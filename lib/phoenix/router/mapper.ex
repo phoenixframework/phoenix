@@ -38,12 +38,13 @@ defmodule Phoenix.Router.Mapper do
     ast = quote do
       def unquote(:match)(conn, unquote(http_method), unquote(path_args)) do
         {unquote(controller), unquote(action), unquote(options)}
-        params = unquote(params_list_with_bindings)
+        conn = conn.params(Dict.merge(conn.params, unquote(params_list_with_bindings)))
 
-        {:ok,  conn
-               |> Plug.Connection.put_resp_content_type("text/plain")
-               |> Plug.Connection.send(200, "Matched Params: #{inspect params}")
-        }
+        apply(unquote(controller), unquote(action), [conn])
+        # {:ok,  conn
+        #        |> Plug.Connection.put_resp_content_type("text/plain")
+        #        |> Plug.Connection.send(200, "Matched Params: #{inspect conn.params}")
+        # }
       end
     end
     # IO.puts Macro.to_string(ast)
@@ -73,11 +74,11 @@ defmodule Phoenix.Router.Mapper do
     end
   end
 
-  defmacro resources(controller, options // []) when is_atom(controller) do
+  defmacro resources(prefix, controller, options // []) do
     quote do
-      get unquote_splicing(["#{controller}/:id", controller, :show, options])
-      get unquote_splicing(["#{controller}", controller, :index, options])
-      post unquote_splicing(["#{controller}", controller, :create, options])
+      get unquote_splicing(["#{prefix}/:id", controller, :show, options])
+      get unquote_splicing(["#{prefix}", controller, :index, options])
+      post unquote_splicing(["#{prefix}", controller, :create, options])
     end
   end
 end

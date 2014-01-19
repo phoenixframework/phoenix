@@ -3,7 +3,6 @@ defmodule Phoenix.Router do
   defmacro __using__(plug_adapter_options // []) do
     quote do
       use Phoenix.Router.Mapper
-      import Plug.Connection
       import unquote(__MODULE__)
 
       @options unquote(plug_adapter_options)

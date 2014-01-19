@@ -6,9 +6,9 @@ defmodule Phoenix.Router.Path do
 
   @doc """
   Splits parameterized String path into list of arguments for defmatch route.
-  Named params beginning with ":" are injected into the argument list as 
+  Named params beginning with ":" are injected into the argument list as
   an AST binding matching the param name.
-  
+
   Examples
     iex> Path.matched_arg_list_with_ast_bindings("users/:user_id/comments/:id")
     ["users", {:user_id, [], Elixir}, "comments", {:id, [], Elixir}]
@@ -20,7 +20,7 @@ defmodule Phoenix.Router.Path do
   def matched_arg_list_with_ast_bindings(path) do
     path
     |> split
-    |> Enum.map fn part -> 
+    |> Enum.map fn part ->
       case part do
         <<":" <> param_name>> -> {binary_to_atom(param_name), [], Elixir}
         _ -> part
@@ -29,7 +29,7 @@ defmodule Phoenix.Router.Path do
   end
 
   @doc """
-  Returns Keyword List of parameters from URL matched with 
+  Returns Keyword List of parameters from URL matched with
   AST of associationed bindings for inclusion in defmatch route
 
   Examples
@@ -61,6 +61,5 @@ defmodule Phoenix.Router.Path do
     Regex.scan(%r/:\w+/, path)
     |> List.flatten
     |> Enum.map(&String.strip(&1, ?:))
-    |> Enum.map(&binary_to_atom(&1))
   end
 end
