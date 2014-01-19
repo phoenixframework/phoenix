@@ -10,6 +10,7 @@ defmodule UsersController do
   use Phoenix.Controller
 
   def show(conn) do
+    :ok = :no
     text conn, "Show user!"
   end
 

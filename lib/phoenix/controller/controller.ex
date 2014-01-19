@@ -32,7 +32,13 @@ defmodule Phoenix.Controller do
   end
 
   def not_found(conn) do
-    IO.puts "NOT FOUND"
     text conn, 404, "Not found"
+  end
+
+  def error(conn, reason) do
+    html conn, 500, """
+    <h1>Internal Server Error</h1>
+    <blockquote>#{inspect reason}</blockquote>
+    """
   end
 end
