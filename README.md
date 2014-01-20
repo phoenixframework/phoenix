@@ -35,3 +35,9 @@ defmodule UsersController do
 end
 ```
 
+## Starting the application
+
+```bash
+$ mix run --no-halt mix.exs
+```
+
