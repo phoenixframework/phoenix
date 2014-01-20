@@ -1,6 +1,10 @@
 # Phoenix
 > Realtime Elixir Web Framework
 
+## Goals
+- First class websockets
+- Ring distribution
+
 ```elixir
 defmodule Router do
   use Phoenix.Router, port: 4000
