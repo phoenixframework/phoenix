@@ -12,7 +12,7 @@ defmodule PagesController do
   use Phoenix.Controller
 
   def show(conn) do
-    text conn, "Hello!"
+    text conn, "Hello! #{conn.params["page"]}"
   end
 end
 
