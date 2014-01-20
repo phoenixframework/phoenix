@@ -21,7 +21,7 @@ defmodule UsersController do
   use Phoenix.Controller
 
   def show(conn) do
-    text conn, "Show user!"
+    text conn, "Showing user #{conn.params["id"]}"
   end
 
   def index(conn) do
