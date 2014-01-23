@@ -3,11 +3,30 @@ defmodule Phoenix.Router.Mapper do
   alias Phoenix.Router.Path
 
   @moduledoc """
-  get "/", :pages, :home, as: :home
+  Adds Macros for Route match definitions. All routes are
+  compiled to patterm matched def matche() definitions for fast
+  and efficient lookup by the VM.
 
-  map :users, only: [:show] do
-    map :comments, only: [:get, :post]
+  # Examples
+
+  defmodule Router do
+    use Phoenix.Router, port: 4000
+
+    get "pages/:page", PagesController, :show, as: :page
+    resources "users", UsersController
   end
+
+  Compiles to
+
+    get "pages/:page", PagesController, :show, as: :page
+
+    -> defmatch({:get, "pages/:page", PagesController, :show, [as: :page]})
+       defroute_aliases({:get, "pages/:page", PagesController, :show, [as: :page]})
+
+    --> def(match(conn, :get, ["pages", page])) do
+          conn = conn.params(Dict.merge(conn.params(), [{"page", page}]))
+          apply(PagesController, :show, [conn])
+        end
   """
 
   defmacro __using__(_options) do
