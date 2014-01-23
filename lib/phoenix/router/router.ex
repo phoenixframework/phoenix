@@ -1,5 +1,8 @@
 defmodule Phoenix.Router do
   use GenServer.Behaviour
+  alias Phoenix.Request
+  alias Phoenix.Dispatcher
+  alias Phoenix.Controller
 
   defmacro __using__(plug_adapter_options // []) do
     quote do
@@ -26,26 +29,17 @@ defmodule Phoenix.Router do
   end
 
   def dispatch(conn, router, http_method, path) do
-    # apply(router, :match, [conn, http_method, path])
-    {:ok, pid} = start([conn, router, http_method, path])
-    :gen_server.call pid, :dispatch
-  end
+    request = Dispatcher.Request.new(conn: conn,
+                                     router: router,
+                                     http_method: http_method,
+                                     path: path)
 
-  def start(state) do
-    :gen_server.start(__MODULE__, state, [])
-  end
-
-  def init(state) do
-    {:ok, state}
-  end
-
-  def handle_call(:dispatch, _from, state = [conn, router, http_method, path]) do
-    plug = apply(router, :match, [conn, http_method, path])
-    {:reply, plug, state}
-  end
-
-  def terminate(reason, [conn, router, http_method, path]) do
-    Phoenix.Controller.error(conn, reason)
+    {:ok, pid} = Dispatcher.Client.start(request)
+    case Dispatcher.Client.dispatch(pid) do
+      {:ok, conn}            -> {:ok, conn}
+      {:error, conn, reason} -> Controller.error(conn, reason)
+    end
   end
 end
+
 

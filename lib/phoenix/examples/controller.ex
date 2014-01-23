@@ -2,6 +2,7 @@ defmodule PagesController do
   use Phoenix.Controller
 
   def show(conn) do
+    :ok = :no
     text conn, "Showing Page!"
   end
 end
@@ -10,7 +11,6 @@ defmodule UsersController do
   use Phoenix.Controller
 
   def show(conn) do
-    :ok = :no
     text conn, "Show user!"
   end
 

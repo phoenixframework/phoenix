@@ -97,4 +97,5 @@ defmodule RoutingTest do
    {:ok, conn} = simulate_request(Router, :get, "route_does_not_exist")
     assert conn.status == 404
   end
+
 end
