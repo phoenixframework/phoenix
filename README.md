@@ -43,6 +43,6 @@ end
 ## Starting the application
 
 ```bash
-$ mix run --no-halt mix.exs
+$ mix run -e 'Router.start' --no-halt mix.exs
 ```
 
