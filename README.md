@@ -1,6 +1,10 @@
 # Phoenix
 > Realtime Elixir Web Framework
 
+## Goals
+- First class websockets
+- Ring distribution
+
 ```elixir
 defmodule Router do
   use Phoenix.Router, port: 4000
@@ -21,7 +25,7 @@ defmodule UsersController do
   use Phoenix.Controller
 
   def show(conn) do
-    text conn, "Show user!"
+    text conn, "Showing user #{conn.params["id"]}"
   end
 
   def index(conn) do
