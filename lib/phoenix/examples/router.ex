@@ -3,6 +3,7 @@ defmodule Router do
 
   get "pages/:page", PagesController, :show, as: :page
   resources "users", UsersController
+  resources "users/:user_id/comments", CommentsController
 end
 
 

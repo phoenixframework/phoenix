@@ -36,8 +36,8 @@ defmodule Phoenix.Router do
 
     {:ok, pid} = Dispatcher.Client.start(request)
     case Dispatcher.Client.dispatch(pid) do
-      {:ok, conn}            -> {:ok, conn}
-      {:error, conn, reason} -> Controller.error(conn, reason)
+      {:ok, conn}      -> {:ok, conn}
+      {:error, reason} -> Controller.error(conn, reason)
     end
   end
 end

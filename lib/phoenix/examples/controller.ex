@@ -5,6 +5,9 @@ defmodule PagesController do
     :ok = :no
     text conn, "Showing Page!"
   end
+
+  def show(conn, "page") do
+  end
 end
 
 defmodule UsersController do

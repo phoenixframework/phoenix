@@ -1,22 +1,20 @@
 defmodule Phoenix.Dispatcher.Server do
   alias Phoenix.Router
 
-  def init({sender, request}) do
-    {:ok, {sender, request}}
+  def init(request) do
+    {:ok, request}
   end
 
-  def handle_cast(:dispatch, {sender, req}) do
+  def handle_call(:dispatch, _from, req) do
     plug = apply(req.router, :match, [req.conn, req.http_method, req.path])
-    send sender, plug
-    {:stop, :normal, {sender, req}}
+    {:stop, :normal, plug, req}
   end
 
-  def terminate(:normal, _state) do
+  def terminate(:normal, _request) do
     IO.puts "Done!"
   end
-  def terminate(reason, {sender, request}) do
+  def terminate(reason, _request) do
     IO.puts ">> TERM"
-    send sender, {:error, request.conn, reason}
   end
 end
 

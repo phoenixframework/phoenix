@@ -2,15 +2,15 @@ defmodule Phoenix.Dispatcher.Client do
   alias Phoenix.Dispatcher.Server
 
   def start(request) do
-    :gen_server.start(Server, {self, request}, [])
+    :gen_server.start(Server, request, [])
   end
 
   def dispatch(pid) do
-    :gen_server.cast(pid, :dispatch)
-    receive do
-      {:ok, conn}            -> {:ok, conn}
-      {:error, conn, reason} -> {:error, conn, reason}
+    try do
+      {:ok, conn} = :gen_server.call(pid, :dispatch)
+      {:ok, conn}
+    catch
+      error, reason -> {:error, reason}
     end
   end
-  def stop(pid), do: Process.exit(pid, :kill)
 end
