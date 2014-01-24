@@ -11,6 +11,7 @@ defmodule RoutingTest do
     use Phoenix.Controller
     def show(conn), do: text(conn, "users show")
     def top(conn), do: text(conn, "users top")
+    def crash(conn), do: raise 'crash!'
   end
 
   defmodule CommentsController do
@@ -26,6 +27,7 @@ defmodule RoutingTest do
     use Phoenix.Router
     get "users/:id", UsersController, :show
     get "users/top", UsersController, :top, as: :top
+    get "route_that_crashes", UsersController, :crash
 
     resources "comments", CommentsController
     get "users/:user_id/comments/:id", CommentsController, :show
@@ -98,4 +100,10 @@ defmodule RoutingTest do
     assert conn.status == 404
   end
 
+  test "dispatch crash returns 500" do
+    {:ok, conn} = simulate_request(Router, :get, "route_that_crashes")
+    assert conn.status == 500
+    assert conn.resp_body =~ %r/Internal Server Error/
+  end
 end
+
