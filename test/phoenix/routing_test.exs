@@ -14,6 +14,11 @@ defmodule RoutingTest do
     def crash(conn), do: raise 'crash!'
   end
 
+  defmodule FilesController do
+    use Phoenix.Controller
+    def show(conn), do: text(conn, "#{conn.params["path"]}")
+  end
+
   defmodule CommentsController do
     use Phoenix.Controller
     def show(conn), do: text(conn, "show comments")
@@ -28,6 +33,9 @@ defmodule RoutingTest do
     get "users/:id", UsersController, :show
     get "users/top", UsersController, :top, as: :top
     get "route_that_crashes", UsersController, :crash
+    get "files/:user_name/*path", FilesController, :show
+    get "backups/*path", FilesController, :show
+    get "static/images/icons/*image", FilesController, :show
 
     resources "comments", CommentsController
     get "users/:user_id/comments/:id", CommentsController, :show
@@ -104,6 +112,25 @@ defmodule RoutingTest do
     {:ok, conn} = simulate_request(Router, :get, "route_that_crashes")
     assert conn.status == 500
     assert conn.resp_body =~ %r/Internal Server Error/
+  end
+
+  test "splat arg with preceeding named parameter to files/:user_name/*path" do
+    {:ok, conn} = simulate_request(Router, :get, "files/elixir/Users/home/file.txt")
+    assert conn.status == 200
+    assert conn.params["user_name"] == "elixir"
+    assert conn.params["path"] == "Users/home/file.txt"
+  end
+
+  test "splat arg with preceeding string to backups/*path" do
+    {:ok, conn} = simulate_request(Router, :get, "backups/name")
+    assert conn.status == 200
+    assert conn.params["path"] == "name"
+  end
+
+  test "splat arg with multiple preceeding strings to static/images/icons/*path" do
+    {:ok, conn} = simulate_request(Router, :get, "static/images/icons/elixir/logos/main.png")
+    assert conn.status == 200
+    assert conn.params["image"] == "elixir/logos/main.png"
   end
 end
 

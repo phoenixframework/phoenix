@@ -11,10 +11,8 @@ defmodule Phoenix.Dispatcher.Server do
   end
 
   def terminate(:normal, _request) do
-    IO.puts "Done!"
   end
   def terminate(reason, _request) do
-    IO.puts ">> TERM"
   end
 end
 

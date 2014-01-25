@@ -1,6 +1,7 @@
 defmodule Phoenix.Router.Mapper do
   alias Phoenix.Router.Params
   alias Phoenix.Router.Path
+  alias Phoenix.Controller
 
   @moduledoc """
   Adds Macros for Route match definitions. All routes are
@@ -50,7 +51,7 @@ defmodule Phoenix.Router.Mapper do
 
     quote do
       unquote(routes_ast)
-      def match(conn, _method, _path), do: Phoenix.Controller.not_found(conn)
+      def match(conn, method, path), do: Controller.not_found(conn, method, path)
     end
   end
 

@@ -2,8 +2,7 @@ defmodule PagesController do
   use Phoenix.Controller
 
   def show(conn) do
-    :ok = :no
-    text conn, "Showing Page!"
+    text conn, "Showing page #{conn.params["page"]}!"
   end
 
   def show(conn, "page") do
@@ -14,7 +13,7 @@ defmodule UsersController do
   use Phoenix.Controller
 
   def show(conn) do
-    text conn, "Show user!"
+    text conn, "Show user #{conn.params["id"]}!"
   end
 
   def index(conn) do
@@ -43,6 +42,14 @@ defmodule CommentsController do
       </body>
     </html>
     """
+  end
+end
+
+defmodule FilesController do
+  use Phoenix.Controller
+
+  def show(conn) do
+    text conn, "Get file: #{conn.params["path"]}"
   end
 end
 

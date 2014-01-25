@@ -1,7 +1,27 @@
 defmodule Phoenix.Router.Path do
 
-  def split(path) do
-    String.split(path, "/")
+  def split(path), do: String.split(path, "/")
+
+  def join(split_path), do: Enum.join(split_path, "/")
+
+  @doc """
+  Returns the AST binding of the given variable with var_name
+
+  var_name - The String or Atom variable name to be bound
+
+  # Examples
+
+  iex> Phoenix.Router.Path.var_ast("my_var")
+  {:var!, [context: Phoenix.Router.Path, import: Kernel], [:my_var]}
+
+  iex> Phoenix.Router.Path.var_ast(:my_var)
+  {:var!, [context: Phoenix.Router.Path, import: Kernel], [:my_var]}
+  """
+  def var_ast(var_name) when is_binary(var_name) do
+    var_ast(binary_to_atom(var_name))
+  end
+  def var_ast(var_name) do
+    quote do: var!(unquote(var_name))
   end
 
   @doc """
@@ -20,13 +40,22 @@ defmodule Phoenix.Router.Path do
   def matched_arg_list_with_ast_bindings(path) do
     path
     |> split
-    |> Enum.map fn part ->
-      case part do
-        <<":" <> param_name>> -> {binary_to_atom(param_name), [], Elixir}
-        _ -> part
-      end
-    end
+    |> Enum.chunk(2, 1, [nil])
+    |> Enum.map(fn [part, next] -> part_to_ast_binding(part, next) end)
+    |> Enum.filter(fn part -> part end)
   end
+  defp part_to_ast_binding(<<"*" <> _splat_name>>, nil), do: nil
+  defp part_to_ast_binding(<<":" <> param_name>>, <<"*" <> splat_name>>) do
+    {:|, [], [var_ast(param_name), var_ast(splat_name)]}
+  end
+  defp part_to_ast_binding(<<":" <> param_name>>, _next) do
+    var_ast(param_name)
+  end
+  defp part_to_ast_binding(part, <<"*" <> splat_name>>) do
+    {:|, [], [part, var_ast(splat_name)]}
+  end
+  defp part_to_ast_binding(part, _next), do: part
+
 
   @doc """
   Returns Keyword List of parameters from URL matched with
@@ -43,7 +72,12 @@ defmodule Phoenix.Router.Path do
 
   def matched_param_ast_bindings(path) do
     path
-    |> matched_arg_list_with_ast_bindings
+    |> split
+    |> Enum.map(fn
+      <<":" <> param>> -> var_ast(param)
+      <<"*" <> param>> -> quote do: Phoenix.Router.Path.join(unquote(var_ast(param)))
+      _part ->
+    end)
     |> Enum.filter(&is_tuple(&1))
   end
 
@@ -58,8 +92,10 @@ defmodule Phoenix.Router.Path do
 
   """
   def param_names(path) do
-    Regex.scan(%r/:\w+/, path)
+    Regex.scan(%r/[\:\*]{1}\w+/, path)
     |> List.flatten
     |> Enum.map(&String.strip(&1, ?:))
+    |> Enum.map(&String.strip(&1, ?*))
   end
 end
+

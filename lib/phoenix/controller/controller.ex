@@ -31,8 +31,8 @@ defmodule Phoenix.Controller do
     }
   end
 
-  def not_found(conn) do
-    text conn, 404, "Not found"
+  def not_found(conn, method, path) do
+    text conn, 404, "No route matches #{method} to #{inspect path}"
   end
 
   def error(conn, reason) do
