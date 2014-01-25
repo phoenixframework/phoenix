@@ -17,9 +17,10 @@ defmodule Phoenix.Router do
       end
 
       def call(conn, []) do
+        alias Phoenix.Router.Path
         conn        = Plug.Connection.fetch_params(conn)
         http_method = conn.method |> String.downcase |> binary_to_atom
-        split_path  = conn.path_info
+        split_path  = Path.split_from_conn(conn)
         params      = conn.params
 
         IO.puts "#{__MODULE__}: #{http_method}: #{inspect split_path}"

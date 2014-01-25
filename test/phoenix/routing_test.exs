@@ -31,6 +31,7 @@ defmodule RoutingTest do
   defmodule Router do
     use Phoenix.Router
     get "users/:id", UsersController, :show
+    get "profiles/profile-:id", UsersController, :show
     get "users/top", UsersController, :top, as: :top
     get "route_that_crashes", UsersController, :crash
     get "files/:user_name/*path", FilesController, :show
@@ -61,6 +62,13 @@ defmodule RoutingTest do
    {:ok, conn} = simulate_request(Router, :get, "users/top")
     assert conn.status == 200
     assert conn.resp_body == "users top"
+  end
+
+  test "named param without forward slash is properly bound" do
+    {:ok, conn} = simulate_request(Router, :get, "profiles/profile-123")
+    assert conn.status == 200
+    assert conn.resp_body == "users show"
+    assert conn.params["id"] == "123"
   end
 
   test "get with resources to 'comments' maps to index action" do

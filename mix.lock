@@ -1,4 +1,4 @@
 [ "cowboy": {:git, "git://github.com/extend/cowboy.git", "0ec713fc4b185c3cd0f6b2e7ec2c5f198361bddd", []},
   "cowlib": {:git, "git://github.com/extend/cowlib.git", "63298e8e160031a70efff86a1acde7e7db1fcda6", [ref: "0.4.0"]},
-  "plug": {:git, "git://github.com/elixir-lang/plug.git", "da3a7fb54ac2fd1dc61338204faee8c7e385315e", []},
+  "plug": {:git, "git://github.com/elixir-lang/plug.git", "052e0d45c98b6b0e0a3bcde13043057a6d832698", []},
   "ranch": {:git, "git://github.com/extend/ranch.git", "5df1f222f94e08abdcab7084f5e13027143cc222", [ref: "0.9.0"]} ]

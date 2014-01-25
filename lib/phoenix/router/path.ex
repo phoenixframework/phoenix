@@ -1,8 +1,12 @@
 defmodule Phoenix.Router.Path do
 
-  def split(path), do: String.split(path, "/")
+  def split(path), do: String.split(path, %r/\/|\-/)
 
   def join(split_path), do: Enum.join(split_path, "/")
+
+  def split_from_conn(conn) do
+    conn.path_info |> join |> split
+  end
 
   @doc """
   Returns the AST binding of the given variable with var_name
