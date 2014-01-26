@@ -1,11 +1,10 @@
 defmodule Phoenix.Router.Mapper do
-  alias Phoenix.Router.Params
   alias Phoenix.Router.Path
   alias Phoenix.Controller
 
   @moduledoc """
   Adds Macros for Route match definitions. All routes are
-  compiled to patterm matched def matche() definitions for fast
+  compiled to patterm matched def match() definitions for fast
   and efficient lookup by the VM.
 
   # Examples
@@ -72,9 +71,13 @@ defmodule Phoenix.Router.Mapper do
     alias_name = options[:as]
     quote do
       if unquote(alias_name) do
-        def unquote(binary_to_atom "#{alias_name}_path")(), do: unquote(path)
+        def unquote(binary_to_atom "#{alias_name}_path")(params // []) do
+          Path.build(unquote(path), params)
+        end
         # TODO: use config based domain for URL
-        def unquote(binary_to_atom "#{alias_name}_url")(), do: unquote(path)
+        def unquote(binary_to_atom "#{alias_name}_url")(params // []) do
+          Path.build(unquote(path), params)
+        end
       end
     end
   end

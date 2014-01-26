@@ -1,11 +1,6 @@
 defmodule RoutingTest do
   use ExUnit.Case
-  use Plug.Test
-
-  def simulate_request(router, http_method, path) do
-    conn = conn(http_method, path)
-    router.call(conn, [])
-  end
+  use PlugHelper
 
   defmodule UsersController do
     use Phoenix.Controller
@@ -30,7 +25,7 @@ defmodule RoutingTest do
 
   defmodule Router do
     use Phoenix.Router
-    get "users/:id", UsersController, :show
+    get "users/:id", UsersController, :show, as: :user
     get "profiles/profile-:id", UsersController, :show
     get "users/top", UsersController, :top, as: :top
     get "route_that_crashes", UsersController, :crash
@@ -139,6 +134,10 @@ defmodule RoutingTest do
     {:ok, conn} = simulate_request(Router, :get, "static/images/icons/elixir/logos/main.png")
     assert conn.status == 200
     assert conn.params["image"] == "elixir/logos/main.png"
+  end
+
+  test "named route builds _path url helper" do
+    assert Router.user_path(id: 88) == "/users/88"
   end
 end
 

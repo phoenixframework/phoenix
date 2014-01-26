@@ -101,5 +101,44 @@ defmodule Phoenix.Router.Path do
     |> Enum.map(&String.strip(&1, ?:))
     |> Enum.map(&String.strip(&1, ?*))
   end
+
+  @doc """
+  Builds String Path replacing named params with keyword list of values
+
+  # Examples
+    iex> Path.build("users/:user_id/comments/:id", user_id: 1, id: 123)
+    "users/1/comments/123"
+
+    iex Path.build("pages/about")
+    "pages/about"
+
+  """
+  def build(path, []), do: path
+  def build(path, param_values) do
+    path
+    |> param_names
+    |> replace_param_names_with_values(param_values, path)
+    |> ensure_leading_slash
+  end
+  defp replace_param_names_with_values(param_names, param_values, path) do
+    Enum.reduce param_names, path, fn param_name, path_acc ->
+      value = param_values[binary_to_atom(param_name)] |> to_string
+      String.replace(path_acc, %r/[\:\*]{1}#{param_name}/, value)
+    end
+  end
+
+  @doc """
+  Adds leading forward slash to string path if missing
+
+  # Examples
+    iex> Path.ensure_leading_slash("users/1")
+    "/users/1"
+
+    iex> Path.ensure_leading_slash("/users/2")
+    "/users/2"
+
+  """
+  def ensure_leading_slash(path = <<"/" <> rest>>), do: path
+  def ensure_leading_slash(path), do: "/" <> path
 end
 

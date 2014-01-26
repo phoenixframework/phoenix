@@ -13,7 +13,11 @@ defmodule UsersController do
   use Phoenix.Controller
 
   def show(conn) do
-    text conn, "Show user #{conn.params["id"]}!"
+    if conn.params["id"] in ["1", "2", "3"] do
+      redirect conn, Router.page_path(page: conn.params["id"])
+    else
+      text conn, "Showing user #{conn.params["id"]}"
+    end
   end
 
   def index(conn) do
