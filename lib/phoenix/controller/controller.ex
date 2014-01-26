@@ -31,6 +31,23 @@ defmodule Phoenix.Controller do
     }
   end
 
+  def redirect(conn, url), do: redirect(conn, 302, url)
+  def redirect(conn, status, url) do
+    conn
+    |> put_resp_header("Location", url)
+    |> html status, """
+       <html>
+         <head>
+            <title>Moved</title>
+         </head>
+         <body>
+           <h1>Moved</h1>
+           <p>This page has moved to <a href="#{url}">#{url}</a></p>
+         </body>
+       </html>
+    """
+  end
+
   def not_found(conn, method, path) do
     text conn, 404, "No route matches #{method} to #{inspect path}"
   end
