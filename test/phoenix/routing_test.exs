@@ -18,6 +18,7 @@ defmodule RoutingTest do
     use Phoenix.Controller
     def show(conn), do: text(conn, "show comments")
     def index(conn), do: text(conn, "index comments")
+    def new(conn), do: text(conn, "new comments")
     def create(conn), do: text(conn, "create comments")
     def update(conn), do: text(conn, "update comments")
     def destroy(conn), do: text(conn, "destroy comments")
@@ -64,6 +65,12 @@ defmodule RoutingTest do
     assert conn.status == 200
     assert conn.resp_body == "users show"
     assert conn.params["id"] == "123"
+  end
+
+  test "get with resources to 'comments/new' maps to new action" do
+   {:ok, conn} = simulate_request(Router, :get, "comments/new")
+    assert conn.status == 200
+    assert conn.resp_body == "new comments"
   end
 
   test "get with resources to 'comments' maps to index action" do
