@@ -109,7 +109,7 @@ defmodule Phoenix.Router.Path do
     iex> Path.build("users/:user_id/comments/:id", user_id: 1, id: 123)
     "users/1/comments/123"
 
-    iex Path.build("pages/about")
+    iex Path.build("pages/about", [])
     "pages/about"
 
   """
@@ -138,7 +138,7 @@ defmodule Phoenix.Router.Path do
     "/users/2"
 
   """
-  def ensure_leading_slash(path = <<"/" <> rest>>), do: path
+  def ensure_leading_slash(path = <<"/" <> _rest>>), do: path
   def ensure_leading_slash(path), do: "/" <> path
 end
 
