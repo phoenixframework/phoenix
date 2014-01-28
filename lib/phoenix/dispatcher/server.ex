@@ -1,5 +1,6 @@
 defmodule Phoenix.Dispatcher.Server do
   alias Phoenix.Router
+  use GenServer.Behaviour
 
   def init(request) do
     {:ok, request}
