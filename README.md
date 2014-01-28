@@ -19,10 +19,10 @@ defmodule PagesController do
   use Phoenix.Controller
 
   def show(conn) do
-    if conn.params["id"] in ["1", "2", "3"] do
-      redirect conn, Router.page_path(page: conn.params["id"])
+    if conn.params["page"] in ["admin"] do
+      redirect conn, Router.page_path(page: "unauthorized")
     else
-      text conn, "Showing user #{conn.params["id"]}"
+      text conn, "Showing page #{conn.params["page"]}"
     end
   end
 

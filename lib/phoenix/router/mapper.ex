@@ -115,6 +115,7 @@ defmodule Phoenix.Router.Mapper do
   defmacro resources(prefix, controller, options // []) do
     quote do
       get    unquote_splicing(["#{prefix}/:id", controller, :show, options])
+      get    unquote_splicing(["#{prefix}/new", controller, :new, options])
       get    unquote_splicing(["#{prefix}", controller, :index, options])
       post   unquote_splicing(["#{prefix}", controller, :create, options])
       put    unquote_splicing(["#{prefix}/:id", controller, :update, options])
