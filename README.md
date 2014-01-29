@@ -5,6 +5,14 @@
 - First class websockets
 - Ring distribution
 
+## Creating a new Phoenix application
+
+```console
+mix phoenix.new you_app /path/to
+```
+
+## Usage
+
 ```elixir
 defmodule Router do
   use Phoenix.Router, port: 4000
