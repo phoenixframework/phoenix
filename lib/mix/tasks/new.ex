@@ -1,5 +1,4 @@
 defmodule Mix.Tasks.Phoenix.New do
-
   use Mix.Task
 
   @shortdoc "Creates Phoenix application"
@@ -59,5 +58,4 @@ defmodule Mix.Tasks.Phoenix.New do
 
     Path.join(root_path, @template_dir)
   end
-
 end

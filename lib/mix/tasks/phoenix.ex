@@ -1,5 +1,4 @@
 defmodule Mix.Tasks.Phoenix do
-
   use Mix.Task
 
   @shortdoc "List Phoenix tasks"
@@ -23,5 +22,4 @@ defmodule Mix.Tasks.Phoenix do
     mix phoenix      --help                     # This help
     """
   end
-
 end
