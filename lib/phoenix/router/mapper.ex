@@ -1,6 +1,7 @@
 defmodule Phoenix.Router.Mapper do
   alias Phoenix.Router.Path
   alias Phoenix.Controller
+  import Inflex
 
   @moduledoc """
   Adds Macros for Route match definitions. All routes are
@@ -47,7 +48,6 @@ defmodule Phoenix.Router.Mapper do
         unquote(acc)
       end
     end
-    IO.puts Macro.to_string(routes_ast)
 
     quote do
       unquote(routes_ast)
@@ -84,87 +84,85 @@ defmodule Phoenix.Router.Mapper do
   end
 
   defmacro get(path, controller, action, options // []) do
-    quote do
-      @routes {:get, nested_prefix <> unquote(path), unquote_splicing([controller, action, options])}
-    end
+    add_route(:get, path, controller, action, options)
   end
 
   defmacro post(path, controller, action, options // []) do
-    quote do
-      @routes {:post, nested_prefix <> unquote(path), unquote_splicing([controller, action, options])}
-    end
+    add_route(:post, path, controller, action, options)
   end
 
   defmacro put(path, controller, action, options // []) do
-    quote do
-      @routes {:put, nested_prefix <> unquote(path), unquote_splicing([controller, action, options])}
-    end
+    add_route(:put, path, controller, action, options)
   end
 
   defmacro patch(path, controller, action, options // []) do
-    quote do
-      @routes {:patch, nested_prefix <> unquote(path), unquote_splicing([controller, action, options])}
-    end
+    add_route(:patch, path, controller, action, options)
   end
 
   defmacro delete(path, controller, action, options // []) do
+    add_route(:delete, path, controller, action, options)
+  end
+
+  defp add_route(verb, path, controller, action, options // []) do
     quote do
-      @routes {:delete, nested_prefix <> unquote(path), unquote_splicing([controller, action, options])}
+      @routes {
+        unquote(verb),
+        current_context_prefix(unquote(path)),
+        unquote_splicing([controller, action, options])
+      }
     end
   end
 
   defmacro resources(prefix, controller, options // []) do
-    # nested_route_ast = quote do
-    #   unquote(options[:do])
-    # end
-
     expanded_opts = Macro.expand(options, __MODULE__)
-    nested_route = case Keyword.fetch(expanded_opts, :do) do
-      {:ok, ast} -> ast
-      _ ->
-    end
+    nested_route  = Keyword.get(expanded_opts, :do)
+    options       = Keyword.delete(expanded_opts, :do)
 
-    opts = Keyword.delete(expanded_opts, :do)
-    quote do
-      options = unquote(opts)
-      get    unquote("#{prefix}/:id"), unquote_splicing([controller, :show]), options
-      get    unquote("#{prefix}/new"), unquote_splicing([controller, :new]), options
-      get    unquote("#{prefix}/"), unquote_splicing([controller, :index]), options
-      post   unquote("#{prefix}/"), unquote_splicing([controller, :create]), options
-      put    unquote("#{prefix}/:id"), unquote_splicing([controller, :update]), options
-      patch  unquote("#{prefix}/:id"), unquote_splicing([controller, :update]), options
-      delete unquote("#{prefix}/:id"), unquote_splicing([controller, :destroy]), options
-      push_context unquote(prefix)
+    quote unquote: true, bind_quoted: [options: options,
+                                       prefix: prefix,
+                                       controller: controller] do
+
+      get    "#{prefix}/:id", controller, :show, options
+      get    "#{prefix}/new", controller, :new, options
+      get    "#{prefix}",     controller, :index, options
+      post   "#{prefix}",     controller, :create, options
+      put    "#{prefix}/:id", controller, :update, options
+      patch  "#{prefix}/:id", controller, :update, options
+      delete "#{prefix}/:id", controller, :destroy, options
+
+      push_context(prefix)
       unquote(nested_route)
       pop_context
     end
   end
 
-  defmacro nested_prefix do
-    quote do
-      nested_prefix = (get_context |> Enum.join("/")) <> "/"
-    end
-  end
-
-  defmacro get_context do
-    quote do
-      (Module.get_attribute __MODULE__, :nested_context) || []
+  defmacro current_context_prefix(relative_path) do
+    quote bind_quoted: [relative_path: relative_path] do
+      case get_contexts do
+        [] -> relative_path
+        contexts -> (contexts |> Enum.reverse |> Path.join) <> "/#{relative_path}"
+      end
     end
   end
 
   defmacro push_context(prefix) do
-    quote do
-      set_context get_context ++ [unquote(prefix)]
+    quote bind_quoted: [prefix: prefix] do
+      set_context [prefix_with_named_resource_param(prefix) | get_contexts]
     end
   end
 
   defmacro pop_context do
     quote do
-      set_context(case get_context do
-        [_last]  -> []
-        []       -> []
-        contexts -> contexts |> Enum.reverse |> tl |> Enum.reverse
+      set_context(case get_contexts do
+        [] -> []
+        contexts -> tl(contexts)
       end)
+    end
+  end
+
+  defmacro get_contexts do
+    quote do
+      (Module.get_attribute __MODULE__, :nested_context) || []
     end
   end
 
@@ -172,6 +170,10 @@ defmodule Phoenix.Router.Mapper do
     quote do
       Module.put_attribute __MODULE__, :nested_context, unquote(context)
     end
+  end
+
+  def prefix_with_named_resource_param(prefix) do
+    Path.join([prefix, ":#{singularize(prefix)}_id"])
   end
 end
 
