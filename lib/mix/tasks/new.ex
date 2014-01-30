@@ -17,10 +17,10 @@ defmodule Mix.Tasks.Phoenix.New do
   @doc """
   Creates Phoenix application.
   """
-  def run([name, project_parent_path]) do
+  def run([name, path]) do
     application_name = Mix.Utils.underscore(name)
     application_module = Mix.Utils.camelize(name)
-    project_path = Path.join(project_parent_path, application_name)
+    project_path = make_project_path(path, application_name)
 
     bindings = [application_name: application_name,
                 application_module: application_module]
@@ -37,6 +37,16 @@ defmodule Mix.Tasks.Phoenix.New do
 
         Mix.Generator.create_file(destination_path, contents)
       end
+    end
+  end
+
+  defp make_project_path(path, application_name) do
+    basename = Mix.Utils.underscore(Path.basename(path))
+
+    if basename == application_name do
+      path
+    else
+      Path.join(path, application_name)
     end
   end
 
