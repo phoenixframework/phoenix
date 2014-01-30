@@ -3,7 +3,6 @@
 To start your new Phoenix application you have to:
 
 1. Install dependencies with `mix deps.get`
-2. Run console with `iex -S mix`
-3. Start Phoenix router with `<%= application_module %>.Config.Router.start %>`
+2. Start Phoenix router with `mix run -e '<%= application_module %>.Config.Router.start' --no-halt mix.exs`
 
 Now you can visit `localhost:4000` from your browser.
