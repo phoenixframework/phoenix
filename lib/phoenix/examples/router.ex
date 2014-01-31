@@ -6,10 +6,9 @@ defmodule Router do
   get "profiles/user-:id", UsersController, :show
 
   resources "users", UsersController do
-    resources "posts", PostsController do
-      resources "images", ImagesController
-    end
+    resources "comments", CommentsController
   end
 end
+
 
 
