@@ -49,6 +49,9 @@ defmodule Phoenix.Router.Mapper do
     end
 
     quote do
+      def routes do
+        [unquote_splicing(Macro.escape(routes))]
+      end
       unquote(routes_ast)
       def match(conn, method, path), do: Controller.not_found(conn, method, path)
     end
