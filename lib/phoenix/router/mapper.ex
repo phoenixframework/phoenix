@@ -1,7 +1,6 @@
 defmodule Phoenix.Router.Mapper do
   alias Phoenix.Router.Path
   alias Phoenix.Controller
-  import Inflex
 
   @moduledoc """
   Adds Macros for Route match definitions. All routes are
@@ -104,19 +103,24 @@ defmodule Phoenix.Router.Mapper do
   end
 
   defp add_route(verb, path, controller, action, options // []) do
-    quote do
+    quote bind_quoted: [verb: verb,
+                        path: path,
+                        controller: controller,
+                        action: action,
+                        options: options] do
       @routes {
-        unquote(verb),
-        current_context_prefix(unquote(path)),
-        unquote_splicing([controller, action, options])
+        verb,
+        Phoenix.Router.Context.current_prefix(path, __MODULE__),
+        controller,
+        action,
+        options
       }
     end
   end
 
   defmacro resources(prefix, controller, options // []) do
-    expanded_opts = Macro.expand(options, __MODULE__)
-    nested_route  = Keyword.get(expanded_opts, :do)
-    options       = Keyword.delete(expanded_opts, :do)
+    nested_route  = Keyword.get(options, :do)
+    options       = Keyword.delete(options, :do)
 
     quote unquote: true, bind_quoted: [options: options,
                                        prefix: prefix,
@@ -130,50 +134,11 @@ defmodule Phoenix.Router.Mapper do
       patch  "#{prefix}/:id", controller, :update, options
       delete "#{prefix}/:id", controller, :destroy, options
 
-      push_context(prefix)
+
+      Phoenix.Router.Context.push(prefix, __MODULE__)
       unquote(nested_route)
-      pop_context
+      Phoenix.Router.Context.pop(__MODULE__)
     end
-  end
-
-  defmacro current_context_prefix(relative_path) do
-    quote bind_quoted: [relative_path: relative_path] do
-      case get_contexts do
-        [] -> relative_path
-        contexts -> (contexts |> Enum.reverse |> Path.join) <> "/#{relative_path}"
-      end
-    end
-  end
-
-  defmacro push_context(prefix) do
-    quote bind_quoted: [prefix: prefix] do
-      set_context [prefix_with_named_resource_param(prefix) | get_contexts]
-    end
-  end
-
-  defmacro pop_context do
-    quote do
-      set_context(case get_contexts do
-        [] -> []
-        contexts -> tl(contexts)
-      end)
-    end
-  end
-
-  defmacro get_contexts do
-    quote do
-      (Module.get_attribute __MODULE__, :nested_context) || []
-    end
-  end
-
-  defmacro set_context(context) do
-    quote do
-      Module.put_attribute __MODULE__, :nested_context, unquote(context)
-    end
-  end
-
-  def prefix_with_named_resource_param(prefix) do
-    Path.join([prefix, ":#{singularize(prefix)}_id"])
   end
 end
 
