@@ -71,11 +71,11 @@ defmodule Phoenix.Router.Mapper do
     alias_name = options[:as]
     quote do
       if unquote(alias_name) do
-        def unquote(binary_to_atom "#{alias_name}_path")(params // []) do
+        def unquote(binary_to_atom "#{alias_name}_path")(params) do
           Path.build(unquote(path), params)
         end
         # TODO: use config based domain for URL
-        def unquote(binary_to_atom "#{alias_name}_url")(params // []) do
+        def unquote(binary_to_atom "#{alias_name}_url")(params) do
           Path.build(unquote(path), params)
         end
       end
@@ -83,44 +83,62 @@ defmodule Phoenix.Router.Mapper do
   end
 
   defmacro get(path, controller, action, options // []) do
-    quote do
-      @routes {:get, unquote_splicing([path, controller, action, options])}
-    end
+    add_route(:get, path, controller, action, options)
   end
 
   defmacro post(path, controller, action, options // []) do
-    quote do
-      @routes {:post, unquote_splicing([path, controller, action, options])}
-    end
+    add_route(:post, path, controller, action, options)
   end
 
   defmacro put(path, controller, action, options // []) do
-    quote do
-      @routes {:put, unquote_splicing([path, controller, action, options])}
-    end
+    add_route(:put, path, controller, action, options)
   end
 
   defmacro patch(path, controller, action, options // []) do
-    quote do
-      @routes {:patch, unquote_splicing([path, controller, action, options])}
-    end
+    add_route(:patch, path, controller, action, options)
   end
 
   defmacro delete(path, controller, action, options // []) do
-    quote do
-      @routes {:delete, unquote_splicing([path, controller, action, options])}
+    add_route(:delete, path, controller, action, options)
+  end
+
+  defp add_route(verb, path, controller, action, options // []) do
+    quote bind_quoted: [verb: verb,
+                        path: path,
+                        controller: controller,
+                        action: action,
+                        options: options] do
+      @routes {
+        verb,
+        Phoenix.Router.Context.current_prefix(path, __MODULE__),
+        controller,
+        action,
+        options
+      }
     end
   end
 
   defmacro resources(prefix, controller, options // []) do
-    quote do
-      get    unquote_splicing(["#{prefix}/:id", controller, :show, options])
-      get    unquote_splicing(["#{prefix}/new", controller, :new, options])
-      get    unquote_splicing(["#{prefix}", controller, :index, options])
-      post   unquote_splicing(["#{prefix}", controller, :create, options])
-      put    unquote_splicing(["#{prefix}/:id", controller, :update, options])
-      patch  unquote_splicing(["#{prefix}/:id", controller, :update, options])
-      delete unquote_splicing(["#{prefix}/:id", controller, :destroy, options])
+    nested_route  = Keyword.get(options, :do)
+    options       = Keyword.delete(options, :do)
+
+    quote unquote: true, bind_quoted: [options: options,
+                                       prefix: prefix,
+                                       controller: controller] do
+
+      get    "#{prefix}/:id", controller, :show, options
+      get    "#{prefix}/new", controller, :new, options
+      get    "#{prefix}",     controller, :index, options
+      post   "#{prefix}",     controller, :create, options
+      put    "#{prefix}/:id", controller, :update, options
+      patch  "#{prefix}/:id", controller, :update, options
+      delete "#{prefix}/:id", controller, :destroy, options
+
+
+      Phoenix.Router.Context.push(prefix, __MODULE__)
+      unquote(nested_route)
+      Phoenix.Router.Context.pop(__MODULE__)
     end
   end
 end
+

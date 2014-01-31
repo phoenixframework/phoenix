@@ -1,4 +1,4 @@
-defmodule RoutingTest do
+defmodule Router.RoutingTest do
   use ExUnit.Case
   use PlugHelper
 
@@ -40,14 +40,14 @@ defmodule RoutingTest do
 
 
   test "get with named param" do
-   {:ok, conn} = simulate_request(Router, :get, "users/1")
+    {:ok, conn} = simulate_request(Router, :get, "users/1")
     assert conn.status == 200
     assert conn.resp_body == "users show"
     assert conn.params["id"] == "1"
   end
 
   test "get with multiple named params" do
-   {:ok, conn} = simulate_request(Router, :get, "users/1/comments/2")
+    {:ok, conn} = simulate_request(Router, :get, "users/1/comments/2")
     assert conn.status == 200
     assert conn.resp_body == "show comments"
     assert conn.params["user_id"] == "1"
@@ -55,7 +55,7 @@ defmodule RoutingTest do
   end
 
   test "get to custom action" do
-   {:ok, conn} = simulate_request(Router, :get, "users/top")
+    {:ok, conn} = simulate_request(Router, :get, "users/top")
     assert conn.status == 200
     assert conn.resp_body == "users top"
   end
@@ -68,53 +68,53 @@ defmodule RoutingTest do
   end
 
   test "get with resources to 'comments/new' maps to new action" do
-   {:ok, conn} = simulate_request(Router, :get, "comments/new")
+    {:ok, conn} = simulate_request(Router, :get, "comments/new")
     assert conn.status == 200
     assert conn.resp_body == "new comments"
   end
 
   test "get with resources to 'comments' maps to index action" do
-   {:ok, conn} = simulate_request(Router, :get, "comments")
+    {:ok, conn} = simulate_request(Router, :get, "comments")
     assert conn.status == 200
     assert conn.resp_body == "index comments"
   end
 
   test "get with resources to 'comments/123' maps to show action with named param" do
-   {:ok, conn} = simulate_request(Router, :get, "comments/123")
+    {:ok, conn} = simulate_request(Router, :get, "comments/123")
     assert conn.status == 200
     assert conn.resp_body == "show comments"
     assert conn.params["id"] == "123"
   end
 
   test "post with resources to 'comments' maps to create action" do
-   {:ok, conn} = simulate_request(Router, :post, "comments")
+    {:ok, conn} = simulate_request(Router, :post, "comments")
     assert conn.status == 200
     assert conn.resp_body == "create comments"
   end
 
   test "put with resources to 'comments/1' maps to update action" do
-   {:ok, conn} = simulate_request(Router, :put, "comments/1")
+    {:ok, conn} = simulate_request(Router, :put, "comments/1")
     assert conn.status == 200
     assert conn.resp_body == "update comments"
     assert conn.params["id"] == "1"
   end
 
   test "patch with resources to 'comments/2' maps to update action" do
-   {:ok, conn} = simulate_request(Router, :patch, "comments/2")
+    {:ok, conn} = simulate_request(Router, :patch, "comments/2")
     assert conn.status == 200
     assert conn.resp_body == "update comments"
     assert conn.params["id"] == "2"
   end
 
   test "delete with resources to 'comments/2' maps to destroy action" do
-   {:ok, conn} = simulate_request(Router, :delete, "comments/2")
+    {:ok, conn} = simulate_request(Router, :delete, "comments/2")
     assert conn.status == 200
     assert conn.resp_body == "destroy comments"
     assert conn.params["id"] == "2"
   end
 
   test "unmatched route returns 404" do
-   {:ok, conn} = simulate_request(Router, :get, "route_does_not_exist")
+    {:ok, conn} = simulate_request(Router, :get, "route_does_not_exist")
     assert conn.status == 404
   end
 
