@@ -1,4 +1,5 @@
 defmodule Phoenix.Router.Context do
+  alias Phoenix.Router.Path
   import Inflex
 
   @moduledoc """
@@ -28,8 +29,11 @@ defmodule Phoenix.Router.Context do
   """
   def current_prefix(relative_path, module) do
     case get(module) do
-      [] -> relative_path
-      contexts -> (contexts |> Enum.reverse |> Path.join) <> "/#{relative_path}"
+      []       -> relative_path
+      contexts -> contexts
+                  |> Enum.reverse
+                  |> Kernel.++([relative_path])
+                  |> Path.join
     end
   end
 
