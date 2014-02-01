@@ -11,5 +11,7 @@ defmodule Router do
     resources "users", Users do
       resources "comments", Comments
     end
+
+    websocket "/echo", Eco
   end
 end
