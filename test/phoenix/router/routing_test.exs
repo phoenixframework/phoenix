@@ -4,6 +4,7 @@ defmodule Router.RoutingTest do
 
   defmodule UsersController do
     use Phoenix.Controller
+    def index(conn), do: text(conn, "users index")
     def show(conn), do: text(conn, "users show")
     def top(conn), do: text(conn, "users top")
     def crash(conn), do: raise 'crash!'
@@ -26,6 +27,7 @@ defmodule Router.RoutingTest do
 
   defmodule Router do
     use Phoenix.Router
+    get "/", UsersController, :index, as: :users
     get "users/:id", UsersController, :show, as: :user
     get "profiles/profile-:id", UsersController, :show
     get "users/top", UsersController, :top, as: :top
@@ -38,6 +40,11 @@ defmodule Router.RoutingTest do
     get "users/:user_id/comments/:id", CommentsController, :show
   end
 
+  test "get root path" do
+    {:ok, conn} = simulate_request(Router, :get, "/")
+    assert conn.status == 200
+    assert conn.resp_body == "users index"
+  end
 
   test "get with named param" do
     {:ok, conn} = simulate_request(Router, :get, "users/1")
