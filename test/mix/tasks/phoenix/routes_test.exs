@@ -8,6 +8,6 @@ defmodule Mix.Tasks.Phoenix.RoutesTest do
   end
 
   test "format routes" do
-    assert(Mix.Tasks.Phoenix.Routes.format_routes(TestRouter.routes) == "page  GET  /  Pages#index")
+    assert(Mix.Tasks.Phoenix.Routes.format_routes(TestRouter.__routes__) == "page  GET  /  Pages#index")
   end
 end

@@ -8,7 +8,7 @@ defmodule Mix.Tasks.Phoenix.Routes do
   Prints routes
   """
   def run([]) do
-    routes = project_module.Config.Router.routes
+    routes = project_module.Config.Router.__routes__
 
     Mix.shell.info format_routes(routes)
   end

@@ -49,7 +49,7 @@ defmodule Phoenix.Router.Mapper do
     end
 
     quote do
-      def routes do
+      def __routes__ do
         [unquote_splicing(Macro.escape(routes))]
       end
       unquote(routes_ast)
