@@ -9,6 +9,23 @@ defmodule Router.RoutingTest do
     def crash(conn), do: raise 'crash!'
   end
 
+  defmodule SessionsController do
+    use Phoenix.Controller
+
+    def new(conn), do: text(conn, "session login")
+    def create(conn), do: text(conn, "session created")
+    def destroy(conn), do: text(conn, "session destroyed")
+  end
+
+  defmodule PostsController do
+    use Phoenix.Controller
+    def show(conn), do: text(conn, "show posts")
+    def new(conn), do: text(conn, "new posts")
+    def index(conn), do: text(conn, "index posts")
+    def create(conn), do: text(conn, "create posts")
+    def update(conn), do: text(conn, "update posts")
+  end
+
   defmodule FilesController do
     use Phoenix.Controller
     def show(conn), do: text(conn, "#{conn.params["path"]}")
@@ -35,6 +52,9 @@ defmodule Router.RoutingTest do
     get "static/images/icons/*image", FilesController, :show
 
     resources "comments", CommentsController
+    resources "posts", PostsController, except: [ :destroy ]
+    resources "sessions", SessionsController, only: [ :new, :create, :destroy ]
+
     get "users/:user_id/comments/:id", CommentsController, :show
   end
 
@@ -141,6 +161,13 @@ defmodule Router.RoutingTest do
     {:ok, conn} = simulate_request(Router, :get, "static/images/icons/elixir/logos/main.png")
     assert conn.status == 200
     assert conn.params["image"] == "elixir/logos/main.png"
+  end
+
+  test "limit resource by passing :except option" do
+    {:ok, conn} = simulate_request(Router, :delete, "posts/2")
+     assert conn.status == 404
+    {:ok, conn} = simulate_request(Router, :get, "posts/new")
+     assert conn.status == 200
   end
 
   test "named route builds _path url helper" do
