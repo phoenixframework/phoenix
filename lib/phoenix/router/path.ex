@@ -35,7 +35,14 @@ defmodule Phoenix.Router.Path do
 
   Examples
     iex> Path.matched_arg_list_with_ast_bindings("users/:user_id/comments/:id")
-    ["users", {:user_id, [], Elixir}, "comments", {:id, [], Elixir}]
+    ["users", {:var!, [context: Phoenix.Router.Path, import: Kernel], [:user_id]},
+     "comments", {:var!, [context: Phoenix.Router.Path, import: Kernel], [:id]}]
+
+    iex> Path.matched_arg_list_with_ast_bindings("/pages")
+    ["pages"]
+
+    iex> Path.matched_arg_list_with_ast_bindings("/")
+    [""]
 
   Generated as:
       def match(:get, ["users", user_id, "comments", id])
@@ -43,6 +50,7 @@ defmodule Phoenix.Router.Path do
   """
   def matched_arg_list_with_ast_bindings(path) do
     path
+    |> ensure_no_leading_slash
     |> split
     |> Enum.chunk(2, 1, [nil])
     |> Enum.map(fn [part, next] -> part_to_ast_binding(part, next) end)
@@ -66,8 +74,9 @@ defmodule Phoenix.Router.Path do
   AST of associationed bindings for inclusion in defmatch route
 
   Examples
-    iex> Path.params_with_bindings("users/:user_id/comments/:id")
-    [user_id: {:user_id, [], Elixir}, id: {:id, [], Elixir}]
+    iex> Path.params_with_ast_bindings("users/:user_id/comments/:id")
+    [{"user_id", {:var!, [context: Phoenix.Router.Path, import: Kernel], [:user_id]}},
+     {"id", {:var!, [context: Phoenix.Router.Path, import: Kernel], [:id]}}]
 
   """
   def params_with_ast_bindings(path) do
@@ -90,7 +99,7 @@ defmodule Phoenix.Router.Path do
 
   Examples
     iex> Phoenix.Router.Path.param_names("users/:user_id/comments/:id")
-    [:user_id, :id]
+    ["user_id", "id"]
     iex> Phoenix.Router.Path.param_names("/pages/about")
     []
 
@@ -107,9 +116,9 @@ defmodule Phoenix.Router.Path do
 
   # Examples
     iex> Path.build("users/:user_id/comments/:id", user_id: 1, id: 123)
-    "users/1/comments/123"
+    "/users/1/comments/123"
 
-    iex Path.build("pages/about", [])
+    iex> Path.build("pages/about", [])
     "pages/about"
 
   """
@@ -140,5 +149,19 @@ defmodule Phoenix.Router.Path do
   """
   def ensure_leading_slash(path = <<"/" <> _rest>>), do: path
   def ensure_leading_slash(path), do: "/" <> path
+
+  @doc """
+  Removes leading forward slash from string path if present
+
+  # Examples
+    iex> Path.ensure_no_leading_slash("users/1")
+    "users/1"
+
+    iex> Path.ensure_no_leading_slash("/users/2")
+    "users/2"
+
+  """
+  def ensure_no_leading_slash(<<"/" <> rest>>), do: rest
+  def ensure_no_leading_slash(path), do: path
 end
 
