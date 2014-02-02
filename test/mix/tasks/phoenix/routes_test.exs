@@ -1,9 +1,13 @@
 defmodule Mix.Tasks.Phoenix.RoutesTest do
   use ExUnit.Case
 
-  test "formats routes as nice string" do
+  defmodule TestRouter do
+    use Phoenix.Router
 
-    assert(Mix.Tasks.Phoenix.Routes.format_routes(routes) == "   GET  /                             Elixir.Trash.Main#index")
+    get "/", Phoenix.Controllers.Pages, :index, as: :page
   end
 
+  test "format routes" do
+    assert(Mix.Tasks.Phoenix.Routes.format_routes(TestRouter.routes) == "page  GET  /  Pages#index")
+  end
 end

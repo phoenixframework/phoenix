@@ -2,12 +2,13 @@ defmodule Mix.Tasks.Phoenix.Routes do
   use Mix.Task
 
   @shortdoc "Prints routes"
+  @recursive true
 
   @doc """
   Prints routes
   """
   def run([]) do
-    routes = Router.routes
+    routes = project_module.Config.Router.routes
 
     Mix.shell.info format_routes(routes)
   end
