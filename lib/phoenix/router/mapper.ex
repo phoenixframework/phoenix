@@ -163,12 +163,6 @@ defmodule Phoenix.Router.Mapper do
   end
 
   defp extract_actions_from(options) do
-    option(options, :only) || delete_from(@actions, option(options, :except))
+    Keyword.get(options, :only) || (@actions -- Keyword.get(options, :except, []))
   end
-  defp option(list, key), do: Keyword.get(list, key)
-
-  defp delete_from(list, nil), do: list
-  defp delete_from(list, []), do: list
-  defp delete_from(list, [h|t]), do: List.delete(list, h) |> delete_from(t)
-
 end
