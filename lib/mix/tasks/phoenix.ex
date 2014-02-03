@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Phoenix do
   @shortdoc "List Phoenix tasks"
 
   @moduledoc """
-  List Phoenix tasks
+  List Phoenix tasks with help
   """
   def run([]) do
     help
@@ -18,8 +18,9 @@ defmodule Mix.Tasks.Phoenix do
     Mix.shell.info """
     Help:
 
-    mix phoenix.new  app_name destination_path  # Creates new Phoenix application
-    mix phoenix      --help                     # This help
+    mix phoenix.new     app_name destination_path  # Creates new Phoenix application
+    mix phoenix.routes  [MyApp.Router]             # Prints routes
+    mix phoenix --help                             # This help
     """
   end
 end

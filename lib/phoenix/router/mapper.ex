@@ -51,6 +51,7 @@ defmodule Phoenix.Router.Mapper do
     end
 
     quote do
+      def __routes__, do: Enum.reverse(@routes)
       unquote(routes_ast)
       def match(conn, method, path), do: Controller.not_found(conn, method, path)
     end
