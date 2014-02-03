@@ -35,6 +35,7 @@ defmodule Router.RoutingTest do
   defmodule CommentsController do
     use Phoenix.Controller
     def show(conn), do: text(conn, "show comments")
+    def edit(conn), do: text(conn, "edit comments")
     def index(conn), do: text(conn, "index comments")
     def new(conn), do: text(conn, "new comments")
     def create(conn), do: text(conn, "create comments")
@@ -113,6 +114,13 @@ defmodule Router.RoutingTest do
     assert conn.params["id"] == "123"
   end
 
+  test "get with resources to 'comments/123/edit' maps to edit action with named param" do
+    {:ok, conn} = simulate_request(Router, :get, "comments/123/edit")
+    assert conn.status == 200
+    assert conn.resp_body == "edit comments"
+    assert conn.params["id"] == "123"
+  end
+
   test "post with resources to 'comments' maps to create action" do
     {:ok, conn} = simulate_request(Router, :post, "comments")
     assert conn.status == 200
@@ -174,7 +182,22 @@ defmodule Router.RoutingTest do
     {:ok, conn} = simulate_request(Router, :delete, "posts/2")
      assert conn.status == 404
     {:ok, conn} = simulate_request(Router, :get, "posts/new")
-     assert conn.status == 200
+    assert conn.status == 200
+  end
+
+  test "limit resource by passing :only option" do
+    {:ok, conn} = simulate_request(Router, :put, "sessions/2")
+     assert conn.status == 404
+    {:ok, conn} = simulate_request(Router, :get, "sessions/")
+     assert conn.status == 404
+    {:ok, conn} = simulate_request(Router, :get, "sessions/1")
+     assert conn.status == 404
+    {:ok, conn} = simulate_request(Router, :get, "sessions/new")
+    assert conn.status == 200
+    {:ok, conn} = simulate_request(Router, :post, "sessions")
+    assert conn.status == 200
+    {:ok, conn} = simulate_request(Router, :delete, "sessions/1")
+    assert conn.status == 200
   end
 
   test "named route builds _path url helper" do

@@ -33,6 +33,24 @@ defmodule Router.NestedTest do
     def special(conn), do: text(conn, "special comments")
   end
 
+  defmodule SessionsController do
+    use Phoenix.Controller
+
+    def new(conn), do: text(conn, "session login")
+    def create(conn), do: text(conn, "session created")
+    def destroy(conn), do: text(conn, "session destroyed")
+  end
+
+  defmodule PostsController do
+    use Phoenix.Controller
+    def show(conn), do: text(conn, "show posts")
+    def new(conn), do: text(conn, "new posts")
+    def index(conn), do: text(conn, "index posts")
+    def create(conn), do: text(conn, "create posts")
+    def update(conn), do: text(conn, "update posts")
+  end
+
+
   defmodule Router do
     use Phoenix.Router
     resources "users", Controllers.Users do
@@ -40,6 +58,8 @@ defmodule Router.NestedTest do
         get "special", Controllers.Comments, :special
       end
       resources "files", Controllers.Files
+      resources "posts", PostsController, except: [ :destroy ]
+      resources "sessions", SessionsController, only: [ :new, :create, :destroy ]
     end
 
     resources "files", Controllers.Files do
@@ -113,6 +133,28 @@ defmodule Router.NestedTest do
     {:ok, conn} = simulate_request(Router, :get, "files")
     assert conn.status == 200
     assert conn.resp_body == "index files"
+  end
+
+  test "nested options limit resource by passing :except option" do
+    {:ok, conn} = simulate_request(Router, :delete, "users/1/posts/2")
+     assert conn.status == 404
+    {:ok, conn} = simulate_request(Router, :get, "users/1/posts/new")
+    assert conn.status == 200
+  end
+
+  test "nested options limit resource by passing :only option" do
+    {:ok, conn} = simulate_request(Router, :put, "users/1/sessions/2")
+     assert conn.status == 404
+    {:ok, conn} = simulate_request(Router, :get, "users/1/sessions/")
+     assert conn.status == 404
+    {:ok, conn} = simulate_request(Router, :get, "users/1/sessions/1")
+     assert conn.status == 404
+    {:ok, conn} = simulate_request(Router, :get, "users/1/sessions/new")
+    assert conn.status == 200
+    {:ok, conn} = simulate_request(Router, :post, "users/1/sessions")
+    assert conn.status == 200
+    {:ok, conn} = simulate_request(Router, :delete, "users/1/sessions/1")
+    assert conn.status == 200
   end
 end
 

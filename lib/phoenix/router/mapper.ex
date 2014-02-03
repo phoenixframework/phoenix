@@ -2,7 +2,7 @@ defmodule Phoenix.Router.Mapper do
   alias Phoenix.Router.Path
   alias Phoenix.Controller
 
-  @actions [ :index, :edit, :show, :new, :create, :update, :destroy]
+  @actions [:index, :edit, :show, :new, :create, :update, :destroy]
 
   @moduledoc """
   Adds Macros for Route match definitions. All routes are
@@ -120,41 +120,26 @@ defmodule Phoenix.Router.Mapper do
     end
   end
 
-  defmacro generate_routes_for(actions, prefix, controller, options) do
-    quote do
-      lc action inlist unquote(actions) do
-        case action do
-          :index ->
-            get "#{unquote(prefix)}", unquote(controller), :index, unquote(options)
-          :show -> 
-            get "#{unquote(prefix)}/:id", unquote(controller), :show, unquote(options)
-          :new -> 
-            get "#{unquote(prefix)}/new", unquote(controller), :new, unquote(options)
-          :edit ->
-            get "#{unquote(prefix)}/edit/:id", unquote(controller), :edit, unquote(options)
-          :create ->
-            post "#{unquote(prefix)}", unquote(controller), :create, unquote(options)
-          :update ->
-            put "#{unquote(prefix)}/:id", unquote(controller), :update, unquote(options)
-            patch "#{unquote(prefix)}/:id", unquote(controller), :update, unquote(options)
-          :destroy ->
-            delete "#{unquote(prefix)}/:id", unquote(controller), :destroy, unquote(options)
-        end
-      end
-    end
-  end
-
   defmacro resources(prefix, controller, options // []) do
     nested_route  = Keyword.get(options, :do)
-    actions       = extract_actions_from(options)
+    actions       = extract_actions_from_options(options)
     options       = Keyword.delete(options, :do)
 
     quote unquote: true, bind_quoted: [actions: actions,
                                        options: options,
                                        prefix: prefix,
                                        controller: controller] do
-
-      generate_routes_for(actions, prefix, controller, options)
+      Enum.each actions, fn
+        :index   -> get    "#{prefix}",          controller, :index, options
+        :show    -> get    "#{prefix}/:id",      controller, :show, options
+        :new     -> get    "#{prefix}/new",      controller, :new, options
+        :edit    -> get    "#{prefix}/:id/edit", controller, :edit, options
+        :create  -> post   "#{prefix}",          controller, :create, options
+        :destroy -> delete "#{prefix}/:id",      controller, :destroy, options
+        :update  ->
+          put   "#{prefix}/:id", controller, :update, options
+          patch "#{prefix}/:id", controller, :update, options
+      end
 
       Phoenix.Router.Context.push(prefix, __MODULE__)
       unquote(nested_route)
@@ -162,7 +147,8 @@ defmodule Phoenix.Router.Mapper do
     end
   end
 
-  defp extract_actions_from(options) do
-    Keyword.get(options, :only) || (@actions -- Keyword.get(options, :except, []))
+  defp extract_actions_from_options(opts) do
+    Keyword.get(opts, :only) || (@actions -- Keyword.get(opts, :except, []))
   end
 end
+
