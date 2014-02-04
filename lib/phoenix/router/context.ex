@@ -59,7 +59,7 @@ defmodule Phoenix.Router.Context do
     Context.current_alias(:index, "pages", __MODULE__)
     => "pages"
     Context.current_alias(:new, "pages", __MODULE__)
-    => "new_path"
+    => "new_page"
     ---------------------------------
 
 
