@@ -30,6 +30,33 @@ defmodule Phoenix.Router.Mapper do
           conn = conn.params(Dict.merge(conn.params(), [{"page", page}]))
           apply(PagesController, :show, [conn])
         end
+
+  The resources macro accepts flags to limit which resources are generated. Passing
+  a list of actions through either :only or :except will prevent building all the
+  routes
+
+  # Examples
+
+  defmodule Router do
+    use Phoenix.Router, port: 4000
+
+    resources "pages", PagesController, only: [ :show ]
+    resources "users", UsersController, except: [ :destroy ]
+  end
+
+  Generated Routes
+
+    page      GET   pages/:id       Pages#show
+
+    users     GET   users           Users#new
+    new_user  GET   users/new       Users#new
+    edit_user GET   users/:id/edit  Users#edit
+    user      GET   users/:id       Users#show
+
+              POST  users           Users#create
+              PUT   users/:id       Users#update
+              PATCH users/:id       Users#update
+
   """
 
   defmacro __using__(_options) do
