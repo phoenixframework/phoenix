@@ -1,4 +1,4 @@
-defmodule Router.NestedTest do
+defmodule Phoenix.Router.NestedTest do
   use ExUnit.Case
   use PlugHelper
 

@@ -1,5 +1,4 @@
 defmodule Phoenix.Dispatcher.Server do
-  alias Phoenix.Router
   use GenServer.Behaviour
 
   def init(request) do
@@ -13,7 +12,7 @@ defmodule Phoenix.Dispatcher.Server do
 
   def terminate(:normal, _request) do
   end
-  def terminate(reason, _request) do
+  def terminate(_reason, _request) do
   end
 end
 

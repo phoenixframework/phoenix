@@ -1,4 +1,4 @@
-defmodule Router.PathTest do
+defmodule Phoenix.Router.PathTest do
   use ExUnit.Case
   alias Phoenix.Router.Path
 

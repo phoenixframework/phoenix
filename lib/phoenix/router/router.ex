@@ -1,6 +1,5 @@
 defmodule Phoenix.Router do
   use GenServer.Behaviour
-  alias Phoenix.Request
   alias Phoenix.Dispatcher
   alias Phoenix.Controller
 

@@ -1,4 +1,4 @@
-defmodule ControllerTest do
+defmodule Phoenix.Router.ControllerTest do
   use ExUnit.Case
   use PlugHelper
 

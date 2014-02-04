@@ -1,6 +1,7 @@
 defmodule Phoenix.Router.Mapper do
   alias Phoenix.Router.Path
   alias Phoenix.Controller
+  alias Phoenix.Router.Context
 
   @actions [:index, :edit, :show, :new, :create, :update, :destroy]
 
@@ -57,7 +58,7 @@ defmodule Phoenix.Router.Mapper do
     end
   end
 
-  defmacro defmatch({http_method, path, controller, action, options}) do
+  defmacro defmatch({http_method, path, controller, action, _options}) do
     path_args = Path.matched_arg_list_with_ast_bindings(path)
     params_list_with_bindings = Path.params_with_ast_bindings(path)
 
@@ -70,15 +71,15 @@ defmodule Phoenix.Router.Mapper do
     end
   end
 
-  defmacro defroute_aliases({http_method, path, controller, action, options}) do
+  defmacro defroute_aliases({_http_method, path, _controller, _action, options}) do
     alias_name = options[:as]
-    quote do
-      if unquote(alias_name) do
-        def unquote(binary_to_atom "#{alias_name}_path")(params) do
+    if alias_name do
+      quote do
+        def unquote(binary_to_atom "#{alias_name}_path")(params // []) do
           Path.build(unquote(path), params)
         end
         # TODO: use config based domain for URL
-        def unquote(binary_to_atom "#{alias_name}_url")(params) do
+        def unquote(binary_to_atom "#{alias_name}_url")(params // []) do
           Path.build(unquote(path), params)
         end
       end
@@ -105,46 +106,46 @@ defmodule Phoenix.Router.Mapper do
     add_route(:delete, path, controller, action, options)
   end
 
-  defp add_route(verb, path, controller, action, options // []) do
+  defp add_route(verb, path, controller, action, options) do
     quote bind_quoted: [verb: verb,
                         path: path,
                         controller: controller,
                         action: action,
                         options: options] do
-      @routes {
-        verb,
-        Phoenix.Router.Context.current_prefix(path, __MODULE__),
-        controller,
-        action,
-        options
-      }
+
+      current_path = Context.current_path(path, __MODULE__)
+      @routes {verb, current_path, controller, action, options}
     end
   end
 
-  defmacro resources(prefix, controller, options // []) do
+  defmacro resources(resource, controller, options // []) do
     nested_route  = Keyword.get(options, :do)
     actions       = extract_actions_from_options(options)
     options       = Keyword.delete(options, :do)
 
     quote unquote: true, bind_quoted: [actions: actions,
                                        options: options,
-                                       prefix: prefix,
+                                       resource: resource,
                                        controller: controller] do
-      Enum.each actions, fn
-        :index   -> get    "#{prefix}",          controller, :index, options
-        :show    -> get    "#{prefix}/:id",      controller, :show, options
-        :new     -> get    "#{prefix}/new",      controller, :new, options
-        :edit    -> get    "#{prefix}/:id/edit", controller, :edit, options
-        :create  -> post   "#{prefix}",          controller, :create, options
-        :destroy -> delete "#{prefix}/:id",      controller, :destroy, options
-        :update  ->
-          put   "#{prefix}/:id", controller, :update, options
-          patch "#{prefix}/:id", controller, :update, options
+      Enum.each actions, fn action ->
+        current_alias = Context.current_alias(action, resource, __MODULE__)
+        opts = Dict.merge(options, as: current_alias)
+        case action do
+          :index   -> get    "#{resource}",          controller, :index, opts
+          :show    -> get    "#{resource}/:id",      controller, :show, opts
+          :new     -> get    "#{resource}/new",      controller, :new, opts
+          :edit    -> get    "#{resource}/:id/edit", controller, :edit, opts
+          :create  -> post   "#{resource}",          controller, :create, opts
+          :destroy -> delete "#{resource}/:id",      controller, :destroy, opts
+          :update  ->
+            put   "#{resource}/:id", controller, :update, options
+            patch "#{resource}/:id", controller, :update, options
+        end
       end
 
-      Phoenix.Router.Context.push(prefix, __MODULE__)
+      Context.push(resource, __MODULE__)
       unquote(nested_route)
-      Phoenix.Router.Context.pop(__MODULE__)
+      Context.pop(__MODULE__)
     end
   end
 

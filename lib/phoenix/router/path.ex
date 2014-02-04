@@ -119,10 +119,10 @@ defmodule Phoenix.Router.Path do
     "/users/1/comments/123"
 
     iex> Path.build("pages/about", [])
-    "pages/about"
+    "/pages/about"
 
   """
-  def build(path, []), do: path
+  def build(path, []), do: ensure_leading_slash(path)
   def build(path, param_values) do
     path
     |> param_names

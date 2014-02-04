@@ -5,7 +5,7 @@ defmodule PagesController do
     text conn, "Showing page #{conn.params["page"]}!"
   end
 
-  def show(conn, "page") do
+  def show(_conn, "page") do
   end
 end
 

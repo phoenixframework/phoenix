@@ -1,4 +1,4 @@
-defmodule Router.RoutingTest do
+defmodule Phoenix.Router.RoutingTest do
   use ExUnit.Case
   use PlugHelper
 
