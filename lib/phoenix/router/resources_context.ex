@@ -1,6 +1,9 @@
-defmodule Phoenix.Router.Context do
+defmodule Phoenix.Router.ResourcesContext do
   alias Phoenix.Router.Path
+  alias Phoenix.Router.Stack
   import Inflex
+
+  @stack_name :nested_resources
 
   @moduledoc """
   Helper functions for pushing and popping nested Route resources
@@ -87,57 +90,34 @@ defmodule Phoenix.Router.Context do
   end
   defp alias_for_action(_action, _resources, _rel_path), do: nil
 
-
   @doc """
-  Pushes the current resource onto resources stack for given module
-  and sets new state in module :nested_context attribute
+  Pushes the current resource onto resources stack
   """
   def push(resource, module) do
-    set([resource | get(module)], module)
+    Stack.push(resource, @stack_name, module)
   end
 
-
   @doc """
-  Pops the current resource off resources stack for given module
-  and sets new state in module :nested_context attribute
+  Pops the current resource off resources stack
   """
   def pop(module) do
-    case get(module) do
-      []         -> set([], module)
-      [_ | rest] -> set(rest, module)
-    end
+    Stack.pop(@stack_name, module)
   end
 
-
-  @doc """
-  Returns the current stack of resources stored in nested_context
-  attribute of module
-  """
-  def get(module) do
-    (Module.get_attribute module, :nested_context) || []
+  defp get(module) do
+    Stack.get(@stack_name, module)
   end
-
-
-  @doc """
-  Updates the current resources state of nested_context
-  attribute of module
-  """
-  def set(context, module) do
-    Module.put_attribute module, :nested_context, context
-  end
-
 
   @doc """
   Appends the singularized inflection of named resource parameter based
   on current route resource
 
   # Examples
-  iex> Context.resource_with_named_param("users")
+  iex> Phoenix.Router.Context.resource_with_named_param("users")
   "users/:user_id"
 
   """
-  def resource_with_named_param(resource) do
+  defp resource_with_named_param(resource) do
     Path.join([resource, ":#{singularize(resource)}_id"])
   end
 end
-

@@ -1,7 +1,8 @@
 defmodule Phoenix.Router.Mapper do
   alias Phoenix.Router.Path
   alias Phoenix.Controller
-  alias Phoenix.Router.Context
+  alias Phoenix.Router.ResourcesContext
+  alias Phoenix.Router.ScopeContext
 
   @actions [:index, :edit, :show, :new, :create, :update, :destroy]
 
@@ -30,7 +31,7 @@ defmodule Phoenix.Router.Mapper do
           conn = conn.params(Dict.merge(conn.params(), [{"page", page}]))
           apply(PagesController, :show, [conn])
         end
-  
+
   The resources macro accepts flags to limit which resources are generated. Passing
   a list of actions through either :only or :except will prevent building all the
   routes
@@ -139,8 +140,14 @@ defmodule Phoenix.Router.Mapper do
                         action: action,
                         options: options] do
 
-      current_path = Context.current_path(path, __MODULE__)
-      @routes {verb, current_path, controller, action, options}
+      current_path = ResourcesContext.current_path(path, __MODULE__)
+      {scoped_path, scoped_controller, scoped_helper} = ScopeContext.current_scope(current_path,
+                                                                                   controller,
+                                                                                   options[:as],
+                                                                                   __MODULE__)
+      opts = Dict.merge(options, as: scoped_helper)
+
+      @routes {verb, scoped_path, scoped_controller, action, opts}
     end
   end
 
@@ -154,7 +161,7 @@ defmodule Phoenix.Router.Mapper do
                                        resource: resource,
                                        controller: controller] do
       Enum.each actions, fn action ->
-        current_alias = Context.current_alias(action, resource, __MODULE__)
+        current_alias = ResourcesContext.current_alias(action, resource, __MODULE__)
         opts = Dict.merge(options, as: current_alias)
         case action do
           :index   -> get    "#{resource}",          controller, :index, opts
@@ -169,9 +176,25 @@ defmodule Phoenix.Router.Mapper do
         end
       end
 
-      Context.push(resource, __MODULE__)
+      ResourcesContext.push(resource, __MODULE__)
       unquote(nested_route)
-      Context.pop(__MODULE__)
+      ResourcesContext.pop(__MODULE__)
+    end
+  end
+
+  defmacro scope(params, options) do
+    nested_route     = Keyword.get(options, :do)
+    path             = Keyword.get(params, :path)
+    controller_alias = Keyword.get(params, :alias)
+    helper           = Keyword.get(params, :helper)
+
+    quote unquote: true, bind_quoted: [path: path,
+                                       controller_alias: controller_alias,
+                                       helper: helper] do
+
+      ScopeContext.push({path, controller_alias, helper}, __MODULE__)
+      unquote(nested_route)
+      ScopeContext.pop(__MODULE__)
     end
   end
 
