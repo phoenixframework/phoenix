@@ -5,11 +5,23 @@
 - First class websockets
 - Ring distribution
 
+## Install Phoenix Framework
+```console
+git clone https://github.com/phoenixframework/phoenix.git && \
+  cd phoenix && \
+  mix do deps.get, compile
+```
+
 ## Creating a new Phoenix application
+From within your phoenix installation:
 
 ```console
-mix phoenix.new your_app /path/to
+mix phoenix.new your_app /path/to/scaffold/your_app
 ```
+*Important* `/path/to/scaffold/your_app` should not be inside the phoenix repo.
+Instead, provide a relative or fully-qualified path outside of the phoenix
+repo.
+
 
 ## Usage
 
