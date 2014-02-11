@@ -36,6 +36,10 @@ defmodule Router do
   resources "users", Controllers.Users do
     resources "comments", Controllers.Comments
   end
+
+  scope path: "admin", alias: Controllers.Admin, helper: "admin" do
+    resources "users", Users
+  end
 end
 
 defmodule Controllers.Pages do
