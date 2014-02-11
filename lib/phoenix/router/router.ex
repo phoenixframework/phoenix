@@ -3,7 +3,7 @@ defmodule Phoenix.Router do
   alias Phoenix.Dispatcher
   alias Phoenix.Controller
 
-  defmacro __using__(plug_adapter_options // []) do
+  defmacro __using__(plug_adapter_options \\ []) do
     quote do
       use Phoenix.Router.Mapper
       import unquote(__MODULE__)
@@ -13,6 +13,10 @@ defmodule Phoenix.Router do
       def start do
         IO.puts "Running #{__MODULE__} with Cowboy with #{inspect @options}"
         Plug.Adapters.Cowboy.http __MODULE__, [], @options
+      end
+
+      def init([]) do
+        []
       end
 
       def call(conn, []) do
@@ -36,7 +40,7 @@ defmodule Phoenix.Router do
 
     {:ok, pid} = Dispatcher.Client.start(request)
     case Dispatcher.Client.dispatch(pid) do
-      {:ok, conn}      -> {:ok, conn}
+      {:ok, conn}      -> conn
       {:error, reason} -> Controller.error(conn, reason)
     end
   end
