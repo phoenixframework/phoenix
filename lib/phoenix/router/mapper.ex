@@ -101,34 +101,34 @@ defmodule Phoenix.Router.Mapper do
     alias_name = options[:as]
     if alias_name do
       quote do
-        def unquote(binary_to_atom "#{alias_name}_path")(params // []) do
+        def unquote(binary_to_atom "#{alias_name}_path")(params \\ []) do
           Path.build(unquote(path), params)
         end
         # TODO: use config based domain for URL
-        def unquote(binary_to_atom "#{alias_name}_url")(params // []) do
+        def unquote(binary_to_atom "#{alias_name}_url")(params \\ []) do
           Path.build(unquote(path), params)
         end
       end
     end
   end
 
-  defmacro get(path, controller, action, options // []) do
+  defmacro get(path, controller, action, options \\ []) do
     add_route(:get, path, controller, action, options)
   end
 
-  defmacro post(path, controller, action, options // []) do
+  defmacro post(path, controller, action, options \\ []) do
     add_route(:post, path, controller, action, options)
   end
 
-  defmacro put(path, controller, action, options // []) do
+  defmacro put(path, controller, action, options \\ []) do
     add_route(:put, path, controller, action, options)
   end
 
-  defmacro patch(path, controller, action, options // []) do
+  defmacro patch(path, controller, action, options \\ []) do
     add_route(:patch, path, controller, action, options)
   end
 
-  defmacro delete(path, controller, action, options // []) do
+  defmacro delete(path, controller, action, options \\ []) do
     add_route(:delete, path, controller, action, options)
   end
 
@@ -144,7 +144,7 @@ defmodule Phoenix.Router.Mapper do
     end
   end
 
-  defmacro resources(resource, controller, options // []) do
+  defmacro resources(resource, controller, options \\ []) do
     nested_route  = Keyword.get(options, :do)
     actions       = extract_actions_from_options(options)
     options       = Keyword.delete(options, :do)
