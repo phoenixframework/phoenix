@@ -24,11 +24,9 @@ defmodule Phoenix.Controller do
   end
 
   def send_response(conn, status, content_type, data) do
-    {:ok,
-      conn
-      |> put_resp_content_type(content_type)
-      |> send_resp(status, data)
-    }
+   conn
+   |> put_resp_content_type(content_type)
+   |> send_resp(status, data)
   end
 
   def redirect(conn, url), do: redirect(conn, 302, url)

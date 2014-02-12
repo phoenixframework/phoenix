@@ -7,7 +7,7 @@ defmodule Phoenix.Dispatcher.Client do
 
   def dispatch(pid) do
     try do
-      {:ok, conn} = :gen_server.call(pid, :dispatch)
+      conn = :gen_server.call(pid, :dispatch)
       {:ok, conn}
     catch
       _error, reason -> {:error, reason}

@@ -19,12 +19,12 @@ defmodule Phoenix.Router.ControllerTest do
   end
 
   test "redirect without status performs 302 redirect do url" do
-    {:ok, conn} = simulate_request(Router, :get, "users/not_found_302")
+    conn = simulate_request(Router, :get, "users/not_found_302")
     assert conn.status == 302
   end
 
   test "redirect without status performs 301 redirect do url" do
-    {:ok, conn} = simulate_request(Router, :get, "users/not_found_301")
+    conn = simulate_request(Router, :get, "users/not_found_301")
     assert conn.status == 301
   end
 end
