@@ -1,4 +1,4 @@
-defmodule Phoenix.Router.NestedTest do
+defmodule Phoenix.Router.ScopedRoutingTest do
   use ExUnit.Case
   use PlugHelper
 
@@ -196,7 +196,8 @@ defmodule Phoenix.Router.NestedTest do
   end
 
   test "double helper scope" do
-    assert RouterHelperScoping.api_v1_account_subscription_path(account_id: 12, id: 88) == "/api/v1/accounts/12/subscriptions/88"
+    assert RouterHelperScoping.api_v1_account_subscription_path(account_id: 12, id: 88) ==
+      "/api/v1/accounts/12/subscriptions/88"
   end
 
 end
