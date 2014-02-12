@@ -71,14 +71,14 @@ defmodule Phoenix.Router.NestedTest do
 
 
   test "toplevel route matches without nesting" do
-    {:ok, conn} = simulate_request(Router, :get, "users/1")
+    conn = simulate_request(Router, :get, "users/1")
     assert conn.status == 200
     assert conn.resp_body == "show users"
     assert conn.params["id"] == "1"
   end
 
   test "1-Level nested route matches with named param prefix on show" do
-    {:ok, conn} = simulate_request(Router, :get, "users/1/comments/2")
+    conn = simulate_request(Router, :get, "users/1/comments/2")
     assert conn.status == 200
     assert conn.resp_body == "show comments"
     assert conn.params["id"] == "2"
@@ -86,21 +86,21 @@ defmodule Phoenix.Router.NestedTest do
   end
 
   test "1-Level nested route matches with named param prefix on index" do
-    {:ok, conn} = simulate_request(Router, :get, "users/1/comments")
+    conn = simulate_request(Router, :get, "users/1/comments")
     assert conn.status == 200
     assert conn.resp_body == "index comments"
     assert conn.params["user_id"] == "1"
   end
 
   test "1-Level nested route matches with named param prefix on create" do
-    {:ok, conn} = simulate_request(Router, :post, "users/1/comments")
+    conn = simulate_request(Router, :post, "users/1/comments")
     assert conn.status == 200
     assert conn.resp_body == "create comments"
     assert conn.params["user_id"] == "1"
   end
 
   test "1-Level nested route matches with named param prefix on update" do
-    {:ok, conn} = simulate_request(Router, :put, "users/1/comments/123")
+    conn = simulate_request(Router, :put, "users/1/comments/123")
     assert conn.status == 200
     assert conn.resp_body == "update comments"
     assert conn.params["user_id"] == "1"
@@ -108,7 +108,7 @@ defmodule Phoenix.Router.NestedTest do
   end
 
   test "1-Level nested route matches with named param prefix on destroy" do
-    {:ok, conn} = simulate_request(Router, :delete, "users/1/comments/123")
+    conn = simulate_request(Router, :delete, "users/1/comments/123")
     assert conn.status == 200
     assert conn.resp_body == "destroy comments"
     assert conn.params["user_id"] == "1"
@@ -116,7 +116,7 @@ defmodule Phoenix.Router.NestedTest do
   end
 
   test "2-Level nested route with get matches" do
-    {:ok, conn} = simulate_request(Router, :get, "users/1/comments/123/special")
+    conn = simulate_request(Router, :get, "users/1/comments/123/special")
     assert conn.status == 200
     assert conn.resp_body == "special comments"
     assert conn.params["user_id"] == "1"
@@ -124,36 +124,36 @@ defmodule Phoenix.Router.NestedTest do
   end
 
   test "nested prefix context reverts back to previous scope after expansion" do
-    {:ok, conn} = simulate_request(Router, :get, "users/8/files/10")
+    conn = simulate_request(Router, :get, "users/8/files/10")
     assert conn.status == 200
     assert conn.resp_body == "show files"
     assert conn.params["user_id"] == "8"
     assert conn.params["id"] == "10"
 
-    {:ok, conn} = simulate_request(Router, :get, "files")
+    conn = simulate_request(Router, :get, "files")
     assert conn.status == 200
     assert conn.resp_body == "index files"
   end
 
   test "nested options limit resource by passing :except option" do
-    {:ok, conn} = simulate_request(Router, :delete, "users/1/posts/2")
+    conn = simulate_request(Router, :delete, "users/1/posts/2")
      assert conn.status == 404
-    {:ok, conn} = simulate_request(Router, :get, "users/1/posts/new")
+    conn = simulate_request(Router, :get, "users/1/posts/new")
     assert conn.status == 200
   end
 
   test "nested options limit resource by passing :only option" do
-    {:ok, conn} = simulate_request(Router, :put, "users/1/sessions/2")
+    conn = simulate_request(Router, :put, "users/1/sessions/2")
      assert conn.status == 404
-    {:ok, conn} = simulate_request(Router, :get, "users/1/sessions/")
+    conn = simulate_request(Router, :get, "users/1/sessions/")
      assert conn.status == 404
-    {:ok, conn} = simulate_request(Router, :get, "users/1/sessions/1")
+    conn = simulate_request(Router, :get, "users/1/sessions/1")
      assert conn.status == 404
-    {:ok, conn} = simulate_request(Router, :get, "users/1/sessions/new")
+    conn = simulate_request(Router, :get, "users/1/sessions/new")
     assert conn.status == 200
-    {:ok, conn} = simulate_request(Router, :post, "users/1/sessions")
+    conn = simulate_request(Router, :post, "users/1/sessions")
     assert conn.status == 200
-    {:ok, conn} = simulate_request(Router, :delete, "users/1/sessions/1")
+    conn = simulate_request(Router, :delete, "users/1/sessions/1")
     assert conn.status == 200
   end
 end
