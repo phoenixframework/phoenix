@@ -90,14 +90,13 @@ mix phoenix --help                             # This help
 API documentaion is available at [http://phoenixframework.github.io/docs/](http://phoenixframework.github.io/docs/)
 
 
-
-
-
-
 ## Development
 
 There are no guidelines yet. Do what feels natural. Submit a bug, join a discussion, open a pull request.
 
 ### Building documentation
 
-Clone [docs repository](https://github.com/phoenixframework/docs) into `../docs` relative to your `phoenix` directory. Run `mix run release_docs.exs` in `phoenix` directory, go to `../docs` directory, commit and push docs.
+1. Clone [docs repository](https://github.com/phoenixframework/docs) into `../docs`. Relative to your `phoenix` directory.
+2. Run `mix run release_docs.exs` in `phoenix` directory.
+3. Change directory to `../docs`.
+4. Commit and push docs.
