@@ -1,4 +1,4 @@
-defmodule PagesController do
+defmodule Phoenix.Examples.Controllers.Pages do
   use Phoenix.Controller
 
   def show(conn) do
@@ -9,7 +9,7 @@ defmodule PagesController do
   end
 end
 
-defmodule UsersController do
+defmodule Phoenix.Examples.Controllers.Users do
   use Phoenix.Controller
 
   def show(conn) do
@@ -31,7 +31,7 @@ defmodule UsersController do
   end
 end
 
-defmodule CommentsController do
+defmodule Phoenix.Examples.Controllers.Comments do
   use Phoenix.Controller
 
   def show(conn) do
@@ -49,7 +49,7 @@ defmodule CommentsController do
   end
 end
 
-defmodule FilesController do
+defmodule Phoenix.Examples.Controllers.Files do
   use Phoenix.Controller
 
   def show(conn) do

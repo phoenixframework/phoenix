@@ -1,11 +1,13 @@
 defmodule Router do
   use Phoenix.Router, port: 4000
 
-  get "pages/:page", Phoenix.Controllers.Pages, :show, as: :page
-  get "files/*path", Phoenix.Controllers.Files, :show, as: :file
-  get "profiles/user-:id", Phoenix.Controllers.Users, :show
+  scope alias: Phoenix.Examples.Controllers do
+    get "pages/:page", Pages, :show, as: :page
+    get "files/*path", Files, :show, as: :file
+    get "profiles/user-:id", Users, :show
 
-  resources "users", Phoenix.Controllers.Users do
-    resources "comments", Phoenix.Controllers.Comments
+    resources "users", Users do
+      resources "comments", Comments
+    end
   end
 end
