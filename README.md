@@ -1,29 +1,27 @@
 # Phoenix
-> Realtime Elixir Web Framework
 
-## Goals
-- First class websockets
-- Ring distribution
+Realtime Elixir Web Framework
 
-## Install Phoenix Framework
-```console
-git clone https://github.com/phoenixframework/phoenix.git && \
-  cd phoenix && \
-  mix do deps.get, compile
-```
+## Getting started
 
-## Creating a new Phoenix application
-From within your phoenix installation:
+1. Install Phoenix
 
-```console
-mix phoenix.new your_app /path/to/scaffold/your_app
-```
-*Important* `/path/to/scaffold/your_app` should not be inside the phoenix repo.
-Instead, provide a relative or fully-qualified path outside of the phoenix
-repo.
+        git clone https://github.com/phoenixframework/phoenix.git && cd phoenix && mix do deps.get, compile
 
 
-## Usage
+2. Create a new Phoenix application
+
+        mix phoenix.new your_app /path/to/scaffold/your_app
+
+    *Important*: Run task from your installation directory. Note that `/path/to/scaffold/your_app` should not be inside the phoenix repo. Instead, provide a relative or fully-qualified path outside of the phoenix repository.
+
+3. Change directory to `/path/to/scaffold/your_app`. Install dependencies and start web server
+        
+        mix deps.get
+        mix run -e 'Router.start' --no-halt mix.exs
+
+
+### Router example
 
 ```elixir
 defmodule Router do
@@ -41,7 +39,11 @@ defmodule Router do
     resources "users", Users
   end
 end
+```
 
+### Controller examples
+
+```elixir
 defmodule Controllers.Pages do
   use Phoenix.Controller
 
@@ -74,37 +76,27 @@ defmodule Controllers.Users do
 end
 ```
 
-## Mix Tasks
+### Mix Tasks
 
-### Print all routes
-
-```bash
-$ mix phoenix.routes Router
-
-             page  GET     pages/:page                       Elixir.Controllers.Pages#show
-                   GET     files/*path                       Elixir.Controllers.Files#show
-                   GET     profiles/user-:id                 Elixir.Controllers.Users#show
-            users  GET     users                             Elixir.Controllers.Users#index
-        edit_user  GET     users/:id/edit                    Elixir.Controllers.Users#edit
-             user  GET     users/:id                         Elixir.Controllers.Users#show
-         new_user  GET     users/new                         Elixir.Controllers.Users#new
-                   POST    users                             Elixir.Controllers.Users#create
-                   PUT     users/:id                         Elixir.Controllers.Users#update
-                   PATCH   users/:id                         Elixir.Controllers.Users#update
-                   DELETE  users/:id                         Elixir.Controllers.Users#destroy
-    user_comments  GET     users/:user_id/comments           Elixir.Controllers.Comments#index
-edit_user_comment  GET     users/:user_id/comments/:id/edit  Elixir.Controllers.Comments#edit
-     user_comment  GET     users/:user_id/comments/:id       Elixir.Controllers.Comments#show
- new_user_comment  GET     users/:user_id/comments/new       Elixir.Controllers.Comments#new
-                   POST    users/:user_id/comments           Elixir.Controllers.Comments#create
-                   PUT     users/:user_id/comments/:id       Elixir.Controllers.Comments#update
-                   PATCH   users/:user_id/comments/:id       Elixir.Controllers.Comments#update
-                   DELETE  users/:user_id/comments/:id       Elixir.Controllers.Comments#destroy
+```console
+mix phoenix                                    # List Phoenix tasks
+mix phoenix.new     app_name destination_path  # Creates new Phoenix application
+mix phoenix.routes  [MyApp.Router]             # Prints routes
+mix phoenix --help                             # This help
 ```
 
-## Starting the application
+## Documentation
 
-```bash
-$ mix run -e 'Router.start' --no-halt mix.exs
-```
+API documentaion is available at [http://phoenixframework.github.io/docs/](http://phoenixframework.github.io/docs/)
 
+
+## Development
+
+There are no guidelines yet. Do what feels natural. Submit a bug, join a discussion, open a pull request.
+
+### Building documentation
+
+1. Clone [docs repository](https://github.com/phoenixframework/docs) into `../docs`. Relative to your `phoenix` directory.
+2. Run `mix run release_docs.exs` in `phoenix` directory.
+3. Change directory to `../docs`.
+4. Commit and push docs.
