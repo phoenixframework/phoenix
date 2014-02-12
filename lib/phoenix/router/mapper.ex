@@ -152,9 +152,9 @@ defmodule Phoenix.Router.Mapper do
   end
 
   defmacro resources(resource, controller, options // []) do
-    nested_route  = Keyword.get(options, :do)
-    actions       = extract_actions_from_options(options)
-    options       = Keyword.delete(options, :do)
+    nested_context = Keyword.get(options, :do)
+    actions        = extract_actions_from_options(options)
+    options        = Keyword.delete(options, :do)
 
     quote unquote: true, bind_quoted: [actions: actions,
                                        options: options,
@@ -177,13 +177,12 @@ defmodule Phoenix.Router.Mapper do
       end
 
       ResourcesContext.push(resource, __MODULE__)
-      unquote(nested_route)
+      unquote(nested_context)
       ResourcesContext.pop(__MODULE__)
     end
   end
 
-  defmacro scope(params, options) do
-    nested_route     = Keyword.get(options, :do)
+  defmacro scope(params, do: nested_context) do
     path             = Keyword.get(params, :path)
     controller_alias = Keyword.get(params, :alias)
     helper           = Keyword.get(params, :helper)
@@ -193,7 +192,7 @@ defmodule Phoenix.Router.Mapper do
                                        helper: helper] do
 
       ScopeContext.push({path, controller_alias, helper}, __MODULE__)
-      unquote(nested_route)
+      unquote(nested_context)
       ScopeContext.pop(__MODULE__)
     end
   end

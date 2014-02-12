@@ -121,3 +121,4 @@ defmodule Phoenix.Router.ResourcesContext do
     Path.join([resource, ":#{singularize(resource)}_id"])
   end
 end
+

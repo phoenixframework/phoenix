@@ -1,7 +1,8 @@
 defmodule Phoenix.Router.Stack do
 
   @moduledoc """
-  Stack impementation used to support nasted expension for nasted resources and scopes. It is stored in module attribute given by the stack name.
+  Stack impementation used to support nasted expension for nasted resources and scopes.
+  It is stored in module attribute given by the stack name.
   """
 
   @doc """
@@ -35,3 +36,4 @@ defmodule Phoenix.Router.Stack do
     Module.put_attribute module, stack_name, stack_content
   end
 end
+
