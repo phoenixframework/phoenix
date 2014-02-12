@@ -22,6 +22,9 @@ mix phoenix.new your_app /path/to/scaffold/your_app
 Instead, provide a relative or fully-qualified path outside of the phoenix
 repo.
 
+## Documentation
+
+API documentaion is available at [http://phoenixframework.github.io/docs/](http://phoenixframework.github.io/docs/)
 
 ## Usage
 
@@ -108,3 +111,10 @@ edit_user_comment  GET     users/:user_id/comments/:id/edit  Elixir.Controllers.
 $ mix run -e 'Router.start' --no-halt mix.exs
 ```
 
+## Development
+
+There are no guidelines yet. Do what feels natural. Submit a bug, join a discussion, open a pull request.
+
+### Building documentation
+
+Clone [docs repository](https://github.com/phoenixframework/docs) into `../docs` relative to your `phoenix` directory. Run `mix run release_docs.exs` in `phoenix` directory, go to `../docs` directory, commit and push docs.
