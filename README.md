@@ -1,6 +1,6 @@
 # Phoenix
 
-Realtime Elixir Web Framework
+> Elixir Web Framework targeting full-featured, fault tolerant applications with realtime functionality.
 
 ## Getting started
 
@@ -100,3 +100,29 @@ There are no guidelines yet. Do what feels natural. Submit a bug, join a discuss
 2. Run `mix run release_docs.exs` in `phoenix` directory.
 3. Change directory to `../docs`.
 4. Commit and push docs.
+
+
+## Feature Roadmap
+- Robust Routing DSL
+  - [x] GET/POST/PUT/PATCH/DELETE macros
+  - [x] Named route helpers
+  - [x] resource routing for RESTful endpoints
+  - [x] Scoped definitions
+  - [ ] Member/Collection resource  routes
+- Middleware
+  - [x] Plug Based Connection handling
+  - [x] Code Reloading
+  - [ ] Enviroment Based logging with log levels
+  - [ ] Static File serving
+- Controllers
+  - [x] html/json/text helpers
+  - [x] redirects
+  - [x] Error page handling
+  - [ ] Error page handling per env
+- Views
+  - [ ] Precompiled View handling
+- Realtime
+  - [ ] Raw websocket handler
+  - [ ] Websocket multiplexing/channels
+  - [ ] Websocket routing DSL
+  - [ ] Websocket Controllers
