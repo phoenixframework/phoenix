@@ -87,7 +87,7 @@ mix phoenix --help                             # This help
 
 ## Documentation
 
-API documentaion is available at [http://docs.phoenixframework.org/](http://docs.phoenixframework.org/)
+API documentaion is available at [http://api.phoenixframework.org/](http://api.phoenixframework.org/)
 
 
 ## Development
