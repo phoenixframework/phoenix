@@ -1,6 +1,6 @@
 # Phoenix
 
-> Elixir Web Framework targeting full-featured, fault tolerant applications with realtime functionality.
+> Elixir Web Framework targeting full-featured, fault tolerant applications with realtime functionality
 
 ## Getting started
 
@@ -109,6 +109,8 @@ There are no guidelines yet. Do what feels natural. Submit a bug, join a discuss
   - [x] resource routing for RESTful endpoints
   - [x] Scoped definitions
   - [ ] Member/Collection resource  routes
+- Configuration
+  - [ ] Environment based configuration with ExConf
 - Middleware
   - [x] Plug Based Connection handling
   - [x] Code Reloading
