@@ -7,7 +7,7 @@ defmodule Phoenix.Router.RoutingTest do
     def index(conn), do: text(conn, "users index")
     def show(conn), do: text(conn, "users show")
     def top(conn), do: text(conn, "users top")
-    def crash(conn), do: raise 'crash!'
+    def crash(_conn), do: raise 'crash!'
   end
 
   defmodule SessionsController do
@@ -156,7 +156,7 @@ defmodule Phoenix.Router.RoutingTest do
   test "dispatch crash returns 500" do
     conn = simulate_request(Router, :get, "route_that_crashes")
     assert conn.status == 500
-    assert conn.resp_body =~ %r/Internal Server Error/
+    assert conn.resp_body =~ ~r/Internal Server Error/
   end
 
   test "splat arg with preceeding named parameter to files/:user_name/*path" do
