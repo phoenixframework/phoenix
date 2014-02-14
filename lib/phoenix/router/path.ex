@@ -1,6 +1,6 @@
 defmodule Phoenix.Router.Path do
 
-  def split(path), do: String.split(path, %r/\/|\-/)
+  def split(path), do: String.split(path, ~r/\/|\-/)
 
   def join(split_path), do: Enum.join(split_path, "/")
 
@@ -105,7 +105,7 @@ defmodule Phoenix.Router.Path do
 
   """
   def param_names(path) do
-    Regex.scan(%r/[\:\*]{1}\w+/, path)
+    Regex.scan(~r/[\:\*]{1}\w+/, path)
     |> List.flatten
     |> Enum.map(&String.strip(&1, ?:))
     |> Enum.map(&String.strip(&1, ?*))
@@ -132,7 +132,7 @@ defmodule Phoenix.Router.Path do
   defp replace_param_names_with_values(param_names, param_values, path) do
     Enum.reduce param_names, path, fn param_name, path_acc ->
       value = param_values[binary_to_atom(param_name)] |> to_string
-      String.replace(path_acc, %r/[\:\*]{1}#{param_name}/, value)
+      String.replace(path_acc, ~r/[\:\*]{1}#{param_name}/, value)
     end
   end
 
