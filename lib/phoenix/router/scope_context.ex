@@ -51,7 +51,9 @@ defmodule Phoenix.Router.ScopeContext do
   end
 
   defp get_paths(module) do
-    Enum.map get(module), fn {path, _, _} -> path end
+    get(module)
+    |> Enum.map(fn {path, _, _} -> path end)
+    |> Enum.filter(&(&1))
   end
 
   defp get_controllers(module) do
