@@ -117,7 +117,7 @@ defmodule Phoenix.Router.ResourcesContext do
   "users/:user_id"
 
   """
-  defp resource_with_named_param(resource) do
+  def resource_with_named_param(resource) do
     Path.join([resource, ":#{singularize(resource)}_id"])
   end
 end

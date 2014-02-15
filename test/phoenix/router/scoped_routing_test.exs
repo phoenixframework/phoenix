@@ -11,7 +11,7 @@ defmodule Phoenix.Router.ScopedRoutingTest do
 
   defmodule Controllers.Api.V1.Users do
     use Phoenix.Controller
-    def show(conn), do: text(conn, "api users show")
+    def show(conn), do: text(conn, "api v1 users show")
   end
 
   defmodule Controllers.Events do
@@ -108,11 +108,6 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   defmodule Controllers.Admin.Users do
     use Phoenix.Controller
     def show(conn), do: text(conn, "admin users show")
-  end
-
-  defmodule Controllers.Api.V1.Users do
-    use Phoenix.Controller
-    def show(conn), do: text(conn, "api v1 users show")
   end
 
   defmodule Controllers.Api.V1.Accounts do
