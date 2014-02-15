@@ -2,7 +2,8 @@ defmodule Phoenix.Router.Path do
 
   def split(path), do: String.split(path, ~r/\/|\-/)
 
-  def join(split_path), do: Enum.join(split_path, "/")
+  def join([]), do: ""
+  def join(split_path), do: Elixir.Path.join(split_path)
 
   def split_from_conn(conn) do
     conn.path_info |> join |> split

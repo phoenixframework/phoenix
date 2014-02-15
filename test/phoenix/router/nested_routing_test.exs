@@ -55,7 +55,7 @@ defmodule Phoenix.Router.NestedTest do
     use Phoenix.Router
     resources "users", Controllers.Users do
       resources "comments", Controllers.Comments do
-        get "special", Controllers.Comments, :special
+        get "/special", Controllers.Comments, :special
       end
       resources "files", Controllers.Files
       resources "posts", PostsController, except: [ :destroy ]
@@ -64,7 +64,7 @@ defmodule Phoenix.Router.NestedTest do
 
     resources "files", Controllers.Files do
       resources "comments", Controllers.Comments do
-        get "avatar", Controllers.Users, :avatar
+        get "/avatar", Controllers.Users, :avatar
       end
     end
   end

@@ -46,19 +46,19 @@ defmodule Phoenix.Router.RoutingTest do
   defmodule Router do
     use Phoenix.Router
     get "/", UsersController, :index, as: :users
-    get "users/:id", UsersController, :show, as: :user
-    get "profiles/profile-:id", UsersController, :show
-    get "users/top", UsersController, :top, as: :top
-    get "route_that_crashes", UsersController, :crash
-    get "files/:user_name/*path", FilesController, :show
-    get "backups/*path", FilesController, :show
-    get "static/images/icons/*image", FilesController, :show
+    get "/users/:id", UsersController, :show, as: :user
+    get "/profiles/profile-:id", UsersController, :show
+    get "/users/top", UsersController, :top, as: :top
+    get "/route_that_crashes", UsersController, :crash
+    get "/files/:user_name/*path", FilesController, :show
+    get "/backups/*path", FilesController, :show
+    get "/static/images/icons/*image", FilesController, :show
 
     resources "comments", CommentsController
     resources "posts", PostsController, except: [ :destroy ]
     resources "sessions", SessionsController, only: [ :new, :create, :destroy ]
 
-    get "users/:user_id/comments/:id", CommentsController, :show
+    get "/users/:user_id/comments/:id", CommentsController, :show
   end
 
   test "get root path" do
