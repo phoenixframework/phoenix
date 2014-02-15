@@ -4,6 +4,7 @@ defmodule Phoenix.Router.Mapper do
   alias Phoenix.Router.ResourcesContext
   alias Phoenix.Router.ScopeContext
   alias Phoenix.Router.Errors
+  alias Phoenix.Router.Mapper
 
   @actions [:index, :edit, :show, :new, :create, :update, :destroy]
 
@@ -153,18 +154,27 @@ defmodule Phoenix.Router.Mapper do
     end
   end
 
-  defmacro resources(resource, controller, options \\ []) do
-    nested_context = Keyword.get(options, :do)
-    actions        = extract_actions_from_options(options)
-    options        = Keyword.delete(options, :do)
-
-    quote unquote: true, bind_quoted: [actions: actions,
-                                       options: options,
+  defmacro resources(resource, controller, opts, do: nested_context) do
+    add_resources resource, controller, opts, do: nested_context
+  end
+  defmacro resources(resource, controller, do: nested_context) do
+    add_resources resource, controller, [], do: nested_context
+  end
+  defmacro resources(resource, controller, opts) do
+    add_resources resource, controller, opts, do: nil
+  end
+  defmacro resources(resource, controller) do
+    add_resources resource, controller, [], do: nil
+  end
+  defp add_resources(resource, controller, options, do: nested_context) do
+    quote unquote: true, bind_quoted: [options: options,
                                        resource: resource,
                                        controller: controller] do
+
+      actions = Mapper.extract_actions_from_options(options)
       Enum.each actions, fn action ->
         current_alias = ResourcesContext.current_alias(action, resource, __MODULE__)
-        opts = Dict.merge(options, as: current_alias)
+        opts = [as: current_alias]
         case action do
           :index   -> get    "/#{resource}",          controller, :index, opts
           :show    -> get    "/#{resource}/:id",      controller, :show, opts
@@ -173,8 +183,8 @@ defmodule Phoenix.Router.Mapper do
           :create  -> post   "/#{resource}",          controller, :create, opts
           :destroy -> delete "/#{resource}/:id",      controller, :destroy, opts
           :update  ->
-            put   "/#{resource}/:id", controller, :update, options
-            patch "/#{resource}/:id", controller, :update, options
+            put   "/#{resource}/:id", controller, :update, []
+            patch "/#{resource}/:id", controller, :update, []
         end
       end
 
@@ -199,7 +209,7 @@ defmodule Phoenix.Router.Mapper do
     end
   end
 
-  defp extract_actions_from_options(opts) do
+  def extract_actions_from_options(opts) do
     Keyword.get(opts, :only) || (@actions -- Keyword.get(opts, :except, []))
   end
 end

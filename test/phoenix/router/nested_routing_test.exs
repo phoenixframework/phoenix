@@ -67,6 +67,10 @@ defmodule Phoenix.Router.NestedTest do
         get "/avatar", Controllers.Users, :avatar
       end
     end
+
+    resources "scoped_files", Controllers.Files, only: [:index] do
+      resources "comments", Controllers.Comments, except: [:destroy]
+    end
   end
 
 
@@ -155,6 +159,40 @@ defmodule Phoenix.Router.NestedTest do
     assert conn.status == 200
     conn = simulate_request(Router, :delete, "users/1/sessions/1")
     assert conn.status == 200
+  end
+
+  test "resource limiting options should work for nested resources" do
+    conn = simulate_request(Router, :get, "scoped_files")
+    assert conn.status == 200
+    assert conn.resp_body == "index files"
+
+    conn = simulate_request(Router, :get, "scoped_files/1")
+    assert conn.status == 404
+    conn = simulate_request(Router, :put, "scoped_files/1")
+    assert conn.status == 404
+    conn = simulate_request(Router, :post, "scoped_files")
+    assert conn.status == 404
+    conn = simulate_request(Router, :delete, "scoped_files/1")
+    assert conn.status == 404
+
+    conn = simulate_request(Router, :get, "scoped_files/1/comments")
+    assert conn.status == 200
+    assert conn.resp_body == "index comments"
+
+    conn = simulate_request(Router, :get, "scoped_files/1/comments/1")
+    assert conn.status == 200
+    assert conn.resp_body == "show comments"
+
+    conn = simulate_request(Router, :put, "scoped_files/1/comments/1")
+    assert conn.status == 200
+    assert conn.resp_body == "update comments"
+
+    conn = simulate_request(Router, :post, "scoped_files/1/comments")
+    assert conn.status == 200
+    assert conn.resp_body == "create comments"
+
+    conn = simulate_request(Router, :delete, "scoped_files/1")
+    assert conn.status == 404
   end
 end
 
