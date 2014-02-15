@@ -33,12 +33,12 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   defmodule Router do
     use Phoenix.Router
     scope path: "admin" do
-      get "users/:id", Controllers.Users, :show, as: :user
+      get "/users/:id", Controllers.Users, :show, as: :user
     end
 
     scope path: "api" do
       scope path: "v1" do
-        get "users/:id", Controllers.Api.V1.Users, :show, as: :api_user
+        get "/users/:id", Controllers.Api.V1.Users, :show, as: :api_user
       end
     end
 
@@ -129,12 +129,12 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     use Phoenix.Router
 
     scope path: "admin", alias: Controllers.Admin do
-      get "users/:id", Users, :show, as: :user
+      get "/users/:id", Users, :show, as: :user
     end
 
     scope path: "api", alias: Controllers.Api do
       scope path: "v1", alias: V1 do
-        get "users/:id", Users, :show, as: :api_v2_user
+        get "/users/:id", Users, :show, as: :api_v2_user
         resources "accounts", Accounts do
           resources "subscriptions", Subscriptions
         end
@@ -178,12 +178,12 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     use Phoenix.Router
 
     scope path: "admin", alias: Controllers.Admin , helper: "admin" do
-      get "users/:id", Users, :show, as: :user
+      get "/users/:id", Users, :show, as: :user
     end
 
     scope path: "api", alias: Controllers.Api, helper: "api" do
       scope path: "v1", alias: V1, helper: "v1" do
-        get "users/:id", Users, :show, as: :api_v2_user
+        get "/users/:id", Users, :show, as: :api_v2_user
         resources "accounts", Accounts do
           resources "subscriptions", Subscriptions
         end

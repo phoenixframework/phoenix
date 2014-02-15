@@ -3,6 +3,7 @@ defmodule Phoenix.Router.Mapper do
   alias Phoenix.Controller
   alias Phoenix.Router.ResourcesContext
   alias Phoenix.Router.ScopeContext
+  alias Phoenix.Router.Errors
 
   @actions [:index, :edit, :show, :new, :create, :update, :destroy]
 
@@ -140,6 +141,7 @@ defmodule Phoenix.Router.Mapper do
                         action: action,
                         options: options] do
 
+      Errors.ensure_valid_path!(path)
       current_path = ResourcesContext.current_path(path, __MODULE__)
       {scoped_path, scoped_controller, scoped_helper} = ScopeContext.current_scope(current_path,
                                                                                    controller,
@@ -164,15 +166,15 @@ defmodule Phoenix.Router.Mapper do
         current_alias = ResourcesContext.current_alias(action, resource, __MODULE__)
         opts = Dict.merge(options, as: current_alias)
         case action do
-          :index   -> get    "#{resource}",          controller, :index, opts
-          :show    -> get    "#{resource}/:id",      controller, :show, opts
-          :new     -> get    "#{resource}/new",      controller, :new, opts
-          :edit    -> get    "#{resource}/:id/edit", controller, :edit, opts
-          :create  -> post   "#{resource}",          controller, :create, opts
-          :destroy -> delete "#{resource}/:id",      controller, :destroy, opts
+          :index   -> get    "/#{resource}",          controller, :index, opts
+          :show    -> get    "/#{resource}/:id",      controller, :show, opts
+          :new     -> get    "/#{resource}/new",      controller, :new, opts
+          :edit    -> get    "/#{resource}/:id/edit", controller, :edit, opts
+          :create  -> post   "/#{resource}",          controller, :create, opts
+          :destroy -> delete "/#{resource}/:id",      controller, :destroy, opts
           :update  ->
-            put   "#{resource}/:id", controller, :update, options
-            patch "#{resource}/:id", controller, :update, options
+            put   "/#{resource}/:id", controller, :update, options
+            patch "/#{resource}/:id", controller, :update, options
         end
       end
 
@@ -201,4 +203,3 @@ defmodule Phoenix.Router.Mapper do
     Keyword.get(opts, :only) || (@actions -- Keyword.get(opts, :except, []))
   end
 end
-

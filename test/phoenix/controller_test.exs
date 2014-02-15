@@ -14,8 +14,8 @@ defmodule Phoenix.Router.ControllerTest do
 
   defmodule Router do
     use Phoenix.Router
-    get "users/not_found_301", RedirController, :redir_301
-    get "users/not_found_302", RedirController, :redir_302
+    get "/users/not_found_301", RedirController, :redir_301
+    get "/users/not_found_302", RedirController, :redir_302
   end
 
   test "redirect without status performs 302 redirect do url" do

@@ -4,8 +4,8 @@ defmodule Phoenix.Router.NamedRoutingTest do
 
   defmodule Router do
     use Phoenix.Router
-    get "users/:id", UsersController, :show, as: :profile
-    get "users/top", UsersController, :top, as: :top
+    get "/users/:id", UsersController, :show, as: :profile
+    get "/users/top", UsersController, :top, as: :top
 
     resources "users", UsersController do
       resources "comments", CommentsController do

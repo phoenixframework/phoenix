@@ -16,7 +16,7 @@
     *Important*: Run task from your installation directory. Note that `/path/to/scaffold/your_app` should not be inside the phoenix repo. Instead, provide a relative or fully-qualified path outside of the phoenix repository.
 
 3. Change directory to `/path/to/scaffold/your_app`. Install dependencies and start web server
-        
+
         mix deps.get
         mix run -e 'Router.start' --no-halt mix.exs
 
@@ -27,9 +27,9 @@
 defmodule Router do
   use Phoenix.Router, port: 4000
 
-  get "pages/:page", Controllers.Pages, :show, as: :page
-  get "files/*path", Controllers.Files, :show
-  get "profiles/user-:id", Controllers.Users, :show
+  get "/pages/:page", Controllers.Pages, :show, as: :page
+  get "/files/*path", Controllers.Files, :show
+  get "/profiles/user-:id", Controllers.Users, :show
 
   resources "users", Controllers.Users do
     resources "comments", Controllers.Comments
