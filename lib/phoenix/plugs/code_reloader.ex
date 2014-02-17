@@ -8,6 +8,9 @@ defmodule Phoenix.Plugs.CodeReloader do
     conn
   end
 
-  defp reload!(:dev), do: Mix.Tasks.Compile.Elixir.run([])
+  defp reload!(:dev) do
+    Mix.Task.reenable "compile.elixir"
+    Mix.Task.run "compile.elixir"
+  end
   defp reload!(_), do: :noop
 end

@@ -2,5 +2,5 @@
   "cowlib": {:git, "git://github.com/extend/cowlib.git", "63298e8e160031a70efff86a1acde7e7db1fcda6", [ref: "0.4.0"]},
   "ex_doc": {:git, "git://github.com/elixir-lang/ex_doc.git", "ee01fe3efd7b8af1dbaa00946bad5817d57b5875", []},
   "inflex": {:git, "git://github.com/nurugger07/inflex.git", "b1c8b1d2647867b9171dbf3e6a3a4ab77ad0617e", []},
-  "plug": {:git, "git://github.com/elixir-lang/plug.git", "be264547dc45d1fce756794ae39df01ed2f53677", []},
+  "plug": {:git, "git://github.com/elixir-lang/plug.git", "9967d4de39c107237a3eb30c3939588766499637", [tag: "v0.3.0"]},
   "ranch": {:git, "git://github.com/extend/ranch.git", "5df1f222f94e08abdcab7084f5e13027143cc222", [ref: "0.9.0"]} ]
