@@ -1,6 +1,8 @@
 defmodule Router do
   use Phoenix.Router, port: 4000
 
+  plug Plug.Static, at: "/static", from: :phoenix
+
   scope alias: Phoenix.Examples.Controllers do
     get "/pages/:page", Pages, :show, as: :page
     get "/files/*path", Files, :show, as: :file
