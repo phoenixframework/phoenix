@@ -125,7 +125,7 @@ There are no guidelines yet. Do what feels natural. Submit a bug, join a discuss
   - [x] Plug Based Connection handling
   - [x] Code Reloading
   - [ ] Enviroment Based logging with log levels
-  - [ ] Static File serving
+  - [x] Static File serving
 - Controllers
   - [x] html/json/text helpers
   - [x] redirects
