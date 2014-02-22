@@ -59,6 +59,10 @@ defmodule Phoenix.Router.ScopedRoutingTest do
         end
       end
     end
+
+    scope path: "staff", alias: Staff, helper: "staff" do
+      resources "products", Products
+    end
   end
 
   test "single scope for single routes" do
@@ -195,4 +199,8 @@ defmodule Phoenix.Router.ScopedRoutingTest do
       "/api/v1/accounts/12/subscriptions/88"
   end
 
+  test "resources actions should prefix scoped helper path" do
+    assert Router.edit_staff_product_path(id: 1) == "/staff/products/1/edit"
+    assert Router.new_staff_product_path == "/staff/products/new"
+  end
 end
