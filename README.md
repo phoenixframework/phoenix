@@ -24,8 +24,10 @@
 ### Router example
 
 ```elixir
-defmodule Router do
+defmodule YourApp.Router do
   use Phoenix.Router, port: 4000
+  
+  plug Plug.Static, at: "/static", from: :your_app
 
   get "/pages/:page", Controllers.Pages, :show, as: :page
   get "/files/*path", Controllers.Files, :show
@@ -85,6 +87,14 @@ mix phoenix.routes  [MyApp.Router]             # Prints routes
 mix phoenix --help                             # This help
 ```
 
+### Static Assets
+Static asset support can be added by including `Plug.Static` in your router. Static assets will be served
+from the `priv/static/` directory of your application.
+
+```elixir
+  plug Plug.Static, at: "/static", from: :your_app
+```
+
 ## Documentation
 
 API documentaion is available at [http://api.phoenixframework.org/](http://api.phoenixframework.org/)
@@ -115,7 +125,7 @@ There are no guidelines yet. Do what feels natural. Submit a bug, join a discuss
   - [x] Plug Based Connection handling
   - [x] Code Reloading
   - [ ] Enviroment Based logging with log levels
-  - [ ] Static File serving
+  - [x] Static File serving
 - Controllers
   - [x] html/json/text helpers
   - [x] redirects
