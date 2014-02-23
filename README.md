@@ -106,7 +106,7 @@ defmodule Controllers.Users do
   use Phoenix.Controller.Filter
 
   before_action :info, some: "option"
-  before_action Plug.MethodOverride
+  after_action  MyPlugs.PrettifyOutput, format: :html
 
   def show(conn) do
     text conn, "Showing user #{conn.params["id"]}"
