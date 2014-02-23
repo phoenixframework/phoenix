@@ -26,7 +26,7 @@
 ```elixir
 defmodule YourApp.Router do
   use Phoenix.Router, port: 4000
-  
+
   plug Plug.Static, at: "/static", from: :your_app
 
   get "/pages/:page", Controllers.Pages, :show, as: :page
@@ -93,6 +93,30 @@ from the `priv/static/` directory of your application.
 
 ```elixir
   plug Plug.Static, at: "/static", from: :your_app
+```
+
+### Controller filters
+Controller filters allow to run code and alter the connection record before running a controller action.
+This is done by adding a stack of plugs ([Plug documentation](http://elixir-lang.org/docs/plug/)) to the
+controller.
+
+```elixir
+defmodule Controllers.Users do
+  use Phoenix.Controller
+  use Phoenix.Controller.Filter
+
+  before_action :info, some: "option"
+  before_action Plug.MethodOverride
+
+  def show(conn) do
+    text conn, "Showing user #{conn.params["id"]}"
+  end
+
+  def info(conn, options) do
+    IO.puts "---> options = #{inspect options} - context = #{inspect conn.private[:phoenix_context]}"
+    conn
+  end
+end
 ```
 
 ## Documentation
