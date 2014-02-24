@@ -5,7 +5,6 @@ defmodule Phoenix.Router.Mapper do
   alias Phoenix.Router.ScopeContext
   alias Phoenix.Router.Errors
   alias Phoenix.Router.Mapper
-  alias Phoenix.Router.Filter
 
   @actions [:index, :edit, :show, :new, :create, :update, :destroy]
 
@@ -95,9 +94,8 @@ defmodule Phoenix.Router.Mapper do
     quote do
       def unquote(:match)(conn, unquote(http_method), unquote(path_args)) do
         conn = conn.params(Dict.merge(conn.params, unquote(params_list_with_bindings)))
-        conn = Filter.run_before_filters(conn, unquote(controller), unquote(action))
-        conn = apply(unquote(controller), unquote(action), [conn])
-        Filter.run_after_filters(conn)
+
+        apply(unquote(controller), unquote(action), [conn])
       end
     end
   end
