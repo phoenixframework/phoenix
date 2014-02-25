@@ -95,9 +95,18 @@ defmodule Phoenix.Router.Mapper do
       def unquote(:match)(conn, unquote(http_method), unquote(path_args)) do
         conn = conn.params(Dict.merge(conn.params, unquote(params_list_with_bindings)))
 
-        apply(unquote(controller), unquote(action), [conn])
+        prepare(conn, unquote(controller), unquote(action))
       end
     end
+  end
+
+  def prepare(conn, controller, action) do
+    if function_exported?(controller, :call, 2) do
+      conn = Plug.Connection.assign_private(conn, :phoenix_context,
+        [ controller: controller, action: action ])
+      conn = controller.call(conn, [])
+    end
+    apply(controller, action, [conn])
   end
 
   defmacro defroute_aliases({_http_method, path, _controller, _action, options}) do
