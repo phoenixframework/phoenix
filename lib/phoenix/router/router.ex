@@ -17,8 +17,8 @@ defmodule Phoenix.Router do
 
   defmacro __before_compile__(_env) do
     quote do
-      plug Plugs.CodeReloader
-      plug Plugs.Logger
+      plug Plugs.CodeReloader, from: __MODULE__
+      plug Plugs.Logger, from: __MODULE__
       plug :dispatch
 
       def dispatch(conn, []) do
