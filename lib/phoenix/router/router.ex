@@ -2,7 +2,6 @@ defmodule Phoenix.Router do
   use GenServer.Behaviour
   alias Phoenix.Dispatcher
   alias Phoenix.Controller
-  alias Phoenix.Config
   alias Phoenix.Plugs
 
   defmacro __using__(plug_adapter_options \\ []) do
@@ -27,7 +26,7 @@ defmodule Phoenix.Router do
       end
 
       def start do
-        options = Phoenix.Router.dispatch_options(@options, __MODULE__)
+        options = Phoenix.Router.Options.merge(@options, __MODULE__)
         IO.puts ">> Running #{__MODULE__} with Cowboy with #{inspect options}"
         Plug.Adapters.Cowboy.http __MODULE__, [], options
       end
@@ -52,11 +51,4 @@ defmodule Phoenix.Router do
       {:error, reason} -> Controller.error(conn, reason)
     end
   end
-
-  def dispatch_options(options, module) do
-    [port: binary_to_integer(Config.for(module).router[:port]) ]
-    |> Dict.merge(options)
-  end
 end
-
-
