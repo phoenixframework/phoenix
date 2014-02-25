@@ -47,10 +47,8 @@ defmodule Phoenix.Router do
                                      path: split_path)
 
     {:ok, pid} = Dispatcher.Client.start(request)
-    case Dispatcher.Client.dispatch(pid) do
-      {:ok, conn}      -> conn
-      {:error, reason} -> Controller.error(conn, reason)
-    end
+    {:ok, conn} = Dispatcher.Client.dispatch(pid)
+    conn
   end
 
   def dispatch_options(options, module) do
