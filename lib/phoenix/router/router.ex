@@ -9,6 +9,7 @@ defmodule Phoenix.Router do
       use Phoenix.Router.Mapper
       @before_compile unquote(__MODULE__)
       use Plug.Builder
+      plug Plugs.ErrorHandler, from: __MODULE__
       import unquote(__MODULE__)
 
       @options unquote(plug_adapter_options)
@@ -46,9 +47,7 @@ defmodule Phoenix.Router do
                                      path: split_path)
 
     {:ok, pid} = Dispatcher.Client.start(request)
-    case Dispatcher.Client.dispatch(pid) do
-      {:ok, conn}      -> conn
-      {:error, reason} -> Controller.error(conn, reason)
-    end
+    {:ok, conn} = Dispatcher.Client.dispatch(pid)
+    conn
   end
 end
