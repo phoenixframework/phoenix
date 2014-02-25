@@ -1,5 +1,5 @@
 defmodule MyApp.Router do
-  use Phoenix.Router, port: 4000
+  use Phoenix.Router
 
   plug Plug.Static, at: "/static", from: :phoenix
 
