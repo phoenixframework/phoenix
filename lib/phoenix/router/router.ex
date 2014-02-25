@@ -54,7 +54,8 @@ defmodule Phoenix.Router do
   end
 
   def dispatch_options(options, module) do
-    Dict.merge([port: Config.for(module).router[:port]], options)
+    [port: binary_to_integer(Config.for(module).router[:port]) ]
+    |> Dict.merge(options)
   end
 end
 
