@@ -10,6 +10,7 @@ defmodule Phoenix.Router do
       use Phoenix.Router.Mapper
       @before_compile unquote(__MODULE__)
       use Plug.Builder
+      plug Plugs.ErrorHandler, from: __MODULE__
       import unquote(__MODULE__)
 
       @options unquote(plug_adapter_options)
