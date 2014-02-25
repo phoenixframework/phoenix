@@ -1,4 +1,4 @@
-defmodule Phoenix.Controller.Websocket do
+defmodule Phoenix.Websocket.RawHandler do
   @moduledoc """
   This module is a convenience for setting up a basic cowboy websocket.
 
@@ -7,11 +7,11 @@ defmodule Phoenix.Controller.Websocket do
   Below is an example of an EchoServer websocket.
       defmodule Router do
         use Phoenix.Router
-        websocket "echo", Websocket
+        raw_websocket "echo", Websocket
       end
 
       defmodule Websocket do
-        use Phoenix.Controller.Websocket
+        use Phoenix.Websocket.RawHandler
         def receive(conn, data, state) do
           conn.send(data)
         end
@@ -24,7 +24,7 @@ defmodule Phoenix.Controller.Websocket do
       closed(data, conn, state)
 
   Each function is an alias for the websocket handler functions, for more detailed information on 
-  connections and what you should return from these functions check out the cowboy websocket documentation.
+  connections and what you should/could return from these functions check out the cowboy websocket documentation.
   http://ninenines.eu/docs/en/cowboy/HEAD/manual/cowboy_websocket_handler/
 
   Things to keep in mind:
@@ -44,7 +44,7 @@ defmodule Phoenix.Controller.Websocket do
 
       defrecord Socket, conn: nil, pid: nil
 
-      import Phoenix.Controller.Websocket
+      import unquote(__MODULE__)
 
       @doc false
       def init({unquote(transport), :http}, req, opts) do

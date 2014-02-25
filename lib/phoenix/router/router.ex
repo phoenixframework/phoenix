@@ -7,7 +7,8 @@ defmodule Phoenix.Router do
   defmacro __using__(plug_adapter_options \\ []) do
     quote do
       use Phoenix.Router.Mapper
-      use Phoenix.Router.WebsocketMapper
+      use Phoenix.Adapters.Cowboy
+      import Phoenix.Router.RawWebsocketMapper
 
       import unquote(__MODULE__)
       @before_compile unquote(__MODULE__)

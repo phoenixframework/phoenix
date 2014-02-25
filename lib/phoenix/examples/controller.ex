@@ -58,7 +58,8 @@ defmodule Phoenix.Examples.Controllers.Files do
 end
 
 defmodule Phoenix.Examples.Controllers.Echo do
-  use Phoenix.Controller.Websocket
+  use Phoenix.Websocket.RawHandler
+
   def stream(data, socket, _state) do
     reply socket, data
   end

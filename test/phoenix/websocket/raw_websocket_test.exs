@@ -1,21 +1,21 @@
 defmodule Phoenix.Controller.WebsocketTest do
   use ExUnit.Case, async: true
-  alias Phoenix.Controller.Websocket
+  import Phoenix.Websocket.RawHandler
 
   defrecord Socket, conn: nil, pid: nil
 
   test "verify correct return from terminate" do
-    Websocket.terminate(Socket.new(pid: self()))
+    terminate(Socket.new(pid: self()))
     assert_received :shutdown
   end
 
   test "verify correct return from hibernate" do
-    Websocket.hibernate(Socket.new(pid: self))
+    hibernate(Socket.new(pid: self))
     assert_received :hibernate
   end
 
   test "verify basic reply" do
-    Websocket.reply(Socket.new(pid: self), {:text, "hello"})
+    reply(Socket.new(pid: self), {:text, "hello"})
     assert_received {:send, {:text, "hello"}, []}
   end
 end

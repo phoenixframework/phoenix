@@ -12,6 +12,6 @@ defmodule Router do
       resources "comments", Comments
     end
 
-    websocket "/echo", Eco
+    raw_websocket "/echo", Eco
   end
 end
