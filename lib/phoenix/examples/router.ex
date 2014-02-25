@@ -26,7 +26,7 @@ end
 defmodule MyApp.Config.Dev do
   use MyApp.Config
 
-  config :router, port: 4000
+  config :router, port: System.get_env("PORT") || 4000
 
   config :plugs, code_reload: true
 
