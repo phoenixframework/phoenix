@@ -163,7 +163,7 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     assert conn.params["id"] == "13"
   end
 
-  test "double scope nasted resources alias" do
+  test "double scope nested resources alias" do
     conn = simulate_request(RouterControllerScoping, :get, "/api/v1/accounts/13/subscriptions/15")
     assert conn.status == 200
     assert conn.resp_body == "api v1 accounts subscriptions show"

@@ -1,7 +1,7 @@
 defmodule Phoenix.Router.Stack do
 
   @moduledoc """
-  Stack impementation used to support nasted expension for nasted resources and scopes.
+  Stack implementation used to support nested expansion for nested resources and scopes.
   It is stored in module attribute given by the stack name.
   """
 
