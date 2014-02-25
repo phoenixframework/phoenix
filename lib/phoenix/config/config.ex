@@ -1,7 +1,7 @@
 defmodule Phoenix.Config do
 
   @doc """
-  Returns the ExConf configuration module based on the PHOENIX_ENV give
+  Returns the ExConf configuration module based on the PHOENIX_ENV given
   the "submodule" of the application. The "base" application module
   is checked for the Existing of a BaseModule.Config module.
 
@@ -13,7 +13,7 @@ defmodule Phoenix.Config do
     iex> Config.for(MyApp.Router)
     MyApp.Config.Dev
 
-    iex> Config.for(MyApp.Controllers.Admin.Users
+    iex> Config.for(MyApp.Controllers.Admin.Users)
     MyApp.Config.Dev
 
   """
