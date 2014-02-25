@@ -7,9 +7,12 @@ defmodule Phoenix.Router do
   defmacro __using__(plug_adapter_options \\ []) do
     quote do
       use Phoenix.Router.Mapper
+      use Phoenix.Adapters.Cowboy
+      import Phoenix.Router.RawWebsocketMapper
+
+      import unquote(__MODULE__)
       @before_compile unquote(__MODULE__)
       use Plug.Builder
-      import unquote(__MODULE__)
 
       @options unquote(plug_adapter_options)
     end
@@ -26,8 +29,10 @@ defmodule Phoenix.Router do
       end
 
       def start do
-        IO.puts ">> Running #{__MODULE__} with Cowboy with #{inspect @options}"
-        Plug.Adapters.Cowboy.http __MODULE__, [], @options
+        options = Phoenix.Adapters.Cowboy.setup_options(__MODULE__, @options, @dispatch_options)
+
+        IO.puts "Running #{__MODULE__} with Cowboy on port #{inspect options}"
+        Plug.Adapters.Cowboy.http __MODULE__, [], options
       end
     end
   end
@@ -37,7 +42,6 @@ defmodule Phoenix.Router do
     conn        = Plug.Connection.fetch_params(conn)
     http_method = conn.method |> String.downcase |> binary_to_atom
     split_path  = Path.split_from_conn(conn)
-
 
     request = Dispatcher.Request.new(conn: conn,
                                      router: router,
@@ -50,6 +54,17 @@ defmodule Phoenix.Router do
       {:error, reason} -> Controller.error(conn, reason)
     end
   end
+
+  def dispatch(conn, router, http_method, path) do
+    request = Dispatcher.Request.new(conn: conn,
+                                     router: router,
+                                     http_method: http_method,
+                                     path: path)
+
+    {:ok, pid} = Dispatcher.Client.start(request)
+    case Dispatcher.Client.dispatch(pid) do
+      {:ok, conn}      -> {:ok, conn}
+      {:error, reason} -> Controller.error(conn, reason)
+    end
+  end
 end
-
-
