@@ -10,6 +10,8 @@ defmodule Phoenix.Router do
       use Plug.Builder
       import unquote(__MODULE__)
 
+      plug Plugs.ErrorHandler, from: __MODULE__
+
       @options unquote(plug_adapter_options)
     end
   end
@@ -41,3 +43,5 @@ defmodule Phoenix.Router do
     apply(router, :match, [conn, http_method, split_path])
   end
 end
+
+

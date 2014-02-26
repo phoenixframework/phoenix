@@ -10,8 +10,7 @@ defmodule Phoenix.Config.App do
     quote do
 
       config :router, port: 4000,
-                      ssl: true,
-                      fast: true
+                      ssl: true
 
       config :plugs, code_reload: false,
                      serve_static_assets: true

@@ -50,10 +50,17 @@ defmodule Phoenix.Controller do
     text conn, 404, "No route matches #{method} to #{inspect path}"
   end
 
-  def error(conn, reason) do
-    html conn, 500, """
-    <h1>Internal Server Error</h1>
-    <blockquote>#{inspect reason}</blockquote>
+  def error(conn, error) do
+    stacktrace = System.stacktrace
+    exception  = Exception.normalize(error)
+    status     = Plug.Exception.status(error)
+
+    html conn, status, """
+      <html>
+        <h2>(#{inspect exception.__record__(:name)}) #{exception.message}</h2>
+        <h4>Stacktrace</h4>
+        <pre>#{Exception.format_stacktrace stacktrace}</pre>
+      </html>
     """
   end
 end
