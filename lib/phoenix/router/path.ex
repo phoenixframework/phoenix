@@ -1,6 +1,6 @@
 defmodule Phoenix.Router.Path do
 
-  def split(path), do: String.split(path, ~r/\/|\-/)
+  def split(path), do: String.split(path, "/")
 
   def join([]), do: ""
   def join(split_path), do: Elixir.Path.join(split_path)

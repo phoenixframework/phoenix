@@ -67,6 +67,19 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.resp_body == "users index"
   end
 
+  test "route to named param with dashes matches" do
+    conn = simulate_request(Router, :get, "users/75f6306d-a090-46f9-8b80-80fd57ec9a41")
+    assert conn.status == 200
+    assert conn.resp_body == "users show"
+    assert conn.params["id"] == "75f6306d-a090-46f9-8b80-80fd57ec9a41"
+
+    conn = simulate_request(Router, :get, "users/75f6306d-a0/comments/34-95")
+    assert conn.status == 200
+    assert conn.resp_body == "show comments"
+    assert conn.params["user_id"] == "75f6306d-a0"
+    assert conn.params["id"] == "34-95"
+  end
+
   test "get with named param" do
     conn = simulate_request(Router, :get, "users/1")
     assert conn.status == 200
@@ -86,13 +99,6 @@ defmodule Phoenix.Router.RoutingTest do
     conn = simulate_request(Router, :get, "users/top")
     assert conn.status == 200
     assert conn.resp_body == "users top"
-  end
-
-  test "named param without forward slash is properly bound" do
-    conn = simulate_request(Router, :get, "profiles/profile-123")
-    assert conn.status == 200
-    assert conn.resp_body == "users show"
-    assert conn.params["id"] == "123"
   end
 
   test "get with resources to 'comments/new' maps to new action" do
@@ -180,18 +186,18 @@ defmodule Phoenix.Router.RoutingTest do
 
   test "limit resource by passing :except option" do
     conn = simulate_request(Router, :delete, "posts/2")
-     assert conn.status == 404
+    assert conn.status == 404
     conn = simulate_request(Router, :get, "posts/new")
     assert conn.status == 200
   end
 
   test "limit resource by passing :only option" do
     conn = simulate_request(Router, :put, "sessions/2")
-     assert conn.status == 404
+    assert conn.status == 404
     conn = simulate_request(Router, :get, "sessions/")
-     assert conn.status == 404
+    assert conn.status == 404
     conn = simulate_request(Router, :get, "sessions/1")
-     assert conn.status == 404
+    assert conn.status == 404
     conn = simulate_request(Router, :get, "sessions/new")
     assert conn.status == 200
     conn = simulate_request(Router, :post, "sessions")
