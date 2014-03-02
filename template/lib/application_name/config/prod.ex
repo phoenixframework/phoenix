@@ -1,4 +1,4 @@
-defmodule <%= application_module %>.Config.Prod
+defmodule <%= application_module %>.Config.Prod do
   use <%= application_module %>.Config
 
   config :router, port: System.get_env("PORT")

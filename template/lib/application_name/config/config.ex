@@ -1,4 +1,4 @@
-defmodule <%= application_module %>.Config
+defmodule <%= application_module %>.Config do
   use Phoenix.Config.App
 
   config :router, port: System.get_env("PORT")
