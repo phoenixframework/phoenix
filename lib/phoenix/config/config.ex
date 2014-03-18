@@ -1,13 +1,13 @@
 defmodule Phoenix.Config do
 
   @doc """
-  Returns the ExConf configuration module based on the PHOENIX_ENV given
+  Returns the ExConf configuration module based on the MIX_ENV given
   the "submodule" of the application. The "base" application module
   is checked for the Existing of a BaseModule.Config module.
 
   Examples
 
-    iex> System.get_env("PHOENIX_ENV")
+    iex> System.get_env("MIX_ENV")
     "dev"
 
     iex> Config.for(MyApp.Router)
