@@ -18,7 +18,7 @@
 3. Change directory to `/path/to/scaffold/your_app`. Install dependencies and start web server
 
         mix deps.get
-        mix run -e 'YourApp.Router.start_link' --no-halt mix.exs
+        mix run --no-halt mix.exs
 
 
 ### Router example
