@@ -26,7 +26,7 @@ defmodule Phoenix.Router do
         Phoenix.Router.perform_dispatch(conn, __MODULE__)
       end
 
-      def start do
+      def start_link do
         options = Phoenix.Router.Options.merge(@options, __MODULE__)
         IO.puts ">> Running #{__MODULE__} with Cowboy with #{inspect options}"
         Plug.Adapters.Cowboy.http __MODULE__, [], options
