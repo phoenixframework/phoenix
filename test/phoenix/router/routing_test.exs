@@ -7,7 +7,7 @@ defmodule Phoenix.Router.RoutingTest do
     def index(conn), do: text(conn, "users index")
     def show(conn), do: text(conn, "users show")
     def top(conn), do: text(conn, "users top")
-    def crash(_conn), do: raise 'crash!'
+    def crash(_conn), do: raise "crash!"
   end
 
   defmodule SessionsController do
