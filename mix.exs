@@ -20,7 +20,8 @@ defmodule Phoenix.Mixfile do
       {:cowboy, github: "extend/cowboy"},
       {:plug, github: "elixir-lang/plug"},
       {:inflex, github: "nurugger07/inflex"},
-      {:ex_conf, github: "phoenixframework/ex_conf"}
+      {:ex_conf, github: "phoenixframework/ex_conf"},
+      {:jazz, github: "meh/jazz"}
     ]
   end
 

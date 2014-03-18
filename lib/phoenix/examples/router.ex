@@ -1,5 +1,6 @@
 defmodule MyApp.Router do
   use Phoenix.Router
+  use Phoenix.Router.Socket
 
   plug Plug.Static, at: "/static", from: :phoenix
 
@@ -11,8 +12,18 @@ defmodule MyApp.Router do
     resources "users", Users do
       resources "comments", Comments
     end
+
+    raw_websocket "/echo", Eco
   end
+
+  channel "messages", Controllers.Messages
+  channel "files",    Controllers.Uploads
 end
+
+"""
+channel.join "messages", (resp) ->
+
+"""
 
 defmodule MyApp.Config do
   use Phoenix.Config.App

@@ -6,9 +6,12 @@ defmodule Phoenix.Router do
   defmacro __using__(plug_adapter_options \\ []) do
     quote do
       use Phoenix.Router.Mapper
+      use Phoenix.Adapters.Cowboy
+      import Phoenix.Router.RawWebsocketMapper
+
+      import unquote(__MODULE__)
       @before_compile unquote(__MODULE__)
       use Plug.Builder
-      import unquote(__MODULE__)
 
       plug Plugs.ErrorHandler, from: __MODULE__
 
@@ -28,7 +31,10 @@ defmodule Phoenix.Router do
 
       def start do
         options = Phoenix.Router.Options.merge(@options, __MODULE__)
-        IO.puts ">> Running #{__MODULE__} with Cowboy with #{inspect options}"
+        # TODO: Refactor into Router.Options
+        options = Phoenix.Adapters.Cowboy.setup_options(__MODULE__, options, @dispatch_options)
+
+        IO.puts "Running #{__MODULE__} with Cowboy on port #{inspect options}"
         Plug.Adapters.Cowboy.http __MODULE__, [], options
       end
     end
@@ -43,5 +49,3 @@ defmodule Phoenix.Router do
     apply(router, :match, [conn, http_method, split_path])
   end
 end
-
-
