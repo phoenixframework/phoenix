@@ -79,7 +79,7 @@ end
 
 ### Configuration
 
-Phoenix provides a configuration per environment set by the `MIX_ENV` environment variable. The default environment `Dev` will be set if `NIX_ENV` does not exist.
+Phoenix provides a configuration per environment set by the `MIX_ENV` environment variable. The default environment `Dev` will be set if `MIX_ENV` does not exist.
 
 #### Configuration file structure:
 ```
