@@ -17,7 +17,7 @@
 
 3. Change directory to `/path/to/scaffold/your_app`. Install dependencies and start web server
 
-        mix deps.get
+        mix do deps.get, compile
         mix phoenix.start
 
 
