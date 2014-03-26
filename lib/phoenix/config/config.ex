@@ -3,7 +3,7 @@ defmodule Phoenix.Config do
   @doc """
   Returns the ExConf configuration module based on the MIX_ENV given
   the "submodule" of the application. The "base" application module
-  is checked for the Existing of a BaseModule.Config module.
+  is checked for the existence of a BaseModule.Config module.
 
   Examples
 
