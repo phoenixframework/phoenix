@@ -1,6 +1,5 @@
 defmodule Phoenix.Router do
   use GenServer.Behaviour
-  alias Phoenix.Controller
   alias Phoenix.Plugs
 
   defmacro __using__(plug_adapter_options \\ []) do
