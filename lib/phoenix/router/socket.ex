@@ -1,25 +1,24 @@
 defmodule Phoenix.Router.Socket do
 
-  defmacro __using__(_opts) do
+  defmacro __using__(options) do
+    mount = Dict.fetch! options, :mount
+
     quote do
-      router = __MODULE__
       import unquote(__MODULE__)
-      defmodule Socket do
-        use Phoenix.Websocket.Handler, router: router
-      end
+      dispatch_option unquote(mount), Phoenix.Socket.Handler, router: __MODULE__
     end
   end
 
   defmacro channel(channel, module) do
     quote do
-      def match(req, :websocket, unquote(channel), "join", data, state) do
-        apply(unquote(module), :join, [req, id])
+      def match(socket, :websocket, unquote(channel), "join", message) do
+        apply(unquote(module), :join, [socket, message])
       end
-      def match(req, :websocket, unquote(channel), "leave", data, state) do
-        apply(unquote(module), :leave, [req, id])
+      def match(socket, :websocket, unquote(channel), "leave", message) do
+        apply(unquote(module), :leave, [socket, message])
       end
-      def match(req, :websocket, unquote(channel), event, data, state) do
-        apply(unquote(module), :event, [event, req, id])
+      def match(socket, :websocket, unquote(channel), event, message) do
+        apply(unquote(module), :event, [event, socket, message])
       end
     end
   end

@@ -1,6 +1,6 @@
 defmodule MyApp.Router do
   use Phoenix.Router
-  use Phoenix.Router.Socket
+  use Phoenix.Router.Socket, mount: "/ws"
 
   plug Plug.Static, at: "/static", from: :phoenix
 
@@ -14,10 +14,14 @@ defmodule MyApp.Router do
     end
 
     raw_websocket "/echo", Eco
+
   end
 
-  channel "messages", Controllers.Messages
-  channel "files",    Controllers.Uploads
+  channel "messages", Phoenix.Examples.Controllers.Messages
+
+  # def match(socket, :websocket, "messages", event, message) do
+  #   apply(Controllers.Messaegs, :event, [event, req, id]
+  # end
 end
 
 """

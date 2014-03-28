@@ -57,6 +57,28 @@ defmodule Phoenix.Examples.Controllers.Files do
   end
 end
 
+defmodule Phoenix.Examples.Controllers.Messages do
+
+  def join(socket, message) do
+    IO.puts "JOIN"
+    {:ok, socket}
+  end
+
+  def event("state", socket, message) do
+    IO.puts "STATE"
+    IO.inspect socket
+    {:ok, socket}
+  end
+
+  def event("update", socket, message) do
+    assigns = Dict.merge socket.assigns, message
+    socket = socket.assigns(assigns)
+    send(socket.pid, {:reply, {:text, JSON.encode!(received: true)}, socket})
+    {:ok, socket }
+  end
+
+end
+
 defmodule Phoenix.Examples.Controllers.Echo do
   # use Phoenix.Websocket.RawHandler
 
