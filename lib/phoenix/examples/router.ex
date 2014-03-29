@@ -18,6 +18,7 @@ defmodule MyApp.Router do
   end
 
   channel "messages", Phoenix.Examples.Controllers.Messages
+  channel "assets", Phoenix.Examples.Controllers.Assets
 
   # def match(socket, :websocket, "messages", event, message) do
   #   apply(Controllers.Messaegs, :event, [event, req, id]

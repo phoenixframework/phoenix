@@ -79,6 +79,30 @@ defmodule Phoenix.Examples.Controllers.Messages do
 
 end
 
+defmodule Phoenix.Examples.Controllers.Assets do
+
+  def join(socket, message) do
+    IO.puts "JOIN"
+    {:ok, socket}
+  end
+
+  def event("state", socket, message) do
+    IO.puts "STATE"
+    IO.inspect socket
+    {:ok, socket}
+  end
+
+  def event("upload", socket, message) do
+    IO.puts "upload"
+    {:ok, socket }
+  end
+
+end
+
+
+
+
+
 defmodule Phoenix.Examples.Controllers.Echo do
   # use Phoenix.Websocket.RawHandler
 
