@@ -7,10 +7,18 @@ defmodule Phoenix.Socket.Handler do
                     channels: [],
                     assigns: []
 
+
+  def add_channel(socket, channel) do
+    socket.channels([channel | socket.channels])
+  end
+
+  def delete_channel(socket, channel) do
+    socket.channels(List.delete(socket.channels, channel))
+  end
+
   def init({:tcp, :http}, req, opts) do
     {:upgrade, :protocol, :cowboy_websocket, req, opts}
   end
-
   def init({:ssl, :http}, req, opts) do
     {:upgrade, :protocol, :cowboy_websocket, req, opts}
   end
@@ -30,7 +38,6 @@ defmodule Phoenix.Socket.Handler do
     {:ok, req, Socket.new(conn: req, pid: self, router: router)}
   end
 
-  @doc false
   def websocket_handle({:text, text}, req, socket = Socket[router: router]) do
     case JSON.decode(text) do
       {:ok, json} ->
@@ -45,11 +52,14 @@ defmodule Phoenix.Socket.Handler do
     end
   end
   defp handle_result({:ok, socket}, req, channel, "join") do
-    {:ok, req, socket.channels([channel | socket.channels])}
+    {:ok, req, add_channel(socket, channel)}
   end
   defp handle_result({:error, socket, reason}, req, _channel, "join") do
     # unauthenticated
     {:ok, req, socket}
+  end
+  defp handle_result({:ok, socket}, req, channel, "leave") do
+    {:ok, req, delete_channel(socket, channel)}
   end
   defp handle_result({:ok, socket}, req, channel, event) do
     {:ok, req, socket}
@@ -64,20 +74,16 @@ defmodule Phoenix.Socket.Handler do
     {:ok, state}
   end
 
-  @doc false
-  def websocket_info({:reply, frame, state}, req, _state) do
+  def websocket_info({:reply, frame}, req, state) do
     {:reply, frame, req, state}
   end
-  @doc false
   def websocket_info(:shutdown, req, state) do
     {:shutdown, req, state}
   end
-  @doc false
   def websocket_info(:hibernate, req, state) do
     {:ok, req, state, :hibernate}
   end
 
-  @doc false
   def websocket_info(data, req, socket) do
     Enum.each socket.channels, fn channel ->
       socket.router.match(socket, :websocket, channel, "info", data)

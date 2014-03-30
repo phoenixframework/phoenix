@@ -58,9 +58,15 @@ defmodule Phoenix.Examples.Controllers.Files do
 end
 
 defmodule Phoenix.Examples.Controllers.Messages do
+  import Phoenix.Channel
 
   def join(socket, message) do
     IO.puts "JOIN"
+    subscribe("messages", socket)
+    {:ok, socket}
+  end
+
+  def leave(socket, message) do
     {:ok, socket}
   end
 
@@ -70,10 +76,14 @@ defmodule Phoenix.Examples.Controllers.Messages do
     {:ok, socket}
   end
 
+  def event("ping", socket, message) do
+    reply(socket, :pong)
+  end
+
   def event("update", socket, message) do
     assigns = Dict.merge socket.assigns, message
     socket = socket.assigns(assigns)
-    send(socket.pid, {:reply, {:text, JSON.encode!(received: true)}, socket})
+    broadcast "messages", broadcast: assigns
     {:ok, socket }
   end
 
