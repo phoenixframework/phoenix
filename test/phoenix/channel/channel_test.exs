@@ -8,6 +8,7 @@ defmodule Phoenix.Channel.ChannelTest do
   def new_socket do
     %Socket{pid: self,
             router: nil,
+            channel: "somechan",
             channels: [],
             assigns: []}
   end
@@ -15,18 +16,18 @@ defmodule Phoenix.Channel.ChannelTest do
   test "#subscribe subscribes socket to topic" do
     socket = new_socket
 
-    assert Channel.subscribe(socket, "somechan", "topic")
+    assert Channel.subscribe(socket, "topic")
     assert Topic.subscribers("somechan:topic") == [socket.pid]
   end
 
   test "#broadcast broadcasts global message on channel" do
     Topic.create("somechan:topic")
-    assert Channel.broadcast("somechan", "topic", foo: :bar)
+    assert Channel.broadcast(new_socket, "topic", foo: :bar)
   end
 
   test "#broadcast_from broadcasts message on channel from publisher" do
     Topic.create("somechan:topic")
-    assert Channel.broadcast_from(new_socket, "somechan", "topic", :hello)
+    assert Channel.broadcast_from(new_socket, "topic", :hello)
     message = JSON.encode!(:hello)
     refute_received message
   end

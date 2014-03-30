@@ -4,18 +4,6 @@ defmodule Phoenix.Socket.Handler do
   alias Phoenix.Socket
   alias Phoenix.Socket.Message
 
-  def add_channel(socket, channel) do
-    %Socket{socket | channels: [channel | socket.channels]}
-  end
-
-  def delete_channel(socket, channel) do
-    %Socket{socket | channels: List.delete(socket.channels, channel)}
-  end
-
-  def authenticated?(socket, channel) do
-    Enum.member? socket.channels, channel
-  end
-
   def init({:tcp, :http}, req, opts) do
     {:upgrade, :protocol, :cowboy_websocket, req, opts}
   end
@@ -40,6 +28,7 @@ defmodule Phoenix.Socket.Handler do
 
   def websocket_handle({:text, text}, req, socket = %Socket{router: router}) do
     msg = Message.parse!(text)
+    socket = Socket.set_current_channel(socket, msg.channel)
     dispatch(socket, msg.channel, msg.event, msg.message)
   end
 
@@ -48,7 +37,7 @@ defmodule Phoenix.Socket.Handler do
     handle_result(result, socket.req, channel, "join")
   end
   defp dispatch(socket, channel, event, msg) when event in ["leave", "event"] do
-    if authenticated?(socket, channel) do
+    if Socket.authenticated?(socket, channel) do
       result = socket.router.match(socket, :websocket, channel, event, msg)
       handle_result(result, socket.req, channel, event)
     else
@@ -57,10 +46,10 @@ defmodule Phoenix.Socket.Handler do
   end
 
   defp handle_result({:ok, socket}, req, channel, "join") do
-    {:ok, req, add_channel(socket, channel)}
+    {:ok, req, Socket.add_channel(socket, channel)}
   end
   defp handle_result({:ok, socket}, req, channel, "leave") do
-    {:ok, req, delete_channel(socket, channel)}
+    {:ok, req, Socket.delete_channel(socket, channel)}
   end
   defp handle_result({:ok, socket}, req, _channel, _event) do
     {:ok, req, socket}

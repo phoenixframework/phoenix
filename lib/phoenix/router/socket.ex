@@ -9,10 +9,10 @@ defmodule Phoenix.Router.Socket do
     end
   end
 
-  defmacro channel(module) do
-    channel = case Code.ensure_compiled(Macro.expand(module, __CALLER__)) do
-      {:module, mod} -> mod.channel
-    end
+  defmacro channel(channel, module) do
+    # channel = case Code.ensure_compiled(Macro.expand(module, __CALLER__)) do
+    #   {:module, mod} -> mod.channel
+    # end
 
     quote do
       def match(socket, :websocket, unquote(channel), "join", message) do
