@@ -1,9 +1,12 @@
 defmodule Phoenix.Topic do
   use GenServer.Behaviour
 
-  @pg_prefix "phx"
+  @pg_prefix "phx:"
   @garbage_collect_after_ms 60 * 1000 # 1 minute
 
+  @doc """
+  Creates a Topic for pubsub broadcast to subscribers
+  """
   def create(name, opts \\ []) do
     if exists?(name) do
       :ok
@@ -40,13 +43,16 @@ defmodule Phoenix.Topic do
     :pg2.get_members(group(name))
   end
 
-  def broadcast(name, message) do
+  def broadcast(name, from_pid \\ nil, message) do
     name
     |> subscribers
-    |> Enum.each fn pid -> send(pid, message) end
+    |> Enum.each fn
+      pid when pid != from_pid -> send(pid, message)
+      _pid ->
+    end
   end
 
-  def group(name), do: "#{@pg_prefix}:#{name}"
+  def group(name), do: "#{@pg_prefix}#{name}"
 
   def active?(name), do: exists?(name) && Enum.any?(subscribers(name))
 

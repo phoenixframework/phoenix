@@ -2,7 +2,7 @@ defmodule Phoenix.Topic.TopicTest do
   use ExUnit.Case, async: false
   alias Phoenix.Topic
 
-  def cleanup, do: Enum.each(0..10, &Topic.delete("topic#{&1}"))
+  def cleanup, do: Enum.each(0..20, &Topic.delete("topic#{&1}"))
 
   def spawn_pid do
     spawn fn ->
@@ -98,13 +98,20 @@ defmodule Phoenix.Topic.TopicTest do
     pids |> Enum.each(&Process.exit &1, :kill)
   end
 
+  test "#broadcast does not publish to broadcaster pid when provided" do
+    assert Topic.create("topic11") == :ok
+    Topic.subscribe("topic11", self)
+    Topic.broadcast "topic11", self, :ping
+    refute_received :ping
+  end
+
   test "processes automatically removed from topic when killed" do
     pid = spawn_pid
-    assert Topic.create("topic11") == :ok
-    assert Topic.subscribe("topic11", pid)
-    assert Topic.subscribers("topic11") == [pid]
+    assert Topic.create("topic12") == :ok
+    assert Topic.subscribe("topic12", pid)
+    assert Topic.subscribers("topic12") == [pid]
     Process.exit pid, :kill
     :timer.sleep 10 # wait until pg2 removes dead pid
-    assert Topic.subscribers("topic11") == []
+    assert Topic.subscribers("topic12") == []
   end
 end
