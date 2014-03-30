@@ -1,4 +1,6 @@
 defmodule Phoenix.Socket do
+  alias Phoenix.Socket
+
   defstruct conn: nil,
             pid: nil,
             channel: nil,
@@ -7,15 +9,15 @@ defmodule Phoenix.Socket do
             assigns: []
 
   def set_current_channel(socket, channel) do
-    %__MODULE__{socket | channel: channel}
+    %Socket{socket | channel: channel}
   end
 
   def add_channel(socket, channel) do
-    %__MODULE__{socket | channels: [channel | socket.channels]}
+    %Socket{socket | channels: [channel | socket.channels]}
   end
 
   def delete_channel(socket, channel) do
-    %__MODULE__{socket | channels: List.delete(socket.channels, channel)}
+    %Socket{socket | channels: List.delete(socket.channels, channel)}
   end
 
   def authenticated?(socket, channel) do
