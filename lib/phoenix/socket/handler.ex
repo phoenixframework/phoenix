@@ -20,13 +20,13 @@ defmodule Phoenix.Socket.Handler do
     {:ok, req, state, timeout} # Timeout defines how long it waits for activity
                                  from the client. Default: infinity.
   """
-  def websocket_init(transport, req, opts) do
+  def websocket_init(_transport, req, opts) do
     router = Dict.fetch! opts, :router
 
     {:ok, req, %Socket{conn: req, pid: self, router: router}}
   end
 
-  def websocket_handle({:text, text}, req, socket = %Socket{router: router}) do
+  def websocket_handle({:text, text}, _req, socket) do
     msg = Message.parse!(text)
     socket = Socket.set_current_channel(socket, msg.channel)
     dispatch(socket, msg.channel, msg.event, msg.message)
@@ -54,7 +54,7 @@ defmodule Phoenix.Socket.Handler do
   defp handle_result({:ok, socket}, _event) do
     {:ok, socket.conn, socket}
   end
-  defp handle_result({:error, socket, reason}, _event) do
+  defp handle_result({:error, socket, _reason}, _event) do
     # unauthenticated
     {:ok, socket.conn, socket}
   end
@@ -64,7 +64,7 @@ defmodule Phoenix.Socket.Handler do
     {:ok, state}
   Possible Returns are identical to stream, all replies gets send to the client.
   """
-  def info(conn, _info, state) do
+  def info(_info, _req, state) do
     {:ok, state}
   end
 
@@ -93,9 +93,9 @@ defmodule Phoenix.Socket.Handler do
    {:remote, close_code(), binary()}
    {:error, :badencoding | :badframe | :closed | atom()}  # Called for many reasons: tab closed, connection dropped.
   """
-  def websocket_terminate(reason, req, socket) do
+  def websocket_terminate(reason, _req, socket) do
     Enum.each socket.channels, fn channel ->
-      socket.router.match(socket, :websocket, channel, "closed", reason: reason)
+      socket.router.match(socket, :websocket, channel, "leave", reason: reason)
     end
     :ok
   end

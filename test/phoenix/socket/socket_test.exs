@@ -1,7 +1,6 @@
 defmodule Phoenix.Socket.SocketTest do
   use ExUnit.Case
   alias Phoenix.Socket
-  alias Phoenix.Socket.Handler
 
   def new_socket do
     %Socket{pid: self,

@@ -3,7 +3,6 @@ defmodule Phoenix.Channel.ChannelTest do
   alias Phoenix.Topic
   alias Phoenix.Channel
   alias Phoenix.Socket
-  alias Phoenix.Socket.Handler
 
   def new_socket do
     %Socket{pid: self,
@@ -28,15 +27,15 @@ defmodule Phoenix.Channel.ChannelTest do
   test "#broadcast_from broadcasts message on channel from publisher" do
     Topic.create("somechan:topic")
     assert Channel.broadcast_from(new_socket, "topic", :hello)
-    message = JSON.encode!(:hello)
-    refute_received message
+    _message = JSON.encode!(:hello)
+    refute_received _message
   end
 
   test "#reply sends response to socket" do
     socket = new_socket
     assert Channel.reply(socket, :hello)
-    message = JSON.encode!(:hello)
-    assert_received message
+    _message = JSON.encode!(:hello)
+    assert_received _message
   end
 end
 

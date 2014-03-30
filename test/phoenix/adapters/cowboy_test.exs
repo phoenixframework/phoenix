@@ -3,7 +3,7 @@ defmodule Phoenix.Adapters.CowboyTest do
   alias Phoenix.Adapters.Cowboy
 
   test "only modifies dispatch option" do
-    options = ListDict.new port: 5000
+    options = [port: 5000]
     assert Cowboy.setup_options(Pheonix, options, [])[:port] == 5000
   end
 
