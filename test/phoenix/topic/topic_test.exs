@@ -98,10 +98,10 @@ defmodule Phoenix.Topic.TopicTest do
     pids |> Enum.each(&Process.exit &1, :kill)
   end
 
-  test "#broadcast does not publish to broadcaster pid when provided" do
+  test "#broadcast_from does not publish to broadcaster pid when provided" do
     assert Topic.create("topic11") == :ok
     Topic.subscribe("topic11", self)
-    Topic.broadcast "topic11", self, :ping
+    Topic.broadcast_from self, "topic11", :ping
     refute_received :ping
   end
 
