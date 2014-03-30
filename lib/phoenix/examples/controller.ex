@@ -2,7 +2,7 @@ defmodule Phoenix.Examples.Controllers.Pages do
   use Phoenix.Controller
 
   def show(conn) do
-    text conn, "Showing page #{conn.params["page"]}!"
+    html conn, File.read!(Path.join(["priv/views/index.html"]))
   end
 
   def show(_conn, "page") do
@@ -58,10 +58,11 @@ defmodule Phoenix.Examples.Controllers.Files do
 end
 
 defmodule Phoenix.Examples.Controllers.Messages do
-  use Phoenix.Channel, channel: "messages"
+  use Phoenix.Channel
 
   def join(socket, message) do
     IO.puts "JOIN"
+    reply(socket, welcome: "it works!")
     subscribe(socket, "activity")
     {:ok, socket}
   end

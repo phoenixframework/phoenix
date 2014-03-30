@@ -34,29 +34,29 @@ defmodule Phoenix.Socket.Handler do
 
   defp dispatch(socket, channel, "join", msg) do
     result = socket.router.match(socket, :websocket, channel, "join", msg)
-    handle_result(result, socket.req, channel, "join")
+    handle_result(result, "join")
   end
   defp dispatch(socket, channel, event, msg) when event in ["leave", "event"] do
     if Socket.authenticated?(socket, channel) do
       result = socket.router.match(socket, :websocket, channel, event, msg)
-      handle_result(result, socket.req, channel, event)
+      handle_result(result, event)
     else
-      handle_result({:error, socket, :unauthenticated}, socket.req, channel, event)
+      handle_result({:error, socket, :unauthenticated}, event)
     end
   end
 
-  defp handle_result({:ok, socket}, req, channel, "join") do
-    {:ok, req, Socket.add_channel(socket, channel)}
+  defp handle_result({:ok, socket}, "join") do
+    {:ok, socket.conn, Socket.add_channel(socket, socket.channel)}
   end
-  defp handle_result({:ok, socket}, req, channel, "leave") do
-    {:ok, req, Socket.delete_channel(socket, channel)}
+  defp handle_result({:ok, socket}, "leave") do
+    {:ok, socket.conn, Socket.delete_channel(socket, socket.channel)}
   end
-  defp handle_result({:ok, socket}, req, _channel, _event) do
-    {:ok, req, socket}
+  defp handle_result({:ok, socket}, _event) do
+    {:ok, socket.conn, socket}
   end
-  defp handle_result({:error, socket, reason}, req, _channel, _event) do
+  defp handle_result({:error, socket, reason}, _event) do
     # unauthenticated
-    {:ok, req, socket}
+    {:ok, socket.conn, socket}
   end
 
   @doc """

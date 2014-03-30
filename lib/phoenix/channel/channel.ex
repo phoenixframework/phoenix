@@ -12,6 +12,9 @@ defmodule Phoenix.Channel do
     Topic.subscribe(socket.pid, namespaced(socket.channel, topic))
   end
 
+  def broadcast(channel, topic, message) when is_binary(channel) do
+    broadcast_from :global, channel, topic, message
+  end
   def broadcast(socket, topic, message) do
     broadcast_from :global, socket.channel, topic, message
   end
