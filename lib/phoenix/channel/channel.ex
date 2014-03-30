@@ -10,40 +10,28 @@ defmodule Phoenix.Channel do
       @channel unquote(channel)
 
       def channel, do: @channel
-
-      # def call(:join, socket, message) do
-      #   join(socket, message)
-      # end
-      # def call(:leave, socket, message) do
-      #   if authenticated?(socket, @channel) do
-      #     leave(socket, message)
-      #   else
-      #     {:error, socket, :unauthenticated}
-      #   end
-      # end
-      # def call(:event, event, socket, message) do
-      #   if authenticated?(socket, @channel) do
-      #     event(event, socket, message)
-      #   else
-      #     {:error, socket, :unauthenticated}
-      #   end
-      # end
     end
   end
 
-  def subscribe(topic, socket) do
-    Topic.subscribe(topic, socket.pid)
+  def namespaced_topic(topic), do: "#{__MODULE__}#{topic}"
+
+  def subscribe(socket, channel, topic) do
+    Topic.subscribe(socket.pid, namespaced(channel, topic))
   end
 
-  def broadcast(topic, message) do
-    broadcast_from :global, topic, message
+  def broadcast(channel, topic, message) do
+    broadcast_from :global, channel, topic, message
   end
 
-  def broadcast_from(:global, topic, message) do
-    Topic.broadcast_from(:global, topic, reply_json(message))
+  def broadcast_from(:global, channel, topic, message) do
+    Topic.broadcast_from :global,
+                         namespaced(channel, topic),
+                         reply_json(message)
   end
-  def broadcast_from(socket, topic, message) do
-    Topic.broadcast_from(socket.pid, topic, reply_json(message))
+  def broadcast_from(socket, channel, topic, message) do
+    Topic.broadcast_from socket.pid,
+                         namespaced(channel, topic),
+                         reply_json(message)
   end
 
   def reply(socket, message) do
@@ -54,4 +42,6 @@ defmodule Phoenix.Channel do
   def reply_json(message) do
     {:reply, {:text, JSON.encode!(message)}}
   end
+
+  defp namespaced(channel, topic), do: "#{channel}:#{topic}"
 end

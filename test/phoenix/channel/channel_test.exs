@@ -15,18 +15,18 @@ defmodule Phoenix.Channel.ChannelTest do
   test "#subscribe subscribes socket to topic" do
     socket = new_socket
 
-    assert Channel.subscribe("topic", socket)
-    assert Topic.subscribers("topic") == [socket.pid]
+    assert Channel.subscribe(socket, "somechan", "topic")
+    assert Topic.subscribers("somechan:topic") == [socket.pid]
   end
 
   test "#broadcast broadcasts global message on channel" do
-    Topic.create("topic")
-    assert Channel.broadcast("topic", foo: :bar)
+    Topic.create("somechan:topic")
+    assert Channel.broadcast("somechan", "topic", foo: :bar)
   end
 
   test "#broadcast_from broadcasts message on channel from publisher" do
-    Topic.create("topic")
-    assert Channel.broadcast_from(new_socket, "topic", :hello)
+    Topic.create("somechan:topic")
+    assert Channel.broadcast_from(new_socket, "somechan", "topic", :hello)
     message = JSON.encode!(:hello)
     refute_received message
   end

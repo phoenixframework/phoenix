@@ -45,9 +45,9 @@ defmodule Phoenix.Topic.TopicTest do
     pid = spawn_pid
     assert Topic.create("topic4") == :ok
     assert Enum.empty?(Topic.subscribers("topic4"))
-    assert Topic.subscribe("topic4", pid)
+    assert Topic.subscribe(pid, "topic4")
     assert Topic.subscribers("topic4") == [pid]
-    assert Topic.unsubscribe("topic4", pid)
+    assert Topic.unsubscribe(pid, "topic4")
     assert Enum.empty?(Topic.subscribers("topic4"))
     Process.exit pid, :kill
   end
@@ -55,7 +55,7 @@ defmodule Phoenix.Topic.TopicTest do
   test "#active? returns true if has subscribers" do
     pid = spawn_pid
     assert Topic.create("topic5") == :ok
-    assert Topic.subscribe("topic5", pid)
+    assert Topic.subscribe(pid, "topic5")
     assert Topic.active?("topic5")
     Process.exit pid, :kill
   end
@@ -76,7 +76,7 @@ defmodule Phoenix.Topic.TopicTest do
     pid = spawn_pid
     assert Topic.create("topic8", garbage_collect_after_ms: 25) == :ok
     assert Topic.exists?("topic8")
-    assert Topic.subscribe("topic8", pid)
+    assert Topic.subscribe(pid, "topic8")
     :timer.sleep 50
     assert Topic.exists?("topic8")
     Process.exit pid, :kill
@@ -84,7 +84,7 @@ defmodule Phoenix.Topic.TopicTest do
 
   test "#broadcast publishes message to each subscriber" do
     assert Topic.create("topic9") == :ok
-    Topic.subscribe("topic9", self)
+    Topic.subscribe(self, "topic9")
     Topic.broadcast "topic9", :ping
     assert_received :ping
   end
@@ -92,7 +92,7 @@ defmodule Phoenix.Topic.TopicTest do
   test "#broadcast does not publish message to other topic subscribers" do
     pids = Enum.map 0..10, fn _ -> spawn_pid end
     assert Topic.create("topic10") == :ok
-    pids |> Enum.each(&Topic.subscribe("topic10", &1))
+    pids |> Enum.each(&Topic.subscribe(&1, "topic10"))
     Topic.broadcast "topic10", :ping
     refute_received :ping
     pids |> Enum.each(&Process.exit &1, :kill)
@@ -100,7 +100,7 @@ defmodule Phoenix.Topic.TopicTest do
 
   test "#broadcast_from does not publish to broadcaster pid when provided" do
     assert Topic.create("topic11") == :ok
-    Topic.subscribe("topic11", self)
+    Topic.subscribe(self, "topic11")
     Topic.broadcast_from self, "topic11", :ping
     refute_received :ping
   end
@@ -108,7 +108,7 @@ defmodule Phoenix.Topic.TopicTest do
   test "processes automatically removed from topic when killed" do
     pid = spawn_pid
     assert Topic.create("topic12") == :ok
-    assert Topic.subscribe("topic12", pid)
+    assert Topic.subscribe(pid, "topic12")
     assert Topic.subscribers("topic12") == [pid]
     Process.exit pid, :kill
     :timer.sleep 10 # wait until pg2 removes dead pid

@@ -55,9 +55,9 @@ defmodule Phoenix.Topic do
 
   Examples
 
-  iex> Topic.subscribe("mytopic", self)
+  iex> Topic.subscribe(self, "mytopic")
   """
-  def subscribe(name, pid) do
+  def subscribe(pid, name) do
     :ok = create(name)
     :pg2.join(group(name), pid)
   end
@@ -67,9 +67,9 @@ defmodule Phoenix.Topic do
 
   Examples
 
-  iex> Topic.unsubscribe("mytopic", self)
+  iex> Topic.unsubscribe(self, "mytopic")
   """
-  def unsubscribe(name, pid) do
+  def unsubscribe(pid, name) do
     :pg2.leave(group(name), pid)
   end
 
@@ -78,7 +78,7 @@ defmodule Phoenix.Topic do
 
   iex> Topic.subscribers("mytopic")
   []
-  iex> Topic.subscribe("mytopic", self)
+  iex> Topic.subscribe(self, "mytopic")
   :ok
   iex> Topic.subscribers("mytopic")
   [#PID<0.41.0>]

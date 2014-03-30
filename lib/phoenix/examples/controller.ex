@@ -62,7 +62,7 @@ defmodule Phoenix.Examples.Controllers.Messages do
 
   def join(socket, message) do
     IO.puts "JOIN"
-    subscribe("messages", socket)
+    subscribe(socket, @channel, "activity")
     {:ok, socket}
   end
 
@@ -83,7 +83,7 @@ defmodule Phoenix.Examples.Controllers.Messages do
   def event("update", socket, message) do
     assigns = Dict.merge socket.assigns, message
     socket = socket.assigns(assigns)
-    broadcast "messages", broadcast: assigns
+    broadcast @channel, "messages", broadcast: assigns
     {:ok, socket }
   end
 
