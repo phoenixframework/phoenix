@@ -1,19 +1,19 @@
 defmodule Phoenix.Socket.Handler do
   @behaviour :cowboy_websocket_handler
 
-  defrecord Socket, conn: nil,
-                    pid: nil,
-                    router: nil,
-                    channels: [],
-                    assigns: []
-
+  alias Phoenix.Socket
+  alias Phoenix.Socket.Message
 
   def add_channel(socket, channel) do
-    socket.channels([channel | socket.channels])
+    %Socket{socket | channels: [channel | socket.channels]}
   end
 
   def delete_channel(socket, channel) do
-    socket.channels(List.delete(socket.channels, channel))
+    %Socket{socket | channels: List.delete(socket.channels, channel)}
+  end
+
+  def authenticated?(socket, channel) do
+    Enum.member? socket.channels, channel
   end
 
   def init({:tcp, :http}, req, opts) do
@@ -35,33 +35,38 @@ defmodule Phoenix.Socket.Handler do
   def websocket_init(transport, req, opts) do
     router = Dict.fetch! opts, :router
 
-    {:ok, req, Socket.new(conn: req, pid: self, router: router)}
+    {:ok, req, %Socket{conn: req, pid: self, router: router}}
   end
 
-  def websocket_handle({:text, text}, req, socket = Socket[router: router]) do
-    case JSON.decode(text) do
-      {:ok, json} ->
-        channel = json["channel"]
-        event   = json["event"]
-        message = json["message"]
+  def websocket_handle({:text, text}, req, socket = %Socket{router: router}) do
+    msg = Message.parse!(text)
+    dispatch(socket, msg.channel, msg.event, msg.message)
+  end
 
-        result  = router.match(socket, :websocket, channel, event, message)
-        handle_result(result, req, channel, event)
-
-      {:error, _reason, _} -> {:ok, req, socket} # TODO: Handle json failure
+  defp dispatch(socket, channel, "join", msg) do
+    result = socket.router.match(socket, :websocket, channel, "join", msg)
+    handle_result(result, socket.req, channel, "join")
+  end
+  defp dispatch(socket, channel, event, msg) when event in ["leave", "event"] do
+    if authenticated?(socket, channel) do
+      result = socket.router.match(socket, :websocket, channel, event, msg)
+      handle_result(result, socket.req, channel, event)
+    else
+      handle_result({:error, socket, :unauthenticated}, socket.req, channel, event)
     end
   end
+
   defp handle_result({:ok, socket}, req, channel, "join") do
     {:ok, req, add_channel(socket, channel)}
-  end
-  defp handle_result({:error, socket, reason}, req, _channel, "join") do
-    # unauthenticated
-    {:ok, req, socket}
   end
   defp handle_result({:ok, socket}, req, channel, "leave") do
     {:ok, req, delete_channel(socket, channel)}
   end
-  defp handle_result({:ok, socket}, req, channel, event) do
+  defp handle_result({:ok, socket}, req, _channel, _event) do
+    {:ok, req, socket}
+  end
+  defp handle_result({:error, socket, reason}, req, _channel, _event) do
+    # unauthenticated
     {:ok, req, socket}
   end
 

@@ -58,7 +58,7 @@ defmodule Phoenix.Examples.Controllers.Files do
 end
 
 defmodule Phoenix.Examples.Controllers.Messages do
-  import Phoenix.Channel
+  use Phoenix.Channel, channel: "messages"
 
   def join(socket, message) do
     IO.puts "JOIN"
