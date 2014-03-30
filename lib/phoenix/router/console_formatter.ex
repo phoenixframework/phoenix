@@ -1,7 +1,8 @@
 defmodule Phoenix.Router.ConsoleFormatter do
+  alias Phoenix.Project
 
   def default_router do
-    project_module.Config.Router
+    Project.module_root.Config.Router
   end
 
   def format(router) do
@@ -34,18 +35,12 @@ defmodule Phoenix.Router.ConsoleFormatter do
     [method_len, path_len, route_name_len] = column_widths
 
     controller_name = String.replace(to_string(controller),
-    to_string(project_module.Controllers) <> ".",
+    to_string(Project.module_root.Controllers) <> ".",
     "")
 
     String.rjust(to_string(route_name), route_name_len) <> "  " <>
     String.ljust(String.upcase(to_string(method)), method_len) <> "  " <>
     String.ljust(path, path_len) <> "  " <>
     controller_name <> "#" <> to_string(action)
-  end
-
-  defp project_module do
-    project_name = Keyword.get Mix.project, :app
-
-    binary_to_atom(Mix.Utils.camelize(to_string(project_name)))
   end
 end

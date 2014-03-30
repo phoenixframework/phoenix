@@ -2,7 +2,7 @@ defmodule Phoenix.Config.App do
   defmacro __using__(_) do
     quote do
       @before_compile unquote(__MODULE__)
-      use ExConf.Config, env_var: "PHOENIX_ENV"
+      use ExConf.Config, env_var: "MIX_ENV"
     end
   end
 

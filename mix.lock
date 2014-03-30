@@ -1,5 +1,5 @@
-%{"cowboy": {:git, "git://github.com/extend/cowboy.git", "9110ee83fe47e4c41b6c001b9ae401979f8ebe4c", []},
-  "cowlib": {:git, "git://github.com/extend/cowlib.git", "a6626f3b4539b07366034b4953ab2df29e3a9d58", [ref: "0.6.0"]},
+%{"cowboy": {:git, "git://github.com/extend/cowboy.git", "05024529679d1d0203b8dcd6e2932cc2a526d370", []},
+  "cowlib": {:git, "git://github.com/extend/cowlib.git", "f58340a0044856bb508df03cfe94cf79308380a2", [ref: "0.6.1"]},
   "ex_conf": {:git, "git://github.com/phoenixframework/ex_conf.git", "e6309e223d55a0dd6be63860ae8af5e0f021c11d", []},
   "ex_doc": {:git, "git://github.com/elixir-lang/ex_doc.git", "c14203bfca186f68ff178e5ada9af4f5fb37e205", []},
   "inflex": {:git, "git://github.com/nurugger07/inflex.git", "3cf7f6257e1a87e7309c554f546ff6fd5ebfe2fa", []},

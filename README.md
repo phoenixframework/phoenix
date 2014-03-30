@@ -12,13 +12,17 @@
 2. Create a new Phoenix application
 
         mix phoenix.new your_app /path/to/scaffold/your_app
-
-    *Important*: Run task from your installation directory. Note that `/path/to/scaffold/your_app` should not be inside the phoenix repo. Instead, provide a relative or fully-qualified path outside of the phoenix repository.
+        
+    *Important*: Run this task in the Phoenix installation directory cloned in the step above. The path provided: `/path/to/scaffold/your_app/` should be outside of the framework installation directory. This will either create a new application directory or install the application into an existing directory.
+    
+    #### Examples:
+        mix phoenix.new your_app /Users/you/projects/my_app
+        mix phoenix.new your_app ../relative_path/my_app
 
 3. Change directory to `/path/to/scaffold/your_app`. Install dependencies and start web server
 
-        mix deps.get
-        mix run -e 'YourApp.Router.start' --no-halt mix.exs
+        mix do deps.get, compile
+        mix phoenix.start
 
 
 ### Router example
@@ -79,7 +83,7 @@ end
 
 ### Configuration
 
-Phoenix provides a configuration per environment set by the `PHOENIX_ENV` environment variable. The default environment `Dev` will be set if `PHOENIX_ENV` does not exist.
+Phoenix provides a configuration per environment set by the `MIX_ENV` environment variable. The default environment `Dev` will be set if `MIX_ENV` does not exist.
 
 #### Configuration file structure:
 ```
