@@ -8,10 +8,23 @@ defmodule Phoenix.Channel do
     end
   end
 
+  @doc """
+  Subscribes socket to given topic based on current multiplexed channel
+  """
   def subscribe(socket, topic) do
     Topic.subscribe(socket.pid, namespaced(socket.channel, topic))
   end
 
+  @doc """
+  Broadcast Dict message, serializable as JSON to topic namedspaced by channel
+
+  Examples
+
+  iex> Channel.broadcast "messages", "create", id: 1, content: "hello"
+  :ok
+  iex> Channel.broadcast socket, "create", id: 1, content: "hello"
+  :ok
+  """
   def broadcast(channel, topic, message) when is_binary(channel) do
     broadcast_from :global, channel, topic, message
   end
@@ -30,7 +43,11 @@ defmodule Phoenix.Channel do
                          reply_json(message)
   end
 
+  @doc """
+  Sends Dict, JSON serializable message to socket
+  """
   def reply(socket, message) do
+    # TODO: Needs to be channel/topic namespaced
     send socket.pid, {:reply, {:text, JSON.encode!(message)}}
     {:ok, socket}
   end

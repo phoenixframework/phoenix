@@ -3,6 +3,16 @@ defmodule Phoenix.Socket.Message do
 
   defstruct channel: nil, event: nil, message: nil
 
+  @doc """
+  Parse json message into required format, raise if invalid
+
+  Messages require the following keys:
+    * channel - The String Channel namespace, ie "messages"
+    * event - The String event name, ie "join"
+    * message - The String JSON message payload
+
+  Returns The Message Map parsed from JSON
+  """
   def parse!(text) do
     case JSON.decode(text) do
       {:ok, json} ->
