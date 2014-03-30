@@ -28,6 +28,7 @@ defmodule Phoenix.Topic do
   end
 
   def subscribe(name, pid) do
+    :ok = create(name)
     :pg2.join(group(name), pid)
   end
 
@@ -35,13 +36,19 @@ defmodule Phoenix.Topic do
     :pg2.leave(group(name), pid)
   end
 
-  def group(name), do: "#{@pg_prefix}_#{name}"
-
-  def members(name) do
-    :pg2.get_members group(name)
+  def subscribers(name) do
+    :pg2.get_members(group(name))
   end
 
-  def active?(name), do: Enum.any?(members(name))
+  def broadcast(name, message) do
+    name
+    |> subscribers
+    |> Enum.each fn pid -> send(pid, message) end
+  end
+
+  def group(name), do: "#{@pg_prefix}:#{name}"
+
+  def active?(name), do: exists?(name) && Enum.any?(subscribers(name))
 
   def init([name, garbage_collect_after_ms]) do
     :ok = :pg2.create(group(name))
@@ -49,11 +56,11 @@ defmodule Phoenix.Topic do
     {:ok, {name, timer}}
   end
 
-  def handle_info(:garbage_collect, state = {name, timer}) do
-    if !exists?(name) || !active?(name) do
-      {:stop, :shutdown, state}
-    else
+  def handle_info(:garbage_collect, state = {name, _timer}) do
+    if active?(name) do
       {:noreply, state}
+    else
+      {:stop, :shutdown, state}
     end
   end
 
@@ -63,3 +70,4 @@ defmodule Phoenix.Topic do
     :ok
   end
 end
+
