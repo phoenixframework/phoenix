@@ -38,12 +38,10 @@ class @Phoenix.Socket
 
   join: (channel, topic, callback) ->
     @awaitingJoins.push({topic: topic, callback: callback})
-    @send({channel: channel, event: "join", message: {topic: topic}})
+    @send({channel: channel, event: "join", topic: topic, message: {foo: "bar"}})
 
 
-  send: ({channel, event, message}) ->
-    @conn.send(JSON.stringify({channel, event, message}))
-
+  send: (data) -> @conn.send(JSON.stringify(data))
 
   onError: (error) -> console.log?("WS: #{error}")
 
@@ -61,9 +59,12 @@ class @Phoenix.Socket
     console.log eventData
     {channel, topic, event, message} = eventData
 
-    switch event
-      when "join:success" then @triggerAwaitingJoinSuccess(topic, message)
-      when "join:failure" then @triggerAwaitingJoinFailure(topic, message)
+    switch topic
+      when "join"
+        if event is "success"
+          @triggerAwaitingJoinSuccess(topic, message)
+        else
+          @triggerAwaitingJoinFailure(topic, message)
       else
         @triggerSubscriptionCallback(channel, topic, message)
 
@@ -74,6 +75,7 @@ class @Phoenix.Socket
 
 
   triggerAwaitingJoinSuccess: (joinedTopic, message) ->
+    console.log "success!"
     for {topic, callback}, index in @awaitingJoins when topic is joinedTopic
       callback?(null, message)
       @awaitingJoins.splice(index, 1)
@@ -83,6 +85,14 @@ class @Phoenix.Socket
     for {topic, callback} in @awaitingJoins when topic is joinedTopic
       callback?(err, message)
       @awaitingJoins.splice(index, 1)
+
+
+socket = new Phoenix.Socket("ws://localhost:4000/ws")
+socket.join "messages", (error, topic) ->
+  throw error if error
+  socket.subscribe("messages", )
+
+
 
 
 

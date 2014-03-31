@@ -26,6 +26,9 @@ defmodule Phoenix.Socket.Handler do
     {:ok, req, %Socket{conn: req, pid: self, router: router}}
   end
 
+  @doc """
+  Dispatches socket message to Router and handles result
+  """
   def websocket_handle({:text, text}, _req, socket) do
     msg = Message.parse!(text)
     socket = Socket.set_current_channel(socket, msg.channel)

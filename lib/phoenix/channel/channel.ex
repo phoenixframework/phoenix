@@ -46,9 +46,14 @@ defmodule Phoenix.Channel do
   @doc """
   Sends Dict, JSON serializable message to socket
   """
-  def reply(socket, message) do
+  def reply(socket, topic, event, message) do
     # TODO: Needs to be channel/topic namespaced
-    send socket.pid, {:reply, {:text, JSON.encode!(message)}}
+    send socket.pid, {:reply, {:text, JSON.encode!(
+      channel: socket.channel,
+      topic: topic,
+      event: event,
+      message: message
+    )}}
     {:ok, socket}
   end
 

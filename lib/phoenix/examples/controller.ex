@@ -60,9 +60,9 @@ end
 defmodule Phoenix.Examples.Controllers.Messages do
   use Phoenix.Channel
 
-  def join(socket, message) do
+  def join(socket, topic, message) do
     IO.puts "JOIN"
-    reply(socket, welcome: "it works!")
+    reply(socket, "join", "success", [])
     subscribe(socket, "activity")
     {:ok, socket}
   end
@@ -78,7 +78,7 @@ defmodule Phoenix.Examples.Controllers.Messages do
   end
 
   def event("ping", socket, message) do
-    reply(socket, :pong)
+    # reply(socket, :pong)
   end
 
   def event("update", socket, message) do

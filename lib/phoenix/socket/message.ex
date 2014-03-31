@@ -1,7 +1,7 @@
 defmodule Phoenix.Socket.Message do
   alias Phoenix.Socket.Message
 
-  defstruct channel: nil, event: nil, message: nil
+  defstruct channel: nil, topic: nil, event: nil, message: nil
 
   @doc """
   Parse json message into required format, raise if invalid
@@ -18,6 +18,7 @@ defmodule Phoenix.Socket.Message do
       {:ok, json} ->
         %Message{
           channel: Dict.fetch!(json, "channel"),
+          topic:   Dict.fetch!(json, "topic"),
           event:   Dict.fetch!(json, "event"),
           message: Dict.fetch!(json, "message")
         }
