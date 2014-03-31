@@ -36,9 +36,9 @@ class @Phoenix.Socket
     @join(join) for join in @awaitingJoins
 
 
-  join: (channel, topic, callback) ->
+  join: (channel, topic, message, callback) ->
     @awaitingJoins.push({topic: topic, callback: callback})
-    @send({channel: channel, event: "join", topic: topic, message: {foo: "bar"}})
+    @send({channel: channel, event: "join", topic: topic, message: message})
 
 
   send: (data) -> @conn.send(JSON.stringify(data))
@@ -85,13 +85,6 @@ class @Phoenix.Socket
     for {topic, callback} in @awaitingJoins when topic is joinedTopic
       callback?(err, message)
       @awaitingJoins.splice(index, 1)
-
-
-socket = new Phoenix.Socket("ws://localhost:4000/ws")
-socket.join "messages", (error, topic) ->
-  throw error if error
-  socket.subscribe("messages", )
-
 
 
 
