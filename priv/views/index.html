@@ -1,9 +1,49 @@
 <html>
   <head>
     <title>Phoenix</title>
-    <script async src="/static/phoenix.js" type='text/javascript'></script>
+    <script src="/static/phoenix.js" type='text/javascript'></script>
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js" type='text/javascript'></script>
+    <script type="text/javascript">
+
+
+      $(function(){
+        var socket     = new Phoenix.Socket("ws://localhost:4000/ws");
+        var $status    = $("#status");
+        var $messages  = $("#messages");
+        var $input     = $("#message-input");
+
+        socket.join("messages", "global", {}, function(chan){
+
+          $input.off("keypress").on("keypress", function(e) {
+            if (e.keyCode == 13) {
+              chan.send("new", {body: $input.val()});
+              $input.val("");
+            }
+          });
+
+          chan.on("join", function(message){
+            $status.text("joined");
+          });
+
+          chan.on("new", function(message){
+            $messages.append("<br/>" + message.body);
+          });
+
+          chan.on("user:entered", function(msg){
+            $messages.append("<br/><i>[" + msg.username + " entered]</i>");
+          });
+        });
+      });
+    </script>
   </head>
   <body>
-    <h1>Welcome to Phoenix</h1>
+    <h1>Phoenix Chat Example</h1>
+
+    <h3>Status: <small id="status">Not Connected</small></h3>
+
+    <div id="messages"></div>
+    <input id="message-input" type="text">
+    <br/>
   </body>
 </html>
+

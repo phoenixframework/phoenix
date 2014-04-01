@@ -33,10 +33,18 @@ class @Phoenix.Socket
   conn: null
   endPoint: null
   channels: null
+  sendBuffer: null
+  sendBufferTimer: null
+  flushEveryMs: 50
+  reconnectTimer: null
+  reconnectAfterMs: 1000
+
 
   constructor: (@endPoint) ->
     @channels = []
     @reconnect()
+    @sendBuffer = []
+    @resetBufferTimer()
 
 
   reconnect: ->
@@ -47,14 +55,33 @@ class @Phoenix.Socket
     @conn.onclose = (event) => @onClose(event)
 
 
+  resetBufferTimer: ->
+    clearTimeout(@sendBufferTimer)
+    @sendBufferTimer = setTimeout((=> @flushSendBuffer()), @flushEveryMs)
+
+
+  onOpen: ->
+    clearTimeout(@reconnectTimer)
+    @rejoinAll()
+
+
   onClose: (event) ->
     console.log("WS: #{event}")
-    # @reconnect()
+    clearTimeout(@reconnectTimer)
+    @reconnectTimer = setTimeout (=> @reconnect() ), @reconnectAfterMs
 
-
-  onOpen: -> @rejoinAll()
 
   onError: (error) -> console.log?("WS: #{error}")
+
+  connectionState: ->
+    switch @conn.readyState
+      when 0 then "connecting"
+      when 1 then "open"
+      when 2 then "closing"
+      when 3 then "closed"
+
+
+  isConnected: -> @connectionState() is "open"
 
   rejoinAll: -> @rejoin(chan) for chan in @channels
 
@@ -69,7 +96,7 @@ class @Phoenix.Socket
   join: (channel, topic, message, callback) ->
     chan = new Phoenix.Channel(channel, topic, message, callback, this)
     @channels.push(chan)
-    @rejoin(chan)
+    @rejoin(chan) if @isConnected()
 
 
   unjoin: (channel, topic) ->
@@ -77,30 +104,24 @@ class @Phoenix.Socket
 
 
   send: (data) ->
-    console.log "Sending: #{data}"
-    @conn.send(JSON.stringify(data))
+    callback = => @conn.send(JSON.stringify(data))
+    if @isConnected()
+      callback()
+    else
+      @sendBuffer.push callback
+
+
+  flushSendBuffer: ->
+    if @isConnected() and @sendBuffer.length > 0
+      callback() for callback in @sendBuffer
+      @sendBuffer = []
+    @resetBufferTimer()
+
 
   onMessage: (rawMessage) ->
     console.log rawMessage
     {channel, topic, event, message} = JSON.parse(rawMessage.data)
     for chan in @channels when chan.isMember(channel, topic)
       chan.trigger(event, message)
-
-
-# socket = new Phoenix.Socket("")
-# socket.join "messages", room, (channel) ->
-#   channel.on "user:entered" ->
-#   channel.on "user:leave", ->
-#
-# socket.join "messages", "global", (channel) ->
-#   channel.on "user:entered", ->
-#
-# socket.join "messages", organization, (channel) ->
-#   channel.on "join", ->
-#   channel.on "error", ->
-#   channel.on "new", ->
-
-
-
 
 

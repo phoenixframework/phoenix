@@ -78,10 +78,22 @@
 
     Socket.prototype.channels = null;
 
+    Socket.prototype.sendBuffer = null;
+
+    Socket.prototype.sendBufferTimer = null;
+
+    Socket.prototype.flushEveryMs = 50;
+
+    Socket.prototype.reconnectTimer = null;
+
+    Socket.prototype.reconnectAfterMs = 1000;
+
     function Socket(endPoint) {
       this.endPoint = endPoint;
       this.channels = [];
       this.reconnect();
+      this.sendBuffer = [];
+      this.resetBufferTimer();
     }
 
     Socket.prototype.reconnect = function() {
@@ -108,16 +120,49 @@
       })(this);
     };
 
-    Socket.prototype.onClose = function(event) {
-      return console.log("WS: " + event);
+    Socket.prototype.resetBufferTimer = function() {
+      clearTimeout(this.sendBufferTimer);
+      return this.sendBufferTimer = setTimeout(((function(_this) {
+        return function() {
+          return _this.flushSendBuffer();
+        };
+      })(this)), this.flushEveryMs);
     };
 
     Socket.prototype.onOpen = function() {
+      clearTimeout(this.reconnectTimer);
       return this.rejoinAll();
+    };
+
+    Socket.prototype.onClose = function(event) {
+      console.log("WS: " + event);
+      clearTimeout(this.reconnectTimer);
+      return this.reconnectTimer = setTimeout(((function(_this) {
+        return function() {
+          return _this.reconnect();
+        };
+      })(this)), this.reconnectAfterMs);
     };
 
     Socket.prototype.onError = function(error) {
       return typeof console.log === "function" ? console.log("WS: " + error) : void 0;
+    };
+
+    Socket.prototype.connectionState = function() {
+      switch (this.conn.readyState) {
+        case 0:
+          return "connecting";
+        case 1:
+          return "open";
+        case 2:
+          return "closing";
+        case 3:
+          return "closed";
+      }
+    };
+
+    Socket.prototype.isConnected = function() {
+      return this.connectionState() === "open";
     };
 
     Socket.prototype.rejoinAll = function() {
@@ -148,7 +193,9 @@
       var chan;
       chan = new Phoenix.Channel(channel, topic, message, callback, this);
       this.channels.push(chan);
-      return this.rejoin(chan);
+      if (this.isConnected()) {
+        return this.rejoin(chan);
+      }
     };
 
     Socket.prototype.unjoin = function(channel, topic) {
@@ -168,8 +215,30 @@
     };
 
     Socket.prototype.send = function(data) {
-      console.log("Sending: " + data);
-      return this.conn.send(JSON.stringify(data));
+      var callback;
+      callback = (function(_this) {
+        return function() {
+          return _this.conn.send(JSON.stringify(data));
+        };
+      })(this);
+      if (this.isConnected()) {
+        return callback();
+      } else {
+        return this.sendBuffer.push(callback);
+      }
+    };
+
+    Socket.prototype.flushSendBuffer = function() {
+      var callback, _i, _len, _ref;
+      if (this.isConnected() && this.sendBuffer.length > 0) {
+        _ref = this.sendBuffer;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          callback = _ref[_i];
+          callback();
+        }
+        this.sendBuffer = [];
+      }
+      return this.resetBufferTimer();
     };
 
     Socket.prototype.onMessage = function(rawMessage) {

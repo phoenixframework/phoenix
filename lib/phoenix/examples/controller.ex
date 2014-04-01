@@ -61,29 +61,15 @@ defmodule Phoenix.Examples.Controllers.Messages do
   use Phoenix.Channel
 
   def join(socket, message) do
-    IO.puts "JOIN"
-    reply(socket, "join", notice: "welcome!")
-    broadcast(socket, "user:entered", user_id: 123)
+    IO.puts "JOIN #{socket.channel}:#{socket.topic}"
+    reply socket, "join", status: "connected"
+    broadcast socket, "user:entered", username: "anonymous"
     {:ok, socket}
   end
 
-  def leave(socket, message) do
+  def event("new", socket, message) do
+    broadcast socket, "new", message
     {:ok, socket}
-  end
-
-  def event("state", socket, message) do
-    IO.puts "STATE"
-    IO.inspect socket
-    reply(socket, "info", info: "info")
-    {:ok, socket}
-  end
-
-  def event("ping", socket, message) do
-    # reply(socket, :pong)
-  end
-
-  def event("update", socket, message) do
-    {:ok, socket }
   end
 
 end
