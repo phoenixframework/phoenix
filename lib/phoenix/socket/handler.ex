@@ -28,7 +28,13 @@ defmodule Phoenix.Socket.Handler do
   end
 
   @doc """
-  Dispatches socket message to Router and handles result
+  Dispatches multiplexed socket message to Router and handles result
+
+  Events
+
+  "join" events are specially treated. When {:ok, socket} is returned
+  from the Channel, the socket is subscribed to the requested channel
+  and the channel is added to the socket's authorized channels.
   """
   def websocket_handle({:text, text}, _req, socket) do
     msg = Message.parse!(text)
@@ -68,9 +74,7 @@ defmodule Phoenix.Socket.Handler do
   end
 
   @doc """
-  Handles handles recieving messages from erlang processes. Default returns
-    {:ok, state}
-  Possible Returns are identical to stream, all replies gets send to the client.
+  Handles handles recieving messages from processes
   """
   def info(_info, _req, state) do
     {:ok, state}
@@ -96,10 +100,11 @@ defmodule Phoenix.Socket.Handler do
   @doc """
   This is called right before the websocket is about to be closed.
   Reason is defined as:
-   {:normal, :shutdown | :timeout}                        # Called when erlang closes connection
-   {:remote, :closed}                                     # Called if the client formally closes connection
+   {:normal, :shutdown | :timeout}   Called when erlang closes connection
+   {:remote, :closed}                Called if client formally closes connection
    {:remote, close_code(), binary()}
-   {:error, :badencoding | :badframe | :closed | atom()}  # Called for many reasons: tab closed, connection dropped.
+   {:error, :badencoding | :badframe | :closed | atom()}  Called for many reasons
+                                                          tab closed, conn dropped.
   """
   def websocket_terminate(reason, _req, socket) do
     Enum.each socket.channels, fn channel ->
@@ -110,13 +115,16 @@ defmodule Phoenix.Socket.Handler do
 
   @doc """
   Sends a reply to the socket. Follow the cowboy websocket frame syntax
+
   Frame is defined as
     :close | :ping | :pong
     {:text | :binary | :close | :ping | :pong, iodata()}
     {:close, close_code(), iodata()}
+
   Options:
     :state
     :hibernate # (true | false) if you want to hibernate the connection
+
   close_code: 1000..4999
   """
   def reply(socket, frame, state \\ []) do

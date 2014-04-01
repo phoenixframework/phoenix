@@ -9,7 +9,7 @@ defmodule Phoenix.Channel do
   end
 
   @doc """
-  Subscribes socket to given topic based on current multiplexed channel
+  Subscribes socket to given channel topic
   """
   def subscribe(socket, channel, topic) do
     Topic.subscribe(socket.pid, namespaced(channel, topic))
@@ -38,7 +38,7 @@ defmodule Phoenix.Channel do
 
   def broadcast_from(from, channel, topic, event, message) do
     Topic.create(namespaced(channel, topic))
-    Topic.broadcast_from(from, namespaced(channel, topic), reply_json(
+    Topic.broadcast_from(from, namespaced(channel, topic), reply_json_frame(
       channel: channel,
       topic: topic,
       event: event,
@@ -50,16 +50,19 @@ defmodule Phoenix.Channel do
   Sends Dict, JSON serializable message to socket
   """
   def reply(socket, event, message) do
-    send socket.pid, {:reply, {:text, JSON.encode!(
+    send socket.pid, reply_json_frame(
       channel: socket.channel,
       topic: socket.topic,
       event: event,
       message: message
-    )}}
+    )
     {:ok, socket}
   end
 
-  def reply_json(message) do
+  @doc """
+  Converts Dict message into JSON text reply frame for Websocket Handler
+  """
+  def reply_json_frame(message) do
     {:reply, {:text, JSON.encode!(message)}}
   end
 
