@@ -3,6 +3,7 @@ defmodule Phoenix.Socket.Handler do
 
   alias Phoenix.Socket
   alias Phoenix.Socket.Message
+  alias Phoenix.Channel
 
   def init({:tcp, :http}, req, opts) do
     {:upgrade, :protocol, :cowboy_websocket, req, opts}
@@ -31,17 +32,19 @@ defmodule Phoenix.Socket.Handler do
   """
   def websocket_handle({:text, text}, _req, socket) do
     msg = Message.parse!(text)
-    socket = Socket.set_current_channel(socket, msg.channel)
-    dispatch(socket, msg.channel, msg.event, msg.message)
+
+    socket
+    |> Socket.set_current_channel(msg.channel, msg.topic)
+    |> dispatch(msg.event, msg.message)
   end
 
-  defp dispatch(socket, channel, "join", msg) do
-    result = socket.router.match(socket, :websocket, channel, "join", msg)
+  defp dispatch(socket, "join", msg) do
+    result = socket.router.match(socket, :websocket, socket.channel, "join", msg)
     handle_result(result, "join")
   end
-  defp dispatch(socket, channel, event, msg) when event in ["leave", "event"] do
-    if Socket.authenticated?(socket, channel) do
-      result = socket.router.match(socket, :websocket, channel, event, msg)
+  defp dispatch(socket, event, msg) do
+    if Socket.authenticated?(socket, socket.channel, socket.topic) do
+      result = socket.router.match(socket, :websocket, socket.channel, event, msg)
       handle_result(result, event)
     else
       handle_result({:error, socket, :unauthenticated}, event)
@@ -49,10 +52,12 @@ defmodule Phoenix.Socket.Handler do
   end
 
   defp handle_result({:ok, socket}, "join") do
-    {:ok, socket.conn, Socket.add_channel(socket, socket.channel)}
+    socket = Socket.add_channel(socket, socket.channel, socket.topic)
+    Channel.subscribe(socket, socket.channel, socket.topic)
+    {:ok, socket.conn, socket}
   end
   defp handle_result({:ok, socket}, "leave") do
-    {:ok, socket.conn, Socket.delete_channel(socket, socket.channel)}
+    {:ok, socket.conn, Socket.delete_channel(socket, socket.channel, socket.topic)}
   end
   defp handle_result({:ok, socket}, _event) do
     {:ok, socket.conn, socket}

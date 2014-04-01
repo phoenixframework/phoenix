@@ -1,90 +1,105 @@
 @Phoenix = {}
 
 
+class @Phoenix.Channel
+
+  bindings: null
+
+  constructor: (@channel, @topic, @message, @callback, @socket) ->
+    @reset()
+
+
+  reset: -> @bindings = []
+
+  on: (event, callback) -> @bindings.push({event, callback})
+
+  isMember: (channel, topic) -> @channel is channel and @topic is topic
+
+  off: (event) ->
+    @bindings = (bind for bind in @bindings when bind.event isnt event)
+
+
+  trigger: (triggerEvent, msg) ->
+    callback(msg) for {event, callback} in @bindings when event is triggerEvent
+
+
+  send: (event, message) -> @socket.send({@channel, @topic, event, message})
+
+
+
+
 class @Phoenix.Socket
 
   conn: null
   endPoint: null
-  subscriptions: null
-  awaitingJoins: null
+  channels: null
 
   constructor: (@endPoint) ->
-    @subscriptions = []
-    @awaitingJoins = []
-    @connect()
+    @channels = []
+    @reconnect()
 
 
-  connect: ->
+  reconnect: ->
     @conn = new WebSocket(@endPoint)
-    @conn.onopen = =>
-      @subscribeAll()
-      @joinAll()
-      @onOpen()
-
+    @conn.onopen = => @onOpen()
     @conn.onerror = (error) => @onError(error)
-    @conn.onmessage = (event) =>  @onEvent(event)
+    @conn.onmessage = (event) =>  @onMessage(event)
+    @conn.onclose = (event) => @onClose(event)
 
 
-  onOpen: -> #noop
-
-  # Retrigger all subscriptions
-  subscribeAll: ->
-    @subscribe(sub) for sub in @subscriptions
-
-  # Retrigger all joins
-  joinAll: ->
-    @join(join) for join in @awaitingJoins
+  onClose: (event) ->
+    console.log("WS: #{event}")
+    # @reconnect()
 
 
-  join: (channel, topic, message, callback) ->
-    @awaitingJoins.push({topic: topic, callback: callback})
-    @send({channel: channel, event: "join", topic: topic, message: message})
-
-
-  send: (data) -> @conn.send(JSON.stringify(data))
+  onOpen: -> @rejoinAll()
 
   onError: (error) -> console.log?("WS: #{error}")
 
-  subscribe: (channel, topic, callback) ->
-    @subscriptions.push({channel, topic, callback})
+  rejoinAll: -> @rejoin(chan) for chan in @channels
+
+  rejoin: (chan) ->
+    chan.reset()
+    {channel, topic, message} = chan
+    @send(channel: channel, topic: topic, event: "join", message: message)
+
+    chan.callback(chan)
 
 
-  unsubscribe: (channel, topic) ->
-    for sub, index in @subscriptions when sub.channel is channel and sub.topic is topic
-      @subscriptions.splice(index, 1)
+  join: (channel, topic, message, callback) ->
+    chan = new Phoenix.Channel(channel, topic, message, callback, this)
+    @channels.push(chan)
+    @rejoin(chan)
 
 
-  onEvent: (event) ->
-    eventData = JSON.parse(event.data)
-    console.log eventData
-    {channel, topic, event, message} = eventData
-
-    switch topic
-      when "join"
-        if event is "success"
-          @triggerAwaitingJoinSuccess(topic, message)
-        else
-          @triggerAwaitingJoinFailure(topic, message)
-      else
-        @triggerSubscriptionCallback(channel, topic, message)
+  unjoin: (channel, topic) ->
+    @channels = (c for c in @channels when not(c.isMember(channel, topic)))
 
 
-  triggerSubscriptionCallback: (channel, topic, message) ->
-    for sub, index in @subscriptions when sub.channel is channel and sub.topic is topic
-      sub.callback?(message)
+  send: (data) ->
+    console.log "Sending: #{data}"
+    @conn.send(JSON.stringify(data))
+
+  onMessage: (rawMessage) ->
+    console.log rawMessage
+    {channel, topic, event, message} = JSON.parse(rawMessage.data)
+    for chan in @channels when chan.isMember(channel, topic)
+      chan.trigger(event, message)
 
 
-  triggerAwaitingJoinSuccess: (joinedTopic, message) ->
-    console.log "success!"
-    for {topic, callback}, index in @awaitingJoins when topic is joinedTopic
-      callback?(null, message)
-      @awaitingJoins.splice(index, 1)
+# socket = new Phoenix.Socket("")
+# socket.join "messages", room, (channel) ->
+#   channel.on "user:entered" ->
+#   channel.on "user:leave", ->
+#
+# socket.join "messages", "global", (channel) ->
+#   channel.on "user:entered", ->
+#
+# socket.join "messages", organization, (channel) ->
+#   channel.on "join", ->
+#   channel.on "error", ->
+#   channel.on "new", ->
 
-
-  triggerAwaitingJoinFailure: (joinedTopic, message) ->
-    for {topic, callback} in @awaitingJoins when topic is joinedTopic
-      callback?(err, message)
-      @awaitingJoins.splice(index, 1)
 
 
 

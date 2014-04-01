@@ -8,6 +8,7 @@ defmodule Phoenix.Socket.Message do
 
   Messages require the following keys:
     * channel - The String Channel namespace, ie "messages"
+    * topic - The String Topic namespace, ie "123"
     * event - The String event name, ie "join"
     * message - The String JSON message payload
 

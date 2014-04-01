@@ -2,28 +2,92 @@
 (function() {
   this.Phoenix = {};
 
+  this.Phoenix.Channel = (function() {
+    Channel.prototype.bindings = null;
+
+    function Channel(channel, topic, message, callback, socket) {
+      this.channel = channel;
+      this.topic = topic;
+      this.message = message;
+      this.callback = callback;
+      this.socket = socket;
+      this.reset();
+    }
+
+    Channel.prototype.reset = function() {
+      return this.bindings = [];
+    };
+
+    Channel.prototype.on = function(event, callback) {
+      return this.bindings.push({
+        event: event,
+        callback: callback
+      });
+    };
+
+    Channel.prototype.isMember = function(channel, topic) {
+      return this.channel === channel && this.topic === topic;
+    };
+
+    Channel.prototype.off = function(event) {
+      var bind;
+      return this.bindings = (function() {
+        var _i, _len, _ref, _results;
+        _ref = this.bindings;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          bind = _ref[_i];
+          if (bind.event !== event) {
+            _results.push(bind);
+          }
+        }
+        return _results;
+      }).call(this);
+    };
+
+    Channel.prototype.trigger = function(triggerEvent, msg) {
+      var callback, event, _i, _len, _ref, _ref1, _results;
+      _ref = this.bindings;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        _ref1 = _ref[_i], event = _ref1.event, callback = _ref1.callback;
+        if (event === triggerEvent) {
+          _results.push(callback(msg));
+        }
+      }
+      return _results;
+    };
+
+    Channel.prototype.send = function(event, message) {
+      return this.socket.send({
+        channel: this.channel,
+        topic: this.topic,
+        event: event,
+        message: message
+      });
+    };
+
+    return Channel;
+
+  })();
+
   this.Phoenix.Socket = (function() {
     Socket.prototype.conn = null;
 
     Socket.prototype.endPoint = null;
 
-    Socket.prototype.subscriptions = null;
-
-    Socket.prototype.awaitingJoins = null;
+    Socket.prototype.channels = null;
 
     function Socket(endPoint) {
       this.endPoint = endPoint;
-      this.subscriptions = [];
-      this.awaitingJoins = [];
-      this.connect();
+      this.channels = [];
+      this.reconnect();
     }
 
-    Socket.prototype.connect = function() {
+    Socket.prototype.reconnect = function() {
       this.conn = new WebSocket(this.endPoint);
       this.conn.onopen = (function(_this) {
         return function() {
-          _this.subscribeAll();
-          _this.joinAll();
           return _this.onOpen();
         };
       })(this);
@@ -32,141 +96,93 @@
           return _this.onError(error);
         };
       })(this);
-      return this.conn.onmessage = (function(_this) {
+      this.conn.onmessage = (function(_this) {
         return function(event) {
-          return _this.onEvent(event);
+          return _this.onMessage(event);
+        };
+      })(this);
+      return this.conn.onclose = (function(_this) {
+        return function(event) {
+          return _this.onClose(event);
         };
       })(this);
     };
 
-    Socket.prototype.onOpen = function() {};
-
-    Socket.prototype.subscribeAll = function() {
-      var sub, _i, _len, _ref, _results;
-      _ref = this.subscriptions;
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        sub = _ref[_i];
-        _results.push(this.subscribe(sub));
-      }
-      return _results;
+    Socket.prototype.onClose = function(event) {
+      return console.log("WS: " + event);
     };
 
-    Socket.prototype.joinAll = function() {
-      var join, _i, _len, _ref, _results;
-      _ref = this.awaitingJoins;
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        join = _ref[_i];
-        _results.push(this.join(join));
-      }
-      return _results;
-    };
-
-    Socket.prototype.join = function(channel, topic, message, callback) {
-      this.awaitingJoins.push({
-        topic: topic,
-        callback: callback
-      });
-      return this.send({
-        channel: channel,
-        event: "join",
-        topic: topic,
-        message: message
-      });
-    };
-
-    Socket.prototype.send = function(data) {
-      return this.conn.send(JSON.stringify(data));
+    Socket.prototype.onOpen = function() {
+      return this.rejoinAll();
     };
 
     Socket.prototype.onError = function(error) {
       return typeof console.log === "function" ? console.log("WS: " + error) : void 0;
     };
 
-    Socket.prototype.subscribe = function(channel, topic, callback) {
-      return this.subscriptions.push({
-        channel: channel,
-        topic: topic,
-        callback: callback
-      });
-    };
-
-    Socket.prototype.unsubscribe = function(channel, topic) {
-      var index, sub, _i, _len, _ref, _results;
-      _ref = this.subscriptions;
-      _results = [];
-      for (index = _i = 0, _len = _ref.length; _i < _len; index = ++_i) {
-        sub = _ref[index];
-        if (sub.channel === channel && sub.topic === topic) {
-          _results.push(this.subscriptions.splice(index, 1));
-        }
-      }
-      return _results;
-    };
-
-    Socket.prototype.onEvent = function(event) {
-      var channel, eventData, message, topic;
-      eventData = JSON.parse(event.data);
-      console.log(eventData);
-      channel = eventData.channel, topic = eventData.topic, event = eventData.event, message = eventData.message;
-      switch (topic) {
-        case "join":
-          if (event === "success") {
-            return this.triggerAwaitingJoinSuccess(topic, message);
-          } else {
-            return this.triggerAwaitingJoinFailure(topic, message);
-          }
-          break;
-        default:
-          return this.triggerSubscriptionCallback(channel, topic, message);
-      }
-    };
-
-    Socket.prototype.triggerSubscriptionCallback = function(channel, topic, message) {
-      var index, sub, _i, _len, _ref, _results;
-      _ref = this.subscriptions;
-      _results = [];
-      for (index = _i = 0, _len = _ref.length; _i < _len; index = ++_i) {
-        sub = _ref[index];
-        if (sub.channel === channel && sub.topic === topic) {
-          _results.push(typeof sub.callback === "function" ? sub.callback(message) : void 0);
-        }
-      }
-      return _results;
-    };
-
-    Socket.prototype.triggerAwaitingJoinSuccess = function(joinedTopic, message) {
-      var callback, index, topic, _i, _len, _ref, _ref1, _results;
-      console.log("success!");
-      _ref = this.awaitingJoins;
-      _results = [];
-      for (index = _i = 0, _len = _ref.length; _i < _len; index = ++_i) {
-        _ref1 = _ref[index], topic = _ref1.topic, callback = _ref1.callback;
-        if (!(topic === joinedTopic)) {
-          continue;
-        }
-        if (typeof callback === "function") {
-          callback(null, message);
-        }
-        _results.push(this.awaitingJoins.splice(index, 1));
-      }
-      return _results;
-    };
-
-    Socket.prototype.triggerAwaitingJoinFailure = function(joinedTopic, message) {
-      var callback, topic, _i, _len, _ref, _ref1, _results;
-      _ref = this.awaitingJoins;
+    Socket.prototype.rejoinAll = function() {
+      var chan, _i, _len, _ref, _results;
+      _ref = this.channels;
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        _ref1 = _ref[_i], topic = _ref1.topic, callback = _ref1.callback;
-        if (!(topic === joinedTopic)) {
-          continue;
+        chan = _ref[_i];
+        _results.push(this.rejoin(chan));
+      }
+      return _results;
+    };
+
+    Socket.prototype.rejoin = function(chan) {
+      var channel, message, topic;
+      chan.reset();
+      channel = chan.channel, topic = chan.topic, message = chan.message;
+      this.send({
+        channel: channel,
+        topic: topic,
+        event: "join",
+        message: message
+      });
+      return chan.callback(chan);
+    };
+
+    Socket.prototype.join = function(channel, topic, message, callback) {
+      var chan;
+      chan = new Phoenix.Channel(channel, topic, message, callback, this);
+      this.channels.push(chan);
+      return this.rejoin(chan);
+    };
+
+    Socket.prototype.unjoin = function(channel, topic) {
+      var c;
+      return this.channels = (function() {
+        var _i, _len, _ref, _results;
+        _ref = this.channels;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          c = _ref[_i];
+          if (!(c.isMember(channel, topic))) {
+            _results.push(c);
+          }
         }
-        if (typeof callback === "function") {
-          callback(err, message);
+        return _results;
+      }).call(this);
+    };
+
+    Socket.prototype.send = function(data) {
+      console.log("Sending: " + data);
+      return this.conn.send(JSON.stringify(data));
+    };
+
+    Socket.prototype.onMessage = function(rawMessage) {
+      var chan, channel, event, message, topic, _i, _len, _ref, _ref1, _results;
+      console.log(rawMessage);
+      _ref = JSON.parse(rawMessage.data), channel = _ref.channel, topic = _ref.topic, event = _ref.event, message = _ref.message;
+      _ref1 = this.channels;
+      _results = [];
+      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+        chan = _ref1[_i];
+        if (chan.isMember(channel, topic)) {
+          _results.push(chan.trigger(event, message));
         }
-        _results.push(this.awaitingJoins.splice(index, 1));
       }
       return _results;
     };

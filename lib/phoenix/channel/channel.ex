@@ -11,8 +11,8 @@ defmodule Phoenix.Channel do
   @doc """
   Subscribes socket to given topic based on current multiplexed channel
   """
-  def subscribe(socket, topic) do
-    Topic.subscribe(socket.pid, namespaced(socket.channel, topic))
+  def subscribe(socket, channel, topic) do
+    Topic.subscribe(socket.pid, namespaced(channel, topic))
   end
 
   @doc """
@@ -25,32 +25,34 @@ defmodule Phoenix.Channel do
   iex> Channel.broadcast socket, "create", id: 1, content: "hello"
   :ok
   """
-  def broadcast(channel, topic, message) when is_binary(channel) do
-    broadcast_from :global, channel, topic, message
+  def broadcast(channel, topic, event, message) when is_binary(channel) do
+    broadcast_from :global, channel, topic, event, message
   end
-  def broadcast(socket, topic, message) do
-    broadcast_from :global, socket.channel, topic, message
+  def broadcast(socket, event, message) do
+    broadcast_from :global, socket.channel, socket.topic, event, message
   end
 
-  def broadcast_from(:global, channel, topic, message) do
-    Topic.broadcast_from :global,
-                         namespaced(channel, topic),
-                         reply_json(message)
+  def broadcast_from(socket = %Socket{}, event, message) do
+    broadcast_from(socket.pid, socket.channel, socket.topic, event, message)
   end
-  def broadcast_from(socket, topic, message) do
-    Topic.broadcast_from socket.pid,
-                         namespaced(socket.channel, topic),
-                         reply_json(message)
+
+  def broadcast_from(from, channel, topic, event, message) do
+    Topic.create(namespaced(channel, topic))
+    Topic.broadcast_from(from, namespaced(channel, topic), reply_json(
+      channel: channel,
+      topic: topic,
+      event: event,
+      message: message
+    ))
   end
 
   @doc """
   Sends Dict, JSON serializable message to socket
   """
-  def reply(socket, topic, event, message) do
-    # TODO: Needs to be channel/topic namespaced
+  def reply(socket, event, message) do
     send socket.pid, {:reply, {:text, JSON.encode!(
       channel: socket.channel,
-      topic: topic,
+      topic: socket.topic,
       event: event,
       message: message
     )}}

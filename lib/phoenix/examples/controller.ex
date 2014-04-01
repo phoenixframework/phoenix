@@ -62,8 +62,8 @@ defmodule Phoenix.Examples.Controllers.Messages do
 
   def join(socket, message) do
     IO.puts "JOIN"
-    reply(socket, "join", "success", [])
-    subscribe(socket, "activity")
+    reply(socket, "join", notice: "welcome!")
+    broadcast(socket, "user:entered", user_id: 123)
     {:ok, socket}
   end
 
@@ -74,6 +74,7 @@ defmodule Phoenix.Examples.Controllers.Messages do
   def event("state", socket, message) do
     IO.puts "STATE"
     IO.inspect socket
+    reply(socket, "info", info: "info")
     {:ok, socket}
   end
 
@@ -82,37 +83,10 @@ defmodule Phoenix.Examples.Controllers.Messages do
   end
 
   def event("update", socket, message) do
-    assigns = Dict.merge socket.assigns, message
-    socket = socket.assigns(assigns)
-    broadcast socket, "messages", broadcast: assigns
     {:ok, socket }
   end
 
 end
-
-defmodule Phoenix.Examples.Controllers.Assets do
-
-  def join(socket, message) do
-    IO.puts "JOIN"
-    {:ok, socket}
-  end
-
-  def event("state", socket, message) do
-    IO.puts "STATE"
-    IO.inspect socket
-    {:ok, socket}
-  end
-
-  def event("upload", socket, message) do
-    IO.puts "upload"
-    {:ok, socket }
-  end
-
-end
-
-
-
-
 
 defmodule Phoenix.Examples.Controllers.Echo do
   # use Phoenix.Websocket.RawHandler
