@@ -15,7 +15,7 @@ defmodule Phoenix.Channel.ChannelTest do
   test "#subscribe subscribes socket to topic" do
     socket = Socket.set_current_channel(new_socket, "chan", "topic")
 
-    assert Channel.subscribe(socket, "event")
+    assert Channel.subscribe(socket, "chan", "topic")
     assert Topic.subscribers("chan:topic") == [socket.pid]
   end
 
