@@ -3,6 +3,13 @@ defmodule Phoenix.Socket.Message do
 
   defstruct channel: nil, topic: nil, event: nil, message: nil
 
+  defexception InvalidMessage, message: nil do
+    def exception(options) do
+      message = options[:message]
+      InvalidMessage[message: "Invalid Socket Message: #{inspect message}"]
+    end
+  end
+
   @doc """
   Parse json message into required format, raise if invalid
 
@@ -17,13 +24,19 @@ defmodule Phoenix.Socket.Message do
   def parse!(text) do
     case JSON.decode(text) do
       {:ok, json} ->
-        %Message{
-          channel: Dict.fetch!(json, "channel"),
-          topic:   Dict.fetch!(json, "topic"),
-          event:   Dict.fetch!(json, "event"),
-          message: Dict.fetch!(json, "message")
-        }
-      {:error, reason} -> raise reason
+        try do
+          %Message{
+            channel: Dict.fetch!(json, "channel"),
+            topic:   Dict.fetch!(json, "topic"),
+            event:   Dict.fetch!(json, "event"),
+            message: Dict.fetch!(json, "message")
+          }
+       rescue
+         err in [KeyError] ->
+          raise InvalidMessage, message: "Missing required key: '#{err.key}'"
+       end
+      {:error, err, _} -> raise InvalidMessage, message: "Invalid JSON format: #{err}"
     end
   end
 end
+

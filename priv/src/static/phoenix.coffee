@@ -42,9 +42,9 @@ class @Phoenix.Socket
 
   constructor: (@endPoint) ->
     @channels = []
-    @reconnect()
     @sendBuffer = []
     @resetBufferTimer()
+    @reconnect()
 
 
   reconnect: ->
@@ -89,7 +89,6 @@ class @Phoenix.Socket
     chan.reset()
     {channel, topic, message} = chan
     @send(channel: channel, topic: topic, event: "join", message: message)
-
     chan.callback(chan)
 
 

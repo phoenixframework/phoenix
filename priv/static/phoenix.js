@@ -91,9 +91,9 @@
     function Socket(endPoint) {
       this.endPoint = endPoint;
       this.channels = [];
-      this.reconnect();
       this.sendBuffer = [];
       this.resetBufferTimer();
+      this.reconnect();
     }
 
     Socket.prototype.reconnect = function() {
