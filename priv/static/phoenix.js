@@ -97,6 +97,13 @@
     }
 
     Socket.prototype.reconnect = function() {
+      var _ref, _ref1;
+      if ((_ref = this.conn) != null) {
+        _ref.onclose = function() {};
+      }
+      if ((_ref1 = this.conn) != null) {
+        _ref1.close();
+      }
       this.conn = new WebSocket(this.endPoint);
       this.conn.onopen = (function(_this) {
         return function() {

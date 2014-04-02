@@ -48,6 +48,8 @@ class @Phoenix.Socket
 
 
   reconnect: ->
+    @conn?.onclose = ->
+    @conn?.close()
     @conn = new WebSocket(@endPoint)
     @conn.onopen = => @onOpen()
     @conn.onerror = (error) => @onError(error)
