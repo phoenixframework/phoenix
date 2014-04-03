@@ -37,7 +37,7 @@ class @Phoenix.Socket
   sendBufferTimer: null
   flushEveryMs: 50
   reconnectTimer: null
-  reconnectAfterMs: 1000
+  reconnectAfterMs: 5000
 
 
   constructor: (@endPoint) ->
@@ -47,14 +47,23 @@ class @Phoenix.Socket
     @reconnect()
 
 
+  close: (callback) ->
+    if @conn?
+      @conn.onclose = =>
+      @conn.close()
+      @conn = null
+      callback?()
+    else
+      callback?()
+
+
   reconnect: ->
-    @conn?.onclose = ->
-    @conn?.close()
-    @conn = new WebSocket(@endPoint)
-    @conn.onopen = => @onOpen()
-    @conn.onerror = (error) => @onError(error)
-    @conn.onmessage = (event) =>  @onMessage(event)
-    @conn.onclose = (event) => @onClose(event)
+    @close =>
+      @conn = new WebSocket(@endPoint)
+      @conn.onopen = => @onOpen()
+      @conn.onerror = (error) => @onError(error)
+      @conn.onmessage = (event) =>  @onMessage(event)
+      @conn.onclose = (event) => @onClose(event)
 
 
   resetBufferTimer: ->
@@ -63,20 +72,20 @@ class @Phoenix.Socket
 
 
   onOpen: ->
-    clearTimeout(@reconnectTimer)
+    clearInterval(@reconnectTimer)
     @rejoinAll()
 
 
   onClose: (event) ->
-    console.log("WS: #{event}")
-    clearTimeout(@reconnectTimer)
-    @reconnectTimer = setTimeout (=> @reconnect() ), @reconnectAfterMs
+    console.log?("WS close: #{event}")
+    clearInterval(@reconnectTimer)
+    @reconnectTimer = setInterval (=> @reconnect() ), @reconnectAfterMs
 
 
-  onError: (error) -> console.log?("WS: #{error}")
+  onError: (error) -> console.log?("WS error: #{error}")
 
   connectionState: ->
-    switch @conn.readyState
+    switch @conn?.readyState ? 3
       when 0 then "connecting"
       when 1 then "open"
       when 2 then "closing"
@@ -120,7 +129,7 @@ class @Phoenix.Socket
 
 
   onMessage: (rawMessage) ->
-    console.log rawMessage
+    console.log? rawMessage
     {channel, topic, event, message} = JSON.parse(rawMessage.data)
     for chan in @channels when chan.isMember(channel, topic)
       chan.trigger(event, message)
