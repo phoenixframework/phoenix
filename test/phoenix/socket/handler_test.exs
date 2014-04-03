@@ -16,6 +16,6 @@ defmodule Phoenix.Socket.HandlerTest do
   test "verify basic reply" do
     socket = %Socket{pid: self}
     reply(socket, {:text, "hello"})
-    assert_received {:reply, {:text, "hello"}, socket}
+    assert_received {:reply, {:text, "hello"}, _socket}
   end
 end

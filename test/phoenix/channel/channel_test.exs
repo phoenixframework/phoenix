@@ -3,6 +3,7 @@ defmodule Phoenix.Channel.ChannelTest do
   alias Phoenix.Topic
   alias Phoenix.Channel
   alias Phoenix.Socket
+  alias Phoenix.Socket.Handler
 
   def new_socket do
     %Socket{pid: self,
@@ -55,10 +56,56 @@ defmodule Phoenix.Channel.ChannelTest do
   test "#leave can be overridden" do
     defmodule Chan2 do
       use Phoenix.Channel
-      def leave(socket), do: :overridden
+      def leave(_socket), do: :overridden
     end
 
     assert Chan2.leave(new_socket) == :overridden
+  end
+
+  test "successful join authorizes and subscribes socket to channel/topic" do
+    defmodule Chan3 do
+      use Phoenix.Channel
+      def join(socket, _msg), do: {:ok, socket}
+    end
+    defmodule Router3 do
+      use Phoenix.Router
+      use Phoenix.Router.Socket, mount: "/ws"
+      channel "chan3", Chan3
+    end
+
+    socket = %Socket{pid: self, router: Router3, channel: "chan3"}
+    message  = """
+    {"channel": "chan3","topic":"topic","event":"join","message":"{}"}
+    """
+    Topic.create("chan3:topic")
+    assert Topic.subscribers("chan3:topic") == []
+    refute Socket.authenticated?(socket, "chan3", "topic")
+    {:ok, _req, socket} = Handler.websocket_handle({:text, message}, nil, socket)
+    assert Socket.authenticated?(socket, "chan3", "topic")
+    assert Topic.subscribers("chan3:topic") == [socket.pid]
+  end
+
+  test "unsuccessful join denies socket access to channel/topic" do
+    defmodule Chan4 do
+      use Phoenix.Channel
+      def join(socket, _msg), do: {:error, socket, :unauthenticated}
+    end
+    defmodule Router4 do
+      use Phoenix.Router
+      use Phoenix.Router.Socket, mount: "/ws"
+      channel "chan4", Chan4
+    end
+
+    socket = %Socket{pid: self, router: Router4, channel: "chan4"}
+    message  = """
+    {"channel": "chan4","topic":"topic","event":"join","message":"{}"}
+    """
+    Topic.create("chan4:topic")
+    assert Topic.subscribers("chan4:topic") == []
+    refute Socket.authenticated?(socket, "chan4", "topic")
+    {:ok, _req, socket} = Handler.websocket_handle({:text, message}, nil, socket)
+    refute Socket.authenticated?(socket, "chan4", "topic")
+    refute Topic.subscribers("chan4:topic") == [socket.pid]
   end
 end
 
