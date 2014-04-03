@@ -16,13 +16,13 @@ defmodule Phoenix.Channel do
   end
 
   @doc """
-  Broadcast Dict message, serializable as JSON to topic namedspaced by channel
+  Broadcast event, serializable as JSON to topic namedspaced by channel
 
   Examples
 
-  iex> Channel.broadcast "messages", "create", id: 1, content: "hello"
+  iex> Channel.broadcast "rooms", "global", "new:message", id: 1, content: "hello"
   :ok
-  iex> Channel.broadcast socket, "create", id: 1, content: "hello"
+  iex> Channel.broadcast socket, "new:message", id: 1, content: "hello"
   :ok
   """
   def broadcast(channel, topic, event, message) when is_binary(channel) do

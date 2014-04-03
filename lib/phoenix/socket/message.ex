@@ -11,9 +11,9 @@ defmodule Phoenix.Socket.Message do
   end
 
   @doc """
-  Parse json message into required format, raise if invalid
+  Parse json message into required format, raise InvalidMessage if invalid
 
-  Messages require the following keys:
+  The Message Protocol requires the following keys:
     * channel - The String Channel namespace, ie "messages"
     * topic - The String Topic namespace, ie "123"
     * event - The String event name, ie "join"

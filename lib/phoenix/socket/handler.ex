@@ -69,7 +69,6 @@ defmodule Phoenix.Socket.Handler do
     {:ok, socket.conn, socket}
   end
   defp handle_result({:error, socket, _reason}, _event) do
-    # unauthenticated
     {:ok, socket.conn, socket}
   end
 
