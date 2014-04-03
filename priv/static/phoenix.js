@@ -103,10 +103,8 @@
         })(this);
         this.conn.close();
         this.conn = null;
-        return typeof callback === "function" ? callback() : void 0;
-      } else {
-        return typeof callback === "function" ? callback() : void 0;
       }
+      return typeof callback === "function" ? callback() : void 0;
     };
 
     Socket.prototype.reconnect = function() {

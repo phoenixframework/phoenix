@@ -52,9 +52,7 @@ class @Phoenix.Socket
       @conn.onclose = =>
       @conn.close()
       @conn = null
-      callback?()
-    else
-      callback?()
+    callback?()
 
 
   reconnect: ->
