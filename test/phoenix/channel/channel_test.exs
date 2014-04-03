@@ -43,5 +43,22 @@ defmodule Phoenix.Channel.ChannelTest do
     _message = JSON.encode!(:hello)
     assert_received _message
   end
+
+  test "Default #leave is generated as a noop" do
+    defmodule Chan1 do
+      use Phoenix.Channel
+    end
+
+    assert Chan1.leave(new_socket) == :noop
+  end
+
+  test "#leave can be overridden" do
+    defmodule Chan2 do
+      use Phoenix.Channel
+      def leave(socket), do: :overridden
+    end
+
+    assert Chan2.leave(new_socket) == :overridden
+  end
 end
 
