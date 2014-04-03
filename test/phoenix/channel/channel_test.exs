@@ -12,11 +12,13 @@ defmodule Phoenix.Channel.ChannelTest do
             assigns: []}
   end
 
-  test "#subscribe subscribes socket to topic" do
+  test "#subscribe/unsubscribe's socket to/from topic" do
     socket = Socket.set_current_channel(new_socket, "chan", "topic")
 
     assert Channel.subscribe(socket, "chan", "topic")
     assert Topic.subscribers("chan:topic") == [socket.pid]
+    assert Channel.unsubscribe(socket, "chan", "topic")
+    assert Topic.subscribers("chan:topic") == []
   end
 
   test "#broadcast broadcasts global message on channel" do

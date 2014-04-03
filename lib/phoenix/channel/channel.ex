@@ -1,6 +1,7 @@
 defmodule Phoenix.Channel do
   alias Phoenix.Topic
   alias Phoenix.Socket
+  alias Phoenix.Socket.Handler
 
   defmacro __using__(options) do
     quote do
@@ -13,6 +14,13 @@ defmodule Phoenix.Channel do
   """
   def subscribe(socket, channel, topic) do
     Topic.subscribe(socket.pid, namespaced(channel, topic))
+  end
+
+  @doc """
+  Unsubscribes socket to given channel topic
+  """
+  def unsubscribe(socket, channel, topic) do
+    Topic.unsubscribe(socket.pid, namespaced(channel, topic))
   end
 
   @doc """
@@ -58,6 +66,16 @@ defmodule Phoenix.Channel do
     )
     {:ok, socket}
   end
+
+  @doc """
+  Terminates socket connection, including all multiplexed channels
+  """
+  def terminate(socket), do: Handler.terminate(socket)
+
+  @doc """
+  Hibernates socket connection
+  """
+  def hibernate(socket), do: Handler.hibernate(socket)
 
   @doc """
   Converts Dict message into JSON text reply frame for Websocket Handler
