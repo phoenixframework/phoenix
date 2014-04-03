@@ -3,12 +3,19 @@ defmodule Phoenix.Channel do
   alias Phoenix.Socket
   alias Phoenix.Socket.Handler
 
-  defmacro __using__(options) do
+  defmacro __using__(_options) do
     quote do
       import unquote(__MODULE__)
 
-      def leave(socket), do: :noop
-      defoverridable leave: 1
+      def leave(socket, message), do: :noop
+      defoverridable leave: 2
+      @before_compile unquote(__MODULE__)
+    end
+  end
+
+  defmacro __before_compile__(_env) do
+    quote do
+      def event(_event, socket, _message), do: {:ok, socket}
     end
   end
 

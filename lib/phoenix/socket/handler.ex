@@ -90,8 +90,10 @@ defmodule Phoenix.Socket.Handler do
   end
 
   def websocket_info(data, req, socket) do
-    Enum.each socket.channels, fn channel ->
-      socket.router.match(socket, :websocket, channel, "info", data)
+    Enum.each socket.channels, fn {channel, topic} ->
+      socket
+      |> Socket.set_current_channel(channel, topic)
+      |> socket.router.match(:websocket, channel, "info", data)
     end
     {:ok, req, socket}
   end
@@ -106,8 +108,10 @@ defmodule Phoenix.Socket.Handler do
                                                           tab closed, conn dropped.
   """
   def websocket_terminate(reason, _req, socket) do
-    Enum.each socket.channels, fn channel ->
-      socket.router.match(socket, :websocket, channel, "leave", reason: reason)
+    Enum.each socket.channels, fn {channel, topic} ->
+      socket
+      |> Socket.set_current_channel(channel, topic)
+      |> socket.router.match(:websocket, channel, "leave", reason: reason)
     end
     :ok
   end

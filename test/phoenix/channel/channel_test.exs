@@ -50,16 +50,16 @@ defmodule Phoenix.Channel.ChannelTest do
       use Phoenix.Channel
     end
 
-    assert Chan1.leave(new_socket) == :noop
+    assert Chan1.leave(new_socket, []) == :noop
   end
 
   test "#leave can be overridden" do
     defmodule Chan2 do
       use Phoenix.Channel
-      def leave(_socket), do: :overridden
+      def leave(_socket, _msg), do: :overridden
     end
 
-    assert Chan2.leave(new_socket) == :overridden
+    assert Chan2.leave(new_socket, []) == :overridden
   end
 
   test "successful join authorizes and subscribes socket to channel/topic" do
@@ -107,5 +107,57 @@ defmodule Phoenix.Channel.ChannelTest do
     refute Socket.authenticated?(socket, "chan4", "topic")
     refute Topic.subscribers("chan4:topic") == [socket.pid]
   end
+
+  test "#leave is called automatically when the socket connection closes" do
+    defmodule Chan5 do
+      use Phoenix.Channel
+      def join(socket, _msg), do: {:ok, socket}
+      def leave(socket, _msg), do: send(socket.assigns[:me], :left)
+    end
+    defmodule Router5 do
+      use Phoenix.Router
+      use Phoenix.Router.Socket, mount: "/ws"
+      channel "chan5", Chan5
+    end
+
+    socket = %Socket{pid: spawn(fn -> :timer.sleep(:infinity) end),
+                     router: Router5,
+                     channel: "chan5",
+                     assigns: [me: self]}
+
+    message  = """
+    {"channel": "chan5","topic":"topic","event":"join","message":"{}"}
+    """
+    Topic.create("chan5:topic")
+    {:ok, _req, socket} = Handler.websocket_handle({:text, message}, nil, socket)
+    Handler.websocket_terminate(:reason, socket.conn, socket)
+    assert_received :left
+  end
+
+  test "#info is called when receiving regular process messages" do
+    defmodule Chan6 do
+      use Phoenix.Channel
+      def join(socket, _msg), do: {:ok, socket}
+      def event("info", socket, _msg), do: send(socket.pid, :info)
+    end
+    defmodule Router6 do
+      use Phoenix.Router
+      use Phoenix.Router.Socket, mount: "/ws"
+      channel "chan6", Chan6
+    end
+
+    socket = %Socket{pid: self,
+                     router: Router6,
+                     channel: "chan6"}
+
+    message  = """
+    {"channel": "chan6","topic":"topic","event":"join","message":"{}"}
+    """
+    Topic.create("chan6:topic")
+    {:ok, _req, socket} = Handler.websocket_handle({:text, message}, nil, socket)
+    Handler.websocket_info(:stuff, socket.conn, socket)
+    assert_received :info
+  end
+
 end
 
