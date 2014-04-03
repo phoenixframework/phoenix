@@ -13,9 +13,6 @@ defmodule MyApp.Router do
     resources "users", Users do
       resources "comments", Comments
     end
-
-    raw_websocket "/echo", Eco
-
   end
 
   channel "messages", Phoenix.Examples.Controllers.Messages

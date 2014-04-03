@@ -7,7 +7,6 @@ defmodule Phoenix.Router do
     quote do
       use Phoenix.Router.Mapper
       use Phoenix.Adapters.Cowboy
-      import Phoenix.Router.RawWebsocketMapper
 
       import unquote(__MODULE__)
       @before_compile unquote(__MODULE__)

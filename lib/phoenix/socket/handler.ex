@@ -126,8 +126,8 @@ defmodule Phoenix.Socket.Handler do
 
   close_code: 1000..4999
   """
-  def reply(socket, frame, state \\ []) do
-    send(socket.pid, {:reply, frame, state})
+  def reply(socket, frame) do
+    send(socket.pid, {:reply, frame, socket})
   end
 
   @doc """

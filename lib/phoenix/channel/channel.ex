@@ -6,6 +6,9 @@ defmodule Phoenix.Channel do
   defmacro __using__(options) do
     quote do
       import unquote(__MODULE__)
+
+      def leave(socket), do: :noop
+      defoverridable leave: 1
     end
   end
 
