@@ -107,7 +107,7 @@ class @Phoenix.Socket
     @rejoin(chan) if @isConnected()
 
 
-  unjoin: (channel, topic) ->
+  leave: (channel, topic) ->
     @channels = (c for c in @channels when not(c.isMember(channel, topic)))
 
 

@@ -208,7 +208,7 @@
       }
     };
 
-    Socket.prototype.unjoin = function(channel, topic) {
+    Socket.prototype.leave = function(channel, topic) {
       var c;
       return this.channels = (function() {
         var _i, _len, _ref, _results;
