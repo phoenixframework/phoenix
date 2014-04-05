@@ -49,8 +49,8 @@ defmodule Phoenix.Channel.ChannelTest do
     defmodule Chan1 do
       use Phoenix.Channel
     end
-
-    assert Chan1.leave(new_socket, []) == :noop
+    socket = new_socket
+    assert Chan1.leave(socket, []) == {:ok, socket}
   end
 
   test "#leave can be overridden" do
@@ -108,11 +108,14 @@ defmodule Phoenix.Channel.ChannelTest do
     refute Topic.subscribers("chan4:topic") == [socket.pid]
   end
 
-  test "#leave is called automatically when the socket connection closes" do
+  test "#leave is called when the socket conn closes, and is unsubscribed" do
     defmodule Chan5 do
       use Phoenix.Channel
       def join(socket, _msg), do: {:ok, socket}
-      def leave(socket, _msg), do: send(socket.assigns[:me], :left)
+      def leave(socket, _msg) do
+        send(socket.pid, :left)
+        {:ok, socket}
+      end
     end
     defmodule Router5 do
       use Phoenix.Router
@@ -120,10 +123,7 @@ defmodule Phoenix.Channel.ChannelTest do
       channel "chan5", Chan5
     end
 
-    socket = %Socket{pid: spawn(fn -> :timer.sleep(:infinity) end),
-                     router: Router5,
-                     channel: "chan5",
-                     assigns: [me: self]}
+    socket = %Socket{pid: self, router: Router5, channel: "chan5"}
 
     message  = """
     {"channel": "chan5","topic":"topic","event":"join","message":"{}"}
@@ -132,13 +132,17 @@ defmodule Phoenix.Channel.ChannelTest do
     {:ok, _req, socket} = Handler.websocket_handle({:text, message}, nil, socket)
     Handler.websocket_terminate(:reason, socket.conn, socket)
     assert_received :left
+    assert Topic.subscribers("chan5:topic") == []
   end
 
   test "#info is called when receiving regular process messages" do
     defmodule Chan6 do
       use Phoenix.Channel
       def join(socket, _msg), do: {:ok, socket}
-      def event("info", socket, _msg), do: send(socket.pid, :info)
+      def event("info", socket, _msg) do
+        send(socket.pid, :info)
+        {:ok, socket}
+      end
     end
     defmodule Router6 do
       use Phoenix.Router
@@ -146,9 +150,7 @@ defmodule Phoenix.Channel.ChannelTest do
       channel "chan6", Chan6
     end
 
-    socket = %Socket{pid: self,
-                     router: Router6,
-                     channel: "chan6"}
+    socket = %Socket{pid: self, router: Router6, channel: "chan6"}
 
     message  = """
     {"channel": "chan6","topic":"topic","event":"join","message":"{}"}

@@ -7,7 +7,7 @@ defmodule Phoenix.Channel do
     quote do
       import unquote(__MODULE__)
 
-      def leave(socket, message), do: :noop
+      def leave(socket, message), do: {:ok, socket}
       defoverridable leave: 2
       @before_compile unquote(__MODULE__)
     end

@@ -45,13 +45,15 @@ defmodule Phoenix.Socket.Handler do
   end
 
   defp dispatch(socket, "join", msg) do
-    result = socket.router.match(socket, :websocket, socket.channel, "join", msg)
-    handle_result(result, "join")
+    socket
+    |> socket.router.match(:websocket, socket.channel, "join", msg)
+    |> handle_result("join")
   end
   defp dispatch(socket, event, msg) do
     if Socket.authenticated?(socket, socket.channel, socket.topic) do
-      result = socket.router.match(socket, :websocket, socket.channel, event, msg)
-      handle_result(result, event)
+      socket
+      |> socket.router.match(:websocket, socket.channel, event, msg)
+      |> handle_result(event)
     else
       handle_result({:error, socket, :unauthenticated}, event)
     end
@@ -63,7 +65,9 @@ defmodule Phoenix.Socket.Handler do
     {:ok, socket.conn, socket}
   end
   defp handle_result({:ok, socket}, "leave") do
-    {:ok, socket.conn, Socket.delete_channel(socket, socket.channel, socket.topic)}
+    socket = Socket.delete_channel(socket, socket.channel, socket.topic)
+    Channel.unsubscribe(socket, socket.channel, socket.topic)
+    {:ok, socket.conn, socket}
   end
   defp handle_result({:ok, socket}, _event) do
     {:ok, socket.conn, socket}
@@ -94,6 +98,7 @@ defmodule Phoenix.Socket.Handler do
       socket
       |> Socket.set_current_channel(channel, topic)
       |> socket.router.match(:websocket, channel, "info", data)
+      |> handle_result("info")
     end
     {:ok, req, socket}
   end
@@ -112,6 +117,7 @@ defmodule Phoenix.Socket.Handler do
       socket
       |> Socket.set_current_channel(channel, topic)
       |> socket.router.match(:websocket, channel, "leave", reason: reason)
+      |> handle_result("leave")
     end
     :ok
   end
