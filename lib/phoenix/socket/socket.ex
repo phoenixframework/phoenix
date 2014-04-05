@@ -14,7 +14,11 @@ defmodule Phoenix.Socket do
   end
 
   def add_channel(socket, channel, topic) do
-    %Socket{socket | channels: [{channel, topic} | socket.channels]}
+    if authenticated?(socket, channel, topic) do
+      socket
+    else
+      %Socket{socket | channels: [{channel, topic} | socket.channels]}
+    end
   end
 
   def delete_channel(socket, channel, topic) do

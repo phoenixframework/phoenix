@@ -32,6 +32,15 @@ defmodule Phoenix.Socket.SocketTest do
     assert socket.channels == [{"test", "topic"}]
   end
 
+  test "#add_channel only adds unique channel/topic pairs" do
+    socket = new_socket |> Socket.add_channel("test", "topic")
+    assert socket.channels == [{"test", "topic"}]
+    socket = Socket.add_channel(socket, "test", "topic")
+    assert socket.channels == [{"test", "topic"}]
+    socket = Socket.add_channel(socket, "test", "newtopic")
+    assert socket.channels == [{"test", "newtopic"}, {"test", "topic"}]
+  end
+
   test "#delete_channel deletes channel" do
     socket = new_socket |> Socket.add_channel("test", "topic")
     assert socket.channels == [{"test", "topic"}]
