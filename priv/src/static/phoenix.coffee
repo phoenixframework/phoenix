@@ -25,6 +25,9 @@ class @Phoenix.Channel
 
   send: (event, message) -> @socket.send({@channel, @topic, event, message})
 
+  leave: (message = {}) ->
+    @socket.leave(@channel, @topic, message)
+    @reset()
 
 
 
@@ -107,7 +110,8 @@ class @Phoenix.Socket
     @rejoin(chan) if @isConnected()
 
 
-  leave: (channel, topic) ->
+  leave: (channel, topic, message = {}) ->
+    @send({channel, topic, "leave", message})
     @channels = (c for c in @channels when not(c.isMember(channel, topic)))
 
 

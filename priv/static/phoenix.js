@@ -67,6 +67,14 @@
       });
     };
 
+    Channel.prototype.leave = function(message) {
+      if (message == null) {
+        message = {};
+      }
+      this.socket.leave(this.channel, this.topic, message);
+      return this.reset();
+    };
+
     return Channel;
 
   })();
@@ -208,8 +216,17 @@
       }
     };
 
-    Socket.prototype.leave = function(channel, topic) {
+    Socket.prototype.leave = function(channel, topic, message) {
       var c;
+      if (message == null) {
+        message = {};
+      }
+      this.send({
+        channel: channel,
+        topic: topic,
+        "leave": "leave",
+        message: message
+      });
       return this.channels = (function() {
         var _i, _len, _ref, _results;
         _ref = this.channels;
