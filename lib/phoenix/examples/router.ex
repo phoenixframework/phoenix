@@ -5,6 +5,7 @@ defmodule Examples.Router do
   plug Plug.Static, at: "/static", from: :phoenix
 
   get "/", Phoenix.Examples.Controllers.Pages, :show
+
   scope alias: Phoenix.Examples.Controllers do
     get "/pages/:page", Pages, :show, as: :page
     get "/files/*path", Files, :show, as: :file
