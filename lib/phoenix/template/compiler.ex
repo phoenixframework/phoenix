@@ -9,6 +9,13 @@ defmodule Phoenix.Template.Compiler do
       import unquote(__MODULE__)
       @path unquote(path)
       @before_compile unquote(__MODULE__)
+
+      def render(template, assigns \\ []) do
+        assigns = Dict.put_new(assigns, :layout, "application.html")
+        {:safe, content} = apply(__MODULE__, binary_to_atom(template), [assigns])
+
+        content
+      end
     end
   end
 
@@ -27,7 +34,7 @@ defmodule Phoenix.Template.Compiler do
     quote bind_quoted: [layout: layout, inner: inner] do
       if layout do
         layout_assigns = Dict.merge(var!(:assigns), inner: inner)
-        apply(__MODULE__, binary_to_atom(layout), [layout_assigns])
+        apply(__MODULE__, binary_to_atom("layouts/#{layout}"), [layout_assigns])
       else
         inner
       end

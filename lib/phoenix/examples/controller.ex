@@ -1,8 +1,9 @@
 defmodule Phoenix.Examples.Controllers.Pages do
   use Phoenix.Controller
+  import MyApp.Templates
 
   def show(conn) do
-    html conn, File.read!(Path.join(["priv/views/index.html"]))
+    html conn, render("pages/home.html", title: "Home")
   end
 
   def show(_conn, "page") do
