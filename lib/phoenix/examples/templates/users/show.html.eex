@@ -1,0 +1,4 @@
+<div>
+  Showing User <%= @name %>
+</div>
+

@@ -1,0 +1,4 @@
+<html>
+  <title><%= @title %></title>
+  <%= @inner %>
+</html>
