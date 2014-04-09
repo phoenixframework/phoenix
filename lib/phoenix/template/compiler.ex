@@ -1,6 +1,30 @@
 defmodule Phoenix.Template.Compiler do
   alias Phoenix.Template
+  alias Phoenix.Mime
 
+  @moduledoc """
+  Precompiles EEx templates into module and provides `render` support
+
+  Examples
+
+  defmodule MyApp.Templates do
+    use Phoenix.Template.Compiler, path: Path.join([__DIR__, "templates"])
+  end
+
+  From outside Controller
+  iex> MyApp.Templates.render("show.html", message: "Hello!")
+  "<h1>Hello!</h1>"
+
+  From within Controller
+  def show(conn) do
+    render conn, "pages/home", title: "Home"
+  end
+
+  def show(conn) do
+    render conn, "pages/home", layout: false, title: "Home"
+  end
+
+  """
   defmacro __using__(options) do
     path = Dict.fetch! options, :path
 
@@ -10,11 +34,29 @@ defmodule Phoenix.Template.Compiler do
       @path unquote(path)
       @before_compile unquote(__MODULE__)
 
-      def render(template, assigns \\ []) do
-        assigns = Dict.put_new(assigns, :layout, "application.html")
+      @doc """
+      Renders template to string and sends html response when providing Conn
+      assigns - The optional Dict of template assigns
+        layout - The optional String layout, ie "application", false
+      """
+      def render(template, assigns) when is_binary(template) do
+        assigns   = Dict.put_new(assigns, :layout, "application.html")
         {:safe, content} = apply(__MODULE__, binary_to_atom(template), [assigns])
 
         content
+      end
+      def render(conn, template, assigns \\ []) do
+        content_type = Dict.get(conn.req_headers, "content-type") || "text/html"
+        render(conn, content_type, template, assigns)
+      end
+      def render(conn, content_type, template, assigns) do
+        extension = Mime.ext_from_type(content_type) || ""
+        assigns   = Dict.merge(conn.assigns, assigns)
+        assigns   = Dict.put_new(assigns, :layout, "application" <> extension)
+        tpl_func  = template <> extension
+        {:safe, content} = apply(__MODULE__, binary_to_atom(tpl_func), [assigns])
+
+        Phoenix.Controller.html(conn, content)
       end
     end
   end

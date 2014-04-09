@@ -1,6 +1,5 @@
 defmodule Phoenix.Template.CompilerTest do
   use ExUnit.Case
-  alias Phoenix.Template
 
   defmodule MyApp.Templates do
     use Phoenix.Template.Compiler, path: Path.join([__DIR__], "../../fixtures/templates")
@@ -24,14 +23,14 @@ defmodule Phoenix.Template.CompilerTest do
   end
 
   test "compiler renders application layout with nested template" do
-    {:safe, html} = MyApp.Templates."show.html"(layout: "layouts/application.html", message: "hello!")
+    {:safe, html} = MyApp.Templates."show.html"(layout: "application.html", message: "hello!")
 
     assert html == "<html>\n  <body>\n    Show! hello!\n\n  </body>\n</html>\n\n"
   end
 
   test "compiler renders application layout with safe nested template" do
     {:safe, html} = MyApp.Templates."show.html"(
-      layout: "layouts/application.html",
+      layout: "application.html",
       message: "<script>alert('xss');</script>"
     )
 
