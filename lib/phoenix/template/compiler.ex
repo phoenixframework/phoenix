@@ -36,8 +36,12 @@ defmodule Phoenix.Template.Compiler do
 
       @doc """
       Renders template to string and sends html response when providing Conn
-      assigns - The optional Dict of template assigns
-        layout - The optional String layout, ie "application", false
+
+      * template - The full or partial template without extension to render
+                   based on content type, ie."users/show", "users/show.html"
+      * assigns - The optional Dict of template assigns
+        * layout - The optional String layout, ie "application", false
+
       """
       def render(template, assigns) when is_binary(template) do
         assigns   = Dict.put_new(assigns, :layout, "application.html")
