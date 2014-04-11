@@ -2,7 +2,9 @@ defmodule <%= application_module %>.Config.Test do
   use <%= application_module %>.Config
 
   config :router, port: 4001,
-                  ssl: false
+                  ssl: false,
+                  # Full error reports are enabled
+                  consider_all_requests_local: true
 
   config :plugs, code_reload: true
 

@@ -159,10 +159,11 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.status == 404
   end
 
-  test "dispatch crash returns 500" do
+  test "dispatch crash returns 500 and renders friendly error page" do
     conn = simulate_request(Router, :get, "route_that_crashes")
     assert conn.status == 500
-    assert conn.resp_body =~ ~r/Stacktrace/
+    assert conn.resp_body =~ ~r/Something went wrong/i
+    refute conn.resp_body =~ ~r/Stacktrace/i
   end
 
   test "splat arg with preceeding named parameter to files/:user_name/*path" do

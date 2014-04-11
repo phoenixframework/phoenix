@@ -10,7 +10,9 @@ defmodule Phoenix.Config.App do
     quote do
 
       config :router, port: 4000,
-                      ssl: true
+                      ssl: true,
+                      # Full error reports are disabled
+                      consider_all_requests_local: false
 
       config :plugs, code_reload: false,
                      serve_static_assets: true

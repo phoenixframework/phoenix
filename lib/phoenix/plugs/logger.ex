@@ -12,5 +12,5 @@ defmodule Phoenix.Plugs.Logger do
   defp log(conn, :debug) do
     IO.puts "#{conn.method}: #{inspect conn.path_info}"
   end
-  defp log(conn, _), do: nil
+  defp log(_conn, _), do: nil
 end
