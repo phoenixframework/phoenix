@@ -11,13 +11,15 @@ end
 
 defmodule Phoenix.Router.OptionsTest do
   use ExUnit.Case
+  alias Phoenix.Adapters.Cowboy
+  alias Phoenix.Router.Options
 
   test "merge port number into options" do
-    assert [port: 1234] ==
-      Phoenix.Router.Options.merge([], PhoenixConfTest.Router)
+    options = Options.merge([], [], PhoenixConfTest.Router, Cowboy)
+    assert options[:port] == 1234
 
-    assert [port: 71107, ssl: false] ==
-      Phoenix.Router.Options.merge([], PhoenixOptionsTest.Router)
+    options = Options.merge([], [], PhoenixOptionsTest.Router, Cowboy)
+    assert options[:port] == 71107
+    assert options[:ssl] == false
   end
-
 end

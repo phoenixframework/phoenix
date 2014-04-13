@@ -1,7 +1,8 @@
 defmodule Phoenix.Router do
   use GenServer.Behaviour
-  alias Phoenix.Controller
   alias Phoenix.Plugs
+  alias Phoenix.Router.Options
+  alias Phoenix.Adapters.Cowboy
 
   defmacro __using__(plug_adapter_options \\ []) do
     quote do
@@ -29,9 +30,7 @@ defmodule Phoenix.Router do
       end
 
       def start do
-        options = Phoenix.Router.Options.merge(@options, __MODULE__)
-        # TODO: Refactor into Router.Options
-        options = Phoenix.Adapters.Cowboy.setup_options(__MODULE__, options, @dispatch_options)
+        options = Options.merge(@options, @dispatch_options, __MODULE__, Cowboy)
 
         IO.puts "Running #{__MODULE__} with Cowboy on port #{inspect options}"
         Plug.Adapters.Cowboy.http __MODULE__, [], options

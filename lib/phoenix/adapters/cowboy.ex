@@ -1,10 +1,11 @@
 defmodule Phoenix.Adapters.Cowboy do
-  def setup_options(module, options, dispatch_options) do
+
+  def merge_options(plug_options, dispatch_options, module) do
     dispatch = Enum.concat [dispatch_options,
-                            Dict.get(options, :dispatch, []),
+                            Dict.get(plug_options, :dispatch, []),
                             [{:_, Plug.Adapters.Cowboy.Handler, { module, [] }}]]
 
-    Dict.put(options, :dispatch, [{:_, dispatch}])
+    Dict.put(plug_options, :dispatch, [{:_, dispatch}])
   end
 
   defmacro __using__(_options) do
