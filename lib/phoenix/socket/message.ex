@@ -4,9 +4,8 @@ defmodule Phoenix.Socket.Message do
   defstruct channel: nil, topic: nil, event: nil, message: nil
 
   defexception InvalidMessage, message: nil do
-    def exception(options) do
-      message = options[:message]
-      InvalidMessage[message: "Invalid Socket Message: #{inspect message}"]
+    def exception(opts) do
+      InvalidMessage[message: "Invalid Socket Message: #{inspect opts[:message]}"]
     end
   end
 
@@ -19,23 +18,21 @@ defmodule Phoenix.Socket.Message do
     * event - The String event name, ie "join"
     * message - The String JSON message payload
 
-  Returns The Message Map parsed from JSON
+  Returns The %Message{} parsed from JSON
   """
   def parse!(text) do
-    case JSON.decode(text) do
-      {:ok, json} ->
-        try do
-          %Message{
-            channel: Dict.fetch!(json, "channel"),
-            topic:   Dict.fetch!(json, "topic"),
-            event:   Dict.fetch!(json, "event"),
-            message: Dict.fetch!(json, "message")
-          }
-       rescue
-         err in [KeyError] ->
-          raise InvalidMessage, message: "Missing required key: '#{err.key}'"
-       end
-      {:error, err, _} -> raise InvalidMessage, message: "Invalid JSON format: #{err}"
+    try do
+      json = JSON.decode!(text)
+
+      %Message{
+        channel: Dict.fetch!(json, "channel"),
+        topic:   Dict.fetch!(json, "topic"),
+        event:   Dict.fetch!(json, "event"),
+        message: Dict.fetch!(json, "message")
+      }
+    rescue
+      err in [KeyError]         -> raise InvalidMessage, message: "Missing key: '#{err.key}'"
+      err in [JSON.SyntaxError] -> raise InvalidMessage, message: "Invalid JSON: #{err.message}"
     end
   end
 end
