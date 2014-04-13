@@ -30,11 +30,21 @@ defmodule Phoenix.Socket.Handler do
   @doc """
   Dispatches multiplexed socket message to Router and handles result
 
-  Events
+  # Join Event
+    "join" events are specially treated.
+    When {:ok, socket} is returned from the Channel, the socket is subscribed
+    to the channel and authorized to pubsub on the channel/topic pair
+    When {:error, socket, reason} is returned, the socket is denied pubsub access
 
-  "join" events are specially treated. When {:ok, socket} is returned
-  from the Channel, the socket is subscribed to the requested channel
-  and the channel is added to the socket's authorized channels.
+  # Leave Event
+    "leave" events call the channels `leave/2` function only if the socket has
+    previously been authorized via `join/2`
+
+  # Arbitrary Events
+    Any other event calls the channel's `event/3` function, with the event
+    name as the first argument. Event handlers are only invoked if the socket
+    was previously authorized via `join/2`.
+
   """
   def websocket_handle({:text, text}, _req, socket) do
     msg = Message.parse!(text)
