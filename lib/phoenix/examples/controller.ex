@@ -69,7 +69,7 @@ defmodule Phoenix.Examples.Controllers.Messages do
 
   def event("new", socket, message) do
     broadcast socket, "new", message
-    {:ok, socket}
+    socket
   end
 
 end

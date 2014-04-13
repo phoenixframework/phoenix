@@ -7,7 +7,7 @@ defmodule Phoenix.Channel do
     quote do
       import unquote(__MODULE__)
 
-      def leave(socket, message), do: {:ok, socket}
+      def leave(socket, message), do: socket
       defoverridable leave: 2
       @before_compile unquote(__MODULE__)
     end
@@ -15,22 +15,30 @@ defmodule Phoenix.Channel do
 
   defmacro __before_compile__(_env) do
     quote do
-      def event(_event, socket, _message), do: {:ok, socket}
+      def event(_event, socket, _message), do: socket
     end
   end
 
   @doc """
   Subscribes socket to given channel topic
+  Returns %Socket{}
   """
   def subscribe(socket, channel, topic) do
-    Topic.subscribe(socket.pid, namespaced(channel, topic))
+    if !Socket.authenticated?(socket, channel, topic) do
+      Topic.subscribe(socket.pid, namespaced(channel, topic))
+      Socket.add_channel(socket, socket.channel, socket.topic)
+    else
+      socket
+    end
   end
 
   @doc """
   Unsubscribes socket to given channel topic
+  Returns %Socket{}
   """
   def unsubscribe(socket, channel, topic) do
     Topic.unsubscribe(socket.pid, namespaced(channel, topic))
+    Socket.delete_channel(socket, socket.channel, socket.topic)
   end
 
   @doc """
@@ -74,7 +82,7 @@ defmodule Phoenix.Channel do
       event: event,
       message: message
     )
-    {:ok, socket}
+    socket
   end
 
   @doc """

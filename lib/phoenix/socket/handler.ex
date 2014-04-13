@@ -60,16 +60,12 @@ defmodule Phoenix.Socket.Handler do
   end
 
   defp handle_result({:ok, socket}, "join") do
-    socket = Socket.add_channel(socket, socket.channel, socket.topic)
-    Channel.subscribe(socket, socket.channel, socket.topic)
-    {:ok, socket.conn, socket}
+    {:ok, socket.conn, Channel.subscribe(socket, socket.channel, socket.topic)}
   end
-  defp handle_result({:ok, socket}, "leave") do
-    socket = Socket.delete_channel(socket, socket.channel, socket.topic)
-    Channel.unsubscribe(socket, socket.channel, socket.topic)
-    {:ok, socket.conn, socket}
+  defp handle_result(socket = %Socket{}, "leave") do
+    {:ok, socket.conn, Channel.unsubscribe(socket, socket.channel, socket.topic)}
   end
-  defp handle_result({:ok, socket}, _event) do
+  defp handle_result(socket = %Socket{}, _event) do
     {:ok, socket.conn, socket}
   end
   defp handle_result({:error, socket, _reason}, _event) do

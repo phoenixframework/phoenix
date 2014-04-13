@@ -50,7 +50,7 @@ defmodule Phoenix.Channel.ChannelTest do
       use Phoenix.Channel
     end
     socket = new_socket
-    assert Chan1.leave(socket, []) == {:ok, socket}
+    assert Chan1.leave(socket, []) == socket
   end
 
   test "#leave can be overridden" do
@@ -114,7 +114,7 @@ defmodule Phoenix.Channel.ChannelTest do
       def join(socket, _msg), do: {:ok, socket}
       def leave(socket, _msg) do
         send(socket.pid, :left)
-        {:ok, socket}
+        socket
       end
     end
     defmodule Router5 do
@@ -141,7 +141,7 @@ defmodule Phoenix.Channel.ChannelTest do
       def join(socket, _msg), do: {:ok, socket}
       def event("info", socket, _msg) do
         send(socket.pid, :info)
-        {:ok, socket}
+        socket
       end
     end
     defmodule Router6 do
