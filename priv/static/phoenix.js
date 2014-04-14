@@ -224,7 +224,7 @@
       this.send({
         channel: channel,
         topic: topic,
-        "leave": "leave",
+        event: "leave",
         message: message
       });
       return this.channels = (function() {

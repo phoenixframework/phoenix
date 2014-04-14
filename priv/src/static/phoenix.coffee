@@ -111,7 +111,7 @@ class @Phoenix.Socket
 
 
   leave: (channel, topic, message = {}) ->
-    @send({channel, topic, "leave", message})
+    @send(channel: channel, topic: topic, event: "leave", message: message)
     @channels = (c for c in @channels when not(c.isMember(channel, topic)))
 
 
