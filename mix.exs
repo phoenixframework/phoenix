@@ -1,11 +1,23 @@
+Code.ensure_loaded?(Hex) and Hex.start
+
 defmodule Phoenix.Mixfile do
   use Mix.Project
 
   def project do
-    [ app: :phoenix,
-      version: "0.0.1",
+    [
+      app: :phoenix,
+      version: "0.1.0",
       elixir: "~> 0.13.0-dev",
-      deps: deps(Mix.env) ]
+      deps: deps(Mix.env),
+      package: [
+        contributors: ["Chris McCord", "Darko Fabijan"],
+        licenses: ["MIT"]
+      ],
+      description: """
+      Elixir Web Framework targeting full-featured, fault tolerant applications
+      with realtime functionality
+      """
+    ]
   end
 
   def application do
