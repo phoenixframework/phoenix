@@ -12,7 +12,7 @@ defmodule Phoenix.Mixfile do
       package: [
         contributors: ["Chris McCord", "Darko Fabijan"],
         licenses: ["MIT"],
-        links: ["https://github.com/phoenixframework/phoenix"]
+        links: [github: "https://github.com/phoenixframework/phoenix"]
       ],
       description: """
       Elixir Web Framework targeting full-featured, fault tolerant applications
