@@ -64,7 +64,7 @@ defmodule Phoenix.Controller do
 
   def error_with_trace(conn, error) do
     stacktrace = System.stacktrace
-    exception  = Exception.normalize(error)
+    exception  = Exception.normalize(:error, error)
     status     = Plug.Exception.status(error)
 
     html conn, status, """
