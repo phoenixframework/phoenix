@@ -43,5 +43,3 @@ defmodule Phoenix.Router do
     apply(router, :match, [conn, http_method, split_path])
   end
 end
-
-

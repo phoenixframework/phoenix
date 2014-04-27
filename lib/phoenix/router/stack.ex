@@ -23,7 +23,7 @@ defmodule Phoenix.Router.Stack do
   end
 
   @doc """
-  Retuns the content of the stack.
+  Returns the content of the stack.
   """
   def get(stack_name, module) do
     (Module.get_attribute module, stack_name) || []
@@ -36,4 +36,3 @@ defmodule Phoenix.Router.Stack do
     Module.put_attribute module, stack_name, stack_content
   end
 end
-

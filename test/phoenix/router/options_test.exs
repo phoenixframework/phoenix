@@ -19,5 +19,4 @@ defmodule Phoenix.Router.OptionsTest do
     assert [port: 71107, ssl: false] ==
       Phoenix.Router.Options.merge([], PhoenixOptionsTest.Router)
   end
-
 end

@@ -55,4 +55,3 @@ defmodule Phoenix.Router.NamedRoutingTest do
     assert Router.new_file_path == "/files/new"
   end
 end
-

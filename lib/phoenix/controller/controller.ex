@@ -78,4 +78,3 @@ defmodule Phoenix.Controller do
     """
   end
 end
-

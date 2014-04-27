@@ -33,4 +33,3 @@ defmodule Phoenix.Config do
     end
   end
 end
-
