@@ -36,12 +36,10 @@ defmodule Phoenix.Router do
 
   def perform_dispatch(conn, router) do
     alias Phoenix.Router.Path
-    conn        = Plug.Connection.fetch_params(conn)
+    conn        = Plug.Conn.fetch_params(conn)
     http_method = conn.method |> String.downcase |> binary_to_atom
     split_path  = Path.split_from_conn(conn)
 
     apply(router, :match, [conn, http_method, split_path])
   end
 end
-
-
