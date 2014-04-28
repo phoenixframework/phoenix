@@ -1,9 +1,9 @@
 defmodule Phoenix.Controller do
-  import Plug.Connection
+  import Plug.Conn
 
   defmacro __using__(_options) do
     quote do
-      import Plug.Connection
+      import Plug.Conn
       import unquote(__MODULE__)
     end
   end
@@ -78,4 +78,3 @@ defmodule Phoenix.Controller do
     """
   end
 end
-
