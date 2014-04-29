@@ -5,15 +5,6 @@ defmodule Mix.Tasks.Phoenix.New do
 
   @template_dir "template"
 
-  def run([]) do
-    Mix.shell.info """
-    Supply application name and destination path.
-
-    e.g.
-      mix phoenix.new photo_blog /home/johndoe/
-    """
-  end
-
   @doc """
   Creates Phoenix application.
   """
@@ -38,6 +29,18 @@ defmodule Mix.Tasks.Phoenix.New do
         Mix.Generator.create_file(destination_path, contents)
       end
     end
+  end
+
+  @doc """
+  Display instructions on how to create a Phoenix application.
+  """
+  def run(_) do
+    Mix.shell.info """
+    Supply application name and destination path.
+
+    e.g.
+      mix phoenix.new photo_blog /home/johndoe/
+    """
   end
 
   defp make_project_path(path, application_name) do
