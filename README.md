@@ -4,6 +4,8 @@
 
 ## Getting started
 
+> Requires: Elixir 0.13.0-dev 
+
 1. Install Phoenix
 
         git clone https://github.com/phoenixframework/phoenix.git && cd phoenix && mix do deps.get, compile
