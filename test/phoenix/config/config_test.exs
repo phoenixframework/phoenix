@@ -13,7 +13,7 @@ defmodule Phoenix.Config.ConfigTest do
   use ExUnit.Case
   alias Phoenix.Config
 
-  test "Config.for finds module based on sub Config existense" do
+  test "Config.for finds module based on sub Config existence" do
     assert Config.for(PhoenixConfTest.Router) == PhoenixConfTest.Config
   end
 

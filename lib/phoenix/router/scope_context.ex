@@ -86,4 +86,3 @@ defmodule Phoenix.Router.ScopeContext do
     Stack.get(@stack_name, module)
   end
 end
-

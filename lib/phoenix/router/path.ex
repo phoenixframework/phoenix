@@ -165,4 +165,3 @@ defmodule Phoenix.Router.Path do
   def ensure_no_leading_slash(<<"/" <> rest>>), do: rest
   def ensure_no_leading_slash(path), do: path
 end
-

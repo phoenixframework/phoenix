@@ -37,4 +37,3 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
     ConsoleFormatter.format_routes(router.__routes__)
   end
 end
-

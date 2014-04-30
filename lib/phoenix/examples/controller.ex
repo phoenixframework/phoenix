@@ -56,4 +56,3 @@ defmodule Phoenix.Examples.Controllers.Files do
     text conn, "Get file: #{conn.params["path"]}"
   end
 end
-

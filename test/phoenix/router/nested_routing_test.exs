@@ -195,4 +195,3 @@ defmodule Phoenix.Router.NestedTest do
     assert conn.status == 404
   end
 end
-
