@@ -36,6 +36,11 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     assert Regex.match?(~r/PhotoBlog/, content)
   end
 
+  test "missing name and/or path arguments" do
+    assert :ok == Mix.Tasks.Phoenix.New.run([])
+    assert :ok == Mix.Tasks.Phoenix.New.run([@app_name])
+  end
+
   teardown_all do
     File.rm_rf(project_path)
     :ok
