@@ -1,8 +1,10 @@
 defmodule MyApp.Router do
   use Phoenix.Router
+  use Phoenix.Router.Socket, mount: "/ws"
 
   plug Plug.Static, at: "/static", from: :phoenix
 
+  get "/", Phoenix.Examples.Controllers.Pages, :show
   scope alias: Phoenix.Examples.Controllers do
     get "/pages/:page", Pages, :show, as: :page
     get "/files/*path", Files, :show, as: :file
@@ -12,7 +14,18 @@ defmodule MyApp.Router do
       resources "comments", Comments
     end
   end
+
+  channel "messages", Phoenix.Examples.Controllers.Messages
+
+  # def match(socket, :websocket, "messages", event, message) do
+  #   apply(Controllers.Messaegs, :event, [event, req, id]
+  # end
 end
+
+"""
+channel.join "messages", (resp) ->
+
+"""
 
 defmodule MyApp.Config do
   use Phoenix.Config.App

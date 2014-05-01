@@ -3,6 +3,7 @@
   "ex_conf": {:git, "git://github.com/phoenixframework/ex_conf.git", "e6309e223d55a0dd6be63860ae8af5e0f021c11d", []},
   "ex_doc": {:git, "git://github.com/elixir-lang/ex_doc.git", "c14203bfca186f68ff178e5ada9af4f5fb37e205", []},
   "inflex": {:git, "git://github.com/nurugger07/inflex.git", "3cf7f6257e1a87e7309c554f546ff6fd5ebfe2fa", []},
+  "jazz": {:git, "git://github.com/meh/jazz.git", "c502fc3894249d677f0546bc02a9b866d5d32afa", []},
   "mime": {:git, "git://github.com/dynamo/mime.git", "db84370c53a67a7e58a4d0cfb026f4edc64a9367", []},
   "plug": {:package, "0.4.2"},
   "ranch": {:git, "git://github.com/extend/ranch.git", "5df1f222f94e08abdcab7084f5e13027143cc222", [ref: "0.9.0"]}}
