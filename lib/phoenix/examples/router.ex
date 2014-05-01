@@ -16,16 +16,7 @@ defmodule MyApp.Router do
   end
 
   channel "messages", Phoenix.Examples.Controllers.Messages
-
-  # def match(socket, :websocket, "messages", event, message) do
-  #   apply(Controllers.Messaegs, :event, [event, req, id]
-  # end
 end
-
-"""
-channel.join "messages", (resp) ->
-
-"""
 
 defmodule MyApp.Config do
   use Phoenix.Config.App
@@ -45,3 +36,4 @@ defmodule MyApp.Config.Dev do
 
   config :logger, level: :debug
 end
+
