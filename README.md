@@ -159,7 +159,7 @@ There are no guidelines yet. Do what feels natural. Submit a bug, join a discuss
   - [x] Scoped definitions
   - [ ] Member/Collection resource  routes
 - Configuration
-  - [ ] Environment based configuration with ExConf
+  - [x] Environment based configuration with ExConf
 - Middleware
   - [x] Plug Based Connection handling
   - [x] Code Reloading
@@ -173,7 +173,5 @@ There are no guidelines yet. Do what feels natural. Submit a bug, join a discuss
 - Views
   - [ ] Precompiled View handling
 - Realtime
-  - [ ] Raw websocket handler
-  - [ ] Websocket multiplexing/channels
-  - [ ] Websocket routing DSL
-  - [ ] Websocket Controllers
+  - [x] Websocket multiplexing/channels
+
