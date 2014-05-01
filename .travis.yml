@@ -9,4 +9,4 @@ before_script:
   - mix local.hex --force
   - MIX_ENV=test mix do deps.get
 script:
-  - MIX_ENV=all mix test
+  - mix test
