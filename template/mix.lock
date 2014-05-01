@@ -1,9 +1,1 @@
-%{"cowboy": {:git, "git://github.com/extend/cowboy.git", "0ec713fc4b185c3cd0f6b2e7ec2c5f198361bddd", []},
-  "cowlib": {:git, "git://github.com/extend/cowlib.git", "63298e8e160031a70efff86a1acde7e7db1fcda6", [ref: "0.4.0"]},
-  "ex_conf": {:git, "git://github.com/phoenixframework/ex_conf.git", "e6309e223d55a0dd6be63860ae8af5e0f021c11d", []},
-  "ex_doc": {:git, "git://github.com/elixir-lang/ex_doc.git", "ee01fe3efd7b8af1dbaa00946bad5817d57b5875", []},
-  "inflex": {:git, "git://github.com/nurugger07/inflex.git", "3cf7f6257e1a87e7309c554f546ff6fd5ebfe2fa", []},
-  "mime": {:git, "git://github.com/dynamo/mime.git", "db84370c53a67a7e58a4d0cfb026f4edc64a9367", []},
-  "phoenix": {:git, "git://github.com/phoenixframework/phoenix.git", "b95a43ab51b99a76ccf0e00d187642f768c83513", []},
-  "plug": {:git, "git://github.com/elixir-lang/plug.git", "c735ee21ab8384ab47ac27feb56cc509641fdc6d", []},
-  "ranch": {:git, "git://github.com/extend/ranch.git", "5df1f222f94e08abdcab7084f5e13027143cc222", [ref: "0.9.0"]}}
+%{"phoenix": {:package, "0.2.0"}}
