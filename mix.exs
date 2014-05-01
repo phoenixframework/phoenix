@@ -6,7 +6,7 @@ defmodule Phoenix.Mixfile do
   def project do
     [
       app: :phoenix,
-      version: "0.2.0",
+      version: "0.2.1",
       elixir: "~> 0.13.0",
       deps: deps(Mix.env),
       package: [
