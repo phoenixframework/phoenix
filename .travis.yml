@@ -6,6 +6,7 @@ before_install:
   - cd elixir && make && cd ..
 before_script:
   - export PATH=`pwd`/elixir/bin:$PATH
-  - yes | MIX_ENV=test mix do deps.get
+  - mix local.hex --force
+  - MIX_ENV=test mix do deps.get
 script:
   - MIX_ENV=all mix test
