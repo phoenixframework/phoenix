@@ -1,4 +1,5 @@
 defmodule Phoenix.Channel do
+  use Jazz
   alias Phoenix.Topic
   alias Phoenix.Socket
   alias Phoenix.Socket.Handler

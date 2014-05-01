@@ -30,7 +30,7 @@ defmodule Phoenix.Mixfile do
 
   defp deps(:prod) do
     [
-      {:cowboy, github: "extend/cowboy"},
+      {:cowboy, github: "extend/cowboy", optional: true},
       {:plug, "0.4.2"},
       {:inflex, "0.2.0"},
       {:ex_conf, "0.1.1"},

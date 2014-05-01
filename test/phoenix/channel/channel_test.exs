@@ -1,5 +1,6 @@
 defmodule Phoenix.Channel.ChannelTest do
   use ExUnit.Case
+  use Jazz
   alias Phoenix.Topic
   alias Phoenix.Channel
   alias Phoenix.Socket
