@@ -24,7 +24,7 @@ defmodule Phoenix.Mixfile do
   def application do
     [
       mod: { Phoenix, [] },
-      applications: [:cowboy, :plug, :ex_conf]
+      applications: [:cowboy, :plug]
     ]
   end
 
@@ -32,7 +32,7 @@ defmodule Phoenix.Mixfile do
     [
       {:cowboy, github: "extend/cowboy"},
       {:plug, "0.4.2"},
-      {:inflex, github: "nurugger07/inflex"},
+      {:inflex, "0.2.0"},
       {:ex_conf, "0.1.1"},
       {:jazz, github: "meh/jazz"}
     ]

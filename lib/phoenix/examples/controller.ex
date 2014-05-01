@@ -71,6 +71,5 @@ defmodule Phoenix.Examples.Controllers.Messages do
     broadcast socket, "new", message
     socket
   end
-
 end
 

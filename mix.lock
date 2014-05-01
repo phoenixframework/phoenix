@@ -2,7 +2,7 @@
   "cowlib": {:git, "git://github.com/extend/cowlib.git", "f58340a0044856bb508df03cfe94cf79308380a2", [ref: "0.6.1"]},
   "ex_conf": {:package, "0.1.1"},
   "ex_doc": {:git, "git://github.com/elixir-lang/ex_doc.git", "c14203bfca186f68ff178e5ada9af4f5fb37e205", []},
-  "inflex": {:git, "git://github.com/nurugger07/inflex.git", "3cf7f6257e1a87e7309c554f546ff6fd5ebfe2fa", []},
+  "inflex": {:package, "0.2.0"},
   "jazz": {:git, "git://github.com/meh/jazz.git", "c502fc3894249d677f0546bc02a9b866d5d32afa", []},
   "mime": {:git, "git://github.com/dynamo/mime.git", "db84370c53a67a7e58a4d0cfb026f4edc64a9367", []},
   "plug": {:package, "0.4.2"},

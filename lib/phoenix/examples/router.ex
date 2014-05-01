@@ -1,4 +1,4 @@
-defmodule MyApp.Router do
+defmodule Phoenix.Examples.MyApp.Router do
   use Phoenix.Router
   use Phoenix.Router.Socket, mount: "/ws"
 
