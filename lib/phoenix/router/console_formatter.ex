@@ -2,7 +2,7 @@ defmodule Phoenix.Router.ConsoleFormatter do
   alias Phoenix.Project
 
   def default_router do
-    Project.module_root.Config.Router
+    Project.module_root.Router
   end
 
   def format(router) do
