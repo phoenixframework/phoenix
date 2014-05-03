@@ -2,8 +2,6 @@ defmodule Phoenix.Topic.TopicTest do
   use ExUnit.Case, async: false
   alias Phoenix.Topic
 
-  def cleanup, do: Enum.each(0..20, &Topic.delete("topic#{&1}"))
-
   def spawn_pid do
     spawn fn ->
       receive do
@@ -11,13 +9,7 @@ defmodule Phoenix.Topic.TopicTest do
     end
   end
 
-  setup do
-    cleanup
-    :ok
-  end
-
-  teardown do
-    cleanup
+  setup_all do
     :ok
   end
 
@@ -66,15 +58,21 @@ defmodule Phoenix.Topic.TopicTest do
   end
 
   test "topic is garbage collected if inactive" do
-    assert Topic.create("topic7", garbage_collect_after_ms: 25) == :ok
+    # assert true == Phoenix.Topic.Supervisor.stop
+    # refute Phoenix.Topic.Supervisor.running?
+    # Topic.Supervisor.start_link garbage_collect_after_ms = 25
+    assert Topic.create("topic7") == :ok
     assert Topic.exists?("topic7")
     :timer.sleep 50
     refute Topic.exists?("topic7")
   end
 
   test "topic is not garbage collected if active" do
+    # Phoenix.Topic.Supervisor.stop
+    # Topic.Supervisor.start_link garbage_collect_after_ms = 25
     pid = spawn_pid
-    assert Topic.create("topic8", garbage_collect_after_ms: 25) == :ok
+    # Topic.Supervisor.start_link garbage_collect_after_ms = 25
+    assert Topic.create("topic8") == :ok
     assert Topic.exists?("topic8")
     assert Topic.subscribe(pid, "topic8")
     :timer.sleep 50
