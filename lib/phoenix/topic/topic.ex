@@ -69,7 +69,10 @@ defmodule Phoenix.Topic do
 
   """
   def subscribers(name) do
-    call {:subscribers, group(name)}
+    case :pg2.get_members(group(name)) do
+      {:error, {:no_such_group, _}} -> []
+      members -> members
+    end
   end
 
   @doc """
@@ -114,6 +117,7 @@ defmodule Phoenix.Topic do
     :pg2.which_groups |> Stream.filter(&match?({@pg_prefix, _}, &1))
   end
 
+  # TODO: remove me
   def batch_create(count) do
     {microsec, _ } = :timer.tc fn ->
       Enum.each 1..count, fn i -> create("topic#{i}") end
