@@ -10,7 +10,7 @@ defmodule Mix.Tasks.Phoenix.New do
   """
   def run([name, path]) do
     application_name = Mix.Utils.underscore(name)
-    application_module = Mix.Utils.camelize(name)
+    application_module = Mix.Utils.camelize(application_name)
     project_path = make_project_path(path, application_name)
 
     bindings = [application_name: application_name,
