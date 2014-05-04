@@ -8,6 +8,7 @@ defmodule Mix.Tasks.Phoenix.Start do
   Starts default Router Worker
   """
   def run([]) do
+    Mix.Tasks.App.Start.run []
     Phoenix.Project.module_root.Router.start
     no_halt
   end
