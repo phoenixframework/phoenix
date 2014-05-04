@@ -4,7 +4,7 @@ defmodule Phoenix.Topic do
 
   @server Phoenix.Topic.Server
 
-  @pg_prefix "phx:"
+  @pg_prefix :phx
 
   @doc """
   Creates a Topic for pubsub broadcast to subscribers
