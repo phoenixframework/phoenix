@@ -63,7 +63,7 @@ defmodule Phoenix.Topic.TopicTest do
     # Topic.Supervisor.start_link garbage_collect_after_ms = 25
     assert Topic.create("topic7") == :ok
     assert Topic.exists?("topic7")
-    :timer.sleep 50
+    send Topic.Server.leader_pid, {:garbage_collect, [{:phx, "topic7"}]}
     refute Topic.exists?("topic7")
   end
 
@@ -75,7 +75,7 @@ defmodule Phoenix.Topic.TopicTest do
     assert Topic.create("topic8") == :ok
     assert Topic.exists?("topic8")
     assert Topic.subscribe(pid, "topic8")
-    :timer.sleep 50
+    send Topic.Server.leader_pid, {:garbage_collect, [{:phx, "topic8"}]}
     assert Topic.exists?("topic8")
     Process.exit pid, :kill
   end

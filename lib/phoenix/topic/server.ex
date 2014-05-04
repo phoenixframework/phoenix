@@ -1,13 +1,11 @@
 defmodule Phoenix.Topic.Server do
   use GenServer.Behaviour
-  alias Phoenix.Topic
+  alias Phoenix.Topic.Server
+  alias Phoenix.Topic.GarbageCollector
 
-  @garbage_collect_after_ms 60_000..120_000
-  @garbage_buffer_size 1000
-
-  defmodule State do
-    defstruct role: :slave, gc_buffer: []
-  end
+  defstruct role: :slave,
+            gc_buffer: [],
+            garbage_collect_after_ms: 60_000..120_000
 
   def start_link do
     :gen_server.start_link __MODULE__, [], []
@@ -19,14 +17,17 @@ defmodule Phoenix.Topic.Server do
     case :global.register_name(Phoenix.Topic.Server, self) do
       :no  ->
         Process.link(leader_pid)
-        {:ok, %State{role: :slave}}
+        {:ok, %Server{role: :slave}}
       :yes ->
         send(self, :garbage_collect_all)
-        {:ok, %State{role: :leader}}
+        {:ok, %Server{role: :leader}}
     end
   end
 
-  def handle_call(_message, _from, %State{role: :slave}), do: {:stop, :error, nil, :slave}
+  def handle_call(_message, _from, %Server{role: :slave}) do
+    {:stop, :error, nil, :slave}
+  end
+
   def handle_call({:exists?, group}, _from, state) do
     {:reply, exists?(group), state}
   end
@@ -40,7 +41,7 @@ defmodule Phoenix.Topic.Server do
       {:reply, :ok, state}
     else
       :ok = :pg2.create(group)
-      {:reply, :ok, mark_for_garbage_collect(state, [group])}
+      {:reply, :ok, GarbageCollector.mark(state, [group])}
     end
   end
 
@@ -56,7 +57,7 @@ defmodule Phoenix.Topic.Server do
     {:reply, delete(group), state}
   end
 
-  def handle_info(_message, %State{role: :slave}), do: {:stop, :error, nil, :slave}
+  def handle_info(_message, %Server{role: :slave}), do: {:stop, :error, nil, :slave}
 
   def handle_info({:garbage_collect, groups}, state) do
     active_groups = Enum.filter groups, fn group ->
@@ -68,21 +69,11 @@ defmodule Phoenix.Topic.Server do
       end
     end
 
-    {:noreply, mark_for_garbage_collect(state, active_groups)}
+    {:noreply, GarbageCollector.mark(state, active_groups)}
   end
 
   def handle_info(:garbage_collect_all, state) do
-    Topic.list
-    |> Stream.chunk(@garbage_buffer_size)
-    |> Enum.each fn groups ->
-      mark_for_garbage_collect(state, groups)
-    end
-    {:noreply, state}
-  end
-
-  def terminate(_reason, timer) do
-    :timer.cancel(timer)
-    :ok
+    {:noreply, GarbageCollector.mark_all(state)}
   end
 
   defp exists?(group) do
@@ -101,25 +92,5 @@ defmodule Phoenix.Topic.Server do
   end
 
   defp delete(group), do: :pg2.delete(group)
-
-  defp mark_for_garbage_collect(state, groups) do
-    state         = %State{state | gc_buffer: state.gc_buffer ++ groups}
-    groups_to_gc  = state.gc_buffer |> Enum.take(@garbage_buffer_size)
-    new_gc_buffer = state.gc_buffer -- groups_to_gc
-
-    if Enum.count(groups_to_gc) >= @garbage_buffer_size do
-      @garbage_collect_after_ms
-      |> rand_int_between
-      |> :timer.send_after({:garbage_collect, groups_to_gc})
-
-      %State{state | gc_buffer: new_gc_buffer}
-    else
-      state
-    end
-  end
-
-  defp rand_int_between(lower..upper) do
-    :random.uniform(upper - lower) + lower
-  end
 end
 

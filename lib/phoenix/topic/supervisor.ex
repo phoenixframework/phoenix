@@ -2,16 +2,10 @@ defmodule Phoenix.Topic.Supervisor do
   use Supervisor.Behaviour
 
   def start_link do
-    :supervisor.start_link(__MODULE__, [])
+    :supervisor.start_link({:local, __MODULE__}, __MODULE__, [])
   end
 
-  def stop do
-    if running?, do: Process.exit(supervisor_pid, :normal)
-  end
-
-  def running?, do: supervisor_pid
-
-  defp supervisor_pid do
+  def pid do
     case Process.whereis(__MODULE__) do
       :undefined -> nil
       pid -> pid
