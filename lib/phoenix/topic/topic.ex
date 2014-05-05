@@ -114,7 +114,7 @@ defmodule Phoenix.Topic do
   end
 
   def list do
-    :pg2.which_groups |> Stream.filter(&match?({@pg_prefix, _}, &1))
+    :pg2.which_groups |> Enum.filter(&match?({@pg_prefix, _}, &1))
   end
 
   # TODO: remove me

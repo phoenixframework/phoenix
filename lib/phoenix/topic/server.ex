@@ -1,11 +1,12 @@
 defmodule Phoenix.Topic.Server do
   use GenServer.Behaviour
+  alias Phoenix.Topic
   alias Phoenix.Topic.Server
   alias Phoenix.Topic.GarbageCollector
 
   defstruct role: :slave,
             gc_buffer: [],
-            garbage_collect_after_ms: 60_000..120_000
+            garbage_collect_after_ms: 60_000..300_000
 
   def start_link do
     :gen_server.start_link __MODULE__, [], []
@@ -41,7 +42,7 @@ defmodule Phoenix.Topic.Server do
       {:reply, :ok, state}
     else
       :ok = :pg2.create(group)
-      {:reply, :ok, GarbageCollector.mark(state, [group])}
+      {:reply, :ok, GarbageCollector.mark(state, group)}
     end
   end
 
@@ -73,7 +74,7 @@ defmodule Phoenix.Topic.Server do
   end
 
   def handle_info(:garbage_collect_all, state) do
-    {:noreply, GarbageCollector.mark_all(state)}
+    {:noreply, GarbageCollector.mark(state, Topic.list)}
   end
 
   defp exists?(group) do

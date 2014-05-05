@@ -1,27 +1,21 @@
 defmodule Phoenix.Topic.GarbageCollector do
-  alias Phoenix.Topic
   alias Phoenix.Topic.Server
 
-  @buffer_size 250
+  @buffer_size 200
 
-  def mark_all(state) do
-    Topic.list
-    |> Stream.chunk(@buffer_size)
-    |> Enum.reduce state, fn groups, new_state ->
-      mark(new_state, groups)
+  def mark(state, groups) when is_list groups do
+    Enum.reduce groups, state, fn group, new_state ->
+      mark(new_state, group)
     end
   end
 
-  def mark(state, groups) do
-    state         = %Server{state | gc_buffer: state.gc_buffer ++ groups}
-    groups_to_gc  = state.gc_buffer |> Enum.take(@buffer_size)
+  def mark(state, group) do
+    if Enum.count(state.gc_buffer) + 1 >= @buffer_size do
+      schedule_garbage_collect(state, [group | state.gc_buffer])
 
-    if Enum.count(groups_to_gc) >= @buffer_size do
-      schedule_garbage_collect(state, groups_to_gc)
-
-      %Server{state | gc_buffer: state.gc_buffer -- groups_to_gc}
+      %Server{state | gc_buffer: []}
     else
-      state
+      %Server{state | gc_buffer: [group | state.gc_buffer]}
     end
   end
 
