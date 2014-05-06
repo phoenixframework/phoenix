@@ -12,7 +12,7 @@ defmodule Phoenix.Router.Socket do
   defmacro channel(channel, module) do
     quote do
       def match(socket, :websocket, unquote(channel), "join", message) do
-        apply(unquote(module), :join, [socket, message])
+        apply(unquote(module), :join, [socket, socket.topic, message])
       end
       def match(socket, :websocket, unquote(channel), "leave", message) do
         apply(unquote(module), :leave, [socket, message])

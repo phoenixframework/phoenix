@@ -66,7 +66,7 @@ defmodule Phoenix.Channel.ChannelTest do
   test "successful join authorizes and subscribes socket to channel/topic" do
     defmodule Chan3 do
       use Phoenix.Channel
-      def join(socket, _msg), do: {:ok, socket}
+      def join(socket, _topic, _msg), do: {:ok, socket}
     end
     defmodule Router3 do
       use Phoenix.Router
@@ -89,7 +89,7 @@ defmodule Phoenix.Channel.ChannelTest do
   test "unsuccessful join denies socket access to channel/topic" do
     defmodule Chan4 do
       use Phoenix.Channel
-      def join(socket, _msg), do: {:error, socket, :unauthenticated}
+      def join(socket, _topic, _msg), do: {:error, socket, :unauthenticated}
     end
     defmodule Router4 do
       use Phoenix.Router
@@ -112,7 +112,7 @@ defmodule Phoenix.Channel.ChannelTest do
   test "#leave is called when the socket conn closes, and is unsubscribed" do
     defmodule Chan5 do
       use Phoenix.Channel
-      def join(socket, _msg), do: {:ok, socket}
+      def join(socket, _topic, _msg), do: {:ok, socket}
       def leave(socket, _msg) do
         send(socket.pid, :left)
         socket
@@ -139,7 +139,7 @@ defmodule Phoenix.Channel.ChannelTest do
   test "#info is called when receiving regular process messages" do
     defmodule Chan6 do
       use Phoenix.Channel
-      def join(socket, _msg), do: {:ok, socket}
+      def join(socket, _topic, _msg), do: {:ok, socket}
       def event("info", socket, _msg) do
         send(socket.pid, :info)
         socket
