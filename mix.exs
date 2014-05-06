@@ -34,7 +34,7 @@ defmodule Phoenix.Mixfile do
       {:plug, "0.4.2"},
       {:inflex, "0.2.0"},
       {:ex_conf, "0.1.1"},
-      {:jazz, github: "meh/jazz"}
+      {:jazz, "0.1.0"}
     ]
   end
 

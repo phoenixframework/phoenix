@@ -69,7 +69,7 @@ defmodule Phoenix.Channel do
       channel: channel,
       topic: topic,
       event: event,
-      message: message
+      message: Enum.into(message, %{})
     ))
   end
 
@@ -81,7 +81,7 @@ defmodule Phoenix.Channel do
       channel: socket.channel,
       topic: socket.topic,
       event: event,
-      message: message
+      message: Enum.into(message, %{})
     )
     socket
   end
@@ -100,7 +100,7 @@ defmodule Phoenix.Channel do
   Converts Dict message into JSON text reply frame for Websocket Handler
   """
   def reply_json_frame(message) do
-    {:reply, {:text, JSON.encode!(message)}}
+    {:reply, {:text, JSON.encode!(Enum.into(message, %{}))}}
   end
 
   defp namespaced(channel, topic), do: "#{channel}:#{topic}"
