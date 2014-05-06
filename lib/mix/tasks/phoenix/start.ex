@@ -8,6 +8,7 @@ defmodule Mix.Tasks.Phoenix.Start do
   Starts default Router Worker
   """
   def run([]) do
+    Mix.Task.run "app.start", []
     Phoenix.Project.module_root.Router.start
     no_halt
   end
@@ -16,6 +17,7 @@ defmodule Mix.Tasks.Phoenix.Start do
   Starts provided Worker
   """
   def run([worker]) do
+    Mix.Task.run "app.start", []
     remote_worker = Module.concat("Elixir", worker)
     if Code.ensure_loaded? remote_worker do
       remote_worker.start

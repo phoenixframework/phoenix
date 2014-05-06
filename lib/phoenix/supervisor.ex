@@ -7,12 +7,8 @@ defmodule Phoenix.Supervisor do
 
   def init([]) do
     children = [
-      # Define workers and child supervisors to be supervised
-      # worker(Phoenix.Worker, [])
+      worker(Phoenix.Topic.Supervisor, [])
     ]
-
-    # See http://elixir-lang.org/docs/stable/Supervisor.Behaviour.html
-    # for other strategies and supported options
     supervise(children, strategy: :one_for_one)
   end
 end
