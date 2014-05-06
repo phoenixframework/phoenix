@@ -117,15 +117,6 @@ defmodule Phoenix.Topic do
     :pg2.which_groups |> Enum.filter(&match?({@pg_prefix, _}, &1))
   end
 
-  # TODO: remove me
-  def batch_create(count) do
-    {microsec, _ } = :timer.tc fn ->
-      Enum.each 1..count, fn i -> create("topic#{i}") end
-    end
-
-    microsec / 1_000_000
-  end
-
   defp call(message), do: :gen_server.call(Server.leader_pid, message)
 
   defp group(name), do: {@pg_prefix, name}
