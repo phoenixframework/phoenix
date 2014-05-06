@@ -10,7 +10,10 @@ defmodule <%= application_module %>.Mixfile do
 
   # Configuration for the OTP application
   def application do
-    [mod: { <%= application_module %>, [] }]
+    [
+      mod: { <%= application_module %>, [] },
+      applications: [:phoenix]
+    ]
   end
 
   # Returns the list of dependencies in the format:
