@@ -15,7 +15,7 @@ defmodule Phoenix.Topic.Server do
   def leader_pid, do: :global.whereis_name(__MODULE__)
 
   def init(_) do
-    case :global.register_name(Phoenix.Topic.Server, self) do
+    case :global.register_name(__MODULE__, self) do
       :no  ->
         Process.link(leader_pid)
         {:ok, %Server{role: :slave}}
