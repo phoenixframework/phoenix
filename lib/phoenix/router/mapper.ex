@@ -10,7 +10,7 @@ defmodule Phoenix.Router.Mapper do
 
   @moduledoc """
   Adds Macros for Route match definitions. All routes are
-  compiled to patterm matched def match() definitions for fast
+  compiled to pattern matched def match() definitions for fast
   and efficient lookup by the VM.
 
   # Examples
