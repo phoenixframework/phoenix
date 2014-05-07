@@ -166,20 +166,20 @@ defmodule Phoenix.Router.RoutingTest do
     refute conn.resp_body =~ ~r/Stacktrace/i
   end
 
-  test "splat arg with preceeding named parameter to files/:user_name/*path" do
+  test "splat arg with preceding named parameter to files/:user_name/*path" do
     conn = simulate_request(Router, :get, "files/elixir/Users/home/file.txt")
     assert conn.status == 200
     assert conn.params["user_name"] == "elixir"
     assert conn.params["path"] == "Users/home/file.txt"
   end
 
-  test "splat arg with preceeding string to backups/*path" do
+  test "splat arg with preceding string to backups/*path" do
     conn = simulate_request(Router, :get, "backups/name")
     assert conn.status == 200
     assert conn.params["path"] == "name"
   end
 
-  test "splat arg with multiple preceeding strings to static/images/icons/*path" do
+  test "splat arg with multiple preceding strings to static/images/icons/*path" do
     conn = simulate_request(Router, :get, "static/images/icons/elixir/logos/main.png")
     assert conn.status == 200
     assert conn.params["image"] == "elixir/logos/main.png"
