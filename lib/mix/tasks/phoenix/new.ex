@@ -18,7 +18,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
     Mix.Generator.create_directory(project_path)
 
-    lc source_path inlist template_files do
+    for source_path <- template_files do
       destination_path = make_destination_path(project_path, source_path, application_name)
 
       if File.dir?(source_path) do

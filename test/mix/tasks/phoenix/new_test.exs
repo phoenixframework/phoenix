@@ -22,7 +22,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       "test/photo_blog_test.exs",
       "test/test_helper.exs"]
 
-    lc file inlist expected_files do
+    for file <- expected_files do
       path = Path.join(project_path, file)
 
       assert File.exists?(path)

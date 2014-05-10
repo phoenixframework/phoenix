@@ -14,7 +14,7 @@ defmodule Phoenix.Router.ConsoleFormatter do
   def format_routes(routes) do
     column_widths = calculate_column_widths(routes)
 
-    lc route inlist routes, do: format_route(route, column_widths)
+    for route <- routes, do: format_route(route, column_widths)
   end
 
   defp calculate_column_widths(routes) do
