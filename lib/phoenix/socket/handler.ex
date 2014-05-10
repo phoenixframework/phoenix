@@ -5,6 +5,12 @@ defmodule Phoenix.Socket.Handler do
   alias Phoenix.Socket.Message
   alias Phoenix.Channel
 
+  defexception InvalidReturn, message: nil do
+    def exception(opts) do
+      InvalidReturn[message: "Invalid Handler return: #{inspect opts[:message]}"]
+    end
+  end
+
   def init({:tcp, :http}, req, opts) do
     {:upgrade, :protocol, :cowboy_websocket, req, opts}
   end
@@ -80,6 +86,16 @@ defmodule Phoenix.Socket.Handler do
   end
   defp handle_result({:error, socket, _reason}, _event) do
     {:ok, socket.conn, socket}
+  end
+  defp handle_result(bad_return, event) when event in ["join", "leave"] do
+    raise InvalidReturn, message: """
+      expected {:ok, %Socket{}} | {:error, %Socket{}, reason} got #{inspect bad_return}
+    """
+  end
+  defp handle_result(bad_return, _event) do
+    raise InvalidReturn, message: """
+      expected %Socket{} got #{inspect bad_return}
+    """
   end
 
   @doc """
