@@ -18,7 +18,7 @@ defmodule Phoenix.Router.Socket do
         apply(unquote(module), :leave, [socket, message])
       end
       def match(socket, :websocket, unquote(channel), event, message) do
-        apply(unquote(module), :event, [event, socket, message])
+        apply(unquote(module), :event, [socket, event, message])
       end
     end
   end

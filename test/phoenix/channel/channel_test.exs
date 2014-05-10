@@ -140,7 +140,7 @@ defmodule Phoenix.Channel.ChannelTest do
     defmodule Chan6 do
       use Phoenix.Channel
       def join(socket, _topic, _msg), do: {:ok, socket}
-      def event("info", socket, _msg) do
+      def event(socket, "info", _msg) do
         send(socket.pid, :info)
         socket
       end

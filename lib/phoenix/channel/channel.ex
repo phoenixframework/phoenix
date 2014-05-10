@@ -16,7 +16,7 @@ defmodule Phoenix.Channel do
 
   defmacro __before_compile__(_env) do
     quote do
-      def event(_event, socket, _message), do: socket
+      def event(socket, _event, _message), do: socket
     end
   end
 
