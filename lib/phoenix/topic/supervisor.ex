@@ -14,6 +14,8 @@ defmodule Phoenix.Topic.Supervisor do
 
   def init(_) do
     tree = [worker(Phoenix.Topic.Server, [])]
-    supervise(tree, strategy: :one_for_one)
+    supervise tree, strategy: :one_for_one,
+                    max_restarts: 5,
+                    max_seconds: 5
   end
 end

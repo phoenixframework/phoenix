@@ -15,7 +15,7 @@ defmodule Phoenix.Topic.Server do
   def leader_pid, do: :global.whereis_name(__MODULE__)
 
   def init(_) do
-    case :global.register_name(Phoenix.Topic.Server, self) do
+    case :global.register_name(__MODULE__, self, &:global.notify_all_name/3) do
       :no  ->
         Process.link(leader_pid)
         {:ok, %Server{role: :slave}}
@@ -25,8 +25,8 @@ defmodule Phoenix.Topic.Server do
     end
   end
 
-  def handle_call(_message, _from, %Server{role: :slave}) do
-    {:stop, :error, nil, :slave}
+  def handle_call(_message, _from, state = %Server{role: :slave}) do
+    {:stop, :error, nil, state}
   end
 
   def handle_call({:exists?, group}, _from, state) do
@@ -58,7 +58,9 @@ defmodule Phoenix.Topic.Server do
     {:reply, delete(group), state}
   end
 
-  def handle_info(_message, %Server{role: :slave}), do: {:stop, :error, nil, :slave}
+  def handle_info(_message, state = %Server{role: :slave}) do
+    {:stop, :error, nil, state}
+  end
 
   def handle_info({:garbage_collect, groups}, state) do
     active_groups = Enum.filter groups, fn group ->
@@ -71,6 +73,10 @@ defmodule Phoenix.Topic.Server do
     end
 
     {:noreply, GarbageCollector.mark(state, active_groups)}
+  end
+
+  def handle_info({:global_name_conflict, name, _other_pid}, state) do
+    {:stop, {:global_name_conflict, name}, state}
   end
 
   def handle_info(:garbage_collect_all, state) do
