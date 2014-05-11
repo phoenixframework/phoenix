@@ -164,40 +164,39 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "#join raise InvalidReturn exception when return type invalid" do
-    defmodule Chan4 do
+    defmodule Chan7 do
       use Phoenix.Channel
-      def join(socket, _topic, _msg), do: :some_bad_return
+      def join(_socket, _topic, _msg), do: :some_bad_return
     end
-    defmodule Router4 do
+    defmodule Router7 do
       use Phoenix.Router
       use Phoenix.Router.Socket, mount: "/ws"
-      channel "chan4", Chan4
+      channel "chan7", Chan7
     end
 
-    socket = %Socket{pid: self, router: Router4, channel: "chan4"}
+    socket = %Socket{pid: self, router: Router7, channel: "chan7"}
     message  = """
-    {"channel": "chan4","topic":"topic","event":"join","message":"{}"}
+    {"channel": "chan7","topic":"topic","event":"join","message":"{}"}
     """
     assert_raise InvalidReturn, fn ->
       Handler.websocket_handle({:text, message}, nil, socket)
     end
-
   end
 
   test "#leave raise InvalidReturn exception when return type invalid" do
-    defmodule Chan6 do
+    defmodule Chan8 do
       use Phoenix.Channel
       def join(socket, _topic, _msg), do: {:ok, socket}
-      def leave(socket, _msg), do: :some_bad_return
+      def leave(_socket, _msg), do: :some_bad_return
     end
-    defmodule Router6 do
+    defmodule Router8 do
       use Phoenix.Router
       use Phoenix.Router.Socket, mount: "/ws"
-      channel "chan6", Chan6
+      channel "chan8", Chan8
     end
-    socket = %Socket{pid: self, router: Router6, channel: "chan6"}
+    socket = %Socket{pid: self, router: Router8, channel: "chan8"}
     message  = """
-    {"channel": "chan6","topic":"topic","event":"join","message":"{}"}
+    {"channel": "chan8","topic":"topic","event":"join","message":"{}"}
     """
     Topic.create("chan6:topic")
     {:ok, _req, socket} = Handler.websocket_handle({:text, message}, nil, socket)
@@ -208,26 +207,26 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "#event raises InvalidReturn exception when return type is invalid" do
-    defmodule Chan7 do
+    defmodule Chan9 do
       use Phoenix.Channel
       def join(socket, _topic, _msg), do: {:ok, socket}
-      def event(socket, "boom", _msg), do: :some_bad_return
+      def event(_socket, "boom", _msg), do: :some_bad_return
     end
-    defmodule Router7 do
+    defmodule Router9 do
       use Phoenix.Router
       use Phoenix.Router.Socket, mount: "/ws"
-      channel "chan7", Chan7
+      channel "chan9", Chan9
     end
-    socket = %Socket{pid: self, router: Router7, channel: "chan7"}
+    socket = %Socket{pid: self, router: Router9, channel: "chan9"}
     message  = """
-    {"channel": "chan7","topic":"topic","event":"join","message":"{}"}
+    {"channel": "chan9","topic":"topic","event":"join","message":"{}"}
     """
-    Topic.create("chan7:topic")
-    refute Socket.authenticated?(socket, "chan7", "topic")
+    Topic.create("chan9:topic")
+    refute Socket.authenticated?(socket, "chan9", "topic")
     {:ok, _req, socket} = Handler.websocket_handle({:text, message}, nil, socket)
-    assert Socket.authenticated?(socket, "chan7", "topic")
+    assert Socket.authenticated?(socket, "chan9", "topic")
     message  = """
-    {"channel": "chan7","topic":"topic","event":"boom","message":"{}"}
+    {"channel": "chan9","topic":"topic","event":"boom","message":"{}"}
     """
     assert_raise InvalidReturn, fn ->
       Handler.websocket_handle({:text, message}, nil, socket)
