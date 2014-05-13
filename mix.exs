@@ -40,6 +40,6 @@ defmodule Phoenix.Mixfile do
 
   defp deps(_) do
     deps(:prod) ++
-      [ { :ex_doc, github: "elixir-lang/ex_doc" } ]
+      [ {:ex_doc, github: "elixir-lang/ex_doc", only: [:docs]} ]
   end
 end
