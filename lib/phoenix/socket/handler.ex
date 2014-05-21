@@ -99,7 +99,7 @@ defmodule Phoenix.Socket.Handler do
   end
 
   @doc """
-  Handles handles recieving messages from processes
+  Handles recieving messages from processes
   """
   def info(_info, _req, state) do
     {:ok, state}
