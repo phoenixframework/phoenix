@@ -35,6 +35,11 @@ defmodule Phoenix.Router do
         IO.puts "Running #{__MODULE__} with Cowboy on port #{inspect options}"
         Plug.Adapters.Cowboy.http __MODULE__, [], options
       end
+
+      def stop do
+        IO.puts "#{__MODULE__} has been stopped"
+        Plug.Adapters.Cowboy.shutdown __MODULE__.HTTP
+      end
     end
   end
 
