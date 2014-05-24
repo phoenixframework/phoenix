@@ -7,7 +7,7 @@ defmodule Phoenix.Socket.Handler do
 
   defexception InvalidReturn, message: nil do
     def exception(opts) do
-      InvalidReturn[message: "Invalid Handler return: #{inspect opts[:message]}"]
+      %InvalidReturn{message: "Invalid Handler return: #{inspect opts[:message]}"}
     end
   end
 
@@ -176,4 +176,3 @@ defmodule Phoenix.Socket.Handler do
     send(socket.pid, :hibernate)
   end
 end
-

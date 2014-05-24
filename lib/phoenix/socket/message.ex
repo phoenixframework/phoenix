@@ -6,7 +6,7 @@ defmodule Phoenix.Socket.Message do
 
   defexception InvalidMessage, message: nil do
     def exception(opts) do
-      InvalidMessage[message: "Invalid Socket Message: #{inspect opts[:message]}"]
+      %InvalidMessage{message: "Invalid Socket Message: #{inspect opts[:message]}"}
     end
   end
 
@@ -37,4 +37,3 @@ defmodule Phoenix.Socket.Message do
     end
   end
 end
-
