@@ -7,7 +7,7 @@ defmodule Phoenix.Mixfile do
     [
       app: :phoenix,
       version: "0.2.3",
-      elixir: "~> 0.13.0",
+      elixir: "~> 0.13.3",
       deps: deps(Mix.env),
       package: [
         contributors: ["Chris McCord", "Darko Fabijan"],
@@ -34,7 +34,7 @@ defmodule Phoenix.Mixfile do
       {:plug, "0.4.3"},
       {:inflex, "0.2.0"},
       {:ex_conf, "0.1.1"},
-      {:jazz, "0.1.0"}
+      {:jazz, github: "meh/jazz"}
     ]
   end
 
