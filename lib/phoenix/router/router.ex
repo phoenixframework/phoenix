@@ -31,16 +31,30 @@ defmodule Phoenix.Router do
 
       def start do
         options = Options.merge(@options, @dispatch_options, __MODULE__, Cowboy)
-
-        IO.puts "Running #{__MODULE__} with Cowboy on port #{inspect options}"
-        Plug.Adapters.Cowboy.http __MODULE__, [], options
+        Phoenix.Router.start_adapter(options)
       end
 
       def stop do
-        IO.puts "#{__MODULE__} has been stopped"
-        Plug.Adapters.Cowboy.shutdown __MODULE__.HTTP
+        options = Options.merge(@options, @dispatch_options, __MODULE__, Cowboy)
+        Phoenix.Router.stop_adapter(options)
       end
     end
+  end
+
+  def start_adapter(options) do
+    case options[:ssl] do
+      true  -> Plug.Adapters.Cowboy.https __MODULE__, [], options
+      false -> Plug.Adapters.Cowboy.http __MODULE__, [], options
+    end
+    IO.puts "Running #{__MODULE__} with Cowboy on port #{inspect options[:port]}"
+  end
+
+  def stop_adapter(options) do
+    case options[:ssl] do
+      true  -> Plug.Adapters.Cowboy.shutdown __MODULE__.HTTPS
+      false -> Plug.Adapters.Cowboy.shutdown __MODULE__.HTTP
+    end
+    IO.puts "#{__MODULE__} has been stopped"
   end
 
   def perform_dispatch(conn, router) do
