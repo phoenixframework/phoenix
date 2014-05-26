@@ -116,6 +116,37 @@ defmodule YourApp.Config.Dev do
 end
 ```
 
+#### Configuration for SSL
+
+To launch your application with support for SSL, just place your keyfile and
+certfile in the `priv` directory and configure your router with the following
+options:
+
+```elixir
+# your_app/lib/config/prod.ex
+defmodule YourApp.Config.Prod do
+  use YourApp.Config
+
+  config :router, port: 4040,
+                  ssl: true,
+		  otp_app: :your_app,
+		  keyfile: "ssl/key.pem",
+		  certfile: "ssl/cert.pem"
+end
+```
+
+When you include the `otp_app` option, `Plug` will search within the `priv`
+directory of your application. If you use relative paths for `keyfile` and
+`certfile` and do not include the `otp_app` option, `Plug` will throw an error.
+
+You can leave out the `otp_app` option if you provide absolute paths to the
+files.
+
+Example:
+
+```elixir
+Path.expand("../../../some/path/to/ssl/key.pem", __DIR__)
+```
 
 ### Mix Tasks
 
