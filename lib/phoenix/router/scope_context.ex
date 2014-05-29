@@ -65,7 +65,9 @@ defmodule Phoenix.Router.ScopeContext do
   end
 
   defp get_helpers(module) do
-    Enum.map get(module), fn {_, _, helper} -> helper end
+    get(module)
+    |> Enum.map(fn {_, _, helper} -> helper end)
+    |> Enum.filter(&(&1))
   end
 
   @doc """

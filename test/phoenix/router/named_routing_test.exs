@@ -13,6 +13,14 @@ defmodule Phoenix.Router.NamedRoutingTest do
       end
     end
     resources "files", FilesController
+
+    scope path: "admin", alias: Controllers.Admin do
+      resources "messages", Messages
+    end
+
+    scope path: "admin", alias: Controllers.Admin, helper: "admin" do
+      resources "messages", Messages
+    end
   end
 
   test "manual alias generated named route" do
@@ -53,6 +61,16 @@ defmodule Phoenix.Router.NamedRoutingTest do
     assert Router.edit_file_path(id: 123) == "/files/123/edit"
     assert Router.file_path(id: 123) == "/files/123"
     assert Router.new_file_path == "/files/new"
+  end
+
+  test "scoped route helpers generated named routes with :path, and :alias options" do
+    assert Router.messages_path == "/admin/messages"
+    assert Router.message_path(id: 1) == "/admin/messages/1"
+  end
+
+  test "scoped route helpers generated named routes with :path, :alias, and :helper options" do
+    assert Router.admin_messages_path == "/admin/messages"
+    assert Router.admin_message_path(id: 1) == "/admin/messages/1"
   end
 end
 
