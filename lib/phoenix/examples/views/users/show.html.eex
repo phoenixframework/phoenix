@@ -1,0 +1,4 @@
+<div>
+  Showing User Phoenix View! <%= @name %>
+</div>
+
