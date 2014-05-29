@@ -1,5 +1,11 @@
 defmodule Phoenix.Template do
 
+  defexception UndefinedError, message: nil do
+    def exception(opts) do
+      %UndefinedError{message: opts[:message]}
+    end
+  end
+
   @doc """
   Converts the template file path into a function name
 

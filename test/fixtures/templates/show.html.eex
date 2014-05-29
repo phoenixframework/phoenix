@@ -1,1 +1,1 @@
-Show! <%= @message %>
+<div>Show! <%= @message %></div>

@@ -26,7 +26,7 @@ defmodule Phoenix.Html do
 
   defimpl Safe, for: List do
     def to_string(list) do
-      bc data inlist list, do: << Safe.to_string(data) :: binary >>
+      for data <- list, into: "", do: << Safe.to_string(data) :: binary >>
     end
   end
 
@@ -36,7 +36,7 @@ defmodule Phoenix.Html do
 
   defimpl Safe, for: Float do
     def to_string(data) do
-      iolist_to_binary(:io_lib_format.fwrite_g(data))
+      IO.iodata_to_binary(:io_lib_format.fwrite_g(data))
     end
   end
 
@@ -45,7 +45,7 @@ defmodule Phoenix.Html do
   end
 
   def escape(buffer) do
-    bc << char >> inbits buffer do
+    for << char <- buffer >>, into: "" do
       << escape_char(char) :: binary >>
     end
   end
