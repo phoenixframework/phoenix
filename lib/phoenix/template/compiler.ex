@@ -104,7 +104,7 @@ defmodule Phoenix.Template.Compiler do
           apply(__MODULE__, :"#{unquote(name)}", [assigns])
         end
 
-        EEx.function_from_string(:def, :"#{unquote(name)}",unquote(content), [:assigns],
+        EEx.function_from_string(:def, :"#{unquote(name)}", unquote(content), [:assigns],
                                  engine: Phoenix.Html.Engine)
       end
     end

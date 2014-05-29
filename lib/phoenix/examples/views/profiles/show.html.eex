@@ -1,0 +1,7 @@
+<%= render "nav/top.html", [] %>
+<div>
+  Profile!
+  hmm
+  <%= Views.Users.render("show.html", [name: @name]) %>
+</div>
+
