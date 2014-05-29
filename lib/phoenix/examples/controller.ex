@@ -3,7 +3,7 @@ defmodule Phoenix.Examples.Controllers.Pages do
   import MyApp.Templates
 
   def show(conn) do
-    render conn, "pages/home", title: "Home"
+    # render conn, "pages/home", title: "Home"
   end
 
   def show(_conn, "page") do

@@ -3,9 +3,11 @@ defmodule Phoenix.Html.Engine do
   use EEx.AssignsEngine
   alias Phoenix.Html.Safe
 
+  def handle_body(body), do: unsafe(body)
+
   def handle_text(buffer, text) do
     quote do
-      { :safe, unquote(buffer) <> unquote(text) }
+      {:safe, unquote(buffer) <> unquote(text)}
     end
   end
 
@@ -30,7 +32,7 @@ defmodule Phoenix.Html.Engine do
     end
   end
 
-  defp unsafe({ :safe, value }), do: value
+  defp unsafe({:safe, value}), do: value
   defp unsafe(value), do: value
 end
 

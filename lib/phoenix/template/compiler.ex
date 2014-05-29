@@ -1,6 +1,8 @@
 defmodule Phoenix.Template.Compiler do
   alias Phoenix.Template
+  alias Phoenix.Template.UndefinedError
   alias Phoenix.Mime
+  alias Plug.Conn
 
   @moduledoc """
   Precompiles EEx templates into module and provides `render` support
@@ -43,25 +45,26 @@ defmodule Phoenix.Template.Compiler do
         * layout - The optional String layout, ie "application", false
 
       """
-      def render(template, assigns) when is_binary(template) do
-        assigns   = Dict.put_new(assigns, :layout, "application.html")
-        {:safe, content} = apply(__MODULE__, binary_to_atom(template), [assigns])
+      # def render(template, assigns) when is_binary(template) do
+      #   assigns   = Dict.put_new(assigns, :layout, "application.html")
+      #   {:safe, content} = apply(__MODULE__, String.to_atom(template), [assigns])
 
-        content
-      end
-      def render(conn, template, assigns \\ []) do
-        content_type = Dict.get(conn.req_headers, "content-type") || "text/html"
-        render(conn, content_type, template, assigns)
-      end
-      def render(conn, content_type, template, assigns) do
-        extension = Mime.ext_from_type(content_type) || ""
-        assigns   = Dict.merge(conn.assigns, assigns)
-        assigns   = Dict.put_new(assigns, :layout, "application" <> extension)
-        tpl_func  = template <> extension
-        {:safe, content} = apply(__MODULE__, binary_to_atom(tpl_func), [assigns])
+      #   content
+      # end
+      # def render(conn, template, assigns) do
+      #   content_type = Enum.at(Conn.get_req_header(conn, "content-type"), 0) || "text/html"
+      #   IO.puts "CONTENT TYPE: #{inspect content_type}"
+      #   render(conn, content_type, template, assigns)
+      # end
+      # def render(conn, content_type, template, assigns) do
+      #   extension = Mime.ext_from_type(content_type) || ""
+      #   assigns   = Dict.merge(conn.assigns, assigns)
+      #   assigns   = Dict.put_new(assigns, :layout, "application" <> extension)
+      #   tpl_func  = template <> extension
+      #   {:safe, content} = apply(__MODULE__, String.to_atom(tpl_func), [assigns])
 
-        Phoenix.Controller.html(conn, content)
-      end
+      #   Phoenix.Controller.html(conn, content)
+      # end
     end
   end
 
@@ -80,23 +83,36 @@ defmodule Phoenix.Template.Compiler do
     quote bind_quoted: [layout: layout, inner: inner] do
       if layout do
         layout_assigns = Dict.merge(var!(:assigns), inner: inner)
-        apply(__MODULE__, binary_to_atom("layouts/#{layout}"), [layout_assigns])
+        {:safe, render("layouts/#{layout}", layout_assigns)}
       else
         inner
       end
     end
   end
 
-  defmacro __before_compile__(_env) do
-    quote do
-      unless File.exists?(@path), do: raise "No such template directory: #{@path}"
+  defmacro __before_compile__(env) do
+    path = Module.get_attribute(env.module, :path)
+    unless File.exists?(path) do
+      raise %UndefinedError{message: "No such template directory: #{path}"}
+    end
 
-      Enum.each Template.find_all_from_root(@path), fn file_path ->
-        name    = Template.func_name_from_path(file_path, @path)
-        content = Template.read!(file_path)
+    renders_ast = for file_path <- Template.find_all_from_root(path) do
+      name    = Template.func_name_from_path(file_path, path)
+      content = Template.read!(file_path)
+      quote do
+        def render(unquote(name), assigns) do
+          apply(__MODULE__, :"#{unquote(name)}", [assigns])
+        end
 
-        EEx.function_from_string(:def, :"#{name}", content, [:assigns],
+        EEx.function_from_string(:def, :"#{unquote(name)}",unquote(content), [:assigns],
                                  engine: Phoenix.Html.Engine)
+      end
+    end
+
+    quote do
+      unquote(renders_ast)
+      def render(undefined_template, _assign) do
+        raise %UndefinedError{message: "No such template \"#{undefined_template}\""}
       end
     end
   end
