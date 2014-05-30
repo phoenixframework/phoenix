@@ -81,11 +81,12 @@ defmodule Phoenix.Template.Compiler do
   """
   defmacro within(layout, do: inner) do
     quote bind_quoted: [layout: layout, inner: inner] do
-      if layout do
-        layout_assigns = Dict.merge(var!(:assigns), inner: inner)
-        {:safe, render("layouts/#{layout}", layout_assigns)}
-      else
-        inner
+      case layout do
+        {module, layout} ->
+          layout_assigns = Dict.merge(var!(:assigns), inner: inner)
+          {:safe, module.render(layout, layout_assigns)}
+        nil ->
+          inner
       end
     end
   end
@@ -100,6 +101,7 @@ defmodule Phoenix.Template.Compiler do
       name    = Template.func_name_from_path(file_path, path)
       content = Template.read!(file_path)
       quote do
+        def render(unquote(name)), do: render(unquote(name), [])
         def render(unquote(name), assigns) do
           apply(__MODULE__, :"#{unquote(name)}", [assigns])
         end
@@ -112,6 +114,7 @@ defmodule Phoenix.Template.Compiler do
 
     quote do
       unquote(renders_ast)
+      def render(undefined_template), do: render(undefined_template, [])
       def render(undefined_template, _assign) do
         raise %UndefinedError{message: "No such template \"#{undefined_template}\""}
       end

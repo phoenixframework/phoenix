@@ -10,6 +10,10 @@ defmodule Phoenix.Template.CompilerTest do
     assert MyApp.Views.render("show.html", message: "hello!") == "<div>Show! hello!</div>\n\n"
   end
 
+  test "compiler precompiles functions with optional assigns" do
+    assert MyApp.Views.render("show.html") == "<div>Show! </div>\n\n"
+  end
+
   test "compiler sanitizes against xss by default" do
     html = MyApp.Views.render("show.html", message: "<script>alert('xss');</script>")
 
@@ -23,18 +27,27 @@ defmodule Phoenix.Template.CompilerTest do
   end
 
   test "compiler renders application layout with nested template" do
-    html = MyApp.Views.render("show.html", layout: "application.html", message: "hello!")
+    html = MyApp.Views.render("show.html",
+      within: {MyApp.Views, "layouts/application.html"},
+      message: "hello!"
+    )
 
     assert html == "<html>\n  <body>\n    <div>Show! hello!</div>\n\n  </body>\n</html>\n\n"
   end
 
   test "compiler renders application layout with safe nested template" do
     html = MyApp.Views.render("show.html",
-      layout: "application.html",
+      within: {MyApp.Views, "layouts/application.html"},
       message: "<script>alert('xss');</script>"
     )
 
     assert html == "<html>\n  <body>\n    <div>Show! &lt;script&gt;alert(&#39;xss&#39;);&lt;/script&gt;</div>\n\n  </body>\n</html>\n\n"
+  end
+
+  test "compiler adds cach-all render/1 that raises UndefinedError" do
+    assert_raise Phoenix.Template.UndefinedError, fn ->
+      MyApp.Views.render("not-exists.html")
+    end
   end
 
   test "compiler adds cach-all render/2 that raises UndefinedError" do

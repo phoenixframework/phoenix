@@ -1,6 +1,6 @@
 defmodule Phoenix.Examples.Controllers.Pages do
   use Phoenix.Controller
-  import MyApp.Templates
+  # import MyApp.Templates
 
   def show(conn) do
     # render conn, "pages/home", title: "Home"

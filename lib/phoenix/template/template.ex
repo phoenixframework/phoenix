@@ -53,7 +53,7 @@ defmodule Phoenix.Template do
       file_contents
     else
       """
-      <%= within @layout do %>#{file_contents}<% end %>
+      <%= within @within do %>#{file_contents}<% end %>
       """
     end
   end
