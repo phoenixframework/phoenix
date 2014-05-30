@@ -138,6 +138,21 @@ defmodule Phoenix.Router.Path do
   end
 
   @doc """
+  Builds a URL based on options passed.
+
+  # Examples:
+    iex> Path.build_url("/users", "example.com", "https")
+    "https://example.com/users"
+
+    iex> Path.build_url("/users", "example.com")
+    "http://example.com/users"
+
+  """
+  def build_url(path, host, scheme \\ "http") do
+    %URI{scheme: scheme, host: host, path: path} |> to_string
+  end
+
+  @doc """
   Adds leading forward slash to string path if missing
 
   # Examples
