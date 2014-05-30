@@ -22,7 +22,7 @@ defmodule Examples.Config do
   use Phoenix.Config.App
 
   config :router, port: 4000,
-                  domain: "example.com"
+                  host: "example.com"
 
   config :plugs, code_reload: false
 

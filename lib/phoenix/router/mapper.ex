@@ -109,11 +109,11 @@ defmodule Phoenix.Router.Mapper do
         end
         def unquote(binary_to_atom "#{alias_name}_url")(params \\ []) do
           config = Phoenix.Config.for(__MODULE__).router
-          domain = config[:domain]
+          host = config[:host]
           scheme = if config[:ssl], do: "https", else: "http"
 
           Path.build(unquote(path), params)
-          |> Path.build_url(domain, scheme)
+          |> Path.build_url(host, scheme)
         end
       end
     end
