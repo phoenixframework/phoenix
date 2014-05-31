@@ -4,7 +4,6 @@ Code.require_file "views/Layouts/layouts.exs", __DIR__
 
 defmodule Phoenix.ViewTest do
   use ExUnit.Case
-  use Plug.Test
   alias Phoenix.UserTest.Views
 
   test "Subviews render templates with imported functions from base view" do
@@ -25,5 +24,10 @@ defmodule Phoenix.ViewTest do
     assert html == "<html>\n  <title>Test</title>\n  Subview truncat...\n\n</html>\n"
   end
 
+  test "Subview modules are implicity defined when missing and directory named via camel case" do
+    assert Code.ensure_compiled?(Views.Profiles)
+    refute Code.ensure_compiled?(Views.Users.Nav)
+    assert Views.Profiles.render("show.html", name: "chris") == "showing profile CHRIS\n"
+  end
 end
 

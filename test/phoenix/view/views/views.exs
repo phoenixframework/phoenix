@@ -1,4 +1,5 @@
 defmodule Phoenix.UserTest.Views do
+  use Phoenix.View.Base
 
   defmacro __using__(_) do
     quote do

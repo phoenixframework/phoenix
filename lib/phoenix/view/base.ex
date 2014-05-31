@@ -36,7 +36,10 @@ defmodule Phoenix.View.Base do
   end
 
   def subview_defined?(dir) do
-    view_module_name = Path.basename(dir) |> Mix.Utils.underscore
-    File.exists?(Path.join([dir, "#{view_module_name}.ex"]))
+    module_name = Path.basename(dir) |> Mix.Utils.underscore
+    ex_file     = Path.join([dir, "#{module_name}.ex"])
+    exs_file    = Path.join([dir, "#{module_name}.exs"])
+
+    File.exists?(ex_file) || File.exists?(exs_file)
   end
 end
