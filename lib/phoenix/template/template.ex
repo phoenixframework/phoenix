@@ -34,13 +34,10 @@ defmodule Phoenix.Template do
   end
 
   @doc """
-  Return String template file_path contents, wrapping non-layout templates
+  Return String template file_path contents, wrapping templates
   in `within` macro to render traditional templates within a layout.
 
   Examples
-
-  iex> Template.read!("/var/www/templates/layouts/application.html.eex")
-  <html>...
 
   iex> Template.read!("/var/www/templates/pages/home.html.eex")
   <%= within @layout do %>
@@ -48,16 +45,7 @@ defmodule Phoenix.Template do
   <% end %>
   """
   def read!(file_path) do
-    file_contents = File.read!(file_path)
-    if layout?(file_path) do
-      file_contents
-    else
-      """
-      <%= within @within do %>#{file_contents}<% end %>
-      """
-    end
+    "<%= within @within do %>#{File.read!(file_path)}<% end %>"
   end
-
-  defp layout?(file_path), do: String.contains?(file_path, "layouts/")
 end
 

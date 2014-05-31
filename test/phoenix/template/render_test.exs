@@ -12,12 +12,12 @@ defmodule Phoenix.Template.RenderTest do
       message: "hi",
       within: {MyApp.Templates, "layouts/application.html"}
     )
-    assert html == "<html>\n  <body>\n    <div>Show! hi</div>\n\n  </body>\n</html>\n\n"
+    assert html == "<html>\n  <body>\n    <div>Show! hi</div>\n\n  </body>\n</html>\n"
   end
 
   test "render without connection renders template without layout" do
     assert MyApp.Templates.render("show.html", message: "hi", layout: false) ==
-      "<div>Show! hi</div>\n\n"
+      "<div>Show! hi</div>\n"
   end
 
   # test "render connection renders template" do

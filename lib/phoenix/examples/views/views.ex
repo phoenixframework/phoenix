@@ -1,4 +1,5 @@
 defmodule MyApp.Views do
+  use Phoenix.View.Base
 
   defmacro __using__(_) do
     quote do
@@ -8,5 +9,6 @@ defmodule MyApp.Views do
     end
   end
 
+  def title, do: "Default"
 end
 
