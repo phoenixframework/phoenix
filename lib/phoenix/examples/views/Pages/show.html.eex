@@ -1,4 +1,0 @@
-<div>
-  Showing Page <%= @title %>
-</div>
-

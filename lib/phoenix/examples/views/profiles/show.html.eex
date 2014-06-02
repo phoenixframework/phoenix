@@ -1,7 +1,0 @@
-<%= render("nav/top.html", []) |> safe %>
-<div>
-  Profile!!!!
-  hmm
-  <%= Views.Users.render("show.html", name: @name) |> safe %>
-</div>
-
