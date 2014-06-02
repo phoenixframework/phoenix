@@ -3,26 +3,16 @@ defmodule Phoenix.Template.Compiler do
   alias Phoenix.Template.UndefinedError
 
   @moduledoc """
-  Precompiles EEx templates into module and provides `render` support
+  Precompiles EEx templates into view module and provides `render` support
 
   Examples
 
-  defmodule MyApp.Templates do
+  defmodule MyApp.Views do
     use Phoenix.Template.Compiler, path: Path.join([__DIR__, "templates"])
   end
 
-  From outside Controller
-  iex> MyApp.Templates.render("show.html", message: "Hello!")
+  iex> MyApp.Views.render("show.html", message: "Hello!")
   "<h1>Hello!</h1>"
-
-  From within Controller
-  def show(conn) do
-    render conn, "pages/home", title: "Home"
-  end
-
-  def show(conn) do
-    render conn, "pages/home", layout: false, title: "Home"
-  end
 
   """
   defmacro __using__(options) do
