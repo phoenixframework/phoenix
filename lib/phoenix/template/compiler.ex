@@ -1,8 +1,6 @@
 defmodule Phoenix.Template.Compiler do
   alias Phoenix.Template
   alias Phoenix.Template.UndefinedError
-  alias Phoenix.Mime
-  alias Plug.Conn
 
   @moduledoc """
   Precompiles EEx templates into module and provides `render` support
@@ -35,36 +33,6 @@ defmodule Phoenix.Template.Compiler do
       import unquote(__MODULE__)
       @path unquote(path)
       @before_compile unquote(__MODULE__)
-
-      @doc """
-      Renders template to string and sends html response when providing Conn
-
-      * template - The full or partial template without extension to render
-                   based on content type, ie."users/show", "users/show.html"
-      * assigns - The optional Dict of template assigns
-        * layout - The optional String layout, ie "application", false
-
-      """
-      # def render(template, assigns) when is_binary(template) do
-      #   assigns   = Dict.put_new(assigns, :layout, "application.html")
-      #   {:safe, content} = apply(__MODULE__, String.to_atom(template), [assigns])
-
-      #   content
-      # end
-      # def render(conn, template, assigns) do
-      #   content_type = Enum.at(Conn.get_req_header(conn, "content-type"), 0) || "text/html"
-      #   IO.puts "CONTENT TYPE: #{inspect content_type}"
-      #   render(conn, content_type, template, assigns)
-      # end
-      # def render(conn, content_type, template, assigns) do
-      #   extension = Mime.ext_from_type(content_type) || ""
-      #   assigns   = Dict.merge(conn.assigns, assigns)
-      #   assigns   = Dict.put_new(assigns, :layout, "application" <> extension)
-      #   tpl_func  = template <> extension
-      #   {:safe, content} = apply(__MODULE__, String.to_atom(tpl_func), [assigns])
-
-      #   Phoenix.Controller.html(conn, content)
-      # end
     end
   end
 

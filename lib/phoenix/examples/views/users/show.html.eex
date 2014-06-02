@@ -1,5 +1,0 @@
-<div>
-  <%= title %>
-  Showing User <%= @name %>
-</div>
-

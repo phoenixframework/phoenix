@@ -1,10 +1,10 @@
-defmodule Examples.Router do
+defmodule MyApp.Router do
   use Phoenix.Router
   use Phoenix.Router.Socket, mount: "/ws"
 
   plug Plug.Static, at: "/static", from: :phoenix
 
-  get "/", Phoenix.Examples.Controllers.Pages, :show
+  get "/", MyApp.Controllers.Pages, :show
 
   scope alias: Phoenix.Examples.Controllers do
     get "/pages/:page", Pages, :show, as: :page
@@ -19,7 +19,7 @@ defmodule Examples.Router do
   channel "messages", Phoenix.Examples.Controllers.Messages
 end
 
-defmodule Examples.Config do
+defmodule MyApp.Config do
   use Phoenix.Config.App
 
   config :router, port: 4000
@@ -28,18 +28,20 @@ defmodule Examples.Config do
 
 end
 
-defmodule Examples.Config.Dev do
-  use Examples.Config
+defmodule MyApp.Config.Dev do
+  use MyApp.Config
 
-  config :router, port: System.get_env("PORT") || 4000
+  config :router, port: System.get_env("PORT") || 4000,
+                  ssl: false,
+                  consider_all_requests_local: true
 
   config :plugs, code_reload: true
 
   config :logger, level: :debug
 end
 
-defmodule Examples.Config.Prod do
-  use Examples.Config
+defmodule MyApp.Config.Prod do
+  use MyApp.Config
 
   config :router, port: System.get_env("PORT") || 4040,
                   ssl: true,

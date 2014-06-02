@@ -1,4 +1,4 @@
-defmodule MyApp.Views.Users do
+defmodule MyApp.Views.Pages do
   use MyApp.Views
 
   def friendly_name(_name), do: ""
