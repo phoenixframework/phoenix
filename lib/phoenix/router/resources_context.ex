@@ -35,7 +35,7 @@ defmodule Phoenix.Router.ResourcesContext do
       []        -> relative_path
       resources -> resources
                    |> Enum.reverse
-                   |> Enum.map(&resource_with_named_param(&1))
+                   |> Enum.map(&resource_with_named_param/1)
                    |> Kernel.++([relative_path])
                    |> Path.join
     end
@@ -68,7 +68,7 @@ defmodule Phoenix.Router.ResourcesContext do
 
   """
   def current_alias(action, relative_path, module) do
-    resources = get(module) |> Enum.reverse |> Enum.map(&singularize(&1))
+    resources = get(module) |> Enum.reverse |> Enum.map(&singularize/1)
 
     alias_for_action(action, resources, relative_path)
   end
