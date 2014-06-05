@@ -5,9 +5,10 @@ defmodule Phoenix.Socket.Handler do
   alias Phoenix.Socket.Message
   alias Phoenix.Channel
 
-  defexception InvalidReturn, message: nil do
-    def exception(opts) do
-      %InvalidReturn{message: "Invalid Handler return: #{inspect opts[:message]}"}
+  defmodule InvalidReturn do
+    defexception [:message]
+    def exception(msg) do
+      %InvalidReturn{message: "Invalid Handler return: #{inspect msg}"}
     end
   end
 

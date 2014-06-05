@@ -4,9 +4,10 @@ defmodule Phoenix.Socket.Message do
 
   defstruct channel: nil, topic: nil, event: nil, message: nil
 
-  defexception InvalidMessage, message: nil do
-    def exception(opts) do
-      %InvalidMessage{message: "Invalid Socket Message: #{inspect opts[:message]}"}
+  defmodule InvalidMessage do
+    defexception [:message]
+    def exception(msg) do
+      %InvalidMessage{message: "Invalid Socket Message: #{inspect msg}"}
     end
   end
 
