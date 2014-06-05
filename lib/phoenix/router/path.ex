@@ -92,7 +92,7 @@ defmodule Phoenix.Router.Path do
       <<"*" <> param>> -> quote do: Phoenix.Router.Path.join(unquote(var_ast(param)))
       _part ->
     end)
-    |> Enum.filter(&is_tuple(&1))
+    |> Enum.filter(&is_tuple/1)
   end
 
   @doc """
