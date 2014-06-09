@@ -1,5 +1,4 @@
 defmodule Phoenix.Router do
-  use GenServer.Behaviour
   alias Phoenix.Plugs
   alias Phoenix.Router.Options
   alias Phoenix.Adapters.Cowboy
