@@ -69,7 +69,7 @@ defmodule Phoenix.Controller do
 
     html conn, status, """
       <html>
-        <h2>(#{inspect exception.__record__(:name)}) #{exception.message}</h2>
+        <h2>(#{inspect exception.__struct__}) #{exception.message}</h2>
         <h4>Stacktrace</h4>
         <body>
           <pre>#{Exception.format_stacktrace stacktrace}</pre>
