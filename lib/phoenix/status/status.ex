@@ -1,5 +1,9 @@
 defmodule Phoenix.Status do
 
+  @moduledoc """
+  Conversion for transforming atoms to http status codes.
+  """
+
   defmodule InvalidStatus do
     defexception [:message]
 
@@ -8,10 +12,6 @@ defmodule Phoenix.Status do
     end
   end
 
-
-  @moduledoc """
-  Conversion for transforming atoms to http status codes.
-  """
   for line <- File.stream!(Path.join([__DIR__, "status.txt"]), [], :line) do
     [code, message] = line |> String.split("\t") |> Enum.map(&String.strip(&1))
     code = String.to_integer code
