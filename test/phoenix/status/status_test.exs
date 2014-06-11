@@ -6,7 +6,7 @@ defmodule Phoenix.Status.StatusTest do
     assert Status.code(:ok) == 200
     assert Status.code(:request_uri_too_long) == 414
     assert Status.code(:variant_also_negotiates) == 506
-    assert_raise Phoenix.Status.InvalidStatus, "invalid http status atom :not_a_real_status", fn ->
+    assert_raise Status.InvalidStatus, fn ->
       Status.code(:not_a_real_status)
     end
   end

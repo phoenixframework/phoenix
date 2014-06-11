@@ -4,8 +4,7 @@ defmodule Phoenix.Status do
     defexception [:message]
 
     def exception(value) do
-      msg = "invalid http status atom #{inspect value}"
-      %InvalidStatus{message: msg}
+      %InvalidStatus{message: "Invalid HTTP status #{inspect value}"}
     end
   end
 
@@ -17,9 +16,9 @@ defmodule Phoenix.Status do
     [code, message] = line |> String.split("\t") |> Enum.map(&String.strip(&1))
     code = String.to_integer code
     atom = message
-            |> String.downcase
-            |> String.replace(~r/[^\w]+/, "_")
-            |> String.to_atom
+           |> String.downcase
+           |> String.replace(~r/[^\w]+/, "_")
+           |> String.to_atom
 
     def code(unquote(atom)), do: unquote(code)
   end
@@ -38,5 +37,4 @@ defmodule Phoenix.Status do
   """
   def code(code) when is_integer(code), do: code
   def code(atom), do: raise(InvalidStatus, atom)
-
 end
