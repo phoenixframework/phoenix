@@ -25,7 +25,7 @@ defmodule <%= application_module %>.Mixfile do
     [
       {:phoenix, "0.2.5"},
       {:jazz, github: "meh/jazz", ref: "7af3b74e58eb1a3fc6b9874a2077efa420f6dfcc"},
-      {:cowboy, github: "extend/cowboy", override: true, ref: "05024529679d1d0203b8dcd6e2932cc2a526d370"},
+      {:cowboy, "~> 0.10.0", github: "extend/cowboy", optional: true}
     ]
   end
 end
