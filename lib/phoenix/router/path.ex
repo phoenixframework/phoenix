@@ -17,16 +17,16 @@ defmodule Phoenix.Router.Path do
   # Examples
 
   iex> Phoenix.Router.Path.var_ast("my_var")
-  {:var!, [context: Phoenix.Router.Path, import: Kernel], [:my_var]}
+  {:my_var, [], nil}
 
   iex> Phoenix.Router.Path.var_ast(:my_var)
-  {:var!, [context: Phoenix.Router.Path, import: Kernel], [:my_var]}
+  {:my_var, [], nil}
   """
   def var_ast(var_name) when is_binary(var_name) do
-    var_ast(binary_to_atom(var_name))
+    var_ast(String.to_atom(var_name))
   end
   def var_ast(var_name) do
-    quote do: var!(unquote(var_name))
+    Macro.var(var_name, nil)
   end
 
   @doc """
@@ -36,8 +36,7 @@ defmodule Phoenix.Router.Path do
 
   Examples
     iex> Path.matched_arg_list_with_ast_bindings("users/:user_id/comments/:id")
-    ["users", {:var!, [context: Phoenix.Router.Path, import: Kernel], [:user_id]},
-     "comments", {:var!, [context: Phoenix.Router.Path, import: Kernel], [:id]}]
+    ["users", {:user_id, [], nil}, "comments", {:id, [], nil}]
 
     iex> Path.matched_arg_list_with_ast_bindings("/pages")
     ["pages"]
@@ -76,8 +75,7 @@ defmodule Phoenix.Router.Path do
 
   Examples
     iex> Path.params_with_ast_bindings("users/:user_id/comments/:id")
-    [{"user_id", {:var!, [context: Phoenix.Router.Path, import: Kernel], [:user_id]}},
-     {"id", {:var!, [context: Phoenix.Router.Path, import: Kernel], [:id]}}]
+    [{"user_id", {:user_id, [], nil}}, {"id", {:id, [], nil}}]
 
   """
   def params_with_ast_bindings(path) do
