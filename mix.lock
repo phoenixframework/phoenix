@@ -1,8 +1,8 @@
 %{"cowboy": {:git, "git://github.com/extend/cowboy.git", "ee3ad5e51005b453230804036e092e1d2ceebe4f", []},
   "cowlib": {:git, "git://github.com/extend/cowlib.git", "e2ffefe828b918486e2cd76e44c54ae9b62c616e", [ref: "0.6.2"]},
-  "ex_conf": {:package, "0.1.1"},
+  "ex_conf": {:package, "0.1.2"},
   "ex_doc": {:git, "git://github.com/elixir-lang/ex_doc.git", "ddf1cae6bf331d8cfd5ded61b3b120293b80642d", []},
   "inflex": {:package, "0.2.0"},
-  "jazz": {:git, "git://github.com/meh/jazz.git", "a02aa91ece89416e20762c3cb82e76766018dc77", []},
+  "jazz": {:package, "0.1.1"},
   "plug": {:package, "0.4.4"},
   "ranch": {:git, "git://github.com/extend/ranch.git", "3189ef2d47843945efc96c224963380462c33d40", [ref: "0.10.0"]}}
