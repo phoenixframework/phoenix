@@ -1,5 +1,5 @@
 defmodule Phoenix.Topic do
-  use GenServer.Behaviour
+  use GenServer
   alias Phoenix.Topic.Server
 
   @server Phoenix.Topic.Server
