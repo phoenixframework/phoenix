@@ -1,5 +1,5 @@
 defmodule <%= application_module %> do
-  use Application.Behaviour
+  use Application
 
   # See http://elixir-lang.org/docs/stable/Application.Behaviour.html
   # for more information on OTP Applications
