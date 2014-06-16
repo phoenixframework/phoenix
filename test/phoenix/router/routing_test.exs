@@ -8,6 +8,9 @@ defmodule Phoenix.Router.RoutingTest do
     def show(conn), do: text(conn, "users show")
     def top(conn), do: text(conn, "users top")
     def crash(_conn), do: raise "crash!"
+    def options(conn), do: text(conn, "users options")
+    def connect(conn), do: text(conn, "users connect")
+    def trace(conn), do: text(conn, "users trace")
   end
 
   defmodule SessionsController do
@@ -53,6 +56,10 @@ defmodule Phoenix.Router.RoutingTest do
     get "/files/:user_name/*path", FilesController, :show
     get "/backups/*path", FilesController, :show
     get "/static/images/icons/*image", FilesController, :show
+
+    trace "/trace", UsersController, :trace
+    options "/options", UsersController, :options
+    connect "/connect", UsersController, :connect
 
     resources "comments", CommentsController
     resources "posts", PostsController, except: [ :destroy ]
@@ -152,6 +159,24 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.status == 200
     assert conn.resp_body == "destroy comments"
     assert conn.params["id"] == "2"
+  end
+
+  test "options to custom action" do
+    conn = simulate_request(Router, :options, "/options")
+    assert conn.status == 200
+    assert conn.resp_body == "users options"
+  end
+
+  test "connect to custom action" do
+    conn = simulate_request(Router, :connect, "/connect")
+    assert conn.status == 200
+    assert conn.resp_body == "users connect"
+  end
+
+  test "trace to custom action" do
+    conn = simulate_request(Router, :trace, "/trace")
+    assert conn.status == 200
+    assert conn.resp_body == "users trace"
   end
 
   test "unmatched route returns 404" do

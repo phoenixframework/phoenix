@@ -7,6 +7,7 @@ defmodule Phoenix.Router.Mapper do
   alias Phoenix.Router.Mapper
 
   @actions [:index, :edit, :show, :new, :create, :update, :destroy]
+  @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace]
 
   @moduledoc """
   Adds Macros for Route match definitions. All routes are
@@ -119,24 +120,10 @@ defmodule Phoenix.Router.Mapper do
     end
   end
 
-  defmacro get(path, controller, action, options \\ []) do
-    add_route(:get, path, controller, action, options)
-  end
-
-  defmacro post(path, controller, action, options \\ []) do
-    add_route(:post, path, controller, action, options)
-  end
-
-  defmacro put(path, controller, action, options \\ []) do
-    add_route(:put, path, controller, action, options)
-  end
-
-  defmacro patch(path, controller, action, options \\ []) do
-    add_route(:patch, path, controller, action, options)
-  end
-
-  defmacro delete(path, controller, action, options \\ []) do
-    add_route(:delete, path, controller, action, options)
+  for verb <- @http_methods do
+    defmacro unquote(verb)(path, controller, action, options \\ []) do
+      add_route(unquote(to_string verb), path, controller, action, options)
+    end
   end
 
   defp add_route(verb, path, controller, action, options) do
