@@ -31,7 +31,7 @@ defmodule Phoenix.Mixfile do
   defp deps(:prod) do
     [
       {:cowboy, "~> 0.10.0", github: "extend/cowboy", optional: true},
-      {:plug, "0.4.4"},
+      {:plug, "0.5.0"},
       {:inflex, "0.2.0"},
       {:ex_conf, "0.1.2"},
       {:jazz, "0.1.1"}
