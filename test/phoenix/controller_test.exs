@@ -17,7 +17,7 @@ defmodule Phoenix.Router.ControllerTest do
 
     def atom(conn) do
       status_atom = String.to_atom(conn.params["status"])
-      text conn, status_atom, ""
+      text conn, status_atom
     end
   end
 
