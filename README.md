@@ -14,9 +14,9 @@
 2. Create a new Phoenix application
 
         mix phoenix.new your_app /path/to/scaffold/your_app
-        
+
     *Important*: Run this task in the Phoenix installation directory cloned in the step above. The path provided: `/path/to/scaffold/your_app/` should be outside of the framework installation directory. This will either create a new application directory or install the application into an existing directory.
-    
+
     #### Examples:
         mix phoenix.new your_app /Users/you/projects/my_app
         mix phoenix.new your_app ../relative_path/my_app
@@ -129,9 +129,9 @@ defmodule YourApp.Config.Prod do
 
   config :router, port: 4040,
                   ssl: true,
-		  otp_app: :your_app,
-		  keyfile: "ssl/key.pem",
-		  certfile: "ssl/cert.pem"
+                  otp_app: :your_app,
+                  keyfile: "ssl/key.pem",
+                  certfile: "ssl/cert.pem"
 end
 ```
 
