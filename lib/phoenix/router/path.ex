@@ -130,7 +130,7 @@ defmodule Phoenix.Router.Path do
   end
   defp replace_param_names_with_values(param_names, param_values, path) do
     Enum.reduce param_names, path, fn param_name, path_acc ->
-      value = param_values[binary_to_atom(param_name)] |> to_string
+      value = param_values[String.to_atom(param_name)] |> to_string
       String.replace(path_acc, ~r/[\:\*]{1}#{param_name}/, value)
     end
   end

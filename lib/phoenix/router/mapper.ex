@@ -105,10 +105,10 @@ defmodule Phoenix.Router.Mapper do
     alias_name = options[:as]
     if alias_name do
       quote do
-        def unquote(binary_to_atom "#{alias_name}_path")(params \\ []) do
+        def unquote(String.to_atom "#{alias_name}_path")(params \\ []) do
           Path.build(unquote(path), params)
         end
-        def unquote(binary_to_atom "#{alias_name}_url")(params \\ []) do
+        def unquote(String.to_atom "#{alias_name}_url")(params \\ []) do
           config = Phoenix.Config.for(__MODULE__).router
           host = config[:host]
           scheme = if config[:ssl], do: "https", else: "http"

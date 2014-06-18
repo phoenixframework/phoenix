@@ -15,5 +15,5 @@ defmodule Phoenix.Router.Options do
   defp option(key, val), do: { key, val }
 
   defp convert(:int, val) when is_integer(val), do: val
-  defp convert(:int, val), do: binary_to_integer(val)
+  defp convert(:int, val), do: String.to_integer(val)
 end

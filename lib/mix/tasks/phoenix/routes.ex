@@ -18,7 +18,7 @@ defmodule Mix.Tasks.Phoenix.Routes do
   Prints routes for specified router
   """
   def run([router]) do
-    router = binary_to_atom("Elixir." <> router)
+    router = String.to_atom("Elixir." <> router)
 
     print_routes(router)
   end
