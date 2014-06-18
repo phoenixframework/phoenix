@@ -56,7 +56,7 @@ defmodule Mix.Tasks.Phoenix.New do
   defp template_files do
     file_pattern = Path.join(template_path, "**/*")
 
-    Path.wildcard(file_pattern)
+    Path.wildcard(file_pattern, match_dot: true)
   end
 
   defp make_destination_path(project_path, file, application_name) do
