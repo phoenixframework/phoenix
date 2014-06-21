@@ -1,6 +1,7 @@
 defmodule Phoenix.Controller do
   import Plug.Conn
   alias Phoenix.Status
+  alias Phoenix.Mime
 
   defmacro __using__(_options) do
     quote do
@@ -64,13 +65,14 @@ defmodule Phoenix.Controller do
   end
 
   def error_with_trace(conn, error) do
-    stacktrace = System.stacktrace
-    exception  = Exception.normalize(:error, error)
-    status     = Plug.Exception.status(error)
+    stacktrace     = System.stacktrace
+    exception      = Exception.normalize(:error, error)
+    status         = Plug.Exception.status(error)
+    exception_type = exception.__struct__
 
     html conn, status, """
       <html>
-        <h2>(#{inspect exception.__struct__}) #{exception.message}</h2>
+        <h2>(#{inspect exception_type}) #{Exception.message(exception)}</h2>
         <h4>Stacktrace</h4>
         <body>
           <pre>#{Exception.format_stacktrace stacktrace}</pre>
@@ -78,4 +80,100 @@ defmodule Phoenix.Controller do
       </html>
     """
   end
+
+  @doc """
+  Renders View template and sends response based on Controller module name and
+  request content-type
+
+  conn - The Plug.Conn struct
+  template - The String template name, ie "show", "index"
+  assigns - The optional dict assigns to pass to template when rendering
+
+  Examples
+
+  defmodule MyApp.Controllers.Users do
+    def show(conn) do
+      render conn, "show", name: "José"
+    end
+  end
+
+  Expands at compile time to:
+
+    MyApp.Views.Users.render("show.html",
+      name: "José",
+      within: {MyApp.Views.Layouts, "application.html"
+    )
+
+  """
+  defmacro render(conn, template, assigns) do
+    subview_module = view_module(__CALLER__.module, controller_name(__CALLER__.module))
+    layout_module  = view_module(__CALLER__.module, "Layouts")
+
+    quote do
+      render_view unquote(conn),
+                  unquote(subview_module),
+                  unquote(layout_module),
+                  unquote(template),
+                  unquote(assigns)
+    end
+  end
+
+  def render_view(conn, view_mod, layout_mod, template, assigns \\ []) do
+    assigns      = Dict.merge(conn.assigns, assigns)
+    content_type = get_content_type(conn)
+    extension    = Mime.ext_from_type(content_type) || ""
+    layout       = Dict.get(assigns, :layout, "application")
+    assigns      = Dict.put_new(assigns, :within, {layout_mod, layout <> extension})
+    status       = Dict.get(assigns, :status, 200)
+
+    rendered_content = view_mod.render(template <> extension, assigns)
+
+    send_response(conn, status, content_type, rendered_content)
+  end
+
+  @doc """
+  Returns the String content-type fron Conn headers.  Defaults "text/html"
+  """
+  def get_content_type(conn) do
+    Enum.at(get_req_header(conn, "content-type"), 0) || "text/html"
+  end
+
+  @doc """
+  Finds View module based on controller_module
+
+  Examples
+
+  iex> Controller.view_module(MyApp.Controllers.Users)
+  MyApp.Views
+
+  iex> Controller.view_module(MyApp.Controllers.Users, Layouts)
+  MyApp.Views.Layouts
+
+  """
+  def view_module(controller_module, submodule \\ nil) do
+    controller_module
+    |> Module.split
+    |> Enum.at(0)
+    |> Module.concat("Views")
+    |> Module.concat(submodule)
+  end
+
+  @doc """
+  Returns the atom controller module name without application and controller
+  module prefix
+
+  Examples
+
+  iex> controller_name(MyApp.Controllers.Admin.Users)
+  Admin.Users
+  """
+  def controller_name(controller_module) do
+    controller_module
+    |> Module.split
+    |> Enum.reverse
+    |> Enum.take_while(&(&1 !== "Controllers"))
+    |> Enum.reverse
+    |> Module.concat
+  end
+
 end

@@ -1,0 +1,1 @@
+Subview <%= truncate_desc(@desc, 7) %>
