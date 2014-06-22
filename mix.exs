@@ -31,10 +31,10 @@ defmodule Phoenix.Mixfile do
   defp deps(:prod) do
     [
       {:cowboy, "~> 0.10.0", github: "extend/cowboy", optional: true},
-      {:plug, "0.5.0"},
-      {:inflex, "0.2.3"},
+      {:plug, github: "elixir-lang/plug"},
+      {:inflex, github: "nurugger07/inflex"},
       {:ex_conf, "0.1.2"},
-      {:jazz, "0.1.1"}
+      {:jazz, github: "meh/jazz"}
     ]
   end
 
