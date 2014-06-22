@@ -66,9 +66,22 @@ end
 
 defmodule Controllers.Users do
   use Phoenix.Controller
+  use Jazz
 
   def show(conn) do
     text conn, "Showing user #{conn.params["id"]}"
+  end
+
+  def create(conn) do
+    # Read the request body
+    {:ok, json, conn} = read_body(conn)
+    user = JSON.decode!(json)
+    # Do something with the user (maybe save to the database)
+
+    # Set location header and respond with 201 Created
+    conn
+    |> put_resp_header("Location", Router.user_path(id: user["id"]))
+    |> json(:created)
   end
 
   def index(conn) do

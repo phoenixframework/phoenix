@@ -9,17 +9,20 @@ defmodule Phoenix.Controller do
     end
   end
 
-  def json(conn, json), do: json(conn, :ok, json)
+  def json(conn, json \\ "") when is_binary(json), do: json(conn, :ok, json)
+  def json(conn, status) when is_atom(status) or is_integer(status), do: json(conn, status, "")
   def json(conn, status, json) do
     send_response(conn, status, "application/json", json)
   end
 
-  def html(conn, html), do: html(conn, :ok, html)
+  def html(conn, html \\ "") when is_binary(html), do: html(conn, :ok, html)
+  def html(conn, status) when is_atom(status) or is_integer(status), do: html(conn, status, "")
   def html(conn, status, html) do
     send_response(conn, status, "text/html", html)
   end
 
-  def text(conn, text), do: text(conn, :ok, text)
+  def text(conn, text \\ "") when is_binary(text), do: text(conn, :ok, text)
+  def text(conn, status) when is_atom(status) or is_integer(status), do: text(conn, status, "")
   def text(conn, status, text) do
     send_response(conn, status, "text/plain", text)
   end
