@@ -12,7 +12,7 @@ defmodule Phoenix.Status do
     end
   end
 
-  for line <- File.stream!(Path.join([__DIR__, "status.txt"]), [], :line) do
+  for line <- File.stream!(Path.join([__DIR__, "statuses.txt"]), [], :line) do
     [code, message] = line |> String.split("\t") |> Enum.map(&String.strip(&1))
     code = String.to_integer code
     atom = message
