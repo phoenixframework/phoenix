@@ -7,23 +7,23 @@ defmodule Phoenix.Template.CompilerTest do
 
 
   test "compiler precompiles all templates from path" do
-    assert MyApp.Views.render("show.html", message: "hello!") == "<div>Show! hello!</div>\n"
+    assert MyApp.Views.render("show.html", message: "hello!") == {:safe, "<div>Show! hello!</div>\n"}
   end
 
   test "compiler precompiles functions with optional assigns" do
-    assert MyApp.Views.render("show.html") == "<div>Show! </div>\n"
+    assert MyApp.Views.render("show.html") == {:safe, "<div>Show! </div>\n"}
   end
 
   test "compiler sanitizes against xss by default" do
     html = MyApp.Views.render("show.html", message: "<script>alert('xss');</script>")
 
-    assert html == "<div>Show! &lt;script&gt;alert(&#39;xss&#39;);&lt;/script&gt;</div>\n"
+    assert html == {:safe, "<div>Show! &lt;script&gt;alert(&#39;xss&#39;);&lt;/script&gt;</div>\n"}
   end
 
   test "compiler allows {:safe, ...} to inject raw data" do
     html = MyApp.Views.render("raw.html", input: "<script>alert('xss');</script>")
 
-    assert html == "Raw <script>alert('xss');</script>\n"
+    assert html == {:safe, "Raw <script>alert('xss');</script>\n"}
   end
 
   test "compiler renders application layout with nested template" do
@@ -32,7 +32,7 @@ defmodule Phoenix.Template.CompilerTest do
       message: "hello!"
     )
 
-    assert html == "<html>\n  <body>\n    <div>Show! hello!</div>\n\n  </body>\n</html>\n"
+    assert html == {:safe, "<html>\n  <body>\n    <div>Show! hello!</div>\n\n  </body>\n</html>\n"}
   end
 
   test "compiler renders application layout with safe nested template" do
@@ -41,7 +41,7 @@ defmodule Phoenix.Template.CompilerTest do
       message: "<script>alert('xss');</script>"
     )
 
-    assert html == "<html>\n  <body>\n    <div>Show! &lt;script&gt;alert(&#39;xss&#39;);&lt;/script&gt;</div>\n\n  </body>\n</html>\n"
+    assert html == {:safe, "<html>\n  <body>\n    <div>Show! &lt;script&gt;alert(&#39;xss&#39;);&lt;/script&gt;</div>\n\n  </body>\n</html>\n"}
   end
 
   test "compiler adds cach-all render/1 that raises UndefinedError" do

@@ -42,7 +42,7 @@ defmodule Phoenix.Template.Compiler do
       case layout do
         {module, layout} ->
           layout_assigns = Dict.merge(var!(assigns), inner: inner, within: nil)
-          {:safe, module.render(layout, layout_assigns)}
+          module.render(layout, layout_assigns)
         nil ->
           inner
       end

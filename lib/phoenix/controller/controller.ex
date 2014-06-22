@@ -2,6 +2,7 @@ defmodule Phoenix.Controller do
   import Plug.Conn
   alias Phoenix.Status
   alias Phoenix.Mime
+  alias Phoenix.Html
 
   defmacro __using__(_options) do
     quote do
@@ -126,7 +127,7 @@ defmodule Phoenix.Controller do
     assigns      = Dict.put_new(assigns, :within, {layout_mod, layout <> extension})
     status       = Dict.get(assigns, :status, 200)
 
-    rendered_content = view_mod.render(template <> extension, assigns)
+    rendered_content = view_mod.render(template <> extension, assigns) |> Html.unsafe
 
     send_response(conn, status, content_type, rendered_content)
   end

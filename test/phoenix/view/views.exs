@@ -5,6 +5,7 @@ defmodule Phoenix.UserTest.Views do
   defmacro __using__(options \\ []) do
     quote do
       use Phoenix.View, templates_root: unquote(@templates_root)
+      alias Phoenix.UserTest.Views
       import unquote(__MODULE__)
     end
   end

@@ -1,9 +1,10 @@
 defmodule Phoenix.Html.Engine do
   use EEx.TransformerEngine
   use EEx.AssignsEngine
+  alias Phoenix.Html
   alias Phoenix.Html.Safe
 
-  def handle_body(body), do: unsafe(body)
+  def handle_body(body), do: Html.safe(body)
 
   def handle_text(buffer, text) do
     quote do
@@ -13,7 +14,7 @@ defmodule Phoenix.Html.Engine do
 
   def handle_expr(buffer, "=", expr) do
     expr   = transform(expr)
-    buffer = unsafe(buffer)
+    buffer = Html.unsafe(buffer)
 
     quote do
       buff = unquote(buffer)
@@ -23,7 +24,7 @@ defmodule Phoenix.Html.Engine do
 
   def handle_expr(buffer, "", expr) do
     expr   = transform(expr)
-    buffer = unsafe(buffer)
+    buffer = Html.unsafe(buffer)
 
     quote do
       buff = unquote(buffer)
@@ -31,8 +32,5 @@ defmodule Phoenix.Html.Engine do
       buff
     end
   end
-
-  defp unsafe({:safe, value}), do: value
-  defp unsafe(value), do: value
 end
 

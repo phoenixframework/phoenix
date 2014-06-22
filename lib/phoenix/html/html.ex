@@ -9,6 +9,11 @@ defmodule Phoenix.Html do
     {?', "&#39;"}
   ]
 
+  def safe({:safe, value}), do: {:safe, value}
+  def safe(value), do: {:safe, value}
+  def unsafe({:safe, value}), do: value
+  def unsafe(value), do: value
+
   defprotocol Safe do
     def to_string(data)
   end
