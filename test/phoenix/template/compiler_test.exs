@@ -44,6 +44,14 @@ defmodule Phoenix.Template.CompilerTest do
     assert html == {:safe, "<html>\n  <body>\n    <div>Show! &lt;script&gt;alert(&#39;xss&#39;);&lt;/script&gt;</div>\n\n  </body>\n</html>\n"}
   end
 
+  test "compiler uses default SmartEngine for non html templates" do
+    html = MyApp.Views.render("show.json",
+      payload: "<script>alert('hello!');</script>"
+    )
+
+    assert html == "{\n  \"type\":\"script\",\n  \"payload:\"<script>alert('hello!');</script>\"\n}\n"
+  end
+
   test "compiler adds cach-all render/1 that raises UndefinedError" do
     assert_raise Phoenix.Template.UndefinedError, fn ->
       MyApp.Views.render("not-exists.html")

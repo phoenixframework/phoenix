@@ -31,7 +31,7 @@ defmodule Phoenix.Template do
   Returns List of template EEx template file paths
   """
   def find_all_from_root(template_root) do
-    Path.wildcard("#{template_root}/**/*.html.eex")
+    Path.wildcard("#{template_root}/**/*.eex")
   end
 
   @doc """
