@@ -6,6 +6,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
   setup_all do
     Mix.Tasks.Phoenix.New.run([@app_name, @destination_path])
+    on_exit fn() -> File.rm_rf(project_path) end
     :ok
   end
 
@@ -39,11 +40,6 @@ defmodule Mix.Tasks.Phoenix.NewTest do
   test "missing name and/or path arguments" do
     assert :ok == Mix.Tasks.Phoenix.New.run([])
     assert :ok == Mix.Tasks.Phoenix.New.run([@app_name])
-  end
-
-  teardown_all do
-    File.rm_rf(project_path)
-    :ok
   end
 
   def project_path do
