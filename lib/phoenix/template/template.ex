@@ -1,6 +1,7 @@
 defmodule Phoenix.Template do
 
-  defexception UndefinedError, message: nil do
+  defmodule UndefinedError do
+    defexception [:message]
     def exception(opts) do
       %UndefinedError{message: opts[:message]}
     end

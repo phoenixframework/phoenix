@@ -41,7 +41,7 @@ defmodule Phoenix.Template.Compiler do
     quote bind_quoted: [layout: layout, inner: inner] do
       case layout do
         {module, layout} ->
-          layout_assigns = Dict.merge(var!(:assigns), inner: inner, within: nil)
+          layout_assigns = Dict.merge(var!(assigns), inner: inner, within: nil)
           {:safe, module.render(layout, layout_assigns)}
         nil ->
           inner

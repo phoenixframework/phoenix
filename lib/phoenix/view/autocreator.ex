@@ -1,10 +1,4 @@
-defmodule Phoenix.View.Base do
-
-  defmacro __using__(_) do
-    quote do
-      @after_compile unquote(__MODULE__)
-    end
-  end
+defmodule Phoenix.View.AutoCreator do
 
   defmacro __after_compile__(env, bytecode) do
     base_module = env.module
@@ -32,14 +26,15 @@ defmodule Phoenix.View.Base do
   end
 
   def subview?(dir) do
-    File.dir?(dir) && String.match?(Path.basename(dir), ~r/^[A-Z].*/)
+    File.dir?(dir) && !String.starts_with?(Path.basename(dir), "_")
   end
 
   def subview_defined?(dir) do
-    module_name = Path.basename(dir) |> Mix.Utils.underscore
+    module_name = Path.basename(dir)
     ex_file     = Path.join([dir, "#{module_name}.ex"])
     exs_file    = Path.join([dir, "#{module_name}.exs"])
 
     File.exists?(ex_file) || File.exists?(exs_file)
   end
 end
+

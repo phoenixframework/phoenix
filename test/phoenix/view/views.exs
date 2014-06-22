@@ -1,10 +1,10 @@
 defmodule Phoenix.UserTest.Views do
-  use Phoenix.View.Base
 
-  defmacro __using__(_) do
+  @templates_root Path.join([__DIR__, "templates"])
+
+  defmacro __using__(options \\ []) do
     quote do
-      use Phoenix.View
-      alias MyApp.Views
+      use Phoenix.View, templates_root: unquote(@templates_root)
       import unquote(__MODULE__)
     end
   end
