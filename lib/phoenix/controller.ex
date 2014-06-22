@@ -106,7 +106,7 @@ defmodule Phoenix.Controller do
     )
 
   """
-  defmacro render(conn, template, assigns) do
+  defmacro render(conn, template, assigns \\ []) do
     subview_module = view_module(__CALLER__.module, controller_name(__CALLER__.module))
     layout_module  = view_module(__CALLER__.module, "Layouts")
 

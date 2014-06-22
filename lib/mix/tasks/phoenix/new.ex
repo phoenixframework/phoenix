@@ -24,8 +24,7 @@ defmodule Mix.Tasks.Phoenix.New do
       if File.dir?(source_path) do
         Mix.Generator.create_directory(destination_path)
       else
-        contents = EEx.eval_file(source_path, bindings)
-
+        contents = eval_file(source_path, bindings)
         Mix.Generator.create_file(destination_path, contents)
       end
     end
@@ -41,6 +40,14 @@ defmodule Mix.Tasks.Phoenix.New do
     e.g.
       mix phoenix.new photo_blog /home/johndoe/
     """
+  end
+
+  defp eval_file(source_path, bindings) do
+    if String.match?(source_path, ~r/templates\//) do
+      File.read!(source_path)
+    else
+      EEx.eval_file(source_path, bindings)
+    end
   end
 
   defp make_project_path(path, application_name) do

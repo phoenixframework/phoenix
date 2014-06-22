@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Hello Phoenix!</title>
+    <link rel="stylesheet" href="/static/css/app.css">
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="https://github.com/phoenixframework/phoenix">Get Started</a></li>
+        </ul>
+        <span class="logo"></span>
+      </div>
+
+      <%= @inner %>
+
+      <div class="footer">
+        <p><a href="http://phoenixframework.org">phoenixframework.org</a></p>
+      </div>
+
+    </div> <!-- /container -->
+  </body>
+</html>
