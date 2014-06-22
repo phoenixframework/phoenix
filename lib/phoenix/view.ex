@@ -5,16 +5,11 @@ defmodule Phoenix.View do
 
     quote do
       import unquote(__MODULE__)
+      import Phoenix.Html, only: [safe: 1, unsafe: 1]
       path = template_path_from_module(__MODULE__, unquote(templates_root))
       use Phoenix.Template.Compiler, path: path
     end
   end
-
-  def safe({:safe, string}), do: {:safe, string}
-  def safe(string), do: {:safe, string}
-
-  def unsafe({:unsafe, string}), do: {:unsafe, string}
-  def unsafe(string), do: {:unsafe, string}
 
   @doc """
   Finds the template path given view module and template root path
