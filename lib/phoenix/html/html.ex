@@ -20,7 +20,7 @@ defmodule Phoenix.Html do
 
   defimpl Safe, for: Atom do
     def to_string(nil), do: ""
-    def to_string(atom), do: Html.escape(atom_to_binary(atom))
+    def to_string(atom), do: Html.escape(Atom.to_string(atom))
   end
 
   defimpl Safe, for: BitString do
@@ -36,7 +36,7 @@ defmodule Phoenix.Html do
   end
 
   defimpl Safe, for: Integer do
-    def to_string(data), do: integer_to_binary(data)
+    def to_string(data), do: Integer.to_string(data)
   end
 
   defimpl Safe, for: Float do

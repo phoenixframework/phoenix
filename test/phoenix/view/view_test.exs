@@ -29,11 +29,5 @@ defmodule Phoenix.ViewTest do
     html = Views.Users.render("show.html", name: "<em>chris</em>")
     assert html == {:safe, "Showing User <b>name:</b> &lt;em&gt;chris&lt;/em&gt;\n\n"}
   end
-
-  test "Subview modules are implicity defined when missing and directory named via camel case" do
-    # assert Code.ensure_compiled?(Views.Profiles)
-    # refute Code.ensure_compiled?(Views.Users.Nav)
-    # assert Views.Profiles.render("show.html", name: "chris") == "showing profile CHRIS\n"
-  end
 end
 

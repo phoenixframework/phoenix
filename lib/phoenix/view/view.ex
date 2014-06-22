@@ -2,16 +2,12 @@ defmodule Phoenix.View do
   alias Phoenix.Project
 
   defmacro __using__(options \\ []) do
-    create_missing_views = Dict.get(options, :create_missing_views, false)
     templates_root = Dict.fetch!(options, :templates_root)
 
     quote do
       import unquote(__MODULE__)
       path = template_path_from_module(__MODULE__, unquote(templates_root))
       use Phoenix.Template.Compiler, path: path
-      if unquote(create_missing_views) do
-        @after_compile Phoenix.View.AutoCreator
-      end
     end
   end
 
