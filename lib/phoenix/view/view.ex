@@ -1,5 +1,4 @@
 defmodule Phoenix.View do
-  alias Phoenix.Project
 
   defmacro __using__(options \\ []) do
     templates_root = Dict.fetch!(options, :templates_root)
