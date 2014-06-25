@@ -1,8 +1,11 @@
 defmodule Phoenix.Controller do
   import Plug.Conn
+  alias Plug.Conn
   alias Phoenix.Status
   alias Phoenix.Mime
   alias Phoenix.Html
+
+  @default_content_type "text/html"
 
   defmacro __using__(_options) do
     quote do
@@ -121,7 +124,7 @@ defmodule Phoenix.Controller do
 
   def render_view(conn, view_mod, layout_mod, template, assigns \\ []) do
     assigns      = Dict.merge(conn.assigns, assigns)
-    content_type = get_content_type(conn)
+    content_type = response_content_type(conn)
     extension    = Mime.ext_from_type(content_type) || ""
     layout       = Dict.get(assigns, :layout, "application")
     assigns      = Dict.put_new(assigns, :within, {layout_mod, layout <> extension})
@@ -133,10 +136,42 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
+  Returns the List of String Accept headers, in order of priority
+  """
+  def accept_formats(%Conn{req_headers: []}), do: []
+  def accept_formats(conn) do
+    conn
+    |> get_req_header("accept")
+    |> to_string
+    |> String.split(",")
+    |> Enum.map fn format ->
+      String.split(format, ";") |> Enum.at(0)
+    end
+  end
+
+  @doc """
+  Returns the String response content-type
+
+  Lookup priority
+  1. format param of mime extension, ie "html", "json", "xml"
+  2. Accept header, ie "text/html,application/xml;q=0.9,*/*;q=0.8"
+  3. "text/html" default fallback
+  """
+  def response_content_type(conn) do
+    ".#{conn.params["format"]}"
+    |> Mime.type_from_ext
+    |> Kernel.||(primary_accept_format(accept_formats(conn)))
+    |> Kernel.||(@default_content_type)
+  end
+  defp primary_accept_format(["*/*"]), do: @default_content_type
+  defp primary_accept_format([type | _rest]), do: Mime.valid_type?(type) && type
+  defp primary_accept_format(_), do: nil
+
+  @doc """
   Returns the String content-type fron Conn headers.  Defaults "text/html"
   """
   def get_content_type(conn) do
-    Enum.at(get_req_header(conn, "content-type"), 0) || "text/html"
+    Enum.at(get_req_header(conn, "content-type"), 0) || @default_content_type
   end
 
   @doc """

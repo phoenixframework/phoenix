@@ -27,4 +27,15 @@ defmodule Phoenix.Mime do
   "text/html"
   """
   def type_from_ext(_ext), do: nil
+
+  @doc """
+  Check if a given String mime type is valid
+
+  Examples
+  iex> Mime.valid_type?("text/html")
+  true
+  iex> Mime.valid_type?("unknown/type")
+  false
+  """
+  def valid_type?(type), do: ext_from_type(type) != nil
 end

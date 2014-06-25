@@ -15,5 +15,13 @@ defmodule Phoenix.Mime.MimeTest do
     assert Mime.type_from_ext(".json") == "application/json"
     assert Mime.type_from_ext(".notfound") == nil
   end
+
+  test "valid_type? returns true when mime is known" do
+    assert Mime.valid_type?("text/html")
+  end
+
+  test "valid_type? returns false when mime is not known" do
+    refute Mime.valid_type?("unknown/type")
+  end
 end
 
