@@ -7,6 +7,7 @@ defmodule Phoenix.Mime.MimeTest do
     assert Mime.ext_from_type("text/csv") == ".csv"
     assert Mime.ext_from_type("application/json") == ".json"
     assert Mime.ext_from_type("NOTFOUND") == nil
+    assert Mime.ext_from_type("") == nil
   end
 
   test "type_from_ext converts extension to content type" do
@@ -14,6 +15,7 @@ defmodule Phoenix.Mime.MimeTest do
     assert Mime.type_from_ext(".csv") == "text/csv"
     assert Mime.type_from_ext(".json") == "application/json"
     assert Mime.type_from_ext(".notfound") == nil
+    assert Mime.type_from_ext("") == nil
   end
 
   test "valid_type? returns true when mime is known" do
