@@ -104,7 +104,7 @@ defmodule Phoenix.Controller do
 
     MyApp.Views.Users.render("show.html",
       name: "José",
-      within: {MyApp.Views.Layouts, "application.html"
+      within: {MyApp.Views.Layouts, "application.html"}
     )
 
   """
