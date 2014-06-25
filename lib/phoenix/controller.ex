@@ -1,6 +1,5 @@
 defmodule Phoenix.Controller do
   import Plug.Conn
-  alias Plug.Conn
   alias Phoenix.Status
   alias Phoenix.Mime
   alias Phoenix.Html
@@ -138,11 +137,14 @@ defmodule Phoenix.Controller do
   @doc """
   Returns the List of String Accept headers, in order of priority
   """
-  def accept_formats(%Conn{req_headers: []}), do: []
   def accept_formats(conn) do
     conn
     |> get_req_header("accept")
-    |> to_string
+    |> parse_accept_headers
+  end
+  defp parse_accept_headers([]), do: []
+  defp parse_accept_headers([accepts | _rest]) do
+    accepts
     |> String.split(",")
     |> Enum.map fn format ->
       String.split(format, ";") |> Enum.at(0)
