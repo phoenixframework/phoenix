@@ -67,6 +67,11 @@ defmodule Phoenix.Router.ControllerTest do
     assert Controller.response_content_type(conn) == "text/html"
   end
 
+  test "response_content_type returns text/html when */*" do
+    conn = %Conn{params: %{}, req_headers: [{"accept", "*/*"}]}
+    assert Controller.response_content_type(conn) == "text/html"
+  end
+
   test "response_content_type prefers format param when available" do
     conn = %Conn{params: %{"format" => "json"}, req_headers: [{"accept", "text/html"}]}
     assert Controller.response_content_type(conn) == "application/json"

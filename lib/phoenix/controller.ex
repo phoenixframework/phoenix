@@ -165,7 +165,7 @@ defmodule Phoenix.Controller do
     |> Kernel.||(primary_accept_format(accept_formats(conn)))
     |> Kernel.||(@default_content_type)
   end
-  defp primary_accept_format(["*/*"]), do: @default_content_type
+  defp primary_accept_format(["*/*" | _rest]), do: @default_content_type
   defp primary_accept_format([type | _rest]), do: Mime.valid_type?(type) && type
   defp primary_accept_format(_), do: nil
 
