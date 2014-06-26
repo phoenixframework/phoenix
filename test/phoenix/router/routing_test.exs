@@ -235,5 +235,12 @@ defmodule Phoenix.Router.RoutingTest do
   test "named route builds _path url helper" do
     assert Router.user_path(id: 88) == "/users/88"
   end
+
+  test "Parsers.Fallback prevents Plug.Parsers from raising UnsupportedMediaTypeError" do
+    conn = conn(:get, "users/1", nil, [headers: [{"content-type", "application/json"}]])
+    conn = Router.call(conn, [])
+    assert conn.status == 200
+    assert conn.params["id"] == "1"
+  end
 end
 

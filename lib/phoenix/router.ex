@@ -2,6 +2,7 @@ defmodule Phoenix.Router do
   alias Phoenix.Plugs
   alias Phoenix.Router.Options
   alias Phoenix.Adapters.Cowboy
+  alias Phoenix.Plugs.Parsers
 
   defmacro __using__(plug_adapter_options \\ []) do
     quote do
@@ -12,7 +13,7 @@ defmodule Phoenix.Router do
       @before_compile unquote(__MODULE__)
       use Plug.Builder
 
-      plug Plug.Parsers, parsers: [:urlencoded, :multipart]
+      plug Plug.Parsers, parsers: [:urlencoded, :multipart, Parsers.Fallback]
       plug Plugs.ErrorHandler, from: __MODULE__
 
       @options unquote(plug_adapter_options)
