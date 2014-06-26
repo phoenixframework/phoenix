@@ -503,7 +503,7 @@ application/vnd.ctc-posml	.pml
 application/postscript	.ai
 application/x-font-type1	.pfa
 application/vnd.powerbuilder6	.pbd
-application/pgp-encrypted	
+application/pgp-encrypted	.pgp
 application/pgp-signature	.pgp
 application/vnd.previewsystems.box	.box
 application/vnd.pvi.ptid1	.ptid
