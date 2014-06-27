@@ -237,7 +237,7 @@ defmodule Phoenix.Router.RoutingTest do
   end
 
   test "Parsers.Fallback prevents Plug.Parsers from raising UnsupportedMediaTypeError" do
-    conn = conn(:get, "users/1", nil, [headers: [{"content-type", "application/json"}]])
+    conn = conn(:get, "users/1", nil, [headers: [{"content-type", "application/widget"}]])
     conn = Router.call(conn, [])
     assert conn.status == 200
     assert conn.params["id"] == "1"
