@@ -13,7 +13,7 @@ defmodule Phoenix.Router do
       @before_compile unquote(__MODULE__)
       use Plug.Builder
 
-      plug Plug.Parsers, parsers: [:urlencoded, :multipart, Parsers.JSON, Parsers.Fallback]
+      plug Plug.Parsers, parsers: [:urlencoded, :multipart, Parsers.JSON], accept: ["*/*"]
       plug Plugs.ErrorHandler, from: __MODULE__
 
       @options unquote(plug_adapter_options)
