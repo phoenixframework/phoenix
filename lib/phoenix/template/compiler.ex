@@ -67,6 +67,7 @@ defmodule Phoenix.Template.Compiler do
           apply(__MODULE__, :"#{unquote(name)}", [assigns])
         end
 
+        @external_resource unquote(file_path)
         @file unquote(file_path)
         EEx.function_from_string(:def, :"#{unquote(name)}", unquote(content), [:assigns],
                                  engine: unquote(engine))
