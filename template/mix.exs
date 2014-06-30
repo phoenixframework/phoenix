@@ -4,7 +4,7 @@ defmodule <%= application_module %>.Mixfile do
   def project do
     [ app: :<%= application_name %>,
       version: "0.0.1",
-      elixir: "~> 0.14.0",
+      elixir: "~> 0.14.2",
       deps: deps ]
   end
 
@@ -23,7 +23,7 @@ defmodule <%= application_module %>.Mixfile do
   # { :barbat, "~> 0.1", github: "elixir-lang/barbat" }
   defp deps do
     [
-      {:phoenix, "0.2.10"},
+      {:phoenix, "0.2.11"},
       {:cowboy, "~> 0.10.0", github: "extend/cowboy", optional: true}
     ]
   end
