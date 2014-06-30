@@ -59,11 +59,8 @@ defmodule Phoenix.Router do
   end
 
   def perform_dispatch(conn, router) do
-    alias Phoenix.Router.Path
-    conn        = Plug.Conn.fetch_params(conn)
-    http_method = conn.method |> String.downcase
-    split_path  = Path.split_from_conn(conn)
+    conn = Plug.Conn.fetch_params(conn)
 
-    apply(router, :match, [conn, http_method, split_path])
+    apply(router, :match, [conn, conn.method, conn.path_info])
   end
 end

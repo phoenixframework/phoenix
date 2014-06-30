@@ -5,10 +5,6 @@ defmodule Phoenix.Router.Path do
   def join([]), do: ""
   def join(split_path), do: Elixir.Path.join(split_path)
 
-  def split_from_conn(conn) do
-    conn.path_info |> join |> split
-  end
-
   @doc """
   Returns the AST binding of the given variable with var_name
 
@@ -42,7 +38,7 @@ defmodule Phoenix.Router.Path do
     ["pages"]
 
     iex> Path.matched_arg_list_with_ast_bindings("/")
-    [""]
+    []
 
   Generated as:
       def match(:get, ["users", user_id, "comments", id])
@@ -54,7 +50,7 @@ defmodule Phoenix.Router.Path do
     |> split
     |> Enum.chunk(2, 1, [nil])
     |> Enum.map(fn [part, next] -> part_to_ast_binding(part, next) end)
-    |> Enum.filter(fn part -> part end)
+    |> Enum.filter(fn part -> not(part in [nil, ""]) end)
   end
   defp part_to_ast_binding(<<"*" <> _splat_name>>, nil), do: nil
   defp part_to_ast_binding(<<":" <> param_name>>, <<"*" <> splat_name>>) do

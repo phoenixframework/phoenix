@@ -121,8 +121,9 @@ defmodule Phoenix.Router.Mapper do
   end
 
   for verb <- @http_methods do
+    method = verb |> to_string |> String.upcase
     defmacro unquote(verb)(path, controller, action, options \\ []) do
-      add_route(unquote(to_string verb), path, controller, action, options)
+      add_route(unquote(method), path, controller, action, options)
     end
   end
 
