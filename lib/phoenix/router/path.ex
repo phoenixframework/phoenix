@@ -107,11 +107,15 @@ defmodule Phoenix.Router.Path do
   end
 
   @doc """
-  Builds String Path replacing named params with keyword list of values
+  Builds String Path replacing named params with keyword list of values,
+  unused parameters are used to construct the query string.
 
   # Examples
     iex> Path.build("users/:user_id/comments/:id", user_id: 1, id: 123)
     "/users/1/comments/123"
+
+    iex> Path.build("users/:user_id/comments/:id", user_id: 1, id: 123, highlight: "abc")
+    "/users/1/comments/123?highlight=abc"
 
     iex> Path.build("pages/about", [])
     "/pages/about"
@@ -119,15 +123,29 @@ defmodule Phoenix.Router.Path do
   """
   def build(path, []), do: ensure_leading_slash(path)
   def build(path, param_values) do
+    param_names = param_names(path)
+
     path
-    |> param_names
-    |> replace_param_names_with_values(param_values, path)
+    |> replace_param_names_with_values(param_names, param_values)
+    |> construct_query_string(param_names, param_values)
     |> ensure_leading_slash
   end
-  defp replace_param_names_with_values(param_names, param_values, path) do
+  defp replace_param_names_with_values(path, param_names, param_values) do
     Enum.reduce param_names, path, fn param_name, path_acc ->
       value = param_values[String.to_atom(param_name)] |> to_string
       String.replace(path_acc, ~r/[\:\*]{1}#{param_name}/, value)
+    end
+  end
+  defp construct_query_string(path, param_names, param_values) do
+    query_params = \
+      Enum.filter(param_values, fn {param_name, _} ->
+        !Enum.member?(param_names, to_string(param_name))
+      end)
+
+    if Enum.empty?(query_params) do
+      path
+    else
+      path <> "?" <> Plug.Conn.Query.encode(query_params)
     end
   end
 

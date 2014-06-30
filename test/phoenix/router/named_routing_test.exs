@@ -33,8 +33,8 @@ defmodule Phoenix.Router.NamedRoutingTest do
   test "manual alias generated named route" do
     assert Router.profile_path(id: 5) == "/users/5"
     assert Router.profile_url(id: 5) == "http://example.com/users/5"
-    assert Router.top_path(id: 5) == "/users/top"
-    assert Router.top_url(id: 5) == "http://example.com/users/top"
+    assert Router.top_path(id: 5) == "/users/top?id=5"
+    assert Router.top_url(id: 5) == "http://example.com/users/top?id=5"
   end
 
   test "resources generates named routes for :index, :edit, :show, :new" do
