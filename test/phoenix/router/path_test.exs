@@ -14,6 +14,11 @@ defmodule Phoenix.Router.PathTest do
       "/users/123/comments/1"
   end
 
+  test "build with named params uses extras to construct the query string" do
+    assert Path.build("users/:user_id/comments/:id", user_id: 123, id: 1, highlights: %{red: "abc", yellow: "def"}) ==
+      "/users/123/comments/1?highlights[red]=abc&highlights[yellow]=def"
+  end
+
   test "build ensures leading forward slash" do
     assert Path.build("users/:id", id: 55) == "/users/55"
     assert Path.build("/users/:id", id: 55) == "/users/55"
