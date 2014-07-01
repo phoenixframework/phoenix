@@ -32,7 +32,7 @@ defmodule Phoenix.Router.Mapper do
 
     --> def(match(conn, :get, ["pages", page])) do
           conn = conn.params(Dict.merge(conn.params(), [{"page", page}]))
-          apply(PagesController, :show, [conn])
+          PagesController.show(conn, conn.params)
         end
 
   The resources macro accepts flags to limit which resources are generated. Passing
@@ -96,7 +96,7 @@ defmodule Phoenix.Router.Mapper do
       def unquote(:match)(conn, unquote(http_method), unquote(path_args)) do
         conn = %{conn | params: Dict.merge(conn.params, unquote(params_list_with_bindings)) }
 
-        apply(unquote(controller), unquote(action), [conn, conn.params])
+        unquote(controller).unquote(action)(conn, conn.params)
       end
     end
   end

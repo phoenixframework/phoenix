@@ -2,7 +2,6 @@ defmodule Phoenix.Controller do
   import Plug.Conn
   alias Phoenix.Status
   alias Phoenix.Mime
-  alias Phoenix.Html
 
   @default_content_type "text/html"
 
@@ -129,7 +128,7 @@ defmodule Phoenix.Controller do
     assigns      = Dict.put_new(assigns, :within, {layout_mod, layout <> extension})
     status       = Dict.get(assigns, :status, 200)
 
-    rendered_content = view_mod.render(template <> extension, assigns) |> Html.unsafe
+    {:safe, rendered_content} = view_mod.render(template <> extension, assigns)
 
     send_response(conn, status, content_type, rendered_content)
   end

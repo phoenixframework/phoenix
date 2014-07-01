@@ -46,7 +46,11 @@ defmodule Phoenix.Template do
   <% end %>
   """
   def read!(file_path) do
-    "<%= within @within do %>#{File.read!(file_path)}<% end %>"
+    if String.contains?(file_path, "layouts/") do
+      File.read!(file_path)
+    else
+      "<%= within @within do %>#{File.read!(file_path)}<% end %>"
+    end
   end
 end
 

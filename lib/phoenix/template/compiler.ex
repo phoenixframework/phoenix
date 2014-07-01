@@ -64,7 +64,7 @@ defmodule Phoenix.Template.Compiler do
       quote do
         def render(unquote(name)), do: render(unquote(name), [])
         def render(unquote(name), assigns) do
-          apply(__MODULE__, :"#{unquote(name)}", [assigns])
+          __MODULE__.unquote(:"#{name}")(assigns)
         end
 
         @external_resource unquote(file_path)
