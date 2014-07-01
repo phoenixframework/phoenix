@@ -31,7 +31,29 @@ defmodule Phoenix.Html do
 
   defimpl Safe, for: List do
     def to_string(list) do
-      for data <- list, into: "", do: << Safe.to_string(data) :: binary >>
+      do_to_string(list) |> IO.iodata_to_binary
+    end
+
+    defp do_to_string([h|t]) do
+      [do_to_string(h)|do_to_string(t)]
+    end
+
+    defp do_to_string([]) do
+      []
+    end
+
+    # We could inline the escape for integers ?>, ?<, ?&, ?" and ?'
+    # instead of calling Html.escape/1
+    defp do_to_string(h) when is_integer(h) do
+      Html.escape(<<h :: utf8>>)
+    end
+
+    defp do_to_string(h) when is_binary(h) do
+      Html.escape(h)
+    end
+
+    defp do_to_string({:safe, h}) when is_binary(h) do
+      h
     end
   end
 
@@ -46,7 +68,7 @@ defmodule Phoenix.Html do
   end
 
   defimpl Safe, for: Tuple do
-    def to_string({ :safe, data }), do: Kernel.to_string(data)
+    def to_string({:safe, data}) when is_binary(data), do: data
   end
 
   def escape(buffer) do
