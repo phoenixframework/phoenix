@@ -28,21 +28,21 @@ defmodule Phoenix.Channel.ChannelTest do
     Topic.create("chan:topic")
     socket = Socket.set_current_channel(new_socket, "chan", "topic")
 
-    assert Channel.broadcast(socket, "event", foo: "bar")
+    assert Channel.broadcast(socket, "event", %{foo: "bar"})
   end
 
   test "#broadcast_from broadcasts message on channel from publisher" do
     Topic.create("chan:topic")
     socket = Socket.set_current_channel(new_socket, "chan", "topic")
 
-    assert Channel.broadcast_from(socket, "event", message: "hello")
+    assert Channel.broadcast_from(socket, "event", %{message: "hello"})
     _message = JSON.encode!(%{message: "hello"})
     refute_received _message
   end
 
   test "#reply sends response to socket" do
     socket = Socket.set_current_channel(new_socket, "chan", "topic")
-    assert Channel.reply(socket, "event", message: "hello")
+    assert Channel.reply(socket, "event", %{message: "hello"})
     _message = JSON.encode!(%{message: "hello"})
     assert_received _message
   end

@@ -65,24 +65,24 @@ defmodule Phoenix.Channel do
 
   def broadcast_from(from, channel, topic, event, message) do
     Topic.create(namespaced(channel, topic))
-    Topic.broadcast_from(from, namespaced(channel, topic), reply_json_frame(
+    Topic.broadcast_from(from, namespaced(channel, topic), reply_json_frame(%{
       channel: channel,
       topic: topic,
       event: event,
-      message: Enum.into(message, %{})
-    ))
+      message: message
+      }))
   end
 
   @doc """
   Sends Dict, JSON serializable message to socket
   """
   def reply(socket, event, message) do
-    send socket.pid, reply_json_frame(
+    send socket.pid, reply_json_frame(%{
       channel: socket.channel,
       topic: socket.topic,
       event: event,
-      message: Enum.into(message, %{})
-    )
+      message: message
+      })
     socket
   end
 
@@ -100,7 +100,7 @@ defmodule Phoenix.Channel do
   Converts Dict message into JSON text reply frame for Websocket Handler
   """
   def reply_json_frame(message) do
-    {:reply, {:text, JSON.encode!(Enum.into(message, %{}))}}
+    {:reply, {:text, JSON.encode!(message)}}
   end
 
   defp namespaced(channel, topic), do: "#{channel}:#{topic}"
