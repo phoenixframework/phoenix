@@ -8,7 +8,7 @@ defmodule Phoenix.Html.Engine do
 
   def handle_text(buffer, text) do
     quote do
-      {:safe, unquote(buffer) <> unquote(text)}
+      {:safe, unquote(Html.unsafe(buffer)) <> unquote(text)}
     end
   end
 
@@ -16,10 +16,10 @@ defmodule Phoenix.Html.Engine do
     expr   = transform(expr)
     buffer = Html.unsafe(buffer)
 
-    quote do
+    {:safe, quote do
       buff = unquote(buffer)
       buff <> Safe.to_string(unquote(expr))
-    end
+    end}
   end
 
   def handle_expr(buffer, "", expr) do

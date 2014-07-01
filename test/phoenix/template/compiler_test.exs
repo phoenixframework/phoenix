@@ -38,6 +38,11 @@ defmodule Phoenix.Template.CompilerTest do
     assert html == {:safe, "<html>\n  <body>\n    <div>Show! hello!</div>\n\n  </body>\n</html>\n"}
   end
 
+  test "compiler renders application layout with safe embed" do
+    html = MyApp.Views.render("within.html")
+    assert html == {:safe, "<html>\n  <body>\n    <>\n  </body>\n</html>\n"}
+  end
+
   test "compiler renders application layout with safe nested template" do
     html = MyApp.Views.render("show.html",
       within: {MyApp.Views, "layouts/application.html"},
