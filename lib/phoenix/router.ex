@@ -3,6 +3,7 @@ defmodule Phoenix.Router do
   alias Phoenix.Router.Options
   alias Phoenix.Adapters.Cowboy
   alias Phoenix.Plugs.Parsers
+  alias Phoenix.Config
 
   defmacro __using__(plug_adapter_options \\ []) do
     quote do
@@ -22,8 +23,7 @@ defmodule Phoenix.Router do
 
   defmacro __before_compile__(_env) do
     quote do
-      plug Plugs.CodeReloader, from: __MODULE__
-      plug Plugs.Logger, from: __MODULE__
+      plug Plugs.Logger, Config.for(__MODULE__).logger[:level]
       plug :dispatch
 
       def dispatch(conn, []) do
@@ -61,6 +61,6 @@ defmodule Phoenix.Router do
   def perform_dispatch(conn, router) do
     conn = Plug.Conn.fetch_params(conn)
 
-    apply(router, :match, [conn, conn.method, conn.path_info])
+    router.match(conn, conn.method, conn.path_info)
   end
 end
