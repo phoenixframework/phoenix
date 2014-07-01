@@ -12,7 +12,7 @@
 ### Setup
 1. Install Phoenix
 
-        git clone https://github.com/phoenixframework/phoenix.git && cd phoenix && git checkout v0.2.11 && mix do deps.get, compile
+        git clone https://github.com/phoenixframework/phoenix.git && cd phoenix && git checkout v0.3.0 && mix do deps.get, compile
 
 
 2. Create a new Phoenix application
@@ -58,12 +58,11 @@ end
 defmodule Controllers.Pages do
   use Phoenix.Controller
 
-  def show(conn) do
-    if conn.params["page"] in ["admin"] do
-      redirect conn, Router.page_path(page: "unauthorized")
-    else
-      text conn, "Showing page #{conn.params["page"]}"
-    end
+  def show(conn, %{"page" => "admin"}) do
+    redirect conn, Router.page_path(page: "unauthorized")
+  end
+  def show(conn, %{"page" => page}) do
+    render conn, title: "Showing page #{page}"
   end
 
 end
@@ -71,11 +70,11 @@ end
 defmodule Controllers.Users do
   use Phoenix.Controller
 
-  def show(conn) do
-    text conn, "Showing user #{conn.params["id"]}"
+  def show(conn, %{"id" => id}) do
+    text conn, "Showing user #{id}"
   end
 
-  def index(conn) do
+  def index(conn, _params) do
     html conn, """
     <html>
       <body>
