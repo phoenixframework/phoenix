@@ -28,6 +28,13 @@ defmodule Phoenix.Router do
       if config.plugs[:code_reload] do
         plug Plugs.CodeReloader
       end
+      if config.plugs[:cookies] do
+        key = Keyword.fetch!(config.cookies, :key)
+        secret = Keyword.fetch!(config.cookies, :secret)
+
+        plug Plug.Session, store: :cookie, key: key, secret: secret
+      end
+
       plug :dispatch
 
       def dispatch(conn, []) do

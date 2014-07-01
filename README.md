@@ -151,6 +151,40 @@ Example:
 Path.expand("../../../some/path/to/ssl/key.pem", __DIR__)
 ```
 
+#### Configuration for Sessions
+
+Phoenix supports a session cookie store that can be easily configured. Just
+add the following configuration settings to your application's config module:
+
+```elixir
+# your_app/lib/config/prod.ex
+defmodule YourApp.Config.Prod do
+  use YourApp.Config
+
+  config :plugs, cookies: true
+
+  config :cookies, key: "_your_app_key", secret: "valid_secret"
+end
+```
+
+Then you can access session data from your application controllers.
+NOTE: that `:key` and `:secret` are required options.
+
+Example:
+
+```elixir
+defmodule Controllers.Pages do
+  use Phoenix.Controller
+
+  def show(conn, _params) do
+    conn = put_session(:foo, "bar")
+    foo = get_session(conn, :foo)
+
+    text conn, foo
+  end
+end
+```
+
 ### Mix Tasks
 
 ```console
