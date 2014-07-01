@@ -171,7 +171,7 @@ from the `priv/static/` directory of your application.
 
 ## Documentation
 
-API documentaion is available at [http://api.phoenixframework.org/](http://api.phoenixframework.org/)
+API documentation is available at [http://api.phoenixframework.org/](http://api.phoenixframework.org/)
 
 
 ## Development
