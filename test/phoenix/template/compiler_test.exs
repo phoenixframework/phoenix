@@ -5,9 +5,12 @@ defmodule Phoenix.Template.CompilerTest do
     use Phoenix.Template.Compiler, path: Path.join([__DIR__], "../../fixtures/templates")
   end
 
-
   test "compiler precompiles all templates from path" do
     assert MyApp.Views.render("show.html", message: "hello!") == {:safe, "<div>Show! hello!</div>\n"}
+  end
+
+  test "compiler precompiles with char data assign" do
+    assert MyApp.Views.render("show.html", message: [?a, ?b, {:safe, "cd"}|"ef"]) == {:safe, "<div>Show! abcdef</div>\n"}
   end
 
   test "compiler precompiles functions with optional assigns" do
