@@ -25,10 +25,10 @@ defmodule Phoenix.Router do
     quote do
       config = Config.for(__MODULE__)
       plug Plugs.Logger, config.logger[:level]
-      plug :dispatch
       if config.plugs[:code_reload] do
         plug Plugs.CodeReloader
       end
+      plug :dispatch
 
       def dispatch(conn, []) do
         Phoenix.Router.perform_dispatch(conn, __MODULE__)
