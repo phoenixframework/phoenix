@@ -6,10 +6,10 @@ defmodule Phoenix.Router.ControllerTest do
 
   defmodule RedirController do
     use Phoenix.Controller
-    def redir_301(conn) do
+    def redir_301(conn, _params) do
       redirect conn, 301, "/users"
     end
-    def redir_302(conn) do
+    def redir_302(conn, _params) do
       redirect conn, "/users"
     end
   end
@@ -17,8 +17,8 @@ defmodule Phoenix.Router.ControllerTest do
   defmodule AtomStatusController do
     use Phoenix.Controller
 
-    def atom(conn) do
-      status_atom = String.to_atom(conn.params["status"])
+    def atom(conn, %{"status" => status}) do
+      status_atom = String.to_atom(status)
       text conn, status_atom, ""
     end
   end

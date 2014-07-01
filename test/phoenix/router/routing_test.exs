@@ -4,46 +4,46 @@ defmodule Phoenix.Router.RoutingTest do
 
   defmodule UsersController do
     use Phoenix.Controller
-    def index(conn), do: text(conn, "users index")
-    def show(conn), do: text(conn, "users show")
-    def top(conn), do: text(conn, "users top")
-    def crash(_conn), do: raise "crash!"
-    def options(conn), do: text(conn, "users options")
-    def connect(conn), do: text(conn, "users connect")
-    def trace(conn), do: text(conn, "users trace")
+    def index(conn, _params), do: text(conn, "users index")
+    def show(conn, _params), do: text(conn, "users show")
+    def top(conn, _params), do: text(conn, "users top")
+    def crash(_conn, _params), do: raise "crash!"
+    def options(conn, _params), do: text(conn, "users options")
+    def connect(conn, _params), do: text(conn, "users connect")
+    def trace(conn, _params), do: text(conn, "users trace")
   end
 
   defmodule SessionsController do
     use Phoenix.Controller
 
-    def new(conn), do: text(conn, "session login")
-    def create(conn), do: text(conn, "session created")
-    def destroy(conn), do: text(conn, "session destroyed")
+    def new(conn, _params), do: text(conn, "session login")
+    def create(conn, _params), do: text(conn, "session created")
+    def destroy(conn, _params), do: text(conn, "session destroyed")
   end
 
   defmodule PostsController do
     use Phoenix.Controller
-    def show(conn), do: text(conn, "show posts")
-    def new(conn), do: text(conn, "new posts")
-    def index(conn), do: text(conn, "index posts")
-    def create(conn), do: text(conn, "create posts")
-    def update(conn), do: text(conn, "update posts")
+    def show(conn, _params), do: text(conn, "show posts")
+    def new(conn, _params), do: text(conn, "new posts")
+    def index(conn, _params), do: text(conn, "index posts")
+    def create(conn, _params), do: text(conn, "create posts")
+    def update(conn, _params), do: text(conn, "update posts")
   end
 
   defmodule FilesController do
     use Phoenix.Controller
-    def show(conn), do: text(conn, "#{conn.params["path"]}")
+    def show(conn, _params), do: text(conn, "#{conn.params["path"]}")
   end
 
   defmodule CommentsController do
     use Phoenix.Controller
-    def show(conn), do: text(conn, "show comments")
-    def edit(conn), do: text(conn, "edit comments")
-    def index(conn), do: text(conn, "index comments")
-    def new(conn), do: text(conn, "new comments")
-    def create(conn), do: text(conn, "create comments")
-    def update(conn), do: text(conn, "update comments")
-    def destroy(conn), do: text(conn, "destroy comments")
+    def show(conn, _params), do: text(conn, "show comments")
+    def edit(conn, _params), do: text(conn, "edit comments")
+    def index(conn, _params), do: text(conn, "index comments")
+    def new(conn, _params), do: text(conn, "new comments")
+    def create(conn, _params), do: text(conn, "create comments")
+    def update(conn, _params), do: text(conn, "update comments")
+    def destroy(conn, _params), do: text(conn, "destroy comments")
   end
 
   defmodule Router do

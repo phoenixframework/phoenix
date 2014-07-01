@@ -6,28 +6,28 @@ defmodule Phoenix.Router.ScopedRoutingTest do
 
   defmodule Controllers.Users do
     use Phoenix.Controller
-    def show(conn), do: text(conn, "users show")
+    def show(conn, _params), do: text(conn, "users show")
   end
 
   defmodule Controllers.Api.V1.Users do
     use Phoenix.Controller
-    def show(conn), do: text(conn, "api v1 users show")
+    def show(conn, _params), do: text(conn, "api v1 users show")
   end
 
   defmodule Controllers.Events do
     use Phoenix.Controller
-    def show(conn), do: text(conn, "show events")
-    def index(conn), do: text(conn, "index events")
+    def show(conn, _params), do: text(conn, "show events")
+    def index(conn, _params), do: text(conn, "index events")
   end
 
   defmodule Controllers.Api.V1.Events do
     use Phoenix.Controller
-    def destroy(conn), do: text(conn, "destroy api v1 events")
+    def destroy(conn, _params), do: text(conn, "destroy api v1 events")
   end
 
   defmodule Controllers.Api.V1.Images do
     use Phoenix.Controller
-    def edit(conn), do: text(conn, "edit api v1 venues images")
+    def edit(conn, _params), do: text(conn, "edit api v1 venues images")
   end
 
   defmodule Router do
@@ -111,17 +111,17 @@ defmodule Phoenix.Router.ScopedRoutingTest do
 
   defmodule Controllers.Admin.Users do
     use Phoenix.Controller
-    def show(conn), do: text(conn, "admin users show")
+    def show(conn, _params), do: text(conn, "admin users show")
   end
 
   defmodule Controllers.Api.V1.Accounts do
     use Phoenix.Controller
-    def show(conn), do: text(conn, "api v1 accounts show")
+    def show(conn, _params), do: text(conn, "api v1 accounts show")
   end
 
   defmodule Controllers.Api.V1.Subscriptions do
     use Phoenix.Controller
-    def show(conn), do: text(conn, "api v1 accounts subscriptions show")
+    def show(conn, _params), do: text(conn, "api v1 accounts subscriptions show")
   end
 
   defmodule RouterControllerScoping do

@@ -4,50 +4,50 @@ defmodule Phoenix.Router.NestedTest do
 
   defmodule Controllers.Users do
     use Phoenix.Controller
-    def show(conn), do: text(conn, "show users")
-    def index(conn), do: text(conn, "index users")
-    def new(conn), do: text(conn, "new users")
-    def create(conn), do: text(conn, "create users")
-    def update(conn), do: text(conn, "update users")
-    def destroy(conn), do: text(conn, "destroy users")
+    def show(conn, _params), do: text(conn, "show users")
+    def index(conn, _params), do: text(conn, "index users")
+    def new(conn, _params), do: text(conn, "new users")
+    def create(conn, _params), do: text(conn, "create users")
+    def update(conn, _params), do: text(conn, "update users")
+    def destroy(conn, _params), do: text(conn, "destroy users")
   end
 
   defmodule Controllers.Files do
     use Phoenix.Controller
-    def show(conn), do: text(conn, "show files")
-    def index(conn), do: text(conn, "index files")
-    def new(conn), do: text(conn, "new files")
-    def create(conn), do: text(conn, "create files")
-    def update(conn), do: text(conn, "update files")
-    def destroy(conn), do: text(conn, "destroy files")
+    def show(conn, _params), do: text(conn, "show files")
+    def index(conn, _params), do: text(conn, "index files")
+    def new(conn, _params), do: text(conn, "new files")
+    def create(conn, _params), do: text(conn, "create files")
+    def update(conn, _params), do: text(conn, "update files")
+    def destroy(conn, _params), do: text(conn, "destroy files")
   end
 
   defmodule Controllers.Comments do
     use Phoenix.Controller
-    def show(conn), do: text(conn, "show comments")
-    def index(conn), do: text(conn, "index comments")
-    def new(conn), do: text(conn, "new comments")
-    def create(conn), do: text(conn, "create comments")
-    def update(conn), do: text(conn, "update comments")
-    def destroy(conn), do: text(conn, "destroy comments")
-    def special(conn), do: text(conn, "special comments")
+    def show(conn, _params), do: text(conn, "show comments")
+    def index(conn, _params), do: text(conn, "index comments")
+    def new(conn, _params), do: text(conn, "new comments")
+    def create(conn, _params), do: text(conn, "create comments")
+    def update(conn, _params), do: text(conn, "update comments")
+    def destroy(conn, _params), do: text(conn, "destroy comments")
+    def special(conn, _params), do: text(conn, "special comments")
   end
 
   defmodule SessionsController do
     use Phoenix.Controller
 
-    def new(conn), do: text(conn, "session login")
-    def create(conn), do: text(conn, "session created")
-    def destroy(conn), do: text(conn, "session destroyed")
+    def new(conn, _params), do: text(conn, "session login")
+    def create(conn, _params), do: text(conn, "session created")
+    def destroy(conn, _params), do: text(conn, "session destroyed")
   end
 
   defmodule PostsController do
     use Phoenix.Controller
-    def show(conn), do: text(conn, "show posts")
-    def new(conn), do: text(conn, "new posts")
-    def index(conn), do: text(conn, "index posts")
-    def create(conn), do: text(conn, "create posts")
-    def update(conn), do: text(conn, "update posts")
+    def show(conn, _params), do: text(conn, "show posts")
+    def new(conn, _params), do: text(conn, "new posts")
+    def index(conn, _params), do: text(conn, "index posts")
+    def create(conn, _params), do: text(conn, "create posts")
+    def update(conn, _params), do: text(conn, "update posts")
   end
 
 
