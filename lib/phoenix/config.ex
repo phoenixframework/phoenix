@@ -27,7 +27,7 @@ defmodule Phoenix.Config do
   defp find_conf(app_module) do
     config_module = Module.concat([app_module, "Config"])
 
-    case Code.ensure_loaded config_module do
+    case Code.ensure_compiled config_module do
       {:module, conf} -> conf.env
       _ -> Phoenix.Config.Fallback
     end

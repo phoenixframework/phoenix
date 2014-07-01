@@ -23,8 +23,12 @@ defmodule Phoenix.Router do
 
   defmacro __before_compile__(_env) do
     quote do
-      plug Plugs.Logger, Config.for(__MODULE__).logger[:level]
+      config = Config.for(__MODULE__)
+      plug Plugs.Logger, config.logger[:level]
       plug :dispatch
+      if config.plugs[:code_reload] do
+        plug Plugs.CodeReloader
+      end
 
       def dispatch(conn, []) do
         Phoenix.Router.perform_dispatch(conn, __MODULE__)

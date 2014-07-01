@@ -1,5 +1,4 @@
 defmodule Phoenix.Plugs.Logger do
-  alias Phoenix.Config
 
   def init(opts), do: opts
 

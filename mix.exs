@@ -33,7 +33,7 @@ defmodule Phoenix.Mixfile do
       {:cowboy, "~> 0.10.0", github: "extend/cowboy", optional: true},
       {:plug, "0.5.1"},
       {:inflex, "0.2.4"},
-      {:ex_conf, "0.1.2"},
+      {:ex_conf, "0.1.3"},
       {:jazz, "0.1.2"}
     ]
   end
