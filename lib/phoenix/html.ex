@@ -72,10 +72,10 @@ defmodule Phoenix.Html do
   end
 
   def escape(buffer) do
-    for << char <- buffer >>, into: "" do
-      << escape_char(char) :: binary >>
-    end
+    IO.iodata_to_binary(for <<char <- buffer>>, do: escape_char(char))
   end
+
+  @compile {:inline, escape_char: 1}
 
   Enum.each @escapes, fn { match, insert } ->
     defp escape_char(unquote(match)), do: unquote(insert)

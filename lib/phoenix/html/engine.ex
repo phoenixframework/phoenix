@@ -18,7 +18,11 @@ defmodule Phoenix.Html.Engine do
 
     {:safe, quote do
       buff = unquote(buffer)
-      buff <> Safe.to_string(unquote(expr))
+      buff <> (case unquote(expr) do
+        {:safe, bin} when is_binary(bin) -> bin
+        bin when is_binary(bin) -> Phoenix.Html.escape(bin)
+        other -> Safe.to_string(other)
+      end)
     end}
   end
 
