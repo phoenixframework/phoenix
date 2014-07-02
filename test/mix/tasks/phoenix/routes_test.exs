@@ -14,6 +14,6 @@ defmodule Mix.Tasks.Phoenix.RoutesTest do
   end
 
   test "format routes for specific router" do
-    assert(Mix.Tasks.Phoenix.Routes.run(["TestApp.Router"]) == :ok)
+    assert Mix.Tasks.Phoenix.Routes.run(["TestApp.Router"])
   end
 end
