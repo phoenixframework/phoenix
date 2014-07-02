@@ -86,6 +86,81 @@ defmodule Controllers.Users do
 end
 ```
 
+### Using views
+
+```elixir
+defmodule App.Controllers.Pages do
+  use Phoenix.Controller
+
+  def index(conn, _params) do
+    render "index", message: "hello"
+  end
+end
+```
+
+This will use `App.Views.Pages` to render `lib/app/templates/pages/index.html.eex` within the template `lib/app/templates/layouts/application.html.eex`. Let's break that down: 
+ * `App.Views.Pages` is the module that will render the template (more on that later)
+ * `app` is you application name
+ * `templates` is your configured templates directory. See `lib/app/views.ex` to change it
+ * `pages` is your controller name
+ * `html` is the requested format (more on that later)
+ * `eex` is the default renderer
+ * `application.html` is the layout because `application` is the default layout name and html is the requested format (more on that later)
+
+This will also create an assign for `message`, so you can use `<%= @message %>` in your eex template.
+
+You may also create helper functions within your views or layouts. For exemple, the previous controller will use `App.Views.Pages` so you could have : 
+
+```elixir
+defmodule App.Views.Pages
+  use App.Views
+
+  def display(something) do 
+    something
+  end
+end
+```
+
+Which would allow you to use this function in your template : `<%= display(@message) %>`. 
+
+Note that all views extend `App.Views` which is defined in `lib/app/views.ex`, thus allowing you to define functions available in all templates.
+
+To read more about eex templating, see the [elixir documentation](http://elixir-lang.org/docs/stable/eex/). 
+
+#### More on request format
+
+By default, html will be used as the format, therefore rendering `*.html.eex`. You can change it in two ways: 
+ * Add `?format=[format]` to your query string
+ * Change the request header `accept` field.
+
+Note that a matching `application.[format].eex` would be used to render `aview.[format].eex`.
+
+See [this file](https://github.com/phoenixframework/phoenix/blob/master/lib/phoenix/mimes.txt) for a list of supported mime types.
+
+#### More on layouts
+
+The "Layouts" module name is hardcoded. This means that `App.Views.Layouts` will be used and, by default, will render templates from `lib/app/templates/layouts`. You cannot delete this view, but you could delete all of its templates in theory.
+
+The template name (application) can be changed easily from the controller. For example : 
+
+```elixir
+defmodule App.Controllers.Pages do
+  use Phoenix.Controller
+
+  def index(conn, _params) do
+    render "index", message: "hello", layout: "not-application"
+  end
+end
+```
+
+To render the template's content inside a layout, use the assign `<%= @inner %>` that will be generated for you.
+
+You may also omit using a template with the following : 
+
+```elixir
+render "index", message: "hello", within: nil
+```
+
 ### Configuration
 
 Phoenix provides a configuration per environment set by the `MIX_ENV` environment variable. The default environment `Dev` will be set if `MIX_ENV` does not exist.
