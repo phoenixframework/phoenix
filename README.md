@@ -229,6 +229,7 @@ There are no guidelines yet. Do what feels natural. Submit a bug, join a discuss
   - [ ] Member/Collection resource  routes
 - Configuration
   - [x] Environment based configuration with ExConf
+  - [ ] ExConf integreation with config.exs
 - Middleware
   - [x] Plug Based Connection handling
   - [x] Code Reloading
@@ -237,10 +238,11 @@ There are no guidelines yet. Do what feels natural. Submit a bug, join a discuss
 - Controllers
   - [x] html/json/text helpers
   - [x] redirects
+  - [ ] Plug layer for action hooks
   - [x] Error page handling
   - [ ] Error page handling per env
 - Views
-  - [ ] Precompiled View handling
+  - [x] Precompiled View handling
 - Realtime
   - [x] Websocket multiplexing/channels
 
