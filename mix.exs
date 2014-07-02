@@ -1,5 +1,3 @@
-Code.ensure_loaded?(Hex) and Hex.start
-
 defmodule Phoenix.Mixfile do
   use Mix.Project
 
