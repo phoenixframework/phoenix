@@ -1,6 +1,7 @@
 defmodule Phoenix.Router do
   alias Phoenix.Plugs
   alias Phoenix.Router.Options
+  alias Phoenix.Router.Path
   alias Phoenix.Adapters.Cowboy
   alias Phoenix.Plugs.Parsers
   alias Phoenix.Config

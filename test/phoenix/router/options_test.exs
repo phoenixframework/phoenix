@@ -22,4 +22,9 @@ defmodule Phoenix.Router.OptionsTest do
     assert options[:port] == 71107
     assert options[:ssl] == false
   end
+
+  test "use localhost as the default hostname" do
+    options = Options.merge([], [], PhoenixConfTest.Router, Cowboy)
+    assert options[:host] == "localhost"
+  end
 end
