@@ -2,7 +2,7 @@ defmodule Phoenix.Config.App do
   use ExConf.Config, env_var: "MIX_ENV"
 
   config :router, port: 4000,
-                  ssl: true,
+                  ssl: false,
                   # Full error reports are disabled
                   consider_all_requests_local: false
 
