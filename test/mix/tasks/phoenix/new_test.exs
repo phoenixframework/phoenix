@@ -38,8 +38,8 @@ defmodule Mix.Tasks.Phoenix.NewTest do
   end
 
   test "missing name and/or path arguments" do
-    assert :ok == Mix.Tasks.Phoenix.New.run([])
-    assert :ok == Mix.Tasks.Phoenix.New.run([@app_name])
+    assert Mix.Tasks.Phoenix.New.run([])
+    assert Mix.Tasks.Phoenix.New.run([@app_name])
   end
 
   def project_path do
