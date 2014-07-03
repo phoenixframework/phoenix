@@ -47,9 +47,9 @@ defmodule Phoenix.Channel do
 
   Examples
 
-  iex> Channel.broadcast "rooms", "global", "new:message", id: 1, content: "hello"
+  iex> Channel.broadcast "rooms", "global", "new:message", %{id: 1, content: "hello"}
   :ok
-  iex> Channel.broadcast socket, "new:message", id: 1, content: "hello"
+  iex> Channel.broadcast socket, "new:message", %{id: 1, content: "hello"}
   :ok
   """
   def broadcast(channel, topic, event, message) when is_binary(channel) do
