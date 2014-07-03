@@ -54,11 +54,12 @@ defmodule Phoenix.Router do
   end
 
   def start_adapter(module, options) do
-    case options[:ssl] do
-      true  -> Plug.Adapters.Cowboy.https module, [], options
-      false -> Plug.Adapters.Cowboy.http module, [], options
+    protocol = case options[:ssl] do
+      true  -> Plug.Adapters.Cowboy.https(module, [], options); "https"
+      false -> Plug.Adapters.Cowboy.http( module, [], options); "http"
     end
-    IO.puts "Running #{module} with Cowboy on port #{inspect options[:port]}"
+    url = Path.build_url("", options[:host], protocol)
+    IO.puts "Running #{module} with Cowboy at #{url} on port #{options[:port]}"
   end
 
   def stop_adapter(module, options) do
