@@ -7,6 +7,34 @@ defmodule Phoenix.Controller do
   @default_content_type "text/html"
   @unsent [:unset, :set]
 
+  @moduledoc """
+  Phoenix Controllers are responsible for handling the dispatch of Router requests
+
+  Like Routers, Controllers are Plugs, but contain a required :action plug that
+  is implicitly added to the end plug chain. The :action proxies to the function
+  defined in the Router. The :action plug can be explicitly added to change
+  its execution order.
+
+  Examples
+
+  defmodule MyApp.Controllers.Admin.Users do
+    use Phoenix.Controller
+
+    plug :authenticate, usernames: ["jose", "eric", "sonny"]
+
+    def authenticate(conn, options) do
+      if get_session(conn, username) in options[:usernames] do
+        conn
+      else
+        conn |> redirect(Router.root_path) |> halt!
+      end
+    end
+
+    def show(conn, params) do
+      # authenticated users only
+    end
+  end
+  """
   defmacro __using__(_options) do
     quote do
       import Plug.Conn
@@ -20,21 +48,52 @@ defmodule Phoenix.Controller do
 
   defmacro __before_compile__(_env) do
     quote do
-      unless Enum.member?(@plugs, fn plug -> elem(plug, 0) == :action end) do
+      unless Enum.find(@plugs, fn {plug, _opts} -> plug == :action end) do
         plug :action
       end
       def action(conn, _options) do
-        apply(__MODULE__, conn.assigns[:action], [conn, conn.params])
+        apply(__MODULE__, conn.private[:phoenix_action], [conn, conn.params])
       end
     end
   end
 
+  @doc """
+  Carries out Controller action after successful Router match, invoking the
+  "2nd layer" Plug stack.
+
+  Connection query string parameters are fetched automatically before
+  controller actions are called, as well as merging any named parameters from
+  the route definition.
+  """
   def perform_action(conn, controller, action, named_params) do
-    conn = Conn.fetch_params(conn) |> Conn.assign(:action, action)
+    conn = Conn.fetch_params(conn) |> Conn.assign_private(:phoenix_action, action)
     conn = %{conn | params: Dict.merge(conn.params, named_params) }
     apply(controller, :call, [conn, []])
   end
 
+  @doc """
+  Returns the Atom action name matched from Router
+  """
+  def action_name(conn), do: conn.private[:phoenix_action]
+
+  @doc """
+  Halts the Plug chain by throwing `{:halt, conn}`.
+  If no response has been sent, an empty Bad Request is sent before throwing
+  error.
+
+  Examples
+    plug :authenticate
+
+    def authenticate(conn, _opts) do
+      if authenticate?(conn) do
+        conn
+      else
+        conn
+        |> redirect(Router.root_path)
+        |> halt!
+       end
+    end
+  """
   def halt!(conn = %Conn{state: state}) when state in @unsent do
     send_resp(conn, 400, "") |> halt!
   end
