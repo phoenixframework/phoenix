@@ -14,7 +14,9 @@ defmodule Mix.Tasks.Phoenix.New do
     project_path = make_project_path(path, application_name)
 
     bindings = [application_name: application_name,
-                application_module: application_module]
+                application_module: application_module,
+                phoenix_version: Keyword.get(Mix.Project.config, :version),
+                elixir_version: Keyword.get(Mix.Project.config, :elixir)]
 
     Mix.Generator.create_directory(project_path)
 
