@@ -36,11 +36,10 @@ defmodule Phoenix.Controller do
   end
 
   def halt!(conn = %Conn{state: state}) when state in @unsent do
-    send_resp(conn, 400, "")
-    throw :halt
+    send_resp(conn, 400, "") |> halt!
   end
-  def halt!(_conn) do
-    throw :halt
+  def halt!(conn) do
+    throw {:halt, conn}
   end
 
   def json(conn, json), do: json(conn, :ok, json)

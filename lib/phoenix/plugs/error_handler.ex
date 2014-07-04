@@ -8,7 +8,7 @@ defmodule Phoenix.Plugs.ErrorHandler do
     try do
       func.(conn)
     catch
-      _kind, :halt -> conn
+      :throw, {:halt, conn} -> conn
       _kind, error ->
         if Config.for(module).router[:consider_all_requests_local] do
           Phoenix.Controller.error_with_trace(conn, error)
