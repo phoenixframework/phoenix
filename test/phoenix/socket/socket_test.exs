@@ -6,7 +6,7 @@ defmodule Phoenix.Socket.SocketTest do
     %Socket{pid: self,
             router: nil,
             channels: [],
-            assigns: []}
+            assigns: %{}}
   end
 
   test "#set_current_channel sets the current channel" do
@@ -46,6 +46,13 @@ defmodule Phoenix.Socket.SocketTest do
     assert socket.channels == [{"test", "topic"}]
     socket = Socket.delete_channel(socket, "test", "topic")
     assert socket.channels == []
+  end
+
+  test "#assign assigns into the assigns map (yo dog)" do
+    socket = new_socket
+    assert socket.assigns == %{}
+    socket = Socket.assign(socket, :foo, "bar")
+    assert socket.assigns == %{foo: "bar"}
   end
 end
 

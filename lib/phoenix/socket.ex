@@ -7,7 +7,7 @@ defmodule Phoenix.Socket do
             topic: nil,
             router: nil,
             channels: [],
-            assigns: []
+            assigns: %{}
 
   def set_current_channel(socket, channel, topic) do
     %Socket{socket | channel: channel, topic: topic}
@@ -27,6 +27,10 @@ defmodule Phoenix.Socket do
 
   def authenticated?(socket, channel, topic) do
     Enum.member? socket.channels, {channel, topic}
+  end
+
+  def assign(socket, key, value) do
+    %Socket{socket | assigns: Map.put(socket.assigns, key, value)}
   end
 end
 
