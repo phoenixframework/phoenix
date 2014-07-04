@@ -1,15 +1,46 @@
 defmodule Phoenix.Controller do
+  alias Plug.Conn
   import Plug.Conn
   alias Phoenix.Status
   alias Phoenix.Mime
 
   @default_content_type "text/html"
+  @unsent [:unset, :set]
 
   defmacro __using__(_options) do
     quote do
       import Plug.Conn
       import unquote(__MODULE__)
+
+      def init(options), do: options
+      @before_compile unquote(__MODULE__)
+      use Plug.Builder
     end
+  end
+
+  defmacro __before_compile__(_env) do
+    quote do
+      unless Enum.member?(@plugs, fn plug -> elem(plug, 0) == :action end) do
+        plug :action
+      end
+      def action(conn, _options) do
+        apply(__MODULE__, conn.assigns[:action], [conn, conn.params])
+      end
+    end
+  end
+
+  def perform_action(conn, controller, action, named_params) do
+    conn = Conn.fetch_params(conn) |> Conn.assign(:action, action)
+    conn = %{conn | params: Dict.merge(conn.params, named_params) }
+    apply(controller, :call, [conn, []])
+  end
+
+  def halt!(conn = %Conn{state: state}) when state in @unsent do
+    send_resp(conn, 400, "")
+    throw :halt
+  end
+  def halt!(_conn) do
+    throw :halt
   end
 
   def json(conn, json), do: json(conn, :ok, json)

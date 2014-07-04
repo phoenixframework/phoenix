@@ -70,8 +70,6 @@ defmodule Phoenix.Router do
   end
 
   def perform_dispatch(conn, router) do
-    conn = Plug.Conn.fetch_params(conn)
-
     router.match(conn, conn.method, conn.path_info)
   end
 end
