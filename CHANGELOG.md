@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.3.1 (2014-07-04)
+* Enhancements
+  * Various performance improvements
 
 ## v0.3.0 (2014-06-30)
 
