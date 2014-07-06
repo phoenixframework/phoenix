@@ -66,8 +66,8 @@ defmodule Phoenix.Controller do
   the route definition.
   """
   def perform_action(conn, controller, action, named_params) do
-    conn = Conn.fetch_params(conn) |> Conn.assign_private(:phoenix_action, action)
-    conn = %{conn | params: Dict.merge(conn.params, named_params) }
+    conn = fetch_params(conn) |> assign_private(:phoenix_action, action)
+    conn = put_in conn.params, Dict.merge(conn.params, named_params)
     apply(controller, :call, [conn, []])
   end
 
