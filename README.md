@@ -101,7 +101,7 @@ defmodule App.Controllers.Pages do
   use Phoenix.Controller
 
   def index(conn, _params) do
-    render "index", message: "hello"
+    render conn, "index", message: "hello"
   end
 end
 ```
@@ -174,7 +174,7 @@ defmodule App.Controllers.Pages do
   use Phoenix.Controller
 
   def index(conn, _params) do
-    render "index", message: "hello", layout: "plain"
+    render conn, "index", message: "hello", layout: "plain"
   end
 end
 ```
