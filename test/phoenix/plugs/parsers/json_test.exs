@@ -14,6 +14,13 @@ defmodule Phoenix.Plugs.Parsers.JSONTest do
     assert conn.params["id"] == 1
   end
 
+  test "parses the request body when it is an array" do
+    headers = [{"content-type", "application/json"}]
+    body = Jazz.encode!([%{id: 2}, %{id: 1}])
+    conn = parse(conn(:post, "/", body, headers: headers))
+    assert length(conn.params["_json"]) == 2
+  end
+
   test "raises ParseError with malformed JSON" do
     exception = assert_raise Phoenix.Plugs.Parsers.JSON.ParseError, fn ->
       headers = [{"content-type", "application/json"}]
