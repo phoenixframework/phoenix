@@ -1,11 +1,9 @@
 defmodule Phoenix.Controller do
-  alias Plug.Conn
+  import Phoenix.Controller.Connection
   import Plug.Conn
-  alias Phoenix.Status
+  alias Phoenix.Plugs
   alias Phoenix.Mime
-
-  @default_content_type "text/html"
-  @unsent [:unset, :set]
+  alias Phoenix.Config
 
   @moduledoc """
   Phoenix Controllers are responsible for handling the dispatch of Router requests
@@ -35,14 +33,22 @@ defmodule Phoenix.Controller do
     end
   end
   """
-  defmacro __using__(_options) do
+  defmacro __using__(options) do
     quote do
       import Plug.Conn
+      import Phoenix.Controller.Connection
       import unquote(__MODULE__)
+      @options unquote(options)
 
       def init(options), do: options
       @before_compile unquote(__MODULE__)
       use Plug.Builder
+      unless @options[:bare] do
+        config = Config.for(__MODULE__)
+        plug Plugs.ParamsFetcher
+        plug Plugs.ContentTypeFetcher
+        plug Plugs.Logger, config.logger[:level]
+      end
     end
   end
 
@@ -66,77 +72,11 @@ defmodule Phoenix.Controller do
   the route definition.
   """
   def perform_action(conn, controller, action, named_params) do
-    conn = fetch_params(conn) |> assign_private(:phoenix_action, action)
-    conn = put_in conn.params, Dict.merge(conn.params, named_params)
+    conn = assign_private(conn, :phoenix_named_params, named_params)
+    |> assign_private(:phoenix_action, action)
+    |> assign_private(:phoenix_controller, controller)
+
     apply(controller, :call, [conn, []])
-  end
-
-  @doc """
-  Returns the Atom action name matched from Router
-  """
-  def action_name(conn), do: conn.private[:phoenix_action]
-
-  @doc """
-  Halts the Plug chain by throwing `{:halt, conn}`.
-  If no response has been sent, an empty Bad Request is sent before throwing
-  error.
-
-  Examples
-    plug :authenticate
-
-    def authenticate(conn, _opts) do
-      if authenticate?(conn) do
-        conn
-      else
-        conn
-        |> redirect(Router.root_path)
-        |> halt!
-       end
-    end
-  """
-  def halt!(conn = %Conn{state: state}) when state in @unsent do
-    send_resp(conn, 400, "") |> halt!
-  end
-  def halt!(conn) do
-    throw {:halt, conn}
-  end
-
-  def json(conn, json), do: json(conn, :ok, json)
-  def json(conn, status, json) do
-    send_response(conn, status, "application/json", json)
-  end
-
-  def html(conn, html), do: html(conn, :ok, html)
-  def html(conn, status, html) do
-    send_response(conn, status, "text/html", html)
-  end
-
-  def text(conn, text), do: text(conn, :ok, text)
-  def text(conn, status, text) do
-    send_response(conn, status, "text/plain", text)
-  end
-
-  def send_response(conn, status, content_type, data) do
-    conn
-    |> put_resp_content_type(content_type)
-    |> send_resp(Status.code(status), data)
-  end
-
-  def redirect(conn, url), do: redirect(conn, :found, url)
-  def redirect(conn, status, url) do
-    conn
-    |> put_resp_header("Location", url)
-    |> html status, """
-       <html>
-         <head>
-            <title>Moved</title>
-         </head>
-         <body>
-           <h1>Moved</h1>
-           <p>This page has moved to <a href="#{url}">#{url}</a></p>
-         </body>
-       </html>
-    """
   end
 
   def not_found(conn, method, path) do
@@ -210,58 +150,16 @@ defmodule Phoenix.Controller do
   end
 
   def render_view(conn, view_mod, layout_mod, template, assigns \\ []) do
-    assigns      = Dict.merge(conn.assigns, assigns)
     content_type = response_content_type(conn)
+    assigns      = Dict.merge(conn.assigns, assigns)
     extension    = Mime.ext_from_type(content_type) || ""
     layout       = Dict.get(assigns, :layout, "application")
-    assigns      = Dict.put_new(assigns, :within, {layout_mod, layout <> extension})
+    assigns      = Dict.put_new(assigns, :within, {layout_mod, layout <> "." <> extension})
     status       = Dict.get(assigns, :status, 200)
 
-    {:safe, rendered_content} = view_mod.render(template <> extension, assigns)
+    {:safe, rendered_content} = view_mod.render(template <> "." <> extension, assigns)
 
     send_response(conn, status, content_type, rendered_content)
-  end
-
-  @doc """
-  Returns the List of String Accept headers, in order of priority
-  """
-  def accept_formats(conn) do
-    conn
-    |> get_req_header("accept")
-    |> parse_accept_headers
-  end
-  defp parse_accept_headers([]), do: []
-  defp parse_accept_headers([accepts | _rest]) do
-    accepts
-    |> String.split(",")
-    |> Enum.map fn format ->
-      String.split(format, ";") |> Enum.at(0)
-    end
-  end
-
-  @doc """
-  Returns the String response content-type
-
-  Lookup priority
-  1. format param of mime extension, ie "html", "json", "xml"
-  2. Accept header, ie "text/html,application/xml;q=0.9,*/*;q=0.8"
-  3. "text/html" default fallback
-  """
-  def response_content_type(conn) do
-    ".#{conn.params["format"]}"
-    |> Mime.type_from_ext
-    |> Kernel.||(primary_accept_format(accept_formats(conn)))
-    |> Kernel.||(@default_content_type)
-  end
-  defp primary_accept_format(["*/*" | _rest]), do: @default_content_type
-  defp primary_accept_format([type | _rest]), do: Mime.valid_type?(type) && type
-  defp primary_accept_format(_), do: nil
-
-  @doc """
-  Returns the String content-type fron Conn headers.  Defaults "text/html"
-  """
-  def get_content_type(conn) do
-    Enum.at(get_req_header(conn, "content-type"), 0) || @default_content_type
   end
 
   @doc """

@@ -24,7 +24,6 @@ defmodule Phoenix.Router do
   defmacro __before_compile__(_env) do
     quote do
       config = Config.for(__MODULE__)
-      plug Plugs.Logger, config.logger[:level]
       if config.plugs[:code_reload] do
         plug Plugs.CodeReloader
       end
