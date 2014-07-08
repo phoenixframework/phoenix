@@ -44,10 +44,9 @@ defmodule Phoenix.Controller do
       @before_compile unquote(__MODULE__)
       use Plug.Builder
       unless @options[:bare] do
-        config = Config.for(__MODULE__)
         plug Plugs.ParamsFetcher
         plug Plugs.ContentTypeFetcher
-        plug Plugs.Logger, config.logger[:level]
+        plug Plugs.Logger, Config.for(__MODULE__).logger[:level]
       end
     end
   end

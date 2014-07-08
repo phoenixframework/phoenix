@@ -4,6 +4,13 @@ defmodule Phoenix.Controller.Connection do
   alias Phoenix.Status
   alias Phoenix.Controller.Errors
 
+  @moduledoc """
+  Handles Interacting with Plug.Conn and integration with the Controller layer
+
+  Used for sending responses, halting connections, and looking up private Conn
+  assigns
+  """
+
   @unsent [:unset, :set]
 
   @doc """
@@ -46,7 +53,7 @@ defmodule Phoenix.Controller.Connection do
   """
   def response_content_type(conn) do
     conn.private[:phoenix_content_type] || raise(
-      %Errors.UnfetchedContentType{message: "You must first call fetch_content_type/1"}
+      %Errors.UnfetchedContentType{message: "You must first call Plugs.ContentTypeFetcher.fetch/1"}
     )
   end
 
