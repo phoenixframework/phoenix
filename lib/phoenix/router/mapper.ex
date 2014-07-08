@@ -114,7 +114,7 @@ defmodule Phoenix.Router.Mapper do
           scheme = if config[:ssl], do: "https", else: "http"
 
           Path.build(unquote(path), params)
-          |> Path.build_url(host, scheme)
+          |> Path.build_url(host, [scheme: scheme])
         end
       end
     end
