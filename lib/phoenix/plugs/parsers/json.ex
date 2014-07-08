@@ -21,6 +21,8 @@ defmodule Phoenix.Plugs.Parsers.JSON do
   def parse(conn, "application", "json", _headers, opts) do
     {:ok, body, conn} = read_body(conn, opts)
     case Jazz.decode(body) do
+      {:ok, terms} when is_list(terms)->
+        {:ok, %{"_json" => terms}, conn}
       {:ok, terms} ->
         {:ok, terms, conn}
       _ ->
