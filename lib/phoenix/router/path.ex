@@ -156,10 +156,10 @@ defmodule Phoenix.Router.Path do
     iex> Path.build_url("/users", "example.com")
     "http://example.com/users"
 
-    iex> Path.build_url("/users", "example.com", [scheme: "https"])
+    iex> Path.build_url("/users", "example.com", scheme: "https")
     "https://example.com/users"
 
-    iex> Path.build_url("/users", "example.com", [port: 8080])
+    iex> Path.build_url("/users", "example.com", port: 8080)
     "http://example.com:8080/users"
 
   """

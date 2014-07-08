@@ -31,7 +31,7 @@ defmodule Phoenix.Router.PathTest do
 
   test "build_url includes the host and scheme" do
     path = Path.build("users/:id", id: 1)
-    assert Path.build_url(path, "example.com", [scheme: "https"]) ==
+    assert Path.build_url(path, "example.com", scheme: "https") ==
       "https://example.com/users/1"
   end
 
