@@ -42,7 +42,7 @@ defmodule Phoenix.Controller.Connection do
     end
   """
   def halt!(conn = %Conn{state: state}) when state in @unsent do
-    send_resp(conn, 400, "") |> halt!
+    text(conn, 400, "Bad Request") |> halt!
   end
   def halt!(conn) do
     throw {:halt, conn}
