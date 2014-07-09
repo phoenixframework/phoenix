@@ -1,15 +1,4 @@
 defmodule Phoenix.Mime do
-
-  @moduledoc """
-  Conversions for transforming extension to mime-type and mime-type to extension
-  """
-  for line <- File.stream!(Path.join([__DIR__, "mimes.txt"]), [], :line) do
-    [type, ext] = line |> String.split("\t") |> Enum.map(&String.strip(&1))
-
-    def ext_from_type(unquote(type)), do: unquote(ext)
-    def type_from_ext(unquote(ext)), do: unquote(type)
-  end
-
   @doc """
   Convert extension to matching mime content type
 
@@ -17,7 +6,12 @@ defmodule Phoenix.Mime do
   iex> Mime.ext_from_type("text/html")
   ".html"
   """
-  def ext_from_type(_type), do: nil
+  def ext_from_type(mime) do
+    case Plug.MIME.extensions(mime) do
+      [fst|_] -> "." <> fst
+      [] -> nil
+    end
+  end
 
   @doc """
   Convert mime content type to matching file extension
@@ -26,7 +20,13 @@ defmodule Phoenix.Mime do
   iex> Mime.type_from_ext(".html")
   "text/html"
   """
-  def type_from_ext(_ext), do: nil
+  def type_from_ext(<<".", ext :: binary>>), do: type_from_ext(to_string(ext))
+  def type_from_ext(ext) do
+    case Plug.MIME.type(ext) do
+      "application/octet-stream" -> nil
+      x -> x
+    end
+  end
 
   @doc """
   Check if a given String mime type is valid
@@ -37,5 +37,7 @@ defmodule Phoenix.Mime do
   iex> Mime.valid_type?("unknown/type")
   false
   """
-  def valid_type?(type), do: ext_from_type(type) != nil
+  def valid_type?(type) do
+    Plug.MIME.valid?(type)
+  end
 end
