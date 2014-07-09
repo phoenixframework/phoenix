@@ -7,10 +7,7 @@ defmodule Phoenix.Mime do
   ".html"
   """
   def ext_from_type(mime) do
-    case Plug.MIME.extensions(mime) do
-      [fst|_] -> "." <> fst
-      [] -> nil
-    end
+    Plug.MIME.extensions(mime)
   end
 
   @doc """
@@ -20,12 +17,8 @@ defmodule Phoenix.Mime do
   iex> Mime.type_from_ext(".html")
   "text/html"
   """
-  def type_from_ext(<<".", ext :: binary>>), do: type_from_ext(to_string(ext))
   def type_from_ext(ext) do
-    case Plug.MIME.type(ext) do
-      "application/octet-stream" -> nil
-      x -> x
-    end
+    Plug.MIME.type(ext)
   end
 
   @doc """
