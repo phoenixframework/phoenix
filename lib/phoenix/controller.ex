@@ -1,7 +1,7 @@
 defmodule Phoenix.Controller do
   import Plug.Conn
   alias Phoenix.Status
-  alias Phoenix.Mime
+  alias Plug.MIME
 
   @default_content_type "text/html"
   @plug_default_mime_type "application/octet-stream"
@@ -124,7 +124,7 @@ defmodule Phoenix.Controller do
   def render_view(conn, view_mod, layout_mod, template, assigns \\ []) do
     assigns      = Dict.merge(conn.assigns, assigns)
     content_type = response_content_type(conn)
-    extensions   = Mime.ext_from_type(content_type)
+    extensions   = MIME.extensions(content_type)
     layout       = Dict.get(assigns, :layout, "application")
     assigns      = Dict.put_new(assigns, :within, {layout_mod, template_name(layout, extensions)})
     status       = Dict.get(assigns, :status, 200)
@@ -169,13 +169,13 @@ defmodule Phoenix.Controller do
     |> Kernel.||(@default_content_type)
   end
   defp mime_type_from_ext(extension) do
-    case Mime.type_from_ext(extension) do
+    case MIME.type(extension) do
       @plug_default_mime_type -> nil
       x -> x
     end
   end
   defp primary_accept_format(["*/*" | _rest]), do: @default_content_type
-  defp primary_accept_format([type | _rest]), do: Mime.valid_type?(type) && type
+  defp primary_accept_format([type | _rest]), do: MIME.valid?(type) && type
   defp primary_accept_format(_), do: nil
 
   @doc """
