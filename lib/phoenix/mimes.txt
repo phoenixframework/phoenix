@@ -262,6 +262,7 @@ application/java-serialized-object	.ser
 text/x-java-source,java	.java
 application/javascript	.js
 application/json	.json
+application/hal+json	.hal
 application/vnd.joost.joda-archive	.joda
 video/jpm	.jpm
 image/jpeg	.jpeg, .jpg
