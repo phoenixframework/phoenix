@@ -1,9 +1,10 @@
 defmodule Phoenix.Controller do
   import Plug.Conn
   alias Phoenix.Status
-  alias Phoenix.Mime
+  alias Plug.MIME
 
   @default_content_type "text/html"
+  @plug_default_mime_type "application/octet-stream"
 
   defmacro __using__(_options) do
     quote do
@@ -123,15 +124,18 @@ defmodule Phoenix.Controller do
   def render_view(conn, view_mod, layout_mod, template, assigns \\ []) do
     assigns      = Dict.merge(conn.assigns, assigns)
     content_type = response_content_type(conn)
-    extension    = Mime.ext_from_type(content_type) || ""
+    extensions   = MIME.extensions(content_type)
     layout       = Dict.get(assigns, :layout, "application")
-    assigns      = Dict.put_new(assigns, :within, {layout_mod, layout <> extension})
+    assigns      = Dict.put_new(assigns, :within, {layout_mod, template_name(layout, extensions)})
     status       = Dict.get(assigns, :status, 200)
 
-    {:safe, rendered_content} = view_mod.render(template <> extension, assigns)
+    {:safe, rendered_content} = view_mod.render(template_name(template, extensions), assigns)
 
     send_response(conn, status, content_type, rendered_content)
   end
+  defp template_name(template, extensions)
+  defp template_name(template, []), do: template
+  defp template_name(template, [ext | _]), do: "#{template}.#{ext}"
 
   @doc """
   Returns the List of String Accept headers, in order of priority
@@ -159,13 +163,19 @@ defmodule Phoenix.Controller do
   3. "text/html" default fallback
   """
   def response_content_type(conn) do
-    ".#{conn.params["format"]}"
-    |> Mime.type_from_ext
+    conn.params["format"]
+    |> mime_type_from_ext
     |> Kernel.||(primary_accept_format(accept_formats(conn)))
     |> Kernel.||(@default_content_type)
   end
+  defp mime_type_from_ext(extension) do
+    case MIME.type(extension) do
+      @plug_default_mime_type -> nil
+      x -> x
+    end
+  end
   defp primary_accept_format(["*/*" | _rest]), do: @default_content_type
-  defp primary_accept_format([type | _rest]), do: Mime.valid_type?(type) && type
+  defp primary_accept_format([type | _rest]), do: MIME.valid?(type) && type
   defp primary_accept_format(_), do: nil
 
   @doc """
@@ -212,5 +222,4 @@ defmodule Phoenix.Controller do
     |> Enum.reverse
     |> Module.concat
   end
-
 end
