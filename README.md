@@ -278,7 +278,7 @@ defmodule Controllers.Pages do
   use Phoenix.Controller
 
   def show(conn, _params) do
-    conn = put_session(:foo, "bar")
+    conn = fetch_session(conn) |> put_session(:foo, "bar")
     foo = get_session(conn, :foo)
 
     text conn, foo
