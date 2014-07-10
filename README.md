@@ -313,6 +313,13 @@ API documentation is available at [http://api.phoenixframework.org/](http://api.
 
 There are no guidelines yet. Do what feels natural. Submit a bug, join a discussion, open a pull request.
 
+### Building phoenix.coffee
+
+```bash
+$ coffee -o priv/static/js -cw priv/src/static/cs
+```
+
+
 ### Building documentation
 
 1. Clone [docs repository](https://github.com/phoenixframework/docs) into `../docs`. Relative to your `phoenix` directory.
