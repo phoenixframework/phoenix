@@ -187,6 +187,123 @@ You may also omit using a template with the following :
 render "index", message: "hello", layout: nil
 ```
 
+### Channels
+
+You can think of channels as controllers with two differences : they are bidirectionnal and the connection stays alive after a reply. 
+
+You implement a channel by creating a module in the _channels_ directory and by using `Phoenix.Channels`, like so : 
+
+```elixir
+defmodule App.Channels.MyChannel do
+  use Phoenix.Channels
+end
+```
+
+First thing to do is to implement the join function, like so : 
+
+
+```elixir
+defmodule App.Channels.MyChannel do
+  use Phoenix.Channels
+
+  def join(socket, "topic", message) do
+    {:ok, socket}
+  end
+
+  def join(socket, _no, _message) do
+    {:error, socket, :unauthorized}
+  end
+
+end
+```
+
+As you can see, you should implement a method to deal with joining topics that don't exist by sending an error and refusing the connection.
+
+Note that you must join a topic before you can send events on this channel. This will become clearer when we look at the JavaScript code, hang tight!
+
+A channel will use a socket underneath to send responses and receive events. As said, sockets are bidirectionnal, which mean you can receive events (similar to requests in your controller). You handle events with pattern matching, for example : 
+
+
+```elixir
+defmodule App.Channels.MyChannel do
+  use Phoenix.Channels
+
+  def event(socket, "eventname", message) do
+    socket
+  end
+
+end
+```
+
+And you can obviously send replies: 
+
+```elixir
+defmodule App.Channels.MyChannel do
+  use Phoenix.Channels
+
+  def event(socket, "eventname", message) do
+    reply socket, "return_event", "Echo: " <> message
+    socket
+  end
+
+end
+```
+
+Note that, for added clarify, events should be prefixed by their topic and a colon (i.e. "topic:event"). Instead of `reply/3`, you may also use `broadcast/3`. In the previous case, this would send a "return\_event" to all clients who previously joined the current socket's topic. 
+
+Remember that a client first has to join a topic before it can send events. On the JavaScript side, this is how it would be done (don't forget to include _/static/js/phoenix.js_) : 
+
+```js
+var socket = new Phoenix.socket("ws://" + location.host + "/ws");
+
+socket.join("channel", "topic", callback);
+```
+
+First you create a socket which uses the ws:// protocol and the host from the current location and it appends the route /ws. This route's name is for you to decide in your router : 
+
+```elixir
+defmodule App.Router do
+  use Phoenix.Router
+  use Phoenix.Router.Socket, mount: "/ws"
+
+  channel "channel", App.Channels.MyChannel
+end
+```
+
+This mounts the socket router on /ws and also register the channel from earlier as `channel`. Let's recap : 
+
+ * The mountpoint for the socket in the router (/ws) has to match the route used on the JavaScript side when creating the new socket.
+ * The channel name in the router has to match the first parameter on the JavaScript call to `socket.join`
+ * The name of the topic used in `def join(socket, "topic", message)` function has to match the second parameter on the JavaScript call to `socket.join`
+
+Now that a channel exists and we have reached it, it's time to do something fun with it! The callback from the previous JavaScript example receives the channel as a parameter and uses that to either subscribe to topics or send events to the server. Here is a quick example of both : 
+
+```js
+var socket = new Phoenix.socket("ws://" + location.host + "/ws");
+
+socket.join("channel", "topic", function(channel) {
+  
+  channel.on("join", function(message) {
+    console.log("joined successfully");
+  });
+
+  channel.on("return_event", function(message) {
+    console.log("Got " + message + " while listening for event return_event");
+  });
+
+  onSomeEvent(function() {
+    channel.send("topic:event", {data: "json stuff"});
+  });
+
+});
+```
+
+There are a few other this not covered in this readme that might be worth exploring : 
+
+ * Both the client and server side allow for leave events (as opposed to join)
+ * In JavaScript, you may manually `.trigger()` events which can be useful for testing
+ * On the server side, string topics are converted into a `Topic`, which can be subscribed to from any elixir code. No need to use websockets!
+
 ### Configuration
 
 Phoenix provides a configuration per environment set by the `MIX_ENV` environment variable. The default environment `Dev` will be set if `MIX_ENV` does not exist.
