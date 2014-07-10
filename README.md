@@ -67,7 +67,7 @@ defmodule Controllers.Pages do
     redirect conn, Router.page_path(page: "unauthorized")
   end
   def show(conn, %{"page" => page}) do
-    render conn, title: "Showing page #{page}"
+    render conn, "show", title: "Showing page #{page}"
   end
 
 end
@@ -127,7 +127,7 @@ defmodule App.Views do
       import unquote(__MODULE__)
 
       # This block is expanded within all views for aliases, imports, etc
-      alias <%= application_module %>.Views
+      alias App.Views
       
       def title, do: "Welcome to Phoenix!"
     end
@@ -344,6 +344,7 @@ There are no guidelines yet. Do what feels natural. Submit a bug, join a discuss
   - [ ] Error page handling per env
 - Views
   - [x] Precompiled View handling
+  - [ ] I18n
 - Realtime
   - [x] Websocket multiplexing/channels
 
