@@ -161,7 +161,7 @@ The template format to render is chosen based on the following priority:
 
 Note that the layout and view templates would be chosen by matching conten types, ie `application.[format].eex` would be used to render `show.[format].eex`.
 
-See [this file](https://github.com/phoenixframework/phoenix/blob/master/lib/phoenix/mimes.txt) for a list of supported mime types.
+See [this file](https://github.com/elixir-lang/plug/blob/master/lib/plug/mime.types) for a list of supported mime types.
 
 #### More on layouts
 
