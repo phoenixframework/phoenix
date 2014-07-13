@@ -35,7 +35,7 @@ When running in production, use protocol consolidation for increased performance
 
        MIX_ENV=prod mix compile.protocols
        MIX_ENV=prod elixir -pa _build/prod/consolidated -S mix phoenix.start
-       
+
 ### Router example
 
 ```elixir
@@ -106,7 +106,7 @@ defmodule App.Controllers.Pages do
 end
 ```
 
-By looking at the controller name `App.Controllers.Pages`, Phoenix will use `App.Views.Pages` to render `lib/app/templates/pages/index.html.eex` within the template `lib/app/templates/layouts/application.html.eex`. Let's break that down: 
+By looking at the controller name `App.Controllers.Pages`, Phoenix will use `App.Views.Pages` to render `lib/app/templates/pages/index.html.eex` within the template `lib/app/templates/layouts/application.html.eex`. Let's break that down:
  * `App.Views.Pages` is the module that will render the template (more on that later)
  * `app` is your application name
  * `templates` is your configured templates directory. See `lib/app/views.ex`
@@ -117,7 +117,7 @@ By looking at the controller name `App.Controllers.Pages`, Phoenix will use `App
 
 Every keyword passed to `render` in the controller is available as an assign within the template, so you can use `<%= @message %>` in the eex template that is rendered in the controller example.
 
-You may also create helper functions within your views or layouts. For exemple, the previous controller will use `App.Views.Pages` so you could have : 
+You may also create helper functions within your views or layouts. For exemple, the previous controller will use `App.Views.Pages` so you could have :
 
 ```elixir
 defmodule App.Views do
@@ -128,7 +128,7 @@ defmodule App.Views do
 
       # This block is expanded within all views for aliases, imports, etc
       alias App.Views
-      
+
       def title, do: "Welcome to Phoenix!"
     end
   end
@@ -139,7 +139,7 @@ end
 defmodule App.Views.Pages
   use App.Views
 
-  def display(something) do 
+  def display(something) do
     String.upcase(something)
   end
 end
@@ -149,7 +149,7 @@ Which would allow you to use these functions in your template : `<%= display(@me
 
 Note that all views extend `App.Views`, allowing you to define functions, aliases, imports, etc available in all templates.
 
-To read more about eex templating, see the [elixir documentation](http://elixir-lang.org/docs/stable/eex/). 
+To read more about eex templating, see the [elixir documentation](http://elixir-lang.org/docs/stable/eex/).
 
 #### More on request format
 
@@ -181,7 +181,7 @@ end
 
 To render the template's content inside a layout, use the assign `<%= @inner %>` that will be generated for you.
 
-You may also omit using a template with the following : 
+You may also omit using a template with the following:
 
 ```elixir
 render "index", message: "hello", layout: nil
@@ -189,9 +189,9 @@ render "index", message: "hello", layout: nil
 
 ### Channels
 
-You can think of channels as controllers with two differences : they are bidirectionnal and the connection stays alive after a reply. 
+Channels broker websocket connections and integrate with the Topic PubSub layer for message broadcasting. You can think of channels as controllers, with two differences: they are bidirectionnal and the connection stays alive after a reply.
 
-You implement a channel by creating a module in the _channels_ directory and by using `Phoenix.Channels`, like so : 
+We can implement a channel by creating a module in the _channels_ directory and by using `Phoenix.Channels`:
 
 ```elixir
 defmodule App.Channels.MyChannel do
@@ -199,7 +199,7 @@ defmodule App.Channels.MyChannel do
 end
 ```
 
-First thing to do is to implement the join function, like so : 
+The first thing to do is to implement the join function to authorize sockets on this Channel's topic:
 
 
 ```elixir
@@ -216,26 +216,29 @@ defmodule App.Channels.MyChannel do
 
 end
 ```
+`join` events are specially treated. When `{:ok, socket}` is returned from the Channel, the socket is subscribed to the channel and authorized to pubsub on the channel/topic pair. When `{:error, socket, reason}` is returned, the socket is denied pubsub access.
 
-As you can see, you should implement a method to deal with joining topics that don't exist by sending an error and refusing the connection.
+Note that we must join a topic before you can send and receive events on a channel. This will become clearer when we look at the JavaScript code, hang tight!
 
-Note that you must join a topic before you can send events on this channel. This will become clearer when we look at the JavaScript code, hang tight!
-
-A channel will use a socket underneath to send responses and receive events. As said, sockets are bidirectionnal, which mean you can receive events (similar to requests in your controller). You handle events with pattern matching, for example : 
+A channel will use a socket underneath to send responses and receive events. As said, sockets are bidirectionnal, which mean you can receive events (similar to requests in your controller). You handle events with pattern matching, for example:
 
 
 ```elixir
 defmodule App.Channels.MyChannel do
   use Phoenix.Channels
 
-  def event(socket, "eventname", message) do
+  def event(socket, "user:active", %{user_id: user_id}) do
+    socket
+  end
+
+  def event(socket, "user:idle", %{user_id: user_id}) do
     socket
   end
 
 end
 ```
 
-And you can obviously send replies: 
+We can send replies directly to a single authorized socket with `reply/3`
 
 ```elixir
 defmodule App.Channels.MyChannel do
@@ -249,9 +252,9 @@ defmodule App.Channels.MyChannel do
 end
 ```
 
-Note that, for added clarify, events should be prefixed by their topic and a colon (i.e. "topic:event"). Instead of `reply/3`, you may also use `broadcast/3`. In the previous case, this would send a "return\_event" to all clients who previously joined the current socket's topic. 
+Note that, for added clarify, events should be prefixed by their subject and a colon (i.e. "subject:event"). Instead of `reply/3`, you may also use `broadcast/3`. In the previous case, this would publish a message to all clients who previously joined the current socket's topic.
 
-Remember that a client first has to join a topic before it can send events. On the JavaScript side, this is how it would be done (don't forget to include _/static/js/phoenix.js_) : 
+Remember that a client first has to join a topic before it can send events. On the JavaScript side, this is how it would be done (don't forget to include _/static/js/phoenix.js_) :
 
 ```js
 var socket = new Phoenix.socket("ws://" + location.host + "/ws");
@@ -259,7 +262,7 @@ var socket = new Phoenix.socket("ws://" + location.host + "/ws");
 socket.join("channel", "topic", callback);
 ```
 
-First you create a socket which uses the ws:// protocol and the host from the current location and it appends the route /ws. This route's name is for you to decide in your router : 
+First you create a socket which uses the ws:// protocol and the host from the current location and it appends the route /ws. This route's name is for you to decide in your router :
 
 ```elixir
 defmodule App.Router do
@@ -270,19 +273,19 @@ defmodule App.Router do
 end
 ```
 
-This mounts the socket router on /ws and also register the channel from earlier as `channel`. Let's recap : 
+This mounts the socket router on /ws and also register the channel from earlier as `channel`. Let's recap:
 
  * The mountpoint for the socket in the router (/ws) has to match the route used on the JavaScript side when creating the new socket.
  * The channel name in the router has to match the first parameter on the JavaScript call to `socket.join`
  * The name of the topic used in `def join(socket, "topic", message)` function has to match the second parameter on the JavaScript call to `socket.join`
 
-Now that a channel exists and we have reached it, it's time to do something fun with it! The callback from the previous JavaScript example receives the channel as a parameter and uses that to either subscribe to topics or send events to the server. Here is a quick example of both : 
+Now that a channel exists and we have reached it, it's time to do something fun with it! The callback from the previous JavaScript example receives the channel as a parameter and uses that to either subscribe to topics or send events to the server. Here is a quick example of both :
 
 ```js
 var socket = new Phoenix.socket("ws://" + location.host + "/ws");
 
 socket.join("channel", "topic", function(channel) {
-  
+
   channel.on("join", function(message) {
     console.log("joined successfully");
   });
@@ -298,7 +301,7 @@ socket.join("channel", "topic", function(channel) {
 });
 ```
 
-There are a few other this not covered in this readme that might be worth exploring : 
+There are a few other this not covered in this readme that might be worth exploring :
 
  * Both the client and server side allow for leave events (as opposed to join)
  * In JavaScript, you may manually `.trigger()` events which can be useful for testing
