@@ -126,8 +126,11 @@ defmodule Phoenix.Controller do
     content_type = response_content_type(conn)
     extensions   = MIME.extensions(content_type)
     layout       = Dict.get(assigns, :layout, "application")
-    assigns      = Dict.put_new(assigns, :within, {layout_mod, template_name(layout, extensions)})
     status       = Dict.get(assigns, :status, 200)
+
+    if layout do
+      assigns = Dict.put_new(assigns, :within, {layout_mod, template_name(layout, extensions)})
+    end
 
     {:safe, rendered_content} = view_mod.render(template_name(template, extensions), assigns)
 
