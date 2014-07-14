@@ -252,7 +252,7 @@ defmodule App.Channels.MyChannel do
 end
 ```
 
-Note that, for added clarify, events should be prefixed by their subject and a colon (i.e. "subject:event"). Instead of `reply/3`, you may also use `broadcast/3`. In the previous case, this would publish a message to all clients who previously joined the current socket's topic.
+Note that, for added clarity, events should be prefixed by their subject and a colon (i.e. "subject:event"). Instead of `reply/3`, you may also use `broadcast/3`. In the previous case, this would publish a message to all clients who previously joined the current socket's topic.
 
 Remember that a client first has to join a topic before it can send events. On the JavaScript side, this is how it would be done (don't forget to include _/static/js/phoenix.js_) :
 
