@@ -1,23 +1,50 @@
-defmodule PhoenixConfTest.Config do
-  use Phoenix.Config.App
-
-  config :router, port: 1234
-end
-defmodule PhoenixConfTest.Router do
-  use Phoenix.Router, port: 4000
-  get "/pages/:page", Pages, :show, as: :page
-end
-
-
 defmodule Phoenix.Config.ConfigTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: false
   alias Phoenix.Config
 
-  test "Config.for finds module based on sub Config existence" do
-    assert Config.for(PhoenixConfTest.Router) == PhoenixConfTest.Config
+  setup_all do
+    Mix.Config.persist(phoenix: [
+      routers: [
+        [endpoint: Router,
+         port: 1234,
+         ssl: false,
+         plugs: [code_reload: false,
+                 cookies: false]
+        ]
+      ],
+      logger: [level: :info]
+    ])
   end
 
-  test "Config.for falls back to Config.Fallback module if no configuration is found" do
-    assert Config.for(SomeApp.Router) == Phoenix.Config.Fallback
+  test "router/2 returns the value for provided router module and get_in path" do
+    assert Config.router(Router, [:port]) == 1234
+  end
+
+  test "router!/2 returns the value for provided router module and get_in path" do
+    assert Config.router!(Router, [:port]) == 1234
+  end
+
+  test "router!/2 raises UndefinedConfigError when value is nil" do
+    assert_raise Config.UndefinedConfigError, fn ->
+      Config.router!(Router, [:key_that_does_not_exist])
+    end
+  end
+
+  test "router/1 returns the keyword list configuration of module with merge defaults" do
+    assert Config.router(Router) == [
+     port: 1234, ssl: false, consider_all_requests_local: false, endpoint: Router,
+     plugs: [code_reload: false, cookies: false]
+    ]
+  end
+
+  test "get/1 returns the config value for provided get_in path" do
+    assert Config.get([:logger, :level]) == :info
+  end
+
+  test "get!/1 raises UndefinedConfigError if value is nil" do
+    assert_raise Config.UndefinedConfigError, fn ->
+      Config.get!([:logger, :key_that_does_not_exist])
+    end
   end
 end
+

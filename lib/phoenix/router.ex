@@ -23,14 +23,13 @@ defmodule Phoenix.Router do
 
   defmacro __before_compile__(_env) do
     quote do
-      config = Config.for(__MODULE__)
-      plug Plugs.Logger, config.logger[:level]
-      if config.plugs[:code_reload] do
+      plug Plugs.Logger, Config.router(__MODULE__, [:logger, :level])
+      if Config.router(__MODULE__, [:plugs, :code_reload]) do
         plug Plugs.CodeReloader
       end
-      if config.plugs[:cookies] do
-        key = Keyword.fetch!(config.cookies, :key)
-        secret = Keyword.fetch!(config.cookies, :secret)
+      if Config.router(__MODULE__, [:plugs, :cookies]) do
+        key    = Config.router!(__MODULE__, [:cookies, :key])
+        secret = Config.router!(__MODULE__, [:cookies, :secret])
 
         plug Plug.Session, store: :cookie, key: key, secret: secret
       end

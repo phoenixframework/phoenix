@@ -1,6 +1,7 @@
 defmodule Phoenix.Router.Mapper do
   alias Phoenix.Router.Path
   alias Phoenix.Controller
+  alias Phoenix.Config
   alias Phoenix.Router.ResourcesContext
   alias Phoenix.Router.ScopeContext
   alias Phoenix.Router.Errors
@@ -109,9 +110,8 @@ defmodule Phoenix.Router.Mapper do
           Path.build(unquote(path), params)
         end
         def unquote(String.to_atom "#{alias_name}_url")(params \\ []) do
-          config = Phoenix.Config.for(__MODULE__).router
-          host = config[:host]
-          scheme = if config[:ssl], do: "https", else: "http"
+          host = Config.router(__MODULE__, [:host])
+          scheme = if Config.router(__MODULE__, [:ssl]), do: "https", else: "http"
 
           Path.build(unquote(path), params)
           |> Path.build_url(host, scheme: scheme)

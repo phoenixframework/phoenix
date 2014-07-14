@@ -1,34 +1,38 @@
-defmodule NamedRoutingTest.Router do
-  use Phoenix.Router
-  get "/users/:id", UsersController, :show, as: :profile
-  get "/users/top", UsersController, :top, as: :top
-
-  resources "users", UsersController do
-    resources "comments", CommentsController do
-      resources "files", FilesController
-    end
-  end
-  resources "files", FilesController
-
-  scope path: "admin", alias: Controllers.Admin do
-    resources "messages", Messages
-  end
-
-  scope path: "admin", alias: Controllers.Admin, helper: "admin" do
-    resources "messages", Messages
-  end
-end
-
-defmodule NamedRoutingTest.Config do
-  use Phoenix.Config.App
-  config :router, port: 1337, host: "example.com", ssl: false
-end
-
 defmodule Phoenix.Router.NamedRoutingTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: false
   use PlugHelper
+  alias Phoenix.Router.NamedRoutingTest.Router
 
-  alias NamedRoutingTest.Router
+  setup_all do
+    Mix.Config.persist(phoenix: [
+      routers: [
+        [endpoint: Router, port: 1337, host: "example.com", ssl: false]
+      ]
+    ])
+
+    defmodule Router do
+      use Phoenix.Router
+      get "/users/:id", UsersController, :show, as: :profile
+      get "/users/top", UsersController, :top, as: :top
+
+      resources "users", UsersController do
+        resources "comments", CommentsController do
+          resources "files", FilesController
+        end
+      end
+      resources "files", FilesController
+
+      scope path: "admin", alias: Controllers.Admin do
+        resources "messages", Messages
+      end
+
+      scope path: "admin", alias: Controllers.Admin, helper: "admin" do
+        resources "messages", Messages
+      end
+    end
+
+    :ok
+  end
 
   test "manual alias generated named route" do
     assert Router.profile_path(id: 5) == "/users/5"

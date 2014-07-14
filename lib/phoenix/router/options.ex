@@ -2,7 +2,7 @@ defmodule Phoenix.Router.Options do
   alias Phoenix.Config
 
   def merge(options, dispatch_options, router_module, adapter) do
-    Config.for(router_module).router
+    Config.router(router_module)
     |> map_config
     |> Dict.merge(options)
     |> adapter.merge_options(dispatch_options, router_module)

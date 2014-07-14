@@ -1,16 +1,27 @@
 defmodule Mix.Tasks.Phoenix.RoutesTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: false
 
-  defmodule Elixir.Phoenix.RouterTest do
-    use Phoenix.Router
+  setup_all do
+    Mix.Config.persist(phoenix: [
+      routers: [
+        [endpoint: Elixir.Phoenix.RouterTest, port: 1234],
+        [endpoint: Elixir.TestApp.Router, port: 1234],
+      ]
+    ])
 
-    get "/", Phoenix.Controllers.Pages, :index, as: :page
-  end
+    defmodule Elixir.Phoenix.RouterTest do
+      use Phoenix.Router
 
-  defmodule Elixir.TestApp.Router do
-    use Phoenix.Router
+      get "/", Phoenix.Controllers.Pages, :index, as: :page
+    end
 
-    get "/", Phoenix.Controllers.Pages, :index, as: :page
+    defmodule Elixir.TestApp.Router do
+      use Phoenix.Router
+
+      get "/", Phoenix.Controllers.Pages, :index, as: :page
+    end
+
+    :ok
   end
 
   test "format routes for specific router" do
