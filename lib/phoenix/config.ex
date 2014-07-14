@@ -1,15 +1,44 @@
 defmodule Phoenix.Config do
 
+  @moduledoc """
+  Handles Mix Config lookup and default values from Application env
+
+  Uses Mix.Config `:phoenix` settings as configuration with `@defaults` fallback
+
+  Each Router requires an `:endpoint` mapping with Router specific options.
+
+  See `@defaults` for a full list of available configuration options.
+
+  Example `config.exs`
+
+    use Mix.Config
+
+    config :phoenix,
+      routers: [
+        [endpoint: MyApp.Router,
+         port: 4000,
+         ssl: false,
+         plugs: [code_reload: false,
+                 cookies: false]
+        ]
+      ]
+
+  """
+
   @defaults [
-    router: [port: 4000,
-             ssl: false,
-             # Full error reports are disabled
-             consider_all_requests_local: false],
-
-    plugs: [code_reload: false,
-            serve_static_assets: true,
-            cookies: false],
-
+    router: [
+      port: 4000,
+      ssl: false,
+      # Full error reports are disabled
+      consider_all_requests_local: false,
+      plugs: [
+        code_reload: false,
+        static_assets: true,
+        parsers: true,
+        error_handler: true,
+        cookies: false
+      ],
+    ],
     logger: [level: :error]
   ]
 

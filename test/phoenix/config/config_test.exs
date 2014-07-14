@@ -31,10 +31,10 @@ defmodule Phoenix.Config.ConfigTest do
   end
 
   test "router/1 returns the keyword list configuration of module with merge defaults" do
-    assert Config.router(Router) == [
-     port: 1234, ssl: false, consider_all_requests_local: false, endpoint: Router,
-     plugs: [code_reload: false, cookies: false]
-    ]
+    assert Enum.sort(Config.router(Router)) == Enum.sort([
+      port: 1234, ssl: false, consider_all_requests_local: false, endpoint: Router,
+      plugs: [code_reload: false, cookies: false]
+    ])
   end
 
   test "get/1 returns the config value for provided get_in path" do
