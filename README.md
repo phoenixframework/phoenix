@@ -195,7 +195,7 @@ We can implement a channel by creating a module in the _channels_ directory and 
 
 ```elixir
 defmodule App.Channels.MyChannel do
-  use Phoenix.Channels
+  use Phoenix.Channel
 end
 ```
 
@@ -204,7 +204,7 @@ The first thing to do is to implement the join function to authorize sockets on 
 
 ```elixir
 defmodule App.Channels.MyChannel do
-  use Phoenix.Channels
+  use Phoenix.Channel
 
   def join(socket, "topic", message) do
     {:ok, socket}
@@ -225,7 +225,7 @@ A channel will use a socket underneath to send responses and receive events. As 
 
 ```elixir
 defmodule App.Channels.MyChannel do
-  use Phoenix.Channels
+  use Phoenix.Channel
 
   def event(socket, "user:active", %{user_id: user_id}) do
     socket
@@ -242,7 +242,7 @@ We can send replies directly to a single authorized socket with `reply/3`
 
 ```elixir
 defmodule App.Channels.MyChannel do
-  use Phoenix.Channels
+  use Phoenix.Channel
 
   def event(socket, "eventname", message) do
     reply socket, "return_event", "Echo: " <> message
