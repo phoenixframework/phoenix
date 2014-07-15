@@ -195,7 +195,7 @@ We can implement a channel by creating a module in the _channels_ directory and 
 
 ```elixir
 defmodule App.Channels.MyChannel do
-  use Phoenix.Channels
+  use Phoenix.Channel
 end
 ```
 
@@ -204,7 +204,7 @@ The first thing to do is to implement the join function to authorize sockets on 
 
 ```elixir
 defmodule App.Channels.MyChannel do
-  use Phoenix.Channels
+  use Phoenix.Channel
 
   def join(socket, "topic", message) do
     {:ok, socket}
@@ -225,7 +225,7 @@ A channel will use a socket underneath to send responses and receive events. As 
 
 ```elixir
 defmodule App.Channels.MyChannel do
-  use Phoenix.Channels
+  use Phoenix.Channel
 
   def event(socket, "user:active", %{user_id: user_id}) do
     socket
@@ -242,7 +242,7 @@ We can send replies directly to a single authorized socket with `reply/3`
 
 ```elixir
 defmodule App.Channels.MyChannel do
-  use Phoenix.Channels
+  use Phoenix.Channel
 
   def event(socket, "eventname", message) do
     reply socket, "return_event", "Echo: " <> message
@@ -252,7 +252,7 @@ defmodule App.Channels.MyChannel do
 end
 ```
 
-Note that, for added clarify, events should be prefixed by their subject and a colon (i.e. "subject:event"). Instead of `reply/3`, you may also use `broadcast/3`. In the previous case, this would publish a message to all clients who previously joined the current socket's topic.
+Note that, for added clarity, events should be prefixed by their subject and a colon (i.e. "subject:event"). Instead of `reply/3`, you may also use `broadcast/3`. In the previous case, this would publish a message to all clients who previously joined the current socket's topic.
 
 Remember that a client first has to join a topic before it can send events. On the JavaScript side, this is how it would be done (don't forget to include _/static/js/phoenix.js_) :
 
