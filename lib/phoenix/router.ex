@@ -53,19 +53,21 @@ defmodule Phoenix.Router do
     end
   end
 
-  def start_adapter(module, options) do
-    case options[:ssl] do
-      true  -> Plug.Adapters.Cowboy.https module, [], options
-      false -> Plug.Adapters.Cowboy.http module, [], options
+  def start_adapter(module, opts) do
+    protocol = if opts[:ssl], do: :https, else: :http
+    case apply(Plug.Adapters.Cowboy, protocol, [module, [], opts]) do
+      {:ok, _pid} ->
+        "%{green}Running #{module} with Cowboy on port #{inspect opts[:port]}%{reset}"
+        |> IO.ANSI.escape
+        |> IO.puts
+      {:error, _} ->
+        raise "Port #{inspect opts[:port]} is already in use"
     end
-    IO.puts "Running #{module} with Cowboy on port #{inspect options[:port]}"
   end
 
-  def stop_adapter(module, options) do
-    case options[:ssl] do
-      true  -> Plug.Adapters.Cowboy.shutdown module.HTTPS
-      false -> Plug.Adapters.Cowboy.shutdown module.HTTP
-    end
+  def stop_adapter(module, opts) do
+    protocol = if opts[:ssl], do: HTTPS, else: HTTP
+    apply(Plug.Adapters.Cowboy, :shutdown, [Module.concat(module, protocol)])
     IO.puts "#{module} has been stopped"
   end
 
