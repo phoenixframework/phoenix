@@ -34,7 +34,7 @@
 When running in production, use protocol consolidation for increased performance:
 
        MIX_ENV=prod mix compile.protocols
-       MIX_ENV=prod elixir -pa _build/prod/consolidated -S mix phoenix.start
+       MIX_ENV=prod PORT=4001 elixir -pa _build/prod/consolidated -S mix phoenix.start
 
 ### Router example
 
