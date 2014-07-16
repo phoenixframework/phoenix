@@ -4,6 +4,7 @@ defmodule Phoenix.Router.Options do
   def merge(options, dispatch_options, router_module, adapter) do
     Config.router(router_module)
     |> map_config
+    |> ensure_host_is_set
     |> Dict.merge(options)
     |> adapter.merge_options(dispatch_options, router_module)
   end
@@ -16,4 +17,12 @@ defmodule Phoenix.Router.Options do
 
   defp convert(:int, val) when is_integer(val), do: val
   defp convert(:int, val), do: String.to_integer(val)
+
+  defp ensure_host_is_set(options) do
+    unless Dict.has_key? options, :host do
+      options ++ [host: "localhost"]
+    else
+      options
+    end
+  end
 end

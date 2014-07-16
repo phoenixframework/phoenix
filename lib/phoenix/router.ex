@@ -1,6 +1,7 @@
 defmodule Phoenix.Router do
   alias Phoenix.Plugs
   alias Phoenix.Router.Options
+  alias Phoenix.Router.Path
   alias Phoenix.Adapters.Cowboy
   alias Phoenix.Plugs.Parsers
   alias Phoenix.Config
@@ -57,11 +58,12 @@ defmodule Phoenix.Router do
   end
 
   def start_adapter(module, options) do
-    case options[:ssl] do
-      true  -> Plug.Adapters.Cowboy.https module, [], options
-      false -> Plug.Adapters.Cowboy.http module, [], options
+    scheme = case options[:ssl] do
+      true  -> Plug.Adapters.Cowboy.https(module, [], options); "https"
+      false -> Plug.Adapters.Cowboy.http( module, [], options); "http"
     end
-    IO.puts "Running #{module} with Cowboy on port #{inspect options[:port]}"
+    url = Path.build_url("", options[:host], [scheme: scheme, port: options[:port]])
+    IO.puts "Running #{module} with Cowboy at #{url}"
   end
 
   def stop_adapter(module, options) do
