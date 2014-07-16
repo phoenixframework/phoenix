@@ -2,20 +2,21 @@ use Mix.Config
 
 config :phoenix,
   routers: [
-    [endpoint: <%= application_module %>.Router,
-     port: 4000,
-     ssl: false,
-     consider_all_requests_local: true,
-     plugs: [code_reload: true,
-             parsers: true,
-             error_handler: true,
-             cookies: true]
+    [
+      endpoint: <%= application_module %>.Router,
+      port: 4000,
+      ssl: false,
+      plugs: [
+        code_reload: true,
+        cookies: true
+      ],
+      cookies: [
+        key: "_<%= Mix.Utils.underscore(application_module) %>_key",
+        secret: "<%= session_secret %>"
+      ]
     ]
   ],
   logger: [
     level: :debug
   ]
-
-
-
 

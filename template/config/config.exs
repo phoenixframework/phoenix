@@ -21,3 +21,4 @@ config :phoenix,
   ]
 
 
+import_config "#{Mix.env}.exs"
