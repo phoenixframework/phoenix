@@ -34,7 +34,7 @@
 When running in production, use protocol consolidation for increased performance:
 
        MIX_ENV=prod mix compile.protocols
-       MIX_ENV=prod elixir -pa _build/prod/consolidated -S mix phoenix.start
+       MIX_ENV=prod PORT=4001 elixir -pa _build/prod/consolidated -S mix phoenix.start
 
 ### Router example
 
@@ -257,7 +257,7 @@ Note that, for added clarity, events should be prefixed by their subject and a c
 Remember that a client first has to join a topic before it can send events. On the JavaScript side, this is how it would be done (don't forget to include _/static/js/phoenix.js_) :
 
 ```js
-var socket = new Phoenix.socket("ws://" + location.host + "/ws");
+var socket = new Phoenix.Socket("ws://" + location.host + "/ws");
 
 socket.join("channel", "topic", callback);
 ```
@@ -282,7 +282,7 @@ This mounts the socket router on /ws and also register the channel from earlier 
 Now that a channel exists and we have reached it, it's time to do something fun with it! The callback from the previous JavaScript example receives the channel as a parameter and uses that to either subscribe to topics or send events to the server. Here is a quick example of both :
 
 ```js
-var socket = new Phoenix.socket("ws://" + location.host + "/ws");
+var socket = new Phoenix.Socket("ws://" + location.host + "/ws");
 
 socket.join("channel", "topic", function(channel) {
 

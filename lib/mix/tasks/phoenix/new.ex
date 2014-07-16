@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
     bindings = [application_name: application_name,
                 application_module: application_module,
-                session_secret: random_string(50, 80)]
+                session_secret: random_string(64, 80)]
 
     Mix.Generator.create_directory(project_path)
 
