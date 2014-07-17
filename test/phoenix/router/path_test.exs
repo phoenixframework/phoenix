@@ -40,4 +40,20 @@ defmodule Phoenix.Router.PathTest do
     assert Path.build_url(path, host: "example.com") ==
       "http://example.com/users/1"
   end
+
+  test "build_url includes the port" do
+    path = Path.build("users/:id", id: 1)
+    assert Path.build_url(path, host: "example.com", port: 1200) ==
+      "http://example.com:1200/users/1"
+  end
+
+  test "build_url does not include the port for 80 and 443" do
+    path = Path.build("users/:id", id: 1)
+    assert Path.build_url(path, host: "example.com", port: 80) ==
+      "http://example.com/users/1"
+
+    assert Path.build_url(path, host: "example.com", port: 443) ==
+      "http://example.com/users/1"
+  end
+
 end
