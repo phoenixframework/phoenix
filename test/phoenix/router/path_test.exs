@@ -31,13 +31,13 @@ defmodule Phoenix.Router.PathTest do
 
   test "build_url includes the host and scheme" do
     path = Path.build("users/:id", id: 1)
-    assert Path.build_url(path, "example.com", scheme: "https") ==
+    assert Path.build_url(path, host: "example.com", ssl: true) ==
       "https://example.com/users/1"
   end
 
   test "build_url includes the host and default scheme" do
     path = Path.build("users/:id", id: 1)
-    assert Path.build_url(path, "example.com") ==
+    assert Path.build_url(path, host: "example.com") ==
       "http://example.com/users/1"
   end
 end

@@ -153,19 +153,24 @@ defmodule Phoenix.Router.Path do
   Builds a URL based on options passed.
 
   # Examples:
-    iex> Path.build_url("/users", "example.com")
+    iex> Path.build_url("/users", host: "example.com")
     "http://example.com/users"
 
-    iex> Path.build_url("/users", "example.com", scheme: "https")
+    iex> Path.build_url("/users", host: "example.com", ssl: true)
     "https://example.com/users"
 
-    iex> Path.build_url("/users", "example.com", port: 8080)
+    iex> Path.build_url("/users", host: "example.com", port: 8080)
     "http://example.com:8080/users"
 
+    iex> Path.build_url("/users", host: "example.com", port: 80)
+    "http://example.com/users"
+
   """
-  def build_url(path, host, options \\ []) do
-    scheme = options[:scheme] || "http"
-    port   = options[:port]
+  def build_url(path, opts \\ []) do
+    scheme = if opts[:ssl], do: "https", else: "http"
+    host = opts[:host]
+    proxy = Enum.member?([80, 443], opts[:port])
+    port = if proxy, do: nil, else: opts[:port]
     %URI{scheme: scheme, host: host, path: path, port: port} |> to_string
   end
 
