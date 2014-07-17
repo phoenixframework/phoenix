@@ -6,7 +6,7 @@ defmodule Phoenix.Router.NamedRoutingTest do
   setup_all do
     Mix.Config.persist(phoenix: [
       routers: [
-        [endpoint: Router, port: 1337, host: "example.com", ssl: false]
+        [endpoint: Router, port: 80, host: "example.com", ssl: false]
       ]
     ])
 
