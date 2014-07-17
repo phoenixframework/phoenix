@@ -110,11 +110,13 @@ defmodule Phoenix.Router.Mapper do
           Path.build(unquote(path), params)
         end
         def unquote(String.to_atom "#{alias_name}_url")(params \\ []) do
-          host = Config.router(__MODULE__, [:host])
+          host  = Config.router(__MODULE__, [:host])
+          proxy = Enum.member?([80, 443],Config.router(__MODULE__, [:port]))
+          port = if proxy, do: Config.router(__MODULE__, [:port]), else: nil
           scheme = if Config.router(__MODULE__, [:ssl]), do: "https", else: "http"
 
           Path.build(unquote(path), params)
-          |> Path.build_url(host, scheme: scheme)
+          |> Path.build_url(host, scheme: scheme, port: port)
         end
       end
     end
