@@ -1,54 +1,84 @@
 defmodule Phoenix.Controller do
+  import Phoenix.Controller.Connection
   import Plug.Conn
-  alias Phoenix.Status
   alias Plug.MIME
+  alias Phoenix.Config
+  alias Phoenix.Plugs
 
   @default_content_type "text/html"
   @plug_default_mime_type "application/octet-stream"
 
-  defmacro __using__(_options) do
+  @moduledoc """
+  Phoenix Controllers are responsible for handling the dispatch of Router requests
+
+  Like Routers, Controllers are Plugs, but contain a required :action plug that
+  is implicitly added to the end plug chain. The :action proxies to the function
+  defined in the Router. The :action plug can be explicitly added to change
+  its execution order.
+
+  Examples
+
+  defmodule MyApp.Controllers.Admin.Users do
+    use Phoenix.Controller
+
+    plug :authenticate, usernames: ["jose", "eric", "sonny"]
+
+    def authenticate(conn, options) do
+      if get_session(conn, username) in options[:usernames] do
+        conn
+      else
+        conn |> redirect(Router.root_path) |> halt!
+      end
+    end
+
+    def show(conn, params) do
+      # authenticated users only
+    end
+  end
+  """
+  defmacro __using__(options) do
     quote do
       import Plug.Conn
+      import Phoenix.Controller.Connection
       import unquote(__MODULE__)
+      @options unquote(options)
+
+      def init(options), do: options
+      @before_compile unquote(__MODULE__)
+      use Plug.Builder
+      unless @options[:bare] do
+        plug Plugs.ParamsFetcher
+        plug Plugs.ContentTypeFetcher
+        plug Plugs.Logger, Config.get([:logger, :level])
+      end
     end
   end
 
-  def json(conn, json), do: json(conn, :ok, json)
-  def json(conn, status, json) do
-    send_response(conn, status, "application/json", json)
+  defmacro __before_compile__(_env) do
+    quote do
+      unless Enum.find(@plugs, fn {plug, _opts} -> plug == :action end) do
+        plug :action
+      end
+      def action(conn, _options) do
+        apply(__MODULE__, conn.private[:phoenix_action], [conn, conn.params])
+      end
+    end
   end
 
-  def html(conn, html), do: html(conn, :ok, html)
-  def html(conn, status, html) do
-    send_response(conn, status, "text/html", html)
-  end
+  @doc """
+  Carries out Controller action after successful Router match, invoking the
+  "2nd layer" Plug stack.
 
-  def text(conn, text), do: text(conn, :ok, text)
-  def text(conn, status, text) do
-    send_response(conn, status, "text/plain", text)
-  end
+  Connection query string parameters are fetched automatically before
+  controller actions are called, as well as merging any named parameters from
+  the route definition.
+  """
+  def perform_action(conn, controller, action, named_params) do
+    conn = assign_private(conn, :phoenix_named_params, named_params)
+    |> assign_private(:phoenix_action, action)
+    |> assign_private(:phoenix_controller, controller)
 
-  def send_response(conn, status, content_type, data) do
-    conn
-    |> put_resp_content_type(content_type)
-    |> send_resp(Status.code(status), data)
-  end
-
-  def redirect(conn, url), do: redirect(conn, :found, url)
-  def redirect(conn, status, url) do
-    conn
-    |> put_resp_header("Location", url)
-    |> html status, """
-       <html>
-         <head>
-            <title>Moved</title>
-         </head>
-         <body>
-           <h1>Moved</h1>
-           <p>This page has moved to <a href="#{url}">#{url}</a></p>
-         </body>
-       </html>
-    """
+    apply(controller, :call, [conn, []])
   end
 
   def not_found(conn, method, path) do
@@ -122,7 +152,6 @@ defmodule Phoenix.Controller do
   end
 
   def render_view(conn, view_mod, layout_mod, template, assigns \\ []) do
-    assigns      = Dict.merge(conn.assigns, assigns)
     content_type = response_content_type(conn)
     extensions   = MIME.extensions(content_type)
     layout       = Dict.get(assigns, :layout, "application")
@@ -141,55 +170,7 @@ defmodule Phoenix.Controller do
   defp template_name(template, [ext | _]), do: "#{template}.#{ext}"
 
   @doc """
-  Returns the List of String Accept headers, in order of priority
-  """
-  def accept_formats(conn) do
-    conn
-    |> get_req_header("accept")
-    |> parse_accept_headers
-  end
-  defp parse_accept_headers([]), do: []
-  defp parse_accept_headers([accepts | _rest]) do
-    accepts
-    |> String.split(",")
-    |> Enum.map fn format ->
-      String.split(format, ";") |> Enum.at(0)
-    end
-  end
-
-  @doc """
-  Returns the String response content-type
-
-  Lookup priority
-  1. format param of mime extension, ie "html", "json", "xml"
-  2. Accept header, ie "text/html,application/xml;q=0.9,*/*;q=0.8"
-  3. "text/html" default fallback
-  """
-  def response_content_type(conn) do
-    conn.params["format"]
-    |> mime_type_from_ext
-    |> Kernel.||(primary_accept_format(accept_formats(conn)))
-    |> Kernel.||(@default_content_type)
-  end
-  defp mime_type_from_ext(extension) do
-    case MIME.type(extension) do
-      @plug_default_mime_type -> nil
-      x -> x
-    end
-  end
-  defp primary_accept_format(["*/*" | _rest]), do: @default_content_type
-  defp primary_accept_format([type | _rest]), do: MIME.valid?(type) && type
-  defp primary_accept_format(_), do: nil
-
-  @doc """
-  Returns the String content-type fron Conn headers.  Defaults "text/html"
-  """
-  def get_content_type(conn) do
-    Enum.at(get_req_header(conn, "content-type"), 0) || @default_content_type
-  end
-
-  @doc """
-  Finds View module based on Controller Module
+  Finds View module based on controller_module
 
   Examples
 

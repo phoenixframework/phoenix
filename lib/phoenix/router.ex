@@ -27,7 +27,7 @@ defmodule Phoenix.Router do
 
   defmacro __before_compile__(_env) do
     quote do
-      plug Plugs.Logger, Config.router(__MODULE__, [:logger, :level])
+      plug Plugs.Logger, Config.get([:logger, :level])
       if Config.router(__MODULE__, [:code_reload]) do
         plug Plugs.CodeReloader
       end
@@ -75,8 +75,6 @@ defmodule Phoenix.Router do
   end
 
   def perform_dispatch(conn, router) do
-    conn = Plug.Conn.fetch_params(conn)
-
     router.match(conn, conn.method, conn.path_info)
   end
 end

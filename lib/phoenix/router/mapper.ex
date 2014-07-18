@@ -95,9 +95,11 @@ defmodule Phoenix.Router.Mapper do
 
     quote do
       def unquote(:match)(conn, unquote(http_method), unquote(path_args)) do
-        conn = %{conn | params: Dict.merge(conn.params, unquote(params_list_with_bindings)) }
-
-        unquote(controller).unquote(action)(conn, conn.params)
+        Controller.perform_action(conn,
+          unquote(controller),
+          unquote(action),
+          unquote(params_list_with_bindings)
+        )
       end
     end
   end
