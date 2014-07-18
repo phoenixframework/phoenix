@@ -3,10 +3,8 @@ defmodule Mix.Tasks.Phoenix.RoutesTest do
 
   setup_all do
     Mix.Config.persist(phoenix: [
-      routers: [
-        [endpoint: Elixir.Phoenix.RouterTest, port: 1234],
-        [endpoint: Elixir.TestApp.Router, port: 1234],
-      ]
+      {Elixir.Phoenix.RouterTest, port: 1234},
+      {Elixir.TestApp.Router, port: 1234}
     ])
 
     defmodule Elixir.Phoenix.RouterTest do

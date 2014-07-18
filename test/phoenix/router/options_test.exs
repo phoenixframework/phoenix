@@ -6,9 +6,7 @@ defmodule Phoenix.Router.OptionsTest do
 
   setup_all do
     Mix.Config.persist(phoenix: [
-      routers: [
-        [endpoint: PhoenixOptionsTest.Router, port: 71107],
-      ]
+      {PhoenixOptionsTest.Router, port: 71107}
     ])
 
     defmodule PhoenixOptionsTest.Router do

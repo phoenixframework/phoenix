@@ -4,15 +4,13 @@ defmodule Phoenix.Config.ConfigTest do
 
   setup_all do
     Mix.Config.persist(phoenix: [
-      routers: [
-        [endpoint: Router,
+      {Router,
          port: 1234,
-         ssl: false,
-         plugs: [code_reload: false,
-                 cookies: false]
-        ]
-      ],
-      logger: [level: :info]
+         ssl: true,
+         code_reload: false,
+         cookies: false
+      },
+      {:logger, [level: :info]}
     ])
   end
 
@@ -32,8 +30,8 @@ defmodule Phoenix.Config.ConfigTest do
 
   test "router/1 returns the keyword list configuration of module with merge defaults" do
     assert Enum.sort(Config.router(Router)) == Enum.sort([
-      port: 1234, ssl: false, consider_all_requests_local: false, endpoint: Router,
-      plugs: [code_reload: false, cookies: false]
+      code_reload: false, consider_all_requests_local: false, cookies: false,
+      error_handler: true, parsers: true, port: 1234, ssl: true, static_assets: true
     ])
   end
 

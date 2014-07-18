@@ -13,31 +13,23 @@ defmodule Phoenix.Config do
 
     use Mix.Config
 
-    config :phoenix,
-      routers: [
-        [endpoint: MyApp.Router,
-         port: 4000,
-         ssl: false,
-         plugs: [code_reload: false,
-                 cookies: false]
-        ]
-      ]
-
+    config :phoenix, MyApp.Router,
+      port: 4000,
+      ssl: false,
+      code_reload: false,
+      cookies: false
   """
 
   @defaults [
     router: [
       port: 4000,
       ssl: false,
-      # Full error reports are disabled
-      consider_all_requests_local: false,
-      plugs: [
-        code_reload: false,
-        static_assets: true,
-        parsers: true,
-        error_handler: true,
-        cookies: false
-      ],
+      consider_all_requests_local: false,      # Full error reports are disabled
+      code_reload: false,
+      static_assets: true,
+      parsers: true,
+      error_handler: true,
+      cookies: false
     ],
     logger: [level: :error]
   ]
@@ -126,12 +118,7 @@ defmodule Phoenix.Config do
   end
 
   defp find_router_conf(module) do
-    router_config = get([:routers]) || []
-
-    case Enum.find(router_config, &(&1[:endpoint] == module)) do
-      nil     -> @defaults[:router]
-      configs -> configs
-    end
+    Application.get_env :phoenix, module, @defaults[:router]
   end
 end
 

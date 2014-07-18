@@ -6,14 +6,12 @@ defmodule Phoenix.Router.SSLTest do
 
   setup_all do
     Mix.Config.persist(phoenix: [
-      routers: [
-        [endpoint: Router,
-         port: "71107",
-         ssl: true,
-         keyfile:  Path.expand("../../fixtures/ssl/key.pem", __DIR__),
-         certfile: Path.expand("../../fixtures/ssl/cert.pem", __DIR__)
-        ]
-      ]
+      {Router,
+        port: "71107",
+        ssl: true,
+        keyfile:  Path.expand("../../fixtures/ssl/key.pem", __DIR__),
+        certfile: Path.expand("../../fixtures/ssl/cert.pem", __DIR__)
+      }
     ])
 
     defmodule Router do

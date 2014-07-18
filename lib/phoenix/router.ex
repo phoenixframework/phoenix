@@ -14,10 +14,10 @@ defmodule Phoenix.Router do
       @before_compile unquote(__MODULE__)
       use Plug.Builder
 
-      if Config.router(__MODULE__, [:plugs, :parsers]) do
+      if Config.router(__MODULE__, [:parsers]) do
         plug Plug.Parsers, parsers: [:urlencoded, :multipart, Parsers.JSON], accept: ["*/*"]
       end
-      if Config.router(__MODULE__, [:plugs, :error_handler]) do
+      if Config.router(__MODULE__, [:error_handler]) do
         plug Plugs.ErrorHandler, from: __MODULE__
       end
 
@@ -28,12 +28,12 @@ defmodule Phoenix.Router do
   defmacro __before_compile__(_env) do
     quote do
       plug Plugs.Logger, Config.router(__MODULE__, [:logger, :level])
-      if Config.router(__MODULE__, [:plugs, :code_reload]) do
+      if Config.router(__MODULE__, [:code_reload]) do
         plug Plugs.CodeReloader
       end
-      if Config.router(__MODULE__, [:plugs, :cookies]) do
-        key    = Config.router!(__MODULE__, [:cookies, :key])
-        secret = Config.router!(__MODULE__, [:cookies, :secret])
+      if Config.router(__MODULE__, [:cookies]) do
+        key    = Config.router!(__MODULE__, [:session_key])
+        secret = Config.router!(__MODULE__, [:session_secret])
 
         plug Plug.Session, store: :cookie, key: key, secret: secret
       end

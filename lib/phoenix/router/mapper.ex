@@ -110,12 +110,11 @@ defmodule Phoenix.Router.Mapper do
           Path.build(unquote(path), params)
         end
         def unquote(String.to_atom "#{alias_name}_url")(params \\ []) do
-          host = Config.router(__MODULE__, [:host])
-          port = Config.router(__MODULE__, [:port])
-          ssl  = Config.router(__MODULE__, [:ssl])
-
-          Path.build(unquote(path), params)
-          |> Path.build_url(ssl: ssl, host: host, port: port)
+          unquote(path)
+          |> Path.build(params)
+          |> Path.build_url(host: Config.router(__MODULE__, [:host]),
+                            port: Config.router(__MODULE__, [:port]),
+                            ssl:  Config.router(__MODULE__, [:ssl]))
         end
       end
     end
