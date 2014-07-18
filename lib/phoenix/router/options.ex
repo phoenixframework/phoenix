@@ -12,6 +12,7 @@ defmodule Phoenix.Router.Options do
   defp map_config([{k, v}|t]), do: [option(k,v)] ++ map_config(t)
 
   defp option(:port, val), do: { :port, convert(:int, val) }
+  defp option(:proxy_port, val), do: { :proxy_port, convert(:int, val) }
   defp option(key, val), do: { key, val }
 
   defp convert(:int, val) when is_integer(val), do: val
