@@ -366,7 +366,7 @@ certfile in the `priv` directory and configure your router with the following
 options:
 
 ```elixir
-# your_app/lib/config/prod.ex
+# your_app/config/prod.ex
 use Mix.Config
 
 config :phoenix, YourApp.Router,
@@ -404,7 +404,7 @@ the route helper functions will not contain the port number.
 Example:
 
 ```elixir
-# your_app/lib/config/prod.ex
+# your_app/config/prod.ex
 use Mix.Config
 
 config :phoenix, YourApp.Router,
@@ -420,7 +420,7 @@ Phoenix supports a session cookie store that can be easily configured. Just
 add the following configuration settings to your application's config module:
 
 ```elixir
-# your_app/lib/config/prod.ex
+# your_app/config/prod.ex
 use Mix.Config
 
 config :phoenix, YourApp.Router,
