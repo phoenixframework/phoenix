@@ -395,6 +395,25 @@ Example:
 Path.expand("../../../some/path/to/ssl/key.pem", __DIR__)
 ```
 
+#### Serving You Application Behind a Proxy
+
+If you are serving your application behind a proxy such as `nginx` or
+`apache`, you will want to specify the `proxy_port` option. This will ensure
+the route helper functions will not contain the port number.
+
+Example:
+
+```elixir
+# your_app/lib/config/prod.ex
+use Mix.Config
+
+config :phoenix, YourApp.Router,
+  ...
+  port: 4000,
+  proxy_port: 443
+  ...
+```
+
 #### Configuration for Sessions
 
 Phoenix supports a session cookie store that can be easily configured. Just
