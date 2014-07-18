@@ -56,7 +56,7 @@ defmodule Phoenix.Controller do
 
   defmacro __before_compile__(_env) do
     quote do
-      unless Enum.find(@plugs, fn {plug, _opts} -> plug == :action end) do
+      unless Plugs.plugged?(@plugs, :action) do
         plug :action
       end
       def action(conn, _options) do

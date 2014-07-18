@@ -38,7 +38,9 @@ defmodule Phoenix.Router do
         plug Plug.Session, store: :cookie, key: key, secret: secret
       end
 
-      plug :dispatch
+      unless Plugs.plugged?(@plugs, :dispatch) do
+        plug :dispatch
+      end
 
       def dispatch(conn, []) do
         Phoenix.Router.perform_dispatch(conn, __MODULE__)
