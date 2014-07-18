@@ -109,8 +109,8 @@ defmodule Phoenix.Controller do
 
   """
   defmacro render(conn, template, assigns \\ []) do
-    subview_module = view_module(__CALLER__.module, controller_name(__CALLER__.module))
-    layout_module  = view_module(__CALLER__.module, "Layouts")
+    subview_module = view_module(__CALLER__.module)
+    layout_module  = layout_module(__CALLER__.module)
 
     quote do
       render_view unquote(conn),
@@ -189,40 +189,36 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Finds View module based on controller_module
+  Finds View module based on Controller Module
 
   Examples
 
-  iex> Controller.view_module(MyApp.Controllers.Users)
-  MyApp.Views
+  iex> Controller.view_module(MyApp.UserController)
+  MyApp.UserView
 
-  iex> Controller.view_module(MyApp.Controllers.Users, Layouts)
-  MyApp.Views.Layouts
+  iex> Controller.view_module(MyApp.Admin.UserController)
+  MyApp.Admin.UserView
 
   """
-  def view_module(controller_module, submodule \\ nil) do
+  def view_module(controller_module) do
     controller_module
-    |> Module.split
-    |> Enum.at(0)
-    |> Module.concat("Views")
-    |> Module.concat(submodule)
+    |> to_string
+    |> String.replace(~r/^(.*)(Controller)$/, "\\1View")
+    |> Module.concat(nil)
   end
 
   @doc """
-  Returns the atom controller module name without application and controller
-  module prefix
+  Finds Layout View module based on Controller Module
 
   Examples
 
-  iex> controller_name(MyApp.Controllers.Admin.Users)
-  Admin.Users
+  iex> Controller.layout_module(MyApp.UserController)
+  MyApp.LayoutView
   """
-  def controller_name(controller_module) do
+  def layout_module(controller_module) do
     controller_module
     |> Module.split
-    |> Enum.reverse
-    |> Enum.take_while(&(&1 !== "Controllers"))
-    |> Enum.reverse
-    |> Module.concat
+    |> Enum.at(0)
+    |> Module.concat("LayoutView")
   end
 end

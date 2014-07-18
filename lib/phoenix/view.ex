@@ -6,7 +6,7 @@ defmodule Phoenix.View do
     quote do
       import unquote(__MODULE__)
       import Phoenix.Html, only: [safe: 1, unsafe: 1]
-      path = template_path_from_module(__MODULE__, unquote(templates_root))
+      path = template_path_from_view_module(__MODULE__, unquote(templates_root))
       use Phoenix.Template.Compiler, path: path
     end
   end
@@ -16,14 +16,16 @@ defmodule Phoenix.View do
 
   Examples
 
-  iex> View.template_path_from_module(MyApp.Views.Users, "my_app/lib/templates")
-  "my_app/lib/templates/users"
+  iex> View.template_path_from_view_module(MyApp.UserView, "web/templates")
+  "web/templates/user"
   """
-  def template_path_from_module(view_module, templates_root) do
-    names       = Module.split(view_module)
-    views_index = Enum.find_index(names, &(&1 == "Views"))
-    submodules  = Enum.split(names, views_index) |> elem(1) |> tl
-    submodule_path = submodules |> Enum.map(&Mix.Utils.underscore/1) |> Path.join
+  def template_path_from_view_module(view_module, templates_root) do
+    submodule_path = view_module
+    |> Module.split
+    |> tl
+    |> Enum.map(&Mix.Utils.underscore/1)
+    |> Path.join
+    |> String.replace(~r/^(.*)(_view)$/, "\\1")
 
     Path.join(templates_root, submodule_path)
   end

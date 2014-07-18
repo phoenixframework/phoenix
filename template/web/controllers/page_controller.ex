@@ -1,4 +1,4 @@
-defmodule <%= application_module %>.Controllers.Pages do
+defmodule <%= application_module %>.PageController do
   use Phoenix.Controller
 
   def index(conn, _params) do

@@ -1,1 +1,0 @@
-Showing User <%= Views.Profiles.render("mini.html", name: @name) %>

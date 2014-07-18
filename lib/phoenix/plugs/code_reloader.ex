@@ -5,7 +5,7 @@ defmodule Phoenix.Plugs.CodeReloader do
   def call(conn, _opts) do
     if Code.ensure_loaded?(Mix.Task) do
       Mix.Task.reenable "compile.elixir"
-      Mix.Task.run "compile.elixir"
+      Mix.Task.run "compile.elixir", ["web"]
     else
       raise """
       If you want to use the code reload plug in production or inside an escript,

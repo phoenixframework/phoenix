@@ -91,4 +91,14 @@ defmodule Phoenix.Router.ControllerTest do
     conn = %Conn{params: %{}, req_headers: [{"accept", "somethingcrazy/abc"}]}
     assert Controller.response_content_type(conn) == "text/html"
   end
+
+  test "view_module returns the view modoule based on controller module" do
+    assert Controller.view_module(MyApp.UserController) == MyApp.UserView
+    assert Controller.view_module(MyApp.Admin.UserController) == MyApp.Admin.UserView
+  end
+
+  test "layout_module returns the view modoule based on controller module" do
+    assert Controller.layout_module(MyApp.UserController) == MyApp.LayoutView
+    assert Controller.layout_module(MyApp.Admin.UserController) == MyApp.LayoutView
+  end
 end

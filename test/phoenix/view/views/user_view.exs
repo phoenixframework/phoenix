@@ -1,4 +1,4 @@
-defmodule Phoenix.UserTest.Views.Users do
+defmodule Phoenix.UserTest.UserView do
   use Phoenix.UserTest.Views
 
 
