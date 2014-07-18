@@ -44,15 +44,17 @@ defmodule YourApp.Router do
 
   plug Plug.Static, at: "/static", from: :your_app
 
-  get "/pages/:page", Controllers.Pages, :show, as: :page
-  get "/files/*path", Controllers.Files, :show
-
-  resources "users", Controllers.Users do
-    resources "comments", Controllers.Comments
+  scope alias: YourApp do
+    get "/pages/:page", PageController, :show, as: :page
+    get "/files/*path", FileController, :show
+    
+    resources "users", UserController do
+    resources "comments", CommentController
+    end
   end
 
-  scope path: "admin", alias: Controllers.Admin, helper: "admin" do
-    resources "users", Users
+  scope path: "admin", alias: YourApp.Admin, helper: "admin" do
+    resources "users", UserController
   end
 end
 ```
@@ -60,7 +62,7 @@ end
 ### Controller examples
 
 ```elixir
-defmodule Controllers.Pages do
+defmodule YourApp.PageController do
   use Phoenix.Controller
 
   def show(conn, %{"page" => "admin"}) do
@@ -72,7 +74,7 @@ defmodule Controllers.Pages do
 
 end
 
-defmodule Controllers.Users do
+defmodule YourApp.UserController do
   use Phoenix.Controller
 
   def show(conn, %{"id" => id}) do
@@ -97,7 +99,7 @@ Put simply, Phoenix Views *render* templates. Views also serve as a presentation
 
 ### Rendering from the Controller
 ```elixir
-defmodule App.Controllers.Pages do
+defmodule App.PageController do
   use Phoenix.Controller
 
   def index(conn, _params) do
@@ -106,8 +108,8 @@ defmodule App.Controllers.Pages do
 end
 ```
 
-By looking at the controller name `App.Controllers.Pages`, Phoenix will use `App.Views.Pages` to render `lib/app/templates/pages/index.html.eex` within the template `lib/app/templates/layouts/application.html.eex`. Let's break that down:
- * `App.Views.Pages` is the module that will render the template (more on that later)
+By looking at the controller name `App.PageController`, Phoenix will use `App.PageView` to render `lib/app/templates/page/index.html.eex` within the template `lib/app/templates/layout/application.html.eex`. Let's break that down:
+ * `App.PageView` is the module that will render the template (more on that later)
  * `app` is your application name
  * `templates` is your configured templates directory. See `lib/app/views.ex`
  * `pages` is your controller name
@@ -136,7 +138,7 @@ defmodule App.Views do
   # Functions defined here are available to all other views/templates
 end
 
-defmodule App.Views.Pages
+defmodule App.PageView
   use App.Views
 
   def display(something) do
@@ -170,7 +172,7 @@ The "Layouts" module name is hardcoded. This means that `App.Views.Layouts` will
 The layout template can be changed easily from the controller. For example :
 
 ```elixir
-defmodule App.Controllers.Pages do
+defmodule App.PageController do
   use Phoenix.Controller
 
   def index(conn, _params) do
@@ -194,7 +196,7 @@ Channels broker websocket connections and integrate with the Topic PubSub layer 
 We can implement a channel by creating a module in the _channels_ directory and by using `Phoenix.Channels`:
 
 ```elixir
-defmodule App.Channels.MyChannel do
+defmodule App.MyChannel do
   use Phoenix.Channel
 end
 ```
@@ -203,7 +205,7 @@ The first thing to do is to implement the join function to authorize sockets on 
 
 
 ```elixir
-defmodule App.Channels.MyChannel do
+defmodule App.MyChannel do
   use Phoenix.Channel
 
   def join(socket, "topic", message) do
@@ -224,7 +226,7 @@ A channel will use a socket underneath to send responses and receive events. As 
 
 
 ```elixir
-defmodule App.Channels.MyChannel do
+defmodule App.MyChannel do
   use Phoenix.Channel
 
   def event(socket, "user:active", %{user_id: user_id}) do
@@ -241,7 +243,7 @@ end
 We can send replies directly to a single authorized socket with `reply/3`
 
 ```elixir
-defmodule App.Channels.MyChannel do
+defmodule App.MyChannel do
   use Phoenix.Channel
 
   def event(socket, "eventname", message) do
@@ -269,7 +271,7 @@ defmodule App.Router do
   use Phoenix.Router
   use Phoenix.Router.Socket, mount: "/ws"
 
-  channel "channel", App.Channels.MyChannel
+  channel "channel", App.MyChannel
 end
 ```
 
@@ -309,35 +311,52 @@ There are a few other this not covered in this readme that might be worth explor
 
 ### Configuration
 
-Phoenix provides a configuration per environment set by the `MIX_ENV` environment variable. The default environment `Dev` will be set if `MIX_ENV` does not exist.
+Phoenix provides a configuration per environment set by the `MIX_ENV` environment variable. The default environment `dev` will be set if `MIX_ENV` does not exist.
 
 #### Configuration file structure:
 ```
-├── your_app/lib/config/
-│   ├── config.ex          Base application configuration
-│   ├── dev.ex
-│   ├── prod.ex
-│   └── test.ex
+├── your_app/config/
+│   ├── config.exs          Base application configuration
+│   ├── dev.exs
+│   ├── prod.exs
+│   └── test.exs
 ```
 
 ```elixir
-# your_app/lib/config/config.ex
-defmodule YourApp.Config do
-  use Phoenix.Config.App
+# your_app/config/config.exs
+use Mix.Config
 
-  config :router, port: System.get_env("PORT")
-  config :plugs, code_reload: false
-  config :logger, level: :error
-end
+config :phoenix, YourApp.Router,
+  port: System.get_env("PORT"),
+  ssl: false,
+  code_reload: false,
+  cookies: true,
+  session_key: "_your_app_key",
+  session_secret: "super secret"
 
-# your_app/lib/config/dev.ex
-defmodule YourApp.Config.Dev do
-  use YourApp.Config
+config :phoenix, :logger,
+  level: :error
 
-  config :router, port: 4000
-  config :plugs, code_reload: true
-  config :logger, level: :debug
-end
+
+import_config "#{Mix.env}.exs"
+
+
+# your_app/config/dev.exs
+use Mix.Config
+
+config :phoenix, YourApp.Router,
+  port: System.get_env("PORT") || 4000,
+  ssl: false,
+  code_reload: true,
+  cookies: true,
+  consider_all_requests_local: true,
+  session_key: "_your_app_key",
+  session_secret: "super secret"
+
+config :phoenix, :logger,
+  level: :debug
+
+
 ```
 
 #### Configuration for SSL
@@ -348,15 +367,19 @@ options:
 
 ```elixir
 # your_app/lib/config/prod.ex
-defmodule YourApp.Config.Prod do
-  use YourApp.Config
+use Mix.Config
 
-  config :router, port: 4040,
-                  ssl: true,
-                  otp_app: :your_app,
-                  keyfile: "ssl/key.pem",
-                  certfile: "ssl/cert.pem"
-end
+config :phoenix, YourApp.Router,
+  port: System.get_env("PORT"),
+  ssl: true,
+  code_reload: false,
+  cookies: true,
+  session_key: "_your_app_key",
+  session_secret: "super secret"
+  otp_app: :your_app,
+  keyfile: "ssl/key.pem",
+  certfile: "ssl/cert.pem"
+
 ```
 
 When you include the `otp_app` option, `Plug` will search within the `priv`
@@ -379,13 +402,15 @@ add the following configuration settings to your application's config module:
 
 ```elixir
 # your_app/lib/config/prod.ex
-defmodule YourApp.Config.Prod do
-  use YourApp.Config
+use Mix.Config
 
-  config :plugs, cookies: true
+config :phoenix, YourApp.Router,
+  ...
+  cookies: true,
+  session_key: "_your_app_key",
+  session_secret: "super secret"
+  ...
 
-  config :cookies, key: "_your_app_key", secret: "valid_secret"
-end
 ```
 
 Then you can access session data from your application controllers.
@@ -394,7 +419,7 @@ NOTE: that `:key` and `:secret` are required options.
 Example:
 
 ```elixir
-defmodule Controllers.Pages do
+defmodule YourApp.PageController do
   use Phoenix.Controller
 
   def show(conn, _params) do
