@@ -9,7 +9,7 @@ defmodule Phoenix.Topic.Server do
             garbage_collect_after_ms: 60_000..300_000
 
   def start_link do
-    :gen_server.start_link __MODULE__, [], []
+    GenServer.start_link __MODULE__, [], []
   end
 
   def leader_pid, do: :global.whereis_name(__MODULE__)
