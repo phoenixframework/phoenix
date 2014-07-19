@@ -1,6 +1,12 @@
 defmodule Phoenix.Plugs.ControllerLogger do
   import Phoenix.Controller.Connection
 
+  @moduledoc """
+  Plug to handle request logging at the controller level
+
+  Includes controller, action, accept headers, and params info for :debug level
+  """
+
   def init(opts), do: opts
 
   def call(conn, level) do

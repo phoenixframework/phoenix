@@ -1,5 +1,11 @@
 defmodule Phoenix.Plugs.RouterLogger do
 
+  @moduledoc """
+  Plug to handle request logging at the router level
+
+  Includes basic request logging of HTTP method and conn.path_info
+  """
+
   def init(opts), do: opts
 
   def call(conn, level) do
