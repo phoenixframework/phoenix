@@ -2,7 +2,6 @@ defmodule Phoenix.Router.OptionsTest do
   use ExUnit.Case, async: false
   alias Phoenix.Adapters.Cowboy
   alias Phoenix.Router.Options
-  alias Phoenix.Router.OptionsTest.PhoenixOptionsTest
 
   setup_all do
     Mix.Config.persist(phoenix: [
