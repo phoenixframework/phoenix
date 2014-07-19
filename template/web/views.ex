@@ -6,6 +6,7 @@ defmodule <%= application_module %>.Views do
       import unquote(__MODULE__)
 
       # This block is expanded within all views for aliases, imports, etc
+      import <%= application_module %>.I18n
       alias <%= application_module %>.Views
     end
   end
