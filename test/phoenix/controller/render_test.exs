@@ -20,12 +20,18 @@ defmodule MyApp.AssignController do
     conn
     |> render "index", layout: false
   end
+
+  def overwrite(conn, _params) do
+    conn
+    |> render "index", layout: false, my_assign: "assign_overwrite"
+  end
 end
 
 defmodule MyApp.Router do
   use Phoenix.Router
   get "/assign/manual", MyApp.AssignController, :index
   get "/assign/plug", MyApp.AssignController, :plugged
+  get "/assign/overwrite", MyApp.AssignController, :overwrite
 end
 
 defmodule Phoenix.Controller.RenderTest do
@@ -42,5 +48,11 @@ defmodule Phoenix.Controller.RenderTest do
     conn = simulate_request(MyApp.Router, :get, "assign/plug")
     assert conn.status == 200
     assert conn.resp_body == "assign_plug\n"
+  end
+
+  test "render can overvrite values in conn.assigns" do
+    conn = simulate_request(MyApp.Router, :get, "assign/overwrite")
+    assert conn.status == 200
+    assert conn.resp_body == "assign_overwrite\n"
   end
 end

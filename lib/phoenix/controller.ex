@@ -157,7 +157,7 @@ defmodule Phoenix.Controller do
     layout       = Dict.get(assigns, :layout, "application")
     status       = Dict.get(assigns, :status, 200)
 
-    assigns = Dict.merge(assigns, conn.assigns)
+    assigns = Dict.merge(conn.assigns, assigns)
 
     if layout do
       assigns = Dict.put_new(assigns, :within, {layout_mod, template_name(layout, extensions)})
