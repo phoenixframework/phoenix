@@ -2,7 +2,7 @@ defmodule Phoenix.Topic.Supervisor do
   use Supervisor
 
   def start_link do
-    :supervisor.start_link({:local, __MODULE__}, __MODULE__, [])
+    Supervisor.start_link(__MODULE__, [], [name: __MODULE__])
   end
 
   def pid do

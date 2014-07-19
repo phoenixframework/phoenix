@@ -117,7 +117,7 @@ defmodule Phoenix.Topic do
     :pg2.which_groups |> Enum.filter(&match?({@pg_prefix, _}, &1))
   end
 
-  defp call(message), do: :gen_server.call(Server.leader_pid, message)
+  defp call(message), do: GenServer.call(Server.leader_pid, message)
 
   defp group(name), do: {@pg_prefix, name}
 end

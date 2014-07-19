@@ -2,7 +2,7 @@ defmodule Phoenix.Supervisor do
   use Supervisor
 
   def start_link do
-    :supervisor.start_link(__MODULE__, [])
+    Supervisor.start_link(__MODULE__, [])
   end
 
   def init([]) do
