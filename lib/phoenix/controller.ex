@@ -49,7 +49,7 @@ defmodule Phoenix.Controller do
       unless @options[:bare] do
         plug Plugs.ParamsFetcher
         plug Plugs.ContentTypeFetcher
-        plug Plugs.Logger, Config.get([:logger, :level])
+        plug Plugs.ControllerLogger, Config.get([:logger, :level])
       end
     end
   end
