@@ -261,7 +261,7 @@ Remember that a client first has to join a topic before it can send events. On t
 ```js
 var socket = new Phoenix.Socket("ws://" + location.host + "/ws");
 
-socket.join("channel", "topic", callback);
+socket.join("channel", "topic", "message", callback);
 ```
 
 First you create a socket which uses the ws:// protocol and the host from the current location and it appends the route /ws. This route's name is for you to decide in your router :
@@ -286,7 +286,7 @@ Now that a channel exists and we have reached it, it's time to do something fun 
 ```js
 var socket = new Phoenix.Socket("ws://" + location.host + "/ws");
 
-socket.join("channel", "topic", function(channel) {
+socket.join("channel", "topic", {}, function(channel) {
 
   channel.on("join", function(message) {
     console.log("joined successfully");
