@@ -1,4 +1,5 @@
 defmodule Phoenix.Plugs.RouterLogger do
+  import Phoenix.Controller.Connection
 
   @moduledoc """
   Plug to handle request logging at the router level
@@ -26,12 +27,26 @@ defmodule Phoenix.Plugs.RouterLogger do
       else
         "#{diff}µs"
       end
-
-      IO.puts "#{before} resp_time=#{resp_time} status=#{conn.status} #{conn.method}: #{inspect conn.path_info}"
+      log(level, before, resp_time, conn)
       conn
     end
   end
   defp before_send(_, _), do: fn conn -> conn end
+
+  defp log(:debug, before, resp_time, conn) do
+    IO.puts """
+      #{before} #{conn.method}: #{inspect conn.path_info}
+      controller: #{controller_module(conn)}
+      action:     #{action_name(conn)}
+      accept:     #{response_content_type(conn)}
+      parameters: #{inspect conn.params}
+      resp_time=#{resp_time} status=#{conn.status} #{conn.method}
+    """
+  end
+
+  defp log(level, before, resp_time, conn) do
+    IO.puts "#{before} resp_time=#{resp_time} status=#{conn.status} #{conn.method}: #{inspect conn.path_info}"
+  end
 
   defp localtime_ms() do
     localtime_ms(:os.timestamp())
