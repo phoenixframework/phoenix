@@ -15,7 +15,10 @@ defmodule Phoenix.Plugs.RouterLogger do
     if level == :debug do
       IO.puts("#{before} #{conn.method}: #{inspect conn.path_info}")
     end
-    Plug.Conn.register_before_send(conn, before_send(before_stamp, level))
+    case before_send(before_stamp, level) do
+      :none -> conn
+      fun -> Plug.Conn.register_before_send(conn, fun)
+    end
   end
 
   defp before_send(before_stamp, level) when level in [:debug, :info, :error] do
@@ -35,7 +38,7 @@ defmodule Phoenix.Plugs.RouterLogger do
       conn
     end
   end
-  defp before_send(_, _), do: fn conn -> conn end
+  defp before_send(_, _), do: :none
 
   defp log(:debug, before, resp_time, conn) do
     IO.puts """
