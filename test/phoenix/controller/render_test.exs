@@ -7,23 +7,26 @@ defmodule MyApp.AssignController do
   plug :assign_value
 
   def assign_value(conn, _) do
-    Plug.Conn.assign(conn, :my_assign, "assign_plug")
+    assign(conn, :my_assign, "assign_plug")
   end
 
   def index(conn, _params) do
     conn
-    |> Plug.Conn.assign(:my_assign, "assign_index")
-    |> render "index", layout: false
+    |> assign(:my_assign, "assign_index")
+    |> layout(nil)
+    |> render "index"
   end
 
   def plugged(conn, _params) do
     conn
-    |> render "index", layout: false
+    |> layout(nil)
+    |> render "index"
   end
 
   def overwrite(conn, _params) do
     conn
-    |> render "index", layout: false, my_assign: "assign_overwrite"
+    |> layout(nil)
+    |> render "index", my_assign: "assign_overwrite"
   end
 end
 

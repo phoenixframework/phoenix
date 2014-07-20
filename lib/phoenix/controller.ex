@@ -152,12 +152,11 @@ defmodule Phoenix.Controller do
   end
 
   def render_view(conn, view_mod, layout_mod, template, assigns \\ []) do
+    assigns      = Dict.merge(conn.assigns, assigns)
     content_type = response_content_type(conn)
     extensions   = MIME.extensions(content_type)
-    layout       = Dict.get(assigns, :layout, "application")
-    status       = Dict.get(assigns, :status, 200)
-
-    assigns = Dict.merge(conn.assigns, assigns)
+    layout       = layout(conn)
+    status       = conn.status || 200
 
     if layout do
       assigns = Dict.put_new(assigns, :within, {layout_mod, template_name(layout, extensions)})
