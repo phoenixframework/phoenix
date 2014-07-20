@@ -36,10 +36,10 @@ defmodule Phoenix.Plugs.RouterLogger do
   defp log(:debug, before, resp_time, conn) do
     IO.puts """
       #{before} #{conn.method}: #{inspect conn.path_info}
-      controller: #{controller_module(conn)}
-      action:     #{action_name(conn)}
-      accept:     #{response_content_type(conn)}
-      parameters: #{inspect conn.params}
+        controller: #{controller_module(conn)}
+        action:     #{action_name(conn)}
+        accept:     #{response_content_type(conn)}
+        parameters: #{inspect conn.params}
       resp_time=#{resp_time} status=#{conn.status} #{conn.method}
     """
   end
