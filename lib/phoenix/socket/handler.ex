@@ -12,6 +12,15 @@ defmodule Phoenix.Socket.Handler do
     end
   end
 
+  @doc """
+  Initializes cowboy websocket
+
+  The following transport options can be provided:
+
+    * `{:tcp, :http}` - Insecure transport over http
+    * `{:ssl, :http}` - Secure transport over https
+
+  """
   def init({:tcp, :http}, req, opts) do
     {:upgrade, :protocol, :cowboy_websocket, req, opts}
   end
@@ -120,6 +129,11 @@ defmodule Phoenix.Socket.Handler do
     {:ok, req, state, :hibernate}
   end
 
+  @doc """
+  Handles regular messages to socket process
+
+  Each messages is forward to all socket's authorized channels "info" event
+  """
   def websocket_info(data, req, socket) do
     Enum.each socket.channels, fn {channel, topic} ->
       socket

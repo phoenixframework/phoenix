@@ -4,6 +4,16 @@ defmodule Phoenix.Topic.Server do
   alias Phoenix.Topic.Server
   alias Phoenix.Topic.GarbageCollector
 
+  @moduledoc """
+  Handles Topic subscriptions and garbage collection with node failover
+
+  All Topic creats, joins, leaves, and destroys are funneled through master
+  Topic Server to prevent race conditions on global :pg2 groups.
+
+  All nodes monitor master Topic.Server and compete for leader in the event of a
+  nodedown.
+  """
+
   defstruct role: :slave,
             gc_buffer: [],
             garbage_collect_after_ms: 60_000..300_000

@@ -205,6 +205,7 @@ defmodule Phoenix.Router.Mapper do
     end
   end
 
+  @doc false
   def extract_actions_from_options(opts) do
     Keyword.get(opts, :only) || (@actions -- Keyword.get(opts, :except, []))
   end

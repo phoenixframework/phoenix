@@ -64,6 +64,15 @@ defmodule Phoenix.Channel do
     broadcast_from(socket.pid, socket.channel, socket.topic, event, message)
   end
 
+  @doc """
+  Broadcast event from pid, serializable as JSON to topic namedspaced by channel
+
+  ## Examples
+
+      iex> Channel.broadcast_from self, "rooms", "global", "new:message", %{id: 1, content: "hello"}
+      :ok
+
+  """
   def broadcast_from(from, channel, topic, event, message) do
     Topic.create(namespaced(channel, topic))
     Topic.broadcast_from(from, namespaced(channel, topic), reply_json_frame(%{

@@ -3,12 +3,18 @@ defmodule Phoenix.Topic.GarbageCollector do
 
   @buffer_size 200
 
+  @doc """
+  Marks a list of topics for garbage collection
+  """
   def mark(state, groups) when is_list groups do
     Enum.reduce groups, state, fn group, new_state ->
       mark(new_state, group)
     end
   end
 
+  @doc """
+  Marks an individual topic for garbage collection
+  """
   def mark(state, group) do
     if Enum.count(state.gc_buffer) + 1 >= @buffer_size do
       schedule_garbage_collect(state, [group | state.gc_buffer])

@@ -24,6 +24,16 @@ defmodule Phoenix.Adapters.Cowboy do
     end
   end
 
+  @doc """
+  Macro to allow Plug dispatch options to be programmatically added
+
+  Used by Router.Socket to add Cowboy specific WebSocket dispatch options
+
+  ## Examples
+
+      dispatch_option "/ws", Socket.Handler, router: MyChannel
+
+  """
   defmacro dispatch_option(path, handler, options \\ []) do
     quote do
       @dispatch_options {unquote(path), unquote(handler), unquote(options)}

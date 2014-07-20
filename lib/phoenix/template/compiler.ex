@@ -83,6 +83,9 @@ defmodule Phoenix.Template.Compiler do
     end
   end
 
+  @doc """
+  Returns the EEx engine for the provided String extension
+  """
   def engine_for_file_ext(".html"), do: Phoenix.Html.Engine
   def engine_for_file_ext(_ext), do: EEx.SmartEngine
 end

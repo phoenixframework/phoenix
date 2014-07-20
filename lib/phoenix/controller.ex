@@ -2,7 +2,6 @@ defmodule Phoenix.Controller do
   import Phoenix.Controller.Connection
   import Plug.Conn
   alias Plug.MIME
-  alias Phoenix.Config
   alias Phoenix.Plugs
 
   @default_content_type "text/html"
@@ -81,6 +80,9 @@ defmodule Phoenix.Controller do
     apply(controller, :call, [conn, []])
   end
 
+  @doc """
+  Sends 404 not found response to client
+  """
   def not_found(conn, method, path) do
     text conn, :not_found, "No route matches #{method} to #{inspect path}"
   end
@@ -97,6 +99,9 @@ defmodule Phoenix.Controller do
     """
   end
 
+  @doc """
+  Render HTML response with stack trace for use in development
+  """
   def error_with_trace(conn, error) do
     stacktrace     = System.stacktrace
     exception      = Exception.normalize(:error, error)
@@ -151,6 +156,9 @@ defmodule Phoenix.Controller do
     end
   end
 
+  @doc """
+  Renders View with template based on Mime Accept headers
+  """
   def render_view(conn, view_mod, layout_mod, template, assigns \\ []) do
     assigns      = Dict.merge(conn.assigns, assigns)
     content_type = response_content_type(conn)

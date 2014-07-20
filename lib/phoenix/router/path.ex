@@ -1,7 +1,13 @@
 defmodule Phoenix.Router.Path do
 
+  @doc """
+  Splits the String path into segments by "/" delimiter
+  """
   def split(path), do: String.split(path, "/")
 
+  @doc """
+  Joins path List to build valid path
+  """
   def join([]), do: ""
   def join(split_path), do: Elixir.Path.join(split_path)
 
@@ -81,8 +87,7 @@ defmodule Phoenix.Router.Path do
   def params_with_ast_bindings(path) do
     Enum.zip(param_names(path), matched_param_ast_bindings(path))
   end
-
-  def matched_param_ast_bindings(path) do
+  defp matched_param_ast_bindings(path) do
     path
     |> split
     |> Enum.map(fn

@@ -1,16 +1,22 @@
 defmodule Phoenix.Router.ConsoleFormatter do
   alias Phoenix.Project
 
+  @doc """
+  Returns the default Application router, ie `MyApp.Router`
+  """
   def default_router do
     Project.module_root.Router
   end
 
+
+  @doc false
   def format(router) do
     routes = router.__routes__
 
     Enum.join(format_routes(routes), "\n")
   end
 
+  @doc false
   def format_routes(routes) do
     column_widths = calculate_column_widths(routes)
 

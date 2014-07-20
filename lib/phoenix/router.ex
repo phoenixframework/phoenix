@@ -58,6 +58,9 @@ defmodule Phoenix.Router do
     end
   end
 
+  @doc """
+  Starts the Router module with provided List of options
+  """
   def start_adapter(module, opts) do
     protocol = if opts[:ssl], do: :https, else: :http
     case apply(Plug.Adapters.Cowboy, protocol, [module, [], opts]) do
@@ -70,12 +73,18 @@ defmodule Phoenix.Router do
     end
   end
 
+  @doc """
+  Stops the Router module with provided List of options
+  """
   def stop_adapter(module, opts) do
     protocol = if opts[:ssl], do: HTTPS, else: HTTP
     apply(Plug.Adapters.Cowboy, :shutdown, [Module.concat(module, protocol)])
     IO.puts "#{module} has been stopped"
   end
 
+  @doc """
+  Carries out Controller dispatch for router match
+  """
   def perform_dispatch(conn, router) do
     router.match(conn, conn.method, conn.path_info)
   end

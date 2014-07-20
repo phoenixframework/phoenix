@@ -138,6 +138,9 @@ defmodule Phoenix.Topic do
     call {:active?, group(name)}
   end
 
+  @doc """
+  Returns a List of all Phoenix Topics from :pg2
+  """
   def list do
     :pg2.which_groups |> Enum.filter(&match?({@pg_prefix, _}, &1))
   end
