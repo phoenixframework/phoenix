@@ -11,6 +11,10 @@ defmodule Phoenix.Plugs.RouterLogger do
 
   def call(conn, level) do
     before_stamp = :os.timestamp()
+    before = localtime_ms(before_stamp) |> format_time
+    if level == :debug do
+      IO.puts("#{before} #{conn.method}: #{inspect conn.path_info}")
+    end
     Plug.Conn.register_before_send(conn, before_send(before_stamp, level))
   end
 
@@ -35,7 +39,6 @@ defmodule Phoenix.Plugs.RouterLogger do
 
   defp log(:debug, before, resp_time, conn) do
     IO.puts """
-      #{before} #{conn.method}: #{inspect conn.path_info}
         controller: #{controller_module(conn)}
         action:     #{action_name(conn)}
         accept:     #{response_content_type(conn)}
