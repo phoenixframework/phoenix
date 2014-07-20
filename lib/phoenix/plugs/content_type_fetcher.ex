@@ -7,10 +7,12 @@ defmodule Phoenix.Plugs.ContentTypeFetcher do
 
   Used by Phoenix.Controller to determine extension of `render/3` template
 
-  Lookup priority
-  1. format param of mime extension, ie "html", "json", "xml"
-  2. Accept header, ie "text/html,application/xml;q=0.9,*/*;q=0.8"
-  3. "text/html" default fallback
+  ## Lookup priority
+
+    1. format param of mime extension, ie "html", "json", "xml"
+    2. Accept header, ie "text/html,application/xml;q=0.9,*/*;q=0.8"
+    3. "text/html" default fallback
+
   """
 
   @default_content_type "text/html"

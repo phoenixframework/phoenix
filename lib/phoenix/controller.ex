@@ -16,25 +16,26 @@ defmodule Phoenix.Controller do
   defined in the Router. The :action plug can be explicitly added to change
   its execution order.
 
-  Examples
+  ## Examples
 
-  defmodule MyApp.Controllers.Admin.Users do
-    use Phoenix.Controller
+      defmodule MyApp.Controllers.Admin.Users do
+        use Phoenix.Controller
 
-    plug :authenticate, usernames: ["jose", "eric", "sonny"]
+        plug :authenticate, usernames: ["jose", "eric", "sonny"]
 
-    def authenticate(conn, options) do
-      if get_session(conn, username) in options[:usernames] do
-        conn
-      else
-        conn |> redirect(Router.root_path) |> halt!
+        def authenticate(conn, options) do
+          if get_session(conn, username) in options[:usernames] do
+            conn
+          else
+            conn |> redirect(Router.root_path) |> halt!
+          end
+        end
+
+        def show(conn, params) do
+          # authenticated users only
+        end
       end
-    end
 
-    def show(conn, params) do
-      # authenticated users only
-    end
-  end
   """
   defmacro __using__(options) do
     quote do
@@ -117,24 +118,24 @@ defmodule Phoenix.Controller do
   Renders View template and sends response based on Controller module name and
   request content-type
 
-  conn - The Plug.Conn struct
-  template - The String template name, ie "show", "index"
-  assigns - The optional dict assigns to pass to template when rendering
+    * conn     - The Plug.Conn struct
+    * template - The String template name, ie "show", "index"
+    * assigns  - The optional dict assigns to pass to template when rendering
 
-  Examples
+  ## Examples
 
-  defmodule MyApp.Controllers.Users do
-    def show(conn) do
-      render conn, "show", name: "José"
-    end
-  end
+      defmodule MyApp.Controllers.Users do
+        def show(conn) do
+          render conn, "show", name: "José"
+        end
+      end
 
-  Expands at compile time to:
+      # Expands at compile time to:
 
-    MyApp.Views.Users.render("show.html",
-      name: "José",
-      within: {MyApp.Views.Layouts, "application.html"}
-    )
+      MyApp.Views.Users.render("show.html",
+        name: "José",
+        within: {MyApp.Views.Layouts, "application.html"}
+      )
 
   """
   defmacro render(conn, template, assigns \\ []) do
@@ -172,13 +173,13 @@ defmodule Phoenix.Controller do
   @doc """
   Finds View module based on controller_module
 
-  Examples
+  ## Examples
 
-  iex> Controller.view_module(MyApp.UserController)
-  MyApp.UserView
+      iex> Controller.view_module(MyApp.UserController)
+      MyApp.UserView
 
-  iex> Controller.view_module(MyApp.Admin.UserController)
-  MyApp.Admin.UserView
+      iex> Controller.view_module(MyApp.Admin.UserController)
+      MyApp.Admin.UserView
 
   """
   def view_module(controller_module) do
@@ -191,10 +192,10 @@ defmodule Phoenix.Controller do
   @doc """
   Finds Layout View module based on Controller Module
 
-  Examples
+  ## Examples
 
-  iex> Controller.layout_module(MyApp.UserController)
-  MyApp.LayoutView
+      iex> Controller.layout_module(MyApp.UserController)
+      MyApp.LayoutView
   """
   def layout_module(controller_module) do
     controller_module

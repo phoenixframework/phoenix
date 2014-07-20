@@ -6,9 +6,9 @@ defmodule Phoenix.Plugs.ParamsFetcher do
 
   Plugged automatically by Phoenix.Controller
 
-  Examples
+  ## Examples
 
-  plug Phoenix.Plugs.ParamsFetcher
+      plug Phoenix.Plugs.ParamsFetcher
 
   """
   def init(opts), do: opts

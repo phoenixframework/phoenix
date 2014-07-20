@@ -8,15 +8,16 @@ defmodule Phoenix.Router.Path do
   @doc """
   Returns the AST binding of the given variable with var_name
 
-  var_name - The String or Atom variable name to be bound
+    * var_name - The String or Atom variable name to be bound
 
-  # Examples
+  ## Examples
 
-  iex> Phoenix.Router.Path.var_ast("my_var")
-  {:my_var, [], nil}
+      iex> Phoenix.Router.Path.var_ast("my_var")
+      {:my_var, [], nil}
 
-  iex> Phoenix.Router.Path.var_ast(:my_var)
-  {:my_var, [], nil}
+      iex> Phoenix.Router.Path.var_ast(:my_var)
+      {:my_var, [], nil}
+
   """
   def var_ast(var_name) when is_binary(var_name) do
     var_ast(String.to_atom(var_name))
@@ -30,17 +31,19 @@ defmodule Phoenix.Router.Path do
   Named params beginning with ":" are injected into the argument list as
   an AST binding matching the param name.
 
-  Examples
-    iex> Path.matched_arg_list_with_ast_bindings("users/:user_id/comments/:id")
-    ["users", {:user_id, [], nil}, "comments", {:id, [], nil}]
+  ## Examples
 
-    iex> Path.matched_arg_list_with_ast_bindings("/pages")
-    ["pages"]
+      iex> Path.matched_arg_list_with_ast_bindings("users/:user_id/comments/:id")
+      ["users", {:user_id, [], nil}, "comments", {:id, [], nil}]
 
-    iex> Path.matched_arg_list_with_ast_bindings("/")
-    []
+      iex> Path.matched_arg_list_with_ast_bindings("/pages")
+      ["pages"]
+
+      iex> Path.matched_arg_list_with_ast_bindings("/")
+      []
 
   Generated as:
+
       def match(:get, ["users", user_id, "comments", id])
 
   """
@@ -69,9 +72,10 @@ defmodule Phoenix.Router.Path do
   Returns Keyword List of parameters from URL matched with
   AST of associationed bindings for inclusion in defmatch route
 
-  Examples
-    iex> Path.params_with_ast_bindings("users/:user_id/comments/:id")
-    [{"user_id", {:user_id, [], nil}}, {"id", {:id, [], nil}}]
+  ## Examples
+
+      iex> Path.params_with_ast_bindings("users/:user_id/comments/:id")
+      [{"user_id", {:user_id, [], nil}}, {"id", {:id, [], nil}}]
 
   """
   def params_with_ast_bindings(path) do
@@ -92,11 +96,12 @@ defmodule Phoenix.Router.Path do
   @doc """
   Returns List of atoms of contained named parameters in route
 
-  Examples
-    iex> Phoenix.Router.Path.param_names("users/:user_id/comments/:id")
-    ["user_id", "id"]
-    iex> Phoenix.Router.Path.param_names("/pages/about")
-    []
+  ## Examples
+
+      iex> Phoenix.Router.Path.param_names("users/:user_id/comments/:id")
+      ["user_id", "id"]
+      iex> Phoenix.Router.Path.param_names("/pages/about")
+      []
 
   """
   def param_names(path) do
@@ -110,15 +115,16 @@ defmodule Phoenix.Router.Path do
   Builds String Path replacing named params with keyword list of values,
   unused parameters are used to construct the query string.
 
-  # Examples
-    iex> Path.build("users/:user_id/comments/:id", user_id: 1, id: 123)
-    "/users/1/comments/123"
+  ## Examples
 
-    iex> Path.build("users/:user_id/comments/:id", user_id: 1, id: 123, highlight: "abc")
-    "/users/1/comments/123?highlight=abc"
+      iex> Path.build("users/:user_id/comments/:id", user_id: 1, id: 123)
+      "/users/1/comments/123"
 
-    iex> Path.build("pages/about", [])
-    "/pages/about"
+      iex> Path.build("users/:user_id/comments/:id", user_id: 1, id: 123, highlight: "abc")
+      "/users/1/comments/123?highlight=abc"
+
+      iex> Path.build("pages/about", [])
+      "/pages/about"
 
   """
   def build(path, []), do: ensure_leading_slash(path)
@@ -152,18 +158,19 @@ defmodule Phoenix.Router.Path do
   @doc """
   Builds a URL based on options passed.
 
-  # Examples:
-    iex> Path.build_url("/users", host: "example.com")
-    "http://example.com/users"
+  ## Examples
 
-    iex> Path.build_url("/users", host: "example.com", ssl: true)
-    "https://example.com/users"
+      iex> Path.build_url("/users", host: "example.com")
+      "http://example.com/users"
 
-    iex> Path.build_url("/users", host: "example.com", port: 8080)
-    "http://example.com:8080/users"
+      iex> Path.build_url("/users", host: "example.com", ssl: true)
+      "https://example.com/users"
 
-    iex> Path.build_url("/users", host: "example.com", port: 80)
-    "http://example.com/users"
+      iex> Path.build_url("/users", host: "example.com", port: 8080)
+      "http://example.com:8080/users"
+
+      iex> Path.build_url("/users", host: "example.com", port: 80)
+      "http://example.com/users"
 
   """
   def build_url(path, opts \\ []) do
@@ -177,12 +184,13 @@ defmodule Phoenix.Router.Path do
   @doc """
   Adds leading forward slash to string path if missing
 
-  # Examples
-    iex> Path.ensure_leading_slash("users/1")
-    "/users/1"
+  ## Examples
 
-    iex> Path.ensure_leading_slash("/users/2")
-    "/users/2"
+      iex> Path.ensure_leading_slash("users/1")
+      "/users/1"
+
+      iex> Path.ensure_leading_slash("/users/2")
+      "/users/2"
 
   """
   def ensure_leading_slash(path = <<"/" <> _rest>>), do: path
@@ -191,12 +199,13 @@ defmodule Phoenix.Router.Path do
   @doc """
   Removes leading forward slash from string path if present
 
-  # Examples
-    iex> Path.ensure_no_leading_slash("users/1")
-    "users/1"
+  ## Examples
 
-    iex> Path.ensure_no_leading_slash("/users/2")
-    "users/2"
+      iex> Path.ensure_no_leading_slash("users/1")
+      "users/1"
+
+      iex> Path.ensure_no_leading_slash("/users/2")
+      "users/2"
 
   """
   def ensure_no_leading_slash(<<"/" <> rest>>), do: rest

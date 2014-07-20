@@ -10,15 +10,16 @@ defmodule Phoenix.Template do
   @doc """
   Converts the template file path into a function name
 
-  path - The String Path to the template file
-  template_root - The String Path of the template root diretory
+    * path - The String Path to the template file
+    * template_root - The String Path of the template root diretory
 
-  Examples
+  ## Examples
 
-  iex> Template.func_name_from_path(
-    "lib/templates/admin/users/show.html.eex",
-    "lib/templates")
-  "admin/users/show.html"
+      iex> Template.func_name_from_path(
+        "lib/templates/admin/users/show.html.eex",
+        "lib/templates")
+      "admin/users/show.html"
+
   """
   def func_name_from_path(path, template_root) do
     path
@@ -38,12 +39,13 @@ defmodule Phoenix.Template do
   Return String template file_path contents, wrapping templates
   in `within` macro to render traditional templates within a layout.
 
-  Examples
+  ## Examples
 
-  iex> Template.read!("/var/www/templates/pages/home.html.eex")
-  <%= within @layout do %>
-    <h1>Home Page</h1>
-  <% end %>
+      iex> Template.read!("/var/www/templates/pages/home.html.eex")
+      <%= within @layout do %>
+        <h1>Home Page</h1>
+      <% end %>
+
   """
   def read!(file_path) do
     if String.contains?(file_path, "layouts/") do

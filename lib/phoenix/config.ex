@@ -9,15 +9,16 @@ defmodule Phoenix.Config do
 
   See `@defaults` for a full list of available configuration options.
 
-  Example `config.exs`
+  ## Example `config.exs`
 
-    use Mix.Config
+      use Mix.Config
 
-    config :phoenix, MyApp.Router,
-      port: 4000,
-      ssl: false,
-      code_reload: false,
-      cookies: false
+      config :phoenix, MyApp.Router,
+        port: 4000,
+        ssl: false,
+        code_reload: false,
+        cookies: false
+
   """
 
   @defaults [
@@ -42,12 +43,13 @@ defmodule Phoenix.Config do
 
   @doc """
   Returns the Keyword List of configuration given the path for get_in lookup
-  of :phoenix Application configuration
+  of `:phoenix` Application configuration
 
-  Examples
+  ## Examples
 
-  iex> Config.get([:logger, :level])
-  :info
+      iex> Config.get([:logger, :level])
+      :info
+
   """
   def get(path) do
     case get_in(Application.get_all_env(:phoenix), path) do
@@ -60,15 +62,16 @@ defmodule Phoenix.Config do
   Returns the Keyword List of configuration given the path for get_in lookup
   of :phoenix Application configuration.
 
-  Raises UndefinedConfigError if the value is nil
+  Raises `UndefinedConfigError` if the value is nil
 
-  Examples
+  ## Examples
 
-  iex> Config.get!([:logger, :level])
-  :info
+      iex> Config.get!([:logger, :level])
+      :info
 
-  iex(2)> Phoenix.Config.get!([:logger, :key_that_does_not_exist])
-  ** (Phoenix.Config.UndefinedConfigError) [message: "No configuration found...
+      iex(2)> Phoenix.Config.get!([:logger, :key_that_does_not_exist])
+      ** (Phoenix.Config.UndefinedConfigError) [message: "No configuration found...
+
   """
   def get!(path) do
     case get(path) do
@@ -84,13 +87,14 @@ defmodule Phoenix.Config do
 
   A get_in path can be supplied to narrow the config lookup
 
-  Examples
+  ## Examples
 
-  iex> Config.router(MyApp.Router)
-  [port: 1234, ssl: false, endpoint: Router, ...]
+      iex> Config.router(MyApp.Router)
+      [port: 1234, ssl: false, endpoint: Router, ...]
 
-  iex> Config.router(MyApp.Router, [:port])
-  1234
+      iex> Config.router(MyApp.Router, [:port])
+      1234
+
   """
   def router(module) do
     for {key, _value} <- Dict.merge(@defaults[:router], find_router_conf(module)) do
@@ -106,7 +110,7 @@ defmodule Phoenix.Config do
 
   @doc """
   Returns the Keyword List router Configuration, with merged Phoenix defaults,
-  raises UndefinedConfigError if value does not exist. See router/2 for details.
+  raises `UndefinedConfigError` if value does not exist. See `router/2` for details.
   """
   def router!(module, path) do
     case router(module, path) do

@@ -23,10 +23,11 @@ defmodule Phoenix.Socket.Handler do
   Handles initalization of the websocket
 
   Possible returns:
-    :ok
-    {:ok, req, state}
-    {:ok, req, state, timeout} # Timeout defines how long it waits for activity
-                                 from the client. Default: infinity.
+
+    * `:ok`
+    * `{:ok, req, state}`
+    * `{:ok, req, state, timeout}` - Timeout defines how long it waits for activity
+                                     from the client. Default: infinity.
   """
   def websocket_init(_transport, req, opts) do
     router = Dict.fetch! opts, :router
@@ -37,20 +38,23 @@ defmodule Phoenix.Socket.Handler do
   @doc """
   Dispatches multiplexed socket message to Router and handles result
 
-  # Join Event
-    "join" events are specially treated.
-    When {:ok, socket} is returned from the Channel, the socket is subscribed
-    to the channel and authorized to pubsub on the channel/topic pair
-    When {:error, socket, reason} is returned, the socket is denied pubsub access
+  ## Join Event
 
-  # Leave Event
-    "leave" events call the channels `leave/2` function only if the socket has
-    previously been authorized via `join/2`
+  "join" events are specially treated.
+  When {:ok, socket} is returned from the Channel, the socket is subscribed
+  to the channel and authorized to pubsub on the channel/topic pair
+  When {:error, socket, reason} is returned, the socket is denied pubsub access
 
-  # Arbitrary Events
-    Any other event calls the channel's `event/3` function, with the event
-    name as the first argument. Event handlers are only invoked if the socket
-    was previously authorized via `join/2`.
+  ## Leave Event
+
+  "leave" events call the channels `leave/2` function only if the socket has
+  previously been authorized via `join/2`
+
+  ## Arbitrary Events
+
+  Any other event calls the channel's `event/3` function, with the event
+  name as the first argument. Event handlers are only invoked if the socket
+  was previously authorized via `join/2`.
 
   """
   def websocket_handle({:text, text}, _req, socket) do
@@ -128,11 +132,13 @@ defmodule Phoenix.Socket.Handler do
 
   @doc """
   This is called right before the websocket is about to be closed.
+
   Reason is defined as:
-   {:normal, :shutdown | :timeout}   Called when erlang closes connection
-   {:remote, :closed}                Called if client formally closes connection
-   {:remote, close_code(), binary()}
-   {:error, :badencoding | :badframe | :closed | atom()}  Called for many reasons
+
+    * `{:normal, :shutdown | :timeout}` - Called when erlang closes connection
+    * `{:remote, :closed}`              - Called if client formally closes connection
+    * `{:remote, close_code(), binary()}`
+    * `{:error, :badencoding | :badframe | :closed | atom()}` - Called for many reasons
                                                           tab closed, conn dropped.
   """
   def websocket_terminate(reason, _req, socket) do
@@ -148,16 +154,19 @@ defmodule Phoenix.Socket.Handler do
   @doc """
   Sends a reply to the socket. Follow the cowboy websocket frame syntax
 
-  Frame is defined as
-    :close | :ping | :pong
-    {:text | :binary | :close | :ping | :pong, iodata()}
-    {:close, close_code(), iodata()}
+  Frame is defined as:
+
+    * `:close | :ping | :pong`
+    * `{:text | :binary | :close | :ping | :pong, iodata()}`
+    * `{:close, close_code(), iodata()}`
 
   Options:
-    :state
-    :hibernate # (true | false) if you want to hibernate the connection
+
+    * `:state`
+    * `:hibernate # (true | false)` if you want to hibernate the connection
 
   close_code: 1000..4999
+
   """
   def reply(socket, frame) do
     send(socket.pid, {:reply, frame, socket})

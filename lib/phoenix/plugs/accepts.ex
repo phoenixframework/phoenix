@@ -6,9 +6,9 @@ defmodule Phoenix.Plugs.Accepts do
   Plug to handle which Accept headers a Plug stack accepts.
   Unaccepted mime-types will return a 400 Bad Request response
 
-  Examples
+  ## Examples
 
-  plug Phoenix.Plugs.Accepts, ["html", "json"]
+      plug Phoenix.Plugs.Accepts, ["html", "json"]
 
   """
 

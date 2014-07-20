@@ -6,14 +6,14 @@ defmodule Phoenix.Template.Compiler do
   @moduledoc """
   Precompiles EEx templates into view module and provides `render` support
 
-  Examples
+  ## Examples
 
-  defmodule MyApp.Views do
-    use Phoenix.Template.Compiler, path: Path.join([__DIR__, "templates"])
-  end
+      defmodule MyApp.Views do
+        use Phoenix.Template.Compiler, path: Path.join([__DIR__, "templates"])
+      end
 
-  iex> MyApp.Views.render("show.html", message: "Hello!")
-  "<h1>Hello!</h1>"
+      iex> MyApp.Views.render("show.html", message: "Hello!")
+      "<h1>Hello!</h1>"
 
   """
   defmacro __using__(options) do
@@ -31,11 +31,11 @@ defmodule Phoenix.Template.Compiler do
   Renders the layout, assigning `@inner` as the provided nested template
   If layout is not provided, simply renders the nested contents without layout
 
-  Examples
+  ## Examples
 
-  <%= within @layout do %>
-    <h1>Home Page</h1>
-  <% end %>
+      <%= within @layout do %>
+        <h1>Home Page</h1>
+      <% end %>
 
   """
   defmacro within(layout, do: inner) do

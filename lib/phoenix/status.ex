@@ -28,12 +28,14 @@ defmodule Phoenix.Status do
 
   When passed an integer status code, simply returns it, valid or not.
 
-  Examples
-  iex> Status.code(:ok)
-  200
+  ## Examples
 
-  iex> Status.code(200)
-  200
+      iex> Status.code(:ok)
+      200
+
+      iex> Status.code(200)
+      200
+
   """
   def code(code) when is_integer(code), do: code
   def code(atom), do: raise(InvalidStatus, atom)

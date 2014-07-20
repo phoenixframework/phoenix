@@ -39,18 +39,20 @@ defmodule Phoenix.Controller.Connection do
   If no response has been sent, an empty Bad Request is sent before throwing
   error.
 
-  Examples
-    plug :authenticate
+  ## Examples
 
-    def authenticate(conn, _opts) do
-      if authenticate?(conn) do
-        conn
-      else
-        conn
-        |> redirect(Router.root_path)
-        |> halt!
-       end
-    end
+      plug :authenticate
+
+      def authenticate(conn, _opts) do
+        if authenticate?(conn) do
+          conn
+        else
+          conn
+          |> redirect(Router.root_path)
+          |> halt!
+         end
+      end
+
   """
   def halt!(conn = %Conn{state: state}) when state in @unsent do
     text(conn, 400, "Bad Request") |> halt!

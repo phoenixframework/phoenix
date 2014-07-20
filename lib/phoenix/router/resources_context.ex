@@ -14,20 +14,20 @@ defmodule Phoenix.Router.ResourcesContext do
   Returns the String route path based on current context
   of module and relative path.
 
-  # Examples
+  ## Examples
 
-    resources "users", Users do
-      resources "comments", Comments
-      -------------------------------
-      Context.current_path("comments")
-      => "users/:user_id/comments"
-      -------------------------------
-    end
-    resources "pages", Pages
-    ---------------------------------
-    Context.current_path("pages")
-    => "pages"
-    ---------------------------------
+      resources "users", Users do
+        resources "comments", Comments
+        -------------------------------
+        Context.current_path("comments")
+        => "users/:user_id/comments"
+        -------------------------------
+      end
+      resources "pages", Pages
+      ---------------------------------
+      Context.current_path("pages")
+      => "pages"
+      ---------------------------------
 
   """
   def current_path(relative_path, module) do
@@ -44,27 +44,26 @@ defmodule Phoenix.Router.ResourcesContext do
   @doc """
   Returns the current alias of the route given module's nested context
 
-  # Examples
+  ## Examples
 
-    resources "users", Users do
-      resources "comments", Comments
-      -------------------------------
-      Context.current_alias(:index, "comments", __MODULE__)
-      => "user_comments"
-      Context.current_alias(:show, "comments", __MODULE__)
-      => "user_comment"
-      Context.current_alias(:edit, "comments", __MODULE__)
-      => "edit_user_comment"
-      -------------------------------
-    end
-    resources "pages", Pages
-    ---------------------------------
-    Context.current_alias(:index, "pages", __MODULE__)
-    => "pages"
-    Context.current_alias(:new, "pages", __MODULE__)
-    => "new_page"
-    ---------------------------------
-
+      resources "users", Users do
+        resources "comments", Comments
+        -------------------------------
+        Context.current_alias(:index, "comments", __MODULE__)
+        => "user_comments"
+        Context.current_alias(:show, "comments", __MODULE__)
+        => "user_comment"
+        Context.current_alias(:edit, "comments", __MODULE__)
+        => "edit_user_comment"
+        -------------------------------
+      end
+      resources "pages", Pages
+      ---------------------------------
+      Context.current_alias(:index, "pages", __MODULE__)
+      => "pages"
+      Context.current_alias(:new, "pages", __MODULE__)
+      => "new_page"
+      ---------------------------------
 
   """
   def current_alias(action, relative_path, module) do
@@ -112,9 +111,10 @@ defmodule Phoenix.Router.ResourcesContext do
   Appends the singularized inflection of named resource parameter based
   on current route resource
 
-  # Examples
-  iex> Phoenix.Router.Context.resource_with_named_param("users")
-  "users/:user_id"
+  ## Examples
+
+      iex> Phoenix.Router.Context.resource_with_named_param("users")
+      "users/:user_id"
 
   """
   def resource_with_named_param(resource) do

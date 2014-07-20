@@ -2,6 +2,26 @@ defmodule Phoenix.Topic do
   use GenServer
   alias Phoenix.Topic.Server
 
+  @moduledoc """
+  Serves as a Notification and PubSub layer for broad use-cases. Used internally
+  by Channels for pubsub broadcast.
+
+  ## Example
+
+      iex> Topic.subscribe(self, "user:123")
+      :ok
+      iex> Process.info(self)[:messages]
+      []
+      iex> Topic.subscribers("user:123")
+      [#PID<0.169.0>]
+      iex> Topic.broadcast "user:123", {:user_update, %{id: 123, name: "Shane"}}
+      :ok
+      iex> Process.info(self)[:messages]
+      {:user_update, %{id: 123, name: "Shane"}}
+
+  """
+
+
   @server Phoenix.Topic.Server
 
   @pg_prefix :phx
@@ -9,12 +29,13 @@ defmodule Phoenix.Topic do
   @doc """
   Creates a Topic for pubsub broadcast to subscribers
 
-  name - The String name of the topic
+    * name - The String name of the topic
 
-  Examples
+  ## Examples
 
-  iex> Topic.create("mytopc")
-  :ok
+      iex> Topic.create("mytopc")
+      :ok
+
   """
   def create(name) do
     :ok = call {:create, group(name)}
@@ -37,9 +58,10 @@ defmodule Phoenix.Topic do
   @doc """
   Adds subsriber pid to given Topic process group
 
-  Examples
+  ## Examples
 
-  iex> Topic.subscribe(self, "mytopic")
+      iex> Topic.subscribe(self, "mytopic")
+
   """
   def subscribe(pid, name) do
     :ok = create(name)
@@ -49,9 +71,10 @@ defmodule Phoenix.Topic do
   @doc """
   Removes the given subscriber from the Topic's process group
 
-  Examples
+  ## Examples
 
-  iex> Topic.unsubscribe(self, "mytopic")
+      iex> Topic.unsubscribe(self, "mytopic")
+
   """
   def unsubscribe(pid, name) do
     call {:unsubscribe, pid, group(name)}
@@ -60,12 +83,14 @@ defmodule Phoenix.Topic do
   @doc """
   Returns the List of subsriber pids of the Topic's process group
 
-  iex> Topic.subscribers("mytopic")
-  []
-  iex> Topic.subscribe(self, "mytopic")
-  :ok
-  iex> Topic.subscribers("mytopic")
-  [#PID<0.41.0>]
+  ## Examples
+
+      iex> Topic.subscribers("mytopic")
+      []
+      iex> Topic.subscribe(self, "mytopic")
+      :ok
+      iex> Topic.subscribers("mytopic")
+      [#PID<0.41.0>]
 
   """
   def subscribers(name) do
@@ -78,11 +103,11 @@ defmodule Phoenix.Topic do
   @doc """
   Broadcasts a message to the Topic's process group subscribers
 
-  Examples
+  ## Examples
 
-  iex> Topic.broadcast("mytopic", :hello)
+      iex> Topic.broadcast("mytopic", :hello)
 
-  To exclude the broadcaster from receiving the message, use #broadcast_from/3
+  To exclude the broadcaster from receiving the message, use `broadcast_from/3`
   """
   def broadcast(name, message) do
     broadcast_from(:global, name, message)
@@ -92,9 +117,9 @@ defmodule Phoenix.Topic do
   Broadcasts a message to the Topic's process group subscribers, excluding
   broadcaster from receiving the message it sent out
 
-  Examples
+  ## Examples
 
-  iex> Topic.broadcast_from(self, "mytopic", :hello)
+      iex> Topic.broadcast_from(self, "mytopic", :hello)
 
   """
   def broadcast_from(from_pid, name, message) do
