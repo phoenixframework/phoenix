@@ -24,15 +24,19 @@ defmodule Phoenix.Controller.Connection do
   def controller_module(conn), do: conn.private[:phoenix_controller]
 
   @doc """
-  Retrieve or Assign layout to phoenix private assigns
+  Assign layout to phoenix private assigns
   """
-  def layout(conn, layout), do: assign_private(conn, :phoenix_layout, layout)
+  def assign_layout(conn, layout), do: assign_private(conn, :phoenix_layout, layout)
+
+  @doc """
+  Retrieve layout from phoenix private assigns
+  """
   def layout(conn), do: Dict.get(conn.private, :phoenix_layout, "application")
 
   @doc """
-  Updates the Conn status
+  Assigns the Conn status
   """
-  def status(conn, status), do: put_in(conn.status, status)
+  def assign_status(conn, status), do: put_in(conn.status, status)
 
   @doc """
   Halts the Plug chain by throwing `{:halt, conn}`.

@@ -13,19 +13,19 @@ defmodule MyApp.AssignController do
   def index(conn, _params) do
     conn
     |> assign(:my_assign, "assign_index")
-    |> layout(nil)
+    |> assign_layout(nil)
     |> render "index"
   end
 
   def plugged(conn, _params) do
     conn
-    |> layout(nil)
+    |> assign_layout(nil)
     |> render "index"
   end
 
   def overwrite(conn, _params) do
     conn
-    |> layout(nil)
+    |> assign_layout(nil)
     |> render "index", my_assign: "assign_overwrite"
   end
 end
