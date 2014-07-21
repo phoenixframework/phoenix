@@ -32,7 +32,7 @@ defmodule Phoenix.Template do
   Returns List of template EEx template file paths
   """
   def find_all_from_root(template_root) do
-    Path.wildcard("#{template_root}/**/*.eex")
+    Path.wildcard("#{template_root}/**/*.{eex,haml}")
   end
 
   @doc """
@@ -46,13 +46,26 @@ defmodule Phoenix.Template do
         <h1>Home Page</h1>
       <% end %>
 
+      iex> Template.read!("/var/www/templates/pages/show.html.haml")
+      <%= within @layout do %>
+        <h1>Haml Show Page</h1>
+      <% end %>
+
   """
   def read!(file_path) do
-    if String.contains?(file_path, "layouts/") do
-      File.read!(file_path)
-    else
-      "<%= within @within do %>#{File.read!(file_path)}<% end %>"
-    end
+    [ _, ext ] = Regex.run ~r{.*\.(haml|eex)$}, file_path
+
+    File.read!(file_path) |>
+      parse(ext) |>
+      wrap_content(file_path)
+  end
+
+  defp parse(content, "haml"), do: Calliope.Render.precompile content
+  defp parse(content, _), do: content
+
+  defp wrap_content(content, ~r{layouts\/}),  do: content
+  defp wrap_content(content, file_path) do
+    "<%= within @within do %>#{content}<% end %>"
   end
 end
 

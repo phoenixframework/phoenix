@@ -18,6 +18,11 @@ defmodule Phoenix.Template.TemplateTest do
     template_root = "/var/www/templates"
     assert Template.func_name_from_path(file_path, template_root) ==
       "home.html"
+
+    file_path = "/var/www/templates/home.html.haml"
+    template_root = "/var/www/templates"
+    assert Template.func_name_from_path(file_path, template_root) ==
+      "home.html"
   end
 
   test "#find_all_from_root/1 returns wildcard of all contained templates" do

@@ -32,7 +32,8 @@ defmodule Phoenix.Mixfile do
       {:plug, "0.5.2"},
       {:inflex, "0.2.4"},
       {:linguist, "~> 0.1.0"},
-      {:jazz, "0.1.2"}
+      {:jazz, "0.1.2"},
+      {:calliope, github: "nurugger07/calliope"}
     ]
   end
 

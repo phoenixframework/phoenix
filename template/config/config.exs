@@ -11,5 +11,4 @@ config :phoenix, <%= application_module %>.Router,
 config :phoenix, :logger,
   level: :error
 
-
 import_config "#{Mix.env}.exs"
