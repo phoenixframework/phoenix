@@ -1,7 +1,6 @@
 defmodule Phoenix.Template.Compiler do
   alias Phoenix.Template
   alias Phoenix.Template.UndefinedError
-  alias Phoenix.Template.Compiler
 
   @moduledoc """
   Precompiles EEx templates into view module and provides `render` support
@@ -57,21 +56,7 @@ defmodule Phoenix.Template.Compiler do
     end
 
     renders_ast = for file_path <- Template.find_all_from_root(path) do
-      name    = Template.func_name_from_path(file_path, path)
-      engine  = Compiler.engine_for_file_ext(Path.extname(name))
-      content = Template.read!(file_path)
-
-      quote do
-        def render(unquote(name)), do: render(unquote(name), [])
-        def render(unquote(name), assigns) do
-          unquote(:"#{name}")(assigns)
-        end
-
-        @external_resource unquote(file_path)
-        @file unquote(file_path)
-        EEx.function_from_string(:defp, :"#{unquote(name)}", unquote(content), [:assigns],
-                                 engine: unquote(engine))
-      end
+      Template.precompile(file_path, path)
     end
 
     quote do
@@ -83,10 +68,5 @@ defmodule Phoenix.Template.Compiler do
     end
   end
 
-  @doc """
-  Returns the EEx engine for the provided String extension
-  """
-  def engine_for_file_ext(".html"), do: Phoenix.Html.Engine
-  def engine_for_file_ext(_ext), do: EEx.SmartEngine
 end
 

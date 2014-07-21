@@ -32,7 +32,11 @@ defmodule Phoenix.Config do
       error_handler: true,
       cookies: false
     ],
-    logger: [level: :error]
+    logger: [level: :error],
+    template_engines: [
+      eex: Phoenix.Template.EExEngine,
+      haml: Phoenix.Template.HamlEngine
+    ]
   ]
 
 

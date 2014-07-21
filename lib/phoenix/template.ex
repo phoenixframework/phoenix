@@ -1,4 +1,5 @@
 defmodule Phoenix.Template do
+  alias Phoenix.Config
 
   defmodule UndefinedError do
     defexception [:message]
@@ -32,40 +33,40 @@ defmodule Phoenix.Template do
   Returns List of template EEx template file paths
   """
   def find_all_from_root(template_root) do
-    Path.wildcard("#{template_root}/**/*.{eex,haml}")
+    extensions = engine_extensions |> Enum.join(",")
+    Path.wildcard("#{template_root}/**/*.{#{extensions}}")
   end
 
   @doc """
-  Return String template file_path contents, wrapping templates
-  in `within` macro to render traditional templates within a layout.
-
-  ## Examples
-
-      iex> Template.read!("/var/www/templates/pages/home.html.eex")
-      <%= within @layout do %>
-        <h1>Home Page</h1>
-      <% end %>
-
-      iex> Template.read!("/var/www/templates/pages/show.html.haml")
-      <%= within @layout do %>
-        <h1>Haml Show Page</h1>
-      <% end %>
-
+  Precompiles the String file_path into a `render/2` function defintion, using
+  an engine configured for the template file extension
   """
-  def read!(file_path) do
-    [ _, ext ] = Regex.run ~r{.*\.(haml|eex)$}, file_path
+  def precompile(file_path, root_path) do
+    name   = func_name_from_path(file_path, root_path)
+    ext    = Path.extname(file_path) |> String.lstrip(?.) |> String.to_atom
+    engine = Config.get([:template_engines, ext])
+    precompiled_template_func = engine.precompile(file_path, name)
 
-    File.read!(file_path) |>
-      parse(ext) |>
-      wrap_content(file_path)
+    quote do
+      def render(unquote(name)), do: render(unquote(name), [])
+      def render(unquote(name), assigns) do
+        unquote(:"#{name}")(assigns)
+      end
+
+      @external_resource unquote(file_path)
+      @file unquote(file_path)
+      unquote(precompiled_template_func)
+    end
   end
 
-  defp parse(content, "haml"), do: Calliope.Render.precompile content
-  defp parse(content, _), do: content
+  @doc """
+  Returns the EEx engine for the provided String extension
+  """
+  def eex_engine_for_file_ext(".html"), do: Phoenix.Html.Engine
+  def eex_engine_for_file_ext(_ext), do: EEx.SmartEngine
 
-  defp wrap_content(content, ~r{layouts\/}),  do: content
-  defp wrap_content(content, file_path) do
-    "<%= within @within do %>#{content}<% end %>"
+  defp engine_extensions do
+    Config.get([:template_engines]) |> Dict.keys
   end
 end
 
