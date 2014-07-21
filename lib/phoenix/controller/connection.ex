@@ -39,6 +39,11 @@ defmodule Phoenix.Controller.Connection do
   def assign_status(conn, status), do: put_in(conn.status, status)
 
   @doc """
+  Returns true if Conn status is valid redirect code
+  """
+  def redirecting?(conn), do: conn.status in 300..308
+
+  @doc """
   Halts the Plug chain by throwing `{:halt, conn}`.
   If no response has been sent, an empty Bad Request is sent before throwing
   error.

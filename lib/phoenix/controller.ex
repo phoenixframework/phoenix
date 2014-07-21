@@ -3,6 +3,7 @@ defmodule Phoenix.Controller do
   import Plug.Conn
   alias Plug.MIME
   alias Phoenix.Plugs
+  alias Phoenix.Config
 
   @default_content_type "text/html"
   @plug_default_mime_type "application/octet-stream"
@@ -52,6 +53,7 @@ defmodule Phoenix.Controller do
       unless @options[:bare] do
         plug Plugs.ParamsFetcher
         plug Plugs.ContentTypeFetcher
+        plug Phoenix.Controller.Message
       end
     end
   end
