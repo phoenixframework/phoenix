@@ -43,6 +43,9 @@ defmodule Phoenix.Controller do
       import unquote(__MODULE__)
       @options unquote(options)
 
+      @subview_module view_module(__MODULE__)
+      @layout_module layout_module(__MODULE__)
+
       def init(options), do: options
       @before_compile unquote(__MODULE__)
       use Plug.Builder
@@ -58,8 +61,13 @@ defmodule Phoenix.Controller do
       unless Plugs.plugged?(@plugs, :action) do
         plug :action
       end
+
       def action(conn, _options) do
         apply(__MODULE__, conn.private[:phoenix_action], [conn, conn.params])
+      end
+
+      def render(conn, template, assigns \\ []) do
+        render_view conn, @subview_module, @layout_module, template, assigns
       end
     end
   end
@@ -120,46 +128,50 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Renders View template and sends response based on Controller module name and
-  request content-type
+  Renders View with template based on Mime Accept headers
 
-    * conn     - The Plug.Conn struct
-    * template - The String template name, ie "show", "index"
-    * assigns  - The optional dict assigns to pass to template when rendering
+    * conn - The Plug.Conn struct
+    * view_mod - The View module to call `render/2` on
+    * layout_mod - The Layout module to render
+    * template - The String template name, ie "show", "index".
+                 An empty list `[]` from `plug :render` automatically assigns
+                 the template as the action_name of the connection
+
+    * assigns - The optional dict assigns to pass to template when rendering
 
   ## Examples
 
-      defmodule MyApp.Controllers.Users do
+      # Explicit rendering
+
+      defmodule MyApp.UserController do
+        use Phoenix.Controller
+
         def show(conn) do
           render conn, "show", name: "José"
         end
       end
 
-      # Expands at compile time to:
+      # Automatic rendering with `plug :render`
 
-      MyApp.Views.Users.render("show.html",
-        name: "José",
-        within: {MyApp.Views.Layouts, "application.html"}
-      )
+      defmodule MyApp.UserController do
+        use Phoenix.Controller
+
+        plug :action
+        plug :render
+
+        def show(conn) do
+          assign(conn, :name, "José")
+        end
+      end
+
 
   """
-  defmacro render(conn, template, assigns \\ []) do
-    subview_module = view_module(__CALLER__.module)
-    layout_module  = layout_module(__CALLER__.module)
-
-    quote do
-      render_view unquote(conn),
-                  unquote(subview_module),
-                  unquote(layout_module),
-                  unquote(template),
-                  unquote(assigns)
-    end
+  def render_view(conn, view_mod, layout_mod, template, assigns \\ [])
+  def render_view(conn, view_mod, layout_mod, [], assigns) do
+    render_view conn, view_mod, layout_mod, action_name(conn), assigns
   end
-
-  @doc """
-  Renders View with template based on Mime Accept headers
-  """
-  def render_view(conn, view_mod, layout_mod, template, assigns \\ []) do
+  def render_view(conn, view_mod, layout_mod, template, assigns) do
+    template     = template || action_name(conn)
     assigns      = Dict.merge(conn.assigns, assigns)
     content_type = response_content_type(conn)
     extensions   = MIME.extensions(content_type)

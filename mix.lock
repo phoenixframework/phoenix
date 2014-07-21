@@ -5,5 +5,5 @@
   "inflex": {:package, "0.2.4"},
   "jazz": {:package, "0.1.2"},
   "linguist": {:package, "0.1.0"},
-  "plug": {:package, "0.5.1"},
+  "plug": {:package, "0.5.2"},
   "ranch": {:git, "git://github.com/extend/ranch.git", "3189ef2d47843945efc96c224963380462c33d40", [ref: "0.10.0"]}}

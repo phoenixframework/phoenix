@@ -1,5 +1,6 @@
 Code.require_file "views.exs", __DIR__
 Code.require_file "views/assign_view.exs", __DIR__
+Code.require_file "views/implicit_render_view.exs", __DIR__
 
 defmodule MyApp.AssignController do
   use Phoenix.Controller
@@ -30,11 +31,26 @@ defmodule MyApp.AssignController do
   end
 end
 
+defmodule MyApp.ImplicitRenderController do
+  use Phoenix.Controller
+
+  plug :action
+  plug :render
+
+  def index(conn, _params) do
+    conn
+    |> assign_layout(nil)
+    |> assign(:my_assign, "implicit render")
+  end
+end
+
+
 defmodule MyApp.Router do
   use Phoenix.Router
   get "/assign/manual", MyApp.AssignController, :index
   get "/assign/plug", MyApp.AssignController, :plugged
   get "/assign/overwrite", MyApp.AssignController, :overwrite
+  get "/renders/implicit", MyApp.ImplicitRenderController, :index
 end
 
 defmodule Phoenix.Controller.RenderTest do
@@ -57,5 +73,11 @@ defmodule Phoenix.Controller.RenderTest do
     conn = simulate_request(MyApp.Router, :get, "assign/overwrite")
     assert conn.status == 200
     assert conn.resp_body == "assign_overwrite\n"
+  end
+
+  test "render can be plugged for implicit rendering of action" do
+    conn = simulate_request(MyApp.Router, :get, "renders/implicit")
+    assert conn.status == 200
+    assert conn.resp_body == "implicit render\n"
   end
 end
