@@ -192,11 +192,11 @@ render "index", message: "hello", layout: nil
 ### Template Engine Configuration
 
 By default, `eex` and `haml` are supported (with an optional `Calliope` dep). To add `haml` support, simply 
-include the follow in your `mix.exs` deps:
+include the following in your `mix.exs` deps:
 
     {:calliope, "~> 0.2.4"}
 
-To Configure a third-party Phoenix Template Engine, add the
+To configure a third-party Phoenix Template Engine, add the
 extenion and module to your Mix Config, ie:
 
     config :phoenix, :template_engines,
