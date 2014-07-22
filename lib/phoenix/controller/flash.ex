@@ -33,8 +33,6 @@ defmodule Phoenix.Controller.Flash do
   Clears the Message dict on new requests
   """
   def call(conn = %Conn{private: %{plug_session: _session}}, _) do
-    conn = persist(conn, get_session(conn, :phoenix_messages) || %{})
-
     register_before_send conn, fn
       conn = %Conn{status: stat} when stat in @http_redir_range -> conn
       conn -> clear(conn)
@@ -54,7 +52,7 @@ defmodule Phoenix.Controller.Flash do
 
   """
   def put(conn, key, message) do
-    put_in(conn.private[:phoenix_messages][key], message) |> persist
+    persist(conn, put_in(get(conn), [key], message))
   end
 
   @doc """
@@ -69,9 +67,9 @@ defmodule Phoenix.Controller.Flash do
       "Welcome Back!"
 
   """
-  def get(conn), do: conn.private[:phoenix_messages]
+  def get(conn), do: get_session(conn, :phoenix_messages) || %{}
   def get(conn, key) do
-    get_in conn.private[:phoenix_messages], [key]
+    get_in get(conn), [key]
   end
 
   @doc """
@@ -97,12 +95,8 @@ defmodule Phoenix.Controller.Flash do
   """
   def clear(conn), do: persist(conn, %{})
 
-  defp persist(conn) do
-    persist(conn, get(conn))
-  end
   defp persist(conn, messages) do
-    conn = assign_private(conn, :phoenix_messages, messages)
-    put_session(conn, :phoenix_messages, conn.private[:phoenix_messages])
+    put_session(conn, :phoenix_messages, messages)
   end
 end
 
