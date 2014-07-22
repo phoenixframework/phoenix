@@ -54,17 +54,4 @@ defmodule Phoenix.Router.ConnectionTest do
   test "assign_status/1 returns the conn.satus" do
     assert Connection.assign_status(%Conn{}, 404).status == 404
   end
-
-  test "redirecting?/1 returns true when conn within redirect http status range" do
-    for status <- 300..308 do
-      assert Connection.redirecting?(struct(Conn, status: status))
-    end
-  end
-
-  test "redirecting?/1 returns false when conn outside redirect http status range" do
-    refute Connection.redirecting?(struct(Conn, status: 299))
-    refute Connection.redirecting?(struct(Conn, status: 309))
-    refute Connection.redirecting?(struct(Conn, status: 200))
-    refute Connection.redirecting?(struct(Conn, status: 404))
-  end
 end

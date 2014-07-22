@@ -36,6 +36,7 @@ defmodule Phoenix.Router do
         secret = Config.router!(__MODULE__, [:session_secret])
 
         plug Plug.Session, store: :cookie, key: key, secret: secret
+        plug Plugs.SessionFetcher
       end
 
       unless Plugs.plugged?(@plugs, :dispatch) do
