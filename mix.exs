@@ -33,7 +33,7 @@ defmodule Phoenix.Mixfile do
       {:inflex, "0.2.4"},
       {:linguist, "~> 0.1.0"},
       {:jazz, "0.1.2"},
-      {:calliope, "~> 0.2.4"}
+      {:calliope, "~> 0.2.4", optional: true}
     ]
   end
 
