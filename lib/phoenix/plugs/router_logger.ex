@@ -40,7 +40,7 @@ defmodule Phoenix.Plugs.RouterLogger do
   end
   defp before_send(_, _), do: :none
 
-  defp log(:debug, before, resp_time, conn) do
+  defp log(:debug, _before, resp_time, conn) do
     IO.puts """
         controller: #{controller_module(conn)}
         action:     #{action_name(conn)}
@@ -50,14 +50,11 @@ defmodule Phoenix.Plugs.RouterLogger do
     """
   end
 
-  defp log(level, before, resp_time, conn) do
+  defp log(_level, before, resp_time, conn) do
     IO.puts "#{before} resp_time=#{resp_time} status=#{conn.status} #{conn.method}: #{inspect conn.path_info}"
   end
 
-  defp localtime_ms() do
-    localtime_ms(:os.timestamp())
-  end
-  #Source https://gist.github.com/dergraf/2216802GOOGLE_PLACES 
+  #Source https://gist.github.com/dergraf/2216802GOOGLE_PLACES
   defp localtime_ms(now = {_, _, micro}) do
     {date, {hours, minutes, meconds}} = :calendar.now_to_local_time(now)
     {date, {hours, minutes, meconds, div(micro, 1000) |> rem(1000)}}
