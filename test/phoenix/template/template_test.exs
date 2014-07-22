@@ -30,5 +30,13 @@ defmodule Phoenix.Template.TemplateTest do
     templates = Template.find_all_from_root(root)
     assert File.exists?(templates |> Enum.at(0))
   end
+
+  test "#eex_engine_for_file_ext/1 returns Phoenix.Html.Engine for html extension" do
+    assert Template.eex_engine_for_file_ext(".html") == Phoenix.Html.Engine
+  end
+
+  test "#eex_engine_for_file_ext/1 returns EEx.SmartEngine for html extension" do
+    assert Template.eex_engine_for_file_ext(".json") == EEx.SmartEngine
+  end
 end
 
