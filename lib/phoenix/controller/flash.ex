@@ -4,6 +4,29 @@ defmodule Phoenix.Controller.Flash do
 
   @http_redir_range 300..308
 
+  @moduledoc """
+  Handles One-time messages, often referred to as "Flash" messages.
+  Messages can be stored in the session and persisted across redirects for
+  notices and alerts about request state.
+
+  Plugged automatically by Phoenix.Controller
+
+  A `Flash` alias is automatically injected when using `Phoenix.Controller`
+
+  ## Examples
+
+      def index(conn, _) do
+        render conn, "index", notice: Flash.get(conn, :notice)
+      end
+
+      def create(conn, _) do
+        conn
+        |> Flash.put(:notice, "Created successfully")
+        |> redirect("/")
+      end
+
+  """
+
   def init(opts), do: opts
 
   @doc """
