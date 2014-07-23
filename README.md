@@ -517,21 +517,24 @@ $ coffee -o priv/static/js -cw priv/src/static/cs
   - [ ] Member/Collection resource  routes
 - Configuration
   - [x] Environment based configuration with ExConf
-  - [ ] ExConf integreation with config.exs
+  - [x] Integreation with config.exs
 - Middleware
   - [x] Plug Based Connection handling
   - [x] Code Reloading
-  - [ ] Enviroment Based logging with log levels
+  - [ ] Enviroment Based logging with log levels with Elixir's Logger
   - [x] Static File serving
 - Controllers
   - [x] html/json/text helpers
   - [x] redirects
-  - [ ] Plug layer for action hooks
+  - [x] Plug layer for action hooks
   - [x] Error page handling
   - [ ] Error page handling per env
 - Views
   - [x] Precompiled View handling
-  - [ ] I18n
+  - [x] I18n
 - Realtime
   - [x] Websocket multiplexing/channels
+  - [x] Browser js client
+  - [ ] iOS client (WIP)
+  - [ ] Android client
 
