@@ -517,7 +517,7 @@ $ coffee -o priv/static/js -cw priv/src/static/cs
   - [ ] Member/Collection resource  routes
 - Configuration
   - [x] Environment based configuration with ExConf
-  - [x] Integreation with config.exs
+  - [x] Integration with config.exs
 - Middleware
   - [x] Plug Based Connection handling
   - [x] Code Reloading
