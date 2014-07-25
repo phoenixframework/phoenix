@@ -2,7 +2,7 @@
 
 > Elixir Web Framework targeting full-featured, fault tolerant applications with realtime functionality
 
-[![Build Status](https://travis-ci.org/phoenixframework/phoenix.svg)](https://travis-ci.org/phoenixframework/phoenix)
+[![Build Status](https://api.travis-ci.org/phoenixframework/phoenix.svg)](https://travis-ci.org/phoenixframework/phoenix)
 
 ## Getting started
 
