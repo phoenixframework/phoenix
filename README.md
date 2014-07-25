@@ -205,6 +205,50 @@ config :phoenix, :template_engines,
   slim: Slim.PhoenixEngine
 ```
 
+### Topics
+
+Topics provide a simple publish/subscribe mechanism that can be used to facilitate messaging between components in an application. To subscribe a process to a given topic, call `subscribe/2` passing in the PID and a string to identify the topic:
+
+```elixir
+Phoenix.Topic.subscribe self, "foo"
+```
+
+Then, to broadcast messages to all subscribers to that topic:
+
+```elixir
+Phoenix.Topic.broadcast "foo", { :message_type, some: 1, data: 2 }
+```
+
+For example, let's look at a rudimentary logger that prints messages when a controller action is invoked:
+
+```elixir
+defmodule Logger do
+  def start_link do
+    sub = spawn_link &(log/0)
+    Phoenix.Topic.subscribe(sub, "logging")
+    {:ok, sub}
+  end
+
+  def log do
+    receive do
+      { :action, params } ->
+        IO.puts "Called action #{params[:action]} in controller #{params[:controller]}"
+      _ ->
+    end
+    log
+  end
+end
+```
+
+With this module added as a worker to the app's supervision tree, we can broadcast messages to the `"logging"` topic, and they will be handled by the logger:
+
+```elixir
+def index(conn, _params) do
+  Phoenix.Topic.broadcast "logging", { :action, controller: "pages", action: "index" }
+  render conn, "index"
+end
+```
+
 ### Channels
 
 Channels broker websocket connections and integrate with the Topic PubSub layer for message broadcasting. You can think of channels as controllers, with two differences: they are bidirectionnal and the connection stays alive after a reply.
