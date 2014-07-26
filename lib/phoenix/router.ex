@@ -39,6 +39,8 @@ defmodule Phoenix.Router do
         plug Plugs.SessionFetcher
       end
 
+      plug Plug.MethodOverride
+
       unless Plugs.plugged?(@plugs, :dispatch) do
         plug :dispatch
       end
