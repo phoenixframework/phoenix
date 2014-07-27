@@ -5,6 +5,7 @@ defmodule Phoenix.Socket do
   Holds state for multiplexed socket connections and Channel/Topic authorization
   """
 
+  @derive [Access]
   defstruct conn: nil,
             pid: nil,
             channel: nil,
@@ -26,7 +27,8 @@ defmodule Phoenix.Socket do
 
   ## Examples
 
-      iex> Socket.add_channel(socket, "rooms", "lobby")
+      iex> Socket.add_channel(%Socket{channels: []}, "rooms", "lobby")
+      %Socket{channels: [{"rooms", "lobby"}]}
 
   """
   def add_channel(socket, channel, topic) do
@@ -42,7 +44,10 @@ defmodule Phoenix.Socket do
 
   ## Examples
 
+      iex> socket = Socket.add_channel(%Socket{channels: []}, "rooms", "lobby")
+      %Socket{channels: [{"rooms", "lobby"}]}
       iex> Socket.delete_channel(socket, "rooms", "lobby")
+      %Socket{channels: []}
 
   """
   def delete_channel(socket, channel, topic) do
@@ -54,6 +59,11 @@ defmodule Phoenix.Socket do
 
   ## Examples
 
+      iex> socket = %Socket{}
+      iex> Socket.authenticated?(socket, "rooms", "lobby")
+      false
+      iex> socket = Socket.add_channel(socket, "rooms", "lobby")
+      %Socket{channels: [{"rooms", "lobby"}]}
       iex> Socket.authenticated?(socket, "rooms", "lobby")
       true
 
@@ -63,10 +73,45 @@ defmodule Phoenix.Socket do
   end
 
   @doc """
-  Adds key/value pair to ephemeral socket state
+  Returns the value for the given assign key, scoped to the active multiplexed
+  channel/topic pair
+
+  ## Examples
+
+      iex> socket = Socket.set_current_channel(%Socket{}, "rooms", "lobby")
+      %Socket{channel: "rooms", topic: "lobby"}
+      iex> Socket.get_assign(socket, :token)
+      nil
+      iex> socket |> Socket.assign(:token, "bar") |> Socket.get_assign(:token)
+      "bar"
+
   """
-  def assign(socket, key, value) do
-    %Socket{socket | assigns: Map.put(socket.assigns, key, value)}
+  def get_assign(socket = %Socket{channel: channel, topic: topic}, key) do
+    get_in socket, [:assigns, channel, topic, key]
+  end
+
+  @doc """
+  Adds key/value pair to ephemeral socket state
+
+  ## Examples
+
+      iex> socket = Socket.set_current_channel(%Socket{}, "rooms", "lobby")
+      %Socket{channel: "rooms", topic: "lobby"}
+      iex> Socket.get_assign(socket, :token)
+      nil
+      iex> socket |> Socket.assign(:token, "bar") |> Socket.get_assign(:token)
+      "bar"
+
+  """
+  def assign(socket = %Socket{channel: channel, topic: topic}, key, value) do
+    socket
+    |> ensure_defaults(channel, topic)
+    |> put_in([:assigns, channel, topic, key], value)
+  end
+  defp ensure_defaults(socket, channel, topic) do
+    socket
+    |> update_in([:assigns, channel], fn val -> val || %{} end)
+    |> update_in([:assigns, channel, topic], fn val -> val || %{} end)
   end
 end
 

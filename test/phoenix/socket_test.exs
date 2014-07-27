@@ -1,38 +1,36 @@
 defmodule Phoenix.Socket.SocketTest do
   use ExUnit.Case
   alias Phoenix.Socket
+  doctest Socket
 
   def new_socket do
-    %Socket{pid: self,
-            router: nil,
-            channels: [],
-            assigns: %{}}
+    %Socket{pid: self}
   end
 
-  test "#set_current_channel sets the current channel" do
+  test "set_current_channel/3 sets the current channel" do
     socket = new_socket |> Socket.set_current_channel("somechan", "sometopic")
     assert socket.channel == "somechan"
     assert socket.topic == "sometopic"
   end
 
-  test "#authenticated? returns true if socket belongs to channel scoped to topic" do
+  test "authenticated?/3 returns true if socket belongs to channel scoped to topic" do
     socket = new_socket
     socket = Socket.add_channel(socket, "channel", "topic")
     assert Socket.authenticated?(socket, "channel", "topic")
     refute Socket.authenticated?(socket, "channel", "othertopic")
   end
 
-  test "#authenticated? returns false if socket does not belong to channel" do
+  test "authenticated?/3 returns false if socket does not belong to channel" do
     socket = new_socket
     refute Socket.authenticated?(socket, "chan", "topic")
   end
 
-  test "#add_channel adds channel" do
+  test "add_channel/3 adds channel" do
     socket = new_socket |> Socket.add_channel("test", "topic")
     assert socket.channels == [{"test", "topic"}]
   end
 
-  test "#add_channel only adds unique channel/topic pairs" do
+  test "add_channel/3 only adds unique channel/topic pairs" do
     socket = new_socket |> Socket.add_channel("test", "topic")
     assert socket.channels == [{"test", "topic"}]
     socket = Socket.add_channel(socket, "test", "topic")
@@ -41,18 +39,26 @@ defmodule Phoenix.Socket.SocketTest do
     assert socket.channels == [{"test", "newtopic"}, {"test", "topic"}]
   end
 
-  test "#delete_channel deletes channel" do
+  test "delete_channel/3 deletes channel" do
     socket = new_socket |> Socket.add_channel("test", "topic")
     assert socket.channels == [{"test", "topic"}]
     socket = Socket.delete_channel(socket, "test", "topic")
     assert socket.channels == []
   end
 
-  test "#assign assigns into the assigns map (yo dog)" do
-    socket = new_socket
-    assert socket.assigns == %{}
+  test "get_assign/2 and assign/3 assigns into the assigns map, scoped to channel/topic pair" do
+    socket = new_socket |> Socket.set_current_channel("rooms", "lobby")
+    refute Socket.get_assign(socket, :foo) == "bar"
     socket = Socket.assign(socket, :foo, "bar")
-    assert socket.assigns == %{foo: "bar"}
+    assert Socket.get_assign(socket, :foo) == "bar"
+
+    socket = socket |> Socket.set_current_channel("rooms", "123")
+    refute Socket.get_assign(socket, :foo) == "bar"
+    socket = Socket.assign(socket, :bar, "baz")
+    assert Socket.get_assign(socket, :bar) == "baz"
+
+    socket = socket |> Socket.set_current_channel("rooms", "lobby")
+    assert Socket.get_assign(socket, :foo) == "bar"
   end
 end
 
