@@ -49,7 +49,7 @@ defmodule YourApp.Router do
     get "/files/*path", FileController, :show
     
     resources "users", UserController do
-    resources "comments", CommentController
+      resources "comments", CommentController
     end
   end
 
