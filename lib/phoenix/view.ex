@@ -1,4 +1,5 @@
 defmodule Phoenix.View do
+  alias Phoenix.Project
 
   @moduledoc """
   Serves as the base view for an entire Phoenix application view layer
@@ -38,7 +39,7 @@ defmodule Phoenix.View do
   """
 
   defmacro __using__(options \\ []) do
-    templates_root = Dict.fetch!(options, :templates_root)
+    templates_root = Dict.get(options, :templates_root, default_templates_root)
 
     quote do
       import unquote(__MODULE__)
@@ -53,7 +54,7 @@ defmodule Phoenix.View do
 
   ## Examples
 
-      iex> View.template_path_from_view_module(MyApp.UserView, "web/templates")
+      iex> Phoenix.View.template_path_from_view_module(MyApp.UserView, "web/templates")
       "web/templates/user"
 
   """
@@ -66,6 +67,13 @@ defmodule Phoenix.View do
     |> String.replace(~r/^(.*)(_view)$/, "\\1")
 
     Path.join(templates_root, submodule_path)
+  end
+
+  @doc """
+  Returns the default String template root path for current mix project
+  """
+  def default_templates_root do
+    Path.join([Project.root_path, "web/templates"])
   end
 end
 
