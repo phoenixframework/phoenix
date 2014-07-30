@@ -86,7 +86,7 @@ defmodule Phoenix.Router.Mapper do
     quote do
       def __routes__, do: Enum.reverse(@routes)
       unquote(routes_ast)
-      def match(conn, method, path), do: Controller.not_found(conn, method, path)
+      def match(conn, method, path), do: Controller.Action.not_found(conn, method, path)
     end
   end
 
@@ -96,7 +96,7 @@ defmodule Phoenix.Router.Mapper do
 
     quote do
       def unquote(:match)(conn, unquote(http_method), unquote(path_args)) do
-        Controller.perform_action(conn,
+        Controller.Action.perform(conn,
           unquote(controller),
           unquote(action),
           unquote(params_list_with_bindings)

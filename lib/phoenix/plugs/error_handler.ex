@@ -1,6 +1,7 @@
 defmodule Phoenix.Plugs.ErrorHandler do
   @behaviour Plug.Wrapper
   alias Phoenix.Config
+  alias Phoenix.Controller
 
   def init(opts), do: opts
 
@@ -11,9 +12,9 @@ defmodule Phoenix.Plugs.ErrorHandler do
       :throw, {:halt, conn} -> conn
       _kind, error ->
         if Config.router(module, [:consider_all_requests_local]) do
-          Phoenix.Controller.error_with_trace(conn, error)
+          Controller.Action.error_with_trace(conn, error)
         else
-          Phoenix.Controller.error(conn, error)
+          Controller.Action.error(conn, error)
         end
     end
   end
