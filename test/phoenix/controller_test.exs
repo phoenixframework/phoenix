@@ -4,6 +4,8 @@ defmodule Phoenix.Router.ControllerTest do
   alias Plug.Conn
   alias Phoenix.Controller
 
+  doctest Controller
+
   defmodule RedirController do
     use Phoenix.Controller
     def redir_301(conn, _params) do

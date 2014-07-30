@@ -47,8 +47,9 @@ defmodule Phoenix.Controller.Flash do
 
   ## Examples
 
-      iex> Flash.put(conn, :notice, "Welcome Back!")
-      %Conn{...}
+      iex> conn = %Conn{private: %{plug_session: %{}}}
+      iex> match? %Conn{}, Flash.put(conn, :notice, "Welcome Back!")
+      true
 
   """
   def put(conn, key, message) do
@@ -60,9 +61,8 @@ defmodule Phoenix.Controller.Flash do
 
   ## Examples
 
-      iex> Flash.get(conn)
-      %{notice: "Welcome Back!"}
-
+      iex> conn = Flash.put(conn, :notice, "Hi!") |> Flash.get
+      %{notice: "Hi!"}
       iex> Flash.get(conn, :notice)
       "Welcome Back!"
 
@@ -77,8 +77,9 @@ defmodule Phoenix.Controller.Flash do
 
   ## Examples
 
-      iex> Flash.pop(conn, :notice)
-      {"Welcome Back!", %Conn{...}}
+      iex> conn = Flash.put(%Conn{}, :notice, "Welcome Back!")
+      iex> Flash.pop(conn, :notice) |> elem(0)
+      "Welcome Back!"
 
   """
   def pop(conn, key) do
