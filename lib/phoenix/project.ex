@@ -21,10 +21,9 @@ defmodule Phoenix.Project do
   Returns the String root path of Mix project
   """
   def root_path do
-    Module.concat([module_root]).module_info[:compile][:source]
-    |> to_string
-    |> Path.dirname
-    |> Path.join("../")
+    app
+    |> Application.app_dir
+    |> Path.join("../../../../")
     |> Path.expand
   end
 end
