@@ -1,11 +1,16 @@
 defmodule Phoenix.Channel do
+  use Behaviour
   use Jazz
   alias Phoenix.Topic
   alias Phoenix.Socket
   alias Phoenix.Socket.Handler
 
+  defcallback join(Socket.t, topic :: binary, auth_msg :: Map) :: {:ok, Socket.t} |
+                                                                  {:error, Socket.t, reason :: term}
+
   defmacro __using__(_options) do
     quote do
+      @behaviour unquote(__MODULE__)
       import unquote(__MODULE__)
 
       def leave(socket, message), do: socket
