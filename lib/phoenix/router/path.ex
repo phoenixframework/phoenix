@@ -62,7 +62,7 @@ defmodule Phoenix.Router.Path do
     |> Enum.filter(fn part -> not(part in [nil, ""]) end)
     |> unwrap_arg_list(path)
   end
-  defp part_to_ast_binding(<<"*" <> splat_name>>, nil), do: nil
+  defp part_to_ast_binding(<<"*" <> _splat_name>>, nil), do: nil
   defp part_to_ast_binding(<<":" <> param_name>>, <<"*" <> splat_name>>) do
     {:|, [], [var_ast(param_name), var_ast(splat_name)]}
   end
