@@ -60,5 +60,18 @@ defmodule Phoenix.Socket.SocketTest do
     socket = socket |> Socket.set_current_channel("rooms", "lobby")
     assert Socket.get_assign(socket, :foo) == "bar"
   end
+
+  test "get_assign/4 and assign/4 assigns for specific channel/topic pair" do
+    socket = new_socket
+    refute Socket.get_assign(socket, "rooms", "lobby", :foo) == "bar"
+    socket = Socket.assign(socket, "rooms", "lobby", :foo, "bar")
+    assert Socket.get_assign(socket, "rooms", "lobby", :foo) == "bar"
+
+    refute Socket.get_assign(socket, "rooms", "123", :foo) == "baz"
+    socket = Socket.assign(socket, "rooms", "123", :foo, "baz")
+    assert Socket.get_assign(socket, "rooms", "123", :foo) == "baz"
+    assert Socket.get_assign(socket, "rooms", "lobby", :foo) == "bar"
+  end
+
 end
 

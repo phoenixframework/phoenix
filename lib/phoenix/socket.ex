@@ -74,7 +74,7 @@ defmodule Phoenix.Socket do
 
   @doc """
   Returns the value for the given assign key, scoped to the active multiplexed
-  channel/topic pair
+  channel/topic pair or for a specific channel/topic
 
   ## Examples
 
@@ -82,11 +82,17 @@ defmodule Phoenix.Socket do
       %Socket{channel: "rooms", topic: "lobby"}
       iex> Socket.get_assign(socket, :token)
       nil
-      iex> socket |> Socket.assign(:token, "bar") |> Socket.get_assign(:token)
+      iex> socket = Socket.assign(socket, :token, "bar")
+      iex> Socket.get_assign(socket, :token)
+      "bar"
+      iex> Socket.get_assign(socket, "rooms", "lobby", :token)
       "bar"
 
   """
   def get_assign(socket = %Socket{channel: channel, topic: topic}, key) do
+    get_assign socket, channel, topic, key
+  end
+  def get_assign(socket, channel, topic, key) do
     get_in socket, [:assigns, channel, topic, key]
   end
 
@@ -99,11 +105,17 @@ defmodule Phoenix.Socket do
       %Socket{channel: "rooms", topic: "lobby"}
       iex> Socket.get_assign(socket, :token)
       nil
-      iex> socket |> Socket.assign(:token, "bar") |> Socket.get_assign(:token)
+      iex> socket = Socket.assign(socket, :token, "bar")
+      iex> Socket.get_assign(socket, :token)
+      "bar"
+      iex> Socket.get_assign(socket, "rooms", "lobby", :token)
       "bar"
 
   """
   def assign(socket = %Socket{channel: channel, topic: topic}, key, value) do
+    assign socket, channel, topic, key, value
+  end
+  def assign(socket, channel, topic, key, value) do
     socket
     |> ensure_defaults(channel, topic)
     |> put_in([:assigns, channel, topic, key], value)
