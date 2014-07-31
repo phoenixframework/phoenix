@@ -11,6 +11,7 @@ defmodule Phoenix.Router.RoutingTest do
     def options(conn, _params), do: text(conn, "users options")
     def connect(conn, _params), do: text(conn, "users connect")
     def trace(conn, _params), do: text(conn, "users trace")
+    def not_found(conn, _params), do: text(conn, :not_found, "not found")
   end
 
   defmodule SessionsController do
@@ -49,9 +50,9 @@ defmodule Phoenix.Router.RoutingTest do
   defmodule Router do
     use Phoenix.Router
     get "/", UsersController, :index, as: :users
+    get "/users/top", UsersController, :top, as: :top
     get "/users/:id", UsersController, :show, as: :user
     get "/profiles/profile-:id", UsersController, :show
-    get "/users/top", UsersController, :top, as: :top
     get "/route_that_crashes", UsersController, :crash
     get "/files/:user_name/*path", FilesController, :show
     get "/backups/*path", FilesController, :show
@@ -66,6 +67,13 @@ defmodule Phoenix.Router.RoutingTest do
     resources "sessions", SessionsController, only: [ :new, :create, :destroy ]
 
     get "/users/:user_id/comments/:id", CommentsController, :show
+  end
+
+  defmodule CatchAllRouter do
+    use Phoenix.Router
+    get "/users/top", UsersController, :top, as: :top
+    get "/users/:id", UsersController, :show, as: :user
+    get "/*path", UsersController, :not_found
   end
 
   test "get root path" do
@@ -241,6 +249,13 @@ defmodule Phoenix.Router.RoutingTest do
     conn = Router.call(conn, [])
     assert conn.status == 200
     assert conn.params["id"] == "1"
+  end
+
+  test "catch-all splat route matches" do
+    conn = simulate_request(CatchAllRouter, :get, "foo/bar/baz")
+    assert conn.status == 404
+    assert conn.params == %{"path" => "foo/bar/baz"}
+    assert conn.resp_body == "not found"
   end
 end
 

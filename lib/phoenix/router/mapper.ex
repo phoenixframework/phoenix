@@ -1,13 +1,13 @@
 defmodule Phoenix.Router.Mapper do
   alias Phoenix.Router.Path
-  alias Phoenix.Controller
+  alias Phoenix.Controller.Action
   alias Phoenix.Config
   alias Phoenix.Router.ResourcesContext
   alias Phoenix.Router.ScopeContext
   alias Phoenix.Router.Errors
   alias Phoenix.Router.Mapper
 
-  @actions [:index, :edit, :show, :new, :create, :update, :destroy]
+  @actions [:index, :edit, :new, :show, :create, :update, :destroy]
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace]
 
   @moduledoc """
@@ -18,22 +18,21 @@ defmodule Phoenix.Router.Mapper do
   ## Examples
 
       defmodule Router do
-        use Phoenix.Router, port: 4000
+        use Phoenix.Router
 
-        get "pages/:page", PagesController, :show, as: :page
-        resources "users", UsersController
+        get "pages/:page", PageController, :show, as: :page
+        resources "users", UserController
       end
 
       # Compiles to
 
-      get "pages/:page", PagesController, :show, as: :page
+      get "pages/:page", PageController, :show, as: :page
 
-      -> defmatch({:get, "pages/:page", PagesController, :show, [as: :page]})
-         defroute_aliases({:get, "pages/:page", PagesController, :show, [as: :page]})
+      -> defmatch({:get, "pages/:page", PageController, :show, [as: :page]})
+         defroute_aliases({:get, "pages/:page", PageController, :show, [as: :page]})
 
       --> def(match(conn, :get, ["pages", page])) do
-            conn = conn.params(Dict.merge(conn.params(), [{"page", page}]))
-            PagesController.show(conn, conn.params)
+            Action.perform(conn, PageController, :show, page: page)
           end
 
   The resources macro accepts flags to limit which resources are generated. Passing
@@ -43,24 +42,24 @@ defmodule Phoenix.Router.Mapper do
   ## Examples
 
       defmodule Router do
-        use Phoenix.Router, port: 4000
+        use Phoenix.Router
 
-        resources "pages", Controllers.Pages, only: [ :show ]
-        resources "users", Controllers.Users, except: [ :destroy ]
+        resources "pages", PageController, only: [:show]
+        resources "users", UserController, except: [:destroy]
       end
 
   ## Generated Routes
 
-      page      GET   pages/:id      Elixir.Controllers.Pages#show
+      page      GET   pages/:id      Elixir.PageControllershow
 
-      users     GET   users          Elixir.Controllers.Users#new
-      new_user  GET   users/new      Elixir.Controllers.Users#new
-      edit_user GET   users/:id/edit Elixir.Controllers.Users#edit
-      user      GET   users/:id      Elixir.Controllers.Users#show
+      users     GET   users          Elixir.UserControllernew
+      new_user  GET   users/new      Elixir.UserControllernew
+      edit_user GET   users/:id/edit Elixir.UserControlleredit
+      user      GET   users/:id      Elixir.UserControllershow
 
-                POST  users          Elixir.Controllers.Users#create
-                PUT   users/:id      Elixir.Controllers.Users#update
-                PATCH users/:id      Elixir.Controllers.Users#update
+                POST  users          Elixir.UserControllercreate
+                PUT   users/:id      Elixir.UserControllerupdate
+                PATCH users/:id      Elixir.UserControllerupdate
 
   """
 
@@ -74,7 +73,7 @@ defmodule Phoenix.Router.Mapper do
   end
 
   defmacro __before_compile__(env) do
-    routes = Enum.reverse(Module.get_attribute(env.module, :routes))
+    routes = Module.get_attribute(env.module, :routes)
     routes_ast = Enum.reduce routes, nil, fn route, acc ->
       quote do
         defmatch(unquote(route))
@@ -86,7 +85,7 @@ defmodule Phoenix.Router.Mapper do
     quote do
       def __routes__, do: Enum.reverse(@routes)
       unquote(routes_ast)
-      def match(conn, method, path), do: Controller.Action.not_found(conn, method, path)
+      def match(conn, method, path), do: Action.not_found(conn, method, path)
     end
   end
 
@@ -96,7 +95,7 @@ defmodule Phoenix.Router.Mapper do
 
     quote do
       def unquote(:match)(conn, unquote(http_method), unquote(path_args)) do
-        Controller.Action.perform(conn,
+        Action.perform(conn,
           unquote(controller),
           unquote(action),
           unquote(params_list_with_bindings)

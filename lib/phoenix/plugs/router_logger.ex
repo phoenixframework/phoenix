@@ -41,6 +41,7 @@ defmodule Phoenix.Plugs.RouterLogger do
   defp before_send(_, _), do: :none
 
   defp log(:debug, _before, resp_time, conn) do
+    conn = Phoenix.Plugs.ContentTypeFetcher.fetch(conn)
     IO.puts """
         controller: #{controller_module(conn)}
         action:     #{action_name(conn)}
