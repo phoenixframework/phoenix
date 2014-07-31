@@ -34,6 +34,17 @@ defmodule Phoenix.Controller do
         end
       end
 
+  ## Controller Actions
+
+  Controllers inject an `action/2` function into all using modules. This
+  invokes the corresponding function mapped in the router and stored in the
+  private `phoenix_action` assign. For custom action handling, `action/2` can be
+  overriden, ie:
+
+      def action(conn = %Conn{private: %{phoenix_action: action}, params) do
+        find_module_for_action(action).call(conn, params)
+      end
+
   """
   defmacro __using__(options) do
     quote do
