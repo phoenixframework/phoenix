@@ -93,7 +93,7 @@ defmodule Phoenix.Socket do
     get_assign socket, channel, topic, key
   end
   def get_assign(socket, channel, topic, key) do
-    get_in socket, [:assigns, channel, topic, key]
+    get_in socket, [:assigns, {channel, topic}, key]
   end
 
   @doc """
@@ -118,12 +118,11 @@ defmodule Phoenix.Socket do
   def assign(socket, channel, topic, key, value) do
     socket
     |> ensure_defaults(channel, topic)
-    |> put_in([:assigns, channel, topic, key], value)
+    |> put_in([:assigns, {channel, topic}, key], value)
   end
   defp ensure_defaults(socket, channel, topic) do
     socket
-    |> update_in([:assigns, channel], fn val -> val || %{} end)
-    |> update_in([:assigns, channel, topic], fn val -> val || %{} end)
+    |> update_in([:assigns, {channel, topic}], fn val -> val || %{} end)
   end
 end
 
