@@ -65,7 +65,11 @@ defmodule Phoenix.Topic.Server do
   end
 
   def handle_call({:delete, group}, _from, state) do
-    {:reply, delete(group), state}
+    if active?(group) do
+      {:reply, {:error, :active}, state}
+    else
+      {:reply, delete(group), state}
+    end
   end
 
   def handle_info(_message, state = %Server{role: :slave}) do

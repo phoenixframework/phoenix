@@ -29,8 +29,16 @@ defmodule Phoenix.Topic.TopicTest do
   test "#delete removes process group" do
     assert Topic.create("topic3") == :ok
     assert Topic.exists?("topic3")
-    assert Topic.delete("topic3")
+    assert Topic.delete("topic3") == :ok
     refute Topic.exists?("topic3")
+  end
+
+  test "#delete does not remove active process groups" do
+    assert Topic.create("topic3") == :ok
+    assert Topic.exists?("topic3")
+    Topic.subscribe(self, "topic3")
+    assert Topic.delete("topic3") == {:error, :active}
+    assert Topic.exists?("topic3")
   end
 
   test "#subscribers, #subscribe, #unsubscribe" do

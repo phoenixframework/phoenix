@@ -33,7 +33,7 @@ defmodule Phoenix.Topic do
 
   ## Examples
 
-      iex> Topic.create("mytopc")
+      iex> Topic.create("mytopic")
       :ok
 
   """
@@ -49,7 +49,15 @@ defmodule Phoenix.Topic do
   end
 
   @doc """
-  Removes Topic from process group
+  Removes Topic from process group if inactive
+
+  ## Examples
+
+      iex> Topic.delete("mytopic")
+      :ok
+      iex> Topic.delete("activetopic")
+      {:error, :active}
+
   """
   def delete(name) do
     call {:delete, group(name)}
