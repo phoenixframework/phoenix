@@ -5,7 +5,7 @@ defmodule Phoenix.Channel do
   alias Phoenix.Socket
   alias Phoenix.Socket.Handler
 
-  defcallback join(Socket.t, topic :: binary, auth_msg :: Map) :: {:ok, Socket.t} |
+  defcallback join(Socket.t, topic :: binary, auth_msg :: map) :: {:ok, Socket.t} |
                                                                   {:error, Socket.t, reason :: term}
 
   defmacro __using__(_options) do

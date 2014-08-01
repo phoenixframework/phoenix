@@ -12,26 +12,37 @@ defmodule Phoenix.Topic.Server do
 
   All nodes monitor master Topic.Server and compete for leader in the event of a
   nodedown.
+
+
+  ## Configuration
+
+  To set a custom garbage collection timer, add the following to your Mix config
+
+      config :phoenix, :topics,
+        garbage_collect_after_ms: 60_000..120_000
+
   """
 
   defstruct role: :slave,
             gc_buffer: [],
-            garbage_collect_after_ms: 60_000..300_000
+            garbage_collect_after_ms: nil
 
-  def start_link do
-    GenServer.start_link __MODULE__, [], []
+  def start_link(opts) do
+    GenServer.start_link __MODULE__, opts, []
   end
 
   def leader_pid, do: :global.whereis_name(__MODULE__)
 
-  def init(_) do
+  def init(opts) do
+    gc_after = Dict.fetch!(opts, :garbage_collect_after_ms)
+
     case :global.register_name(__MODULE__, self, &:global.notify_all_name/3) do
       :no  ->
         Process.link(leader_pid)
-        {:ok, %Server{role: :slave}}
+        {:ok, struct(Server, role: :slave, garbage_collect_after_ms: gc_after)}
       :yes ->
         send(self, :garbage_collect_all)
-        {:ok, %Server{role: :leader}}
+        {:ok, struct(Server, role: :leader, garbage_collect_after_ms: gc_after)}
     end
   end
 
