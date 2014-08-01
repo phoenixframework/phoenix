@@ -130,7 +130,7 @@ defmodule Phoenix.Controller do
   end
   def render_view(conn, view_mod, layout_mod, template, assigns) do
     template     = template || action_name(conn)
-    assigns      = Dict.merge(conn.assigns, assigns)
+    assigns      = Dict.merge(conn.assigns, assigns) |> Dict.put_new(:conn, conn)
     content_type = response_content_type(conn)
     extensions   = MIME.extensions(content_type)
     layout       = layout(conn)
