@@ -19,28 +19,10 @@ defmodule Phoenix.Template.HamlEngine do
     end
   end
 
-  @doc """
-  Return String template file_path contents, wrapping templates
-  in `within` macro to render traditional templates within a layout.
-
-  ## Examples
-
-      iex> Template.read!("/var/www/templates/pages/show.html.haml")
-      <%= within @layout do %>
-        <h1>Haml Show Page</h1>
-      <% end %>
-
-  """
-  def read!(file_path) do
+  defp read!(file_path) do
     file_path
     |> File.read!
     |> Calliope.Render.precompile
-    |> wrap_content(file_path)
-  end
-
-  defp wrap_content(content, ~r{layouts\/}),  do: content
-  defp wrap_content(content, _file_path) do
-    "<%= within @within do %>#{content}<% end %>"
   end
 end
 

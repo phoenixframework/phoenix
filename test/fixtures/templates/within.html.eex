@@ -1,1 +1,0 @@
-<%= within {MyApp.Views, "layouts/application.html"} do %><%= {:safe, "<>"} %><% end %>

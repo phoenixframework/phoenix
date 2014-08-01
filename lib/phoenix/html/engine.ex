@@ -4,7 +4,7 @@ defmodule Phoenix.Html.Engine do
   alias Phoenix.Html
   alias Phoenix.Html.Safe
 
-  def handle_body(body), do: Html.safe(body)
+  def handle_body(body), do: Html.unsafe(body)
 
   def handle_text(buffer, text) do
     quote do

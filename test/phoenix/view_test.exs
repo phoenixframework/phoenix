@@ -7,42 +7,51 @@ defmodule Phoenix.ViewTest do
   use ExUnit.Case
   alias Phoenix.UserTest.UserView
   alias Phoenix.UserTest.LayoutView
+  alias Phoenix.View
 
-  doctest Phoenix.View
+  doctest Phoenix.View, except: [render: 3]
 
   test "Subviews render templates with imported functions from base view" do
-    assert UserView.render("base.html", name: "chris") == {:safe, "<div>\n  Base CHRIS\n</div>\n\n"}
+    assert View.render(UserView, "base.html", name: "chris") == "<div>\n  Base CHRIS\n</div>\n\n"
   end
 
   test "Subviews render templates with imported functions from subview" do
-    assert UserView.render("sub.html", desc: "truncated") == {:safe, "Subview truncat...\n"}
+    assert View.render(UserView, "sub.html", desc: "truncated") == "Subview truncat...\n"
   end
 
   test "views can be render within another view, such as layouts" do
-    html = UserView.render("sub.html",
+    html = View.render(UserView, "sub.html",
       desc: "truncated",
       title: "Test",
       within: {LayoutView, "application.html"}
     )
 
-    assert html == {:safe, "<html>\n  <title>Test</title>\n  Subview truncat...\n\n</html>\n"}
+    assert html == "<html>\n  <title>Test</title>\n  Subview truncat...\n\n</html>\n"
   end
 
   test "views can render other views within template without safing" do
-    html = UserView.render("show.html", name: "<em>chris</em>")
-    assert html == {:safe, "Showing User <b>name:</b> &lt;em&gt;chris&lt;/em&gt;\n\n"}
+    html = View.render(UserView, "show.html", name: "<em>chris</em>")
+    assert html == "Showing User <b>name:</b> &lt;em&gt;chris&lt;/em&gt;\n\n"
   end
 
   test "template_path_from_view_module finds the template path given view module" do
-    assert Phoenix.View.template_path_from_view_module(MyApp.UserView, "web/templates") ==
+    assert View.template_path_from_view_module(MyApp.UserView, "web/templates") ==
       "web/templates/user"
 
-    assert Phoenix.View.template_path_from_view_module(MyApp.Admin.UserView, "web/templates") ==
+    assert View.template_path_from_view_module(MyApp.Admin.UserView, "web/templates") ==
       "web/templates/admin/user"
   end
 
   test "default_templates_root/0 returns the default template path based on current mix project" do
-    assert Phoenix.View.default_templates_root == Path.join([Phoenix.Project.root_path, "web/templates"])
+    assert View.default_templates_root == Path.join([Phoenix.Project.root_path, "web/templates"])
+  end
+
+  test "wrap_rendered_content/2 safes html content" do
+    assert View.wrap_rendered_content("<b>Hi</b>", ".html") == {:safe, "<b>Hi</b>"}
+  end
+
+  test "wrap_rendered_content/2 returns string for non-html content" do
+    assert View.wrap_rendered_content("Hi", ".txt") == "Hi"
   end
 end
 

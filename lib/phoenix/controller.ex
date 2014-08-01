@@ -2,6 +2,7 @@ defmodule Phoenix.Controller do
   import Phoenix.Controller.Connection
   alias Plug.MIME
   alias Phoenix.Plugs
+  alias Phoenix.View
 
   @default_content_type "text/html"
   @plug_default_mime_type "application/octet-stream"
@@ -130,26 +131,26 @@ defmodule Phoenix.Controller do
   end
   def render_view(conn, view_mod, layout_mod, template, assigns) do
     template     = template || action_name(conn)
-    assigns      = Dict.merge(conn.assigns, assigns) |> Dict.put_new(:conn, conn)
     content_type = response_content_type(conn)
-    extensions   = MIME.extensions(content_type)
-    layout       = layout(conn)
+    exts         = MIME.extensions(content_type)
     status       = conn.status || 200
-
-    if is_binary layout do
-      assigns = Dict.put_new(assigns, :within, {layout_mod, template_name(layout, extensions)})
-    end
-
-    content = case view_mod.render(template_name(template, extensions), assigns) do
-      {:safe, rendered_content} -> rendered_content
-      rendered_content -> rendered_content
-    end
+    conn         = prepare_for_render(conn, assigns, layout_mod, exts)
+    content = View.render(view_mod, template_name(template, exts), conn.assigns)
 
     send_response(conn, status, content_type, content)
   end
   defp template_name(template, extensions)
   defp template_name(template, []), do: template
   defp template_name(template, [ext | _]), do: "#{template}.#{ext}"
+  defp prepare_for_render(conn, assigns, layout_mod, exts) do
+    assigns = Dict.put_new(assigns, :conn, conn)
+    layout = layout(conn)
+    if is_binary layout do
+      assigns = Dict.put_new(assigns, :within, {layout_mod, template_name(layout, exts)})
+    end
+
+    update_in(conn.assigns, &Dict.merge(&1, assigns))
+  end
 
   @doc """
   Finds View module based on controller_module
