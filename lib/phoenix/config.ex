@@ -48,7 +48,16 @@ defmodule Phoenix.Config do
     def exception(msg), do: %UndefinedConfigError{message: inspect(msg)}
   end
 
+  @doc """
+  Returns the default configuration value given the path for get_in lookup
+  of `:phoenix` Application configuration
 
+  ## Examples
+
+      iex> Config.default([:logger, :level])
+      :error
+
+  """
   def default(path) do
     get_in(@defaults, path)
   end
