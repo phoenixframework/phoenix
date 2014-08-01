@@ -67,10 +67,12 @@ defmodule Phoenix.Router do
   def start_adapter(module, opts) do
     protocol = if opts[:ssl], do: :https, else: :http
     case apply(Plug.Adapters.Cowboy, protocol, [module, [], opts]) do
-      {:ok, _pid} ->
+      {:ok, pid} ->
         "%{green}Running #{module} with Cowboy on port #{inspect opts[:port]}%{reset}"
         |> IO.ANSI.escape
         |> IO.puts
+        {:ok, pid}
+
       {:error, _} ->
         raise "Port #{inspect opts[:port]} is already in use"
     end
