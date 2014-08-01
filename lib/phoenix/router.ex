@@ -73,7 +73,7 @@ defmodule Phoenix.Router do
         |> IO.puts
         {:ok, pid}
 
-      {:error, _} ->
+      {:error, :eaddrinuse} ->
         raise "Port #{inspect opts[:port]} is already in use"
     end
   end
