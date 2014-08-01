@@ -129,6 +129,7 @@ defmodule Phoenix.Controller do
     render_view conn, view_mod, layout_mod, action_name(conn), assigns
   end
   def render_view(conn, view_mod, layout_mod, template, assigns) do
+    conn         = assign_layout(conn, assigns[:layout])
     template     = template || action_name(conn)
     assigns      = Dict.merge(conn.assigns, assigns)
     content_type = response_content_type(conn)
@@ -136,7 +137,7 @@ defmodule Phoenix.Controller do
     layout       = layout(conn)
     status       = conn.status || 200
 
-    if layout do
+    if layout and layout != :none do
       assigns = Dict.put_new(assigns, :within, {layout_mod, template_name(layout, extensions)})
     end
 
