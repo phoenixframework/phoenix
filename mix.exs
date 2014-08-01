@@ -28,8 +28,8 @@ defmodule Phoenix.Mixfile do
 
   defp deps(:prod) do
     [
-      {:cowboy, "~> 0.10.0", github: "extend/cowboy", optional: true},
-      {:plug, "0.5.2"},
+      {:cowboy, "~> 1.0.0", optional: true},
+      {:plug, "0.5.3"},
       {:inflex, "0.2.4"},
       {:linguist, "~> 0.1.0"},
       {:jazz, "0.1.2"},

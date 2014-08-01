@@ -25,7 +25,7 @@ defmodule <%= application_module %>.Mixfile do
   defp deps do
     [
       {:phoenix, github: "phoenixframework/phoenix"},
-      {:cowboy, "~> 0.10.0", github: "extend/cowboy", optional: true}
+      {:cowboy, "~> 1.0.0"}
     ]
   end
 end
