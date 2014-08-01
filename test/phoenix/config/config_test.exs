@@ -44,5 +44,16 @@ defmodule Phoenix.Config.ConfigTest do
       Config.get!([:logger, :key_that_does_not_exist])
     end
   end
+
+  test "default/1 returns the default config value" do
+    assert Config.default([:logger, :level]) == :error
+  end
+
+  test "default!/1 raises UndefinedConfigError if value is nil" do
+    assert_raise Config.UndefinedConfigError, fn ->
+      Config.default!([:logger, :key_that_does_not_exist])
+    end
+  end
+
 end
 

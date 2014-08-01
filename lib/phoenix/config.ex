@@ -36,6 +36,9 @@ defmodule Phoenix.Config do
     template_engines: [
       eex: Phoenix.Template.EExEngine,
       haml: Phoenix.Template.HamlEngine
+    ],
+    topics: [
+      garbage_collect_after_ms: 60_000..300_000
     ]
   ]
 
@@ -43,6 +46,19 @@ defmodule Phoenix.Config do
   defmodule UndefinedConfigError do
     defexception [:message]
     def exception(msg), do: %UndefinedConfigError{message: inspect(msg)}
+  end
+
+
+  def default(path) do
+    get_in(@defaults, path)
+  end
+  def default!(path) do
+    case default(path) do
+      nil   -> raise UndefinedConfigError, message: """
+        No default configuration found for #{inspect path}
+        """
+      value -> value
+    end
   end
 
   @doc """
@@ -57,7 +73,7 @@ defmodule Phoenix.Config do
   """
   def get(path) do
     case get_in(Application.get_all_env(:phoenix), path) do
-      nil   -> get_in(@defaults, path)
+      nil   -> default(path)
       value -> value
     end
   end
@@ -107,7 +123,7 @@ defmodule Phoenix.Config do
   end
   def router(module, path) do
     case get_in(find_router_conf(module), path) do
-      nil   -> get_in(@defaults, [:router] ++ path)
+      nil   -> default([:router] ++ path)
       value -> value
     end
   end
