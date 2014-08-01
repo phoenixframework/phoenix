@@ -50,6 +50,7 @@ defmodule Phoenix.Channel.ChannelTest do
   test "Default #leave is generated as a noop" do
     defmodule Chan1 do
       use Phoenix.Channel
+      def join(socket, _topic, _msg), do: {:ok, socket}
     end
     socket = new_socket
     assert Chan1.leave(socket, []) == socket
@@ -58,6 +59,7 @@ defmodule Phoenix.Channel.ChannelTest do
   test "#leave can be overridden" do
     defmodule Chan2 do
       use Phoenix.Channel
+      def join(socket, _topic, _msg), do: {:ok, socket}
       def leave(_socket, _msg), do: :overridden
     end
 

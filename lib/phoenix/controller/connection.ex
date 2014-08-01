@@ -25,8 +25,22 @@ defmodule Phoenix.Controller.Connection do
 
   @doc """
   Assign layout to phoenix private assigns
+
+  Possible values include any String, as well as the Atom `:none` to
+  render without a layout.
+
+  ## Examples
+
+      iex> conn |> assign_layout("print")
+      iex> conn |> assign_layout(:none)
+
   """
-  def assign_layout(conn, layout), do: assign_private(conn, :phoenix_layout, layout)
+  def assign_layout(conn, layout) when is_binary(layout) do
+    assign_private(conn, :phoenix_layout, layout)
+  end
+  def assign_layout(conn, :none) do
+    assign_private(conn, :phoenix_layout, :none)
+  end
 
   @doc """
   Retrieve layout from phoenix private assigns

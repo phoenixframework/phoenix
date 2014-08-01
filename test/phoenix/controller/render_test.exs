@@ -14,19 +14,19 @@ defmodule MyApp.AssignController do
   def index(conn, _params) do
     conn
     |> assign(:my_assign, "assign_index")
-    |> assign_layout(nil)
+    |> assign_layout(:none)
     |> render "index"
   end
 
   def plugged(conn, _params) do
     conn
-    |> assign_layout(nil)
+    |> assign_layout(:none)
     |> render "index"
   end
 
   def overwrite(conn, _params) do
     conn
-    |> assign_layout(nil)
+    |> assign_layout(:none)
     |> render "index", my_assign: "assign_overwrite"
   end
 end
@@ -39,7 +39,7 @@ defmodule MyApp.ImplicitRenderController do
 
   def index(conn, _params) do
     conn
-    |> assign_layout(nil)
+    |> assign_layout(:none)
     |> assign(:my_assign, "implicit render")
   end
 end

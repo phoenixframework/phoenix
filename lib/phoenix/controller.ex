@@ -136,13 +136,16 @@ defmodule Phoenix.Controller do
     layout       = layout(conn)
     status       = conn.status || 200
 
-    if layout do
+    if is_binary layout do
       assigns = Dict.put_new(assigns, :within, {layout_mod, template_name(layout, extensions)})
     end
 
-    {:safe, rendered_content} = view_mod.render(template_name(template, extensions), assigns)
+    content = case view_mod.render(template_name(template, extensions), assigns) do
+      {:safe, rendered_content} -> rendered_content
+      rendered_content -> rendered_content
+    end
 
-    send_response(conn, status, content_type, rendered_content)
+    send_response(conn, status, content_type, content)
   end
   defp template_name(template, extensions)
   defp template_name(template, []), do: template
