@@ -51,7 +51,7 @@ defmodule Phoenix.ViewTest do
     assert View.default_templates_root == Path.join([Phoenix.Project.root_path, "web/templates"])
   end
 
-  test "unwrap_rendered_content/2 safes html content" do
+  test "unwrap_rendered_content/2 unwraps safe'd html content" do
     assert View.unwrap_rendered_content({:safe, "<b>Hi</b>"}, ".html") == "<b>Hi</b>"
   end
 
