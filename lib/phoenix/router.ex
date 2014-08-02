@@ -4,6 +4,7 @@ defmodule Phoenix.Router do
   alias Phoenix.Adapters.Cowboy
   alias Phoenix.Plugs.Parsers
   alias Phoenix.Config
+  alias Phoenix.Project
 
   defmacro __using__(plug_adapter_options \\ []) do
     quote do
@@ -14,6 +15,10 @@ defmodule Phoenix.Router do
       @before_compile unquote(__MODULE__)
       use Plug.Builder
 
+      if Config.router(__MODULE__, [:static_assets]) do
+        mount = Config.router(__MODULE__, [:static_assets_mount])
+        plug Plug.Static, at: mount, from: Project.app
+      end
       if Config.router(__MODULE__, [:parsers]) do
         plug Plug.Parsers, parsers: [:urlencoded, :multipart, Parsers.JSON], accept: ["*/*"]
       end

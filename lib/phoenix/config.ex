@@ -28,9 +28,10 @@ defmodule Phoenix.Config do
       consider_all_requests_local: false,      # Full error reports are disabled
       code_reload: false,
       static_assets: true,
+      static_assets_mount: "/",
       parsers: true,
       error_handler: true,
-      cookies: false
+      cookies: false,
     ],
     logger: [level: :error],
     template_engines: [

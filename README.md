@@ -42,12 +42,10 @@ When running in production, use protocol consolidation for increased performance
 defmodule YourApp.Router do
   use Phoenix.Router
 
-  plug Plug.Static, at: "/static", from: :your_app
-
   scope alias: YourApp do
     get "/pages/:page", PageController, :show, as: :page
     get "/files/*path", FileController, :show
-    
+
     resources "users", UserController do
       resources "comments", CommentController
     end
@@ -191,7 +189,7 @@ render "index", message: "hello", layout: nil
 
 ### Template Engine Configuration
 
-By default, `eex` and `haml` are supported (with an optional `calliope` dep). To add `haml` support, simply 
+By default, `eex` and `haml` are supported (with an optional `calliope` dep). To add `haml` support, simply
 include the following in your `mix.exs` deps:
 
 ```elixir
@@ -316,7 +314,7 @@ end
 
 Note that, for added clarity, events should be prefixed by their subject and a colon (i.e. "subject:event"). Instead of `reply/3`, you may also use `broadcast/3`. In the previous case, this would publish a message to all clients who previously joined the current socket's topic.
 
-Remember that a client first has to join a topic before it can send events. On the JavaScript side, this is how it would be done (don't forget to include _/static/js/phoenix.js_) :
+Remember that a client first has to join a topic before it can send events. On the JavaScript side, this is how it would be done (don't forget to include _/js/phoenix.js_) :
 
 ```js
 var socket = new Phoenix.Socket("ws://" + location.host + "/ws");
@@ -521,12 +519,12 @@ mix phoenix --help                             # This help
 ```
 
 ### Static Assets
-Static asset support can be added by including `Plug.Static` in your router. Static assets will be served
-from the `priv/static/` directory of your application.
+Static assets are enabled by default and served from the `priv/static/`
+directory of your application. The assets are mounted at the root path, so
+`priv/static/js/phoenix.js` would be served from `example.com/js/phoenix.js`.
+See configuration options for details on disabling assets and customizing the
+mount point.
 
-```elixir
-  plug Plug.Static, at: "/static", from: :your_app
-```
 
 ## Documentation
 
