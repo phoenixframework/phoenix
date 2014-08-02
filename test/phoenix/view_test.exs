@@ -34,6 +34,11 @@ defmodule Phoenix.ViewTest do
     assert html == "Showing User <b>name:</b> &lt;em&gt;chris&lt;/em&gt;\n\n"
   end
 
+  test "views can render local templates without safing" do
+    html = View.render(UserView, "local_render.html", title: "<em>chris</em>")
+    assert html == "Local Render <h1>&lt;em&gt;chris&lt;/em&gt;</h1>\n\n"
+  end
+
   test "template_path_from_view_module finds the template path given view module" do
     assert View.template_path_from_view_module(MyApp.UserView, "web/templates") ==
       "web/templates/user"
@@ -46,12 +51,12 @@ defmodule Phoenix.ViewTest do
     assert View.default_templates_root == Path.join([Phoenix.Project.root_path, "web/templates"])
   end
 
-  test "wrap_rendered_content/2 safes html content" do
-    assert View.wrap_rendered_content("<b>Hi</b>", ".html") == {:safe, "<b>Hi</b>"}
+  test "unwrap_rendered_content/2 safes html content" do
+    assert View.unwrap_rendered_content({:safe, "<b>Hi</b>"}, ".html") == "<b>Hi</b>"
   end
 
-  test "wrap_rendered_content/2 returns string for non-html content" do
-    assert View.wrap_rendered_content("Hi", ".txt") == "Hi"
+  test "unwrap_rendered_content/2 returns string for non-html content" do
+    assert View.unwrap_rendered_content("Hi", ".txt") == "Hi"
   end
 end
 

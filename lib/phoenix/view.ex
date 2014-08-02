@@ -86,11 +86,13 @@ defmodule Phoenix.View do
   defp render_within({layout_mod, layout_tpl}, inner_mod, template, assigns) do
     template
     |> inner_mod.render(assigns)
-    |> wrap_rendered_content(Path.extname(template))
     |> render_layout(layout_mod, layout_tpl, assigns)
+    |> unwrap_rendered_content(Path.extname(template))
   end
   defp render_within(nil, module, template, assigns) do
-    module.render(template, assigns)
+    template
+    |> module.render(assigns)
+    |> unwrap_rendered_content(Path.extname(template))
   end
   defp render_layout(inner_content, layout_mod, layout_tpl, assigns) do
     layout_assigns = Dict.merge(assigns, inner: inner_content)
@@ -98,18 +100,18 @@ defmodule Phoenix.View do
   end
 
   @doc """
-  Wraps rendered String content within extension specific structure
+  Unwraps rendered String content within extension specific structure
 
   ## Examples
 
-      iex> View.wrap_rendered_content("<h1>Hello!</h1>", ".html")
-      {:safe, "<h1>Hello!</h1>"}
-      iex> View.wrap_rendered_content("Hello!", ".txt")
+      iex> View.unwrap_rendered_content({:safe, "<h1>Hello!</h1>"}, ".html")
+      "<h1>Hello!</h1>"
+      iex> View.unwrap_rendered_content("Hello!", ".txt")
       "Hello!"
 
   """
-  def wrap_rendered_content(content, ".html"), do: Html.safe(content)
-  def wrap_rendered_content(content, _ext), do: content
+  def unwrap_rendered_content(content, ".html"), do: Html.unsafe(content)
+  def unwrap_rendered_content(content, _ext), do: content
 
   @doc """
   Finds the template path given view module and template root path

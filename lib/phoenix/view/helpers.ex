@@ -24,8 +24,6 @@ defmodule Phoenix.View.Helpers do
   See Phoenix.Views.render/3 for rendering options
   """
   def render(module, template, assigns) do
-    module
-    |> View.render(template, assigns)
-    |> View.wrap_rendered_content(Path.extname(template))
+    module.render(template, assigns)
   end
 end
