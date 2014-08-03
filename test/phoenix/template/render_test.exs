@@ -20,19 +20,6 @@ defmodule Phoenix.Template.RenderTest do
     assert html == "<html>\n  <body>\n    <div>Show! hi</div>\n\n  </body>\n</html>\n"
   end
 
-  test "render a haml template with layout" do
-    html = View.render(MyApp.Templates, "new.html",
-      message: "hi",
-      within: {MyApp.Templates, "layouts/application.html"}
-    )
-    assert html == "<html>\n  <body>\n    <h2>New Template</h2>\n  </body>\n</html>\n"
-  end
-
-  test "render a haml template without layout" do
-    html = View.render(MyApp.Templates, "new.html", [])
-    assert html == "<h2>New Template</h2>"
-  end
-
   test "render without connection renders template without layout" do
     assert View.render(MyApp.Templates, "show.html", message: "hi") ==
       "<div>Show! hi</div>\n"

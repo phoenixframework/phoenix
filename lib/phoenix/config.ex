@@ -35,8 +35,7 @@ defmodule Phoenix.Config do
     ],
     logger: [level: :error],
     template_engines: [
-      eex: Phoenix.Template.EExEngine,
-      haml: Phoenix.Template.HamlEngine
+      eex: Phoenix.Template.EExEngine
     ],
     topics: [
       garbage_collect_after_ms: 60_000..300_000
