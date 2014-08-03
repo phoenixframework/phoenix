@@ -1,5 +1,6 @@
 defmodule Phoenix.Template.EExEngine do
   alias Phoenix.Template
+  @behaviour Phoenix.Template.Engine
 
   @doc """
   Precompiles the String file_path into a function defintion, using EEx Engine
