@@ -1,6 +1,5 @@
 defmodule Phoenix.Html.Engine do
-  use EEx.TransformerEngine
-  use EEx.AssignsEngine
+  use EEx.Engine
   alias Phoenix.Html
   alias Phoenix.Html.Safe
 
@@ -13,21 +12,21 @@ defmodule Phoenix.Html.Engine do
   end
 
   def handle_expr(buffer, "=", expr) do
-    expr   = transform(expr)
+    expr   = expr(expr)
     buffer = Html.unsafe(buffer)
 
     {:safe, quote do
       buff = unquote(buffer)
       buff <> (case unquote(expr) do
         {:safe, bin} when is_binary(bin) -> bin
-        bin when is_binary(bin) -> Phoenix.Html.escape(bin)
+        bin when is_binary(bin) -> Html.escape(bin)
         other -> Safe.to_string(other)
       end)
     end}
   end
 
   def handle_expr(buffer, "", expr) do
-    expr   = transform(expr)
+    expr   = expr(expr)
     buffer = Html.unsafe(buffer)
 
     quote do
@@ -35,6 +34,10 @@ defmodule Phoenix.Html.Engine do
       unquote(expr)
       buff
     end
+  end
+
+  defp expr(expr) do
+    Macro.prewalk(expr, &EEx.Engine.handle_assign/1)
   end
 end
 

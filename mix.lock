@@ -1,9 +1,9 @@
 %{"calliope": {:package, "0.2.4"},
   "cowboy": {:package, "1.0.0"},
-  "cowlib": {:git, "git://github.com/extend/cowlib.git", "d544a494af4dbc810fc9c15eaf5cc050cced1501", [ref: "1.0.0"]},
+  "cowlib": {:package, "1.0.0"},
   "ex_doc": {:git, "git://github.com/elixir-lang/ex_doc.git", "b59a08729ad0ee805aabc4f2b4f2d97261a57825", []},
   "inflex": {:package, "0.2.4"},
   "jazz": {:package, "0.1.2"},
   "linguist": {:package, "0.1.0"},
   "plug": {:package, "0.5.3"},
-  "ranch": {:git, "git://github.com/extend/ranch.git", "adf1822defc2b7cfdc7aca112adabfa1d614043c", [ref: "1.0.0"]}}
+  "ranch": {:package, "1.0.0"}}
