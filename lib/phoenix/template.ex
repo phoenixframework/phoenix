@@ -49,10 +49,6 @@ defmodule Phoenix.Template do
 
     quote do
       def render(unquote(name)), do: render(unquote(name), [])
-      def render(unquote(name), assigns) do
-        unquote(:"#{name}")(assigns)
-      end
-
       @external_resource unquote(file_path)
       @file unquote(file_path)
       unquote(precompiled_template_func)

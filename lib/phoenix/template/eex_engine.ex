@@ -14,9 +14,13 @@ defmodule Phoenix.Template.EExEngine do
     engine = Template.eex_engine_for_file_ext(Path.extname(func_name))
     content = File.read!(file_path)
 
-    quote bind_quoted: [func_name: func_name, content: content, engine: engine] do
+    quote unquote: true, bind_quoted: [func_name: func_name, content: content, engine: engine] do
       EEx.function_from_string(:defp, :"#{func_name}", content, [:assigns],
                                engine: engine)
+
+      def render(unquote(func_name), assigns) do
+        unquote(:"#{func_name}")(assigns)
+      end
     end
   end
 end
