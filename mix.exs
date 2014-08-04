@@ -31,7 +31,7 @@ defmodule Phoenix.Mixfile do
       {:cowboy, "~> 1.0.0", optional: true},
       {:plug, "0.5.3"},
       {:inflex, "0.2.4"},
-      {:linguist, "~> 0.1.0"},
+      {:linguist, "~> 0.1.1"},
       {:jazz, "0.1.2"},
     ]
   end

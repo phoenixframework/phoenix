@@ -193,7 +193,7 @@ By default, `eex` is supported. To add `haml` support, simply
 include the following in your `mix.exs` deps:
 
 ```elixir
-{:phoenix_haml, "~> 0.0.1"}
+{:phoenix_haml, "~> 0.0.3"}
 ```
 
 and add the `PhoenixHaml.Engine` to your `config/config.exs`

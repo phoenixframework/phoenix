@@ -4,6 +4,6 @@
   "ex_doc": {:git, "git://github.com/elixir-lang/ex_doc.git", "b59a08729ad0ee805aabc4f2b4f2d97261a57825", []},
   "inflex": {:package, "0.2.4"},
   "jazz": {:package, "0.1.2"},
-  "linguist": {:package, "0.1.0"},
+  "linguist": {:package, "0.1.1"},
   "plug": {:package, "0.5.3"},
   "ranch": {:package, "1.0.0"}}

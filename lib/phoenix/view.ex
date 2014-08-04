@@ -65,7 +65,7 @@ defmodule Phoenix.View do
 
   ## Layouts
 
-  Template can be renderes within other templates using the `within` option.
+  Template can be rendered within other templates using the `within` option.
   `within` accepts a Tuple, of the form `{LayoutModule, "template.extension"}`
 
   When the sub template is rendered, the layout template will have an `@inner`
