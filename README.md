@@ -117,7 +117,7 @@ By looking at the controller name `App.PageController`, Phoenix will use `App.Pa
 
 Every keyword passed to `render` in the controller is available as an assign within the template, so you can use `<%= @message %>` in the eex template that is rendered in the controller example.
 
-You may also create helper functions within your views or layouts. For exemple, the previous controller will use `App.Views.Pages` so you could have :
+You may also create helper functions within your views or layouts. For example, the previous controller will use `App.PageView` so you could have :
 
 ```elixir
 defmodule App.Views do
@@ -165,7 +165,7 @@ See [this file](https://github.com/elixir-lang/plug/blob/master/lib/plug/mime.ty
 
 #### More on layouts
 
-The "Layouts" module name is hardcoded. This means that `App.Views.Layouts` will be used and, by default, will render templates from `lib/app/templates/layouts`.
+The "LayoutView" module name is hardcoded. This means that `App.LayoutView` will be used and, by default, will render templates from `web/templates/layout`.
 
 The layout template can be changed easily from the controller. For example :
 
