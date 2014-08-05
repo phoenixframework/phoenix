@@ -7,7 +7,7 @@
 ## Getting started
 
 ### Requirements
-- Elixir v0.14.2
+- Elixir v0.15.0
 
 ### Setup
 1. Install Phoenix
