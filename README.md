@@ -479,9 +479,6 @@ config :phoenix, YourApp.Router,
   session_key: "_your_app_key",
   session_secret: "super secret"
 
-config :phoenix, :logger,
-  level: :error
-
 
 import_config "#{Mix.env}.exs"
 
@@ -497,9 +494,6 @@ config :phoenix, YourApp.Router,
   consider_all_requests_local: true,
   session_key: "_your_app_key",
   session_secret: "super secret"
-
-config :phoenix, :logger,
-  level: :debug
 
 
 ```
@@ -650,7 +644,7 @@ $ coffee -o priv/static/js -cw priv/src/static/cs
 - Middleware
   - [x] Plug Based Connection handling
   - [x] Code Reloading
-  - [ ] Enviroment Based logging with log levels with Elixir's Logger
+  - [x] Enviroment Based logging with log levels with Elixir's Logger
   - [x] Static File serving
 - Controllers
   - [x] html/json/text helpers

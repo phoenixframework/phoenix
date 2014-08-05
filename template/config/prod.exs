@@ -9,6 +9,7 @@ config :phoenix, <%= application_module %>.Router,
   session_key: "_<%= application_name %>_key",
   session_secret: "<%= session_secret %>"
 
-config :phoenix, :logger,
-  level: :error
+config :logger, :console
+  level: :info
+  metadata: [:request_id] 
 

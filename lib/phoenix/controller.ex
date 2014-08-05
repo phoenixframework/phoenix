@@ -132,7 +132,7 @@ defmodule Phoenix.Controller do
   end
   def render_view(conn, view_mod, layout_mod, template, assigns) do
     template     = template || action_name(conn)
-    content_type = response_content_type(conn)
+    content_type = response_content_type!(conn)
     ext         = MIME.extensions(content_type) |> Enum.at(0)
     status       = conn.status || 200
     conn         = prepare_for_render(conn, assigns, layout_mod, ext)
