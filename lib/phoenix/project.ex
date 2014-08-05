@@ -16,14 +16,4 @@ defmodule Phoenix.Project do
     |> Mix.Utils.camelize
     |> String.to_atom
   end
-
-  @doc """
-  Returns the String root path of Mix project
-  """
-  def root_path do
-    app
-    |> Application.app_dir
-    |> Path.join("../../../../")
-    |> Path.expand
-  end
 end

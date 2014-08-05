@@ -48,7 +48,7 @@ defmodule Phoenix.ViewTest do
   end
 
   test "default_templates_root/0 returns the default template path based on current mix project" do
-    assert View.default_templates_root == Path.join([Phoenix.Project.root_path, "web/templates"])
+    assert String.contains?(View.default_templates_root, "web/templates")
   end
 
   test "unwrap_rendered_content/2 unwraps safe'd html content" do

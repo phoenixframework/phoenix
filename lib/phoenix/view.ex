@@ -137,7 +137,7 @@ defmodule Phoenix.View do
   Returns the default String template root path for current mix project
   """
   def default_templates_root do
-    Path.join([Project.root_path, "web/templates"])
+    Path.join([File.cwd!, "web/templates"])
   end
 end
 

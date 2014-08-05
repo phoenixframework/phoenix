@@ -1,5 +1,4 @@
 defmodule Phoenix.View.Helpers do
-  alias Phoenix.View
 
   @moduledoc """
   Imported into all Phoenix Views for rendering support and template
