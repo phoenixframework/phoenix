@@ -41,11 +41,14 @@ defmodule Phoenix.Controller.Connection do
   def assign_layout(conn, :none) do
     assign_private(conn, :phoenix_layout, :none)
   end
+  def assign_layout(conn, _) do
+    assign_layout(conn, "application")
+  end
 
   @doc """
   Retrieve layout from phoenix private assigns
   """
-  def layout(conn), do: Dict.get(conn.private, :phoenix_layout, "application")
+  def layout(conn), do: Dict.get(conn.private, :phoenix_layout)
 
   @doc """
   Assigns the Conn status

@@ -144,7 +144,8 @@ defmodule Phoenix.Controller do
   defp template_name(template, [ext | _]), do: "#{template}.#{ext}"
   defp prepare_for_render(conn, assigns, layout_mod, exts) do
     assigns = Dict.put_new(assigns, :conn, conn)
-    layout = layout(conn)
+    conn    = assign_layout(conn, Dict.get(assigns, :layout))
+    layout  = layout(conn)
     if is_binary layout do
       assigns = Dict.put_new(assigns, :within, {layout_mod, template_name(layout, exts)})
     end
