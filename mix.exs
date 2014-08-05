@@ -32,7 +32,7 @@ defmodule Phoenix.Mixfile do
       {:plug, "0.5.3"},
       {:inflex, "0.2.4"},
       {:linguist, "~> 0.1.1"},
-      {:jazz, "0.1.2"},
+      {:jazz, "0.2.0"},
     ]
   end
 
