@@ -73,8 +73,8 @@ defmodule Phoenix.Router do
     protocol = if opts[:ssl], do: :https, else: :http
     case apply(Plug.Adapters.Cowboy, protocol, [module, [], opts]) do
       {:ok, pid} ->
-        "%{green}Running #{module} with Cowboy on port #{inspect opts[:port]}%{reset}"
-        |> IO.ANSI.escape
+        [:green, "Running #{module} with Cowboy on port #{inspect opts[:port]}"]
+        |> IO.ANSI.format
         |> IO.puts
         {:ok, pid}
 
