@@ -17,9 +17,23 @@ defmodule Phoenix.Plugs.Parsers.JSON do
     end
   end
 
+  @doc """
+  Parsers JSON body into `conn.params`
 
+  JSON arrays are parsed into a `"_json"` key to allow propper
+  param merging.
+
+  An empty request body is parsed as an empty map
+  """
   def parse(conn, "application", "json", _headers, opts) do
-    {:ok, body, conn} = read_body(conn, opts)
+    conn
+    |> read_body(opts)
+    |> decode
+  end
+  defp decode({:ok, body, conn}) when body in [nil, ""] do
+    {:ok, %{}, conn}
+  end
+  defp decode({:ok, body, conn}) do
     case Jazz.decode(body) do
       {:ok, terms} when is_list(terms)->
         {:ok, %{"_json" => terms}, conn}

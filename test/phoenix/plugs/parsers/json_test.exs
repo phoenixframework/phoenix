@@ -28,4 +28,10 @@ defmodule Phoenix.Plugs.Parsers.JSONTest do
     end
     assert Plug.Exception.status(exception) == 400
   end
+
+  test "handles empty body as blank map" do
+    headers = [{"content-type", "application/json"}]
+    conn = parse(conn(:post, "/", nil, headers: headers))
+    assert conn.params == %{}
+  end
 end
