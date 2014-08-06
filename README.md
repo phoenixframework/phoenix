@@ -167,24 +167,26 @@ See [this file](https://github.com/elixir-lang/plug/blob/master/lib/plug/mime.ty
 
 The "LayoutView" module name is hardcoded. This means that `App.LayoutView` will be used and, by default, will render templates from `web/templates/layout`.
 
-The layout template can be changed easily from the controller. For example :
+The layout template can be changed easily from the controller via `assign_layout/2`. For example :
 
 ```elixir
 defmodule App.PageController do
   use Phoenix.Controller
 
   def index(conn, _params) do
-    render conn, "index", message: "hello", layout: "plain"
+    conn
+    |> assign_layout("plain")
+    |> render "index", message: "hello"
   end
 end
 ```
 
 To render the template's content inside a layout, use the assign `<%= @inner %>` that will be generated for you.
 
-You may also omit using a template with the following:
+You may also omit using a layout with the following:
 
 ```elixir
-render "index", message: "hello", layout: nil
+conn |> assign_layout(:none) |> render "index", message: "hello"
 ```
 
 ### Template Engine Configuration
