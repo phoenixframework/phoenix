@@ -1,5 +1,6 @@
 defmodule Mix.Tasks.Phoenix.New do
   use Mix.Task
+  alias Phoenix.Naming
 
   @shortdoc "Creates Phoenix application"
 
@@ -9,8 +10,8 @@ defmodule Mix.Tasks.Phoenix.New do
   Creates Phoenix application.
   """
   def run([name, path]) do
-    application_name = Mix.Utils.underscore(name)
-    application_module = Mix.Utils.camelize(application_name)
+    application_name = Naming.underscore(name)
+    application_module = Naming.camelize(application_name)
     project_path = make_project_path(path, application_name)
 
     bindings = [application_name: application_name,
@@ -62,7 +63,7 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   defp make_project_path(path, application_name) do
-    basename = Mix.Utils.underscore(Path.basename(path))
+    basename = Naming.underscore(Path.basename(path))
 
     if basename == application_name do
       path

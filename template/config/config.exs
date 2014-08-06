@@ -11,7 +11,7 @@ config :phoenix, <%= application_module %>.Router,
   code_reload: false,
   static_assets: true,
   cookies: true,
-  session_key: "_<%= Mix.Utils.underscore(application_module) %>_key",
+  session_key: "_<%= application_name %>_key",
   session_secret: "<%= session_secret %>"
 
 config :phoenix, :logger,

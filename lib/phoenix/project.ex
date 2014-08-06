@@ -1,4 +1,5 @@
 defmodule Phoenix.Project do
+  alias Phoenix.Naming
 
   @doc """
   Returns the Applications name as an Atom, ie :phoenix
@@ -13,7 +14,7 @@ defmodule Phoenix.Project do
   def module_root do
     app
     |> to_string
-    |> Mix.Utils.camelize
+    |> Naming.camelize
     |> String.to_atom
   end
 end

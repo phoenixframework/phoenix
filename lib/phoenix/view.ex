@@ -1,6 +1,7 @@
 defmodule Phoenix.View do
   alias Phoenix.Project
   alias Phoenix.Html
+  alias Phoenix.Naming
 
   @moduledoc """
   Serves as the base view for an entire Phoenix application view layer
@@ -126,7 +127,7 @@ defmodule Phoenix.View do
     submodule_path = view_module
     |> Module.split
     |> tl
-    |> Enum.map(&Mix.Utils.underscore/1)
+    |> Enum.map(&Naming.underscore/1)
     |> Path.join
     |> String.replace(~r/^(.*)(_view)$/, "\\1")
 
