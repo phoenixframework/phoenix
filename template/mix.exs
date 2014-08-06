@@ -13,7 +13,7 @@ defmodule <%= application_module %>.Mixfile do
   def application do
     [
       mod: { <%= application_module %>, [] },
-      applications: [:phoenix]
+      applications: [:phoenix, :cowboy]
     ]
   end
 

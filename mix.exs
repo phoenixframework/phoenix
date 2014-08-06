@@ -6,7 +6,7 @@ defmodule Phoenix.Mixfile do
       app: :phoenix,
       version: "0.3.1",
       elixir: "~> 0.15.0",
-      deps: deps(Mix.env),
+      deps: deps,
       package: [
         contributors: ["Chris McCord", "Darko Fabijan"],
         licenses: ["MIT"],
@@ -22,22 +22,18 @@ defmodule Phoenix.Mixfile do
   def application do
     [
       mod: { Phoenix, [] },
-      applications: [:cowboy, :plug]
+      applications: [:plug, :linguist, :inflex, :jazz]
     ]
   end
 
-  defp deps(:prod) do
+  def deps do
     [
       {:cowboy, "~> 1.0.0", optional: true},
       {:plug, "0.5.3"},
       {:inflex, "0.2.4"},
       {:linguist, "~> 0.1.1"},
       {:jazz, "0.2.0"},
+      {:ex_doc, github: "elixir-lang/ex_doc", only: [:docs]}
     ]
-  end
-
-  defp deps(_) do
-    deps(:prod) ++
-      [ {:ex_doc, github: "elixir-lang/ex_doc", only: [:docs]} ]
   end
 end
