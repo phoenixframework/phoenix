@@ -10,6 +10,7 @@ defmodule Phoenix.Router.RoutingTest do
     def crash(_conn, _params), do: raise "crash!"
     def options(conn, _params), do: text(conn, "users options")
     def connect(conn, _params), do: text(conn, "users connect")
+    def head(conn, _params), do: conn |> send_resp(200, "")
     def trace(conn, _params), do: text(conn, "users trace")
     def not_found(conn, _params), do: text(conn, :not_found, "not found")
   end
@@ -61,6 +62,7 @@ defmodule Phoenix.Router.RoutingTest do
     trace "/trace", UsersController, :trace
     options "/options", UsersController, :options
     connect "/connect", UsersController, :connect
+    head "/head", UsersController, :head
 
     resources "comments", CommentsController
     resources "posts", PostsController, except: [ :destroy ]
@@ -185,6 +187,13 @@ defmodule Phoenix.Router.RoutingTest do
     conn = simulate_request(Router, :trace, "/trace")
     assert conn.status == 200
     assert conn.resp_body == "users trace"
+  end
+
+  test "head to custom action" do
+    conn = simulate_request(Router, :head, "/head")
+    assert conn.status == 200
+    assert conn.method == "HEAD"
+    assert conn.resp_body == ""
   end
 
   test "unmatched route returns 404" do

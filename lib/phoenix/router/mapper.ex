@@ -8,7 +8,8 @@ defmodule Phoenix.Router.Mapper do
   alias Phoenix.Router.Mapper
 
   @actions [:index, :edit, :new, :show, :create, :update, :destroy]
-  @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace]
+  @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace,
+                 :head]
 
   @moduledoc """
   Adds Macros for Route match definitions. All routes are
