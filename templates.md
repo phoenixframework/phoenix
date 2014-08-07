@@ -1,0 +1,10 @@
+- templates - description
+  - layouts
+  - page templates
+  - partials
+    - getting data into partials
+  - path helpers???
+    - link_to
+    - url_for
+    - path_for
+  - form helpers?

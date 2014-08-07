@@ -1,0 +1,7 @@
+- router - description
+  - mix phoenix.routes
+  - resources
+  - nested resources
+  - verb based matchers [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
+  - scopes
+  - what else is hiding that I don't see yet?

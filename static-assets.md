@@ -1,0 +1,4 @@
+- static assets
+  - asset compilation - js and css
+    - is there a standard way to do this?
+    - just use gulp and/or compass or whatever?

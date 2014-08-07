@@ -1,0 +1,4 @@
+- controllers - description
+  - actions
+    - data gathering
+    - rendering

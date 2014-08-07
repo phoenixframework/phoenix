@@ -1,0 +1,3 @@
+- customize
+  - customize the welcome page
+  - add a new page

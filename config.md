@@ -1,0 +1,6 @@
+- configuration - description
+  - directory location
+  - environments
+  - sessions
+  - SSL
+  - proxy

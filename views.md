@@ -1,0 +1,3 @@
+- views - description
+  - what is their role?
+  - rendering

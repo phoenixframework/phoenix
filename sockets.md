@@ -1,0 +1,2 @@
+- sockets - description [same as channels?]
+  - gotta lear how these work before i can come up with an outline :^)
