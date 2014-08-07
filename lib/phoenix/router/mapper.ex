@@ -6,6 +6,7 @@ defmodule Phoenix.Router.Mapper do
   alias Phoenix.Router.ScopeContext
   alias Phoenix.Router.Errors
   alias Phoenix.Router.Mapper
+  alias Phoenix.Router.RouteAlias
 
   @actions [:index, :edit, :new, :show, :create, :update, :destroy]
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace,
@@ -105,22 +106,10 @@ defmodule Phoenix.Router.Mapper do
     end
   end
 
-  defmacro defroute_aliases({_http_method, path, _controller, _action, options}) do
+  defmacro defroute_aliases({_http_method, path, _controller, action, options}) do
     alias_name = options[:as]
     if alias_name do
-      quote do
-        def unquote(String.to_atom "#{alias_name}_path")(params \\ []) do
-          Path.build(unquote(path), params)
-        end
-        def unquote(String.to_atom "#{alias_name}_url")(params \\ []) do
-          unquote(path)
-          |> Path.build(params)
-          |> Path.build_url(ssl:  Config.router(__MODULE__, [:ssl]),
-                            host: Config.router(__MODULE__, [:host]),
-                            port: Config.router(__MODULE__, [:proxy_port]) ||
-                                  Config.router(__MODULE__, [:port]))
-        end
-      end
+      RouteAlias.defalias(alias_name, path, action, __CALLER__.module)
     end
   end
 

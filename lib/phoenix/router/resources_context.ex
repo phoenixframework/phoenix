@@ -67,9 +67,7 @@ defmodule Phoenix.Router.ResourcesContext do
 
   """
   def current_alias(action, relative_path, module) do
-    resources = get(module) |> Enum.reverse |> Enum.map(&singularize(&1))
-
-    alias_for_action(action, resources, relative_path)
+    resources = get(module) |> Enum.reverse |> Enum.join("_")
   end
   defp alias_for_action(:index, resources, rel_path) do
     resources
