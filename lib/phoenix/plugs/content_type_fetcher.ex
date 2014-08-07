@@ -30,7 +30,7 @@ defmodule Phoenix.Plugs.ContentTypeFetcher do
     |> Kernel.||(primary_accept_format(accept_formats(conn)))
     |> Kernel.||(@default_content_type)
 
-    assign_private(conn, :phoenix_content_type, type)
+    put_resp_content_type(conn, type, nil)
   end
   defp mime_type(type) when type in [nil, ""], do: nil
   defp mime_type(type), do: MIME.type(type)

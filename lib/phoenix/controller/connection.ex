@@ -83,7 +83,7 @@ defmodule Phoenix.Controller.Connection do
   Returns the String Mime content-type of response
   """
   def response_content_type(conn) do
-    conn.private[:phoenix_content_type] || raise(
+    Enum.at(get_resp_header(conn, "content-type"), 0) || raise(
       %Errors.UnfetchedContentType{message: "You must first call Plugs.ContentTypeFetcher.fetch/1"}
     )
   end
