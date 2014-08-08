@@ -3,6 +3,7 @@ defmodule Phoenix.Channel do
   use Jazz
   alias Phoenix.Topic
   alias Phoenix.Socket
+  alias Phoenix.Socket.Message
   alias Phoenix.Socket.Handler
 
   defcallback join(Socket.t, topic :: binary, auth_msg :: map) :: {:ok, Socket.t} |
@@ -71,6 +72,7 @@ defmodule Phoenix.Channel do
 
   @doc """
   Broadcast event from pid, serializable as JSON to topic namedspaced by channel
+  The broadcasting socket `from`, does not receive the published message.
 
   ## Examples
 
@@ -80,24 +82,24 @@ defmodule Phoenix.Channel do
   """
   def broadcast_from(from, channel, topic, event, message) do
     Topic.create(namespaced(channel, topic))
-    Topic.broadcast_from(from, namespaced(channel, topic), reply_json_frame(%{
+    Topic.broadcast_from from, namespaced(channel, topic), %Message{
       channel: channel,
       topic: topic,
       event: event,
       message: message
-      }))
+    }
   end
 
   @doc """
   Sends Dict, JSON serializable message to socket
   """
   def reply(socket, event, message) do
-    send socket.pid, reply_json_frame(%{
+    send socket.pid, %Message{
       channel: socket.channel,
       topic: socket.topic,
       event: event,
       message: message
-      })
+    }
     socket
   end
 
@@ -110,13 +112,6 @@ defmodule Phoenix.Channel do
   Hibernates socket connection
   """
   def hibernate(socket), do: Handler.hibernate(socket)
-
-  @doc """
-  Converts Dict message into JSON text reply frame for Websocket Handler
-  """
-  def reply_json_frame(message) do
-    {:reply, {:text, JSON.encode!(message)}}
-  end
 
   defp namespaced(channel, topic), do: "#{channel}:#{topic}"
 end

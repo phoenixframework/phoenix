@@ -1,4 +1,5 @@
 defmodule Phoenix.Socket.Handler do
+  use Jazz
   @behaviour :cowboy_websocket_handler
 
   alias Phoenix.Socket
@@ -117,6 +118,13 @@ defmodule Phoenix.Socket.Handler do
   """
   def info(_info, _req, state) do
     {:ok, state}
+  end
+
+  @doc """
+  Receives %Message{} and sends encoded message JSON to client
+  """
+  def websocket_info(message = %Message{}, req, state) do
+    {:reply, {:text, JSON.encode!(message)}, req, state}
   end
 
   def websocket_info({:reply, frame}, req, state) do

@@ -4,6 +4,7 @@ defmodule Phoenix.Channel.ChannelTest do
   alias Phoenix.Topic
   alias Phoenix.Channel
   alias Phoenix.Socket
+  alias Phoenix.Socket.Message
   alias Phoenix.Socket.Handler
   alias Phoenix.Socket.Handler.InvalidReturn
 
@@ -31,20 +32,26 @@ defmodule Phoenix.Channel.ChannelTest do
     assert Channel.broadcast(socket, "event", %{foo: "bar"})
   end
 
-  test "#broadcast_from broadcasts message on channel from publisher" do
+  test "#broadcast_from broadcasts message on channel, skipping publisher" do
     Topic.create("chan:topic")
-    socket = Socket.set_current_channel(new_socket, "chan", "topic")
+    socket = new_socket
+    |> Socket.set_current_channel("chan", "topic")
+    |> Channel.subscribe("chan", "topic")
 
     assert Channel.broadcast_from(socket, "event", %{message: "hello"})
-    _message = JSON.encode!(%{message: "hello"})
-    refute_received _message
+    refute Enum.any?(Process.info(self)[:messages], &match?(%Message{}, &1))
   end
 
   test "#reply sends response to socket" do
     socket = Socket.set_current_channel(new_socket, "chan", "topic")
     assert Channel.reply(socket, "event", %{message: "hello"})
-    _message = JSON.encode!(%{message: "hello"})
-    assert_received _message
+
+    assert Enum.any?(Process.info(self)[:messages], &match?(%Message{}, &1))
+    assert_received %Message{
+      channel: "chan",
+      event: "event",
+      message: %{message: "hello"}, topic: "topic"
+    }
   end
 
   test "Default #leave is generated as a noop" do
