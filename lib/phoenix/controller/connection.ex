@@ -81,11 +81,17 @@ defmodule Phoenix.Controller.Connection do
 
   @doc """
   Returns the String Mime content-type of response
+
+  Raises Errors.UnfetchedContentType if content type is not yet fetched
   """
   def response_content_type(conn) do
-    Enum.at(get_resp_header(conn, "content-type"), 0) || raise(
-      %Errors.UnfetchedContentType{message: "You must first call Plugs.ContentTypeFetcher.fetch/1"}
-    )
+    conn
+    |> get_resp_header("content-type")
+    |> Enum.at(0)
+    |> Kernel.||(raise %Errors.UnfetchedContentType{message:
+      "You must first call Plugs.ContentTypeFetcher.fetch/1"})
+    |> String.split(";")
+    |> Enum.at(0)
   end
 
   @doc """
