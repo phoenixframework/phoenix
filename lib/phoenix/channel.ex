@@ -16,13 +16,6 @@ defmodule Phoenix.Channel do
 
       def leave(socket, message), do: socket
       defoverridable leave: 2
-      @before_compile unquote(__MODULE__)
-    end
-  end
-
-  defmacro __before_compile__(_env) do
-    quote do
-      def event(socket, _event, _message), do: socket
     end
   end
 
