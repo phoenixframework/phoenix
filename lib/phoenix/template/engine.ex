@@ -4,11 +4,11 @@ defmodule Phoenix.Template.Engine do
   @moduledoc """
   Engines need only to support precompiling a template function, of the form:
 
-      def precompile(file_path, func_name)
+      def precompile(file_path, template_name)
 
   The `precompile/2` function must return an AST for for a `render/2` function:
 
-      def render(func_name, assigns \\ [])
+      def render(template_name, assigns \\ [])
 
   See `Template.EExEngine` for an example engine implementation.
 
@@ -24,6 +24,6 @@ defmodule Phoenix.Template.Engine do
 
   """
 
-  defcallback precompile(file_path :: binary, func_name :: binary) :: term
+  defcallback precompile(file_path :: binary, template_name :: binary) :: term
 
 end

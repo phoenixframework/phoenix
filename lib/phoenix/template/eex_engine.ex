@@ -10,16 +10,16 @@ defmodule Phoenix.Template.EExEngine do
       def render("show.html", assigns \\ [])
 
   """
-  def precompile(file_path, func_name) do
-    engine = Template.eex_engine_for_file_ext(Path.extname(func_name))
+  def precompile(file_path, tpl_name) do
+    engine = Template.eex_engine_for_file_ext(Path.extname(tpl_name))
     content = File.read!(file_path)
 
-    quote unquote: true, bind_quoted: [func_name: func_name, content: content, engine: engine] do
-      EEx.function_from_string(:defp, :"#{func_name}", content, [:assigns],
+    quote unquote: true, bind_quoted: [tpl_name: tpl_name, content: content, engine: engine] do
+      EEx.function_from_string(:defp, :"#{tpl_name}", content, [:assigns],
                                engine: engine)
 
-      def render(unquote(func_name), assigns) do
-        unquote(:"#{func_name}")(assigns)
+      def render(unquote(tpl_name), assigns) do
+        unquote(:"#{tpl_name}")(assigns)
       end
     end
   end
