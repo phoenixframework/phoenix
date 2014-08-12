@@ -7,7 +7,7 @@ defmodule Phoenix.Topic.Server do
   @moduledoc """
   Handles Topic subscriptions and garbage collection with node failover
 
-  All Topic creats, joins, leaves, and destroys are funneled through master
+  All Topic creates, joins, leaves, and destroys are funneled through master
   Topic Server to prevent race conditions on global :pg2 groups.
 
   All nodes monitor master Topic.Server and compete for leader in the event of a
