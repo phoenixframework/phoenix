@@ -6,6 +6,7 @@ defmodule Phoenix.Controller do
 
   @default_content_type "text/html"
   @plug_default_mime_type "application/octet-stream"
+  @layout_extension_types ["html"]
 
   @moduledoc """
   Phoenix Controllers are responsible for handling the dispatch of Router requests
@@ -132,21 +133,20 @@ defmodule Phoenix.Controller do
   def render_view(conn, view_mod, layout_mod, template, assigns) do
     template     = template || action_name(conn)
     content_type = response_content_type(conn)
-    exts         = MIME.extensions(content_type)
+    ext         = MIME.extensions(content_type) |> Enum.at(0)
     status       = conn.status || 200
-    conn         = prepare_for_render(conn, assigns, layout_mod, exts)
-    content = View.render(view_mod, template_name(template, exts), conn.assigns)
+    conn         = prepare_for_render(conn, assigns, layout_mod, ext)
+    content = View.render(view_mod, template_name(template, ext), conn.assigns)
 
     send_response(conn, status, content_type, content)
   end
-  defp template_name(template, extensions)
-  defp template_name(template, []), do: template
-  defp template_name(template, [ext | _]), do: "#{template}.#{ext}"
-  defp prepare_for_render(conn, assigns, layout_mod, exts) do
+  defp template_name(template, nil), do: template
+  defp template_name(template, ext), do: "#{template}.#{ext}"
+  defp prepare_for_render(conn, assigns, layout_mod, ext) do
     assigns = Dict.put_new(assigns, :conn, conn)
     layout = layout(conn)
-    if is_binary layout do
-      assigns = Dict.put_new(assigns, :within, {layout_mod, template_name(layout, exts)})
+    if is_binary(layout) && ext in @layout_extension_types do
+      assigns = Dict.put_new(assigns, :within, {layout_mod, template_name(layout, ext)})
     end
 
     update_in(conn.assigns, &Dict.merge(&1, assigns))

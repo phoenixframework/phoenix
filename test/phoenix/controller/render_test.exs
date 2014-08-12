@@ -1,6 +1,7 @@
 Code.require_file "views.exs", __DIR__
 Code.require_file "views/assign_view.exs", __DIR__
 Code.require_file "views/implicit_render_view.exs", __DIR__
+Code.require_file "views/render_view.exs", __DIR__
 
 defmodule MyApp.AssignController do
   use Phoenix.Controller
@@ -44,6 +45,14 @@ defmodule MyApp.ImplicitRenderController do
   end
 end
 
+defmodule MyApp.RenderController do
+  use Phoenix.Controller
+  plug :action
+  def show(conn, _params) do
+    render conn, "show", []
+  end
+end
+
 
 defmodule MyApp.Router do
   use Phoenix.Router
@@ -51,6 +60,7 @@ defmodule MyApp.Router do
   get "/assign/plug", MyApp.AssignController, :plugged
   get "/assign/overwrite", MyApp.AssignController, :overwrite
   get "/renders/implicit", MyApp.ImplicitRenderController, :index
+  get "/renders/json",     MyApp.RenderController, :show
 end
 
 defmodule Phoenix.Controller.RenderTest do
@@ -79,5 +89,11 @@ defmodule Phoenix.Controller.RenderTest do
     conn = simulate_request(MyApp.Router, :get, "renders/implicit")
     assert conn.status == 200
     assert conn.resp_body == "implicit render\n"
+  end
+
+  test "rendering non-html templates does not render layout" do
+    conn = simulate_request(MyApp.Router, :get, "renders/json?format=json")
+    assert conn.status == 200
+    assert conn.resp_body == "{\"foo\":\"bar\"}"
   end
 end
