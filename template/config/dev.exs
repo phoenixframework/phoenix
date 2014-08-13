@@ -3,6 +3,7 @@ use Mix.Config
 config :phoenix, <%= application_module %>.Router,
   port: System.get_env("PORT") || 4000,
   ssl: false,
+  host: "localhost",
   code_reload: true,
   cookies: true,
   consider_all_requests_local: true,

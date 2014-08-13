@@ -32,7 +32,7 @@ defmodule Phoenix.Config.ConfigTest do
     assert Enum.sort(Config.router(Router)) == Enum.sort([
       code_reload: false, consider_all_requests_local: false, cookies: false,
       error_handler: true, parsers: true, port: 1234, ssl: true, static_assets: true,
-      static_assets_mount: "/"
+      static_assets_mount: "/", host: "localhost"
     ])
   end
 

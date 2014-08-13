@@ -25,6 +25,7 @@ defmodule Phoenix.Config do
     router: [
       port: 4000,
       ssl: false,
+      host: "localhost",
       consider_all_requests_local: false,      # Full error reports are disabled
       code_reload: false,
       static_assets: true,
