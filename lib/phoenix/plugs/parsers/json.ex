@@ -18,18 +18,22 @@ defmodule Phoenix.Plugs.Parsers.JSON do
   end
 
   @doc """
-  Parsers JSON body into `conn.params`
+  Parses JSON body into `conn.params`
 
-  JSON arrays are parsed into a `"_json"` key to allow propper
+  JSON arrays are parsed into a `"_json"` key to allow proper
   param merging.
 
-  An empty request body is parsed as an empty map
+  An empty request body is parsed as an empty map.
   """
   def parse(conn, "application", "json", _headers, opts) do
     conn
     |> read_body(opts)
     |> decode
   end
+  def parse(conn, _type, _subtype, _headers, _opts) do
+    {:next, conn}
+  end
+
   defp decode({:ok, body, conn}) when body in [nil, ""] do
     {:ok, %{}, conn}
   end
@@ -42,9 +46,5 @@ defmodule Phoenix.Plugs.Parsers.JSON do
       _ ->
         raise ParseError, message: "malformed JSON."
     end
-  end
-
-  def parse(conn, _type, _subtype, _headers, _opts) do
-    {:next, conn}
   end
 end
