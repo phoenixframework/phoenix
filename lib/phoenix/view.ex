@@ -1,5 +1,4 @@
 defmodule Phoenix.View do
-  alias Phoenix.Project
   alias Phoenix.Html
   alias Phoenix.Naming
 
