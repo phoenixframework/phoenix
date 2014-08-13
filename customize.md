@@ -91,7 +91,7 @@ end
 
 ###A New Controller
 
-Controllers are Elixir modules, and actions are Elixir functions defined on them. Our route specifies that we need a HelloPhoenix.HelloController module with an index function. Let's do that now.
+Controllers are Elixir modules, and actions are Elixir functions defined on them. The purpose of actions is to gather any data and perform any tasks needed for rendering. Our route specifies that we need a HelloPhoenix.HelloController module with an index function. Let's do that now.
 
 Create a new web/controllers/hello_controller.ex file, and make it look like the following.
 
@@ -116,7 +116,8 @@ This simply says that we want to render the index.html.eex template for our hell
 On to rendering!
 
 ###A New View
-[TODO figure out a good view definition for here]
+
+The main job of Phoenix views is to prepare data for use in a template. Functions which take raw data and transform it into a more presentable form should go here. As an example, say we have a data structure which represents a user with a first_name field and a last_name field, and in a template, we want to show the user's full name. We could write code in the template to merge those fields into a full name, but the better approach is to write a function in the view to do it for us, then call that function in the template. The result is a cleaner and more legible template.
 
 In order to render any templates for our HelloController, we need a HelloView. Let's create an empty one for now, and leave a detailed description of views for later. Create web/views/hello_view.ex and make it look like this.
 
