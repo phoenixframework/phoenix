@@ -67,25 +67,10 @@ defmodule Phoenix.Router.ResourcesContext do
 
   """
   def current_alias(action, relative_path, module) do
-    resources = get(module) |> Enum.reverse |> Enum.join("_")
-  end
-  defp alias_for_action(:index, resources, rel_path) do
-    resources
-    |> Kernel.++([pluralize(rel_path)])
+    [relative_path | get(module)]
+    |> Enum.reverse
     |> Enum.join("_")
   end
-  defp alias_for_action(action, resources, rel_path) when action in [:new, :edit] do
-    [action]
-    |> Kernel.++(resources)
-    |> Kernel.++([singularize(rel_path)])
-    |> Enum.join("_")
-  end
-  defp alias_for_action(:show, resources, rel_path) do
-    resources
-    |> Kernel.++([singularize(rel_path)])
-    |> Enum.join("_")
-  end
-  defp alias_for_action(_action, _resources, _rel_path), do: nil
 
   @doc """
   Pushes the current resource onto resources stack

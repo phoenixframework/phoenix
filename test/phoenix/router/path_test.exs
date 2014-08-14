@@ -24,6 +24,11 @@ defmodule Phoenix.Router.PathTest do
     assert Path.build("/users/:id", id: 55) == "/users/55"
   end
 
+  test "build/4 replaces named params in pathand build query_string params" do
+    assert Path.build("users/:id", [id: 55], []) == "/users/55"
+    assert Path.build("/users/:id", [id: 55], foo: "bar") == "/users/55?foo=bar"
+  end
+
   test "ensure_leading_slash adds forward slash to route if missing" do
     assert Path.ensure_leading_slash("users/1") == "/users/1"
     assert Path.ensure_leading_slash("/users/1") == "/users/1"

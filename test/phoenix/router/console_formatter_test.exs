@@ -23,14 +23,16 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
   end
 
   test "format resource routes" do
-    assert draw(RouterTestResources) == ["    images  GET     /images           Images#index",
-                                         "edit_image  GET     /images/:id/edit  Images#edit",
-                                         " new_image  GET     /images/new       Images#new",
-                                         "     image  GET     /images/:id       Images#show",
-                                         "            POST    /images           Images#create",
-                                         "            PUT     /images/:id       Images#update",
-                                         "            PATCH   /images/:id       Images#update",
-                                         "            DELETE  /images/:id       Images#destroy"]
+    assert draw(RouterTestResources) == [
+      "images  GET     /images           Images#index",
+      "images  GET     /images/:id/edit  Images#edit",
+      "images  GET     /images/new       Images#new",
+      "images  GET     /images/:id       Images#show",
+      "images  POST    /images           Images#create",
+      "        PUT     /images/:id       Images#update",
+      "        PATCH   /images/:id       Images#update",
+      "images  DELETE  /images/:id       Images#destroy"
+    ]
   end
 
   defp draw(router) do

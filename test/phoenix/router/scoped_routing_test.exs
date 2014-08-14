@@ -177,7 +177,7 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     use Phoenix.Router
 
     scope path: "admin", alias: Controllers.Admin , helper: "admin" do
-      get "/users/:id", Users, :show, as: :user
+      get "/users/:id", Users, :show, as: :users
     end
 
     scope path: "api", alias: Controllers.Api, helper: "api" do
@@ -191,16 +191,16 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   end
 
   test "single helper scope" do
-    assert RouterHelperScoping.admin_user_path(id: 88) == "/admin/users/88"
+    assert RouterHelperScoping.admin_users_path(:show, 88) == "/admin/users/88"
   end
 
   test "double helper scope" do
-    assert RouterHelperScoping.api_v1_account_subscription_path(account_id: 12, id: 88) ==
+    assert RouterHelperScoping.api_v1_accounts_subscriptions_path(:show, 12, 88) ==
       "/api/v1/accounts/12/subscriptions/88"
   end
 
   test "resources actions should prefix scoped helper path" do
-    assert Router.edit_staff_product_path(id: 1) == "/staff/products/1/edit"
-    assert Router.new_staff_product_path == "/staff/products/new"
+    assert Router.staff_products_path(:edit, 1) == "/staff/products/1/edit"
+    assert Router.staff_products_path(:new) == "/staff/products/new"
   end
 end

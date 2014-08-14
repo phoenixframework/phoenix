@@ -1,7 +1,6 @@
 defmodule Phoenix.Router.Mapper do
   alias Phoenix.Router.Path
   alias Phoenix.Controller.Action
-  alias Phoenix.Config
   alias Phoenix.Router.ResourcesContext
   alias Phoenix.Router.ScopeContext
   alias Phoenix.Router.Errors
