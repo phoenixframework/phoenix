@@ -159,7 +159,7 @@ The template format to render is chosen based on the following priority:
  * The request header `accept` field, ie "text/html"
  * Fallback to html as default format, therefore rendering `*.html.eex`
 
-To override the request headers, for example when rendering your sitemap.xml, you would do something like
+To override the render format, for example when rendering your sitemap.xml, you can explicitly set the response content-type, using `put_resp_content_type/2` and the template will be chosen from the given mime-type, ie:
 
 ```elixir
 def sitemap(conn, _params) do
