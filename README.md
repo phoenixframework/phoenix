@@ -159,6 +159,16 @@ The template format to render is chosen based on the following priority:
  * The request header `accept` field, ie "text/html"
  * Fallback to html as default format, therefore rendering `*.html.eex`
 
+To override the request headers, for example when rendering your sitemap.xml, you would do something like
+
+```elixir
+def sitemap(conn, _params) do
+  conn
+  |> put_resp_content_type("text/xml")
+  |> render "sitemap"
+end
+```
+
 Note that the layout and view templates would be chosen by matching conten types, ie `application.[format].eex` would be used to render `show.[format].eex`.
 
 See [this file](https://github.com/elixir-lang/plug/blob/master/lib/plug/mime.types) for a list of supported mime types.
