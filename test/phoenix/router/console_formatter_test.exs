@@ -11,9 +11,9 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
   end
 
   test "format multiple routes" do
-    assert draw(RouterTestSingleRoutes) == ["        page  GET     /        Pages#index",
-                                            "upload_image  POST    /images  Images#upload",
-                                            "remove_image  DELETE  /images  Images#destroy"]
+    assert draw(RouterTestSingleRoutes) == ["        page_path  GET     /        Pages.index/2",
+                                            "upload_image_path  POST    /images  Images.upload/2",
+                                            "remove_image_path  DELETE  /images  Images.destroy/2"]
   end
 
   defmodule RouterTestResources do
@@ -24,14 +24,14 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
 
   test "format resource routes" do
     assert draw(RouterTestResources) == [
-      "images  GET     /images           Images#index",
-      "images  GET     /images/:id/edit  Images#edit",
-      "images  GET     /images/new       Images#new",
-      "images  GET     /images/:id       Images#show",
-      "images  POST    /images           Images#create",
-      "        PUT     /images/:id       Images#update",
-      "        PATCH   /images/:id       Images#update",
-      "images  DELETE  /images/:id       Images#destroy"
+      "images_path  GET     /images           Images.index/2",
+      "images_path  GET     /images/:id/edit  Images.edit/2",
+      "images_path  GET     /images/new       Images.new/2",
+      "images_path  GET     /images/:id       Images.show/2",
+      "images_path  POST    /images           Images.create/2",
+      "             PUT     /images/:id       Images.update/2",
+      "             PATCH   /images/:id       Images.update/2",
+      "images_path  DELETE  /images/:id       Images.destroy/2"
     ]
   end
 

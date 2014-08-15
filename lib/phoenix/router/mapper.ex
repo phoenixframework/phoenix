@@ -154,7 +154,7 @@ defmodule Phoenix.Router.Mapper do
 
       actions = Mapper.extract_actions_from_options(options)
       Enum.each actions, fn action ->
-        current_alias = ResourcesContext.current_alias(action, resource, __MODULE__)
+        current_alias = ResourcesContext.current_alias(resource, __MODULE__)
         opts = [as: current_alias]
         case action do
           :index   -> get    "/#{resource}",          controller, :index, opts

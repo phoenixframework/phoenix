@@ -59,14 +59,14 @@ defmodule Phoenix.Router.ResourcesContext do
       end
       resources "pages", Pages
       ---------------------------------
-      Context.current_alias(:index, "pages", __MODULE__)
-      => "pages"
-      Context.current_alias(:new, "pages", __MODULE__)
-      => "new_page"
+      Context.current_alias("users", __MODULE__)
+      => "users"
+      Context.current_alias("comments", __MODULE__)
+      => "users_comments"
       ---------------------------------
 
   """
-  def current_alias(action, relative_path, module) do
+  def current_alias(relative_path, module) do
     [relative_path | get(module)]
     |> Enum.reverse
     |> Enum.join("_")
