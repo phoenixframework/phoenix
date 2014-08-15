@@ -165,5 +165,14 @@ defmodule Phoenix.Router.NamedRoutingTest do
     assert Router.admin_messages_url(:show, 1, []) == "http://example.com/admin/messages/1"
     assert Router.admin_messages_url(:show, 1) == "http://example.com/admin/messages/1"
   end
+
+  test "Helpers module is generated with named route helpers that can be imported" do
+    assert Router.Helpers.profile_path(:show, 5, []) == "/users/5"
+    assert Router.Helpers.profile_path(:show, 5) == "/users/5"
+    assert Router.Helpers.profile_url(:show, 5, []) == "http://example.com/users/5"
+    assert Router.Helpers.profile_url(:show, 5) == "http://example.com/users/5"
+    assert Router.Helpers.top_path(:top, id: 5) == "/users/top?id=5"
+    assert Router.Helpers.top_url(:top, id: 5) == "http://example.com/users/top?id=5"
+  end
 end
 

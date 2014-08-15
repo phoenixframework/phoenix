@@ -74,23 +74,20 @@ defmodule Phoenix.Router.Mapper do
   end
 
   defmacro __before_compile__(env) do
-    routes = Module.get_attribute(env.module, :routes)
-    routes_ast = Enum.reduce routes, nil, fn route, acc ->
-      quote do
-        defmatch(unquote(route))
-        defroute_aliases(unquote(route))
-        unquote(acc)
-      end
-    end
+    routes      = env.module |> Module.get_attribute(:routes) |> Enum.reverse
+    mathces_ast = for route <- routes, do: defmatch(route)
+    helpers_ast = for route <- routes, do: defroute_aliases(env.module, route)
 
     quote do
       def __routes__, do: Enum.reverse(@routes)
-      unquote(routes_ast)
+      unquote(mathces_ast)
       def match(conn, method, path), do: Action.not_found(conn, method, path)
+      unquote(helpers_ast)
+      defmodule Helpers, do: unquote(helpers_ast)
     end
   end
 
-  defmacro defmatch({http_method, path, controller, action, _options}) do
+  defp defmatch({http_method, path, controller, action, _options}) do
     path_args = Path.matched_arg_list_with_ast_bindings(path)
     params_list_with_bindings = Path.params_with_ast_bindings(path)
 
@@ -105,10 +102,10 @@ defmodule Phoenix.Router.Mapper do
     end
   end
 
-  defmacro defroute_aliases({_http_method, path, _controller, action, options}) do
+  defp defroute_aliases(module, {_http_method, path, _controller, action, options}) do
     alias_name = options[:as]
     if alias_name do
-      RouteAlias.defalias(alias_name, path, action, __CALLER__.module)
+      RouteAlias.defalias(alias_name, path, action, module)
     end
   end
 

@@ -50,7 +50,7 @@ defmodule Phoenix.Router.RouteAlias do
           Path.build(unquote(path), unquote(named_dict), params)
         end
         def unquote(:"#{alias_name}_url")(unquote(action), unquote_splicing(named_args), params) do
-          Path.build_url(unquote(path), unquote(named_dict), params, __MODULE__)
+          Path.build_url(unquote(path), unquote(named_dict), params, unquote(module))
         end
       end
     end
