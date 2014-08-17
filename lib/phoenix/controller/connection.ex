@@ -24,6 +24,11 @@ defmodule Phoenix.Controller.Connection do
   def controller_module(conn), do: conn.private[:phoenix_controller]
 
   @doc """
+  Returns the Actom Router Module that dispatched the Conn
+  """
+  def router_module(conn), do: conn.private[:phoenix_router]
+
+  @doc """
   Assign layout to phoenix private assigns
 
   Possible values include any String, as well as the Atom `:none` to

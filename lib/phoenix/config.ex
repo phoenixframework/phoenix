@@ -33,6 +33,8 @@ defmodule Phoenix.Config do
       parsers: true,
       error_handler: true,
       cookies: false,
+      not_found_controller: nil,
+      error_controller: nil
     ],
     logger: [level: :error],
     template_engines: [

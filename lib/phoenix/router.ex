@@ -22,9 +22,6 @@ defmodule Phoenix.Router do
       if Config.router(__MODULE__, [:parsers]) do
         plug Plug.Parsers, parsers: [:urlencoded, :multipart, Parsers.JSON], accept: ["*/*"]
       end
-      if Config.router(__MODULE__, [:error_handler]) do
-        plug Plugs.ErrorHandler, from: __MODULE__
-      end
 
       @options unquote(plug_adapter_options)
     end

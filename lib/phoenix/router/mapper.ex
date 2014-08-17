@@ -33,7 +33,7 @@ defmodule Phoenix.Router.Mapper do
          defroute_aliases({:get, "pages/:page", PageController, :show, [as: :page]})
 
       --> def(match(conn, :get, ["pages", page])) do
-            Action.perform(conn, PageController, :show, page: page)
+            Action.perform(conn, PageController, :show, [page: page], Router)
           end
 
   The resources macro accepts flags to limit which resources are generated. Passing
@@ -79,7 +79,7 @@ defmodule Phoenix.Router.Mapper do
     quote do
       def __routes__, do: Enum.reverse(@routes)
       unquote(mathces_ast)
-      def match(conn, method, path), do: Action.not_found(conn, method, path)
+      def match(conn, method, path), do: throw({:not_found, conn})
       unquote(helpers_ast)
       defmodule Helpers, do: unquote(helpers_ast)
     end
@@ -91,10 +91,12 @@ defmodule Phoenix.Router.Mapper do
 
     quote do
       def unquote(:match)(conn, unquote(http_method), unquote(path_args)) do
+        IO.puts "Performing #{unquote(action)}"
         Action.perform(conn,
           unquote(controller),
           unquote(action),
-          unquote(params_list_with_bindings)
+          unquote(params_list_with_bindings),
+          __MODULE__
         )
       end
     end

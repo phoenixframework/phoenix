@@ -1,6 +1,8 @@
 defmodule Phoenix.Controller.Action do
   import Phoenix.Controller.Connection
   import Plug.Conn
+  alias Phoenix.Config
+  alias Phoenix.Router.Path
 
   @doc """
   Carries out Controller action after successful Router match, invoking the
@@ -10,10 +12,11 @@ defmodule Phoenix.Controller.Action do
   controller actions are called, as well as merging any named parameters from
   the route definition.
   """
-  def perform(conn, controller, action, named_params) do
+  def perform(conn, controller, action, named_params, router) do
     conn = assign_private(conn, :phoenix_named_params, named_params)
     |> assign_private(:phoenix_action, action)
     |> assign_private(:phoenix_controller, controller)
+    |> assign_private(:phoenix_router, router)
 
     apply(controller, :call, [conn, []])
   end
@@ -21,26 +24,45 @@ defmodule Phoenix.Controller.Action do
   @doc """
   Sends 404 not found response to client
   """
-  def not_found(conn, method, path) do
-    text conn, :not_found, "No route matches #{method} to #{inspect path}"
+  def handle_not_found(conn) do
+    router    = router_module(conn)
+    from_ctrl = controller_module(conn)
+
+    if (ctrl = Config.router(router, [:not_found_controller])) && ctrl != from_ctrl do
+      ctrl.handle_not_found(conn)
+    else
+      text conn, :not_found, "No route matches #{conn.method} to #{Path.join(conn.path_info)}"
+    end
   end
 
-  def error(conn, error) do
-    status = Plug.Exception.status(error)
+  def handle_error(conn, kind, error) do
+    router    = router_module(conn)
+    from_ctrl = controller_module(conn)
 
-    html conn, status, """
-      <html>
-        <body>
-          <pre>Something went wrong</pre>
-        </body>
-      </html>
-    """
+    cond do
+      Config.router(router, [:consider_all_requests_local]) ->
+        error_with_trace(conn, kind, error)
+
+      (ctrl = Config.router(router, [:error_controller])) && ctrl != from_ctrl ->
+        ctrl.handle_error(conn, kind, error)
+
+      true ->
+        status = Plug.Exception.status(error)
+        html conn, status, """
+          <html>
+            <body>
+              <pre>Something went wrong</pre>
+            </body>
+          </html>
+        """
+    end
   end
+
 
   @doc """
   Render HTML response with stack trace for use in development
   """
-  def error_with_trace(conn, error) do
+  def error_with_trace(conn, _kind, error) do
     stacktrace     = System.stacktrace
     exception      = Exception.normalize(:error, error)
     status         = Plug.Exception.status(error)

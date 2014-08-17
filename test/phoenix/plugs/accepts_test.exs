@@ -20,7 +20,7 @@ defmodule Phoenix.Plugs.AcceptsTest do
   test "returns the connection when Accept mime-extension is accepted" do
     conn = Plug.Test.conn(:get, "/")
     conn = put_in conn.req_headers, [{"accept", "text/html,application/xml;q=0.9,*/*;q=0.8"}]
-    conn = Action.perform(conn, HtmlController, :show, [])
+    conn = Action.perform(conn, HtmlController, :show, [], nil)
 
     refute conn.status == 400
   end
@@ -29,7 +29,7 @@ defmodule Phoenix.Plugs.AcceptsTest do
     conn = Plug.Test.conn(:get, "/")
     conn = put_in conn.req_headers, [{"accept", "text/html,application/xml;q=0.9,*/*;q=0.8"}]
 
-    {:halt, conn} = catch_throw(Action.perform(conn, JsonController, :show, []))
+    {:halt, conn} = catch_throw(Action.perform(conn, JsonController, :show, [], nil))
 
     assert conn.status == 400
   end
