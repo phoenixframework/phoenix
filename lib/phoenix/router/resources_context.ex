@@ -59,35 +59,18 @@ defmodule Phoenix.Router.ResourcesContext do
       end
       resources "pages", Pages
       ---------------------------------
-      Context.current_alias(:index, "pages", __MODULE__)
-      => "pages"
-      Context.current_alias(:new, "pages", __MODULE__)
-      => "new_page"
+      Context.current_alias("users", __MODULE__)
+      => "users"
+      Context.current_alias("comments", __MODULE__)
+      => "users_comments"
       ---------------------------------
 
   """
-  def current_alias(action, relative_path, module) do
-    resources = get(module) |> Enum.reverse |> Enum.map(&singularize(&1))
-
-    alias_for_action(action, resources, relative_path)
-  end
-  defp alias_for_action(:index, resources, rel_path) do
-    resources
-    |> Kernel.++([pluralize(rel_path)])
+  def current_alias(relative_path, module) do
+    [relative_path | get(module)]
+    |> Enum.reverse
     |> Enum.join("_")
   end
-  defp alias_for_action(action, resources, rel_path) when action in [:new, :edit] do
-    [action]
-    |> Kernel.++(resources)
-    |> Kernel.++([singularize(rel_path)])
-    |> Enum.join("_")
-  end
-  defp alias_for_action(:show, resources, rel_path) do
-    resources
-    |> Kernel.++([singularize(rel_path)])
-    |> Enum.join("_")
-  end
-  defp alias_for_action(_action, _resources, _rel_path), do: nil
 
   @doc """
   Pushes the current resource onto resources stack

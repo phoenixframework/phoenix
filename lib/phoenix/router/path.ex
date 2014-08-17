@@ -1,4 +1,5 @@
 defmodule Phoenix.Router.Path do
+  alias Phoenix.Config
 
   @doc """
   Splits the String path into segments by "/" delimiter
@@ -144,6 +145,12 @@ defmodule Phoenix.Router.Path do
     |> construct_query_string(param_names, param_values)
     |> ensure_leading_slash
   end
+  def build(path, named_param_values, param_values) do
+    param_names = param_names(path)
+    path
+    |> replace_param_names_with_values(param_names, named_param_values)
+    |> build(param_values)
+  end
   defp replace_param_names_with_values(path, param_names, param_values) do
     Enum.reduce param_names, path, fn param_name, path_acc ->
       value = param_values[String.to_atom(param_name)] |> to_string
@@ -188,6 +195,15 @@ defmodule Phoenix.Router.Path do
     port = if proxy, do: nil, else: opts[:port]
     %URI{scheme: scheme, host: host, path: path, port: port} |> to_string
   end
+  def build_url(path_string, named_params, params, module) do
+    path_string
+    |> build(named_params, params)
+    |> build_url(ssl:  Config.router(module, [:ssl]),
+                 host: Config.router(module, [:host]),
+                 port: Config.router(module, [:proxy_port]) ||
+                       Config.router(module, [:port]))
+  end
+
 
   @doc """
   Adds leading forward slash to string path if missing

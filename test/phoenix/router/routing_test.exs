@@ -52,7 +52,7 @@ defmodule Phoenix.Router.RoutingTest do
     use Phoenix.Router
     get "/", UsersController, :index, as: :users
     get "/users/top", UsersController, :top, as: :top
-    get "/users/:id", UsersController, :show, as: :user
+    get "/users/:id", UsersController, :show, as: :users
     get "/profiles/profile-:id", UsersController, :show
     get "/route_that_crashes", UsersController, :crash
     get "/files/:user_name/*path", FilesController, :show
@@ -250,7 +250,7 @@ defmodule Phoenix.Router.RoutingTest do
   end
 
   test "named route builds _path url helper" do
-    assert Router.user_path(id: 88) == "/users/88"
+    assert Router.users_path(:show, 88) == "/users/88"
   end
 
   test "Parsers.Fallback prevents Plug.Parsers from raising UnsupportedMediaTypeError" do
