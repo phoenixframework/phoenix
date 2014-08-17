@@ -43,7 +43,7 @@ defmodule YourApp.Router do
   use Phoenix.Router
 
   scope alias: YourApp do
-    get "/pages/:page", PageController, :show, as: :page
+    get "/pages/:page", PageController, :show, as: :pages
     get "/files/*path", FileController, :show
 
     resources "users", UserController do
@@ -64,7 +64,7 @@ defmodule YourApp.PageController do
   use Phoenix.Controller
 
   def show(conn, %{"page" => "admin"}) do
-    redirect conn, Router.page_path(page: "unauthorized")
+    redirect conn, Router.pages_path(:show, "unauthorized")
   end
   def show(conn, %{"page" => page}) do
     render conn, "show", title: "Showing page #{page}"
@@ -80,13 +80,7 @@ defmodule YourApp.UserController do
   end
 
   def index(conn, _params) do
-    html conn, """
-    <html>
-      <body>
-        <h1>Users</h1>
-      </body>
-    </html>
-    """
+   json conn, JSON.encode!(Repo.all(User))
   end
 end
 ```
@@ -123,17 +117,16 @@ You may also create helper functions within your views or layouts. For example, 
 defmodule App.Views do
   defmacro __using__(_options) do
     quote do
-      use Phoenix.View, templates_root: unquote(Path.join([__DIR__, "templates"]))
       import unquote(__MODULE__)
 
       # This block is expanded within all views for aliases, imports, etc
-      alias App.Views
-
-      def title, do: "Welcome to Phoenix!"
+      import App.I18n
+      import App.Router.Helpers
     end
   end
 
   # Functions defined here are available to all other views/templates
+  def title, do: "Welcome to Phoenix!"
 end
 
 defmodule App.PageView
@@ -205,7 +198,7 @@ By default, `eex` is supported. To add `haml` support, simply
 include the following in your `mix.exs` deps:
 
 ```elixir
-{:phoenix_haml, "~> 0.0.3"}
+{:phoenix_haml, "~> 0.0.4"}
 ```
 
 and add the `PhoenixHaml.Engine` to your `config/config.exs`
