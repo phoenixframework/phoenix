@@ -25,8 +25,4 @@ defmodule Phoenix.View.Helpers do
   def render(module, template, assigns) do
     module.render(template, assigns)
   end
-
-  def url(conn, path) do
-
-  end
 end
