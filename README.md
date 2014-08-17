@@ -57,6 +57,82 @@ defmodule YourApp.Router do
 end
 ```
 
+Routes specified using `get`, `post`, `put`, and `delete` respond to the correspdonding HTTP method. The second and third parameters are the controller module and function, respectively. For example, the line `get "/files/*path", FileController, :show` above will route GET requests matching `/files/*path` to the `FileController.show` function.
+
+#### Resources
+
+The `resources` macro generates a set of routes for the standard CRUD operations, so:
+
+```elixir
+resources "users", UserController
+```
+
+is the equivalent of writing:
+
+```elixir
+get "/users",          UserController, :index
+get "/users/:id",      UserController, :show
+get "/users/new",      UserController, :new
+post "/users",         UserController, :create
+get "/users/:id/edit", UserController, :edit
+put "/users/:id",      UserController, :update
+delete "/users/:id",   UserController, :destroy
+```
+
+Resources will also generate a set of named routes and associated helper methods:
+
+```elixir
+resources "users", UserController do
+  resources "comments", CommentController
+end
+
+iex> Router.users_path(:index)
+"/users"
+
+iex> Router.users_path(:show, 123)
+"/users/123"
+
+iex> Router.users_path(:show, 123, page: 5)
+"/users/123?page=5"
+
+iex> Router.users_path(:edit, 123)
+"/users/123/edit"
+
+iex> Router.users_path(:destroy, 123)
+"/users/123"
+
+iex> Router.users_path(:new)
+"/users/new"
+
+iex> Router.users_comments_path(:show, 99, 100)
+"/users/99/comments/100"
+
+iex> Router.users_comments_path(:index, 99, foo: "bar")
+"/users/99/comments?foo=bar"
+
+iex> Router.users_comments_url(:index, 99)
+"http://example.com/users/99/comments"
+
+iex> Router.users_comments_path(:edit, 88, 2, [])
+"/users/88/comments/2/edit"
+
+iex> Router.users_comments_path(:new, 88)
+"/users/88/comments/new"
+```
+
+#### Method Overrides
+
+Since browsers don't allow HTML forms to send PUT or DELETE requests, Phoenix allows the POST method to be overridden, either by adding a `_method` form parameter, or specifying an `x-http-method-override` HTTP header.
+
+For example, to make a button to delete a post, you could write:
+
+```html
+<form action="<%= posts_path(:destroy, post.id) %>" method="post">
+  <input type="hidden" name="_method" value="DELETE">
+  <input type="submit" value="Delete Post">
+</form>
+```
+
 ### Controller examples
 
 ```elixir
