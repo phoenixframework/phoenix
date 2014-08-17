@@ -67,7 +67,7 @@ The page we are going to build will simply say "Hello from Phoenix!" when we poi
 
 The first thing we need to do to create that page is define a route for it. Open up web/router.ex in your favorite text editor. It should currently look like this.
 
-``` elixir
+```elixir
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
@@ -78,7 +78,7 @@ end
 
 Let's add a new route to the router that maps the GET for "/hello" to the index action of a soon-to-be created HelloPhoenix.HelloController. Your router.ex file should now look like this.
 
-```
+```elixir
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
@@ -95,7 +95,7 @@ Controllers are Elixir modules, and actions are Elixir functions defined on them
 
 Create a new web/controllers/hello_controller.ex file, and make it look like the following.
 
-``` elixir
+```elixir
 defmodule HelloPhoenix.HelloController do
   use Phoenix.Controller
 
@@ -107,7 +107,7 @@ end
 
 We will save a more complete discussion of controllers for the controller specific guide, but for now, the interesting part is this line.
 
-```
+```elixir
 render conn, "index"
 ```
 
@@ -121,7 +121,7 @@ The main job of Phoenix views is to prepare data for use in a template. Function
 
 In order to render any templates for our HelloController, we need a HelloView. Let's create an empty one for now, and leave a detailed description of views for later. Create web/views/hello_view.ex and make it look like this.
 
-``` elixir
+```elixir
 defmodule HelloPhoenix.HelloView do
   use HelloPhoenix.Views
 end
@@ -135,7 +135,7 @@ Templates are scoped to a controller. In practice, this simply means that we cre
 
 Let's do that now. Create web/templates/hello/index.html.eex and make it look like this.
 
-``` elixir
+```elixir
 <div class="jumbotron">
   <h2>Hello from Phoenix!</h2>
 </div>
@@ -156,7 +156,7 @@ As we did last time, the first thing we'll do is create a new route.
 
 For this page, we're going to re-use our HelloController we just created and just add a new "show" action. We'll add a line just below our last route, like this.
 
-``` elixir
+```elixir
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
@@ -175,7 +175,7 @@ For example, if we point the browser at: http://localhost:4000/hello/Frank , the
 
 Requests to our new route will be handled by the HelloPhoenix.HelloController "show" action. We already have the controller, so all we need to do is add a "show" function to it. This time, we'll need to keep the params that get passed into the action so that we can pass the messenger to the template. To do that, we add this show function to the controller.
 
-``` elixir
+```elixir
 def show(conn, params) do
   render conn, "show", messenger: params["messenger"]
 end
@@ -192,7 +192,7 @@ To do that, we'll use the special eex tags for executing Elixir expressions - <%
 
 And this is what the template should look like.
 
-``` elixir
+```elixir
 <div class="jumbotron">
   <h2>Hello World, from <%= @messenger %>!</h2>
 </div>
