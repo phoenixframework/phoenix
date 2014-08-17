@@ -5,7 +5,7 @@ defmodule Phoenix.Router.Mapper do
   alias Phoenix.Router.ScopeContext
   alias Phoenix.Router.Errors
   alias Phoenix.Router.Mapper
-  alias Phoenix.Router.RouteAlias
+  alias Phoenix.Router.RouteHelper
 
   @actions [:index, :edit, :new, :show, :create, :update, :destroy]
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace,
@@ -51,16 +51,14 @@ defmodule Phoenix.Router.Mapper do
 
   ## Generated Routes
 
-      page      GET   pages/:id      Elixir.PageControllershow
-
-      users     GET   users          Elixir.UserControllernew
-      new_user  GET   users/new      Elixir.UserControllernew
-      edit_user GET   users/:id/edit Elixir.UserControlleredit
-      user      GET   users/:id      Elixir.UserControllershow
-
-                POST  users          Elixir.UserControllercreate
-                PUT   users/:id      Elixir.UserControllerupdate
-                PATCH users/:id      Elixir.UserControllerupdate
+      pages_path  GET    /pages/:id       Elixir.PageController.show/2
+      users_path  GET    /users           Elixir.UserController.index/2
+      users_path  GET    /users/:id/edit  Elixir.UserController.edit/2
+      users_path  GET    /users/new       Elixir.UserController.new/2
+      users_path  GET    /users/:id       Elixir.UserController.show/2
+      users_path  POST   /users           Elixir.UserController.create/2
+                  PUT    /users/:id       Elixir.UserController.update/2
+                  PATCH  /users/:id       Elixir.UserController.update/2
 
   """
 
@@ -76,7 +74,7 @@ defmodule Phoenix.Router.Mapper do
   defmacro __before_compile__(env) do
     routes      = env.module |> Module.get_attribute(:routes) |> Enum.reverse
     mathces_ast = for route <- routes, do: defmatch(route)
-    helpers_ast = for route <- routes, do: defroute_aliases(env.module, route)
+    helpers_ast = RouteHelper.defhelpers(routes, env.module)
 
     quote do
       def __routes__, do: Enum.reverse(@routes)
@@ -99,13 +97,6 @@ defmodule Phoenix.Router.Mapper do
           unquote(params_list_with_bindings)
         )
       end
-    end
-  end
-
-  defp defroute_aliases(module, {_http_method, path, _controller, action, options}) do
-    alias_name = options[:as]
-    if alias_name do
-      RouteAlias.defalias(alias_name, path, action, module)
     end
   end
 
