@@ -12,11 +12,10 @@ defmodule Phoenix.Controller.Action do
   controller actions are called, as well as merging any named parameters from
   the route definition.
   """
-  def perform(conn, controller, action, named_params, router) do
+  def perform(conn, controller, action, named_params) do
     conn = assign_private(conn, :phoenix_named_params, named_params)
     |> assign_private(:phoenix_action, action)
     |> assign_private(:phoenix_controller, controller)
-    |> assign_private(:phoenix_router, router)
 
     apply(controller, :call, [conn, []])
   end
@@ -24,27 +23,24 @@ defmodule Phoenix.Controller.Action do
   @doc """
   Sends 404 not found response to client
   """
-  def handle_not_found(conn) do
-    router    = router_module(conn)
-    from_ctrl = controller_module(conn)
+  def handle_error(conn, :throw, {:not_found, conn}) do
+    router = router_module(conn)
 
-    if (ctrl = Config.router(router, [:not_found_controller])) && ctrl != from_ctrl do
-      ctrl.handle_not_found(conn)
+    if controller = Config.router(router, [:error_controller]) do
+      controller.handle_error(conn, :throw, {:not_found, conn})
     else
       text conn, :not_found, "No route matches #{conn.method} to #{Path.join(conn.path_info)}"
     end
   end
-
   def handle_error(conn, kind, error) do
     router    = router_module(conn)
-    from_ctrl = controller_module(conn)
 
     cond do
       Config.router(router, [:consider_all_requests_local]) ->
         error_with_trace(conn, kind, error)
 
-      (ctrl = Config.router(router, [:error_controller])) && ctrl != from_ctrl ->
-        ctrl.handle_error(conn, kind, error)
+      controller = Config.router(router, [:error_controller]) ->
+        controller.handle_error(conn, kind, error)
 
       true ->
         status = Plug.Exception.status(error)

@@ -5,5 +5,5 @@
   "inflex": {:package, "0.2.4"},
   "jazz": {:package, "0.2.0"},
   "linguist": {:package, "0.1.1"},
-  "plug": {:package, "0.5.3"},
+  "plug": {:git, "git://github.com/elixir-lang/plug.git", "1bf2300eff14f21f07f197c62d1a0fcce3f5edd2", []},
   "ranch": {:package, "1.0.0"}}

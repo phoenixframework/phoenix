@@ -1,6 +1,5 @@
 defmodule Phoenix.Controller do
   import Phoenix.Controller.Connection
-  alias Phoenix.Controller.Action
   alias Plug.MIME
   alias Phoenix.Plugs
   alias Phoenix.View
@@ -64,7 +63,6 @@ defmodule Phoenix.Controller do
       @before_compile unquote(__MODULE__)
       use Plug.Builder
       unless @options[:bare] do
-        plug Plugs.ErrorHandler
         plug Plugs.ParamsFetcher
         plug Plugs.ContentTypeFetcher
         plug Phoenix.Controller.Flash
@@ -85,14 +83,7 @@ defmodule Phoenix.Controller do
       def render(conn, template, assigns \\ []) do
         render_view conn, @subview_module, @layout_module, template, assigns
       end
-
-      def handle_error(conn, kind, error) do
-        Action.handle_error(conn, kind, error)
-      end
-      def handle_not_found(conn) do
-        Action.handle_not_found(conn)
-      end
-      defoverridable action: 2, handle_error: 3, handle_not_found: 1
+      defoverridable action: 2
     end
   end
 

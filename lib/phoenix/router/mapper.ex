@@ -91,12 +91,10 @@ defmodule Phoenix.Router.Mapper do
 
     quote do
       def unquote(:match)(conn, unquote(http_method), unquote(path_args)) do
-        IO.puts "Performing #{unquote(action)}"
         Action.perform(conn,
           unquote(controller),
           unquote(action),
-          unquote(params_list_with_bindings),
-          __MODULE__
+          unquote(params_list_with_bindings)
         )
       end
     end
