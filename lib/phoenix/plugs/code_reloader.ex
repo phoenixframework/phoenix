@@ -4,6 +4,7 @@ defmodule Phoenix.Plugs.CodeReloader do
 
   def call(conn, _opts) do
     if Code.ensure_loaded?(Mix.Task) do
+      ensure_views_recompiled
       Mix.Task.reenable "compile.elixir"
       Mix.Task.run "compile.elixir", ["web"]
     else
@@ -15,4 +16,10 @@ defmodule Phoenix.Plugs.CodeReloader do
 
     conn
   end
+
+  # TODO: Fix this hack
+  defp ensure_views_recompiled do
+    System.cmd("touch", ["web/views.ex"])
+  end
 end
+
