@@ -17,7 +17,6 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       "lib/photo_blog.ex",
       "web/controllers/page_controller.ex",
       "web/router.ex",
-      "lib/photo_blog/supervisor.ex",
       "mix.exs",
       "test",
       "test/photo_blog_test.exs",
