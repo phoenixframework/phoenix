@@ -587,7 +587,7 @@ defmodule YourApp.PageController do
   use Phoenix.Controller
 
   def show(conn, _params) do
-    conn = fetch_session(conn) |> put_session(:foo, "bar")
+    conn = put_session(conn, :foo, "bar")
     foo = get_session(conn, :foo)
 
     text conn, foo
