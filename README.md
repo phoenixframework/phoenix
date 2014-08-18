@@ -404,12 +404,12 @@ Note that, for added clarity, events should be prefixed by their subject and a c
 Remember that a client first has to join a topic before it can send events. On the JavaScript side, this is how it would be done (don't forget to include _/js/phoenix.js_) :
 
 ```js
-var socket = new Phoenix.Socket("ws://" + location.host + "/ws");
+var socket = new Phoenix.Socket("/ws");
 
 socket.join("channel", "topic", {some_auth_token: "secret"}, callback);
 ```
 
-First you create a socket which uses the ws:// protocol and the host from the current location and it appends the route /ws. This route's name is for you to decide in your router :
+First you create a socket which uses the route name /ws. This route's name is for you to decide in your router :
 
 ```elixir
 defmodule App.Router do
@@ -429,7 +429,7 @@ This mounts the socket router on /ws and also register the channel from earlier 
 Now that a channel exists and we have reached it, it's time to do something fun with it! The callback from the previous JavaScript example receives the channel as a parameter and uses that to either subscribe to topics or send events to the server. Here is a quick example of both :
 
 ```js
-var socket = new Phoenix.Socket("ws://" + location.host + "/ws");
+var socket = new Phoenix.Socket("/ws");
 
 socket.join("channel", "topic", {}, function(channel) {
 
@@ -448,8 +448,9 @@ socket.join("channel", "topic", {}, function(channel) {
 });
 ```
 
-There are a few other this not covered in this readme that might be worth exploring :
+There are a few other things not covered in this readme that might be worth exploring :
 
+ * By default a socket uses the ws:// protocol and the host from the current location. If you mean to use a separate router on a host other than `location.host`, be sure to specify the full path when initializing the socket, i.e. `var socket = new Phoenix.Socket("//example.com/ws")` or `var socket = new Phoenix.Socket("ws://example.com/ws")`
  * Both the client and server side allow for leave events (as opposed to join)
  * In JavaScript, you may manually `.trigger()` events which can be useful for testing
  * On the server side, string topics are converted into a `Topic`, which can be subscribed to from any elixir code. No need to use websockets!
