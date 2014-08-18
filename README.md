@@ -56,7 +56,7 @@ defmodule YourApp.Router do
 end
 ```
 
-Routes specified using `get`, `post`, `put`, and `delete` respond to the correspdonding HTTP method. The second and third parameters are the controller module and function, respectively. For example, the line `get "/files/*path", FileController, :show` above will route GET requests matching `/files/*path` to the `FileController.show` function.
+Routes specified using `get`, `post`, `put`, and `delete` respond to the corresponding HTTP method. The second and third parameters are the controller module and function, respectively. For example, the line `get "/files/*path", FileController, :show` above will route GET requests matching `/files/*path` to the `FileController.show` function.
 
 #### Resources
 
@@ -237,7 +237,7 @@ def sitemap(conn, _params) do
 end
 ```
 
-Note that the layout and view templates would be chosen by matching conten types, ie `application.[format].eex` would be used to render `show.[format].eex`.
+Note that the layout and view templates would be chosen by matching content types, ie `application.[format].eex` would be used to render `show.[format].eex`.
 
 See [this file](https://github.com/elixir-lang/plug/blob/master/lib/plug/mime.types) for a list of supported mime types.
 
@@ -336,7 +336,7 @@ end
 
 ### Channels
 
-Channels broker websocket connections and integrate with the Topic PubSub layer for message broadcasting. You can think of channels as controllers, with two differences: they are bidirectionnal and the connection stays alive after a reply.
+Channels broker websocket connections and integrate with the Topic PubSub layer for message broadcasting. You can think of channels as controllers, with two differences: they are bidirectional and the connection stays alive after a reply.
 
 We can implement a channel by creating a module in the _channels_ directory and by using `Phoenix.Channels`:
 
@@ -367,7 +367,7 @@ end
 
 Note that we must join a topic before you can send and receive events on a channel. This will become clearer when we look at the JavaScript code, hang tight!
 
-A channel will use a socket underneath to send responses and receive events. As said, sockets are bidirectionnal, which mean you can receive events (similar to requests in your controller). You handle events with pattern matching, for example:
+A channel will use a socket underneath to send responses and receive events. As said, sockets are bidirectional, which mean you can receive events (similar to requests in your controller). You handle events with pattern matching, for example:
 
 
 ```elixir
