@@ -45,4 +45,13 @@ defmodule Phoenix.Project do
 
     {rel_view_path, Module.concat([module_root, module])}
   end
+
+  def modules do
+    Mix.Project.compile_path <> "**/*"
+    |> Path.wildcard
+    |> Stream.map(&(Path.basename(&1)))
+    |> Stream.filter(&String.ends_with?(&1, ".beam"))
+    |> Stream.map(&Path.basename(&1, ".beam"))
+    |> Enum.to_list
+  end
 end
