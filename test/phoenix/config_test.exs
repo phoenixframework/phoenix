@@ -47,7 +47,7 @@ defmodule Phoenix.Config.ConfigTest do
   end
 
   test "default/1 returns the default config value" do
-    assert Config.default([:logger, :level]) == :error
+    assert Config.default([:router, :port]) == 4000
   end
 
   test "default!/1 raises UndefinedConfigError if value is nil" do

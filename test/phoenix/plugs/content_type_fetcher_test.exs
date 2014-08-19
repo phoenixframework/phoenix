@@ -21,37 +21,37 @@ defmodule Phoenix.Plugs.ContentTypeFetcherTest do
   test "response_content_type defaults to text/html" do
     conn = Plug.Conn.fetch_params(%Conn{})
     |> ContentTypeFetcher.fetch
-    assert Connection.response_content_type(conn) == "text/html"
+    assert Connection.response_content_type!(conn) == "text/html"
   end
 
   test "response_content_type returns text/html when */*" do
     conn = %Conn{params: %{}, req_headers: [{"accept", "*/*"}]}
     |> ContentTypeFetcher.fetch
-    assert Connection.response_content_type(conn) == "text/html"
+    assert Connection.response_content_type!(conn) == "text/html"
   end
 
   test "response_content_type prefers format param when available" do
     conn = %Conn{params: %{"format" => "json"}, req_headers: [{"accept", "text/html"}]}
     |> ContentTypeFetcher.fetch
-    assert Connection.response_content_type(conn) == "application/json"
+    assert Connection.response_content_type!(conn) == "application/json"
   end
 
   test "response_content_type uses accept header when format param missing" do
     conn = %Conn{params: %{}, req_headers: [{"accept", "application/xml"}]}
     |> ContentTypeFetcher.fetch
-    assert Connection.response_content_type(conn) == "application/xml"
+    assert Connection.response_content_type!(conn) == "application/xml"
   end
 
   test "response_content_type falls back to text/html when format and Accepet missing" do
     conn = %Conn{params: %{}, req_headers: []}
     |> ContentTypeFetcher.fetch
-    assert Connection.response_content_type(conn) == "text/html"
+    assert Connection.response_content_type!(conn) == "text/html"
   end
 
   test "response_content_type falls back to text/html when mime is invalid" do
     conn = %Conn{params: %{}, req_headers: [{"accept", "somethingcrazy/abc"}]}
     |> ContentTypeFetcher.fetch
-    assert Connection.response_content_type(conn) == "text/html"
+    assert Connection.response_content_type!(conn) == "text/html"
   end
 
 

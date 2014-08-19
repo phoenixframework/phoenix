@@ -34,7 +34,6 @@ defmodule Phoenix.Config do
       error_handler: true,
       cookies: false,
     ],
-    logger: [level: :error],
     template_engines: [
       eex: Phoenix.Template.EExEngine
     ],
@@ -55,7 +54,7 @@ defmodule Phoenix.Config do
 
   ## Examples
 
-      iex> Config.default([:logger, :level])
+      iex> Config.default([:router, :port])
       :error
 
   """
@@ -77,7 +76,7 @@ defmodule Phoenix.Config do
 
   ## Examples
 
-      iex> Config.get([:logger, :level])
+      iex> Config.get([:router, :port])
       :info
 
   """
@@ -96,10 +95,10 @@ defmodule Phoenix.Config do
 
   ## Examples
 
-      iex> Config.get!([:logger, :level])
+      iex> Config.get!([:router, :port])
       :info
 
-      iex(2)> Phoenix.Config.get!([:logger, :key_that_does_not_exist])
+      iex(2)> Phoenix.Config.get!([:router, :key_that_does_not_exist])
       ** (Phoenix.Config.UndefinedConfigError) [message: "No configuration found...
 
   """

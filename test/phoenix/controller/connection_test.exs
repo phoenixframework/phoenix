@@ -24,22 +24,31 @@ defmodule Phoenix.Router.ConnectionTest do
     assert catch_throw(Connection.halt!(conn)) == {:halt, conn}
   end
 
-  test "response_content_type raises UnfetchedContentType error if unfetched" do
+  test "response_content_type! raises UnfetchedContentType error if unfetched" do
     assert_raise Errors.UnfetchedContentType, fn ->
-      Connection.response_content_type(%Conn{})
+      Connection.response_content_type!(%Conn{})
     end
+  end
+
+  test "response_content_type returns :error if unfetched" do
+    assert {:error, _msg} = Connection.response_content_type(%Conn{})
+  end
+
+  test "response_content_type! returns content type when fetched" do
+    conn = Phoenix.Plugs.ContentTypeFetcher.fetch(%Conn{params: %{}})
+    assert Connection.response_content_type!(conn) == "text/html"
   end
 
   test "response_content_type returns content type when fetched" do
     conn = Phoenix.Plugs.ContentTypeFetcher.fetch(%Conn{params: %{}})
-    assert Connection.response_content_type(conn) == "text/html"
+    assert Connection.response_content_type(conn) == {:ok, "text/html"}
   end
 
   test "response_content_type falls back to text/html when mime is invalid" do
     conn = Plugs.ContentTypeFetcher.fetch(
      %Conn{params: %{}, req_headers: [{"accept", "somethingcrazy/abc"}]}
     )
-    assert Connection.response_content_type(conn) == "text/html"
+    assert Connection.response_content_type!(conn) == "text/html"
   end
 
   test "assign_layout/2 assigns the private assign_layout" do

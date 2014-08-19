@@ -15,7 +15,7 @@ defmodule Phoenix.Plugs.Accepts do
   def init(opts), do: opts
 
   def call(conn, extensions) do
-    primary_accept_extension = MIME.extensions(response_content_type(conn)) |> hd
+    primary_accept_extension = MIME.extensions(response_content_type!(conn)) |> hd
 
     if primary_accept_extension in extensions do
       conn
