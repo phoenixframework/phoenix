@@ -16,7 +16,6 @@ defmodule Phoenix.Router do
       use Plug.Builder
 
       plug Plug.Logger
-      plug Plugs.RouterLogger
 
       if Config.router(__MODULE__, [:static_assets]) do
         mount = Config.router(__MODULE__, [:static_assets_mount])

@@ -87,7 +87,7 @@ defmodule Phoenix.Controller.Connection do
   def response_content_type!(conn) do
     case response_content_type(conn) do
       {:ok, resp}   -> resp
-      {:error, msg} -> raise %Errors.UnfetchedContentType{message: msg}
+      {:error, :unfetched} -> raise %Errors.UnfetchedContentType{message: "You must first call Plugs.ContentTypeFetcher.fetch/1"}
     end
   end
 
@@ -99,7 +99,7 @@ defmodule Phoenix.Controller.Connection do
       iex> response_content_type(conn)
       {:ok, "text/html"}
       iex> response_content_type(conn)
-      {:error, "You must first call Plugs.ContentTypeFetcher.fetch/1"}
+      {:error, :unfetched}
 
   """
   def response_content_type(conn) do
@@ -107,7 +107,7 @@ defmodule Phoenix.Controller.Connection do
     |> get_resp_header("content-type")
     |> Enum.at(0)
     |> case do
-      nil -> {:error, "You must first call Plugs.ContentTypeFetcher.fetch/1"}
+      nil -> {:error, :unfetched }
       headers -> {:ok, headers |> String.split(";") |> Enum.at(0)}
     end
   end
