@@ -1,6 +1,6 @@
 defmodule Phoenix.Plugs.AcceptsTest do
   use ExUnit.Case, async: true
-  use Plug.Test
+  use PlugHelper
   alias Phoenix.Plugs
   alias Phoenix.Controller.Action
 
@@ -20,7 +20,9 @@ defmodule Phoenix.Plugs.AcceptsTest do
   test "returns the connection when Accept mime-extension is accepted" do
     conn = Plug.Test.conn(:get, "/")
     conn = put_in conn.req_headers, [{"accept", "text/html,application/xml;q=0.9,*/*;q=0.8"}]
-    conn = Action.perform(conn, HtmlController, :show, [])
+    {conn, _} = capture_log fn ->
+      Action.perform(conn, HtmlController, :show, [])
+    end
 
     refute conn.status == 400
   end
@@ -29,7 +31,9 @@ defmodule Phoenix.Plugs.AcceptsTest do
     conn = Plug.Test.conn(:get, "/")
     conn = put_in conn.req_headers, [{"accept", "text/html,application/xml;q=0.9,*/*;q=0.8"}]
 
-    {:halt, conn} = catch_throw(Action.perform(conn, JsonController, :show, []))
+    {{:halt, conn} , _} = capture_log fn ->
+      catch_throw(Action.perform(conn, JsonController, :show, []))
+    end
 
     assert conn.status == 400
   end

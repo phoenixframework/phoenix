@@ -15,7 +15,7 @@ defmodule Phoenix.RouterLoggerTest do
   test "verify logger" do
     {_conn, [_plug_log, header, accept, parameters, _plug_log_2]} = simulate_request_with_logging(Router, :get, "/")
     assert String.contains?(header, "[debug] Processing by Phoenix.RouterLoggerTest.LoggerController.index")
-    assert accept == "  Accept: text/plain"
+    assert accept == "  Accept: text/html"
     assert parameters == "  Parameters: %{}"
   end
 end
