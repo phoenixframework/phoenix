@@ -66,7 +66,6 @@ defmodule Phoenix.Controller do
         plug Plugs.ParamsFetcher
         plug Plugs.ContentTypeFetcher
         plug Phoenix.Controller.Flash
-        plug Plug.Logger
         plug Plugs.RouterLogger
       end
     end
