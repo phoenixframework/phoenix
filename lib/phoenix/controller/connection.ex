@@ -93,8 +93,14 @@ defmodule Phoenix.Controller.Connection do
 
   @doc """
   Returns the String Mime content-type of response
-    {:ok, "text/html"}
-    {:error, "You must first call Plugs.ContentTypeFetcher.fetch/1"}
+
+  ## Examples
+
+      iex> response_content_type(conn)
+      {:ok, "text/html"}
+      iex> response_content_type(conn)
+      {:error, "You must first call Plugs.ContentTypeFetcher.fetch/1"}
+
   """
   def response_content_type(conn) do
     conn
