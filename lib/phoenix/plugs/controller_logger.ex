@@ -1,4 +1,4 @@
-defmodule Phoenix.Plugs.RouterLogger do
+defmodule Phoenix.Plugs.ControllerLogger do
   import Phoenix.Controller.Connection
   require Logger
 
