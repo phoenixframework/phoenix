@@ -86,8 +86,8 @@ defmodule Phoenix.Controller.Connection do
   """
   def response_content_type!(conn) do
     case response_content_type(conn) do
-      {:ok, resp} -> resp
-      {:error, msg} ->  raise %Errors.UnfetchedContentType{message: msg}
+      {:ok, resp}   -> resp
+      {:error, msg} -> raise %Errors.UnfetchedContentType{message: msg}
     end
   end
 
