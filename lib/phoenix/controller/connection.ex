@@ -87,7 +87,7 @@ defmodule Phoenix.Controller.Connection do
   def response_content_type!(conn) do
     case response_content_type(conn) do
       {:ok, resp}   -> resp
-      {:error, :unfetched} -> raise %Errors.UnfetchedContentType{message: "You must first call Plugs.ContentTypeFetcher.fetch/1"}
+      {:error, :unfetched} -> raise Errors.UnfetchedContentType, message: "You must first call Plugs.ContentTypeFetcher.fetch/1"
     end
   end
 
