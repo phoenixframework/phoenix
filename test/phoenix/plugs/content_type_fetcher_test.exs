@@ -53,6 +53,4 @@ defmodule Phoenix.Plugs.ContentTypeFetcherTest do
     |> ContentTypeFetcher.fetch
     assert Connection.response_content_type!(conn) == "text/html"
   end
-
-
 end
