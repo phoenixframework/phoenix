@@ -1,5 +1,6 @@
 defmodule Phoenix.Plugs.Parsers.JSON do
   import Plug.Conn
+  alias Poison, as: JSON
 
   @moduledoc """
   Parses JSON request body.
@@ -38,7 +39,7 @@ defmodule Phoenix.Plugs.Parsers.JSON do
     {:ok, %{}, conn}
   end
   defp decode({:ok, body, conn}) do
-    case Jazz.decode(body) do
+    case JSON.decode(body) do
       {:ok, terms} when is_list(terms)->
         {:ok, %{"_json" => terms}, conn}
       {:ok, terms} ->

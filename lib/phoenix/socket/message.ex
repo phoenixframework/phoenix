@@ -1,5 +1,5 @@
 defmodule Phoenix.Socket.Message do
-  use Jazz
+  alias Poison, as: JSON
   alias Phoenix.Socket.Message
 
   defstruct channel: nil, topic: nil, event: nil, message: nil

@@ -22,7 +22,7 @@ defmodule Phoenix.Mixfile do
   def application do
     [
       mod: { Phoenix, [] },
-      applications: [:plug, :linguist, :inflex, :jazz, :logger]
+      applications: [:plug, :linguist, :inflex, :poison, :logger]
     ]
   end
 
@@ -32,7 +32,7 @@ defmodule Phoenix.Mixfile do
       {:plug, "0.6.0"},
       {:inflex, "0.2.4"},
       {:linguist, "~> 0.1.1"},
-      {:jazz, "0.2.0"},
+      {:poison, "~> 1.0.1"},
       {:ex_doc, github: "elixir-lang/ex_doc", only: [:docs]}
     ]
   end

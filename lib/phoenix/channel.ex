@@ -1,6 +1,5 @@
 defmodule Phoenix.Channel do
   use Behaviour
-  use Jazz
   alias Phoenix.Topic
   alias Phoenix.Socket
   alias Phoenix.Socket.Message

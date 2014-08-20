@@ -1,6 +1,7 @@
 defmodule Phoenix.Plugs.Parsers.JSONTest do
   use ExUnit.Case, async: true
   use Plug.Test
+  alias Poison, as: JSON
 
   def parse(conn, opts \\ []) do
     opts = Keyword.put_new(opts, :parsers, [Phoenix.Plugs.Parsers.JSON])
@@ -9,14 +10,14 @@ defmodule Phoenix.Plugs.Parsers.JSONTest do
 
   test "parses the request body" do
     headers = [{"content-type", "application/json"}]
-    body = Jazz.encode!(%{id: 1})
+    body = JSON.encode!(%{id: 1}) |> IO.iodata_to_binary
     conn = parse(conn(:post, "/", body, headers: headers))
     assert conn.params["id"] == 1
   end
 
   test "parses the request body when it is an array" do
     headers = [{"content-type", "application/json"}]
-    body = Jazz.encode!([%{id: 2}, %{id: 1}])
+    body = JSON.encode!([%{id: 2}, %{id: 1}]) |> IO.iodata_to_binary
     conn = parse(conn(:post, "/", body, headers: headers))
     assert length(conn.params["_json"]) == 2
   end

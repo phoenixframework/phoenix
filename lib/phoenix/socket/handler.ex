@@ -1,5 +1,6 @@
 defmodule Phoenix.Socket.Handler do
-  use Jazz
+  alias Poison, as: JSON
+
   @behaviour :cowboy_websocket_handler
 
   alias Phoenix.Socket

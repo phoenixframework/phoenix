@@ -5,7 +5,7 @@ defmodule Phoenix.Template.RenderTest do
 
   defmodule MyApp.Templates do
     use Phoenix.Template.Compiler, path: Path.join([__DIR__], "../../fixtures/templates")
-    use Jazz
+    alias Poison, as: JSON
 
     def render("user.json", [name: name]) do
       JSON.encode! %{id: 123, name: name}
@@ -26,7 +26,7 @@ defmodule Phoenix.Template.RenderTest do
   end
 
   test "render can be called directly from regular functiond defs" do
-    assert View.render(MyApp.Templates, "user.json", name: "eric") ==
-      "{\"id\":123,\"name\":\"eric\"}"
+    assert IO.iodata_to_binary(View.render(MyApp.Templates, "user.json", name: "eric")) ==
+      "{\"name\":\"eric\",\"id\":123}"
   end
 end
