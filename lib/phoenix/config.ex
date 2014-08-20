@@ -16,7 +16,6 @@ defmodule Phoenix.Config do
       config :phoenix, MyApp.Router,
         port: 4000,
         ssl: false,
-        code_reload: false,
         cookies: false
 
   """

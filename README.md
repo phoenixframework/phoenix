@@ -499,11 +499,12 @@ use Mix.Config
 config :phoenix, YourApp.Router,
   port: System.get_env("PORT"),
   ssl: false,
-  code_reload: false,
   cookies: true,
   session_key: "_your_app_key",
   session_secret: "super secret"
 
+config :phoenix, :code_reloader,
+  enabled: false
 
 import_config "#{Mix.env}.exs"
 
@@ -514,12 +515,13 @@ use Mix.Config
 config :phoenix, YourApp.Router,
   port: System.get_env("PORT") || 4000,
   ssl: false,
-  code_reload: true,
   cookies: true,
   consider_all_requests_local: true,
   session_key: "_your_app_key",
   session_secret: "super secret"
 
+config :phoenix, :code_reloader,
+  enabled: true
 
 ```
 
@@ -536,7 +538,6 @@ use Mix.Config
 config :phoenix, YourApp.Router,
   port: System.get_env("PORT"),
   ssl: true,
-  code_reload: false,
   cookies: true,
   session_key: "_your_app_key",
   session_secret: "super secret"

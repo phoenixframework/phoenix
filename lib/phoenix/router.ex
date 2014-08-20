@@ -34,7 +34,7 @@ defmodule Phoenix.Router do
 
   defmacro __before_compile__(_env) do
     quote do
-      if Config.router(__MODULE__, [:code_reload]) do
+      if Config.get([:code_reloader, :enabled]) do
         plug Plugs.CodeReloader
       end
       if Config.router(__MODULE__, [:cookies]) do
