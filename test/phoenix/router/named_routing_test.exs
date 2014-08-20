@@ -175,5 +175,10 @@ defmodule Phoenix.Router.NamedRoutingTest do
     assert Helpers.top_path(:top, id: 5) == "/users/top?id=5"
     assert Helpers.url(Helpers.top_path(:top, id: 5)) == "http://example.com/users/top?id=5"
   end
+
+  test "Helpers generate update actions" do
+    assert Router.messages_path(:update, 1, []) == "/admin/messages/1"
+    assert Router.messages_path(:update, 1) == "/admin/messages/1"
+  end
 end
 

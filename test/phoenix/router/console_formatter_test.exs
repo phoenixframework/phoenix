@@ -29,8 +29,8 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
       "images_path  GET     /images/new       Images.new/2",
       "images_path  GET     /images/:id       Images.show/2",
       "images_path  POST    /images           Images.create/2",
-      "             PUT     /images/:id       Images.update/2",
-      "             PATCH   /images/:id       Images.update/2",
+      "images_path  PUT     /images/:id       Images.update/2",
+      "images_path  PATCH   /images/:id       Images.update/2",
       "images_path  DELETE  /images/:id       Images.destroy/2"
     ]
   end

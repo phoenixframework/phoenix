@@ -155,8 +155,8 @@ defmodule Phoenix.Router.Mapper do
           :create  -> post   "/#{resource}",          controller, :create, opts
           :destroy -> delete "/#{resource}/:id",      controller, :destroy, opts
           :update  ->
-            put   "/#{resource}/:id", controller, :update, []
-            patch "/#{resource}/:id", controller, :update, []
+            put   "/#{resource}/:id", controller, :update, opts
+            patch "/#{resource}/:id", controller, :update, opts
         end
       end
 
