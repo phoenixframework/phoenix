@@ -175,10 +175,10 @@ defmodule App.PageController do
 end
 ```
 
-By looking at the controller name `App.PageController`, Phoenix will use `App.PageView` to render `lib/app/templates/page/index.html.eex` within the template `lib/app/templates/layout/application.html.eex`. Let's break that down:
+By looking at the controller name `App.PageController`, Phoenix will use `App.PageView` to render `web/templates/page/index.html.eex` within the template `web/templates/layout/application.html.eex`. Let's break that down:
  * `App.PageView` is the module that will render the template (more on that later)
- * `app` is your application name
- * `templates` is your configured templates directory. See `lib/app/views.ex`
+ * `App` is your application name
+ * `templates` is your configured templates directory. See `web/views.ex`
  * `pages` is your controller name
  * `html` is the requested format (more on that later)
  * `eex` is the default renderer
