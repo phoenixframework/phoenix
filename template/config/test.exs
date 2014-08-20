@@ -9,6 +9,9 @@ config :phoenix, <%= application_module %>.Router,
   session_key: "_<%= application_name %>_key",
   session_secret: "<%= session_secret %>"
 
+config :phoenix, :code_reloader,
+  enabled: true
+
 config :logger, :console
   level: :debug
 

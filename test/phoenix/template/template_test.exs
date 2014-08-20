@@ -38,5 +38,9 @@ defmodule Phoenix.Template.TemplateTest do
   test "#eex_engine_for_file_ext/1 returns EEx.SmartEngine for html extension" do
     assert Template.eex_engine_for_file_ext(".json") == EEx.SmartEngine
   end
+
+  test "path_hash/1 returns the sha hash for dirctory list of file path" do
+    assert Template.path_hash(Path.expand("test/fixtures/**/*"))
+  end
 end
 

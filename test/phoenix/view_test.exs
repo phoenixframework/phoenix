@@ -58,5 +58,9 @@ defmodule Phoenix.ViewTest do
   test "unwrap_rendered_content/2 returns string for non-html content" do
     assert View.unwrap_rendered_content("Hi", ".txt") == "Hi"
   end
+
+  test "views have phoenix_recompile?/0 injected" do
+    refute UserView.phoenix_recompile?
+  end
 end
 

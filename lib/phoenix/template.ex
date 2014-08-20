@@ -72,7 +72,7 @@ defmodule Phoenix.Template do
       end
 
       @doc "Returns true if list of directory files has changed"
-      def recompile?, do: unquote(path_hash(path)) != Template.path_hash(@path)
+      def phoenix_recompile?, do: unquote(path_hash(path)) != Template.path_hash(@path)
     end
   end
 

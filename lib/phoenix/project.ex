@@ -1,6 +1,10 @@
 defmodule Phoenix.Project do
   alias Phoenix.Naming
 
+  @moduledoc """
+  Handles lookup of current Mix project and modules
+  """
+
   @doc """
   Returns the Applications name as an Atom, ie :phoenix
   """
@@ -19,39 +23,20 @@ defmodule Phoenix.Project do
   end
 
   @doc """
-  Returns all conventionally defined view modules and file paths in web/views
+  Returns Stream of all Modules located in Project
 
   ## Exampes
 
-      iex> Project.module_root
-      PageView
-      iex> Project.view_modules
-      {"web/views/page_view.ex", MyApp.Views.PageView}
+      iex> Project.modules |> Enum.to_list
+      [MyApp.Router, MyApp.Views, MyApp.I18n, ...]
 
   """
-  def view_modules do
-    "web/views/**/**.{ex, exs}"
-    |> Path.wildcard
-    |> Enum.map(&view_path_to_module(&1))
-    |> Enum.filter(fn {_path, mod} -> Code.ensure_loaded?(mod) end)
-  end
-
-  defp view_path_to_module(rel_view_path) do
-    module = rel_view_path
-    |> String.replace(~r/(web\/views\/)|(\.ex)|(\.exs)/, "")
-    |> String.split("/")
-    |> Enum.map(&Phoenix.Naming.camelize(&1))
-    |> Enum.join(".")
-
-    {rel_view_path, Module.concat([module_root, module])}
-  end
-
   def modules do
     Mix.Project.compile_path <> "**/*"
     |> Path.wildcard
     |> Stream.map(&(Path.basename(&1)))
     |> Stream.filter(&String.ends_with?(&1, ".beam"))
     |> Stream.map(&Path.basename(&1, ".beam"))
-    |> Enum.to_list
+    |> Stream.map(&Module.concat(&1, nil))
   end
 end

@@ -8,17 +8,17 @@ use Mix.Config
 config :phoenix, <%= application_module %>.Router,
   port: System.get_env("PORT"),
   ssl: false,
-  code_reload: false,
   static_assets: true,
   cookies: true,
   session_key: "_<%= application_name %>_key",
   session_secret: "<%= session_secret %>"
 
+config :phoenix, :code_reloader,
+  enabled: false
+
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
-
-
 
 # Import environment specific config. Note, this must remain at the bottom of
 # this file to properly merge your previous config entries.
