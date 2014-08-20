@@ -157,7 +157,7 @@
 
       Socket.prototype.onClose = function(event) {
         if (typeof console.log === "function") {
-          console.log("WS close: " + event);
+          console.log("WS close: ", event);
         }
         clearInterval(this.reconnectTimer);
         return this.reconnectTimer = setInterval(((function(_this) {
