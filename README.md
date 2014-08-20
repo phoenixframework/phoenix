@@ -137,6 +137,8 @@ For example, to make a button to delete a post, you could write:
 ```elixir
 defmodule YourApp.PageController do
   use Phoenix.Controller
+  # must add this to use redirect, otherwise you've got UndefinedFunction error
+  alias YourApp.Router
 
   def show(conn, %{"page" => "admin"}) do
     redirect conn, Router.pages_path(:show, "unauthorized")
