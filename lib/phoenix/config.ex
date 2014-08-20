@@ -27,12 +27,16 @@ defmodule Phoenix.Config do
       ssl: false,
       host: "localhost",
       consider_all_requests_local: false,      # Full error reports are disabled
-      code_reload: false,
       static_assets: true,
       static_assets_mount: "/",
       parsers: true,
       error_handler: true,
       cookies: false,
+      session_key: nil,
+      session_secret: nil
+    ],
+    code_reloader: [
+      enabled: false
     ],
     template_engines: [
       eex: Phoenix.Template.EExEngine

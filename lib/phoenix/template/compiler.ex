@@ -39,18 +39,7 @@ defmodule Phoenix.Template.Compiler do
       raise %UndefinedError{message: "No such template directory: #{path}"}
     end
 
-    renders_ast = for file_path <- Template.find_all_from_root(path) do
-      Template.precompile(file_path, path)
-    end
-
-    quote do
-      unquote(renders_ast)
-      def render(undefined_template), do: render(undefined_template, [])
-      def render(undefined_template, _assign) do
-        raise %UndefinedError{message: "No such template \"#{undefined_template}\""}
-      end
-    end
+    Template.precompile_all_from_root(path)
   end
-
 end
 
