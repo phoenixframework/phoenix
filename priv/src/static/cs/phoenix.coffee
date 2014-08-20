@@ -84,12 +84,12 @@
 
 
     onClose: (event) ->
-      console.log?("WS close: #{event}")
+      console.log?("WS close: ", event)
       clearInterval(@reconnectTimer)
       @reconnectTimer = setInterval (=> @reconnect() ), @reconnectAfterMs
 
 
-    onError: (error) -> console.log?("WS error: #{error}")
+    onError: (error) -> console.log?("WS error: ", error)
 
     connectionState: ->
       switch @conn?.readyState ? 3
@@ -137,7 +137,7 @@
 
 
     onMessage: (rawMessage) ->
-      console.log? rawMessage
+      console.log?("message received: ", rawMessage)
       {channel, topic, event, message} = JSON.parse(rawMessage.data)
       for chan in @channels when chan.isMember(channel, topic)
         chan.trigger(event, message)
