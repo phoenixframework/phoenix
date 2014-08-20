@@ -37,6 +37,6 @@ defmodule Phoenix.Project do
     |> Stream.map(&(Path.basename(&1)))
     |> Stream.filter(&String.ends_with?(&1, ".beam"))
     |> Stream.map(&Path.basename(&1, ".beam"))
-    |> Stream.map(&Module.concat(&1, nil))
+    |> Stream.map(&Module.concat([&1]))
   end
 end

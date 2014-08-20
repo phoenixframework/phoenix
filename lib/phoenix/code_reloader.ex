@@ -30,8 +30,19 @@ defmodule Phoenix.CodeReloader do
   end
 
   @doc false
-  def handle_call(:reload, _from, state) do
-    {:reply, mix_compile(Code.ensure_loaded(Mix.Task)), state}
+  def handle_call(:reload, from, state) do
+    froms = all_waiting([from])
+    reply = mix_compile(Code.ensure_loaded(Mix.Task))
+    Enum.each(froms, &GenServer.reply(&1, reply))
+    {:noreply, state}
+  end
+
+  defp all_waiting(acc) do
+    receive do
+      {:"$gen_call", from, :reload} -> all_waiting([from | acc])
+    after
+      0 -> acc
+    end
   end
 
   @doc """
@@ -58,8 +69,11 @@ defmodule Phoenix.CodeReloader do
   end
   defp modules_for_recompilation(modules) do
     modules
-    |> Stream.filter(fn mod -> function_exported?(mod, :phoenix_recompile?, 0) end)
-    |> Stream.filter(fn mod -> mod.phoenix_recompile? end)
+    |> Stream.filter fn mod ->
+      Code.ensure_loaded?(mod) and
+        function_exported?(mod, :phoenix_recompile?, 0) and
+        mod.phoenix_recompile?
+    end
   end
   defp modules_to_file_paths(modules) do
     Stream.map(modules, fn mod -> mod.__info__(:compile)[:source] end)
