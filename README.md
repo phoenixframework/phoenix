@@ -363,6 +363,7 @@ defmodule App.MyChannel do
 
 end
 ```
+
 `join` events are specially treated. When `{:ok, socket}` is returned from the Channel, the socket is subscribed to the channel and authorized to pubsub on the channel/topic pair. When `{:error, socket, reason}` is returned, the socket is denied pubsub access.
 
 Note that we must join a topic before you can send and receive events on a channel. This will become clearer when we look at the JavaScript code, hang tight!
@@ -433,10 +434,6 @@ var socket = new Phoenix.Socket("ws://" + location.host + "/ws");
 
 socket.join("channel", "topic", {}, function(channel) {
 
-  channel.on("join", function(message) {
-    console.log("joined successfully");
-  });
-
   channel.on("return_event", function(message) {
     console.log("Got " + message + " while listening for event return_event");
   });
@@ -447,8 +444,36 @@ socket.join("channel", "topic", {}, function(channel) {
 
 });
 ```
+If you wish, you can send a "join" event back to the client
+```elixir
+def join(socket, topic, message) do
+  reply socket, "join", %{content: "joined #{topic} successfully"}
+  {:ok, socket}
+end
+```
+Which you can handle after you get the channel object.
+``` javascript
+channel.on("return_event", function(message) {
+  console.log("Got " + message + " while listening for event return_event");
+});
+```
+Similarly, you can send an explicit message when denying conection.
+```elixir
+def join(socket, topic, message) do
+  reply socket, "error", %{reason: "failed to join #{topic}"}
+  {:error, socket, :reason}
+end
+```
+and handle that like any other event
+``` javascript
+channel.on("error", function(error) {
+  console.log("Failed to join topic. Reason: +" error.reason);
+});
+```
 
-There are a few other this not covered in this readme that might be worth exploring :
+It should be noted that join and error messages are not returned by default, as the client implicitly knows whether it has successfuly subscribed to a channel: the socket will simply not recieve any messages should the connection be denied.
+
+There are a few other things not covered in this readme that might be worth exploring :
 
  * Both the client and server side allow for leave events (as opposed to join)
  * In JavaScript, you may manually `.trigger()` events which can be useful for testing
