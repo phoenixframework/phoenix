@@ -1,7 +1,6 @@
 defmodule Phoenix.Router.ResourcesContext do
   alias Phoenix.Router.Path
   alias Phoenix.Router.Stack
-  import Inflex
 
   @stack_name :nested_resources
 
@@ -101,7 +100,7 @@ defmodule Phoenix.Router.ResourcesContext do
 
   """
   def resource_with_named_param(resource) do
-    Path.join([resource, ":#{singularize(resource)}_id"])
+    Path.join([resource, ":#{Inflex.singularize(resource)}_id"])
   end
 end
 

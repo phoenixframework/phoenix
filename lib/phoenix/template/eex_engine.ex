@@ -16,7 +16,7 @@ defmodule Phoenix.Template.EExEngine do
 
     quote unquote: true, bind_quoted: [tpl_name: tpl_name, content: content, engine: engine] do
       EEx.function_from_string(:defp, :"#{tpl_name}", content, [:assigns],
-                               engine: engine)
+                               engine: engine, file: unquote(file_path))
 
       def render(unquote(tpl_name), assigns) do
         unquote(:"#{tpl_name}")(assigns)
