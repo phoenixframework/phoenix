@@ -32,7 +32,8 @@ defmodule Phoenix.Config do
       error_handler: true,
       cookies: false,
       session_key: nil,
-      session_secret: nil
+      session_secret: nil,
+      error_controller: nil
     ],
     code_reloader: [
       enabled: false

@@ -4,7 +4,9 @@ defmodule Phoenix.Router do
   alias Phoenix.Adapters.Cowboy
   alias Phoenix.Plugs.Parsers
   alias Phoenix.Config
+  alias Phoenix.Controller.Action
   alias Phoenix.Project
+  alias Plug.Conn
 
   defmacro __using__(plug_adapter_options \\ []) do
     quote do
@@ -23,9 +25,6 @@ defmodule Phoenix.Router do
       end
       if Config.router(__MODULE__, [:parsers]) do
         plug Plug.Parsers, parsers: [:urlencoded, :multipart, Parsers.JSON], accept: ["*/*"]
-      end
-      if Config.router(__MODULE__, [:error_handler]) do
-        plug Plugs.ErrorHandler, from: __MODULE__
       end
 
       @options unquote(plug_adapter_options)
@@ -97,6 +96,13 @@ defmodule Phoenix.Router do
   Carries out Controller dispatch for router match
   """
   def perform_dispatch(conn, router) do
-    router.match(conn, conn.method, conn.path_info)
+    conn = Conn.assign_private(conn, :phoenix_router, router)
+    try do
+      router.match(conn, conn.method, conn.path_info)
+    catch
+      :throw, {:halt, conn}         -> conn
+      :throw, {err, conn = %Conn{}} -> Action.handle_error(conn, :throw, {err, conn})
+      kind, error                   -> Action.handle_error(conn, kind, error)
+    end
   end
 end

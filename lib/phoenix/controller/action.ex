@@ -1,6 +1,8 @@
 defmodule Phoenix.Controller.Action do
   import Phoenix.Controller.Connection
   import Plug.Conn
+  alias Phoenix.Config
+  alias Phoenix.Router.Path
 
   @doc """
   Carries out Controller action after successful Router match, invoking the
@@ -21,26 +23,42 @@ defmodule Phoenix.Controller.Action do
   @doc """
   Sends 404 not found response to client
   """
-  def not_found(conn, method, path) do
-    text conn, :not_found, "No route matches #{method} to #{inspect path}"
+  def handle_error(conn, :throw, {:not_found, conn}) do
+    router = router_module(conn)
+
+    if controller = Config.router(router, [:error_controller]) do
+      controller.handle_error(conn, :throw, {:not_found, conn})
+    else
+      text conn, :not_found, "No route matches #{conn.method} to #{Path.join(conn.path_info)}"
+    end
+  end
+  def handle_error(conn, kind, error) do
+    router    = router_module(conn)
+
+    cond do
+      Config.router(router, [:consider_all_requests_local]) ->
+        error_with_trace(conn, kind, error)
+
+      controller = Config.router(router, [:error_controller]) ->
+        controller.handle_error(conn, kind, error)
+
+      true ->
+        status = Plug.Exception.status(error)
+        html conn, status, """
+          <html>
+            <body>
+              <pre>Something went wrong</pre>
+            </body>
+          </html>
+        """
+    end
   end
 
-  def error(conn, error) do
-    status = Plug.Exception.status(error)
-
-    html conn, status, """
-      <html>
-        <body>
-          <pre>Something went wrong</pre>
-        </body>
-      </html>
-    """
-  end
 
   @doc """
   Render HTML response with stack trace for use in development
   """
-  def error_with_trace(conn, error) do
+  def error_with_trace(conn, _kind, error) do
     stacktrace     = System.stacktrace
     exception      = Exception.normalize(:error, error)
     status         = Plug.Exception.status(error)
