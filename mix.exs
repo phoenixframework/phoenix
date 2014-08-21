@@ -33,7 +33,8 @@ defmodule Phoenix.Mixfile do
       {:inflex, "0.2.4"},
       {:linguist, "~> 0.1.1"},
       {:poison, "~> 1.0.1"},
-      {:ex_doc, github: "elixir-lang/ex_doc", only: [:docs]}
+      {:earmark, "~> 0.1", only: :docs},
+      {:ex_doc, "~> 0.5", only: :docs}
     ]
   end
 end
