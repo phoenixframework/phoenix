@@ -472,7 +472,7 @@ channel.on("error", function(error) {
 });
 ```
 
-It should be noted that join and error messages are not returned by default, as the client implicitly knows whether it has successfuly subscribed to a channel: the socket will simply not recieve any messages should the connection be denied.
+It should be noted that join and error messages are not returned by default, as the client implicitly knows whether it has successfuly subscribed to a channel: the socket will simply not receive any messages should the connection be denied.
 
 There are a few other things not covered in this readme that might be worth exploring :
 

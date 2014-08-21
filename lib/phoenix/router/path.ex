@@ -80,7 +80,7 @@ defmodule Phoenix.Router.Path do
 
   @doc """
   Returns Keyword List of parameters from URL matched with
-  AST of associationed bindings for inclusion in defmatch route
+  AST of associated bindings for inclusion in defmatch route
 
   ## Examples
 

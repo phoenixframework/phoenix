@@ -32,7 +32,7 @@ defmodule Phoenix.Channel do
   end
 
   @doc """
-  Unsubscribes socket to given channel topic
+  Unsubscribes socket from given channel topic
   Returns %Socket{}
   """
   def unsubscribe(socket, channel, topic) do
