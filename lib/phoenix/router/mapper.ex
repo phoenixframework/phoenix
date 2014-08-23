@@ -34,7 +34,7 @@ defmodule Phoenix.Router.Mapper do
          defroute_aliases({:get, "pages/:page", PageController, :show, [as: :page]})
 
       --> def(match(conn, :get, ["pages", page])) do
-            Action.perform(conn, PageController, :show, [page: page], Router)
+            Action.perform(conn, PageController, :show, page: page)
           end
 
   The resources macro accepts flags to limit which resources are generated. Passing
