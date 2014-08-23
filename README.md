@@ -676,6 +676,28 @@ defmodule YourApp.PageController do
 end
 ```
 
+#### Catching Errors at the Controller layer
+
+Errors can be caught at the controller layer by overriding `call/2` on the controller. ie:
+
+```elixir
+defmodule YourApp.UserController do
+  use Phoenix.Controller
+
+  def call(conn, opts) do
+    try do
+      super(conn, opts)
+    rescue
+      Ecto.NotSingleResult -> conn |> assign_status(404) |> render "user_404"
+    end
+  end
+
+  def show(conn, %{"id" => id}) do
+    render conn, "index", user: Repo.get!(User, id)
+  end
+end
+```
+
 ### Mix Tasks
 
 ```console
