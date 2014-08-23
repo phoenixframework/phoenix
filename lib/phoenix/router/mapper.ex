@@ -1,6 +1,7 @@
 defmodule Phoenix.Router.Mapper do
   alias Phoenix.Router.Path
   alias Phoenix.Controller.Action
+  alias Phoenix.Controller.Connection
   alias Phoenix.Router.ResourcesContext
   alias Phoenix.Router.ScopeContext
   alias Phoenix.Router.Errors
@@ -79,7 +80,7 @@ defmodule Phoenix.Router.Mapper do
     quote do
       def __routes__, do: Enum.reverse(@routes)
       unquote(mathces_ast)
-      def match(conn, method, path), do: throw({:not_found, conn})
+      def match(conn, method, path), do: Connection.assign_status(conn, 404)
       unquote(helpers_ast)
       defmodule Helpers, do: unquote(helpers_ast)
     end

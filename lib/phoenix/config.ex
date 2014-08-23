@@ -29,11 +29,12 @@ defmodule Phoenix.Config do
       static_assets: true,
       static_assets_mount: "/",
       parsers: true,
-      error_handler: true,
       cookies: false,
       session_key: nil,
       session_secret: nil,
-      error_controller: nil
+      catch_errors: true,
+      debug_errors: false,
+      page_controller: Phoenix.Controller.PageController,
     ],
     code_reloader: [
       enabled: false
@@ -129,9 +130,9 @@ defmodule Phoenix.Config do
       1234
 
   """
-  def router(module) do
-    for {key, _value} <- Dict.merge(@defaults[:router], find_router_conf(module)) do
-      {key, router(module, [key])}
+  def router(mod) do
+    for {key, _value} <- Dict.merge(@defaults[:router], find_router_conf(mod)) do
+      {key, router(mod, [key])}
     end
   end
   def router(module, path) do

@@ -2,16 +2,27 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
   use ExUnit.Case, async: false
   use PlugHelper
   alias Phoenix.Controller.ErrorHandlingTest
-  alias ErrorHandlingTest.RouterCatchAllHandler
-  alias ErrorHandlingTest.RouterNoHandler
-  alias ErrorHandlingTest.RouterCustomHandler
-  alias ErrorHandlingTest.ErrorController
-  alias ErrorHandlingTest.CustomerErrorController
+  alias ErrorHandlingTest.RouterCustomPageController
+  alias ErrorHandlingTest.RouterDefaultPageController
+  alias ErrorHandlingTest.RouterDefaultPageControllerDebugErrors
+  alias ErrorHandlingTest.RouterDefaultPageControllerNoCatch
+  alias ErrorHandlingTest.PageController
 
   setup_all do
     Mix.Config.persist(phoenix: [
-      {RouterCatchAllHandler,
-        error_controller: ErrorController
+      {RouterCustomPageController,
+        page_controller: PageController,
+        catch_errors: true
+      },
+      {RouterDefaultPageController,
+        catch_errors: true
+      },
+      {RouterDefaultPageControllerNoCatch,
+        catch_errors: false
+      },
+      {RouterDefaultPageControllerDebugErrors,
+        catch_errors: true,
+        debug_errors: true
       }
     ])
 
@@ -20,96 +31,119 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
 
       plug :action
 
-      def not_found(conn, _params) do
-        throw {:not_found, conn}
-      end
-
-      def error(_conn, _params) do
-        raise "boom"
-      end
-    end
-
-    defmodule CustomerErrorController do
-      use Phoenix.Controller
-
-      plug :action
-
       def call(conn, options) do
         try do
           super(conn, options)
         catch
-          :throw, {:not_found, conn} -> text(conn, "couldn't find it")
+          :throw, "boom" -> text(conn, 500, "boom")
         end
       end
 
-      def not_found(conn, _params) do
-        throw {:not_found, conn}
-      end
-
-      def error(_conn, _params) do
-        raise "boom"
-      end
+      def assign_404(conn, _params), do: assign_status(conn, 404)
+      def assign_500(conn, _params), do: assign_status(conn, 500)
+      def raise_500(_conn, _params), do: raise "boom!"
+      def throw_error(_conn, _params), do: throw "boom"
     end
 
-    defmodule ErrorController do
+    defmodule PageController do
       use Phoenix.Controller
 
-      def handle_error(conn, :throw, {:not_found, conn}) do
-        assign(conn, :error, :handled_404)
+      def error(conn, _) do
+        case error(conn) do
+          _ -> assign(conn, :error, :handled_500)
+        end
       end
 
-      def handle_error(conn, _kind, _error) do
-        assign(conn, :error, :handled_500)
+      def not_found(conn, _) do
+        conn
+        |> assign(:error, :handled_404)
+        |> text 404, "not found"
       end
     end
 
-    defmodule RouterCatchAllHandler do
+    defmodule RouterCustomPageController do
       use Phoenix.Router
-      get "/404", MyController, :not_found
-      get "/500", MyController, :error
+      get "/404", MyController, :assign_404
+      get "/500", MyController, :assign_500
+      get "/500-raise", MyController, :raise_500
+      get "/500-throw", MyController, :throw_error
     end
 
-    defmodule RouterNoHandler do
+    defmodule RouterDefaultPageController do
       use Phoenix.Router
-      get "/404", MyController, :not_found
-      get "/500", MyController, :error
+      get "/404", MyController, :assign_404
+      get "/500", MyController, :assign_500
+      get "/500-raise", MyController, :raise_500
+      get "/500-throw", MyController, :throw_error
     end
 
-    defmodule RouterCustomHandler do
+    defmodule RouterDefaultPageControllerNoCatch do
       use Phoenix.Router
-      get "/404", CustomerErrorController, :not_found
-      get "/500", CustomerErrorController, :error
+      get "/500-raise", MyController, :raise_500
+    end
+
+    defmodule RouterDefaultPageControllerDebugErrors do
+      use Phoenix.Router
+      get "/404", MyController, :assign_404
+      get "/500", MyController, :assign_500
+      get "/500-raise", MyController, :raise_500
+      get "/500-throw", MyController, :throw_error
     end
 
     :ok
   end
 
-  test "error_controller can be configured for custom 404 handling" do
-    conn = simulate_request(RouterCatchAllHandler, :get, "/404")
+
+  test "default PageController renders 404 for returned 404 status" do
+    conn = simulate_request(RouterDefaultPageController, :get, "/404")
+    assert String.match?(conn.resp_body, ~r/not found/)
+  end
+
+  test "default PageController renders 500 for returned 500 status" do
+    conn = simulate_request(RouterDefaultPageController, :get, "/500")
+    assert String.match?(conn.resp_body, ~r/Something went wrong/)
+  end
+
+  test "default PageController renders 500 for errors when catch_errors: true" do
+    conn = simulate_request(RouterDefaultPageController, :get, "/500-raise")
+    assert String.match?(conn.resp_body, ~r/Something went wrong/)
+  end
+
+  test "errors are not caught when catch_errors: false" do
+    assert_raise RuntimeError, fn ->
+      simulate_request(RouterDefaultPageControllerNoCatch, :get, "/500-raise")
+    end
+  end
+
+  test "page_controller can be configured for custom 404 handling" do
+    conn = simulate_request(RouterCustomPageController, :get, "/404")
     assert conn.assigns[:error] == :handled_404
   end
 
-  test "error_controller can be configured for custom error handling" do
-    conn = simulate_request(RouterCatchAllHandler, :get, "/500")
+  test "page_controller can be configured for custom 500 handling" do
+    conn = simulate_request(RouterCustomPageController, :get, "/500-raise")
     assert conn.assigns[:error] == :handled_500
   end
 
-  test "default 404 handling returns 404 status" do
-    conn = simulate_request(RouterNoHandler, :get, "/404")
-    assert conn.status == 404
-    assert conn.assigns[:error] == nil
-  end
-
-  test "default 500 handling returns 500 status" do
-    conn = simulate_request(RouterNoHandler, :get, "/500")
+  test "controller can override call/2 to cache errors" do
+    conn = simulate_request(RouterCustomPageController, :get, "/500-throw")
     assert conn.status == 500
-    assert conn.assigns[:error] == nil
+    assert conn.resp_body == "boom"
   end
 
-  test "controllers can override call/2 for custom error handling per controller" do
-    conn = simulate_request(RouterCustomHandler, :get, "/404")
-    assert conn.status == 200
-    assert conn.resp_body == "couldn't find it"
+  test "debug_errors: true renders Phoenix's debug 404 page" do
+    conn = simulate_request(RouterDefaultPageControllerDebugErrors, :get, "/400")
+    assert String.match?(conn.resp_body, ~r/No route matches/)
   end
 
+  test "debug_errors: true renders Phoenix's debug 500 page for assigned 500 status" do
+    conn = simulate_request(RouterDefaultPageControllerDebugErrors, :get, "/500")
+    assert String.match?(conn.resp_body, ~r/Something went wrong/)
+  end
+
+  test "debug_errors: true renders Phoenix's debug 500 page for uncaught error" do
+    conn = simulate_request(RouterDefaultPageControllerDebugErrors, :get, "/500-raise")
+    assert String.match?(conn.resp_body, ~r/Stacktrace/)
+  end
 end
+

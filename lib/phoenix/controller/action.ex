@@ -2,7 +2,6 @@ defmodule Phoenix.Controller.Action do
   import Phoenix.Controller.Connection
   import Plug.Conn
   alias Phoenix.Config
-  alias Phoenix.Router.Path
 
   @doc """
   Carries out Controller action after successful Router match, invoking the
@@ -21,57 +20,52 @@ defmodule Phoenix.Controller.Action do
   end
 
   @doc """
-  Sends 404 not found response to client
+  Handles sending 404 response based on Router's Mix Config settings
+
+  ## Router Configuration Options
+
+    * page_controller - The optional Module to have `not_found/2` action invoked
+                        when 404's status occurs.
+                        Default `Phoenix.Controller.PageController`
+    * debug_errors - Bool to display Phoenix's route debug page for 404 status.
+                     Default `false`
+
   """
-  def handle_error(conn, :throw, {:not_found, conn}) do
+  def handle_not_found(conn) do
+    conn   = put_in conn.halted, false
     router = router_module(conn)
+    params = named_params(conn)
 
-    if controller = Config.router(router, [:error_controller]) do
-      controller.handle_error(conn, :throw, {:not_found, conn})
+    if Config.router(router, [:debug_errors]) do
+      perform conn, Phoenix.Controller.PageController, :not_found_debug, params
     else
-      text conn, :not_found, "No route matches #{conn.method} to #{Path.join(conn.path_info)}"
-    end
-  end
-  def handle_error(conn, kind, error) do
-    router    = router_module(conn)
-
-    cond do
-      Config.router(router, [:consider_all_requests_local]) ->
-        error_with_trace(conn, kind, error)
-
-      controller = Config.router(router, [:error_controller]) ->
-        controller.handle_error(conn, kind, error)
-
-      true ->
-        status = Plug.Exception.status(error)
-        html conn, status, """
-          <html>
-            <body>
-              <pre>Something went wrong</pre>
-            </body>
-          </html>
-        """
+      perform conn, Config.router!(router, [:page_controller]), :not_found, params
     end
   end
 
 
   @doc """
-  Render HTML response with stack trace for use in development
-  """
-  def error_with_trace(conn, _kind, error) do
-    stacktrace     = System.stacktrace
-    exception      = Exception.normalize(:error, error)
-    status         = Plug.Exception.status(error)
-    exception_type = exception.__struct__
+  Handles sending 500 response based on Router's Mix Config settings
 
-    html conn, status, """
-      <html>
-        <h2>(#{inspect exception_type}) #{Exception.message(exception)}</h2>
-        <h4>Stacktrace</h4>
-        <body>
-          <pre>#{Exception.format_stacktrace stacktrace}</pre>
-        </body>
-      </html>
-    """
+  ## Router Configuration Options
+
+    * page_controller - The optional Module to have `error/2` action invoked
+                        when 500's status occurs.
+                        Default `Phoenix.Controller.PageController`
+    * debug_errors - Bool to display Phoenix's route debug page for 500 status.
+                     Default `false`
+
+  """
+
+  def handle_error(conn) do
+    conn   = put_in conn.halted, false
+    router = router_module(conn)
+    params = named_params(conn)
+
+    if Config.router(router, [:debug_errors]) do
+      perform conn, Phoenix.Controller.PageController, :error_debug, params
+    else
+      perform conn, Config.router!(router, [:page_controller]), :error, params
+    end
   end
 end
