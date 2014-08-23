@@ -109,7 +109,7 @@ iex> Router.users_comments_path(:show, 99, 100)
 iex> Router.users_comments_path(:index, 99, foo: "bar")
 "/users/99/comments?foo=bar"
 
-iex> Router.users_comments_url(:index, 99)
+iex> Router.users_comments_path(:index, 99) |> Router.url
 "http://example.com/users/99/comments"
 
 iex> Router.users_comments_path(:edit, 88, 2, [])
