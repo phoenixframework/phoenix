@@ -56,14 +56,15 @@ defmodule Phoenix.Template.CompilerTest do
     assert html == "{\n  \"type\":\"script\",\n  \"payload:\"<script>alert('hello!');</script>\"\n}\n"
   end
 
-  test "compiler adds cach-all render/1 that raises UndefinedError" do
+  test "compiler adds catch-all render/1 that raises UndefinedError" do
     assert_raise Phoenix.Template.UndefinedError, fn ->
       View.render(MyApp.Views, "not-exists.html", [])
     end
   end
 
-  test "compiler adds cach-all render/2 that raises UndefinedError" do
-    assert_raise Phoenix.Template.UndefinedError, fn ->
+  test "compiler adds catch-all render/2 that raises UndefinedError" do
+    message = "No such template \"not-exists.html\" for Elixir.Phoenix.Template.CompilerTest.MyApp.Views"
+    assert_raise Phoenix.Template.UndefinedError, message, fn ->
       View.render(MyApp.Views, "not-exists.html", [])
     end
   end
