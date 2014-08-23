@@ -11,7 +11,10 @@ config :phoenix, <%= application_module %>.Router,
   static_assets: true,
   cookies: true,
   session_key: "_<%= application_name %>_key",
-  session_secret: "<%= session_secret %>"
+  session_secret: "<%= session_secret %>",
+  catch_errors: true,
+  debug_errors: false,
+  page_controller: Phoenix.Controller.PageController
 
 config :phoenix, :code_reloader,
   enabled: false
