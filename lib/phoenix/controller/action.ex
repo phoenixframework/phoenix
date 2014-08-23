@@ -3,9 +3,13 @@ defmodule Phoenix.Controller.Action do
   import Plug.Conn
   alias Phoenix.Config
 
+  @moduledoc """
+  Carries out Controller action after successful Router match and handles
+  404 and 500 responses after route match
+  """
+
   @doc """
-  Carries out Controller action after successful Router match, invoking the
-  "2nd layer" Plug stack.
+  Performs Controller action, invoking the "2nd layer" Plug stack.
 
   Connection query string parameters are fetched automatically before
   controller actions are called, as well as merging any named parameters from

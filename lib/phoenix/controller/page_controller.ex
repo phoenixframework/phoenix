@@ -1,6 +1,18 @@
 defmodule Phoenix.Controller.PageController do
   use Phoenix.Controller
 
+  @moduledoc """
+  Default 404 and 500 error page controller, configured via Mix on each Router
+
+  ## Example Configuration
+
+      config :phoenix, MyApp.Router,
+        page_controller: MyApp.PageController
+
+      config :phoenix, App.Router,
+        page_controller: Phoenix.Controller.PageController
+
+  """
 
   def not_found(conn, _) do
     text conn, 404, "not found"
