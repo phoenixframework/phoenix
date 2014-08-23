@@ -25,7 +25,6 @@ defmodule Phoenix.Config do
       port: 4000,
       ssl: false,
       host: "localhost",
-      consider_all_requests_local: false,      # Full error reports are disabled
       static_assets: true,
       static_assets_mount: "/",
       parsers: true,

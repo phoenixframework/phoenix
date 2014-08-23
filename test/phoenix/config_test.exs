@@ -29,7 +29,7 @@ defmodule Phoenix.Config.ConfigTest do
 
   test "router/1 returns the keyword list configuration of module with merge defaults" do
     assert Enum.sort(Config.router(Router)) == Enum.sort([
-      catch_errors: true, consider_all_requests_local: false, cookies: false,
+      catch_errors: true, cookies: false,
       debug_errors: false, host: "localhost",
       page_controller: Phoenix.Controller.PageController, parsers: true,
       port: 1234, session_key: nil, session_secret: nil, ssl: true,

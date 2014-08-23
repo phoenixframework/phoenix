@@ -56,6 +56,7 @@ defmodule Phoenix.Controller.Action do
     * page_controller - The optional Module to have `error/2` action invoked
                         when 500's status occurs.
                         Default `Phoenix.Controller.PageController`
+    * catch_errors - Bool to catch errors at the Router level. Default `true`
     * debug_errors - Bool to display Phoenix's route debug page for 500 status.
                      Default `false`
 

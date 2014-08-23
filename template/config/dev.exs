@@ -5,7 +5,6 @@ config :phoenix, <%= application_module %>.Router,
   ssl: false,
   host: "localhost",
   cookies: true,
-  consider_all_requests_local: true,
   session_key: "_<%= application_name %>_key",
   session_secret: "<%= session_secret %>",
   debug_errors: true
