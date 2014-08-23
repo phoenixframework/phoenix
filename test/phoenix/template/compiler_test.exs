@@ -63,7 +63,7 @@ defmodule Phoenix.Template.CompilerTest do
   end
 
   test "compiler adds catch-all render/2 that raises UndefinedError" do
-    message = "No such template \"not-exists.html\" for Elixir.Phoenix.Template.CompilerTest.MyApp.Views"
+    message = "No such template \"not-exists.html\" for Phoenix.Template.CompilerTest.MyApp.Views"
     assert_raise Phoenix.Template.UndefinedError, message, fn ->
       View.render(MyApp.Views, "not-exists.html", [])
     end

@@ -1,5 +1,6 @@
 defmodule Phoenix.Plugs.ControllerLogger do
   import Phoenix.Controller.Connection
+  import Phoenix.Naming, only: [module_name: 1]
   require Logger
 
   @moduledoc """
@@ -13,7 +14,10 @@ defmodule Phoenix.Plugs.ControllerLogger do
   def call(conn, _level) do
     Logger.debug fn ->
       {_status, content_type} = response_content_type(conn)
-      ["Processing by ", inspect(controller_module(conn)), ?., Atom.to_string(action_name(conn)), ?\n,
+      module = conn |> controller_module |> module_name
+      action = conn |> action_name |> Atom.to_string
+
+      ["Processing by ", module, ?., action, ?\n,
         "  Accept: ", content_type, ?\n,
         "  Parameters: ", inspect(conn.params), ?\n]
     end

@@ -1,6 +1,7 @@
 defmodule Phoenix.Template do
   alias Phoenix.Config
   alias Phoenix.Template
+  alias Phoenix.Naming
 
   defmodule UndefinedError do
     defexception [:message]
@@ -68,7 +69,9 @@ defmodule Phoenix.Template do
       unquote(renders_ast)
       def render(undefined_template), do: render(undefined_template, [])
       def render(undefined_template, _assign) do
-        raise %UndefinedError{message: "No such template \"#{undefined_template}\" for #{__MODULE__}"}
+        raise %UndefinedError{
+          message: "No such template \"#{undefined_template}\" for #{Naming.module_name(__MODULE__)}"
+        }
       end
 
       @doc "Returns true if list of directory files has changed"
