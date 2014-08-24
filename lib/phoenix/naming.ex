@@ -31,21 +31,7 @@ defmodule Phoenix.Naming do
       "my_app"
 
   """
-  def underscore(string), do: do_underscore(String.codepoints(string), [])
-  def do_underscore([], acc), do: acc |> Enum.reverse |> Enum.join("")
-  def do_underscore([char | rest], []) when char in "A".."Z" do
-    do_underscore(rest, [String.downcase(char)])
-  end
-  def do_underscore([char | rest], acc) when char in "A".."Z" do
-    do_underscore(rest, [String.downcase(char), "_" | acc])
-  end
-  def do_underscore([char | rest], acc) when char in ["-"] do
-    do_underscore(rest, ["_" | acc])
-  end
-  def do_underscore([char | rest], acc) do
-    do_underscore(rest, [char | acc])
-  end
-
+  def underscore(string), do: Mix.Utils.underscore(string)
 
   @doc """
   Converts String to camel case
@@ -59,16 +45,7 @@ defmodule Phoenix.Naming do
       "MyApp"
 
   """
-  def camelize(string), do: do_camelize(String.codepoints(string), [])
-  def do_camelize([], acc), do: acc |> Enum.reverse |> Enum.join("")
-  def do_camelize([char | rest], []) when char in "a".."z" do
-    do_camelize(rest, [String.upcase(char)])
+  def camelize(string) do
+    Regex.replace(~r/-/, string, "_") |> Mix.Utils.camelize
   end
-  def do_camelize([sep, next | rest], acc) when sep in ["_", "-"] do
-    do_camelize(rest, [String.upcase(next) | acc])
-  end
-  def do_camelize([char | rest], acc) do
-    do_camelize(rest, [char | acc])
-  end
-
 end
