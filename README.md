@@ -626,12 +626,12 @@ end
 
 ### Custom Not Found and Error Pages
 
-A `page_controller` can be configured on the Router Mix config, where two actions must be defined for custom 404 and 500 error handling. Additionally, `catch_errors` and `debug_errors` settings control how errors are caught and displayed. Router configuration options include:
+A `error_controller` can be configured on the Router Mix config, where two actions must be defined for custom 404 and 500 error handling. Additionally, `catch_errors` and `debug_errors` settings control how errors are caught and displayed. Router configuration options include:
 
 
-* page_controller - The optional Module to have `error/2`, `not_found/2`
-                actions invoked when 400/500's status occurs.
-                Default `Phoenix.Controller.PageController`
+* error_controller - The optional Module to have `error/2`, `not_found/2`
+                     actions invoked when 400/500's status occurs.
+                     Default `Phoenix.Controller.ErrorController`
 * catch_errors - Bool to catch errors at the Router level. Default `true`
 * debug_errors - Bool to display Phoenix's route/stacktrace debug pages for 404/500 statuses.
              Default `false`
@@ -649,14 +649,14 @@ config :phoenix, YourApp.Router,
   ...
   catch_errors: true,
   debug_errors: false,
-  page_controller: YourApp.PageController
-  
+  error_controller: YourApp.PageController
+
 # config/dev.exs
 config :phoenix, YourApp.Router,
   ...
   debug_errors: true # Show Phoenix route/stacktrace debug pages for 404/500's
-  
-  
+
+
 defmodule YourApp.PageController do
   use Phoenix.Controller
 

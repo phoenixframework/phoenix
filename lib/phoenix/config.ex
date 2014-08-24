@@ -33,7 +33,7 @@ defmodule Phoenix.Config do
       session_secret: nil,
       catch_errors: true,
       debug_errors: false,
-      page_controller: Phoenix.Controller.PageController,
+      error_controller: Phoenix.Controller.ErrorController,
     ],
     code_reloader: [
       enabled: false

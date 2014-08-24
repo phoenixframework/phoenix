@@ -1,4 +1,4 @@
-defmodule Phoenix.Controller.PageController do
+defmodule Phoenix.Controller.ErrorController do
   use Phoenix.Controller
 
   @moduledoc """
@@ -7,10 +7,10 @@ defmodule Phoenix.Controller.PageController do
   ## Example Configuration
 
       config :phoenix, MyApp.Router,
-        page_controller: MyApp.PageController
+        error_controller: MyApp.ErrorController
 
       config :phoenix, App.Router,
-        page_controller: Phoenix.Controller.PageController
+        error_controller: Phoenix.Controller.ErrorController
 
   """
 

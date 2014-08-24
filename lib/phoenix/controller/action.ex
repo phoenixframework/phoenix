@@ -28,9 +28,9 @@ defmodule Phoenix.Controller.Action do
 
   ## Router Configuration Options
 
-    * page_controller - The optional Module to have `not_found/2` action invoked
+    * error_controller - The optional Module to have `not_found/2` action invoked
                         when 404's status occurs.
-                        Default `Phoenix.Controller.PageController`
+                        Default `Phoenix.Controller.ErrorController`
     * debug_errors - Bool to display Phoenix's route debug page for 404 status.
                      Default `false`
 
@@ -41,9 +41,9 @@ defmodule Phoenix.Controller.Action do
     params = named_params(conn)
 
     if Config.router(router, [:debug_errors]) do
-      perform conn, Phoenix.Controller.PageController, :not_found_debug, params
+      perform conn, Phoenix.Controller.ErrorController, :not_found_debug, params
     else
-      perform conn, Config.router!(router, [:page_controller]), :not_found, params
+      perform conn, Config.router!(router, [:error_controller]), :not_found, params
     end
   end
 
@@ -53,9 +53,9 @@ defmodule Phoenix.Controller.Action do
 
   ## Router Configuration Options
 
-    * page_controller - The optional Module to have `error/2` action invoked
+    * error_controller - The optional Module to have `error/2` action invoked
                         when 500's status occurs.
-                        Default `Phoenix.Controller.PageController`
+                        Default `Phoenix.Controller.ErrorController`
     * catch_errors - Bool to catch errors at the Router level. Default `true`
     * debug_errors - Bool to display Phoenix's route debug page for 500 status.
                      Default `false`
@@ -68,9 +68,9 @@ defmodule Phoenix.Controller.Action do
     params = named_params(conn)
 
     if Config.router(router, [:debug_errors]) do
-      perform conn, Phoenix.Controller.PageController, :error_debug, params
+      perform conn, Phoenix.Controller.ErrorController, :error_debug, params
     else
-      perform conn, Config.router!(router, [:page_controller]), :error, params
+      perform conn, Config.router!(router, [:error_controller]), :error, params
     end
   end
 end

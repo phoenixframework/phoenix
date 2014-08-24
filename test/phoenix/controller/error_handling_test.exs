@@ -11,7 +11,7 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
   setup_all do
     Mix.Config.persist(phoenix: [
       {RouterCustomPageController,
-        page_controller: PageController,
+        error_controller: PageController,
         catch_errors: true
       },
       {RouterDefaultPageController,
@@ -94,17 +94,17 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
   end
 
 
-  test "default PageController renders 404 for returned 404 status" do
+  test "default ErrorController renders 404 for returned 404 status" do
     conn = simulate_request(RouterDefaultPageController, :get, "/404")
     assert String.match?(conn.resp_body, ~r/not found/)
   end
 
-  test "default PageController renders 500 for returned 500 status" do
+  test "default ErrorController renders 500 for returned 500 status" do
     conn = simulate_request(RouterDefaultPageController, :get, "/500")
     assert String.match?(conn.resp_body, ~r/Something went wrong/)
   end
 
-  test "default PageController renders 500 for errors when catch_errors: true" do
+  test "default ErrorController renders 500 for errors when catch_errors: true" do
     conn = simulate_request(RouterDefaultPageController, :get, "/500-raise")
     assert String.match?(conn.resp_body, ~r/Something went wrong/)
   end
@@ -115,12 +115,12 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
     end
   end
 
-  test "page_controller can be configured for custom 404 handling" do
+  test "error_controller can be configured for custom 404 handling" do
     conn = simulate_request(RouterCustomPageController, :get, "/404")
     assert conn.assigns[:error] == :handled_404
   end
 
-  test "page_controller can be configured for custom 500 handling" do
+  test "error_controller can be configured for custom 500 handling" do
     conn = simulate_request(RouterCustomPageController, :get, "/500-raise")
     assert conn.assigns[:error] == :handled_500
   end

@@ -14,7 +14,7 @@ config :phoenix, <%= application_module %>.Router,
   session_secret: "<%= session_secret %>",
   catch_errors: true,
   debug_errors: false,
-  page_controller: <%= application_module %>.PageController
+  error_controller: <%= application_module %>.PageController
 
 config :phoenix, :code_reloader,
   enabled: false

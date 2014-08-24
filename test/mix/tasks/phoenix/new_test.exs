@@ -6,7 +6,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
   setup_all do
     Mix.Tasks.Phoenix.New.run([@app_name, @destination_path])
-    on_exit fn() -> File.rm_rf(project_path) end
+    on_exit fn -> File.rm_rf(project_path) end
     :ok
   end
 
