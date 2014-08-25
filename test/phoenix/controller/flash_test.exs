@@ -57,7 +57,7 @@ defmodule Phoenix.Controller.FlashTest do
 
   test "get/1 returns the map of messages" do
     conn = conn_with_session |> Flash.put(:notice, "hi")
-    assert Flash.get(conn) == %{notice: "hi"}
+    assert Flash.get(conn) == %{notice: ["hi"]}
   end
 
   test "get/2 returns the message by key" do
@@ -65,9 +65,29 @@ defmodule Phoenix.Controller.FlashTest do
     assert Flash.get(conn, :notice) == "hi"
   end
 
+  test "get/2 returns the only the last message put" do
+    conn = conn_with_session
+    |> Flash.put(:notice, "hi")
+    |> Flash.put(:notice, "bye")
+    assert Flash.get(conn, :notice) == "bye"
+  end
+
   test "get/2 returns nil for missing key" do
     conn = conn_with_session
     assert Flash.get(conn, :notice) == nil
+  end
+
+  test "get_all/2 returns a list of messages by key" do
+    conn = conn_with_session
+    |> Flash.put(:notices, "hello")
+    |> Flash.put(:notices, "world")
+
+    assert Flash.get_all(conn, :notices) == ["hello", "world"]
+  end
+
+  test "get_all/2 returns [] for missing key" do
+    conn = conn_with_session
+    assert Flash.get_all(conn, :notices) == []
   end
 
   test "put/3 adds the key/message pair to the flash" do
@@ -96,10 +116,20 @@ defmodule Phoenix.Controller.FlashTest do
 
     {message, conn} = Flash.pop(conn, :error)
     assert message == "oh noes!"
-    assert Flash.get(conn) == %{notice: "false alarm!"}
+    assert Flash.get(conn) == %{notice: ["false alarm!"]}
 
     {message, conn} = Flash.pop(conn, :notice)
     assert message == "false alarm!"
+    assert Flash.get(conn) == %{}
+  end
+
+  test "pop_all/3 pops all messages from the flash" do
+    conn = conn_with_session
+    |> Flash.put(:notices, "oh noes!")
+    |> Flash.put(:notices, "false alarm!")
+
+    {messages, conn} = Flash.pop_all(conn, :notices)
+    assert messages == ["oh noes!", "false alarm!"]
     assert Flash.get(conn) == %{}
   end
 end
