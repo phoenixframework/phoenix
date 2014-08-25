@@ -2,7 +2,7 @@
   "cowlib": {:package, "1.0.0"},
   "earmark": {:package, "0.1.10"},
   "ex_doc": {:package, "0.5.2"},
-  "inflex": {:package, "0.2.4"},
+  "inflex": {:package, "0.2.6"},
   "linguist": {:package, "0.1.1"},
   "plug": {:package, "0.6.0"},
   "poison": {:package, "1.0.1"},
