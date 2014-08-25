@@ -47,11 +47,7 @@ defmodule Phoenix.Router.ScopeContext do
                  |> Enum.reverse
                  |> Kernel.++([helper])
                  |> Enum.join("_")
-                 |> move_helper_actions_to_prefix
     end
-  end
-  defp move_helper_actions_to_prefix(helper) do
-    Regex.replace(~r/(.*)(edit_|new_)(.*)/, helper, "\\2\\1\\3")
   end
 
   defp get_paths(module) do
