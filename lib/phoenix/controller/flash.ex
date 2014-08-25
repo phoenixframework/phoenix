@@ -53,10 +53,7 @@ defmodule Phoenix.Controller.Flash do
 
   """
   def put(conn, key, message) do
-    messages = case get_all(conn, key) do
-      [] -> [message]
-      messages -> messages ++ [message]
-    end
+    messages = [message] ++ get_all(conn, key)
     persist(conn, put_in(get(conn), [key], messages))
   end
 
@@ -73,12 +70,9 @@ defmodule Phoenix.Controller.Flash do
   """
   def get(conn), do: get_session(conn, :phoenix_messages) || %{}
   def get(conn, key) do
-    case get_in get(conn), [key] do
+     case get_in get(conn), [key] do
       nil -> nil
-      [message] -> message
-      [_ | messages] ->
-        [message | _] = Enum.reverse messages
-        message
+      [message | _messages] -> message
     end
   end
 
@@ -96,7 +90,8 @@ defmodule Phoenix.Controller.Flash do
   """
   def get_all(conn), do: get_session(conn, :phoenix_messages) || %{}
   def get_all(conn, key) do
-    get_in(get(conn), [key]) || []
+    messages = get_in(get(conn), [key]) || []
+    Enum.reverse messages
   end
 
   @doc """
