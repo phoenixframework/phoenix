@@ -53,7 +53,7 @@ defmodule Phoenix.Controller.Flash do
 
   """
   def put(conn, key, message) do
-    messages = [message] ++ get_all(conn, key)
+    messages = [message | get_all(conn, key)]
     persist(conn, put_in(get(conn), [key], messages))
   end
 
