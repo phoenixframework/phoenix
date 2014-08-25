@@ -127,7 +127,7 @@ defmodule Phoenix.Controller.Flash do
   """
   def pop_all(conn, key) do
     messages = get_all(conn, key)
-    if messages do
+    if messages != [] do
       conn = persist(conn, Dict.drop(get(conn), [key]))
     end
 
