@@ -8,22 +8,19 @@ The router file that Phoenix generates for you, web/router.ex, will look somethi
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
-  plug Plug.Static, at: "/static", from: :test
-  get "/", HelloPhoenix.PageController, :index, as: :page
+  get "/", HelloPhoenix.Controller, :index, as: :pages
 end
 ```
-Whatever you called your application will appear instead of 'HelloPhoenix' for both the router module name and the PageController name.
+Whatever you called your application will appear instead of 'HelloPhoenix' for both the router module name and the Controller name.
 
 The first line of this module `use Phoenix.Router` simply makes Phoenix router functions available in our particular router.
 
-The next line `plug Plug.Static, at: "/static", from: :hello_phoenix` tells the middleware layer, plug, where to serve our static assets from. JavaScript, image, and CSS files each have their own directory under /static.
-
-Now we come to our first application level route.
-`get "/", HelloPhoenix.PageController, :index, as: :page`
+Next we have an application level route.
+`get "/", HelloPhoenix.Controller, :index, as: :pages`
 
 'get' is a Phoenix macro which expands out to define one clause of the match function. It corresponds to the HTTP verb GET. Similar macros exist for other HTTP verbs including POST, PUT, PATCH, DELETE, OPTIONS, CONNECT, TRACE and HEAD.
 
-The first argument to these macros is the path. Here, it is the root of the application, "/". The next two arguments are the controller and action we want to have handle this request. Finally, "as: :page" is a way of naming this route, which we will talk about in a moment.
+The first argument to these macros is the path. Here, it is the root of the application, "/". The next two arguments are the controller and action we want to have handle this request. Finally, "as: :pages" is a way of naming this route, which we will talk about in a moment.
 
 If this were the only route in our router module, the whole module would look like this after invoking the macro.
 
@@ -35,7 +32,7 @@ defmodule HelloPhoenix.Router do
 end
 ```
 
-The body of this function is where the index function of the PageController is called.
+Clearly, the body of this function is where the index function of the PageController is called.
 
 As we add more routes, more clauses of the match function will be added to our router module. These will behave like any other multi-clause function in Elixir. They will be tried in order from the top, and the first clause to match will be executed. After a match is found, the search will stop and no other clauses will by tried.
 
@@ -64,22 +61,22 @@ Let's see how this works. Go to the root of a newly-generated Phoenix applicatio
 
 ```
 $ mix phoenix.routes
-page_path  GET  /  Elixir.HelloPhoenix.PageController.index/2
+pages_path  GET  /  Elixir.HelloPhoenix.PageController.index/2
 ```
 
 The line in the router which generates that output is this, which we have examined above.
 
 ```elixir
-get "/", HelloPhoenix.PageController, :index, as: :page
+get "/", HelloPhoenix.PageController, :index, as: :pages
 ```
 
 The output tells us that any HTTP GET request for the root of the application will be handled by the index action of the HelloPhoenix.PageController.
 
-The "as: :page" portion of the route has been translated into "page_path" in the output. The "page_path" function is a path helper, and we'll talk about those next.
+The "as: :pages" portion of the route has been translated into "pages_path" in the output. The "pages_path" function is a path helper, and we'll talk about those next.
 
 ###Path Helpers
 
-By adding "as: :page", we have in effect named a resource for this route; we've called it "page". "page_path" is the name of a function which will expand out to the path that will lead back to this route from within the application.
+By adding "as: :pages", we have in effect named a resource for this route; we've called it "pages". "pages_path" is the name of a function which will expand out to the path that will lead back to this route from within the application.
 
 That's a mouthful. Let's see it in action. Run `$ iex -S mix` at the root of the project. When we call the pages_path function on our router with the action as an argument, it returns the path to us.
 
@@ -88,18 +85,18 @@ iex(4)> HelloPhoenix.Router.pages_path(:index)
 "/"
 ```
 
-This is significant because we can use the "page_path" function to link to the root of our application.
+This is significant because we can use the "pages_path" function to link to the root of our application.
 ```html
-<a href="<%= HelloPhoenix.Router.page_path %>">To the Welcome Page!</a>
+<a href="<%= HelloPhoenix.Router.pages_path %>">To the Welcome Page!</a>
 ```
 
-If you try to give the same name to another route, the router will not compile. Try adding the following route to the bottom of your router. `get "/page", HelloPhoenix.AnotherController, :index, as: :page`
+If you try to give the same name to another route, the router will not compile. Try adding the following route to the bottom of your router. `get "/page", HelloPhoenix.AnotherController, :index, as: :pages`
 
 Then run `$ mix compile`
 
 ```
 == Compilation error on file web/router.ex ==
-** (CompileError) web/router.ex:1: def page_path/1 has default values and multiple clauses, define a function head with the defaults
+** (CompileError) web/router.ex:1: def pages_path/1 has default values and multiple clauses, define a function head with the defaults
     (elixir) src/elixir_def.erl:340: :elixir_def.store_each/8
     (elixir) src/elixir_def.erl:107: :elixir_def.store_definition/9
     (stdlib) erl_eval.erl:657: :erl_eval.do_apply/6
@@ -116,7 +113,7 @@ The router supports other macros besides those for HTTP verbs like 'get', 'post'
 
 Put this line into your router.ex file `resources "users", HelloPhoenix.UsersController`
 
-Then go to the root of your project, and run ``$ mix phoenix.routes`
+Then go to the root of your project, and run `$ mix phoenix.routes`
 
 You should see something like the following. Of course, the name of your project will replace "HelloPhoenix".
 
@@ -134,7 +131,7 @@ users_path  DELETE  /users/:id       Elixir.HelloPhoenix.UsersController.destroy
 This is the standard matrix of HTTP verbs, paths and controller actions. Let's look at them individually, in a slightly different order.
 
 - A GET request to /users will invoke the index action to show all the users.
-- A GET request to /users/:id will invoke the show action with an id to show an individual user.
+- A GET request to /users/:id will invoke the show action with an id to show an individual user identified by that id.
 - A GET request to /users/new will invoke the new action to present a form for creating a new user.
 - A POST request to /users will invoke the create action to save a new user to the data store.
 - A GET request to /users/:id/edit will invoke the edit action with an id to retrieve an individual user from the data store and present the information in a form for editing.
@@ -153,11 +150,11 @@ resources "posts", HelloPhoenix.PostsController, only: [:index, :show]
 Running `$ mix phoenix.routes` shows that we now only have the routes to the index and show actions defined.
 
 ```elixir
-      posts_path  GET     /posts                         Elixir.HelloPhoenix.PostsController.index/2
-      posts_path  GET     /posts/:id                     Elixir.HelloPhoenix.PostsController.show/2
+posts_path  GET     /posts                         Elixir.HelloPhoenix.PostsController.index/2
+posts_path  GET     /posts/:id                     Elixir.HelloPhoenix.PostsController.show/2
 ```
 
-Similarly, if we have a comments resource that we don't want to ever remove, we could define a route like this.
+Similarly, if we have a comments resource that we don't want to ever delete, we could define a route like this.
 
 ```elixir
 resources "comments", HelloPhoenix.CommentsController, except: [:destroy]
