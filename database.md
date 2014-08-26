@@ -8,7 +8,7 @@ At the moment supports the PostgreSQL database.
 
 In your mix.exs file add the postgrex and ecto dependencies:
 
-```
+```elixir
 def application do
   [
     mod: {YourPhoenixApp, [] },
@@ -34,8 +34,34 @@ mix deps.get
 
 ### Add a Repository
 
-A repository is a wrapper around the database.
+A repository is a wrapper around the database. It can be defined as follows in a file called web/models/repo.ex:
 
+```elixir
+defmodule MyPhoenixApp.Repo do
+  use Ecto.Repo, adapter: Ecto.Adapters.Postgres
+
+  def conf do
+    parse_url "ecto://username:password@host/database_name"
+  end
+
+  def priv do
+    app_dir(:my_phoenix_app, "priv/repo")
+  end
+end
+```
+
+where the conf defines the connection details to the database and the priv defines the directory for the migrations.
+
+Each repository in Ecto defines a `start_link/0` function that needs to be invoked before using the repository. In general this function is not called directly, but via the supervisor chain. Edit your lib/app_name.ex to be similar to the following:
+
+```elixir
+def start(_type, _args) do
+  import Supervisor.Spec, warn: false
+  tree = [worker(MyPhoenixApp.Repo, [])]
+  opts = [strategy: :one_for_one, name: MyPhoenixApp.Sup]
+  Supervisor.start_link(tree, opts)
+end
+```
 
 ### Add a Model
 
