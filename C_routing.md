@@ -257,9 +257,7 @@ iex> HelloPhoenix.Router.users_posts_path(:index, 42, active: true)
 "/users/42/posts?active=true"
 ```
 
-###Scopes
+###Scoped Routes
 
 
-###Sockets
-  - channels
-  - topics
+###Channel Routes
