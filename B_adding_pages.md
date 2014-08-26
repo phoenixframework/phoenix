@@ -58,7 +58,7 @@ Enough prep, let's get on with our first new Phoenix page!
 Routes map unique http verb/path pairs to controller/action pairs which will handle them. The route for our "Welcome to Phoenix!" page from the previous guide looks like this.
 
 ```
-get "/", HelloPhoenix.PageController, :index, as: :page
+get "/", HelloPhoenix.PageController, :index, as: :pages
 ```
 
 Let's digest what this route is telling us. Visiting http://localhost:4000 issues an http GET request to the root path. All requests like this will be handled by the "index" function in the "HelloPhoenix.PageController" module defined in web/controllers/page_controller.ex. (Let's ignore the "as: :page" part until we get to the routing guide.)
@@ -71,8 +71,7 @@ The first thing we need to do to create that page is define a route for it. Open
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
-  plug Plug.Static, at: "/static", from: :hello_phoenix
-  get "/", HelloPhoenix.PageController, :index, as: :page
+  get "/", HelloPhoenix.PageController, :index, as: :pages
 end
 ```
 
@@ -82,8 +81,7 @@ Let's add a new route to the router that maps the GET for "/hello" to the index 
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
-  plug Plug.Static, at: "/static", from: :hello_phoenix
-  get "/", HelloPhoenix.PageController, :index, as: :page
+  get "/", HelloPhoenix.PageController, :index, as: :pages
 
   get "/hello", HelloPhoenix.HelloController, :index
 end
@@ -117,9 +115,13 @@ On to rendering!
 
 ###A New View
 
-The main job of Phoenix views is to prepare data for use in a template. Functions which take raw data and transform it into a more presentable form should go here. As an example, say we have a data structure which represents a user with a first_name field and a last_name field, and in a template, we want to show the user's full name. We could write code in the template to merge those fields into a full name, but the better approach is to write a function in the view to do it for us, then call that function in the template. The result is a cleaner and more legible template.
+Phoenix views have several important jobs. They actually render templates. They also act as a presentation layer for raw data from the controller, preparing it for use in a template. Functions which perform this transformation should go in a view.
 
-In order to render any templates for our HelloController, we need a HelloView. Let's create an empty one for now, and leave a detailed description of views for later. Create web/views/hello_view.ex and make it look like this.
+As an example, say we have a data structure which represents a user with a first_name field and a last_name field, and in a template, we want to show the user's full name. We could write code in the template to merge those fields into a full name, but the better approach is to write a function in the view to do it for us, then call that function in the template. The result is a cleaner and more legible template.
+
+It's also important to note that each Phoenix application has a base view located at web/views.ex. Functions defined there will be available to all the views we define in the web/views directory.
+
+In order to render any templates for our HelloController, we need a HelloView. The names are significant here - the first part of the names of the view and controller must match. Let's create an empty one for now, and leave a more detailed description of views for later. Create web/views/hello_view.ex and make it look like this.
 
 ```elixir
 defmodule HelloPhoenix.HelloView do
@@ -160,8 +162,7 @@ For this page, we're going to re-use our HelloController we just created and jus
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
-  plug Plug.Static, at: "/static", from: :hello_phoenix
-  get "/", HelloPhoenix.PageController, :index, as: :page
+  get "/", HelloPhoenix.PageController, :index, as: :pages
 
   get "/hello", HelloPhoenix.HelloController, :index
   get "/hello/:messenger", HelloPhoenix.HelloController, :show
@@ -176,11 +177,14 @@ For example, if we point the browser at: http://localhost:4000/hello/Frank , the
 Requests to our new route will be handled by the HelloPhoenix.HelloController "show" action. We already have the controller, so all we need to do is add a "show" function to it. This time, we'll need to keep the params that get passed into the action so that we can pass the messenger to the template. To do that, we add this show function to the controller.
 
 ```elixir
-def show(conn, params) do
-  render conn, "show", messenger: params["messenger"]
+def show(conn, %{"messenger" => messenger}) do
+  render conn, "show", messenger: messenger
 end
 ```
-Notice the differences between this function and the index function. We pass a third argument into the render function, a key value pair where ":messenger" is the key, and whatever we put in the url at the messenger position is passed as the value.
+
+There are a couple of things to notice here. We pattern match against the params passed into the show function so that the messenger variable will be bound to the value we put in the :messenger position in the url. For example, if our url is http://localhost:4000/hello/Frank, the messenger variable would be bound to "Frank".
+
+We also pass a third argument into the render function, a key value pair where ":messenger" is the key, and the messenger variable is passed as the value.
 
 It's good to remember that the keys to the params Dict will always be strings.
 

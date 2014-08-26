@@ -23,9 +23,9 @@ The first thing we need to do is clone the phoenix repo from github. Visit the P
 
     `cd phoenix`
 
-- And checkout the latest release version
+- And make sure you are on the master branch.
 
-    `git checkout v0.3.1`
+    `git checkout master`
 
 Once this is done, we need to have phoenix generate a new project for us, and we need  it to do so outside the phoenix repo itself. This is like running 'rails new my_project_name', in which rails will generate an empty project outside of the rails gem directory.
 
