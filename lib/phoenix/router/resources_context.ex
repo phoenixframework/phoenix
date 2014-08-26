@@ -45,18 +45,16 @@ defmodule Phoenix.Router.ResourcesContext do
 
   ## Examples
 
-      resources "users", Users do
-        resources "comments", Comments
+      resources "users", UserController do
+        resources "comments", CommentController
         -------------------------------
         Context.current_alias(:index, "comments", __MODULE__)
-        => "user_comments"
+        => "users_comments"
         Context.current_alias(:show, "comments", __MODULE__)
         => "user_comment"
-        Context.current_alias(:edit, "comments", __MODULE__)
-        => "edit_user_comment"
         -------------------------------
       end
-      resources "pages", Pages
+      resources "pages", PageController
       ---------------------------------
       Context.current_alias("users", __MODULE__)
       => "users"
@@ -66,13 +64,18 @@ defmodule Phoenix.Router.ResourcesContext do
 
   """
   def current_alias(relative_path, module) do
-    [relative_path | get(module)]
+    [relative_path | get_names(module)]
     |> Enum.reverse
     |> Enum.join("_")
   end
 
   @doc """
   Pushes the current resource onto resources stack
+
+  ## Examples
+
+      iex> ResourcesContext.push(%{name: "users", param_prefix: "user", param_key: "id})
+
   """
   def push(resource, module) do
     Stack.push(resource, @stack_name, module)
@@ -89,18 +92,24 @@ defmodule Phoenix.Router.ResourcesContext do
     Stack.get(@stack_name, module)
   end
 
+  defp get_names(module) do
+    get(module) |> Enum.map(fn res -> res.name end)
+  end
+
   @doc """
   Appends the singularized inflection of named resource parameter based
   on current route resource
 
   ## Examples
 
-      iex> Phoenix.Router.Context.resource_with_named_param("users")
+      iex> Phoenix.Router.Context.resource_with_named_param(%{
+        name: "users", param_prefix: "user", param_key: "id"}
+      )
       "users/:user_id"
 
   """
-  def resource_with_named_param(resource) do
-    Path.join([resource, ":#{Inflex.singularize(resource)}_id"])
+  def resource_with_named_param(%{name: name, param_prefix: prefix, param_key: key}) do
+    Path.join([name, ":#{prefix}_#{key}"])
   end
 end
 

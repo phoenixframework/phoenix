@@ -4,28 +4,28 @@ defmodule Phoenix.Router.ScopedRoutingTest do
 
   # Path scoping
 
-  defmodule Controllers.Users do
+  defmodule ProfileController do
     use Phoenix.Controller
-    def show(conn, _params), do: text(conn, "users show")
+    def show(conn, _params), do: text(conn, "profiles show")
   end
 
-  defmodule Controllers.Api.V1.Users do
+  defmodule Api.V1.UserController do
     use Phoenix.Controller
     def show(conn, _params), do: text(conn, "api v1 users show")
   end
 
-  defmodule Controllers.Events do
+  defmodule EventController do
     use Phoenix.Controller
     def show(conn, _params), do: text(conn, "show events")
     def index(conn, _params), do: text(conn, "index events")
   end
 
-  defmodule Controllers.Api.V1.Events do
+  defmodule Api.V1.EventController do
     use Phoenix.Controller
     def destroy(conn, _params), do: text(conn, "destroy api v1 events")
   end
 
-  defmodule Controllers.Api.V1.Images do
+  defmodule Api.V1.ImageController do
     use Phoenix.Controller
     def edit(conn, _params), do: text(conn, "edit api v1 venues images")
   end
@@ -33,42 +33,42 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   defmodule Router do
     use Phoenix.Router
     scope path: "admin" do
-      get "/users/:id", Controllers.Users, :show, as: :user
+      get "/profiles/:id", ProfileController, :show, as: :profiles
     end
 
     scope path: "api" do
       scope path: "v1" do
-        get "/users/:id", Controllers.Api.V1.Users, :show, as: :api_user
+        get "/users/:id", Api.V1.UserController, :show, as: :api_users
       end
     end
 
     scope path: "admin" do
-      resources "events", Controllers.Events, only: [:show, :index]
+      resources "events", EventController, only: [:show, :index]
     end
 
     scope path: "api" do
       scope path: "v1" do
-        resources "events", Controllers.Api.V1.Events, only: [:destroy]
+        resources "events", Api.V1.EventController, only: [:destroy]
       end
     end
 
     scope path: "api" do
       scope path: "v1" do
-        resources "venues", Controllers.Api.V1.Venues do
-          resources "images", Controllers.Api.V1.Images, only: [:edit]
+        resources "venues", Api.V1.VenueController do
+          resources "images", Api.V1.ImageController, only: [:edit]
         end
       end
     end
 
     scope path: "staff", alias: Staff, helper: "staff" do
-      resources "products", Products
+      resources "products", ProductController
     end
   end
 
   test "single scope for single routes" do
-    conn = simulate_request(Router, :get, "/admin/users/1")
+    conn = simulate_request(Router, :get, "/admin/profiles/1")
     assert conn.status == 200
-    assert conn.resp_body == "users show"
+    assert conn.resp_body == "profiles show"
     assert conn.params["id"] == "1"
   end
 
@@ -109,17 +109,17 @@ defmodule Phoenix.Router.ScopedRoutingTest do
 
   # Controller scoping
 
-  defmodule Controllers.Admin.Users do
+  defmodule Admin.UserController do
     use Phoenix.Controller
     def show(conn, _params), do: text(conn, "admin users show")
   end
 
-  defmodule Controllers.Api.V1.Accounts do
+  defmodule Api.V1.AccountController do
     use Phoenix.Controller
     def show(conn, _params), do: text(conn, "api v1 accounts show")
   end
 
-  defmodule Controllers.Api.V1.Subscriptions do
+  defmodule Api.V1.SubscriptionController do
     use Phoenix.Controller
     def show(conn, _params), do: text(conn, "api v1 accounts subscriptions show")
   end
@@ -127,15 +127,15 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   defmodule RouterControllerScoping do
     use Phoenix.Router
 
-    scope path: "admin", alias: Controllers.Admin do
-      get "/users/:id", Users, :show, as: :user
+    scope path: "admin", alias: Admin do
+      get "/users/:id", UserController, :show, as: :users
     end
 
-    scope path: "api", alias: Controllers.Api do
+    scope path: "api", alias: Api do
       scope path: "v1", alias: V1 do
-        get "/users/:id", Users, :show, as: :api_v2_user
-        resources "accounts", Accounts do
-          resources "subscriptions", Subscriptions
+        get "/users/:id", UserController, :show, as: :api_v2_users
+        resources "accounts", AccountController do
+          resources "subscriptions", SubscriptionController
         end
       end
     end
@@ -176,15 +176,15 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   defmodule RouterHelperScoping do
     use Phoenix.Router
 
-    scope path: "admin", alias: Controllers.Admin , helper: "admin" do
-      get "/users/:id", Users, :show, as: :users
+    scope path: "admin", alias: Admin , helper: "admin" do
+      get "/users/:id", UserController, :show, as: :users
     end
 
-    scope path: "api", alias: Controllers.Api, helper: "api" do
+    scope path: "api", alias: Api, helper: "api" do
       scope path: "v1", alias: V1, helper: "v1" do
-        get "/users/:id", Users, :show, as: :api_v2_user
-        resources "accounts", Accounts do
-          resources "subscriptions", Subscriptions
+        get "/users/:id", UserController, :show, as: :api_v2_users
+        resources "accounts", AccountController do
+          resources "subscriptions", SubscriptionController
         end
       end
     end

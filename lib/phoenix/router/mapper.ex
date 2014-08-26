@@ -7,6 +7,7 @@ defmodule Phoenix.Router.Mapper do
   alias Phoenix.Router.Mapper
   alias Phoenix.Router.RouteHelper
 
+  @default_param_key "id"
   @actions [:index, :edit, :new, :show, :create, :update, :destroy]
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace,
                  :head]
@@ -126,6 +127,20 @@ defmodule Phoenix.Router.Mapper do
     end
   end
 
+  @doc """
+  Defines RESTful endpoints for a resource, for the following ations:
+  `[:index, :create, :show, :update, :destroy]`
+
+    * resource - The String resource path, ie "users"
+    * controller - The Controller module
+    * opts - The optional Keyword List of options
+      * only - The list of actions to generate routes for, ie: `[:show, :edit]`
+      * except - The actions to exclude generated routes for, ie `[:destroy]`
+      * param_key - The optional key for this resource. Default "id"
+      * param_prefix - The optional prefix for this resource. Default determined
+                       by Controller name. ie, UserController => "user"
+
+  """
   defmacro resources(resource, controller, opts, do: nested_context) do
     add_resources resource, controller, opts, do: nested_context
   end
@@ -141,26 +156,30 @@ defmodule Phoenix.Router.Mapper do
   defp add_resources(resource, controller, options, do: nested_context) do
     quote unquote: true, bind_quoted: [options: options,
                                        resource: resource,
-                                       controller: controller] do
+                                       ctrl: controller] do
 
       actions = Mapper.extract_actions_from_options(options)
+      key     = Keyword.get(options, :param_key, unquote(@default_param_key))
+      prefix  = Keyword.get(options, :param_prefix, Mapper.param_prefix(ctrl))
+      context = %{name: resource, param_prefix: prefix, param_key: key}
+
       Enum.each actions, fn action ->
         current_alias = ResourcesContext.current_alias(resource, __MODULE__)
         opts = [as: current_alias]
         case action do
-          :index   -> get    "/#{resource}",          controller, :index, opts
-          :show    -> get    "/#{resource}/:id",      controller, :show, opts
-          :new     -> get    "/#{resource}/new",      controller, :new, opts
-          :edit    -> get    "/#{resource}/:id/edit", controller, :edit, opts
-          :create  -> post   "/#{resource}",          controller, :create, opts
-          :destroy -> delete "/#{resource}/:id",      controller, :destroy, opts
+          :index   -> get    "/#{resource}",              ctrl, :index, opts
+          :show    -> get    "/#{resource}/:#{key}",      ctrl, :show, opts
+          :new     -> get    "/#{resource}/new",          ctrl, :new, opts
+          :edit    -> get    "/#{resource}/:#{key}/edit", ctrl, :edit, opts
+          :create  -> post   "/#{resource}",              ctrl, :create, opts
+          :destroy -> delete "/#{resource}/:#{key}",      ctrl, :destroy, opts
           :update  ->
-            put   "/#{resource}/:id", controller, :update, opts
-            patch "/#{resource}/:id", controller, :update, opts
+            put   "/#{resource}/:id", ctrl, :update, opts
+            patch "/#{resource}/:id", ctrl, :update, opts
         end
       end
 
-      ResourcesContext.push(resource, __MODULE__)
+      ResourcesContext.push(context, __MODULE__)
       unquote(nested_context)
       ResourcesContext.pop(__MODULE__)
     end
@@ -184,5 +203,22 @@ defmodule Phoenix.Router.Mapper do
   @doc false
   def extract_actions_from_options(opts) do
     Keyword.get(opts, :only) || (@actions -- Keyword.get(opts, :except, []))
+  end
+
+  @doc """
+  Converts the controller Module into a String param prefix based on name
+
+  ## Examples
+
+      iex> Mapper.param_prefix_from_controller(UserController)
+      "user"
+
+  """
+  def param_prefix(controller) do
+    Phoenix.Naming.module_name(controller)
+    |> String.split(".")
+    |> List.last
+    |> String.replace("Controller", "")
+    |> Phoenix.Naming.underscore
   end
 end

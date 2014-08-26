@@ -2,7 +2,7 @@ defmodule Phoenix.Router.NestedTest do
   use ExUnit.Case
   use PlugHelper
 
-  defmodule Controllers.Users do
+  defmodule UserController do
     use Phoenix.Controller
     def show(conn, _params), do: text(conn, "show users")
     def index(conn, _params), do: text(conn, "index users")
@@ -12,7 +12,7 @@ defmodule Phoenix.Router.NestedTest do
     def destroy(conn, _params), do: text(conn, "destroy users")
   end
 
-  defmodule Controllers.Files do
+  defmodule FileController do
     use Phoenix.Controller
     def show(conn, _params), do: text(conn, "show files")
     def index(conn, _params), do: text(conn, "index files")
@@ -22,7 +22,7 @@ defmodule Phoenix.Router.NestedTest do
     def destroy(conn, _params), do: text(conn, "destroy files")
   end
 
-  defmodule Controllers.Comments do
+  defmodule CommentController do
     use Phoenix.Controller
     def show(conn, _params), do: text(conn, "show comments")
     def index(conn, _params), do: text(conn, "index comments")
@@ -33,7 +33,7 @@ defmodule Phoenix.Router.NestedTest do
     def special(conn, _params), do: text(conn, "special comments")
   end
 
-  defmodule SessionsController do
+  defmodule SessionController do
     use Phoenix.Controller
 
     def new(conn, _params), do: text(conn, "session login")
@@ -41,7 +41,7 @@ defmodule Phoenix.Router.NestedTest do
     def destroy(conn, _params), do: text(conn, "session destroyed")
   end
 
-  defmodule PostsController do
+  defmodule PostController do
     use Phoenix.Controller
     def show(conn, _params), do: text(conn, "show posts")
     def new(conn, _params), do: text(conn, "new posts")
@@ -50,26 +50,40 @@ defmodule Phoenix.Router.NestedTest do
     def update(conn, _params), do: text(conn, "update posts")
   end
 
+  defmodule PageController do
+    use Phoenix.Controller
+    def show(conn, _params), do: text(conn, "show page")
+  end
+
+  defmodule RatingController do
+    use Phoenix.Controller
+    def show(conn, _params), do: text(conn, "show rating")
+  end
+
 
   defmodule Router do
     use Phoenix.Router
-    resources "users", Controllers.Users do
-      resources "comments", Controllers.Comments do
-        get "/special", Controllers.Comments, :special
+    resources "users", UserController do
+      resources "comments", CommentController do
+        get "/special", CommentController, :special
       end
-      resources "files", Controllers.Files
-      resources "posts", PostsController, except: [ :destroy ]
-      resources "sessions", SessionsController, only: [ :new, :create, :destroy ]
+      resources "files", FileController
+      resources "posts", PostController, except: [ :destroy ]
+      resources "sessions", SessionController, only: [ :new, :create, :destroy ]
     end
 
-    resources "files", Controllers.Files do
-      resources "comments", Controllers.Comments do
-        get "/avatar", Controllers.Users, :avatar
+    resources "files", FileController do
+      resources "comments", CommentController do
+        get "/avatar", Users, :avatar
       end
     end
 
-    resources "scoped_files", Controllers.Files, only: [:index] do
-      resources "comments", Controllers.Comments, except: [:destroy]
+    resources "scoped_files", FileController, only: [:index] do
+      resources "comments", CommentController, except: [:destroy]
+    end
+
+    resources "pages", PageController, param_key: "slug", param_prefix: "area" do
+      resources "ratings", RatingController, param_key: "key", param_prefix: "vote"
     end
   end
 
@@ -193,6 +207,21 @@ defmodule Phoenix.Router.NestedTest do
 
     conn = simulate_request(Router, :delete, "scoped_files/1")
     assert conn.status == 404
+  end
+
+  test "param option allows default singularlized _id param to be overidden" do
+    conn = simulate_request(Router, :get, "pages/about")
+    assert conn.status == 200
+    assert conn.params["slug"] == "about"
+    assert conn.resp_body == "show page"
+    assert Router.pages_path(:show, "about") == "/pages/about"
+
+    conn = simulate_request(Router, :get, "pages/contact/ratings/the_key")
+    assert conn.status == 200
+    assert conn.params["area_slug"] == "contact"
+    assert conn.params["key"] == "the_key"
+    assert conn.resp_body == "show rating"
+    assert Router.pages_ratings_path(:show, "contact", "the_key") == "/pages/contact/ratings/the_key"
   end
 end
 

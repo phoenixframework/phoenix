@@ -22,7 +22,7 @@ defmodule Phoenix.Mixfile do
   def application do
     [
       mod: { Phoenix, [] },
-      applications: [:plug, :linguist, :inflex, :poison, :logger]
+      applications: [:plug, :linguist, :poison, :logger]
     ]
   end
 
@@ -30,7 +30,6 @@ defmodule Phoenix.Mixfile do
     [
       {:cowboy, "~> 1.0.0", optional: true},
       {:plug, "0.6.0"},
-      {:inflex, "0.2.4"},
       {:linguist, "~> 0.1.1"},
       {:poison, "~> 1.0.1"},
       {:earmark, "~> 0.1", only: :docs},
