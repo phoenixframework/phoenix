@@ -86,6 +86,21 @@ Add our application's router as a child to our application's supervisor:
   end
 ```
 
+#### Note about `mix phoenix.start`
+
+Once this worker exists in your supervisor, `mix phoenix.start` will no longer work like before as you'll end up seeing an error message similar to:
+
+```
+** (CaseClauseError) no case clause matching: {:error, {:already_started, #PID<0.168.0>}}
+    (phoenix) lib/phoenix/router.ex:75: Phoenix.Router.start_adapter/2
+    (phoenix) lib/mix/tasks/phoenix/start.ex:12: Mix.Tasks.Phoenix.Start.run/1
+    (mix) lib/mix/cli.ex:63: Mix.CLI.run_task/2
+    (elixir) src/elixir_lexical.erl:17: :elixir_lexical.run/3
+    (elixir) lib/code.ex:316: Code.require_file/2
+```
+
+In this case, `mix phoenix.start` is failing because it is trying to start your application's router after the application supervisor has already started it. `mix` will start your application as it's running the `phoenix.start` Mix task, which is how that error occurs. If you were using something like `iex -S mix phoenix.start` during your development cycle, `iex -S mix` will essentially achieve the same result.
+
 ### Generating the release
 
 Running `mix release` will kick off the build process for our release.
