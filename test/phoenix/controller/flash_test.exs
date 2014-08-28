@@ -109,22 +109,11 @@ defmodule Phoenix.Controller.FlashTest do
     assert Flash.get(conn) == %{}
   end
 
-  test "pop/3 pops the message from the flash" do
-    conn = conn_with_session
-    |> Flash.put(:error, "oh noes!")
-    |> Flash.put(:notice, "false alarm!")
-
-    {message, conn} = Flash.pop(conn, :error)
-    assert message == "oh noes!"
-    assert Flash.get(conn) == %{notice: ["false alarm!"]}
-
-    {message, conn} = Flash.pop(conn, :notice)
-    assert message == "false alarm!"
-    assert Flash.get(conn) == %{}
-  end
-
   test "pop_all/3 pops all messages from the flash" do
     conn = conn_with_session
+    assert match?{[], _conn}, Flash.pop_all(conn, :notices)
+
+    conn = conn
     |> Flash.put(:notices, "oh noes!")
     |> Flash.put(:notices, "false alarm!")
 

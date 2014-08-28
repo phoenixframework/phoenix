@@ -53,8 +53,7 @@ defmodule Phoenix.Controller.Flash do
 
   """
   def put(conn, key, message) do
-    messages = [message | get_all(conn, key)]
-    persist(conn, put_in(get(conn), [key], messages))
+    persist(conn, put_in(get(conn), [key], [message | get_all(conn, key)]))
   end
 
   @doc """
@@ -82,56 +81,39 @@ defmodule Phoenix.Controller.Flash do
   ## Examples
 
       iex> conn
-      iex> |> Flash.put(:notice, "Hello")
-      iex> |> Flash.put(:notice, "Hi!")
-      iex> |> Flash.get
-      %{notice: ["hello", "world"]
+      |> Flash.put(:notice, "Hello")
+      |> Flash.put(:notice, "Hi!")
+      |> Flash.get
+      %{notice: ["hello", "world"]}
 
   """
-  def get_all(conn), do: get_session(conn, :phoenix_messages) || %{}
   def get_all(conn, key) do
-    messages = get_in(get(conn), [key]) || []
-    Enum.reverse messages
+    conn
+    |> get
+    |> get_in([key])
+    |> Kernel.||([])
+    |> Enum.reverse
   end
 
   @doc """
-  Removes a message from the Flash, returning a {message, conn} pair
-
-  ## Examples
-
-      iex> conn = Flash.put(%Conn{}, :notice, "Welcome Back!")
-      iex> Flash.pop(conn, :notice) |> elem(0)
-      "Welcome Back!"
-
-  """
-  def pop(conn, key) do
-    message = get(conn, key)
-    if message do
-      conn = persist(conn, Dict.drop(get(conn), [key]))
-    end
-
-    {message, conn}
-  end
-
-  @doc """
-  Removes all messages from the Flash, returning a {messages, conn} pair
+  Removes all messages from the for given key, returning a `{msgs, conn}` pair
 
   ## Examples
 
       iex> %Conn{}
-      iex> |> Flash.put(:notices, "oh noes!")
-      iex> |> Flash.put(:notice, "false alarm!")
-      iex> |> Flash.pop_all(:notices) |> elem(0)
+      |> Flash.put(:notices, "oh noes!")
+      |> Flash.put(:notice, "false alarm!")
+      |> Flash.pop_all(:notices)
       ["oh noes!", "false alarm!"]
 
   """
   def pop_all(conn, key) do
-    messages = get_all(conn, key)
-    if messages != [] do
-      conn = persist(conn, Dict.drop(get(conn), [key]))
+    conn
+    |> get_all(key)
+    |> case do
+      []   -> {[], conn}
+      msgs -> {msgs, persist(conn, Dict.drop(get(conn), [key]))}
     end
-
-    {messages, conn}
   end
 
   @doc """
