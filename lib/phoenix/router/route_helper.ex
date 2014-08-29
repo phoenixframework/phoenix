@@ -23,23 +23,17 @@ defmodule Phoenix.Router.RouteHelper do
 
   ## Examples
 
-      iex> RouteHelper.defhelper("comments", "/comments", :index, MyApp.Router)
+      iex> RouteHelper.defhelper("comment", "/comments", :index, MyApp.Router)
       quote do
-        def(comments_path(:index, params)) do
+        def(comment_path(:index, params)) do
           Path.build("/comments", [], params)
-        end
-        def(comments_url(:index, params)) do
-          Path.build_url("/comments", [], params, __MODULE__)
         end
       end
 
-      iex> RouteHelper.defhelper("comments", "/comments/:id", :destroy, MyApp.Router)
+      iex> RouteHelper.defhelper("comment", "/comments/:id", :destroy, MyApp.Router)
       quote do
-        def(comments_path(:show, id, params)) do
+        def(comment_path(:show, id, params)) do
           Path.build("/comments/:id", [id: id], params)
-        end
-        def(comments_url(:show, id, params)) do
-          Path.build_url("/comments/:id", [id: id], params, __MODULE__)
         end
       end
 

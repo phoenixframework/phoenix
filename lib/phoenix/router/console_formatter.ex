@@ -1,5 +1,6 @@
 defmodule Phoenix.Router.ConsoleFormatter do
   alias Phoenix.Project
+  alias Phoenix.Naming
 
   @doc """
   Returns the default Application router, ie `MyApp.Router`
@@ -39,10 +40,7 @@ defmodule Phoenix.Router.ConsoleFormatter do
     {method, path, controller, action, options} = route
     route_name = route_name(Keyword.get(options, :as))
     [method_len, path_len, route_name_len] = column_widths
-
-    controller_name = String.replace(to_string(controller),
-    to_string(Project.module_root.Controllers) <> ".",
-    "")
+    controller_name = controller |> to_string |> Naming.module_name
 
     String.rjust(route_name, route_name_len) <> "  " <>
     String.ljust(String.upcase(to_string(method)), method_len) <> "  " <>

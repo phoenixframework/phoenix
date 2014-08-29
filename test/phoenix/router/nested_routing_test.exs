@@ -72,7 +72,7 @@ defmodule Phoenix.Router.NestedTest do
       resources "sessions", SessionController, only: [ :new, :create, :destroy ]
     end
 
-    resources "files", FileController do
+    resources "files", FileController, name: "asset" do
       resources "comments", CommentController do
         get "/avatar", Users, :avatar
       end
@@ -82,8 +82,8 @@ defmodule Phoenix.Router.NestedTest do
       resources "comments", CommentController, except: [:destroy]
     end
 
-    resources "pages", PageController, param_key: "slug", param_prefix: "area" do
-      resources "ratings", RatingController, param_key: "key", param_prefix: "vote"
+    resources "pages", PageController, param: "slug", name: "area" do
+      resources "ratings", RatingController, param: "key", name: "vote"
     end
   end
 
@@ -214,14 +214,14 @@ defmodule Phoenix.Router.NestedTest do
     assert conn.status == 200
     assert conn.params["slug"] == "about"
     assert conn.resp_body == "show page"
-    assert Router.pages_path(:show, "about") == "/pages/about"
+    assert Router.area_path(:show, "about") == "/pages/about"
 
     conn = simulate_request(Router, :get, "pages/contact/ratings/the_key")
     assert conn.status == 200
     assert conn.params["area_slug"] == "contact"
     assert conn.params["key"] == "the_key"
     assert conn.resp_body == "show rating"
-    assert Router.pages_ratings_path(:show, "contact", "the_key") == "/pages/contact/ratings/the_key"
+    assert Router.area_vote_path(:show, "contact", "the_key") == "/pages/contact/ratings/the_key"
   end
 end
 

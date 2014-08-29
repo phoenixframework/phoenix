@@ -31,12 +31,12 @@ defmodule Phoenix.Router.ResourcesContext do
   """
   def current_path(relative_path, module) do
     case get(module) do
-      []        -> relative_path
-      resources -> resources
-                   |> Enum.reverse
-                   |> Enum.map(&resource_with_named_param(&1))
-                   |> Kernel.++([relative_path])
-                   |> Path.join
+      []    -> relative_path
+      paths -> paths
+               |> Enum.reverse
+               |> Enum.map(&resource_with_named_param(&1))
+               |> Kernel.++([relative_path])
+               |> Path.join
     end
   end
 
@@ -63,8 +63,8 @@ defmodule Phoenix.Router.ResourcesContext do
       ---------------------------------
 
   """
-  def current_alias(relative_path, module) do
-    [relative_path | get_names(module)]
+  def current_alias(name, module) do
+    [name | get_names(module)]
     |> Enum.reverse
     |> Enum.join("_")
   end
@@ -103,13 +103,13 @@ defmodule Phoenix.Router.ResourcesContext do
   ## Examples
 
       iex> Phoenix.Router.Context.resource_with_named_param(%{
-        name: "users", param_prefix: "user", param_key: "id"}
+        path: "users", name: "user", param: "id"}
       )
       "users/:user_id"
 
   """
-  def resource_with_named_param(%{name: name, param_prefix: prefix, param_key: key}) do
-    Path.join([name, ":#{prefix}_#{key}"])
+  def resource_with_named_param(%{path: path, name: name, param: param}) do
+    Path.join([path, ":#{name}_#{param}"])
   end
 end
 

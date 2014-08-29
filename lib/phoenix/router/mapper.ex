@@ -131,51 +131,51 @@ defmodule Phoenix.Router.Mapper do
   Defines RESTful endpoints for a resource, for the following ations:
   `[:index, :create, :show, :update, :destroy]`
 
-    * resource - The String resource path, ie "users"
+    * path - The String resource path, ie "users"
     * controller - The Controller module
     * opts - The optional Keyword List of options
       * only - The list of actions to generate routes for, ie: `[:show, :edit]`
       * except - The actions to exclude generated routes for, ie `[:destroy]`
-      * param_key - The optional key for this resource. Default "id"
-      * param_prefix - The optional prefix for this resource. Default determined
-                       by Controller name. ie, UserController => "user"
+      * param - The optional key for this resource. Default "id"
+      * name - The optional prefix for this resource. Default determined
+               by Controller name. ie, UserController => "user"
 
   """
-  defmacro resources(resource, controller, opts, do: nested_context) do
-    add_resources resource, controller, opts, do: nested_context
+  defmacro resources(path, controller, opts, do: nested_context) do
+    add_resources path, controller, opts, do: nested_context
   end
-  defmacro resources(resource, controller, do: nested_context) do
-    add_resources resource, controller, [], do: nested_context
+  defmacro resources(path, controller, do: nested_context) do
+    add_resources path, controller, [], do: nested_context
   end
-  defmacro resources(resource, controller, opts) do
-    add_resources resource, controller, opts, do: nil
+  defmacro resources(path, controller, opts) do
+    add_resources path, controller, opts, do: nil
   end
-  defmacro resources(resource, controller) do
-    add_resources resource, controller, [], do: nil
+  defmacro resources(path, controller) do
+    add_resources path, controller, [], do: nil
   end
-  defp add_resources(resource, controller, options, do: nested_context) do
+  defp add_resources(path, controller, options, do: nested_context) do
     quote unquote: true, bind_quoted: [options: options,
-                                       resource: resource,
+                                       path: path,
                                        ctrl: controller] do
 
       actions = Mapper.extract_actions_from_options(options)
-      key     = Keyword.get(options, :param_key, unquote(@default_param_key))
-      prefix  = Keyword.get(options, :param_prefix, Mapper.param_prefix(ctrl))
-      context = %{name: resource, param_prefix: prefix, param_key: key}
+      param   = Keyword.get(options, :param, unquote(@default_param_key))
+      name    = Keyword.get(options, :name, Mapper.resource_name(ctrl))
+      context = %{path: path, name: name, param: param}
 
       Enum.each actions, fn action ->
-        current_alias = ResourcesContext.current_alias(resource, __MODULE__)
+        current_alias = ResourcesContext.current_alias(name, __MODULE__)
         opts = [as: current_alias]
         case action do
-          :index   -> get    "/#{resource}",              ctrl, :index, opts
-          :show    -> get    "/#{resource}/:#{key}",      ctrl, :show, opts
-          :new     -> get    "/#{resource}/new",          ctrl, :new, opts
-          :edit    -> get    "/#{resource}/:#{key}/edit", ctrl, :edit, opts
-          :create  -> post   "/#{resource}",              ctrl, :create, opts
-          :destroy -> delete "/#{resource}/:#{key}",      ctrl, :destroy, opts
+          :index   -> get    "/#{path}",                ctrl, :index, opts
+          :show    -> get    "/#{path}/:#{param}",      ctrl, :show, opts
+          :new     -> get    "/#{path}/new",            ctrl, :new, opts
+          :edit    -> get    "/#{path}/:#{param}/edit", ctrl, :edit, opts
+          :create  -> post   "/#{path}",                ctrl, :create, opts
+          :destroy -> delete "/#{path}/:#{param}",      ctrl, :destroy, opts
           :update  ->
-            put   "/#{resource}/:id", ctrl, :update, opts
-            patch "/#{resource}/:id", ctrl, :update, opts
+            put   "/#{path}/:id", ctrl, :update, opts
+            patch "/#{path}/:id", ctrl, :update, Dict.drop(opts, [:as])
         end
       end
 
@@ -210,11 +210,11 @@ defmodule Phoenix.Router.Mapper do
 
   ## Examples
 
-      iex> Mapper.param_prefix_from_controller(UserController)
+      iex> Mapper.resource_name_from_controller(UserController)
       "user"
 
   """
-  def param_prefix(controller) do
+  def resource_name(controller) do
     Phoenix.Naming.module_name(controller)
     |> String.split(".")
     |> List.last
