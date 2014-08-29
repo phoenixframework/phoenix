@@ -3,6 +3,10 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   use PlugHelper
 
   # Path scoping
+  defmodule Admin.PostController do
+    use Phoenix.Controller
+    def show(conn, _params), do: text(conn, "post show")
+  end
 
   defmodule ProfileController do
     use Phoenix.Controller
@@ -176,8 +180,12 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   defmodule RouterHelperScoping do
     use Phoenix.Router
 
+    scope alias: Admin do
+      get "/admin_posts/:id", PostController, :show
+    end
+
     scope path: "/admin", alias: Admin , helper: "admin" do
-      get "/users/:id", UserController, :show, as: :user
+      get "/users/:id", UserController, :show, as: "user"
     end
 
     scope path: "/api", alias: Api, helper: "api" do
@@ -202,5 +210,12 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   test "resources actions should prefix scoped helper path" do
     assert Router.staff_product_path(:edit, 1) == "/staff/products/1/edit"
     assert Router.staff_product_path(:new) == "/staff/products/new"
+  end
+
+  test "scope does not require path argument" do
+    conn = simulate_request(RouterHelperScoping, :get, "/admin_posts/123")
+    assert conn.status == 200
+    assert conn.params["id"] == "123"
+    assert conn.resp_body == "post show"
   end
 end

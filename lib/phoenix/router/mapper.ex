@@ -195,7 +195,7 @@ defmodule Phoenix.Router.Mapper do
     quote unquote: true, bind_quoted: [path: path,
                                        controller_alias: controller_alias,
                                        helper: helper] do
-      Errors.ensure_valid_path!(path)
+      if path, do: Errors.ensure_valid_path!(path)
       ScopeContext.push({path, controller_alias, helper}, __MODULE__)
       unquote(nested_context)
       ScopeContext.pop(__MODULE__)
