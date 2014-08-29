@@ -214,14 +214,14 @@ defmodule App.PageView
   end
   
   def render("show.json", %{page: page}) do
-    JSON.encode! title: page.title, url: page.url
+    JSON.encode! %{title: page.title, url: page.url}
   end
 end
 ```
 
 Which would allow you to use these functions in your template : `<%= display(@message) %>`, `<%= title %>`
 
-Note that all views extend `App.Views`, allowing you to define functions, aliases, imports, etc available in all templates. Additionally, `render/2` functions can be defined to perform rendering directly as function definitions. The arguments to `render/2` are controller action name with the response content type mime extension.
+Note that all views extend `App.Views`, allowing you to define functions, aliases, imports, etc available in all templates. Additionally, `render/2` functions can be defined to perform rendering directly as function definitions. The arguments to `render/2` are controller action name with the response content-type mime extension.
 
 To read more about eex templating, see the [elixir documentation](http://elixir-lang.org/docs/stable/eex/).
 
