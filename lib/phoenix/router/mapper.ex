@@ -23,15 +23,15 @@ defmodule Phoenix.Router.Mapper do
       defmodule Router do
         use Phoenix.Router
 
-        get "pages/:page", PageController, :show, as: :page
-        resources "users", UserController
+        get "/pages/:page", PageController, :show, as: :page
+        resources "/users", UserController
       end
 
       # Compiles to
 
-      get "pages/:page", PageController, :show, as: :page
+      get "/pages/:page", PageController, :show, as: :page
 
-      -> defmatch({:get, "pages/:page", PageController, :show, [as: :page]})
+      -> defmatch({:get, "/pages/:page", PageController, :show, [as: :page]})
          defroute_aliases({:get, "pages/:page", PageController, :show, [as: :page]})
 
       --> def(match(conn, :get, ["pages", page])) do
@@ -47,20 +47,20 @@ defmodule Phoenix.Router.Mapper do
       defmodule Router do
         use Phoenix.Router
 
-        resources "pages", PageController, only: [:show]
-        resources "users", UserController, except: [:destroy]
+        resources "/pages", PageController, only: [:show]
+        resources "/users", UserController, except: [:destroy]
       end
 
   ## Generated Routes
 
-      pages_path  GET    /pages/:id       Elixir.PageController.show/2
-      users_path  GET    /users           Elixir.UserController.index/2
-      users_path  GET    /users/:id/edit  Elixir.UserController.edit/2
-      users_path  GET    /users/new       Elixir.UserController.new/2
-      users_path  GET    /users/:id       Elixir.UserController.show/2
-      users_path  POST   /users           Elixir.UserController.create/2
-                  PUT    /users/:id       Elixir.UserController.update/2
-                  PATCH  /users/:id       Elixir.UserController.update/2
+      page_path  GET    /pages/:id       PageController.show/2
+      user_path  GET    /users           UserController.index/2
+      user_path  GET    /users/:id/edit  UserController.edit/2
+      user_path  GET    /users/new       UserController.new/2
+      user_path  GET    /users/:id       UserController.show/2
+      user_path  POST   /users           UserController.create/2
+                 PUT    /users/:id       UserController.update/2
+                 PATCH  /users/:id       UserController.update/2
 
   """
 
@@ -212,7 +212,7 @@ defmodule Phoenix.Router.Mapper do
 
   ## Examples
 
-      iex> Mapper.resource_name_from_controller(UserController)
+      iex> Mapper.resource_name(UserController)
       "user"
 
   """
