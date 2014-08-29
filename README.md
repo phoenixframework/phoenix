@@ -626,7 +626,7 @@ end
 
 ### Custom Not Found and Error Pages
 
-A `error_controller` can be configured on the Router Mix config, where two actions must be defined for custom 404 and 500 error handling. Additionally, `catch_errors` and `debug_errors` settings control how errors are caught and displayed. Router configuration options include:
+An `error_controller` can be configured on the Router Mix config, where two actions must be defined for custom 404 and 500 error handling. Additionally, `catch_errors` and `debug_errors` settings control how errors are caught and displayed. Router configuration options include:
 
 
 * error_controller - The optional Module to have `error/2`, `not_found/2`
@@ -760,7 +760,7 @@ $ coffee -o priv/static/js -cw priv/src/static/cs
   - [x] redirects
   - [x] Plug layer for action hooks
   - [x] Error page handling
-  - [ ] Error page handling per env
+  - [x] Error page handling per env
 - Views
   - [x] Precompiled View handling
   - [x] I18n
