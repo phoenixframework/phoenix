@@ -100,7 +100,7 @@ iex> Router.user_path(:edit, 123)
 iex> Router.user_path(:destroy, 123)
 "/users/123"
 
-iex> Router.users_path(:new)
+iex> Router.user_path(:new)
 "/users/new"
 
 iex> Router.user_comment_path(:show, 99, 100)
