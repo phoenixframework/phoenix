@@ -51,16 +51,20 @@ defmodule Phoenix.Channel do
       :ok
 
   """
-  def broadcast(channel, topic, event, message) when is_binary(channel) do
+  def broadcast(channel, topic, event, message) when is_binary(channel) and is_map(message) do
     broadcast_from :global, channel, topic, event, message
   end
+  def broadcast(_, _, _, _), do: invalid_message_arg
+
   def broadcast(socket, event, message) do
     broadcast_from :global, socket.channel, socket.topic, event, message
   end
 
-  def broadcast_from(socket = %Socket{}, event, message) do
+  def broadcast_from(socket = %Socket{}, event, message) when is_map(message) do
     broadcast_from(socket.pid, socket.channel, socket.topic, event, message)
   end
+
+  def broadcast_from(_, _, _), do: invalid_message_arg
 
   @doc """
   Broadcast event from pid, serializable as JSON to topic namedspaced by channel
@@ -72,7 +76,7 @@ defmodule Phoenix.Channel do
       :ok
 
   """
-  def broadcast_from(from, channel, topic, event, message) do
+  def broadcast_from(from, channel, topic, event, message) when is_map(message) do
     Topic.create(namespaced(channel, topic))
     Topic.broadcast_from from, namespaced(channel, topic), %Message{
       channel: channel,
@@ -82,10 +86,12 @@ defmodule Phoenix.Channel do
     }
   end
 
+  def broadcast_from(_, _, _, _, _), do: invalid_message_arg
+
   @doc """
   Sends Dict, JSON serializable message to socket
   """
-  def reply(socket, event, message) do
+  def reply(socket, event, message) when is_map(message) do
     send socket.pid, %Message{
       channel: socket.channel,
       topic: socket.topic,
@@ -94,6 +100,8 @@ defmodule Phoenix.Channel do
     }
     socket
   end
+
+  def reply(_, _, _), do: invalid_message_arg
 
   @doc """
   Terminates socket connection, including all multiplexed channels
@@ -106,4 +114,7 @@ defmodule Phoenix.Channel do
   def hibernate(socket), do: Handler.hibernate(socket)
 
   defp namespaced(channel, topic), do: "#{channel}:#{topic}"
+  defp invalid_message_arg do
+    raise "Message argument must be of type Map"
+  end
 end
