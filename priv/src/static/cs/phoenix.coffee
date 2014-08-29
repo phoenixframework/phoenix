@@ -49,11 +49,19 @@
     reconnectAfterMs: 5000
 
 
-    constructor: (@endPoint) ->
+    constructor: (endPoint) ->
+      @endPoint = @determineEndpoint(endPoint)
       @channels = []
       @sendBuffer = []
       @resetBufferTimer()
       @reconnect()
+
+
+    determineEndpoint: (endPoint) ->
+      return endPoint unless endPoint.charAt(0) == '/'
+      protocol = if location.protocol.match(/^https/) then 'wss' else 'ws'
+      return "#{protocol}:#{endPoint}" if endPoint.charAt(1) == '/'
+      "#{protocol}://#{location.host}#{endPoint}"
 
 
     close: (callback) ->
