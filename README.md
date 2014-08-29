@@ -45,13 +45,13 @@ defmodule YourApp.Router do
     get "/pages/:page", PageController, :show, as: :pages
     get "/files/*path", FileController, :show
 
-    resources "users", UserController do
-      resources "comments", CommentController
+    resources "/users", UserController do
+      resources "/comments", CommentController
     end
   end
 
-  scope path: "admin", alias: YourApp.Admin, helper: "admin" do
-    resources "users", UserController
+  scope path: "/admin", alias: YourApp.Admin, helper: "admin" do
+    resources "/users", UserController
   end
 end
 ```
@@ -63,7 +63,7 @@ Routes specified using `get`, `post`, `put`, and `delete` respond to the corresp
 The `resources` macro generates a set of routes for the standard CRUD operations, so:
 
 ```elixir
-resources "users", UserController
+resources "/users", UserController
 ```
 
 is the equivalent of writing:
@@ -81,41 +81,41 @@ delete "/users/:id",   UserController, :destroy
 Resources will also generate a set of named routes and associated helper methods:
 
 ```elixir
-resources "users", UserController do
-  resources "comments", CommentController
+resources "/users", UserController do
+  resources "/comments", CommentController
 end
 
-iex> Router.users_path(:index)
+iex> Router.user_path(:index)
 "/users"
 
-iex> Router.users_path(:show, 123)
+iex> Router.user_path(:show, 123)
 "/users/123"
 
-iex> Router.users_path(:show, 123, page: 5)
+iex> Router.user_path(:show, 123, page: 5)
 "/users/123?page=5"
 
-iex> Router.users_path(:edit, 123)
+iex> Router.user_path(:edit, 123)
 "/users/123/edit"
 
-iex> Router.users_path(:destroy, 123)
+iex> Router.user_path(:destroy, 123)
 "/users/123"
 
 iex> Router.users_path(:new)
 "/users/new"
 
-iex> Router.users_comments_path(:show, 99, 100)
+iex> Router.user_comment_path(:show, 99, 100)
 "/users/99/comments/100"
 
-iex> Router.users_comments_path(:index, 99, foo: "bar")
+iex> Router.user_comment_path(:index, 99, foo: "bar")
 "/users/99/comments?foo=bar"
 
-iex> Router.users_comments_path(:index, 99) |> Router.url
+iex> Router.user_comment_path(:index, 99) |> Router.url
 "http://example.com/users/99/comments"
 
-iex> Router.users_comments_path(:edit, 88, 2, [])
+iex> Router.user_comment_path(:edit, 88, 2, [])
 "/users/88/comments/2/edit"
 
-iex> Router.users_comments_path(:new, 88)
+iex> Router.user_comment_path(:new, 88)
 "/users/88/comments/new"
 ```
 
@@ -126,7 +126,7 @@ Since browsers don't allow HTML forms to send PUT or DELETE requests, Phoenix al
 For example, to make a button to delete a post, you could write:
 
 ```html
-<form action="<%= posts_path(:destroy, post.id) %>" method="post">
+<form action="<%= post_path(:destroy, post.id) %>" method="post">
   <input type="hidden" name="_method" value="DELETE">
   <input type="submit" value="Delete Post">
 </form>
@@ -140,7 +140,7 @@ defmodule YourApp.PageController do
   alias YourApp.Router
 
   def show(conn, %{"page" => "admin"}) do
-    redirect conn, Router.pages_path(:show, "unauthorized")
+    redirect conn, Router.page_path(:show, "unauthorized")
   end
   def show(conn, %{"page" => page}) do
     render conn, "show", title: "Showing page #{page}"
