@@ -1,10 +1,16 @@
 defmodule Phoenix.Router do
+  import Plug.Conn, only: [assign_private: 3]
+  import Phoenix.Controller.Connection, only: [assign_status: 2, assign_error: 3]
   alias Phoenix.Plugs
   alias Phoenix.Router.Options
   alias Phoenix.Adapters.Cowboy
   alias Phoenix.Plugs.Parsers
   alias Phoenix.Config
+  alias Phoenix.Controller.Action
   alias Phoenix.Project
+  alias Plug.Conn
+
+  @unsent [:unset, :set]
 
   defmacro __using__(plug_adapter_options \\ []) do
     quote do
@@ -23,9 +29,6 @@ defmodule Phoenix.Router do
       plug Plug.Logger
       if Config.router(__MODULE__, [:parsers]) do
         plug Plug.Parsers, parsers: [:urlencoded, :multipart, Parsers.JSON], accept: ["*/*"]
-      end
-      if Config.router(__MODULE__, [:error_handler]) do
-        plug Plugs.ErrorHandler, from: __MODULE__
       end
 
       @options unquote(plug_adapter_options)
@@ -97,6 +100,35 @@ defmodule Phoenix.Router do
   Carries out Controller dispatch for router match
   """
   def perform_dispatch(conn, router) do
-    router.match(conn, conn.method, conn.path_info)
+    conn = assign_private(conn, :phoenix_router, router)
+    try do
+      router.match(conn, conn.method, conn.path_info)
+    catch
+      kind, err -> handle_err(conn, kind, err, Config.router(router, [:catch_errors]))
+    end
+    |> after_dispatch
   end
+
+  defp handle_err(conn, kind, error, _catch_errors = true) do
+    conn
+    |> assign_error(kind, error)
+    |> assign_status(500)
+  end
+  defp handle_err(_, :throw, err, _nocatch), do: throw(err)
+  defp handle_err(_, :error, err, _nocatch), do: reraise(err, System.stacktrace)
+
+  defp after_dispatch(conn = %Conn{state: state, status: status})
+    when state in @unsent
+    and status == 404 do
+
+    Action.handle_not_found(conn)
+  end
+  defp after_dispatch(conn = %Conn{state: state, status: status})
+    when state in @unsent
+    and status == 500 do
+
+    Action.handle_error(conn)
+  end
+  defp after_dispatch(conn), do: conn
 end
+

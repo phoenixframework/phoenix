@@ -36,7 +36,7 @@ defmodule Phoenix.Router.ControllerTest do
       if conn.params["username"] == "superadmin" do
         conn
       else
-        halt!(conn)
+        conn |> assign_status(401) |> halt
       end
     end
     def authenticate(conn, _), do: conn
@@ -59,7 +59,7 @@ defmodule Phoenix.Router.ControllerTest do
     end
 
     def restricted(conn, _params) do
-      text conn, ""
+      conn |> assign(:restricted, true) |> text ""
     end
   end
 
@@ -129,12 +129,15 @@ defmodule Phoenix.Router.ControllerTest do
     assert conn.assigns[:stack] == [:first_plug, :action, :second_plug]
   end
 
-  test "halt! stops plug chain" do
+  test "halt stops plug chain" do
     conn = simulate_request(Router, :get, "plugs/standard/restricted?username=superadmin")
     assert conn.status == 200
+    assert conn.assigns[:restricted]
 
     conn = simulate_request(Router, :get, "plugs/standard/restricted?username=bob")
-    assert conn.status == 400
+    assert conn.status == 401
+    refute conn.assigns[:restricted]
+    assert conn.resp_body == nil
   end
 
   test "view_module returns the view modoule based on controller module" do

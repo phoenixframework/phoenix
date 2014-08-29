@@ -69,13 +69,13 @@ resources "/users", UserController
 is the equivalent of writing:
 
 ```elixir
-get "/users",          UserController, :index
-get "/users/:id",      UserController, :show
-get "/users/new",      UserController, :new
-post "/users",         UserController, :create
-get "/users/:id/edit", UserController, :edit
-put "/users/:id",      UserController, :update
-delete "/users/:id",   UserController, :destroy
+get  "/users",          UserController, :index
+get  "/users/:id",      UserController, :show
+get  "/users/new",      UserController, :new
+post "/users",          UserController, :create
+get  "/users/:id/edit", UserController, :edit
+put  "/users/:id",      UserController, :update
+delete "/users/:id",    UserController, :destroy
 ```
 
 Resources will also generate a set of named routes and associated helper methods:
@@ -516,13 +516,18 @@ use Mix.Config
 config :phoenix, YourApp.Router,
   port: System.get_env("PORT") || 4000,
   ssl: false,
+  host: "localhost",
   cookies: true,
-  consider_all_requests_local: true,
   session_key: "_your_app_key",
-  session_secret: "super secret"
+  session_secret: "$+X2PG$PX0^88^HXB)...",
+  debug_errors: true
 
 config :phoenix, :code_reloader,
   enabled: true
+
+config :logger, :console,
+  level: :debug
+
 
 ```
 
@@ -538,13 +543,15 @@ use Mix.Config
 
 config :phoenix, YourApp.Router,
   port: System.get_env("PORT"),
-  ssl: true,
+  ssl: false,
+  host: "example.com",
   cookies: true,
   session_key: "_your_app_key",
-  session_secret: "super secret"
-  otp_app: :your_app,
-  keyfile: "ssl/key.pem",
-  certfile: "ssl/cert.pem"
+  session_secret: "$+X2PG$PX0^88^HXB)..."
+
+config :logger, :console,
+  level: :info,
+  metadata: [:request_id]
 
 ```
 
@@ -612,6 +619,81 @@ defmodule YourApp.PageController do
     foo = get_session(conn, :foo)
 
     text conn, foo
+  end
+end
+```
+
+
+### Custom Not Found and Error Pages
+
+A `error_controller` can be configured on the Router Mix config, where two actions must be defined for custom 404 and 500 error handling. Additionally, `catch_errors` and `debug_errors` settings control how errors are caught and displayed. Router configuration options include:
+
+
+* error_controller - The optional Module to have `error/2`, `not_found/2`
+                     actions invoked when 400/500's status occurs.
+                     Default `Phoenix.Controller.ErrorController`
+* catch_errors - Bool to catch errors at the Router level. Default `true`
+* debug_errors - Bool to display Phoenix's route/stacktrace debug pages for 404/500 statuses.
+             Default `false`
+
+
+The `error/2` action will be invoked on the page controller when a 500 status has been assigned to the connection, but a response has not been sent, as well as anytime an error is thrown or raised (provided `catch_errors: true`)
+
+The `not_found/2` action will be invoked on the page controller when a 404 status is assigned to the conn and a response is not sent.
+
+#### Example Custom Error handling with PageController
+
+```elixir
+# config/config.exs
+config :phoenix, YourApp.Router,
+  ...
+  catch_errors: true,
+  debug_errors: false,
+  error_controller: YourApp.PageController
+
+# config/dev.exs
+config :phoenix, YourApp.Router,
+  ...
+  debug_errors: true # Show Phoenix route/stacktrace debug pages for 404/500's
+
+
+defmodule YourApp.PageController do
+  use Phoenix.Controller
+
+  def not_found(conn, _) do
+    text conn, 404, "The page you were looking for couldn't be found"
+  end
+
+  def error(conn, _) do
+    handle_error(conn, error(conn))
+  end
+  defp handle_error(conn, {:error, Ecto.NotSingleResult}) do
+    not_found(conn, [])
+  end
+  defp handle_error(conn, _any) do
+    text conn, 500, "Something went wrong"
+  end
+end
+```
+
+#### Catching Errors at the Controller layer
+
+Errors can be caught at the controller layer by overriding `call/2` on the controller. ie:
+
+```elixir
+defmodule YourApp.UserController do
+  use Phoenix.Controller
+
+  def call(conn, opts) do
+    try do
+      super(conn, opts)
+    rescue
+      Ecto.NotSingleResult -> conn |> assign_status(404) |> render "user_404"
+    end
+  end
+
+  def show(conn, %{"id" => id}) do
+    render conn, "index", user: Repo.get!(User, id)
   end
 end
 ```

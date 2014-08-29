@@ -25,14 +25,15 @@ defmodule Phoenix.Config do
       port: 4000,
       ssl: false,
       host: "localhost",
-      consider_all_requests_local: false,      # Full error reports are disabled
       static_assets: true,
       static_assets_mount: "/",
       parsers: true,
-      error_handler: true,
       cookies: false,
       session_key: nil,
-      session_secret: nil
+      session_secret: nil,
+      catch_errors: true,
+      debug_errors: false,
+      error_controller: Phoenix.Controller.ErrorController,
     ],
     code_reloader: [
       enabled: false
@@ -128,9 +129,9 @@ defmodule Phoenix.Config do
       1234
 
   """
-  def router(module) do
-    for {key, _value} <- Dict.merge(@defaults[:router], find_router_conf(module)) do
-      {key, router(module, [key])}
+  def router(mod) do
+    for {key, _value} <- Dict.merge(@defaults[:router], find_router_conf(mod)) do
+      {key, router(mod, [key])}
     end
   end
   def router(module, path) do

@@ -16,14 +16,6 @@ defmodule Phoenix.Router.ConnectionTest do
     assert Connection.controller_module(conn) == "show"
   end
 
-  test "halt! throws exception" do
-    conn = %Conn{state: :unsent}
-    assert catch_throw(Connection.halt!(conn)) == {:halt, conn}
-
-    conn = %Conn{state: :sent}
-    assert catch_throw(Connection.halt!(conn)) == {:halt, conn}
-  end
-
   test "response_content_type! raises UnfetchedContentType error if unfetched" do
     assert_raise Errors.UnfetchedContentType, fn ->
       Connection.response_content_type!(%Conn{})
@@ -62,5 +54,15 @@ defmodule Phoenix.Router.ConnectionTest do
 
   test "assign_status/1 returns the conn.satus" do
     assert Connection.assign_status(%Conn{}, 404).status == 404
+  end
+
+  test "assign_error/3 and error/1 assign and return error" do
+    conn = Connection.assign_error(%Conn{}, :throw, "boom")
+    assert Connection.error(conn) == {:throw, "boom"}
+  end
+
+  test "named_params/1 returns the private named params" do
+    conn = Conn.assign_private(%Conn{}, :phoenix_named_params, [key: "val"])
+    assert Connection.named_params(conn) == [key: "val"]
   end
 end

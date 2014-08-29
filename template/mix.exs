@@ -24,6 +24,8 @@ defmodule <%= application_module %>.Mixfile do
   # { :barbat, "~> 0.1", github: "elixir-lang/barbat" }
   defp deps do
     [
+      # TODO: use Plug 0.7.0 from hex when released
+      {:plug, github: "elixir-lang/plug"},
       {:phoenix, github: "phoenixframework/phoenix"},
       {:cowboy, "~> 1.0.0"}
     ]

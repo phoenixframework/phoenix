@@ -1,5 +1,6 @@
 defmodule Phoenix.Plugs.Accepts do
   import Phoenix.Controller.Connection
+  import Plug.Conn
   alias Plug.MIME
 
   @moduledoc """
@@ -20,7 +21,7 @@ defmodule Phoenix.Plugs.Accepts do
     if primary_accept_extension in extensions do
       conn
     else
-      halt!(conn)
+      conn |> send_resp(400, "Bad Request") |> halt
     end
   end
 end

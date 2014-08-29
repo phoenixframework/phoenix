@@ -1,14 +1,12 @@
 defmodule Phoenix.Controller.Connection do
   import Plug.Conn
-  alias Plug.Conn
   alias Phoenix.Status
   alias Phoenix.Controller.Errors
 
   @moduledoc """
   Handles Interacting with Plug.Conn and integration with the Controller layer
 
-  Used for sending responses, halting connections, and looking up private Conn
-  assigns
+  Used for sending responses and looking up private Conn assigns
   """
 
   @unsent [:unset, :set]
@@ -22,6 +20,28 @@ defmodule Phoenix.Controller.Connection do
   Returns the Atom Controller Module matched from Router
   """
   def controller_module(conn), do: conn.private[:phoenix_controller]
+
+  @doc """
+  Returns the Actom Router Module that dispatched the Conn
+  """
+  def router_module(conn), do: conn.private[:phoenix_router]
+
+  @doc """
+  Assign error to phoenix private assigns
+  """
+  def assign_error(conn, kind, error) do
+    assign_private(conn, :phoenix_error, {kind, error})
+  end
+
+  @doc """
+  Retrieve error from phoenix private assigns
+  """
+  def error(conn), do: Dict.get(conn.private, :phoenix_error)
+
+  @doc """
+  Returns the Map of named params of Phoenix private assigns
+  """
+  def named_params(conn), do: Dict.get(conn.private, :phoenix_named_params, %{})
 
   @doc """
   Assign layout to phoenix private assigns
@@ -50,34 +70,7 @@ defmodule Phoenix.Controller.Connection do
   @doc """
   Assigns the Conn status
   """
-  def assign_status(conn, status), do: put_in(conn.status, status)
-
-  @doc """
-  Halts the Plug chain by throwing `{:halt, conn}`.
-  If no response has been sent, an empty Bad Request is sent before throwing
-  error.
-
-  ## Examples
-
-      plug :authenticate
-
-      def authenticate(conn, _opts) do
-        if authenticate?(conn) do
-          conn
-        else
-          conn
-          |> redirect(Router.root_path)
-          |> halt!
-         end
-      end
-
-  """
-  def halt!(conn = %Conn{state: state}) when state in @unsent do
-    text(conn, 400, "Bad Request") |> halt!
-  end
-  def halt!(conn) do
-    throw {:halt, conn}
-  end
+  def assign_status(conn, status), do: put_in(conn.status, Status.code(status))
 
   @doc """
   Returns the String Mime content-type of response
