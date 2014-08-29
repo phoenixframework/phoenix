@@ -50,18 +50,20 @@
 
 
     constructor: (endPoint) ->
-      @endPoint = @determineEndpoint(endPoint)
+      @endPoint = @expandEndpoint(endPoint)
       @channels = []
       @sendBuffer = []
       @resetBufferTimer()
       @reconnect()
 
 
-    determineEndpoint: (endPoint) ->
-      return endPoint unless endPoint.charAt(0) == '/'
-      protocol = if location.protocol.match(/^https/) then 'wss' else 'ws'
-      return "#{protocol}:#{endPoint}" if endPoint.charAt(1) == '/'
-      "#{protocol}://#{location.host}#{endPoint}"
+    protocol: -> if location.protocol.match(/^https/) then "wss" else "ws"
+
+    expandEndpoint: (endPoint) ->
+      return endPoint unless endPoint.charAt(0) is "/"
+      return "#{@protocol()}:#{endPoint}" if endPoint.charAt(1) is "/"
+
+      "#{@protocol()}://#{location.host}#{endPoint}"
 
 
     close: (callback) ->

@@ -103,23 +103,29 @@
       Socket.prototype.reconnectAfterMs = 5000;
 
       function Socket(endPoint) {
-        this.endPoint = this.determineEndpoint(endPoint);
+        this.endPoint = this.expandEndpoint(endPoint);
         this.channels = [];
         this.sendBuffer = [];
         this.resetBufferTimer();
         this.reconnect();
       }
 
-      Socket.prototype.determineEndpoint = function(endPoint) {
-        var protocol;
-        if (endPoint.charAt(0) !== '/') {
+      Socket.prototype.protocol = function() {
+        if (location.protocol.match(/^https/)) {
+          return "wss";
+        } else {
+          return "ws";
+        }
+      };
+
+      Socket.prototype.expandEndpoint = function(endPoint) {
+        if (endPoint.charAt(0) !== "/") {
           return endPoint;
         }
-        protocol = location.protocol.match(/^https/) ? 'wss' : 'ws';
-        if (endPoint.charAt(1) === '/') {
-          return "" + protocol + ":" + endPoint;
+        if (endPoint.charAt(1) === "/") {
+          return "" + (this.protocol()) + ":" + endPoint;
         }
-        return "" + protocol + "://" + location.host + endPoint;
+        return "" + (this.protocol()) + "://" + location.host + endPoint;
       };
 
       Socket.prototype.close = function(callback) {
