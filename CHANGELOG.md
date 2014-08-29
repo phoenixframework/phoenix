@@ -5,15 +5,16 @@
 * Enhancements
   * Controllers are now Plugs and can be plugged as a "second layer" plug stack from the Router plug stack
   * Elixir Logger Integration - Improved request logger, durations, params, etc
-  * Custom 404/500 page handling, [details](https://github.com/phoenixframework/phoenix#custom-not-found-and-error-pages)
+  * Custom 404/500 page handling, [details](https://github.com/phoenixframework/phoenix/blob/0b6bdffab45fc46bc1455860f2d3971d0224eeb5/README.md#custom-not-found-and-error-pages)
   * Ability to halt Plug stacks with Plug 0.7.0 `halt/1`
   * Internationalization support
   * Flash messages for one-time message support across redirects
-  * News Template.Engine behaviour for third-party template engines. See [PhoenixHaml](https://github.com/chrismccord/phoenix_haml) for haml support via Callipe.
+  * New `Template.Engine` behaviour for third-party template engines. See [PhoenixHaml](https://github.com/chrismccord/phoenix_haml) for haml support via Calliope.
   * `render/2` can be explicitly plugged for automatic rendering of actions based on action name
-  * add assign_layout/2 and assign_status/2
-  * assign API for Sockets allows ephemeral state to be stored on the multiplex socket, similar to conn assigns
-  * `proxy_port` Router config option added for deployments where public facing port differs from local port
+  * Add assign_layout/2 and assign_status/2
+  * Assign API for Sockets allows ephemeral state to be stored on the multiplexed socket, similar to conn assigns
+  * Add `proxy_port` Router config option for deployments where public facing port differs from local port
+  * Add nested generated `Helpers` module to Routers for easy imports of named route helpers, ie `import MyApp.Router.Helpers`
 
 
 * Bug fixes
@@ -23,6 +24,7 @@
   * ExConf Configuration has been replaced by Mix Config
   * Directory and naming conventions have changed. A `web/` directory now lives at root of the project and holds routers, controllers, channels, views & templates, where all `web/` files are recompiled by the code reloader during development. Modules that cannot be simply recompiled in process are placed in lib as normal and require a server restart to take effect. Follow [this guide](https://gist.github.com/dgoldie/2fdc90fe09ecdddb78f4) for upgrade steps from 0.3.x.
   * Naming conventions now use singular form for module names, directory names, and named route helpers
+  * Named route helpers have been reworked to use single function name with patterned matched arguments. See the [readme  examples](https://github.com/phoenixframework/phoenix/blob/0b6bdffab45fc46bc1455860f2d3971d0224eeb5/README.md#resources)
   * `layout: nil` render option has been replaced by `assign_layout(conn, :none)`
   * `Plugs.JSON` now adds parsed parans under "_json" key when the JSON object is an array
 
