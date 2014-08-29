@@ -37,6 +37,7 @@ defmodule Phoenix.Router.ResourcesContext do
                |> Enum.map(&resource_with_named_param(&1))
                |> Kernel.++([relative_path])
                |> Path.join
+               |> Elixir.Path.expand("")
     end
   end
 

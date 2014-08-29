@@ -117,13 +117,14 @@ defmodule Phoenix.Router.Mapper do
 
       Errors.ensure_valid_path!(path)
       current_path = ResourcesContext.current_path(path, __MODULE__)
-      {scoped_path, scoped_controller, scoped_helper} = ScopeContext.current_scope(current_path,
-                                                                                   controller,
-                                                                                   options[:as],
-                                                                                   __MODULE__)
+      {scoped_path, scoped_ctrl, scoped_helper} = ScopeContext.current_scope(
+        current_path,
+        controller,
+        options[:as],
+        __MODULE__
+      )
       opts = Dict.merge(options, as: scoped_helper)
-
-      @routes {verb, scoped_path, scoped_controller, action, opts}
+      @routes {verb, scoped_path, scoped_ctrl, action, opts}
     end
   end
 
@@ -157,7 +158,7 @@ defmodule Phoenix.Router.Mapper do
     quote unquote: true, bind_quoted: [options: options,
                                        path: path,
                                        ctrl: controller] do
-
+      Errors.ensure_valid_path!(path)
       actions = Mapper.extract_actions_from_options(options)
       param   = Keyword.get(options, :param, unquote(@default_param_key))
       name    = Keyword.get(options, :name, Mapper.resource_name(ctrl))
@@ -167,15 +168,15 @@ defmodule Phoenix.Router.Mapper do
         current_alias = ResourcesContext.current_alias(name, __MODULE__)
         opts = [as: current_alias]
         case action do
-          :index   -> get    "/#{path}",                ctrl, :index, opts
-          :show    -> get    "/#{path}/:#{param}",      ctrl, :show, opts
-          :new     -> get    "/#{path}/new",            ctrl, :new, opts
-          :edit    -> get    "/#{path}/:#{param}/edit", ctrl, :edit, opts
-          :create  -> post   "/#{path}",                ctrl, :create, opts
-          :destroy -> delete "/#{path}/:#{param}",      ctrl, :destroy, opts
+          :index   -> get    "#{path}",                ctrl, :index, opts
+          :show    -> get    "#{path}/:#{param}",      ctrl, :show, opts
+          :new     -> get    "#{path}/new",            ctrl, :new, opts
+          :edit    -> get    "#{path}/:#{param}/edit", ctrl, :edit, opts
+          :create  -> post   "#{path}",                ctrl, :create, opts
+          :destroy -> delete "#{path}/:#{param}",      ctrl, :destroy, opts
           :update  ->
-            put   "/#{path}/:id", ctrl, :update, opts
-            patch "/#{path}/:id", ctrl, :update, Dict.drop(opts, [:as])
+            put   "#{path}/:id", ctrl, :update, opts
+            patch "#{path}/:id", ctrl, :update, Dict.drop(opts, [:as])
         end
       end
 
@@ -193,7 +194,7 @@ defmodule Phoenix.Router.Mapper do
     quote unquote: true, bind_quoted: [path: path,
                                        controller_alias: controller_alias,
                                        helper: helper] do
-
+      Errors.ensure_valid_path!(path)
       ScopeContext.push({path, controller_alias, helper}, __MODULE__)
       unquote(nested_context)
       ScopeContext.pop(__MODULE__)

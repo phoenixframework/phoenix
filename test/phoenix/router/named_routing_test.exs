@@ -14,19 +14,19 @@ defmodule Phoenix.Router.NamedRoutingTest do
       get "/users/:id", UserControler, :show, as: :profile
       get "/users/top", UserControler, :top, as: :top
 
-      resources "users", UserController do
-        resources "comments", CommentController do
-          resources "files", FileController
+      resources "/users", UserController do
+        resources "/comments", CommentController do
+          resources "/files", FileController
         end
       end
-      resources "files", FileController
+      resources "/files", FileController
 
-      scope path: "admin", alias: Admin do
-        resources "messages", MessageController
+      scope path: "/admin", alias: Admin do
+        resources "/messages", MessageController
       end
 
-      scope path: "admin", alias: Admin, helper: "admin" do
-        resources "messages", MessageController
+      scope path: "/admin", alias: Admin, helper: "admin" do
+        resources "/messages", MessageController
       end
     end
 

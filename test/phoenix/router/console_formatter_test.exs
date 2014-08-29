@@ -20,7 +20,7 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
   defmodule RouterTestResources do
     use Phoenix.Router
 
-    resources "images", Phoenix.ImageController
+    resources "/images", Phoenix.ImageController
   end
 
   test "format resource routes" do

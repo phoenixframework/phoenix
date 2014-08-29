@@ -63,27 +63,27 @@ defmodule Phoenix.Router.NestedTest do
 
   defmodule Router do
     use Phoenix.Router
-    resources "users", UserController do
-      resources "comments", CommentController do
+    resources "/users", UserController do
+      resources "/comments", CommentController do
         get "/special", CommentController, :special
       end
-      resources "files", FileController
-      resources "posts", PostController, except: [ :destroy ]
-      resources "sessions", SessionController, only: [ :new, :create, :destroy ]
+      resources "/files", FileController
+      resources "/posts", PostController, except: [ :destroy ]
+      resources "/sessions", SessionController, only: [ :new, :create, :destroy ]
     end
 
-    resources "files", FileController, name: "asset" do
-      resources "comments", CommentController do
+    resources "/files", FileController, name: "asset" do
+      resources "/comments", CommentController do
         get "/avatar", Users, :avatar
       end
     end
 
-    resources "scoped_files", FileController, only: [:index] do
-      resources "comments", CommentController, except: [:destroy]
+    resources "/scoped_files", FileController, only: [:index] do
+      resources "/comments", CommentController, except: [:destroy]
     end
 
-    resources "pages", PageController, param: "slug", name: "area" do
-      resources "ratings", RatingController, param: "key", name: "vote"
+    resources "/pages", PageController, param: "slug", name: "area" do
+      resources "/ratings", RatingController, param: "key", name: "vote"
     end
   end
 

@@ -64,9 +64,9 @@ defmodule Phoenix.Router.RoutingTest do
     connect "/connect", UsersController, :connect
     head "/head", UsersController, :head
 
-    resources "comments", CommentsController
-    resources "posts", PostsController, except: [ :destroy ]
-    resources "sessions", SessionsController, only: [ :new, :create, :destroy ]
+    resources "/comments", CommentsController
+    resources "/posts", PostsController, except: [ :destroy ]
+    resources "/sessions", SessionsController, only: [ :new, :create, :destroy ]
 
     get "/users/:user_id/comments/:id", CommentsController, :show
   end

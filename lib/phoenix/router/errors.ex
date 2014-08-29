@@ -9,9 +9,9 @@ defmodule Phoenix.Router.Errors do
     raise ArgumentError, message: """
     Path must start with slash.
     Change path from:
-    #{path}
+    "#{path}"
     to
-    /#{path}
+    "/#{path}"
     """
   end
 end
