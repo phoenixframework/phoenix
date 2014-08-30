@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.4.0-dev (2014-08-30)
+## v0.4.0 (2014-08-30)
 
 * Enhancements
   * Controllers are now Plugs and can be plugged as a "second layer" plug stack from the Router plug stack
