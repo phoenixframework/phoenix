@@ -4,7 +4,7 @@ defmodule <%= application_module %>.Mixfile do
   def project do
     [ app: :<%= application_name %>,
       version: "0.0.1",
-      elixir: "~> 0.15.1",
+      elixir: "~> 1.0.0-rc1",
       elixirc_paths: ["lib", "web"],
       deps: deps ]
   end
