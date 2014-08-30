@@ -1,12 +1,11 @@
 defmodule Phoenix.Router.ConsoleFormatter do
-  alias Phoenix.Project
   alias Phoenix.Naming
 
   @doc """
   Returns the default Application router, ie `MyApp.Router`
   """
   def default_router do
-    Project.module_root.Router
+    Module.concat(Phoenix.Project.module_root, Router)
   end
 
 

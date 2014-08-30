@@ -1,8 +1,8 @@
 %{"cowboy": {:package, "1.0.0"},
   "cowlib": {:package, "1.0.0"},
   "earmark": {:package, "0.1.10"},
-  "ex_doc": {:package, "0.5.2"},
-  "linguist": {:package, "0.1.1"},
-  "plug": {:git, "git://github.com/elixir-lang/plug.git", "900dbda8b56b9a211c411c51ba87eb4f14b8f509", []},
-  "poison": {:package, "1.0.1"},
+  "ex_doc": {:package, "0.6.0"},
+  "linguist": {:git, "git://github.com/aforward/linguist.git", "8de330a3fd77fe506a61dff55f59723d7cbe5c2f", []},
+  "plug": {:git, "git://github.com/elixir-lang/plug.git", "2ae185974855dd4bb1cbb281d3301230ff3cd98b", []},
+  "poison": {:git, "git://github.com/aforward/poison.git", "a1d218c012872c2a2a947bc9d5215a346d563abd", []},
   "ranch": {:package, "1.0.0"}}

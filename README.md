@@ -6,7 +6,7 @@
 ## Getting started
 
 ### Requirements
-- Elixir v0.15.1
+- Elixir v1.0.0-rc1
 
 ### Setup
 1. Install Phoenix
@@ -212,7 +212,7 @@ defmodule App.PageView
   def display(something) do
     String.upcase(something)
   end
-  
+
   def render("show.json", %{page: page}) do
     JSON.encode! %{title: page.title, url: page.url}
   end
