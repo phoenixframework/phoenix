@@ -2,7 +2,7 @@
   "cowlib": {:package, "1.0.0"},
   "earmark": {:package, "0.1.10"},
   "ex_doc": {:package, "0.5.2"},
-  "linguist": {:package, "0.1.1"},
-  "plug": {:git, "git://github.com/elixir-lang/plug.git", "900dbda8b56b9a211c411c51ba87eb4f14b8f509", []},
+  "linguist": {:package, "0.1.2"},
+  "plug": {:package, "0.7.0"},
   "poison": {:package, "1.0.1"},
   "ranch": {:package, "1.0.0"}}

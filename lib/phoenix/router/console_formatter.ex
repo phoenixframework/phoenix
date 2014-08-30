@@ -6,7 +6,7 @@ defmodule Phoenix.Router.ConsoleFormatter do
   Returns the default Application router, ie `MyApp.Router`
   """
   def default_router do
-    Project.module_root.Router
+    Module.concat(Project.module_root, Router)
   end
 
 
