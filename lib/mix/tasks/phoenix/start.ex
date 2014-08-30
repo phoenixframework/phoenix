@@ -9,7 +9,7 @@ defmodule Mix.Tasks.Phoenix.Start do
   """
   def run([]) do
     Mix.Task.run "app.start", []
-    Phoenix.Project.module_root.Router.start
+    Module.concat(Phoenix.Project.module_root, Router).start
     no_halt
   end
 
