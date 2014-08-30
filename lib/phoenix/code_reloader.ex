@@ -58,7 +58,7 @@ defmodule Phoenix.CodeReloader do
   def mix_compile({:module, Mix.Task}) do
     touch_modules_for_recompile
     Mix.Task.reenable "compile.elixir"
-    Mix.Task.run "compile.elixir", ["web"]
+    Mix.Task.run "compile.elixir", ["--ignore-module-conflict", "--elixirc-paths", "web"]
   end
 
   defp touch_modules_for_recompile do
