@@ -24,7 +24,7 @@ defmodule <%= application_module %>.Mixfile do
   # { :barbat, "~> 0.1", github: "elixir-lang/barbat" }
   defp deps do
     [
-      {:phoenix, github: "phoenixframework/phoenix"},
+      {:phoenix, "0.4.0"},
       {:cowboy, "~> 1.0.0"}
     ]
   end
