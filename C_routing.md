@@ -564,3 +564,44 @@ api_v1_review_path  DELETE  /api/v1/reviews/:id       HelloPhoenix.Api.V1.Review
 ```
 
 ###Channel Routes
+
+Channels are a very exciting, realtime component of the Phoenix framework. They are so important that they will have a guide of their own.
+
+Channels are roughly analogous to controllers except that they are capable of bi-directional communication and their connections persist beyond the initial response. They are also closely tied to a client - written for JavaScript, iOS or Android. For now, we'll focus on defining routes for them and leave a detailed discussion of their capabilities to the Channel Guide.
+
+Each channel depend on a socket mounted at a given point for it's communication. The first thing we need to do to define a route for a channel, then, is to define a socket and specify the path to it's mount point.
+
+Here's what that looks like in our router file.
+
+```elixir
+defmodule HelloPhoenix.Router do
+  use Phoenix.Router
+  use Phoenix.Router.Socket, mount: "/my_socket"
+end
+```
+
+The next thing we need to do is define a channel, giving it a name and associating it with a channel module which will implement it's behavior. If we have a channel module called "OurChannel" and a channel called "our_channel_name", the code to do this is straightforward, `channel "our_channel_name", HelloPhoenix.OurChannel`
+
+The whole router, then, looks like this.
+
+```elixir
+defmodule HelloPhoenix.Router do
+  use Phoenix.Router
+  use Phoenix.Router.Socket, mount: "/my_socket"
+
+  channel "our_channel_name", HelloPhoenix.OurChannel
+end
+```
+
+
+###Summary
+
+Routing is a big topic, and we have covered a lot of ground here. The important points to take away from this guide are:
+- Routes which begin with an HTTP verb name expand to a single clause of the match function.
+- Routes which begin with 'resources' expand to 8 clauses of the match function.
+- Resources may restrict the number of match function clauses by using the "only:" or "except:" options.
+- Any of these routes may be nested.
+- Any of these routes may be scoped to a given path.
+- Using the alias option in a scope can reduce the duplication in controller names.
+- Using the helper option for scoped routes eliminates unreachable paths.
+- Scoped routes may also be nested.
