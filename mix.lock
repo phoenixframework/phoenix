@@ -4,5 +4,5 @@
   "ex_doc": {:package, "0.5.2"},
   "linguist": {:package, "0.1.2"},
   "plug": {:package, "0.7.0"},
-  "poison": {:package, "1.0.1"},
+  "poison": {:package, "1.1.0"},
   "ranch": {:package, "1.0.0"}}
