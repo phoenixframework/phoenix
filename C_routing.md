@@ -22,19 +22,19 @@ Next we have an application level route.
 
 The first argument to these macros is the path. Here, it is the root of the application, "/". The next two arguments are the controller and action we want to have handle this request. Finally, "as: :pages" is a way of naming this route, which we will talk about in a moment.
 
-If this were the only route in our router module, the whole module would look like this after invoking the macro.
+If this were the only route in our router module, the whole module would look like this after the macro expands.
 
 ```elixir
 defmodule HelloPhoenix.Router do
   def match(conn, "GET", ["/"]) do
-    Controller.perform_action(conn, PageController, :index)
+    Controller.perform_action(conn, HelloPhoenix.PageController, :index)
   end
 end
 ```
 
-Clearly, the body of this function is where the index function of the PageController is called.
+Clearly, the body of the match function is where the index function of the PageController is called.
 
-As we add more routes, more clauses of the match function will be added to our router module. These will behave like any other multi-clause function in Elixir. They will be tried in order from the top, and the first clause to match will be executed. After a match is found, the search will stop and no other clauses will by tried.
+As we add more routes, more clauses of the match function will be added to our router module. These will behave like any other multi-clause function in Elixir. They will be tried in order from the top, and the first clause to match the paramates given (verb and path) will be executed. After a match is found, the search will stop and no other clauses will by tried.
 
 This means that it is possible to create a route which will never be called, based on the HTTP verb and the path, regardless of the controller and action.
 
@@ -61,7 +61,7 @@ Let's see how this works. Go to the root of a newly-generated Phoenix applicatio
 
 ```
 $ mix phoenix.routes
-pages_path  GET  /  Elixir.HelloPhoenix.PageController.index/2
+pages_path  GET  /  HelloPhoenix.PageController.index/2
 ```
 
 The line in the router which generates that output is this, which we have examined above.
@@ -76,7 +76,7 @@ The "as: :pages" portion of the route has been translated into "pages_path" in t
 
 ###Path Helpers
 
-By adding "as: :pages", we have in effect named a resource for this route; we've called it "pages". "pages_path" is the name of a function which will expand out to the path that will lead back to this route from within the application.
+By adding "as: :pages", we have in effect named a resource for this route; we've called it "pages". "pages_path" is the name of a function which will return the path that will lead back to this route from within the application.
 
 That's a mouthful. Let's see it in action. Run `$ iex -S mix` at the root of the project. When we call the pages_path function on our router with the action as an argument, it returns the path to us.
 
@@ -111,21 +111,21 @@ Then run `$ mix compile`
 
 The router supports other macros besides those for HTTP verbs like 'get', 'post' and 'put'. The most important among them is 'resources', which expands out to eight clauses of the match function.
 
-Put this line into your router.ex file `resources "users", HelloPhoenix.UsersController`
+Put this line into your router.ex file `resources "users", HelloPhoenix.UserController`
 
 Then go to the root of your project, and run `$ mix phoenix.routes`
 
 You should see something like the following. Of course, the name of your project will replace "HelloPhoenix".
 
 ```elixir
-users_path  GET     /users           Elixir.HelloPhoenix.UsersController.index/2
-users_path  GET     /users/:id/edit  Elixir.HelloPhoenix.UsersController.edit/2
-users_path  GET     /users/new       Elixir.HelloPhoenix.UsersController.new/2
-users_path  GET     /users/:id       Elixir.HelloPhoenix.UsersController.show/2
-users_path  POST    /users           Elixir.HelloPhoenix.UsersController.create/2
-users_path  PUT     /users/:id       Elixir.HelloPhoenix.UsersController.update/2
-users_path  PATCH   /users/:id       Elixir.HelloPhoenix.UsersController.update/2
-users_path  DELETE  /users/:id       Elixir.HelloPhoenix.UsersController.destroy/2
+user_path  GET     /users           HelloPhoenix.UserController.index/2
+user_path  GET     /users/:id/edit  HelloPhoenix.UserController.edit/2
+user_path  GET     /users/new       HelloPhoenix.UserController.new/2
+user_path  GET     /users/:id       HelloPhoenix.UserController.show/2
+user_path  POST    /users           HelloPhoenix.UserController.create/2
+user_path  PUT     /users/:id       HelloPhoenix.UserController.update/2
+user_path  PATCH   /users/:id       HelloPhoenix.UserController.update/2
+user_path  DELETE  /users/:id       HelloPhoenix.UserController.destroy/2
 ```
 
 This is the standard matrix of HTTP verbs, paths and controller actions. Let's look at them individually, in a slightly different order.
@@ -144,117 +144,423 @@ If we don't feel that we need all of these routes, we can be selective using the
 Let's say we have a read-only posts resource. We could define it like this.
 
 ```elixir
-resources "posts", HelloPhoenix.PostsController, only: [:index, :show]
+resources "posts", HelloPhoenix.PostController, only: [:index, :show]
 ```
 
 Running `$ mix phoenix.routes` shows that we now only have the routes to the index and show actions defined.
 
 ```elixir
-posts_path  GET     /posts                         Elixir.HelloPhoenix.PostsController.index/2
-posts_path  GET     /posts/:id                     Elixir.HelloPhoenix.PostsController.show/2
+posts_path  GET     /posts                         HelloPhoenix.PostsController.index/2
+posts_path  GET     /posts/:id                     HelloPhoenix.PostsController.show/2
 ```
 
-Similarly, if we have a comments resource that we don't want to ever delete, we could define a route like this.
+Similarly, if we have a comments resource, and we don't want to provide a route to delete one, we could define a route like this.
 
 ```elixir
-resources "comments", HelloPhoenix.CommentsController, except: [:destroy]
+resources "comments", HelloPhoenix.CommentController, except: [:destroy]
 ```
 
 Running `$ mix phoenix.routes` now shows that we have all the routes except the DELETE request to the destroy action.
 
 ```elixir
-   comments_path  GET     /comments                      Elixir.HelloPhoenix.CommentsController.index/2
-   comments_path  GET     /comments/:id/edit             Elixir.HelloPhoenix.CommentsController.edit/2
-   comments_path  GET     /comments/new                  Elixir.HelloPhoenix.CommentsController.new/2
-   comments_path  GET     /comments/:id                  Elixir.HelloPhoenix.CommentsController.show/2
-   comments_path  POST    /comments                      Elixir.HelloPhoenix.CommentsController.create/2
-   comments_path  PUT     /comments/:id                  Elixir.HelloPhoenix.CommentsController.update/2
-   comments_path  PATCH   /comments/:id                  Elixir.HelloPhoenix.CommentsController.update/2
+   comment_path  GET     /comments                      HelloPhoenix.CommentController.index/2
+   comment_path  GET     /comments/:id/edit             HelloPhoenix.CommentController.edit/2
+   comment_path  GET     /comments/new                  HelloPhoenix.CommentController.new/2
+   comment_path  GET     /comments/:id                  HelloPhoenix.CommentController.show/2
+   comment_path  POST    /comments                      HelloPhoenix.CommentController.create/2
+   comment_path  PUT     /comments/:id                  HelloPhoenix.CommentController.update/2
+   comment_path  PATCH   /comments/:id                  HelloPhoenix.CommentController.update/2
 ```
 
 ###Path Helpers
-The phoenix.routes task also listed the users_path as the path function for each line of output. Here is what that path translates to for each action.
+The phoenix.routes task also listed the user_path as the path function for each line of output. Here is what that path translates to for each action.
 
 ```
-iex(2)> HelloPhoenix.Router.users_path(:index)
+iex(2)> HelloPhoenix.Router.user_path(:index)
 "/users"
 
-iex(3)> HelloPhoenix.Router.users_path(:show, 17)
+iex(3)> HelloPhoenix.Router.user_path(:show, 17)
 "/users/17"
 
-iex(4)> HelloPhoenix.Router.users_path(:new)
+iex(4)> HelloPhoenix.Router.user_path(:new)
 "/users/new"
 
-iex(5)> HelloPhoenix.Router.users_path(:create)
+iex(5)> HelloPhoenix.Router.user_path(:create)
 "/users"
 
-iex(6)> HelloPhoenix.Router.users_path(:edit, 37)
+iex(6)> HelloPhoenix.Router.user_path(:edit, 37)
 "/users/37/edit"
 
-iex(7)> HelloPhoenix.Router.users_path(:update, 37)
+iex(7)> HelloPhoenix.Router.user_path(:update, 37)
 "/users/37"
 
-iex(8)> HelloPhoenix.Router.users_path(:destroy, 17)
+iex(8)> HelloPhoenix.Router.user_path(:destroy, 17)
 "/users/17"
 ```
 
 What about paths with query strings? Phoenix has you covered. By adding an optional third argument of key value pairs, the path helpers will return those pairs in the query string.
 
 ```elixir
-iex(3)> HelloPhoenix.Router.users_path(:show, 17, admin: true, active: false)
+iex(3)> HelloPhoenix.Router.user_path(:show, 17, admin: true, active: false)
 "/users/17?admin=true&active=false"
 ```
 
-What if you need a full url instead of a path? Again, Phoenix has an answer in the Router.url function.
+What if you need a full url instead of a path? Again, Phoenix has an answer - the Router.url function.
 
 ```elixir
-iex(3)> HelloPhoenix.Router.users_path(:index, 42) |> HelloPhoenix.Router.url
+iex(3)> HelloPhoenix.Router.user_path(:index, 42) |> HelloPhoenix.Router.url
 "http://localhost:4000/users/42"
 ```
 
-The Router.url function will get the host, port, proxy port and ssl information needed to construct the full url from the configuration parameters set for each environment. We'll talk about configuration in more detail in it's own guide. For now, you can take a look at /config/dev.exs in your own project to see what those values are.
+The Router.url function will get the host, port, proxy port and ssl information needed to construct the full url from the configuration parameters set for each environment. We'll talk about configuration in more detail in it's own guide. For now, you can take a look at /config/dev.exs file in your own project to see what those values are.
 
 
 ###Nested Resources
 
-It is also possible to nest resources. Let's say we also have a posts resourse which has a one to many relationship with users. That is to say, a user can create many posts, and any post belongs to only one user. We can represent that with a nested route like this.
+It is also possible to nest resources in a Phoenix router. Let's say we also have a posts resourse which has a one to many relationship with users. That is to say, a user can create many posts, and an individual post belongs to only one user. We can represent that with a nested route like this.
 
 ```elixir
-resources "users", HelloPhoenix.UsersControler do
-  resources "posts", HelloPhoenix.PostsController
+resources "users", HelloPhoenix.UserControler do
+  resources "posts", HelloPhoenix.PostController
 end
 ```
 
 When we run `$ mix phoenix.routes` now, in addition to the routes we saw for users above, we get the following set of routes.
 
 ```elixir
-users_posts_path  GET     users/:user_id/posts           Elixir.HelloPhoenix.PostsController.index/2
-users_posts_path  GET     users/:user_id/posts/:id/edit  Elixir.HelloPhoenix.PostsController.edit/2
-users_posts_path  GET     users/:user_id/posts/new       Elixir.HelloPhoenix.PostsController.new/2
-users_posts_path  GET     users/:user_id/posts/:id       Elixir.HelloPhoenix.PostsController.show/2
-users_posts_path  POST    users/:user_id/posts           Elixir.HelloPhoenix.PostsController.create/2
-users_posts_path  PUT     users/:user_id/posts/:id       Elixir.HelloPhoenix.PostsController.update/2
-users_posts_path  PATCH   users/:user_id/posts/:id       Elixir.HelloPhoenix.PostsController.update/2
-users_posts_path  DELETE  users/:user_id/posts/:id       Elixir.HelloPhoenix.PostsController.destroy/2
+user_post_path  GET     users/:user_id/posts           HelloPhoenix.PostController.index/2
+user_post_path  GET     users/:user_id/posts/:id/edit  HelloPhoenix.PostController.edit/2
+user_post_path  GET     users/:user_id/posts/new       HelloPhoenix.PostController.new/2
+user_post_path  GET     users/:user_id/posts/:id       HelloPhoenix.PostController.show/2
+user_post_path  POST    users/:user_id/posts           HelloPhoenix.PostController.create/2
+user_post_path  PUT     users/:user_id/posts/:id       HelloPhoenix.PostController.update/2
+user_post_path  PATCH   users/:user_id/posts/:id       HelloPhoenix.PostController.update/2
+user_post_path  DELETE  users/:user_id/posts/:id       HelloPhoenix.PostController.destroy/2
 ```
 
-We see that each of these routes scopes the posts to a user id. For the first one, we will invoke the PostsController index action, but we will pass in a user_id. This implies that we would display all the posts for that individual user. The same scoping applies for all these routes.
+We see that each of these routes scopes the posts to a user id. For the first one, we will invoke the PostController index action, but we will pass in a user_id. This implies that we would display all the posts for that individual user only. The same scoping applies for all these routes.
 
-Path helpers for nested routes will need to have the ids listed in the order they came in the route definition. For this show route, 42 is the user_id, and 17 is the id for the post.
+When calling path helper functions for nested routes, we will need to pass the ids in the order they came in the route definition. For the following show route, 42 is the user_id, and 17 is the post id.
 
 ```elixir
-iex(2)> HelloPhoenix.Router.users_posts_path(:show, 42, 17)
+iex(2)> HelloPhoenix.Router.user_post_path(:show, 42, 17)
 "/users/42/posts/17"
 ```
 
 Again, if we add a key value pair to the end of the function call, it is added to the query string.
 
 ```elixir
-iex> HelloPhoenix.Router.users_posts_path(:index, 42, active: true)
+iex> HelloPhoenix.Router.user_post_path(:index, 42, active: true)
 "/users/42/posts?active=true"
 ```
 
 ###Scoped Routes
 
+Scopes are a way to group routes under a common path prefix. We might want to do this for admin functionality, APIs  and especially for versioned APIs. Let's say we have user generated reviews on a site, and that those reviews need to be approved by an admin. The semantics of these resources are quite different, and they may not share the same controller, so we want to keep them separate.
+
+The paths to the user facing reviews would look like a standard resource.
+
+```elixir
+/reviews
+/reviews/1234
+/reviews/1234/edit
+
+and so on
+```
+
+The admin review paths could be prefixed with "/admin".
+
+```elixir
+/admin/reviews
+/admin/reviews/1234
+/admin/reviews/1234/edit
+
+and so on
+```
+
+We accomplish this with a scoped route that sets a path option to "/admin" like this one.
+
+```elixir
+scope path: "/admin" do
+  resources "/reviews", HelloPhoenix.Admin.ReviewController
+end
+```
+
+Note that the path we set must begin with a slash. Without the slash, when we run `$ mix phoenix.routes`, the compiler will give this handy error message.
+
+```elixir
+== Compilation error on file web/router.ex ==
+** (ArgumentError) Path must start with slash.
+Change path from:
+"admin"
+to
+"/admin"
+
+    lib/phoenix/router/errors.ex:9: Phoenix.Router.Errors.ensure_valid_path!/1
+    web/router.ex:11: (module)
+    (stdlib) erl_eval.erl:657: :erl_eval.do_apply/6
+    (elixir) src/elixir.erl:175: :elixir.erl_eval/3
+    (elixir) src/elixir.erl:163: :elixir.eval_forms/4
+```
+
+When we make that correction, `$ mix phoenix.routes` tells us we've got the admin paths we are looking for.
+
+```elixir
+review_path  GET     /admin/reviews           HelloPhoenix.Admin.ReviewController.index/2
+review_path  GET     /admin/reviews/:id/edit  HelloPhoenix.Admin.ReviewController.edit/2
+review_path  GET     /admin/reviews/new       HelloPhoenix.Admin.ReviewController.new/2
+review_path  GET     /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.show/2
+review_path  POST    /admin/reviews           HelloPhoenix.Admin.ReviewController.create/2
+review_path  PUT     /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.update/2
+             PATCH   /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.update/2
+review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.destroy/2
+```
+
+This looks good, but there is a problem here. Remember that we wanted both user facing reviews routes as well as the admin ones. When we define both of those routes in our router, like this,
+
+```elixir
+resources "/reviews", ReviewController
+
+scope path: "/admin" do
+  resources "/reviews", Admin.ReviewController
+end
+```
+
+and we run `$ mix phoenix.routes`, we get this output.
+
+```elixir
+web/router.ex:1: warning: this clause cannot match because a previous clause at line 1 always matches
+web/router.ex:1: warning: this clause cannot match because a previous clause at line 1 always matches
+web/router.ex:1: warning: this clause cannot match because a previous clause at line 1 always matches
+web/router.ex:1: warning: this clause cannot match because a previous clause at line 1 always matches
+web/router.ex:1: warning: this clause cannot match because a previous clause at line 1 always matches
+web/router.ex:1: warning: this clause cannot match because a previous clause at line 1 always matches
+web/router.ex:1: warning: this clause cannot match because a previous clause at line 1 always matches
+Compiled web/views/layout_view.ex
+Compiled web/views/page_view.ex
+web/router.ex:1: warning: this clause cannot match because a previous clause at line 1 always matches
+web/router.ex:1: warning: this clause cannot match because a previous clause at line 1 always matches
+web/router.ex:1: warning: this clause cannot match because a previous clause at line 1 always matches
+web/router.ex:1: warning: this clause cannot match because a previous clause at line 1 always matches
+web/router.ex:1: warning: this clause cannot match because a previous clause at line 1 always matches
+web/router.ex:1: warning: this clause cannot match because a previous clause at line 1 always matches
+web/router.ex:1: warning: this clause cannot match because a previous clause at line 1 always matches
+Compiled web/router.ex
+Generated test.app
+review_path  GET     /reviews                 HelloPhoenix.ReviewController.index/2
+review_path  GET     /reviews/:id/edit        HelloPhoenix.ReviewController.edit/2
+review_path  GET     /reviews/new             HelloPhoenix.ReviewController.new/2
+review_path  GET     /reviews/:id             HelloPhoenix.ReviewController.show/2
+review_path  POST    /reviews                 HelloPhoenix.ReviewController.create/2
+review_path  PUT     /reviews/:id             HelloPhoenix.ReviewController.update/2
+             PATCH   /reviews/:id             HelloPhoenix.ReviewController.update/2
+review_path  DELETE  /reviews/:id             HelloPhoenix.ReviewController.destroy/2
+review_path  GET     /admin/reviews           HelloPhoenix.Admin.ReviewController.index/2
+review_path  GET     /admin/reviews/:id/edit  HelloPhoenix.Admin.ReviewController.edit/2
+review_path  GET     /admin/reviews/new       HelloPhoenix.Admin.ReviewController.new/2
+review_path  GET     /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.show/2
+review_path  POST    /admin/reviews           HelloPhoenix.Admin.ReviewController.create/2
+review_path  PUT     /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.update/2
+             PATCH   /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.update/2
+review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.destroy/2
+```
+
+The actual routes we get all look right, except for the path helper at the beginning of each line. We are getting the same helper for both the user facing review routes and the admin ones. The duplicate definitions of that helper are what cause the compiler warnings. We can fix this problem by adding a `helper: "admin"` option to our scoped route.
+
+```elixir
+resources "/reviews", ReviewController
+
+scope path: "/admin", helper: "admin" do
+  resources "/reviews", Admin.ReviewController
+end
+```
+
+`$ mix phoenix.routes` now shows us we have the routes we are looking for, and there are no compiler warnings.
+
+```elixir
+      review_path  GET     /reviews                 HelloPhoenix.ReviewController.index/2
+      review_path  GET     /reviews/:id/edit        HelloPhoenix.ReviewController.edit/2
+      review_path  GET     /reviews/new             HelloPhoenix.ReviewController.new/2
+      review_path  GET     /reviews/:id             HelloPhoenix.ReviewController.show/2
+      review_path  POST    /reviews                 HelloPhoenix.ReviewController.create/2
+      review_path  PUT     /reviews/:id             HelloPhoenix.ReviewController.update/2
+                   PATCH   /reviews/:id             HelloPhoenix.ReviewController.update/2
+      review_path  DELETE  /reviews/:id             HelloPhoenix.ReviewController.destroy/2
+admin_review_path  GET     /admin/reviews           HelloPhoenix.Admin.ReviewController.index/2
+admin_review_path  GET     /admin/reviews/:id/edit  HelloPhoenix.Admin.ReviewController.edit/2
+admin_review_path  GET     /admin/reviews/new       HelloPhoenix.Admin.ReviewController.new/2
+admin_review_path  GET     /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.show/2
+admin_review_path  POST    /admin/reviews           HelloPhoenix.Admin.ReviewController.create/2
+admin_review_path  PUT     /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.update/2
+                   PATCH   /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.update/2
+admin_review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.destroy/2
+```
+
+The path helpers return what we want them to as well. Run `$ iex -S mix` and give them a try.
+
+```elixir
+iex(1)> Test.Router.review_path(:index)
+"/reviews"
+
+iex(2)> Test.Router.admin_review_path(:show, 1234)
+"/admin/reviews/1234"
+```
+
+What if we had a number of resources that were all handled by admins? We could put all of them inside the same scope.
+
+```elixir
+scope path: "/admin", helper: "admin" do
+  resources "/images", HelloPhoenix.Admin.ImageController
+  resources "/reviews", HelloPhoenix.Admin.ReviewController
+  resources "/users", HelloPhoenix.Admin.UserController
+end
+```
+
+Here's what `$ mix phoenix.routes` tells us.
+
+```elixir
+ admin_image_path  GET     /admin/images            HelloPhoenix.Admin.ImageController.index/2
+ admin_image_path  GET     /admin/images/:id/edit   HelloPhoenix.Admin.ImageController.edit/2
+ admin_image_path  GET     /admin/images/new        HelloPhoenix.Admin.ImageController.new/2
+ admin_image_path  GET     /admin/images/:id        HelloPhoenix.Admin.ImageController.show/2
+ admin_image_path  POST    /admin/images            HelloPhoenix.Admin.ImageController.create/2
+ admin_image_path  PUT     /admin/images/:id        HelloPhoenix.Admin.ImageController.update/2
+                   PATCH   /admin/images/:id        HelloPhoenix.Admin.ImageController.update/2
+ admin_image_path  DELETE  /admin/images/:id        HelloPhoenix.Admin.ImageController.destroy/2
+admin_review_path  GET     /admin/reviews           HelloPhoenix.Admin.ReviewController.index/2
+admin_review_path  GET     /admin/reviews/:id/edit  HelloPhoenix.Admin.ReviewController.edit/2
+admin_review_path  GET     /admin/reviews/new       HelloPhoenix.Admin.ReviewController.new/2
+admin_review_path  GET     /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.show/2
+admin_review_path  POST    /admin/reviews           HelloPhoenix.Admin.ReviewController.create/2
+admin_review_path  PUT     /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.update/2
+                   PATCH   /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.update/2
+admin_review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.destroy/2
+  admin_user_path  GET     /admin/users             HelloPhoenix.Admin.UserController.index/2
+  admin_user_path  GET     /admin/users/:id/edit    HelloPhoenix.Admin.UserController.edit/2
+  admin_user_path  GET     /admin/users/new         HelloPhoenix.Admin.UserController.new/2
+  admin_user_path  GET     /admin/users/:id         HelloPhoenix.Admin.UserController.show/2
+  admin_user_path  POST    /admin/users             HelloPhoenix.Admin.UserController.create/2
+  admin_user_path  PUT     /admin/users/:id         HelloPhoenix.Admin.UserController.update/2
+                   PATCH   /admin/users/:id         HelloPhoenix.Admin.UserController.update/2
+  admin_user_path  DELETE  /admin/users/:id         HelloPhoenix.Admin.UserController.destroy/2
+```
+
+This is great, exactly what we want. Yet there is something we can improve upon. Notice that for each resource, we needed to fully qualify the controller name with "HelloPhoenix.Admin"? That's tedious and error prone. Assuming the name of each of our controllers actually begins with "HelloPhoenix.Admin", we can add an `alias: HelloPhoenix.Admin` option to our scope declaration, and all of our routes will have the correct, fully qualified controller name.
+
+```elixir
+scope path: "/admin", alias: HelloPhoenix.Admin, helper: "admin" do
+  resources "/images", ImageController
+  resources "/reviews", ReviewController
+  resources "/users", UserController
+end
+```
+
+`$ mix phoenix.routes` tells us that we get the same result as when we qualified each controller name individually.
+
+```elixir
+ admin_image_path  GET     /admin/images            HelloPhoenix.Admin.ImageController.index/2
+ admin_image_path  GET     /admin/images/:id/edit   HelloPhoenix.Admin.ImageController.edit/2
+ admin_image_path  GET     /admin/images/new        HelloPhoenix.Admin.ImageController.new/2
+ admin_image_path  GET     /admin/images/:id        HelloPhoenix.Admin.ImageController.show/2
+ admin_image_path  POST    /admin/images            HelloPhoenix.Admin.ImageController.create/2
+ admin_image_path  PUT     /admin/images/:id        HelloPhoenix.Admin.ImageController.update/2
+                   PATCH   /admin/images/:id        HelloPhoenix.Admin.ImageController.update/2
+ admin_image_path  DELETE  /admin/images/:id        HelloPhoenix.Admin.ImageController.destroy/2
+admin_review_path  GET     /admin/reviews           HelloPhoenix.Admin.ReviewController.index/2
+admin_review_path  GET     /admin/reviews/:id/edit  HelloPhoenix.Admin.ReviewController.edit/2
+admin_review_path  GET     /admin/reviews/new       HelloPhoenix.Admin.ReviewController.new/2
+admin_review_path  GET     /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.show/2
+admin_review_path  POST    /admin/reviews           HelloPhoenix.Admin.ReviewController.create/2
+admin_review_path  PUT     /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.update/2
+                   PATCH   /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.update/2
+admin_review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.destroy/2
+  admin_user_path  GET     /admin/users             HelloPhoenix.Admin.UserController.index/2
+  admin_user_path  GET     /admin/users/:id/edit    HelloPhoenix.Admin.UserController.edit/2
+  admin_user_path  GET     /admin/users/new         HelloPhoenix.Admin.UserController.new/2
+  admin_user_path  GET     /admin/users/:id         HelloPhoenix.Admin.UserController.show/2
+  admin_user_path  POST    /admin/users             HelloPhoenix.Admin.UserController.create/2
+  admin_user_path  PUT     /admin/users/:id         HelloPhoenix.Admin.UserController.update/2
+                   PATCH   /admin/users/:id         HelloPhoenix.Admin.UserController.update/2
+  admin_user_path  DELETE  /admin/users/:id         HelloPhoenix.Admin.UserController.destroy/2
+```
+
+As a bonus, we could nest all of the routes for our application inside a scope that simply has an alias for the name of our Phoenix app, and eliminate the duplication in our controller names.
+
+```elixir
+defmodule HelloPhoenix.Router do
+  use Phoenix.Router
+
+  scope alias: HelloPhoenix do
+    get "/images", ImageController, :index, as: :images
+    resources "/reviews", ReviewController
+    resources "/users", UserController
+  end
+end
+```
+
+`$ mix phoenix.routes` tells us that all of our controllers now have the correct, fully-qualified names.
+
+```elixir
+images_path  GET     /images            HelloPhoenix.ImageController.index/2
+review_path  GET     /reviews           HelloPhoenix.ReviewController.index/2
+review_path  GET     /reviews/:id/edit  HelloPhoenix.ReviewController.edit/2
+review_path  GET     /reviews/new       HelloPhoenix.ReviewController.new/2
+review_path  GET     /reviews/:id       HelloPhoenix.ReviewController.show/2
+review_path  POST    /reviews           HelloPhoenix.ReviewController.create/2
+review_path  PUT     /reviews/:id       HelloPhoenix.ReviewController.update/2
+             PATCH   /reviews/:id       HelloPhoenix.ReviewController.update/2
+review_path  DELETE  /reviews/:id       HelloPhoenix.ReviewController.destroy/2
+  user_path  GET     /users             HelloPhoenix.UserController.index/2
+  user_path  GET     /users/:id/edit    HelloPhoenix.UserController.edit/2
+  user_path  GET     /users/new         HelloPhoenix.UserController.new/2
+  user_path  GET     /users/:id         HelloPhoenix.UserController.show/2
+  user_path  POST    /users             HelloPhoenix.UserController.create/2
+  user_path  PUT     /users/:id         HelloPhoenix.UserController.update/2
+             PATCH   /users/:id         HelloPhoenix.UserController.update/2
+  user_path  DELETE  /users/:id         HelloPhoenix.UserController.destroy/2
+```
+
+Note: The three options - path, alias and helper - may appear in any order, and the resulting routes will be the same.
+
+Scopes can also nest, just as resources can. If we had a versioned api with resources for images, reviews and users, we could define routes for them like this.
+
+```elixir
+scope path: "/api", alias: HelloPhoenix.Api, helper: "api" do
+  scope path: "/v1", alias: V1, helper: "v1" do
+    resources "/images", ImageController
+    resources "/reviews", ReviewController
+    resources "/users", UserController
+  end
+end
+```
+
+`$ mix phoenix.routes` tells us that have the routes we're looking for.
+
+```elixir
+ api_v1_image_path  GET     /api/v1/images            HelloPhoenix.Api.V1.ImageController.index/2
+ api_v1_image_path  GET     /api/v1/images/:id/edit   HelloPhoenix.Api.V1.ImageController.edit/2
+ api_v1_image_path  GET     /api/v1/images/new        HelloPhoenix.Api.V1.ImageController.new/2
+ api_v1_image_path  GET     /api/v1/images/:id        HelloPhoenix.Api.V1.ImageController.show/2
+ api_v1_image_path  POST    /api/v1/images            HelloPhoenix.Api.V1.ImageController.create/2
+ api_v1_image_path  PUT     /api/v1/images/:id        HelloPhoenix.Api.V1.ImageController.update/2
+                    PATCH   /api/v1/images/:id        HelloPhoenix.Api.V1.ImageController.update/2
+ api_v1_image_path  DELETE  /api/v1/images/:id        HelloPhoenix.Api.V1.ImageController.destroy/2
+api_v1_review_path  GET     /api/v1/reviews           HelloPhoenix.Api.V1.ReviewController.index/2
+api_v1_review_path  GET     /api/v1/reviews/:id/edit  HelloPhoenix.Api.V1.ReviewController.edit/2
+api_v1_review_path  GET     /api/v1/reviews/new       HelloPhoenix.Api.V1.ReviewController.new/2
+api_v1_review_path  GET     /api/v1/reviews/:id       HelloPhoenix.Api.V1.ReviewController.show/2
+api_v1_review_path  POST    /api/v1/reviews           HelloPhoenix.Api.V1.ReviewController.create/2
+api_v1_review_path  PUT     /api/v1/reviews/:id       HelloPhoenix.Api.V1.ReviewController.update/2
+                    PATCH   /api/v1/reviews/:id       HelloPhoenix.Api.V1.ReviewController.update/2
+api_v1_review_path  DELETE  /api/v1/reviews/:id       HelloPhoenix.Api.V1.ReviewController.destroy/2
+  api_v1_user_path  GET     /api/v1/users             HelloPhoenix.Api.V1.UserController.index/2
+  api_v1_user_path  GET     /api/v1/users/:id/edit    HelloPhoenix.Api.V1.UserController.edit/2
+  api_v1_user_path  GET     /api/v1/users/new         HelloPhoenix.Api.V1.UserController.new/2
+  api_v1_user_path  GET     /api/v1/users/:id         HelloPhoenix.Api.V1.UserController.show/2
+  api_v1_user_path  POST    /api/v1/users             HelloPhoenix.Api.V1.UserController.create/2
+  api_v1_user_path  PUT     /api/v1/users/:id         HelloPhoenix.Api.V1.UserController.update/2
+                    PATCH   /api/v1/users/:id         HelloPhoenix.Api.V1.UserController.update/2
+  api_v1_user_path  DELETE  /api/v1/users/:id         HelloPhoenix.Api.V1.UserController.destroy/2
+```
 
 ###Channel Routes
