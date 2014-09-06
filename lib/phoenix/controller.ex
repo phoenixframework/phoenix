@@ -82,10 +82,6 @@ defmodule Phoenix.Controller do
         apply(__MODULE__, conn.private[:phoenix_action], [conn, conn.params])
       end
 
-      def render(conn, template, assigns \\ []) do
-        render_view conn, @subview_module, @layout_module, template, assigns
-      end
-
       defoverridable action: 2
     end
   end
@@ -129,6 +125,12 @@ defmodule Phoenix.Controller do
 
 
   """
+  defmacro render(conn, template, assigns \\ []) do
+    quote do
+      render_view unquote(conn), @subview_module, @layout_module, unquote(template), unquote(assigns)
+    end
+  end
+
   def render_view(conn, view_mod, layout_mod, template, assigns \\ [])
   def render_view(conn, view_mod, layout_mod, [], assigns) do
     render_view conn, view_mod, layout_mod, action_name(conn), assigns
