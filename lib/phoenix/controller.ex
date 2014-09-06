@@ -85,6 +85,10 @@ defmodule Phoenix.Controller do
       def render(conn, template, assigns \\ []) do
         render_view conn, @subview_module, @layout_module, template, assigns
       end
+
+      def permit_params(conn, whitelist) do
+        put_in conn.params, Dict.take(conn.params, whitelist)
+      end
       defoverridable action: 2
     end
   end
