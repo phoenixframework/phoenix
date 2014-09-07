@@ -1,6 +1,5 @@
 defmodule Phoenix.View.Helpers.FormBuilder do
 
-  @derive [Access]
   defstruct resource: nil, opts: []
 
   import Phoenix.View.Helpers.TagHelper
@@ -32,7 +31,7 @@ defmodule Phoenix.View.Helpers.FormBuilder do
   end
 
   defp input_value(builder, name, opts) do
-    Dict.get(opts, :value) || get_in(builder, [:resource, name])
+    opts[:value] || Map.get(builder.resource, name)
   end
 end
 

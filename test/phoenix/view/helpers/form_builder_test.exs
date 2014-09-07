@@ -17,7 +17,6 @@ defmodule Phoenix.View.Helpers.FormBuilderTest do
   import Phoenix.View.Helpers.FormBuilder
 
   defmodule User do
-    @derive [Access]
     defstruct id: nil, name: nil
   end
 
