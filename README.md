@@ -126,7 +126,7 @@ Since browsers don't allow HTML forms to send PUT or DELETE requests, Phoenix al
 For example, to make a button to delete a post, you could write:
 
 ```html
-<form action="<%= post_path(:destroy, post.id) %>" method="post">
+<form action="<%= post_path(:destroy, @post.id) %>" method="post">
   <input type="hidden" name="_method" value="DELETE">
   <input type="submit" value="Delete Post">
 </form>
