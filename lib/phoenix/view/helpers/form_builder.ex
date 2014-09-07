@@ -1,6 +1,10 @@
 defmodule Phoenix.View.Helpers.FormBuilder do
 
-  defstruct resource: nil, opts: []
+  defstruct [
+    resource: nil,
+    input_prefix: "",
+    opts: []
+  ]
 
   import Phoenix.View.Helpers.TagHelper
 
@@ -8,7 +12,10 @@ defmodule Phoenix.View.Helpers.FormBuilder do
 
   def form_for(resource, opts \\ [], func) do
     opts = Dict.put_new(opts, :method, :post)
-    builder = %FormBuilder{resource: resource, opts: opts}
+    builder = %FormBuilder{
+      resource: resource,
+      input_prefix: input_prefix(resource),
+      opts: opts}
     form_tag(builder, opts, do: func.(builder))
   end
 
@@ -22,12 +29,15 @@ defmodule Phoenix.View.Helpers.FormBuilder do
     tag(:input, attrs)
   end
 
-  defp input_name(builder, name) do
-    builder.resource.__struct__
+  defp input_prefix(resource) do
+    resource.__struct__
     |> Module.split
     |> List.last
     |> Phoenix.Naming.underscore
-    |> Kernel.<> "[#{name}]"
+  end
+
+  defp input_name(builder, name) do
+    builder.input_prefix <> "[#{name}]"
   end
 
   defp input_value(builder, name, opts) do
