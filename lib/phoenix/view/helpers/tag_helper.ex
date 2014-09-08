@@ -74,18 +74,23 @@ defmodule Phoenix.View.Helpers.TagHelper do
   end
 
   @doc false
-  defp build_attributes(tag, []), do: []
-  defp build_attributes(tag, attrs) do
-    Enum.map attrs, fn {k,v} ->
-      cond do
-        k in @boolean_attrs -> {k, k}
-        is_list(v) -> nested_attributes(k, v)
-        not k in @data_attrs || (tag == :form && k == :method) -> {k, v}
-        k == :method -> [{:"data-#{k}", v}, {:rel, "nofollow"}]
-        true -> {:"data-#{k}", v}
-      end
-    end
-  end
+  defp build_attrs(_tag, []), do: []
+  defp build_attrs(tag, attrs), do: build_attrs(tag, attrs, [])
+
+  defp build_attrs(_tag, [], acc),
+    do: acc |> List.flatten |> Enum.sort |> tag_attrs
+  defp build_attrs(:form, [{:method,v}|t], acc),
+    do: build_attrs(:form, t, [{:method, v}|acc])
+  defp build_attrs(tag, [{k,v}|t], acc) when is_list(v),
+    do: build_attrs(tag, t, [[nested_attrs(k,v)]|acc])
+  defp build_attrs(tag, [{k,v}|t], acc) when k in @data_attrs,
+    do: build_attrs(tag, t, [[{:"data-#{k}", v}]|acc])
+  defp build_attrs(tag, [{k,_v}|t], acc) when k in @boolean_attrs,
+    do: build_attrs(tag, t, [{k,k}|acc])
+  defp build_attrs(tag, [{:method,v}|t], acc),
+    do: build_attrs(tag, t, [[{:"data-method", v}, {:rel, "nofollow"}]|acc])
+  defp build_attrs(tag, [{k,v}|t], acc),
+    do: build_attrs(tag, t, [[{k,v}]|acc])
 
   @doc false
   defp dasherize(value) when is_atom(value), do: dasherize(Atom.to_string(value))
