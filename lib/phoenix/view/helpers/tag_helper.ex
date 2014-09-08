@@ -87,6 +87,7 @@ defmodule Phoenix.View.Helpers.TagHelper do
     end
   end
 
+  @doc false
   defp dasherize(value) when is_atom(value), do: dasherize(Atom.to_string(value))
-  defp dasherize(value), do: Regex.replace(~r/_/, value, "-")
+  defp dasherize(value), do: String.replace(value, "_", "-")
 end
