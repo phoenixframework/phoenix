@@ -63,11 +63,11 @@ defmodule Phoenix.View.Helpers.TagHelper do
   end
 
   @doc false
-  defp nested_attributes(attr, dict) do
+  defp nested_attrs(attr, dict) do
     Enum.map dict, fn {k,v} ->
       attr_name = :"#{attr}-#{dasherize(k)}"
       case is_list(v) do
-        true  -> nested_attributes(attr_name, v)
+        true  -> nested_attrs(attr_name, v)
         false -> {attr_name, v}
       end
     end
