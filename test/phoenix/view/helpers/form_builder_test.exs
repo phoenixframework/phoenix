@@ -8,7 +8,7 @@ defmodule Phoenix.View.Helpers.FormBuilderTest do
     import Phoenix.View.Helpers.FormBuilder
 
     EEx.function_from_string :def, :render, """
-    <%= form_for @user, [action: "/users"], fn f ->  %>
+    <%= form_for @user, [action: "/users", remote: true], fn f ->  %>
       <%= "Hey there" %>
       <%= text_field f, :id, value: nil %>
       <%= text_field f, :name %>
@@ -30,7 +30,7 @@ defmodule Phoenix.View.Helpers.FormBuilderTest do
     user = %User{id: 1, name: "José Valim"}
     view = FormView.render([user: user])
     assert view == ~S"""
-    <form action="/users" method="post">
+    <form action="/users" data-remote="true" method="post">
       Hey there
       <input name="user[id]" type="text" value="1">
       <input name="user[name]" type="text" value="José Valim">
