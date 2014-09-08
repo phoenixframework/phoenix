@@ -46,13 +46,13 @@ defmodule Phoenix.View.Helpers.TagHelper do
   end
 
   @doc ~S"""
-  Creates an HTML tag with given name, content, and options.
+  Creates an HTML tag with given name, content, and attributes.
   """
   def content_tag(name, content) when is_binary(content), do: content_tag(name, content, [])
   def content_tag(name, content, attrs) when is_binary(content) do
     content_tag(name, attrs, [do: content])
   end
-  def content_tag(name, attrs \\ [], [do: block]) do
+  def content_tag(name, attrs, [do: block]) when is_list(attrs) do
     tag(name, attrs) <> block <> "</#{name}>"
   end
 
