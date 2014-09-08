@@ -34,7 +34,6 @@ defmodule Phoenix.HTML.Tag do
     tag(name, attrs) <> block <> "</#{name}>"
   end
 
-  @doc false
   defp tag_attrs([]), do: ""
   defp tag_attrs(attrs) do
     Enum.map_join attrs, fn {k,v} ->
@@ -42,7 +41,6 @@ defmodule Phoenix.HTML.Tag do
     end
   end
 
-  @doc false
   defp nested_attrs(attr, dict, acc) do
     Enum.reduce dict, acc, fn {k,v}, acc ->
       attr_name = "#{attr}-#{dasherize(k)}"
@@ -53,7 +51,6 @@ defmodule Phoenix.HTML.Tag do
     end
   end
 
-  @doc false
   defp build_attrs(_tag, []), do: []
   defp build_attrs(tag, attrs), do: build_attrs(tag, attrs, [])
 
@@ -72,7 +69,6 @@ defmodule Phoenix.HTML.Tag do
   defp build_attrs(tag, [{k,v}|t], acc),
     do: build_attrs(tag, t, [{to_string(k),v}|acc])
 
-  @doc false
   defp dasherize(value) when is_atom(value), do: dasherize(Atom.to_string(value))
   defp dasherize(value), do: String.replace(value, "_", "-")
 end
