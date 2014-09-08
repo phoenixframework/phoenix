@@ -1,4 +1,4 @@
-defmodule Phoenix.View.Helpers.TagHelper do
+defmodule Phoenix.HTML.Tag do
   @moduledoc ~S"""
   Helpers related to producing html tags within templates.
   """

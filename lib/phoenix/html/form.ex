@@ -1,4 +1,4 @@
-defmodule Phoenix.View.Helpers.FormBuilder do
+defmodule Phoenix.HTML.Form do
 
   defstruct [
     resource: nil,
@@ -6,13 +6,13 @@ defmodule Phoenix.View.Helpers.FormBuilder do
     opts: []
   ]
 
-  import Phoenix.View.Helpers.TagHelper
+  import Phoenix.HTML.Tag
 
-  alias Phoenix.View.Helpers.FormBuilder
+  alias Phoenix.HTML.Form
 
   def form_for(resource, opts \\ [], func) do
     opts = Dict.put_new(opts, :method, :post)
-    builder = %FormBuilder{
+    builder = %Form{
       resource: resource,
       input_prefix: input_prefix(resource),
       opts: opts}

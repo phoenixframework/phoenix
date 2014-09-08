@@ -1,7 +1,7 @@
-defmodule Phoenix.View.Helpers.TagHelperTest do
+defmodule Phoenix.HTML.TagTest do
   use ExUnit.Case, async: true
 
-  import Phoenix.View.Helpers.TagHelper
+  import Phoenix.HTML.Tag
 
   test "tag" do
     assert tag(:br) == "<br>"

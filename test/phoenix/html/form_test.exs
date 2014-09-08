@@ -1,11 +1,11 @@
-defmodule Phoenix.View.Helpers.FormBuilderTest do
+defmodule Phoenix.HTML.FormTest do
   use ExUnit.Case, async: true
 
-  import Phoenix.View.Helpers.FormBuilder
+  import Phoenix.HTML.Form
 
   defmodule FormView do
     require EEx
-    import Phoenix.View.Helpers.FormBuilder
+    import Phoenix.HTML.Form
 
     EEx.function_from_string :def, :render, """
     <%= form_for @user, [action: "/users", remote: true], fn f ->  %>
