@@ -42,11 +42,11 @@ defmodule Phoenix.HTML.Tag do
 
   @doc false
   defp nested_attrs(attr, dict, acc) do
-    Enum.reduce dict, [], fn {k,v}, acc ->
       attr_name = :"#{attr}-#{dasherize(k)}"
+    Enum.reduce dict, acc, fn {k,v}, acc ->
       case is_list(v) do
         true  -> nested_attrs(attr_name, v, acc)
-        false -> {attr_name, v}
+        false -> [{attr_name, v}|acc]
       end
     end
   end
@@ -60,7 +60,7 @@ defmodule Phoenix.HTML.Tag do
   defp build_attrs(:form, [{:method,v}|t], acc),
     do: build_attrs(:form, t, [{:method, v}|acc])
   defp build_attrs(tag, [{k,v}|t], acc) when is_list(v),
-    do: build_attrs(tag, t, [nested_attrs(k,v, acc)|acc])
+    do: build_attrs(tag, t, nested_attrs(k, v, acc))
   defp build_attrs(tag, [{k,v}|t], acc) when k in @data_attrs,
     do: build_attrs(tag, t, [{:"data-#{k}", v}|acc])
   defp build_attrs(tag, [{k,v}|t], acc) when v == true,
