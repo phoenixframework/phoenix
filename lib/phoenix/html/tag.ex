@@ -7,27 +7,6 @@ defmodule Phoenix.HTML.Tag do
 
   @data_attrs [:method, :remote, :confirm]
 
-  @boolean_attrs [
-    :autoplay,
-    :autofocus,
-    :formnovalidate,
-    :checked,
-    :disabled,
-    :hidden,
-    :loop,
-    :multiple,
-    :muted,
-    :readonly,
-    :required,
-    :selected,
-    :declare,
-    :defer,
-    :ismap,
-    :itemscope,
-    :noresize,
-    :novalidate
-  ]
-
   @doc ~S"""
   Creates an HTML tag with the given name and options.
 
@@ -84,7 +63,7 @@ defmodule Phoenix.HTML.Tag do
     do: build_attrs(tag, t, [nested_attrs(k,v, acc)|acc])
   defp build_attrs(tag, [{k,v}|t], acc) when k in @data_attrs,
     do: build_attrs(tag, t, [{:"data-#{k}", v}|acc])
-  defp build_attrs(tag, [{k,_v}|t], acc) when k in @boolean_attrs,
+  defp build_attrs(tag, [{k,v}|t], acc) when v == true,
     do: build_attrs(tag, t, [{k,k}|acc])
   defp build_attrs(tag, [{:method,v}|t], acc),
     do: build_attrs(tag, t, [{:"data-method", v}, {:rel, "nofollow"}|acc])
