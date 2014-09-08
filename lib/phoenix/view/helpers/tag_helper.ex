@@ -3,14 +3,7 @@ defmodule Phoenix.View.Helpers.TagHelper do
   Helpers related to producing html tags within templates.
   """
 
-  @escape_values %{
-    "&"  => "&amp;",
-    "<"  => "&lt;",
-    ">"  => "&rt;",
-    "\"" => "&quot;"
-  }
-
-  @escape_regex ~r/[&<>"]/
+  alias Phoenix.Html.Safe
 
   @data_attrs [:method, :remote, :confirm]
 
@@ -63,19 +56,10 @@ defmodule Phoenix.View.Helpers.TagHelper do
     tag(name, attrs) <> block <> "</#{name}>"
   end
 
-  @doc """
-  Returns a compiled list of HTML attributes.
-  """
+  @doc false
   defp tag_attributes([]), do: ""
   defp tag_attributes(attrs) do
-    Enum.map_join attrs, fn {k,v} -> ~s( #{k}="#{escape_value(v)}") end
-  end
-
-  @doc false
-  defp escape_value(value) do
-    Regex.replace @escape_regex, to_string(value), fn x ->
-      @escape_values[x]
-    end
+    Enum.map_join attrs, fn {k,v} -> ~s( #{k}="#{Safe.to_string(v)}") end
   end
 
   @doc false
