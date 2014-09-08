@@ -9,7 +9,8 @@ defmodule Phoenix.HTML.TagTest do
     assert tag(:input, type: "text", name: "user_id") == ~s(<input name="user_id" type="text">)
     assert tag(:input, name: ~s("<3")) == ~s(<input name="&quot;&lt;3&quot;">)
     assert tag(:input, data: [toggle: "dropdown"]) == ~s(<input data-toggle="dropdown">)
-    assert tag(:input, data: [toggle: [target: "#parent"]]) == ~s(<input data-toggle-target="#parent">)
+    assert tag(:input, data: [toggle: [target: "#parent", attr: "blah"]]) ==
+      ~s(<input data-toggle-attr="blah" data-toggle-target="#parent">)
     assert tag(:audio, autoplay: true) == ~s(<audio autoplay="autoplay">)
   end
 
