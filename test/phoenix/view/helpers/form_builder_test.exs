@@ -1,20 +1,20 @@
-defmodule FormView do
-  require EEx
-  import Phoenix.View.Helpers.FormBuilder
-
-  EEx.function_from_string :def, :render, """
-  <%= form_for @user, [action: "/users"], fn f ->  %>
-    <%= "Hey there" %>
-    <%= text_field f, :id, value: nil %>
-    <%= text_field f, :name %>
-  <% end %>
-  """, [:assigns]
-end
-
 defmodule Phoenix.View.Helpers.FormBuilderTest do
   use ExUnit.Case, async: true
 
   import Phoenix.View.Helpers.FormBuilder
+
+  defmodule FormView do
+    require EEx
+    import Phoenix.View.Helpers.FormBuilder
+
+    EEx.function_from_string :def, :render, """
+    <%= form_for @user, [action: "/users"], fn f ->  %>
+      <%= "Hey there" %>
+      <%= text_field f, :id, value: nil %>
+      <%= text_field f, :name %>
+    <% end %>
+    """, [:assigns]
+  end
 
   defmodule User do
     defstruct id: nil, name: nil
