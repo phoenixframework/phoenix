@@ -62,11 +62,11 @@ defmodule Phoenix.HTML.Tag do
   end
 
   @doc false
-  defp nested_attrs(attr, dict) do
-    Enum.map dict, fn {k,v} ->
+  defp nested_attrs(attr, dict, acc) do
+    Enum.reduce dict, [], fn {k,v}, acc ->
       attr_name = :"#{attr}-#{dasherize(k)}"
       case is_list(v) do
-        true  -> nested_attrs(attr_name, v)
+        true  -> nested_attrs(attr_name, v, acc)
         false -> {attr_name, v}
       end
     end
@@ -77,19 +77,19 @@ defmodule Phoenix.HTML.Tag do
   defp build_attrs(tag, attrs), do: build_attrs(tag, attrs, [])
 
   defp build_attrs(_tag, [], acc),
-    do: acc |> List.flatten |> Enum.sort |> tag_attrs
+    do: acc |> Enum.sort |> tag_attrs
   defp build_attrs(:form, [{:method,v}|t], acc),
     do: build_attrs(:form, t, [{:method, v}|acc])
   defp build_attrs(tag, [{k,v}|t], acc) when is_list(v),
-    do: build_attrs(tag, t, [[nested_attrs(k,v)]|acc])
+    do: build_attrs(tag, t, [nested_attrs(k,v, acc)|acc])
   defp build_attrs(tag, [{k,v}|t], acc) when k in @data_attrs,
-    do: build_attrs(tag, t, [[{:"data-#{k}", v}]|acc])
+    do: build_attrs(tag, t, [{:"data-#{k}", v}|acc])
   defp build_attrs(tag, [{k,_v}|t], acc) when k in @boolean_attrs,
     do: build_attrs(tag, t, [{k,k}|acc])
   defp build_attrs(tag, [{:method,v}|t], acc),
-    do: build_attrs(tag, t, [[{:"data-method", v}, {:rel, "nofollow"}]|acc])
+    do: build_attrs(tag, t, [{:"data-method", v}, {:rel, "nofollow"}|acc])
   defp build_attrs(tag, [{k,v}|t], acc),
-    do: build_attrs(tag, t, [[{k,v}]|acc])
+    do: build_attrs(tag, t, [{k,v}|acc])
 
   @doc false
   defp dasherize(value) when is_atom(value), do: dasherize(Atom.to_string(value))
