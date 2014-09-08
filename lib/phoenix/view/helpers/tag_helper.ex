@@ -57,8 +57,8 @@ defmodule Phoenix.View.Helpers.TagHelper do
   end
 
   @doc false
-  defp tag_attributes([]), do: ""
-  defp tag_attributes(attrs) do
+  defp tag_attrs([]), do: ""
+  defp tag_attrs(attrs) do
     Enum.map_join attrs, fn {k,v} -> ~s( #{k}="#{Safe.to_string(v)}") end
   end
 
