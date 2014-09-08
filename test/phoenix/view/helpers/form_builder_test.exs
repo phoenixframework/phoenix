@@ -21,7 +21,6 @@ defmodule Phoenix.View.Helpers.FormBuilderTest do
   end
 
   test "form_tag" do
-    user = %User{id: 1, name: "José Valim"}
     assert form_tag([action: "/users"], do: "Hello") ==
       ~s(<form action="/users">Hello</form>)
   end
