@@ -41,8 +41,7 @@ defmodule Phoenix.View.Helpers.TagHelper do
   def tag(name, attrs) when is_list(attrs),   do: tag(name, attrs, true)
   def tag(name, open)  when is_boolean(open), do: tag(name, [], open)
   def tag(name, attrs, open) do
-    attrs = build_attributes(name, attrs) |> List.flatten |> Enum.sort
-    "<#{name}#{tag_attributes(attrs)}#{if open, do: ">", else: " />"}"
+    "<#{name}#{build_attrs(name, attrs)}#{if open, do: ">", else: " />"}"
   end
 
   @doc ~S"""
