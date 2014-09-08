@@ -16,10 +16,10 @@ defmodule Phoenix.View.Helpers.FormBuilder do
       resource: resource,
       input_prefix: input_prefix(resource),
       opts: opts}
-    form_tag(builder, opts, do: func.(builder))
+    form_tag(opts, do: func.(builder))
   end
 
-  def form_tag(builder, opts \\ [], [do: block]) do
+  def form_tag(opts \\ [], [do: block]) do
     content_tag(:form, opts, do: block)
   end
 
