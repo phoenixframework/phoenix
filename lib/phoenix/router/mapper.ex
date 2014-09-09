@@ -9,8 +9,7 @@ defmodule Phoenix.Router.Mapper do
 
   @default_param_key "id"
   @actions [:index, :edit, :new, :show, :create, :update, :destroy]
-  @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace,
-                 :head]
+  @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
 
   @moduledoc """
   Adds Macros for Route match definitions. All routes are
@@ -123,8 +122,7 @@ defmodule Phoenix.Router.Mapper do
         options[:as],
         __MODULE__
       )
-      opts = Dict.merge(options, as: scoped_helper)
-      @routes Phoenix.Router.Route.build(verb, scoped_path, scoped_ctrl, action, opts)
+      @routes Phoenix.Router.Route.build(verb, scoped_path, scoped_ctrl, action, scoped_helper)
     end
   end
 
