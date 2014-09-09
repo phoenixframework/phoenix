@@ -35,32 +35,6 @@ defmodule Phoenix.Router.Path do
   end
 
   @doc """
-  Splits parameterized String path into list of arguments for defmatch route.
-  Named params beginning with ":" are injected into the argument list as
-  an AST binding matching the param name.
-
-  ## Examples
-
-      iex> Path.build_match("users/:user_id/comments/:id")
-      {[:user_id, :id],
-       ["users", {:user_id, [], nil}, "comments", {:id, [], nil}]}
-
-      iex> Path.build_match("/pages")
-      {[], ["pages"]}
-
-      iex> Path.build_match("/")
-      {[], []}
-
-  Generated as:
-
-      def match(:get, ["users", user_id, "comments", id])
-
-  """
-  def build_match(path) do
-    Plug.Router.Utils.build_match(path)
-  end
-
-  @doc """
   Returns List of atoms of contained named parameters in route
 
   ## Examples

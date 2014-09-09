@@ -1,5 +1,4 @@
 defmodule Phoenix.Router.Mapper do
-  alias Phoenix.Router.Path
   alias Phoenix.Controller.Action
   alias Phoenix.Controller.Connection
   alias Phoenix.Router.ResourcesContext
@@ -86,16 +85,17 @@ defmodule Phoenix.Router.Mapper do
     end
   end
 
-  defp defmatch({http_method, path, controller, action, _options}) do
-    {vars, path} = Path.build_match(path)
-    vars = Enum.map(vars, fn var -> {Atom.to_string(var), Macro.var(var, nil)} end)
+  defp defmatch(route) do
+    binding = Enum.map(route.params, fn var ->
+      {Atom.to_string(var), Macro.var(var, nil)}
+    end)
 
     quote do
-      def unquote(:match)(conn, unquote(http_method), unquote(path)) do
+      def unquote(:match)(conn, unquote(route.verb), unquote(route.segments)) do
         Action.perform(conn,
-          unquote(controller),
-          unquote(action),
-          unquote(vars)
+          unquote(route.controller),
+          unquote(route.action),
+          unquote(binding)
         )
       end
     end
@@ -124,7 +124,7 @@ defmodule Phoenix.Router.Mapper do
         __MODULE__
       )
       opts = Dict.merge(options, as: scoped_helper)
-      @routes {verb, scoped_path, scoped_ctrl, action, opts}
+      @routes Phoenix.Router.Route.build(verb, scoped_path, scoped_ctrl, action, opts)
     end
   end
 

@@ -38,11 +38,11 @@ defmodule Phoenix.Router.RouteHelper do
       end
 
   """
-  def defhelper(module, {_http_method, path, _controller, action, options}) do
-    defhelper(options[:as], path, action, module)
+  def defhelper(module, route) do
+    defhelper(route.options[:as], route.path, route.action, module)
   end
-  def defhelper(nil, _path, _action, _module), do: nil
-  def defhelper(helper_name, path, action, module) do
+  defp defhelper(nil, _path, _action, _module), do: nil
+  defp defhelper(helper_name, path, action, module) do
     Module.register_attribute(module, :route_helpers, accumulate: true, persist: false)
     helpers    = Module.get_attribute(module, :route_helpers)
     named_args = named_path_args(path)
