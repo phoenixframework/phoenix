@@ -32,7 +32,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "#broadcast raises friendly error when message arg isn't a Map" do
-    message = "Message argument must be of type Map"
+    message = "Message argument must be a map"
     assert_raise RuntimeError, message, fn ->
       Channel.broadcast("channel", "topic", "event", bar: "foo", foo: "bar")
     end
@@ -50,14 +50,14 @@ defmodule Phoenix.Channel.ChannelTest do
 
   test "#broadcast_from raises friendly error when message arg isn't a Map" do
     socket = Socket.set_current_channel(new_socket, "chan", "topic")
-    message = "Message argument must be of type Map"
+    message = "Message argument must be a map"
     assert_raise RuntimeError, message, fn ->
       Channel.broadcast_from(socket, "event", bar: "foo", foo: "bar")
     end
   end
 
   test "#broadcast_from/5 raises friendly error when message arg isn't a Map" do
-    message = "Message argument must be of type Map"
+    message = "Message argument must be a map"
     assert_raise RuntimeError, message, fn ->
       Channel.broadcast_from(self, "channel", "topic", "event", bar: "foo")
     end
@@ -77,7 +77,7 @@ defmodule Phoenix.Channel.ChannelTest do
 
   test "#reply raises friendly error when message arg isn't a Map" do
     socket = Socket.set_current_channel(new_socket, "chan", "topic")
-    message = "Message argument must be of type Map"
+    message = "Message argument must be a map"
     assert_raise RuntimeError, message, fn ->
       Channel.reply(socket, "event", foo: "bar", bar: "foo")
     end
