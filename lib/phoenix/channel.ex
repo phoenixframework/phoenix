@@ -54,17 +54,15 @@ defmodule Phoenix.Channel do
   def broadcast(channel, topic, event, message) when is_binary(channel) do
     broadcast_from :global, channel, topic, event, message
   end
+
   def broadcast(socket, event, message) do
     broadcast_from :global, socket.channel, socket.topic, event, message
-  end
-
-  def broadcast_from(socket = %Socket{}, event, message) do
-    broadcast_from(socket.pid, socket.channel, socket.topic, event, message)
   end
 
   @doc """
   Broadcast event from pid, serializable as JSON to topic namedspaced by channel
   The broadcasting socket `from`, does not receive the published message.
+  The event's message must be a map serializable as JSON.
 
   ## Examples
 
@@ -72,7 +70,10 @@ defmodule Phoenix.Channel do
       :ok
 
   """
-  def broadcast_from(from, channel, topic, event, message) do
+  def broadcast_from(socket = %Socket{}, event, message) do
+    broadcast_from(socket.pid, socket.channel, socket.topic, event, message)
+  end
+  def broadcast_from(from, channel, topic, event, message) when is_map(message) do
     Topic.create(namespaced(channel, topic))
     Topic.broadcast_from from, namespaced(channel, topic), %Message{
       channel: channel,
@@ -81,11 +82,12 @@ defmodule Phoenix.Channel do
       message: message
     }
   end
+  def broadcast_from(_, _, _, _, _), do: raise_invalid_message
 
   @doc """
   Sends Dict, JSON serializable message to socket
   """
-  def reply(socket, event, message) do
+  def reply(socket, event, message) when is_map(message) do
     send socket.pid, %Message{
       channel: socket.channel,
       topic: socket.topic,
@@ -94,6 +96,7 @@ defmodule Phoenix.Channel do
     }
     socket
   end
+  def reply(_, _, _), do: raise_invalid_message
 
   @doc """
   Terminates socket connection, including all multiplexed channels
@@ -106,4 +109,6 @@ defmodule Phoenix.Channel do
   def hibernate(socket), do: Handler.hibernate(socket)
 
   defp namespaced(channel, topic), do: "#{channel}:#{topic}"
+
+  defp raise_invalid_message, do: raise "Message argument must be a map"
 end
