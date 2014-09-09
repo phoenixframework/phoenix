@@ -1,7 +1,6 @@
 defmodule Phoenix.Router.Mapper do
   alias Phoenix.Controller.Action
   alias Phoenix.Controller.Connection
-  alias Phoenix.Router.ResourcesContext
   alias Phoenix.Router.ScopeContext
   alias Phoenix.Router.Errors
   alias Phoenix.Router.Mapper
@@ -115,9 +114,8 @@ defmodule Phoenix.Router.Mapper do
                         options: options] do
 
       Errors.ensure_valid_path!(path)
-      current_path = ResourcesContext.current_path(path, __MODULE__)
       {scoped_path, scoped_ctrl, scoped_helper} = ScopeContext.current_scope(
-        current_path,
+        path,
         controller,
         options[:as],
         __MODULE__
@@ -160,11 +158,12 @@ defmodule Phoenix.Router.Mapper do
       actions = Mapper.extract_actions_from_options(options)
       param   = Keyword.get(options, :param, unquote(@default_param_key))
       name    = Keyword.get(options, :name, Mapper.resource_name(ctrl))
-      context = %{path: path, name: name, param: param}
+      alias   = Keyword.get(options, :alias, Mapper.resource_alias(ctrl))
+      as      = Keyword.get(options, :as, name)
+      context = [path: Path.join(path, ":#{name}_#{param}"), as: as]
 
       Enum.each actions, fn action ->
-        current_alias = ResourcesContext.current_alias(name, __MODULE__)
-        opts = [as: current_alias]
+        opts = [as: as]
         case action do
           :index   -> get    "#{path}",                ctrl, :index, opts
           :show    -> get    "#{path}/:#{param}",      ctrl, :show, opts
@@ -174,26 +173,24 @@ defmodule Phoenix.Router.Mapper do
           :destroy -> delete "#{path}/:#{param}",      ctrl, :destroy, opts
           :update  ->
             put   "#{path}/:id", ctrl, :update, opts
-            patch "#{path}/:id", ctrl, :update, Dict.drop(opts, [:as])
+            patch "#{path}/:id", ctrl, :update, as: nil
         end
       end
 
-      ResourcesContext.push(context, __MODULE__)
-      unquote(nested_context)
-      ResourcesContext.pop(__MODULE__)
+      scope context do
+        unquote(nested_context)
+      end
     end
   end
 
   defmacro scope(params, do: nested_context) do
-    path             = Keyword.get(params, :path)
-    controller_alias = Keyword.get(params, :alias)
-    helper           = Keyword.get(params, :helper)
-
-    quote unquote: true, bind_quoted: [path: path,
-                                       controller_alias: controller_alias,
-                                       helper: helper] do
+    quote do
+      params = unquote(params)
+      path   = Keyword.get(params, :path)
+      alias  = Keyword.get(params, :alias)
+      as     = Keyword.get(params, :as)
       if path, do: Errors.ensure_valid_path!(path)
-      ScopeContext.push({path, controller_alias, helper}, __MODULE__)
+      ScopeContext.push({path, alias, as}, __MODULE__)
       unquote(nested_context)
       ScopeContext.pop(__MODULE__)
     end
@@ -214,10 +211,14 @@ defmodule Phoenix.Router.Mapper do
 
   """
   def resource_name(controller) do
+    resource_alias(controller)
+    |> Phoenix.Naming.underscore
+  end
+
+  def resource_alias(controller) do
     Phoenix.Naming.module_name(controller)
     |> String.split(".")
     |> List.last
     |> String.replace("Controller", "")
-    |> Phoenix.Naming.underscore
   end
 end

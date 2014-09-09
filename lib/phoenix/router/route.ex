@@ -26,7 +26,6 @@ defmodule Phoenix.Router.Route do
   and validated, raising an error in case of invalid paths.
   """
   # TODO: Ensure path is normalized.
-  # TODO: Test this.
   @spec build(String.t, String.t, atom, atom, atom) :: t
   def build(verb, path, controller, action, helper)
       when is_binary(verb) and is_binary(path) and is_atom(controller) and

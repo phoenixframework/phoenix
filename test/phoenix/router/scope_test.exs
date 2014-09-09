@@ -69,7 +69,7 @@ defmodule Phoenix.Router.ScopedRoutingTest do
       end
     end
 
-    scope path: "/staff", alias: Staff, helper: "staff" do
+    scope path: "/staff", alias: Staff, as: "staff" do
       resources "/products", ProductController
     end
   end
@@ -178,49 +178,5 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     assert conn.resp_body == "api v1 accounts subscriptions show"
     assert conn.params["account_id"] == "13"
     assert conn.params["id"] == "15"
-  end
-
-  # Helper scoping
-
-  defmodule RouterHelperScoping do
-    use Phoenix.Router
-
-    scope alias: Admin do
-      get "/admin_posts/:id", PostController, :show
-    end
-
-    scope path: "/admin", alias: Admin , helper: "admin" do
-      get "/users/:id", UserController, :show, as: "user"
-    end
-
-    scope path: "/api", alias: Api, helper: "api" do
-      scope path: "/v1", alias: V1, helper: "v1" do
-        get "/users/:id", UserController, :show, as: :api_v2_user
-        resources "/accounts", AccountController do
-          resources "/subscriptions", SubscriptionController
-        end
-      end
-    end
-  end
-
-  test "single helper scope" do
-    assert RouterHelperScoping.admin_user_path(:show, 88) == "/admin/users/88"
-  end
-
-  test "double helper scope" do
-    assert RouterHelperScoping.api_v1_account_subscription_path(:show, 12, 88) ==
-      "/api/v1/accounts/12/subscriptions/88"
-  end
-
-  test "resources actions should prefix scoped helper path" do
-    assert Router.staff_product_path(:edit, 1) == "/staff/products/1/edit"
-    assert Router.staff_product_path(:new) == "/staff/products/new"
-  end
-
-  test "scope does not require path argument" do
-    conn = call(RouterHelperScoping, :get, "/admin_posts/123")
-    assert conn.status == 200
-    assert conn.params["id"] == "123"
-    assert conn.resp_body == "post show"
   end
 end

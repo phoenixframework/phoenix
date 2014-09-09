@@ -12,6 +12,7 @@ defmodule Phoenix.Router.NestedTest do
     def show(conn, _params), do: text(conn, "show users")
     def index(conn, _params), do: text(conn, "index users")
     def new(conn, _params), do: text(conn, "new users")
+    def edit(conn, _params), do: text(conn, "edit users")
     def create(conn, _params), do: text(conn, "create users")
     def update(conn, _params), do: text(conn, "update users")
     def destroy(conn, _params), do: text(conn, "destroy users")
@@ -92,11 +93,55 @@ defmodule Phoenix.Router.NestedTest do
     end
   end
 
-  test "toplevel route matches without nesting" do
-    conn = call(Router, :get, "users/1")
+  test "toplevel route matches new action" do
+    conn = call(Router, :get, "users/new")
+    assert conn.status == 200
+    assert conn.resp_body == "new users"
+  end
+
+  test "toplevel route matches index action" do
+    conn = call(Router, :get, "users")
+    assert conn.status == 200
+    assert conn.resp_body == "index users"
+  end
+
+  test "toplevel route matches show action with named param" do
+    conn = call(Router, :get, "users/123")
     assert conn.status == 200
     assert conn.resp_body == "show users"
+    assert conn.params["id"] == "123"
+  end
+
+  test "toplevel route matches edit action with named param" do
+    conn = call(Router, :get, "users/123/edit")
+    assert conn.status == 200
+    assert conn.resp_body == "edit users"
+    assert conn.params["id"] == "123"
+  end
+
+  test "toplevel route matches create action" do
+    conn = call(Router, :post, "users")
+    assert conn.status == 200
+    assert conn.resp_body == "create users"
+  end
+
+  test "toplevel route matches update action" do
+    conn = call(Router, :put, "users/1")
+    assert conn.status == 200
+    assert conn.resp_body == "update users"
     assert conn.params["id"] == "1"
+
+    conn = call(Router, :patch, "users/2")
+    assert conn.status == 200
+    assert conn.resp_body == "update users"
+    assert conn.params["id"] == "2"
+  end
+
+  test "toplevel route matches destroy action" do
+    conn = call(Router, :delete, "users/2")
+    assert conn.status == 200
+    assert conn.resp_body == "destroy users"
+    assert conn.params["id"] == "2"
   end
 
   test "1-Level nested route matches with named param prefix on show" do

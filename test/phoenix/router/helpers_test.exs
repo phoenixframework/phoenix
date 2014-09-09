@@ -21,7 +21,7 @@ defmodule Phoenix.Router.NamedRoutingTest do
       resources "/messages", MessageController
     end
 
-    scope path: "/admin", alias: Admin, helper: "admin" do
+    scope path: "/admin", alias: Admin, as: "admin" do
       resources "/messages", MessageController
     end
   end
