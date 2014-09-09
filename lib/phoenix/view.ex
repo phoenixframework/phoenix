@@ -20,8 +20,6 @@ defmodule Phoenix.View do
             import unquote(__MODULE__)
 
             # This block is expanded within all views for aliases, imports, etc
-            alias App.Views
-
             def title, do: "Welcome to Phoenix!"
           end
         end

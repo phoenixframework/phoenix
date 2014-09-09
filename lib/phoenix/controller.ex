@@ -53,8 +53,7 @@ defmodule Phoenix.Controller do
       import Plug.Conn
       import Phoenix.Controller.Connection
       import unquote(__MODULE__)
-      alias Phoenix.Controller.Flash
-      alias Poison, as: JSON
+
       @options unquote(options)
 
       @subview_module view_module(__MODULE__)

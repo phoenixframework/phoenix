@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.2-dev (2014-09-08)
+
+* Backwards incompatible changes
+  * [Controller] Remove default, inject aliases: `Flash`, `JSON`
+
+
 ## v0.4.1 (2014-09-08)
 
 * Bug fixes
