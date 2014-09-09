@@ -6,6 +6,7 @@ defmodule Phoenix.Router.NamedRoutingTest do
     use Phoenix.Router
 
     get "/users/:id", UserControler, :show, as: :profile
+    get "/users/file/*file", UserControler, :file, as: :profile
     get "/users/top", UserControler, :top, as: :top
 
     resources "/users", UserController do
@@ -33,6 +34,7 @@ defmodule Phoenix.Router.NamedRoutingTest do
   test "manual alias generated named route" do
     assert Router.profile_path(:show, 5, []) == "/users/5"
     assert Router.profile_path(:show, 5) == "/users/5"
+    assert Router.profile_path(:file, ["foo", "bar"]) == "/users/file/foo/bar"
     assert Router.top_path(:top, id: 5) == "/users/top?id=5"
   end
 
