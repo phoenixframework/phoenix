@@ -1,6 +1,11 @@
 defmodule Phoenix.Router.ScopedRoutingTest do
-  use ExUnit.Case
-  use PlugHelper
+  use ExUnit.Case, async: true
+  use RouterHelper
+
+  setup do
+    Logger.disable(self())
+    :ok
+  end
 
   # Path scoping
   defmodule Admin.PostController do
@@ -70,41 +75,41 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   end
 
   test "single scope for single routes" do
-    conn = simulate_request(Router, :get, "/admin/profiles/1")
+    conn = call(Router, :get, "/admin/profiles/1")
     assert conn.status == 200
     assert conn.resp_body == "profiles show"
     assert conn.params["id"] == "1"
   end
 
   test "double scope for single routes" do
-    conn = simulate_request(Router, :get, "/api/v1/users/1")
+    conn = call(Router, :get, "/api/v1/users/1")
     assert conn.status == 200
     assert conn.resp_body == "api v1 users show"
     assert conn.params["id"] == "1"
   end
 
   test "single scope for resources" do
-    conn = simulate_request(Router, :get, "/admin/events")
+    conn = call(Router, :get, "/admin/events")
     assert conn.status == 200
     assert conn.resp_body == "index events"
   end
 
   test "single scope for resources - show action" do
-    conn = simulate_request(Router, :get, "/admin/events/12")
+    conn = call(Router, :get, "/admin/events/12")
     assert conn.status == 200
     assert conn.resp_body == "show events"
     assert conn.params["id"] == "12"
   end
 
   test "double scope for resources - show action" do
-    conn = simulate_request(Router, :delete, "/api/v1/events/12")
+    conn = call(Router, :delete, "/api/v1/events/12")
     assert conn.status == 200
     assert conn.resp_body == "destroy api v1 events"
     assert conn.params["id"] == "12"
   end
 
   test "double scope for double nested resources - show action" do
-    conn = simulate_request(Router, :get, "/api/v1/venues/12/images/13/edit")
+    conn = call(Router, :get, "/api/v1/venues/12/images/13/edit")
     assert conn.status == 200
     assert conn.resp_body == "edit api v1 venues images"
     assert conn.params["venue_id"] == "12"
@@ -147,28 +152,28 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   end
 
   test "scope alias" do
-    conn = simulate_request(RouterControllerScoping, :get, "/admin/users/12")
+    conn = call(RouterControllerScoping, :get, "/admin/users/12")
     assert conn.status == 200
     assert conn.resp_body == "admin users show"
     assert conn.params["id"] == "12"
   end
 
   test "double scope alias" do
-    conn = simulate_request(RouterControllerScoping, :get, "/api/v1/users/13")
+    conn = call(RouterControllerScoping, :get, "/api/v1/users/13")
     assert conn.status == 200
     assert conn.resp_body == "api v1 users show"
     assert conn.params["id"] == "13"
   end
 
   test "double scope resources alias" do
-    conn = simulate_request(RouterControllerScoping, :get, "/api/v1/accounts/13")
+    conn = call(RouterControllerScoping, :get, "/api/v1/accounts/13")
     assert conn.status == 200
     assert conn.resp_body == "api v1 accounts show"
     assert conn.params["id"] == "13"
   end
 
   test "double scope nested resources alias" do
-    conn = simulate_request(RouterControllerScoping, :get, "/api/v1/accounts/13/subscriptions/15")
+    conn = call(RouterControllerScoping, :get, "/api/v1/accounts/13/subscriptions/15")
     assert conn.status == 200
     assert conn.resp_body == "api v1 accounts subscriptions show"
     assert conn.params["account_id"] == "13"
@@ -213,7 +218,7 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   end
 
   test "scope does not require path argument" do
-    conn = simulate_request(RouterHelperScoping, :get, "/admin_posts/123")
+    conn = call(RouterHelperScoping, :get, "/admin_posts/123")
     assert conn.status == 200
     assert conn.params["id"] == "123"
     assert conn.resp_body == "post show"

@@ -20,34 +20,22 @@ defmodule Phoenix.Router.ScopeContext do
   end
 
   defp current_path(relative_path, module) do
-    case get_paths(module) do
-      []    -> relative_path
-      paths -> paths
-               |> Enum.reverse
-               |> Kernel.++([relative_path])
-               |> Path.join
-    end
+    [relative_path|get_paths(module)]
+    |> Enum.reverse
+    |> Path.join
   end
 
   defp current_controller(controller, module) do
-    case get_controllers(module) do
-      []          -> controller
-      controllers -> controllers
-                     |> Enum.reverse
-                     |> Kernel.++([controller])
-                     |> Module.concat
-    end
+    [controller|get_controllers(module)]
+    |> Enum.reverse
+    |> Module.concat
   end
 
   defp current_helper(nil, _module), do: nil
   defp current_helper(helper, module) do
-    case get_helpers(module) do
-      []      -> helper
-      helpers -> helpers
-                 |> Enum.reverse
-                 |> Kernel.++([helper])
-                 |> Enum.join("_")
-    end
+    [helper|get_helpers(module)]
+    |> Enum.reverse
+    |> Enum.join("_")
   end
 
   defp get_paths(module) do

@@ -1,6 +1,6 @@
 defmodule Phoenix.Controller.FlashTest do
   use ExUnit.Case
-  use PlugHelper
+  use RouterHelper
   alias Phoenix.Controller.Flash
   alias Phoenix.Controller.FlashTest.Router
 

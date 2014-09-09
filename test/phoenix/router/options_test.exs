@@ -3,28 +3,17 @@ defmodule Phoenix.Router.OptionsTest do
   alias Phoenix.Adapters.Cowboy
   alias Phoenix.Router.Options
 
-  setup_all do
-    Mix.Config.persist(phoenix: [
-      {Router, port: 71107},
-      {Router2, port: "4000", proxy_port: "80"},
-    ])
-
-    defmodule Router do
-      use Phoenix.Router
-      get "/pages/:page", Pages, :show, as: :page
-    end
-
-    :ok
-  end
+  Application.put_env(:phoenix, OptionsRouter, port: 71107)
+  Application.put_env(:phoenix, OptionsRouter2, port: "4000", proxy_port: "80")
 
   test "merge port number into options" do
-    options = Options.merge([], [], Router, Cowboy)
+    options = Options.merge([], [], OptionsRouter, Cowboy)
     assert options[:port] == 71107
     assert options[:ssl] == false
   end
 
-  test "converts port and proxy_prot from string to int" do
-    options = Options.merge([], [], Router2, Cowboy)
+  test "converts port and proxy_port from string to int" do
+    options = Options.merge([], [], OptionsRouter2, Cowboy)
     assert options[:port] == 4000
     assert options[:proxy_port] == 80
   end

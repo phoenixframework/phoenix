@@ -8,13 +8,13 @@ defmodule Phoenix.Router.Route do
   @doc """
   The Route struct. It stores:
 
-  * :verb - the HTTP verb as an upcase string
-  * :path - the route path as a normalized string
+  * :verb - the HTTP verb as an upcased string
+  * :path - the normalized path as string
   * :segments - the route path as quoted segments
   * :params - the parameter names as a list of atoms
-  * :controller - ?
-  * :action - ?
-  * :helper - the named of the named helper (may be nil)
+  * :controller - the controller module
+  * :action - the action as an atom
+  * :helper - the named of the helper as a string (may be nil)
   """
   defstruct [:verb, :path, :segments, :params, :controller, :action, :helper]
   @type t :: %Route{}
@@ -27,7 +27,9 @@ defmodule Phoenix.Router.Route do
   # TODO: Ensure path is normalized.
   # TODO: Test this.
   @spec build(String.t, String.t, atom, atom, atom) :: t
-  def build(verb, path, controller, action, helper) when is_binary(verb) and is_binary(path) do
+  def build(verb, path, controller, action, helper)
+      when is_binary(verb) and is_binary(path) and is_atom(controller) and
+           is_atom(action) and (is_binary(helper) or is_nil(helper)) do
     {params, segments} = Plug.Router.Utils.build_match(path)
     %Route{verb: verb, path: path, segments: segments, params: params,
            controller: controller, action: action, helper: helper}
