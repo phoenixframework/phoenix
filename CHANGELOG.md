@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.1 (2014-09-08)
+
+* Bug fixes
+  * [Project Generation] Fix project template dependencies pointing to incorrect phoenix and elixir versions
+
+
 ## v0.4.0 (2014-08-30)
 
 * Enhancements
