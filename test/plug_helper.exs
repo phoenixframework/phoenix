@@ -4,17 +4,17 @@ defmodule PlugHelper do
     quote do
       use Plug.Test
       import ExUnit.CaptureIO
-      def simulate_request(router, http_method, path) do
+      def simulate_request(router, http_method, path, params_or_body \\ nil, opts \\ []) do
         {conn, _} = capture_log fn ->
-          conn = conn(http_method, path)
+          conn = conn(http_method, path, params_or_body, opts)
           router.call(conn, [])
         end
         conn
       end
 
-      def simulate_request_with_logging(router, http_method, path) do
+      def simulate_request_with_logging(router, http_method, path, params_or_body \\ nil, opts \\ []) do
         capture_log fn ->
-          conn = conn(http_method, path)
+          conn = conn(http_method, path, params_or_body, opts)
           router.call(conn, [])
         end
       end

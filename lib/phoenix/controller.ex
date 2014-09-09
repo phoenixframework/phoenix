@@ -81,9 +81,6 @@ defmodule Phoenix.Controller do
         apply(__MODULE__, conn.private[:phoenix_action], [conn, conn.params])
       end
 
-      def render(conn, template, assigns \\ []) do
-        render_view conn, @subview_module, @layout_module, template, assigns
-      end
       defoverridable action: 2
     end
   end
@@ -127,6 +124,12 @@ defmodule Phoenix.Controller do
 
 
   """
+  defmacro render(conn, template, assigns \\ []) do
+    quote do
+      render_view unquote(conn), @subview_module, @layout_module, unquote(template), unquote(assigns)
+    end
+  end
+
   def render_view(conn, view_mod, layout_mod, template, assigns \\ [])
   def render_view(conn, view_mod, layout_mod, [], assigns) do
     render_view conn, view_mod, layout_mod, action_name(conn), assigns
@@ -185,5 +188,26 @@ defmodule Phoenix.Controller do
     |> Module.split
     |> Enum.at(0)
     |> Module.concat("LayoutView")
+  end
+
+  @doc """
+  Removes fields in the conn's params that are not included in the whitelist
+
+  ## Examples
+      # Params are filtered according to whitelist
+
+      defmodule MyApp.UserController do
+        use Phoenix.Controller
+
+        plug :permit_params, ["first_name", "last_name"]
+
+        def create(conn, params) do
+          # params will only include first_name and last_name fields
+        end
+      end
+
+  """
+  def permit_params(conn, whitelist) do
+    put_in conn.params, Dict.take(conn.params, whitelist)
   end
 end
