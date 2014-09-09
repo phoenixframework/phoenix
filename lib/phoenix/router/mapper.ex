@@ -66,8 +66,7 @@ defmodule Phoenix.Router.Mapper do
 
   defmacro __using__(_options) do
     quote do
-      Module.register_attribute __MODULE__, :routes, accumulate: true,
-                                                     persist: false
+      Module.register_attribute __MODULE__, :routes, accumulate: true
       import unquote(__MODULE__)
       @before_compile unquote(__MODULE__)
     end
@@ -75,12 +74,12 @@ defmodule Phoenix.Router.Mapper do
 
   defmacro __before_compile__(env) do
     routes      = env.module |> Module.get_attribute(:routes) |> Enum.reverse
-    mathces_ast = for route <- routes, do: defmatch(route)
+    matches_ast = for route <- routes, do: defmatch(route)
     helpers_ast = RouteHelper.defhelpers(routes, env.module)
 
     quote do
       def __routes__, do: Enum.reverse(@routes)
-      unquote(mathces_ast)
+      unquote(matches_ast)
       def match(conn, method, path), do: Connection.assign_status(conn, 404)
       unquote(helpers_ast)
       defmodule Helpers, do: unquote(helpers_ast)
@@ -88,15 +87,15 @@ defmodule Phoenix.Router.Mapper do
   end
 
   defp defmatch({http_method, path, controller, action, _options}) do
-    path_args = Path.matched_arg_list_with_ast_bindings(path)
-    params_list_with_bindings = Path.params_with_ast_bindings(path)
+    {vars, path} = Path.build_match(path)
+    vars = Enum.map(vars, fn var -> {Atom.to_string(var), Macro.var(var, nil)} end)
 
     quote do
-      def unquote(:match)(conn, unquote(http_method), unquote(path_args)) do
+      def unquote(:match)(conn, unquote(http_method), unquote(path)) do
         Action.perform(conn,
           unquote(controller),
           unquote(action),
-          unquote(params_list_with_bindings)
+          unquote(vars)
         )
       end
     end

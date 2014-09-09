@@ -2,15 +2,16 @@ defmodule Phoenix.Router.Path do
   alias Phoenix.Config
 
   @doc """
-  Splits the String path into segments by "/" delimiter
+  Splits the path into segments by "/" delimiter.
   """
   def split(path), do: String.split(path, "/")
 
   @doc """
-  Joins path List to build valid path
+  Joins the given paths into a valid path.
   """
+  # TODO: Relying on Path is a bad idea as it may do OS specific checks.
   def join([]), do: ""
-  def join(split_path), do: Elixir.Path.join(split_path)
+  def join(list), do: Elixir.Path.join(list)
 
   @doc """
   Returns the AST binding of the given variable with var_name
@@ -40,66 +41,23 @@ defmodule Phoenix.Router.Path do
 
   ## Examples
 
-      iex> Path.matched_arg_list_with_ast_bindings("users/:user_id/comments/:id")
-      ["users", {:user_id, [], nil}, "comments", {:id, [], nil}]
+      iex> Path.build_match("users/:user_id/comments/:id")
+      {[:user_id, :id],
+       ["users", {:user_id, [], nil}, "comments", {:id, [], nil}]}
 
-      iex> Path.matched_arg_list_with_ast_bindings("/pages")
-      ["pages"]
+      iex> Path.build_match("/pages")
+      {[], ["pages"]}
 
-      iex> Path.matched_arg_list_with_ast_bindings("/")
-      []
+      iex> Path.build_match("/")
+      {[], []}
 
   Generated as:
 
       def match(:get, ["users", user_id, "comments", id])
 
   """
-  def matched_arg_list_with_ast_bindings(path) do
-    path
-    |> ensure_no_leading_slash
-    |> split
-    |> Enum.chunk(2, 1, [nil])
-    |> Enum.map(fn [part, next] -> part_to_ast_binding(part, next) end)
-    |> Enum.filter(fn part -> not(part in [nil, ""]) end)
-    |> unwrap_arg_list(path)
-  end
-  defp part_to_ast_binding(<<"*" <> _splat_name>>, nil), do: nil
-  defp part_to_ast_binding(<<":" <> param_name>>, <<"*" <> splat_name>>) do
-    {:|, [], [var_ast(param_name), var_ast(splat_name)]}
-  end
-  defp part_to_ast_binding(<<":" <> param_name>>, _next) do
-    var_ast(param_name)
-  end
-  defp part_to_ast_binding(part, <<"*" <> splat_name>>) do
-    {:|, [], [part, var_ast(splat_name)]}
-  end
-  defp part_to_ast_binding(part, _next), do: part
-  defp unwrap_arg_list([], <<"/*" <> splat_name>>), do: var_ast(splat_name)
-  defp unwrap_arg_list(args, _path), do: args
-
-
-  @doc """
-  Returns Keyword List of parameters from URL matched with
-  AST of associated bindings for inclusion in defmatch route
-
-  ## Examples
-
-      iex> Path.params_with_ast_bindings("users/:user_id/comments/:id")
-      [{"user_id", {:user_id, [], nil}}, {"id", {:id, [], nil}}]
-
-  """
-  def params_with_ast_bindings(path) do
-    Enum.zip(param_names(path), matched_param_ast_bindings(path))
-  end
-  defp matched_param_ast_bindings(path) do
-    path
-    |> split
-    |> Enum.map(fn
-      <<":" <> param>> -> var_ast(param)
-      <<"*" <> param>> -> quote do: Phoenix.Router.Path.join(unquote(var_ast(param)))
-      _part ->
-    end)
-    |> Enum.filter(&is_tuple(&1))
+  def build_match(path) do
+    Plug.Router.Utils.build_match(path)
   end
 
   @doc """

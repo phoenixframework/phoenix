@@ -53,16 +53,17 @@ defmodule Phoenix.Router do
 
       plug Plug.MethodOverride
 
-      unless Plugs.plugged?(@plugs, :dispatch) do
-        plug :dispatch
-      end
-
       @options unquote(plug_adapter_options)
     end
   end
 
   defmacro __before_compile__(_env) do
     quote do
+      # TODO: Test this is actually added at the end.
+      unless Plugs.plugged?(@plugs, :dispatch) do
+        plug :dispatch
+      end
+
       def dispatch(conn, []) do
         Phoenix.Router.perform_dispatch(conn, __MODULE__)
       end

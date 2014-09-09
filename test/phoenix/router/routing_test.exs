@@ -212,19 +212,19 @@ defmodule Phoenix.Router.RoutingTest do
     conn = simulate_request(Router, :get, "files/elixir/Users/home/file.txt")
     assert conn.status == 200
     assert conn.params["user_name"] == "elixir"
-    assert conn.params["path"] == "Users/home/file.txt"
+    assert conn.params["path"] == ["Users", "home", "file.txt"]
   end
 
   test "splat arg with preceding string to backups/*path" do
     conn = simulate_request(Router, :get, "backups/name")
     assert conn.status == 200
-    assert conn.params["path"] == "name"
+    assert conn.params["path"] == ["name"]
   end
 
   test "splat arg with multiple preceding strings to static/images/icons/*path" do
     conn = simulate_request(Router, :get, "static/images/icons/elixir/logos/main.png")
     assert conn.status == 200
-    assert conn.params["image"] == "elixir/logos/main.png"
+    assert conn.params["image"] == ["elixir", "logos", "main.png"]
   end
 
   test "limit resource by passing :except option" do
@@ -265,7 +265,7 @@ defmodule Phoenix.Router.RoutingTest do
   test "catch-all splat route matches" do
     conn = simulate_request(CatchAllRouter, :get, "foo/bar/baz")
     assert conn.status == 404
-    assert conn.params == %{"path" => "foo/bar/baz"}
+    assert conn.params == %{"path" => ~w"foo bar baz"}
     assert conn.resp_body == "not found"
   end
 end
