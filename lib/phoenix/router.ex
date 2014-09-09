@@ -1,4 +1,12 @@
 defmodule Phoenix.Router do
+  @moduledoc """
+  Defines the Phoenix router.
+
+  A router is the heart of a Phoenix application. It defines
+  the main stack your web application will use to handle requests
+  as well as the valid routes and endpoints.
+  """
+
   import Plug.Conn, only: [assign_private: 3]
   import Phoenix.Controller.Connection, only: [assign_status: 2, assign_error: 3]
   alias Phoenix.Plugs
@@ -17,29 +25,24 @@ defmodule Phoenix.Router do
       use Phoenix.Router.Mapper
       use Phoenix.Adapters.Cowboy
 
-      import unquote(__MODULE__)
       @before_compile unquote(__MODULE__)
       use Plug.Builder
-
 
       if Config.router(__MODULE__, [:static_assets]) do
         mount = Config.router(__MODULE__, [:static_assets_mount])
         plug Plug.Static, at: mount, from: Project.app
       end
+
       plug Plug.Logger
+
       if Config.router(__MODULE__, [:parsers]) do
         plug Plug.Parsers, parsers: [:urlencoded, :multipart, Parsers.JSON], accept: ["*/*"]
       end
 
-      @options unquote(plug_adapter_options)
-    end
-  end
-
-  defmacro __before_compile__(_env) do
-    quote do
       if Config.get([:code_reloader, :enabled]) do
         plug Plugs.CodeReloader
       end
+
       if Config.router(__MODULE__, [:cookies]) do
         key    = Config.router!(__MODULE__, [:session_key])
         secret = Config.router!(__MODULE__, [:session_secret])
@@ -54,6 +57,12 @@ defmodule Phoenix.Router do
         plug :dispatch
       end
 
+      @options unquote(plug_adapter_options)
+    end
+  end
+
+  defmacro __before_compile__(_env) do
+    quote do
       def dispatch(conn, []) do
         Phoenix.Router.perform_dispatch(conn, __MODULE__)
       end
