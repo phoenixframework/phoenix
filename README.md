@@ -6,12 +6,12 @@
 ## Getting started
 
 ### Requirements
-- Elixir v1.0.0-rc1
+- Elixir v1.0.0-rc1+
 
 ### Setup
 1. Install Phoenix
 
-        git clone https://github.com/phoenixframework/phoenix.git && cd phoenix && git checkout v0.4.0 && mix do deps.get, compile
+        git clone https://github.com/phoenixframework/phoenix.git && cd phoenix && git checkout v0.4.1 && mix do deps.get, compile
 
 
 2. Create a new Phoenix application
