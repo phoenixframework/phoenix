@@ -21,7 +21,7 @@ defmodule Phoenix.Router.NamedRoutingTest do
       resources "/messages", MessageController
     end
 
-    scope path: "/admin", alias: Admin, as: "admin" do
+    scope path: "/admin/new", alias: Admin, as: "admin" do
       resources "/messages", MessageController
     end
   end
@@ -112,10 +112,10 @@ defmodule Phoenix.Router.NamedRoutingTest do
   end
 
   test "scoped route helpers generated named routes with :path, :alias, and :helper options" do
-    assert Router.admin_message_path(:index, []) == "/admin/messages"
-    assert Router.admin_message_path(:index) == "/admin/messages"
-    assert Router.admin_message_path(:show, 1, []) == "/admin/messages/1"
-    assert Router.admin_message_path(:show, 1) == "/admin/messages/1"
+    assert Router.admin_message_path(:index, []) == "/admin/new/messages"
+    assert Router.admin_message_path(:index) == "/admin/new/messages"
+    assert Router.admin_message_path(:show, 1, []) == "/admin/new/messages/1"
+    assert Router.admin_message_path(:show, 1) == "/admin/new/messages/1"
   end
 
   test "helpers module is generated with named route helpers that can be imported" do

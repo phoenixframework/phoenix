@@ -4,7 +4,8 @@ defmodule Phoenix.Router.Mapper do
   alias Phoenix.Router.ScopeContext
   alias Phoenix.Router.Errors
   alias Phoenix.Router.Mapper
-  alias Phoenix.Router.RouteHelper
+  alias Phoenix.Router.Path
+  alias Phoenix.Router.Route
 
   @default_param_key "id"
   @actions [:index, :edit, :new, :show, :create, :update, :destroy]
@@ -71,33 +72,31 @@ defmodule Phoenix.Router.Mapper do
 
   defmacro __before_compile__(env) do
     routes      = env.module |> Module.get_attribute(:routes) |> Enum.reverse
-    matches_ast = for route <- routes, do: defmatch(route)
-    helpers_ast = RouteHelper.defhelpers(routes, env.module)
+    helpers_ast = defhelpers(routes, env.module)
 
     quote do
       def __routes__, do: Enum.reverse(@routes)
-      unquote(matches_ast)
+      # TODO: follow match/dispatch pattern from Plug
       def match(conn, method, path), do: Connection.assign_status(conn, 404)
       unquote(helpers_ast)
       defmodule Helpers, do: unquote(helpers_ast)
     end
   end
 
-  defp defmatch(route) do
-    binding = Enum.map(route.params, fn var ->
-      {Atom.to_string(var), Macro.var(var, nil)}
-    end)
+  defp defhelpers(routes, module) do
+    path_helpers_ast = for route <- routes, do: Route.helper_definition(route)
 
     quote do
-      def unquote(:match)(conn, unquote(route.verb), unquote(route.segments)) do
-        Action.perform(conn,
-          unquote(route.controller),
-          unquote(route.action),
-          unquote(binding)
-        )
+      unquote(path_helpers_ast)
+      # TODO: use host/port/schem from Conn
+      def url(_conn = %Plug.Conn{}, path), do: url(path)
+      def url(path) do
+        # TODO: Review this whole config story
+        Path.build_url(path, [], [], unquote(module))
       end
     end
   end
+
 
   for verb <- @http_methods do
     method = verb |> to_string |> String.upcase
@@ -120,7 +119,14 @@ defmodule Phoenix.Router.Mapper do
         options[:as],
         __MODULE__
       )
-      @routes Phoenix.Router.Route.build(verb, scoped_path, scoped_ctrl, action, scoped_helper)
+
+      route = Route.build(verb, scoped_path, scoped_ctrl, action, scoped_helper)
+      @routes route
+
+      def unquote(:match)(conn, unquote(route.verb), unquote(route.segments)) do
+        Action.perform(conn, unquote(route.controller),
+                       unquote(route.action), unquote(route.binding))
+      end
     end
   end
 
@@ -160,7 +166,7 @@ defmodule Phoenix.Router.Mapper do
       name    = Keyword.get(options, :name, Mapper.resource_name(ctrl))
       alias   = Keyword.get(options, :alias, Mapper.resource_alias(ctrl))
       as      = Keyword.get(options, :as, name)
-      context = [path: Path.join(path, ":#{name}_#{param}"), as: as]
+      context = [path: Elixir.Path.join(path, ":#{name}_#{param}"), as: as]
 
       Enum.each actions, fn action ->
         opts = [as: as]

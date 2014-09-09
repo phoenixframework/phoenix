@@ -7,7 +7,7 @@ defmodule Phoenix.Router.RouteTest do
     route = build("GET", "/foo/:bar", Hello, :world, "hello_world")
     assert route.verb == "GET"
     assert route.segments == ["foo", {:bar, [], nil}]
-    assert route.params == [:bar]
+    assert route.binding == [{"bar", {:bar, [], nil}}]
     assert route.controller == Hello
     assert route.action == :world
     assert route.helper == "hello_world"
