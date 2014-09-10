@@ -2,24 +2,23 @@ defmodule Mix.Tasks.Phoenix.Routes do
   use Mix.Task
   alias Phoenix.Router.ConsoleFormatter
 
-  @shortdoc "Prints routes"
+  @shortdoc "Prints all routes"
   @recursive true
 
-  @doc """
-  Prints routes
+  @moduledoc """
+  Prints all routes for the default or a given router.
+
+      $ mix phoenix.router
+      $ mix phoenix.router MyApp.AnotherRouter
   """
+
   def run([]) do
     router = ConsoleFormatter.default_router
-
     print_routes(router)
   end
 
-  @doc """
-  Prints routes for specified router
-  """
   def run([router]) do
-    router = String.to_atom("Elixir." <> router)
-
+    router = Module.concat([router])
     print_routes(router)
   end
 

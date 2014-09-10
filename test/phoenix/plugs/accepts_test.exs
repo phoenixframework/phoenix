@@ -1,6 +1,6 @@
 defmodule Phoenix.Plugs.AcceptsTest do
   use ExUnit.Case, async: true
-  use PlugHelper
+  use RouterHelper
   alias Phoenix.Plugs
   alias Phoenix.Controller.Action
 
