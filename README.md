@@ -578,7 +578,7 @@ Path.expand("../../../some/path/to/ssl/key.pem", __DIR__)
 
 If you are serving your application behind a proxy such as `nginx` or
 `apache`, you will want to specify the `proxy_port` option. This will ensure
-the route helper functions will not contain the port number.
+the route helper functions will use the proxy port number.
 
 Example:
 

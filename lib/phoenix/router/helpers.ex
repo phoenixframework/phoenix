@@ -54,8 +54,6 @@ defmodule Phoenix.Router.Helpers do
           o  -> segments <> "?" <> o
         end
       end
-
-      defp to_str(k), do: String.Chars.to_string(k)
     end
 
     Module.create(Module.concat(env.module, Helpers), code,
@@ -65,6 +63,8 @@ defmodule Phoenix.Router.Helpers do
   @doc """
   Receives a router and generates a URL from its configuration.
   """
+  # TODO: Consider decoupling the info used to run the
+  #       server from the info used to generate URLs.
   def url_from_config(router) do
     sche = if Config.router(router, [:ssl]), do: "https", else: "http"
     # TODO: What happens if host and port are not available
