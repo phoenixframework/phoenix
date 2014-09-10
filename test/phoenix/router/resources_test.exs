@@ -263,14 +263,16 @@ defmodule Phoenix.Router.NestedTest do
     assert conn.status == 200
     assert conn.params["slug"] == "about"
     assert conn.resp_body == "show page"
-    assert Router.area_path(:show, "about") == "/pages/about"
+    assert Router.Helpers.area_path(:show, "about") ==
+           "/pages/about"
 
     conn = call(Router, :get, "pages/contact/ratings/the_key")
     assert conn.status == 200
     assert conn.params["area_slug"] == "contact"
     assert conn.params["key"] == "the_key"
     assert conn.resp_body == "show rating"
-    assert Router.area_vote_path(:show, "contact", "the_key") == "/pages/contact/ratings/the_key"
+    assert Router.Helpers.area_vote_path(:show, "contact", "the_key") ==
+           "/pages/contact/ratings/the_key"
   end
 end
 

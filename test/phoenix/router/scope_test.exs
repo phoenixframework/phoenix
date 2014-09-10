@@ -8,6 +8,7 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   end
 
   # Path scoping
+
   defmodule Admin.PostController do
     use Phoenix.Controller
     def show(conn, _params), do: text(conn, "post show")
@@ -42,12 +43,12 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   defmodule Router do
     use Phoenix.Router
     scope path: "/admin" do
-      get "/profiles/:id", ProfileController, :show, as: :profiles
+      get "/profiles/:id", ProfileController, :show
     end
 
     scope path: "/api" do
       scope path: "/v1" do
-        get "/users/:id", Api.V1.UserController, :show, as: :api_users
+        get "/users/:id", Api.V1.UserController, :show
       end
     end
 
@@ -69,7 +70,7 @@ defmodule Phoenix.Router.ScopedRoutingTest do
       end
     end
 
-    scope path: "/staff", alias: Staff, as: "staff" do
+    scope path: "/staff", alias: Staff do
       resources "/products", ProductController
     end
   end
@@ -116,7 +117,7 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     assert conn.params["id"] == "13"
   end
 
-  # Controller scoping
+  # Alias scoping
 
   defmodule Admin.UserController do
     use Phoenix.Controller
@@ -137,12 +138,12 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     use Phoenix.Router
 
     scope path: "/admin", alias: Admin do
-      get "/users/:id", UserController, :show, as: :users
+      get "/users/:id", UserController, :show
     end
 
     scope path: "/api", alias: Api do
       scope path: "/v1", alias: V1 do
-        get "/users/:id", UserController, :show, as: :api_v2_users
+        get "/users/:id", UserController, :show
         resources "/accounts", AccountController do
           resources "/subscriptions", SubscriptionController
         end

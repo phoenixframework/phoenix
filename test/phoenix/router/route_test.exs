@@ -16,13 +16,13 @@ defmodule Phoenix.Router.RouteTest do
   test "builds helper definitions with :identifiers" do
     route = build("GET", "/foo/:bar", Hello, :world, "hello_world")
 
-    assert extract_helper_definition(route, 0) == String.strip """
+    assert extract_defhelper(route, 0) == String.strip """
     def(hello_world_path(:world, bar)) do
       hello_world_path(:world, bar, [])
     end
     """
 
-    assert extract_helper_definition(route, 1) == String.strip """
+    assert extract_defhelper(route, 1) == String.strip """
     def(hello_world_path(:world, bar, params)) do
       Route.segments_to_path(("" <> "/foo") <> "/" <> to_string(bar), params, ["bar"])
     end
@@ -32,21 +32,21 @@ defmodule Phoenix.Router.RouteTest do
   test "builds helper definitions with *identifiers" do
     route = build("GET", "/foo/*bar", Hello, :world, "hello_world")
 
-    assert extract_helper_definition(route, 0) == String.strip """
+    assert extract_defhelper(route, 0) == String.strip """
     def(hello_world_path(:world, bar)) do
       hello_world_path(:world, bar, [])
     end
     """
 
-    assert extract_helper_definition(route, 1) == String.strip """
+    assert extract_defhelper(route, 1) == String.strip """
     def(hello_world_path(:world, bar, params)) do
       Route.segments_to_path(("" <> "/foo") <> "/" <> Enum.join(bar, "/"), params, ["bar"])
     end
     """
   end
 
-  defp extract_helper_definition(route, pos) do
-    {:__block__, _, block} = helper_definition(route)
+  defp extract_defhelper(route, pos) do
+    {:__block__, _, block} = defhelper(route)
     Enum.at(block, pos) |> Macro.to_string()
   end
 end

@@ -1,8 +1,7 @@
 defmodule Phoenix.Router.Mapper do
   alias Phoenix.Controller.Action
   alias Phoenix.Controller.Connection
-  alias Phoenix.Router.ScopeContext
-  alias Phoenix.Router.Errors
+  alias Phoenix.Router.Scope
   alias Phoenix.Router.Mapper
   alias Phoenix.Router.Path
   alias Phoenix.Router.Route
@@ -75,16 +74,15 @@ defmodule Phoenix.Router.Mapper do
     helpers_ast = defhelpers(routes, env.module)
 
     quote do
-      def __routes__, do: Enum.reverse(@routes)
+      def __routes__, do: unquote(Macro.escape(routes))
       # TODO: follow match/dispatch pattern from Plug
       def match(conn, method, path), do: Connection.assign_status(conn, 404)
-      unquote(helpers_ast)
       defmodule Helpers, do: unquote(helpers_ast)
     end
   end
 
   defp defhelpers(routes, module) do
-    path_helpers_ast = for route <- routes, do: Route.helper_definition(route)
+    path_helpers_ast = for route <- routes, do: Route.defhelper(route)
 
     quote do
       unquote(path_helpers_ast)
@@ -97,30 +95,19 @@ defmodule Phoenix.Router.Mapper do
     end
   end
 
-
   for verb <- @http_methods do
     method = verb |> to_string |> String.upcase
+    @doc """
+    Generates a route to handle #{verb} requests.
+    """
     defmacro unquote(verb)(path, controller, action, options \\ []) do
       add_route(unquote(method), path, controller, action, options)
     end
   end
 
   defp add_route(verb, path, controller, action, options) do
-    quote bind_quoted: [verb: verb,
-                        path: path,
-                        controller: controller,
-                        action: action,
-                        options: options] do
-
-      Errors.ensure_valid_path!(path)
-      {scoped_path, scoped_ctrl, scoped_helper} = ScopeContext.current_scope(
-        path,
-        controller,
-        options[:as],
-        __MODULE__
-      )
-
-      route = Route.build(verb, scoped_path, scoped_ctrl, action, scoped_helper)
+    quote bind_quoted: binding() do
+      route = Scope.route(__MODULE__, verb, path, controller, action, options)
       @routes route
 
       def unquote(:match)(conn, unquote(route.verb), unquote(route.segments)) do
@@ -160,11 +147,10 @@ defmodule Phoenix.Router.Mapper do
     quote unquote: true, bind_quoted: [options: options,
                                        path: path,
                                        ctrl: controller] do
-      Errors.ensure_valid_path!(path)
+      
       actions = Mapper.extract_actions_from_options(options)
       param   = Keyword.get(options, :param, unquote(@default_param_key))
-      name    = Keyword.get(options, :name, Mapper.resource_name(ctrl))
-      alias   = Keyword.get(options, :alias, Mapper.resource_alias(ctrl))
+      name    = Keyword.get(options, :name, Phoenix.Naming.resource_name(ctrl, "Controller"))
       as      = Keyword.get(options, :as, name)
       context = [path: Elixir.Path.join(path, ":#{name}_#{param}"), as: as]
 
@@ -191,40 +177,17 @@ defmodule Phoenix.Router.Mapper do
 
   defmacro scope(params, do: nested_context) do
     quote do
-      params = unquote(params)
-      path   = Keyword.get(params, :path)
-      alias  = Keyword.get(params, :alias)
-      as     = Keyword.get(params, :as)
-      if path, do: Errors.ensure_valid_path!(path)
-      ScopeContext.push({path, alias, as}, __MODULE__)
-      unquote(nested_context)
-      ScopeContext.pop(__MODULE__)
+      Scope.push(__MODULE__, unquote(params))
+      try do
+        unquote(nested_context)
+      after
+        Scope.pop(__MODULE__)
+      end
     end
   end
 
   @doc false
   def extract_actions_from_options(opts) do
     Keyword.get(opts, :only) || (@actions -- Keyword.get(opts, :except, []))
-  end
-
-  @doc """
-  Converts the controller Module into a String param prefix based on name
-
-  ## Examples
-
-      iex> Mapper.resource_name(UserController)
-      "user"
-
-  """
-  def resource_name(controller) do
-    resource_alias(controller)
-    |> Phoenix.Naming.underscore
-  end
-
-  def resource_alias(controller) do
-    Phoenix.Naming.module_name(controller)
-    |> String.split(".")
-    |> List.last
-    |> String.replace("Controller", "")
   end
 end

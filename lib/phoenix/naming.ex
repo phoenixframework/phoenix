@@ -20,6 +20,28 @@ defmodule Phoenix.Naming do
   end
 
   @doc """
+  Extracts the resource name from an alias.
+  """
+  def resource_name(alias, suffix \\ nil) do
+    alias
+    |> Module.split()
+    |> List.last()
+    |> remove_suffix(suffix)
+    |> Phoenix.Naming.underscore()
+  end
+
+  defp remove_suffix(alias, nil),
+    do: alias
+  defp remove_suffix(alias, suffix) do
+    suffix_size = byte_size(suffix)
+    prefix_size = byte_size(alias) - suffix_size
+    case alias do
+      <<prefix::binary-size(prefix_size), ^suffix::binary>> -> prefix
+      _ -> alias
+    end
+  end
+
+  @doc """
   Converts String to underscore case
 
   ## Examples
