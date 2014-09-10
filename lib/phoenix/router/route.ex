@@ -1,6 +1,7 @@
 defmodule Phoenix.Router.Route do
   # This module defines the Route struct that is used
-  # throughout Phoenix's router.
+  # throughout Phoenix's router. This struct is private
+  # as it contains internal routing information.
   @moduledoc false
 
   alias Phoenix.Router.Route
@@ -22,8 +23,7 @@ defmodule Phoenix.Router.Route do
 
   @doc """
   Receives the verb, path, controller, action and helper
-  and returns a Route struct. The given path is processed
-  and validated, raising an error in case of invalid paths.
+  and returns a Route struct.
   """
   @spec build(String.t, String.t, atom, atom, atom) :: t
   def build(verb, path, controller, action, helper)

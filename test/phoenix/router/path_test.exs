@@ -58,7 +58,9 @@ defmodule Phoenix.Router.PathTest do
       "http://example.com/users/1"
 
     assert Path.build_url(path, host: "example.com", port: 443) ==
-      "http://example.com/users/1"
-  end
+      "http://example.com:443/users/1"
 
+    assert Path.build_url(path, host: "example.com", port: 443, ssl: true) ==
+      "https://example.com/users/1"
+  end
 end

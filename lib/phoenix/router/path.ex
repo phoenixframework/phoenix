@@ -123,8 +123,7 @@ defmodule Phoenix.Router.Path do
   def build_url(path, opts \\ []) do
     scheme = if opts[:ssl], do: "https", else: "http"
     host = opts[:host]
-    proxy = Enum.member?([80, 443], opts[:port])
-    port = if proxy, do: nil, else: opts[:port]
+    port = opts[:port]
     %URI{scheme: scheme, host: host, path: path, port: port} |> to_string
   end
   def build_url(path_string, named_params, params, module) do

@@ -1,13 +1,11 @@
 defmodule Phoenix.Router.Mapper do
   alias Phoenix.Controller.Action
   alias Phoenix.Controller.Connection
-  alias Phoenix.Router.Scope
-  alias Phoenix.Router.Mapper
   alias Phoenix.Router.Path
+  alias Phoenix.Router.Resource
   alias Phoenix.Router.Route
+  alias Phoenix.Router.Scope
 
-  @default_param_key "id"
-  @actions [:index, :edit, :new, :show, :create, :update, :destroy]
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
 
   @moduledoc """
@@ -143,51 +141,43 @@ defmodule Phoenix.Router.Mapper do
   defmacro resources(path, controller) do
     add_resources path, controller, [], do: nil
   end
-  defp add_resources(path, controller, options, do: nested_context) do
-    quote unquote: true, bind_quoted: [options: options,
-                                       path: path,
-                                       ctrl: controller] do
-      
-      actions = Mapper.extract_actions_from_options(options)
-      param   = Keyword.get(options, :param, unquote(@default_param_key))
-      name    = Keyword.get(options, :name, Phoenix.Naming.resource_name(ctrl, "Controller"))
-      as      = Keyword.get(options, :as, name)
-      context = [path: Elixir.Path.join(path, ":#{name}_#{param}"), as: as]
+  defp add_resources(path, controller, options, do: context) do
+    quote do
+      resource = Resource.build(unquote(path), unquote(controller), unquote(options))
 
-      Enum.each actions, fn action ->
-        opts = [as: as]
+      parm = resource.param
+      path = resource.path
+      ctrl = resource.controller
+      opts = [as: resource.as]
+
+      Enum.each resource.actions, fn action ->
         case action do
           :index   -> get    "#{path}",                ctrl, :index, opts
-          :show    -> get    "#{path}/:#{param}",      ctrl, :show, opts
+          :show    -> get    "#{path}/:#{parm}",      ctrl, :show, opts
           :new     -> get    "#{path}/new",            ctrl, :new, opts
-          :edit    -> get    "#{path}/:#{param}/edit", ctrl, :edit, opts
+          :edit    -> get    "#{path}/:#{parm}/edit", ctrl, :edit, opts
           :create  -> post   "#{path}",                ctrl, :create, opts
-          :destroy -> delete "#{path}/:#{param}",      ctrl, :destroy, opts
+          :destroy -> delete "#{path}/:#{parm}",      ctrl, :destroy, opts
           :update  ->
-            put   "#{path}/:id", ctrl, :update, opts
-            patch "#{path}/:id", ctrl, :update, as: nil
+            put   "#{path}/:#{parm}", ctrl, :update, opts
+            patch "#{path}/:#{parm}", ctrl, :update, as: nil
         end
       end
 
-      scope context do
-        unquote(nested_context)
+      scope resource.member do
+        unquote(context)
       end
     end
   end
 
-  defmacro scope(params, do: nested_context) do
+  defmacro scope(params, do: context) do
     quote do
       Scope.push(__MODULE__, unquote(params))
       try do
-        unquote(nested_context)
+        unquote(context)
       after
         Scope.pop(__MODULE__)
       end
     end
-  end
-
-  @doc false
-  def extract_actions_from_options(opts) do
-    Keyword.get(opts, :only) || (@actions -- Keyword.get(opts, :except, []))
   end
 end
