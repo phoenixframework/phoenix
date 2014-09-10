@@ -2,7 +2,69 @@ defmodule Phoenix.Router.NamedRoutingTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
+  alias Phoenix.Router.Helpers
+
+  ## Unit tests
+
+  test "generates url_from_config" do
+    Application.put_env(:phoenix, :url_from_config,
+      port: 1337, proxy_port: 80, host: "example.com", ssl: false)
+    assert Helpers.url_from_config(:url_from_config) ==
+           "http://example.com"
+
+    Application.put_env(:phoenix, :url_from_config,
+      port: 1337, host: "example.com", ssl: true)
+    assert Helpers.url_from_config(:url_from_config) ==
+            "https://example.com:1337"
+  end
+
+  test "defhelper with :identifiers" do
+    route = build("GET", "/foo/:bar", Hello, :world, "hello_world")
+
+    assert extract_defhelper(route, 0) == String.strip """
+    def(hello_world_path(:world, bar)) do
+      hello_world_path(:world, bar, [])
+    end
+    """
+
+    assert extract_defhelper(route, 1) == String.strip """
+    def(hello_world_path(:world, bar, params)) do
+      to_path(("" <> "/foo") <> "/" <> to_string(bar), params, ["bar"])
+    end
+    """
+  end
+
+  test "defhelper with *identifiers" do
+    route = build("GET", "/foo/*bar", Hello, :world, "hello_world")
+
+    assert extract_defhelper(route, 0) == String.strip """
+    def(hello_world_path(:world, bar)) do
+      hello_world_path(:world, bar, [])
+    end
+    """
+
+    assert extract_defhelper(route, 1) == String.strip """
+    def(hello_world_path(:world, bar, params)) do
+      to_path(("" <> "/foo") <> "/" <> Enum.join(bar, "/"), params, ["bar"])
+    end
+    """
+  end
+
+  defp build(verb, path, controller, action, helper) do
+    Phoenix.Router.Route.build(verb, path, controller, action, helper)
+  end
+
+  defp extract_defhelper(route, pos) do
+    {:__block__, _, block} = Helpers.defhelper(route)
+    Enum.at(block, pos) |> Macro.to_string()
+  end
+
+  ## Integration tests
+
   defmodule Router do
+    Application.put_env(:phoenix, Router,
+      port: 1337, proxy_port: 80, host: "example.com", ssl: false)
+
     use Phoenix.Router
 
     get "/posts/top", PostController, :top, as: :top
@@ -29,18 +91,18 @@ defmodule Phoenix.Router.NamedRoutingTest do
 
   alias Router.Helpers
 
-  Application.put_env(:phoenix, Router,
-    port: 1337, proxy_port: 80, host: "example.com", ssl: false)
-
   test "top-level named route" do
     assert Helpers.post_path(:show, 5) == "/posts/5"
     assert Helpers.post_path(:show, 5, []) == "/posts/5"
+    assert Helpers.post_path(:show, 5, id: 5) == "/posts/5"
+    assert Helpers.post_path(:show, 5, %{"id" => 5}) == "/posts/5"
 
     assert Helpers.post_path(:file, ["foo", "bar"]) == "/posts/file/foo/bar"
     assert Helpers.post_path(:file, ["foo", "bar"], []) == "/posts/file/foo/bar"
 
     assert Helpers.top_path(:top) == "/posts/top"
     assert Helpers.top_path(:top, id: 5) == "/posts/top?id=5"
+    assert Helpers.top_path(:top, %{"id" => 5}) == "/posts/top?id=5"
 
     assert_raise UndefinedFunctionError, fn ->
       Helpers.post_path(:skip)

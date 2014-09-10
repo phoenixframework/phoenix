@@ -1,9 +1,7 @@
 defmodule Phoenix.Router.Mapper do
   alias Phoenix.Controller.Action
   alias Phoenix.Controller.Connection
-  alias Phoenix.Router.Path
   alias Phoenix.Router.Resource
-  alias Phoenix.Router.Route
   alias Phoenix.Router.Scope
 
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
@@ -68,28 +66,13 @@ defmodule Phoenix.Router.Mapper do
   end
 
   defmacro __before_compile__(env) do
-    routes      = env.module |> Module.get_attribute(:routes) |> Enum.reverse
-    helpers_ast = defhelpers(routes, env.module)
+    routes = env.module |> Module.get_attribute(:routes) |> Enum.reverse
+    Phoenix.Router.Helpers.define(env, routes)
 
     quote do
       def __routes__, do: unquote(Macro.escape(routes))
       # TODO: follow match/dispatch pattern from Plug
       def match(conn, method, path), do: Connection.assign_status(conn, 404)
-      defmodule Helpers, do: unquote(helpers_ast)
-    end
-  end
-
-  defp defhelpers(routes, module) do
-    path_helpers_ast = for route <- routes, do: Route.defhelper(route)
-
-    quote do
-      unquote(path_helpers_ast)
-      # TODO: use host/port/schem from Conn
-      def url(_conn = %Plug.Conn{}, path), do: url(path)
-      def url(path) do
-        # TODO: Review this whole config story
-        Path.build_url(path, [], [], unquote(module))
-      end
     end
   end
 
