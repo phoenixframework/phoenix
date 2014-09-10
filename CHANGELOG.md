@@ -1,9 +1,15 @@
 # Changelog
 
-## v0.4.2-dev (2014-09-08)
+## v0.5.0-dev
+
+* Enhancements
+  * [Router] Named helpers are now automatically generated for every route based on the controller name
+  * [Router] Named helpers have been optimized to do as little work as possible at runtime
 
 * Backwards incompatible changes
   * [Controller] Remove default, inject aliases: `Flash`, `JSON`
+  * [Router] `*path` identifiers in routers are now returned as a list
+  * [Router] Named helpers are now defined in a explicit module nested to your router. For example, if your router is named `MyApp.Router`, the named helpers will be available at `MyApp.Router.Helpers`
 
 
 ## v0.4.1 (2014-09-08)
