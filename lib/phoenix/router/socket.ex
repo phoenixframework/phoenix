@@ -1,5 +1,5 @@
 defmodule Phoenix.Router.Socket do
-
+  # TODO: Move this to Phoenix.Router
   defmacro __using__(options) do
     mount = Dict.fetch! options, :mount
 
