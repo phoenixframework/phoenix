@@ -69,9 +69,11 @@ defmodule Phoenix.Template do
       unquote(renders_ast)
       def render(undefined_template), do: render(undefined_template, [])
       def render(undefined_template, _assign) do
-        raise %UndefinedError{
-          message: "No such template \"#{undefined_template}\" for #{Naming.module_name(__MODULE__)}"
-        }
+        raise %UndefinedError{message: """
+        Could not render "#{undefined_template}" for #{Naming.module_name(__MODULE__)}, please define a clause for render/2 or define a template at "#{@path}".
+
+        The following templates were compiled: "#{Enum.join @templates, ", "}"
+        """}
       end
 
       @doc "Returns true if list of directory files has changed"
@@ -93,6 +95,7 @@ defmodule Phoenix.Template do
       def render(unquote(name)), do: render(unquote(name), [])
       @external_resource unquote(file_path)
       @file unquote(file_path)
+      @templates unquote(name)
       unquote(precompiled_template_func)
     end
   end

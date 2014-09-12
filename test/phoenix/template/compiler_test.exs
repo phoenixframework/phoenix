@@ -63,17 +63,14 @@ defmodule Phoenix.Template.CompilerTest do
   end
 
   test "compiler adds catch-all render/2 that raises UndefinedError" do
-    message = "No such template \"not-exists.html\" for Phoenix.Template.CompilerTest.MyApp.Views"
-    assert_raise Phoenix.Template.UndefinedError, message, fn ->
+    assert_raise Phoenix.Template.UndefinedError, fn ->
       View.render(MyApp.Views, "not-exists.html", [])
     end
   end
 
-  test "missing template path raises UndefinedError" do
-    assert_raise Phoenix.Template.UndefinedError, fn ->
-      defmodule MyApp2.Views do
-        use Phoenix.Template.Compiler, path: Path.join([__DIR__], "not-exists")
-      end
+  test "Compiler ignores missing template path" do
+    defmodule MyApp2.Views do
+      use Phoenix.Template.Compiler, path: Path.join([__DIR__], "not-exists")
     end
   end
 end

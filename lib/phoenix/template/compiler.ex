@@ -1,6 +1,5 @@
 defmodule Phoenix.Template.Compiler do
   alias Phoenix.Template
-  alias Phoenix.Template.UndefinedError
 
   @moduledoc """
   Precompiles EEx templates into view module and provides `render` support
@@ -34,10 +33,8 @@ defmodule Phoenix.Template.Compiler do
   end
 
   defmacro __before_compile__(env) do
+    Module.register_attribute(env.module, :templates, accumulate: true)
     path = Module.get_attribute(env.module, :path)
-    unless File.exists?(path) do
-      raise %UndefinedError{message: "No such template directory: #{path}"}
-    end
 
     Template.precompile_all_from_root(path)
   end
