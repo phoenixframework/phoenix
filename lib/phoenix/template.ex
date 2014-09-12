@@ -69,11 +69,11 @@ defmodule Phoenix.Template do
       unquote(renders_ast)
       def render(undefined_template), do: render(undefined_template, [])
       def render(undefined_template, _assign) do
-        raise %UndefinedError{message: """
+        raise UndefinedError, message: """
         Could not render "#{undefined_template}" for #{Naming.module_name(__MODULE__)}, please define a clause for render/2 or define a template at "#{@path}".
 
         The following templates were compiled: "#{Enum.join @templates, ", "}"
-        """}
+        """
       end
 
       @doc "Returns true if list of directory files has changed"
