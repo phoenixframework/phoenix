@@ -53,21 +53,44 @@ defmodule Phoenix.Naming do
       "my_app"
 
   """
-  def underscore(string), do: do_underscore(String.codepoints(string), [])
-  def do_underscore([], acc), do: acc |> Enum.reverse |> Enum.join("")
-  def do_underscore([char | rest], []) when char in "A".."Z" do
-    do_underscore(rest, [String.downcase(char)])
-  end
-  def do_underscore([char | rest], acc) when char in "A".."Z" do
-    do_underscore(rest, [String.downcase(char), "_" | acc])
-  end
-  def do_underscore([char | rest], acc) when char in ["-"] do
-    do_underscore(rest, ["_" | acc])
-  end
-  def do_underscore([char | rest], acc) do
-    do_underscore(rest, [char | acc])
+  def underscore(""), do: ""
+
+  def underscore(<<h, t :: binary>>) do
+    <<to_lower_char(h)>> <> do_underscore(t, h)
   end
 
+  defp do_underscore(<<h, t, rest :: binary>>, _) when h in ?A..?Z and not t in ?A..?Z do
+    <<?_, to_lower_char(h), t>> <> do_underscore(rest, t)
+  end
+
+  defp do_underscore(<<h, t :: binary>>, prev) when h in ?A..?Z and not prev in ?A..?Z do
+    <<?_, to_lower_char(h)>> <> do_underscore(t, h)
+  end
+
+  defp do_underscore(<<?-, t :: binary>>, _) do
+    <<?_>> <> do_underscore(t, ?-)
+  end
+
+  defp do_underscore(<< "..", t :: binary>>, _) do
+    <<"..">> <> underscore(t)
+  end
+
+  defp do_underscore(<<?.>>, _), do: <<?.>>
+
+  defp do_underscore(<<?., t :: binary>>, _) do
+    <<?/>> <> underscore(t)
+  end
+
+  defp do_underscore(<<h, t :: binary>>, _) do
+    <<to_lower_char(h)>> <> do_underscore(t, h)
+  end
+
+  defp do_underscore(<<>>, _) do
+    <<>>
+  end
+
+  defp to_lower_char(char) when char in ?A..?Z, do: char + 32
+  defp to_lower_char(char), do: char
 
   @doc """
   Converts String to camel case
