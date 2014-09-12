@@ -124,6 +124,7 @@ defmodule Phoenix.Router do
   alias Phoenix.Router.Adapter
   alias Phoenix.Router.Resource
   alias Phoenix.Router.Scope
+  alias Phoenix.Adapters.Cowboy
 
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
 
