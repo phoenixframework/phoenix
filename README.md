@@ -149,7 +149,9 @@ defmodule YourApp.PageController do
   end
 
 end
+```
 
+```elixir
 defmodule YourApp.UserController do
   use Phoenix.Controller
 
@@ -182,7 +184,7 @@ By looking at the controller name `App.PageController`, Phoenix will use `App.Pa
  * `App.PageView` is the module that will render the template (more on that later)
  * `App` is your application name
  * `templates` is your configured templates directory. See `web/views.ex`
- * `pages` is your controller name
+ * `page` is your controller name
  * `html` is the requested format (more on that later)
  * `eex` is the default renderer
  * `application.html` is the layout because `application` is the default layout name and html is the requested format (more on that later)
@@ -195,6 +197,7 @@ You may also create helper functions within your views or layouts. For example, 
 defmodule App.Views do
   defmacro __using__(_options) do
     quote do
+      use Phoenix.View
       import unquote(__MODULE__)
 
       # This block is expanded within all views for aliases, imports, etc
@@ -207,7 +210,7 @@ defmodule App.Views do
   def title, do: "Welcome to Phoenix!"
 end
 
-defmodule App.PageView
+defmodule App.PageView do
   use App.Views
   alias Poison, as: JSON
 
@@ -346,7 +349,7 @@ end
 
 Channels broker websocket connections and integrate with the Topic PubSub layer for message broadcasting. You can think of channels as controllers, with two differences: they are bidirectional and the connection stays alive after a reply.
 
-We can implement a channel by creating a module in the _channels_ directory and by using `Phoenix.Channels`:
+We can implement a channel by creating a module in the _channels_ directory and by using `Phoenix.Channel`:
 
 ```elixir
 defmodule App.MyChannel do
@@ -408,7 +411,7 @@ defmodule App.MyChannel do
 end
 ```
 
-Note that, for added clarity, events should be prefixed by their subject and a colon (i.e. "subject:event"). Instead of `reply/3`, you may also use `broadcast/3`. In the previous case, this would publish a message to all clients who previously joined the current socket's topic.
+Note that, for added clarity, events should be prefixed with their subject and a colon (i.e. "subject:event"). Instead of `reply/3`, you may also use `broadcast/3`. In the previous case, this would publish a message to all clients who previously joined the current socket's topic.
 
 Remember that a client first has to join a topic before it can send events. On the JavaScript side, this is how it would be done (don't forget to include _/js/phoenix.js_) :
 
@@ -418,7 +421,7 @@ var socket = new Phoenix.Socket("/ws");
 socket.join("channel", "topic", {some_auth_token: "secret"}, callback);
 ```
 
-First you create a socket which uses the route name /ws. This route's name is for you to decide in your router :
+First you should create a socket, which uses `/ws` route name. This route's name is for you to decide in your router :
 
 ```elixir
 defmodule App.Router do
@@ -429,7 +432,7 @@ defmodule App.Router do
 end
 ```
 
-This mounts the socket router on /ws and also register the channel from earlier as `channel`. Let's recap:
+This mounts the socket router at `/ws` and also registers the above channel as `channel`. Let's recap:
 
  * The mountpoint for the socket in the router (/ws) has to match the route used on the JavaScript side when creating the new socket.
  * The channel name in the router has to match the first parameter on the JavaScript call to `socket.join`
@@ -475,7 +478,7 @@ end
 and handle that like any other event
 ``` javascript
 channel.on("error", function(error) {
-  console.log("Failed to join topic. Reason: +" error.reason);
+  console.log("Failed to join topic. Reason: " + error.reason);
 });
 ```
 
@@ -516,8 +519,9 @@ config :phoenix, :code_reloader,
   enabled: false
 
 import_config "#{Mix.env}.exs"
+```
 
-
+```elixir
 # your_app/config/dev.exs
 use Mix.Config
 
@@ -535,8 +539,6 @@ config :phoenix, :code_reloader,
 
 config :logger, :console,
   level: :debug
-
-
 ```
 
 #### Configuration for SSL
@@ -546,7 +548,7 @@ certfile in the `priv` directory and configure your router with the following
 options:
 
 ```elixir
-# your_app/config/prod.ex
+# your_app/config/prod.exs
 use Mix.Config
 
 config :phoenix, YourApp.Router,
@@ -560,7 +562,6 @@ config :phoenix, YourApp.Router,
 config :logger, :console,
   level: :info,
   metadata: [:request_id]
-
 ```
 
 When you include the `otp_app` option, `Plug` will search within the `priv`
@@ -585,13 +586,13 @@ the route helper functions will use the proxy port number.
 Example:
 
 ```elixir
-# your_app/config/prod.ex
+# your_app/config/prod.exs
 use Mix.Config
 
 config :phoenix, YourApp.Router,
   ...
   port: 4000,
-  proxy_port: 443
+  proxy_port: 443,
   ...
 ```
 
@@ -601,19 +602,18 @@ Phoenix supports a session cookie store that can be easily configured. Just
 add the following configuration settings to your application's config module:
 
 ```elixir
-# your_app/config/prod.ex
+# your_app/config/prod.exs
 use Mix.Config
 
 config :phoenix, YourApp.Router,
   ...
   cookies: true,
   session_key: "_your_app_key",
-  session_secret: "super secret"
+  session_secret: "super secret",
   ...
-
 ```
 
-Then you can access session data from your application controllers.
+Then you can access session data from your application's controllers.
 NOTE: that `:key` and `:secret` are required options.
 
 Example:
@@ -658,13 +658,16 @@ config :phoenix, YourApp.Router,
   catch_errors: true,
   debug_errors: false,
   error_controller: YourApp.PageController
+```
 
+```elixir
 # config/dev.exs
 config :phoenix, YourApp.Router,
   ...
   debug_errors: true # Show Phoenix route/stacktrace debug pages for 404/500's
+```
 
-
+```elixir
 defmodule YourApp.PageController do
   use Phoenix.Controller
 
@@ -675,9 +678,11 @@ defmodule YourApp.PageController do
   def error(conn, _) do
     handle_error(conn, error(conn))
   end
+
   defp handle_error(conn, {:error, Ecto.NotSingleResult}) do
     not_found(conn, [])
   end
+
   defp handle_error(conn, _any) do
     text conn, 500, "Something went wrong"
   end
@@ -686,7 +691,7 @@ end
 
 #### Catching Errors at the Controller layer
 
-Errors can be caught at the controller layer by overriding `call/2` on the controller. ie:
+Errors can be caught at the controller layer by overriding `call/2` in the controller, i.e.:
 
 ```elixir
 defmodule YourApp.UserController do
@@ -717,6 +722,7 @@ mix phoenix --help                             # This help
 ```
 
 ### Static Assets
+
 Static assets are enabled by default and served from the `priv/static/`
 directory of your application. The assets are mounted at the root path, so
 `priv/static/js/phoenix.js` would be served from `example.com/js/phoenix.js`.
@@ -777,4 +783,3 @@ $ coffee -o priv/static/js -cw priv/src/static/cs
   - [x] Browser js client
   - [ ] iOS client (WIP)
   - [ ] Android client
-
