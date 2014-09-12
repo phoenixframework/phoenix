@@ -52,6 +52,12 @@ defmodule Phoenix.Naming do
       iex> Naming.underscore("my-app")
       "my_app"
 
+  In general, `underscore` can be thought of as the reverse of
+  `camelize`, however, in some cases formatting may be lost:
+
+      Mix.Utils.underscore "SAPExample"  #=> "sap_example"
+      Mix.Utils.camelize   "sap_example" #=> "SapExample"
+
   """
   def underscore(""), do: ""
 
@@ -100,20 +106,48 @@ defmodule Phoenix.Naming do
       iex> Naming.camelize("my_app")
       "MyApp"
 
-      iex> Naming.camelize("my-app")
-      "MyApp"
+  In general, `camelize` can be thought of as the reverse of
+  `underscore`, however, in some cases formatting may be lost:
+
+      Mix.Utils.underscore "SAPExample"  #=> "sap_example"
+      Mix.Utils.camelize   "sap_example" #=> "SapExample"
 
   """
-  def camelize(string), do: do_camelize(String.codepoints(string), [])
-  def do_camelize([], acc), do: acc |> Enum.reverse |> Enum.join("")
-  def do_camelize([char | rest], []) when char in "a".."z" do
-    do_camelize(rest, [String.upcase(char)])
+  def camelize(""), do: ""
+
+  def camelize(<<?_, t :: binary>>) do
+    camelize(t)
   end
-  def do_camelize([sep, next | rest], acc) when sep in ["_", "-"] do
-    do_camelize(rest, [String.upcase(next) | acc])
+
+  def camelize(<<h, t :: binary>>) do
+    <<to_upper_char(h)>> <> do_camelize(t)
   end
-  def do_camelize([char | rest], acc) do
-    do_camelize(rest, [char | acc])
+
+  defp do_camelize(<<?_, ?_, t :: binary>>) do
+    do_camelize(<< ?_, t :: binary >>)
   end
+
+  defp do_camelize(<<?_, h, t :: binary>>) when h in ?a..?z do
+    <<to_upper_char(h)>> <> do_camelize(t)
+  end
+
+  defp do_camelize(<<?_>>) do
+    <<>>
+  end
+
+  defp do_camelize(<<?/, t :: binary>>) do
+    <<?.>> <> camelize(t)
+  end
+
+  defp do_camelize(<<h, t :: binary>>) do
+    <<h>> <> do_camelize(t)
+  end
+
+  defp do_camelize(<<>>) do
+    <<>>
+  end
+
+  defp to_upper_char(char) when char in ?a..?z, do: char - 32
+  defp to_upper_char(char), do: char
 
 end
