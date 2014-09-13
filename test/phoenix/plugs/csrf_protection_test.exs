@@ -65,10 +65,18 @@ defmodule Phoenix.Controller.CsrfProtectionTest do
     simulate_request(Router, :head, "index")
   end
 
-  test "protected requests with valid tokens are allowed", context do
+  test "protected requests with valid token in params are allowed", context do
     simulate_request(Router, :post, "create", %{csrf_token: "hello123"})
     simulate_request(Router, :put, "update", %{csrf_token: "hello123"})
     simulate_request(Router, :delete, "destroy", %{csrf_token: "hello123"})
     simulate_request(Router, :patch, "update", %{csrf_token: "hello123"})
+  end
+
+  test "protected requests with valid token in header are allowed" do
+    headers = [{:headers, [{"X-CSRF-Token", "hello123"}] }]
+    simulate_request(Router, :post, "create", nil, headers)
+    simulate_request(Router, :put, "update", nil, headers)
+    simulate_request(Router, :delete, "destroy", nil, headers)
+    simulate_request(Router, :patch, "update", nil, headers)
   end
 end
