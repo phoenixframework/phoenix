@@ -55,8 +55,8 @@ defmodule Phoenix.Naming do
   In general, `underscore` can be thought of as the reverse of
   `camelize`, however, in some cases formatting may be lost:
 
-      Mix.Utils.underscore "SAPExample"  #=> "sap_example"
-      Mix.Utils.camelize   "sap_example" #=> "SapExample"
+      Naming.underscore "SAPExample"  #=> "sap_example"
+      Naming.camelize   "sap_example" #=> "SapExample"
 
   """
   def underscore(""), do: ""
@@ -109,8 +109,8 @@ defmodule Phoenix.Naming do
   In general, `camelize` can be thought of as the reverse of
   `underscore`, however, in some cases formatting may be lost:
 
-      Mix.Utils.underscore "SAPExample"  #=> "sap_example"
-      Mix.Utils.camelize   "sap_example" #=> "SapExample"
+      Naming.underscore "SAPExample"  #=> "sap_example"
+      Naming.camelize   "sap_example" #=> "SapExample"
 
   """
   def camelize(""), do: ""
