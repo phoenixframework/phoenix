@@ -17,7 +17,7 @@ defmodule Phoenix.Controller.CsrfProtectionTest do
 
   defp simulate_request_without_token(method, path, params \\ nil) do
     conn(method, path, params)
-    |> Plug.Session.call(session_options)
+    |> Plug.Session.call(session_options())
     |> fetch_session
   end
 
@@ -26,7 +26,7 @@ defmodule Phoenix.Controller.CsrfProtectionTest do
 
     recycle(conn, old_conn)
     |> Plug.Parsers.call(opts)
-    |> Plug.Session.call(session_options)
+    |> Plug.Session.call(session_options())
     |> fetch_session
   end
 
@@ -52,6 +52,15 @@ defmodule Phoenix.Controller.CsrfProtectionTest do
       assert conn.params["csrf_token"] == ""
       CsrfProtection.call(conn, [])
     end
+  end
+
+  test "for invalid authenticity token" do
+    old_conn = simulate_request(:get, "/")
+
+    conn = conn(:post, "/", %{csrf_token: "foo"})
+           |> recycle_data(old_conn)
+           |> CsrfProtection.call(raise_error: false)
+    assert conn.halted == true
   end
 
   test "unprotected requests are always valid" do
