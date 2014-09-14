@@ -5,16 +5,28 @@ defmodule Phoenix.Controller.CsrfProtectionTest do
 
   def simulate_request(method, path, params \\ nil) do
     simulate_request_without_token(method, path, params)
-    |> put_session(:csrf_token, "hello123")
+    |> put_session(:csrf_token, "hello123") |> send_resp(200, "ok")
+  end
+
+  defp session_options do
+    Plug.Session.init(
+      store: :cookie,
+      key: "foobar",
+      secret: "11111111111111111111111111111111111111111111111111111111111111111111111111")
   end
 
   defp simulate_request_without_token(method, path, params \\ nil) do
+    conn(method, path, params)
+    |> Plug.Session.call(session_options)
+    |> fetch_session
+  end
+
+  defp recycle_data(conn, old_conn) do
     opts = Plug.Parsers.init(parsers: [:urlencoded, :multipart, Parsers.JSON], accept: ["*/*"])
-    conn = conn(method, path, params)
-           |> fetch_cookies
-           |> Plug.Parsers.call(opts)
-    opts = Plug.Session.init(store: :cookie, key: "foobar", secret: "11111111111111111111111111111111111111111111111111111111111111111111111111")
-    Plug.Session.call(conn, opts)
+
+    recycle(conn, old_conn)
+    |> Plug.Parsers.call(opts)
+    |> Plug.Session.call(session_options)
     |> fetch_session
   end
 
@@ -25,43 +37,60 @@ defmodule Phoenix.Controller.CsrfProtectionTest do
   end
 
   test "raises error for invalid authenticity token" do
+    old_conn = simulate_request(:get, "/")
+
     assert_raise RuntimeError, fn ->
-      conn = simulate_request(:post, "/", %{first_name: "Foo", csrf_token: "foo"})
+      conn = conn(:post, "/", %{csrf_token: "foo"}) |> recycle_data(old_conn)
       assert get_session(conn, :csrf_token) == "hello123"
+      assert conn.params["csrf_token"] == "foo"
       CsrfProtection.call(conn, [])
     end
+
     assert_raise RuntimeError, fn ->
-      conn = simulate_request(:post, "/", %{first_name: "Foo", csrf_token: "foo"})
+      conn = conn(:post, "/", %{csrf_token: ""}) |> recycle_data(old_conn)
       assert get_session(conn, :csrf_token) == "hello123"
+      assert conn.params["csrf_token"] == ""
       CsrfProtection.call(conn, [])
     end
   end
 
   test "unprotected requests are always valid" do
-    simulate_request(:get, "/") |> CsrfProtection.call([])
-    simulate_request(:options, "/") |> CsrfProtection.call([])
-    simulate_request(:connect, "/") |> CsrfProtection.call([])
-    simulate_request(:trace, "/") |> CsrfProtection.call([])
-    simulate_request(:head, "/") |> CsrfProtection.call([])
+    simulate_request_without_token(:get, "/") |> CsrfProtection.call([])
+    simulate_request_without_token(:options, "/") |> CsrfProtection.call([])
+    simulate_request_without_token(:connect, "/") |> CsrfProtection.call([])
+    simulate_request_without_token(:trace, "/") |> CsrfProtection.call([])
+    simulate_request_without_token(:head, "/") |> CsrfProtection.call([])
   end
 
   test "protected requests with valid token in params are allowed except DELETE" do
-    simulate_request(:post, "/", %{csrf_token: "hello123"}) |> CsrfProtection.call([])
-    simulate_request(:put, "/", %{csrf_token: "hello123"}) |> CsrfProtection.call([])
-    simulate_request(:patch, "/", %{csrf_token: "hello123"}) |> CsrfProtection.call([])
+    old_conn = simulate_request(:get, "/")
+    params = %{csrf_token: "hello123"}
+
+    conn(:post, "/", params) |> recycle_data(old_conn) |> CsrfProtection.call([])
+    conn(:put, "/", params) |> recycle_data(old_conn) |> CsrfProtection.call([])
+    conn(:patch, "/", params) |> recycle_data(old_conn) |> CsrfProtection.call([])
   end
 
   test "protected requests with valid token in header are allowed" do
-    simulate_request(:post, "/")
+    old_conn = simulate_request(:get, "/")
+
+    conn(:post, "/")
+    |> recycle_data(old_conn)
     |> put_req_header("X-CSRF-Token", "hello123")
     |> CsrfProtection.call([])
-    simulate_request(:put, "/")
+
+    conn(:put, "/")
+    |> recycle_data(old_conn)
     |> put_req_header("X-CSRF-Token", "hello123")
     |> CsrfProtection.call([])
-    simulate_request(:patch, "/")
+
+    conn(:patch, "/")
+    |> recycle_data(old_conn)
     |> put_req_header("X-CSRF-Token", "hello123")
     |> CsrfProtection.call([])
-    simulate_request(:delete, "/")
+
+    conn(:delete, "/")
+    |> recycle_data(old_conn)
     |> put_req_header("X-CSRF-Token", "hello123")
     |> CsrfProtection.call([])
   end
