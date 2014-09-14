@@ -1,82 +1,64 @@
 defmodule Phoenix.Controller.CsrfProtectionTest do
-  use ExUnit.Case
-  use RouterHelper
-  alias Phoenix.Controller.CsrfProtectionTest.Router
+  use ExUnit.Case, async: true
+  use Plug.Test
   alias Phoenix.Plugs.CsrfProtection
 
-  setup_all do
-    Mix.Config.persist(phoenix: [
-      {Router,
-        cookies: true,
-        session_key: "_app",
-        session_secret: "111111111111111111111111111111111111111111111111111111111111111111111111111",
-        csrf_protection: true
-      }
-    ])
-
-    defmodule Controller do
-      use Phoenix.Controller
-
-      plug :action
-
-      def index(conn, _params) do
-        text conn, "hello"
-      end
-      def create(conn, _params), do: conn
-      def update(conn, _params), do: conn
-      def destroy(conn, _params), do: conn
-    end
-
-    defmodule Router do
-      use Phoenix.Router
-      plug :plant_token
-
-      def plant_token(conn, _opts) do
-        conn = Conn.put_session(conn, :csrf_token, "hello123")
-        conn
-      end
-
-      resources "/csrf", Controller
-    end
-
-    :ok
+  def simulate_request(method, path, params \\ nil) do
+    opts = Plug.Parsers.init(parsers: [:urlencoded, :multipart, Parsers.JSON], accept: ["*/*"])
+    conn = conn(method, path, params)
+           |> fetch_cookies
+           |> Plug.Parsers.call(opts)
+    opts = Plug.Session.init(store: :cookie, key: "foobar", secret: "11111111111111111111111111111111111111111111111111111111111111111111111111")
+    Plug.Session.call(conn, opts)
+    |> fetch_session
+    |> put_session(:csrf_token, "hello123")
   end
 
   setup do
-    conn = simulate_request(Router, :get, "index")
+    conn = simulate_request(:get, "/")
+    assert get_session(conn, :csrf_token) == "hello123"
     :ok
   end
 
   test "raises error for invalid authenticity token" do
-    params = %{first_name: "Foo", csrf_token: "12"}
     assert_raise RuntimeError, fn ->
-      simulate_request Router, :post, "create", params
+      conn = simulate_request(:post, "/", %{first_name: "Foo", csrf_token: "foo"})
+      assert get_session(conn, :csrf_token) == "hello123"
+      CsrfProtection.call(conn, [])
     end
     assert_raise RuntimeError, fn ->
-      simulate_request Router, :post, "create", %{}
+      conn = simulate_request(:post, "/", %{first_name: "Foo", csrf_token: "foo"})
+      assert get_session(conn, :csrf_token) == "hello123"
+      CsrfProtection.call(conn, [])
     end
   end
 
   test "unprotected requests are always valid" do
-    simulate_request(Router, :get, "index")
-    simulate_request(Router, :options, "index")
-    simulate_request(Router, :connect, "index")
-    simulate_request(Router, :trace, "index")
-    simulate_request(Router, :head, "index")
+    simulate_request(:get, "/") |> CsrfProtection.call([])
+    simulate_request(:options, "/") |> CsrfProtection.call([])
+    simulate_request(:connect, "/") |> CsrfProtection.call([])
+    simulate_request(:trace, "/") |> CsrfProtection.call([])
+    simulate_request(:head, "/") |> CsrfProtection.call([])
   end
 
-  test "protected requests with valid token in params are allowed", context do
-    simulate_request(Router, :post, "create", %{csrf_token: "hello123"})
-    simulate_request(Router, :put, "update", %{csrf_token: "hello123"})
-    simulate_request(Router, :delete, "destroy", %{csrf_token: "hello123"})
-    simulate_request(Router, :patch, "update", %{csrf_token: "hello123"})
+  test "protected requests with valid token in params are allowed except DELETE" do
+    simulate_request(:post, "/", %{csrf_token: "hello123"}) |> CsrfProtection.call([])
+    simulate_request(:put, "/", %{csrf_token: "hello123"}) |> CsrfProtection.call([])
+    simulate_request(:patch, "/", %{csrf_token: "hello123"}) |> CsrfProtection.call([])
   end
 
   test "protected requests with valid token in header are allowed" do
-    headers = [{:headers, [{"X-CSRF-Token", "hello123"}] }]
-    simulate_request(Router, :post, "create", nil, headers)
-    simulate_request(Router, :put, "update", nil, headers)
-    simulate_request(Router, :delete, "destroy", nil, headers)
-    simulate_request(Router, :patch, "update", nil, headers)
+    simulate_request(:post, "/")
+    |> put_req_header("X-CSRF-Token", "hello123")
+    |> CsrfProtection.call([])
+    simulate_request(:put, "/")
+    |> put_req_header("X-CSRF-Token", "hello123")
+    |> CsrfProtection.call([])
+    simulate_request(:patch, "/")
+    |> put_req_header("X-CSRF-Token", "hello123")
+    |> CsrfProtection.call([])
+    simulate_request(:delete, "/")
+    |> put_req_header("X-CSRF-Token", "hello123")
+    |> CsrfProtection.call([])
   end
 end
