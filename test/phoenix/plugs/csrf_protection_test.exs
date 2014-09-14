@@ -4,6 +4,11 @@ defmodule Phoenix.Controller.CsrfProtectionTest do
   alias Phoenix.Plugs.CsrfProtection
 
   def simulate_request(method, path, params \\ nil) do
+    simulate_request_without_token(method, path, params)
+    |> put_session(:csrf_token, "hello123")
+  end
+
+  defp simulate_request_without_token(method, path, params \\ nil) do
     opts = Plug.Parsers.init(parsers: [:urlencoded, :multipart, Parsers.JSON], accept: ["*/*"])
     conn = conn(method, path, params)
            |> fetch_cookies
@@ -11,7 +16,6 @@ defmodule Phoenix.Controller.CsrfProtectionTest do
     opts = Plug.Session.init(store: :cookie, key: "foobar", secret: "11111111111111111111111111111111111111111111111111111111111111111111111111")
     Plug.Session.call(conn, opts)
     |> fetch_session
-    |> put_session(:csrf_token, "hello123")
   end
 
   setup do
@@ -60,5 +64,10 @@ defmodule Phoenix.Controller.CsrfProtectionTest do
     simulate_request(:delete, "/")
     |> put_req_header("X-CSRF-Token", "hello123")
     |> CsrfProtection.call([])
+  end
+
+  test "csrf_token is generated when it isn't available" do
+    conn = simulate_request_without_token(:get, "/") |> CsrfProtection.call([])
+    assert !!Conn.get_session(conn, :csrf_token)
   end
 end
