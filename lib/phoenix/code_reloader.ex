@@ -57,6 +57,12 @@ defmodule Phoenix.CodeReloader do
   end
   def mix_compile({:module, Mix.Task}) do
     touch_modules_for_recompile
+    mix_compile_env(Mix.env)
+  end
+  defp mix_compile_env(:test) do
+    reload_modules_for_recompile
+  end
+  defp mix_compile_env(_env) do
     Mix.Task.reenable "compile.elixir"
     Mix.Task.run "compile.elixir", ["--ignore-module-conflict", "--elixirc-paths", "web"]
   end
@@ -67,6 +73,13 @@ defmodule Phoenix.CodeReloader do
     |> modules_to_file_paths
     |> Enum.each(&File.touch!(&1))
   end
+
+  defp reload_modules_for_recompile do
+    Project.modules
+    |> modules_for_recompilation
+    |> Enum.each(&IEx.Helpers.r(&1))
+  end
+
   defp modules_for_recompilation(modules) do
     modules
     |> Stream.filter fn mod ->
