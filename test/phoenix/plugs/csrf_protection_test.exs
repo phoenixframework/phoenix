@@ -30,36 +30,14 @@ defmodule Phoenix.Controller.CsrfProtectionTest do
     |> fetch_session
   end
 
-  setup do
-    conn = simulate_request(:get, "/")
-    assert get_session(conn, :csrf_token) == "hello123"
-    :ok
-  end
-
-  test "raises error for invalid authenticity token" do
-    old_conn = simulate_request(:get, "/")
-
-    assert_raise RuntimeError, fn ->
-      conn = conn(:post, "/", %{csrf_token: "foo"}) |> recycle_data(old_conn)
-      assert get_session(conn, :csrf_token) == "hello123"
-      assert conn.params["csrf_token"] == "foo"
-      CsrfProtection.call(conn, [])
-    end
-
-    assert_raise RuntimeError, fn ->
-      conn = conn(:post, "/", %{csrf_token: ""}) |> recycle_data(old_conn)
-      assert get_session(conn, :csrf_token) == "hello123"
-      assert conn.params["csrf_token"] == ""
-      CsrfProtection.call(conn, [])
-    end
-  end
-
   test "for invalid authenticity token" do
     old_conn = simulate_request(:get, "/")
 
     conn = conn(:post, "/", %{csrf_token: "foo"})
            |> recycle_data(old_conn)
-           |> CsrfProtection.call(raise_error: false)
+           |> CsrfProtection.call([])
+
+    assert conn.state == :sent
     assert conn.halted == true
   end
 

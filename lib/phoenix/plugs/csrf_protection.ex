@@ -9,9 +9,8 @@ defmodule Phoenix.Plugs.CsrfProtection do
   If a CSRF token in the session does not previously exist, a CSRF token will
   be generated and put into the session.
 
-  When a token is invalid, an error is raised or a response is sent back with
-  a 401 status. This is configurable by passing an option `raise_error: boolean`
-  to the plug. It raises an error by default.
+  When a token is invalid, the connection is halted preventing further plugs
+  downstream from being invoked.
 
   The session's CSRF token will be compared with a token in the params with key
   "csrf-token" or a token in the request headers with key 'X-CSRF-Token'.
@@ -23,7 +22,7 @@ defmodule Phoenix.Plugs.CsrfProtection do
 
   ## Examples
 
-      plug Phoenix.Plugs.CsrfProtection, raise_error: false
+      plug Phoenix.Plugs.CsrfProtection
 
   """
   @protected_methods ~w(POST PUT PATCH DELETE)
@@ -35,24 +34,22 @@ defmodule Phoenix.Plugs.CsrfProtection do
 
   def init(opts), do: opts
 
-  def call(%Conn{method: method} = conn, opts) when method in @protected_methods do
+  def call(%Conn{method: method} = conn, _opts) when method in @protected_methods do
     if verified_request?(conn) do
       conn
     else
-      handle_invalid_token(conn, opts)
+      handle_invalid_token(conn)
     end
   end
 
   def call(conn, _opts), do: ensure_csrf_token(conn)
 
-  defp handle_invalid_token(conn, opts) do
-    if Keyword.get(opts, :raise_error, true) do
-      raise @invalid_token_error_message
-    else
-      Conn.send_resp(conn, 401, @invalid_token_error_message)
-      Logger.debug(@invalid_token_error_message)
-      Conn.halt(conn)
-    end
+  defp handle_invalid_token(conn) do
+    Logger.debug(@invalid_token_error_message)
+
+    conn
+    |> Conn.send_resp(401, @invalid_token_error_message)
+    |> Conn.halt
   end
 
   defp verified_request?(conn) do
