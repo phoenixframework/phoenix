@@ -1,5 +1,4 @@
 defmodule Phoenix.Controller.Action do
-  require Logger
   import Phoenix.Controller.Connection
   import Plug.Conn
   alias Phoenix.Config
@@ -68,26 +67,10 @@ defmodule Phoenix.Controller.Action do
     router = router_module(conn)
     params = named_params(conn)
 
-    log_error(conn)
-
     if Config.router(router, [:debug_errors]) do
       perform conn, Phoenix.Controller.ErrorController, :error_debug, params
     else
       perform conn, Config.router!(router, [:error_controller]), :error, params
-    end
-  end
-
-  defp log_error(conn) do
-    Logger.error fn ->
-        err            = error(conn)
-        stacktrace     = System.stacktrace
-        exception      = Exception.normalize(:error, err)
-        exception_type = exception.__struct__
-
-      """
-      #{inspect exception_type}) #{Exception.message(exception)}
-      #{Exception.format_stacktrace stacktrace}
-      """
     end
   end
 end

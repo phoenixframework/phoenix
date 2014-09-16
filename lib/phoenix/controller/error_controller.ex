@@ -23,9 +23,9 @@ defmodule Phoenix.Controller.ErrorController do
   end
 
   def error(conn, _) do
-    status = case error(conn) do
-      {_kind, err} -> Plug.Exception.status(err)
-      _            -> 500
+    status = case Phoenix.Controller.Exception.from_conn(conn) do
+      %Phoenix.Controller.Exception{status: status} -> status
+      :no_exception -> 500
     end
 
     text conn, status, "Something went wrong"
@@ -35,24 +35,24 @@ defmodule Phoenix.Controller.ErrorController do
   Render HTML response with stack trace for use in development
   """
   def error_debug(conn, opts) do
-    case error(conn) do
-      {_kind, err} ->
-        status         = Plug.Exception.status(err)
-        stacktrace     = System.stacktrace
-        exception      = Exception.normalize(:error, err)
-        exception_type = exception.__struct__
+    case Phoenix.Controller.Exception.from_conn(conn) do
+      exception = %Phoenix.Controller.Exception{} ->
+        Phoenix.Controller.Exception.log(exception)
+        render_error_debug(conn, exception)
 
-        html conn, status, """
-          <html>
-            <h2>(#{inspect exception_type}) #{Exception.message(exception)}</h2>
-            <h4>Stacktrace</h4>
-            <body>
-              <pre>#{Exception.format_stacktrace stacktrace}</pre>
-            </body>
-          </html>
-        """
-      _ -> error(conn, opts)
+      :no_exception -> error(conn, opts)
     end
+  end
+  defp render_error_debug(conn, exception) do
+    html conn, exception.status, """
+      <html>
+        <h2>**(#{inspect exception.type}) #{exception.message}</h2>
+        <h4>Stacktrace</h4>
+        <body>
+          <pre>#{exception.stacktrace_formatted}</pre>
+        </body>
+      </html>
+    """
   end
 end
 
