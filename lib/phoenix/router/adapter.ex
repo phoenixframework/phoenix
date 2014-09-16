@@ -21,6 +21,9 @@ defmodule Phoenix.Router.Adapter do
         |> IO.puts
         {:ok, pid}
 
+      {:error, {:already_started, pid}} ->
+        {:ok, pid}
+
       {:error, :eaddrinuse} ->
         raise "Port #{inspect opts[:port]} is already in use"
     end
