@@ -31,7 +31,7 @@ defmodule Phoenix.Router do
   The `get/3` macro above accepts a request of format "/pages/VALUE" and
   dispatches it to the show action in the `PageController`.
 
-  Phoenix's router is extremelly efficient, as it relies on Elixir
+  Phoenix's router is extremely efficient, as it relies on Elixir
   pattern matching for matching routes and serving requests.
 
   ### Helpers
@@ -87,7 +87,7 @@ defmodule Phoenix.Router do
 
   Finally, Phoenix ships with a `mix phoenix.router` task that nicely
   formats all routes in a given router. We can use it to verify all
-  routes included the router above:
+  routes included in the router above:
 
       $ mix phoenix.router
       page_path  GET    /pages/:id       PageController.show/2
