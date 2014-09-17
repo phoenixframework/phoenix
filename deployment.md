@@ -70,7 +70,7 @@ Update our `mix.exs` file to have all dependencies listed under `applications` i
 
 Doing so helps us overcome one of [exrm's common issues](https://github.com/bitwalker/exrm#common-issues) by helping exrm know of all our dependencies so that it can properly bundle them into our release. When not completed, our application will probably alert us of missing modules or of a failure to start a child application when we go to run our release.
 
-Even if you list all of your dependencies, your application may still fail, typically because one of your dependencies does not properly list its own dependencies. A quick fix for this is to include the missing dependency in your list of applications. You should create an issue or a pull request to that project's repo to help the coommunity, but it isn't necessary.
+Even if you list all of your dependencies, your application may still fail, typically because one of your dependencies does not properly list its own dependencies. A quick fix for this is to include the missing dependency in your list of applications. You should create an issue or a pull request to that project's repo to help the community, but it isn't necessary.
 
 Add our application's router as a child to our application's supervisor:
 
