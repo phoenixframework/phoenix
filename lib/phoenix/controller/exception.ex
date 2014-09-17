@@ -16,6 +16,7 @@ defmodule Phoenix.Controller.Exception do
         end
 
       end
+
   """
 
   defstruct status: nil,
@@ -59,7 +60,7 @@ defmodule Phoenix.Controller.Exception do
     stack = System.stacktrace
     excep = case err do
       %{__struct__: _} -> err
-      _                -> Elixir.Exception.normalize(:error, err)
+      _                -> Elixir.Exception.normalize(kind, err)
     end
 
     %Exception{status: Plug.Exception.status(err),
