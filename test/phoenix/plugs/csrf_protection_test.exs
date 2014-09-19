@@ -39,6 +39,13 @@ defmodule Phoenix.Controller.CsrfProtectionTest do
 
     assert conn.state == :sent
     assert conn.halted == true
+
+    conn = conn(:post, "/", %{})
+           |> recycle_data(old_conn)
+           |> CsrfProtection.call([])
+
+    assert conn.state == :sent
+    assert conn.halted == true
   end
 
   test "unprotected requests are always valid" do
