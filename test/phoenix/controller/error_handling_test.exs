@@ -29,8 +29,6 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
     defmodule MyController do
       use Phoenix.Controller
 
-      plug :action
-
       def call(conn, options) do
         try do
           super(conn, options)

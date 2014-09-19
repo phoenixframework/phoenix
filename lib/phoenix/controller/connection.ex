@@ -30,18 +30,13 @@ defmodule Phoenix.Controller.Connection do
   Assign error to phoenix private assigns
   """
   def assign_error(conn, kind, error) do
-    assign_private(conn, :phoenix_error, {kind, error})
+    put_private(conn, :phoenix_error, {kind, error})
   end
 
   @doc """
   Retrieve error from phoenix private assigns
   """
   def error(conn), do: Dict.get(conn.private, :phoenix_error)
-
-  @doc """
-  Returns the Map of named params of Phoenix private assigns
-  """
-  def named_params(conn), do: Dict.get(conn.private, :phoenix_named_params, %{})
 
   @doc """
   Assign layout to phoenix private assigns
@@ -56,10 +51,10 @@ defmodule Phoenix.Controller.Connection do
 
   """
   def assign_layout(conn, layout) when is_binary(layout) do
-    assign_private(conn, :phoenix_layout, layout)
+    put_private(conn, :phoenix_layout, layout)
   end
   def assign_layout(conn, :none) do
-    assign_private(conn, :phoenix_layout, :none)
+    put_private(conn, :phoenix_layout, :none)
   end
 
   @doc """

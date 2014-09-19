@@ -21,7 +21,7 @@ defmodule Phoenix.Controller do
       defmodule MyApp.Controllers.Admin.Users do
         use Phoenix.Controller
 
-        plug :authenticate, usernames: ["jose", "eric", "sonny"]
+        before_action :authenticate, usernames: ["jose", "eric", "sonny"]
 
         def authenticate(conn, options) do
           if get_session(conn, username) in options[:usernames] do
@@ -49,42 +49,25 @@ defmodule Phoenix.Controller do
 
   """
   defmacro __using__(options) do
-    quote do
+    quote bind_quoted: [options: options] do
       import Plug.Conn
+      import Phoenix.Controller
       import Phoenix.Controller.Connection
-      import unquote(__MODULE__)
 
-      @options unquote(options)
+      use Phoenix.Controller.Stack
 
       @subview_module view_module(__MODULE__)
       @layout_module layout_module(__MODULE__)
 
-      def init(options), do: options
-      @before_compile unquote(__MODULE__)
-      use Plug.Builder
-      unless @options[:bare] do
-        plug Plugs.ParamsFetcher
-        plug Plugs.ContentTypeFetcher
-        plug Phoenix.Controller.Flash
-        plug Plugs.ControllerLogger
-      end
-    end
-  end
-
-  defmacro __before_compile__(_env) do
-    quote do
-      unless Plugs.plugged?(@plugs, :action) do
-        plug :action
-      end
-
-      def action(conn, _options) do
-        apply(__MODULE__, conn.private[:phoenix_action], [conn, conn.params])
-      end
-
       def render(conn, template, assigns \\ []) do
         render_view conn, @subview_module, @layout_module, template, assigns
       end
-      defoverridable action: 2
+
+      unless options[:bare] do
+        before_action Plugs.ContentTypeFetcher
+        before_action Phoenix.Controller.Flash
+        before_action Plugs.ControllerLogger
+      end
     end
   end
 

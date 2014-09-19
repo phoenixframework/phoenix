@@ -4,7 +4,7 @@ defmodule Phoenix.Router.Adapter do
   # * The adapter stuff can be moved directly to the adapter module.
   @moduledoc false
 
-  import Plug.Conn, only: [assign_private: 3]
+  import Plug.Conn, only: [put_private: 3]
   import Phoenix.Controller.Connection, only: [assign_status: 2, assign_error: 3]
 
   @unsent [:unset, :set]
@@ -65,11 +65,12 @@ defmodule Phoenix.Router.Adapter do
   Carries out Controller dispatch for router match
   """
   def dispatch(conn, router) do
-    conn = assign_private(conn, :phoenix_router, router)
+    conn = put_private(conn, :phoenix_router, router)
     try do
       router.match(conn, conn.method, conn.path_info)
     catch
-      kind, err -> handle_err(conn, kind, err, Phoenix.Config.router(router, [:catch_errors]))
+      kind, err ->
+        handle_err(conn, kind, err, Phoenix.Config.router(router, [:catch_errors]))
     end
     |> after_dispatch
   end

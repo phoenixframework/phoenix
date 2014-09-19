@@ -9,21 +9,6 @@ defmodule Phoenix.Controller.Action do
   """
 
   @doc """
-  Performs Controller action, invoking the "2nd layer" Plug stack.
-
-  Connection query string parameters are fetched automatically before
-  controller actions are called, as well as merging any named parameters from
-  the route definition.
-  """
-  def perform(conn, controller, action, named_params) do
-    conn = assign_private(conn, :phoenix_named_params, named_params)
-    |> assign_private(:phoenix_action, action)
-    |> assign_private(:phoenix_controller, controller)
-
-    apply(controller, :call, [conn, []])
-  end
-
-  @doc """
   Handles sending 404 response based on Router's Mix Config settings
 
   ## Router Configuration Options
@@ -38,12 +23,11 @@ defmodule Phoenix.Controller.Action do
   def handle_not_found(conn) do
     conn   = put_in conn.halted, false
     router = router_module(conn)
-    params = named_params(conn)
 
     if Config.router(router, [:debug_errors]) do
-      perform conn, Phoenix.Controller.ErrorController, :not_found_debug, params
+      Phoenix.Controller.ErrorController.call(conn, :not_found_debug)
     else
-      perform conn, Config.router!(router, [:error_controller]), :not_found, params
+      Config.router!(router, [:error_controller]).call(conn, :not_found)
     end
   end
 
@@ -65,12 +49,11 @@ defmodule Phoenix.Controller.Action do
   def handle_error(conn) do
     conn   = put_in conn.halted, false
     router = router_module(conn)
-    params = named_params(conn)
 
     if Config.router(router, [:debug_errors]) do
-      perform conn, Phoenix.Controller.ErrorController, :error_debug, params
+      Phoenix.Controller.ErrorController.call(conn, :error_debug)
     else
-      perform conn, Config.router!(router, [:error_controller]), :error, params
+      Config.router!(router, [:error_controller]).call(conn, :error)
     end
   end
 end

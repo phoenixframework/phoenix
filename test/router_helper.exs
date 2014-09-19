@@ -13,6 +13,10 @@ defmodule RouterHelper do
     router.call(conn(verb, path, params, headers), [])
   end
 
+  def action(controller, verb, action, params \\ nil, headers \\ []) do
+    controller.call(conn(verb, "/", params, headers), action)
+  end
+
   # TODO: Avoid capture_log does not allow us to run tests concurrently.
   # Always call it explicitly instead of by default.
   def simulate_request(router, http_method, path) do

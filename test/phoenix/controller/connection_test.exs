@@ -7,12 +7,12 @@ defmodule Phoenix.Router.ConnectionTest do
   alias Phoenix.Plugs
 
   test "action_name returns the private phoenix_action" do
-    conn = Conn.assign_private(%Conn{}, :phoenix_action, "show")
+    conn = Conn.put_private(%Conn{}, :phoenix_action, "show")
     assert Connection.action_name(conn) == "show"
   end
 
   test "controller_module returns the private phoenix_controller" do
-    conn = Conn.assign_private(%Conn{}, :phoenix_controller, "show")
+    conn = Conn.put_private(%Conn{}, :phoenix_controller, "show")
     assert Connection.controller_module(conn) == "show"
   end
 
@@ -59,10 +59,5 @@ defmodule Phoenix.Router.ConnectionTest do
   test "assign_error/3 and error/1 assign and return error" do
     conn = Connection.assign_error(%Conn{}, :throw, "boom")
     assert Connection.error(conn) == {:throw, "boom"}
-  end
-
-  test "named_params/1 returns the private named params" do
-    conn = Conn.assign_private(%Conn{}, :phoenix_named_params, [key: "val"])
-    assert Connection.named_params(conn) == [key: "val"]
   end
 end

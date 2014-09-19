@@ -116,7 +116,6 @@ defmodule Phoenix.Router do
   """
 
   alias Phoenix.Config
-  alias Phoenix.Controller.Action
   alias Phoenix.Controller.Connection
   alias Phoenix.Plugs
   alias Phoenix.Plugs.Parsers
@@ -160,7 +159,7 @@ defmodule Phoenix.Router do
         secret = Config.router!(__MODULE__, [:session_secret])
 
         plug Plug.Session, store: :cookie, key: key, secret: secret
-        plug Plugs.SessionFetcher
+        plug :fetch_session
       end
 
       plug Plug.MethodOverride
@@ -218,11 +217,13 @@ defmodule Phoenix.Router do
   defp add_route(verb, path, controller, action, options) do
     quote bind_quoted: binding() do
       route = Scope.route(__MODULE__, verb, path, controller, action, options)
+      parts = {:%{}, [], route.binding}
       @phoenix_routes route
 
       def unquote(:match)(conn, unquote(route.verb), unquote(route.segments)) do
-        Action.perform(conn, unquote(route.controller),
-                       unquote(route.action), unquote(route.binding))
+        conn = update_in(conn.params, &Map.merge(&1, unquote(parts)))
+        opts = unquote(route.controller).init(unquote(route.action))
+        unquote(route.controller).call(conn, opts)
       end
     end
   end

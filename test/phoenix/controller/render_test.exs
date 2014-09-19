@@ -6,7 +6,7 @@ Code.require_file "views/render_view.exs", __DIR__
 defmodule MyApp.AssignController do
   use Phoenix.Controller
 
-  plug :assign_value
+  before_action :assign_value
 
   def assign_value(conn, _) do
     assign(conn, :my_assign, "assign_plug")
@@ -35,8 +35,7 @@ end
 defmodule MyApp.ImplicitRenderController do
   use Phoenix.Controller
 
-  plug :action
-  plug :render
+  after_action :render
 
   def index(conn, _params) do
     conn
@@ -47,7 +46,7 @@ end
 
 defmodule MyApp.RenderController do
   use Phoenix.Controller
-  plug :action
+
   def show(conn, _params) do
     render conn, "show", []
   end
