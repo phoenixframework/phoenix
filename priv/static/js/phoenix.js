@@ -102,7 +102,7 @@
 
       Socket.prototype.reconnectAfterMs = 5000;
 
-      Socket.prototype.heartbeatInterval = 1000;
+      Socket.prototype.heartbeatInterval = 30000;
 
       Socket.prototype.heartbeatMessage = "ping";
 

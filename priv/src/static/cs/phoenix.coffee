@@ -47,7 +47,7 @@
     flushEveryMs: 50
     reconnectTimer: null
     reconnectAfterMs: 5000
-    heartbeatInterval: 1000
+    heartbeatInterval: 30000
     heartbeatMessage: "ping"
 
     constructor: (endPoint, opts) ->
