@@ -2,7 +2,6 @@ defmodule Phoenix.Plugs.AcceptsTest do
   use ExUnit.Case, async: true
   use RouterHelper
   alias Phoenix.Plugs
-  alias Phoenix.Controller.Action
 
   @ct Plugs.ContentTypeFetcher.init([])
   @html Plugs.Accepts.init(["html"])

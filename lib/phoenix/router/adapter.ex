@@ -5,8 +5,9 @@ defmodule Phoenix.Router.Adapter do
   @moduledoc false
 
   import Plug.Conn, only: [put_private: 3]
-  import Phoenix.Controller.Connection, only: [assign_status: 2, assign_error: 3]
+  import Phoenix.Controller.Connection, only: [assign_status: 2, assign_error: 3, router_module: 1]
 
+  alias Phoenix.Config
   @unsent [:unset, :set]
 
   @doc """
@@ -83,13 +84,49 @@ defmodule Phoenix.Router.Adapter do
   defp handle_err(_, :throw, err, _nocatch), do: throw(err)
   defp handle_err(_, :error, err, _nocatch), do: reraise(err, System.stacktrace)
 
+
+  # Handles sending 404 response based on Router's Mix Config settings
+  #
+  # ## Router Configuration Options
+  #
+  #   * error_controller - The optional Module to have `not_found/2` action invoked
+  #                       when 404's status occurs.
+  #                       Default `Phoenix.Controller.ErrorController`
+  #   * debug_errors - Bool to display Phoenix's route debug page for 404 status.
+  #                    Default `false`
   defp after_dispatch(conn = %Plug.Conn{state: state, status: status})
       when state in @unsent and status == 404 do
-    Phoenix.Controller.Action.handle_not_found(conn)
+    conn   = put_in conn.halted, false
+    router = router_module(conn)
+
+    if Config.router(router, [:debug_errors]) do
+      Phoenix.Controller.ErrorController.call(conn, :not_found_debug)
+    else
+      Config.router!(router, [:error_controller]).call(conn, :not_found)
+    end
   end
+
+  # Handles sending 500 response based on Router's Mix Config settings
+  #
+  # ## Router Configuration Options
+  #
+  #   * error_controller - The optional Module to have `error/2` action invoked
+  #                       when 500's status occurs.
+  #                       Default `Phoenix.Controller.ErrorController`
+  #   * catch_errors - Bool to catch errors at the Router level. Default `true`
+  #   * debug_errors - Bool to display Phoenix's route debug page for 500 status.
+  #                    Default `false`
+  #
   defp after_dispatch(conn = %Plug.Conn{state: state, status: status})
       when state in @unsent and status == 500 do
-    Phoenix.Controller.Action.handle_error(conn)
+    conn   = put_in conn.halted, false
+    router = router_module(conn)
+
+    if Config.router(router, [:debug_errors]) do
+      Phoenix.Controller.ErrorController.call(conn, :error_debug)
+    else
+      Config.router!(router, [:error_controller]).call(conn, :error)
+    end
   end
   defp after_dispatch(conn), do: conn
 end
