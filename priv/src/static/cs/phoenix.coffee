@@ -47,13 +47,13 @@
     flushEveryMs: 50
     reconnectTimer: null
     reconnectAfterMs: 5000
-    heartbeatInterval: 30000
+    heartbeatIntervalMs: 30000
     heartbeatMessage: "ping"
 
     constructor: (endPoint, opts) ->
       if opts?
         @heartbeatMessage = opts.heartbeatMessage if opts.heartbeatMessage?
-        @heartbeatInterval = opts.heartbeatInterval if opts.heartbeatInterval?
+        @heartbeatIntervalMs = opts.heartbeatIntervalMs if opts.heartbeatIntervalMs?
       @endPoint = @expandEndpoint(endPoint)
       @channels = []
       @sendBuffer = []
@@ -101,7 +101,7 @@
 
     onOpen: ->
       clearInterval(@reconnectTimer)
-      @heartbeatTimer = setInterval(@sendHeartbeat, @heartbeatInterval)
+      @heartbeatTimer = setInterval(@sendHeartbeat, @heartbeatIntervalMs)
       @rejoinAll()
 
 

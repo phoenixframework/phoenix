@@ -102,7 +102,7 @@
 
       Socket.prototype.reconnectAfterMs = 5000;
 
-      Socket.prototype.heartbeatInterval = 30000;
+      Socket.prototype.heartbeatIntervalMs = 30000;
 
       Socket.prototype.heartbeatMessage = "ping";
 
@@ -111,8 +111,8 @@
           if (opts.heartbeatMessage != null) {
             this.heartbeatMessage = opts.heartbeatMessage;
           }
-          if (opts.heartbeatInterval != null) {
-            this.heartbeatInterval = opts.heartbeatInterval;
+          if (opts.heartbeatIntervalMs != null) {
+            this.heartbeatIntervalMs = opts.heartbeatIntervalMs;
           }
         }
         this.endPoint = this.expandEndpoint(endPoint);
@@ -194,7 +194,7 @@
 
       Socket.prototype.onOpen = function() {
         clearInterval(this.reconnectTimer);
-        this.heartbeatTimer = setInterval(this.sendHeartbeat, this.heartbeatInterval);
+        this.heartbeatTimer = setInterval(this.sendHeartbeat, this.heartbeatIntervalMs);
         return this.rejoinAll();
       };
 
