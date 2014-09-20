@@ -48,12 +48,11 @@
     reconnectTimer: null
     reconnectAfterMs: 5000
     heartbeatIntervalMs: 30000
-    heartbeatMessage: "ping"
 
     constructor: (endPoint, opts) ->
-      if opts?
-        @heartbeatMessage = opts.heartbeatMessage if opts.heartbeatMessage?
-        @heartbeatIntervalMs = opts.heartbeatIntervalMs if opts.heartbeatIntervalMs?
+      if opts? && (opts.heartbeatMessage? || opts.sendHeartbeat?)
+        @heartbeatMessage = opts.heartbeatMessage || "heartbeat"
+        @heartbeatIntervalMs = opts.heartbeatIntervalMs || @heartbeatIntervalMs
       @endPoint = @expandEndpoint(endPoint)
       @channels = []
       @sendBuffer = []
@@ -83,7 +82,7 @@
       callback?()
 
     sendHeartbeat: ->
-      socket.send(@heartbeatMessage)
+      @conn.send(@heartbeatMessage)
 
     reconnect: ->
       @close =>
