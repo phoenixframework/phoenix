@@ -1,6 +1,6 @@
 defmodule Phoenix.Controller.ErrorHandlingTest do
   use ExUnit.Case, async: false
-  use RouterHelper
+  use ConnHelper
   alias Phoenix.Controller.ErrorHandlingTest
   alias ErrorHandlingTest.RouterCustomPageController
   alias ErrorHandlingTest.RouterDefaultPageController

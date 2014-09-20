@@ -14,4 +14,3 @@ defmodule Phoenix.ControllerTest do
     assert Controller.layout_module(MyApp.Admin.UserController) == MyApp.LayoutView
   end
 end
-

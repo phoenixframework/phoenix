@@ -1,6 +1,6 @@
 defmodule Phoenix.Router.ConnectionTest do
   use ExUnit.Case
-  use RouterHelper
+  use ConnHelper
   alias Plug.Conn
   alias Phoenix.Controller.Connection
   alias Phoenix.Controller.Errors

@@ -1,6 +1,6 @@
 defmodule Phoenix.Plugs.AcceptsTest do
   use ExUnit.Case, async: true
-  use RouterHelper
+  use ConnHelper
   alias Phoenix.Plugs
 
   @ct Plugs.ContentTypeFetcher.init([])

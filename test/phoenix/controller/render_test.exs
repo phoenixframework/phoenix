@@ -64,7 +64,7 @@ end
 
 defmodule Phoenix.Controller.RenderTest do
   use ExUnit.Case
-  use RouterHelper
+  use ConnHelper
 
   test "render contain values from conn.assigns" do
     conn = simulate_request(MyApp.Router, :get, "assign/manual")

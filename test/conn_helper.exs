@@ -1,11 +1,11 @@
-defmodule RouterHelper do
+defmodule ConnHelper do
   import Plug.Test
   import ExUnit.CaptureIO
 
   defmacro __using__(_) do
     quote do
       use Plug.Test
-      import RouterHelper
+      import ConnHelper
     end
   end
 
