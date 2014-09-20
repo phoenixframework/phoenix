@@ -3,6 +3,6 @@
   "earmark": {:package, "0.1.10"},
   "ex_doc": {:package, "0.5.2"},
   "linguist": {:package, "0.1.2"},
-  "plug": {:package, "0.7.0"},
+  "plug": {:git, "git://github.com/elixir-lang/plug.git", "8bd55f05dd2e048f34fae3d255f21c4ee46d8235", []},
   "poison": {:package, "1.1.0"},
   "ranch": {:package, "1.0.0"}}

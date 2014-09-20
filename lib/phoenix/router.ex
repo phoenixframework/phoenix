@@ -107,11 +107,11 @@ defmodule Phoenix.Router do
 
   ## Plug stack
 
-  Documentation upcoming.
+  TODO: documentation.
 
   ## Web server
 
-  Documentation upcoming.
+  TODO: documentation.
 
   """
 

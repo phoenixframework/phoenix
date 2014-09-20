@@ -10,11 +10,11 @@ defmodule ConnHelper do
   end
 
   def call(router, verb, path, params \\ nil, headers \\ []) do
-    router.call(conn(verb, path, params, headers), [])
+    router.call(conn(verb, path, params, headers), router.init([]))
   end
 
   def action(controller, verb, action, params \\ nil, headers \\ []) do
-    controller.call(conn(verb, "/", params, headers), action)
+    controller.call(conn(verb, "/", params, headers), controller.init(action))
   end
 
   # TODO: Avoid capture_log does not allow us to run tests concurrently.
