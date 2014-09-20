@@ -1,6 +1,5 @@
 defmodule Phoenix.Controller.Connection do
   import Plug.Conn
-  alias Phoenix.Status
   alias Phoenix.Controller.Errors
 
   @moduledoc """
@@ -46,15 +45,21 @@ defmodule Phoenix.Controller.Connection do
 
   ## Examples
 
-      iex> conn |> assign_layout("print")
-      iex> conn |> assign_layout(:none)
+      iex> conn |> put_layout("print")
+      iex> conn |> put_layout(:none)
 
   """
-  def assign_layout(conn, layout) when is_binary(layout) do
+  def put_layout(conn, layout) when is_binary(layout) do
     put_private(conn, :phoenix_layout, layout)
   end
-  def assign_layout(conn, :none) do
+  def put_layout(conn, :none) do
     put_private(conn, :phoenix_layout, :none)
+  end
+
+  @doc false
+  def assign_layout(conn, layout) do
+    IO.write :stderr, "put_status/2 is deprecated in favor of put_status/2\n#{Exception.format_stacktrace}"
+    put_layout(conn, layout)
   end
 
   @doc """
@@ -62,10 +67,11 @@ defmodule Phoenix.Controller.Connection do
   """
   def layout(conn), do: Dict.get(conn.private, :phoenix_layout, "application")
 
-  @doc """
-  Assigns the Conn status
-  """
-  def assign_status(conn, status), do: put_in(conn.status, Status.code(status))
+  @doc false
+  def assign_status(conn, status) do
+    IO.write :stderr, "put_status/2 is deprecated in favor of put_status/2\n#{Exception.format_stacktrace}"
+    put_status(conn, status)
+  end
 
   @doc """
   Returns the String Mime content-type of response
@@ -153,7 +159,7 @@ defmodule Phoenix.Controller.Connection do
   def send_response(conn, status, content_type, data) do
     conn
     |> put_resp_content_type(content_type)
-    |> send_resp(Status.code(status), data)
+    |> send_resp(status, data)
   end
 
   @doc """

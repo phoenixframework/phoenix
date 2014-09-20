@@ -43,17 +43,13 @@ defmodule Phoenix.Router.ConnectionTest do
     assert Connection.response_content_type!(conn) == "text/html"
   end
 
-  test "assign_layout/2 assigns the private assign_layout" do
-    conn = Connection.assign_layout(%Conn{}, "print")
+  test "put_layout/2 assigns the private put_layout" do
+    conn = Connection.put_layout(%Conn{}, "print")
     assert Connection.layout(conn) == "print"
   end
 
-  test "layout/1 retrieves the assign_layout, defaulting to application" do
+  test "layout/1 retrieves the put_layout, defaulting to application" do
     assert Connection.layout(%Conn{}) == "application"
-  end
-
-  test "assign_status/1 returns the conn.satus" do
-    assert Connection.assign_status(%Conn{}, 404).status == 404
   end
 
   test "assign_error/3 and error/1 assign and return error" do

@@ -4,8 +4,8 @@ defmodule Phoenix.Router.Adapter do
   # * The adapter stuff can be moved directly to the adapter module.
   @moduledoc false
 
-  import Plug.Conn, only: [put_private: 3]
-  import Phoenix.Controller.Connection, only: [assign_status: 2, assign_error: 3, router_module: 1]
+  import Plug.Conn, only: [put_private: 3, put_status: 2]
+  import Phoenix.Controller.Connection, only: [assign_error: 3, router_module: 1]
 
   alias Phoenix.Config
   @unsent [:unset, :set]
@@ -76,14 +76,14 @@ defmodule Phoenix.Router.Adapter do
     |> after_dispatch
   end
 
-  defp handle_err(conn, kind, error, _catch_errors = true) do
+  defp handle_err(conn, kind, error, true) do
     conn
     |> assign_error(kind, error)
-    |> assign_status(500)
+    |> put_status(500)
   end
-  defp handle_err(_, :throw, err, _nocatch), do: throw(err)
-  defp handle_err(_, :error, err, _nocatch), do: reraise(err, System.stacktrace)
 
+  defp handle_err(_, kind, err, _nocatch), do:
+    :erlang.raise(kind, err, System.stacktrace)
 
   # Handles sending 404 response based on Router's Mix Config settings
   #

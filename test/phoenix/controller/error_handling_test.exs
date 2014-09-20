@@ -37,8 +37,8 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
         end
       end
 
-      def assign_404(conn, _params), do: assign_status(conn, 404)
-      def assign_500(conn, _params), do: assign_status(conn, 500)
+      def assign_404(conn, _params), do: put_status(conn, 404)
+      def assign_500(conn, _params), do: put_status(conn, 500)
       def raise_500(_conn, _params), do: raise "boom!"
       def throw_error(_conn, _params), do: throw "boom"
     end

@@ -116,7 +116,6 @@ defmodule Phoenix.Router do
   """
 
   alias Phoenix.Config
-  alias Phoenix.Controller.Connection
   alias Phoenix.Plugs
   alias Phoenix.Plugs.Parsers
   alias Phoenix.Project
@@ -181,7 +180,7 @@ defmodule Phoenix.Router do
 
       # TODO: follow match/dispatch pattern from Plug
       def match(conn, method, path) do
-        Connection.assign_status(conn, 404)
+        Plug.Conn.put_status(conn, 404)
       end
 
       def dispatch(conn, []) do
