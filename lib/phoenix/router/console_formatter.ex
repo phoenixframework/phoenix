@@ -2,7 +2,6 @@ defmodule Phoenix.Router.ConsoleFormatter do
   @moduledoc false
 
   alias Phoenix.Project
-  alias Phoenix.Naming
   alias Phoenix.Router.Route
 
   @doc """
@@ -39,12 +38,11 @@ defmodule Phoenix.Router.ConsoleFormatter do
            action: action, helper: helper} = route
     route_name = route_name(helper)
     {verb_len, path_len, route_name_len} = column_widths
-    controller_name = controller |> Atom.to_string |> Naming.module_name
 
     String.rjust(route_name, route_name_len) <> "  " <>
     String.ljust(verb, verb_len) <> "  " <>
     String.ljust(path, path_len) <> "  " <>
-    controller_name <> "." <> Atom.to_string(action) <> "/2\n"
+    inspect(controller) <> "." <> Atom.to_string(action) <> "/2\n"
   end
 
   defp route_name(nil),  do: ""

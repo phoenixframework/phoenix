@@ -1,6 +1,6 @@
 defmodule Phoenix.CodeReloaderTest do
   use ExUnit.Case
-  use RouterHelper
+  use ConnHelper
   alias Phoenix.CodeReloader
 
   test "mix_compile/1 logs warning when Mix.Task is not loaded" do

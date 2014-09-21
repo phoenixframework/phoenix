@@ -2,7 +2,6 @@ defmodule Phoenix.Template.TemplateTest do
   use ExUnit.Case
   alias Phoenix.Template
 
-
   test "#func_name_from_path/2 returns the function name from the full path" do
     file_path = "/var/www/templates/admin/users/show.html.eex"
     template_root = "/var/www/templates"

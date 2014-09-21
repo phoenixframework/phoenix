@@ -5,7 +5,7 @@ config :phoenix, <%= application_module %>.Router,
   ssl: false,
   cookies: true,
   session_key: "_<%= application_name %>_key",
-  session_secret: "<%= session_secret %>"
+  secret_key_base: "<%= secret_key_base %>"
 
 config :phoenix, :code_reloader,
   enabled: true
