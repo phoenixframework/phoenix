@@ -513,7 +513,7 @@ config :phoenix, YourApp.Router,
   ssl: false,
   cookies: true,
   session_key: "_your_app_key",
-  session_secret: "super secret"
+  secret_key_base: "super secret"
 
 config :phoenix, :code_reloader,
   enabled: false
@@ -531,7 +531,7 @@ config :phoenix, YourApp.Router,
   host: "localhost",
   cookies: true,
   session_key: "_your_app_key",
-  session_secret: "$+X2PG$PX0^88^HXB)...",
+  secret_key_base: "$+X2PG$PX0^88^HXB)...",
   debug_errors: true
 
 config :phoenix, :code_reloader,
@@ -557,7 +557,7 @@ config :phoenix, YourApp.Router,
   host: "example.com",
   cookies: true,
   session_key: "_your_app_key",
-  session_secret: "$+X2PG$PX0^88^HXB)..."
+  secret_key_base: "$+X2PG$PX0^88^HXB)..."
 
 config :logger, :console,
   level: :info,
@@ -609,7 +609,7 @@ config :phoenix, YourApp.Router,
   ...
   cookies: true,
   session_key: "_your_app_key",
-  session_secret: "super secret",
+  secret_key_base: "super secret",
   ...
 ```
 
