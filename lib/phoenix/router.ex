@@ -153,11 +153,16 @@ defmodule Phoenix.Router do
         plug Plugs.CodeReloader
       end
 
-      if Config.router(__MODULE__, [:cookies]) do
-        key    = Config.router!(__MODULE__, [:session_key])
-        secret = Config.router!(__MODULE__, [:session_secret])
+      plug :put_secret_key_base
 
-        plug Plug.Session, store: :cookie, key: key, secret: secret
+      if Config.router(__MODULE__, [:cookies]) do
+        key = Config.router!(__MODULE__, [:session_key])
+        encrypt = Config.router!(__MODULE__, [:encrypt])
+        signing = Config.router!(__MODULE__, [:signing_salt])
+        encryption = Config.router!(__MODULE__, [:encryption_salt])
+
+        plug Plug.Session, store: :cookie, key: key, encrypt: true,
+                           signing_salt: signing, encryption_salt: encryption
         plug :fetch_session
       end
 
@@ -199,6 +204,10 @@ defmodule Phoenix.Router do
 
       def __routes__ do
         unquote(Macro.escape(routes))
+      end
+
+      defp put_secret_key_base(conn, _) do
+        put_in conn.secret_key_base, Config.router(__MODULE__, [:secret_key_base])
       end
     end
   end

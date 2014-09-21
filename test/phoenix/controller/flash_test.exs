@@ -13,7 +13,7 @@ defmodule Phoenix.Controller.FlashTest do
       {Router,
         cookies: true,
         session_key: "_app",
-        session_secret: "111111111111111111111111111111111111111111111111111111111111111111111111111"
+        secret_key_base: String.duplicate("abcdefgh", 8)
       }
     ])
 
