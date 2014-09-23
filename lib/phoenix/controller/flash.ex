@@ -61,13 +61,20 @@ defmodule Phoenix.Controller.Flash do
 
   ## Examples
 
-      iex> conn = Flash.put(conn, :notice, "Hi!") |> Flash.get
+      iex> Flash.put(conn, :notice, "Hi!") |> Flash.get
       %{notice: "Hi!"}
-      iex> Flash.get(conn, :notice)
-      "Welcome Back!"
-
   """
   def get(conn), do: get_session(conn, :phoenix_messages) || %{}
+
+  @doc """
+  Returns a message from the Flash by key
+
+  ## Examples
+
+      iex> Flash.put(conn, :notice, "Hello!") |> Flash.get(:notice)
+      "Hello!"
+
+  """
   def get(conn, key) do
      case get_in get(conn), [key] do
       nil -> nil
@@ -76,15 +83,15 @@ defmodule Phoenix.Controller.Flash do
   end
 
   @doc """
-  Returns a list of messages from the Flash
+  Returns a list of messages by key from the Flash
 
   ## Examples
 
       iex> conn
-      |> Flash.put(:notice, "Hello")
-      |> Flash.put(:notice, "Hi!")
-      |> Flash.get
-      %{notice: ["hello", "world"]}
+      |> Flash.put(:notices, "hello")
+      |> Flash.put(:notices, "world")
+      |> Flash.get_all(:notices)
+      ["hello", "world"]
 
   """
   def get_all(conn, key) do
@@ -104,7 +111,7 @@ defmodule Phoenix.Controller.Flash do
       |> Flash.put(:notices, "oh noes!")
       |> Flash.put(:notice, "false alarm!")
       |> Flash.pop_all(:notices)
-      ["oh noes!", "false alarm!"]
+      {["oh noes!", "false alarm!"], %Conn{}}
 
   """
   def pop_all(conn, key) do
