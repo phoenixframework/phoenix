@@ -170,11 +170,12 @@ Put simply, Phoenix Views *render* templates. Views also serve as a presentation
 
 ### Flash Examples
 
-In your controller, `Phoenix.Controller.Flash` is automatically aliased. You could use it to persist messages across redirects like below.
+You could use `Phoenix.Controller.Flash` to persist messages across redirects like below.
 
 ```elixir
 defmodule YourApp.PageController do
   use Phoenix.Controller
+  alias Phoenix.Controller.Flash
 
   def create(conn, _) do
     # Code for some create action here
@@ -185,7 +186,7 @@ defmodule YourApp.PageController do
 end
 ```
 
-`Phoenix.Controller.Flash` is automatically aliased in all Views too. In your templates,
+`Phoenix.Controller.Flash` is automatically aliased in all Views. In your templates,
 you would display flash messages by doing something like:
 
 ```elixir
