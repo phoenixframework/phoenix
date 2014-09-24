@@ -124,7 +124,7 @@
 
 
     join: (channel, topic, message, callback) ->
-      chan = new Phoenix.Channel(channel, topic, message, callback, this)
+      chan = new exports.Channel(channel, topic, message, callback, this)
       @channels.push(chan)
       @rejoin(chan) if @isConnected()
 
