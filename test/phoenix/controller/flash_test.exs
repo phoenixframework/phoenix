@@ -107,7 +107,7 @@ defmodule Phoenix.Controller.FlashTest do
     assert Flash.get(conn) == %{}
   end
 
-  test "pop_all/3 pops all messages from the flash" do
+  test "pop_all/2 pops all messages from the flash" do
     conn = conn_with_session
     assert match?{[], _conn}, Flash.pop_all(conn, :notices)
 

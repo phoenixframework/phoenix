@@ -147,7 +147,6 @@ defmodule YourApp.PageController do
   def show(conn, %{"page" => page}) do
     render conn, "show", title: "Showing page #{page}"
   end
-
 end
 ```
 
@@ -160,7 +159,7 @@ defmodule YourApp.UserController do
   end
 
   def index(conn, _params) do
-   json conn, JSON.encode!(Repo.all(User))
+    json conn, JSON.encode!(Repo.all(User))
   end
 end
 ```
@@ -168,6 +167,51 @@ end
 ### Views & Templates
 
 Put simply, Phoenix Views *render* templates. Views also serve as a presentation layer for their templates where functions, alias, imports, etc are in context.
+
+### Flash Examples
+
+You could use `Phoenix.Controller.Flash` to persist messages across redirects like below.
+
+```elixir
+defmodule YourApp.PageController do
+  use Phoenix.Controller
+  alias Phoenix.Controller.Flash
+
+  def create(conn, _) do
+    # Code for some create action here
+    conn
+    |> Flash.put(:notice, "Created successfully")
+    |> redirect("/")
+  end
+end
+```
+
+`Phoenix.Controller.Flash` is automatically aliased in all Views. In your templates,
+you would display flash messages by doing something like:
+
+```elixir
+# web/templates/layout/application.html.eex
+<%= if notice = Flash.get(@conn, :notice) do %>
+  <div class="container">
+    <div class="row">
+      <p><%= notice %></p>
+    </div>
+  </div>
+<% end %>
+```
+
+Phoenix also supports multiple flash messages.
+
+```elixir
+# web/templates/layout/application.html.eex
+<%= for notice <- Flash.get_all(@conn, :notice) do %>
+  <div class="container">
+    <div class="row">
+      <p><%= notice %></p>
+    </div>
+  </div>
+<% end %>
+```
 
 ### Rendering from the Controller
 ```elixir
