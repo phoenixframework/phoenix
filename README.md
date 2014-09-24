@@ -147,7 +147,6 @@ defmodule YourApp.PageController do
   def show(conn, %{"page" => page}) do
     render conn, "show", title: "Showing page #{page}"
   end
-
 end
 ```
 
@@ -160,7 +159,7 @@ defmodule YourApp.UserController do
   end
 
   def index(conn, _params) do
-   json conn, JSON.encode!(Repo.all(User))
+    json conn, JSON.encode!(Repo.all(User))
   end
 end
 ```
@@ -168,6 +167,51 @@ end
 ### Views & Templates
 
 Put simply, Phoenix Views *render* templates. Views also serve as a presentation layer for their templates where functions, alias, imports, etc are in context.
+
+### Flash Examples
+
+You could use `Phoenix.Controller.Flash` to persist messages across redirects like below.
+
+```elixir
+defmodule YourApp.PageController do
+  use Phoenix.Controller
+  alias Phoenix.Controller.Flash
+
+  def create(conn, _) do
+    # Code for some create action here
+    conn
+    |> Flash.put(:notice, "Created successfully")
+    |> redirect("/")
+  end
+end
+```
+
+`Phoenix.Controller.Flash` is automatically aliased in all Views. In your templates,
+you would display flash messages by doing something like:
+
+```elixir
+# web/templates/layout/application.html.eex
+<%= if notice = Flash.get(@conn, :notice) do %>
+  <div class="container">
+    <div class="row">
+      <p><%= notice %></p>
+    </div>
+  </div>
+<% end %>
+```
+
+Phoenix also supports multiple flash messages.
+
+```elixir
+# web/templates/layout/application.html.eex
+<%= for notice <- Flash.get_all(@conn, :notice) do %>
+  <div class="container">
+    <div class="row">
+      <p><%= notice %></p>
+    </div>
+  </div>
+<% end %>
+```
 
 ### Rendering from the Controller
 ```elixir
@@ -256,7 +300,7 @@ See [this file](https://github.com/elixir-lang/plug/blob/master/lib/plug/mime.ty
 
 The "LayoutView" module name is hardcoded. This means that `App.LayoutView` will be used and, by default, will render templates from `web/templates/layout`.
 
-The layout template can be changed easily from the controller via `assign_layout/2`. For example :
+The layout template can be changed easily from the controller via `put_layout/2`. For example :
 
 ```elixir
 defmodule App.PageController do
@@ -264,7 +308,7 @@ defmodule App.PageController do
 
   def index(conn, _params) do
     conn
-    |> assign_layout("plain")
+    |> put_layout("plain")
     |> render "index", message: "hello"
   end
 end
@@ -275,7 +319,7 @@ To render the template's content inside a layout, use the assign `<%= @inner %>`
 You may also omit using a layout with the following:
 
 ```elixir
-conn |> assign_layout(:none) |> render "index", message: "hello"
+conn |> put_layout(:none) |> render "index", message: "hello"
 ```
 
 ### Template Engine Configuration
@@ -513,7 +557,7 @@ config :phoenix, YourApp.Router,
   ssl: false,
   cookies: true,
   session_key: "_your_app_key",
-  session_secret: "super secret"
+  secret_key_base: "super secret"
 
 config :phoenix, :code_reloader,
   enabled: false
@@ -531,7 +575,7 @@ config :phoenix, YourApp.Router,
   host: "localhost",
   cookies: true,
   session_key: "_your_app_key",
-  session_secret: "$+X2PG$PX0^88^HXB)...",
+  secret_key_base: "$+X2PG$PX0^88^HXB)...",
   debug_errors: true
 
 config :phoenix, :code_reloader,
@@ -557,7 +601,7 @@ config :phoenix, YourApp.Router,
   host: "example.com",
   cookies: true,
   session_key: "_your_app_key",
-  session_secret: "$+X2PG$PX0^88^HXB)..."
+  secret_key_base: "$+X2PG$PX0^88^HXB)..."
 
 config :logger, :console,
   level: :info,
@@ -609,7 +653,7 @@ config :phoenix, YourApp.Router,
   ...
   cookies: true,
   session_key: "_your_app_key",
-  session_secret: "super secret",
+  secret_key_base: "super secret",
   ...
 ```
 
@@ -701,7 +745,7 @@ defmodule YourApp.UserController do
     try do
       super(conn, opts)
     rescue
-      Ecto.NotSingleResult -> conn |> assign_status(404) |> render "user_404"
+      Ecto.NotSingleResult -> conn |> put_status(404) |> render "user_404"
     end
   end
 

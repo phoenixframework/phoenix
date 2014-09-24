@@ -1,6 +1,6 @@
 defmodule Phoenix.Router.NamedRoutingTest do
   use ExUnit.Case, async: true
-  use RouterHelper
+  use ConnHelper
 
   alias Phoenix.Router.Helpers
 

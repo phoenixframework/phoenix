@@ -1,7 +1,6 @@
 defmodule Phoenix.Template do
   alias Phoenix.Config
   alias Phoenix.Template
-  alias Phoenix.Naming
 
   defmodule UndefinedError do
     defexception [:message]
@@ -70,7 +69,7 @@ defmodule Phoenix.Template do
       def render(undefined_template), do: render(undefined_template, [])
       def render(undefined_template, _assign) do
         raise UndefinedError, message: """
-        Could not render "#{undefined_template}" for #{Naming.module_name(__MODULE__)}, please define a clause for render/2 or define a template at "#{@path}".
+        Could not render "#{undefined_template}" for #{inspect(__MODULE__)}, please define a clause for render/2 or define a template at "#{@path}".
 
         The following templates were compiled: "#{Enum.join @templates, ", "}"
         """

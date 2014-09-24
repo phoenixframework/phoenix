@@ -1,16 +1,20 @@
-defmodule RouterHelper do
+defmodule ConnHelper do
   import Plug.Test
   import ExUnit.CaptureIO
 
   defmacro __using__(_) do
     quote do
       use Plug.Test
-      import RouterHelper
+      import ConnHelper
     end
   end
 
   def call(router, verb, path, params \\ nil, headers \\ []) do
-    router.call(conn(verb, path, params, headers), [])
+    router.call(conn(verb, path, params, headers), router.init([]))
+  end
+
+  def action(controller, verb, action, params \\ nil, headers \\ []) do
+    controller.call(conn(verb, "/", params, headers), controller.init(action))
   end
 
   # TODO: Avoid capture_log does not allow us to run tests concurrently.

@@ -19,7 +19,7 @@ defmodule Phoenix.Plugs do
 
   """
   def plugged?(plugs, plug_name) do
-    Enum.find plugs, fn {plug, _opts} -> plug == plug_name end
+    Enum.find plugs, fn {plug, _opts, _guard} -> plug == plug_name end
   end
 
 end

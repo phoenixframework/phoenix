@@ -1,7 +1,7 @@
 defmodule Phoenix.Controller.ExceptionTest do
   use ExUnit.Case, async: false
   alias Phoenix.Controller
-  import RouterHelper
+  import ConnHelper
 
   def conn_with_caught_exception(func) do
     try do

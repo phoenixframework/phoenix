@@ -107,17 +107,15 @@ defmodule Phoenix.Router do
 
   ## Plug stack
 
-  Documentation upcoming.
+  TODO: documentation.
 
   ## Web server
 
-  Documentation upcoming.
+  TODO: documentation.
 
   """
 
   alias Phoenix.Config
-  alias Phoenix.Controller.Action
-  alias Phoenix.Controller.Connection
   alias Phoenix.Plugs
   alias Phoenix.Plugs.Parsers
   alias Phoenix.Project
@@ -155,12 +153,17 @@ defmodule Phoenix.Router do
         plug Plugs.CodeReloader
       end
 
-      if Config.router(__MODULE__, [:cookies]) do
-        key    = Config.router!(__MODULE__, [:session_key])
-        secret = Config.router!(__MODULE__, [:session_secret])
+      plug :put_secret_key_base
 
-        plug Plug.Session, store: :cookie, key: key, secret: secret
-        plug Plugs.SessionFetcher
+      if Config.router(__MODULE__, [:cookies]) do
+        key = Config.router!(__MODULE__, [:session_key])
+        encrypt = Config.router!(__MODULE__, [:encrypt])
+        signing = Config.router!(__MODULE__, [:signing_salt])
+        encryption = Config.router!(__MODULE__, [:encryption_salt])
+
+        plug Plug.Session, store: :cookie, key: key, encrypt: true,
+                           signing_salt: signing, encryption_salt: encryption
+        plug :fetch_session
       end
 
       plug Plug.MethodOverride
@@ -182,7 +185,7 @@ defmodule Phoenix.Router do
 
       # TODO: follow match/dispatch pattern from Plug
       def match(conn, method, path) do
-        Connection.assign_status(conn, 404)
+        Plug.Conn.put_status(conn, 404)
       end
 
       def dispatch(conn, []) do
@@ -202,6 +205,10 @@ defmodule Phoenix.Router do
       def __routes__ do
         unquote(Macro.escape(routes))
       end
+
+      defp put_secret_key_base(conn, _) do
+        put_in conn.secret_key_base, Config.router(__MODULE__, [:secret_key_base])
+      end
     end
   end
 
@@ -218,11 +225,13 @@ defmodule Phoenix.Router do
   defp add_route(verb, path, controller, action, options) do
     quote bind_quoted: binding() do
       route = Scope.route(__MODULE__, verb, path, controller, action, options)
+      parts = {:%{}, [], route.binding}
       @phoenix_routes route
 
       def unquote(:match)(conn, unquote(route.verb), unquote(route.segments)) do
-        Action.perform(conn, unquote(route.controller),
-                       unquote(route.action), unquote(route.binding))
+        conn = update_in(conn.params, &Map.merge(&1, unquote(parts)))
+        opts = unquote(route.controller).init(unquote(route.action))
+        unquote(route.controller).call(conn, opts)
       end
     end
   end

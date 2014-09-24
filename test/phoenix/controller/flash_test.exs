@@ -1,6 +1,6 @@
 defmodule Phoenix.Controller.FlashTest do
   use ExUnit.Case
-  use RouterHelper
+  use ConnHelper
   alias Phoenix.Controller.Flash
   alias Phoenix.Controller.FlashTest.Router
 
@@ -13,14 +13,12 @@ defmodule Phoenix.Controller.FlashTest do
       {Router,
         cookies: true,
         session_key: "_app",
-        session_secret: "111111111111111111111111111111111111111111111111111111111111111111111111111"
+        secret_key_base: String.duplicate("abcdefgh", 8)
       }
     ])
 
     defmodule FlashController do
       use Phoenix.Controller
-
-      plug :action
 
       def index(conn, _params) do
         text conn, "hello"
@@ -109,7 +107,7 @@ defmodule Phoenix.Controller.FlashTest do
     assert Flash.get(conn) == %{}
   end
 
-  test "pop_all/3 pops all messages from the flash" do
+  test "pop_all/2 pops all messages from the flash" do
     conn = conn_with_session
     assert match?{[], _conn}, Flash.pop_all(conn, :notices)
 

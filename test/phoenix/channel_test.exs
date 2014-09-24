@@ -281,5 +281,31 @@ defmodule Phoenix.Channel.ChannelTest do
     assert match?(%Message{channel: "phoenix", topic: "conn", event: "heartbeat", message: %{}},
                   Message.parse!(json))
   end
+
+  test "socket state can change when receiving regular process messages" do
+    defmodule Chan10 do
+      use Phoenix.Channel
+      def join(socket, _topic, _msg), do: {:ok, socket}
+      def event(socket, "info", _msg) do
+        Socket.assign(socket, :foo, :bar)
+      end
+    end
+    defmodule Router10 do
+      use Phoenix.Router
+      use Phoenix.Router.Socket, mount: "/ws"
+      channel "chan10", Chan10
+    end
+
+    socket = %Socket{pid: self, router: Router10, channel: "chan66"}
+
+    message  = """
+    {"channel": "chan10","topic":"topic","event":"join","message":"{}"}
+    """
+    Topic.create("chan10:topic")
+    {:ok, _req, socket} = Handler.websocket_handle({:text, message}, nil, socket)
+    {:ok, _req, socket} = Handler.websocket_info(:stuff, socket.conn, socket)
+
+    assert Socket.get_assign(socket, socket.channel, "topic", :foo) == :bar
+  end
 end
 

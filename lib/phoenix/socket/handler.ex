@@ -156,11 +156,12 @@ defmodule Phoenix.Socket.Handler do
   Each messages is forward to all socket's authorized channels "info" event
   """
   def websocket_info(data, req, socket) do
-    Enum.each socket.channels, fn {channel, topic} ->
+    socket = Enum.reduce socket.channels, socket, fn {channel, topic}, socket ->
+      {:ok, _conn, socket} = socket
+        |> Socket.set_current_channel(channel, topic)
+        |> socket.router.match(:websocket, channel, "info", data)
+        |> handle_result("info")
       socket
-      |> Socket.set_current_channel(channel, topic)
-      |> socket.router.match(:websocket, channel, "info", data)
-      |> handle_result("info")
     end
     {:ok, req, socket}
   end

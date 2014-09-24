@@ -9,82 +9,88 @@ defmodule Phoenix.Controller do
   @layout_extension_types ["html"]
 
   @moduledoc """
-  Phoenix Controllers are responsible for handling the dispatch of Router requests
+  Controllers are conveniences for handling router requests.
 
-  Like Routers, Controllers are Plugs, but contain a required :action plug that
-  is implicitly added to the end plug chain. The :action proxies to the function
-  defined in the Router. The :action plug can be explicitly added to change
-  its execution order.
+  For example, the route:
 
-  ## Examples
+      get "/users/:id", UserController, :show
 
-      defmodule MyApp.Controllers.Admin.Users do
+  will invoke the `show/2` action in the `UserController`:
+
+      defmodule UserController do
         use Phoenix.Controller
 
-        plug :authenticate, usernames: ["jose", "eric", "sonny"]
-
-        def authenticate(conn, options) do
-          if get_session(conn, username) in options[:usernames] do
-            conn
-          else
-            conn |> redirect(Router.root_path) |> halt!
-          end
+        def show(conn, %{"id" => id}) do
+          user = Repo.get(User, id)
+          render conn, "show.html", user: user
         end
+      end
+
+  An action is just a regular function that receives the connection
+  and the request parameters as arguments. The connection is a
+  `Plug.Conn` struct, as specified by the Plug library.
+
+  ## Connection
+
+  A controller by default provides many convenience functions for
+  manipulating the connection, rendering templates, and more.
+
+  Those functions are imported from two modules:
+
+    * `Plug.Conn` - a bunch of low-level functions to work with
+      the connection
+
+    * `Phoenix.Controller.Connection` - functions provided by Phoenix
+      to support rendering, and other Phoenix specific behaviour
+
+  ## Rendering and layouts
+
+  TODO: documentation.
+
+  ## Plug stacks
+
+  As routers, controllers also have their own plug stack, allowing developers
+  to execute a particular plug before or after an action:
+
+      defmodule UserController do
+        use Phoenix.Controller
+
+        before_action :authenticate, usernames: ["jose", "eric", "sonny"]
 
         def show(conn, params) do
           # authenticated users only
         end
+
+        defp authenticate(conn, options) do
+          if get_session(conn, :username) in options[:usernames] do
+            conn
+          else
+            conn |> redirect(Router.root_path) |> halt
+          end
+        end
       end
 
-  ## Controller Actions
-
-  Controllers inject an `action/2` function into all using modules. This
-  invokes the corresponding function mapped in the router and stored in the
-  private `phoenix_action` assign. For custom action handling, `action/2` can be
-  overriden, ie:
-
-      def action(conn = %Conn{private: %{phoenix_action: action}, params) do
-        find_module_for_action(action).call(conn, params)
-      end
-
+  Check `Phoenix.Controller.Stack` for more information on `before_action/2`
+  and how to customize the plug stack.
   """
-  defmacro __using__(options) do
+  defmacro __using__(_options) do
     quote do
       import Plug.Conn
+      import Phoenix.Controller
       import Phoenix.Controller.Connection
-      import unquote(__MODULE__)
 
-      @options unquote(options)
+      use Phoenix.Controller.Stack
 
       @subview_module view_module(__MODULE__)
       @layout_module layout_module(__MODULE__)
 
-      def init(options), do: options
-      @before_compile unquote(__MODULE__)
-      use Plug.Builder
-      unless @options[:bare] do
-        plug Plugs.ParamsFetcher
-        plug Plugs.ContentTypeFetcher
-        plug Phoenix.Controller.Flash
-        plug Plugs.ControllerLogger
-      end
-    end
-  end
-
-  defmacro __before_compile__(_env) do
-    quote do
-      unless Plugs.plugged?(@plugs, :action) do
-        plug :action
-      end
-
-      def action(conn, _options) do
-        apply(__MODULE__, conn.private[:phoenix_action], [conn, conn.params])
-      end
-
       def render(conn, template, assigns \\ []) do
         render_view conn, @subview_module, @layout_module, template, assigns
       end
-      defoverridable action: 2
+
+      before_action Plugs.ContentTypeFetcher
+      before_action Phoenix.Controller.Flash
+      before_action Plugs.ControllerLogger
     end
   end
 

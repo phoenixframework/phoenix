@@ -1,6 +1,6 @@
 defmodule Phoenix.ControllerLoggerTest do
   use ExUnit.Case, async: false
-  use RouterHelper
+  use ConnHelper
 
   defmodule LoggerController do
     use Phoenix.Controller

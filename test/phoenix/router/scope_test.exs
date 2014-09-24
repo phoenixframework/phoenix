@@ -1,6 +1,6 @@
 defmodule Phoenix.Router.ScopedRoutingTest do
   use ExUnit.Case, async: true
-  use RouterHelper
+  use ConnHelper
 
   setup do
     Logger.disable(self())
