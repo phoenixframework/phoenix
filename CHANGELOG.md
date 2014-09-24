@@ -5,6 +5,7 @@
 * Enhancements
   * [Router] Named helpers are now automatically generated for every route based on the controller name
   * [Router] Named helpers have been optimized to do as little work as possible at runtime
+  * [Channels] The `phoenix.js` channel client now sends a configurable heartbeat every 30s to maintain connections
 
 * Deprecations
   * [Controller] `assign_private` is deprecated in favor of `put_private`
