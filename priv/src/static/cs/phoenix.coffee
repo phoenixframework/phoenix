@@ -47,9 +47,12 @@
     flushEveryMs: 50
     reconnectTimer: null
     reconnectAfterMs: 5000
+    heartbeatIntervalMs: 30000
 
-
-    constructor: (endPoint) ->
+    constructor: (endPoint, opts) ->
+      if opts? && (opts.heartbeatMessage? || opts.sendHeartbeat?)
+        @heartbeatMessage = opts.heartbeatMessage || "heartbeat"
+        @heartbeatIntervalMs = opts.heartbeatIntervalMs || @heartbeatIntervalMs
       @endPoint = @expandEndpoint(endPoint)
       @channels = []
       @sendBuffer = []
@@ -65,14 +68,21 @@
 
       "#{@protocol()}://#{location.host}#{endPoint}"
 
+    isReady: ->
+      @conn? && @conn.readyState == WebSocket.OPEN
 
-    close: (callback) ->
+    close: (callback, code, reason) ->
       if @conn?
         @conn.onclose = =>
-        @conn.close()
+        if code? && !isNaN(code)
+          @conn.close(code, reason || '')
+        else
+          @conn.close()
         @conn = null
       callback?()
 
+    sendHeartbeat: ->
+      @conn.send(@heartbeatMessage)
 
     reconnect: ->
       @close =>
@@ -90,12 +100,14 @@
 
     onOpen: ->
       clearInterval(@reconnectTimer)
+      @heartbeatTimer = setInterval(@sendHeartbeat, @heartbeatIntervalMs)
       @rejoinAll()
 
 
     onClose: (event) ->
       console.log?("WS close: ", event)
       clearInterval(@reconnectTimer)
+      clearInterval(@heartbeatTimer)
       @reconnectTimer = setInterval (=> @reconnect() ), @reconnectAfterMs
 
 
@@ -103,10 +115,10 @@
 
     connectionState: ->
       switch @conn?.readyState ? 3
-        when 0 then "connecting"
-        when 1 then "open"
-        when 2 then "closing"
-        when 3 then "closed"
+        when WebSocket.CONNECTING then "connecting"
+        when WebSocket.OPEN then "open"
+        when WebSocket.CLOSING then "closing"
+        when WebSocket.CLOSED then "closed"
 
 
     isConnected: -> @connectionState() is "open"

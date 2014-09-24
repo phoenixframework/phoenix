@@ -102,7 +102,13 @@
 
       Socket.prototype.reconnectAfterMs = 5000;
 
-      function Socket(endPoint) {
+      Socket.prototype.heartbeatIntervalMs = 30000;
+
+      function Socket(endPoint, opts) {
+        if ((opts != null) && ((opts.heartbeatMessage != null) || (opts.sendHeartbeat != null))) {
+          this.heartbeatMessage = opts.heartbeatMessage || "heartbeat";
+          this.heartbeatIntervalMs = opts.heartbeatIntervalMs || this.heartbeatIntervalMs;
+        }
         this.endPoint = this.expandEndpoint(endPoint);
         this.channels = [];
         this.sendBuffer = [];
@@ -128,15 +134,27 @@
         return "" + (this.protocol()) + "://" + location.host + endPoint;
       };
 
-      Socket.prototype.close = function(callback) {
+      Socket.prototype.isReady = function() {
+        return (this.conn != null) && this.conn.readyState === WebSocket.OPEN;
+      };
+
+      Socket.prototype.close = function(callback, code, reason) {
         if (this.conn != null) {
           this.conn.onclose = (function(_this) {
             return function() {};
           })(this);
-          this.conn.close();
+          if ((code != null) && !isNaN(code)) {
+            this.conn.close(code, reason || '');
+          } else {
+            this.conn.close();
+          }
           this.conn = null;
         }
         return typeof callback === "function" ? callback() : void 0;
+      };
+
+      Socket.prototype.sendHeartbeat = function() {
+        return this.conn.send(this.heartbeatMessage);
       };
 
       Socket.prototype.reconnect = function() {
@@ -170,6 +188,7 @@
 
       Socket.prototype.onOpen = function() {
         clearInterval(this.reconnectTimer);
+        this.heartbeatTimer = setInterval(this.sendHeartbeat, this.heartbeatIntervalMs);
         return this.rejoinAll();
       };
 
@@ -178,6 +197,7 @@
           console.log("WS close: ", event);
         }
         clearInterval(this.reconnectTimer);
+        clearInterval(this.heartbeatTimer);
         return this.reconnectTimer = setInterval(((function(_this) {
           return function() {
             return _this.reconnect();
@@ -192,13 +212,13 @@
       Socket.prototype.connectionState = function() {
         var _ref, _ref1;
         switch ((_ref = (_ref1 = this.conn) != null ? _ref1.readyState : void 0) != null ? _ref : 3) {
-          case 0:
+          case WebSocket.CONNECTING:
             return "connecting";
-          case 1:
+          case WebSocket.OPEN:
             return "open";
-          case 2:
+          case WebSocket.CLOSING:
             return "closing";
-          case 3:
+          case WebSocket.CLOSED:
             return "closed";
         }
       };
