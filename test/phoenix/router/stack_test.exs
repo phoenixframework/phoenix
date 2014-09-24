@@ -1,23 +1,29 @@
-defmodule Phoenix.Router.StckTest do
+defmodule Phoenix.Router.StackTest.UserController do
+  use Phoenix.Controller
+  def show(conn, _params), do: text(conn, "users index")
+  def crash(_conn, _params), do: raise "crash!"
+end
+
+alias Phoenix.Router.StackTest.UserController
+
+# Define it at the top to guarantee there is no scope
+# leakage from the test case.
+defmodule Phoenix.Router.StackTest.Router do
+  use Phoenix.Router
+
+  get "/users/:id", UserController, :show, as: :users
+  get "/route_that_crashes", UserController, :crash
+end
+
+alias Phoenix.Router.StackTest.Router
+
+defmodule Phoenix.Router.StackTest do
   use ExUnit.Case, async: true
   use ConnHelper
 
   setup do
     Logger.disable(self())
     :ok
-  end
-
-  defmodule UsersController do
-    use Phoenix.Controller
-    def show(conn, _params), do: text(conn, "users index")
-    def crash(_conn, _params), do: raise "crash!"
-  end
-
-  defmodule Router do
-    use Phoenix.Router
-
-    get "/users/:id", UsersController, :show, as: :users
-    get "/route_that_crashes", UsersController, :crash
   end
 
   ## Plug stack

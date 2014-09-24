@@ -136,6 +136,7 @@ defmodule Phoenix.Router do
       # TODO: This should not be adapter specific.
       use Phoenix.Adapters.Cowboy
       use Plug.Builder
+      import Plug.Conn
 
       # TODO: Test and document all of those configurations
       if Config.router(__MODULE__, [:static_assets]) do
