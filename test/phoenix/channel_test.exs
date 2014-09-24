@@ -270,5 +270,16 @@ defmodule Phoenix.Channel.ChannelTest do
       Handler.websocket_handle({:text, message}, nil, socket)
     end
   end
+
+  test "phoenix channel returns heartbeat message when received" do
+    socket = %Socket{pid: self, router: Router9, channel: "phoenix"}
+    msg  = """
+    {"channel": "phoenix","topic":"conn","event":"heartbeat","message":"{}"}
+    """
+    {:reply, {:text, json}, _req, _} = Handler.websocket_handle({:text, msg}, nil, socket)
+
+    assert match?(%Message{channel: "phoenix", topic: "conn", event: "heartbeat", message: %{}},
+                  Message.parse!(json))
+  end
 end
 

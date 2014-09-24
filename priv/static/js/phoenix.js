@@ -104,17 +104,12 @@
 
       Socket.prototype.heartbeatIntervalMs = 30000;
 
-      Socket.prototype.heartbeatMessage = "ping";
-
       function Socket(endPoint, opts) {
-        if (opts != null) {
-          if (opts.heartbeatMessage != null) {
-            this.heartbeatMessage = opts.heartbeatMessage;
-          }
-          if (opts.heartbeatIntervalMs != null) {
-            this.heartbeatIntervalMs = opts.heartbeatIntervalMs;
-          }
+        var _ref;
+        if (opts == null) {
+          opts = {};
         }
+        this.heartbeatIntervalMs = (_ref = opts.heartbeatIntervalMs) != null ? _ref : this.heartbeatIntervalMs;
         this.endPoint = this.expandEndpoint(endPoint);
         this.channels = [];
         this.sendBuffer = [];
@@ -140,27 +135,19 @@
         return "" + (this.protocol()) + "://" + location.host + endPoint;
       };
 
-      Socket.prototype.isReady = function() {
-        return (this.conn != null) && this.conn.readyState === WebSocket.OPEN;
-      };
-
       Socket.prototype.close = function(callback, code, reason) {
         if (this.conn != null) {
           this.conn.onclose = (function(_this) {
             return function() {};
           })(this);
-          if ((code != null) && !isNaN(code)) {
-            this.conn.close(code, reason || '');
+          if (code != null) {
+            this.conn.close(code, reason != null ? reason : "");
           } else {
             this.conn.close();
           }
           this.conn = null;
         }
         return typeof callback === "function" ? callback() : void 0;
-      };
-
-      Socket.prototype.sendHeartbeat = function() {
-        return socket.send(this.heartbeatMessage);
       };
 
       Socket.prototype.reconnect = function() {
@@ -194,7 +181,11 @@
 
       Socket.prototype.onOpen = function() {
         clearInterval(this.reconnectTimer);
-        this.heartbeatTimer = setInterval(this.sendHeartbeat, this.heartbeatIntervalMs);
+        this.heartbeatTimer = setInterval(((function(_this) {
+          return function() {
+            return _this.sendHeartbeat();
+          };
+        })(this)), this.heartbeatIntervalMs);
         return this.rejoinAll();
       };
 
@@ -216,8 +207,8 @@
       };
 
       Socket.prototype.connectionState = function() {
-        var _ref, _ref1;
-        switch ((_ref = (_ref1 = this.conn) != null ? _ref1.readyState : void 0) != null ? _ref : 3) {
+        var _ref;
+        switch ((_ref = this.conn) != null ? _ref.readyState : void 0) {
           case WebSocket.CONNECTING:
             return "connecting";
           case WebSocket.OPEN:
@@ -225,6 +216,7 @@
           case WebSocket.CLOSING:
             return "closing";
           case WebSocket.CLOSED:
+          case null:
             return "closed";
         }
       };
@@ -303,6 +295,15 @@
         } else {
           return this.sendBuffer.push(callback);
         }
+      };
+
+      Socket.prototype.sendHeartbeat = function() {
+        return this.send({
+          channel: "phoenix",
+          topic: "conn",
+          event: "heartbeat",
+          message: {}
+        });
       };
 
       Socket.prototype.flushSendBuffer = function() {

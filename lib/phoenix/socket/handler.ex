@@ -67,24 +67,36 @@ defmodule Phoenix.Socket.Handler do
   name as the first argument. Event handlers are only invoked if the socket
   was previously authorized via `join/2`.
 
+  ## Heartbeat
+
+  Clients can send a heartbeat message on the `phoenix` channel and receive the
+  same heartbeat messsage as a response. This is useful to ensure long-running
+  sockets are kept alive. Message format;
+
+      %Message{channel: "phoenix", topic: "conn", event: "heartbeat", message: %{}}
+
   """
   def websocket_handle({:text, text}, _req, socket) do
     msg = Message.parse!(text)
 
     socket
     |> Socket.set_current_channel(msg.channel, msg.topic)
-    |> dispatch(msg.event, msg.message)
+    |> dispatch(msg.channel, msg.event, msg.message)
   end
 
-  defp dispatch(socket, "join", msg) do
+  defp dispatch(socket, "phoenix", "heartbeat", _msg) do
+    msg = %Message{channel: "phoenix", topic: "conn", event: "heartbeat", message: %{}}
+    {:reply, {:text, JSON.encode!(msg)}, socket.conn, socket}
+  end
+  defp dispatch(socket, channel, "join", msg) do
     socket
-    |> socket.router.match(:websocket, socket.channel, "join", msg)
+    |> socket.router.match(:websocket, channel, "join", msg)
     |> handle_result("join")
   end
-  defp dispatch(socket, event, msg) do
-    if Socket.authenticated?(socket, socket.channel, socket.topic) do
+  defp dispatch(socket, channel, event, msg) do
+    if Socket.authenticated?(socket, channel, socket.topic) do
       socket
-      |> socket.router.match(:websocket, socket.channel, event, msg)
+      |> socket.router.match(:websocket, channel, event, msg)
       |> handle_result(event)
     else
       handle_result({:error, socket, :unauthenticated}, event)
