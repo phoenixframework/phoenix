@@ -9,8 +9,7 @@ defmodule Phoenix.Plugs.CsrfProtection do
   If a CSRF token in the session does not previously exist, a CSRF token will
   be generated and put into the session.
 
-  When a token is invalid, the connection is halted preventing further plugs
-  downstream from being invoked.
+  When a token is invalid, an InvalidAuthenticityToken error is raised.
 
   The session's CSRF token will be compared with a token in the params with key
   "csrf-token" or a token in the request headers with key 'X-CSRF-Token'.
@@ -32,6 +31,18 @@ defmodule Phoenix.Plugs.CsrfProtection do
   value in your request's headers with key 'X-CSRF-Token'.
   """
 
+  defmodule InvalidAuthenticityToken do
+    @moduledoc """
+    Error raised when CSRF token is invalid.
+    """
+
+    defexception [:message]
+
+    defimpl Plug.Exception do
+      def status(_exception), do: 403
+    end
+  end
+
   def init(opts), do: opts
 
   def call(%Conn{method: method} = conn, _opts) when method in @protected_methods do
@@ -42,15 +53,12 @@ defmodule Phoenix.Plugs.CsrfProtection do
     end
   end
 
-  def call(conn, _opts), do: ensure_csrf_token(conn)
-
-  defp handle_invalid_token(conn) do
+  def handle_invalid_token(conn) do
     Logger.debug(@invalid_token_error_message)
-
-    conn
-    |> Conn.send_resp(401, @invalid_token_error_message)
-    |> Conn.halt
+    raise InvalidAuthenticityToken, message: @invalid_token_error_message
   end
+
+  def call(conn, _opts), do: ensure_csrf_token(conn)
 
   defp verified_request?(conn) do
     valid_authenticity_token?(conn, conn.params["csrf_token"]) ||
@@ -66,8 +74,6 @@ defmodule Phoenix.Plugs.CsrfProtection do
 
   def get_csrf_token(conn), do: Conn.get_session(conn, :csrf_token)
 
-  #####
-  #
   # TOKEN GENERATION
 
   defp ensure_csrf_token(conn) do

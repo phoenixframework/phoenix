@@ -2,58 +2,67 @@ defmodule Phoenix.Controller.CsrfProtectionTest do
   use ExUnit.Case, async: true
   use Plug.Test
   alias Phoenix.Plugs.CsrfProtection
+  alias Phoenix.Plugs.CsrfProtection.InvalidAuthenticityToken
+
+  @default_opts Plug.Session.init(
+    store: :cookie,
+    key: "foobar",
+    encryption_salt: "cookie store encryption salt",
+    signing_salt: "cookie store signing salt",
+    encrypt: true
+  )
+
+  @secret String.duplicate("abcdef0123456789", 8)
 
   def simulate_request(method, path, params \\ nil) do
     simulate_request_without_token(method, path, params)
-    |> put_session(:csrf_token, "hello123") |> send_resp(200, "ok")
-  end
-
-  defp session_options do
-    Plug.Session.init(
-      store: :cookie,
-      key: "foobar",
-      secret: "11111111111111111111111111111111111111111111111111111111111111111111111111")
+    |> put_session(:csrf_token, "hello123")
+    |> send_resp(200, "ok")
   end
 
   defp simulate_request_without_token(method, path, params \\ nil) do
     conn(method, path, params)
-    |> Plug.Session.call(session_options())
+    |> sign_cookie(@secret)
+    |> Plug.Session.call(@default_opts)
     |> fetch_session
   end
 
   defp recycle_data(conn, old_conn) do
     opts = Plug.Parsers.init(parsers: [:urlencoded, :multipart, Parsers.JSON], accept: ["*/*"])
 
-    recycle(conn, old_conn)
+    sign_cookie(conn, @secret)
+    |> recycle(old_conn)
     |> Plug.Parsers.call(opts)
-    |> Plug.Session.call(session_options())
+    |> Plug.Session.call(@default_opts)
     |> fetch_session
   end
 
-  test "for invalid authenticity token" do
+  defp sign_cookie(conn, secret) do
+    put_in conn.secret_key_base, secret
+  end
+
+  test "raise error for invalid authenticity token" do
     old_conn = simulate_request(:get, "/")
 
-    conn = conn(:post, "/", %{csrf_token: "foo"})
-           |> recycle_data(old_conn)
-           |> CsrfProtection.call([])
+    assert_raise InvalidAuthenticityToken, fn ->
+      conn(:post, "/", %{csrf_token: "foo"})
+      |> recycle_data(old_conn)
+      |> CsrfProtection.call([])
+    end
 
-    assert conn.state == :sent
-    assert conn.halted == true
-
-    conn = conn(:post, "/", %{})
-           |> recycle_data(old_conn)
-           |> CsrfProtection.call([])
-
-    assert conn.state == :sent
-    assert conn.halted == true
+    assert_raise InvalidAuthenticityToken, fn ->
+      conn(:post, "/", %{})
+      |> recycle_data(old_conn)
+      |> CsrfProtection.call([])
+    end
   end
 
   test "unprotected requests are always valid" do
     conn = simulate_request_without_token(:get, "/") |> CsrfProtection.call([])
-    assert conn.halted  == false
+    assert conn.halted == false
 
     conn = simulate_request_without_token(:options, "/") |> CsrfProtection.call([])
-    assert conn.halted  == false
+    assert conn.halted == false
 
     conn = simulate_request_without_token(:connect, "/") |> CsrfProtection.call([])
     assert conn.halted == false
