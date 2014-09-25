@@ -6,14 +6,14 @@ defmodule <%= application_module %>.Mixfile do
       version: "0.0.1",
       elixir: "~> 1.0.0",
       elixirc_paths: ["lib", "web"],
-      deps: deps ]
+      deps: deps(Mix.env) ]
   end
 
   # Configuration for the OTP application
   def application do
     [
       mod: { <%= application_module %>, [] },
-      applications: [:phoenix, :cowboy, :logger]
+      applications: app_list(Mix.env)
     ]
   end
 
@@ -22,10 +22,14 @@ defmodule <%= application_module %>.Mixfile do
   #
   # To specify particular versions, regardless of the tag, do:
   # { :barbat, "~> 0.1", github: "elixir-lang/barbat" }
-  defp deps do
+  defp deps(_) do
     [
       {:phoenix, "0.4.1"},
       {:cowboy, "~> 1.0.0"}
     ]
+  end
+
+  defp app_list(_) do
+    [:phoenix, :cowboy, :logger]
   end
 end
