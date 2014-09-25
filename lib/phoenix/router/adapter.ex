@@ -24,6 +24,9 @@ defmodule Phoenix.Router.Adapter do
 
       {:error, :eaddrinuse} ->
         raise "Port #{inspect opts[:port]} is already in use"
+
+      {:error, reason} ->
+        raise "Something went wrong while starting router: #{inspect reason}"
     end
   end
 
