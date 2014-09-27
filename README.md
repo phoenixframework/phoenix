@@ -77,6 +77,7 @@ get  "/users/new",      UserController, :new
 post "/users",          UserController, :create
 get  "/users/:id/edit", UserController, :edit
 put  "/users/:id",      UserController, :update
+patch "/users/:id",     UserController, :update
 delete "/users/:id",    UserController, :destroy
 ```
 
