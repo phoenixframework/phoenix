@@ -5,6 +5,7 @@ defmodule Mix.Tasks.Phoenix.New do
   @shortdoc "Creates Phoenix application"
 
   @template_dir "template"
+  @non_eval_templates_dir "template/web/templates"
 
   @doc """
   Creates Phoenix application.
@@ -45,10 +46,12 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   defp eval_file(source_path, bindings) do
-    if String.match?(source_path, ~r/templates\//) do
-      File.read!(source_path)
-    else
-      EEx.eval_file(source_path, bindings)
+    non_eval_templates = Path.relative_to(source_path, non_eval_templates_path)
+    case Path.type non_eval_templates do
+      :relative ->
+        File.read!(source_path)
+      :absolute ->
+        EEx.eval_file(source_path, bindings)
     end
   end
 
@@ -83,6 +86,12 @@ defmodule Mix.Tasks.Phoenix.New do
     relative_path = Path.relative_to(new_path, template_path)
 
     Path.join(project_path, relative_path)
+  end
+
+  defp non_eval_templates_path do
+    {:ok, root_path} = File.cwd
+
+    Path.join(root_path, @non_eval_templates_dir)
   end
 
   defp template_path do
