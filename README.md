@@ -458,6 +458,22 @@ end
 
 Note that, for added clarity, events should be prefixed with their subject and a colon (i.e. "subject:event"). Instead of `reply/3`, you may also use `broadcast/3`. In the previous case, this would publish a message to all clients who previously joined the current socket's topic.
 
+When sending process messages directly to a socket like `send socket.pid "pong"`, the
+`"pong"` message triggers the `"info"` event for _all the authorized channels_ for that socket. Below is an example:
+
+```elixir
+def event(socket, "ping", message) do
+  IO.puts "sending myself pong"
+  send socket.pid, "pong"
+  socket
+end
+
+def event(socket, "info", "pong") do
+  IO.puts "Got pong from my own ping"
+  socket
+end
+```
+
 Remember that a client first has to join a topic before it can send events. On the JavaScript side, this is how it would be done (don't forget to include _/js/phoenix.js_) :
 
 ```js
