@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
   @shortdoc "Creates Phoenix application"
 
-  @template_dir "template"
+  @template_dir "priv/template"
 
   @doc """
   Creates Phoenix application.
@@ -45,7 +45,7 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   defp eval_file(source_path, bindings) do
-    if String.match?(source_path, ~r/templates\//) do
+    if String.ends_with?(source_path, ".html.eex") do
       File.read!(source_path)
     else
       EEx.eval_file(source_path, bindings)
@@ -86,8 +86,6 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   defp template_path do
-    {:ok, root_path} = File.cwd
-
-    Path.join(root_path, @template_dir)
+    Path.join(File.cwd!, @template_dir)
   end
 end
