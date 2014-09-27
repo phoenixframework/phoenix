@@ -16,7 +16,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
     bindings = [application_name: application_name,
                 application_module: application_module,
-                secret_key_base: random_string(64, 80)]
+                secret_key_base: random_string(64)]
 
     Mix.Generator.create_directory(project_path)
 
@@ -52,14 +52,8 @@ defmodule Mix.Tasks.Phoenix.New do
     end
   end
 
-  defp random_string(min_length, max_length) do
-    :random.seed :erlang.now
-    chars = String.codepoints("ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+=12345678910")
-    upper = :random.uniform(max_length - min_length) + min_length
-
-    for _ <- 0..upper, into: ""  do
-      Enum.at(chars, :random.uniform(Enum.count(chars) - 1))
-    end
+  def random_string(length) do
+    :crypto.strong_rand_bytes(length) |> Base.encode64
   end
 
   defp make_project_path(path, application_name) do
