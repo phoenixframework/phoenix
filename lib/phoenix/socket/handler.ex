@@ -151,9 +151,9 @@ defmodule Phoenix.Socket.Handler do
   end
 
   @doc """
-  Handles regular messages to socket process
+  Handles regular messages sent to the socket process
 
-  Each messages is forward to all socket's authorized channels "info" event
+  Each message is forwarded to the "info" event of the socket's authorized channels
   """
   def websocket_info(data, req, socket) do
     socket = Enum.reduce socket.channels, socket, fn {channel, topic}, socket ->
