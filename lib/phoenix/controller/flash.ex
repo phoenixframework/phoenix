@@ -9,10 +9,6 @@ defmodule Phoenix.Controller.Flash do
   Messages can be stored in the session and persisted across redirects for
   notices and alerts about request state.
 
-  Plugged automatically by Phoenix.Controller
-
-  A `Flash` alias is automatically injected when using `Phoenix.Controller`
-
   ## Examples
 
       def index(conn, _) do
