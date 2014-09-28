@@ -88,9 +88,9 @@ defmodule Phoenix.Controller.Flash do
   ## Examples
 
       iex> conn
-      |> Flash.put(:notices, "hello")
-      |> Flash.put(:notices, "world")
-      |> Flash.get_all(:notices)
+      |> Flash.put(:notice, "hello")
+      |> Flash.put(:notice, "world")
+      |> Flash.get_all(:notice)
       ["hello", "world"]
 
   """
@@ -108,9 +108,9 @@ defmodule Phoenix.Controller.Flash do
   ## Examples
 
       iex> %Conn{}
-      |> Flash.put(:notices, "oh noes!")
+      |> Flash.put(:notice, "oh noes!")
       |> Flash.put(:notice, "false alarm!")
-      |> Flash.pop_all(:notices)
+      |> Flash.pop_all(:notice)
       {["oh noes!", "false alarm!"], %Conn{}}
 
   """
