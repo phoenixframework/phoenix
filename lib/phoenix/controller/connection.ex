@@ -58,7 +58,7 @@ defmodule Phoenix.Controller.Connection do
 
   @doc false
   def assign_layout(conn, layout) do
-    IO.write :stderr, "put_status/2 is deprecated in favor of put_status/2\n#{Exception.format_stacktrace}"
+    IO.write :stderr, "assign_layout/2 is deprecated in favor of put_layout/2\n#{Exception.format_stacktrace}"
     put_layout(conn, layout)
   end
 
@@ -69,7 +69,7 @@ defmodule Phoenix.Controller.Connection do
 
   @doc false
   def assign_status(conn, status) do
-    IO.write :stderr, "put_status/2 is deprecated in favor of put_status/2\n#{Exception.format_stacktrace}"
+    IO.write :stderr, "assign_status/2 is deprecated in favor of put_status/2\n#{Exception.format_stacktrace}"
     put_status(conn, status)
   end
 
