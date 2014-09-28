@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
   @shortdoc "Creates Phoenix application"
 
-  @template_dir "priv/template"
+  @template_priv_dir "template"
 
   @doc """
   Creates Phoenix application.
@@ -79,7 +79,7 @@ defmodule Mix.Tasks.Phoenix.New do
     Path.join(project_path, relative_path)
   end
 
-  defp template_path do
-    Path.join(File.cwd!, @template_dir)
+  def template_path do
+    Path.join(Application.app_dir(:phoenix, "priv"), @template_priv_dir)
   end
 end
