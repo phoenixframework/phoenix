@@ -32,6 +32,7 @@ defmodule Phoenix.Controller.FlashTest do
 
     defmodule Router do
       use Phoenix.Router
+      pipe_through :browser
       get "/", FlashController, :index
       get "/set_flash/:notice/:status", FlashController, :set_flash
     end

@@ -69,9 +69,8 @@ defmodule Phoenix.Router.Adapter do
   Carries out Controller dispatch for router match
   """
   def dispatch(conn, router) do
-    conn = put_private(conn, :phoenix_router, router)
     try do
-      router.match(conn, conn.method, conn.path_info)
+      conn.private.phoenix_route.(conn)
     catch
       kind, err ->
         handle_err(conn, kind, err, Phoenix.Config.router(router, [:catch_errors]))

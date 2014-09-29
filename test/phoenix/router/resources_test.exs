@@ -1,4 +1,4 @@
-defmodule Phoenix.Router.NestedTest do
+defmodule Phoenix.Router.ResourcesTest do
   use ExUnit.Case, async: true
   use ConnHelper
 
@@ -68,6 +68,8 @@ defmodule Phoenix.Router.NestedTest do
 
   defmodule Router do
     use Phoenix.Router
+
+    pipe_through :browser
 
     resources "/users", UserController do
       resources "/comments", CommentController do
@@ -204,18 +206,18 @@ defmodule Phoenix.Router.NestedTest do
 
   test "nested options limit resource by passing :except option" do
     conn = call(Router, :delete, "users/1/posts/2")
-     assert conn.status == 404
+    assert conn.status == 404
     conn = call(Router, :get, "users/1/posts/new")
     assert conn.status == 200
   end
 
   test "nested options limit resource by passing :only option" do
     conn = call(Router, :put, "users/1/sessions/2")
-     assert conn.status == 404
+    assert conn.status == 404
     conn = call(Router, :get, "users/1/sessions/")
-     assert conn.status == 404
+    assert conn.status == 404
     conn = call(Router, :get, "users/1/sessions/1")
-     assert conn.status == 404
+    assert conn.status == 404
     conn = call(Router, :get, "users/1/sessions/new")
     assert conn.status == 200
     conn = call(Router, :post, "users/1/sessions")

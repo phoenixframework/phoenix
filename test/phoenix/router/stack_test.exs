@@ -10,7 +10,7 @@ alias Phoenix.Router.StackTest.UserController
 # leakage from the test case.
 defmodule Phoenix.Router.StackTest.Router do
   use Phoenix.Router
-
+  pipe_through :browser
   get "/users/:id", UserController, :show, as: :users
   get "/route_that_crashes", UserController, :crash
 end

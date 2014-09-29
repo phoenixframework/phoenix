@@ -26,6 +26,7 @@ defmodule Phoenix.Router.RoutingTest do
 
   defmodule Router do
     use Phoenix.Router
+    pipe_through :browser
 
     get "/", UsersController, :index, as: :users
     get "/users/top", UsersController, :top, as: :top
@@ -46,6 +47,7 @@ defmodule Phoenix.Router.RoutingTest do
 
   defmodule CatchAllRouter do
     use Phoenix.Router
+    pipe_through :browser
     get "/users/top", UsersController, :top, as: :top
     get "/users/:id", UsersController, :show, as: :user
     get "/*path", UsersController, :not_found

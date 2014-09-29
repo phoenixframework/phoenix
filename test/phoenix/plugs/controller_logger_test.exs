@@ -9,6 +9,7 @@ defmodule Phoenix.ControllerLoggerTest do
 
   defmodule Router do
     use Phoenix.Router
+    pipe_through :browser
     get "/", LoggerController, :index
   end
 

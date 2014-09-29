@@ -61,6 +61,7 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
 
     defmodule RouterCustomPageController do
       use Phoenix.Router
+      pipe_through :browser
       get "/404", MyController, :assign_404
       get "/500", MyController, :assign_500
       get "/500-raise", MyController, :raise_500
@@ -69,6 +70,7 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
 
     defmodule RouterDefaultPageController do
       use Phoenix.Router
+      pipe_through :browser
       get "/404", MyController, :assign_404
       get "/500", MyController, :assign_500
       get "/500-raise", MyController, :raise_500
@@ -77,11 +79,13 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
 
     defmodule RouterDefaultPageControllerNoCatch do
       use Phoenix.Router
+      pipe_through :browser
       get "/500-raise", MyController, :raise_500
     end
 
     defmodule RouterDefaultPageControllerDebugErrors do
       use Phoenix.Router
+      pipe_through :browser
       get "/404", MyController, :assign_404
       get "/500", MyController, :assign_500
       get "/500-raise", MyController, :raise_500

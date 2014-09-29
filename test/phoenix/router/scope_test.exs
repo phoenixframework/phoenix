@@ -42,6 +42,9 @@ defmodule Phoenix.Router.ScopedRoutingTest do
 
   defmodule Router do
     use Phoenix.Router
+
+    pipe_through :browser
+
     scope path: "/admin" do
       get "/profiles/:id", ProfileController, :show
     end
@@ -137,6 +140,8 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   defmodule RouterControllerScoping do
     use Phoenix.Router
 
+    pipe_through :browser
+
     scope path: "/admin", alias: Admin do
       get "/users/:id", UserController, :show
     end
@@ -149,7 +154,6 @@ defmodule Phoenix.Router.ScopedRoutingTest do
         end
       end
     end
-
   end
 
   test "scope alias" do
