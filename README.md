@@ -424,7 +424,7 @@ end
 
 Note that we must join a topic before you can send and receive events on a channel. This will become clearer when we look at the JavaScript code, hang tight!
 
-A channel will use a socket underneath to send responses and receive events. As said, sockets are bidirectional, which mean you can receive events (similar to requests in your controller). You handle events with pattern matching, for example:
+A channel will use a socket underneath to send responses and receive events. As said, sockets are bidirectional, which mean you can receive events (similar to requests in your controller). You handle events with pattern matching directly on the event name and message map, for example:
 
 
 ```elixir
@@ -448,8 +448,8 @@ We can send replies directly to a single authorized socket with `reply/3`
 defmodule App.MyChannel do
   use Phoenix.Channel
 
-  def event(socket, "eventname", message) do
-    reply socket, "return_event", "Echo: " <> message
+  def event(socket, "incoming:event", message) do
+    reply socket, "response:event", %{message: "Echo: " <> message.content}
     socket
   end
 
@@ -459,7 +459,7 @@ end
 Note that, for added clarity, events should be prefixed with their subject and a colon (i.e. "subject:event"). Instead of `reply/3`, you may also use `broadcast/3`. In the previous case, this would publish a message to all clients who previously joined the current socket's topic.
 
 When sending process messages directly to a socket like `send socket.pid "pong"`, the
-`"pong"` message triggers the `"info"` event for _all the authorized channels_ for that socket. Below is an example:
+`"pong"` message triggers the `"info"` event for _all the authorized channels_ for that socket. Instead of receiving a map like normal socket events, the `info` event receives the literal message sent to the process. Below is an example:
 
 ```elixir
 def event(socket, "ping", message) do
@@ -506,12 +506,12 @@ var socket = new Phoenix.Socket("/ws");
 
 socket.join("channel", "topic", {}, function(channel) {
 
-  channel.on("return_event", function(message) {
-    console.log("Got " + message + " while listening for event return_event");
+  channel.on("pong", function(message) {
+    console.log("Got " + message + " while listening for event pong");
   });
 
   onSomeEvent(function() {
-    channel.send("topic:event", {data: "json stuff"});
+    channel.send("ping", {data: "json stuff"});
   });
 
 });
@@ -525,8 +525,8 @@ end
 ```
 Which you can handle after you get the channel object.
 ``` javascript
-channel.on("return_event", function(message) {
-  console.log("Got " + message + " while listening for event return_event");
+channel.on("join", function(message) {
+  console.log("Got " + message.content);
 });
 ```
 Similarly, you can send an explicit message when denying conection.
@@ -550,7 +550,7 @@ There are a few other things not covered in this readme that might be worth expl
  * By default a socket uses the ws:// protocol and the host from the current location. If you mean to use a separate router on a host other than `location.host`, be sure to specify the full path when initializing the socket, i.e. `var socket = new Phoenix.Socket("//example.com/ws")` or `var socket = new Phoenix.Socket("ws://example.com/ws")`
  * Both the client and server side allow for leave events (as opposed to join)
  * In JavaScript, you may manually `.trigger()` events which can be useful for testing
- * On the server side, string topics are converted into a `Topic`, which can be subscribed to from any elixir code. No need to use websockets!
+
 
 ### Configuration
 
