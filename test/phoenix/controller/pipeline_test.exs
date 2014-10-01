@@ -1,15 +1,16 @@
-defmodule Phoenix.Controller.StackTest do
+defmodule Phoenix.Controller.PipelineTest do
   use ExUnit.Case, async: true
   use ConnHelper
 
   defmodule MyController do
     use Phoenix.Controller
 
-    before_action :prepend, :before1 when action in [:show, :create]
-    before_action :prepend, :before2
-    after_action :prepend, :after1
-    after_action :prepend, :after2
-    after_action :done when not action in [:create]
+    plug :prepend, :before1 when action in [:show, :create]
+    plug :prepend, :before2
+    plug :action
+    plug :prepend, :after1
+    plug :prepend, :after2
+    plug :done when not action in [:create]
 
     defp prepend(conn, val) do
       update_in conn.private.stack, &[val|&1]

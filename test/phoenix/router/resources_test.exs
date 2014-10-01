@@ -9,6 +9,7 @@ defmodule Phoenix.Router.ResourcesTest do
 
   defmodule UserController do
     use Phoenix.Controller
+    plug :action
     def show(conn, _params), do: text(conn, "show users")
     def index(conn, _params), do: text(conn, "index users")
     def new(conn, _params), do: text(conn, "new users")
@@ -20,6 +21,7 @@ defmodule Phoenix.Router.ResourcesTest do
 
   defmodule FileController do
     use Phoenix.Controller
+    plug :action
     def show(conn, _params), do: text(conn, "show files")
     def index(conn, _params), do: text(conn, "index files")
     def new(conn, _params), do: text(conn, "new files")
@@ -30,6 +32,7 @@ defmodule Phoenix.Router.ResourcesTest do
 
   defmodule CommentController do
     use Phoenix.Controller
+    plug :action
     def show(conn, _params), do: text(conn, "show comments")
     def index(conn, _params), do: text(conn, "index comments")
     def new(conn, _params), do: text(conn, "new comments")
@@ -41,6 +44,7 @@ defmodule Phoenix.Router.ResourcesTest do
 
   defmodule SessionController do
     use Phoenix.Controller
+    plug :action
     def new(conn, _params), do: text(conn, "session login")
     def create(conn, _params), do: text(conn, "session created")
     def destroy(conn, _params), do: text(conn, "session destroyed")
@@ -48,6 +52,7 @@ defmodule Phoenix.Router.ResourcesTest do
 
   defmodule PostController do
     use Phoenix.Controller
+    plug :action
     def show(conn, _params), do: text(conn, "show posts")
     def new(conn, _params), do: text(conn, "new posts")
     def index(conn, _params), do: text(conn, "index posts")
@@ -57,11 +62,13 @@ defmodule Phoenix.Router.ResourcesTest do
 
   defmodule PageController do
     use Phoenix.Controller
+    plug :action
     def show(conn, _params), do: text(conn, "show page")
   end
 
   defmodule RatingController do
     use Phoenix.Controller
+    plug :action
     def show(conn, _params), do: text(conn, "show rating")
   end
 

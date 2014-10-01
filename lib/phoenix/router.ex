@@ -8,7 +8,7 @@ defmodule Phoenix.Router do
     * It provides routes and named route conveniences for
       routing requests to controllers
 
-    * It defines a Plug stack responsible for handling all
+    * It defines a plug pipelines responsible for handling
       upcoming requests
 
     * It hosts configuration for the router and related
@@ -239,7 +239,7 @@ defmodule Phoenix.Router do
   end
 
   defp plug() do
-    {conn, stack} =
+    {conn, pipeline} =
       [:dispatch, :match, :before]
       |> Enum.map(&{&1, [], true})
       |> Plug.Builder.compile()
@@ -254,7 +254,7 @@ defmodule Phoenix.Router do
       def call(unquote(conn), opts) do
         unquote(conn) =
           Plug.Conn.put_private(unquote(conn), :phoenix_router, __MODULE__)
-        unquote(stack)
+        unquote(pipeline)
       end
 
       def match(conn, []) do

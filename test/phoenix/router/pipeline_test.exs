@@ -1,13 +1,14 @@
-defmodule Phoenix.Router.StackTest.SampleController do
+defmodule Phoenix.Router.PipelineTest.SampleController do
   use Phoenix.Controller
+  plug :action
   def index(conn, _params), do: text(conn, "index")
   def crash(_conn, _params), do: raise "crash!"
 end
 
-alias Phoenix.Router.StackTest.SampleController
+alias Phoenix.Router.PipelineTest.SampleController
 
 Mix.Config.persist(phoenix: [
-  {Phoenix.Router.StackTest.Router,
+  {Phoenix.Router.PipelineTest.Router,
     cookies: true,
     session_key: "_app",
     secret_key_base: String.duplicate("abcdefgh", 8)}
@@ -15,7 +16,7 @@ Mix.Config.persist(phoenix: [
 
 # Define it at the top to guarantee there is no scope
 # leakage from the test case.
-defmodule Phoenix.Router.StackTest.Router do
+defmodule Phoenix.Router.PipelineTest.Router do
   use Phoenix.Router
 
   pipeline :before do
@@ -61,9 +62,9 @@ defmodule Phoenix.Router.StackTest.Router do
   end
 end
 
-alias Phoenix.Router.StackTest.Router
+alias Phoenix.Router.PipelineTest.Router
 
-defmodule Phoenix.Router.StackTest do
+defmodule Phoenix.Router.PipelineTest do
   use ExUnit.Case, async: true
   use ConnHelper
 

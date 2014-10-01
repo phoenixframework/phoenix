@@ -9,7 +9,8 @@ defmodule Phoenix.Controller do
   @layout_extension_types ["html"]
 
   @moduledoc """
-  Controllers are conveniences for handling router requests.
+  Controllers are used to group common functionality in the same
+  (pluggable) module.
 
   For example, the route:
 
@@ -19,6 +20,8 @@ defmodule Phoenix.Controller do
 
       defmodule UserController do
         use Phoenix.Controller
+
+        plug :action
 
         def show(conn, %{"id" => id}) do
           user = Repo.get(User, id)
@@ -47,15 +50,16 @@ defmodule Phoenix.Controller do
 
   TODO: documentation.
 
-  ## Plug stacks
+  ## Plug pipeline
 
-  As routers, controllers also have their own plug stack, allowing developers
-  to execute a particular plug before or after an action:
+  As routers, controllers also have their own plug pipeline. However,
+  different from routers, controllers have a single pipeline:
 
       defmodule UserController do
         use Phoenix.Controller
 
-        before_action :authenticate, usernames: ["jose", "eric", "sonny"]
+        plug :authenticate, usernames: ["jose", "eric", "sonny"]
+        plug :action
 
         def show(conn, params) do
           # authenticated users only
@@ -70,8 +74,11 @@ defmodule Phoenix.Controller do
         end
       end
 
-  Check `Phoenix.Controller.Stack` for more information on `before_action/2`
-  and how to customize the plug stack.
+  The `:action` plug must always be invoked and it represents the action
+  to be dispatched to.
+
+  Check `Phoenix.Controller.Pipeline` for more information on `plug/2`
+  and how to customize the plug pipeline.
   """
   defmacro __using__(_options) do
     quote do
@@ -79,7 +86,7 @@ defmodule Phoenix.Controller do
       import Phoenix.Controller
       import Phoenix.Controller.Connection
 
-      use Phoenix.Controller.Stack
+      use Phoenix.Controller.Pipeline
 
       @subview_module view_module(__MODULE__)
       @layout_module layout_module(__MODULE__)
@@ -88,9 +95,9 @@ defmodule Phoenix.Controller do
         render_view conn, @subview_module, @layout_module, template, assigns
       end
 
-      before_action Plugs.ContentTypeFetcher
-      before_action Phoenix.Controller.Flash
-      before_action Plugs.ControllerLogger
+      plug Plugs.ContentTypeFetcher
+      plug Phoenix.Controller.Flash
+      plug Plugs.ControllerLogger
     end
   end
 

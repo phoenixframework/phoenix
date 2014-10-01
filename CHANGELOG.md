@@ -14,7 +14,7 @@
 
 * Backwards incompatible changes
   * [Controller] Remove default, inject aliases: `Flash`, `JSON`
-  * [Controller] Controllers now use `before_action` and `after_action` to customize the plug stack
+  * [Controller] Controllers now require `plug :action` to be explicitly invoked
   * [Router] `*path` identifiers in routers are now returned as a list
   * [Router] Named helpers are now defined in a explicit module nested to your router. For example, if your router is named `MyApp.Router`, the named helpers will be available at `MyApp.Router.Helpers`
   * [Router] `session_secret` configuration is deprecated in favor of `secret_key_base`

@@ -11,12 +11,14 @@ defmodule Phoenix.Router.ScopedRoutingTest do
 
   defmodule ProfileController do
     use Phoenix.Controller
+    plug :action
     def show(conn, _params), do: text(conn, "profiles show")
     def index(conn, _params), do: text(conn, "profiles index")
   end
 
   defmodule Api.V1.UserController do
     use Phoenix.Controller
+    plug :action
     def show(conn, _params), do: text(conn, "api v1 users show")
     def destroy(conn, _params), do: text(conn, "api v1 users destroy")
     def edit(conn, _params), do: text(conn, "api v1 users edit")
@@ -83,11 +85,13 @@ defmodule Phoenix.Router.ScopedRoutingTest do
 
   defmodule Api.V1.AccountController do
     use Phoenix.Controller
+    plug :action
     def show(conn, _params), do: text(conn, "api v1 accounts show")
   end
 
   defmodule Api.V1.SubscriptionController do
     use Phoenix.Controller
+    plug :action
     def show(conn, _params), do: text(conn, "api v1 accounts subscriptions show")
   end
 

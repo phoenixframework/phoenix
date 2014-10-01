@@ -140,10 +140,10 @@ For example, to make a button to delete a post, you could write:
 ```elixir
 defmodule YourApp.PageController do
   use Phoenix.Controller
-  alias YourApp.Router
+  plug :action
 
   def show(conn, %{"page" => "admin"}) do
-    redirect conn, Router.page_path(:show, "unauthorized")
+    redirect conn, YourApp.Router.Helpers.page_path(:show, "unauthorized")
   end
   def show(conn, %{"page" => page}) do
     render conn, "show", title: "Showing page #{page}"
@@ -154,6 +154,8 @@ end
 ```elixir
 defmodule YourApp.UserController do
   use Phoenix.Controller
+
+  plug :action
 
   def show(conn, %{"id" => id}) do
     text conn, "Showing user #{id}"
@@ -176,6 +178,9 @@ You could use `Phoenix.Controller.Flash` to persist messages across redirects li
 ```elixir
 defmodule YourApp.PageController do
   use Phoenix.Controller
+
+  plug :action
+
   alias Phoenix.Controller.Flash
 
   def create(conn, _) do
@@ -218,6 +223,8 @@ Phoenix also supports multiple flash messages.
 ```elixir
 defmodule App.PageController do
   use Phoenix.Controller
+
+  plug :action
 
   def index(conn, _params) do
     render conn, "index", message: "hello"

@@ -20,6 +20,8 @@ defmodule Phoenix.Controller.FlashTest do
     defmodule FlashController do
       use Phoenix.Controller
 
+      plug :action
+
       def index(conn, _params) do
         text conn, "hello"
       end
