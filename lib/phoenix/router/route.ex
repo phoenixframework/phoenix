@@ -37,8 +37,7 @@ defmodule Phoenix.Router.Route do
       {Atom.to_string(var), Macro.var(var, nil)}
     end)
 
-    pipes = Enum.reduce(pipe_through, quote(do: conn), &{&1, [], [&2, []]})
-    pipes = quote(do: fn conn -> unquote(pipes) end)
+    pipes = Enum.reduce(pipe_through, quote(do: var!(conn)), &{&1, [], [&2, []]})
 
     %Route{verb: verb, path: path, segments: segments, binding: binding,
            controller: controller, action: action, helper: helper,

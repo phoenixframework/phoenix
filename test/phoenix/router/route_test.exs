@@ -11,7 +11,6 @@ defmodule Phoenix.Router.RouteTest do
     assert route.controller == Hello
     assert route.action == :world
     assert route.helper == "hello_world"
-    assert Macro.to_string(route.pipe_through) ==
-           "fn conn -> bar(foo(conn, []), []) end"
+    assert Macro.to_string(route.pipe_through) == "bar(foo(var!(conn), []), [])"
   end
 end

@@ -9,72 +9,44 @@ defmodule Phoenix.Router.ScopedRoutingTest do
 
   # Path scoping
 
-  defmodule Admin.PostController do
-    use Phoenix.Controller
-    def show(conn, _params), do: text(conn, "post show")
-  end
-
   defmodule ProfileController do
     use Phoenix.Controller
     def show(conn, _params), do: text(conn, "profiles show")
+    def index(conn, _params), do: text(conn, "profiles index")
   end
 
   defmodule Api.V1.UserController do
     use Phoenix.Controller
     def show(conn, _params), do: text(conn, "api v1 users show")
-  end
-
-  defmodule EventController do
-    use Phoenix.Controller
-    def show(conn, _params), do: text(conn, "show events")
-    def index(conn, _params), do: text(conn, "index events")
-  end
-
-  defmodule Api.V1.EventController do
-    use Phoenix.Controller
-    def destroy(conn, _params), do: text(conn, "destroy api v1 events")
-  end
-
-  defmodule Api.V1.ImageController do
-    use Phoenix.Controller
-    def edit(conn, _params), do: text(conn, "edit api v1 venues images")
+    def destroy(conn, _params), do: text(conn, "api v1 users destroy")
+    def edit(conn, _params), do: text(conn, "api v1 users edit")
   end
 
   defmodule Router do
     use Phoenix.Router
 
-    pipe_through :browser
-
-    scope path: "/admin" do
+    scope "/admin" do
       get "/profiles/:id", ProfileController, :show
     end
 
-    scope path: "/api" do
+    scope "/api" do
       scope path: "/v1" do
         get "/users/:id", Api.V1.UserController, :show
       end
     end
 
-    scope path: "/admin" do
-      resources "/events", EventController, only: [:show, :index]
-    end
-
     scope path: "/api" do
       scope path: "/v1" do
-        resources "/events", Api.V1.EventController, only: [:destroy]
+        resources "/users", Api.V1.UserController, only: [:destroy]
       end
     end
 
     scope path: "/api" do
       scope path: "/v1" do
         resources "/venues", Api.V1.VenueController do
-          resources "/images", Api.V1.ImageController, only: [:edit]
+          resources "/users", Api.V1.UserController, only: [:edit]
         end
       end
-    end
-
-    scope path: "/staff", alias: Staff do
-      resources "/products", ProductController
     end
   end
 
@@ -92,40 +64,22 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     assert conn.params["id"] == "1"
   end
 
-  test "single scope for resources" do
-    conn = call(Router, :get, "/admin/events")
+  test "scope for resources" do
+    conn = call(Router, :delete, "/api/v1/users/12")
     assert conn.status == 200
-    assert conn.resp_body == "index events"
-  end
-
-  test "single scope for resources - show action" do
-    conn = call(Router, :get, "/admin/events/12")
-    assert conn.status == 200
-    assert conn.resp_body == "show events"
+    assert conn.resp_body == "api v1 users destroy"
     assert conn.params["id"] == "12"
   end
 
-  test "double scope for resources - show action" do
-    conn = call(Router, :delete, "/api/v1/events/12")
+  test "scope for double nested resources" do
+    conn = call(Router, :get, "/api/v1/venues/12/users/13/edit")
     assert conn.status == 200
-    assert conn.resp_body == "destroy api v1 events"
-    assert conn.params["id"] == "12"
-  end
-
-  test "double scope for double nested resources - show action" do
-    conn = call(Router, :get, "/api/v1/venues/12/images/13/edit")
-    assert conn.status == 200
-    assert conn.resp_body == "edit api v1 venues images"
+    assert conn.resp_body == "api v1 users edit"
     assert conn.params["venue_id"] == "12"
     assert conn.params["id"] == "13"
   end
 
   # Alias scoping
-
-  defmodule Admin.UserController do
-    use Phoenix.Controller
-    def show(conn, _params), do: text(conn, "admin users show")
-  end
 
   defmodule Api.V1.AccountController do
     use Phoenix.Controller
@@ -140,15 +94,10 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   defmodule RouterControllerScoping do
     use Phoenix.Router
 
-    pipe_through :browser
+    scope "/api", Api do
+      get "/users/:id", V1.UserController, :show
 
-    scope path: "/admin", alias: Admin do
-      get "/users/:id", UserController, :show
-    end
-
-    scope path: "/api", alias: Api do
-      scope path: "/v1", alias: V1 do
-        get "/users/:id", UserController, :show
+      scope "/v1", V1, as: :api_v1 do
         resources "/accounts", AccountController do
           resources "/subscriptions", SubscriptionController
         end
@@ -157,14 +106,7 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   end
 
   test "scope alias" do
-    conn = call(RouterControllerScoping, :get, "/admin/users/12")
-    assert conn.status == 200
-    assert conn.resp_body == "admin users show"
-    assert conn.params["id"] == "12"
-  end
-
-  test "double scope alias" do
-    conn = call(RouterControllerScoping, :get, "/api/v1/users/13")
+    conn = call(RouterControllerScoping, :get, "/api/users/13")
     assert conn.status == 200
     assert conn.resp_body == "api v1 users show"
     assert conn.params["id"] == "13"

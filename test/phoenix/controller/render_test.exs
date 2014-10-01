@@ -55,7 +55,6 @@ end
 
 defmodule MyApp.Router do
   use Phoenix.Router
-  pipe_through :browser
   get "/assign/manual", MyApp.AssignController, :index
   get "/assign/plug", MyApp.AssignController, :plugged
   get "/assign/overwrite", MyApp.AssignController, :overwrite

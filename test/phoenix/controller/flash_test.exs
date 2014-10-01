@@ -121,4 +121,3 @@ defmodule Phoenix.Controller.FlashTest do
     assert Flash.get(conn) == %{}
   end
 end
-

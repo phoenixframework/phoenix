@@ -120,7 +120,8 @@ defmodule Phoenix.Router do
 
   Such transformations are defined via plugs, as defined
   in the [Plug](http://github.com/elixir-lang/plug) specification.
-  Once a pipeline is defined, it can be configured per scope.
+  Once a pipeline is defined, it can be piped through per scope.
+
   For example:
 
       defmodule MyApp.Router do
@@ -146,33 +147,51 @@ defmodule Phoenix.Router do
     * `:browser` - a pipeline for handling browser requests
     * `:api` - a pipeline for handling api requests
 
-  You can define new pipelines at any moment with the
-  `pipeline/2` macro.
+  All pipelines are invoked after a matching route is found,
+  with exception of the `:before` pipeline which is dispatched
+  before any attempt to match a route.
+
+  ### :before pipeline
+
+  TODO: Describe plugs in the before pipeline.
+
+  ### :browser pipeline
+
+  TODO: Describe plugs in the browser pipeline.
+
+  ### :api pipeline
+
+  TODO: Describe plugs in the api pipeline.
 
   ### Customizing pipelines
 
-  Defining new pipelines is straigh-forward, someone for
-  example may write:
+  You can define new pipelines at any moment with the `pipeline/2`
+  macro:
 
       pipeline :secure do
         plug :token_authentication
       end
 
-  And then in a scope:
+  And then in a scope (or at root):
 
       pipe_through [:api, :secure]
 
-  Pipelines are always defined as overridable functions
-  which means they can be easily customized too. For example,
-  we can directly modify the api pipeline for adding security
-  if desired:
+  Pipelines are always defined as overridable functions which means
+  they can be easily extended. For example, we can extend the api
+  pipeline directly and add security:
 
       pipeline :api do
         plug :super
         plug :token_authentication
       end
 
+  Where `plug :super` will invoke the previously defined pipeline.
+  In general though, it is preferred to define new pipelines then
+  modify existing ones.
+
   ## Configuration
+
+  TODO: documentation
 
   ## Web server
 
@@ -209,7 +228,7 @@ defmodule Phoenix.Router do
 
       # Set up initial scope
       @phoenix_pipeline nil
-      Phoenix.Router.Scope.push(__MODULE__, [])
+      Phoenix.Router.Scope.init(__MODULE__)
 
       # TODO: Document what those options are about
       @options unquote(plug_adapter_options)
@@ -220,6 +239,11 @@ defmodule Phoenix.Router do
   end
 
   defp plug() do
+    {conn, stack} =
+      [:dispatch, :match, :before]
+      |> Enum.map(&{&1, [], true})
+      |> Plug.Builder.compile()
+
     quote do
       @behaviour Plug
 
@@ -227,21 +251,21 @@ defmodule Phoenix.Router do
         opts
       end
 
-      def call(conn, opts) do
-        conn =
-          conn
-          |> Plug.Conn.put_private(:phoenix_router, __MODULE__)
-          |> before([])
-
-        {dispatch, stack} = match(conn, [])
-
-        conn
-        |> Plug.Conn.put_private(:phoenix_route, dispatch)
-        |> stack.()
-        |> dispatch([])
+      def call(unquote(conn), opts) do
+        unquote(conn) =
+          Plug.Conn.put_private(unquote(conn), :phoenix_router, __MODULE__)
+        unquote(stack)
       end
 
-      defoverridable [init: 1, call: 2]
+      def match(conn, []) do
+        match(conn, conn.method, conn.path_info)
+      end
+
+      def dispatch(conn, []) do
+        Phoenix.Router.Adapter.dispatch(conn, __MODULE__)
+      end
+
+      defoverridable [init: 1, call: 2, match: 2, dispatch: 2]
     end
   end
 
@@ -283,6 +307,10 @@ defmodule Phoenix.Router do
         end
         plug Plug.MethodOverride
       end
+
+      pipeline :api do
+        # Empty by default
+      end
     end
   end
 
@@ -292,21 +320,10 @@ defmodule Phoenix.Router do
     Phoenix.Router.Helpers.define(env, routes)
 
     quote do
-      # TODO: We need to halt here.
-      # TODO: We should not call dispatch (or any of the pipelines).
-      defp do_match(_method, _path) do
-        {fn conn ->
-           Plug.Conn.put_status(conn, 404)
-         end,
-         fn conn -> dispatch(conn, []) end}
-      end
-
-      def match(conn, []) do
-        do_match(conn.method, conn.path_info)
-      end
-
-      def dispatch(conn, []) do
-        Phoenix.Router.Adapter.dispatch(conn, __MODULE__)
+      defp match(conn, _method, _path) do
+        Plug.Conn.put_private(conn, :phoenix_route, fn conn ->
+          Plug.Conn.put_status(conn, 404)
+        end)
       end
 
       def start do
@@ -323,6 +340,8 @@ defmodule Phoenix.Router do
         unquote(Macro.escape(routes))
       end
 
+      # TODO: How is this customizable?
+      # We can move it to the controller.
       defp put_secret_key_base(conn, _) do
         put_in conn.secret_key_base, Config.router(__MODULE__, [:secret_key_base])
       end
@@ -345,13 +364,14 @@ defmodule Phoenix.Router do
       parts = {:%{}, [], route.binding}
       @phoenix_routes route
 
-      defp do_match(unquote(route.verb), unquote(route.segments)) do
-        {fn conn ->
-          conn = update_in(conn.params, &Map.merge(&1, unquote(parts)))
-          opts = unquote(route.controller).init(unquote(route.action))
-          unquote(route.controller).call(conn, opts)
-         end,
-         unquote(route.pipe_through)}
+      defp match(var!(conn), unquote(route.verb), unquote(route.segments)) do
+        var!(conn) =
+          Plug.Conn.put_private(var!(conn), :phoenix_route, fn conn ->
+            conn = update_in(conn.params, &Map.merge(&1, unquote(parts)))
+            opts = unquote(route.controller).init(unquote(route.action))
+            unquote(route.controller).call(conn, opts)
+          end)
+        unquote(route.pipe_through)
       end
     end
   end
@@ -387,6 +407,7 @@ defmodule Phoenix.Router do
 
     compiler =
       quote bind_quoted: [plug: plug] do
+        Scope.pipeline(__MODULE__, plug)
         {conn, body} = Plug.Builder.compile(@phoenix_pipeline)
         def unquote(plug)(unquote(conn), _), do: unquote(body)
         defoverridable [{plug, 2}]
@@ -418,7 +439,6 @@ defmodule Phoenix.Router do
   """
   defmacro pipe_through(pipes) do
     quote do
-      # TODO: Validate pipes
       Scope.pipe_through(__MODULE__, unquote(pipes))
     end
   end
@@ -529,9 +549,53 @@ defmodule Phoenix.Router do
     * `:alias` - an alias (atom) containing the controller scope
 
   """
-  defmacro scope(params, do: context) do
+  defmacro scope(options, do: context) do
+    do_scope(options, context)
+  end
+
+  @doc """
+  Define a scope with the given path.
+
+  This function is a shortcut for:
+
+      scope path: path do
+        ...
+      end
+
+  """
+  defmacro scope(path, options, do: context) do
+    options = quote do
+      path = unquote(path)
+      case unquote(options) do
+        alias when is_atom(alias) -> [path: path, alias: alias]
+        options when is_list(options) -> Keyword.put(options, :path, path)
+      end
+    end
+    do_scope(options, context)
+  end
+
+  @doc """
+  Define a scope with the given path and alias.
+
+  This function is a shortcut for:
+
+      scope path: path, alias: alias do
+        ...
+      end
+
+  """
+  defmacro scope(path, alias, options, do: context) do
+    options = quote do
+      unquote(options)
+      |> Keyword.put(:path, unquote(path))
+      |> Keyword.put(:alias, unquote(alias))
+    end
+    do_scope(options, context)
+  end
+
+  defp do_scope(options, context) do
     quote do
-      Scope.push(__MODULE__, unquote(params))
+      Scope.push(__MODULE__, unquote(options))
       try do
         unquote(context)
       after

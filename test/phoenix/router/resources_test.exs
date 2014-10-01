@@ -41,7 +41,6 @@ defmodule Phoenix.Router.ResourcesTest do
 
   defmodule SessionController do
     use Phoenix.Controller
-
     def new(conn, _params), do: text(conn, "session login")
     def create(conn, _params), do: text(conn, "session created")
     def destroy(conn, _params), do: text(conn, "session destroyed")
@@ -69,15 +68,13 @@ defmodule Phoenix.Router.ResourcesTest do
   defmodule Router do
     use Phoenix.Router
 
-    pipe_through :browser
-
     resources "/users", UserController do
       resources "/comments", CommentController do
         get "/special", CommentController, :special
       end
       resources "/files", FileController
-      resources "/posts", PostController, except: [ :destroy ]
-      resources "/sessions", SessionController, only: [ :new, :create, :destroy ]
+      resources "/posts", PostController, except: [:destroy]
+      resources "/sessions", SessionController, only: [:new, :create, :destroy]
     end
 
     resources "/files", FileController, name: "asset" do
