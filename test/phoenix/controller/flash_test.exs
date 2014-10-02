@@ -20,6 +20,8 @@ defmodule Phoenix.Controller.FlashTest do
     defmodule FlashController do
       use Phoenix.Controller
 
+      plug :action
+
       def index(conn, _params) do
         text conn, "hello"
       end
@@ -32,6 +34,7 @@ defmodule Phoenix.Controller.FlashTest do
 
     defmodule Router do
       use Phoenix.Router
+      pipe_through :browser
       get "/", FlashController, :index
       get "/set_flash/:notice/:status", FlashController, :set_flash
     end
@@ -120,4 +123,3 @@ defmodule Phoenix.Controller.FlashTest do
     assert Flash.get(conn) == %{}
   end
 end
-

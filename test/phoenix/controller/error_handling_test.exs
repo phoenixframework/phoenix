@@ -29,6 +29,8 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
     defmodule MyController do
       use Phoenix.Controller
 
+      plug :action
+
       def call(conn, options) do
         try do
           super(conn, options)
@@ -46,6 +48,8 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
     defmodule PageController do
       use Phoenix.Controller
 
+      plug :action
+
       def error(conn, _) do
         case error(conn) do
           _ -> assign(conn, :error, :handled_500)
@@ -61,6 +65,7 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
 
     defmodule RouterCustomPageController do
       use Phoenix.Router
+
       get "/404", MyController, :assign_404
       get "/500", MyController, :assign_500
       get "/500-raise", MyController, :raise_500
@@ -69,6 +74,7 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
 
     defmodule RouterDefaultPageController do
       use Phoenix.Router
+
       get "/404", MyController, :assign_404
       get "/500", MyController, :assign_500
       get "/500-raise", MyController, :raise_500
@@ -77,11 +83,13 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
 
     defmodule RouterDefaultPageControllerNoCatch do
       use Phoenix.Router
+
       get "/500-raise", MyController, :raise_500
     end
 
     defmodule RouterDefaultPageControllerDebugErrors do
       use Phoenix.Router
+
       get "/404", MyController, :assign_404
       get "/500", MyController, :assign_500
       get "/500-raise", MyController, :raise_500

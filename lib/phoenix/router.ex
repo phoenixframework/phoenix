@@ -8,8 +8,11 @@ defmodule Phoenix.Router do
     * It provides routes and named route conveniences for
       routing requests to controllers
 
-    * It defines a Plug stack responsible for handling all
+    * It defines a plug pipelines responsible for handling
       upcoming requests
+
+    * It hosts configuration for the router and related
+      entities (like plugs)
 
     * It provides a wrapper for starting and stopping a
       web server specific to this router
@@ -24,6 +27,8 @@ defmodule Phoenix.Router do
 
       defmodule MyApp.Router do
         use Phoenix.Router
+
+        pipe_through :browser
 
         get "/pages/:page", PageController, :show
       end
@@ -81,6 +86,8 @@ defmodule Phoenix.Router do
       defmodule MyApp.Router do
         use Phoenix.Router
 
+        pipe_through :browser
+
         resources "/pages", PageController, only: [:show]
         resources "/users", UserController, except: [:destroy]
       end
@@ -105,9 +112,86 @@ defmodule Phoenix.Router do
 
   Check `scope/2` and `resources/4` for more information.
 
-  ## Plug stack
+  ## Pipelines and plugs
 
-  TODO: documentation.
+  Once a request arrives to the Phoenix router, it performs
+  a series of transformations through pipelines until the
+  request is dispatched to a desired end-point.
+
+  Such transformations are defined via plugs, as defined
+  in the [Plug](http://github.com/elixir-lang/plug) specification.
+  Once a pipeline is defined, it can be piped through per scope.
+
+  For example:
+
+      defmodule MyApp.Router do
+        use Phoenix.Router
+
+        scope path: "/" do
+          pipe_through :browser
+
+          # browser related routes and resources
+        end
+
+        scope path: "/api" do
+          pipe_through :api
+
+          # api related routes and resources
+        end
+      end
+
+  By default, Phoenix ships with three pipelines:
+
+    * `:before` - a special pipeline that is always invoked
+      before any route matches
+    * `:browser` - a pipeline for handling browser requests
+    * `:api` - a pipeline for handling api requests
+
+  All pipelines are invoked after a matching route is found,
+  with exception of the `:before` pipeline which is dispatched
+  before any attempt to match a route.
+
+  ### :before pipeline
+
+  TODO: Describe plugs in the before pipeline.
+
+  ### :browser pipeline
+
+  TODO: Describe plugs in the browser pipeline.
+
+  ### :api pipeline
+
+  TODO: Describe plugs in the api pipeline.
+
+  ### Customizing pipelines
+
+  You can define new pipelines at any moment with the `pipeline/2`
+  macro:
+
+      pipeline :secure do
+        plug :token_authentication
+      end
+
+  And then in a scope (or at root):
+
+      pipe_through [:api, :secure]
+
+  Pipelines are always defined as overridable functions which means
+  they can be easily extended. For example, we can extend the api
+  pipeline directly and add security:
+
+      pipeline :api do
+        plug :super
+        plug :token_authentication
+      end
+
+  Where `plug :super` will invoke the previously defined pipeline.
+  In general though, it is preferred to define new pipelines then
+  modify existing ones.
+
+  ## Configuration
+
+  TODO: documentation
 
   ## Web server
 
@@ -128,48 +212,105 @@ defmodule Phoenix.Router do
 
   @doc false
   defmacro __using__(plug_adapter_options \\ []) do
+    prelude   = prelude(plug_adapter_options)
+    plug      = plug()
+    pipelines = pipelines()
+    [prelude, plug, pipelines]
+  end
+
+  defp prelude(plug_adapter_options) do
     quote do
-      import Phoenix.Router
-      @before_compile unquote(__MODULE__)
+      @before_compile Phoenix.Router
       Module.register_attribute __MODULE__, :phoenix_routes, accumulate: true
+
+      import Phoenix.Router
+      import Plug.Conn
+
+      # Set up initial scope
+      @phoenix_pipeline nil
+      Phoenix.Router.Scope.init(__MODULE__)
+
+      # TODO: Document what those options are about
+      @options unquote(plug_adapter_options)
 
       # TODO: This should not be adapter specific.
       use Phoenix.Adapters.Cowboy
-      use Plug.Builder
-      import Plug.Conn
+    end
+  end
 
-      # TODO: Test and document all of those configurations
-      if Config.router(__MODULE__, [:static_assets]) do
-        mount = Config.router(__MODULE__, [:static_assets_mount])
-        plug Plug.Static, at: mount, from: Project.app
+  defp plug() do
+    {conn, pipeline} =
+      [:dispatch, :match, :before]
+      |> Enum.map(&{&1, [], true})
+      |> Plug.Builder.compile()
+
+    quote do
+      @behaviour Plug
+
+      def init(opts) do
+        opts
       end
 
-      plug Plug.Logger
-
-      if Config.router(__MODULE__, [:parsers]) do
-        plug Plug.Parsers, parsers: [:urlencoded, :multipart, Parsers.JSON], accept: ["*/*"]
+      def call(unquote(conn), opts) do
+        unquote(conn) =
+          Plug.Conn.put_private(unquote(conn), :phoenix_router, __MODULE__)
+        unquote(pipeline)
       end
 
-      if Config.get([:code_reloader, :enabled]) do
-        plug Plugs.CodeReloader
+      def match(conn, []) do
+        match(conn, conn.method, conn.path_info)
       end
 
-      plug :put_secret_key_base
-
-      if Config.router(__MODULE__, [:cookies]) do
-        key = Config.router!(__MODULE__, [:session_key])
-        encrypt = Config.router!(__MODULE__, [:encrypt])
-        signing = Config.router!(__MODULE__, [:signing_salt])
-        encryption = Config.router!(__MODULE__, [:encryption_salt])
-
-        plug Plug.Session, store: :cookie, key: key, encrypt: true,
-                           signing_salt: signing, encryption_salt: encryption
-        plug :fetch_session
+      def dispatch(conn, []) do
+        Phoenix.Router.Adapter.dispatch(conn, __MODULE__)
       end
 
-      plug Plug.MethodOverride
+      defoverridable [init: 1, call: 2, match: 2, dispatch: 2]
+    end
+  end
 
-      @options unquote(plug_adapter_options)
+  # TODO: Test and document all of those configurations
+  defp pipelines() do
+    quote do
+      pipeline :before do
+        if Config.router(__MODULE__, [:static_assets]) do
+          mount = Config.router(__MODULE__, [:static_assets_mount])
+          plug Plug.Static, at: mount, from: Project.app
+        end
+
+        plug Plug.Logger
+
+        if Config.router(__MODULE__, [:parsers]) do
+          plug Plug.Parsers, parsers: [:urlencoded, :multipart, Parsers.JSON], accept: ["*/*"]
+        end
+
+        if Config.get([:code_reloader, :enabled]) do
+          plug Plugs.CodeReloader
+        end
+
+        plug :put_secret_key_base
+
+        if Config.router(__MODULE__, [:cookies]) do
+          key = Config.router!(__MODULE__, [:session_key])
+          encrypt = Config.router!(__MODULE__, [:encrypt])
+          signing = Config.router!(__MODULE__, [:signing_salt])
+          encryption = Config.router!(__MODULE__, [:encryption_salt])
+
+          plug Plug.Session, store: :cookie, key: key, encrypt: true,
+                             signing_salt: signing, encryption_salt: encryption
+        end
+      end
+
+      pipeline :browser do
+        if Config.router(__MODULE__, [:cookies]) do
+          plug :fetch_session
+        end
+        plug Plug.MethodOverride
+      end
+
+      pipeline :api do
+        # Empty by default
+      end
     end
   end
 
@@ -179,18 +320,10 @@ defmodule Phoenix.Router do
     Phoenix.Router.Helpers.define(env, routes)
 
     quote do
-      # TODO: Test this is actually added at the end.
-      unless Plugs.plugged?(@plugs, :dispatch) do
-        plug :dispatch
-      end
-
-      # TODO: follow match/dispatch pattern from Plug
-      def match(conn, method, path) do
-        Plug.Conn.put_status(conn, 404)
-      end
-
-      def dispatch(conn, []) do
-        Phoenix.Router.Adapter.dispatch(conn, __MODULE__)
+      defp match(conn, _method, _path) do
+        Plug.Conn.put_private(conn, :phoenix_route, fn conn ->
+          Plug.Conn.put_status(conn, 404)
+        end)
       end
 
       def start do
@@ -207,6 +340,8 @@ defmodule Phoenix.Router do
         unquote(Macro.escape(routes))
       end
 
+      # TODO: How is this customizable?
+      # We can move it to the controller.
       defp put_secret_key_base(conn, _) do
         put_in conn.secret_key_base, Config.router(__MODULE__, [:secret_key_base])
       end
@@ -229,11 +364,82 @@ defmodule Phoenix.Router do
       parts = {:%{}, [], route.binding}
       @phoenix_routes route
 
-      def unquote(:match)(conn, unquote(route.verb), unquote(route.segments)) do
-        conn = update_in(conn.params, &Map.merge(&1, unquote(parts)))
-        opts = unquote(route.controller).init(unquote(route.action))
-        unquote(route.controller).call(conn, opts)
+      defp match(var!(conn), unquote(route.verb), unquote(route.segments)) do
+        var!(conn) =
+          Plug.Conn.put_private(var!(conn), :phoenix_route, fn conn ->
+            conn = update_in(conn.params, &Map.merge(&1, unquote(parts)))
+            opts = unquote(route.controller).init(unquote(route.action))
+            unquote(route.controller).call(conn, opts)
+          end)
+        unquote(route.pipe_through)
       end
+    end
+  end
+
+  @doc """
+  Defines a plug pipeline.
+
+  Pipelines are defined at the router root and can be used
+  from any scope.
+
+  ## Examples
+
+      pipeline :api do
+        plug :token_authentication
+        plug :dispatch
+      end
+
+  A scope may then use this pipeline as:
+
+      scope path: "/" do
+        pipe_through :api
+      end
+
+  Every time `pipe_through/1` is called, the new pipelines
+  are appended to the ones previously given.
+  """
+  defmacro pipeline(plug, do: block) do
+    block =
+      quote do
+        @phoenix_pipeline []
+        unquote(block)
+      end
+
+    compiler =
+      quote bind_quoted: [plug: plug] do
+        Scope.pipeline(__MODULE__, plug)
+        {conn, body} = Plug.Builder.compile(@phoenix_pipeline)
+        def unquote(plug)(unquote(conn), _), do: unquote(body)
+        defoverridable [{plug, 2}]
+        @phoenix_pipeline nil
+      end
+
+    [block, compiler]
+  end
+
+  @doc """
+  Defines a plug inside a pipeline.
+
+  See `pipeline/2` for more information.
+  """
+  defmacro plug(plug, opts \\ []) do
+    quote do
+      if pipeline = @phoenix_pipeline do
+        @phoenix_pipeline [{unquote(plug), unquote(opts), true}|pipeline]
+      else
+        raise "cannot define plug at the router level, plug must be defined inside a pipeline"
+      end
+    end
+  end
+
+  @doc """
+  Defines a pipeline to send the connection through.
+
+  See `pipeline/2` for more information.
+  """
+  defmacro pipe_through(pipes) do
+    quote do
+      Scope.pipe_through(__MODULE__, unquote(pipes))
     end
   end
 
@@ -343,9 +549,53 @@ defmodule Phoenix.Router do
     * `:alias` - an alias (atom) containing the controller scope
 
   """
-  defmacro scope(params, do: context) do
+  defmacro scope(options, do: context) do
+    do_scope(options, context)
+  end
+
+  @doc """
+  Define a scope with the given path.
+
+  This function is a shortcut for:
+
+      scope path: path do
+        ...
+      end
+
+  """
+  defmacro scope(path, options, do: context) do
+    options = quote do
+      path = unquote(path)
+      case unquote(options) do
+        alias when is_atom(alias) -> [path: path, alias: alias]
+        options when is_list(options) -> Keyword.put(options, :path, path)
+      end
+    end
+    do_scope(options, context)
+  end
+
+  @doc """
+  Define a scope with the given path and alias.
+
+  This function is a shortcut for:
+
+      scope path: path, alias: alias do
+        ...
+      end
+
+  """
+  defmacro scope(path, alias, options, do: context) do
+    options = quote do
+      unquote(options)
+      |> Keyword.put(:path, unquote(path))
+      |> Keyword.put(:alias, unquote(alias))
+    end
+    do_scope(options, context)
+  end
+
+  defp do_scope(options, context) do
     quote do
-      Scope.push(__MODULE__, unquote(params))
+      Scope.push(__MODULE__, unquote(options))
       try do
         unquote(context)
       after

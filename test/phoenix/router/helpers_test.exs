@@ -19,7 +19,7 @@ defmodule Phoenix.Router.NamedRoutingTest do
   end
 
   test "defhelper with :identifiers" do
-    route = build("GET", "/foo/:bar", Hello, :world, "hello_world")
+    route = build("GET", "/foo/:bar", Hello, :world, "hello_world", [])
 
     assert extract_defhelper(route, 0) == String.strip """
     def(hello_world_path(:world, bar)) do
@@ -35,7 +35,7 @@ defmodule Phoenix.Router.NamedRoutingTest do
   end
 
   test "defhelper with *identifiers" do
-    route = build("GET", "/foo/*bar", Hello, :world, "hello_world")
+    route = build("GET", "/foo/*bar", Hello, :world, "hello_world", [])
 
     assert extract_defhelper(route, 0) == String.strip """
     def(hello_world_path(:world, bar)) do
@@ -50,8 +50,8 @@ defmodule Phoenix.Router.NamedRoutingTest do
     """
   end
 
-  defp build(verb, path, controller, action, helper) do
-    Phoenix.Router.Route.build(verb, path, controller, action, helper)
+  defp build(verb, path, controller, action, helper, pipe_through) do
+    Phoenix.Router.Route.build(verb, path, controller, action, helper, pipe_through)
   end
 
   defp extract_defhelper(route, pos) do

@@ -1,4 +1,4 @@
-defmodule Phoenix.Router.NestedTest do
+defmodule Phoenix.Router.ResourcesTest do
   use ExUnit.Case, async: true
   use ConnHelper
 
@@ -9,6 +9,7 @@ defmodule Phoenix.Router.NestedTest do
 
   defmodule UserController do
     use Phoenix.Controller
+    plug :action
     def show(conn, _params), do: text(conn, "show users")
     def index(conn, _params), do: text(conn, "index users")
     def new(conn, _params), do: text(conn, "new users")
@@ -20,6 +21,7 @@ defmodule Phoenix.Router.NestedTest do
 
   defmodule FileController do
     use Phoenix.Controller
+    plug :action
     def show(conn, _params), do: text(conn, "show files")
     def index(conn, _params), do: text(conn, "index files")
     def new(conn, _params), do: text(conn, "new files")
@@ -30,6 +32,7 @@ defmodule Phoenix.Router.NestedTest do
 
   defmodule CommentController do
     use Phoenix.Controller
+    plug :action
     def show(conn, _params), do: text(conn, "show comments")
     def index(conn, _params), do: text(conn, "index comments")
     def new(conn, _params), do: text(conn, "new comments")
@@ -41,7 +44,7 @@ defmodule Phoenix.Router.NestedTest do
 
   defmodule SessionController do
     use Phoenix.Controller
-
+    plug :action
     def new(conn, _params), do: text(conn, "session login")
     def create(conn, _params), do: text(conn, "session created")
     def destroy(conn, _params), do: text(conn, "session destroyed")
@@ -49,6 +52,7 @@ defmodule Phoenix.Router.NestedTest do
 
   defmodule PostController do
     use Phoenix.Controller
+    plug :action
     def show(conn, _params), do: text(conn, "show posts")
     def new(conn, _params), do: text(conn, "new posts")
     def index(conn, _params), do: text(conn, "index posts")
@@ -58,11 +62,13 @@ defmodule Phoenix.Router.NestedTest do
 
   defmodule PageController do
     use Phoenix.Controller
+    plug :action
     def show(conn, _params), do: text(conn, "show page")
   end
 
   defmodule RatingController do
     use Phoenix.Controller
+    plug :action
     def show(conn, _params), do: text(conn, "show rating")
   end
 
@@ -74,8 +80,8 @@ defmodule Phoenix.Router.NestedTest do
         get "/special", CommentController, :special
       end
       resources "/files", FileController
-      resources "/posts", PostController, except: [ :destroy ]
-      resources "/sessions", SessionController, only: [ :new, :create, :destroy ]
+      resources "/posts", PostController, except: [:destroy]
+      resources "/sessions", SessionController, only: [:new, :create, :destroy]
     end
 
     resources "/files", FileController, name: "asset" do
@@ -204,18 +210,18 @@ defmodule Phoenix.Router.NestedTest do
 
   test "nested options limit resource by passing :except option" do
     conn = call(Router, :delete, "users/1/posts/2")
-     assert conn.status == 404
+    assert conn.status == 404
     conn = call(Router, :get, "users/1/posts/new")
     assert conn.status == 200
   end
 
   test "nested options limit resource by passing :only option" do
     conn = call(Router, :put, "users/1/sessions/2")
-     assert conn.status == 404
+    assert conn.status == 404
     conn = call(Router, :get, "users/1/sessions/")
-     assert conn.status == 404
+    assert conn.status == 404
     conn = call(Router, :get, "users/1/sessions/1")
-     assert conn.status == 404
+    assert conn.status == 404
     conn = call(Router, :get, "users/1/sessions/new")
     assert conn.status == 200
     conn = call(Router, :post, "users/1/sessions")

@@ -1,6 +1,8 @@
 defmodule Phoenix.Controller.ErrorController do
   use Phoenix.Controller
 
+  plug :action
+
   @moduledoc """
   Default 404 and 500 error page controller, configured via Mix on each Router
 

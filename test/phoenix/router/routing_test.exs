@@ -7,8 +7,9 @@ defmodule Phoenix.Router.RoutingTest do
     :ok
   end
 
-  defmodule UsersController do
+  defmodule UserController do
     use Phoenix.Controller
+    plug :action
     def index(conn, _params), do: text(conn, "users index")
     def show(conn, _params), do: text(conn, "users show")
     def top(conn, _params), do: text(conn, "users top")
@@ -17,38 +18,34 @@ defmodule Phoenix.Router.RoutingTest do
     def head(conn, _params), do: conn |> send_resp(200, "")
     def trace(conn, _params), do: text(conn, "users trace")
     def not_found(conn, _params), do: text(conn, :not_found, "not found")
-  end
-
-  defmodule FilesController do
-    use Phoenix.Controller
-    def show(conn, _params), do: text(conn, conn.params["path"] || "show files")
+    def image(conn, _params), do: text(conn, conn.params["path"] || "show files")
   end
 
   defmodule Router do
     use Phoenix.Router
 
-    get "/", UsersController, :index, as: :users
-    get "/users/top", UsersController, :top, as: :top
-    get "/users/:id", UsersController, :show, as: :users
-    get "/profiles/profile-:id", UsersController, :show
-    get "/route_that_crashes", UsersController, :crash
-    get "/files/:user_name/*path", FilesController, :show
-    get "/backups/*path", FilesController, :show
-    get "/static/images/icons/*image", FilesController, :show
+    get "/", UserController, :index, as: :users
+    get "/users/top", UserController, :top, as: :top
+    get "/users/:id", UserController, :show, as: :users
+    get "/profiles/profile-:id", UserController, :show
+    get "/route_that_crashes", UserController, :crash
+    get "/files/:user_name/*path", UserController, :image
+    get "/backups/*path", UserController, :image
+    get "/static/images/icons/*image", UserController, :image
 
-    trace "/trace", UsersController, :trace
-    options "/options", UsersController, :options
-    connect "/connect", UsersController, :connect
-    head "/head", UsersController, :head
+    trace "/trace", UserController, :trace
+    options "/options", UserController, :options
+    connect "/connect", UserController, :connect
+    head "/head", UserController, :head
 
-    get "/users/:user_id/files/:id", FilesController, :show
+    get "/users/:user_id/files/:id", UserController, :image
   end
 
   defmodule CatchAllRouter do
     use Phoenix.Router
-    get "/users/top", UsersController, :top, as: :top
-    get "/users/:id", UsersController, :show, as: :user
-    get "/*path", UsersController, :not_found
+    get "/users/top", UserController, :top, as: :top
+    get "/users/:id", UserController, :show, as: :user
+    get "/*path", UserController, :not_found
   end
 
   test "get root path" do
