@@ -305,12 +305,90 @@ We would then need to provide an `index.xml.eex` template which created valid xm
 
 For a list of valid content mime-types, please see the documentation from the plug middleware framework: https://github.com/elixir-lang/plug/blob/master/lib/plug/mime.types
 
-##TODO
+
 
 ### Redirection
-- Examples
-  - redirect conn, "http://elixir-lang.org"
-  - redirect conn, 404, "http://elixir-lang.org"
+
+Often, we need to redirect to a new url in the middle of a request. A successful create action, for instance, will usually redirect to the show action for the model we just created. Alternately, it could redirect to the index action to show all the things of that same type. There are plenty of other cases where redirection is useful as well.
+
+Whatever the circumstance, Phoenix controllers provide the handy `redirect/2` and `redirect/3` functions to make redirection easy.
+
+In order to try out `redirect/2`, let's create a new route.
+
+```elixir
+get "/redirect_test", HelloPhoenix.PageController, :redirect_test, as: :redirect_tests
+```
+
+Then we'll change the `index` action to do nothing but redirect to our new route.
+
+```elixir
+def index(conn, _params) do
+  redirect conn, "/redirect_test"
+end
+```
+
+Finally, let's define the action we redirect to, which simply renders the text "Redirect!"
+
+```elixir
+def redirect_test(conn, _params) do
+  text conn, "Redirect!"
+end
+```
+When we reload our Welcome page at the root route, we see that we've been redirected to `/redirect_test` which has rendered the text "Redirect!". It works!
+
+If we care to, we can open up our developer tools, click on the network tab, and visit our root route again. We see two main requests for this page - a get to "/" with a status of 302, and a get to "/redirect_test" with a status of 200.
+
+Notice that the redirect function takes `conn` as well as a string representing a relative path within our application. It can also take `conn` and a string representing a fully-qualified url.
+
+```elixir
+def index(conn, _params) do
+  redirect conn, "http://localhost:4000/redirect_test"
+end
+```
+
+We can also make use of the path helpers we learned about in the Routing Guide. It's useful to alias the helpers in order to shorten the expression.
+
+```elixir
+defmodule HelloPhoenix.PageController do
+  use Phoenix.Controller
+  alias HelloPhoenix.Router.Helpers
+
+  def index(conn, _params) do
+    redirect conn, Helpers.redirect_tests_path(:redirect_test)
+  end
+end
+```
+
+The url helper works in the same way.
+
+```elixir
+def index(conn, _params) do
+  redirect conn, Helpers.redirect_tests_path(:redirect_test) |> Helpers.url
+end
+```
+
+`redirect/3` works the same as `redirect/2` with the addition of the ability to set a status code with the second argument.
+
+We could easily have written our index action like this and had the exact same behavior.
+
+```elixir
+def index(conn, _params) do
+  redirect conn, 302, "/redirect_test"
+end
+```
+That's great, but what happens if we change the status code to 404?
+
+```elixir
+def index(conn, _params) do
+  redirect conn, 404, "/redirect_test"
+end
+```
+
+When we reload the root route, we see a new page which has rendered some minimal HTML, without our layout, telling us the page has moved. The page does offer a helpful link to the url we should be redirected to.
+
+As it turns out, when we use any of the 300 level status codes, which represent some form of redirect, `redirect/3` will work as if we were using `redirect/2`. Any other status code - even 500 - will give us this minimal HTML page.
+
+##TODO
 
 ### Assign Conn Properties
 - set HTTP status code
