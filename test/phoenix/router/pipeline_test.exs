@@ -7,12 +7,24 @@ end
 
 alias Phoenix.Router.PipelineTest.SampleController
 
-Mix.Config.persist(phoenix: [
-  {Phoenix.Router.PipelineTest.Router,
-    cookies: true,
-    session_key: "_app",
-    secret_key_base: String.duplicate("abcdefgh", 8)}
-])
+## Empty router
+
+Application.put_env(:phoenix, Phoenix.Router.PipelineTest.EmptyRouter,
+  [])
+
+defmodule Phoenix.Router.PipelineTest.EmptyRouter do
+  use Phoenix.Router
+
+  get "/root", SampleController, :index
+end
+
+alias Phoenix.Router.PipelineTest.EmptyRouter
+
+## Router
+
+Application.put_env(:phoenix, Phoenix.Router.PipelineTest.Router,
+  session: [store: :cookie, key: "_app"],
+  secret_key_base: String.duplicate("abcdefgh", 8))
 
 # Define it at the top to guarantee there is no scope
 # leakage from the test case.
@@ -71,6 +83,15 @@ defmodule Phoenix.Router.PipelineTest do
   setup do
     Logger.disable(self())
     :ok
+  end
+
+  ## No configuration
+
+  test "does not setup the session" do
+    conn = call(EmptyRouter, :get, "/root")
+    assert_raise ArgumentError, "cannot fetch session without a configured session plug", fn ->
+      fetch_session(conn)
+    end
   end
 
   ## Plug configuration

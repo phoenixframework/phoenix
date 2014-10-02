@@ -153,7 +153,14 @@ defmodule Phoenix.Router do
 
   ### :before pipeline
 
-  TODO: Describe plugs in the before pipeline.
+  Those are the plugs in the `:before` pipeline in the order
+  they are defined. How each plug is configured is defined in
+  a later sections.
+
+    * `Plug.Session` - a plug that sets up session management.
+      Note that `fetch_session/2` must still be explicitly called
+      before using the session as this plug just sets up how
+      the session is fetched.
 
   ### :browser pipeline
 
@@ -189,9 +196,32 @@ defmodule Phoenix.Router do
   In general though, it is preferred to define new pipelines then
   modify existing ones.
 
-  ## Configuration
+  ## Router configuration
 
-  TODO: documentation
+  All routers are configured directly in the Phoenix application
+  environment. For example:
+
+      config :phoenix, YourApp.Router,
+        secret_key_base: "kjoy3o1zeidquwy1398juxzldjlksahdk3"
+
+  Phoenix configuration is split in two categories. Compile-time
+  configuration means the configuration is read during compilation
+  and cannot be dynamically changed during runtime. Most of the
+  compile-time configuration is related to pipelines and plugs.
+
+  On the other hand, runtime configuration is read when your
+  application is started.
+
+  ### Compile-time
+
+    * `:session` - configures the `Plug.Session` plug. For example:
+
+        config :phoenix, YourApp.Router,
+          session: [store: :cookie, key: "_your_app_key"]
+
+      By default is false.
+
+  ### Runtime
 
   ## Web server
 
@@ -211,14 +241,14 @@ defmodule Phoenix.Router do
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
 
   @doc false
-  defmacro __using__(plug_adapter_options \\ []) do
-    prelude   = prelude(plug_adapter_options)
+  defmacro __using__(_opts) do
+    prelude   = prelude()
     plug      = plug()
     pipelines = pipelines()
     [prelude, plug, pipelines]
   end
 
-  defp prelude(plug_adapter_options) do
+  defp prelude() do
     quote do
       @before_compile Phoenix.Router
       Module.register_attribute __MODULE__, :phoenix_routes, accumulate: true
@@ -226,12 +256,11 @@ defmodule Phoenix.Router do
       import Phoenix.Router
       import Plug.Conn
 
+      @config Phoenix.Router.Adapter.config(__MODULE__)
+
       # Set up initial scope
       @phoenix_pipeline nil
       Phoenix.Router.Scope.init(__MODULE__)
-
-      # TODO: Document what those options are about
-      @options unquote(plug_adapter_options)
 
       # TODO: This should not be adapter specific.
       use Phoenix.Adapters.Cowboy
@@ -290,22 +319,19 @@ defmodule Phoenix.Router do
 
         plug :put_secret_key_base
 
-        if Config.router(__MODULE__, [:cookies]) do
-          key = Config.router!(__MODULE__, [:session_key])
-          encrypt = Config.router!(__MODULE__, [:encrypt])
-          signing = Config.router!(__MODULE__, [:signing_salt])
-          encryption = Config.router!(__MODULE__, [:encryption_salt])
-
-          plug Plug.Session, store: :cookie, key: key, encrypt: true,
-                             signing_salt: signing, encryption_salt: encryption
+        if session = @config[:session] do
+          salt    = Atom.to_string(__MODULE__)
+          session = Keyword.merge([signing_salt: salt, encryption_salt: salt], session)
+          plug Plug.Session, session
         end
+
+        plug Plug.MethodOverride
       end
 
       pipeline :browser do
-        if Config.router(__MODULE__, [:cookies]) do
+        if @config[:session] do
           plug :fetch_session
         end
-        plug Plug.MethodOverride
       end
 
       pipeline :api do
@@ -327,12 +353,12 @@ defmodule Phoenix.Router do
       end
 
       def start do
-        options = Adapter.merge(@options, @dispatch_options, __MODULE__, Cowboy)
+        options = Adapter.merge([], @dispatch_options, __MODULE__, Cowboy)
         Adapter.start(__MODULE__, options)
       end
 
       def stop do
-        options = Adapter.merge(@options, @dispatch_options, __MODULE__, Cowboy)
+        options = Adapter.merge([], @dispatch_options, __MODULE__, Cowboy)
         Adapter.stop(__MODULE__, options)
       end
 

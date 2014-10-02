@@ -11,8 +11,7 @@ defmodule Phoenix.Controller.FlashTest do
   setup_all do
     Mix.Config.persist(phoenix: [
       {Router,
-        cookies: true,
-        session_key: "_app",
+        session: [store: :cookie, key: "_app"],
         secret_key_base: String.duplicate("abcdefgh", 8)
       }
     ])
