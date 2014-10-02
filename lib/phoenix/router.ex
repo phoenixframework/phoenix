@@ -157,10 +157,15 @@ defmodule Phoenix.Router do
   they are defined. How each plug is configured is defined in
   a later sections.
 
+    * `Plug.Parsers` - parses the request body when a known
+      parser is available. By default parsers urlencoded,
+      multipart and json (with poison). The request body is left
+      untouched when the request content-type cannot be parsed
+
     * `Plug.Session` - a plug that sets up session management.
       Note that `fetch_session/2` must still be explicitly called
       before using the session as this plug just sets up how
-      the session is fetched.
+      the session is fetched
 
   ### :browser pipeline
 
@@ -216,10 +221,16 @@ defmodule Phoenix.Router do
 
     * `:session` - configures the `Plug.Session` plug. For example:
 
-        config :phoenix, YourApp.Router,
-          session: [store: :cookie, key: "_your_app_key"]
+          config :phoenix, YourApp.Router,
+            session: [store: :cookie, key: "_your_app_key"]
 
       By default is false.
+
+    * `:parsers` - sets up the request parsers. Defaults to:
+
+          [accept: ["*/*"],
+           json_decoder: Poison,
+           parsers: [:urlencoded, :multipart, :json]]
 
   ### Runtime
 
@@ -231,7 +242,6 @@ defmodule Phoenix.Router do
 
   alias Phoenix.Config
   alias Phoenix.Plugs
-  alias Phoenix.Plugs.Parsers
   alias Phoenix.Project
   alias Phoenix.Router.Adapter
   alias Phoenix.Router.Resource
@@ -309,12 +319,12 @@ defmodule Phoenix.Router do
 
         plug Plug.Logger
 
-        if Config.router(__MODULE__, [:parsers]) do
-          plug Plug.Parsers, parsers: [:urlencoded, :multipart, Parsers.JSON], accept: ["*/*"]
-        end
-
         if Config.get([:code_reloader, :enabled]) do
           plug Plugs.CodeReloader
+        end
+
+        if parsers = @config[:parsers] do
+          plug Plug.Parsers, parsers
         end
 
         plug :put_secret_key_base

@@ -39,7 +39,11 @@ defmodule Phoenix.Router.Adapter do
     IO.puts "#{module} has been stopped"
   end
 
-  @defaults [session: false]
+  @defaults [
+    parsers: [parsers: [:urlencoded, :multipart, :json],
+              accept: ["*/*"], json_decoder: Poison],
+    session: false
+  ]
 
   def config(router) do
     config = Application.get_env(:phoenix, router, [])

@@ -47,7 +47,7 @@ defmodule Phoenix.Router.PipelineTest.Router do
   end
 
   get "/root", SampleController, :index
-  get "/root/:id", SampleController, :index
+  put "/root/:id", SampleController, :index
   get "/route_that_crashes", SampleController, :crash
 
   scope path: "/browser" do
@@ -103,8 +103,16 @@ defmodule Phoenix.Router.PipelineTest do
     refute conn.resp_body =~ ~r/Stacktrace/i
   end
 
+  test "parsers parses json body" do
+    conn = call(Router, :put, "/root/1", "{\"foo\": [1, 2, 3]}",
+                [headers: [{"content-type", "application/json"}]])
+    assert conn.status == 200
+    assert conn.params["id"] == "1"
+    assert conn.params["foo"] == [1, 2, 3]
+  end
+
   test "parsers accepts all media types" do
-    conn = call(Router, :get, "/root/1", %{},
+    conn = call(Router, :put, "/root/1", "WIDGET",
                 [headers: [{"content-type", "application/widget"}]])
     assert conn.status == 200
     assert conn.params["id"] == "1"

@@ -20,21 +20,17 @@ defmodule Phoenix.Mixfile do
   end
 
   def application do
-    [
-      mod: { Phoenix, [] },
-      applications: [:plug, :linguist, :poison, :logger]
-    ]
+    [mod: { Phoenix, [] },
+     applications: [:plug, :linguist, :poison, :logger]]
   end
 
   def deps do
-    [
-      {:cowboy, "~> 1.0.0", optional: true},
-      {:plug, "~> 0.8.0"},
-      {:linguist, "~> 0.1.2"},
-      {:poison, "~> 1.1.0"},
-      {:earmark, "~> 0.1", only: :docs},
-      {:ex_doc, "~> 0.5", only: :docs},
-      {:websocket_client, github: "jeremyong/websocket_client", only: :test}
-    ]
+    [{:cowboy, "~> 1.0.0", optional: true},
+     {:plug, github: "elixir-lang/plug"},
+     {:linguist, "~> 0.1.2"},
+     {:poison, "~> 1.1.0"},
+     {:earmark, "~> 0.1", only: :docs},
+     {:ex_doc, "~> 0.5", only: :docs},
+     {:websocket_client, github: "jeremyong/websocket_client", only: :test}]
   end
 end
