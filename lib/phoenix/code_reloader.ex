@@ -1,7 +1,6 @@
 defmodule Phoenix.CodeReloader do
   use GenServer
   require Logger
-  alias Phoenix.Project
 
   @moduledoc """
   Server to handle automatic Code reloading in development.
@@ -68,14 +67,14 @@ defmodule Phoenix.CodeReloader do
   end
 
   defp touch_modules_for_recompile do
-    Project.modules
+    Mix.Phoenix.modules
     |> modules_for_recompilation
     |> modules_to_file_paths
     |> Enum.each(&File.touch!(&1))
   end
 
   defp reload_modules_for_recompile do
-    Project.modules
+    Mix.Phoenix.modules
     |> modules_for_recompilation
     |> Enum.each(&IEx.Helpers.r(&1))
   end

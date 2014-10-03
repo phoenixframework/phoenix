@@ -9,7 +9,6 @@ use Mix.Config
 config :phoenix, <%= application_module %>.Router,
   port: System.get_env("PORT"),
   ssl: false,
-  static_assets: true,
   secret_key_base: "<%= secret_key_base %>",
   catch_errors: true,
   debug_errors: false,

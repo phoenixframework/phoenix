@@ -10,12 +10,13 @@ alias Phoenix.Router.PipelineTest.SampleController
 ## Empty router
 
 Application.put_env(:phoenix, Phoenix.Router.PipelineTest.EmptyRouter,
-  [])
+  [static: false, parsers: false])
 
 defmodule Phoenix.Router.PipelineTest.EmptyRouter do
   use Phoenix.Router
 
   get "/root", SampleController, :index
+  put "/root/:id", SampleController, :index
 end
 
 alias Phoenix.Router.PipelineTest.EmptyRouter
@@ -94,6 +95,17 @@ defmodule Phoenix.Router.PipelineTest do
     end
   end
 
+  test "does not setup parsers" do
+    conn = call(EmptyRouter, :put, "/root/1", "{\"foo\": [1, 2, 3]}",
+                [headers: [{"content-type", "application/json"}]])
+    assert conn.params.__struct__ == Plug.Conn.Unfetched
+  end
+
+  test "does not setup static" do
+    conn = call(EmptyRouter, :get, "/js/phoenix.js")
+    assert conn.status == 404
+  end
+
   ## Plug configuration
 
   test "dispatch crash returns 500 and renders friendly error page" do
@@ -116,6 +128,11 @@ defmodule Phoenix.Router.PipelineTest do
                 [headers: [{"content-type", "application/widget"}]])
     assert conn.status == 200
     assert conn.params["id"] == "1"
+  end
+
+  test "parsers servers static assets" do
+    conn = call(Router, :get, "/js/phoenix.js")
+    assert conn.status == 200
   end
 
   ## Pipelines

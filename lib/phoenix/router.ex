@@ -157,6 +157,9 @@ defmodule Phoenix.Router do
   they are defined. How each plug is configured is defined in
   a later sections.
 
+    * `Plug.Static` - serves static assets. Since this plug comes
+      before the router, serving of static assets is not logged
+
     * `Plug.Parsers` - parses the request body when a known
       parser is available. By default parsers urlencoded,
       multipart and json (with poison). The request body is left
@@ -219,18 +222,26 @@ defmodule Phoenix.Router do
 
   ### Compile-time
 
-    * `:session` - configures the `Plug.Session` plug. For example:
+    * `:session` - configures the `Plug.Session` plug. Defaults to
+      `false` but can be set to a keyword list of options as defined
+      in `Plug.Session`. For example:
 
           config :phoenix, YourApp.Router,
             session: [store: :cookie, key: "_your_app_key"]
 
-      By default is false.
-
-    * `:parsers` - sets up the request parsers. Defaults to:
+    * `:parsers` - sets up the request parsers. If parsers are disabled,
+      parameters won't be explicitly fetched before matching a route and
+      functionality dependent on parameters, like the `Plug.MethodOverride`,
+      will be disabled too. Defaults to:
 
           [accept: ["*/*"],
            json_decoder: Poison,
            parsers: [:urlencoded, :multipart, :json]]
+
+    * `:static` - sets up static assets serving. Defaults to:
+
+          [at: "/",
+           from: Mix.Project.config[:app]]
 
   ### Runtime
 
@@ -242,7 +253,6 @@ defmodule Phoenix.Router do
 
   alias Phoenix.Config
   alias Phoenix.Plugs
-  alias Phoenix.Project
   alias Phoenix.Router.Adapter
   alias Phoenix.Router.Resource
   alias Phoenix.Router.Scope
@@ -267,6 +277,8 @@ defmodule Phoenix.Router do
       import Plug.Conn
 
       @config Phoenix.Router.Adapter.config(__MODULE__)
+      @otp_app @config[:otp_app] || Mix.Project.config[:app] ||
+               raise "please set :otp_app config for #{inspect __MODULE__}"
 
       # Set up initial scope
       @phoenix_pipeline nil
@@ -312,9 +324,9 @@ defmodule Phoenix.Router do
   defp pipelines() do
     quote do
       pipeline :before do
-        if Config.router(__MODULE__, [:static_assets]) do
-          mount = Config.router(__MODULE__, [:static_assets_mount])
-          plug Plug.Static, at: mount, from: Project.app
+        if static = @config[:static] do
+          static = Keyword.merge([from: @otp_app], static)
+          plug Plug.Static, static
         end
 
         plug Plug.Logger
@@ -325,6 +337,7 @@ defmodule Phoenix.Router do
 
         if parsers = @config[:parsers] do
           plug Plug.Parsers, parsers
+          plug Plug.MethodOverride
         end
 
         plug :put_secret_key_base
@@ -334,8 +347,6 @@ defmodule Phoenix.Router do
           session = Keyword.merge([signing_salt: salt, encryption_salt: salt], session)
           plug Plug.Session, session
         end
-
-        plug Plug.MethodOverride
       end
 
       pipeline :browser do

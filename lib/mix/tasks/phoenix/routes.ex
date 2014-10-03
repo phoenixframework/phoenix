@@ -13,13 +13,11 @@ defmodule Mix.Tasks.Phoenix.Routes do
   """
 
   def run([]) do
-    router = ConsoleFormatter.default_router
-    print_routes(router)
+    print_routes(Mix.Phoenix.router)
   end
 
   def run([router]) do
-    router = Module.concat([router])
-    print_routes(router)
+    print_routes(Module.concat([router]))
   end
 
   defp print_routes(router) do

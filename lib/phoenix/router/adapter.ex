@@ -42,6 +42,7 @@ defmodule Phoenix.Router.Adapter do
   @defaults [
     parsers: [parsers: [:urlencoded, :multipart, :json],
               accept: ["*/*"], json_decoder: Poison],
+    static: [at: "/"],
     session: false
   ]
 

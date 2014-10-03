@@ -1,6 +1,14 @@
 defmodule Phoenix.Naming do
   @doc """
-  Extracts the resource name from an alias.
+  Extracts the resource name from an alias
+
+  ## Examples
+
+      iex> Phoenix.Naming.resource_name(MyApp.User)
+      "user"
+      iex> Phoenix.Naming.resource_name(MyApp.UserView, "View")
+      "user"
+
   """
   def resource_name(alias, suffix \\ nil) do
     alias
@@ -26,10 +34,10 @@ defmodule Phoenix.Naming do
 
   ## Examples
 
-      iex> Naming.underscore("MyApp")
+      iex> Phoenix.Naming.underscore("MyApp")
       "my_app"
 
-      iex> Naming.underscore("my-app")
+      iex> Phoenix.Naming.underscore("my-app")
       "my_app"
 
   In general, `underscore` can be thought of as the reverse of
@@ -83,14 +91,14 @@ defmodule Phoenix.Naming do
 
   ## Examples
 
-      iex> Naming.camelize("my_app")
+      iex> Phoenix.Naming.camelize("my_app")
       "MyApp"
 
   In general, `camelize` can be thought of as the reverse of
   `underscore`, however, in some cases formatting may be lost:
 
-      Naming.underscore "SAPExample"  #=> "sap_example"
-      Naming.camelize   "sap_example" #=> "SapExample"
+      Phoenix.Naming.underscore "SAPExample"  #=> "sap_example"
+      Phoenix.Naming.camelize   "sap_example" #=> "SapExample"
 
   """
   def camelize(""), do: ""
@@ -129,5 +137,4 @@ defmodule Phoenix.Naming do
 
   defp to_upper_char(char) when char in ?a..?z, do: char - 32
   defp to_upper_char(char), do: char
-
 end

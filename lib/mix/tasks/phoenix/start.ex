@@ -1,29 +1,26 @@
 defmodule Mix.Tasks.Phoenix.Start do
   use Mix.Task
 
-  @shortdoc "Starts Application Workers"
+  @shortdoc "Starts application workers"
   @recursive true
 
-  @doc """
-  Starts default Router Worker
+  @moduledoc """
+  Starts the router or a given worker
+
+      $ mix phoenix.router
+      $ mix phoenix.router MyApp.AnotherRouter
+
   """
   def run([]) do
     Mix.Task.run "app.start", []
-    Module.concat(Phoenix.Project.module_root, Router).start
+    Mix.Phoenix.router.start
     no_halt
   end
 
-  @doc """
-  Starts provided Worker
-  """
   def run([worker]) do
     Mix.Task.run "app.start", []
     remote_worker = Module.concat("Elixir", worker)
-    if Code.ensure_loaded? remote_worker do
-      remote_worker.start
-    else
-      Module.concat(Phoenix.Project.module_root, worker).start
-    end
+    remote_worker.start
     no_halt
   end
 
