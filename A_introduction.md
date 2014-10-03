@@ -57,8 +57,7 @@ After that, we start the application.
 Point your favorite web browser to localhost port 4000, and you should see the Phoenix Framework welcome page.
 http://localhost:4000/  
 
-
-[IMAGE include a screenshot of the page here]
+![Phoenix Welcome Page](/images/welcome-to-phoenix.png)
 
 If your screen looks like the image above, congratulations! You now have working Phoenix application.
 

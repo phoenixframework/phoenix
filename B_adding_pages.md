@@ -144,7 +144,8 @@ Let's do that now. Create web/templates/hello/index.html.eex and make it look li
 ```
 
 Now that we've got the route, controller, view and template, we should be able to point our browsers at http://localhost:4000/hello and see our greeting from Phoenix!
-[IMAGE hello-from-phoenix]
+
+![Phoenix Greets Us](/images/hello-from-phoenix.png)
 
 There are a couple of interesting things to notice about what we just did. We didn't need to stop and re-start the server while we made these changes. Yes, Phoenix has hot code re-loading! Also, even though our index.html.eex file consisted of only a single div tag, The page we get is a full html document. Our index template is rendered into the application layout - web/templates/layout/application.html.eex. If you open it, you'll see a tag that looks like this: <%= @inner %>, which is what injects our rendered template into the layout before the html is sent off to the browser.
 
@@ -205,6 +206,7 @@ And this is what the template should look like.
 Our messenger appears as "@messenger". In this case, this is not a module attribute. It is special bit of metaprogrammed syntax which stands in for "Dict.get(assigns, :messenger)". The result is much nicer on the eyes and much easier to work with in a template.
 
 We're done. If you point your browser here: http://localhost:4000/hello/Frank, you should see a page that looks like this:
-[IMAGE hello-world-from-framk]
+
+![Frank Greets Us from Phoenix](/images/hello-world-from-frank.png)
 
 Play around a bit. Whatever you put after /hello/ will appear on the page as your messenger.
