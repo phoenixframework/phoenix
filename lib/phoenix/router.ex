@@ -201,7 +201,6 @@ defmodule Phoenix.Router do
 
   alias Phoenix.Config
   alias Phoenix.Plugs
-  alias Phoenix.Plugs.Parsers
   alias Phoenix.Project
   alias Phoenix.Router.Adapter
   alias Phoenix.Router.Resource
@@ -281,7 +280,7 @@ defmodule Phoenix.Router do
         plug Plug.Logger
 
         if Config.router(__MODULE__, [:parsers]) do
-          plug Plug.Parsers, parsers: [:urlencoded, :multipart, Parsers.JSON], accept: ["*/*"]
+          plug Plug.Parsers, parsers: [:urlencoded, :multipart, :json], accept: ["*/*"], json_decoder: Poison
         end
 
         if Config.get([:code_reloader, :enabled]) do
