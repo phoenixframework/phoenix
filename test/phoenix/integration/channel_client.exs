@@ -2,6 +2,10 @@ defmodule Phoenix.Integration.ChannelClient do
   alias Poison, as: JSON
 
   defmodule Server do
+    @doc """
+    Starts the WS client connection to remote WS url. Received Socket.Messages
+    are forwarded to sender process
+    """
     def start_link(sender, url) do
       :crypto.start
       :ssl.start
@@ -12,11 +16,18 @@ defmodule Phoenix.Integration.ChannelClient do
       {:ok, sender}
     end
 
+    @doc """
+    Receives JSON encoded Socket.Message from remote WS endpoint and
+    forwards message to client sender process
+    """
     def websocket_handle({:text, msg}, _conn_state, sender) do
       send sender, Phoenix.Socket.Message.parse!(msg)
       {:ok, sender}
     end
 
+    @doc """
+    Sends JSON encoded Socket.Message to remote WS endpoint
+    """
     def websocket_info({:send, msg}, _conn_state, sender) do
       {:reply, {:text, msg}, sender}
     end
