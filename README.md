@@ -835,20 +835,20 @@ application, by calling `start_rotors` from your `lib/app_name.ex` file.
 
 ``` elixir
 def start(_type, _args) do
-    import Supervisor.Spec, warn: false
+  import Supervisor.Spec, warn: false
 
-    children = [
-      worker(Repo, [])
-    ]
+  children = [
+    worker(Repo, [])
+  ]
 
-    # we start rotors only in development
-    if Mix.env == :dev do
-      AppName.Initializers.start_rotors
-    end
-
-    opts = [strategy: :one_for_one, name: AppName.Supervisor]
-    Supervisor.start_link(children, opts)
+  # we start rotors only in development
+  if Mix.env == :dev do
+    AppName.Initializers.start_rotors
   end
+
+  opts = [strategy: :one_for_one, name: AppName.Supervisor]
+  Supervisor.start_link(children, opts)
+end
 ```
 
 ## Documentation
