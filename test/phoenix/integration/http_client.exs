@@ -9,6 +9,12 @@ defmodule Phoenix.Integration.HTTPClient do
   @doc """
   Performs HTTP Request and returns Response
 
+    * method - The http methid, ie :get, :post, :put, etc
+    * url - The string url, ie "http://example.com"
+    * opts - The map of options, including a map of `:headers`
+    * body - The optional string body. If the body is a map, it is convered
+             to a URI encoded string of parameters
+
   ## Examples
 
       iex> HTTPClient.request(:get, "http://127.0.0.1", %{})
