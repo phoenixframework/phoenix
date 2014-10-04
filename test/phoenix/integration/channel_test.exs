@@ -1,17 +1,16 @@
-Code.require_file "channel_client.exs", __DIR__
+Code.require_file "websocket_client.exs", __DIR__
 
 defmodule Phoenix.Integration.ChannelTest do
   use ExUnit.Case, async: true
   alias Phoenix.Integration.ChannelTest.Router
   alias Phoenix.Integration.ChannelTest.RoomChannel
-  alias Phoenix.Integration.ChannelClient
+  alias Phoenix.Integration.WebsocketClient
   alias Phoenix.Socket.Message
 
   @port 4808
 
-  Application.put_env(:phoenix, Router, port: @port)
-
   setup_all do
+    Application.put_env(:phoenix, Router, port: @port)
     Router.start
     on_exit &Router.stop/0
     :ok
@@ -44,22 +43,25 @@ defmodule Phoenix.Integration.ChannelTest do
   end
 
   test "adapter handles websocket join, leave, and event messages" do
-    {:ok, sock} = ChannelClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
+    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
 
-    ChannelClient.join(sock, "rooms", "lobby", %{})
+    WebsocketClient.join(sock, "rooms", "lobby", %{})
     assert_receive %Message{event: "join", message: %{"status" => "connected"}}
 
-    ChannelClient.send_event(sock, "rooms", "lobby", "new:msg", %{body: "hi!"})
+    WebsocketClient.send_event(sock, "rooms", "lobby", "new:msg", %{body: "hi!"})
     assert_receive %Message{event: "new:msg", message: %{"body" => "hi!"}}
 
-    ChannelClient.leave(sock, "rooms", "lobby", %{})
+    WebsocketClient.leave(sock, "rooms", "lobby", %{})
     assert_receive %Message{event: "you:left", message: %{"message" => "bye!"}}
+
+    WebsocketClient.send_event(sock, "rooms", "lobby", "new:msg", %{body: "hi!"})
+    refute_receive %Message{}
   end
 
   test "adapter handles refuses websocket events that haven't joined" do
-    {:ok, sock} = ChannelClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
+    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
 
-    ChannelClient.send_event(sock, "rooms", "lobby", "new:msg", %{body: "hi!"})
+    WebsocketClient.send_event(sock, "rooms", "lobby", "new:msg", %{body: "hi!"})
     refute_receive %Message{}
   end
 end

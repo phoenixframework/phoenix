@@ -1,16 +1,15 @@
+Code.require_file "http_client.exs", __DIR__
+
 defmodule Phoenix.Integration.AdapterTest do
   use ExUnit.Case, async: true
   alias Phoenix.Integration.AdapterTest.Router
   alias Phoenix.Integration.AdapterTest.Controller
+  alias Phoenix.Integration.HTTPClient
 
-  Application.put_env(:phoenix, Router, port: 4807)
-
-  def resp(response) do
-    {:ok, {{_, status, _}, _, body}} = response
-    %{status: status, body: body}
-  end
+  @port 4807
 
   setup_all do
+    Application.put_env(:phoenix, Router, port: @port)
     Router.start
     on_exit &Router.stop/0
     :ok
@@ -28,10 +27,11 @@ defmodule Phoenix.Integration.AdapterTest do
     def index(conn, _), do: text(conn, "ok")
   end
 
-  test "adapters starts on configured port and serves requests" do
-    resp = resp(:httpc.request(:get, {'http://127.0.0.1:4807', []}, [],
-                               body_format: :binary))
+  test "adapters starts on configured port and serves requests, and stops" do
+    {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@port}", %{})
     assert resp.status == 200
     assert resp.body == "ok"
+    Router.stop
+    {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@port}", %{})
   end
 end
