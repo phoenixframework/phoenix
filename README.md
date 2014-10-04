@@ -552,6 +552,29 @@ channel.on("error", function(error) {
 
 It should be noted that join and error messages are not returned by default, as the client implicitly knows whether it has successfuly subscribed to a channel: the socket will simply not receive any messages should the connection be denied.
 
+
+#### Holding state in socket connections
+
+Ephemeral state can be stored on the socket and is available for the lifetime of the socket connection using the `assign/3` and `get_assign/2` imported functions. This is useful for fetching channel/topic related information a single time in `join/3` and having it available within each socket `event/3` function. Here's a basic example:
+
+```elixir
+def join(socket, topic, %{"token" => token, "user_id" => user_id) do
+  if user = MyAuth.find_authorized_user(user_id, token) do
+    socket = assign(:socket, :user, user)
+    {:ok, socket}
+  else
+    {:error, socket, :unauthorized}
+  end
+end
+
+def event(socket, "new:msg", %{msg: msg}) do
+  user = get_assign(socket, :user)
+  broadcoast socket, "new:msg", %{user_id: user.id, name: user.name, msg: msg}
+  socket
+end
+```
+
+
 There are a few other things not covered in this readme that might be worth exploring :
 
  * By default a socket uses the ws:// protocol and the host from the current location. If you mean to use a separate router on a host other than `location.host`, be sure to specify the full path when initializing the socket, i.e. `var socket = new Phoenix.Socket("//example.com/ws")` or `var socket = new Phoenix.Socket("ws://example.com/ws")`
