@@ -84,41 +84,46 @@ delete "/users/:id",    UserController, :destroy
 Resources will also generate a set of named routes and associated helper methods:
 
 ```elixir
-resources "/users", UserController do
-  resources "/comments", CommentController
-end
+defmodule YourApp.Router do
+  use Phoenix.Router
 
-iex> Router.user_path(:index)
+  resources "/users", UserController do
+    resources "/comments", CommentController
+  end
+end
+```
+
+iex> YourApp.Router.Helpers.user_path(:index)
 "/users"
 
-iex> Router.user_path(:show, 123)
+iex> YourApp.Router.Helpers.user_path(:show, 123)
 "/users/123"
 
-iex> Router.user_path(:show, 123, page: 5)
+iex> YourApp.Router.Helpers.user_path(:show, 123, page: 5)
 "/users/123?page=5"
 
-iex> Router.user_path(:edit, 123)
+iex> YourApp.Router.Helpers.user_path(:edit, 123)
 "/users/123/edit"
 
-iex> Router.user_path(:destroy, 123)
+iex> YourApp.Router.Helpers.user_path(:destroy, 123)
 "/users/123"
 
-iex> Router.user_path(:new)
+iex> YourApp.Router.Helpers.user_path(:new)
 "/users/new"
 
-iex> Router.user_comment_path(:show, 99, 100)
+iex> YourApp.Router.Helpers.user_comment_path(:show, 99, 100)
 "/users/99/comments/100"
 
-iex> Router.user_comment_path(:index, 99, foo: "bar")
+iex> YourApp.Router.Helpers.user_comment_path(:index, 99, foo: "bar")
 "/users/99/comments?foo=bar"
 
-iex> Router.user_comment_path(:index, 99) |> Router.url
+iex> YourApp.Router.Helpers.user_comment_path(:index, 99) |> YourApp.Router.Helpers.url
 "http://example.com/users/99/comments"
 
-iex> Router.user_comment_path(:edit, 88, 2, [])
+iex> YourApp.Router.Helpers.user_comment_path(:edit, 88, 2, [])
 "/users/88/comments/2/edit"
 
-iex> Router.user_comment_path(:new, 88)
+iex> YourApp.Router.Helpers.user_comment_path(:new, 88)
 "/users/88/comments/new"
 ```
 
