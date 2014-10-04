@@ -5,4 +5,5 @@
   "linguist": {:package, "0.1.2"},
   "plug": {:package, "0.8.0"},
   "poison": {:package, "1.1.0"},
-  "ranch": {:package, "1.0.0"}}
+  "ranch": {:package, "1.0.0"},
+  "websocket_client": {:git, "git://github.com/jeremyong/websocket_client.git", "2b8d9805306d36f22330f432ae6472f1f2625c30", []}}
