@@ -91,7 +91,6 @@ defmodule YourApp.Router do
     resources "/comments", CommentController
   end
 end
-```
 
 iex> YourApp.Router.Helpers.user_path(:index)
 "/users"
