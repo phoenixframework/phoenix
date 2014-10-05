@@ -8,6 +8,8 @@ A newly generated Phoenix app will have a single controller, the PageController,
 defmodule HelloPhoenix.PageController do
   use Phoenix.Controller
 
+  plug :action
+
   def index(conn, _params) do
     render conn, "index"
   end
@@ -388,14 +390,166 @@ When we reload the root route, we see a new page which has rendered some minimal
 
 As it turns out, when we use any of the 300 level status codes, which represent some form of redirect, `redirect/3` will work as if we were using `redirect/2`. Any other status code - even 500 - will give us this minimal HTML page.
 
+### Creating a Custom Errors Controller
+
+It's quite common for applications to have custom error pages for handling status 404 "not found" and 500 "internal error" messages. Phoenix has a version of these in each freshly generated app. If we open up the `HelloPhoenix.PageController`, we'll see the `not_found/2` and `error/2` functions.
+
+```elixir
+defmodule HelloPhoenix.PageController do
+  use Phoenix.Controller
+
+  plug :action
+
+  def index(conn, _params) do
+    render conn, "index"
+  end
+
+  def not_found(conn, _params) do
+    render conn, "not_found"
+  end
+
+  def error(conn, _params) do
+    render conn, "error"
+  end
+end
+```
+
+Before we change anything, let's test the default behavior by going to a route that just doesn't exist, like this.
+
+`http://localhost:4000/clearly_wrong`
+
+What we see is a rendered string of text.
+
+`No route matches GET to ["clearly_wrong"]`
+
+Now let's see what happens when the `index` action throws an error.
+
+```elixir
+defmodule HelloPhoenix.PageController do
+  use Phoenix.Controller
+
+  plug :action
+
+  def index(conn, _params) do
+    raise "uh oh"
+  end
+```
+When we go to `http://localhost:4000`, we get a stack trace.
+
+```text
+**(RuntimeError) uh oh
+
+Stacktrace
+
+    (test) web/controllers/page_controller.ex:8: Test.PageController.index/2
+    (test) web/controllers/page_controller.ex:1: Test.PageController.phoenix_controller_stack/2
+    (phoenix) lib/phoenix/router/adapter.ex:73: Phoenix.Router.Adapter.dispatch/2
+    (test) web/router.ex:2: Test.Router.call/2
+    (plug) lib/plug/adapters/cowboy/handler.ex:7: Plug.Adapters.Cowboy.Handler.init/3
+    (cowboy) src/cowboy_handler.erl:64: :cowboy_handler.handler_init/4
+    (cowboy) src/cowboy_protocol.erl:435: :cowboy_protocol.execute/4
+```
+
+Ok, fine, so we should be able to change the templates for the `render conn, "not_found"` and `ender conn, "error"` calls, right? Actually, no. We need to hunt a little deeper in the Phoenix source code to find where these responses are coming from.
+
+Take a look at <a href="https://github.com/phoenixframework/phoenix/blob/master/lib/phoenix/controller/error_controller.ex">error_controller.ex</a>. There are functions called `not_found_debug/2` and `error_debug/2` that render the error messages we just saw.
+
+By default, the development environment is configured to "debug" errors, so the `<function>_debug` functions are called. There are also two functions in the `ErrorController`, `not_found/2` and `error/2`, for handling these errors when debugging is turned off. They return text strings as well, as we can see.
+
+In order to create a better experience for our users, what we need to do is to configure our application to not use these default functions, and to provide alternatives that meet our needs.
+
+Let's start by opening up `/config/config.exs`. The stanza we care about now pertains to the `HelloPhoenix.Router`.
+
+```elixir
+config :phoenix, HelloPhoenix.Router,
+  port: System.get_env("PORT"),
+  ssl: false,
+  static_assets: true,
+  cookies: true,
+  session_key: "_hello_phoenix_key",
+  secret_key_base: "such_extra_seekrit_stuff==",
+  catch_errors: true,
+  debug_errors: false,
+  error_controller: HelloPhoenix.PageController
+```
+The last three lines are the most pertinent. Only the very last line actually needs to change. We do want to catch errors (so that we don't show a stack trace). We do not want to debug errors. Currently, our app is configured to use `HelloPhoenix.PageController` for our errors. Let's change that to a new `HelloPhoenix.OopsController` that we will create in a minute.
+
+```elixir
+error_controller: HelloPhoenix.OopsController
+```
+You might think that we're done with configuration - but not so fast. If we look at the very bottom of `/config/config.exs` we see a line which will import configuration from the config file for the environment we are in.
+
+```elixir
+import_config "#{Mix.env}.exs"
+```
+Since we're in development, that file is `/config/dev.exs`.
+
+```elixir
+config :phoenix, HelloPhoenix.Router,
+  port: System.get_env("PORT") || 4000,
+  ssl: false,
+  host: "localhost",
+  cookies: true,
+  session_key: "_hello_phoenix_key",
+  secret_key_base: "such_extra_seekrit_stuff==",
+  debug_errors: true
+```
+We need mimic the last three lines of the general config file, like this.
+
+```elixir
+debug_errors: false,
+catch_errors: true,
+error_controller: HelloPhoenix.OopsController
+```
+Very Important! We are only changing the development config for demonstration purposes. We want to see the effect of our changes with the fewest steps. In general, we want debugging turned on, and we don't want to catch errors in development.
+
+Now we're ready for our new error controller. In `/web/controllers` we need to create `oops_controller.ex`.
+
+```elixir
+defmodule HelloPhoenix.OopsController do
+  use Phoenix.Controller
+
+  plug :action
+
+  def not_found(conn, _params) do
+    render conn, "not_found"
+  end
+
+  def error(conn, _params) do
+    render conn, "error"
+  end
+end
+```
+
+We also need to remove the `not_found/2` and `error/2` actions from `HelloPhoenix.PageController` since they  are superfluous.
+
+From here on, our tasks are the same as they were in the Adding Pages Guide.
+
+In order to render our templates, we create a new, empty view at `/web/views/oops_view.ex`.
+
+```elixir
+defmodule HelloPhoenix.OopsView do
+  use HelloPhoenix.Views
+
+end
+```
+
+Then we need a new `/web/templates/oops` directory with `not_found.html.eex` and `errors.html.eex` templates in it.
+
+```html
+<div class="jumbotron">
+  <h2>Oops! Sorry, we can't seem to find that for you.</h2>
+</div>
+```
+
+```html
+<div class="jumbotron">
+  <h2>Oops! Sorry, something went wrong.</h2>
+</div>
+```
+Finally, since we've made a configuration changes, we need to restart our application for this to take effect.
+
 ##TODO
 
 ### Assign Conn Properties
 - set HTTP status code
-
-### Creating a Custom Errors Controller
-- error handling, 404, 500
-  - override default config
-  - new controller
-  - new view
-  - new templates
