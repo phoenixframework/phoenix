@@ -8,7 +8,7 @@ The router file that Phoenix generates for you, web/router.ex, will look somethi
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
-  get "/", HelloPhoenix.Controller, :index, as: :pages
+  get "/", HelloPhoenix.PageController, :index, as: :pages
 end
 ```
 Whatever you called your application will appear instead of 'HelloPhoenix' for both the router module name and the Controller name.
@@ -81,13 +81,13 @@ By adding "as: :pages", we have in effect named a resource for this route; we've
 That's a mouthful. Let's see it in action. Run `$ iex -S mix` at the root of the project. When we call the pages_path function on our router with the action as an argument, it returns the path to us.
 
 ```
-iex(4)> HelloPhoenix.Router.pages_path(:index)
+iex(4)> HelloPhoenix.Router.Helpers.pages_path(:index)
 "/"
 ```
 
 This is significant because we can use the "pages_path" function to link to the root of our application.
 ```html
-<a href="<%= HelloPhoenix.Router.pages_path %>">To the Welcome Page!</a>
+<a href="<%= HelloPhoenix.Router.Helpers.pages_path(:index) %>">To the Welcome Page!</a>
 ```
 
 If you try to give the same name to another route, the router will not compile. Try adding the following route to the bottom of your router. `get "/page", HelloPhoenix.AnotherController, :index, as: :pages`
@@ -176,43 +176,43 @@ Running `$ mix phoenix.routes` now shows that we have all the routes except the 
 The phoenix.routes task also listed the user_path as the path function for each line of output. Here is what that path translates to for each action.
 
 ```
-iex(2)> HelloPhoenix.Router.user_path(:index)
+iex(2)> HelloPhoenix.Router.Helpers.user_path(:index)
 "/users"
 
-iex(3)> HelloPhoenix.Router.user_path(:show, 17)
+iex(3)> HelloPhoenix.Router.Helpers.user_path(:show, 17)
 "/users/17"
 
-iex(4)> HelloPhoenix.Router.user_path(:new)
+iex(4)> HelloPhoenix.Router.Helpers.user_path(:new)
 "/users/new"
 
-iex(5)> HelloPhoenix.Router.user_path(:create)
+iex(5)> HelloPhoenix.Router.Helpers.user_path(:create)
 "/users"
 
-iex(6)> HelloPhoenix.Router.user_path(:edit, 37)
+iex(6)> HelloPhoenix.Router.Helpers.user_path(:edit, 37)
 "/users/37/edit"
 
-iex(7)> HelloPhoenix.Router.user_path(:update, 37)
+iex(7)> HelloPhoenix.Router.Helpers.user_path(:update, 37)
 "/users/37"
 
-iex(8)> HelloPhoenix.Router.user_path(:destroy, 17)
+iex(8)> HelloPhoenix.Router.Helpers.user_path(:destroy, 17)
 "/users/17"
 ```
 
 What about paths with query strings? Phoenix has you covered. By adding an optional third argument of key value pairs, the path helpers will return those pairs in the query string.
 
 ```elixir
-iex(3)> HelloPhoenix.Router.user_path(:show, 17, admin: true, active: false)
+iex(3)> HelloPhoenix.Router.Helpers.user_path(:show, 17, admin: true, active: false)
 "/users/17?admin=true&active=false"
 ```
 
-What if you need a full url instead of a path? Again, Phoenix has an answer - the Router.url function.
+What if you need a full url instead of a path? Again, Phoenix has an answer - the Router.Helpers.url function.
 
 ```elixir
-iex(3)> HelloPhoenix.Router.user_path(:index, 42) |> HelloPhoenix.Router.url
+iex(3)> HelloPhoenix.Router.Helpers.user_path(:index, 42) |> HelloPhoenix.Router.Helpers.url
 "http://localhost:4000/users/42"
 ```
 
-The Router.url function will get the host, port, proxy port and ssl information needed to construct the full url from the configuration parameters set for each environment. We'll talk about configuration in more detail in it's own guide. For now, you can take a look at /config/dev.exs file in your own project to see what those values are.
+The Router.Helpers.url function will get the host, port, proxy port and ssl information needed to construct the full url from the configuration parameters set for each environment. We'll talk about configuration in more detail in it's own guide. For now, you can take a look at /config/dev.exs file in your own project to see what those values are.
 
 
 ###Nested Resources
@@ -243,14 +243,14 @@ We see that each of these routes scopes the posts to a user id. For the first on
 When calling path helper functions for nested routes, we will need to pass the ids in the order they came in the route definition. For the following show route, 42 is the user_id, and 17 is the post id.
 
 ```elixir
-iex(2)> HelloPhoenix.Router.user_post_path(:show, 42, 17)
+iex(2)> HelloPhoenix.Router.Helpers.user_post_path(:show, 42, 17)
 "/users/42/posts/17"
 ```
 
 Again, if we add a key value pair to the end of the function call, it is added to the query string.
 
 ```elixir
-iex> HelloPhoenix.Router.user_post_path(:index, 42, active: true)
+iex> HelloPhoenix.Router.Helpers.user_post_path(:index, 42, active: true)
 "/users/42/posts?active=true"
 ```
 
@@ -399,10 +399,10 @@ admin_review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewCon
 The path helpers return what we want them to as well. Run `$ iex -S mix` and give them a try.
 
 ```elixir
-iex(1)> Test.Router.review_path(:index)
+iex(1)> Test.Router.Helpers.review_path(:index)
 "/reviews"
 
-iex(2)> Test.Router.admin_review_path(:show, 1234)
+iex(2)> Test.Router.Helpers.admin_review_path(:show, 1234)
 "/admin/reviews/1234"
 ```
 
