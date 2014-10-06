@@ -2,19 +2,15 @@ Code.require_file "websocket_client.exs", __DIR__
 
 defmodule Phoenix.Integration.ChannelTest do
   use ExUnit.Case, async: true
+  import ExUnit.CaptureIO
+
   alias Phoenix.Integration.ChannelTest.Router
   alias Phoenix.Integration.ChannelTest.RoomChannel
   alias Phoenix.Integration.WebsocketClient
   alias Phoenix.Socket.Message
 
   @port 4808
-
-  setup_all do
-    Application.put_env(:phoenix, Router, port: @port)
-    Router.start
-    on_exit &Router.stop/0
-    :ok
-  end
+  Application.put_env(:phoenix, Router, port: @port)
 
   defmodule Router do
     use Phoenix.Router
@@ -40,6 +36,12 @@ defmodule Phoenix.Integration.ChannelTest do
       broadcast socket, "new:msg", message
       socket
     end
+  end
+
+  setup_all do
+    capture_io fn -> Router.start end
+    on_exit fn -> capture_io &Router.stop/0 end
+    :ok
   end
 
   test "adapter handles websocket join, leave, and event messages" do
