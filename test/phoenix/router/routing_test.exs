@@ -15,7 +15,6 @@ defmodule Phoenix.Router.RoutingTest do
     def top(conn, _params), do: text(conn, "users top")
     def options(conn, _params), do: text(conn, "users options")
     def connect(conn, _params), do: text(conn, "users connect")
-    def head(conn, _params), do: conn |> send_resp(200, "")
     def trace(conn, _params), do: text(conn, "users trace")
     def not_found(conn, _params), do: text(conn, :not_found, "not found")
     def image(conn, _params), do: text(conn, conn.params["path"] || "show files")
@@ -36,7 +35,6 @@ defmodule Phoenix.Router.RoutingTest do
     trace "/trace", UserController, :trace
     options "/options", UserController, :options
     connect "/connect", UserController, :connect
-    head "/head", UserController, :head
 
     get "/users/:user_id/files/:id", UserController, :image
   end
@@ -96,13 +94,6 @@ defmodule Phoenix.Router.RoutingTest do
     conn = call(Router, :trace, "/trace")
     assert conn.status == 200
     assert conn.resp_body == "users trace"
-  end
-
-  test "head to custom action" do
-    conn = call(Router, :head, "/head")
-    assert conn.status == 200
-    assert conn.method == "HEAD"
-    assert conn.resp_body == ""
   end
 
   test "unmatched route returns 404" do
