@@ -165,6 +165,10 @@ defmodule Phoenix.Router do
       multipart and json (with poison). The request body is left
       untouched when the request content-type cannot be parsed
 
+    * `Plug.MethodOverride` - converts the request method to
+      `PUT`, `PATCH` or `DELETE` for `POST` requests with a
+      valid `_method` parameter
+
     * `Plug.Session` - a plug that sets up session management.
       Note that `fetch_session/2` must still be explicitly called
       before using the session as this plug just sets up how
@@ -244,6 +248,8 @@ defmodule Phoenix.Router do
            from: Mix.Project.config[:app]]
 
   ### Runtime
+
+  TODO: documentation.
 
   ## Web server
 

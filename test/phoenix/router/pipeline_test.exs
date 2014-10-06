@@ -106,6 +106,11 @@ defmodule Phoenix.Router.PipelineTest do
     assert conn.status == 404
   end
 
+  test "does not override method" do
+    conn = call(EmptyRouter, :post, "/root/1", %{"_method" => "PUT"})
+    assert conn.status == 404
+  end
+
   ## Plug configuration
 
   test "dispatch crash returns 500 and renders friendly error page" do
@@ -133,6 +138,12 @@ defmodule Phoenix.Router.PipelineTest do
   test "parsers servers static assets" do
     conn = call(Router, :get, "/js/phoenix.js")
     assert conn.status == 200
+  end
+
+  test "overrides method" do
+    conn = call(Router, :post, "/root/1", %{"_method" => "PUT"})
+    assert conn.status == 200
+    assert conn.params["id"] == "1"
   end
 
   ## Pipelines
