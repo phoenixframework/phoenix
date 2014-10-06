@@ -25,9 +25,9 @@ defmodule Phoenix.Mixfile do
 
   def deps do
     [{:cowboy, "~> 1.0.0", optional: true},
-     {:plug, github: "elixir-lang/plug"},
      {:linguist, "~> 0.1.2"},
-     {:poison, "~> 1.1.0"},
+     {:plug, "~> 0.8.1"},
+     {:poison, "~> 1.1"},
      {:earmark, "~> 0.1", only: :docs},
      {:ex_doc, "~> 0.5", only: :docs},
      {:websocket_client, github: "jeremyong/websocket_client", only: :test}]

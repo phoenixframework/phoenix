@@ -18,7 +18,7 @@ defmodule Phoenix.Plugs.ControllerLogger do
 
       ["Processing by ", module, ?., action, ?\n,
         "  Accept: ", content_type, ?\n,
-        "  Parameters: ", inspect(conn.params), ?\n]
+        "  Parameters: ", inspect(conn.params)]
     end
     conn
   end

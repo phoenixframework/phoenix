@@ -3,7 +3,7 @@
   "earmark": {:package, "0.1.10"},
   "ex_doc": {:package, "0.5.2"},
   "linguist": {:package, "0.1.2"},
-  "plug": {:git, "git://github.com/elixir-lang/plug.git", "25e2cadf43924d5ef12e9ab0c322920c2ffbc38e", []},
+  "plug": {:package, "0.8.1"},
   "poison": {:package, "1.1.0"},
   "ranch": {:package, "1.0.0"},
   "websocket_client": {:git, "git://github.com/jeremyong/websocket_client.git", "2b8d9805306d36f22330f432ae6472f1f2625c30", []}}
