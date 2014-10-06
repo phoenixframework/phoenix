@@ -16,7 +16,6 @@ defmodule Phoenix.Config do
       config :phoenix, MyApp.Router,
         port: 4000,
         ssl: false,
-        cookies: false
 
   """
 
@@ -25,21 +24,10 @@ defmodule Phoenix.Config do
       port: 4000,
       ssl: false,
       host: "localhost",
-      static_assets: true,
-      static_assets_mount: "/",
-      parsers: true,
-      cookies: false,
-      session_key: nil,
-      encrypt: true,
       secret_key_base: nil,
-      signing_salt: "cookie store signing salt",
-      encryption_salt: "cookie store encryption salt",
       catch_errors: true,
       debug_errors: false,
       error_controller: Phoenix.Controller.ErrorController,
-    ],
-    code_reloader: [
-      enabled: false
     ],
     template_engines: [
       eex: Phoenix.Template.EExEngine

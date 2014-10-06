@@ -174,6 +174,10 @@ defmodule Phoenix.Router do
       before using the session as this plug just sets up how
       the session is fetched
 
+    * `Phoenix.CodeReloader` - a plug that enables code reloading
+      for all entries in the `web` directory. It is configured
+      directly in the Phoenix application
+
   ### :browser pipeline
 
   TODO: Describe plugs in the browser pipeline.
@@ -337,7 +341,7 @@ defmodule Phoenix.Router do
 
         plug Plug.Logger
 
-        if Config.get([:code_reloader, :enabled]) do
+        if Application.get_env(:phoenix, :code_reloader) do
           plug Plugs.CodeReloader
         end
 

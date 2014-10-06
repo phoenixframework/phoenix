@@ -6,8 +6,7 @@ defmodule Phoenix.Config.ConfigTest do
     Mix.Config.persist(phoenix: [
       {Router,
          port: 1234,
-         ssl: true,
-         cookies: false
+         ssl: true
       },
       {:logger, [level: :info]}
     ])
@@ -29,13 +28,13 @@ defmodule Phoenix.Config.ConfigTest do
 
   test "router/1 returns the keyword list configuration of module with merge defaults" do
     assert Enum.sort(Config.router(Router)) == Enum.sort([
-      catch_errors: true, cookies: false,
-      debug_errors: false, encrypt: true, host: "localhost",
-      encryption_salt: "cookie store encryption salt",
-      error_controller: Phoenix.Controller.ErrorController, parsers: true,
-      port: 1234, secret_key_base: nil, session_key: nil,
-      signing_salt: "cookie store signing salt", ssl: true,
-      static_assets: true, static_assets_mount: "/"
+      catch_errors: true,
+      debug_errors: false,
+      host: "localhost",
+      error_controller: Phoenix.Controller.ErrorController,
+      port: 1234,
+      secret_key_base: nil,
+      ssl: true
     ])
   end
 

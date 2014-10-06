@@ -7,5 +7,4 @@ config :phoenix, <%= application_module %>.Router,
   debug_errors: true
 
 # Enables code reloading for development
-config :phoenix, :code_reloader,
-  enabled: true
+config :phoenix, :code_reloader, true

@@ -590,50 +590,14 @@ There are a few other things not covered in this readme that might be worth expl
 
 Phoenix provides a configuration per environment set by the `MIX_ENV` environment variable. The default environment `dev` will be set if `MIX_ENV` does not exist.
 
-#### Configuration file structure:
+#### Configuration file structure
+
 ```
 ├── your_app/config/
 │   ├── config.exs          Base application configuration
 │   ├── dev.exs
 │   ├── prod.exs
 │   └── test.exs
-```
-
-```elixir
-# your_app/config/config.exs
-use Mix.Config
-
-config :phoenix, YourApp.Router,
-  port: System.get_env("PORT"),
-  ssl: false,
-  cookies: true,
-  session_key: "_your_app_key",
-  secret_key_base: "super secret"
-
-config :phoenix, :code_reloader,
-  enabled: false
-
-import_config "#{Mix.env}.exs"
-```
-
-```elixir
-# your_app/config/dev.exs
-use Mix.Config
-
-config :phoenix, YourApp.Router,
-  port: System.get_env("PORT") || 4000,
-  ssl: false,
-  host: "localhost",
-  cookies: true,
-  session_key: "_your_app_key",
-  secret_key_base: "$+X2PG$PX0^88^HXB)...",
-  debug_errors: true
-
-config :phoenix, :code_reloader,
-  enabled: true
-
-config :logger, :console,
-  level: :debug
 ```
 
 #### Configuration for SSL
