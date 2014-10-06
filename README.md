@@ -801,7 +801,7 @@ There are no guidelines yet. Do what feels natural. Submit a bug, join a discuss
 ### Building phoenix.coffee
 
 ```bash
-$ coffee -o priv/static/js -cw priv/src/static/cs
+$ coffee -o priv/static/js -cw assets/cs
 ```
 
 
