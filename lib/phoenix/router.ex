@@ -160,6 +160,8 @@ defmodule Phoenix.Router do
     * `Plug.Static` - serves static assets. Since this plug comes
       before the router, serving of static assets is not logged
 
+    * `Plug.Logger` - logs incoming requests
+
     * `Plug.Parsers` - parses the request body when a known
       parser is available. By default parsers urlencoded,
       multipart and json (with poison). The request body is left
@@ -168,6 +170,9 @@ defmodule Phoenix.Router do
     * `Plug.MethodOverride` - converts the request method to
       `PUT`, `PATCH` or `DELETE` for `POST` requests with a
       valid `_method` parameter
+
+    * `Plug.Head` - converts `HEAD` requests to `GET` requests and
+      strips the response body
 
     * `Plug.Session` - a plug that sets up session management.
       Note that `fetch_session/2` must still be explicitly called
@@ -350,6 +355,7 @@ defmodule Phoenix.Router do
           plug Plug.MethodOverride
         end
 
+        plug Plug.Head
         plug :put_secret_key_base
 
         if session = @config[:session] do

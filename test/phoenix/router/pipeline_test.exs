@@ -120,6 +120,12 @@ defmodule Phoenix.Router.PipelineTest do
     refute conn.resp_body =~ ~r/Stacktrace/i
   end
 
+  test "converts HEAD requests to GET" do
+    conn = call(Router, :head, "/root")
+    assert conn.status == 200
+    assert conn.resp_body == ""
+  end
+
   test "parsers parses json body" do
     conn = call(Router, :put, "/root/1", "{\"foo\": [1, 2, 3]}",
                 [headers: [{"content-type", "application/json"}]])
