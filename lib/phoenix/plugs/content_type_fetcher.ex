@@ -25,10 +25,11 @@ defmodule Phoenix.Plugs.ContentTypeFetcher do
   Assigns the String response content-type to private :phoenix_content_type
   """
   def fetch(conn) do
-    type = conn.params["format"]
-    |> mime_type
-    |> Kernel.||(primary_accept_format(accept_formats(conn)))
-    |> Kernel.||(@default_content_type)
+    type =
+      if(Map.has_key?(conn.params, "format"), do: conn.params["format"])
+      |> mime_type
+      |> Kernel.||(primary_accept_format(accept_formats(conn)))
+      |> Kernel.||(@default_content_type)
 
     put_resp_content_type(conn, type)
   end

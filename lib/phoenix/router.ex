@@ -153,7 +153,30 @@ defmodule Phoenix.Router do
 
   ### :before pipeline
 
-  TODO: Describe plugs in the before pipeline.
+  Those are the plugs in the `:before` pipeline in the order
+  they are defined. How each plug is configured is defined in
+  a later sections.
+
+    * `Plug.Static` - serves static assets. Since this plug comes
+      before the router, serving of static assets is not logged
+
+    * `Plug.Parsers` - parses the request body when a known
+      parser is available. By default parsers urlencoded,
+      multipart and json (with poison). The request body is left
+      untouched when the request content-type cannot be parsed
+
+    * `Plug.MethodOverride` - converts the request method to
+      `PUT`, `PATCH` or `DELETE` for `POST` requests with a
+      valid `_method` parameter
+
+    * `Plug.Session` - a plug that sets up session management.
+      Note that `fetch_session/2` must still be explicitly called
+      before using the session as this plug just sets up how
+      the session is fetched
+
+    * `Phoenix.CodeReloader` - a plug that enables code reloading
+      for all entries in the `web` directory. It is configured
+      directly in the Phoenix application
 
   ### :browser pipeline
 
@@ -189,9 +212,48 @@ defmodule Phoenix.Router do
   In general though, it is preferred to define new pipelines then
   modify existing ones.
 
-  ## Configuration
+  ## Router configuration
 
-  TODO: documentation
+  All routers are configured directly in the Phoenix application
+  environment. For example:
+
+      config :phoenix, YourApp.Router,
+        secret_key_base: "kjoy3o1zeidquwy1398juxzldjlksahdk3"
+
+  Phoenix configuration is split in two categories. Compile-time
+  configuration means the configuration is read during compilation
+  and cannot be dynamically changed during runtime. Most of the
+  compile-time configuration is related to pipelines and plugs.
+
+  On the other hand, runtime configuration is read when your
+  application is started.
+
+  ### Compile-time
+
+    * `:session` - configures the `Plug.Session` plug. Defaults to
+      `false` but can be set to a keyword list of options as defined
+      in `Plug.Session`. For example:
+
+          config :phoenix, YourApp.Router,
+            session: [store: :cookie, key: "_your_app_key"]
+
+    * `:parsers` - sets up the request parsers. If parsers are disabled,
+      parameters won't be explicitly fetched before matching a route and
+      functionality dependent on parameters, like the `Plug.MethodOverride`,
+      will be disabled too. Defaults to:
+
+          [accept: ["*/*"],
+           json_decoder: Poison,
+           parsers: [:urlencoded, :multipart, :json]]
+
+    * `:static` - sets up static assets serving. Defaults to:
+
+          [at: "/",
+           from: Mix.Project.config[:app]]
+
+  ### Runtime
+
+  TODO: documentation.
 
   ## Web server
 
@@ -201,8 +263,6 @@ defmodule Phoenix.Router do
 
   alias Phoenix.Config
   alias Phoenix.Plugs
-  alias Phoenix.Plugs.Parsers
-  alias Phoenix.Project
   alias Phoenix.Router.Adapter
   alias Phoenix.Router.Resource
   alias Phoenix.Router.Scope
@@ -211,14 +271,14 @@ defmodule Phoenix.Router do
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
 
   @doc false
-  defmacro __using__(plug_adapter_options \\ []) do
-    prelude   = prelude(plug_adapter_options)
+  defmacro __using__(_opts) do
+    prelude   = prelude()
     plug      = plug()
     pipelines = pipelines()
     [prelude, plug, pipelines]
   end
 
-  defp prelude(plug_adapter_options) do
+  defp prelude() do
     quote do
       @before_compile Phoenix.Router
       Module.register_attribute __MODULE__, :phoenix_routes, accumulate: true
@@ -226,12 +286,13 @@ defmodule Phoenix.Router do
       import Phoenix.Router
       import Plug.Conn
 
+      @config Phoenix.Router.Adapter.config(__MODULE__)
+      @otp_app @config[:otp_app] || Mix.Project.config[:app] ||
+               raise "please set :otp_app config for #{inspect __MODULE__}"
+
       # Set up initial scope
       @phoenix_pipeline nil
       Phoenix.Router.Scope.init(__MODULE__)
-
-      # TODO: Document what those options are about
-      @options unquote(plug_adapter_options)
 
       # TODO: This should not be adapter specific.
       use Phoenix.Adapters.Cowboy
@@ -273,39 +334,35 @@ defmodule Phoenix.Router do
   defp pipelines() do
     quote do
       pipeline :before do
-        if Config.router(__MODULE__, [:static_assets]) do
-          mount = Config.router(__MODULE__, [:static_assets_mount])
-          plug Plug.Static, at: mount, from: Project.app
+        if static = @config[:static] do
+          static = Keyword.merge([from: @otp_app], static)
+          plug Plug.Static, static
         end
 
         plug Plug.Logger
 
-        if Config.router(__MODULE__, [:parsers]) do
-          plug Plug.Parsers, parsers: [:urlencoded, :multipart, Parsers.JSON], accept: ["*/*"]
+        if Application.get_env(:phoenix, :code_reloader) do
+          plug Plugs.CodeReloader
         end
 
-        if Config.get([:code_reloader, :enabled]) do
-          plug Plugs.CodeReloader
+        if parsers = @config[:parsers] do
+          plug Plug.Parsers, parsers
+          plug Plug.MethodOverride
         end
 
         plug :put_secret_key_base
 
-        if Config.router(__MODULE__, [:cookies]) do
-          key = Config.router!(__MODULE__, [:session_key])
-          encrypt = Config.router!(__MODULE__, [:encrypt])
-          signing = Config.router!(__MODULE__, [:signing_salt])
-          encryption = Config.router!(__MODULE__, [:encryption_salt])
-
-          plug Plug.Session, store: :cookie, key: key, encrypt: true,
-                             signing_salt: signing, encryption_salt: encryption
+        if session = @config[:session] do
+          salt    = Atom.to_string(__MODULE__)
+          session = Keyword.merge([signing_salt: salt, encryption_salt: salt], session)
+          plug Plug.Session, session
         end
       end
 
       pipeline :browser do
-        if Config.router(__MODULE__, [:cookies]) do
+        if @config[:session] do
           plug :fetch_session
         end
-        plug Plug.MethodOverride
       end
 
       pipeline :api do
@@ -327,12 +384,12 @@ defmodule Phoenix.Router do
       end
 
       def start do
-        options = Adapter.merge(@options, @dispatch_options, __MODULE__, Cowboy)
+        options = Adapter.merge([], @dispatch_options, __MODULE__, Cowboy)
         Adapter.start(__MODULE__, options)
       end
 
       def stop do
-        options = Adapter.merge(@options, @dispatch_options, __MODULE__, Cowboy)
+        options = Adapter.merge([], @dispatch_options, __MODULE__, Cowboy)
         Adapter.stop(__MODULE__, options)
       end
 

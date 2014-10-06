@@ -7,12 +7,25 @@ end
 
 alias Phoenix.Router.PipelineTest.SampleController
 
-Mix.Config.persist(phoenix: [
-  {Phoenix.Router.PipelineTest.Router,
-    cookies: true,
-    session_key: "_app",
-    secret_key_base: String.duplicate("abcdefgh", 8)}
-])
+## Empty router
+
+Application.put_env(:phoenix, Phoenix.Router.PipelineTest.EmptyRouter,
+  [static: false, parsers: false])
+
+defmodule Phoenix.Router.PipelineTest.EmptyRouter do
+  use Phoenix.Router
+
+  get "/root", SampleController, :index
+  put "/root/:id", SampleController, :index
+end
+
+alias Phoenix.Router.PipelineTest.EmptyRouter
+
+## Router
+
+Application.put_env(:phoenix, Phoenix.Router.PipelineTest.Router,
+  session: [store: :cookie, key: "_app"],
+  secret_key_base: String.duplicate("abcdefgh", 8))
 
 # Define it at the top to guarantee there is no scope
 # leakage from the test case.
@@ -35,7 +48,7 @@ defmodule Phoenix.Router.PipelineTest.Router do
   end
 
   get "/root", SampleController, :index
-  get "/root/:id", SampleController, :index
+  put "/root/:id", SampleController, :index
   get "/route_that_crashes", SampleController, :crash
 
   scope path: "/browser" do
@@ -73,6 +86,31 @@ defmodule Phoenix.Router.PipelineTest do
     :ok
   end
 
+  ## No configuration
+
+  test "does not setup the session" do
+    conn = call(EmptyRouter, :get, "/root")
+    assert_raise ArgumentError, "cannot fetch session without a configured session plug", fn ->
+      fetch_session(conn)
+    end
+  end
+
+  test "does not setup parsers" do
+    conn = call(EmptyRouter, :put, "/root/1", "{\"foo\": [1, 2, 3]}",
+                [headers: [{"content-type", "application/json"}]])
+    assert conn.params.__struct__ == Plug.Conn.Unfetched
+  end
+
+  test "does not setup static" do
+    conn = call(EmptyRouter, :get, "/js/phoenix.js")
+    assert conn.status == 404
+  end
+
+  test "does not override method" do
+    conn = call(EmptyRouter, :post, "/root/1", %{"_method" => "PUT"})
+    assert conn.status == 404
+  end
+
   ## Plug configuration
 
   test "dispatch crash returns 500 and renders friendly error page" do
@@ -82,9 +120,28 @@ defmodule Phoenix.Router.PipelineTest do
     refute conn.resp_body =~ ~r/Stacktrace/i
   end
 
+  test "parsers parses json body" do
+    conn = call(Router, :put, "/root/1", "{\"foo\": [1, 2, 3]}",
+                [headers: [{"content-type", "application/json"}]])
+    assert conn.status == 200
+    assert conn.params["id"] == "1"
+    assert conn.params["foo"] == [1, 2, 3]
+  end
+
   test "parsers accepts all media types" do
-    conn = call(Router, :get, "/root/1", %{},
+    conn = call(Router, :put, "/root/1", "WIDGET",
                 [headers: [{"content-type", "application/widget"}]])
+    assert conn.status == 200
+    assert conn.params["id"] == "1"
+  end
+
+  test "parsers servers static assets" do
+    conn = call(Router, :get, "/js/phoenix.js")
+    assert conn.status == 200
+  end
+
+  test "overrides method" do
+    conn = call(Router, :post, "/root/1", %{"_method" => "PUT"})
     assert conn.status == 200
     assert conn.params["id"] == "1"
   end
