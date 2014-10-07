@@ -232,6 +232,40 @@ end
  ```
 When you start the application and view `http://localhost:4000/`, you should see a very different page, one with no title, logo image, or css styling at all.
 
+Very Important! For function calls in the middle of a pipeline, like `put_layout/2` here, it is critical to use parenthesis around the arguments because the pipeline operator binds more tightly. This leads to parsing problems and very strange results.
+
+If you ever get a stack trace that looks like this,
+
+```
+**(FunctionClauseError) no function clause matching in Plug.Conn.get_resp_header/2
+
+Stacktrace
+
+    (plug) lib/plug/conn.ex:353: Plug.Conn.get_resp_header(:none, "content-type")
+```
+
+where your argument replaces `conn` as the first argument, one of the first things to check is whether there are parens in the right places.
+
+This is fine.
+
+```elixir
+def index(conn, params) do
+  conn
+  |> put_layout(:none)
+  |> render "index"
+end
+ ```
+
+This won't work.
+
+```elixir
+def index(conn, params) do
+  conn
+  |> put_layout :none
+  |> render "index"
+end
+ ```
+
 Now let's actually create another layout and render the index template into it. As an example, let's say we had a different layout for the admin section of our application which didn't have the logo image. To do this, let's copy the existing `application.html.eex` to a new file `admin.html.eex`. Then remove the line in it that displays the logo.
 
 ```elixir
