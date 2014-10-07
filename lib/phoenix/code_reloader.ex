@@ -57,8 +57,7 @@ defmodule Phoenix.CodeReloader do
   def mix_compile({:module, Mix.Task}) do
     touch_modules_for_recompile
     Mix.Task.reenable "compile.elixir"
-    # TODO: --ignore-module-conflict can be removed on Elixir 1.0.1
-    Mix.Task.run "compile.elixir", ["--ignore-module-conflict", "--elixirc-paths", "web"]
+    Mix.Task.run "compile.elixir", ["--elixirc-paths", "web"]
   end
 
   @doc """

@@ -1,48 +1,73 @@
+Code.require_file "../../mix_helper.exs", __DIR__
+
 defmodule Mix.Tasks.Phoenix.NewTest do
   use ExUnit.Case
+  import MixHelper
+  import ExUnit.CaptureIO
 
-  @app_name "photo_blog"
-  @destination_path "/tmp"
+  @app_name  "photo_blog"
+  @tmp_path  tmp_path()
+  @project_path Path.join(@tmp_path, @app_name)
 
   setup_all do
-    File.rm_rf(project_path)
-    Mix.Tasks.Phoenix.New.run([@app_name, @destination_path])
-    on_exit fn -> File.rm_rf(project_path) end
+    # Clean up and create a new project
+    File.rm_rf(@project_path)
+    Mix.Tasks.Phoenix.New.run(["--dev", @app_name, @project_path])
+
+    # Copy artifacts from Phoenix so we can compile and run tests
+    File.cp_r "_build",   Path.join(@project_path, "_build")
+    File.cp_r "deps",     Path.join(@project_path, "deps")
+    File.cp_r "mix.lock", Path.join(@project_path, "mix.lock")
+
     :ok
   end
 
   test "creates files and directories" do
-    expected_files = [".gitignore",
-      "README.md",
-      "lib",
-      "lib/photo_blog.ex",
-      "web/controllers/page_controller.ex",
-      "web/router.ex",
-      "mix.exs",
-      "test",
-      "test/photo_blog_test.exs",
-      "test/test_helper.exs"]
+    File.cd! @project_path, fn ->
+      assert_file ".gitignore"
+      assert_file "README.md"
+      assert_file "lib/photo_blog.ex", ~r/defmodule PhotoBlog do/
 
-    for file <- expected_files do
-      path = Path.join(project_path, file)
+      assert_file "priv/static/css/phoenix.css"
+      assert_file "priv/static/images/phoenix.png"
+      assert_file "priv/static/js/phoenix.js"
 
-      assert File.exists?(path)
+      assert_file "test/photo_blog_test.exs"
+      assert_file "test/test_helper.exs"
+
+      assert_file "web/controllers/page_controller.ex", ~r/defmodule PhotoBlog.PageController/
+      assert_file "web/router.ex", ~r/defmodule PhotoBlog.Router/
     end
   end
 
-  test "files contain application name" do
-    path = Path.join(project_path, "lib/photo_blog.ex")
-    {:ok, content} = File.read(path)
+  test "compiles and recompiles project" do
+    in_project :photo_blog, @project_path, fn _ ->
+      Mix.Task.run "compile", ["--no-deps-check"]
+      assert_received {:mix_shell, :info, ["Compiled lib/photo_blog.ex"]}
+      assert_received {:mix_shell, :info, ["Compiled web/router.ex"]}
 
-    assert Regex.match?(~r/PhotoBlog/, content)
+      File.write!("web/templates/page/index.html.eex", "oops")
+      Mix.Task.run "compile", ["--no-deps-check"]
+      refute_received {:mix_shell, :info, ["Compiled lib/photo_blog.ex"]}
+      assert_received {:mix_shell, :info, ["Compiled web/views/page_view.ex"]}
+    end
   end
 
   test "missing name and/or path arguments" do
-    assert Mix.Tasks.Phoenix.New.run([])
-    assert Mix.Tasks.Phoenix.New.run([@app_name])
+    assert_raise Mix.Error, fn ->
+      Mix.Tasks.Phoenix.New.run([])
+    end
   end
 
-  def project_path do
-    Path.join(@destination_path, @app_name)
+  defp in_project(app, path, fun) do
+    %{name: name, file: file} = Mix.Project.pop
+
+    try do
+      capture_io :stderr, fn ->
+        Mix.Project.in_project app, path, [], fun
+      end
+    after
+      Mix.Project.push name, file
+    end
   end
 end

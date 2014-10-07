@@ -1,10 +1,4 @@
 /_build
 /deps
+/tmp
 erl_crash.dump
-*.ez
-.DS_Store
-Gemfile
-Gemfile.lock
-Guardfile
-
-

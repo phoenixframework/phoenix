@@ -8,7 +8,7 @@
     <meta name="author" content="">
 
     <title>Hello Phoenix!</title>
-    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/phoenix.css">
   </head>
 
   <body>
@@ -20,7 +20,7 @@
         <span class="logo"></span>
       </div>
 
-      <%= @inner %>
+      <%%= @inner %>
 
       <div class="footer">
         <p><a href="http://phoenixframework.org">phoenixframework.org</a></p>

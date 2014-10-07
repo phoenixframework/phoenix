@@ -572,11 +572,11 @@ defmodule Phoenix.Router do
 
       Enum.each resource.actions, fn action ->
         case action do
-          :index   -> get    "#{path}",                ctrl, :index, opts
+          :index   -> get    "#{path}",               ctrl, :index, opts
           :show    -> get    "#{path}/:#{parm}",      ctrl, :show, opts
-          :new     -> get    "#{path}/new",            ctrl, :new, opts
+          :new     -> get    "#{path}/new",           ctrl, :new, opts
           :edit    -> get    "#{path}/:#{parm}/edit", ctrl, :edit, opts
-          :create  -> post   "#{path}",                ctrl, :create, opts
+          :create  -> post   "#{path}",               ctrl, :create, opts
           :destroy -> delete "#{path}/:#{parm}",      ctrl, :destroy, opts
           :update  ->
             put   "#{path}/:#{parm}", ctrl, :update, opts

@@ -9,13 +9,11 @@ defmodule Mix.Tasks.Phoenix.RoutesTest do
 
     defmodule Elixir.Phoenix.RouterTest do
       use Phoenix.Router
-
       get "/", Phoenix.Controllers.Pages, :index, as: :page
     end
 
     defmodule Elixir.TestApp.Router do
       use Phoenix.Router
-
       get "/", Phoenix.Controllers.Pages, :index, as: :page
     end
 
