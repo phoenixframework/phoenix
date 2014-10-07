@@ -2,6 +2,7 @@
 > Elixir Web Framework targeting full-featured, fault tolerant applications with realtime functionality
 
 [![Build Status](https://api.travis-ci.org/phoenixframework/phoenix.svg)](https://travis-ci.org/phoenixframework/phoenix)
+[![Inline docs](http://inch-ci.org/github/phoenixframework/phoenix.svg)](http://inch-ci.org/github/phoenixframework/phoenix)
 
 ## Getting started
 
@@ -822,7 +823,7 @@ $ coffee -o priv/static/js -cw assets/cs
   [1]: https://github.com/phoenixframework/phoenix/issues
   [2]: http://groups.google.com/group/phoenix-talk
   [3]: http://groups.google.com/group/phoenix-core
-  
+
 
 ## Feature Roadmap
 - Robust Routing DSL

@@ -29,7 +29,8 @@ defmodule Phoenix.Mixfile do
      {:plug, "~> 0.8.1"},
      {:poison, "~> 1.1"},
      {:earmark, "~> 0.1", only: :docs},
-     {:ex_doc, "~> 0.5", only: :docs},
+     {:ex_doc, "~> 0.6", only: :docs},
+     {:inch_ex, "~> 0.2", only: :docs},
      {:websocket_client, github: "jeremyong/websocket_client", only: :test}]
   end
 end
