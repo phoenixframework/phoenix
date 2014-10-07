@@ -61,11 +61,16 @@ defmodule Phoenix.CodeReloader do
     Mix.Task.run "compile.elixir", ["--ignore-module-conflict", "--elixirc-paths", "web"]
   end
 
-  defp touch_modules_for_recompile do
+  @doc """
+  File.touch! any file in that responds to phoenix_recompile? and returns true
+
+  Returns the list of touched files
+  """
+  def touch_modules_for_recompile do
     Mix.Phoenix.modules
     |> modules_for_recompilation
     |> modules_to_file_paths
-    |> Enum.each(&File.touch!(&1))
+    |> Enum.map(&File.touch!(&1))
   end
 
   defp modules_for_recompilation(modules) do

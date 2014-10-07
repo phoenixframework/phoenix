@@ -20,6 +20,7 @@
   * [Router] `session_secret` configuration is deprecated in favor of `secret_key_base`
   * [Router] Plugs can now only be defined inside pipelines. All routers now need to explicitly declare which pipeline they want to use
   * [Router] Router configuration was revamped, static configuration has been moved into `:static`, session configuration into `:session` and parsers configuration into `:parsers`
+  * [CodeReloaer] Code reloading now requires the `:phoenix` compiler to be added to the list of compilers in your `mix.exs` project config, ie: `compilers: [:phoenix] ++ Mix.compilers`. Additionally, the `Phoenix.CodeReloader.reload!` invocation should be removed from your `test_helper.exs` for applications generated on `0.4.x`.
 
 
 ## v0.4.1 (2014-09-08)
