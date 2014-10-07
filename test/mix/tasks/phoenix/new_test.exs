@@ -10,6 +10,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
   @app_name  "photo_blog"
   @tmp_path  tmp_path()
   @project_path Path.join(@tmp_path, @app_name)
+  @epoch {{1970, 1, 1}, {0, 0, 0}}
 
   setup_all do
     # Clean up and create a new project
@@ -44,24 +45,29 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
   test "compiles and recompiles project" do
     Logger.disable(self())
+    Application.put_env(:phoenix, :code_reloader, true)
 
     in_project :photo_blog, @project_path, fn _ ->
       Mix.Task.run "compile", ["--no-deps-check"]
       assert_received {:mix_shell, :info, ["Compiled lib/photo_blog.ex"]}
       assert_received {:mix_shell, :info, ["Compiled web/router.ex"]}
+      Mix.shell.flush
+      Mix.Task.clear
 
-      # Changing existing template triggers recompilation (through mix)
-      File.write!("web/templates/layout/application.html.eex", "oops")
+      # Adding a new template touches file (through mix)
+      File.touch! "web/views/layout_view.ex", @epoch
+      File.write! "web/templates/layout/another.html.eex", "oops"
       Mix.Task.run "compile", ["--no-deps-check"]
-      refute_received {:mix_shell, :info, ["Compiled lib/photo_blog.ex"]}
-      assert_received {:mix_shell, :info, ["Compiled web/views/layout_view.ex"]}
+      assert File.stat!("web/views/layout_view.ex").mtime > @epoch
 
       # Adding a new template triggers recompilation (through request)
-      File.write!("web/templates/page/another.html.eex", "oops")
+      File.touch! "web/views/page_view.ex", @epoch
+      File.write! "web/templates/page/another.html.eex", "oops"
       PhotoBlog.Router.call(conn(:get, "/"), [])
-      refute_received {:mix_shell, :info, ["Compiled lib/photo_blog.ex"]}
-      assert_received {:mix_shell, :info, ["Compiled web/views/page_view.ex"]}
+      assert File.stat!("web/views/page_view.ex").mtime > @epoch
     end
+  after
+    Application.put_env(:phoenix, :code_reloader, false)
   end
 
   test "missing name and/or path arguments" do

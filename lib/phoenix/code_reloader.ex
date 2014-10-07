@@ -14,7 +14,7 @@ defmodule Phoenix.CodeReloader do
   """
 
   @doc """
-  Starts the code reloader server.
+  Starts the code reloader server
 
   The code reloader server is automatically started by Phoenix.
   """
@@ -30,7 +30,7 @@ defmodule Phoenix.CodeReloader do
   end
 
   @doc """
-  Touches sources that should be recompiled.
+  Touches sources that should be recompiled
 
   This works by checking each compiled Phoenix module if
   `phoenix_recompiled?/0` returns true and if so it touches
@@ -65,10 +65,6 @@ defmodule Phoenix.CodeReloader do
     end
   end
 
-  @doc """
-  Run `mix compile` in process against the `web/` directory, ensuring views
-  are recompiled where necessary.
-  """
   defp mix_compile({:error, _reason}) do
     Logger.error "If you want to use the code reload plug in production or " <>
                  "inside an escript, add :mix to your list of dependencies or " <>
