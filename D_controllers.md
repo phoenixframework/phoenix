@@ -341,7 +341,24 @@ We would then need to provide an `index.xml.eex` template which created valid xm
 
 For a list of valid content mime-types, please see the documentation from the plug middleware framework: https://github.com/elixir-lang/plug/blob/master/lib/plug/mime.types
 
+### Setting HTTP Status
 
+We can also set the HTTP status code of a response similarly to how we set the content type. The `Plug.Conn` module, imported into all controllers, has a `put_status/2` function to do this. (In release 0.4.1 and before, this was `assign_status/2`)
+
+`put_status/2` takes `conn` and an integer for the status code we want to set.
+
+Let's try that in our `PageController` `index` action.
+
+```elixir
+def index(conn, _params) do
+  conn
+  |> put_status(200)
+  |> render "index"
+end
+```
+The status code we provide must be valid - Cowboy, the web server Phoenix runs on, will throw an error on invalid codes - but the code will not change the behavior of the response. If, for example, we set the status to 404 or 500, we do not get an error page. Similarly, no 300 level code will actually redirect. (It wouldn't know where to redirect to, even if the code did affect behavior.)
+
+If we use our browser's web inspection network tool, however, we will see the status code being set as we reload the page.
 
 ### Redirection
 
@@ -582,8 +599,3 @@ Then we need a new `/web/templates/oops` directory with `not_found.html.eex` and
 </div>
 ```
 Finally, since we've made a configuration changes, we need to restart our application for this to take effect.
-
-##TODO
-
-### Assign Conn Properties
-- set HTTP status code
