@@ -2,6 +2,8 @@ Code.require_file "../../mix_helper.exs", __DIR__
 
 defmodule Mix.Tasks.Phoenix.NewTest do
   use ExUnit.Case
+  use Plug.Test
+
   import MixHelper
   import ExUnit.CaptureIO
 
@@ -41,13 +43,22 @@ defmodule Mix.Tasks.Phoenix.NewTest do
   end
 
   test "compiles and recompiles project" do
+    Logger.disable(self())
+
     in_project :photo_blog, @project_path, fn _ ->
       Mix.Task.run "compile", ["--no-deps-check"]
       assert_received {:mix_shell, :info, ["Compiled lib/photo_blog.ex"]}
       assert_received {:mix_shell, :info, ["Compiled web/router.ex"]}
 
-      File.write!("web/templates/page/index.html.eex", "oops")
+      # Changing existing template triggers recompilation (through mix)
+      File.write!("web/templates/layout/application.html.eex", "oops")
       Mix.Task.run "compile", ["--no-deps-check"]
+      refute_received {:mix_shell, :info, ["Compiled lib/photo_blog.ex"]}
+      assert_received {:mix_shell, :info, ["Compiled web/views/layout_view.ex"]}
+
+      # Adding a new template triggers recompilation (through request)
+      File.write!("web/templates/page/another.html.eex", "oops")
+      PhotoBlog.Router.call(conn(:get, "/"), [])
       refute_received {:mix_shell, :info, ["Compiled lib/photo_blog.ex"]}
       assert_received {:mix_shell, :info, ["Compiled web/views/page_view.ex"]}
     end

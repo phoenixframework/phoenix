@@ -3,13 +3,24 @@ defmodule Phoenix.CodeReloader do
   require Logger
 
   @moduledoc """
-  Server to handle automatic Code reloading in development.
+  Server to handle automatic code reloading
 
-  `mix compile` is run in process for the `web/` directory. Applicaton
-  Views are automatically recompiled with their file list changes. To
-  prevent module redefinition errors, all code reloads are funneled through
-  a sequential call operation.
+  For each request, Phoenix checks if any of the modules previously
+  compiled requires recompilation via `phoenix_recompile?/0` and then
+  calls `mix compile` for sources exclusive to the `web` directory.
+
+  To race conditions, all code reloads are funneled through a sequential
+  call operation.
   """
+
+  @doc """
+  Starts the code reloader server.
+
+  The code reloader server is automatically started by Phoenix.
+  """
+  def start_link do
+    GenServer.start_link __MODULE__, [], name: __MODULE__
+  end
 
   @doc """
   Reloads codes witin `web/` directory
@@ -18,17 +29,27 @@ defmodule Phoenix.CodeReloader do
     GenServer.call __MODULE__, :reload
   end
 
-  @doc false
-  def start_link do
-    GenServer.start_link __MODULE__, [], name: __MODULE__
+  @doc """
+  Touches sources that should be recompiled.
+
+  This works by checking each compiled Phoenix module if
+  `phoenix_recompiled?/0` returns true and if so it touches
+  it sources file.
+  """
+  def touch do
+    Mix.Phoenix.modules
+    |> modules_for_recompilation
+    |> modules_to_file_paths
+    |> Stream.each(&File.touch!/1)
+    |> Enum.to_list()
   end
 
-  @doc false
+  ## Callbacks
+
   def init(_opts) do
     {:ok, :nostate}
   end
 
-  @doc false
   def handle_call(:reload, from, state) do
     froms = all_waiting([from])
     reply = mix_compile(Code.ensure_loaded(Mix.Task))
@@ -48,28 +69,16 @@ defmodule Phoenix.CodeReloader do
   Run `mix compile` in process against the `web/` directory, ensuring views
   are recompiled where necessary.
   """
-  def mix_compile({:error, _reason}) do
+  defp mix_compile({:error, _reason}) do
     Logger.error "If you want to use the code reload plug in production or " <>
                  "inside an escript, add :mix to your list of dependencies or " <>
                  "disable code reloading"
   end
 
-  def mix_compile({:module, Mix.Task}) do
-    touch_modules_for_recompile
+  defp mix_compile({:module, Mix.Task}) do
+    touch()
     Mix.Task.reenable "compile.elixir"
     Mix.Task.run "compile.elixir", ["--elixirc-paths", "web"]
-  end
-
-  @doc """
-  File.touch! any file in that responds to phoenix_recompile? and returns true
-
-  Returns the list of touched files
-  """
-  def touch_modules_for_recompile do
-    Mix.Phoenix.modules
-    |> modules_for_recompilation
-    |> modules_to_file_paths
-    |> Enum.map(&File.touch!(&1))
   end
 
   defp modules_for_recompilation(modules) do
