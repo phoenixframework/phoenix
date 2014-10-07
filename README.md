@@ -812,6 +812,17 @@ $ coffee -o priv/static/js -cw assets/cs
 3. Change directory to `../docs`.
 4. Commit and push docs.
 
+## Important links
+
+* \#elixir-lang on freenode IRC
+* [Issue tracker][1]
+* [phoenix-talk Mailing list (questions)][2]
+* [phoenix-core Mailing list (development)][3]
+
+  [1]: https://github.com/phoenixframework/phoenix/issues
+  [2]: http://groups.google.com/group/phoenix-talk
+  [3]: http://groups.google.com/group/phoenix-core
+  
 
 ## Feature Roadmap
 - Robust Routing DSL
