@@ -1,4 +1,6 @@
 defmodule Phoenix.Channel.Transport do
+  require Logger
+
   alias Phoenix.Socket
   alias Phoenix.Channel
   alias Phoenix.Socket.Message
@@ -64,12 +66,27 @@ defmodule Phoenix.Channel.Transport do
 
     sockets
     |> HashDict.get({msg.channel, msg.topic}, socket)
-    |> dispatch(msg.channel, msg.event, msg.message)
+    |> dispatch_with_redirect_logger(msg.channel, msg.event, msg.message)
     |> case do
       {:ok, socket} ->
         {:ok, HashDict.put(sockets, {msg.channel, msg.topic}, socket)}
       {:error, _socket, reason} ->
         {:error, sockets, reason}
+    end
+  end
+
+  defp dispatch_with_redirect_logger(socket, channel, event, message) do
+    try do
+      dispatch(socket, channel, event, message)
+    catch
+      kind, %InvalidReturn{message: message} ->
+        raise InvalidReturn, message: message
+      kind, error ->
+        error = Exception.normalize(kind, error)
+        Logger.error fn ->
+          Exception.format_banner(kind, error) <> "\n" <> Exception.format_stacktrace(System.stacktrace)
+        end
+        handle_result({:error, socket, :error}, event)
     end
   end
 
