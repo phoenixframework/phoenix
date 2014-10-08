@@ -343,22 +343,45 @@ For a list of valid content mime-types, please see the documentation from the pl
 
 ### Setting HTTP Status
 
-We can also set the HTTP status code of a response similarly to how we set the content type. The `Plug.Conn` module, imported into all controllers, has a `put_status/2` function to do this. (In release 0.4.1 and before, this was `assign_status/2`)
+We can also set the HTTP status code of a response similarly to the way we set the content type. The `Plug.Conn` module, imported into all controllers, has a `put_status/2` function to do this. (In release 0.4.1 and before, this was `assign_status/2`)
 
-`put_status/2` takes `conn` and an integer for the status code we want to set.
+`put_status/2` takes `conn` and either an integer or a "friendly name" used as an atom for the status code we want to set.  Here is the list of supported <a href=" https://github.com/elixir-lang/plug/blob/master/lib/plug/conn/status.ex#L7-L63">friendly names</a>.
 
-Let's try that in our `PageController` `index` action.
+Let's change the status in our `PageController` `index` action.
 
 ```elixir
 def index(conn, _params) do
   conn
-  |> put_status(200)
+  |> put_status(202)
   |> render "index"
 end
 ```
-The status code we provide must be valid - Cowboy, the web server Phoenix runs on, will throw an error on invalid codes - but the code will not change the behavior of the response. If, for example, we set the status to 404 or 500, we do not get an error page. Similarly, no 300 level code will actually redirect. (It wouldn't know where to redirect to, even if the code did affect behavior.)
+The status code we provide must be valid - Cowboy, the web server Phoenix runs on, will throw an error on invalid codes. If we look at our development logs, or use our browser's web inspection network tool, we will see the status code being set as we reload the page.
 
-If we use our browser's web inspection network tool, however, we will see the status code being set as we reload the page.
+If the action sends a response - either renders or redirects - changing the code will not change the behavior of the response. If, for example, we set the status to 404 or 500 and then `render "index"`, we do not get an error page. Similarly, no 300 level code will actually redirect. (It wouldn't know where to redirect to, even if the code did affect behavior.)
+
+This implementation of the `HelloPhoenix.PageController` `index` action, for example, will _not_ render the default `not_found` behavior.
+
+```elixir
+def index(conn, _params) do
+  conn
+  |> put_status(:not_found)
+  |> render "index"
+end
+```
+
+On the other hand, if we set the status code to a 404 or 500, and the action neither renders nor redirects, then we _will_ see the appropriate error page. Status codes in the 300 range still won't know where to redirect to.
+
+This implementation of the `index` action _will_ render the default `not_found` behavior.
+
+```elixir
+def index(conn, _params) do
+  conn
+  |> put_status(:not_found)
+end
+```
+
+Very Important! (This may seem self-evident, but it bit me.) If we remove any rendering or redirection from an action, no new response will be sent to the browser. No matter how many times we reload a page, we will see exactly the same pixels as before. This means that if we get a stack trace, then remove the `render/2` call to debug it, any fixes we try will show exactly the same stack trace no matter how many times we reload.
 
 ### Redirection
 
@@ -545,7 +568,7 @@ config :phoenix, HelloPhoenix.Router,
   secret_key_base: "such_extra_seekrit_stuff==",
   debug_errors: true
 ```
-We need mimic the last three lines of the general config file, like this.
+We need to mimic the last three lines of the general config file, like this.
 
 ```elixir
 debug_errors: false,
