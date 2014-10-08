@@ -1,5 +1,6 @@
 defmodule Phoenix.Channel.ChannelTest do
   use ExUnit.Case
+  use ConnHelper
   alias Phoenix.PubSub
   alias Phoenix.Channel
   alias Phoenix.Socket
@@ -314,5 +315,30 @@ defmodule Phoenix.Channel.ChannelTest do
     socket = Chan10.event(socket, "put", %{val: 123})
     _socket = Chan10.event(socket, "get", %{"key" => :val})
     assert_received 123
+  end
+
+  test "channel logs non-ranch formatted error" do
+    defmodule Chan11 do
+      use Phoenix.Channel
+      def join(_socket, _topic, _msg), do: raise "Foo"
+    end
+    defmodule Router11 do
+      use Phoenix.Router
+      use Phoenix.Router.Socket, mount: "/ws"
+      channel "chan11", Chan11
+    end
+
+    socket = %Socket{pid: self, router: Router11, channel: "chan11"}
+    message  = """
+    {"channel": "chan11","topic":"topic","event":"join","message":"{}"}
+    """
+
+    {_, [error_banner|stacktrace]} = capture_log fn ->
+      Handler.websocket_handle({:text, message}, nil, socket)
+    end
+    entry = List.first(stacktrace)
+
+    assert error_banner =~ "(RuntimeError) Foo"
+    assert entry =~ "test/phoenix/channel_test.exs:315: Phoenix.Channel.ChannelTest.Chan11.join/3"
   end
 end
