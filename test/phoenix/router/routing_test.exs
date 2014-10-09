@@ -37,12 +37,6 @@ defmodule Phoenix.Router.RoutingTest do
     connect "/connect", UserController, :connect
 
     get "/users/:user_id/files/:id", UserController, :image
-  end
-
-  defmodule CatchAllRouter do
-    use Phoenix.Router
-    get "/users/top", UserController, :top, as: :top
-    get "/users/:id", UserController, :show, as: :user
     get "/*path", UserController, :not_found
   end
 
@@ -116,7 +110,7 @@ defmodule Phoenix.Router.RoutingTest do
   end
 
   test "catch-all splat route matches" do
-    conn = call(CatchAllRouter, :get, "foo/bar/baz")
+    conn = call(Router, :get, "foo/bar/baz")
     assert conn.status == 404
     assert conn.params == %{"path" => ~w"foo bar baz"}
     assert conn.resp_body == "not found"
