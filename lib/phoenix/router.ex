@@ -275,7 +275,6 @@ defmodule Phoenix.Router do
   alias Phoenix.Router.Adapter
   alias Phoenix.Router.Resource
   alias Phoenix.Router.Scope
-  alias Phoenix.Adapters.Cowboy
 
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
 
@@ -303,8 +302,11 @@ defmodule Phoenix.Router do
       @phoenix_pipeline nil
       Phoenix.Router.Scope.init(__MODULE__)
 
-      # TODO: This should not be adapter specific.
-      use Phoenix.Adapters.Cowboy
+      # TODO: Today we provide @dispatch_options which
+      # is specific to Cowboy. We need to figure out a way
+      # to specify, decoupled from the adapter, which
+      # transports we support (websockets, longpooling, etc).
+      Module.register_attribute __MODULE__, :dispatch_options, accumulate: true
     end
   end
 
@@ -393,18 +395,23 @@ defmodule Phoenix.Router do
         end)
       end
 
-      def start do
-        options = Adapter.merge([], @dispatch_options, __MODULE__, Cowboy)
-        Adapter.start(@otp_app, __MODULE__, options)
+      def start(options \\ []) do
+        Adapter.start(@otp_app, __MODULE__, @dispatch_options, options)
       end
 
-      def stop do
-        options = Adapter.merge([], @dispatch_options, __MODULE__, Cowboy)
-        Adapter.stop(@otp_app, __MODULE__, options)
+      def stop() do
+        Adapter.stop(@otp_app, __MODULE__)
       end
 
       def __routes__ do
         unquote(Macro.escape(routes))
+      end
+
+      def config(key, default \\ nil) do
+        case :ets.lookup(__MODULE__, key) do
+          [{^key, val}] -> val
+          [] -> default
+        end
       end
 
       # TODO: How is this customizable?

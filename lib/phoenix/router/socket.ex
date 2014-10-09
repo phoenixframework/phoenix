@@ -5,7 +5,7 @@ defmodule Phoenix.Router.Socket do
 
     quote do
       import unquote(__MODULE__)
-      dispatch_option unquote(mount), Phoenix.Socket.Handler, router: __MODULE__
+      @dispatch_options {unquote(mount), Phoenix.Socket.Handler, router: __MODULE__}
     end
   end
 

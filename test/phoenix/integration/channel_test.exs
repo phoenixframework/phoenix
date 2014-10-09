@@ -10,7 +10,7 @@ defmodule Phoenix.Integration.ChannelTest do
   alias Phoenix.Socket.Message
 
   @port 4808
-  Application.put_env(:phoenix, Router, port: @port)
+  Application.put_env(:phoenix, Router, http: [port: @port])
 
   defmodule Router do
     use Phoenix.Router

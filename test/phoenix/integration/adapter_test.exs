@@ -8,7 +8,7 @@ defmodule Phoenix.Integration.AdapterTest do
   alias Phoenix.Integration.HTTPClient
 
   @port 4807
-  Application.put_env(:phoenix, Router, port: @port)
+  Application.put_env(:phoenix, Router, http: [port: "4807"])
 
   defmodule Router do
     use Phoenix.Router

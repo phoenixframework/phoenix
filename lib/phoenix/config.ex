@@ -117,6 +117,8 @@ defmodule Phoenix.Config do
       session: false,
 
       # Runtime config
+      http: [port: 4000],
+      https: false,
       port: 4000,
       ssl: false,
       host: "localhost",
