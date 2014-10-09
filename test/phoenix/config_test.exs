@@ -53,4 +53,16 @@ defmodule Phoenix.ConfigTest do
     reload([], [meta.test])
     assert :ets.info(meta.test, :name) == :undefined
   end
+
+  test "supports reloadable caches", meta do
+    {:ok, pid} = runtime(:phoenix_config, meta.test)
+    Process.link(pid)
+
+    assert cache(meta.test, :__hello__, fn _ -> 1 end) == 1
+    assert cache(meta.test, :__hello__, fn _ -> 2 end) == 1
+    assert cache(meta.test, :__hello__, fn _ -> 3 end) == 1
+
+    reload([{meta.test, []}], [])
+    assert cache(meta.test, :__hello__, fn _ -> 4 end) == 4
+  end
 end

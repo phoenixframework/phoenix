@@ -10,7 +10,7 @@ alias Phoenix.Router.PipelineTest.SampleController
 ## Empty router
 
 Application.put_env(:phoenix, Phoenix.Router.PipelineTest.EmptyRouter,
-  static: false, parsers: false, http: false)
+  static: false, parsers: false, http: false, https: false)
 
 defmodule Phoenix.Router.PipelineTest.EmptyRouter do
   use Phoenix.Router
@@ -27,7 +27,7 @@ EmptyRouter.start()
 Application.put_env(:phoenix, Phoenix.Router.PipelineTest.Router,
   session: [store: :cookie, key: "_app"],
   secret_key_base: String.duplicate("abcdefgh", 8),
-  http: false)
+  http: false, https: false)
 
 # Define it at the top to guarantee there is no scope
 # leakage from the test case.

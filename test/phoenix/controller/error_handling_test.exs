@@ -49,7 +49,7 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
   end
 
   # For simplicity, we will rely on Phoenix.Config.
-  Application.put_env(:phoenix, Router, http: false)
+  Application.put_env(:phoenix, Router, http: false, https: false)
   Router.start()
 
   @defaults [catch_errors: true,
@@ -57,7 +57,7 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
              error_controller: Phoenix.Controller.ErrorController]
 
   defp config!(opts) do
-    Phoenix.Config.config_change(Router, Keyword.merge(@defaults, opts))
+    Phoenix.Config.store(Router, Keyword.merge(@defaults, opts))
   end
 
   setup do

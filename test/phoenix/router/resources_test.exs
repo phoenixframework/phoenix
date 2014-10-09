@@ -99,7 +99,7 @@ defmodule Phoenix.Router.ResourcesTest do
     end
   end
 
-  Application.put_env(:phoenix, Router, http: false)
+  Application.put_env(:phoenix, Router, http: false, https: false)
   Router.start()
 
   test "toplevel route matches new action" do

@@ -9,12 +9,10 @@ defmodule Phoenix.Controller.FlashTest do
   end
 
   setup_all do
-    Mix.Config.persist(phoenix: [
-      {Router,
-        session: [store: :cookie, key: "_app"],
-        secret_key_base: String.duplicate("abcdefgh", 8)
-      }
-    ])
+    Application.put_env :phoenix, Router,
+      http: false, https: false,
+      session: [store: :cookie, key: "_app"],
+      secret_key_base: String.duplicate("abcdefgh", 8)
 
     defmodule FlashController do
       use Phoenix.Controller
@@ -38,6 +36,7 @@ defmodule Phoenix.Controller.FlashTest do
       get "/set_flash/:notice/:status", FlashController, :set_flash
     end
 
+    Router.start()
     :ok
   end
 

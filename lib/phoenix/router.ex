@@ -266,7 +266,16 @@ defmodule Phoenix.Router do
 
           [port: 4000]
 
-    * `:https` - the configuratio for the https server. Defaults to false.
+    * `:https` - the configuration for the https server. Defaults to:
+
+          [port: 4040]
+
+    * `:secret_key_base` - a secret key used as base to generate secrets
+      to encode cookies, session and friends. Defaults to nil.
+
+    * `:url` - configuration for generating URLs throughout the app. Defaults to:
+
+          [host: "localhost"]
 
   ## Web server
 
@@ -274,7 +283,6 @@ defmodule Phoenix.Router do
 
   """
 
-  alias Phoenix.Config
   alias Phoenix.Plugs
   alias Phoenix.Router.Adapter
   alias Phoenix.Router.Resource
@@ -397,16 +405,10 @@ defmodule Phoenix.Router do
   defp server() do
     quote do
       @doc """
-      Starts the router for serving requests
-
-      ## Options
-
-        * :http - when false, does not enable http mode
-        * :https - when false, does not enable https mode
-
+      Starts the current router for serving requests
       """
-      def start(options \\ []) do
-        Adapter.start(@otp_app, __MODULE__, options)
+      def start() do
+        Adapter.start(@otp_app, __MODULE__)
       end
 
       @doc """
@@ -456,7 +458,11 @@ defmodule Phoenix.Router do
       # TODO: How is this customizable?
       # We can move it to the controller.
       defp put_secret_key_base(conn, _) do
-        put_in conn.secret_key_base, Config.router(__MODULE__, [:secret_key_base])
+        try do
+          put_in conn.secret_key_base, config(:secret_key_base)
+        rescue
+          _ -> conn
+        end
       end
     end
   end

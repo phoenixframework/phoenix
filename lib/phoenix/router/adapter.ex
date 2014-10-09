@@ -13,24 +13,21 @@ defmodule Phoenix.Router.Adapter do
   @doc """
   Starts the router.
   """
-  def start(otp_app, module, opts) do
+  def start(otp_app, module) do
     Phoenix.Config.runtime(otp_app, module)
 
     # TODO: We need to test this logic when we support custom adapters.
 
-    if Keyword.get(opts, :http, true) &&
-       (config = module.config(:http)) do
+    if config = module.config(:http) do
       start(:http, otp_app, module, config)
     end
 
-    if Keyword.get(opts, :https, true) &&
-       (config = module.config(:https)) do
-      config =
-        (module.config(:http) || [])
-        |> Keyword.delete(:port)
-        |> Keyword.merge(module.config(:https))
+    if config = module.config(:https) do
+      config = Keyword.merge(module.config(:http) || [], module.config(:https))
       start(:https, otp_app, module, config)
     end
+
+    :ok
   end
 
   defp start(scheme, otp_app, module, config) do
@@ -38,14 +35,13 @@ defmodule Phoenix.Router.Adapter do
     report apply(Plug.Adapters.Cowboy, scheme, [module, [], opts]), scheme, module, opts
   end
 
-  defp dispatch(otp_app, module, config) do
+  defp dispatch(_otp_app, module, config) do
     dispatch = module.__transport__ ++
                [{:_, Plug.Adapters.Cowboy.Handler, {module, []}}]
 
     config
     |> Keyword.put(:dispatch, [{:_, dispatch}])
     |> Keyword.put(:port, to_integer(config[:port]))
-    |> Keyword.put(:otp_app, otp_app)
   end
 
   defp to_integer(binary) when is_binary(binary), do: String.to_integer(binary)
@@ -81,6 +77,7 @@ defmodule Phoenix.Router.Adapter do
 
     Phoenix.Config.stop(module)
     IO.puts "#{module} has been stopped"
+    :ok
   end
 
   # TODO: Move the dispatch logic and error handling elsewhere.

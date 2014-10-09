@@ -12,8 +12,8 @@ use Mix.Config
 # disk for the key and cert.
 
 config :phoenix, <%= application_module %>.Router,
+  url: [host: "example.com"],
   http: [port: System.get_env("PORT")],
-  host: "example.com",
   secret_key_base: "<%= secret_key_base %>"
 
 config :logger, :console,
