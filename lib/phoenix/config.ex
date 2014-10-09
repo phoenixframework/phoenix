@@ -28,22 +28,41 @@ defmodule Phoenix.Config do
   @doc """
   Starts a supervised Phoenix configuration handler.
   """
-  def supervise(router) do
-    Supervisor.start_child(Phoenix.Config.Supervisor, [router])
+  def supervise(otp_app, router) do
+    Supervisor.start_child(Phoenix.Config.Supervisor, [otp_app, router])
   end
 
   @doc """
   Starts a linked Phoenix configuration handler.
   """
-  def start_link(router) do
-    GenServer.start_link(__MODULE__, router)
+  def start_link(otp_app, router) do
+    GenServer.start_link(__MODULE__, {otp_app, router})
+  end
+
+  @doc """
+  Stops Phoenix configuration handler for router.
+  """
+  def stop(router) do
+    [__config__: pid] = :ets.lookup(router, :__config__)
+    GenServer.call(pid, :stop)
   end
 
   @doc """
   Loads the router configuration.
   """
   def load(router) do
-    with_defaults(Application.get_env(:phoenix, router, []))
+    config  = Application.get_env(:phoenix, router, [])
+
+    otp_app = cond do
+      config[:otp_app] ->
+        config[:otp_app]
+      Code.ensure_loaded?(Mix.Project) && Mix.Project.config[:app] ->
+        Mix.Project.config[:app]
+      true ->
+        raise "please set :otp_app config for #{inspect router}"
+    end
+
+    with_defaults(config, otp_app)
   end
 
   @doc """
@@ -62,29 +81,35 @@ defmodule Phoenix.Config do
 
   # Callbacks
 
-  def init(module) do
+  def init({app, module}) do
     :ets.new(module, [:named_table, :protected, read_concurrency: true])
+    :ets.insert(module, [__config__: self()])
     update(module, load(module))
-    {:ok, module}
+    {:ok, {app, module}}
   end
 
-  def handle_call({:config_changed, changed, removed}, _from, module) do
+  def handle_call({:config_changed, changed, removed}, _from, {app, module}) do
     cond do
       changed = changed[module] ->
-        update(module, with_defaults(changed))
-        {:reply, :ok, module}
+        update(module, with_defaults(changed, app))
+        {:reply, :ok, {app, module}}
       module in removed ->
-        :ets.delete(module)
-        {:stop, :normal, :ok, module}
+        stop(app, module)
       true ->
-        {:reply, :ok, module}
+        {:reply, :ok, {app, module}}
     end
+  end
+
+  def handle_call(:stop, _from, {app, module}) do
+    stop(app, module)
   end
 
   # Helpers
 
-  defp with_defaults(config) do
+  defp with_defaults(config, otp_app) do
     defaults = [
+      otp_app: otp_app,
+
       # Compile-time config
       parsers: [parsers: [:urlencoded, :multipart, :json],
                  accept: ["*/*"], json_decoder: Poison],
@@ -113,14 +138,19 @@ defmodule Phoenix.Config do
   end
 
   defp update(module, config) do
-    old_keys = :ets.tab2list(module) |> keys()
-    new_keys = config |> keys()
+    old_keys = keys(:ets.tab2list(module))
+    new_keys = [:__config__|keys(config)]
     Enum.each old_keys -- new_keys, &:ets.delete(module, &1)
     :ets.insert(module, config)
   end
 
   defp keys(data) do
     Enum.map(data, &elem(&1, 0))
+  end
+
+  defp stop(app, module) do
+    :ets.delete(module)
+    {:stop, :normal, :ok, {app, module}}
   end
 
   @moduledoc """

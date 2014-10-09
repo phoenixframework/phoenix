@@ -13,7 +13,8 @@ defmodule Phoenix.Router.Adapter do
   @doc """
   Starts the Router module with provided List of options
   """
-  def start(module, opts) do
+  def start(otp_app, module, opts) do
+    Phoenix.Config.supervise(otp_app, module)
     protocol = if opts[:ssl], do: :https, else: :http
     case apply(Plug.Adapters.Cowboy, protocol, [module, [], opts]) do
       {:ok, pid} ->
@@ -33,7 +34,8 @@ defmodule Phoenix.Router.Adapter do
   @doc """
   Stops the Router module with provided List of options
   """
-  def stop(module, opts) do
+  def stop(_otp_app, module, opts) do
+    Phoenix.Config.stop(module)
     protocol = if opts[:ssl], do: HTTPS, else: HTTP
     apply(Plug.Adapters.Cowboy, :shutdown, [Module.concat(module, protocol)])
     IO.puts "#{module} has been stopped"

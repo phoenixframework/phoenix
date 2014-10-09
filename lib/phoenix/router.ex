@@ -295,9 +295,9 @@ defmodule Phoenix.Router do
       import Phoenix.Router
       import Plug.Conn
 
-      @config Phoenix.Config.load(__MODULE__)
-      @otp_app @config[:otp_app] || Mix.Project.config[:app] ||
-               raise "please set :otp_app config for #{inspect __MODULE__}"
+      config = Phoenix.Config.load(__MODULE__)
+      @config config
+      @otp_app config[:otp_app]
 
       # Set up initial scope
       @phoenix_pipeline nil
@@ -395,12 +395,12 @@ defmodule Phoenix.Router do
 
       def start do
         options = Adapter.merge([], @dispatch_options, __MODULE__, Cowboy)
-        Adapter.start(__MODULE__, options)
+        Adapter.start(@otp_app, __MODULE__, options)
       end
 
       def stop do
         options = Adapter.merge([], @dispatch_options, __MODULE__, Cowboy)
-        Adapter.stop(__MODULE__, options)
+        Adapter.stop(@otp_app, __MODULE__, options)
       end
 
       def __routes__ do
