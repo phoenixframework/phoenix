@@ -299,7 +299,7 @@ defmodule Phoenix.Router do
       import Phoenix.Router
       import Plug.Conn
 
-      config = Phoenix.Config.load(__MODULE__)
+      config = Phoenix.Config.compile_time(__MODULE__)
       @config config
       @otp_app config[:otp_app]
 

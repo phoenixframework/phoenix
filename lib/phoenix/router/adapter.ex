@@ -9,13 +9,12 @@ defmodule Phoenix.Router.Adapter do
   import Phoenix.Controller.Connection, only: [assign_error: 3, router_module: 1]
 
   @unsent [:unset, :set]
-  alias Phoenix.Config
 
   @doc """
   Starts the router.
   """
   def start(otp_app, module, opts) do
-    Phoenix.Config.supervise(otp_app, module)
+    Phoenix.Config.runtime(otp_app, module)
 
     # TODO: We need to test this logic when we support custom adapters.
 
@@ -94,7 +93,7 @@ defmodule Phoenix.Router.Adapter do
       conn.private.phoenix_route.(conn)
     catch
       kind, err ->
-        handle_err(conn, kind, err, Phoenix.Config.router(router, [:catch_errors]))
+        handle_err(conn, kind, err, router.config(:catch_errors))
     end
     |> after_dispatch
   end
@@ -122,10 +121,10 @@ defmodule Phoenix.Router.Adapter do
     conn   = put_in conn.halted, false
     router = router_module(conn)
 
-    if Config.router(router, [:debug_errors]) do
+    if router.config(:debug_errors) do
       Phoenix.Controller.ErrorController.call(conn, :not_found_debug)
     else
-      Config.router!(router, [:error_controller]).call(conn, :not_found)
+      router.config(:error_controller).call(conn, :not_found)
     end
   end
 
@@ -145,10 +144,10 @@ defmodule Phoenix.Router.Adapter do
     conn   = put_in conn.halted, false
     router = router_module(conn)
 
-    if Config.router(router, [:debug_errors]) do
+    if router.config(:debug_errors) do
       Phoenix.Controller.ErrorController.call(conn, :error_debug)
     else
-      Config.router!(router, [:error_controller]).call(conn, :error)
+      router.config(:error_controller).call(conn, :error)
     end
   end
   defp after_dispatch(conn), do: conn

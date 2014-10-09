@@ -96,11 +96,6 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.resp_body == "users trace"
   end
 
-  test "unmatched route returns 404" do
-    conn = call(Router, :get, "route_does_not_exist")
-    assert conn.status == 404
-  end
-
   test "splat arg with preceding named parameter to files/:user_name/*path" do
     conn = call(Router, :get, "files/elixir/Users/home/file.txt")
     assert conn.status == 200

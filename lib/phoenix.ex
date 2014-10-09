@@ -1,9 +1,16 @@
 defmodule Phoenix do
   use Application
 
-  # See http://elixir-lang.org/docs/stable/elixir/Application.html
-  # for more information on OTP Applications
+  # Application callbacks
+
+  @doc false
   def start(_type, _args) do
     Phoenix.Supervisor.start_link
+  end
+
+  @doc false
+  def config_change(changed, _new, removed) do
+    Phoenix.Config.config_change(changed, removed)
+    :ok
   end
 end

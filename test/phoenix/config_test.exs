@@ -9,7 +9,7 @@ defmodule Phoenix.ConfigTest do
   end
 
   test "loads router configuration", meta do
-    config = load(meta.test)
+    config = compile_time(meta.test)
     assert config[:otp_app] == :phoenix_config
     assert config[:parsers] == false
     assert config[:static] == [at: "/"]
@@ -17,7 +17,7 @@ defmodule Phoenix.ConfigTest do
   end
 
   test "loads otp_app from Mix environment", _meta do
-    config = load(:whatever_router)
+    config = compile_time(:whatever_router)
     assert config[:otp_app] == :phoenix
     assert config[:static] == [at: "/"]
   end
@@ -34,7 +34,7 @@ defmodule Phoenix.ConfigTest do
   end
 
   test "starts a supervised and reloadable router handler", meta do
-    {:ok, pid} = supervise(:phoenix_config, meta.test)
+    {:ok, pid} = runtime(:phoenix_config, meta.test)
     Process.link(pid)
 
     # Nothing changed

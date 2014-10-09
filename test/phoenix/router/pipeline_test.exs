@@ -10,7 +10,7 @@ alias Phoenix.Router.PipelineTest.SampleController
 ## Empty router
 
 Application.put_env(:phoenix, Phoenix.Router.PipelineTest.EmptyRouter,
-  [static: false, parsers: false])
+  static: false, parsers: false, http: false)
 
 defmodule Phoenix.Router.PipelineTest.EmptyRouter do
   use Phoenix.Router
@@ -20,12 +20,14 @@ defmodule Phoenix.Router.PipelineTest.EmptyRouter do
 end
 
 alias Phoenix.Router.PipelineTest.EmptyRouter
+EmptyRouter.start()
 
 ## Router
 
 Application.put_env(:phoenix, Phoenix.Router.PipelineTest.Router,
   session: [store: :cookie, key: "_app"],
-  secret_key_base: String.duplicate("abcdefgh", 8))
+  secret_key_base: String.duplicate("abcdefgh", 8),
+  http: false)
 
 # Define it at the top to guarantee there is no scope
 # leakage from the test case.
@@ -76,6 +78,7 @@ defmodule Phoenix.Router.PipelineTest.Router do
 end
 
 alias Phoenix.Router.PipelineTest.Router
+Router.start()
 
 defmodule Phoenix.Router.PipelineTest do
   use ExUnit.Case, async: true

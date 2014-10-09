@@ -1,16 +1,17 @@
 defmodule Phoenix.Config.Supervisor do
   @moduledoc false
-  @name __MODULE__
+  use Supervisor
 
   def start_link do
-    import Supervisor.Spec
+    Supervisor.start_link(__MODULE__, [], name: __MODULE__)
+  end
 
+  def init([]) do
     children = [
       worker(Phoenix.Config, [], type: :transient)
     ]
 
-    opts = [strategy: :simple_one_for_one, name: @name]
-    Supervisor.start_link(children, opts)
+    supervise children, strategy: :simple_one_for_one
   end
 end
 
@@ -26,11 +27,33 @@ defmodule Phoenix.Config do
   use GenServer
 
   @doc """
-  Starts a supervised Phoenix configuration handler.
+  Returns the compile router configuration for compilation time.
   """
-  def supervise(otp_app, router) do
+  def compile_time(router) do
+    config = Application.get_env(:phoenix, router, [])
+
+    otp_app = cond do
+      config[:otp_app] ->
+        config[:otp_app]
+      Code.ensure_loaded?(Mix.Project) && Mix.Project.config[:app] ->
+        Mix.Project.config[:app]
+      true ->
+        raise "please set :otp_app config for #{inspect router}"
+    end
+
+    with_defaults(config, otp_app)
+  end
+
+  @doc """
+  Starts a supervised Phoenix configuration handler for runtime.
+
+  Data is accessed by the router via ETS.
+  """
+  def runtime(otp_app, router) do
     Supervisor.start_child(Phoenix.Config.Supervisor, [otp_app, router])
   end
+
+  ## GenServer API
 
   @doc """
   Starts a linked Phoenix configuration handler.
@@ -48,32 +71,22 @@ defmodule Phoenix.Config do
   end
 
   @doc """
-  Loads the router configuration.
+  Changes the configuration of a given router.
   """
-  def load(router) do
-    config  = Application.get_env(:phoenix, router, [])
-
-    otp_app = cond do
-      config[:otp_app] ->
-        config[:otp_app]
-      Code.ensure_loaded?(Mix.Project) && Mix.Project.config[:app] ->
-        Mix.Project.config[:app]
-      true ->
-        raise "please set :otp_app config for #{inspect router}"
-    end
-
-    with_defaults(config, otp_app)
+  def config_change(router, opts) do
+    [__config__: pid] = :ets.lookup(router, :__config__)
+    GenServer.call(pid, {:config_change, [{router, opts}], []})
   end
 
   @doc """
-  Reloads all configuration children.
+  Reloads all children.
 
   It receives a keyword list with changed routers and another
   with removed ones. The changed config are updated while the
   removed ones stop, effectively removing the table.
   """
   def reload(changed, removed) do
-    request = {:config_changed, changed, removed}
+    request = {:config_change, changed, removed}
     Supervisor.which_children(Phoenix.Config.Supervisor)
     |> Enum.map(&Task.async(GenServer, :call, [elem(&1, 1), request]))
     |> Enum.each(&Task.await(&1))
@@ -84,11 +97,12 @@ defmodule Phoenix.Config do
   def init({app, module}) do
     :ets.new(module, [:named_table, :protected, read_concurrency: true])
     :ets.insert(module, [__config__: self()])
-    update(module, load(module))
+    config = Application.get_env(:phoenix, module, [])
+    update(module, with_defaults(config, app))
     {:ok, {app, module}}
   end
 
-  def handle_call({:config_changed, changed, removed}, _from, {app, module}) do
+  def handle_call({:config_change, changed, removed}, _from, {app, module}) do
     cond do
       changed = changed[module] ->
         update(module, with_defaults(changed, app))
