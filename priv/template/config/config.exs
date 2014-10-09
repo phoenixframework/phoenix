@@ -7,8 +7,8 @@ use Mix.Config
 
 # Configures the router
 config :phoenix, <%= application_module %>.Router,
-  port: System.get_env("PORT"),
-  ssl: false,
+  http: [port: System.get_env("PORT")],
+  https: false,
   secret_key_base: "<%= secret_key_base %>",
   catch_errors: true,
   debug_errors: false,

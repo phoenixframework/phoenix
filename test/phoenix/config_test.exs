@@ -1,5 +1,5 @@
 defmodule Phoenix.ConfigTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
   import Phoenix.Config
 
   setup meta do

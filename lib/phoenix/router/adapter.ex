@@ -14,12 +14,14 @@ defmodule Phoenix.Router.Adapter do
   @doc """
   Starts the router.
   """
-  def start(otp_app, module, dispatch_opts, opts) do
+  def start(otp_app, module, opts) do
     Phoenix.Config.supervise(otp_app, module)
+
+    # TODO: We need to test this logic when we support custom adapters.
 
     if Keyword.get(opts, :http, true) &&
        (config = module.config(:http)) do
-      run(:http, module, config, dispatch_opts)
+      start(:http, otp_app, module, config)
     end
 
     if Keyword.get(opts, :https, true) &&
@@ -28,22 +30,23 @@ defmodule Phoenix.Router.Adapter do
         (module.config(:http) || [])
         |> Keyword.delete(:port)
         |> Keyword.merge(module.config(:https))
-      run(:https, module, config, dispatch_opts)
+      start(:https, otp_app, module, config)
     end
   end
 
-  defp run(scheme, module, config, dispatch_opts) do
-    opts = dispatch(module, config, dispatch_opts)
+  defp start(scheme, otp_app, module, config) do
+    opts = dispatch(otp_app, module, config)
     report apply(Plug.Adapters.Cowboy, scheme, [module, [], opts]), scheme, module, opts
   end
 
-  defp dispatch(module, config, dispatch_opts) do
-    dispatch = dispatch_opts ++
+  defp dispatch(otp_app, module, config) do
+    dispatch = module.__transport__ ++
                [{:_, Plug.Adapters.Cowboy.Handler, {module, []}}]
-    IO.inspect dispatch
+
     config
     |> Keyword.put(:dispatch, [{:_, dispatch}])
     |> Keyword.put(:port, to_integer(config[:port]))
+    |> Keyword.put(:otp_app, otp_app)
   end
 
   defp to_integer(binary) when is_binary(binary), do: String.to_integer(binary)
