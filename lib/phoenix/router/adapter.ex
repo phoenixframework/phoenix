@@ -39,26 +39,6 @@ defmodule Phoenix.Router.Adapter do
     IO.puts "#{module} has been stopped"
   end
 
-  @defaults [
-    parsers: [parsers: [:urlencoded, :multipart, :json],
-              accept: ["*/*"], json_decoder: Poison],
-    static: [at: "/"],
-    session: false
-  ]
-
-  def config(router) do
-    config = Application.get_env(:phoenix, router, [])
-    Keyword.merge(@defaults, config, &merger/3)
-  end
-
-  defp merger(_k, v1, v2) do
-    if Keyword.keyword?(v1) and Keyword.keyword?(v2) do
-      Keyword.merge(v1, v2, &merger/3)
-    else
-      v2
-    end
-  end
-
   @doc """
   Merges Plug options with dispatch options, delegating to adapter module for
   adapter specific option handling

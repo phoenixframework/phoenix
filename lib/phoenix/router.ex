@@ -230,8 +230,12 @@ defmodule Phoenix.Router do
   and cannot be dynamically changed during runtime. Most of the
   compile-time configuration is related to pipelines and plugs.
 
-  On the other hand, runtime configuration is read when your
-  application is started.
+  On the other hand, runtime configuration is accessed when your
+  application is started and can be read through the `config/2`
+  function:
+
+      YourApp.Router.config(:port)
+      YourApp.Router.config(:some_config, :default_value)
 
   ### Compile-time
 
@@ -291,7 +295,7 @@ defmodule Phoenix.Router do
       import Phoenix.Router
       import Plug.Conn
 
-      @config Phoenix.Router.Adapter.config(__MODULE__)
+      @config Phoenix.Config.load(__MODULE__)
       @otp_app @config[:otp_app] || Mix.Project.config[:app] ||
                raise "please set :otp_app config for #{inspect __MODULE__}"
 

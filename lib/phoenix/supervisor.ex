@@ -8,6 +8,7 @@ defmodule Phoenix.Supervisor do
   def init([]) do
     []
     |> child(Phoenix.Topic.Supervisor, [], true)
+    |> child(Phoenix.Config.Supervisor, [], true)
     |> child(Phoenix.CodeReloader, [], Application.get_env(:phoenix, :code_reloader))
     |> supervise(strategy: :one_for_one)
   end
