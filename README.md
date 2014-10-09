@@ -1,4 +1,4 @@
-![phoenix logo](https://raw.githubusercontent.com/phoenixframework/phoenix/master/priv/static/images/phoenix-logo.png)
+![phoenix logo](https://raw.githubusercontent.com/phoenixframework/phoenix/master/priv/static/images/phoenix.png)
 > Elixir Web Framework targeting full-featured, fault tolerant applications with realtime functionality
 
 [![Build Status](https://api.travis-ci.org/phoenixframework/phoenix.svg)](https://travis-ci.org/phoenixframework/phoenix)
