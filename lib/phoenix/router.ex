@@ -5,17 +5,15 @@ defmodule Phoenix.Router do
   A router is the heart of a Phoenix application. It has three
   main responsibilities:
 
-    * It provides routes and named route conveniences for
-      routing requests to controllers
-
-    * It defines a plug pipelines responsible for handling
-      upcoming requests
+    * It defines a plug pipeline responsible for handling
+      upcoming requests and dispatch those requests to
+      controllers and other plugs
 
     * It hosts configuration for the router and related
       entities (like plugs)
 
-    * It provides a wrapper for starting and stopping a
-      web server specific to this router
+    * It provides a wrapper for starting and stopping the
+      router in a specific web server
 
   We will explore those responsibilities next.
 
@@ -185,11 +183,15 @@ defmodule Phoenix.Router do
 
   ### :browser pipeline
 
-  TODO: Describe plugs in the browser pipeline.
+  The following plugs are in the browser pipeline:
+
+    * `:fetch_session` - calls the `Plug.Conn.fetch_session/2` that
+      effectively fetches the session and makes it available in the
+      connection
 
   ### :api pipeline
 
-  TODO: Describe plugs in the api pipeline.
+  Currently there are no plugs in the `:api` pipeline.
 
   ### Customizing pipelines
 
@@ -213,9 +215,9 @@ defmodule Phoenix.Router do
         plug :token_authentication
       end
 
-  Where `plug :super` will invoke the previously defined pipeline.
-  In general though, it is preferred to define new pipelines then
-  modify existing ones.
+  Where `plug :super` will invoke the existing pligs in the api
+  pipeline. In general though, it is preferred to define new pipelines
+  then modify existing ones.
 
   ## Router configuration
 
@@ -246,41 +248,51 @@ defmodule Phoenix.Router do
           config :phoenix, YourApp.Router,
             session: [store: :cookie, key: "_your_app_key"]
 
-    * `:parsers` - sets up the request parsers. If parsers are disabled,
-      parameters won't be explicitly fetched before matching a route and
-      functionality dependent on parameters, like the `Plug.MethodOverride`,
-      will be disabled too. Defaults to:
+    * `:parsers` - sets up the request parsers. Accepts a set of options
+      as defined by `Plug.Parsers`. If parsers are disabled, parameters
+      won't be explicitly fetched before matching a route and functionality
+      dependent on parameters, like the `Plug.MethodOverride`, will be
+      disabled too. Defaults to:
 
           [accept: ["*/*"],
            json_decoder: Poison,
            parsers: [:urlencoded, :multipart, :json]]
 
-    * `:static` - sets up static assets serving. Defaults to:
+    * `:static` - sets up static assets serving. Accepts a set of options
+      as defined by `Plug.Static`. Defaults to:
 
           [at: "/",
            from: Mix.Project.config[:app]]
 
   ### Runtime
 
-    * `:http` - the configuration for the http server. Defaults to:
+    * `:http` - the configuration for the http server. Currently uses
+      cowboy and accepts all options as defined by `Plug.Adapters.Cowboy`.
+      Defaults to:
 
           [port: 4000]
 
-    * `:https` - the configuration for the https server. Defaults to:
+    * `:https` - the configuration for the https server. Currently uses
+      cowboy and accepts all options as defined by `Plug.Adapters.Cowboy`.
+      Defaults to:
 
           [port: 4040]
 
     * `:secret_key_base` - a secret key used as base to generate secrets
-      to encode cookies, session and friends. Defaults to nil.
+      to encode cookies, session and friends. Defaults to nil as it must
+      be set per application
 
-    * `:url` - configuration for generating URLs throughout the app. Defaults to:
+    * `:url` - configuration for generating URLs throughout the app.
+      Accepts the host, scheme and port. Defaults to:
 
           [host: "localhost"]
 
   ## Web server
 
-  TODO: documentation.
-
+  Starting a router as part of a web server can be done by invoking
+  `YourApp.Router.start/0`. Stopping the router is done with
+  `YourApp.Router.stop/0`. The web server is configured with the
+  `:http` and `:https` options defined above.
   """
 
   alias Phoenix.Plugs
