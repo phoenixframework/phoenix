@@ -20,7 +20,9 @@ defmodule Phoenix.Mixfile do
   def application do
     [mod: {Phoenix, []},
      applications: [:plug, :linguist, :poison, :logger],
-     env: [code_reloader: false]]
+     env: [code_reloader: false,
+           template_engines: [eex: Phoenix.Template.EExEngine],
+           topics: [garbage_collect_after_ms: 60_000..300_000]]]
   end
 
   def deps do

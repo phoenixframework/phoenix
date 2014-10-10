@@ -99,6 +99,13 @@ defmodule Phoenix.Router.ResourcesTest do
     end
   end
 
+  setup_all do
+    Application.put_env(:phoenix, Router, http: false, https: false)
+    Router.start()
+    on_exit &Router.stop/0
+    :ok
+  end
+
   test "toplevel route matches new action" do
     conn = call(Router, :get, "users/new")
     assert conn.status == 200

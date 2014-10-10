@@ -2,7 +2,6 @@ defmodule Phoenix.Router.Helpers do
   # Module that generates the routing helpers.
   @moduledoc false
 
-  alias Phoenix.Config
   alias Phoenix.Router.Route
 
   @doc """
@@ -10,7 +9,6 @@ defmodule Phoenix.Router.Helpers do
   """
   def define(env, routes) do
     ast = for route <- routes, do: defhelper(route)
-    url = url_from_config(env.module)
 
     # It is in general bad practice to generate large chunks of code
     # inside quoted expressions. However, we can get away with this
@@ -30,12 +28,15 @@ defmodule Phoenix.Router.Helpers do
       @doc """
       Generates a URL for the given path.
       """
-      def url(path), do: unquote(url) <> path
+      def url(path) do
+        Phoenix.Config.cache(unquote(env.module),
+          :__phoenix_url_helper__,
+          &Phoenix.Router.Helpers.url/1) <> path
+      end
 
       @doc """
       Generates a URL for the given path considering the connection data.
       """
-      # TODO: use host/port/schema from connection
       def url(%Plug.Conn{}, path), do: url(path)
 
       # Functions used by generated helpers
@@ -61,17 +62,29 @@ defmodule Phoenix.Router.Helpers do
   end
 
   @doc """
-  Receives a router and generates a URL from its configuration.
+  Builds the url from the router configuration.
   """
-  # TODO: Consider decoupling the info used to run the
-  #       server from the info used to generate URLs.
-  def url_from_config(router) do
-    sche = if Config.router(router, [:ssl]), do: "https", else: "http"
-    # TODO: What happens if host and port are not available
-    host = Config.router(router, [:host])
-    port = Config.router(router, [:proxy_port]) ||
-           Config.router(router, [:port])
-    String.Chars.URI.to_string %URI{scheme: sche, host: host, port: port}
+  def url(router) do
+    {scheme, port} =
+      cond do
+        config = router.config(:https) ->
+          {"https", config[:port]}
+        config = router.config(:http) ->
+          {"http", config[:port]}
+        true ->
+          {"http", "80"}
+      end
+
+    url    = router.config(:url)
+    scheme = url[:scheme] || scheme
+    host   = url[:host]
+    port   = to_string(url[:port] || port)
+
+    case {scheme, port} do
+      {"https", "443"} -> "https://" <> host
+      {"http", "80"}   -> "http://" <> host
+      {_, _}           -> scheme <> "://" <> host <> ":" <> port
+    end
   end
 
   @doc """

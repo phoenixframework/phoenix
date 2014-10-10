@@ -37,12 +37,6 @@ defmodule Phoenix.Router.RoutingTest do
     connect "/connect", UserController, :connect
 
     get "/users/:user_id/files/:id", UserController, :image
-  end
-
-  defmodule CatchAllRouter do
-    use Phoenix.Router
-    get "/users/top", UserController, :top, as: :top
-    get "/users/:id", UserController, :show, as: :user
     get "/*path", UserController, :not_found
   end
 
@@ -96,11 +90,6 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.resp_body == "users trace"
   end
 
-  test "unmatched route returns 404" do
-    conn = call(Router, :get, "route_does_not_exist")
-    assert conn.status == 404
-  end
-
   test "splat arg with preceding named parameter to files/:user_name/*path" do
     conn = call(Router, :get, "files/elixir/Users/home/file.txt")
     assert conn.status == 200
@@ -121,7 +110,7 @@ defmodule Phoenix.Router.RoutingTest do
   end
 
   test "catch-all splat route matches" do
-    conn = call(CatchAllRouter, :get, "foo/bar/baz")
+    conn = call(Router, :get, "foo/bar/baz")
     assert conn.status == 404
     assert conn.params == %{"path" => ~w"foo bar baz"}
     assert conn.resp_body == "not found"

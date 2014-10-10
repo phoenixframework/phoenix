@@ -1,4 +1,4 @@
-defmodule Phoenix.Router.NamedRoutingTest do
+defmodule Phoenix.Router.HelpersTest do
   use ExUnit.Case, async: true
   use ConnHelper
 
@@ -6,16 +6,27 @@ defmodule Phoenix.Router.NamedRoutingTest do
 
   ## Unit tests
 
-  test "generates url_from_config" do
-    Application.put_env(:phoenix, :url_from_config,
-      port: 1337, proxy_port: 80, host: "example.com", ssl: false)
-    assert Helpers.url_from_config(:url_from_config) ==
-           "http://example.com"
+  defmodule HTTPSRouter do
+    def config(:https), do: [port: 443]
+    def config(:url), do: [host: "example.com"]
+  end
 
-    Application.put_env(:phoenix, :url_from_config,
-      port: 1337, host: "example.com", ssl: true)
-    assert Helpers.url_from_config(:url_from_config) ==
-            "https://example.com:1337"
+  defmodule HTTPRouter do
+    def config(:https), do: false
+    def config(:http), do: [port: 80]
+    def config(:url), do: [host: "example.com"]
+  end
+
+  defmodule URLRouter do
+    def config(:https), do: false
+    def config(:http), do: false
+    def config(:url), do: [host: "example.com", port: 678, scheme: "random"]
+  end
+
+  test "generates url" do
+    assert Helpers.url(URLRouter) == "random://example.com:678"
+    assert Helpers.url(HTTPRouter) == "http://example.com"
+    assert Helpers.url(HTTPSRouter) == "https://example.com"
   end
 
   test "defhelper with :identifiers" do
@@ -62,9 +73,6 @@ defmodule Phoenix.Router.NamedRoutingTest do
   ## Integration tests
 
   defmodule Router do
-    Application.put_env(:phoenix, Router,
-      port: 1337, proxy_port: 80, host: "example.com", ssl: false)
-
     use Phoenix.Router
 
     get "/posts/top", PostController, :top, as: :top
@@ -87,6 +95,14 @@ defmodule Phoenix.Router.NamedRoutingTest do
     scope path: "/admin/new", alias: Admin, as: "admin" do
       resources "/messages", MessageController
     end
+  end
+
+  setup_all do
+    Application.put_env(:phoenix, Router, url: [host: "example.com"],
+                        http: false, https: false)
+    Router.start()
+    on_exit &Router.stop/0
+    :ok
   end
 
   alias Router.Helpers

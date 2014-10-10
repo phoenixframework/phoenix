@@ -1,5 +1,4 @@
 defmodule Phoenix.Template do
-  alias Phoenix.Config
   alias Phoenix.Template
 
   defmodule UndefinedError do
@@ -87,7 +86,7 @@ defmodule Phoenix.Template do
   def precompile(file_path, root_path) do
     name   = func_name_from_path(file_path, root_path)
     ext    = Path.extname(file_path) |> String.lstrip(?.) |> String.to_atom
-    engine = Config.get([:template_engines, ext])
+    engine = Application.get_env(:phoenix, :template_engines)[ext]
     precompiled_template_func = engine.precompile(file_path, name)
 
     quote do
@@ -102,11 +101,13 @@ defmodule Phoenix.Template do
   @doc """
   Returns the EEx engine for the provided String extension
   """
+  # TODO: Mark if a format is safe or not
+  # via an option instead of hardcoding
   def eex_engine_for_file_ext(".html"), do: Phoenix.Html.Engine
   def eex_engine_for_file_ext(_ext), do: EEx.SmartEngine
 
   defp engine_extensions do
-    Config.get([:template_engines]) |> Dict.keys
+    Application.get_env(:phoenix, :template_engines) |> Dict.keys
   end
 end
 

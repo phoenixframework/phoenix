@@ -1,23 +1,56 @@
 defmodule Phoenix.Router.Adapter do
-  # TODO: This is a temporary module that we need to better handle.
-  # * The exception handling can be moved elsewhere.
-  # * The adapter stuff can be moved directly to the adapter module.
+  # This module contains the logic for starting and stopping
+  # the router server. Today, much of the logic is specific
+  # to cowboy but we can make it more generic when we add
+  # support for other adapters.
   @moduledoc false
 
   import Plug.Conn, only: [put_private: 3, put_status: 2]
   import Phoenix.Controller.Connection, only: [assign_error: 3, router_module: 1]
 
-  alias Phoenix.Config
   @unsent [:unset, :set]
 
   @doc """
-  Starts the Router module with provided List of options
+  Starts the router.
   """
-  def start(module, opts) do
-    protocol = if opts[:ssl], do: :https, else: :http
-    case apply(Plug.Adapters.Cowboy, protocol, [module, [], opts]) do
+  def start(otp_app, module) do
+    Phoenix.Config.runtime(otp_app, module)
+
+    # TODO: We need to test this logic when we support custom adapters.
+
+    if config = module.config(:http) do
+      start(:http, otp_app, module, config)
+    end
+
+    if config = module.config(:https) do
+      config = Keyword.merge(module.config(:http) || [], module.config(:https))
+      start(:https, otp_app, module, config)
+    end
+
+    :ok
+  end
+
+  defp start(scheme, otp_app, module, config) do
+    opts = dispatch(otp_app, module, config)
+    report apply(Plug.Adapters.Cowboy, scheme, [module, [], opts]), scheme, module, opts
+  end
+
+  defp dispatch(_otp_app, module, config) do
+    dispatch = module.__transport__ ++
+               [{:_, Plug.Adapters.Cowboy.Handler, {module, []}}]
+
+    config
+    |> Keyword.put(:dispatch, [{:_, dispatch}])
+    |> Keyword.put(:port, to_integer(config[:port]))
+  end
+
+  defp to_integer(binary) when is_binary(binary), do: String.to_integer(binary)
+  defp to_integer(integer) when is_integer(integer), do: integer
+
+  defp report(result, scheme, module, opts) do
+    case result do
       {:ok, pid} ->
-        [:green, "Running #{inspect module} with Cowboy on port #{inspect opts[:port]}"]
+        [:green, "Running #{inspect module} with Cowboy on port #{inspect opts[:port]} (#{scheme})"]
         |> IO.ANSI.format
         |> IO.puts
         {:ok, pid}
@@ -31,59 +64,22 @@ defmodule Phoenix.Router.Adapter do
   end
 
   @doc """
-  Stops the Router module with provided List of options
+  Stops the router.
   """
-  def stop(module, opts) do
-    protocol = if opts[:ssl], do: HTTPS, else: HTTP
-    apply(Plug.Adapters.Cowboy, :shutdown, [Module.concat(module, protocol)])
-    IO.puts "#{module} has been stopped"
-  end
-
-  @defaults [
-    parsers: [parsers: [:urlencoded, :multipart, :json],
-              accept: ["*/*"], json_decoder: Poison],
-    static: [at: "/"],
-    session: false
-  ]
-
-  def config(router) do
-    config = Application.get_env(:phoenix, router, [])
-    Keyword.merge(@defaults, config, &merger/3)
-  end
-
-  defp merger(_k, v1, v2) do
-    if Keyword.keyword?(v1) and Keyword.keyword?(v2) do
-      Keyword.merge(v1, v2, &merger/3)
-    else
-      v2
+  def stop(_otp_app, module) do
+    if module.config(:http) do
+      Plug.Adapters.Cowboy.shutdown(Module.concat(module, HTTP))
     end
+
+    if module.config(:https) do
+      Plug.Adapters.Cowboy.shutdown(Module.concat(module, HTTPS))
+    end
+
+    Phoenix.Config.stop(module)
+    :ok
   end
 
-  @doc """
-  Merges Plug options with dispatch options, delegating to adapter module for
-  adapter specific option handling
-
-    * options - The Plug routing options, ie, [port: 4000, ip: {127, 0, 0, 1}]
-    * dispatch_options - The adapter dispatch_options built from `dispatch_option` macro
-    * adapter - The webserver adapter module to handle adapter spefic options, ie `Adapters.Cowboy`
-
-  """
-  def merge(options, dispatch_options, router_module, adapter) do
-    Phoenix.Config.router(router_module)
-    |> map_config
-    |> Dict.merge(options)
-    |> adapter.merge_options(dispatch_options, router_module)
-  end
-
-  defp map_config([]), do: []
-  defp map_config([{k, v}|t]), do: [option(k,v)] ++ map_config(t)
-
-  defp option(:port, val), do: { :port, convert(:int, val) }
-  defp option(:proxy_port, val), do: { :proxy_port, convert(:int, val) }
-  defp option(key, val), do: { key, val }
-
-  defp convert(:int, val) when is_integer(val), do: val
-  defp convert(:int, val), do: String.to_integer(val)
+  # TODO: Move the dispatch logic and error handling elsewhere.
 
   @doc """
   Carries out Controller dispatch for router match
@@ -93,7 +89,7 @@ defmodule Phoenix.Router.Adapter do
       conn.private.phoenix_route.(conn)
     catch
       kind, err ->
-        handle_err(conn, kind, err, Phoenix.Config.router(router, [:catch_errors]))
+        handle_err(conn, kind, err, router.config(:catch_errors))
     end
     |> after_dispatch
   end
@@ -121,10 +117,10 @@ defmodule Phoenix.Router.Adapter do
     conn   = put_in conn.halted, false
     router = router_module(conn)
 
-    if Config.router(router, [:debug_errors]) do
+    if router.config(:debug_errors) do
       Phoenix.Controller.ErrorController.call(conn, :not_found_debug)
     else
-      Config.router!(router, [:error_controller]).call(conn, :not_found)
+      router.config(:error_controller).call(conn, :not_found)
     end
   end
 
@@ -144,10 +140,10 @@ defmodule Phoenix.Router.Adapter do
     conn   = put_in conn.halted, false
     router = router_module(conn)
 
-    if Config.router(router, [:debug_errors]) do
+    if router.config(:debug_errors) do
       Phoenix.Controller.ErrorController.call(conn, :error_debug)
     else
-      Config.router!(router, [:error_controller]).call(conn, :error)
+      router.config(:error_controller).call(conn, :error)
     end
   end
   defp after_dispatch(conn), do: conn

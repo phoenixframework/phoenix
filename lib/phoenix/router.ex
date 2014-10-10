@@ -227,11 +227,15 @@ defmodule Phoenix.Router do
 
   Phoenix configuration is split in two categories. Compile-time
   configuration means the configuration is read during compilation
-  and cannot be dynamically changed during runtime. Most of the
-  compile-time configuration is related to pipelines and plugs.
+  and changed it at runtime has no effect. Most of the compile-time
+  configuration is related to pipelines and plugs.
 
-  On the other hand, runtime configuration is read when your
-  application is started.
+  On the other hand, runtime configuration is accessed during or
+  after your application is started and can be read through the
+  `config/2` function:
+
+      YourApp.Router.config(:port)
+      YourApp.Router.config(:some_config, :default_value)
 
   ### Compile-time
 
@@ -258,7 +262,20 @@ defmodule Phoenix.Router do
 
   ### Runtime
 
-  TODO: documentation.
+    * `:http` - the configuration for the http server. Defaults to:
+
+          [port: 4000]
+
+    * `:https` - the configuration for the https server. Defaults to:
+
+          [port: 4040]
+
+    * `:secret_key_base` - a secret key used as base to generate secrets
+      to encode cookies, session and friends. Defaults to nil.
+
+    * `:url` - configuration for generating URLs throughout the app. Defaults to:
+
+          [host: "localhost"]
 
   ## Web server
 
@@ -266,12 +283,10 @@ defmodule Phoenix.Router do
 
   """
 
-  alias Phoenix.Config
   alias Phoenix.Plugs
   alias Phoenix.Router.Adapter
   alias Phoenix.Router.Resource
   alias Phoenix.Router.Scope
-  alias Phoenix.Adapters.Cowboy
 
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
 
@@ -280,7 +295,8 @@ defmodule Phoenix.Router do
     prelude   = prelude()
     plug      = plug()
     pipelines = pipelines()
-    [prelude, plug, pipelines]
+    server    = server()
+    [prelude, plug, pipelines, server]
   end
 
   defp prelude() do
@@ -291,16 +307,19 @@ defmodule Phoenix.Router do
       import Phoenix.Router
       import Plug.Conn
 
-      @config Phoenix.Router.Adapter.config(__MODULE__)
-      @otp_app @config[:otp_app] || Mix.Project.config[:app] ||
-               raise "please set :otp_app config for #{inspect __MODULE__}"
+      config = Phoenix.Config.compile_time(__MODULE__)
+      @config config
+      @otp_app config[:otp_app]
 
       # Set up initial scope
       @phoenix_pipeline nil
       Phoenix.Router.Scope.init(__MODULE__)
 
-      # TODO: This should not be adapter specific.
-      use Phoenix.Adapters.Cowboy
+      # TODO: Today we provide @dispatch_options which
+      # is specific to Cowboy. We need to figure out a way
+      # to specify, decoupled from the adapter, which
+      # transports we support (websockets, long pooling, etc).
+      Module.register_attribute __MODULE__, :dispatch_options, accumulate: true
     end
   end
 
@@ -310,32 +329,38 @@ defmodule Phoenix.Router do
       |> Enum.map(&{&1, [], true})
       |> Plug.Builder.compile()
 
-    quote do
+    quote location: :keep do
       @behaviour Plug
 
+      @doc """
+      Callback required by Plug that initializes the router
+      for serving web requests.
+      """
       def init(opts) do
         opts
       end
 
+      @doc """
+      Callback invoked by Plug on every request.
+      """
       def call(unquote(conn), opts) do
         unquote(conn) =
           Plug.Conn.put_private(unquote(conn), :phoenix_router, __MODULE__)
         unquote(pipeline)
       end
 
-      def match(conn, []) do
+      defp match(conn, []) do
         match(conn, conn.method, conn.path_info)
       end
 
-      def dispatch(conn, []) do
+      defp dispatch(conn, []) do
         Phoenix.Router.Adapter.dispatch(conn, __MODULE__)
       end
 
-      defoverridable [init: 1, call: 2, match: 2, dispatch: 2]
+      defoverridable [init: 1, call: 2]
     end
   end
 
-  # TODO: Test and document all of those configurations
   defp pipelines() do
     quote do
       pipeline :before do
@@ -377,36 +402,67 @@ defmodule Phoenix.Router do
     end
   end
 
+  defp server() do
+    quote location: :keep do
+      @doc """
+      Starts the current router for serving requests
+      """
+      def start() do
+        Adapter.start(@otp_app, __MODULE__)
+      end
+
+      @doc """
+      Stops the current router from serving requests
+      """
+      def stop() do
+        Adapter.stop(@otp_app, __MODULE__)
+      end
+
+      @doc """
+      Returns the router configuration for `key`
+
+      Returns `default` if the router does not exist.
+      """
+      def config(key, default \\ nil) do
+        case :ets.lookup(__MODULE__, key) do
+          [{^key, val}] -> val
+          [] -> default
+        end
+      end
+    end
+  end
+
   @doc false
   defmacro __before_compile__(env) do
     routes = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse
     Phoenix.Router.Helpers.define(env, routes)
 
-    quote do
+    quote location: :keep do
+      @doc false
+      def __routes__ do
+        unquote(Macro.escape(routes))
+      end
+
+      @doc false
+      def __transport__ do
+        @dispatch_options
+      end
+
+      # TODO: How to handle errors?
       defp match(conn, _method, _path) do
         Plug.Conn.put_private(conn, :phoenix_route, fn conn ->
           Plug.Conn.put_status(conn, 404)
         end)
       end
 
-      def start do
-        options = Adapter.merge([], @dispatch_options, __MODULE__, Cowboy)
-        Adapter.start(__MODULE__, options)
-      end
-
-      def stop do
-        options = Adapter.merge([], @dispatch_options, __MODULE__, Cowboy)
-        Adapter.stop(__MODULE__, options)
-      end
-
-      def __routes__ do
-        unquote(Macro.escape(routes))
-      end
-
       # TODO: How is this customizable?
       # We can move it to the controller.
       defp put_secret_key_base(conn, _) do
-        put_in conn.secret_key_base, Config.router(__MODULE__, [:secret_key_base])
+        try do
+          put_in conn.secret_key_base, config(:secret_key_base)
+        rescue
+          _ -> conn
+        end
       end
     end
   end
@@ -472,7 +528,7 @@ defmodule Phoenix.Router do
       quote bind_quoted: [plug: plug] do
         Scope.pipeline(__MODULE__, plug)
         {conn, body} = Plug.Builder.compile(@phoenix_pipeline)
-        def unquote(plug)(unquote(conn), _), do: unquote(body)
+        defp unquote(plug)(unquote(conn), _), do: unquote(body)
         defoverridable [{plug, 2}]
         @phoenix_pipeline nil
       end
