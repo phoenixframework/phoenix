@@ -9,3 +9,6 @@ before_script:
   - mix local.hex --force
   - mix deps.get --only test
 script: mix test
+after_script:
+  - mix deps.get --only docs
+  - MIX_ENV=docs mix inch.report
