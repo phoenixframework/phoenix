@@ -25,9 +25,6 @@ defmodule Phoenix.Router.ResourcesTest do
     def show(conn, _params), do: text(conn, "show files")
     def index(conn, _params), do: text(conn, "index files")
     def new(conn, _params), do: text(conn, "new files")
-    def create(conn, _params), do: text(conn, "create files")
-    def update(conn, _params), do: text(conn, "update files")
-    def destroy(conn, _params), do: text(conn, "destroy files")
   end
 
   defmodule CommentController do
@@ -42,36 +39,6 @@ defmodule Phoenix.Router.ResourcesTest do
     def special(conn, _params), do: text(conn, "special comments")
   end
 
-  defmodule SessionController do
-    use Phoenix.Controller
-    plug :action
-    def new(conn, _params), do: text(conn, "session login")
-    def create(conn, _params), do: text(conn, "session created")
-    def destroy(conn, _params), do: text(conn, "session destroyed")
-  end
-
-  defmodule PostController do
-    use Phoenix.Controller
-    plug :action
-    def show(conn, _params), do: text(conn, "show posts")
-    def new(conn, _params), do: text(conn, "new posts")
-    def index(conn, _params), do: text(conn, "index posts")
-    def create(conn, _params), do: text(conn, "create posts")
-    def update(conn, _params), do: text(conn, "update posts")
-  end
-
-  defmodule PageController do
-    use Phoenix.Controller
-    plug :action
-    def show(conn, _params), do: text(conn, "show page")
-  end
-
-  defmodule RatingController do
-    use Phoenix.Controller
-    plug :action
-    def show(conn, _params), do: text(conn, "show rating")
-  end
-
   defmodule Router do
     use Phoenix.Router
 
@@ -79,23 +46,14 @@ defmodule Phoenix.Router.ResourcesTest do
       resources "/comments", CommentController do
         get "/special", CommentController, :special
       end
-      resources "/files", FileController
-      resources "/posts", PostController, except: [:destroy]
-      resources "/sessions", SessionController, only: [:new, :create, :destroy]
+      resources "/files", FileController, except: [:destroy]
     end
 
-    resources "/files", FileController, name: "asset" do
-      resources "/comments", CommentController do
-        get "/avatar", Users, :avatar
-      end
-    end
+    resources "/files", FileController, only: [:index]
 
-    resources "/scoped_files", FileController, only: [:index] do
-      resources "/comments", CommentController, except: [:destroy]
-    end
-
-    resources "/pages", PageController, param: "slug", name: "area" do
-      resources "/ratings", RatingController, param: "key", name: "vote"
+    resources "/admin", UserController, param: "slug", name: "admin", only: [:show] do
+      resources "/comments", CommentController, param: "key", name: "post", except: [:destroy]
+      resources "files", FileController, only: [:show, :index, :new]
     end
   end
 
@@ -216,54 +174,54 @@ defmodule Phoenix.Router.ResourcesTest do
   end
 
   test "nested options limit resource by passing :except option" do
-    conn = call(Router, :delete, "users/1/posts/2")
+    conn = call(Router, :delete, "users/1/files/2")
     assert conn.status == 404
-    conn = call(Router, :get, "users/1/posts/new")
+    conn = call(Router, :get, "users/1/files/new")
     assert conn.status == 200
   end
 
   test "nested options limit resource by passing :only option" do
-    conn = call(Router, :put, "users/1/sessions/2")
+    conn = call(Router, :put, "admin/1/files/2")
     assert conn.status == 404
-    conn = call(Router, :get, "users/1/sessions/")
+    conn = call(Router, :post, "admin/1/files")
     assert conn.status == 404
-    conn = call(Router, :get, "users/1/sessions/1")
+    conn = call(Router, :delete, "admin/1/files/1")
     assert conn.status == 404
-    conn = call(Router, :get, "users/1/sessions/new")
+    conn = call(Router, :get, "admin/1/files/")
     assert conn.status == 200
-    conn = call(Router, :post, "users/1/sessions")
+    conn = call(Router, :get, "admin/1/files/1")
     assert conn.status == 200
-    conn = call(Router, :delete, "users/1/sessions/1")
+    conn = call(Router, :get, "admin/1/files/new")
     assert conn.status == 200
   end
 
   test "resource limiting options should work for nested resources" do
-    conn = call(Router, :get, "scoped_files")
+    conn = call(Router, :get, "admin/1")
     assert conn.status == 200
-    assert conn.resp_body == "index files"
+    assert conn.resp_body == "show users"
 
-    conn = call(Router, :get, "scoped_files/1")
+    conn = call(Router, :get, "admin/")
     assert conn.status == 404
-    conn = call(Router, :put, "scoped_files/1")
+    conn = call(Router, :put, "admin/1")
     assert conn.status == 404
-    conn = call(Router, :post, "scoped_files")
+    conn = call(Router, :post, "admin")
     assert conn.status == 404
-    conn = call(Router, :delete, "scoped_files/1")
+    conn = call(Router, :delete, "admin/1")
     assert conn.status == 404
 
-    conn = call(Router, :get, "scoped_files/1/comments")
+    conn = call(Router, :get, "admin/1/comments")
     assert conn.status == 200
     assert conn.resp_body == "index comments"
 
-    conn = call(Router, :get, "scoped_files/1/comments/1")
+    conn = call(Router, :get, "admin/1/comments/1")
     assert conn.status == 200
     assert conn.resp_body == "show comments"
 
-    conn = call(Router, :put, "scoped_files/1/comments/1")
+    conn = call(Router, :put, "admin/1/comments/1")
     assert conn.status == 200
     assert conn.resp_body == "update comments"
 
-    conn = call(Router, :post, "scoped_files/1/comments")
+    conn = call(Router, :post, "admin/1/comments")
     assert conn.status == 200
     assert conn.resp_body == "create comments"
 
@@ -272,20 +230,19 @@ defmodule Phoenix.Router.ResourcesTest do
   end
 
   test "param option allows default singularlized _id param to be overidden" do
-    conn = call(Router, :get, "pages/about")
+    conn = call(Router, :get, "admin/foo")
     assert conn.status == 200
-    assert conn.params["slug"] == "about"
-    assert conn.resp_body == "show page"
-    assert Router.Helpers.area_path(:show, "about") ==
-           "/pages/about"
+    assert conn.params["slug"] == "foo"
+    assert conn.resp_body == "show users"
+    assert Router.Helpers.admin_path(:show, "foo") ==
+           "/admin/foo"
 
-    conn = call(Router, :get, "pages/contact/ratings/the_key")
+    conn = call(Router, :get, "admin/bar/comments/the_key")
     assert conn.status == 200
-    assert conn.params["area_slug"] == "contact"
+    assert conn.params["admin_slug"] == "bar"
     assert conn.params["key"] == "the_key"
-    assert conn.resp_body == "show rating"
-    assert Router.Helpers.area_vote_path(:show, "contact", "the_key") ==
-           "/pages/contact/ratings/the_key"
+    assert conn.resp_body == "show comments"
+    assert Router.Helpers.admin_post_path(:show, "bar", "the_key") ==
+           "/admin/bar/comments/the_key"
   end
 end
-
