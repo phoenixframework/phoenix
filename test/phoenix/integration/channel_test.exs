@@ -4,19 +4,8 @@ defmodule Phoenix.Integration.ChannelTest do
   use ExUnit.Case, async: true
   import ExUnit.CaptureIO
 
-  alias Phoenix.Integration.ChannelTest.Router
-  alias Phoenix.Integration.ChannelTest.RoomChannel
   alias Phoenix.Integration.WebsocketClient
   alias Phoenix.Socket.Message
-
-  @port 4808
-  Application.put_env(:phoenix, Router, http: [port: @port], https: false)
-
-  defmodule Router do
-    use Phoenix.Router
-    use Phoenix.Router.Socket, mount: "/ws"
-    channel "rooms", RoomChannel
-  end
 
   defmodule RoomChannel do
     use Phoenix.Channel
@@ -38,9 +27,18 @@ defmodule Phoenix.Integration.ChannelTest do
     end
   end
 
+  defmodule Router do
+    use Phoenix.Router
+    use Phoenix.Router.Socket, mount: "/ws"
+    channel "rooms", RoomChannel
+  end
+
+  @port 4808
+  Application.put_env(:phoenix, Router, http: [port: @port], https: false)
+
   setup_all do
     capture_io fn -> Router.start end
-    on_exit fn -> capture_io &Router.stop/0 end
+    on_exit &Router.stop/0
     :ok
   end
 

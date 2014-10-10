@@ -48,16 +48,18 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
     get "/500-throw", MyController, :throw_error
   end
 
-  # For simplicity, we will rely on Phoenix.Config.
-  Application.put_env(:phoenix, Router, http: false, https: false)
-  Router.start()
-
   @defaults [catch_errors: true,
              debug_errors: false,
              error_controller: Phoenix.Controller.ErrorController]
 
   defp config!(opts) do
     Phoenix.Config.store(Router, Keyword.merge(@defaults, opts))
+  end
+
+  setup_all do
+    Application.put_env(:phoenix, Router, http: false, https: false)
+    Router.start()
+    on_exit &Router.stop/0
   end
 
   setup do

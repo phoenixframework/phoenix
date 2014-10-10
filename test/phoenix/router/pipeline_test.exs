@@ -20,7 +20,6 @@ defmodule Phoenix.Router.PipelineTest.EmptyRouter do
 end
 
 alias Phoenix.Router.PipelineTest.EmptyRouter
-EmptyRouter.start()
 
 ## Router
 
@@ -78,11 +77,18 @@ defmodule Phoenix.Router.PipelineTest.Router do
 end
 
 alias Phoenix.Router.PipelineTest.Router
-Router.start()
 
 defmodule Phoenix.Router.PipelineTest do
   use ExUnit.Case, async: true
   use ConnHelper
+
+  setup_all do
+    EmptyRouter.start()
+    Router.start()
+    on_exit &EmptyRouter.stop/0
+    on_exit &Router.stop/0
+    :ok
+  end
 
   setup do
     Logger.disable(self())

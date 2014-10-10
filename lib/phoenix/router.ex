@@ -329,7 +329,7 @@ defmodule Phoenix.Router do
       |> Enum.map(&{&1, [], true})
       |> Plug.Builder.compile()
 
-    quote do
+    quote location: :keep do
       @behaviour Plug
 
       @doc """
@@ -403,7 +403,7 @@ defmodule Phoenix.Router do
   end
 
   defp server() do
-    quote do
+    quote location: :keep do
       @doc """
       Starts the current router for serving requests
       """
@@ -437,7 +437,7 @@ defmodule Phoenix.Router do
     routes = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse
     Phoenix.Router.Helpers.define(env, routes)
 
-    quote do
+    quote location: :keep do
       @doc false
       def __routes__ do
         unquote(Macro.escape(routes))

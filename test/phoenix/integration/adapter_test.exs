@@ -4,11 +4,7 @@ defmodule Phoenix.Integration.AdapterTest do
   use ExUnit.Case, async: true
   import ExUnit.CaptureIO
 
-  alias Phoenix.Integration.AdapterTest.Router
   alias Phoenix.Integration.HTTPClient
-
-  @port 4807
-  Application.put_env(:phoenix, Router, http: [port: "4807"], https: false)
 
   defmodule Router do
     use Phoenix.Router
@@ -22,9 +18,11 @@ defmodule Phoenix.Integration.AdapterTest do
     end
   end
 
+  @port 4807
+
   setup_all do
+    Application.put_env(:phoenix, Router, http: [port: "4807"], https: false)
     capture_io fn -> Router.start end
-    on_exit fn -> capture_io &Router.stop/0 end
     :ok
   end
 
@@ -32,7 +30,7 @@ defmodule Phoenix.Integration.AdapterTest do
     {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@port}", %{})
     assert resp.status == 200
     assert resp.body == "ok"
-    capture_io fn -> Router.stop end
+    Router.stop
     {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@port}", %{})
   end
 end

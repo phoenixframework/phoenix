@@ -97,9 +97,13 @@ defmodule Phoenix.Router.HelpersTest do
     end
   end
 
-  Application.put_env(:phoenix, Router, url: [host: "example.com"],
-                      http: false, https: false)
-  Router.start()
+  setup_all do
+    Application.put_env(:phoenix, Router, url: [host: "example.com"],
+                        http: false, https: false)
+    Router.start()
+    on_exit &Router.stop/0
+    :ok
+  end
 
   alias Router.Helpers
 

@@ -76,7 +76,6 @@ defmodule Phoenix.Router.Adapter do
     end
 
     Phoenix.Config.stop(module)
-    IO.puts "#{module} has been stopped"
     :ok
   end
 

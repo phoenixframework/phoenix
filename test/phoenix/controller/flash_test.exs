@@ -37,6 +37,7 @@ defmodule Phoenix.Controller.FlashTest do
     end
 
     Router.start()
+    on_exit &Router.stop/0
     :ok
   end
 

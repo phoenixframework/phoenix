@@ -8,7 +8,7 @@ defmodule Phoenix.Config.Supervisor do
 
   def init([]) do
     children = [
-      worker(Phoenix.Config, [], type: :transient)
+      worker(Phoenix.Config, [], restart: :transient)
     ]
 
     supervise children, strategy: :simple_one_for_one
