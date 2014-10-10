@@ -7,6 +7,8 @@ defmodule Mix.Tasks.Compile.Phoenix do
   """
 
   def run(_args) do
+    Application.ensure_all_started(:phoenix)
+
     case Phoenix.CodeReloader.touch do
       [] -> :noop
       _  -> :ok

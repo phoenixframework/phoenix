@@ -107,7 +107,9 @@ defmodule Phoenix.Template do
   def eex_engine_for_file_ext(_ext), do: EEx.SmartEngine
 
   defp engine_extensions do
-    Application.get_env(:phoenix, :template_engines) |> Dict.keys
+    (Application.get_env(:phoenix, :template_engines) ||
+      raise "could not load template_engines configuration for Phoenix." <>
+            "Was the Phoenix started?") |> Dict.keys
   end
 end
 
