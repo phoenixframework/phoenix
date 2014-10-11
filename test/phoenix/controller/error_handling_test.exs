@@ -19,12 +19,6 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
     def assign_500(conn, _params), do: put_status(conn, 500)
     def raise_500(_conn, _params), do: raise "boom!"
     def throw_error(_conn, _params), do: throw "boom"
-  end
-
-  defmodule PageController do
-    use Phoenix.Controller
-
-    plug :action
 
     def error(conn, _) do
       case error(conn) do
@@ -86,19 +80,19 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
   end
 
   test "error controller can be configured for custom 404 handling" do
-    config! error_controller: PageController, catch_errors: true
+    config! error_controller: MyController, catch_errors: true
     conn = call(Router, :get, "/404")
     assert conn.assigns[:error] == :handled_404
   end
 
   test "error controller can be configured for custom 500 handling" do
-    config! error_controller: PageController, catch_errors: true
+    config! error_controller: MyController, catch_errors: true
     conn = call(Router, :get, "/500-raise")
     assert conn.assigns[:error] == :handled_500
   end
 
   test "error controller can override call/2 to catch errors" do
-    config! error_controller: PageController, catch_errors: true
+    config! error_controller: MyController, catch_errors: true
     conn = call(Router, :get, "/500-throw")
     assert conn.status == 500
     assert conn.resp_body == "boom"
@@ -130,4 +124,3 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
     assert conn.resp_body =~ ~r/Stacktrace/
   end
 end
-

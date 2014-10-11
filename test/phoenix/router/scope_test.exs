@@ -9,13 +9,6 @@ defmodule Phoenix.Router.ScopedRoutingTest do
 
   # Path scoping
 
-  defmodule ProfileController do
-    use Phoenix.Controller
-    plug :action
-    def show(conn, _params), do: text(conn, "profiles show")
-    def index(conn, _params), do: text(conn, "profiles index")
-  end
-
   defmodule Api.V1.UserController do
     use Phoenix.Controller
     plug :action
@@ -28,7 +21,7 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     use Phoenix.Router
 
     scope "/admin" do
-      get "/profiles/:id", ProfileController, :show
+      get "/users/:id", Api.V1.UserController, :show
     end
 
     scope "/api" do
@@ -47,7 +40,7 @@ defmodule Phoenix.Router.ScopedRoutingTest do
 
     scope path: "/api" do
       scope "/v1", Api.V1 do
-        resources "/venues", VenueController do
+        resources "/venues", VenueController, only: [:show] do
           resources "/users", UserController, only: [:edit]
         end
       end
@@ -55,9 +48,9 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   end
 
   test "single scope for single routes" do
-    conn = call(Router, :get, "/admin/profiles/1")
+    conn = call(Router, :get, "/admin/users/1")
     assert conn.status == 200
-    assert conn.resp_body == "profiles show"
+    assert conn.resp_body == "api v1 users show"
     assert conn.params["id"] == "1"
 
     conn = call(Router, :get, "/api/users/13")
