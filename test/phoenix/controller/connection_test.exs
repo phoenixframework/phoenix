@@ -1,5 +1,5 @@
 defmodule Phoenix.Router.ConnectionTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   use ConnHelper
   alias Plug.Conn
   alias Phoenix.Controller.Connection

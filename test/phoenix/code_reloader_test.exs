@@ -1,5 +1,5 @@
 defmodule Phoenix.CodeReloaderTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   use ConnHelper
 
   test "touch/0 touches and returns touched files" do

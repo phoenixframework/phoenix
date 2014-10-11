@@ -1,5 +1,5 @@
 defmodule Phoenix.Template.CompilerTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   alias Phoenix.View
 
   defmodule MyApp.Views do

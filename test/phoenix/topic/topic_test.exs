@@ -1,5 +1,5 @@
 defmodule Phoenix.Topic.TopicTest do
-  use ExUnit.Case, async: false
+  use ExUnit.Case
   alias Phoenix.Topic
 
   def spawn_pid do

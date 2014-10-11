@@ -17,23 +17,6 @@ defmodule ConnHelper do
     controller.call(conn(verb, "/", params, headers), controller.init(action))
   end
 
-  # TODO: Avoid capture_log does not allow us to run tests concurrently.
-  # Always call it explicitly instead of by default.
-  def simulate_request(router, http_method, path) do
-    {conn, _} = capture_log fn ->
-      conn = conn(http_method, path)
-      router.call(conn, [])
-    end
-    conn
-  end
-
-  def simulate_request_with_logging(router, http_method, path) do
-    capture_log fn ->
-      conn = conn(http_method, path)
-      router.call(conn, [])
-    end
-  end
-
   def capture_log(fun) do
     data = capture_io(:user, fn ->
       Process.put(:capture_log, fun.())

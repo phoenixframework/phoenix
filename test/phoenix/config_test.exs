@@ -1,4 +1,6 @@
 defmodule Phoenix.ConfigTest do
+  # This test case needs to be sync because we rely on
+  # Phoenix.Config.Supervisor which is global.
   use ExUnit.Case
   import Phoenix.Config
 

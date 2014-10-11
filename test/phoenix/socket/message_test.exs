@@ -1,5 +1,5 @@
 defmodule Phoenix.Socket.MessageTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   alias Phoenix.Socket.Message
   alias Phoenix.Socket.Message.InvalidMessage

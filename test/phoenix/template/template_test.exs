@@ -1,5 +1,5 @@
 defmodule Phoenix.Template.TemplateTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   alias Phoenix.Template
 
   test "#func_name_from_path/2 returns the function name from the full path" do

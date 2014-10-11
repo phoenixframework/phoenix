@@ -2,10 +2,9 @@ Code.require_file "views.exs", __DIR__
 Code.require_file "views/user_view.exs", __DIR__
 
 defmodule Phoenix.View.HelpersTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   alias Phoenix.UserTest.UserView
   alias Phoenix.View.Helpers
-
 
   test "render/3 safes html views" do
     assert Helpers.render(UserView, "base.html", name: "chris")

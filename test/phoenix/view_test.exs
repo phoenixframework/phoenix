@@ -4,18 +4,18 @@ Code.require_file "view/views/profile_view.exs", __DIR__
 Code.require_file "view/views/layout_view.exs", __DIR__
 
 defmodule Phoenix.ViewTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   alias Phoenix.UserTest.UserView
   alias Phoenix.UserTest.LayoutView
   alias Phoenix.View
 
   doctest Phoenix.View, except: [render: 3]
 
-  test "Subviews render templates with imported functions from base view" do
+  test "subviews render templates with imported functions from base view" do
     assert View.render(UserView, "base.html", name: "chris") == "<div>\n  Base CHRIS\n</div>\n\n"
   end
 
-  test "Subviews render templates with imported functions from subview" do
+  test "subviews render templates with imported functions from subview" do
     assert View.render(UserView, "sub.html", desc: "truncated") == "Subview truncat...\n"
   end
 

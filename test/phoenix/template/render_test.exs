@@ -1,5 +1,5 @@
 defmodule Phoenix.Template.RenderTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   use Plug.Test
   alias Phoenix.View
 

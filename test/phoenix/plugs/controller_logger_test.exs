@@ -1,5 +1,5 @@
 defmodule Phoenix.ControllerLoggerTest do
-  use ExUnit.Case, async: false
+  use ExUnit.Case
   use ConnHelper
 
   defmodule LoggerController do
@@ -8,15 +8,13 @@ defmodule Phoenix.ControllerLoggerTest do
     def index(conn, _params), do: text(conn, "index")
   end
 
-  defmodule Router do
-    use Phoenix.Router
-    get "/", LoggerController, :index
-  end
-
   test "verify logger" do
-    {_conn, [_plug_log, header, accept, parameters, _plug_log_2]} = simulate_request_with_logging(Router, :get, "/")
+    {_conn, [header, accept, parameters]} = capture_log fn ->
+      conn = conn(:get, "/", foo: "bar") |> fetch_params
+      LoggerController.call(conn, LoggerController.init(:index))
+    end
     assert header =~ "[debug] Processing by Phoenix.ControllerLoggerTest.LoggerController.index"
     assert accept =~ "Accept: text/html"
-    assert parameters =~ "Parameters: %{}"
+    assert parameters =~ "Parameters: %{\"foo\" => \"bar\"}"
   end
 end
