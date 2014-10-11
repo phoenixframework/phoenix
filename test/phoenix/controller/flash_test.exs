@@ -1,5 +1,5 @@
 defmodule Phoenix.Controller.FlashTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   use ConnHelper
   alias Phoenix.Controller.Flash
   alias Phoenix.Controller.FlashTest.Router
@@ -41,16 +41,21 @@ defmodule Phoenix.Controller.FlashTest do
     :ok
   end
 
+  setup do
+    Logger.disable(self())
+    :ok
+  end
+
   test "flash is persisted when status in redirect" do
     for status <- 300..308 do
-      conn = simulate_request(Router, :get, "/set_flash/elixir/#{status}")
+      conn = call(Router, :get, "/set_flash/elixir/#{status}")
       assert Flash.get(conn, :notice) == "elixir"
     end
   end
 
   test "flash is not persisted when status is not redirect" do
     for status <- [299, 309, 200, 404] do
-      conn = simulate_request(Router, :get, "/set_flash/elixir/#{status}")
+      conn = call(Router, :get, "/set_flash/elixir/#{status}")
       assert Flash.get(conn, :notice) == nil
     end
   end
