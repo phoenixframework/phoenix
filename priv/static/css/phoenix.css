@@ -21,11 +21,12 @@ body {
   padding-left: 15px;
 }
 .logo {
-  width: 463px;
-  height: 65px;
+  width: 519px;
+  height: 71px;
   display: inline-block;
   margin-bottom: 1em;
   background-image: url("/images/phoenix.png");
+  background-size: 519px 71px;
 }
 /* Custom page header */
 .header {
