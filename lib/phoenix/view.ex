@@ -41,10 +41,9 @@ defmodule Phoenix.View do
     templates_root = Dict.get(options, :templates_root, default_templates_root)
 
     quote do
-      import unquote(__MODULE__), except: [render: 3]
       import Phoenix.View.Helpers
       import Phoenix.Html, only: [safe: 1, unsafe: 1]
-      path = template_path_from_view_module(__MODULE__, unquote(templates_root))
+      path = Phoenix.View.template_path_from_view_module(__MODULE__, unquote(templates_root))
       use Phoenix.Template.Compiler, path: path
     end
   end
