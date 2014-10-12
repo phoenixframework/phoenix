@@ -1,17 +1,20 @@
 defmodule Phoenix.Template.EExEngine do
+  @moduledoc """
+  The Phoenix enegine that handles the `.eex` extension.
+  """
+
   @behaviour Phoenix.Template.Engine
 
-  @doc """
-  Precompiles the String file_path into a function defintion, using EEx Engine
+  def compile(path, name) do
+    path
+    |> File.read!
+    |> EEx.compile_string(engine: engine_for(name), file: path, line: 1)
+  end
 
-  For example, given "templates/show.html.eex", returns an AST def of the form:
-
-      def render("show.html", assigns \\ [])
-
-  """
-  def compile(file, template) do
-    engine = Phoenix.Template.eex_engine_for_file_ext(Path.extname(template))
-    opts   = [engine: engine, file: file, line: 1]
-    EEx.compile_string(File.read!(file), opts)
+  defp engine_for(name) do
+    case Phoenix.Template.format_encoder(name) do
+      Phoenix.HTML.Engine -> Phoenix.HTML.Engine
+      _                   -> EEx.SmartEngine
+    end
   end
 end

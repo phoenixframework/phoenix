@@ -51,14 +51,6 @@ defmodule Phoenix.ViewTest do
     assert String.contains?(View.default_templates_root, "web/templates")
   end
 
-  test "unwrap_rendered_content/2 unwraps safe'd html content" do
-    assert View.unwrap_rendered_content({:safe, "<b>Hi</b>"}, ".html") == "<b>Hi</b>"
-  end
-
-  test "unwrap_rendered_content/2 returns string for non-html content" do
-    assert View.unwrap_rendered_content("Hi", ".txt") == "Hi"
-  end
-
   test "views have phoenix_recompile?/0 injected" do
     refute UserView.phoenix_recompile?
   end

@@ -1,4 +1,8 @@
 defmodule Phoenix.Naming do
+  @moduledoc """
+  Conveniences for inflecting names in Phoenix.
+  """
+
   @doc """
   Extracts the resource name from an alias
 

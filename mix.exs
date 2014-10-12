@@ -22,6 +22,7 @@ defmodule Phoenix.Mixfile do
      applications: [:plug, :linguist, :poison, :logger],
      env: [code_reloader: false,
            template_engines: [eex: Phoenix.Template.EExEngine],
+           format_encoders: [html: Phoenix.HTML.Engine],
            topics: [garbage_collect_after_ms: 60_000..300_000]]]
   end
 

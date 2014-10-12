@@ -1,5 +1,4 @@
 defmodule Phoenix.View do
-  alias Phoenix.HTML
   alias Phoenix.Naming
 
   @moduledoc """
@@ -42,7 +41,7 @@ defmodule Phoenix.View do
 
     quote do
       import Phoenix.View.Helpers
-      import Phoenix.HTML, only: [safe: 1, unsafe: 1]
+      use Phoenix.HTML
       path = Phoenix.View.template_path_from_view_module(__MODULE__, unquote(templates_root))
       use Phoenix.Template.Compiler, path: path
     end
@@ -84,31 +83,25 @@ defmodule Phoenix.View do
     template
     |> inner_mod.render(assigns)
     |> render_layout(layout_mod, layout_tpl, assigns)
-    |> unwrap_rendered_content(Path.extname(template))
+    |> encode(template)
   end
   defp render_within(nil, module, template, assigns) do
     template
     |> module.render(assigns)
-    |> unwrap_rendered_content(Path.extname(template))
+    |> encode(template)
   end
   defp render_layout(inner_content, layout_mod, layout_tpl, assigns) do
     layout_assigns = Dict.merge(assigns, inner: inner_content)
     layout_mod.render(layout_tpl, layout_assigns)
   end
 
-  @doc """
-  Unwraps rendered String content within extension specific structure
-
-  ## Examples
-
-      iex> View.unwrap_rendered_content({:safe, "<h1>Hello!</h1>"}, ".html")
-      "<h1>Hello!</h1>"
-      iex> View.unwrap_rendered_content("Hello!", ".txt")
-      "Hello!"
-
-  """
-  def unwrap_rendered_content(content, ".html"), do: HTML.unsafe(content)
-  def unwrap_rendered_content(content, _ext), do: content
+  defp encode(content, template) do
+    if encoder = Phoenix.Template.format_encoder(template) do
+      encoder.encode!(content)
+    else
+      content
+    end
+  end
 
   @doc """
   Finds the template path given view module and template root path

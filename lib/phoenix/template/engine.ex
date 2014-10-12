@@ -6,12 +6,12 @@ defmodule Phoenix.Template.Engine do
   the template file and the template name and outputs the template quoted
   expression:
 
-      def compile(file, template)
+      def compile(template_path, template_name)
 
   See `Phoenix.Template.EExEngine` for an example engine implementation.
   """
 
   use Behaviour
 
-  defcallback compile(file :: binary, template :: binary) :: Macro.t
+  defcallback compile(template_path :: binary, template_name :: binary) :: Macro.t
 end

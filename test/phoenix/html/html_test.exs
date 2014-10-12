@@ -4,9 +4,9 @@ defmodule Phoenix.HTMLTest do
   alias Phoenix.HTML
 
   test "escape/1 escapes HTML entities" do
-    assert HTML.escape("foo") == "foo"
-    assert HTML.escape("<foo>") == "&lt;foo&gt;"
-    assert HTML.escape("\" & \'") == "&quot; &amp; &#39;"
+    assert HTML.html_escape("foo") == "foo"
+    assert HTML.html_escape("<foo>") == "&lt;foo&gt;"
+    assert HTML.html_escape("\" & \'") == "&quot; &amp; &#39;"
   end
 
   test "Phoenix.HTML.Safe for binaries" do

@@ -5,22 +5,23 @@ defprotocol Phoenix.HTML.Safe do
   Defines the HTML safe protocol.
 
   In order to promote HTML safety, Phoenix templates
-  do not use `to_string/1` to convert data types to
+  do not use `Kernel.to_string/1` to convert data types to
   strings in templates. Instead, Phoenix uses this
   protocol which must be implemented by data structures
   and guarantee that a HTML safe representation is returned.
   """
+
   def to_string(data)
 end
 
 defimpl Phoenix.HTML.Safe, for: Atom do
   def to_string(nil), do: ""
-  def to_string(atom), do: HTML.escape(Atom.to_string(atom))
+  def to_string(atom), do: HTML.html_escape(Atom.to_string(atom))
 end
 
 defimpl Phoenix.HTML.Safe, for: BitString do
   def to_string(data) when is_binary(data) do
-    HTML.escape(data)
+    HTML.html_escape(data)
   end
 end
 
@@ -38,13 +39,13 @@ defimpl Phoenix.HTML.Safe, for: List do
   end
 
   # TODO: We could inline the escape for integers ?>, ?<,
-  # ?&, ?" and ?' instead of calling Phoenix.HTML.escape/1
+  # ?&, ?" and ?' instead of calling Phoenix.HTML.html_escape/1
   defp do_to_string(h) when is_integer(h) do
-    HTML.escape(<<h :: utf8>>)
+    HTML.html_escape(<<h :: utf8>>)
   end
 
   defp do_to_string(h) when is_binary(h) do
-    HTML.escape(h)
+    HTML.html_escape(h)
   end
 
   defp do_to_string({:safe, h}) when is_binary(h) do

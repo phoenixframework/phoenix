@@ -2,6 +2,9 @@ defmodule Phoenix.HTML do
   @moduledoc """
   Conveniences for working HTML strings and templates.
 
+  When used, it imports this module and, in the future,
+  many other modules under the Phoenix.HTML namespace.
+
   ## HTML Safe
 
   One of the main responsibilities of this module is to
@@ -11,10 +14,29 @@ defmodule Phoenix.HTML do
   In order to mark some code as safe, developers should
   simply wrap their IO data in a `{:safe, data}` tuple.
   Alternative, one can simply use the `safe/1` function.
-
-  The `unsafe/1` function does the opposite and ensure the
-  current code is not wrapped in a tuple.
   """
+
+  @doc false
+  defmacro __using__(_) do
+    quote do
+      import Phoenix.HTML
+    end
+  end
+
+  @doc """
+  Marks the given value as HTML safe.
+  """
+  def safe({:safe, value}), do: {:safe, value}
+  def safe(value) when is_binary(value), do: {:safe, value}
+
+  @doc """
+  Escapes the HTML entities in the given string.
+  """
+  def html_escape(buffer) when is_binary(buffer) do
+    IO.iodata_to_binary(for <<char <- buffer>>, do: escape_char(char))
+  end
+
+  @compile {:inline, escape_char: 1}
 
   @escapes [
     {?<, "&lt;"},
@@ -23,27 +45,6 @@ defmodule Phoenix.HTML do
     {?", "&quot;"},
     {?', "&#39;"}
   ]
-
-  @doc """
-  Marks the given value as HTML safe.
-  """
-  def safe({:safe, value}), do: {:safe, value}
-  def safe(value), do: {:safe, value}
-
-  @doc """
-  Marks the given value as unsafe.
-  """
-  def unsafe({:safe, value}), do: value
-  def unsafe(value), do: value
-
-  @doc """
-  Escapes the HTML entities in the given string.
-  """
-  def escape(buffer) when is_binary(buffer) do
-    IO.iodata_to_binary(for <<char <- buffer>>, do: escape_char(char))
-  end
-
-  @compile {:inline, escape_char: 1}
 
   Enum.each @escapes, fn { match, insert } ->
     defp escape_char(unquote(match)), do: unquote(insert)
