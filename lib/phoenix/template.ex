@@ -1,4 +1,24 @@
 defmodule Phoenix.Template do
+  @moduledoc """
+  TODO: Talk about templates.
+
+  ## Custom Template Engines
+
+  Phoenix supports custom template engines. Please check
+  `Phoenix.Template.Engine` for more information on the
+  API required to be implemented by custom engines.
+
+  Once a template engine is defined, you can tell Phoenix
+  about it via the template engines option:
+
+      config :phoenix, :template_engines,
+        eex: Phoenix.Template.EExEngine,
+        haml: Calliope.PhoenixEngine
+
+  Notice that all desired engines must be explicitly listed
+  in the `:template_engines` configuration.
+  """
+
   alias Phoenix.Template
 
   defmodule UndefinedError do
@@ -65,7 +85,7 @@ defmodule Phoenix.Template do
 
     quote do
       unquote(renders_ast)
-      def render(undefined_template), do: render(undefined_template, [])
+      def render(template), do: render(template, [])
       def render(undefined_template, _assign) do
         raise UndefinedError, message: """
         Could not render "#{undefined_template}" for #{inspect(__MODULE__)}, please define a clause for render/2 or define a template at "#{@path}".
@@ -87,14 +107,17 @@ defmodule Phoenix.Template do
     name   = func_name_from_path(file_path, root_path)
     ext    = Path.extname(file_path) |> String.lstrip(?.) |> String.to_atom
     engine = Application.get_env(:phoenix, :template_engines)[ext]
-    precompiled_template_func = engine.precompile(file_path, name)
+    quoted = engine.compile(file_path, name)
 
     quote do
-      def render(unquote(name)), do: render(unquote(name), [])
-      @external_resource unquote(file_path)
       @file unquote(file_path)
       @templates unquote(name)
-      unquote(precompiled_template_func)
+      @external_resource unquote(file_path)
+
+      def render(unquote(name), var!(assigns)) do
+        _ = var!(assigns)
+        unquote(quoted)
+      end
     end
   end
 
