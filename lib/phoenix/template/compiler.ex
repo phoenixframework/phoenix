@@ -25,8 +25,6 @@ defmodule Phoenix.Template.Compiler do
     path = Dict.fetch! options, :path
 
     quote do
-      require EEx
-      import unquote(__MODULE__)
       @path unquote(path)
       @before_compile unquote(__MODULE__)
     end

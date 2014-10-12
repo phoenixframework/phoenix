@@ -30,8 +30,8 @@ defmodule Phoenix.Template.TemplateTest do
     assert File.exists?(templates |> Enum.at(0))
   end
 
-  test "#eex_engine_for_file_ext/1 returns Phoenix.Html.Engine for html extension" do
-    assert Template.eex_engine_for_file_ext(".html") == Phoenix.Html.Engine
+  test "#eex_engine_for_file_ext/1 returns Phoenix.HTML.Engine for html extension" do
+    assert Template.eex_engine_for_file_ext(".html") == Phoenix.HTML.Engine
   end
 
   test "#eex_engine_for_file_ext/1 returns EEx.SmartEngine for html extension" do

@@ -126,7 +126,7 @@ defmodule Phoenix.Template do
   """
   # TODO: Mark if a format is safe or not
   # via an option instead of hardcoding
-  def eex_engine_for_file_ext(".html"), do: Phoenix.Html.Engine
+  def eex_engine_for_file_ext(".html"), do: Phoenix.HTML.Engine
   def eex_engine_for_file_ext(_ext), do: EEx.SmartEngine
 
   defp engine_extensions do

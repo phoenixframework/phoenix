@@ -1,5 +1,5 @@
 defmodule Phoenix.View do
-  alias Phoenix.Html
+  alias Phoenix.HTML
   alias Phoenix.Naming
 
   @moduledoc """
@@ -42,7 +42,7 @@ defmodule Phoenix.View do
 
     quote do
       import Phoenix.View.Helpers
-      import Phoenix.Html, only: [safe: 1, unsafe: 1]
+      import Phoenix.HTML, only: [safe: 1, unsafe: 1]
       path = Phoenix.View.template_path_from_view_module(__MODULE__, unquote(templates_root))
       use Phoenix.Template.Compiler, path: path
     end
@@ -67,7 +67,7 @@ defmodule Phoenix.View do
 
   When the sub template is rendered, the layout template will have an `@inner`
   assign containing the rendered contents of the sub-template. For html
-  templates, `@inner` will be passed through `Html.safe/1` automatically.
+  templates, `@inner` will be passed through `Phoenix.HTML.safe/1` automatically.
 
   ### Examples
 
@@ -107,7 +107,7 @@ defmodule Phoenix.View do
       "Hello!"
 
   """
-  def unwrap_rendered_content(content, ".html"), do: Html.unsafe(content)
+  def unwrap_rendered_content(content, ".html"), do: HTML.unsafe(content)
   def unwrap_rendered_content(content, _ext), do: content
 
   @doc """
