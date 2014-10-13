@@ -48,12 +48,14 @@
     reconnectTimer: null
     reconnectAfterMs: 5000
     heartbeatIntervalMs: 30000
+    stateChangeCallbacks: null
 
     constructor: (endPoint, opts = {}) ->
       @heartbeatIntervalMs = opts.heartbeatIntervalMs ? @heartbeatIntervalMs
       @endPoint = @expandEndpoint(endPoint)
       @channels = []
       @sendBuffer = []
+      @stateChangeCallbacks = {open: [], close: [], error: []}
       @resetBufferTimer()
       @reconnect()
 
@@ -78,10 +80,10 @@
     reconnect: ->
       @close =>
         @conn = new WebSocket(@endPoint)
-        @conn.onopen = => @onOpen()
-        @conn.onerror = (error) => @onError(error)
+        @conn.onopen = => @onConnOpen()
+        @conn.onerror = (error) => @onConnError(error)
         @conn.onmessage = (event) =>  @onMessage(event)
-        @conn.onclose = (event) => @onClose(event)
+        @conn.onclose = (event) => @onConnClose(event)
 
 
     resetBufferTimer: ->
@@ -89,20 +91,35 @@
       @sendBufferTimer = setTimeout((=> @flushSendBuffer()), @flushEveryMs)
 
 
-    onOpen: ->
+    # Registers callbacks for connection state change events
+    #
+    # Examples
+    #
+    #    socket.onError (error) -> alert("An error occurred")
+    #
+    onOpen:  (callback) -> @stateChangeCallbacks.open.push(callback) if callback
+    onClose: (callback) -> @stateChangeCallbacks.close.push(callback) if callback
+    onError: (callback) -> @stateChangeCallbacks.error.push(callback) if callback
+
+    onConnOpen: ->
       clearInterval(@reconnectTimer)
       @heartbeatTimer = setInterval (=> @sendHeartbeat() ), @heartbeatIntervalMs
       @rejoinAll()
+      callback() for callback in @stateChangeCallbacks.open
 
 
-    onClose: (event) ->
+    onConnClose: (event) ->
       console.log?("WS close: ", event)
       clearInterval(@reconnectTimer)
       clearInterval(@heartbeatTimer)
       @reconnectTimer = setInterval (=> @reconnect() ), @reconnectAfterMs
+      callback(event) for callback in @stateChangeCallbacks.close
 
 
-    onError: (error) -> console.log?("WS error: ", error)
+    onConnError: (error) ->
+      console.log?("WS error: ", error)
+      callback(error) for callback in @stateChangeCallbacks.error
+
 
     connectionState: ->
       switch @conn?.readyState
