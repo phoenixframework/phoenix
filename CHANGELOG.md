@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.5.0-dev
+## v0.5.0
 
 * Enhancements
   * [Router] Named helpers are now automatically generated for every route based on the controller name
@@ -13,7 +13,7 @@
   * [Controller] `assign_status` is deprecated in favor of `put_status`
 
 * Backwards incompatible changes
-  * [Controller] Remove default, inject aliases: `Flash`, `JSON`
+  * [Controller] Remove default, injected aliases: `Flash`, `JSON`
   * [Controller] Controllers now require `plug :action` to be explicitly invoked
   * [Router] `*path` identifiers in routers are now returned as a list
   * [Router] Named helpers are now defined in a explicit module nested to your router. For example, if your router is named `MyApp.Router`, the named helpers will be available at `MyApp.Router.Helpers`

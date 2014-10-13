@@ -3,11 +3,11 @@ defmodule Phoenix.Mixfile do
 
   def project do
     [app: :phoenix,
-     version: "0.5.0-dev",
+     version: "0.5.0",
      elixir: "~> 1.0.1 or ~> 1.1",
      deps: deps,
      package: [
-       contributors: ["Chris McCord", "Darko Fabijan"],
+       contributors: ["Chris McCord", "Darko Fabijan", "José Valim"],
        licenses: ["MIT"],
        links: [github: "https://github.com/phoenixframework/phoenix"]
      ],
