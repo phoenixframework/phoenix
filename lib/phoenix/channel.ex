@@ -12,6 +12,7 @@ defmodule Phoenix.Channel do
     quote do
       @behaviour unquote(__MODULE__)
       import unquote(__MODULE__)
+      import Phoenix.Socket
 
       def leave(socket, message), do: socket
       defoverridable leave: 2
