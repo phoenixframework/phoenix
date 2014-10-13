@@ -13,6 +13,8 @@ defmodule Phoenix.Template do
     * template path - is the complete path of the template
       in the filesystem, for example, "path/to/users.html.eex"
 
+    * template root - the directory were templates are defined
+
     * template engine - a module that receives a template path
       and transforms its source code into Elixir quoted expressions.
 
@@ -58,9 +60,61 @@ defmodule Phoenix.Template do
   alias Phoenix.Template
 
   defmodule UndefinedError do
-    defexception [:message]
-    def exception(opts) do
-      %UndefinedError{message: opts[:message]}
+    @moduledoc """
+    Exception raised when a template cannot be found.
+    """
+    defexception [:available, :template, :module, :root]
+
+    def message(exception) do
+      "Could not render #{inspect exception.template} for #{inspect exception.module}, "
+        <> "please define a clause for render/2 or define a template at "
+        <> "#{inspect Path.relative_to_cwd exception.root}. "
+        <> "The following templates were compiled:\n\n"
+        <> Enum.map_join(exception.available, "\n", &"* #{&1}")
+    end
+  end
+
+  @doc false
+  defmacro __using__(options) do
+    path = Dict.fetch! options, :root
+
+    quote do
+      @root unquote(path)
+      @before_compile unquote(__MODULE__)
+
+      @doc """
+      Renders the given template locally.
+      """
+      def render(template, assigns \\ [])
+    end
+  end
+
+  @doc false
+  defmacro __before_compile__(env) do
+    root = Module.get_attribute(env.module, :root)
+
+    pairs = for path <- find_all_from_root(root) do
+      precompile(path, root)
+    end
+
+    names = Enum.map(pairs, &elem(&1, 0))
+    codes = Enum.map(pairs, &elem(&1, 1))
+
+    quote do
+      unquote(codes)
+
+      def render(template, _assign) do
+        raise UndefinedError,
+          available: unquote(names),
+          template: template,
+          root: @root,
+          module: __MODULE__
+      end
+
+      @doc """
+      Returns true whenever the list of templates change in the filesystem.
+      """
+      def phoenix_recompile?, do: unquote(path_hash(root)) != Template.path_hash(@root)
     end
   end
 
@@ -116,65 +170,31 @@ defmodule Phoenix.Template do
   Returns the sha hash of the list of all file names in the given path
   """
   def path_hash(template_root) do
-    "#{template_root}/**/*"
-    |> Path.wildcard
+    find_all_from_root(template_root)
     |> Enum.sort
-    |> sha
-  end
-  def sha(data), do: :crypto.hash(:sha, data)
-
-  @doc """
-  Precompiles all templates witin `@path` directory as function definitions
-
-  Injects a `recompile?` function to determine if the directory contents have
-  changed and the module requires recompilation. Uses sha hash of dir contents.
-
-  See `precompile/2` for more information
-
-  Returns AST of `render/2` functions and `recompile?/0`
-  """
-  def precompile_all_from_root(path) do
-    renders_ast = for file_path <- find_all_from_root(path) do
-      precompile(file_path, path)
-    end
-
-    quote do
-      unquote(renders_ast)
-      def render(template), do: render(template, [])
-      def render(undefined_template, _assign) do
-        raise UndefinedError, message: """
-        Could not render "#{undefined_template}" for #{inspect(__MODULE__)}, please define a clause for render/2 or define a template at "#{@path}".
-
-        The following templates were compiled: "#{Enum.join @templates, ", "}"
-        """
-      end
-
-      @doc "Returns true if list of directory files has changed"
-      def phoenix_recompile?, do: unquote(path_hash(path)) != Template.path_hash(@path)
-    end
+    |> :erlang.md5
   end
 
   @doc """
   Precompiles the String file_path into a `render/2` function defintion, using
   an engine configured for the template file extension
   """
-  def precompile(file_path, root_path) do
-    name   = func_name_from_path(file_path, root_path)
-    ext    = Path.extname(file_path) |> String.lstrip(?.) |> String.to_atom
+  def precompile(path, root) do
+    name   = func_name_from_path(path, root)
+    ext    = Path.extname(path) |> String.lstrip(?.) |> String.to_atom
     engine = Application.get_env(:phoenix, :template_engines)[ext] ||
                raise "could not find template engine for extension #{inspect ext}"
-    quoted = engine.compile(file_path, name)
+    quoted = engine.compile(path, name)
 
-    quote do
-      @file unquote(file_path)
-      @templates unquote(name)
-      @external_resource unquote(file_path)
+    {name, quote do
+      @file unquote(path)
+      @external_resource unquote(path)
 
       def render(unquote(name), var!(assigns)) do
         _ = var!(assigns)
         unquote(quoted)
       end
-    end
+    end}
   end
 
   defp engine_extensions do

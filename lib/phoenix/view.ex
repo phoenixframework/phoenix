@@ -7,7 +7,7 @@ defmodule Phoenix.View do
   Users define `App.Views` and `use Phoenix.View`. The main view:
 
     * Serves as a base presentation layer for all views and templates
-    * Wires up the Template.Compiler and template path all for all other views
+    * Wires up the Template and template path all for all other views
     * Expects the base view to define a `__using__` macro for other view modules
 
   ## Examples
@@ -42,8 +42,8 @@ defmodule Phoenix.View do
     quote do
       import Phoenix.View.Helpers
       use Phoenix.HTML
-      path = Phoenix.View.template_path_from_view_module(__MODULE__, unquote(templates_root))
-      use Phoenix.Template.Compiler, path: path
+      root = Phoenix.View.template_path_from_view_module(__MODULE__, unquote(templates_root))
+      use Phoenix.Template, root: root
     end
   end
 

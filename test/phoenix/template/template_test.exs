@@ -1,4 +1,4 @@
-defmodule Phoenix.Template.TemplateTest do
+defmodule Phoenix.TemplateTest do
   use ExUnit.Case, async: true
   alias Phoenix.Template
 
@@ -30,7 +30,7 @@ defmodule Phoenix.Template.TemplateTest do
     assert File.exists?(templates |> Enum.at(0))
   end
 
-  test "path_hash/1 returns the sha hash for dirctory list of file path" do
+  test "path_hash/1 returns the hash for directory list" do
     assert Template.path_hash(Path.expand("test/fixtures/**/*"))
   end
 
