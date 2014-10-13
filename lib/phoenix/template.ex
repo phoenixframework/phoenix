@@ -1,115 +1,253 @@
 defmodule Phoenix.Template do
+  @moduledoc """
+  A template is a file used by Phoenix on rendering.
+
+  Since many views require rendering large contents, for example
+  a whole HTML file, it is common to put those files in the file
+  system into a particular directory, typically "web/templates".
+
+  This module provides conveniences for reading all files from a
+  particular directory and embeding them into a single module.
+  Imagine you have a directory with templates:
+
+      # templates/foo.html.eex
+      Hello <%= @name %>
+
+      # templates.ex
+      defmodule Templates do
+        use Phoenix.Template, root: "templates"
+      end
+
+  Now the template foo can be directly rendered with:
+
+      Templates.render("foo.html", name: "John Doe")
+
+  In practice though, developers rarely use Phoenix.Template
+  directly. Instead they use Phoenix.View which wraps the template
+  functionality and add some extra conveniences.
+
+  ## Terminology
+
+  Here is a quick introduction into Phoenix templates terms:
+
+    * template name - is the name of the template as
+      given by the user, without the template engine extension,
+      for example: "users.html"
+
+    * template path - is the complete path of the template
+      in the filesystem, for example, "path/to/users.html.eex"
+
+    * template root - the directory were templates are defined
+
+    * template engine - a module that receives a template path
+      and transforms its source code into Elixir quoted expressions.
+
+  ## Custom Template Engines
+
+  Phoenix supports custom template engines. Engines tell
+  Phoenix how to convert a template path into quoted expressions.
+  Please check `Phoenix.Template.Engine` for more information on
+  the API required to be implemented by custom engines.
+
+  Once a template engine is defined, you can tell Phoenix
+  about it via the template engines option:
+
+      config :phoenix, :template_engines,
+        eex: Phoenix.Template.EExEngine,
+        exs: Phoenix.Template.ExsEngine
+
+  ## Format encoders
+
+  Besides template engines, Phoenix has the concept of format encoders.
+  Format encoders work per format and are responsible for encoding a
+  given format to string once the view layer finishes processing.
+
+  A format encoder must export a function called `encode!/1` which
+  receives the rendering artifact and returns a string.
+
+  New encoders can be added via the format encoder option:
+
+      config :phoenix, :format_encoders,
+        html: Phoenix.HTML.Engine,
+        json: Poison
+
+  """
+
+  @type name :: binary
+  @type path :: binary
+  @type root :: binary
+
   alias Phoenix.Template
 
+  @encoders [html: Phoenix.HTML.Engine, json: Poison]
+  @engines  [eex: Phoenix.Template.EExEngine, exs: Phoenix.Template.ExsEngine]
+
   defmodule UndefinedError do
-    defexception [:message]
-    def exception(opts) do
-      %UndefinedError{message: opts[:message]}
+    @moduledoc """
+    Exception raised when a template cannot be found.
+    """
+    defexception [:available, :template, :module, :root]
+
+    def message(exception) do
+      "Could not render #{inspect exception.template} for #{inspect exception.module}, "
+        <> "please define a clause for render/2 or define a template at "
+        <> "#{inspect Path.relative_to_cwd exception.root}. "
+        <> "The following templates were compiled:\n\n"
+        <> Enum.map_join(exception.available, "\n", &"* #{&1}")
+    end
+  end
+
+  @doc false
+  defmacro __using__(options) do
+    path = Dict.fetch! options, :root
+
+    quote do
+      @root unquote(path)
+      @before_compile unquote(__MODULE__)
+
+      @doc """
+      Renders the given template locally.
+      """
+      def render(template, assigns \\ [])
+    end
+  end
+
+  @doc false
+  defmacro __before_compile__(env) do
+    root = Module.get_attribute(env.module, :root)
+
+    pairs = for path <- find_all(root) do
+      compile(path, root)
+    end
+
+    names = Enum.map(pairs, &elem(&1, 0))
+    codes = Enum.map(pairs, &elem(&1, 1))
+
+    quote do
+      unquote(codes)
+
+      def render(template, _assign) do
+        raise UndefinedError,
+          available: unquote(names),
+          template: template,
+          root: @root,
+          module: __MODULE__
+      end
+
+      @doc """
+      Returns true whenever the list of templates change in the filesystem.
+      """
+      def phoenix_recompile?, do: unquote(hash(root)) != Template.hash(@root)
     end
   end
 
   @doc """
-  Converts the template file path into a function name
+  Returns the format encoder for the given template name.
+  """
+  @spec format_encoder(name) :: module | nil
+  def format_encoder(template_name) when is_binary(template_name) do
+    Map.get(compiled_format_encoders, Path.extname(template_name))
+  end
 
-    * path - The String Path to the template file
-    * template_root - The String Path of the template root diretory
+  defp compiled_format_encoders do
+    case Application.fetch_env(:phoenix, :compiled_format_encoders) do
+      {:ok, encoders} ->
+        encoders
+      :error ->
+        encoders =
+          @encoders
+          |> Keyword.merge(raw_config(:format_encoders))
+          |> Enum.filter(fn {_, v} -> v end)
+          |> Enum.into(%{}, fn {k, v} -> {".#{k}", v} end)
+        Application.put_env(:phoenix, :compiled_format_encoders, encoders)
+        encoders
+    end
+  end
+
+  @doc """
+  Returns a keyword list with all template engines
+  extensions followed by their modules.
+  """
+  @spec engines() :: %{atom => module}
+  def engines do
+    compiled_engines()
+  end
+
+  defp compiled_engines do
+    case Application.fetch_env(:phoenix, :compiled_template_engines) do
+      {:ok, engines} ->
+        engines
+      :error ->
+        engines =
+          @engines
+          |> Keyword.merge(raw_config(:template_engines))
+          |> Enum.filter(fn {_, v} -> v end)
+          |> Enum.into(%{})
+        Application.put_env(:phoenix, :compiled_template_engines, engines)
+        engines
+    end
+  end
+
+  defp raw_config(name) do
+    Application.get_env(:phoenix, name) ||
+      raise "could not load #{name} configuration for Phoenix." <>
+            "Was the :phoenix application started?"
+  end
+
+  @doc """
+  Converts the template path into the template name.
 
   ## Examples
 
-      iex> Template.func_name_from_path(
-        "lib/templates/admin/users/show.html.eex",
-        "lib/templates")
+      iex> Phoenix.Template.template_path_to_name(
+      ...>   "lib/templates/admin/users/show.html.eex",
+      ...>   "lib/templates")
       "admin/users/show.html"
 
   """
-  def func_name_from_path(path, template_root) do
+  @spec template_path_to_name(path, root) :: name
+  def template_path_to_name(path, root) do
     path
-    |> String.replace(template_root, "")
-    |> String.lstrip(?/)
-    |> String.replace(Path.extname(path), "")
+    |> Path.rootname()
+    |> Path.relative_to(root)
   end
 
   @doc """
-  Returns List of template EEx template file paths
+  Returns all template paths in a given template root.
   """
-  def find_all_from_root(template_root) do
-    extensions = engine_extensions |> Enum.join(",")
-    Path.wildcard("#{template_root}/**/*.{#{extensions}}")
+  @spec find_all(root) :: [path]
+  def find_all(root) do
+    extensions = engines |> Map.keys() |> Enum.join(",")
+    Path.wildcard("#{root}/*.{#{extensions}}")
   end
 
   @doc """
-  Returns the sha hash of the list of all file names in the given path
+  Returns the hash of all template paths in the given root.
+
+  Used by Phoenix to check if a given root path requires recompilation.
   """
-  def path_hash(template_root) do
-    "#{template_root}/**/*"
-    |> Path.wildcard
+  @spec hash(root) :: binary
+  def hash(root) do
+    find_all(root)
     |> Enum.sort
-    |> sha
+    |> :erlang.md5
   end
-  def sha(data), do: :crypto.hash(:sha, data)
 
-  @doc """
-  Precompiles all templates witin `@path` directory as function definitions
+  defp compile(path, root) do
+    name   = template_path_to_name(path, root)
+    ext    = Path.extname(path) |> String.lstrip(?.) |> String.to_atom
+    engine = engines()[ext]
+    quoted = engine.compile(path, name)
 
-  Injects a `recompile?` function to determine if the directory contents have
-  changed and the module requires recompilation. Uses sha hash of dir contents.
+    {name, quote do
+      @file unquote(path)
+      @external_resource unquote(path)
 
-  See `precompile/2` for more information
-
-  Returns AST of `render/2` functions and `recompile?/0`
-  """
-  def precompile_all_from_root(path) do
-    renders_ast = for file_path <- find_all_from_root(path) do
-      precompile(file_path, path)
-    end
-
-    quote do
-      unquote(renders_ast)
-      def render(undefined_template), do: render(undefined_template, [])
-      def render(undefined_template, _assign) do
-        raise UndefinedError, message: """
-        Could not render "#{undefined_template}" for #{inspect(__MODULE__)}, please define a clause for render/2 or define a template at "#{@path}".
-
-        The following templates were compiled: "#{Enum.join @templates, ", "}"
-        """
+      def render(unquote(name), var!(assigns)) do
+        _ = var!(assigns)
+        unquote(quoted)
       end
-
-      @doc "Returns true if list of directory files has changed"
-      def phoenix_recompile?, do: unquote(path_hash(path)) != Template.path_hash(@path)
-    end
-  end
-
-  @doc """
-  Precompiles the String file_path into a `render/2` function defintion, using
-  an engine configured for the template file extension
-  """
-  def precompile(file_path, root_path) do
-    name   = func_name_from_path(file_path, root_path)
-    ext    = Path.extname(file_path) |> String.lstrip(?.) |> String.to_atom
-    engine = Application.get_env(:phoenix, :template_engines)[ext]
-    precompiled_template_func = engine.precompile(file_path, name)
-
-    quote do
-      def render(unquote(name)), do: render(unquote(name), [])
-      @external_resource unquote(file_path)
-      @file unquote(file_path)
-      @templates unquote(name)
-      unquote(precompiled_template_func)
-    end
-  end
-
-  @doc """
-  Returns the EEx engine for the provided String extension
-  """
-  # TODO: Mark if a format is safe or not
-  # via an option instead of hardcoding
-  def eex_engine_for_file_ext(".html"), do: Phoenix.Html.Engine
-  def eex_engine_for_file_ext(_ext), do: EEx.SmartEngine
-
-  defp engine_extensions do
-    (Application.get_env(:phoenix, :template_engines) ||
-      raise "could not load template_engines configuration for Phoenix." <>
-            "Was the Phoenix started?") |> Dict.keys
+    end}
   end
 end
 

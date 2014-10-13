@@ -35,8 +35,8 @@ defmodule Phoenix.ViewTest do
   end
 
   test "views can render local templates without safing" do
-    html = View.render(UserView, "local_render.html", title: "<em>chris</em>")
-    assert html == "Local Render <h1>&lt;em&gt;chris&lt;/em&gt;</h1>\n\n"
+    html = View.render(UserView, "local_render.html", [])
+    assert html == "Local Render Subview Hello...\n\n"
   end
 
   test "template_path_from_view_module finds the template path given view module" do
@@ -49,14 +49,6 @@ defmodule Phoenix.ViewTest do
 
   test "default_templates_root/0 returns the default template path based on current mix project" do
     assert String.contains?(View.default_templates_root, "web/templates")
-  end
-
-  test "unwrap_rendered_content/2 unwraps safe'd html content" do
-    assert View.unwrap_rendered_content({:safe, "<b>Hi</b>"}, ".html") == "<b>Hi</b>"
-  end
-
-  test "unwrap_rendered_content/2 returns string for non-html content" do
-    assert View.unwrap_rendered_content("Hi", ".txt") == "Hi"
   end
 
   test "views have phoenix_recompile?/0 injected" do

@@ -1,5 +1,42 @@
-defmodule Phoenix.Html do
-  alias Phoenix.Html
+defmodule Phoenix.HTML do
+  @moduledoc """
+  Conveniences for working HTML strings and templates.
+
+  When used, it imports this module and, in the future,
+  many other modules under the Phoenix.HTML namespace.
+
+  ## HTML Safe
+
+  One of the main responsibilities of this module is to
+  provide convenience functions for escaping and marking
+  HTML code as safe or unsafe.
+
+  In order to mark some code as safe, developers should
+  simply wrap their IO data in a `{:safe, data}` tuple.
+  Alternative, one can simply use the `safe/1` function.
+  """
+
+  @doc false
+  defmacro __using__(_) do
+    quote do
+      import Phoenix.HTML
+    end
+  end
+
+  @doc """
+  Marks the given value as HTML safe.
+  """
+  def safe({:safe, value}), do: {:safe, value}
+  def safe(value) when is_binary(value), do: {:safe, value}
+
+  @doc """
+  Escapes the HTML entities in the given string.
+  """
+  def html_escape(buffer) when is_binary(buffer) do
+    IO.iodata_to_binary(for <<char <- buffer>>, do: escape_char(char))
+  end
+
+  @compile {:inline, escape_char: 1}
 
   @escapes [
     {?<, "&lt;"},
@@ -9,78 +46,9 @@ defmodule Phoenix.Html do
     {?', "&#39;"}
   ]
 
-  def safe({:safe, value}), do: {:safe, value}
-  def safe(value), do: {:safe, value}
-  def unsafe({:safe, value}), do: value
-  def unsafe(value), do: value
-
-  defprotocol Safe do
-    def to_string(data)
-  end
-
-  defimpl Safe, for: Atom do
-    def to_string(nil), do: ""
-    def to_string(atom), do: Html.escape(Atom.to_string(atom))
-  end
-
-  defimpl Safe, for: BitString do
-    def to_string(data) when is_binary(data) do
-      Html.escape(data)
-    end
-  end
-
-  defimpl Safe, for: List do
-    def to_string(list) do
-      do_to_string(list) |> IO.iodata_to_binary
-    end
-
-    defp do_to_string([h|t]) do
-      [do_to_string(h)|do_to_string(t)]
-    end
-
-    defp do_to_string([]) do
-      []
-    end
-
-    # We could inline the escape for integers ?>, ?<, ?&, ?" and ?'
-    # instead of calling Html.escape/1
-    defp do_to_string(h) when is_integer(h) do
-      Html.escape(<<h :: utf8>>)
-    end
-
-    defp do_to_string(h) when is_binary(h) do
-      Html.escape(h)
-    end
-
-    defp do_to_string({:safe, h}) when is_binary(h) do
-      h
-    end
-  end
-
-  defimpl Safe, for: Integer do
-    def to_string(data), do: Integer.to_string(data)
-  end
-
-  defimpl Safe, for: Float do
-    def to_string(data) do
-      IO.iodata_to_binary(:io_lib_format.fwrite_g(data))
-    end
-  end
-
-  defimpl Safe, for: Tuple do
-    def to_string({:safe, data}) when is_binary(data), do: data
-  end
-
-  def escape(buffer) do
-    IO.iodata_to_binary(for <<char <- buffer>>, do: escape_char(char))
-  end
-
-  @compile {:inline, escape_char: 1}
-
   Enum.each @escapes, fn { match, insert } ->
     defp escape_char(unquote(match)), do: unquote(insert)
   end
 
   defp escape_char(char), do: << char >>
 end
-

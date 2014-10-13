@@ -1,4 +1,0 @@
-{
-  "type":"script",
-  "payload:"<%= @payload %>"
-}

@@ -1,5 +1,4 @@
 defmodule Phoenix.View do
-  alias Phoenix.Html
   alias Phoenix.Naming
 
   @moduledoc """
@@ -8,7 +7,7 @@ defmodule Phoenix.View do
   Users define `App.Views` and `use Phoenix.View`. The main view:
 
     * Serves as a base presentation layer for all views and templates
-    * Wires up the Template.Compiler and template path all for all other views
+    * Wires up the Template and template path all for all other views
     * Expects the base view to define a `__using__` macro for other view modules
 
   ## Examples
@@ -42,9 +41,9 @@ defmodule Phoenix.View do
 
     quote do
       import Phoenix.View.Helpers
-      import Phoenix.Html, only: [safe: 1, unsafe: 1]
-      path = Phoenix.View.template_path_from_view_module(__MODULE__, unquote(templates_root))
-      use Phoenix.Template.Compiler, path: path
+      use Phoenix.HTML
+      root = Phoenix.View.template_path_from_view_module(__MODULE__, unquote(templates_root))
+      use Phoenix.Template, root: root
     end
   end
 
@@ -67,7 +66,7 @@ defmodule Phoenix.View do
 
   When the sub template is rendered, the layout template will have an `@inner`
   assign containing the rendered contents of the sub-template. For html
-  templates, `@inner` will be passed through `Html.safe/1` automatically.
+  templates, `@inner` will be passed through `Phoenix.HTML.safe/1` automatically.
 
   ### Examples
 
@@ -84,31 +83,25 @@ defmodule Phoenix.View do
     template
     |> inner_mod.render(assigns)
     |> render_layout(layout_mod, layout_tpl, assigns)
-    |> unwrap_rendered_content(Path.extname(template))
+    |> encode(template)
   end
   defp render_within(nil, module, template, assigns) do
     template
     |> module.render(assigns)
-    |> unwrap_rendered_content(Path.extname(template))
+    |> encode(template)
   end
   defp render_layout(inner_content, layout_mod, layout_tpl, assigns) do
     layout_assigns = Dict.merge(assigns, inner: inner_content)
     layout_mod.render(layout_tpl, layout_assigns)
   end
 
-  @doc """
-  Unwraps rendered String content within extension specific structure
-
-  ## Examples
-
-      iex> View.unwrap_rendered_content({:safe, "<h1>Hello!</h1>"}, ".html")
-      "<h1>Hello!</h1>"
-      iex> View.unwrap_rendered_content("Hello!", ".txt")
-      "Hello!"
-
-  """
-  def unwrap_rendered_content(content, ".html"), do: Html.unsafe(content)
-  def unwrap_rendered_content(content, _ext), do: content
+  defp encode(content, template) do
+    if encoder = Phoenix.Template.format_encoder(template) do
+      encoder.encode!(content)
+    else
+      content
+    end
+  end
 
   @doc """
   Finds the template path given view module and template root path

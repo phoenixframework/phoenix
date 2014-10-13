@@ -1,1 +1,1 @@
-Local Render <%= render "nav/top.html", assigns %>
+Local Render <%= render "sub.html", desc: "Hello" %>
