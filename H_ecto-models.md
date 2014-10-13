@@ -28,8 +28,8 @@ end
 
 And then install the dependenciew with:
 
-```
-mix deps.get
+```console
+$ mix deps.get
 ```
 
 ### Add a Repository

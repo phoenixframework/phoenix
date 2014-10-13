@@ -5,7 +5,7 @@ Our task for this guide is to add two new pages to our Phoenix application. One 
 
 When Phoenix generates a new application for us, it builds a top level directory structure like this.
 
-```
+```text
 ├── _build
 ├── config
 ├── deps
@@ -18,7 +18,7 @@ When Phoenix generates a new application for us, it builds a top level directory
 
 Most of our work in this tutorial will be in the web directory, which looks like this when expanded.
 
-```
+```text
 ├── channels
 ├── controllers
 │   └── page_controller.ex
@@ -40,7 +40,7 @@ All of the files which are currently in the controllers, templates and views dir
 
 All of our application's static assets live in priv/static in the directory appropriate for each type of file - css, images or js. We won't be making any changes here for now, but it's good to know where to look for future reference.
 
-```
+```text
 priv
 └── static
     ├── css
@@ -57,7 +57,7 @@ Enough prep, let's get on with our first new Phoenix page!
 
 Routes map unique http verb/path pairs to controller/action pairs which will handle them. The route for our "Welcome to Phoenix!" page from the previous guide looks like this.
 
-```
+```elixir
 get "/", HelloPhoenix.PageController, :index, as: :pages
 ```
 
@@ -137,7 +137,7 @@ Templates are scoped to a controller. In practice, this simply means that we cre
 
 Let's do that now. Create web/templates/hello/index.html.eex and make it look like this.
 
-```elixir
+```html
 <div class="jumbotron">
   <h2>Hello from Phoenix!</h2>
 </div>
@@ -197,7 +197,7 @@ To do that, we'll use the special eex tags for executing Elixir expressions - <%
 
 And this is what the template should look like.
 
-```elixir
+```html
 <div class="jumbotron">
   <h2>Hello World, from <%= @messenger %>!</h2>
 </div>

@@ -10,7 +10,7 @@ Deployment is great and all, but be sure you have these things before continuing
 - Build environment
 - Hosting environment
 
-> Psst! Your hosting environment and your build environment can be one in the same if you're doing a test run. 
+> Psst! Your hosting environment and your build environment can be one in the same if you're doing a test run.
 
 Be sure that the architectures for both your build and hosting environments are the same, e.g. 64-bit Linux -> 64-bit Linux. Without doing this, you run the risk of your application not running. Using a virtual machine for your build environment that mirrors your hosting environment will be an easy way to ensure you don't have any such problems when deploying your application.
 
@@ -41,7 +41,7 @@ To get started, we'll need to add exrm into our list of dependencies. With later
 
 With that taken care of, a simple `mix do deps.get, deps.compile` will pull down exrm and its dependencies, along with the rest of your application's dependencies, and ensures that everything compiles so exrm's mix tasks are available as well. Speaking of...
 
-```
+```console
 $ mix help
 mix                   # Run the default task (current: mix run)
 ...
@@ -50,7 +50,7 @@ mix release.clean     # Clean up any release-related files.
 mix release.plugins   # View information about active release plugins
 mix run               # Run the given file or expression
 mix test              # Run a project's tests
-iex -S mix            # Start IEx and run the default task 
+iex -S mix            # Start IEx and run the default task
 ```
 
 Bam! Now we're cooking with fire!
@@ -90,7 +90,7 @@ Add our application's router as a child to our application's supervisor:
 
 Once this worker exists in your supervisor, `mix phoenix.start` will no longer work like before as you'll end up seeing an error message similar to:
 
-```
+```text
 ** (CaseClauseError) no case clause matching: {:error, {:already_started, #PID<0.168.0>}}
     (phoenix) lib/phoenix/router.ex:75: Phoenix.Router.start_adapter/2
     (phoenix) lib/mix/tasks/phoenix/start.ex:12: Mix.Tasks.Phoenix.Start.run/1
@@ -107,7 +107,7 @@ Running `mix release` will kick off the build process for our release.
 
 > Note: In the following sections, you'll see our application's version (`0.0.1`) pop up in bunch of places. This value is pulled from the application's `mix.exs` file, under the project's version.
 
-```
+```console
 $ mix release
 ==> Generating relx configuration...
 ==> Generating sys.config...
@@ -130,7 +130,7 @@ Once we see `==> The release for my_app-0.0.1 is ready!` pop up in our console, 
 
 #### Contents of a release
 
-```
+```console
 $ ls -la rel/my_app
 total 21488
 drwxr-xr-x   7 shane  staff       238 Aug 22 10:03 .
@@ -144,11 +144,11 @@ drwxr-xr-x   5 shane  staff       170 Aug 22 10:03 releases
 
 `bin` contains our generated executables for running our application.  The `bin/my_app` executable is what we will eventually use to issue commands to our application.
 
-`erts-6.1` contains all necessary files for the Erlang run-time system, pulled from our build environment. 
+`erts-6.1` contains all necessary files for the Erlang run-time system, pulled from our build environment.
 
-`lib` contains the compiled BEAM files for our applicaiton and all of our dependencies. This is where all of your hard work goes. 
+`lib` contains the compiled BEAM files for our applicaiton and all of our dependencies. This is where all of your hard work goes.
 
-`releases` is the home for our releases, being used to house any release-dependent configurations and scripts that exrm finds necessary for running our application. 
+`releases` is the home for our releases, being used to house any release-dependent configurations and scripts that exrm finds necessary for running our application.
 
 The tarball is our release in archive form, ready to be shipped off to our hosting environment.
 
@@ -156,7 +156,7 @@ The tarball is our release in archive form, ready to be shipped off to our hosti
 
 Before deploying our release, we should make sure that it runs on our build environment. To do that, we will issue the `console` command to our executable, essentially running our application via `iex`.
 
-```
+```console
 $ rel/my_app/bin/my_app console
 Exec: /Users/shane/code/elixir/my_app/rel/my_app/erts-6.1/bin/erlexec -boot /Users/shane/code/elixir/my_app/rel/my_app/releases/0.0.1/my_app -env ERL_LIBS /Users/shane/code/elixir/my_app/rel/my_app/lib -config /Users/shane/code/elixir/my_app/rel/my_app/releases/0.0.1/sys.config -pa /Users/shane/code/elixir/my_app/rel/my_app/lib/consolidated -args_file /Users/shane/code/elixir/my_app/rel/my_app/releases/0.0.1/vm.args -user Elixir.IEx.CLI -extra --no-halt +iex -- console
 Root: /Users/shane/code/elixir/my_app/rel/my_app
@@ -165,7 +165,7 @@ Erlang/OTP 17 [erts-6.1] [source-d2a4c20] [64-bit] [smp:4:4] [async-threads:10] 
 
 Interactive Elixir (0.15.2-dev) - press Ctrl+C to exit (type h() ENTER for help)
 iex(my_app@127.0.0.1)1>
-``` 
+```
 
 This is the point where your application will crash if it fails to start a child application. However, if all goes well, you should be dropped into an `iex` prompt. Congratulations! We're ready to deploy our application!
 
@@ -175,14 +175,14 @@ Now comes the easy part! There are many ways for us to get our tarballed release
 
 In our example, we'll use SCP to upload to a remote server.
 
-```
+```console
 $ scp -i ~/.ssh/id_rsa.pub rel/my_app/my_app-0.0.1.tar.gz ubuntu@hostname.com:/home/ubuntu
 my_app-0.0.1.tar.gz                100%   18MB  80.0KB/s   03:48
 ```
 
 Hooray! Let's SSH into that environment to set our application up.
 
-```
+```console
 $ ssh -i ~/.ssh/id_rsa.pub ubuntu@hostname.com
 $ sudo mkdir -p /app
 $ sudo chown ubuntu:ubuntu /app
@@ -202,7 +202,7 @@ First step in exposing our application to the world is ensuring that our applica
 
 In this case, we'll be using `upstart` as our OS is Ubuntu, and `upstart` has been bundled with Ubuntu since 6.10. Let's edit our init script with `sudo vi /etc/init/my_app.conf`
 
-```
+```text
 description "my_app"
 
 ## Uncomment the following two lines to run the
@@ -235,14 +235,14 @@ Along with the `start` command, exrm bundles a few others with our application t
 
 The `ping` command is a great sanity check when you need to ensure your application is running:
 
-```
+```console
 $ bin/my_app ping
 pong
 ```
 
 Or to see if it isn't:
 
-```
+```console
 $ bin/my_app ping
 Node 'my_app@127.0.0.1' not responding to pings.
 ```
@@ -251,7 +251,7 @@ Node 'my_app@127.0.0.1' not responding to pings.
 
 `remote_console` will be your friend when debugging is in order. It allows you to attach an IEx console to your running application. When closing the console, your application continues to run.
 
-```
+```console
 $ bin/my_app remote_console
 Erlang/OTP 17 [erts-6.1] [source-d2a4c20] [64-bit] [smp:4:4] [async-threads:10] [hipe] [kernel-poll:false]
 
@@ -267,7 +267,7 @@ Although at the time of writing (25 Aug 2014) there is an [open issue with upgra
 
 You may run into situations where your application needs to stop. Look no further than the `stop` command.
 
-```
+```console
 $ bin/my_app stop
 ok
 ```
@@ -276,11 +276,11 @@ ok
 
 In a lot of cases, you're going to have more than one application running in your hosting environment, all of which might need to be accessible on port 80. Since only one application can listen on a single port at a time, we need to use something to proxy our application. You will typically see Apache (with `mod_proxy` enabled) or nginx used for this, and we'll be setting up nginx in this case.
 
-Let's create our config file for our application. By default, everything in `/etc/nginx/sites-enabled` is included into the main `/etc/nginx/nginx.conf` file that is used to configure nginx's runtime environment. Standard practice is to create our file in `/etc/nginx/sites-available` and make a symbolic link to it in `/etc/nginx/sites-enabled`. 
+Let's create our config file for our application. By default, everything in `/etc/nginx/sites-enabled` is included into the main `/etc/nginx/nginx.conf` file that is used to configure nginx's runtime environment. Standard practice is to create our file in `/etc/nginx/sites-available` and make a symbolic link to it in `/etc/nginx/sites-enabled`.
 
 > Note: These points hold true for Apache as well, but the steps to accomplish them are slightly different.
 
-```
+```console
 $ sudo touch /etc/nginx/sites-available/my_app
 $ sudo ln -s /etc/nginx/sites-available /etc/nginx/sites-enabled
 $ sudo vi /etc/nginx/sites-available/my_app
@@ -288,7 +288,7 @@ $ sudo vi /etc/nginx/sites-available/my_app
 
 Contents of our `/etc/nginx/sites-available/my_app` file:
 
-```
+```nginx
 upstream my_app {
     server 127.0.0.1:8888;
 }
@@ -310,4 +310,4 @@ server{
 
 Like our `upstart` script, this nginx config is basic. Look to the [nginx wiki](http://wiki.nginx.org/Main) for steps to configure any more involved features. Restart nginx with `sudo service nginx restart` to load our new config.
 
-At this point, we should be able to see our application if we visit `http://hostname.com/` if everything has been successful up to this point. 
+At this point, we should be able to see our application if we visit `http://hostname.com/` if everything has been successful up to this point.
