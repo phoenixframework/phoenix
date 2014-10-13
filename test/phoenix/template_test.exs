@@ -6,6 +6,10 @@ defmodule Phoenix.TemplateTest do
 
   @templates Path.expand("../fixtures/templates", __DIR__)
 
+  test "engines/0" do
+    assert is_map Template.engines
+  end
+
   test "template_path_to_name/2" do
     path = "/var/www/templates/admin/users/show.html.eex"
     root = "/var/www/templates"
