@@ -54,10 +54,7 @@ defmodule Phoenix.Template do
 
       config :phoenix, :template_engines,
         eex: Phoenix.Template.EExEngine,
-        haml: Calliope.PhoenixEngine
-
-  Notice that all desired engines must be explicitly listed
-  in the `:template_engines` configuration.
+        exs: Phoenix.Template.ExsEngine
 
   ## Format encoders
 
@@ -68,17 +65,12 @@ defmodule Phoenix.Template do
   A format encoder must export a function called `encode!/1` which
   receives the rendering artifact and returns a string.
 
-  Phoenix ships with one formatter called `Phoenix.HTML.Safe` for `:html`
-  templates which are responsible to guarantee the given output is HTML
-  safe.
-
-  New encoders can be added via the format encoders option:
+  New encoders can be added via the format encoder option:
 
       config :phoenix, :format_encoders,
-        html: Phoenix.HTML.Safe
+        html: Phoenix.HTML.Engine,
+        json: Poison
 
-  Notice that all desired encoders must be explicitly listed
-  in the `:format_encoders` configuration.
   """
 
   @type name :: binary
@@ -86,6 +78,9 @@ defmodule Phoenix.Template do
   @type root :: binary
 
   alias Phoenix.Template
+
+  @encoders [html: Phoenix.HTML.Engine, json: Poison]
+  @engines  [eex: Phoenix.Template.EExEngine, exs: Phoenix.Template.ExsEngine]
 
   defmodule UndefinedError do
     @moduledoc """
@@ -159,8 +154,11 @@ defmodule Phoenix.Template do
       {:ok, encoders} ->
         encoders
       :error ->
-        encoders = Enum.into(Application.get_env(:phoenix, :format_encoders),
-                             %{}, fn {k, v} -> {".#{k}", v} end)
+        encoders =
+          @encoders
+          |> Keyword.merge(raw_config(:format_encoders))
+          |> Enum.filter(fn {_, v} -> v end)
+          |> Enum.into(%{}, fn {k, v} -> {".#{k}", v} end)
         Application.put_env(:phoenix, :compiled_format_encoders, encoders)
         encoders
     end
@@ -170,11 +168,30 @@ defmodule Phoenix.Template do
   Returns a keyword list with all template engines
   extensions followed by their modules.
   """
-  @spec engines() :: [{atom, module}]
+  @spec engines() :: %{atom => module}
   def engines do
-    Application.get_env(:phoenix, :template_engines) ||
-          raise "could not load template_engines configuration for Phoenix." <>
-                "Was the :phoenix application started?"
+    compiled_engines()
+  end
+
+  defp compiled_engines do
+    case Application.fetch_env(:phoenix, :compiled_template_engines) do
+      {:ok, engines} ->
+        engines
+      :error ->
+        engines =
+          @engines
+          |> Keyword.merge(raw_config(:template_engines))
+          |> Enum.filter(fn {_, v} -> v end)
+          |> Enum.into(%{})
+        Application.put_env(:phoenix, :compiled_template_engines, engines)
+        engines
+    end
+  end
+
+  defp raw_config(name) do
+    Application.get_env(:phoenix, name) ||
+      raise "could not load #{name} configuration for Phoenix." <>
+            "Was the :phoenix application started?"
   end
 
   @doc """
@@ -200,7 +217,7 @@ defmodule Phoenix.Template do
   """
   @spec find_all(root) :: [path]
   def find_all(root) do
-    extensions = engines |> Keyword.keys() |> Enum.join(",")
+    extensions = engines |> Map.keys() |> Enum.join(",")
     Path.wildcard("#{root}/*.{#{extensions}}")
   end
 

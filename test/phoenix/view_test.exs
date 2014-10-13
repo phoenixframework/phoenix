@@ -35,8 +35,8 @@ defmodule Phoenix.ViewTest do
   end
 
   test "views can render local templates without safing" do
-    html = View.render(UserView, "local_render.html", title: "<em>chris</em>")
-    assert html == "Local Render <h1>&lt;em&gt;chris&lt;/em&gt;</h1>\n\n"
+    html = View.render(UserView, "local_render.html", [])
+    assert html == "Local Render Subview Hello...\n\n"
   end
 
   test "template_path_from_view_module finds the template path given view module" do
