@@ -42,13 +42,13 @@ If you do create an ambiguous route, the router will still compile, but you will
 
 Define this route at the very bottom of your router.
 
-```
+```elixir
 get "/", HelloPhoenix.RootController, :index
 ```
 
 Then run `$ mix compile` at the root of your project. You will see the following warning from the compiler.
 
-```
+```text
 web/router.ex:1: warning: this clause cannot match because a previous clause at line 1 always matches
 Compiled web/router.ex
 ```
@@ -59,7 +59,7 @@ Phoenix provides a great tool for investigating routes in your application, the 
 
 Let's see how this works. Go to the root of a newly-generated Phoenix application and run `$ mix phoenix.routes`. (If you haven't already done so, you'll need to run `$ mix do deps.get, compile` before running the routes task.) You should see something like this.
 
-```
+```console
 $ mix phoenix.routes
 pages_path  GET  /  HelloPhoenix.PageController.index/2
 ```
@@ -80,7 +80,7 @@ By adding "as: :pages", we have in effect named a resource for this route; we've
 
 That's a mouthful. Let's see it in action. Run `$ iex -S mix` at the root of the project. When we call the pages_path function on our router with the action as an argument, it returns the path to us.
 
-```
+```elixir
 iex(4)> HelloPhoenix.Router.Helpers.pages_path(:index)
 "/"
 ```
@@ -94,7 +94,7 @@ If you try to give the same name to another route, the router will not compile. 
 
 Then run `$ mix compile`
 
-```
+```text
 == Compilation error on file web/router.ex ==
 ** (CompileError) web/router.ex:1: def pages_path/1 has default values and multiple clauses, define a function head with the defaults
     (elixir) src/elixir_def.erl:340: :elixir_def.store_each/8
@@ -175,7 +175,7 @@ Running `$ mix phoenix.routes` now shows that we have all the routes except the 
 ###Path Helpers
 The phoenix.routes task also listed the user_path as the path function for each line of output. Here is what that path translates to for each action.
 
-```
+```elixir
 iex(2)> HelloPhoenix.Router.Helpers.user_path(:index)
 "/users"
 
@@ -260,7 +260,7 @@ Scopes are a way to group routes under a common path prefix. We might want to do
 
 The paths to the user facing reviews would look like a standard resource.
 
-```elixir
+```text
 /reviews
 /reviews/1234
 /reviews/1234/edit
@@ -270,7 +270,7 @@ and so on
 
 The admin review paths could be prefixed with "/admin".
 
-```elixir
+```text
 /admin/reviews
 /admin/reviews/1234
 /admin/reviews/1234/edit
@@ -288,7 +288,7 @@ end
 
 Note that the path we set must begin with a slash. Without the slash, when we run `$ mix phoenix.routes`, the compiler will give this handy error message.
 
-```elixir
+```text
 == Compilation error on file web/router.ex ==
 ** (ArgumentError) Path must start with slash.
 Change path from:

@@ -44,7 +44,7 @@ What might a real world example look like? Let's say we have users in our system
 
 The application, however, may need to present the user's full name. We could do this by concatenating the values of those fields into a single string in each template that needs it. It's much cleaner, however, to do something like this.
 
-```elixir
+```html
 <p>Full Name <%= full_name(user) %></p>
 ```
 Let's say that there are a number of templates which will need the user's full name, and that a different view renders each of them. The way to handle that is to define a `full_name/1` function in the appication view.

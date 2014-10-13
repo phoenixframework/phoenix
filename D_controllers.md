@@ -109,7 +109,7 @@ In order to see our flash messages, we need to be able to pull them off of the `
 
 Let's put these blocks in our application layout. They are designed to work if we have one or many messages set on each key.
 
-```elixir
+```html
 <%= for error <- Flash.get_all(@conn, :error) do %>
       <div class="flash_error">
         <div class="row">
@@ -125,7 +125,7 @@ Let's put these blocks in our application layout. They are designed to work if w
          </div>
        </div>
   <% end %>
- ```
+```
 
  When we reload the page, our messages should appear.
 
@@ -229,14 +229,14 @@ def index(conn, params) do
   |> put_layout(:none)
   |> render "index"
 end
- ```
+```
 When you start the application and view `http://localhost:4000/`, you should see a very different page, one with no title, logo image, or css styling at all.
 
 Very Important! For function calls in the middle of a pipeline, like `put_layout/2` here, it is critical to use parenthesis around the arguments because the pipeline operator binds more tightly. This leads to parsing problems and very strange results.
 
 If you ever get a stack trace that looks like this,
 
-```
+```text
 **(FunctionClauseError) no function clause matching in Plug.Conn.get_resp_header/2
 
 Stacktrace
@@ -254,7 +254,7 @@ def index(conn, params) do
   |> put_layout(:none)
   |> render "index"
 end
- ```
+```
 
 This won't work.
 
@@ -264,11 +264,11 @@ def index(conn, params) do
   |> put_layout :none
   |> render "index"
 end
- ```
+```
 
 Now let's actually create another layout and render the index template into it. As an example, let's say we had a different layout for the admin section of our application which didn't have the logo image. To do this, let's copy the existing `application.html.eex` to a new file `admin.html.eex`. Then remove the line in it that displays the logo.
 
-```elixir
+```html
 <span class="logo"></span> <!-- remove this line -->
 ```
 
@@ -280,7 +280,7 @@ def index(conn, params) do
   |> put_layout("admin")
   |> render "index"
 end
- ```
+```
 
 Reload the page, and we should be rendering the admin layout with no logo.
 
