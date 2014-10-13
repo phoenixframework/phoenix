@@ -39,14 +39,6 @@ defmodule Phoenix.ViewTest do
     assert html == "Local Render Subview Hello...\n\n"
   end
 
-  test "template_path_from_view_module finds the template path given view module" do
-    assert View.template_path_from_view_module(MyApp.UserView, "web/templates") ==
-      "web/templates/user"
-
-    assert View.template_path_from_view_module(MyApp.Admin.UserView, "web/templates") ==
-      "web/templates/admin/user"
-  end
-
   test "default_templates_root/0 returns the default template path based on current mix project" do
     assert String.contains?(View.default_templates_root, "web/templates")
   end

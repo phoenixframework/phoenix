@@ -1,6 +1,4 @@
 defmodule Phoenix.View do
-  alias Phoenix.Naming
-
   @moduledoc """
   Serves as the base view for an entire Phoenix application view layer
 
@@ -42,7 +40,8 @@ defmodule Phoenix.View do
     quote do
       import Phoenix.View.Helpers
       use Phoenix.HTML
-      root = Phoenix.View.template_path_from_view_module(__MODULE__, unquote(templates_root))
+      root = Path.join(unquote(templates_root),
+                       Phoenix.Template.module_to_template_root(__MODULE__, "View"))
       use Phoenix.Template, root: root
     end
   end
@@ -101,26 +100,6 @@ defmodule Phoenix.View do
     else
       content
     end
-  end
-
-  @doc """
-  Finds the template path given view module and template root path
-
-  ## Examples
-
-      iex> Phoenix.View.template_path_from_view_module(MyApp.UserView, "web/templates")
-      "web/templates/user"
-
-  """
-  def template_path_from_view_module(view_module, templates_root) do
-    submodule_path = view_module
-    |> Module.split
-    |> tl
-    |> Enum.map(&Naming.underscore/1)
-    |> Path.join
-    |> String.replace(~r/^(.*)(_view)$/, "\\1")
-
-    Path.join(templates_root, submodule_path)
   end
 
   @doc """

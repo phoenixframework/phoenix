@@ -213,6 +213,27 @@ defmodule Phoenix.Template do
   end
 
   @doc """
+  Converts a module, without the suffix, to a template root.
+
+  ## Examples
+
+      iex> Phoenix.Template.module_to_template_root(MyApp.UserView, "View")
+      "user"
+
+      iex> Phoenix.Template.module_to_template_root(MyApp.Admin.User, "View")
+      "admin/user"
+
+  """
+  def module_to_template_root(module, suffix) do
+    module
+    |> Phoenix.Naming.unsuffix(suffix)
+    |> Module.split
+    |> tl
+    |> Enum.map(&Phoenix.Naming.underscore/1)
+    |> Path.join
+  end
+
+  @doc """
   Returns all template paths in a given template root.
   """
   @spec find_all(root) :: [path]
