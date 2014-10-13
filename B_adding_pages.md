@@ -96,6 +96,7 @@ Create a new web/controllers/hello_controller.ex file, and make it look like the
 ```elixir
 defmodule HelloPhoenix.HelloController do
   use Phoenix.Controller
+  plug :action
 
   def index(conn, _params) do
     render conn, "index"
