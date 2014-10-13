@@ -13,14 +13,15 @@ defmodule Phoenix.Controller.CsrfProtectionTest do
   )
 
   @secret String.duplicate("abcdef0123456789", 8)
+  @csrf_token "hello123"
 
-  def simulate_request(method, path, params \\ nil) do
-    simulate_request_without_token(method, path, params)
-    |> put_session(:csrf_token, "hello123")
+  def call_with_token(method, path, params \\ nil) do
+    call(method, path, params)
+    |> put_session(:csrf_token, @csrf_token)
     |> send_resp(200, "ok")
   end
 
-  defp simulate_request_without_token(method, path, params \\ nil) do
+  defp call(method, path, params \\ nil) do
     conn(method, path, params)
     |> sign_cookie(@secret)
     |> Plug.Session.call(@default_opts)
@@ -28,7 +29,7 @@ defmodule Phoenix.Controller.CsrfProtectionTest do
   end
 
   defp recycle_data(conn, old_conn) do
-    opts = Plug.Parsers.init(parsers: [:urlencoded, :multipart, Parsers.JSON], accept: ["*/*"])
+    opts = Plug.Parsers.init(parsers: [:urlencoded, :multipart, :json], accept: ["*/*"])
 
     sign_cookie(conn, @secret)
     |> recycle(old_conn)
@@ -42,7 +43,7 @@ defmodule Phoenix.Controller.CsrfProtectionTest do
   end
 
   test "raise error for invalid authenticity token" do
-    old_conn = simulate_request(:get, "/")
+    old_conn = call_with_token(:get, "/")
 
     assert_raise InvalidAuthenticityToken, fn ->
       conn(:post, "/", %{csrf_token: "foo"})
@@ -58,25 +59,25 @@ defmodule Phoenix.Controller.CsrfProtectionTest do
   end
 
   test "unprotected requests are always valid" do
-    conn = simulate_request_without_token(:get, "/") |> CsrfProtection.call([])
+    conn = call(:get, "/") |> CsrfProtection.call([])
     assert conn.halted == false
 
-    conn = simulate_request_without_token(:options, "/") |> CsrfProtection.call([])
+    conn = call(:options, "/") |> CsrfProtection.call([])
     assert conn.halted == false
 
-    conn = simulate_request_without_token(:connect, "/") |> CsrfProtection.call([])
+    conn = call(:connect, "/") |> CsrfProtection.call([])
     assert conn.halted == false
 
-    conn = simulate_request_without_token(:trace, "/") |> CsrfProtection.call([])
+    conn = call(:trace, "/") |> CsrfProtection.call([])
     assert conn.halted == false
 
-    conn = simulate_request_without_token(:head, "/") |> CsrfProtection.call([])
+    conn = call(:head, "/") |> CsrfProtection.call([])
     assert conn.halted == false
   end
 
   test "protected requests with valid token in params are allowed except DELETE" do
-    old_conn = simulate_request(:get, "/")
-    params = %{csrf_token: "hello123"}
+    old_conn = call_with_token(:get, "/")
+    params = %{csrf_token: @csrf_token}
 
     conn = conn(:post, "/", params) |> recycle_data(old_conn) |> CsrfProtection.call([])
     assert conn.halted == false
@@ -89,35 +90,35 @@ defmodule Phoenix.Controller.CsrfProtectionTest do
   end
 
   test "protected requests with valid token in header are allowed" do
-    old_conn = simulate_request(:get, "/")
+    old_conn = call_with_token(:get, "/")
 
     conn = conn(:post, "/")
     |> recycle_data(old_conn)
-    |> put_req_header("X-CSRF-Token", "hello123")
+    |> put_req_header("X-CSRF-Token", @csrf_token)
     |> CsrfProtection.call([])
     assert conn.halted == false
 
     conn = conn(:put, "/")
     |> recycle_data(old_conn)
-    |> put_req_header("X-CSRF-Token", "hello123")
+    |> put_req_header("X-CSRF-Token", @csrf_token)
     |> CsrfProtection.call([])
     assert conn.halted == false
 
     conn = conn(:patch, "/")
     |> recycle_data(old_conn)
-    |> put_req_header("X-CSRF-Token", "hello123")
+    |> put_req_header("X-CSRF-Token", @csrf_token)
     |> CsrfProtection.call([])
     assert conn.halted == false
 
     conn = conn(:delete, "/")
     |> recycle_data(old_conn)
-    |> put_req_header("X-CSRF-Token", "hello123")
+    |> put_req_header("X-CSRF-Token", @csrf_token)
     |> CsrfProtection.call([])
     assert conn.halted == false
   end
 
   test "csrf_token is generated when it isn't available" do
-    conn = simulate_request_without_token(:get, "/") |> CsrfProtection.call([])
+    conn = call(:get, "/") |> CsrfProtection.call([])
     assert !!Conn.get_session(conn, :csrf_token)
   end
 end

@@ -1,6 +1,5 @@
 defmodule Phoenix.Plugs.CsrfProtection do
   alias Plug.Conn
-  require Logger
 
   @moduledoc """
   Plug to protect from cross-site request forgery.
@@ -14,7 +13,7 @@ defmodule Phoenix.Plugs.CsrfProtection do
   The session's CSRF token will be compared with a token in the params with key
   "csrf-token" or a token in the request headers with key 'X-CSRF-Token'.
 
-  Only POST, PUT, PATCH and DELETE are protected methods. DELETE methods needs
+  Only POST, PUT, PATCH and DELETE are protected methods. DELETE methods need
   a token in the request header to be validated since it doesn't accept params.
 
   Plugged by Phoenix.Router if :csrf_protection in Phoenix.Config is set to true.
@@ -25,11 +24,6 @@ defmodule Phoenix.Plugs.CsrfProtection do
 
   """
   @protected_methods ~w(POST PUT PATCH DELETE)
-  @invalid_token_error_message """
-  Invalid authenticity token. Make sure that all your POST, PUT, PATCH and DELETE
-  requests include the authenticity token as part of form params or as a
-  value in your request's headers with key 'X-CSRF-Token'.
-  """
 
   defmodule InvalidAuthenticityToken do
     @moduledoc """
@@ -49,13 +43,8 @@ defmodule Phoenix.Plugs.CsrfProtection do
     if verified_request?(conn) do
       conn
     else
-      handle_invalid_token(conn)
+      raise InvalidAuthenticityToken, message: @invalid_token_error_message
     end
-  end
-
-  def handle_invalid_token(conn) do
-    Logger.debug(@invalid_token_error_message)
-    raise InvalidAuthenticityToken, message: @invalid_token_error_message
   end
 
   def call(conn, _opts), do: ensure_csrf_token(conn)
@@ -66,7 +55,7 @@ defmodule Phoenix.Plugs.CsrfProtection do
   end
 
   defp valid_token_in_header?(conn) do
-    header_token = "#{Conn.get_req_header(conn, "X-CSRF-Token")}"
+    header_token = Conn.get_req_header(conn, "X-CSRF-Token") |> Enum.at(0)
     valid_authenticity_token?(conn, header_token)
   end
   defp valid_authenticity_token?(_conn, nil), do: false
