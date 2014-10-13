@@ -1,6 +1,30 @@
 defmodule Phoenix.Template do
   @moduledoc """
-  TODO: Talk about templates.
+  A template is a file used by Phoenix on rendering.
+
+  Since many views require rendering large contents, for example
+  a whole HTML file, it is common to put those files in the file
+  system into a particular directory, typically "web/templates".
+
+  This module provides conveniences for reading all files from a
+  particular directory and embeding them into a single module.
+  Imagine you have a directory with templates:
+
+      # templates/foo.html.eex
+      Hello <%= @name %>
+
+      # templates.ex
+      defmodule Templates do
+        use Phoenix.Template, root: "templates"
+      end
+
+  Now the template foo can be directly rendered with:
+
+      Templates.render("foo.html", name: "John Doe")
+
+  In practice though, developers rarely use Phoenix.Template
+  directly. Instead they use Phoenix.View which wraps the template
+  functionality and add some extra conveniences.
 
   ## Terminology
 
@@ -57,6 +81,10 @@ defmodule Phoenix.Template do
   in the `:format_encoders` configuration.
   """
 
+  @type name :: binary
+  @type path :: binary
+  @type root :: binary
+
   alias Phoenix.Template
 
   defmodule UndefinedError do
@@ -93,8 +121,8 @@ defmodule Phoenix.Template do
   defmacro __before_compile__(env) do
     root = Module.get_attribute(env.module, :root)
 
-    pairs = for path <- find_all_from_root(root) do
-      precompile(path, root)
+    pairs = for path <- find_all(root) do
+      compile(path, root)
     end
 
     names = Enum.map(pairs, &elem(&1, 0))
@@ -114,13 +142,14 @@ defmodule Phoenix.Template do
       @doc """
       Returns true whenever the list of templates change in the filesystem.
       """
-      def phoenix_recompile?, do: unquote(path_hash(root)) != Template.path_hash(@root)
+      def phoenix_recompile?, do: unquote(hash(root)) != Template.hash(@root)
     end
   end
 
   @doc """
   Returns the format encoder for the given template name.
   """
+  @spec format_encoder(name) :: module | nil
   def format_encoder(template_name) when is_binary(template_name) do
     Map.get(compiled_format_encoders, Path.extname(template_name))
   end
@@ -138,52 +167,59 @@ defmodule Phoenix.Template do
   end
 
   @doc """
-  Converts the template file path into a function name
+  Returns a keyword list with all template engines
+  extensions followed by their modules.
+  """
+  @spec engines() :: [{atom, module}]
+  def engines do
+    Application.get_env(:phoenix, :template_engines) ||
+          raise "could not load template_engines configuration for Phoenix." <>
+                "Was the :phoenix application started?"
+  end
 
-    * path - The String Path to the template file
-    * template_root - The String Path of the template root diretory
+  @doc """
+  Converts the template path into the template name.
 
   ## Examples
 
-      iex> Template.func_name_from_path(
-        "lib/templates/admin/users/show.html.eex",
-        "lib/templates")
+      iex> Phoenix.Template.template_path_to_name(
+      ...>   "lib/templates/admin/users/show.html.eex",
+      ...>   "lib/templates")
       "admin/users/show.html"
 
   """
-  def func_name_from_path(path, template_root) do
+  @spec template_path_to_name(path, root) :: name
+  def template_path_to_name(path, root) do
     path
-    |> String.replace(template_root, "")
-    |> String.lstrip(?/)
-    |> String.replace(Path.extname(path), "")
+    |> Path.rootname()
+    |> Path.relative_to(root)
   end
 
   @doc """
-  Returns List of template EEx template file paths
+  Returns all template paths in a given template root.
   """
-  def find_all_from_root(template_root) do
-    extensions = engine_extensions |> Enum.join(",")
-    Path.wildcard("#{template_root}/**/*.{#{extensions}}")
+  @spec find_all(root) :: [path]
+  def find_all(root) do
+    extensions = engines |> Keyword.keys() |> Enum.join(",")
+    Path.wildcard("#{root}/*.{#{extensions}}")
   end
 
   @doc """
-  Returns the sha hash of the list of all file names in the given path
+  Returns the hash of all template paths in the given root.
+
+  Used by Phoenix to check if a given root path requires recompilation.
   """
-  def path_hash(template_root) do
-    find_all_from_root(template_root)
+  @spec hash(root) :: binary
+  def hash(root) do
+    find_all(root)
     |> Enum.sort
     |> :erlang.md5
   end
 
-  @doc """
-  Precompiles the String file_path into a `render/2` function defintion, using
-  an engine configured for the template file extension
-  """
-  def precompile(path, root) do
-    name   = func_name_from_path(path, root)
+  defp compile(path, root) do
+    name   = template_path_to_name(path, root)
     ext    = Path.extname(path) |> String.lstrip(?.) |> String.to_atom
-    engine = Application.get_env(:phoenix, :template_engines)[ext] ||
-               raise "could not find template engine for extension #{inspect ext}"
+    engine = engines()[ext]
     quoted = engine.compile(path, name)
 
     {name, quote do
@@ -195,12 +231,6 @@ defmodule Phoenix.Template do
         unquote(quoted)
       end
     end}
-  end
-
-  defp engine_extensions do
-    (Application.get_env(:phoenix, :template_engines) ||
-      raise "could not load template_engines configuration for Phoenix." <>
-            "Was the Phoenix started?") |> Dict.keys
   end
 end
 
