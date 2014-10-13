@@ -282,19 +282,27 @@ defmodule Phoenix.Channel.ChannelTest do
                   Message.parse!(json))
   end
 
+  defmodule Chan10 do
+    use Phoenix.Channel
+    def join(socket, _topic, _msg), do: {:ok, socket}
+    def event(socket, "info", _msg) do
+      assign(socket, :foo, :bar)
+    end
+    def event(socket, "put", dict) do
+      Enum.reduce dict, socket, fn {k, v}, socket -> assign(socket, k, v) end
+    end
+    def event(socket, "get", %{"key" => key}) do
+      send socket.pid, get_assign(socket, key)
+      socket
+    end
+  end
+  defmodule Router10 do
+    use Phoenix.Router
+    use Phoenix.Router.Socket, mount: "/ws"
+    channel "chan10", Chan10
+  end
+
   test "socket state can change when receiving regular process messages" do
-    defmodule Chan10 do
-      use Phoenix.Channel
-      def join(socket, _topic, _msg), do: {:ok, socket}
-      def event(socket, "info", _msg) do
-        Socket.assign(socket, :foo, :bar)
-      end
-    end
-    defmodule Router10 do
-      use Phoenix.Router
-      use Phoenix.Router.Socket, mount: "/ws"
-      channel "chan10", Chan10
-    end
 
     socket = %Socket{pid: self, router: Router10, channel: "chan66"}
 
@@ -306,6 +314,13 @@ defmodule Phoenix.Channel.ChannelTest do
     {:ok, _req, socket} = Handler.websocket_info(:stuff, socket.conn, socket)
 
     assert Socket.get_assign(socket, socket.channel, "topic", :foo) == :bar
+  end
+
+  test "Socket state can be put and retrieved" do
+    socket = %Socket{pid: self, router: Router10, channel: "chan66"}
+    socket = Chan10.event(socket, "put", %{val: 123})
+    _socket = Chan10.event(socket, "get", %{"key" => :val})
+    assert_received 123
   end
 end
 
