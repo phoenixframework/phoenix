@@ -16,7 +16,7 @@ defmodule Phoenix.Config.Supervisor do
 end
 
 defmodule Phoenix.Config do
-  # Handles router configuration.
+  # Handles Phoenix configuration.
   #
   # This module is private to Phoenix and should not be accessed
   # directly. The Phoenix Router configuration can be accessed at
@@ -27,77 +27,66 @@ defmodule Phoenix.Config do
   use GenServer
 
   @doc """
-  Returns the compile router configuration for compilation time.
-  """
-  def compile_time(router) do
-    config = Application.get_env(:phoenix, router, [])
-
-    otp_app = cond do
-      config[:otp_app] ->
-        config[:otp_app]
-      Code.ensure_loaded?(Mix.Project) && Mix.Project.config[:app] ->
-        Mix.Project.config[:app]
-      true ->
-        raise "please set :otp_app config for #{inspect router}"
-    end
-
-    with_defaults(config, otp_app)
-  end
-
-  @doc """
   Starts a supervised Phoenix configuration handler for runtime.
 
-  Data is accessed by the router via ETS.
+  Data is accessed by the module via ETS.
   """
-  def runtime(otp_app, router) do
-    Supervisor.start_child(Phoenix.Config.Supervisor, [otp_app, router])
-  end
-
-  ## GenServer API
-
-  @doc """
-  Starts a linked Phoenix configuration handler.
-  """
-  def start_link(otp_app, router) do
-    GenServer.start_link(__MODULE__, {otp_app, router})
+  def start_supervised(module, defaults) do
+    Supervisor.start_child(Phoenix.Config.Supervisor, [module, defaults])
   end
 
   @doc """
-  Stops Phoenix configuration handler for the router.
+  Stops Phoenix configuration handler for the module.
   """
-  def stop(router) do
-    [__config__: pid] = :ets.lookup(router, :__config__)
+  def stop(module) do
+    [__config__: pid] = :ets.lookup(module, :__config__)
     GenServer.call(pid, :stop)
   end
 
   @doc """
-  Caches a value in Phoenix configuration handler for the router.
+  Deep merges the given configuration.
+  """
+  def merge(config1, config2) do
+    Keyword.merge(config1, config2, &merger/3)
+  end
+
+  @doc """
+  Caches a value in Phoenix configuration handler for the module.
 
   Notice writes are not serialized to the server, we expect the
   function that generates the cache to be idempotent.
   """
-  def cache(router, key, fun) do
-    case :ets.lookup(router, key) do
+  def cache(module, key, fun) do
+    case :ets.lookup(module, key) do
       [{^key, val}] -> val
       [] ->
-        val = fun.(router)
-        store(router, [{key, val}])
+        val = fun.(module)
+        store(module, [{key, val}])
         val
     end
   end
 
+  ## Internal API
+
   @doc """
-  Stores the given keywords in the Phoenix configuration handler for the router.
+  Starts a linked Phoenix configuration handler.
   """
-  def store(router, pairs) do
-    [__config__: pid] = :ets.lookup(router, :__config__)
+  def start_link(module, defaults) do
+    GenServer.start_link(__MODULE__, {module, defaults})
+  end
+
+  @doc """
+  Stores the given keywords in the Phoenix configuration handler for the module.
+  """
+  def store(module, pairs) do
+    [__config__: pid] = :ets.lookup(module, :__config__)
     GenServer.call(pid, {:store, pairs})
   end
 
   @doc """
   Reloads all children.
 
-  It receives a keyword list with changed routers and another
+  It receives a keyword list with changed config and another
   with removed ones. The changed config are updated while the
   removed ones stop, effectively removing the table.
   """
@@ -110,59 +99,36 @@ defmodule Phoenix.Config do
 
   # Callbacks
 
-  def init({app, module}) do
+  def init({module, defaults}) do
     :ets.new(module, [:named_table, :protected, read_concurrency: true])
     :ets.insert(module, [__config__: self()])
     config = Application.get_env(:phoenix, module, [])
-    update(module, with_defaults(config, app))
-    {:ok, {app, module}}
+    update(module, merge(defaults, config))
+    {:ok, {module, defaults}}
   end
 
-  def handle_call({:store, config}, _from, {app, module}) do
+  def handle_call({:store, config}, _from, {module, defaults}) do
     :ets.insert(module, config)
-    {:reply, :ok, {app, module}}
+    {:reply, :ok, {module, defaults}}
   end
 
-  def handle_call({:config_change, changed, removed}, _from, {app, module}) do
+  def handle_call({:config_change, changed, removed}, _from, {module, defaults}) do
     cond do
       changed = changed[module] ->
-        update(module, with_defaults(changed, app))
-        {:reply, :ok, {app, module}}
+        update(module, merge(defaults, changed))
+        {:reply, :ok, {module, defaults}}
       module in removed ->
-        stop(app, module)
+        stop(module, defaults)
       true ->
-        {:reply, :ok, {app, module}}
+        {:reply, :ok, {module, defaults}}
     end
   end
 
-  def handle_call(:stop, _from, {app, module}) do
-    stop(app, module)
+  def handle_call(:stop, _from, {module, defaults}) do
+    stop(module, defaults)
   end
 
   # Helpers
-
-  defp with_defaults(config, otp_app) do
-    defaults = [
-      otp_app: otp_app,
-
-      # Compile-time config
-      parsers: [parsers: [:urlencoded, :multipart, :json],
-                 accept: ["*/*"], json_decoder: Poison],
-      static: [at: "/"],
-      session: false,
-
-      # Runtime config
-      url: [host: "localhost"],
-      http: [port: 4000, otp_app: otp_app],
-      https: [port: 4040, otp_app: otp_app],
-      secret_key_base: nil,
-      catch_errors: true,
-      debug_errors: false,
-      error_controller: Phoenix.Controller.ErrorController
-    ]
-
-    Keyword.merge(defaults, config, &merger/3)
-  end
 
   defp merger(_k, v1, v2) do
     if Keyword.keyword?(v1) and Keyword.keyword?(v2) do
@@ -183,8 +149,8 @@ defmodule Phoenix.Config do
     Enum.map(data, &elem(&1, 0))
   end
 
-  defp stop(app, module) do
+  defp stop(module, defaults) do
     :ets.delete(module)
-    {:stop, :normal, :ok, {app, module}}
+    {:stop, :normal, :ok, {module, defaults}}
   end
 end

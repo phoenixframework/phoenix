@@ -268,15 +268,11 @@ defmodule Phoenix.Router do
 
     * `:http` - the configuration for the http server. Currently uses
       cowboy and accepts all options as defined by `Plug.Adapters.Cowboy`.
-      Defaults to:
-
-          [port: 4000]
+      Defaults to false.
 
     * `:https` - the configuration for the https server. Currently uses
       cowboy and accepts all options as defined by `Plug.Adapters.Cowboy`.
-      Defaults to:
-
-          [port: 4040]
+      Defaults to false.
 
     * `:secret_key_base` - a secret key used as base to generate secrets
       to encode cookies, session and friends. Defaults to nil as it must
@@ -319,7 +315,7 @@ defmodule Phoenix.Router do
       import Phoenix.Router
       import Plug.Conn
 
-      config = Phoenix.Config.compile_time(__MODULE__)
+      config = Adapter.config(__MODULE__)
       @config config
       @otp_app config[:otp_app]
 

@@ -10,22 +10,10 @@ defmodule Phoenix.ConfigTest do
     :ok
   end
 
-  test "loads router configuration", meta do
-    config = compile_time(meta.test)
-    assert config[:otp_app] == :phoenix_config
-    assert config[:parsers] == false
-    assert config[:static] == [at: "/"]
-    assert config[:custom] == true
-  end
-
-  test "loads otp_app from Mix environment", _meta do
-    config = compile_time(:whatever_router)
-    assert config[:otp_app] == :phoenix
-    assert config[:static] == [at: "/"]
-  end
+  @defaults [static: [at: "/"]]
 
   test "starts an ets table as part of the router handler", meta do
-    {:ok, _pid} = start_link(:phoenix_config, meta.test)
+    {:ok, _pid} = start_link(meta.test, @defaults)
     assert :ets.info(meta.test, :name) == meta.test
     assert :ets.lookup(meta.test, :parsers) == [parsers: false]
     assert :ets.lookup(meta.test, :static)  == [static: [at: "/"]]
@@ -36,7 +24,7 @@ defmodule Phoenix.ConfigTest do
   end
 
   test "starts a supervised and reloadable router handler", meta do
-    {:ok, pid} = runtime(:phoenix_config, meta.test)
+    {:ok, pid} = start_supervised(meta.test, @defaults)
     Process.link(pid)
 
     # Nothing changed
@@ -57,7 +45,7 @@ defmodule Phoenix.ConfigTest do
   end
 
   test "supports reloadable caches", meta do
-    {:ok, pid} = runtime(:phoenix_config, meta.test)
+    {:ok, pid} = start_supervised(meta.test, @defaults)
     Process.link(pid)
 
     assert cache(meta.test, :__hello__, fn _ -> 1 end) == 1

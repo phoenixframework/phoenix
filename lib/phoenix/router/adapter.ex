@@ -11,19 +11,43 @@ defmodule Phoenix.Router.Adapter do
   @unsent [:unset, :set]
 
   @doc """
+  The router configuration used at compile time.
+  """
+  def config(router) do
+    config = Application.get_env(:phoenix, router, [])
+
+    otp_app = cond do
+      config[:otp_app] ->
+        config[:otp_app]
+      Code.ensure_loaded?(Mix.Project) && Mix.Project.config[:app] ->
+        Mix.Project.config[:app]
+      true ->
+        raise "please set :otp_app config for #{inspect router}"
+    end
+
+    Phoenix.Config.merge(defaults(otp_app), config)
+  end
+
+  @doc """
   Starts the router.
   """
   def start(otp_app, module) do
-    Phoenix.Config.runtime(otp_app, module)
+    Phoenix.Config.start_supervised(module, defaults(otp_app))
 
     # TODO: We need to test this logic when we support custom adapters.
-
     if config = module.config(:http) do
+      config =
+        config
+        |> Keyword.put_new(:otp_app, otp_app)
+        |> Keyword.put_new(:port, 4000)
       start(:http, otp_app, module, config)
     end
 
     if config = module.config(:https) do
-      config = Keyword.merge(module.config(:http) || [], module.config(:https))
+      config =
+        Keyword.merge(module.config(:http) || [], module.config(:https))
+        |> Keyword.put_new(:otp_app, otp_app)
+        |> Keyword.put_new(:port, 4040)
       start(:https, otp_app, module, config)
     end
 
@@ -77,6 +101,25 @@ defmodule Phoenix.Router.Adapter do
 
     Phoenix.Config.stop(module)
     :ok
+  end
+
+  defp defaults(otp_app) do
+    [otp_app: otp_app,
+
+     # Compile-time config
+     parsers: [parsers: [:urlencoded, :multipart, :json],
+                accept: ["*/*"], json_decoder: Poison],
+     static: [at: "/"],
+     session: false,
+
+     # Runtime config
+     url: [host: "localhost"],
+     http: false,
+     https: false,
+     secret_key_base: nil,
+     catch_errors: true,
+     debug_errors: false,
+     error_controller: Phoenix.Controller.ErrorController]
   end
 
   # TODO: Move the dispatch logic and error handling elsewhere.
