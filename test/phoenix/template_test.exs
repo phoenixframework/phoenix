@@ -95,8 +95,8 @@ defmodule Phoenix.TemplateTest do
     end
   end
 
-  test "generates phoenix_recompile? function" do
-    refute View.phoenix_recompile?
+  test "generates __phoenix_recompile__? function" do
+    refute View.__phoenix_recompile__?
   end
 end
 

@@ -142,7 +142,7 @@ defmodule Phoenix.Template do
       @doc """
       Returns true whenever the list of templates change in the filesystem.
       """
-      def phoenix_recompile?, do: unquote(hash(root)) != Template.hash(@template_root)
+      def __phoenix_recompile__?, do: unquote(hash(root)) != Template.hash(@template_root)
     end
   end
 
