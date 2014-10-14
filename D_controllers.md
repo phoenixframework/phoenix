@@ -26,7 +26,7 @@ end
 
 The first line below the module definition invokes the `__using__/1` macro of the `Phoenix.Controller` module, which imports some useful modules.
 
-The second line `plug :action` has been recently added with the 0.5.0 release of Phoenix. `plug/1` is a macro defined in the `Plug.Builder` module of the Elixir Plug middleware framework. It's purpose is to insert a new piece of middleware into the stack of middlewares which will be executed, in order, during a request cycle. Here, it is inserting `:action` which handles dispatching to the correct controller module and function (in other words, the action) according to the routes defined in the router.
+The second line `plug :action` has been recently added with the 0.5.0 release of Phoenix. `plug/1` is a macro defined in the `Phoenix.Controller.Pipeline` module. It's purpose is to insert a new piece of middleware into the stack of middlewares which will be executed, in order, during a request cycle. Here, it is inserting `:action` which handles dispatching to the correct controller module and function (in other words, the action) according to the routes defined in the router.
 
 In addition, the `PageController` gives us the index action to display the Phoenix welcome page associated with the default route Phoenix defines in the router. It also gives us generic actions to handle 404 Page not Found and 500 Internal Error responses.
 
