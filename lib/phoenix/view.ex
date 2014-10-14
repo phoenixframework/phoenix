@@ -213,13 +213,13 @@ defmodule Phoenix.View do
   However, there are keys under assigns that are specially handled by
   Phoenix, they are:
 
-    * :within - tells Phoenix to wrap the rendered result in the
+    * `:within` - tells Phoenix to wrap the rendered result in the
       given layout. See next section.
 
   ## Layouts
 
   Template can be rendered within other templates using the `:within`
-  option. :within` accepts a tuple of the form `{LayoutModule, "template.extension"}`.
+  option. `:within` accepts a tuple of the form `{LayoutModule, "template.extension"}`.
 
   When a template is rendered, the layout template will have an `@inner`
   assign containing the rendered contents of the sub-template. For HTML
@@ -227,7 +227,7 @@ defmodule Phoenix.View do
 
       Phoenix.View.render(YourApp.UserView, "index.html",
                           within: {YourApp.LayoutView, "application.html"})
-      #=> {;safe, "<html><h1>Hello!</h1></html>"}
+      #=> {:safe, "<html><h1>Hello!</h1></html>"}
 
   """
   def render(module, template, assigns) do
