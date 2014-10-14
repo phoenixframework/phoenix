@@ -95,6 +95,8 @@ defmodule Phoenix.Router.HelpersTest do
     scope path: "/admin/new", alias: Admin, as: "admin" do
       resources "/messages", MessageController
     end
+
+    get "/", PageController, :root, as: :page
   end
 
   setup_all do
@@ -119,6 +121,8 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.top_path(:top) == "/posts/top"
     assert Helpers.top_path(:top, id: 5) == "/posts/top?id=5"
     assert Helpers.top_path(:top, %{"id" => 5}) == "/posts/top?id=5"
+
+    assert Helpers.page_path(:root) == "/"
 
     assert_raise UndefinedFunctionError, fn ->
       Helpers.post_path(:skip)
