@@ -1,6 +1,6 @@
 defmodule Phoenix.Template do
   @moduledoc """
-  A template is a file used by Phoenix on rendering.
+  Templates are used by Phoenix on rendering.
 
   Since many views require rendering large contents, for example
   a whole HTML file, it is common to put those files in the file
@@ -22,8 +22,8 @@ defmodule Phoenix.Template do
 
       Templates.render("foo.html", name: "John Doe")
 
-  In practice though, developers rarely use Phoenix.Template
-  directly. Instead they use Phoenix.View which wraps the template
+  In practice though, developers rarely use `Phoenix.Template`
+  directly. Instead they use `Phoenix.View` which wraps the template
   functionality and add some extra conveniences.
 
   ## Terminology

@@ -2,6 +2,17 @@
 
 ## v0.6.0-dev
 
+* Enhancements
+  * [View] Add support to format_encoders that automatically encodes rendered templates. This means a "user.json" template only needs to return a map (or any structure encodable to JSON) and it will be automatically encoded to JSON by Phoenix
+  * [View] Add a .exs template engine
+
+* Backwards incompatible changes
+  * [View] Your application should now directly use Phoenix.View in its main view and specify further configuration in the `using(...)` section
+  * [View] Template engines now should implement compile and simply return the quoted expression of the function body instead of the quoted expression of the render function
+
+* Bug fixes
+  * [Router] Generate correct route for helper path on root
+
 ## v0.5.0
 
 * Enhancements

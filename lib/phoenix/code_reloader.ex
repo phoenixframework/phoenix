@@ -26,7 +26,7 @@ defmodule Phoenix.CodeReloader do
   Reloads codes witin `web/` directory
   """
   def reload! do
-    GenServer.call __MODULE__, :reload
+    GenServer.call __MODULE__, :reload, :infinity
   end
 
   @doc """

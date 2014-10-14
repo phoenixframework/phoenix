@@ -56,22 +56,10 @@ defmodule Phoenix.Controller.Connection do
     put_private(conn, :phoenix_layout, :none)
   end
 
-  @doc false
-  def assign_layout(conn, layout) do
-    IO.write :stderr, "assign_layout/2 is deprecated in favor of put_layout/2\n#{Exception.format_stacktrace}"
-    put_layout(conn, layout)
-  end
-
   @doc """
   Retrieve layout from phoenix private assigns
   """
   def layout(conn), do: Dict.get(conn.private, :phoenix_layout, "application")
-
-  @doc false
-  def assign_status(conn, status) do
-    IO.write :stderr, "assign_status/2 is deprecated in favor of put_status/2\n#{Exception.format_stacktrace}"
-    put_status(conn, status)
-  end
 
   @doc """
   Returns the String Mime content-type of response
