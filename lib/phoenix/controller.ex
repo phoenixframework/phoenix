@@ -120,6 +120,8 @@ defmodule Phoenix.Controller do
       defmodule MyApp.UserController do
         use Phoenix.Controller
 
+        plug :action
+
         def show(conn) do
           render conn, "show", name: "José"
         end
