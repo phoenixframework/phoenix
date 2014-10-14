@@ -1,1 +1,0 @@
-Showing User <%= render UserTest.ProfileView, "mini.html", name: @name %>

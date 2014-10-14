@@ -150,7 +150,7 @@ defmodule Phoenix.Controller do
     ext          = MIME.extensions(content_type) |> Enum.at(0)
     status       = conn.status || 200
     conn         = prepare_for_render(conn, assigns, layout_mod, ext)
-    content = View.render(view_mod, template_name(template, ext), conn.assigns)
+    content = View.render_to_iodata(view_mod, template_name(template, ext), conn.assigns)
 
     send_response(conn, status, content_type, content)
   end

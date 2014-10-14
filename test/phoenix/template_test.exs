@@ -32,11 +32,11 @@ defmodule Phoenix.TemplateTest do
            "home.html"
   end
 
-  test "find_all/1 finds all templates in the iven root" do
+  test "find_all/1 finds all templates in the given root" do
     templates = Template.find_all @templates
     assert Path.join(@templates, "show.html.eex") in templates
 
-    templates = Template.find_all Path.dirname(@templates)
+    templates = Template.find_all Path.expand("../ssl", @templates)
     assert templates == []
   end
 

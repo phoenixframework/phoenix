@@ -1,1 +1,0 @@
-showing profile <%= friendly_name @name %>

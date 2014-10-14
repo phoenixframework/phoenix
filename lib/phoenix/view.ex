@@ -34,15 +34,93 @@ defmodule Phoenix.View do
 
   """
 
-  defmacro __using__(options \\ []) do
-    templates_root = Dict.get(options, :templates_root, default_templates_root)
+  @doc false
+  defmacro __using__(options) do
+    if root = Keyword.get(options, :root) do
+      quote do
+        @view_root unquote(root)
+        unquote(__base__())
+      end
+    else
+      # TODO: Remove this message once codebases have been upgraded
+      raise """
+      You are using the old API for Phoenix.View.
+      Here is the new view for your application:
 
+          defmodule YOURAPP.View do
+            use Phoenix.View, root: "web/templates"
+
+            # Everything in this block is available runs in this
+            # module and in other views that use MyApp.View
+            using do
+              # Import common functionality
+              import YOURAPP.I18n
+              import YOURAPP.Router.Helpers
+
+              # Use Phoenix.HTML to import all HTML functions (forms, tags, etc)
+              use Phoenix.HTML
+
+              # Common aliases
+              alias Phoenix.Controller.Flash
+            end
+
+            # Functions defined here are available to all other views/templates
+          end
+
+      Replace YOURAPP by your actual application module name.
+      """
+    end
+  end
+
+  @doc """
+  Implements the `__using__/1` callback for this view.
+
+  This macro expects a block that will be executed in the current
+  module and on all modules that use it. For example, the following
+  code:
+
+      defmodule MyApp.View do
+        use Phoenix.View, root: "web/templates"
+
+        using do
+          IO.inspect __MODULE__
+        end
+      end
+
+      defmodule MyApp.UserView do
+        use MyApp.View
+      end
+
+  will print both `MyApp.View` and `MyApp.UserView` names. By using
+  `MyApp.View`, `MyApp.UserView` will automatically be made a view
+  too.
+  """
+  defmacro using(do: block) do
+    {block, __usable__(block)}
+  end
+
+  defp __base__ do
     quote do
-      import Phoenix.View.Helpers
-      use Phoenix.HTML
-      root = Path.join(unquote(templates_root),
-                       Phoenix.Template.module_to_template_root(__MODULE__, "View"))
-      use Phoenix.Template, root: root
+      import Phoenix.View
+      use Phoenix.Template, root:
+        Path.join(@view_root, Phoenix.Template.module_to_template_root(__MODULE__, "View"))
+    end
+  end
+
+  defp __usable__(block) do
+    quote location: :keep do
+      @doc false
+      defmacro __using__(opts) do
+        root  = Keyword.get(opts, :root, @view_root)
+        base  = unquote(Macro.escape(__base__()))
+        block = unquote(Macro.escape(block))
+        quote do
+          @view_root unquote(root)
+          unquote(base)
+          unquote(block)
+          import unquote(__MODULE__), except: [render: 2]
+        end
+      end
     end
   end
 
@@ -55,8 +133,8 @@ defmodule Phoenix.View do
 
   ## Examples
 
-      iex> View.render(MyView, "index.html", title: "Hello!")
-      "<h1>Hello!</h1>"
+      View.render(MyView, "index.html", title: "Hello!")
+      #=> "<h1>Hello!</h1>"
 
   ## Layouts
 
@@ -69,8 +147,8 @@ defmodule Phoenix.View do
 
   ### Examples
 
-      iex> View.render(MyView, "index.html", within: {LayoutView, "app.html"})
-      "<html><h1>Hello!</h1></html>"
+      View.render(MyView, "index.html", within: {LayoutView, "app.html"})
+      #=> "<html><h1>Hello!</h1></html>"
 
   """
   def render(module, template, assigns) do
@@ -82,16 +160,18 @@ defmodule Phoenix.View do
     template
     |> inner_mod.render(assigns)
     |> render_layout(layout_mod, layout_tpl, assigns)
-    |> encode(template)
   end
   defp render_within(nil, module, template, assigns) do
     template
     |> module.render(assigns)
-    |> encode(template)
   end
   defp render_layout(inner_content, layout_mod, layout_tpl, assigns) do
     layout_assigns = Dict.merge(assigns, inner: inner_content)
     layout_mod.render(layout_tpl, layout_assigns)
+  end
+
+  def render_to_iodata(module, template, assign) do
+    render(module, template, assign) |> encode(template)
   end
 
   defp encode(content, template) do
@@ -100,13 +180,6 @@ defmodule Phoenix.View do
     else
       content
     end
-  end
-
-  @doc """
-  Returns the default String template root path for current mix project
-  """
-  def default_templates_root do
-    Path.join([File.cwd!, "web/templates"])
   end
 end
 

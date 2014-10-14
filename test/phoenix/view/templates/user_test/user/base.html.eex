@@ -1,4 +1,0 @@
-<div>
-  Base <%= friendly_name @name %>
-</div>
-

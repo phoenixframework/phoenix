@@ -92,8 +92,13 @@ defmodule Phoenix.Template do
       "Could not render #{inspect exception.template} for #{inspect exception.module}, "
         <> "please define a clause for render/2 or define a template at "
         <> "#{inspect Path.relative_to_cwd exception.root}. "
-        <> "The following templates were compiled:\n\n"
-        <> Enum.map_join(exception.available, "\n", &"* #{&1}")
+        <> available_templates(exception.available)
+    end
+
+    defp available_templates([]), do: "No templates were compiled for this module."
+    defp available_templates(available) do
+      "The following templates were compiled:\n\n"
+        <> Enum.map_join(available, "\n", &"* #{&1}")
     end
   end
 
@@ -102,7 +107,7 @@ defmodule Phoenix.Template do
     path = Dict.fetch! options, :root
 
     quote do
-      @root unquote(path)
+      @template_root unquote(path)
       @before_compile unquote(__MODULE__)
 
       @doc """
@@ -114,7 +119,7 @@ defmodule Phoenix.Template do
 
   @doc false
   defmacro __before_compile__(env) do
-    root = Module.get_attribute(env.module, :root)
+    root = Module.get_attribute(env.module, :template_root)
 
     pairs = for path <- find_all(root) do
       compile(path, root)
@@ -130,14 +135,14 @@ defmodule Phoenix.Template do
         raise UndefinedError,
           available: unquote(names),
           template: template,
-          root: @root,
+          root: @template_root,
           module: __MODULE__
       end
 
       @doc """
       Returns true whenever the list of templates change in the filesystem.
       """
-      def phoenix_recompile?, do: unquote(hash(root)) != Template.hash(@root)
+      def phoenix_recompile?, do: unquote(hash(root)) != Template.hash(@template_root)
     end
   end
 
