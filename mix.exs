@@ -30,7 +30,7 @@ defmodule Phoenix.Mixfile do
     [{:cowboy, "~> 1.0", optional: true},
      {:linguist, "~> 0.1.2"},
      {:plug, "~> 0.8.1"},
-     {:poison, "~> 1.1"},
+     {:poison, "~> 1.2"},
      {:earmark, "~> 0.1", only: :docs},
      {:ex_doc, "~> 0.6", only: :docs},
      {:inch_ex, "~> 0.2", only: :docs},

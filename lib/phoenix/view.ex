@@ -96,6 +96,11 @@ defmodule Phoenix.View do
   too.
   """
   defmacro using(do: block) do
+    # Add a :context to avoid warnings
+    block = Macro.prewalk(block, fn x ->
+      Macro.update_meta(x, &Keyword.put(&1, :context, Phoenix.View))
+    end)
+
     {block, __usable__(block)}
   end
 
@@ -108,7 +113,7 @@ defmodule Phoenix.View do
   end
 
   defp __usable__(block) do
-    quote location: :keep do
+    quote do
       @doc false
       defmacro __using__(opts) do
         root  = Keyword.get(opts, :root, @view_root)
