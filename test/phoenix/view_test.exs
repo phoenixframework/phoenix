@@ -1,66 +1,51 @@
-Code.require_file "view/views.exs", __DIR__
-Code.require_file "view/views/user_view.exs", __DIR__
-Code.require_file "view/views/profile_view.exs", __DIR__
-Code.require_file "view/views/layout_view.exs", __DIR__
+Code.require_file "../fixtures/views.exs", __DIR__
 
 defmodule Phoenix.ViewTest do
   use ExUnit.Case, async: true
-  alias Phoenix.UserTest.UserView
-  alias Phoenix.UserTest.LayoutView
+
+  doctest Phoenix.View
   alias Phoenix.View
 
-  doctest Phoenix.View, except: [render: 3]
-
-  test "subviews render templates with imported functions from base view" do
-    assert View.render(UserView, "base.html", name: "chris") == "<div>\n  Base CHRIS\n</div>\n\n"
+  test "renders views defined on root" do
+    assert View.render(MyApp.View, "show.html", message: "Hello world") ==
+           {:safe, "<div>Show! Hello world</div>\n"}
   end
 
-  test "subviews render templates with imported functions from subview" do
-    assert View.render(UserView, "sub.html", desc: "truncated") == "Subview truncat...\n"
+  test "renders subviews with helpers" do
+    assert View.render(MyApp.UserView, "index.html", title: "Hello world") ==
+           {:safe, "Hello world\n"}
+
+    assert View.render(MyApp.UserView, "show.json", []) ==
+           %{foo: "bar"}
   end
 
-  test "views can be render within another view, such as layouts" do
-    html = View.render(UserView, "sub.html",
-      desc: "truncated",
+  test "renders views with layouts" do
+    html = View.render(MyApp.View, "show.html",
       title: "Test",
-      within: {LayoutView, "application.html"}
+      message: "Hello world",
+      within: {MyApp.LayoutView, "application.html"}
     )
 
-    assert html == "<html>\n  <title>Test</title>\n  Subview truncat...\n\n</html>\n"
+    assert html ==
+           {:safe, "<html>\n  <title>Test</title>\n  <div>Show! Hello world</div>\n\n</html>\n"}
   end
 
-  test "views can render other views within template without safing" do
-    html = View.render(UserView, "show.html", name: "<em>chris</em>")
-    assert html == "Showing User <b>name:</b> &lt;em&gt;chris&lt;/em&gt;\n\n"
+  test "renders views defined to iodata using encoders" do
+    assert View.render_to_iodata(MyApp.UserView, "index.html", title: "Hello world") ==
+           "Hello world\n"
+
+    assert View.render_to_iodata(MyApp.UserView, "show.json", []) ==
+           "{\"foo\":\"bar\"}"
   end
 
-  test "views can render local templates without safing" do
-    html = View.render(UserView, "local_render.html", title: "<em>chris</em>")
-    assert html == "Local Render <h1>&lt;em&gt;chris&lt;/em&gt;</h1>\n\n"
-  end
+  test "renders views with layouts to iodata using encoders" do
+    html = View.render_to_iodata(MyApp.View, "show.html",
+      title: "Test",
+      message: "Hello world",
+      within: {MyApp.LayoutView, "application.html"}
+    )
 
-  test "template_path_from_view_module finds the template path given view module" do
-    assert View.template_path_from_view_module(MyApp.UserView, "web/templates") ==
-      "web/templates/user"
-
-    assert View.template_path_from_view_module(MyApp.Admin.UserView, "web/templates") ==
-      "web/templates/admin/user"
-  end
-
-  test "default_templates_root/0 returns the default template path based on current mix project" do
-    assert String.contains?(View.default_templates_root, "web/templates")
-  end
-
-  test "unwrap_rendered_content/2 unwraps safe'd html content" do
-    assert View.unwrap_rendered_content({:safe, "<b>Hi</b>"}, ".html") == "<b>Hi</b>"
-  end
-
-  test "unwrap_rendered_content/2 returns string for non-html content" do
-    assert View.unwrap_rendered_content("Hi", ".txt") == "Hi"
-  end
-
-  test "views have phoenix_recompile?/0 injected" do
-    refute UserView.phoenix_recompile?
+    assert html ==
+           "<html>\n  <title>Test</title>\n  <div>Show! Hello world</div>\n\n</html>\n"
   end
 end
-

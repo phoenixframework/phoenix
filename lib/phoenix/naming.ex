@@ -1,40 +1,66 @@
 defmodule Phoenix.Naming do
+  @moduledoc """
+  Conveniences for inflecting and working with names in Phoenix.
+  """
+
   @doc """
-  Extracts the resource name from an alias
+  Extracts the resource name from an alias.
 
   ## Examples
 
       iex> Phoenix.Naming.resource_name(MyApp.User)
       "user"
+
       iex> Phoenix.Naming.resource_name(MyApp.UserView, "View")
       "user"
 
   """
-  def resource_name(alias, suffix \\ nil) do
+  @spec resource_name(String.Chars.t, String.t) :: String.t
+  def resource_name(alias, suffix \\ "") do
     alias
+    |> to_string()
     |> Module.split()
     |> List.last()
-    |> remove_suffix(suffix)
-    |> Phoenix.Naming.underscore()
+    |> unsuffix(suffix)
+    |> underscore()
   end
 
-  defp remove_suffix(alias, nil),
-    do: alias
-  defp remove_suffix(alias, suffix) do
+  @doc """
+  Removes the given suffix from the name if it exists.
+
+  ## Examples
+
+      iex> Phoenix.Naming.unsuffix("MyApp.User", "View")
+      "MyApp.User"
+
+      iex> Phoenix.Naming.unsuffix("MyApp.UserView", "View")
+      "MyApp.User"
+
+  """
+  @spec unsuffix(String.Chars.t, String.t) :: String.t
+  def unsuffix(value, "") do
+    to_string(value)
+  end
+
+  def unsuffix(value, suffix) do
+    string = to_string(value)
     suffix_size = byte_size(suffix)
-    prefix_size = byte_size(alias) - suffix_size
-    case alias do
+    prefix_size = byte_size(string) - suffix_size
+    case string do
       <<prefix::binary-size(prefix_size), ^suffix::binary>> -> prefix
-      _ -> alias
+      _ -> string
     end
   end
 
   @doc """
-  Converts String to underscore case
+  Converts String to underscore case.
 
   ## Examples
 
       iex> Phoenix.Naming.underscore("MyApp")
+      "my_app"
+
+      iex> Phoenix.Naming.underscore(:MyApp)
       "my_app"
 
       iex> Phoenix.Naming.underscore("my-app")
@@ -43,10 +69,16 @@ defmodule Phoenix.Naming do
   In general, `underscore` can be thought of as the reverse of
   `camelize`, however, in some cases formatting may be lost:
 
-      Naming.underscore "SAPExample"  #=> "sap_example"
-      Naming.camelize   "sap_example" #=> "SapExample"
+      Phoenix.Naming.underscore "SAPExample"  #=> "sap_example"
+      Phoenix.Naming.camelize   "sap_example" #=> "SapExample"
 
   """
+  @spec underscore(String.Chars.t) :: String.t
+
+  def underscore(value) when not is_binary(value) do
+    underscore(to_string(value))
+  end
+
   def underscore(""), do: ""
 
   def underscore(<<h, t :: binary>>) do
@@ -87,11 +119,14 @@ defmodule Phoenix.Naming do
   defp to_lower_char(char), do: char
 
   @doc """
-  Converts String to camel case
+  Converts String to camel case.
 
   ## Examples
 
       iex> Phoenix.Naming.camelize("my_app")
+      "MyApp"
+
+      iex> Phoenix.Naming.camelize(:my_app)
       "MyApp"
 
   In general, `camelize` can be thought of as the reverse of
@@ -101,6 +136,12 @@ defmodule Phoenix.Naming do
       Phoenix.Naming.camelize   "sap_example" #=> "SapExample"
 
   """
+  @spec camelize(String.Chars.t) :: String.t
+
+  def camelize(value) when not is_binary(value) do
+    camelize(to_string(value))
+  end
+
   def camelize(""), do: ""
 
   def camelize(<<?_, t :: binary>>) do

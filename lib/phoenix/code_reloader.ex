@@ -6,7 +6,7 @@ defmodule Phoenix.CodeReloader do
   Server to handle automatic code reloading
 
   For each request, Phoenix checks if any of the modules previously
-  compiled requires recompilation via `phoenix_recompile?/0` and then
+  compiled requires recompilation via `__phoenix_recompile__?/0` and then
   calls `mix compile` for sources exclusive to the `web` directory.
 
   To race conditions, all code reloads are funneled through a sequential
@@ -81,8 +81,8 @@ defmodule Phoenix.CodeReloader do
     modules
     |> Stream.filter fn mod ->
       Code.ensure_loaded?(mod) and
-        function_exported?(mod, :phoenix_recompile?, 0) and
-        mod.phoenix_recompile?
+        function_exported?(mod, :__phoenix_recompile__?, 0) and
+        mod.__phoenix_recompile__?
     end
   end
 

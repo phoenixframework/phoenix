@@ -1,29 +1,17 @@
 defmodule Phoenix.Template.Engine do
-  use Behaviour
-
   @moduledoc """
-  Engines need only to support precompiling a template function, of the form:
+  Specifies the API for adding custom template engines into Phoenix.
 
-      def precompile(file_path, template_name)
+  Engines need only to implement the `compile/2` function, that receives
+  the template file and the template name and outputs the template quoted
+  expression:
 
-  The `precompile/2` function must return an AST for for a `render/2` function:
+      def compile(template_path, template_name)
 
-      def render(template_name, assigns \\ [])
-
-  See `Template.EExEngine` for an example engine implementation.
-
-
-  ## Template Engine Configuration
-
-  By default, `eex` and `haml` are supported (with an optional `Calliope` dep)
-  To Configure a third-party Phoenix Template Engine, simply add the
-  extenion and module to your Mix Config, ie:
-
-      config :phoenix, :template_engines,
-        slim: Slim.PhoenixEngine
-
+  See `Phoenix.Template.EExEngine` for an example engine implementation.
   """
 
-  defcallback precompile(file_path :: binary, template_name :: binary) :: term
+  use Behaviour
 
+  defcallback compile(template_path :: binary, template_name :: binary) :: Macro.t
 end

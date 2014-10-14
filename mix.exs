@@ -21,7 +21,8 @@ defmodule Phoenix.Mixfile do
     [mod: {Phoenix, []},
      applications: [:plug, :linguist, :poison, :logger],
      env: [code_reloader: false,
-           template_engines: [eex: Phoenix.Template.EExEngine],
+           template_engines: [],
+           format_encoders: [],
            topics: [garbage_collect_after_ms: 60_000..300_000]]]
   end
 

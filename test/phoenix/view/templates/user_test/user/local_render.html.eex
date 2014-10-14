@@ -1,1 +1,0 @@
-Local Render <%= render "nav/top.html", assigns %>

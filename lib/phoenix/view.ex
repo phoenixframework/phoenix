@@ -1,14 +1,11 @@
 defmodule Phoenix.View do
-  alias Phoenix.Html
-  alias Phoenix.Naming
-
   @moduledoc """
   Serves as the base view for an entire Phoenix application view layer
 
   Users define `App.Views` and `use Phoenix.View`. The main view:
 
     * Serves as a base presentation layer for all views and templates
-    * Wires up the Template.Compiler and template path all for all other views
+    * Wires up the Template and template path all for all other views
     * Expects the base view to define a `__using__` macro for other view modules
 
   ## Examples
@@ -37,14 +34,93 @@ defmodule Phoenix.View do
 
   """
 
-  defmacro __using__(options \\ []) do
-    templates_root = Dict.get(options, :templates_root, default_templates_root)
+  @doc false
+  defmacro __using__(options) do
+    if root = Keyword.get(options, :root) do
+      quote do
+        @view_root unquote(root)
+        unquote(__base__())
+      end
+    else
+      # TODO: Remove this message once codebases have been upgraded
+      raise """
+      You are using the old API for Phoenix.View.
+      Here is the new view for your application:
 
+          defmodule YOURAPP.View do
+            use Phoenix.View, root: "web/templates"
+
+            # Everything in this block is available runs in this
+            # module and in other views that use MyApp.View
+            using do
+              # Import common functionality
+              import YOURAPP.I18n
+              import YOURAPP.Router.Helpers
+
+              # Use Phoenix.HTML to import all HTML functions (forms, tags, etc)
+              use Phoenix.HTML
+
+              # Common aliases
+              alias Phoenix.Controller.Flash
+            end
+
+            # Functions defined here are available to all other views/templates
+          end
+
+      Replace YOURAPP by your actual application module name.
+      """
+    end
+  end
+
+  @doc """
+  Implements the `__using__/1` callback for this view.
+
+  This macro expects a block that will be executed in the current
+  module and on all modules that use it. For example, the following
+  code:
+
+      defmodule MyApp.View do
+        use Phoenix.View, root: "web/templates"
+
+        using do
+          IO.inspect __MODULE__
+        end
+      end
+
+      defmodule MyApp.UserView do
+        use MyApp.View
+      end
+
+  will print both `MyApp.View` and `MyApp.UserView` names. By using
+  `MyApp.View`, `MyApp.UserView` will automatically be made a view
+  too.
+  """
+  defmacro using(do: block) do
+    {block, __usable__(block)}
+  end
+
+  defp __base__ do
     quote do
-      import Phoenix.View.Helpers
-      import Phoenix.Html, only: [safe: 1, unsafe: 1]
-      path = Phoenix.View.template_path_from_view_module(__MODULE__, unquote(templates_root))
-      use Phoenix.Template.Compiler, path: path
+      import Phoenix.View
+      use Phoenix.Template, root:
+        Path.join(@view_root, Phoenix.Template.module_to_template_root(__MODULE__, "View"))
+    end
+  end
+
+  defp __usable__(block) do
+    quote location: :keep do
+      @doc false
+      defmacro __using__(opts) do
+        root  = Keyword.get(opts, :root, @view_root)
+        base  = unquote(Macro.escape(__base__()))
+        block = unquote(Macro.escape(block))
+        quote do
+          @view_root unquote(root)
+          unquote(base)
+          unquote(block)
+          import unquote(__MODULE__), except: [render: 2]
+        end
+      end
     end
   end
 
@@ -57,8 +133,8 @@ defmodule Phoenix.View do
 
   ## Examples
 
-      iex> View.render(MyView, "index.html", title: "Hello!")
-      "<h1>Hello!</h1>"
+      View.render(MyView, "index.html", title: "Hello!")
+      #=> "<h1>Hello!</h1>"
 
   ## Layouts
 
@@ -67,12 +143,12 @@ defmodule Phoenix.View do
 
   When the sub template is rendered, the layout template will have an `@inner`
   assign containing the rendered contents of the sub-template. For html
-  templates, `@inner` will be passed through `Html.safe/1` automatically.
+  templates, `@inner` will be passed through `Phoenix.HTML.safe/1` automatically.
 
   ### Examples
 
-      iex> View.render(MyView, "index.html", within: {LayoutView, "app.html"})
-      "<html><h1>Hello!</h1></html>"
+      View.render(MyView, "index.html", within: {LayoutView, "app.html"})
+      #=> "<html><h1>Hello!</h1></html>"
 
   """
   def render(module, template, assigns) do
@@ -84,57 +160,26 @@ defmodule Phoenix.View do
     template
     |> inner_mod.render(assigns)
     |> render_layout(layout_mod, layout_tpl, assigns)
-    |> unwrap_rendered_content(Path.extname(template))
   end
   defp render_within(nil, module, template, assigns) do
     template
     |> module.render(assigns)
-    |> unwrap_rendered_content(Path.extname(template))
   end
   defp render_layout(inner_content, layout_mod, layout_tpl, assigns) do
     layout_assigns = Dict.merge(assigns, inner: inner_content)
     layout_mod.render(layout_tpl, layout_assigns)
   end
 
-  @doc """
-  Unwraps rendered String content within extension specific structure
-
-  ## Examples
-
-      iex> View.unwrap_rendered_content({:safe, "<h1>Hello!</h1>"}, ".html")
-      "<h1>Hello!</h1>"
-      iex> View.unwrap_rendered_content("Hello!", ".txt")
-      "Hello!"
-
-  """
-  def unwrap_rendered_content(content, ".html"), do: Html.unsafe(content)
-  def unwrap_rendered_content(content, _ext), do: content
-
-  @doc """
-  Finds the template path given view module and template root path
-
-  ## Examples
-
-      iex> Phoenix.View.template_path_from_view_module(MyApp.UserView, "web/templates")
-      "web/templates/user"
-
-  """
-  def template_path_from_view_module(view_module, templates_root) do
-    submodule_path = view_module
-    |> Module.split
-    |> tl
-    |> Enum.map(&Naming.underscore/1)
-    |> Path.join
-    |> String.replace(~r/^(.*)(_view)$/, "\\1")
-
-    Path.join(templates_root, submodule_path)
+  def render_to_iodata(module, template, assign) do
+    render(module, template, assign) |> encode(template)
   end
 
-  @doc """
-  Returns the default String template root path for current mix project
-  """
-  def default_templates_root do
-    Path.join([File.cwd!, "web/templates"])
+  defp encode(content, template) do
+    if encoder = Phoenix.Template.format_encoder(template) do
+      encoder.encode!(content)
+    else
+      content
+    end
   end
 end
 
