@@ -112,6 +112,7 @@ defmodule Phoenix.Router.Helpers do
     end
   end
 
+  defp optimize_segments([]), do: "/"
   defp optimize_segments(segments) when is_list(segments),
     do: optimize_segments(segments, "")
   defp optimize_segments(segments),
