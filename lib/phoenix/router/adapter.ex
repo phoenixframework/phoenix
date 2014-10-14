@@ -61,7 +61,7 @@ defmodule Phoenix.Router.Adapter do
 
   defp dispatch(_otp_app, module, config) do
     dispatch = module.__transport__ ++
-               [{:_, Plug.Adapters.Cowboy.Handler, {module, []}}]
+               [{:_, Phoenix.Router.CowboyHandler, {module, []}}]
 
     config
     |> Keyword.put(:dispatch, [{:_, dispatch}])

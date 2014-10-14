@@ -11,6 +11,7 @@ defmodule Phoenix.Socket do
             channel: nil,
             topic: nil,
             router: nil,
+            handler: nil,
             channels: [],
             assigns: %{}
 
