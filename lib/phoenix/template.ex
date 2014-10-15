@@ -196,7 +196,7 @@ defmodule Phoenix.Template do
   defp raw_config(name) do
     Application.get_env(:phoenix, name) ||
       raise "could not load #{name} configuration for Phoenix." <>
-            "Was the :phoenix application started?"
+            " Was the :phoenix application started?"
   end
 
   @doc """
