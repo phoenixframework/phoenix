@@ -71,19 +71,46 @@ The first thing we need to do to create that page is define a route for it. Open
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
-  get "/", HelloPhoenix.PageController, :index, as: :pages
+  scope "/" do
+    # Use the default browser stack.
+    pipe_through :browser
+
+    get "/", HelloPhoenix.PageController, :index, as: :pages
+  end
+
+  # Other scopes may use custom stacks.
+  # scope "/api" do
+  #   pipe_through :api
+  # end
 end
 ```
 
-Let's add a new route to the router that maps the GET for "/hello" to the index action of a soon-to-be created HelloPhoenix.HelloController. Your router.ex file should now look like this.
+For now, we'll ignore the use of `scope` here and focus on adding a route.
+
+Let's add a new route to the router that maps the GET for "/hello" to the index action of a soon-to-be created HelloPhoenix.HelloController. Like so:
+
+```elixir
+get "/hello", HelloPhoenix.HelloController, :index
+```
+
+Your router.ex file should now look like this.
 
 ```elixir
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
-  get "/", HelloPhoenix.PageController, :index, as: :pages
+  scope "/" do
+    # Use the default browser stack.
+    pipe_through :browser
 
-  get "/hello", HelloPhoenix.HelloController, :index
+    get "/", HelloPhoenix.PageController, :index, as: :pages
+    get "/hello", HelloPhoenix.HelloController, :index
+  end
+
+  # Other scopes may use custom stacks.
+  # scope "/api" do
+  #   pipe_through :api
+  # end
 end
 ```
 
@@ -96,7 +123,7 @@ Create a new web/controllers/hello_controller.ex file, and make it look like the
 ```elixir
 defmodule HelloPhoenix.HelloController do
   use Phoenix.Controller
-  
+
   plug :action
 
   def index(conn, _params) do
@@ -165,10 +192,19 @@ For this page, we're going to re-use our HelloController we just created and jus
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
-  get "/", HelloPhoenix.PageController, :index, as: :pages
+  scope "/" do
+    # Use the default browser stack.
+    pipe_through :browser
 
-  get "/hello", HelloPhoenix.HelloController, :index
-  get "/hello/:messenger", HelloPhoenix.HelloController, :show
+    get "/", HelloPhoenix.PageController, :index, as: :pages
+    get "/hello", HelloPhoenix.HelloController, :index
+    get "/hello/:messenger", HelloPhoenix.HelloController, :show
+  end
+
+  # Other scopes may use custom stacks.
+  # scope "/api" do
+  #   pipe_through :api
+  # end
 end
 ```
 Notice that we put the atom ":messenger" in the path. Phoenix will take whatever value that appears in that position in the url and passes a Dict with the key "messanger" pointing to that value to the controller.
