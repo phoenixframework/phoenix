@@ -27,8 +27,8 @@ defmodule Phoenix.Router.CowboyHandler do
   def websocket_init(_transport, req, opts) do
     handler = Dict.fetch! opts, :handler
 
-    opts = handler.init(opts)
-    {:ok, req, {handler, %{pid: self}}}
+    {:ok, state} = handler.init(opts)
+    {:ok, req, {handler, state}}
   end
 
   def websocket_handle({:text, text}, req, {handler, state}) do
