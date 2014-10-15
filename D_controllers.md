@@ -213,7 +213,7 @@ end
 
 The `render/3` function will derive the name of a template to render from the name of the view it is called from and the basename we pass in. The view must have the same root name as the controller for this to work properly. In this case, that would be `/web/templates/hello/show.html.eex`. `render/3` will also pass the value which the show action received for messenger from the params hash into the template for interpolation.
 
-There is also a shortcut for rendering which uses a plug for the render function. Here is how it's done.
+There is also a shortcut for rendering which uses a plug for rendering. Here's how.
 
 The first thing we need to do is to add a `plug :render` line to our controller.
 
@@ -264,6 +264,8 @@ end
 ```
 
 With this, both `@message` and `@name` will be availale in the `index.html.eex` template.
+
+Very Important! The render plug takes over all rendering for all actions in a controller. Once we plug render, if we try to use any rendering-style function in any action - `text/2`, `json/2`, `html/2`, `render/2` or even `redirect/2`- we will get errors if that action is dispatched to. Even if the application appears to do the right thing, the server will be throwing errors. Bottom line, if we're going to use `plug :render`, we have to go all-in, for all actions in a controller.
 
 Rendering does not end with the template, though. By default, the results of the template render will be inserted into a layout, which will also be rendered.
 
