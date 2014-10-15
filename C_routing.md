@@ -8,14 +8,24 @@ The router file that Phoenix generates for you, web/router.ex, will look somethi
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
-  get "/", HelloPhoenix.PageController, :index, as: :pages
+  scope "/" do
+    # Use the default browser stack.
+    pipe_through :browser
+
+    get "/", HelloPhoenix.PageController, :index, as: :pages
+  end
+
+  # Other scopes may use custom stacks.
+  # scope "/api" do
+  #   pipe_through :api
+  # end
 end
 ```
 Whatever you called your application will appear instead of 'HelloPhoenix' for both the router module name and the Controller name.
 
 The first line of this module `use Phoenix.Router` simply makes Phoenix router functions available in our particular router.
 
-Next we have an application level route.
+Inside the block marked `scope` (which we'll get to a little later) we have an application level route.
 `get "/", HelloPhoenix.Controller, :index, as: :pages`
 
 'get' is a Phoenix macro which expands out to define one clause of the match function. It corresponds to the HTTP verb GET. Similar macros exist for other HTTP verbs including POST, PUT, PATCH, DELETE, OPTIONS, CONNECT, TRACE and HEAD.
