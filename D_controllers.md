@@ -213,6 +213,58 @@ end
 
 The `render/3` function will derive the name of a template to render from the name of the view it is called from and the basename we pass in. The view must have the same root name as the controller for this to work properly. In this case, that would be `/web/templates/hello/show.html.eex`. `render/3` will also pass the value which the show action received for messenger from the params hash into the template for interpolation.
 
+There is also a shortcut for rendering which uses a plug for the render function. Here is how it's done.
+
+The first thing we need to do is to add a `plug :render` line to our controller.
+
+```elixir
+defmodule HelloPhoenix.PageController do
+  use Phoenix.Controller
+
+  plug :action
+  plug :render
+
+. . .
+```
+
+After that we can omit the render call in our actions as long as we return `conn` either directly or as the return value of a function.
+
+In a new Phoenix app, try plugging render and then replacing the index action with this.
+
+```elixir
+def index(conn, _params) do
+  conn
+end
+```
+
+After restarting our local server and viewing the root route in our browser, we should see the "Welcome to Phoenix!" page exactly as we did when we explicitly rendered the index template.
+
+Just as `plug :action` inserted a plug for dispatching to the correct module/function in a controller's plug stack, `plug :render` inserts a rendering plug in the stack for us. In essence, we've just moved rendering to a different layer.
+
+If we need to pass values into the template when using `plug :render`, that's easy. We can use `Plug.Conn.assign/3`, which conveniently returns `conn`.
+
+```elixir
+def index(conn, _params) do
+  assign(conn, :message, "Welcome Back!")
+end
+```
+
+We can access this message in our `index.html.eex` template like this `<%= @message %>`, anywhere we would like.
+
+The `Phoenix.Controller` module imports `Plug.Conn`, so shortening the call to `assign/3` works just fine.
+
+Passing more than one value in to our template is as simple as connecting `assign/3` functions together in a pipeline.
+
+```elixir
+def index(conn, _params) do
+  conn
+  |> assign(:message, "Welcome Back!")
+  |> assign(:name, "Dweezil")  
+end
+```
+
+With this, both `@message` and `@name` will be availale in the `index.html.eex` template.
+
 Rendering does not end with the template, though. By default, the results of the template render will be inserted into a layout, which will also be rendered.
 
 Templates and layouts have their own guide, so we won't spend much time on them here. What we will look at is how to assign a different layout, or none at all, inside a controller action.
