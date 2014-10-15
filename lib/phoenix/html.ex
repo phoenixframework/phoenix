@@ -13,7 +13,7 @@ defmodule Phoenix.HTML do
 
   In order to mark some code as safe, developers should
   simply wrap their IO data in a `{:safe, data}` tuple.
-  Alternative, one can simply use the `safe/1` function.
+  Alternatively, one can simply use the `safe/1` function.
   """
 
   @doc false
