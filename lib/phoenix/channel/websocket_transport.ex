@@ -1,28 +1,26 @@
 defmodule Phoenix.Channel.WebSocketTransport do
+  use Phoenix.Controller
   use Phoenix.WebSocket
 
-  @behaviour Phoenix.Channel.Transport
-
   alias Phoenix.Channel.Transport
+  alias Phoenix.Socket
   alias Phoenix.Socket.Message
   alias Poison, as: JSON
 
+  plug :action
 
-  def start_link(opts) do
-    :ok
+  def upgrade_conn(conn, _) do
+    upgrade(conn, websocket: __MODULE__)
   end
-
 
   @doc """
   Handles initalization of the websocket
   """
-  def init(opts) do
-    router = Dict.fetch! opts, :router
-
-    {:ok, %Socket{pid: self, router: router}}
+  def ws_init(conn) do
+    {:ok, %Socket{pid: self, router: router_module(conn)}}
   end
 
-  def ws_handle(text, _req, socket) do
+  def ws_handle(text, socket) do
     text
     |> Message.parse!
     |> Transport.dispatch(socket)
@@ -48,7 +46,7 @@ defmodule Phoenix.Channel.WebSocketTransport do
   @doc """
   This is called right before the websocket is about to be closed.
   """
-  def ws_terminate(reason, _req, socket) do
+  def ws_terminate(reason, socket) do
     Transport.dispatch_leave(socket, reason)
     :ok
   end

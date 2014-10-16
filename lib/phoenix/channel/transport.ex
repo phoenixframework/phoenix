@@ -1,10 +1,10 @@
 defmodule Phoenix.Channel.Transport do
-  use Behaviour
+  alias Phoenix.Socket
+  alias Phoenix.Channel
+  alias Phoenix.Socket.Message
 
   @moduledoc """
   """
-
-  defcallback start_link(options :: list) :: {:ok, pid} | {:error, term}
 
   defmodule InvalidReturn do
     defexception [:message]
@@ -23,6 +23,8 @@ defmodule Phoenix.Channel.Transport do
   defp dispatch(socket, "phoenix", "heartbeat", _msg) do
     msg = %Message{channel: "phoenix", topic: "conn", event: "heartbeat", message: %{}}
     send socket.pid, msg
+
+    socket
   end
   defp dispatch(socket, channel, "join", msg) do
     socket

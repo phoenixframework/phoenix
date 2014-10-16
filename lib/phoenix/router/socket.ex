@@ -5,7 +5,7 @@ defmodule Phoenix.Router.Socket do
 
     quote do
       import unquote(__MODULE__)
-      @dispatch_options {unquote(mount), Phoenix.Socket.Handler, router: __MODULE__}
+      get unquote(mount), Phoenix.Channel.WebSocketTransport, :upgrade_conn
     end
   end
 

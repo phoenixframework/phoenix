@@ -4,27 +4,23 @@ defmodule Phoenix.WebSocket do
     quote do
       import unquote(__MODULE__)
 
-      @before_compile unquote(__MODULE__)
-    end
-  end
-
-  defmacro __before_compile__(_env) do
-    quote do
-      def ws_handle(_text, _req, socket), do: socket
+      def ws_handle(_text, state), do: state
 
       @doc """
       Handles regular messages sent to the socket process
 
       Each message is forwarded to the "info" event of the socket's authorized channels
       """
-      def ws_info(_data, socket), do: socket
+      def ws_info(_data, state), do: state
 
       @doc """
       This is called right before the websocket is about to be closed.
       """
-      def ws_terminate(_reason, _req, _socket), do: :ok
+      def ws_terminate(_reason, _state), do: :ok
 
-      def ws_hibernate(_socket), do: :ok
+      def ws_hibernate(_state), do: :ok
+
+      defoverridable ws_handle: 2, ws_info: 2, ws_terminate: 2, ws_hibernate: 1
     end
   end
 
