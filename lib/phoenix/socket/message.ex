@@ -12,7 +12,7 @@ defmodule Phoenix.Socket.Message do
   end
 
   @doc """
-  Parse json message into required format, raise InvalidMessage if invalid
+  Parse json message into required format, raises `InvalidMessage` if invalid
 
   The Message Protocol requires the following keys:
 
@@ -25,17 +25,26 @@ defmodule Phoenix.Socket.Message do
   """
   def parse!(text) do
     try do
-      json = JSON.decode!(text)
+      text |> JSON.decode! |> from_map!
+    rescue
+      err in [JSON.SyntaxError] -> raise InvalidMessage, message: "Invalid JSON: #{err.message}"
+    end
+  end
 
+  @doc """
+  Converts a map with string keys into a `%Message{}`. Raises `InvalidMessage` if not valid
+  See `parse!/1` for required keys
+  """
+  def from_map!(map) do
+    try do
       %Message{
-        channel: Dict.fetch!(json, "channel"),
-        topic:   Dict.fetch!(json, "topic"),
-        event:   Dict.fetch!(json, "event"),
-        message: Dict.fetch!(json, "message")
+        channel: Dict.fetch!(map, "channel"),
+        topic:   Dict.fetch!(map, "topic"),
+        event:   Dict.fetch!(map, "event"),
+        message: Dict.fetch!(map, "message")
       }
     rescue
-      err in [KeyError]         -> raise InvalidMessage, message: "Missing key: '#{err.key}'"
-      err in [JSON.SyntaxError] -> raise InvalidMessage, message: "Invalid JSON: #{err.message}"
+      err in [KeyError] -> raise InvalidMessage, message: "Missing key: '#{err.key}'"
     end
   end
 end
