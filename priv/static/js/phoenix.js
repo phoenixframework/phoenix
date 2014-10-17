@@ -9,6 +9,8 @@
       return factory((root.Phoenix = {}));
     }
   })(this, function(exports) {
+    var root;
+    root = this;
     exports.Channel = (function() {
       Channel.prototype.bindings = null;
 
@@ -106,12 +108,15 @@
 
       Socket.prototype.stateChangeCallbacks = null;
 
+      Socket.prototype.transport = null;
+
       function Socket(endPoint, opts) {
-        var _ref;
+        var _ref, _ref1, _ref2;
         if (opts == null) {
           opts = {};
         }
-        this.heartbeatIntervalMs = (_ref = opts.heartbeatIntervalMs) != null ? _ref : this.heartbeatIntervalMs;
+        this.transport = (_ref = (_ref1 = opts.transport) != null ? _ref1 : root.WebSocket) != null ? _ref : exports.LongPoller;
+        this.heartbeatIntervalMs = (_ref2 = opts.heartbeatIntervalMs) != null ? _ref2 : this.heartbeatIntervalMs;
         this.endPoint = this.expandEndpoint(endPoint);
         this.channels = [];
         this.sendBuffer = [];
@@ -160,7 +165,7 @@
       Socket.prototype.reconnect = function() {
         return this.close((function(_this) {
           return function() {
-            _this.conn = new WebSocket(_this.endPoint);
+            _this.conn = new _this.transport(_this.endPoint);
             _this.conn.onopen = function() {
               return _this.onConnOpen();
             };
@@ -390,6 +395,123 @@
       return Socket;
 
     })();
+    exports.LongPoller = (function() {
+      LongPoller.prototype.timeoutMs = 10000;
+
+      LongPoller.prototype.retryInMs = 5000;
+
+      LongPoller.prototype.endPoint = null;
+
+      LongPoller.prototype.onopen = function() {};
+
+      LongPoller.prototype.onerror = function() {};
+
+      LongPoller.prototype.onmessage = function() {};
+
+      LongPoller.prototype.onclose = function() {};
+
+      LongPoller.prototype.states = {
+        connecting: 0,
+        open: 1,
+        closing: 2,
+        closed: 3
+      };
+
+      function LongPoller(endPoint) {
+        this.endPoint = this.normalizeEndpoint(endPoint);
+        this.readyState = this.states.connecting;
+        this.open();
+      }
+
+      LongPoller.prototype.open = function() {
+        return exports.Ajax.request("POST", this.endPoint, "application/json", null, (function(_this) {
+          return function(status, resp) {
+            if (status === 200) {
+              _this.readyState = _this.states.open;
+              _this.onopen();
+              return _this.poll();
+            } else {
+              return _this.onerror();
+            }
+          };
+        })(this));
+      };
+
+      LongPoller.prototype.normalizeEndpoint = function(endPoint) {
+        var suffix;
+        suffix = /\/$/.test(endPoint) ? "poll" : "/poll";
+        return endPoint.replace("ws://", "http://").replace("wss://", "https://") + suffix;
+      };
+
+      LongPoller.prototype.poll = function() {
+        if (this.readyState !== this.states.open) {
+          return;
+        }
+        console.log("polling");
+        return exports.Ajax.request("GET", this.endPoint, "application/json", null, (function(_this) {
+          return function(status, resp) {
+            var msg, _i, _len, _ref;
+            switch (status) {
+              case 200:
+                _ref = JSON.parse(resp);
+                for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                  msg = _ref[_i];
+                  _this.onmessage({
+                    data: JSON.stringify(msg)
+                  });
+                }
+                break;
+              case 204:
+                break;
+              default:
+                _this.onerror();
+                setTimeout((function() {
+                  return _this.poll();
+                }), _this.retryInMs);
+                return;
+            }
+            return _this.poll();
+          };
+        })(this));
+      };
+
+      LongPoller.prototype.send = function(body) {
+        return exports.Ajax.request("PUT", this.endPoint, "application/json", body, (function(_this) {
+          return function(status, resp) {
+            if (status !== 200) {
+              return _this.onerror();
+            }
+          };
+        })(this));
+      };
+
+      LongPoller.prototype.close = function(code, reason) {
+        this.readyState = this.states.closed;
+        return this.onclose();
+      };
+
+      return LongPoller;
+
+    })();
+    exports.Ajax = {
+      state: {
+        done: 4
+      },
+      request: function(method, endPoint, accept, body, callback) {
+        var req;
+        req = root.XMLHttpRequest != null ? new root.XMLHttpRequest() : new root.ActiveXObject("Microsoft.XMLHTTP");
+        req.open(method, endPoint, true);
+        req.setRequestHeader("Content-type", accept);
+        req.onreadystatechange = (function(_this) {
+          return function() {
+            if (req.readyState === _this.state.done) {
+              return typeof callback === "function" ? callback(req.status, req.responseText) : void 0;
+            }
+          };
+        })(this);
+        return req.send(body);
+      }
+    };
     return exports;
   });
 
