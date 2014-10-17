@@ -40,7 +40,7 @@ defmodule Phoenix.CodeReloader do
     Mix.Phoenix.modules
     |> modules_for_recompilation
     |> modules_to_file_paths
-    |> Stream.each(&File.touch!/1)
+    |> Stream.each(&File.touch/1)
     |> Enum.to_list()
   end
 

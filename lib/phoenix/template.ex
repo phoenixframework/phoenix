@@ -107,7 +107,7 @@ defmodule Phoenix.Template do
     path = Dict.fetch! options, :root
 
     quote do
-      @template_root unquote(path)
+      @template_root Path.relative_to_cwd(unquote(path))
       @before_compile unquote(__MODULE__)
 
       @doc """
