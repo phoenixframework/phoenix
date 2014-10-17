@@ -792,7 +792,7 @@ mount point.
 
 ## Documentation
 
-API documentation is available at [http://api.phoenixframework.org/](http://api.phoenixframework.org/)
+API documentation is available at [http://hexdocs.pm/phoenix/0.5.0/overview.html](http://hexdocs.pm/phoenix/0.5.0/overview.html)
 
 
 ## Development
