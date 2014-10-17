@@ -1,4 +1,4 @@
-defmodule Phoenix.Transports.Longpoller do
+defmodule Phoenix.Transports.LongPoller do
   use Phoenix.Controller
   alias Phoenix.Socket.Message
   alias Poison, as: JSON
@@ -10,7 +10,7 @@ defmodule Phoenix.Transports.Longpoller do
   plug :action
 
   @doc """
-  Starts `Longpoller.Server` and stores pid in session. This action must be
+  Starts `LongPoller.Server` and stores pid in session. This action must be
   called first before sending requests to `poll` or `publish`
   """
   def open(conn, _) do
@@ -19,7 +19,7 @@ defmodule Phoenix.Transports.Longpoller do
   end
 
   @doc """
-  Listens for `%Message{}`'s from `Longpoller.Server`.
+  Listens for `%Message{}`'s from `LongPoller.Server`.
 
   As soon as messages are received, they are encoded as JSON and send down
   to the longpolling client, which immediately repolls. If a timeout occurrs,
@@ -61,18 +61,18 @@ defmodule Phoenix.Transports.Longpoller do
   ## Client
 
   @doc """
-  Starts the `Longpoller.Server` and stores the serialized pid in the session
+  Starts the `LongPoller.Server` and stores the serialized pid in the session
   """
   def start_session(conn) do
     router = router_module(conn)
-    {:ok, server_pid} = Phoenix.Transports.Longpoller.Server.start_link(self, router)
+    {:ok, server_pid} = Phoenix.Transports.LongPoller.Server.start_link(self, router)
     conn = put_session(conn, session_key(conn), :erlang.term_to_binary(server_pid))
 
     {conn, server_pid}
   end
 
   @doc """
-  Finds or starts the `Longpoller.Session` server
+  Finds or starts the `LongPoller.Session` server
   """
   def resume_session(conn) do
     {conn, server_pid} = case longpoll_pid(conn) do
@@ -84,7 +84,7 @@ defmodule Phoenix.Transports.Longpoller do
   end
 
   @doc """
-  Retrieves the serialized `Longpoller.Server` pid from the session
+  Retrieves the serialized `LongPoller.Server` pid from the session
   """
   def longpoll_pid(conn) do
     case get_session(conn, session_key(conn)) do
@@ -96,7 +96,7 @@ defmodule Phoenix.Transports.Longpoller do
   end
 
   @doc """
-  Ack's a list of %Messages{}'s back to the `Longpoller.Server`
+  Ack's a list of %Messages{}'s back to the `LongPoller.Server`
 
   To be called after buffered messages have been relayed to client
   """
@@ -114,7 +114,7 @@ defmodule Phoenix.Transports.Longpoller do
   end
 
   @doc """
-  Dispatches deserialized `%Message{}` from client to `Longpoller.Server`
+  Dispatches deserialized `%Message{}` from client to `LongPoller.Server`
   """
   def dispatch(server_pid, message) do
     GenServer.call(server_pid, {:dispatch, message})

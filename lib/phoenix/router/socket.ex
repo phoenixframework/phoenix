@@ -6,9 +6,9 @@ defmodule Phoenix.Router.Socket do
     quote do
       import unquote(__MODULE__)
       get unquote(mount), Phoenix.Transports.WebSocket, :upgrade_conn
-      get unquote(mount <> "/poll"), Phoenix.Transports.Longpoller, :poll
-      post unquote(mount <> "/poll"), Phoenix.Transports.Longpoller, :open
-      put unquote(mount <> "/poll"), Phoenix.Transports.Longpoller, :publish
+      get unquote(mount <> "/poll"), Phoenix.Transports.LongPoller, :poll
+      post unquote(mount <> "/poll"), Phoenix.Transports.LongPoller, :open
+      put unquote(mount <> "/poll"), Phoenix.Transports.LongPoller, :publish
     end
   end
 

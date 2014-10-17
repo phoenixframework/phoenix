@@ -1,10 +1,10 @@
-defmodule Phoenix.Transports.Longpoller.Server do
+defmodule Phoenix.Transports.LongPoller.Server do
   use GenServer
   alias Phoenix.Socket
   alias Phoenix.Socket.Message
   alias Phoenix.Channel.Transport
 
-  # TODO: Make this confirable, and refer to `Longpoller` setting
+  # TODO: Make this confirable, and refer to `LongPoller` setting
   @timeout_ms 10_000 * 2
 
   def start_link(listener, router) do
