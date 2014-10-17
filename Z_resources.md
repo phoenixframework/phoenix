@@ -18,7 +18,6 @@ This is a selected list of resources to help you find your way with Elixir, Phoe
   - <a href="http://www.manning.com/juric/">Elixir in Action</a>, Saša Jurić
   - <a href="http://shop.oreilly.com/product/0636920030584.do">Introducing Elixir</a>, Simon St. Laurent, J. David Eisenberg
 
-
 ##Phoenix
 - <a href="https://github.com/phoenixframework/phoenix">The Phoenix Project</a>
 - <a href="http://api.phoenixframework.org/">Official Documentation</a> (current stable release)
@@ -32,6 +31,22 @@ This is a selected list of resources to help you find your way with Elixir, Phoe
 #####Videos
   - <a href="http://www.confreaks.com/videos/3488-railsconf-workshop-all-aboard-the-elixir-expresse">All Aboard The Elixir Express</a>, Chris McCord
   - <a href="http://www.confreaks.com/videos/4132-elixirconf2014-rise-of-the-phoenix-building-an-elixir-web-framework">The Rise of the Phoenix</a>, Chris McCord
+
+##Plug
+  The Elixir middleware layer Phoenix makes extensive use of.
+  - <a href="https://github.com/elixir-lang/plug">Source Code and Readme</a>
+  - <a href="http://hexdocs.pm/plug/0.8.1/">Documentation</a>
+
+##EEX
+  The default templating system for Phoenix.
+  - <a href="https://github.com/elixir-lang/elixir">Source Code and Readme</a>
+  - <a href="http://elixir-lang.org/docs/stable/eex/">Documentation</a>
+
+##Cowboy
+  The webserver Phoenix is based on.
+  - <a href="https://github.com/ninenines/cowboy">Source Code and Readme</a>
+  - <a href="http://ninenines.eu/docs/en/cowboy/1.0/guide/">User Guides</a>
+  - <a href="http://ninenines.eu/docs/en/cowboy/1.0/manual/">Manual/Function Reference</a>
 
 ##Erlang
 - <a href="http://www.erlang.org/doc/getting_started/users_guide.html">Erlang User Guide</a>
