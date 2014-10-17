@@ -1,0 +1,122 @@
+defmodule Phoenix.Transports.Longpoller do
+  use Phoenix.Controller
+  alias Phoenix.Socket.Message
+  alias Poison, as: JSON
+
+  # TODO: Make this configurable
+  @timeout_ms 10_000
+
+  plug :fetch_session
+  plug :action
+
+  @doc """
+  Starts `Longpoller.Server` and stores pid in session. This action must be
+  called first before sending requests to `poll` or `publish`
+  """
+  def open(conn, _) do
+    {conn, _server_pid} = resume_session(conn)
+    send_resp(conn, :ok, "")
+  end
+
+  @doc """
+  Listens for `%Message{}`'s from `Longpoller.Server`.
+
+  As soon as messages are received, they are encoded as JSON and send down
+  to the longpolling client, which immediately repolls. If a timeout occurrs,
+  a :no_content response is returned, and the client should immediately repoll.
+  """
+  def poll(conn, _params) do
+    {conn, server_pid} = resume_session(conn)
+    listen(conn, server_pid)
+  end
+  defp listen(conn, server_pid) do
+    set_active_listener(server_pid, self)
+    receive do
+      {:messages, msgs} ->
+        conn = json(conn, JSON.encode!(msgs))
+        ack(server_pid, msgs)
+        conn
+    after
+      @timeout_ms -> send_resp(conn, :no_content, "")
+    end
+  end
+
+  @doc """
+  Publishes a `%Message{}` to a channel
+
+  If the message was authorized by the Channel, a 200 OK response is returned,
+  otherwise a 401 Unauthorized response is returned
+  """
+  def publish(conn, message) do
+    {conn, server_pid} = resume_session(conn)
+    msg = Message.from_map!(message)
+
+    case dispatch(server_pid, msg) do
+      {:ok, _socket}             -> send_resp(conn, :ok, "")
+      {:error, _socket, _reason} -> send_resp(conn, :unauthorized, "")
+    end
+  end
+
+
+  ## Client
+
+  @doc """
+  Starts the `Longpoller.Server` and stores the serialized pid in the session
+  """
+  def start_session(conn) do
+    router = router_module(conn)
+    {:ok, server_pid} = Phoenix.Transports.Longpoller.Server.start_link(self, router)
+    conn = put_session(conn, session_key(conn), :erlang.term_to_binary(server_pid))
+
+    {conn, server_pid}
+  end
+
+  @doc """
+  Finds or starts the `Longpoller.Session` server
+  """
+  def resume_session(conn) do
+    {conn, server_pid} = case longpoll_pid(conn) do
+      nil -> start_session(conn)
+      pid -> {conn, pid}
+    end
+
+    {conn, server_pid}
+  end
+
+  @doc """
+  Retrieves the serialized `Longpoller.Server` pid from the session
+  """
+  def longpoll_pid(conn) do
+    case get_session(conn, session_key(conn)) do
+      nil -> nil
+      bin ->
+        pid = :erlang.binary_to_term(bin)
+        if Process.alive?(pid), do: pid, else: nil
+    end
+  end
+
+  @doc """
+  Ack's a list of %Messages{}'s back to the `Longpoller.Server`
+
+  To be called after buffered messages have been relayed to client
+  """
+  def ack(server_pid, messages) do
+    :ok = GenServer.call(server_pid, {:ack, messages})
+  end
+
+  defp session_key(conn), do: :"#{router_module(conn)}_longpoll_pid"
+
+  @doc """
+  Sets the active listener process. Called by polling `conn`
+  """
+  def set_active_listener(server_pid, listener_pid) do
+    GenServer.call(server_pid, {:set_active_listener, listener_pid})
+  end
+
+  @doc """
+  Dispatches deserialized `%Message{}` from client to `Longpoller.Server`
+  """
+  def dispatch(server_pid, message) do
+    GenServer.call(server_pid, {:dispatch, message})
+  end
+end

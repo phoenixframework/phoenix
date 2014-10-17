@@ -23,6 +23,9 @@ defmodule Phoenix.Channel do
   Subscribes socket to given channel topic
   Returns %Socket{}
   """
+  def subscribe(pid, channel, topic) when is_pid(pid) do
+    Topic.subscribe(pid, namespaced(channel, topic))
+  end
   def subscribe(socket, channel, topic) do
     if !Socket.authenticated?(socket, channel, topic) do
       Topic.subscribe(socket.pid, namespaced(channel, topic))
@@ -36,6 +39,9 @@ defmodule Phoenix.Channel do
   Unsubscribes socket from given channel topic
   Returns %Socket{}
   """
+  def unsubscribe(pid, channel, topic) when is_pid(pid) do
+    Topic.unsubscribe(pid, namespaced(channel, topic))
+  end
   def unsubscribe(socket, channel, topic) do
     Topic.unsubscribe(socket.pid, namespaced(channel, topic))
     Socket.delete_channel(socket, channel, topic)

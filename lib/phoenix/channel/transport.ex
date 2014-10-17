@@ -24,17 +24,17 @@ defmodule Phoenix.Channel.Transport do
     msg = %Message{channel: "phoenix", topic: "conn", event: "heartbeat", message: %{}}
     send socket.pid, msg
 
-    socket
+    {:ok, socket}
   end
   defp dispatch(socket, channel, "join", msg) do
     socket
-    |> socket.router.match(:websocket, channel, "join", msg)
+    |> socket.router.match(:socket, channel, "join", msg)
     |> handle_result("join")
   end
   defp dispatch(socket, channel, event, msg) do
     if Socket.authenticated?(socket, channel, socket.topic) do
       socket
-      |> socket.router.match(:websocket, channel, event, msg)
+      |> socket.router.match(:socket, channel, event, msg)
       |> handle_result(event)
     else
       handle_result({:error, socket, :unauthenticated}, event)
@@ -42,16 +42,16 @@ defmodule Phoenix.Channel.Transport do
   end
 
   defp handle_result({:ok, socket}, "join") do
-    Channel.subscribe(socket, socket.channel, socket.topic)
+    {:ok, Channel.subscribe(socket, socket.channel, socket.topic)}
   end
   defp handle_result(socket = %Socket{}, "leave") do
-    Channel.unsubscribe(socket, socket.channel, socket.topic)
+    {:ok, Channel.unsubscribe(socket, socket.channel, socket.topic)}
   end
   defp handle_result(socket = %Socket{}, _event) do
-    socket
+    {:ok, socket}
   end
-  defp handle_result({:error, socket, _reason}, _event) do
-    socket
+  defp handle_result({:error, socket, reason}, _event) do
+    {:error, socket, reason}
   end
   defp handle_result(bad_return, event) when event in ["join", "leave"] do
     raise InvalidReturn, message: """
@@ -65,14 +65,16 @@ defmodule Phoenix.Channel.Transport do
   end
 
   def dispatch_info(socket = %Socket{},  data) do
-    Enum.reduce socket.channels, socket, fn {channel, topic}, socket ->
-      dispatch_info(socket, channel, topic, data)
+    socket = Enum.reduce socket.channels, socket, fn {channel, topic}, socket ->
+      {:ok, socket} = dispatch_info(socket, channel, topic, data)
+      socket
     end
+    {:ok, socket}
   end
   def dispatch_info(socket, channel, topic, data) do
     socket
     |> Socket.set_current_channel(channel, topic)
-    |> socket.router.match(:websocket, channel, "info", data)
+    |> socket.router.match(:socket, channel, "info", data)
     |> handle_result("info")
   end
 
@@ -80,7 +82,7 @@ defmodule Phoenix.Channel.Transport do
     Enum.each socket.channels, fn {channel, topic} ->
       socket
       |> Socket.set_current_channel(channel, topic)
-      |> socket.router.match(:websocket, channel, "leave", reason: reason)
+      |> socket.router.match(:socket, channel, "leave", reason: reason)
       |> handle_result("leave")
     end
     :ok
