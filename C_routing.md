@@ -121,7 +121,7 @@ Then run `$ mix compile`
 
 ###Resources
 
-The router supports other macros besides those for HTTP verbs like 'get', 'post' and 'put'. The most important among them is 'resources', which expands out to eight clauses of the match function.
+The router supports other macros besides those for HTTP verbs like `get/2`, `post/2` and `put/2`. The most important among them is `resources/2`, which expands out to eight clauses of the match function.
 
 Put this line into your router.ex file `resources "users", HelloPhoenix.UserController`
 
