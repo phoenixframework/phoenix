@@ -2,7 +2,7 @@
 
 Phoenix routing has a dual nature. As we have seen in the preceding guide, it is a way to parse incoming HTTP requests and dispatch to the correct controller and action - passing along any parameters that may have been included. It is also a mechanism for generating a path or url given a previously defined named route - passing in any parameters which may be needed.
 
-The router file that Phoenix generates for you, web/router.ex, will look something like this one.
+The router file that Phoenix generates for you, `web/router.ex`, will look something like this one.
 
 ```elixir
 defmodule HelloPhoenix.Router do
@@ -21,11 +21,13 @@ defmodule HelloPhoenix.Router do
   # end
 end
 ```
-Whatever you called your application will appear instead of 'HelloPhoenix' for both the router module name and the Controller name.
+The name you gave your application will appear instead of 'HelloPhoenix' for both the router module name and the Controller name.
 
 The first line of this module `use Phoenix.Router` simply makes Phoenix router functions available in our particular router.
 
-Inside the block marked `scope` (which we'll get to a little later) we have an application level route.
+Scopes have their own section in this guide, so we won't spend time on the `scope "/" do` block here. The `pipe_through :browser` line will get a full treatment in the Pipeline section of this guide. We'll skip over it for now as well.
+
+Inside the scope block, however, we have our first actual route.
 `get "/", HelloPhoenix.Controller, :index, as: :pages`
 
 'get' is a Phoenix macro which expands out to define one clause of the match function. It corresponds to the HTTP verb GET. Similar macros exist for other HTTP verbs including POST, PUT, PATCH, DELETE, OPTIONS, CONNECT, TRACE and HEAD.
