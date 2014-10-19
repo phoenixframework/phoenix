@@ -2,6 +2,8 @@ defmodule Phoenix.Transports.WebSocket do
   use Phoenix.Controller
   use Phoenix.WebSocket
 
+  @moduledoc false
+
   alias Phoenix.Channel.Transport
   alias Phoenix.Socket
   alias Phoenix.Socket.Message

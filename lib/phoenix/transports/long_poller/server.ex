@@ -1,5 +1,8 @@
 defmodule Phoenix.Transports.LongPoller.Server do
   use GenServer
+
+  @moduledoc false
+
   alias Phoenix.Socket
   alias Phoenix.Socket.Message
   alias Phoenix.Channel.Transport

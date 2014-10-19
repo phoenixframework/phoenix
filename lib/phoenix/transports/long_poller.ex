@@ -1,5 +1,8 @@
 defmodule Phoenix.Transports.LongPoller do
   use Phoenix.Controller
+
+  @moduledoc false
+
   alias Phoenix.Socket.Message
   alias Poison, as: JSON
 
