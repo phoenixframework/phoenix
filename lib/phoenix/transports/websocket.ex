@@ -21,7 +21,8 @@ defmodule Phoenix.Transports.WebSocket do
   end
 
   @doc """
-  Receives JSON encoded `%Message{}` from client and dispatches to Transport layer
+  Receives JSON encoded `%Phoenix.Socket.Message{}` from client and dispatches
+  to Transport layer
   """
   def ws_handle(text, socket) do
     text
@@ -34,7 +35,7 @@ defmodule Phoenix.Transports.WebSocket do
   end
 
   @doc """
-  Receives `%Message{}` and sends encoded message JSON to client
+  Receives `%Phoenix.Socket.Message{}` and sends encoded message JSON to client
   """
   def ws_info(message = %Message{}, socket) do
     reply(socket.pid, JSON.encode!(message))

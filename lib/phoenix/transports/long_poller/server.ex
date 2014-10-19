@@ -32,7 +32,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   end
 
   @doc """
-  Dispatches client `%Messages{}` back through Transport layer
+  Dispatches client `%Phoenix.Socket.Messages{}` back through Transport layer
   """
   def handle_call({:dispatch, message}, _from, state) do
     message
@@ -46,7 +46,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   end
 
   @doc """
-  Forwards replied/broadcasted `%Message{}`s from Channels back to client
+  Forwards replied/broadcasted `%Phoenix.Socket.Message{}`s from Channels back to client
   """
   def handle_info(message = %Message{}, state) do
     if Process.alive?(state.listener) do

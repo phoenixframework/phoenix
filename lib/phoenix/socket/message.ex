@@ -12,9 +12,9 @@ defmodule Phoenix.Socket.Message do
   end
 
   @doc """
-  Parse json message into required format, raises `InvalidMessage` if invalid
+  Parse JSON into required format, raises `Phoenix.Socket.InvalidMessage` if invalid
 
-  The Message Protocol requires the following keys:
+  The Message format requires the following keys:
 
     * channel - The String Channel namespace, ie "messages"
     * topic - The String Topic namespace, ie "123"
@@ -32,7 +32,9 @@ defmodule Phoenix.Socket.Message do
   end
 
   @doc """
-  Converts a map with string keys into a `%Message{}`. Raises `InvalidMessage` if not valid
+  Converts a map with string keys into a `%Phoenix.Socket.Message{}`.
+  Raises `InvalidMessage` if not valid
+
   See `parse!/1` for required keys
   """
   def from_map!(map) do

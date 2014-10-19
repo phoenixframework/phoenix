@@ -4,25 +4,26 @@ defmodule Phoenix.Channel.Transport do
   alias Phoenix.Socket.Message
 
   @moduledoc """
-  The Transport Layer handles dispatching incoming and outgoing Channel
-  `%Message{}`'s from remote clients, backed by different Channel transport
-  implementations and serializations.
+  Handles dispatching incoming and outgoing Channel messages
 
   ## The Transport Adapter Contract
+
+  The Transport layer dispatches `%Phoenix.Socket.Message{}`'s from remote clients,
+  backed by different Channel transport implementations and serializations.
 
   ### Server
 
   To implement a Transport adapter, the Server must broker the following actions:
 
-    * Handle receiving incoming, encoded `%Message{}`'s from remote clients, then
-      deserialing and fowarding message through `Transport.dispatch/2`. Finish by
-      keeping state of returned `%Socket{}`.
-    * Handle receiving outgoing `%Message{}`s as Elixir process messages, then
-      encoding and fowarding to connected remote client.
+    * Handle receiving incoming, encoded `%Phoenix.Socket.Message{}`'s from
+      remote clients, then deserialing and fowarding message through
+      `Phoenix.Transport.dispatch/2`. Finish by keeping state of returned `%Phoenix.Socket{}`.
+    * Handle receiving outgoing `%Phoenix.Socket.Message{}`s as Elixir process
+      messages, then encoding and fowarding to connected remote client.
     * Handle receiving arbitrary Elixir messages and fowarding through
-      `Transport.dispatch_info/2`. Finish by keeping state of returned `%Socket{}`.
+      `Phoenix.Transport.dispatch_info/2`. Finish by keeping state of returned `%Socket{}`.
     * Handle remote client disconnects and relaying event through
-      `Transport.dispatch_leave/2`
+      `Phoenix.Transport.dispatch_leave/2`
 
   See `Phoenix.Transports.WebSocket` for an example transport server implementation.
 
@@ -33,7 +34,7 @@ defmodule Phoenix.Channel.Transport do
   encodings.
 
   However, a client can be implemented for other protocols and encodings by
-  abiding by the `%Message{}` protocol as explained in `Phoenix.Message` docs.
+  abiding by the `Phoenix.Socket.Message` format
 
   See `assets/cs/phoenix.coffee` for an example transport client implementation.
   """
@@ -47,7 +48,7 @@ defmodule Phoenix.Channel.Transport do
 
 
   @doc """
-  Dispatches `%Message{}` to Channel. All serialized, remote client messages
+  Dispatches `%Phoenix.Socket.Message{}` to Channel. All serialized, remote client messages
   should be deserialied and fowarded through this function by adapters.
 
   The following return signatures must be handled by transport adapters:
@@ -110,7 +111,7 @@ defmodule Phoenix.Channel.Transport do
   Arbitrary Elixir processes are received by adapters and forwarded through
   this function to be dispatched as `"info"` events on each socket channel.
 
-  The returned `%Socket{}`'s state must be held by the adapter
+  The returned `%Phoenix.Socket{}`'s state must be held by the adapter
   """
   def dispatch_info(socket = %Socket{},  data) do
     socket = Enum.reduce socket.channels, socket, fn {channel, topic}, socket ->

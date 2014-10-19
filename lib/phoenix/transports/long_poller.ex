@@ -10,8 +10,8 @@ defmodule Phoenix.Transports.LongPoller do
   plug :action
 
   @doc """
-  Starts `LongPoller.Server` and stores pid in session. This action must be
-  called first before sending requests to `poll` or `publish`
+  Starts `Phoenix.LongPoller.Server` and stores pid in session. This action must
+  be called first before sending requests to `poll` or `publish`
   """
   def open(conn, _) do
     {conn, _server_pid} = resume_session(conn)
@@ -19,11 +19,11 @@ defmodule Phoenix.Transports.LongPoller do
   end
 
   @doc """
-  Listens for `%Message{}`'s from `LongPoller.Server`.
+  Listens for `%Phoenix.Socket.Message{}`'s from `Phoenix.LongPoller.Server`.
 
   As soon as messages are received, they are encoded as JSON and send down
   to the longpolling client, which immediately repolls. If a timeout occurrs,
-  a :no_content response is returned, and the client should immediately repoll.
+  a `:no_content` response is returned, and the client should immediately repoll.
   """
   def poll(conn, _params) do
     {conn, server_pid} = resume_session(conn)
@@ -42,7 +42,7 @@ defmodule Phoenix.Transports.LongPoller do
   end
 
   @doc """
-  Publishes a `%Message{}` to a channel
+  Publishes a `%Phoenix.Socket.Message{}` to a channel
 
   If the message was authorized by the Channel, a 200 OK response is returned,
   otherwise a 401 Unauthorized response is returned
@@ -61,7 +61,7 @@ defmodule Phoenix.Transports.LongPoller do
   ## Client
 
   @doc """
-  Starts the `LongPoller.Server` and stores the serialized pid in the session
+  Starts the `Phoenix.LongPoller.Server` and stores the serialized pid in the session
   """
   def start_session(conn) do
     router = router_module(conn)
@@ -72,7 +72,7 @@ defmodule Phoenix.Transports.LongPoller do
   end
 
   @doc """
-  Finds or starts the `LongPoller.Session` server
+  Finds or starts the `Phoenix.LongPoller.Server` server
   """
   def resume_session(conn) do
     {conn, server_pid} = case longpoll_pid(conn) do
@@ -84,7 +84,7 @@ defmodule Phoenix.Transports.LongPoller do
   end
 
   @doc """
-  Retrieves the serialized `LongPoller.Server` pid from the session
+  Retrieves the serialized `Phoenix.LongPoller.Server` pid from the session
   """
   def longpoll_pid(conn) do
     case get_session(conn, session_key(conn)) do
@@ -96,7 +96,7 @@ defmodule Phoenix.Transports.LongPoller do
   end
 
   @doc """
-  Ack's a list of %Messages{}'s back to the `LongPoller.Server`
+  Ack's a list of `%Phoenix.Socket.Messages{}`'s back to the `Phoenix.LongPoller.Server`
 
   To be called after buffered messages have been relayed to client
   """
@@ -114,7 +114,8 @@ defmodule Phoenix.Transports.LongPoller do
   end
 
   @doc """
-  Dispatches deserialized `%Message{}` from client to `LongPoller.Server`
+  Dispatches deserialized `%Phoenix.Socket.Message{}` from client to
+  `Phoenix.LongPoller.Server`
   """
   def dispatch(server_pid, message) do
     GenServer.call(server_pid, {:dispatch, message})
