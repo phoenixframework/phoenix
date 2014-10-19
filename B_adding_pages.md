@@ -58,14 +58,19 @@ Enough prep, let's get on with our first new Phoenix page!
 Routes map unique http verb/path pairs to controller/action pairs which will handle them. The route for our "Welcome to Phoenix!" page from the previous guide looks like this.
 
 ```elixir
+get "/", HelloPhoenix.PageController, :index
+```
+If you are working with the 0.5.0 Phoenix release or earlier, there will be an extra `as: :pages` option added to your route. This is no longer necessary on the master branch or later releases.
+
+```elixir
 get "/", HelloPhoenix.PageController, :index, as: :pages
 ```
 
-Let's digest what this route is telling us. Visiting http://localhost:4000 issues an http GET request to the root path. All requests like this will be handled by the "index" function in the "HelloPhoenix.PageController" module defined in web/controllers/page_controller.ex. (Let's ignore the "as: :page" part until we get to the routing guide.)
+Let's digest what this route is telling us. Visiting http://localhost:4000 issues an http GET request to the root path. All requests like this will be handled by the "index" function in the "HelloPhoenix.PageController" module defined in web/controllers/page_controller.ex.
 
 The page we are going to build will simply say "Hello from Phoenix!" when we point our browser to http://localhost:4000/hello.
 
-The first thing we need to do to create that page is define a route for it. Open up web/router.ex in your favorite text editor. It should currently look like this.
+The first thing we need to do to create that page is define a route for it. Open up `web/router.ex` in your favorite text editor. It should currently look like this.
 
 ```elixir
 defmodule HelloPhoenix.Router do
@@ -75,7 +80,7 @@ defmodule HelloPhoenix.Router do
     # Use the default browser stack.
     pipe_through :browser
 
-    get "/", HelloPhoenix.PageController, :index, as: :pages
+    get "/", HelloPhoenix.PageController, :index
   end
 
   # Other scopes may use custom stacks.
@@ -103,7 +108,7 @@ defmodule HelloPhoenix.Router do
     # Use the default browser stack.
     pipe_through :browser
 
-    get "/", HelloPhoenix.PageController, :index, as: :pages
+    get "/", HelloPhoenix.PageController, :index
     get "/hello", HelloPhoenix.HelloController, :index
   end
 
@@ -138,7 +143,7 @@ We will save a more complete discussion of controllers for the controller specif
 render conn, "index"
 ```
 
-This simply says that we want to render the index.html.eex template for our hello_controller.ex. Notice that we are ignorming the params arguement to the index function. We aren't taking input from the request at all to render this page.
+This simply says that we want to render the index.html.eex template for our hello_controller.ex. Notice that we are ignoring the params argument to the index function. We aren't taking input from the request at all to render this page.
 
 On to rendering!
 
@@ -196,7 +201,7 @@ defmodule HelloPhoenix.Router do
     # Use the default browser stack.
     pipe_through :browser
 
-    get "/", HelloPhoenix.PageController, :index, as: :pages
+    get "/", HelloPhoenix.PageController, :index
     get "/hello", HelloPhoenix.HelloController, :index
     get "/hello/:messenger", HelloPhoenix.HelloController, :show
   end
