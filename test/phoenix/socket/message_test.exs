@@ -15,8 +15,8 @@ defmodule Phoenix.Socket.MessageTest do
     assert message.message == "m"
   end
 
-  test "parse! raises InvalidMessage when given invalid json" do
-    assert_raise InvalidMessage, fn ->
+  test "parse! raises Poison.SyntaxError when given invalid json" do
+    assert_raise Poison.SyntaxError, fn ->
       Message.parse!("""
       {INVALID"channel": "c","topic":"t","event":"e","message":"m"}
       """)
