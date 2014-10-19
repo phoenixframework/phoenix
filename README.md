@@ -45,7 +45,7 @@ defmodule YourApp.Router do
   use Phoenix.Router
 
   scope alias: YourApp do
-    get "/pages/:page", PageController, :show, as: :pages
+    get "/pages/:page", PageController, :show
     get "/files/*path", FileController, :show
 
     resources "/users", UserController do

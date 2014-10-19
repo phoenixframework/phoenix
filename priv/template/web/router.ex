@@ -5,7 +5,7 @@ defmodule <%= application_module %>.Router do
     # Use the default browser stack.
     pipe_through :browser
 
-    get "/", <%= application_module %>.PageController, :index, as: :pages
+    get "/", <%= application_module %>.PageController, :index
   end
 
   # Other scopes may use custom stacks.
