@@ -159,6 +159,7 @@ end
 ```elixir
 defmodule YourApp.UserController do
   use Phoenix.Controller
+  alias Poison, as: JSON
 
   plug :action
 
