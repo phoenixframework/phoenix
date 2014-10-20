@@ -1,6 +1,6 @@
 defmodule Phoenix.HTML.Engine do
   @moduledoc """
-  This is an imlementation of EEx.Engine and
+  This is an implementation of EEx.Engine and
   Phoenix format encoder that guarantees templates are
   HTML Safe.
   """
