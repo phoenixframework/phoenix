@@ -265,7 +265,23 @@ end
 
 With this, both `@message` and `@name` will be availale in the `index.html.eex` template.
 
-Very Important! The render plug takes over all rendering for all actions in a controller. Once we plug render, if we try to use any rendering-style function in any action - `text/2`, `json/2`, `html/2`, `render/2` or even `redirect/2`- we will get errors if that action is dispatched to. Even if the application appears to do the right thing, the server will be throwing errors. Bottom line, if we're going to use `plug :render`, we have to go all-in, for all actions in a controller.
+What if we want to plug render, but only some of our actions should actually call `render/2`? For example, some actions might need to do a redirect, or return json.
+
+By default, the render plug takes over all rendering for all actions in a controller. Once we plug render, if we try to use any rendering-style function in any action - `text/2`, `json/2`, `html/2`, `render/2` or even `redirect/2`- we will get errors if that action is dispatched to. Even if the application appears to do the right thing, the server will be throwing errors.
+
+Phoenix offers a solution to this by letting us specify which actions `plug :render` should be applied to. If we only wanted `plug :render` to work on the `index` and `show` actions, we could do this.
+
+```elixir
+defmodule HelloPhoenix.PageController do
+  use Phoenix.Controller
+
+  plug :action
+  plug :render  when action in [:index, :show]
+
+. . .
+```
+
+Then we are free to call any of the rendering-style functions in any other actions besides `index` and `show` in `HelloPhoenix.PageController` without generating errors.
 
 Rendering does not end with the template, though. By default, the results of the template render will be inserted into a layout, which will also be rendered.
 
