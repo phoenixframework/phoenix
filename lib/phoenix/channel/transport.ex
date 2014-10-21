@@ -17,11 +17,13 @@ defmodule Phoenix.Channel.Transport do
 
     * Handle receiving incoming, encoded `%Phoenix.Socket.Message{}`'s from
       remote clients, then deserialing and fowarding message through
-      `Phoenix.Transport.dispatch/2`. Finish by keeping state of returned `%Phoenix.Socket{}`.
+      `Phoenix.Transport.dispatch/2`. Finish by keeping state of returned
+      HashDict of `%Phoenix.Socket{}`s.
     * Handle receiving outgoing `%Phoenix.Socket.Message{}`s as Elixir process
       messages, then encoding and fowarding to connected remote client.
     * Handle receiving arbitrary Elixir messages and fowarding through
-      `Phoenix.Transport.dispatch_info/2`. Finish by keeping state of returned `%Socket{}`.
+      `Phoenix.Transport.dispatch_info/2`. Finish by keeping state of returned
+      HashDict of `%Phoenix.Socket{}`s.
     * Handle remote client disconnects and relaying event through
       `Phoenix.Transport.dispatch_leave/2`
 
@@ -53,9 +55,9 @@ defmodule Phoenix.Channel.Transport do
 
   The following return signatures must be handled by transport adapters:
     * `{:ok, sockets}` - Successful dispatch, with updated `HashDict` of sockets
-    * `{:error, sockets, reason}` - Failed dispatched with updatd state
+    * `{:error, sockets, reason}` - Failed dispatched with updatd `HashDict` of sockets
 
-  The returned `HashDict` of sockets must be held by the adapter
+  The returned `HashDict` of `%Phoenix.Socket{}`s must be held by the adapter
   """
   def dispatch(msg = %Message{}, sockets, adapter_pid, router) do
     socket = %Socket{pid: adapter_pid, router: router, channel: msg.channel, topic: msg.topic}
@@ -119,7 +121,7 @@ defmodule Phoenix.Channel.Transport do
   Arbitrary Elixir processes are received by adapters and forwarded through
   this function to be dispatched as `"info"` events on each socket channel.
 
-  The returned `%Phoenix.Socket{}`'s state must be held by the adapter
+  The returned `HashDict` of `%Phoenix.Socket{}`s must be held by the adapter
   """
   def dispatch_info(sockets, data) do
     sockets = Enum.reduce sockets, sockets, fn {_, socket}, sockets ->
