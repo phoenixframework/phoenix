@@ -215,7 +215,7 @@ defmodule Phoenix.Router do
         plug :token_authentication
       end
 
-  Where `plug :super` will invoke the existing pligs in the api
+  Where `plug :super` will invoke the existing plugs in the api
   pipeline. In general though, it is preferred to define new pipelines
   then modify existing ones.
 
