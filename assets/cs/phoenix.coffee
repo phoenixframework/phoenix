@@ -40,6 +40,8 @@
 
   class exports.Socket
 
+    @states: {connecting: 0, open: 1, closing: 2, closed: 3}
+
     conn: null
     endPoint: null
     channels: null
@@ -53,6 +55,7 @@
     transport: null
 
     constructor: (endPoint, opts = {}) ->
+      @states = exports.Socket.states
       @transport = opts.transport ? root.WebSocket ? exports.LongPoller
       @heartbeatIntervalMs = opts.heartbeatIntervalMs ? @heartbeatIntervalMs
       @endPoint = @expandEndpoint(endPoint)
@@ -106,7 +109,8 @@
 
     onConnOpen: ->
       clearInterval(@reconnectTimer)
-      @heartbeatTimer = setInterval (=> @sendHeartbeat() ), @heartbeatIntervalMs
+      unless @transport.skipHeartbeat
+        @heartbeatTimer = setInterval (=> @sendHeartbeat() ), @heartbeatIntervalMs
       @rejoinAll()
       callback() for callback in @stateChangeCallbacks.open
 
@@ -126,10 +130,10 @@
 
     connectionState: ->
       switch @conn?.readyState
-        when WebSocket.CONNECTING   then "connecting"
-        when WebSocket.OPEN         then "open"
-        when WebSocket.CLOSING      then "closing"
-        when WebSocket.CLOSED, null then "closed"
+        when @states.connecting   then "connecting"
+        when @states.open         then "open"
+        when @states.closing      then "closing"
+        when @states.closed, null then "closed"
 
 
     isConnected: -> @connectionState() is "open"
@@ -183,17 +187,17 @@
 
   class exports.LongPoller
 
-    timeoutMs: 10000
     retryInMs: 5000
     endPoint: null
+    skipHeartbeat: true
     onopen:    -> # noop
     onerror:   -> # noop
     onmessage: -> # noop
     onclose:   -> # noop
-    states: {connecting: 0, open: 1, closing: 2, closed: 3}
 
     constructor: (endPoint) ->
-      @endPoint = @normalizeEndpoint(endPoint)
+      @states     = exports.Socket.states
+      @endPoint   = @normalizeEndpoint(endPoint)
       @readyState = @states.connecting
       @open()
 
@@ -218,13 +222,14 @@
       console.log "polling"
       exports.Ajax.request "GET", @endPoint, "application/json", null, (status, resp) =>
         switch status
-          when 200 then @onmessage(data: JSON.stringify(msg)) for msg in JSON.parse(resp)
-          when 204 then # noop
+          when 200
+            @onmessage(data: JSON.stringify(msg)) for msg in JSON.parse(resp)
+            @poll()
+          when 204
+            @poll()
           else
-            @onerror()
-            setTimeout (=> @poll()), @retryInMs
-            return
-        @poll()
+            @close()
+            setTimeout (=> @open()), @retryInMs
 
 
     send: (body) ->
@@ -239,7 +244,7 @@
 
   exports.Ajax =
 
-    state: {done: 4}
+    states: {complete: 4}
 
     request: (method, endPoint, accept, body, callback) ->
       req = if root.XMLHttpRequest?
@@ -249,7 +254,7 @@
       req.open method, endPoint, true
       req.setRequestHeader("Content-type", accept)
       req.onreadystatechange = =>
-        callback?(req.status, req.responseText) if req.readyState is @state.done
+        callback?(req.status, req.responseText) if req.readyState is @states.complete
 
       req.send(body)
 
