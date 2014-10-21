@@ -52,16 +52,16 @@ defmodule Phoenix.Channel.Transport do
   should be deserialied and fowarded through this function by adapters.
 
   The following return signatures must be handled by transport adapters:
-    * `{:ok, socket}` - Successful dispatch, with updated state
-    * `{:error, socket, reason}` - Failed dispatched with updatd state
+    * `{:ok, sockets}` - Successful dispatch, with updated `HashDict` of sockets
+    * `{:error, sockets, reason}` - Failed dispatched with updatd state
 
-  The returned `%Socket{}`'s state must be held by the adapter
+  The returned `HashDict` of sockets must be held by the adapter
   """
   def dispatch(msg = %Message{}, sockets, adapter_pid, router) do
+    socket = %Socket{pid: adapter_pid, router: router, channel: msg.channel, topic: msg.topic}
+
     sockets
-    |> HashDict.get({msg.channel, msg.topic})
-    |> Kernel.||(%Socket{pid: adapter_pid, router: router})
-    |> Socket.set_current_channel(msg.channel, msg.topic)
+    |> HashDict.get({msg.channel, msg.topic}, socket)
     |> dispatch(msg.channel, msg.event, msg.message)
     |> case do
       {:ok, socket} ->

@@ -1,6 +1,5 @@
 defmodule Phoenix.Transports.LongPoller.Server do
   use GenServer
-  alias Phoenix.Transports.LongPoller.Server
 
   @moduledoc false
 
@@ -10,14 +9,14 @@ defmodule Phoenix.Transports.LongPoller.Server do
   # TODO: Make this confirable, and refer to `LongPoller` setting
   @timeout_ms 10_000 * 2
 
-  defstruct listener: nil, buffer: [], router: nil, sockets: HashDict.new
 
   def start_link(listener, router) do
     GenServer.start_link(__MODULE__, [listener, router])
   end
 
   def init([listener, router]) do
-    {:ok, %Server{listener: listener, router: router}, @timeout_ms}
+    state = %{listener: listener, buffer: [], router: router, sockets: HashDict.new}
+    {:ok, state, @timeout_ms}
   end
 
   @doc """
@@ -27,12 +26,12 @@ defmodule Phoenix.Transports.LongPoller.Server do
     if Enum.any?(state.buffer) do
       send pid, {:messages, state.buffer}
     end
-    {:reply, :ok, %Server{state | listener: pid}}
+    {:reply, :ok, %{state | listener: pid}}
   end
 
   # TODO: %Messages{}'s need unique ids so we can properly ack them
   def handle_call({:ack, messages}, _from, state) do
-    {:reply, :ok, %Server{state | buffer: state.buffer -- messages}}
+    {:reply, :ok, %{state | buffer: state.buffer -- messages}}
   end
 
   @doc """
@@ -43,9 +42,9 @@ defmodule Phoenix.Transports.LongPoller.Server do
     |> Transport.dispatch(state.sockets, self, state.router)
     |> case do
       {:ok, sockets} ->
-        {:reply, {:ok, sockets}, %Server{state | sockets: sockets}}
+        {:reply, {:ok, sockets}, %{state | sockets: sockets}}
       {:error, sockets, reason} ->
-        {:reply, {:error, sockets, reason}, %Server{state | sockets: sockets}}
+        {:reply, {:error, sockets, reason}, %{state | sockets: sockets}}
     end
   end
 
@@ -56,7 +55,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
     if Process.alive?(state.listener) do
       send state.listener, {:messages, [message]}
     end
-    {:noreply, %Server{state | buffer: [message | state.buffer]}}
+    {:noreply, %{state | buffer: [message | state.buffer]}}
   end
 
   def handle_info(:timeout, state) do
@@ -71,7 +70,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
       {:ok, sockets} -> sockets
       {:error, sockets, _reason} -> sockets
     end
-    {:noreply, %Server{state | sockets: sockets}}
+    {:noreply, %{state | sockets: sockets}}
   end
 
   @doc """

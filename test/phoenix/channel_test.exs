@@ -251,7 +251,7 @@ defmodule Phoenix.Channel.ChannelTest do
       channel "chan9", Chan9
     end
 
-    socket = %Socket{pid: self, router: Router9, channel: "chan9"}
+    socket = %Socket{pid: self, router: Router9, channel: "chan9", topic: "topic"}
     sockets = HashDict.put(HashDict.new, {"chan9", "topic"}, socket)
     message = %Message{channel: "chan9", topic: "topic", event: "join", message: %{}}
 
@@ -297,7 +297,7 @@ defmodule Phoenix.Channel.ChannelTest do
 
   test "socket state can change when receiving regular process messages" do
 
-    socket = %Socket{pid: self, router: Router10, channel: "chan66"}
+    socket = %Socket{pid: self, router: Router10, channel: "chan10", topic: "topic"}
     sockets = HashDict.put(HashDict.new, {"chan10", "topic"}, socket)
     message = %Message{channel: "chan10", topic: "topic", event: "join", message: %{}}
 
@@ -310,7 +310,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "Socket state can be put and retrieved" do
-    socket = %Socket{pid: self, router: Router10, channel: "chan66"}
+    socket = %Socket{pid: self, router: Router10, channel: "chan10", topic: "topic"}
     socket = Chan10.event(socket, "put", %{val: 123})
     _socket = Chan10.event(socket, "get", %{"key" => :val})
     assert_received 123

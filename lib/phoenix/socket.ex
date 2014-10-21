@@ -32,9 +32,7 @@ defmodule Phoenix.Socket do
 
   """
   def authorize(socket, channel, topic) do
-    socket
-    |> set_current_channel(channel, topic)
-    |> put_in([:authorized], true)
+    %Socket{socket | channel: channel, topic: topic, authorized: true}
   end
 
   @doc """
@@ -49,8 +47,7 @@ defmodule Phoenix.Socket do
 
   """
   def deauthorize(socket) do
-    socket
-    |> put_in([:authorized], false)
+    %Socket{socket | authorized: false}
   end
 
   @doc """
@@ -105,7 +102,7 @@ defmodule Phoenix.Socket do
 
   """
   def assign(socket = %Socket{}, key, value) do
-    put_in socket, [:assigns, key], value
+    put_in socket.assigns[key], value
   end
 end
 
