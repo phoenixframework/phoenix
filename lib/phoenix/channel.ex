@@ -27,9 +27,9 @@ defmodule Phoenix.Channel do
     Topic.subscribe(pid, namespaced(channel, topic))
   end
   def subscribe(socket, channel, topic) do
-    if !Socket.authenticated?(socket, channel, topic) do
+    if !Socket.authorized?(socket, channel, topic) do
       Topic.subscribe(socket.pid, namespaced(channel, topic))
-      Socket.add_channel(socket, channel, topic)
+      Socket.authorize(socket, channel, topic)
     else
       socket
     end
@@ -44,7 +44,7 @@ defmodule Phoenix.Channel do
   end
   def unsubscribe(socket, channel, topic) do
     Topic.unsubscribe(socket.pid, namespaced(channel, topic))
-    Socket.delete_channel(socket, channel, topic)
+    Socket.deauthorize(socket)
   end
 
   @doc """

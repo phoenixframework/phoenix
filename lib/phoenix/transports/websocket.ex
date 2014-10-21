@@ -5,7 +5,6 @@ defmodule Phoenix.Transports.WebSocket do
   @moduledoc false
 
   alias Phoenix.Channel.Transport
-  alias Phoenix.Socket
   alias Phoenix.Socket.Message
   alias Poison, as: JSON
 
@@ -19,29 +18,29 @@ defmodule Phoenix.Transports.WebSocket do
   Handles initalization of the websocket
   """
   def ws_init(conn) do
-    {:ok, %Socket{pid: self, router: router_module(conn)}}
+    {:ok, {router_module(conn), HashDict.new}}
   end
 
   @doc """
   Receives JSON encoded `%Phoenix.Socket.Message{}` from client and dispatches
   to Transport layer
   """
-  def ws_handle(text, socket) do
+  def ws_handle(text, {router, sockets}) do
     text
     |> Message.parse!
-    |> Transport.dispatch(socket)
+    |> Transport.dispatch(sockets, self, router)
     |> case do
-      {:ok, socket} -> socket
-      {:error, socket, _reason} -> socket
+      {:ok, sockets}             -> {router, sockets}
+      {:error, sockets, _reason} -> {router, sockets}
     end
   end
 
   @doc """
   Receives `%Phoenix.Socket.Message{}` and sends encoded message JSON to client
   """
-  def ws_info(message = %Message{}, socket) do
-    reply(socket.pid, JSON.encode!(message))
-    socket
+  def ws_info(message = %Message{}, state) do
+    reply(self, JSON.encode!(message))
+    state
   end
 
   @doc """
@@ -49,18 +48,20 @@ defmodule Phoenix.Transports.WebSocket do
 
   Dispatches `"info"` event back through Tranport layer to all socket's channels
   """
-  def ws_info(data, socket) do
-    case Transport.dispatch_info(socket, data) do
+  def ws_info(data, {router, sockets}) do
+    {:ok, sockets} = case Transport.dispatch_info(sockets, data) do
       {:ok, socket} -> socket
       {:error, socket, _reason} -> socket
     end
+
+    {router, sockets}
   end
 
   @doc """
   Called on WS close. Dispatches the `leave` event back through Transport layer
   """
-  def ws_terminate(reason, socket) do
-    :ok = Transport.dispatch_leave(socket, reason)
+  def ws_terminate(reason, {_router, sockets}) do
+    :ok = Transport.dispatch_leave(sockets, reason)
     :ok
   end
 end

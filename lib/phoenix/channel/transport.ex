@@ -57,25 +57,33 @@ defmodule Phoenix.Channel.Transport do
 
   The returned `%Socket{}`'s state must be held by the adapter
   """
-  def dispatch(msg, socket) do
-    socket
+  def dispatch(msg = %Message{}, sockets, adapter_pid, router) do
+    sockets
+    |> HashDict.get({msg.channel, msg.topic})
+    |> Kernel.||(%Socket{pid: adapter_pid, router: router})
     |> Socket.set_current_channel(msg.channel, msg.topic)
     |> dispatch(msg.channel, msg.event, msg.message)
+    |> case do
+      {:ok, socket} ->
+        {:ok, HashDict.put(sockets, {msg.channel, msg.topic}, socket)}
+      {:error, _socket, reason} ->
+        {:error, sockets, reason}
+    end
   end
 
-  defp dispatch(socket, "phoenix", "heartbeat", _msg) do
+  def dispatch(socket, "phoenix", "heartbeat", _msg) do
     msg = %Message{channel: "phoenix", topic: "conn", event: "heartbeat", message: %{}}
     send socket.pid, msg
 
     {:ok, socket}
   end
-  defp dispatch(socket, channel, "join", msg) do
+  def dispatch(socket, channel, "join", msg) do
     socket
     |> socket.router.match(:socket, channel, "join", msg)
     |> handle_result("join")
   end
-  defp dispatch(socket, channel, event, msg) do
-    if Socket.authenticated?(socket, channel, socket.topic) do
+  def dispatch(socket, channel, event, msg) do
+    if Socket.authorized?(socket, channel, socket.topic) do
       socket
       |> socket.router.match(:socket, channel, event, msg)
       |> handle_result(event)
@@ -113,16 +121,15 @@ defmodule Phoenix.Channel.Transport do
 
   The returned `%Phoenix.Socket{}`'s state must be held by the adapter
   """
-  def dispatch_info(socket = %Socket{},  data) do
-    socket = Enum.reduce socket.channels, socket, fn {channel, topic}, socket ->
-      {:ok, socket} = dispatch_info(socket, channel, topic, data)
-      socket
+  def dispatch_info(sockets, data) do
+    sockets = Enum.reduce sockets, sockets, fn {_, socket}, sockets ->
+      {:ok, socket} = dispatch_info(socket, socket.channel, data)
+      HashDict.put(sockets, {socket.channel, socket.topic}, socket)
     end
-    {:ok, socket}
+    {:ok, sockets}
   end
-  def dispatch_info(socket, channel, topic, data) do
+  def dispatch_info(socket = %Socket{}, channel, data) do
     socket
-    |> Socket.set_current_channel(channel, topic)
     |> socket.router.match(:socket, channel, "info", data)
     |> handle_result("info")
   end
@@ -133,11 +140,10 @@ defmodule Phoenix.Channel.Transport do
 
   Most adapters shutdown after this dispatch as they client has disconnected
   """
-  def dispatch_leave(socket, reason) do
-    Enum.each socket.channels, fn {channel, topic} ->
+  def dispatch_leave(sockets, reason) do
+    Enum.each sockets, fn {_, socket} ->
       socket
-      |> Socket.set_current_channel(channel, topic)
-      |> socket.router.match(:socket, channel, "leave", reason: reason)
+      |> socket.router.match(:socket, socket.channel, "leave", reason: reason)
       |> handle_result("leave")
     end
     :ok

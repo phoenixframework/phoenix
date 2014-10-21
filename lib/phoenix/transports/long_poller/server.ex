@@ -1,22 +1,23 @@
 defmodule Phoenix.Transports.LongPoller.Server do
   use GenServer
+  alias Phoenix.Transports.LongPoller.Server
 
   @moduledoc false
 
-  alias Phoenix.Socket
   alias Phoenix.Socket.Message
   alias Phoenix.Channel.Transport
 
   # TODO: Make this confirable, and refer to `LongPoller` setting
   @timeout_ms 10_000 * 2
 
+  defstruct listener: nil, buffer: [], router: nil, sockets: HashDict.new
+
   def start_link(listener, router) do
     GenServer.start_link(__MODULE__, [listener, router])
   end
 
   def init([listener, router]) do
-    socket = %Socket{pid: self, router: router}
-    {:ok, %{listener: listener, buffer: [], socket: socket}, @timeout_ms}
+    {:ok, %Server{listener: listener, router: router}, @timeout_ms}
   end
 
   @doc """
@@ -26,12 +27,12 @@ defmodule Phoenix.Transports.LongPoller.Server do
     if Enum.any?(state.buffer) do
       send pid, {:messages, state.buffer}
     end
-    {:reply, state.socket, %{state | listener: pid}}
+    {:reply, :ok, %Server{state | listener: pid}}
   end
 
   # TODO: %Messages{}'s need unique ids so we can properly ack them
   def handle_call({:ack, messages}, _from, state) do
-    {:reply, :ok, %{state | buffer: state.buffer -- messages}}
+    {:reply, :ok, %Server{state | buffer: state.buffer -- messages}}
   end
 
   @doc """
@@ -39,12 +40,12 @@ defmodule Phoenix.Transports.LongPoller.Server do
   """
   def handle_call({:dispatch, message}, _from, state) do
     message
-    |> Transport.dispatch(state.socket)
+    |> Transport.dispatch(state.sockets, self, state.router)
     |> case do
-      {:ok, socket} ->
-        {:reply, {:ok, socket}, %{state | socket: socket}}
-      {:error, socket, reason} ->
-        {:reply, {:error, socket, reason}, %{state | socket: socket}}
+      {:ok, sockets} ->
+        {:reply, {:ok, sockets}, %Server{state | sockets: sockets}}
+      {:error, sockets, reason} ->
+        {:reply, {:error, sockets, reason}, %Server{state | sockets: sockets}}
     end
   end
 
@@ -55,7 +56,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
     if Process.alive?(state.listener) do
       send state.listener, {:messages, [message]}
     end
-    {:noreply, %{state | buffer: [message | state.buffer]}}
+    {:noreply, %Server{state | buffer: [message | state.buffer]}}
   end
 
   def handle_info(:timeout, state) do
@@ -66,18 +67,18 @@ defmodule Phoenix.Transports.LongPoller.Server do
   Forwards arbitrary Elixir messages back to listening client
   """
   def handle_info(data, state) do
-    socket = case Transport.dispatch_info(state.socket, data) do
-      {:ok, socket} -> socket
-      {:error, socket, _reason} -> socket
+    sockets = case Transport.dispatch_info(state.sockets, data) do
+      {:ok, sockets} -> sockets
+      {:error, sockets, _reason} -> sockets
     end
-    {:noreply, %{state | socket: socket}}
+    {:noreply, %Server{state | sockets: sockets}}
   end
 
   @doc """
   Handles forwarding arbitrary Elixir messages back to listening client
   """
   def terminate(reason, state) do
-    :ok = Transport.dispatch_leave(state.socket, reason)
+    :ok = Transport.dispatch_leave(state.sockets, reason)
     :ok
   end
 end

@@ -11,8 +11,7 @@ defmodule Phoenix.Socket do
             channel: nil,
             topic: nil,
             router: nil,
-            handler: nil,
-            channels: [],
+            authorized: false,
             assigns: %{}
 
 
@@ -28,31 +27,30 @@ defmodule Phoenix.Socket do
 
   ## Examples
 
-      iex> Socket.add_channel(%Socket{channels: []}, "rooms", "lobby")
-      %Socket{channels: [{"rooms", "lobby"}]}
+      iex> Socket.authorize(%Socket{}, "rooms", "lobby")
+      %Socket{channel: "rooms", topic: "lobby", authorized: true}
 
   """
-  def add_channel(socket, channel, topic) do
-    if authenticated?(socket, channel, topic) do
-      socket
-    else
-      %Socket{socket | channels: [{channel, topic} | socket.channels]}
-    end
+  def authorize(socket, channel, topic) do
+    socket
+    |> set_current_channel(channel, topic)
+    |> put_in([:authorized], true)
   end
 
   @doc """
-  Removes a channel/topic pair from authorized channels list
+  Deauthorizes channel/topic pair
 
   ## Examples
 
-      iex> socket = Socket.add_channel(%Socket{channels: []}, "rooms", "lobby")
-      %Socket{channels: [{"rooms", "lobby"}]}
-      iex> Socket.delete_channel(socket, "rooms", "lobby")
-      %Socket{channels: []}
+      iex> socket = Socket.authorize(%Socket{}, "rooms", "lobby")
+      %Socket{channel: "rooms", topic: "lobby", authorized: true}
+      iex> Socket.deauthorize(socket)
+      %Socket{channel: "rooms", topic: "lobby", authorized: false}
 
   """
-  def delete_channel(socket, channel, topic) do
-    %Socket{socket | channels: List.delete(socket.channels, {channel, topic})}
+  def deauthorize(socket) do
+    socket
+    |> put_in([:authorized], false)
   end
 
   @doc """
@@ -61,16 +59,16 @@ defmodule Phoenix.Socket do
   ## Examples
 
       iex> socket = %Socket{}
-      iex> Socket.authenticated?(socket, "rooms", "lobby")
+      iex> Socket.authorized?(socket, "rooms", "lobby")
       false
-      iex> socket = Socket.add_channel(socket, "rooms", "lobby")
-      %Socket{channels: [{"rooms", "lobby"}]}
-      iex> Socket.authenticated?(socket, "rooms", "lobby")
+      iex> socket = Socket.authorize(socket, "rooms", "lobby")
+      %Socket{channel: "rooms", topic: "lobby", authorized: true}
+      iex> Socket.authorized?(socket, "rooms", "lobby")
       true
 
   """
-  def authenticated?(socket, channel, topic) do
-    Enum.member? socket.channels, {channel, topic}
+  def authorized?(socket, channel, topic) do
+    socket.authorized && socket.channel == channel && socket.topic == topic
   end
 
   @doc """
@@ -86,15 +84,10 @@ defmodule Phoenix.Socket do
       iex> socket = Socket.assign(socket, :token, "bar")
       iex> Socket.get_assign(socket, :token)
       "bar"
-      iex> Socket.get_assign(socket, "rooms", "lobby", :token)
-      "bar"
 
   """
-  def get_assign(socket = %Socket{channel: channel, topic: topic}, key) do
-    get_assign socket, channel, topic, key
-  end
-  def get_assign(socket, channel, topic, key) do
-    get_in socket, [:assigns, {channel, topic}, key]
+  def get_assign(socket = %Socket{}, key) do
+    get_in socket.assigns, [key]
   end
 
   @doc """
@@ -109,21 +102,10 @@ defmodule Phoenix.Socket do
       iex> socket = Socket.assign(socket, :token, "bar")
       iex> Socket.get_assign(socket, :token)
       "bar"
-      iex> Socket.get_assign(socket, "rooms", "lobby", :token)
-      "bar"
 
   """
-  def assign(socket = %Socket{channel: channel, topic: topic}, key, value) do
-    assign socket, channel, topic, key, value
-  end
-  def assign(socket, channel, topic, key, value) do
-    socket
-    |> ensure_defaults(channel, topic)
-    |> put_in([:assigns, {channel, topic}, key], value)
-  end
-  defp ensure_defaults(socket, channel, topic) do
-    socket
-    |> update_in([:assigns, {channel, topic}], fn val -> val || %{} end)
+  def assign(socket = %Socket{}, key, value) do
+    put_in socket, [:assigns, key], value
   end
 end
 
