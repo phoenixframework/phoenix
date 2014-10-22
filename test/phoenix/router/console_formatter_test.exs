@@ -30,8 +30,7 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
     image_path  GET     /images/new       Phoenix.ImageController.new/2
     image_path  GET     /images/:id       Phoenix.ImageController.show/2
     image_path  POST    /images           Phoenix.ImageController.create/2
-    image_path  PUT     /images/:id       Phoenix.ImageController.update/2
-                PATCH   /images/:id       Phoenix.ImageController.update/2
+    image_path  PATCH   /images/:id       Phoenix.ImageController.update/2
     image_path  DELETE  /images/:id       Phoenix.ImageController.destroy/2
     """
   end

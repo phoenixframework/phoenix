@@ -97,7 +97,7 @@ defmodule Phoenix.Router.ResourcesTest do
   end
 
   test "toplevel route matches update action" do
-    conn = call(Router, :put, "users/1")
+    conn = call(Router, :patch, "users/1")
     assert conn.status == 200
     assert conn.resp_body == "update users"
     assert conn.params["id"] == "1"
@@ -138,7 +138,7 @@ defmodule Phoenix.Router.ResourcesTest do
   end
 
   test "1-Level nested route matches with named param prefix on update" do
-    conn = call(Router, :put, "users/1/comments/123")
+    conn = call(Router, :patch, "users/1/comments/123")
     assert conn.status == 200
     assert conn.resp_body == "update comments"
     assert conn.params["user_id"] == "1"
@@ -181,7 +181,7 @@ defmodule Phoenix.Router.ResourcesTest do
   end
 
   test "nested options limit resource by passing :only option" do
-    conn = call(Router, :put, "admin/1/files/2")
+    conn = call(Router, :patch, "admin/1/files/2")
     assert conn.status == 404
     conn = call(Router, :post, "admin/1/files")
     assert conn.status == 404
@@ -202,7 +202,7 @@ defmodule Phoenix.Router.ResourcesTest do
 
     conn = call(Router, :get, "admin/")
     assert conn.status == 404
-    conn = call(Router, :put, "admin/1")
+    conn = call(Router, :patch, "admin/1")
     assert conn.status == 404
     conn = call(Router, :post, "admin")
     assert conn.status == 404
@@ -217,7 +217,7 @@ defmodule Phoenix.Router.ResourcesTest do
     assert conn.status == 200
     assert conn.resp_body == "show comments"
 
-    conn = call(Router, :put, "admin/1/comments/1")
+    conn = call(Router, :patch, "admin/1/comments/1")
     assert conn.status == 200
     assert conn.resp_body == "update comments"
 

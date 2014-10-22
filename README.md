@@ -59,7 +59,7 @@ defmodule YourApp.Router do
 end
 ```
 
-Routes specified using `get`, `post`, `put`, and `delete` respond to the corresponding HTTP method. The second and third parameters are the controller module and function, respectively. For example, the line `get "/files/*path", FileController, :show` above will route GET requests matching `/files/*path` to the `FileController.show` function.
+Routes specified using `get`, `post`, `patch`, and `delete` respond to the corresponding HTTP method. The second and third parameters are the controller module and function, respectively. For example, the line `get "/files/*path", FileController, :show` above will route GET requests matching `/files/*path` to the `FileController.show` function.
 
 #### Resources
 
@@ -77,7 +77,6 @@ get  "/users/:id",      UserController, :show
 get  "/users/new",      UserController, :new
 post "/users",          UserController, :create
 get  "/users/:id/edit", UserController, :edit
-put  "/users/:id",      UserController, :update
 patch "/users/:id",     UserController, :update
 delete "/users/:id",    UserController, :destroy
 ```
@@ -129,7 +128,7 @@ iex> YourApp.Router.Helpers.user_comment_path(:new, 88)
 
 #### Method Overrides
 
-Since browsers don't allow HTML forms to send PUT or DELETE requests, Phoenix allows the POST method to be overridden, either by adding a `_method` form parameter, or specifying an `x-http-method-override` HTTP header.
+Since browsers don't allow HTML forms to send PATCH or DELETE requests, Phoenix allows the POST method to be overridden, either by adding a `_method` form parameter, or specifying an `x-http-method-override` HTTP header.
 
 For example, to make a button to delete a post, you could write:
 

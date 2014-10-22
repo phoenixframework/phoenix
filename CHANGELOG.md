@@ -9,6 +9,7 @@
 * Backwards incompatible changes
   * [View] Your application should now directly use Phoenix.View in its main view and specify further configuration in the `using(...)` section
   * [View] Template engines now should implement compile and simply return the quoted expression of the function body instead of the quoted expression of the render function
+  * [Router] `PUT` route generation for the `:update` action has been dropped in favor of `PATCH`.
 
 * Bug fixes
   * [Router] Generate correct route for helper path on root
