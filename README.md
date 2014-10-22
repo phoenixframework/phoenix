@@ -241,7 +241,7 @@ end
 By looking at the controller name `App.PageController`, Phoenix will use `App.PageView` to render `web/templates/page/index.html.eex` within the template `web/templates/layout/application.html.eex`. Let's break that down:
  * `App.PageView` is the module that will render the template (more on that later)
  * `App` is your application name
- * `templates` is your configured templates directory. See `web/views.ex`
+ * `templates` is your configured templates directory. See `web/view.ex`
  * `page` is your controller name
  * `html` is the requested format (more on that later)
  * `eex` is the default renderer
@@ -252,24 +252,29 @@ Every keyword passed to `render` in the controller is available as an assign wit
 You may also create helper functions within your views or layouts. For example, the previous controller will use `App.PageView` so you could have :
 
 ```elixir
-defmodule App.Views do
-  defmacro __using__(_options) do
-    quote do
-      use Phoenix.View
-      import unquote(__MODULE__)
+defmodule YourApp.View do
+  use Phoenix.View, root: "web/templates"
 
-      # This block is expanded within all views for aliases, imports, etc
-      import App.I18n
-      import App.Router.Helpers
-    end
+  # Everything in this block is available runs in this
+  # module and in other views that use MyApp.View
+  using do
+    # Import common functionality
+    import YourApp.I18n
+    import YourApp.Router.Helpers
+
+    # Use Phoenix.HTML to import all HTML functions (forms, tags, etc)
+    use Phoenix.HTML
+
+    # Common aliases
+    alias Phoenix.Controller.Flash
   end
 
   # Functions defined here are available to all other views/templates
   def title, do: "Welcome to Phoenix!"
 end
 
-defmodule App.PageView do
-  use App.Views
+defmodule YourApp.PageView do
+  use YourApp.View
   alias Poison, as: JSON
 
   def display(something) do
@@ -284,7 +289,7 @@ end
 
 Which would allow you to use these functions in your template : `<%= display(@message) %>`, `<%= title %>`
 
-Note that all views extend `App.Views`, allowing you to define functions, aliases, imports, etc available in all templates. Additionally, `render/2` functions can be defined to perform rendering directly as function definitions. The arguments to `render/2` are controller action name with the response content-type mime extension.
+Note that all views extend `YourApp.View`, allowing you to define functions, aliases, imports, etc available in all templates. Additionally, `render/2` functions can be defined to perform rendering directly as function definitions. The arguments to `render/2` are controller action name with the response content-type mime extension.
 
 To read more about eex templating, see the [elixir documentation](http://elixir-lang.org/docs/stable/eex/).
 
