@@ -1,4 +1,14 @@
-### Databases
+#This Guide is Under Construction
+
+####In the meantime, these links might help.
+- [Elixir Dose, Introduction to Ecto](http://elixirdose.com/post/introduction-to-ecto)
+- [Elixir Dose, Ecto With Phoenix, Part1](http://elixirdose.com/post/lets-build-web-app-with-phoenix-and-ecto)
+- [Elixir Dose, Ecto With Phoenix, Part2](http://elixirdose.com/post/phoenix-ecto-and-jobs-portal-project-part-2)
+- [Elixir Dose, Ecto With Phoenix, Part3](http://elixirdose.com/post/phoenix-ecto-and-jobs-portal-project-part-3)
+- [Elixir Dose, Ecto With Phoenix, Part4](http://elixirdose.com/post/phoenix-part-4-registration-and-login)
+
+
+###Ecto Models
 
 To connect to a database you would need to add ecto.
 ecto is a database abstraction that for interacting with databases and writing queries.

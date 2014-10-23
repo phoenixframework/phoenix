@@ -1,3 +1,9 @@
+#This Guide is Under Construction
+
+####In the meantime, these links might help.
+- [Phoenix Views on Hexdocs](http://hexdocs.pm/phoenix/0.5.0/Phoenix.View.html)
+- [Phoenix Readme on Views and Templates](https://github.com/phoenixframework/phoenix#views--templates)
+
 ## Views
 
 The Phoenix view layer is composed of two main components. There is the application view, which serves as the base for all the other views. This is where application-wide view behavior goes. There is also a directory of user defined views, each of which acts as a link between a specific controller and it's related templates.
