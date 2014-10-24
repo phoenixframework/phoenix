@@ -22,4 +22,13 @@ defmodule Phoenix.HTML.TagTest do
     assert content_tag(:p, "Hello") == "<p>Hello</p>"
     assert content_tag(:p, [class: "dark"], do: "Hello") == ~s(<p class="dark">Hello</p>)
   end
+
+  test "input_tag" do
+    assert input_tag(:text, name: "name") ==
+      ~s(<input name="name" type="text" />)
+    assert input_tag(:password, name: "password") ==
+      ~s(<input name="password" type="password" />)
+    assert input_tag(:text, name: "username", required: true) ==
+      ~s(<input name="username" required="required" type="text" />)
+  end
 end

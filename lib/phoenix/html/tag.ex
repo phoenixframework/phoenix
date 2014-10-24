@@ -34,6 +34,17 @@ defmodule Phoenix.HTML.Tag do
     tag(name, attrs) <> block <> "</#{name}>"
   end
 
+  @doc """
+  Creates an HTML input field with the given type and options.
+
+  ## Examples
+      iex> Phoenix.HTML.Tag.input_tag(:text, name: "name")
+      "<input name="name" type="text" />"
+  """
+  def input_tag(type, opts \\ [], open \\ false) do
+    tag(:input, Dict.merge([type: type], opts), open)
+  end
+
   defp tag_attrs([]), do: ""
   defp tag_attrs(attrs) do
     Enum.map_join attrs, fn {k,v} ->
