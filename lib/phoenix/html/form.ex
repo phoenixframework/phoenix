@@ -41,7 +41,7 @@ defmodule Phoenix.HTML.Form do
   end
 
   defp input_value(builder, name, opts) do
-    opts[:value] || Map.get(builder.resource, name)
+    Dict.get(opts, :value, Map.get(builder.resource, name))
   end
 end
 

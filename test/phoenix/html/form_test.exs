@@ -31,7 +31,7 @@ defmodule Phoenix.HTML.FormTest do
     assert view == ~S"""
     <form action="/users" data-remote="true" method="post">
       Hey there
-      <input name="user[id]" type="text" value="1">
+      <input name="user[id]" type="text" value="">
       <input name="user[name]" type="text" value="José Valim">
     </form>
     """
