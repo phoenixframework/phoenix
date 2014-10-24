@@ -11,9 +11,9 @@ defmodule Phoenix.HTML.Tag do
   Creates an HTML tag with the given name and options.
 
   ## Examples
-      iex> tag(:br)
+      iex> Phoenix.HTML.Tag.tag(:br)
       "<br>"
-      iex> tag(:input, type: "text", name: "user_id")
+      iex> Phoenix.HTML.Tag.tag(:input, type: "text", name: "user_id")
       "<input name="user_id" type="text">"
   """
   def tag(name),                              do: tag(name, [], true)
