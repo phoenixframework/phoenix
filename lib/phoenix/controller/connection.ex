@@ -38,30 +38,6 @@ defmodule Phoenix.Controller.Connection do
   def error(conn), do: Dict.get(conn.private, :phoenix_error)
 
   @doc """
-  Assign layout to phoenix private assigns
-
-  Possible values include any String, as well as the Atom `:none` to
-  render without a layout.
-
-  ## Examples
-
-      iex> conn |> put_layout("print")
-      iex> conn |> put_layout(:none)
-
-  """
-  def put_layout(conn, layout) when is_binary(layout) do
-    put_private(conn, :phoenix_layout, layout)
-  end
-  def put_layout(conn, :none) do
-    put_private(conn, :phoenix_layout, :none)
-  end
-
-  @doc """
-  Retrieve layout from phoenix private assigns
-  """
-  def layout(conn), do: Dict.get(conn.private, :phoenix_layout, "application")
-
-  @doc """
   Returns the String Mime content-type of response
 
   Raises Errors.UnfetchedContentType if content type is not yet fetched

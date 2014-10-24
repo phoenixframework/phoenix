@@ -30,7 +30,7 @@ defmodule Phoenix.ViewTest do
            {:safe, "<html>\n  <title>Test</title>\n  <div>Show! Hello world</div>\n\n</html>\n"}
   end
 
-  test "renders views defined to iodata using encoders" do
+  test "renders views to iodata using encoders" do
     assert View.render_to_iodata(MyApp.UserView, "index.html", title: "Hello world") ==
            "Hello world\n"
 

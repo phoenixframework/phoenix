@@ -1,6 +1,7 @@
-defmodule Phoenix.Router.ConnectionTest do
+defmodule Phoenix.Controller.ConnectionTest do
   use ExUnit.Case, async: true
   use ConnHelper
+
   alias Plug.Conn
   alias Phoenix.Controller.Connection
   alias Phoenix.Controller.Errors
@@ -41,15 +42,6 @@ defmodule Phoenix.Router.ConnectionTest do
      %Conn{params: %{}, req_headers: [{"accept", "somethingcrazy/abc"}]}
     )
     assert Connection.response_content_type!(conn) == "text/html"
-  end
-
-  test "put_layout/2 assigns the private put_layout" do
-    conn = Connection.put_layout(%Conn{}, "print")
-    assert Connection.layout(conn) == "print"
-  end
-
-  test "layout/1 retrieves the put_layout, defaulting to application" do
-    assert Connection.layout(%Conn{}) == "application"
   end
 
   test "assign_error/3 and error/1 assign and return error" do

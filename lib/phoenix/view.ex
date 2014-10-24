@@ -232,7 +232,7 @@ defmodule Phoenix.View do
   """
   def render(module, template, assigns) do
     assigns
-    |> Dict.get(:within)
+    |> Dict.get(:within, false)
     |> render_within(module, template, assigns)
   end
   defp render_within({layout_mod, layout_tpl}, inner_mod, template, assigns) do
@@ -240,7 +240,7 @@ defmodule Phoenix.View do
     |> inner_mod.render(assigns)
     |> render_layout(layout_mod, layout_tpl, assigns)
   end
-  defp render_within(nil, module, template, assigns) do
+  defp render_within(false, module, template, assigns) do
     template
     |> module.render(assigns)
   end
