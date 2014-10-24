@@ -1,9 +1,9 @@
 defmodule Phoenix.HTML.Tag do
   @moduledoc ~S"""
-  Helpers related to producing html tags within templates.
+  Helpers related to producing HTML tags within templates.
   """
 
-  alias Phoenix.Html.Safe
+  alias Phoenix.HTML.Safe
 
   @data_attrs [:method, :remote, :confirm]
 
