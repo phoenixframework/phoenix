@@ -20,4 +20,8 @@ end
 
 defmodule MyApp.UserView do
   use MyApp.View
+
+  def render("edit.html", %{} = assigns) do
+    "EDIT#{assigns[:layout]} - #{assigns[:title]}"
+  end
 end

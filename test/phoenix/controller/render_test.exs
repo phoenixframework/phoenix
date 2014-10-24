@@ -45,31 +45,31 @@ defmodule Phoenix.Controller.RenderTest do
   end
 
   test "renders template with overriding layout option" do
-    conn = render(layout_conn, "index.html", title: "Hello", within: false)
+    conn = render(layout_conn, "index.html", title: "Hello", layout: false)
     assert conn.resp_body == "Hello\n"
     assert html_response?(conn)
   end
 
   test "renders template with atom layout option" do
-    conn = render(conn, "index.html", title: "Hello", within: {MyApp.LayoutView, :application})
+    conn = render(conn, "index.html", title: "Hello", layout: {MyApp.LayoutView, :application})
     assert conn.resp_body =~ ~r"<title>Hello</title>"
     assert html_response?(conn)
   end
 
   test "renders template with string layout option" do
-    conn = render(conn, "index.html", title: "Hello", within: {MyApp.LayoutView, "application.html"})
+    conn = render(conn, "index.html", title: "Hello", layout: {MyApp.LayoutView, "application.html"})
     assert conn.resp_body =~ ~r"<title>Hello</title>"
     assert html_response?(conn)
   end
 
   test "skips layout depending on layout_formats with string template" do
-    conn = render(conn, "show.json", within: {MyApp.LayoutView, :application})
+    conn = render(conn, "show.json", layout: {MyApp.LayoutView, :application})
     assert conn.resp_body == ~s({"foo":"bar"})
   end
 
   test "skips layout depending on layout_formats with atom template" do
     conn = put_in layout_conn.params["format"], "json"
-    conn = render(conn, :show, within: {MyApp.LayoutView, :application})
+    conn = render(conn, :show, layout: {MyApp.LayoutView, :application})
     assert conn.resp_body == ~s({"foo":"bar"})
   end
 

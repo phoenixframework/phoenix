@@ -318,12 +318,12 @@ defmodule Phoenix.Controller do
       end
 
     update_in conn.assigns,
-              & &1 |> Dict.merge(assigns) |> Map.put(:within, layout)
+              & &1 |> Dict.merge(assigns) |> Map.put(:layout, layout)
   end
 
   defp layout(conn, assigns, format) do
     if format in @layout_extension_types do
-      case Dict.fetch(assigns, :within) do
+      case Dict.fetch(assigns, :layout) do
         {:ok, layout} -> layout
         :error -> layout(conn)
       end

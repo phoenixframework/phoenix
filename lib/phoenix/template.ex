@@ -20,7 +20,7 @@ defmodule Phoenix.Template do
 
   Now the template foo can be directly rendered with:
 
-      Templates.render("foo.html", name: "John Doe")
+      Templates.render("foo.html", %{name: "John Doe"})
 
   In practice though, developers rarely use `Phoenix.Template`
   directly. Instead they use `Phoenix.View` which wraps the template
@@ -113,7 +113,7 @@ defmodule Phoenix.Template do
       @doc """
       Renders the given template locally.
       """
-      def render(template, assigns \\ [])
+      def render(template, assigns \\ %{})
     end
   end
 
