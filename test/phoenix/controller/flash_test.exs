@@ -25,7 +25,7 @@ defmodule Phoenix.Controller.FlashTest do
 
       def set_flash(conn, %{"notice" => notice, "status" => status}) do
         {status, _} = Integer.parse(status)
-        conn |> Flash.put(:notice, notice) |> redirect(status, "/")
+        conn |> Flash.put(:notice, notice) |> put_status(status) |> redirect(to: "/")
       end
     end
 

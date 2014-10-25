@@ -17,11 +17,11 @@ defmodule Phoenix.Controller.ErrorController do
   """
 
   def not_found(conn, _) do
-    text conn, 404, "not found"
+    conn |> put_status(404) |> text("not found")
   end
 
   def not_found_debug(conn, _) do
-    text conn, 404, "No route matches #{conn.method} to #{inspect conn.path_info}"
+    conn |> put_status(404) |> text("No route matches #{conn.method} to #{inspect conn.path_info}")
   end
 
   def error(conn, _) do
@@ -30,7 +30,7 @@ defmodule Phoenix.Controller.ErrorController do
       :no_exception -> 500
     end
 
-    text conn, status, "Something went wrong"
+    conn |> put_status(status) |> text("Something went wrong")
   end
 
   @doc """
@@ -46,7 +46,9 @@ defmodule Phoenix.Controller.ErrorController do
     end
   end
   defp render_error_debug(conn, exception) do
-    html conn, exception.status, """
+    conn
+    |> put_status(exception.status)
+    |> html("""
       <html>
         <h2>**(#{inspect exception.type}) #{exception.message}</h2>
         <h4>Stacktrace</h4>
@@ -54,7 +56,7 @@ defmodule Phoenix.Controller.ErrorController do
           <pre>#{exception.stacktrace_formatted}</pre>
         </body>
       </html>
-    """
+    """)
   end
 end
 

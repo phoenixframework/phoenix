@@ -44,13 +44,13 @@ defmodule Phoenix.Controller do
 
   ## Rendering and layouts
 
-  One of the main feature provided by controllers is the ability
+  One of the main features provided by controllers is the ability
   to do content negotiation and render templates based on
   information sent by the client. Read `render/3` to learn more.
 
   It is also important to not confuse `Phoenix.Controller.render/3`
   with `Phoenix.View.render/3` in the long term. The former expects
-  a connection and does content negotiation while the latter is
+  a connection and relies on content negotiation while the latter is
   connection-agnostnic and typically invoked from your views.
 
   ## Plug pipeline
@@ -103,19 +103,114 @@ defmodule Phoenix.Controller do
   Returns the action name as an atom.
   """
   @spec action_name(Plug.Conn.t) :: atom
-  def action_name(conn), do: conn.private[:phoenix_action]
+  def action_name(conn), do: conn.private |> Map.get(:phoenix_action)
 
   @doc """
   Returns the controller module as an atom.
   """
   @spec controller_module(Plug.Conn.t) :: atom
-  def controller_module(conn), do: conn.private[:phoenix_controller]
+  def controller_module(conn), do: conn.private |> Map.get(:phoenix_controller)
 
   @doc """
   Returns the router module as an atom.
   """
   @spec router_module(Plug.Conn.t) :: atom
-  def router_module(conn), do: conn.private[:phoenix_router]
+  def router_module(conn), do: conn.private |> Map.get(:phoenix_router)
+
+  @doc """
+  Retrieve error from Phoenix router.
+  """
+  # TODO: Consider removing this once we re-evaluate
+  @spec error(Plug.Conn.t) :: term
+  def error(conn), do: conn.private |> Map.get(:phoenix_error)
+
+  @doc """
+  Sends JSON response and halts.
+
+  It uses the configured `:format_encoder` under the `:phoenix`
+  application for `:json` to pick up the encoder module.
+
+  ## Examples
+
+      iex> json conn, %{id: 123}
+
+  """
+  @spec json(Plug.Conn.t, term) :: Plug.Conn.t
+  def json(conn, data) do
+    encoder =
+      Application.get_env(:phoenix, :format_encoders)
+      |> Keyword.get(:json, Poison)
+
+    send_resp(conn, 200, "application/json", encoder.encode!(data))
+  end
+
+  @doc """
+  Sends text response and halts.
+
+  ## Examples
+
+      iex> text conn, "hello"
+
+      iex> text conn, :implements_to_string
+
+  """
+  @spec text(Plug.Conn.t, String.Chars.t) :: Plug.Conn.t
+  def text(conn, data) do
+    send_resp(conn, 200, "text/plain", to_string(data))
+  end
+
+  @doc """
+  Sends html response and halts.
+
+  ## Examples
+
+      iex> html conn, "<html><head>..."
+
+  """
+  @spec html(Plug.Conn.t, iodata) :: Plug.Conn.t
+  def html(conn, data) do
+    send_resp(conn, 200, "text/html", data)
+  end
+
+  @doc """
+  Sends redirect response to the given url.
+
+  For security, `:to` only accepts paths. Use the `:external`
+  option to redirect to any URL.
+
+  ## Examples
+
+      redirect conn, to: "/login"
+      redirect conn, external: "http://elixir-lang.org"
+
+  """
+  def redirect(conn, opts) when is_binary(opts) do
+    IO.write :stderr, "redirect(conn, string) is deprecated, please use redirect(conn, to: string) instead\n#{Exception.format_stacktrace}"
+    redirect(conn, to: opts)
+  end
+
+  def redirect(conn, opts) when is_list(opts) do
+    url  = url(opts)
+    body = "<html><body>You are being <a href=\"#{Phoenix.HTML.html_escape(url)}\">redirected</a>.</body></html>"
+
+    conn
+    |> put_resp_header("Location", url)
+    |> send_resp(302, "text/html", body)
+  end
+
+  defp url(opts) do
+    cond do
+      to = opts[:to] ->
+        case to do
+          "/" <> _ -> to
+          _        -> raise ArgumentError, "the :to option in redirect expects a path"
+        end
+      external = opts[:external] ->
+        external
+      true ->
+        raise ArgumentError, "expected :to or :external option in redirect/2"
+    end
+  end
 
   @doc """
   Stores the view for rendering.
@@ -211,6 +306,9 @@ defmodule Phoenix.Controller do
   content type (for example, a HTML template will set "text/html" as response
   content type) and the data is sent to the client with default status of 200.
 
+  The connection is halted after rendering, meaning any other plug in the
+  pipeline won't be invoked.
+
   ## Arguments
 
     * `conn` - the `Plug.Conn` struct
@@ -249,7 +347,8 @@ defmodule Phoenix.Controller do
       end
 
   In order for the example above to work, we need to do content negotiation with
-  the accepts plug. You can do so by adding the following to your pipeline:
+  the accepts plug before rendering. You can do so by adding the following to your
+  pipeline (in the router):
 
       plug :accepts, ~w(html)
 
@@ -324,12 +423,10 @@ defmodule Phoenix.Controller do
   def render(conn, template, format, assigns) do
     content_type = Plug.MIME.type(format)
     conn = prepare_assigns(conn, assigns, format)
-    data = Phoenix.View.render_to_iodata(view_module(conn), template,
+    view = view_module(conn) || raise "a view module was not specified, set one with put_view/2"
+    data = Phoenix.View.render_to_iodata(view, template,
                                          Map.put(conn.assigns, :conn, conn))
-
-    conn
-    |> put_resp_content_type(content_type)
-    |> send_resp(conn.status || 200, data)
+    send_resp(conn, 200, content_type, data)
   end
 
   defp prepare_assigns(conn, assigns, format) do
@@ -358,6 +455,13 @@ defmodule Phoenix.Controller do
     Atom.to_string(name) <> "." <> format
   defp template_name(name, _format) when is_binary(name), do:
     name
+
+  defp send_resp(conn, default_status, content_type, body) do
+    conn
+    |> put_resp_content_type(content_type)
+    |> send_resp(conn.status || default_status, body)
+    |> halt()
+  end
 
   @doc false
   def __view__(controller_module) do

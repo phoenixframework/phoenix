@@ -16,7 +16,7 @@ defmodule Phoenix.Router.RoutingTest do
     def options(conn, _params), do: text(conn, "users options")
     def connect(conn, _params), do: text(conn, "users connect")
     def trace(conn, _params), do: text(conn, "users trace")
-    def not_found(conn, _params), do: text(conn, :not_found, "not found")
+    def not_found(conn, _params), do: text(put_status(conn, :not_found), "not found")
     def image(conn, _params), do: text(conn, conn.params["path"] || "show files")
   end
 

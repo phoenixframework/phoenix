@@ -31,6 +31,12 @@ defmodule Phoenix.Controller.RenderTest do
     assert html_response?(conn)
   end
 
+  test "renders and halts" do
+    conn = render(conn, "index.html", title: "Hello")
+    assert conn.resp_body == "Hello\n"
+    assert conn.halted
+  end
+
   test "renders string template with put layout" do
     conn = render(layout_conn, "index.html", title: "Hello")
     assert conn.resp_body =~ ~r"<title>Hello</title>"
@@ -107,6 +113,12 @@ defmodule Phoenix.Controller.RenderTest do
 
     assert_raise RuntimeError, ~r/cannot render template "index" without format/, fn ->
       render(conn(), "index")
+    end
+  end
+
+  test "errors when rendering without view" do
+    assert_raise RuntimeError, ~r/a view module was not specified/, fn ->
+      render(conn() |> put_view(nil), "index.html")
     end
   end
 end
