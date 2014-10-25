@@ -16,5 +16,5 @@ config :phoenix, <%= application_module %>.Router,
   http: [port: System.get_env("PORT")],
   secret_key_base: "<%= secret_key_base %>"
 
-config :logger, :console,
+config :logger,
   level: :info

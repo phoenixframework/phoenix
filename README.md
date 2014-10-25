@@ -624,9 +624,8 @@ config :phoenix, YourApp.Router,
   session_key: "_your_app_key",
   secret_key_base: "$+X2PG$PX0^88^HXB)..."
 
-config :logger, :console,
-  level: :info,
-  metadata: [:request_id]
+config :logger,
+  level: :info
 ```
 
 When you include the `otp_app` option, `Plug` will search within the `priv`
