@@ -101,7 +101,8 @@ defmodule Phoenix.Router do
       user_path  GET    /users/new       UserController.new/2
       user_path  GET    /users/:id       UserController.show/2
       user_path  POST   /users           UserController.create/2
-                 PATCH  /users/:id       UserController.update/2
+      user_path  PATCH  /users/:id       UserController.update/2
+                 PUT    /users/:id       UserController.update/2
 
   One can also pass a router explicitly as argument to the task:
 
@@ -584,6 +585,7 @@ defmodule Phoenix.Router do
     * `GET /resources/:id` => `:show`
     * `GET /resources/:id/edit` => `:edit`
     * `PATCH /resources/:id` => `:update`
+    * `PUT /resources/:id` => `:update`
     * `DELETE /resources/:id` => `:destroy`
 
   ## Options
@@ -640,7 +642,9 @@ defmodule Phoenix.Router do
           :edit    -> get    "#{path}/:#{parm}/edit", ctrl, :edit, opts
           :create  -> post   "#{path}",               ctrl, :create, opts
           :destroy -> delete "#{path}/:#{parm}",      ctrl, :destroy, opts
-          :update  -> patch  "#{path}/:#{parm}", ctrl, :update, opts
+          :update  ->
+            patch "#{path}/:#{parm}", ctrl, :update, opts
+            put   "#{path}/:#{parm}", ctrl, :update, as: nil
         end
       end
 

@@ -96,16 +96,18 @@ defmodule Phoenix.Router.ResourcesTest do
     assert conn.resp_body == "create users"
   end
 
-  test "toplevel route matches update action" do
-    conn = call(Router, :patch, "users/1")
-    assert conn.status == 200
-    assert conn.resp_body == "update users"
-    assert conn.params["id"] == "1"
+  test "toplevel route matches update action with both PUT and PATCH" do
+    for method <- [:put, :patch] do
+      conn = call(Router, method, "users/1")
+      assert conn.status == 200
+      assert conn.resp_body == "update users"
+      assert conn.params["id"] == "1"
 
-    conn = call(Router, :patch, "users/2")
-    assert conn.status == 200
-    assert conn.resp_body == "update users"
-    assert conn.params["id"] == "2"
+      conn = call(Router, method, "users/2")
+      assert conn.status == 200
+      assert conn.resp_body == "update users"
+      assert conn.params["id"] == "2"
+    end
   end
 
   test "toplevel route matches destroy action" do
