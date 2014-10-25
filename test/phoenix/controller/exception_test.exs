@@ -1,13 +1,14 @@
 defmodule Phoenix.Controller.ExceptionTest do
   use ExUnit.Case, async: false
+  use ConnHelper
+
   alias Phoenix.Controller
-  import ConnHelper
 
   def conn_with_caught_exception(func) do
     try do
       func.()
     catch
-      kind, err -> Controller.Connection.assign_error(%Plug.Conn{}, kind, err)
+      kind, error -> put_private(conn(:get, "/"), :phoenix_error, {kind, error})
     end
   end
 

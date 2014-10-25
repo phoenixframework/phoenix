@@ -1,8 +1,6 @@
 defmodule Phoenix.Controller do
   alias Phoenix.Plugs
-
   import Plug.Conn
-  import Phoenix.Controller.Connection
 
   @layout_extension_types ["html"]
 
@@ -48,8 +46,12 @@ defmodule Phoenix.Controller do
 
   One of the main feature provided by controllers is the ability
   to do content negotiation and render templates based on
-  information sent by the client. Read `render/3` for more
-  information.
+  information sent by the client. Read `render/3` to learn more.
+
+  It is also important to not confuse `Phoenix.Controller.render/3`
+  with `Phoenix.View.render/3` in the long term. The former expects
+  a connection and does content negotiation while the latter is
+  connection-agnostnic and typically invoked from your views.
 
   ## Plug pipeline
 
@@ -96,6 +98,24 @@ defmodule Phoenix.Controller do
       plug :put_view, Phoenix.Controller.__view__(__MODULE__)
     end
   end
+
+  @doc """
+  Returns the action name as an atom.
+  """
+  @spec action_name(Plug.Conn.t) :: atom
+  def action_name(conn), do: conn.private[:phoenix_action]
+
+  @doc """
+  Returns the controller module as an atom.
+  """
+  @spec controller_module(Plug.Conn.t) :: atom
+  def controller_module(conn), do: conn.private[:phoenix_controller]
+
+  @doc """
+  Returns the router module as an atom.
+  """
+  @spec router_module(Plug.Conn.t) :: atom
+  def router_module(conn), do: conn.private[:phoenix_router]
 
   @doc """
   Stores the view for rendering.
@@ -173,6 +193,7 @@ defmodule Phoenix.Controller do
 
   See `render/3` for more information.
   """
+  @spec render(Plug.Conn.t, Dict.t | binary | atom) :: Plug.Conn.t
   def render(conn, template_or_assigns \\ [])
 
   def render(conn, template) when is_binary(template) or is_atom(template) do
@@ -281,6 +302,7 @@ defmodule Phoenix.Controller do
   `layout_formats/2` and `put_layout_formats/2` can be used to configure
   which formats support/require layout rendering (defaults to "html" only).
   """
+  @spec render(Plug.Conn.t, binary | atom, Dict.t) :: Plug.Conn.t
   def render(conn, template, assigns) when is_atom(template) do
     format =
       conn.params["format"] ||

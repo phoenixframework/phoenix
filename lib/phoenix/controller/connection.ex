@@ -3,34 +3,7 @@ defmodule Phoenix.Controller.Connection do
   alias Phoenix.Controller.Errors
 
   # TODO: Move everything here to the Phoenix.Controller module?
-
-  @moduledoc """
-  Handles Interacting with Plug.Conn and integration with the Controller layer
-
-  Used for sending responses and looking up private Conn assigns
-  """
-
-  @doc """
-  Returns the Atom action name matched from Router
-  """
-  def action_name(conn), do: conn.private[:phoenix_action]
-
-  @doc """
-  Returns the Atom Controller Module matched from Router
-  """
-  def controller_module(conn), do: conn.private[:phoenix_controller]
-
-  @doc """
-  Returns the Actom Router Module that dispatched the Conn
-  """
-  def router_module(conn), do: conn.private[:phoenix_router]
-
-  @doc """
-  Assign error to phoenix private assigns
-  """
-  def assign_error(conn, kind, error) do
-    put_private(conn, :phoenix_error, {kind, error})
-  end
+  @moduledoc false
 
   @doc """
   Retrieve error from phoenix private assigns

@@ -4,6 +4,21 @@ defmodule Phoenix.ControllerTest do
 
   import Phoenix.Controller
 
+  test "action_name/1" do
+    conn = Conn.put_private(%Conn{}, :phoenix_action, :show)
+    assert action_name(conn) == :show
+  end
+
+  test "controller_module/1" do
+    conn = Conn.put_private(%Conn{}, :phoenix_controller, Hello)
+    assert controller_module(conn) == Hello
+  end
+
+  test "router_module/1" do
+    conn = Conn.put_private(%Conn{}, :phoenix_router, Hello)
+    assert router_module(conn) == Hello
+  end
+
   test "put_layout/2 and layout/1" do
     conn = conn(:get, "/")
     assert layout(conn) == false

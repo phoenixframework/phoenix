@@ -6,7 +6,7 @@ defmodule Phoenix.Router.Adapter do
   @moduledoc false
 
   import Plug.Conn, only: [put_private: 3, put_status: 2]
-  import Phoenix.Controller.Connection, only: [assign_error: 3, router_module: 1]
+  import Phoenix.Controller, only: [router_module: 1]
 
   @unsent [:unset, :set]
 
@@ -139,7 +139,7 @@ defmodule Phoenix.Router.Adapter do
 
   defp handle_err(conn, kind, error, true) do
     conn
-    |> assign_error(kind, error)
+    |> put_private(:phoenix_error, {kind, error})
     |> put_status(500)
   end
 
