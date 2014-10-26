@@ -46,7 +46,7 @@ end
 
 Clearly, the body of the match function is where the index function of the PageController is called.
 
-As we add more routes, more clauses of the match function will be added to our router module. These will behave like any other multi-clause function in Elixir. They will be tried in order from the top, and the first clause to match the paramates given (verb and path) will be executed. After a match is found, the search will stop and no other clauses will by tried.
+As we add more routes, more clauses of the match function will be added to our router module. These will behave like any other multi-clause function in Elixir. They will be tried in order from the top, and the first clause to match the paramaters given (verb and path) will be executed. After a match is found, the search will stop and no other clauses will by tried.
 
 This means that it is possible to create a route which will never match, based on the HTTP verb and the path, regardless of the controller and action.
 
@@ -78,23 +78,8 @@ page_path  GET  /  HelloPhoenix.PageController.index/2
 
 The output tells us that any HTTP GET request for the root of the application will be handled by the index action of the HelloPhoenix.PageController.
 
-`page_path` is an instance of a what Phoenix calls a path helper, and we'll talk about those next.
+`page_path` is an instance of a what Phoenix calls a path helper, and we'll talk about those very soon.
 
-###Path Helpers
-
-Path helpers are functions which are defined on the `Router.Helpers` module for an individual application. For us, that is `HelloPhoenix.Router.Helpers`, and `page_path` is the function which will return the path to the root of our application.
-
-That's a mouthful. Let's see it in action. Run `$ iex -S mix` at the root of the project. When we call the `page_path` function on our router helpers with the action as an argument, it returns the path to us.
-
-```elixir
-iex(4)> HelloPhoenix.Router.Helpers.page_path(:index)
-"/"
-```
-
-This is significant because we can use the `page_path` function in a template to link to the root of our application.
-```html
-<a href="<%= HelloPhoenix.Router.Helpers.page_path(:index) %>">To the Welcome Page!</a>
-```
 
 ###Resources
 
@@ -160,9 +145,29 @@ comment_path  POST    /comments                      HelloPhoenix.CommentControl
 comment_path  PUT     /comments/:id                  HelloPhoenix.CommentController.update/2
 comment_path  PATCH   /comments/:id                  HelloPhoenix.CommentController.update/2
 ```
+###Path Helpers
+
+Path helpers are functions which are dynamically defined on the `Router.Helpers` module for an individual application. For us, that is `HelloPhoenix.Router.Helpers`.
+Their names are derived from the name of the controller used in the route definition. Our controller is `HelloPhoenix.PageController`, and `page_path` is the function which will return the path to the root of our application.
+
+That's a mouthful. Let's see it in action. Run `$ iex -S mix` at the root of the project. When we call the `page_path` function on our router helpers with the action as an argument, it returns the path to us.
+
+```elixir
+iex(4)> HelloPhoenix.Router.Helpers.page_path(:index)
+"/"
+```
+
+This is significant because we can use the `page_path` function in a template to link to the root of our application.
+
+```html
+<a href="<%= HelloPhoenix.Router.Helpers.page_path(:index) %>">To the Welcome Page!</a>
+```
+
+This pays off tremendously if we should ever have to change the path of our route in the router. Since the path helpers are built dynamically from the routes, any calls to `page_path` in our templates will still work.
 
 ###More on Path Helpers
-The phoenix.routes task also listed the user_path as the path function for each line of output. Here is what that path translates to for each action.
+
+When we ran the `phoenix.routes` task for our user resource, it listed the `user_path` as the path helper function for each line of output. Here is what that translates to for each action.
 
 ```elixir
 iex(2)> HelloPhoenix.Router.Helpers.user_path(:index)
@@ -194,7 +199,7 @@ iex(3)> HelloPhoenix.Router.Helpers.user_path(:show, 17, admin: true, active: fa
 "/users/17?admin=true&active=false"
 ```
 
-What if you need a full url instead of a path? Again, Phoenix has an answer - the Router.Helpers.url function.
+What if we need a full url instead of a path? Again, Phoenix has an answer - the Router.Helpers.url function.
 
 ```elixir
 iex(3)> HelloPhoenix.Router.Helpers.user_path(:index, 42) |> HelloPhoenix.Router.Helpers.url
@@ -216,6 +221,7 @@ end
 When we run `$ mix phoenix.routes` now, in addition to the routes we saw for users above, we get the following set of routes.
 
 ```elixir
+. . .
 user_post_path  GET     users/:user_id/posts           HelloPhoenix.PostController.index/2
 user_post_path  GET     users/:user_id/posts/:id/edit  HelloPhoenix.PostController.edit/2
 user_post_path  GET     users/:user_id/posts/new       HelloPhoenix.PostController.new/2
