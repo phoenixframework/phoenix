@@ -53,7 +53,7 @@ defmodule YourApp.Router do
     end
   end
 
-  scope path: "/admin", alias: YourApp.Admin, helper: "admin" do
+  scope "/admin", alias: YourApp.Admin, helper: "admin" do
     resources "/users", UserController
   end
 end

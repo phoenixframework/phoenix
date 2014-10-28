@@ -25,7 +25,7 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     end
 
     scope "/api" do
-      scope path: "/v1" do
+      scope "/v1" do
         get "/users/:id", Api.V1.UserController, :show
       end
     end
@@ -33,12 +33,12 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     scope "/api", Api do
       get "/users/:id", V1.UserController, :show
 
-      scope path: "/v1", alias: V1 do
+      scope "/v1", alias: V1 do
         resources "/users", UserController, only: [:destroy]
       end
     end
 
-    scope path: "/api" do
+    scope "/api" do
       scope "/v1", Api.V1 do
         resources "/venues", VenueController, only: [:show] do
           resources "/users", UserController, only: [:edit]

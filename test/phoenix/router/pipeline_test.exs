@@ -52,17 +52,17 @@ defmodule Phoenix.Router.PipelineTest.Router do
   put "/root/:id", SampleController, :index
   get "/route_that_crashes", SampleController, :crash
 
-  scope path: "/browser" do
+  scope "/browser" do
     pipe_through :browser
     get "/root", SampleController, :index
 
-    scope path: "/api" do
+    scope "/api" do
       pipe_through :api
       get "/root", SampleController, :index
     end
   end
 
-  scope path: "/browser-api" do
+  scope "/browser-api" do
     pipe_through [:browser, :api]
     get "/root", SampleController, :index
   end
