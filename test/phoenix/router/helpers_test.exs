@@ -88,11 +88,11 @@ defmodule Phoenix.Router.HelpersTest do
 
     resources "/files", FileController
 
-    scope path: "/admin", alias: Admin do
+    scope "/admin", alias: Admin do
       resources "/messages", MessageController
     end
 
-    scope path: "/admin/new", alias: Admin, as: "admin" do
+    scope "/admin/new", alias: Admin, as: "admin" do
       resources "/messages", MessageController
     end
 

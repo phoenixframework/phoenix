@@ -70,7 +70,7 @@ defmodule Phoenix.Router do
 
   The router also supports scoping of routes:
 
-      scope path: "/api/v1", as: :api_v1 do
+      scope "/api/v1", as: :api_v1 do
         get "/pages/:id", PageController, :show
       end
 
@@ -125,13 +125,13 @@ defmodule Phoenix.Router do
       defmodule MyApp.Router do
         use Phoenix.Router
 
-        scope path: "/" do
+        scope "/" do
           pipe_through :browser
 
           # browser related routes and resources
         end
 
-        scope path: "/api" do
+        scope "/api" do
           pipe_through :api
 
           # api related routes and resources
@@ -518,7 +518,7 @@ defmodule Phoenix.Router do
 
   A scope may then use this pipeline as:
 
-      scope path: "/" do
+      scope "/" do
         pipe_through :api
       end
 
@@ -659,7 +659,7 @@ defmodule Phoenix.Router do
 
   ## Examples
 
-    scope path: "/api/v1", as: :api_v1, alias: API.V1 do
+    scope "/api/v1", as: :api_v1, alias: API.V1 do
       get "/pages/:id", PageController, :show
     end
 
