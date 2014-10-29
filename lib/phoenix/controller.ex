@@ -91,7 +91,6 @@ defmodule Phoenix.Controller do
 
       use Phoenix.Controller.Pipeline
 
-      plug Plugs.ContentTypeFetcher
       plug Plugs.ControllerLogger
       plug Phoenix.Controller.Flash
       plug :put_layout, {Phoenix.Controller.__layout__(__MODULE__), :application}
