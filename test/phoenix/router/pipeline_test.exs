@@ -39,6 +39,10 @@ defmodule Phoenix.Router.PipelineTest.Router do
   end
 
   pipeline :browser do
+    plug :fetch_session
+  end
+
+  pipeline :browser do
     plug :super
     plug :put_session, "from browser" # session must be fetched
     plug :put_assign, "from browser"

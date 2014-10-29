@@ -26,8 +26,6 @@ defmodule Phoenix.Router do
       defmodule MyApp.Router do
         use Phoenix.Router
 
-        pipe_through :browser
-
         get "/pages/:page", PageController, :show
       end
 
@@ -138,16 +136,10 @@ defmodule Phoenix.Router do
         end
       end
 
-  By default, Phoenix ships with three pipelines:
-
-    * `:before` - a special pipeline that is always invoked
-      before any route matches
-    * `:browser` - a pipeline for handling browser requests
-    * `:api` - a pipeline for handling api requests
-
-  All pipelines are invoked after a matching route is found,
-  with exception of the `:before` pipeline which is dispatched
-  before any attempt to match a route.
+  By default, Phoenix ships with one pipeline, called `:before`,
+  that is always invoked before any route matches. All other
+  pipelines are invoked only after a specific route matches,
+  but before the route is dispatched to.
 
   ### :before pipeline
 
@@ -181,43 +173,18 @@ defmodule Phoenix.Router do
       for all entries in the `web` directory. It is configured
       directly in the Phoenix application
 
-  ### :browser pipeline
-
-  The following plugs are in the browser pipeline:
-
-    * `:fetch_session` - calls the `Plug.Conn.fetch_session/2` that
-      effectively fetches the session and makes it available in the
-      connection
-
-  ### :api pipeline
-
-  Currently there are no plugs in the `:api` pipeline.
-
   ### Customizing pipelines
 
   You can define new pipelines at any moment with the `pipeline/2`
   macro:
 
-      pipeline :secure do
+      pipeline :api do
         plug :token_authentication
       end
 
   And then in a scope (or at root):
 
-      pipe_through [:api, :secure]
-
-  Pipelines are always defined as overridable functions which means
-  they can be easily extended. For example, we can extend the api
-  pipeline directly and add security:
-
-      pipeline :api do
-        plug :super
-        plug :token_authentication
-      end
-
-  Where `plug :super` will invoke the existing plugs in the api
-  pipeline. In general though, it is preferred to define new pipelines
-  then modify existing ones.
+      pipe_through [:api]
 
   ## Router configuration
 
@@ -314,6 +281,7 @@ defmodule Phoenix.Router do
 
       import Phoenix.Router
       import Plug.Conn
+      import Phoenix.Controller
 
       config = Adapter.config(__MODULE__)
       @config config
@@ -396,16 +364,6 @@ defmodule Phoenix.Router do
           session = Keyword.merge([signing_salt: salt, encryption_salt: salt], session)
           plug Plug.Session, session
         end
-      end
-
-      pipeline :browser do
-        if @config[:session] do
-          plug :fetch_session
-        end
-      end
-
-      pipeline :api do
-        # Empty by default
       end
     end
   end

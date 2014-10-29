@@ -47,6 +47,10 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     Logger.disable(self())
     Application.put_env(:phoenix, :code_reloader, true)
 
+    :ets.new(:hello, [:named_table, :public])
+    Application.put_env(:phoenix, PhotoBlog.Router,
+      session: [store: :ets, key: "_app", table: :hello])
+
     in_project :photo_blog, @project_path, fn _ ->
       Mix.Task.run "compile", ["--no-deps-check"]
       assert_received {:mix_shell, :info, ["Compiled lib/photo_blog.ex"]}
@@ -63,6 +67,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       # Adding a new template triggers recompilation (through request)
       File.touch! "web/views/page_view.ex", @epoch
       File.write! "web/templates/page/another.html.eex", "oops"
+
       PhotoBlog.Router.call(conn(:get, "/"), [])
       assert File.stat!("web/views/page_view.ex").mtime > @epoch
     end
