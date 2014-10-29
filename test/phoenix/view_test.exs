@@ -23,14 +23,14 @@ defmodule Phoenix.ViewTest do
     html = View.render(MyApp.View, "show.html",
       title: "Test",
       message: "Hello world",
-      within: {MyApp.LayoutView, "application.html"}
+      layout: {MyApp.LayoutView, "application.html"}
     )
 
     assert html ==
            {:safe, "<html>\n  <title>Test</title>\n  <div>Show! Hello world</div>\n\n</html>\n"}
   end
 
-  test "renders views defined to iodata using encoders" do
+  test "renders views to iodata using encoders" do
     assert View.render_to_iodata(MyApp.UserView, "index.html", title: "Hello world") ==
            "Hello world\n"
 
@@ -42,10 +42,20 @@ defmodule Phoenix.ViewTest do
     html = View.render_to_iodata(MyApp.View, "show.html",
       title: "Test",
       message: "Hello world",
-      within: {MyApp.LayoutView, "application.html"}
+      layout: {MyApp.LayoutView, "application.html"}
     )
 
     assert html ==
            "<html>\n  <title>Test</title>\n  <div>Show! Hello world</div>\n\n</html>\n"
+  end
+
+  test "converts assigns to maps and removes :layout" do
+    html = View.render_to_iodata(MyApp.UserView, "edit.html",
+      title: "Test",
+      layout: {MyApp.LayoutView, "application.html"}
+    )
+
+    assert html ==
+           "<html>\n  <title>Test</title>\n  EDIT - Test\n</html>\n"
   end
 end

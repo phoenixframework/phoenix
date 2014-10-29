@@ -41,7 +41,7 @@ defmodule Phoenix.Controller.Exception do
   """
   def from_conn(conn) do
     conn
-    |> Phoenix.Controller.Connection.error
+    |> Phoenix.Controller.error
     |> from_error
   end
   defp from_error({:throw, err}) do

@@ -25,13 +25,19 @@ defmodule Phoenix.Controller.FlashTest do
 
       def set_flash(conn, %{"notice" => notice, "status" => status}) do
         {status, _} = Integer.parse(status)
-        conn |> Flash.put(:notice, notice) |> redirect(status, "/")
+        conn |> Flash.put(:notice, notice) |> put_status(status) |> redirect(to: "/")
       end
     end
 
     defmodule Router do
       use Phoenix.Router
+
+      pipeline :browser do
+        plug :fetch_session
+      end
+
       pipe_through :browser
+
       get "/", FlashController, :index
       get "/set_flash/:notice/:status", FlashController, :set_flash
     end

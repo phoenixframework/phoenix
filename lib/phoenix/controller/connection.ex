@@ -2,64 +2,8 @@ defmodule Phoenix.Controller.Connection do
   import Plug.Conn
   alias Phoenix.Controller.Errors
 
-  # TODO: Move everything here to the Phoenix.Controller module?
-
-  @moduledoc """
-  Handles Interacting with Plug.Conn and integration with the Controller layer
-
-  Used for sending responses and looking up private Conn assigns
-  """
-
-  @doc """
-  Returns the Atom action name matched from Router
-  """
-  def action_name(conn), do: conn.private[:phoenix_action]
-
-  @doc """
-  Returns the Atom Controller Module matched from Router
-  """
-  def controller_module(conn), do: conn.private[:phoenix_controller]
-
-  @doc """
-  Returns the Actom Router Module that dispatched the Conn
-  """
-  def router_module(conn), do: conn.private[:phoenix_router]
-
-  @doc """
-  Assign error to phoenix private assigns
-  """
-  def assign_error(conn, kind, error) do
-    put_private(conn, :phoenix_error, {kind, error})
-  end
-
-  @doc """
-  Retrieve error from phoenix private assigns
-  """
-  def error(conn), do: Dict.get(conn.private, :phoenix_error)
-
-  @doc """
-  Assign layout to phoenix private assigns
-
-  Possible values include any String, as well as the Atom `:none` to
-  render without a layout.
-
-  ## Examples
-
-      iex> conn |> put_layout("print")
-      iex> conn |> put_layout(:none)
-
-  """
-  def put_layout(conn, layout) when is_binary(layout) do
-    put_private(conn, :phoenix_layout, layout)
-  end
-  def put_layout(conn, :none) do
-    put_private(conn, :phoenix_layout, :none)
-  end
-
-  @doc """
-  Retrieve layout from phoenix private assigns
-  """
-  def layout(conn), do: Dict.get(conn.private, :phoenix_layout, "application")
+  # TODO: Remove this module
+  @moduledoc false
 
   @doc """
   Returns the String Mime content-type of response
@@ -103,8 +47,8 @@ defmodule Phoenix.Controller.Connection do
       json conn, 200, "{\"id\": 123}"
 
   """
-  def json(conn, json), do: json(conn, :ok, json)
   def json(conn, status, json) do
+    IO.write :stderr, "json/3 is deprecated, please use json/2 + put_status/2 instead\n#{Exception.format_stacktrace}"
     send_response(conn, status, "application/json", json)
   end
 
@@ -117,8 +61,8 @@ defmodule Phoenix.Controller.Connection do
       html conn, 200, "<h1>Hello!</h1>"
 
   """
-  def html(conn, html), do: html(conn, :ok, html)
   def html(conn, status, html) do
+    IO.write :stderr, "html/3 is deprecated, please use html/2 + put_status/2 instead\n#{Exception.format_stacktrace}"
     send_response(conn, status, "text/html", html)
   end
 
@@ -131,8 +75,8 @@ defmodule Phoenix.Controller.Connection do
       text conn, 200, "hello"
 
   """
-  def text(conn, text), do: text(conn, :ok, text)
   def text(conn, status, text) do
+    IO.write :stderr, "text/3 is deprecated, please use text/2 + put_status/2 instead\n#{Exception.format_stacktrace}"
     send_response(conn, status, "text/plain", text)
   end
 
@@ -148,31 +92,5 @@ defmodule Phoenix.Controller.Connection do
     conn
     |> put_resp_content_type(content_type)
     |> send_resp(status, data)
-  end
-
-  @doc """
-  Sends redirect response to provided url String
-
-  ## Examples
-
-      redirect conn, "http://elixir-lang.org"
-      redirect conn, 404, "http://elixir-lang.org"
-
-  """
-  def redirect(conn, url), do: redirect(conn, :found, url)
-  def redirect(conn, status, url) do
-    conn
-    |> put_resp_header("Location", url)
-    |> html status, """
-       <html>
-         <head>
-            <title>Moved</title>
-         </head>
-         <body>
-           <h1>Moved</h1>
-           <p>This page has moved to <a href="#{url}">#{url}</a></p>
-         </body>
-       </html>
-    """
   end
 end

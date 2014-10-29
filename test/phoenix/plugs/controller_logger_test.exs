@@ -8,13 +8,12 @@ defmodule Phoenix.ControllerLoggerTest do
     def index(conn, _params), do: text(conn, "index")
   end
 
-  test "verify logger" do
-    {_conn, [header, accept, parameters]} = capture_log fn ->
-      conn = conn(:get, "/", foo: "bar") |> fetch_params
+  test "logs controller, action, format and parameters" do
+    {_conn, [header, parameters]} = capture_log fn ->
+      conn = conn(:get, "/", foo: "bar", format: "html") |> fetch_params
       LoggerController.call(conn, LoggerController.init(:index))
     end
-    assert header =~ "[debug] Processing by Phoenix.ControllerLoggerTest.LoggerController.index"
-    assert accept =~ "Accept: text/html"
-    assert parameters =~ "Parameters: %{\"foo\" => \"bar\"}"
+    assert header =~ "[debug] Processing by Phoenix.ControllerLoggerTest.LoggerController.index/2"
+    assert parameters =~ "Parameters: %{\"foo\" => \"bar\", \"format\" => \"html\"}"
   end
 end

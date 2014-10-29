@@ -11,7 +11,7 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
       try do
         super(conn, options)
       catch
-        :throw, "boom" -> text(conn, 500, "boom")
+        :throw, "boom" -> conn |> put_status(500) |> text("boom")
       end
     end
 
@@ -29,7 +29,8 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
     def not_found(conn, _) do
       conn
       |> assign(:error, :handled_404)
-      |> text 404, "not found"
+      |> put_status(:not_found)
+      |> text("not found")
     end
   end
 
@@ -118,7 +119,7 @@ defmodule Phoenix.Controller.ErrorHandlingTest do
     assert conn.resp_body =~ ~r/Something went wrong/
   end
 
-  test "renders Phoenix's debug 500 page for uncaught error  when debug_errors: true" do
+  test "renders Phoenix's debug 500 page for uncaught error when debug_errors: true" do
     config! debug_errors: true
     conn = call(Router, :get, "/500-raise")
     assert conn.resp_body =~ ~r/Stacktrace/
