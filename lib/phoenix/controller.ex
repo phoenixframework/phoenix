@@ -463,6 +463,43 @@ defmodule Phoenix.Controller do
     |> halt()
   end
 
+  @doc """
+  Performs content negotiation based on the accepted formats.
+
+  It receives a connection, a list of formats that the server
+  is capable of rendering and then proceeds to perform content
+  negotiation based on the request information.
+
+  If the request contains a "format" parameter, it is
+  considered to be the format desired by the client. If no
+  "format" parameter is available, this function will parse
+  the "accept" header and find a matching format accordingly.
+
+  It is important to notice that browsers have historically
+  sent bad accept headers. For this reason, this function will
+  default to "html" format whenever:
+
+    * the accepted list of arguments contains the "html" format
+
+    * the accept header specified more than one media type preceeded
+      or followed by the wildcard media type "*/*"
+
+  This function raises `Phoenix.NotAcceptableError`, which is rendered
+  with status 406, whenever the server cannot serve a response in any
+  of the formats expected by the client.
+
+  ## Examples
+
+  `accepts/2` can be invoked as a function:
+
+      iex> accepts(conn, ~w(html json))
+
+  or used as a plug:
+
+      plug :accepts, ~w(html json)
+
+  """
+  @spec accepts(Plug.Conn.t, [binary]) :: Plug.Conn.t | no_return
   def accepts(conn, [_|_] = accepted) do
     case Map.fetch conn.params, "format" do
       {:ok, format} ->

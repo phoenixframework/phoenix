@@ -123,18 +123,21 @@ defmodule Phoenix.Router do
       defmodule MyApp.Router do
         use Phoenix.Router
 
+        pipeline :browser do
+          plug :fetch_session
+          plug :accepts, ~w(html json)
+        end
+
         scope "/" do
           pipe_through :browser
 
           # browser related routes and resources
         end
-
-        scope "/api" do
-          pipe_through :api
-
-          # api related routes and resources
-        end
       end
+
+  `Phoenix.Router` imports both `Plug.Conn` and `Phoenix.Controller`
+  functions to help define plugs. In the example above, `fetch_session/2`
+  comes from `Plug.Conn` while `accepts/2` comes from `Phoenix.Controller`.
 
   By default, Phoenix ships with one pipeline, called `:before`,
   that is always invoked before any route matches. All other
