@@ -180,8 +180,9 @@ defmodule Phoenix.Controller do
 
   ## Examples
 
-      redirect conn, to: "/login"
-      redirect conn, external: "http://elixir-lang.org"
+      iex> redirect conn, to: "/login"
+
+      iex> redirect conn, external: "http://elixir-lang.org"
 
   """
   def redirect(conn, opts) when is_binary(opts) do
@@ -461,6 +462,97 @@ defmodule Phoenix.Controller do
     |> put_resp_content_type(content_type)
     |> send_resp(conn.status || default_status, body)
     |> halt()
+  end
+
+  def accepts(conn, [_|_] = accepted) do
+    case Map.fetch conn.params, "format" do
+      {:ok, format} ->
+        handle_params_accept(conn, format, accepted)
+      :error ->
+        handle_header_accept(conn, get_req_header(conn, "accept"), accepted)
+    end
+  end
+
+  defp handle_params_accept(conn, format, accepted) do
+    if format in accepted do
+      conn
+    else
+      raise Phoenix.NotAcceptableError,
+        message: "unknown format #{inspect format}, expected one of #{inspect accepted}"
+    end
+  end
+
+  # In case there is no accepts header or the header is */*
+  # we use the first format specified in the accepts list.
+  defp handle_header_accept(conn, header, [first|_]) when header == [] or header == ["*/*"] do
+    accept(conn, first)
+  end
+
+  # In case there is a header, we need to parse it.
+  # But before we check for */* because if one exists and we serve html,
+  # we unfortunately need to assume it is a browser sending us a request.
+  defp handle_header_accept(conn, [header|_], accepted) do
+    if header =~ "*/*" and "html" in accepted do
+      accept(conn, "html")
+    else
+      parse_header_accept(conn, String.split(header, ","), [], accepted)
+    end
+  end
+
+  defp parse_header_accept(conn, [h|t], acc, accepted) do
+    case Plug.Conn.Utils.media_type(h) do
+      {:ok, type, subtype, args} ->
+        exts = parse_exts(type <> "/" <> subtype)
+        q    = parse_q(args)
+
+        if q === 1.0 && (format = find_format(exts, accepted)) do
+          accept(conn, format)
+        else
+          parse_header_accept(conn, t, [{-q, exts}|acc], accepted)
+        end
+      :error ->
+        parse_header_accept(conn, t, acc, accepted)
+    end
+  end
+
+  defp parse_header_accept(conn, [], acc, accepted) do
+    acc
+    |> Enum.sort()
+    |> Enum.find_value(&parse_header_accept(conn, &1, accepted))
+    |> Kernel.||(refuse(conn, accepted))
+  end
+
+  defp parse_header_accept(conn, {_, exts}, accepted) do
+    if format = find_format(exts, accepted) do
+      accept(conn, format)
+    end
+  end
+
+  defp parse_q(args) do
+    case Map.fetch(args, "q") do
+      {:ok, float} ->
+        case Float.parse(float) do
+          {float, _} -> float
+          :error -> 1.0
+        end
+      :error ->
+        1.0
+    end
+  end
+
+  defp parse_exts("*/*" = type), do: type
+  defp parse_exts(type),         do: Plug.MIME.extensions(type)
+
+  defp find_format("*/*", accepted), do: Enum.fetch!(accepted, 0)
+  defp find_format(exts, accepted),  do: Enum.find(exts, &(&1 in accepted))
+
+  defp accept(conn, format) do
+    put_in conn.params["format"], format
+  end
+
+  defp refuse(_conn, accepted) do
+    raise Phoenix.NotAcceptableError,
+      message: "no supported media type in accept header, expected one of #{inspect accepted}"
   end
 
   @doc false

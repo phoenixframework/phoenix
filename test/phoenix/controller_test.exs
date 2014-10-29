@@ -93,6 +93,71 @@ defmodule Phoenix.ControllerTest do
     assert conn.halted
   end
 
+  defp with_accept(header) do
+    conn(:get, "/", [], headers: [{"accept", header}])
+  end
+
+  test "accepts/2 uses params[:format] when available" do
+    conn = accepts conn(:get, "/", format: "json"), ~w(json)
+    assert conn.params["format"] == "json"
+
+    exception = assert_raise Phoenix.NotAcceptableError,
+                             ~r/unknown format "json"/, fn ->
+      accepts conn(:get, "/", format: "json"), ~w(html)
+    end
+    assert Plug.Exception.status(exception) == 406
+  end
+
+  test "accepts/2 uses first accepts on empty or catch-all header" do
+    conn = accepts conn(:get, "/", []), ~w(json)
+    assert conn.params["format"] == "json"
+
+    conn = accepts with_accept("*/*"), ~w(json)
+    assert conn.params["format"] == "json"
+  end
+
+  test "accepts/2 on non-empty */*" do
+    # Fallbacks to HTML due to browsers behavior
+    conn = accepts with_accept("application/json, */*"), ~w(html json)
+    assert conn.params["format"] == "html"
+
+    conn = accepts with_accept("*/*, application/json"), ~w(html json)
+    assert conn.params["format"] == "html"
+
+    # No HTML is treated normally
+    conn = accepts with_accept("*/*, text/plain, application/json"), ~w(json text)
+    assert conn.params["format"] == "json"
+
+    conn = accepts with_accept("text/plain, application/json, */*"), ~w(json text)
+    assert conn.params["format"] == "text"
+  end
+
+  test "accepts/2 ignores invalid media types" do
+    conn = accepts with_accept("foo/bar, bar baz, application/json"), ~w(html json)
+    assert conn.params["format"] == "json"
+  end
+
+  test "accepts/2 considers q params" do
+    conn = accepts with_accept("text/html; q=0.7, application/json"), ~w(html json)
+    assert conn.params["format"] == "json"
+
+    conn = accepts with_accept("application/json, text/html; q=0.7"), ~w(html json)
+    assert conn.params["format"] == "json"
+
+    conn = accepts with_accept("application/json; q=1.0, text/html; q=0.7"), ~w(html json)
+    assert conn.params["format"] == "json"
+
+    conn = accepts with_accept("application/json; q=0.8, text/html; q=0.7"), ~w(html json)
+    assert conn.params["format"] == "json"
+
+    conn = accepts with_accept("text/html; q=0.7, application/json; q=0.8"), ~w(html json)
+    assert conn.params["format"] == "json"
+
+    assert_raise Phoenix.NotAcceptableError, ~r/no supported media type in accept/, fn ->
+      accepts with_accept("text/html; q=0.7, application/json; q=0.8"), ~w(xml)
+    end
+  end
+
   test "__view__ returns the view modoule based on controller module" do
     assert Phoenix.Controller.__view__(MyApp.UserController) == MyApp.UserView
     assert Phoenix.Controller.__view__(MyApp.Admin.UserController) == MyApp.Admin.UserView
