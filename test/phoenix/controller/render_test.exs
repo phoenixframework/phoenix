@@ -69,11 +69,20 @@ defmodule Phoenix.Controller.RenderTest do
   end
 
   test "skips layout depending on layout_formats with string template" do
-    conn = render(conn, "show.json", layout: {MyApp.LayoutView, :application})
+    conn = layout_conn |> put_layout_formats([]) |> render("index.html", title: "Hello")
+    assert conn.resp_body == "Hello\n"
+    assert html_response?(conn)
+
+    conn = render(conn(), "show.json", layout: {MyApp.LayoutView, :application})
     assert conn.resp_body == ~s({"foo":"bar"})
   end
 
   test "skips layout depending on layout_formats with atom template" do
+    conn = put_in layout_conn.params["format"], "html"
+    conn = conn |> put_layout_formats([]) |> render(:index, title: "Hello")
+    assert conn.resp_body == "Hello\n"
+    assert html_response?(conn)
+
     conn = put_in layout_conn.params["format"], "json"
     conn = render(conn, :show, layout: {MyApp.LayoutView, :application})
     assert conn.resp_body == ~s({"foo":"bar"})

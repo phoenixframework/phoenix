@@ -2,8 +2,6 @@ defmodule Phoenix.Controller do
   alias Phoenix.Plugs
   import Plug.Conn
 
-  @layout_extension_types ["html"]
-
   @moduledoc """
   Controllers are used to group common functionality in the same
   (pluggable) module.
@@ -277,9 +275,35 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
+  Sets which formats have a layout when rendering.
+
+  ## Examples
+
+      iex> layout_formats conn
+      ["html"]
+
+      iex> put_layout_formats conn, ~w(html mobile)
+      iex> layout_formats conn
+      ["html", "mobile"]
+
+  """
+  @spec put_layout_formats(Plug.Conn.t, [String.t]) :: Plug.Conn.t
+  def put_layout_formats(conn, formats) when is_list(formats) do
+    put_private(conn, :phoenix_layout_formats, formats)
+  end
+
+  @doc """
+  Retrieves current layout formats.
+  """
+  @spec layout_formats(Plug.Conn.t) :: [String.t]
+  def layout_formats(conn) do
+    Map.get(conn.private, :phoenix_layout_formats, ~w(html))
+  end
+
+  @doc """
   Retrieves the current layout.
   """
-  @spec layout(Plug.Conn.t) :: {atom, binary} | false
+  @spec layout(Plug.Conn.t) :: {atom, String.t} | false
   def layout(conn), do: conn.private |> Map.get(:phoenix_layout, false)
 
   @doc """
@@ -441,7 +465,7 @@ defmodule Phoenix.Controller do
   end
 
   defp layout(conn, assigns, format) do
-    if format in @layout_extension_types do
+    if format in layout_formats(conn) do
       case Dict.fetch(assigns, :layout) do
         {:ok, layout} -> layout
         :error -> layout(conn)

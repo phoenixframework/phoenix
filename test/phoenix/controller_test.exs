@@ -24,6 +24,14 @@ defmodule Phoenix.ControllerTest do
     assert router_module(conn) == Hello
   end
 
+  test "put_layout_formats/2 and layout_formats/1" do
+    conn = conn(:get, "/")
+    assert layout_formats(conn) == ~w(html)
+
+    conn = put_layout_formats conn, ~w(json xml)
+    assert layout_formats(conn) == ~w(json xml)
+  end
+
   test "put_layout/2 and layout/1" do
     conn = conn(:get, "/")
     assert layout(conn) == false
