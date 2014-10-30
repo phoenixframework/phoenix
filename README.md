@@ -570,7 +570,7 @@ Ephemeral state can be stored on the socket and is available for the lifetime of
 ```elixir
 def join(socket, topic, %{"token" => token, "user_id" => user_id) do
   if user = MyAuth.find_authorized_user(user_id, token) do
-    socket = assign(:socket, :user, user)
+    socket = assign(socket, :user, user)
     {:ok, socket}
   else
     {:error, socket, :unauthorized}
