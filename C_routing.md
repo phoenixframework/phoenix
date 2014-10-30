@@ -46,7 +46,7 @@ end
 
 Clearly, the body of the match function is where the index function of the PageController is called.
 
-As we add more routes, more clauses of the match function will be added to our router module. These will behave like any other multi-clause function in Elixir. They will be tried in order from the top, and the first clause to match the paramates given (verb and path) will be executed. After a match is found, the search will stop and no other clauses will by tried.
+As we add more routes, more clauses of the match function will be added to our router module. These will behave like any other multi-clause function in Elixir. They will be tried in order from the top, and the first clause to match the paramaters given (verb and path) will be executed. After a match is found, the search will stop and no other clauses will by tried.
 
 This means that it is possible to create a route which will never match, based on the HTTP verb and the path, regardless of the controller and action.
 
@@ -78,23 +78,8 @@ page_path  GET  /  HelloPhoenix.PageController.index/2
 
 The output tells us that any HTTP GET request for the root of the application will be handled by the index action of the HelloPhoenix.PageController.
 
-`page_path` is an instance of a what Phoenix calls a path helper, and we'll talk about those next.
+`page_path` is an instance of a what Phoenix calls a path helper, and we'll talk about those very soon.
 
-###Path Helpers
-
-Path helpers are functions which are defined on the `Router.Helpers` module for an individual application. For us, that is `HelloPhoenix.Router.Helpers`, and `page_path` is the function which will return the path to the root of our application.
-
-That's a mouthful. Let's see it in action. Run `$ iex -S mix` at the root of the project. When we call the `page_path` function on our router helpers with the action as an argument, it returns the path to us.
-
-```elixir
-iex(4)> HelloPhoenix.Router.Helpers.page_path(:index)
-"/"
-```
-
-This is significant because we can use the `page_path` function in a template to link to the root of our application.
-```html
-<a href="<%= HelloPhoenix.Router.Helpers.page_path(:index) %>">To the Welcome Page!</a>
-```
 
 ###Resources
 
@@ -160,9 +145,29 @@ comment_path  POST    /comments                      HelloPhoenix.CommentControl
 comment_path  PUT     /comments/:id                  HelloPhoenix.CommentController.update/2
 comment_path  PATCH   /comments/:id                  HelloPhoenix.CommentController.update/2
 ```
+###Path Helpers
+
+Path helpers are functions which are dynamically defined on the `Router.Helpers` module for an individual application. For us, that is `HelloPhoenix.Router.Helpers`.
+Their names are derived from the name of the controller used in the route definition. Our controller is `HelloPhoenix.PageController`, and `page_path` is the function which will return the path to the root of our application.
+
+That's a mouthful. Let's see it in action. Run `$ iex -S mix` at the root of the project. When we call the `page_path` function on our router helpers with the action as an argument, it returns the path to us.
+
+```elixir
+iex(4)> HelloPhoenix.Router.Helpers.page_path(:index)
+"/"
+```
+
+This is significant because we can use the `page_path` function in a template to link to the root of our application.
+
+```html
+<a href="<%= HelloPhoenix.Router.Helpers.page_path(:index) %>">To the Welcome Page!</a>
+```
+
+This pays off tremendously if we should ever have to change the path of our route in the router. Since the path helpers are built dynamically from the routes, any calls to `page_path` in our templates will still work.
 
 ###More on Path Helpers
-The phoenix.routes task also listed the user_path as the path function for each line of output. Here is what that path translates to for each action.
+
+When we ran the `phoenix.routes` task for our user resource, it listed the `user_path` as the path helper function for each line of output. Here is what that translates to for each action.
 
 ```elixir
 iex(2)> HelloPhoenix.Router.Helpers.user_path(:index)
@@ -194,7 +199,7 @@ iex(3)> HelloPhoenix.Router.Helpers.user_path(:show, 17, admin: true, active: fa
 "/users/17?admin=true&active=false"
 ```
 
-What if you need a full url instead of a path? Again, Phoenix has an answer - the Router.Helpers.url function.
+What if we need a full url instead of a path? Again, Phoenix has an answer - the Router.Helpers.url function.
 
 ```elixir
 iex(3)> HelloPhoenix.Router.Helpers.user_path(:index, 42) |> HelloPhoenix.Router.Helpers.url
@@ -216,6 +221,7 @@ end
 When we run `$ mix phoenix.routes` now, in addition to the routes we saw for users above, we get the following set of routes.
 
 ```elixir
+. . .
 user_post_path  GET     users/:user_id/posts           HelloPhoenix.PostController.index/2
 user_post_path  GET     users/:user_id/posts/:id/edit  HelloPhoenix.PostController.edit/2
 user_post_path  GET     users/:user_id/posts/new       HelloPhoenix.PostController.new/2
@@ -520,6 +526,208 @@ api_v1_review_path  DELETE  /api/v1/reviews/:id       HelloPhoenix.Api.V1.Review
   api_v1_user_path  DELETE  /api/v1/users/:id         HelloPhoenix.Api.V1.UserController.destroy/2
 ```
 
+###Pipelines
+
+We have come quite a long way in this guide without talking about one of the first lines we saw in the router - `pipe_through :browser`. It's time to fix that.
+
+Remember in the Overview Guide when we described plugs as being stacked and executable in a pre-determined order, like a pipeline? Now we're going to take a closer look at how these plug stacks work in the router.
+
+Pipelines are simply plugs stacked up together in a specific order and given a name. They allow us to customize behaviors and transformations related to the handling of requests. Phoenix provides default pipelines for common tasks, but it allows us to customize them, and it also allows us to create new pipelines to meet our needs.
+
+A newly generated Phoenix application defines three pipelines, `:before`, `:browser`, and `:api`. The router will always invoke the `:before` pipeline at the very beginning of any request, before the router even tries to match a route. It does this implicitly, without us having to declare anything in the router. The plugs in the `:before` pipeline represent all the actions that need to happen before the router can properly handle it.
+
+#####The `:before` Pipeline
+The `:before` pipeline actually does quite a lot of work preparing a request for the router. This list of plugs in the `:before` pipeline comes directly from the [Phoenix router documentation](http://hexdocs.pm/phoenix/0.5.0/Phoenix.Router.html). They appear here in the order they are executed.
+
+```
+- Plug.Static - serves static assets. Since this plug comes
+  before the router, serving of static assets is not logged
+
+- Plug.Logger - logs incoming requests
+
+- Plug.Parsers - parses the request body when a known
+  parser is available. By default parsers urlencoded,
+  multipart and json (with poison). The request body is left
+  untouched when the request content-type cannot be parsed
+
+- Plug.MethodOverride - converts the request method to
+  PUT, PATCH or DELETE for POST requests with a
+  valid _method parameter
+
+- Plug.Head - converts HEAD requests to GET requests
+  and strips the response body
+
+- Plug.Session - a plug that sets up session management.
+  Note that fetch_session/2 must still be explicitly called
+  before using the session as this plug just sets up how
+  the session is fetched
+
+- Phoenix.CodeReloader - a plug that enables code reloading
+  for all entries in the web directory. It is configured
+  directly in the Phoenix application
+```
+
+In case you were wondering, the router really does invoke the `:before` pipeline implicitly. If we try to make it explicit, like this.
+
+```elixir
+defmodule HelloPhoenix.Router do
+  use Phoenix.Router
+
+  pipe_through :before
+  pipe_through :browser
+
+  get "/", HelloPhoenix.PageController, :index
+end
+```
+
+We get this compilation error.
+
+```console
+== Compilation error on file web/router.ex ==
+** (ArgumentError) the :before pipeline is always piped through
+    (phoenix) lib/phoenix/router/scope.ex:41: anonymous fn/2 in Phoenix.Router.Scope.pipe_through/2
+    (elixir) lib/enum.ex:537: Enum."-each/2-lists^foreach/1-0-"/2
+    (elixir) lib/enum.ex:537: Enum.each/2
+    (phoenix) lib/phoenix/router/scope.ex:38: Phoenix.Router.Scope.pipe_through/2
+    web/router.ex:8: (module)
+```
+
+#####The `:browser` and `:api` Pipelines
+
+Phoenix defines two other pipelines by default, `:browser` and `:api`. The router will invoked these after it matches a route, assuming we have called `pipe_through/1` with them in the enclosing scope.
+
+As their names suggest, the `:browser` pipeline prepares for routes which render HTML for a browser. The `:api` pipeline prepares for routes which produce data for an api.
+
+The `:browser` pipeline has a single plug, `:fetch_session`, which, naturally, fetches the session data and makes it available in the connection.
+
+Currently, the `:api` pipeline is empty by default, and has no plugs defined for it.
+
+The router will invoke a pipeline on a route defined within a scope. If no scope is defined, the router will invoke the pipeline on all the routes in the router. If we call `pipe_through/1` within a nested scope, the router will invoke it on the inner scope only.
+
+Those are a lot of words bunched up together. Let's take a look at some examples to untangle their meaning.
+
+Here's another look at the router from a newly generated Phoenix application, this time with the api scope commented back in and a route added.
+
+```elixir
+defmodule HelloPhoenix.Router do
+  use Phoenix.Router
+
+  scope "/" do
+    # Use the default browser stack.
+    pipe_through :browser
+
+    get "/", HelloPhoenix.PageController, :index
+  end
+
+  # Other scopes may use custom stacks.
+  scope "/api" do
+    pipe_through :api
+
+    resources "reviews", HelloPhoenix.ReviewController
+  end
+end
+```
+When a request comes in to the server, the router will pass it through the `:before` pipeline no matter what. Then it will attempt to match on the path and HTTP verb.
+
+Let's say the request matches our first route, a GET to `/`. The router will pipe that request through the `:browser` pipeline - which will fetch the session data - before it dispatches the request to the `PageController` `index` action.
+
+Conversely, if the request matches any of the routes defined by the `resources/2` macro, the router will pipe it through the `:api` pipeline - which currently does nothing - before it dispatches to the correct action of the `HelloPhoenix.ReviewController`.
+
+If we know that our application will only render views for the browser. We can simplify our router quite a bit.
+
+```elixir
+defmodule HelloPhoenix.Router do
+  use Phoenix.Router
+
+  pipe_through :browser
+
+  get "/", HelloPhoenix.PageController, :index
+
+  resources "reviews", HelloPhoenix.ReviewController
+end
+```
+Removing all scopes forces the router to invoke the `:browser` pipeline on all routes.
+
+Let's stretch these ideas out a little. What if we need to pipe requests through both `:browser` and one or more custom pipelines? We simply pipe through a list of pipelines, and Phoenix will invoke them in order.
+
+```elixir
+defmodule HelloPhoenix.Router do
+  use Phoenix.Router
+
+  scope "/reviews" do
+    # Use the default browser stack.
+    pipe_through [:browser, :review_checks, :other_great_stuff]
+
+    resources "reviews", HelloPhoenix.ReviewController
+  end
+end
+```
+
+Here's another example where nested scopes have different pipelines.
+```elixir
+defmodule HelloPhoenix.Router do
+  use Phoenix.Router
+
+  scope "/" do
+    pipe_through :browser
+
+    resources "posts", HelloPhoenix.PostController
+
+    scope "/reviews" do
+      pipe_through :review_checks
+
+      resources "reviews", HelloPhoenix.ReviewController
+    end
+  end
+end
+```
+
+In general, the scoping rules for pipelines behave as you might expect. In this example, all routes will pipe through the `:browser` pipeline, because the "/" scope encloses all the routes. Only the "reviews" resources routes will pipe through the `:review_checks` pipeline, however, because we declare `pipe_through :review_checks` within the "/reviews" scope, where the "reviews" resources routes are.
+
+
+#####Creating New Pipelines
+Phoenix allows us to create our own custom pipelines anywhere in the router. It couldn't be simpler. We just call the `pipeline/2` macro with an atom for the name of our new pipeline and a block with all the plugs we want in it.
+
+```elixir
+defmodule HelloPhoenix.Router do
+  use Phoenix.Router
+
+  pipeline :review_checks do
+    plug :ensure_authenticated_user
+    plug :ensure_user_owns_review
+  end
+
+  scope "/reviews" do
+    pipe_through :review_checks
+
+    resources "reviews", HelloPhoenix.ReviewController
+  end
+end
+```
+
+#####Customizing Existing Pipelines
+We can always open up existing pipelines and customize both the plugs that make them up, and, to an extent, the order in which they are invoked. In general, however, it is preferable to create new pipelines and invoke `pipe_through` with a list of pipelines, in order.
+
+Here's how we might customize the `:browser` pipeline. The example assumes that we have already defined the plugs `:authenticate` and `:set_current_user`.
+
+```elixir
+defmodule HelloPhoenix.Router do
+  use Phoenix.Router
+
+  pipeline :browser do
+    plug :super
+    plug :authenticate
+    plug :set_current_user
+  end
+
+  pipe_through :browser
+
+  resources "reviews", HelloPhoenix.ReviewController
+end
+```
+
+`plug :super` will invoke any plugs in the `:browser` pipeline before it plugs `:authenticate` and `:set_current_user`.
+
 ###Channel Routes
 
 Channels are a very exciting, realtime component of the Phoenix framework. They are so important that they will have a guide of their own.
@@ -549,8 +757,6 @@ defmodule HelloPhoenix.Router do
   channel "our_channel_name", HelloPhoenix.OurChannel
 end
 ```
-
-
 ###Summary
 
 Routing is a big topic, and we have covered a lot of ground here. The important points to take away from this guide are:
