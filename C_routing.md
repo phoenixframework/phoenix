@@ -298,6 +298,8 @@ review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewControlle
 This looks good, but there is a problem here. Remember that we wanted both user facing reviews routes as well as the admin ones. When we define both of those routes in our router, like this,
 
 ```elixir
+pipe_through :browser
+
 resources "/reviews", ReviewController
 
 scope "/admin" do
@@ -329,6 +331,8 @@ review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewControlle
 The actual routes we get all look right, except for the path helper at the beginning of each line. We are getting the same helper for both the user facing review routes and the admin ones. We can fix this problem by adding a `as: :admin` option to our admin scope.
 
 ```elixir
+pipe_through :browser
+
 resources "/reviews", ReviewController
 
 scope "/admin", as: :admin do
@@ -371,6 +375,8 @@ What if we had a number of resources that were all handled by admins? We could p
 
 ```elixir
 scope "/admin", as: :admin do
+  pipe_through :browser
+
   resources "/images", HelloPhoenix.Admin.ImageController
   resources "/reviews", HelloPhoenix.Admin.ReviewController
   resources "/users", HelloPhoenix.Admin.UserController
@@ -410,6 +416,8 @@ This is great, exactly what we want, but we can make it even better. Notice that
 
 ```elixir
 scope "/admin", as: :admin, alias: HelloPhoenix.Admin do
+  pipe_through :browser
+
   resources "/images", ImageController
   resources "/reviews", ReviewController
   resources "/users", UserController
@@ -489,6 +497,8 @@ Scopes can also nest, just as resources can. If we had a versioned api with reso
 
 ```elixir
 scope "/api", alias: HelloPhoenix.Api, as: :api do
+  pipe_through :api
+
   scope "/v1", alias: V1, as: :v1 do
     resources "/images", ImageController
     resources "/reviews", ReviewController
@@ -573,8 +583,7 @@ In case you were wondering, the router really does invoke the `:before` pipeline
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
-  pipe_through :before
-  pipe_through :browser
+  pipe_through [:before, :browser]
 
   get "/", HelloPhoenix.PageController, :index
 end
