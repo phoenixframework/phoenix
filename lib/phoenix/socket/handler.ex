@@ -83,6 +83,12 @@ defmodule Phoenix.Socket.Handler do
     |> Socket.set_current_channel(msg.channel, msg.topic)
     |> dispatch(msg.channel, msg.event, msg.message)
   end
+  def websocket_handle({:ping, _}, _req, socket) do
+    {:ok, socket.conn, socket}
+  end
+  def websocket_handle({:pong, _}, _req, socket) do
+    {:ok, socket.conn, socket}
+  end
 
   defp dispatch(socket, "phoenix", "heartbeat", _msg) do
     msg = %Message{channel: "phoenix", topic: "conn", event: "heartbeat", message: %{}}
