@@ -6,21 +6,21 @@ defmodule Phoenix.Router do
   main responsibilities:
 
     * It defines a plug pipeline responsible for handling
-      upcoming requests and dispatch those requests to
-      controllers and other plugs
+      upcoming requests and dispatching those requests to
+      controllers and other plugs.
 
     * It hosts configuration for the router and related
-      entities (like plugs)
+      entities (like plugs).
 
     * It provides a wrapper for starting and stopping the
-      router in a specific web server
+      router in a specific web server.
 
   We will explore those responsibilities next.
 
   ## Routing
 
   The router provides a set of macros for generating routes
-  that dispatches to a specific controller and action. Those
+  that dispatch to specific controllers and actions. Those
   macros are named after HTTP verbs. For example:
 
       defmodule MyApp.Router do
@@ -88,7 +88,7 @@ defmodule Phoenix.Router do
         resources "/users", UserController, except: [:destroy]
       end
 
-  Finally, Phoenix ships with a `mix phoenix.router` task that nicely
+  Finally, Phoenix ships with a `mix phoenix.routes` task that nicely
   formats all routes in a given router. We can use it to verify all
   routes included in the router above:
 
@@ -102,7 +102,7 @@ defmodule Phoenix.Router do
       user_path  PATCH  /users/:id       UserController.update/2
                  PUT    /users/:id       UserController.update/2
 
-  One can also pass a router explicitly as argument to the task:
+  One can also pass a router explicitly as an argument to the task:
 
       $ mix phoenix.router MyApp.Router
 
@@ -135,8 +135,8 @@ defmodule Phoenix.Router do
         end
       end
 
-  `Phoenix.Router` imports both `Plug.Conn` and `Phoenix.Controller`
-  functions to help define plugs. In the example above, `fetch_session/2`
+  `Phoenix.Router` imports functions from both `Plug.Conn` and `Phoenix.Controller`
+  to help define plugs. In the example above, `fetch_session/2`
   comes from `Plug.Conn` while `accepts/2` comes from `Phoenix.Controller`.
 
   By default, Phoenix ships with one pipeline, called `:before`,
@@ -199,7 +199,7 @@ defmodule Phoenix.Router do
 
   Phoenix configuration is split in two categories. Compile-time
   configuration means the configuration is read during compilation
-  and changed it at runtime has no effect. Most of the compile-time
+  and changing it at runtime has no effect. Most of the compile-time
   configuration is related to pipelines and plugs.
 
   On the other hand, runtime configuration is accessed during or
