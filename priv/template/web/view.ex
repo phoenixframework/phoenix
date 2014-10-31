@@ -1,8 +1,8 @@
 defmodule <%= application_module %>.View do
   use Phoenix.View, root: "web/templates"
 
-  # Everything in this block is available runs in this
-  # module and in other views that use MyApp.View
+  # Everything that is imported, aliased, or used in this block is available
+  # in the rest of this module and in any other view module that uses it.
   using do
     # Import common functionality
     import <%= application_module %>.I18n
