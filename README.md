@@ -796,7 +796,7 @@ mount point.
 
 ## Documentation
 
-API documentation is available at [http://api.phoenixframework.org/](http://api.phoenixframework.org/)
+API documentation is available at [http://hexdocs.pm/phoenix](http://hexdocs.pm/phoenix)
 
 
 ## Development
@@ -808,14 +808,6 @@ There are no guidelines yet. Do what feels natural. Submit a bug, join a discuss
 ```bash
 $ coffee -o priv/static/js -cw assets/cs
 ```
-
-
-### Building documentation
-
-1. Clone [docs repository](https://github.com/phoenixframework/docs) into `../docs`. Relative to your `phoenix` directory.
-2. Run `MIX_ENV=docs mix run release_docs.exs` in `phoenix` directory.
-3. Change directory to `../docs`.
-4. Commit and push docs.
 
 ## Important links
 
