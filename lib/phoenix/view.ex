@@ -7,17 +7,17 @@ defmodule Phoenix.View do
   application.
 
   The view layer also contains conveniences for rendering templates,
-  including support for layours and encoders per format.
+  including support for layouts and encoders per format.
 
   ## Examples
 
-  First, define the main view module:
+  Phoenix defines the main view module at /web/view.ex:
 
       defmodule YourApp.View do
         use Phoenix.View, root: "web/templates"
 
-        # Everything in this block is available runs in this
-        # module and in other views that use YourApp.View
+        # Everything that is imported, aliased, or used in this block is available
+        # in the rest of this module and in any other view module that uses it.
         using do
           # Import common functionality
           import YourApp.I18n
@@ -25,12 +25,15 @@ defmodule Phoenix.View do
 
           # Use Phoenix.HTML to import all HTML functions (forms, tags, etc)
           use Phoenix.HTML
+
+          # Common aliases
+          alias Phoenix.Controller.Flash
         end
 
         # Functions defined here are available to all other views/templates
       end
 
-  Once the main view module is defined, we can use it to define each view:
+  We can use the main view module to define other view modules:
 
       defmodule YourApp.UserView do
         use YourApp.View
@@ -44,19 +47,19 @@ defmodule Phoenix.View do
       Hello <%= @name %>
 
   The `.eex` extension is called a template engine which tells Phoenix how
-  to compile the code in the file into actual Elixir source code. After compiled,
-  the template can be rendered as:
+  to compile the code in the file into actual Elixir source code. After it is 
+  compiled, the template can be rendered as:
 
       Phoenix.View.render(YourApp.UserView, "index.html", name: "John Doe")
       #=> {:safe, "Hello John Doe"}
 
-  We will discuss rendering with detail next.
+  We will discuss rendering in detail next.
 
   ## Rendering
 
-  The main responsability of a view is to render a template.
+  The main responsibility of a view is to render a template.
 
-  A template has a name, which is also contains a format. For example,
+  A template has a name, which also contains a format. For example,
   in the previous section we have rendered the "index.html" template:
 
       Phoenix.View.render(YourApp.UserView, "index.html", name: "John Doe")
@@ -78,13 +81,13 @@ defmodule Phoenix.View do
       defmodule YourApp.UserView do
         use YourApp.View
 
-        def render("user.json", %{user: user}) do
+        def render("show.json", %{user: user}) do
           %{name: user.name, address: user.address}
         end
       end
 
-  Notice that, in order to render JSON data, we don't need to explicitly
-  return a JSON string! Instead we just return data that is encodable to
+  Notice that in order to render JSON data, we don't need to explicitly
+  return a JSON string! Instead, we just return data that is encodable to
   JSON.
 
   Both JSON and HTML formats will be encoded only when passing the data
@@ -113,8 +116,8 @@ defmodule Phoenix.View do
           defmodule YOURAPP.View do
             use Phoenix.View, root: "web/templates"
 
-            # Everything in this block is available runs in this
-            # module and in other views that use MyApp.View
+            # Everything that is imported, aliased, or used in this block is available
+            # in the rest of this module and in any other view module that uses it.
             using do
               # Import common functionality
               import YOURAPP.I18n
