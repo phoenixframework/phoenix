@@ -83,7 +83,9 @@ defmodule Phoenix.Socket do
       "bar"
 
   """
+  # TODO: remove in 0.7.0
   def get_assign(socket = %Socket{}, key) do
+    IO.write :stderr, "get_assign/2 is deprecated, please use `socket.assigns[:key]` instead"
     get_in socket.assigns, [key]
   end
 
@@ -105,5 +107,3 @@ defmodule Phoenix.Socket do
     put_in socket.assigns[key], value
   end
 end
-
-

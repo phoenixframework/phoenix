@@ -38,5 +38,9 @@ defmodule Phoenix.Socket.SocketTest do
     socket = Socket.assign(socket, :foo, "bar")
     assert Socket.get_assign(socket, :foo) == "bar"
   end
-end
 
+  test "socket assigns can be accessed from assigns map" do
+    socket = new_socket |> Socket.assign(:key, :val)
+    assert socket.assigns[:key] == :val
+  end
+end
