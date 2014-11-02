@@ -8,7 +8,7 @@
 
 ### Requirements
 
-- Elixir v1.0.0+
+- Elixir v1.0.2+
 
 ### Setup
 
