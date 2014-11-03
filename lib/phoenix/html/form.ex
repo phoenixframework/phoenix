@@ -26,8 +26,10 @@ defmodule Phoenix.HTML.Form do
   def text_field(builder, name, opts \\ []) do
     defaults = [type: "text", value: input_value(builder, name, opts)]
     attrs = Dict.merge([name: input_name(builder, name)], defaults)
-    tag(:input, attrs)
+    input_tag(:text, attrs)
   end
+
+  def label(name)
 
   defp input_prefix(resource) do
     resource.__struct__
