@@ -91,7 +91,11 @@ defmodule YourApp.Router do
     resources "/comments", CommentController
   end
 end
+```
 
+Executing 'iex -S mix' from your project's root directory will load your project into the shell. Then you can explore the routes interactively.
+
+```elixir
 iex> YourApp.Router.Helpers.user_path(:index)
 "/users"
 
