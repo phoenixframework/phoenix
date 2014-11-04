@@ -8,8 +8,8 @@ defmodule Mix.Tasks.Phoenix.Routes do
   @moduledoc """
   Prints all routes for the default or a given router.
 
-      $ mix phoenix.router
-      $ mix phoenix.router MyApp.AnotherRouter
+      $ mix phoenix.routes
+      $ mix phoenix.routes MyApp.AnotherRouter
   """
 
   def run([]) do
