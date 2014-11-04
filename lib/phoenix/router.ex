@@ -92,7 +92,7 @@ defmodule Phoenix.Router do
   formats all routes in a given router. We can use it to verify all
   routes included in the router above:
 
-      $ mix phoenix.router
+      $ mix phoenix.routes
       page_path  GET    /pages/:id       PageController.show/2
       user_path  GET    /users           UserController.index/2
       user_path  GET    /users/:id/edit  UserController.edit/2
@@ -104,7 +104,7 @@ defmodule Phoenix.Router do
 
   One can also pass a router explicitly as an argument to the task:
 
-      $ mix phoenix.router MyApp.Router
+      $ mix phoenix.routes MyApp.Router
 
   Check `scope/2` and `resources/4` for more information.
 

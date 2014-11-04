@@ -7,8 +7,8 @@ defmodule Mix.Tasks.Phoenix.Start do
   @moduledoc """
   Starts the router or a given worker
 
-      $ mix phoenix.router
-      $ mix phoenix.router MyApp.AnotherRouter
+      $ mix phoenix.routes
+      $ mix phoenix.routes MyApp.AnotherRouter
 
   """
   def run([]) do
