@@ -11,15 +11,11 @@
 
     bindings: null
 
-    constructor: (@channel, @topic, @message, @callback, @onJoin, @socket) ->
+    constructor: (@channel, @topic, @message, @callback, @socket) ->
       @reset()
 
 
-    reset: ->
-      if @onJoin
-        @bindings = [{event: "join", callback: @onJoin}]
-      else
-        @bindings = []
+    reset: -> @bindings = []
 
     on: (event, callback) -> @bindings.push({event, callback})
 
@@ -140,12 +136,12 @@
     rejoin: (chan) ->
       chan.reset()
       {channel, topic, message} = chan
-      @send(channel: channel, topic: topic, event: "join", message: message)
       chan.callback(chan)
+      @send(channel: channel, topic: topic, event: "join", message: message)
 
 
-    join: (channel, topic, message, callback, onJoin) ->
-      chan = new exports.Channel(channel, topic, message, callback, onJoin, this)
+    join: (channel, topic, message, callback) ->
+      chan = new exports.Channel(channel, topic, message, callback, this)
       @channels.push(chan)
       @rejoin(chan) if @isConnected()
 
