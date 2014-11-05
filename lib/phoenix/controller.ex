@@ -124,7 +124,7 @@ defmodule Phoenix.Controller do
   @doc """
   Sends JSON response and halts.
 
-  It uses the configured `:format_encoder` under the `:phoenix`
+  It uses the configured `:format_encoders` under the `:phoenix`
   application for `:json` to pick up the encoder module.
 
   ## Examples
