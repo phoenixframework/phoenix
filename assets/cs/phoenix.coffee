@@ -136,8 +136,8 @@
     rejoin: (chan) ->
       chan.reset()
       {channel, topic, message} = chan
-      @send(channel: channel, topic: topic, event: "join", message: message)
       chan.callback(chan)
+      @send(channel: channel, topic: topic, event: "join", message: message)
 
 
     join: (channel, topic, message, callback) ->
