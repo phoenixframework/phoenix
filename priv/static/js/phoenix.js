@@ -291,13 +291,13 @@
         var channel, message, topic;
         chan.reset();
         channel = chan.channel, topic = chan.topic, message = chan.message;
-        this.send({
+        chan.callback(chan);
+        return this.send({
           channel: channel,
           topic: topic,
           event: "join",
           message: message
         });
-        return chan.callback(chan);
       };
 
       Socket.prototype.join = function(channel, topic, message, callback) {
