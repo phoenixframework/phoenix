@@ -113,6 +113,10 @@ Great, `page_path/1` evaluated to "/" as we would expect, and we didn't need to 
 
 Individual views have a much narrower scope. Their job is to render, and provide decorating functions for, a single directory of templates. Phoenix assumes a strong naming convention from controllers to views to the templates they render. The `PageController` requires a `PageView` to render templates in the `web/templates/page` directory. If we change the `:root` declaration in the main view, of course, Phoenix would look for a `page` directory within the directory we set there.
 
+You might be wondering how individual views are able to work so closely with templates.
+
+The main view uses Phoenix's main template module with `use Phoenix.Template`. `Phoenix.Template` provides many convenience methods for working with templates - finding them, extracting their names and paths, and much more.
+
 Let's experiment a little with one of the generated views Phoenix provides us, `web/views/page_view.ex`. We'll add a `message` function to it, like this.
 
 ```elixir
@@ -158,6 +162,30 @@ iex(2)> Phoenix.View.render(HelloPhoenix.PageView, "test.html", message: "Assign
  "I came from assigns: Assigns has an @.\nThis is the message: Hello from the view!\n"}
  ```
 
-TODO
-- render layouts => @inner
-- render_to_iodata
+Let's test out the HTML escaping, just for fun.
+
+```console
+iex(6)> Phoenix.View.render(HelloPhoenix.PageView, "test.html", message: "<script>badThings();</script>")
+{:safe,
+ "I came from assigns: &lt;script&gt;badThings();&lt;/script&gt;\nThis is the message: Hello from the view!\n"}
+```
+
+If we need only the rendered string, without the whole tuple, we can use the `render_to_iodata/3`.
+
+ ```console
+ iex(3)> Phoenix.View.render_to_iodata(HelloPhoenix.PageView, "test.html", message: "Assigns has an @.")
+"I came from assigns: Assigns has an @.\nThis is the message: Hello from the view!\n"
+  ```
+
+###A Word About Layouts
+
+Layouts are just templates. They have an individual view, just like other templates. In a newly generated app, this is `web/views/layout_view.ex`. You may be wondering how the string resulting from a rendered view ends up inside a layout. That's a great question!
+
+When a template is rendered, the layout view will assign `@inner` with the rendered contents of the  template. For HTML templates, `@inner` will be always marked as safe.
+
+If we look at `web/templates/layout/application.html.eex`, just about in the middle of the `<body>`, we will see this.
+
+```html
+<%= @inner %>
+```
+This is where the rendered string from the template will be placed.
