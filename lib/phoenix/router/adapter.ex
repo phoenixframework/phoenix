@@ -112,6 +112,9 @@ defmodule Phoenix.Router.Adapter do
      static: [at: "/"],
      session: false,
 
+     # Transports
+     transports: [longpoller: [window_ms: 10_000]],
+
      # Runtime config
      url: [host: "localhost"],
      http: false,

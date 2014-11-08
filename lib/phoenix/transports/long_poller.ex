@@ -5,9 +5,7 @@ defmodule Phoenix.Transports.LongPoller do
 
   alias Phoenix.Socket.Message
   alias Poison, as: JSON
-
-  # TODO: Make this configurable
-  @timeout_ms 10_000
+  alias Phoenix.Transports.LongPoller
 
   plug :fetch_session
   plug :action
@@ -33,14 +31,17 @@ defmodule Phoenix.Transports.LongPoller do
     listen(conn, server_pid)
   end
   defp listen(conn, server_pid) do
+    timeout_ms = timeout_window_ms(conn)
     set_active_listener(server_pid, self)
+
     receive do
       {:messages, msgs} ->
-        conn = json(conn, JSON.encode!(msgs))
         ack(server_pid, msgs)
-        conn
+        json(conn, JSON.encode!(msgs))
     after
-      @timeout_ms -> send_resp(conn, :no_content, "")
+      timeout_ms ->
+        ack(server_pid, [])
+        send_resp(conn, :no_content, "")
     end
   end
 
@@ -68,7 +69,7 @@ defmodule Phoenix.Transports.LongPoller do
   """
   def start_session(conn) do
     router = router_module(conn)
-    {:ok, server_pid} = Phoenix.Transports.LongPoller.Server.start_link(self, router)
+    {:ok, server_pid} = LongPoller.Server.start(router, timeout_window_ms(conn))
     conn = put_session(conn, session_key(conn), :erlang.term_to_binary(server_pid))
 
     {conn, server_pid}
@@ -122,5 +123,9 @@ defmodule Phoenix.Transports.LongPoller do
   """
   def dispatch(server_pid, message) do
     GenServer.call(server_pid, {:dispatch, message})
+  end
+
+  defp timeout_window_ms(conn) do
+    get_in router_module(conn).config(:transports), [:longpoller, :window_ms]
   end
 end

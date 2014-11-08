@@ -11,7 +11,7 @@ defmodule Phoenix.Integration.HTTPClient do
 
     * method - The http methid, ie :get, :post, :put, etc
     * url - The string url, ie "http://example.com"
-    * opts - The map of options, including a map of `:headers`
+    * headers - The map of headers
     * body - The optional string body. If the body is a map, it is convered
              to a URI encoded string of parameters
 
@@ -27,19 +27,21 @@ defmodule Phoenix.Integration.HTTPClient do
       {:error, ...}
 
   """
-  def request(method, url, opts, body \\ "")
-  def request(method, url, opts, body) when is_map body do
-    request(method, url, opts, URI.encode_query(body))
+  def request(method, url, headers, body \\ "")
+  def request(method, url, headers, body) when is_map body do
+    request(method, url, headers, URI.encode_query(body))
   end
-  def request(method, url, opts, body) do
+  def request(method, url, headers, body) do
     url     = String.to_char_list(url)
-    headers = Dict.get(opts, :headers, %{})
-    |> Dict.put_new("content-type", "text/html")
-    |> Enum.map(fn {k, v} -> {String.to_char_list(k), String.to_char_list(v)} end)
+    headers = headers |> Dict.put_new("content-type", "text/html")
+    content_type = headers["content-type"] |> String.to_char_list
+    header_list = Enum.map headers, fn {k, v} ->
+      {String.to_char_list(k), String.to_char_list(v)}
+    end
 
     case method do
-      :get -> :httpc.request(:get, {url, headers}, [], body_format: :binary)
-      meth -> :httpc.request(meth, {url, headers, headers["content-type"], body}, [],
+      :get -> :httpc.request(:get, {url, header_list}, [], body_format: :binary)
+      meth -> :httpc.request(meth, {url, header_list, content_type, body}, [],
                              body_format: :binary)
     end |> format_resp
   end
@@ -48,4 +50,3 @@ defmodule Phoenix.Integration.HTTPClient do
   end
   defp format_resp({:error, reason}), do: {:error, reason}
 end
-
