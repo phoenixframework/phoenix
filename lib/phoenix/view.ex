@@ -116,18 +116,20 @@ defmodule Phoenix.View do
           defmodule YOURAPP.View do
             use Phoenix.View, root: "web/templates"
 
-            # Everything that is imported, aliased, or used in this block is available
-            # in the rest of this module and in any other view module that uses it.
+            # The quoted expression returned by this block is applied
+            # to this module and all other views that use this module.
             using do
-              # Import common functionality
-              import YOURAPP.I18n
-              import YOURAPP.Router.Helpers
+              quote do
+                # Import common functionality
+                import YOURAPP.I18n
+                import YOURAPP.Router.Helpers
 
-              # Use Phoenix.HTML to import all HTML functions (forms, tags, etc)
-              use Phoenix.HTML
+                # Use Phoenix.HTML to import all HTML functions (forms, tags, etc)
+                use Phoenix.HTML
 
-              # Common aliases
-              alias Phoenix.Controller.Flash
+                # Common aliases
+                alias Phoenix.Controller.Flash
+              end
             end
 
             # Functions defined here are available to all other views/templates
@@ -141,15 +143,18 @@ defmodule Phoenix.View do
   @doc """
   Implements the `__using__/1` callback for this view.
 
-  This macro expects a block that will be executed in the current
-  module and on all modules that use it. For example, the following
-  code:
+  This macro expects a block that will be executed every time
+  the current module is used, including the current module itself.
+  The block must return a quoted expression that will then be
+  injected on the using module. For example, the following code:
 
       defmodule MyApp.View do
         use Phoenix.View, root: "web/templates"
 
         using do
-          IO.inspect __MODULE__
+          quote do
+            IO.inspect __MODULE__
+          end
         end
       end
 
@@ -162,12 +167,8 @@ defmodule Phoenix.View do
   too.
   """
   defmacro using(do: block) do
-    # Add a :context to avoid warnings
-    block = Macro.prewalk(block, fn x ->
-      Macro.update_meta(x, &Keyword.put(&1, :context, Phoenix.View))
-    end)
-
-    {block, __usable__(block)}
+    evaled = Code.eval_quoted(block, [], __CALLER__)
+    {evaled, __usable__(block)}
   end
 
   defp __base__ do
@@ -184,7 +185,7 @@ defmodule Phoenix.View do
       defmacro __using__(opts) do
         root  = Keyword.get(opts, :root, @view_root)
         base  = unquote(Macro.escape(__base__()))
-        block = unquote(Macro.escape(block))
+        block = unquote(block)
         quote do
           @view_root unquote(root)
           unquote(base)

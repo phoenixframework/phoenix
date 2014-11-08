@@ -2,7 +2,9 @@ defmodule MyApp.View do
   use Phoenix.View, root: "test/fixtures/templates"
 
   using do
-    use Phoenix.HTML
+    quote do
+      use Phoenix.HTML
+    end
   end
 
   def escaped_title(title) do
