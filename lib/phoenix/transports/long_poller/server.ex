@@ -29,7 +29,6 @@ defmodule Phoenix.Transports.LongPoller.Server do
   Sets active listener pid as the receiver of broadcasted messages
   """
   def handle_call({:set_active_listener, pid}, _from, state) do
-    IO.inspect "Setting active listener with state #{inspect state.buffer}"
     if Enum.any?(state.buffer) do
       send pid, {:messages, Enum.reverse(state.buffer)}
     end

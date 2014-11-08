@@ -4,7 +4,6 @@ defmodule Phoenix.Transports.LongPoller do
   @moduledoc false
 
   alias Phoenix.Socket.Message
-  alias Poison, as: JSON
   alias Phoenix.Transports.LongPoller
 
   plug :fetch_session
@@ -37,7 +36,7 @@ defmodule Phoenix.Transports.LongPoller do
     receive do
       {:messages, msgs} ->
         ack(server_pid, msgs)
-        json(conn, JSON.encode!(msgs))
+        json(conn, msgs)
     after
       timeout_ms ->
         ack(server_pid, [])

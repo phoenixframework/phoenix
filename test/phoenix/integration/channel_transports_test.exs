@@ -33,7 +33,7 @@ defmodule Phoenix.Integration.ChannelTransportsTest do
     headers = if cookie, do: %{"Cookie" => cookie}, else: %{}
     if json_map do
       headers = Dict.merge(headers, %{"content-type" => "application/json"})
-      body = Poison.encode!(json_map) |> IO.iodata_to_binary
+      body = Poison.encode!(json_map)
     end
     {:ok, resp} = HTTPClient.request(method, "http://127.0.0.1:#{@port}/ws/poll", headers, body)
     if resp.body != "" do
@@ -176,7 +176,7 @@ defmodule Phoenix.Integration.ChannelTransportsTest do
     assert resp.status == 200
     Phoenix.Channel.broadcast "rooms", "lobby", "new:msg", %{body: "Hello"}
     # poll
-    {resp, cookie} = poll(:get, cookie)
+    {resp, _cookie} = poll(:get, cookie)
     assert resp.status == 200
     assert Enum.count(resp.body) == 2
     assert Enum.at(resp.body, 0)["message"]["status"] == "connected"
