@@ -316,4 +316,3 @@ defmodule Phoenix.Channel.ChannelTest do
     assert_received 123
   end
 end
-

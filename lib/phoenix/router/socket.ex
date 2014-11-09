@@ -1,5 +1,7 @@
 # TODO: Remove in 0.7.0
 defmodule Phoenix.Router.Socket do
+  alias Phoenix.Router.Scope
+
   defmacro __using__(options) do
     mount = Dict.fetch! options, :mount
 
@@ -14,6 +16,13 @@ defmodule Phoenix.Router.Socket do
 
   defmacro channel(channel, module) do
     quote do
+      if Scope.within_scope?(__MODULE__) do
+        raise """
+        You are trying to call `channel` within a `scope` definition.
+        Please move your channel definitions outside of any scope block.
+        """
+      end
+
       def match(socket, :socket, unquote(channel), "join", message) do
         apply(unquote(module), :join, [socket, socket.topic, message])
       end
