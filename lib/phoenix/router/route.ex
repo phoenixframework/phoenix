@@ -7,7 +7,7 @@ defmodule Phoenix.Router.Route do
   alias Phoenix.Router.Route
 
   @doc """
-  The Route struct. It stores:
+  The `Phoenix.Router.Route` struct. It stores:
 
     * :verb - the HTTP verb as an upcased string
     * :path - the normalized path as string
@@ -24,7 +24,7 @@ defmodule Phoenix.Router.Route do
 
   @doc """
   Receives the verb, path, controller, action and helper
-  and returns a Route struct.
+  and returns a `Phoenix.Router.Route` struct.
   """
   @spec build(String.t, String.t, atom, atom, atom, atom) :: t
   def build(verb, path, controller, action, helper, pipe_through)

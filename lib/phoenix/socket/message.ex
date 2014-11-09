@@ -12,16 +12,17 @@ defmodule Phoenix.Socket.Message do
   end
 
   @doc """
-  Parse json message into required format, raise InvalidMessage if invalid
+  Parse JSON into required format
+  Raises `Phoenix.Socket.Message.InvalidMessage` if invalid
 
-  The Message Protocol requires the following keys:
+  The Message format requires the following keys:
 
     * channel - The String Channel namespace, ie "messages"
     * topic - The String Topic namespace, ie "123"
     * event - The String event name, ie "join"
     * message - The String JSON message payload
 
-  Returns The %Message{} parsed from JSON
+  Returns The `%Phoenix.Socket.Message{}` parsed from JSON
   """
   def parse!(text) do
     try do

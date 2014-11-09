@@ -10,7 +10,7 @@ defmodule Phoenix.Router.Resource do
   @actions [:index, :edit, :new, :show, :create, :update, :destroy]
 
   @doc """
-  The Resource struct. It stores:
+  The `Phoenix.Router.Resource` struct. It stores:
 
     * :path - the path as string (not normalized)
     * :param - the param to be used in routes (not normalized)
@@ -26,7 +26,7 @@ defmodule Phoenix.Router.Resource do
 
   @doc """
   Receives the path, controller and a set of options and
-  returns a Resource struct.
+  returns a `Phoenix.Router.Resource` struct.
   """
   def build(path, controller, options) when
       is_binary(path) and is_atom(controller) and is_list(options) do

@@ -125,7 +125,7 @@ defmodule Phoenix.Router.Adapter do
   # TODO: Move the dispatch logic and error handling elsewhere.
 
   @doc """
-  Carries out Controller dispatch for router match
+  Carries out `Phoenix.Controller` dispatch for router match
   """
   def dispatch(conn, router) do
     try do
