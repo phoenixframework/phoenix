@@ -54,6 +54,16 @@
     stateChangeCallbacks: null
     transport: null
 
+    # Initializes the Socket
+    #
+    # endPoint - The string WebSocket endpoint, ie, "ws://example.com/ws",
+    #                                               "wss://example.com"
+    #                                               "/ws" (inherited host & protocol)
+    # opts - Optional configuration
+    #   transport - The Websocket Transport, ie WebSocket, Phoenix.LongPoller.
+    #               Defaults to WebSocket with automatic LongPoller fallback.
+    #   heartbeatIntervalMs - The millisecond interval to send a heartbeat message
+    #
     constructor: (endPoint, opts = {}) ->
       @states = exports.Socket.states
       @transport = opts.transport ? root.WebSocket ? exports.LongPoller
