@@ -76,9 +76,16 @@ defmodule Phoenix.Transports.LongPoller do
   def start_session(conn) do
     router = router_module(conn)
     {:ok, server_pid} = LongPoller.Server.start(router, timeout_window_ms(conn))
-    conn = put_session(conn, session_key(conn), :erlang.term_to_binary(server_pid))
+    conn = put_sesesion_with_salt(conn, server_pid)
 
     {conn, server_pid}
+  end
+
+  defp put_sesesion_with_salt(conn, server_pid) do
+    key = session_key(conn)
+    conn
+    |> put_session(key, :erlang.term_to_binary(server_pid))
+    |> put_session("#{key}_salt", :crypto.strong_rand_bytes(16) |> Base.encode64)
   end
 
   @doc """
