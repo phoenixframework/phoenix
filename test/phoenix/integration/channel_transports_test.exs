@@ -11,7 +11,9 @@ defmodule Phoenix.Integration.ChannelTransportsTest do
   alias Phoenix.Integration.ChannelTransportsTest.Router
 
   @port 4808
-  # Application.put_env(:phoenix, Router, http: [port: @port], https: false)
+  @window_ms 100
+  @ensure_window_timeout_ms @window_ms * 3
+
   Application.put_env(:phoenix, Router, [
     https: false,
     http: [port: @port],
@@ -19,7 +21,7 @@ defmodule Phoenix.Integration.ChannelTransportsTest do
     catch_errors: false,
     debug_errors: false,
     session: [store: :cookie, key: "_integration_test"],
-    transports: [longpoller: [window_ms: 100]]
+    transports: [longpoller: [window_ms: @window_ms]]
   ])
 
 
@@ -176,13 +178,39 @@ defmodule Phoenix.Integration.ChannelTransportsTest do
     assert resp.status == 200
     Phoenix.Channel.broadcast "rooms", "lobby", "new:msg", %{body: "Hello"}
     # poll
-    {resp, _cookie} = poll(:get, cookie)
+    {resp, cookie} = poll(:get, cookie)
     assert resp.status == 200
     assert Enum.count(resp.body) == 2
     assert Enum.at(resp.body, 0)["message"]["status"] == "connected"
     assert Enum.at(resp.body, 1)["message"]["body"] == "Hello"
 
-    ## Recovery from crashed longpoller server
-    # TODO
+
+    ## Server termination handling
+
+    # 410 from crashed/terminated longpoller server when polling
+    :timer.sleep @ensure_window_timeout_ms
+    {resp, cookie} = poll(:get, cookie)
+    assert resp.status == 410
+
+
+    # 410 from crashed/terminated longpoller server when publishing
+    # create new session
+    {resp, cookie} = poll :post, cookie, %{}
+    assert resp.status == 200
+
+    # join
+    {resp, cookie} = poll :put, cookie, %{"channel" => "rooms",
+                                          "topic" => "lobby",
+                                          "event" => "join",
+                                          "message" => %{}}
+    assert resp.status == 200
+    Phoenix.Channel.subscribe(self, "rooms", "lobby")
+    :timer.sleep @ensure_window_timeout_ms
+    {resp, _cookie} = poll :put, cookie, %{"channel" => "rooms",
+                                          "topic" => "lobby",
+                                          "event" => "new:msg",
+                                          "message" => %{"body" => "hi!"}}
+    assert resp.status == 410
+    refute_receive %Message{event: "new:msg", message: %{"body" => "hi!"}}
   end
 end

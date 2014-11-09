@@ -14,7 +14,7 @@ defmodule Phoenix.Transports.LongPoller do
   be called first before sending requests to `poll` or `publish`
   """
   def open(conn, _) do
-    {conn, _server_pid} = resume_session(conn)
+    {conn, _server_pid} = start_session(conn)
     send_resp(conn, :ok, "")
   end
 
@@ -26,8 +26,10 @@ defmodule Phoenix.Transports.LongPoller do
   a `:no_content` response is returned, and the client should immediately repoll.
   """
   def poll(conn, _params) do
-    {conn, server_pid} = resume_session(conn)
-    listen(conn, server_pid)
+    case resume_session(conn) do
+      {:ok, conn, server_pid}     -> listen(conn, server_pid)
+      {:error, conn, :terminated} -> send_resp(conn, :gone, "")
+    end
   end
   defp listen(conn, server_pid) do
     timeout_ms = timeout_window_ms(conn)
@@ -51,7 +53,12 @@ defmodule Phoenix.Transports.LongPoller do
   otherwise a 401 Unauthorized response is returned
   """
   def publish(conn, message) do
-    {conn, server_pid} = resume_session(conn)
+    case resume_session(conn) do
+      {:ok, conn, server_pid}     -> dispatch_publish(conn, message, server_pid)
+      {:error, conn, :terminated} -> send_resp(conn, :gone, "")
+    end
+  end
+  defp dispatch_publish(conn, message, server_pid) do
     msg = Message.from_map!(message)
 
     case dispatch(server_pid, msg) do
@@ -75,15 +82,14 @@ defmodule Phoenix.Transports.LongPoller do
   end
 
   @doc """
-  Finds or starts the `Phoenix.LongPoller.Server` server
+  Finds the `Phoenix.LongPoller.Server` server form the session
   """
   def resume_session(conn) do
-    {conn, server_pid} = case longpoll_pid(conn) do
-      nil -> start_session(conn)
-      pid -> {conn, pid}
+    case longpoll_pid(conn) do
+      {:ok, pid}            -> {:ok, conn, pid}
+      :nopid                -> {:error, conn, :terminated}
+      {:error, :terminated} -> {:error, conn, :terminated}
     end
-
-    {conn, server_pid}
   end
 
   @doc """
@@ -91,10 +97,14 @@ defmodule Phoenix.Transports.LongPoller do
   """
   def longpoll_pid(conn) do
     case get_session(conn, session_key(conn)) do
-      nil -> nil
+      nil -> :nopid
       bin ->
         pid = :erlang.binary_to_term(bin)
-        if Process.alive?(pid), do: pid, else: nil
+        if Process.alive?(pid) do
+          {:ok, pid}
+        else
+          {:error, :terminated}
+        end
     end
   end
 

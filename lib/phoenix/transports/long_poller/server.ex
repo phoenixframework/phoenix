@@ -21,8 +21,8 @@ defmodule Phoenix.Transports.LongPoller.Server do
 
   @doc false
   def init([router, window_ms]) do
-    state = %{listener: nil, buffer: [], router: router, sockets: HashDict.new}
-    {:ok, state, window_ms * 2}
+    state = %{listener: nil, buffer: [], router: router, sockets: HashDict.new, window_ms: window_ms * 2}
+    {:ok, state, state.window_ms}
   end
 
   @doc """
@@ -32,7 +32,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
     if Enum.any?(state.buffer) do
       send pid, {:messages, Enum.reverse(state.buffer)}
     end
-    {:reply, :ok, %{state | listener: pid}}
+    {:reply, :ok, %{state | listener: pid}, state.window_ms}
   end
 
   # TODO: %Messages{}'s need unique ids so we can properly ack them
@@ -43,7 +43,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   """
   def handle_call({:ack, messages}, _from, state) do
     buffer = state.buffer -- messages
-    {:reply, :ok, %{state | buffer: buffer, listener: nil}}
+    {:reply, :ok, %{state | buffer: buffer, listener: nil}, state.window_ms}
   end
 
   @doc """
@@ -54,9 +54,9 @@ defmodule Phoenix.Transports.LongPoller.Server do
     |> Transport.dispatch(state.sockets, self, state.router)
     |> case do
       {:ok, sockets} ->
-        {:reply, {:ok, sockets}, %{state | sockets: sockets}}
+        {:reply, {:ok, sockets}, %{state | sockets: sockets}, state.window_ms}
       {:error, sockets, reason} ->
-        {:reply, {:error, sockets, reason}, %{state | sockets: sockets}}
+        {:reply, {:error, sockets, reason}, %{state | sockets: sockets}, state.window_ms}
     end
   end
 
@@ -68,7 +68,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
     if state.listener && Process.alive?(state.listener) do
       send state.listener, {:messages, buffer}
     end
-    {:noreply, %{state | buffer: buffer}}
+    {:noreply, %{state | buffer: buffer}, state.window_ms}
   end
 
   def handle_info(:timeout, state) do
@@ -83,7 +83,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
       {:ok, sockets} -> sockets
       {:error, sockets, _reason} -> sockets
     end
-    {:noreply, %{state | sockets: sockets}}
+    {:noreply, %{state | sockets: sockets}, state.window_ms}
   end
 
   @doc """
