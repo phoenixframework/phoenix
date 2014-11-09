@@ -1,9 +1,11 @@
 ###Welcome to the Proto-Phoenix-Guides!
 
-This is the very beginning of what will become the actual Phoenix Guides. The material here is clearly in a very early stage of development. It's not formatted. It's incomplete. There may be factual errors. But it is something.
+This is the workspace for what will become the actual Phoenix Guides. The material here is in an early stage of development. The formatting is minimal. The coverage is incomplete. There may be factual errors. But it is something, and it is available now.
 
-Since this repo is now public, those of you who have experience with Phoenix can contribute what you have learned. Please do!
+Phoenix is moving fast. Those of us who have contributed to these guides are doing our best to keep up with the changes. Wherever possible, we have noted differences between what works on the master branch and what works on the latest stable release. Still, we may miss things.
 
-#####Note:
+The good news is, we love pull requests! Please do submit additions or corrections. The guides will be better for us all.
 
-The goofy 'A_filename' format is intended to roughly show the order the guides should appear when there is actual navigation. Unlabeled files don't have a place in line just yet.
+#####In Case You Were Wondering:
+
+The non-standard 'A_filename' format is intended to roughly show the order the guides should appear when there is a site with actual navigation.
