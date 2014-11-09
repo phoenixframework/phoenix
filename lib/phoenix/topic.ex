@@ -27,7 +27,7 @@ defmodule Phoenix.Topic do
   @pg_prefix :phx
 
   @doc """
-  Creates a Topic for pubsub broadcast to subscribers
+  Creates a `Phoenix.Topic` for pubsub broadcast to subscribers
 
     * name - The String name of the topic
 
@@ -42,14 +42,14 @@ defmodule Phoenix.Topic do
   end
 
   @doc """
-  Checks if a given Topic is registered as a process group
+  Checks if a given `Phoenix.Topic` is registered as a process group
   """
   def exists?(name) do
     call {:exists?, group(name)}
   end
 
   @doc """
-  Removes Topic from process group if inactive
+  Removes `Phoenix.Topic` from process group if inactive
 
   ## Examples
 
@@ -64,7 +64,7 @@ defmodule Phoenix.Topic do
   end
 
   @doc """
-  Adds subsriber pid to given Topic process group
+  Adds subsriber pid to given `Phoenix.Topic` process group
 
   ## Examples
 
@@ -77,7 +77,7 @@ defmodule Phoenix.Topic do
   end
 
   @doc """
-  Removes the given subscriber from the Topic's process group
+  Removes subscriber pid from given `Phoenix.Topic` process group
 
   ## Examples
 
@@ -89,7 +89,7 @@ defmodule Phoenix.Topic do
   end
 
   @doc """
-  Returns the List of subsriber pids of the Topic's process group
+  Returns the List of subsriber pids of given `Phoenix.Topic` process group
 
   ## Examples
 
@@ -109,7 +109,7 @@ defmodule Phoenix.Topic do
   end
 
   @doc """
-  Broadcasts a message to the Topic's process group subscribers
+  Broadcasts a message to the given `Phoenix.Topic` process group subscribers
 
   ## Examples
 
@@ -122,8 +122,8 @@ defmodule Phoenix.Topic do
   end
 
   @doc """
-  Broadcasts a message to the Topic's process group subscribers, excluding
-  broadcaster from receiving the message it sent out
+  Broadcasts a message to the given `Phoenix.Topic` process group subscribers,
+  excluding broadcaster from receiving the message it sent out
 
   ## Examples
 
@@ -140,14 +140,14 @@ defmodule Phoenix.Topic do
   end
 
   @doc """
-  Check if Topic is active. To be active it must be created and have subscribers
+  Check if `Phoenix.Topic` is active. To be active it must be created and have subscribers
   """
   def active?(name) do
     call {:active?, group(name)}
   end
 
   @doc """
-  Returns a List of all Phoenix Topics from :pg2
+  Returns a List of all Phoenix Topics from `:pg2`
   """
   def list do
     :pg2.which_groups |> Enum.filter(&match?({@pg_prefix, _}, &1))

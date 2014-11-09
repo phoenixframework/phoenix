@@ -37,9 +37,9 @@ defmodule Phoenix.Controller.Flash do
   def call(conn, _), do: conn
 
   @doc """
-  Persists a message in the Flash, within the current session
+  Persists a message in the `Phoenix.Flash`, within the current session
 
-  Returns the updated Conn
+  Returns the updated `%Conn{}`
 
   ## Examples
 
@@ -53,7 +53,7 @@ defmodule Phoenix.Controller.Flash do
   end
 
   @doc """
-  Returns a message from the Flash
+  Returns a message from the `Phoenix.Flash`
 
   ## Examples
 
@@ -63,7 +63,7 @@ defmodule Phoenix.Controller.Flash do
   def get(conn), do: get_session(conn, :phoenix_messages) || %{}
 
   @doc """
-  Returns a message from the Flash by key
+  Returns a message from the `Phoenix.Flash` by key
 
   ## Examples
 
@@ -79,7 +79,7 @@ defmodule Phoenix.Controller.Flash do
   end
 
   @doc """
-  Returns a list of messages by key from the Flash
+  Returns a list of messages by key from the `Phoenix.Flash`
 
   ## Examples
 

@@ -3,7 +3,7 @@ defmodule Phoenix.HTML do
   Conveniences for working HTML strings and templates.
 
   When used, it imports this module and, in the future,
-  many other modules under the Phoenix.HTML namespace.
+  many other modules under the `Phoenix.HTML` namespace.
 
   ## HTML Safe
 

@@ -7,7 +7,7 @@ defmodule Phoenix.NotAcceptableError do
   the contents the client are able to render.
 
   If you are seeing this error, you should check if you are listing
-  the desired formats in your :accepts plug or if you are setting
+  the desired formats in your `:accepts` plug or if you are setting
   the proper accept header in the client.
   """
 
