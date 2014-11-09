@@ -17,6 +17,7 @@ This is a selected list of resources to help you find your way with Elixir, Phoe
   - <a href="http://pragprog.com/book/elixir/programming-elixir">Programming Elixir</a>, Dave Thomas
   - <a href="http://www.manning.com/juric/">Elixir in Action</a>, Saša Jurić
   - <a href="http://shop.oreilly.com/product/0636920030584.do">Introducing Elixir</a>, Simon St. Laurent, J. David Eisenberg
+  - <a href="https://pragprog.com/book/cmelixir/metaprogramming-elixir">Metaprogramming Elixir</a>, Chris McChord, coming in May 2015
 
 ##Phoenix
 - <a href="https://github.com/phoenixframework/phoenix">The Phoenix Project</a>
