@@ -24,12 +24,9 @@ defmodule Phoenix.Integration.ChannelTransportsTest do
     transports: [longpoller: [window_ms: @window_ms]]
   ])
 
-
-  def after_hook(func), do: func.()
-
   @doc """
   Helper method to maintain cookie session state when making HTTP requestss.
-  Returns %HTTPClient.Response{} with body is decoded into JSON map
+  Returns %HTTPClient.Response{} with body decoded into JSON map
   """
   def poll(method, cookie, json_map \\ nil) do
     headers = if cookie, do: %{"Cookie" => cookie}, else: %{}
