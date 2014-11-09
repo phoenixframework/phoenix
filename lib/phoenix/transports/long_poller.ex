@@ -75,7 +75,8 @@ defmodule Phoenix.Transports.LongPoller do
   """
   def start_session(conn) do
     router = router_module(conn)
-    {:ok, server_pid} = LongPoller.Server.start(router, timeout_window_ms(conn))
+    child  = [router, timeout_window_ms(conn)]
+    {:ok, server_pid} = Supervisor.start_child(LongPoller.Supervisor, child)
     conn = put_sesesion_with_salt(conn, server_pid)
 
     {conn, server_pid}

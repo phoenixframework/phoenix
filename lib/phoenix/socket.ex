@@ -72,16 +72,7 @@ defmodule Phoenix.Socket do
   Returns the value for the given assign key, scoped to the active multiplexed
   channel/topic pair or for a specific channel/topic
 
-  ## Examples
-
-      iex> socket = Socket.set_current_channel(%Socket{}, "rooms", "lobby")
-      %Socket{channel: "rooms", topic: "lobby"}
-      iex> Socket.get_assign(socket, :token)
-      nil
-      iex> socket = Socket.assign(socket, :token, "bar")
-      iex> Socket.get_assign(socket, :token)
-      "bar"
-
+  This function is deprecated, see `Phoenix.Socket.assign/2` for access details
   """
   # TODO: remove in 0.7.0
   def get_assign(socket = %Socket{}, key) do
@@ -96,10 +87,10 @@ defmodule Phoenix.Socket do
 
       iex> socket = Socket.set_current_channel(%Socket{}, "rooms", "lobby")
       %Socket{channel: "rooms", topic: "lobby"}
-      iex> Socket.get_assign(socket, :token)
+      iex> socket.assigns[:token]
       nil
       iex> socket = Socket.assign(socket, :token, "bar")
-      iex> Socket.get_assign(socket, :token)
+      iex> socket.assigns[:token]
       "bar"
 
   """

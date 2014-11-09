@@ -72,6 +72,16 @@ defmodule Phoenix.Integration.ChannelTransportsTest do
   defmodule Router do
     use Phoenix.Router
     use Phoenix.Router.Socket, mount: "/ws"
+    pipeline :before do
+      plug :disable_logger
+      plug :super
+    end
+
+    defp disable_logger(conn, _) do
+      Logger.disable(self)
+      conn
+    end
+
     channel "rooms", RoomChannel
   end
 

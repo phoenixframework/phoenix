@@ -32,13 +32,6 @@ defmodule Phoenix.Socket.SocketTest do
     refute Socket.authorized?(socket, "test", "topic")
   end
 
-  test "get_assign/2 and assign/3 assigns into the assigns map" do
-    socket = new_socket |> Socket.set_current_channel("rooms", "lobby")
-    refute Socket.get_assign(socket, :foo) == "bar"
-    socket = Socket.assign(socket, :foo, "bar")
-    assert Socket.get_assign(socket, :foo) == "bar"
-  end
-
   test "socket assigns can be accessed from assigns map" do
     socket = new_socket |> Socket.assign(:key, :val)
     assert socket.assigns[:key] == :val

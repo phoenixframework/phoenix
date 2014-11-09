@@ -1,3 +1,19 @@
+defmodule Phoenix.Transports.LongPoller.Supervisor do
+  @moduledoc false
+  use Supervisor
+
+  def start_link do
+    Supervisor.start_link(__MODULE__, [], name: __MODULE__)
+  end
+
+  def init([]) do
+    children = [
+      worker(Phoenix.Transports.LongPoller.Server, [], restart: :transient)
+    ]
+    supervise(children, strategy: :simple_one_for_one)
+  end
+end
+
 defmodule Phoenix.Transports.LongPoller.Server do
   use GenServer
 
@@ -15,8 +31,8 @@ defmodule Phoenix.Transports.LongPoller.Server do
   If the server receives no message within `window_ms`, it terminates and
   clients are responsible for opening a new session.
   """
-  def start(router, window_ms) do
-    GenServer.start(__MODULE__, [router, window_ms])
+  def start_link(router, window_ms) do
+    GenServer.start_link(__MODULE__, [router, window_ms])
   end
 
   @doc false

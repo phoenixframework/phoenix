@@ -11,6 +11,7 @@ defmodule Phoenix.Supervisor do
     []
     |> child(Phoenix.Config.Supervisor, [], true)
     |> child(Phoenix.Topic.Server, [topics], true)
+    |> child(Phoenix.Transports.LongPoller.Supervisor, [], true)
     |> child(Phoenix.CodeReloader, [], Application.get_env(:phoenix, :code_reloader))
     |> supervise(strategy: :one_for_one)
   end

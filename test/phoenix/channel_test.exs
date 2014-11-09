@@ -285,7 +285,7 @@ defmodule Phoenix.Channel.ChannelTest do
       Enum.reduce dict, socket, fn {k, v}, socket -> assign(socket, k, v) end
     end
     def event(socket, "get", %{"key" => key}) do
-      send socket.pid, get_assign(socket, key)
+      send socket.pid, socket.assigns[key]
       socket
     end
   end
@@ -306,7 +306,7 @@ defmodule Phoenix.Channel.ChannelTest do
     {:ok, sockets} = Transport.dispatch_info(sockets, :stuff)
     socket = HashDict.get(sockets, {"chan10", "topic"})
 
-    assert Socket.get_assign(socket, :foo) == :bar
+    assert socket.assigns[:foo] == :bar
   end
 
   test "Socket state can be put and retrieved" do
