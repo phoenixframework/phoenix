@@ -1,6 +1,6 @@
 defmodule Phoenix.Channel.ChannelTest do
   use ExUnit.Case
-  alias Phoenix.Topic
+  alias Phoenix.PubSub
   alias Phoenix.Channel
   alias Phoenix.Socket
   alias Phoenix.Socket.Message
@@ -18,13 +18,13 @@ defmodule Phoenix.Channel.ChannelTest do
     socket = Socket.set_current_channel(new_socket, "chan", "topic")
 
     assert Channel.subscribe(socket, "chan", "topic")
-    assert Topic.subscribers("chan:topic") == [socket.pid]
+    assert PubSub.subscribers("chan:topic") == [socket.pid]
     assert Channel.unsubscribe(socket, "chan", "topic")
-    assert Topic.subscribers("chan:topic") == []
+    assert PubSub.subscribers("chan:topic") == []
   end
 
   test "#broadcast broadcasts global message on channel" do
-    Topic.create("chan:topic")
+    PubSub.create("chan:topic")
     socket = Socket.set_current_channel(new_socket, "chan", "topic")
 
     assert Channel.broadcast(socket, "event", %{foo: "bar"})
@@ -38,7 +38,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "#broadcast_from broadcasts message on channel, skipping publisher" do
-    Topic.create("chan:topic")
+    PubSub.create("chan:topic")
     socket = new_socket
     |> Socket.set_current_channel("chan", "topic")
     |> Channel.subscribe("chan", "topic")
@@ -114,14 +114,14 @@ defmodule Phoenix.Channel.ChannelTest do
 
     message = %Message{channel: "chan3", topic: "topic", event: "join", message: %{}}
 
-    Topic.create("chan3:topic")
-    assert Topic.subscribers("chan3:topic") == []
+    PubSub.create("chan3:topic")
+    assert PubSub.subscribers("chan3:topic") == []
     {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router3)
     socket = HashDict.get(sockets, {"chan3", "topic"})
     assert socket
     assert Socket.authorized?(socket, "chan3", "topic")
-    assert Topic.subscribers("chan3:topic") == [socket.pid]
-    assert Topic.subscribers("chan3:topic") == [self]
+    assert PubSub.subscribers("chan3:topic") == [socket.pid]
+    assert PubSub.subscribers("chan3:topic") == [self]
   end
 
   test "unsuccessful join denies socket access to channel/topic" do
@@ -137,11 +137,11 @@ defmodule Phoenix.Channel.ChannelTest do
 
     message = %Message{channel: "chan4", topic: "topic", event: "join", message: %{}}
 
-    Topic.create("chan4:topic")
-    assert Topic.subscribers("chan4:topic") == []
+    PubSub.create("chan4:topic")
+    assert PubSub.subscribers("chan4:topic") == []
     {:error, sockets, :unauthorized} = Transport.dispatch(message, HashDict.new, self, Router4)
     refute HashDict.get(sockets, {"chan4", "topic"})
-    refute Topic.subscribers("chan4:topic") == [self]
+    refute PubSub.subscribers("chan4:topic") == [self]
   end
 
   test "#leave is called when the socket conn closes, and is unsubscribed" do
@@ -163,11 +163,11 @@ defmodule Phoenix.Channel.ChannelTest do
     sockets = HashDict.put(HashDict.new, {"chan5", "topic"}, socket)
     message = %Message{channel: "chan5", topic: "topic", event: "join", message: %{}}
 
-    Topic.create("chan5:topic")
+    PubSub.create("chan5:topic")
     {:ok, sockets} = Transport.dispatch(message, sockets, self, Router5)
     Transport.dispatch_leave(sockets, :reason)
     assert_received :left
-    assert Topic.subscribers("chan5:topic") == []
+    assert PubSub.subscribers("chan5:topic") == []
   end
 
   test "#info is called when receiving regular process messages" do
@@ -189,7 +189,7 @@ defmodule Phoenix.Channel.ChannelTest do
     sockets = HashDict.put(HashDict.new, {"chan6", "topic"}, socket)
     message = %Message{channel: "chan6", topic: "topic", event: "join", message: %{}}
 
-    Topic.create("chan6:topic")
+    PubSub.create("chan6:topic")
     {:ok, sockets} = Transport.dispatch(message, sockets, self, Router6)
     Transport.dispatch_info(sockets, :stuff)
     assert_received :info
@@ -231,7 +231,7 @@ defmodule Phoenix.Channel.ChannelTest do
     sockets = HashDict.put(HashDict.new, {"chan8", "topic"}, socket)
     message = %Message{channel: "chan8", topic: "topic", event: "join", message: %{}}
 
-    Topic.create("chan6:topic")
+    PubSub.create("chan6:topic")
     {:ok, sockets} = Transport.dispatch(message, sockets, self, Router8)
 
     assert_raise InvalidReturn, fn ->
@@ -255,7 +255,7 @@ defmodule Phoenix.Channel.ChannelTest do
     sockets = HashDict.put(HashDict.new, {"chan9", "topic"}, socket)
     message = %Message{channel: "chan9", topic: "topic", event: "join", message: %{}}
 
-    Topic.create("chan9:topic")
+    PubSub.create("chan9:topic")
     {:ok, sockets} = Transport.dispatch(message, sockets, self, Router9)
     sock = HashDict.get(sockets, {"chan9", "topic"})
     assert Socket.authorized?(sock, "chan9", "topic")
@@ -301,7 +301,7 @@ defmodule Phoenix.Channel.ChannelTest do
     sockets = HashDict.put(HashDict.new, {"chan10", "topic"}, socket)
     message = %Message{channel: "chan10", topic: "topic", event: "join", message: %{}}
 
-    Topic.create("chan10:topic")
+    PubSub.create("chan10:topic")
     {:ok, sockets} = Transport.dispatch(message, sockets, self, Router10)
     {:ok, sockets} = Transport.dispatch_info(sockets, :stuff)
     socket = HashDict.get(sockets, {"chan10", "topic"})

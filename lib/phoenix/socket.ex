@@ -2,7 +2,7 @@ defmodule Phoenix.Socket do
   alias Phoenix.Socket
 
   @moduledoc """
-  Holds state for multiplexed socket connections and Channel/Topic authorization
+  Holds state for multiplexed socket connections and Channel authorization
   """
 
   @derive [Access]
