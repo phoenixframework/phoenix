@@ -77,12 +77,13 @@ defmodule Phoenix.Transports.LongPoller do
     router = router_module(conn)
     child  = [router, timeout_window_ms(conn)]
     {:ok, server_pid} = Supervisor.start_child(LongPoller.Supervisor, child)
-    conn = put_sesesion_with_salt(conn, server_pid)
+    conn = put_session_with_salt(conn, server_pid)
 
     {conn, server_pid}
   end
 
-  defp put_sesesion_with_salt(conn, server_pid) do
+  # Serialized longpoll server pid into session and harden with random salt
+  defp put_session_with_salt(conn, server_pid) do
     key = session_key(conn)
     conn
     |> put_session(key, :erlang.term_to_binary(server_pid))
@@ -90,7 +91,7 @@ defmodule Phoenix.Transports.LongPoller do
   end
 
   @doc """
-  Finds the `Phoenix.LongPoller.Server` server form the session
+  Finds the `Phoenix.LongPoller.Server` server from the session
   """
   def resume_session(conn) do
     case longpoll_pid(conn) do
