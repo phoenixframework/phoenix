@@ -26,7 +26,7 @@ end
 
 The first line below the module definition invokes the `__using__/1` macro of the `Phoenix.Controller` module, which imports some useful modules.
 
-The second line `plug :action` has been recently added with the 0.5.0 release of Phoenix. `plug/1` is a macro defined in the `Phoenix.Controller.Pipeline` module. It's purpose is to insert a new piece of middleware into the stack of middlewares which will be executed, in order, during a request cycle. Here, it is inserting `:action` which handles dispatching to the correct controller module and function (in other words, the action) according to the routes defined in the router.
+The second line `plug :action` has been recently added with the 0.5.0 release of Phoenix. `plug/1` is a macro defined in the `Phoenix.Controller.Pipeline` module. Its purpose is to insert a new piece of middleware into the stack of middlewares which will be executed, in order, during a request cycle. Here, it is inserting `:action` which handles dispatching to the correct controller module and function (in other words, the action) according to the routes defined in the router.
 
 In addition, the `PageController` gives us the index action to display the Phoenix welcome page associated with the default route Phoenix defines in the router. It also gives us generic actions to handle 404 Page not Found and 500 Internal Error responses.
 
@@ -78,9 +78,9 @@ end
 In some cases - often in index actions, for instance - we don't care about parameters because our behavior doesn't depend on them. In those cases, we don't use the incoming params, and simply prepend the variable name with an underscore, `_params`. This will keep the compiler from complaining about the unused variable while still keeping the correct arity. We see this in all the actions of the default PageController which Phoenix generates for us.
 
 ###Gathering Data
-While Phoenix does not ship with it's own data access layer, the Elixir project Ecto provides a very nice solution for those using the Postgres relational database. (Other adapters for Ecto are coming soon.) We cover how to use Ecto in a Phoenix project in the Data Access guide.
+While Phoenix does not ship with its own data access layer, the Elixir project Ecto provides a very nice solution for those using the Postgres relational database. (Other adapters for Ecto are coming soon.) We cover how to use Ecto in a Phoenix project in the Data Access guide.
 
-Of course, there are many other data access options. Ets and Dets are key value data stores built into OTP. OTP also provides a relational database called mnesia  with it's own query language called QLC. Both Elixir and Erlang also have a number of libraries for working with a wide range of popular data stores.
+Of course, there are many other data access options. Ets and Dets are key value data stores built into OTP. OTP also provides a relational database called mnesia  with its own query language called QLC. Both Elixir and Erlang also have a number of libraries for working with a wide range of popular data stores.
 
 The data world is your oyster, but we won't be covering these options in the Phoenix Guides.
 
@@ -295,7 +295,7 @@ Since layouts are really just templates, they need a view to render them. This i
 
 Before we create a new layout, though, let's do the simplest possible thing and render a template with no layout at all.
 
-The `Phoenix.Controller.Connection` module provides the `put_layout/2` function for us to switch layouts with. (Note: in release 0.4.1 and earlier, this was `assign_layout/2`.) This takes `conn` as it's first argument and a string for the basename of the layout we want to render as the second. Another clause of the fuction will match on the atom `:none` for the second argument, and that's how we will render the Phoenix welcome page with no layout at all.
+The `Phoenix.Controller.Connection` module provides the `put_layout/2` function for us to switch layouts with. (Note: in release 0.4.1 and earlier, this was `assign_layout/2`.) This takes `conn` as its first argument and a string for the basename of the layout we want to render as the second. Another clause of the fuction will match on the atom `:none` for the second argument, and that's how we will render the Phoenix welcome page with no layout at all.
 
 In a freshly generated Phoenix app, edit the index action of the `PageController` module to look like this.
 
