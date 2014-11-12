@@ -137,11 +137,15 @@ defmodule HelloPhoenix.HelloController do
 end
 ```
 
+Note: When running the current Phoenix master, or any version greater than 0.5.0, template names need to include their protocol file extension. That means rendering will look like this `render conn, "index.html"`.
+
 We will save a more complete discussion of controllers for the controller specific guide, but for now, the interesting part is this line.
 
 ```elixir
 render conn, "index"
 ```
+
+Again, use `render conn, "index.html"` for current Phoenix master or versions greater than 0.5.0.
 
 This simply says that we want to render the index.html.eex template for our hello_controller.ex. Notice that we are ignoring the params argument to the index function. We aren't taking input from the request at all to render this page.
 
@@ -225,6 +229,8 @@ def show(conn, %{"messenger" => messenger}) do
   render conn, "show", messenger: messenger
 end
 ```
+
+This should be `render conn, "show.html", messenger: messenger` for current Phoenix master or versions greater than 0.5.0.
 
 There are a couple of things to notice here. We pattern match against the params passed into the show function so that the messenger variable will be bound to the value we put in the :messenger position in the url. For example, if our url is http://localhost:4000/hello/Frank, the messenger variable would be bound to "Frank".
 
