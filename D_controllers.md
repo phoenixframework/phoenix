@@ -23,6 +23,7 @@ defmodule HelloPhoenix.PageController do
   end
 end
 ```
+Important! Until Phoenix version 0.5.0, template names in render calls did not need any file extensions. Render calls in the controller above, for example, don't include them. `render conn, "index"` Later versions of Phoenix, including the current master branch, _do_ require a file extension, like this. `render conn, "index.html"` This guide is written for 0.5.0, so take care if you are using a later version.
 
 The first line below the module definition invokes the `__using__/1` macro of the `Phoenix.Controller` module, which imports some useful modules.
 
