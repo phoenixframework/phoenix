@@ -32,6 +32,10 @@ For our purposes, a relative path will do.
 
 ` $ mix phoenix.new hello_phoenix ../hello_phoenix`
 
+Then cd into the new project directory.
+
+`cd ../hello_phoenix`
+
 The next step is to get and compile the dependencies that your phoenix application will need to run:
 
 ` $ mix do deps.get, compile`
