@@ -72,23 +72,29 @@ Doing so helps us overcome one of [exrm's common issues](https://github.com/bitw
 
 Even if you list all of your dependencies, your application may still fail, typically because one of your dependencies does not properly list its own dependencies. A quick fix for this is to include the missing dependency in your list of applications. You should create an issue or a pull request to that project's repo to help the community, but it isn't necessary.
 
-Add our application's router as a child to our application's supervisor:
+Add our application's router as a child to our application's start:
 
 ```elixir
-  def init([]) do
+  def start(_type, _args) do
+    import Supervisor.Spec, warn: false
+    
+    MyApp.Router.start
+    
     children = [
-      worker(MyApp.Router, [], function: :start)
+      # Define workers and child supervisors to be supervised
+      # worker(MyApp.Worker, [arg1, arg2, arg3])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
     # for other strategies and supported options
-    supervise(children, strategy: :one_for_one)
+    opts = [strategy: :one_for_one, name: MyApp.Supervisor]
+    Supervisor.start_link(children, opts)
   end
 ```
 
 #### Note about `mix phoenix.start`
 
-Once this worker exists in your supervisor, `mix phoenix.start` will no longer work like before as you'll end up seeing an error message similar to:
+Once this worker exists in your application start, `mix phoenix.start` will no longer work like before as you'll end up seeing an error message similar to:
 
 ```text
 ** (CaseClauseError) no case clause matching: {:error, {:already_started, #PID<0.168.0>}}
@@ -99,7 +105,7 @@ Once this worker exists in your supervisor, `mix phoenix.start` will no longer w
     (elixir) lib/code.ex:316: Code.require_file/2
 ```
 
-In this case, `mix phoenix.start` is failing because it is trying to start your application's router after the application supervisor has already started it. `mix` will start your application as it's running the `phoenix.start` Mix task, which is how that error occurs. If you were using something like `iex -S mix phoenix.start` during your development cycle, `iex -S mix` will essentially achieve the same result.
+In this case, `mix phoenix.start` is failing because it is trying to start your application's router after the application start has already started it. `mix` will start your application as it's running the `phoenix.start` Mix task, which is how that error occurs. If you were using something like `iex -S mix phoenix.start` during your development cycle, `iex -S mix` will essentially achieve the same result.
 
 ### Generating the release
 
