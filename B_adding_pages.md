@@ -38,7 +38,7 @@ Most of our work in this tutorial will be in the web directory, which looks like
 
 All of the files which are currently in the controllers, templates and views directories are there to create the "Welcome to Phoenix!" page we saw in the last guide. We will see how we can re-use some of that code shortly.
 
-All of our application's static assets live in priv/static in the directory appropriate for each type of file - css, images or js. We won't be making any changes here for now, but it's good to know where to look for future reference.
+All of our application's static assets live in `priv/static` in the directory appropriate for each type of file - css, images or js. We won't be making any changes here for now, but it's good to know where to look for future reference.
 
 ```text
 priv
@@ -66,7 +66,7 @@ If you are working with the 0.5.0 Phoenix release or earlier, there will be an e
 get "/", HelloPhoenix.PageController, :index, as: :pages
 ```
 
-Let's digest what this route is telling us. Visiting http://localhost:4000 issues an http GET request to the root path. All requests like this will be handled by the "index" function in the "HelloPhoenix.PageController" module defined in web/controllers/page_controller.ex.
+Let's digest what this route is telling us. Visiting http://localhost:4000/ issues an http GET request to the root path. All requests like this will be handled by the "index" function in the "HelloPhoenix.PageController" module defined in `web/controllers/page_controller.ex`.
 
 The page we are going to build will simply say "Hello from Phoenix!" when we point our browser to http://localhost:4000/hello.
 
@@ -92,13 +92,13 @@ end
 
 For now, we'll ignore the use of `scope` here and focus on adding a route.
 
-Let's add a new route to the router that maps the GET for "/hello" to the index action of a soon-to-be created HelloPhoenix.HelloController. Like so:
+Let's add a new route to the router that maps the GET for "/hello" to the index action of a soon-to-be created `HelloPhoenix.HelloController`. Like so:
 
 ```elixir
 get "/hello", HelloPhoenix.HelloController, :index
 ```
 
-Your router.ex file should now look like this.
+Your `router.ex` file should now look like this.
 
 ```elixir
 defmodule HelloPhoenix.Router do
@@ -121,9 +121,9 @@ end
 
 ###A New Controller
 
-Controllers are Elixir modules, and actions are Elixir functions defined on them. The purpose of actions is to gather any data and perform any tasks needed for rendering. Our route specifies that we need a HelloPhoenix.HelloController module with an index function. Let's do that now.
+Controllers are Elixir modules, and actions are Elixir functions defined on them. The purpose of actions is to gather any data and perform any tasks needed for rendering. Our route specifies that we need a `HelloPhoenix.HelloController` module with an index function. Let's do that now.
 
-Create a new web/controllers/hello_controller.ex file, and make it look like the following.
+Create a new `web/controllers/hello_controller.ex` file, and make it look like the following.
 
 ```elixir
 defmodule HelloPhoenix.HelloController do
@@ -136,6 +136,7 @@ defmodule HelloPhoenix.HelloController do
   end
 end
 ```
+Note: When running the current Phoenix master, or any version greater than 0.5.0, template names requires an explicit extension when using a string template to render, which means rendering will look like this `render conn, "index.html"`. However, we also allow an atom, i.e. `render conn, :index`, which will behave like <= 5.0 where the template will be chosen by accept headers or format query string param.
 
 Note: When running the current Phoenix master, or any version greater than 0.5.0, template names need to include their protocol file extension. That means rendering will look like this `render conn, "index.html"`.
 
@@ -145,9 +146,9 @@ We will save a more complete discussion of controllers for the controller specif
 render conn, "index"
 ```
 
-Again, use `render conn, "index.html"` for current Phoenix master or versions greater than 0.5.0.
+Again, use `render conn, "index.html"`, or the atom form for current Phoenix master or versions greater than 0.5.0.
 
-This simply says that we want to render the index.html.eex template for our hello_controller.ex. Notice that we are ignoring the params argument to the index function. We aren't taking input from the request at all to render this page.
+This simply says that we want to render the `index.html.eex` template for our `hello_controller.ex`. Notice that we are ignoring the params argument to the index function. We aren't taking input from the request at all to render this page.
 
 On to rendering!
 
@@ -155,25 +156,25 @@ On to rendering!
 
 Phoenix views have several important jobs. They actually render templates. They also act as a presentation layer for raw data from the controller, preparing it for use in a template. Functions which perform this transformation should go in a view.
 
-As an example, say we have a data structure which represents a user with a first_name field and a last_name field, and in a template, we want to show the user's full name. We could write code in the template to merge those fields into a full name, but the better approach is to write a function in the view to do it for us, then call that function in the template. The result is a cleaner and more legible template.
+As an example, say we have a data structure which represents a user with a `first_name` field and a `last_name` field, and in a template, we want to show the user's full name. We could write code in the template to merge those fields into a full name, but the better approach is to write a function in the view to do it for us, then call that function in the template. The result is a cleaner and more legible template.
 
-It's also important to note that each Phoenix application has a base view located at web/views.ex. Functions defined there will be available to all the views we define in the web/views directory.
+It's also important to note that each Phoenix application has a base view located at `web/view.ex`. Functions defined there will be available to all the views we define in the `web/views` directory.
 
-In order to render any templates for our HelloController, we need a HelloView. The names are significant here - the first part of the names of the view and controller must match. Let's create an empty one for now, and leave a more detailed description of views for later. Create web/views/hello_view.ex and make it look like this.
+In order to render any templates for our `HelloController`, we need a HelloView. The names are significant here - the first part of the names of the view and controller must match. Let's create an empty one for now, and leave a more detailed description of views for later. Create `web/views/hello_view.ex` and make it look like this.
 
 ```elixir
 defmodule HelloPhoenix.HelloView do
-  use HelloPhoenix.Views
+  use HelloPhoenix.View
 end
 ```
 
 ###A New Template
 
-Phoenix templates are just that, templates into which data can be rendered. The standard templating engine Phoenix uses is eex, which stands for Embedded Elixir. http://elixir-lang.org/docs/stable/eex/ All our template files will have the .eex file extension.
+Phoenix templates are just that, templates into which data can be rendered. The standard templating engine Phoenix uses is eex, which stands for Embedded Elixir. http://elixir-lang.org/docs/stable/eex/ All our template files will have the `.eex` file extension.
 
-Templates are scoped to a controller. In practice, this simply means that we create a directory named after the controller in the web/templates directory. For our hello page, that means we need to create a "hello" directory under web/templates and then create an index.html.eex file within it.
+Templates are scoped to a controller. In practice, this simply means that we create a directory named after the controller in the `web/templates` directory. For our hello page, that means we need to create a "hello" directory under `web/templates` and then create an `index.html.eex` file within it.
 
-Let's do that now. Create web/templates/hello/index.html.eex and make it look like this.
+Let's do that now. Create `web/templates/hello/index.html.eex` and make it look like this.
 
 ```html
 <div class="jumbotron">
@@ -185,7 +186,7 @@ Now that we've got the route, controller, view and template, we should be able t
 
 ![Phoenix Greets Us](/images/hello-from-phoenix.png)
 
-There are a couple of interesting things to notice about what we just did. We didn't need to stop and re-start the server while we made these changes. Yes, Phoenix has hot code re-loading! Also, even though our index.html.eex file consisted of only a single div tag, The page we get is a full html document. Our index template is rendered into the application layout - web/templates/layout/application.html.eex. If you open it, you'll see a tag that looks like this: <%= @inner %>, which is what injects our rendered template into the layout before the html is sent off to the browser.
+There are a couple of interesting things to notice about what we just did. We didn't need to stop and re-start the server while we made these changes. Yes, Phoenix has hot code re-loading! Also, even though our `index.html.eex` file consisted of only a single div tag, The page we get is a full html document. Our index template is rendered into the application layout - `web/templates/layout/application.html.eex`. If you open it, you'll see a tag that looks like this: `<%= @inner %>`, which is what injects our rendered template into the layout before the html is sent off to the browser.
 
 ##Another New Page
 
@@ -195,7 +196,7 @@ As we did last time, the first thing we'll do is create a new route.
 
 ###A New Route
 
-For this page, we're going to re-use our HelloController we just created and just add a new "show" action. We'll add a line just below our last route, like this.
+For this page, we're going to re-use our `HelloController` we just created and just add a new `show` action. We'll add a line just below our last route, like this.
 
 ```elixir
 defmodule HelloPhoenix.Router do
@@ -216,7 +217,7 @@ defmodule HelloPhoenix.Router do
   # end
 end
 ```
-Notice that we put the atom ":messenger" in the path. Phoenix will take whatever value that appears in that position in the url and passes a Dict with the key "messanger" pointing to that value to the controller.
+Notice that we put the atom `:messenger` in the path. Phoenix will take whatever value that appears in that position in the url and passes a Dict with the key "messanger" pointing to that value to the controller.
 
 For example, if we point the browser at: http://localhost:4000/hello/Frank , the value of ":messenger" will be "Frank".
 
@@ -230,19 +231,19 @@ def show(conn, %{"messenger" => messenger}) do
 end
 ```
 
-This should be `render conn, "show.html", messenger: messenger` for current Phoenix master or versions greater than 0.5.0.
+Again, This should be `render conn, "show.html", messenger: messenger` for current Phoenix versions greater than 0.5.0.
 
 There are a couple of things to notice here. We pattern match against the params passed into the show function so that the messenger variable will be bound to the value we put in the :messenger position in the url. For example, if our url is http://localhost:4000/hello/Frank, the messenger variable would be bound to "Frank".
 
-We also pass a third argument into the render function, a key value pair where ":messenger" is the key, and the messenger variable is passed as the value.
+We also pass a third argument into the render function, a key value pair where `:messenger` is the key, and the messenger variable is passed as the value.
 
 It's good to remember that the keys to the params Dict will always be strings.
 
 ###A New Template
 
-For the last piece of this puzzle, we'll need a new template. Since it is for the show action of the HelloController, it will go the web/templates/hello directory and be called show.html.eex. It will look surprisingly like our index.html.eex template, except that we will need to display the name of our messenger.
+For the last piece of this puzzle, we'll need a new template. Since it is for the show action of the `HelloController`, it will go the `web/templates/hello` directory and be called `show.html.eex`. It will look surprisingly like our `index.html.eex` template, except that we will need to display the name of our messenger.
 
-To do that, we'll use the special eex tags for executing Elixir expressions - <%=  %>. Notice that the initial tag has an equals sign like this: <%= . That means that any Elixir code that goes between those tags will be executed, and the resulting value will replace the tag. If the equals sign were missing, the code would still be executed, but the value would not appear on the page.
+To do that, we'll use the special eex tags for executing Elixir expressions - `<%=  %>`. Notice that the initial tag has an equals sign like this: `<%=` . That means that any Elixir code that goes between those tags will be executed, and the resulting value will replace the tag. If the equals sign were missing, the code would still be executed, but the value would not appear on the page.
 
 And this is what the template should look like.
 
@@ -252,7 +253,7 @@ And this is what the template should look like.
 </div>
 ```
 
-Our messenger appears as "@messenger". In this case, this is not a module attribute. It is special bit of metaprogrammed syntax which stands in for "Dict.get(assigns, :messenger)". The result is much nicer on the eyes and much easier to work with in a template.
+Our messenger appears as `@messenger`. In this case, this is not a module attribute. It is special bit of metaprogrammed syntax which stands in for `Dict.get(assigns, :messenger)`. The result is much nicer on the eyes and much easier to work with in a template.
 
 We're done. If you point your browser here: http://localhost:4000/hello/Frank, you should see a page that looks like this:
 
