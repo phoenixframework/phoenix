@@ -24,15 +24,17 @@ defmodule HelloPhoenix.View do
   # Everything that is imported, aliased, or used in this block is available
   # in the rest of this module and in any other view module that uses it.
   using do
-    # Import common functionality
-    import HelloPhoenix.I18n
-    import HelloPhoenix.Router.Helpers
+    quote do
+      # Import common functionality
+      import HelloPhoenix.I18n
+      import HelloPhoenix.Router.Helpers
 
-    # Use Phoenix.HTML to import all HTML functions (forms, tags, etc)
-    use Phoenix.HTML
+      # Use Phoenix.HTML to import all HTML functions (forms, tags, etc)
+      use Phoenix.HTML
 
-    # Common aliases
-    alias Phoenix.Controller.Flash
+      # Common aliases
+      alias Phoenix.Controller.Flash
+    end
   end
 
   # Functions defined here are available to all other views/templates
