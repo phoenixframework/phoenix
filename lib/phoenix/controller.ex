@@ -138,7 +138,7 @@ defmodule Phoenix.Controller do
       Application.get_env(:phoenix, :format_encoders)
       |> Keyword.get(:json, Poison)
 
-    send_resp(conn, 200, "application/json", encoder.encode!(data))
+    send_resp(conn, conn.status || 200, "application/json", encoder.encode!(data))
   end
 
   @doc """
@@ -153,7 +153,7 @@ defmodule Phoenix.Controller do
   """
   @spec text(Plug.Conn.t, String.Chars.t) :: Plug.Conn.t
   def text(conn, data) do
-    send_resp(conn, 200, "text/plain", to_string(data))
+    send_resp(conn, conn.status || 200, "text/plain", to_string(data))
   end
 
   @doc """
@@ -166,7 +166,7 @@ defmodule Phoenix.Controller do
   """
   @spec html(Plug.Conn.t, iodata) :: Plug.Conn.t
   def html(conn, data) do
-    send_resp(conn, 200, "text/html", data)
+    send_resp(conn, conn.status || 200, "text/html", data)
   end
 
   @doc """
