@@ -11,19 +11,19 @@ defmodule HelloPhoenix.PageController do
   plug :action
 
   def index(conn, _params) do
-    render conn, "index"
+    render conn, "index.html"
   end
 
   def not_found(conn, _params) do
-    render conn, "not_found"
+    render conn, "not_found.html"
   end
 
   def error(conn, _params) do
-    render conn, "error"
+    render conn, "error.html"
   end
 end
 ```
-Important! Until Phoenix version 0.5.0, template names in render calls did not need any file extensions. Render calls in the controller above, for example, don't include them. `render conn, "index"` Later versions of Phoenix, including the current master branch, _do_ require a file extension, like this. `render conn, "index.html"` This guide is written for 0.5.0, so take care if you are using a later version.
+Important! This controller has been generated from the master branch. Until Phoenix version 0.5.0, template names in render calls did not need any file extensions. The templates above would simply be "index", "not_found", and "error". In both master and 0.5.0, we can use atoms instead of strings for template names, `:index`, `:not_found`, and `:error`.
 
 The first line below the module definition invokes the `__using__/1` macro of the `Phoenix.Controller` module, which imports some useful modules.
 
