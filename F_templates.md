@@ -195,5 +195,49 @@ Now we can move `_key.html.eex` from the `web/templates/page` directory into the
 Going back to [localhost:4000/test](http://localhost:4000/test) again. The page should look exactly as it did before.
 
 ##### Configuring a New Template Engine
-TODO
-Phoenix has the concept of a template engine, a module that receives a template path and transforms its source code into Elixir quoted expressions.
+
+Phoenix relies on template engines to convert templates of different formats into quoted Elixir expressions. These are modules that receive a template path and then transform the template at that path. Phoenix ships with an engine for Eex templates, but we can configure others. Let's add phoenix_haml, a Haml engine.
+
+To make the versions of Phoenix and phoenix_haml coordinate, we'll be using the master branch of both. In our application, we need to declare phoenix_haml as a dependency in `mix.exs`.
+
+```elixir
+defp deps do
+  [
+    {:phoenix, github: "phoenixframework/phoenix"},
+    {:cowboy, "~> 1.0"},
+    {:phoenix_haml, github: "chrismccord/phoenix_haml"},
+  ]
+end
+```
+
+We also need to configure phoenix_haml as a new template engine in `config/config.ex`.
+
+```elixir
+config :phoenix, :template_engines,
+  haml: PhoenixHaml.Engine
+ ```
+
+At the root of our application, we need to run `mix do deps.get, compile` to bring in phoenix_haml.
+
+When we have phoenix_haml compiled into our application, we can convert our `test.html.eex` from an Eex template into a Haml one.
+
+First, let's change the filename to reflect the type of file we'll be working with `test.html.haml`.
+
+Checking [localhost:4000/test](http://localhost:4000/test) again. The page should look exactly as it did before. This is because Haml understands how to render the HTML and Eex tags we already have in our template.
+
+Now we can actually convert our template over to Haml syntax.
+
+```elixir
+.jumbotron
+  %p= handler_info @conn
+
+  %h3 Keys for the conn Struct
+
+  - for key <- connection_keys @conn do
+    = render HelloPhoenix.SharedView, "_key.html", key: key
+
+```
+
+Again, [localhost:4000/test](http://localhost:4000/test) should look the same as it did before.
+
+Phoenix Haml depends on the [Calliope project](http://calliopehaml.info/). Currently, Calliope does not handle partials, Elixir conditionals, or exception messages, but they are coming soon.
