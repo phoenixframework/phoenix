@@ -60,6 +60,15 @@ defmodule Phoenix.ControllerTest do
     assert conn.halted
   end
 
+  test "json/2 allows status injection on connection" do
+    conn = conn(:get, "/") |> put_status(400)
+    conn = json(conn, %{foo: :bar})
+    assert conn.resp_body == "{\"foo\":\"bar\"}"
+    assert conn.status == 400
+    assert get_resp_content_type(conn) == "application/json"
+    assert conn.halted
+  end
+
   test "text/2" do
     conn = text(conn(:get, "/"), "foobar")
     assert conn.resp_body == "foobar"
@@ -72,9 +81,27 @@ defmodule Phoenix.ControllerTest do
     assert conn.halted
   end
 
+  test "text/2 allows status injection on connection" do
+    conn = conn(:get, "/") |> put_status(400)
+    conn = text(conn, :foobar)
+    assert conn.resp_body == "foobar"
+    assert conn.status == 400
+    assert get_resp_content_type(conn) == "text/plain"
+    assert conn.halted
+  end
+
   test "html/2" do
     conn = html(conn(:get, "/"), "foobar")
     assert conn.resp_body == "foobar"
+    assert get_resp_content_type(conn) == "text/html"
+    assert conn.halted
+  end
+
+  test "html/2 allows status injection on connection" do
+    conn = conn(:get, "/") |> put_status(400)
+    conn = html(conn, "foobar")
+    assert conn.resp_body == "foobar"
+    assert conn.status == 400
     assert get_resp_content_type(conn) == "text/html"
     assert conn.halted
   end
