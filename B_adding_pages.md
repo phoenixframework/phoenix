@@ -132,21 +132,17 @@ defmodule HelloPhoenix.HelloController do
   plug :action
 
   def index(conn, _params) do
-    render conn, "index"
+    render conn, "index.html"
   end
 end
 ```
-Note: When running the current Phoenix master, or any version greater than 0.5.0, template names requires an explicit extension when using a string template to render, which means rendering will look like this `render conn, "index.html"`. However, we also allow an atom, i.e. `render conn, :index`, which will behave like <= 5.0 where the template will be chosen by accept headers or format query string param.
-
-Note: When running the current Phoenix master, or any version greater than 0.5.0, template names need to include their protocol file extension. That means rendering will look like this `render conn, "index.html"`.
+Note: This `render/2` call is what we get from the current master branch. In versions 0.5.0 and below, the extension on the template name was not used, so render call looked like this `render conn, "index"` Atoms as template names work for both versions `render conn, :index`.
 
 We will save a more complete discussion of controllers for the controller specific guide, but for now, the interesting part is this line.
 
 ```elixir
-render conn, "index"
+render conn, "index.html"
 ```
-
-Again, use `render conn, "index.html"`, or the atom form for current Phoenix master or versions greater than 0.5.0.
 
 This simply says that we want to render the `index.html.eex` template for our `hello_controller.ex`. Notice that we are ignoring the params argument to the index function. We aren't taking input from the request at all to render this page.
 
@@ -227,7 +223,7 @@ Requests to our new route will be handled by the HelloPhoenix.HelloController "s
 
 ```elixir
 def show(conn, %{"messenger" => messenger}) do
-  render conn, "show", messenger: messenger
+  render conn, "show.html", messenger: messenger
 end
 ```
 
