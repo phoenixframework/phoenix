@@ -23,7 +23,7 @@ defmodule HelloPhoenix.PageController do
   end
 end
 ```
-Important! This controller has been generated from the master branch. Until Phoenix version 0.5.0, template names in render calls did not need any file extensions. The templates above would simply be "index", "not_found", and "error". In both master and 0.5.0, we can use atoms instead of strings for template names, `:index`, `:not_found`, and `:error`.
+Note: This controller has been generated from the master branch. Until Phoenix version 0.5.0, template names in render calls did not need file extensions. The templates above would simply be "index", "not_found", and "error". In both master and 0.5.0, we can use atoms instead of strings for template names, `:index`, `:not_found`, and `:error`.
 
 The first line below the module definition invokes the `__using__/1` macro of the `Phoenix.Controller` module, which imports some useful modules.
 
@@ -37,20 +37,20 @@ Controller actions are just functions. We can name them anything we like as long
 For example, we could change the action name in the default route that Phoenix gives us in a new app from index:
 
 ```elixir
-get "/", Test.PageController, :index, as: :pages
+get "/", Test.PageController, :index
 ```
 
 To test:
 
 ```elixir
-get "/", Test.PageController, :test, as: :pages
+get "/", Test.PageController, :test
 ```
 
 As long as we change the action name in the PageController to "test" as well, the welcome page will load as before.
 
 ```elixir
 def test(conn, _params) do
- render conn, "index"
+ render conn, "index.html"
 end
 ```
 
@@ -72,7 +72,7 @@ The second parameter is `params`. Not surprisingly, this is a map which holds an
 
 ```elixir
 def show(conn, %{"messenger" => messenger}) do
-  render conn, "show", messenger: messenger
+  render conn, "show.html", messenger: messenger
 end
 ```
 
@@ -207,12 +207,12 @@ defmodule HelloPhoenix.HelloController do
   plug :action
 
   def show(conn, %{"messenger" => messenger}) do
-    render conn, "show", messenger: messenger
+    render conn, "show.html", messenger: messenger
   end
 end
 ```
 
-The `render/3` function will derive the name of a template to render from the name of the view it is called from and the basename we pass in. The view must have the same root name as the controller for this to work properly. In this case, that would be `/web/templates/hello/show.html.eex`. `render/3` will also pass the value which the show action received for messenger from the params hash into the template for interpolation.
+The controller must have the same root name as the individual view as the directory name where `show.html.eex` lives in order for this `render/3` call to work properly. `render/3` will also pass the value which the show action received for messenger from the params hash into the template for interpolation.
 
 There is also a shortcut for rendering which uses a plug for rendering. Here's how.
 
@@ -304,7 +304,7 @@ In a freshly generated Phoenix app, edit the index action of the `PageController
 def index(conn, params) do
   conn
   |> put_layout(:none)
-  |> render "index"
+  |> render "index.html"
 end
 ```
 When you start the application and view `http://localhost:4000/`, you should see a very different page, one with no title, logo image, or css styling at all.
@@ -329,7 +329,7 @@ This is fine.
 def index(conn, params) do
   conn
   |> put_layout(:none)
-  |> render "index"
+  |> render "index.html"
 end
 ```
 
@@ -339,7 +339,7 @@ This won't work.
 def index(conn, params) do
   conn
   |> put_layout :none
-  |> render "index"
+  |> render "index.html"
 end
 ```
 
@@ -355,7 +355,7 @@ Then, pass the basename of the new layout into `put_layout/2` in our index actio
 def index(conn, params) do
   conn
   |> put_layout("admin")
-  |> render "index"
+  |> render "index.html"
 end
 ```
 
@@ -371,7 +371,7 @@ Let's take the `PageController` index action from a newly generated app as an ex
 
 ```elixir
 def index(conn, _params) do
-  render conn, "index"
+  render conn, "index.html"
 end
 ```
 
@@ -392,7 +392,7 @@ Of course, we can pass data into our template as well. Let's change our action t
 
 ```elixir
 def index(conn, params) do
-  render conn, "index", message: params["message"]
+  render conn, "index.html", message: params["message"]
 end
 ```
 
@@ -411,7 +411,7 @@ Analogous to the `format` query string param, we can render any sort of format w
 def index(conn, _params) do
   conn
   |> put_resp_content_type("text/xml")
-  |> render "index", content: some_xml_content
+  |> render "index.html", content: some_xml_content
 end
 ```
 We would then need to provide an `index.xml.eex` template which created valid xml, and we would be done.
@@ -430,7 +430,7 @@ Let's change the status in our `PageController` `index` action.
 def index(conn, _params) do
   conn
   |> put_status(202)
-  |> render "index"
+  |> render "index.html"
 end
 ```
 The status code we provide must be valid - Cowboy, the web server Phoenix runs on, will throw an error on invalid codes. If we look at our development logs, or use our browser's web inspection network tool, we will see the status code being set as we reload the page.
@@ -443,7 +443,7 @@ This implementation of the `HelloPhoenix.PageController` `index` action, for exa
 def index(conn, _params) do
   conn
   |> put_status(:not_found)
-  |> render "index"
+  |> render "index.html"
 end
 ```
 
@@ -552,15 +552,15 @@ defmodule HelloPhoenix.PageController do
   plug :action
 
   def index(conn, _params) do
-    render conn, "index"
+    render conn, "index.html"
   end
 
   def not_found(conn, _params) do
-    render conn, "not_found"
+    render conn, "not_found.html"
   end
 
   def error(conn, _params) do
-    render conn, "error"
+    render conn, "error.html"
   end
 end
 ```
@@ -663,11 +663,11 @@ defmodule HelloPhoenix.OopsController do
   plug :action
 
   def not_found(conn, _params) do
-    render conn, "not_found"
+    render conn, "not_found.html"
   end
 
   def error(conn, _params) do
-    render conn, "error"
+    render conn, "error.html"
   end
 end
 ```
