@@ -25,6 +25,7 @@ defmodule Phoenix.CodeReloader do
   @doc """
   Reloads codes witin `web/` directory
   """
+  @spec reload! :: :ok | :noop | :error
   def reload! do
     GenServer.call __MODULE__, :reload, :infinity
   end
@@ -74,7 +75,11 @@ defmodule Phoenix.CodeReloader do
   defp mix_compile({:module, Mix.Task}) do
     touch()
     Mix.Task.reenable "compile.elixir"
-    Mix.Task.run "compile.elixir", ["--elixirc-paths", "web"]
+    try do
+      Mix.Task.run "compile.elixir", ["--elixirc-paths", "web"]
+    catch
+      _, _ -> :error
+    end
   end
 
   defp modules_for_recompilation(modules) do

@@ -16,7 +16,7 @@ defmodule Phoenix.HTML.Engine do
   def encode!(other), do: HTML.Safe.to_string(other)
 
   @doc false
-  def handle_body(body), do: HTML.safe(body)
+  def handle_body(body), do: body
 
   @doc false
   def handle_text(buffer, text) do

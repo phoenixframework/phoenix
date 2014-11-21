@@ -8,7 +8,7 @@ defmodule Phoenix.ViewTest do
 
   test "renders views defined on root" do
     assert View.render(MyApp.View, "show.html", message: "Hello world") ==
-           {:safe, "<div>Show! Hello world</div>\n"}
+           {:safe, "<div>Show! Hello world</div>\n\n"}
   end
 
   test "renders subviews with helpers" do
@@ -27,7 +27,7 @@ defmodule Phoenix.ViewTest do
     )
 
     assert html ==
-           {:safe, "<html>\n  <title>Test</title>\n  <div>Show! Hello world</div>\n\n</html>\n"}
+           {:safe, "<html>\n  <title>Test</title>\n  <div>Show! Hello world</div>\n\n\n</html>\n"}
   end
 
   test "renders views to iodata using encoders" do
@@ -46,7 +46,7 @@ defmodule Phoenix.ViewTest do
     )
 
     assert html ==
-           "<html>\n  <title>Test</title>\n  <div>Show! Hello world</div>\n\n</html>\n"
+           "<html>\n  <title>Test</title>\n  <div>Show! Hello world</div>\n\n\n</html>\n"
   end
 
   test "converts assigns to maps and removes :layout" do
