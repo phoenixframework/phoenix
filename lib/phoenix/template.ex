@@ -261,6 +261,7 @@ defmodule Phoenix.Template do
 
   defp compile(path, root) do
     name   = template_path_to_name(path, root)
+    defp   = String.to_atom(name)
     ext    = Path.extname(path) |> String.lstrip(?.) |> String.to_atom
     engine = engines()[ext]
     quoted = engine.compile(path, name)
@@ -269,9 +270,13 @@ defmodule Phoenix.Template do
       @file unquote(path)
       @external_resource unquote(path)
 
-      def render(unquote(name), var!(assigns)) do
+      defp unquote(defp)(var!(assigns)) do
         _ = var!(assigns)
         unquote(quoted)
+      end
+
+      def render(unquote(name), assigns) do
+        unquote(defp)(assigns)
       end
     end}
   end

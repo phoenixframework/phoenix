@@ -11,6 +11,18 @@ defmodule Phoenix.ViewTest do
            {:safe, "<div>Show! Hello world</div>\n\n"}
   end
 
+  test "renders views keeping their template file info" do
+    try do
+      View.render(MyApp.View, "show.html", message: {:not, :a, :string})
+    catch
+      _, _ ->
+        info = [file: 'test/fixtures/templates/show.html.eex', line: 1]
+        assert {MyApp.View, :"show.html", 1, info} in System.stacktrace
+    else
+      _ -> flunk "expected rendering to raise"
+    end
+  end
+
   test "renders subviews with helpers" do
     assert View.render(MyApp.UserView, "index.html", title: "Hello world") ==
            {:safe, "Hello world\n"}
