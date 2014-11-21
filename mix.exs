@@ -28,7 +28,7 @@ defmodule Phoenix.Mixfile do
 
   def deps do
     [{:cowboy, "~> 1.0", optional: true},
-     {:linguist, "~> 0.1.2"},
+     {:linguist, "~> 0.1.3"},
      {:plug, "~> 0.8.2"},
      {:poison, "~> 1.2"},
      {:earmark, "~> 0.1", only: :docs},
