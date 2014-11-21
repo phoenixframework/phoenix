@@ -258,18 +258,20 @@ You may also create helper functions within your views or layouts. For example, 
 defmodule YourApp.View do
   use Phoenix.View, root: "web/templates"
 
-  # Everything in this block is available runs in this
-  # module and in other views that use MyApp.View
+  # The quoted expression returned by this block is applied
+  # to this module and all other views that use this module.
   using do
-    # Import common functionality
-    import YourApp.I18n
-    import YourApp.Router.Helpers
+    quote do
+      # Import common functionality
+      import YourApp.I18n
+      import YourApp.Router.Helpers
 
-    # Use Phoenix.HTML to import all HTML functions (forms, tags, etc)
-    use Phoenix.HTML
+      # Use Phoenix.HTML to import all HTML functions (forms, tags, etc)
+      use Phoenix.HTML
 
-    # Common aliases
-    alias Phoenix.Controller.Flash
+      # Common aliases
+      alias Phoenix.Controller.Flash
+    end
   end
 
   # Functions defined here are available to all other views/templates
