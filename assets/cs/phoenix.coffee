@@ -5,7 +5,8 @@
     factory(exports)
   else
     factory((root.Phoenix = {}))
-) @, (exports) ->
+) this, (exports) ->
+  root = this
 
   class exports.Channel
 
@@ -39,6 +40,8 @@
 
   class exports.Socket
 
+    @states: {connecting: 0, open: 1, closing: 2, closed: 3}
+
     conn: null
     endPoint: null
     channels: null
@@ -49,8 +52,21 @@
     reconnectAfterMs: 5000
     heartbeatIntervalMs: 30000
     stateChangeCallbacks: null
+    transport: null
 
+    # Initializes the Socket
+    #
+    # endPoint - The string WebSocket endpoint, ie, "ws://example.com/ws",
+    #                                               "wss://example.com"
+    #                                               "/ws" (inherited host & protocol)
+    # opts - Optional configuration
+    #   transport - The Websocket Transport, ie WebSocket, Phoenix.LongPoller.
+    #               Defaults to WebSocket with automatic LongPoller fallback.
+    #   heartbeatIntervalMs - The millisecond interval to send a heartbeat message
+    #
     constructor: (endPoint, opts = {}) ->
+      @states = exports.Socket.states
+      @transport = opts.transport ? root.WebSocket ? exports.LongPoller
       @heartbeatIntervalMs = opts.heartbeatIntervalMs ? @heartbeatIntervalMs
       @endPoint = @expandEndpoint(endPoint)
       @channels = []
@@ -79,7 +95,7 @@
 
     reconnect: ->
       @close =>
-        @conn = new WebSocket(@endPoint)
+        @conn = new @transport(@endPoint)
         @conn.onopen = => @onConnOpen()
         @conn.onerror = (error) => @onConnError(error)
         @conn.onmessage = (event) =>  @onMessage(event)
@@ -103,7 +119,8 @@
 
     onConnOpen: ->
       clearInterval(@reconnectTimer)
-      @heartbeatTimer = setInterval (=> @sendHeartbeat() ), @heartbeatIntervalMs
+      unless @transport.skipHeartbeat
+        @heartbeatTimer = setInterval (=> @sendHeartbeat() ), @heartbeatIntervalMs
       @rejoinAll()
       callback() for callback in @stateChangeCallbacks.open
 
@@ -123,10 +140,10 @@
 
     connectionState: ->
       switch @conn?.readyState
-        when WebSocket.CONNECTING   then "connecting"
-        when WebSocket.OPEN         then "open"
-        when WebSocket.CLOSING      then "closing"
-        when WebSocket.CLOSED, null then "closed"
+        when @states.connecting   then "connecting"
+        when @states.open         then "open"
+        when @states.closing      then "closing"
+        when @states.closed, null then "closed"
 
 
     isConnected: -> @connectionState() is "open"
@@ -136,8 +153,8 @@
     rejoin: (chan) ->
       chan.reset()
       {channel, topic, message} = chan
-      chan.callback(chan)
       @send(channel: channel, topic: topic, event: "join", message: message)
+      chan.callback(chan)
 
 
     join: (channel, topic, message, callback) ->
@@ -175,5 +192,82 @@
       {channel, topic, event, message} = JSON.parse(rawMessage.data)
       for chan in @channels when chan.isMember(channel, topic)
         chan.trigger(event, message)
+
+
+
+  class exports.LongPoller
+
+    retryInMs: 5000
+    endPoint: null
+    skipHeartbeat: true
+    onopen:    -> # noop
+    onerror:   -> # noop
+    onmessage: -> # noop
+    onclose:   -> # noop
+
+    constructor: (endPoint) ->
+      @states     = exports.Socket.states
+      @endPoint   = @normalizeEndpoint(endPoint)
+      @readyState = @states.connecting
+      @open()
+
+
+    open: ->
+      exports.Ajax.request "POST", @endPoint, "application/json", null, (status, resp) =>
+        if status is 200
+          @readyState = @states.open
+          @onopen()
+          @poll()
+        else
+          @onerror()
+
+
+    normalizeEndpoint: (endPoint) ->
+      suffix = if /\/$/.test(endPoint) then "poll" else "/poll"
+      endPoint.replace("ws://", "http://").replace("wss://", "https://") + suffix
+
+
+    poll: ->
+      return unless @readyState is @states.open
+      console.log "polling"
+      exports.Ajax.request "GET", @endPoint, "application/json", null, (status, resp) =>
+        switch status
+          when 200
+            @onmessage(data: JSON.stringify(msg)) for msg in JSON.parse(resp)
+            @poll()
+          when 204
+            @poll()
+          else
+            @close()
+            setTimeout (=> @open()), @retryInMs
+
+
+    send: (body) ->
+      exports.Ajax.request "PUT", @endPoint, "application/json", body, (status, resp) =>
+        @onerror() unless status is 200
+
+
+    close: (code, reason) ->
+      @readyState = @states.closed
+      @onclose()
+
+
+  exports.Ajax =
+
+    states: {complete: 4}
+
+    request: (method, endPoint, accept, body, callback) ->
+      req = if root.XMLHttpRequest?
+        new root.XMLHttpRequest() # IE7+, Firefox, Chrome, Opera, Safari
+      else
+        new root.ActiveXObject("Microsoft.XMLHTTP") # IE6, IE5
+      req.open method, endPoint, true
+      req.setRequestHeader("Content-type", accept)
+      req.onreadystatechange = =>
+        callback?(req.status, req.responseText) if req.readyState is @states.complete
+
+      req.send(body)
+
+
 
   exports

@@ -18,25 +18,32 @@ defmodule Phoenix.Socket.Message do
   The Message format requires the following keys:
 
     * channel - The String Channel namespace, ie "messages"
-    * topic - The String Topic namespace, ie "123"
+    * topic - The String topic namespace, ie "123"
     * event - The String event name, ie "join"
     * message - The String JSON message payload
 
   Returns The `%Phoenix.Socket.Message{}` parsed from JSON
   """
   def parse!(text) do
-    try do
-      json = JSON.decode!(text)
+    text |> JSON.decode! |> from_map!
+  end
 
+  @doc """
+  Converts a map with string keys into a `%Phoenix.Socket.Message{}`.
+  Raises `Phoenix.Socket.Message.InvalidMessage` if not valid
+
+  See `parse!/1` for required keys
+  """
+  def from_map!(map) when is_map(map) do
+    try do
       %Message{
-        channel: Dict.fetch!(json, "channel"),
-        topic:   Dict.fetch!(json, "topic"),
-        event:   Dict.fetch!(json, "event"),
-        message: Dict.fetch!(json, "message")
+        channel: Map.fetch!(map, "channel"),
+        topic:   Map.fetch!(map, "topic"),
+        event:   Map.fetch!(map, "event"),
+        message: Map.fetch!(map, "message")
       }
     rescue
-      err in [KeyError]         -> raise InvalidMessage, message: "Missing key: '#{err.key}'"
-      err in [JSON.SyntaxError] -> raise InvalidMessage, message: "Invalid JSON: #{err.message}"
+      err in [KeyError] -> raise InvalidMessage, message: "Missing key: '#{err.key}'"
     end
   end
 end

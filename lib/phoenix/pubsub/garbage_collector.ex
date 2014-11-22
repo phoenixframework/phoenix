@@ -1,5 +1,5 @@
-defmodule Phoenix.Topic.GarbageCollector do
-  alias Phoenix.Topic.Server
+defmodule Phoenix.PubSub.GarbageCollector do
+  alias Phoenix.PubSub.Server
 
   @buffer_size 200
 

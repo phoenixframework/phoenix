@@ -57,6 +57,5 @@ defmodule Phoenix.Integration.WebsocketClient do
     send_event(server_pid, channel, topic, "leave", msg)
   end
 
-  defp json!(map), do: JSON.encode!(map) |> IO.iodata_to_binary
+  defp json!(map), do: JSON.encode!(map)
 end
-

@@ -1,6 +1,6 @@
 defmodule Phoenix.Channel do
   use Behaviour
-  alias Phoenix.Topic
+  alias Phoenix.PubSub
   alias Phoenix.Socket
   alias Phoenix.Socket.Message
   alias Phoenix.Socket.Handler
@@ -23,10 +23,13 @@ defmodule Phoenix.Channel do
   Subscribes socket to given channel topic
   Returns `%Phoenix.Socket{}`
   """
+  def subscribe(pid, channel, topic) when is_pid(pid) do
+    PubSub.subscribe(pid, namespaced(channel, topic))
+  end
   def subscribe(socket, channel, topic) do
-    if !Socket.authenticated?(socket, channel, topic) do
-      Topic.subscribe(socket.pid, namespaced(channel, topic))
-      Socket.add_channel(socket, channel, topic)
+    if !Socket.authorized?(socket, channel, topic) do
+      PubSub.subscribe(socket.pid, namespaced(channel, topic))
+      Socket.authorize(socket, channel, topic)
     else
       socket
     end
@@ -36,9 +39,12 @@ defmodule Phoenix.Channel do
   Unsubscribes socket from given channel topic
   Returns `%Phoenix.Socket{}`
   """
+  def unsubscribe(pid, channel, topic) when is_pid(pid) do
+    PubSub.unsubscribe(pid, namespaced(channel, topic))
+  end
   def unsubscribe(socket, channel, topic) do
-    Topic.unsubscribe(socket.pid, namespaced(channel, topic))
-    Socket.delete_channel(socket, channel, topic)
+    PubSub.unsubscribe(socket.pid, namespaced(channel, topic))
+    Socket.deauthorize(socket)
   end
 
   @doc """
@@ -75,8 +81,8 @@ defmodule Phoenix.Channel do
     broadcast_from(socket.pid, socket.channel, socket.topic, event, message)
   end
   def broadcast_from(from, channel, topic, event, message) when is_map(message) do
-    Topic.create(namespaced(channel, topic))
-    Topic.broadcast_from from, namespaced(channel, topic), %Message{
+    PubSub.create(namespaced(channel, topic))
+    PubSub.broadcast_from from, namespaced(channel, topic), %Message{
       channel: channel,
       topic: topic,
       event: event,

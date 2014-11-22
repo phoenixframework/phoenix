@@ -1,24 +1,24 @@
-defmodule Phoenix.Topic.Server do
+defmodule Phoenix.PubSub.Server do
   use GenServer
-  alias Phoenix.Topic
-  alias Phoenix.Topic.Server
-  alias Phoenix.Topic.GarbageCollector
+  alias Phoenix.PubSub
+  alias Phoenix.PubSub.Server
+  alias Phoenix.PubSub.GarbageCollector
 
   @moduledoc """
-  Handles `Phoenix.Topic` subscriptions and garbage collection with node failover
+  Handles PubSub subscriptions and garbage collection with node failover
 
-  All `Phoenix.Topic` creates, joins, leaves, and destroys are funneled through master
-  `Phoenix.Topic.Server` to prevent race conditions on global `:pg2` groups.
+  All PubSub creates, joins, leaves, and destroys are funneled through master
+  PubSub Server to prevent race conditions on global :pg2 groups.
 
-  All nodes monitor master `Phoenix.Topic.Server` and compete for leader in the event of a
-  nodedown.
+  All nodes monitor master `Phoenix.PubSub.Server` and compete for leader in
+  the event of a nodedown.
 
 
   ## Configuration
 
   To set a custom garbage collection timer, add the following to your Mix config
 
-      config :phoenix, :topics,
+      config :phoenix, :pubsub,
         garbage_collect_after_ms: 60_000..120_000
 
   """
@@ -105,7 +105,7 @@ defmodule Phoenix.Topic.Server do
   end
 
   def handle_info(:garbage_collect_all, state) do
-    {:noreply, GarbageCollector.mark(state, Topic.list)}
+    {:noreply, GarbageCollector.mark(state, PubSub.list)}
   end
 
   defp exists?(group) do
@@ -125,4 +125,3 @@ defmodule Phoenix.Topic.Server do
 
   defp delete(group), do: :pg2.delete(group)
 end
-

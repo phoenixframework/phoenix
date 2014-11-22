@@ -78,6 +78,16 @@ defmodule Phoenix.Router.Scope do
     update_stack(module, fn [_|stack] -> stack end)
   end
 
+  @doc """
+  Returns true if modules definition is currently within a scope block
+  """
+  def within_scope?(module) do
+    case get_stack(module) do
+      [{nil, nil, nil, []}] -> false
+      _ -> true
+    end
+  end
+
   defp join(module, path, alias, as) do
     stack = get_stack(module)
     {join_path(stack, path), join_alias(stack, alias),

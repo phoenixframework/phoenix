@@ -369,18 +369,18 @@ config :phoenix, :template_engines,
   slim: Slim.PhoenixEngine
 ```
 
-### Topics
+### PubSub
 
-Topics provide a simple publish/subscribe mechanism that can be used to facilitate messaging between components in an application. To subscribe a process to a given topic, call `subscribe/2` passing in the PID and a string to identify the topic:
+The PubSub module provides a simple publish/subscribe mechanism that can be used to facilitate messaging between components in an application. To subscribe a process to a given topic, call `subscribe/2` passing in the PID and a string to identify the topic:
 
 ```elixir
-Phoenix.Topic.subscribe self, "foo"
+Phoenix.PubSub.subscribe self, "foo"
 ```
 
 Then, to broadcast messages to all subscribers to that topic:
 
 ```elixir
-Phoenix.Topic.broadcast "foo", { :message_type, some: 1, data: 2 }
+Phoenix.PubSub.broadcast "foo", { :message_type, some: 1, data: 2 }
 ```
 
 For example, let's look at a rudimentary logger that prints messages when a controller action is invoked:
@@ -389,7 +389,7 @@ For example, let's look at a rudimentary logger that prints messages when a cont
 defmodule Logger do
   def start_link do
     sub = spawn_link &(log/0)
-    Phoenix.Topic.subscribe(sub, "logging")
+    Phoenix.PubSub.subscribe(sub, "logging")
     {:ok, sub}
   end
 
@@ -408,14 +408,14 @@ With this module added as a worker to the app's supervision tree, we can broadca
 
 ```elixir
 def index(conn, _params) do
-  Phoenix.Topic.broadcast "logging", { :action, controller: "pages", action: "index" }
+  Phoenix.PubSub.broadcast "logging", { :action, controller: "pages", action: "index" }
   render conn, "index"
 end
 ```
 
 ### Channels
 
-Channels broker websocket connections and integrate with the Topic PubSub layer for message broadcasting. You can think of channels as controllers, with two differences: they are bidirectional and the connection stays alive after a reply.
+Channels broker websocket connections and integrate with the PubSub layer for message broadcasting. You can think of channels as controllers, with two differences: they are bidirectional and the connection stays alive after a reply.
 
 We can implement a channel by creating a module in the _channels_ directory and by using `Phoenix.Channel`:
 
