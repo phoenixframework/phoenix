@@ -97,6 +97,7 @@ to be added to the list of compilers in your `mix.exs` project config,
 ie: `compilers: [:phoenix] ++ Mix.compilers`. Additionally, the
 `Phoenix.CodeReloader.reload!` invocation should be removed from your
 `test_helper.exs` for applications generated on `0.4.x`.
+  * [Topic] `Phoenix.Topic` has been renamed to `Phoenix.PubSub`. If you were calling into the topic layer directly, update your module references.
 
 
 ## v0.4.1 (2014-09-08)
