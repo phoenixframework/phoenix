@@ -14,7 +14,7 @@
 
 1. Install Phoenix
 
-        git clone https://github.com/phoenixframework/phoenix.git && cd phoenix && git checkout v0.5.0 && mix do deps.get, compile
+        git clone https://github.com/phoenixframework/phoenix.git && cd phoenix && git checkout v0.6.0 && mix do deps.get, compile
 
 
 2. Create a new Phoenix application

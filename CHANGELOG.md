@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.6.0-dev
+## v0.6.0
 
 See the [`0.5.x` to `0.6.0` upgrade instructions](https://gist.github.com/chrismccord/e774e6ab5220e6505a03) for upgrading your
 existing applications.
