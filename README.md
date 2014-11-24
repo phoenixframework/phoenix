@@ -679,10 +679,11 @@ use Mix.Config
 
 config :phoenix, YourApp.Router,
   ...
-  cookies: true,
-  session_key: "_your_app_key",
-  secret_key_base: "super secret",
-  ...
+  secret_key_base: "..."
+ 
+config :phoenix, YourApp.Router,
+  session: [store: :cookie,
+            key: "_your_app_key"]
 ```
 
 Then you can access session data from your application's controllers.
