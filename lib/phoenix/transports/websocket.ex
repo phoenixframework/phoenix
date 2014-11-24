@@ -11,7 +11,7 @@ defmodule Phoenix.Transports.WebSocket do
   plug :action
 
   def upgrade_conn(conn, _) do
-    upgrade(conn, websocket: __MODULE__)
+    put_private(conn, :upgrade, {:websocket, __MODULE__}) |> halt
   end
 
   @doc """

@@ -154,7 +154,7 @@ defmodule YourApp.PageController do
     redirect conn, YourApp.Router.Helpers.page_path(:show, "unauthorized")
   end
   def show(conn, %{"page" => page}) do
-    render conn, "show", title: "Showing page #{page}"
+    render conn, "show.html", title: "Showing page #{page}"
   end
 end
 ```
@@ -286,7 +286,6 @@ end
 
 defmodule YourApp.PageView do
   use YourApp.View
-  alias Poison, as: JSON
 
   def display(something) do
     String.upcase(something)

@@ -85,7 +85,6 @@ defmodule Phoenix.Controller do
     quote do
       import Plug.Conn
       import Phoenix.Controller
-      import Phoenix.Controller.Connection
 
       use Phoenix.Controller.Pipeline
 
@@ -182,11 +181,6 @@ defmodule Phoenix.Controller do
       iex> redirect conn, external: "http://elixir-lang.org"
 
   """
-  def redirect(conn, opts) when is_binary(opts) do
-    IO.write :stderr, "redirect(conn, string) is deprecated, please use redirect(conn, to: string) instead\n#{Exception.format_stacktrace}"
-    redirect(conn, to: opts)
-  end
-
   def redirect(conn, opts) when is_list(opts) do
     url  = url(opts)
     body = "<html><body>You are being <a href=\"#{Phoenix.HTML.html_escape(url)}\">redirected</a>.</body></html>"

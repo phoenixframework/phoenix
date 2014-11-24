@@ -69,18 +69,6 @@ defmodule Phoenix.Socket do
   end
 
   @doc """
-  Returns the value for the given assign key, scoped to the active multiplexed
-  channel/topic pair or for a specific channel/topic
-
-  This function is deprecated, see `Phoenix.Socket.assign/2` for access details
-  """
-  # TODO: remove in 0.7.0
-  def get_assign(socket = %Socket{}, key) do
-    IO.write :stderr, "get_assign/2 is deprecated, please use `socket.assigns[:key]` instead"
-    get_in socket.assigns, [key]
-  end
-
-  @doc """
   Adds key/value pair to ephemeral socket state
 
   ## Examples
