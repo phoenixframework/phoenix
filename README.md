@@ -162,16 +162,22 @@ end
 ```elixir
 defmodule YourApp.UserController do
   use Phoenix.Controller
-  alias Poison, as: JSON
 
+  plug :locale, default: "en"
   plug :action
 
   def show(conn, %{"id" => id}) do
-    text conn, "Showing user #{id}"
+    conn
+    |> assign(:user_id, id)
+    |> render("index.html")
   end
 
-  def index(conn, _params) do
-    json conn, JSON.encode!(Repo.all(User))
+  defp locale(conn, opts) do
+    if conn.params["locale"] in ["en", "fr", "de"] do
+      assign(conn, :locale, conn.params["locale"])
+    else
+      assign(conn, :locale, opts[:default])
+    end
   end
 end
 ```
@@ -287,7 +293,7 @@ defmodule YourApp.PageView do
   end
 
   def render("show.json", %{page: page}) do
-    JSON.encode! %{title: page.title, url: page.url}
+    %{title: page.title, url: page.url}
   end
 end
 ```
@@ -312,11 +318,11 @@ To override the render format, for example when rendering your sitemap.xml, you 
 def sitemap(conn, _params) do
   conn
   |> put_resp_content_type("text/xml")
-  |> render "sitemap"
+  |> render(:sitemap)
 end
 ```
 
-Note that the layout and view templates would be chosen by matching content types, ie `application.[format].eex` would be used to render `show.[format].eex`.
+Note that using the atom form of the template name `:sitemap`, would render the template based on the response content type, ie `sitemap.[format].eex`.
 
 See [this file](https://github.com/elixir-lang/plug/blob/master/lib/plug/mime.types) for a list of supported mime types.
 
@@ -333,7 +339,7 @@ defmodule App.PageController do
   def index(conn, _params) do
     conn
     |> put_layout("plain")
-    |> render "index", message: "hello"
+    |> render("index.html", message: "hello")
   end
 end
 ```
@@ -352,7 +358,7 @@ By default, `eex` is supported. To add `haml` support, simply
 include the following in your `mix.exs` deps:
 
 ```elixir
-{:phoenix_haml, "~> 0.0.4"}
+{:phoenix_haml, "~> 0.1.0"}
 ```
 
 and add the `PhoenixHaml.Engine` to your `config/config.exs`
