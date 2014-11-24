@@ -623,15 +623,11 @@ options:
 use Mix.Config
 
 config :phoenix, YourApp.Router,
-  port: System.get_env("PORT"),
-  ssl: false,
-  host: "example.com",
-  cookies: true,
-  session_key: "_your_app_key",
-  secret_key_base: "$+X2PG$PX0^88^HXB)..."
-
-config :logger,
-  level: :info
+  https: [port: 443,
+          host: "example.com",
+          keyfile: System.get_env("SOME_APP_SSL_KEY_PATH"),
+          certfile: System.get_env("SOME_APP_SSL_CERT_PATH")],
+  ...
 ```
 
 When you include the `otp_app` option, `Plug` will search within the `priv`
