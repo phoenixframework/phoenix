@@ -33,7 +33,7 @@ defmodule Mix.Tasks.Phoenix.New do
     Mix.raise """
     phoenix.new expects application name and destination path.
 
-        mix phoenix.new photo_blog /home/johndoe/
+        mix phoenix.new my_app /home/johndoe/my_app
 
     """
   end

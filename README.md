@@ -19,15 +19,15 @@
 
 2. Create a new Phoenix application
 
-        mix phoenix.new your_app /path/to/scaffold/your_app
+        mix phoenix.new my_app /path/to/scaffold/my_app
 
-    *Important*: Run this task in the Phoenix installation directory cloned in the step above. The path provided: `/path/to/scaffold/your_app/` should be outside of the framework installation directory. This will either create a new application directory or install the application into an existing directory.
+    *Important*: Run this task in the Phoenix installation directory cloned in the step above. The path provided: `/path/to/scaffold/my_app/` should be outside of the framework installation directory. This will either create a new application directory or install the application into an existing directory.
 
     #### Examples:
-        mix phoenix.new your_app /Users/you/projects/my_app
-        mix phoenix.new your_app ../relative_path/my_app
+        mix phoenix.new my_app /Users/you/projects/my_app
+        mix phoenix.new my_app ../relative_path/my_app
 
-3. Change directory to `/path/to/scaffold/your_app`. Install dependencies and start web server
+3. Change directory to `/path/to/scaffold/my_app`. Install dependencies and start web server
 
         mix do deps.get, compile
         mix phoenix.start
@@ -41,10 +41,10 @@ When running in production, use protocol consolidation for increased performance
 ### Router example
 
 ```elixir
-defmodule YourApp.Router do
+defmodule MyApp.Router do
   use Phoenix.Router
 
-  scope alias: YourApp do
+  scope alias: MyApp do
     get "/pages/:page", PageController, :show
     get "/files/*path", FileController, :show
 
@@ -53,7 +53,7 @@ defmodule YourApp.Router do
     end
   end
 
-  scope "/admin", alias: YourApp.Admin, helper: "admin" do
+  scope "/admin", alias: MyApp.Admin, helper: "admin" do
     resources "/users", UserController
   end
 end
@@ -84,7 +84,7 @@ delete "/users/:id",    UserController, :destroy
 Resources will also generate a set of named routes and associated helper methods:
 
 ```elixir
-defmodule YourApp.Router do
+defmodule MyApp.Router do
   use Phoenix.Router
 
   resources "/users", UserController do
@@ -96,37 +96,37 @@ end
 Executing 'iex -S mix' from your project's root directory will load your project into the shell. Then you can explore the routes interactively.
 
 ```elixir
-iex> YourApp.Router.Helpers.user_path(:index)
+iex> MyApp.Router.Helpers.user_path(:index)
 "/users"
 
-iex> YourApp.Router.Helpers.user_path(:show, 123)
+iex> MyApp.Router.Helpers.user_path(:show, 123)
 "/users/123"
 
-iex> YourApp.Router.Helpers.user_path(:show, 123, page: 5)
+iex> MyApp.Router.Helpers.user_path(:show, 123, page: 5)
 "/users/123?page=5"
 
-iex> YourApp.Router.Helpers.user_path(:edit, 123)
+iex> MyApp.Router.Helpers.user_path(:edit, 123)
 "/users/123/edit"
 
-iex> YourApp.Router.Helpers.user_path(:destroy, 123)
+iex> MyApp.Router.Helpers.user_path(:destroy, 123)
 "/users/123"
 
-iex> YourApp.Router.Helpers.user_path(:new)
+iex> MyApp.Router.Helpers.user_path(:new)
 "/users/new"
 
-iex> YourApp.Router.Helpers.user_comment_path(:show, 99, 100)
+iex> MyApp.Router.Helpers.user_comment_path(:show, 99, 100)
 "/users/99/comments/100"
 
-iex> YourApp.Router.Helpers.user_comment_path(:index, 99, foo: "bar")
+iex> MyApp.Router.Helpers.user_comment_path(:index, 99, foo: "bar")
 "/users/99/comments?foo=bar"
 
-iex> YourApp.Router.Helpers.user_comment_path(:index, 99) |> YourApp.Router.Helpers.url
+iex> MyApp.Router.Helpers.user_comment_path(:index, 99) |> MyApp.Router.Helpers.url
 "http://example.com/users/99/comments"
 
-iex> YourApp.Router.Helpers.user_comment_path(:edit, 88, 2, [])
+iex> MyApp.Router.Helpers.user_comment_path(:edit, 88, 2, [])
 "/users/88/comments/2/edit"
 
-iex> YourApp.Router.Helpers.user_comment_path(:new, 88)
+iex> MyApp.Router.Helpers.user_comment_path(:new, 88)
 "/users/88/comments/new"
 ```
 
@@ -146,12 +146,12 @@ For example, to make a button to delete a post, you could write:
 ### Controller examples
 
 ```elixir
-defmodule YourApp.PageController do
+defmodule MyApp.PageController do
   use Phoenix.Controller
   plug :action
 
   def show(conn, %{"page" => "admin"}) do
-    redirect conn, YourApp.Router.Helpers.page_path(:show, "unauthorized")
+    redirect conn, MyApp.Router.Helpers.page_path(:show, "unauthorized")
   end
   def show(conn, %{"page" => page}) do
     render conn, "show.html", title: "Showing page #{page}"
@@ -160,7 +160,7 @@ end
 ```
 
 ```elixir
-defmodule YourApp.UserController do
+defmodule MyApp.UserController do
   use Phoenix.Controller
 
   plug :locale, default: "en"
@@ -191,7 +191,7 @@ Put simply, Phoenix Views *render* templates. Views also serve as a presentation
 You could use `Phoenix.Controller.Flash` to persist messages across redirects like below.
 
 ```elixir
-defmodule YourApp.PageController do
+defmodule MyApp.PageController do
   use Phoenix.Controller
 
   plug :action
@@ -261,7 +261,7 @@ Every keyword passed to `render` in the controller is available as an assign wit
 You may also create helper functions within your views or layouts. For example, the previous controller will use `App.PageView` so you could have :
 
 ```elixir
-defmodule YourApp.View do
+defmodule MyApp.View do
   use Phoenix.View, root: "web/templates"
 
   # The quoted expression returned by this block is applied
@@ -269,8 +269,8 @@ defmodule YourApp.View do
   using do
     quote do
       # Import common functionality
-      import YourApp.I18n
-      import YourApp.Router.Helpers
+      import MyApp.I18n
+      import MyApp.Router.Helpers
 
       # Use Phoenix.HTML to import all HTML functions (forms, tags, etc)
       use Phoenix.HTML
@@ -284,8 +284,8 @@ defmodule YourApp.View do
   def title, do: "Welcome to Phoenix!"
 end
 
-defmodule YourApp.PageView do
-  use YourApp.View
+defmodule MyApp.PageView do
+  use MyApp.View
 
   def display(something) do
     String.upcase(something)
@@ -299,7 +299,7 @@ end
 
 Which would allow you to use these functions in your template : `<%= display(@message) %>`, `<%= title %>`
 
-Note that all views extend `YourApp.View`, allowing you to define functions, aliases, imports, etc available in all templates. Additionally, `render/2` functions can be defined to perform rendering directly as function definitions. The arguments to `render/2` are controller action name with the response content-type mime extension.
+Note that all views extend `MyApp.View`, allowing you to define functions, aliases, imports, etc available in all templates. Additionally, `render/2` functions can be defined to perform rendering directly as function definitions. The arguments to `render/2` are controller action name with the response content-type mime extension.
 
 To read more about eex templating, see the [elixir documentation](http://elixir-lang.org/docs/stable/eex/).
 
@@ -610,7 +610,7 @@ Phoenix provides a configuration per environment set by the `MIX_ENV` environmen
 #### Configuration file structure
 
 ```
-├── your_app/config/
+├── my_app/config/
 │   ├── config.exs          Base application configuration
 │   ├── dev.exs
 │   ├── prod.exs
@@ -624,10 +624,10 @@ certfile in the `priv` directory and configure your router with the following
 options:
 
 ```elixir
-# your_app/config/prod.exs
+# my_app/config/prod.exs
 use Mix.Config
 
-config :phoenix, YourApp.Router,
+config :phoenix, MyApp.Router,
   https: [port: 443,
           host: "example.com",
           keyfile: System.get_env("SOME_APP_SSL_KEY_PATH"),
@@ -657,10 +657,10 @@ the route helper functions will use the proxy port number.
 Example:
 
 ```elixir
-# your_app/config/prod.exs
+# my_app/config/prod.exs
 use Mix.Config
 
-config :phoenix, YourApp.Router,
+config :phoenix, MyApp.Router,
   ...
   http: [host: ..., port: 4000],
   url:  [host: "myurlhost", port: 80]
@@ -673,14 +673,14 @@ Phoenix supports a session cookie store that can be easily configured. Just
 add the following configuration settings to your application's config module:
 
 ```elixir
-# your_app/config/prod.exs
+# my_app/config/prod.exs
 use Mix.Config
 
-config :phoenix, YourApp.Router,
+config :phoenix, MyApp.Router,
   ...
   secret_key_base: "..."
- 
-config :phoenix, YourApp.Router,
+
+config :phoenix, MyApp.Router,
   session: [store: :cookie,
             key: "_your_app_key"]
 ```
@@ -691,7 +691,7 @@ NOTE: that `:key` and `:secret` are required options.
 Example:
 
 ```elixir
-defmodule YourApp.PageController do
+defmodule MyApp.PageController do
   use Phoenix.Controller
 
   def show(conn, _params) do
@@ -725,22 +725,22 @@ The `not_found/2` action will be invoked on the page controller when a 404 statu
 
 ```elixir
 # config/config.exs
-config :phoenix, YourApp.Router,
+config :phoenix, MyApp.Router,
   ...
   catch_errors: true,
   debug_errors: false,
-  error_controller: YourApp.PageController
+  error_controller: MyApp.PageController
 ```
 
 ```elixir
 # config/dev.exs
-config :phoenix, YourApp.Router,
+config :phoenix, MyApp.Router,
   ...
   debug_errors: true # Show Phoenix route/stacktrace debug pages for 404/500's
 ```
 
 ```elixir
-defmodule YourApp.PageController do
+defmodule MyApp.PageController do
   use Phoenix.Controller
 
   def not_found(conn, _) do
@@ -766,7 +766,7 @@ end
 Errors can be caught at the controller layer by overriding `call/2` in the controller, i.e.:
 
 ```elixir
-defmodule YourApp.UserController do
+defmodule MyApp.UserController do
   use Phoenix.Controller
 
   def call(conn, opts) do
