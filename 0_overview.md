@@ -10,7 +10,7 @@ The aim of this introductory guide is to present a brief, high level overview of
 
 Phoenix is actually the top layer of a multi-layer system designed to be modular and flexible. The other layers are the Elixir middleware project, Plug, and the Erlang web server, Cowboy. Plug and Cowboy are covered in the next sections of this guide.
 
-Phoenix is made up of a number of distinct parts, each with it's own purpose and role to play in building a web application. We will cover them all in depth throughout the guides, but here's a quick breakdown.
+Phoenix is made up of a number of distinct parts, each with its own purpose and role to play in building a web application. We will cover them all in depth throughout the guides, but here's a quick breakdown.
 
 - The Router
   - parses incoming requests and dispatches to the correct controller/action
@@ -60,4 +60,4 @@ Sheriff uses parse transforms for type based validation. Sheriff also validates 
 
 Cowboy has fantastic documentation. The Guides are especially helpful. Learning more about Cowboy will surely help you to understand of Phoenix more fully.
 
-Cowboy has it's own section of links in the [resources guide](/Z_resources.md).
+Cowboy has its own section of links in the [resources guide](/Z_resources.md).

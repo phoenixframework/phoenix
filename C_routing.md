@@ -206,7 +206,7 @@ iex(3)> HelloPhoenix.Router.Helpers.user_path(:index, 42) |> HelloPhoenix.Router
 "http://localhost:4000/users/42"
 ```
 
-The `Router.Helpers.url` function will get the host, port, proxy port and ssl information needed to construct the full url from the configuration parameters set for each environment. We'll talk about configuration in more detail in it's own guide. For now, you can take a look at `/config/dev.exs` file in your own project to see what those values are.
+The `Router.Helpers.url` function will get the host, port, proxy port and ssl information needed to construct the full url from the configuration parameters set for each environment. We'll talk about configuration in more detail in its own guide. For now, you can take a look at `/config/dev.exs` file in your own project to see what those values are.
 
 
 ###Nested Resources
@@ -743,7 +743,7 @@ Channels are a very exciting, realtime component of the Phoenix framework. They 
 
 Channels are roughly analogous to controllers except that they are capable of bi-directional communication and their connections persist beyond the initial response. They are also closely tied to a client - written for JavaScript, iOS or Android. For now, we'll focus on defining routes for them and leave a detailed discussion of their capabilities to the Channel Guide.
 
-Each channel depend on a socket mounted at a given point for it's communication. The first thing we need to do to define a route for a channel, then, is to define a socket and specify the path to it's mount point.
+Each channel depend on a socket mounted at a given point for its communication. The first thing we need to do to define a route for a channel, then, is to define a socket and specify the path to its mount point.
 
 Here's what that looks like in our router file.
 
@@ -754,7 +754,7 @@ defmodule HelloPhoenix.Router do
 end
 ```
 
-The next thing we need to do is define a channel, giving it a name and associating it with a channel module which will implement it's behavior. If we have a channel module called "OurChannel" and a channel called "our_channel_name", the code to do this is straightforward, `channel "our_channel_name", HelloPhoenix.OurChannel`
+The next thing we need to do is define a channel, giving it a name and associating it with a channel module which will implement its behavior. If we have a channel module called "OurChannel" and a channel called "our_channel_name", the code to do this is straightforward, `channel "our_channel_name", HelloPhoenix.OurChannel`
 
 The whole router, then, looks like this.
 

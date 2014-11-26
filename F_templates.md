@@ -90,7 +90,7 @@ end
 
 ```
 
-Note, it's important to put parenthesis around the `conn` argument to `from_struct/1` because otherwise the pipeline operator will bind more tightly to it than `Map.from_struct/1` causing an error like this one.
+Note, it is important to put parenthesis around the `conn` argument to `from_struct/1` because otherwise the pipeline operator will bind more tightly to it than `Map.from_struct/1` causing an error like this one.
 
 ```console
 **(FunctionClauseError) no function clause matching in Map.from_struct/1

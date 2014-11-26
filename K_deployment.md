@@ -77,9 +77,9 @@ Add our application's router as a child to our application's start:
 ```elixir
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
-    
+
     MyApp.Router.start
-    
+
     children = [
       # Define workers and child supervisors to be supervised
       # worker(MyApp.Worker, [arg1, arg2, arg3])
@@ -105,7 +105,7 @@ Once this worker exists in your application start, `mix phoenix.start` will no l
     (elixir) lib/code.ex:316: Code.require_file/2
 ```
 
-In this case, `mix phoenix.start` is failing because it is trying to start your application's router after the application start has already started it. `mix` will start your application as it's running the `phoenix.start` Mix task, which is how that error occurs. If you were using something like `iex -S mix phoenix.start` during your development cycle, `iex -S mix` will essentially achieve the same result.
+In this case, `mix phoenix.start` is failing because it is trying to start your application's router after the application start has already started it. `mix` will start your application as it is running the `phoenix.start` Mix task, which is how that error occurs. If you were using something like `iex -S mix phoenix.start` during your development cycle, `iex -S mix` will essentially achieve the same result.
 
 ### Generating the release
 

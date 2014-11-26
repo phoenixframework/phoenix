@@ -147,7 +147,7 @@ As we can see, we're calling `render/3` with the individual view responsible for
 
 The return value is a tuple beginning with the atom `:safe` and the resultant string of the interpolated template.
 
-"Safe" here means that Phoenix has escaped the contents of our rendered template. Phoenix defines it's own `Phoenix.HTML.Safe` protocol with implementations for atoms, bitstrings, lists, integers, floats, and tuples to handle this escaping for us as our templates are rendered into strings.
+"Safe" here means that Phoenix has escaped the contents of our rendered template. Phoenix defines its own `Phoenix.HTML.Safe` protocol with implementations for atoms, bitstrings, lists, integers, floats, and tuples to handle this escaping for us as our templates are rendered into strings.
 
 What happens if we assign some key value pairs to the third argument of `render/3`? In order to find out, we need to change the template just a bit.
 

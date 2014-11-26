@@ -120,7 +120,7 @@ defmodule HelloPhoenix.User do
 end
 ```
 
-Elixir does not currently have it's own module for date and time functions, so we've used Ecto's `DateTime{}` here to set the default `created_at` and `updated_at` timestamps.
+Elixir does not currently have its own module for date and time functions, so we've used Ecto's `DateTime{}` here to set the default `created_at` and `updated_at` timestamps.
 
 ### Generating a Migration
 
@@ -138,7 +138,7 @@ $ mix ecto.gen.migration HelloPhoenix.Repo initial_users_create
 
 Note that Ecto created a `priv/repo/migrations` as we told it to in the `app_dir/2` function we invoked in the `priv/0` function of `HelloPhoenix.Repo`. That's where all our migrations should go.
 
-Note also that the first part of the migration file itself is a timestamp. Ecto uses this to keep track of which migrations to run, so it's a good idea to just use the generator mix task each time we need a migration, just to get the timestamp right.
+Note also that the first part of the migration file itself is a timestamp. Ecto uses this to keep track of which migrations to run, so it is a good idea to just use the generator mix task each time we need a migration, just to get the timestamp right.
 
 Here's the empty migration file Ecto created.
 
@@ -259,7 +259,7 @@ $ mix ecto.rollback HelloPhoenix.Repo
 
 ```
 
-Now if we take a look in the database, we see that our `users` table and it's sequence are both gone.
+Now if we take a look in the database, we see that our `users` table and its sequence are both gone.
 
 ```console
 # \d
