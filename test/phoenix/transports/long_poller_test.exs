@@ -2,6 +2,8 @@ defmodule Phoenix.Tranports.LongPollerTest do
   use ExUnit.Case, async: true
   use ConnHelper
   import ExUnit.CaptureIO
+
+  alias Plug.Conn
   alias Phoenix.Transports.LongPoller
   alias Phoenix.Tranports.LongPollerTest.Router
 

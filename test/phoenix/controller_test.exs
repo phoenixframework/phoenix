@@ -3,6 +3,7 @@ defmodule Phoenix.ControllerTest do
   use ConnHelper
 
   import Phoenix.Controller
+  alias Plug.Conn
 
   defp get_resp_content_type(conn) do
     [header]  = get_resp_header(conn, "content-type")

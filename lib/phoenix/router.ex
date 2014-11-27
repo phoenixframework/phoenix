@@ -224,7 +224,7 @@ defmodule Phoenix.Router do
       dependent on parameters, like the `Plug.MethodOverride`, will be
       disabled too. Defaults to:
 
-          [accept: ["*/*"],
+          [pass: ["*/*"],
            json_decoder: Poison,
            parsers: [:urlencoded, :multipart, :json]]
 
@@ -270,11 +270,12 @@ defmodule Phoenix.Router do
 
   @doc false
   defmacro __using__(_opts) do
-    prelude   = prelude()
-    plug      = plug()
-    pipelines = pipelines()
-    server    = server()
-    [prelude, plug, pipelines, server]
+    quote do
+      unquote(prelude())
+      unquote(plug())
+      unquote(pipelines())
+      unquote(server())
+    end
   end
 
   defp prelude() do
@@ -288,7 +289,6 @@ defmodule Phoenix.Router do
 
       config = Adapter.config(__MODULE__)
       @config config
-      @otp_app config[:otp_app]
 
       # Set up initial scope
       @phoenix_pipeline nil
@@ -322,19 +322,46 @@ defmodule Phoenix.Router do
       @doc """
       Callback invoked by Plug on every request.
       """
-      def call(unquote(conn), opts) do
-        unquote(conn) =
-          Plug.Conn.put_private(unquote(conn), :phoenix_router, __MODULE__)
-          |> Plug.Conn.put_private(:phoenix_pipelines, [])
-        unquote(pipeline)
-      end
 
-      defp match(conn, []) do
-        match(conn, conn.method, conn.path_info)
-      end
+      # For debugging errors, we wrap each step in the pipeline
+      # in isolation. This allows us to have fresh copies of the
+      # connection as we go.
+      if config[:debug_errors] do
+        @debug_errors [otp_app: config[:otp_app]]
 
-      defp dispatch(conn, []) do
-        Phoenix.Router.Adapter.dispatch(conn, __MODULE__)
+        def call(unquote(conn), opts) do
+          unquote(conn) =
+            Plug.Conn.put_private(unquote(conn), :phoenix_router, __MODULE__)
+            |> Plug.Conn.put_private(:phoenix_pipelines, [])
+          Plug.Debugger.wrap(unquote(conn), @debug_errors, fn -> unquote(pipeline) end)
+        end
+
+        defp match(conn, []) do
+          Plug.Debugger.wrap(conn, @debug_errors, fn ->
+            match(conn, conn.method, conn.path_info)
+          end)
+        end
+
+        defp dispatch(conn, []) do
+          Plug.Debugger.wrap(conn, @debug_errors, fn ->
+            Phoenix.Router.Adapter.dispatch(conn, __MODULE__)
+          end)
+        end
+      else
+        def call(unquote(conn), opts) do
+          unquote(conn) =
+            Plug.Conn.put_private(unquote(conn), :phoenix_router, __MODULE__)
+            |> Plug.Conn.put_private(:phoenix_pipelines, [])
+          unquote(pipeline)
+        end
+
+        defp match(conn, []) do
+          match(conn, conn.method, conn.path_info)
+        end
+
+        defp dispatch(conn, []) do
+          Phoenix.Router.Adapter.dispatch(conn, __MODULE__)
+        end
       end
 
       defoverridable [init: 1, call: 2]
@@ -344,8 +371,8 @@ defmodule Phoenix.Router do
   defp pipelines() do
     quote do
       pipeline :before do
-        if static = @config[:static] do
-          static = Keyword.merge([from: @otp_app], static)
+        if static = config[:static] do
+          static = Keyword.merge([from: config[:otp_app]], static)
           plug Plug.Static, static
         end
 
@@ -355,7 +382,7 @@ defmodule Phoenix.Router do
           plug Plugs.CodeReloader
         end
 
-        if parsers = @config[:parsers] do
+        if parsers = config[:parsers] do
           plug Plug.Parsers, parsers
           plug Plug.MethodOverride
         end
@@ -363,7 +390,7 @@ defmodule Phoenix.Router do
         plug Plug.Head
         plug :put_secret_key_base
 
-        if session = @config[:session] do
+        if session = config[:session] do
           salt    = Atom.to_string(__MODULE__)
           session = Keyword.merge([signing_salt: salt, encryption_salt: salt], session)
           plug Plug.Session, session
@@ -373,19 +400,19 @@ defmodule Phoenix.Router do
   end
 
   defp server() do
-    quote location: :keep do
+    quote location: :keep, unquote: false do
       @doc """
       Starts the current router for serving requests
       """
       def start() do
-        Adapter.start(@otp_app, __MODULE__)
+        Adapter.start(unquote(config[:otp_app]), __MODULE__)
       end
 
       @doc """
       Stops the current router from serving requests
       """
       def stop() do
-        Adapter.stop(@otp_app, __MODULE__)
+        Adapter.stop(unquote(config[:otp_app]), __MODULE__)
       end
 
       @doc """

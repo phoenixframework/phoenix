@@ -108,7 +108,7 @@ defmodule Phoenix.Router.Adapter do
 
      # Compile-time config
      parsers: [parsers: [:urlencoded, :multipart, :json],
-                accept: ["*/*"], json_decoder: Poison],
+               pass: ["*/*"], json_decoder: Poison],
      static: [at: "/"],
      session: false,
 
@@ -131,13 +131,7 @@ defmodule Phoenix.Router.Adapter do
   Carries out `Phoenix.Controller` dispatch for router match
   """
   def dispatch(conn, router) do
-    try do
-      conn.private.phoenix_route.(conn)
-    catch
-      kind, err ->
-        handle_err(conn, kind, err, router.config(:catch_errors))
-    end
-    |> after_dispatch
+    conn.private.phoenix_route.(conn)
   end
 
   defp handle_err(conn, kind, error, true) do
