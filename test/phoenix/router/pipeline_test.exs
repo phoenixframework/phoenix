@@ -39,6 +39,12 @@ defmodule Phoenix.Router.PipelineTest.Router do
 
   pipeline :browser do
     plug :fetch_session
+  end
+
+  # This pipeline declaration is for testing that previous pipeline is overridable
+  # with super
+  pipeline :browser do
+    plug :super
     plug :put_assign, "from browser"
   end
 
