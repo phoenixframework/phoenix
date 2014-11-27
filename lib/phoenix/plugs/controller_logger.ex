@@ -22,7 +22,10 @@ defmodule Phoenix.Plugs.ControllerLogger do
     Logger.debug fn ->
       module = conn |> controller_module |> inspect
       action = conn |> action_name |> Atom.to_string
-      filtered_parameters = conn.params |> filter_parameters
+      filter_params =
+        Application.get_env(:phoenix, :filter_parameters)
+        |> Enum.map(&String.downcase(&1))
+      filtered_parameters = conn.params |> filter_parameters(filter_params)
 
       ["Processing by ", module, ?., action, ?/, ?2, ?\n,
         "  Parameters: ", inspect(filtered_parameters)]
@@ -30,21 +33,20 @@ defmodule Phoenix.Plugs.ControllerLogger do
     conn
   end
 
-  defp filter_parameters(params) do
-    filter_parameters = Application.get_env(:phoenix, :filter_parameters)
+  defp filter_parameters(params, filter_params) do
     Enum.into params, %{}, fn {k, v} ->
-      if String.contains?(String.downcase(k), filter_parameters) do
+      if String.contains?(String.downcase(k), filter_params) do
         {k, "FILTERED"}
       else
-        {k, filter_values(v)}
+        {k, filter_values(v, filter_params)}
       end
     end
   end
 
-  defp filter_values(%{} = map),
-    do: filter_parameters(map)
-  defp filter_values([_|_] = list),
-    do: Enum.map(list, fn (item) -> if is_map(item), do: filter_parameters(item), else: item end)
-  defp filter_values(other),
+  defp filter_values(%{} = map, filter_params),
+    do: filter_parameters(map, filter_params)
+  defp filter_values([_|_] = list, filter_params),
+    do: Enum.map(list, fn (item) -> if is_map(item), do: filter_parameters(item, filter_params), else: item end)
+  defp filter_values(other, _filter_params),
     do: other
 end

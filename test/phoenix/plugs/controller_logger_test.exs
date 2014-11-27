@@ -17,11 +17,11 @@ defmodule Phoenix.ControllerLoggerTest do
   test "filter parameter" do
     filter_parameters = Application.get_env(:phoenix, :filter_parameters)
     try do
-      Application.put_env(:phoenix, :filter_parameters, filter_parameters ++ ["secret"])
+      Application.put_env(:phoenix, :filter_parameters, filter_parameters ++ ["Secret"])
       {_conn, [_, parameters]} = call_controller_with_params(
-        password: "should_not_be_show", secret: "should_not_be_show"
+        password: "should_not_be_show", Secret: "should_not_be_show"
       )
-      assert parameters =~ "Parameters: %{\"password\" => \"FILTERED\", \"secret\" => \"FILTERED\"}"
+      assert parameters =~ "Parameters: %{\"Secret\" => \"FILTERED\", \"password\" => \"FILTERED\"}"
     after
       Application.put_env(:phoenix, :filter_parameters, filter_parameters)
     end
