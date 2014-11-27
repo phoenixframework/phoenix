@@ -43,7 +43,6 @@ defmodule Phoenix.ControllerLoggerTest do
 
   defp call_controller_with_params(params) do
     capture_log fn ->
-      conn = conn(:get, "/", foo: "bar", format: "html") |> fetch_params
       conn = conn(:get, "/", params) |> fetch_params
       LoggerController.call(conn, LoggerController.init(:index))
     end
