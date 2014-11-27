@@ -51,7 +51,7 @@ defmodule Phoenix.Channel.Transport do
 
   @doc """
   Dispatches `%Phoenix.Socket.Message{}` to Channel. All serialized, remote client messages
-  should be deserialied and fowarded through this function by adapters.
+  should be deserialized and forwarded through this function by adapters.
 
   The following return signatures must be handled by transport adapters:
     * `{:ok, sockets}` - Successful dispatch, with updated `HashDict` of sockets
