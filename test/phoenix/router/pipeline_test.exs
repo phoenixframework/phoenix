@@ -34,17 +34,11 @@ defmodule Phoenix.Router.PipelineTest.Router do
   use Phoenix.Router
 
   pipeline :before do
-    plug :put_assign, "from before"
     plug :super
   end
 
   pipeline :browser do
     plug :fetch_session
-  end
-
-  pipeline :browser do
-    plug :super
-    plug :put_session, "from browser" # session must be fetched
     plug :put_assign, "from browser"
   end
 
@@ -73,10 +67,6 @@ defmodule Phoenix.Router.PipelineTest.Router do
 
   defp put_assign(conn, value) do
     assign conn, :stack, value
-  end
-
-  defp put_session(conn, value) do
-    put_session conn, :stack, value
   end
 end
 
@@ -169,25 +159,22 @@ defmodule Phoenix.Router.PipelineTest do
 
   test "does not invoke pipelines at root" do
     conn = call(Router, :get, "/root")
-    assert conn.assigns.stack == "from before"
+    assert conn.private[:phoenix_pipelines] == [:before]
   end
 
   test "invokes pipelines per scope" do
     conn = call(Router, :get, "/browser/root")
-    assert conn.assigns.stack == "from browser"
-    assert get_session(conn, :stack) == "from browser"
+    assert conn.private[:phoenix_pipelines] == [:before, :browser]
   end
 
   test "invokes pipelines in a nested scope" do
     conn = call(Router, :get, "/browser/api/root")
-    assert conn.assigns.stack == "from api"
-    assert get_session(conn, :stack) == "from browser"
+    assert conn.private[:phoenix_pipelines] == [:before, :browser, :api]
   end
 
   test "invokes multiple pipelines" do
     conn = call(Router, :get, "/browser-api/root")
-    assert conn.assigns.stack == "from api"
-    assert get_session(conn, :stack) == "from browser"
+    assert conn.private[:phoenix_pipelines] == [:before, :browser, :api]
   end
 
   test "invalid pipelines" do
