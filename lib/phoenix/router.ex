@@ -325,6 +325,7 @@ defmodule Phoenix.Router do
       def call(unquote(conn), opts) do
         unquote(conn) =
           Plug.Conn.put_private(unquote(conn), :phoenix_router, __MODULE__)
+          |> Plug.Conn.put_private(:phoenix_pipelines, [])
         unquote(pipeline)
       end
 
@@ -459,6 +460,7 @@ defmodule Phoenix.Router do
             opts = unquote(route.controller).init(unquote(route.action))
             unquote(route.controller).call(conn, opts)
           end)
+          |> Plug.Conn.put_private(:phoenix_pipelines, unquote(route.pipeline))
         unquote(route.pipe_through)
       end
     end

@@ -15,11 +15,12 @@ defmodule Phoenix.Router.Route do
     * :binding - the route bindings
     * :controller - the controller module
     * :action - the action as an atom
-    * :helper - the named of the helper as a string (may be nil)
+    * :helper - the name of the helper as a string (may be nil)
     * :pipe_through - the elements to pipe through
+    * :pipeline - the pipeline names as a list of atoms
 
   """
-  defstruct [:verb, :path, :segments, :binding, :controller, :action, :helper, :pipe_through]
+  defstruct [:verb, :path, :segments, :binding, :controller, :action, :helper, :pipe_through, :pipeline]
   @type t :: %Route{}
 
   @doc """
@@ -41,6 +42,6 @@ defmodule Phoenix.Router.Route do
 
     %Route{verb: verb, path: path, segments: segments, binding: binding,
            controller: controller, action: action, helper: helper,
-           pipe_through: pipes}
+           pipe_through: pipes, pipeline: [:before | pipe_through]}
   end
 end

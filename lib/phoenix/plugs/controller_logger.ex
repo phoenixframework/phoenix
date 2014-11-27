@@ -14,7 +14,8 @@ defmodule Phoenix.Plugs.ControllerLogger do
       action = conn |> action_name |> Atom.to_string
 
       ["Processing by ", module, ?., action, ?/, ?2, ?\n,
-        "  Parameters: ", inspect(conn.params)]
+        "  Parameters: ", inspect(conn.params), ?\n,
+        "  Pipeline: ", inspect(conn.private[:phoenix_pipelines])]
     end
     conn
   end
