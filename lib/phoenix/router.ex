@@ -560,7 +560,11 @@ defmodule Phoenix.Router do
   """
   defmacro pipe_through(pipes) do
     quote do
-      Scope.pipe_through(__MODULE__, unquote(pipes))
+      if pipeline = @phoenix_pipeline do
+        raise "cannot pipe_through inside a pipeline"
+      else
+        Scope.pipe_through(__MODULE__, unquote(pipes))
+      end
     end
   end
 
