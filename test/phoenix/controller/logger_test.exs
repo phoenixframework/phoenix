@@ -1,4 +1,4 @@
-defmodule Phoenix.ControllerLoggerTest do
+defmodule Phoenix.Controller.LoggerTest do
   use ExUnit.Case
   use ConnHelper
 
@@ -15,7 +15,7 @@ defmodule Phoenix.ControllerLoggerTest do
       |> put_private(:phoenix_pipelines, [:browser])
       |> LoggerController.call(LoggerController.init(:index))
     end
-    assert header =~ "[debug] Processing by Phoenix.ControllerLoggerTest.LoggerController.index/2"
+    assert header =~ "[debug] Processing by Phoenix.Controller.LoggerTest.LoggerController.index/2"
     assert parameters =~ "Parameters: %{\"foo\" => \"bar\", \"format\" => \"html\"}"
     assert pipeline =~  "Pipeline: [:browser]"
   end

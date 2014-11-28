@@ -1,5 +1,4 @@
 defmodule Phoenix.Controller do
-  alias Phoenix.Plugs
   import Plug.Conn
 
   @moduledoc """
@@ -88,7 +87,7 @@ defmodule Phoenix.Controller do
 
       use Phoenix.Controller.Pipeline
 
-      plug Plugs.ControllerLogger
+      plug Phoenix.Controller.Logger
       plug Phoenix.Controller.Flash
       plug :put_layout, {Phoenix.Controller.__layout__(__MODULE__), :application}
       plug :put_view, Phoenix.Controller.__view__(__MODULE__)

@@ -261,7 +261,6 @@ defmodule Phoenix.Router do
   `:http` and `:https` options defined above.
   """
 
-  alias Phoenix.Plugs
   alias Phoenix.Router.Adapter
   alias Phoenix.Router.Resource
   alias Phoenix.Router.Scope
@@ -293,12 +292,6 @@ defmodule Phoenix.Router do
       # Set up initial scope
       @phoenix_pipeline nil
       Phoenix.Router.Scope.init(__MODULE__)
-
-      # TODO: Today we provide @dispatch_options which
-      # is specific to Cowboy. We need to figure out a way
-      # to specify, decoupled from the adapter, which
-      # transports we support (websockets, long pooling, etc).
-      Module.register_attribute __MODULE__, :dispatch_options, accumulate: true
     end
   end
 
@@ -307,6 +300,15 @@ defmodule Phoenix.Router do
       [:dispatch, :match, :before]
       |> Enum.map(&{&1, [], true})
       |> Plug.Builder.compile()
+
+    call =
+      quote do
+        unquote(conn) =
+          unquote(conn)
+          |> Plug.Conn.put_private(:phoenix_router, __MODULE__)
+          |> Plug.Conn.put_private(:phoenix_pipelines, [])
+        unquote(pipeline)
+      end
 
     quote location: :keep do
       @behaviour Plug
@@ -330,10 +332,9 @@ defmodule Phoenix.Router do
         @debug_errors [otp_app: config[:otp_app]]
 
         def call(unquote(conn), opts) do
-          unquote(conn) =
-            Plug.Conn.put_private(unquote(conn), :phoenix_router, __MODULE__)
-            |> Plug.Conn.put_private(:phoenix_pipelines, [])
-          Plug.Debugger.wrap(unquote(conn), @debug_errors, fn -> unquote(pipeline) end)
+          Plug.Debugger.wrap(unquote(conn), @debug_errors, fn ->
+            unquote(call)
+          end)
         end
 
         defp match(conn, []) do
@@ -344,15 +345,12 @@ defmodule Phoenix.Router do
 
         defp dispatch(conn, []) do
           Plug.Debugger.wrap(conn, @debug_errors, fn ->
-            Phoenix.Router.Adapter.dispatch(conn, __MODULE__)
+            conn.private.phoenix_route.(conn)
           end)
         end
       else
         def call(unquote(conn), opts) do
-          unquote(conn) =
-            Plug.Conn.put_private(unquote(conn), :phoenix_router, __MODULE__)
-            |> Plug.Conn.put_private(:phoenix_pipelines, [])
-          unquote(pipeline)
+          unquote(call)
         end
 
         defp match(conn, []) do
@@ -360,7 +358,7 @@ defmodule Phoenix.Router do
         end
 
         defp dispatch(conn, []) do
-          Phoenix.Router.Adapter.dispatch(conn, __MODULE__)
+          conn.private.phoenix_route.(conn)
         end
       end
 
@@ -379,7 +377,7 @@ defmodule Phoenix.Router do
         plug Plug.Logger
 
         if Application.get_env(:phoenix, :code_reloader) do
-          plug Plugs.CodeReloader
+          plug Phoenix.CodeReloader
         end
 
         if parsers = config[:parsers] do
@@ -438,11 +436,6 @@ defmodule Phoenix.Router do
       @doc false
       def __routes__ do
         unquote(Macro.escape(routes))
-      end
-
-      @doc false
-      def __transport__ do
-        @dispatch_options
       end
 
       # TODO: How to handle errors?
