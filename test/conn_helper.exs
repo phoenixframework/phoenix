@@ -18,10 +18,9 @@ defmodule ConnHelper do
   end
 
   def capture_log(fun) do
-    data = capture_io(:user, fn ->
-      Process.put(:capture_log, fun.())
+    capture_io(:user, fn ->
+      fun.()
       Logger.flush()
-    end) |> String.split("\n", trim: true)
-    {Process.get(:capture_log), data}
+    end)
   end
 end

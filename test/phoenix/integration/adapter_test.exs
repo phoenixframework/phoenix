@@ -1,12 +1,14 @@
 Code.require_file "http_client.exs", __DIR__
 
 defmodule Phoenix.Integration.AdapterTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
+  use ConnHelper
+
   import ExUnit.CaptureIO
 
-  alias Phoenix.Integration.HTTPClient
+  Application.put_env(:phoenix, __MODULE__.ProdRouter, http: [port: "4807"])
 
-  defmodule Router do
+  defmodule ProdRouter do
     use Phoenix.Router
 
     pipeline :before do
@@ -18,19 +20,46 @@ defmodule Phoenix.Integration.AdapterTest do
     end
   end
 
-  @port 4807
+  Application.put_env(:phoenix, __MODULE__.DevRouter, http: [port: "4808"], debug_errors: true)
 
-  setup_all do
-    Application.put_env(:phoenix, Router, http: [port: "4807"], https: false)
-    capture_io fn -> Router.start end
-    :ok
+  defmodule DevRouter do
+    use Phoenix.Router
+
+    pipeline :before do
+      plug :done
+    end
+
+    def done(_conn, _) do
+      raise "oops"
+    end
   end
 
-  test "adapters starts on configured port and serves requests, and stops" do
-    {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@port}", %{})
+  @prod 4807
+  @dev  4808
+
+  alias Phoenix.Integration.HTTPClient
+
+  test "adapters starts on configured port and serves requests and stops for prod" do
+    capture_io fn -> ProdRouter.start end
+
+    {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
     assert resp.status == 200
     assert resp.body == "ok"
-    Router.stop
-    {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@port}", %{})
+
+    ProdRouter.stop
+    {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
+  end
+
+  test "adapters starts on configured port and serves requests and stops for dev" do
+    capture_io fn -> DevRouter.start end
+
+    assert capture_log(fn ->
+      {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
+      assert resp.status == 500
+      assert resp.body =~ "RuntimeError at GET /"
+    end) =~ "** (RuntimeError) oops"
+
+    DevRouter.stop
+    {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
   end
 end

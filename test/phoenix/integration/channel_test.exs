@@ -1,49 +1,26 @@
 Code.require_file "websocket_client.exs", __DIR__
 Code.require_file "http_client.exs", __DIR__
 
-defmodule Phoenix.Integration.ChannelTransportsTest do
+defmodule Phoenix.Integration.ChannelTest do
   use ExUnit.Case, async: true
   import ExUnit.CaptureIO
 
   alias Phoenix.Integration.WebsocketClient
   alias Phoenix.Integration.HTTPClient
   alias Phoenix.Socket.Message
-  alias Phoenix.Integration.ChannelTransportsTest.Router
 
-  @port 4808
+  @port 5807
   @window_ms 100
   @ensure_window_timeout_ms @window_ms * 3
 
-  Application.put_env(:phoenix, Router, [
+  Application.put_env(:phoenix, __MODULE__.Router, [
     https: false,
     http: [port: @port],
     secret_key_base: "7pe/JuPlX/rvpyk80h5r9eShTBtTLIY4WcDIX/r60Fz+8pnQDc1usobc9D7KvD9/l6DNZBXo5Uc8HXSpsuwCcA==",
-    catch_errors: false,
     debug_errors: false,
     session: [store: :cookie, key: "_integration_test"],
     transports: [longpoller: [window_ms: @window_ms]]
   ])
-
-  @doc """
-  Helper method to maintain cookie session state when making HTTP requestss.
-  Returns %HTTPClient.Response{} with body decoded into JSON map
-  """
-  def poll(method, cookie, json_map \\ nil) do
-    headers = if cookie, do: %{"Cookie" => cookie}, else: %{}
-    if json_map do
-      headers = Dict.merge(headers, %{"content-type" => "application/json"})
-      body = Poison.encode!(json_map)
-    end
-    {:ok, resp} = HTTPClient.request(method, "http://127.0.0.1:#{@port}/ws/poll", headers, body)
-    if resp.body != "" do
-      resp = put_in resp.body, Poison.decode!(resp.body)
-    end
-
-    case resp.headers |> Enum.into(%{}) |> Map.get('set-cookie') |> to_string do
-      ""         -> {resp, cookie}
-      new_cookie -> {resp, new_cookie}
-    end
-  end
 
   defmodule RoomChannel do
     use Phoenix.Channel
@@ -65,10 +42,10 @@ defmodule Phoenix.Integration.ChannelTransportsTest do
     end
   end
 
-
   defmodule Router do
     use Phoenix.Router
     use Phoenix.Router.Socket, mount: "/ws"
+
     pipeline :before do
       plug :disable_logger
       plug :super
@@ -87,7 +64,6 @@ defmodule Phoenix.Integration.ChannelTransportsTest do
     on_exit &Router.stop/0
     :ok
   end
-
 
   ## Websocket Transport
 
@@ -114,8 +90,32 @@ defmodule Phoenix.Integration.ChannelTransportsTest do
     refute_receive %Message{}
   end
 
-
   ## Longpoller Transport
+
+  @doc """
+  Helper method to maintain cookie session state when making HTTP requests.
+
+  Returns a response with body decoded into JSON map.
+  """
+  def poll(method, cookie, json \\ nil) do
+    headers = if cookie, do: %{"Cookie" => cookie}, else: %{}
+
+    if json do
+      headers = Dict.merge(headers, %{"content-type" => "application/json"})
+      body    = Poison.encode!(json)
+    end
+
+    {:ok, resp} = HTTPClient.request(method, "http://127.0.0.1:#{@port}/ws/poll", headers, body)
+
+    if resp.body != "" do
+      resp = put_in resp.body, Poison.decode!(resp.body)
+    end
+
+    case resp.headers |> Enum.into(%{}) |> Map.get('set-cookie') |> to_string do
+      ""         -> {resp, cookie}
+      new_cookie -> {resp, new_cookie}
+    end
+  end
 
   test "adapter handles longpolling join, leave, and event messages" do
     # create session

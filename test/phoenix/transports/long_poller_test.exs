@@ -35,7 +35,6 @@ defmodule Phoenix.Tranports.LongPollerTest do
     :ok
   end
 
-
   test "start_session starts the LongPoller.Server and stores pid in session" do
     conn = conn_with_session
     assert LongPoller.longpoll_pid(conn) == :nopid
@@ -51,22 +50,22 @@ defmodule Phoenix.Tranports.LongPollerTest do
     assert Process.alive?(server_pid)
     :timer.sleep @ensure_window_timeout_ms
     refute Process.alive?(server_pid)
-    assert match? {:error, :terminated}, LongPoller.longpoll_pid(conn)
+    assert {:error, :terminated} = LongPoller.longpoll_pid(conn)
   end
 
   test "resume_session returns {:ok, conn, pid} if valid session" do
     {conn = %Conn{}, server_pid} = LongPoller.start_session(conn_with_session)
-    assert match?({:ok, %Conn{}, ^server_pid}, LongPoller.resume_session(conn))
+    assert {:ok, %Conn{}, ^server_pid} = LongPoller.resume_session(conn)
   end
 
   test "resume_session returns {:error, conn, :terminated} if dead session" do
     {conn = %Conn{}, _server_pid} = LongPoller.start_session(conn_with_session)
     :timer.sleep @ensure_window_timeout_ms
-    assert match?({:error, %Conn{}, :terminated}, LongPoller.resume_session(conn))
+    assert {:error, %Conn{}, :terminated} = LongPoller.resume_session(conn)
   end
 
   test "resume_session returns {:error, conn, :terminated} if missing session" do
     conn = conn_with_session
-    assert match?({:error, %Conn{}, :terminated}, LongPoller.resume_session(conn))
+    assert {:error, %Conn{}, :terminated} = LongPoller.resume_session(conn)
   end
 end
