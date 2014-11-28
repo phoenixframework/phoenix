@@ -446,7 +446,7 @@ defmodule Phoenix.Router do
     routes = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse
     Phoenix.Router.Helpers.define(env, routes)
 
-    quote location: :keep do
+    quote do
       @doc false
       def __routes__ do
         unquote(Macro.escape(routes))
