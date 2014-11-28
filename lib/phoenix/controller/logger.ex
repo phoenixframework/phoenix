@@ -1,6 +1,8 @@
-defmodule Phoenix.Plugs.ControllerLogger do
-  import Phoenix.Controller
+defmodule Phoenix.Controller.Logger do
   require Logger
+
+  @behaviour Plug
+  import Phoenix.Controller
 
   @moduledoc """
   Plug to handle request logging at the controller level.

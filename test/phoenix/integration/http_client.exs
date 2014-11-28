@@ -1,11 +1,4 @@
 defmodule Phoenix.Integration.HTTPClient do
-
-  @moduledoc """
-  Simple HTTP client for integration testing
-  """
-
-  defmodule Response, do: defstruct(status: nil, headers: [], body: nil)
-
   @doc """
   Performs HTTP Request and returns Response
 
@@ -34,19 +27,20 @@ defmodule Phoenix.Integration.HTTPClient do
   def request(method, url, headers, body) do
     url     = String.to_char_list(url)
     headers = headers |> Dict.put_new("content-type", "text/html")
-    content_type = headers["content-type"] |> String.to_char_list
-    header_list = Enum.map headers, fn {k, v} ->
+    ct_type = headers["content-type"] |> String.to_char_list
+
+    header = Enum.map headers, fn {k, v} ->
       {String.to_char_list(k), String.to_char_list(v)}
     end
 
     case method do
-      :get -> :httpc.request(:get, {url, header_list}, [], body_format: :binary)
-      meth -> :httpc.request(meth, {url, header_list, content_type, body}, [],
-                             body_format: :binary)
+      :get -> :httpc.request(:get, {url, header}, [], body_format: :binary)
+      _    -> :httpc.request(method, {url, header, ct_type, body}, [], body_format: :binary)
     end |> format_resp
   end
-  defp format_resp({:ok, {{_httpvs, status, _status_phrase}, headers, body}}) do
-    {:ok, %Response{status: status, headers: headers, body: body}}
+
+  defp format_resp({:ok, {{_http, status, _status_phrase}, headers, body}}) do
+    {:ok, %{status: status, headers: headers, body: body}}
   end
   defp format_resp({:error, reason}), do: {:error, reason}
 end

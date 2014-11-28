@@ -706,80 +706,30 @@ end
 
 ### Custom Not Found and Error Pages
 
-An `error_controller` can be configured on the Router Mix config, where two actions must be defined for custom 404 and 500 error handling. Additionally, `catch_errors` and `debug_errors` settings control how errors are caught and displayed. Router configuration options include:
+Phoenix will by default render pages when a failure happens in your application using the `MyApp.ErrorsView` view in your application. Additionally, `debug_errors` can be set to true if you desire a debugging error page:
 
+  * debug_errors - Bool to display a debugging page on failures. Default `false`.
+  * render_errors - The view to render error pages on failures. Default `MyApp.ErrorsView`.
 
-* error_controller - The optional Module to have `error/2`, `not_found/2`
-                     actions invoked when 400/500's status occurs.
-                     Default `Phoenix.Controller.ErrorController`
-* catch_errors - Bool to catch errors at the Router level. Default `true`
-* debug_errors - Bool to display Phoenix's route/stacktrace debug pages for 404/500 statuses.
-             Default `false`
+Everytime there is a failure and debugging is disable, the `render/2` will be invoked in the view with the template name according to its status and format, for example, "404.html" or "500.json". See `MyApp.ErrorsView` generated in your application for code samples on how to customize your error pages.
 
+#### Plug.Exception
 
-The `error/2` action will be invoked on the page controller when a 500 status has been assigned to the connection, but a response has not been sent, as well as anytime an error is thrown or raised (provided `catch_errors: true`)
+Phoenix uses the `Plug.Exception` protocol when rendering error pages to figure out which status code an exception should be rendered with. For example, `Phoenix.Router.NoRouteError` uses this protocol to set its status code to 404.
 
-The `not_found/2` action will be invoked on the page controller when a 404 status is assigned to the conn and a response is not sent.
-
-#### Example Custom Error handling with PageController
+There are two ways of setting the status code of an exception. If you are defining the exception in your application and the exception belongs to the HTTP layer, you can directly define a `plug_status` field:
 
 ```elixir
-# config/config.exs
-config :phoenix, MyApp.Router,
-  ...
-  catch_errors: true,
-  debug_errors: false,
-  error_controller: MyApp.PageController
-```
-
-```elixir
-# config/dev.exs
-config :phoenix, MyApp.Router,
-  ...
-  debug_errors: true # Show Phoenix route/stacktrace debug pages for 404/500's
-```
-
-```elixir
-defmodule MyApp.PageController do
-  use Phoenix.Controller
-
-  def not_found(conn, _) do
-    text conn, 404, "The page you were looking for couldn't be found"
-  end
-
-  def error(conn, _) do
-    handle_error(conn, error(conn))
-  end
-
-  defp handle_error(conn, {:error, Ecto.NotSingleResult}) do
-    not_found(conn, [])
-  end
-
-  defp handle_error(conn, _any) do
-    text conn, 500, "Something went wrong"
-  end
+defmodule Phoenix.Route.NoRouteError do
+  defexception plug_status: 404, message: "no route found"
 end
 ```
 
-#### Catching Errors at the Controller layer
-
-Errors can be caught at the controller layer by overriding `call/2` in the controller, i.e.:
+However, if you want to extend an existing exception with Plug.Exception, you just need to directly implement the protocol. For example, if you are using Ecto, you may want to define the following:
 
 ```elixir
-defmodule MyApp.UserController do
-  use Phoenix.Controller
-
-  def call(conn, opts) do
-    try do
-      super(conn, opts)
-    rescue
-      Ecto.NotSingleResult -> conn |> put_status(404) |> render "user_404"
-    end
-  end
-
-  def show(conn, %{"id" => id}) do
-    render conn, "index", user: Repo.get!(User, id)
-  end
+defimpl Plug.Exception, for: Ecto.NotSingleResult do
+  def status(_exception), do: 404
 end
 ```
 

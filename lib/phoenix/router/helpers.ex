@@ -101,6 +101,7 @@ defmodule Phoenix.Router.Helpers do
     {bins, vars} = :lists.unzip(route.binding)
     segs = optimize_segments(route.segments)
 
+    # We are using -1 to avoid warnings in case a path has already been defined.
     quote line: -1 do
       def unquote(:"#{helper}_path")(unquote(action), unquote_splicing(vars)) do
         unquote(:"#{helper}_path")(unquote(action), unquote_splicing(vars), [])

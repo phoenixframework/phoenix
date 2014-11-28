@@ -5,11 +5,6 @@ defmodule Phoenix.Router.Adapter do
   # support for other adapters.
   @moduledoc false
 
-  import Plug.Conn, only: [put_private: 3, put_status: 2]
-  import Phoenix.Controller, only: [router_module: 1]
-
-  @unsent [:unset, :set]
-
   @doc """
   The router configuration used at compile time.
   """
@@ -25,14 +20,14 @@ defmodule Phoenix.Router.Adapter do
         raise "please set :otp_app config for #{inspect router}"
     end
 
-    Phoenix.Config.merge(defaults(otp_app), config)
+    Phoenix.Config.merge(defaults(otp_app, router), config)
   end
 
   @doc """
   Starts the router.
   """
   def start(otp_app, module) do
-    Phoenix.Config.start_supervised(module, defaults(otp_app))
+    Phoenix.Config.start_supervised(module, defaults(otp_app, module))
 
     # TODO: We need to test this logic when we support custom adapters.
     if config = module.config(:http) do
@@ -40,7 +35,7 @@ defmodule Phoenix.Router.Adapter do
         config
         |> Keyword.put_new(:otp_app, otp_app)
         |> Keyword.put_new(:port, 4000)
-      start(:http, otp_app, module, config)
+      start(:http, module, config)
     end
 
     if config = module.config(:https) do
@@ -48,23 +43,20 @@ defmodule Phoenix.Router.Adapter do
         Keyword.merge(module.config(:http) || [], module.config(:https))
         |> Keyword.put_new(:otp_app, otp_app)
         |> Keyword.put_new(:port, 4040)
-      start(:https, otp_app, module, config)
+      start(:https, module, config)
     end
 
     :ok
   end
 
-  defp start(scheme, otp_app, module, config) do
-    opts = dispatch(otp_app, module, config)
+  defp start(scheme, module, config) do
+    opts = dispatch(module, config)
     report apply(Plug.Adapters.Cowboy, scheme, [module, [], opts]), scheme, module, opts
   end
 
-  defp dispatch(_otp_app, module, config) do
-    dispatch = module.__transport__ ++
-               [{:_, Phoenix.Router.CowboyHandler, {module, []}}]
-
+  defp dispatch(module, config) do
     config
-    |> Keyword.put(:dispatch, [{:_, dispatch}])
+    |> Keyword.put(:dispatch, [{:_, [{:_, Phoenix.Router.CowboyHandler, {module, []}}]}])
     |> Keyword.put(:port, to_integer(config[:port]))
   end
 
@@ -103,12 +95,12 @@ defmodule Phoenix.Router.Adapter do
     :ok
   end
 
-  defp defaults(otp_app) do
+  defp defaults(otp_app, module) do
     [otp_app: otp_app,
 
      # Compile-time config
      parsers: [parsers: [:urlencoded, :multipart, :json],
-                accept: ["*/*"], json_decoder: Poison],
+               pass: ["*/*"], json_decoder: Poison],
      static: [at: "/"],
      session: false,
 
@@ -120,77 +112,14 @@ defmodule Phoenix.Router.Adapter do
      http: false,
      https: false,
      secret_key_base: nil,
-     catch_errors: true,
      debug_errors: false,
-     error_controller: Phoenix.Controller.ErrorController]
+     render_errors: render_errors(module)]
   end
 
-  # TODO: Move the dispatch logic and error handling elsewhere.
-
-  @doc """
-  Carries out `Phoenix.Controller` dispatch for router match
-  """
-  def dispatch(conn, router) do
-    try do
-      conn.private.phoenix_route.(conn)
-    catch
-      kind, err ->
-        handle_err(conn, kind, err, router.config(:catch_errors))
-    end
-    |> after_dispatch
+  defp render_errors(module) do
+    module
+    |> Module.split
+    |> Enum.at(0)
+    |> Module.concat("ErrorsView")
   end
-
-  defp handle_err(conn, kind, error, true) do
-    conn
-    |> put_private(:phoenix_error, {kind, error})
-    |> put_status(500)
-  end
-
-  defp handle_err(_, kind, err, _nocatch), do:
-    :erlang.raise(kind, err, System.stacktrace)
-
-  # Handles sending 404 response based on Router's Mix Config settings
-  #
-  # ## Router Configuration Options
-  #
-  #   * error_controller - The optional Module to have `not_found/2` action invoked
-  #                       when 404's status occurs.
-  #                       Default `Phoenix.Controller.ErrorController`
-  #   * debug_errors - Bool to display Phoenix's route debug page for 404 status.
-  #                    Default `false`
-  defp after_dispatch(conn = %Plug.Conn{state: state, status: status})
-      when state in @unsent and status == 404 do
-    conn   = put_in conn.halted, false
-    router = router_module(conn)
-
-    if router.config(:debug_errors) do
-      Phoenix.Controller.ErrorController.call(conn, :not_found_debug)
-    else
-      router.config(:error_controller).call(conn, :not_found)
-    end
-  end
-
-  # Handles sending 500 response based on Router's Mix Config settings
-  #
-  # ## Router Configuration Options
-  #
-  #   * error_controller - The optional Module to have `error/2` action invoked
-  #                       when 500's status occurs.
-  #                       Default `Phoenix.Controller.ErrorController`
-  #   * catch_errors - Bool to catch errors at the Router level. Default `true`
-  #   * debug_errors - Bool to display Phoenix's route debug page for 500 status.
-  #                    Default `false`
-  #
-  defp after_dispatch(conn = %Plug.Conn{state: state, status: status})
-      when state in @unsent and status == 500 do
-    conn   = put_in conn.halted, false
-    router = router_module(conn)
-
-    if router.config(:debug_errors) do
-      Phoenix.Controller.ErrorController.call(conn, :error_debug)
-    else
-      router.config(:error_controller).call(conn, :error)
-    end
-  end
-  defp after_dispatch(conn), do: conn
 end

@@ -1,4 +1,17 @@
 defmodule Phoenix.Router do
+  defmodule NoRouteError do
+    @moduledoc """
+    Exception raised when no route is found.
+    """
+    defexception plug_status: 404, message: "no route found"
+
+    def exception(opts) do
+      method = Keyword.fetch!(opts, :method)
+      path   = "/" <> Enum.join(Keyword.fetch!(opts, :path_info), "/")
+      %NoRouteError{message: "no route found for #{method} #{path}"}
+    end
+  end
+
   @moduledoc """
   Defines the Phoenix router.
 
@@ -224,7 +237,7 @@ defmodule Phoenix.Router do
       dependent on parameters, like the `Plug.MethodOverride`, will be
       disabled too. Defaults to:
 
-          [accept: ["*/*"],
+          [pass: ["*/*"],
            json_decoder: Poison,
            parsers: [:urlencoded, :multipart, :json]]
 
@@ -261,7 +274,6 @@ defmodule Phoenix.Router do
   `:http` and `:https` options defined above.
   """
 
-  alias Phoenix.Plugs
   alias Phoenix.Router.Adapter
   alias Phoenix.Router.Resource
   alias Phoenix.Router.Scope
@@ -270,11 +282,12 @@ defmodule Phoenix.Router do
 
   @doc false
   defmacro __using__(_opts) do
-    prelude   = prelude()
-    plug      = plug()
-    pipelines = pipelines()
-    server    = server()
-    [prelude, plug, pipelines, server]
+    quote do
+      unquote(prelude())
+      unquote(plug())
+      unquote(pipelines())
+      unquote(server())
+    end
   end
 
   defp prelude() do
@@ -288,17 +301,10 @@ defmodule Phoenix.Router do
 
       config = Adapter.config(__MODULE__)
       @config config
-      @otp_app config[:otp_app]
 
       # Set up initial scope
       @phoenix_pipeline nil
       Phoenix.Router.Scope.init(__MODULE__)
-
-      # TODO: Today we provide @dispatch_options which
-      # is specific to Cowboy. We need to figure out a way
-      # to specify, decoupled from the adapter, which
-      # transports we support (websockets, long pooling, etc).
-      Module.register_attribute __MODULE__, :dispatch_options, accumulate: true
     end
   end
 
@@ -307,6 +313,15 @@ defmodule Phoenix.Router do
       [:dispatch, :match, :before]
       |> Enum.map(&{&1, [], true})
       |> Plug.Builder.compile()
+
+    call =
+      quote do
+        unquote(conn) =
+          unquote(conn)
+          |> Plug.Conn.put_private(:phoenix_router, __MODULE__)
+          |> Plug.Conn.put_private(:phoenix_pipelines, [])
+        unquote(pipeline)
+      end
 
     quote location: :keep do
       @behaviour Plug
@@ -322,40 +337,64 @@ defmodule Phoenix.Router do
       @doc """
       Callback invoked by Plug on every request.
       """
-      def call(unquote(conn), opts) do
-        unquote(conn) =
-          Plug.Conn.put_private(unquote(conn), :phoenix_router, __MODULE__)
-          |> Plug.Conn.put_private(:phoenix_pipelines, [])
-        unquote(pipeline)
-      end
 
-      defp match(conn, []) do
-        match(conn, conn.method, conn.path_info)
-      end
+      # For debugging errors, we wrap each step in the pipeline
+      # in isolation. This allows us to have fresh copies of the
+      # connection as we go.
+      if config[:debug_errors] do
+        @debug_errors [otp_app: config[:otp_app]]
 
-      defp dispatch(conn, []) do
-        Phoenix.Router.Adapter.dispatch(conn, __MODULE__)
+        def call(unquote(conn), opts) do
+          Plug.Debugger.wrap(unquote(conn), @debug_errors, fn ->
+            unquote(call)
+          end)
+        end
+
+        defp match(conn, []) do
+          Plug.Debugger.wrap(conn, @debug_errors, fn ->
+            match(conn, conn.method, conn.path_info)
+          end)
+        end
+
+        defp dispatch(conn, []) do
+          Plug.Debugger.wrap(conn, @debug_errors, fn ->
+            conn.private.phoenix_route.(conn)
+          end)
+        end
+      else
+        def call(unquote(conn), opts) do
+          unquote(call)
+        end
+
+        defp match(conn, []) do
+          match(conn, conn.method, conn.path_info)
+        end
+
+        defp dispatch(conn, []) do
+          conn.private.phoenix_route.(conn)
+        end
       end
 
       defoverridable [init: 1, call: 2]
+      use Phoenix.Router.RenderErrors, view: config[:render_errors]
     end
   end
 
   defp pipelines() do
     quote do
       pipeline :before do
-        if static = @config[:static] do
-          static = Keyword.merge([from: @otp_app], static)
+        if static = config[:static] do
+          static = Keyword.merge([from: config[:otp_app]], static)
           plug Plug.Static, static
         end
 
         plug Plug.Logger
 
         if Application.get_env(:phoenix, :code_reloader) do
-          plug Plugs.CodeReloader
+          plug Phoenix.CodeReloader
         end
 
-        if parsers = @config[:parsers] do
+        if parsers = config[:parsers] do
           plug Plug.Parsers, parsers
           plug Plug.MethodOverride
         end
@@ -363,7 +402,7 @@ defmodule Phoenix.Router do
         plug Plug.Head
         plug :put_secret_key_base
 
-        if session = @config[:session] do
+        if session = config[:session] do
           salt    = Atom.to_string(__MODULE__)
           session = Keyword.merge([signing_salt: salt, encryption_salt: salt], session)
           plug Plug.Session, session
@@ -373,19 +412,19 @@ defmodule Phoenix.Router do
   end
 
   defp server() do
-    quote location: :keep do
+    quote location: :keep, unquote: false do
       @doc """
       Starts the current router for serving requests
       """
       def start() do
-        Adapter.start(@otp_app, __MODULE__)
+        Adapter.start(unquote(config[:otp_app]), __MODULE__)
       end
 
       @doc """
       Stops the current router from serving requests
       """
       def stop() do
-        Adapter.stop(@otp_app, __MODULE__)
+        Adapter.stop(unquote(config[:otp_app]), __MODULE__)
       end
 
       @doc """
@@ -407,22 +446,14 @@ defmodule Phoenix.Router do
     routes = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse
     Phoenix.Router.Helpers.define(env, routes)
 
-    quote location: :keep do
+    quote do
       @doc false
       def __routes__ do
         unquote(Macro.escape(routes))
       end
 
-      @doc false
-      def __transport__ do
-        @dispatch_options
-      end
-
-      # TODO: How to handle errors?
-      defp match(conn, _method, _path) do
-        Plug.Conn.put_private(conn, :phoenix_route, fn conn ->
-          Plug.Conn.put_status(conn, 404)
-        end)
+      defp match(conn, method, path_info) do
+        raise NoRouteError, method: method, path_info: path_info
       end
 
       # TODO: How is this customizable?

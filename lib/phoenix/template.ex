@@ -99,6 +99,7 @@ defmodule Phoenix.Template do
     defp available_templates(available) do
       "The following templates were compiled:\n\n"
         <> Enum.map_join(available, "\n", &"* #{&1}")
+        <> "\n"
     end
   end
 
@@ -128,7 +129,10 @@ defmodule Phoenix.Template do
     names = Enum.map(pairs, &elem(&1, 0))
     codes = Enum.map(pairs, &elem(&1, 1))
 
-    quote do
+    # We are using line -1 because we don't want warnings coming from
+    # render/2 to be reported in case the user has already defined a
+    # catch all render/2 clause.
+    quote line: -1 do
       unquote(codes)
 
       def render(template, _assign) do

@@ -6,13 +6,14 @@ defmodule Phoenix.Supervisor do
   end
 
   def init([]) do
-    pubsub_conf = Application.get_env(:phoenix, :pubsub)
+    pubsub = Application.get_env(:phoenix, :pubsub)
+    code_reloader = Application.get_env(:phoenix, :code_reloader)
 
     []
+    |> child(Phoenix.PubSub.Server, [pubsub], true)
+    |> child(Phoenix.CodeReloader.Server, [], code_reloader)
     |> child(Phoenix.Config.Supervisor, [], true)
-    |> child(Phoenix.PubSub.Server, [pubsub_conf], true)
     |> child(Phoenix.Transports.LongPoller.Supervisor, [], true)
-    |> child(Phoenix.CodeReloader, [], Application.get_env(:phoenix, :code_reloader))
     |> supervise(strategy: :one_for_one)
   end
 
