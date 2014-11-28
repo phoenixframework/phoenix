@@ -99,7 +99,7 @@ Resources will also generate a set of named routes and associated helper methods
 ```elixir
 defmodule MyApp.Router do
   use Phoenix.Router
-
+  ...
   resources "/users", UserController do
     resources "/comments", CommentController
   end
@@ -161,13 +161,18 @@ For example, to make a button to delete a post, you could write:
 ```elixir
 defmodule MyApp.PageController do
   use Phoenix.Controller
+  import MyApp.Router.Helpers
+
   plug :action
 
   def show(conn, %{"page" => "admin"}) do
-    redirect conn, MyApp.Router.Helpers.page_path(:show, "unauthorized")
+    redirect conn, to: page_path(:show, "unauthorized")
   end
+
   def show(conn, %{"page" => page}) do
-    render conn, "show.html", title: "Showing page #{page}"
+    conn
+    |> assign(:title, "Showing page #{page}")
+    |> render("show.html")
   end
 end
 ```
