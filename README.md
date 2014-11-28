@@ -44,7 +44,18 @@ When running in production, use protocol consolidation for increased performance
 defmodule MyApp.Router do
   use Phoenix.Router
 
-  scope alias: MyApp do
+  pipeline :browser do
+    plug :accepts, ~w(html)
+    plug :fetch_session
+  end
+
+  pipeline :api do
+    plug :accepts, ~w(json)
+  end
+
+  scope "/", alias: MyApp do
+    pipe_through :browser
+
     get "/pages/:page", PageController, :show
     get "/files/*path", FileController, :show
 
@@ -53,7 +64,9 @@ defmodule MyApp.Router do
     end
   end
 
-  scope "/admin", alias: MyApp.Admin, helper: "admin" do
+  scope "/api", alias: MyApp.Api do
+    pipe_through :api
+
     resources "/users", UserController
   end
 end
