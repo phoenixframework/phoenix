@@ -1,6 +1,11 @@
 # Changelog
 
-## v0.6.0
+## v0.6.1-dev
+
+* Enhancements
+  * [Controller] Allow sensitive parameters to be filtered from logs
+
+## v0.6.0 (2014-11-22)
 
 See the [`0.5.x` to `0.6.0` upgrade instructions](https://gist.github.com/chrismccord/e774e6ab5220e6505a03) for upgrading your
 existing applications.
