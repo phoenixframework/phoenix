@@ -176,19 +176,27 @@ defmodule Phoenix.Router.ResourcesTest do
   end
 
   test "nested options limit resource by passing :except option" do
-    conn = call(Router, :delete, "users/1/files/2")
-    assert conn.status == 404
+    assert_raise Phoenix.Router.NoRouteError, fn ->
+      call(Router, :delete, "users/1/files/2")
+    end
+
     conn = call(Router, :get, "users/1/files/new")
     assert conn.status == 200
   end
 
   test "nested options limit resource by passing :only option" do
-    conn = call(Router, :patch, "admin/1/files/2")
-    assert conn.status == 404
-    conn = call(Router, :post, "admin/1/files")
-    assert conn.status == 404
-    conn = call(Router, :delete, "admin/1/files/1")
-    assert conn.status == 404
+    assert_raise Phoenix.Router.NoRouteError, fn ->
+      call(Router, :patch, "admin/1/files/2")
+    end
+
+    assert_raise Phoenix.Router.NoRouteError, fn ->
+      call(Router, :post, "admin/1/files")
+    end
+
+    assert_raise Phoenix.Router.NoRouteError, fn ->
+      call(Router, :delete, "admin/1/files/1")
+    end
+
     conn = call(Router, :get, "admin/1/files/")
     assert conn.status == 200
     conn = call(Router, :get, "admin/1/files/1")
@@ -202,14 +210,22 @@ defmodule Phoenix.Router.ResourcesTest do
     assert conn.status == 200
     assert conn.resp_body == "show users"
 
-    conn = call(Router, :get, "admin/")
-    assert conn.status == 404
-    conn = call(Router, :patch, "admin/1")
-    assert conn.status == 404
-    conn = call(Router, :post, "admin")
-    assert conn.status == 404
-    conn = call(Router, :delete, "admin/1")
-    assert conn.status == 404
+
+    assert_raise Phoenix.Router.NoRouteError, fn ->
+      call(Router, :get, "admin/")
+    end
+
+    assert_raise Phoenix.Router.NoRouteError, fn ->
+      call(Router, :patch, "admin/1")
+    end
+
+    assert_raise Phoenix.Router.NoRouteError, fn ->
+      call(Router, :post, "admin")
+    end
+
+    assert_raise Phoenix.Router.NoRouteError, fn ->
+      call(Router, :delete, "admin/1")
+    end
 
     conn = call(Router, :get, "admin/1/comments")
     assert conn.status == 200
@@ -227,8 +243,9 @@ defmodule Phoenix.Router.ResourcesTest do
     assert conn.status == 200
     assert conn.resp_body == "create comments"
 
-    conn = call(Router, :delete, "scoped_files/1")
-    assert conn.status == 404
+    assert_raise Phoenix.Router.NoRouteError, fn ->
+      call(Router, :delete, "scoped_files/1")
+    end
   end
 
   test "param option allows default singularlized _id param to be overidden" do

@@ -9,16 +9,14 @@ defmodule Phoenix.Router.CowboyHandler do
   def upgrade(req, env, __MODULE__, {transport, plug, opts}) do
     conn = @connection.conn(req, transport)
     try do
-      case plug.call(conn, opts) do
-        %Plug.Conn{adapter: {@connection, req}} = conn ->
-          case conn.private[:upgrade] do
-            {:websocket, handler} ->
-              :cowboy_websocket.upgrade(req, env, __MODULE__, {handler, conn})
-            _ ->
-              {:ok, req, [{:result, :ok} | env]}
-          end
-        other ->
-          raise "Cowboy adapter expected #{inspect plug} to return Plug.Conn but got: #{inspect other}"
+      case conn = plug.call(conn, opts) do
+        %Plug.Conn{private: %{phoenix_upgrade: upgrade}} ->
+          {@connection, req}    = conn.adapter
+          {:websocket, handler} = upgrade
+          :cowboy_websocket.upgrade(req, env, __MODULE__, {handler, conn})
+        _ ->
+          {@connection, req} = maybe_send(conn, plug).adapter
+          {:ok, req, [{:result, :ok} | env]}
       end
     catch
       :error, value ->
@@ -40,6 +38,13 @@ defmodule Phoenix.Router.CowboyHandler do
   def terminate(reason, req, stack) do
     :cowboy_req.maybe_reply(stack, req)
     exit(reason)
+  end
+
+  defp maybe_send(%Plug.Conn{state: :unset}, _plug),      do: raise Plug.Conn.NotSentError
+  defp maybe_send(%Plug.Conn{state: :set} = conn, _plug), do: Plug.Conn.send_resp(conn)
+  defp maybe_send(%Plug.Conn{} = conn, _plug),            do: conn
+  defp maybe_send(other, plug) do
+    raise "Cowboy adapter expected #{inspect plug} to return Plug.Conn but got: #{inspect other}"
   end
 
   ## Websockets

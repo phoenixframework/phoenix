@@ -20,14 +20,14 @@ defmodule Phoenix.Router.Adapter do
         raise "please set :otp_app config for #{inspect router}"
     end
 
-    Phoenix.Config.merge(defaults(otp_app), config)
+    Phoenix.Config.merge(defaults(otp_app, router), config)
   end
 
   @doc """
   Starts the router.
   """
   def start(otp_app, module) do
-    Phoenix.Config.start_supervised(module, defaults(otp_app))
+    Phoenix.Config.start_supervised(module, defaults(otp_app, module))
 
     # TODO: We need to test this logic when we support custom adapters.
     if config = module.config(:http) do
@@ -95,7 +95,7 @@ defmodule Phoenix.Router.Adapter do
     :ok
   end
 
-  defp defaults(otp_app) do
+  defp defaults(otp_app, module) do
     [otp_app: otp_app,
 
      # Compile-time config
@@ -112,6 +112,14 @@ defmodule Phoenix.Router.Adapter do
      http: false,
      https: false,
      secret_key_base: nil,
-     debug_errors: false]
+     debug_errors: false,
+     render_errors: render_errors(module)]
+  end
+
+  defp render_errors(module) do
+    module
+    |> Module.split
+    |> Enum.at(0)
+    |> Module.concat("ErrorsView")
   end
 end

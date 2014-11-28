@@ -177,10 +177,8 @@ defmodule Phoenix.CodeReloader do
     """
   end
 
-  defp path(%Plug.Conn{path_info: []}), do:
-    "/"
   defp path(%Plug.Conn{path_info: path}), do:
-    Enum.reduce(path, [], fn(i, acc) -> [acc, ?/, i] end)
+    "/" <> Enum.join(path, "/")
 
   defp method(%Plug.Conn{method: method}), do:
     method

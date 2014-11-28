@@ -1,4 +1,17 @@
 defmodule Phoenix.Router do
+  defmodule NoRouteError do
+    @moduledoc """
+    Exception raised when no route is found.
+    """
+    defexception plug_status: 404, message: "no route found"
+
+    def exception(opts) do
+      method = Keyword.fetch!(opts, :method)
+      path   = "/" <> Enum.join(Keyword.fetch!(opts, :path_info), "/")
+      %NoRouteError{message: "no route found for #{method} #{path}"}
+    end
+  end
+
   @moduledoc """
   Defines the Phoenix router.
 
@@ -363,6 +376,7 @@ defmodule Phoenix.Router do
       end
 
       defoverridable [init: 1, call: 2]
+      use Phoenix.Router.RenderErrors, view: config[:render_errors]
     end
   end
 
@@ -438,11 +452,8 @@ defmodule Phoenix.Router do
         unquote(Macro.escape(routes))
       end
 
-      # TODO: How to handle errors?
-      defp match(conn, _method, _path) do
-        Plug.Conn.put_private(conn, :phoenix_route, fn conn ->
-          Plug.Conn.put_status(conn, 404)
-        end)
+      defp match(conn, method, path_info) do
+        raise NoRouteError, method: method, path_info: path_info
       end
 
       # TODO: How is this customizable?

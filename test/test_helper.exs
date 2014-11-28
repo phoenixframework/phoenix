@@ -8,4 +8,12 @@ Application.put_env(:phoenix, :code_reloader, false)
 # avoid polluting tests.
 Mix.shell(Mix.Shell.Process)
 
+# Used whenever a router fails. We default to simply
+# rendering a short string.
+defmodule Phoenix.ErrorsView do
+  def render(template, _assigns) do
+    "#{template} from Phoenix.ErrorsView"
+  end
+end
+
 ExUnit.start()
