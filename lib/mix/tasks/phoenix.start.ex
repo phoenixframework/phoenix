@@ -5,10 +5,10 @@ defmodule Mix.Tasks.Phoenix.Start do
   @recursive true
 
   @moduledoc """
-  Starts the router or a given worker
+  Starts the router or a given worker. Defaults to `MyApp.Router`
 
-      $ mix phoenix.routes
-      $ mix phoenix.routes MyApp.AnotherRouter
+      $ mix phoenix.start
+      $ mix phoenix.start MyApp.AnotherRouter
 
   """
   def run([]) do
