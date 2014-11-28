@@ -38,13 +38,13 @@ defmodule Phoenix.CodeReloader do
   @doc """
   API used by Plug to start the code reloader.
   """
-  def init(opts), do: opts
+  def init(opts), do: Keyword.put_new(opts, :reloader, &Phoenix.CodeReloader.reload!/0)
 
   @doc """
   API used by Plug to invoke the code reloader on every request.
   """
-  def call(conn, _opts) do
-    case Phoenix.CodeReloader.reload! do
+  def call(conn, opts) do
+    case opts[:reloader].() do
       {:error, output} ->
         conn
         |> put_resp_content_type("text/html")
