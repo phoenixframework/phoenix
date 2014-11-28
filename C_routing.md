@@ -214,7 +214,7 @@ The `Router.Helpers.url` function will get the host, port, proxy port and ssl in
 It is also possible to nest resources in a Phoenix router. Let's say we also have a posts resource which has a one to many relationship with users. That is to say, a user can create many posts, and an individual post belongs to only one user. We can represent that with a nested route like this.
 
 ```elixir
-resources "users", HelloPhoenix.UserControler do
+resources "users", HelloPhoenix.UserController do
   resources "posts", HelloPhoenix.PostController
 end
 ```
