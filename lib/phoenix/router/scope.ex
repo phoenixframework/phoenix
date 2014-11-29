@@ -1,14 +1,18 @@
 defmodule Phoenix.Router.Scope do
+  alias Phoenix.Router.Scope
   @moduledoc false
 
   @stack :phoenix_router_scopes
   @pipes :phoenix_pipeline_scopes
 
+  @derive [Access]
+  defstruct path: nil, alias: nil, as: nil, pipes: []
+
   @doc """
   Initializes the scope.
   """
   def init(module) do
-    Module.put_attribute(module, @stack, [{nil, nil, nil, []}])
+    Module.put_attribute(module, @stack, [%Scope{}])
     Module.put_attribute(module, @pipes, HashSet.new)
   end
 
@@ -47,7 +51,7 @@ defmodule Phoenix.Router.Scope do
     end
 
     update_stack(module, fn [scope|stack] ->
-      scope = put_elem(scope, 3, elem(scope, 3) ++ pipes)
+      scope = put_in scope.pipes, scope.pipes ++ pipes
       [scope|stack]
     end)
   end
@@ -66,8 +70,8 @@ defmodule Phoenix.Router.Scope do
     alias = Keyword.get(opts, :alias)
     if alias, do: alias = Atom.to_string(alias)
 
-    as = Keyword.get(opts, :as)
-    scope = {path, alias, as, []}
+    as    = Keyword.get(opts, :as)
+    scope = %Scope{path: path, alias: alias, as: as, pipes: []}
     update_stack(module, fn stack -> [scope|stack] end)
   end
 
@@ -81,12 +85,7 @@ defmodule Phoenix.Router.Scope do
   @doc """
   Returns true if modules definition is currently within a scope block
   """
-  def within_scope?(module) do
-    case get_stack(module) do
-      [{nil, nil, nil, []}] -> false
-      _ -> true
-    end
-  end
+  def within_scope?(module), do: get_stack(module) != [%Scope{}]
 
   defp join(module, path, alias, as) do
     stack = get_stack(module)
@@ -96,34 +95,34 @@ defmodule Phoenix.Router.Scope do
 
   defp join_path(stack, path) do
     "/" <>
-      ([Plug.Router.Utils.split(path)|extract(stack, 0)]
+      ([Plug.Router.Utils.split(path)|extract(stack, :path)]
        |> Enum.reverse()
        |> Enum.concat()
        |> Enum.join("/"))
   end
 
   defp join_alias(stack, alias) when is_atom(alias) do
-    [alias|extract(stack, 1)]
+    [alias|extract(stack, :alias)]
     |> Enum.reverse()
     |> Module.concat()
   end
 
   defp join_as(_stack, nil), do: nil
   defp join_as(stack, as) when is_atom(as) or is_binary(as) do
-    [as|extract(stack, 2)]
+    [as|extract(stack, :as)]
     |> Enum.reverse()
     |> Enum.join("_")
   end
 
   defp join_pipe_through(stack) do
-    for tuple <- Enum.reverse(stack),
-        item <- elem(tuple, 3),
+    for scope <- Enum.reverse(stack),
+        item <- scope.pipes,
         do: item
   end
 
-  defp extract(stack, pos) do
-    for tuple <- stack,
-        item = elem(tuple, pos),
+  defp extract(stack, attr) do
+    for scope <- stack,
+        item = scope[attr],
         do: item
   end
 
