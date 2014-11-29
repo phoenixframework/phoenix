@@ -1,6 +1,20 @@
 defmodule Phoenix.Router.RenderErrors do
   @moduledoc """
   A module used to catch failures and render them using a view.
+
+  This module is automatically used in `Phoenix.Router` but it
+  could be used with any other module that defines `call/2` as
+  an overridable function:
+
+      defmodule MyPlug do
+        use Plug.Builder
+        use Phoenix.Router.RenderErrors, view: MyApp.ErrorsView
+
+        ...
+      end
+
+  The options available on `use` are defined in the documentation
+  for the `wrap/3` function.
   """
 
   @already_sent {:plug_conn, :sent}
@@ -26,26 +40,24 @@ defmodule Phoenix.Router.RenderErrors do
 
   ## Options
 
-    * `:view` - the name of the view we render templates
-      against
+    * `:view` - the name of the view we render templates against
 
   """
   def wrap(conn, opts, fun) do
     try do
       fun.()
+    rescue
+      # Today we special case no NoRouteError because we don't
+      # want to see it logged. In the future, the requirements
+      # may also change when it comes to cascading routers.
+      e in [Phoenix.Router.NoRouteError] ->
+        maybe_render(e.conn, :error, e, System.stacktrace, opts)
+
     catch
       kind, reason ->
         stack = System.stacktrace
-
-        receive do
-          @already_sent ->
-            send self(), @already_sent
-            :erlang.raise kind, reason, stack
-        after
-          0 ->
-            render conn, kind, reason, stack, opts
-            :erlang.raise kind, reason, stack
-        end
+        maybe_render(conn, kind, reason, stack, opts)
+        :erlang.raise(kind, reason, stack)
     end
   end
 
@@ -62,6 +74,17 @@ defmodule Phoenix.Router.RenderErrors do
     |> put_view(opts[:view])
     |> put_status(status)
     |> render(format, %{kind: kind, reason: reason, stack: stack})
+  end
+
+  defp maybe_render(conn, kind, reason, stack, opts) do
+    receive do
+      @already_sent ->
+        send self(), @already_sent
+        conn
+    after
+      0 ->
+        render conn, kind, reason, stack, opts
+    end
   end
 
   defp format(conn) do

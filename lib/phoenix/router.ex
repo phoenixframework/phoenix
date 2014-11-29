@@ -3,12 +3,12 @@ defmodule Phoenix.Router do
     @moduledoc """
     Exception raised when no route is found.
     """
-    defexception plug_status: 404, message: "no route found"
+    defexception plug_status: 404, message: "no route found", conn: nil
 
     def exception(opts) do
-      method = Keyword.fetch!(opts, :method)
-      path   = "/" <> Enum.join(Keyword.fetch!(opts, :path_info), "/")
-      %NoRouteError{message: "no route found for #{method} #{path}"}
+      conn = Keyword.fetch!(opts, :conn)
+      path = "/" <> Enum.join(conn.path_info, "/")
+      %NoRouteError{message: "no route found for #{conn.method} #{path}", conn: conn}
     end
   end
 
@@ -247,6 +247,17 @@ defmodule Phoenix.Router do
           [at: "/",
            from: Mix.Project.config[:app]]
 
+    * `:debug_errors` - when true, uses `Plug.Debugger` functionality for
+      debugging failures in the application. Recomended to be set to true
+      only in development as it allows listing of the application source
+      code during debugging. Defaults to false.
+
+    * `:render_errors` - a module representing a view to render templates
+      whenever there is a failure in the application. For example, if the
+      application crashes with a 500 error during a HTML request,
+      `render("500.html", assigns)` will be called in the view given to
+      `:render_errors`. The default view is `MyApp.ErrorsView`.
+
   ### Runtime
 
     * `:http` - the configuration for the http server. Currently uses
@@ -259,7 +270,7 @@ defmodule Phoenix.Router do
 
     * `:secret_key_base` - a secret key used as base to generate secrets
       to encode cookies, session and friends. Defaults to nil as it must
-      be set per application
+      be set per application.
 
     * `:url` - configuration for generating URLs throughout the app.
       Accepts the host, scheme and port. Defaults to:
@@ -376,6 +387,7 @@ defmodule Phoenix.Router do
       end
 
       defoverridable [init: 1, call: 2]
+
       use Phoenix.Router.RenderErrors, view: config[:render_errors]
     end
   end
@@ -452,8 +464,8 @@ defmodule Phoenix.Router do
         unquote(Macro.escape(routes))
       end
 
-      defp match(conn, method, path_info) do
-        raise NoRouteError, method: method, path_info: path_info
+      defp match(conn, _method, _path_info) do
+        raise NoRouteError, conn: conn
       end
 
       # TODO: How is this customizable?

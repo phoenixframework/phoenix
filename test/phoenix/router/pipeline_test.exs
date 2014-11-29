@@ -111,15 +111,13 @@ defmodule Phoenix.Router.PipelineTest do
   end
 
   test "does not setup static" do
-    assert_raise Phoenix.Router.NoRouteError, ~r"no route found for GET /js/phoenix.js", fn ->
-      call(EmptyRouter, :get, "/js/phoenix.js")
-    end
+    conn = call(EmptyRouter, :get, "/js/phoenix.js")
+    assert conn.status == 404
   end
 
   test "does not override method" do
-    assert_raise Phoenix.Router.NoRouteError, ~r"no route found for POST /root/1", fn ->
-      call(EmptyRouter, :post, "/root/1", %{"_method" => "PUT"})
-    end
+    conn = call(EmptyRouter, :post, "/root/1", %{"_method" => "PUT"})
+    assert conn.status == 404
   end
 
   ## Plug configuration

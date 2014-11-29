@@ -4,6 +4,10 @@ defmodule Phoenix.Router.RenderErrorsTest do
 
   view = __MODULE__
 
+  def render("404.html", %{kind: kind, reason: _reason, stack: _stack, conn: conn}) do
+    "Got 404 from #{kind} with #{conn.method}"
+  end
+
   def render("415.html", %{kind: kind, reason: _reason, stack: _stack, conn: conn}) do
     "Got 415 from #{kind} with #{conn.method}"
   end
@@ -28,6 +32,10 @@ defmodule Phoenix.Router.RenderErrorsTest do
       send_resp conn, 200, "oops"
       raise "oops"
     end
+
+    match _ do
+      raise Phoenix.Router.NoRouteError, conn: conn
+    end
   end
 
   test "call/2 is overridden" do
@@ -43,6 +51,14 @@ defmodule Phoenix.Router.RenderErrorsTest do
       conn(:get, "/send_and_boom") |> Router.call([])
     end
 
+    assert_received {:plug_conn, :sent}
+  end
+
+  test "call/2 is overridden with no route match" do
+    conn = conn(:get, "/unknown") |> Router.call([])
+    assert conn.state == :sent
+    assert conn.status == 404
+    assert conn.resp_body == "Got 404 from error with GET"
     assert_received {:plug_conn, :sent}
   end
 
