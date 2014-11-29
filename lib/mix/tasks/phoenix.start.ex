@@ -13,8 +13,10 @@ defmodule Mix.Tasks.Phoenix.Start do
   """
   def run([]) do
     Mix.Task.run "app.start", []
-    Mix.Phoenix.router.start
-    no_halt
+    if Mix.Phoenix.is_phoenix_app? do
+      Mix.Phoenix.router.start
+      no_halt
+    end
   end
 
   def run([worker]) do
