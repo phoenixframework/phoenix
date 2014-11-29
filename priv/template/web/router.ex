@@ -10,14 +10,14 @@ defmodule <%= application_module %>.Router do
     plug :accepts, ~w(json)
   end
 
-  scope "/" do
+  scope "/", <%= application_module %> do
     pipe_through :browser # Use the default browser stack
 
-    get "/", <%= application_module %>.PageController, :index
+    get "/", PageController, :index
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api" do
+  # scope "/api", <%= application_module %> do
   #   pipe_through :api
   # end
 end
