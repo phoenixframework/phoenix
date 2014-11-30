@@ -105,7 +105,10 @@ defmodule Phoenix.Router.Adapter do
      session: false,
 
      # Transports
-     transports: [longpoller: [window_ms: 10_000]],
+     transports: [
+       longpoller_window_ms: 10_000,
+       websocket_serializer: Phoenix.Transports.JSONSerializer
+     ],
 
      # Runtime config
      url: [host: "localhost"],

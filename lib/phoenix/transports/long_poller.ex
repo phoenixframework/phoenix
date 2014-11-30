@@ -144,6 +144,6 @@ defmodule Phoenix.Transports.LongPoller do
   end
 
   defp timeout_window_ms(conn) do
-    get_in router_module(conn).config(:transports), [:longpoller, :window_ms]
+    get_in router_module(conn).config(:transports), [:longpoller_window_ms]
   end
 end

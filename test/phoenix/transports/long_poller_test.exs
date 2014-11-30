@@ -21,7 +21,7 @@ defmodule Phoenix.Tranports.LongPollerTest do
     http: [port: @port],
     secret_key_base: "7pe/JuPlX/rvpyk80h5r9eShTBtTLIY4WcDIX/r60Fz+8pnQDc1usobc9D7KvD9/l6DNZBXo5Uc8HXSpsuwCcA==",
     session: [store: :cookie, key: "_unit_test"],
-    transports: [longpoller: [window_ms: @window_ms]]
+    transports: [longpoller_window_ms: @window_ms]
   ])
 
   defmodule Router do

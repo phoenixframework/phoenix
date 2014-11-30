@@ -19,7 +19,7 @@ defmodule Phoenix.Integration.ChannelTest do
     secret_key_base: "7pe/JuPlX/rvpyk80h5r9eShTBtTLIY4WcDIX/r60Fz+8pnQDc1usobc9D7KvD9/l6DNZBXo5Uc8HXSpsuwCcA==",
     debug_errors: false,
     session: [store: :cookie, key: "_integration_test"],
-    transports: [longpoller: [window_ms: @window_ms]]
+    transports: [longpoller_window_ms: @window_ms]
   ])
 
   defmodule RoomChannel do
