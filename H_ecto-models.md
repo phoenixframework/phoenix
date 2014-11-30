@@ -291,5 +291,131 @@ Ok, our `users` table is back again.
  public | users_id_seq             | sequence | phoenix
 (4 rows)
 ```
+### Experiments With Our Model
+
+Now that we have defined a model and migrated our schema, let's experiment a little in an iex session.
+
+At the root of our project, let's run our now familiar command.
+
+```console
+$ iex -S mix
+```
+You might also want to establish a direct `psql` connection to your PostgreSQL database using your own credentials and database name.
+
+The first thing we need to do is create a new struct from our `User` model. Since we haven't aliased anything, we need to use the fully qualified name, `HelloPhoenix.User`.
+
+```console
+iex(1)> user = %HelloPhoenix.User{first_name: "Dweezil", last_name: "Zappa", email: "dweezil@example.com"}
+%HelloPhoenix.User{created_at: %Ecto.DateTime{day: 28, hour: 22, min: 10,
+  month: 11, sec: 31, year: 2014}, email: "dweezil@example.com",
+ first_name: "Dweezil", id: nil, last_name: "Zappa",
+ updated_at: %Ecto.DateTime{day: 28, hour: 22, min: 10, month: 11, sec: 31,
+  year: 2014}}
+```
+Notice that the default values we set in the model for `created_at` and `updated_at` are currently populated with a special struct `%Ecto.DateTime` representing the current date and time.
+
+Also, at this point, we don't have a value set for the `id` field. We haven't communicated at all with the database. We can test this with a simple query we perform directly in a `psql` session.
+
+```console
+phoenix_demo=# select * from users;
+ id | first_name | last_name | email | created_at | updated_at
+----+------------+-----------+-------+------------+------------
+(0 rows)
+```
+Now that we have a struct from our model, we can use the `insert` function from our repo to create a record in the database.
+
+```console
+iex(2)> HelloPhoenix.Repo.insert user
+%HelloPhoenix.User{created_at: %Ecto.DateTime{day: 28, hour: 22, min: 10,
+  month: 11, sec: 31, year: 2014}, email: "dweezil@example.com",
+ first_name: "Dweezil", id: 1, last_name: "Zappa",
+ updated_at: %Ecto.DateTime{day: 28, hour: 22, min: 10, month: 11, sec: 31,
+  year: 2014}}
+```
+
+Now we do have a value for the `id` field, which implies that our struct was saved to the database. We can verify that this actually worked directly in `psql`.
+
+```console
+phoenix_demo=# select * from users;
+ id | first_name | last_name |        email        |     created_at      |     updated_at
+----+------------+-----------+---------------------+---------------------+---------------------
+  1 | Dweezil    | Zappa     | dweezil@example.com | 2014-11-28 22:10:31 | 2014-11-28 22:10:31
+(1 row)
+```
+
+The `%Ecto.DateTime` struct has clearly been tranlated into a proper PostgreSQL datetime format for both the `created_at` and `updated_at` columns.
+
+Now that we have a row in the database, we can try out some of Ecto's query functions. Let's try to simply get all the users. Notice we pass the whole model module to the `HelloPhoenix.Repo.all` function.
+
+```console
+iex(3)> HelloPhoenix.Repo.all HelloPhoenix.User
+[%HelloPhoenix.User{created_at: %Ecto.DateTime{day: 28, hour: 22, min: 10,
+   month: 11, sec: 31, year: 2014}, email: "dweezil@example.com",
+  first_name: "Dweezil", id: 1, last_name: "Zappa",
+  updated_at: %Ecto.DateTime{day: 28, hour: 22, min: 10, month: 11, sec: 31,
+   year: 2014}}]
+```
+This returns us a list of all the users, represented as structs, which at this point is only Dweezil.
+
+Since we know the id of our record, we can use the `HelloPhoenix.Repo.get` function, which also takes the model module and an integer for the id.
+
+```console
+iex(4)> HelloPhoenix.Repo.get HelloPhoenix.User, 1
+%HelloPhoenix.User{created_at: %Ecto.DateTime{day: 28, hour: 22, min: 10,
+  month: 11, sec: 31, year: 2014}, email: "dweezil@example.com",
+ first_name: "Dweezil", id: 1, last_name: "Zappa",
+ updated_at: %Ecto.DateTime{day: 28, hour: 22, min: 10, month: 11, sec: 31,
+  year: 2014}}
+```
+This time, we get back a single struct because the id is unique for a given model.
+
+Let's see if we can update our user, changing both the first name and email address. Step one is changing the values for the given keys in our struct.
+
+```console
+iex(9)> user = Map.merge(user, %{first_name: "Frank", email: "frank@example.com"})
+%HelloPhoenix.User{created_at: %Ecto.DateTime{day: 28, hour: 22, min: 10,
+  month: 11, sec: 31, year: 2014}, email: "frank@example.com",
+ first_name: "Frank", id: 1, last_name: "Zappa",
+ updated_at: %Ecto.DateTime{day: 28, hour: 22, min: 10, month: 11, sec: 31,
+  year: 2014}}
+```
+Step two is updating it in the database with the `HelloPhoenix.Repo.update` function.
+
+```console
+iex(10)> HelloPhoenix.Repo.update user
+:ok
+```
+We got the atom `:ok` back, so it looks good. Let's check to see what our record looks like.
+
+```console
+phoenix_demo=# select * from users;
+ id | first_name | last_name |       email       |     created_at      |     updated_at
+----+------------+-----------+-------------------+---------------------+---------------------
+  1 | Frank      | Zappa     | frank@example.com | 2014-11-28 22:10:31 | 2014-11-28 22:10:31
+(1 row)
+```
+
+The `first_name` and `email` columns are right, but notice that the `updated_at` column didn't change as we might have expected it to. We need to manually manage that in our code.
+
+The only thing really left to try is deleting our user.
+
+```console
+iex(11)> HelloPhoenix.Repo.delete user
+:ok
+```
+Let's see what the `all` function returns.
+
+```console
+iex(12)> HelloPhoenix.Repo.all HelloPhoenix.User
+[]
+```
+Great, and now let's confirm in the database.
+
+```console
+phoenix_demo=# select * from users;
+ id | first_name | last_name | email | created_at | updated_at
+----+------------+-----------+-------+------------+------------
+(0 rows)
+```
 
 ### Adding a Query Module
