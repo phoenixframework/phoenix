@@ -8,6 +8,7 @@
   * [Router] Add `Plug.Debugger` that shows helpful error pages in case of failures
   * [Router] Add `Phoenix.Router.RenderErrors` which dispatches to a view for rendering in case of crashes
   * [Router] Log which pipelines were triggered during a request
+  * [Channel] Allows custom serializers to be configured for WebSocket Transport
 
 ## v0.6.0 (2014-11-22)
 
