@@ -1,6 +1,8 @@
 # Changelog
 
-## v0.6.1-dev
+## v0.7.0-dev
+
+## v0.6.1 (2014-11-30)
 
 * Enhancements
   * [Controller] Allow sensitive parameters to be filtered from logs
