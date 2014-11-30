@@ -363,7 +363,7 @@ defmodule Phoenix.Router do
 
         defp match(conn, []) do
           Plug.Debugger.wrap(conn, @debug_errors, fn ->
-            match(conn, conn.method, conn.path_info)
+            match(conn, conn.method, conn.path_info, conn.host)
           end)
         end
 
@@ -378,7 +378,7 @@ defmodule Phoenix.Router do
         end
 
         defp match(conn, []) do
-          match(conn, conn.method, conn.path_info)
+          match(conn, conn.method, conn.path_info, conn.host)
         end
 
         defp dispatch(conn, []) do
@@ -464,7 +464,7 @@ defmodule Phoenix.Router do
         unquote(Macro.escape(routes))
       end
 
-      defp match(conn, _method, _path_info) do
+      defp match(conn, _method, _path_info, _host) do
         raise NoRouteError, conn: conn
       end
 
@@ -494,19 +494,19 @@ defmodule Phoenix.Router do
     quote bind_quoted: binding() do
       route = Scope.route(__MODULE__, verb, path, controller, action, options)
       parts = {:%{}, [], route.binding}
-      host  = quote do: <<unquote(to_string(route.host)) <> _rest>>
 
       @phoenix_routes route
 
-      defp match(var!(conn) = %Plug.Conn{host: unquote(host)}, unquote(route.verb), unquote(route.segments)) do
+      defp match(var!(conn), unquote(route.verb), unquote(route.path_segments),
+                 unquote(route.host_segments)) do
         var!(conn) =
           Plug.Conn.put_private(var!(conn), :phoenix_route, fn conn ->
             conn = update_in(conn.params, &Map.merge(&1, unquote(parts)))
             opts = unquote(route.controller).init(unquote(route.action))
             unquote(route.controller).call(conn, opts)
           end)
-          |> Plug.Conn.put_private(:phoenix_pipelines, unquote(route.pipeline))
-        unquote(route.pipe_through)
+          |> Plug.Conn.put_private(:phoenix_pipelines, unquote(route.pipe_through))
+        unquote(route.pipe_segments)
       end
     end
   end

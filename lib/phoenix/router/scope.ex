@@ -5,7 +5,6 @@ defmodule Phoenix.Router.Scope do
   @stack :phoenix_router_scopes
   @pipes :phoenix_pipeline_scopes
 
-  @derive [Access]
   defstruct path: nil, alias: nil, as: nil, pipes: [], host: nil
 
   @doc """
@@ -21,9 +20,8 @@ defmodule Phoenix.Router.Scope do
   """
   def route(module, verb, path, controller, action, options) do
     as = Keyword.get(options, :as, Phoenix.Naming.resource_name(controller, "Controller"))
-    host = host(module)
-    {path, alias, as, pipe_through} = join(module, path, controller, as)
-    Phoenix.Router.Route.build(verb, path, alias, action, as, pipe_through, host)
+    {path, host, alias, as, pipe_through} = join(module, path, controller, as)
+    Phoenix.Router.Route.build(verb, path, host, alias, action, as, pipe_through)
   end
 
   @doc """
@@ -94,7 +92,7 @@ defmodule Phoenix.Router.Scope do
 
   defp join(module, path, alias, as) do
     stack = get_stack(module)
-    {join_path(stack, path), join_alias(stack, alias),
+    {join_path(stack, path), find_host(stack), join_alias(stack, alias),
      join_as(stack, as), join_pipe_through(stack)}
   end
 
@@ -125,17 +123,14 @@ defmodule Phoenix.Router.Scope do
         do: item
   end
 
-  defp extract(stack, attr) do
-    for scope <- stack,
-        item = scope[attr],
-        do: item
+  defp find_host(stack) do
+    Enum.find_value(stack, & &1.host)
   end
 
-  defp host(module) do
-    case get_stack(module) do
-      [scope | _rest] -> scope.host
-      _               -> nil
-    end
+  defp extract(stack, attr) do
+    for scope <- stack,
+        item = Map.fetch!(scope, attr),
+        do: item
   end
 
   defp get_stack(module) do

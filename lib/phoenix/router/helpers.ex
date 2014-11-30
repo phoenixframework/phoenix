@@ -99,7 +99,7 @@ defmodule Phoenix.Router.Helpers do
     action = route.action
 
     {bins, vars} = :lists.unzip(route.binding)
-    segs = optimize_segments(route.segments)
+    segs = optimize_segments(route.path_segments)
 
     # We are using -1 to avoid warnings in case a path has already been defined.
     quote line: -1 do

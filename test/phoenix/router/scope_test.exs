@@ -26,8 +26,10 @@ defmodule Phoenix.Router.ScopedRoutingTest do
       get "/users/:id", Api.V1.UserController, :baz_host
     end
 
-    scope "/admin", host: "foobar.com" do
-      get "/users/:id", Api.V1.UserController, :foo_host
+    scope host: "foobar.com" do
+      scope "/admin" do
+        get "/users/:id", Api.V1.UserController, :foo_host
+      end
     end
 
     scope "/admin" do
@@ -50,6 +52,12 @@ defmodule Phoenix.Router.ScopedRoutingTest do
 
     scope "/host", host: "baz." do
       get "/users/:id", Api.V1.UserController, :baz_host
+    end
+
+    scope host: "foobar.com" do
+      scope "/host" do
+        get "/users/:id", Api.V1.UserController, :foo_host
+      end
     end
 
     scope "/api" do
@@ -113,9 +121,14 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   end
 
   test "host 404s when failed match" do
+    conn = call(Router, :get, "http://foobar.com/host/users/1")
+    assert conn.status == 200
+
     conn = call(Router, :get, "http://baz.pang.com/host/users/1")
     assert conn.status == 200
-    assert conn.resp_body == "baz request from baz.pang.com"
+
+    conn = call(Router, :get, "http://foobar.com.br/host/users/1")
+    assert conn.status == 404
 
     conn = call(Router, :get, "http://ba.pang.com/host/users/1")
     assert conn.status == 404
