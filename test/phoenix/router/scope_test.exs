@@ -15,10 +15,20 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     def show(conn, _params), do: text(conn, "api v1 users show")
     def destroy(conn, _params), do: text(conn, "api v1 users destroy")
     def edit(conn, _params), do: text(conn, "api v1 users edit")
+    def foo_host(conn, _params), do: text(conn, "foo request from #{conn.host}")
+    def baz_host(conn, _params), do: text(conn, "baz request from #{conn.host}")
   end
 
   defmodule Router do
     use Phoenix.Router
+
+    scope "/admin", host: "baz." do
+      get "/users/:id", Api.V1.UserController, :baz_host
+    end
+
+    scope "/admin", host: "foobar.com" do
+      get "/users/:id", Api.V1.UserController, :foo_host
+    end
 
     scope "/admin" do
       get "/users/:id", Api.V1.UserController, :show
@@ -36,6 +46,10 @@ defmodule Phoenix.Router.ScopedRoutingTest do
       scope "/v1", alias: V1 do
         resources "/users", UserController, only: [:destroy]
       end
+    end
+
+    scope "/host", host: "baz." do
+      get "/users/:id", Api.V1.UserController, :baz_host
     end
 
     scope "/api" do
@@ -79,5 +93,31 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     assert conn.resp_body == "api v1 users edit"
     assert conn.params["venue_id"] == "12"
     assert conn.params["id"] == "13"
+  end
+
+  test "host scopes routes based on conn.host" do
+    conn = call(Router, :get, "http://foobar.com/admin/users/1")
+    assert conn.status == 200
+    assert conn.resp_body == "foo request from foobar.com"
+    assert conn.params["id"] == "1"
+  end
+
+  test "host scopes allows partial host matching" do
+    conn = call(Router, :get, "http://baz.bing.com/admin/users/1")
+    assert conn.status == 200
+    assert conn.resp_body == "baz request from baz.bing.com"
+
+    conn = call(Router, :get, "http://baz.pang.com/admin/users/1")
+    assert conn.status == 200
+    assert conn.resp_body == "baz request from baz.pang.com"
+  end
+
+  test "host 404s when failed match" do
+    conn = call(Router, :get, "http://baz.pang.com/host/users/1")
+    assert conn.status == 200
+    assert conn.resp_body == "baz request from baz.pang.com"
+
+    conn = call(Router, :get, "http://ba.pang.com/host/users/1")
+    assert conn.status == 404
   end
 end

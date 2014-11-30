@@ -62,7 +62,7 @@ defmodule Phoenix.Router.HelpersTest do
   end
 
   defp build(verb, path, controller, action, helper, pipe_through) do
-    Phoenix.Router.Route.build(verb, path, controller, action, helper, pipe_through)
+    Phoenix.Router.Route.build(verb, path, controller, action, helper, pipe_through, _host = nil)
   end
 
   defp extract_defhelper(route, pos) do

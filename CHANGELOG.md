@@ -4,6 +4,7 @@
 
 * Enhancements
   * [Controller] Allow sensitive parameters to be filtered from logs
+  * [Router] Add ability for routes to be scoped by hostname
 
 ## v0.6.0 (2014-11-22)
 

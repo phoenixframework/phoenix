@@ -494,9 +494,11 @@ defmodule Phoenix.Router do
     quote bind_quoted: binding() do
       route = Scope.route(__MODULE__, verb, path, controller, action, options)
       parts = {:%{}, [], route.binding}
+      host  = quote do: <<unquote(to_string(route.host)) <> _rest>>
+
       @phoenix_routes route
 
-      defp match(var!(conn), unquote(route.verb), unquote(route.segments)) do
+      defp match(var!(conn) = %Plug.Conn{host: unquote(host)}, unquote(route.verb), unquote(route.segments)) do
         var!(conn) =
           Plug.Conn.put_private(var!(conn), :phoenix_route, fn conn ->
             conn = update_in(conn.params, &Map.merge(&1, unquote(parts)))
@@ -684,6 +686,8 @@ defmodule Phoenix.Router do
     * `:path` - a string containing the path scope
     * `:as` - a string or atom containing the named helper scope
     * `:alias` - an alias (atom) containing the controller scope
+    * `:host` - a string containing the host scope, or prefix host scope, ie
+                `"foo.bar.com"`, `"foo."`
 
   """
   defmacro scope(options, do: context) do

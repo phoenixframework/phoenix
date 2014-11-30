@@ -20,15 +20,17 @@ defmodule Phoenix.Router.Route do
     * :pipeline - the pipeline names as a list of atoms
 
   """
-  defstruct [:verb, :path, :segments, :binding, :controller, :action, :helper, :pipe_through, :pipeline]
+  defstruct [:verb, :path, :segments, :binding, :controller, :action, :helper,
+             :pipe_through, :pipeline, :host]
+
   @type t :: %Route{}
 
   @doc """
   Receives the verb, path, controller, action and helper
   and returns a `Phoenix.Router.Route` struct.
   """
-  @spec build(String.t, String.t, atom, atom, atom, atom) :: t
-  def build(verb, path, controller, action, helper, pipe_through)
+  @spec build(String.t, String.t, atom, atom, atom, atom, binary) :: t
+  def build(verb, path, controller, action, helper, pipe_through, host)
       when is_binary(verb) and is_binary(path) and is_atom(controller) and
            is_atom(action) and (is_binary(helper) or is_nil(helper)) and
            is_list(pipe_through) do
@@ -42,6 +44,6 @@ defmodule Phoenix.Router.Route do
 
     %Route{verb: verb, path: path, segments: segments, binding: binding,
            controller: controller, action: action, helper: helper,
-           pipe_through: pipes, pipeline: [:before | pipe_through]}
+           pipe_through: pipes, pipeline: [:before | pipe_through], host: host}
   end
 end

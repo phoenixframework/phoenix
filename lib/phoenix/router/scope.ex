@@ -6,7 +6,7 @@ defmodule Phoenix.Router.Scope do
   @pipes :phoenix_pipeline_scopes
 
   @derive [Access]
-  defstruct path: nil, alias: nil, as: nil, pipes: []
+  defstruct path: nil, alias: nil, as: nil, pipes: [], host: nil
 
   @doc """
   Initializes the scope.
@@ -21,8 +21,9 @@ defmodule Phoenix.Router.Scope do
   """
   def route(module, verb, path, controller, action, options) do
     as = Keyword.get(options, :as, Phoenix.Naming.resource_name(controller, "Controller"))
+    host = host(module)
     {path, alias, as, pipe_through} = join(module, path, controller, as)
-    Phoenix.Router.Route.build(verb, path, alias, action, as, pipe_through)
+    Phoenix.Router.Route.build(verb, path, alias, action, as, pipe_through, host)
   end
 
   @doc """
@@ -70,8 +71,12 @@ defmodule Phoenix.Router.Scope do
     alias = Keyword.get(opts, :alias)
     if alias, do: alias = Atom.to_string(alias)
 
-    as    = Keyword.get(opts, :as)
-    scope = %Scope{path: path, alias: alias, as: as, pipes: []}
+    scope = struct(Scope, path: path,
+                          alias: alias,
+                          as: Keyword.get(opts, :as),
+                          host: Keyword.get(opts, :host),
+                          pipes: [])
+
     update_stack(module, fn stack -> [scope|stack] end)
   end
 
@@ -124,6 +129,13 @@ defmodule Phoenix.Router.Scope do
     for scope <- stack,
         item = scope[attr],
         do: item
+  end
+
+  defp host(module) do
+    case get_stack(module) do
+      [scope | _rest] -> scope.host
+      _               -> nil
+    end
   end
 
   defp get_stack(module) do
