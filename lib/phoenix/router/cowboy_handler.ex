@@ -1,6 +1,7 @@
 defmodule Phoenix.Router.CowboyHandler do
   @moduledoc false
   @connection Plug.Adapters.Cowboy.Conn
+  @already_sent {:plug_conn, :sent}
 
   def init({transport, :http}, req, {plug, opts}) when transport in [:tcp, :ssl] do
     {:upgrade, :protocol, __MODULE__, req, {transport, plug, opts}}
@@ -32,6 +33,12 @@ defmodule Phoenix.Router.CowboyHandler do
         stack = System.stacktrace()
         reason = {value, {plug, :call, [conn, opts]}}
         terminate(reason, req, stack)
+    after
+      receive do
+        @already_sent -> :ok
+      after
+        0 -> :ok
+      end
     end
   end
 

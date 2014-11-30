@@ -5,7 +5,7 @@
   "inch_ex": {:hex, :inch_ex, "0.2.0"},
   "json": {:hex, :json, "0.3.2"},
   "linguist": {:hex, :linguist, "0.1.4"},
-  "plug": {:hex, :plug, "0.8.3"},
+  "plug": {:hex, :plug, "0.8.4"},
   "poison": {:hex, :poison, "1.2.0"},
   "ranch": {:hex, :ranch, "1.0.0"},
   "websocket_client": {:git, "git://github.com/jeremyong/websocket_client.git", "2b8d9805306d36f22330f432ae6472f1f2625c30", []}}

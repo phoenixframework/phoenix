@@ -16,6 +16,9 @@ defmodule Phoenix.Integration.AdapterTest do
     end
 
     def done(conn, _) do
+      # Assert we never have a lingering sent message in the inbox
+      refute_received {:plug_conn, :sent}
+
       case conn.path_info do
         [] -> halt resp conn, 200, "ok"
         _  -> raise "oops"
@@ -33,6 +36,9 @@ defmodule Phoenix.Integration.AdapterTest do
     end
 
     def done(conn, _) do
+      # Assert we never have a lingering @already_sent entry in the inbox
+      refute_received {:plug_conn, :sent}
+
       case conn.path_info do
         [] -> halt resp conn, 200, "ok"
         _  -> raise "oops"
@@ -48,15 +54,15 @@ defmodule Phoenix.Integration.AdapterTest do
   test "adapters starts on configured port and serves requests and stops for prod" do
     capture_io fn -> ProdRouter.start end
 
+    {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
+    assert resp.status == 200
+    assert resp.body == "ok"
+
     assert capture_log(fn ->
       {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/unknown", %{})
       assert resp.status == 500
       assert resp.body == "500.html from Phoenix.ErrorsView"
     end) =~ "** (RuntimeError) oops"
-
-    {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
-    assert resp.status == 200
-    assert resp.body == "ok"
 
     ProdRouter.stop
     {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
@@ -65,15 +71,15 @@ defmodule Phoenix.Integration.AdapterTest do
   test "adapters starts on configured port and serves requests and stops for dev" do
     capture_io fn -> DevRouter.start end
 
+    {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
+    assert resp.status == 200
+    assert resp.body == "ok"
+
     assert capture_log(fn ->
       {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}/unknown", %{})
       assert resp.status == 500
       assert resp.body =~ "RuntimeError at GET /"
     end) =~ "** (RuntimeError) oops"
-
-    {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
-    assert resp.status == 200
-    assert resp.body == "ok"
 
     DevRouter.stop
     {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
