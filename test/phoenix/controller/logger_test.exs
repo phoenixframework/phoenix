@@ -24,15 +24,15 @@ defmodule Phoenix.Controller.LoggerTest do
     filter_parameters = Application.get_env(:phoenix, :filter_parameters)
 
     try do
-      Application.put_env(:phoenix, :filter_parameters, filter_parameters ++ ["Secret"])
+      Application.put_env(:phoenix, :filter_parameters, ["PASS"])
 
       output = capture_log fn ->
-        conn(:get, "/", password: "should_not_be_show", Secret: "should_not_be_show")
+        conn(:get, "/", password: "should_show", PASS: "should_not_show")
         |> fetch_params
         |> LoggerController.call(LoggerController.init(:index))
       end
 
-      assert output =~ "Parameters: %{\"Secret\" => \"FILTERED\", \"password\" => \"FILTERED\"}"
+      assert output =~ "Parameters: %{\"PASS\" => \"[FILTERED]\", \"password\" => \"should_show\"}"
     after
       Application.put_env(:phoenix, :filter_parameters, filter_parameters)
     end
@@ -40,21 +40,21 @@ defmodule Phoenix.Controller.LoggerTest do
 
   test "filter parameter when a map has secret key" do
     output = capture_log fn ->
-      conn(:get, "/", foo: "bar", map: %{password: "should_not_be_show"})
+      conn(:get, "/", foo: "bar", map: %{password: "should_not_show"})
       |> fetch_params
       |> LoggerController.call(LoggerController.init(:index))
     end
 
-    assert output =~ "Parameters: %{\"foo\" => \"bar\", \"map\" => %{\"password\" => \"FILTERED\"}}"
+    assert output =~ "Parameters: %{\"foo\" => \"bar\", \"map\" => %{\"password\" => \"[FILTERED]\"}}"
   end
 
   test "filter parameter when a list has a map with secret" do
     output = capture_log fn ->
-      conn(:get, "/", foo: "bar", list: [%{password: "should_not_be_show"}])
+      conn(:get, "/", foo: "bar", list: [%{password: "should_not_show"}])
       |> fetch_params
       |> LoggerController.call(LoggerController.init(:index))
     end
 
-    assert output =~ "Parameters: %{\"foo\" => \"bar\", \"list\" => [%{\"password\" => \"FILTERED\"}]}"
+    assert output =~ "Parameters: %{\"foo\" => \"bar\", \"list\" => [%{\"password\" => \"[FILTERED]\"}]}"
   end
 end
