@@ -4,7 +4,10 @@
 
 * Enhancements
   * [Controller] Allow sensitive parameters to be filtered from logs
-  * [Router] Add ability for routes to be scoped by hostname
+  * [Router] Add ability for routes to be scoped by hostname via the :host option
+  * [Router] Add `Plug.Debugger` that shows helpful error pages in case of failures
+  * [Router] Add `Phoenix.Router.RenderErrors` which dispatches to a view for rendering in case of crashes
+  * [Router] Log which pipelines were triggered during a request
 
 ## v0.6.0 (2014-11-22)
 
