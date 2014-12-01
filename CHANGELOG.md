@@ -4,7 +4,7 @@
 
 * Backwards incompatible changes
   * [Controller] `html/2`, `json/2`, `text/2`, `redirect/2` and
-`render/3` now halt automatically
+`render/3` no longer halt automatically
 
 ## v0.6.1 (2014-11-30)
 
