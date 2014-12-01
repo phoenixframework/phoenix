@@ -10,8 +10,7 @@ config :phoenix, <%= application_module %>.Router,
   url: [host: "localhost"],
   http: [port: System.get_env("PORT")],
   secret_key_base: "<%= secret_key_base %>",
-  debug_errors: false,
-  error_controller: <%= application_module %>.PageController
+  debug_errors: false
 
 # Session configuration
 config :phoenix, <%= application_module %>.Router,
