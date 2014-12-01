@@ -394,7 +394,6 @@ phoenix_demo=# select * from users;
   1 | Frank      | Zappa     | frank@example.com | 2014-11-28 22:10:31 | 2014-11-28 22:10:31
 (1 row)
 ```
-
 The `first_name` and `email` columns are right, but notice that the `updated_at` column didn't change as we might have expected it to. We need to manually manage that in our code.
 
 The only thing really left to try is deleting our user.
@@ -409,7 +408,7 @@ Let's see what the `all` function returns.
 iex(12)> HelloPhoenix.Repo.all HelloPhoenix.User
 []
 ```
-Great, and now let's confirm in the database.
+Great, and now let's confirm that in the database.
 
 ```console
 phoenix_demo=# select * from users;
@@ -419,3 +418,193 @@ phoenix_demo=# select * from users;
 ```
 
 ### Adding a Query Module
+
+We've taken a look at Ecto's basic built-in query functions above, but what if we need something a little more complex? Ecto has a very expressive query building DSL. It also allows us to define query modules in which to define functions to perform specific queries. We'll explore both of these next.
+
+For more complex queries, we have two options. If we have a one-off query, we might define a query using Ecto's dsl wherever we may be in the code, and have the `HelloPhoenix.Repo` execute our query right there. If, on the other hand, we might re-use our query, we can create a function in an Ecto query module to wrap the creation and execution of the query. That's the path we will persue here.
+
+To begin with, let's start from a clean slate. We'll roll back and then migrate our database to reset both our tables and sequences.
+
+```console
+$ mix ecto.rollback HelloPhoenix.Repo
+* running DOWN _build/dev/lib/hello_phoenix/priv/repo/migrations/20141125235524_initial_users_create.exs
+
+$ mix ecto.migrate HelloPhoenix.Repo
+* running UP _build/dev/lib/hello_phoenix/priv/repo/migrations/20141125235524_initial_users_create.exs
+```
+Now let's generate a migration to add a column to our `users` table.
+
+```console
+$ mix ecto.gen.migration HelloPhoenix.Repo add-active-column-to-users
+* creating priv/repo/migrations
+* creating priv/repo/migrations/20141130053817_add-active-column-to-users.exs
+```
+Then we add a new `active` field to our `HelloPhoenix.User` model with a boolean datatype and a default value of false.
+
+```elixir
+defmodule HelloPhoenix.User do
+  use Ecto.Model
+
+  schema "users" do
+    field :first_name, :string
+    field :last_name, :string
+    field :email, :string
+    field :active, :boolean, default: false
+    field :created_at, :datetime, default: Ecto.DateTime.local
+    field :updated_at, :datetime, default: Ecto.DateTime.local
+  end
+end
+```
+With the field added to the model, we can fill out the migration we just created.
+
+```elixir
+defmodule :"Elixir.HelloPhoenix.Repo.Migrations.Add-active-column-to-users" do
+  use Ecto.Migration
+
+  def up do
+    "ALTER TABLE users ADD COLUMN active boolean"
+  end
+
+  def down do
+    "ALTER TABLE users DROP COLUMN active"
+  end
+end
+```
+Now we can run that migration to add the column to our `users` table.
+
+```console
+$ mix ecto.migrate HelloPhoenix.Repo
+* running UP _build/dev/lib/hello_phoenix/priv/repo/migrations/20141130053817_add-active-column-to-users.exs
+```
+
+Let's see what it looks like in the database.
+
+```console
+phoenix_demo=# \d users
+                                     Table "public.users"
+   Column   |            Type             |                     Modifiers
+------------+-----------------------------+----------------------------------------------------
+ id         | integer                     | not null default nextval('users_id_seq'::regclass)
+ first_name | character varying(255)      |
+ last_name  | character varying(255)      |
+ email      | character varying(255)      |
+ created_at | timestamp without time zone |
+ updated_at | timestamp without time zone |
+ active     | boolean                     |
+Indexes:
+    "users_pkey" PRIMARY KEY, btree (id)
+```
+Great, `active` is there at the bottom.
+
+Now let's add some users, both active and inactive. We begin with an iex session.
+
+```console
+$ iex -S mix
+```
+Then we create an active user.
+
+```console
+iex(1)> user = %HelloPhoenix.User{first_name: "Frodo", last_name: "Baggins", email: "frodo@example.com", active: true}
+%HelloPhoenix.User{active: true,
+ created_at: %Ecto.DateTime{day: 29, hour: 21, min: 52, month: 11, sec: 15,
+  year: 2014}, email: "frodo@example.com", first_name: "Frodo", id: nil,
+ last_name: "Baggins",
+ updated_at: %Ecto.DateTime{day: 29, hour: 21, min: 52, month: 11, sec: 15,
+  year: 2014}}
+```
+And then we do the insert.
+
+```console
+iex(2)> HelloPhoenix.Repo.insert user
+%HelloPhoenix.User{active: true,
+ created_at: %Ecto.DateTime{day: 29, hour: 21, min: 52, month: 11, sec: 15,
+  year: 2014}, email: "frodo@example.com", first_name: "Frodo", id: 1,
+ last_name: "Baggins",
+ updated_at: %Ecto.DateTime{day: 29, hour: 21, min: 52, month: 11, sec: 15,
+  year: 2014}}
+```
+Then we create an inactive user.
+
+```console
+iex(3)> user = %HelloPhoenix.User{first_name: "Bilbo", last_name: "Baggins", email: "bilbo@example.com"}
+%HelloPhoenix.User{active: false,
+ created_at: %Ecto.DateTime{day: 29, hour: 21, min: 52, month: 11, sec: 15,
+  year: 2014}, email: "bilbo@example.com", first_name: "Bilbo", id: nil,
+ last_name: "Baggins",
+ updated_at: %Ecto.DateTime{day: 29, hour: 21, min: 52, month: 11, sec: 15,
+  year: 2014}}
+```
+And then we do the insert.
+
+```console
+iex(4)> HelloPhoenix.Repo.insert user
+%HelloPhoenix.User{active: false,
+ created_at: %Ecto.DateTime{day: 29, hour: 21, min: 52, month: 11, sec: 15,
+  year: 2014}, email: "bilbo@example.com", first_name: "Bilbo", id: 2,
+ last_name: "Baggins",
+ updated_at: %Ecto.DateTime{day: 29, hour: 21, min: 52, month: 11, sec: 15,
+  year: 2014}}
+```
+If we do a quick check in the database, we see that they are both there and that Ecto uses "t" and "f" to denote true and false.
+
+```console
+phoenix_demo=# select * from users;
+ id | first_name | last_name |        email        |     created_at      |     updated_at      | active
+----+------------+-----------+---------------------+---------------------+---------------------+--------
+  1 | Frodo    | Baggins     | frodo@example.com   | 2014-11-29 21:52:15 | 2014-11-29 21:52:15 | t
+  2 | Bilbo    | Baggins     | bilbo@example.com   | 2014-11-29 21:52:15 | 2014-11-29 21:52:15 | f
+(2 rows)
+```
+Great, so our data is ready, and we can create a query module to define some specific query functions. Let's create this one at `web/models/user_query.ex` for now. We are naming this query module after our model, implying that these functions should only apply to the `HelloPhoenix.User` model. There is nothing in Ecto that enforces this, but as a project grows, this seems like a useful approach.
+
+Since this is a very simple example, we're not going to create a separate `queries` directory, but if your project is large and complex, this might be an idea worth considering.
+
+For our query module to work, we need to import `Ecto.Query`. Then all we need to do is define a function which creates and executes the query we want. In our case, we want to find all the active users. (Be sure to check out the [Ecto Query documentation](http://hexdocs.pm/ecto/0.2.5/Ecto.Query.html) for a full explanation of how to build queries in Ecto.)
+
+```elixir
+defmodule HelloPhoenix.UserQuery do
+  import Ecto.Query
+
+  def active do
+    query = from users in HelloPhoenix.User,
+            where: users.active == true,
+            select: users
+    HelloPhoenix.Repo.all query
+  end
+end
+```
+Now that we have our module and function defined, we can run it in our iex session. We would expect that our `active` function would return only the row for Frodo.
+
+```console
+iex(5)> HelloPhoenix.UserQuery.active
+[%HelloPhoenix.User{active: true,
+  created_at: %Ecto.DateTime{day: 29, hour: 21, min: 52, month: 11, sec: 15,
+   year: 2014}, email: "frodo@example.com", first_name: "Frodo", id: 1,
+  last_name: "Baggins",
+  updated_at: %Ecto.DateTime{day: 29, hour: 21, min: 52, month: 11, sec: 15,
+   year: 2014}}]
+```
+That's exactly what happens.
+
+Just to run a little sanity test, let's make sure that `HelloPhoenix.Repo.all` returns both of our user records.
+
+```console
+iex(6)> HelloPhoenix.Repo.all HelloPhoenix.User
+[%HelloPhoenix.User{active: true,
+  created_at: %Ecto.DateTime{day: 29, hour: 21, min: 52, month: 11, sec: 15,
+   year: 2014}, email: "frodo@example.com", first_name: "Frodo", id: 1,
+  last_name: "Baggins",
+  updated_at: %Ecto.DateTime{day: 29, hour: 21, min: 52, month: 11, sec: 15,
+   year: 2014}},
+ %HelloPhoenix.User{active: false,
+  created_at: %Ecto.DateTime{day: 29, hour: 21, min: 52, month: 11, sec: 15,
+   year: 2014}, email: "bilbo@example.com", first_name: "Bilbo", id: 2,
+  last_name: "Baggins",
+  updated_at: %Ecto.DateTime{day: 29, hour: 21, min: 52, month: 11, sec: 15,
+   year: 2014}}]
+```
+It does indeed return both rows.
+
+We've taken a tour of Ecto and how we might integrate it into our Phoenix project. The next section will show how we might use Ecto in the actions of a standard RESTful controller.
+
+### Ecto in Controller Actions
