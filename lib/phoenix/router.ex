@@ -3,12 +3,15 @@ defmodule Phoenix.Router do
     @moduledoc """
     Exception raised when no route is found.
     """
-    defexception plug_status: 404, message: "no route found", conn: nil
+    defexception plug_status: 404, message: "no route found", conn: nil, router: nil
 
     def exception(opts) do
-      conn = Keyword.fetch!(opts, :conn)
-      path = "/" <> Enum.join(conn.path_info, "/")
-      %NoRouteError{message: "no route found for #{conn.method} #{path}", conn: conn}
+      conn   = Keyword.fetch!(opts, :conn)
+      router = Keyword.fetch!(opts, :router)
+      path   = "/" <> Enum.join(conn.path_info, "/")
+
+      %NoRouteError{message: "no route found for #{conn.method} #{path} (#{inspect router})",
+                    conn: conn, router: router}
     end
   end
 
@@ -465,7 +468,7 @@ defmodule Phoenix.Router do
       end
 
       defp match(conn, _method, _path_info, _host) do
-        raise NoRouteError, conn: conn
+        raise NoRouteError, conn: conn, router: __MODULE__
       end
 
       # TODO: How is this customizable?

@@ -34,7 +34,7 @@ defmodule Phoenix.Router.RenderErrorsTest do
     end
 
     match _ do
-      raise Phoenix.Router.NoRouteError, conn: conn
+      raise Phoenix.Router.NoRouteError, conn: conn, router: __MODULE__
     end
   end
 
