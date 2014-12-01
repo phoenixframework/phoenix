@@ -1,21 +1,10 @@
 defmodule Phoenix.Router.RenderErrors do
-  @moduledoc """
-  A module used to catch failures and render them using a view.
-
-  This module is automatically used in `Phoenix.Router` but it
-  could be used with any other module that defines `call/2` as
-  an overridable function:
-
-      defmodule MyPlug do
-        use Plug.Builder
-        use Phoenix.Router.RenderErrors, view: MyApp.ErrorsView
-
-        ...
-      end
-
-  The options available on `use` are defined in the documentation
-  for the `wrap/3` function.
-  """
+  # This module is used to catch failures and render them using a view.
+  #
+  # This module is automatically used in `Phoenix.Router` where it
+  # overrides `call/2` to provide rendering. Once the error is
+  # rendered, the error is reraised unless it is a NoRouteError.
+  @moduledoc false
 
   @already_sent {:plug_conn, :sent}
   import Plug.Conn

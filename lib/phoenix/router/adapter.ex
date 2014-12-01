@@ -1,6 +1,6 @@
 defmodule Phoenix.Router.Adapter do
   # This module contains the logic for starting and stopping
-  # the router server. Today, much of the logic is specific
+  # the router server. Today much of the logic is specific
   # to cowboy but we can make it more generic when we add
   # support for other adapters.
   @moduledoc false
