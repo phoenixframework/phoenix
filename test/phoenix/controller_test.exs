@@ -58,7 +58,7 @@ defmodule Phoenix.ControllerTest do
     conn = json(conn(:get, "/"), %{foo: :bar})
     assert conn.resp_body == "{\"foo\":\"bar\"}"
     assert get_resp_content_type(conn) == "application/json"
-    assert conn.halted
+    refute conn.halted
   end
 
   test "json/2 allows status injection on connection" do
@@ -66,20 +66,18 @@ defmodule Phoenix.ControllerTest do
     conn = json(conn, %{foo: :bar})
     assert conn.resp_body == "{\"foo\":\"bar\"}"
     assert conn.status == 400
-    assert get_resp_content_type(conn) == "application/json"
-    assert conn.halted
   end
 
   test "text/2" do
     conn = text(conn(:get, "/"), "foobar")
     assert conn.resp_body == "foobar"
     assert get_resp_content_type(conn) == "text/plain"
-    assert conn.halted
+    refute conn.halted
 
     conn = text(conn(:get, "/"), :foobar)
     assert conn.resp_body == "foobar"
     assert get_resp_content_type(conn) == "text/plain"
-    assert conn.halted
+    refute conn.halted
   end
 
   test "text/2 allows status injection on connection" do
@@ -87,15 +85,13 @@ defmodule Phoenix.ControllerTest do
     conn = text(conn, :foobar)
     assert conn.resp_body == "foobar"
     assert conn.status == 400
-    assert get_resp_content_type(conn) == "text/plain"
-    assert conn.halted
   end
 
   test "html/2" do
     conn = html(conn(:get, "/"), "foobar")
     assert conn.resp_body == "foobar"
     assert get_resp_content_type(conn) == "text/html"
-    assert conn.halted
+    refute conn.halted
   end
 
   test "html/2 allows status injection on connection" do
@@ -103,8 +99,6 @@ defmodule Phoenix.ControllerTest do
     conn = html(conn, "foobar")
     assert conn.resp_body == "foobar"
     assert conn.status == 400
-    assert get_resp_content_type(conn) == "text/html"
-    assert conn.halted
   end
 
   test "redirect/2 with :to" do
@@ -112,7 +106,7 @@ defmodule Phoenix.ControllerTest do
     assert conn.resp_body =~ "/foobar"
     assert get_resp_content_type(conn) == "text/html"
     assert get_resp_header(conn, "Location") == ["/foobar"]
-    assert conn.halted
+    refute conn.halted
 
     conn = redirect(conn(:get, "/"), to: "/<foobar>")
     assert conn.resp_body =~ "/&lt;foobar&gt;"
@@ -126,7 +120,7 @@ defmodule Phoenix.ControllerTest do
     conn = redirect(conn(:get, "/"), external: "http://example.com")
     assert conn.resp_body =~ "http://example.com"
     assert get_resp_header(conn, "Location") == ["http://example.com"]
-    assert conn.halted
+    refute conn.halted
   end
 
   defp with_accept(header) do

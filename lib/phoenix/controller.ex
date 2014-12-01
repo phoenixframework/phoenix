@@ -120,7 +120,7 @@ defmodule Phoenix.Controller do
   def error(conn), do: conn.private |> Map.get(:phoenix_error)
 
   @doc """
-  Sends JSON response and halts.
+  Sends JSON response.
 
   It uses the configured `:format_encoders` under the `:phoenix`
   application for `:json` to pick up the encoder module.
@@ -140,7 +140,7 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Sends text response and halts.
+  Sends text response.
 
   ## Examples
 
@@ -155,7 +155,7 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Sends html response and halts.
+  Sends html response.
 
   ## Examples
 
@@ -323,9 +323,6 @@ defmodule Phoenix.Controller do
   content type (for example, a HTML template will set "text/html" as response
   content type) and the data is sent to the client with default status of 200.
 
-  The connection is halted after rendering, meaning any other plug in the
-  pipeline won't be invoked.
-
   ## Arguments
 
     * `conn` - the `Plug.Conn` struct
@@ -477,7 +474,6 @@ defmodule Phoenix.Controller do
     conn
     |> put_resp_content_type(content_type)
     |> send_resp(conn.status || default_status, body)
-    |> halt()
   end
 
   @doc """
