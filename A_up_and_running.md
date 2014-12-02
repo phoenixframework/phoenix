@@ -1,62 +1,86 @@
 ##Hello Phoenix!
-The aim of this first guide is to get a phoenix application up and running on your system as quickly as possible.
+The aim of this first guide is to get a Phoenix application up and running as quickly as possible.
 
-Before we begin, you will need to install Elixir and Erlang on your machine. The Elixir site itself has the latest and most complete [installation information](http://elixir-lang.org/getting_started/1.html). Currently, Phoenix requires Elixir version 1.0.0 or greater which in turn requires Erlang version 17.0 or greater.
+Before we begin, we will need to install Elixir and Erlang. The Elixir site itself has the latest and most complete [installation information](http://elixir-lang.org/getting_started/1.html). Currently, Phoenix requires Elixir version 1.0.0 or greater which in turn requires Erlang version 17.0 or greater.
 
-In order to install Phoenix, you will also need to have git installed on your system. While git is extremely popular, for those of you who may not have it installed, this is an important step. Github has some good documentation on [getting set up with git](https://help.github.com/articles/set-up-git).
+In order to install Phoenix, we will also need to have git installed on our system. While git is extremely popular, for those of us who may not have it installed, this is an important step. Github has some good documentation on [getting set up with git](https://help.github.com/articles/set-up-git).
 
 Let's get started.
 
-The first thing we need to do is clone the phoenix repo from github. Visit the Phoenix project's page on github: https://github.com/phoenixframework/phoenix
+The first thing we need to do is clone the phoenix repo from github. Let's navigate into a directory that we want to contain Phoenix. Cloning the repo will create a new directory called `phoenix` wherever we run the clone command. Here are the steps.
 
 - First, clone the repo
-
-    `git clone https://github.com/phoenixframework/phoenix.git`
+```console
+$ git clone https://github.com/phoenixframework/phoenix.git
+```
 
 - Then cd into the phoenix directory itself
+```console
+$ cd phoenix
+```
 
-    `cd phoenix`
+- And make sure we are on the master branch.
+```console
+$ git checkout master
+```
 
-- And make sure you are on the master branch.
+- Get the dependencies and compile the whole project
+```console
+$ mix do deps.get, compile
+```
+Note: This is passing a list of arguments to mix and is functionally equivalent to the two line version.
 
-    `git checkout master`
+```console
+$ mix deps.get
+```
 
-Once this is done, we need to have phoenix generate a new project for us, and we need  it to do so outside the phoenix repo itself. This is like running 'rails new my_project_name', in which rails will generate an empty project outside of the rails gem directory.
+```console
+$ mix compile
+```
 
-Phoenix will accept either absolute or relative paths for the directory of you new project. Both of these will work:
+Once this is done, we need to have Phoenix generate a new project for us, and we need it to do so outside the Phoenix repo itself. Phoenix provides a mix task `phoenix.new` for this, and the task takes both the name of our new project and the path to where we want  the new application to live.
 
-` $ mix phoenix.new hello_phoenix ../hello_phoenix`
-` $ mix phoenix.new hello_phoenix /Users/me/work/elixir-stuff/hello_phoenix`
+Phoenix will accept either an absolute or relative path for the directory of our new project. Either of these will work.
+
+```console
+$ mix phoenix.new hello_phoenix /Users/me/work/elixir-stuff/hello_phoenix
+```
+
+```console
+$ mix phoenix.new hello_phoenix ../hello_phoenix
+```
 
 For our purposes, a relative path will do.
 
-` $ mix phoenix.new hello_phoenix ../hello_phoenix`
+```console
+$ mix phoenix.new hello_phoenix ../hello_phoenix
+```
 
-Then cd into the new project directory.
+We can then `cd` into the new project directory.
 
-`cd ../hello_phoenix`
+```console
+$ cd ../hello_phoenix
+```
 
-The next step is to get and compile the dependencies that your phoenix application will need to run:
+The next step is to get and compile the dependencies that our phoenix application will need.
 
-` $ mix do deps.get, compile`
+```console
+$ mix do deps.get, compile
+```
+This is different from the similar step we did above. That step was compiling Phoenix itself. This is compiling our new application, which Phoenix just generated.
 
-Note: This is passing a list of arguments to mix and is functionally equivalent to the two line version.
+Once the application compiles successfully, we can start it.
 
-` $ mix deps.get`
+```console
+$ mix phoenix.start
+```
 
-` $ mix compile`
-
-After that, we start the application.
-
-` $ mix phoenix.start`
-
-Point your favorite web browser to localhost port 4000, and you should see the Phoenix Framework welcome page.
-http://localhost:4000/  
+If we point our favorite web browser at [http://localhost:4000](http://localhost:4000), we should see the Phoenix Framework welcome page.
 
 ![Phoenix Welcome Page](/images/welcome-to-phoenix.png)
 
 If your screen looks like the image above, congratulations! You now have working Phoenix application.
 
-Locally, your application is running in an iex session. To stop it, hit ctrl-c twice, just as you would to stop iex normally.
+Locally, our application is running in an iex session. To stop it, we hit ctrl-c twice, just as we would to stop iex normally.
 
-The next step is customizing the application just a bit to give you a sense of how a Phoenix is put together.
+The next step is customizing our application just a bit to give us a sense of how a Phoenix app is put together.
