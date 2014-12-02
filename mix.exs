@@ -30,7 +30,8 @@ defmodule Phoenix.Mixfile do
   def deps do
     [{:cowboy, "~> 1.0", optional: true},
      {:linguist, "~> 0.1.4"},
-     {:plug, "~> 0.8.4"},
+     # TODO: Bump Plug back to hex on next release
+     {:plug, github: "elixir-lang/plug"},
      {:poison, "~> 1.2"},
      {:earmark, "~> 0.1", only: :docs},
      {:ex_doc, "~> 0.6", only: :docs},

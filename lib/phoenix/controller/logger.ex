@@ -38,6 +38,9 @@ defmodule Phoenix.Controller.Logger do
     conn
   end
 
+  defp filter_values(%{__struct__: mod} = struct, _filter_params) when is_atom(mod) do
+    struct
+  end
   defp filter_values(%{} = map, filter_params) do
     Enum.into map, %{}, fn {k, v} ->
       if String.contains?(k, filter_params) do

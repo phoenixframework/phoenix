@@ -57,4 +57,20 @@ defmodule Phoenix.Controller.LoggerTest do
 
     assert output =~ "Parameters: %{\"foo\" => \"bar\", \"list\" => [%{\"password\" => \"[FILTERED]\"}]}"
   end
+
+  test "does not filter structs" do
+    output = capture_log fn ->
+      conn(:get, "/", %{foo: "bar", file: %Plug.Upload{}})
+      |> fetch_params
+      |> LoggerController.call(LoggerController.init(:index))
+    end
+    assert output =~ "Parameters: %{\"file\" => %Plug.Upload{content_type: nil, filename: nil, path: nil}, \"foo\" => \"bar\"}"
+
+    output = capture_log fn ->
+      conn(:get, "/", %{foo: "bar", file: %{__struct__: "s"}})
+      |> fetch_params
+      |> LoggerController.call(LoggerController.init(:index))
+    end
+    assert output =~ "Parameters: %{\"file\" => %{\"__struct__\" => \"s\"}, \"foo\" => \"bar\"}"
+  end
 end
