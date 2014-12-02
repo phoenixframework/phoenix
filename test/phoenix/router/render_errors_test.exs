@@ -1,6 +1,6 @@
 defmodule Phoenix.Router.RenderErrorsTest do
   use ExUnit.Case, async: true
-  use Plug.Test
+  use ConnHelper
 
   view = __MODULE__
 
@@ -40,7 +40,7 @@ defmodule Phoenix.Router.RenderErrorsTest do
 
   test "call/2 is overridden" do
     assert_raise RuntimeError, "oops", fn ->
-      conn(:get, "/boom") |> Router.call([])
+      call(Router, :get, "/boom")
     end
 
     assert_received {:plug_conn, :sent}
@@ -48,14 +48,14 @@ defmodule Phoenix.Router.RenderErrorsTest do
 
   test "call/2 is overridden but is a no-op when response is already sent" do
     assert_raise RuntimeError, "oops", fn ->
-      conn(:get, "/send_and_boom") |> Router.call([])
+      call(Router, :get, "/send_and_boom")
     end
 
     assert_received {:plug_conn, :sent}
   end
 
   test "call/2 is overridden with no route match" do
-    conn = conn(:get, "/unknown") |> Router.call([])
+    conn = call(Router, :get, "/unknown")
     assert conn.state == :sent
     assert conn.status == 404
     assert conn.resp_body == "Got 404 from error with GET"

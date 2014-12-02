@@ -60,7 +60,7 @@ defmodule Phoenix.CodeReloader do
     <!DOCTYPE html>
     <html>
     <head>
-        <title>CompilationError at #{method(conn)} #{path(conn)}</title>
+        <title>CompilationError at #{method(conn)} #{full_path(conn)}</title>
         <style>
         * {
             margin: 0;
@@ -162,7 +162,7 @@ defmodule Phoenix.CodeReloader do
     <body>
         <div class="top">
             <header class="exception">
-                <h2><strong>CompilationError</strong> <span>at #{method(conn)} #{path(conn)}</span></h2>
+                <h2><strong>CompilationError</strong> <span>at #{method(conn)} #{full_path(conn)}</span></h2>
                 <p>Showing console output</p>
             </header>
         </div>
@@ -176,9 +176,6 @@ defmodule Phoenix.CodeReloader do
     </html>
     """
   end
-
-  defp path(%Plug.Conn{path_info: path}), do:
-    "/" <> Enum.join(path, "/")
 
   defp method(%Plug.Conn{method: method}), do:
     method
