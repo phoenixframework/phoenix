@@ -73,6 +73,18 @@ defmodule Phoenix.Channel.Transport do
     end
   end
 
+  @doc """
+  Dispatches `%Phoenix.Socket.Message{}` in response to a heartbeat message sent from the client.
+ 
+  The Message format sent to phoenix requires the following key / values:
+
+    * channel - The String value "phoenix"
+    * topic - The String value "conn"
+    * event - The String value "heartbeat"
+    * message - An empty JSON message payload, ie {}
+
+  The server will respond to heartbeats with the same message
+  """
   def dispatch(socket, "phoenix", "heartbeat", _msg) do
     msg = %Message{channel: "phoenix", topic: "conn", event: "heartbeat", message: %{}}
     send socket.pid, msg
