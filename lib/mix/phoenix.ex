@@ -26,4 +26,13 @@ defmodule Mix.Phoenix do
   defp beam_to_module(path) do
     path |> Path.basename(".beam") |> String.to_atom()
   end
+
+  @doc """
+  Checks to see if an app has phoenix in its dependency list.
+  """
+  def is_phoenix_app? do
+    Mix.Project.config
+    |> Keyword.fetch!(:deps)
+    |> Keyword.has_key?(:phoenix)
+  end
 end
