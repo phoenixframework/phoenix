@@ -19,7 +19,7 @@ Let's make some additions to our application so we can experiment a little.
 First, let's define a new route in `web/router.ex` within the `scope "/" do` block.
 
 ```elixir
-get "/test", Test.PageController, :test
+get "/test", HelloPhoenix.PageController, :test
 ```
 
 Now, let's define the controller action we specified in the route. We'll add a `test/2` action in the `web/controllers/page_controller.ex` file.
@@ -36,7 +36,7 @@ We're going to create a function that tells us which controller and action are h
 To do that, we need to import the `action_name/1` and `controller_module/1` functions from `Phoenix.Controller` in the main view.
 
 ```elixir
-defmodule Test.View do
+defmodule HelloPhoenix.View do
   use Phoenix.View, root: "web/templates"
 
   # The quoted expression returned by this block is applied
@@ -44,8 +44,8 @@ defmodule Test.View do
   using do
     quote do
       # Import common functionality
-      import Test.I18n
-      import Test.Router.Helpers
+      import HelloPhoenix.I18n
+      import HelloPhoenix.Router.Helpers
       import Phoenix.Controller, only: [action_name: 1, controller_module: 1] # Add This Import Statement
 
 . . .
@@ -98,13 +98,13 @@ Note, it is important to put parenthesis around the `conn` argument to `from_str
 Stacktrace
 
     (elixir) lib/map.ex:60: Map.from_struct([:__struct__, :adapter, :assigns, :before_send, :cookies, :halted, :host, :method, :params, :path_info, :peer, :port, :private, :query_string, :remote_ip, :req_cookies, :req_headers, :resp_body, :resp_cookies, :resp_headers, :scheme, :script_name, :secret_key_base, :state, :status])
-    (test) web/views/page_view.ex:4: Test.PageView.render/2
+    (test) web/views/page_view.ex:4: HelloPhoenix.PageView.render/2
     (phoenix) lib/phoenix/view.ex:247: Phoenix.View.render_within/3
     (phoenix) lib/phoenix/view.ex:262: Phoenix.View.render_to_iodata/3
     (phoenix) lib/phoenix/controller.ex:451: Phoenix.Controller.render/4
-    (test) web/controllers/page_controller.ex:1: Test.PageController.phoenix_controller_stack/2
+    (test) web/controllers/page_controller.ex:1: HelloPhoenix.PageController.phoenix_controller_stack/2
     (phoenix) lib/phoenix/router/adapter.ex:132: Phoenix.Router.Adapter.dispatch/2
-    (test) lib/phoenix/router.ex:2: Test.Router.call/2
+    (test) lib/phoenix/router.ex:2: HelloPhoenix.Router.call/2
 
 ```
 
