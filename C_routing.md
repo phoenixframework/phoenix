@@ -1,22 +1,30 @@
-###Routing
+### Routing
 
-Phoenix routing has a dual nature. As we have seen in the preceding guide, it is a way to parse incoming HTTP requests and dispatch to the correct controller and action - passing along any parameters that may have been included. It is also a mechanism for generating a path or url given a previously defined route - passing in any parameters which may be needed.
+The Phoenix router is the main hub of your application. It matches HTTP requests to controller actions, wires up realtime channel handlers, and defines a serires of pipeline transformations for scoping middleware to sets of routes.
 
-The router file that Phoenix generates, `web/router.ex`, will look something like this one. Phoenix release 0.5.0 and earlier will, however, have an extra `as: :pages` option on the end of the route (just after `:index` ).
+The router file that Phoenix generates, `web/router.ex`, will look something like this one.
 
 ```elixir
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
-  scope "/" do
-    # Use the default browser stack.
-    pipe_through :browser
+  pipeline :browser do
+    plug :accepts, ~w(html)
+    plug :fetch_session
+  end
 
-    get "/", HelloPhoenix.PageController, :index
+  # pipeline :api do
+  #   plug :accepts, ~w(json)
+  # end
+
+  scope "/", HelloPhoenix do
+    pipe_through :browser # Use the default browser stack
+
+    get "/", PageController, :index
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api" do
+  # scope "/api", HelloPhoenix do
   #   pipe_through :api
   # end
 end
@@ -25,12 +33,12 @@ The name you gave your application will appear instead of 'HelloPhoenix' for bot
 
 The first line of this module `use Phoenix.Router` simply makes Phoenix router functions available in our particular router.
 
-Scopes have their own section in this guide, so we won't spend time on the `scope "/" do` block here. The `pipe_through :browser` line will get a full treatment in the Pipeline section of this guide. We'll skip over it for now as well.
+Scopes have their own section in this guide, so we won't spend time on the `scope "/" do` block here. The `pipe_through :browser` line will get a full treatment in the Pipeline section of this guide. For now, you only need to know that pipelines allow a set of middleware transformations to be applied to different sets of routes.
 
 Inside the scope block, however, we have our first actual route.
-`get "/", HelloPhoenix.Controller, :index`
+`get "/", PageController, :index`
 
-'get' is a Phoenix macro which expands out to define one clause of the match function. It corresponds to the HTTP verb GET. Similar macros exist for other HTTP verbs including POST, PUT, PATCH, DELETE, OPTIONS, CONNECT, TRACE and HEAD.
+`get` is a Phoenix macro which expands out to define one clause of the match function. It corresponds to the HTTP verb GET. Similar macros exist for other HTTP verbs including POST, PUT, PATCH, DELETE, OPTIONS, CONNECT, TRACE and HEAD.
 
 The first argument to these macros is the path. Here, it is the root of the application, "/". The next two arguments are the controller and action we want to have handle this request. These macros may also take other options, which we will see throughout the rest of this guide.
 
@@ -39,12 +47,10 @@ If this were the only route in our router module, the whole module would look li
 ```elixir
 defmodule HelloPhoenix.Router do
   def match(conn, "GET", ["/"]) do
-    Controller.perform_action(conn, HelloPhoenix.PageController, :index)
-  end
 end
 ```
 
-Clearly, the body of the match function is where the index function of the PageController is called.
+The body of the match function sets up the connection and invokes the matched controller action.
 
 As we add more routes, more clauses of the match function will be added to our router module. These will behave like any other multi-clause function in Elixir. They will be tried in order from the top, and the first clause to match the paramaters given (verb and path) will be executed. After a match is found, the search will stop and no other clauses will by tried.
 
@@ -621,15 +627,23 @@ Here's another look at the router from a newly generated Phoenix application, th
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
-  scope "/" do
-    # Use the default browser stack.
+  pipeline :browser do
+    plug :accepts, ~w(html)
+    plug :fetch_session
+  end
+
+  pipeline :api do
+    plug :accepts, ~w(json)
+  end
+  
+  scope "/", HelloPhoenix do
     pipe_through :browser
 
-    get "/", HelloPhoenix.PageController, :index
+    get "/", PageController, :index
   end
 
   # Other scopes may use custom stacks.
-  scope "/api" do
+  scope "/api", HelloPhoenix do
     pipe_through :api
 
     resources "reviews", HelloPhoenix.ReviewController
@@ -648,6 +662,11 @@ If we know that our application will only render views for the browser. We can s
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
+  pipeline :browser do
+    plug :accepts, ~w(html)
+    plug :fetch_session
+  end
+  
   pipe_through :browser
 
   get "/", HelloPhoenix.PageController, :index
@@ -663,6 +682,12 @@ Let's stretch these ideas out a little. What if we need to pipe requests through
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
+  pipeline :browser do
+    plug :accepts, ~w(html)
+    plug :fetch_session
+  end
+  ...
+  
   scope "/reviews" do
     # Use the default browser stack.
     pipe_through [:browser, :review_checks, :other_great_stuff]
@@ -677,6 +702,12 @@ Here's another example where nested scopes have different pipelines.
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
+  pipeline :browser do
+    plug :accepts, ~w(html)
+    plug :fetch_session
+  end
+  ...
+  
   scope "/" do
     pipe_through :browser
 
@@ -701,6 +732,11 @@ Phoenix allows us to create our own custom pipelines anywhere in the router. It 
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
+  pipeline :browser do
+    plug :accepts, ~w(html)
+    plug :fetch_session
+  end
+  
   pipeline :review_checks do
     plug :ensure_authenticated_user
     plug :ensure_user_owns_review
@@ -715,18 +751,23 @@ end
 ```
 
 #####Customizing Existing Pipelines
-We can always open up existing pipelines and customize both the plugs that make them up, and, to an extent, the order in which they are invoked. In general, however, it is preferable to create new pipelines and invoke `pipe_through` with a list of pipelines, in order.
+We can always open up the `:before` pipeline and customize the plugs that make it up, and, to an extent, the order in which they are invoked. In general, however, it is preferable to create new pipelines and invoke `pipe_through` with a list of pipelines, in order.
 
-Here's how we might customize the `:browser` pipeline. The example assumes that we have already defined the plugs `:authenticate` and `:set_current_user`.
+Here's how we might customize the `:before` pipeline. The example assumes that we have already defined the plugs `:authenticate` and `:set_current_user`.
 
 ```elixir
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
-  pipeline :browser do
+  pipeline :before do
     plug :super
     plug :authenticate
     plug :set_current_user
+  end
+  
+  pipeline :browser do
+    plug :accepts, ~w(html)
+    plug :fetch_session
   end
 
   pipe_through :browser
