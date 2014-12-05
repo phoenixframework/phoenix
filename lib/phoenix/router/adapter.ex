@@ -123,6 +123,6 @@ defmodule Phoenix.Router.Adapter do
     module
     |> Module.split
     |> Enum.at(0)
-    |> Module.concat("ErrorsView")
+    |> Module.concat("ErrorView")
   end
 end

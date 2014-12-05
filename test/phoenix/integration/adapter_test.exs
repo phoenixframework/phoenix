@@ -61,7 +61,7 @@ defmodule Phoenix.Integration.AdapterTest do
     assert capture_log(fn ->
       {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/unknown", %{})
       assert resp.status == 500
-      assert resp.body == "500.html from Phoenix.ErrorsView"
+      assert resp.body == "500.html from Phoenix.ErrorView"
     end) =~ "** (RuntimeError) oops"
 
     ProdRouter.stop

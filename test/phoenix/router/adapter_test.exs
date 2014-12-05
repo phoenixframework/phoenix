@@ -14,6 +14,6 @@ defmodule Phoenix.Router.AdapterTest do
     assert config[:parsers] == false
     assert config[:static] == [at: "/"]
     assert config[:custom] == true
-    assert config[:render_errors] == AdapterApp.ErrorsView
+    assert config[:render_errors] == AdapterApp.ErrorView
   end
 end

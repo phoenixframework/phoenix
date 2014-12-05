@@ -724,12 +724,12 @@ end
 
 ### Custom Not Found and Error Pages
 
-Phoenix will by default render pages when a failure happens in your application using the `MyApp.ErrorsView` view in your application. Additionally, `debug_errors` can be set to true if you desire a debugging error page:
+Phoenix will by default render pages when a failure happens in your application using the `MyApp.ErrorView` view in your application. Additionally, `debug_errors` can be set to true if you desire a debugging error page:
 
   * debug_errors - Bool to display a debugging page on failures. Default `false`.
-  * render_errors - The view to render error pages on failures. Default `MyApp.ErrorsView`.
+  * render_errors - The view to render error pages on failures. Default `MyApp.ErrorView`.
 
-Everytime there is a failure and debugging is disable, the `render/2` will be invoked in the view with the template name according to its status and format, for example, "404.html" or "500.json". See `MyApp.ErrorsView` generated in your application for code samples on how to customize your error pages.
+Everytime there is a failure and debugging is disable, the `render/2` will be invoked in the view with the template name according to its status and format, for example, "404.html" or "500.json". See `MyApp.ErrorView` generated in your application for code samples on how to customize your error pages.
 
 #### Plug.Exception
 
