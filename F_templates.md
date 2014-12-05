@@ -82,6 +82,8 @@ We can define functions in any individual view in `web/views`. Functions defined
 
 Let's set ourselves up for the next section by creating a function in `web/views/page_view.ex` to return a list of keys for the `conn` struct.
 
+For anyone new to Elixir, a struct is a special form of the map which acts as a kind of tagged type. You can read about them [here](http://elixir-lang.org/docs/stable/elixir/Kernel.html#defstruct/1) and [here](http://elixir-lang.org/docs/stable/elixir/Kernel.html#struct/2).
+
 ```elixir
 def connection_keys(conn) do
   Map.from_struct(conn)
@@ -89,8 +91,9 @@ def connection_keys(conn) do
 end
 
 ```
+In case you were wondering, the `|>` is Elixir's [pipe operator](http://elixir-lang.org/docs/stable/elixir/Kernel.html#|>/2). It takes the return value of one expression and pipes it into the first argument of the following expression.
 
-Note, it is important to put parenthesis around the `conn` argument to `from_struct/1` because otherwise the pipeline operator will bind more tightly to it than `Map.from_struct/1` causing an error like this one.
+Note, it is important to put parenthesis around the `conn` argument to `from_struct/1` because otherwise the pipe operator will bind more tightly to it than `Map.from_struct/1` causing an error like this one.
 
 ```console
 **(FunctionClauseError) no function clause matching in Map.from_struct/1
