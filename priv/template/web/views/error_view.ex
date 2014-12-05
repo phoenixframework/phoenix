@@ -1,4 +1,4 @@
-defmodule <%= application_module %>.ErrorsView do
+defmodule <%= application_module %>.ErrorView do
   use <%= application_module %>.View
 
   def render("404.html", _assigns) do
