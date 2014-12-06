@@ -12,11 +12,10 @@ defmodule Mix.Tasks.Phoenix.Gen.Controller do
   """
 
   def run(args) do
-    {opts, args, _} = OptionParser.parse(args, strict: [dev: :boolean])
-    run(args, opts)
+    run(args, nil)
   end
 
-  def run([name], opts) do
+  def run([name], _opts) do
     application_name   = Naming.camelize(Mix.Project.config()[:app])
     controller = name
     controller_name = Naming.camelize(controller)
@@ -27,16 +26,16 @@ defmodule Mix.Tasks.Phoenix.Gen.Controller do
 
     copy_from template_dir, "./", controller_name, &EEx.eval_file(&1, binding)
     Mix.shell.info """
-    Don't forget to add your new controller to your router.ex
+    Don't forget to add your new controller to your web/router.ex
 
-        resource "/#{controller}", #{application_name}.#{controller_name}
+        resource "/#{controller}", #{application_name}.#{controller_name}Controller
     
     """
   end
 
   def run(_, _opts) do
     Mix.raise """
-    phoenix.new expects application name and destination path.
+    phoenix.gen.controller expects a controller name
 
         mix phoenix.gen.controller controller_name
 
@@ -48,6 +47,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Controller do
       source_dir
       |> Path.join("**/*")
       |> Path.wildcard(match_dot: true)
+    controller_name = String.downcase(controller_name)
 
     for source_path <- source_paths do
       target_path = make_destination_path(source_path, source_dir,

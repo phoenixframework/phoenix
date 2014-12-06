@@ -1,4 +1,4 @@
-defmodule <%= application_module %>.<%= controller_name %> do
+defmodule <%= application_name %>.<%= controller_name %>Controller do
   use Phoenix.Controller
 
   plug :action
