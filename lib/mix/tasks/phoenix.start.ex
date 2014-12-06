@@ -36,24 +36,22 @@ defmodule Mix.Tasks.Phoenix.Start do
   project. Umbrella projects must either define their routers in the top
   level mix file, or pass them specifically on the command line.
   """
-  def run(routers \\ []) do
-    if routers == [] do 
-      routers = Keyword.get :Mix.Project.config, :routers, []
-    end
+  def run(args) do
+    Mix.Task.run "app.start", []
+    Enum.map routers(args), &(&1.start)
+    no_halt
+  end
 
-    if Mix.Project.umbrella? do
-      start_all_apps
-    else
-      Mix.Task.run "app.start", []
-      if routers == [] do routers = [Mix.Phoenix.router.start] end
+  defp routers([]) do
+    rs = Keyword.get :Mix.Project.config, :routers, []
+    if rs == [] and not Mix.Project.umbrella? do
+      rs = [Mix.Phoenix.router]
     end
+    routers(rs)
+  end
 
-    if routers != [] do
-      for r <- routers do 
-        Module.concat("Elixir", r).start
-      end
-      no_halt
-    end
+  defp routers(args) do
+    for r <- args, do: Module.concat("Elixir", r)
   end
 
   defp no_halt do
@@ -62,13 +60,5 @@ defmodule Mix.Tasks.Phoenix.Start do
 
   defp iex_running? do
     Code.ensure_loaded?(IEx) && IEx.started?
-  end
-
-  defp start_all_apps do
-    config = Mix.Project.deps_config |> Keyword.delete(:deps_path)
-    for %Mix.Dep{app: app, opts: opts} <- Mix.Dep.Umbrella.loaded do
-      Mix.Project.in_project(app, opts[:path], config, 
-        fn _ -> Mix.Task.run "app.start", [] end)
-    end  
   end
 end
