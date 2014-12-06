@@ -62,7 +62,7 @@ defmodule Phoenix.Channel.ChannelTest do
     end
   end
 
-  test "#reply sends response to socket" do
+  test "#reply/3 sends response to socket" do
     socket = Socket.set_current_channel(new_socket, "chan", "topic")
     assert Channel.reply(socket, "event", %{message: "hello"})
 
@@ -74,11 +74,31 @@ defmodule Phoenix.Channel.ChannelTest do
     }
   end
 
-  test "#reply raises friendly error when message arg isn't a Map" do
+  test "#reply/3 raises friendly error when message arg isn't a Map" do
     socket = Socket.set_current_channel(new_socket, "chan", "topic")
     message = "Message argument must be a map"
     assert_raise RuntimeError, message, fn ->
       Channel.reply(socket, "event", foo: "bar", bar: "foo")
+    end
+  end
+
+  test "#reply/2 sends a binary response to socket" do
+    socket = Socket.set_current_channel(new_socket, "chan", "topic")
+    assert Channel.reply(socket, <<8, 12, 79, 255>>)
+
+    assert Enum.any?(Process.info(self)[:messages], &match?(<<_::binary>>, &1))
+    assert_received <<8, 12, 79, 255>>
+  end
+
+  test "#reply/2 raises friendly error when data arg isn't a binary" do
+    socket = Socket.set_current_channel(new_socket, "chan", "topic")
+    message = "Data argument must be a binary"
+    assert_raise RuntimeError, message, fn ->
+      Channel.reply(socket, %Message{
+        channel: "chan",
+        event: "event",
+        message: %{message: "hello"}, topic: "topic"
+      })
     end
   end
 

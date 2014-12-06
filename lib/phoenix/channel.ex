@@ -104,6 +104,15 @@ defmodule Phoenix.Channel do
     socket
   end
   def reply(_, _, _), do: raise_invalid_message
+  
+  @doc """
+  Sends binary to socket
+  """
+  def reply(socket, data) when is_binary(data) do
+    send socket.pid, data
+    socket
+  end
+  def reply(_, _), do: raise_invalid_binary
 
   @doc """
   Terminates socket connection, including all multiplexed channels
@@ -118,4 +127,5 @@ defmodule Phoenix.Channel do
   defp namespaced(channel, topic), do: "#{channel}:#{topic}"
 
   defp raise_invalid_message, do: raise "Message argument must be a map"
+  defp raise_invalid_binary, do: raise "Data argument must be a binary"
 end
