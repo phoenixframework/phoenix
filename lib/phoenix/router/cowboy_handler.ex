@@ -71,7 +71,12 @@ defmodule Phoenix.Router.CowboyHandler do
   end
 
   def websocket_info({:reply, text}, req, state) do
-    {:reply, {:text, text}, req, state}
+    case String.valid? text do
+      true -> 
+        {:reply, {:text, text}, req, state}
+      false -> 
+        {:reply, {:binary, text}, req, state}
+    end
   end
 
   def websocket_info(:shutdown, req, state) do

@@ -50,6 +50,14 @@ defmodule Phoenix.Transports.WebSocket do
       {:error, sockets, _reason} -> %{state | sockets: sockets}
     end
   end
+  
+  @doc """
+  Receives binary and sends to client
+  """
+  def ws_info(data, state) when is_binary(data) do
+    reply(self, data)
+    state
+  end
 
   @doc """
   Receives `%Phoenix.Socket.Message{}` and sends encoded message JSON to client
