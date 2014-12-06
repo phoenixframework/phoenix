@@ -10,9 +10,9 @@ Mix.shell(Mix.Shell.Process)
 
 # Used whenever a router fails. We default to simply
 # rendering a short string.
-defmodule Phoenix.ErrorsView do
+defmodule Phoenix.ErrorView do
   def render(template, _assigns) do
-    "#{template} from Phoenix.ErrorsView"
+    "#{template} from Phoenix.ErrorView"
   end
 end
 

@@ -259,7 +259,7 @@ defmodule Phoenix.Router do
       whenever there is a failure in the application. For example, if the
       application crashes with a 500 error during a HTML request,
       `render("500.html", assigns)` will be called in the view given to
-      `:render_errors`. The default view is `MyApp.ErrorsView`.
+      `:render_errors`. The default view is `MyApp.ErrorView`.
 
   ### Runtime
 
