@@ -596,12 +596,12 @@ defmodule Phoenix.Router do
 
     * `GET /users` => `:index`
     * `GET /users/new` => `:new`
-    * `POST /resources` => `:create`
-    * `GET /resources/:id` => `:show`
-    * `GET /resources/:id/edit` => `:edit`
-    * `PATCH /resources/:id` => `:update`
-    * `PUT /resources/:id` => `:update`
-    * `DELETE /resources/:id` => `:destroy`
+    * `POST /users` => `:create`
+    * `GET /users/:id` => `:show`
+    * `GET /users/:id/edit` => `:edit`
+    * `PATCH /users/:id` => `:update`
+    * `PUT /users/:id` => `:update`
+    * `DELETE /users/:id` => `:destroy`
 
   ## Options
 
