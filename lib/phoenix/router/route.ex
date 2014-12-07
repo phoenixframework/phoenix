@@ -36,7 +36,7 @@ defmodule Phoenix.Router.Route do
       when is_binary(verb) and is_binary(path) and (is_binary(host) or is_nil(host)) and
            is_atom(controller) and is_atom(action) and (is_binary(helper) or is_nil(helper)) and
            is_list(pipe_through) do
-    {params, path_segments} = Plug.Router.Utils.build_match(path)
+    {params, path_segments} = Plug.Router.Utils.build_path_match(path)
 
     binding = Enum.map(params, fn var ->
       {Atom.to_string(var), Macro.var(var, nil)}

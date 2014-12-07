@@ -5,7 +5,7 @@
   "inch_ex": {:hex, :inch_ex, "0.2.0"},
   "json": {:hex, :json, "0.3.2"},
   "linguist": {:hex, :linguist, "0.1.4"},
-  "plug": {:git, "git://github.com/elixir-lang/plug.git", "e19e6c08463980732bdbb1ccc39b384bde57279b", []},
+  "plug": {:git, "git://github.com/elixir-lang/plug.git", "029bbed62e4aa321355f3b9af6272ea843e35ec0", []},
   "poison": {:hex, :poison, "1.2.0"},
   "ranch": {:hex, :ranch, "1.0.0"},
   "websocket_client": {:git, "git://github.com/jeremyong/websocket_client.git", "2b8d9805306d36f22330f432ae6472f1f2625c30", []}}
