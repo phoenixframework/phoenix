@@ -3,6 +3,8 @@
 ## v0.7.0-dev
 
 * Backwards incompatible changes
+  * [I18n] `Linguist` has been removed as a dependency, and an `I18n` module is no longer generated in your project.
+  * [View] `ErrorsView` has been renamed to `ErrorView`, update your `MyApp.ErrorsView` accordingly.
   * [Controller] `html/2`, `json/2`, `text/2`, `redirect/2` and
 `render/3` no longer halt automatically
 

@@ -6,7 +6,6 @@ defmodule <%= application_module %>.View do
   using do
     quote do
       # Import common functionality
-      import <%= application_module %>.I18n
       import <%= application_module %>.Router.Helpers
 
       # Use Phoenix.HTML to import all HTML functions (forms, tags, etc)

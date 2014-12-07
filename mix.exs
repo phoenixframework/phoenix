@@ -19,7 +19,7 @@ defmodule Phoenix.Mixfile do
 
   def application do
     [mod: {Phoenix, []},
-     applications: [:plug, :linguist, :poison, :logger],
+     applications: [:plug, :poison, :logger],
      env: [code_reloader: false,
            template_engines: [],
            format_encoders: [],
@@ -29,7 +29,6 @@ defmodule Phoenix.Mixfile do
 
   def deps do
     [{:cowboy, "~> 1.0", optional: true},
-     {:linguist, "~> 0.1.4"},
      # TODO: Bump Plug back to hex on next release
      {:plug, github: "elixir-lang/plug"},
      {:poison, "~> 1.2"},
