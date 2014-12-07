@@ -43,7 +43,7 @@ defmodule Phoenix.Controller.Logger do
   end
   defp filter_values(%{} = map, filter_params) do
     Enum.into map, %{}, fn {k, v} ->
-      if String.contains?(k, filter_params) do
+      if is_binary(k) && String.contains?(k, filter_params) do
         {k, "[FILTERED]"}
       else
         {k, filter_values(v, filter_params)}

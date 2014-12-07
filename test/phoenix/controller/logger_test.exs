@@ -73,4 +73,14 @@ defmodule Phoenix.Controller.LoggerTest do
     end
     assert output =~ "Parameters: %{\"file\" => %{\"__struct__\" => \"s\"}, \"foo\" => \"bar\"}"
   end
+
+  test "does not fail on atomic keys" do
+    output = capture_log fn ->
+      conn(:get, "/", %{password: "should_not_show"})
+      |> fetch_params
+      |> Map.update!(:params, &Dict.put(&1, :foo, "bar"))
+      |> LoggerController.call(LoggerController.init(:index))
+    end
+    assert output =~ "Parameters: %{:foo => \"bar\", \"password\" => \"[FILTERED]\"}"
+  end
 end
