@@ -11,7 +11,7 @@ defmodule <%= application_name %>.<%= controller_name %>Controller do
   def edit(conn, _params) do
   end
 
-  # POST /<%= controller %>/new
+  # GET /<%= controller %>/new
   def new(conn, _params) do
   end
 

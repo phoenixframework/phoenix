@@ -1,6 +1,7 @@
 defmodule Mix.Tasks.Phoenix.New do
   use Mix.Task
   alias Phoenix.Naming
+  import Mix.Phoenix
 
   @shortdoc "Creates Phoenix application"
 
@@ -26,7 +27,7 @@ defmodule Mix.Tasks.Phoenix.New do
                secret_key_base: random_string(64)]
 
     copy_from template_dir, path, application_name, &EEx.eval_file(&1, binding)
-    copy_from static_dir, Path.join(path, "priv/static"), application_name, &File.read!(&1)
+    copy_from static_dir, Path.join(path, "priv/static"), {"application_name", application_name}, &File.read!(&1)
   end
 
   def run(_, _opts) do
@@ -40,31 +41,6 @@ defmodule Mix.Tasks.Phoenix.New do
 
   def random_string(length) do
     :crypto.strong_rand_bytes(length) |> Base.encode64
-  end
-
-  defp copy_from(source_dir, target_dir, application_name, fun) do
-    source_paths =
-      source_dir
-      |> Path.join("**/*")
-      |> Path.wildcard(match_dot: true)
-
-    for source_path <- source_paths do
-      target_path = make_destination_path(source_path, source_dir,
-                                          target_dir, application_name)
-
-      unless File.dir?(source_path) do
-        contents = fun.(source_path)
-        Mix.Generator.create_file(target_path, contents)
-      end
-    end
-  end
-
-  defp make_destination_path(source_path, source_dir, target_dir, application_name) do
-    target_path =
-      source_path
-      |> String.replace("application_name", application_name)
-      |> Path.relative_to(source_dir)
-    Path.join(target_dir, target_path)
   end
 
   defp phoenix_dep(true), do: ~s[{:phoenix, path: #{inspect File.cwd!}}]
