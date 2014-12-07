@@ -71,7 +71,7 @@ defmodule Mix.Tasks.Phoenix.New do
   defp phoenix_dep(_),    do: ~s[{:phoenix, github: "phoenixframework/phoenix"}]
 
   defp template_dir do
-    Application.app_dir(:phoenix, "priv/template")
+    Application.app_dir(:phoenix, "priv/templates/app")
   end
 
   defp static_dir do
