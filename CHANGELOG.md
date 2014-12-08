@@ -1,6 +1,11 @@
 # Changelog
 
-## v0.6.1-dev
+## v0.6.2
+
+* Bug fixes
+  * Fix phoenix dep reference in new project generator
+
+## v0.6.1
 
 * Enhancements
   * [Controller] Allow sensitive parameters to be filtered from logs
