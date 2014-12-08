@@ -8,6 +8,11 @@
   * [Controller] `html/2`, `json/2`, `text/2`, `redirect/2` and
 `render/3` no longer halt automatically
 
+## v0.6.2 (2014-12-07)
+
+* Bug fixes
+  * Fix phoenix dep reference in new project generator
+
 ## v0.6.1 (2014-11-30)
 
 * Enhancements
