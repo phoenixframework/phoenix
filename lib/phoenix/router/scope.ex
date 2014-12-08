@@ -12,7 +12,7 @@ defmodule Phoenix.Router.Scope do
   """
   def init(module) do
     Module.put_attribute(module, @stack, [%Scope{}])
-    Module.put_attribute(module, @pipes, HashSet.new)
+    Module.put_attribute(module, @pipes, %{})
   end
 
   @doc """
@@ -25,10 +25,39 @@ defmodule Phoenix.Router.Scope do
   end
 
   @doc """
-  Defines the given pipeline.
+  Gets all pipelines in the module.
   """
-  def pipeline(module, pipe) when is_atom(pipe) do
-    update_pipes module, &HashSet.put(&1, pipe)
+  def pipelines(module) do
+    get_attribute(module, @pipes)
+  end
+
+  @doc """
+  Reads an existing pipeline.
+  """
+  def read_pipeline(module, pipe, style) do
+    case pipelines(module)[pipe] do
+      {_line, _pipes} when style == :define ->
+        raise ArgumentError, "pipeline #{inspect pipe} has already been defined. " <>
+                             "If you want to extend it, please use the extend/2 macro"
+      {_line, pipes} ->
+        pipes
+      nil when style == :extend ->
+        raise ArgumentError, "cannot extend pipeline #{inspect pipe} " <>
+                             "because it was not define previously"
+      nil ->
+        []
+    end
+  end
+
+  @doc """
+  Writes a pipeline.
+  """
+  def write_pipeline(module, pipe, new_line, new_pipes) when is_atom(pipe) do
+    update_attribute module, @pipes, fn map ->
+      Map.update(map, pipe, {new_line, new_pipes}, fn {old_line, _old_pipes} ->
+        {old_line, new_pipes}
+      end)
+    end
   end
 
   @doc """
@@ -36,13 +65,13 @@ defmodule Phoenix.Router.Scope do
   """
   def pipe_through(module, pipes) do
     pipes = List.wrap(pipes)
-    available = get_pipes(module)
+    available = pipelines(module)
 
     Enum.each pipes, fn pipe ->
       cond do
         pipe == :before ->
           raise ArgumentError, "the :before pipeline is always piped through"
-        pipe in available ->
+        Map.has_key?(available, pipe) ->
           :ok
         true ->
           raise ArgumentError, "unknown pipeline #{inspect pipe}"
@@ -139,14 +168,6 @@ defmodule Phoenix.Router.Scope do
 
   defp update_stack(module, fun) do
     update_attribute(module, @stack, fun)
-  end
-
-  defp get_pipes(module) do
-    get_attribute(module, @pipes)
-  end
-
-  defp update_pipes(module, fun) do
-    update_attribute(module, @pipes, fun)
   end
 
   defp get_attribute(module, attr) do

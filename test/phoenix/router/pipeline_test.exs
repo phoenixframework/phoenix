@@ -33,18 +33,14 @@ Application.put_env(:phoenix, Phoenix.Router.PipelineTest.Router,
 defmodule Phoenix.Router.PipelineTest.Router do
   use Phoenix.Router
 
-  pipeline :before do
-    plug :super
+  # Decorate an existing pipeline
+  extend :before do
+    plug :put_assign, "from before"
+    plug :check_params!
   end
 
   pipeline :browser do
     plug :fetch_session
-  end
-
-  # This pipeline declaration is for testing that previous pipeline is overridable
-  # with super
-  pipeline :browser do
-    plug :super
     plug :put_assign, "from browser"
   end
 
@@ -74,6 +70,11 @@ defmodule Phoenix.Router.PipelineTest.Router do
   defp put_assign(conn, value) do
     assign conn, :stack, value
   end
+
+  defp check_params!(conn, _) do
+    _ = conn.params["should not raise"]
+    conn
+  end
 end
 
 alias Phoenix.Router.PipelineTest.Router
@@ -95,7 +96,7 @@ defmodule Phoenix.Router.PipelineTest do
     :ok
   end
 
-  ## No configuration
+  ## No configuration (default pipeline)
 
   test "does not setup the session" do
     conn = call(EmptyRouter, :get, "/root")
@@ -120,7 +121,7 @@ defmodule Phoenix.Router.PipelineTest do
     assert conn.status == 404
   end
 
-  ## Plug configuration
+  ## With configuration (default pipeline)
 
   test "converts HEAD requests to GET" do
     conn = call(Router, :head, "/root")
@@ -161,19 +162,27 @@ defmodule Phoenix.Router.PipelineTest do
     assert conn.private[:phoenix_pipelines] == [:before]
   end
 
+  test "pipelines are extensible" do
+    conn = call(Router, :get, "/root")
+    assert conn.assigns[:stack] == "from before"
+  end
+
   test "invokes pipelines per scope" do
     conn = call(Router, :get, "/browser/root")
     assert conn.private[:phoenix_pipelines] == [:before, :browser]
+    assert conn.assigns[:stack] == "from browser"
   end
 
   test "invokes pipelines in a nested scope" do
     conn = call(Router, :get, "/browser/api/root")
     assert conn.private[:phoenix_pipelines] == [:before, :browser, :api]
+    assert conn.assigns[:stack] == "from api"
   end
 
   test "invokes multiple pipelines" do
     conn = call(Router, :get, "/browser-api/root")
     assert conn.private[:phoenix_pipelines] == [:before, :browser, :api]
+    assert conn.assigns[:stack] == "from api"
   end
 
   test "invalid pipelines" do

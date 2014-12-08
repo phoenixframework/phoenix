@@ -205,6 +205,14 @@ defmodule Phoenix.Router do
 
       pipe_through [:api]
 
+  In case you want to extend an existing pipeline, you can use the
+  `extend/2` macro with a pipeline. For example, in order to add new
+  plugs to the `:before` pipeline, one can do:
+
+      extend :before do
+        plug :authentication
+      end
+
   ## Router configuration
 
   All routers are configured directly in the Phoenix application
@@ -461,6 +469,14 @@ defmodule Phoenix.Router do
     routes = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse
     Phoenix.Router.Helpers.define(env, routes)
 
+    pipelines =
+      for {name, {line, pipelines}} <- Scope.pipelines(env.module) do
+        {conn, body} = Plug.Builder.compile(pipelines)
+        quote line: line do
+          defp unquote(name)(unquote(conn), _), do: unquote(body)
+        end
+      end
+
     quote do
       @doc false
       def __routes__ do
@@ -470,6 +486,8 @@ defmodule Phoenix.Router do
       defp match(conn, _method, _path_info, _host) do
         raise NoRouteError, conn: conn, router: __MODULE__
       end
+
+      unquote(pipelines)
 
       # TODO: How is this customizable?
       # We can move it to the controller.
@@ -536,23 +554,31 @@ defmodule Phoenix.Router do
   Every time `pipe_through/1` is called, the new pipelines
   are appended to the ones previously given.
   """
-  defmacro pipeline(plug, do: block) do
-    block =
-      quote do
-        @phoenix_pipeline []
-        unquote(block)
-      end
+  defmacro pipeline(pipeline, do: block) do
+    pipeline(pipeline, block, :define)
+  end
 
-    compiler =
-      quote bind_quoted: [plug: plug] do
-        Scope.pipeline(__MODULE__, plug)
-        {conn, body} = Plug.Builder.compile(@phoenix_pipeline)
-        defp unquote(plug)(unquote(conn), _), do: unquote(body)
-        defoverridable [{plug, 2}]
-        @phoenix_pipeline nil
-      end
+  @doc """
+  Extends a previously defined pipeline.
 
-    [block, compiler]
+  ## Examples
+
+      extend :before do
+        plug :authentication
+      end
+  """
+  defmacro extend(pipeline, do: block) do
+    pipeline(pipeline, block, :extend)
+  end
+
+  defp pipeline(pipeline, block, style) do
+    quote do
+      pipeline = unquote(pipeline)
+      @phoenix_pipeline Scope.read_pipeline(__MODULE__, pipeline, unquote(style))
+      unquote(block)
+      Scope.write_pipeline(__MODULE__, pipeline, __ENV__.line, @phoenix_pipeline)
+      @phoenix_pipeline nil
+    end
   end
 
   @doc """
