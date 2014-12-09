@@ -61,7 +61,7 @@ The route for our "Welcome to Phoenix!" page from the previous Up And Running Gu
 ```elixir
 get "/", HelloPhoenix.PageController, :index
 ```
-Let's digest what this route is telling us. Visiting [http://localhost:4000/](http://localhost:4000/) issues an http GET request to the root path. All requests like this will be handled by the "index" function in the "HelloPhoenix.PageController" module defined in `web/controllers/page_controller.ex`.
+Let's digest what this route is telling us. Visiting [http://localhost:4000/](http://localhost:4000/) issues an http GET request to the root path. All requests like this will be handled by the `index` function in the `HelloPhoenix.PageController` module defined in `web/controllers/page_controller.ex`.
 
 The page we are going to build will simply say "Hello from Phoenix!" when we point our browser to [http://localhost:4000/hello](http://localhost:4000/hello).
 
@@ -95,10 +95,10 @@ end
 
 For now, we'll ignore the pipelines and the use of `scope` here and just focus on adding a route. (We cover these topics in the Routing Guide, if you're curious.)
 
-Let's add a new route to the router that maps the GET for "/hello" to the index action of a soon-to-be created `HelloPhoenix.HelloController`.
+Let's add a new route to the router that maps the GET for `/hello` to the index action of a soon-to-be created `HelloPhoenix.HelloController`.
 
 ```elixir
-get "/hello", HelloPhoenix.HelloController, :index
+get "/hello", HelloController, :index
 ```
 
 The `scope "/"` block of our `router.ex` file should now look like this.
@@ -108,7 +108,7 @@ scope "/", HelloPhoenix do
   pipe_through :browser # Use the default browser stack
 
   get "/", PageController, :index
-  get "/hello", HelloPhoenix.HelloController, :index
+  get "/hello", HelloController, :index
 end
 ```
 
@@ -131,7 +131,7 @@ end
 ```
 We'll save a discussion of `use Phoenix.Controller` and `plug :action` for the Controller Guide. For now, let's focus on the `index/2` action.
 
-All controller actions take two arguments. The first is `conn`, a struct which holds  a ton of data about the request. The second is `params`, which are the request parameters. Here, we are not using `params` and avoiding compiler warnings by adding the leading '_'.
+All controller actions take two arguments. The first is `conn`, a struct which holds a ton of data about the request. The second is `params`, which are the request parameters. Here, we are not using `params` and avoiding compiler warnings by adding the leading `_`.
 
 The core of this action is `render conn, "index.html"`. This tells Phoenix to find a template called `index.html.eex` and render it. Phoenix will look for the template in a directory named after our controller, so `web/templates/hello`.
 
@@ -186,33 +186,32 @@ As we did last time, the first thing we'll do is create a new route.
 For this page, we're going to re-use the `HelloController` we just created and just add a new `show` action. We'll add a line just below our last route, like this.
 
 ```elixir
-scope "/" do
-  # Use the default browser stack.
-  pipe_through :browser
+scope "/", HelloPhoenix do
+  pipe_through :browser # Use the default browser stack.
 
-  get "/", HelloPhoenix.PageController, :index
-  get "/hello", HelloPhoenix.HelloController, :index
-  get "/hello/:messenger", HelloPhoenix.HelloController, :show
+  get "/", PageController, :index
+  get "/hello", HelloController, :index
+  get "/hello/:messenger", HelloController, :show
 end
 ```
-Notice that we put the atom `:messenger` in the path. Phoenix will take whatever value that appears in that position in the url and passes a Dict with the key "messanger" pointing to that value to the controller.
+Notice that we put the atom `:messenger` in the path. Phoenix will take whatever value that appears in that position in the url and passes a [Dict](http://elixir-lang.org/docs/stable/elixir/Dict.html) with the key `messanger` pointing to that value to the controller.
 
 For example, if we point the browser at: [http://localhost:4000/hello/Frank](http://localhost:4000/hello/Frank), the value of ":messenger" will be "Frank".
 
 ###A New Action
 
-Requests to our new route will be handled by the `HelloPhoenix.HelloController` "show" action. We already have the controller, so all we need to do is add a "show" action to it. This time, we'll need to keep the params that get passed into the action so that we can pass the messenger to the template. To do that, we add this show function to the controller.
+Requests to our new route will be handled by the `HelloPhoenix.HelloController` `show` action. We already have the controller, so all we need to do is add a `show` action to it. This time, we'll need to keep the params that get passed into the action so that we can pass the messenger to the template. To do that, we add this show function to the controller.
 
 ```elixir
 def show(conn, %{"messenger" => messenger}) do
   render conn, "show.html", messenger: messenger
 end
 ```
-There are a couple of things to notice here. We pattern match against the params passed into the show function so that the messenger variable will be bound to the value we put in the `:messenger` position in the url. For example, if our url is [http://localhost:4000/hello/Frank](http://localhost:4000/hello/Frank), the messenger variable would be bound to "Frank".
+There are a couple of things to notice here. We pattern match against the params passed into the show function so that the messenger variable will be bound to the value we put in the `:messenger` position in the url. For example, if our url is [http://localhost:4000/hello/Frank](http://localhost:4000/hello/Frank), the messenger variable would be bound to `Frank`.
 
 We also pass a third argument into the render function, a key value pair where `:messenger` is the key, and the messenger variable is passed as the value.
 
-It's good to remember that the keys to the params Dict will always be strings.
+It's good to remember that the keys to the params [Dict](http://elixir-lang.org/docs/stable/elixir/Dict.html) will always be strings.
 
 ###A New Template
 

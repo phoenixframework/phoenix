@@ -1,6 +1,6 @@
 ### Routing
 
-The Phoenix router is the main hub of your application. It matches HTTP requests to controller actions, wires up realtime channel handlers, and defines a serires of pipeline transformations for scoping middleware to sets of routes.
+The Phoenix router is the main hub of your application. It matches HTTP requests to controller actions, wires up realtime channel handlers, and defines a series of pipeline transformations for scoping middleware to sets of routes.
 
 The router file that Phoenix generates, `web/router.ex`, will look something like this one.
 
