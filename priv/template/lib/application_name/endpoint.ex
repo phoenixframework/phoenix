@@ -24,5 +24,5 @@ defmodule <%= application_module %>.Endpoint do
     signing_salt: "<%= signing_salt %>",
     encryption_salt: "<%= encryption_salt %>"
 
-  plug <%= application_module %>.Router
+  plug :router, <%= application_module %>.Router
 end

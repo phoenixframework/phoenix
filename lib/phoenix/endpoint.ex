@@ -88,8 +88,11 @@ defmodule Phoenix.Endpoint do
   #
   # 3. Add a config_change callback to your application
   #
+  # 4. If you are using url/1, it now needs to be accessed
+  #    from the endpoint
+  #
 
-  # TODO: Add error handling and other configs (What about the router)
+  # TODO: Handle other configs (What about the router)
   # TODO: Migrate to own app OTP config
 
   @doc false
@@ -105,6 +108,7 @@ defmodule Phoenix.Endpoint do
     quote do
       otp_app = unquote(opts)[:otp_app] || raise "endpoint expects :otp_app to be given"
       config  = Adapter.config(otp_app, __MODULE__)
+      @config config
     end
   end
 
@@ -190,6 +194,46 @@ defmodule Phoenix.Endpoint do
   defmacro plug(plug, opts \\ []) do
     quote do
       @plugs {unquote(plug), unquote(opts), true}
+    end
+  end
+
+  @doc """
+  A macro that can be plugged in order to handle routing errors.
+
+  By default, a Phoenix router will raise a `Phoenix.Router.NoRouteError`
+  struct in case no route is found. This macro wraps the router call so
+  the route error does not pass through.
+
+  It also wraps the router call to provide better debugger and error
+  rendering behaviour.
+
+  ## Examples
+
+      plug :router, MyApp.Router
+
+  """
+  defmacro router(conn, plug) do
+    conf = Module.get_attribute(__CALLER__.module, :config)
+
+    code =
+      if conf[:debug_errors] do
+        quote do
+          Plug.Debugger.wrap(conn, @plug_debugger, fn ->
+            plug.call(conn, plug.init([]))
+          end)
+        end
+      else
+        quote do
+          plug.call(conn, plug.init([]))
+        end
+      end
+
+    quote do
+      conn = unquote(conn)
+      plug = unquote(plug)
+      Phoenix.Endpoint.ErrorHandler.wrap(conn, @phoenix_handle_errors, fn ->
+        unquote(code)
+      end)
     end
   end
 end

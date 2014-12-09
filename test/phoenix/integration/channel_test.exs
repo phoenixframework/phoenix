@@ -130,7 +130,7 @@ defmodule Phoenix.Integration.ChannelTest do
 
   test "adapter handles longpolling join, leave, and event messages" do
     # create session
-    {resp, cookie} = poll :post, _session = nil, %{}
+    {resp, cookie} = poll :post, nil, %{}
     assert resp.status == 200
 
     # join

@@ -179,9 +179,9 @@ defmodule Phoenix.Router do
     call =
       quote do
         unquote(conn) =
-          unquote(conn)
-          |> Plug.Conn.put_private(:phoenix_router, __MODULE__)
-          |> Plug.Conn.put_private(:phoenix_pipelines, [])
+          update_in unquote(conn).private,
+            &(&1 |> Map.put(:phoenix_router, __MODULE__)
+                 |> Map.put(:phoenix_pipelines, []))
         unquote(pipeline)
       end
 
@@ -199,50 +199,19 @@ defmodule Phoenix.Router do
       @doc """
       Callback invoked by Plug on every request.
       """
+      def call(unquote(conn), opts) do
+        unquote(call)
+      end
 
-      # TODO: Fix me
-      config = []
+      defp match(conn, []) do
+        match(conn, conn.method, conn.path_info, conn.host)
+      end
 
-      # For debugging errors, we wrap each step in the pipeline
-      # in isolation. This allows us to have fresh copies of the
-      # connection as we go.
-      if config[:debug_errors] do
-        @debug_errors [otp_app: config[:otp_app]]
-
-        def call(unquote(conn), opts) do
-          Plug.Debugger.wrap(unquote(conn), @debug_errors, fn ->
-            unquote(call)
-          end)
-        end
-
-        defp match(conn, []) do
-          Plug.Debugger.wrap(conn, @debug_errors, fn ->
-            match(conn, conn.method, conn.path_info, conn.host)
-          end)
-        end
-
-        defp dispatch(conn, []) do
-          Plug.Debugger.wrap(conn, @debug_errors, fn ->
-            conn.private.phoenix_route.(conn)
-          end)
-        end
-      else
-        def call(unquote(conn), opts) do
-          unquote(call)
-        end
-
-        defp match(conn, []) do
-          match(conn, conn.method, conn.path_info, conn.host)
-        end
-
-        defp dispatch(conn, []) do
-          conn.private.phoenix_route.(conn)
-        end
+      defp dispatch(conn, []) do
+        conn.private.phoenix_route.(conn)
       end
 
       defoverridable [init: 1, call: 2]
-
-      use Phoenix.Endpoint.ErrorHandler, view: config[:render_errors]
     end
   end
 
