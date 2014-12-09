@@ -44,7 +44,7 @@ defmodule Phoenix.Router.Route do
 
     %Route{verb: verb, path: path, host: host, binding: binding,
            controller: controller, action: action, helper: helper,
-           pipe_through: [:before | pipe_through], path_segments: path_segments,
+           pipe_through: pipe_through, path_segments: path_segments,
            host_segments: build_host(host), pipe_segments: build_pipes(pipe_through)}
   end
 

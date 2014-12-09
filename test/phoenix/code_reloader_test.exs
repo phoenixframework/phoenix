@@ -1,6 +1,6 @@
 defmodule Phoenix.CodeReloaderTest do
   use ExUnit.Case, async: true
-  use ConnHelper
+  use RouterHelper
 
   test "touch/0 touches and returns touched files" do
     assert Phoenix.CodeReloader.touch == []

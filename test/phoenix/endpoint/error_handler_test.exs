@@ -1,6 +1,6 @@
-defmodule Phoenix.Router.RenderErrorsTest do
+defmodule Phoenix.Endpoint.ErrorHandlerTest do
   use ExUnit.Case, async: true
-  use ConnHelper
+  use RouterHelper
 
   view = __MODULE__
 
@@ -18,7 +18,7 @@ defmodule Phoenix.Router.RenderErrorsTest do
 
   defmodule Router do
     use Plug.Router
-    use Phoenix.Router.RenderErrors, view: view
+    use Phoenix.Endpoint.ErrorHandler, view: view
 
     plug :match
     plug :dispatch
@@ -68,7 +68,7 @@ defmodule Phoenix.Router.RenderErrorsTest do
     try do
       fun.()
     catch
-      kind, error -> Phoenix.Router.RenderErrors.render(conn, kind, error, System.stacktrace, opts)
+      kind, error -> Phoenix.Endpoint.ErrorHandler.render(conn, kind, error, System.stacktrace, opts)
     else
       _ -> flunk "function should have failed"
     end

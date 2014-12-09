@@ -10,6 +10,7 @@ defmodule Mix.Tasks.Phoenix.Routes do
 
       $ mix phoenix.routes
       $ mix phoenix.routes MyApp.AnotherRouter
+
   """
 
   def run([]) do
@@ -17,7 +18,7 @@ defmodule Mix.Tasks.Phoenix.Routes do
   end
 
   def run([router]) do
-    print_routes(Module.concat([router]))
+    print_routes(Module.concat("Elixir", router))
   end
 
   defp print_routes(router) do

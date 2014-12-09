@@ -1,6 +1,8 @@
 Code.require_file "../../mix_helper.exs", __DIR__
 
 defmodule Mix.Tasks.Phoenix.NewTest do
+  # This test case needs to be sync because we rely on
+  # changing the current working directory which is global.
   use ExUnit.Case
   use Plug.Test
 
@@ -30,6 +32,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file ".gitignore"
       assert_file "README.md"
       assert_file "lib/photo_blog.ex", ~r/defmodule PhotoBlog do/
+      assert_file "lib/photo_blog/endpoint.ex", ~r/defmodule PhotoBlog.Endpoint do/
 
       assert_file "priv/static/css/phoenix.css"
       assert_file "priv/static/images/phoenix.png"
@@ -47,9 +50,8 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     Logger.disable(self())
     Application.put_env(:phoenix, :code_reloader, true)
 
-    :ets.new(:hello, [:named_table, :public])
-    Application.put_env(:phoenix, PhotoBlog.Router,
-      session: [store: :ets, key: "_app", table: :hello])
+    Application.put_env(:photo_blog, PhotoBlog.Endpoint,
+      secret_key_base: String.duplicate("abcdefgh", 8))
 
     in_project :photo_blog, @project_path, fn _ ->
       Mix.Task.run "compile", ["--no-deps-check"]
@@ -68,8 +70,19 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       File.touch! "web/views/page_view.ex", @epoch
       File.write! "web/templates/page/another.html.eex", "oops"
 
-      PhotoBlog.Router.call(conn(:get, "/"), [])
+      PhotoBlog.Endpoint.start()
+
+      try do
+        PhotoBlog.Endpoint.call(conn(:get, "/"), [])
+      after
+        PhotoBlog.Endpoint.stop()
+      end
+
       assert File.stat!("web/views/page_view.ex").mtime > @epoch
+
+      assert capture_io(fn ->
+        Mix.Task.run("test")
+      end) =~ "1 tests, 0 failures"
     end
   after
     Application.put_env(:phoenix, :code_reloader, false)

@@ -28,14 +28,20 @@ defmodule Phoenix.Controller.Logger do
     Logger.debug fn ->
       module = conn |> controller_module |> inspect
       action = conn |> action_name |> Atom.to_string
-      params = filter_values(conn.params, Application.get_env(:phoenix, :filter_parameters))
 
       ["Processing by ", module, ?., action, ?/, ?2, ?\n,
-        "  Parameters: ", inspect(params), ?\n,
-        "  Pipeline: ", inspect(conn.private[:phoenix_pipelines])]
+        "  Parameters: ", params(conn.params), ?\n,
+        "  Pipelines: ", inspect(conn.private[:phoenix_pipelines])]
     end
 
     conn
+  end
+
+  defp params(%Plug.Conn.Unfetched{}), do: "[UNFETCHED]"
+  defp params(params) do
+    params
+    |> filter_values(Application.get_env(:phoenix, :filter_parameters))
+    |> inspect()
   end
 
   defp filter_values(%{__struct__: mod} = struct, _filter_params) when is_atom(mod) do

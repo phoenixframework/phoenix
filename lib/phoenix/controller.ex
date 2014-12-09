@@ -95,29 +95,28 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Returns the action name as an atom.
+  Returns the action name as an atom, raises if unavailable.
   """
   @spec action_name(Plug.Conn.t) :: atom
-  def action_name(conn), do: conn.private |> Map.get(:phoenix_action)
+  def action_name(conn), do: conn.private.phoenix_action
 
   @doc """
-  Returns the controller module as an atom.
+  Returns the controller module as an atom, raises if unavailable.
   """
   @spec controller_module(Plug.Conn.t) :: atom
-  def controller_module(conn), do: conn.private |> Map.get(:phoenix_controller)
+  def controller_module(conn), do: conn.private.phoenix_controller
 
   @doc """
-  Returns the router module as an atom.
+  Returns the router module as an atom, raises if unavailable.
   """
   @spec router_module(Plug.Conn.t) :: atom
-  def router_module(conn), do: conn.private |> Map.get(:phoenix_router)
+  def router_module(conn), do: conn.private.phoenix_router
 
   @doc """
-  Retrieve error from Phoenix router.
+  Returns the endpoint module as an atom, raises if unavailable.
   """
-  # TODO: Consider removing this once we re-evaluate
-  @spec error(Plug.Conn.t) :: term
-  def error(conn), do: conn.private |> Map.get(:phoenix_error)
+  @spec endpoint_module(Plug.Conn.t) :: atom
+  def endpoint_module(conn), do: conn.private.phoenix_endpoint
 
   @doc """
   Sends JSON response.

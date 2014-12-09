@@ -1,2 +1,2 @@
-<%= application_module %>.Router.start
+<%= application_module %>.Endpoint.start
 ExUnit.start

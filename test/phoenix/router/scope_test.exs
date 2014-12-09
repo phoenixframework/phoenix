@@ -1,11 +1,6 @@
 defmodule Phoenix.Router.ScopedRoutingTest do
   use ExUnit.Case, async: true
-  use ConnHelper
-
-  setup do
-    Logger.disable(self())
-    :ok
-  end
+  use RouterHelper
 
   # Path scoping
 
@@ -69,6 +64,11 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     end
   end
 
+  setup do
+    Logger.disable(self())
+    :ok
+  end
+
   test "single scope for single routes" do
     conn = call(Router, :get, "/admin/users/1")
     assert conn.status == 200
@@ -127,10 +127,12 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     conn = call(Router, :get, "http://baz.pang.com/host/users/1")
     assert conn.status == 200
 
-    conn = call(Router, :get, "http://foobar.com.br/host/users/1")
-    assert conn.status == 404
+    assert_raise Phoenix.Router.NoRouteError, fn ->
+      call(Router, :get, "http://foobar.com.br/host/users/1")
+    end
 
-    conn = call(Router, :get, "http://ba.pang.com/host/users/1")
-    assert conn.status == 404
+    assert_raise Phoenix.Router.NoRouteError, fn ->
+      call(Router, :get, "http://ba.pang.com/host/users/1")
+    end
   end
 end

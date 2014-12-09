@@ -1,52 +1,31 @@
 defmodule Phoenix.Controller.FlashTest do
   use ExUnit.Case, async: true
-  use ConnHelper
+  use RouterHelper
 
-  alias Plug.Conn
   alias Phoenix.Controller.Flash
-  alias Phoenix.Controller.FlashTest.Router
 
-  def conn_with_session(session \\ %{}) do
-    %Conn{private: %{plug_session: session}}
+  @session Plug.Session.init(
+    store: :cookie,
+    key: "_app",
+    encryption_salt: "yadayada",
+    signing_salt: "yadayada"
+  )
+
+  def conn_with_session() do
+    conn(:get, "/")
+    |> Map.put(:secret_key_base, String.duplicate("abcdefgh", 8))
+    |> Plug.Session.call(@session)
+    |> fetch_session()
   end
 
-  setup_all do
-    Application.put_env :phoenix, Router,
-      http: false, https: false,
-      session: [store: :cookie, key: "_app"],
-      secret_key_base: String.duplicate("abcdefgh", 8)
+  defmodule FlashController do
+    use Phoenix.Controller
 
-    defmodule FlashController do
-      use Phoenix.Controller
+    plug :action
 
-      plug :action
-
-      def index(conn, _params) do
-        text conn, "hello"
-      end
-
-      def set_flash(conn, %{"notice" => notice, "status" => status}) do
-        {status, _} = Integer.parse(status)
-        conn |> Flash.put(:notice, notice) |> put_status(status) |> redirect(to: "/")
-      end
+    def set_flash(conn, _params) do
+      conn |> Flash.put(:notice, "elixir") |> redirect(to: "/")
     end
-
-    defmodule Router do
-      use Phoenix.Router
-
-      pipeline :browser do
-        plug :fetch_session
-      end
-
-      pipe_through :browser
-
-      get "/", FlashController, :index
-      get "/set_flash/:notice/:status", FlashController, :set_flash
-    end
-
-    Router.start()
-    on_exit &Router.stop/0
-    :ok
   end
 
   setup do
@@ -56,14 +35,14 @@ defmodule Phoenix.Controller.FlashTest do
 
   test "flash is persisted when status in redirect" do
     for status <- 300..308 do
-      conn = call(Router, :get, "/set_flash/elixir/#{status}")
+      conn = conn_with_session |> put_status(status) |> FlashController.call(:set_flash)
       assert Flash.get(conn, :notice) == "elixir"
     end
   end
 
   test "flash is not persisted when status is not redirect" do
     for status <- [299, 309, 200, 404] do
-      conn = call(Router, :get, "/set_flash/elixir/#{status}")
+      conn = conn_with_session |> put_status(status) |> FlashController.call(:set_flash)
       assert Flash.get(conn, :notice) == nil
     end
   end

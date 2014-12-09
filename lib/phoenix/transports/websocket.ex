@@ -31,10 +31,8 @@ defmodule Phoenix.Transports.WebSocket do
   Handles initalization of the websocket
   """
   def ws_init(conn) do
-    router = router_module(conn)
-    serializer = Dict.fetch!(router.config(:transports), :websocket_serializer)
-
-    {:ok, %{router: router, sockets: HashDict.new, serializer: serializer}}
+    serializer = Dict.fetch!(endpoint_module(conn).config(:transports), :websocket_serializer)
+    {:ok, %{router: router_module(conn), sockets: HashDict.new, serializer: serializer}}
   end
 
   @doc """

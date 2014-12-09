@@ -1,6 +1,6 @@
 defmodule Phoenix.Controller.PipelineTest do
   use ExUnit.Case, async: true
-  use ConnHelper
+  use RouterHelper
 
   defmodule MyController do
     use Phoenix.Controller
@@ -31,6 +31,7 @@ defmodule Phoenix.Controller.PipelineTest do
 
   setup do
     Logger.disable(self())
+    :ok
   end
 
   test "invokes the plug stack" do

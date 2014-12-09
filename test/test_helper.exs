@@ -1,4 +1,4 @@
-Code.require_file("conn_helper.exs", __DIR__)
+Code.require_file("router_helper.exs", __DIR__)
 
 # Disable code reloader because we don't want
 # test routers to be using it by default.

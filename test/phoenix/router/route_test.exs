@@ -12,7 +12,7 @@ defmodule Phoenix.Router.RouteTest do
     assert route.controller == Hello
     assert route.action == :world
     assert route.helper == "hello_world"
-    assert route.pipe_through == [:before, :foo, :bar]
+    assert route.pipe_through == [:foo, :bar]
     assert route.path_segments == ["foo", {:bar, [], nil}]
     assert Macro.to_string(route.host_segments) == "_"
     assert Macro.to_string(route.pipe_segments) == "bar(foo(var!(conn), []), [])"

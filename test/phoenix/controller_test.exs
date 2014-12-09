@@ -1,6 +1,6 @@
 defmodule Phoenix.ControllerTest do
   use ExUnit.Case, async: true
-  use ConnHelper
+  use RouterHelper
 
   import Phoenix.Controller
   alias Plug.Conn
@@ -23,6 +23,11 @@ defmodule Phoenix.ControllerTest do
   test "router_module/1" do
     conn = Conn.put_private(%Conn{}, :phoenix_router, Hello)
     assert router_module(conn) == Hello
+  end
+
+  test "endpoint_module/1" do
+    conn = Conn.put_private(%Conn{}, :phoenix_endpoint, Hello)
+    assert endpoint_module(conn) == Hello
   end
 
   test "put_layout_formats/2 and layout_formats/1" do

@@ -23,7 +23,9 @@ defmodule Mix.Tasks.Phoenix.New do
     binding = [application_name: application_name,
                application_module: application_module,
                phoenix_dep: phoenix_dep(opts[:dev]),
-               secret_key_base: random_string(64)]
+               secret_key_base: random_string(64),
+               encryption_salt: random_string(8),
+               signing_salt: random_string(8)]
 
     copy_from template_dir, path, application_name, &EEx.eval_file(&1, binding)
     copy_from static_dir, Path.join(path, "priv/static"), application_name, &File.read!(&1)
@@ -39,7 +41,7 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   def random_string(length) do
-    :crypto.strong_rand_bytes(length) |> Base.encode64
+    :crypto.strong_rand_bytes(length) |> Base.encode64 |> binary_part(0, length)
   end
 
   defp copy_from(source_dir, target_dir, application_name, fun) do
