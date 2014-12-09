@@ -5,7 +5,7 @@ defmodule Phoenix.Router.Helpers do
   alias Phoenix.Router.Route
 
   @doc """
-  Generates the router module for the given environment and routes.
+  Generates the helper module for the given environment and routes.
   """
   def define(env, routes) do
     ast = for route <- routes, do: defhelper(route)
@@ -25,19 +25,21 @@ defmodule Phoenix.Router.Helpers do
       """
       unquote(ast)
 
-      @doc """
-      Generates a URL for the given path.
-      """
-      def url(path) do
-        Phoenix.Config.cache(unquote(env.module),
-          :__phoenix_url_helper__,
-          &Phoenix.Router.Helpers.url/1) <> path
-      end
+      # TODO: Fix commented code
 
-      @doc """
-      Generates a URL for the given path considering the connection data.
-      """
-      def url(%Plug.Conn{}, path), do: url(path)
+      # @doc """
+      # Generates a URL for the given path.
+      # """
+      # def url(path) do
+      #   Phoenix.Config.cache(unquote(endpoint),
+      #     :__phoenix_url_helper__,
+      #     &Phoenix.Router.Helpers.url/1) <> path
+      # end
+
+      # @doc """
+      # Generates a URL for the given path considering the connection data.
+      # """
+      # def url(%Plug.Conn{}, path), do: url(path)
 
       # Functions used by generated helpers
 
@@ -64,18 +66,18 @@ defmodule Phoenix.Router.Helpers do
   @doc """
   Builds the url from the router configuration.
   """
-  def url(router) do
+  def url(endpoint) do
     {scheme, port} =
       cond do
-        config = router.config(:https) ->
+        config = endpoint.config(:https) ->
           {"https", config[:port]}
-        config = router.config(:http) ->
+        config = endpoint.config(:http) ->
           {"http", config[:port]}
         true ->
           {"http", "80"}
       end
 
-    url    = router.config(:url)
+    url    = endpoint.config(:url)
     scheme = url[:scheme] || scheme
     host   = url[:host]
     port   = to_string(url[:port] || port)

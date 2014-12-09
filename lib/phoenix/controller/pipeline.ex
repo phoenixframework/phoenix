@@ -104,7 +104,7 @@ defmodule Phoenix.Controller.Pipeline do
         conn = update_in conn.private,
                  &(&1 |> Map.put(:phoenix_controller, __MODULE__)
                       |> Map.put(:phoenix_action, action))
-        phoenix_controller_stack(conn, action)
+        phoenix_controller_pipeline(conn, action)
       end
 
       def action(%{private: %{phoenix_action: action}} = conn, _options) do
@@ -120,7 +120,7 @@ defmodule Phoenix.Controller.Pipeline do
     plugs = Module.get_attribute(env.module, :plugs)
     {conn, body} = Plug.Builder.compile(plugs)
     quote do
-      defp phoenix_controller_stack(unquote(conn), var!(action)) do
+      defp phoenix_controller_pipeline(unquote(conn), var!(action)) do
         var!(conn) = unquote(conn)
         var!(controller) = __MODULE__
         _ = var!(conn)

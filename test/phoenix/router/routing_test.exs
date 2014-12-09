@@ -1,11 +1,6 @@
 defmodule Phoenix.Router.RoutingTest do
   use ExUnit.Case, async: true
-  use ConnHelper
-
-  setup do
-    Logger.disable(self())
-    :ok
-  end
+  use RouterHelper
 
   defmodule UserController do
     use Phoenix.Controller
@@ -38,6 +33,11 @@ defmodule Phoenix.Router.RoutingTest do
 
     get "/users/:user_id/files/:id", UserController, :image
     get "/*path", UserController, :not_found
+  end
+
+  setup do
+    Logger.disable(self())
+    :ok
   end
 
   test "get root path" do

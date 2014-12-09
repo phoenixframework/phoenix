@@ -13,12 +13,11 @@ defmodule Phoenix.Integration.ChannelTest do
   @window_ms 100
   @ensure_window_timeout_ms @window_ms * 3
 
-  Application.put_env(:phoenix, __MODULE__.Router, [
+  Application.put_env(:phoenix, __MODULE__.Endpoint, [
     https: false,
     http: [port: @port],
-    secret_key_base: "7pe/JuPlX/rvpyk80h5r9eShTBtTLIY4WcDIX/r60Fz+8pnQDc1usobc9D7KvD9/l6DNZBXo5Uc8HXSpsuwCcA==",
+    secret_key_base: String.duplicate("abcdefgh", 8),
     debug_errors: false,
-    session: [store: :cookie, key: "_integration_test"],
     transports: [longpoller_window_ms: @window_ms]
   ])
 
@@ -46,22 +45,34 @@ defmodule Phoenix.Integration.ChannelTest do
     use Phoenix.Router
     use Phoenix.Router.Socket, mount: "/ws"
 
-    pipeline :before do
-      plug :disable_logger
-      plug :super
-    end
-
-    defp disable_logger(conn, _) do
+    def call(conn, opts) do
       Logger.disable(self)
-      conn
+      super(conn, opts)
     end
 
     channel "rooms", RoomChannel
   end
 
+  defmodule Endpoint do
+    use Phoenix.Endpoint, otp_app: :phoenix
+
+    plug Plug.Parsers,
+      parsers: [:urlencoded, :json],
+      pass: "*/*",
+      json_decoder: Poison
+
+    plug Plug.Session,
+      store: :cookie,
+      key: "_integration_test",
+      encryption_salt: "yadayada",
+      signing_salt: "yadayada"
+
+    plug Router
+  end
+
   setup_all do
-    capture_io fn -> Router.start end
-    on_exit &Router.stop/0
+    capture_io fn -> Endpoint.start end
+    on_exit &Endpoint.stop/0
     :ok
   end
 

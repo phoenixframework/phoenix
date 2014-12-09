@@ -6,6 +6,10 @@ defmodule Phoenix.Transports.LongPoller do
   alias Phoenix.Socket.Message
   alias Phoenix.Transports.LongPoller
 
+  # TODO: If we are going to decouple this from the router,
+  # we need to plug the parameter parser and use its own
+  # session thing
+
   plug :fetch_session
   plug :action
 
@@ -58,6 +62,7 @@ defmodule Phoenix.Transports.LongPoller do
       {:error, conn, :terminated} -> send_resp(conn, :gone, "")
     end
   end
+
   defp dispatch_publish(conn, message, server_pid) do
     msg = Message.from_map!(message)
 
@@ -66,7 +71,6 @@ defmodule Phoenix.Transports.LongPoller do
       {:error, _socket, _reason} -> send_resp(conn, :unauthorized, "")
     end
   end
-
 
   ## Client
 
@@ -143,7 +147,9 @@ defmodule Phoenix.Transports.LongPoller do
     GenServer.call(server_pid, {:dispatch, message})
   end
 
+  # TODO: Is this config in the endpoint or in the router?
+
   defp timeout_window_ms(conn) do
-    get_in router_module(conn).config(:transports), [:longpoller_window_ms]
+    get_in conn.private.phoenix_endpoint.config(:transports), [:longpoller_window_ms]
   end
 end

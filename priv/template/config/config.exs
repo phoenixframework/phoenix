@@ -5,17 +5,12 @@
 # is restricted to this project.
 use Mix.Config
 
-# Configures the router
-config :phoenix, <%= application_module %>.Router,
+# Configures the endpoint
+config :phoenix, <%= application_module %>.Endpoint,
   url: [host: "localhost"],
   http: [port: System.get_env("PORT")],
   secret_key_base: "<%= secret_key_base %>",
   debug_errors: false
-
-# Session configuration
-config :phoenix, <%= application_module %>.Router,
-  session: [store: :cookie,
-            key: "_<%= application_name %>_key"]
 
 # Configures Elixir's Logger
 config :logger, :console,

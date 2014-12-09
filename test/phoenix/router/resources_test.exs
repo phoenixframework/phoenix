@@ -1,11 +1,6 @@
 defmodule Phoenix.Router.ResourcesTest do
   use ExUnit.Case, async: true
-  use ConnHelper
-
-  setup do
-    Logger.disable(self())
-    :ok
-  end
+  use RouterHelper
 
   defmodule UserController do
     use Phoenix.Controller
@@ -57,10 +52,8 @@ defmodule Phoenix.Router.ResourcesTest do
     end
   end
 
-  setup_all do
-    Application.put_env(:phoenix, Router, http: false, https: false)
-    Router.start()
-    on_exit &Router.stop/0
+  setup do
+    Logger.disable(self())
     :ok
   end
 

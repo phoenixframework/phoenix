@@ -1,4 +1,4 @@
-defmodule Phoenix.Router.CowboyHandler do
+defmodule Phoenix.Endpoint.CowboyHandler do
   @moduledoc false
   @connection Plug.Adapters.Cowboy.Conn
   @already_sent {:plug_conn, :sent}

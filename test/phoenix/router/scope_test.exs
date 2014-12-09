@@ -1,11 +1,6 @@
 defmodule Phoenix.Router.ScopedRoutingTest do
   use ExUnit.Case, async: true
-  use ConnHelper
-
-  setup do
-    Logger.disable(self())
-    :ok
-  end
+  use RouterHelper
 
   # Path scoping
 
@@ -67,6 +62,11 @@ defmodule Phoenix.Router.ScopedRoutingTest do
         end
       end
     end
+  end
+
+  setup do
+    Logger.disable(self())
+    :ok
   end
 
   test "single scope for single routes" do

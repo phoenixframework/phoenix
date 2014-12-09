@@ -1,38 +1,28 @@
 defmodule Phoenix.Tranports.LongPollerTest do
   use ExUnit.Case, async: true
-  use ConnHelper
-  import ExUnit.CaptureIO
+  use RouterHelper
 
   alias Plug.Conn
   alias Phoenix.Transports.LongPoller
   alias Phoenix.Tranports.LongPollerTest.Router
 
-  def conn_with_session(session \\ %{}) do
-    %Conn{private: %{plug_session: session}}
-    |> put_private(:phoenix_router, Router)
-  end
-
   @port 4809
   @window_ms 20
   @ensure_window_timeout_ms @window_ms * 3
 
-  Application.put_env(:phoenix, Router, [
-    https: false,
-    http: [port: @port],
-    secret_key_base: "7pe/JuPlX/rvpyk80h5r9eShTBtTLIY4WcDIX/r60Fz+8pnQDc1usobc9D7KvD9/l6DNZBXo5Uc8HXSpsuwCcA==",
-    session: [store: :cookie, key: "_unit_test"],
-    transports: [longpoller_window_ms: @window_ms]
-  ])
+  def conn_with_session(session \\ %{}) do
+    %Conn{private: %{plug_session: session}}
+    |> put_private(:phoenix_router, Router)
+    |> put_private(:phoenix_endpoint, __MODULE__)
+  end
+
+  def config(:transports) do
+    [longpoller_window_ms: @window_ms]
+  end
 
   defmodule Router do
     use Phoenix.Router
     use Phoenix.Router.Socket, mount: "/ws"
-  end
-
-  setup_all do
-    capture_io fn -> Router.start end
-    on_exit &Router.stop/0
-    :ok
   end
 
   test "start_session starts the LongPoller.Server and stores pid in session" do

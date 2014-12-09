@@ -1,28 +1,25 @@
 defmodule Mix.Tasks.Phoenix.Start do
   use Mix.Task
 
-  @shortdoc "Starts application workers"
+  @shortdoc "Starts application endpoints/workers"
   @recursive true
 
   @moduledoc """
-  Starts the router or a given worker. Defaults to `MyApp.Router`
+  Starts the default endpoints or the given workers.
+  Defaults to `MyApp.Endpoint`.
 
       $ mix phoenix.start
-      $ mix phoenix.start MyApp.AnotherRouter
+      $ mix phoenix.start MyApp.Endpoint MyApp.Worker1 MyApp.Worker2
 
   """
-  def run([]) do
+  def run(args) do
     Mix.Task.run "app.start", []
-    Mix.Phoenix.router.start
+    Enum.each endpoints(args), &(&1.start)
     no_halt
   end
 
-  def run([worker]) do
-    Mix.Task.run "app.start", []
-    remote_worker = Module.concat("Elixir", worker)
-    remote_worker.start
-    no_halt
-  end
+  defp endpoints([]),      do: [Mix.Phoenix.endpoint]
+  defp endpoints(workers), do: Enum.map(workers, &Module.concat("Elixir", &1))
 
   defp no_halt do
     unless iex_running?, do: :timer.sleep(:infinity)

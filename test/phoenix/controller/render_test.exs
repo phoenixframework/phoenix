@@ -3,7 +3,7 @@ Code.require_file "../../fixtures/views.exs", __DIR__
 defmodule Phoenix.Controller.RenderTest do
   use ExUnit.Case, async: true
 
-  use ConnHelper
+  use RouterHelper
   import Phoenix.Controller
 
   defp conn() do

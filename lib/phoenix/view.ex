@@ -110,35 +110,7 @@ defmodule Phoenix.View do
         unquote(__base__())
       end
     else
-      # TODO: Remove this message once codebases have been upgraded
-      raise """
-      You are using the old API for Phoenix.View.
-      Here is the new view for your application:
-
-          defmodule YOURAPP.View do
-            use Phoenix.View, root: "web/templates"
-
-            # The quoted expression returned by this block is applied
-            # to this module and all other views that use this module.
-            using do
-              quote do
-                # Import common functionality
-                import YOURAPP.I18n
-                import YOURAPP.Router.Helpers
-
-                # Use Phoenix.HTML to import all HTML functions (forms, tags, etc)
-                use Phoenix.HTML
-
-                # Common aliases
-                alias Phoenix.Controller.Flash
-              end
-            end
-
-            # Functions defined here are available to all other views/templates
-          end
-
-      Replace YOURAPP by your actual application module name.
-      """
+      raise "expected :root to be given as an option"
     end
   end
 

@@ -1,6 +1,6 @@
 defmodule Phoenix.ControllerTest do
   use ExUnit.Case, async: true
-  use ConnHelper
+  use RouterHelper
 
   import Phoenix.Controller
   alias Plug.Conn

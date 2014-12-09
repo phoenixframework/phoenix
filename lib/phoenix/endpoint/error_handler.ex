@@ -1,4 +1,4 @@
-defmodule Phoenix.Router.RenderErrors do
+defmodule Phoenix.Endpoint.ErrorHandler do
   # This module is used to catch failures and render them using a view.
   #
   # This module is automatically used in `Phoenix.Router` where it
@@ -13,13 +13,19 @@ defmodule Phoenix.Router.RenderErrors do
   @doc false
   defmacro __using__(opts) do
     quote do
+      @before_compile Phoenix.Endpoint.ErrorHandler
       @phoenix_render_errors unquote(opts)
+    end
+  end
+
+  @doc false
+  defmacro __before_compile__(_) do
+    quote location: :keep do
+      defoverridable [call: 2]
 
       def call(conn, opts) do
-        Phoenix.Router.RenderErrors.wrap(conn, @phoenix_render_errors, fn -> super(conn, opts) end)
+        Phoenix.Endpoint.ErrorHandler.wrap(conn, @phoenix_render_errors, fn -> super(conn, opts) end)
       end
-
-      defoverridable [call: 2]
     end
   end
 

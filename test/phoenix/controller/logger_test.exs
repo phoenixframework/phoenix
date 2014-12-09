@@ -1,6 +1,6 @@
 defmodule Phoenix.Controller.LoggerTest do
   use ExUnit.Case
-  use ConnHelper
+  use RouterHelper
 
   defmodule LoggerController do
     use Phoenix.Controller
@@ -13,11 +13,11 @@ defmodule Phoenix.Controller.LoggerTest do
       conn(:get, "/", foo: "bar", format: "html")
       |> fetch_params
       |> put_private(:phoenix_pipelines, [:browser])
-      |> LoggerController.call(LoggerController.init(:index))
+      |> action
     end
     assert output =~ "[debug] Processing by Phoenix.Controller.LoggerTest.LoggerController.index/2"
     assert output =~ "Parameters: %{\"foo\" => \"bar\", \"format\" => \"html\"}"
-    assert output =~ "Pipeline: [:browser]"
+    assert output =~ "Pipelines: [:browser]"
   end
 
   test "filter parameter" do
@@ -29,7 +29,7 @@ defmodule Phoenix.Controller.LoggerTest do
       output = capture_log fn ->
         conn(:get, "/", password: "should_show", PASS: "should_not_show")
         |> fetch_params
-        |> LoggerController.call(LoggerController.init(:index))
+        |> action
       end
 
       assert output =~ "Parameters: %{\"PASS\" => \"[FILTERED]\", \"password\" => \"should_show\"}"
@@ -42,7 +42,7 @@ defmodule Phoenix.Controller.LoggerTest do
     output = capture_log fn ->
       conn(:get, "/", foo: "bar", map: %{password: "should_not_show"})
       |> fetch_params
-      |> LoggerController.call(LoggerController.init(:index))
+      |> action
     end
 
     assert output =~ "Parameters: %{\"foo\" => \"bar\", \"map\" => %{\"password\" => \"[FILTERED]\"}}"
@@ -52,7 +52,7 @@ defmodule Phoenix.Controller.LoggerTest do
     output = capture_log fn ->
       conn(:get, "/", foo: "bar", list: [%{password: "should_not_show"}])
       |> fetch_params
-      |> LoggerController.call(LoggerController.init(:index))
+      |> action
     end
 
     assert output =~ "Parameters: %{\"foo\" => \"bar\", \"list\" => [%{\"password\" => \"[FILTERED]\"}]}"
@@ -62,14 +62,14 @@ defmodule Phoenix.Controller.LoggerTest do
     output = capture_log fn ->
       conn(:get, "/", %{foo: "bar", file: %Plug.Upload{}})
       |> fetch_params
-      |> LoggerController.call(LoggerController.init(:index))
+      |> action
     end
     assert output =~ "Parameters: %{\"file\" => %Plug.Upload{content_type: nil, filename: nil, path: nil}, \"foo\" => \"bar\"}"
 
     output = capture_log fn ->
       conn(:get, "/", %{foo: "bar", file: %{__struct__: "s"}})
       |> fetch_params
-      |> LoggerController.call(LoggerController.init(:index))
+      |> action
     end
     assert output =~ "Parameters: %{\"file\" => %{\"__struct__\" => \"s\"}, \"foo\" => \"bar\"}"
   end
@@ -79,8 +79,20 @@ defmodule Phoenix.Controller.LoggerTest do
       conn(:get, "/", %{password: "should_not_show"})
       |> fetch_params
       |> Map.update!(:params, &Dict.put(&1, :foo, "bar"))
-      |> LoggerController.call(LoggerController.init(:index))
+      |> action
     end
     assert output =~ "Parameters: %{:foo => \"bar\", \"password\" => \"[FILTERED]\"}"
+  end
+
+  test "does not filter unfetched parameters" do
+    output = capture_log fn ->
+      conn(:get, "/", "{foo:bar}", headers: [{"content-type", "application/json"}])
+      |> action
+    end
+    assert output =~ "Parameters: [UNFETCHED]"
+  end
+
+  defp action(conn) do
+    LoggerController.call(conn, LoggerController.init(:index))
   end
 end

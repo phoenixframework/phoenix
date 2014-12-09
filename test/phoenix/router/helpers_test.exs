@@ -1,32 +1,32 @@
 defmodule Phoenix.Router.HelpersTest do
   use ExUnit.Case, async: true
-  use ConnHelper
+  use RouterHelper
 
   alias Phoenix.Router.Helpers
 
   ## Unit tests
 
-  defmodule HTTPSRouter do
+  defmodule HTTPSEndpoint do
     def config(:https), do: [port: 443]
     def config(:url), do: [host: "example.com"]
   end
 
-  defmodule HTTPRouter do
+  defmodule HTTPEndpoint do
     def config(:https), do: false
     def config(:http), do: [port: 80]
     def config(:url), do: [host: "example.com"]
   end
 
-  defmodule URLRouter do
+  defmodule URLEndpoint do
     def config(:https), do: false
     def config(:http), do: false
     def config(:url), do: [host: "example.com", port: 678, scheme: "random"]
   end
 
   test "generates url" do
-    assert Helpers.url(URLRouter) == "random://example.com:678"
-    assert Helpers.url(HTTPRouter) == "http://example.com"
-    assert Helpers.url(HTTPSRouter) == "https://example.com"
+    assert Helpers.url(URLEndpoint) == "random://example.com:678"
+    assert Helpers.url(HTTPEndpoint) == "http://example.com"
+    assert Helpers.url(HTTPSEndpoint) == "https://example.com"
   end
 
   test "defhelper with :identifiers" do
@@ -97,14 +97,6 @@ defmodule Phoenix.Router.HelpersTest do
     end
 
     get "/", PageController, :root, as: :page
-  end
-
-  setup_all do
-    Application.put_env(:phoenix, Router, url: [host: "example.com"],
-                        http: false, https: false)
-    Router.start()
-    on_exit &Router.stop/0
-    :ok
   end
 
   alias Router.Helpers

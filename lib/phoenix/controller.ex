@@ -113,13 +113,6 @@ defmodule Phoenix.Controller do
   def router_module(conn), do: conn.private |> Map.get(:phoenix_router)
 
   @doc """
-  Retrieve error from Phoenix router.
-  """
-  # TODO: Consider removing this once we re-evaluate
-  @spec error(Plug.Conn.t) :: term
-  def error(conn), do: conn.private |> Map.get(:phoenix_error)
-
-  @doc """
   Sends JSON response.
 
   It uses the configured `:format_encoders` under the `:phoenix`

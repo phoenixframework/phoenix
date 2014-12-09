@@ -16,24 +16,7 @@ defmodule Phoenix.Router do
   end
 
   @moduledoc """
-  Defines the Phoenix router.
-
-  A router is the heart of a Phoenix application. It has three
-  main responsibilities:
-
-    * It defines a plug pipeline responsible for handling
-      upcoming requests and dispatching those requests to
-      controllers and other plugs.
-
-    * It hosts configuration for the router and related
-      entities (like plugs).
-
-    * It provides a wrapper for starting and stopping the
-      router in a specific web server.
-
-  We will explore those responsibilities next.
-
-  ## Routing
+  Defines a Phoenix router.
 
   The router provides a set of macros for generating routes
   that dispatch to specific controllers and actions. Those
@@ -155,152 +138,20 @@ defmodule Phoenix.Router do
   to help define plugs. In the example above, `fetch_session/2`
   comes from `Plug.Conn` while `accepts/2` comes from `Phoenix.Controller`.
 
-  By default, Phoenix ships with one pipeline, called `:before`,
-  that is always invoked before any route matches. All other
-  pipelines are invoked only after a specific route matches,
-  but before the route is dispatched to.
-
-  ### :before pipeline
-
-  Those are the plugs in the `:before` pipeline in the order
-  they are defined. How each plug is configured is defined in
-  a later sections.
-
-    * `Plug.Static` - serves static assets. Since this plug comes
-      before the router, serving of static assets is not logged
-
-    * `Plug.Logger` - logs incoming requests
-
-    * `Plug.Parsers` - parses the request body when a known
-      parser is available. By default parsers urlencoded,
-      multipart and json (with poison). The request body is left
-      untouched when the request content-type cannot be parsed
-
-    * `Plug.MethodOverride` - converts the request method to
-      `PUT`, `PATCH` or `DELETE` for `POST` requests with a
-      valid `_method` parameter
-
-    * `Plug.Head` - converts `HEAD` requests to `GET` requests and
-      strips the response body
-
-    * `Plug.Session` - a plug that sets up session management.
-      Note that `fetch_session/2` must still be explicitly called
-      before using the session as this plug just sets up how
-      the session is fetched
-
-    * `Phoenix.CodeReloader` - a plug that enables code reloading
-      for all entries in the `web` directory. It is configured
-      directly in the Phoenix application
-
-  ### Customizing pipelines
-
-  You can define new pipelines at any moment with the `pipeline/2`
-  macro:
-
-      pipeline :api do
-        plug :token_authentication
-      end
-
-  And then in a scope (or at root):
-
-      pipe_through [:api]
-
-  ## Router configuration
-
-  All routers are configured directly in the Phoenix application
-  environment. For example:
-
-      config :phoenix, YourApp.Router,
-        secret_key_base: "kjoy3o1zeidquwy1398juxzldjlksahdk3"
-
-  Phoenix configuration is split in two categories. Compile-time
-  configuration means the configuration is read during compilation
-  and changing it at runtime has no effect. Most of the compile-time
-  configuration is related to pipelines and plugs.
-
-  On the other hand, runtime configuration is accessed during or
-  after your application is started and can be read through the
-  `config/2` function:
-
-      YourApp.Router.config(:port)
-      YourApp.Router.config(:some_config, :default_value)
-
-  ### Compile-time
-
-    * `:session` - configures the `Plug.Session` plug. Defaults to
-      `false` but can be set to a keyword list of options as defined
-      in `Plug.Session`. For example:
-
-          config :phoenix, YourApp.Router,
-            session: [store: :cookie, key: "_your_app_key"]
-
-    * `:parsers` - sets up the request parsers. Accepts a set of options
-      as defined by `Plug.Parsers`. If parsers are disabled, parameters
-      won't be explicitly fetched before matching a route and functionality
-      dependent on parameters, like the `Plug.MethodOverride`, will be
-      disabled too. Defaults to:
-
-          [pass: ["*/*"],
-           json_decoder: Poison,
-           parsers: [:urlencoded, :multipart, :json]]
-
-    * `:static` - sets up static assets serving. Accepts a set of options
-      as defined by `Plug.Static`. Defaults to:
-
-          [at: "/",
-           from: Mix.Project.config[:app]]
-
-    * `:debug_errors` - when true, uses `Plug.Debugger` functionality for
-      debugging failures in the application. Recomended to be set to true
-      only in development as it allows listing of the application source
-      code during debugging. Defaults to false.
-
-    * `:render_errors` - a module representing a view to render templates
-      whenever there is a failure in the application. For example, if the
-      application crashes with a 500 error during a HTML request,
-      `render("500.html", assigns)` will be called in the view given to
-      `:render_errors`. The default view is `MyApp.ErrorView`.
-
-  ### Runtime
-
-    * `:http` - the configuration for the http server. Currently uses
-      cowboy and accepts all options as defined by `Plug.Adapters.Cowboy`.
-      Defaults to false.
-
-    * `:https` - the configuration for the https server. Currently uses
-      cowboy and accepts all options as defined by `Plug.Adapters.Cowboy`.
-      Defaults to false.
-
-    * `:secret_key_base` - a secret key used as base to generate secrets
-      to encode cookies, session and friends. Defaults to nil as it must
-      be set per application.
-
-    * `:url` - configuration for generating URLs throughout the app.
-      Accepts the host, scheme and port. Defaults to:
-
-          [host: "localhost"]
-
-  ## Web server
-
-  Starting a router as part of a web server can be done by invoking
-  `YourApp.Router.start/0`. Stopping the router is done with
-  `YourApp.Router.stop/0`. The web server is configured with the
-  `:http` and `:https` options defined above.
+  Note that router pipelines are only invoked after a route is found.
+  No plug is invoked in case no matches were found.
   """
 
-  alias Phoenix.Router.Adapter
   alias Phoenix.Router.Resource
   alias Phoenix.Router.Scope
 
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
 
   @doc false
-  defmacro __using__(_opts) do
+  defmacro __using__(_) do
     quote do
       unquote(prelude())
       unquote(plug())
-      unquote(pipelines())
-      unquote(server())
     end
   end
 
@@ -313,9 +164,6 @@ defmodule Phoenix.Router do
       import Plug.Conn
       import Phoenix.Controller
 
-      config = Adapter.config(__MODULE__)
-      @config config
-
       # Set up initial scope
       @phoenix_pipeline nil
       Phoenix.Router.Scope.init(__MODULE__)
@@ -324,7 +172,7 @@ defmodule Phoenix.Router do
 
   defp plug() do
     {conn, pipeline} =
-      [:dispatch, :match, :before]
+      [:dispatch, :match]
       |> Enum.map(&{&1, [], true})
       |> Plug.Builder.compile()
 
@@ -351,6 +199,9 @@ defmodule Phoenix.Router do
       @doc """
       Callback invoked by Plug on every request.
       """
+
+      # TODO: Fix me
+      config = []
 
       # For debugging errors, we wrap each step in the pipeline
       # in isolation. This allows us to have fresh copies of the
@@ -391,68 +242,7 @@ defmodule Phoenix.Router do
 
       defoverridable [init: 1, call: 2]
 
-      use Phoenix.Router.RenderErrors, view: config[:render_errors]
-    end
-  end
-
-  defp pipelines() do
-    quote do
-      pipeline :before do
-        if static = config[:static] do
-          static = Keyword.merge([from: config[:otp_app]], static)
-          plug Plug.Static, static
-        end
-
-        plug Plug.Logger
-
-        if Application.get_env(:phoenix, :code_reloader) do
-          plug Phoenix.CodeReloader
-        end
-
-        if parsers = config[:parsers] do
-          plug Plug.Parsers, parsers
-          plug Plug.MethodOverride
-        end
-
-        plug Plug.Head
-        plug :put_secret_key_base
-
-        if session = config[:session] do
-          salt    = Atom.to_string(__MODULE__)
-          session = Keyword.merge([signing_salt: salt, encryption_salt: salt], session)
-          plug Plug.Session, session
-        end
-      end
-    end
-  end
-
-  defp server() do
-    quote location: :keep, unquote: false do
-      @doc """
-      Starts the current router for serving requests
-      """
-      def start() do
-        Adapter.start(unquote(config[:otp_app]), __MODULE__)
-      end
-
-      @doc """
-      Stops the current router from serving requests
-      """
-      def stop() do
-        Adapter.stop(unquote(config[:otp_app]), __MODULE__)
-      end
-
-      @doc """
-      Returns the router configuration for `key`
-
-      Returns `default` if the router does not exist.
-      """
-      def config(key, default \\ nil) do
-        case :ets.lookup(__MODULE__, key) do
-          [{^key, val}] -> val
-          [] -> default
-        end
-      end
+      use Phoenix.Endpoint.ErrorHandler, view: config[:render_errors]
     end
   end
 
@@ -469,16 +259,6 @@ defmodule Phoenix.Router do
 
       defp match(conn, _method, _path_info, _host) do
         raise NoRouteError, conn: conn, router: __MODULE__
-      end
-
-      # TODO: How is this customizable?
-      # We can move it to the controller.
-      defp put_secret_key_base(conn, _) do
-        try do
-          put_in conn.secret_key_base, config(:secret_key_base)
-        rescue
-          _ -> conn
-        end
       end
     end
   end
@@ -548,7 +328,6 @@ defmodule Phoenix.Router do
         Scope.pipeline(__MODULE__, plug)
         {conn, body} = Plug.Builder.compile(@phoenix_pipeline)
         defp unquote(plug)(unquote(conn), _), do: unquote(body)
-        defoverridable [{plug, 2}]
         @phoenix_pipeline nil
       end
 
@@ -586,7 +365,7 @@ defmodule Phoenix.Router do
   end
 
   @doc """
-  Defines "RESTful" endpoints for a resource.
+  Defines "RESTful" routes for a resource.
 
   The given definition:
 

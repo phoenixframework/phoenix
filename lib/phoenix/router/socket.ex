@@ -16,7 +16,7 @@ defmodule Phoenix.Router.Socket do
 
   defmacro channel(channel, module) do
     quote do
-      if Scope.within_scope?(__MODULE__) do
+      if Scope.inside_scope?(__MODULE__) do
         raise """
         You are trying to call `channel` within a `scope` definition.
         Please move your channel definitions outside of any scope block.
