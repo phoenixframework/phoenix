@@ -1,4 +1,6 @@
 defmodule Phoenix.Controller.LoggerTest do
+  # This test case needs to be sync because we rely on
+  # log capture which is global.
   use ExUnit.Case
   use RouterHelper
 

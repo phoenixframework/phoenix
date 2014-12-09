@@ -75,6 +75,12 @@ defmodule Phoenix.Endpoint do
   `YourApp.Endpoint.start/0`. Stopping the endpoint is done with
   `YourApp.Endpoint.stop/0`. The web server is configured with the
   `:http` and `:https` options defined above.
+
+  The endpoint also provides a `url/1` function that generates a url
+  with the given path according to the :url configuration above:
+
+      MyApp.Endpoint.url("/foo/bar")
+      #=> "http://example.com/foo/bar"
   """
 
   alias Phoenix.Endpoint.Adapter
@@ -92,7 +98,6 @@ defmodule Phoenix.Endpoint do
   #    from the endpoint
   #
 
-  # TODO: Handle other configs (What about the router)
   # TODO: Migrate to own app OTP config
 
   @doc false
@@ -166,6 +171,16 @@ defmodule Phoenix.Endpoint do
           [{^key, val}] -> val
           [] -> default
         end
+      end
+
+      @doc """
+      Generates a URL for the given path based on the
+      `:url` configuration for the endpoint.
+      """
+      def url(path) do
+        Phoenix.Config.cache(__MODULE__,
+          :__phoenix_url_helper__,
+          &Phoenix.Endpoint.Adapter.url/1) <> path
       end
     end
   end

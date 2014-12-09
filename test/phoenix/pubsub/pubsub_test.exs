@@ -1,4 +1,5 @@
 defmodule Phoenix.PubSub.PubSubTest do
+  # TODO: Should be async
   use ExUnit.Case
   alias Phoenix.PubSub
 

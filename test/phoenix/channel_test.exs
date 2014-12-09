@@ -1,4 +1,5 @@
 defmodule Phoenix.Channel.ChannelTest do
+  # TODO: Should be async
   use ExUnit.Case
   alias Phoenix.PubSub
   alias Phoenix.Channel

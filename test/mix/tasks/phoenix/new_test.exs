@@ -1,6 +1,8 @@
 Code.require_file "../../mix_helper.exs", __DIR__
 
 defmodule Mix.Tasks.Phoenix.NewTest do
+  # This test case needs to be sync because we rely on
+  # changing the current working directory which is global.
   use ExUnit.Case
   use Plug.Test
 

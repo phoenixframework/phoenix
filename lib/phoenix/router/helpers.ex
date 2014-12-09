@@ -25,21 +25,12 @@ defmodule Phoenix.Router.Helpers do
       """
       unquote(ast)
 
-      # TODO: Fix commented code
-
-      # @doc """
-      # Generates a URL for the given path.
-      # """
-      # def url(path) do
-      #   Phoenix.Config.cache(unquote(endpoint),
-      #     :__phoenix_url_helper__,
-      #     &Phoenix.Router.Helpers.url/1) <> path
-      # end
-
-      # @doc """
-      # Generates a URL for the given path considering the connection data.
-      # """
-      # def url(%Plug.Conn{}, path), do: url(path)
+      @doc """
+      Generates a URL for the given path considering the connection data.
+      """
+      def url(%Plug.Conn{private: private}, path) do
+        private.phoenix_endpoint.url(path)
+      end
 
       # Functions used by generated helpers
 
@@ -61,32 +52,6 @@ defmodule Phoenix.Router.Helpers do
 
     Module.create(Module.concat(env.module, Helpers), code,
                   line: env.line, file: env.file)
-  end
-
-  @doc """
-  Builds the url from the router configuration.
-  """
-  def url(endpoint) do
-    {scheme, port} =
-      cond do
-        config = endpoint.config(:https) ->
-          {"https", config[:port]}
-        config = endpoint.config(:http) ->
-          {"http", config[:port]}
-        true ->
-          {"http", "80"}
-      end
-
-    url    = endpoint.config(:url)
-    scheme = url[:scheme] || scheme
-    host   = url[:host]
-    port   = to_string(url[:port] || port)
-
-    case {scheme, port} do
-      {"https", "443"} -> "https://" <> host
-      {"http", "80"}   -> "http://" <> host
-      {_, _}           -> scheme <> "://" <> host <> ":" <> port
-    end
   end
 
   @doc """

@@ -147,9 +147,7 @@ defmodule Phoenix.Transports.LongPoller do
     GenServer.call(server_pid, {:dispatch, message})
   end
 
-  # TODO: Is this config in the endpoint or in the router?
-
   defp timeout_window_ms(conn) do
-    get_in conn.private.phoenix_endpoint.config(:transports), [:longpoller_window_ms]
+    get_in endpoint_module(conn).config(:transports), [:longpoller_window_ms]
   end
 end

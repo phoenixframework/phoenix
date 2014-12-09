@@ -25,6 +25,11 @@ defmodule Phoenix.ControllerTest do
     assert router_module(conn) == Hello
   end
 
+  test "endpoint_module/1" do
+    conn = Conn.put_private(%Conn{}, :phoenix_endpoint, Hello)
+    assert endpoint_module(conn) == Hello
+  end
+
   test "put_layout_formats/2 and layout_formats/1" do
     conn = conn(:get, "/")
     assert layout_formats(conn) == ~w(html)

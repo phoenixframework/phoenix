@@ -13,6 +13,61 @@ defmodule Phoenix.Endpoint.Adapter do
     Phoenix.Config.merge(defaults(otp_app, endpoint), config)
   end
 
+  defp defaults(otp_app, module) do
+    [otp_app: otp_app,
+
+     # Compile-time config
+     debug_errors: false,
+     render_errors: render_errors(module),
+
+     # Transports
+     transports: [
+       longpoller_window_ms: 10_000,
+       websocket_serializer: Phoenix.Transports.JSONSerializer
+     ],
+
+     # Runtime config
+     url: [host: "localhost"],
+     http: false,
+     https: false,
+     secret_key_base: nil]
+  end
+
+  defp render_errors(module) do
+    module
+    |> Module.split
+    |> Enum.at(0)
+    |> Module.concat("ErrorView")
+  end
+
+  @doc """
+  Builds the endpoint url from its configuration.
+  """
+  def url(endpoint) do
+    {scheme, port} =
+      cond do
+        config = endpoint.config(:https) ->
+          {"https", config[:port]}
+        config = endpoint.config(:http) ->
+          {"http", config[:port]}
+        true ->
+          {"http", "80"}
+      end
+
+    url    = endpoint.config(:url)
+    scheme = url[:scheme] || scheme
+    host   = url[:host]
+    port   = to_string(url[:port] || port)
+
+    case {scheme, port} do
+      {"https", "443"} -> "https://" <> host
+      {"http", "80"}   -> "http://" <> host
+      {_, _}           -> scheme <> "://" <> host <> ":" <> port
+    end
+  end
+
+  ## Adapter specific
+
   @doc """
   Starts the endpoint.
   """
@@ -83,32 +138,5 @@ defmodule Phoenix.Endpoint.Adapter do
 
     Phoenix.Config.stop(module)
     :ok
-  end
-
-  defp defaults(otp_app, module) do
-    [otp_app: otp_app,
-
-     # Compile-time config
-     debug_errors: false,
-     render_errors: render_errors(module),
-
-     # Transports
-     transports: [
-       longpoller_window_ms: 10_000,
-       websocket_serializer: Phoenix.Transports.JSONSerializer
-     ],
-
-     # Runtime config
-     url: [host: "localhost"],
-     http: false,
-     https: false,
-     secret_key_base: nil]
-  end
-
-  defp render_errors(module) do
-    module
-    |> Module.split
-    |> Enum.at(0)
-    |> Module.concat("ErrorView")
   end
 end

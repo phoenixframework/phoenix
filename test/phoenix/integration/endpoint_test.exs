@@ -1,6 +1,8 @@
 Code.require_file "http_client.exs", __DIR__
 
 defmodule Phoenix.Integration.EndpointTest do
+  # This test case needs to be sync because we rely on
+  # log capture which is global.
   use ExUnit.Case
   use RouterHelper
 
@@ -8,7 +10,7 @@ defmodule Phoenix.Integration.EndpointTest do
   alias Phoenix.Integration.AdapterTest.ProdEndpoint
   alias Phoenix.Integration.AdapterTest.DevEndpoint
 
-  Application.put_env(:phoenix, ProdEndpoint, http: [port: "4807"])
+  Application.put_env(:phoenix, ProdEndpoint, http: [port: "4807"], url: [host: "example.com"])
   Application.put_env(:phoenix, DevEndpoint, http: [port: "4808"], debug_errors: true)
 
   defmodule Router do
@@ -65,6 +67,7 @@ defmodule Phoenix.Integration.EndpointTest do
 
   test "adapters starts on configured port and serves requests and stops for prod" do
     capture_io fn -> ProdEndpoint.start end
+    assert ProdEndpoint.url("/") == "http://example.com:4807/"
 
     {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
     assert resp.status == 200
@@ -92,6 +95,7 @@ defmodule Phoenix.Integration.EndpointTest do
 
   test "adapters starts on configured port and serves requests and stops for dev" do
     capture_io fn -> DevEndpoint.start end
+    assert DevEndpoint.url("/") == "http://localhost:4808/"
 
     {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
     assert resp.status == 200

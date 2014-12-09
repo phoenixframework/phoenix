@@ -6,29 +6,6 @@ defmodule Phoenix.Router.HelpersTest do
 
   ## Unit tests
 
-  defmodule HTTPSEndpoint do
-    def config(:https), do: [port: 443]
-    def config(:url), do: [host: "example.com"]
-  end
-
-  defmodule HTTPEndpoint do
-    def config(:https), do: false
-    def config(:http), do: [port: 80]
-    def config(:url), do: [host: "example.com"]
-  end
-
-  defmodule URLEndpoint do
-    def config(:https), do: false
-    def config(:http), do: false
-    def config(:url), do: [host: "example.com", port: 678, scheme: "random"]
-  end
-
-  test "generates url" do
-    assert Helpers.url(URLEndpoint) == "random://example.com:678"
-    assert Helpers.url(HTTPEndpoint) == "http://example.com"
-    assert Helpers.url(HTTPSEndpoint) == "https://example.com"
-  end
-
   test "defhelper with :identifiers" do
     route = build("GET", "/foo/:bar", nil, Hello, :world, "hello_world", [])
 
@@ -201,7 +178,12 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.admin_message_path(:show, 1) == "/admin/new/messages/1"
   end
 
+  def url(path) do
+    "https://example.com" <> path
+  end
+
   test "helpers module generates a url helper" do
-    assert Helpers.url("/foo/bar") == "http://example.com/foo/bar"
+    conn = conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
+    assert Helpers.url(conn, "/foo/bar") == "https://example.com/foo/bar"
   end
 end
