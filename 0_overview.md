@@ -48,13 +48,13 @@ Links to more in-depth information on Plug can be found in the Resources Guide.
 
 ### Cowboy
 
-Cowboy is an HTTP server written in Erlang by Loïc Hoguin of [99s](http://ninenines.eu/). Cowboy is built in a modular way on top of Ranch, Bullet, and Sheriff. This is how 99s describes them all.
+Cowboy is an HTTP server written in Erlang by Loïc Hoguin of [99s](http://ninenines.eu/). Cowboy is built in a modular way on top of Ranch, Bullet, and Sheriff. This is how 99s describes them.
 
 - Cowboy is a small, fast, modular HTTP server supporting Websockets, SPDY and more.
 
 - Ranch is a socket acceptor pool for TCP protocols. It is also a standalone library for building networked applications.
 
-- Bullet is simple, reliable, efficient streaming library.
+- Bullet is a simple, reliable, efficient streaming library.
 
 - Sheriff uses parse transforms for type based validation. Sheriff also validates data dynamically using Erlang's type system with no extra code required.
 
