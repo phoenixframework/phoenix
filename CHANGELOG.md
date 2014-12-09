@@ -2,16 +2,25 @@
 
 ## v0.7.0-dev
 
+* Enhancements
+  * [Endpoint] Introduce the concept of endpoints which removes some of the responsibilities from the router
+  * [Endpoint] Move configuration from the :phoenix application to the user own OTP app
+
+* Bug fixes
+  * [Router] Fix a bug where the error rendering layer was not picking JSON changes
+  * [CodeReloader] Fix a bug where the code reloader was unable to recompile when the router could not compile
+
 * Backwards incompatible changes
-  * [I18n] `Linguist` has been removed as a dependency, and an `I18n` module is no longer generated in your project.
-  * [View] `ErrorsView` has been renamed to `ErrorView`, update your `MyApp.ErrorsView` accordingly.
+  * [I18n] `Linguist` has been removed as a dependency, and an `I18n` module is no longer generated in your project
+  * [View] `ErrorsView` has been renamed to `ErrorView`, update your `MyApp.ErrorsView` accordingly
   * [Controller] `html/2`, `json/2`, `text/2`, `redirect/2` and
 `render/3` no longer halt automatically
+  * [Router] Configuration is no longer stored in the router but in the application endpoint. The before pipeline was also removed and move to the endpoint itself
 
 ## v0.6.2 (2014-12-07)
 
 * Bug fixes
-  * Fix phoenix dep reference in new project generator
+  * [Mix] Fix phoenix dep reference in new project generator
 
 ## v0.6.1 (2014-11-30)
 
