@@ -19,9 +19,8 @@ defmodule Phoenix.Config do
   # Handles Phoenix configuration.
   #
   # This module is private to Phoenix and should not be accessed
-  # directly. The Phoenix Router configuration can be accessed at
-  # runtime using the `config/2` function or at compilation time via
-  # the `@config` attribute.
+  # directly. The Phoenix endpoint configuration can be accessed
+  # at runtime using the `config/2` function.
   @moduledoc false
 
   use GenServer
@@ -31,8 +30,8 @@ defmodule Phoenix.Config do
 
   Data is accessed by the module via ETS.
   """
-  def start_supervised(module, defaults) do
-    Supervisor.start_child(Phoenix.Config.Supervisor, [module, defaults])
+  def start_supervised(otp_app, module, defaults) do
+    Supervisor.start_child(Phoenix.Config.Supervisor, [otp_app, module, defaults])
   end
 
   @doc """
@@ -66,20 +65,30 @@ defmodule Phoenix.Config do
     end
   end
 
+  @doc """
+  Reads the configuration for module from the given otp app.
+
+  Useful to read a particular value at compilation time.
+  """
+  def from_env(otp_app, module, defaults) do
+    config = Application.get_env(otp_app, module, [])
+    merge(defaults, config)
+  end
+
   ## Internal API
 
   @doc """
   Starts a linked Phoenix configuration handler.
   """
-  def start_link(module, defaults) do
-    GenServer.start_link(__MODULE__, {module, defaults})
+  def start_link(otp_app, module, defaults) do
+    GenServer.start_link(__MODULE__, {otp_app, module, defaults})
   end
 
   @doc """
   Stores the given keywords in the Phoenix configuration handler for the module.
   """
   def store(module, pairs) do
-    [__config__: pid] = :ets.lookup(module, :__config__)
+    pid = :ets.lookup_element(module, :__config__, 2)
     GenServer.call(pid, {:store, pairs})
   end
 
@@ -90,20 +99,17 @@ defmodule Phoenix.Config do
   with removed ones. The changed config are updated while the
   removed ones stop, effectively removing the table.
   """
-  def reload(changed, removed) do
-    request = {:config_change, changed, removed}
-    Supervisor.which_children(Phoenix.Config.Supervisor)
-    |> Enum.map(&Task.async(GenServer, :call, [elem(&1, 1), request]))
-    |> Enum.each(&Task.await(&1))
+  def reload(module, changed, removed) do
+    pid = :ets.lookup_element(module, :__config__, 2)
+    GenServer.call(pid, {:config_change, changed, removed})
   end
 
   # Callbacks
 
-  def init({module, defaults}) do
+  def init({otp_app, module, defaults}) do
     :ets.new(module, [:named_table, :protected, read_concurrency: true])
     :ets.insert(module, [__config__: self()])
-    config = Application.get_env(:phoenix, module, [])
-    update(module, merge(defaults, config))
+    update(module, from_env(otp_app, module, defaults))
     {:ok, {module, defaults}}
   end
 

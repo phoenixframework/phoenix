@@ -85,21 +85,6 @@ defmodule Phoenix.Endpoint do
 
   alias Phoenix.Endpoint.Adapter
 
-  # How to upgrade to Phoenix 0.7.0
-  #
-  # 1. Define a Phoenix.Endpoint
-  #
-  # 2. Migrate your config/*.exs files to configure the
-  #    endpoint in your application instead of the router
-  #
-  # 3. Add a config_change callback to your application
-  #
-  # 4. If you are using url/1, it now needs to be accessed
-  #    from the endpoint
-  #
-
-  # TODO: Migrate to own app OTP config
-
   @doc false
   defmacro __using__(opts) do
     quote do

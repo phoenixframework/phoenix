@@ -13,7 +13,7 @@ defmodule Phoenix.Integration.ChannelTest do
   @window_ms 100
   @ensure_window_timeout_ms @window_ms * 3
 
-  Application.put_env(:phoenix, __MODULE__.Endpoint, [
+  Application.put_env(:channel_app, __MODULE__.Endpoint, [
     https: false,
     http: [port: @port],
     secret_key_base: String.duplicate("abcdefgh", 8),
@@ -54,7 +54,7 @@ defmodule Phoenix.Integration.ChannelTest do
   end
 
   defmodule Endpoint do
-    use Phoenix.Endpoint, otp_app: :phoenix
+    use Phoenix.Endpoint, otp_app: :channel_app
 
     plug Plug.Parsers,
       parsers: [:urlencoded, :json],

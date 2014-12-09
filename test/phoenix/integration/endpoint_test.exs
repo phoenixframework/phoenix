@@ -10,8 +10,8 @@ defmodule Phoenix.Integration.EndpointTest do
   alias Phoenix.Integration.AdapterTest.ProdEndpoint
   alias Phoenix.Integration.AdapterTest.DevEndpoint
 
-  Application.put_env(:phoenix, ProdEndpoint, http: [port: "4807"], url: [host: "example.com"])
-  Application.put_env(:phoenix, DevEndpoint, http: [port: "4808"], debug_errors: true)
+  Application.put_env(:endpoint_app, ProdEndpoint, http: [port: "4807"], url: [host: "example.com"])
+  Application.put_env(:endpoint_app, DevEndpoint, http: [port: "4808"], debug_errors: true)
 
   defmodule Router do
     use Plug.Router
@@ -35,7 +35,7 @@ defmodule Phoenix.Integration.EndpointTest do
 
   for mod <- [ProdEndpoint, DevEndpoint] do
     defmodule mod do
-      use Phoenix.Endpoint, otp_app: :phoenix
+      use Phoenix.Endpoint, otp_app: :endpoint_app
 
       plug :router, Router
 

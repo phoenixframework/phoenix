@@ -9,8 +9,7 @@ defmodule Phoenix.Endpoint.Adapter do
   The endpoint configuration used at compile time.
   """
   def config(otp_app, endpoint) do
-    config = Application.get_env(:phoenix, endpoint, [])
-    Phoenix.Config.merge(defaults(otp_app, endpoint), config)
+    Phoenix.Config.from_env(otp_app, endpoint, defaults(otp_app, endpoint))
   end
 
   defp defaults(otp_app, module) do
@@ -72,7 +71,7 @@ defmodule Phoenix.Endpoint.Adapter do
   Starts the endpoint.
   """
   def start(otp_app, module) do
-    Phoenix.Config.start_supervised(module, defaults(otp_app, module))
+    Phoenix.Config.start_supervised(otp_app, module, defaults(otp_app, module))
 
     # TODO: We need to test this logic when we support custom adapters.
     if config = module.config(:http) do

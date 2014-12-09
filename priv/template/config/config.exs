@@ -6,7 +6,7 @@
 use Mix.Config
 
 # Configures the endpoint
-config :phoenix, <%= application_module %>.Endpoint,
+config :<%= application_name %>, <%= application_module %>.Endpoint,
   url: [host: "localhost"],
   http: [port: System.get_env("PORT")],
   secret_key_base: "<%= secret_key_base %>",

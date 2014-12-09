@@ -50,7 +50,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     Logger.disable(self())
     Application.put_env(:phoenix, :code_reloader, true)
 
-    Application.put_env(:phoenix, PhotoBlog.Endpoint,
+    Application.put_env(:photo_blog, PhotoBlog.Endpoint,
       secret_key_base: String.duplicate("abcdefgh", 8))
 
     in_project :photo_blog, @project_path, fn _ ->

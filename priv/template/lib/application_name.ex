@@ -16,4 +16,11 @@ defmodule <%= application_module %> do
     opts = [strategy: :one_for_one, name: <%= application_module %>.Supervisor]
     Supervisor.start_link(children, opts)
   end
+
+  # Tell Phoenix to update the cached endpoint configuration
+  # whenever the application is updated.
+  def config_change(changed, _new, removed) do
+    Phoenix.Config.config_change(<%= application_module %>.Endpoint, changed, removed)
+    :ok
+  end
 end
