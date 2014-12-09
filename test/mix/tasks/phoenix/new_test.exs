@@ -79,6 +79,10 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       end
 
       assert File.stat!("web/views/page_view.ex").mtime > @epoch
+
+      assert capture_io(fn ->
+        Mix.Task.run("test")
+      end) =~ "1 tests, 0 failures"
     end
   after
     Application.put_env(:phoenix, :code_reloader, false)
