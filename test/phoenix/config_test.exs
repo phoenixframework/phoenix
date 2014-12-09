@@ -31,28 +31,28 @@ defmodule Phoenix.ConfigTest do
     assert :ets.info(meta.test, :name) == :undefined
   end
 
-  test "starts a supervised and reloadable router handler", meta do
+  test "starts a supervised and changeable router handler", meta do
     {:ok, pid} = start_supervised(:config_app, meta.test, @defaults)
     Process.link(pid)
 
     # Nothing changed
-    reload(meta.test, [], [])
+    config_change(meta.test, [], [])
     assert :ets.lookup(meta.test, :parsers) == [parsers: false]
     assert :ets.lookup(meta.test, :static)  == [static: [at: "/"]]
     assert :ets.lookup(meta.test, :custom)  == [custom: true]
 
     # Something changed
-    reload(meta.test, [{meta.test, parsers: true}], [])
+    config_change(meta.test, [{meta.test, parsers: true}], [])
     assert :ets.lookup(meta.test, :parsers) == [parsers: true]
     assert :ets.lookup(meta.test, :static)  == [static: [at: "/"]]
     assert :ets.lookup(meta.test, :custom)  == []
 
     # Router removed
-    reload(meta.test, [], [meta.test])
+    config_change(meta.test, [], [meta.test])
     assert :ets.info(meta.test, :name) == :undefined
   end
 
-  test "supports reloadable caches", meta do
+  test "supports changeable caches", meta do
     {:ok, pid} = start_supervised(:config_app, meta.test, @defaults)
     Process.link(pid)
 
@@ -60,7 +60,7 @@ defmodule Phoenix.ConfigTest do
     assert cache(meta.test, :__hello__, fn _ -> 2 end) == 1
     assert cache(meta.test, :__hello__, fn _ -> 3 end) == 1
 
-    reload(meta.test, [{meta.test, []}], [])
+    config_change(meta.test, [{meta.test, []}], [])
     assert cache(meta.test, :__hello__, fn _ -> 4 end) == 4
   end
 end

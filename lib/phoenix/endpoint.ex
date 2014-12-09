@@ -159,6 +159,13 @@ defmodule Phoenix.Endpoint do
       end
 
       @doc """
+      Reloads the configuration given the application environment changes.
+      """
+      def config_change(changed, removed) do
+        Phoenix.Config.config_change(__MODULE__, changed, removed)
+      end
+
+      @doc """
       Generates a URL for the given path based on the
       `:url` configuration for the endpoint.
       """
