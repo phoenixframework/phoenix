@@ -635,7 +635,7 @@ defmodule HelloPhoenix.Router do
   pipeline :api do
     plug :accepts, ~w(json)
   end
-  
+
   scope "/", HelloPhoenix do
     pipe_through :browser
 
@@ -666,7 +666,7 @@ defmodule HelloPhoenix.Router do
     plug :accepts, ~w(html)
     plug :fetch_session
   end
-  
+
   pipe_through :browser
 
   get "/", HelloPhoenix.PageController, :index
@@ -687,7 +687,7 @@ defmodule HelloPhoenix.Router do
     plug :fetch_session
   end
   ...
-  
+
   scope "/reviews" do
     # Use the default browser stack.
     pipe_through [:browser, :review_checks, :other_great_stuff]
@@ -707,7 +707,7 @@ defmodule HelloPhoenix.Router do
     plug :fetch_session
   end
   ...
-  
+
   scope "/" do
     pipe_through :browser
 
@@ -736,7 +736,7 @@ defmodule HelloPhoenix.Router do
     plug :accepts, ~w(html)
     plug :fetch_session
   end
-  
+
   pipeline :review_checks do
     plug :ensure_authenticated_user
     plug :ensure_user_owns_review
@@ -764,7 +764,7 @@ defmodule HelloPhoenix.Router do
     plug :authenticate
     plug :set_current_user
   end
-  
+
   pipeline :browser do
     plug :accepts, ~w(html)
     plug :fetch_session
@@ -784,7 +784,7 @@ Channels are a very exciting, realtime component of the Phoenix framework. They 
 
 Channels are roughly analogous to controllers except that they are capable of bi-directional communication and their connections persist beyond the initial response. They are also closely tied to a client - written for JavaScript, iOS or Android. For now, we'll focus on defining routes for them and leave a detailed discussion of their capabilities to the Channel Guide.
 
-Each channel depend on a socket mounted at a given point for its communication. The first thing we need to do to define a route for a channel, then, is to define a socket and specify the path to its mount point.
+Each channel depends on a socket mounted at a given point for its communication. The first thing we need to do to define a route for a channel. Then we define a socket and specify the path to its mount point.
 
 Here's what that looks like in our router file.
 
