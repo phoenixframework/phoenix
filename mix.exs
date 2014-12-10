@@ -6,11 +6,11 @@ defmodule Phoenix.Mixfile do
      version: "0.7.0",
      elixir: "~> 1.0.2 or ~> 1.1-dev",
      deps: deps,
-     package: [
-       contributors: ["Chris McCord", "Darko Fabijan", "José Valim"],
-       licenses: ["MIT"],
-       links: %{github: "https://github.com/phoenixframework/phoenix"}
-     ],
+     package: package,
+     docs: &docs/0,
+     name: "Phoenix",
+     source_url: "https://github.com/phoenixframework/phoenix",
+     homepage_url: "http://www.phoenixframework.org",
      description: """
      Elixir Web Framework targeting full-featured, fault tolerant applications
      with realtime functionality
@@ -27,7 +27,7 @@ defmodule Phoenix.Mixfile do
            filter_parameters: ["password"]]]
   end
 
-  def deps do
+  defp deps do
     [{:cowboy, "~> 1.0", optional: true},
      # TODO: Bump Plug back to hex on next release
      {:plug, github: "elixir-lang/plug"},
@@ -36,5 +36,18 @@ defmodule Phoenix.Mixfile do
      {:ex_doc, "~> 0.6", only: :docs},
      {:inch_ex, "~> 0.2", only: :docs},
      {:websocket_client, github: "jeremyong/websocket_client", only: :test}]
+  end
+  
+  defp package do
+    [contributors: ["Chris McCord", "Darko Fabijan", "José Valim"],
+     licenses: ["MIT"],
+     links: %{github: "https://github.com/phoenixframework/phoenix"}]
+  end
+  
+  defp docs do
+    {ref, 0} = System.cmd("git", ["rev-parse", "--verify", "--quiet", "HEAD"])
+    [source_ref: ref,
+     main: "overview",
+     readme: true]
   end
 end
