@@ -7,9 +7,9 @@ defmodule Phoenix.Transports.WebSocket do
   ## Configuration
 
   By default, JSON encoding is used to broker messages to and from clients,
-  but the serializer is configurable via the Router's transport configuration:
+  but the serializer is configurable via the Endpoint's transport configuration:
 
-      config :my_app, MyApp.Router, transports: [
+      config :my_app, MyApp.Endpoint, transports: [
         websocket_serializer: MySerializer
       ]
 
