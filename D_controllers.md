@@ -439,16 +439,6 @@ end
 
 ### Redirection
 
-For security, `:to` only accepts paths. Use the `:external`
-  option to redirect to any URL.
-
-  ## Examples
-
-      iex> redirect conn, to: "/login"
-
-      iex> redirect conn, external: "http://elixir-lang.org"
-***************************************
-
 Often, we need to redirect to a new url in the middle of a request. A successful create action, for instance, will usually redirect to the show action for the model we just created. Alternately, it could redirect to the index action to show all the things of that same type. There are plenty of other cases where redirection is useful as well.
 
 Whatever the circumstance, Phoenix controllers provide the handy `redirect/2` function to make redirection easy. Phoenix differentiates between redirecting to a path within the application and redirecting to a url external to our application.
