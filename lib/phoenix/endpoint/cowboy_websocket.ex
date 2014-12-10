@@ -38,16 +38,20 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
     {:ok, req, {handler, state}}
   end
 
-  def websocket_handle({:text, text}, req, {handler, state}) do
-    state = handler.ws_handle(text, state)
+  def websocket_handle({opcode = :text, payload}, req, {handler, state}) do
+    state = handler.ws_handle(opcode, payload, state)
+    {:ok, req, {handler, state}}
+  end
+  def websocket_handle({opcode = :binary, payload}, req, {handler, state}) do
+    state = handler.ws_handle(opcode, payload, state)
     {:ok, req, {handler, state}}
   end
   def websocket_handle(_other, req, {handler, state}) do
     {:ok, req, {handler, state}}
   end
 
-  def websocket_info({:reply, text}, req, state) do
-    {:reply, {:text, text}, req, state}
+  def websocket_info({:reply, {opcode, payload}}, req, state) do
+    {:reply, {opcode, payload}, req, state}
   end
   def websocket_info(:shutdown, req, state) do
     {:shutdown, req, state}

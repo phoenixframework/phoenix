@@ -14,7 +14,7 @@ defmodule Phoenix.Transports.WebSocket do
       ]
 
   The `websocket_serializer` module needs only to implement the `encode!/1` and
-  `decode!/1` functions defined by the `Phoenix.Transports.Serializer` behaviour.
+  `decode!/2` functions defined by the `Phoenix.Transports.Serializer` behaviour.
   """
 
   alias Phoenix.Channel.Transport
@@ -38,9 +38,9 @@ defmodule Phoenix.Transports.WebSocket do
   Receives JSON encoded `%Phoenix.Socket.Message{}` from client and dispatches
   to Transport layer
   """
-  def ws_handle(text, state = %{router: router, sockets: sockets, serializer: serializer}) do
-    text
-    |> serializer.decode!
+  def ws_handle(opcode, payload, state = %{router: router, sockets: sockets, serializer: serializer}) do
+    payload
+    |> serializer.decode!(opcode)
     |> Transport.dispatch(sockets, self, router)
     |> case do
       {:ok, sockets}             -> %{state | sockets: sockets}
