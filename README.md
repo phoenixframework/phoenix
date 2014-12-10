@@ -4,6 +4,41 @@
 [![Build Status](https://api.travis-ci.org/phoenixframework/phoenix.svg)](https://travis-ci.org/phoenixframework/phoenix)
 [![Inline docs](http://inch-ci.org/github/phoenixframework/phoenix.svg)](http://inch-ci.org/github/phoenixframework/phoenix)
 
+***
+
+- [Getting started](#getting-started)
+  - [Requirements](#requirements)
+  - [Setup](#setup)
+  - [Router example](#router-example)
+    - [Resources](#resources)
+    - [Method Overrides](#method-overrides)
+  - [Controller examples](#controller-examples)
+  - [Views & Templates](#views--templates)
+  - [Flash Examples](#flash-examples)
+  - [Rendering from the Controller](#rendering-from-the-controller)
+    - [More on request format](#more-on-request-format)
+    - [More on layouts](#more-on-layouts)
+  - [Template Engine Configuration](#template-engine-configuration)
+  - [PubSub](#pubsub)
+  - [Channels](#channels)
+    - [Holding state in socket connections](#holding-state-in-socket-connections)
+  - [Configuration](#configuration)
+    - [Configuration file structure](#configuration-file-structure)
+    - [Configuration for SSL](#configuration-for-ssl)
+    - [Serving Your Application Behind a Proxy](#serving-your-application-behind-a-proxy)
+    - [Configuration for Sessions](#configuration-for-sessions)
+  - [Custom Not Found and Error Pages](#custom-not-found-and-error-pages)
+    - [Plug.Exception](#plugexception)
+  - [Mix Tasks](#mix-tasks)
+  - [Static Assets](#static-assets)
+- [Documentation](#documentation)
+- [Development](#development)
+  - [Building phoenix.coffee](#building-phoenixcoffee)
+- [Contributing](#contributing)
+- [Important links](#important-links)
+- [Feature Roadmap](#feature-roadmap)
+
+
 ## Getting started
 
 ### Requirements
@@ -784,6 +819,10 @@ There are no guidelines yet. Do what feels natural. Submit a bug, join a discuss
 ```bash
 $ coffee -o priv/static/js -cw assets/cs
 ```
+
+## Contributing
+
+We appreciate any contribution to Phoenix, so check out our [CONTRIBUTING.md](CONTRIBUTING.md) guide for more information. We usually keep a list of features and bugs [in the issue tracker][1].
 
 ## Important links
 
