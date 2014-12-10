@@ -22,7 +22,7 @@ defmodule <%= application_module %>.Mixfile do
   #
   # Type `mix help deps` for examples and options
   defp deps do
-    [<%= phoenix_dep %>,
+    [{:phoenix, "~> 0.7.0"},
      {:cowboy, "~> 1.0"}]
   end
 end

@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.7.0-dev
+## v0.7.0 (2014-12-09)
 
 * Enhancements
   * [Endpoint] Introduce the concept of endpoints which removes some of the responsibilities from the router
