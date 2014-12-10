@@ -36,7 +36,7 @@ To test:
 get "/", HelloPhoenix.PageController, :test
 ```
 
-As long as we change the action name in the PageController to "test" as well, the welcome page will load as before.
+As long as we change the action name in the `PageController` to `test` as well, the welcome page will load as before.
 
 ```elixir
 def test(conn, _params) do
@@ -44,7 +44,7 @@ def test(conn, _params) do
 end
 ```
 
-While we can name our actions whatever we like, there are conventions for action names which we should follow whenever possible. We went over these in the Routing Guide, but we'll take another quick look here.
+While we can name our actions whatever we like, there are conventions for action names which we should follow whenever possible. We went over these in the [Routing Guide](http://www.phoenixframework.org/docs/routing), but we'll take another quick look here.
 
 - index   - renders a list of all items of the given resource type
 - show    - renders an individual item by id
@@ -56,21 +56,21 @@ While we can name our actions whatever we like, there are conventions for action
 
 Each of these actions takes two parameters, which will be provided by Phoenix behind the scenes.
 
-The first parameter is always `conn`, a struct which holds information about the request such as the host, path elements, port, query string, and much more. `conn`, comes to Phoenix via Elixir's plug middleware framework. More detailed info about `conn` can be found in [plug's documentation](http://elixir-lang.org/docs/plug/Plug.Conn.html).
+The first parameter is always `conn`, a struct which holds information about the request such as the host, path elements, port, query string, and much more. `conn`, comes to Phoenix via Elixir's plug middleware framework. More detailed info about `conn` can be found in [plug's documentation](http://hexdocs.pm/plug/Plug.Conn.html).
 
-The second parameter is `params`. Not surprisingly, this is a map which holds any parameters passed along in the HTTP request. It is a good practice to pattern match against params in the function signature to provide data in a simple package we can pass on to rendering. We saw this in the Adding Pages guide when we added a messenger parameter to our `show` route.
+The second parameter is `params`. Not surprisingly, this is a map which holds any parameters passed along in the HTTP request. It is a good practice to pattern match against params in the function signature to provide data in a simple package we can pass on to rendering. We saw this in the [Adding Pages guide](http://www.phoenixframework.org/docs/adding-pages) when we added a messenger parameter to our `show` route.
 
 ```elixir
 def show(conn, %{"messenger" => messenger}) do
   render conn, "show.html", messenger: messenger
 end
 ```
-In some cases - often in index actions, for instance - we don't care about parameters because our behavior doesn't depend on them. In those cases, we don't use the incoming params, and simply prepend the variable name with an underscore, `_params`. This will keep the compiler from complaining about the unused variable while still keeping the correct arity.
+In some cases - often in `index` actions, for instance - we don't care about parameters because our behavior doesn't depend on them. In those cases, we don't use the incoming params, and simply prepend the variable name with an underscore, `_params`. This will keep the compiler from complaining about the unused variable while still keeping the correct arity.
 
 ###Gathering Data
-While Phoenix does not ship with its own data access layer, the Elixir project Ecto provides a very nice solution for those using the Postgres relational database. (There are plans to offer other adapters for Ecto in the future.) We cover how to use Ecto in a Phoenix project in the Ecto Models Guide.
+While Phoenix does not ship with its own data access layer, the Elixir project [Ecto](http://hexdocs.pm/ecto) provides a very nice solution for those using the [Postgres](http://www.postgresql.org/) relational database. (There are plans to offer other adapters for Ecto in the future.) We cover how to use Ecto in a Phoenix project in the [Ecto Models Guide](http://www.phoenixframework.org/docs/ecto-models).
 
-Of course, there are many other data access options. Ets and Dets are key value data stores built into OTP. OTP also provides a relational database called mnesia  with its own query language called QLC. Both Elixir and Erlang also have a number of libraries for working with a wide range of popular data stores.
+Of course, there are many other data access options. [Ets](http://www.erlang.org/doc/man/ets.html) and [Dets](http://www.erlang.org/doc/man/ets.html) are key value data stores built into [OTP](http://www.erlang.org/doc/). OTP also provides a relational database called [mnesia](http://www.erlang.org/doc/man/mnesia.html) with its own query language called QLC. Both Elixir and Erlang also have a number of libraries for working with a wide range of popular data stores.
 
 The data world is your oyster, but we won't be covering these options in these guides.
 
@@ -86,7 +86,7 @@ defmodule HelloPhoenix.PageController do
   alias Phoenix.Controller.Flash
 . . .
 ```
-Now we can use `Flash.put/3` to set flash messages on `conn` for this request cycle. We could change the `PageController` index action to set a notice and an error.
+Now we can use `Flash.put/3` to set flash messages on `conn` for this request cycle. We could change the `PageController` `index` action to set a notice and an error.
 
 ```elixir
 def index(conn, _params) do
@@ -97,7 +97,7 @@ def index(conn, _params) do
 end
 ```
 
-The `Phoenix.Controller.Flash` module is not particular about the keys we use. As long as we are internally consistent, all will be well. "notice", "error", and "alert", however, are common.
+The `Phoenix.Controller.Flash` module is not particular about the keys we use. As long as we are internally consistent, all will be well. `notice`, `error`, and `alert`, however, are common.
 
 In order to see our flash messages, we need to be able to pull them off of the `conn` and display them all in a template/layout. One way to do the first part is with `get_all/2` which takes `conn` and the key we care about and returns a list of values for that key.
 
@@ -143,7 +143,7 @@ def show(conn, %{"id" => id}) do
   text conn, "Showing id #{id}"
 end
 ```
-Assuming we had a route for `get "/our_path/:id"` mapped to this show action, going to "/our_path/15" in your browser should display "Showing id 15" as plain text without any HTML.
+Assuming we had a route for `get "/our_path/:id"` mapped to this show action, going to `/our_path/15` in your browser should display `Showing id 15` as plain text without any HTML.
 
 A step beyond this is rendering pure json. Phoenix provides the `json/2` function for this. As long as we pass in something that the Poison library can parse into JSON - a map, in this case - this will work.
 
@@ -152,7 +152,7 @@ def show(conn, %{"id" => id}) do
   json conn, %{id: id}
 end
 ```
-If we again visit "our_path/15" in the browser, we should see a block of JSON with the key "id" mapped to the number 15.
+If we again visit `our_path/15` in the browser, we should see a block of JSON with the key `id` mapped to the number `15`.
 
 ```elixir
 {
@@ -176,7 +176,7 @@ def show(conn, %{"id" => id}) do
 end
 ```
 
-Hitting "/our_path/15" this time generates the HTML document as we created the string for in the action, except that the value "15" will be interpolated into the page. Note that what we wrote in the action is not an eex document. It's a multi-line string, so we interpolate the `id` variable like this `#{id}` instead of this `<%= id %>`.
+Hitting `/our_path/15` this time generates the HTML document as we created the string for in the action, except that the value `15` will be interpolated into the page. Note that what we wrote in the action is not an eex document. It's a multi-line string, so we interpolate the `id` variable like this `#{id}` instead of this `<%= id %>`.
 
 It is worth noting that the `text/2`, `json/2`, and `html/2` functions require neither a Phoenix view, nor a template to render.
 
@@ -186,7 +186,7 @@ For this, Phoenix provides the `render/3` function.
 
 Interestingly, `render/3` is defined in the `Phoenix.View` module instead of `Phoenix.Controller`, but it is aliased in `Phoenix.Controller` for convenience.
 
-We have already seen the render function in the "Adding Pages Guide". Our show action there looked like this.
+We have already seen the render function in the [Adding Pages Guide](http://www.phoenixframework.org/docs/adding-pages). Our show action there looked like this.
 
 ```elixir
 defmodule HelloPhoenix.HelloController do
@@ -246,7 +246,7 @@ Passing more than one value in to our template is as simple as connecting `assig
 def index(conn, _params) do
   conn
   |> assign(:message, "Welcome Back!")
-  |> assign(:name, "Dweezil")  
+  |> assign(:name, "Dweezil")
 end
 ```
 With this, both `@message` and `@name` will be available in the `index.html.eex` template.
@@ -270,7 +270,7 @@ Then we are free to call any of the rendering-style functions in any other actio
 
 Rendering does not end with the template, though. By default, the results of the template render will be inserted into a layout, which will also be rendered.
 
-Templates and layouts have their own guide, so we won't spend much time on them here. What we will look at is how to assign a different layout, or none at all, inside a controller action.
+[Templates and layouts](http://www.phoenixframework.org/docs/templates) have their own guide, so we won't spend much time on them here. What we will look at is how to assign a different layout, or none at all, inside a controller action.
 
 ### Assigning Layouts
 
@@ -376,7 +376,7 @@ defmodule HelloPhoenix.Router do
   end
 . . .
 ```
-If we go to [http://localhost:4000/?format=text](http://localhost:4000/?format=text), we will see "OMG, this is actually some text."
+If we go to [http://localhost:4000/?format=text](http://localhost:4000/?format=text), we will see `OMG, this is actually some text.`
 
 Of course, we can pass data into our template as well. Let's change our action to take in a message parameter.
 
@@ -412,7 +412,7 @@ For a list of valid content mime-types, please see the documentation from the pl
 
 We can also set the HTTP status code of a response similarly to the way we set the content type. The `Plug.Conn` module, imported into all controllers, has a `put_status/2` function to do this.
 
-`put_status/2` takes `conn` and either an integer or a "friendly name" used as an atom for the status code we want to set.  Here is the list of supported  [https://github.com/elixir-lang/plug/blob/master/lib/plug/conn/status.ex#L7-L63](friendly names).
+`put_status/2` takes `conn` and either an integer or a "friendly name" used as an atom for the status code we want to set. Here is the list of supported [https://github.com/elixir-lang/plug/blob/master/lib/plug/conn/status.ex#L7-L63](friendly names).
 
 Let's change the status in our `PageController` `index` action.
 
@@ -457,16 +457,16 @@ def index(conn, _params) do
 end
 ```
 
-Finally, let's define the action we redirect to, which simply renders the text "Redirect!"
+Finally, let's define the action we redirect to, which simply renders the text `Redirect!`.
 
 ```elixir
 def redirect_test(conn, _params) do
   text conn, "Redirect!"
 end
 ```
-When we reload our Welcome page at the root route, we see that we've been redirected to `/redirect_test` which has rendered the text "Redirect!". It works!
+When we reload our Welcome page at the root route, we see that we've been redirected to `/redirect_test` which has rendered the text `Redirect!`. It works!
 
-If we care to, we can open up our developer tools, click on the network tab, and visit our root route again. We see two main requests for this page - a get to "/" with a status of 302, and a get to "/redirect_test" with a status of 200.
+If we care to, we can open up our developer tools, click on the network tab, and visit our root route again. We see two main requests for this page - a get to `/` with a status of `302`, and a get to `/redirect_test` with a status of `200`.
 
 Notice that the redirect function takes `conn` as well as a string representing a relative path within our application. It can also take `conn` and a string representing a fully-qualified url.
 
