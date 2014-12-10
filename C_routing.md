@@ -29,7 +29,7 @@ defmodule HelloPhoenix.Router do
   # end
 end
 ```
-The name you gave your application will appear instead of 'HelloPhoenix' for both the router module name and the Controller name.
+The name you gave your application will appear instead of `HelloPhoenix` for both the router module and controller name.
 
 The first line of this module `use Phoenix.Router` simply makes Phoenix router functions available in our particular router.
 
@@ -40,7 +40,7 @@ Inside the scope block, however, we have our first actual route.
 
 `get` is a Phoenix macro which expands out to define one clause of the match function. It corresponds to the HTTP verb GET. Similar macros exist for other HTTP verbs including POST, PUT, PATCH, DELETE, OPTIONS, CONNECT, TRACE and HEAD.
 
-The first argument to these macros is the path. Here, it is the root of the application, "/". The next two arguments are the controller and action we want to have handle this request. These macros may also take other options, which we will see throughout the rest of this guide.
+The first argument to these macros is the path. Here, it is the root of the application, `/`. The next two arguments are the controller and action we want to have handle this request. These macros may also take other options, which we will see throughout the rest of this guide.
 
 If this were the only route in our router module, the whole module would look like this after the macro expands.
 
@@ -82,7 +82,7 @@ $ mix phoenix.routes
 page_path  GET  /  HelloPhoenix.PageController.index/2
 ```
 
-The output tells us that any HTTP GET request for the root of the application will be handled by the index action of the HelloPhoenix.PageController.
+The output tells us that any HTTP GET request for the root of the application will be handled by the index action of the `HelloPhoenix.PageController`.
 
 `page_path` is an instance of a what Phoenix calls a path helper, and we'll talk about those very soon.
 
@@ -91,11 +91,11 @@ The output tells us that any HTTP GET request for the root of the application wi
 
 The router supports other macros besides those for HTTP verbs like `get`, `post` and `put`. The most important among them is `resources`, which expands out to eight clauses of the match function.
 
-Put this line into your router.ex file inside the `scope "/" do` block: `resources "users", HelloPhoenix.UserController`.
+Put this line into your `router.ex` file inside the `scope "/" do` block: `resources "users", HelloPhoenix.UserController`.
 
 Then go to the root of your project, and run `$ mix phoenix.routes`
 
-You should see something like the following. Of course, the name of your project will replace "HelloPhoenix".
+You should see something like the following. Of course, the name of your project will replace `HelloPhoenix`.
 
 ```elixir
 user_path  GET     /users           HelloPhoenix.UserController.index/2
@@ -205,7 +205,7 @@ iex(3)> HelloPhoenix.Router.Helpers.user_path(:show, 17, admin: true, active: fa
 "/users/17?admin=true&active=false"
 ```
 
-What if we need a full url instead of a path? Again, Phoenix has an answer - the Router.Helpers.url function.
+What if we need a full url instead of a path? Again, Phoenix has an answer - the `Router.Helpers.url` function.
 
 ```elixir
 iex(3)> HelloPhoenix.Router.Helpers.user_path(:index, 42) |> HelloPhoenix.Router.Helpers.url
@@ -238,9 +238,9 @@ user_post_path  PATCH   users/:user_id/posts/:id       HelloPhoenix.PostControll
 user_post_path  DELETE  users/:user_id/posts/:id       HelloPhoenix.PostController.destroy/2
 ```
 
-We see that each of these routes scopes the posts to a user id. For the first one, we will invoke the `PostController` `index` action, but we will pass in a user_id. This implies that we would display all the posts for that individual user only. The same scoping applies for all these routes.
+We see that each of these routes scopes the posts to a user id. For the first one, we will invoke the `PostController` `index` action, but we will pass in a `user_id`. This implies that we would display all the posts for that individual user only. The same scoping applies for all these routes.
 
-When calling path helper functions for nested routes, we will need to pass the ids in the order they came in the route definition. For the following show route, 42 is the user_id, and 17 is the post_id.
+When calling path helper functions for nested routes, we will need to pass the ids in the order they came in the route definition. For the following `show` route, `42` is the `user_id`, and `17` is the `post_id`.
 
 ```elixir
 iex(2)> HelloPhoenix.Router.Helpers.user_post_path(:show, 42, 17)
@@ -268,7 +268,7 @@ The paths to the user facing reviews would look like a standard resource.
 and so on
 ```
 
-The admin review paths could be prefixed with "/admin".
+The admin review paths could be prefixed with `/admin`.
 
 ```text
 /admin/reviews
@@ -278,7 +278,7 @@ The admin review paths could be prefixed with "/admin".
 and so on
 ```
 
-We accomplish this with a scoped route that sets a path option to "/admin" like this one.
+We accomplish this with a scoped route that sets a path option to `/admin` like this one.
 
 ```elixir
 scope "/admin" do
@@ -418,7 +418,7 @@ admin_review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewCon
   admin_user_path  DELETE  /admin/users/:id         HelloPhoenix.Admin.UserController.destroy/2
 ```
 
-This is great, exactly what we want, but we can make it even better. Notice that for each resource, we needed to fully qualify the controller name with "HelloPhoenix.Admin"? That's tedious and error prone. Assuming the name of each of our controllers actually begins with "HelloPhoenix.Admin", we can add an `alias: HelloPhoenix.Admin` option to our scope declaration, and all of our routes will have the correct, fully qualified controller name.
+This is great, exactly what we want, but we can make it even better. Notice that for each resource, we needed to fully qualify the controller name with `HelloPhoenix.Admin`? That's tedious and error prone. Assuming the name of each of our controllers actually begins with `HelloPhoenix.Admin`, we can add an `alias: HelloPhoenix.Admin` option to our scope declaration, and all of our routes will have the correct, fully qualified controller name.
 
 ```elixir
 scope "/admin", as: :admin, alias: HelloPhoenix.Admin do
@@ -553,32 +553,32 @@ Pipelines are simply plugs stacked up together in a specific order and given a n
 A newly generated Phoenix application defines three pipelines, `:before`, `:browser`, and `:api`. The router will always invoke the `:before` pipeline at the very beginning of any request, before the router even tries to match a route. It does this implicitly, without us having to declare anything in the router. The plugs in the `:before` pipeline represent all the actions that need to happen before the router can properly handle it.
 
 #####The `:before` Pipeline
-The `:before` pipeline actually does quite a lot of work preparing a request for the router. This list of plugs in the `:before` pipeline comes directly from the [Phoenix router documentation](http://hexdocs.pm/phoenix/0.5.0/Phoenix.Router.html). They appear here in the order they are executed.
+The `:before` pipeline actually does quite a lot of work preparing a request for the router. This list of plugs in the `:before` pipeline comes directly from the [Phoenix router documentation](http://hexdocs.pm/phoenix/Phoenix.Router.html). They appear here in the order they are executed.
 
 ```
-- Plug.Static - serves static assets. Since this plug comes
+- [Plug.Static](http://hexdocs.pm/plug/Plug.Static.html) - serves static assets. Since this plug comes
   before the router, serving of static assets is not logged
 
-- Plug.Logger - logs incoming requests
+- [Plug.Logger](http://hexdocs.pm/plug/Plug.Logger.html) - logs incoming requests
 
-- Plug.Parsers - parses the request body when a known
+- [Plug.Parsers](http://hexdocs.pm/plug/Plug.Parsers.html) - parses the request body when a known
   parser is available. By default parsers urlencoded,
   multipart and json (with poison). The request body is left
   untouched when the request content-type cannot be parsed
 
-- Plug.MethodOverride - converts the request method to
+- [Plug.MethodOverride](http://hexdocs.pm/plug/Plug.MethodOverride.html) - converts the request method to
   PUT, PATCH or DELETE for POST requests with a
   valid _method parameter
 
-- Plug.Head - converts HEAD requests to GET requests
+- [Plug.Head](http://hexdocs.pm/plug/Plug.Head.html) - converts HEAD requests to GET requests
   and strips the response body
 
-- Plug.Session - a plug that sets up session management.
+- [Plug.Session](http://hexdocs.pm/plug/Plug.Session.html) - a plug that sets up session management.
   Note that fetch_session/2 must still be explicitly called
   before using the session as this plug just sets up how
   the session is fetched
 
-- Phoenix.CodeReloader - a plug that enables code reloading
+- [Phoenix.CodeReloader](http://hexdocs.pm/phoenix/Phoenix.CodeReloader.html) - a plug that enables code reloading
   for all entries in the web directory. It is configured
   directly in the Phoenix application
 ```
@@ -722,7 +722,7 @@ defmodule HelloPhoenix.Router do
 end
 ```
 
-In general, the scoping rules for pipelines behave as you might expect. In this example, all routes will pipe through the `:browser` pipeline, because the "/" scope encloses all the routes. Only the "reviews" resources routes will pipe through the `:review_checks` pipeline, however, because we declare `pipe_through :review_checks` within the "/reviews" scope, where the "reviews" resources routes are.
+In general, the scoping rules for pipelines behave as you might expect. In this example, all routes will pipe through the `:browser` pipeline, because the `/` scope encloses all the routes. Only the `reviews` resources routes will pipe through the `:review_checks` pipeline, however, because we declare `pipe_through :review_checks` within the `/reviews` scope, where the `reviews` resources routes are.
 
 
 #####Creating New Pipelines
@@ -795,7 +795,7 @@ defmodule HelloPhoenix.Router do
 end
 ```
 
-The next thing we need to do is define a channel, giving it a name and associating it with a channel module which will implement its behavior. If we have a channel module called "OurChannel" and a channel called "our_channel_name", the code to do this is straightforward, `channel "our_channel_name", HelloPhoenix.OurChannel`
+The next thing we need to do is define a channel, giving it a name and associating it with a channel module which will implement its behavior. If we have a channel module called "OurChannel" and a channel called `our_channel_name`, the code to do this is straightforward, `channel "our_channel_name", HelloPhoenix.OurChannel`
 
 The whole router, then, looks like this.
 
@@ -812,7 +812,7 @@ end
 Routing is a big topic, and we have covered a lot of ground here. The important points to take away from this guide are:
 - Routes which begin with an HTTP verb name expand to a single clause of the match function.
 - Routes which begin with 'resources' expand to 8 clauses of the match function.
-- Resources may restrict the number of match function clauses by using the "only:" or "except:" options.
+- Resources may restrict the number of match function clauses by using the `only:` or `except:` options.
 - Any of these routes may be nested.
 - Any of these routes may be scoped to a given path.
 - Using the alias option in a scope can reduce the duplication in controller names.
