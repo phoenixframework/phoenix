@@ -1,6 +1,7 @@
 # Changelog
 
 ## v0.7.0 (2014-12-09)
+See these [`0.6.x` to `0.7.0` upgrade instructions](https://gist.github.com/chrismccord/c24b2b516066d987f4fe) to bring your existing apps up to speed.
 
 * Enhancements
   * [Endpoint] Introduce the concept of endpoints which removes some of the responsibilities from the router
