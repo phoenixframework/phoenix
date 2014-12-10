@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.7.1 (2014-12-09)
+
+* Bug fixes
+  * Include Plug dep in new project generation since it's a github dep until next Plug release.
+
 ## v0.7.0 (2014-12-09)
 See these [`0.6.x` to `0.7.0` upgrade instructions](https://gist.github.com/chrismccord/c24b2b516066d987f4fe) to bring your existing apps up to speed.
 

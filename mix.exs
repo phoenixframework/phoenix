@@ -3,7 +3,7 @@ defmodule Phoenix.Mixfile do
 
   def project do
     [app: :phoenix,
-     version: "0.7.0",
+     version: "0.7.1",
      elixir: "~> 1.0.2 or ~> 1.1-dev",
      deps: deps,
      package: package,
@@ -37,13 +37,13 @@ defmodule Phoenix.Mixfile do
      {:inch_ex, "~> 0.2", only: :docs},
      {:websocket_client, github: "jeremyong/websocket_client", only: :test}]
   end
-  
+
   defp package do
     [contributors: ["Chris McCord", "Darko Fabijan", "José Valim"],
      licenses: ["MIT"],
      links: %{github: "https://github.com/phoenixframework/phoenix"}]
   end
-  
+
   defp docs do
     {ref, 0} = System.cmd("git", ["rev-parse", "--verify", "--quiet", "HEAD"])
     [source_ref: ref,
