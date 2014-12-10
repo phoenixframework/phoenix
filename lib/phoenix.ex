@@ -1,4 +1,6 @@
 defmodule Phoenix do
+  @moduledoc false
+
   use Application
 
   @doc false
