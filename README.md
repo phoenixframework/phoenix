@@ -133,7 +133,7 @@ iex> MyApp.Router.Helpers.user_comment_path(:show, 99, 100)
 iex> MyApp.Router.Helpers.user_comment_path(:index, 99, foo: "bar")
 "/users/99/comments?foo=bar"
 
-iex> MyApp.Router.Helpers.user_comment_path(:index, 99) |> MyApp.Router.Helpers.url
+iex> MyApp.Router.Helpers.user_comment_path(:index, 99) |> MyApp.Endpoint.url
 "http://example.com/users/99/comments"
 
 iex> MyApp.Router.Helpers.user_comment_path(:edit, 88, 2, [])
