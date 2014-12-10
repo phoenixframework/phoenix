@@ -75,7 +75,7 @@ Of course, there are many other data access options. Ets and Dets are key value 
 The data world is your oyster, but we won't be covering these options in these guides.
 
 ###Flash Messages
-#TODO make sure the flash messages section works
+
 There are times when we need to communicate with users during the course of an action. Maybe there was an error updating a model. Maybe we just want to welcome them back to the application. For this, we have flash messages.
 
 In order to use flash messages, we first alias the `Phoenix.Controller.Flash` module in the controller we want to set messages in.
@@ -439,7 +439,6 @@ end
 
 ### Redirection
 
-#TODO
 For security, `:to` only accepts paths. Use the `:external`
   option to redirect to any URL.
 
