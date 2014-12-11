@@ -3,7 +3,6 @@ defmodule Mix.Tasks.Phoenix.Routes do
   alias Phoenix.Router.ConsoleFormatter
 
   @shortdoc "Prints all routes"
-  @recursive true
 
   @moduledoc """
   Prints all routes for the default or a given router.
@@ -11,6 +10,8 @@ defmodule Mix.Tasks.Phoenix.Routes do
       $ mix phoenix.routes
       $ mix phoenix.routes MyApp.AnotherRouter
 
+  Umbrella projects do not have a default router and
+  therefore always expect a router to be given.
   """
 
   def run([]) do
