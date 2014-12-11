@@ -2,6 +2,7 @@ defmodule Phoenix.Endpoint.CowboyHandler do
   @moduledoc false
   @connection Plug.Adapters.Cowboy.Conn
   @already_sent {:plug_conn, :sent}
+  alias Phoenix.Endpoint.CowboyWebSocket
 
   def init({transport, :http}, req, {plug, opts}) when transport in [:tcp, :ssl] do
     {:upgrade, :protocol, __MODULE__, req, {transport, plug, opts}}
@@ -14,7 +15,7 @@ defmodule Phoenix.Endpoint.CowboyHandler do
         %Plug.Conn{private: %{phoenix_upgrade: upgrade}} ->
           {@connection, req}    = conn.adapter
           {:websocket, handler} = upgrade
-          :cowboy_websocket.upgrade(req, env, __MODULE__, {handler, conn})
+          CowboyWebSocket.upgrade(req, env, handler, conn)
         _ ->
           {@connection, req} = maybe_send(conn, plug).adapter
           {:ok, req, [{:result, :ok} | env]}
@@ -54,41 +55,4 @@ defmodule Phoenix.Endpoint.CowboyHandler do
     raise "Cowboy adapter expected #{inspect plug} to return Plug.Conn but got: #{inspect other}"
   end
 
-  ## Websockets
-
-  def websocket_init(_transport, req, {handler, conn}) do
-    {:ok, state} = handler.ws_init(conn)
-    {:ok, req, {handler, state}}
-  end
-
-  def websocket_handle({:text, text}, req, {handler, state}) do
-    state = handler.ws_handle(text, state)
-    {:ok, req, {handler, state}}
-  end
-
-  def websocket_handle(_other, req, {handler, state}) do
-    {:ok, req, {handler, state}}
-  end
-
-  def websocket_info({:reply, text}, req, state) do
-    {:reply, {:text, text}, req, state}
-  end
-
-  def websocket_info(:shutdown, req, state) do
-    {:shutdown, req, state}
-  end
-
-  def websocket_info(:hibernate, req, {handler, state}) do
-    :ok = handler.ws_hibernate(state)
-    {:ok, req, state, :hibernate}
-  end
-
-  def websocket_info(message, req, {handler, state}) do
-    state = handler.ws_info(message, state)
-    {:ok, req, {handler, state}}
-  end
-
-  def websocket_terminate(reason, _req, {handler, state}) do
-    :ok = handler.ws_terminate(reason, state)
-  end
 end
