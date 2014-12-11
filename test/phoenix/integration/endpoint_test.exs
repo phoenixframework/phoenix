@@ -10,10 +10,8 @@ defmodule Phoenix.Integration.EndpointTest do
   alias Phoenix.Integration.AdapterTest.ProdEndpoint
   alias Phoenix.Integration.AdapterTest.DevEndpoint
 
-  @prod_config [http: [port: "4807"], url: [host: "example.com"]]
-  Application.put_env(:endpoint_app, ProdEndpoint, @prod_config)
-  @dev_config [http: [port: "4808"], debug_errors: true]
-  Application.put_env(:endpoint_app, DevEndpoint, @dev_config)
+  Application.put_env(:endpoint_int, ProdEndpoint, http: [port: "4807"], url: [host: "example.com"])
+  Application.put_env(:endpoint_int, DevEndpoint, http: [port: "4808"], debug_errors: true)
 
   defmodule Router do
     use Plug.Router
@@ -37,7 +35,7 @@ defmodule Phoenix.Integration.EndpointTest do
 
   for mod <- [ProdEndpoint, DevEndpoint] do
     defmodule mod do
-      use Phoenix.Endpoint, otp_app: :endpoint_app
+      use Phoenix.Endpoint, otp_app: :endpoint_int
 
       plug :router, Router
 
@@ -70,15 +68,6 @@ defmodule Phoenix.Integration.EndpointTest do
   test "adapters starts on configured port and serves requests and stops for prod" do
     capture_io fn -> ProdEndpoint.start end
 
-    # Configuration
-    assert ProdEndpoint.config(:url) == [host: "example.com"]
-    assert ProdEndpoint.url("/") == "http://example.com:4807/"
-
-    config = put_in @prod_config[:url][:port], 1234
-    assert ProdEndpoint.config_change([{ProdEndpoint, config}], []) == :ok
-    assert ProdEndpoint.config(:url) == [host: "example.com", port: 1234]
-    assert ProdEndpoint.url("/") == "http://example.com:1234/"
-
     # Requests
     {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
     assert resp.status == 200
@@ -107,16 +96,6 @@ defmodule Phoenix.Integration.EndpointTest do
   test "adapters starts on configured port and serves requests and stops for dev" do
     capture_io fn -> DevEndpoint.start end
 
-    # Configuration
-    assert DevEndpoint.config(:url) == [host: "localhost"]
-    assert DevEndpoint.url("/") == "http://localhost:4808/"
-
-    config = put_in @dev_config[:url], [port: 1234]
-    assert DevEndpoint.config_change([{DevEndpoint, config}], []) == :ok
-    assert DevEndpoint.config(:url) == [host: "localhost", port: 1234]
-    assert DevEndpoint.url("/") == "http://localhost:1234/"
-
-    # Requests
     {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
     assert resp.status == 200
     assert resp.body == "ok"

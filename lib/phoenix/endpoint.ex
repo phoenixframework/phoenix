@@ -188,7 +188,7 @@ defmodule Phoenix.Endpoint do
     end
   end
 
-  defp allow_plug?({Phoenix.CodeReloder, _, _}), do:
+  defp allow_plug?({Phoenix.CodeReloader, _, _}), do:
     Application.get_env(:phoenix, :code_reloader, false)
   defp allow_plug?(_), do:
     true
