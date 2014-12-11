@@ -6,20 +6,53 @@ defmodule Mix.Tasks.Phoenix.Start do
 
   @moduledoc """
   Starts the default endpoints or the given workers.
-  Defaults to `MyApp.Endpoint`.
+  Defaults to `MyApp.Endpoint` for standalone projects.
 
+      # start the default Endpoint in the project
       $ mix phoenix.start
+      # explicitly start several Endpoints
       $ mix phoenix.start MyApp.Endpoint MyApp.Worker1 MyApp.Worker2
 
+  You can select the endpoints automatically started by phoenix.start when
+  its invoked with no arguments by defining a `endpoints:` item in the
+  project configuration:
+
+      defmodule MyApp.Mixfile do
+          use Mix.Project
+
+          def project do
+            [apps_path: "apps",
+             deps: deps,
+             endpoints: [Some.Endpoint, Another.Endpoint]]
+          end
+
+          defp deps do
+            []
+          end
+      end
+
+  ## Umbrella projects
+  By default, `phoenix.start` will not start any endpoints in an umbrella
+  project. Umbrella projects must either define their endpoints in the top
+  level mix file, or pass them specifically on the command line.
   """
   def run(args) do
     Mix.Task.run "app.start", []
-    Enum.each endpoints(args), &(&1.start)
+    configured_endpoints = Keyword.get(Mix.Project.config, :endpoints, [])
+
+    args
+    |> endpoints(configured_endpoints, Mix.Project.umbrella?)
+    |> Enum.each(fn endpoint -> endpoint.start end)
+
     no_halt
   end
 
-  defp endpoints([]),      do: [Mix.Phoenix.endpoint]
-  defp endpoints(workers), do: Enum.map(workers, &Module.concat("Elixir", &1))
+  defp endpoints([], [], _umbrella = true) do
+    raise "No Endpoints to start. Umbrella applictions must add endpoints in the project configuration or pass workers as command line arguments."
+  end
+  defp endpoints([], [], _umbrella = false), do: [Mix.Phoenix.endpoint]
+  defp endpoints([], conf_endpts, _),        do: conf_endpts
+  defp endpoints(args, _conf_endpts, _),     do: Enum.map(args, &Module.concat("Elixir", &1))
 
   defp no_halt do
     unless iex_running?, do: :timer.sleep(:infinity)
