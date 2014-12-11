@@ -49,7 +49,7 @@
 
 1. Install Phoenix
 
-        git clone https://github.com/phoenixframework/phoenix.git && cd phoenix && git checkout v0.7.1 && mix do deps.get, compile
+        git clone https://github.com/phoenixframework/phoenix.git && cd phoenix && git checkout v0.7.2 && mix do deps.get, compile
 
 
 2. Create a new Phoenix application

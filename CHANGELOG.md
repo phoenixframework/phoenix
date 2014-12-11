@@ -1,5 +1,15 @@
 # Changelog
 
+
+## v0.7.1 (2014-12-11)
+
+* Enhancements
+  * Update Plug to `0.9.0`. You can now remove the Plug git dep from your `mix.exs`.
+
+* Bug fixes
+  * Ensure CodeReloader is removed fron Endpoint when disabled
+
+
 ## v0.7.1 (2014-12-09)
 
 * Bug fixes
