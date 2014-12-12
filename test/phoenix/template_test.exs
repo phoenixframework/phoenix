@@ -56,31 +56,32 @@ defmodule Phoenix.TemplateTest do
     import Phoenix.HTML
 
     def render("user.json", [name: name]) do
-      Poison.encode! %{id: 123, name: name}
+      %{id: 123, name: name}
     end
   end
 
   test "render regular function definitions" do
-    assert IO.iodata_to_binary(View.render("user.json", name: "eric")) ==
-      "{\"name\":\"eric\",\"id\":123}"
+    assert View.render("user.json", name: "eric") ==
+           %{id: 123, name: "eric"}
   end
 
   test "render eex templates sanitizes against xss by default" do
     assert View.render("show.html") ==
-           {:safe, "<div>Show! </div>\n\n"}
+           {:safe, [[[["" | "<div>Show! "] | ""] | "</div>\n"] | "\n"]}
 
     assert View.render("show.html", message: "<script>alert('xss');</script>") ==
-           {:safe, "<div>Show! &lt;script&gt;alert(&#39;xss&#39;);&lt;/script&gt;</div>\n\n"}
+           {:safe, [[[["" | "<div>Show! "] | "&lt;script&gt;alert(&#39;xss&#39;);&lt;/script&gt;"] |
+                   "</div>\n"] | "\n"]}
   end
 
   test "render eex templates allows raw data to be injected" do
-    html = View.render("safe.html", message: "<script>alert('xss');</script>")
-    assert html == {:safe, "Raw <script>alert('xss');</script>\n"}
+    assert View.render("safe.html", message: "<script>alert('xss');</script>") ==
+           {:safe, [[["" | "Raw "] | "<script>alert('xss');</script>"] | "\n"]}
   end
 
   test "compiles templates from path" do
     assert View.render("show.html", message: "hello!") ==
-           {:safe, "<div>Show! hello!</div>\n\n"}
+           {:safe, [[[["" | "<div>Show! "] | "hello!"] | "</div>\n"] | "\n"]}
   end
 
   test "compiler adds catch-all render/2 that raises UndefinedError" do

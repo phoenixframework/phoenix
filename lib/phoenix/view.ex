@@ -232,12 +232,23 @@ defmodule Phoenix.View do
     layout_mod.render(layout_tpl, assigns)
   end
 
+  @doc """
+  Renders the template and returns iodata.
+  """
   def render_to_iodata(module, template, assign) do
     render(module, template, assign) |> encode(template)
   end
 
+  @doc """
+  Renders the template and returns a string.
+  """
+  def render_to_string(module, template, assign) do
+    render_to_iodata(module, template, assign) |> IO.iodata_to_binary
+  end
+
   defp encode(content, template) do
     if encoder = Phoenix.Template.format_encoder(template) do
+      # TODO: This should use iodata
       encoder.encode!(content)
     else
       content
