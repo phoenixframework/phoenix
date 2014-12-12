@@ -193,6 +193,15 @@ defmodule Phoenix.ControllerTest do
     end
   end
 
+  test "protect_from_forgery/2 doesn't blow up" do
+    conn = conn(:get, "/")
+    conn
+    |> Conn.put_private(:plug_session_fetch, fn (conn) -> conn end)
+    |> Conn.put_private(:plug_session, %{csrf_token: "TOKEN"})
+    |> Conn.fetch_session([])
+    |> protect_from_forgery([])
+  end
+
   test "__view__ returns the view modoule based on controller module" do
     assert Phoenix.Controller.__view__(MyApp.UserController) == MyApp.UserView
     assert Phoenix.Controller.__view__(MyApp.Admin.UserController) == MyApp.Admin.UserView

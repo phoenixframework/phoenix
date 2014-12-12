@@ -521,6 +521,15 @@ defmodule Phoenix.Controller do
     end
   end
 
+  @doc """
+  Currently used as a wrapper function for Plug.CSRFProtection and mainly serves
+  as a function plug in MyApp.Router. Makes CSRFProtection more easily extensible
+  from within Phoenix.
+  """
+  def protect_from_forgery(conn, opts \\ []) do
+    Plug.CSRFProtection.call(conn, opts)
+  end
+
   defp handle_params_accept(conn, format, accepted) do
     if format in accepted do
       conn
