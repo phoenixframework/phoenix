@@ -14,15 +14,18 @@ defmodule Mix.Tasks.Phoenix.Routes do
   therefore always expect a router to be given.
   """
 
-  def run([]) do
-    print_routes(Mix.Phoenix.router)
+  def run(args) do
+    Mix.shell.info ConsoleFormatter.format(router(args))
   end
 
-  def run([router]) do
-    print_routes(Module.concat("Elixir", router))
-  end
-
-  defp print_routes(router) do
-    Mix.shell.info ConsoleFormatter.format(router)
+  defp router(args) do
+    cond do
+      router = Enum.at(args, 0) ->
+        Module.concat("Elixir", router)
+      Mix.Project.umbrella? ->
+        Mix.raise "Umbrella applications require an explicit router to be given to phoenix.routes"
+      true ->
+        Module.concat(Mix.Phoenix.base(), "Router")
+    end
   end
 end

@@ -3,17 +3,30 @@ defmodule Mix.Phoenix do
   @moduledoc false
 
   @doc """
-  Retrieves the project router based on the application name.
+  Returns the module base name based on the application name.
   """
-  def router do
-    Module.concat(app_base, "Router")
+  def base do
+    Mix.Project.config
+    |> Keyword.fetch!(:app)
+    |> to_string
+    |> Phoenix.Naming.camelize
   end
 
   @doc """
-  Retrieves the project endpoint based on the application name.
+  Retrieves the project endpoints based on the application name.
   """
-  def endpoint do
-    Module.concat(app_base, "Endpoint")
+  def endpoints(args) do
+    cond do
+      args != [] ->
+        Enum.map(args, &Module.concat("Elixir", &1))
+      endpoints = Mix.Project.config[:endpoints] ->
+        endpoints
+      Mix.Project.umbrella? ->
+        Mix.raise "No endpoints available. Umbrella applications must add endpoints in the project " <>
+                  "configuration or pass them explicitly via command line arguments"
+      true ->
+        [Module.concat(base(), Endpoint)]
+    end
   end
 
   @doc """
@@ -24,13 +37,6 @@ defmodule Mix.Phoenix do
     |> Path.join("*.beam")
     |> Path.wildcard
     |> Enum.map(&beam_to_module/1)
-  end
-
-  defp app_base do
-    Mix.Project.config
-    |> Keyword.fetch!(:app)
-    |> to_string
-    |> Phoenix.Naming.camelize
   end
 
   defp beam_to_module(path) do

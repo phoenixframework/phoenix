@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.8.0-dev
+
+* Backwards incompatible changes
+  * Endpoints should now be explicitly started in your application supervision tree. Just add `worker(YourApp.Endpoint, [])` to your supervision tree in `lib/your_app.ex`
+  * `mix phoenix.start` was renamed to `mix phoenix.server`
+  * The `YourApp.Endpoint.start/0` function was removed. You can simply remove it from your `test/test_helper.ex` file
 
 ## v0.7.2 (2014-12-11)
 
@@ -8,7 +14,6 @@
 
 * Bug fixes
   * Ensure CodeReloader is removed fron Endpoint when disabled
-
 
 ## v0.7.1 (2014-12-09)
 

@@ -70,13 +70,8 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       File.touch! "web/views/page_view.ex", @epoch
       File.write! "web/templates/page/another.html.eex", "oops"
 
-      PhotoBlog.Endpoint.start()
-
-      try do
-        PhotoBlog.Endpoint.call(conn(:get, "/"), [])
-      after
-        PhotoBlog.Endpoint.stop()
-      end
+      {:ok, _} = Application.ensure_all_started(:photo_blog)
+      PhotoBlog.Endpoint.call(conn(:get, "/"), [])
 
       assert File.stat!("web/views/page_view.ex").mtime > @epoch
 

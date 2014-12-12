@@ -8,24 +8,46 @@ defmodule Phoenix.Endpoint do
 
   Overall, an endpoint has three responsibilities:
 
+    * It provides a wrapper for starting and stopping the
+      endpoint as part of a supervision tree.
+
     * To define an initial plug pipeline where requests
       are sent to.
 
     * To host web specific configuration for your
       application.
 
-    * It provides a wrapper for starting and stopping the
-      endpoint in a specific web server.
+  ## Endpoints
+
+  An endpoint is simply a module defined with the help
+  of Phoenix.Endpoint. If you have used the phoenix.new
+  generator, an endpoint was automatically generated as
+  part of your application:
+
+      defmodule YourApp.Endpoint do
+        use Phoenix.Endpoint, otp_app: :your_app
+
+        # plug ...
+        # plug ...
+
+        plug :router, YourApp.Router
+      end
+
+  Before being used, an endpoint must be splicitly started as part
+  of your application supervision tree too (which is again done by
+  default in generated applications):
+
+      worker(YourApp.Endpoint, [])
 
   ## Endpoint configuration
 
-  All endpoints are configured directly in the Phoenix application
-  environment. For example:
+  All endpoints are configured in your application environment.
+  For example:
 
-      config :phoenix, YourApp.Endpoint,
+      config :your_app, YourApp.Endpoint,
         secret_key_base: "kjoy3o1zeidquwy1398juxzldjlksahdk3"
 
-  Phoenix configuration is split in two categories. Compile-time
+  Endpoint configuration is split in two categories. Compile-time
   configuration means the configuration is read during compilation
   and changing it at runtime has no effect. The compile-time
   configuration is mostly related to error handling.
@@ -69,18 +91,24 @@ defmodule Phoenix.Endpoint do
 
           [host: "localhost"]
 
-  ## Web server
+  ## Endpoint API
 
-  Starting an endpoint as part of a web server can be done by invoking
-  `YourApp.Endpoint.start/0`. Stopping the endpoint is done with
-  `YourApp.Endpoint.stop/0`. The web server is configured with the
-  `:http` and `:https` options defined above.
+  In the previous section, we have used the `config/2` function which is
+  automatically generated in your Endpoint. Here is a summary of all functions
+  defined in your endpoint:
 
-  The endpoint also provides a `url/1` function that generates a url
-  with the given path according to the :url configuration above:
+    * `start_link()` - starts the Endpoint process required for its functioning
+    * `config(key, default)` - access the endpoint configuration given by key
+    * `config_change(changed, removed)` - reload the endpoint configuration on application upgrades
+    * `url(path)` - returns the URL for this endpoint with the given path
 
-      MyApp.Endpoint.url("/foo/bar")
-      #=> "http://example.com/foo/bar"
+  Besides the functions above, it defines also the API expected by Plug
+  for serving requests:
+
+    * `init(opts)` - invoked when starting the endpoint server
+    * `call(conn, opts)` - invoked on every request and it simply dispatches to
+      the defined Plug pipeline
+
   """
 
   alias Phoenix.Endpoint.Adapter
@@ -133,17 +161,24 @@ defmodule Phoenix.Endpoint do
   defp server() do
     quote location: :keep, unquote: false do
       @doc """
+      Starts the endpoint.
+      """
+      def start_link do
+        Adapter.start_link(unquote(otp_app), __MODULE__)
+      end
+
+      @doc """
       Starts the current endpoint for serving requests.
       """
-      def start() do
-        Adapter.start(unquote(otp_app), __MODULE__)
+      def serve() do
+        Adapter.serve(unquote(otp_app), __MODULE__)
       end
 
       @doc """
       Stops the current endpoint from serving requests.
       """
-      def stop() do
-        Adapter.stop(unquote(otp_app), __MODULE__)
+      def shutdown() do
+        Adapter.shutdown(unquote(otp_app), __MODULE__)
       end
 
       @doc """

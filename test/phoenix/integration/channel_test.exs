@@ -71,8 +71,8 @@ defmodule Phoenix.Integration.ChannelTest do
   end
 
   setup_all do
-    capture_io fn -> Endpoint.start end
-    on_exit &Endpoint.stop/0
+    Endpoint.start_link
+    capture_io fn -> Endpoint.serve end
     :ok
   end
 

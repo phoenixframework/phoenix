@@ -12,7 +12,6 @@ defmodule Phoenix.Supervisor do
     []
     |> child(Phoenix.PubSub.Server, [pubsub], true)
     |> child(Phoenix.CodeReloader.Server, [], code_reloader)
-    |> child(Phoenix.Config.Supervisor, [], true)
     |> child(Phoenix.Transports.LongPoller.Supervisor, [], true)
     |> supervise(strategy: :one_for_one)
   end

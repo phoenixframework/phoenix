@@ -66,7 +66,8 @@ defmodule Phoenix.Integration.EndpointTest do
   alias Phoenix.Integration.HTTPClient
 
   test "adapters starts on configured port and serves requests and stops for prod" do
-    capture_io fn -> ProdEndpoint.start end
+    ProdEndpoint.start_link
+    capture_io fn -> ProdEndpoint.serve end
 
     # Requests
     {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
@@ -89,12 +90,13 @@ defmodule Phoenix.Integration.EndpointTest do
       assert resp.body == "500.html from Phoenix.ErrorView"
     end) =~ "** (RuntimeError) oops"
 
-    ProdEndpoint.stop
+    ProdEndpoint.shutdown
     {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
   end
 
   test "adapters starts on configured port and serves requests and stops for dev" do
-    capture_io fn -> DevEndpoint.start end
+    DevEndpoint.start_link
+    capture_io fn -> DevEndpoint.serve end
 
     {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
     assert resp.status == 200
@@ -116,7 +118,7 @@ defmodule Phoenix.Integration.EndpointTest do
       assert resp.body =~ "RuntimeError at GET /router/oops"
     end) =~ "** (RuntimeError) oops"
 
-    DevEndpoint.stop
+    DevEndpoint.shutdown
     {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
   end
 end

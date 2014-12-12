@@ -2,7 +2,7 @@ defmodule Phoenix.EndpointTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
-  @config [http: false, https: false, url: [host: "example.com"]]
+  @config [url: [host: "example.com"]]
   Application.put_env(:endpoint_app, __MODULE__.Endpoint, @config)
 
   defmodule Endpoint do
@@ -15,9 +15,8 @@ defmodule Phoenix.EndpointTest do
     end
   end
 
-  setup_all do
-    Endpoint.start
-    on_exit fn -> Endpoint.stop end
+  setup do
+    Endpoint.start_link()
     :ok
   end
 

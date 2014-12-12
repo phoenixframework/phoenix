@@ -65,13 +65,13 @@
 3. Change directory to `/path/to/scaffold/my_app`. Install dependencies and start web server
 
         mix do deps.get, compile
-        mix phoenix.start
+        mix phoenix.server
 
 
 When running in production, use protocol consolidation for increased performance:
 
        MIX_ENV=prod mix compile.protocols
-       MIX_ENV=prod PORT=4001 elixir -pa _build/prod/consolidated -S mix phoenix.start
+       MIX_ENV=prod PORT=4001 elixir -pa _build/prod/consolidated -S mix phoenix.server
 
 ### Router example
 
@@ -789,10 +789,9 @@ end
 ### Mix Tasks
 
 ```console
-mix phoenix                                    # List Phoenix tasks
 mix phoenix.new     app_name destination_path  # Creates new Phoenix application
 mix phoenix.routes  [MyApp.Router]             # Prints routes
-mix phoenix.start   [MyApp.Router]             # Starts worker
+mix phoenix.server   [MyApp.Router]            # Starts the server
 mix phoenix --help                             # This help
 ```
 

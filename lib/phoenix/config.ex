@@ -1,20 +1,3 @@
-defmodule Phoenix.Config.Supervisor do
-  @moduledoc false
-  use Supervisor
-
-  def start_link do
-    Supervisor.start_link(__MODULE__, [], name: __MODULE__)
-  end
-
-  def init([]) do
-    children = [
-      worker(Phoenix.Config, [], restart: :transient)
-    ]
-
-    supervise children, strategy: :simple_one_for_one
-  end
-end
-
 defmodule Phoenix.Config do
   # Handles Phoenix configuration.
   #
@@ -26,12 +9,10 @@ defmodule Phoenix.Config do
   use GenServer
 
   @doc """
-  Starts a supervised Phoenix configuration handler for runtime.
-
-  Data is accessed by the module via ETS.
+  Starts a Phoenix configuration handler.
   """
-  def start_supervised(otp_app, module, defaults) do
-    Supervisor.start_child(Phoenix.Config.Supervisor, [otp_app, module, defaults])
+  def start_link(otp_app, module, defaults) do
+    GenServer.start_link(__MODULE__, {otp_app, module, defaults})
   end
 
   @doc """
@@ -73,15 +54,6 @@ defmodule Phoenix.Config do
   def from_env(otp_app, module, defaults) do
     config = Application.get_env(otp_app, module, [])
     merge(defaults, config)
-  end
-
-  ## Internal API
-
-  @doc """
-  Starts a linked Phoenix configuration handler.
-  """
-  def start_link(otp_app, module, defaults) do
-    GenServer.start_link(__MODULE__, {otp_app, module, defaults})
   end
 
   @doc """

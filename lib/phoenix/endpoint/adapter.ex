@@ -1,9 +1,16 @@
 defmodule Phoenix.Endpoint.Adapter do
-  # This module contains the logic for starting and stopping
-  # the endpoint server. Today much of the logic is specific
-  # to cowboy but we can make it more generic when we add
-  # support for other adapters.
+  # This module contains the logic used by most functions in
+  # Phoenix.Endpoint. Today much of the logic start/stop logic
+  # is specific to cowboy but we can make it more generic when
+  # we add support for other adapters.
   @moduledoc false
+
+  @doc """
+  Starts the endpoint process.
+  """
+  def start_link(otp_app, module) do
+    Phoenix.Config.start_link(otp_app, module, defaults(otp_app, module))
+  end
 
   @doc """
   The endpoint configuration used at compile time.
@@ -68,18 +75,16 @@ defmodule Phoenix.Endpoint.Adapter do
   ## Adapter specific
 
   @doc """
-  Starts the endpoint.
+  Serves requests from the endpoint.
   """
-  def start(otp_app, module) do
-    Phoenix.Config.start_supervised(otp_app, module, defaults(otp_app, module))
-
+  def serve(otp_app, module) do
     # TODO: We need to test this logic when we support custom adapters.
     if config = module.config(:http) do
       config =
         config
         |> Keyword.put_new(:otp_app, otp_app)
         |> Keyword.put_new(:port, 4000)
-      start(:http, module, config)
+      serve(:http, module, config)
     end
 
     if config = module.config(:https) do
@@ -87,13 +92,13 @@ defmodule Phoenix.Endpoint.Adapter do
         Keyword.merge(module.config(:http) || [], module.config(:https))
         |> Keyword.put_new(:otp_app, otp_app)
         |> Keyword.put_new(:port, 4040)
-      start(:https, module, config)
+      serve(:https, module, config)
     end
 
     :ok
   end
 
-  defp start(scheme, module, config) do
+  defp serve(scheme, module, config) do
     opts = dispatch(module, config)
     report apply(Plug.Adapters.Cowboy, scheme, [module, [], opts]), scheme, module, opts
   end
@@ -126,7 +131,7 @@ defmodule Phoenix.Endpoint.Adapter do
   @doc """
   Stops the endpoint.
   """
-  def stop(_otp_app, module) do
+  def shutdown(_otp_app, module) do
     if module.config(:http) do
       Plug.Adapters.Cowboy.shutdown(Module.concat(module, HTTP))
     end
@@ -135,7 +140,6 @@ defmodule Phoenix.Endpoint.Adapter do
       Plug.Adapters.Cowboy.shutdown(Module.concat(module, HTTPS))
     end
 
-    Phoenix.Config.stop(module)
     :ok
   end
 end
