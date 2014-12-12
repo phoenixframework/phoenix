@@ -36,7 +36,8 @@ defmodule Phoenix.Endpoint.Adapter do
      url: [host: "localhost"],
      http: false,
      https: false,
-     secret_key_base: nil]
+     secret_key_base: nil,
+     static: [root: "/priv/static", route: "/"]]
   end
 
   defp render_errors(module) do
@@ -69,6 +70,29 @@ defmodule Phoenix.Endpoint.Adapter do
       {"https", "443"} -> "https://" <> host
       {"http", "80"}   -> "http://" <> host
       {_, _}           -> scheme <> "://" <> host <> ":" <> port
+    end
+  end
+
+  @doc """
+  Returns the static path of a file in the static root directory.
+  When file exists, it includes a timestamp. When it doesn't exist, just
+  the static path is returned.
+  """
+  def static_path(endpoint, path) do
+    app_root = Application.app_dir(endpoint.config(:otp_app))
+    config = endpoint.config(:static)
+    static_root = Keyword.get(config, :root)
+    file_path = Path.expand(static_root, app_root) |> Path.join(path)
+    route = Keyword.get(config, :route)
+
+    case File.stat(file_path) do
+      {:ok, %File.Stat{mtime: mtime, type: type}} when type != :directory and is_tuple(mtime) ->
+        seconds = :calendar.datetime_to_gregorian_seconds(mtime)
+        route = Keyword.get(config, :route)
+        path = Plug.Router.Utils.split(path) |> Enum.join("/")
+        Path.join(route, [path, ??, to_string(seconds)])
+      _ ->
+        Path.join(route, path)
     end
   end
 
