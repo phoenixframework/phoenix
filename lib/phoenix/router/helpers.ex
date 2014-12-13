@@ -32,6 +32,13 @@ defmodule Phoenix.Router.Helpers do
         private.phoenix_endpoint.url(path)
       end
 
+      @doc """
+      Generates path to a static asset given its file path.
+      """
+      def static_path(%Plug.Conn{private: private}, path) do
+        private.phoenix_endpoint.static_path(path)
+      end
+
       # Functions used by generated helpers
 
       defp to_path(segments, [], _reserved) do
