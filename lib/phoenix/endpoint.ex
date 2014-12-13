@@ -215,9 +215,14 @@ defmodule Phoenix.Endpoint do
       for the endpoint.
       """
       def static_path(path) do
-        Phoenix.Config.cache(__MODULE__,
-          {:__phoenix_static__, path},
-          &Phoenix.Endpoint.Adapter.static_path(&1, path))
+        path = "/" <> (Plug.Router.Utils.split(path) |> Enum.join("/"))
+        if config(:static)[:cache_static_lookup] do
+          Phoenix.Config.cache(__MODULE__,
+            {:__phoenix_static__, path},
+            &Phoenix.Endpoint.Adapter.static_path(&1, path))
+        else
+          Phoenix.Endpoint.Adapter.static_path(__MODULE__, path)
+        end
       end
     end
   end

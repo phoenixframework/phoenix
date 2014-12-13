@@ -30,8 +30,30 @@ defmodule Phoenix.EndpointTest do
     config = put_in(config[:static][:route], "/static")
     assert Endpoint.config_change([{Endpoint, config}], []) == :ok
     assert Endpoint.config(:url) == [host: "example.com", port: 1234]
+    assert Endpoint.config(:static) == [root: "/priv/static",
+                                        route: "/static",
+                                        cache_static_lookup: true]
     assert Endpoint.url("/") == "http://example.com:1234/"
     assert Endpoint.static_path("/images/foo.png") == "/static/images/foo.png"
+  end
+
+  test "static_path/1 caching can be disabled" do
+    key = {:__phoenix_static__, "/images/foo.png"}
+    assert Endpoint.static_path("/images/foo.png") == "/images/foo.png"
+    assert :ets.lookup(Endpoint, key) == [{key, "/images/foo.png"}]
+
+    config = put_in(@config[:static][:cache_static_lookup], false)
+    assert Endpoint.config_change([{Endpoint, config}], []) == :ok
+    assert Endpoint.static_path("/images/foo.png") == "/images/foo.png"
+    assert :ets.lookup(Endpoint, key) == []
+  end
+
+  test "static_path/1 caches path only once" do
+    key = {:__phoenix_static__, "/images/foo.png"}
+    assert Endpoint.static_path("/images/foo.png") == "/images/foo.png"
+    assert Endpoint.static_path("images/foo.png") == "/images/foo.png"
+    assert :ets.lookup(Endpoint, key) == [{key, "/images/foo.png"}]
+    assert :ets.lookup(Endpoint, {:__phoenix_static__, "images/foo.png"}) == []
   end
 
   test "does not include code reloading if disabled" do

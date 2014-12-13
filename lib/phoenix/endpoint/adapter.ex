@@ -37,7 +37,7 @@ defmodule Phoenix.Endpoint.Adapter do
      http: false,
      https: false,
      secret_key_base: nil,
-     static: [root: "/priv/static", route: "/"]]
+     static: [root: "/priv/static", route: "/", cache_static_lookup: true]]
   end
 
   defp render_errors(module) do
@@ -79,14 +79,15 @@ defmodule Phoenix.Endpoint.Adapter do
   the static path is returned.
   """
   def static_path(endpoint, path) do
-    app_root = Application.app_dir(endpoint.config(:otp_app))
     config = endpoint.config(:static)
     static_root = Keyword.get(config, :root)
-    file_path = Path.expand(static_root, app_root) |> Path.join(path)
+    file_path = Application.app_dir(endpoint.config(:otp_app), static_root)
+                |> Path.join(path)
     route = Keyword.get(config, :route)
 
     case File.stat(file_path) do
-      {:ok, %File.Stat{mtime: mtime, type: type}} when type != :directory and is_tuple(mtime) ->
+      {:ok, %File.Stat{mtime: mtime, type: type}}
+          when type != :directory and is_tuple(mtime) ->
         seconds = :calendar.datetime_to_gregorian_seconds(mtime)
         route = Keyword.get(config, :route)
         path = Plug.Router.Utils.split(path) |> Enum.join("/")
