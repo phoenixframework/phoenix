@@ -189,10 +189,19 @@ defmodule Phoenix.Router.HelpersTest do
   test "helpers module generates a url helper" do
     conn = conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
     assert Helpers.url(conn, "/foo/bar") == "https://example.com/foo/bar"
+    assert Helpers.url(__MODULE__, "/foo/bar") == "https://example.com/foo/bar"
   end
 
   test "helpers module generates a static_path helper" do
     conn = conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
     assert Helpers.static_path(conn, "/images/foo.png") == "/images/foo.png"
+    assert Helpers.static_path(__MODULE__, "/images/foo.png") == "/images/foo.png"
+  end
+
+  test "helpers module generates a static_url helper" do
+    conn = conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
+    url = "https://example.com/images/foo.png"
+    assert Helpers.static_url(conn, "/images/foo.png") == url
+    assert Helpers.static_url(__MODULE__, "/images/foo.png") == url
   end
 end

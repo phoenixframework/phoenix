@@ -3,6 +3,7 @@ defmodule Phoenix.Router.Helpers do
   @moduledoc false
 
   alias Phoenix.Router.Route
+  alias Plug.Conn
 
   @doc """
   Generates the helper module for the given environment and routes.
@@ -26,17 +27,37 @@ defmodule Phoenix.Router.Helpers do
       unquote(ast)
 
       @doc """
-      Generates a URL for the given path considering the connection data.
+      Generates a URL for the given path considering the connection data or
+      Endpoint provided.
       """
-      def url(%Plug.Conn{private: private}, path) do
+      def url(%Conn{private: private}, path) do
         private.phoenix_endpoint.url(path)
+      end
+      def url(endpoint, path) do
+        endpoint.url(path)
       end
 
       @doc """
-      Generates path to a static asset given its file path.
+      Generates path to a static asset given its file path. It expects either a
+      conn or an Endpoint.
       """
-      def static_path(%Plug.Conn{private: private}, path) do
+      def static_path(%Conn{private: private}, path) do
         private.phoenix_endpoint.static_path(path)
+      end
+      def static_path(endpoint, path) do
+        endpoint.static_path(path)
+      end
+
+      @doc """
+      Generates url to a static asset given its file path. It expects either a
+      conn or an Endpoint.
+      """
+      def static_url(%Conn{private: private}, path) do
+        endpoint = private.phoenix_endpoint
+        endpoint.static_path(path) |> endpoint.url()
+      end
+      def static_url(endpoint, path) do
+        endpoint.static_path(path) |> endpoint.url()
       end
 
       # Functions used by generated helpers
@@ -50,7 +71,7 @@ defmodule Phoenix.Router.Helpers do
                not (k = to_string(k)) in reserved,
                do: {k, v}
 
-        case Plug.Conn.Query.encode dict do
+        case Conn.Query.encode dict do
           "" -> segments
           o  -> segments <> "?" <> o
         end
