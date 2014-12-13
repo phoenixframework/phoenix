@@ -17,7 +17,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
   setup_all do
     # Clean up and create a new project
     File.rm_rf(@project_path)
-    Mix.Tasks.Phoenix.New.run(["--dev", @app_name, @project_path])
+    Mix.Tasks.Phoenix.New.run([@app_name, @project_path])
 
     # Copy artifacts from Phoenix so we can compile and run tests
     File.cp_r "_build",   Path.join(@project_path, "_build")
@@ -57,6 +57,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       Mix.Task.run "compile", ["--no-deps-check"]
       assert_received {:mix_shell, :info, ["Compiled lib/photo_blog.ex"]}
       assert_received {:mix_shell, :info, ["Compiled web/router.ex"]}
+      refute_received {:mix_shell, :info, ["Compiled lib/phoenix.ex"]}
       Mix.shell.flush
       Mix.Task.clear
 

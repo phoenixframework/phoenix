@@ -70,7 +70,7 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   defp phoenix_dep(true), do: ~s[{:phoenix, path: #{inspect File.cwd!}}]
-  defp phoenix_dep(_),    do: ~s[{:phoenix, github: "phoenixframework/phoenix"}]
+  defp phoenix_dep(_),    do: ~s[{:phoenix, "~> 0.7.2"}]
 
   defp template_dir do
     Application.app_dir(:phoenix, "priv/template")
