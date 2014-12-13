@@ -13,9 +13,9 @@
 
 ##Ecto Models
 
-Most web applications make use of some kind of datastore to hold data that the application needs to function. Phoenix does not currently ship with a model layer for interacting with a database as some server side MVC frameworks do. Fortunately, one of Elixir's core projects is Ecto, a dsl for interacting with databases. Currently, Ecto only supports the PostgreSQL relational database via the `postgrex` adapter, but there are plans to expand the list of supported databases in the future.
+Most web applications make use of some kind of datastore to hold data that the application needs to function. Phoenix does not currently ship with a model layer for interacting with a database as some server side MVC frameworks do. Fortunately, one of Elixir's core projects is [Ecto](https://github.com/elixir-lang/ecto), a dsl for interacting with databases. Currently, Ecto only supports the PostgreSQL relational database via the `postgrex` adapter, but there are plans to expand the list of supported databases in the future.
 
-Before we begin, we'll need to have PostgreSQL  installed on our system. We'll need to create a database for our application as well as a user with a password which our application can log in as.
+Before we begin, we'll need to have PostgreSQL installed on our system. We'll need to create a database for our application as well as a user with a password which our application can log in as.
 
 The [PostgreSQL documentation](http://www.postgresql.org/) has information on how to do all of that.
 
@@ -74,7 +74,7 @@ defmodule HelloPhoenix.Repo do
 end
 ```
 
-The `conf/0` function defines the details Ecto needs to connect to the database. Of course, we need to fill in our own actual values for 'username', 'password', 'host', and 'database_name'.
+The `conf/0` function defines the details Ecto needs to connect to the database. Of course, we need to fill in our own actual values for `username`, `password`, `host`, and `database_name`.
 
 The `priv/0` function defines the directory into which Ecto will create a `migrations` directory for our migration files. We'll talk more about migrations in just a moment.
 
@@ -196,7 +196,7 @@ Then we can view all the entities in the `phoenix_demo` database with the `\d` c
 ```colsole
 phoenix_demo=# \d
                    List of relations
- Schema |           Name           |   Type   |  Owner  
+ Schema |           Name           |   Type   |  Owner
 --------+--------------------------+----------+---------
  public | schema_migrations        | table    | phoenix
  public | schema_migrations_id_seq | sequence | phoenix
@@ -264,7 +264,7 @@ Now if we take a look in the database, we see that our `users` table and its seq
 ```console
 # \d
                    List of relations
- Schema |           Name           |   Type   |  Owner  
+ Schema |           Name           |   Type   |  Owner
 --------+--------------------------+----------+---------
  public | schema_migrations        | table    | phoenix
  public | schema_migrations_id_seq | sequence | phoenix
@@ -283,7 +283,7 @@ Ok, our `users` table is back again.
 ```console
 # \d
                    List of relations
- Schema |           Name           |   Type   |  Owner  
+ Schema |           Name           |   Type   |  Owner
 --------+--------------------------+----------+---------
  public | schema_migrations        | table    | phoenix
  public | schema_migrations_id_seq | sequence | phoenix
