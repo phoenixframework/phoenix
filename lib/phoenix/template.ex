@@ -62,8 +62,8 @@ defmodule Phoenix.Template do
   Format encoders work per format and are responsible for encoding a
   given format to string once the view layer finishes processing.
 
-  A format encoder must export a function called `encode!/1` which
-  receives the rendering artifact and returns a string.
+  A format encoder must export a function called `encode_to_iodata!/1`
+  which receives the rendering artifact and returns iodata.
 
   New encoders can be added via the format encoder option:
 

@@ -135,7 +135,7 @@ defmodule Phoenix.Controller do
       Application.get_env(:phoenix, :format_encoders)
       |> Keyword.get(:json, Poison)
 
-    send_resp(conn, conn.status || 200, "application/json", encoder.encode!(data))
+    send_resp(conn, conn.status || 200, "application/json", encoder.encode_to_iodata!(data))
   end
 
   @doc """

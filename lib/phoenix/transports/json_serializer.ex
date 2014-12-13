@@ -7,8 +7,7 @@ defmodule Phoenix.Transports.JSONSerializer do
   @doc """
   Encodes a `Phoenix.Socket.Message` struct to JSON string
   """
-  # TODO: This should use iodata
-  def encode!(message), do: Poison.encode!(message)
+  def encode!(message), do: Poison.encode_to_iodata!(message)
 
   @doc """
   Decodes JSON String into `Phoenix.Socket.Message` struct

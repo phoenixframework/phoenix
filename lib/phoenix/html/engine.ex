@@ -9,11 +9,11 @@ defmodule Phoenix.HTML.Engine do
   alias Phoenix.HTML
 
   @doc false
-  def encode(body), do: {:ok, encode!(body)}
+  def encode_to_iodata(body), do: {:ok, encode_to_iodata!(body)}
 
   @doc false
-  def encode!({:safe, body}), do: body
-  def encode!(other), do: HTML.Safe.to_iodata(other)
+  def encode_to_iodata!({:safe, body}), do: body
+  def encode_to_iodata!(other), do: HTML.Safe.to_iodata(other)
 
   @doc false
   def handle_body(body), do: body

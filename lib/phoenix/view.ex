@@ -248,8 +248,7 @@ defmodule Phoenix.View do
 
   defp encode(content, template) do
     if encoder = Phoenix.Template.format_encoder(template) do
-      # TODO: This should use iodata
-      encoder.encode!(content)
+      encoder.encode_to_iodata!(content)
     else
       content
     end
