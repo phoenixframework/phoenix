@@ -629,7 +629,7 @@ It should be noted that join and error messages are not returned by default, as 
 
 #### Holding state in socket connections
 
-Ephemeral state can be stored on the socket and is available for the lifetime of the socket connection using the `assign/3` and `get_assign/2` imported functions. This is useful for fetching channel/topic related information a single time in `join/3` and having it available within each socket `event/3` function. Here's a basic example:
+Ephemeral state can be stored on the socket and is available for the lifetime of the socket connection using the `assign/3` imported function. This is useful for fetching channel/topic related information a single time in `join/3` and having it available within each socket `event/3` function. Here's a basic example:
 
 ```elixir
 def join(socket, topic, %{"token" => token, "user_id" => user_id) do
@@ -642,8 +642,8 @@ def join(socket, topic, %{"token" => token, "user_id" => user_id) do
 end
 
 def event(socket, "new:msg", %{msg: msg}) do
-  user = get_assign(socket, :user)
-  broadcoast socket, "new:msg", %{user_id: user.id, name: user.name, msg: msg}
+  user = socket.assigns[:user]
+  broadcast socket, "new:msg", %{user_id: user.id, name: user.name, msg: msg}
   socket
 end
 ```
