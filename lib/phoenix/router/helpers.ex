@@ -105,6 +105,26 @@ defmodule Phoenix.Router.Helpers do
       def unquote(:"#{helper}_path")(unquote(action), unquote_splicing(vars), params) do
         to_path(unquote(segs), params, unquote(bins))
       end
+
+      def unquote(:"#{helper}_url")(%Conn{private: private}, unquote(action), unquote_splicing(vars), params) do
+        unquote(:"#{helper}_path")(unquote(action), unquote_splicing(vars), params)
+        |> private.phoenix_endpoint.url()
+      end
+
+      def unquote(:"#{helper}_url")(%Conn{private: private}, unquote(action), unquote_splicing(vars)) do
+        unquote(:"#{helper}_path")(unquote(action), unquote_splicing(vars))
+        |> private.phoenix_endpoint.url()
+      end
+
+      def unquote(:"#{helper}_url")(endpoint, unquote(action), unquote_splicing(vars), params) do
+        unquote(:"#{helper}_path")(unquote(action), unquote_splicing(vars), params)
+        |> endpoint.url()
+      end
+
+      def unquote(:"#{helper}_url")(endpoint, unquote(action), unquote_splicing(vars)) do
+        unquote(:"#{helper}_path")(unquote(action), unquote_splicing(vars))
+        |> endpoint.url()
+      end
     end
   end
 

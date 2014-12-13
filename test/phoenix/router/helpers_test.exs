@@ -186,6 +186,15 @@ defmodule Phoenix.Router.HelpersTest do
     path
   end
 
+  test "helpers module generates named routes url helpers" do
+    conn = conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
+    url = "https://example.com/admin/new/messages/1"
+    assert Helpers.admin_message_url(conn, :show, 1) == url
+    assert Helpers.admin_message_url(conn, :show, 1, []) == url
+    assert Helpers.admin_message_url(__MODULE__, :show, 1) == url
+    assert Helpers.admin_message_url(__MODULE__, :show, 1, []) == url
+  end
+
   test "helpers module generates a url helper" do
     conn = conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
     assert Helpers.url(conn, "/foo/bar") == "https://example.com/foo/bar"
