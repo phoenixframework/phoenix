@@ -71,7 +71,7 @@ to look like this.
 
 When we reload the Welcome to Phoenix page, we should see our new title.
 
-The `<%=` and `%>` are from the Elixir Eex project. They enclose executable Elixir code within a template. The '=' tells Eex to print the result. If the '=' is not there, Eex wills still execute the code, but there will be no output. In our example, we are calling the `title` function from `HelloPhoenix.View` and printing the output into the title tag.
+The `<%=` and `%>` are from the Elixir [Eex](http://elixir-lang.org/docs/stable/eex/) project. They enclose executable Elixir code within a template. The `=` tells Eex to print the result. If the `=` is not there, Eex wills still execute the code, but there will be no output. In our example, we are calling the `title` function from `HelloPhoenix.View` and printing the output into the title tag.
 
 Note that we didn't need to fully qualify the `title` function with `HelloPhoenix.View`. Our layout template has a layout view to render it, and the layout view uses `HelloPhoenix.View`.
 
@@ -108,7 +108,7 @@ Let's reload the page and view source to see what we have.
 <a href="/">Link back to ourselves</a>
 ```
 
-Great, `page_path/1` evaluated to "/" as we would expect, and we didn't need to qualify it with `HelloPhoenix.View`.
+Great, `page_path/1` evaluated to `/` as we would expect, and we didn't need to qualify it with `HelloPhoenix.View`.
 
 
 ###Individual Views
@@ -156,7 +156,7 @@ I came from assigns: <%= @message %>
 This is the message: <%= message %>
 ```
 
-Note the "@" in the top line. Now if we change our function call, we see a different rendering.
+Note the `@` in the top line. Now if we change our function call, we see a different rendering.
 
 ```console
 iex(2)> Phoenix.View.render(HelloPhoenix.PageView, "test.html", message: "Assigns has an @.")
