@@ -8,7 +8,6 @@ use Mix.Config
 # Configures the endpoint
 config :<%= application_name %>, <%= application_module %>.Endpoint,
   url: [host: "localhost"],
-  http: [port: System.get_env("PORT")],
   secret_key_base: "<%= secret_key_base %>",
   debug_errors: false
 
