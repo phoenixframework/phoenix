@@ -33,16 +33,25 @@ defmodule Phoenix.Config do
   @doc """
   Caches a value in Phoenix configuration handler for the module.
 
+  The given function needs to return a tuple with `:cache` if the
+  value should be cached or `:stale` if the value should not be
+  cached because it can be consequently considered stale.
+
   Notice writes are not serialized to the server, we expect the
   function that generates the cache to be idempotent.
   """
+  @spec cache(module, term, (module -> {:cache | :stale, term})) :: term
   def cache(module, key, fun) do
     case :ets.lookup(module, key) do
       [{^key, val}] -> val
       [] ->
-        val = fun.(module)
-        store(module, [{key, val}])
-        val
+        case fun.(module) do
+          {:cache, val} ->
+            store(module, [{key, val}])
+            val
+          {:stale, val} ->
+            val
+        end
     end
   end
 

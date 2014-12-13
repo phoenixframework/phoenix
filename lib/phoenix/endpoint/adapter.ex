@@ -49,6 +49,9 @@ defmodule Phoenix.Endpoint.Adapter do
 
   @doc """
   Builds the endpoint url from its configuration.
+
+  The result is wrapped in a `{:cache, value}` tuple so
+  the Phoenix.Config layer knows how to cache it.
   """
   def url(endpoint) do
     {scheme, port} =
@@ -66,11 +69,12 @@ defmodule Phoenix.Endpoint.Adapter do
     host   = url[:host]
     port   = to_string(url[:port] || port)
 
-    case {scheme, port} do
-      {"https", "443"} -> "https://" <> host
-      {"http", "80"}   -> "http://" <> host
-      {_, _}           -> scheme <> "://" <> host <> ":" <> port
-    end
+    {:cache,
+      case {scheme, port} do
+        {"https", "443"} -> "https://" <> host
+        {"http", "80"}   -> "http://" <> host
+        {_, _}           -> scheme <> "://" <> host <> ":" <> port
+      end}
   end
 
   @doc """
@@ -78,18 +82,26 @@ defmodule Phoenix.Endpoint.Adapter do
 
   When file exists, it includes a timestamp. When it doesn't exist,
   just the static path is returned.
+
+  The result is wrapped in a `{:cache | :stale, value}` tuple so
+  the Phoenix.Config layer knows how to cache it.
   """
-  def static_path(endpoint, path) do
+  def static_path(endpoint, "/" <> _ = path) do
     file = Application.app_dir(endpoint.config(:otp_app), Path.join("priv/static", path))
 
     case File.stat(file) do
       {:ok, %File.Stat{mtime: mtime, type: type}}
           when type != :directory and is_tuple(mtime) ->
-        seconds = :calendar.datetime_to_gregorian_seconds(mtime)
-        path <> "?" <> Integer.to_string(seconds)
+        key = if endpoint.config(:cache_static_lookup), do: :cache, else: :stale
+        sec = :calendar.datetime_to_gregorian_seconds(mtime)
+        {key, path <> "?" <> Integer.to_string(sec)}
       _ ->
-        path
+        {:stale, path}
     end
+  end
+
+  def static_path(endpoint, path) when is_binary(path) do
+    raise ArgumentError, "static_path/2 expects a path starting with / as argument"
   end
 
   ## Adapter specific

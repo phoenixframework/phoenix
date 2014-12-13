@@ -206,22 +206,18 @@ defmodule Phoenix.Endpoint do
       """
       def url(path) do
         Phoenix.Config.cache(__MODULE__,
-          :__phoenix_url_helper__,
+          :__phoenix_url__,
           &Phoenix.Endpoint.Adapter.url/1) <> path
       end
 
       @doc """
-      Generates a route to a static file based on the `:static` configuration
-      for the endpoint.
+      Generates a route to a static file based on the contents inside
+      `priv/static` for the endpoint otp application.
       """
       def static_path(path) do
-        if config(:cache_static_lookup) do
-          Phoenix.Config.cache(__MODULE__,
-            {:__phoenix_static__, path},
-            &Phoenix.Endpoint.Adapter.static_path(&1, path))
-        else
-          Phoenix.Endpoint.Adapter.static_path(__MODULE__, path)
-        end
+        Phoenix.Config.cache(__MODULE__,
+          {:__phoenix_static__, path},
+          &Phoenix.Endpoint.Adapter.static_path(&1, path))
       end
     end
   end
