@@ -643,7 +643,7 @@ end
 
 def event(socket, "new:msg", %{msg: msg}) do
   user = get_assign(socket, :user)
-  broadcoast socket, "new:msg", %{user_id: user.id, name: user.name, msg: msg}
+  broadcast socket, "new:msg", %{user_id: user.id, name: user.name, msg: msg}
   socket
 end
 ```
