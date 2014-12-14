@@ -144,37 +144,46 @@ end
 Executing 'iex -S mix' from your project's root directory will load your project into the shell. Then you can explore the routes interactively.
 
 ```elixir
-iex> MyApp.Router.Helpers.user_path(:index)
+iex> MyApp.Router.Helpers.user_url(MyApp.Endpoint, :index)
+"http://example.com/users"
+
+iex> MyApp.Router.Helpers.user_url(conn, :index)
+"http://example.com/users"
+
+iex> MyApp.Router.Helpers.user_url(MyApp.Endpoint, :index)
 "/users"
 
-iex> MyApp.Router.Helpers.user_path(:show, 123)
+iex> MyApp.Router.Helpers.user_path(conn, :index)
+"/users"
+
+iex> MyApp.Router.Helpers.user_path(conn, :show, 123)
 "/users/123"
 
-iex> MyApp.Router.Helpers.user_path(:show, 123, page: 5)
+iex> MyApp.Router.Helpers.user_path(conn, :show, 123, page: 5)
 "/users/123?page=5"
 
-iex> MyApp.Router.Helpers.user_path(:edit, 123)
+iex> MyApp.Router.Helpers.user_path(conn, :edit, 123)
 "/users/123/edit"
 
-iex> MyApp.Router.Helpers.user_path(:destroy, 123)
+iex> MyApp.Router.Helpers.user_path(conn, :destroy, 123)
 "/users/123"
 
-iex> MyApp.Router.Helpers.user_path(:new)
+iex> MyApp.Router.Helpers.user_path(conn, :new)
 "/users/new"
 
-iex> MyApp.Router.Helpers.user_comment_path(:show, 99, 100)
+iex> MyApp.Router.Helpers.user_comment_path(conn, :show, 99, 100)
 "/users/99/comments/100"
 
-iex> MyApp.Router.Helpers.user_comment_path(:index, 99, foo: "bar")
+iex> MyApp.Router.Helpers.user_comment_path(conn, :index, 99, foo: "bar")
 "/users/99/comments?foo=bar"
 
-iex> MyApp.Router.Helpers.user_comment_path(:index, 99) |> MyApp.Endpoint.url
+iex> MyApp.Router.Helpers.user_comment_path(conn, :index, 99) |> MyApp.Endpoint.url
 "http://example.com/users/99/comments"
 
-iex> MyApp.Router.Helpers.user_comment_path(:edit, 88, 2, [])
+iex> MyApp.Router.Helpers.user_comment_path(conn, :edit, 88, 2, [])
 "/users/88/comments/2/edit"
 
-iex> MyApp.Router.Helpers.user_comment_path(:new, 88)
+iex> MyApp.Router.Helpers.user_comment_path(conn, :new, 88)
 "/users/88/comments/new"
 ```
 
@@ -185,7 +194,7 @@ Since browsers don't allow HTML forms to send PATCH or DELETE requests, Phoenix 
 For example, to make a button to delete a post, you could write:
 
 ```html
-<form action="<%= post_path(:destroy, @post.id) %>" method="post">
+<form action="<%= post_path(conn, :destroy, @post.id) %>" method="post">
   <input type="hidden" name="_method" value="DELETE">
   <input type="submit" value="Delete Post">
 </form>
@@ -201,7 +210,7 @@ defmodule MyApp.PageController do
   plug :action
 
   def show(conn, %{"page" => "admin"}) do
-    redirect conn, to: page_path(:show, "unauthorized")
+    redirect conn, to: page_path(conn, :show, "unauthorized")
   end
 
   def show(conn, %{"page" => page}) do

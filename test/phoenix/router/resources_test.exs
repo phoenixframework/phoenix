@@ -245,7 +245,7 @@ defmodule Phoenix.Router.ResourcesTest do
     assert conn.status == 200
     assert conn.params["slug"] == "foo"
     assert conn.resp_body == "show users"
-    assert Router.Helpers.admin_path(:show, "foo") ==
+    assert Router.Helpers.admin_path(conn, :show, "foo") ==
            "/admin/foo"
 
     conn = call(Router, :get, "admin/bar/comments/the_key")
@@ -253,7 +253,7 @@ defmodule Phoenix.Router.ResourcesTest do
     assert conn.params["admin_slug"] == "bar"
     assert conn.params["key"] == "the_key"
     assert conn.resp_body == "show comments"
-    assert Router.Helpers.admin_post_path(:show, "bar", "the_key") ==
+    assert Router.Helpers.admin_post_path(conn, :show, "bar", "the_key") ==
            "/admin/bar/comments/the_key"
   end
 end
