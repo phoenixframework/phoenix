@@ -56,8 +56,8 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     end
 
     scope "/api" do
-      scope "/v1", Api.V1 do
-        resources "/venues", VenueController, only: [:show] do
+      scope "/v1", Api do
+        resources "/venues", V1.VenueController, only: [:show], alias: V1 do
           resources "/users", UserController, only: [:edit]
         end
       end

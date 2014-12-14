@@ -14,7 +14,7 @@ defmodule Phoenix.Router.ResourcesTest do
     def destroy(conn, _params), do: text(conn, "destroy users")
   end
 
-  defmodule FileController do
+  defmodule Api.FileController do
     use Phoenix.Controller
     plug :action
     def show(conn, _params), do: text(conn, "show files")
@@ -22,7 +22,7 @@ defmodule Phoenix.Router.ResourcesTest do
     def new(conn, _params), do: text(conn, "new files")
   end
 
-  defmodule CommentController do
+  defmodule Api.CommentController do
     use Phoenix.Controller
     plug :action
     def show(conn, _params), do: text(conn, "show comments")
@@ -37,16 +37,16 @@ defmodule Phoenix.Router.ResourcesTest do
   defmodule Router do
     use Phoenix.Router
 
-    resources "/users", UserController do
+    resources "/users", UserController, alias: Api do
       resources "/comments", CommentController do
         get "/special", CommentController, :special
       end
       resources "/files", FileController, except: [:destroy]
     end
 
-    resources "/files", FileController, only: [:index]
+    resources "/files", Api.FileController, only: [:index]
 
-    resources "/admin", UserController, param: "slug", name: "admin", only: [:show] do
+    resources "/admin", UserController, param: "slug", name: "admin", only: [:show], alias: Api do
       resources "/comments", CommentController, param: "key", name: "post", except: [:destroy]
       resources "files", FileController, only: [:show, :index, :new]
     end

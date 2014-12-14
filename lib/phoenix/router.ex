@@ -389,7 +389,6 @@ defmodule Phoenix.Router do
 
   defp add_resources(path, controller, options, do: context) do
     quote do
-      # TODO: Support :alias as option (which is passed to scope)
       resource = Resource.build(unquote(path), unquote(controller), unquote(options))
 
       parm = resource.param
