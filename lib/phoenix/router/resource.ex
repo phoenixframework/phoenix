@@ -31,12 +31,13 @@ defmodule Phoenix.Router.Resource do
   def build(path, controller, options) when
       is_binary(path) and is_atom(controller) and is_list(options) do
     actions = extract_actions(options)
+    alias   = Keyword.get(options, :alias)
     param   = Keyword.get(options, :param, @default_param_key)
     name    = Keyword.get(options, :name, Phoenix.Naming.resource_name(controller, "Controller"))
     as      = Keyword.get(options, :as, name)
 
     collection = [path: path, as: as]
-    member     = [path: Path.join(path, ":#{name}_#{param}"), as: as]
+    member     = [path: Path.join(path, ":#{name}_#{param}"), as: as, alias: alias]
 
     %Resource{path: path, actions: actions, param: param, as: as,
               member: member, collection: collection, controller: controller}
