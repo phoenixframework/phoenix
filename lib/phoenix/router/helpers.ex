@@ -33,7 +33,7 @@ defmodule Phoenix.Router.Helpers do
       def url(%Conn{private: private}, path) do
         private.phoenix_endpoint.url(path)
       end
-      def url(endpoint, path) do
+      def url(endpoint, path) when is_atom(endpoint) do
         endpoint.url(path)
       end
 
@@ -42,9 +42,9 @@ defmodule Phoenix.Router.Helpers do
       conn or an Endpoint.
       """
       def static_path(%Conn{private: private}, path) do
-        private.phoenix_endpoint.static_path(path)
+        static_path(private.phoenix_endpoint, path)
       end
-      def static_path(endpoint, path) do
+      def static_path(endpoint, path) when is_atom(endpoint) do
         endpoint.static_path(path)
       end
 
@@ -53,11 +53,10 @@ defmodule Phoenix.Router.Helpers do
       conn or an Endpoint.
       """
       def static_url(%Conn{private: private}, path) do
-        endpoint = private.phoenix_endpoint
-        endpoint.static_path(path) |> endpoint.url()
+        static_url(private.phoenix_endpoint, path)
       end
       def static_url(endpoint, path) do
-        endpoint.static_path(path) |> endpoint.url()
+        url(endpoint, static_path(endpoint, path))
       end
 
       # Functions used by generated helpers
@@ -98,32 +97,20 @@ defmodule Phoenix.Router.Helpers do
 
     # We are using -1 to avoid warnings in case a path has already been defined.
     quote line: -1 do
-      def unquote(:"#{helper}_path")(unquote(action), unquote_splicing(vars)) do
-        unquote(:"#{helper}_path")(unquote(action), unquote_splicing(vars), [])
+      def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(action), unquote_splicing(vars)) do
+        unquote(:"#{helper}_path")(conn_or_endpoint, unquote(action), unquote_splicing(vars), [])
       end
 
-      def unquote(:"#{helper}_path")(unquote(action), unquote_splicing(vars), params) do
+      def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(action), unquote_splicing(vars), params) do
         to_path(unquote(segs), params, unquote(bins))
       end
 
-      def unquote(:"#{helper}_url")(%Conn{private: private}, unquote(action), unquote_splicing(vars), params) do
-        unquote(:"#{helper}_path")(unquote(action), unquote_splicing(vars), params)
-        |> private.phoenix_endpoint.url()
+      def unquote(:"#{helper}_url")(conn_or_endpoint, unquote(action), unquote_splicing(vars)) do
+        unquote(:"#{helper}_url")(conn_or_endpoint, unquote(action), unquote_splicing(vars), [])
       end
 
-      def unquote(:"#{helper}_url")(%Conn{private: private}, unquote(action), unquote_splicing(vars)) do
-        unquote(:"#{helper}_path")(unquote(action), unquote_splicing(vars))
-        |> private.phoenix_endpoint.url()
-      end
-
-      def unquote(:"#{helper}_url")(endpoint, unquote(action), unquote_splicing(vars), params) do
-        unquote(:"#{helper}_path")(unquote(action), unquote_splicing(vars), params)
-        |> endpoint.url()
-      end
-
-      def unquote(:"#{helper}_url")(endpoint, unquote(action), unquote_splicing(vars)) do
-        unquote(:"#{helper}_path")(unquote(action), unquote_splicing(vars))
-        |> endpoint.url()
+      def unquote(:"#{helper}_url")(conn_or_endpoint, unquote(action), unquote_splicing(vars), params) do
+        url(conn_or_endpoint, unquote(:"#{helper}_path")(conn_or_endpoint, unquote(action), unquote_splicing(vars), params))
       end
     end
   end
