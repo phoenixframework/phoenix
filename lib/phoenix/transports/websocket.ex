@@ -1,6 +1,5 @@
 defmodule Phoenix.Transports.WebSocket do
   use Phoenix.Controller
-  use Phoenix.WebSocket
 
   @moduledoc """
   Handles WebSocket clients for the Channel Transport layer
@@ -77,5 +76,11 @@ defmodule Phoenix.Transports.WebSocket do
   def ws_terminate(reason, %{sockets: sockets}) do
     :ok = Transport.dispatch_leave(sockets, reason)
     :ok
+  end
+
+  def ws_hibernate(_state), do: :ok
+
+  defp reply(pid, msg) do
+    send(pid, {:reply, msg})
   end
 end
