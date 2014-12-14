@@ -10,13 +10,13 @@ defmodule Phoenix.Router.HelpersTest do
     route = build("GET", "/foo/:bar", nil, Hello, :world, "hello_world", [])
 
     assert extract_defhelper(route, 0) == String.strip """
-    def(hello_world_path(:world, bar)) do
-      hello_world_path(:world, bar, [])
+    def(hello_world_path(conn_or_endpoint, :world, bar)) do
+      hello_world_path(conn_or_endpoint, :world, bar, [])
     end
     """
 
     assert extract_defhelper(route, 1) == String.strip """
-    def(hello_world_path(:world, bar, params)) do
+    def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
       to_path(("" <> "/foo") <> "/" <> to_string(bar), params, ["bar"])
     end
     """
@@ -26,13 +26,13 @@ defmodule Phoenix.Router.HelpersTest do
     route = build("GET", "/foo/*bar", nil, Hello, :world, "hello_world", [])
 
     assert extract_defhelper(route, 0) == String.strip """
-    def(hello_world_path(:world, bar)) do
-      hello_world_path(:world, bar, [])
+    def(hello_world_path(conn_or_endpoint, :world, bar)) do
+      hello_world_path(conn_or_endpoint, :world, bar, [])
     end
     """
 
     assert extract_defhelper(route, 1) == String.strip """
-    def(hello_world_path(:world, bar, params)) do
+    def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
       to_path(("" <> "/foo") <> "/" <> Enum.join(bar, "/"), params, ["bar"])
     end
     """
@@ -79,103 +79,106 @@ defmodule Phoenix.Router.HelpersTest do
   alias Router.Helpers
 
   test "top-level named route" do
-    assert Helpers.post_path(:show, 5) == "/posts/5"
-    assert Helpers.post_path(:show, 5, []) == "/posts/5"
-    assert Helpers.post_path(:show, 5, id: 5) == "/posts/5"
-    assert Helpers.post_path(:show, 5, %{"id" => 5}) == "/posts/5"
+    assert Helpers.post_path(__MODULE__, :show, 5) == "/posts/5"
+    assert Helpers.post_path(__MODULE__, :show, 5, []) == "/posts/5"
+    assert Helpers.post_path(__MODULE__, :show, 5, id: 5) == "/posts/5"
+    assert Helpers.post_path(__MODULE__, :show, 5, %{"id" => 5}) == "/posts/5"
 
-    assert Helpers.post_path(:file, ["foo", "bar"]) == "/posts/file/foo/bar"
-    assert Helpers.post_path(:file, ["foo", "bar"], []) == "/posts/file/foo/bar"
+    assert Helpers.post_path(__MODULE__, :file, ["foo", "bar"]) == "/posts/file/foo/bar"
+    assert Helpers.post_path(__MODULE__, :file, ["foo", "bar"], []) == "/posts/file/foo/bar"
 
-    assert Helpers.top_path(:top) == "/posts/top"
-    assert Helpers.top_path(:top, id: 5) == "/posts/top?id=5"
-    assert Helpers.top_path(:top, %{"id" => 5}) == "/posts/top?id=5"
+    assert Helpers.top_path(__MODULE__, :top) == "/posts/top"
+    assert Helpers.top_path(__MODULE__, :top, id: 5) == "/posts/top?id=5"
+    assert Helpers.top_path(__MODULE__, :top, %{"id" => 5}) == "/posts/top?id=5"
 
-    assert Helpers.page_path(:root) == "/"
+    assert Helpers.page_path(__MODULE__, :root) == "/"
 
     assert_raise UndefinedFunctionError, fn ->
-      Helpers.post_path(:skip)
+      Helpers.post_path(__MODULE__, :skip)
     end
   end
 
   test "resources generates named routes for :index, :edit, :show, :new" do
-    assert Helpers.user_path(:index, []) == "/users"
-    assert Helpers.user_path(:index) == "/users"
-    assert Helpers.user_path(:edit, 123, []) == "/users/123/edit"
-    assert Helpers.user_path(:edit, 123) == "/users/123/edit"
-    assert Helpers.user_path(:show, 123, []) == "/users/123"
-    assert Helpers.user_path(:show, 123) == "/users/123"
-    assert Helpers.user_path(:new, []) == "/users/new"
-    assert Helpers.user_path(:new) == "/users/new"
+    conn = conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
+    # Can pass either conn or __MODULE__ to named path helpers
+    assert Helpers.user_path(conn, :index, []) == "/users"
+    assert Helpers.user_path(__MODULE__, :index, []) == "/users"
+    assert Helpers.user_path(__MODULE__, :index) == "/users"
+    assert Helpers.user_path(__MODULE__, :edit, 123, []) == "/users/123/edit"
+    assert Helpers.user_path(__MODULE__, :edit, 123) == "/users/123/edit"
+    assert Helpers.user_path(__MODULE__, :show, 123, []) == "/users/123"
+    assert Helpers.user_path(__MODULE__, :show, 123) == "/users/123"
+    assert Helpers.user_path(__MODULE__, :new, []) == "/users/new"
+    assert Helpers.user_path(__MODULE__, :new) == "/users/new"
   end
 
   test "resources generates named routes for :create, :update, :delete" do
-    assert Helpers.message_path(:create, []) == "/admin/messages"
-    assert Helpers.message_path(:create) == "/admin/messages"
+    assert Helpers.message_path(__MODULE__, :create, []) == "/admin/messages"
+    assert Helpers.message_path(__MODULE__, :create) == "/admin/messages"
 
-    assert Helpers.message_path(:update, 1, []) == "/admin/messages/1"
-    assert Helpers.message_path(:update, 1) == "/admin/messages/1"
+    assert Helpers.message_path(__MODULE__, :update, 1, []) == "/admin/messages/1"
+    assert Helpers.message_path(__MODULE__, :update, 1) == "/admin/messages/1"
 
-    assert Helpers.message_path(:destroy, 1, []) == "/admin/messages/1"
-    assert Helpers.message_path(:destroy, 1) == "/admin/messages/1"
+    assert Helpers.message_path(__MODULE__, :destroy, 1, []) == "/admin/messages/1"
+    assert Helpers.message_path(__MODULE__, :destroy, 1) == "/admin/messages/1"
   end
 
   test "1-Level nested resources generates nested named routes for :index, :edit, :show, :new" do
-    assert Helpers.user_comment_path(:index, 99, []) == "/users/99/comments"
-    assert Helpers.user_comment_path(:index, 99) == "/users/99/comments"
-    assert Helpers.user_comment_path(:edit, 88, 2, []) == "/users/88/comments/2/edit"
-    assert Helpers.user_comment_path(:edit, 88, 2) == "/users/88/comments/2/edit"
-    assert Helpers.user_comment_path(:show, 123, 2, []) == "/users/123/comments/2"
-    assert Helpers.user_comment_path(:show, 123, 2) == "/users/123/comments/2"
-    assert Helpers.user_comment_path(:new, 88, []) == "/users/88/comments/new"
-    assert Helpers.user_comment_path(:new, 88) == "/users/88/comments/new"
+    assert Helpers.user_comment_path(__MODULE__, :index, 99, []) == "/users/99/comments"
+    assert Helpers.user_comment_path(__MODULE__, :index, 99) == "/users/99/comments"
+    assert Helpers.user_comment_path(__MODULE__, :edit, 88, 2, []) == "/users/88/comments/2/edit"
+    assert Helpers.user_comment_path(__MODULE__, :edit, 88, 2) == "/users/88/comments/2/edit"
+    assert Helpers.user_comment_path(__MODULE__, :show, 123, 2, []) == "/users/123/comments/2"
+    assert Helpers.user_comment_path(__MODULE__, :show, 123, 2) == "/users/123/comments/2"
+    assert Helpers.user_comment_path(__MODULE__, :new, 88, []) == "/users/88/comments/new"
+    assert Helpers.user_comment_path(__MODULE__, :new, 88) == "/users/88/comments/new"
   end
 
   test "2-Level nested resources generates nested named routes for :index, :edit, :show, :new" do
-    assert Helpers.user_comment_file_path(:index, 99, 1, []) ==
+    assert Helpers.user_comment_file_path(__MODULE__, :index, 99, 1, []) ==
       "/users/99/comments/1/files"
-    assert Helpers.user_comment_file_path(:index, 99, 1) ==
+    assert Helpers.user_comment_file_path(__MODULE__, :index, 99, 1) ==
       "/users/99/comments/1/files"
 
-    assert Helpers.user_comment_file_path(:edit, 88, 1, 2, []) ==
+    assert Helpers.user_comment_file_path(__MODULE__, :edit, 88, 1, 2, []) ==
       "/users/88/comments/1/files/2/edit"
-    assert Helpers.user_comment_file_path(:edit, 88, 1, 2) ==
+    assert Helpers.user_comment_file_path(__MODULE__, :edit, 88, 1, 2) ==
       "/users/88/comments/1/files/2/edit"
 
-    assert Helpers.user_comment_file_path(:show, 123, 1, 2, []) ==
+    assert Helpers.user_comment_file_path(__MODULE__, :show, 123, 1, 2, []) ==
       "/users/123/comments/1/files/2"
-    assert Helpers.user_comment_file_path(:show, 123, 1, 2) ==
+    assert Helpers.user_comment_file_path(__MODULE__, :show, 123, 1, 2) ==
       "/users/123/comments/1/files/2"
 
-    assert Helpers.user_comment_file_path(:new, 88, 1, []) ==
+    assert Helpers.user_comment_file_path(__MODULE__, :new, 88, 1, []) ==
       "/users/88/comments/1/files/new"
-    assert Helpers.user_comment_file_path(:new, 88, 1) ==
+    assert Helpers.user_comment_file_path(__MODULE__, :new, 88, 1) ==
       "/users/88/comments/1/files/new"
   end
 
   test "resources without block generates named routes for :index, :edit, :show, :new" do
-    assert Helpers.file_path(:index, []) == "/files"
-    assert Helpers.file_path(:index) == "/files"
-    assert Helpers.file_path(:edit, 123, []) == "/files/123/edit"
-    assert Helpers.file_path(:edit, 123) == "/files/123/edit"
-    assert Helpers.file_path(:show, 123, []) == "/files/123"
-    assert Helpers.file_path(:show, 123) == "/files/123"
-    assert Helpers.file_path(:new, []) == "/files/new"
-    assert Helpers.file_path(:new) == "/files/new"
+    assert Helpers.file_path(__MODULE__, :index, []) == "/files"
+    assert Helpers.file_path(__MODULE__, :index) == "/files"
+    assert Helpers.file_path(__MODULE__, :edit, 123, []) == "/files/123/edit"
+    assert Helpers.file_path(__MODULE__, :edit, 123) == "/files/123/edit"
+    assert Helpers.file_path(__MODULE__, :show, 123, []) == "/files/123"
+    assert Helpers.file_path(__MODULE__, :show, 123) == "/files/123"
+    assert Helpers.file_path(__MODULE__, :new, []) == "/files/new"
+    assert Helpers.file_path(__MODULE__, :new) == "/files/new"
   end
 
   test "scoped route helpers generated named routes with :path, and :alias options" do
-    assert Helpers.message_path(:index, []) == "/admin/messages"
-    assert Helpers.message_path(:index) == "/admin/messages"
-    assert Helpers.message_path(:show, 1, []) == "/admin/messages/1"
-    assert Helpers.message_path(:show, 1) == "/admin/messages/1"
+    assert Helpers.message_path(__MODULE__, :index, []) == "/admin/messages"
+    assert Helpers.message_path(__MODULE__, :index) == "/admin/messages"
+    assert Helpers.message_path(__MODULE__, :show, 1, []) == "/admin/messages/1"
+    assert Helpers.message_path(__MODULE__, :show, 1) == "/admin/messages/1"
   end
 
   test "scoped route helpers generated named routes with :path, :alias, and :helper options" do
-    assert Helpers.admin_message_path(:index, []) == "/admin/new/messages"
-    assert Helpers.admin_message_path(:index) == "/admin/new/messages"
-    assert Helpers.admin_message_path(:show, 1, []) == "/admin/new/messages/1"
-    assert Helpers.admin_message_path(:show, 1) == "/admin/new/messages/1"
+    assert Helpers.admin_message_path(__MODULE__, :index, []) == "/admin/new/messages"
+    assert Helpers.admin_message_path(__MODULE__, :index) == "/admin/new/messages"
+    assert Helpers.admin_message_path(__MODULE__, :show, 1, []) == "/admin/new/messages/1"
+    assert Helpers.admin_message_path(__MODULE__, :show, 1) == "/admin/new/messages/1"
   end
 
   def url(path) do
@@ -186,13 +189,31 @@ defmodule Phoenix.Router.HelpersTest do
     path
   end
 
+  test "helpers module generates named routes url helpers" do
+    conn = conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
+    url = "https://example.com/admin/new/messages/1"
+    assert Helpers.admin_message_url(conn, :show, 1) == url
+    assert Helpers.admin_message_url(conn, :show, 1, []) == url
+    assert Helpers.admin_message_url(__MODULE__, :show, 1) == url
+    assert Helpers.admin_message_url(__MODULE__, :show, 1, []) == url
+  end
+
   test "helpers module generates a url helper" do
     conn = conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
     assert Helpers.url(conn, "/foo/bar") == "https://example.com/foo/bar"
+    assert Helpers.url(__MODULE__, "/foo/bar") == "https://example.com/foo/bar"
   end
 
   test "helpers module generates a static_path helper" do
     conn = conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
     assert Helpers.static_path(conn, "/images/foo.png") == "/images/foo.png"
+    assert Helpers.static_path(__MODULE__, "/images/foo.png") == "/images/foo.png"
+  end
+
+  test "helpers module generates a static_url helper" do
+    conn = conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
+    url = "https://example.com/images/foo.png"
+    assert Helpers.static_url(conn, "/images/foo.png") == url
+    assert Helpers.static_url(__MODULE__, "/images/foo.png") == url
   end
 end

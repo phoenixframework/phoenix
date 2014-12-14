@@ -45,13 +45,22 @@ defmodule Phoenix.Router do
 
       get "/pages/:page", PageController, :show
 
-  will generate a named helper:
+  will generate the following named helper:
 
-      MyApp.Router.Helpers.page_path(:show, "hello")
+      MyApp.Router.Helpers.page_path(conn_or_endpoint, :show, "hello")
       "/pages/hello"
 
-      MyApp.Router.Helpers.page_path(:show, "hello", some: "query")
+      MyApp.Router.Helpers.page_path(conn_or_endpoint, :show, "hello", some: "query")
       "/pages/hello?some=query"
+
+      MyApp.Router.Helpers.page_url(conn_or_endpoint, :show, "hello")
+      "http://example.com/pages/hello?some=query"
+
+      MyApp.Router.Helpers.page_url(conn_or_endpoint, :show, "hello", some: "query")
+      "http://example.com/pages/hello?some=query"
+
+  The url generated in the named url helpers is based on the configuration for
+  `:url`, `:http` and `:https`.
 
   The named helper can also be customized with the `:as` option. Given
   the route:
@@ -60,7 +69,7 @@ defmodule Phoenix.Router do
 
   the named helper will be:
 
-      MyApp.Router.Helpers.special_page_path(:show, "hello")
+      MyApp.Router.Helpers.special_page_path(conn, :show, "hello")
       "/pages/hello"
 
   ### Scopes and Resources
