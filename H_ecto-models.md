@@ -559,7 +559,7 @@ Great, so our data is ready, and we can create a query module to define some spe
 
 Since this is a very simple example, we're not going to create a separate `queries` directory, but if your project is large and complex, this might be an idea worth considering.
 
-For our query module to work, we need to import `Ecto.Query`. Then all we need to do is define a function which creates and executes the query we want. In our case, we want to find all the active users. (Be sure to check out the [Ecto Query documentation](http://hexdocs.pm/ecto/0.2.5/Ecto.Query.html) for a full explanation of how to build queries in Ecto.)
+For our query module to work, we need to import `Ecto.Query`. Then all we need to do is define a function which creates and executes the query we want. In our case, we want to find all the active users. (Be sure to check out the [Ecto Query documentation](http://hexdocs.pm/ecto/Ecto.Query.html) for a full explanation of how to build queries in Ecto.)
 
 ```elixir
 defmodule HelloPhoenix.UserQuery do
