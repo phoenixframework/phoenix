@@ -204,6 +204,8 @@ defmodule Phoenix.Router do
       end
 
       defp match(conn, []) do
+        IO.inspect(conn.path_info)
+        IO.inspect(conn.host)
         match(conn, conn.method, conn.path_info, conn.host)
       end
 
@@ -242,19 +244,28 @@ defmodule Phoenix.Router do
     end
   end
 
+  # ["users", {:user_id, [], nil}, "comments", "special"]
+
   defp add_route(verb, path, controller, action, options) do
     quote bind_quoted: binding() do
-      route = Scope.route(__MODULE__, verb, path, controller, action, options)
+      route = Scope.build_route(__MODULE__, verb, path, controller, action, options)
+      collection = Keyword.get(options, :collection)
       parts = {:%{}, [], route.binding}
+
+      if collection do
+        IO.inspect(route)
+      end
 
       @phoenix_routes route
 
       defp match(var!(conn), unquote(route.verb), unquote(route.path_segments),
                  unquote(route.host_segments)) do
+        IO.inspect(unquote(route.path_segments))
         var!(conn) =
           Plug.Conn.put_private(var!(conn), :phoenix_route, fn conn ->
             conn = update_in(conn.params, &Map.merge(&1, unquote(parts)))
             opts = unquote(route.controller).init(unquote(route.action))
+            IO.inspect(unquote(route.action))
             unquote(route.controller).call(conn, opts)
           end)
           |> Plug.Conn.put_private(:phoenix_pipelines, unquote(route.pipe_through))

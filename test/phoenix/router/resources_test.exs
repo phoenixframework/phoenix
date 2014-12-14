@@ -25,13 +25,14 @@ defmodule Phoenix.Router.ResourcesTest do
   defmodule Api.CommentController do
     use Phoenix.Controller
     plug :action
-    def show(conn, _params), do: text(conn, "show comments")
+    # def show(conn, _params), do: text(conn, "show comments")
     def index(conn, _params), do: text(conn, "index comments")
     def new(conn, _params), do: text(conn, "new comments")
     def create(conn, _params), do: text(conn, "create comments")
     def update(conn, _params), do: text(conn, "update comments")
     def destroy(conn, _params), do: text(conn, "destroy comments")
     def special(conn, _params), do: text(conn, "special comments")
+    def favorites(conn, _params), do: text(conn, "favorite comments")
   end
 
   defmodule Router do
@@ -40,6 +41,7 @@ defmodule Phoenix.Router.ResourcesTest do
     resources "/users", UserController, alias: Api do
       resources "/comments", CommentController do
         get "/special", CommentController, :special
+        get "/favorites", CommentController, :favorites, collection: true
       end
       resources "/files", FileController, except: [:destroy]
     end
@@ -149,11 +151,16 @@ defmodule Phoenix.Router.ResourcesTest do
   end
 
   test "2-Level nested route with get matches" do
-    conn = call(Router, :get, "users/1/comments/123/special")
+    # conn = call(Router, :get, "users/1/comments/123/special")
+    # assert conn.status == 200
+    # assert conn.resp_body == "special comments"
+    # assert conn.params["user_id"] == "1"
+    # assert conn.params["comment_id"] == "123"
+
+    conn = call(Router, :get, "users/1/comments/favorites")
     assert conn.status == 200
-    assert conn.resp_body == "special comments"
+    assert conn.resp_body == "favorite comments"
     assert conn.params["user_id"] == "1"
-    assert conn.params["comment_id"] == "123"
   end
 
   test "nested prefix context reverts back to previous scope after expansion" do
