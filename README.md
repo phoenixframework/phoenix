@@ -41,6 +41,8 @@
 
 ## Getting started
 
+- Also see the offical site at http://www.phoenixframework.org/
+
 ### Requirements
 
 - Elixir v1.0.2+
