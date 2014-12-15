@@ -11,13 +11,20 @@ defmodule Phoenix.Endpoint.CowboyHandler do
   def upgrade(req, env, __MODULE__, {transport, plug, opts}) do
     conn = @connection.conn(req, transport)
     try do
-      plug.call(conn, opts)
+      case plug.call(conn, opts) do
+        %Plug.Conn{private: %{phoenix_upgrade: upgrade}} = conn ->
+          {@connection, req}    = conn.adapter
+          {:websocket, handler} = upgrade
+          {:upgrade, CowboyWebSocket, [req, env, handler, conn]}
+        conn ->
+          {@connection, req} = maybe_send(conn, plug).adapter
+          {:ok, req, [{:result, :ok} | env]}
+      end
     else
-      %Plug.Conn{private: %{phoenix_upgrade: {:websocket, _handler}}} = conn ->
-        CowboyWebSocket.call(conn, env)
-      conn ->
-        {@connection, req} = maybe_send(conn, plug).adapter
-        {:ok, req, [{:result, :ok} | env]}
+      {:upgrade, module, args} ->
+        apply(module, :upgrade, args)
+      {:ok, _req, _env} = ok ->
+        ok
     catch
       :error, value ->
         stack = System.stacktrace()

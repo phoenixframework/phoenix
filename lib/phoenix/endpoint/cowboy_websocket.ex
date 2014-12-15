@@ -2,13 +2,6 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
   @moduledoc false
   @behaviour :cowboy_sub_protocol
   @behaviour :cowboy_websocket_handler
-  @connection Plug.Adapters.Cowboy.Conn
-
-  def call(%Plug.Conn{private: %{phoenix_upgrade: upgrade}} = conn, env) do
-    {@connection, req}    = conn.adapter
-    {:websocket, handler} = upgrade
-    upgrade(req, env, handler, conn)
-  end
 
   def upgrade(req, env, handler, conn) do
     args = [req, env, __MODULE__, {handler, conn}]
