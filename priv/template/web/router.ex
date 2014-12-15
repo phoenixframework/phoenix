@@ -4,6 +4,7 @@ defmodule <%= application_module %>.Router do
   pipeline :browser do
     plug :accepts, ~w(html)
     plug :fetch_session
+    plug :protect_from_forgery
   end
 
   pipeline :api do
