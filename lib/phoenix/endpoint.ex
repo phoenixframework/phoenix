@@ -161,7 +161,7 @@ defmodule Phoenix.Endpoint do
   defp server() do
     quote location: :keep, unquote: false do
       @doc """
-      Starts the endpoint.
+      Starts the endpoint supervision tree.
       """
       def start_link do
         Adapter.start_link(unquote(otp_app), __MODULE__)

@@ -6,10 +6,16 @@ defmodule Phoenix.Endpoint.Adapter do
   @moduledoc false
 
   @doc """
-  Starts the endpoint process.
+  Starts the endpoint supervision tree.
   """
   def start_link(otp_app, module) do
-    Phoenix.Config.start_link(otp_app, module, defaults(otp_app, module))
+    import Supervisor.Spec
+
+    children = [
+      worker(Phoenix.Config, [otp_app, module, defaults(otp_app, module)])
+    ]
+
+    Supervisor.start_link(children, strategy: :rest_for_one)
   end
 
   @doc """
@@ -100,7 +106,7 @@ defmodule Phoenix.Endpoint.Adapter do
     end
   end
 
-  def static_path(endpoint, path) when is_binary(path) do
+  def static_path(_endpoint, path) when is_binary(path) do
     raise ArgumentError, "static_path/2 expects a path starting with / as argument"
   end
 
