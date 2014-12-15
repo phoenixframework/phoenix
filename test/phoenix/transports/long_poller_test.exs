@@ -7,8 +7,6 @@ defmodule Phoenix.Tranports.LongPollerTest do
   alias Phoenix.Tranports.LongPollerTest.Router
 
   @port 4809
-  @window_ms 20
-  @ensure_window_timeout_ms @window_ms * 3
 
   def conn_with_session(session \\ %{}) do
     %Conn{private: %{plug_session: session}}
@@ -17,7 +15,7 @@ defmodule Phoenix.Tranports.LongPollerTest do
   end
 
   def config(:transports) do
-    [longpoller_window_ms: @window_ms]
+    [longpoller_window_ms: 10_000]
   end
 
   defmodule Router do
@@ -37,8 +35,10 @@ defmodule Phoenix.Tranports.LongPollerTest do
 
   test "longpoll_pid returns {:error, :terminated} if serialized pid is dead" do
     {conn = %Conn{}, server_pid} = LongPoller.start_session(conn_with_session)
-    assert Process.alive?(server_pid)
-    :timer.sleep @ensure_window_timeout_ms
+    assert {:ok, pid} = LongPoller.longpoll_pid(conn)
+    assert server_pid == pid
+    assert Process.alive?(pid)
+    Process.exit(server_pid, :kill)
     refute Process.alive?(server_pid)
     assert {:error, :terminated} = LongPoller.longpoll_pid(conn)
   end
@@ -49,8 +49,8 @@ defmodule Phoenix.Tranports.LongPollerTest do
   end
 
   test "resume_session returns {:error, conn, :terminated} if dead session" do
-    {conn = %Conn{}, _server_pid} = LongPoller.start_session(conn_with_session)
-    :timer.sleep @ensure_window_timeout_ms
+    {conn = %Conn{}, server_pid} = LongPoller.start_session(conn_with_session)
+    Process.exit(server_pid, :kill)
     assert {:error, %Conn{}, :terminated} = LongPoller.resume_session(conn)
   end
 
