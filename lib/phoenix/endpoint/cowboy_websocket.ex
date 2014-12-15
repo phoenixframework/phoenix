@@ -12,29 +12,8 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
     try do
       apply(mod, fun, args)
     catch
-      class, [reason: reason, mfa: {__MODULE__, :websocket_init, 3},
-          stacktrace: stack, req: _req, opts: {handler, conn}] ->
-        mfa = {handler, :ws_init, [conn]}
-        exit(class, reason, stack, mfa, conn, env)
-      class, [reason: reason, mfa: {__MODULE__, :websocket_handle, 3},
-          stacktrace: stack, msg: {:text, text}, req: _req,
-          state: {handler, state}] ->
-        mfa = {handler, :ws_handle, [text, state]}
-        exit(class, reason, stack, mfa, conn, env)
-      class, [reason: reason, mfa: {__MODULE__, :websocket_info, 3},
-          stacktrace: stack, msg: :hibernate, req: _req,
-          state: {handler, state}] ->
-        mfa = {handler, :ws_hibernate, [state]}
-        exit(class, reason, stack, mfa, conn, env)
-      class, [reason: reason, mfa: {__MODULE__, :websocket_info, 3},
-          stacktrace: stack, msg: msg, req: _req, state: {handler, state}] ->
-        mfa = {handler, :ws_info, [msg, state]}
-        exit(class, reason, stack, mfa, conn, env)
-      class, [reason: reason, mfa: {__MODULE__, :websocket_terminate, 3},
-          stacktrace: stack, req: _req, state: {handler, state},
-          terminate_reason: terminate_reason] ->
-        mfa = {handler, :ws_terminate, [terminate_reason, state]}
-        exit(class, reason, stack, mfa, conn, env)
+      class, [{:reason, reason}, {:mfa, _mfa}, {:stacktrace, stack} | _rest] ->
+        exit(class, reason, stack, conn, env)
     else
       {:ok, _req, _env} = ok ->
         ok
@@ -45,8 +24,8 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
     end
   end
 
-  defp exit(class, reason, stack, mfa, conn, env) do
-    reason2 = {format_reason(class, reason, stack), mfa}
+  defp exit(class, reason, stack, conn, env) do
+    reason2 = format_reason(class, reason, stack)
     exit({reason2, {__MODULE__, :call, [conn, env]}})
   end
 
