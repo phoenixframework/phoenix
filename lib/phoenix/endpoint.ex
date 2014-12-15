@@ -74,6 +74,9 @@ defmodule Phoenix.Endpoint do
 
   ### Runtime
 
+    * `:cache_static_lookup` - when true, static assets lookup in the
+      filesystem via the `static_path` function are cached. Defaults to true.
+
     * `:http` - the configuration for the http server. Currently uses
       cowboy and accepts all options as defined by `Plug.Adapters.Cowboy`.
       Defaults to false.
@@ -86,6 +89,10 @@ defmodule Phoenix.Endpoint do
       to encode cookies, session and friends. Defaults to nil as it must
       be set per application.
 
+    * `:server` - when true, starts the web server when the endpoint
+      supervision tree starts. Defaults to false. The `mix phoenix.server`
+      task automatically sets this to true.
+
     * `:url` - configuration for generating URLs throughout the app.
       Accepts the host, scheme and port. Defaults to:
 
@@ -97,10 +104,12 @@ defmodule Phoenix.Endpoint do
   automatically generated in your Endpoint. Here is a summary of all functions
   defined in your endpoint:
 
-    * `start_link()` - starts the Endpoint process required for its functioning
+    * `start_link()` - starts the Endpoint supervision tree, including its
+      configuration cache and possibly the servers for handling requests
     * `config(key, default)` - access the endpoint configuration given by key
     * `config_change(changed, removed)` - reload the endpoint configuration on application upgrades
     * `url(path)` - returns the URL for this endpoint with the given path
+    * `static_path(path)` - returns the static path for a given asset
 
   Besides the functions above, it defines also the API expected by Plug
   for serving requests:
@@ -165,20 +174,6 @@ defmodule Phoenix.Endpoint do
       """
       def start_link do
         Adapter.start_link(unquote(otp_app), __MODULE__)
-      end
-
-      @doc """
-      Starts the current endpoint for serving requests.
-      """
-      def serve() do
-        Adapter.serve(unquote(otp_app), __MODULE__)
-      end
-
-      @doc """
-      Stops the current endpoint from serving requests.
-      """
-      def shutdown() do
-        Adapter.shutdown(unquote(otp_app), __MODULE__)
       end
 
       @doc """

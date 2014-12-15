@@ -24,7 +24,8 @@ defmodule Phoenix.Mixfile do
            template_engines: [],
            format_encoders: [],
            pubsub: [garbage_collect_after_ms: 60_000..300_000],
-           filter_parameters: ["password"]]]
+           filter_parameters: ["password"],
+           serve_endpoints: false]]
   end
 
   defp deps do

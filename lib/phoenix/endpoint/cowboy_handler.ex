@@ -2,7 +2,41 @@ defmodule Phoenix.Endpoint.CowboyHandler do
   @moduledoc false
   @connection Plug.Adapters.Cowboy.Conn
   @already_sent {:plug_conn, :sent}
-  alias Phoenix.Endpoint.CowboyWebSocket
+
+  require Logger
+
+  ## Phoenix API
+
+  def start_link(scheme, endpoint, config, {m, f, a}) do
+    case apply(m, f, a) do
+      {:ok, pid} ->
+        Logger.debug info(scheme, endpoint, config)
+        {:ok, pid}
+
+      {:error, {:shutdown, {_, _, {{_, {:error, :eaddrinuse}}, _}}}} = error ->
+        Logger.error [info(scheme, endpoint, config), " failed, port already in use"]
+        error
+
+      {:error, _} = error ->
+        error
+    end
+  end
+
+  defp info(scheme, endpoint, config) do
+    "Running #{inspect endpoint} with Cowboy on port #{inspect config[:port]} (#{scheme})"
+  end
+
+  def child_spec(scheme, endpoint, config) do
+    config = Keyword.put(config, :dispatch, [{:_, [{:_, __MODULE__, {endpoint, []}}]}])
+
+    {ref, mfa, type, timeout, kind, modules} =
+      Plug.Adapters.Cowboy.child_spec(scheme, endpoint, [], config)
+
+    mfa = {__MODULE__, :start_link, [scheme, endpoint, config, mfa]}
+    {ref, mfa, type, timeout, kind, modules}
+  end
+
+  ## Cowboy Handler
 
   def init({transport, :http}, req, {plug, opts}) when transport in [:tcp, :ssl] do
     {:upgrade, :protocol, __MODULE__, req, {transport, plug, opts}}
@@ -15,7 +49,7 @@ defmodule Phoenix.Endpoint.CowboyHandler do
         %Plug.Conn{private: %{phoenix_upgrade: upgrade}} = conn ->
           {@connection, req}    = conn.adapter
           {:websocket, handler} = upgrade
-          {:upgrade, CowboyWebSocket, [req, env, handler, conn]}
+          {:upgrade, Phoenix.Endpoint.CowboyWebSocket, [req, env, handler, conn]}
         conn ->
           {@connection, req} = maybe_send(conn, plug).adapter
           {:ok, req, [{:result, :ok} | env]}

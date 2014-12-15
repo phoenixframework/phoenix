@@ -2,8 +2,7 @@ defmodule Phoenix.EndpointTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
-  @config [url: [host: "example.com"],
-           static: [root: "/priv/static", route: "/"]]
+  @config [url: [host: "example.com"]]
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
 
   defmodule Endpoint do

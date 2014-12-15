@@ -8,6 +8,9 @@ Application.put_env(:phoenix, :code_reloader, false)
 # avoid polluting tests.
 Mix.shell(Mix.Shell.Process)
 
+# Starts web server applications
+Application.ensure_all_started(:cowboy)
+
 # Used whenever a router fails. We default to simply
 # rendering a short string.
 defmodule Phoenix.ErrorView do

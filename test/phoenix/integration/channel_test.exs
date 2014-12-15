@@ -3,7 +3,7 @@ Code.require_file "http_client.exs", __DIR__
 
 defmodule Phoenix.Integration.ChannelTest do
   use ExUnit.Case, async: true
-  import ExUnit.CaptureIO
+  import RouterHelper, only: [capture_log: 1]
 
   alias Phoenix.Integration.WebsocketClient
   alias Phoenix.Integration.HTTPClient
@@ -18,7 +18,8 @@ defmodule Phoenix.Integration.ChannelTest do
     http: [port: @port],
     secret_key_base: String.duplicate("abcdefgh", 8),
     debug_errors: false,
-    transports: [longpoller_window_ms: @window_ms]
+    transports: [longpoller_window_ms: @window_ms],
+    server: true
   ])
 
   defmodule RoomChannel do
@@ -71,8 +72,7 @@ defmodule Phoenix.Integration.ChannelTest do
   end
 
   setup_all do
-    Endpoint.start_link
-    capture_io fn -> Endpoint.serve end
+    capture_log fn -> Endpoint.start_link end
     :ok
   end
 

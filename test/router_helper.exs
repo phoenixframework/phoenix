@@ -2,7 +2,9 @@ defmodule RouterHelper do
   @moduledoc """
   Conveniences for testing routers and controllers.
 
-  Must not be used to test endpoints.
+  Must not be used to test endpoints as it does some
+  pre-processing (like fetching params) which could
+  skew endpoint tests.
   """
 
   import Plug.Test

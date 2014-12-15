@@ -1,8 +1,7 @@
 defmodule Phoenix.Endpoint.Adapter do
-  # This module contains the logic used by most functions in
-  # Phoenix.Endpoint. Today much of the logic start/stop logic
-  # is specific to cowboy but we can make it more generic when
-  # we add support for other adapters.
+  # This module contains the logic used by most functions
+  # in Phoenix.Endpoint as well the supervisor for starting
+  # the adapters/handlers.
   @moduledoc false
 
   @doc """
@@ -12,10 +11,11 @@ defmodule Phoenix.Endpoint.Adapter do
     import Supervisor.Spec
 
     children = [
-      worker(Phoenix.Config, [otp_app, module, defaults(otp_app, module)])
+      worker(Phoenix.Config, [otp_app, module, defaults(otp_app, module)]),
+      supervisor(Phoenix.Endpoint.Supervisor, [otp_app, module])
     ]
 
-    Supervisor.start_link(children, strategy: :rest_for_one)
+    Supervisor.start_link(children, strategy: :rest_for_one, name: module)
   end
 
   @doc """
@@ -43,6 +43,7 @@ defmodule Phoenix.Endpoint.Adapter do
      http: false,
      https: false,
      secret_key_base: nil,
+     server: Application.get_env(:phoenix, :serve_endpoints, false),
      url: [host: "localhost"]]
   end
 
@@ -108,76 +109,5 @@ defmodule Phoenix.Endpoint.Adapter do
 
   def static_path(_endpoint, path) when is_binary(path) do
     raise ArgumentError, "static_path/2 expects a path starting with / as argument"
-  end
-
-  ## Adapter specific
-
-  @doc """
-  Serves requests from the endpoint.
-  """
-  def serve(otp_app, module) do
-    # TODO: We need to test this logic when we support custom adapters.
-    if config = module.config(:http) do
-      config =
-        config
-        |> Keyword.put_new(:otp_app, otp_app)
-        |> Keyword.put_new(:port, 4000)
-      serve(:http, module, config)
-    end
-
-    if config = module.config(:https) do
-      config =
-        Keyword.merge(module.config(:http) || [], module.config(:https))
-        |> Keyword.put_new(:otp_app, otp_app)
-        |> Keyword.put_new(:port, 4040)
-      serve(:https, module, config)
-    end
-
-    :ok
-  end
-
-  defp serve(scheme, module, config) do
-    opts = dispatch(module, config)
-    report apply(Plug.Adapters.Cowboy, scheme, [module, [], opts]), scheme, module, opts
-  end
-
-  defp dispatch(module, config) do
-    config
-    |> Keyword.put(:dispatch, [{:_, [{:_, Phoenix.Endpoint.CowboyHandler, {module, []}}]}])
-    |> Keyword.put(:port, to_integer(config[:port]))
-  end
-
-  defp to_integer(binary) when is_binary(binary), do: String.to_integer(binary)
-  defp to_integer(integer) when is_integer(integer), do: integer
-
-  defp report(result, scheme, module, opts) do
-    case result do
-      {:ok, pid} ->
-        [:green, "Running #{inspect module} with Cowboy on port #{inspect opts[:port]} (#{scheme})"]
-        |> IO.ANSI.format
-        |> IO.puts
-        {:ok, pid}
-
-      {:error, :eaddrinuse} ->
-        raise "Port #{inspect opts[:port]} is already in use"
-
-      {:error, reason} ->
-        raise "Something went wrong while starting endpoint: #{Exception.format_exit reason}"
-    end
-  end
-
-  @doc """
-  Stops the endpoint.
-  """
-  def shutdown(_otp_app, module) do
-    if module.config(:http) do
-      Plug.Adapters.Cowboy.shutdown(Module.concat(module, HTTP))
-    end
-
-    if module.config(:https) do
-      Plug.Adapters.Cowboy.shutdown(Module.concat(module, HTTPS))
-    end
-
-    :ok
   end
 end

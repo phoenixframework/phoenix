@@ -4,14 +4,15 @@ defmodule Phoenix.Integration.EndpointTest do
   # This test case needs to be sync because we rely on
   # log capture which is global.
   use ExUnit.Case
-  use RouterHelper
+  import RouterHelper, only: [capture_log: 1]
 
-  import ExUnit.CaptureIO
   alias Phoenix.Integration.AdapterTest.ProdEndpoint
   alias Phoenix.Integration.AdapterTest.DevEndpoint
 
-  Application.put_env(:endpoint_int, ProdEndpoint, http: [port: "4807"], url: [host: "example.com"])
-  Application.put_env(:endpoint_int, DevEndpoint, http: [port: "4808"], debug_errors: true)
+  Application.put_env(:endpoint_int, ProdEndpoint,
+      http: [port: "4807"], url: [host: "example.com"], server: true)
+  Application.put_env(:endpoint_int, DevEndpoint,
+      http: [port: "4808"], debug_errors: true)
 
   defmodule Router do
     use Plug.Router
@@ -66,8 +67,8 @@ defmodule Phoenix.Integration.EndpointTest do
   alias Phoenix.Integration.HTTPClient
 
   test "adapters starts on configured port and serves requests and stops for prod" do
-    ProdEndpoint.start_link
-    capture_io fn -> ProdEndpoint.serve end
+    # Has server: true
+    capture_log fn -> ProdEndpoint.start_link end
 
     # Requests
     {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
@@ -90,14 +91,22 @@ defmodule Phoenix.Integration.EndpointTest do
       assert resp.body == "500.html from Phoenix.ErrorView"
     end) =~ "** (RuntimeError) oops"
 
-    ProdEndpoint.shutdown
+    shutdown(ProdEndpoint)
     {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
   end
 
   test "adapters starts on configured port and serves requests and stops for dev" do
+    # Has server: false
     DevEndpoint.start_link
-    capture_io fn -> DevEndpoint.serve end
+    {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
+    shutdown(DevEndpoint)
 
+    # Toggle globally
+    serve_endpoints(true)
+    on_exit(fn -> serve_endpoints(false) end)
+    capture_log fn -> DevEndpoint.start_link end
+
+    # Requests
     {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
     assert resp.status == 200
     assert resp.body == "ok"
@@ -117,8 +126,22 @@ defmodule Phoenix.Integration.EndpointTest do
       assert resp.status == 500
       assert resp.body =~ "RuntimeError at GET /router/oops"
     end) =~ "** (RuntimeError) oops"
+  end
 
-    DevEndpoint.shutdown
-    {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
+  defp serve_endpoints(bool) do
+    Application.put_env(:phoenix, :serve_endpoints, bool)
+  end
+
+  defp shutdown(endpoint) do
+    pid = Process.whereis(endpoint)
+    Process.unlink(pid)
+    Process.exit(pid, :shutdown)
+    wait_until_dead(endpoint)
+  end
+
+  defp wait_until_dead(endpoint) do
+    if Process.whereis(endpoint) do
+      wait_until_dead(endpoint)
+    end
   end
 end
