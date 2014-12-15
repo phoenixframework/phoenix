@@ -29,11 +29,11 @@ defmodule Phoenix.Endpoint.CowboyHandler do
   def child_spec(scheme, endpoint, config) do
     config = Keyword.put(config, :dispatch, [{:_, [{:_, __MODULE__, {endpoint, []}}]}])
 
-    {ref, mfa, type, timeout, kind, modules} =
+    {_ref, mfa, type, timeout, kind, modules} =
       Plug.Adapters.Cowboy.child_spec(scheme, endpoint, [], config)
 
     mfa = {__MODULE__, :start_link, [scheme, endpoint, config, mfa]}
-    {ref, mfa, type, timeout, kind, modules}
+    {scheme, mfa, type, timeout, kind, modules}
   end
 
   ## Cowboy Handler

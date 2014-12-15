@@ -26,8 +26,8 @@ config :logger,
 #
 #     config :phoenix, :serve_endpoints, true
 #
-# Alternatively, you can choose exactly which server to start
-# per endpoint:
+# Alternatively, you can configure exactly which server to
+# start per endpoint:
 #
 #     config :<%= application_name %>, <%= application_module %>.Endpoint, server: true
 #

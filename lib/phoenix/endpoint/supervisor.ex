@@ -24,7 +24,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
 
     if config = endpoint.config(:https) do
-      Application.ensure_all_started(:ssl)
+      {:ok, _} = Application.ensure_all_started(:ssl)
       children =
         [@handler.child_spec(:https, endpoint, default(config, otp_app, 4040))|children]
     end
