@@ -512,11 +512,11 @@ A channel will use a socket underneath to send responses and receive events. As 
 defmodule App.MyChannel do
   use Phoenix.Channel
 
-  def event(socket, "user:active", %{user_id: user_id}) do
+  def event(socket, "user:active", %{"user_id" => user_id}) do
     socket
   end
 
-  def event(socket, "user:idle", %{user_id: user_id}) do
+  def event(socket, "user:idle", %{"user_id" => user_id}) do
     socket
   end
 
