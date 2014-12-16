@@ -98,7 +98,7 @@ defmodule Phoenix.Channel.ChannelTest do
   defmodule UnauthenticatedChannel do
     use Phoenix.Channel
     def join(socket, _topic, _msg), do: {:error, socket, :unauthenticated}
-    def leave(socket, _msg), do: :overridden
+    def leave(_socket, _msg), do: :overridden
   end
 
   defmodule BadReturnJoinChannel do
