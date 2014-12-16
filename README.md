@@ -67,7 +67,7 @@
 3. Change directory to `/path/to/scaffold/my_app`. Install dependencies and start web server
 
         mix do deps.get, compile
-        mix phoenix.server
+        mix phoenix.start
 
 
 When running in production, use protocol consolidation for increased performance:
