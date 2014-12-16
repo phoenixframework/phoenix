@@ -350,7 +350,7 @@ Rendering HTML through a template is fine, but what if we need to change the ren
 
 Phoenix allows us to change formats on the fly with the `format` query string parameter. To make this  happen, Phoenix requires an appropriately named view and an appropriately named template in the correct directory.
 
-Let's take the `PageController` index action from a newly generated app as an example. Out of the box, this has the right view, `PageView`, the right templates directory, `/web/templates/page`, and the right template for rendering HTML, `application.html.eex`.
+Let's take the `PageController` index action from a newly generated app as an example. Out of the box, this has the right view, `PageView`, the right templates directory, `/web/templates/page`, and the right template for rendering HTML, `index.html.eex`.
 
 ```elixir
 def index(conn, _params) do
@@ -364,7 +364,7 @@ Here is our example `index.text.eex` template.
 ```elixir
 "OMG, this is actually some text."
 ```
-There's just one thing we need to do to make this work. We need to tell our router that it should accept the `text` format. We do that by adding to the list of accepted formats in the `:before` pipeline. Let's open up `web/router.ex` and change the `plug :accepts` line like this.
+There are just few more thing we need to do to make this work. We need to tell our router that it should accept the `text` format. We do that by adding to the list of accepted formats in the `:before` pipeline. Let's open up `web/router.ex` and change the `plug :accepts` line like this.
 
 ```elixir
 defmodule HelloPhoenix.Router do
@@ -375,6 +375,13 @@ defmodule HelloPhoenix.Router do
     plug :fetch_session
   end
 . . .
+```
+And also we need to tell controller to render a template with the same format as the one found in conn.params["format"].
+
+```elixir
+def index(conn, _params) do
+  render conn, :index
+end
 ```
 If we go to [http://localhost:4000/?format=text](http://localhost:4000/?format=text), we will see `OMG, this is actually some text.`
 
