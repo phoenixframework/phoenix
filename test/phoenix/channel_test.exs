@@ -82,187 +82,167 @@ defmodule Phoenix.Channel.ChannelTest do
     end
   end
 
-  test "Default #leave is generated as a noop" do
-    defmodule Chan1 do
-      use Phoenix.Channel
-      def join(socket, _topic, _msg), do: {:ok, socket}
+  defmodule AuthenticatedChannel do
+    use Phoenix.Channel
+    def join(socket, _topic, _msg), do: {:ok, socket}
+    def leave(socket, _msg) do
+      send(socket.pid, :left)
+      socket
     end
+    def event(socket, "info", _msg) do
+      send(socket.pid, :info)
+      socket
+    end
+  end
+
+  defmodule UnauthenticatedChannel do
+    use Phoenix.Channel
+    def join(socket, _topic, _msg), do: {:error, socket, :unauthenticated}
+    def leave(socket, _msg), do: :overridden
+  end
+
+  defmodule BadReturnJoinChannel do
+    use Phoenix.Channel
+    def join(_socket, _topic, _msg), do: :some_bad_return
+  end
+
+  defmodule BadReturnLeaveChannel do
+    use Phoenix.Channel
+    def join(socket, _topic, _msg), do: {:ok, socket}
+    def leave(_socket, _msg), do: :some_bad_return
+  end
+
+  defmodule BadReturnArgsChannel do
+    use Phoenix.Channel
+    def join(socket, _topic, _msg), do: {:ok, socket}
+    def event(_socket, "boom", _msg), do: :some_bad_return
+  end
+
+  defmodule ChangeSocketStateChannel do
+    use Phoenix.Channel
+    def join(socket, _topic, _msg), do: {:ok, socket}
+    def event(socket, "info", _msg) do
+      Socket.assign(socket, :foo, :bar)
+    end
+    def event(socket, "put", dict) do
+      Enum.reduce dict, socket, fn {k, v}, socket -> Socket.assign(socket, k, v) end
+    end
+    def event(socket, "get", %{"key" => key}) do
+      send socket.pid, socket.assigns[key]
+      socket
+    end
+  end
+
+  defmodule ErrorChannel do
+    use Phoenix.Channel
+    def join(_socket, _topic, _msg), do: raise "Foo"
+  end
+
+  defmodule Router do
+    use Phoenix.Router
+    use Phoenix.Router.Socket, mount: "/ws"
+
+    channel "chan1", AuthenticatedChannel
+    channel "chan2", UnauthenticatedChannel
+    channel "chan3", BadReturnJoinChannel
+    channel "chan4", BadReturnLeaveChannel
+    channel "chan5", BadReturnArgsChannel
+    channel "chan6", ChangeSocketStateChannel
+    channel "chan7", ErrorChannel
+  end
+
+  test "Default #leave is generated as a noop" do
     socket = new_socket
-    assert Chan1.leave(socket, []) == socket
+    assert AuthenticatedChannel.leave(socket, []) == socket
   end
 
   test "#leave can be overridden" do
-    defmodule Chan2 do
-      use Phoenix.Channel
-      def join(socket, _topic, _msg), do: {:ok, socket}
-      def leave(_socket, _msg), do: :overridden
-    end
-
-    assert Chan2.leave(new_socket, []) == :overridden
+    assert UnauthenticatedChannel.leave(new_socket, []) == :overridden
   end
 
   test "successful join authorizes and subscribes socket to channel/topic" do
-    defmodule Chan3 do
-      use Phoenix.Channel
-      def join(socket, _topic, _msg), do: {:ok, socket}
-    end
-    defmodule Router3 do
-      use Phoenix.Router
-      use Phoenix.Router.Socket, mount: "/ws"
-      channel "chan3", Chan3
-    end
+    message = %Message{channel: "chan1", topic: "topic", event: "join", message: %{}}
 
-    message = %Message{channel: "chan3", topic: "topic", event: "join", message: %{}}
-
-    PubSub.create("chan3:topic")
-    assert PubSub.subscribers("chan3:topic") == []
-    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router3)
-    socket = HashDict.get(sockets, {"chan3", "topic"})
+    PubSub.create("chan1:topic")
+    assert PubSub.subscribers("chan1:topic") == []
+    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router)
+    socket = HashDict.get(sockets, {"chan1", "topic"})
     assert socket
-    assert Socket.authorized?(socket, "chan3", "topic")
-    assert PubSub.subscribers("chan3:topic") == [socket.pid]
-    assert PubSub.subscribers("chan3:topic") == [self]
+    assert Socket.authorized?(socket, "chan1", "topic")
+    assert PubSub.subscribers("chan1:topic") == [socket.pid]
+    assert PubSub.subscribers("chan1:topic") == [self]
   end
 
   test "unsuccessful join denies socket access to channel/topic" do
-    defmodule Chan4 do
-      use Phoenix.Channel
-      def join(socket, _topic, _msg), do: {:error, socket, :unauthorized}
-    end
-    defmodule Router4 do
-      use Phoenix.Router
-      use Phoenix.Router.Socket, mount: "/ws"
-      channel "chan4", Chan4
-    end
+    message = %Message{channel: "chan2", topic: "topic", event: "join", message: %{}}
 
-    message = %Message{channel: "chan4", topic: "topic", event: "join", message: %{}}
-
-    PubSub.create("chan4:topic")
-    assert PubSub.subscribers("chan4:topic") == []
-    {:error, sockets, :unauthorized} = Transport.dispatch(message, HashDict.new, self, Router4)
-    refute HashDict.get(sockets, {"chan4", "topic"})
-    refute PubSub.subscribers("chan4:topic") == [self]
+    PubSub.create("chan2:topic")
+    assert PubSub.subscribers("chan2:topic") == []
+    {:error, sockets, :unauthenticated} = Transport.dispatch(message, HashDict.new, self, Router)
+    refute HashDict.get(sockets, {"chan2", "topic"})
+    refute PubSub.subscribers("chan2:topic") == [self]
   end
 
   test "#leave is called when the socket conn closes, and is unsubscribed" do
-    defmodule Chan5 do
-      use Phoenix.Channel
-      def join(socket, _topic, _msg), do: {:ok, socket}
-      def leave(socket, _msg) do
-        send(socket.pid, :left)
-        socket
-      end
-    end
-    defmodule Router5 do
-      use Phoenix.Router
-      use Phoenix.Router.Socket, mount: "/ws"
-      channel "chan5", Chan5
-    end
+    socket = %Socket{pid: self, router: Router, channel: "chan1"}
+    sockets = HashDict.put(HashDict.new, {"chan1", "topic"}, socket)
+    message = %Message{channel: "chan1", topic: "topic", event: "join", message: %{}}
 
-    socket = %Socket{pid: self, router: Router5, channel: "chan5"}
-    sockets = HashDict.put(HashDict.new, {"chan5", "topic"}, socket)
-    message = %Message{channel: "chan5", topic: "topic", event: "join", message: %{}}
-
-    PubSub.create("chan5:topic")
-    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router5)
+    PubSub.create("chan1:topic")
+    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router)
     Transport.dispatch_leave(sockets, :reason)
     assert_received :left
-    assert PubSub.subscribers("chan5:topic") == []
+    assert PubSub.subscribers("chan1:topic") == []
   end
 
   test "#info is called when receiving regular process messages" do
-    defmodule Chan6 do
-      use Phoenix.Channel
-      def join(socket, _topic, _msg), do: {:ok, socket}
-      def event(socket, "info", _msg) do
-        send(socket.pid, :info)
-        socket
-      end
-    end
-    defmodule Router6 do
-      use Phoenix.Router
-      use Phoenix.Router.Socket, mount: "/ws"
-      channel "chan6", Chan6
-    end
+    socket = %Socket{pid: self, router: Router, channel: "chan1"}
+    sockets = HashDict.put(HashDict.new, {"chan1", "topic"}, socket)
+    message = %Message{channel: "chan1", topic: "topic", event: "join", message: %{}}
 
-    socket = %Socket{pid: self, router: Router6, channel: "chan6"}
-    sockets = HashDict.put(HashDict.new, {"chan6", "topic"}, socket)
-    message = %Message{channel: "chan6", topic: "topic", event: "join", message: %{}}
-
-    PubSub.create("chan6:topic")
-    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router6)
+    PubSub.create("chan1:topic")
+    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router)
     Transport.dispatch_info(sockets, :stuff)
     assert_received :info
   end
 
   test "#join raise InvalidReturn exception when return type invalid" do
-    defmodule Chan7 do
-      use Phoenix.Channel
-      def join(_socket, _topic, _msg), do: :some_bad_return
-    end
-    defmodule Router7 do
-      use Phoenix.Router
-      use Phoenix.Router.Socket, mount: "/ws"
-      channel "chan7", Chan7
-    end
-
-    socket = %Socket{pid: self, router: Router7, channel: "chan7"}
-    sockets = HashDict.put(HashDict.new, {"chan7", "topic"}, socket)
-    message = %Message{channel: "chan7", topic: "topic", event: "join", message: %{}}
+    socket = %Socket{pid: self, router: Router, channel: "chan3"}
+    sockets = HashDict.put(HashDict.new, {"chan3", "topic"}, socket)
+    message = %Message{channel: "chan3", topic: "topic", event: "join", message: %{}}
 
     assert_raise InvalidReturn, fn ->
-      {:ok, _sockets} = Transport.dispatch(message, sockets, self, Router7)
+      {:ok, _sockets} = Transport.dispatch(message, sockets, self, Router)
     end
   end
 
   test "#leave raise InvalidReturn exception when return type invalid" do
-    defmodule Chan8 do
-      use Phoenix.Channel
-      def join(socket, _topic, _msg), do: {:ok, socket}
-      def leave(_socket, _msg), do: :some_bad_return
-    end
-    defmodule Router8 do
-      use Phoenix.Router
-      use Phoenix.Router.Socket, mount: "/ws"
-      channel "chan8", Chan8
-    end
+    socket = %Socket{pid: self, router: Router, channel: "chan4", topic: "topic"}
+    sockets = HashDict.put(HashDict.new, {"chan4", "topic"}, socket)
+    message = %Message{channel: "chan4", topic: "topic", event: "join", message: %{}}
 
-    socket = %Socket{pid: self, router: Router8, channel: "chan8"}
-    sockets = HashDict.put(HashDict.new, {"chan8", "topic"}, socket)
-    message = %Message{channel: "chan8", topic: "topic", event: "join", message: %{}}
-
-    PubSub.create("chan6:topic")
-    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router8)
-
+    PubSub.create("chan4:topic")
+    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router)
+    sock = HashDict.get(sockets, {"chan4", "topic"})
+    assert Socket.authorized?(sock, "chan4", "topic")
     assert_raise InvalidReturn, fn ->
       Transport.dispatch_leave(sockets, :reason)
     end
   end
 
   test "#event raises InvalidReturn exception when return type is invalid" do
-    defmodule Chan9 do
-      use Phoenix.Channel
-      def join(socket, _topic, _msg), do: {:ok, socket}
-      def event(_socket, "boom", _msg), do: :some_bad_return
-    end
-    defmodule Router9 do
-      use Phoenix.Router
-      use Phoenix.Router.Socket, mount: "/ws"
-      channel "chan9", Chan9
-    end
+    socket = %Socket{pid: self, router: Router, channel: "chan5", topic: "topic"}
+    sockets = HashDict.put(HashDict.new, {"chan5", "topic"}, socket)
+    message = %Message{channel: "chan5", topic: "topic", event: "join", message: %{}}
 
-    socket = %Socket{pid: self, router: Router9, channel: "chan9", topic: "topic"}
-    sockets = HashDict.put(HashDict.new, {"chan9", "topic"}, socket)
-    message = %Message{channel: "chan9", topic: "topic", event: "join", message: %{}}
-
-    PubSub.create("chan9:topic")
-    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router9)
-    sock = HashDict.get(sockets, {"chan9", "topic"})
-    assert Socket.authorized?(sock, "chan9", "topic")
-    message = %Message{channel: "chan9", topic: "topic", event: "boom", message: %{}}
+    PubSub.create("chan5:topic")
+    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router)
+    sock = HashDict.get(sockets, {"chan5", "topic"})
+    assert Socket.authorized?(sock, "chan5", "topic")
+    message = %Message{channel: "chan5", topic: "topic", event: "boom", message: %{}}
 
     assert_raise InvalidReturn, fn ->
-      Transport.dispatch(message, sockets, self, Router9)
+      Transport.dispatch(message, sockets, self, Router)
     end
   end
 
@@ -275,44 +255,23 @@ defmodule Phoenix.Channel.ChannelTest do
     assert_received %Message{channel: "phoenix", topic: "conn", event: "heartbeat", message: %{}}
   end
 
-  defmodule Chan10 do
-    use Phoenix.Channel
-    def join(socket, _topic, _msg), do: {:ok, socket}
-    def event(socket, "info", _msg) do
-      assign(socket, :foo, :bar)
-    end
-    def event(socket, "put", dict) do
-      Enum.reduce dict, socket, fn {k, v}, socket -> assign(socket, k, v) end
-    end
-    def event(socket, "get", %{"key" => key}) do
-      send socket.pid, socket.assigns[key]
-      socket
-    end
-  end
-  defmodule Router10 do
-    use Phoenix.Router
-    use Phoenix.Router.Socket, mount: "/ws"
-    channel "chan10", Chan10
-  end
-
   test "socket state can change when receiving regular process messages" do
+    socket = %Socket{pid: self, router: Router, channel: "chan6", topic: "topic"}
+    sockets = HashDict.put(HashDict.new, {"chan6", "topic"}, socket)
+    message = %Message{channel: "chan6", topic: "topic", event: "join", message: %{}}
 
-    socket = %Socket{pid: self, router: Router10, channel: "chan10", topic: "topic"}
-    sockets = HashDict.put(HashDict.new, {"chan10", "topic"}, socket)
-    message = %Message{channel: "chan10", topic: "topic", event: "join", message: %{}}
-
-    PubSub.create("chan10:topic")
-    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router10)
+    PubSub.create("chan6:topic")
+    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router)
     {:ok, sockets} = Transport.dispatch_info(sockets, :stuff)
-    socket = HashDict.get(sockets, {"chan10", "topic"})
+    socket = HashDict.get(sockets, {"chan6", "topic"})
 
     assert socket.assigns[:foo] == :bar
   end
 
   test "Socket state can be put and retrieved" do
-    socket = %Socket{pid: self, router: Router10, channel: "chan10", topic: "topic"}
-    socket = Chan10.event(socket, "put", %{val: 123})
-    _socket = Chan10.event(socket, "get", %{"key" => :val})
+    socket = %Socket{pid: self, router: Router, channel: "chan66"}
+    socket = ChangeSocketStateChannel.event(socket, "put", %{val: 123})
+    _socket = ChangeSocketStateChannel.event(socket, "get", %{"key" => :val})
     assert_received 123
   end
 end
