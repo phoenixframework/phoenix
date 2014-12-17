@@ -24,7 +24,7 @@ defmodule Phoenix.Controller.FlashTest do
     plug :action
 
     def set_flash(conn, _params) do
-      conn |> Flash.put(:notice, "elixir") |> redirect(to: "/")
+      conn |> Flash.put_flash(:notice, "elixir") |> redirect(to: "/")
     end
   end
 
@@ -36,81 +36,81 @@ defmodule Phoenix.Controller.FlashTest do
   test "flash is persisted when status in redirect" do
     for status <- 300..308 do
       conn = conn_with_session |> put_status(status) |> FlashController.call(:set_flash)
-      assert Flash.get(conn, :notice) == "elixir"
+      assert Flash.flash(conn, :notice) == "elixir"
     end
   end
 
   test "flash is not persisted when status is not redirect" do
     for status <- [299, 309, 200, 404] do
       conn = conn_with_session |> put_status(status) |> FlashController.call(:set_flash)
-      assert Flash.get(conn, :notice) == nil
+      assert Flash.flash(conn, :notice) == nil
     end
   end
 
-  test "get/1 returns the map of messages" do
-    conn = conn_with_session |> Flash.put(:notice, "hi")
-    assert Flash.get(conn) == %{notice: ["hi"]}
+  test "flash/1 returns the map of messages" do
+    conn = conn_with_session |> Flash.put_flash(:notice, "hi")
+    assert Flash.flash(conn) == %{notice: ["hi"]}
   end
 
-  test "get/2 returns the message by key" do
-    conn = conn_with_session |> Flash.put(:notice, "hi")
-    assert Flash.get(conn, :notice) == "hi"
+  test "flash/2 returns the message by key" do
+    conn = conn_with_session |> Flash.put_flash(:notice, "hi")
+    assert Flash.flash(conn, :notice) == "hi"
   end
 
-  test "get/2 returns the only the last message put" do
+  test "flash/2 returns the only the last message put" do
     conn = conn_with_session
-    |> Flash.put(:notice, "hi")
-    |> Flash.put(:notice, "bye")
-    assert Flash.get(conn, :notice) == "bye"
+    |> Flash.put_flash(:notice, "hi")
+    |> Flash.put_flash(:notice, "bye")
+    assert Flash.flash(conn, :notice) == "bye"
   end
 
-  test "get/2 returns nil for missing key" do
+  test "flash/2 returns nil for missing key" do
     conn = conn_with_session
-    assert Flash.get(conn, :notice) == nil
+    assert Flash.flash(conn, :notice) == nil
   end
 
-  test "get_all/2 returns a list of messages by key" do
+  test "get_all_flash/2 returns a list of messages by key" do
     conn = conn_with_session
-    |> Flash.put(:notices, "hello")
-    |> Flash.put(:notices, "world")
+    |> Flash.put_flash(:notices, "hello")
+    |> Flash.put_flash(:notices, "world")
 
-    assert Flash.get_all(conn, :notices) == ["hello", "world"]
+    assert Flash.get_all_flash(conn, :notices) == ["hello", "world"]
   end
 
-  test "get_all/2 returns [] for missing key" do
+  test "get_all_flash/2 returns [] for missing key" do
     conn = conn_with_session
-    assert Flash.get_all(conn, :notices) == []
+    assert Flash.get_all_flash(conn, :notices) == []
   end
 
-  test "put/3 adds the key/message pair to the flash" do
+  test "put_flash/3 adds the key/message pair to the flash" do
     conn = conn_with_session
-    |> Flash.put(:error, "oh noes!")
-    |> Flash.put(:notice, "false alarm!")
+    |> Flash.put_flash(:error, "oh noes!")
+    |> Flash.put_flash(:notice, "false alarm!")
 
-    assert Flash.get(conn, :error) == "oh noes!"
-    assert Flash.get(conn, :notice) == "false alarm!"
+    assert Flash.flash(conn, :error) == "oh noes!"
+    assert Flash.flash(conn, :notice) == "false alarm!"
   end
 
-  test "clear/1 clears the flash messages" do
+  test "clear_flash/1 clears the flash messages" do
     conn = conn_with_session
-    |> Flash.put(:error, "oh noes!")
-    |> Flash.put(:notice, "false alarm!")
+    |> Flash.put_flash(:error, "oh noes!")
+    |> Flash.put_flash(:notice, "false alarm!")
 
-    refute Flash.get(conn) == %{}
-    conn = Flash.clear(conn)
-    assert Flash.get(conn) == %{}
+    refute Flash.flash(conn) == %{}
+    conn = Flash.clear_flash(conn)
+    assert Flash.flash(conn) == %{}
   end
 
-  test "pop_all/2 pops all messages from the flash" do
+  test "pop_all_flash/2 pops all messages from the flash" do
     conn = conn_with_session
-    assert match?{[], _conn}, Flash.pop_all(conn, :notices)
+    assert match?{[], _conn}, Flash.pop_all_flash(conn, :notices)
 
     conn = conn
-    |> Flash.put(:notices, "oh noes!")
-    |> Flash.put(:notices, "false alarm!")
+    |> Flash.put_flash(:notices, "oh noes!")
+    |> Flash.put_flash(:notices, "false alarm!")
 
-    {messages, conn} = Flash.pop_all(conn, :notices)
+    {messages, conn} = Flash.pop_all_flash(conn, :notices)
     assert messages == ["oh noes!", "false alarm!"]
-    assert Flash.get(conn) == %{}
+    assert Flash.flash(conn) == %{}
   end
 end

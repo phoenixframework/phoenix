@@ -12,12 +12,12 @@ defmodule Phoenix.Controller.Flash do
   ## Examples
 
       def index(conn, _) do
-        render conn, "index", notice: Flash.get(conn, :notice)
+        render conn, "index", notice: Flash.flash(conn, :notice)
       end
 
       def create(conn, _) do
         conn
-        |> Flash.put(:notice, "Created successfully")
+        |> Flash.put_flash(:notice, "Created successfully")
         |> redirect("/")
       end
 
@@ -31,7 +31,7 @@ defmodule Phoenix.Controller.Flash do
   def call(conn = %Conn{private: %{plug_session: _session}}, _) do
     register_before_send conn, fn
       conn = %Conn{status: stat} when stat in @http_redir_range -> conn
-      conn -> clear(conn)
+      conn -> clear_flash(conn)
     end
   end
   def call(conn, _), do: conn
@@ -44,12 +44,12 @@ defmodule Phoenix.Controller.Flash do
   ## Examples
 
       iex> conn = %Conn{private: %{plug_session: %{}}}
-      iex> match? %Conn{}, Flash.put(conn, :notice, "Welcome Back!")
+      iex> match? %Conn{}, Flash.put_flash(conn, :notice, "Welcome Back!")
       true
 
   """
-  def put(conn, key, message) do
-    persist(conn, put_in(get(conn), [key], [message | get_all(conn, key)]))
+  def put_flash(conn, key, message) do
+    persist(conn, put_in(flash(conn), [key], [message | get_all_flash(conn, key)]))
   end
 
   @doc """
@@ -57,22 +57,22 @@ defmodule Phoenix.Controller.Flash do
 
   ## Examples
 
-      iex> Flash.put(conn, :notice, "Hi!") |> Flash.get
+      iex> Flash.put_flash(conn, :notice, "Hi!") |> Flash.get
       %{notice: "Hi!"}
   """
-  def get(conn), do: get_session(conn, :phoenix_messages) || %{}
+  def flash(conn), do: get_session(conn, :phoenix_messages) || %{}
 
   @doc """
   Returns a message from the `Phoenix.Flash` by key
 
   ## Examples
 
-      iex> Flash.put(conn, :notice, "Hello!") |> Flash.get(:notice)
+      iex> Flash.put_flash(conn, :notice, "Hello!") |> Flash.flash(:notice)
       "Hello!"
 
   """
-  def get(conn, key) do
-     case get_in get(conn), [key] do
+  def flash(conn, key) do
+     case get_in flash(conn), [key] do
       nil -> nil
       [message | _messages] -> message
     end
@@ -84,15 +84,15 @@ defmodule Phoenix.Controller.Flash do
   ## Examples
 
       iex> conn
-      |> Flash.put(:notice, "hello")
-      |> Flash.put(:notice, "world")
-      |> Flash.get_all(:notice)
+      |> Flash.put_flash(:notice, "hello")
+      |> Flash.put_flash(:notice, "world")
+      |> Flash.get_all_flash(:notice)
       ["hello", "world"]
 
   """
-  def get_all(conn, key) do
+  def get_all_flash(conn, key) do
     conn
-    |> get
+    |> flash
     |> get_in([key])
     |> Kernel.||([])
     |> Enum.reverse
@@ -104,25 +104,25 @@ defmodule Phoenix.Controller.Flash do
   ## Examples
 
       iex> %Conn{}
-      |> Flash.put(:notice, "oh noes!")
-      |> Flash.put(:notice, "false alarm!")
-      |> Flash.pop_all(:notice)
+      |> Flash.put_flash(:notice, "oh noes!")
+      |> Flash.put_flash(:notice, "false alarm!")
+      |> Flash.pop_all_flash(:notice)
       {["oh noes!", "false alarm!"], %Conn{}}
 
   """
-  def pop_all(conn, key) do
+  def pop_all_flash(conn, key) do
     conn
-    |> get_all(key)
+    |> get_all_flash(key)
     |> case do
       []   -> {[], conn}
-      msgs -> {msgs, persist(conn, Dict.drop(get(conn), [key]))}
+      msgs -> {msgs, persist(conn, Dict.drop(flash(conn), [key]))}
     end
   end
 
   @doc """
   Clears all flash messages
   """
-  def clear(conn), do: persist(conn, %{})
+  def clear_flash(conn), do: persist(conn, %{})
 
   defp persist(conn, messages) do
     put_session(conn, :phoenix_messages, messages)
