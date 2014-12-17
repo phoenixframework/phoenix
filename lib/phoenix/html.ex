@@ -70,6 +70,9 @@ defmodule Phoenix.HTML do
       iex> Phoenix.HTML.html_escape("<hello>")
       {:safe, "&lt;hello&gt;"}
 
+      iex> Phoenix.HTML.html_escape('<hello>')
+      {:safe, ["&lt;", 104, 101, 108, 108, 111, "&gt;"]}
+
       iex> Phoenix.HTML.html_escape({:safe, "<hello>"})
       {:safe, "<hello>"}
   """
