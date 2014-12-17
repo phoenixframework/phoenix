@@ -9,7 +9,7 @@ defmodule Phoenix.Controller.Logger do
 
   ## Parameter filtering
 
-  When loggging parameters, Phoenix can filter out sensitive parameters
+  When logging parameters, Phoenix can filter out sensitive parameters
   in the logs, such as passwords, tokens and what not. Parameters to
   be filtered can be added via the `:filter_parameters` option:
 

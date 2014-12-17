@@ -13,7 +13,7 @@ defmodule Phoenix.CodeReloader do
   ## Server delegation
 
   @doc """
-  Reloads code within the witin `web` directory.
+  Reloads code within the `web` directory.
   """
   @spec reload! :: :ok | :noop | {:error, binary()}
   defdelegate reload!(), to: Phoenix.CodeReloader.Server
