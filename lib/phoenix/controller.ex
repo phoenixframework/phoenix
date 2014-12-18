@@ -1,5 +1,8 @@
 defmodule Phoenix.Controller do
   import Plug.Conn
+  alias Plug.Conn
+
+  @http_redir_range 300..308
 
   @moduledoc """
   Controllers are used to group common functionality in the same
@@ -88,7 +91,6 @@ defmodule Phoenix.Controller do
       use Phoenix.Controller.Pipeline
 
       plug Phoenix.Controller.Logger
-      plug Phoenix.Controller.Flash
       plug :put_layout, {Phoenix.Controller.__layout__(__MODULE__), :application}
       plug :put_view, Phoenix.Controller.__view__(__MODULE__)
     end
@@ -627,5 +629,74 @@ defmodule Phoenix.Controller do
     |> Module.split
     |> Enum.at(0)
     |> Module.concat("LayoutView")
+  end
+
+  @doc """
+  Ensures phoenix_messages key exists in session and
+  clears flash messages on new requests
+  """
+  def fetch_flash(conn = %Conn{private: %{plug_session: _session}}, _opts) do
+    conn = put_session(conn, :phoenix_messages, %{})
+    register_before_send conn, fn
+      conn = %Conn{status: stat} when stat in @http_redir_range -> conn
+      conn -> clear_flash(conn)
+    end
+  end
+  def fetch_flash(conn, _opts) do
+    raise ArgumentError, message: "session not fetched, call fetch_session/2"
+  end
+
+  @doc """
+  Persists a message in the :phoenix_messages session key
+
+  Returns the updated `%Conn{}`
+
+  ## Examples
+
+      iex> conn = %Conn{private: %{plug_session: %{}}}
+      iex> match? %Conn{}, put_flash(conn, :notice, "Welcome Back!")
+      true
+
+  """
+  def put_flash(conn, key, message) do
+    persist_flash(conn, put_in(get_flash(conn), [key], message))
+  end
+
+  @doc """
+  Returns a flash message from session key :phoenix_messages
+
+  ## Examples
+
+      iex> put_flash(conn, :notice, "Hi!") |> get_flash
+      %{notice: "Hi!"}
+  """
+  def get_flash(conn) do
+    if flash_messages = get_session(conn, :phoenix_messages) do
+      flash_messages
+    else
+      raise ArgumentError, message: "flash not fetched, call fetch_flash/2"
+    end
+  end
+
+  @doc """
+  Returns a message from :phoenix_messages session store by key
+
+  ## Examples
+
+      iex> put_flash(conn, :notice, "Hello!") |> get_flash(:notice)
+      "Hello!"
+
+  """
+  def get_flash(conn, key) do
+     get_in get_flash(conn), [key]
+  end
+
+  @doc """
+  Clears all flash messages in :phoenix_messages session store
+  """
+  def clear_flash(conn), do: persist_flash(conn, %{})
+
+  defp persist_flash(conn, messages) do
+    put_session(conn, :phoenix_messages, messages)
   end
 end
