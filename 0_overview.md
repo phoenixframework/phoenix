@@ -58,6 +58,6 @@ Cowboy is an HTTP server written in Erlang by Loïc Hoguin of [99s](http://ninen
 
 - Sheriff uses parse transforms for type based validation. Sheriff also validates data dynamically using Erlang's type system with no extra code required.
 
-Cowboy has fantastic documentation. The [Guides](http://ninenines.eu/docs/en/cowboy/HEAD/guide/) are especially helpful. Learning more about Cowboy will surely help you to understand of Phoenix more fully.
+Cowboy has fantastic documentation. The [Guides](http://ninenines.eu/docs/en/cowboy/HEAD/guide/) are especially helpful. Learning more about Cowboy will surely help you to understand Phoenix more fully.
 
 Cowboy has its own section of links in the [Resources Guide](http://www.phoenixframework.org/docs/resources).
