@@ -75,7 +75,7 @@ defmodule Phoenix.Channel.Transport do
 
   @doc """
   Dispatches `%Phoenix.Socket.Message{}` in response to a heartbeat message sent from the client.
- 
+
   The Message format sent to phoenix requires the following key / values:
 
     * channel - The String value "phoenix"
@@ -118,7 +118,7 @@ defmodule Phoenix.Channel.Transport do
   defp handle_result({:error, socket, reason}, _event) do
     {:error, socket, reason}
   end
-  defp handle_result(bad_return, event) when event in ["join", "leave"] do
+  defp handle_result(bad_return, event) when event == "join" do
     raise InvalidReturn, message: """
       expected {:ok, %Socket{}} | {:error, %Socket{}, reason} got #{inspect bad_return}
     """
