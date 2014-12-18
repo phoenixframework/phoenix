@@ -32,7 +32,8 @@ defmodule Phoenix.HTMLTest do
   end
 
   test "get_flash/2 returns the flash message" do
-    conn = conn_with_session
+    conn = conn(:get, "/")
+      |> with_session
       |> Phoenix.Controller.fetch_flash([])
       |> Phoenix.Controller.put_flash(:error, "oh noes!")
       |> Phoenix.Controller.put_flash(:notice, "false alarm!")
