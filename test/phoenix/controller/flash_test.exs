@@ -4,20 +4,6 @@ defmodule Phoenix.Controller.FlashTest do
 
   import Phoenix.Controller
 
-  @session Plug.Session.init(
-    store: :cookie,
-    key: "_app",
-    encryption_salt: "yadayada",
-    signing_salt: "yadayada"
-  )
-
-  def conn_with_session() do
-    conn(:get, "/")
-    |> Map.put(:secret_key_base, String.duplicate("abcdefgh", 8))
-    |> Plug.Session.call(@session)
-    |> fetch_session()
-  end
-
   defmodule FlashController do
     use Phoenix.Controller
 

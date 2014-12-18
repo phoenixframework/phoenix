@@ -10,11 +10,25 @@ defmodule RouterHelper do
   import Plug.Test
   import ExUnit.CaptureIO
 
+  @session Plug.Session.init(
+    store: :cookie,
+    key: "_app",
+    encryption_salt: "yadayada",
+    signing_salt: "yadayada"
+  )
+
   defmacro __using__(_) do
     quote do
       use Plug.Test
       import RouterHelper
     end
+  end
+
+  def conn_with_session() do
+    conn(:get, "/")
+    |> Map.put(:secret_key_base, String.duplicate("abcdefgh", 8))
+    |> Plug.Session.call(@session)
+    |> Plug.Conn.fetch_session()
   end
 
   def call(router, verb, path, params \\ nil, headers \\ []) do

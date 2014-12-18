@@ -8,7 +8,7 @@ defmodule Phoenix.Tranports.LongPollerTest do
 
   @port 4809
 
-  def conn_with_session(session \\ %{}) do
+  def conn_with_sess(session \\ %{}) do
     %Conn{private: %{plug_session: session}}
     |> put_private(:phoenix_router, Router)
     |> put_private(:phoenix_endpoint, __MODULE__)
@@ -24,7 +24,7 @@ defmodule Phoenix.Tranports.LongPollerTest do
   end
 
   test "start_session starts the LongPoller.Server and stores pid in session" do
-    conn = conn_with_session
+    conn = conn_with_sess
     assert LongPoller.longpoll_pid(conn) == :nopid
     {conn = %Conn{}, server_pid} = LongPoller.start_session(conn)
 
@@ -34,7 +34,7 @@ defmodule Phoenix.Tranports.LongPollerTest do
   end
 
   test "longpoll_pid returns {:error, :terminated} if serialized pid is dead" do
-    {conn = %Conn{}, server_pid} = LongPoller.start_session(conn_with_session)
+    {conn = %Conn{}, server_pid} = LongPoller.start_session(conn_with_sess)
     assert {:ok, pid} = LongPoller.longpoll_pid(conn)
     assert server_pid == pid
     assert Process.alive?(pid)
@@ -44,18 +44,18 @@ defmodule Phoenix.Tranports.LongPollerTest do
   end
 
   test "resume_session returns {:ok, conn, pid} if valid session" do
-    {conn = %Conn{}, server_pid} = LongPoller.start_session(conn_with_session)
+    {conn = %Conn{}, server_pid} = LongPoller.start_session(conn_with_sess)
     assert {:ok, %Conn{}, ^server_pid} = LongPoller.resume_session(conn)
   end
 
   test "resume_session returns {:error, conn, :terminated} if dead session" do
-    {conn = %Conn{}, server_pid} = LongPoller.start_session(conn_with_session)
+    {conn = %Conn{}, server_pid} = LongPoller.start_session(conn_with_sess)
     Process.exit(server_pid, :kill)
     assert {:error, %Conn{}, :terminated} = LongPoller.resume_session(conn)
   end
 
   test "resume_session returns {:error, conn, :terminated} if missing session" do
-    conn = conn_with_session
+    conn = conn_with_sess
     assert {:error, %Conn{}, :terminated} = LongPoller.resume_session(conn)
   end
 end
