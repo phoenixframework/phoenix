@@ -1,8 +1,5 @@
 defmodule Phoenix.Controller do
   import Plug.Conn
-  alias Plug.Conn
-
-  @http_redir_range 300..308
 
   @moduledoc """
   Controllers are used to group common functionality in the same
@@ -632,68 +629,79 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Ensures phoenix_messages key exists in session and
-  clears flash messages on new requests
+  Fetches the flash so it can be used during the request.
   """
-  def fetch_flash(conn, _opts) do
-    conn = put_session(conn, :phoenix_messages, %{})
-    register_before_send conn, fn
-      conn = %Conn{status: stat} when stat in @http_redir_range -> conn
-      conn -> clear_flash(conn)
+  def fetch_flash(conn, _opts \\ []) do
+    flash = get_session(conn, :phoenix_flash) || %{}
+    conn  = persist_flash(conn, flash)
+
+    register_before_send conn, fn conn ->
+      flash = conn.private.phoenix_flash
+
+      cond do
+        map_size(flash) == 0 ->
+          conn
+        conn.status in 300..308 ->
+          put_session(conn, :phoenix_flash, flash)
+        true ->
+          delete_session(conn, :phoenix_flash)
+      end
     end
   end
 
   @doc """
-  Persists a message in the :phoenix_messages session key
+  Persists a value in flash.
 
-  Returns the updated `%Conn{}`
+  Returns the updated connection.
 
   ## Examples
 
-      iex> conn = %Conn{private: %{plug_session: %{}}}
-      iex> match? %Conn{}, put_flash(conn, :notice, "Welcome Back!")
-      true
+      iex> conn = put_flash(conn, :notice, "Welcome Back!")
+      iex> get_flash(conn, :notice)
+      "Welcome Back!"
 
   """
   def put_flash(conn, key, message) do
-    persist_flash(conn, put_in(get_flash(conn), [key], message))
+    persist_flash(conn, Map.put(get_flash(conn), key, message))
   end
 
   @doc """
-  Returns a flash message from session key :phoenix_messages
+  Returns a previously set flash message or nil.
 
   ## Examples
 
-      iex> put_flash(conn, :notice, "Hi!") |> get_flash
-      %{notice: "Hi!"}
+      iex> conn = put_flash(conn, :notice, "Welcome Back!")
+      iex> get_flash(conn)
+      %{notice: "Welcome Back!"}
+
   """
   def get_flash(conn) do
-    if flash_messages = get_session(conn, :phoenix_messages) do
-      flash_messages
-    else
+    Map.get(conn.private, :phoenix_flash) ||
       raise ArgumentError, message: "flash not fetched, call fetch_flash/2"
-    end
   end
 
   @doc """
-  Returns a message from :phoenix_messages session store by key
+  Returns a message from flash by key
 
   ## Examples
 
-      iex> put_flash(conn, :notice, "Hello!") |> get_flash(:notice)
-      "Hello!"
+      iex> conn = put_flash(conn, :notice, "Welcome Back!")
+      iex> get_flash(conn, :notice)
+      "Welcome Back!"
 
   """
   def get_flash(conn, key) do
-     get_in get_flash(conn), [key]
+    get_flash(conn)[key]
   end
 
   @doc """
-  Clears all flash messages in :phoenix_messages session store
+  Clears all flash messages.
   """
-  def clear_flash(conn), do: persist_flash(conn, %{})
+  def clear_flash(conn) do
+    persist_flash(conn, %{})
+  end
 
-  defp persist_flash(conn, messages) do
-    put_session(conn, :phoenix_messages, messages)
+  defp persist_flash(conn, value) do
+    put_private(conn, :phoenix_flash, value)
   end
 end

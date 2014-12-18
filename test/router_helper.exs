@@ -24,8 +24,8 @@ defmodule RouterHelper do
     end
   end
 
-  def conn_with_session() do
-    conn(:get, "/")
+  def with_session(conn) do
+    conn
     |> Map.put(:secret_key_base, String.duplicate("abcdefgh", 8))
     |> Plug.Session.call(@session)
     |> Plug.Conn.fetch_session()

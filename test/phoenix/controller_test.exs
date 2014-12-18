@@ -196,9 +196,7 @@ defmodule Phoenix.ControllerTest do
   test "protect_from_forgery/2 doesn't blow up" do
     conn = conn(:get, "/")
     conn
-    |> Conn.put_private(:plug_session_fetch, fn (conn) -> conn end)
-    |> Conn.put_private(:plug_session, %{csrf_token: "TOKEN"})
-    |> Conn.fetch_session([])
+    |> with_session
     |> protect_from_forgery([])
   end
 
