@@ -635,15 +635,12 @@ defmodule Phoenix.Controller do
   Ensures phoenix_messages key exists in session and
   clears flash messages on new requests
   """
-  def fetch_flash(conn = %Conn{private: %{plug_session: _session}}, _opts) do
+  def fetch_flash(conn, _opts) do
     conn = put_session(conn, :phoenix_messages, %{})
     register_before_send conn, fn
       conn = %Conn{status: stat} when stat in @http_redir_range -> conn
       conn -> clear_flash(conn)
     end
-  end
-  def fetch_flash(conn, _opts) do
-    raise ArgumentError, message: "session not fetched, call fetch_session/2"
   end
 
   @doc """

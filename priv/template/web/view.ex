@@ -10,9 +10,6 @@ defmodule <%= application_module %>.View do
 
       # Use Phoenix.HTML to import all HTML functions (forms, tags, etc)
       use Phoenix.HTML
-
-      # Common aliases
-      alias Phoenix.Controller.Flash
     end
   end
 
