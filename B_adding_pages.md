@@ -194,7 +194,7 @@ scope "/", HelloPhoenix do
   get "/hello/:messenger", HelloController, :show
 end
 ```
-Notice that we put the atom `:messenger` in the path. Phoenix will take whatever value that appears in that position in the url and passes a [Dict](http://elixir-lang.org/docs/stable/elixir/Dict.html) with the key `messanger` pointing to that value to the controller.
+Notice that we put the atom `:messenger` in the path. Phoenix will take whatever value that appears in that position in the url and passes a [Dict](http://elixir-lang.org/docs/stable/elixir/Dict.html) with the key `messenger` pointing to that value to the controller.
 
 For example, if we point the browser at: [http://localhost:4000/hello/Frank](http://localhost:4000/hello/Frank), the value of ":messenger" will be "Frank".
 
