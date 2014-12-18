@@ -8,6 +8,7 @@
   * `mix phoenix.start` was renamed to `mix phoenix.server`
   * The `YourApp.Endpoint.start/0` function was removed. You can simply remove it from your `test/test_helper.ex` file
   * Generated named paths now expect a conn arg. For example, `MyApp.Router.Helpers.page_path(conn, :show, "hello")` instead of `MyApp.Router.Helpers.page_path(:show, "hello")`
+  * [Controller] `Phoenix.Controller.Flash` has been removed in favor of `fetch_flash/2`, `get_flash/2`, and `put_flash/2` functions on `Phoenix.Controller`.
 
 ## v0.7.2 (2014-12-11)
 
