@@ -49,7 +49,7 @@ defmodule Phoenix.Controller.Flash do
 
   """
   def put_flash(conn, key, message) do
-    persist(conn, put_in(flash(conn), [key], [message | get_all_flash(conn, key)]))
+    persist(conn, put_in(flash(conn), [key], message))
   end
 
   @doc """
@@ -72,51 +72,7 @@ defmodule Phoenix.Controller.Flash do
 
   """
   def flash(conn, key) do
-     case get_in flash(conn), [key] do
-      nil -> nil
-      [message | _messages] -> message
-    end
-  end
-
-  @doc """
-  Returns a list of messages by key from the `Phoenix.Flash`
-
-  ## Examples
-
-      iex> conn
-      |> Flash.put_flash(:notice, "hello")
-      |> Flash.put_flash(:notice, "world")
-      |> Flash.get_all_flash(:notice)
-      ["hello", "world"]
-
-  """
-  def get_all_flash(conn, key) do
-    conn
-    |> flash
-    |> get_in([key])
-    |> Kernel.||([])
-    |> Enum.reverse
-  end
-
-  @doc """
-  Removes all messages from the for given key, returning a `{msgs, conn}` pair
-
-  ## Examples
-
-      iex> %Conn{}
-      |> Flash.put_flash(:notice, "oh noes!")
-      |> Flash.put_flash(:notice, "false alarm!")
-      |> Flash.pop_all_flash(:notice)
-      {["oh noes!", "false alarm!"], %Conn{}}
-
-  """
-  def pop_all_flash(conn, key) do
-    conn
-    |> get_all_flash(key)
-    |> case do
-      []   -> {[], conn}
-      msgs -> {msgs, persist(conn, Dict.drop(flash(conn), [key]))}
-    end
+     get_in flash(conn), [key]
   end
 
   @doc """

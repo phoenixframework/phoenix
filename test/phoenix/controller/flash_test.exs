@@ -49,37 +49,17 @@ defmodule Phoenix.Controller.FlashTest do
 
   test "flash/1 returns the map of messages" do
     conn = conn_with_session |> Flash.put_flash(:notice, "hi")
-    assert Flash.flash(conn) == %{notice: ["hi"]}
+    assert Flash.flash(conn) == %{notice: "hi"}
   end
 
-  test "flash/2 returns the message by key" do
+  test "flash/2 returns the message by key and clears it" do
     conn = conn_with_session |> Flash.put_flash(:notice, "hi")
     assert Flash.flash(conn, :notice) == "hi"
-  end
-
-  test "flash/2 returns the only the last message put" do
-    conn = conn_with_session
-    |> Flash.put_flash(:notice, "hi")
-    |> Flash.put_flash(:notice, "bye")
-    assert Flash.flash(conn, :notice) == "bye"
   end
 
   test "flash/2 returns nil for missing key" do
     conn = conn_with_session
     assert Flash.flash(conn, :notice) == nil
-  end
-
-  test "get_all_flash/2 returns a list of messages by key" do
-    conn = conn_with_session
-    |> Flash.put_flash(:notices, "hello")
-    |> Flash.put_flash(:notices, "world")
-
-    assert Flash.get_all_flash(conn, :notices) == ["hello", "world"]
-  end
-
-  test "get_all_flash/2 returns [] for missing key" do
-    conn = conn_with_session
-    assert Flash.get_all_flash(conn, :notices) == []
   end
 
   test "put_flash/3 adds the key/message pair to the flash" do
@@ -98,19 +78,6 @@ defmodule Phoenix.Controller.FlashTest do
 
     refute Flash.flash(conn) == %{}
     conn = Flash.clear_flash(conn)
-    assert Flash.flash(conn) == %{}
-  end
-
-  test "pop_all_flash/2 pops all messages from the flash" do
-    conn = conn_with_session
-    assert match?{[], _conn}, Flash.pop_all_flash(conn, :notices)
-
-    conn = conn
-    |> Flash.put_flash(:notices, "oh noes!")
-    |> Flash.put_flash(:notices, "false alarm!")
-
-    {messages, conn} = Flash.pop_all_flash(conn, :notices)
-    assert messages == ["oh noes!", "false alarm!"]
     assert Flash.flash(conn) == %{}
   end
 end
