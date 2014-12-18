@@ -18,7 +18,7 @@ Please **do not** use the issue tracker for personal support requests nor featur
 Development issues can be discussed on [the phoenix-core mailing list](http://groups.google.com/group/phoenix-core).
 
 We do our best to keep the issue tracker tidy and organized, making it useful
-for everyone. For example, we classify open issues per perceived difficulty ,
+for everyone. For example, we classify open issues per perceived difficulty,
 making it easier for developers to [contribute to Phoenix](#pull-requests).
 
 ## Bug reports
