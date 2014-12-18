@@ -1,6 +1,6 @@
 ### Routing
 
-The Phoenix router is the main hub of your application. It matches HTTP requests to controller actions, wires up realtime channel handlers, and defines a series of pipeline transformations for scoping middleware to sets of routes.
+The router is the main hub of any Phoenix application. It matches HTTP requests to controller actions, wires up realtime channel handlers, and defines a series of pipeline transformations for scoping middleware to sets of routes.
 
 The router file that Phoenix generates, `web/router.ex`, will look something like this one.
 
@@ -13,9 +13,9 @@ defmodule HelloPhoenix.Router do
     plug :fetch_session
   end
 
-  # pipeline :api do
-  #   plug :accepts, ~w(json)
-  # end
+  pipeline :api do
+    plug :accepts, ~w(json)
+  end
 
   scope "/", HelloPhoenix do
     pipe_through :browser # Use the default browser stack
@@ -33,12 +33,12 @@ The name you gave your application will appear instead of `HelloPhoenix` for bot
 
 The first line of this module `use Phoenix.Router` simply makes Phoenix router functions available in our particular router.
 
-Scopes have their own section in this guide, so we won't spend time on the `scope "/" do` block here. The `pipe_through :browser` line will get a full treatment in the Pipeline section of this guide. For now, you only need to know that pipelines allow a set of middleware transformations to be applied to different sets of routes.
+Scopes have their own section in this guide, so we won't spend time on the `scope "/", HelloPhoenix do` block here. The `pipe_through :browser` line will get a full treatment in the Pipeline section of this guide. For now, you only need to know that pipelines allow a set of middleware transformations to be applied to different sets of routes.
 
 Inside the scope block, however, we have our first actual route.
 `get "/", PageController, :index`
 
-`get` is a Phoenix macro which expands out to define one clause of the match function. It corresponds to the HTTP verb GET. Similar macros exist for other HTTP verbs including POST, PUT, PATCH, DELETE, OPTIONS, CONNECT, TRACE and HEAD.
+`get` is a Phoenix macro which expands out to define one clause of the `match` function. It corresponds to the HTTP verb GET. Similar macros exist for other HTTP verbs including POST, PUT, PATCH, DELETE, OPTIONS, CONNECT, TRACE and HEAD.
 
 The first argument to these macros is the path. Here, it is the root of the application, `/`. The next two arguments are the controller and action we want to have handle this request. These macros may also take other options, which we will see throughout the rest of this guide.
 
@@ -47,6 +47,8 @@ If this were the only route in our router module, the whole module would look li
 ```elixir
 defmodule HelloPhoenix.Router do
   def match(conn, "GET", ["/"]) do
+    Controller.perform_action(conn, HelloPhoenix.PageController, :index)
+  end
 end
 ```
 
@@ -58,10 +60,10 @@ This means that it is possible to create a route which will never match, based o
 
 If we do create an ambiguous route, the router will still compile, but we will get a warning. Let's see this in action.
 
-Define this route at the bottom of the `scope "/" do` block in the router.
+Define this route at the bottom of the `scope "/", HelloPhoenix do` block in the router.
 
 ```elixir
-get "/", HelloPhoenix.RootController, :index
+get "/", RootController, :index
 ```
 
 Then run `$ mix compile` at the root of your project. You will see the following warning from the compiler.
@@ -91,7 +93,7 @@ The output tells us that any HTTP GET request for the root of the application wi
 
 The router supports other macros besides those for HTTP verbs like `get`, `post` and `put`. The most important among them is `resources`, which expands out to eight clauses of the match function.
 
-Put this line into your `router.ex` file inside the `scope "/" do` block: `resources "users", HelloPhoenix.UserController`.
+Put this line into your `router.ex` file inside the `scope "/", HelloPhoenix do` block: `resources "users", UserController`. (For this purpose, it doesn't matter that we don't actually have a `HelloPhoenix.UserController`.)
 
 Then go to the root of your project, and run `$ mix phoenix.routes`
 
@@ -103,8 +105,8 @@ user_path  GET     /users/:id/edit  HelloPhoenix.UserController.edit/2
 user_path  GET     /users/new       HelloPhoenix.UserController.new/2
 user_path  GET     /users/:id       HelloPhoenix.UserController.show/2
 user_path  POST    /users           HelloPhoenix.UserController.create/2
-user_path  PUT     /users/:id       HelloPhoenix.UserController.update/2
 user_path  PATCH   /users/:id       HelloPhoenix.UserController.update/2
+           PUT     /users/:id       HelloPhoenix.UserController.update/2
 user_path  DELETE  /users/:id       HelloPhoenix.UserController.destroy/2
 ```
 
@@ -115,8 +117,8 @@ This is the standard matrix of HTTP verbs, paths and controller actions. Let's l
 - A GET request to /users/new will invoke the new action to present a form for creating a new user.
 - A POST request to /users will invoke the create action to save a new user to the data store.
 - A GET request to /users/:id/edit will invoke the edit action with an id to retrieve an individual user from the data store and present the information in a form for editing.
-- A PUT request to /users/:id will invoke the update action with an id to save the updated user to the data store.
-- A PATCH request to /users/:id will also invoke the update action with an id to save the updated use to the data store.
+- A PATCH request to /users/:id will invoke the update action with an id to save the updated user to the data store.
+- A PUT request to /users/:id will also invoke the update action with an id to save the updated use to the data store.
 - A DELETE request to /users/:id will invoke the destroy action with an id to remove the individual user from the data store.
 
 If we don't feel that we need all of these routes, we can be selective using the `:only` and `:except` options.
@@ -124,7 +126,7 @@ If we don't feel that we need all of these routes, we can be selective using the
 Let's say we have a read-only posts resource. We could define it like this.
 
 ```elixir
-resources "posts", HelloPhoenix.PostController, only: [:index, :show]
+resources "posts", PostController, only: [:index, :show]
 ```
 
 Running `$ mix phoenix.routes` shows that we now only have the routes to the index and show actions defined.
@@ -137,7 +139,7 @@ post_path  GET     /posts/:id                     HelloPhoenix.PostsController.s
 Similarly, if we have a comments resource, and we don't want to provide a route to delete one, we could define a route like this.
 
 ```elixir
-resources "comments", HelloPhoenix.CommentController, except: [:destroy]
+resources "comments", CommentController, except: [:destroy]
 ```
 
 Running `$ mix phoenix.routes` now shows that we have all the routes except the DELETE request to the destroy action.
@@ -168,6 +170,7 @@ This is significant because we can use the `page_path` function in a template to
 ```html
 <a href="<%= HelloPhoenix.Router.Helpers.page_path(:index) %>">To the Welcome Page!</a>
 ```
+Note: If that function invocation seems uncomfortably long, there is a solution. By including `import HelloPhoenix.Router.Helpers` in our main application view, we can shorten that to `page_path(:index)`. Please see the [View Guide](http://www.phoenixframework.org/v0.6.2/docs/views) for more information.
 
 This pays off tremendously if we should ever have to change the path of our route in the router. Since the path helpers are built dynamically from the routes, any calls to `page_path` in our templates will still work.
 
@@ -205,23 +208,30 @@ iex(3)> HelloPhoenix.Router.Helpers.user_path(:show, 17, admin: true, active: fa
 "/users/17?admin=true&active=false"
 ```
 
-What if we need a full url instead of a path? Again, Phoenix has an answer - the `Router.Helpers.url` function.
+What if we need a full url instead of a path? Again, Phoenix has an answer, but this time, we need to interact with Phoenix in a slightly different way in order to see it. Let's close out our `iex` session by hitting `ctrl-c` twice.
+
+Now, let's open an `iex` session and start our application simultaneously.
+
+```console
+$ iex -S mix phoenix.start
+```
+In order to get a full url, we pipe the result of the `user_path/1` function into `Endpoint.url/1`.
 
 ```elixir
-iex(3)> HelloPhoenix.Router.Helpers.user_path(:index, 42) |> HelloPhoenix.Router.Helpers.url
-"http://localhost:4000/users/42"
+iex(3)> HelloPhoenix.Router.Helpers.user_path(:index) |> HelloPhoenix.Endpoint.url
+"http://localhost:4000/users"
 ```
+Application endpoints will have their own guide soon. For now, think of them as the entity that handles requests just up to the point where the router takes over. That includes starting the app/server, applying configuration, and applying the plugs common to all requests.
 
-The `Router.Helpers.url` function will get the host, port, proxy port and ssl information needed to construct the full url from the configuration parameters set for each environment. We'll talk about configuration in more detail in its own guide. For now, you can take a look at `/config/dev.exs` file in your own project to see what those values are.
-
+The `Endpoint.url/1` function will get the host, port, proxy port and ssl information needed to construct the full url from the configuration parameters set for each environment. We'll talk about configuration in more detail in its own guide. For now, you can take a look at `/config/dev.exs` file in your own project to see what those values are.
 
 ###Nested Resources
 
 It is also possible to nest resources in a Phoenix router. Let's say we also have a posts resource which has a one to many relationship with users. That is to say, a user can create many posts, and an individual post belongs to only one user. We can represent that with a nested route like this.
 
 ```elixir
-resources "users", HelloPhoenix.UserController do
-  resources "posts", HelloPhoenix.PostController
+resources "users", UserController do
+  resources "posts", PostController
 end
 ```
 When we run `$ mix phoenix.routes` now, in addition to the routes we saw for users above, we get the following set of routes.
@@ -278,7 +288,7 @@ The admin review paths could be prefixed with `/admin`.
 and so on
 ```
 
-We accomplish this with a scoped route that sets a path option to `/admin` like this one.
+We accomplish this with a scoped route that sets a path option to `/admin` like this one. For now, let's not nest this scope inside of any other scopes (like the `scope "/", HelloPhoenix do` one provided for us in a new app).
 
 ```elixir
 scope "/admin" do
@@ -289,6 +299,8 @@ end
 ```
 
 Note that Phoenix will assume that the path we set ought to begin with a slash, so `scope "/admin" do` and `scope "admin" do` will both produce the same results.
+
+Note also, that the way this scope is currently defined, we need to fully qualify our controller name, `HelloPhoenix.Admin.ReviewController`. We'll fix that in a minute.
 
 ```elixir
 review_path  GET     /admin/reviews           HelloPhoenix.Admin.ReviewController.index/2
@@ -306,10 +318,10 @@ This looks good, but there is a problem here. Remember that we wanted both user 
 ```elixir
 pipe_through :browser
 
-resources "/reviews", ReviewController
+resources "/reviews", HelloPhoenix.ReviewController
 
 scope "/admin" do
-  resources "/reviews", Admin.ReviewController
+  resources "/reviews", HelloPhoenix.Admin.ReviewController
 end
 ```
 
@@ -339,10 +351,10 @@ The actual routes we get all look right, except for the path helper at the begin
 ```elixir
 pipe_through :browser
 
-resources "/reviews", ReviewController
+resources "/reviews", HelloPhoenix.ReviewController
 
 scope "/admin", as: :admin do
-  resources "/reviews", Admin.ReviewController
+  resources "/reviews", HelloPhoenix.Admin.ReviewController
 end
 ```
 
@@ -418,10 +430,10 @@ admin_review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewCon
   admin_user_path  DELETE  /admin/users/:id         HelloPhoenix.Admin.UserController.destroy/2
 ```
 
-This is great, exactly what we want, but we can make it even better. Notice that for each resource, we needed to fully qualify the controller name with `HelloPhoenix.Admin`? That's tedious and error prone. Assuming the name of each of our controllers actually begins with `HelloPhoenix.Admin`, we can add an `alias: HelloPhoenix.Admin` option to our scope declaration, and all of our routes will have the correct, fully qualified controller name.
+This is great, exactly what we want, but we can make it even better. Notice that for each resource, we needed to fully qualify the controller name with `HelloPhoenix.Admin`. That's tedious and error prone. Assuming the name of each of our controllers actually begins with `HelloPhoenix.Admin`, we can add a `HelloPhoenix.Admin` option to our scope declaration just after the scope path, and all of our routes will have the correct, fully qualified controller name.
 
 ```elixir
-scope "/admin", as: :admin, alias: HelloPhoenix.Admin do
+scope "/admin", HelloPhoenix.Admin, as: :admin do
   pipe_through :browser
 
   resources "/images", ImageController
@@ -459,13 +471,13 @@ admin_review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewCon
   admin_user_path  DELETE  /admin/users/:id         HelloPhoenix.Admin.UserController.destroy/2
 ```
 
-As a bonus, we could nest all of the routes for our application inside a scope that simply has an alias for the name of our Phoenix app, and eliminate the duplication in our controller names.
+As a bonus, we could nest all of the routes for our application inside a scope that simply has an alias for the name of our Phoenix app, and eliminate the duplication in our controller names. Phoenix now does this for us in the generated router for a new application.
 
 ```elixir
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
-  scope "/", alias: HelloPhoenix do
+  scope "/", HelloPhoenix do
     pipe_through :browser
 
     get "/images", ImageController, :index
@@ -497,15 +509,13 @@ review_path  DELETE  /reviews/:id       HelloPhoenix.ReviewController.destroy/2
   user_path  DELETE  /users/:id         HelloPhoenix.UserController.destroy/2
 ```
 
-Note: The `:as` and `:alias` options may appear in any order, and the resulting routes will be the same.
-
 Scopes can also nest, just as resources can. If we had a versioned api with resources for images, reviews and users, we could define routes for them like this.
 
 ```elixir
-scope "/api", alias: HelloPhoenix.Api, as: :api do
+scope "/api", HelloPhoenix.Api, as: :api do
   pipe_through :api
 
-  scope "/v1", alias: V1, as: :v1 do
+  scope "/v1", V1, as: :v1 do
     resources "/images", ImageController
     resources "/reviews", ReviewController
     resources "/users", UserController\
@@ -540,6 +550,64 @@ api_v1_review_path  DELETE  /api/v1/reviews/:id       HelloPhoenix.Api.V1.Review
   api_v1_user_path  PUT     /api/v1/users/:id         HelloPhoenix.Api.V1.UserController.update/2
                     PATCH   /api/v1/users/:id         HelloPhoenix.Api.V1.UserController.update/2
   api_v1_user_path  DELETE  /api/v1/users/:id         HelloPhoenix.Api.V1.UserController.destroy/2
+```
+Interestingly, we can re-define the same scope as long as we are careful not to duplicate routes. If we do duplicate a route, we'll get this familiar warning.
+
+```console
+warning: this clause cannot match because a previous clause at line 16 always matches
+```
+This router is perfectly fine with two scopes defined for the same path.
+
+```elixir
+defmodule HelloPhoenix.Router do
+  use Phoenix.Router
+
+  pipeline :browser do
+    plug :accepts, ~w(html)
+    plug :fetch_session
+  end
+
+  pipeline :api do
+    plug :accepts, ~w(json)
+  end
+
+  scope "/", HelloPhoenix do
+    pipe_through :browser
+
+    resources "users", UserController
+  end
+
+  scope "/", AnotherApp do
+    pipe_through :browser
+
+    resources "posts", PostController
+  end
+
+  # Other scopes may use custom stacks.
+  # scope "/api", HelloPhoenix do
+  #   pipe_through :api
+  # end
+end
+```
+And when we run `$ mix phoenix.routes`, we see the following output.
+
+```console
+user_path  GET     /users           HelloPhoenix.UserController.index/2
+user_path  GET     /users/:id/edit  HelloPhoenix.UserController.edit/2
+user_path  GET     /users/new       HelloPhoenix.UserController.new/2
+user_path  GET     /users/:id       HelloPhoenix.UserController.show/2
+user_path  POST    /users           HelloPhoenix.UserController.create/2
+user_path  PATCH   /users/:id       HelloPhoenix.UserController.update/2
+           PUT     /users/:id       HelloPhoenix.UserController.update/2
+user_path  DELETE  /users/:id       HelloPhoenix.UserController.destroy/2
+post_path  GET     /posts           AnotherApp.PostController.index/2
+post_path  GET     /posts/:id/edit  AnotherApp.PostController.edit/2
+post_path  GET     /posts/new       AnotherApp.PostController.new/2
+post_path  GET     /posts/:id       AnotherApp.PostController.show/2
+post_path  POST    /posts           AnotherApp.PostController.create/2
+post_path  PATCH   /posts/:id       AnotherApp.PostController.update/2
+           PUT     /posts/:id       AnotherApp.PostController.update/2
+post_path  DELETE  /posts/:id       AnotherApp.PostController.destroy/2
 ```
 
 ###Pipelines
@@ -613,9 +681,9 @@ Phoenix defines two other pipelines by default, `:browser` and `:api`. The route
 
 As their names suggest, the `:browser` pipeline prepares for routes which render HTML for a browser. The `:api` pipeline prepares for routes which produce data for an api.
 
-The `:browser` pipeline has a single plug, `:fetch_session`, which, naturally, fetches the session data and makes it available in the connection.
+The `:browser` pipeline has two plugs: `plug :accepts, ~w(html)` which defines the request format or formats which will be accepted, and `:fetch_session`, which, naturally, fetches the session data and makes it available in the connection.
 
-Currently, the `:api` pipeline is empty by default, and has no plugs defined for it.
+Currently, the `:api` pipeline only defines `plug :accepts, ~w(json)`.
 
 The router will invoke a pipeline on a route defined within a scope. If no scope is defined, the router will invoke the pipeline on all the routes in the router. If we call `pipe_through/1` within a nested scope, the router will invoke it on the inner scope only.
 
@@ -646,7 +714,7 @@ defmodule HelloPhoenix.Router do
   scope "/api", HelloPhoenix do
     pipe_through :api
 
-    resources "reviews", HelloPhoenix.ReviewController
+    resources "reviews", ReviewController
   end
 end
 ```
@@ -708,15 +776,15 @@ defmodule HelloPhoenix.Router do
   end
   ...
 
-  scope "/" do
+  scope "/", HelloPhoenix do
     pipe_through :browser
 
-    resources "posts", HelloPhoenix.PostController
+    resources "posts", PostController
 
     scope "/reviews" do
       pipe_through :review_checks
 
-      resources "reviews", HelloPhoenix.ReviewController
+      resources "reviews", ReviewController
     end
   end
 end
@@ -742,10 +810,10 @@ defmodule HelloPhoenix.Router do
     plug :ensure_user_owns_review
   end
 
-  scope "/reviews" do
+  scope "/reviews", HelloPhoenix do
     pipe_through :review_checks
 
-    resources "reviews", HelloPhoenix.ReviewController
+    resources "reviews", ReviewController
   end
 end
 ```
