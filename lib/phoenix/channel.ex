@@ -3,7 +3,6 @@ defmodule Phoenix.Channel do
   alias Phoenix.PubSub
   alias Phoenix.Socket
   alias Phoenix.Socket.Message
-  alias Phoenix.Socket.Handler
 
   defcallback join(Socket.t, topic :: binary, auth_msg :: map) :: {:ok, Socket.t} |
                                                                   {:error, Socket.t, reason :: term}
@@ -108,12 +107,12 @@ defmodule Phoenix.Channel do
   @doc """
   Terminates socket connection, including all multiplexed channels
   """
-  def terminate(socket), do: Handler.terminate(socket)
+  def terminate(socket), do: send(socket.pid, :shutdown)
 
   @doc """
   Hibernates socket connection
   """
-  def hibernate(socket), do: Handler.hibernate(socket)
+  def hibernate(socket), do: send(socket.pid, :hibernate)
 
   defp namespaced(channel, topic), do: "#{channel}:#{topic}"
 
