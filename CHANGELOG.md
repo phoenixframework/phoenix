@@ -3,6 +3,8 @@
 ## v0.8.0-dev
 * Enhancements
   * [Router] `protect_from_forgery` has been added to the Router for CSRF protection. This is automatically plugged in new projects. See [this example](https://github.com/phoenixframework/phoenix/blob/ce5ebf3d9de4412a18e6325cd0d34e1b9699fb5a/priv/template/web/router.ex#L7) for plugging in your existing router pipeline(s).
+* Bug Fixes
+  * [Channel] Fix WebSocket Heartbeat causing unnecessary `%Phoenix.Socket{}`'s to be tracked and leave errors on disconnect.
 * Backwards incompatible changes
   * Endpoints should now be explicitly started in your application supervision tree. Just add `worker(YourApp.Endpoint, [])` to your supervision tree in `lib/your_app.ex`
   * `mix phoenix.start` was renamed to `mix phoenix.server`

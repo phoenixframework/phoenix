@@ -216,12 +216,13 @@ defmodule Phoenix.Channel.ChannelTest do
     end
   end
 
-  test "phoenix channel returns heartbeat message when received" do
-    sockets = HashDict.put(HashDict.new, {"phoenix", "conn"}, new_socket)
+  test "returns heartbeat message when received, and does not store socket" do
+    sockets = HashDict.new
     message = %Message{channel: "phoenix", topic: "conn", event: "heartbeat", message: %{}}
 
-    assert match?({:ok, _sockets}, Transport.dispatch(message, sockets, self, Router))
+    assert {:ok, sockets} = Transport.dispatch(message, sockets, self, Router)
     assert_received %Message{channel: "phoenix", topic: "conn", event: "heartbeat", message: %{}}
+    assert sockets == HashDict.new
   end
 
   test "socket state can change when receiving regular process messages" do
@@ -242,4 +243,6 @@ defmodule Phoenix.Channel.ChannelTest do
     _socket = MyChannel.event(socket, "get", %{"key" => :val})
     assert_received 123
   end
+
+
 end

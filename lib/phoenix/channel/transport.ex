@@ -68,6 +68,8 @@ defmodule Phoenix.Channel.Transport do
     |> case do
       {:ok, socket} ->
         {:ok, HashDict.put(sockets, {msg.channel, msg.topic}, socket)}
+      {:heartbeat, _socket} ->
+        {:ok, sockets}
       {:error, _socket, reason} ->
         {:error, sockets, reason}
     end
@@ -89,7 +91,7 @@ defmodule Phoenix.Channel.Transport do
     msg = %Message{channel: "phoenix", topic: "conn", event: "heartbeat", message: %{}}
     send socket.pid, msg
 
-    {:ok, socket}
+    {:heartbeat, socket}
   end
   def dispatch(socket, channel, "join", msg) do
     socket
