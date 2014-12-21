@@ -194,8 +194,7 @@ defmodule Phoenix.ControllerTest do
   end
 
   test "protect_from_forgery/2 doesn't blow up" do
-    conn = conn(:get, "/")
-    conn
+    conn(:get, "/")
     |> with_session
     |> protect_from_forgery([])
   end
