@@ -158,19 +158,22 @@ comment_path  PATCH   /comments/:id                  HelloPhoenix.CommentControl
 Path helpers are functions which are dynamically defined on the `Router.Helpers` module for an individual application. For us, that is `HelloPhoenix.Router.Helpers`.
 Their names are derived from the name of the controller used in the route definition. Our controller is `HelloPhoenix.PageController`, and `page_path` is the function which will return the path to the root of our application.
 
-That's a mouthful. Let's see it in action. Run `$ iex -S mix` at the root of the project. When we call the `page_path` function on our router helpers with the action as an argument, it returns the path to us.
+That's a mouthful. Let's see it in action. Run `$ iex -S mix` at the root of the
+project. When we call the `page_path` function on our router helpers with the
+the `Endpoint` or connection and action as arguments, it returns the path to us.
 
 ```elixir
-iex(4)> HelloPhoenix.Router.Helpers.page_path(:index)
+iex(4)> HelloPhoenix.Router.Helpers.page_path(Endpoint, :index)
 "/"
 ```
 
 This is significant because we can use the `page_path` function in a template to link to the root of our application.
 
 ```html
-<a href="<%= HelloPhoenix.Router.Helpers.page_path(:index) %>">To the Welcome Page!</a>
+<a href="<%= HelloPhoenix.Router.Helpers.page_path(@conn, :index) %>">To the Welcome Page!</a>
 ```
-Note: If that function invocation seems uncomfortably long, there is a solution. By including `import HelloPhoenix.Router.Helpers` in our main application view, we can shorten that to `page_path(:index)`. Please see the [View Guide](http://www.phoenixframework.org/v0.6.2/docs/views) for more information.
+Note: If that function invocation seems uncomfortably long, there is a solution. By including `import HelloPhoenix.Router.Helpers` in our main
+application view, we can shorten that to `page_path(@conn, :index)`. Please see the [View Guide](http://www.phoenixframework.org/docs/views) for more information.
 
 This pays off tremendously if we should ever have to change the path of our route in the router. Since the path helpers are built dynamically from the routes, any calls to `page_path` in our templates will still work.
 
@@ -179,32 +182,32 @@ This pays off tremendously if we should ever have to change the path of our rout
 When we ran the `phoenix.routes` task for our user resource, it listed the `user_path` as the path helper function for each line of output. Here is what that translates to for each action.
 
 ```elixir
-iex(2)> HelloPhoenix.Router.Helpers.user_path(:index)
+iex(2)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :index)
 "/users"
 
-iex(3)> HelloPhoenix.Router.Helpers.user_path(:show, 17)
+iex(3)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :show, 17)
 "/users/17"
 
-iex(4)> HelloPhoenix.Router.Helpers.user_path(:new)
+iex(4)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :new)
 "/users/new"
 
-iex(5)> HelloPhoenix.Router.Helpers.user_path(:create)
+iex(5)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :create)
 "/users"
 
-iex(6)> HelloPhoenix.Router.Helpers.user_path(:edit, 37)
+iex(6)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :edit, 37)
 "/users/37/edit"
 
-iex(7)> HelloPhoenix.Router.Helpers.user_path(:update, 37)
+iex(7)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :update, 37)
 "/users/37"
 
-iex(8)> HelloPhoenix.Router.Helpers.user_path(:destroy, 17)
+iex(8)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :destroy, 17)
 "/users/17"
 ```
 
-What about paths with query strings? Phoenix has you covered. By adding an optional third argument of key value pairs, the path helpers will return those pairs in the query string.
+What about paths with query strings? Phoenix has you covered. By adding an optional fourth argument of key value pairs, the path helpers will return those pairs in the query string.
 
 ```elixir
-iex(3)> HelloPhoenix.Router.Helpers.user_path(:show, 17, admin: true, active: false)
+iex(3)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :show, 17, admin: true, active: false)
 "/users/17?admin=true&active=false"
 ```
 
@@ -215,10 +218,10 @@ Now, let's open an `iex` session and start our application simultaneously.
 ```console
 $ iex -S mix phoenix.start
 ```
-In order to get a full url, we pipe the result of the `user_path/1` function into `Endpoint.url/1`.
+In order to get a full url, we pipe the result of the `user_path/2` function into `Endpoint.url/1`.
 
 ```elixir
-iex(3)> HelloPhoenix.Router.Helpers.user_path(:index) |> HelloPhoenix.Endpoint.url
+iex(3)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :index) |> HelloPhoenix.Endpoint.url
 "http://localhost:4000/users"
 ```
 Application endpoints will have their own guide soon. For now, think of them as the entity that handles requests just up to the point where the router takes over. That includes starting the app/server, applying configuration, and applying the plugs common to all requests.
@@ -253,14 +256,14 @@ We see that each of these routes scopes the posts to a user id. For the first on
 When calling path helper functions for nested routes, we will need to pass the ids in the order they came in the route definition. For the following `show` route, `42` is the `user_id`, and `17` is the `post_id`.
 
 ```elixir
-iex(2)> HelloPhoenix.Router.Helpers.user_post_path(:show, 42, 17)
+iex(2)> HelloPhoenix.Router.Helpers.user_post_path(Endpoint, :show, 42, 17)
 "/users/42/posts/17"
 ```
 
 Again, if we add a key value pair to the end of the function call, it is added to the query string.
 
 ```elixir
-iex> HelloPhoenix.Router.Helpers.user_post_path(:index, 42, active: true)
+iex> HelloPhoenix.Router.Helpers.user_post_path(Endpoint, :index, 42, active: true)
 "/users/42/posts?active=true"
 ```
 
