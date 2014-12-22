@@ -13,16 +13,25 @@ defmodule Phoenix.Channel.ChannelTest do
     def leave(_socket, _msg) do
       Process.get(:leave)
     end
-    def event(socket, "info", msg) do
+    def incoming(socket, "info", msg) do
       send socket.pid, :info
       msg
     end
-    def event(_socket, "boom", msg), do: msg
-    def event(socket, "put", dict) do
+    def incoming(_socket, "boom", msg), do: msg
+    def incoming(socket, "put", dict) do
       Enum.reduce dict, socket, fn {k, v}, socket -> Socket.assign(socket, k, v) end
     end
-    def event(socket, "get", %{"key" => key}) do
+    def incoming(socket, "get", %{"key" => key}) do
       send socket.pid, socket.assigns[key]
+      socket
+    end
+
+    def outgoing(socket, "some:broadcast", _msg) do
+      send socket.pid, :outgoing
+      socket
+    end
+    def outgoing(socket, event, message) do
+      reply(socket, event, message)
       socket
     end
   end
@@ -239,10 +248,23 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "Socket state can be put and retrieved" do
-    socket = MyChannel.event(new_socket, "put", %{val: 123})
-    _socket = MyChannel.event(socket, "get", %{"key" => :val})
+    socket = MyChannel.incoming(new_socket, "put", %{val: 123})
+    _socket = MyChannel.incoming(socket, "get", %{"key" => :val})
     assert_received 123
   end
 
+  test "outgoing/3 can be overidden for custom broadcast handling" do
+    socket = new_socket
+    sockets = HashDict.put(HashDict.new, {"chan1", "topic"}, socket)
+    message = join_message({:ok, socket})
 
+    PubSub.create("chan1:topic")
+    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router)
+    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router)
+    Transport.dispatch_broadcast(sockets, %Message{event: "some:broadcast",
+                                                   channel: "chan1",
+                                                   topic: "topic",
+                                                   message: "hello"})
+    assert_received :outgoing
+  end
 end

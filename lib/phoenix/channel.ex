@@ -14,7 +14,11 @@ defmodule Phoenix.Channel do
       import Phoenix.Socket
 
       def leave(socket, message), do: socket
-      defoverridable leave: 2
+      def outgoing(socket, event, message) do
+        reply(socket, event, message)
+        socket
+      end
+      defoverridable leave: 2, outgoing: 3
     end
   end
 
@@ -81,12 +85,12 @@ defmodule Phoenix.Channel do
   end
   def broadcast_from(from, channel, topic, event, message) when is_map(message) do
     PubSub.create(namespaced(channel, topic))
-    PubSub.broadcast_from from, namespaced(channel, topic), %Message{
+    PubSub.broadcast_from from, namespaced(channel, topic), {:broadcast, %Message{
       channel: channel,
       topic: topic,
       event: event,
       message: message
-    }
+    }}
   end
   def broadcast_from(_, _, _, _, _), do: raise_invalid_message
 

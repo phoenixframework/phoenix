@@ -23,14 +23,18 @@ defmodule Phoenix.Router.Socket do
         """
       end
 
-      def match(socket, :socket, unquote(channel), "join", message) do
+      def match(socket, :incoming_socket, unquote(channel), "join", message) do
         apply(unquote(module), :join, [socket, socket.topic, message])
       end
-      def match(socket, :socket, unquote(channel), "leave", message) do
+      def match(socket, :incoming_socket, unquote(channel), "leave", message) do
         apply(unquote(module), :leave, [socket, message])
       end
-      def match(socket, :socket, unquote(channel), event, message) do
-        apply(unquote(module), :event, [socket, event, message])
+
+      def match(socket, :incoming_socket, unquote(channel), event, message) do
+        apply(unquote(module), :incoming, [socket, event, message])
+      end
+      def match(socket, :outgoing_socket, unquote(channel), event, message) do
+        apply(unquote(module), :outgoing, [socket, event, message])
       end
     end
   end

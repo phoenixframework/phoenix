@@ -86,6 +86,15 @@ defmodule Phoenix.Transports.LongPoller.Server do
     end
     {:noreply, %{state | buffer: buffer}, state.window_ms}
   end
+  def handle_info({:broadcast, message = %Message{}}, %{sockets: sockets} = state) do
+    sockets = case Transport.dispatch_broadcast(sockets, message) do
+      {:ok, socks} -> socks
+      {:error, socks, _reason} -> socks
+    end
+
+    {:noreply, %{state | sockets: sockets}, state.window_ms}
+  end
+
 
   def handle_info(:timeout, state) do
     {:stop, :shutdown, state}

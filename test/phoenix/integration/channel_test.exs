@@ -36,7 +36,7 @@ defmodule Phoenix.Integration.ChannelTest do
       socket
     end
 
-    def event(socket, "new:msg", message) do
+    def incoming(socket, "new:msg", message) do
       broadcast socket, "new:msg", message
       socket
     end
@@ -172,7 +172,7 @@ defmodule Phoenix.Integration.ChannelTest do
                                           "event" => "new:msg",
                                           "message" => %{"body" => "hi!"}}
     assert resp.status == 200
-    assert_receive %Message{event: "new:msg", message: %{"body" => "hi!"}}
+    assert_receive {:broadcast, %Message{event: "new:msg", message: %{"body" => "hi!"}}}
     {resp, cookie} = poll(:get, cookie)
     assert resp.status == 200
 
@@ -183,7 +183,7 @@ defmodule Phoenix.Integration.ChannelTest do
                                           "event" => "new:msg",
                                           "message" => %{"body" => "this method shouldn't send!'"}}
     assert resp.status == 401
-    refute_receive %Message{event: "new:msg"}
+    refute_receive {:broadcast, %Message{event: "new:msg"}}
 
 
     ## multiplexed sockets
@@ -194,13 +194,13 @@ defmodule Phoenix.Integration.ChannelTest do
                                           "event" => "join",
                                           "message" => %{}}
     assert resp.status == 200
-    Phoenix.Channel.broadcast "rooms", "lobby", "new:msg", %{body: "Hello"}
+    Phoenix.Channel.broadcast "rooms", "lobby", "new:msg", %{body: "Hello lobby"}
     # poll
     {resp, cookie} = poll(:get, cookie)
     assert resp.status == 200
     assert Enum.count(resp.body) == 2
     assert Enum.at(resp.body, 0)["message"]["status"] == "connected"
-    assert Enum.at(resp.body, 1)["message"]["body"] == "Hello"
+    assert Enum.at(resp.body, 1)["message"]["body"] == "Hello lobby"
 
 
     ## Server termination handling

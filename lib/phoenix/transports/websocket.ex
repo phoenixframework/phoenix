@@ -51,6 +51,14 @@ defmodule Phoenix.Transports.WebSocket do
   @doc """
   Receives `%Phoenix.Socket.Message{}` and sends encoded message JSON to client
   """
+  def ws_info({:broadcast, message = %Message{}}, state = %{sockets: sockets}) do
+    sockets = case Transport.dispatch_broadcast(sockets, message) do
+      {:ok, socks} -> socks
+      {:error, socks, _reason} -> socks
+    end
+
+    %{state | sockets: sockets}
+  end
   def ws_info(message = %Message{}, state = %{serializer: serializer}) do
     reply(self, serializer.encode!(message))
     state

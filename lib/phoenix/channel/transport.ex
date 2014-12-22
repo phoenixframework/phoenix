@@ -95,13 +95,13 @@ defmodule Phoenix.Channel.Transport do
   end
   def dispatch(socket, channel, "join", msg) do
     socket
-    |> socket.router.match(:socket, channel, "join", msg)
+    |> socket.router.match(:incoming_socket, channel, "join", msg)
     |> handle_result("join")
   end
   def dispatch(socket, channel, event, msg) do
     if Socket.authorized?(socket, channel, socket.topic) do
       socket
-      |> socket.router.match(:socket, channel, event, msg)
+      |> socket.router.match(:incoming_socket, channel, event, msg)
       |> handle_result(event)
     else
       handle_result({:error, socket, :unauthenticated}, event)
@@ -132,6 +132,28 @@ defmodule Phoenix.Channel.Transport do
   end
 
   @doc """
+  When an Adapter receives `{:broadcast, %Message{}}`, it dispatches to this
+  function with its socket state.
+
+  The message is routed to the intended channel's outgoing/3 callback.
+  """
+  def dispatch_broadcast(sockets, %Message{event: event, message: payload} = msg) do
+    sockets
+    |> HashDict.get({msg.channel, msg.topic})
+    |> case do
+      nil    ->
+        {:ok, sockets}
+      socket ->
+        {:ok, sock} =
+          socket
+          |> socket.router.match(:outgoing_socket, socket.channel, event, payload)
+          |> handle_result(event)
+
+        {:ok, HashDict.put(sockets, {sock.channel, sock.topic}, sock)}
+    end
+  end
+
+  @doc """
   Arbitrary Elixir processes are received by adapters and forwarded through
   this function to be dispatched as `"info"` events on each socket channel.
 
@@ -146,7 +168,7 @@ defmodule Phoenix.Channel.Transport do
   end
   def dispatch_info(socket = %Socket{}, channel, data) do
     socket
-    |> socket.router.match(:socket, channel, "info", data)
+    |> socket.router.match(:incoming_socket, channel, "info", data)
     |> handle_result("info")
   end
 
@@ -159,7 +181,7 @@ defmodule Phoenix.Channel.Transport do
   def dispatch_leave(sockets, reason) do
     Enum.each sockets, fn {_, socket} ->
       socket
-      |> socket.router.match(:socket, socket.channel, "leave", reason: reason)
+      |> socket.router.match(:incoming_socket, socket.channel, "leave", reason: reason)
       |> handle_result("leave")
     end
     :ok
