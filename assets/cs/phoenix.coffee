@@ -71,7 +71,7 @@
       @endPoint = @expandEndpoint(endPoint)
       @channels = []
       @sendBuffer = []
-      @stateChangeCallbacks = {open: [], close: [], error: []}
+      @stateChangeCallbacks = {open: [], close: [], error: [], message: []}
       @resetBufferTimer()
       @reconnect()
 
@@ -98,7 +98,7 @@
         @conn = new @transport(@endPoint)
         @conn.onopen = => @onConnOpen()
         @conn.onerror = (error) => @onConnError(error)
-        @conn.onmessage = (event) =>  @onMessage(event)
+        @conn.onmessage = (event) =>  @onConnMessage(event)
         @conn.onclose = (event) => @onConnClose(event)
 
 
@@ -116,6 +116,7 @@
     onOpen:  (callback) -> @stateChangeCallbacks.open.push(callback) if callback
     onClose: (callback) -> @stateChangeCallbacks.close.push(callback) if callback
     onError: (callback) -> @stateChangeCallbacks.error.push(callback) if callback
+    onMessage: (callback) -> @stateChangeCallbacks.message.push(callback) if callback
 
     onConnOpen: ->
       clearInterval(@reconnectTimer)
@@ -187,11 +188,12 @@
       @resetBufferTimer()
 
 
-    onMessage: (rawMessage) ->
+    onConnMessage: (rawMessage) ->
       console.log?("message received: ", rawMessage)
       {channel, topic, event, message} = JSON.parse(rawMessage.data)
       for chan in @channels when chan.isMember(channel, topic)
         chan.trigger(event, message)
+      callback(channel, topic, event, message) for callback in @stateChangeCallbacks.message
 
 
 

@@ -131,7 +131,8 @@
         this.stateChangeCallbacks = {
           open: [],
           close: [],
-          error: []
+          error: [],
+          message: []
         };
         this.resetBufferTimer();
         this.reconnect();
@@ -181,7 +182,7 @@
               return _this.onConnError(error);
             };
             _this.conn.onmessage = function(event) {
-              return _this.onMessage(event);
+              return _this.onConnMessage(event);
             };
             return _this.conn.onclose = function(event) {
               return _this.onConnClose(event);
@@ -214,6 +215,12 @@
       Socket.prototype.onError = function(callback) {
         if (callback) {
           return this.stateChangeCallbacks.error.push(callback);
+        }
+      };
+
+      Socket.prototype.onMessage = function(callback) {
+        if (callback) {
+          return this.stateChangeCallbacks.message.push(callback);
         }
       };
 
@@ -385,19 +392,24 @@
         return this.resetBufferTimer();
       };
 
-      Socket.prototype.onMessage = function(rawMessage) {
-        var chan, channel, event, message, topic, _i, _len, _ref, _ref1, _results;
+      Socket.prototype.onConnMessage = function(rawMessage) {
+        var callback, chan, channel, event, message, topic, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
         if (typeof console.log === "function") {
           console.log("message received: ", rawMessage);
         }
         _ref = JSON.parse(rawMessage.data), channel = _ref.channel, topic = _ref.topic, event = _ref.event, message = _ref.message;
         _ref1 = this.channels;
-        _results = [];
         for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
           chan = _ref1[_i];
           if (chan.isMember(channel, topic)) {
-            _results.push(chan.trigger(event, message));
+            chan.trigger(event, message);
           }
+        }
+        _ref2 = this.stateChangeCallbacks.message;
+        _results = [];
+        for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+          callback = _ref2[_j];
+          _results.push(callback(channel, topic, event, message));
         }
         return _results;
       };
