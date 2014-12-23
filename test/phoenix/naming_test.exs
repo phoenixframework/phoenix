@@ -17,6 +17,9 @@ defmodule Phoenix.NamingTest do
 
   test "camelize/1 converts Strings to camel case" do
     assert Naming.camelize("foo_bar") == "FooBar"
+    assert Naming.camelize("foo__bar") == "FooBar"
     assert Naming.camelize("foobar") == "Foobar"
+    assert Naming.camelize("_foobar") == "Foobar"
+    assert Naming.camelize("foobar_") == "Foobar"
   end
 end
