@@ -267,7 +267,7 @@ iex(my_app@127.0.0.1)1>
 
 ##### `upgrade`
 
-Although at the time of writing (25 Aug 2014) there is an [open issue with upgrading an app with exrm](https://github.com/bitwalker/exrm/issues/56), the `upgrade` command allows you to upgrade your application to a newer codebase without downtime. Awesome, right?
+The `upgrade` command allows you to upgrade your application to a newer codebase without downtime. Awesome, right?
 
 ##### `stop`
 
