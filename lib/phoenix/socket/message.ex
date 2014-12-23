@@ -2,7 +2,7 @@ defmodule Phoenix.Socket.Message do
   alias Poison, as: JSON
   alias Phoenix.Socket.Message
 
-  defstruct channel: nil, event: nil, message: nil
+  defstruct topic: nil, event: nil, message: nil
 
   defmodule InvalidMessage do
     defexception [:message]
@@ -17,7 +17,7 @@ defmodule Phoenix.Socket.Message do
 
   The Message format requires the following keys:
 
-    * channel - The String Channel namespace, ie "messages"
+    * topic - The String topic  or topic:subtopic pair namespace, ie "messages", "messages:123"
     * event - The String event name, ie "join"
     * message - The String JSON message payload
 
@@ -36,7 +36,7 @@ defmodule Phoenix.Socket.Message do
   def from_map!(map) when is_map(map) do
     try do
       %Message{
-        channel: Map.fetch!(map, "channel"),
+        topic: Map.fetch!(map, "topic"),
         event:   Map.fetch!(map, "event"),
         message: Map.fetch!(map, "message")
       }

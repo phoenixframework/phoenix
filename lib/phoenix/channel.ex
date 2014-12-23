@@ -4,8 +4,8 @@ defmodule Phoenix.Channel do
   alias Phoenix.Socket
   alias Phoenix.Socket.Message
 
-  defcallback join(Socket.t, channel :: binary, auth_msg :: map) :: {:ok, Socket.t} |
-                                                                    {:error, Socket.t, reason :: term}
+  defcallback join(Socket.t, topic :: binary, auth_msg :: map) :: {:ok, Socket.t} |
+                                                                  {:error, Socket.t, reason :: term}
 
   defmacro __using__(_options) do
     quote do
@@ -25,30 +25,30 @@ defmodule Phoenix.Channel do
 
   # TODO: Move this to pubsub
   @doc """
-  Subscribes socket to given channel
+  Subscribes socket to given topic
   Returns `%Phoenix.Socket{}`
   """
-  def subscribe(pid, channel) when is_pid(pid) do
-    PubSub.subscribe(pid, channel)
+  def subscribe(pid, topic) when is_pid(pid) do
+    PubSub.subscribe(pid, topic)
   end
-  def subscribe(socket, channel) do
-    if !Socket.authorized?(socket, channel) do
-      PubSub.subscribe(socket.pid, channel)
-      Socket.authorize(socket, channel)
+  def subscribe(socket, topic) do
+    if !Socket.authorized?(socket, topic) do
+      PubSub.subscribe(socket.pid, topic)
+      Socket.authorize(socket, topic)
     else
       socket
     end
   end
 
   @doc """
-  Unsubscribes socket from given channel
+  Unsubscribes socket from given topic
   Returns `%Phoenix.Socket{}`
   """
-  def unsubscribe(pid, channel) when is_pid(pid) do
-    PubSub.unsubscribe(pid, channel)
+  def unsubscribe(pid, topic) when is_pid(pid) do
+    PubSub.unsubscribe(pid, topic)
   end
-  def unsubscribe(socket, channel) do
-    PubSub.unsubscribe(socket.pid, channel)
+  def unsubscribe(socket, topic) do
+    PubSub.unsubscribe(socket.pid, topic)
     Socket.deauthorize(socket)
   end
 
@@ -63,12 +63,12 @@ defmodule Phoenix.Channel do
       :ok
 
   """
-  def broadcast(channel, event, message) when is_binary(channel) do
-    broadcast_from :global, channel, event, message
+  def broadcast(topic, event, message) when is_binary(topic) do
+    broadcast_from :global, topic, event, message
   end
 
   def broadcast(socket = %Socket{}, event, message) do
-    broadcast_from :global, socket.channel, event, message
+    broadcast_from :global, socket.topic, event, message
   end
 
   @doc """
@@ -83,12 +83,12 @@ defmodule Phoenix.Channel do
 
   """
   def broadcast_from(socket = %Socket{}, event, message) do
-    broadcast_from(socket.pid, socket.channel, event, message)
+    broadcast_from(socket.pid, socket.topic, event, message)
   end
-  def broadcast_from(from, channel, event, message) when is_map(message) do
-    PubSub.create(channel)
-    PubSub.broadcast_from from, channel, {:broadcast, %Message{
-      channel: channel,
+  def broadcast_from(from, topic, event, message) when is_map(message) do
+    PubSub.create(topic)
+    PubSub.broadcast_from from, topic, {:broadcast, %Message{
+      topic: topic,
       event: event,
       message: message
     }}
@@ -100,7 +100,7 @@ defmodule Phoenix.Channel do
   """
   def reply(socket, event, message) when is_map(message) do
     send socket.pid, %Message{
-      channel: socket.channel,
+      topic: socket.topic,
       event: event,
       message: message
     }

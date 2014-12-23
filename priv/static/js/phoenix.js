@@ -14,8 +14,7 @@
     exports.Channel = (function() {
       Channel.prototype.bindings = null;
 
-      function Channel(channel, topic, message, callback, socket) {
-        this.channel = channel;
+      function Channel(topic, message, callback, socket) {
         this.topic = topic;
         this.message = message;
         this.callback = callback;
@@ -34,8 +33,8 @@
         });
       };
 
-      Channel.prototype.isMember = function(channel, topic) {
-        return this.channel === channel && this.topic === topic;
+      Channel.prototype.isMember = function(topic) {
+        return this.topic === topic;
       };
 
       Channel.prototype.off = function(event) {
@@ -69,7 +68,6 @@
 
       Channel.prototype.send = function(event, message) {
         return this.socket.send({
-          channel: this.channel,
           topic: this.topic,
           event: event,
           message: message
@@ -80,7 +78,7 @@
         if (message == null) {
           message = {};
         }
-        this.socket.leave(this.channel, this.topic, message);
+        this.socket.leave(this.topic, message);
         return this.reset();
       };
 
@@ -310,11 +308,10 @@
       };
 
       Socket.prototype.rejoin = function(chan) {
-        var channel, message, topic;
+        var message, topic;
         chan.reset();
-        channel = chan.channel, topic = chan.topic, message = chan.message;
+        topic = chan.topic, message = chan.message;
         this.send({
-          channel: channel,
           topic: topic,
           event: "join",
           message: message
@@ -322,22 +319,21 @@
         return chan.callback(chan);
       };
 
-      Socket.prototype.join = function(channel, topic, message, callback) {
+      Socket.prototype.join = function(topic, message, callback) {
         var chan;
-        chan = new exports.Channel(channel, topic, message, callback, this);
+        chan = new exports.Channel(topic, message, callback, this);
         this.channels.push(chan);
         if (this.isConnected()) {
           return this.rejoin(chan);
         }
       };
 
-      Socket.prototype.leave = function(channel, topic, message) {
+      Socket.prototype.leave = function(topic, message) {
         var c;
         if (message == null) {
           message = {};
         }
         this.send({
-          channel: channel,
           topic: topic,
           event: "leave",
           message: message
@@ -348,7 +344,7 @@
           _results = [];
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
             c = _ref[_i];
-            if (!(c.isMember(channel, topic))) {
+            if (!(c.isMember(topic))) {
               _results.push(c);
             }
           }
@@ -372,8 +368,7 @@
 
       Socket.prototype.sendHeartbeat = function() {
         return this.send({
-          channel: "phoenix",
-          topic: "conn",
+          topic: "phoenix",
           event: "heartbeat",
           message: {}
         });
@@ -393,15 +388,15 @@
       };
 
       Socket.prototype.onConnMessage = function(rawMessage) {
-        var callback, chan, channel, event, message, topic, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
+        var callback, chan, event, message, topic, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
         if (typeof console.log === "function") {
           console.log("message received: ", rawMessage);
         }
-        _ref = JSON.parse(rawMessage.data), channel = _ref.channel, topic = _ref.topic, event = _ref.event, message = _ref.message;
+        _ref = JSON.parse(rawMessage.data), topic = _ref.topic, event = _ref.event, message = _ref.message;
         _ref1 = this.channels;
         for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
           chan = _ref1[_i];
-          if (chan.isMember(channel, topic)) {
+          if (chan.isMember(topic)) {
             chan.trigger(event, message);
           }
         }
@@ -409,7 +404,7 @@
         _results = [];
         for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
           callback = _ref2[_j];
-          _results.push(callback(channel, topic, event, message));
+          _results.push(callback(topic, event, message));
         }
         return _results;
       };

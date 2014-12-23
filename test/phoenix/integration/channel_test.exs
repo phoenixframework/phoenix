@@ -25,7 +25,7 @@ defmodule Phoenix.Integration.ChannelTest do
   defmodule RoomChannel do
     use Phoenix.Channel
 
-    def join(socket, _channel, message) do
+    def join(socket, _topic, message) do
       reply socket, "join", %{status: "connected"}
       broadcast socket, "user:entered", %{user: message["user"]}
       {:ok, socket}
@@ -134,7 +134,7 @@ defmodule Phoenix.Integration.ChannelTest do
     assert resp.status == 200
 
     # join
-    {resp, cookie} = poll :put, cookie, %{"channel" => "rooms:lobby",
+    {resp, cookie} = poll :put, cookie, %{"topic" => "rooms:lobby",
                                           "event" => "join",
                                           "message" => %{}}
     assert resp.status == 200
@@ -166,7 +166,7 @@ defmodule Phoenix.Integration.ChannelTest do
 
     # generic events
     Phoenix.Channel.subscribe(self, "rooms:lobby")
-    {resp, cookie} = poll :put, cookie, %{"channel" => "rooms:lobby",
+    {resp, cookie} = poll :put, cookie, %{"topic" => "rooms:lobby",
                                           "event" => "new:msg",
                                           "message" => %{"body" => "hi!"}}
     assert resp.status == 200
@@ -176,7 +176,7 @@ defmodule Phoenix.Integration.ChannelTest do
 
     # unauthorized events
     Phoenix.Channel.subscribe(self, "rooms:private-room")
-    {resp, cookie} = poll :put, cookie, %{"channel" => "rooms:private-room",
+    {resp, cookie} = poll :put, cookie, %{"topic" => "rooms:private-room",
                                           "event" => "new:msg",
                                           "message" => %{"body" => "this method shouldn't send!'"}}
     assert resp.status == 401
@@ -186,7 +186,7 @@ defmodule Phoenix.Integration.ChannelTest do
     ## multiplexed sockets
 
     # join
-    {resp, cookie} = poll :put, cookie, %{"channel" => "rooms:room123",
+    {resp, cookie} = poll :put, cookie, %{"topic" => "rooms:room123",
                                           "event" => "join",
                                           "message" => %{}}
     assert resp.status == 200
@@ -213,13 +213,13 @@ defmodule Phoenix.Integration.ChannelTest do
     assert resp.status == 200
 
     # join
-    {resp, cookie} = poll :put, cookie, %{"channel" => "rooms:lobby",
+    {resp, cookie} = poll :put, cookie, %{"topic" => "rooms:lobby",
                                           "event" => "join",
                                           "message" => %{}}
     assert resp.status == 200
     Phoenix.Channel.subscribe(self, "rooms:lobby")
     :timer.sleep @ensure_window_timeout_ms
-    {resp, _cookie} = poll :put, cookie, %{"channel" => "rooms:lobby",
+    {resp, _cookie} = poll :put, cookie, %{"topic" => "rooms:lobby",
                                           "event" => "new:msg",
                                           "message" => %{"body" => "hi!"}}
     assert resp.status == 410

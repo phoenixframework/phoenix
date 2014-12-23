@@ -8,41 +8,41 @@ defmodule Phoenix.Socket do
   @derive [Access]
   defstruct conn: nil,
             pid: nil,
-            channel: nil,
+            topic: nil,
             router: nil,
             authorized: false,
             assigns: %{}
 
 
   @doc """
-  Sets current channel of multiplexed socket connection
+  Sets current topic of multiplexed socket connection
   """
-  def set_current_channel(socket, channel) do
-    %Socket{socket | channel: channel}
+  def set_current_topic(socket, topic) do
+    %Socket{socket | topic: topic}
   end
 
   @doc """
-  Adds authorized channel to Socket's channel list
+  Adds authorized topic to Socket's topic list
 
   ## Examples
 
       iex> Socket.authorize(%Socket{}, "rooms:lobby")
-      %Socket{channel: "rooms:lobby", authorized: true}
+      %Socket{topic: "rooms:lobby", authorized: true}
 
   """
-  def authorize(socket, channel) do
-    %Socket{socket | channel: channel, authorized: true}
+  def authorize(socket, topic) do
+    %Socket{socket | topic: topic, authorized: true}
   end
 
   @doc """
-  Deauthorizes channel
+  Deauthorizes topic
 
   ## Examples
 
       iex> socket = Socket.authorize(%Socket{}, "rooms:lobby")
-      %Socket{channel: "rooms:lobby", authorized: true}
+      %Socket{topic: "rooms:lobby", authorized: true}
       iex> Socket.deauthorize(socket)
-      %Socket{channel: "rooms:lobby", authorized: false}
+      %Socket{topic: "rooms:lobby", authorized: false}
 
   """
   def deauthorize(socket) do
@@ -50,7 +50,7 @@ defmodule Phoenix.Socket do
   end
 
   @doc """
-  Checks if a given String channel is authorized for this Socket
+  Checks if a given String topic is authorized for this Socket
 
   ## Examples
 
@@ -58,13 +58,13 @@ defmodule Phoenix.Socket do
       iex> Socket.authorized?(socket, "rooms:lobby")
       false
       iex> socket = Socket.authorize(socket, "rooms:lobby")
-      %Socket{channel: "rooms:lobby", authorized: true}
+      %Socket{topic: "rooms:lobby", authorized: true}
       iex> Socket.authorized?(socket, "rooms:lobby")
       true
 
   """
-  def authorized?(socket, channel) do
-    socket.authorized && socket.channel == channel
+  def authorized?(socket, topic) do
+    socket.authorized && socket.topic == topic
   end
 
   @doc """
@@ -72,8 +72,8 @@ defmodule Phoenix.Socket do
 
   ## Examples
 
-      iex> socket = Socket.set_current_channel(%Socket{}, "rooms:lobby")
-      %Socket{channel: "rooms:lobby"}
+      iex> socket = Socket.set_current_topic(%Socket{}, "rooms:lobby")
+      %Socket{topic: "rooms:lobby"}
       iex> socket.assigns[:token]
       nil
       iex> socket = Socket.assign(socket, :token, "bar")

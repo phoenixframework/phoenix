@@ -12,7 +12,7 @@
 
     bindings: null
 
-    constructor: (@channel, @topic, @message, @callback, @socket) ->
+    constructor: (@topic, @message, @callback, @socket) ->
       @reset()
 
 
@@ -20,7 +20,7 @@
 
     on: (event, callback) -> @bindings.push({event, callback})
 
-    isMember: (channel, topic) -> @channel is channel and @topic is topic
+    isMember: (topic) -> @topic is topic
 
     off: (event) ->
       @bindings = (bind for bind in @bindings when bind.event isnt event)
@@ -30,10 +30,10 @@
       callback(msg) for {event, callback} in @bindings when event is triggerEvent
 
 
-    send: (event, message) -> @socket.send({@channel, @topic, event, message})
+    send: (event, message) -> @socket.send({@topic, event, message})
 
     leave: (message = {}) ->
-      @socket.leave(@channel, @topic, message)
+      @socket.leave(@topic, message)
       @reset()
 
 
@@ -153,20 +153,20 @@
 
     rejoin: (chan) ->
       chan.reset()
-      {channel, topic, message} = chan
-      @send(channel: channel, topic: topic, event: "join", message: message)
+      {topic, message} = chan
+      @send(topic: topic, event: "join", message: message)
       chan.callback(chan)
 
 
-    join: (channel, topic, message, callback) ->
-      chan = new exports.Channel(channel, topic, message, callback, this)
+    join: (topic, message, callback) ->
+      chan = new exports.Channel(topic, message, callback, this)
       @channels.push(chan)
       @rejoin(chan) if @isConnected()
 
 
-    leave: (channel, topic, message = {}) ->
-      @send(channel: channel, topic: topic, event: "leave", message: message)
-      @channels = (c for c in @channels when not(c.isMember(channel, topic)))
+    leave: (topic, message = {}) ->
+      @send(topic: topic, event: "leave", message: message)
+      @channels = (c for c in @channels when not(c.isMember(topic)))
 
 
     send: (data) ->
@@ -178,7 +178,7 @@
 
 
     sendHeartbeat: ->
-      @send(channel: "phoenix", topic: "conn", event: "heartbeat", message: {})
+      @send(topic: "phoenix", event: "heartbeat", message: {})
 
 
     flushSendBuffer: ->
@@ -190,10 +190,10 @@
 
     onConnMessage: (rawMessage) ->
       console.log?("message received: ", rawMessage)
-      {channel, topic, event, message} = JSON.parse(rawMessage.data)
-      for chan in @channels when chan.isMember(channel, topic)
+      {topic, event, message} = JSON.parse(rawMessage.data)
+      for chan in @channels when chan.isMember(topic)
         chan.trigger(event, message)
-      callback(channel, topic, event, message) for callback in @stateChangeCallbacks.message
+      callback(topic, event, message) for callback in @stateChangeCallbacks.message
 
 
 
