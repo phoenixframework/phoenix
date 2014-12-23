@@ -16,7 +16,7 @@
 
 ## Getting started
 
-- See the offical site at http://www.phoenixframework.org/
+- See the official site at http://www.phoenixframework.org/
 
 ## Documentation
 
@@ -62,7 +62,7 @@ We appreciate any contribution to Phoenix, so check out our [CONTRIBUTING.md](CO
 - Middleware
   - [x] Plug Based Connection handling
   - [x] Code Reloading
-  - [x] Enviroment Based logging with log levels with Elixir's Logger
+  - [x] Environment Based logging with log levels with Elixir's Logger
   - [x] Static File serving
 - Controllers
   - [x] html/json/text helpers
