@@ -111,7 +111,7 @@ Great, `page_path/1` evaluated to `/` as we would expect, and we didn't need to 
 
 ###Individual Views
 
-Individual views have a much narrower scope. Their job is to render, and provide decorating functions for, a single directory of templates. Phoenix assumes a strong naming convention from controllers to views to the templates they render. The `PageController` requires a `PageView` to render templates in the `web/templates/page` directory. If we change the `:root` declaration in the main view, of course, Phoenix would look for a `page` directory within the directory we set there.
+Individual views have a much narrower scope. Their job is to render, and provide decorating functions for a single directory of templates. Phoenix assumes a strong naming convention from controllers to views to the templates they render. The `PageController` requires a `PageView` to render templates in the `web/templates/page` directory. If we change the `:root` declaration in the main view, of course, Phoenix would look for a `page` directory within the directory we set there.
 
 You might be wondering how individual views are able to work so closely with templates.
 
@@ -154,10 +154,13 @@ I came from assigns: <%= @message %>
 This is the message: <%= message %>
 ```
 
-Note the `@` in the top line. Now if we change our function call, we see a different rendering.
+Note the `@` in the top line. Now if we change our function call, we see a different rendering after recompiling `PageView` module.
 
 ```console
-iex(2)> Phoenix.View.render(HelloPhoenix.PageView, "test.html", message: "Assigns has an @.")
+iex(2)> r HelloPhoenix.PageView
+web/views/page_view.ex:1: warning: redefining module HelloPhoenix.PageView
+{:reloaded, HelloPhoenix.PageView, [HelloPhoenix.PageView]}
+iex(3)> Phoenix.View.render(HelloPhoenix.PageView, "test.html", message: "Assigns has an @.")
 {:safe,
  "I came from assigns: Assigns has an @.\nThis is the message: Hello from the view!\n"}
  ```
