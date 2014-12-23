@@ -1,5 +1,3 @@
-##Welcome to Phoenix!
-
 Phoenix is a web development framework written in Elixir which implements the server-side MVC pattern. If you've ever used a similar framework, say Ruby on Rails or Python's Django, many of the concepts will be familiar to you. Phoenix is not, however, simply a Rails clone. It aims to have the best of both worlds, high developer productivity _and_ high application performance. Phoenix also has some interesting new twists, channels for managing Websockets, pre-compiled templates and the potential for alternative architectures which may make services more manageable from the very beginning of your project.
 
 If you are already familiar with Elixir, great! If not, there are a number of places you can go to learn. You might want to read through the [Elixir guides](http://elixir-lang.org/getting_started/1.html) first. You might also want to look through any of the books, blogs or videos listed in the [Resources Guide](http://www.phoenixframework.org/docs/resources).

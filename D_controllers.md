@@ -1,5 +1,3 @@
-##Controller Guide
-
 Phoenix controllers act as a sort of intermediary modules. Their functions - called actions - are invoked from the router in response to HTTP requests. The actions, in turn, gather all the necessary data and perform all the necessary steps before - in a typical case - invoking the view layer to render a template.
 
 A newly generated Phoenix app will have a single controller, the `PageController`, which looks like this.

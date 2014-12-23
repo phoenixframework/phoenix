@@ -11,8 +11,6 @@
 
 
 
-##Ecto Models
-
 Most web applications make use of some kind of datastore to hold data that the application needs to function. Phoenix does not currently ship with a model layer for interacting with a database as some server side MVC frameworks do. Fortunately, one of Elixir's core projects is [Ecto](https://github.com/elixir-lang/ecto), a dsl for interacting with databases. Currently, Ecto only supports the PostgreSQL relational database via the `postgrex` adapter, but there are plans to expand the list of supported databases in the future.
 
 Before we begin, we'll need to have PostgreSQL installed on our system. We'll need to create a database for our application as well as a user with a password which our application can log in as.

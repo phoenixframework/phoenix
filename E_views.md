@@ -1,5 +1,3 @@
-##Views
-
 Phoenix views have two main jobs. First and foremost, they render templates (this includes layouts). The core function involved in rendering, `render/3`, is defined in `Phoenix.View`. Views also provide functions which take raw data and make it easier for templates to consume. If you are familiar with decorators or the facade pattern, this is similar.
 
 Phoenix defines view behavior in layers. The deepest level is `Phoenix.View`, from Phoenix itself, which doesn't appear in our generated application code. Since Phoenix is a dependency of our application, we have access to `Phoenix.View` even though we don't see it directly.
