@@ -25,7 +25,7 @@ defmodule Phoenix.Integration.ChannelTest do
   defmodule RoomChannel do
     use Phoenix.Channel
 
-    def join(socket, _room_id, message) do
+    def join(socket, _channel, message) do
       reply socket, "join", %{status: "connected"}
       broadcast socket, "user:entered", %{user: message["user"]}
       {:ok, socket}
@@ -51,7 +51,7 @@ defmodule Phoenix.Integration.ChannelTest do
       super(conn, opts)
     end
 
-    channel "rooms", RoomChannel
+    channel "rooms:*", RoomChannel
   end
 
   defmodule Endpoint do
@@ -81,23 +81,23 @@ defmodule Phoenix.Integration.ChannelTest do
   test "adapter handles websocket join, leave, and event messages" do
     {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
 
-    WebsocketClient.join(sock, "rooms", "lobby", %{})
+    WebsocketClient.join(sock, "rooms:lobby", %{})
     assert_receive %Message{event: "join", message: %{"status" => "connected"}}
 
-    WebsocketClient.send_event(sock, "rooms", "lobby", "new:msg", %{body: "hi!"})
+    WebsocketClient.send_event(sock, "rooms:lobby", "new:msg", %{body: "hi!"})
     assert_receive %Message{event: "new:msg", message: %{"body" => "hi!"}}
 
-    WebsocketClient.leave(sock, "rooms", "lobby", %{})
+    WebsocketClient.leave(sock, "rooms:lobby", %{})
     assert_receive %Message{event: "you:left", message: %{"message" => "bye!"}}
 
-    WebsocketClient.send_event(sock, "rooms", "lobby", "new:msg", %{body: "hi!"})
+    WebsocketClient.send_event(sock, "rooms:lobby", "new:msg", %{body: "hi!"})
     refute_receive %Message{}
   end
 
   test "adapter handles refuses websocket events that haven't joined" do
     {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
 
-    WebsocketClient.send_event(sock, "rooms", "lobby", "new:msg", %{body: "hi!"})
+    WebsocketClient.send_event(sock, "rooms:lobby", "new:msg", %{body: "hi!"})
     refute_receive %Message{}
   end
 
@@ -134,8 +134,7 @@ defmodule Phoenix.Integration.ChannelTest do
     assert resp.status == 200
 
     # join
-    {resp, cookie} = poll :put, cookie, %{"channel" => "rooms",
-                                          "topic" => "lobby",
+    {resp, cookie} = poll :put, cookie, %{"channel" => "rooms:lobby",
                                           "event" => "join",
                                           "message" => %{}}
     assert resp.status == 200
@@ -151,8 +150,8 @@ defmodule Phoenix.Integration.ChannelTest do
     assert resp.status == 204
 
     # messages are buffered between polls
-    Phoenix.Channel.broadcast "rooms", "lobby", "user:entered", %{name: "José"}
-    Phoenix.Channel.broadcast "rooms", "lobby", "user:entered", %{name: "Sonny"}
+    Phoenix.Channel.broadcast "rooms:lobby", "user:entered", %{name: "José"}
+    Phoenix.Channel.broadcast "rooms:lobby", "user:entered", %{name: "Sonny"}
     {resp, cookie} = poll(:get, cookie)
     assert resp.status == 200
     assert Enum.count(resp.body) == 2
@@ -166,9 +165,8 @@ defmodule Phoenix.Integration.ChannelTest do
     assert resp.status == 204
 
     # generic events
-    Phoenix.Channel.subscribe(self, "rooms", "lobby")
-    {resp, cookie} = poll :put, cookie, %{"channel" => "rooms",
-                                          "topic" => "lobby",
+    Phoenix.Channel.subscribe(self, "rooms:lobby")
+    {resp, cookie} = poll :put, cookie, %{"channel" => "rooms:lobby",
                                           "event" => "new:msg",
                                           "message" => %{"body" => "hi!"}}
     assert resp.status == 200
@@ -177,9 +175,8 @@ defmodule Phoenix.Integration.ChannelTest do
     assert resp.status == 200
 
     # unauthorized events
-    Phoenix.Channel.subscribe(self, "rooms", "private-room")
-    {resp, cookie} = poll :put, cookie, %{"channel" => "rooms",
-                                          "topic" => "private-room",
+    Phoenix.Channel.subscribe(self, "rooms:private-room")
+    {resp, cookie} = poll :put, cookie, %{"channel" => "rooms:private-room",
                                           "event" => "new:msg",
                                           "message" => %{"body" => "this method shouldn't send!'"}}
     assert resp.status == 401
@@ -189,12 +186,11 @@ defmodule Phoenix.Integration.ChannelTest do
     ## multiplexed sockets
 
     # join
-    {resp, cookie} = poll :put, cookie, %{"channel" => "rooms",
-                                          "topic" => "room123",
+    {resp, cookie} = poll :put, cookie, %{"channel" => "rooms:room123",
                                           "event" => "join",
                                           "message" => %{}}
     assert resp.status == 200
-    Phoenix.Channel.broadcast "rooms", "lobby", "new:msg", %{body: "Hello lobby"}
+    Phoenix.Channel.broadcast "rooms:lobby", "new:msg", %{body: "Hello lobby"}
     # poll
     {resp, cookie} = poll(:get, cookie)
     assert resp.status == 200
@@ -217,15 +213,13 @@ defmodule Phoenix.Integration.ChannelTest do
     assert resp.status == 200
 
     # join
-    {resp, cookie} = poll :put, cookie, %{"channel" => "rooms",
-                                          "topic" => "lobby",
+    {resp, cookie} = poll :put, cookie, %{"channel" => "rooms:lobby",
                                           "event" => "join",
                                           "message" => %{}}
     assert resp.status == 200
-    Phoenix.Channel.subscribe(self, "rooms", "lobby")
+    Phoenix.Channel.subscribe(self, "rooms:lobby")
     :timer.sleep @ensure_window_timeout_ms
-    {resp, _cookie} = poll :put, cookie, %{"channel" => "rooms",
-                                          "topic" => "lobby",
+    {resp, _cookie} = poll :put, cookie, %{"channel" => "rooms:lobby",
                                           "event" => "new:msg",
                                           "message" => %{"body" => "hi!"}}
     assert resp.status == 410

@@ -7,35 +7,43 @@ defmodule Phoenix.Router.Socket do
 
     quote do
       import unquote(__MODULE__)
+      Module.register_attribute(__MODULE__, :channels, accumulate: true)
       get unquote(mount), Phoenix.Transports.WebSocket, :upgrade_conn
       get unquote(mount <> "/poll"), Phoenix.Transports.LongPoller, :poll
       post unquote(mount <> "/poll"), Phoenix.Transports.LongPoller, :open
       put unquote(mount <> "/poll"), Phoenix.Transports.LongPoller, :publish
+      @before_compile unquote(__MODULE__)
     end
   end
 
-  defmacro channel(channel, module) do
-    quote do
-      if Scope.inside_scope?(__MODULE__) do
-        raise """
-        You are trying to call `channel` within a `scope` definition.
-        Please move your channel definitions outside of any scope block.
-        """
-      end
+  defmacro __before_compile__(env) do
+    channels = defchannels(Module.get_attribute(env.module, :channels))
+  end
 
-      def match(socket, :incoming_socket, unquote(channel), "join", message) do
-        apply(unquote(module), :join, [socket, socket.topic, message])
-      end
-      def match(socket, :incoming_socket, unquote(channel), "leave", message) do
-        apply(unquote(module), :leave, [socket, message])
-      end
+  def defchannels(channels) do
+    for {pattern, module, opts} <- channels do
+      [root | _rest] = String.split(pattern, "*")
 
-      def match(socket, :incoming_socket, unquote(channel), event, message) do
-        apply(unquote(module), :incoming, [socket, event, message])
+      quote do
+        def match_channel(socket, :incoming, <<unquote(root) <> _rest>>, "join", msg) do
+          apply(unquote(module), :join, [socket, socket.channel, msg])
+        end
+        def match_channel(socket, :incoming, <<unquote(root) <> _rest>>, "leave", msg) do
+          apply(unquote(module), :leave, [socket, msg])
+        end
+        def match_channel(socket, :incoming, <<unquote(root) <> _rest>>, event, msg) do
+          apply(unquote(module), :incoming, [socket, event, msg])
+        end
+        def match_channel(socket, :outgoing, <<unquote(root) <> _rest>>, event, msg) do
+          apply(unquote(module), :outgoing, [socket, event, msg])
+        end
       end
-      def match(socket, :outgoing_socket, unquote(channel), event, message) do
-        apply(unquote(module), :outgoing, [socket, event, message])
-      end
+    end
+  end
+
+  defmacro channel(pattern, module, opts \\ []) do
+    quote bind_quoted: binding do
+      @channels {pattern, module, opts}
     end
   end
 end

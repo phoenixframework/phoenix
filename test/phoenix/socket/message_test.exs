@@ -6,11 +6,10 @@ defmodule Phoenix.Socket.MessageTest do
 
   test "parse! returns map when given valid json with required keys" do
     message = Message.parse!("""
-    {"channel": "c","topic":"t","event":"e","message":"m"}
+    {"channel": "c","event":"e","message":"m"}
     """)
 
     assert message.channel == "c"
-    assert message.topic == "t"
     assert message.event == "e"
     assert message.message == "m"
   end
@@ -18,7 +17,7 @@ defmodule Phoenix.Socket.MessageTest do
   test "parse! raises Poison.SyntaxError when given invalid json" do
     assert_raise Poison.SyntaxError, fn ->
       Message.parse!("""
-      {INVALID"channel": "c","topic":"t","event":"e","message":"m"}
+      {INVALID"channel": "c","event":"e","message":"m"}
       """)
     end
   end
@@ -26,15 +25,7 @@ defmodule Phoenix.Socket.MessageTest do
   test "parse! raises InvalidMessage when missing :channel key" do
     assert_raise InvalidMessage, fn ->
       Message.parse!("""
-      {"topic":"t","event":"e","message":"m"}
-      """)
-    end
-  end
-
-  test "parse! raises InvalidMessage when missing :topic key" do
-    assert_raise InvalidMessage, fn ->
-      Message.parse!("""
-      {"channel": "c","event":"e","message":"m"}
+      {"event":"e","message":"m"}
       """)
     end
   end
@@ -42,7 +33,7 @@ defmodule Phoenix.Socket.MessageTest do
   test "parse! raises InvalidMessage when missing :event key" do
     assert_raise InvalidMessage, fn ->
       Message.parse!("""
-      {"channel": "c","topic":"t","message":"m"}
+      {"channel": "c","message":"m"}
       """)
     end
   end
@@ -50,29 +41,25 @@ defmodule Phoenix.Socket.MessageTest do
   test "parse! raises InvalidMessage when missing :message key" do
     assert_raise InvalidMessage, fn ->
       Message.parse!("""
-      {"channel": "c","topic":"t","event":"e"}
+      {"channel": "c","event":"e"}
       """)
     end
   end
 
   test "from_map! converts a map with string keys into a %Message{}" do
-    msg = Message.from_map!(%{"channel" => "c", "topic" => "t", "event" => "e", "message" => ""})
-    assert msg == %Message{channel: "c", topic: "t", event: "e", message: ""}
+    msg = Message.from_map!(%{"channel" => "c", "event" => "e", "message" => ""})
+    assert msg == %Message{channel: "c", event: "e", message: ""}
   end
 
   test "from_map! raises InvalidMessage when any required key" do
     assert_raise InvalidMessage, fn ->
-      Message.from_map!(%{"topic" => "t", "event" => "e", "message" => ""})
+      Message.from_map!(%{"event" => "e", "message" => ""})
     end
     assert_raise InvalidMessage, fn ->
-      Message.from_map!(%{"channel" => "c", "event" => "e", "message" => ""})
+      Message.from_map!(%{"channel" => "c", "message" => ""})
     end
     assert_raise InvalidMessage, fn ->
-      Message.from_map!(%{"channel" => "c", "topic" => "t", "message" => ""})
-    end
-    assert_raise InvalidMessage, fn ->
-      Message.from_map!(%{"channel" => "c", "topic" => "t", "event" => "e"})
+      Message.from_map!(%{"channel" => "c", "event" => "e"})
     end
   end
 end
-

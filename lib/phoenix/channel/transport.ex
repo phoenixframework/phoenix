@@ -60,14 +60,14 @@ defmodule Phoenix.Channel.Transport do
   The returned `HashDict` of `%Phoenix.Socket{}`s must be held by the adapter
   """
   def dispatch(msg = %Message{}, sockets, adapter_pid, router) do
-    socket = %Socket{pid: adapter_pid, router: router, channel: msg.channel, topic: msg.topic}
+    socket = %Socket{pid: adapter_pid, router: router, channel: msg.channel}
 
     sockets
-    |> HashDict.get({msg.channel, msg.topic}, socket)
+    |> HashDict.get(msg.channel, socket)
     |> dispatch(msg.channel, msg.event, msg.message)
     |> case do
       {:ok, socket} ->
-        {:ok, HashDict.put(sockets, {msg.channel, msg.topic}, socket)}
+        {:ok, HashDict.put(sockets, msg.channel, socket)}
       {:heartbeat, _socket} ->
         {:ok, sockets}
       {:error, _socket, reason} ->
@@ -81,27 +81,26 @@ defmodule Phoenix.Channel.Transport do
   The Message format sent to phoenix requires the following key / values:
 
     * channel - The String value "phoenix"
-    * topic - The String value "conn"
     * event - The String value "heartbeat"
     * message - An empty JSON message payload, ie {}
 
   The server will respond to heartbeats with the same message
   """
   def dispatch(socket, "phoenix", "heartbeat", _msg) do
-    msg = %Message{channel: "phoenix", topic: "conn", event: "heartbeat", message: %{}}
+    msg = %Message{channel: "phoenix", event: "heartbeat", message: %{}}
     send socket.pid, msg
 
     {:heartbeat, socket}
   end
   def dispatch(socket, channel, "join", msg) do
     socket
-    |> socket.router.match(:incoming_socket, channel, "join", msg)
+    |> socket.router.match_channel(:incoming, channel, "join", msg)
     |> handle_result("join")
   end
   def dispatch(socket, channel, event, msg) do
-    if Socket.authorized?(socket, channel, socket.topic) do
+    if Socket.authorized?(socket, channel) do
       socket
-      |> socket.router.match(:incoming_socket, channel, event, msg)
+      |> socket.router.match_channel(:incoming, channel, event, msg)
       |> handle_result(event)
     else
       handle_result({:error, socket, :unauthenticated}, event)
@@ -109,10 +108,10 @@ defmodule Phoenix.Channel.Transport do
   end
 
   defp handle_result({:ok, socket}, "join") do
-    {:ok, Channel.subscribe(socket, socket.channel, socket.topic)}
+    {:ok, Channel.subscribe(socket, socket.channel)}
   end
   defp handle_result(socket = %Socket{}, "leave") do
-    {:ok, Channel.unsubscribe(socket, socket.channel, socket.topic)}
+    {:ok, Channel.unsubscribe(socket, socket.channel)}
   end
   defp handle_result(socket = %Socket{}, _event) do
     {:ok, socket}
@@ -139,17 +138,17 @@ defmodule Phoenix.Channel.Transport do
   """
   def dispatch_broadcast(sockets, %Message{event: event, message: payload} = msg) do
     sockets
-    |> HashDict.get({msg.channel, msg.topic})
+    |> HashDict.get(msg.channel)
     |> case do
       nil    ->
         {:ok, sockets}
       socket ->
         {:ok, sock} =
           socket
-          |> socket.router.match(:outgoing_socket, socket.channel, event, payload)
+          |> socket.router.match_channel(:outgoing, socket.channel, event, payload)
           |> handle_result(event)
 
-        {:ok, HashDict.put(sockets, {sock.channel, sock.topic}, sock)}
+        {:ok, HashDict.put(sockets, sock.channel, sock)}
     end
   end
 
@@ -162,13 +161,13 @@ defmodule Phoenix.Channel.Transport do
   def dispatch_info(sockets, data) do
     sockets = Enum.reduce sockets, sockets, fn {_, socket}, sockets ->
       {:ok, socket} = dispatch_info(socket, socket.channel, data)
-      HashDict.put(sockets, {socket.channel, socket.topic}, socket)
+      HashDict.put(sockets, socket.channel, socket)
     end
     {:ok, sockets}
   end
   def dispatch_info(socket = %Socket{}, channel, data) do
     socket
-    |> socket.router.match(:incoming_socket, channel, "info", data)
+    |> socket.router.match_channel(:incoming, channel, "info", data)
     |> handle_result("info")
   end
 
@@ -181,7 +180,7 @@ defmodule Phoenix.Channel.Transport do
   def dispatch_leave(sockets, reason) do
     Enum.each sockets, fn {_, socket} ->
       socket
-      |> socket.router.match(:incoming_socket, socket.channel, "leave", reason: reason)
+      |> socket.router.match_channel(:incoming, socket.channel, "leave", reason: reason)
       |> handle_result("leave")
     end
     :ok
