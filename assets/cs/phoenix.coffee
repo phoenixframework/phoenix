@@ -30,7 +30,7 @@
       callback(msg) for {event, callback} in @bindings when event is triggerEvent
 
 
-    send: (event, message) -> @socket.send({@topic, event, message})
+    send: (event, payload) -> @socket.send({@topic, event, payload})
 
     leave: (message = {}) ->
       @socket.leave(@topic, message)
@@ -154,7 +154,7 @@
     rejoin: (chan) ->
       chan.reset()
       {topic, message} = chan
-      @send(topic: topic, event: "join", message: message)
+      @send(topic: topic, event: "join", payload: message)
       chan.callback(chan)
 
 
@@ -165,7 +165,7 @@
 
 
     leave: (topic, message = {}) ->
-      @send(topic: topic, event: "leave", message: message)
+      @send(topic: topic, event: "leave", payload: message)
       @channels = (c for c in @channels when not(c.isMember(topic)))
 
 
@@ -178,7 +178,7 @@
 
 
     sendHeartbeat: ->
-      @send(topic: "phoenix", event: "heartbeat", message: {})
+      @send(topic: "phoenix", event: "heartbeat", payload: {})
 
 
     flushSendBuffer: ->
@@ -190,10 +190,10 @@
 
     onConnMessage: (rawMessage) ->
       console.log?("message received: ", rawMessage)
-      {topic, event, message} = JSON.parse(rawMessage.data)
+      {topic, event, payload} = JSON.parse(rawMessage.data)
       for chan in @channels when chan.isMember(topic)
-        chan.trigger(event, message)
-      callback(topic, event, message) for callback in @stateChangeCallbacks.message
+        chan.trigger(event, payload)
+      callback(topic, event, payload) for callback in @stateChangeCallbacks.message
 
 
 

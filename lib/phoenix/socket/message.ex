@@ -2,7 +2,7 @@ defmodule Phoenix.Socket.Message do
   alias Poison, as: JSON
   alias Phoenix.Socket.Message
 
-  defstruct topic: nil, event: nil, message: nil
+  defstruct topic: nil, event: nil, payload: nil
 
   defmodule InvalidMessage do
     defexception [:message]
@@ -19,7 +19,7 @@ defmodule Phoenix.Socket.Message do
 
     * topic - The String topic  or topic:subtopic pair namespace, ie "messages", "messages:123"
     * event - The String event name, ie "join"
-    * message - The String JSON message payload
+    * payload - The String JSON message payload
 
   Returns The `%Phoenix.Socket.Message{}` parsed from JSON
   """
@@ -38,7 +38,7 @@ defmodule Phoenix.Socket.Message do
       %Message{
         topic: Map.fetch!(map, "topic"),
         event:   Map.fetch!(map, "event"),
-        message: Map.fetch!(map, "message")
+        payload: Map.fetch!(map, "payload")
       }
     rescue
       err in [KeyError] -> raise InvalidMessage, message: "Missing key: '#{err.key}'"

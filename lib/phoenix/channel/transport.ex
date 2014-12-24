@@ -64,7 +64,7 @@ defmodule Phoenix.Channel.Transport do
 
     sockets
     |> HashDict.get(msg.topic, socket)
-    |> dispatch(msg.topic, msg.event, msg.message, transport)
+    |> dispatch(msg.topic, msg.event, msg.payload, transport)
     |> case do
       {:ok, socket} ->
         {:ok, HashDict.put(sockets, msg.topic, socket)}
@@ -82,12 +82,12 @@ defmodule Phoenix.Channel.Transport do
 
     * topic - The String value "phoenix"
     * event - The String value "heartbeat"
-    * message - An empty JSON message payload, ie {}
+    * payload - An empty JSON message payload, ie {}
 
   The server will respond to heartbeats with the same message
   """
   def dispatch(socket, "phoenix", "heartbeat", _msg, _transport) do
-    msg = %Message{topic: "phoenix", event: "heartbeat", message: %{}}
+    msg = %Message{topic: "phoenix", event: "heartbeat", payload: %{}}
     send socket.pid, msg
 
     {:heartbeat, socket}
@@ -136,7 +136,7 @@ defmodule Phoenix.Channel.Transport do
 
   The message is routed to the intended channel's outgoing/3 callback.
   """
-  def dispatch_broadcast(sockets, %Message{event: event, message: payload} = msg, transport) do
+  def dispatch_broadcast(sockets, %Message{event: event, payload: payload} = msg, transport) do
     sockets
     |> HashDict.get(msg.topic)
     |> case do

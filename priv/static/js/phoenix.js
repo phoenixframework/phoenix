@@ -66,11 +66,11 @@
         return _results;
       };
 
-      Channel.prototype.send = function(event, message) {
+      Channel.prototype.send = function(event, payload) {
         return this.socket.send({
           topic: this.topic,
           event: event,
-          message: message
+          payload: payload
         });
       };
 
@@ -314,7 +314,7 @@
         this.send({
           topic: topic,
           event: "join",
-          message: message
+          payload: message
         });
         return chan.callback(chan);
       };
@@ -336,7 +336,7 @@
         this.send({
           topic: topic,
           event: "leave",
-          message: message
+          payload: message
         });
         return this.channels = (function() {
           var _i, _len, _ref, _results;
@@ -370,7 +370,7 @@
         return this.send({
           topic: "phoenix",
           event: "heartbeat",
-          message: {}
+          payload: {}
         });
       };
 
@@ -388,23 +388,23 @@
       };
 
       Socket.prototype.onConnMessage = function(rawMessage) {
-        var callback, chan, event, message, topic, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
+        var callback, chan, event, payload, topic, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
         if (typeof console.log === "function") {
           console.log("message received: ", rawMessage);
         }
-        _ref = JSON.parse(rawMessage.data), topic = _ref.topic, event = _ref.event, message = _ref.message;
+        _ref = JSON.parse(rawMessage.data), topic = _ref.topic, event = _ref.event, payload = _ref.payload;
         _ref1 = this.channels;
         for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
           chan = _ref1[_i];
           if (chan.isMember(topic)) {
-            chan.trigger(event, message);
+            chan.trigger(event, payload);
           }
         }
         _ref2 = this.stateChangeCallbacks.message;
         _results = [];
         for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
           callback = _ref2[_j];
-          _results.push(callback(topic, event, message));
+          _results.push(callback(topic, event, payload));
         }
         return _results;
       };

@@ -28,27 +28,27 @@ defmodule Phoenix.Router.Socket do
       [root | _rest] = String.split(topic_pattern, "*")
 
       quote do
-        def match_channel(socket, :incoming, <<unquote(root) <> _rest>>, "join", msg, transport)
+        def match_channel(socket, :incoming, <<unquote(root) <> _rest>>, "join", msg_payload, transport)
           when transport in unquote(transports) do
-          apply(unquote(module), :join, [socket, socket.topic, msg])
+          apply(unquote(module), :join, [socket, socket.topic, msg_payload])
         end
-        def match_channel(socket, :incoming, <<unquote(root) <> _rest>>, "leave", msg, transport)
+        def match_channel(socket, :incoming, <<unquote(root) <> _rest>>, "leave", msg_payload, transport)
           when transport in unquote(transports) do
-          apply(unquote(module), :leave, [socket, msg])
+          apply(unquote(module), :leave, [socket, msg_payload])
         end
-        def match_channel(socket, :incoming, <<unquote(root) <> _rest>>, event, msg, transport)
+        def match_channel(socket, :incoming, <<unquote(root) <> _rest>>, event, msg_payload, transport)
           when transport in unquote(transports) do
-          apply(unquote(module), :incoming, [socket, event, msg])
+          apply(unquote(module), :incoming, [socket, event, msg_payload])
         end
-        def match_channel(socket, :outgoing, <<unquote(root) <> _rest>>, event, msg, _transport) do
-          apply(unquote(module), :outgoing, [socket, event, msg])
+        def match_channel(socket, :outgoing, <<unquote(root) <> _rest>>, event, msg_payload, _transport) do
+          apply(unquote(module), :outgoing, [socket, event, msg_payload])
         end
       end
     end
 
     quote do
       unquote(channels_ast)
-      def match_channel(socket, _direction, _channel, _event, _msg, _transport) do
+      def match_channel(socket, _direction, _channel, _event, _msg_payload, _transport) do
         {:error, socket, :badmatch}
       end
     end

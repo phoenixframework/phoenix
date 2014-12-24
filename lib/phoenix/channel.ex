@@ -90,7 +90,7 @@ defmodule Phoenix.Channel do
     PubSub.broadcast_from from, topic, {:broadcast, %Message{
       topic: topic,
       event: event,
-      message: message
+      payload: message
     }}
   end
   def broadcast_from(_, _, _, _), do: raise_invalid_message
@@ -102,7 +102,7 @@ defmodule Phoenix.Channel do
     send socket.pid, %Message{
       topic: socket.topic,
       event: event,
-      message: message
+      payload: message
     }
     socket
   end

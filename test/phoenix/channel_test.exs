@@ -53,7 +53,7 @@ defmodule Phoenix.Channel.ChannelTest do
   def join_message(message) do
     %Message{topic: "topic1:subtopic",
              event: "join",
-             message: message}
+             payload: message}
   end
 
   test "#subscribe/unsubscribe's socket to/from topic" do
@@ -85,7 +85,7 @@ defmodule Phoenix.Channel.ChannelTest do
     |> Socket.set_current_topic("top:subtop")
     |> Channel.subscribe("top:subtop")
 
-    assert Channel.broadcast_from(socket, "event", %{message: "hello"})
+    assert Channel.broadcast_from(socket, "event", %{payload: "hello"})
     refute Enum.any?(Process.info(self)[:messages], &match?(%Message{}, &1))
   end
 
@@ -106,13 +106,13 @@ defmodule Phoenix.Channel.ChannelTest do
 
   test "#reply sends response to socket" do
     socket = Socket.set_current_topic(new_socket, "top:subtop")
-    assert Channel.reply(socket, "event", %{message: "hello"})
+    assert Channel.reply(socket, "event", %{payload: "hello"})
 
     assert Enum.any?(Process.info(self)[:messages], &match?(%Message{}, &1))
     assert_received %Message{
       topic: "top:subtop",
       event: "event",
-      message: %{message: "hello"}
+      payload: %{payload: "hello"}
     }
   end
 
@@ -216,7 +216,7 @@ defmodule Phoenix.Channel.ChannelTest do
     assert Socket.authorized?(sock, "topic1:subtopic")
     message = %Message{topic: "topic1:subtopic",
                        event: "boom",
-                       message: :badreturn}
+                       payload: :badreturn}
 
     assert_raise InvalidReturn, fn ->
       Transport.dispatch(message, sockets, self, Router, WebSocket)
@@ -225,10 +225,10 @@ defmodule Phoenix.Channel.ChannelTest do
 
   test "returns heartbeat message when received, and does not store socket" do
     sockets = HashDict.new
-    message = %Message{topic: "phoenix", event: "heartbeat", message: %{}}
+    message = %Message{topic: "phoenix", event: "heartbeat", payload: %{}}
 
     assert {:ok, sockets} = Transport.dispatch(message, sockets, self, Router, WebSocket)
-    assert_received %Message{topic: "phoenix", event: "heartbeat", message: %{}}
+    assert_received %Message{topic: "phoenix", event: "heartbeat", payload: %{}}
     assert sockets == HashDict.new
   end
 
@@ -261,7 +261,7 @@ defmodule Phoenix.Channel.ChannelTest do
     {:ok, sockets} = Transport.dispatch(message, sockets, self, Router, WebSocket)
     Transport.dispatch_broadcast(sockets, %Message{event: "some:broadcast",
                                                    topic: "topic1:subtopic",
-                                                   message: "hello"}, WebSocket)
+                                                   payload: "hello"}, WebSocket)
     assert_received :outgoing
   end
 end

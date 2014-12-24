@@ -39,7 +39,7 @@ defmodule Phoenix.Integration.WebsocketClient do
   Sends an event to the WebSocket server per the Message protocol
   """
   def send_event(server_pid, topic, event, msg) do
-    msg = json!(%{topic: topic, event: event, message: msg})
+    msg = json!(%{topic: topic, event: event, payload: msg})
     send server_pid, {:send, msg}
   end
 
