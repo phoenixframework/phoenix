@@ -39,7 +39,7 @@ defmodule HelloPhoenix.View do
 end
 ```
 
-Besides bringing in all the functions and aliases available to `Phoenix.Veiw`, the first line allows us to set the root directory within which Phoenix will look for templates. By default, that is `web/templates`. If we need to change that, this is the place to do so.
+Besides bringing in all the functions and aliases available to `Phoenix.View`, the first line allows us to set the root directory within which Phoenix will look for templates. By default, that is `web/templates`. If we need to change that, this is the place to do so.
 
 The `using/1` macro bundles together all the `use`, `import`, and `alias` statements the main view module needs in one place. We can add others we might need here to augment the defaults. Once there, they will be available in the rest of the main view module as well as in any other view modules that use it.
 
