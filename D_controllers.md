@@ -278,7 +278,7 @@ Since layouts are really just templates, they need a view to render them. This i
 
 Before we create a new layout, though, let's do the simplest possible thing and render a template with no layout at all.
 
-The `Phoenix.Controller.Connection` module provides the `put_layout/2` function for us to switch layouts with. (Note: in release 0.4.1 and earlier, this was `assign_layout/2`.) This takes `conn` as its first argument and a string for the basename of the layout we want to render as the second. Another clause of the fuction will match on the boolean `false` for the second argument, and that's how we will render the Phoenix welcome page with no layout at all.
+The `Phoenix.Controller` module provides the `put_layout/2` function for us to switch layouts with. (Note: in release 0.4.1 and earlier, this was `assign_layout/2`.) This takes `conn` as its first argument and a string for the basename of the layout we want to render as the second. Another clause of the fuction will match on the boolean `false` for the second argument, and that's how we will render the Phoenix welcome page with no layout at all.
 
 In a freshly generated Phoenix app, edit the index action of the `PageController` module to look like this.
 
