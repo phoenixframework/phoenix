@@ -118,13 +118,14 @@
       Socket.prototype.transport = null;
 
       function Socket(endPoint, opts) {
-        var _ref, _ref1, _ref2;
+        var _ref, _ref1, _ref2, _ref3;
         if (opts == null) {
           opts = {};
         }
         this.states = exports.Socket.states;
         this.transport = (_ref = (_ref1 = opts.transport) != null ? _ref1 : root.WebSocket) != null ? _ref : exports.LongPoller;
         this.heartbeatIntervalMs = (_ref2 = opts.heartbeatIntervalMs) != null ? _ref2 : this.heartbeatIntervalMs;
+        this.logger = (_ref3 = opts.logger) != null ? _ref3 : (function() {});
         this.endPoint = this.expandEndpoint(endPoint);
         this.channels = [];
         this.sendBuffer = [];
@@ -200,6 +201,10 @@
         })(this)), this.flushEveryMs);
       };
 
+      Socket.prototype.log = function(msg) {
+        return this.logger(msg);
+      };
+
       Socket.prototype.onOpen = function(callback) {
         if (callback) {
           return this.stateChangeCallbacks.open.push(callback);
@@ -246,9 +251,8 @@
 
       Socket.prototype.onConnClose = function(event) {
         var callback, _i, _len, _ref, _results;
-        if (typeof console.log === "function") {
-          console.log("WS close: ", event);
-        }
+        this.log("WS close:");
+        this.log(event);
         clearInterval(this.reconnectTimer);
         clearInterval(this.heartbeatTimer);
         this.reconnectTimer = setInterval(((function(_this) {
@@ -267,9 +271,8 @@
 
       Socket.prototype.onConnError = function(error) {
         var callback, _i, _len, _ref, _results;
-        if (typeof console.log === "function") {
-          console.log("WS error: ", error);
-        }
+        this.log("WS error:");
+        this.log(error);
         _ref = this.stateChangeCallbacks.error;
         _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -394,9 +397,8 @@
 
       Socket.prototype.onConnMessage = function(rawMessage) {
         var callback, chan, channel, event, message, topic, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
-        if (typeof console.log === "function") {
-          console.log("message received: ", rawMessage);
-        }
+        this.log("message received:");
+        this.log(rawMessage);
         _ref = JSON.parse(rawMessage.data), channel = _ref.channel, topic = _ref.topic, event = _ref.event, message = _ref.message;
         _ref1 = this.channels;
         for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
@@ -463,7 +465,6 @@
         if (this.readyState !== this.states.open) {
           return;
         }
-        console.log("polling");
         return exports.Ajax.request("GET", this.endPoint, "application/json", null, (function(_this) {
           return function(status, resp) {
             var msg, _i, _len, _ref;

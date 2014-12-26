@@ -63,11 +63,14 @@
     #   transport - The Websocket Transport, ie WebSocket, Phoenix.LongPoller.
     #               Defaults to WebSocket with automatic LongPoller fallback.
     #   heartbeatIntervalMs - The millisecond interval to send a heartbeat message
+    #   logger - The optional function for specialized logging, ie:
+    #            `logger: (msg) -> console.log(msg)`
     #
     constructor: (endPoint, opts = {}) ->
       @states = exports.Socket.states
       @transport = opts.transport ? root.WebSocket ? exports.LongPoller
       @heartbeatIntervalMs = opts.heartbeatIntervalMs ? @heartbeatIntervalMs
+      @logger = opts.logger ? (-> ) # noop
       @endPoint = @expandEndpoint(endPoint)
       @channels = []
       @sendBuffer = []
@@ -107,6 +110,9 @@
       @sendBufferTimer = setTimeout((=> @flushSendBuffer()), @flushEveryMs)
 
 
+    # Logs the message. Override `@logger` for specialized logging. noops by default
+    log: (msg) -> @logger(msg)
+
     # Registers callbacks for connection state change events
     #
     # Examples
@@ -127,7 +133,8 @@
 
 
     onConnClose: (event) ->
-      console.log?("WS close: ", event)
+      @log("WS close:")
+      @log(event)
       clearInterval(@reconnectTimer)
       clearInterval(@heartbeatTimer)
       @reconnectTimer = setInterval (=> @reconnect() ), @reconnectAfterMs
@@ -135,7 +142,8 @@
 
 
     onConnError: (error) ->
-      console.log?("WS error: ", error)
+      @log("WS error:")
+      @log(error)
       callback(error) for callback in @stateChangeCallbacks.error
 
 
@@ -189,7 +197,8 @@
 
 
     onConnMessage: (rawMessage) ->
-      console.log?("message received: ", rawMessage)
+      @log("message received:")
+      @log(rawMessage)
       {channel, topic, event, message} = JSON.parse(rawMessage.data)
       for chan in @channels when chan.isMember(channel, topic)
         chan.trigger(event, message)
@@ -231,7 +240,6 @@
 
     poll: ->
       return unless @readyState is @states.open
-      console.log "polling"
       exports.Ajax.request "GET", @endPoint, "application/json", null, (status, resp) =>
         switch status
           when 200
