@@ -6,9 +6,16 @@ defmodule Phoenix.Router.ConsoleFormatter do
   Format the routes for printing.
   """
   def format(router) do
-    routes = router.__routes__
+    routes = user_defined_routes(router)
     column_widths = calculate_column_widths(routes)
     Enum.map_join(routes, "", &format_route(&1, column_widths))
+  end
+
+  defp user_defined_routes(router) do
+    router.__routes__
+    |> Enum.reject(fn route ->
+      route.controller |> to_string |> String.starts_with?("Elixir.Phoenix.Transports")
+    end)
   end
 
   defp calculate_column_widths(routes) do

@@ -149,16 +149,34 @@ defmodule Phoenix.Router do
 
   Note that router pipelines are only invoked after a route is found.
   No plug is invoked in case no matches were found.
+
+
+  ### Channels
+
+  Channels allow you to route pubsub events to channel handlers in your application.
+  By default, Phoenix supports both WebSocket and LongPoller transports.
+  See the `Phoenix.Channel.Transport` documentation for more information on writing
+  your own transports. The default mount point for the WebSocket transport is `"/ws"`,
+  but this can be configured with the `socket_mount` option to `use`:
+
+      defmodule MyApp.Router do
+        use Phoenix.Router, socket_mount: "/websocket"
+      end
+
   """
 
   alias Phoenix.Router.Resource
   alias Phoenix.Router.Scope
+  alias Phoenix.Router.Helpers
 
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
 
   @doc false
-  defmacro __using__(_) do
+  defmacro __using__(opts \\ []) do
+    mount = opts[:socket_mount] || "/ws"
+
     quote do
+      @socket_mount unquote(mount)
       unquote(prelude())
       unquote(plug())
     end
@@ -166,8 +184,9 @@ defmodule Phoenix.Router do
 
   defp prelude() do
     quote do
-      @before_compile Phoenix.Router
+      @before_compile unquote(__MODULE__)
       Module.register_attribute __MODULE__, :phoenix_routes, accumulate: true
+      Module.register_attribute(__MODULE__, :channels, accumulate: true)
 
       import Phoenix.Router
       import Plug.Conn
@@ -176,6 +195,10 @@ defmodule Phoenix.Router do
       # Set up initial scope
       @phoenix_pipeline nil
       Phoenix.Router.Scope.init(__MODULE__)
+      get  @socket_mount, Phoenix.Transports.WebSocket, :upgrade_conn
+      get  @socket_mount <> "/poll", Phoenix.Transports.LongPoller, :poll
+      post @socket_mount <> "/poll", Phoenix.Transports.LongPoller, :open
+      put  @socket_mount <> "/poll", Phoenix.Transports.LongPoller, :publish
     end
   end
 
@@ -226,8 +249,9 @@ defmodule Phoenix.Router do
 
   @doc false
   defmacro __before_compile__(env) do
-    routes = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse
-    Phoenix.Router.Helpers.define(env, routes)
+    routes   = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse
+    chan_ast = env.module |> Module.get_attribute(:channels) |> Helpers.defchannels
+    Helpers.define(env, routes)
 
     quote do
       @doc false
@@ -238,6 +262,7 @@ defmodule Phoenix.Router do
       defp match(conn, _method, _path_info, _host) do
         raise NoRouteError, conn: conn, router: __MODULE__
       end
+      unquote(chan_ast)
     end
   end
 
@@ -475,7 +500,7 @@ defmodule Phoenix.Router do
   end
 
   @doc """
-  Define a scope with the given path and alias.
+  Defines a scope with the given path and alias.
 
   This function is a shortcut for:
 
@@ -501,6 +526,42 @@ defmodule Phoenix.Router do
       after
         Scope.pop(__MODULE__)
       end
+    end
+  end
+
+  @doc """
+  Defines a channel matching the given topic and transports
+
+    * `topic_pattern` - The string pattern, ie "rooms:*", "users:*", "system"
+    * `module` - The channel module handler, ie `MyApp.RoomChannel`
+    * `opts` - The optional list of options. Available options are:
+      * `via` - The transport adapters to accept on this channel.
+                Defaults `[Phoenix.Transports.WebSocket, Phoenix.Transports.LongPoller]`
+
+  ## Examples
+
+      channel "topic1:*", MyChannel
+      channel "topic2:*", MyChannel, via: [Phoenix.Transports.WebSocket]
+      channel "topic",    MyChannel, via: [Phoenix.Transports.LongPoller]
+
+  ## Topic Patterns
+
+  The `channel` macro accepts topic patterns in two flavors. A splat argument
+  can be provided as the last character to indicate a "topic:subtopic" match. If
+  a plain string is provied, only that topic will match the channel handler.
+  Most use-cases will use the "topic:*" pattern to allow more versatile topic
+  scoping.
+  """
+  defmacro channel(topic_pattern, module, opts \\ []) do
+    quote bind_quoted: binding do
+      if Scope.inside_scope?(__MODULE__) do
+        raise """
+        You are trying to call `channel` within a `scope` definition.
+        Please move your channel definitions outside of any scope block.
+        """
+      end
+
+      @channels {topic_pattern, module, opts}
     end
   end
 end

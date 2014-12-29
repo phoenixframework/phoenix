@@ -40,4 +40,3 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
     ConsoleFormatter.format(router)
   end
 end
-

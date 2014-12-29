@@ -5,6 +5,8 @@ defmodule Phoenix.Router.Helpers do
   alias Phoenix.Router.Route
   alias Plug.Conn
 
+  @transports [Phoenix.Transports.WebSocket, Phoenix.Transports.LongPoller]
+
   @doc """
   Generates the helper module for the given environment and routes.
   """
@@ -129,4 +131,52 @@ defmodule Phoenix.Router.Helpers do
     do: optimize_segments(t, quote(do: unquote(acc) <> "/" <> to_string(unquote(h))))
   defp optimize_segments([], acc),
     do: acc
+
+
+  @doc """
+  Receives the `@channels` accumulated module attribute and returns an AST of
+  `match_channel` definitions
+  """
+  def defchannels(channels) do
+    channels_ast = for {topic_pattern, module, opts} <- channels do
+      topic_pattern
+      |> to_topic_match
+      |> defchannel(module, opts[:via] || @transports)
+    end
+
+    quote do
+      unquote(channels_ast)
+      def match_channel(socket, _direction, _channel, _event, _msg_payload, _transport) do
+        {:error, socket, :bad_transport_match}
+      end
+    end
+  end
+
+  defp to_topic_match(topic_pattern) do
+    case String.split(topic_pattern, "*") do
+      [prefix, ""] -> quote do: <<unquote(prefix) <> _rest>>
+      [bare_topic] -> quote do: unquote(bare_topic)
+      _            -> raise "channels using splat patterns must end with *"
+    end
+  end
+
+  defp defchannel(topic_match, module, transports) do
+    quote do
+      def match_channel(socket, :incoming, unquote(topic_match), "join", msg_payload, transport)
+        when transport in unquote(transports) do
+        apply(unquote(module), :join, [socket, socket.topic, msg_payload])
+      end
+      def match_channel(socket, :incoming, unquote(topic_match), "leave", msg_payload, transport)
+        when transport in unquote(transports) do
+        apply(unquote(module), :leave, [socket, msg_payload])
+      end
+      def match_channel(socket, :incoming, unquote(topic_match), event, msg_payload, transport)
+        when transport in unquote(transports) do
+        apply(unquote(module), :incoming, [socket, event, msg_payload])
+      end
+      def match_channel(socket, :outgoing, unquote(topic_match), event, msg_payload, _transport) do
+        apply(unquote(module), :outgoing, [socket, event, msg_payload])
+      end
+    end
+  end
 end
