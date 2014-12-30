@@ -374,7 +374,7 @@ defmodule HelloPhoenix.Router do
   end
 . . .
 ```
-And also we need to tell controller to render a template with the same format as the one found in conn.params["format"].
+And also we need to tell the controller to render a template with the same format as the one found in conn.params["format"].
 
 ```elixir
 def index(conn, _params) do
