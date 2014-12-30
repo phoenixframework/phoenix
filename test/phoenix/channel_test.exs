@@ -47,12 +47,14 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   defmodule Router do
-    use Phoenix.Router, socket_mount: "/ws"
+    use Phoenix.Router
 
-    channel "topic1:*", MyChannel
-    channel "baretopic", MyChannel
-    channel "wsonly:*", MyChannel, via: [WebSocket]
-    channel "lponly:*", MyChannel, via: [LongPoller]
+    socket "/ws" do
+      channel "topic1:*", MyChannel
+      channel "baretopic", MyChannel
+      channel "wsonly:*", MyChannel, via: [WebSocket]
+      channel "lponly:*", MyChannel, via: [LongPoller]
+    end
   end
 
   def new_socket do

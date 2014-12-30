@@ -43,14 +43,16 @@ defmodule Phoenix.Integration.ChannelTest do
   end
 
   defmodule Router do
-    use Phoenix.Router, socket_mount: "/ws"
+    use Phoenix.Router
 
     def call(conn, opts) do
       Logger.disable(self)
       super(conn, opts)
     end
 
-    channel "rooms:*", RoomChannel
+    socket "/ws" do
+      channel "rooms:*", RoomChannel
+    end
   end
 
   defmodule Endpoint do

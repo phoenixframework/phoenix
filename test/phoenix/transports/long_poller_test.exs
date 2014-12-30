@@ -19,7 +19,10 @@ defmodule Phoenix.Tranports.LongPollerTest do
   end
 
   defmodule Router do
-    use Phoenix.Router, socket_mount: "/ws"
+    use Phoenix.Router
+
+    socket "/ws" do
+    end
   end
 
   test "start_session starts the LongPoller.Server and stores pid in session" do

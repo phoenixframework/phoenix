@@ -156,11 +156,14 @@ defmodule Phoenix.Router do
   Channels allow you to route pubsub events to channel handlers in your application.
   By default, Phoenix supports both WebSocket and LongPoller transports.
   See the `Phoenix.Channel.Transport` documentation for more information on writing
-  your own transports. The default mount point for the WebSocket transport is `"/ws"`,
-  but this can be configured with the `socket_mount` option to `use`:
+  your own transports. Chanenls are defined with a `socket` mount, ie:
 
       defmodule MyApp.Router do
-        use Phoenix.Router, socket_mount: "/websocket"
+        use Phoenix.Router
+
+        socket "/ws" do
+          channel "rooms:*", MyApp.RoomChannel
+        end
       end
 
   """
@@ -172,11 +175,8 @@ defmodule Phoenix.Router do
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
 
   @doc false
-  defmacro __using__(opts \\ []) do
-    mount = opts[:socket_mount] || "/ws"
-
+  defmacro __using__(_opts) do
     quote do
-      @socket_mount unquote(mount)
       unquote(prelude())
       unquote(plug())
     end
@@ -195,10 +195,6 @@ defmodule Phoenix.Router do
       # Set up initial scope
       @phoenix_pipeline nil
       Phoenix.Router.Scope.init(__MODULE__)
-      get  @socket_mount, Phoenix.Transports.WebSocket, :upgrade_conn
-      get  @socket_mount <> "/poll", Phoenix.Transports.LongPoller, :poll
-      post @socket_mount <> "/poll", Phoenix.Transports.LongPoller, :open
-      put  @socket_mount <> "/poll", Phoenix.Transports.LongPoller, :publish
     end
   end
 
@@ -540,9 +536,11 @@ defmodule Phoenix.Router do
 
   ## Examples
 
-      channel "topic1:*", MyChannel
-      channel "topic2:*", MyChannel, via: [Phoenix.Transports.WebSocket]
-      channel "topic",    MyChannel, via: [Phoenix.Transports.LongPoller]
+      socket "/ws" do
+        channel "topic1:*", MyChannel
+        channel "topic2:*", MyChannel, via: [Phoenix.Transports.WebSocket]
+        channel "topic",    MyChannel, via: [Phoenix.Transports.LongPoller]
+      end
 
   ## Topic Patterns
 
@@ -554,14 +552,61 @@ defmodule Phoenix.Router do
   """
   defmacro channel(topic_pattern, module, opts \\ []) do
     quote bind_quoted: binding do
-      if Scope.inside_scope?(__MODULE__) do
+      unless @socket_mount do
         raise """
-        You are trying to call `channel` within a `scope` definition.
-        Please move your channel definitions outside of any scope block.
+        You are trying to call `channel` outside of a `socket` block.
+        Please move your channel definitions inside a `socket` block.
         """
       end
 
-      @channels {topic_pattern, module, opts}
+      @channels {topic_pattern, module, Dict.merge([via: @transports], opts)}
+    end
+  end
+
+  @doc """
+  Defines a socket mount-point for channel definitions. By default, the
+  given path is a websocket upgrade endpoint, with Long-polling fallback.
+  The transports can be configured with the socket options or on each individual
+  channel.
+
+    * `mount` - The string path for the websocket upgrade, ie "/ws"
+    * `opts` - The optional keyword list of options
+      * `via` - The optional transport modules to apply to all channels in the block,
+                ie: `[Phoenix.Transports.WebSocket]`
+      *`as` - The optional named route helper function, ie :socket
+
+  ## Examples
+
+      socket "/ws" do
+        channel "rooms:*", RoomChannel
+      end
+
+      socket "/ws-only", as: :socket, via: [Phoenix.Transports.WebSocket] do
+        channel "rooms:*", RoomChannel
+      end
+
+  """
+  defmacro socket(mount, do: channel_block) do
+    quote do: socket(unquote(mount), [], do: unquote(channel_block))
+  end
+  defmacro socket(mount, opts, do: channel_block) do
+    quote bind_quoted: [mount: mount, opts: opts], unquote: true do
+      if Scope.inside_scope?(__MODULE__) do
+        raise """
+        You are trying to call `socket` within a `scope` definition.
+        Please move your socket and channel definitions outside of any scope block.
+        """
+      end
+
+      @socket_mount mount
+      @transports opts[:via]
+      get  @socket_mount, Phoenix.Transports.WebSocket, :upgrade, as: opts[:as]
+      get  @socket_mount <> "/poll", Phoenix.Transports.LongPoller, :poll
+      post @socket_mount <> "/poll", Phoenix.Transports.LongPoller, :open
+      put  @socket_mount <> "/poll", Phoenix.Transports.LongPoller, :publish
+      unquote(channel_block)
+      @transports nil
+      @socket_mount nil
     end
   end
 end

@@ -155,7 +155,7 @@ defmodule Phoenix.Router.Helpers do
   defp to_topic_match(topic_pattern) do
     case String.split(topic_pattern, "*") do
       [prefix, ""] -> quote do: <<unquote(prefix) <> _rest>>
-      [bare_topic] -> quote do: unquote(bare_topic)
+      [bare_topic] -> bare_topic
       _            -> raise "channels using splat patterns must end with *"
     end
   end
