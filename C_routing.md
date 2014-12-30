@@ -519,7 +519,7 @@ scope "/api", HelloPhoenix.Api, as: :api do
   scope "/v1", V1, as: :v1 do
     resources "/images", ImageController
     resources "/reviews", ReviewController
-    resources "/users", UserController\
+    resources "/users", UserController
   end
 end
 ```
