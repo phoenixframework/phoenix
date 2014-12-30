@@ -97,7 +97,7 @@ defmodule Phoenix.Integration.ChannelTest do
     {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
 
     WebsocketClient.send_event(sock, "rooms:lobby", "new:msg", %{body: "hi!"})
-    refute_receive %Message{}
+    refute_receive {:socket_reply, %Message{}}
   end
 
   ## Longpoller Transport
@@ -169,7 +169,7 @@ defmodule Phoenix.Integration.ChannelTest do
                                           "event" => "new:msg",
                                           "payload" => %{"body" => "hi!"}}
     assert resp.status == 200
-    assert_receive {:broadcast, %Message{event: "new:msg", payload: %{"body" => "hi!"}}}
+    assert_receive {:socket_broadcast, %Message{event: "new:msg", payload: %{"body" => "hi!"}}}
     {resp, cookie} = poll(:get, cookie)
     assert resp.status == 200
 
@@ -179,7 +179,7 @@ defmodule Phoenix.Integration.ChannelTest do
                                           "event" => "new:msg",
                                           "payload" => %{"body" => "this method shouldn't send!'"}}
     assert resp.status == 401
-    refute_receive {:broadcast, %Message{event: "new:msg"}}
+    refute_receive {:socket_broadcast, %Message{event: "new:msg"}}
 
 
     ## multiplexed sockets
@@ -222,6 +222,6 @@ defmodule Phoenix.Integration.ChannelTest do
                                           "event" => "new:msg",
                                           "payload" => %{"body" => "hi!"}}
     assert resp.status == 410
-    refute_receive %Message{event: "new:msg", payload: %{"body" => "hi!"}}
+    refute_receive {:socket_reply, %Message{event: "new:msg", payload: %{"body" => "hi!"}}}
   end
 end

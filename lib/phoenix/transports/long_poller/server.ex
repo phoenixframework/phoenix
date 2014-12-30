@@ -80,14 +80,14 @@ defmodule Phoenix.Transports.LongPoller.Server do
   @doc """
   Forwards replied/broadcasted `%Phoenix.Socket.Message{}`s from Channels back to client
   """
-  def handle_info(message = %Message{}, state) do
+  def handle_info({:socket_reply, message = %Message{}}, state) do
     buffer = [message | state.buffer]
     if state.listener && Process.alive?(state.listener) do
       send state.listener, {:messages, buffer}
     end
     {:noreply, %{state | buffer: buffer}, state.window_ms}
   end
-  def handle_info({:broadcast, message = %Message{}}, %{sockets: sockets} = state) do
+  def handle_info({:socket_broadcast, message = %Message{}}, %{sockets: sockets} = state) do
     sockets = case Transport.dispatch_broadcast(sockets, message, LongPoller) do
       {:ok, socks} -> socks
       {:error, socks, _reason} -> socks

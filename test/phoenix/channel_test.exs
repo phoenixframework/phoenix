@@ -116,12 +116,12 @@ defmodule Phoenix.Channel.ChannelTest do
     socket = Socket.set_current_topic(new_socket, "top:subtop")
     assert Channel.reply(socket, "event", %{payload: "hello"})
 
-    assert Enum.any?(Process.info(self)[:messages], &match?(%Message{}, &1))
-    assert_received %Message{
+    assert Enum.any?(Process.info(self)[:messages], &match?({:socket_reply, %Message{}}, &1))
+    assert_received {:socket_reply, %Message{
       topic: "top:subtop",
       event: "event",
       payload: %{payload: "hello"}
-    }
+    }}
   end
 
   test "#reply raises friendly error when message arg isn't a Map" do
@@ -236,7 +236,7 @@ defmodule Phoenix.Channel.ChannelTest do
     message = %Message{topic: "phoenix", event: "heartbeat", payload: %{}}
 
     assert {:ok, sockets} = Transport.dispatch(message, sockets, self, Router, WebSocket)
-    assert_received %Message{topic: "phoenix", event: "heartbeat", payload: %{}}
+    assert_received {:socket_reply, %Message{topic: "phoenix", event: "heartbeat", payload: %{}}}
     assert sockets == HashDict.new
   end
 

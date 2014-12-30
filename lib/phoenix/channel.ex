@@ -87,7 +87,7 @@ defmodule Phoenix.Channel do
   end
   def broadcast_from(from, topic, event, message) when is_map(message) do
     PubSub.create(topic)
-    PubSub.broadcast_from from, topic, {:broadcast, %Message{
+    PubSub.broadcast_from from, topic, {:socket_broadcast, %Message{
       topic: topic,
       event: event,
       payload: message
@@ -99,11 +99,11 @@ defmodule Phoenix.Channel do
   Sends Dict, JSON serializable message to socket
   """
   def reply(socket, event, message) when is_map(message) do
-    send socket.pid, %Message{
+    send socket.pid, {:socket_reply, %Message{
       topic: socket.topic,
       event: event,
       payload: message
-    }
+    }}
     socket
   end
   def reply(_, _, _), do: raise_invalid_message

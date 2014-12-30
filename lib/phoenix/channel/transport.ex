@@ -87,8 +87,7 @@ defmodule Phoenix.Channel.Transport do
   The server will respond to heartbeats with the same message
   """
   def dispatch(socket, "phoenix", "heartbeat", _msg, _transport) do
-    msg = %Message{topic: "phoenix", event: "heartbeat", payload: %{}}
-    send socket.pid, msg
+    send socket.pid, {:socket_reply, %Message{topic: "phoenix", event: "heartbeat", payload: %{}}}
 
     {:heartbeat, socket}
   end
@@ -131,7 +130,7 @@ defmodule Phoenix.Channel.Transport do
   end
 
   @doc """
-  When an Adapter receives `{:broadcast, %Message{}}`, it dispatches to this
+  When an Adapter receives `{:socket_broadcast, %Message{}}`, it dispatches to this
   function with its socket state.
 
   The message is routed to the intended channel's outgoing/3 callback.
