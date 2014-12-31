@@ -55,6 +55,15 @@ defmodule Phoenix.Channel.ChannelTest do
       channel "wsonly:*", MyChannel, via: [WebSocket]
       channel "lponly:*", MyChannel, via: [LongPoller]
     end
+
+    socket "/ws2", Phoenix.Channel.ChannelTest, via: [WebSocket] do
+      channel "topic2:*", Elixir.MyChannel
+      channel "topic2-override:*", Elixir.MyChannel, via: [LongPoller]
+    end
+
+    socket "/ws3", alias: Phoenix.Channel.ChannelTest do
+      channel "topic3:*", Elixir.MyChannel
+    end
   end
 
   def new_socket do
@@ -359,7 +368,45 @@ defmodule Phoenix.Channel.ChannelTest do
   test "unmatched channel message returns {:error, sockets, :bad_transport_match}" do
     message = %Message{topic: "slfjskdjfsjfsklfj:somesubtopic", event: "join", payload: %{}}
     assert {:error, _sockets, :bad_transport_match} =
-      Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
     refute_received {:join, "slfjskdjfsjfsklfj:somesubtopic"}
+  end
+
+  test "socket/3 with alias option" do
+    socket = new_socket |> Socket.set_current_topic("topic2:somesubtopic")
+    message = %Message{topic: "topic2:somesubtopic",
+                       event: "join",
+                       payload: {:ok, socket}}
+    {:ok, _sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    assert_received {:join, "topic2:somesubtopic"}
+  end
+
+  test "socket/3 with alias applies :alias option" do
+    socket = new_socket |> Socket.set_current_topic("topic3:somesubtopic")
+    message = %Message{topic: "topic3:somesubtopic",
+                       event: "join",
+                       payload: {:ok, socket}}
+    {:ok, _sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    assert_received {:join, "topic3:somesubtopic"}
+  end
+
+  test "socket/3 with via applies overridable transport filters to all channels" do
+    socket = new_socket |> Socket.set_current_topic("topic2:somesubtopic")
+    message = %Message{topic: "topic2:somesubtopic",
+                       event: "join",
+                       payload: {:ok, socket}}
+    assert {:error, _sockets, :bad_transport_match} =
+      Transport.dispatch(message, HashDict.new, self, Router, LongPoller)
+    refute_received {:join, "topic2:somesubtopic"}
+
+    socket = new_socket |> Socket.set_current_topic("topic2-override:somesubtopic")
+    message = %Message{topic: "topic2-override:somesubtopic",
+                       event: "join",
+                       payload: {:ok, socket}}
+    assert {:ok, _sockets} = Transport.dispatch(message, HashDict.new, self, Router, LongPoller)
+    assert_received {:join, "topic2-override:somesubtopic"}
+    assert {:error, _sockets, :bad_transport_match} =
+      Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    refute_received {:join, "topic2-override:somesubtopic"}
   end
 end
