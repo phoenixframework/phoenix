@@ -14,7 +14,7 @@ When Phoenix generates a new application for us, it builds a top level directory
 ```
 
 
-Most of our work in this guide will be in the web directory, which looks like this when expanded.
+Most of our work in this guide will be in the `web` directory, which looks like this when expanded.
 
 ```text
 ├── channels
