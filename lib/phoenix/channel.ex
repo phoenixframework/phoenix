@@ -13,8 +13,8 @@ defmodule Phoenix.Channel do
       import unquote(__MODULE__)
       import Phoenix.Socket
 
-      def leave(socket, message), do: socket
-      def outgoing(socket, event, message) do
+      def leave(message, socket), do: socket
+      def outgoing(event, message, socket) do
         reply(socket, event, message)
         socket
       end

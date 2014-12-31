@@ -25,18 +25,18 @@ defmodule Phoenix.Integration.ChannelTest do
   defmodule RoomChannel do
     use Phoenix.Channel
 
-    def join(socket, _topic, message) do
+    def join(_topic, message, socket) do
       reply socket, "join", %{status: "connected"}
       broadcast socket, "user:entered", %{user: message["user"]}
       {:ok, socket}
     end
 
-    def leave(socket, _message) do
+    def leave(_message, socket) do
       reply socket, "you:left", %{message: "bye!"}
       socket
     end
 
-    def incoming(socket, "new:msg", message) do
+    def incoming("new:msg", message, socket) do
       broadcast socket, "new:msg", message
       socket
     end

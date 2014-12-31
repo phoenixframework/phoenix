@@ -11,36 +11,36 @@ defmodule Phoenix.Channel.ChannelTest do
 
   defmodule MyChannel do
     use Phoenix.Channel
-    def join(socket, topic, msg) do
+    def join(topic, msg, socket) do
       send socket.pid, {:join, topic}
       msg
     end
-    def leave(_socket, _msg) do
+    def leave(_msg, _socket) do
       Process.get(:leave)
     end
-    def incoming(socket, "info", msg) do
+    def incoming("info", msg, socket) do
       send socket.pid, :info
       msg
     end
 
-    def incoming(socket, "some:event", _msg) do
+    def incoming("some:event", _msg, socket) do
       send socket.pid, {:incoming, socket.topic}
       socket
     end
-    def incoming(_socket, "boom", msg), do: msg
-    def incoming(socket, "put", dict) do
+    def incoming("boom", msg, _socket), do: msg
+    def incoming("put", dict, socket) do
       Enum.reduce dict, socket, fn {k, v}, socket -> Socket.assign(socket, k, v) end
     end
-    def incoming(socket, "get", %{"key" => key}) do
+    def incoming("get", %{"key" => key}, socket) do
       send socket.pid, socket.assigns[key]
       socket
     end
 
-    def outgoing(socket, "some:broadcast", _msg) do
+    def outgoing("some:broadcast", _msg, socket) do
       send socket.pid, :outgoing
       socket
     end
-    def outgoing(socket, event, message) do
+    def outgoing(event, message, socket) do
       reply(socket, event, message)
       socket
     end
@@ -268,8 +268,8 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "Socket state can be put and retrieved" do
-    socket = MyChannel.incoming(new_socket, "put", %{val: 123})
-    _socket = MyChannel.incoming(socket, "get", %{"key" => :val})
+    socket = MyChannel.incoming("put", %{val: 123}, new_socket)
+    _socket = MyChannel.incoming("get", %{"key" => :val}, socket)
     assert_received 123
   end
 

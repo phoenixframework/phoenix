@@ -164,18 +164,18 @@ defmodule Phoenix.Router.Helpers do
     quote do
       def match_channel(socket, :incoming, unquote(topic_match), "join", msg_payload, transport)
         when transport in unquote(transports) do
-        apply(unquote(module), :join, [socket, socket.topic, msg_payload])
+        apply(unquote(module), :join, [socket.topic, msg_payload, socket])
       end
       def match_channel(socket, :incoming, unquote(topic_match), "leave", msg_payload, transport)
         when transport in unquote(transports) do
-        apply(unquote(module), :leave, [socket, msg_payload])
+        apply(unquote(module), :leave, [msg_payload, socket])
       end
       def match_channel(socket, :incoming, unquote(topic_match), event, msg_payload, transport)
         when transport in unquote(transports) do
-        apply(unquote(module), :incoming, [socket, event, msg_payload])
+        apply(unquote(module), :incoming, [event, msg_payload, socket])
       end
       def match_channel(socket, :outgoing, unquote(topic_match), event, msg_payload, _transport) do
-        apply(unquote(module), :outgoing, [socket, event, msg_payload])
+        apply(unquote(module), :outgoing, [event, msg_payload, socket])
       end
     end
   end
