@@ -219,8 +219,8 @@
 
     constructor: (endPoint) ->
       @states          = exports.Socket.states
-      @upgradeEndpoint = endPoint
-      @endPoint        = @normalizeEndpoint(endPoint)
+      @upgradeEndpoint = @normalizeEndpoint(endPoint)
+      @pollEndpoint    = @upgradeEndpoint + if /\/$/.test(endPoint) then "poll" else "/poll"
       @readyState      = @states.connecting
       @open()
 
@@ -236,13 +236,12 @@
 
 
     normalizeEndpoint: (endPoint) ->
-      suffix = if /\/$/.test(endPoint) then "poll" else "/poll"
-      endPoint.replace("ws://", "http://").replace("wss://", "https://") + suffix
+      endPoint.replace("ws://", "http://").replace("wss://", "https://")
 
 
     poll: ->
       return unless @readyState is @states.open
-      exports.Ajax.request "GET", @endPoint, "application/json", null, (status, resp) =>
+      exports.Ajax.request "GET", @pollEndpoint, "application/json", null, (status, resp) =>
         switch status
           when 200
             @onmessage(data: JSON.stringify(msg)) for msg in JSON.parse(resp)
@@ -255,7 +254,7 @@
 
 
     send: (body) ->
-      exports.Ajax.request "POST", @endPoint, "application/json", body, (status, resp) =>
+      exports.Ajax.request "POST", @pollEndpoint, "application/json", body, (status, resp) =>
         @onerror() unless status is 200
 
 

@@ -431,8 +431,8 @@
 
       function LongPoller(endPoint) {
         this.states = exports.Socket.states;
-        this.upgradeEndpoint = endPoint;
-        this.endPoint = this.normalizeEndpoint(endPoint);
+        this.upgradeEndpoint = this.normalizeEndpoint(endPoint);
+        this.pollEndpoint = this.upgradeEndpoint + (/\/$/.test(endPoint) ? "poll" : "/poll");
         this.readyState = this.states.connecting;
         this.open();
       }
@@ -452,16 +452,14 @@
       };
 
       LongPoller.prototype.normalizeEndpoint = function(endPoint) {
-        var suffix;
-        suffix = /\/$/.test(endPoint) ? "poll" : "/poll";
-        return endPoint.replace("ws://", "http://").replace("wss://", "https://") + suffix;
+        return endPoint.replace("ws://", "http://").replace("wss://", "https://");
       };
 
       LongPoller.prototype.poll = function() {
         if (this.readyState !== this.states.open) {
           return;
         }
-        return exports.Ajax.request("GET", this.endPoint, "application/json", null, (function(_this) {
+        return exports.Ajax.request("GET", this.pollEndpoint, "application/json", null, (function(_this) {
           return function(status, resp) {
             var msg, _i, _len, _ref;
             switch (status) {
@@ -487,7 +485,7 @@
       };
 
       LongPoller.prototype.send = function(body) {
-        return exports.Ajax.request("POST", this.endPoint, "application/json", body, (function(_this) {
+        return exports.Ajax.request("POST", this.pollEndpoint, "application/json", body, (function(_this) {
           return function(status, resp) {
             if (status !== 200) {
               return _this.onerror();
