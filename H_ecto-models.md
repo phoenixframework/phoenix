@@ -38,7 +38,7 @@ Then we need to add them to our list of applications. (still in `mix.exs`)
 ```elixir
 def application do
   [
-    mod: {HelloPhoenix, [] },
+    mod: {HelloPhoenix, []},
     applications: [:phoenix, :cowboy, :postgrex, :ecto]
   ]
 end

@@ -1,4 +1,4 @@
-Phoenix controllers act as a sort of intermediary modules. Their functions - called actions - are invoked from the router in response to HTTP requests. The actions, in turn, gather all the necessary data and perform all the necessary steps before - in a typical case - invoking the view layer to render a template.
+Phoenix controllers act as intermediary modules. Their functions - called actions - are invoked from the router in response to HTTP requests. The actions, in turn, gather all the necessary data and perform all the necessary steps before - in a typical case - invoking the view layer to render a template.
 
 A newly generated Phoenix app will have a single controller, the `PageController`, which looks like this.
 
@@ -132,7 +132,7 @@ Besides `put/3` and `get_all/2`, the `Phoenix.Controller.Flash` module has some 
 `pop_all/2` also takes `conn` and a key, and returns a tuple containing a list of values and `conn`.
 
 ### Rendering
-Controllers have several ways of rendering content. The simplest is to render some plain text. Phoenix provides the `text/2` function for just this.
+Controllers have several ways of rendering content. The simplest is to render some plain text using the `text/2` function which Phoenix provides.
 
 Let's say we have a show action which receives an id from the params map, and all we want to do is return some text with the id. For that, we could do the following.
 
@@ -143,7 +143,7 @@ end
 ```
 Assuming we had a route for `get "/our_path/:id"` mapped to this show action, going to `/our_path/15` in your browser should display `Showing id 15` as plain text without any HTML.
 
-A step beyond this is rendering pure json. Phoenix provides the `json/2` function for this. As long as we pass in something that the Poison library can parse into JSON - a map, in this case - this will work.
+A step beyond this is rendering pure JSON with the `json/2` function. We need to pass it something that the Poison library can parse into JSON, such as a map. (Poison is one of Phoenix's dependencies.)
 
 ```elixir
 def show(conn, %{"id" => id}) do
@@ -174,7 +174,7 @@ def show(conn, %{"id" => id}) do
 end
 ```
 
-Hitting `/our_path/15` this time generates the HTML document as we created the string for in the action, except that the value `15` will be interpolated into the page. Note that what we wrote in the action is not an eex document. It's a multi-line string, so we interpolate the `id` variable like this `#{id}` instead of this `<%= id %>`.
+Hitting `/our_path/15` now renders the HTML string we defined in the `show` action, with the value `15` interpolated. Note that what we wrote in the action is not an `eex` template. It's a multi-line string, so we interpolate the `id` variable like this `#{id}` instead of this `<%= id %>`.
 
 It is worth noting that the `text/2`, `json/2`, and `html/2` functions require neither a Phoenix view, nor a template to render.
 
