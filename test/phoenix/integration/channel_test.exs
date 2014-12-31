@@ -109,7 +109,7 @@ defmodule Phoenix.Integration.ChannelTest do
 
   Returns a response with body decoded into JSON map.
   """
-  def poll(method, cookie, json \\ nil) do
+  def poll(method, path, cookie, json \\ nil) do
     headers = if cookie, do: %{"Cookie" => cookie}, else: %{}
 
     if json do
@@ -117,7 +117,7 @@ defmodule Phoenix.Integration.ChannelTest do
       body    = Poison.encode!(json)
     end
 
-    {:ok, resp} = HTTPClient.request(method, "http://127.0.0.1:#{@port}/ws/poll", headers, body)
+    {:ok, resp} = HTTPClient.request(method, "http://127.0.0.1:#{@port}#{path}", headers, body)
 
     if resp.body != "" do
       resp = put_in resp.body, Poison.decode!(resp.body)
@@ -131,55 +131,55 @@ defmodule Phoenix.Integration.ChannelTest do
 
   test "adapter handles longpolling join, leave, and event messages" do
     # create session
-    {resp, cookie} = poll :post, nil, %{}
+    {resp, cookie} = poll :post, "/ws", nil, %{}
     assert resp.status == 200
 
     # join
-    {resp, cookie} = poll :put, cookie, %{"topic" => "rooms:lobby",
-                                          "event" => "join",
-                                          "payload" => %{}}
+    {resp, cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:lobby",
+                                                       "event" => "join",
+                                                       "payload" => %{}}
     assert resp.status == 200
 
     # poll with messsages sends buffer
-    {resp, cookie} = poll(:get, cookie)
+    {resp, cookie} = poll(:get, "/ws/poll", cookie)
     assert resp.status == 200
     [status_msg] = resp.body
     assert status_msg["payload"] == %{"status" => "connected"}
 
     # poll without messages sends 204 no_content
-    {resp, cookie} = poll(:get, cookie)
+    {resp, cookie} = poll(:get, "/ws/poll", cookie)
     assert resp.status == 204
 
     # messages are buffered between polls
     Phoenix.Channel.broadcast "rooms:lobby", "user:entered", %{name: "José"}
     Phoenix.Channel.broadcast "rooms:lobby", "user:entered", %{name: "Sonny"}
-    {resp, cookie} = poll(:get, cookie)
+    {resp, cookie} = poll(:get, "/ws/poll", cookie)
     assert resp.status == 200
     assert Enum.count(resp.body) == 2
     assert Enum.map(resp.body, &(&1["payload"]["name"])) == ["José", "Sonny"]
 
     # poll without messages sends 204 no_content
-    {resp, cookie} = poll(:get, cookie)
+    {resp, cookie} = poll(:get, "/ws/poll", cookie)
     assert resp.status == 204
 
-    {resp, cookie} = poll(:get, cookie)
+    {resp, cookie} = poll(:get, "/ws/poll", cookie)
     assert resp.status == 204
 
     # generic events
     Phoenix.Channel.subscribe(self, "rooms:lobby")
-    {resp, cookie} = poll :put, cookie, %{"topic" => "rooms:lobby",
-                                          "event" => "new:msg",
-                                          "payload" => %{"body" => "hi!"}}
+    {resp, cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:lobby",
+                                                       "event" => "new:msg",
+                                                       "payload" => %{"body" => "hi!"}}
     assert resp.status == 200
     assert_receive {:socket_broadcast, %Message{event: "new:msg", payload: %{"body" => "hi!"}}}
-    {resp, cookie} = poll(:get, cookie)
+    {resp, cookie} = poll(:get, "/ws/poll", cookie)
     assert resp.status == 200
 
     # unauthorized events
     Phoenix.Channel.subscribe(self, "rooms:private-room")
-    {resp, cookie} = poll :put, cookie, %{"topic" => "rooms:private-room",
-                                          "event" => "new:msg",
-                                          "payload" => %{"body" => "this method shouldn't send!'"}}
+    {resp, cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:private-room",
+                                                       "event" => "new:msg",
+                                                       "payload" => %{"body" => "this method shouldn't send!'"}}
     assert resp.status == 401
     refute_receive {:socket_broadcast, %Message{event: "new:msg"}}
 
@@ -187,13 +187,13 @@ defmodule Phoenix.Integration.ChannelTest do
     ## multiplexed sockets
 
     # join
-    {resp, cookie} = poll :put, cookie, %{"topic" => "rooms:room123",
-                                          "event" => "join",
-                                          "payload" => %{}}
+    {resp, cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:room123",
+                                                       "event" => "join",
+                                                       "payload" => %{}}
     assert resp.status == 200
     Phoenix.Channel.broadcast "rooms:lobby", "new:msg", %{body: "Hello lobby"}
     # poll
-    {resp, cookie} = poll(:get, cookie)
+    {resp, cookie} = poll(:get, "/ws/poll", cookie)
     assert resp.status == 200
     assert Enum.count(resp.body) == 2
     assert Enum.at(resp.body, 0)["payload"]["status"] == "connected"
@@ -204,25 +204,25 @@ defmodule Phoenix.Integration.ChannelTest do
 
     # 410 from crashed/terminated longpoller server when polling
     :timer.sleep @ensure_window_timeout_ms
-    {resp, cookie} = poll(:get, cookie)
+    {resp, cookie} = poll(:get, "/ws/poll", cookie)
     assert resp.status == 410
 
 
     # 410 from crashed/terminated longpoller server when publishing
     # create new session
-    {resp, cookie} = poll :post, cookie, %{}
+    {resp, cookie} = poll :post, "/ws", cookie, %{}
     assert resp.status == 200
 
     # join
-    {resp, cookie} = poll :put, cookie, %{"topic" => "rooms:lobby",
-                                          "event" => "join",
-                                          "payload" => %{}}
+    {resp, cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:lobby",
+                                                       "event" => "join",
+                                                       "payload" => %{}}
     assert resp.status == 200
     Phoenix.Channel.subscribe(self, "rooms:lobby")
     :timer.sleep @ensure_window_timeout_ms
-    {resp, _cookie} = poll :put, cookie, %{"topic" => "rooms:lobby",
-                                          "event" => "new:msg",
-                                          "payload" => %{"body" => "hi!"}}
+    {resp, _cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:lobby",
+                                                        "event" => "new:msg",
+                                                        "payload" => %{"body" => "hi!"}}
     assert resp.status == 410
     refute_receive {:socket_reply, %Message{event: "new:msg", payload: %{"body" => "hi!"}}}
   end

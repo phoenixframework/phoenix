@@ -282,9 +282,8 @@ defmodule Phoenix.Router do
                  unquote(route.host_segments)) do
         var!(conn) =
           Plug.Conn.put_private(var!(conn), :phoenix_route, fn conn ->
-            conn = update_in(conn.params, &Map.merge(&1, unquote(parts)))
-            opts = unquote(route.controller).init(unquote(route.action))
-            unquote(route.controller).call(conn, opts)
+            update_in(conn.params, &Map.merge(&1, unquote(parts)))
+            |> Phoenix.Controller.call_action(unquote(route.controller), unquote(route.action))
           end)
           |> Plug.Conn.put_private(:phoenix_pipelines, unquote(route.pipe_through))
         unquote(route.pipe_segments)
@@ -579,9 +578,9 @@ defmodule Phoenix.Router do
       @transports opts[:via]
       @channel_alias opts[:alias]
       get  @phoenix_socket_mount, Phoenix.Transports.WebSocket, :upgrade, Dict.take(opts, [:as])
+      post @phoenix_socket_mount, Phoenix.Transports.WebSocket, :upgrade
       get  @phoenix_socket_mount <> "/poll", Phoenix.Transports.LongPoller, :poll
-      post @phoenix_socket_mount <> "/poll", Phoenix.Transports.LongPoller, :open
-      put  @phoenix_socket_mount <> "/poll", Phoenix.Transports.LongPoller, :publish
+      post @phoenix_socket_mount <> "/poll", Phoenix.Transports.LongPoller, :publish
       unquote(chan_block)
       @phoenix_socket_mount nil
       @transports nil
