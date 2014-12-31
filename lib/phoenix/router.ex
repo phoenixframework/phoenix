@@ -575,16 +575,16 @@ defmodule Phoenix.Router do
       end
 
       @phoenix_socket_mount mount
-      @transports opts[:via]
-      @channel_alias opts[:alias]
+      @phoenix_transports opts[:via]
+      @phoenix_channel_alias opts[:alias]
       get  @phoenix_socket_mount, Phoenix.Transports.WebSocket, :upgrade, Dict.take(opts, [:as])
       post @phoenix_socket_mount, Phoenix.Transports.WebSocket, :upgrade
       get  @phoenix_socket_mount <> "/poll", Phoenix.Transports.LongPoller, :poll
       post @phoenix_socket_mount <> "/poll", Phoenix.Transports.LongPoller, :publish
       unquote(chan_block)
       @phoenix_socket_mount nil
-      @transports nil
-      @channel_alias nil
+      @phoenix_transports nil
+      @phoenix_channel_alias nil
     end
   end
   @doc """
@@ -622,8 +622,8 @@ defmodule Phoenix.Router do
       end
 
       @phoenix_channels {topic_pattern,
-                         Module.concat(@channel_alias, module),
-                         Dict.merge([via: @transports], opts)}
+                         Module.concat(@phoenix_channel_alias, module),
+                         Dict.merge([via: @phoenix_transports], opts)}
     end
   end
 end
