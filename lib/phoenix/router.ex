@@ -185,7 +185,7 @@ defmodule Phoenix.Router do
   defp prelude() do
     quote do
       Module.register_attribute __MODULE__, :phoenix_routes, accumulate: true
-      Module.register_attribute __MODULE__, :channels, accumulate: true
+      Module.register_attribute __MODULE__, :phoenix_channels, accumulate: true
 
       import Phoenix.Router
       import Plug.Conn
@@ -246,14 +246,13 @@ defmodule Phoenix.Router do
   @doc false
   defmacro __before_compile__(env) do
     routes   = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse
-    chan_ast = env.module |> Module.get_attribute(:channels) |> Helpers.defchannels
+    chan_ast = env.module |> Module.get_attribute(:phoenix_channels) |> Helpers.defchannels
+
     Helpers.define(env, routes)
 
     quote do
       @doc false
-      def __routes__ do
-        unquote(Macro.escape(routes))
-      end
+      def __routes__, do: unquote(Macro.escape(routes))
 
       defp match(conn, _method, _path_info, _host) do
         raise NoRouteError, conn: conn, router: __MODULE__
@@ -576,15 +575,15 @@ defmodule Phoenix.Router do
         """
       end
 
-      @socket_mount mount
+      @phoenix_socket_mount mount
       @transports opts[:via]
       @channel_alias opts[:alias]
-      get  @socket_mount, Phoenix.Transports.WebSocket, :upgrade, Dict.take(opts, [:as])
-      get  @socket_mount <> "/poll", Phoenix.Transports.LongPoller, :poll
-      post @socket_mount <> "/poll", Phoenix.Transports.LongPoller, :open
-      put  @socket_mount <> "/poll", Phoenix.Transports.LongPoller, :publish
+      get  @phoenix_socket_mount, Phoenix.Transports.WebSocket, :upgrade, Dict.take(opts, [:as])
+      get  @phoenix_socket_mount <> "/poll", Phoenix.Transports.LongPoller, :poll
+      post @phoenix_socket_mount <> "/poll", Phoenix.Transports.LongPoller, :open
+      put  @phoenix_socket_mount <> "/poll", Phoenix.Transports.LongPoller, :publish
       unquote(chan_block)
-      @socket_mount nil
+      @phoenix_socket_mount nil
       @transports nil
       @channel_alias nil
     end
@@ -616,16 +615,16 @@ defmodule Phoenix.Router do
   """
   defmacro channel(topic_pattern, module, opts \\ []) do
     quote bind_quoted: binding do
-      unless @socket_mount do
+      unless @phoenix_socket_mount do
         raise """
         You are trying to call `channel` outside of a `socket` block.
         Please move your channel definitions inside a `socket` block.
         """
       end
 
-      @channels {topic_pattern,
-                 Module.concat(@channel_alias, module),
-                 Dict.merge([via: @transports], opts)}
+      @phoenix_channels {topic_pattern,
+                         Module.concat(@channel_alias, module),
+                         Dict.merge([via: @transports], opts)}
     end
   end
 end
