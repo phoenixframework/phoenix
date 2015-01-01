@@ -104,7 +104,9 @@ defmodule Phoenix.View do
     if root = Keyword.get(options, :root) do
       quote do
         @view_root unquote(root)
-        unquote(__base__())
+        import Phoenix.View
+        use Phoenix.Template, root:
+          Path.join(@view_root, Phoenix.Template.module_to_template_root(__MODULE__, "View"))
       end
     else
       raise "expected :root to be given as an option"
@@ -142,24 +144,14 @@ defmodule Phoenix.View do
     {evaled, __usable__(block)}
   end
 
-  defp __base__ do
-    quote do
-      import Phoenix.View
-      use Phoenix.Template, root:
-        Path.join(@view_root, Phoenix.Template.module_to_template_root(__MODULE__, "View"))
-    end
-  end
-
   defp __usable__(block) do
     quote do
       @doc false
       defmacro __using__(opts) do
         root  = Keyword.get(opts, :root, @view_root)
-        base  = unquote(Macro.escape(__base__()))
         block = unquote(block)
         quote do
-          @view_root unquote(root)
-          unquote(base)
+          use Phoenix.View, root: unquote(root)
           unquote(block)
           import unquote(__MODULE__), except: [render: 2]
         end
