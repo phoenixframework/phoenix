@@ -226,21 +226,33 @@ defmodule Phoenix.Template do
 
   ## Examples
 
-      iex> Phoenix.Template.module_to_template_root(MyApp.UserView, "View")
+      iex> Phoenix.Template.module_to_template_root(MyApp.UserView, MyApp, "View")
       "user"
 
-      iex> Phoenix.Template.module_to_template_root(MyApp.Admin.User, "View")
+      iex> Phoenix.Template.module_to_template_root(MyApp.Admin.User, MyApp, "View")
       "admin/user"
 
+      iex> Phoenix.Template.module_to_template_root(MyApp.Admin.User, MyApp.Admin, "View")
+      "user"
+
+      iex> Phoenix.Template.module_to_template_root(MyApp.View, MyApp, "View")
+      ""
+
+      iex> Phoenix.Template.module_to_template_root(MyApp.View, MyApp.View, "View")
+      ""
+
   """
-  def module_to_template_root(module, suffix) do
+  def module_to_template_root(module, base, suffix) do
     module
     |> Phoenix.Naming.unsuffix(suffix)
     |> Module.split
-    |> tl
+    |> Enum.drop(length(Module.split(base)))
     |> Enum.map(&Phoenix.Naming.underscore/1)
-    |> Path.join
+    |> join_paths
   end
+
+  defp join_paths([]),    do: ""
+  defp join_paths(paths), do: Path.join(paths)
 
   @doc """
   Returns all template paths in a given template root.

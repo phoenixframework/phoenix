@@ -199,7 +199,7 @@ defmodule Phoenix.ControllerTest do
     |> protect_from_forgery([])
   end
 
-  test "__view__ returns the view modoule based on controller module" do
+  test "__view__ returns the view module based on controller module" do
     assert Phoenix.Controller.__view__(MyApp.UserController) == MyApp.UserView
     assert Phoenix.Controller.__view__(MyApp.Admin.UserController) == MyApp.Admin.UserView
   end

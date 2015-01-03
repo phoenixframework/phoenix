@@ -32,6 +32,14 @@ defmodule Phoenix.ViewTest do
            %{foo: "bar"}
   end
 
+  test "renders views even with deeply namespace module names" do
+    assert View.render(MyApp.Nested.UserView, "show.json", []) ==
+           %{foo: "bar"}
+
+    assert View.render(MyApp.Templates.UserView, "show.json", []) ==
+           %{foo: "bar"}
+  end
+
   test "renders views with layouts" do
     html = View.render(MyApp.View, "show.html",
       title: "Test",

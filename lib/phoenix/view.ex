@@ -46,7 +46,7 @@ defmodule Phoenix.View do
       Hello <%= @name %>
 
   The `.eex` extension is called a template engine which tells Phoenix how
-  to compile the code in the file into actual Elixir source code. After it is 
+  to compile the code in the file into actual Elixir source code. After it is
   compiled, the template can be rendered as:
 
       Phoenix.View.render(YourApp.UserView, "index.html", name: "John Doe")
@@ -99,14 +99,46 @@ defmodule Phoenix.View do
   more about format encoders in `Phoenix.Template` documentation.
   """
 
-  @doc false
+  @doc """
+  When used, defines the current module as a main view module.
+
+  ## Options
+
+    * `:root` - the template root to find templates
+    * `:namespace` - the namespace to consider when calculating view paths
+
+  The `:root` option is required while the `:namespace` always to the
+  first nesting in the module name. For instance, both `MyApp.UserView`
+  and `MyApp.Admin.UserView` have namespace `MyApp`.
+
+  The namespace is used to calculate paths. For example, if you are in
+  `MyApp.UserView` and the namespace is `MyApp`, templates are expected
+  at `Path.join(root, "user")`. On the other hand, if the view is
+  `MyApp.Admin.UserView`, the path will be `Path.join(root, "admin/user")`
+  and so on.
+
+  Setting the namespace to `MyApp.Admin` in the second example will force
+  the template to also be looked up at `Path.join(root, "user")`.
+  """
   defmacro __using__(options) do
     if root = Keyword.get(options, :root) do
+      namespace =
+        if given = Keyword.get(options, :namespace) do
+          given
+        else
+          __CALLER__.module
+          |> Module.split()
+          |> Enum.take(1)
+          |> Module.concat()
+        end
+
       quote do
+        @view_namespace unquote(namespace)
         @view_root unquote(root)
         import Phoenix.View
         use Phoenix.Template, root:
-          Path.join(@view_root, Phoenix.Template.module_to_template_root(__MODULE__, "View"))
+          Path.join(@view_root,
+                    Phoenix.Template.module_to_template_root(__MODULE__, @view_namespace, "View"))
       end
     else
       raise "expected :root to be given as an option"
@@ -148,10 +180,15 @@ defmodule Phoenix.View do
     quote do
       @doc false
       defmacro __using__(opts) do
-        root  = Keyword.get(opts, :root, @view_root)
+        opts =
+          opts
+          |> Keyword.put_new(:root, @view_root)
+          |> Keyword.put_new(:namespace, @view_namespace)
+
         block = unquote(block)
+
         quote do
-          use Phoenix.View, root: unquote(root)
+          use Phoenix.View, unquote(opts)
           unquote(block)
           import unquote(__MODULE__), except: [render: 2]
         end
