@@ -5,6 +5,7 @@ defmodule Mix.PhoenixTest do
     assert Mix.Phoenix.base == "Phoenix"
     Application.put_env(:phoenix, :phoenix_namespace, Phoenix.Sample.App)
     assert Mix.Phoenix.base == "Phoenix.Sample.App"
+  after
     Application.delete_env(:phoenix, :phoenix_namespace)
   end
 

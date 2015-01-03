@@ -5,7 +5,7 @@
 # is restricted to this project.
 use Mix.Config
 
-# Configures the phoenix application
+# Configures the namespace used by Phoenix generators
 config :<%= application_name %>,
   phoenix_namespace: <%= application_module %>
 
