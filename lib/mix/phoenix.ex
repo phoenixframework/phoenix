@@ -3,13 +3,20 @@ defmodule Mix.Phoenix do
   @moduledoc false
 
   @doc """
-  Returns the module base name based on the application name.
+  Returns the module base name based on the configuration value.
+
+      config :my_app
+        phoenix_namespace: My.App
+
   """
   def base do
-    {mod, _} =
-      Mix.Project.get!.application
-      |> Keyword.fetch!(:mod)
-    module_to_base_name(mod)
+    app = Mix.Project.config |> Keyword.fetch!(:app)
+
+    Mix.Config.read!("config/config.exs")
+    |> Keyword.fetch!(app)
+    |> List.keyfind(:phoenix_namespace, 0)
+    |> elem(1)
+    |> module_to_base_name
   end
 
   defp module_to_base_name(mod) do
