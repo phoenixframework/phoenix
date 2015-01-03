@@ -12,11 +12,10 @@ defmodule Mix.Phoenix do
   def base do
     app = Mix.Project.config |> Keyword.fetch!(:app)
 
-    Mix.Config.read!("config/config.exs")
-    |> Keyword.fetch!(app)
-    |> List.keyfind(:phoenix_namespace, 0)
-    |> elem(1)
-    |> module_to_base_name
+    case Application.get_env(app, :phoenix_namespace, app) do
+      ^app -> app |> to_string |> Phoenix.Naming.camelize
+      mod  -> mod |> module_to_base_name
+    end
   end
 
   defp module_to_base_name(mod) do

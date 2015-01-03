@@ -2,9 +2,9 @@ defmodule Mix.PhoenixTest do
   use ExUnit.Case, async: false
 
   test "base/0 returns the module base based on the Mix application" do
-    Mix.Project.in_project(:phoenix_sample_app, "test/fixtures/namespacing", fn _ ->
-      assert Mix.Phoenix.base == "Phoenix.Sample.App"
-    end)
+    assert Mix.Phoenix.base == "Phoenix"
+    Application.put_env(:phoenix, :phoenix_namespace, Phoenix.Sample.App)
+    assert Mix.Phoenix.base == "Phoenix.Sample.App"
   end
 
   test "modules/0 returns all modules in project" do
