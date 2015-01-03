@@ -14,12 +14,8 @@ defmodule Mix.Phoenix do
 
     case Application.get_env(app, :phoenix_namespace, app) do
       ^app -> app |> to_string |> Phoenix.Naming.camelize
-      mod  -> mod |> module_to_base_name
+      mod  -> mod |> inspect
     end
-  end
-
-  defp module_to_base_name(mod) do
-    mod |> to_string |> String.replace("Elixir.", "")
   end
 
   @doc """
