@@ -6,10 +6,9 @@ defmodule Mix.Phoenix do
   Returns the module base name based on the application name.
   """
   def base do
-    {:ok, {mod, _}} =
-      Mix.Project.config
-      |> Keyword.fetch!(:app)
-      |> :application.get_key(:mod)
+    {mod, _} =
+      Mix.Project.get!.application
+      |> Keyword.fetch!(:mod)
     module_to_base_name(mod)
   end
 
