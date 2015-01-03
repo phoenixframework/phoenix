@@ -1,5 +1,5 @@
 defmodule Mix.PhoenixTest do
-  use ExUnit.Case, async: false
+  use ExUnit.Case, async: true
 
   test "base/0 returns the module base based on the Mix application" do
     assert Mix.Phoenix.base == "Phoenix"
