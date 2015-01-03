@@ -59,6 +59,27 @@ defmodule Phoenix.ControllerTest do
     end
   end
 
+  test "maybe_put_layout/2" do
+    conn = maybe_put_layout(conn(:get, "/"), false)
+    assert layout(conn) == false
+    conn = maybe_put_layout(conn, {AppView, "application.html"})
+    assert layout(conn) == false
+
+    conn = maybe_put_layout(conn(:get, "/"), {AppView, "application.html"})
+    assert layout(conn) == {AppView, "application.html"}
+    conn = maybe_put_layout(conn, false)
+    assert layout(conn) == {AppView, "application.html"}
+  end
+
+  test "put_view/2 and maybe_put_view/2" do
+    conn = maybe_put_view(conn(:get, "/"), Hello)
+    assert view_module(conn) == Hello
+    conn = maybe_put_view(conn, World)
+    assert view_module(conn) == Hello
+    conn = put_view(conn, World)
+    assert view_module(conn) == World
+  end
+
   test "json/2" do
     conn = json(conn(:get, "/"), %{foo: :bar})
     assert conn.resp_body == "{\"foo\":\"bar\"}"

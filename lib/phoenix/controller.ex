@@ -88,8 +88,8 @@ defmodule Phoenix.Controller do
       use Phoenix.Controller.Pipeline
 
       plug Phoenix.Controller.Logger
-      plug :put_layout, {Phoenix.Controller.__layout__(__MODULE__), :application}
-      plug :put_view, Phoenix.Controller.__view__(__MODULE__)
+      plug :maybe_put_layout, {Phoenix.Controller.__layout__(__MODULE__), :application}
+      plug :maybe_put_view, Phoenix.Controller.__view__(__MODULE__)
     end
   end
 
@@ -211,6 +211,14 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
+  Stores the view for rendering if one was not stored yet.
+  """
+  @spec maybe_put_view(Plug.Conn.t, atom) :: Plug.Conn.t
+  def maybe_put_view(conn, module) do
+    update_in conn.private, &Map.put_new(&1, :phoenix_view, module)
+  end
+
+  @doc """
   Retrieves the current view.
   """
   @spec view_module(Plug.Conn.t) :: atom
@@ -264,6 +272,16 @@ defmodule Phoenix.Controller do
         false    -> raise "cannot use put_layout/2 with atom/binary when layout is false, use a tuple instead"
       end
     end
+  end
+
+  @doc """
+  Stores the layout for rendering if one was not stored yet.
+  """
+  @spec maybe_put_layout(Plug.Conn.t, {atom, binary} | false) :: Plug.Conn.t
+  def maybe_put_layout(conn, layout)
+      when tuple_size(layout) == 2
+      when layout == false do
+    update_in conn.private, &Map.put_new(&1, :phoenix_layout, layout)
   end
 
   @doc """
@@ -436,7 +454,8 @@ defmodule Phoenix.Controller do
   def render(conn, template, format, assigns) do
     content_type = Plug.MIME.type(format)
     conn = prepare_assigns(conn, assigns, format)
-    view = view_module(conn) || raise "a view module was not specified, set one with put_view/2"
+    view = Map.get(conn.private, :phoenix_view) ||
+            raise "a view module was not specified, set one with put_view/2"
     data = Phoenix.View.render_to_iodata(view, template,
                                          Map.put(conn.assigns, :conn, conn))
     send_resp(conn, 200, content_type, data)
