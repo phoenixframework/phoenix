@@ -5,6 +5,10 @@
 # is restricted to this project.
 use Mix.Config
 
+# Configures the phoenix application
+config :<%= application_name %>,
+  phoenix_namespace: <%= application_module %>
+
 # Configures the endpoint
 config :<%= application_name %>, <%= application_module %>.Endpoint,
   url: [host: "localhost"],
