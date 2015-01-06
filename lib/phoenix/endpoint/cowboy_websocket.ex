@@ -33,7 +33,7 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
 
   def websocket_init(_transport, req, {handler, conn}) do
     {:ok, state} = handler.ws_init(conn)
-    {:ok, req, {handler, state}}
+    {:ok, :cowboy_req.compact(req), {handler, state}}
   end
 
   def websocket_handle({:text, text}, req, {handler, state}) do
