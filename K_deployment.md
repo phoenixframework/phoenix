@@ -7,14 +7,14 @@ Once we have a working application, we're ready to deploy it. If you're not quit
 Deployment is great and all, but be sure you have these things before continuing:
 
 - a working application
-- a build environment - this can be your dev env
-- a hosting environment - this can also be your build env for testing/experimentation
+- a build environment - this can be our dev environment
+- a hosting environment - this can be our build environment for testing/experimentation
 
-Be sure that the architectures for both your build and hosting environments are the same, e.g. 64-bit Linux -> 64-bit Linux. If the architectures don't match, your application might not run when deployed. Using a virtual machine for your build environment that mirrors your hosting environment is an easy way to avoid such problems.
+We need to be sure that the architectures for both our build and hosting environments are the same, e.g. 64-bit Linux -> 64-bit Linux. If the architectures don't match, our application might not run when deployed. Using a virtual machine that mirrors our hosting environment as our build environment is an easy way to avoid such problems.
 
 ### Goals
 
-Our main goal for this guide is to generate a release, using [Elixir Release Manager](https://github.com/bitwalker/exrm) (exrm) and deploy it to our hosting environment. Once we have our application running, we will discuss steps needed to make it available to the world.
+Our main goal for this guide is to generate a release, using [Elixir Release Manager](https://github.com/bitwalker/exrm) (exrm) and deploy it to our hosting environment. Once we have our application running, we will discuss steps needed to make it publicly visible.
 
 ## Tasks
 
@@ -22,8 +22,9 @@ Let's separate our release process into a few tasks so we can keep track of wher
 
 - Add exrm as a dependency
 - Generate a release
-- Deploy our release
-- Expose our application
+- Test it
+- Deploy it
+- Make it public
 
 ## Add exrm as a Dependency
 
@@ -61,7 +62,7 @@ Now we need to update our `mix.exs` file to have all dependencies listed in the 
 
 Doing this helps us overcome one of [exrm's common issues](https://github.com/bitwalker/exrm#common-issues) by helping exrm know of all our dependencies so that it can properly bundle them into our release. Without this, our application will probably alert us about missing modules or a failure to start a child application when we go to run our release.
 
-Even if we list all of our dependencies, our application may still fail. Typically, this happens because one of our dependencies does not properly list its own dependencies. A quick fix for this is to include the missing dependency or dependencies in our list of applications. If you feel like helping the community, you can create an issue or a pull request to that project's repo, but it isn't necessary.
+Even if we list all of our dependencies, our application may still fail. Typically, this happens because one of our dependencies does not properly list its own dependencies. A quick fix for this is to include the missing dependency or dependencies in our list of applications. If you feel like helping the community, you can create an issue or a pull request to that project's repo.
 
 In our `lib/hello_phoenix.ex` file, we need to start our endpoint as part of the `start/2` function.
 
@@ -124,7 +125,7 @@ Running HelloPhoenix.Endpoint with Cowboy on port 4000 (http)
 $
 ```
 
-### Generating the release
+### Generating the Release
 
 Now that we've configured our application, let's build our release by running `mix release` at the root of our application.
 
@@ -143,21 +144,21 @@ $ mix release
 ==> The release for hello_phoenix-0.0.1 is ready!
 ```
 There are a couple of interesting things to note here.
-- Since we didn't specify a `MIX_ENV` value, we got `dev` by default. Right now, we're experimenting. If we were doing a real release, we would want to specify `MIX_ENV=prod`.
+- Since we didn't specify a `MIX_ENV` value, we got `dev` by default. Right now, we're experimenting. If we were doing a real release, we would want to specify `MIX_ENV=prod` when we run `mix release`.
 
 - We see our application's version number - `0.0.1`. This value comes from the application's `mix.exs` file. It is mapped to the `:version` key inside the `project/0` function.
 
 - Exrm has created a `rel` directory at the root of our application where it has written everything related to this release.
 
-Exrm uses a set of default configuration options when building our release that will work for most applications. If you need more advanced configuration options, checkout [exrm's configuration section](https://github.com/bitwalker/exrm#configuration) for more detailed information.
+Exrm uses a set of default configuration options when building our release that will work for most applications. If we need more advanced configuration options, we can checkout [exrm's configuration section](https://github.com/bitwalker/exrm#configuration) for more detailed information.
 
-If we make a mistake, or if something doesn't go quite right, we can run `mix release.clean`, which will delete the release for the current application version number. If we add the `--implode` flag, expm will remove _all_ releases. These will be permanently removed unless they are under version controll. Obviously, this is a destructive operation, and expm will prompt us to make sure we want to continue.
+If we make a mistake, or if something doesn't go quite right, we can run `mix release.clean`, which will delete the release for the current application version number. If we add the `--implode` flag, expm will remove _all_ releases for all versions of our application. These will be permanently removed unless they are under version controll. Obviously, this is a destructive operation, and expm will prompt us to make sure we want to continue.
 
 #### Contents of a Release
 
-Exrm has created our release, but you may be asking yourself, "Where is it? What is this `rel` directory?" Let's take a look.
+Exrm has created our release, but you may be thinking, "Where did it go?""
 
-Everything related to releases is in the `rel` directory. Let's see what's in it.
+Everything related to releases is in the `rel` directory, and specifically for us, `rel/hello_phoenix`. Let's see what's in it.
 
 ```console
 $ ls -la rel/hello_phoenix/
@@ -171,7 +172,7 @@ drwxr-xr-x  19 lance  staff       646 Jan  4 14:16 lib
 drwxr-xr-x   5 lance  staff       170 Jan  4 14:16 releases
 ```
 
-The `bin` directory contains our generated executables for running our application. The `bin/hello_phoenix` executable is what we will eventually use to issue commands to our application.
+The `bin` directory contains the generated executables for running our application. The `bin/hello_phoenix` executable is what we will eventually use to issue commands to our application.
 
 ```console
 $ ls -la rel/hello_phoenix/bin
@@ -197,7 +198,7 @@ drwxr-xr-x   5 lance  staff  170 Jan  4 14:16 lib
 drwxr-xr-x   3 lance  staff  102 Jan  4 14:16 src
 ```
 
-The `lib` directory contains the compiled BEAM files for our application and all of our dependencies. This is where all of your hard work goes.
+The `lib` directory contains the compiled BEAM files for our application and all of our dependencies. This is where all of our work goes.
 
 ```console
 $ ls -la rel/hello_phoenix/lib/
@@ -223,7 +224,7 @@ drwxr-xr-x   4 lance  staff  136 Jan  4 14:16 stdlib-2.3
 drwxr-xr-x   3 lance  staff  102 Jan  4 14:16 syntax_tools-1.6.17
 ```
 
-The `releases` directory is the home for our releases, being used to house any release-dependent configurations and scripts that Exrm finds necessary for running our application. If we have multiple versions of our application, and if we have created releases for them, we will have multiple releases in the `releases` directory.
+The `releases` directory is the home for our releases - any release-dependent configurations and scripts that exrm finds necessary for running our application. If we have multiple versions of our application, and if we have created releases for them, we will have multiple releases in the `releases` directory.
 
 ```console
 $ ls -la rel/hello_phoenix/releases/
@@ -237,7 +238,7 @@ drwxr-xr-x  8 lance  staff  272 Jan  4 14:16 0.0.1
 
 The `hello_phoenix-0.0.1.tar.gz` tarball is our release in archive form, ready to be shipped off to our hosting environment.
 
-### Testing our release
+### Testing Our Release
 
 Before deploying our release, we should make sure that it runs on our build environment. To do that, we will issue the `console` command to our executable, essentially running our application via `iex`.
 
@@ -254,22 +255,20 @@ iex(hello_phoenix@127.0.0.1)1>
 
 ```
 
-This is the point where your application will crash if it fails to start a child application. However, if all goes well, you should be dropped into an `iex` prompt. We should also see our app running at [http://localhost:4000/](http://localhost:4000/).
+This is the point where our application will crash if it fails to start a child application. If all goes well, however, we should end up at an `iex` prompt. We should also see our app running at [http://localhost:4000/](http://localhost:4000/).
 
 Congratulations! We're ready to deploy our application!
 
-## Deploy!
+## Deploying Our Release
 
-Now comes the easy part! There are many ways for us to get our tarballed release to our hosting environment, so you have a bit of free reign in this step.
-
-In our example, we'll use SCP to upload to a remote server.
+There are many ways for us to get our tarballed release to our hosting environment. In our example, we'll use SCP to upload to a remote server.
 
 ```console
 $ scp -i ~/.ssh/id_rsa.pub rel/hello_phoenix-0.0.1.tar.gz ubuntu@hostname.com:/home/ubuntu
 hello_phoenix-0.0.1.tar.gz                100%   18MB  80.0KB/s   03:48
 ```
 
-Hooray! Let's SSH into that environment to set our application up.
+Let's SSH into that environment to set our application up.
 
 ```console
 $ ssh -i ~/.ssh/id_rsa.pub ubuntu@hostname.com
@@ -279,17 +278,15 @@ $ cd /app
 $ tar xfz /home/ubuntu/hello_phoenix-0.0.1.tar.gz
 ```
 
-See? I told you it would be easy.
-
-## Exposè
+## Making Our Application Public
 
 We're getting close.
 
-### Set up our init system
+### Setting Up Our Init System
 
-First step in exposing our application to the world is ensuring that our application is running in case of a system restart, expected or unexpected. To do this, we will need to create an init script for our hosting environment's init system, be it `systemd`, `upstart`, or whatever.
+First step in exposing our application to the world is ensuring that our application will start running in case of a system restart - expected or unexpected. To do this, we will need to create an init script for our hosting environment's init system, be it `systemd`, `upstart`, or whatever.
 
-In this case, we'll be using `upstart` as our OS is Ubuntu, and `upstart` has been bundled with Ubuntu since 6.10. Let's edit our init script with `sudo vi /etc/init/my_app.conf`
+Let's use `upstart` as an example. We'll edit our init script with `sudo vi /etc/init/my_app.conf` (this is on Ubuntu Linux).
 
 ```text
 description "hello_phoenix"
@@ -316,7 +313,7 @@ Here, we've told `upstart` a few basic things about how we want it to handle our
 
 One key point to notice is that we're instructing `upstart` to run our release's `bin/hello_phoenix start` command, which boostraps our application and runs it as a daemon.
 
-#### exrm commands
+#### exrm Commands
 
 Along with the `start` command, exrm bundles a few others with our application that are equally useful. Check out the [exrm docs](https://github.com/bitwalker/exrm) for details on what's possible.
 
@@ -338,7 +335,7 @@ Node 'hello_phoenix@127.0.0.1' not responding to pings.
 
 ##### `remote_console`
 
-`remote_console` will be your friend when debugging is in order. It allows you to attach an IEx console to your running application. When closing the console, your application continues to run.
+`remote_console` will be our friend when debugging is in order. It allows us to attach an IEx console to our running application. When closing the console, our application continues to run.
 
 ```console
 $ bin/hello_phoenix remote_console
@@ -350,20 +347,20 @@ iex(hello_phoenix@127.0.0.1)1>
 
 ##### `upgrade`
 
-The `upgrade` command allows you to upgrade your application to a newer codebase without downtime.
+The `upgrade` command allows us to upgrade our application to a newer codebase without downtime.
 
 ##### `stop`
 
-You may run into situations where your application needs to stop. Look no further than the `stop` command.
+We may run into situations where we need to stop our application. The `stop` command is just what we need.
 
 ```console
 $ bin/hello_phoenix stop
 ok
 ```
 
-### Set up our web server
+### Setting Up Our Web Server
 
-In a lot of cases, you're going to have more than one application running in your hosting environment, all of which might need to be accessible on port 80. Since only one application can listen on a single port at a time, we need to use something to proxy our application. You will typically see Apache (with `mod_proxy` enabled) or nginx used for this, and we'll be setting up nginx in this case.
+In a lot of cases, we're going to have more than one application running in our hosting environment, all of which might need to be accessible on port 80. Since only one application can listen on a single port at a time, we need to use something to proxy our application. Typically, Apache (with `mod_proxy` enabled) or nginx is used for this, and we'll be setting up nginx in this case.
 
 Let's create our config file for our application. By default, everything in `/etc/nginx/sites-enabled` is included into the main `/etc/nginx/nginx.conf` file that is used to configure nginx's runtime environment. Standard practice is to create our file in `/etc/nginx/sites-available` and make a symbolic link to it in `/etc/nginx/sites-enabled`.
 
@@ -375,7 +372,7 @@ $ sudo ln -s /etc/nginx/sites-available /etc/nginx/sites-enabled
 $ sudo vi /etc/nginx/sites-available/hello_phoenix
 ```
 
-Contents of our `/etc/nginx/sites-available/hello_phoenix` file:
+These are the contents of our `/etc/nginx/sites-available/hello_phoenix` file.
 
 ```nginx
 upstream hello_phoenix {
