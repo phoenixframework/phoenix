@@ -1,32 +1,30 @@
 defmodule Phoenix.Endpoint.CowboyWebSocket do
   @moduledoc false
-  @behaviour :cowboy_sub_protocol
   @behaviour :cowboy_websocket_handler
 
-  def upgrade(req, env, handler, conn) do
-    args = [req, env, __MODULE__, {handler, conn}]
-    resume(conn, env, :cowboy_websocket, :upgrade, args)
+  def call(conn, args) do
+    resume(conn, :cowboy_websocket, :upgrade, args)
   end
 
-  def resume(conn, env, mod, fun, args) do
+  def resume(conn, module, fun, args) do
     try do
-      apply(mod, fun, args)
+      apply(module, fun, args)
     catch
       class, [{:reason, reason}, {:mfa, _mfa}, {:stacktrace, stack} | _rest] ->
-        exit(class, reason, stack, conn, env)
+        exit(class, reason, stack, conn)
     else
       {:ok, _req, _env} = ok ->
         ok
       {:suspend, module, fun, args} ->
-        {:suspend, __MODULE__, :resume, [conn, env, module, fun, args]}
+        {:suspend, __MODULE__, :resume, [conn, module, fun, args]}
       {:stop, _req} = stop ->
         stop
     end
   end
 
-  defp exit(class, reason, stack, conn, env) do
+  defp exit(class, reason, stack, conn) do
     reason2 = format_reason(class, reason, stack)
-    exit({reason2, {__MODULE__, :call, [conn, env]}})
+    exit({reason2, {__MODULE__, :call, [conn, []]}})
   end
 
   defp format_reason(:exit, reason, _), do: reason

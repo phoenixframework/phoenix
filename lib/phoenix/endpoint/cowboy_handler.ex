@@ -1,8 +1,5 @@
 defmodule Phoenix.Endpoint.CowboyHandler do
   @moduledoc false
-  @connection Plug.Adapters.Cowboy.Conn
-  @already_sent {:plug_conn, :sent}
-
   require Logger
 
   ## Phoenix API
@@ -38,6 +35,10 @@ defmodule Phoenix.Endpoint.CowboyHandler do
 
   ## Cowboy Handler
 
+  @connection Plug.Adapters.Cowboy.Conn
+  @websockets Phoenix.Endpoint.CowboyWebSocket
+  @already_sent {:plug_conn, :sent}
+
   def init({transport, :http}, req, {plug, opts}) when transport in [:tcp, :ssl] do
     {:upgrade, :protocol, __MODULE__, req, {transport, plug, opts}}
   end
@@ -49,14 +50,15 @@ defmodule Phoenix.Endpoint.CowboyHandler do
         %Plug.Conn{private: %{phoenix_upgrade: upgrade}} = conn ->
           {@connection, req}    = conn.adapter
           {:websocket, handler} = upgrade
-          {:upgrade, Phoenix.Endpoint.CowboyWebSocket, [req, env, handler, conn]}
+          args = [req, env, @websockets, {handler, conn}]
+          {:upgrade, @websockets, conn, args}
         conn ->
           {@connection, req} = maybe_send(conn, plug).adapter
           {:ok, req, [{:result, :ok} | env]}
       end
     else
-      {:upgrade, module, args} ->
-        apply(module, :upgrade, args)
+      {:upgrade, module, conn, args} ->
+        module.call(conn, args)
       {:ok, _req, _env} = ok ->
         ok
     catch
