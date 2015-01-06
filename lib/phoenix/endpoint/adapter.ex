@@ -97,11 +97,10 @@ defmodule Phoenix.Endpoint.Adapter do
     file = Application.app_dir(endpoint.config(:otp_app), Path.join("priv/static", path))
 
     case File.stat(file) do
-      {:ok, %File.Stat{mtime: mtime, type: type}}
-          when type != :directory and is_tuple(mtime) ->
+      {:ok, %File.Stat{type: :regular, mtime: mtime, size: size}} ->
         key = if endpoint.config(:cache_static_lookup), do: :cache, else: :stale
-        sec = :calendar.datetime_to_gregorian_seconds(mtime)
-        {key, path <> "?" <> Integer.to_string(sec)}
+        vsn = {size, mtime} |> :erlang.phash2() |> Integer.to_string(16)
+        {key, path <> "?vsn=" <> vsn}
       _ ->
         {:stale, path}
     end

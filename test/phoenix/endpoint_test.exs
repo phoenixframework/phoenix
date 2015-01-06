@@ -34,26 +34,30 @@ defmodule Phoenix.EndpointTest do
     file = Path.expand("priv/static/images/phoenix.png", File.cwd!)
 
     # Old timestamp
-    old_mtime   = File.stat!(file).mtime
-    old_seconds = :calendar.datetime_to_gregorian_seconds(old_mtime)
-    assert Endpoint.static_path("/images/phoenix.png") == "/images/phoenix.png?#{old_seconds}"
+    old_stat = File.stat!(file)
+    old_vsn  = static_vsn(old_stat)
+    assert Endpoint.static_path("/images/phoenix.png") == "/images/phoenix.png?vsn=#{old_vsn}"
 
     # New timestamp
     File.touch!(file)
-    new_mtime   = File.stat!(file).mtime
-    new_seconds = :calendar.datetime_to_gregorian_seconds(new_mtime)
-    assert Endpoint.static_path("/images/phoenix.png") == "/images/phoenix.png?#{new_seconds}"
+    new_stat = File.stat!(file)
+    new_vsn  = static_vsn(new_stat)
+    assert Endpoint.static_path("/images/phoenix.png") == "/images/phoenix.png?vsn=#{new_vsn}"
 
     # Now with cache enabled
     config = put_in(@config[:cache_static_lookup], true)
     assert Endpoint.config_change([{Endpoint, config}], []) == :ok
 
-    assert Endpoint.static_path("/images/phoenix.png") == "/images/phoenix.png?#{new_seconds}"
-    File.touch!(file, old_mtime)
-    assert Endpoint.static_path("/images/phoenix.png") == "/images/phoenix.png?#{new_seconds}"
+    assert Endpoint.static_path("/images/phoenix.png") == "/images/phoenix.png?vsn=#{new_vsn}"
+    File.touch!(file, old_stat.mtime)
+    assert Endpoint.static_path("/images/phoenix.png") == "/images/phoenix.png?vsn=#{new_vsn}"
   end
 
   test "does not include code reloading if disabled" do
     assert is_map Endpoint.call(conn(:get, "/"), [])
+  end
+
+  defp static_vsn(file) do
+    {file.size, file.mtime} |> :erlang.phash2() |> Integer.to_string(16)
   end
 end
