@@ -21,7 +21,7 @@ defmodule Phoenix.Router.Resource do
     * :collection - the context for collection routes
 
   """
-  defstruct [:path, :actions, :param, :as, :controller, :member, :collection]
+  defstruct [:path, :actions, :param, :as, :controller, :member]
   @type t :: %Resource{}
 
   @doc """
@@ -36,11 +36,11 @@ defmodule Phoenix.Router.Resource do
     name    = Keyword.get(options, :name, Phoenix.Naming.resource_name(controller, "Controller"))
     as      = Keyword.get(options, :as, name)
 
-    collection = [path: path, as: as]
-    member     = [path: Path.join(path, ":#{name}_#{param}"), as: as, alias: alias]
+    member  = [path: Path.join(path, ":#{name}_#{param}"), as: as, alias: alias,
+               collection_path: path]
 
     %Resource{path: path, actions: actions, param: param, as: as,
-              member: member, collection: collection, controller: controller}
+              member: member, controller: controller}
   end
 
   defp extract_actions(opts) do

@@ -5,7 +5,7 @@ defmodule Phoenix.Router.Scope do
   @stack :phoenix_router_scopes
   @pipes :phoenix_pipeline_scopes
 
-  defstruct path: nil, alias: nil, as: nil, pipes: [], host: nil
+  defstruct path: nil, alias: nil, as: nil, pipes: [], host: nil, collection_path: nil
 
   @doc """
   Initializes the scope.
@@ -18,9 +18,10 @@ defmodule Phoenix.Router.Scope do
   @doc """
   Builds a route based on the top of the stack.
   """
-  def route(module, verb, path, controller, action, options) do
+  def build_route(module, verb, path, controller, action, options) do
     as = Keyword.get(options, :as, Phoenix.Naming.resource_name(controller, "Controller"))
-    {path, host, alias, as, pipe_through} = join(module, path, controller, as)
+    collection = Keyword.get(options, :collection)
+    {path, host, alias, as, pipe_through} = join(module, path, controller, as, collection)
     Phoenix.Router.Route.build(verb, path, host, alias, action, as, pipe_through)
   end
 
@@ -66,10 +67,14 @@ defmodule Phoenix.Router.Scope do
     path  = Keyword.get(opts, :path)
     if path, do: path = Plug.Router.Utils.split(path)
 
+    collection_path = Keyword.get(opts, :collection_path)
+    if collection_path, do: collection_path = Plug.Router.Utils.split(collection_path)
+
     alias = Keyword.get(opts, :alias)
     if alias, do: alias = Atom.to_string(alias)
 
     scope = struct(Scope, path: path,
+                          collection_path: collection_path,
                           alias: alias,
                           as: Keyword.get(opts, :as),
                           host: Keyword.get(opts, :host),
@@ -90,18 +95,28 @@ defmodule Phoenix.Router.Scope do
   """
   def inside_scope?(module), do: length(get_stack(module)) > 1
 
-  defp join(module, path, alias, as) do
+  def inside_resource_scope?(module), do: get_stack(module)
+
+  defp join(module, path, alias, as, collection) do
     stack = get_stack(module)
-    {join_path(stack, path), find_host(stack), join_alias(stack, alias),
+    {join_path(stack, path, collection), find_host(stack), join_alias(stack, alias),
      join_as(stack, as), join_pipe_through(stack)}
   end
 
-  defp join_path(stack, path) do
+  defp join_path(stack, path, collection) do
     "/" <>
-      ([Plug.Router.Utils.split(path)|extract(stack, :path)]
+      ([Plug.Router.Utils.split(path)|generate_prefix_path(stack, collection)]
        |> Enum.reverse()
        |> Enum.concat()
        |> Enum.join("/"))
+  end
+
+  defp generate_prefix_path([parent|rest] = stack, collection) do
+    if collection do
+      [parent.collection_path|extract(rest, :path)]
+    else
+      extract(stack, :path)
+    end
   end
 
   defp join_alias(stack, alias) when is_atom(alias) do
