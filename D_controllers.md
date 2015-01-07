@@ -369,7 +369,7 @@ defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
   pipeline :browser do
-    plug :accepts, ~w(html, text)
+    plug :accepts, ~w(html text)
     plug :fetch_session
   end
 . . .
