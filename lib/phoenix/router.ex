@@ -283,7 +283,7 @@ defmodule Phoenix.Router do
         var!(conn) =
           Plug.Conn.put_private(var!(conn), :phoenix_route, fn conn ->
             update_in(conn.params, &Map.merge(&1, unquote(parts)))
-            |> Phoenix.Controller.call_action(unquote(route.controller), unquote(route.action))
+            |> unquote(route.controller).call(unquote(route.controller).init(unquote(route.action)))
           end)
           |> Plug.Conn.put_private(:phoenix_pipelines, unquote(route.pipe_through))
         unquote(route.pipe_segments)

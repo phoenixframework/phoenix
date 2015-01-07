@@ -704,16 +704,4 @@ defmodule Phoenix.Controller do
   defp persist_flash(conn, value) do
     put_private(conn, :phoenix_flash, value)
   end
-
-  @doc """
-  Invokes the controller plug and calls its action
-
-  ## Examples
-
-      iex> Controller.call_action(conn, MyApp.MyController, :index)
-
-  """
-  def call_action(conn, controller, action) do
-    controller.call(conn, controller.init(action))
-  end
 end

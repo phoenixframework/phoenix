@@ -19,6 +19,7 @@ defmodule Phoenix.Transports.WebSocket do
 
   alias Phoenix.Channel.Transport
   alias Phoenix.Socket.Message
+  alias Phoenix.Transports.LongPoller
 
   plug :action
 
@@ -26,7 +27,7 @@ defmodule Phoenix.Transports.WebSocket do
     put_private(conn, :phoenix_upgrade, {:websocket, __MODULE__}) |> halt
   end
   def upgrade(%Plug.Conn{method: "POST"} = conn, _) do
-    call_action(conn, Phoenix.Transports.LongPoller, :open)
+    LongPoller.call(conn, LongPoller.init(:open))
   end
 
   @doc """
