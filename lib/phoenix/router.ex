@@ -611,6 +611,8 @@ defmodule Phoenix.Router do
   a plain string is provied, only that topic will match the channel handler.
   Most use-cases will use the "topic:*" pattern to allow more versatile topic
   scoping.
+
+  See `Phoenix.Channel` for more information
   """
   defmacro channel(topic_pattern, module, opts \\ []) do
     quote bind_quoted: binding do

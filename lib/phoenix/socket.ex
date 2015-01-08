@@ -6,8 +6,7 @@ defmodule Phoenix.Socket do
   """
 
   @derive [Access]
-  defstruct conn: nil,
-            pid: nil,
+  defstruct pid: nil,
             topic: nil,
             router: nil,
             authorized: false,

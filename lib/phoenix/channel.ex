@@ -1,4 +1,104 @@
 defmodule Phoenix.Channel do
+
+  @moduledoc """
+  Defines a Phoenix Channel.
+
+  Channels provide a means for bidirectional communication from clients that
+  integrates with the `Phoenix.PubSub` layer for soft-realtime functionality.
+
+  ## Topics & Callbacks
+  When clients join a channel, they do so by subscribing a topic.
+  Topics are string idenitifiers in the `Phoenix.PubSub` layer that allow
+  multiple processes to subscribe and broadcast messages about a give topic.
+  Everytime you join a Channel, you need to choose which particular topic you
+  want to listen to. The topic is just an identifier, but by convention it is
+  often made of two parts: `"topic:subtopic"`. Using the `"topic:subtopic"`
+  approach pairs nicely with the `Phoenix.Router.channel/3` macro to match
+  topic patterns in your router to your channel handlers:
+
+      socket "/ws", MyApp do
+        channel "rooms:*", RoomChannel
+      end
+
+  Any topic coming into the router with the `"rooms:"` prefix, would dispatch
+  to `MyApp.RoomChannel` in the above example. Topics can also be pattern
+  matched in your channels' `join/3` callback to pluck out the scoped pattern:
+
+      # handles the special `"lobby"` subtopic
+      def join("rooms:lobby", _auth_message, socket) do
+        {:ok, socket}
+      end
+
+      # handles any other subtopic as the room ID, ie `"rooms:12"`, `"rooms:34"`
+      def join("rooms:" <> room_id, auth_message, socket) do
+        {:ok, socket}
+      end
+
+  ### Authorization
+  Clients must join a channel to send and receive PubSub events on that channel.
+  Your channels must implement a `join/3` callback that authorizes the socket
+  for the given channel. It is common for clients to send up authorization data,
+  such as HMAC'd tokens for this purpose.
+
+  To authorize a socket in `join/3`, return `{:ok, socket}`
+  To refuse authorization in `join/3, return `{:error, socket, :some_reason}`
+
+
+  ### Incoming Events
+  After a client has successfully joined a channel, incoming events from the
+  client are routed through the channel's `incoming/3` callbacks. Within these
+  callbacks, you can perform any action. Typically you'll either foward a
+  message out to all listeners with `Phoenix.Channel.broadcast/3`, or reply
+  directly to the socket with `Phoenix.Channel.reply/3`.
+  Incoming callbacks must return the `socket` to maintain ephemeral state.
+
+  Here's an example of receiving an incoming `"new:msg"` event from a one client,
+  and broadcasting the message to all topic subscribers for this socket.
+  *Note*: `incoming/3` and `reply/3` both return the provided `socket`.
+
+      def incoming("new:msg", %{"uid" => uid, "body" => body}, socket) do
+        broadcast socket, "new:msg", %{uid: uid, body: body}
+      end
+
+  You can also send a reply directly to the socket:
+
+      # client asks for their current rank, reply sent directly as new event
+      def incoming("current:rank", socket) do
+        reply socket, "current:rank", %{val: Game.get_rank(socket.assigns[:user])}
+      end
+
+
+  ### Outgoing Events
+
+  When an event is broadcasted with `Phoenix.Channel.broadcast/3`, each channel
+  subscribers' `outgoing/3` callback is triggered where the event can be
+  replayed as is, or customized on a socket by socket basis to append extra
+  information, or conditionall filter the message from being delivered.
+
+      def incoming("new:msg", %{"uid" => uid, "body" => body}, socket) do
+        broadcast socket, "new:msg", %{uid: uid, body: body}
+      end
+
+      # for every socket subscribing on this channel, append an `is_editable`
+      # value for client metadata
+      def outgoing("new:msg", msg, socket) do
+        reply socket, "new:msg", Dict.merge(msg,
+          is_editable: User.can_edit_message?(socket.assigns[:user], msg)
+        )
+      end
+
+      # do not send broadcasted `"user:joined"` events if this socket's user
+      # is ignoring the user who joined
+      def outgoing("user:joined", msg, socket) do
+        if User.ignoring?(socket.assigns[:user], msg.user_id do
+          socket
+        else
+          reply socket, "user:joined", msg
+        end
+      end
+
+  """
+
   use Behaviour
   alias Phoenix.PubSub
   alias Phoenix.Socket
