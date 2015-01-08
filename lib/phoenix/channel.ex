@@ -37,7 +37,7 @@ defmodule Phoenix.Channel do
   ### Authorization
   Clients must join a channel to send and receive PubSub events on that channel.
   Your channels must implement a `join/3` callback that authorizes the socket
-  for the given channel. It is common for clients to send up authorization data,
+  for the given topic. It is common for clients to send up authorization data,
   such as HMAC'd tokens for this purpose.
 
   To authorize a socket in `join/3`, return `{:ok, socket}`
@@ -54,7 +54,7 @@ defmodule Phoenix.Channel do
 
   Here's an example of receiving an incoming `"new:msg"` event from a one client,
   and broadcasting the message to all topic subscribers for this socket.
-  *Note*: `handle_in/3` and `reply/3` both return the provided `socket`.
+  *Note*: `broadcast/3` and `reply/3` both return the provided `socket`.
 
       def handle_in("new:msg", %{"uid" => uid, "body" => body}, socket) do
         broadcast socket, "new:msg", %{uid: uid, body: body}
@@ -72,14 +72,14 @@ defmodule Phoenix.Channel do
 
   When an event is broadcasted with `Phoenix.Channel.broadcast/3`, each channel
   subscribers' `handle_out/3` callback is triggered where the event can be
-  replayed as is, or customized on a socket by socket basis to append extra
-  information, or conditionall filter the message from being delivered.
+  relayed as is, or customized on a socket by socket basis to append extra
+  information, or conditionally filter the message from being delivered.
 
       def handle_in("new:msg", %{"uid" => uid, "body" => body}, socket) do
         broadcast socket, "new:msg", %{uid: uid, body: body}
       end
 
-      # for every socket subscribing on this channel, append an `is_editable`
+      # for every socket subscribing on this topic, append an `is_editable`
       # value for client metadata
       def handle_out("new:msg", msg, socket) do
         reply socket, "new:msg", Dict.merge(msg,
@@ -90,7 +90,7 @@ defmodule Phoenix.Channel do
       # do not send broadcasted `"user:joined"` events if this socket's user
       # is ignoring the user who joined
       def handle_out("user:joined", msg, socket) do
-        if User.ignoring?(socket.assigns[:user], msg.user_id do
+        if User.ignoring?(socket.assigns[:user], msg.user_id) do
           socket
         else
           reply socket, "user:joined", msg
