@@ -18,29 +18,29 @@ defmodule Phoenix.Channel.ChannelTest do
     def leave(_msg, _socket) do
       Process.get(:leave)
     end
-    def incoming("info", msg, socket) do
+    def handle_in("info", msg, socket) do
       send socket.pid, :info
       msg
     end
 
-    def incoming("some:event", _msg, socket) do
-      send socket.pid, {:incoming, socket.topic}
+    def handle_in("some:event", _msg, socket) do
+      send socket.pid, {:handle_in, socket.topic}
       socket
     end
-    def incoming("boom", msg, _socket), do: msg
-    def incoming("put", dict, socket) do
+    def handle_in("boom", msg, _socket), do: msg
+    def handle_in("put", dict, socket) do
       Enum.reduce dict, socket, fn {k, v}, socket -> Socket.assign(socket, k, v) end
     end
-    def incoming("get", %{"key" => key}, socket) do
+    def handle_in("get", %{"key" => key}, socket) do
       send socket.pid, socket.assigns[key]
       socket
     end
 
-    def outgoing("some:broadcast", _msg, socket) do
-      send socket.pid, :outgoing
+    def handle_out("some:broadcast", _msg, socket) do
+      send socket.pid, :handle_out
       socket
     end
-    def outgoing(event, message, socket) do
+    def handle_out(event, message, socket) do
       reply(socket, event, message)
       socket
     end
@@ -268,12 +268,12 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "Socket state can be put and retrieved" do
-    socket = MyChannel.incoming("put", %{val: 123}, new_socket)
-    _socket = MyChannel.incoming("get", %{"key" => :val}, socket)
+    socket = MyChannel.handle_in("put", %{val: 123}, new_socket)
+    _socket = MyChannel.handle_in("get", %{"key" => :val}, socket)
     assert_received 123
   end
 
-  test "outgoing/3 can be overidden for custom broadcast handling" do
+  test "handle_out/3 can be overidden for custom broadcast handling" do
     socket = new_socket
     sockets = HashDict.put(HashDict.new, "topic1:subtopic", socket)
     message = join_message({:ok, socket})
@@ -284,10 +284,10 @@ defmodule Phoenix.Channel.ChannelTest do
     Transport.dispatch_broadcast(sockets, %Message{event: "some:broadcast",
                                                    topic: "topic1:subtopic",
                                                    payload: "hello"}, WebSocket)
-    assert_received :outgoing
+    assert_received :handle_out
   end
 
-  test "join/3 and incoming/3 match splat topics" do
+  test "join/3 and handle_in/3 match splat topics" do
     socket = new_socket |> Socket.put_current_topic("topic1:somesubtopic")
     message = %Message{topic: "topic1:somesubtopic",
                        event: "join",
@@ -305,16 +305,16 @@ defmodule Phoenix.Channel.ChannelTest do
                        event: "some:event",
                        payload: %{}}
     Transport.dispatch(message, sockets, self, Router, WebSocket)
-    assert_received {:incoming, "topic1:somesubtopic"}
+    assert_received {:handle_in, "topic1:somesubtopic"}
 
     message = %Message{topic: "topic1",
                        event: "some:event",
                        payload: %{}}
     Transport.dispatch(message, sockets, self, Router, WebSocket)
-    refute_received {:incoming, "topic1:somesubtopic"}
+    refute_received {:handle_in, "topic1:somesubtopic"}
   end
 
-  test "join/3 and incoming/3 match bare topics" do
+  test "join/3 and handle_in/3 match bare topics" do
     socket = new_socket |> Socket.put_current_topic("baretopic")
     message = %Message{topic: "baretopic",
                        event: "join",
@@ -332,13 +332,13 @@ defmodule Phoenix.Channel.ChannelTest do
                        event: "some:event",
                        payload: %{}}
     Transport.dispatch(message, sockets, self, Router, WebSocket)
-    assert_received {:incoming, "baretopic"}
+    assert_received {:handle_in, "baretopic"}
 
     message = %Message{topic: "baretopic:sub",
                        event: "some:event",
                        payload: %{}}
     Transport.dispatch(message, sockets, self, Router, WebSocket)
-    refute_received {:incoming, "baretopic:sub"}
+    refute_received {:handle_in, "baretopic:sub"}
   end
 
   test "channel `via:` option filters messages by transport" do

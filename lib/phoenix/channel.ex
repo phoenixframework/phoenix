@@ -46,7 +46,7 @@ defmodule Phoenix.Channel do
 
   ### Incoming Events
   After a client has successfully joined a channel, incoming events from the
-  client are routed through the channel's `incoming/3` callbacks. Within these
+  client are routed through the channel's `handle_in/3` callbacks. Within these
   callbacks, you can perform any action. Typically you'll either foward a
   message out to all listeners with `Phoenix.Channel.broadcast/3`, or reply
   directly to the socket with `Phoenix.Channel.reply/3`.
@@ -54,16 +54,16 @@ defmodule Phoenix.Channel do
 
   Here's an example of receiving an incoming `"new:msg"` event from a one client,
   and broadcasting the message to all topic subscribers for this socket.
-  *Note*: `incoming/3` and `reply/3` both return the provided `socket`.
+  *Note*: `handle_in/3` and `reply/3` both return the provided `socket`.
 
-      def incoming("new:msg", %{"uid" => uid, "body" => body}, socket) do
+      def handle_in("new:msg", %{"uid" => uid, "body" => body}, socket) do
         broadcast socket, "new:msg", %{uid: uid, body: body}
       end
 
   You can also send a reply directly to the socket:
 
       # client asks for their current rank, reply sent directly as new event
-      def incoming("current:rank", socket) do
+      def handle_in("current:rank", socket) do
         reply socket, "current:rank", %{val: Game.get_rank(socket.assigns[:user])}
       end
 
@@ -71,17 +71,17 @@ defmodule Phoenix.Channel do
   ### Outgoing Events
 
   When an event is broadcasted with `Phoenix.Channel.broadcast/3`, each channel
-  subscribers' `outgoing/3` callback is triggered where the event can be
+  subscribers' `handle_out/3` callback is triggered where the event can be
   replayed as is, or customized on a socket by socket basis to append extra
   information, or conditionall filter the message from being delivered.
 
-      def incoming("new:msg", %{"uid" => uid, "body" => body}, socket) do
+      def handle_in("new:msg", %{"uid" => uid, "body" => body}, socket) do
         broadcast socket, "new:msg", %{uid: uid, body: body}
       end
 
       # for every socket subscribing on this channel, append an `is_editable`
       # value for client metadata
-      def outgoing("new:msg", msg, socket) do
+      def handle_out("new:msg", msg, socket) do
         reply socket, "new:msg", Dict.merge(msg,
           is_editable: User.can_edit_message?(socket.assigns[:user], msg)
         )
@@ -89,7 +89,7 @@ defmodule Phoenix.Channel do
 
       # do not send broadcasted `"user:joined"` events if this socket's user
       # is ignoring the user who joined
-      def outgoing("user:joined", msg, socket) do
+      def handle_out("user:joined", msg, socket) do
         if User.ignoring?(socket.assigns[:user], msg.user_id do
           socket
         else
@@ -99,7 +99,7 @@ defmodule Phoenix.Channel do
 
    By default, unhandled outgoing events are forwarded to each client as a reply,
    but you'll need to define the catch-all clause yourself once you define an
-   `outgoing/3` clause.
+   `handle_out/3` clause.
 
   """
 
@@ -113,9 +113,9 @@ defmodule Phoenix.Channel do
 
   defcallback leave(message :: map, Socket.t) :: Socket.t
 
-  defcallback incoming(topic :: binary, message :: map, Socket.t) :: Socket.t
+  defcallback handle_in(topic :: binary, message :: map, Socket.t) :: Socket.t
 
-  defcallback outgoing(topic :: binary, message :: map, Socket.t) :: Socket.t
+  defcallback handle_out(topic :: binary, message :: map, Socket.t) :: Socket.t
 
   defmacro __using__(_options) do
     quote do
@@ -124,11 +124,11 @@ defmodule Phoenix.Channel do
       import Phoenix.Socket
 
       def leave(message, socket), do: socket
-      def outgoing(event, message, socket) do
+      def handle_out(event, message, socket) do
         reply(socket, event, message)
         socket
       end
-      defoverridable leave: 2, outgoing: 3
+      defoverridable leave: 2, handle_out: 3
     end
   end
 

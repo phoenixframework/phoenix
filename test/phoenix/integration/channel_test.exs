@@ -36,7 +36,7 @@ defmodule Phoenix.Integration.ChannelTest do
       socket
     end
 
-    def incoming("new:msg", message, socket) do
+    def handle_in("new:msg", message, socket) do
       broadcast socket, "new:msg", message
       socket
     end
