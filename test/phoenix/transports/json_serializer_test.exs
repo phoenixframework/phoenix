@@ -8,12 +8,12 @@ defmodule Phoenix.Tranports.JSONSerializerTest do
 
   test "encode!/1 encodes `Phoenix.Socket.Message` as JSON" do
     msg = %Message{topic: "t", event: "e", payload: "m"}
-
-    assert JSONSerializer.encode!(msg) |> to_string == @msg_json
+    {:text, encoded_msg} = JSONSerializer.encode!(msg)
+    assert encoded_msg |> to_string == @msg_json
   end
 
-  test "decode!/1 decodes `Phoenix.Socket.Message` from JSON" do
+  test "decode!/2 decodes `Phoenix.Socket.Message` from JSON" do
     assert %Message{topic: "t", event: "e", payload: "m"} ==
-      JSONSerializer.decode!(@msg_json)
+      JSONSerializer.decode!(@msg_json, :text)
   end
 end
