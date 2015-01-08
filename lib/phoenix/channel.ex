@@ -97,6 +97,10 @@ defmodule Phoenix.Channel do
         end
       end
 
+   By default, unhandled outgoing events are forwarded to each client as a reply,
+   but you'll need to define the catch-all clause yourself once you define an
+   `outgoing/3` clause.
+
   """
 
   use Behaviour

@@ -1,4 +1,16 @@
 defmodule Phoenix.Socket.Message do
+
+  @moduledoc """
+  Defines a `Phoenix.Socket` Message dispatched over channels.
+
+  The Message format requires the following keys:
+
+    * topic - The String topic  or topic:subtopic pair namespace, ie "messages", "messages:123"
+    * event - The String event name, ie "join"
+    * payload - The String JSON message payload
+
+  """
+
   alias Poison, as: JSON
   alias Phoenix.Socket.Message
 
@@ -14,12 +26,6 @@ defmodule Phoenix.Socket.Message do
   @doc """
   Parse JSON into required format
   Raises `Phoenix.Socket.Message.InvalidMessage` if invalid
-
-  The Message format requires the following keys:
-
-    * topic - The String topic  or topic:subtopic pair namespace, ie "messages", "messages:123"
-    * event - The String event name, ie "join"
-    * payload - The String JSON message payload
 
   Returns The `%Phoenix.Socket.Message{}` parsed from JSON
   """

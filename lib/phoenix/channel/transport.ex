@@ -19,8 +19,12 @@ defmodule Phoenix.Channel.Transport do
       remote clients, then deserialing and fowarding message through
       `Phoenix.Transport.dispatch/2`. Finish by keeping state of returned
       HashDict of `%Phoenix.Socket{}`s.
-    * Handle receiving outgoing `%Phoenix.Socket.Message{}`s as Elixir process
-      messages, then encoding and fowarding to connected remote client.
+    * Handle receiving outgoing `{:socket_reply, %Phoenix.Socket.Message{}}` as
+      Elixir process messages, then encoding and fowarding to remote client.
+    * Handle receiving outgoing `{:socket_broadcast, %Phoenix.Socket.Message{}}` as
+      Elixir process messages, then forwarding message through
+      `Phoenix.Transport.dispatch_broadcast/3`. Finish by keeping state of returned
+      HashDict of `%Phoenix.Socket{}`s.
     * Handle receiving arbitrary Elixir messages and fowarding through
       `Phoenix.Transport.dispatch_info/2`. Finish by keeping state of returned
       HashDict of `%Phoenix.Socket{}`s.

@@ -1,9 +1,19 @@
 defmodule Phoenix.Socket do
-  alias Phoenix.Socket
 
   @moduledoc """
   Holds state for multiplexed socket connections and Channel authorization
+
+  ## Socket Fields
+
+  * `pid` - The Pid of the socket's transport process
+  * `topic` - The string topic, ie `"rooms:123"`
+  * `router` - The router module where this socket originated
+  * `authorized` - The boolean authorization status, default `false`
+  * `assigns` - The map of socket assigns, default: `%{}`
+
   """
+
+  alias Phoenix.Socket
 
   @derive [Access]
   defstruct pid: nil,
