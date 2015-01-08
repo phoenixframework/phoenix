@@ -19,13 +19,17 @@ defmodule Phoenix.Channel.Transport do
       remote clients, then deserialing and fowarding message through
       `Phoenix.Transport.dispatch/2`. Finish by keeping state of returned
       HashDict of `%Phoenix.Socket{}`s.
-    * Handle receiving outgoing `%Phoenix.Socket.Message{}`s as Elixir process
-      messages, then encoding and fowarding to connected remote client.
+    * Handle receiving outgoing `{:socket_reply, %Phoenix.Socket.Message{}}` as
+      Elixir process messages, then encoding and fowarding to remote client.
+    * Handle receiving outgoing `{:socket_broadcast, %Phoenix.Socket.Message{}}` as
+      Elixir process messages, then forwarding message through
+      `Phoenix.Transport.dispatch_broadcast/3`. Finish by keeping state of returned
+      HashDict of `%Phoenix.Socket{}`s.
     * Handle receiving arbitrary Elixir messages and fowarding through
       `Phoenix.Transport.dispatch_info/2`. Finish by keeping state of returned
       HashDict of `%Phoenix.Socket{}`s.
     * Handle remote client disconnects and relaying event through
-      `Phoenix.Transport.dispatch_leave/2`
+      `Phoenix.Transport.dispatch_leave/3`
 
   See `Phoenix.Transports.WebSocket` for an example transport server implementation.
 
@@ -59,15 +63,15 @@ defmodule Phoenix.Channel.Transport do
 
   The returned `HashDict` of `%Phoenix.Socket{}`s must be held by the adapter
   """
-  def dispatch(msg = %Message{}, sockets, adapter_pid, router) do
-    socket = %Socket{pid: adapter_pid, router: router, channel: msg.channel, topic: msg.topic}
+  def dispatch(msg = %Message{}, sockets, adapter_pid, router, transport) do
+    socket = %Socket{pid: adapter_pid, router: router, topic: msg.topic}
 
     sockets
-    |> HashDict.get({msg.channel, msg.topic}, socket)
-    |> dispatch(msg.channel, msg.event, msg.message)
+    |> HashDict.get(msg.topic, socket)
+    |> dispatch(msg.topic, msg.event, msg.payload, transport)
     |> case do
       {:ok, socket} ->
-        {:ok, HashDict.put(sockets, {msg.channel, msg.topic}, socket)}
+        {:ok, HashDict.put(sockets, msg.topic, socket)}
       {:heartbeat, _socket} ->
         {:ok, sockets}
       {:error, _socket, reason} ->
@@ -80,28 +84,26 @@ defmodule Phoenix.Channel.Transport do
 
   The Message format sent to phoenix requires the following key / values:
 
-    * channel - The String value "phoenix"
-    * topic - The String value "conn"
+    * topic - The String value "phoenix"
     * event - The String value "heartbeat"
-    * message - An empty JSON message payload, ie {}
+    * payload - An empty JSON message payload, ie {}
 
   The server will respond to heartbeats with the same message
   """
-  def dispatch(socket, "phoenix", "heartbeat", _msg) do
-    msg = %Message{channel: "phoenix", topic: "conn", event: "heartbeat", message: %{}}
-    send socket.pid, msg
+  def dispatch(socket, "phoenix", "heartbeat", _msg, _transport) do
+    send socket.pid, {:socket_reply, %Message{topic: "phoenix", event: "heartbeat", payload: %{}}}
 
     {:heartbeat, socket}
   end
-  def dispatch(socket, channel, "join", msg) do
+  def dispatch(socket, topic, "join", msg, transport) do
     socket
-    |> socket.router.match(:socket, channel, "join", msg)
+    |> socket.router.match_channel(:incoming, topic, "join", msg, transport)
     |> handle_result("join")
   end
-  def dispatch(socket, channel, event, msg) do
-    if Socket.authorized?(socket, channel, socket.topic) do
+  def dispatch(socket, topic, event, msg, transport) do
+    if Socket.authorized?(socket, topic) do
       socket
-      |> socket.router.match(:socket, channel, event, msg)
+      |> socket.router.match_channel(:incoming, topic, event, msg, transport)
       |> handle_result(event)
     else
       handle_result({:error, socket, :unauthenticated}, event)
@@ -109,10 +111,10 @@ defmodule Phoenix.Channel.Transport do
   end
 
   defp handle_result({:ok, socket}, "join") do
-    {:ok, Channel.subscribe(socket, socket.channel, socket.topic)}
+    {:ok, Channel.subscribe(socket, socket.topic)}
   end
   defp handle_result(socket = %Socket{}, "leave") do
-    {:ok, Channel.unsubscribe(socket, socket.channel, socket.topic)}
+    {:ok, Channel.unsubscribe(socket, socket.topic)}
   end
   defp handle_result(socket = %Socket{}, _event) do
     {:ok, socket}
@@ -132,21 +134,43 @@ defmodule Phoenix.Channel.Transport do
   end
 
   @doc """
+  When an Adapter receives `{:socket_broadcast, %Message{}}`, it dispatches to this
+  function with its socket state.
+
+  The message is routed to the intended channel's outgoing/3 callback.
+  """
+  def dispatch_broadcast(sockets, %Message{event: event, payload: payload} = msg, transport) do
+    sockets
+    |> HashDict.get(msg.topic)
+    |> case do
+      nil    ->
+        {:ok, sockets}
+      socket ->
+        {:ok, sock} =
+          socket
+          |> socket.router.match_channel(:outgoing, socket.topic, event, payload, transport)
+          |> handle_result(event)
+
+        {:ok, HashDict.put(sockets, sock.topic, sock)}
+    end
+  end
+
+  @doc """
   Arbitrary Elixir processes are received by adapters and forwarded through
   this function to be dispatched as `"info"` events on each socket channel.
 
   The returned `HashDict` of `%Phoenix.Socket{}`s must be held by the adapter
   """
-  def dispatch_info(sockets, data) do
+  def dispatch_info(sockets, data, transport) do
     sockets = Enum.reduce sockets, sockets, fn {_, socket}, sockets ->
-      {:ok, socket} = dispatch_info(socket, socket.channel, data)
-      HashDict.put(sockets, {socket.channel, socket.topic}, socket)
+      {:ok, socket} = dispatch_info(socket, socket.topic, data, transport)
+      HashDict.put(sockets, socket.topic, socket)
     end
     {:ok, sockets}
   end
-  def dispatch_info(socket = %Socket{}, channel, data) do
+  def dispatch_info(socket = %Socket{}, topic, data, transport) do
     socket
-    |> socket.router.match(:socket, channel, "info", data)
+    |> socket.router.match_channel(:incoming, topic, "info", data, transport)
     |> handle_result("info")
   end
 
@@ -156,10 +180,10 @@ defmodule Phoenix.Channel.Transport do
 
   Most adapters shutdown after this dispatch as they client has disconnected
   """
-  def dispatch_leave(sockets, reason) do
+  def dispatch_leave(sockets, reason, transport) do
     Enum.each sockets, fn {_, socket} ->
       socket
-      |> socket.router.match(:socket, socket.channel, "leave", reason: reason)
+      |> socket.router.match_channel(:incoming, socket.topic, "leave", %{reason: reason}, transport)
       |> handle_result("leave")
     end
     :ok

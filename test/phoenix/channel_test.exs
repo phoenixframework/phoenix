@@ -6,60 +6,90 @@ defmodule Phoenix.Channel.ChannelTest do
   alias Phoenix.Socket.Message
   alias Phoenix.Channel.Transport
   alias Phoenix.Channel.Transport.InvalidReturn
+  alias Phoenix.Transports.WebSocket
+  alias Phoenix.Transports.LongPoller
 
   defmodule MyChannel do
     use Phoenix.Channel
-    def join(_socket, _topic, msg), do: msg
-    def leave(_socket, _msg) do
+    def join(topic, msg, socket) do
+      send socket.pid, {:join, topic}
+      msg
+    end
+    def leave(_msg, _socket) do
       Process.get(:leave)
     end
-    def event(socket, "info", msg) do
+    def incoming("info", msg, socket) do
       send socket.pid, :info
       msg
     end
-    def event(_socket, "boom", msg), do: msg
-    def event(socket, "put", dict) do
+
+    def incoming("some:event", _msg, socket) do
+      send socket.pid, {:incoming, socket.topic}
+      socket
+    end
+    def incoming("boom", msg, _socket), do: msg
+    def incoming("put", dict, socket) do
       Enum.reduce dict, socket, fn {k, v}, socket -> Socket.assign(socket, k, v) end
     end
-    def event(socket, "get", %{"key" => key}) do
+    def incoming("get", %{"key" => key}, socket) do
       send socket.pid, socket.assigns[key]
+      socket
+    end
+
+    def outgoing("some:broadcast", _msg, socket) do
+      send socket.pid, :outgoing
+      socket
+    end
+    def outgoing(event, message, socket) do
+      reply(socket, event, message)
       socket
     end
   end
 
   defmodule Router do
     use Phoenix.Router
-    use Phoenix.Router.Socket, mount: "/ws"
 
-    channel "chan1", MyChannel
+    socket "/ws" do
+      channel "topic1:*", MyChannel
+      channel "baretopic", MyChannel
+      channel "wsonly:*", MyChannel, via: [WebSocket]
+      channel "lponly:*", MyChannel, via: [LongPoller]
+    end
+
+    socket "/ws2", Phoenix.Channel.ChannelTest, via: [WebSocket] do
+      channel "topic2:*", Elixir.MyChannel
+      channel "topic2-override:*", Elixir.MyChannel, via: [LongPoller]
+    end
+
+    socket "/ws3", alias: Phoenix.Channel.ChannelTest do
+      channel "topic3:*", Elixir.MyChannel
+    end
   end
 
   def new_socket do
     %Socket{pid: self,
             router: Router,
-            topic: "topic",
-            channel: "chan1",
+            topic: "topic1:subtopic",
             assigns: []}
   end
   def join_message(message) do
-    %Message{channel: "chan1",
-             topic: "topic",
+    %Message{topic: "topic1:subtopic",
              event: "join",
-             message: message}
+             payload: message}
   end
 
   test "#subscribe/unsubscribe's socket to/from topic" do
-    socket = Socket.set_current_channel(new_socket, "chan", "topic")
+    socket = Socket.put_current_topic(new_socket, "top:subtop")
 
-    assert Channel.subscribe(socket, "chan", "topic")
-    assert PubSub.subscribers("chan:topic") == [socket.pid]
-    assert Channel.unsubscribe(socket, "chan", "topic")
-    assert PubSub.subscribers("chan:topic") == []
+    assert Channel.subscribe(socket, "top:subtop")
+    assert PubSub.subscribers("top:subtop") == [socket.pid]
+    assert Channel.unsubscribe(socket, "top:subtop")
+    assert PubSub.subscribers("top:subtop") == []
   end
 
-  test "#broadcast broadcasts global message on channel" do
-    PubSub.create("chan:topic")
-    socket = Socket.set_current_channel(new_socket, "chan", "topic")
+  test "#broadcast broadcasts global message on topic" do
+    PubSub.create("top:subtop")
+    socket = Socket.put_current_topic(new_socket, "top:subtop")
 
     assert Channel.broadcast(socket, "event", %{foo: "bar"})
   end
@@ -67,49 +97,49 @@ defmodule Phoenix.Channel.ChannelTest do
   test "#broadcast raises friendly error when message arg isn't a Map" do
     message = "Message argument must be a map"
     assert_raise RuntimeError, message, fn ->
-      Channel.broadcast("channel", "topic", "event", bar: "foo", foo: "bar")
+      Channel.broadcast("topic:subtopic", "event", bar: "foo", foo: "bar")
     end
   end
 
-  test "#broadcast_from broadcasts message on channel, skipping publisher" do
-    PubSub.create("chan:topic")
+  test "#broadcast_from broadcasts message on topic, skipping publisher" do
+    PubSub.create("top:subtop")
     socket = new_socket
-    |> Socket.set_current_channel("chan", "topic")
-    |> Channel.subscribe("chan", "topic")
+    |> Socket.put_current_topic("top:subtop")
+    |> Channel.subscribe("top:subtop")
 
-    assert Channel.broadcast_from(socket, "event", %{message: "hello"})
+    assert Channel.broadcast_from(socket, "event", %{payload: "hello"})
     refute Enum.any?(Process.info(self)[:messages], &match?(%Message{}, &1))
   end
 
   test "#broadcast_from raises friendly error when message arg isn't a Map" do
-    socket = Socket.set_current_channel(new_socket, "chan", "topic")
+    socket = Socket.put_current_topic(new_socket, "top:subtop")
     message = "Message argument must be a map"
     assert_raise RuntimeError, message, fn ->
       Channel.broadcast_from(socket, "event", bar: "foo", foo: "bar")
     end
   end
 
-  test "#broadcast_from/5 raises friendly error when message arg isn't a Map" do
+  test "#broadcast_from/4 raises friendly error when message arg isn't a Map" do
     message = "Message argument must be a map"
     assert_raise RuntimeError, message, fn ->
-      Channel.broadcast_from(self, "channel", "topic", "event", bar: "foo")
+      Channel.broadcast_from(self, "topic:subtopic", "event", bar: "foo")
     end
   end
 
   test "#reply sends response to socket" do
-    socket = Socket.set_current_channel(new_socket, "chan", "topic")
-    assert Channel.reply(socket, "event", %{message: "hello"})
+    socket = Socket.put_current_topic(new_socket, "top:subtop")
+    assert Channel.reply(socket, "event", %{payload: "hello"})
 
-    assert Enum.any?(Process.info(self)[:messages], &match?(%Message{}, &1))
-    assert_received %Message{
-      channel: "chan",
+    assert Enum.any?(Process.info(self)[:messages], &match?({:socket_reply, %Message{}}, &1))
+    assert_received {:socket_reply, %Message{
+      topic: "top:subtop",
       event: "event",
-      message: %{message: "hello"}, topic: "topic"
-    }
+      payload: %{payload: "hello"}
+    }}
   end
 
   test "#reply raises friendly error when message arg isn't a Map" do
-    socket = Socket.set_current_channel(new_socket, "chan", "topic")
+    socket = Socket.put_current_topic(new_socket, "top:subtop")
     message = "Message argument must be a map"
     assert_raise RuntimeError, message, fn ->
       Channel.reply(socket, "event", foo: "bar", bar: "foo")
@@ -127,122 +157,256 @@ defmodule Phoenix.Channel.ChannelTest do
     assert MyChannel.leave(new_socket, []) == :overridden
   end
 
-  test "successful join authorizes and subscribes socket to channel/topic" do
+  test "successful join authorizes and subscribes socket to topic" do
     message = join_message({:ok, new_socket})
 
-    PubSub.create("chan1:topic")
-    assert PubSub.subscribers("chan1:topic") == []
-    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router)
-    socket = HashDict.get(sockets, {"chan1", "topic"})
+    PubSub.create("topic1:subtopic")
+    assert PubSub.subscribers("topic1:subtopic") == []
+    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    socket = HashDict.get(sockets, "topic1:subtopic")
     assert socket
-    assert Socket.authorized?(socket, "chan1", "topic")
-    assert PubSub.subscribers("chan1:topic") == [socket.pid]
-    assert PubSub.subscribers("chan1:topic") == [self]
+    assert Socket.authorized?(socket, "topic1:subtopic")
+    assert PubSub.subscribers("topic1:subtopic") == [socket.pid]
+    assert PubSub.subscribers("topic1:subtopic") == [self]
   end
 
-  test "unsuccessful join denies socket access to channel/topic" do
+  test "unsuccessful join denies socket access to topic" do
     message = join_message({:error, new_socket, :unauthenticated})
 
-    PubSub.create("chan1:topic")
-    assert PubSub.subscribers("chan1:topic") == []
-    {:error, sockets, :unauthenticated} = Transport.dispatch(message, HashDict.new, self, Router)
-    refute HashDict.get(sockets, {"chan1", "topic"})
-    refute PubSub.subscribers("chan1:topic") == [self]
+    PubSub.create("topic1:subtopic")
+    assert PubSub.subscribers("topic1:subtopic") == []
+    {:error, sockets, :unauthenticated} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    refute HashDict.get(sockets, "topic1:subtopic")
+    refute PubSub.subscribers("topic1:subtopic") == [self]
   end
 
   test "#leave is called when the socket conn closes, and is unsubscribed" do
     socket = new_socket
-    sockets = HashDict.put(HashDict.new, {"chan1", "topic"}, socket)
+    sockets = HashDict.put(HashDict.new, "topic1:subtopic", socket)
     message = join_message({:ok, socket})
 
-    PubSub.create("chan1:topic")
-    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router)
+    PubSub.create("topic1:subtopic")
+    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router, WebSocket)
     Process.put(:leave, socket)
-    Transport.dispatch_leave(sockets, :reason)
-    assert PubSub.subscribers("chan1:topic") == []
+    Transport.dispatch_leave(sockets, :reason, WebSocket)
+    assert PubSub.subscribers("topic1:subtopic") == []
   end
 
   test "#info is called when receiving regular process messages" do
     socket = new_socket
-    sockets = HashDict.put(HashDict.new, {"chan1", "topic"}, socket)
+    sockets = HashDict.put(HashDict.new, "topic1:subtopic", socket)
     message = join_message({:ok, socket})
 
-    PubSub.create("chan1:topic")
-    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router)
-    Transport.dispatch_info(sockets, socket)
+    PubSub.create("topic1:subtopic")
+    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router, WebSocket)
+    Transport.dispatch_info(sockets, socket, WebSocket)
     assert_received :info
   end
 
   test "#join raise InvalidReturn exception when return type invalid" do
-    sockets = HashDict.put(HashDict.new, {"chan1", "topic"}, new_socket)
+    sockets = HashDict.put(HashDict.new, "topic1:subtopic", new_socket)
     message = join_message(:badreturn)
 
     assert_raise InvalidReturn, fn ->
-      {:ok, _sockets} = Transport.dispatch(message, sockets, self, Router)
+      {:ok, _sockets} = Transport.dispatch(message, sockets, self, Router, WebSocket)
     end
   end
 
   test "#leave raise InvalidReturn exception when return type invalid" do
     socket = new_socket
-    sockets = HashDict.put(HashDict.new, {"chan1", "topic"}, socket)
+    sockets = HashDict.put(HashDict.new, "topic1:subtopic", socket)
     message = join_message({:ok, socket})
 
-    PubSub.create("chan1:topic")
-    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router)
-    sock = HashDict.get(sockets, {"chan1", "topic"})
-    assert Socket.authorized?(sock, "chan1", "topic")
+    PubSub.create("topic1:subtopic")
+    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router, WebSocket)
+    sock = HashDict.get(sockets, "topic1:subtopic")
+    assert Socket.authorized?(sock, "topic1:subtopic")
     Process.put(:leave, :badreturn)
     assert_raise InvalidReturn, fn ->
-      Transport.dispatch_leave(sockets, :reason)
+      Transport.dispatch_leave(sockets, :reason, WebSocket)
     end
   end
 
   test "#event raises InvalidReturn exception when return type is invalid" do
     socket = new_socket
-    sockets = HashDict.put(HashDict.new, {"chan1", "topic"}, socket)
+    sockets = HashDict.put(HashDict.new, "topic1:subtopic", socket)
     message = join_message({:ok, socket})
 
-    PubSub.create("chan1:topic")
-    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router)
-    sock = HashDict.get(sockets, {"chan1", "topic"})
-    assert Socket.authorized?(sock, "chan1", "topic")
-    message = %Message{channel: "chan1",
-                       topic: "topic",
+    PubSub.create("topic1:subtopic")
+    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router, WebSocket)
+    sock = HashDict.get(sockets, "topic1:subtopic")
+    assert Socket.authorized?(sock, "topic1:subtopic")
+    message = %Message{topic: "topic1:subtopic",
                        event: "boom",
-                       message: :badreturn}
+                       payload: :badreturn}
 
     assert_raise InvalidReturn, fn ->
-      Transport.dispatch(message, sockets, self, Router)
+      Transport.dispatch(message, sockets, self, Router, WebSocket)
     end
   end
 
   test "returns heartbeat message when received, and does not store socket" do
     sockets = HashDict.new
-    message = %Message{channel: "phoenix", topic: "conn", event: "heartbeat", message: %{}}
+    message = %Message{topic: "phoenix", event: "heartbeat", payload: %{}}
 
-    assert {:ok, sockets} = Transport.dispatch(message, sockets, self, Router)
-    assert_received %Message{channel: "phoenix", topic: "conn", event: "heartbeat", message: %{}}
+    assert {:ok, sockets} = Transport.dispatch(message, sockets, self, Router, WebSocket)
+    assert_received {:socket_reply, %Message{topic: "phoenix", event: "heartbeat", payload: %{}}}
     assert sockets == HashDict.new
   end
 
   test "socket state can change when receiving regular process messages" do
     socket = new_socket
-    sockets = HashDict.put(HashDict.new, {"chan1", "topic"}, socket)
+    sockets = HashDict.put(HashDict.new, "topic1:subtopic", socket)
     message = join_message({:ok, socket})
 
-    PubSub.create("chan1:topic")
-    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router)
-    {:ok, sockets} = Transport.dispatch_info(sockets, Socket.assign(socket, :foo, :bar))
-    socket = HashDict.get(sockets, {"chan1", "topic"})
+    PubSub.create("topic1:subtopic")
+    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router, WebSocket)
+    {:ok, sockets} = Transport.dispatch_info(sockets, Socket.assign(socket, :foo, :bar), WebSocket)
+    socket = HashDict.get(sockets, "topic1:subtopic")
 
     assert socket.assigns[:foo] == :bar
   end
 
   test "Socket state can be put and retrieved" do
-    socket = MyChannel.event(new_socket, "put", %{val: 123})
-    _socket = MyChannel.event(socket, "get", %{"key" => :val})
+    socket = MyChannel.incoming("put", %{val: 123}, new_socket)
+    _socket = MyChannel.incoming("get", %{"key" => :val}, socket)
     assert_received 123
   end
 
+  test "outgoing/3 can be overidden for custom broadcast handling" do
+    socket = new_socket
+    sockets = HashDict.put(HashDict.new, "topic1:subtopic", socket)
+    message = join_message({:ok, socket})
 
+    PubSub.create("topic1:subtopic")
+    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router, WebSocket)
+    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router, WebSocket)
+    Transport.dispatch_broadcast(sockets, %Message{event: "some:broadcast",
+                                                   topic: "topic1:subtopic",
+                                                   payload: "hello"}, WebSocket)
+    assert_received :outgoing
+  end
+
+  test "join/3 and incoming/3 match splat topics" do
+    socket = new_socket |> Socket.put_current_topic("topic1:somesubtopic")
+    message = %Message{topic: "topic1:somesubtopic",
+                       event: "join",
+                       payload: {:ok, socket}}
+    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    assert_received {:join, "topic1:somesubtopic"}
+
+    message = %Message{topic: "topic1",
+                       event: "join",
+                       payload: {:ok, socket}}
+    {:error, _sockets, :bad_transport_match} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    refute_received {:join, "topic1"}
+
+    message = %Message{topic: "topic1:somesubtopic",
+                       event: "some:event",
+                       payload: %{}}
+    Transport.dispatch(message, sockets, self, Router, WebSocket)
+    assert_received {:incoming, "topic1:somesubtopic"}
+
+    message = %Message{topic: "topic1",
+                       event: "some:event",
+                       payload: %{}}
+    Transport.dispatch(message, sockets, self, Router, WebSocket)
+    refute_received {:incoming, "topic1:somesubtopic"}
+  end
+
+  test "join/3 and incoming/3 match bare topics" do
+    socket = new_socket |> Socket.put_current_topic("baretopic")
+    message = %Message{topic: "baretopic",
+                       event: "join",
+                       payload: {:ok, socket}}
+    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    assert_received {:join, "baretopic"}
+
+    message = %Message{topic: "baretopic:sub",
+                       event: "join",
+                       payload: {:ok, socket}}
+    {:error, _sockets, :bad_transport_match} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    refute_received {:join, "baretopic:sub"}
+
+    message = %Message{topic: "baretopic",
+                       event: "some:event",
+                       payload: %{}}
+    Transport.dispatch(message, sockets, self, Router, WebSocket)
+    assert_received {:incoming, "baretopic"}
+
+    message = %Message{topic: "baretopic:sub",
+                       event: "some:event",
+                       payload: %{}}
+    Transport.dispatch(message, sockets, self, Router, WebSocket)
+    refute_received {:incoming, "baretopic:sub"}
+  end
+
+  test "channel `via:` option filters messages by transport" do
+    # via WS
+    socket = new_socket |> Socket.put_current_topic("wsonly:somesubtopic")
+    message = %Message{topic: "wsonly:somesubtopic",
+                       event: "join",
+                       payload: {:ok, socket}}
+    {:ok, _sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    assert_received {:join, "wsonly:somesubtopic"}
+
+    {:error, _sockets, :bad_transport_match} = Transport.dispatch(message, HashDict.new, self, Router, LongPoller)
+    refute_received {:join, "wsonly:somesubtopic"}
+
+    # via LP
+    socket = new_socket |> Socket.put_current_topic("lponly:somesubtopic")
+    message = %Message{topic: "lponly:somesubtopic",
+                       event: "join",
+                       payload: {:ok, socket}}
+    {:ok, _sockets} = Transport.dispatch(message, HashDict.new, self, Router, LongPoller)
+    assert_received {:join, "lponly:somesubtopic"}
+
+    {:error, _sockets, :bad_transport_match} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    refute_received {:join, "lponly:somesubtopic"}
+  end
+
+  test "unmatched channel message returns {:error, sockets, :bad_transport_match}" do
+    message = %Message{topic: "slfjskdjfsjfsklfj:somesubtopic", event: "join", payload: %{}}
+    assert {:error, _sockets, :bad_transport_match} =
+    Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    refute_received {:join, "slfjskdjfsjfsklfj:somesubtopic"}
+  end
+
+  test "socket/3 with alias option" do
+    socket = new_socket |> Socket.put_current_topic("topic2:somesubtopic")
+    message = %Message{topic: "topic2:somesubtopic",
+                       event: "join",
+                       payload: {:ok, socket}}
+    {:ok, _sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    assert_received {:join, "topic2:somesubtopic"}
+  end
+
+  test "socket/3 with alias applies :alias option" do
+    socket = new_socket |> Socket.put_current_topic("topic3:somesubtopic")
+    message = %Message{topic: "topic3:somesubtopic",
+                       event: "join",
+                       payload: {:ok, socket}}
+    {:ok, _sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    assert_received {:join, "topic3:somesubtopic"}
+  end
+
+  test "socket/3 with via applies overridable transport filters to all channels" do
+    socket = new_socket |> Socket.put_current_topic("topic2:somesubtopic")
+    message = %Message{topic: "topic2:somesubtopic",
+                       event: "join",
+                       payload: {:ok, socket}}
+    assert {:error, _sockets, :bad_transport_match} =
+      Transport.dispatch(message, HashDict.new, self, Router, LongPoller)
+    refute_received {:join, "topic2:somesubtopic"}
+
+    socket = new_socket |> Socket.put_current_topic("topic2-override:somesubtopic")
+    message = %Message{topic: "topic2-override:somesubtopic",
+                       event: "join",
+                       payload: {:ok, socket}}
+    assert {:ok, _sockets} = Transport.dispatch(message, HashDict.new, self, Router, LongPoller)
+    assert_received {:join, "topic2-override:somesubtopic"}
+    assert {:error, _sockets, :bad_transport_match} =
+      Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    refute_received {:join, "topic2-override:somesubtopic"}
+  end
 end

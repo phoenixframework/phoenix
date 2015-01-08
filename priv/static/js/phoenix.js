@@ -14,8 +14,7 @@
     exports.Channel = (function() {
       Channel.prototype.bindings = null;
 
-      function Channel(channel, topic, message, callback, socket) {
-        this.channel = channel;
+      function Channel(topic, message, callback, socket) {
         this.topic = topic;
         this.message = message;
         this.callback = callback;
@@ -34,8 +33,8 @@
         });
       };
 
-      Channel.prototype.isMember = function(channel, topic) {
-        return this.channel === channel && this.topic === topic;
+      Channel.prototype.isMember = function(topic) {
+        return this.topic === topic;
       };
 
       Channel.prototype.off = function(event) {
@@ -67,12 +66,11 @@
         return _results;
       };
 
-      Channel.prototype.send = function(event, message) {
+      Channel.prototype.send = function(event, payload) {
         return this.socket.send({
-          channel: this.channel,
           topic: this.topic,
           event: event,
-          message: message
+          payload: payload
         });
       };
 
@@ -80,7 +78,7 @@
         if (message == null) {
           message = {};
         }
-        this.socket.leave(this.channel, this.topic, message);
+        this.socket.leave(this.topic, message);
         return this.reset();
       };
 
@@ -313,37 +311,35 @@
       };
 
       Socket.prototype.rejoin = function(chan) {
-        var channel, message, topic;
+        var message, topic;
         chan.reset();
-        channel = chan.channel, topic = chan.topic, message = chan.message;
+        topic = chan.topic, message = chan.message;
         this.send({
-          channel: channel,
           topic: topic,
           event: "join",
-          message: message
+          payload: message
         });
         return chan.callback(chan);
       };
 
-      Socket.prototype.join = function(channel, topic, message, callback) {
+      Socket.prototype.join = function(topic, message, callback) {
         var chan;
-        chan = new exports.Channel(channel, topic, message, callback, this);
+        chan = new exports.Channel(topic, message, callback, this);
         this.channels.push(chan);
         if (this.isConnected()) {
           return this.rejoin(chan);
         }
       };
 
-      Socket.prototype.leave = function(channel, topic, message) {
+      Socket.prototype.leave = function(topic, message) {
         var c;
         if (message == null) {
           message = {};
         }
         this.send({
-          channel: channel,
           topic: topic,
           event: "leave",
-          message: message
+          payload: message
         });
         return this.channels = (function() {
           var _i, _len, _ref, _results;
@@ -351,7 +347,7 @@
           _results = [];
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
             c = _ref[_i];
-            if (!(c.isMember(channel, topic))) {
+            if (!(c.isMember(topic))) {
               _results.push(c);
             }
           }
@@ -375,10 +371,9 @@
 
       Socket.prototype.sendHeartbeat = function() {
         return this.send({
-          channel: "phoenix",
-          topic: "conn",
+          topic: "phoenix",
           event: "heartbeat",
-          message: {}
+          payload: {}
         });
       };
 
@@ -396,22 +391,22 @@
       };
 
       Socket.prototype.onConnMessage = function(rawMessage) {
-        var callback, chan, channel, event, message, topic, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
+        var callback, chan, event, payload, topic, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
         this.log("message received:");
         this.log(rawMessage);
-        _ref = JSON.parse(rawMessage.data), channel = _ref.channel, topic = _ref.topic, event = _ref.event, message = _ref.message;
+        _ref = JSON.parse(rawMessage.data), topic = _ref.topic, event = _ref.event, payload = _ref.payload;
         _ref1 = this.channels;
         for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
           chan = _ref1[_i];
-          if (chan.isMember(channel, topic)) {
-            chan.trigger(event, message);
+          if (chan.isMember(topic)) {
+            chan.trigger(event, payload);
           }
         }
         _ref2 = this.stateChangeCallbacks.message;
         _results = [];
         for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
           callback = _ref2[_j];
-          _results.push(callback(channel, topic, event, message));
+          _results.push(callback(topic, event, payload));
         }
         return _results;
       };
@@ -436,13 +431,14 @@
 
       function LongPoller(endPoint) {
         this.states = exports.Socket.states;
-        this.endPoint = this.normalizeEndpoint(endPoint);
+        this.upgradeEndpoint = this.normalizeEndpoint(endPoint);
+        this.pollEndpoint = this.upgradeEndpoint + (/\/$/.test(endPoint) ? "poll" : "/poll");
         this.readyState = this.states.connecting;
         this.open();
       }
 
       LongPoller.prototype.open = function() {
-        return exports.Ajax.request("POST", this.endPoint, "application/json", null, (function(_this) {
+        return exports.Ajax.request("POST", this.upgradeEndpoint, "application/json", null, (function(_this) {
           return function(status, resp) {
             if (status === 200) {
               _this.readyState = _this.states.open;
@@ -456,16 +452,14 @@
       };
 
       LongPoller.prototype.normalizeEndpoint = function(endPoint) {
-        var suffix;
-        suffix = /\/$/.test(endPoint) ? "poll" : "/poll";
-        return endPoint.replace("ws://", "http://").replace("wss://", "https://") + suffix;
+        return endPoint.replace("ws://", "http://").replace("wss://", "https://");
       };
 
       LongPoller.prototype.poll = function() {
         if (this.readyState !== this.states.open) {
           return;
         }
-        return exports.Ajax.request("GET", this.endPoint, "application/json", null, (function(_this) {
+        return exports.Ajax.request("GET", this.pollEndpoint, "application/json", null, (function(_this) {
           return function(status, resp) {
             var msg, _i, _len, _ref;
             switch (status) {
@@ -491,7 +485,7 @@
       };
 
       LongPoller.prototype.send = function(body) {
-        return exports.Ajax.request("PUT", this.endPoint, "application/json", body, (function(_this) {
+        return exports.Ajax.request("POST", this.pollEndpoint, "application/json", body, (function(_this) {
           return function(status, resp) {
             if (status !== 200) {
               return _this.onerror();

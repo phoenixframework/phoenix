@@ -1,8 +1,20 @@
 defmodule Phoenix.Socket.Message do
+
+  @moduledoc """
+  Defines a `Phoenix.Socket` Message dispatched over channels.
+
+  The Message format requires the following keys:
+
+    * topic - The String topic  or topic:subtopic pair namespace, ie "messages", "messages:123"
+    * event - The String event name, ie "join"
+    * payload - The String JSON message payload
+
+  """
+
   alias Poison, as: JSON
   alias Phoenix.Socket.Message
 
-  defstruct channel: nil, topic: nil, event: nil, message: nil
+  defstruct topic: nil, event: nil, payload: nil
 
   defmodule InvalidMessage do
     defexception [:message]
@@ -14,13 +26,6 @@ defmodule Phoenix.Socket.Message do
   @doc """
   Parse JSON into required format
   Raises `Phoenix.Socket.Message.InvalidMessage` if invalid
-
-  The Message format requires the following keys:
-
-    * channel - The String Channel namespace, ie "messages"
-    * topic - The String topic namespace, ie "123"
-    * event - The String event name, ie "join"
-    * message - The String JSON message payload
 
   Returns The `%Phoenix.Socket.Message{}` parsed from JSON
   """
@@ -37,10 +42,9 @@ defmodule Phoenix.Socket.Message do
   def from_map!(map) when is_map(map) do
     try do
       %Message{
-        channel: Map.fetch!(map, "channel"),
-        topic:   Map.fetch!(map, "topic"),
+        topic: Map.fetch!(map, "topic"),
         event:   Map.fetch!(map, "event"),
-        message: Map.fetch!(map, "message")
+        payload: Map.fetch!(map, "payload")
       }
     rescue
       err in [KeyError] -> raise InvalidMessage, message: "Missing key: '#{err.key}'"

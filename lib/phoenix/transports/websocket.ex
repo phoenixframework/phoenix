@@ -19,11 +19,15 @@ defmodule Phoenix.Transports.WebSocket do
 
   alias Phoenix.Channel.Transport
   alias Phoenix.Socket.Message
+  alias Phoenix.Transports.LongPoller
 
   plug :action
 
-  def upgrade_conn(conn, _) do
+  def upgrade(%Plug.Conn{method: "GET"} = conn, _) do
     put_private(conn, :phoenix_upgrade, {:websocket, __MODULE__}) |> halt
+  end
+  def upgrade(%Plug.Conn{method: "POST"} = conn, _) do
+    LongPoller.call(conn, LongPoller.init(:open))
   end
 
   @doc """
@@ -41,7 +45,7 @@ defmodule Phoenix.Transports.WebSocket do
   def ws_handle(text, state = %{router: router, sockets: sockets, serializer: serializer}) do
     text
     |> serializer.decode!
-    |> Transport.dispatch(sockets, self, router)
+    |> Transport.dispatch(sockets, self, router, __MODULE__)
     |> case do
       {:ok, sockets}             -> %{state | sockets: sockets}
       {:error, sockets, _reason} -> %{state | sockets: sockets}
@@ -51,7 +55,15 @@ defmodule Phoenix.Transports.WebSocket do
   @doc """
   Receives `%Phoenix.Socket.Message{}` and sends encoded message JSON to client
   """
-  def ws_info(message = %Message{}, state = %{serializer: serializer}) do
+  def ws_info({:socket_broadcast, message = %Message{}}, state = %{sockets: sockets}) do
+    sockets = case Transport.dispatch_broadcast(sockets, message, __MODULE__) do
+      {:ok, socks} -> socks
+      {:error, socks, _reason} -> socks
+    end
+
+    %{state | sockets: sockets}
+  end
+  def ws_info({:socket_reply, message = %Message{}}, state = %{serializer: serializer}) do
     reply(self, serializer.encode!(message))
     state
   end
@@ -62,7 +74,7 @@ defmodule Phoenix.Transports.WebSocket do
   Dispatches `"info"` event back through Tranport layer to all socket's channels
   """
   def ws_info(data, state = %{sockets: sockets}) do
-    sockets = case Transport.dispatch_info(sockets, data) do
+    sockets = case Transport.dispatch_info(sockets, data, __MODULE__) do
       {:ok, socks} -> socks
       {:error, socks, _reason} -> socks
     end
@@ -74,7 +86,7 @@ defmodule Phoenix.Transports.WebSocket do
   Called on WS close. Dispatches the `leave` event back through Transport layer
   """
   def ws_terminate(reason, %{sockets: sockets}) do
-    :ok = Transport.dispatch_leave(sockets, reason)
+    :ok = Transport.dispatch_leave(sockets, reason, __MODULE__)
     :ok
   end
 

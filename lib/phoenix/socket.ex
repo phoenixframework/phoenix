@@ -1,14 +1,22 @@
 defmodule Phoenix.Socket do
-  alias Phoenix.Socket
 
   @moduledoc """
   Holds state for multiplexed socket connections and Channel authorization
+
+  ## Socket Fields
+
+  * `pid` - The Pid of the socket's transport process
+  * `topic` - The string topic, ie `"rooms:123"`
+  * `router` - The router module where this socket originated
+  * `authorized` - The boolean authorization status, default `false`
+  * `assigns` - The map of socket assigns, default: `%{}`
+
   """
 
+  alias Phoenix.Socket
+
   @derive [Access]
-  defstruct conn: nil,
-            pid: nil,
-            channel: nil,
+  defstruct pid: nil,
             topic: nil,
             router: nil,
             authorized: false,
@@ -16,34 +24,34 @@ defmodule Phoenix.Socket do
 
 
   @doc """
-  Sets current channel of multiplexed socket connection
+  Sets current topic of multiplexed socket connection
   """
-  def set_current_channel(socket, channel, topic) do
-    %Socket{socket | channel: channel, topic: topic}
+  def put_current_topic(socket, topic) do
+    %Socket{socket | topic: topic}
   end
 
   @doc """
-  Adds authorized channel/topic pair to Socket's channel list
+  Adds authorized topic to Socket's topic list
 
   ## Examples
 
-      iex> Socket.authorize(%Socket{}, "rooms", "lobby")
-      %Socket{channel: "rooms", topic: "lobby", authorized: true}
+      iex> Socket.authorize(%Socket{}, "rooms:lobby")
+      %Socket{topic: "rooms:lobby", authorized: true}
 
   """
-  def authorize(socket, channel, topic) do
-    %Socket{socket | channel: channel, topic: topic, authorized: true}
+  def authorize(socket, topic) do
+    %Socket{socket | topic: topic, authorized: true}
   end
 
   @doc """
-  Deauthorizes channel/topic pair
+  Deauthorizes topic
 
   ## Examples
 
-      iex> socket = Socket.authorize(%Socket{}, "rooms", "lobby")
-      %Socket{channel: "rooms", topic: "lobby", authorized: true}
+      iex> socket = Socket.authorize(%Socket{}, "rooms:lobby")
+      %Socket{topic: "rooms:lobby", authorized: true}
       iex> Socket.deauthorize(socket)
-      %Socket{channel: "rooms", topic: "lobby", authorized: false}
+      %Socket{topic: "rooms:lobby", authorized: false}
 
   """
   def deauthorize(socket) do
@@ -51,21 +59,21 @@ defmodule Phoenix.Socket do
   end
 
   @doc """
-  Checks if a given String channel/topic pair is authorized for this Socket
+  Checks if a given String topic is authorized for this Socket
 
   ## Examples
 
       iex> socket = %Socket{}
-      iex> Socket.authorized?(socket, "rooms", "lobby")
+      iex> Socket.authorized?(socket, "rooms:lobby")
       false
-      iex> socket = Socket.authorize(socket, "rooms", "lobby")
-      %Socket{channel: "rooms", topic: "lobby", authorized: true}
-      iex> Socket.authorized?(socket, "rooms", "lobby")
+      iex> socket = Socket.authorize(socket, "rooms:lobby")
+      %Socket{topic: "rooms:lobby", authorized: true}
+      iex> Socket.authorized?(socket, "rooms:lobby")
       true
 
   """
-  def authorized?(socket, channel, topic) do
-    socket.authorized && socket.channel == channel && socket.topic == topic
+  def authorized?(socket, topic) do
+    socket.authorized && socket.topic == topic
   end
 
   @doc """
@@ -73,8 +81,8 @@ defmodule Phoenix.Socket do
 
   ## Examples
 
-      iex> socket = Socket.set_current_channel(%Socket{}, "rooms", "lobby")
-      %Socket{channel: "rooms", topic: "lobby"}
+      iex> socket = Socket.put_current_topic(%Socket{}, "rooms:lobby")
+      %Socket{topic: "rooms:lobby"}
       iex> socket.assigns[:token]
       nil
       iex> socket = Socket.assign(socket, :token, "bar")

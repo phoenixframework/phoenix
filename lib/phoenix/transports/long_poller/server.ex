@@ -21,6 +21,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
 
   alias Phoenix.Socket.Message
   alias Phoenix.Channel.Transport
+  alias Phoenix.Transports.LongPoller
 
   @doc """
   Starts the Server
@@ -67,7 +68,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   """
   def handle_call({:dispatch, message}, _from, state) do
     message
-    |> Transport.dispatch(state.sockets, self, state.router)
+    |> Transport.dispatch(state.sockets, self, state.router, LongPoller)
     |> case do
       {:ok, sockets} ->
         {:reply, {:ok, sockets}, %{state | sockets: sockets}, state.window_ms}
@@ -79,13 +80,22 @@ defmodule Phoenix.Transports.LongPoller.Server do
   @doc """
   Forwards replied/broadcasted `%Phoenix.Socket.Message{}`s from Channels back to client
   """
-  def handle_info(message = %Message{}, state) do
+  def handle_info({:socket_reply, message = %Message{}}, state) do
     buffer = [message | state.buffer]
     if state.listener && Process.alive?(state.listener) do
       send state.listener, {:messages, buffer}
     end
     {:noreply, %{state | buffer: buffer}, state.window_ms}
   end
+  def handle_info({:socket_broadcast, message = %Message{}}, %{sockets: sockets} = state) do
+    sockets = case Transport.dispatch_broadcast(sockets, message, LongPoller) do
+      {:ok, socks} -> socks
+      {:error, socks, _reason} -> socks
+    end
+
+    {:noreply, %{state | sockets: sockets}, state.window_ms}
+  end
+
 
   def handle_info(:timeout, state) do
     {:stop, :shutdown, state}
@@ -95,7 +105,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   Forwards arbitrary Elixir messages back to listening client
   """
   def handle_info(data, state) do
-    sockets = case Transport.dispatch_info(state.sockets, data) do
+    sockets = case Transport.dispatch_info(state.sockets, data, LongPoller) do
       {:ok, sockets} -> sockets
       {:error, sockets, _reason} -> sockets
     end
@@ -106,7 +116,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   Handles forwarding arbitrary Elixir messages back to listening client
   """
   def terminate(reason, state) do
-    :ok = Transport.dispatch_leave(state.sockets, reason)
+    :ok = Transport.dispatch_leave(state.sockets, reason, LongPoller)
     :ok
   end
 end
