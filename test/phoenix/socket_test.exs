@@ -8,8 +8,8 @@ defmodule Phoenix.SocketTest do
     %Socket{pid: self}
   end
 
-  test "set_current_topic/3 sets the current topic" do
-    socket = new_socket |> Socket.set_current_topic("sometopic:somesubtopic")
+  test "put_current_topic/3 sets the current topic" do
+    socket = new_socket |> Socket.put_current_topic("sometopic:somesubtopic")
     assert socket.topic == "sometopic:somesubtopic"
   end
 

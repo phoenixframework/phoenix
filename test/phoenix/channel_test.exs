@@ -79,7 +79,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "#subscribe/unsubscribe's socket to/from topic" do
-    socket = Socket.set_current_topic(new_socket, "top:subtop")
+    socket = Socket.put_current_topic(new_socket, "top:subtop")
 
     assert Channel.subscribe(socket, "top:subtop")
     assert PubSub.subscribers("top:subtop") == [socket.pid]
@@ -89,7 +89,7 @@ defmodule Phoenix.Channel.ChannelTest do
 
   test "#broadcast broadcasts global message on topic" do
     PubSub.create("top:subtop")
-    socket = Socket.set_current_topic(new_socket, "top:subtop")
+    socket = Socket.put_current_topic(new_socket, "top:subtop")
 
     assert Channel.broadcast(socket, "event", %{foo: "bar"})
   end
@@ -104,7 +104,7 @@ defmodule Phoenix.Channel.ChannelTest do
   test "#broadcast_from broadcasts message on topic, skipping publisher" do
     PubSub.create("top:subtop")
     socket = new_socket
-    |> Socket.set_current_topic("top:subtop")
+    |> Socket.put_current_topic("top:subtop")
     |> Channel.subscribe("top:subtop")
 
     assert Channel.broadcast_from(socket, "event", %{payload: "hello"})
@@ -112,7 +112,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "#broadcast_from raises friendly error when message arg isn't a Map" do
-    socket = Socket.set_current_topic(new_socket, "top:subtop")
+    socket = Socket.put_current_topic(new_socket, "top:subtop")
     message = "Message argument must be a map"
     assert_raise RuntimeError, message, fn ->
       Channel.broadcast_from(socket, "event", bar: "foo", foo: "bar")
@@ -127,7 +127,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "#reply sends response to socket" do
-    socket = Socket.set_current_topic(new_socket, "top:subtop")
+    socket = Socket.put_current_topic(new_socket, "top:subtop")
     assert Channel.reply(socket, "event", %{payload: "hello"})
 
     assert Enum.any?(Process.info(self)[:messages], &match?({:socket_reply, %Message{}}, &1))
@@ -139,7 +139,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "#reply raises friendly error when message arg isn't a Map" do
-    socket = Socket.set_current_topic(new_socket, "top:subtop")
+    socket = Socket.put_current_topic(new_socket, "top:subtop")
     message = "Message argument must be a map"
     assert_raise RuntimeError, message, fn ->
       Channel.reply(socket, "event", foo: "bar", bar: "foo")
@@ -288,7 +288,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "join/3 and incoming/3 match splat topics" do
-    socket = new_socket |> Socket.set_current_topic("topic1:somesubtopic")
+    socket = new_socket |> Socket.put_current_topic("topic1:somesubtopic")
     message = %Message{topic: "topic1:somesubtopic",
                        event: "join",
                        payload: {:ok, socket}}
@@ -315,7 +315,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "join/3 and incoming/3 match bare topics" do
-    socket = new_socket |> Socket.set_current_topic("baretopic")
+    socket = new_socket |> Socket.put_current_topic("baretopic")
     message = %Message{topic: "baretopic",
                        event: "join",
                        payload: {:ok, socket}}
@@ -343,7 +343,7 @@ defmodule Phoenix.Channel.ChannelTest do
 
   test "channel `via:` option filters messages by transport" do
     # via WS
-    socket = new_socket |> Socket.set_current_topic("wsonly:somesubtopic")
+    socket = new_socket |> Socket.put_current_topic("wsonly:somesubtopic")
     message = %Message{topic: "wsonly:somesubtopic",
                        event: "join",
                        payload: {:ok, socket}}
@@ -354,7 +354,7 @@ defmodule Phoenix.Channel.ChannelTest do
     refute_received {:join, "wsonly:somesubtopic"}
 
     # via LP
-    socket = new_socket |> Socket.set_current_topic("lponly:somesubtopic")
+    socket = new_socket |> Socket.put_current_topic("lponly:somesubtopic")
     message = %Message{topic: "lponly:somesubtopic",
                        event: "join",
                        payload: {:ok, socket}}
@@ -373,7 +373,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "socket/3 with alias option" do
-    socket = new_socket |> Socket.set_current_topic("topic2:somesubtopic")
+    socket = new_socket |> Socket.put_current_topic("topic2:somesubtopic")
     message = %Message{topic: "topic2:somesubtopic",
                        event: "join",
                        payload: {:ok, socket}}
@@ -382,7 +382,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "socket/3 with alias applies :alias option" do
-    socket = new_socket |> Socket.set_current_topic("topic3:somesubtopic")
+    socket = new_socket |> Socket.put_current_topic("topic3:somesubtopic")
     message = %Message{topic: "topic3:somesubtopic",
                        event: "join",
                        payload: {:ok, socket}}
@@ -391,7 +391,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "socket/3 with via applies overridable transport filters to all channels" do
-    socket = new_socket |> Socket.set_current_topic("topic2:somesubtopic")
+    socket = new_socket |> Socket.put_current_topic("topic2:somesubtopic")
     message = %Message{topic: "topic2:somesubtopic",
                        event: "join",
                        payload: {:ok, socket}}
@@ -399,7 +399,7 @@ defmodule Phoenix.Channel.ChannelTest do
       Transport.dispatch(message, HashDict.new, self, Router, LongPoller)
     refute_received {:join, "topic2:somesubtopic"}
 
-    socket = new_socket |> Socket.set_current_topic("topic2-override:somesubtopic")
+    socket = new_socket |> Socket.put_current_topic("topic2-override:somesubtopic")
     message = %Message{topic: "topic2-override:somesubtopic",
                        event: "join",
                        payload: {:ok, socket}}

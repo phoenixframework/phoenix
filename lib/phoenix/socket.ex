@@ -17,7 +17,7 @@ defmodule Phoenix.Socket do
   @doc """
   Sets current topic of multiplexed socket connection
   """
-  def set_current_topic(socket, topic) do
+  def put_current_topic(socket, topic) do
     %Socket{socket | topic: topic}
   end
 
@@ -72,7 +72,7 @@ defmodule Phoenix.Socket do
 
   ## Examples
 
-      iex> socket = Socket.set_current_topic(%Socket{}, "rooms:lobby")
+      iex> socket = Socket.put_current_topic(%Socket{}, "rooms:lobby")
       %Socket{topic: "rooms:lobby"}
       iex> socket.assigns[:token]
       nil
