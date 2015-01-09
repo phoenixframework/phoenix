@@ -4,7 +4,7 @@ There are currently three built-in Phoenix-specific mix tasks available to us wi
 $ mix help | grep -i phoenix
 mix phoenix.new       # Creates Phoenix application
 mix phoenix.routes    # Prints all routes
-mix phoenix.start     # Starts application endpoints/workers
+mix phoenix.server    # Starts applications and their servers
 ```
 We have seen all of these at one point or another in the guides, but having all the information about them in one place seems like a good idea. And here we are.
 
@@ -96,37 +96,30 @@ $ mix phoenix.routes TaskTester.Router
 page_path  GET  /  TaskTester.PageController.index/2
 ```
 
-#### `mix phoenix.start`
+#### `mix phoenix.server`
 
-Clearly, this is the task we use to start our application. (The one exception to this came up in the [Deployment Guide](http://www.phoenixframework.org/v0.7.2/docs/deployment). If we start an endpoint in our application's `start/2` function, the `phoenix.start` task will no longer work. Please see the guide for the alternative.)
+This is the task we use to get our application running. It takes no arguments at all. If we pass any in, they will be silently ignored.
 
-This task can take an endpoint, a worker, or a list of wokers as arguments. If we don't pass it anything, the default will be the endpoint Phoenix generated for us.
+```console
+$ mix phoenix.server
+16:09:43.435 [debug] Running TaskTester.Endpoint with Cowboy on port 4000 (http)
+```
+It silently ignores our `DoesNotExist` argument.
+
+```console
+$ mix phoenix.server DoesNotExist
+16:10:17.018 [debug] Running TaskTester.Endpoint with Cowboy on port 4000 (http)
+```
+Prior to the 0.8.x versions of Phoenix, we used the `phoenix.start` task to get our applications running. That task no longer exists, and attempting to run it will cause an error.
 
 ```console
 $ mix phoenix.start
-Running TaskTester.Endpoint with Cowboy on port 4000 (http)
-```
-Alternately, we can specify an endpoint if we want our application to start with a specific one. This can be useful in [umbrella projects](http://elixir-lang.org/getting_started/mix_otp/7.html).
-
-```console
-$ mix phoenix.start TaskTester.Endpoint
-Running TaskTester.Endpoint with Cowboy on port 4000 (http)
-```
-In Phoenix versions previous to the 0.7.x series, we could specify a router when running the `phoenix.start` task. This will now error out because we start applications with endpoints instead of routers.
-
-```console
-$ mix phoenix.start TaskTester.Router
-** (UndefinedFunctionError) undefined function: TaskTester.Router.start/0
-(hello_phoenix) TaskTester.Router.start()
-(elixir) lib/enum.ex:537: Enum."-each/2-lists^foreach/1-0-"/2
-(elixir) lib/enum.ex:537: Enum.each/2
-(phoenix) lib/mix/tasks/phoenix.start.ex:17: Mix.Tasks.Phoenix.Start.run/1
-(mix) lib/mix/cli.ex:55: Mix.CLI.run_task/2
+** (Mix) The task phoenix.start could not be found
 ```
 If we would like to start our application and also have an `iex` session open to it, we can run the mix task within `iex` like this, `iex -S mix phoenix.start`.
 
 ```console
-$ iex -S mix phoenix.start
+$ iex -S mix phoenix.server
 Erlang/OTP 17 [erts-6.3] [source] [64-bit] [smp:4:4] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
 
 Running TaskTester.Endpoint with Cowboy on port 4000 (http)
