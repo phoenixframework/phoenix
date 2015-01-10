@@ -13,11 +13,14 @@ defmodule Phoenix.CodeReloader do
   ## Server delegation
 
   @doc """
-  Reloads code within directories specified in the `:reloadable_paths` config.
+  Reloads code within the paths specified in the `:reloadable_paths` config.
   This is configured in your application environment like:
 
       config :your_app, YourApp.Endpoint,
-        reloadable_paths: ["--elixirc-paths", "web"]
+        reloadable_paths: ["web"]
+
+  Keep in mind that the paths passed to `:reloadable_paths` must be a subset
+  of the paths specified in the `:elixirc_paths` option of `project/0` in mix.exs.
   """
   @spec reload!([binary]) :: :ok | :noop | {:error, binary()}
   defdelegate reload!(paths), to: Phoenix.CodeReloader.Server
@@ -48,8 +51,7 @@ defmodule Phoenix.CodeReloader do
   API used by Plug to invoke the code reloader on every request.
   """
   def call(conn, opts) do
-    reloadable_paths = conn.private.phoenix_endpoint.config(:reloadable_paths)
-    case opts[:reloader].(reloadable_paths) do
+    case opts[:reloader].(reloadable_paths(conn)) do
       {:error, output} ->
         conn
         |> put_resp_content_type("text/html")
@@ -58,6 +60,10 @@ defmodule Phoenix.CodeReloader do
       _ ->
         conn
     end
+  end
+
+  def reloadable_paths(conn) do
+    ["--elixirc-paths"|conn.private.phoenix_endpoint.config(:reloadable_paths)]
   end
 
   defp template(conn, output) do
