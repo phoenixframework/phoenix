@@ -144,7 +144,7 @@ defmodule Phoenix.Channel.Transport do
   end
   defp handle_result(bad_return, _event) do
     raise InvalidReturn, message: """
-      expected {:ok, %Socket{}} | {:leave, %Socket{}, reason} got #{inspect bad_return}
+      expected {:ok, %Socket{}} | {:leave, %Socket{}} got #{inspect bad_return}
     """
   end
 
@@ -180,8 +180,8 @@ defmodule Phoenix.Channel.Transport do
       |> do_dispatch_info(data)
       |> transport_response(sockets)
       |> case do
-       {:ok, sockets}             -> sockets
-       {:error, sockets, _reason} -> sockets
+        {:ok, sockets}             -> sockets
+        {:error, sockets, _reason} -> sockets
       end
     end
 
