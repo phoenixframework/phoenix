@@ -54,11 +54,18 @@ defmodule Mix.Tasks.Phoenix.New do
       target_path = make_destination_path(source_path, source_dir,
                                           target_dir, application_name)
 
-      unless File.dir?(source_path) do
-        contents = fun.(source_path)
-        Mix.Generator.create_file(target_path, contents)
+      cond do
+        File.dir?(source_path) ->
+          File.mkdir_p!(target_path)
+        Path.basename(source_path) == ".keep" ->
+          :ok
+        true ->
+          contents = fun.(source_path)
+          Mix.Generator.create_file(target_path, contents)
       end
     end
+
+    :ok
   end
 
   defp make_destination_path(source_path, source_dir, target_dir, application_name) do

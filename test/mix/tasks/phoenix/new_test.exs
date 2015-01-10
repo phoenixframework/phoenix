@@ -41,8 +41,20 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "test/photo_blog_test.exs"
       assert_file "test/test_helper.exs"
 
-      assert_file "web/controllers/page_controller.ex", ~r/defmodule PhotoBlog.PageController/
+      assert File.exists?("web/channels")
+      refute File.exists?("web/channels/.keep")
+
+      assert_file "web/controllers/page_controller.ex",
+                  ~r/defmodule PhotoBlog.PageController/
+
+      assert File.exists?("web/models")
+      refute File.exists?("web/models/.keep")
+
+      assert_file "web/views/page_view.ex",
+                  ~r/defmodule PhotoBlog.PageView/
+
       assert_file "web/router.ex", ~r/defmodule PhotoBlog.Router/
+      assert_file "web/view.ex", ~r/defmodule PhotoBlog.View/
     end
   end
 
