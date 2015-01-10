@@ -4,11 +4,11 @@
 # This configuration file is loaded before any dependency and
 # is restricted to this project.
 use Mix.Config
-
+<%= if String.contains?(application_module, ".") do %>
 # Configures the namespace used by Phoenix generators
 config :<%= application_name %>,
   phoenix_namespace: <%= application_module %>
-
+<% end %>
 # Configures the endpoint
 config :<%= application_name %>, <%= application_module %>.Endpoint,
   url: [host: "localhost"],

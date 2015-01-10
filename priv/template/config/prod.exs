@@ -16,8 +16,8 @@ config :<%= application_name %>, <%= application_module %>.Endpoint,
   http: [port: System.get_env("PORT")],
   secret_key_base: "<%= secret_key_base %>"
 
-config :logger,
-  level: :info
+# Do not pring debug messages in production
+config :logger, level: :info
 
 # ## Using releases
 #

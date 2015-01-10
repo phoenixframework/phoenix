@@ -8,11 +8,9 @@ defmodule Mix.Tasks.Compile.Phoenix do
 
   @doc false
   def run(_args) do
-    Application.ensure_all_started(:phoenix)
-    if Application.get_env(:phoenix, :code_reloader) do
-      reload()
-    else
-      :noop
+    case touch() do
+      [] -> :noop
+      _  -> :ok
     end
   end
 
@@ -23,13 +21,6 @@ defmodule Mix.Tasks.Compile.Phoenix do
     |> modules_to_file_paths
     |> Stream.each(&File.touch/1)
     |> Enum.to_list()
-  end
-
-  defp reload do
-    case touch() do
-      [] -> :noop
-      _  -> :ok
-    end
   end
 
   defp modules_for_recompilation(modules) do
