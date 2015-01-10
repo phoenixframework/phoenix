@@ -13,10 +13,14 @@ defmodule Phoenix.CodeReloader do
   ## Server delegation
 
   @doc """
-  Reloads code within the `web` directory.
+  Reloads code within directories specified in the `:reloadable_paths` config.
+  This is configured in your application environment like:
+
+      config :your_app, YourApp.Endpoint,
+        reloadable_paths: ["--elixirc-paths", "web"]
   """
-  @spec reload! :: :ok | :noop | {:error, binary()}
-  defdelegate reload!(), to: Phoenix.CodeReloader.Server
+  @spec reload!([binary]) :: :ok | :noop | {:error, binary()}
+  defdelegate reload!(paths), to: Phoenix.CodeReloader.Server
 
   @doc """
   Touches sources that should be recompiled.
@@ -38,13 +42,14 @@ defmodule Phoenix.CodeReloader do
   @doc """
   API used by Plug to start the code reloader.
   """
-  def init(opts), do: Keyword.put_new(opts, :reloader, &Phoenix.CodeReloader.reload!/0)
+  def init(opts), do: Keyword.put_new(opts, :reloader, &Phoenix.CodeReloader.reload!/1)
 
   @doc """
   API used by Plug to invoke the code reloader on every request.
   """
   def call(conn, opts) do
-    case opts[:reloader].() do
+    reloadable_paths = conn.private.phoenix_endpoint.config(:reloadable_paths)
+    case opts[:reloader].(reloadable_paths) do
       {:error, output} ->
         conn
         |> put_resp_content_type("text/html")
