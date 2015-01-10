@@ -54,10 +54,10 @@ defmodule Phoenix.Channel do
 
   Here's an example of receiving an incoming `"new:msg"` event from a one client,
   and broadcasting the message to all topic subscribers for this socket.
-  *Note*: `broadcast/3` and `reply/3` both return the provided `socket`.
 
       def handle_in("new:msg", %{"uid" => uid, "body" => body}, socket) do
         broadcast socket, "new:msg", %{uid: uid, body: body}
+        {:ok, socket}
       end
 
   You can also send a reply directly to the socket:
@@ -65,6 +65,7 @@ defmodule Phoenix.Channel do
       # client asks for their current rank, reply sent directly as new event
       def handle_in("current:rank", socket) do
         reply socket, "current:rank", %{val: Game.get_rank(socket.assigns[:user])}
+        {:ok, socket}
       end
 
 
@@ -74,6 +75,7 @@ defmodule Phoenix.Channel do
   subscribers' `handle_out/3` callback is triggered where the event can be
   relayed as is, or customized on a socket by socket basis to append extra
   information, or conditionally filter the message from being delivered.
+  *Note*: `broadcast/3` and `reply/3` both return `{:ok, socket}`.
 
       def handle_in("new:msg", %{"uid" => uid, "body" => body}, socket) do
         broadcast socket, "new:msg", %{uid: uid, body: body}
@@ -91,7 +93,7 @@ defmodule Phoenix.Channel do
       # is ignoring the user who joined
       def handle_out("user:joined", msg, socket) do
         if User.ignoring?(socket.assigns[:user], msg.user_id) do
-          socket
+          {:ok, socket}
         else
           reply socket, "user:joined", msg
         end

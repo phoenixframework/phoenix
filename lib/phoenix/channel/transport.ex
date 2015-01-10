@@ -18,7 +18,7 @@ defmodule Phoenix.Channel.Transport do
     * Handle receiving incoming, encoded `%Phoenix.Socket.Message{}`'s from
       remote clients, then deserialing and fowarding message through
       `Phoenix.Transport.dispatch/2`. Finish by keeping state of returned
-      HashDict of `%Phoenix.Socket{}`s.
+      HashDict of `%Phoenix.Socket{}`s. Message keys must be deserialized as strings.
     * Handle receiving outgoing `{:socket_reply, %Phoenix.Socket.Message{}}` as
       Elixir process messages, then encoding and fowarding to remote client.
     * Handle receiving outgoing `{:socket_broadcast, %Phoenix.Socket.Message{}}` as
