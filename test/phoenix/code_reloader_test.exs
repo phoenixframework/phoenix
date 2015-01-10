@@ -4,7 +4,7 @@ defmodule Phoenix.CodeReloaderTest do
 
   defmodule Endpoint do
     def config(:reloadable_paths) do
-      ["--elixirc-paths", "web"]
+      ["web"]
     end
   end
 

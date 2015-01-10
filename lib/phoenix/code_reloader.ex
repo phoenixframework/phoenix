@@ -13,11 +13,14 @@ defmodule Phoenix.CodeReloader do
   ## Server delegation
 
   @doc """
-  Reloads code within directories specified in the `:reloadable_paths` config.
+  Reloads code within the paths specified in the `:reloadable_paths` config.
   This is configured in your application environment like:
 
       config :your_app, YourApp.Endpoint,
-        reloadable_paths: ["--elixirc-paths", "web"]
+        reloadable_paths: ["web"]
+
+  Keep in mind that the paths passed to :reloadable_paths must be a subset
+  of the paths specified in the :elixirc_paths option of `project/0` in mix.exs.
   """
   @spec reload!([binary]) :: :ok | :noop | {:error, binary()}
   defdelegate reload!(paths), to: Phoenix.CodeReloader.Server
