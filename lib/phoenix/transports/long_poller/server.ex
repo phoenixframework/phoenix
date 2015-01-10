@@ -102,17 +102,6 @@ defmodule Phoenix.Transports.LongPoller.Server do
   end
 
   @doc """
-  Forwards arbitrary Elixir messages back to listening client
-  """
-  def handle_info(data, state) do
-    sockets = case Transport.dispatch_info(state.sockets, data) do
-      {:ok, sockets} -> sockets
-      {:error, sockets, _reason} -> sockets
-    end
-    {:noreply, %{state | sockets: sockets}, state.window_ms}
-  end
-
-  @doc """
   Handles forwarding arbitrary Elixir messages back to listening client
   """
   def terminate(reason, state) do

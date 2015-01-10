@@ -103,11 +103,6 @@ defmodule Phoenix.Channel do
    but you'll need to define the catch-all clause yourself once you define an
    `handle_out/3` clause.
 
-  ### Elixir Process Messages
-  When the underlying Transport adapter receives an Elixir process message, it
-  forwards the message to the channels for *all* its multiplexed sockets, by
-  invoking the the `handle_info/2` callback in each channel.
-
   """
 
   use Behaviour
@@ -128,10 +123,6 @@ defmodule Phoenix.Channel do
                                                                    {:leave, Socket.t} |
                                                                    {:error, Socket.t, reason :: term}
 
-  defcallback handle_info(msg :: term, Socket.t) :: {:ok, Socket.t} |
-                                                    {:leave, Socket.t} |
-                                                    {:error, Socket.t, reason :: term}
-
   defmacro __using__(_options) do
     quote do
       @behaviour unquote(__MODULE__)
@@ -142,9 +133,8 @@ defmodule Phoenix.Channel do
       def handle_out(event, message, socket) do
         reply(socket, event, message)
       end
-      def handle_info(message, socket), do: {:ok, socket}
 
-      defoverridable leave: 2, handle_out: 3, handle_info: 2
+      defoverridable leave: 2, handle_out: 3
     end
   end
 

@@ -25,9 +25,6 @@ defmodule Phoenix.Channel.Transport do
       Elixir process messages, then forwarding message through
       `Phoenix.Transport.dispatch_broadcast/2`. Finish by keeping state of returned
       HashDict of `%Phoenix.Socket{}`s.
-    * Handle receiving arbitrary Elixir messages and fowarding through
-      `Phoenix.Transport.dispatch_info/2`. Finish by keeping state of returned
-      HashDict of `%Phoenix.Socket{}`s.
     * Handle remote client disconnects and relaying event through
       `Phoenix.Transport.dispatch_leave/2`
 
@@ -166,31 +163,6 @@ defmodule Phoenix.Channel.Transport do
         |> handle_result(event)
         |> transport_response(sockets)
     end
-  end
-
-  @doc """
-  Arbitrary Elixir processes are received by adapters and forwarded through
-  this function to be dispatched as `"info"` events on each socket channel.
-
-  The returned `HashDict` of `%Phoenix.Socket{}`s must be held by the adapter
-  """
-  def dispatch_info(sockets, data) do
-    sockets = Enum.reduce sockets, sockets, fn {_, socket}, sockets ->
-      socket
-      |> do_dispatch_info(data)
-      |> transport_response(sockets)
-      |> case do
-        {:ok, sockets}             -> sockets
-        {:error, sockets, _reason} -> sockets
-      end
-    end
-
-    {:ok, sockets}
-  end
-  defp do_dispatch_info(%Socket{topic: topic, transport: transport} = socket, data) do
-    socket
-    |> socket.router.match_channel(:info, topic, "info", data, transport)
-    |> handle_result("info")
   end
 
   @doc """

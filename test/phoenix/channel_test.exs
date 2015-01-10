@@ -32,10 +32,6 @@ defmodule Phoenix.Channel.ChannelTest do
         {:ok, socket}
       end
     end
-    def handle_info(msg, socket) do
-      send socket.pid, :info
-      msg.(socket)
-    end
 
     def handle_in("some:event", _msg, socket) do
       send socket.pid, {:handle_in, socket.topic}
@@ -245,15 +241,6 @@ defmodule Phoenix.Channel.ChannelTest do
     assert PubSub.subscribers("topic1:subtopic") == []
   end
 
-  test "#info is called when receiving regular process messages" do
-    message = join_message(fn socket -> {:ok, socket} end)
-    # join
-    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
-    # info
-    Transport.dispatch_info(sockets, fn socket -> {:ok, socket} end)
-    assert_received :info
-  end
-
   test "#join raise InvalidReturn exception when return type invalid" do
     message = join_message(fn _socket -> :badreturn end)
 
@@ -296,18 +283,6 @@ defmodule Phoenix.Channel.ChannelTest do
     assert {:ok, sockets} = Transport.dispatch(msg, HashDict.new, self, Router, WebSocket)
     assert_received {:socket_reply, %Message{topic: "phoenix", event: "heartbeat"}}
     assert sockets == HashDict.new
-  end
-
-  test "socket state can change when receiving regular process messages" do
-    message = join_message(fn socket -> {:ok, socket} end)
-
-    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
-    {:ok, sockets} = Transport.dispatch_info(sockets, fn socket ->
-      {:ok, Socket.assign(socket, :foo, :bar)}
-    end)
-    socket = HashDict.get(sockets, "topic1:subtopic")
-
-    assert socket.assigns[:foo] == :bar
   end
 
   test "Socket state can be put and retrieved" do

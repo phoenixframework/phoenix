@@ -69,20 +69,6 @@ defmodule Phoenix.Transports.WebSocket do
   end
 
   @doc """
-  Handles Elixir messages sent to the socket process
-
-  Dispatches `"info"` event back through Tranport layer to all socket's channels
-  """
-  def ws_info(data, state = %{sockets: sockets}) do
-    sockets = case Transport.dispatch_info(sockets, data) do
-      {:ok, socks} -> socks
-      {:error, socks, _reason} -> socks
-    end
-
-    %{state | sockets: sockets}
-  end
-
-  @doc """
   Called on WS close. Dispatches the `leave` event back through Transport layer
   """
   def ws_terminate(reason, %{sockets: sockets}) do
