@@ -20,7 +20,7 @@ defmodule MixHelper do
   def assert_file(file, match) do
     cond do
       Regex.regex?(match) ->
-        assert_file file, &(&1 =~ match)
+        assert_file file, &(assert &1 =~ match)
       is_function(match, 1) ->
         assert_file(file)
         match.(File.read!(file))

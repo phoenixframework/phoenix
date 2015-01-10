@@ -3,39 +3,42 @@
 ## v0.8.0-dev
 
 * Enhancements
-  * [Router] `protect_from_forgery` has been added to the Router for CSRF protection. This is automatically plugged in new projects. See [this example](https://github.com/phoenixframework/phoenix/blob/ce5ebf3d9de4412a18e6325cd0d34e1b9699fb5a/priv/template/web/router.ex#L7) for plugging in your existing router pipeline(s).
-  * [Router] New `socket` macro allows scoping channels to different transports and mounting multiple socket endpoints.
-  * [Channels] The "topic" abstraction has been refined to be a simple string identifier to provide more direct integration with the `Phoenix.PubSub` layer.
-  * [Channels] Channels can now intercept outgoing messages and customize the broadcast for a socket-by-socket customization, message dropping, etc.
-  * [Channels] A channel can be left by returning `{:leave, socket}` from a channel callback to unsubscribe from the channel.
+  * [Router] `protect_from_forgery` has been added to the Router for CSRF protection. This is automatically plugged in new projects. See [this example](https://github.com/phoenixframework/phoenix/blob/ce5ebf3d9de4412a18e6325cd0d34e1b9699fb5a/priv/template/web/router.ex#L7) for plugging in your existing router pipeline(s)
+  * [Router] New `socket` macro allows scoping channels to different transports and mounting multiple socket endpoints
+  * [Channels] The "topic" abstraction has been refined to be a simple string identifier to provide more direct integration with the `Phoenix.PubSub` layer
+  * [Channels] Channels can now intercept outgoing messages and customize the broadcast for a socket-by-socket customization, message dropping, etc
+  * [Channels] A channel can be left by returning `{:leave, socket}` from a channel callback to unsubscribe from the channel
+  * [Endpoint] Allow the reloadable paths to be configured in the endpoint
+  * [Mix] Allow the code generation namespace to be configured with the `:app_namespace` option
 
 * Bug Fixes
-  * [Channel] Fix WebSocket Heartbeat causing unnecessary `%Phoenix.Socket{}`'s to be tracked and leave errors on disconnect.
+  * [Channel] Fix WebSocket heartbeat causing unnecessary `%Phoenix.Socket{}`'s to be tracked and leave errors on disconnect
+  * [Mix] Ensure Phoenix can serve and code reload inside umbrella apps
 
 * Backwards incompatible changes
-  * Endpoints should now be explicitly started in your application supervision tree. Just add `worker(YourApp.Endpoint, [])` to your supervision tree in `lib/your_app.ex`
+  * [Endpoint] Endpoints should now be explicitly started in your application supervision tree. Just add `worker(YourApp.Endpoint, [])` to your supervision tree in `lib/your_app.ex`
   * `mix phoenix.start` was renamed to `mix phoenix.server`
-  * The `YourApp.Endpoint.start/0` function was removed. You can simply remove it from your `test/test_helper.ex` file
-  * Generated named paths now expect a conn arg. For example, `MyApp.Router.Helpers.page_path(conn, :show, "hello")` instead of `MyApp.Router.Helpers.page_path(:show, "hello")`
-  * [Controller] `Phoenix.Controller.Flash` has been removed in favor of `fetch_flash/2`, `get_flash/2`, and `put_flash/2` functions on `Phoenix.Controller`.
-* [Router] `Phoenix.Router.Socket` has been removed in favor of new `Phoenix.Router.socket/2` macro.
-* [Router] The `channel` macro now requires a topic pattern to be used to match incoming channel messages to a channel handler. See `Phoenix.Router.channel/2` for details.
-* [Channel] The `event/3` callback has been renamed to `handle_in/3` and the argument order has changed to `def handle_in("some:event", msg, socket)`
-* [Channel] Channel callback return signatures have changed and now require `{:ok, socket} | {:leave, socket| | {:error, socket, reason}`. `terminate/2` and `hibernate/2` have also been removed.
+  * [Endpoint] The `YourApp.Endpoint.start/0` function was removed. You can simply remove it from your `test/test_helper.ex` file
+  * [Router] Generated named paths now expect a conn arg. For example, `MyApp.Router.Helpers.page_path(conn, :show, "hello")` instead of `MyApp.Router.Helpers.page_path(:show, "hello")`
+  * [Controller] `Phoenix.Controller.Flash` has been removed in favor of `fetch_flash/2`, `get_flash/2`, and `put_flash/2` functions on `Phoenix.Controller`
+  * [Router] `Phoenix.Router.Socket` has been removed in favor of new `Phoenix.Router.socket/2` macro.
+  * [Router] The `channel` macro now requires a topic pattern to be used to match incoming channel messages to a channel handler. See `Phoenix.Router.channel/2` for details.
+  * [Channel] The `event/3` callback has been renamed to `handle_in/3` and the argument order has changed to `def handle_in("some:event", msg, socket)`
+  * [Channel] Channel callback return signatures have changed and now require `{:ok, socket} | {:leave, socket| | {:error, socket, reason}`. `terminate/2` and `hibernate/2` have also been removed.
 
 
 ## v0.7.2 (2014-12-11)
 
 * Enhancements
-  * Update Plug to `0.9.0`. You can now remove the Plug git dep from your `mix.exs`.
+  * [Mix] Update Plug to `0.9.0`. You can now remove the Plug git dep from your `mix.exs`.
 
 * Bug fixes
-  * Ensure CodeReloader is removed fron Endpoint when disabled
+  * [Endpoint] Ensure CodeReloader is removed fron Endpoint when disabled
 
 ## v0.7.1 (2014-12-09)
 
 * Bug fixes
-  * Include Plug dep in new project generation since it's a github dep until next Plug release.
+  * [Phoenix] Include Plug dep in new project generation since it's a github dep until next Plug release.
 
 ## v0.7.0 (2014-12-09)
 See these [`0.6.x` to `0.7.0` upgrade instructions](https://gist.github.com/chrismccord/c24b2b516066d987f4fe) to bring your existing apps up to speed.

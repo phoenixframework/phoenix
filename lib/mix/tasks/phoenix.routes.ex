@@ -10,6 +10,17 @@ defmodule Mix.Tasks.Phoenix.Routes do
       $ mix phoenix.routes
       $ mix phoenix.routes MyApp.AnotherRouter
 
+  The default router is inflected from the application
+  name unless a configuration named `:app_namespace`
+  is set inside your application configuration. For example,
+  the configuration:
+
+      config :my_app,
+        app_namespace: My.App
+
+  will exhibit the routes for `My.App.Router` when this
+  task is invoked without arguments.
+
   Umbrella projects do not have a default router and
   therefore always expect a router to be given.
   """

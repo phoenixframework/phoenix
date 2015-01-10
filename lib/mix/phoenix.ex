@@ -6,13 +6,13 @@ defmodule Mix.Phoenix do
   Returns the module base name based on the configuration value.
 
       config :my_app
-        phoenix_namespace: My.App
+        app_namespace: My.App
 
   """
   def base do
     app = Mix.Project.config |> Keyword.fetch!(:app)
 
-    case Application.get_env(app, :phoenix_namespace, app) do
+    case Application.get_env(app, :app_namespace, app) do
       ^app -> app |> to_string |> Phoenix.Naming.camelize
       mod  -> mod |> inspect
     end
