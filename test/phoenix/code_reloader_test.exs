@@ -2,29 +2,37 @@ defmodule Phoenix.CodeReloaderTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
+  defmodule Endpoint do
+    def config(:reloadable_paths) do
+      ["--elixirc-paths", "web"]
+    end
+  end
+
   test "touch/0 touches and returns touched files" do
     assert Phoenix.CodeReloader.touch == []
   end
 
-  test "reload!/0 sends recompilation through GenServer" do
-    assert Phoenix.CodeReloader.reload! == :noop
+  test "reload!/1 sends recompilation through GenServer" do
+    assert Phoenix.CodeReloader.reload!([]) == :noop
   end
-
-  def reload! do
-    Process.get(:code_reloader)
-  end
-
-  @opts Phoenix.CodeReloader.init(reloader: &__MODULE__.reload!/0)
 
   test "reloads on every request" do
-    Process.put(:code_reloader, :ok)
-    conn = Phoenix.CodeReloader.call(conn(:get, "/"), @opts)
+    opts = Phoenix.CodeReloader.init([])
+    conn = conn(:get, "/")
+           |> Plug.Conn.put_private(:phoenix_endpoint, Endpoint)
+           |> Phoenix.CodeReloader.call(opts)
     assert conn.state == :unset
   end
 
+  def reload!(_) do
+    {:error, "oops"}
+  end
+
   test "render compilation error on failure" do
-    Process.put(:code_reloader, {:error, "oops"})
-    conn = Phoenix.CodeReloader.call(conn(:get, "/"), @opts)
+    opts = Phoenix.CodeReloader.init(reloader: &__MODULE__.reload!/1)
+    conn = conn(:get, "/")
+           |> Plug.Conn.put_private(:phoenix_endpoint, Endpoint)
+           |> Phoenix.CodeReloader.call(opts)
     assert conn.state  == :sent
     assert conn.status == 500
     assert conn.resp_body =~ "oops"

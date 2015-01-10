@@ -10,8 +10,8 @@ defmodule Phoenix.CodeReloader.Server do
     GenServer.start_link __MODULE__, [], name: __MODULE__
   end
 
-  def reload! do
-    GenServer.call __MODULE__, :reload!, :infinity
+  def reload!(paths) do
+    GenServer.call __MODULE__, {:reload!, paths}, :infinity
   end
 
   def touch do
@@ -28,9 +28,9 @@ defmodule Phoenix.CodeReloader.Server do
     {:ok, :nostate}
   end
 
-  def handle_call(:reload!, from, state) do
+  def handle_call({:reload!, paths}, from, state) do
     froms = all_waiting([from])
-    reply = mix_compile(Code.ensure_loaded(Mix.Task))
+    reply = mix_compile(Code.ensure_loaded(Mix.Task), paths)
     Enum.each(froms, &GenServer.reply(&1, reply))
     {:noreply, state}
   end
@@ -43,20 +43,20 @@ defmodule Phoenix.CodeReloader.Server do
     end
   end
 
-  defp mix_compile({:error, _reason}) do
+  defp mix_compile({:error, _reason}, _) do
     Logger.error "If you want to use the code reload plug in production or " <>
                  "inside an escript, add :mix to your list of dependencies or " <>
                  "disable code reloading"
   end
 
-  defp mix_compile({:module, Mix.Task}) do
+  defp mix_compile({:module, Mix.Task}, paths) do
     touch()
     Mix.Task.reenable "compile.elixir"
 
     {res, out} =
       proxy_io(fn ->
         try do
-          Mix.Task.run "compile.elixir", ["--elixirc-paths", "web"]
+          Mix.Task.run "compile.elixir", paths
         catch
           _, _ -> :error
         end
