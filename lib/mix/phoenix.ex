@@ -19,7 +19,7 @@ defmodule Mix.Phoenix do
   end
 
   @doc """
-  Returns all modules in a project.
+  Returns all compiled modules in a project.
   """
   def modules do
     Mix.Project.compile_path

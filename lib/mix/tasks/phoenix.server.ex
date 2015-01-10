@@ -2,7 +2,6 @@ defmodule Mix.Tasks.Phoenix.Server do
   use Mix.Task
 
   @shortdoc "Starts applications and their servers"
-  @recursive true
 
   @moduledoc """
   Starts the application by configuring all endpoints servers to run.

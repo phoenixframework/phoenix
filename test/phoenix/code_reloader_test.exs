@@ -8,8 +8,8 @@ defmodule Phoenix.CodeReloaderTest do
     end
   end
 
-  test "touch/0 touches and returns touched files" do
-    assert Phoenix.CodeReloader.touch == []
+  test "task touches files" do
+    assert Mix.Tasks.Compile.Phoenix.run([]) == :noop
   end
 
   test "reload!/1 sends recompilation through GenServer" do
