@@ -25,7 +25,12 @@ defmodule Phoenix.Channel.ChannelTest do
       msg.(socket)
     end
     def leave(_msg, socket) do
-      Process.get(:leave).(socket)
+      send socket.pid, :leave_triggered
+      if on_leave = Process.get(:leave) do
+        on_leave.(socket)
+      else
+        {:ok, socket}
+      end
     end
     def handle_info(msg, socket) do
       send socket.pid, :info
@@ -44,10 +49,17 @@ defmodule Phoenix.Channel.ChannelTest do
       send socket.pid, socket.assigns[key]
       {:ok, socket}
     end
+    def handle_in("should:be:going", _msg, socket) do
+      {:leave, socket}
+    end
 
     def handle_out("some:broadcast", _msg, socket) do
       send socket.pid, :handle_out
       {:ok, socket}
+    end
+    def handle_out("everyone:leave", _msg, socket) do
+      send socket.pid, :everyone_leaving
+      {:leave, socket}
     end
     def handle_out(event, message, socket) do
       reply(socket, event, message)
@@ -159,7 +171,44 @@ defmodule Phoenix.Channel.ChannelTest do
 
   test "#leave can be overridden" do
     Process.put(:leave, fn _ -> :overridden end)
-    assert MyChannel.leave(new_socket, []) == :overridden
+    assert MyChannel.leave(%{}, new_socket) == :overridden
+  end
+
+  test "handle_in and handle_out callbacks can return {:leave, socket} to leave channel" do
+    # join
+    join = fn ->
+      message = join_message(fn socket -> {:ok, socket} end)
+      PubSub.create("topic1:subtopic")
+      assert PubSub.subscribers("topic1:subtopic") == []
+      Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    end
+
+    # incoming leave
+    {:ok, sockets} = join.()
+    assert HashDict.get(sockets, "topic1:subtopic")
+    assert PubSub.subscribers("topic1:subtopic") == [self]
+    # send message that returns {:leave, socket} now that we've joined
+    message = %Message{topic: "topic1:subtopic",
+                       event: "should:be:going",
+                       payload: %{}}
+    {:ok, socks} = Transport.dispatch(message, sockets, self, Router, WebSocket)
+    refute HashDict.get(socks, "topic1:subtopic")
+    assert socks == HashDict.new
+    assert PubSub.subscribers("topic1:subtopic") == []
+    assert_received :leave_triggered
+
+    # outgoing leave
+    {:ok, sockets} = join.()
+    assert HashDict.get(sockets, "topic1:subtopic")
+    assert PubSub.subscribers("topic1:subtopic") == [self]
+    # send broadcast that returns {:leave, socket} now that we've joined
+    msg = %Message{event: "everyone:leave", topic: "topic1:subtopic", payload: %{}}
+    {:ok, sockets} = Transport.dispatch_broadcast(sockets, msg)
+    refute HashDict.get(sockets, "topic1:subtopic")
+    assert sockets == HashDict.new
+    assert PubSub.subscribers("topic1:subtopic") == []
+    assert_received :everyone_leaving
+    assert_received :leave_triggered
   end
 
   test "successful join authorizes and subscribes socket to topic" do
