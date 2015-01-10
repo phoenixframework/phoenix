@@ -47,34 +47,3 @@ We appreciate any contribution to Phoenix, so check out our [CONTRIBUTING.md](CO
   [1]: https://github.com/phoenixframework/phoenix/issues
   [2]: http://groups.google.com/group/phoenix-talk
   [3]: http://groups.google.com/group/phoenix-core
-
-
-## Feature Roadmap
-- Robust Routing DSL
-  - [x] GET/POST/PUT/PATCH/DELETE macros
-  - [x] Named route helpers
-  - [x] resource routing for RESTful endpoints
-  - [x] Scoped definitions
-  - [ ] Member/Collection resource  routes
-- Configuration
-  - [x] Environment based configuration with ExConf
-  - [x] Integration with config.exs
-- Middleware
-  - [x] Plug Based Connection handling
-  - [x] Code Reloading
-  - [x] Environment Based logging with log levels with Elixir's Logger
-  - [x] Static File serving
-- Controllers
-  - [x] html/json/text helpers
-  - [x] redirects
-  - [x] Plug layer for action hooks
-  - [x] Error page handling
-  - [x] Error page handling per env
-- Views
-  - [x] Precompiled View handling
-  - [x] I18n
-- Realtime
-  - [x] Websocket multiplexing/channels
-  - [x] Browser js client
-  - [ ] iOS client (WIP)
-  - [ ] Android client
