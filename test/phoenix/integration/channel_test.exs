@@ -33,12 +33,10 @@ defmodule Phoenix.Integration.ChannelTest do
 
     def leave(_message, socket) do
       reply socket, "you:left", %{message: "bye!"}
-      socket
     end
 
     def handle_in("new:msg", message, socket) do
       broadcast socket, "new:msg", message
-      socket
     end
   end
 
@@ -166,7 +164,7 @@ defmodule Phoenix.Integration.ChannelTest do
     assert resp.status == 204
 
     # generic events
-    Phoenix.Channel.subscribe(self, "rooms:lobby")
+    Phoenix.PubSub.subscribe(self, "rooms:lobby")
     {resp, cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:lobby",
                                                        "event" => "new:msg",
                                                        "payload" => %{"body" => "hi!"}}
@@ -176,7 +174,7 @@ defmodule Phoenix.Integration.ChannelTest do
     assert resp.status == 200
 
     # unauthorized events
-    Phoenix.Channel.subscribe(self, "rooms:private-room")
+    Phoenix.PubSub.subscribe(self, "rooms:private-room")
     {resp, cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:private-room",
                                                        "event" => "new:msg",
                                                        "payload" => %{"body" => "this method shouldn't send!'"}}
@@ -218,7 +216,7 @@ defmodule Phoenix.Integration.ChannelTest do
                                                        "event" => "join",
                                                        "payload" => %{}}
     assert resp.status == 200
-    Phoenix.Channel.subscribe(self, "rooms:lobby")
+    Phoenix.PubSub.subscribe(self, "rooms:lobby")
     :timer.sleep @ensure_window_timeout_ms
     {resp, _cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:lobby",
                                                         "event" => "new:msg",

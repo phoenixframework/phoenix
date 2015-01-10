@@ -101,6 +101,11 @@ defmodule Phoenix.Channel do
    but you'll need to define the catch-all clause yourself once you define an
    `handle_out/3` clause.
 
+  ### Elixir Process Messages
+  When the underlying Transport adapter receives an Elixir process message, it
+  forwards the message to the channels for *all* its multiplexed sockets, by
+  invoking the the `handle_info/2` callback in each channel.
+
   """
 
   use Behaviour
@@ -111,11 +116,19 @@ defmodule Phoenix.Channel do
   defcallback join(topic :: binary, auth_msg :: map, Socket.t) :: {:ok, Socket.t} |
                                                                   {:error, Socket.t, reason :: term}
 
-  defcallback leave(message :: map, Socket.t) :: Socket.t
+  defcallback leave(msg :: map, Socket.t) :: {:ok, Socket.t}
 
-  defcallback handle_in(topic :: binary, message :: map, Socket.t) :: Socket.t
+  defcallback handle_in(topic :: binary, msg :: map, Socket.t) :: {:ok, Socket.t} |
+                                                                  {:leave, Socket.t} |
+                                                                  {:error, Socket.t, reason :: term}
 
-  defcallback handle_out(topic :: binary, message :: map, Socket.t) :: Socket.t
+  defcallback handle_out(topic :: binary, msg :: map, Socket.t) :: {:ok, Socket.t} |
+                                                                   {:leave, Socket.t} |
+                                                                   {:error, Socket.t, reason :: term}
+
+  defcallback handle_info(msg :: term, Socket.t) :: {:ok, Socket.t} |
+                                                    {:leave, Socket.t} |
+                                                    {:error, Socket.t, reason :: term}
 
   defmacro __using__(_options) do
     quote do
@@ -123,43 +136,14 @@ defmodule Phoenix.Channel do
       import unquote(__MODULE__)
       import Phoenix.Socket
 
-      def leave(message, socket), do: socket
+      def leave(message, socket), do: {:ok, socket}
       def handle_out(event, message, socket) do
         reply(socket, event, message)
-        socket
       end
-      defoverridable leave: 2, handle_out: 3
+      def handle_info(message, socket), do: {:ok, socket}
+
+      defoverridable leave: 2, handle_out: 3, handle_info: 2
     end
-  end
-
-
-  # TODO: Move this to pubsub
-  @doc """
-  Subscribes socket to given topic
-  Returns `%Phoenix.Socket{}`
-  """
-  def subscribe(pid, topic) when is_pid(pid) do
-    PubSub.subscribe(pid, topic)
-  end
-  def subscribe(socket, topic) do
-    if !Socket.authorized?(socket, topic) do
-      PubSub.subscribe(socket.pid, topic)
-      Socket.authorize(socket, topic)
-    else
-      socket
-    end
-  end
-
-  @doc """
-  Unsubscribes socket from given topic
-  Returns `%Phoenix.Socket{}`
-  """
-  def unsubscribe(pid, topic) when is_pid(pid) do
-    PubSub.unsubscribe(pid, topic)
-  end
-  def unsubscribe(socket, topic) do
-    PubSub.unsubscribe(socket.pid, topic)
-    Socket.deauthorize(socket)
   end
 
   @doc """
@@ -179,6 +163,7 @@ defmodule Phoenix.Channel do
 
   def broadcast(socket = %Socket{}, event, message) do
     broadcast_from :global, socket.topic, event, message
+    {:ok, socket}
   end
 
   @doc """
@@ -194,6 +179,7 @@ defmodule Phoenix.Channel do
   """
   def broadcast_from(socket = %Socket{}, event, message) do
     broadcast_from(socket.pid, socket.topic, event, message)
+    {:ok, socket}
   end
   def broadcast_from(from, topic, event, message) when is_map(message) do
     PubSub.create(topic)
@@ -214,19 +200,9 @@ defmodule Phoenix.Channel do
       event: event,
       payload: message
     }}
-    socket
+    {:ok, socket}
   end
   def reply(_, _, _), do: raise_invalid_message
-
-  @doc """
-  Terminates socket connection, including all multiplexed channels
-  """
-  def terminate(socket), do: send(socket.pid, :shutdown)
-
-  @doc """
-  Hibernates socket connection
-  """
-  def hibernate(socket), do: send(socket.pid, :hibernate)
 
   defp raise_invalid_message, do: raise "Message argument must be a map"
 end

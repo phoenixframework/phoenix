@@ -88,7 +88,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
     {:noreply, %{state | buffer: buffer}, state.window_ms}
   end
   def handle_info({:socket_broadcast, message = %Message{}}, %{sockets: sockets} = state) do
-    sockets = case Transport.dispatch_broadcast(sockets, message, LongPoller) do
+    sockets = case Transport.dispatch_broadcast(sockets, message) do
       {:ok, socks} -> socks
       {:error, socks, _reason} -> socks
     end
@@ -105,7 +105,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   Forwards arbitrary Elixir messages back to listening client
   """
   def handle_info(data, state) do
-    sockets = case Transport.dispatch_info(state.sockets, data, LongPoller) do
+    sockets = case Transport.dispatch_info(state.sockets, data) do
       {:ok, sockets} -> sockets
       {:error, sockets, _reason} -> sockets
     end
@@ -116,7 +116,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   Handles forwarding arbitrary Elixir messages back to listening client
   """
   def terminate(reason, state) do
-    :ok = Transport.dispatch_leave(state.sockets, reason, LongPoller)
+    :ok = Transport.dispatch_leave(state.sockets, reason)
     :ok
   end
 end

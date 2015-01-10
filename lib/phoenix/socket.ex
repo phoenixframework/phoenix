@@ -10,6 +10,7 @@ defmodule Phoenix.Socket do
   * `router` - The router module where this socket originated
   * `authorized` - The boolean authorization status, default `false`
   * `assigns` - The map of socket assigns, default: `%{}`
+  * `transport` - The socket's Transport, ie: `Phoenix.Transports.WebSocket`
 
   """
 
@@ -20,6 +21,7 @@ defmodule Phoenix.Socket do
             topic: nil,
             router: nil,
             authorized: false,
+            transport: nil,
             assigns: %{}
 
 

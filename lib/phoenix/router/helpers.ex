@@ -177,6 +177,10 @@ defmodule Phoenix.Router.Helpers do
       def match_channel(socket, :outgoing, unquote(topic_match), event, msg_payload, _transport) do
         apply(unquote(module), :handle_out, [event, msg_payload, socket])
       end
+      def match_channel(socket, :info, unquote(topic_match), _event, msg_payload, transport)
+        when transport in unquote(transports) do
+        apply(unquote(module), :handle_info, [msg_payload, socket])
+      end
     end
   end
 end

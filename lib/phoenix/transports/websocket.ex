@@ -56,7 +56,7 @@ defmodule Phoenix.Transports.WebSocket do
   Receives `%Phoenix.Socket.Message{}` and sends encoded message JSON to client
   """
   def ws_info({:socket_broadcast, message = %Message{}}, state = %{sockets: sockets}) do
-    sockets = case Transport.dispatch_broadcast(sockets, message, __MODULE__) do
+    sockets = case Transport.dispatch_broadcast(sockets, message) do
       {:ok, socks} -> socks
       {:error, socks, _reason} -> socks
     end
@@ -74,7 +74,7 @@ defmodule Phoenix.Transports.WebSocket do
   Dispatches `"info"` event back through Tranport layer to all socket's channels
   """
   def ws_info(data, state = %{sockets: sockets}) do
-    sockets = case Transport.dispatch_info(sockets, data, __MODULE__) do
+    sockets = case Transport.dispatch_info(sockets, data) do
       {:ok, socks} -> socks
       {:error, socks, _reason} -> socks
     end
@@ -86,7 +86,7 @@ defmodule Phoenix.Transports.WebSocket do
   Called on WS close. Dispatches the `leave` event back through Transport layer
   """
   def ws_terminate(reason, %{sockets: sockets}) do
-    :ok = Transport.dispatch_leave(sockets, reason, __MODULE__)
+    :ok = Transport.dispatch_leave(sockets, reason)
     :ok
   end
 
