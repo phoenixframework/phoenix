@@ -1,6 +1,7 @@
 # Changelog
 
 ## v0.8.0 (2015-1-11)
+See these [`0.7.x` to `0.8.0` upgrade instructions](https://gist.github.com/chrismccord/9434b8fa208b3aae22b6) to bring your existing apps up to speed.
 
 * Enhancements
   * [Router] `protect_from_forgery` has been added to the Router for CSRF protection. This is automatically plugged in new projects. See [this example](https://github.com/phoenixframework/phoenix/blob/ce5ebf3d9de4412a18e6325cd0d34e1b9699fb5a/priv/template/web/router.ex#L7) for plugging in your existing router pipeline(s)
