@@ -185,3 +185,85 @@ If we look at `web/templates/layout/application.html.eex`, just about in the mid
 <%= @inner %>
 ```
 This is where the rendered string from the template will be placed.
+
+###The ErrorView
+
+Phoenix recently added a new individual view to every generated application, the `ErrorView` which lives here `web/views/error_view.ex`. The purpose of the `ErrorView` is to handle two of the most common errors - `404 not found` and `500 internal error` - in a general way, from one centralized location. Let's see what it looks like.
+
+```elixir
+defmodule HelloPhoenix.ErrorView do
+  use HelloPhoenix.View
+
+  def render("404.html", _assigns) do
+    "Page not found - 404"
+  end
+
+  def render("500.html", _assigns) do
+    "Server internal error - 500"
+  end
+
+  # Render all other templates as 500
+  def render(_, assigns) do
+    render "500.html", assigns
+  end
+end
+```
+Before we dive into this, let's see what the rendered `404 not found` message looks like in a browser. Let's go to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path) for a running local application and see what we get.
+
+Ok, that's not very exciting. We get the bare string "Page not found - 404", displayed without a layout.
+
+Let's see if we can use what we already know about views to make this a more interesting error page.
+
+The first question is, where does that error string come from? The answer is right in the `ErrorView`.
+
+```elixir
+def render("404.html", _assigns) do
+  "Page not found - 404"
+end
+```
+Great, so we have a `render/2` function that takes a template and an `assigns` map, which we ignore. Where is this `render/2` function being called from?
+
+The answer is the `render/4` function defined in the `Phoenix.Endpoint.ErrorHandler` module. The whole purpose of this module is to catch errors and render them with a view, in our case, the `HelloPhoenix.ErrorView`.
+
+The `Endpoint.ErrorHandler` has determined that our request with the silly path has led to a `404 not found` error. Our request is rendered through the `:browser` pipeline, meaning our format is `HTML`. This makes the `ErrorHandler` try to render a template called "404.html". That, in turn makes this clause of `render/2` match.
+
+Now that we understand how we got here, let's make a better error page.
+
+If we look in the `web/templates/page` directory, we'll see two templates which are unused in a new application, `not_found.html.eex` and `error.html.eex`. We can make use of these now.
+
+First, let's add a little markup to our `not_found.html.eex` template, changing it from this:
+```
+The page you are looking for does not exist
+```
+to this:
+
+```html
+<div class="jumbotron">
+  <p>Sorry, the page you are looking for does not exist.</p>
+</div>
+```
+Now we can use the `render/3` function we saw above when we were experimenting with rendering in the `iex` session.
+
+Our `render/2` function should look like this when we've modified it.
+
+```elixir
+def render("404.html", _assigns) do
+  render(HelloPhoenix.PageView, "not_found.html", %{})
+end
+```
+Let's go back to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path) and see what that looks like.
+
+We've made progress; we're rendering our new template, complete with markup. We still don't have a layout, though.
+
+In order to make that happen, we need to specify a layout, but where? It turns out that the `assigns` map - the one we passed as an empty map for our third argument just now - can have a `:layout` key and a two element tuple as a value. The tuple consists of the layout view as the first element, and the layout template as the second. Let's try passing that in as our third argument to `render/3`.
+
+```elixir
+def render("404.html", _assigns) do
+  render(HelloPhoenix.PageView, "not_found.html", layout: {HelloPhoenix.LayoutView, "application.html"})
+end
+```
+Now when we go back to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path), we should see exactly what we're looking for, our new template rendered within the application layout.
+
+Of course, we can do these same steps with the `def render("500.html", _assigns) do` clause in our `ErrorView` and the `error.html.eex` template as well.
+
+We can also use the `assigns` map passed into `render/2` in the `ErrorView` instead of discarding it. We can put the new layout key and value into it to display more information in our templates.
