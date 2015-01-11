@@ -3,7 +3,7 @@ defmodule Phoenix.Mixfile do
 
   def project do
     [app: :phoenix,
-     version: "0.8.0",
+     version: "0.9.0-dev",
      elixir: "~> 1.0.2 or ~> 1.1-dev",
      deps: deps,
      package: package,
@@ -33,7 +33,7 @@ defmodule Phoenix.Mixfile do
      {:plug, "~> 0.9.0"},
      {:poison, "~> 1.3"},
      {:earmark, "~> 0.1", only: :docs},
-     {:ex_doc, "~> 0.6", only: :docs},
+     {:ex_doc, "~> 0.7", only: :docs},
      {:inch_ex, "~> 0.2", only: :docs},
      {:websocket_client, github: "jeremyong/websocket_client", only: :test}]
   end
