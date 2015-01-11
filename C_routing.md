@@ -9,6 +9,7 @@ defmodule HelloPhoenix.Router do
   pipeline :browser do
     plug :accepts, ~w(html)
     plug :fetch_session
+    plug :protect_from_forgery
   end
 
   pipeline :api do
@@ -52,7 +53,7 @@ end
 
 The body of the match function sets up the connection and invokes the matched controller action.
 
-As we add more routes, more clauses of the match function will be added to our router module. These will behave like any other multi-clause function in Elixir. They will be tried in order from the top, and the first clause to match the paramaters given (verb and path) will be executed. After a match is found, the search will stop and no other clauses will by tried.
+As we add more routes, more clauses of the match function will be added to our router module. These will behave like any other multi-clause function in Elixir. They will be tried in order from the top, and the first clause to match the parameters given (verb and path) will be executed. After a match is found, the search will stop and no other clauses will by tried.
 
 This means that it is possible to create a route which will never match, based on the HTTP verb and the path, regardless of the controller and action.
 
@@ -566,6 +567,7 @@ defmodule HelloPhoenix.Router do
   pipeline :browser do
     plug :accepts, ~w(html)
     plug :fetch_session
+    plug :protect_from_forgery
   end
 
   pipeline :api do
@@ -682,7 +684,7 @@ Phoenix defines two other pipelines by default, `:browser` and `:api`. The route
 
 As their names suggest, the `:browser` pipeline prepares for routes which render HTML for a browser. The `:api` pipeline prepares for routes which produce data for an api.
 
-The `:browser` pipeline has two plugs: `plug :accepts, ~w(html)` which defines the request format or formats which will be accepted, and `:fetch_session`, which, naturally, fetches the session data and makes it available in the connection.
+The `:browser` pipeline has three plugs: `plug :accepts, ~w(html)` which defines the request format or formats which will be accepted, `:fetch_session`, which, naturally, fetches the session data and makes it available in the connection, and  `:protect_from_forgery`, which protects form posts from cross site forgery.
 
 Currently, the `:api` pipeline only defines `plug :accepts, ~w(json)`.
 
@@ -699,6 +701,7 @@ defmodule HelloPhoenix.Router do
   pipeline :browser do
     plug :accepts, ~w(html)
     plug :fetch_session
+    plug :protect_from_forgery
   end
 
   pipeline :api do
@@ -734,6 +737,7 @@ defmodule HelloPhoenix.Router do
   pipeline :browser do
     plug :accepts, ~w(html)
     plug :fetch_session
+    plug :protect_from_forgery
   end
 
   pipe_through :browser
@@ -754,6 +758,7 @@ defmodule HelloPhoenix.Router do
   pipeline :browser do
     plug :accepts, ~w(html)
     plug :fetch_session
+    plug :protect_from_forgery
   end
   ...
 
@@ -774,6 +779,7 @@ defmodule HelloPhoenix.Router do
   pipeline :browser do
     plug :accepts, ~w(html)
     plug :fetch_session
+    plug :protect_from_forgery
   end
   ...
 
@@ -804,6 +810,7 @@ defmodule HelloPhoenix.Router do
   pipeline :browser do
     plug :accepts, ~w(html)
     plug :fetch_session
+    plug :protect_from_forgery
   end
 
   pipeline :review_checks do
@@ -837,6 +844,7 @@ defmodule HelloPhoenix.Router do
   pipeline :browser do
     plug :accepts, ~w(html)
     plug :fetch_session
+    plug :protect_from_forgery
   end
 
   pipe_through :browser
