@@ -371,6 +371,7 @@ defmodule HelloPhoenix.Router do
   pipeline :browser do
     plug :accepts, ~w(html text)
     plug :fetch_session
+    plug :protect_from_forgery
   end
 . . .
 ```
