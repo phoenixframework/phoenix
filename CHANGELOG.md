@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.8.0-dev
+## v0.8.0 (2015-1-11)
 
 * Enhancements
   * [Router] `protect_from_forgery` has been added to the Router for CSRF protection. This is automatically plugged in new projects. See [this example](https://github.com/phoenixframework/phoenix/blob/ce5ebf3d9de4412a18e6325cd0d34e1b9699fb5a/priv/template/web/router.ex#L7) for plugging in your existing router pipeline(s)
@@ -8,8 +8,10 @@
   * [Channels] The "topic" abstraction has been refined to be a simple string identifier to provide more direct integration with the `Phoenix.PubSub` layer
   * [Channels] Channels can now intercept outgoing messages and customize the broadcast for a socket-by-socket customization, message dropping, etc
   * [Channels] A channel can be left by returning `{:leave, socket}` from a channel callback to unsubscribe from the channel
+  * [Channels] Channel Serializer can now use binary protocol over websockets instead of just text
   * [Endpoint] Allow the reloadable paths to be configured in the endpoint
   * [Mix] Allow the code generation namespace to be configured with the `:app_namespace` option
+  * [Mix] Allow `:reloadable_paths` in Endpoint configuration to reload directories other than `"web"` in development
 
 * Bug Fixes
   * [Channel] Fix WebSocket heartbeat causing unnecessary `%Phoenix.Socket{}`'s to be tracked and leave errors on disconnect

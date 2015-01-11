@@ -33,7 +33,7 @@ defmodule Phoenix.Socket do
   end
 
   @doc """
-  Adds authorized topic to Socket's topic list
+  Authorizes socket's topic
 
   ## Examples
 
