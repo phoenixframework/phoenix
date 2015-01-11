@@ -47,7 +47,6 @@ defmodule Phoenix.Mixfile do
   defp docs do
     {ref, 0} = System.cmd("git", ["rev-parse", "--verify", "--quiet", "HEAD"])
     [source_ref: ref,
-     main: "overview",
-     readme: true]
+     main: "overview"]
   end
 end
