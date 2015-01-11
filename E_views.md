@@ -12,20 +12,18 @@ It's important to note that the scope of the main view is global to all views an
 
 ### Main Application View
 
-Let's take a look at the main view.  Please note, this is from the current master branch. If you are using 0.5.0, please see the
-[Phoenix Views documentation](http://hexdocs.pm/phoenix/0.5.0/Phoenix.View.html) on Hexdocs. There are some differences, but by looking at both examples, the relationship between the two should become clear.
+Let's take a look at the main view.
 
 ```elixir
 defmodule HelloPhoenix.View do
   use Phoenix.View, root: "web/templates"
 
-  # Everything that is imported, aliased, or used in this block is available
-  # in the rest of this module and in any other view module that uses it.
+  # The quoted expression returned by this block is applied
+  # to this module and all other views that use this module.
   using do
     quote do
       # Import common functionality
-      import HelloPhoenix.I18n
-      import HelloPhoenix.Router.Helpers
+      import Test.Router.Helpers
 
       # Use Phoenix.HTML to import all HTML functions (forms, tags, etc)
       use Phoenix.HTML
@@ -108,7 +106,6 @@ Let's reload the page and view source to see what we have.
 
 Great, `page_path/1` evaluated to `/` as we would expect, and we didn't need to qualify it with `HelloPhoenix.View`.
 
-
 ###Individual Views
 
 Individual views have a much narrower scope. Their job is to render, and provide decorating functions for a single directory of templates. Phoenix assumes a strong naming convention from controllers to views to the templates they render. The `PageController` requires a `PageView` to render templates in the `web/templates/page` directory. If we change the `:root` declaration in the main view, of course, Phoenix would look for a `page` directory within the directory we set there.
@@ -128,14 +125,12 @@ defmodule HelloPhoenix.PageView do
   end
 end
 ```
-
 Now let's create a new template to play around with, `web/templates/page/test.html.eex`.
 
 ```html
 This is the message: <%= message %>
 ```
-
-This doesn't correspond to any action in our controller, but we'll exercise it in a mix console. At the root of our project, we can run `iex -S mix`, and then explicitly render our template.
+This doesn't correspond to any action in our controller, but we'll exercise it in an `iex` session. At the root of our project, we can run `iex -S mix`, and then explicitly render our template.
 
 ```console
 iex(1)> Phoenix.View.render(HelloPhoenix.PageView, "test.html", %{})
@@ -164,7 +159,6 @@ iex(3)> Phoenix.View.render(HelloPhoenix.PageView, "test.html", message: "Assign
 {:safe,
  "I came from assigns: Assigns has an @.\nThis is the message: Hello from the view!\n"}
  ```
-
 Let's test out the HTML escaping, just for fun.
 
 ```console
@@ -172,7 +166,6 @@ iex(6)> Phoenix.View.render(HelloPhoenix.PageView, "test.html", message: "<scrip
 {:safe,
  "I came from assigns: &lt;script&gt;badThings();&lt;/script&gt;\nThis is the message: Hello from the view!\n"}
 ```
-
 If we need only the rendered string, without the whole tuple, we can use the `render_to_iodata/3`.
 
  ```console
