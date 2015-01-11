@@ -18,9 +18,9 @@ $ git clone https://github.com/phoenixframework/phoenix.git
 $ cd phoenix
 ```
 
-- And make sure we are on the v0.7.2 branch.
+- And make sure we are on the v0.8.0 branch.
 ```console
-$ git checkout v0.7.2
+$ git checkout v0.8.0
 ```
 
 - Get the dependencies and compile the whole project
