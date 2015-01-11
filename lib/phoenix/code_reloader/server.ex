@@ -42,6 +42,7 @@ defmodule Phoenix.CodeReloader.Server do
   end
 
   defp mix_compile({:module, Mix.Task}, paths) do
+    reloadable_paths = Enum.flat_map(paths, &["--elixirc-paths", &1])
     Mix.Task.reenable "compile.phoenix"
     Mix.Task.reenable "compile.elixir"
 
@@ -49,7 +50,7 @@ defmodule Phoenix.CodeReloader.Server do
       proxy_io(fn ->
         try do
           Mix.Task.run "compile.phoenix"
-          Mix.Task.run "compile.elixir", paths
+          Mix.Task.run "compile.elixir", reloadable_paths
         catch
           _, _ -> :error
         end
