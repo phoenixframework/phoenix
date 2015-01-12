@@ -13,6 +13,8 @@ Phoenix is made up of a number of distinct parts, each with its own purpose and 
 - The Router
   - parses incoming requests and dispatches to the correct controller/action, passing parameters as needed
   - provides helpers to generate route paths or urls to resources
+- The Endpoint
+  - handles all aspects of requests up until the beginning of our applications
 - Controllers
   - provide functions called actions to handle requests
   - Actions
