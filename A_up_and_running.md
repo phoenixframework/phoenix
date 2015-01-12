@@ -6,7 +6,7 @@ In order to install Phoenix, we will also need to have git installed on our syst
 
 Let's get started.
 
-The first thing we need to do is clone the phoenix repo from github. Let's navigate into a directory that we want to contain Phoenix. Cloning the repo will create a new directory called `phoenix` wherever we run the clone command. Here are the steps.
+The first thing we need to do is clone the Phoenix repo from github. Let's navigate into a directory that we want to contain Phoenix. Cloning the repo will create a new directory called `phoenix` wherever we run the clone command. Here are the steps.
 
 - First, clone the repo
 ```console
@@ -71,7 +71,7 @@ This is different from the similar step we did above. That step was compiling Ph
 Once the application compiles successfully, we can start it.
 
 ```console
-$ mix phoenix.start
+$ mix phoenix.server
 ```
 
 By default Phoenix accepts requests on port 4000. If we point our favorite web browser at [http://localhost:4000](http://localhost:4000), we should see the Phoenix Framework welcome page.

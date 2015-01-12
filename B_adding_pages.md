@@ -20,18 +20,20 @@ Most of our work in this guide will be in the `web` directory, which looks like 
 ├── channels
 ├── controllers
 │   └── page_controller.ex
-├── i18n.ex
 ├── models
 ├── router.ex
 ├── templates
 │   ├── layout
 │   │   └── application.html.eex
 │   └── page
-│       └── index.html.eex
-├── views
-│   ├── layout_view.ex
-│   └── page_view.ex
-└── views.ex
+│       ├── error.html.eex
+│       ├── index.html.eex
+│       └── not_found.html.eex
+├── view.ex
+└── views
+    ├── error_view.ex
+    ├── layout_view.ex
+    └── page_view.ex
 ```
 
 All of the files which are currently in the controllers, templates and views directories are there to create the "Welcome to Phoenix!" page we saw in the last guide. We will see how we can re-use some of that code shortly.
@@ -42,14 +44,21 @@ All of our application's static assets live in `priv/static` in the directory ap
 priv
 └── static
     ├── css
-    │   └── app.css
+    |   └── phoenix.css
     ├── images
+    │   └── phoenix.png
     └── js
         └── phoenix.js
 ```
+The `lib` directory also contains files we should know about. Our application's endpoint is at `lib/hello_phoenix/endpoing.ex`, and our application file (which starts our application and it's supervision tree) is at `lib/hello_phoenix.ex`.
 
+```text
+lib
+├── hello_phoenix
+│   └── endpoint.ex
+└── hello_phoenix.ex
+```
 Enough prep, let's get on with our first new Phoenix page!
-
 
 ###A New Route
 
@@ -72,6 +81,8 @@ defmodule HelloPhoenix.Router do
   pipeline :browser do
     plug :accepts, ~w(html)
     plug :fetch_session
+    plug :fetch_flash
+    plug :protect_from_forgery
   end
 
   pipeline :api do
@@ -89,11 +100,11 @@ defmodule HelloPhoenix.Router do
   #   pipe_through :api
   # end
 end
+
 ```
+For now, we'll ignore the pipelines and the use of `scope` here and just focus on adding a route. (We cover these topics in the [Routing Guide](http://www.phoenixframework.org/v0.8.0/docs/routing), if you're curious.)
 
-For now, we'll ignore the pipelines and the use of `scope` here and just focus on adding a route. (We cover these topics in the Routing Guide, if you're curious.)
-
-Let's add a new route to the router that maps the GET for `/hello` to the index action of a soon-to-be created `HelloPhoenix.HelloController`.
+Let's add a new route to the router that maps a `GET` request for `/hello` to the `index` action of a soon-to-be-created `HelloPhoenix.HelloController`.
 
 ```elixir
 get "/hello", HelloController, :index
@@ -127,9 +138,9 @@ defmodule HelloPhoenix.HelloController do
   end
 end
 ```
-We'll save a discussion of `use Phoenix.Controller` and `plug :action` for the Controller Guide. For now, let's focus on the `index/2` action.
+We'll save a discussion of `use Phoenix.Controller` and `plug :action` for the [Controllers Guide](http://www.phoenixframework.org/v0.8.0/docs/controllers). For now, let's focus on the `index/2` action.
 
-All controller actions take two arguments. The first is `conn`, a struct which holds a ton of data about the request. The second is `params`, which are the request parameters. Here, we are not using `params` and avoiding compiler warnings by adding the leading `_`.
+All controller actions take two arguments. The first is `conn`, a struct which holds a ton of data about the request. The second is `params`, which are the request parameters. Here, we are not using `params`, and we avoid compiler warnings by adding the leading `_`.
 
 The core of this action is `render conn, "index.html"`. This tells Phoenix to find a template called `index.html.eex` and render it. Phoenix will look for the template in a directory named after our controller, so `web/templates/hello`.
 
@@ -192,7 +203,7 @@ scope "/", HelloPhoenix do
   get "/hello/:messenger", HelloController, :show
 end
 ```
-Notice that we put the atom `:messenger` in the path. Phoenix will take whatever value that appears in that position in the url and passes a [Dict](http://elixir-lang.org/docs/stable/elixir/Dict.html) with the key `messenger` pointing to that value to the controller.
+Notice that we put the atom `:messenger` in the path. Phoenix will take whatever value that appears in that position in the url and pass a [Dict](http://elixir-lang.org/docs/stable/elixir/Dict.html) with the key `messenger` pointing to that value to the controller.
 
 For example, if we point the browser at: [http://localhost:4000/hello/Frank](http://localhost:4000/hello/Frank), the value of ":messenger" will be "Frank".
 
@@ -205,15 +216,15 @@ def show(conn, %{"messenger" => messenger}) do
   render conn, "show.html", messenger: messenger
 end
 ```
-There are a couple of things to notice here. We pattern match against the params passed into the show function so that the messenger variable will be bound to the value we put in the `:messenger` position in the url. For example, if our url is [http://localhost:4000/hello/Frank](http://localhost:4000/hello/Frank), the messenger variable would be bound to `Frank`.
+There are a couple of things to notice here. We pattern match against the params passed into the show function so that the `messenger` variable will be bound to the value we put in the `:messenger` position in the url. For example, if our url is [http://localhost:4000/hello/Frank](http://localhost:4000/hello/Frank), the messenger variable would be bound to `Frank`.
 
-We also pass a third argument into the render function, a key value pair where `:messenger` is the key, and the messenger variable is passed as the value.
+Within the body of the `show` action, we also pass a third argument into the render function, a key value pair where `:messenger` is the key, and the messenger variable is passed as the value.
 
 It's good to remember that the keys to the params [Dict](http://elixir-lang.org/docs/stable/elixir/Dict.html) will always be strings.
 
 ###A New Template
 
-For the last piece of this puzzle, we'll need a new template. Since it is for the show action of the `HelloController`, it will go the `web/templates/hello` directory and be called `show.html.eex`. It will look surprisingly like our `index.html.eex` template, except that we will need to display the name of our messenger.
+For the last piece of this puzzle, we'll need a new template. Since it is for the `show` action of the `HelloController`, it will go the `web/templates/hello` directory and be called `show.html.eex`. It will look surprisingly like our `index.html.eex` template, except that we will need to display the name of our messenger.
 
 To do that, we'll use the special eex tags for executing Elixir expressions - `<%=  %>`. Notice that the initial tag has an equals sign like this: `<%=` . That means that any Elixir code that goes between those tags will be executed, and the resulting value will replace the tag. If the equals sign were missing, the code would still be executed, but the value would not appear on the page.
 
