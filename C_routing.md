@@ -9,6 +9,7 @@ defmodule HelloPhoenix.Router do
   pipeline :browser do
     plug :accepts, ~w(html)
     plug :fetch_session
+    plug :fetch_flash
     plug :protect_from_forgery
   end
 
@@ -37,18 +38,16 @@ Scopes have their own section in this guide, so we won't spend time on the `scop
 Inside the scope block, however, we have our first actual route.
 `get "/", PageController, :index`
 
-`get` is a Phoenix macro which expands out to define one clause of the `match` function. It corresponds to the HTTP verb GET. Similar macros exist for other HTTP verbs including POST, PUT, PATCH, DELETE, OPTIONS, CONNECT, TRACE and HEAD.
+`get` is a Phoenix macro which expands out to define one clause of the `match/3` function. It corresponds to the HTTP verb GET. Similar macros exist for other HTTP verbs including POST, PUT, PATCH, DELETE, OPTIONS, CONNECT, TRACE and HEAD.
 
 The first argument to these macros is the path. Here, it is the root of the application, `/`. The next two arguments are the controller and action we want to have handle this request. These macros may also take other options, which we will see throughout the rest of this guide.
 
-If this were the only route in our router module, the whole module would look like this after the macro expands.
+If this were the only route in our router module, the clause of the `mactch/3` function would look like this after the macro expands.
 
 ```elixir
-defmodule HelloPhoenix.Router do
   def match(conn, "GET", ["/"]) do
     Controller.perform_action(conn, HelloPhoenix.PageController, :index)
   end
-end
 ```
 
 The body of the match function sets up the connection and invokes the matched controller action.
@@ -82,17 +81,25 @@ Let's see how this works. Go to the root of a newly-generated Phoenix applicatio
 $ mix phoenix.routes
 page_path  GET  /  HelloPhoenix.PageController.index/2
 ```
-
-The output tells us that any HTTP GET request for the root of the application will be handled by the index action of the `HelloPhoenix.PageController`.
+The output tells us that any HTTP GET request for the root of the application will be handled by the `index` action of the `HelloPhoenix.PageController`.
 
 `page_path` is an instance of a what Phoenix calls a path helper, and we'll talk about those very soon.
-
 
 ###Resources
 
 The router supports other macros besides those for HTTP verbs like `get`, `post` and `put`. The most important among them is `resources`, which expands out to eight clauses of the match function.
 
-Put this line into your `router.ex` file inside the `scope "/", HelloPhoenix do` block: `resources "users", UserController`. (For this purpose, it doesn't matter that we don't actually have a `HelloPhoenix.UserController`.)
+Let's add a resource to our `router.ex` file like this.
+
+```elixir
+scope "/", HelloPhoenix do
+  pipe_through :browser # Use the default browser stack
+
+  get "/", PageController, :index
+  resources "users", UserController
+end
+```
+For this purpose, it doesn't matter that we don't actually have a `HelloPhoenix.UserController`.
 
 Then go to the root of your project, and run `$ mix phoenix.routes`
 
@@ -108,17 +115,16 @@ user_path  PATCH   /users/:id       HelloPhoenix.UserController.update/2
            PUT     /users/:id       HelloPhoenix.UserController.update/2
 user_path  DELETE  /users/:id       HelloPhoenix.UserController.destroy/2
 ```
-
 This is the standard matrix of HTTP verbs, paths and controller actions. Let's look at them individually, in a slightly different order.
 
-- A GET request to /users will invoke the index action to show all the users.
-- A GET request to /users/:id will invoke the show action with an id to show an individual user identified by that id.
-- A GET request to /users/new will invoke the new action to present a form for creating a new user.
-- A POST request to /users will invoke the create action to save a new user to the data store.
-- A GET request to /users/:id/edit will invoke the edit action with an id to retrieve an individual user from the data store and present the information in a form for editing.
-- A PATCH request to /users/:id will invoke the update action with an id to save the updated user to the data store.
-- A PUT request to /users/:id will also invoke the update action with an id to save the updated use to the data store.
-- A DELETE request to /users/:id will invoke the destroy action with an id to remove the individual user from the data store.
+- A GET request to `/users` will invoke the `index` action to show all the users.
+- A GET request to `/users/:id` will invoke the `show` action with an id to show an individual user identified by that id.
+- A GET request to `/users/new` will invoke the `new` action to present a form for creating a new user.
+- A POST request to `/users` will invoke the `create` action to save a new user to the data store.
+- A GET request to `/users/:id/edit` will invoke the `edit` action with an id to retrieve an individual user from the data store and present the information in a form for editing.
+- A PATCH request to `/users/:id` will invoke the `update` action with an id to save the updated user to the data store.
+- A PUT request to `/users/:id` will also invoke the `update` action with an id to save the updated use to the data store.
+- A DELETE request to `/users/:id` will invoke the `destroy` action with an id to remove the individual user from the data store.
 
 If we don't feel that we need all of these routes, we can be selective using the `:only` and `:except` options.
 
@@ -210,14 +216,7 @@ iex(3)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :show, 17, admin: true, 
 "/users/17?admin=true&active=false"
 ```
 
-What if we need a full url instead of a path? Again, Phoenix has an answer, but this time, we need to interact with Phoenix in a slightly different way in order to see it. Let's close out our `iex` session by hitting `ctrl-c` twice.
-
-Now, let's open an `iex` session and start our application simultaneously.
-
-```console
-$ iex -S mix phoenix.start
-```
-In order to get a full url, we pipe the result of the `user_path/2` function into `Endpoint.url/1`.
+What if we need a full url instead of a path? Again, Phoenix has an answer. In order to get a full url, we pipe the result of the `user_path/2` function into `Endpoint.url/1`.
 
 ```elixir
 iex(3)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :index) |> HelloPhoenix.Endpoint.url
@@ -348,7 +347,7 @@ review_path  PUT     /admin/reviews/:id       HelloPhoenix.Admin.ReviewControlle
 review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.destroy/2
 ```
 
-The actual routes we get all look right, except for the path helper at the beginning of each line. We are getting the same helper for both the user facing review routes and the admin ones. We can fix this problem by adding a `as: :admin` option to our admin scope.
+The actual routes we get all look right, except for the path helper at the beginning of each line. We are getting the same helper for both the user facing review routes and the admin ones. We can fix this problem by adding an `as: :admin` option to our admin scope.
 
 ```elixir
 pipe_through :browser
@@ -384,10 +383,10 @@ admin_review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewCon
 The path helpers return what we want them to as well. Run `$ iex -S mix` and give them a try.
 
 ```elixir
-iex(1)> HelloPhoenix.Router.Helpers.review_path(:index)
+iex(1)> HelloPhoenix.Router.Helpers.review_path(Endpoint, :index)
 "/reviews"
 
-iex(2)> HelloPhoenix.Router.Helpers.admin_review_path(:show, 1234)
+iex(2)> HelloPhoenix.Router.Helpers.admin_review_path(Endpoint, :show, 1234)
 "/admin/reviews/1234"
 ```
 
@@ -567,6 +566,7 @@ defmodule HelloPhoenix.Router do
   pipeline :browser do
     plug :accepts, ~w(html)
     plug :fetch_session
+    plug :fetch_flash
     plug :protect_from_forgery
   end
 
@@ -594,7 +594,7 @@ end
 ```
 And when we run `$ mix phoenix.routes`, we see the following output.
 
-```console
+```elixir
 user_path  GET     /users           HelloPhoenix.UserController.index/2
 user_path  GET     /users/:id/edit  HelloPhoenix.UserController.edit/2
 user_path  GET     /users/new       HelloPhoenix.UserController.new/2
@@ -617,66 +617,33 @@ post_path  DELETE  /posts/:id       AnotherApp.PostController.destroy/2
 
 We have come quite a long way in this guide without talking about one of the first lines we saw in the router - `pipe_through :browser`. It's time to fix that.
 
-Remember in the Overview Guide when we described plugs as being stacked and executable in a pre-determined order, like a pipeline? Now we're going to take a closer look at how these plug stacks work in the router.
+Remember in the [Overview Guide](http://www.phoenixframework.org/docs/overview) when we described plugs as being stacked and executable in a pre-determined order, like a pipeline? Now we're going to take a closer look at how these plug stacks work in the router.
 
 Pipelines are simply plugs stacked up together in a specific order and given a name. They allow us to customize behaviors and transformations related to the handling of requests. Phoenix provides default pipelines for common tasks, but it allows us to customize them, and it also allows us to create new pipelines to meet our needs.
 
-A newly generated Phoenix application defines three pipelines, `:before`, `:browser`, and `:api`. The router will always invoke the `:before` pipeline at the very beginning of any request, before the router even tries to match a route. It does this implicitly, without us having to declare anything in the router. The plugs in the `:before` pipeline represent all the actions that need to happen before the router can properly handle it.
+A newly generated Phoenix application defines two pipelines, `:browser`, and `:api`. We'll get to those in a minute, but first we need to talk about the plug stack in the Endpoint.
 
-#####The `:before` Pipeline
-The `:before` pipeline actually does quite a lot of work preparing a request for the router. This list of plugs in the `:before` pipeline comes directly from the [Phoenix router documentation](http://hexdocs.pm/phoenix/Phoenix.Router.html). They appear here in the order they are executed.
+#####The Endpoint Plugs
 
-```
-- [Plug.Static](http://hexdocs.pm/plug/Plug.Static.html) - serves static assets. Since this plug comes
-  before the router, serving of static assets is not logged
+Older versions of Phoenix defined a third pipeline `:before`. Its purpose was to organize all the plugs common to every request, and make sure they were executed first, before the `:browser` or `:api` pipelines. Currently, the Endpoint has taken over this responsibility. These Endpoint plugs do quite a lot of work. Here they are in order.
+
+- [Plug.Static](http://hexdocs.pm/plug/Plug.Static.html) - serves static assets. Since this plug comes before the router, serving of static assets is not logged
 
 - [Plug.Logger](http://hexdocs.pm/plug/Plug.Logger.html) - logs incoming requests
 
-- [Plug.Parsers](http://hexdocs.pm/plug/Plug.Parsers.html) - parses the request body when a known
-  parser is available. By default parsers urlencoded,
-  multipart and json (with poison). The request body is left
-  untouched when the request content-type cannot be parsed
+- [Phoenix.CodeReloader](http://hexdocs.pm/phoenix/Phoenix.CodeReloader.html) - a plug that enables code reloading for all entries in the web directory. It is configured directly in the Phoenix application
+
+- [Plug.Parsers](http://hexdocs.pm/plug/Plug.Parsers.html) - parses the request body when a known parser is available. By default parsers urlencoded, multipart and json (with poison). The request body is left untouched when the request content-type cannot be parsed
 
 - [Plug.MethodOverride](http://hexdocs.pm/plug/Plug.MethodOverride.html) - converts the request method to
-  PUT, PATCH or DELETE for POST requests with a
-  valid _method parameter
+  PUT, PATCH or DELETE for POST requests with a valid `_method` parameter
 
-- [Plug.Head](http://hexdocs.pm/plug/Plug.Head.html) - converts HEAD requests to GET requests
-  and strips the response body
+- [Plug.Head](http://hexdocs.pm/plug/Plug.Head.html) - converts HEAD requests to GET requests and strips the response body
 
 - [Plug.Session](http://hexdocs.pm/plug/Plug.Session.html) - a plug that sets up session management.
-  Note that fetch_session/2 must still be explicitly called
-  before using the session as this plug just sets up how
-  the session is fetched
+  Note that fetch_session/2 must still be explicitly called before using the session as this plug just sets up how the session is fetched
 
-- [Phoenix.CodeReloader](http://hexdocs.pm/phoenix/Phoenix.CodeReloader.html) - a plug that enables code reloading
-  for all entries in the web directory. It is configured
-  directly in the Phoenix application
-```
-
-In case you were wondering, the router really does invoke the `:before` pipeline implicitly. If we try to make it explicit, like this.
-
-```elixir
-defmodule HelloPhoenix.Router do
-  use Phoenix.Router
-
-  pipe_through [:before, :browser]
-
-  get "/", HelloPhoenix.PageController, :index
-end
-```
-
-We get this compilation error.
-
-```console
-== Compilation error on file web/router.ex ==
-** (ArgumentError) the :before pipeline is always piped through
-    (phoenix) lib/phoenix/router/scope.ex:41: anonymous fn/2 in Phoenix.Router.Scope.pipe_through/2
-    (elixir) lib/enum.ex:537: Enum."-each/2-lists^foreach/1-0-"/2
-    (elixir) lib/enum.ex:537: Enum.each/2
-    (phoenix) lib/phoenix/router/scope.ex:38: Phoenix.Router.Scope.pipe_through/2
-    web/router.ex:8: (module)
-```
+- [Plug.Router](http://hexdocs.pm/plug/Plug.Router.html) - plugs our router into the request cycle
 
 #####The `:browser` and `:api` Pipelines
 
@@ -684,7 +651,7 @@ Phoenix defines two other pipelines by default, `:browser` and `:api`. The route
 
 As their names suggest, the `:browser` pipeline prepares for routes which render HTML for a browser. The `:api` pipeline prepares for routes which produce data for an api.
 
-The `:browser` pipeline has three plugs: `plug :accepts, ~w(html)` which defines the request format or formats which will be accepted, `:fetch_session`, which, naturally, fetches the session data and makes it available in the connection, and  `:protect_from_forgery`, which protects form posts from cross site forgery.
+The `:browser` pipeline has four plugs: `plug :accepts, ~w(html)` which defines the request format or formats which will be accepted, `:fetch_session`, which, naturally, fetches the session data and makes it available in the connection, `:fetch_flash` which retrieves any flash messages which may have been set, and  `:protect_from_forgery`, which protects form posts from cross site forgery.
 
 Currently, the `:api` pipeline only defines `plug :accepts, ~w(json)`.
 
@@ -701,6 +668,7 @@ defmodule HelloPhoenix.Router do
   pipeline :browser do
     plug :accepts, ~w(html)
     plug :fetch_session
+    plug :fetch_flash
     plug :protect_from_forgery
   end
 
@@ -722,9 +690,9 @@ defmodule HelloPhoenix.Router do
   end
 end
 ```
-When a request comes in to the server, the router will pass it through the `:before` pipeline no matter what. Then it will attempt to match on the path and HTTP verb.
+When a request comes in to the server, it will pass through the plugs in our Endpoint no matter what. Then it will attempt to match on the path and HTTP verb.
 
-Let's say the request matches our first route, a GET to `/`. The router will pipe that request through the `:browser` pipeline - which will fetch the session data - before it dispatches the request to the `PageController` `index` action.
+Let's say the request matches our first route, a GET to `/`. The router will pipe that request through the `:browser` pipeline - which will fetch the session data, fetch the flash, and execute forgery protection - before it dispatches the request to the `PageController` `index` action.
 
 Conversely, if the request matches any of the routes defined by the `resources/2` macro, the router will pipe it through the `:api` pipeline - which currently does nothing - before it dispatches to the correct action of the `HelloPhoenix.ReviewController`.
 
@@ -737,6 +705,7 @@ defmodule HelloPhoenix.Router do
   pipeline :browser do
     plug :accepts, ~w(html)
     plug :fetch_session
+    plug :fetch_flash
     plug :protect_from_forgery
   end
 
@@ -758,6 +727,7 @@ defmodule HelloPhoenix.Router do
   pipeline :browser do
     plug :accepts, ~w(html)
     plug :fetch_session
+    plug :fetch_flash
     plug :protect_from_forgery
   end
   ...
@@ -772,6 +742,7 @@ end
 ```
 
 Here's another example where nested scopes have different pipelines.
+
 ```elixir
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
@@ -779,6 +750,7 @@ defmodule HelloPhoenix.Router do
   pipeline :browser do
     plug :accepts, ~w(html)
     plug :fetch_session
+    plug :fetch_flash
     plug :protect_from_forgery
   end
   ...
@@ -810,6 +782,7 @@ defmodule HelloPhoenix.Router do
   pipeline :browser do
     plug :accepts, ~w(html)
     plug :fetch_session
+    plug :fetch_flash
     plug :protect_from_forgery
   end
 
@@ -826,62 +799,36 @@ defmodule HelloPhoenix.Router do
 end
 ```
 
-#####Customizing Existing Pipelines
-We can always open up the `:before` pipeline and customize the plugs that make it up, and, to an extent, the order in which they are invoked. In general, however, it is preferable to create new pipelines and invoke `pipe_through` with a list of pipelines, in order.
-
-Here's how we might customize the `:before` pipeline. The example assumes that we have already defined the plugs `:authenticate` and `:set_current_user`.
-
-```elixir
-defmodule HelloPhoenix.Router do
-  use Phoenix.Router
-
-  pipeline :before do
-    plug :super
-    plug :authenticate
-    plug :set_current_user
-  end
-
-  pipeline :browser do
-    plug :accepts, ~w(html)
-    plug :fetch_session
-    plug :protect_from_forgery
-  end
-
-  pipe_through :browser
-
-  resources "reviews", HelloPhoenix.ReviewController
-end
-```
-
-`plug :super` will invoke any plugs in the `:browser` pipeline before it plugs `:authenticate` and `:set_current_user`.
-
 ###Channel Routes
 
 Channels are a very exciting, realtime component of the Phoenix framework. They are so important that they will have a guide of their own.
 
 Channels are roughly analogous to controllers except that they are capable of bi-directional communication and their connections persist beyond the initial response. They are also closely tied to a client - written for JavaScript, iOS or Android. For now, we'll focus on defining routes for them and leave a detailed discussion of their capabilities to the Channel Guide.
 
-Each channel depends on a socket mounted at a given point for its communication. The first thing we need to do to define a route for a channel. Then we define a socket and specify the path to its mount point.
+Each channel depends on a socket mounted at a given point for its communication. We can define the socket in a way that looks a lot like a scope for a regular route. Which is to say we define a socket block with a path to the socket's mount point and the name of our application to fully qualify our channel name.
 
 Here's what that looks like in our router file.
 
 ```elixir
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
-  use Phoenix.Router.Socket, mount: "/my_socket"
+
+  socket "/ws", HelloPhoenix do
+  end
+  ...
 end
 ```
 
-The next thing we need to do is define a channel, giving it a name and associating it with a channel module which will implement its behavior. If we have a channel module called "OurChannel" and a channel called `our_channel_name`, the code to do this is straightforward, `channel "our_channel_name", HelloPhoenix.OurChannel`
-
-The whole router, then, looks like this.
+Next, we need to define a channel, specifying a topic and associating it with the channel module which will implement its behavior. If we have a channel module called `RoomChannel` and a topic called `lobby`, the code to do this is straightforward.
 
 ```elixir
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
-  use Phoenix.Router.Socket, mount: "/my_socket"
 
-  channel "our_channel_name", HelloPhoenix.OurChannel
+  socket "/ws", HelloPhoenix do
+    channel "lobby", RoomChannel
+  end
+  ...
 end
 ```
 ###Summary
@@ -892,6 +839,6 @@ Routing is a big topic, and we have covered a lot of ground here. The important 
 - Resources may restrict the number of match function clauses by using the `only:` or `except:` options.
 - Any of these routes may be nested.
 - Any of these routes may be scoped to a given path.
-- Using the alias option in a scope can reduce the duplication in controller names.
+- Using the `as:` option in a scope can reduce the duplication.
 - Using the helper option for scoped routes eliminates unreachable paths.
 - Scoped routes may also be nested.
