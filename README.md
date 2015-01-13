@@ -11,7 +11,6 @@
   - [Building phoenix.coffee](#building-phoenixcoffee)
 - [Contributing](#contributing)
 - [Important links](#important-links)
-- [Feature Roadmap](#feature-roadmap)
 
 
 ## Getting started
