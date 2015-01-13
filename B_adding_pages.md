@@ -50,7 +50,7 @@ priv
     └── js
         └── phoenix.js
 ```
-The `lib` directory also contains files we should know about. Our application's endpoint is at `lib/hello_phoenix/endpoing.ex`, and our application file (which starts our application and it's supervision tree) is at `lib/hello_phoenix.ex`.
+The `lib` directory also contains files we should know about. Our application's endpoint is at `lib/hello_phoenix/endpoint.ex`, and our application file (which starts our application and it's supervision tree) is at `lib/hello_phoenix.ex`.
 
 ```text
 lib
