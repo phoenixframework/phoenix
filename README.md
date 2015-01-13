@@ -4,23 +4,13 @@
 [![Build Status](https://api.travis-ci.org/phoenixframework/phoenix.svg)](https://travis-ci.org/phoenixframework/phoenix)
 [![Inline docs](http://inch-ci.org/github/phoenixframework/phoenix.svg)](http://inch-ci.org/github/phoenixframework/phoenix)
 
-***
-
-- [Documentation](#documentation)
-- [Development](#development)
-  - [Building phoenix.coffee](#building-phoenixcoffee)
-- [Contributing](#contributing)
-- [Important links](#important-links)
-
-
 ## Getting started
 
-- See the official site at http://www.phoenixframework.org/
+See the official site at http://www.phoenixframework.org/
 
 ## Documentation
 
 API documentation is available at [http://hexdocs.pm/phoenix](http://hexdocs.pm/phoenix)
-
 
 ## Development
 
