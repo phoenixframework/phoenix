@@ -136,12 +136,17 @@ defmodule Phoenix.Channel.Transport do
   end
   defp handle_result(bad_return, event) when event == "join" do
     raise InvalidReturn, message: """
-      expected {:ok, %Socket{}} | {:error, %Socket{}, reason} got #{inspect bad_return}
+      expected `join` to return `{:ok, %Socket{}} | {:error, %Socket{}, reason}` got `#{inspect bad_return}`
     """
   end
-  defp handle_result(bad_return, _event) do
+  defp handle_result(bad_return, event) when event == "leave" do
     raise InvalidReturn, message: """
-      expected {:ok, %Socket{}} | {:leave, %Socket{}} got #{inspect bad_return}
+      expected `leave` to return `{:ok, %Socket{}} | {:error, %Socket{}, reason}` got `#{inspect bad_return}`
+    """
+  end
+  defp handle_result(bad_return, event) do
+    raise InvalidReturn, message: """
+      expected `#{event}` to return `{:ok, %Socket{}} | {:leave, %Socket{}}  | {:error, socket, reason}` got `#{inspect bad_return}`
     """
   end
 
