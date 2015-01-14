@@ -826,7 +826,7 @@ defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
   socket "/ws", HelloPhoenix do
-    channel "lobby", RoomChannel
+    channel "rooms:*", RoomChannel # Will match all topics which begin with "rooms:"
   end
   ...
 end
