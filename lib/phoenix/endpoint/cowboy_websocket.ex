@@ -32,8 +32,8 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
   defp format_reason(:error, reason, stack), do: {reason, stack}
 
   def websocket_init(_transport, req, {handler, conn}) do
-    {:ok, state} = handler.ws_init(conn)
-    {:ok, :cowboy_req.compact(req), {handler, state}}
+    {:ok, state, timeout} = handler.ws_init(conn)
+    {:ok, :cowboy_req.compact(req), {handler, state}, timeout}
   end
 
   def websocket_handle({opcode = :text, payload}, req, {handler, state}) do

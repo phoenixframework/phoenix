@@ -35,7 +35,8 @@ defmodule Phoenix.Endpoint.Adapter do
      # Transports
      transports: [
        longpoller_window_ms: 10_000,
-       websocket_serializer: Phoenix.Transports.JSONSerializer
+       websocket_serializer: Phoenix.Transports.JSONSerializer,
+       websocket_timeout: :infinity
      ],
 
      # Runtime config
