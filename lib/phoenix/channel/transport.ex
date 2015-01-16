@@ -81,13 +81,11 @@ defmodule Phoenix.Channel.Transport do
     {:ok, sockets}
   end
   defp transport_response({:error, reason, %Socket{} = socket}, sockets) do
-    Logger.error fn ->
-      """
-      Dispatching topic "#{socket.topic}" to #{socket.router}"
-        reason: #{inspect(reason)}
-        state:  #{inspect(socket)}
-      """
-    end
+    Logger.error """
+    Dispatching topic #{inspect socket.topic} to #{inspect socket.router} failed"
+    Reason: #{inspect(reason)}
+     State: #{inspect(socket)}
+    """
     {:error, reason, HashDict.delete(sockets, socket.topic)}
   end
 

@@ -1,6 +1,6 @@
-defmodule Phoenix.Channel.ChannelTest do
+defmodule Phoenix.ChannelTest do
   use ExUnit.Case, async: true
-  import RouterHelper, only: [capture_log: 1]
+
   alias Phoenix.PubSub
   alias Phoenix.Channel
   alias Phoenix.Socket
@@ -73,12 +73,12 @@ defmodule Phoenix.Channel.ChannelTest do
       channel "lponly:*", MyChannel, via: [LongPoller]
     end
 
-    socket "/ws2", Phoenix.Channel.ChannelTest, via: [WebSocket] do
+    socket "/ws2", Phoenix.ChannelTest, via: [WebSocket] do
       channel "topic2:*", Elixir.MyChannel
       channel "topic2-override:*", Elixir.MyChannel, via: [LongPoller]
     end
 
-    socket "/ws3", alias: Phoenix.Channel.ChannelTest do
+    socket "/ws3", alias: Phoenix.ChannelTest do
       channel "topic3:*", Elixir.MyChannel
     end
   end
@@ -89,10 +89,16 @@ defmodule Phoenix.Channel.ChannelTest do
             topic: "topic1:subtopic",
             assigns: []}
   end
+
   def join_message(func) do
     %Message{topic: "topic1:subtopic",
              event: "join",
              payload: func}
+  end
+
+  setup do
+    Logger.disable(self())
+    :ok
   end
 
   test "#subscribe/unsubscribe's socket to/from topic" do
@@ -222,15 +228,13 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "unsuccessful join denies socket access to topic" do
-    capture_log fn ->
-      message = join_message(fn socket -> {:error, :unauthenticated, socket} end)
+    message = join_message(fn socket -> {:error, :unauthenticated, socket} end)
 
-      PubSub.create("topic1:subtopic")
-      assert PubSub.subscribers("topic1:subtopic") == []
-      {:error, :unauthenticated, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
-      refute HashDict.get(sockets, "topic1:subtopic")
-      refute PubSub.subscribers("topic1:subtopic") == [self]
-    end
+    PubSub.create("topic1:subtopic")
+    assert PubSub.subscribers("topic1:subtopic") == []
+    {:error, :unauthenticated, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    refute HashDict.get(sockets, "topic1:subtopic")
+    refute PubSub.subscribers("topic1:subtopic") == [self]
   end
 
   test "#leave is called when the socket conn closes, and is unsubscribed" do
@@ -306,94 +310,86 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "join/3 and handle_in/3 match splat topics" do
-    capture_log fn ->
-      message = %Message{topic: "topic1:somesubtopic",
-                         event: "join",
-                         payload: fn socket -> {:ok, socket} end}
-      {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
-      assert_received {:join, "topic1:somesubtopic"}
+    message = %Message{topic: "topic1:somesubtopic",
+                       event: "join",
+                       payload: fn socket -> {:ok, socket} end}
+    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    assert_received {:join, "topic1:somesubtopic"}
 
-      message = %Message{topic: "topic1",
-                         event: "join",
-                         payload: fn socket -> {:ok, socket} end}
-      {:error, :bad_transport_match, _sockets} = Transport.dispatch(message, sockets, self, Router, WebSocket)
-      refute_received {:join, "topic1"}
+    message = %Message{topic: "topic1",
+                       event: "join",
+                       payload: fn socket -> {:ok, socket} end}
+    {:error, :bad_transport_match, _sockets} = Transport.dispatch(message, sockets, self, Router, WebSocket)
+    refute_received {:join, "topic1"}
 
-      message = %Message{topic: "topic1:somesubtopic",
-                         event: "some:event",
-                         payload: fn socket -> {:ok, socket} end}
-      Transport.dispatch(message, sockets, self, Router, WebSocket)
-      assert_received {:handle_in, "topic1:somesubtopic"}
+    message = %Message{topic: "topic1:somesubtopic",
+                       event: "some:event",
+                       payload: fn socket -> {:ok, socket} end}
+    Transport.dispatch(message, sockets, self, Router, WebSocket)
+    assert_received {:handle_in, "topic1:somesubtopic"}
 
-      message = %Message{topic: "topic1",
-                         event: "some:event",
-                         payload: fn socket -> {:ok, socket} end}
-      Transport.dispatch(message, sockets, self, Router, WebSocket)
-      refute_received {:handle_in, "topic1:somesubtopic"}
-    end
+    message = %Message{topic: "topic1",
+                       event: "some:event",
+                       payload: fn socket -> {:ok, socket} end}
+    Transport.dispatch(message, sockets, self, Router, WebSocket)
+    refute_received {:handle_in, "topic1:somesubtopic"}
   end
 
   test "join/3 and handle_in/3 match bare topics" do
-    capture_log fn ->
-      message = %Message{topic: "baretopic",
-                         event: "join",
-                         payload: fn socket -> {:ok, socket} end}
-      {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
-      assert_received {:join, "baretopic"}
+    message = %Message{topic: "baretopic",
+                       event: "join",
+                       payload: fn socket -> {:ok, socket} end}
+    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    assert_received {:join, "baretopic"}
 
-      message = %Message{topic: "baretopic:sub",
-                         event: "join",
-                         payload: fn socket -> {:ok, socket} end}
-      {:error, :bad_transport_match, _sockets} = Transport.dispatch(message, sockets, self, Router, WebSocket)
-      refute_received {:join, "baretopic:sub"}
+    message = %Message{topic: "baretopic:sub",
+                       event: "join",
+                       payload: fn socket -> {:ok, socket} end}
+    {:error, :bad_transport_match, _sockets} = Transport.dispatch(message, sockets, self, Router, WebSocket)
+    refute_received {:join, "baretopic:sub"}
 
-      message = %Message{topic: "baretopic",
-                         event: "some:event",
-                         payload: fn socket -> {:ok, socket} end}
-      Transport.dispatch(message, sockets, self, Router, WebSocket)
-      assert_received {:handle_in, "baretopic"}
+    message = %Message{topic: "baretopic",
+                       event: "some:event",
+                       payload: fn socket -> {:ok, socket} end}
+    Transport.dispatch(message, sockets, self, Router, WebSocket)
+    assert_received {:handle_in, "baretopic"}
 
-      message = %Message{topic: "baretopic:sub",
-                         event: "some:event",
-                         payload: fn socket -> {:ok, socket} end}
-      Transport.dispatch(message, sockets, self, Router, WebSocket)
-      refute_received {:handle_in, "baretopic:sub"}
-    end
+    message = %Message{topic: "baretopic:sub",
+                       event: "some:event",
+                       payload: fn socket -> {:ok, socket} end}
+    Transport.dispatch(message, sockets, self, Router, WebSocket)
+    refute_received {:handle_in, "baretopic:sub"}
   end
 
   test "channel `via:` option filters messages by transport" do
-    capture_log fn ->
-      # via WS
-      message = %Message{topic: "wsonly:somesubtopic",
-                         event: "join",
-                         payload: fn socket -> {:ok, socket} end}
-      {:ok, _sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
-      assert_received {:join, "wsonly:somesubtopic"}
+    # via WS
+    message = %Message{topic: "wsonly:somesubtopic",
+                       event: "join",
+                       payload: fn socket -> {:ok, socket} end}
+    {:ok, _sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    assert_received {:join, "wsonly:somesubtopic"}
 
-      {:error, :bad_transport_match, _sockets} = Transport.dispatch(message, HashDict.new, self, Router, LongPoller)
-      refute_received {:join, "wsonly:somesubtopic"}
+    {:error, :bad_transport_match, _sockets} = Transport.dispatch(message, HashDict.new, self, Router, LongPoller)
+    refute_received {:join, "wsonly:somesubtopic"}
 
-      # via LP
-      message = %Message{topic: "lponly:somesubtopic",
-                         event: "join",
-                         payload: fn socket -> {:ok, socket} end}
-      {:ok, _sockets} = Transport.dispatch(message, HashDict.new, self, Router, LongPoller)
-      assert_received {:join, "lponly:somesubtopic"}
+    # via LP
+    message = %Message{topic: "lponly:somesubtopic",
+                       event: "join",
+                       payload: fn socket -> {:ok, socket} end}
+    {:ok, _sockets} = Transport.dispatch(message, HashDict.new, self, Router, LongPoller)
+    assert_received {:join, "lponly:somesubtopic"}
 
-      {:error, :bad_transport_match, _sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
-      refute_received {:join, "lponly:somesubtopic"}
-    end
+    {:error, :bad_transport_match, _sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    refute_received {:join, "lponly:somesubtopic"}
   end
 
   test "unmatched channel message returns {:error, :bad_transport_match, sockets}" do
-    capture_log fn ->
-      message = %Message{topic: "ensurebadmatch:somesubtopic",
-                         event: "join",
-                         payload: fn socket -> {:ok, socket} end}
-      assert {:error, :bad_transport_match, _sockets} =
-      Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
-      refute_received {:join, "ensurebadmatch:somesubtopic"}
-    end
+    message = %Message{topic: "ensurebadmatch:somesubtopic",
+                       event: "join",
+                       payload: fn socket -> {:ok, socket} end}
+    assert {:error, :bad_transport_match, _sockets} =
+    Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    refute_received {:join, "ensurebadmatch:somesubtopic"}
   end
 
   test "socket/3 with alias option" do
@@ -413,22 +409,20 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "socket/3 with via applies overridable transport filters to all channels" do
-    capture_log fn ->
-      message = %Message{topic: "topic2:somesubtopic",
-                         event: "join",
-                         payload: fn socket -> {:ok, socket} end}
-      assert {:error, :bad_transport_match, sockets} =
-        Transport.dispatch(message, HashDict.new, self, Router, LongPoller)
-      refute_received {:join, "topic2:somesubtopic"}
+    message = %Message{topic: "topic2:somesubtopic",
+                       event: "join",
+                       payload: fn socket -> {:ok, socket} end}
+    assert {:error, :bad_transport_match, sockets} =
+      Transport.dispatch(message, HashDict.new, self, Router, LongPoller)
+    refute_received {:join, "topic2:somesubtopic"}
 
-      message = %Message{topic: "topic2-override:somesubtopic",
-                         event: "join",
-                         payload: fn socket -> {:ok, socket} end}
-      assert {:ok, _sockets} = Transport.dispatch(message, sockets, self, Router, LongPoller)
-      assert_received {:join, "topic2-override:somesubtopic"}
-      assert {:error, :bad_transport_match, _sockets} =
-        Transport.dispatch(message, sockets, self, Router, WebSocket)
-      refute_received {:join, "topic2-override:somesubtopic"}
-    end
+    message = %Message{topic: "topic2-override:somesubtopic",
+                       event: "join",
+                       payload: fn socket -> {:ok, socket} end}
+    assert {:ok, _sockets} = Transport.dispatch(message, sockets, self, Router, LongPoller)
+    assert_received {:join, "topic2-override:somesubtopic"}
+    assert {:error, :bad_transport_match, _sockets} =
+      Transport.dispatch(message, sockets, self, Router, WebSocket)
+    refute_received {:join, "topic2-override:somesubtopic"}
   end
 end
