@@ -115,13 +115,13 @@ defmodule Phoenix.Channel do
 
   defcallback leave(msg :: map, Socket.t) :: {:ok, Socket.t}
 
-  defcallback handle_in(topic :: binary, msg :: map, Socket.t) :: {:ok, Socket.t} |
-                                                                  {:leave, Socket.t} |
-                                                                  {:error, Socket.t, reason :: term}
+  defcallback handle_in(event :: String.t, msg :: map, Socket.t) :: {:ok, Socket.t} |
+                                                                    {:leave, Socket.t} |
+                                                                    {:error, Socket.t, reason :: term}
 
-  defcallback handle_out(topic :: binary, msg :: map, Socket.t) :: {:ok, Socket.t} |
-                                                                   {:leave, Socket.t} |
-                                                                   {:error, Socket.t, reason :: term}
+  defcallback handle_out(event :: String.t, msg :: map, Socket.t) :: {:ok, Socket.t} |
+                                                                     {:leave, Socket.t} |
+                                                                     {:error, Socket.t, reason :: term}
 
   defmacro __using__(_options) do
     quote do
