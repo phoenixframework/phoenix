@@ -21,7 +21,6 @@ defmodule Phoenix.PubSub do
 
   """
 
-
   @server Phoenix.PubSub.Server
 
   @pg_prefix :phx
