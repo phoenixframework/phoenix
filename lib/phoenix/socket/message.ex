@@ -11,7 +11,6 @@ defmodule Phoenix.Socket.Message do
 
   """
 
-  alias Poison, as: JSON
   alias Phoenix.Socket.Message
 
   defstruct topic: nil, event: nil, payload: nil
@@ -24,20 +23,8 @@ defmodule Phoenix.Socket.Message do
   end
 
   @doc """
-  Parse JSON into required format
-  Raises `Phoenix.Socket.Message.InvalidMessage` if invalid
-
-  Returns The `%Phoenix.Socket.Message{}` parsed from JSON
-  """
-  def parse!(text) do
-    text |> JSON.decode! |> from_map!
-  end
-
-  @doc """
   Converts a map with string keys into a `%Phoenix.Socket.Message{}`.
   Raises `Phoenix.Socket.Message.InvalidMessage` if not valid
-
-  See `parse!/1` for required keys
   """
   def from_map!(map) when is_map(map) do
     try do
