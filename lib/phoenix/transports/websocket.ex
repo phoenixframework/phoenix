@@ -48,7 +48,7 @@ defmodule Phoenix.Transports.WebSocket do
     |> Transport.dispatch(sockets, self, router, __MODULE__)
     |> case do
       {:ok, sockets}             -> %{state | sockets: sockets}
-      {:error, sockets, _reason} -> %{state | sockets: sockets}
+      {:error, _reason, sockets} -> %{state | sockets: sockets}
     end
   end
 
@@ -58,7 +58,7 @@ defmodule Phoenix.Transports.WebSocket do
   def ws_info({:socket_broadcast, message = %Message{}}, state = %{sockets: sockets}) do
     sockets = case Transport.dispatch_broadcast(sockets, message) do
       {:ok, socks} -> socks
-      {:error, socks, _reason} -> socks
+      {:error, _reason, socks} -> socks
     end
 
     %{state | sockets: sockets}
