@@ -21,7 +21,6 @@ defmodule Phoenix.PubSub do
 
   """
 
-
   @server Phoenix.PubSub.Server
 
   @pg_prefix :phx
@@ -147,7 +146,7 @@ defmodule Phoenix.PubSub do
     |> subscribers
     |> Enum.each fn
       pid when pid != from_pid -> send(pid, message)
-      _pid ->
+      _pid -> :ok
     end
   end
 

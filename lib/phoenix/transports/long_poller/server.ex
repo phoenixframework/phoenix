@@ -72,8 +72,8 @@ defmodule Phoenix.Transports.LongPoller.Server do
     |> case do
       {:ok, sockets} ->
         {:reply, {:ok, sockets}, %{state | sockets: sockets}, state.window_ms}
-      {:error, sockets, reason} ->
-        {:reply, {:error, sockets, reason}, %{state | sockets: sockets}, state.window_ms}
+      {:error, reason, sockets} ->
+        {:reply, {:error, reason, sockets}, %{state | sockets: sockets}, state.window_ms}
     end
   end
 
@@ -90,7 +90,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   def handle_info({:socket_broadcast, message = %Message{}}, %{sockets: sockets} = state) do
     sockets = case Transport.dispatch_broadcast(sockets, message) do
       {:ok, socks} -> socks
-      {:error, socks, _reason} -> socks
+      {:error, _reason, socks} -> socks
     end
 
     {:noreply, %{state | sockets: sockets}, state.window_ms}

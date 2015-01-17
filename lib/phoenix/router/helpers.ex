@@ -147,7 +147,7 @@ defmodule Phoenix.Router.Helpers do
     quote do
       unquote(channels_ast)
       def match_channel(socket, _direction, _channel, _event, _msg_payload, _transport) do
-        {:error, socket, :bad_transport_match}
+        {:error, :bad_transport_match, socket}
       end
     end
   end

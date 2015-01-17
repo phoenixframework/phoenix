@@ -24,7 +24,8 @@ defmodule Phoenix.Endpoint.CowboyHandler do
   end
 
   def child_spec(scheme, endpoint, config) do
-    config = Keyword.put(config, :dispatch, [{:_, [{:_, __MODULE__, {endpoint, []}}]}])
+    # Use put_new to allow custom dispatches
+    config = Keyword.put_new(config, :dispatch, [{:_, [{:_, __MODULE__, {endpoint, []}}]}])
 
     {_ref, mfa, type, timeout, kind, modules} =
       Plug.Adapters.Cowboy.child_spec(scheme, endpoint, [], config)

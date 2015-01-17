@@ -1,7 +1,10 @@
 defmodule Phoenix.Channel.Transport do
+
+  require Logger
   alias Phoenix.Socket
   alias Phoenix.Socket.Message
   alias Phoenix.PubSub
+
 
   @moduledoc """
   Handles dispatching incoming and outgoing Channel messages
@@ -56,7 +59,7 @@ defmodule Phoenix.Channel.Transport do
 
   The following return signatures must be handled by transport adapters:
     * `{:ok, sockets}` - Successful dispatch, with updated `HashDict` of sockets
-    * `{:error, sockets, reason}` - Failed dispatched with updatd `HashDict` of sockets
+    * `{:error, reason, sockets}` - Failed dispatched with updatd `HashDict` of sockets
 
   The returned `HashDict` of `%Phoenix.Socket{}`s must be held by the adapter
   """
@@ -77,8 +80,13 @@ defmodule Phoenix.Channel.Transport do
   defp transport_response({:heartbeat, _socket}, sockets) do
     {:ok, sockets}
   end
-  defp transport_response({:error, socket, reason}, sockets) do
-    {:error, HashDict.delete(sockets, socket.topic), reason}
+  defp transport_response({:error, reason, %Socket{} = socket}, sockets) do
+    Logger.error """
+    Dispatching topic #{inspect socket.topic} to #{inspect socket.router} failed"
+    Reason: #{inspect(reason)}
+     State: #{inspect(socket)}
+    """
+    {:error, reason, HashDict.delete(sockets, socket.topic)}
   end
 
 
@@ -109,7 +117,7 @@ defmodule Phoenix.Channel.Transport do
       |> socket.router.match_channel(:incoming, topic, event, msg, socket.transport)
       |> handle_result(event)
     else
-      handle_result({:error, socket, :unauthenticated}, event)
+      handle_result({:error, :unauthenticated, socket}, event)
     end
   end
 
@@ -131,22 +139,22 @@ defmodule Phoenix.Channel.Transport do
     |> socket.router.match_channel(:incoming, socket.topic, "leave", %{reason: :leave}, socket.transport)
     |> handle_result("leave")
   end
-  defp handle_result({:error, socket, reason}, _event) do
-    {:error, socket, reason}
+  defp handle_result({:error, reason, %Socket{} = socket}, _event) do
+    {:error, reason, socket}
   end
   defp handle_result(bad_return, event) when event == "join" do
     raise InvalidReturn, message: """
-      expected `join` to return `{:ok, %Socket{}} | {:error, %Socket{}, reason}` got `#{inspect bad_return}`
+      expected `join` to return `{:ok, %Socket{}} | {:error, reason, %Socket{}}` got `#{inspect bad_return}`
     """
   end
   defp handle_result(bad_return, event) when event == "leave" do
     raise InvalidReturn, message: """
-      expected `leave` to return `{:ok, %Socket{}} | {:error, %Socket{}, reason}` got `#{inspect bad_return}`
+      expected `leave` to return `{:ok, %Socket{}} | {:error, reason, %Socket{}}` got `#{inspect bad_return}`
     """
   end
   defp handle_result(bad_return, event) do
     raise InvalidReturn, message: """
-      expected `#{event}` to return `{:ok, %Socket{}} | {:leave, %Socket{}}  | {:error, socket, reason}` got `#{inspect bad_return}`
+      expected `#{event}` to return `{:ok, %Socket{}} | {:leave, %Socket{}}  | {:error, reason, %Socket{}}` got `#{inspect bad_return}`
     """
   end
 

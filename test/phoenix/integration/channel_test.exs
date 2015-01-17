@@ -174,54 +174,56 @@ defmodule Phoenix.Integration.ChannelTest do
     assert resp.status == 200
 
     # unauthorized events
-    Phoenix.PubSub.subscribe(self, "rooms:private-room")
-    {resp, cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:private-room",
-                                                       "event" => "new:msg",
-                                                       "payload" => %{"body" => "this method shouldn't send!'"}}
-    assert resp.status == 401
-    refute_receive {:socket_broadcast, %Message{event: "new:msg"}}
+    capture_log fn ->
+      Phoenix.PubSub.subscribe(self, "rooms:private-room")
+      {resp, cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:private-room",
+                                                         "event" => "new:msg",
+                                                         "payload" => %{"body" => "this method shouldn't send!'"}}
+      assert resp.status == 401
+      refute_receive {:socket_broadcast, %Message{event: "new:msg"}}
 
 
-    ## multiplexed sockets
+      ## multiplexed sockets
 
-    # join
-    {resp, cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:room123",
-                                                       "event" => "join",
-                                                       "payload" => %{}}
-    assert resp.status == 200
-    Phoenix.Channel.broadcast "rooms:lobby", "new:msg", %{body: "Hello lobby"}
-    # poll
-    {resp, cookie} = poll(:get, "/ws/poll", cookie)
-    assert resp.status == 200
-    assert Enum.count(resp.body) == 2
-    assert Enum.at(resp.body, 0)["payload"]["status"] == "connected"
-    assert Enum.at(resp.body, 1)["payload"]["body"] == "Hello lobby"
-
-
-    ## Server termination handling
-
-    # 410 from crashed/terminated longpoller server when polling
-    :timer.sleep @ensure_window_timeout_ms
-    {resp, cookie} = poll(:get, "/ws/poll", cookie)
-    assert resp.status == 410
+      # join
+      {resp, cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:room123",
+                                                         "event" => "join",
+                                                         "payload" => %{}}
+      assert resp.status == 200
+      Phoenix.Channel.broadcast "rooms:lobby", "new:msg", %{body: "Hello lobby"}
+      # poll
+      {resp, cookie} = poll(:get, "/ws/poll", cookie)
+      assert resp.status == 200
+      assert Enum.count(resp.body) == 2
+      assert Enum.at(resp.body, 0)["payload"]["status"] == "connected"
+      assert Enum.at(resp.body, 1)["payload"]["body"] == "Hello lobby"
 
 
-    # 410 from crashed/terminated longpoller server when publishing
-    # create new session
-    {resp, cookie} = poll :post, "/ws", cookie, %{}
-    assert resp.status == 200
+      ## Server termination handling
 
-    # join
-    {resp, cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:lobby",
-                                                       "event" => "join",
-                                                       "payload" => %{}}
-    assert resp.status == 200
-    Phoenix.PubSub.subscribe(self, "rooms:lobby")
-    :timer.sleep @ensure_window_timeout_ms
-    {resp, _cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:lobby",
-                                                        "event" => "new:msg",
-                                                        "payload" => %{"body" => "hi!"}}
-    assert resp.status == 410
-    refute_receive {:socket_reply, %Message{event: "new:msg", payload: %{"body" => "hi!"}}}
+      # 410 from crashed/terminated longpoller server when polling
+      :timer.sleep @ensure_window_timeout_ms
+      {resp, cookie} = poll(:get, "/ws/poll", cookie)
+      assert resp.status == 410
+
+
+      # 410 from crashed/terminated longpoller server when publishing
+      # create new session
+      {resp, cookie} = poll :post, "/ws", cookie, %{}
+      assert resp.status == 200
+
+      # join
+      {resp, cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:lobby",
+                                                         "event" => "join",
+                                                         "payload" => %{}}
+      assert resp.status == 200
+      Phoenix.PubSub.subscribe(self, "rooms:lobby")
+      :timer.sleep @ensure_window_timeout_ms
+      {resp, _cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:lobby",
+                                                          "event" => "new:msg",
+                                                          "payload" => %{"body" => "hi!"}}
+      assert resp.status == 410
+      refute_receive {:socket_reply, %Message{event: "new:msg", payload: %{"body" => "hi!"}}}
+    end
   end
 end
