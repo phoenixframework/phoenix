@@ -452,6 +452,7 @@ defmodule Phoenix.Controller do
   end
 
   def render(conn, template, format, assigns) do
+    assigns = to_map(assigns)
     content_type = Plug.MIME.type(format)
     conn = prepare_assigns(conn, assigns, format)
     view = Map.get(conn.private, :phoenix_view) ||
@@ -469,12 +470,12 @@ defmodule Phoenix.Controller do
       end
 
     update_in conn.assigns,
-              & &1 |> Dict.merge(assigns) |> Map.put(:layout, layout)
+              & &1 |> Map.merge(assigns) |> Map.put(:layout, layout)
   end
 
   defp layout(conn, assigns, format) do
     if format in layout_formats(conn) do
-      case Dict.fetch(assigns, :layout) do
+      case Map.fetch(assigns, :layout) do
         {:ok, layout} -> layout
         :error -> layout(conn)
       end
@@ -482,6 +483,10 @@ defmodule Phoenix.Controller do
       false
     end
   end
+
+  defp to_map(assigns) when is_map(assigns), do: assigns
+  defp to_map(assigns) when is_list(assigns), do: :maps.from_list(assigns)
+  defp to_map(assigns), do: Dict.merge(%{}, assigns)
 
   defp template_name(name, format) when is_atom(name), do:
     Atom.to_string(name) <> "." <> format

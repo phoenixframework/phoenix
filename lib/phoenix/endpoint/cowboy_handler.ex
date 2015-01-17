@@ -7,7 +7,7 @@ defmodule Phoenix.Endpoint.CowboyHandler do
   def start_link(scheme, endpoint, config, {m, f, a}) do
     case apply(m, f, a) do
       {:ok, pid} ->
-        Logger.debug info(scheme, endpoint, config)
+        Logger.info info(scheme, endpoint, config)
         {:ok, pid}
 
       {:error, {:shutdown, {_, _, {{_, {:error, :eaddrinuse}}, _}}}} = error ->

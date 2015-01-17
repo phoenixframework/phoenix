@@ -39,7 +39,7 @@ defimpl Phoenix.HTML.Safe, for: BitString do
     defp escape_char(unquote(match)), do: unquote(insert)
   end
 
-  defp escape_char(char), do: <<char>>
+  defp escape_char(char), do: char
 end
 
 defimpl Phoenix.HTML.Safe, for: List do

@@ -237,10 +237,14 @@ defmodule Phoenix.View do
   """
   def render(module, template, assigns) do
     assigns
-    |> Enum.into(%{})
+    |> to_map()
     |> Map.pop(:layout, false)
     |> render_within(module, template)
   end
+
+  defp to_map(assigns) when is_map(assigns), do: assigns
+  defp to_map(assigns) when is_list(assigns), do: :maps.from_list(assigns)
+  defp to_map(assigns), do: Dict.merge(%{}, assigns)
 
   defp render_within({{layout_mod, layout_tpl}, assigns}, inner_mod, template) do
     template

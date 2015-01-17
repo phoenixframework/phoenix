@@ -63,7 +63,7 @@ defmodule Phoenix.HTML.Engine do
     quote do
       case unquote(expr) do
         {:safe, data} -> data
-        bin when is_binary(bin) -> Phoenix.HTML.Safe.BitString.to_iodata(bin)
+        bin when is_binary(bin) -> HTML.Safe.BitString.to_iodata(bin)
         other -> HTML.Safe.to_iodata(other)
       end
     end
