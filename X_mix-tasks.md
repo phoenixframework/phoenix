@@ -10,7 +10,7 @@ We have seen all of these at one point or another in the guides, but having all 
 
 #### `mix phoenix.new`
 
-This is how we tell Phoenix the framework to generate a new Phoenix application for us. We saw it early on in the [Up and Running Guide](http://www.phoenixframework.org/v0.8.0/docs/up-and-running)
+This is how we tell Phoenix the framework to generate a new Phoenix application for us. We saw it early on in the [Up and Running Guide](http://www.phoenixframework.org/docs/up-and-running)
 
 We need to pass this task a name for our application, and a path so Phoenix knows where to create it. Conventionally, we use all lower-case letters with underscores for the name (snake case). We can use either a relative or absolute path for the second argument. The only requirement is that the path must be outside of Phoenix itself.
 
@@ -81,7 +81,7 @@ $ mix phoenix.new task_tester /Users/lance/work/task_tester
 
 #### `mix phoenix.routes`
 
-This task has a single purpose, to show us all the routes defined for a given router. We saw it used extensively in the [Routing Guide](http://www.phoenixframework.org/v0.8.0/docs/routing).
+This task has a single purpose, to show us all the routes defined for a given router. We saw it used extensively in the [Routing Guide](http://www.phoenixframework.org/docs/routing).
 
 If we don't specify a router for this task, it will default to the router Phoenix generated for us.
 
