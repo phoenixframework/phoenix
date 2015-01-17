@@ -228,4 +228,37 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.socket_url(conn, :upgrade) == url
     assert Helpers.socket_url(__MODULE__, :upgrade) == url
   end
+
+  defp extract_defchannels(channels, pos) do
+    {:__block__, _, block} = Phoenix.Router.Helpers.defchannels(channels)
+    Enum.at(block, pos) |> Macro.to_string()
+  end
+
+  test "defchannels does not generate generic match_channel when there are no channels" do
+    assert extract_defchannels([], 0) == String.strip """
+    []
+    """
+  end
+
+  test "defchannels generates all channels above the generic match" do
+    assert extract_defchannels([{"topic:*", Module, []}], 0) == String.strip """
+    [(
+      def(match_channel(socket, :incoming, <<\"topic\" <> _rest>>, \"join\", msg_payload, transport) when transport in [Phoenix.Transports.WebSocket, Phoenix.Transports.LongPoller]) do
+        apply(Module, :join, [socket.topic(), msg_payload, socket])
+      end
+      def(match_channel(socket, :incoming, <<\"topic\" <> _rest>>, \"leave\", msg_payload, transport) when transport in [Phoenix.Transports.WebSocket, Phoenix.Transports.LongPoller]) do
+        apply(Module, :leave, [msg_payload, socket])
+      end
+      def(match_channel(socket, :incoming, <<\"topic\" <> _rest>>, event, msg_payload, transport) when transport in [Phoenix.Transports.WebSocket, Phoenix.Transports.LongPoller]) do
+        apply(Module, :handle_in, [event, msg_payload, socket])
+      end
+      def(match_channel(socket, :outgoing, <<\"topic\" <> _rest>>, event, msg_payload, _transport)) do
+        apply(Module, :handle_out, [event, msg_payload, socket])
+      end
+      def(match_channel(socket, :info, <<\"topic\" <> _rest>>, _event, msg_payload, transport) when transport in [Phoenix.Transports.WebSocket, Phoenix.Transports.LongPoller]) do
+        apply(Module, :handle_info, [msg_payload, socket])
+      end
+    )]
+    """
+  end
 end

@@ -11,6 +11,8 @@ defmodule Phoenix.PubSub.PubSubTest do
   end
 
   setup_all do
+    # Other tests can create topics with similar names and cause random failures
+    PubSub.list |> Enum.each fn({:phx, topic}) -> PubSub.delete(topic) end
     :ok
   end
 

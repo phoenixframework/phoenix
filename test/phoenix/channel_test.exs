@@ -312,8 +312,8 @@ defmodule Phoenix.Channel.ChannelTest do
     message = %Message{topic: "topic1",
                        event: "join",
                        payload: fn socket -> {:ok, socket} end}
-    {:error, _sockets, :bad_transport_match} = Transport.dispatch(message, sockets, self, Router, WebSocket)
-    refute_received {:join, "topic1"}
+    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router, WebSocket)
+    assert_received {:join, "topic1"}
 
     message = %Message{topic: "topic1:somesubtopic",
                        event: "some:event",
@@ -414,8 +414,7 @@ defmodule Phoenix.Channel.ChannelTest do
                        payload: fn socket -> {:ok, socket} end}
     assert {:ok, _sockets} = Transport.dispatch(message, sockets, self, Router, LongPoller)
     assert_received {:join, "topic2-override:somesubtopic"}
-    assert {:error, _sockets, :bad_transport_match} =
-      Transport.dispatch(message, sockets, self, Router, WebSocket)
-    refute_received {:join, "topic2-override:somesubtopic"}
+    assert {:ok, _sockets} = Transport.dispatch(message, sockets, self, Router, WebSocket)
+    assert_received {:join, "topic2-override:somesubtopic"}
   end
 end
