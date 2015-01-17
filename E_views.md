@@ -23,13 +23,10 @@ defmodule HelloPhoenix.View do
   using do
     quote do
       # Import common functionality
-      import Test.Router.Helpers
+      import HelloPhoenix.Router.Helpers
 
       # Use Phoenix.HTML to import all HTML functions (forms, tags, etc)
       use Phoenix.HTML
-
-      # Common aliases
-      alias Phoenix.Controller.Flash
     end
   end
 
@@ -64,7 +61,6 @@ to look like this.
 ```elixir
 <title><%= title %></title>
 ```
-
 When we reload the Welcome to Phoenix page, we should see our new title.
 
 The `<%=` and `%>` are from the Elixir [Eex](http://elixir-lang.org/docs/stable/eex/) project. They enclose executable Elixir code within a template. The `=` tells Eex to print the result. If the `=` is not there, Eex wills still execute the code, but there will be no output. In our example, we are calling the `title` function from `HelloPhoenix.View` and printing the output into the title tag.
@@ -94,7 +90,7 @@ Then add a line with a link back to the same page. (The object is to see how pat
 <div class="jumbotron">
   <h2>Welcome to Phoenix!</h2>
   <p class="lead">Phoenix is an Elixir Web Framework targeting full-featured, fault tolerant applications with realtime functionality.</p>
-  <p><a href="<%= page_path :index %>">Link back to ourselves</a></p>
+  <p><a href="<%= page_path @conn, :index %>">Link back to ourselves</a></p>
 </div>
 ```
 
@@ -104,7 +100,7 @@ Let's reload the page and view source to see what we have.
 <a href="/">Link back to ourselves</a>
 ```
 
-Great, `page_path/1` evaluated to `/` as we would expect, and we didn't need to qualify it with `HelloPhoenix.View`.
+Great, `page_path/2` evaluated to `/` as we would expect, and we didn't need to qualify it with `HelloPhoenix.View`.
 
 ###Individual Views
 
@@ -177,7 +173,7 @@ If we need only the rendered string, without the whole tuple, we can use the `re
 
 Layouts are just templates. They have an individual view, just like other templates. In a newly generated app, this is `web/views/layout_view.ex`. You may be wondering how the string resulting from a rendered view ends up inside a layout. That's a great question!
 
-When a template is rendered, the layout view will assign `@inner` with the rendered contents of the  template. For HTML templates, `@inner` will be always marked as safe.
+When a template is rendered, the layout view will assign `@inner` with the rendered contents of the template. For HTML templates, `@inner` will be always marked as safe.
 
 If we look at `web/templates/layout/application.html.eex`, just about in the middle of the `<body>`, we will see this.
 
@@ -208,7 +204,20 @@ defmodule HelloPhoenix.ErrorView do
   end
 end
 ```
-Before we dive into this, let's see what the rendered `404 not found` message looks like in a browser. Let's go to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path) for a running local application and see what we get.
+Before we dive into this, let's see what the rendered `404 not found` message looks like in a browser. In the development environment, Phoenix will debug errors by default, showing us a very informative debugging page. What we want here, however, is to see what page the application would serve in production. In order to do that we need to change some configuration in `config/dev.exs`. We change `debug_errors: false` and add `catch_errors: true`.
+
+```elixir
+use Mix.Config
+
+config :hello_phoenix, HelloPhoenix.Endpoint,
+http: [port: System.get_env("PORT") || 4000],
+debug_errors: false,
+catch_errors: true,
+cache_static_lookup: false
+. . .
+```
+
+Now let's go to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path) for a running local application and see what we get.
 
 Ok, that's not very exciting. We get the bare string "Page not found - 404", displayed without a layout.
 
@@ -232,6 +241,7 @@ Now that we understand how we got here, let's make a better error page.
 If we look in the `web/templates/page` directory, we'll see two templates which are unused in a new application, `not_found.html.eex` and `error.html.eex`. We can make use of these now.
 
 First, let's add a little markup to our `not_found.html.eex` template, changing it from this:
+
 ```
 The page you are looking for does not exist
 ```
