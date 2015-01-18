@@ -1,8 +1,10 @@
 defmodule <%= application_module %>.Endpoint do
   use Phoenix.Endpoint, otp_app: :<%= application_name %>
 
+  # Serve at "/" the given assets from "priv/static" directory
   plug Plug.Static,
-    at: "/", from: :<%= application_name %>
+    at: "/", from: :<%= application_name %>,
+    only: ~w(css images js favicon.ico robots.txt)
 
   plug Plug.Logger
 

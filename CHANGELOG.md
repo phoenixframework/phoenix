@@ -2,11 +2,15 @@
 
 ## v0.9.0-dev
 
+* Bug fixes
+  * [Plug] Ensure session and flash are serializable to JSON
+
 * Backwards incompatible changes
   * [Channel] The error return signature has been changed from `{:error, socket, reason}` to {:error, reason, socket}`
+  * [Plug] `Plug.CSRFProtection` now uses a cookie instead of session and expects a `"_csrf_token"` parameter instead of `"csrf_token"`
 
+## v0.8.0 (2015-01-11)
 
-## v0.8.0 (2015-1-11)
 See these [`0.7.x` to `0.8.0` upgrade instructions](https://gist.github.com/chrismccord/9434b8fa208b3aae22b6) to bring your existing apps up to speed.
 
 * Enhancements
@@ -34,7 +38,6 @@ See these [`0.7.x` to `0.8.0` upgrade instructions](https://gist.github.com/chri
   * [Router] The `channel` macro now requires a topic pattern to be used to match incoming channel messages to a channel handler. See `Phoenix.Router.channel/2` for details.
   * [Channel] The `event/3` callback has been renamed to `handle_in/3` and the argument order has changed to `def handle_in("some:event", msg, socket)`
   * [Channel] Channel callback return signatures have changed and now require `{:ok, socket} | {:leave, socket| | {:error, socket, reason}`. `terminate/2` and `hibernate/2` have also been removed.
-
 
 ## v0.7.2 (2014-12-11)
 

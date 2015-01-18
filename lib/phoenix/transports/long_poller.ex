@@ -130,7 +130,7 @@ defmodule Phoenix.Transports.LongPoller do
     :ok = GenServer.call(server_pid, {:ack, messages})
   end
 
-  defp session_key(conn), do: :"#{router_module(conn)}_longpoll_pid"
+  defp session_key(conn), do: "#{router_module(conn)}_longpoll_pid"
 
   @doc """
   Sets the active listener process. Called by polling `conn`

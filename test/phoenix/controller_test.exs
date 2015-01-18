@@ -216,7 +216,8 @@ defmodule Phoenix.ControllerTest do
 
   test "protect_from_forgery/2 doesn't blow up" do
     conn(:get, "/")
-    |> with_session
+    |> fetch_cookies
+    |> fetch_params
     |> protect_from_forgery([])
   end
 

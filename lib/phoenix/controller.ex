@@ -636,27 +636,11 @@ defmodule Phoenix.Controller do
       message: "no supported media type in accept header, expected one of #{inspect accepted}"
   end
 
-  @doc false
-  def __view__(controller_module) do
-    controller_module
-    |> Phoenix.Naming.unsuffix("Controller")
-    |> Kernel.<>("View")
-    |> Module.concat(nil)
-  end
-
-  @doc false
-  def __layout__(controller_module) do
-    controller_module
-    |> Module.split
-    |> Enum.at(0)
-    |> Module.concat("LayoutView")
-  end
-
   @doc """
   Fetches the flash so it can be used during the request.
   """
   def fetch_flash(conn, _opts \\ []) do
-    flash = get_session(conn, :phoenix_flash) || %{}
+    flash = get_session(conn, "phoenix_flash") || %{}
     conn  = persist_flash(conn, flash)
 
     register_before_send conn, fn conn ->
@@ -666,9 +650,9 @@ defmodule Phoenix.Controller do
         map_size(flash) == 0 ->
           conn
         conn.status in 300..308 ->
-          put_session(conn, :phoenix_flash, flash)
+          put_session(conn, "phoenix_flash", flash)
         true ->
-          delete_session(conn, :phoenix_flash)
+          delete_session(conn, "phoenix_flash")
       end
     end
   end
@@ -686,7 +670,7 @@ defmodule Phoenix.Controller do
 
   """
   def put_flash(conn, key, message) do
-    persist_flash(conn, Map.put(get_flash(conn), key, message))
+    persist_flash(conn, Map.put(get_flash(conn), flash_key(key), message))
   end
 
   @doc """
@@ -696,7 +680,7 @@ defmodule Phoenix.Controller do
 
       iex> conn = put_flash(conn, :notice, "Welcome Back!")
       iex> get_flash(conn)
-      %{notice: "Welcome Back!"}
+      %{"notice" => "Welcome Back!"}
 
   """
   def get_flash(conn) do
@@ -715,7 +699,7 @@ defmodule Phoenix.Controller do
 
   """
   def get_flash(conn, key) do
-    get_flash(conn)[key]
+    get_flash(conn)[flash_key(key)]
   end
 
   @doc """
@@ -725,7 +709,26 @@ defmodule Phoenix.Controller do
     persist_flash(conn, %{})
   end
 
+  defp flash_key(binary) when is_binary(binary), do: binary
+  defp flash_key(atom) when is_atom(atom), do: Atom.to_string(atom)
+
   defp persist_flash(conn, value) do
     put_private(conn, :phoenix_flash, value)
+  end
+
+  @doc false
+  def __view__(controller_module) do
+    controller_module
+    |> Phoenix.Naming.unsuffix("Controller")
+    |> Kernel.<>("View")
+    |> Module.concat(nil)
+  end
+
+  @doc false
+  def __layout__(controller_module) do
+    controller_module
+    |> Module.split
+    |> Enum.at(0)
+    |> Module.concat("LayoutView")
   end
 end
