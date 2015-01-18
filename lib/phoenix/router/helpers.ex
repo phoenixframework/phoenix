@@ -146,9 +146,7 @@ defmodule Phoenix.Router.Helpers do
 
     quote do
       unquote(channels_ast)
-      def match_channel_join(socket, _topic, _msg_payload, _transport) do
-        {:error, :bad_transport_match, socket}
-      end
+      def channel_for_topic(_topic, _transport), do: nil
     end
   end
 
@@ -160,12 +158,12 @@ defmodule Phoenix.Router.Helpers do
     end
   end
 
-  defp defchannel(topic_match, module, transports) do
+  defp defchannel(topic_match, channel_module, transports) do
     quote do
-      def match_channel_join(socket, unquote(topic_match), msg_payload, transport)
+      def channel_for_topic(unquote(topic_match), transport)
         when transport in unquote(transports) do
-        socket = %Phoenix.Socket{socket | channel: unquote(module)}
-        apply(unquote(module), :join, [socket.topic, msg_payload, socket])
+
+        unquote(channel_module)
       end
     end
   end

@@ -41,7 +41,7 @@ defmodule Phoenix.Channel do
   such as HMAC'd tokens for this purpose.
 
   To authorize a socket in `join/3`, return `{:ok, socket}`
-  To refuse authorization in `join/3, return `{:error, socket, :some_reason}`
+  To refuse authorization in `join/3, return `:ignore`
 
 
   ### Incoming Events
@@ -111,17 +111,18 @@ defmodule Phoenix.Channel do
   alias Phoenix.Socket.Message
 
   defcallback join(topic :: binary, auth_msg :: map, Socket.t) :: {:ok, Socket.t} |
-                                                                  {:error, Socket.t, reason :: term}
+                                                                  :ignore |
+                                                                  {:error, reason :: term, Socket.t}
 
   defcallback leave(msg :: map, Socket.t) :: {:ok, Socket.t}
 
   defcallback handle_in(event :: String.t, msg :: map, Socket.t) :: {:ok, Socket.t} |
                                                                     {:leave, Socket.t} |
-                                                                    {:error, Socket.t, reason :: term}
+                                                                    {:error, reason :: term, Socket.t}
 
   defcallback handle_out(event :: String.t, msg :: map, Socket.t) :: {:ok, Socket.t} |
                                                                      {:leave, Socket.t} |
-                                                                     {:error, Socket.t, reason :: term}
+                                                                     {:error, reason :: term, Socket.t}
 
   defmacro __using__(_options) do
     quote do

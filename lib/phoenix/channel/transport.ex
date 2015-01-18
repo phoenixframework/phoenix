@@ -80,13 +80,18 @@ defmodule Phoenix.Channel.Transport do
   defp transport_response({:heartbeat, _socket}, sockets) do
     {:ok, sockets}
   end
+  defp transport_response(:ignore, sockets) do
+    {:ok, sockets}
+  end
   defp transport_response({:error, reason, %Socket{} = socket}, sockets) do
-    Logger.error """
-    Crashed Dispatching topic #{inspect socket.topic} to #{inspect(socket.channel || socket.router)}
-      Reason: #{inspect(reason)}
-      Router: #{inspect(socket.router)}
-      State:  #{inspect(socket)}
-    """
+    Logger.error fn ->
+      """
+      Crashed dispatching topic \"#{inspect socket.topic}\" to #{inspect(socket.channel || socket.router)}
+        Reason: #{inspect(reason)}
+        Router: #{inspect(socket.router)}
+        State:  #{inspect(socket)}
+      """
+    end
     {:error, reason, HashDict.delete(sockets, socket.topic)}
   end
 
@@ -108,20 +113,22 @@ defmodule Phoenix.Channel.Transport do
     {:heartbeat, socket}
   end
   def dispatch(socket, topic, "join", msg) do
-    socket
-    |> socket.router.match_channel_join(topic, msg, socket.transport)
-    |> handle_result("join")
-  end
-  def dispatch(socket, topic, "leave", msg) do
-    if Socket.authorized?(socket, topic) do
-      socket.channel.leave(msg, socket) |> handle_result("leave")
-    else
-      handle_result({:error, :unauthenticated, socket}, "leave")
+    case socket.router.channel_for_topic(topic, socket.transport) do
+      nil ->
+        Logger.debug fn -> "Ignoring unmatched topic \"#{socket.topic}\" in #{inspect(socket.router)}" end
+        handle_result(:ignore, "join")
+      channel ->
+        topic
+        |> channel.join(msg, Socket.put_channel(socket, channel))
+        |> handle_result("join")
     end
   end
   def dispatch(socket, topic, event, msg) do
     if Socket.authorized?(socket, topic) do
-      socket.channel.handle_in(event, msg, socket) |> handle_result(event)
+      case event do
+        "leave" -> socket.channel.leave(msg, socket)
+        event   -> socket.channel.handle_in(event, msg, socket)
+      end |> handle_result(event)
     else
       handle_result({:error, :unauthenticated, socket}, event)
     end
@@ -138,6 +145,7 @@ defmodule Phoenix.Channel.Transport do
   defp handle_result({:ok, %Socket{} = socket}, _event) do
     {:ok, socket}
   end
+  defp handle_result(:ignore, "join"), do: :ignore
   defp handle_result({:leave, %Socket{} = socket}, event)
     when not event in ["join", "leave"] do
 
@@ -148,7 +156,7 @@ defmodule Phoenix.Channel.Transport do
   end
   defp handle_result(bad_return, event) when event == "join" do
     raise InvalidReturn, message: """
-      expected `join` to return `{:ok, %Socket{}} | {:error, reason, %Socket{}}` got `#{inspect bad_return}`
+      expected `join` to return `{:ok, %Socket{}} | :ignore | {:error, reason, socket}` got `#{inspect bad_return}`
     """
   end
   defp handle_result(bad_return, event) when event == "leave" do

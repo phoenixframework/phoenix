@@ -8,9 +8,14 @@ defmodule Phoenix.SocketTest do
     %Socket{pid: self}
   end
 
-  test "put_current_topic/3 sets the current topic" do
-    socket = new_socket |> Socket.put_current_topic("sometopic:somesubtopic")
+  test "put_topic/2 sets the topic" do
+    socket = new_socket |> Socket.put_topic("sometopic:somesubtopic")
     assert socket.topic == "sometopic:somesubtopic"
+  end
+
+  test "put_channel/2 sets the channel" do
+    socket = new_socket |> Socket.put_channel(MyChannel)
+    assert socket.channel == MyChannel
   end
 
   test "authorized?/2 returns true if socket belongs to topic" do
