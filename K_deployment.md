@@ -1,5 +1,3 @@
-## Deployment
-
 Once we have a working application, we're ready to deploy it. If you're not quite finished with your own application, don't worry. Just follow the [Up and Running Guide](http://www.phoenixframework.org/docs/up-and-running) to create a basic application to work with.
 
 ### What We'll Need
