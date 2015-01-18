@@ -1,4 +1,4 @@
-Templates are what they sound like they should be - files into which we pass data to form complete HTTP responses. For a web application these responses would typically be full HTML documents. For an API, they would most often be JSON or possibly XML. The majority of the code in template files is often markup, but there will also be sections of Elixir code for Phoenix to compile and evaluate.
+Templates are what they sound like they should be - files into which we pass data to form complete HTTP responses. For a web application these responses would typically be full HTML documents. For an API, they would most often be JSON or possibly XML. The majority of the code in template files is often markup, but there will also be sections of Elixir code for Phoenix to compile and evaluate. The fact that Phoenix templates are pre-compiled makes them extremely fast.
 
 EEx is the default template system in Phoenix, and it is quite similar to ERB in Ruby. It is actually part of Elixir itself, and Phoenix uses EEx templates to create files like the router and the main application view while generating a new application.
 
@@ -6,7 +6,7 @@ As we learned in the [View Guide](http://www.phoenixframework.org/docs/views), b
 
 ###Examples
 
-We've already seen several ways in which templates are used, notably in the Adding Pages Guide and the View Guide. We may cover some of the same territory here, but we will certainly add some new information.
+We've already seen several ways in which templates are used, notably in the [Adding Pages Guide](http://www.phoenixframework.org/docs/adding-pages) and the [Views Guide](http://www.phoenixframework.org/docs/views). We may cover some of the same territory here, but we will certainly add some new information.
 
 ##### Functions in the Main View
 
@@ -14,10 +14,15 @@ Phoenix generates a main application view at `web/view.ex`. Functions we define 
 
 Let's make some additions to our application so we can experiment a little.
 
-First, let's define a new route in `web/router.ex` within the `scope "/" do` block.
+First, let's define a new route in `web/router.ex`.
 
 ```elixir
-get "/test", HelloPhoenix.PageController, :test
+scope "/", HelloPhoenix do
+  pipe_through :browser # Use the default browser stack
+
+  get "/", PageController, :index
+  get "/test", PageController, :test
+end
 ```
 
 Now, let's define the controller action we specified in the route. We'll add a `test/2` action in the `web/controllers/page_controller.ex` file.
@@ -28,7 +33,6 @@ def test(conn, _params) do
 end
 
 ```
-
 We're going to create a function that tells us which controller and action are handling our request.
 
 To do that, we need to import the `action_name/1` and `controller_module/1` functions from `Phoenix.Controller` in the main view.
@@ -42,7 +46,6 @@ defmodule HelloPhoenix.View do
   using do
     quote do
       # Import common functionality
-      import HelloPhoenix.I18n
       import HelloPhoenix.Router.Helpers
       import Phoenix.Controller, only: [action_name: 1, controller_module: 1] # Add This Import Statement
 
@@ -69,7 +72,6 @@ We have a route. We created a new controller action. We have made modifications 
 </div>
 
 ```
-
 Notice that `@conn` is available to us in the template for free via the `assigns` map.
 
 If we visit [localhost:4000/test](http://localhost:4000/test), we will see that our page is brought to us by `Elixir.HelloPhoenix.PageController.test`.
@@ -87,7 +89,6 @@ def connection_keys(conn) do
   Map.from_struct(conn)
   |> Map.keys
 end
-
 ```
 In case you were wondering, the `|>` is Elixir's [pipe operator](http://elixir-lang.org/docs/stable/elixir/Kernel.html#|>/2). It takes the return value of one expression and pipes it into the first argument of the following expression.
 
@@ -130,7 +131,6 @@ We can add a header and a list comprehension like this.
   <% end %>
 </div>
 ```
-
 We use the list of keys returned by the `connection_keys` function as the source list to iterate over. Note that we need the `=` in both `<%=` - one for the top line of the list comprehension and the other to display the key. Without them, nothing would actually be displayed.
 
 When we visit [localhost:4000/test](http://localhost:4000/test) again, we see all the keys displayed.
@@ -142,12 +142,11 @@ In our list comprehension example above, the part that actually displays the val
 ```elixir
 <p><%= key %></p>
 ```
-
 We are probably fine with leaving this in place. Quite often, however, this display code is somewhat more complex, and putting it in the middle of a list comprehension makes our templates harder to read.
 
 That's where partials come in. Partials are templates, usually quite small, which are rendered within other templates. This is simply a continuation of the rendering chain we have already seen. Layouts are templates into which regular templates are rendered. Regular templates may have partial templates rendered into them.
 
-Let's turn this display snippet into a partial. Create a new template file at `web/templates/page/_key.html.eex`, like this.
+Let's turn this display snippet into a partial. Let's create a new template file at `web/templates/page/_key.html.eex`, like this.
 
 ```elixir
 <p><%= @key %></p>
@@ -164,7 +163,7 @@ Now that we have a template, we simply render it within our list comprehension i
 
 Let's take a look at [localhost:4000/test](http://localhost:4000/test) again. The page should look exactly as it did before.
 
-##### Shared Partials
+##### Partials Shared Across Views
 
 Often, we find that small pieces of data need to be rendered the same way in different parts of the application. It's a good practice to move these partials into their own shared directory to indicate that they ought to be available anywhere in the app.
 
@@ -199,18 +198,17 @@ Going back to [localhost:4000/test](http://localhost:4000/test) again. The page 
 
 Phoenix relies on template engines to convert templates of different formats into quoted Elixir expressions. These are modules that receive a template path and then transform the template at that path. Phoenix ships with an engine for Eex templates, but we can configure others. Let's add [phoenix_haml](https://github.com/chrismccord/phoenix_haml), a Haml engine.
 
-To make the versions of Phoenix and phoenix_haml coordinate, we'll be using the master branch of both. In our application, we need to declare phoenix_haml as a dependency in `mix.exs`.
+In our application, we need to declare phoenix_haml as a dependency in `mix.exs`.
 
 ```elixir
 defp deps do
   [
-    {:phoenix, github: "phoenixframework/phoenix"},
+    {:phoenix, "~> 0.8.0"},
     {:cowboy, "~> 1.0"},
     {:phoenix_haml, github: "chrismccord/phoenix_haml"},
   ]
 end
 ```
-
 We also need to configure phoenix_haml as a new template engine in `config/config.ex`.
 
 ```elixir
@@ -218,7 +216,7 @@ config :phoenix, :template_engines,
   haml: PhoenixHaml.Engine
  ```
 
-At the root of our application, we need to run `mix do deps.get, compile` to bring in phoenix_haml.
+At the root of our application, we need to run `mix do deps.get, compile` to bring in phoenix_haml. If there are compiler errors saying that different versions of Phoenix are required for our app and phoenix_haml, we'll need to update the Phoenix dependency in `deps/phoenix_haml/mix.exs` to match the version of Phoenix that we're using.
 
 When we have phoenix_haml compiled into our application, we can convert our `test.html.eex` from an Eex template into a Haml one.
 
