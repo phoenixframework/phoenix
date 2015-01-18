@@ -1,20 +1,20 @@
 ## Deployment
 
-Once we have a working application, we're ready to deploy it. If you're not quite finished with your own application, don't worry. Just follow the [Up and Running Guide](http://www.phoenixframework.org/v0.7.2/docs/up-and-running) to create a basic application to work with.
+Once we have a working application, we're ready to deploy it. If you're not quite finished with your own application, don't worry. Just follow the [Up and Running Guide](http://www.phoenixframework.org/docs/up-and-running) to create a basic application to work with.
 
 ### What We'll Need
 
-Deployment is great and all, but be sure you have these things before continuing:
+There are just a few things we'll need before we continue.
 
 - a working application
 - a build environment - this can be our dev environment
 - a hosting environment - this can be our build environment for testing/experimentation
 
-We need to be sure that the architectures for both our build and hosting environments are the same, e.g. 64-bit Linux -> 64-bit Linux. If the architectures don't match, our application might not run when deployed. Using a virtual machine that mirrors our hosting environment as our build environment is an easy way to avoid such problems.
+We need to be sure that the architectures for both our build and hosting environments are the same, e.g. 64-bit Linux -> 64-bit Linux. If the architectures don't match, our application might not run when deployed. Using a virtual machine that mirrors our hosting environment as our build environment is an easy way to avoid that problem.
 
 ### Goals
 
-Our main goal for this guide is to generate a release, using [Elixir Release Manager](https://github.com/bitwalker/exrm) (exrm) and deploy it to our hosting environment. Once we have our application running, we will discuss steps needed to make it publicly visible.
+Our main goal for this guide is to generate a release, using the [Elixir Release Manager](https://github.com/bitwalker/exrm) (exrm), and deploy it to our hosting environment. Once we have our application running, we will discuss steps needed to make it publicly visible.
 
 ## Tasks
 
@@ -32,13 +32,12 @@ To get started, we'll need to add `{:exrm, "~> 0.14.16"}` into the list of depen
 
 ```elixir
   def deps do
-    [{:phoenix, "~> 0.7.2"},
+    [{:phoenix, "~> 0.8.0"},
       {:cowboy, "~> 1.0.0"},
       {:exrm, "~> 0.14.16"}]
   end
 ```
-
-With that taken care of, a simple `mix do deps.get, compile` will pull down exrm and its dependencies, along with the rest of our application's dependencies, and ensures that everything compiles. If all goes well, exrm's mix tasks will be available as well.
+With that taken care of, a simple `mix do deps.get, compile` will pull down exrm and its dependencies, along with the rest of our application's dependencies. It also ensures that everything compiles properly. If all goes well, exrm's mix tasks will be available.
 
 ```console
 $ mix help
@@ -59,71 +58,56 @@ Now we need to update our `mix.exs` file to have all dependencies listed in the 
       applications: [:phoenix, :cowboy, :logger]]
   end
 ```
+Doing this helps us overcome one of [exrm's common issues](https://github.com/bitwalker/exrm#common-issues) by helping exrm know about all our dependencies so that it can properly bundle them into our release. Without this, our application will probably alert us about missing modules or a failure to start a child application when we go to run our release.
 
-Doing this helps us overcome one of [exrm's common issues](https://github.com/bitwalker/exrm#common-issues) by helping exrm know of all our dependencies so that it can properly bundle them into our release. Without this, our application will probably alert us about missing modules or a failure to start a child application when we go to run our release.
+Even if we list all of our dependencies, our application may still fail. Typically, this happens because one of our dependencies does not properly list its own dependencies. A quick fix for this is to include the missing dependency or dependencies in our list of applications. If this happens to you, and you feel like helping the community, you can create an issue or a pull request to that project's repo.
 
-Even if we list all of our dependencies, our application may still fail. Typically, this happens because one of our dependencies does not properly list its own dependencies. A quick fix for this is to include the missing dependency or dependencies in our list of applications. If you feel like helping the community, you can create an issue or a pull request to that project's repo.
-
-In our `lib/hello_phoenix.ex` file, we need to start our endpoint as part of the `start/2` function.
+In versions of Phoenix previous to 0.8.0, we needed to take an extra step of starting our Endpoint (or router for older versions) inside our application's `start/2` function. This is no longer necessary as our Endpoint is registered as a worker which will be started by the Supervisor. We can see this in our `lib/hello_phoenix.ex` file.
 
 ```elixir
+defmodule HelloPhoenix do
+  use Application
+
+  # See http://elixir-lang.org/docs/stable/elixir/Application.html
+  # for more information on OTP Applications
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
-    HelloPhoenix.Endpoint.start
-
     children = [
-      # Define workers and child supervisors to be supervised
-      # worker(MyApp.Worker, [arg1, arg2, arg3])
+      # Start the endpoint when the application starts
+      worker(HelloPhoenix.Endpoint, []),
+
+      # Here you could define other workers and supervisors as children
+      # worker(HelloPhoenix.Worker, [arg1, arg2, arg3]),
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
     # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: MyApp.Supervisor]
+    opts = [strategy: :one_for_one, name: HelloPhoenix.Supervisor]
     Supervisor.start_link(children, opts)
   end
-```
 
+  # Tell Phoenix to update the endpoint configuration
+  # whenever the application is updated.
+  def config_change(changed, _new, removed) do
+    HelloPhoenix.Endpoint.config_change(changed, removed)
+    :ok
+  end
+end
+```
 Note: Just to be extra clear, this file is named after our application. If we had called it `MyApp`, this file would be `lib/my_app.ex`.
 
-#### A Note about `mix phoenix.start`
+There's one last thing we need to do before we create our release. We need to configure our Endpoint to act as a server in `config.exs`.
 
-Once we add the `HelloPhoenix.Endpoint.start` to the `start/2` function, `mix phoenix.start` will no longer work, and we'll get an error if we try to run it.
-
-```text
-$ mix phoenix.start
-Running HelloPhoenix.Endpoint with Cowboy on port 4000 (http)
-** (RuntimeError) Something went wrong while starting endpoint: already started: #PID<0.139.0>
-   (phoenix) lib/phoenix/endpoint/adapter.ex:122: Phoenix.Endpoint.Adapter.report/4
-   (phoenix) lib/phoenix/endpoint/adapter.ex:82: Phoenix.Endpoint.Adapter.start/2
-   (elixir) lib/enum.ex:537: Enum."-each/2-lists^foreach/1-0-"/2
-   (elixir) lib/enum.ex:537: Enum.each/2
-   (phoenix) lib/mix/tasks/phoenix.start.ex:17: Mix.Tasks.Phoenix.Start.run/1
-   (mix) lib/mix/cli.ex:55: Mix.CLI.run_task/2
+```elixir
+# Configures the endpoint
+config :hello_phoenix, HelloPhoenix.Endpoint,
+url: [host: "localhost"],
+secret_key_base: "OOmSQ22Liduec/twplfKrEseNL2m7ivMK32ywKECyhckgQVLtBCxS3cMusKD2v8f",
+debug_errors: false,
+server: true
 ```
-
-This error is telling us that `mix phoenix.start` has tried to start our endpoint twice. Here's what's happening. Invoking `mix` will always start our application, and starting our application will, of course, start our endpoint. Since we added the `HelloPhoenix.Endpoint.start` line to the `start/2` function, running the `phoenix.start` task will attempt to start the endpoint again, causing the error.
-
-How do we start our application in development, once we've modified the `start/2` function? The short answer is that we can just run `iex -S mix`. This will start our application and keep it running. It has a nice advantage in that we can also interact with the running application this way.
-
-```console
-$ iex -S mix
-Erlang/OTP 17 [erts-6.3] [source] [64-bit] [smp:4:4] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
-
-Running HelloPhoenix.Endpoint with Cowboy on port 4000 (http)
-Interactive Elixir (1.0.2) - press Ctrl+C to exit (type h() ENTER for help)
-iex(1)>
-```
-
-If we go to [http://localhost:4000/](http://localhost:4000), we should see our familiar welcome page.
-
-As a side note, if we try to simply run `mix`, our application will start, but unfortunately, it will halt again immediately.
-
-```console
-$ mix
-Running HelloPhoenix.Endpoint with Cowboy on port 4000 (http)
-$
-```
+When we run `$ mix phoenix.server` to start our application, that mix task automatically sets the server parameter to true. When we're creating a release, however, we need to make sure that we have this manually configured. If you get through this release guide, and you aren't seeing any pages coming from your server, this is a likely culprit.
 
 ### Generating the Release
 
@@ -152,13 +136,13 @@ There are a couple of interesting things to note here.
 
 Exrm uses a set of default configuration options when building our release that will work for most applications. If we need more advanced configuration options, we can checkout [exrm's configuration section](https://github.com/bitwalker/exrm#configuration) for more detailed information.
 
-If we make a mistake, or if something doesn't go quite right, we can run `mix release.clean`, which will delete the release for the current application version number. If we add the `--implode` flag, expm will remove _all_ releases for all versions of our application. These will be permanently removed unless they are under version controll. Obviously, this is a destructive operation, and expm will prompt us to make sure we want to continue.
+If we make a mistake, or if something doesn't go quite right, we can run `mix release.clean`, which will delete the release for the current application version number. If we add the `--implode` flag, expm will remove _all_ releases for all versions of our application. These will be permanently removed unless they are under version control. Obviously, this is a destructive operation, and expm will prompt us to make sure we want to continue.
 
 #### Contents of a Release
 
-Exrm has created our release, but you may be thinking, "Where did it go?""
+Exrm has created our release, and put it somewhere in the `rel` directory, but where exactly did all the pieces end up?
 
-Everything related to releases is in the `rel` directory, and specifically for us, `rel/hello_phoenix`. Let's see what's in it.
+Everything related to our releases is in the `rel/hello_phoenix` directory. Let's see what's in it.
 
 ```console
 $ ls -la rel/hello_phoenix/
@@ -172,7 +156,7 @@ drwxr-xr-x  19 lance  staff       646 Jan  4 14:16 lib
 drwxr-xr-x   5 lance  staff       170 Jan  4 14:16 releases
 ```
 
-The `bin` directory contains the generated executables for running our application. The `bin/hello_phoenix` executable is what we will eventually use to issue commands to our application.
+The `bin` directory contains the generated executables for running our application. The `bin/hello_phoenix` executable is what we will use to issue commands to our application.
 
 ```console
 $ ls -la rel/hello_phoenix/bin
@@ -203,25 +187,25 @@ The `lib` directory contains the compiled BEAM files for our application and all
 ```console
 $ ls -la rel/hello_phoenix/lib/
 total 0
-drwxr-xr-x  19 lance  staff  646 Jan  4 14:16 .
-drwxr-xr-x   7 lance  staff  238 Jan  4 14:16 ..
-drwxr-xr-x   3 lance  staff  102 Jan  4 14:16 compiler-5.0.3
-drwxr-xr-x  13 lance  staff  442 Jan  4 14:16 consolidated
-drwxr-xr-x   3 lance  staff  102 Jan  4 14:16 cowboy-1.0.0
-drwxr-xr-x   4 lance  staff  136 Jan  4 14:16 cowlib-1.0.1
-drwxr-xr-x   4 lance  staff  136 Jan  4 14:16 crypto-3.4.2
-drwxr-xr-x   3 lance  staff  102 Jan  4 14:16 elixir-1.0.2
-drwxr-xr-x   4 lance  staff  136 Jan  4 14:16 hello_phoenix-0.0.1
-drwxr-xr-x   3 lance  staff  102 Jan  4 14:16 iex-1.0.2
-drwxr-xr-x   4 lance  staff  136 Jan  4 14:16 kernel-3.1
-drwxr-xr-x   3 lance  staff  102 Jan  4 14:16 logger-1.0.2
-drwxr-xr-x   4 lance  staff  136 Jan  4 14:16 phoenix-0.7.2
-drwxr-xr-x   3 lance  staff  102 Jan  4 14:16 plug-0.9.0
-drwxr-xr-x   3 lance  staff  102 Jan  4 14:16 poison-1.3.0
-drwxr-xr-x   3 lance  staff  102 Jan  4 14:16 ranch-1.0.0
-drwxr-xr-x   3 lance  staff  102 Jan  4 14:16 sasl-2.4.1
-drwxr-xr-x   4 lance  staff  136 Jan  4 14:16 stdlib-2.3
-drwxr-xr-x   3 lance  staff  102 Jan  4 14:16 syntax_tools-1.6.17
+drwxr-xr-x  19 lance  staff  646 Jan 16 16:03 .
+drwxr-xr-x   7 lance  staff  238 Jan 16 16:04 ..
+drwxr-xr-x   3 lance  staff  102 Jan 16 16:03 compiler-5.0
+drwxr-xr-x  13 lance  staff  442 Jan 16 16:03 consolidated
+drwxr-xr-x   3 lance  staff  102 Jan 16 16:03 cowboy-1.0.0
+drwxr-xr-x   4 lance  staff  136 Jan 16 16:03 cowlib-1.0.1
+drwxr-xr-x   4 lance  staff  136 Jan 16 16:03 crypto-3.3
+drwxr-xr-x   3 lance  staff  102 Jan 16 16:03 elixir-1.0.2
+drwxr-xr-x   4 lance  staff  136 Jan 16 16:03 hello_phoenix-0.0.1
+drwxr-xr-x   3 lance  staff  102 Jan 16 16:03 iex-1.0.2
+drwxr-xr-x   4 lance  staff  136 Jan 16 16:03 kernel-3.0
+drwxr-xr-x   3 lance  staff  102 Jan 16 16:03 logger-1.0.2
+drwxr-xr-x   4 lance  staff  136 Jan 16 16:03 phoenix-0.8.0
+drwxr-xr-x   3 lance  staff  102 Jan 16 16:03 plug-0.9.0
+drwxr-xr-x   3 lance  staff  102 Jan 16 16:03 poison-1.3.0
+drwxr-xr-x   3 lance  staff  102 Jan 16 16:03 ranch-1.0.0
+drwxr-xr-x   3 lance  staff  102 Jan 16 16:03 sasl-2.4
+drwxr-xr-x   4 lance  staff  136 Jan 16 16:03 stdlib-2.0
+drwxr-xr-x   3 lance  staff  102 Jan 16 16:03 syntax_tools-1.6.14
 ```
 
 The `releases` directory is the home for our releases - any release-dependent configurations and scripts that exrm finds necessary for running our application. If we have multiple versions of our application, and if we have created releases for them, we will have multiple releases in the `releases` directory.
@@ -240,24 +224,99 @@ The `hello_phoenix-0.0.1.tar.gz` tarball is our release in archive form, ready t
 
 ### Testing Our Release
 
-Before deploying our release, we should make sure that it runs on our build environment. To do that, we will issue the `console` command to our executable, essentially running our application via `iex`.
+Before deploying our release, we should make sure that it runs in our build environment. To do that, we will issue the `console` command to our executable, essentially running our application via `iex`.
 
 ```console
 $ rel/hello_phoenix/bin/hello_phoenix console
-Exec: /Users/lance/lance-work/hello_phoenix/rel/hello_phoenix/erts-6.3/bin/erlexec -boot /Users/lance/lance-work/hello_phoenix/rel/hello_phoenix/releases/0.0.1/hello_phoenix -boot_var ERTS_LIB_DIR /Users/lance/lance-work/hello_phoenix/rel/hello_phoenix/erts-6.3/../lib -env ERL_LIBS /Users/lance/lance-work/hello_phoenix/rel/hello_phoenix/lib -config /Users/lance/lance-work/hello_phoenix/rel/hello_phoenix/releases/0.0.1/sys.config -pa /Users/lance/lance-work/hello_phoenix/rel/hello_phoenix/lib/consolidated -args_file /Users/lance/lance-work/hello_phoenix/rel/hello_phoenix/releases/0.0.1/vm.args -user Elixir.IEx.CLI -extra --no-halt +iex -- console
-Root: /Users/lance/lance-work/hello_phoenix/rel/hello_phoenix
-/Users/lance/lance-work/hello_phoenix/rel/hello_phoenix
-Erlang/OTP 17 [erts-6.3] [source] [64-bit] [smp:4:4] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
+Exec: /Users/lance/work/hello_phoenix/rel/hello_phoenix/erts-6.0/bin/erlexec -boot /Users/lance/work/hello_phoenix/rel/hello_phoenix/releases/0.0.1/hello_phoenix -boot_var ERTS_LIB_DIR /Users/lance/work/hello_phoenix/rel/hello_phoenix/erts-6.0/../lib -env ERL_LIBS /Users/lance/work/hello_phoenix/rel/hello_phoenix/lib -config /Users/lance/work/hello_phoenix/rel/hello_phoenix/releases/0.0.1/sys.config -pa /Users/lance/work/hello_phoenix/rel/hello_phoenix/lib/consolidated -args_file /Users/lance/work/hello_phoenix/rel/hello_phoenix/releases/0.0.1/vm.args -user Elixir.IEx.CLI -extra --no-halt +iex -- console
+Root: /Users/lance/work/hello_phoenix/rel/hello_phoenix
+/Users/lance/work/hello_phoenix/rel/hello_phoenix
+Erlang/OTP 17 [erts-6.0] [source-07b8f44] [64-bit] [smp:8:8] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
 
-Running HelloPhoenix.Endpoint with Cowboy on port 4000 (http)
+[debug] Running HelloPhoenix.Endpoint with Cowboy on port 4000 (http)
 Interactive Elixir (1.0.2) - press Ctrl+C to exit (type h() ENTER for help)
 iex(hello_phoenix@127.0.0.1)1>
 
 ```
-
 This is the point where our application will crash if it fails to start a child application. If all goes well, however, we should end up at an `iex` prompt. We should also see our app running at [http://localhost:4000/](http://localhost:4000/).
 
-Congratulations! We're ready to deploy our application!
+Let's hit `ctrl-c` twice to get out of iex so that we can explore a couple of different ways to interact with our release.
+
+One thing we can do is start the release without a console session. Let's try running the `start` command.
+
+```console
+$ rel/hello_phoenix/bin/hello_phoenix start
+```
+And we see . . . nothing except that our prompt comes right back. This is ok!
+
+We can check to make sure that it is really ok by pinging the release.
+
+```console
+$ rel/hello_phoenix/bin/hello_phoenix ping
+pong
+```
+Great, it's responding.
+
+Now let's try connecting a console to the running release with the `remote_console` command.
+
+```console
+$ rel/hello_phoenix/bin/hello_phoenix remote_console
+Erlang/OTP 17 [erts-6.0] [source-07b8f44] [64-bit] [smp:8:8] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
+
+Interactive Elixir (1.0.2) - press Ctrl+C to exit (type h() ENTER for help)
+iex(hello_phoenix@127.0.0.1)1>
+```
+That worked. At this point, we can run any commands we might normally run in a console session.
+
+Ok, let's get out of this session by hitting `ctrl-c` twice again. What happens if we ping the release again?
+
+```console
+$ rel/hello_phoenix/bin/hello_phoenix ping
+pong
+```
+It's still alive and responding. This is a feature! If the server were to go down every time we stopped a remote console, that would be a problem. Note that this situation is different from when we ran the `console` command above. The `remote_console` command is not intended to start a release locally, but rather to connect to one which has already started.
+
+So how _do_ we stop the server, then? There are two ways.
+
+One way is to simply issue the `stop` command.
+
+```console
+$ rel/hello_phoenix/bin/hello_phoenix stop
+ok
+```
+That looks promising. What happens if we ping the server again?
+
+```console
+$ rel/hello_phoenix/bin/hello_phoenix ping
+Node 'hello_phoenix@127.0.0.1' not responding to pings.
+```
+Success.
+
+Ok, let's re-start our release and establish a remote console to try the other way of stopping it.
+
+```console
+$ rel/hello_phoenix/bin/hello_phoenix start
+$ rel/hello_phoenix/bin/hello_phoenix remote_console
+Erlang/OTP 17 [erts-6.0] [source-07b8f44] [64-bit] [smp:8:8] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
+
+Interactive Elixir (1.0.2) - press Ctrl+C to exit (type h() ENTER for help)
+iex(hello_phoenix@127.0.0.1)1>
+```
+Great. Now at the prompt, let's issue this command `:init.stop`.
+
+```console
+iex(hello_phoenix@127.0.0.1)1> :init.stop
+:ok
+```
+Then let's hit `ctrl-c` twice again to exit our iex session and ping the server to see if it responds.
+
+```console
+$ rel/hello_phoenix/bin/hello_phoenix ping
+Node 'hello_phoenix@127.0.0.1' not responding to pings.
+```
+As we expected, the server is now down.
+
+Congratulations! Now that we've interacted a bit with our release locally, we're ready to deploy our application!
 
 ## Deploying Our Release
 
@@ -267,7 +326,6 @@ There are many ways for us to get our tarballed release to our hosting environme
 $ scp -i ~/.ssh/id_rsa.pub rel/hello_phoenix-0.0.1.tar.gz ubuntu@hostname.com:/home/ubuntu
 hello_phoenix-0.0.1.tar.gz                100%   18MB  80.0KB/s   03:48
 ```
-
 Let's SSH into that environment to set our application up.
 
 ```console
@@ -312,51 +370,6 @@ exec /bin/sh /app/bin/hello_phoenix start
 Here, we've told `upstart` a few basic things about how we want it to handle our application. If you need to know how to do somthing in particular, take a look at the [`upstart` cookbook](http://upstart.ubuntu.com/cookbook/) for loads of information on it. We'll kick off the first start of our application with `sudo start hello_phoenix`.
 
 One key point to notice is that we're instructing `upstart` to run our release's `bin/hello_phoenix start` command, which boostraps our application and runs it as a daemon.
-
-#### exrm Commands
-
-Along with the `start` command, exrm bundles a few others with our application that are equally useful. Check out the [exrm docs](https://github.com/bitwalker/exrm) for details on what's possible.
-
-##### `ping`
-
-The `ping` command is a great sanity check when you need to ensure your application is running:
-
-```console
-$ bin/hello_phoenix ping
-pong
-```
-
-Or to see if it isn't:
-
-```console
-$ bin/hello_phoenix ping
-Node 'hello_phoenix@127.0.0.1' not responding to pings.
-```
-
-##### `remote_console`
-
-`remote_console` will be our friend when debugging is in order. It allows us to attach an IEx console to our running application. When closing the console, our application continues to run.
-
-```console
-$ bin/hello_phoenix remote_console
-Erlang/OTP 17 [erts-6.1] [source-d2a4c20] [64-bit] [smp:4:4] [async-threads:10] [hipe] [kernel-poll:false]
-
-Interactive Elixir (0.15.2-dev) - press Ctrl+C to exit (type h() ENTER for help)
-iex(hello_phoenix@127.0.0.1)1>
-```
-
-##### `upgrade`
-
-The `upgrade` command allows us to upgrade our application to a newer codebase without downtime.
-
-##### `stop`
-
-We may run into situations where we need to stop our application. The `stop` command is just what we need.
-
-```console
-$ bin/hello_phoenix stop
-ok
-```
 
 ### Setting Up Our Web Server
 
