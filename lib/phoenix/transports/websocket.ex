@@ -15,6 +15,14 @@ defmodule Phoenix.Transports.WebSocket do
 
   The `websocket_serializer` module needs only to implement the `encode!/1` and
   `decode!/2` functions defined by the `Phoenix.Transports.Serializer` behaviour.
+
+  Websockets, by default, do not timeout if the connection is lost. To set a
+  maximum timeout duration in milliseconds, add this to your Endpoint's transport
+  configuration:
+
+      config :my_app, MyApp.Endpoint, transports: [
+        websocket_timeout: 60000
+      ]
   """
 
   alias Phoenix.Channel.Transport
@@ -35,7 +43,8 @@ defmodule Phoenix.Transports.WebSocket do
   """
   def ws_init(conn) do
     serializer = Dict.fetch!(endpoint_module(conn).config(:transports), :websocket_serializer)
-    {:ok, %{router: router_module(conn), sockets: HashDict.new, serializer: serializer}}
+    timeout = Dict.fetch!(endpoint_module(conn).config(:transports), :websocket_timeout)
+    {:ok, %{router: router_module(conn), sockets: HashDict.new, serializer: serializer}, timeout}
   end
 
   @doc """
