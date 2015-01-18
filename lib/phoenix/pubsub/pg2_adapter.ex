@@ -22,8 +22,13 @@ defmodule Phoenix.PubSub.PG2Adapter do
 
   @pg_prefix :phx
 
-  def start_link(opts) do
-    GenServer.start_link PG2Server, opts, []
+  def start_link(opts \\ []) do
+    options = Dict.merge(Application.get_env(:phoenix, :pubsub), opts)
+    GenServer.start_link PG2Server, options, []
+  end
+
+  def stop do
+    GenServer.call(leader_pid, :stop)
   end
 
   def create(topic),
