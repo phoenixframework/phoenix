@@ -113,7 +113,7 @@ user_path  GET     /users/:id       HelloPhoenix.UserController.show/2
 user_path  POST    /users           HelloPhoenix.UserController.create/2
 user_path  PATCH   /users/:id       HelloPhoenix.UserController.update/2
            PUT     /users/:id       HelloPhoenix.UserController.update/2
-user_path  DELETE  /users/:id       HelloPhoenix.UserController.destroy/2
+user_path  DELETE  /users/:id       HelloPhoenix.UserController.delete/2
 ```
 This is the standard matrix of HTTP verbs, paths and controller actions. Let's look at them individually, in a slightly different order.
 
@@ -124,7 +124,7 @@ This is the standard matrix of HTTP verbs, paths and controller actions. Let's l
 - A GET request to `/users/:id/edit` will invoke the `edit` action with an id to retrieve an individual user from the data store and present the information in a form for editing.
 - A PATCH request to `/users/:id` will invoke the `update` action with an id to save the updated user to the data store.
 - A PUT request to `/users/:id` will also invoke the `update` action with an id to save the updated use to the data store.
-- A DELETE request to `/users/:id` will invoke the `destroy` action with an id to remove the individual user from the data store.
+- A DELETE request to `/users/:id` will invoke the `delete` action with an id to remove the individual user from the data store.
 
 If we don't feel that we need all of these routes, we can be selective using the `:only` and `:except` options.
 
@@ -144,10 +144,10 @@ post_path  GET     /posts/:id                     HelloPhoenix.PostsController.s
 Similarly, if we have a comments resource, and we don't want to provide a route to delete one, we could define a route like this.
 
 ```elixir
-resources "comments", CommentController, except: [:destroy]
+resources "comments", CommentController, except: [:delete]
 ```
 
-Running `$ mix phoenix.routes` now shows that we have all the routes except the DELETE request to the destroy action.
+Running `$ mix phoenix.routes` now shows that we have all the routes except the DELETE request to the delete action.
 
 ```elixir
 comment_path  GET     /comments                      HelloPhoenix.CommentController.index/2
@@ -205,7 +205,7 @@ iex(6)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :edit, 37)
 iex(7)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :update, 37)
 "/users/37"
 
-iex(8)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :destroy, 17)
+iex(8)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :delete, 17)
 "/users/17"
 ```
 
@@ -246,7 +246,7 @@ user_post_path  GET     users/:user_id/posts/:id       HelloPhoenix.PostControll
 user_post_path  POST    users/:user_id/posts           HelloPhoenix.PostController.create/2
 user_post_path  PUT     users/:user_id/posts/:id       HelloPhoenix.PostController.update/2
 user_post_path  PATCH   users/:user_id/posts/:id       HelloPhoenix.PostController.update/2
-user_post_path  DELETE  users/:user_id/posts/:id       HelloPhoenix.PostController.destroy/2
+user_post_path  DELETE  users/:user_id/posts/:id       HelloPhoenix.PostController.delete/2
 ```
 
 We see that each of these routes scopes the posts to a user id. For the first one, we will invoke the `PostController` `index` action, but we will pass in a `user_id`. This implies that we would display all the posts for that individual user only. The same scoping applies for all these routes.
@@ -311,7 +311,7 @@ review_path  GET     /admin/reviews/:id       HelloPhoenix.Admin.ReviewControlle
 review_path  POST    /admin/reviews           HelloPhoenix.Admin.ReviewController.create/2
 review_path  PUT     /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.update/2
              PATCH   /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.update/2
-review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.destroy/2
+review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.delete/2
 ```
 
 This looks good, but there is a problem here. Remember that we wanted both user facing reviews routes as well as the admin ones. When we define both of those routes in our router, like this,
@@ -336,7 +336,7 @@ review_path  GET     /reviews/:id             HelloPhoenix.ReviewController.show
 review_path  POST    /reviews                 HelloPhoenix.ReviewController.create/2
 review_path  PUT     /reviews/:id             HelloPhoenix.ReviewController.update/2
              PATCH   /reviews/:id             HelloPhoenix.ReviewController.update/2
-review_path  DELETE  /reviews/:id             HelloPhoenix.ReviewController.destroy/2
+review_path  DELETE  /reviews/:id             HelloPhoenix.ReviewController.delete/2
 review_path  GET     /admin/reviews           HelloPhoenix.Admin.ReviewController.index/2
 review_path  GET     /admin/reviews/:id/edit  HelloPhoenix.Admin.ReviewController.edit/2
 review_path  GET     /admin/reviews/new       HelloPhoenix.Admin.ReviewController.new/2
@@ -344,7 +344,7 @@ review_path  GET     /admin/reviews/:id       HelloPhoenix.Admin.ReviewControlle
 review_path  POST    /admin/reviews           HelloPhoenix.Admin.ReviewController.create/2
 review_path  PUT     /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.update/2
              PATCH   /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.update/2
-review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.destroy/2
+review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.delete/2
 ```
 
 The actual routes we get all look right, except for the path helper at the beginning of each line. We are getting the same helper for both the user facing review routes and the admin ones. We can fix this problem by adding an `as: :admin` option to our admin scope.
@@ -369,7 +369,7 @@ end
       review_path  POST    /reviews                 HelloPhoenix.ReviewController.create/2
       review_path  PUT     /reviews/:id             HelloPhoenix.ReviewController.update/2
                    PATCH   /reviews/:id             HelloPhoenix.ReviewController.update/2
-      review_path  DELETE  /reviews/:id             HelloPhoenix.ReviewController.destroy/2
+      review_path  DELETE  /reviews/:id             HelloPhoenix.ReviewController.delete/2
 admin_review_path  GET     /admin/reviews           HelloPhoenix.Admin.ReviewController.index/2
 admin_review_path  GET     /admin/reviews/:id/edit  HelloPhoenix.Admin.ReviewController.edit/2
 admin_review_path  GET     /admin/reviews/new       HelloPhoenix.Admin.ReviewController.new/2
@@ -377,7 +377,7 @@ admin_review_path  GET     /admin/reviews/:id       HelloPhoenix.Admin.ReviewCon
 admin_review_path  POST    /admin/reviews           HelloPhoenix.Admin.ReviewController.create/2
 admin_review_path  PUT     /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.update/2
                    PATCH   /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.update/2
-admin_review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.destroy/2
+admin_review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.delete/2
 ```
 
 The path helpers return what we want them to as well. Run `$ iex -S mix` and give them a try.
@@ -412,7 +412,7 @@ Here's what `$ mix phoenix.routes` tells us.
  admin_image_path  POST    /admin/images            HelloPhoenix.Admin.ImageController.create/2
  admin_image_path  PUT     /admin/images/:id        HelloPhoenix.Admin.ImageController.update/2
                    PATCH   /admin/images/:id        HelloPhoenix.Admin.ImageController.update/2
- admin_image_path  DELETE  /admin/images/:id        HelloPhoenix.Admin.ImageController.destroy/2
+ admin_image_path  DELETE  /admin/images/:id        HelloPhoenix.Admin.ImageController.delete/2
 admin_review_path  GET     /admin/reviews           HelloPhoenix.Admin.ReviewController.index/2
 admin_review_path  GET     /admin/reviews/:id/edit  HelloPhoenix.Admin.ReviewController.edit/2
 admin_review_path  GET     /admin/reviews/new       HelloPhoenix.Admin.ReviewController.new/2
@@ -420,7 +420,7 @@ admin_review_path  GET     /admin/reviews/:id       HelloPhoenix.Admin.ReviewCon
 admin_review_path  POST    /admin/reviews           HelloPhoenix.Admin.ReviewController.create/2
 admin_review_path  PUT     /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.update/2
                    PATCH   /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.update/2
-admin_review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.destroy/2
+admin_review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.delete/2
   admin_user_path  GET     /admin/users             HelloPhoenix.Admin.UserController.index/2
   admin_user_path  GET     /admin/users/:id/edit    HelloPhoenix.Admin.UserController.edit/2
   admin_user_path  GET     /admin/users/new         HelloPhoenix.Admin.UserController.new/2
@@ -428,7 +428,7 @@ admin_review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewCon
   admin_user_path  POST    /admin/users             HelloPhoenix.Admin.UserController.create/2
   admin_user_path  PUT     /admin/users/:id         HelloPhoenix.Admin.UserController.update/2
                    PATCH   /admin/users/:id         HelloPhoenix.Admin.UserController.update/2
-  admin_user_path  DELETE  /admin/users/:id         HelloPhoenix.Admin.UserController.destroy/2
+  admin_user_path  DELETE  /admin/users/:id         HelloPhoenix.Admin.UserController.delete/2
 ```
 
 This is great, exactly what we want, but we can make it even better. Notice that for each resource, we needed to fully qualify the controller name with `HelloPhoenix.Admin`. That's tedious and error prone. Assuming the name of each of our controllers actually begins with `HelloPhoenix.Admin`, we can add a `HelloPhoenix.Admin` option to our scope declaration just after the scope path, and all of our routes will have the correct, fully qualified controller name.
@@ -453,7 +453,7 @@ end
  admin_image_path  POST    /admin/images            HelloPhoenix.Admin.ImageController.create/2
  admin_image_path  PUT     /admin/images/:id        HelloPhoenix.Admin.ImageController.update/2
                    PATCH   /admin/images/:id        HelloPhoenix.Admin.ImageController.update/2
- admin_image_path  DELETE  /admin/images/:id        HelloPhoenix.Admin.ImageController.destroy/2
+ admin_image_path  DELETE  /admin/images/:id        HelloPhoenix.Admin.ImageController.delete/2
 admin_review_path  GET     /admin/reviews           HelloPhoenix.Admin.ReviewController.index/2
 admin_review_path  GET     /admin/reviews/:id/edit  HelloPhoenix.Admin.ReviewController.edit/2
 admin_review_path  GET     /admin/reviews/new       HelloPhoenix.Admin.ReviewController.new/2
@@ -461,7 +461,7 @@ admin_review_path  GET     /admin/reviews/:id       HelloPhoenix.Admin.ReviewCon
 admin_review_path  POST    /admin/reviews           HelloPhoenix.Admin.ReviewController.create/2
 admin_review_path  PUT     /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.update/2
                    PATCH   /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.update/2
-admin_review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.destroy/2
+admin_review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.delete/2
   admin_user_path  GET     /admin/users             HelloPhoenix.Admin.UserController.index/2
   admin_user_path  GET     /admin/users/:id/edit    HelloPhoenix.Admin.UserController.edit/2
   admin_user_path  GET     /admin/users/new         HelloPhoenix.Admin.UserController.new/2
@@ -469,7 +469,7 @@ admin_review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewCon
   admin_user_path  POST    /admin/users             HelloPhoenix.Admin.UserController.create/2
   admin_user_path  PUT     /admin/users/:id         HelloPhoenix.Admin.UserController.update/2
                    PATCH   /admin/users/:id         HelloPhoenix.Admin.UserController.update/2
-  admin_user_path  DELETE  /admin/users/:id         HelloPhoenix.Admin.UserController.destroy/2
+  admin_user_path  DELETE  /admin/users/:id         HelloPhoenix.Admin.UserController.delete/2
 ```
 
 As a bonus, we could nest all of the routes for our application inside a scope that simply has an alias for the name of our Phoenix app, and eliminate the duplication in our controller names. Phoenix now does this for us in the generated router for a new application.
@@ -499,7 +499,7 @@ review_path  GET     /reviews/:id       HelloPhoenix.ReviewController.show/2
 review_path  POST    /reviews           HelloPhoenix.ReviewController.create/2
 review_path  PUT     /reviews/:id       HelloPhoenix.ReviewController.update/2
              PATCH   /reviews/:id       HelloPhoenix.ReviewController.update/2
-review_path  DELETE  /reviews/:id       HelloPhoenix.ReviewController.destroy/2
+review_path  DELETE  /reviews/:id       HelloPhoenix.ReviewController.delete/2
   user_path  GET     /users             HelloPhoenix.UserController.index/2
   user_path  GET     /users/:id/edit    HelloPhoenix.UserController.edit/2
   user_path  GET     /users/new         HelloPhoenix.UserController.new/2
@@ -507,7 +507,7 @@ review_path  DELETE  /reviews/:id       HelloPhoenix.ReviewController.destroy/2
   user_path  POST    /users             HelloPhoenix.UserController.create/2
   user_path  PUT     /users/:id         HelloPhoenix.UserController.update/2
              PATCH   /users/:id         HelloPhoenix.UserController.update/2
-  user_path  DELETE  /users/:id         HelloPhoenix.UserController.destroy/2
+  user_path  DELETE  /users/:id         HelloPhoenix.UserController.delete/2
 ```
 
 Scopes can also nest, just as resources can. If we had a versioned api with resources for images, reviews and users, we could define routes for them like this.
@@ -534,7 +534,7 @@ end
  api_v1_image_path  POST    /api/v1/images            HelloPhoenix.Api.V1.ImageController.create/2
  api_v1_image_path  PUT     /api/v1/images/:id        HelloPhoenix.Api.V1.ImageController.update/2
                     PATCH   /api/v1/images/:id        HelloPhoenix.Api.V1.ImageController.update/2
- api_v1_image_path  DELETE  /api/v1/images/:id        HelloPhoenix.Api.V1.ImageController.destroy/2
+ api_v1_image_path  DELETE  /api/v1/images/:id        HelloPhoenix.Api.V1.ImageController.delete/2
 api_v1_review_path  GET     /api/v1/reviews           HelloPhoenix.Api.V1.ReviewController.index/2
 api_v1_review_path  GET     /api/v1/reviews/:id/edit  HelloPhoenix.Api.V1.ReviewController.edit/2
 api_v1_review_path  GET     /api/v1/reviews/new       HelloPhoenix.Api.V1.ReviewController.new/2
@@ -542,7 +542,7 @@ api_v1_review_path  GET     /api/v1/reviews/:id       HelloPhoenix.Api.V1.Review
 api_v1_review_path  POST    /api/v1/reviews           HelloPhoenix.Api.V1.ReviewController.create/2
 api_v1_review_path  PUT     /api/v1/reviews/:id       HelloPhoenix.Api.V1.ReviewController.update/2
                     PATCH   /api/v1/reviews/:id       HelloPhoenix.Api.V1.ReviewController.update/2
-api_v1_review_path  DELETE  /api/v1/reviews/:id       HelloPhoenix.Api.V1.ReviewController.destroy/2
+api_v1_review_path  DELETE  /api/v1/reviews/:id       HelloPhoenix.Api.V1.ReviewController.delete/2
   api_v1_user_path  GET     /api/v1/users             HelloPhoenix.Api.V1.UserController.index/2
   api_v1_user_path  GET     /api/v1/users/:id/edit    HelloPhoenix.Api.V1.UserController.edit/2
   api_v1_user_path  GET     /api/v1/users/new         HelloPhoenix.Api.V1.UserController.new/2
@@ -550,7 +550,7 @@ api_v1_review_path  DELETE  /api/v1/reviews/:id       HelloPhoenix.Api.V1.Review
   api_v1_user_path  POST    /api/v1/users             HelloPhoenix.Api.V1.UserController.create/2
   api_v1_user_path  PUT     /api/v1/users/:id         HelloPhoenix.Api.V1.UserController.update/2
                     PATCH   /api/v1/users/:id         HelloPhoenix.Api.V1.UserController.update/2
-  api_v1_user_path  DELETE  /api/v1/users/:id         HelloPhoenix.Api.V1.UserController.destroy/2
+  api_v1_user_path  DELETE  /api/v1/users/:id         HelloPhoenix.Api.V1.UserController.delete/2
 ```
 Interestingly, we can re-define the same scope as long as we are careful not to duplicate routes. If we do duplicate a route, we'll get this familiar warning.
 
@@ -602,7 +602,7 @@ user_path  GET     /users/:id       HelloPhoenix.UserController.show/2
 user_path  POST    /users           HelloPhoenix.UserController.create/2
 user_path  PATCH   /users/:id       HelloPhoenix.UserController.update/2
            PUT     /users/:id       HelloPhoenix.UserController.update/2
-user_path  DELETE  /users/:id       HelloPhoenix.UserController.destroy/2
+user_path  DELETE  /users/:id       HelloPhoenix.UserController.delete/2
 post_path  GET     /posts           AnotherApp.PostController.index/2
 post_path  GET     /posts/:id/edit  AnotherApp.PostController.edit/2
 post_path  GET     /posts/new       AnotherApp.PostController.new/2
@@ -610,7 +610,7 @@ post_path  GET     /posts/:id       AnotherApp.PostController.show/2
 post_path  POST    /posts           AnotherApp.PostController.create/2
 post_path  PATCH   /posts/:id       AnotherApp.PostController.update/2
            PUT     /posts/:id       AnotherApp.PostController.update/2
-post_path  DELETE  /posts/:id       AnotherApp.PostController.destroy/2
+post_path  DELETE  /posts/:id       AnotherApp.PostController.delete/2
 ```
 
 ###Pipelines

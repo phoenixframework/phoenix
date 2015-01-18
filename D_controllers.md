@@ -50,7 +50,7 @@ While we can name our actions whatever we like, there are conventions for action
 - create  - receives params for one new item and saves it in a datastore
 - edit    - retrieves and individual item by id and displays it in a form for editing
 - update  - receives params for one edited item and saves it to a datastore
-- destroy - receives an id for an item to be deleted and deletes it from a datastore
+- delete  - receives an id for an item to be deleted and deletes it from a datastore
 
 Each of these actions takes two parameters, which will be provided by Phoenix behind the scenes.
 
