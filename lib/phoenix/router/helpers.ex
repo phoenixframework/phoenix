@@ -146,7 +146,7 @@ defmodule Phoenix.Router.Helpers do
 
     quote do
       unquote(channels_ast)
-      def match_channel(socket, _direction, _channel, _event, _msg_payload, _transport) do
+      def match_channel_join(socket, _topic, _msg_payload, _transport) do
         {:error, :bad_transport_match, socket}
       end
     end
@@ -162,24 +162,10 @@ defmodule Phoenix.Router.Helpers do
 
   defp defchannel(topic_match, module, transports) do
     quote do
-      def match_channel(socket, :incoming, unquote(topic_match), "join", msg_payload, transport)
+      def match_channel_join(socket, unquote(topic_match), msg_payload, transport)
         when transport in unquote(transports) do
+        socket = %Phoenix.Socket{socket | channel: unquote(module)}
         apply(unquote(module), :join, [socket.topic, msg_payload, socket])
-      end
-      def match_channel(socket, :incoming, unquote(topic_match), "leave", msg_payload, transport)
-        when transport in unquote(transports) do
-        apply(unquote(module), :leave, [msg_payload, socket])
-      end
-      def match_channel(socket, :incoming, unquote(topic_match), event, msg_payload, transport)
-        when transport in unquote(transports) do
-        apply(unquote(module), :handle_in, [event, msg_payload, socket])
-      end
-      def match_channel(socket, :outgoing, unquote(topic_match), event, msg_payload, _transport) do
-        apply(unquote(module), :handle_out, [event, msg_payload, socket])
-      end
-      def match_channel(socket, :info, unquote(topic_match), _event, msg_payload, transport)
-        when transport in unquote(transports) do
-        apply(unquote(module), :handle_info, [msg_payload, socket])
       end
     end
   end

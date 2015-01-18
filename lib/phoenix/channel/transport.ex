@@ -82,9 +82,10 @@ defmodule Phoenix.Channel.Transport do
   end
   defp transport_response({:error, reason, %Socket{} = socket}, sockets) do
     Logger.error """
-    Dispatching topic #{inspect socket.topic} to #{inspect socket.router} failed"
-    Reason: #{inspect(reason)}
-     State: #{inspect(socket)}
+    Crashed Dispatching topic #{inspect socket.topic} to #{inspect(socket.channel || socket.router)}
+      Reason: #{inspect(reason)}
+      Router: #{inspect(socket.router)}
+      State:  #{inspect(socket)}
     """
     {:error, reason, HashDict.delete(sockets, socket.topic)}
   end
@@ -108,36 +109,39 @@ defmodule Phoenix.Channel.Transport do
   end
   def dispatch(socket, topic, "join", msg) do
     socket
-    |> socket.router.match_channel(:incoming, topic, "join", msg, socket.transport)
+    |> socket.router.match_channel_join(topic, msg, socket.transport)
     |> handle_result("join")
+  end
+  def dispatch(socket, topic, "leave", msg) do
+    if Socket.authorized?(socket, topic) do
+      socket.channel.leave(msg, socket) |> handle_result("leave")
+    else
+      handle_result({:error, :unauthenticated, socket}, "leave")
+    end
   end
   def dispatch(socket, topic, event, msg) do
     if Socket.authorized?(socket, topic) do
-      socket
-      |> socket.router.match_channel(:incoming, topic, event, msg, socket.transport)
-      |> handle_result(event)
+      socket.channel.handle_in(event, msg, socket) |> handle_result(event)
     else
       handle_result({:error, :unauthenticated, socket}, event)
     end
   end
 
-  defp handle_result({:ok, socket = %Socket{}}, "join") do
+  defp handle_result({:ok, %Socket{} = socket}, "join") do
     PubSub.subscribe(socket.pid, socket.topic)
     {:ok, Socket.authorize(socket, socket.topic)}
   end
-  defp handle_result({:ok, socket = %Socket{}}, "leave") do
+  defp handle_result({:ok, %Socket{} = socket}, "leave") do
     PubSub.unsubscribe(socket.pid, socket.topic)
     {:leave, Socket.deauthorize(socket)}
   end
-  defp handle_result({:ok, socket = %Socket{}}, _event) do
+  defp handle_result({:ok, %Socket{} = socket}, _event) do
     {:ok, socket}
   end
-  defp handle_result({:leave, socket = %Socket{}}, event)
+  defp handle_result({:leave, %Socket{} = socket}, event)
     when not event in ["join", "leave"] do
 
-    socket
-    |> socket.router.match_channel(:incoming, socket.topic, "leave", %{reason: :leave}, socket.transport)
-    |> handle_result("leave")
+    socket.channel.leave(%{reason: :leave}, socket) |> handle_result("leave")
   end
   defp handle_result({:error, reason, %Socket{} = socket}, _event) do
     {:error, reason, socket}
@@ -171,8 +175,8 @@ defmodule Phoenix.Channel.Transport do
       nil    ->
         {:ok, sockets}
       socket ->
-        socket
-        |> socket.router.match_channel(:outgoing, socket.topic, event, payload, socket.transport)
+        event
+        |> socket.channel.handle_out(payload, socket)
         |> handle_result(event)
         |> transport_response(sockets)
     end
@@ -185,10 +189,8 @@ defmodule Phoenix.Channel.Transport do
   Most adapters shutdown after this dispatch as they client has disconnected
   """
   def dispatch_leave(sockets, reason) do
-    Enum.each sockets, fn {_, %Socket{topic: topic, transport: trans} = socket} ->
-      socket
-      |> socket.router.match_channel(:incoming, topic, "leave", %{reason: reason}, trans)
-      |> handle_result("leave")
+    Enum.each sockets, fn {_, socket} ->
+      socket.channel.leave(%{reason: reason}, socket) |> handle_result("leave")
     end
     :ok
   end

@@ -8,6 +8,7 @@ defmodule Phoenix.Socket do
   * `pid` - The Pid of the socket's transport process
   * `topic` - The string topic, ie `"rooms:123"`
   * `router` - The router module where this socket originated
+  * `channel` - The channel module where this socket originated
   * `authorized` - The boolean authorization status, default `false`
   * `assigns` - The map of socket assigns, default: `%{}`
   * `transport` - The socket's Transport, ie: `Phoenix.Transports.WebSocket`
@@ -20,6 +21,7 @@ defmodule Phoenix.Socket do
   defstruct pid: nil,
             topic: nil,
             router: nil,
+            channel: nil,
             authorized: false,
             transport: nil,
             assigns: %{}
