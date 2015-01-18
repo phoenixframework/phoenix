@@ -1,6 +1,5 @@
 defmodule Phoenix.PubSub do
   use GenServer
-  alias Phoenix.PubSub.Server
 
   @moduledoc """
   Serves as a Notification and PubSub layer for broad use-cases. Used internally
@@ -21,10 +20,6 @@ defmodule Phoenix.PubSub do
 
   """
 
-  @server Phoenix.PubSub.Server
-
-  @pg_prefix :phx
-
   @doc """
   Creates a topic for pubsub broadcast to subscribers
 
@@ -37,14 +32,14 @@ defmodule Phoenix.PubSub do
 
   """
   def create(topic_name) do
-    :ok = call {:create, group(topic_name)}
+    :ok = adapter.create(topic_name)
   end
 
   @doc """
   Checks if a given topic is registered as a process group
   """
   def exists?(topic_name) do
-    call {:exists?, group(topic_name)}
+    adapter.exists?(topic_name)
   end
 
   @doc """
@@ -59,7 +54,7 @@ defmodule Phoenix.PubSub do
 
   """
   def delete(topic_name) do
-    call {:delete, group(topic_name)}
+    adapter.delete(topic_name)
   end
 
   @doc """
@@ -74,8 +69,9 @@ defmodule Phoenix.PubSub do
 
   """
   def subscribe(pid, topic_name) do
-    :ok = create(topic_name)
-    call {:subscribe, pid, group(topic_name)}
+    adapter = adapter()
+    :ok = adapter.create(topic_name)
+    adapter.subscribe(pid, topic_name)
   end
 
   @doc """
@@ -90,7 +86,7 @@ defmodule Phoenix.PubSub do
 
   """
   def unsubscribe(pid, topic_name) do
-    call {:unsubscribe, pid, group(topic_name)}
+    adapter.unsubscribe(pid, topic_name)
   end
 
   @doc """
@@ -107,10 +103,7 @@ defmodule Phoenix.PubSub do
 
   """
   def subscribers(topic_name) do
-    case :pg2.get_members(group(topic_name)) do
-      {:error, {:no_such_group, _}} -> []
-      members -> members
-    end
+    adapter.subscribers(topic_name)
   end
 
   @doc """
@@ -142,29 +135,24 @@ defmodule Phoenix.PubSub do
 
   """
   def broadcast_from(from_pid, topic_name, message) do
-    topic_name
-    |> subscribers
-    |> Enum.each fn
-      pid when pid != from_pid -> send(pid, message)
-      _pid -> :ok
-    end
+    adapter.broadcast_from(from_pid, topic_name, message)
   end
 
   @doc """
   Check if PubSub is active. To be active it must be created and have subscribers
   """
   def active?(topic_name) do
-    call {:active?, group(topic_name)}
+    adapter.active?(topic_name)
   end
 
   @doc """
   Returns a List of all Phoenix PubSubs from :pg2
   """
   def list do
-    :pg2.which_groups |> Enum.filter(&match?({@pg_prefix, _}, &1))
+    adapter.list()
   end
 
-  defp call(message), do: GenServer.call(Server.leader_pid, message)
-
-  defp group(topic_name), do: {@pg_prefix, topic_name}
+  defp adapter do
+    Application.get_env(:phoenix, :pubsub) |> Dict.get(:adapter, Phoenix.PubSub.PG2Adapter)
+  end
 end

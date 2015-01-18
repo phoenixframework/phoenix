@@ -72,7 +72,7 @@ defmodule Phoenix.PubSub.PubSubTest do
     # PubSub.Supervisor.start_link garbage_collect_after_ms = 25
     assert PubSub.create("topic7") == :ok
     assert PubSub.exists?("topic7")
-    send PubSub.Server.leader_pid, {:garbage_collect, [{:phx, "topic7"}]}
+    send PubSub.PG2Adapter.leader_pid, {:garbage_collect, [{:phx, "topic7"}]}
     refute PubSub.exists?("topic7")
   end
 
@@ -84,7 +84,7 @@ defmodule Phoenix.PubSub.PubSubTest do
     assert PubSub.create("topic8") == :ok
     assert PubSub.exists?("topic8")
     assert PubSub.subscribe(pid, "topic8")
-    send PubSub.Server.leader_pid, {:garbage_collect, [{:phx, "topic8"}]}
+    send PubSub.PG2Adapter.leader_pid, {:garbage_collect, [{:phx, "topic8"}]}
     assert PubSub.exists?("topic8")
     Process.exit pid, :kill
   end
