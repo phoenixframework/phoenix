@@ -7,7 +7,7 @@ defmodule Phoenix.PubSub.Server do
   @moduledoc """
   Handles PubSub subscriptions and garbage collection with node failover
 
-  All PubSub creates, joins, leaves, and destroys are funneled through master
+  All PubSub creates, joins, leaves, and deletes are funneled through master
   PubSub Server to prevent race conditions on global :pg2 groups.
 
   All nodes monitor master `Phoenix.PubSub.Server` and compete for leader in

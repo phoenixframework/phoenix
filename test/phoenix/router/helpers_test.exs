@@ -122,8 +122,8 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.message_path(__MODULE__, :update, 1, []) == "/admin/messages/1"
     assert Helpers.message_path(__MODULE__, :update, 1) == "/admin/messages/1"
 
-    assert Helpers.message_path(__MODULE__, :destroy, 1, []) == "/admin/messages/1"
-    assert Helpers.message_path(__MODULE__, :destroy, 1) == "/admin/messages/1"
+    assert Helpers.message_path(__MODULE__, :delete, 1, []) == "/admin/messages/1"
+    assert Helpers.message_path(__MODULE__, :delete, 1) == "/admin/messages/1"
   end
 
   test "1-Level nested resources generates nested named routes for :index, :edit, :show, :new" do

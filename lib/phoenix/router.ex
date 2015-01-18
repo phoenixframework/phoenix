@@ -93,7 +93,7 @@ defmodule Phoenix.Router do
         pipe_through :browser
 
         resources "/pages", PageController, only: [:show]
-        resources "/users", UserController, except: [:destroy]
+        resources "/users", UserController, except: [:delete]
       end
 
   Finally, Phoenix ships with a `mix phoenix.routes` task that nicely
@@ -377,14 +377,14 @@ defmodule Phoenix.Router do
     * `GET /users/:id/edit` => `:edit`
     * `PATCH /users/:id` => `:update`
     * `PUT /users/:id` => `:update`
-    * `DELETE /users/:id` => `:destroy`
+    * `DELETE /users/:id` => `:delete`
 
   ## Options
 
   This macro accepts a set of options:
 
     * `:only` - a list of actions to generate routes for, for example: `[:show, :edit]`
-    * `:except` - a list of actions to exclude generated routes from, for example: `[:destroy]`
+    * `:except` - a list of actions to exclude generated routes from, for example: `[:delete]`
     * `:param` - the name of the paramter for this resource, defaults to `"id"`
     * `:name` - the prefix for this resource. This is used for the named helper
       and as the prefix for the parameter in nested resources. The default value
@@ -431,7 +431,7 @@ defmodule Phoenix.Router do
           :new     -> get    "#{path}/new",           ctrl, :new, opts
           :edit    -> get    "#{path}/:#{parm}/edit", ctrl, :edit, opts
           :create  -> post   "#{path}",               ctrl, :create, opts
-          :destroy -> delete "#{path}/:#{parm}",      ctrl, :destroy, opts
+          :delete  -> delete "#{path}/:#{parm}",      ctrl, :delete, opts
           :update  ->
             patch "#{path}/:#{parm}", ctrl, :update, opts
             put   "#{path}/:#{parm}", ctrl, :update, as: nil

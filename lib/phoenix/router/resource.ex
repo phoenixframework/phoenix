@@ -7,7 +7,7 @@ defmodule Phoenix.Router.Resource do
   alias Phoenix.Router.Resource
 
   @default_param_key "id"
-  @actions [:index, :edit, :new, :show, :create, :update, :destroy]
+  @actions [:index, :edit, :new, :show, :create, :update, :delete]
 
   @doc """
   The `Phoenix.Router.Resource` struct. It stores:

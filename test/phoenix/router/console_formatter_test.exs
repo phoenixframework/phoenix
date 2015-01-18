@@ -10,7 +10,7 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
 
     get "/", Phoenix.PageController, :index, as: :page
     post "/images", Phoenix.ImageController, :upload, as: :upload_image
-    delete "/images", Phoenix.ImageController, :destroy, as: :remove_image
+    delete "/images", Phoenix.ImageController, :delete, as: :remove_image
   end
 
   test "format multiple routes" do
@@ -21,7 +21,7 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
      long_poller_path  POST    /ws/poll  Phoenix.Transports.LongPoller.publish/2
             page_path  GET     /         Phoenix.PageController.index/2
     upload_image_path  POST    /images   Phoenix.ImageController.upload/2
-    remove_image_path  DELETE  /images   Phoenix.ImageController.destroy/2
+    remove_image_path  DELETE  /images   Phoenix.ImageController.delete/2
     """
   end
 
@@ -39,7 +39,7 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
     image_path  POST    /images           Phoenix.ImageController.create/2
     image_path  PATCH   /images/:id       Phoenix.ImageController.update/2
                 PUT     /images/:id       Phoenix.ImageController.update/2
-    image_path  DELETE  /images/:id       Phoenix.ImageController.destroy/2
+    image_path  DELETE  /images/:id       Phoenix.ImageController.delete/2
     """
   end
 

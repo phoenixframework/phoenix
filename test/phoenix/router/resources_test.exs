@@ -11,7 +11,7 @@ defmodule Phoenix.Router.ResourcesTest do
     def edit(conn, _params), do: text(conn, "edit users")
     def create(conn, _params), do: text(conn, "create users")
     def update(conn, _params), do: text(conn, "update users")
-    def destroy(conn, _params), do: text(conn, "destroy users")
+    def delete(conn, _params), do: text(conn, "delete users")
   end
 
   defmodule Api.FileController do
@@ -30,7 +30,7 @@ defmodule Phoenix.Router.ResourcesTest do
     def new(conn, _params), do: text(conn, "new comments")
     def create(conn, _params), do: text(conn, "create comments")
     def update(conn, _params), do: text(conn, "update comments")
-    def destroy(conn, _params), do: text(conn, "destroy comments")
+    def delete(conn, _params), do: text(conn, "delete comments")
     def special(conn, _params), do: text(conn, "special comments")
   end
 
@@ -41,13 +41,13 @@ defmodule Phoenix.Router.ResourcesTest do
       resources "/comments", CommentController do
         get "/special", CommentController, :special
       end
-      resources "/files", FileController, except: [:destroy]
+      resources "/files", FileController, except: [:delete]
     end
 
     resources "/files", Api.FileController, only: [:index]
 
     resources "/admin", UserController, param: "slug", name: "admin", only: [:show], alias: Api do
-      resources "/comments", CommentController, param: "key", name: "post", except: [:destroy]
+      resources "/comments", CommentController, param: "key", name: "post", except: [:delete]
       resources "files", FileController, only: [:show, :index, :new]
     end
   end
@@ -103,10 +103,10 @@ defmodule Phoenix.Router.ResourcesTest do
     end
   end
 
-  test "toplevel route matches destroy action" do
+  test "toplevel route matches delete action" do
     conn = call(Router, :delete, "users/2")
     assert conn.status == 200
-    assert conn.resp_body == "destroy users"
+    assert conn.resp_body == "delete users"
     assert conn.params["id"] == "2"
   end
 
@@ -140,10 +140,10 @@ defmodule Phoenix.Router.ResourcesTest do
     assert conn.params["id"] == "123"
   end
 
-  test "1-Level nested route matches with named param prefix on destroy" do
+  test "1-Level nested route matches with named param prefix on delete" do
     conn = call(Router, :delete, "users/1/comments/123")
     assert conn.status == 200
-    assert conn.resp_body == "destroy comments"
+    assert conn.resp_body == "delete comments"
     assert conn.params["user_id"] == "1"
     assert conn.params["id"] == "123"
   end

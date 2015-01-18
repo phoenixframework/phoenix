@@ -8,7 +8,7 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     use Phoenix.Controller
     plug :action
     def show(conn, _params), do: text(conn, "api v1 users show")
-    def destroy(conn, _params), do: text(conn, "api v1 users destroy")
+    def delete(conn, _params), do: text(conn, "api v1 users delete")
     def edit(conn, _params), do: text(conn, "api v1 users edit")
     def foo_host(conn, _params), do: text(conn, "foo request from #{conn.host}")
     def baz_host(conn, _params), do: text(conn, "baz request from #{conn.host}")
@@ -41,7 +41,7 @@ defmodule Phoenix.Router.ScopedRoutingTest do
       get "/users/:id", V1.UserController, :show
 
       scope "/v1", alias: V1 do
-        resources "/users", UserController, only: [:destroy]
+        resources "/users", UserController, only: [:delete]
       end
     end
 
@@ -91,7 +91,7 @@ defmodule Phoenix.Router.ScopedRoutingTest do
   test "scope for resources" do
     conn = call(Router, :delete, "/api/v1/users/12")
     assert conn.status == 200
-    assert conn.resp_body == "api v1 users destroy"
+    assert conn.resp_body == "api v1 users delete"
     assert conn.params["id"] == "12"
   end
 

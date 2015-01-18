@@ -8,6 +8,7 @@
 * Backwards incompatible changes
   * [Channel] The error return signature has been changed from `{:error, socket, reason}` to {:error, reason, socket}`
   * [Plug] `Plug.CSRFProtection` now uses a cookie instead of session and expects a `"_csrf_token"` parameter instead of `"csrf_token"`
+  * [Router] The `destroy` action has been renamed to `delete`
 
 ## v0.8.0 (2015-01-11)
 
