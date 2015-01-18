@@ -10,10 +10,6 @@ defmodule Phoenix.PubSub.PubSubTest do
     end
   end
 
-  setup_all do
-    :ok
-  end
-
   test "#create adds topic to process group" do
     refute PubSub.exists?("topic1")
     assert PubSub.create("topic1") == :ok

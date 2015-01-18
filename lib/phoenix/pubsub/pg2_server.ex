@@ -5,22 +5,9 @@ defmodule Phoenix.PubSub.PG2Server do
   alias Phoenix.PubSub.GarbageCollector
 
   @moduledoc """
-  Handles PubSub subscriptions and garbage collection with node failover
+  The server for the PG2Adapter
 
-  All PubSub creates, joins, leaves, and deletes are funneled through master
-  PubSub Server to prevent race conditions on global :pg2 groups.
-
-  All nodes monitor master `Phoenix.PubSub.PG2Server` and compete for leader in
-  the event of a nodedown.
-
-
-  ## Configuration
-
-  To set a custom garbage collection timer, add the following to your Mix config
-
-      config :phoenix, :pubsub,
-        garbage_collect_after_ms: 60_000..120_000
-
+  See `Phoenix.PubSub.PG2Adapter` for details and configuration options.
   """
 
   defstruct role: :slave,
@@ -75,6 +62,10 @@ defmodule Phoenix.PubSub.PG2Server do
     else
       {:reply, delete_group(group), state}
     end
+  end
+
+  def handle_call(:stop, _from, state) do
+    {:stop, :normal, state}
   end
 
   def handle_info(_message, state = %PG2Server{role: :slave}) do
