@@ -54,10 +54,4 @@ defmodule Phoenix.PubSub.RedisAdapter do
   end
 
   defp group(topic), do: "phx:#{topic}"
-
-  def go do
-    start_link
-    broadcast("foo", 'bar')
-    broadcast("foo", "bar")
-  end
 end
