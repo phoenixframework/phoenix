@@ -2,7 +2,7 @@ defmodule Phoenix.PubSub.RedisAdapter do
 
   @behaviour Phoenix.PubSub.Adapter
 
-  @pg_prefix "phxrs"
+  @pg_prefix :phxrs
 
   alias Phoenix.PubSub.RedisServer
 
