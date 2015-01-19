@@ -30,39 +30,70 @@ defmodule Phoenix.PubSub.PG2Adapter do
     GenServer.start_link PG2Server, options, []
   end
 
+  @doc """
+  Stops the leader
+  """
   def stop do
-    GenServer.call(leader_pid, :stop)
+    GenServer.call(server_pid, :stop)
   end
 
+  @doc """
+  Creates the namespaced pg2 group for topic
+  """
   def create(topic),
-    do: call({:create, group(topic)})
+    do: call({:create, namespace_topic(topic)})
 
+
+  @doc """
+  Checks if pg2 group exists for topic
+  """
   def exists?(topic),
-    do: call({:exists?, group(topic)})
+    do: call({:exists?, namespace_topic(topic)})
 
+  @doc """
+  Checks if pg2 group has any member pids for topic
+  """
   def active?(topic),
-    do: call({:active?, group(topic)})
+    do: call({:active?, namespace_topic(topic)})
 
+  @doc """
+  Removes the pg2 group for given topic
+  """
   def delete(topic),
-    do: call({:delete, group(topic)})
+    do: call({:delete, namespace_topic(topic)})
 
+  @doc """
+  Subscribes the pid to the pg2 group for the topic
+  """
   def subscribe(pid, topic),
-    do: call({:subscribe, pid, group(topic)})
+    do: call({:subscribe, pid, namespace_topic(topic)})
 
+  @doc """
+  Unsubscribes the pid from the pg2 group for the topic
+  """
   def unsubscribe(pid, topic),
-    do: call({:unsubscribe, pid, group(topic)})
+    do: call({:unsubscribe, pid, namespace_topic(topic)})
 
+  @doc """
+  Returns lists of subscriber pids of members of pg2 group for topic
+  """
   def subscribers(topic) do
-    case :pg2.get_members(group(topic)) do
+    case :pg2.get_members(namespace_topic(topic)) do
       {:error, {:no_such_group, _}} -> []
       members -> members
     end
   end
 
+  @doc """
+  Broadcasts message on given topic
+  """
   def broadcast(topic, message) do
     broadcast_from(:global, topic, message)
   end
 
+  @doc """
+  Broadcasts message to all but sender on given topic
+  """
   def broadcast_from(from_pid, topic, message) do
     topic
     |> subscribers
@@ -72,15 +103,21 @@ defmodule Phoenix.PubSub.PG2Adapter do
     end
   end
 
+  @doc """
+  Returns lists of strings of all topics under pg2
+  """
   def list do
     :pg2.which_groups |> Enum.filter(&match?({@pg_prefix, _}, &1))
   end
 
-  def leader_pid, do: :global.whereis_name(PG2Server)
+  @doc """
+  Returns the pid of the registered pg2 leader
+  """
+  def server_pid, do: :global.whereis_name(PG2Server)
+
+  def namespace_topic(topic), do: {@pg_prefix, topic}
 
   defp call(message) do
-    GenServer.call(leader_pid, message)
+    GenServer.call(server_pid, message)
   end
-
-  defp group(topic), do: {@pg_prefix, topic}
 end

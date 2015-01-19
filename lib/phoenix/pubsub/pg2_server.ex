@@ -19,7 +19,7 @@ defmodule Phoenix.PubSub.PG2Server do
 
     case :global.register_name(__MODULE__, self, &:global.notify_all_name/3) do
       :no  ->
-        Process.link(PG2Adapter.leader_pid)
+        Process.link(PG2Adapter.server_pid)
         {:ok, struct(PG2Server, role: :slave, garbage_collect_after_ms: gc_after)}
       :yes ->
         send(self, :garbage_collect_all)
