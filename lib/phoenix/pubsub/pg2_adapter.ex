@@ -1,5 +1,4 @@
 defmodule Phoenix.PubSub.PG2Adapter do
-  alias Phoenix.PubSub.PG2Server
 
   @moduledoc """
   Handles PubSub subscriptions and garbage collection with node failover
@@ -16,11 +15,15 @@ defmodule Phoenix.PubSub.PG2Adapter do
   To set a custom garbage collection timer, add the following to your Mix config
 
       config :phoenix, :pubsub,
+        adapter: Phoenix.PubSub.PG2Adapter,
         garbage_collect_after_ms: 60_000..120_000
 
   """
 
+  @behaviour Phoenix.PubSub.Adapter
   @pg_prefix :phx
+
+  alias Phoenix.PubSub.PG2Server
 
   def start_link(opts \\ []) do
     options = Dict.merge(Application.get_env(:phoenix, :pubsub), opts)
