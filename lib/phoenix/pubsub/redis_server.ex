@@ -18,7 +18,6 @@ end
 defmodule Phoenix.PubSub.RedisServer do
   use GenServer
   alias Phoenix.PubSub.RedisServer
-  alias Phoenix.PubSub.RedisAdapter
   alias Phoenix.PubSub.GarbageCollector
 
   @moduledoc """
