@@ -31,14 +31,14 @@ defmodule Phoenix.PubSub do
       :ok
 
   """
-  def create(topic_name) do
+  def create(topic_name, adapter \\ adapter()) do
     :ok = adapter.create(topic_name)
   end
 
   @doc """
   Checks if a given topic is registered as a process group
   """
-  def exists?(topic_name) do
+  def exists?(topic_name, adapter \\ adapter()) do
     adapter.exists?(topic_name)
   end
 
@@ -53,7 +53,7 @@ defmodule Phoenix.PubSub do
       {:error, :active}
 
   """
-  def delete(topic_name) do
+  def delete(topic_name, adapter \\ adapter()) do
     adapter.delete(topic_name)
   end
 
@@ -68,8 +68,7 @@ defmodule Phoenix.PubSub do
       iex> PubSub.subscribe(self, "mytopic")
 
   """
-  def subscribe(pid, topic_name) do
-    adapter = adapter()
+  def subscribe(pid, topic_name, adapter \\ adapter()) do
     :ok = adapter.create(topic_name)
     adapter.subscribe(pid, topic_name)
   end
@@ -85,7 +84,7 @@ defmodule Phoenix.PubSub do
       iex> PubSub.unsubscribe(self, "mytopic")
 
   """
-  def unsubscribe(pid, topic_name) do
+  def unsubscribe(pid, topic_name, adapter \\ adapter()) do
     adapter.unsubscribe(pid, topic_name)
   end
 
@@ -102,7 +101,7 @@ defmodule Phoenix.PubSub do
       [#PID<0.41.0>]
 
   """
-  def subscribers(topic_name) do
+  def subscribers(topic_name, adapter \\ adapter()) do
     adapter.subscribers(topic_name)
   end
 
@@ -118,8 +117,8 @@ defmodule Phoenix.PubSub do
 
   To exclude the broadcaster from receiving the message, use `broadcast_from/3`
   """
-  def broadcast(topic_name, message) do
-    broadcast_from(:global, topic_name, message)
+  def broadcast(topic_name, message, adapter \\ adapter()) do
+    broadcast_from(:global, topic_name, message, adapter)
   end
 
   @doc """
@@ -134,21 +133,21 @@ defmodule Phoenix.PubSub do
       iex> PubSub.broadcast_from(self, "mytopic", :hello)
 
   """
-  def broadcast_from(from_pid, topic_name, message) do
+  def broadcast_from(from_pid, topic_name, message, adapter \\ adapter()) do
     adapter.broadcast_from(from_pid, topic_name, message)
   end
 
   @doc """
   Check if PubSub is active. To be active it must be created and have subscribers
   """
-  def active?(topic_name) do
+  def active?(topic_name, adapter \\ adapter()) do
     adapter.active?(topic_name)
   end
 
   @doc """
   Returns a List of all Phoenix PubSubs from :pg2
   """
-  def list do
+  def list(adapter \\ adapter()) do
     adapter.list()
   end
 

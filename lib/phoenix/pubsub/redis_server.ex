@@ -18,6 +18,7 @@ end
 defmodule Phoenix.PubSub.RedisServer do
   use GenServer
   alias Phoenix.PubSub.RedisServer
+  alias Phoenix.PubSub.RedisAdapter
   alias Phoenix.PubSub.GarbageCollector
 
   @moduledoc """
@@ -29,7 +30,6 @@ defmodule Phoenix.PubSub.RedisServer do
   @derive [Access]
   defstruct gc_buffer: [],
             garbage_collect_after_ms: nil,
-            topics: nil,
             eredis_sub_pid: nil,
             eredis_pid: nil
 
@@ -51,8 +51,9 @@ defmodule Phoenix.PubSub.RedisServer do
     :eredis_sub.controlling_process(eredis_sub_pid)
     :eredis_sub.psubscribe(eredis_sub_pid, ["phx:*"])
 
-    {:ok, struct(RedisServer, topics: HashDict.new,
-                              eredis_sub_pid: eredis_sub_pid,
+    send(self, :garbage_collect_all)
+
+    {:ok, struct(RedisServer, eredis_sub_pid: eredis_sub_pid,
                               eredis_pid: eredis_pid,
                               garbage_collect_after_ms: gc_after)}
   end
@@ -69,47 +70,25 @@ defmodule Phoenix.PubSub.RedisServer do
     if group_exists?(state, group) do
       {:reply, :ok, state}
     else
-      state =
-        state
-        |> put_in([:topics], HashDict.put(state.topics, group, HashSet.new))
-        |> gc_mark(group)
-
-      {:reply, :ok, state}
+      :ok = :pg2.create(group)
+      {:reply, :ok, gc_mark(state, group)}
     end
   end
 
   def handle_call({:subscribe, pid, group}, _from, state) do
-    members = subscribers(state, group)
-    state = put_in(state.topics, HashDict.put(state.topics, group, HashSet.put(members, pid)))
-    {:reply, :ok, state}
+    {:reply, :pg2.join(group, pid), state}
   end
 
   def handle_call({:unsubscribe, pid, group}, _from, state) do
-    members = state |> subscribers(group) |> HashSet.delete(pid)
-    state =
-      state
-      |> put_in([:topics], HashDict.put(state.topics, group, members))
-      |> gc_mark(group)
-
-    {:reply, :ok, state}
+    {:reply, :pg2.leave(group, pid), state}
   end
 
   def handle_call({:delete, group}, _from, state) do
     if group_active?(state, group) do
       {:reply, {:error, :active}, state}
     else
-      :ok = :eredis.unsubscribe(state.eredis_sub_pid, [group])
       {:reply, :ok, delete_group(state, group)}
     end
-  end
-
-  def handle_call(:list, _from, state) do
-    {:reply, list(state), state}
-  end
-
-  def handle_call({:subscribers, group}, _from, state) do
-    pids = state |> subscribers(group) |> Enum.to_list
-    {:reply, pids, state}
   end
 
   def handle_call(:stop, _from, state) do
@@ -120,8 +99,8 @@ defmodule Phoenix.PubSub.RedisServer do
     end
   end
 
-  def handle_call({:broadcast, from_pid, group, msg}, _from, state) do
-    :eredis.q(state.eredis_pid, ["PUBLISH", group, {from_pid, msg}])
+  def handle_call({:broadcast, from_pid, topic, msg}, _from, state) do
+    :eredis.q(state.eredis_pid, ["PUBLISH", "phx:#{topic}", {from_pid, msg}])
     {:reply, :ok, state}
   end
 
@@ -138,7 +117,7 @@ defmodule Phoenix.PubSub.RedisServer do
   end
 
   def handle_info(:garbage_collect_all, state) do
-    {:noreply, gc_mark(state, list(state))}
+    {:noreply, gc_mark(state, RedisAdapter.list)}
   end
 
   def handle_info({:subscribed, "phx:*", _client_pid}, state) do
@@ -146,11 +125,11 @@ defmodule Phoenix.PubSub.RedisServer do
     {:noreply, state}
   end
 
-  def handle_info({:pmessage, "phx:*", group, binary_msg, _client_pid}, state) do
+  def handle_info({:pmessage, "phx:*", "phx:" <> topic, binary_msg, _client_pid}, state) do
     {from_pid, msg} = :erlang.binary_to_term(binary_msg)
 
-    state
-    |> subscribers(group)
+    topic
+    |> RedisAdapter.subscribers
     |> Enum.each fn
       pid when pid != from_pid -> send(pid, msg)
       _pid -> :ok
@@ -164,31 +143,28 @@ defmodule Phoenix.PubSub.RedisServer do
     {:stop, :eredis_disconnected, state}
   end
 
-  defp group_exists?(state, group) do
-    case HashDict.get(state.topics, group) do
-      nil -> false
-      _   -> true
+  defp group_exists?(_state, group) do
+    case :pg2.get_closest_pid(group) do
+      pid when is_pid(pid)          -> true
+      {:error, {:no_process, _}}    -> true
+      {:error, {:no_such_group, _}} -> false
     end
   end
 
-  defp group_active?(state, group) do
-    HashSet.size(subscribers(state, group)) > 0
+  defp group_active?(_state, group) do
+    case :pg2.get_closest_pid(group) do
+      pid when is_pid(pid) -> true
+      _ -> false
+    end
   end
 
   defp delete_group(state, group) do
-    put_in state.topics, HashDict.drop(state.topics, group)
+    :pg2.delete(group)
+    state
   end
 
   defp gc_mark(state, group) do
     buffer = GarbageCollector.mark(state.gc_buffer, state.garbage_collect_after_ms, group)
     %RedisServer{state | gc_buffer: buffer}
-  end
-
-  defp list(state) do
-    HashDict.keys(state.topics)
-  end
-
-  defp subscribers(state, group) do
-    HashDict.get(state.topics, group, HashSet.new)
   end
 end
