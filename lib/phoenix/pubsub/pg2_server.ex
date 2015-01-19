@@ -65,7 +65,7 @@ defmodule Phoenix.PubSub.PG2Server do
   end
 
   def handle_call(:stop, _from, state) do
-    {:stop, :normal, state}
+    {:stop, :normal, :ok, state}
   end
 
   def handle_info(_message, state = %PG2Server{role: :slave}) do
