@@ -70,7 +70,7 @@ get "/", HelloPhoenix.PageController, :index
 ```
 Let's digest what this route is telling us. Visiting [http://localhost:4000/](http://localhost:4000/) issues an http GET request to the root path. All requests like this will be handled by the `index` function in the `HelloPhoenix.PageController` module defined in `web/controllers/page_controller.ex`.
 
-The page we are going to build will simply say "Hello from Phoenix!" when we point our browser to [http://localhost:4000/hello](http://localhost:4000/hello).
+The page we are going to build will simply say "Hello World, from Phoenix!" when we point our browser to [http://localhost:4000/hello](http://localhost:4000/hello).
 
 The first thing we need to do to create that page is define a route for it. Let's open up `web/router.ex` in a text editor. It should currently look like this.
 
@@ -174,7 +174,7 @@ Let's do that now. Create `web/templates/hello/index.html.eex` and make it look 
 
 ```html
 <div class="jumbotron">
-  <h2>Hello from Phoenix!</h2>
+  <h2>Hello World, from Phoenix!</h2>
 </div>
 ```
 
