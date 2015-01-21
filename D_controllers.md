@@ -322,7 +322,7 @@ def index(conn, params) do
   |> render "index.html"
 end
 ```
-When weload the page, and we should be rendering the admin layout with no logo.
+When we load the page, and we should be rendering the admin layout with no logo.
 
 ### Overriding Rendering Formats
 
@@ -344,7 +344,7 @@ Here is our example `index.text.eex` template.
 ```elixir
 "OMG, this is actually some text."
 ```
-There are just few more things we need to do to make this work. We need to tell our router that it should accept the `text` format. We do that by adding to the list of accepted formats in the `:before` pipeline. Let's open up `web/router.ex` and change the `plug :accepts` line like this.
+There are just few more things we need to do to make this work. We need to tell our router that it should accept the `text` format. We do that by adding `text` to the list of accepted formats in the `:browser` pipeline. Let's open up `web/router.ex` and change the `plug :accepts` line like this.
 
 ```elixir
 defmodule HelloPhoenix.Router do

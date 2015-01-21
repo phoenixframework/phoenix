@@ -116,7 +116,7 @@ So far, we've only displayed singular values in our templates - strings here, an
 
 The answer is that we can use Elixir's list comprehensions.
 
-Now that we have a function, visible to our template, that returns a list of keys in the `conn` struct, all we need to do is modify our `web/templates/page/test.html.eex` template a bit do display them.
+Now that we have a function, visible to our template, that returns a list of keys in the `conn` struct, all we need to do is modify our `web/templates/page/test.html.eex` template a bit to display them.
 
 We can add a header and a list comprehension like this.
 
