@@ -647,7 +647,7 @@ Older versions of Phoenix defined a third pipeline `:before`. Its purpose was to
 
 #####The `:browser` and `:api` Pipelines
 
-Phoenix defines two other pipelines by default, `:browser` and `:api`. The router will invoked these after it matches a route, assuming we have called `pipe_through/1` with them in the enclosing scope.
+Phoenix defines two other pipelines by default, `:browser` and `:api`. The router will invoke these after it matches a route, assuming we have called `pipe_through/1` with them in the enclosing scope.
 
 As their names suggest, the `:browser` pipeline prepares for routes which render HTML for a browser. The `:api` pipeline prepares for routes which produce data for an api.
 
