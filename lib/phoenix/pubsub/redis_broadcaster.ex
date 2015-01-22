@@ -23,6 +23,17 @@ defmodule Phoenix.PubSub.RedisBroadcaster do
   end
 
   @doc false
+  def terminate(_reason, state) do
+    case state do
+      %{status: :disconnected} -> :ok
+      state ->
+        case :eredis_client.stop(state.pid) do
+          :ok -> :ok
+          err -> {:error, err}
+        end
+    end
+  end
+
   def handle_info({:EXIT, _pid, {:connection_error, {:connection_error, :econnrefused}}}, state) do
     {:noreply, state}
   end
@@ -44,28 +55,26 @@ defmodule Phoenix.PubSub.RedisBroadcaster do
   end
 
   @doc """
-  Stops the server
-  """
-  def handle_call(:stop, _from, pid) do
-    case :eredis_client.stop(pid) do
-      :ok -> {:stop, :normal, :ok, pid}
-      err -> {:stop, err, {:error, err}, pid}
-    end
-  end
-
-  @doc """
   Decodes binary message and fowards to pg2 subscribers of topic
   """
-  def handle_cast({:forward_to_subscribers, topic, binary_msg}, state) do
-    {from_pid, msg} = :erlang.binary_to_term(binary_msg)
+  def handle_cast({:forward_to_subscribers, my_node_ref, topic, binary_msg}, state) do
+    binary_msg
+    |> :erlang.binary_to_term
+    |> broadcast(Phoenix.PubSub.RedisAdapter.subscribers(topic), my_node_ref)
 
-    topic
-    |> Phoenix.PubSub.RedisAdapter.subscribers
-    |> Enum.each fn
+    {:noreply, state}
+  end
+
+  defp broadcast({_version, my_node_ref, from_pid, msg}, subscribers, my_node_ref) do
+    Enum.each subscribers, fn
       pid when pid != from_pid -> send(pid, msg)
       _pid -> :ok
     end
-    {:noreply, state}
+    :ok
+  end
+  defp broadcast({_version, _remote_ref, _from_pid, msg}, subscribers, _my_ref) do
+    Enum.each(subscribers, fn pid -> send(pid, msg) end)
+    :ok
   end
 
   defp handle_publish(topic, msg, state) do

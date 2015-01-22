@@ -18,7 +18,7 @@ defmodule Phoenix.PubSub.RedisSupervisor do
     ]
 
     children = [
-      worker(Phoenix.PubSub.RedisServer, [opts]),
+      worker(Phoenix.PubSub.RedisServer, [opts], restart: :transient),
       :poolboy.child_spec(:phx_redis_pool, pool_opts, [opts])
     ]
     supervise children, strategy: :one_for_one
