@@ -1,22 +1,6 @@
-defmodule Phoenix.PubSub.RedisSupervisor do
-  use Supervisor
-
-  @moduledoc false
-
-  def start_link(opts) do
-    Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
-  end
-
-  def init(opts) do
-    children = [
-      worker(Phoenix.PubSub.RedisServer, [opts]),
-    ]
-    supervise children, strategy: :one_for_one, max_restarts: 1_000_000
-  end
-end
-
 defmodule Phoenix.PubSub.RedisServer do
   use GenServer
+  require Logger
   alias Phoenix.PubSub.RedisServer
   alias Phoenix.PubSub.RedisAdapter
   alias Phoenix.PubSub.GarbageCollector
@@ -31,31 +15,43 @@ defmodule Phoenix.PubSub.RedisServer do
   defstruct gc_buffer: [],
             garbage_collect_after_ms: nil,
             eredis_sub_pid: nil,
-            eredis_pid: nil
+            status: :disconnected,
+            reconnect_attemps: 0,
+            opts: []
 
   @defaults [host: "127.0.0.1", port: 6379, password: ""]
 
+  @max_connect_attemps 3   # 15s to establish connection
+  @reconnect_after_ms 5000
+
+  @doc """
+  Starts the server
+
+  TODO document options
+  """
   def start_link(opts) do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
+  @doc """
+  Initializes the server.
+
+  An initial connection establishment loop is entered. Once `:eredis_sub`
+  is started successfully, it handles reconnections automatically, so we
+  pass off reconnection handling once we find an initial connection.
+  """
   def init(opts) do
     gc_after = Dict.fetch!(opts, :garbage_collect_after_ms)
     opts = Dict.merge(@defaults, opts)
     opts = Dict.merge(opts, host: String.to_char_list(to_string(opts[:host])),
                             password: String.to_char_list(to_string(opts[:password])))
 
-    {:ok, eredis_sub_pid} = :eredis_sub.start_link(opts)
-    {:ok, eredis_pid}     = :eredis.start_link(opts)
-
-    :eredis_sub.controlling_process(eredis_sub_pid)
-    :eredis_sub.psubscribe(eredis_sub_pid, ["phx:*"])
-
+    Process.flag(:trap_exit, true)
+    send(self, :establish_conn)
     send(self, :garbage_collect_all)
 
-    {:ok, struct(RedisServer, eredis_sub_pid: eredis_sub_pid,
-                              eredis_pid: eredis_pid,
-                              garbage_collect_after_ms: gc_after)}
+
+    {:ok, struct(RedisServer, opts: opts, garbage_collect_after_ms: gc_after)}
   end
 
   def handle_call({:exists?, group}, _from, state) do
@@ -92,7 +88,6 @@ defmodule Phoenix.PubSub.RedisServer do
   end
 
   def handle_call(:stop, _from, state) do
-    :eredis_client.stop(state.eredis_pid)
     case :eredis_client.stop(state.eredis_sub_pid) do
       :ok -> {:stop, :normal, :ok, state}
       err -> {:stop, err, {:error, err}, state}
@@ -100,8 +95,49 @@ defmodule Phoenix.PubSub.RedisServer do
   end
 
   def handle_call({:broadcast, from_pid, topic, msg}, _from, state) do
-    :eredis.q(state.eredis_pid, ["PUBLISH", "phx:#{topic}", {from_pid, msg}])
-    {:reply, :ok, state}
+    with_conn state, fn state ->
+      result = :poolboy.transaction :phx_redis_pool, fn worker_pid ->
+        GenServer.call(worker_pid, {:publish_to_redis, "phx:#{topic}", {from_pid, msg}})
+      end
+      {:reply, result, state}
+    end
+  end
+
+  def handle_info({:EXIT, _pid, {:connection_error, {:connection_error, :econnrefused}}}, state) do
+    {:noreply, state}
+  end
+
+  @doc """
+  Connection establishment and shutdown loop
+
+  On init, an initial conection to redis is attempted when starting `:eredis_sub`.
+  If failed, the connection is tried again in `@reconnect_after_ms` until a max
+  of `@max_connect_attemps` is tried, at which point the server terminates with
+  an `:exceeded_max_conn_attempts`.
+  """
+  def handle_info(:establish_conn, %RedisServer{status: :connected} = state) do
+    {:noreply, state}
+  end
+  def handle_info(:establish_conn, %RedisServer{reconnect_attemps: count} = state)
+    when count >= @max_connect_attemps do
+
+    {:stop, :exceeded_max_conn_attempts, state}
+  end
+  def handle_info(:establish_conn, state) do
+    case :eredis_sub.start_link(state.opts) do
+      {:ok, eredis_sub_pid} ->
+        :eredis_sub.controlling_process(eredis_sub_pid)
+        :eredis_sub.psubscribe(eredis_sub_pid, ["phx:*"])
+
+         {:noreply, %RedisServer{state | eredis_sub_pid: eredis_sub_pid,
+                                         status: :connected,
+                                         reconnect_attemps: 0}}
+      _error ->
+        Logger.error fn -> "#{inspect __MODULE__} unable to establish redis connection. Attempting to reconnect..." end
+        :timer.send_after(@reconnect_after_ms, :establish_conn)
+        {:noreply, %RedisServer{state | status: :disconnected,
+                                        reconnect_attemps: state.reconnect_attemps + 1}}
+     end
   end
 
   def handle_info({:garbage_collect, groups}, state) do
@@ -126,21 +162,22 @@ defmodule Phoenix.PubSub.RedisServer do
   end
 
   def handle_info({:pmessage, "phx:*", "phx:" <> topic, binary_msg, _client_pid}, state) do
-    {from_pid, msg} = :erlang.binary_to_term(binary_msg)
-
-    topic
-    |> RedisAdapter.subscribers
-    |> Enum.each fn
-      pid when pid != from_pid -> send(pid, msg)
-      _pid -> :ok
+    :poolboy.transaction :phx_redis_pool, fn worker_pid ->
+      GenServer.cast(worker_pid, {:forward_to_subscribers, topic, binary_msg})
     end
 
     :eredis_sub.ack_message(state.eredis_sub_pid)
     {:noreply, state}
   end
 
+  def handle_info({:eredis_connected, _client_pid}, state) do
+    Logger.info fn -> "#{inspect __MODULE__} redis connection re-established" end
+    {:noreply, %RedisServer{state | status: :connected}}
+  end
+
   def handle_info({:eredis_disconnected, _client_pid}, state) do
-    {:stop, :eredis_disconnected, state}
+    Logger.error fn -> "#{inspect __MODULE__} lost redis connection. Attempting to reconnect..." end
+    {:noreply, %RedisServer{state | status: :disconnected}}
   end
 
   defp group_exists?(_state, group) do
@@ -166,5 +203,15 @@ defmodule Phoenix.PubSub.RedisServer do
   defp gc_mark(state, group) do
     buffer = GarbageCollector.mark(state.gc_buffer, state.garbage_collect_after_ms, group)
     %RedisServer{state | gc_buffer: buffer}
+  end
+
+  # Ensures an established connection exists for the callback.
+  # If no connection exists, `{:reply, {:error, :no_connection}, state}`
+  # is returned and the callback is not invoked
+  defp with_conn(%RedisServer{status: :connected} = state, func) do
+    func.(state)
+  end
+  defp with_conn(%RedisServer{status: :disconnected} = state, _func) do
+    {:reply, {:error, :no_connection}, state}
   end
 end

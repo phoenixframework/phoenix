@@ -20,11 +20,6 @@ defmodule Phoenix.PubSub.Adapter do
   defcallback stop() :: :ok | {:error, reason :: term}
 
   @doc """
-  Returns the PubSub server Pid
-  """
-  defcallback server_pid() :: nil | pid
-
-  @doc """
   Creates a PubSub group for given topic to hold subscriptions
   """
   defcallback create(topic :: String.t) :: :ok | {:error, reason :: term}
@@ -73,11 +68,4 @@ defmodule Phoenix.PubSub.Adapter do
   Returns lists of strings of all topics that exists on PubSub adapter
   """
   defcallback list() :: list
-
-
-  @doc """
-  Returns the namespaced topic stored in adapter
-  """
-  defcallback namespace_topic(topic :: String.t) :: term
-
 end
