@@ -17,6 +17,7 @@ defmodule Phoenix.PubSub.RedisServer do
             eredis_sub_pid: nil,
             status: :disconnected,
             reconnect_attemps: 0,
+            node_ref: nil,
             opts: []
 
   @defaults [host: "127.0.0.1", port: 6379, password: ""]
@@ -51,7 +52,9 @@ defmodule Phoenix.PubSub.RedisServer do
     send(self, :garbage_collect_all)
 
 
-    {:ok, struct(RedisServer, opts: opts, garbage_collect_after_ms: gc_after)}
+    {:ok, struct(RedisServer, opts: opts,
+                              garbage_collect_after_ms: gc_after,
+                              node_ref: :erlang.make_ref)}
   end
 
   def handle_call({:exists?, group}, _from, state) do
@@ -87,20 +90,23 @@ defmodule Phoenix.PubSub.RedisServer do
     end
   end
 
-  def handle_call(:stop, _from, state) do
-    case :eredis_client.stop(state.eredis_sub_pid) do
-      :ok -> {:stop, :normal, :ok, state}
-      err -> {:stop, err, {:error, err}, state}
-    end
-  end
-
   def handle_call({:broadcast, from_pid, topic, msg}, _from, state) do
     with_conn state, fn state ->
       result = :poolboy.transaction :phx_redis_pool, fn worker_pid ->
-        GenServer.call(worker_pid, {:publish_to_redis, "phx:#{topic}", {from_pid, msg}})
+        GenServer.call(worker_pid, {:publish_to_redis, "phx:#{topic}",
+                                   {1, state.node_ref, from_pid, msg}})
       end
       {:reply, result, state}
     end
+  end
+
+  def handle_info({:pmessage, "phx:*", "phx:" <> topic, binary_msg, _client_pid}, state) do
+    :poolboy.transaction :phx_redis_pool, fn worker_pid ->
+      GenServer.cast(worker_pid, {:forward_to_subscribers, state.node_ref, topic, binary_msg})
+    end
+
+    :eredis_sub.ack_message(state.eredis_sub_pid)
+    {:noreply, state}
   end
 
   def handle_info({:EXIT, _pid, {:connection_error, {:connection_error, :econnrefused}}}, state) do
@@ -161,15 +167,6 @@ defmodule Phoenix.PubSub.RedisServer do
     {:noreply, state}
   end
 
-  def handle_info({:pmessage, "phx:*", "phx:" <> topic, binary_msg, _client_pid}, state) do
-    :poolboy.transaction :phx_redis_pool, fn worker_pid ->
-      GenServer.cast(worker_pid, {:forward_to_subscribers, topic, binary_msg})
-    end
-
-    :eredis_sub.ack_message(state.eredis_sub_pid)
-    {:noreply, state}
-  end
-
   def handle_info({:eredis_connected, _client_pid}, state) do
     Logger.info fn -> "#{inspect __MODULE__} redis connection re-established" end
     {:noreply, %RedisServer{state | status: :connected}}
@@ -178,6 +175,16 @@ defmodule Phoenix.PubSub.RedisServer do
   def handle_info({:eredis_disconnected, _client_pid}, state) do
     Logger.error fn -> "#{inspect __MODULE__} lost redis connection. Attempting to reconnect..." end
     {:noreply, %RedisServer{state | status: :disconnected}}
+  end
+
+  def terminate(_reason, %{status: :disconnected}) do
+    :ok
+  end
+  def terminate(_reason, state) do
+    case :eredis_client.stop(state.eredis_sub_pid) do
+      :ok -> :ok
+      err -> {:error, err}
+    end
   end
 
   defp group_exists?(_state, group) do
