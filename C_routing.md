@@ -42,7 +42,7 @@ Inside the scope block, however, we have our first actual route.
 
 The first argument to these macros is the path. Here, it is the root of the application, `/`. The next two arguments are the controller and action we want to have handle this request. These macros may also take other options, which we will see throughout the rest of this guide.
 
-If this were the only route in our router module, the clause of the `mactch/3` function would look like this after the macro expands.
+If this were the only route in our router module, the clause of the `match/3` function would look like this after the macro expands.
 
 ```elixir
   def match(conn, "GET", ["/"]) do
