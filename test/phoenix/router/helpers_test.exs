@@ -68,6 +68,10 @@ defmodule Phoenix.Router.HelpersTest do
 
     resources "/files", FileController
 
+    resource "/account", UserController, as: :account do
+      resource "/page", PagesController, as: :page, only: [:show]
+    end
+
     scope "/admin", alias: Admin do
       resources "/messages", MessageController
     end
@@ -168,6 +172,24 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.file_path(__MODULE__, :show, 123) == "/files/123"
     assert Helpers.file_path(__MODULE__, :new, []) == "/files/new"
     assert Helpers.file_path(__MODULE__, :new) == "/files/new"
+  end
+
+  test "resource generates named routes for :show, :edit, :new, :update, :delete" do
+    assert Helpers.account_path(__MODULE__, :show, []) == "/account"
+    assert Helpers.account_path(__MODULE__, :show) == "/account"
+    assert Helpers.account_path(__MODULE__, :edit, []) == "/account/edit"
+    assert Helpers.account_path(__MODULE__, :edit) == "/account/edit"
+    assert Helpers.account_path(__MODULE__, :new, []) == "/account/new"
+    assert Helpers.account_path(__MODULE__, :new) == "/account/new"
+    assert Helpers.account_path(__MODULE__, :update, []) == "/account"
+    assert Helpers.account_path(__MODULE__, :update) == "/account"
+    assert Helpers.account_path(__MODULE__, :delete, []) == "/account"
+    assert Helpers.account_path(__MODULE__, :delete) == "/account"
+  end
+
+  test "2-Level nested resource generates nested named routes for :show" do
+    assert Helpers.account_page_path(__MODULE__, :show, []) == "/account/page"
+    assert Helpers.account_page_path(__MODULE__, :show) == "/account/page"
   end
 
   test "scoped route helpers generated named routes with :path, and :alias options" do
