@@ -415,6 +415,53 @@ defmodule Phoenix.Router do
     add_resources path, controller, [], do: nil
   end
 
+  @doc """
+  Defines "RESTful" routes for a resource that client's lookup without referencing an ID.
+
+  The given definition:
+
+      resource "/account", UserController
+
+  will include routes to the following actions:
+
+    * `GET /account` => `:show`
+    * `GET /account/new` => `:new`
+    * `POST /account` => `:create`
+    * `GET /account/edit` => `:edit`
+    * `PATCH /account` => `:update`
+    * `PUT /account` => `:update`
+    * `DELETE /account` => `:delete`
+
+  ## Options
+
+  This macro accepts the same options as `resources/4`
+
+  """
+  defmacro resource(path, controller, opts, do: nested_context) do
+    add_resource path, controller, opts, do: nested_context
+  end
+
+  @doc """
+  See `resource/4`.
+  """
+  defmacro resource(path, controller, do: nested_context) do
+    add_resource path, controller, [], do: nested_context
+  end
+
+  @doc """
+  See `resource/4`.
+  """
+  defmacro resource(path, controller, opts) do
+    add_resource path, controller, opts, do: nil
+  end
+
+  @doc """
+  See `resource/4`.
+  """
+  defmacro resource(path, controller) do
+    add_resource path, controller, [], do: nil
+  end
+
   defp add_resources(path, controller, options, do: context) do
     quote do
       resource = Resource.build(unquote(path), unquote(controller), unquote(options))
@@ -435,6 +482,34 @@ defmodule Phoenix.Router do
           :update  ->
             patch "#{path}/:#{parm}", ctrl, :update, opts
             put   "#{path}/:#{parm}", ctrl, :update, as: nil
+        end
+      end
+
+      scope resource.member do
+        unquote(context)
+      end
+    end
+  end
+
+  defp add_resource(path, controller, options, do: context) do
+    quote do
+      opts     = Keyword.merge(unquote(options), singular: true)
+      resource = Resource.build(unquote(path), unquote(controller), opts)
+
+      path = resource.path
+      ctrl = resource.controller
+      opts = [as: resource.as]
+
+      Enum.each resource.actions, fn action ->
+        case action do
+          :show    -> get    "#{path}",      ctrl, :show, opts
+          :new     -> get    "#{path}/new",  ctrl, :new, opts
+          :edit    -> get    "#{path}/edit", ctrl, :edit, opts
+          :create  -> post   "#{path}",      ctrl, :create, opts
+          :delete  -> delete "#{path}",      ctrl, :delete, opts
+          :update  ->
+            patch "#{path}", ctrl, :update, opts
+            put   "#{path}", ctrl, :update, as: nil
         end
       end
 
