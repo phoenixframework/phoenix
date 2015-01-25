@@ -18,6 +18,9 @@ defmodule Phoenix.PubSub.Local do
   def start_link(server_name) do
     GenServer.start_link(__MODULE__, [], name: server_name)
   end
+  def start_link() do
+    GenServer.start_link(__MODULE__, [])
+  end
 
 
   @doc """

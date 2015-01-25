@@ -2,7 +2,6 @@ defmodule Phoenix.PubSub.RedisServer do
   use GenServer
   require Logger
   alias Phoenix.PubSub.RedisServer
-  alias Phoenix.PubSub.RedisServer.Local
 
   @moduledoc """
   The server for the RedisAdapter
@@ -29,7 +28,7 @@ defmodule Phoenix.PubSub.RedisServer do
   TODO document options
   """
   def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts, name: __MODULE__)
+    GenServer.start_link(__MODULE__, opts, name: Dict.fetch!(opts, :name))
   end
 
   @doc """
@@ -40,7 +39,7 @@ defmodule Phoenix.PubSub.RedisServer do
   pass off reconnection handling once we find an initial connection.
   """
   def init(opts) do
-    {:ok, local_pid} = Phoenix.PubSub.Local.start_link(Local)
+    {:ok, local_pid} = Phoenix.PubSub.Local.start_link()
     opts = Dict.merge(@defaults, opts)
     opts = Dict.merge(opts, host: String.to_char_list(to_string(opts[:host])),
                             password: String.to_char_list(to_string(opts[:password])))
@@ -67,7 +66,7 @@ defmodule Phoenix.PubSub.RedisServer do
     {:reply, GenServer.call(state.local_pid, {:subscribers, topic}), state}
   end
 
-  def handle_call(:list, state) do
+  def handle_call(:list, _from, state) do
     {:reply, GenServer.call(state.local_pid, :list), state}
   end
 

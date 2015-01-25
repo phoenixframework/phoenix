@@ -12,6 +12,8 @@ defmodule Phoenix.Socket do
   * `authorized` - The boolean authorization status, default `false`
   * `assigns` - The map of socket assigns, default: `%{}`
   * `transport` - The socket's Transport, ie: `Phoenix.Transports.WebSocket`
+  * `pubsub_server` - The registered name of the socket's PubSub server
+
 
   """
 
@@ -24,6 +26,7 @@ defmodule Phoenix.Socket do
             channel: nil,
             authorized: false,
             transport: nil,
+            pubsub_server: nil,
             assigns: %{}
 
 
@@ -38,7 +41,7 @@ defmodule Phoenix.Socket do
   Sets channel of socket
   """
   def put_channel(socket, channel) do
-    %Socket{socket | channel: channel}
+    %Socket{socket | channel: channel, pubsub_server: channel.pubsub_server()}
   end
 
   @doc """

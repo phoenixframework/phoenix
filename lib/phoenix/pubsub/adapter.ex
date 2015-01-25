@@ -17,20 +17,20 @@ defmodule Phoenix.PubSub.Adapter do
   @doc """
   Subscribes pid to the topic
   """
-  defcallback subscribe(pid :: Pid, topic :: String.t) :: :ok | {:error, reason :: term}
+  defcallback subscribe(server :: Pid | atom, pid :: Pid, topic :: String.t) :: :ok | {:error, reason :: term}
 
   @doc """
   Unsubscribes pid from the topic
   """
-  defcallback unsubscribe(pid :: Pid, topic :: String.t) :: :ok | {:error, reason :: term}
+  defcallback unsubscribe(server :: Pid | atom, pid :: Pid, topic :: String.t) :: :ok | {:error, reason :: term}
 
   @doc """
   Broadcasts a message on the given topic
   """
-  defcallback broadcast(topic :: String.t, message :: Map.t) :: :ok | {:error, reason :: term}
+  defcallback broadcast(server :: Pid | atom, topic :: String.t, message :: Map.t) :: :ok | {:error, reason :: term}
 
   @doc """
   Broadcasts a message on the topic, excluding sender from receiving broadcast
   """
-  defcallback broadcast_from(from_pid :: Pid, String.t, message :: Map.t) :: :ok | {:error, reason :: term}
+  defcallback broadcast_from(server :: Pid | atom, from_pid :: Pid, String.t, message :: Map.t) :: :ok | {:error, reason :: term}
 end

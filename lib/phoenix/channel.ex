@@ -124,16 +124,34 @@ defmodule Phoenix.Channel do
                                                                      {:leave, Socket.t} |
                                                                      {:error, reason :: term, Socket.t}
 
-  defmacro __using__(_options) do
+  defmacro __using__(options \\ []) do
     quote do
       @behaviour unquote(__MODULE__)
-      import unquote(__MODULE__)
+      @pubsub_server unquote(options[:pubsub_server])
+      import unquote(__MODULE__), except: [broadcast: 4,
+                                           broadcast_from: 4,
+                                           broadcast_from: 5]
       import Phoenix.Socket
 
+      def pubsub_server, do: @pubsub_server
+
       def leave(message, socket), do: {:ok, socket}
+
       def handle_in(_event, _message, socket), do: {:ok, socket}
+
       def handle_out(event, message, socket) do
         reply(socket, event, message)
+      end
+
+      def broadcast_from(socket = %Socket{}, event, msg) do
+        Phoenix.Channel.broadcast_from(@pubsub_server, socket, event, msg)
+      end
+      def broadcast_from(from, topic, event, msg) when is_map(msg) do
+        Phoenix.Channel.broadcast_from(@pubsub_server, from, topic, event, msg)
+      end
+
+      def broadcast(topic_or_socket, event, msg) do
+        Phoenix.Channel.broadcast(@pubsub_server, topic_or_socket, event, msg)
       end
 
       defoverridable leave: 2, handle_out: 3, handle_in: 3
@@ -151,12 +169,12 @@ defmodule Phoenix.Channel do
       :ok
 
   """
-  def broadcast(topic, event, message) when is_binary(topic) do
-    broadcast_from :global, topic, event, message
+  def broadcast(server, topic, event, message) when is_binary(topic) do
+    broadcast_from server, :none, topic, event, message
   end
 
-  def broadcast(socket = %Socket{}, event, message) do
-    broadcast_from :global, socket.topic, event, message
+  def broadcast(server, socket = %Socket{}, event, message) do
+    broadcast_from server, :none, socket.topic, event, message
     {:ok, socket}
   end
 
@@ -171,18 +189,18 @@ defmodule Phoenix.Channel do
       :ok
 
   """
-  def broadcast_from(socket = %Socket{}, event, message) do
-    broadcast_from(socket.pid, socket.topic, event, message)
+  def broadcast_from(pubsub_server, socket = %Socket{}, event, message) do
+    broadcast_from(pubsub_server, socket.pid, socket.topic, event, message)
     {:ok, socket}
   end
-  def broadcast_from(from, topic, event, message) when is_map(message) do
-    PubSub.broadcast_from from, topic, {:socket_broadcast, %Message{
+  def broadcast_from(pubsub_server, from, topic, event, message) when is_map(message) do
+    PubSub.broadcast_from pubsub_server, from, topic, {:socket_broadcast, %Message{
       topic: topic,
       event: event,
       payload: message
     }}
   end
-  def broadcast_from(_, _, _, _), do: raise_invalid_message
+  def broadcast_from(_, _, _, _, _), do: raise_invalid_message
 
   @doc """
   Sends Dict, JSON serializable message to socket
