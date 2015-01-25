@@ -1,6 +1,5 @@
 defmodule Phoenix.PubSub.PG2Server do
   use GenServer
-  alias Phoenix.PubSub.PG2Adapter.Local
 
   @moduledoc """
   The server for the PG2Adapter
@@ -10,8 +9,8 @@ defmodule Phoenix.PubSub.PG2Server do
 
   @private_pg2_group {:phx, :global}
 
-  def init(opts) do
-    {:ok, local_pid} = Phoenix.PubSub.Local.start_link(Local)
+  def init(_opts) do
+    {:ok, local_pid} = Phoenix.PubSub.Local.start_link()
     :ok = :pg2.create(@private_pg2_group)
     :ok = :pg2.join(@private_pg2_group, self)
     {:ok, %{local_pid: local_pid}}
@@ -41,7 +40,7 @@ defmodule Phoenix.PubSub.PG2Server do
     {:reply, GenServer.call(state.local_pid, {:subscribers, topic}), state}
   end
 
-  def handle_call(:list, state) do
+  def handle_call(:list, _from, state) do
     {:reply, GenServer.call(state.local_pid, :list), state}
   end
 
