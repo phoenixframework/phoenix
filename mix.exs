@@ -23,8 +23,6 @@ defmodule Phoenix.Mixfile do
      env: [code_reloader: false,
            template_engines: [],
            format_encoders: [],
-           pubsub: [adapter: Phoenix.PubSub.PG2Adapter,
-                    garbage_collect_after_ms: 60_000..300_000],
            filter_parameters: ["password"],
            serve_endpoints: false]]
   end
