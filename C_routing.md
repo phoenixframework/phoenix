@@ -524,7 +524,7 @@ scope "/api", HelloPhoenix.Api, as: :api do
 end
 ```
 
-`$ mix phoenix.routes` tells us that have the routes we're looking for.
+`$ mix phoenix.routes` tells us that we have the routes we're looking for.
 
 ```elixir
  api_v1_image_path  GET     /api/v1/images            HelloPhoenix.Api.V1.ImageController.index/2
