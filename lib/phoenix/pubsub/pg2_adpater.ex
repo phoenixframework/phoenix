@@ -1,13 +1,16 @@
-defmodule Phoenix.PubSub.PG2Server do
+defmodule Phoenix.PubSub.PG2Adapter do
   use GenServer
 
   @moduledoc """
   The server for the PG2Adapter
-
-  See `Phoenix.PubSub.PG2Adapter` for details and configuration options.
   """
 
   @private_pg2_group {:phx, :global}
+
+
+  def start_link(opts) do
+    GenServer.start_link __MODULE__, [], name: Dict.fetch!(opts, :name)
+  end
 
   def init(_opts) do
     {:ok, local_pid} = Phoenix.PubSub.Local.start_link()
