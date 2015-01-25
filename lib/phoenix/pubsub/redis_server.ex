@@ -2,8 +2,7 @@ defmodule Phoenix.PubSub.RedisServer do
   use GenServer
   require Logger
   alias Phoenix.PubSub.RedisServer
-  alias Phoenix.PubSub.RedisAdapter
-  alias Phoenix.PubSub.GarbageCollector
+  alias Phoenix.PubSub.RedisServer.Local
 
   @moduledoc """
   The server for the RedisAdapter
@@ -12,12 +11,11 @@ defmodule Phoenix.PubSub.RedisServer do
   """
 
   @derive [Access]
-  defstruct gc_buffer: [],
-            garbage_collect_after_ms: nil,
-            eredis_sub_pid: nil,
+  defstruct eredis_sub_pid: nil,
             status: :disconnected,
             reconnect_attemps: 0,
             node_ref: nil,
+            local_pid: nil,
             opts: []
 
   @defaults [host: "127.0.0.1", port: 6379, password: ""]
@@ -42,52 +40,35 @@ defmodule Phoenix.PubSub.RedisServer do
   pass off reconnection handling once we find an initial connection.
   """
   def init(opts) do
-    gc_after = Dict.fetch!(opts, :garbage_collect_after_ms)
+    {:ok, local_pid} = Phoenix.PubSub.Local.start_link(Local)
     opts = Dict.merge(@defaults, opts)
     opts = Dict.merge(opts, host: String.to_char_list(to_string(opts[:host])),
                             password: String.to_char_list(to_string(opts[:password])))
 
     Process.flag(:trap_exit, true)
     send(self, :establish_conn)
-    send(self, :garbage_collect_all)
-
 
     {:ok, struct(RedisServer, opts: opts,
-                              garbage_collect_after_ms: gc_after,
+                              local_pid: local_pid,
                               node_ref: :erlang.make_ref)}
   end
 
-  def handle_call({:exists?, group}, _from, state) do
-    {:reply, group_exists?(state, group), state}
+
+
+  def handle_call({:subscribe, pid, topic}, _from, state) do
+    {:reply, GenServer.call(state.local_pid, {:subscribe, pid, topic}), state}
   end
 
-  def handle_call({:active?, group}, _from, state) do
-    {:reply, group_active?(state, group), state}
+  def handle_call({:unsubscribe, pid, topic}, _from, state) do
+    {:reply, GenServer.call(state.local_pid, {:unsubscribe, pid, topic}), state}
   end
 
-  def handle_call({:create, group}, _from, state) do
-    if group_exists?(state, group) do
-      {:reply, :ok, state}
-    else
-      :ok = :pg2.create(group)
-      {:reply, :ok, gc_mark(state, group)}
-    end
+  def handle_call({:subscribers, topic}, _from, state) do
+    {:reply, GenServer.call(state.local_pid, {:subscribers, topic}), state}
   end
 
-  def handle_call({:subscribe, pid, group}, _from, state) do
-    {:reply, :pg2.join(group, pid), state}
-  end
-
-  def handle_call({:unsubscribe, pid, group}, _from, state) do
-    {:reply, :pg2.leave(group, pid), state}
-  end
-
-  def handle_call({:delete, group}, _from, state) do
-    if group_active?(state, group) do
-      {:reply, {:error, :active}, state}
-    else
-      {:reply, :ok, delete_group(state, group)}
-    end
+  def handle_call(:list, state) do
+    {:reply, GenServer.call(state.local_pid, :list), state}
   end
 
   def handle_call({:broadcast, from_pid, topic, msg}, _from, state) do
@@ -102,7 +83,8 @@ defmodule Phoenix.PubSub.RedisServer do
 
   def handle_info({:pmessage, "phx:*", "phx:" <> topic, binary_msg, _client_pid}, state) do
     :poolboy.transaction :phx_redis_pool, fn worker_pid ->
-      GenServer.cast(worker_pid, {:forward_to_subscribers, state.node_ref, topic, binary_msg})
+      GenServer.cast(worker_pid, {:forward_to_subscribers,
+                                  state.local_pid, state.node_ref, topic, binary_msg})
     end
 
     :eredis_sub.ack_message(state.eredis_sub_pid)
@@ -146,22 +128,6 @@ defmodule Phoenix.PubSub.RedisServer do
      end
   end
 
-  def handle_info({:garbage_collect, groups}, state) do
-    {state, active_groups} = Enum.reduce groups, {state, []}, fn group, {state, acc} ->
-      if group_active?(state, group) do
-        {state, [group | acc]}
-      else
-        {delete_group(state, group), acc}
-      end
-    end
-
-    {:noreply, gc_mark(state, active_groups)}
-  end
-
-  def handle_info(:garbage_collect_all, state) do
-    {:noreply, gc_mark(state, RedisAdapter.list)}
-  end
-
   def handle_info({:subscribed, "phx:*", _client_pid}, state) do
     :eredis_sub.ack_message(state.eredis_sub_pid)
     {:noreply, state}
@@ -185,31 +151,6 @@ defmodule Phoenix.PubSub.RedisServer do
       :ok -> :ok
       err -> {:error, err}
     end
-  end
-
-  defp group_exists?(_state, group) do
-    case :pg2.get_closest_pid(group) do
-      pid when is_pid(pid)          -> true
-      {:error, {:no_process, _}}    -> true
-      {:error, {:no_such_group, _}} -> false
-    end
-  end
-
-  defp group_active?(_state, group) do
-    case :pg2.get_closest_pid(group) do
-      pid when is_pid(pid) -> true
-      _ -> false
-    end
-  end
-
-  defp delete_group(state, group) do
-    :pg2.delete(group)
-    state
-  end
-
-  defp gc_mark(state, group) do
-    buffer = GarbageCollector.mark(state.gc_buffer, state.garbage_collect_after_ms, group)
-    %RedisServer{state | gc_buffer: buffer}
   end
 
   # Ensures an established connection exists for the callback.

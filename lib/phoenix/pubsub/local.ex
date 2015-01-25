@@ -1,6 +1,25 @@
 defmodule Phoenix.PubSub.Local do
   use GenServer
 
+  @moduledoc """
+  PubSub implementation for handling local-node process groups
+
+  This modules is used by Phoenix pubsub adapters to handle their
+  local node topic subscriptions. See `Phoenix.PubSub.PG2Adapter`
+  for an example integration.
+  """
+
+  @doc """
+  Starts the server
+
+    * `server_name` - The name to registered the server under
+
+  """
+  def start_link(server_name) do
+    GenServer.start_link(__MODULE__, [], name: server_name)
+  end
+
+
   @doc """
   Subscribes the pid to the topic
 
@@ -9,12 +28,12 @@ defmodule Phoenix.PubSub.Local do
 
   ## Examples
 
-      iex> PubSub.Local.subscribe(self, "foo")
+      iex> PubSub.Local.subscribe(:local_server, self, "foo")
       :ok
 
   """
-  def subscribe(pid, topic) do
-    GenServer.call(__MODULE__, {:subscribe, pid, topic})
+  def subscribe(local_server, pid, topic) do
+    GenServer.call(local_server, {:subscribe, pid, topic})
   end
 
   @doc """
@@ -25,12 +44,12 @@ defmodule Phoenix.PubSub.Local do
 
   ## Examples
 
-      iex> PubSub.Local.unsubscribe(self, "foo")
+      iex> PubSub.Local.unsubscribe(:local_server, self, "foo")
       :ok
 
   """
-  def unsubscribe(pid, topic) do
-    GenServer.call(__MODULE__, {:unsubscribe, pid, topic})
+  def unsubscribe(local_server, pid, topic) do
+    GenServer.call(local_server, {:unsubscribe, pid, topic})
   end
 
   @doc """
@@ -40,14 +59,14 @@ defmodule Phoenix.PubSub.Local do
 
   ## Examples
 
-      iex> PubSub.Local.broadcast("foo")
+      iex> PubSub.Local.broadcast(:local_server, "foo")
       :ok
-      iex> PubSub.Local.broadcast("bar")
+      iex> PubSub.Local.broadcast(:local_server, "bar")
       :no_topic
 
   """
-  def broadcast(topic, msg) do
-    GenServer.call(__MODULE__, {:broadcast, topic, msg})
+  def broadcast(local_server, topic, msg) do
+    GenServer.call(local_server, {:broadcast, :none, topic, msg})
   end
 
   @doc """
@@ -57,29 +76,22 @@ defmodule Phoenix.PubSub.Local do
 
   ## Examples
 
-      iex> PubSub.Local.subscribers("foo")
+      iex> PubSub.Local.subscribers(:local_server, "foo")
       #HashSet<[]>
 
   """
-  def subscribers(topic) do
-    GenServer.call(__MODULE__, {:subscribers, topic})
-  end
-
-  @doc """
-  Starts the server
-  """
-  def start_link(server_name \\ __MODULE__) do
-    GenServer.start_link(__MODULE__, [], name: server_name)
+  def subscribers(local_server, topic) do
+    GenServer.call(local_server, {:subscribers, topic})
   end
 
   @doc false
-  def list do
-    GenServer.call(__MODULE__, :list)
+  def list(local_server) do
+    GenServer.call(local_server, :list)
   end
 
   @doc false
-  def subscription(pid) do
-    GenServer.call(__MODULE__, {:subscription, pid})
+  def subscription(local_server, pid) do
+    GenServer.call(local_server, {:subscription, pid})
   end
 
   @doc false
@@ -111,10 +123,13 @@ defmodule Phoenix.PubSub.Local do
     {:reply, :ok, drop_subscription(state, pid, topic)}
   end
 
-  def handle_call({:broadcast, topic, msg}, _from, state) do
+  def handle_call({:broadcast, from_pid, topic, msg}, _from, state) do
     case HashDict.fetch(state.topics, topic) do
       {:ok, pids} ->
-        Enum.each(pids, fn pid -> send(pid, msg) end)
+        Enum.each(pids, fn
+          pid when pid != from_pid -> send(pid, msg)
+          _ -> :ok
+        end)
         {:reply, :ok, state}
 
       :error ->

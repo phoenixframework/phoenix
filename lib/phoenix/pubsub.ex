@@ -21,43 +21,6 @@ defmodule Phoenix.PubSub do
   """
 
   @doc """
-  Creates a topic for pubsub broadcast to subscribers
-
-    * topic_name - The String name of the topic
-
-  ## Examples
-
-      iex> PubSub.create("mytopic")
-      :ok
-
-  """
-  def create(topic_name, adapter \\ adapter()) do
-    :ok = adapter.create(topic_name)
-  end
-
-  @doc """
-  Checks if a given topic is registered as a process group
-  """
-  def exists?(topic_name, adapter \\ adapter()) do
-    adapter.exists?(topic_name)
-  end
-
-  @doc """
-  Removes topic from process group if inactive
-
-  ## Examples
-
-      iex> PubSub.delete("mytopic")
-      :ok
-      iex> PubSub.delete("activetopic")
-      {:error, :active}
-
-  """
-  def delete(topic_name, adapter \\ adapter()) do
-    adapter.delete(topic_name)
-  end
-
-  @doc """
   Adds subsriber pid to the given topic
 
     * pid - The Pid of the subscriber
@@ -69,7 +32,6 @@ defmodule Phoenix.PubSub do
 
   """
   def subscribe(pid, topic_name, adapter \\ adapter()) do
-    :ok = adapter.create(topic_name)
     adapter.subscribe(pid, topic_name)
   end
 
@@ -118,7 +80,7 @@ defmodule Phoenix.PubSub do
   To exclude the broadcaster from receiving the message, use `broadcast_from/3`
   """
   def broadcast(topic_name, message, adapter \\ adapter()) do
-    broadcast_from(:global, topic_name, message, adapter)
+    broadcast_from(:none, topic_name, message, adapter)
   end
 
   @doc """
@@ -135,13 +97,6 @@ defmodule Phoenix.PubSub do
   """
   def broadcast_from(from_pid, topic_name, message, adapter \\ adapter()) do
     adapter.broadcast_from(from_pid, topic_name, message)
-  end
-
-  @doc """
-  Check if PubSub is active. To be active it must be created and have subscribers
-  """
-  def active?(topic_name, adapter \\ adapter()) do
-    adapter.active?(topic_name)
   end
 
   @doc """

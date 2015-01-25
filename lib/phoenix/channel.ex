@@ -175,7 +175,6 @@ defmodule Phoenix.Channel do
     {:ok, socket}
   end
   def broadcast_from(from, topic, event, message) when is_map(message) do
-    PubSub.create(topic)
     PubSub.broadcast_from from, topic, {:socket_broadcast, %Message{
       topic: topic,
       event: event,

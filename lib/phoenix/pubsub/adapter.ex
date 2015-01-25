@@ -15,16 +15,6 @@ defmodule Phoenix.PubSub.Adapter do
                                              {:error, reason :: term}
 
   @doc """
-  Creates a PubSub group for given topic to hold subscriptions
-  """
-  defcallback create(topic :: String.t) :: :ok | {:error, reason :: term}
-
-  @doc """
-  Delets a PubSub group for the given topic
-  """
-  defcallback delete(topic :: String.t) :: :ok | {:error, reason :: term}
-
-  @doc """
   Subscribes pid to the topic
   """
   defcallback subscribe(pid :: Pid, topic :: String.t) :: :ok | {:error, reason :: term}

@@ -1,8 +1,6 @@
 defmodule Phoenix.PubSub.PG2Server do
   use GenServer
-  alias Phoenix.PubSub.PG2Server
-  alias Phoenix.PubSub.PG2Adapter
-  alias Phoenix.PubSub.GarbageCollector
+  alias Phoenix.PubSub.PG2Adapter.Local
 
   @moduledoc """
   The server for the PG2Adapter
@@ -10,108 +8,49 @@ defmodule Phoenix.PubSub.PG2Server do
   See `Phoenix.PubSub.PG2Adapter` for details and configuration options.
   """
 
-  defstruct role: :slave,
-            gc_buffer: [],
-            garbage_collect_after_ms: nil
+  @private_pg2_group {:phx, :global}
 
   def init(opts) do
-    gc_after = Dict.fetch!(opts, :garbage_collect_after_ms)
+    {:ok, local_pid} = Phoenix.PubSub.Local.start_link(Local)
+    :ok = :pg2.create(@private_pg2_group)
+    :ok = :pg2.join(@private_pg2_group, self)
+    {:ok, %{local_pid: local_pid}}
+  end
 
-    case :global.register_name(__MODULE__, self, &:global.notify_all_name/3) do
-      :no  ->
-        Process.link(PG2Adapter.server_pid)
-        {:ok, struct(PG2Server, role: :slave, garbage_collect_after_ms: gc_after)}
-      :yes ->
-        send(self, :garbage_collect_all)
-        {:ok, struct(PG2Server, role: :leader, garbage_collect_after_ms: gc_after)}
+  def handle_call({:subscribe, pid, topic}, _from, state) do
+    {:reply, GenServer.call(state.local_pid, {:subscribe, pid, topic}), state}
+  end
+
+  def handle_call({:unsubscribe, pid, topic}, _from, state) do
+    {:reply, GenServer.call(state.local_pid, {:unsubscribe, pid, topic}), state}
+  end
+
+  def handle_call({:broadcast, from_pid, topic, msg}, _from, state) do
+    case :pg2.get_members(@private_pg2_group) do
+      {:error, {:no_such_group, _}} -> {:stop, :no_global_group, state}
+      pids -> pids
+       for pid <- pids do
+         send(pid, {:forward_to_local, from_pid, topic, msg})
+       end
     end
+
+    {:reply, :ok, state}
   end
 
-  def handle_call(_message, _from, state = %PG2Server{role: :slave}) do
-    {:stop, :error, nil, state}
+  def handle_call({:subscribers, topic}, _from, state) do
+    {:reply, GenServer.call(state.local_pid, {:subscribers, topic}), state}
   end
 
-  def handle_call({:exists?, group}, _from, state) do
-    {:reply, group_exists?(group), state}
-  end
-
-  def handle_call({:active?, group}, _from, state) do
-    {:reply, group_active?(group), state}
-  end
-
-  def handle_call({:create, group}, _from, state) do
-    if group_exists?(group) do
-      {:reply, :ok, state}
-    else
-      :ok = :pg2.create(group)
-      {:reply, :ok, gc_mark(state, group)}
-    end
-  end
-
-  def handle_call({:subscribe, pid, group}, _from, state) do
-    {:reply, :pg2.join(group, pid), state}
-  end
-
-  def handle_call({:unsubscribe, pid, group}, _from, state) do
-    {:reply, :pg2.leave(group, pid), state}
-  end
-
-  def handle_call({:delete, group}, _from, state) do
-    if group_active?(group) do
-      {:reply, {:error, :active}, state}
-    else
-      {:reply, delete_group(group), state}
-    end
+  def handle_call(:list, state) do
+    {:reply, GenServer.call(state.local_pid, :list), state}
   end
 
   def handle_call(:stop, _from, state) do
     {:stop, :normal, :ok, state}
   end
 
-  def handle_info(_message, state = %PG2Server{role: :slave}) do
-    {:stop, :error, nil, state}
-  end
-
-  def handle_info({:garbage_collect, groups}, state) do
-    active_groups = Enum.filter groups, fn group ->
-      if group_active?(group) do
-        true
-      else
-        delete_group(group)
-        false
-      end
-    end
-
-    {:noreply, gc_mark(state, active_groups)}
-  end
-
-  def handle_info({:global_name_conflict, name, _other_pid}, state) do
-    {:stop, {:global_name_conflict, name}, state}
-  end
-
-  def handle_info(:garbage_collect_all, state) do
-    {:noreply, gc_mark(state, PG2Adapter.list)}
-  end
-
-  defp group_exists?(group) do
-    case :pg2.get_closest_pid(group) do
-      pid when is_pid(pid)          -> true
-      {:error, {:no_process, _}}    -> true
-      {:error, {:no_such_group, _}} -> false
-    end
-  end
-
-  defp group_active?(group) do
-    case :pg2.get_closest_pid(group) do
-      pid when is_pid(pid) -> true
-      _ -> false
-    end
-  end
-
-  defp delete_group(group), do: :pg2.delete(group)
-
-  defp gc_mark(state, group) do
-    buffer = GarbageCollector.mark(state.gc_buffer, state.garbage_collect_after_ms, group)
-    %PG2Server{state | gc_buffer: buffer}
+  def handle_info({:forward_to_local, from_pid, topic, msg}, state) do
+    GenServer.call(state.local_pid, {:broadcast, from_pid, topic, msg})
+    {:noreply, state}
   end
 end

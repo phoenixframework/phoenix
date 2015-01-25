@@ -4,7 +4,7 @@ defmodule Phoenix.PubSub.RedisBroadcaster do
 
   @moduledoc """
   Worker for pooled publishes to redis and forwarding received
-  redis messages to pg2 subscribers
+  redis messages to Local subscribers
   """
 
   @doc """
@@ -55,25 +55,23 @@ defmodule Phoenix.PubSub.RedisBroadcaster do
   end
 
   @doc """
-  Decodes binary message and fowards to pg2 subscribers of topic
+  Decodes binary message and fowards to local subscribers of topic
   """
-  def handle_cast({:forward_to_subscribers, my_node_ref, topic, binary_msg}, state) do
+  def handle_cast({:forward_to_subscribers, local_pid, my_node_ref, topic, binary_msg}, state) do
     binary_msg
     |> :erlang.binary_to_term
-    |> broadcast(Phoenix.PubSub.RedisAdapter.subscribers(topic), my_node_ref)
+    |> broadcast(local_pid, topic, my_node_ref)
 
     {:noreply, state}
   end
 
-  defp broadcast({_version, my_node_ref, from_pid, msg}, subscribers, my_node_ref) do
-    Enum.each subscribers, fn
-      pid when pid != from_pid -> send(pid, msg)
-      _pid -> :ok
-    end
+  # handle redis from_pid matching on different nodes incorrectly using node_ref
+  defp broadcast({_version, my_node_ref, from_pid, msg}, local_pid, topic, my_node_ref) do
+    GenServer.call(local_pid, {:broadcast, from_pid, topic, msg})
     :ok
   end
-  defp broadcast({_version, _remote_ref, _from_pid, msg}, subscribers, _my_ref) do
-    Enum.each(subscribers, fn pid -> send(pid, msg) end)
+  defp broadcast({_version, _remote_ref, _from_pid, msg}, local_pid, topic, _my_ref) do
+    GenServer.call(local_pid, {:broadcast, :none, topic, msg})
     :ok
   end
 
