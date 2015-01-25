@@ -21,103 +21,50 @@ defmodule Phoenix.PubSub.PG2Adapter do
   """
 
   @behaviour Phoenix.PubSub.Adapter
-  @pg_prefix :phx
 
   alias Phoenix.PubSub.PG2Server
 
   def start_link(opts \\ []) do
     options = Dict.merge(Application.get_env(:phoenix, :pubsub), opts)
-    GenServer.start_link PG2Server, options, []
+    GenServer.start_link PG2Server, options, name: PG2Server
   end
-
-  @doc """
-  Stops the leader
-  """
-  def stop do
-    GenServer.call(server_pid, :stop)
-  end
-
-  @doc """
-  Creates the namespaced pg2 group for topic
-  """
-  def create(topic),
-    do: call({:create, namespace_topic(topic)})
-
-
-  @doc """
-  Checks if pg2 group exists for topic
-  """
-  def exists?(topic),
-    do: call({:exists?, namespace_topic(topic)})
-
-  @doc """
-  Checks if pg2 group has any member pids for topic
-  """
-  def active?(topic),
-    do: call({:active?, namespace_topic(topic)})
-
-  @doc """
-  Removes the pg2 group for given topic
-  """
-  def delete(topic),
-    do: call({:delete, namespace_topic(topic)})
 
   @doc """
   Subscribes the pid to the pg2 group for the topic
   """
   def subscribe(pid, topic),
-    do: call({:subscribe, pid, namespace_topic(topic)})
+    do: call({:subscribe, pid, topic})
 
   @doc """
   Unsubscribes the pid from the pg2 group for the topic
   """
   def unsubscribe(pid, topic),
-    do: call({:unsubscribe, pid, namespace_topic(topic)})
+    do: call({:unsubscribe, pid, topic})
 
   @doc """
   Returns lists of subscriber pids of members of pg2 group for topic
   """
-  def subscribers(topic) do
-    case :pg2.get_members(namespace_topic(topic)) do
-      {:error, {:no_such_group, _}} -> []
-      members -> members
-    end
-  end
+  def subscribers(topic),
+    do: call({:subscribers, topic})
 
   @doc """
   Broadcasts message on given topic
   """
-  def broadcast(topic, message) do
-    broadcast_from(:global, topic, message)
-  end
+  def broadcast(topic, message),
+    do: call({:broadcast, :none, topic, message})
 
   @doc """
   Broadcasts message to all but sender on given topic
   """
-  def broadcast_from(from_pid, topic, message) do
-    topic
-    |> subscribers
-    |> Enum.each fn
-      pid when pid != from_pid -> send(pid, message)
-      _pid -> :ok
-    end
-  end
+  def broadcast_from(from_pid, topic, message),
+    do: call({:broadcast, from_pid, topic, message})
 
   @doc """
   Returns lists of strings of all topics under pg2
   """
-  def list do
-    :pg2.which_groups |> Enum.filter(&match?({@pg_prefix, _}, &1))
-  end
-
-  @doc """
-  Returns the pid of the registered pg2 leader
-  """
-  def server_pid, do: :global.whereis_name(PG2Server)
-
-  def namespace_topic(topic), do: {@pg_prefix, topic}
+  def list, do: call(:list)
 
   defp call(message) do
-    GenServer.call(server_pid, message)
+    GenServer.call(Process.whereis(PG2Server), message)
   end
 end
