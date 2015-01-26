@@ -16,7 +16,7 @@ defmodule Phoenix.HTML.TagTest do
   end
 
   test "content_tag" do
-    assert content_tag(:form, [action: "/users", remote: true], do: tag(:input, name: "user[name]")) ==
+    assert content_tag(:form, [action: "/users", data: [remote: true]], do: tag(:input, name: "user[name]")) ==
       ~s(<form action="/users" data-remote="true"><input name="user[name]"></form>)
     assert content_tag(:p, "Hello", class: "dark") == ~s(<p class="dark">Hello</p>)
     assert content_tag(:p, "Hello") == "<p>Hello</p>"
