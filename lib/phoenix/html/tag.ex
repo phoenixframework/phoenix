@@ -8,11 +8,10 @@ defmodule Phoenix.HTML.Tag do
   @doc ~S"""
   Creates an HTML tag with the given name and options.
 
-  ## Examples
-      iex> Phoenix.HTML.Tag.tag(:br)
+      iex> tag(:br)
       "<br>"
-      iex> Phoenix.HTML.Tag.tag(:input, type: "text", name: "user_id")
-      "<input name="user_id" type="text">"
+      iex> tag(:input, type: "text", name: "user_id")
+      "<input name=\"user_id\" type=\"text\">"
   """
   def tag(name),                              do: tag(name, [], true)
   def tag(name, attrs) when is_list(attrs),   do: tag(name, attrs, true)
@@ -21,7 +20,7 @@ defmodule Phoenix.HTML.Tag do
     "<#{name}#{build_attrs(name, attrs)}#{if open, do: ">", else: " />"}"
   end
 
-  @doc ~S"""
+  @doc """
   Creates an HTML tag with given name, content, and attributes.
   """
   def content_tag(name, content) when is_binary(content), do: content_tag(name, content, [])
@@ -32,12 +31,11 @@ defmodule Phoenix.HTML.Tag do
     tag(name, attrs) <> block <> "</#{name}>"
   end
 
-  @doc """
+  @doc ~S"""
   Creates an HTML input field with the given type and options.
 
-  ## Examples
-      iex> Phoenix.HTML.Tag.input_tag(:text, name: "name")
-      "<input name="name" type="text" />"
+      iex> input_tag(:text, name: "name")
+      "<input name=\"name\" type=\"text\">"
   """
   def input_tag(type, opts \\ [], open \\ false) do
     tag(:input, Keyword.put_new(opts, :type, type), open)
