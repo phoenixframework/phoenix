@@ -58,19 +58,17 @@ defmodule Phoenix.Naming do
   ## Examples
 
       iex> Phoenix.Naming.module_to_pub_server(MyApp.MyChannel)
-      :my_app_pub
+      MyApp.PubSub
 
       iex> Phoenix.Naming.module_to_pub_server(MyApp.Admin.MyChannel)
-      :my_app_pub
+      MyApp.PubSub
 
   """
   def module_to_pub_server(mod) do
     mod
     |> Module.split
     |> hd
-    |> Phoenix.Naming.underscore
-    |> Kernel.<>("_pub")
-    |> String.to_atom
+    |> Module.concat("PubSub")
   end
 
   @doc """
