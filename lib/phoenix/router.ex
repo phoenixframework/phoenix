@@ -90,8 +90,6 @@ defmodule Phoenix.Router do
       defmodule MyApp.Router do
         use Phoenix.Router
 
-        pipe_through :browser
-
         resources "/pages", PageController, only: [:show]
         resources "/users", UserController, except: [:delete]
       end
@@ -149,7 +147,6 @@ defmodule Phoenix.Router do
 
   Note that router pipelines are only invoked after a route is found.
   No plug is invoked in case no matches were found.
-
 
   ### Channels
 
