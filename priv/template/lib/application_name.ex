@@ -9,7 +9,7 @@ defmodule <%= application_module %> do
     children = [
       # Start the endpoint when the application starts
       worker(<%= application_module %>.Endpoint, []),
-      worker(Phoenix.PubSub.PG2Adapter, [[name: <%= ":#{application_name}_pub" %>]]),
+      worker(Phoenix.PubSub.PG2, [[name: <%= ":#{application_name}_pub" %>]]),
 
       # Here you could define other workers and supervisors as children
       # worker(<%= application_module %>.Worker, [arg1, arg2, arg3]),

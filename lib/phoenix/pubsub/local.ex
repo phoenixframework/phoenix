@@ -5,7 +5,7 @@ defmodule Phoenix.PubSub.Local do
   PubSub implementation for handling local-node process groups
 
   This modules is used by Phoenix pubsub adapters to handle their
-  local node topic subscriptions. See `Phoenix.PubSub.PG2Adapter`
+  local node topic subscriptions. See `Phoenix.PubSub.PG2`
   for an example integration.
   """
 
@@ -145,7 +145,6 @@ defmodule Phoenix.PubSub.Local do
   end
 
   def terminate(_reason, _state) do
-    # TODO notify linked (?) subscribers?
     :ok
   end
 

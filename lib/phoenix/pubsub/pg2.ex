@@ -1,8 +1,8 @@
-defmodule Phoenix.PubSub.PG2Adapter do
+defmodule Phoenix.PubSub.PG2 do
   use GenServer
 
   @moduledoc """
-  The server for the PG2Adapter
+  PubSub adapter based on `:pg2`
   """
 
   @private_pg2_group {:phx, :global}

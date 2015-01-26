@@ -9,7 +9,7 @@ defmodule Phoenix.PubSub.LocalTest do
 
   test "subscribe/2 joins a pid to a topic and broadcast/2 sends messages" do
     # subscribe
-    pid = spawn fn -> :timer.sleep(10000) end
+    pid = spawn fn -> :timer.sleep(:infinity) end
     assert PubSub.Local.subscribers(:phxpub, "foo") |> Enum.to_list == []
     :ok = PubSub.Local.subscribe(:phxpub, self, "foo")
     :ok = PubSub.Local.subscribe(:phxpub, pid, "foo")
@@ -31,7 +31,7 @@ defmodule Phoenix.PubSub.LocalTest do
   end
 
   test "unsubscribe/2 leaves group and removes topics when last pid leaves" do
-    pid = spawn fn -> :timer.sleep(10000) end
+    pid = spawn fn -> :timer.sleep(:infinity) end
     :ok = PubSub.Local.subscribe(:phxpub, self, "topic1")
     :ok = PubSub.Local.subscribe(:phxpub, pid, "topic1")
     assert PubSub.Local.subscribers(:phxpub, "topic1") |> Enum.to_list |> Enum.sort
@@ -47,7 +47,7 @@ defmodule Phoenix.PubSub.LocalTest do
   end
 
   test "unsubscribe/2 when not a subscriber and topic not exists" do
-    pid = spawn fn -> :timer.sleep(10000) end
+    pid = spawn fn -> :timer.sleep(:infinity) end
     :ok = PubSub.Local.subscribe(:phxpub, pid, "topic3")
     :ok = PubSub.Local.unsubscribe(:phxpub, self, "topic3")
     assert PubSub.Local.subscribers(:phxpub, "topic3") |> Enum.to_list == [pid]
@@ -57,7 +57,7 @@ defmodule Phoenix.PubSub.LocalTest do
   end
 
   test "pid is removed when DOWN and topic dropped if last subscriber" do
-    pid = spawn fn -> :timer.sleep(10000) end
+    pid = spawn fn -> :timer.sleep(:infinity) end
     :ok = PubSub.Local.subscribe(:phxpub, self, "topic5")
     :ok = PubSub.Local.subscribe(:phxpub, pid, "topic5")
     :ok = PubSub.Local.subscribe(:phxpub, pid, "topic6")
