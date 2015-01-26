@@ -126,11 +126,13 @@ defmodule Phoenix.Channel do
 
   defmacro __using__(options \\ []) do
     quote do
+      options = unquote(options)
       @behaviour unquote(__MODULE__)
-      @pubsub_server unquote(options[:pubsub_server])
-      import unquote(__MODULE__), except: [broadcast: 4,
-                                           broadcast_from: 4,
-                                           broadcast_from: 5]
+      @pubsub_server options[:pubsub_server] ||
+        Phoenix.Naming.module_to_pub_server(__MODULE__)
+
+
+      import unquote(__MODULE__), only: [reply: 3]
       import Phoenix.Socket
 
       def pubsub_server, do: @pubsub_server

@@ -53,6 +53,27 @@ defmodule Phoenix.Naming do
   end
 
   @doc """
+  Inflects the default name of the PubSub server from the module name
+
+  ## Examples
+
+      iex> Phoenix.Naming.module_to_pub_server(MyApp.MyChannel)
+      :my_app_pub
+
+      iex> Phoenix.Naming.module_to_pub_server(MyApp.Admin.MyChannel)
+      :my_app_pub
+
+  """
+  def module_to_pub_server(mod) do
+    mod
+    |> Module.split
+    |> hd
+    |> Phoenix.Naming.underscore
+    |> Kernel.<>("_pub")
+    |> String.to_atom
+  end
+
+  @doc """
   Converts String to underscore case.
 
   ## Examples

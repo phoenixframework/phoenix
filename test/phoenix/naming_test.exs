@@ -22,4 +22,10 @@ defmodule Phoenix.NamingTest do
     assert Naming.camelize("_foobar") == "Foobar"
     assert Naming.camelize("foobar_") == "Foobar"
   end
+
+  test "module_to_pub_server/1 inflects the pubsub server from the module" do
+    assert Naming.module_to_pub_server(MyApp.MyChannel) == :my_app_pub
+    assert Naming.module_to_pub_server(MyApp.Admin.MyChannel) == :my_app_pub
+    assert Naming.module_to_pub_server(MyApp) == :my_app_pub
+  end
 end
