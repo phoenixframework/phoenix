@@ -5,8 +5,6 @@ defmodule Phoenix.HTML.Tag do
 
   alias Phoenix.HTML.Safe
 
-  @data_attrs [:method, :remote, :confirm]
-
   @doc ~S"""
   Creates an HTML tag with the given name and options.
 
@@ -67,16 +65,10 @@ defmodule Phoenix.HTML.Tag do
 
   defp build_attrs(_tag, [], acc),
     do: acc |> Enum.sort |> tag_attrs
-  defp build_attrs(:form, [{:method,v}|t], acc),
-    do: build_attrs(:form, t, [{"method", v}|acc])
   defp build_attrs(tag, [{k,v}|t], acc) when is_list(v),
     do: build_attrs(tag, t, nested_attrs(k, v, acc))
-  defp build_attrs(tag, [{k,v}|t], acc) when k in @data_attrs,
-    do: build_attrs(tag, t, [{"data-#{k}", v}|acc])
   defp build_attrs(tag, [{k,v}|t], acc) when v == true,
     do: build_attrs(tag, t, [{to_string(k),k}|acc])
-  defp build_attrs(tag, [{:method,v}|t], acc),
-    do: build_attrs(tag, t, [{"data-method", v}, {"rel", "nofollow"}|acc])
   defp build_attrs(tag, [{k,v}|t], acc),
     do: build_attrs(tag, t, [{to_string(k),v}|acc])
 
