@@ -40,7 +40,7 @@ defmodule Phoenix.HTML.Tag do
       "<input name="name" type="text" />"
   """
   def input_tag(type, opts \\ [], open \\ false) do
-    tag(:input, Dict.merge([type: type], opts), open)
+    tag(:input, Keyword.put_new(opts, :type, type), open)
   end
 
   defp tag_attrs([]), do: ""
