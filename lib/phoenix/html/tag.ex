@@ -48,7 +48,7 @@ defmodule Phoenix.HTML.Tag do
   defp tag_attrs([]), do: ""
   defp tag_attrs(attrs) do
     Enum.map_join attrs, fn {k,v} ->
-      " " <> k <> "=" <> "\"" <> Safe.to_string(v) <> "\""
+      " " <> k <> "=" <> "\"" <> Safe.to_iodata(v) <> "\""
     end
   end
 
