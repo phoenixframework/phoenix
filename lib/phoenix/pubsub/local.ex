@@ -175,25 +175,22 @@ defmodule Phoenix.PubSub.Local do
             topic_pids  = HashSet.delete(topic_pids, pid)
             subd_topics = HashSet.delete(subd_topics, topic)
 
-            cond do
-              Enum.any?(topic_pids) && Enum.any?(subd_topics) ->
-                %{state | topics: HashDict.put(state.topics, topic, topic_pids),
-                          pids: HashDict.put(state.pids, pid, {ref, subd_topics})}
+            topics =
+              if Enum.any?(topic_pids) do
+                HashDict.put(state.topics, topic, topic_pids)
+              else
+                HashDict.delete(state.topics, topic)
+              end
 
-              Enum.empty?(topic_pids) && Enum.empty?(subd_topics) ->
+            pids =
+              if Enum.any?(subd_topics) do
+                HashDict.put(state.pids, pid, {ref, subd_topics})
+              else
                 Process.demonitor(ref)
-                %{state | topics: HashDict.delete(state.topics, topic),
-                          pids: HashDict.delete(state.pids, pid)}
+                HashDict.delete(state.pids, pid)
+              end
 
-              Enum.empty?(subd_topics) ->
-                Process.demonitor(ref)
-                %{state | topics: HashDict.put(state.topics, topic, topic_pids),
-                          pids: HashDict.delete(state.pids, pid)}
-
-              Enum.empty?(topic_pids) ->
-                %{state | topics: HashDict.delete(state.topics, topic),
-                          pids: HashDict.put(state.pids, pid, {ref, subd_topics})}
-            end
+            %{state | topics: topics, pids: pids}
         end
     end
   end
