@@ -31,7 +31,16 @@ defmodule Phoenix.HTML.Form do
     input_tag(:text, attrs)
   end
 
-  def label(name)
+  def label(builder, name) do
+    label_text = name
+      |> to_string()
+      |> String.capitalize()
+      |> String.replace("_", " ")
+    label(builder, name, label_text)
+  end
+  def label(builder, name, label_text) do
+    content_tag(:label, label_text, for: dom_id(builder, name))
+  end
 
   defp input_prefix(resource) do
     resource.__struct__

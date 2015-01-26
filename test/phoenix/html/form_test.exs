@@ -11,6 +11,7 @@ defmodule Phoenix.HTML.FormTest do
     <%= form_for @user, [action: "/users", data: [remote: true]], fn f ->  %>
       <%= "Hey there" %>
       <%= text_field f, :id, value: nil %>
+      <%= label f, :name %>
       <%= text_field f, :name %>
     <% end %>
     """, [:assigns]
@@ -32,6 +33,7 @@ defmodule Phoenix.HTML.FormTest do
     <form action="/users" data-remote="true" method="post">
       Hey there
       <input id="user_id" name="user[id]" type="text" value="">
+      <label for="user_name">Name</label>
       <input id="user_name" name="user[name]" type="text" value="José Valim">
     </form>
     """
