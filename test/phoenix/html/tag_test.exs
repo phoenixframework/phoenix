@@ -5,7 +5,6 @@ defmodule Phoenix.HTML.TagTest do
 
   test "tag" do
     assert tag(:br) == "<br>"
-    assert tag(:br, false) == "<br />"
     assert tag(:input, type: "text", name: "user_id") == ~s(<input name="user_id" type="text">)
     assert tag(:input, name: ~s("<3")) == ~s(<input name="&quot;&lt;3&quot;">)
     assert tag(:input, data: [toggle: "dropdown"]) == ~s(<input data-toggle="dropdown">)
@@ -25,10 +24,10 @@ defmodule Phoenix.HTML.TagTest do
 
   test "input_tag" do
     assert input_tag(:text, name: "name") ==
-      ~s(<input name="name" type="text" />)
+      ~s(<input name="name" type="text">)
     assert input_tag(:password, name: "password") ==
-      ~s(<input name="password" type="password" />)
+      ~s(<input name="password" type="password">)
     assert input_tag(:text, name: "username", required: true) ==
-      ~s(<input name="username" required="required" type="text" />)
+      ~s(<input name="username" required="required" type="text">)
   end
 end

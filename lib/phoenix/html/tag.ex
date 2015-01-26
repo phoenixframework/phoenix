@@ -13,11 +13,9 @@ defmodule Phoenix.HTML.Tag do
       iex> tag(:input, type: "text", name: "user_id")
       "<input name=\"user_id\" type=\"text\">"
   """
-  def tag(name),                              do: tag(name, [], true)
-  def tag(name, attrs) when is_list(attrs),   do: tag(name, attrs, true)
-  def tag(name, open)  when is_boolean(open), do: tag(name, [], open)
-  def tag(name, attrs, open) do
-    "<#{name}#{build_attrs(name, attrs)}#{if open, do: ">", else: " />"}"
+  def tag(name), do: tag(name, [])
+  def tag(name, attrs) when is_list(attrs) do
+    "<#{name}#{build_attrs(name, attrs)}>"
   end
 
   @doc """
@@ -37,8 +35,8 @@ defmodule Phoenix.HTML.Tag do
       iex> input_tag(:text, name: "name")
       "<input name=\"name\" type=\"text\">"
   """
-  def input_tag(type, opts \\ [], open \\ false) do
-    tag(:input, Keyword.put_new(opts, :type, type), open)
+  def input_tag(type, opts \\ []) do
+    tag(:input, Keyword.put_new(opts, :type, type))
   end
 
   defp tag_attrs([]), do: ""
