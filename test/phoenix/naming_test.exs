@@ -24,8 +24,8 @@ defmodule Phoenix.NamingTest do
   end
 
   test "module_to_pub_server/1 inflects the pubsub server from the module" do
-    assert Naming.module_to_pub_server(MyApp.MyChannel) == :my_app_pub
-    assert Naming.module_to_pub_server(MyApp.Admin.MyChannel) == :my_app_pub
-    assert Naming.module_to_pub_server(MyApp) == :my_app_pub
+    assert Naming.module_to_pub_server(MyApp.MyChannel) == MyApp.PubSub
+    assert Naming.module_to_pub_server(MyApp.Admin.MyChannel) == MyApp.PubSub
+    assert Naming.module_to_pub_server(MyApp) == MyApp.PubSub
   end
 end
