@@ -18,8 +18,17 @@ defmodule Phoenix.HTML.Tag do
     "<#{name}#{build_attrs(name, attrs)}>"
   end
 
-  @doc """
+  @doc ~S"""
   Creates an HTML tag with given name, content, and attributes.
+
+      iex> content_tag(:p, "Hello")
+      "<p>Hello</p>"
+      iex> content_tag(:p, "Hello", class: "test")
+      "<p class=\"test\">Hello</p>"
+      iex> content_tag :p, class: "test" do
+      ...>   "Hello"
+      ...> end
+      "<p class=\"test\">Hello</p>"
   """
   def content_tag(name, content) when is_binary(content), do: content_tag(name, content, [])
   def content_tag(name, content, attrs) when is_binary(content) do
