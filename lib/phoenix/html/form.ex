@@ -25,7 +25,9 @@ defmodule Phoenix.HTML.Form do
 
   def text_field(builder, name, opts \\ []) do
     defaults = [type: "text", value: input_value(builder, name, opts)]
-    attrs = Keyword.put_new(defaults, :name, input_name(builder, name))
+    attrs = defaults
+      |> Keyword.put_new(:name, input_name(builder, name))
+      |> Keyword.put_new(:id, dom_id(builder, name))
     input_tag(:text, attrs)
   end
 
@@ -36,6 +38,10 @@ defmodule Phoenix.HTML.Form do
     |> Module.split
     |> List.last
     |> Phoenix.Naming.underscore
+  end
+
+  defp dom_id(builder, name) do
+    builder.input_prefix <> "_#{name}"
   end
 
   defp input_name(builder, name) do
