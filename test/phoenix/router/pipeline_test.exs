@@ -21,6 +21,10 @@ defmodule Phoenix.Router.PipelineTest.Router do
     plug :put_assign, "api"
   end
 
+  pipeline :params do
+    plug :put_params
+  end
+
   get "/root", SampleController, :index
   put "/root/:id", SampleController, :index
   get "/route_that_crashes", SampleController, :crash
@@ -33,6 +37,11 @@ defmodule Phoenix.Router.PipelineTest.Router do
       pipe_through :api
       get "/root", SampleController, :index
     end
+
+    scope "/:id" do
+      pipe_through :params
+      get "/", SampleController, :index
+    end
   end
 
   scope "/browser-api" do
@@ -42,6 +51,10 @@ defmodule Phoenix.Router.PipelineTest.Router do
 
   defp put_assign(conn, value) do
     assign conn, :stack, value
+  end
+
+  defp put_params(conn, _) do
+    assign conn, :params, conn.params
   end
 end
 
@@ -78,6 +91,11 @@ defmodule Phoenix.Router.PipelineTest do
     conn = call(Router, :get, "/browser-api/root")
     assert conn.private[:phoenix_pipelines] == [:browser, :api]
     assert conn.assigns[:stack] == "api"
+  end
+
+  test "merge parameters before invoking pipelines" do
+    conn = call(Router, :get, "/browser/hello")
+    assert conn.assigns[:params] == %{"id" => "hello"}
   end
 
   test "invalid pipelines" do
