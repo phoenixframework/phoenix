@@ -185,7 +185,7 @@ defmodule Phoenix.Controller do
 
     conn
     |> put_resp_header("Location", url)
-    |> send_resp(302, "text/html", body)
+    |> send_resp(conn.status || 302, "text/html", body)
   end
 
   defp url(opts) do

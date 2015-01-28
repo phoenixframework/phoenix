@@ -149,6 +149,13 @@ defmodule Phoenix.ControllerTest do
     refute conn.halted
   end
 
+  test "redirect/2 with put_status/2 uses previously set status or defaults to 302" do
+    conn = conn(:get, "/") |> redirect(to: "/")
+    assert conn.status == 302
+    conn = conn(:get, "/") |> put_status(301) |> redirect(to: "/")
+    assert conn.status == 301
+  end
+
   defp with_accept(header) do
     conn(:get, "/", [], headers: [{"accept", header}])
   end
