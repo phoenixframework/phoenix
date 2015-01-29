@@ -18,10 +18,6 @@ defmodule Phoenix.PubSub.Local do
   def start_link(server_name) do
     GenServer.start_link(__MODULE__, [], name: server_name)
   end
-  def start_link() do
-    GenServer.start_link(__MODULE__, [])
-  end
-
 
   @doc """
   Subscribes the pid to the topic
@@ -202,7 +198,7 @@ defmodule Phoenix.PubSub.Local do
           drop_subscription(state, pid, topic)
         end)
 
-      _ref_pid_mismatch -> state # handle chance that DOWN pid doesn't match ref
+      _ref_pid_mismatch -> state
     end
   end
 end

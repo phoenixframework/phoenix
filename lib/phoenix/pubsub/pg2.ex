@@ -5,19 +5,20 @@ defmodule Phoenix.PubSub.PG2 do
   PubSub adapter based on `:pg2`
   """
 
-  @private_pg2_group {:phx, :global}
-
-
   def start_link(opts) do
-    GenServer.start_link __MODULE__, [], name: Dict.fetch!(opts, :name)
+    GenServer.start_link __MODULE__, opts, name: Dict.fetch!(opts, :name)
   end
 
-  def init(_opts) do
-    {:ok, local_pid} = Phoenix.PubSub.Local.start_link()
-    :ok = :pg2.create(@private_pg2_group)
-    :ok = :pg2.join(@private_pg2_group, self)
-    {:ok, %{local_pid: local_pid}}
+  def init(opts) do
+    server_name = opts[:name]
+    pg2_namespace = pg2_namespace(server_name)
+    {:ok, local_pid} = Phoenix.PubSub.Local.start_link(Module.concat(server_name, Local))
+    :ok = :pg2.create(pg2_namespace)
+    :ok = :pg2.join(pg2_namespace, self)
+    {:ok, %{local_pid: local_pid, namespace: pg2_namespace}}
   end
+
+  defp pg2_namespace(server_name), do: {:phx, server_name}
 
   def handle_call({:subscribe, pid, topic}, _from, state) do
     {:reply, GenServer.call(state.local_pid, {:subscribe, pid, topic}), state}
@@ -28,7 +29,7 @@ defmodule Phoenix.PubSub.PG2 do
   end
 
   def handle_call({:broadcast, from_pid, topic, msg}, _from, state) do
-    case :pg2.get_members(@private_pg2_group) do
+    case :pg2.get_members(state.namespace) do
       {:error, {:no_such_group, _}} -> {:stop, :no_global_group, state}
       pids -> pids
        for pid <- pids do
