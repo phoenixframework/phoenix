@@ -85,6 +85,10 @@ defmodule Phoenix.Router.HelpersTest do
 
   alias Router.Helpers
 
+  test "defines a __helpers__ function" do
+    assert Router.__helpers__ == Router.Helpers
+  end
+
   test "top-level named route" do
     assert Helpers.post_path(__MODULE__, :show, 5) == "/posts/5"
     assert Helpers.post_path(__MODULE__, :show, 5, []) == "/posts/5"

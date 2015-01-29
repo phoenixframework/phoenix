@@ -244,18 +244,22 @@ defmodule Phoenix.Router do
   @doc false
   defmacro __before_compile__(env) do
     routes   = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse
-    chan_ast = env.module |> Module.get_attribute(:phoenix_channels) |> Helpers.defchannels
+    channels = env.module |> Module.get_attribute(:phoenix_channels) |> Helpers.defchannels
 
     Helpers.define(env, routes)
 
     quote do
       @doc false
-      def __routes__, do: unquote(Macro.escape(routes))
+      def __routes__,  do: unquote(Macro.escape(routes))
+
+      @doc false
+      def __helpers__, do: __MODULE__.Helpers
 
       defp match(conn, _method, _path_info, _host) do
         raise NoRouteError, conn: conn, router: __MODULE__
       end
-      unquote(chan_ast)
+
+      unquote(channels)
     end
   end
 
