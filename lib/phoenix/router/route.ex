@@ -22,8 +22,8 @@ defmodule Phoenix.Router.Route do
     * :pipe_segments - the quoted segments to pipe through
 
   """
-  defstruct [:verb, :path, :host, :binding, :controller, :action, :helper, :pipe_through,
-             :path_segments, :host_segments, :pipe_segments]
+  defstruct [:verb, :path, :host, :binding, :controller, :action, :helper,
+             :private, :pipe_through, :path_segments, :host_segments, :pipe_segments]
 
   @type t :: %Route{}
 
@@ -31,11 +31,11 @@ defmodule Phoenix.Router.Route do
   Receives the verb, path, controller, action and helper
   and returns a `Phoenix.Router.Route` struct.
   """
-  @spec build(String.t, String.t, String.t | nil, atom, atom, atom | nil, atom) :: t
-  def build(verb, path, host, controller, action, helper, pipe_through)
+  @spec build(String.t, String.t, String.t | nil, atom, atom, atom | nil, atom, %{}) :: t
+  def build(verb, path, host, controller, action, helper, pipe_through, private)
       when is_binary(verb) and is_binary(path) and (is_binary(host) or is_nil(host)) and
            is_atom(controller) and is_atom(action) and (is_binary(helper) or is_nil(helper)) and
-           is_list(pipe_through) do
+           is_list(pipe_through) and is_map(private) do
     {params, path_segments} = Plug.Router.Utils.build_path_match(path)
 
     binding = Enum.map(params, fn var ->
@@ -44,8 +44,22 @@ defmodule Phoenix.Router.Route do
 
     %Route{verb: verb, path: path, host: host, binding: binding,
            controller: controller, action: action, helper: helper,
+           private: private,
            pipe_through: pipe_through, path_segments: path_segments,
            host_segments: build_host(host), pipe_segments: build_pipes(pipe_through)}
+  end
+
+  @doc """
+  Returns a code that merges route data into a connection
+  unless the data is empty.
+  """
+  def maybe_merge(key, data) do
+    if map_size(data) > 0 do
+      quote do
+        var!(conn) =
+          update_in var!(conn).unquote(key), &Map.merge(&1, unquote(Macro.escape(data)))
+      end
+    end
   end
 
   defp build_host(host) do

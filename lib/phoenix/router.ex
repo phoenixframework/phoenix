@@ -167,6 +167,7 @@ defmodule Phoenix.Router do
 
   alias Phoenix.Router.Resource
   alias Phoenix.Router.Scope
+  alias Phoenix.Router.Route
   alias Phoenix.Router.Helpers
 
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
@@ -277,6 +278,8 @@ defmodule Phoenix.Router do
 
       defp match(var!(conn), unquote(route.verb), unquote(route.path_segments),
                  unquote(route.host_segments)) do
+        unquote(Route.maybe_merge(:private, route.private))
+
         var!(conn) =
           update_in(var!(conn).params, &Map.merge(&1, unquote(parts)))
           |> Plug.Conn.put_private(:phoenix_pipelines, unquote(route.pipe_through))
@@ -284,6 +287,7 @@ defmodule Phoenix.Router do
               opts = unquote(route.controller).init(unquote(route.action))
               unquote(route.controller).call(conn, opts)
              end)
+
         unquote(route.pipe_segments)
       end
     end
@@ -467,7 +471,7 @@ defmodule Phoenix.Router do
       parm = resource.param
       path = resource.path
       ctrl = resource.controller
-      opts = [as: resource.as]
+      opts = resource.route
 
       Enum.each resource.actions, fn action ->
         case action do
@@ -479,7 +483,7 @@ defmodule Phoenix.Router do
           :delete  -> delete "#{path}/:#{parm}",      ctrl, :delete, opts
           :update  ->
             patch "#{path}/:#{parm}", ctrl, :update, opts
-            put   "#{path}/:#{parm}", ctrl, :update, as: nil
+            put   "#{path}/:#{parm}", ctrl, :update, Keyword.put(opts, :as, nil)
         end
       end
 
@@ -496,7 +500,7 @@ defmodule Phoenix.Router do
 
       path = resource.path
       ctrl = resource.controller
-      opts = [as: resource.as]
+      opts = resource.route
 
       Enum.each resource.actions, fn action ->
         case action do
@@ -507,7 +511,7 @@ defmodule Phoenix.Router do
           :delete  -> delete "#{path}",      ctrl, :delete, opts
           :update  ->
             patch "#{path}", ctrl, :update, opts
-            put   "#{path}", ctrl, :update, as: nil
+            put   "#{path}", ctrl, :update, Keyword.put(opts, :as, nil)
         end
       end
 
@@ -539,6 +543,7 @@ defmodule Phoenix.Router do
     * `:alias` - an alias (atom) containing the controller scope
     * `:host` - a string containing the host scope, or prefix host scope, ie
                 `"foo.bar.com"`, `"foo."`
+    * `:private` - a map of private data to merge into the connection when a route matches
 
   """
   defmacro scope(options, do: context) do
@@ -597,19 +602,25 @@ defmodule Phoenix.Router do
   end
 
   @doc """
-  Defines a socket mount-point for channel definitions. By default, the
-  given path is a websocket upgrade endpoint, with Long-polling fallback.
-  The transports can be configured with the socket options or on each individual
-  channel.
+  Defines a socket mount-point for channel definitions.
 
-    * `mount` - The string path for the websocket upgrade, ie "/ws"
-    * `opts` - The optional keyword list of options
-      * `via` - The optional transport modules to apply to all channels in the block,
-                ie: `[Phoenix.Transports.WebSocket]`
-      *`as` - The optional named route helper function, ie :socket
-      *`alias` - The optional alias to apply to all channel modules, ie: MyApp.
-                 Alternatively, you can pass an alias as a standalone second argument
-                 to `socket` to apply the alias, similar to `scope`.
+  By default, the given path is a websocket upgrade endpoint,
+  with long-polling fallback. The transports can be configured
+  with the socket options or on each individual channel.
+
+  It expects the `mount` path as a string and a keyword list
+  of options.
+
+  ## Options
+
+    * `:via` - the optional transport modules to apply to all
+      channels in the block, ie: `[Phoenix.Transports.WebSocket]`
+
+    * `:as` - the optional named route helper function, ie `:socket`
+
+    * `:alias` - the optional alias to apply to all channel modules,
+      ie: `MyApp`. Alternatively, you can pass an alias as a standalone
+      second argument to apply the alias, similar to `scope/2`.
 
   ## Examples
 
@@ -660,14 +671,18 @@ defmodule Phoenix.Router do
       @phoenix_channel_alias nil
     end
   end
+
   @doc """
-  Defines a channel matching the given topic and transports
+  Defines a channel matching the given topic and transports.
 
     * `topic_pattern` - The string pattern, ie "rooms:*", "users:*", "system"
     * `module` - The channel module handler, ie `MyApp.RoomChannel`
-    * `opts` - The optional list of options. Available options are:
-      * `via` - The transport adapters to accept on this channel.
-                Defaults `[Phoenix.Transports.WebSocket, Phoenix.Transports.LongPoller]`
+    * `opts` - The optional list of options, see below
+
+  ## Options
+
+    * `:via` - the transport adapters to accept on this channel.
+      Defaults `[Phoenix.Transports.WebSocket, Phoenix.Transports.LongPoller]`
 
   ## Examples
 
