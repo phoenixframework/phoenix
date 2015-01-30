@@ -4,8 +4,8 @@ defmodule Phoenix.PubSub.PubSubTest do
   alias Phoenix.PubSub
 
   @adapters [
-    {Phoenix.PubSub.RedisSupervisor, :redis_pub},
-    {Phoenix.PubSub.PG2,            :pg2_pub}
+    {Phoenix.PubSub.Redis, :redis_pub},
+    {Phoenix.PubSub.PG2,   :pg2_pub}
   ]
 
   def spawn_pid do
