@@ -3,9 +3,9 @@ defmodule Phoenix.PubSub.RedisServer do
   require Logger
 
   @moduledoc """
-  The server for the RedisAdapter
+  `Phoenix.PubSub` adapter for Redis
 
-  See `Phoenix.PubSub.RedisAdapter` for details and configuration options.
+  See `Phoenix.PubSub.Redis` for details and configuration options.
   """
 
   @defaults [host: "127.0.0.1", port: 6379, password: ""]
@@ -16,8 +16,6 @@ defmodule Phoenix.PubSub.RedisServer do
 
   @doc """
   Starts the server
-
-  TODO document options
   """
   def start_link(opts) do
     GenServer.start_link(__MODULE__, opts, name: Dict.fetch!(opts, :name))
@@ -91,6 +89,10 @@ defmodule Phoenix.PubSub.RedisServer do
     {:noreply, state}
   end
 
+  def handle_info({:EXIT, _linked_pid, _reason}, state) do
+    {:noreply, state}
+  end
+
   @doc """
   Connection establishment and shutdown loop
 
@@ -121,10 +123,6 @@ defmodule Phoenix.PubSub.RedisServer do
   def handle_info({:eredis_disconnected, _client_pid}, state) do
     Logger.error "lost redis connection. Attempting to reconnect..."
     {:noreply, %{state | status: :disconnected}}
-  end
-
-  def handle_info({:EXIT, _linked_pid, _reason}, state) do
-    {:noreply, state}
   end
 
   def terminate(_reason, %{status: :disconnected}) do
@@ -166,7 +164,7 @@ defmodule Phoenix.PubSub.RedisServer do
     {:noreply, %{state | status: :disconnected,
                          reconnect_attemps: state.reconnect_attemps + 1}}
   end
-  def establish_success(eredis_sub_pid, eredis_pid, state) do
+  defp establish_success(eredis_sub_pid, eredis_pid, state) do
     :eredis_sub.controlling_process(eredis_sub_pid)
     :eredis_sub.subscribe(eredis_sub_pid, [state.namespace])
 
