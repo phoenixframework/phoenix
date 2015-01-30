@@ -62,10 +62,6 @@ defmodule Phoenix.PubSub.RedisServer do
     {:reply, GenServer.call(state.local_name, {:subscribers, topic}), state}
   end
 
-  def handle_call(:list, _from, state) do
-    {:reply, GenServer.call(state.local_name, :list), state}
-  end
-
   def handle_call({:broadcast, from_pid, topic, msg}, _from, state) do
     redis_msg = {1, state.node_ref, from_pid, topic, msg}
     case :eredis.q(state.eredis_pid, ["PUBLISH", state.namespace, redis_msg]) do

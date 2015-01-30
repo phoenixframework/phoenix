@@ -44,10 +44,6 @@ defmodule Phoenix.PubSub.PG2Server do
     {:reply, GenServer.call(state.local_name, {:subscribers, topic}), state}
   end
 
-  def handle_call(:list, _from, state) do
-    {:reply, GenServer.call(state.local_name, :list), state}
-  end
-
   def handle_call(:stop, _from, state) do
     {:stop, :normal, :ok, state}
   end
