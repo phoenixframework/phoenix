@@ -12,6 +12,7 @@ defmodule Phoenix.PubSub.RedisServer do
 
   @max_connect_attemps 3   # 15s to establish connection
   @reconnect_after_ms 5000
+  @redis_msg_vsn 1
 
   @doc """
   Starts the server
@@ -39,8 +40,7 @@ defmodule Phoenix.PubSub.RedisServer do
     Process.flag(:trap_exit, true)
     send(self, :establish_conn)
 
-    {:ok, %{name: server_name,
-            local_name: local_name,
+    {:ok, %{local_name: local_name,
             namespace: redis_namespace(server_name),
             eredis_sub_pid: nil,
             eredis_pid: nil,
@@ -63,7 +63,7 @@ defmodule Phoenix.PubSub.RedisServer do
   end
 
   def handle_call({:broadcast, from_pid, topic, msg}, _from, state) do
-    redis_msg = {1, state.node_ref, from_pid, topic, msg}
+    redis_msg = {@redis_msg_vsn, state.node_ref, from_pid, topic, msg}
     case :eredis.q(state.eredis_pid, ["PUBLISH", state.namespace, redis_msg]) do
       {:ok, _}         -> {:reply, :ok, state}
       {:error, reason} -> {:reply, {:error, reason}, state}
