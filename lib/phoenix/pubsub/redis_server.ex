@@ -30,8 +30,9 @@ defmodule Phoenix.PubSub.RedisServer do
   pass off reconnection handling once we find an initial connection.
   """
   def init(opts) do
-    server_name = opts[:name]
-    {:ok, local_pid} = Phoenix.PubSub.Local.start_link(Module.concat(server_name, Local))
+    server_name = Keyword.fetch!(opts, :name)
+    local_name  = Keyword.fetch!(opts, :local_name)
+    pool_name   = Keyword.fetch!(opts, :pool_name)
     opts = Dict.merge(@defaults, opts)
     opts = Dict.merge(opts, host: String.to_char_list(to_string(opts[:host])),
                             password: String.to_char_list(to_string(opts[:password])))
@@ -40,32 +41,33 @@ defmodule Phoenix.PubSub.RedisServer do
     send(self, :establish_conn)
 
     {:ok, %{name: server_name,
+            local_name: local_name,
+            pool_name: pool_name,
             eredis_sub_pid: nil,
             status: :disconnected,
             node_ref: :erlang.make_ref,
-            local_pid: local_pid,
             reconnect_attemps: 0,
             opts: opts}}
   end
 
   def handle_call({:subscribe, pid, topic}, _from, state) do
-    {:reply, GenServer.call(state.local_pid, {:subscribe, pid, topic}), state}
+    {:reply, GenServer.call(state.local_name, {:subscribe, pid, topic}), state}
   end
 
   def handle_call({:unsubscribe, pid, topic}, _from, state) do
-    {:reply, GenServer.call(state.local_pid, {:unsubscribe, pid, topic}), state}
+    {:reply, GenServer.call(state.local_name, {:unsubscribe, pid, topic}), state}
   end
 
   def handle_call({:subscribers, topic}, _from, state) do
-    {:reply, GenServer.call(state.local_pid, {:subscribers, topic}), state}
+    {:reply, GenServer.call(state.local_name, {:subscribers, topic}), state}
   end
 
   def handle_call(:list, _from, state) do
-    {:reply, GenServer.call(state.local_pid, :list), state}
+    {:reply, GenServer.call(state.local_name, :list), state}
   end
 
   def handle_call({:broadcast, from_pid, topic, msg}, _from, state) do
-    result = :poolboy.transaction :phx_redis_pool, fn worker_pid ->
+    result = :poolboy.transaction state.pool_name, fn worker_pid ->
       GenServer.call(worker_pid, {:publish_to_redis, namespace(state, topic),
                                  {1, state.node_ref, from_pid, msg}})
     end
@@ -75,9 +77,9 @@ defmodule Phoenix.PubSub.RedisServer do
   # Removes redis pool
   def handle_info({:pmessage, _pattern, namespaced_topic, binary_msg, _client_pid}, state) do
     {:ok, topic} = remove_namespace(state, namespaced_topic)
-    :poolboy.transaction :phx_redis_pool, fn worker_pid ->
+    :poolboy.transaction state.pool_name, fn worker_pid ->
       GenServer.cast(worker_pid, {:forward_to_subscribers,
-                                  state.local_pid, state.node_ref, topic, binary_msg})
+                                  state.local_name, state.node_ref, topic, binary_msg})
     end
 
     :eredis_sub.ack_message(state.eredis_sub_pid)
