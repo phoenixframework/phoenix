@@ -54,5 +54,7 @@ defmodule Phoenix.PubSub do
   @doc """
   Returns lists of strings of all topics under pg2
   """
-  def list(server), do: call(server, :list)
+  def list(server_name) do
+    GenServer.call(Module.concat(server_name, Local), :list)
+  end
 end
