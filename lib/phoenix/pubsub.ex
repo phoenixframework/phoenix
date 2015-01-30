@@ -23,9 +23,19 @@ defmodule Phoenix.PubSub do
 
   @doc """
   Subscribes the pid to the pg2 group for the topic
+
+    * `server` - The Pid registered name of the server
+    * `pid` - The subscriber pid to receive pubsub messages
+    * `topic` - The topic to subscribe to, ie: `"users:123"`
+    * `opts` - The optional list of options. Supported options
+               only include `:link` to link the subscriber to
+               the pubsub adapter
   """
-  def subscribe(server, pid, topic),
-    do: call(server, {:subscribe, pid, topic})
+  def subscribe(server, pid, topic, opts \\ [])
+  def subscribe(server, pid, topic, link: link),
+    do: call(server, {:subscribe, pid, topic, link && true})
+  def subscribe(server, pid, topic, _opts),
+    do: call(server, {:subscribe, pid, topic, _link = false})
 
   @doc """
   Unsubscribes the pid from the pg2 group for the topic

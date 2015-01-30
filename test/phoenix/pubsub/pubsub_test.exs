@@ -30,6 +30,33 @@ defmodule Phoenix.PubSub.PubSubTest do
       Process.exit pid, :kill
     end
 
+    test "#{inspect @adapter} subscribe/3 with link does not down adapter" do
+      server_name = Module.concat(@server, :link_pub)
+      {:ok, _super_pid} = @adapter.start_link(name: server_name)
+      server_pid = Process.whereis(server_name)
+      assert Process.alive?(server_pid)
+      pid = spawn_pid
+
+      assert Enum.empty?(PubSub.subscribers(server_name, "topic4"))
+      assert PubSub.subscribe(server_name, pid, "topic4", link: true)
+      Process.exit(pid, :kill)
+      refute Process.alive?(pid)
+      assert Process.alive?(server_pid)
+    end
+
+    test "#{inspect @adapter} subscribe/3 with link downs subscriber" do
+      server_name = Module.concat(@server, :link_pub2)
+      {:ok, _super_pid} = @adapter.start_link(name: server_name)
+      server_pid = Process.whereis(server_name)
+      assert Process.alive?(server_pid)
+      pid = spawn_pid
+
+      assert PubSub.subscribe(server_name, pid, "topic4", link: true)
+      Process.exit(server_pid, :kill)
+      refute Process.alive?(server_pid)
+      refute Process.alive?(pid)
+    end
+
     test "#{inspect @adapter} #broadcast publishes message to each subscriber" do
       PubSub.subscribe(@server, self, "topic9")
       assert PubSub.subscribers(@server, "topic9") |> Enum.to_list == [self]

@@ -50,7 +50,8 @@ defmodule Phoenix.PubSub.RedisServer do
             opts: opts}}
   end
 
-  def handle_call({:subscribe, pid, topic}, _from, state) do
+  def handle_call({:subscribe, pid, topic, link}, _from, state) do
+    if link, do: Process.link(pid)
     {:reply, GenServer.call(state.local_name, {:subscribe, pid, topic}), state}
   end
 
@@ -120,6 +121,10 @@ defmodule Phoenix.PubSub.RedisServer do
   def handle_info({:eredis_disconnected, _client_pid}, state) do
     Logger.error "lost redis connection. Attempting to reconnect..."
     {:noreply, %{state | status: :disconnected}}
+  end
+
+  def handle_info({:EXIT, _linked_pid, _reason}, state) do
+    {:noreply, state}
   end
 
   def terminate(_reason, %{status: :disconnected}) do
