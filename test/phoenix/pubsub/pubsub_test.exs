@@ -50,11 +50,14 @@ defmodule Phoenix.PubSub.PubSubTest do
       server_pid = Process.whereis(server_name)
       assert Process.alive?(server_pid)
       pid = spawn_pid
+      non_linked_pid = spawn_pid
 
       assert PubSub.subscribe(server_name, pid, "topic4", link: true)
+      assert PubSub.subscribe(server_name, non_linked_pid, "topic4")
       Process.exit(server_pid, :kill)
       refute Process.alive?(server_pid)
       refute Process.alive?(pid)
+      assert Process.alive?(non_linked_pid)
     end
 
     test "#{inspect @adapter} #broadcast publishes message to each subscriber" do
