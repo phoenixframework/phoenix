@@ -103,6 +103,16 @@ defmodule Phoenix.Channel do
    but you'll need to define the catch-all clause yourself once you define an
    `handle_out/3` clause.
 
+
+  ### PubSub Configuration
+
+  By default, the name of the channel's PubSub server is inflected from the
+  channel module name, which should match the PubSub adapter name(s) in
+  your supervision tree. You can override the defaults by passing the
+  `:pubsub_server` option to `use`:
+
+      use Phoenix.Channel, pubsub_server: :my_special_pub
+
   """
 
   use Behaviour

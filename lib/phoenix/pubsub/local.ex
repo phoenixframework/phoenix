@@ -22,12 +22,13 @@ defmodule Phoenix.PubSub.Local do
   @doc """
   Subscribes the pid to the topic
 
+    * `local_server` - The registered server name or pid
     * `pid` - The subscriber Pid
     * `topic` - The string topic, ie "users:123"
 
   ## Examples
 
-      iex> PubSub.Local.subscribe(:local_server, self, "foo")
+      iex> subscribe(:local_server, self, "foo")
       :ok
 
   """
@@ -38,12 +39,13 @@ defmodule Phoenix.PubSub.Local do
   @doc """
   Unsubscribes the pid from the topic
 
+    * `local_server` - The registered server name or pid
     * `pid` - The subscriber Pid
     * `topic` - The string topic, ie "users:123"
 
   ## Examples
 
-      iex> PubSub.Local.unsubscribe(:local_server, self, "foo")
+      iex> unsubscribe(:local_server, self, "foo")
       :ok
 
   """
@@ -54,13 +56,14 @@ defmodule Phoenix.PubSub.Local do
   @doc """
   Sends a message to allow subscribers of a topic
 
+    * `local_server` - The registered server name or pid
     * `topic` - The string topic, ie "users:123"
 
   ## Examples
 
-      iex> PubSub.Local.broadcast(:local_server, "foo")
+      iex> broadcast(:local_server, "foo")
       :ok
-      iex> PubSub.Local.broadcast(:local_server, "bar")
+      iex> broadcast(:local_server, "bar")
       :no_topic
 
   """
@@ -71,11 +74,12 @@ defmodule Phoenix.PubSub.Local do
   @doc """
   Returns the `HashSet` of subscribers pids for the given topic
 
+    * `local_server` - The registered server name or pid
     * `topic` - The string topic, ie "users:123"
 
   ## Examples
 
-      iex> PubSub.Local.subscribers(:local_server, "foo")
+      iex> subscribers(:local_server, "foo")
       #HashSet<[]>
 
   """

@@ -2,7 +2,9 @@ defmodule Phoenix.PubSub.PG2Server do
   use GenServer
 
   @moduledoc """
-  PubSub adapter based on `:pg2`
+  `Phoenix.PubSub` adapter based on `:pg2`
+
+  See `Phoenix.PubSub.Redis` for details and configuration options.
   """
 
   def start_link(opts) do
