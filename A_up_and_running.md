@@ -36,7 +36,27 @@ $ mix deps.get
 ```console
 $ mix compile
 ```
+Note: On some Linux systems, Erlang installations do not include the Erlang ssl or inets packages. This will cause hex to fail. If you see an error message like this one,
 
+```console
+$  mix do deps.get, compile
+Could not start Hex. Try fetching a new version with `mix local.hex` or uninstalling it with `mix archive.uninstall hex.ez`
+** (UndefinedFunctionError) undefined function: :ssl.start/0 (module :ssl is not available)
+:ssl.start()
+lib/hex.ex:16: Hex.start_api/0
+lib/hex.ex:8: Hex.start/0
+(mix) lib/mix/tasks/local.hex.ex:69: Mix.Tasks.Local.Hex.start/0
+(mix) lib/mix/dep/loader.ex:117: Mix.Dep.Loader.with_scm_and_app/1
+(mix) lib/mix/dep/loader.ex:86: Mix.Dep.Loader.to_dep/3
+(elixir) lib/enum.ex:977: Enum."-map/2-lc$^0/1-0-"/2
+(mix) lib/mix/dep/loader.ex:234: Mix.Dep.Loader.mix_children/1
+```
+(note this part especially `(module :ssl is not available)`), try installing those packages manually. Of course, substitute the package manager for your system if it doesn't use apt as the example does.
+
+```console
+$ sudo apt-get install erlang-ssl
+$ sudo apt-get install erlang-inets
+```
 Once this is done, we need to have Phoenix generate a new project for us, and we need it to do so outside the Phoenix repo itself. Phoenix provides a mix task `phoenix.new` for this, and the task takes both the name of our new project and the path to where we want  the new application to live.
 
 Phoenix will accept either an absolute or relative path for the directory of our new project. Either of these will work.
