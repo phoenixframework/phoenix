@@ -117,7 +117,7 @@ defmodule Phoenix.PubSub.RedisServer do
 
   def handle_info({:eredis_connected, _client_pid}, state) do
     Logger.info "redis connection re-established"
-    {:noreply, %{state | status: :connected}}
+    establish_success(state.eredis_sub_pid, state.eredis_pid, state)
   end
 
   def handle_info({:eredis_disconnected, _client_pid}, state) do
