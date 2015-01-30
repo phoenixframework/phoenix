@@ -32,7 +32,6 @@ defmodule Phoenix.PubSub.RedisServer do
   def init(opts) do
     server_name = Keyword.fetch!(opts, :name)
     local_name  = Keyword.fetch!(opts, :local_name)
-    pool_name   = Keyword.fetch!(opts, :pool_name)
     opts = Dict.merge(@defaults, opts)
     opts = Dict.merge(opts, host: String.to_char_list(to_string(opts[:host])),
                             password: String.to_char_list(to_string(opts[:password])))
@@ -42,8 +41,9 @@ defmodule Phoenix.PubSub.RedisServer do
 
     {:ok, %{name: server_name,
             local_name: local_name,
-            pool_name: pool_name,
+            namespace: redis_namespace(server_name),
             eredis_sub_pid: nil,
+            eredis_pid: nil,
             status: :disconnected,
             node_ref: :erlang.make_ref,
             reconnect_attemps: 0,
@@ -67,19 +67,23 @@ defmodule Phoenix.PubSub.RedisServer do
   end
 
   def handle_call({:broadcast, from_pid, topic, msg}, _from, state) do
-    result = :poolboy.transaction state.pool_name, fn worker_pid ->
-      GenServer.call(worker_pid, {:publish_to_redis, namespace(state, topic),
-                                 {1, state.node_ref, from_pid, msg}})
+    redis_msg = {1, state.node_ref, from_pid, topic, msg}
+    case :eredis.q(state.eredis_pid, ["PUBLISH", state.namespace, redis_msg]) do
+      {:ok, _}         -> {:reply, :ok, state}
+      {:error, reason} -> {:reply, {:error, reason}, state}
     end
-    {:reply, result, state}
   end
 
-  # Removes redis pool
-  def handle_info({:pmessage, _pattern, namespaced_topic, binary_msg, _client_pid}, state) do
-    {:ok, topic} = remove_namespace(state, namespaced_topic)
-    :poolboy.transaction state.pool_name, fn worker_pid ->
-      GenServer.cast(worker_pid, {:forward_to_subscribers,
-                                  state.local_name, state.node_ref, topic, binary_msg})
+  @doc """
+  Decodes binary message and fowards to local subscribers of topic
+  """
+  def handle_info({:message, _redis_topic, bin_msg, _cli_pid}, state) do
+    {_vsn, remote_node_ref, from_pid, topic, msg} = :erlang.binary_to_term(bin_msg)
+
+    if remote_node_ref == state.node_ref do
+      GenServer.call(state.local_name, {:broadcast, from_pid, topic, msg})
+    else
+      GenServer.call(state.local_name, {:broadcast, :none, topic, msg})
     end
 
     :eredis_sub.ack_message(state.eredis_sub_pid)
@@ -104,20 +108,7 @@ defmodule Phoenix.PubSub.RedisServer do
     {:stop, :exceeded_max_conn_attempts, state}
   end
   def handle_info(:establish_conn, state) do
-    case :eredis_sub.start_link(state.opts) do
-      {:ok, eredis_sub_pid} ->
-        :eredis_sub.controlling_process(eredis_sub_pid)
-        :eredis_sub.psubscribe(eredis_sub_pid, [namespace(state, "*")])
-
-         {:noreply, %{state | eredis_sub_pid: eredis_sub_pid,
-                              status: :connected,
-                              reconnect_attemps: 0}}
-      _error ->
-        Logger.error "unable to establish redis connection. Attempting to reconnect..."
-        :timer.send_after(@reconnect_after_ms, :establish_conn)
-        {:noreply, %{state | status: :disconnected,
-                             reconnect_attemps: state.reconnect_attemps + 1}}
-     end
+    handle_establish_conn(state)
   end
 
   def handle_info({:subscribed, _pattern, _client_pid}, state) do
@@ -140,19 +131,47 @@ defmodule Phoenix.PubSub.RedisServer do
   end
   def terminate(_reason, state) do
     case :eredis_client.stop(state.eredis_sub_pid) do
-      :ok -> :ok
+      :ok ->
+        case :eredis_client.stop(state.eredis_pid) do
+          :ok -> :ok
+          err -> {:error, err}
+        end
       err -> {:error, err}
     end
   end
 
-  defp namespace(state, topic), do: "phx:#{state.name}:#{topic}"
+  defp redis_namespace(server_name), do: "phx:#{server_name}"
 
-  defp remove_namespace(state, namespaced_topic) do
-    namespaced_topic
-    |> String.split("phx:#{state.name}:", parts: 2)
-    |> case do
-      [_, topic] -> {:ok, topic}
-      _          -> {:error, :bad_topic}
-    end
+  defp handle_establish_conn(state) do
+    case {:eredis_sub.start_link(state.opts), :eredis.start_link(state.opts)} do
+      {{:ok, eredis_sub_pid}, {:ok, eredis_pid}} ->
+        establish_success(eredis_sub_pid, eredis_pid, state)
+
+      {{:ok, eredis_sub_pid}, _} ->
+        :ok = :eredis_client.stop(eredis_sub_pid)
+        establish_failed(state)
+
+      {_, {:ok, eredis_pid}} ->
+        :ok = :eredis_client.stop(eredis_pid)
+        establish_failed(state)
+
+      _error ->
+        establish_failed(state)
+     end
+  end
+  defp establish_failed(state) do
+    Logger.error "unable to establish redis connection. Attempting to reconnect..."
+    :timer.send_after(@reconnect_after_ms, :establish_conn)
+    {:noreply, %{state | status: :disconnected,
+                         reconnect_attemps: state.reconnect_attemps + 1}}
+  end
+  def establish_success(eredis_sub_pid, eredis_pid, state) do
+    :eredis_sub.controlling_process(eredis_sub_pid)
+    :eredis_sub.subscribe(eredis_sub_pid, [state.namespace])
+
+    {:noreply, %{state | eredis_sub_pid: eredis_sub_pid,
+                         eredis_pid: eredis_pid,
+                         status: :connected,
+                         reconnect_attemps: 0}}
   end
 end
