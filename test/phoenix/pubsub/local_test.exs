@@ -77,14 +77,16 @@ defmodule Phoenix.PubSub.LocalTest do
   test "when subscriber leaves last topic, it is demonitored and removed" do
     :ok = PubSub.Local.subscribe(:phxpub, self, "topic7")
     :ok = PubSub.Local.subscribe(:phxpub, self, "topic8")
-    assert PubSub.Local.subscription(:phxpub, self) |> Enum.to_list |> Enum.sort
+    {:ok, topics} = PubSub.Local.subscription(:phxpub, self)
+    assert topics |> Enum.to_list |> Enum.sort
       == ["topic7", "topic8"]
 
     :ok = PubSub.Local.unsubscribe(:phxpub, self, "topic7")
-    assert PubSub.Local.subscription(:phxpub, self) |> Enum.to_list |> Enum.sort
+    {:ok, topics} = PubSub.Local.subscription(:phxpub, self)
+    assert topics |> Enum.to_list |> Enum.sort
       == ["topic8"]
 
     :ok = PubSub.Local.unsubscribe(:phxpub, self, "topic8")
-    assert PubSub.Local.subscription(:phxpub, self) == :no_subscription
+    assert PubSub.Local.subscription(:phxpub, self) == :error
   end
 end

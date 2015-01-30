@@ -105,8 +105,8 @@ defmodule Phoenix.PubSub.Local do
 
   def handle_call({:subscription, pid}, _from, state) do
     case HashDict.fetch(state.pids, pid) do
-      {:ok, {_ref, topics}} -> {:reply, topics, state}
-      :error                -> {:reply, :no_subscription, state}
+      {:ok, {_ref, topics}} -> {:reply, {:ok, topics}, state}
+      :error                -> {:reply, :error, state}
     end
   end
 
