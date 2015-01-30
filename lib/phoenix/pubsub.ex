@@ -51,9 +51,8 @@ defmodule Phoenix.PubSub do
   def broadcast_from(server, from_pid, topic, message),
     do: call(server, {:broadcast, from_pid, topic, message})
 
-  @doc """
-  Returns lists of strings of all topics under pg2
-  """
+  @doc false
+  # Returns list of all topics under local server, for debug and perf tuning
   def list(server_name) do
     GenServer.call(Module.concat(server_name, Local), :list)
   end
