@@ -25,6 +25,9 @@ defmodule Phoenix.PubSub.Local do
     * `local_server` - The registered server name or pid
     * `pid` - The subscriber Pid
     * `topic` - The string topic, ie "users:123"
+    * `opts` - The optional list of options. Supported options
+               only include `:link` to link the subscriber to
+               the pubsub adapter
 
   ## Examples
 
@@ -32,9 +35,12 @@ defmodule Phoenix.PubSub.Local do
       :ok
 
   """
-  def subscribe(local_server, pid, topic) do
-    GenServer.call(local_server, {:subscribe, pid, topic})
-  end
+  def subscribe(local_server, pid, topic, opts \\ [])
+  def subscribe(local_server, pid, topic, link: link),
+    do: GenServer.call(local_server, {:subscribe, pid, topic, link && true})
+  def subscribe(local_server, pid, topic, _opts),
+    do: GenServer.call(local_server, {:subscribe, pid, topic, _link = false})
+
 
   @doc """
   Unsubscribes the pid from the topic
@@ -118,7 +124,8 @@ defmodule Phoenix.PubSub.Local do
     {:reply, HashDict.get(state.topics, topic, HashSet.new), state}
   end
 
-  def handle_call({:subscribe, pid, topic}, _from, state) do
+  def handle_call({:subscribe, pid, topic, link}, _from, state) do
+    if link, do: Process.link(pid)
     {:reply, :ok, put_subscription(state, pid, topic)}
   end
 
@@ -142,6 +149,10 @@ defmodule Phoenix.PubSub.Local do
 
   def handle_info({:DOWN, ref, _type, pid, _info}, state) do
     {:noreply, drop_subscriber(state, pid, ref)}
+  end
+
+  def handle_info({:EXIT, _linked_pid, _reason}, state) do
+    {:noreply, state}
   end
 
   def terminate(_reason, _state) do

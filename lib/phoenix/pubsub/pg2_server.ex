@@ -16,8 +16,6 @@ defmodule Phoenix.PubSub.PG2Server do
     local_name    = Keyword.fetch!(opts, :local_name)
     pg2_namespace = pg2_namespace(server_name)
 
-    Process.flag(:trap_exit, true)
-
     :ok = :pg2.create(pg2_namespace)
     :ok = :pg2.join(pg2_namespace, self)
 
@@ -25,8 +23,7 @@ defmodule Phoenix.PubSub.PG2Server do
   end
 
   def handle_call({:subscribe, pid, topic, link}, _from, state) do
-    if link, do: Process.link(pid)
-    {:reply, GenServer.call(state.local_name, {:subscribe, pid, topic}), state}
+    {:reply, GenServer.call(state.local_name, {:subscribe, pid, topic, link}), state}
   end
 
   def handle_call({:unsubscribe, pid, topic}, _from, state) do
@@ -55,10 +52,6 @@ defmodule Phoenix.PubSub.PG2Server do
 
   def handle_info({:forward_to_local, from_pid, topic, msg}, state) do
     GenServer.call(state.local_name, {:broadcast, from_pid, topic, msg})
-    {:noreply, state}
-  end
-
-  def handle_info({:EXIT, _linked_pid, _reason}, state) do
     {:noreply, state}
   end
 

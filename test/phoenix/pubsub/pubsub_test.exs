@@ -33,22 +33,22 @@ defmodule Phoenix.PubSub.PubSubTest do
     test "#{inspect @adapter} subscribe/3 with link does not down adapter" do
       server_name = Module.concat(@server, :link_pub)
       {:ok, _super_pid} = @adapter.start_link(name: server_name)
-      server_pid = Process.whereis(server_name)
-      assert Process.alive?(server_pid)
+      local_pid = Process.whereis(Module.concat(server_name, Local))
+      assert Process.alive?(local_pid)
       pid = spawn_pid
 
       assert Enum.empty?(PubSub.subscribers(server_name, "topic4"))
       assert PubSub.subscribe(server_name, pid, "topic4", link: true)
       Process.exit(pid, :kill)
       refute Process.alive?(pid)
-      assert Process.alive?(server_pid)
+      assert Process.alive?(local_pid)
     end
 
     test "#{inspect @adapter} subscribe/3 with link downs subscriber" do
       server_name = Module.concat(@server, :link_pub2)
       {:ok, _super_pid} = @adapter.start_link(name: server_name)
-      server_pid = Process.whereis(server_name)
-      assert Process.alive?(server_pid)
+      local_pid = Process.whereis(Module.concat(server_name, Local))
+      assert Process.alive?(local_pid)
       pid = spawn_pid
       non_linked_pid = spawn_pid
       non_linked_pid2 = spawn_pid
@@ -56,8 +56,8 @@ defmodule Phoenix.PubSub.PubSubTest do
       assert PubSub.subscribe(server_name, pid, "topic4", link: true)
       assert PubSub.subscribe(server_name, non_linked_pid, "topic4")
       assert PubSub.subscribe(server_name, non_linked_pid2, "topic4", link: false)
-      Process.exit(server_pid, :kill)
-      refute Process.alive?(server_pid)
+      Process.exit(local_pid, :kill)
+      refute Process.alive?(local_pid)
       refute Process.alive?(pid)
       assert Process.alive?(non_linked_pid)
       assert Process.alive?(non_linked_pid2)
