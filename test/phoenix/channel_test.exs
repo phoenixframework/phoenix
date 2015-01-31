@@ -110,39 +110,53 @@ defmodule Phoenix.ChannelTest do
     assert PubSub.subscribers(:my_app_pub, "top:subtop") == HashSet.new
   end
 
-  test "#broadcast broadcasts global message on topic" do
+  test "#broadcast and #broadcast! broadcasts global message on topic" do
     socket = Socket.put_topic(new_socket, "top:subtop")
 
     assert Channel.broadcast(:my_app_pub, socket, "event", %{foo: "bar"})
+    assert Channel.broadcast!(:my_app_pub, socket, "event", %{foo: "bar"})
   end
 
-  test "#broadcast raises friendly error when message arg isn't a Map" do
+
+  test "#broadcast and #broadcast! raises friendly error when message arg isn't a Map" do
     message = "Message argument must be a map"
     assert_raise RuntimeError, message, fn ->
       Channel.broadcast(:my_app_pub, "topic:subtopic", "event", bar: "foo", foo: "bar")
     end
+    assert_raise RuntimeError, message, fn ->
+      Channel.broadcast!(:my_app_pub, "topic:subtopic", "event", bar: "foo", foo: "bar")
+    end
   end
 
-  test "#broadcast_from broadcasts message on topic, skipping publisher" do
+  test "#broadcast_from and #broadcast_from! broadcasts message, skipping publisher" do
     socket = new_socket |> Socket.put_topic("top:subtop")
     PubSub.subscribe(:my_app_pub, socket.pid, "top:subtop")
 
     assert Channel.broadcast_from(:my_app_pub, socket, "event", %{payload: "hello"})
     refute Enum.any?(Process.info(self)[:messages], &match?(%Message{}, &1))
+
+    assert Channel.broadcast_from!(:my_app_pub, socket, "event", %{payload: "hello"})
+    refute Enum.any?(Process.info(self)[:messages], &match?(%Message{}, &1))
   end
 
-  test "#broadcast_from raises friendly error when message arg isn't a Map" do
+  test "#broadcast_from and #broadcast_from! raises error when msg isn't a Map" do
     socket = Socket.put_topic(new_socket, "top:subtop")
     message = "Message argument must be a map"
     assert_raise RuntimeError, message, fn ->
       Channel.broadcast_from(:my_app_pub, socket, "event", bar: "foo", foo: "bar")
     end
+    assert_raise RuntimeError, message, fn ->
+      Channel.broadcast_from!(:my_app_pub, socket, "event", bar: "foo", foo: "bar")
+    end
   end
 
-  test "#broadcast_from/4 raises friendly error when message arg isn't a Map" do
+  test "#broadcast_from/4 and broadcast_from!/4 raises error when msg isn't a Map" do
     message = "Message argument must be a map"
     assert_raise RuntimeError, message, fn ->
       Channel.broadcast_from(:my_app_pub, self, "topic:subtopic", "event", bar: "foo")
+    end
+    assert_raise RuntimeError, message, fn ->
+      Channel.broadcast_from!(:my_app_pub, self, "topic:subtopic", "event", bar: "foo")
     end
   end
 

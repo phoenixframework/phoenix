@@ -22,6 +22,17 @@ defmodule Phoenix.PubSub.RedisServer do
   end
 
   @doc """
+  Broadcasts message to redis. To be only called from {:perform, {m, f, a}}
+  response to clients
+  """
+  def broadcast(eredis_pid, namespace, redis_msg) do
+    case :eredis.q(eredis_pid, ["PUBLISH", namespace, redis_msg]) do
+      {:ok, _}         -> :ok
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  @doc """
   Initializes the server.
 
   An initial connection establishment loop is entered. Once `:eredis_sub`
@@ -49,23 +60,24 @@ defmodule Phoenix.PubSub.RedisServer do
   end
 
   def handle_call({:subscribe, pid, topic, link}, _from, state) do
-    {:reply, GenServer.call(state.local_name, {:subscribe, pid, topic, link}), state}
+    response = {:perform, {GenServer, :call, [state.local_name, {:subscribe, pid, topic, link}]}}
+    {:reply, response, state}
   end
 
   def handle_call({:unsubscribe, pid, topic}, _from, state) do
-    {:reply, GenServer.call(state.local_name, {:unsubscribe, pid, topic}), state}
+    response = {:perform, {GenServer, :call, [state.local_name, {:unsubscribe, pid, topic}]}}
+    {:reply, response, state}
   end
 
   def handle_call({:subscribers, topic}, _from, state) do
-    {:reply, GenServer.call(state.local_name, {:subscribers, topic}), state}
+    response = {:perform, {GenServer, :call, [state.local_name, {:subscribers, topic}]}}
+    {:reply, response, state}
   end
 
   def handle_call({:broadcast, from_pid, topic, msg}, _from, state) do
     redis_msg = {@redis_msg_vsn, state.node_ref, from_pid, topic, msg}
-    case :eredis.q(state.eredis_pid, ["PUBLISH", state.namespace, redis_msg]) do
-      {:ok, _}         -> {:reply, :ok, state}
-      {:error, reason} -> {:reply, {:error, reason}, state}
-    end
+    resp = {:perform, {__MODULE__, :broadcast, [state.eredis_pid, state.namespace, redis_msg]}}
+    {:reply, resp, state}
   end
 
   @doc """

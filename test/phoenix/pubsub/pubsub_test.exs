@@ -12,6 +12,11 @@ defmodule Phoenix.PubSub.PubSubTest do
     spawn fn -> :timer.sleep(:infinity) end
   end
 
+  defmodule FailedBroadcaster do
+    def broadcast(_server, _topic, _msg), do: {:error, :boom}
+    def broadcast_from(_server, _from_pid, _topic, _msg), do: {:error, :boom}
+  end
+
   for {adapter, name} <- @adapters do
     @adapter adapter
     @server name
@@ -63,24 +68,41 @@ defmodule Phoenix.PubSub.PubSubTest do
       assert Process.alive?(non_linked_pid2)
     end
 
-    test "#{inspect @adapter} #broadcast publishes message to each subscriber" do
+    test "#{inspect @adapter} broadcast/3 and broadcast!/3 publishes message to each subscriber" do
       PubSub.subscribe(@server, self, "topic9")
       assert PubSub.subscribers(@server, "topic9") |> Enum.to_list == [self]
-      PubSub.broadcast(@server, "topic9", :ping)
+      :ok = PubSub.broadcast(@server, "topic9", :ping)
+      assert_receive :ping
+      :ok = PubSub.broadcast!(@server, "topic9", :ping)
       assert_receive :ping
     end
 
-    test "#{inspect @adapter} #broadcast does not publish message to other topic subscribers" do
+    test "#{inspect @adapter} broadcast!/3 and broadcast_from!/4 raise if broadcast fails" do
+      PubSub.subscribe(@server, self, "topic9")
+      assert PubSub.subscribers(@server, "topic9") |> Enum.to_list == [self]
+      assert_raise PubSub.BroadcastError, fn ->
+        PubSub.broadcast!(@server, "topic9", :ping, FailedBroadcaster)
+      end
+      assert_raise PubSub.BroadcastError, fn ->
+        PubSub.broadcast_from!(@server, self, "topic9", :ping, FailedBroadcaster)
+      end
+      refute_receive :ping
+    end
+
+    test "#{inspect @adapter} broadcast/3 does not publish message to other topic subscribers" do
       pids = Enum.map 0..10, fn _ -> spawn_pid end
       pids |> Enum.each(&PubSub.subscribe(@server, &1, "topic10"))
-      PubSub.broadcast(@server, "topic10", :ping)
+      :ok = PubSub.broadcast(@server, "topic10", :ping)
       refute_receive :ping
       pids |> Enum.each(&Process.exit &1, :kill)
     end
 
-    test "#{inspect @adapter} #broadcast_from does not publish to broadcaster pid when provided" do
+    test "#{inspect @adapter} broadcast_from/4 and broadcast_from!/4 skips sender" do
       PubSub.subscribe(@server, self, "topic11")
       PubSub.broadcast_from(@server, self, "topic11", :ping)
+      refute_receive :ping
+
+      PubSub.broadcast_from!(@server, self, "topic11", :ping)
       refute_receive :ping
     end
 
