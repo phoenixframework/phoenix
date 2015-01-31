@@ -36,7 +36,7 @@ defmodule Phoenix.Integration.ChannelTest do
     end
 
     def handle_in("new:msg", message, socket) do
-      broadcast socket, "new:msg", message
+      broadcast! socket, "new:msg", message
     end
   end
 
@@ -149,8 +149,8 @@ defmodule Phoenix.Integration.ChannelTest do
     assert resp.status == 204
 
     # messages are buffered between polls
-    Phoenix.Channel.broadcast :my_app_pub, "rooms:lobby", "user:entered", %{name: "José"}
-    Phoenix.Channel.broadcast :my_app_pub, "rooms:lobby", "user:entered", %{name: "Sonny"}
+    Phoenix.Channel.broadcast! :my_app_pub, "rooms:lobby", "user:entered", %{name: "José"}
+    Phoenix.Channel.broadcast! :my_app_pub, "rooms:lobby", "user:entered", %{name: "Sonny"}
     {resp, cookie} = poll(:get, "/ws/poll", cookie)
     assert resp.status == 200
     assert Enum.count(resp.body) == 2
@@ -190,7 +190,7 @@ defmodule Phoenix.Integration.ChannelTest do
                                                          "event" => "join",
                                                          "payload" => %{}}
       assert resp.status == 200
-      Phoenix.Channel.broadcast :my_app_pub, "rooms:lobby", "new:msg", %{body: "Hello lobby"}
+      Phoenix.Channel.broadcast! :my_app_pub, "rooms:lobby", "new:msg", %{body: "Hello lobby"}
       # poll
       {resp, cookie} = poll(:get, "/ws/poll", cookie)
       assert resp.status == 200

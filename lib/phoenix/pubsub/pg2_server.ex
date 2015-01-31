@@ -23,24 +23,29 @@ defmodule Phoenix.PubSub.PG2Server do
   end
 
   def handle_call({:subscribe, pid, topic, link}, _from, state) do
-    {:reply, GenServer.call(state.local_name, {:subscribe, pid, topic, link}), state}
+    response = {:perform, {GenServer, :call, [state.local_name, {:subscribe, pid, topic, link}]}}
+    {:reply, response, state}
   end
 
   def handle_call({:unsubscribe, pid, topic}, _from, state) do
-    {:reply, GenServer.call(state.local_name, {:unsubscribe, pid, topic}), state}
+    response = {:perform, {GenServer, :call, [state.local_name, {:unsubscribe, pid, topic}]}}
+    {:reply, response, state}
   end
 
   def handle_call({:broadcast, from_pid, topic, msg}, _from, state) do
     case :pg2.get_members(state.namespace) do
+      {:error, {:no_such_group, _}} ->
+        {:stop, :no_such_group, {:error, :no_such_group}, state}
+
       pids when is_list(pids) ->
         Enum.each(pids, &send(&1, {:forward_to_local, from_pid, topic, msg}))
+        {:reply, :ok, state}
     end
-
-    {:reply, :ok, state}
   end
 
   def handle_call({:subscribers, topic}, _from, state) do
-    {:reply, GenServer.call(state.local_name, {:subscribers, topic}), state}
+    response = {:perform, {GenServer, :call, [state.local_name, {:subscribers, topic}]}}
+    {:reply, response, state}
   end
 
   def handle_call(:stop, _from, state) do
