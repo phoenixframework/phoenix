@@ -32,11 +32,8 @@ defmodule Phoenix.PubSub.PG2Server do
 
   def handle_call({:broadcast, from_pid, topic, msg}, _from, state) do
     case :pg2.get_members(state.namespace) do
-      {:error, {:no_such_group, _}} -> {:stop, :no_global_group, state}
-      pids -> pids
-       for pid <- pids do
-         send(pid, {:forward_to_local, from_pid, topic, msg})
-       end
+      pids when is_list(pids) ->
+        Enum.each(pids, &send(&1, {:forward_to_local, from_pid, topic, msg}))
     end
 
     {:reply, :ok, state}
