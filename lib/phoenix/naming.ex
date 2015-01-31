@@ -53,22 +53,25 @@ defmodule Phoenix.Naming do
   end
 
   @doc """
-  Inflects the default name of the PubSub server from the module name
+  Finds the Base Namespace of the module with optional concat
 
   ## Examples
 
-      iex> Phoenix.Naming.module_to_pub_server(MyApp.MyChannel)
+      iex> Phoenix.Naming.base_namespace(MyApp.MyChannel)
+      MyApp
+
+      iex> Phoenix.Naming.base_namespace(MyApp.Admin.MyChannel, PubSub)
       MyApp.PubSub
 
-      iex> Phoenix.Naming.module_to_pub_server(MyApp.Admin.MyChannel)
+      iex> Phoenix.Naming.base_namespace(MyApp.Admin.MyChannel, "PubSub")
       MyApp.PubSub
 
   """
-  def module_to_pub_server(mod) do
+  def base_namespace(mod, submodule \\ nil) do
     mod
     |> Module.split
     |> hd
-    |> Module.concat("PubSub")
+    |> Module.concat(submodule)
   end
 
   @doc """

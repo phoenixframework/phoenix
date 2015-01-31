@@ -21,7 +21,7 @@ defmodule Mix.Tasks.Phoenix.New do
     application_module = Naming.camelize(application_name)
     pubsub_server      = application_module
                          |> Module.concat(nil)
-                         |> Naming.module_to_pub_server
+                         |> Naming.base_namespace(PubSub)
 
     binding = [application_name: application_name,
                application_module: application_module,

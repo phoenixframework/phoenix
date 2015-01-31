@@ -139,7 +139,7 @@ defmodule Phoenix.Channel do
       options = unquote(options)
       @behaviour unquote(__MODULE__)
       @pubsub_server options[:pubsub_server] ||
-        Phoenix.Naming.module_to_pub_server(__MODULE__)
+        Phoenix.Naming.base_namespace(__MODULE__, "PubSub")
 
 
       import unquote(__MODULE__), only: [reply: 3]
