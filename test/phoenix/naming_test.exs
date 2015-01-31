@@ -23,9 +23,9 @@ defmodule Phoenix.NamingTest do
     assert Naming.camelize("foobar_") == "Foobar"
   end
 
-  test "module_to_pub_server/1 inflects the pubsub server from the module" do
-    assert Naming.module_to_pub_server(MyApp.MyChannel) == MyApp.PubSub
-    assert Naming.module_to_pub_server(MyApp.Admin.MyChannel) == MyApp.PubSub
-    assert Naming.module_to_pub_server(MyApp) == MyApp.PubSub
+  test "base_namespace/1 returns the base namespace of a module with optional concat" do
+    assert Naming.base_namespace(MyApp.MyChannel) == MyApp
+    assert Naming.base_namespace(MyApp.Admin.MyChannel, PubSub) == MyApp.PubSub
+    assert Naming.base_namespace(MyApp.Admin.MyChannel, "PubSub") == MyApp.PubSub
   end
 end

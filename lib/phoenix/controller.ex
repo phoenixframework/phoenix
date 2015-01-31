@@ -726,9 +726,6 @@ defmodule Phoenix.Controller do
 
   @doc false
   def __layout__(controller_module) do
-    controller_module
-    |> Module.split
-    |> Enum.at(0)
-    |> Module.concat("LayoutView")
+    Phoenix.Naming.base_namespace(controller_module, "LayoutView")
   end
 end
