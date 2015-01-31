@@ -20,7 +20,7 @@ defmodule Phoenix.PubSub.PG2 do
   """
 
   def start_link(opts) do
-    supervisor_name = Module.concat(__MODULE__, Keyword.fetch!(opts, :name))
+    supervisor_name = Module.concat(Keyword.fetch!(opts, :name), Supervisor)
     Supervisor.start_link(__MODULE__, opts, name: supervisor_name)
   end
 

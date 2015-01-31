@@ -49,8 +49,7 @@ defmodule Phoenix.PubSub.RedisServer do
   end
 
   def handle_call({:subscribe, pid, topic, link}, _from, state) do
-    if link, do: Process.link(pid)
-    {:reply, GenServer.call(state.local_name, {:subscribe, pid, topic}), state}
+    {:reply, GenServer.call(state.local_name, {:subscribe, pid, topic, link}), state}
   end
 
   def handle_call({:unsubscribe, pid, topic}, _from, state) do
@@ -86,10 +85,6 @@ defmodule Phoenix.PubSub.RedisServer do
   end
 
   def handle_info({:EXIT, _pid, {:connection_error, {:connection_error, :econnrefused}}}, state) do
-    {:noreply, state}
-  end
-
-  def handle_info({:EXIT, _linked_pid, _reason}, state) do
     {:noreply, state}
   end
 
@@ -129,14 +124,9 @@ defmodule Phoenix.PubSub.RedisServer do
     :ok
   end
   def terminate(_reason, state) do
-    case :eredis_client.stop(state.eredis_sub_pid) do
-      :ok ->
-        case :eredis_client.stop(state.eredis_pid) do
-          :ok -> :ok
-          err -> {:error, err}
-        end
-      err -> {:error, err}
-    end
+    :eredis_client.stop(state.eredis_sub_pid)
+    :eredis_client.stop(state.eredis_pid)
+    :ok
   end
 
   defp redis_namespace(server_name), do: "phx:#{server_name}"
