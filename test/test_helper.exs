@@ -11,7 +11,7 @@ Mix.shell(Mix.Shell.Process)
 # Starts web server applications
 Application.ensure_all_started(:cowboy)
 
-{:ok, _pid} = Phoenix.PubSub.PG2.start_link(name: :my_app_pub)
+{:ok, _pid} = Phoenix.PubSub.PG2.start_link(:my_app_pub)
 
 # Used whenever a router fails. We default to simply
 # rendering a short string.
