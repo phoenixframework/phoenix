@@ -43,7 +43,7 @@ defmodule Phoenix.PubSub.RedisServer do
             eredis_sub_pid: nil,
             eredis_pid: nil,
             status: :disconnected,
-            node_ref: :erlang.make_ref,
+            node_ref: nil,
             reconnect_attemps: 0,
             opts: opts}}
   end
@@ -171,6 +171,12 @@ defmodule Phoenix.PubSub.RedisServer do
     {:noreply, %{state | eredis_sub_pid: eredis_sub_pid,
                          eredis_pid: eredis_pid,
                          status: :connected,
+                         node_ref: make_node_ref(eredis_pid, state.namespace),
                          reconnect_attemps: 0}}
+  end
+
+  defp make_node_ref(eredis_pid, namespace) do
+    {:ok, count} = :eredis.q(eredis_pid, ["INCR", "#{namespace}:node_counter"])
+    count
   end
 end
