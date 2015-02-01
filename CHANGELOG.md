@@ -2,13 +2,22 @@
 
 ## v0.9.0-dev
 
+See these [`0.8.x` to `0.9.0` upgrade instructions](https://gist.github.com/chrismccord/def6f4dc444b6a8f8d8b) to bring your existing apps up to speed.
+
+* Enhancements
+  * [PubSub/Channels] The PubSub layer now supports Redis, and is opened up to other third party adapters. It still defaults to PG2, but other adapters are convenient for non-distributed deployments or durable messaging.
+
 * Bug fixes
   * [Plug] Ensure session and flash are serializable to JSON
 
 * Backwards incompatible changes
+  * [PubSub] The new PubSub system requires the adapter's superviser to be added to your supervisione tree. Add `supervisor(Phoenix.PubSub.PG2, [MyApp.PubSub])` to your app supervistor.
+  * [PubSub] The `Phoenix.PubSub` API now requires a registered server name, ie `Phoenix.PubSub.broadcast(MyApp.PubSub, "foo:bar", %{baz: :bang})`
+  * [Channel] Channel broadcasts from outside a socket connection now must be called off the Channel module directly, ie: `MyApp.MyChannel.broadcast("topic", "event", %{...})`
   * [Channel] The error return signature has been changed from `{:error, socket, reason}` to {:error, reason, socket}`
   * [Plug] `Plug.CSRFProtection` now uses a cookie instead of session and expects a `"_csrf_token"` parameter instead of `"csrf_token"`
-  * [Router] The `destroy` action has been renamed to `delete`
+  * [Router] The `destroy` action has been renamed to `delete`, update your controller actions and url builders accordingly
+
 
 ## v0.8.0 (2015-01-11)
 
