@@ -10,7 +10,7 @@ defmodule Phoenix.PubSub.Redis do
       children = [
         ...
         worker(...),
-        supervisor(Phoenix.PubSub.Redis, [[name: MyApp.PubSub]]),
+        supervisor(Phoenix.PubSub.Redis, [MyApp.PubSub]),
       ]
 
   and add `:eredis`, and `:poolboy` to your deps:
