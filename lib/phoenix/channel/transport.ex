@@ -135,7 +135,7 @@ defmodule Phoenix.Channel.Transport do
   end
 
   defp handle_result({:ok, %Socket{} = socket}, "join") do
-    PubSub.subscribe(socket.pubsub_server, socket.pid, socket.topic)
+    PubSub.subscribe(socket.pubsub_server, socket.pid, socket.topic, link: true)
     {:ok, Socket.authorize(socket, socket.topic)}
   end
   defp handle_result({:ok, %Socket{} = socket}, "leave") do
