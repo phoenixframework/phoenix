@@ -10,7 +10,6 @@ defmodule Phoenix.PubSub.RedisServer do
 
   @defaults [host: "127.0.0.1", port: 6379, password: ""]
 
-  @max_connect_attemps 3   # 15s to establish connection
   @reconnect_after_ms 5000
   @redis_msg_vsn 1
 
@@ -55,7 +54,6 @@ defmodule Phoenix.PubSub.RedisServer do
             eredis_pid: nil,
             status: :disconnected,
             node_ref: nil,
-            reconnect_attemps: 0,
             opts: opts}}
   end
 
@@ -74,6 +72,9 @@ defmodule Phoenix.PubSub.RedisServer do
     {:reply, response, state}
   end
 
+  def handle_call({:broadcast, from_pid, topic, msg}, _from, %{status: :disconnected} = state) do
+    {:reply, {:error, :disconnected}, state}
+  end
   def handle_call({:broadcast, from_pid, topic, msg}, _from, state) do
     redis_msg = {@redis_msg_vsn, state.node_ref, from_pid, topic, msg}
     resp = {:perform, {__MODULE__, :broadcast, [state.eredis_pid, state.namespace, redis_msg]}}
@@ -103,16 +104,8 @@ defmodule Phoenix.PubSub.RedisServer do
   @doc """
   Connection establishment and shutdown loop
 
-  On init, an initial conection to redis is attempted when starting `:eredis_sub`.
-  If failed, the connection is tried again in `@reconnect_after_ms` until a max
-  of `@max_connect_attemps` is tried, at which point the server terminates with
-  an `:exceeded_max_conn_attempts`.
+  On init, an initial conection to redis is attempted when starting `:eredis_sub`
   """
-  def handle_info(:establish_conn, %{reconnect_attemps: count} = state)
-    when count >= @max_connect_attemps do
-
-    {:stop, :exceeded_max_conn_attempts, state}
-  end
   def handle_info(:establish_conn, state) do
     handle_establish_conn(state)
   end
@@ -163,8 +156,7 @@ defmodule Phoenix.PubSub.RedisServer do
   defp establish_failed(state) do
     Logger.error "unable to establish redis connection. Attempting to reconnect..."
     :timer.send_after(@reconnect_after_ms, :establish_conn)
-    {:noreply, %{state | status: :disconnected,
-                         reconnect_attemps: state.reconnect_attemps + 1}}
+    {:noreply, %{state | status: :disconnected}}
   end
   defp establish_success(eredis_sub_pid, eredis_pid, state) do
     :eredis_sub.controlling_process(eredis_sub_pid)
@@ -173,8 +165,7 @@ defmodule Phoenix.PubSub.RedisServer do
     {:noreply, %{state | eredis_sub_pid: eredis_sub_pid,
                          eredis_pid: eredis_pid,
                          status: :connected,
-                         node_ref: make_node_ref(eredis_pid, state.namespace),
-                         reconnect_attemps: 0}}
+                         node_ref: make_node_ref(eredis_pid, state.namespace)}}
   end
 
   defp make_node_ref(eredis_pid, namespace) do

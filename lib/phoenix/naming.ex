@@ -57,17 +57,17 @@ defmodule Phoenix.Naming do
 
   ## Examples
 
-      iex> Phoenix.Naming.base_namespace(MyApp.MyChannel)
+      iex> Phoenix.Naming.base_concat(MyApp.MyChannel)
       MyApp
 
-      iex> Phoenix.Naming.base_namespace(MyApp.Admin.MyChannel, PubSub)
+      iex> Phoenix.Naming.base_concat(MyApp.Admin.MyChannel, PubSub)
       MyApp.PubSub
 
-      iex> Phoenix.Naming.base_namespace(MyApp.Admin.MyChannel, "PubSub")
+      iex> Phoenix.Naming.base_concat(MyApp.Admin.MyChannel, "PubSub")
       MyApp.PubSub
 
   """
-  def base_namespace(mod, submodule \\ nil) do
+  def base_concat(mod, submodule \\ nil) do
     mod
     |> Module.split
     |> hd
