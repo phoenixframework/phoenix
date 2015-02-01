@@ -56,7 +56,7 @@ defmodule Phoenix.PubSub do
 
 
   @doc """
-  Subscribes the pid to the pg2 group for the topic
+  Subscribes the pid to the PubSub adapter's topic
 
     * `server` - The Pid registered name of the server
     * `pid` - The subscriber pid to receive pubsub messages
@@ -72,13 +72,13 @@ defmodule Phoenix.PubSub do
     do: call(server, {:subscribe, pid, topic, _link = false})
 
   @doc """
-  Unsubscribes the pid from the pg2 group for the topic
+  Unsubscribes the pid from the PubSub adapter's topic
   """
   def unsubscribe(server, pid, topic),
     do: call(server, {:unsubscribe, pid, topic})
 
   @doc """
-  Returns lists of subscriber pids of members of pg2 group for topic
+  Returns list of subscriber pids of members of PubSub adapter's group for topic
   """
   def subscribers(server, topic),
     do: call(server, {:subscribers, topic})
