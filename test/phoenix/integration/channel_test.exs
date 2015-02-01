@@ -41,7 +41,7 @@ defmodule Phoenix.Integration.ChannelTest do
   end
 
   defmodule Router do
-    use Phoenix.Router
+    use Phoenix.Router, pubsub_server: :my_app_pub
 
     def call(conn, opts) do
       Logger.disable(self)

@@ -18,7 +18,7 @@ defmodule Phoenix.Transports.LongPoller do
   be called first before sending requests to `poll` or `publish`
   """
   def open(conn, _) do
-    {conn, _server_pid} = start_session(conn)
+    {conn, _priv_topic, _server_pid} = start_session(conn)
     send_resp(conn, :ok, "")
   end
 
@@ -31,23 +31,39 @@ defmodule Phoenix.Transports.LongPoller do
   """
   def poll(conn, _params) do
     case resume_session(conn) do
-      {:ok, conn, server_pid}     -> listen(conn, server_pid)
+      {:ok, conn, priv_topic}     -> listen(conn, priv_topic)
       {:error, conn, :terminated} -> send_resp(conn, :gone, "")
     end
   end
-  defp listen(conn, server_pid) do
+  defp listen(conn, priv_topic) do
     timeout_ms = timeout_window_ms(conn)
-    set_active_listener(server_pid, self)
+    flush_local_buffer()
+    :ok = broadcast_from(conn, priv_topic, :flush)
 
     receive do
       {:messages, msgs} ->
-        ack(server_pid, msgs)
+        :ok = ack(conn, priv_topic, msgs)
         json(conn, msgs)
     after
       timeout_ms ->
-        ack(server_pid, [])
+        :ok = ack(conn, priv_topic, [])
         send_resp(conn, :no_content, "")
     end
+  end
+
+  defp flush_local_buffer do
+    receive do
+      {:messages, _msgs} -> flush_local_buffer()
+    after 0 -> :ok
+    end
+  end
+
+  defp subscribe(conn, priv_topic) do
+    Phoenix.PubSub.subscribe(router_module(conn).pubsub_server(), self, priv_topic)
+  end
+
+  defp broadcast_from(conn, priv_topic, msg) do
+    Phoenix.PubSub.broadcast_from(router_module(conn).pubsub_server(), self, priv_topic, msg)
   end
 
   @doc """
@@ -58,17 +74,17 @@ defmodule Phoenix.Transports.LongPoller do
   """
   def publish(conn, message) do
     case resume_session(conn) do
-      {:ok, conn, server_pid}     -> dispatch_publish(conn, message, server_pid)
+      {:ok, conn, priv_topic}     -> dispatch_publish(conn, message, priv_topic)
       {:error, conn, :terminated} -> send_resp(conn, :gone, "")
     end
   end
 
-  defp dispatch_publish(conn, message, server_pid) do
+  defp dispatch_publish(conn, message, priv_topic) do
     msg = Message.from_map!(message)
 
-    case dispatch(server_pid, msg) do
-      {:ok, _socket}             -> send_resp(conn, :ok, "")
-      {:error, _socket, _reason} -> send_resp(conn, :unauthorized, "")
+    case dispatch(conn, priv_topic, msg) do
+      :ok               -> send_resp(conn, :ok, "")
+      {:error, _reason} -> send_resp(conn, :unauthorized, "")
     end
   end
 
@@ -79,28 +95,25 @@ defmodule Phoenix.Transports.LongPoller do
   """
   def start_session(conn) do
     router = router_module(conn)
-    child  = [router, timeout_window_ms(conn)]
+    priv_topic =
+      "phx:lp:"
+      |> Kernel.<>(Base.encode64(:crypto.strong_rand_bytes(16)))
+      |> Kernel.<>(to_string(get_req_header(conn, "x-request-id")))
+
+    child = [router, timeout_window_ms(conn), priv_topic]
     {:ok, server_pid} = Supervisor.start_child(LongPoller.Supervisor, child)
-    conn = put_session_with_salt(conn, server_pid)
+    conn = put_session(conn, session_key(conn), priv_topic)
 
-    {conn, server_pid}
-  end
-
-  # Serialized longpoll server pid into session and harden with random salt
-  defp put_session_with_salt(conn, server_pid) do
-    key = session_key(conn)
-    conn
-    |> put_session(key, :erlang.term_to_binary(server_pid))
-    |> put_session("#{key}_salt", :crypto.strong_rand_bytes(16) |> Base.encode64)
+    {conn, priv_topic, server_pid}
   end
 
   @doc """
   Finds the `Phoenix.LongPoller.Server` server from the session
   """
   def resume_session(conn) do
-    case longpoll_pid(conn) do
-      {:ok, pid}            -> {:ok, conn, pid}
-      :nopid                -> {:error, conn, :terminated}
+    case longpoll_topic(conn) do
+      {:ok, priv_topic}     -> {:ok, conn, priv_topic}
+      :notopic              -> {:error, conn, :terminated}
       {:error, :terminated} -> {:error, conn, :terminated}
     end
   end
@@ -108,15 +121,16 @@ defmodule Phoenix.Transports.LongPoller do
   @doc """
   Retrieves the serialized `Phoenix.LongPoller.Server` pid from the session
   """
-  def longpoll_pid(conn) do
+  def longpoll_topic(conn) do
     case get_session(conn, session_key(conn)) do
-      nil -> :nopid
-      bin ->
-        pid = :erlang.binary_to_term(bin)
-        if Process.alive?(pid) do
-          {:ok, pid}
-        else
-          {:error, :terminated}
+      nil -> :notopic
+      priv_topic ->
+        :ok = subscribe(conn, priv_topic)
+        :ok = broadcast_from(conn, priv_topic, :ping)
+        receive do
+          :pong -> {:ok, priv_topic}
+        after
+          1000  -> {:error, :terminated}
         end
     end
   end
@@ -126,25 +140,29 @@ defmodule Phoenix.Transports.LongPoller do
 
   To be called after buffered messages have been relayed to client
   """
-  def ack(server_pid, messages) do
-    :ok = GenServer.call(server_pid, {:ack, messages})
+  def ack(conn, priv_topic, messages) do
+    :ok = broadcast_from(conn, priv_topic, {:ack, messages})
+    receive do
+      {:ok, :ack} -> :ok
+    after
+      1000 -> :error
+    end
   end
 
-  defp session_key(conn), do: "#{router_module(conn)}_longpoll_pid"
-
-  @doc """
-  Sets the active listener process. Called by polling `conn`
-  """
-  def set_active_listener(server_pid, listener_pid) do
-    GenServer.call(server_pid, {:set_active_listener, listener_pid})
-  end
+  defp session_key(conn), do: "#{router_module(conn)}_longpoll_topic"
 
   @doc """
   Dispatches deserialized `%Phoenix.Socket.Message{}` from client to
   `Phoenix.LongPoller.Server`
   """
-  def dispatch(server_pid, message) do
-    GenServer.call(server_pid, {:dispatch, message})
+  def dispatch(conn, priv_topic, msg) do
+    :ok = broadcast_from(conn, priv_topic, {:dispatch, msg})
+    receive do
+      {:ok, :dispatch}            -> :ok
+      {:error, :dispatch, reason} -> {:error, reason}
+    after
+      1000 -> {:error, :timeout}
+    end
   end
 
   defp timeout_window_ms(conn) do

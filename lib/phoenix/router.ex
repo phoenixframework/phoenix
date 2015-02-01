@@ -173,8 +173,12 @@ defmodule Phoenix.Router do
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
 
   @doc false
-  defmacro __using__(_opts) do
+  defmacro __using__(opts) do
     quote do
+      opts = unquote(opts)
+      @pubsub_server opts[:pubsub_server] ||
+        Phoenix.Naming.base_concat(__MODULE__, "PubSub")
+      def pubsub_server, do: @pubsub_server
       unquote(prelude())
       unquote(plug())
     end
