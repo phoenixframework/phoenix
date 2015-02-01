@@ -35,6 +35,7 @@ defmodule Phoenix.Mixfile do
      {:ex_doc, "~> 0.7", only: :docs},
      {:inch_ex, "~> 0.2", only: :docs},
      {:eredis, github: "wooga/eredis", optional: true},
+     {:poolboy, "~> 1.4.2", optional: true},
      {:websocket_client, github: "jeremyong/websocket_client", only: :test}]
   end
 

@@ -8,8 +8,6 @@ defmodule Phoenix.PubSub.RedisServer do
   See `Phoenix.PubSub.Redis` for details and configuration options.
   """
 
-  @defaults [host: "127.0.0.1", port: 6379, password: ""]
-
   @reconnect_after_ms 5000
   @redis_msg_vsn 1
 
@@ -24,10 +22,17 @@ defmodule Phoenix.PubSub.RedisServer do
   Broadcasts message to redis. To be only called from {:perform, {m, f, a}}
   response to clients
   """
-  def broadcast(eredis_pid, namespace, redis_msg) do
-    case :eredis.q(eredis_pid, ["PUBLISH", namespace, redis_msg]) do
-      {:ok, _}         -> :ok
-      {:error, reason} -> {:error, reason}
+  def broadcast(namespace, pool_name, redis_msg) do
+    :poolboy.transaction pool_name, fn eredis_conn ->
+      case GenServer.call(eredis_conn, :eredis) do
+        {:ok, eredis_pid} ->
+          case :eredis.q(eredis_pid, ["PUBLISH", namespace, redis_msg]) do
+            {:ok, _}         -> :ok
+            {:error, reason} -> {:error, reason}
+          end
+
+        {:error, reason} -> {:error, reason}
+      end
     end
   end
 
@@ -39,19 +44,13 @@ defmodule Phoenix.PubSub.RedisServer do
   pass off reconnection handling once we find an initial connection.
   """
   def init(opts) do
-    server_name = Keyword.fetch!(opts, :name)
-    local_name  = Keyword.fetch!(opts, :local_name)
-    opts = Dict.merge(@defaults, opts)
-    opts = Dict.merge(opts, host: String.to_char_list(to_string(opts[:host])),
-                            password: String.to_char_list(to_string(opts[:password])))
-
     Process.flag(:trap_exit, true)
     send(self, :establish_conn)
 
-    {:ok, %{local_name: local_name,
-            namespace: redis_namespace(server_name),
+    {:ok, %{local_name: Keyword.fetch!(opts, :local_name),
+            pool_name: Keyword.fetch!(opts, :pool_name),
+            namespace: redis_namespace(Keyword.fetch!(opts, :name)),
             eredis_sub_pid: nil,
-            eredis_pid: nil,
             status: :disconnected,
             node_ref: nil,
             opts: opts}}
@@ -72,12 +71,9 @@ defmodule Phoenix.PubSub.RedisServer do
     {:reply, response, state}
   end
 
-  def handle_call({:broadcast, from_pid, topic, msg}, _from, %{status: :disconnected} = state) do
-    {:reply, {:error, :disconnected}, state}
-  end
   def handle_call({:broadcast, from_pid, topic, msg}, _from, state) do
     redis_msg = {@redis_msg_vsn, state.node_ref, from_pid, topic, msg}
-    resp = {:perform, {__MODULE__, :broadcast, [state.eredis_pid, state.namespace, redis_msg]}}
+    resp = {:perform, {__MODULE__, :broadcast, [state.namespace, state.pool_name, redis_msg]}}
     {:reply, resp, state}
   end
 
@@ -101,6 +97,11 @@ defmodule Phoenix.PubSub.RedisServer do
     {:noreply, state}
   end
 
+  def handle_info({:EXIT, eredis_sub_pid, _}, %{eredis_sub_pid: eredis_sub_pid} = state) do
+    send(self, :establish_conn)
+    {:noreply, %{state | status: :disconnected, eredis_sub_pid: nil}}
+  end
+
   @doc """
   Connection establishment and shutdown loop
 
@@ -117,7 +118,7 @@ defmodule Phoenix.PubSub.RedisServer do
 
   def handle_info({:eredis_connected, _client_pid}, state) do
     Logger.info "redis connection re-established"
-    establish_success(state.eredis_sub_pid, state.eredis_pid, state)
+    establish_success(state.eredis_sub_pid, state)
   end
 
   def handle_info({:eredis_disconnected, _client_pid}, state) do
@@ -130,27 +131,15 @@ defmodule Phoenix.PubSub.RedisServer do
   end
   def terminate(_reason, state) do
     :eredis_client.stop(state.eredis_sub_pid)
-    :eredis_client.stop(state.eredis_pid)
     :ok
   end
 
   defp redis_namespace(server_name), do: "phx:#{server_name}"
 
   defp handle_establish_conn(state) do
-    case {:eredis_sub.start_link(state.opts), :eredis.start_link(state.opts)} do
-      {{:ok, eredis_sub_pid}, {:ok, eredis_pid}} ->
-        establish_success(eredis_sub_pid, eredis_pid, state)
-
-      {{:ok, eredis_sub_pid}, _} ->
-        :ok = :eredis_client.stop(eredis_sub_pid)
-        establish_failed(state)
-
-      {_, {:ok, eredis_pid}} ->
-        :ok = :eredis_client.stop(eredis_pid)
-        establish_failed(state)
-
-      _error ->
-        establish_failed(state)
+    case :eredis_sub.start_link(state.opts) do
+      {:ok, eredis_sub_pid} -> establish_success(eredis_sub_pid, state)
+      _error                -> establish_failed(state)
      end
   end
   defp establish_failed(state) do
@@ -158,18 +147,21 @@ defmodule Phoenix.PubSub.RedisServer do
     :timer.send_after(@reconnect_after_ms, :establish_conn)
     {:noreply, %{state | status: :disconnected}}
   end
-  defp establish_success(eredis_sub_pid, eredis_pid, state) do
+  defp establish_success(eredis_sub_pid, state) do
     :eredis_sub.controlling_process(eredis_sub_pid)
     :eredis_sub.subscribe(eredis_sub_pid, [state.namespace])
 
     {:noreply, %{state | eredis_sub_pid: eredis_sub_pid,
-                         eredis_pid: eredis_pid,
                          status: :connected,
-                         node_ref: make_node_ref(eredis_pid, state.namespace)}}
+                         node_ref: make_node_ref(state)}}
   end
 
-  defp make_node_ref(eredis_pid, namespace) do
-    {:ok, count} = :eredis.q(eredis_pid, ["INCR", "#{namespace}:node_counter"])
-    count
+  defp make_node_ref(state) do
+    :poolboy.transaction state.pool_name, fn eredis_conn ->
+      {:ok, eredis_pid} = GenServer.call(eredis_conn, :eredis)
+      {:ok, count} = :eredis.q(eredis_pid, ["INCR", "#{state.namespace}:node_counter"])
+
+      count
+    end
   end
 end
