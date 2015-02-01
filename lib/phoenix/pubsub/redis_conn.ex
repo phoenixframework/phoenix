@@ -34,6 +34,6 @@ defmodule Phoenix.PubSub.RedisConn do
     {:noreply, state}
   end
 
-  def terminate({:disconnected, _}), do: :ok
-  def terminate({pid, _}), do: :eredis_client.stop(pid)
+  def terminate(_reason, {:disconnected, _}), do: :ok
+  def terminate(_reason, {pid, _}), do: :eredis_client.stop(pid)
 end
