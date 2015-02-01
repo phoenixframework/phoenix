@@ -10,7 +10,7 @@ defmodule Phoenix.PubSub.PG2 do
       children = [
         ...
         worker(...),
-        supervisor(Phoenix.PubSub.PG2, [[name: MyApp.PubSub]]),
+        supervisor(Phoenix.PubSub.PG2, [MyApp.PubSub]),
       ]
 
 

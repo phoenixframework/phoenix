@@ -131,7 +131,6 @@ defmodule Phoenix.PubSub.RedisServer do
   end
   def terminate(_reason, state) do
     :eredis_client.stop(state.eredis_sub_pid)
-    :ok
   end
 
   defp redis_namespace(server_name), do: "phx:#{server_name}"
