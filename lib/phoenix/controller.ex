@@ -726,6 +726,6 @@ defmodule Phoenix.Controller do
 
   @doc false
   def __layout__(controller_module) do
-    Phoenix.Naming.base_namespace(controller_module, "LayoutView")
+    Phoenix.Naming.base_concat(controller_module, "LayoutView")
   end
 end
