@@ -44,10 +44,7 @@ defmodule Phoenix.Transports.WebSocket do
   def ws_init(conn) do
     serializer = Dict.fetch!(endpoint_module(conn).config(:transports), :websocket_serializer)
     timeout = Dict.fetch!(endpoint_module(conn).config(:transports), :websocket_timeout)
-    {:ok, %{router: router_module(conn),
-            sockets: HashDict.new,
-            pubsub_server: Map.fetch!(conn.private, :pubsub_server),
-            serializer: serializer}, timeout}
+    {:ok, %{router: router_module(conn), sockets: HashDict.new, serializer: serializer}, timeout}
   end
 
   @doc """

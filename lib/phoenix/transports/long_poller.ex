@@ -3,6 +3,8 @@ defmodule Phoenix.Transports.LongPoller do
 
   @moduledoc false
 
+  @pubsub_timeout_ms 1000
+
   alias Phoenix.Socket.Message
   alias Phoenix.Transports.LongPoller
 
@@ -51,21 +53,6 @@ defmodule Phoenix.Transports.LongPoller do
     end
   end
 
-  defp flush_local_buffer do
-    receive do
-      {:messages, _msgs} -> flush_local_buffer()
-    after 0 -> :ok
-    end
-  end
-
-  defp subscribe(conn, priv_topic) do
-    Phoenix.PubSub.subscribe(router_module(conn).pubsub_server(), self, priv_topic)
-  end
-
-  defp broadcast_from(conn, priv_topic, msg) do
-    Phoenix.PubSub.broadcast_from(router_module(conn).pubsub_server(), self, priv_topic, msg)
-  end
-
   @doc """
   Publishes a `%Phoenix.Socket.Message{}` to a channel
 
@@ -98,9 +85,9 @@ defmodule Phoenix.Transports.LongPoller do
     priv_topic =
       "phx:lp:"
       |> Kernel.<>(Base.encode64(:crypto.strong_rand_bytes(16)))
-      |> Kernel.<>(to_string(get_req_header(conn, "x-request-id")))
+      |> Kernel.<>(:os.timestamp() |> Tuple.to_list |> Enum.join(""))
 
-    child = [router, timeout_window_ms(conn), priv_topic]
+    child = [router, timeout_window_ms(conn), priv_topic, pubsub_server(conn)]
     {:ok, server_pid} = Supervisor.start_child(LongPoller.Supervisor, child)
     conn = put_session(conn, session_key(conn), priv_topic)
 
@@ -130,7 +117,7 @@ defmodule Phoenix.Transports.LongPoller do
         receive do
           :pong -> {:ok, priv_topic}
         after
-          1000  -> {:error, :terminated}
+          @pubsub_timeout_ms  -> {:error, :terminated}
         end
     end
   end
@@ -145,7 +132,7 @@ defmodule Phoenix.Transports.LongPoller do
     receive do
       {:ok, :ack} -> :ok
     after
-      1000 -> :error
+      @pubsub_timeout_ms -> :error
     end
   end
 
@@ -161,11 +148,28 @@ defmodule Phoenix.Transports.LongPoller do
       {:ok, :dispatch}            -> :ok
       {:error, :dispatch, reason} -> {:error, reason}
     after
-      1000 -> {:error, :timeout}
+      @pubsub_timeout_ms -> {:error, :timeout}
     end
   end
 
   defp timeout_window_ms(conn) do
     get_in endpoint_module(conn).config(:transports), [:longpoller_window_ms]
+  end
+
+  defp pubsub_server(conn), do: router_module(conn).pubsub_server()
+
+  defp flush_local_buffer do
+    receive do
+      {:messages, _msgs} -> flush_local_buffer()
+    after 0 -> :ok
+    end
+  end
+
+  defp subscribe(conn, priv_topic) do
+    Phoenix.PubSub.subscribe(pubsub_server(conn), self, priv_topic)
+  end
+
+  defp broadcast_from(conn, priv_topic, msg) do
+    Phoenix.PubSub.broadcast_from(pubsub_server(conn), self, priv_topic, msg)
   end
 end

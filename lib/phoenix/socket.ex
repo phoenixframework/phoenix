@@ -41,7 +41,7 @@ defmodule Phoenix.Socket do
   Sets channel of socket
   """
   def put_channel(socket, channel) do
-    %Socket{socket | channel: channel, pubsub_server: channel.pubsub_server()}
+    %Socket{socket | channel: channel}
   end
 
   @doc """

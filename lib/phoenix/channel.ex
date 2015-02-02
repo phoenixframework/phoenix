@@ -103,16 +103,6 @@ defmodule Phoenix.Channel do
    but you'll need to define the catch-all clause yourself once you define an
    `handle_out/3` clause.
 
-
-  ### PubSub Configuration
-
-  By default, the name of the channel's PubSub server is inflected from the
-  channel module name, which should match the PubSub adapter name(s) in
-  your supervision tree. You can override the defaults by passing the
-  `:pubsub_server` option to `use`:
-
-      use Phoenix.Channel, pubsub_server: :my_special_pub
-
   """
 
   use Behaviour
@@ -134,48 +124,34 @@ defmodule Phoenix.Channel do
                                                                      {:leave, Socket.t} |
                                                                      {:error, reason :: term, Socket.t}
 
-  defmacro __using__(options \\ []) do
+  defmacro __using__(_) do
     quote do
-      options = unquote(options)
       @behaviour unquote(__MODULE__)
-      @pubsub_server options[:pubsub_server] ||
-        Phoenix.Naming.base_concat(__MODULE__, "PubSub")
-
 
       import unquote(__MODULE__), only: [reply: 3]
       import Phoenix.Socket
 
-      def pubsub_server, do: @pubsub_server
-
       def leave(message, socket), do: {:ok, socket}
-
-      def handle_in(_event, _message, socket), do: {:ok, socket}
 
       def handle_out(event, message, socket) do
         reply(socket, event, message)
       end
 
-      def broadcast_from(socket = %Socket{}, event, msg) do
-        Phoenix.Channel.broadcast_from(@pubsub_server, socket, event, msg)
+      def broadcast_from(%Socket{} = socket, event, msg) do
+        Phoenix.Channel.broadcast_from(socket.pubsub_server, socket, event, msg)
       end
-      def broadcast_from!(socket = %Socket{}, event, msg) do
-        Phoenix.Channel.broadcast_from!(@pubsub_server, socket, event, msg)
-      end
-      def broadcast_from(from, topic, event, msg) when is_map(msg) do
-        Phoenix.Channel.broadcast_from(@pubsub_server, from, topic, event, msg)
-      end
-      def broadcast_from!(from, topic, event, msg) when is_map(msg) do
-        Phoenix.Channel.broadcast_from!(@pubsub_server, from, topic, event, msg)
+      def broadcast_from!(%Socket{} = socket, event, msg) do
+        Phoenix.Channel.broadcast_from!(socket.pubsub_server, socket, event, msg)
       end
 
-      def broadcast(topic_or_socket, event, msg) do
-        Phoenix.Channel.broadcast(@pubsub_server, topic_or_socket, event, msg)
+      def broadcast(%Socket{} = socket, event, msg) do
+        Phoenix.Channel.broadcast(socket.pubsub_server, socket, event, msg)
       end
-      def broadcast!(topic_or_socket, event, msg) do
-        Phoenix.Channel.broadcast!(@pubsub_server, topic_or_socket, event, msg)
+      def broadcast!(%Socket{} = socket, event, msg) do
+        Phoenix.Channel.broadcast!(socket.pubsub_server, socket, event, msg)
       end
 
-      defoverridable leave: 2, handle_out: 3, handle_in: 3
+      defoverridable leave: 2, handle_out: 3
     end
   end
 
