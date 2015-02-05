@@ -12,7 +12,7 @@ defmodule Phoenix.Endpoint.Adapter do
 
     children = [
       worker(Phoenix.Config, [otp_app, module, defaults(otp_app, module)]),
-      supervisor(Phoenix.Endpoint.Supervisor, [otp_app, module])
+      supervisor(Phoenix.Endpoint.Server, [otp_app, module])
     ]
 
     Supervisor.start_link(children, strategy: :rest_for_one, name: module)

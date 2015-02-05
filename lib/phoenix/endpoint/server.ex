@@ -1,4 +1,4 @@
-defmodule Phoenix.Endpoint.Supervisor do
+defmodule Phoenix.Endpoint.Server do
   # The supervisor for the underlying handlers.
   @moduledoc false
 
