@@ -3,26 +3,10 @@ defmodule Phoenix.Transports.LongPoller do
 
   @moduledoc false
 
-  @pubsub_timeout_ms 1000
-
   alias Phoenix.Socket.Message
   alias Phoenix.Transports.LongPoller
 
-  # TODO: If we are going to decouple this from the router,
-  # we need to plug the parameter parser and use its own
-  # session thing
-
-  plug :fetch_session
   plug :action
-
-  @doc """
-  Starts `Phoenix.LongPoller.Server` and stores pid in session. This action must
-  be called first before sending requests to `poll` or `publish`
-  """
-  def open(conn, _) do
-    {conn, _priv_topic, _server_pid} = start_session(conn)
-    send_resp(conn, :ok, "")
-  end
 
   @doc """
   Listens for `%Phoenix.Socket.Message{}`'s from `Phoenix.LongPoller.Server`.
@@ -34,22 +18,28 @@ defmodule Phoenix.Transports.LongPoller do
   def poll(conn, _params) do
     case resume_session(conn) do
       {:ok, conn, priv_topic}     -> listen(conn, priv_topic)
-      {:error, conn, :terminated} -> send_resp(conn, :gone, "")
+      {:error, conn, :terminated} ->
+        {conn, priv_topic, sig, _server_pid} = start_session(conn)
+
+        conn
+        |> put_status(:gone)
+        |> json(%{token: priv_topic, sig: sig})
     end
   end
   defp listen(conn, priv_topic) do
-    timeout_ms = timeout_window_ms(conn)
-    flush_local_buffer()
-    :ok = broadcast_from(conn, priv_topic, :flush)
+    ref = :erlang.make_ref()
+    :ok = broadcast_from(conn, priv_topic, {:flush, ref})
 
     receive do
-      {:messages, msgs} ->
+      {:messages, msgs, ^ref} ->
         :ok = ack(conn, priv_topic, msgs)
-        json(conn, msgs)
+        json(conn, %{messages: msgs, token: conn.params["token"], sig: conn.params["sig"]})
     after
-      timeout_ms ->
+      timeout_window_ms(conn) ->
         :ok = ack(conn, priv_topic, [])
-        send_resp(conn, :no_content, "")
+        conn
+        |> put_status(:no_content)
+        |> json(%{token: conn.params["token"], sig: conn.params["sig"]})
     end
   end
 
@@ -62,7 +52,7 @@ defmodule Phoenix.Transports.LongPoller do
   def publish(conn, message) do
     case resume_session(conn) do
       {:ok, conn, priv_topic}     -> dispatch_publish(conn, message, priv_topic)
-      {:error, conn, :terminated} -> send_resp(conn, :gone, "")
+      {:error, conn, :terminated} -> conn |> put_status(:gone) |> json(%{})
     end
   end
 
@@ -89,16 +79,15 @@ defmodule Phoenix.Transports.LongPoller do
 
     child = [router, timeout_window_ms(conn), priv_topic, pubsub_server(conn)]
     {:ok, server_pid} = Supervisor.start_child(LongPoller.Supervisor, child)
-    conn = put_session(conn, session_key(conn), priv_topic)
 
-    {conn, priv_topic, server_pid}
+    {conn, priv_topic, sign(conn, priv_topic), server_pid}
   end
 
   @doc """
   Finds the `Phoenix.LongPoller.Server` server from the session
   """
   def resume_session(conn) do
-    case longpoll_topic(conn) do
+    case verify_longpoll_topic(conn) do
       {:ok, priv_topic}     -> {:ok, conn, priv_topic}
       :notopic              -> {:error, conn, :terminated}
       {:error, :terminated} -> {:error, conn, :terminated}
@@ -106,21 +95,24 @@ defmodule Phoenix.Transports.LongPoller do
   end
 
   @doc """
-  Retrieves the serialized `Phoenix.LongPoller.Server` pid from the session
+  Retrieves the serialized `Phoenix.LongPoller.Server` pid from the encrypted token
   """
-  def longpoll_topic(conn) do
-    case get_session(conn, session_key(conn)) do
-      nil -> :notopic
-      priv_topic ->
+  def verify_longpoll_topic(%Plug.Conn{params: %{"token" => token, "sig" => sig}} = conn) do
+    case verify(conn, token, sig) do
+      {:ok, priv_topic} ->
+        ref = :erlang.make_ref()
         :ok = subscribe(conn, priv_topic)
-        :ok = broadcast_from(conn, priv_topic, :ping)
+        :ok = broadcast_from(conn, priv_topic, {:subscribe, ref})
         receive do
-          :pong -> {:ok, priv_topic}
+          {:ok, :subscribe, ^ref} -> {:ok, priv_topic}
         after
-          @pubsub_timeout_ms  -> {:error, :terminated}
+          pubsub_timeout_ms(conn)  -> {:error, :terminated}
         end
+
+      _ -> :notopic
     end
   end
+  def verify_longpoll_topic(_conn), do: :notopic
 
   @doc """
   Ack's a list of `%Phoenix.Socket.Messages{}`'s back to the `Phoenix.LongPoller.Server`
@@ -128,27 +120,27 @@ defmodule Phoenix.Transports.LongPoller do
   To be called after buffered messages have been relayed to client
   """
   def ack(conn, priv_topic, messages) do
-    :ok = broadcast_from(conn, priv_topic, {:ack, messages})
+    ref = :erlang.make_ref()
+    :ok = broadcast_from(conn, priv_topic, {:ack, messages, ref})
     receive do
-      {:ok, :ack} -> :ok
+      {:ok, :ack, ^ref} -> :ok
     after
-      @pubsub_timeout_ms -> :error
+      pubsub_timeout_ms(conn) -> :error
     end
   end
-
-  defp session_key(conn), do: "#{router_module(conn)}_longpoll_topic"
 
   @doc """
   Dispatches deserialized `%Phoenix.Socket.Message{}` from client to
   `Phoenix.LongPoller.Server`
   """
   def dispatch(conn, priv_topic, msg) do
-    :ok = broadcast_from(conn, priv_topic, {:dispatch, msg})
+    ref = :erlang.make_ref()
+    :ok = broadcast_from(conn, priv_topic, {:dispatch, msg, ref})
     receive do
-      {:ok, :dispatch}            -> :ok
-      {:error, :dispatch, reason} -> {:error, reason}
+      {:ok, :dispatch, ^ref}            -> :ok
+      {:error, :dispatch, reason, ^ref} -> {:error, reason}
     after
-      @pubsub_timeout_ms -> {:error, :timeout}
+      pubsub_timeout_ms(conn) -> {:error, :timeout}
     end
   end
 
@@ -156,14 +148,11 @@ defmodule Phoenix.Transports.LongPoller do
     get_in endpoint_module(conn).config(:transports), [:longpoller_window_ms]
   end
 
-  defp pubsub_server(conn), do: router_module(conn).pubsub_server()
-
-  defp flush_local_buffer do
-    receive do
-      {:messages, _msgs} -> flush_local_buffer()
-    after 0 -> :ok
-    end
+  defp pubsub_timeout_ms(conn) do
+    get_in endpoint_module(conn).config(:transports), [:longpoller_pubsub_timeout_ms]
   end
+
+  defp pubsub_server(conn), do: router_module(conn).__pubsub_server__()
 
   defp subscribe(conn, priv_topic) do
     Phoenix.PubSub.subscribe(pubsub_server(conn), self, priv_topic)
@@ -171,5 +160,16 @@ defmodule Phoenix.Transports.LongPoller do
 
   defp broadcast_from(conn, priv_topic, msg) do
     Phoenix.PubSub.broadcast_from(pubsub_server(conn), self, priv_topic, msg)
+  end
+
+  defp sign(conn, priv_topic) do
+    Plug.Crypto.MessageVerifier.sign(priv_topic, conn.secret_key_base)
+  end
+
+  defp verify(conn, priv_topic, sig) do
+    case Plug.Crypto.MessageVerifier.verify(sig, conn.secret_key_base) do
+      {:ok, ^priv_topic} -> {:ok, priv_topic}
+      _ -> :error
+    end
   end
 end

@@ -128,27 +128,21 @@ defmodule Phoenix.Channel do
     quote do
       @behaviour unquote(__MODULE__)
 
-      import unquote(__MODULE__), only: [reply: 3]
+      import unquote(__MODULE__), only: [reply: 3,
+                                         broadcast: 3,
+                                         broadcast: 4,
+                                         broadcast!: 3,
+                                         broadcast!: 4,
+                                         broadcast_from: 3,
+                                         broadcast_from: 4,
+                                         broadcast_from!: 3,
+                                         broadcast_from!: 4]
       import Phoenix.Socket
 
       def leave(message, socket), do: {:ok, socket}
 
       def handle_out(event, message, socket) do
         reply(socket, event, message)
-      end
-
-      def broadcast_from(%Socket{} = socket, event, msg) do
-        Phoenix.Channel.broadcast_from(socket.pubsub_server, socket, event, msg)
-      end
-      def broadcast_from!(%Socket{} = socket, event, msg) do
-        Phoenix.Channel.broadcast_from!(socket.pubsub_server, socket, event, msg)
-      end
-
-      def broadcast(%Socket{} = socket, event, msg) do
-        Phoenix.Channel.broadcast(socket.pubsub_server, socket, event, msg)
-      end
-      def broadcast!(%Socket{} = socket, event, msg) do
-        Phoenix.Channel.broadcast!(socket.pubsub_server, socket, event, msg)
       end
 
       defoverridable leave: 2, handle_out: 3
@@ -166,6 +160,9 @@ defmodule Phoenix.Channel do
       :ok
 
   """
+  def broadcast(%Socket{} = socket, event, msg) do
+    Phoenix.Channel.broadcast(socket.pubsub_server, socket, event, msg)
+  end
   def broadcast(server, topic, event, message) when is_binary(topic) do
     broadcast_from server, :none, topic, event, message
   end
@@ -178,6 +175,9 @@ defmodule Phoenix.Channel do
   Same as `Phoenix.Channel.broadcast/4`, but
   raises `Phoenix.PubSub.BroadcastError` if broadcast fails
   """
+  def broadcast!(%Socket{} = socket, event, msg) do
+    Phoenix.Channel.broadcast!(socket.pubsub_server, socket, event, msg)
+  end
   def broadcast!(server, topic, event, message) when is_binary(topic) do
     broadcast_from! server, :none, topic, event, message
   end
@@ -197,6 +197,9 @@ defmodule Phoenix.Channel do
       :ok
 
   """
+  def broadcast_from(%Socket{} = socket, event, msg) do
+    Phoenix.Channel.broadcast_from(socket.pubsub_server, socket, event, msg)
+  end
   def broadcast_from(pubsub_server, socket = %Socket{}, event, message) do
     broadcast_from(pubsub_server, socket.pid, socket.topic, event, message)
     {:ok, socket}
@@ -214,6 +217,9 @@ defmodule Phoenix.Channel do
   Same as `Phoenix.Channel.broadcast_from/4`, but
   raises `Phoenix.PubSub.BroadcastError` if broadcast fails
   """
+  def broadcast_from!(%Socket{} = socket, event, msg) do
+    Phoenix.Channel.broadcast_from!(socket.pubsub_server, socket, event, msg)
+  end
   def broadcast_from!(pubsub_server, socket = %Socket{}, event, message) do
     broadcast_from!(pubsub_server, socket.pid, socket.topic, event, message)
     {:ok, socket}

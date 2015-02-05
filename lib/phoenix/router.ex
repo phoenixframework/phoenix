@@ -179,7 +179,7 @@ defmodule Phoenix.Router do
       @pubsub_server opts[:pubsub_server] ||
         Phoenix.Naming.base_concat(__MODULE__, "PubSub")
 
-      def pubsub_server, do: @pubsub_server
+      def __pubsub_server__, do: @pubsub_server
 
       def broadcast_from(from, topic, event, msg) when is_map(msg) do
         Phoenix.Channel.broadcast_from(@pubsub_server, from, topic, event, msg)

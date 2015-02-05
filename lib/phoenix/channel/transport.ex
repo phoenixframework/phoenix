@@ -66,7 +66,7 @@ defmodule Phoenix.Channel.Transport do
   def dispatch(msg = %Message{}, sockets, adapter_pid, router, transport) do
     socket = %Socket{pid: adapter_pid,
                      router: router,
-                     pubsub_server: router.pubsub_server(),
+                     pubsub_server: router.__pubsub_server__(),
                      topic: msg.topic,
                      transport: transport}
 

@@ -59,15 +59,15 @@ defmodule Phoenix.Transports.LongPoller.Server do
   @doc """
   Dispatches client `%Phoenix.Socket.Messages{}` back through Transport layer
   """
-  def handle_info({:dispatch, message}, state) do
+  def handle_info({:dispatch, message, ref}, state) do
     message
     |> Transport.dispatch(state.sockets, self, state.router, LongPoller)
     |> case do
       {:ok, sockets} ->
-        :ok = broadcast_from(state, {:ok, :dispatch})
+        :ok = broadcast_from(state, {:ok, :dispatch, ref})
         {:noreply, %{state | sockets: sockets}, state.window_ms}
       {:error, reason, sockets} ->
-        :ok = broadcast_from(state, {:error, :dispatch, reason})
+        :ok = broadcast_from(state, {:error, :dispatch, reason, ref})
         {:noreply, %{state | sockets: sockets}, state.window_ms}
     end
   end
@@ -89,14 +89,15 @@ defmodule Phoenix.Transports.LongPoller.Server do
     {:noreply, %{state | sockets: sockets}, state.window_ms}
   end
 
-  def handle_info(:ping, state) do
-    :ok = broadcast_from(state, :pong)
+  def handle_info({:subscribe, ref}, state) do
+    :ok = broadcast_from(state, {:ok, :subscribe, ref})
+
     {:noreply, state, state.window_ms}
   end
 
-  def handle_info(:flush, state) do
+  def handle_info({:flush, ref}, state) do
     if Enum.any?(state.buffer) do
-      :ok = broadcast_from(state, {:messages, Enum.reverse(state.buffer)})
+      :ok = broadcast_from(state, {:messages, Enum.reverse(state.buffer), ref})
     end
     {:noreply, state, state.window_ms}
   end
@@ -107,9 +108,10 @@ defmodule Phoenix.Transports.LongPoller.Server do
   `:ack` calls to the server also represent the client listener
   closing for repoll.
   """
-  def handle_info({:ack, messages}, state) do
+  def handle_info({:ack, messages, ref}, state) do
+    # TODO remove --
     buffer = state.buffer -- messages
-    :ok = broadcast_from(state, {:ok, :ack})
+    :ok = broadcast_from(state, {:ok, :ack, ref})
 
     {:noreply, %{state | buffer: buffer}, state.window_ms}
   end
