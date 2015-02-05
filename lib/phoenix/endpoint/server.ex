@@ -38,13 +38,13 @@ defmodule Phoenix.Endpoint.Server do
       |> Keyword.put_new(:otp_app, otp_app)
       |> Keyword.put_new(:port, port)
 
-    Keyword.put(config, :port, to_integer(config[:port]))
+    Keyword.put(config, :port, get_port_value(config[:port]))
   end
 
-  defp to_integer({ :dynamic, var_name }) do
-    var_name |> System.get_env |> to_integer
+  defp get_port_value({ :dynamic, var_name }) do
+    var_name |> System.get_env |> get_port_value
   end
-  defp to_integer(function) when is_function(function), do: function.() |> to_integer
-  defp to_integer(binary)   when is_binary(binary),     do: String.to_integer(binary)
-  defp to_integer(integer)  when is_integer(integer),   do: integer
+  defp get_port_value(function) when is_function(function), do: function.() |> get_port_value
+  defp get_port_value(binary)   when is_binary(binary),     do: String.to_integer(binary)
+  defp get_port_value(integer)  when is_integer(integer),   do: integer
 end
