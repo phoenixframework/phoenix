@@ -41,6 +41,7 @@ defmodule Phoenix.Endpoint.Server do
     Keyword.put(config, :port, to_integer(config[:port]))
   end
 
-  defp to_integer(binary)  when is_binary(binary),   do: String.to_integer(binary)
-  defp to_integer(integer) when is_integer(integer), do: integer
+  defp to_integer(function) when is_function(function), do: function.() |> to_integer
+  defp to_integer(binary)   when is_binary(binary),     do: String.to_integer(binary)
+  defp to_integer(integer)  when is_integer(integer),   do: integer
 end
