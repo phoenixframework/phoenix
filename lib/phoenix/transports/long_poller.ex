@@ -6,6 +6,8 @@ defmodule Phoenix.Transports.LongPoller do
   alias Phoenix.Socket.Message
   alias Phoenix.Transports.LongPoller
 
+
+
   plug :action
 
   @doc """
@@ -163,13 +165,28 @@ defmodule Phoenix.Transports.LongPoller do
   end
 
   defp sign(conn, priv_topic) do
-    Plug.Crypto.MessageVerifier.sign(priv_topic, conn.secret_key_base)
+    salt = derive_salt(conn, to_string(pubsub_server(conn)), [])
+    Plug.Crypto.MessageVerifier.sign(priv_topic, conn.secret_key_base <> salt)
   end
 
   defp verify(conn, priv_topic, sig) do
-    case Plug.Crypto.MessageVerifier.verify(sig, conn.secret_key_base) do
+    salt = derive_salt(conn, to_string(pubsub_server(conn)), [])
+    case Plug.Crypto.MessageVerifier.verify(sig, conn.secret_key_base <> salt) do
       {:ok, ^priv_topic} -> {:ok, priv_topic}
       _ -> :error
     end
+  end
+
+  defp derive_salt(%Plug.Conn{secret_key_base: base}, _key, _key_opts)
+    when base == nil or byte_size(base) < 64 do
+
+    raise "conn.secret_key_base must be at least 64 bytes for longpoll token verification"
+  end
+  defp derive_salt(conn, key, key_opts) do
+    crypto_opts =
+      key_opts
+      |> Keyword.merge(get_in endpoint_module(conn).config(:transports), [:longpoller_crypto])
+
+    Plug.Crypto.KeyGenerator.generate(conn.secret_key_base, key, crypto_opts)
   end
 end

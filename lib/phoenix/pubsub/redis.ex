@@ -13,13 +13,22 @@ defmodule Phoenix.PubSub.Redis do
         supervisor(Phoenix.PubSub.Redis, [MyApp.PubSub]),
       ]
 
-  and add `:eredis`, and `:poolboy` to your deps:
+  add `:eredis`, and `:poolboy` to your deps:
 
       defp deps do
         [{:eredis, github: "wooga/eredis"},
          {:poolboy, "~> 1.4.2"},
-        ...
+        ...]
       end
+
+  and add `:poolboy` to your applications:
+
+      def application do
+        [mod: {MyApp, []},
+         applications: [..., :phoenix, :poolboy],
+         ...]
+      end
+
 
 
     * `name` - The required name to register the PubSub processes, ie: `MyApp.PubSub`
