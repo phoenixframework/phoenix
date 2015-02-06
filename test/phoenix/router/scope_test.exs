@@ -37,11 +37,12 @@ defmodule Phoenix.Router.ScopedRoutingTest do
       end
     end
 
-    scope "/api", Api do
-      get "/users/:id", V1.UserController, :show
+    scope "/api", Api, private: %{private_token: "foo"} do
+      get "/users", V1.UserController, :show
+      get "/users/:id", V1.UserController, :show, private: %{private_token: "bar"}
 
       scope "/v1", alias: V1 do
-        resources "/users", UserController, only: [:delete]
+        resources "/users", UserController, only: [:delete], private: %{private_token: "baz"}
       end
     end
 
@@ -134,5 +135,19 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     assert_raise Phoenix.Router.NoRouteError, fn ->
       call(Router, :get, "http://ba.pang.com/host/users/1")
     end
+  end
+
+  test "private data in scopes" do
+    conn = call(Router, :get, "/api/users")
+    assert conn.status == 200
+    assert conn.private[:private_token] == "foo"
+
+    conn = call(Router, :get, "/api/users/13")
+    assert conn.status == 200
+    assert conn.private[:private_token] == "bar"
+
+    conn = call(Router, :delete, "/api/v1/users/13")
+    assert conn.status == 200
+    assert conn.private[:private_token] == "baz"
   end
 end

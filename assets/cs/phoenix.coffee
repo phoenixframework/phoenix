@@ -211,6 +211,8 @@
 
     retryInMs: 5000
     endPoint: null
+    token: null
+    sig: null
     skipHeartbeat: true
     onopen:    -> # noop
     onerror:   -> # noop
@@ -221,40 +223,35 @@
       @states          = exports.Socket.states
       @upgradeEndpoint = @normalizeEndpoint(endPoint)
       @pollEndpoint    = @upgradeEndpoint + if /\/$/.test(endPoint) then "poll" else "/poll"
-      @readyState      = @states.connecting
-      @open()
-
-
-    open: ->
-      exports.Ajax.request "POST", @upgradeEndpoint, "application/json", null, (status, resp) =>
-        if status is 200
-          @readyState = @states.open
-          @onopen()
-          @poll()
-        else
-          @onerror()
+      @readyState      = @states.open
+      @poll()
 
 
     normalizeEndpoint: (endPoint) ->
       endPoint.replace("ws://", "http://").replace("wss://", "https://")
 
+    endpointURL: -> @pollEndpoint + "?=token=#{@token ? ""}&sig=#{@sig ? ""}"
 
     poll: ->
       return unless @readyState is @states.open
-      exports.Ajax.request "GET", @pollEndpoint, "application/json", null, (status, resp) =>
+      exports.Ajax.request "GET", @endpointURL(), "application/json", null, (status, resp) =>
+        {@token, @sig, messages} = JSON.parse(resp)
         switch status
           when 200
-            @onmessage(data: JSON.stringify(msg)) for msg in JSON.parse(resp)
+            @onmessage(data: JSON.stringify(msg)) for msg in messages
             @poll()
           when 204
             @poll()
+          when 410
+            @onopen()
+            @poll()
           else
             @close()
-            setTimeout (=> @open()), @retryInMs
+            setTimeout (=> @poll()), @retryInMs
 
 
     send: (body) ->
-      exports.Ajax.request "POST", @pollEndpoint, "application/json", body, (status, resp) =>
+      exports.Ajax.request "POST", @endpointURL(), "application/json", body, (status, resp) =>
         @onerror() unless status is 200
 
 

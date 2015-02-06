@@ -14,14 +14,14 @@ defmodule Phoenix.Router.Resource do
 
     * :path - the path as string (not normalized)
     * :param - the param to be used in routes (not normalized)
-    * :as - the helper name (not normalized)
     * :controller - the controller as an atom
     * :actions - a list of actions as atoms
+    * :route - the context for resource routes
     * :member - the context for member routes
     * :collection - the context for collection routes
 
   """
-  defstruct [:path, :actions, :param, :as, :controller, :member, :collection]
+  defstruct [:path, :actions, :param, :route, :controller, :route, :member, :collection]
   @type t :: %Resource{}
 
   @doc """
@@ -30,20 +30,27 @@ defmodule Phoenix.Router.Resource do
   """
   def build(path, controller, options) when
       is_binary(path) and is_atom(controller) and is_list(options) do
-    actions = extract_actions(options)
-    alias   = Keyword.get(options, :alias)
-    param   = Keyword.get(options, :param, @default_param_key)
-    name    = Keyword.get(options, :name, Phoenix.Naming.resource_name(controller, "Controller"))
-    as      = Keyword.get(options, :as, name)
+    alias    = Keyword.get(options, :alias)
+    param    = Keyword.get(options, :param, @default_param_key)
+    name     = Keyword.get(options, :name, Phoenix.Naming.resource_name(controller, "Controller"))
+    as       = Keyword.get(options, :as, name)
+    singular = Keyword.get(options, :singular)
+    private  = Keyword.get(options, :private, %{})
+    actions  = extract_actions(options, singular)
 
-    collection = [path: path, as: as]
-    member     = [path: Path.join(path, ":#{name}_#{param}"), as: as, alias: alias]
+    route       = [as: as, private: private]
+    collection  = [path: path, as: as, private: private]
+    member_path = if singular, do: path, else: Path.join(path, ":#{name}_#{param}")
+    member      = [path: member_path, as: as, alias: alias, private: private]
 
-    %Resource{path: path, actions: actions, param: param, as: as,
+    %Resource{path: path, actions: actions, param: param, route: route,
               member: member, collection: collection, controller: controller}
   end
 
-  defp extract_actions(opts) do
-    Keyword.get(opts, :only) || (@actions -- Keyword.get(opts, :except, []))
+  defp extract_actions(opts, singular) do
+    Keyword.get(opts, :only) || (default_actions(singular) -- Keyword.get(opts, :except, []))
   end
+
+  defp default_actions(_singular=true), do: @actions -- [:index]
+  defp default_actions(_singular),      do: @actions
 end

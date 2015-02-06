@@ -5,7 +5,7 @@ defmodule Phoenix.Router.Scope do
   @stack :phoenix_router_scopes
   @pipes :phoenix_pipeline_scopes
 
-  defstruct path: nil, alias: nil, as: nil, pipes: [], host: nil
+  defstruct path: nil, alias: nil, as: nil, pipes: [], host: nil, private: %{}
 
   @doc """
   Initializes the scope.
@@ -18,10 +18,12 @@ defmodule Phoenix.Router.Scope do
   @doc """
   Builds a route based on the top of the stack.
   """
-  def route(module, verb, path, controller, action, options) do
-    as = Keyword.get(options, :as, Phoenix.Naming.resource_name(controller, "Controller"))
-    {path, host, alias, as, pipe_through} = join(module, path, controller, as)
-    Phoenix.Router.Route.build(verb, path, host, alias, action, as, pipe_through)
+  def route(module, verb, path, controller, action, opts) do
+    private = Keyword.get(opts, :private, %{})
+    as      = Keyword.get(opts, :as, Phoenix.Naming.resource_name(controller, "Controller"))
+
+    {path, host, alias, as, pipes, private} = join(module, path, controller, as, private)
+    Phoenix.Router.Route.build(verb, path, host, alias, action, as, pipes, private)
   end
 
   @doc """
@@ -69,11 +71,12 @@ defmodule Phoenix.Router.Scope do
     alias = Keyword.get(opts, :alias)
     if alias, do: alias = Atom.to_string(alias)
 
-    scope = struct(Scope, path: path,
-                          alias: alias,
-                          as: Keyword.get(opts, :as),
-                          host: Keyword.get(opts, :host),
-                          pipes: [])
+    scope = %Scope{path: path,
+                   alias: alias,
+                   as: Keyword.get(opts, :as),
+                   host: Keyword.get(opts, :host),
+                   pipes: [],
+                   private: Keyword.get(opts, :private, %{})}
 
     update_stack(module, fn stack -> [scope|stack] end)
   end
@@ -90,10 +93,10 @@ defmodule Phoenix.Router.Scope do
   """
   def inside_scope?(module), do: length(get_stack(module)) > 1
 
-  defp join(module, path, alias, as) do
+  defp join(module, path, alias, as, private) do
     stack = get_stack(module)
     {join_path(stack, path), find_host(stack), join_alias(stack, alias),
-     join_as(stack, as), join_pipe_through(stack)}
+     join_as(stack, as), join_pipe_through(stack), join_private(stack, private)}
   end
 
   defp join_path(stack, path) do
@@ -115,6 +118,10 @@ defmodule Phoenix.Router.Scope do
     [as|extract(stack, :as)]
     |> Enum.reverse()
     |> Enum.join("_")
+  end
+
+  defp join_private(stack, private) do
+    Enum.reduce stack, private, &Map.merge(&1.private, &2)
   end
 
   defp join_pipe_through(stack) do

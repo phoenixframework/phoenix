@@ -39,7 +39,7 @@ See these [`0.7.x` to `0.8.0` upgrade instructions](https://gist.github.com/chri
   * [Mix] Ensure Phoenix can serve and code reload inside umbrella apps
 
 * Backwards incompatible changes
-  * [Endpoint] Endpoints should now be explicitly started in your application supervision tree. Just add `worker(YourApp.Endpoint, [])` to your supervision tree in `lib/your_app.ex`
+  * [Endpoint] Endpoints should now be explicitly started in your application supervision tree. Just add `supervisor(YourApp.Endpoint, [])` to your supervision tree in `lib/your_app.ex`
   * `mix phoenix.start` was renamed to `mix phoenix.server`
   * [Endpoint] The `YourApp.Endpoint.start/0` function was removed. You can simply remove it from your `test/test_helper.ex` file
   * [Router] Generated named paths now expect a conn arg. For example, `MyApp.Router.Helpers.page_path(conn, :show, "hello")` instead of `MyApp.Router.Helpers.page_path(:show, "hello")`

@@ -8,9 +8,8 @@ defmodule <%= application_module %> do
 
     children = [
       # Start the endpoint when the application starts
-      worker(<%= application_module %>.Endpoint, []),
+      supervisor(<%= application_module %>.Endpoint, []),
       supervisor(Phoenix.PubSub.PG2, [<%= inspect(pubsub_server) %>]),
-
       # Here you could define other workers and supervisors as children
       # worker(<%= application_module %>.Worker, [arg1, arg2, arg3]),
     ]

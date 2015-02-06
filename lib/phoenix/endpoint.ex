@@ -37,7 +37,7 @@ defmodule Phoenix.Endpoint do
   of your application supervision tree too (which is again done by
   default in generated applications):
 
-      worker(YourApp.Endpoint, [])
+      supervisor(YourApp.Endpoint, [])
 
   ## Endpoint configuration
 

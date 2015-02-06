@@ -32,48 +32,43 @@ defmodule Phoenix.Transports.LongPoller.Server do
   If the server receives no message within `window_ms`, it terminates and
   clients are responsible for opening a new session.
   """
-  def start_link(router, window_ms) do
-    GenServer.start_link(__MODULE__, [router, window_ms])
+  def start_link(router, window_ms, priv_topic, pubsub_server) do
+    GenServer.start_link(__MODULE__, [router, window_ms, priv_topic, pubsub_server])
   end
 
   @doc false
-  def init([router, window_ms]) do
-    state = %{listener: nil, buffer: [], router: router, sockets: HashDict.new, window_ms: window_ms * 2}
+  def init([router, window_ms, priv_topic, pubsub_server]) do
+    Process.flag(:trap_exit, true)
+
+    state = %{buffer: [],
+              router: router,
+              sockets: HashDict.new,
+              window_ms: window_ms * 2,
+              pubsub_server: pubsub_server,
+              priv_topic: priv_topic}
+
+    :ok = Phoenix.PubSub.subscribe(state.pubsub_server, self, state.priv_topic)
     {:ok, state, state.window_ms}
   end
 
   @doc """
-  Sets active listener pid as the receiver of broadcasted messages
+  Stops the server
   """
-  def handle_call({:set_active_listener, pid}, _from, state) do
-    if Enum.any?(state.buffer) do
-      send pid, {:messages, Enum.reverse(state.buffer)}
-    end
-    {:reply, :ok, %{state | listener: pid}, state.window_ms}
-  end
-
-  # TODO: %Messages{}'s need unique ids so we can properly ack them
-  @doc """
-  Handles acknowledged messages from client and removes from buffer.
-  `:ack` calls to the server also represent the client listener
-  closing for repoll.
-  """
-  def handle_call({:ack, messages}, _from, state) do
-    buffer = state.buffer -- messages
-    {:reply, :ok, %{state | buffer: buffer, listener: nil}, state.window_ms}
-  end
+  def handle_call(:stop, _from, state), do: {:stop, :shutdown, :ok, state}
 
   @doc """
   Dispatches client `%Phoenix.Socket.Messages{}` back through Transport layer
   """
-  def handle_call({:dispatch, message}, _from, state) do
+  def handle_info({:dispatch, message, ref}, state) do
     message
     |> Transport.dispatch(state.sockets, self, state.router, LongPoller)
     |> case do
       {:ok, sockets} ->
-        {:reply, {:ok, sockets}, %{state | sockets: sockets}, state.window_ms}
+        :ok = broadcast_from(state, {:ok, :dispatch, ref})
+        {:noreply, %{state | sockets: sockets}, state.window_ms}
       {:error, reason, sockets} ->
-        {:reply, {:error, reason, sockets}, %{state | sockets: sockets}, state.window_ms}
+        :ok = broadcast_from(state, {:error, :dispatch, reason, ref})
+        {:noreply, %{state | sockets: sockets}, state.window_ms}
     end
   end
 
@@ -82,9 +77,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   """
   def handle_info({:socket_reply, message = %Message{}}, state) do
     buffer = [message | state.buffer]
-    if state.listener && Process.alive?(state.listener) do
-      send state.listener, {:messages, buffer}
-    end
+    :ok = broadcast_from(state, {:messages, Enum.reverse(buffer)})
     {:noreply, %{state | buffer: buffer}, state.window_ms}
   end
   def handle_info({:socket_broadcast, message = %Message{}}, %{sockets: sockets} = state) do
@@ -96,9 +89,36 @@ defmodule Phoenix.Transports.LongPoller.Server do
     {:noreply, %{state | sockets: sockets}, state.window_ms}
   end
 
+  def handle_info({:subscribe, ref}, state) do
+    :ok = broadcast_from(state, {:ok, :subscribe, ref})
+
+    {:noreply, state, state.window_ms}
+  end
+
+  def handle_info({:flush, ref}, state) do
+    if Enum.any?(state.buffer) do
+      :ok = broadcast_from(state, {:messages, Enum.reverse(state.buffer), ref})
+    end
+    {:noreply, state, state.window_ms}
+  end
+
+  # TODO: %Messages{}'s need unique ids so we can properly ack them
+  @doc """
+  Handles acknowledged messages from client and removes from buffer.
+  `:ack` calls to the server also represent the client listener
+  closing for repoll.
+  """
+  def handle_info({:ack, messages, ref}, state) do
+    # TODO remove --
+    buffer = state.buffer -- messages
+    :ok = broadcast_from(state, {:ok, :ack, ref})
+
+    {:noreply, %{state | buffer: buffer}, state.window_ms}
+  end
+
 
   def handle_info(:timeout, state) do
-    {:stop, :shutdown, state}
+    {:stop, :normal, state}
   end
 
   @doc """
@@ -107,5 +127,9 @@ defmodule Phoenix.Transports.LongPoller.Server do
   def terminate(reason, state) do
     :ok = Transport.dispatch_leave(state.sockets, reason)
     :ok
+  end
+
+  defp broadcast_from(state, msg) do
+    Phoenix.PubSub.broadcast_from(state.pubsub_server, self, state.priv_topic, msg)
   end
 end

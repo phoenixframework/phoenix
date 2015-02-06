@@ -419,6 +419,10 @@
 
       LongPoller.prototype.endPoint = null;
 
+      LongPoller.prototype.token = null;
+
+      LongPoller.prototype.sig = null;
+
       LongPoller.prototype.skipHeartbeat = true;
 
       LongPoller.prototype.onopen = function() {};
@@ -433,40 +437,31 @@
         this.states = exports.Socket.states;
         this.upgradeEndpoint = this.normalizeEndpoint(endPoint);
         this.pollEndpoint = this.upgradeEndpoint + (/\/$/.test(endPoint) ? "poll" : "/poll");
-        this.readyState = this.states.connecting;
-        this.open();
+        this.readyState = this.states.open;
+        this.poll();
       }
-
-      LongPoller.prototype.open = function() {
-        return exports.Ajax.request("POST", this.upgradeEndpoint, "application/json", null, (function(_this) {
-          return function(status, resp) {
-            if (status === 200) {
-              _this.readyState = _this.states.open;
-              _this.onopen();
-              return _this.poll();
-            } else {
-              return _this.onerror();
-            }
-          };
-        })(this));
-      };
 
       LongPoller.prototype.normalizeEndpoint = function(endPoint) {
         return endPoint.replace("ws://", "http://").replace("wss://", "https://");
+      };
+
+      LongPoller.prototype.endpointURL = function() {
+        var _ref, _ref1;
+        return this.pollEndpoint + ("?=token=" + ((_ref = this.token) != null ? _ref : "") + "&sig=" + ((_ref1 = this.sig) != null ? _ref1 : ""));
       };
 
       LongPoller.prototype.poll = function() {
         if (this.readyState !== this.states.open) {
           return;
         }
-        return exports.Ajax.request("GET", this.pollEndpoint, "application/json", null, (function(_this) {
+        return exports.Ajax.request("GET", this.endpointURL(), "application/json", null, (function(_this) {
           return function(status, resp) {
-            var msg, _i, _len, _ref;
+            var messages, msg, _i, _len, _ref;
+            _ref = JSON.parse(resp), _this.token = _ref.token, _this.sig = _ref.sig, messages = _ref.messages;
             switch (status) {
               case 200:
-                _ref = JSON.parse(resp);
-                for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-                  msg = _ref[_i];
+                for (_i = 0, _len = messages.length; _i < _len; _i++) {
+                  msg = messages[_i];
                   _this.onmessage({
                     data: JSON.stringify(msg)
                   });
@@ -474,10 +469,13 @@
                 return _this.poll();
               case 204:
                 return _this.poll();
+              case 410:
+                _this.onopen();
+                return _this.poll();
               default:
                 _this.close();
                 return setTimeout((function() {
-                  return _this.open();
+                  return _this.poll();
                 }), _this.retryInMs);
             }
           };
@@ -485,7 +483,7 @@
       };
 
       LongPoller.prototype.send = function(body) {
-        return exports.Ajax.request("POST", this.pollEndpoint, "application/json", body, (function(_this) {
+        return exports.Ajax.request("POST", this.endpointURL(), "application/json", body, (function(_this) {
           return function(status, resp) {
             if (status !== 200) {
               return _this.onerror();

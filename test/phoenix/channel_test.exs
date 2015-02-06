@@ -64,7 +64,7 @@ defmodule Phoenix.ChannelTest do
   end
 
   defmodule Router do
-    use Phoenix.Router
+    use Phoenix.Router, pubsub_server: :my_app_pub
 
     socket "/ws" do
       channel "topic1:*", MyChannel
