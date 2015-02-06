@@ -152,7 +152,7 @@ defmodule Phoenix.Transports.LongPoller do
     get_in endpoint_module(conn).config(:transports), [:longpoller_pubsub_timeout_ms]
   end
 
-  defp pubsub_server(conn), do: router_module(conn).__pubsub_server__()
+  defp pubsub_server(conn), do: endpoint_module(conn).__pubsub_server__()
 
   defp subscribe(conn, priv_topic) do
     Phoenix.PubSub.subscribe(pubsub_server(conn), self, priv_topic)

@@ -173,29 +173,8 @@ defmodule Phoenix.Router do
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
 
   @doc false
-  defmacro __using__(opts) do
+  defmacro __using__(_) do
     quote do
-      opts = unquote(opts)
-      @pubsub_server opts[:pubsub_server] ||
-        Phoenix.Naming.base_concat(__MODULE__, "PubSub")
-
-      def __pubsub_server__, do: @pubsub_server
-
-      def broadcast_from(from, topic, event, msg) when is_map(msg) do
-        Phoenix.Channel.broadcast_from(@pubsub_server, from, topic, event, msg)
-      end
-      def broadcast_from!(from, topic, event, msg) when is_map(msg) do
-        Phoenix.Channel.broadcast_from!(@pubsub_server, from, topic, event, msg)
-      end
-
-      def broadcast(topic, event, msg) do
-        Phoenix.Channel.broadcast(@pubsub_server, topic, event, msg)
-      end
-
-      def broadcast!(topic, event, msg) do
-        Phoenix.Channel.broadcast!(@pubsub_server, topic, event, msg)
-      end
-
       unquote(prelude())
       unquote(plug())
     end

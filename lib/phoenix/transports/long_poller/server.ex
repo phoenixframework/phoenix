@@ -61,7 +61,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   """
   def handle_info({:dispatch, message, ref}, state) do
     message
-    |> Transport.dispatch(state.sockets, self, state.router, LongPoller)
+    |> Transport.dispatch(state.sockets, self, state.router, state.pubsub_server, LongPoller)
     |> case do
       {:ok, sockets} ->
         :ok = broadcast_from(state, {:ok, :dispatch, ref})

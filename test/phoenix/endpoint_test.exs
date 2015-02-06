@@ -2,7 +2,9 @@ defmodule Phoenix.EndpointTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
-  @config [url: [host: "example.com"]]
+  @config [url: [host: "example.com"],
+           server: false,
+           pubsub: [adapter: Phoenix.PubSub.PG2, name: :endpoint_pub]]
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
 
   defmodule Endpoint do
@@ -15,7 +17,7 @@ defmodule Phoenix.EndpointTest do
     end
   end
 
-  setup do
+  setup_all do
     Endpoint.start_link()
     :ok
   end
@@ -55,6 +57,26 @@ defmodule Phoenix.EndpointTest do
 
   test "does not include code reloading if disabled" do
     assert is_map Endpoint.call(conn(:get, "/"), [])
+  end
+
+  test "injects pubsub broadcast with configured server" do
+    Phoenix.PubSub.subscribe(:endpoint_pub, self, "sometopic")
+
+    Endpoint.broadcast_from(:none, "sometopic", "event1", %{key: :val})
+    assert_receive {:socket_broadcast, %Phoenix.Socket.Message{
+      event: "event1", payload: %{key: :val}, topic: "sometopic"}}
+
+    Endpoint.broadcast_from!(:none, "sometopic", "event2", %{key: :val})
+    assert_receive {:socket_broadcast, %Phoenix.Socket.Message{
+      event: "event2", payload: %{key: :val}, topic: "sometopic"}}
+
+    Endpoint.broadcast("sometopic", "event3", %{key: :val})
+    assert_receive {:socket_broadcast, %Phoenix.Socket.Message{
+      event: "event3", payload: %{key: :val}, topic: "sometopic"}}
+
+    Endpoint.broadcast!("sometopic", "event4", %{key: :val})
+    assert_receive {:socket_broadcast, %Phoenix.Socket.Message{
+      event: "event4", payload: %{key: :val}, topic: "sometopic"}}
   end
 
   defp static_vsn(file) do

@@ -9,7 +9,7 @@ defmodule Phoenix.SocketTest do
   end
 
   defmodule MyChannel do
-    use Phoenix.Channel, pubsub_server: :my_app_pub
+    use Phoenix.Channel
     def join(_topic, _msg, socket), do: {:ok, socket}
     def handle_in(_event, _msg, socket), do: {:ok, socket}
   end

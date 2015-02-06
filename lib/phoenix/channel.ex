@@ -103,6 +103,28 @@ defmodule Phoenix.Channel do
    but you'll need to define the catch-all clause yourself once you define an
    `handle_out/3` clause.
 
+
+  ## Broadcasting to an external topic
+  In some cases, you will want to broadcast messages without the context of a `soceket`.
+  This could be for broadcasint from within your channel to an external topic, or
+  broadcasting from elsewhere in your application like a Controller or GenServer.
+  For these cases, you can broadcast from your Endpoint and the configure PubSub
+  server will be used:
+
+      # within channel
+      def handle_in("new:msg", %{"uid" => uid, "body" => body}, socket) do
+        broadcast! socket, "new:msg", %{uid: uid, body: body}
+        MyApp.Endpoint.broadcast! "rooms:superadmin", "new:msg", %{uid: uid, body: body}
+      end
+
+      # within controller
+      def create(conn, params) do
+        ...
+        MyApp.Endpoint.broadcast! "rooms:" <> rid, "new:msg", %{uid: uid, body: body}
+        MyApp.Endpoint.broadcast! "rooms:superadmin", "new:msg", %{uid: uid, body: body}
+        redirect conn, to: "/"
+      end
+
   """
 
   use Behaviour
@@ -128,15 +150,7 @@ defmodule Phoenix.Channel do
     quote do
       @behaviour unquote(__MODULE__)
 
-      import unquote(__MODULE__), only: [reply: 3,
-                                         broadcast: 3,
-                                         broadcast: 4,
-                                         broadcast!: 3,
-                                         broadcast!: 4,
-                                         broadcast_from: 3,
-                                         broadcast_from: 4,
-                                         broadcast_from!: 3,
-                                         broadcast_from!: 4]
+      import unquote(__MODULE__)
       import Phoenix.Socket
 
       def leave(message, socket), do: {:ok, socket}

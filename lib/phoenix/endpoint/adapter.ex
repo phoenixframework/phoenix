@@ -47,7 +47,8 @@ defmodule Phoenix.Endpoint.Adapter do
      reloadable_paths: ["web"],
      secret_key_base: nil,
      server: Application.get_env(:phoenix, :serve_endpoints, false),
-     url: [host: "localhost"]]
+     url: [host: "localhost"],
+     pubsub: []]
   end
 
   defp render_errors(module) do

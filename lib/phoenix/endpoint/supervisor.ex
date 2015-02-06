@@ -6,7 +6,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   use Supervisor
 
   def start_link(otp_app, endpoint) do
-    if endpoint.config(:server) do
+    if endpoint.config(:server) || endpoint.config(:pubsub)[:adapter] do
       Supervisor.start_link(__MODULE__, {otp_app, endpoint})
     else
       :ignore
@@ -16,17 +16,27 @@ defmodule Phoenix.Endpoint.Supervisor do
   def init({otp_app, endpoint}) do
     import Supervisor.Spec
 
+    pubsub_conf = endpoint.config(:pubsub)
     children = []
 
-    if config = endpoint.config(:http) do
-      children =
-        [@handler.child_spec(:http, endpoint, default(config, otp_app, 4000))|children]
+    if endpoint.config(:server) do
+      if config = endpoint.config(:http) do
+        children =
+          [@handler.child_spec(:http, endpoint, default(config, otp_app, 4000))|children]
+      end
+
+      if config = endpoint.config(:https) do
+        {:ok, _} = Application.ensure_all_started(:ssl)
+        children =
+          [@handler.child_spec(:https, endpoint, default(config, otp_app, 4040))|children]
+      end
     end
 
-    if config = endpoint.config(:https) do
-      {:ok, _} = Application.ensure_all_started(:ssl)
+    if adapter = pubsub_conf[:adapter] do
+      server_name = endpoint.__pubsub_server__()
+      opts = pubsub_conf[:options] || []
       children =
-        [@handler.child_spec(:https, endpoint, default(config, otp_app, 4040))|children]
+        [supervisor(adapter, [server_name, opts]) | children]
     end
 
     supervise(children, strategy: :one_for_one)

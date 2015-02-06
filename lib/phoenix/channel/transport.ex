@@ -63,10 +63,10 @@ defmodule Phoenix.Channel.Transport do
 
   The returned `HashDict` of `%Phoenix.Socket{}`s must be held by the adapter
   """
-  def dispatch(msg = %Message{}, sockets, adapter_pid, router, transport) do
+  def dispatch(msg = %Message{}, sockets, adapter_pid, router, pubsub_server, transport) do
     socket = %Socket{pid: adapter_pid,
                      router: router,
-                     pubsub_server: router.__pubsub_server__(),
+                     pubsub_server: pubsub_server,
                      topic: msg.topic,
                      transport: transport}
 

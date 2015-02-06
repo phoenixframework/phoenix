@@ -8,23 +8,26 @@ defmodule Phoenix.Integration.ChannelTest do
   alias Phoenix.Integration.WebsocketClient
   alias Phoenix.Integration.HTTPClient
   alias Phoenix.Socket.Message
+  alias Phoenix.PubSub.PG2
+  alias __MODULE__.Endpoint
 
   @port 5807
   @window_ms 100
   @pubsub_window_ms 100
   @ensure_window_timeout_ms @window_ms * 4
 
-  Application.put_env(:channel_app, __MODULE__.Endpoint, [
+  Application.put_env(:channel_app, Endpoint, [
     https: false,
     http: [port: @port],
     secret_key_base: String.duplicate("abcdefgh", 8),
     debug_errors: false,
     transports: [longpoller_window_ms: @window_ms, longpoller_pubsub_timeout_ms: @pubsub_window_ms],
-    server: true
+    server: true,
+    pubsub: [adapter: PG2, name: :int_pub]
   ])
 
   defmodule RoomChannel do
-    use Phoenix.Channel, pubsub_server: :my_app_pub
+    use Phoenix.Channel
 
     def join(_topic, message, socket) do
       reply socket, "join", %{status: "connected"}
@@ -42,7 +45,7 @@ defmodule Phoenix.Integration.ChannelTest do
   end
 
   defmodule Router do
-    use Phoenix.Router, pubsub_server: :my_app_pub
+    use Phoenix.Router
 
     def call(conn, opts) do
       Logger.disable(self)
@@ -151,8 +154,8 @@ defmodule Phoenix.Integration.ChannelTest do
     assert resp.status == 204
 
     # messages are buffered between polls
-    Phoenix.Channel.broadcast! :my_app_pub, "rooms:lobby", "user:entered", %{name: "José"}
-    Phoenix.Channel.broadcast! :my_app_pub, "rooms:lobby", "user:entered", %{name: "Sonny"}
+    Phoenix.Channel.broadcast! :int_pub, "rooms:lobby", "user:entered", %{name: "José"}
+    Phoenix.Channel.broadcast! :int_pub, "rooms:lobby", "user:entered", %{name: "Sonny"}
     resp = poll(:get, "/ws/poll", session)
     session = Map.take(resp.body, ["token", "sig"])
     assert resp.status == 200
@@ -169,7 +172,7 @@ defmodule Phoenix.Integration.ChannelTest do
     assert resp.status == 204
 
     # generic events
-    Phoenix.PubSub.subscribe(:my_app_pub, self, "rooms:lobby")
+    Phoenix.PubSub.subscribe(:int_pub, self, "rooms:lobby")
     resp = poll :post, "/ws/poll", Map.take(resp.body, ["token", "sig"]), %{
       "topic" => "rooms:lobby",
       "event" => "new:msg",
@@ -183,7 +186,7 @@ defmodule Phoenix.Integration.ChannelTest do
 
     # unauthorized events
     capture_log fn ->
-      Phoenix.PubSub.subscribe(:my_app_pub, self, "rooms:private-room")
+      Phoenix.PubSub.subscribe(:int_pub, self, "rooms:private-room")
       resp = poll :post, "/ws/poll", session, %{
         "topic" => "rooms:private-room",
         "event" => "new:msg",
@@ -202,7 +205,7 @@ defmodule Phoenix.Integration.ChannelTest do
         "payload" => %{}
       }
       assert resp.status == 200
-      Phoenix.Channel.broadcast! :my_app_pub, "rooms:lobby", "new:msg", %{body: "Hello lobby"}
+      Phoenix.Channel.broadcast! :int_pub, "rooms:lobby", "new:msg", %{body: "Hello lobby"}
       # poll
       resp = poll(:get, "/ws/poll", session)
       session = Map.take(resp.body, ["token", "sig"])
@@ -227,7 +230,7 @@ defmodule Phoenix.Integration.ChannelTest do
         "payload" => %{}
       }
       assert resp.status == 200
-      Phoenix.PubSub.subscribe(:my_app_pub, self, "rooms:lobby")
+      Phoenix.PubSub.subscribe(:int_pub, self, "rooms:lobby")
       :timer.sleep @ensure_window_timeout_ms
       resp = poll :post, "/ws/poll", session, %{
         "topic" => "rooms:lobby",

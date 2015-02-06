@@ -5,8 +5,10 @@ defmodule Phoenix.PubSub do
   by Channels for pubsub broadcast.
 
   ## PubSub Adapter Contract
-  PubSub adapters need to only respond to a few process-based messages to
-  integrate with Phoenix. PubSub functions send the following messages:
+  PubSub adapters need to only implement `start_link/2` and respond to a few
+  process-based messages to integrate with Phoenix.
+
+  PubSub functions send the following messages:
 
     * `subscribe` -
        sends:        `{:subscribe, pid, topic, link}`
@@ -23,6 +25,10 @@ defmodule Phoenix.PubSub do
        sends          `{:broadcast, :none, topic, message}`
        respond with: `:ok | {:error, reason} {:perform, {m, f a}}`
 
+  Additionally, adapters must implement `start_link/2` with the following format:
+
+      def start_link(pubsub_server_name_to_locally_register, options)
+
 
   ### Offloading work to clients via MFA response
   The `Phoenix.PubSub` API allows any of its functions to handle a
@@ -34,13 +40,13 @@ defmodule Phoenix.PubSub do
 
   ## Example
 
-      iex> PubSub.subscribe(self, "user:123")
+      iex> PubSub.subscribe(MyApp.PubSub, self, "user:123")
       :ok
       iex> Process.info(self)[:messages]
       []
-      iex> PubSub.subscribers("user:123")
+      iex> PubSub.subscribers(MyApp.PubSub, "user:123")
       [#PID<0.169.0>]
-      iex> PubSub.broadcast "user:123", {:user_update, %{id: 123, name: "Shane"}}
+      iex> PubSub.broadcast MyApp.PubSub, "user:123", {:user_update, %{id: 123, name: "Shane"}}
       :ok
       iex> Process.info(self)[:messages]
       {:user_update, %{id: 123, name: "Shane"}}

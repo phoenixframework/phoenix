@@ -11,7 +11,7 @@ defmodule Phoenix.ChannelTest do
   alias Phoenix.Transports.LongPoller
 
   defmodule BlankChannel do
-    use Phoenix.Channel, pubsub_server: :my_app_pub
+    use Phoenix.Channel
     def join(_topic, _msg, socket), do: {:ok, socket}
 
     def handle_in(_event, _msg, socket) do
@@ -20,7 +20,7 @@ defmodule Phoenix.ChannelTest do
   end
 
   defmodule MyChannel do
-    use Phoenix.Channel, pubsub_server: :my_app_pub
+    use Phoenix.Channel
     def join(topic, msg, socket) do
       send socket.pid, {:join, topic}
       msg.(socket)
@@ -64,7 +64,7 @@ defmodule Phoenix.ChannelTest do
   end
 
   defmodule Router do
-    use Phoenix.Router, pubsub_server: :my_app_pub
+    use Phoenix.Router
 
     socket "/ws" do
       channel "topic1:*", MyChannel
@@ -104,38 +104,38 @@ defmodule Phoenix.ChannelTest do
   test "#subscribe/unsubscribe's socket to/from topic" do
     socket = Socket.put_topic(new_socket, "top:subtop")
 
-    assert PubSub.subscribe(:my_app_pub, socket.pid, "top:subtop")
-    assert PubSub.subscribers(:my_app_pub, "top:subtop") |> Enum.to_list == [socket.pid]
-    assert PubSub.unsubscribe(:my_app_pub, socket.pid, "top:subtop")
-    assert PubSub.subscribers(:my_app_pub, "top:subtop") == HashSet.new
+    assert PubSub.subscribe(:phx_pub, socket.pid, "top:subtop")
+    assert PubSub.subscribers(:phx_pub, "top:subtop") |> Enum.to_list == [socket.pid]
+    assert PubSub.unsubscribe(:phx_pub, socket.pid, "top:subtop")
+    assert PubSub.subscribers(:phx_pub, "top:subtop") == HashSet.new
   end
 
   test "#broadcast and #broadcast! broadcasts global message on topic" do
     socket = Socket.put_topic(new_socket, "top:subtop")
 
-    assert Channel.broadcast(:my_app_pub, socket, "event", %{foo: "bar"})
-    assert Channel.broadcast!(:my_app_pub, socket, "event", %{foo: "bar"})
+    assert Channel.broadcast(:phx_pub, socket, "event", %{foo: "bar"})
+    assert Channel.broadcast!(:phx_pub, socket, "event", %{foo: "bar"})
   end
 
 
   test "#broadcast and #broadcast! raises friendly error when message arg isn't a Map" do
     message = "Message argument must be a map"
     assert_raise RuntimeError, message, fn ->
-      Channel.broadcast(:my_app_pub, "topic:subtopic", "event", bar: "foo", foo: "bar")
+      Channel.broadcast(:phx_pub, "topic:subtopic", "event", bar: "foo", foo: "bar")
     end
     assert_raise RuntimeError, message, fn ->
-      Channel.broadcast!(:my_app_pub, "topic:subtopic", "event", bar: "foo", foo: "bar")
+      Channel.broadcast!(:phx_pub, "topic:subtopic", "event", bar: "foo", foo: "bar")
     end
   end
 
   test "#broadcast_from and #broadcast_from! broadcasts message, skipping publisher" do
     socket = new_socket |> Socket.put_topic("top:subtop")
-    PubSub.subscribe(:my_app_pub, socket.pid, "top:subtop")
+    PubSub.subscribe(:phx_pub, socket.pid, "top:subtop")
 
-    assert Channel.broadcast_from(:my_app_pub, socket, "event", %{payload: "hello"})
+    assert Channel.broadcast_from(:phx_pub, socket, "event", %{payload: "hello"})
     refute Enum.any?(Process.info(self)[:messages], &match?(%Message{}, &1))
 
-    assert Channel.broadcast_from!(:my_app_pub, socket, "event", %{payload: "hello"})
+    assert Channel.broadcast_from!(:phx_pub, socket, "event", %{payload: "hello"})
     refute Enum.any?(Process.info(self)[:messages], &match?(%Message{}, &1))
   end
 
@@ -143,20 +143,20 @@ defmodule Phoenix.ChannelTest do
     socket = Socket.put_topic(new_socket, "top:subtop")
     message = "Message argument must be a map"
     assert_raise RuntimeError, message, fn ->
-      Channel.broadcast_from(:my_app_pub, socket, "event", bar: "foo", foo: "bar")
+      Channel.broadcast_from(:phx_pub, socket, "event", bar: "foo", foo: "bar")
     end
     assert_raise RuntimeError, message, fn ->
-      Channel.broadcast_from!(:my_app_pub, socket, "event", bar: "foo", foo: "bar")
+      Channel.broadcast_from!(:phx_pub, socket, "event", bar: "foo", foo: "bar")
     end
   end
 
   test "#broadcast_from/4 and broadcast_from!/4 raises error when msg isn't a Map" do
     message = "Message argument must be a map"
     assert_raise RuntimeError, message, fn ->
-      Channel.broadcast_from(:my_app_pub, self, "topic:subtopic", "event", bar: "foo")
+      Channel.broadcast_from(:phx_pub, self, "topic:subtopic", "event", bar: "foo")
     end
     assert_raise RuntimeError, message, fn ->
-      Channel.broadcast_from!(:my_app_pub, self, "topic:subtopic", "event", bar: "foo")
+      Channel.broadcast_from!(:phx_pub, self, "topic:subtopic", "event", bar: "foo")
     end
   end
 
@@ -193,34 +193,34 @@ defmodule Phoenix.ChannelTest do
     # join
     join = fn ->
       message = join_message(fn socket -> {:ok, socket} end)
-      assert PubSub.subscribers(:my_app_pub, "topic1:subtopic") == HashSet.new
-      Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+      assert PubSub.subscribers(:phx_pub, "topic1:subtopic") == HashSet.new
+      Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, WebSocket)
     end
 
     # incoming leave
     {:ok, sockets} = join.()
     assert HashDict.get(sockets, "topic1:subtopic")
-    assert PubSub.subscribers(:my_app_pub, "topic1:subtopic") |> Enum.to_list == [self]
+    assert PubSub.subscribers(:phx_pub, "topic1:subtopic") |> Enum.to_list == [self]
     # send message that returns {:leave, socket} now that we've joined
     message = %Message{topic: "topic1:subtopic",
                        event: "should:be:going",
                        payload: %{}}
-    {:ok, socks} = Transport.dispatch(message, sockets, self, Router, WebSocket)
+    {:ok, socks} = Transport.dispatch(message, sockets, self, Router, :phx_pub, WebSocket)
     refute HashDict.get(socks, "topic1:subtopic")
     assert socks == HashDict.new
-    assert PubSub.subscribers(:my_app_pub, "topic1:subtopic") == HashSet.new
+    assert PubSub.subscribers(:phx_pub, "topic1:subtopic") == HashSet.new
     assert_received :leave_triggered
 
     # outgoing leave
     {:ok, sockets} = join.()
     assert HashDict.get(sockets, "topic1:subtopic")
-    assert PubSub.subscribers(:my_app_pub, "topic1:subtopic") |> Enum.to_list == [self]
+    assert PubSub.subscribers(:phx_pub, "topic1:subtopic") |> Enum.to_list == [self]
     # send broadcast that returns {:leave, socket} now that we've joined
     msg = %Message{event: "everyone:leave", topic: "topic1:subtopic", payload: %{}}
     {:ok, sockets} = Transport.dispatch_broadcast(sockets, msg)
     refute HashDict.get(sockets, "topic1:subtopic")
     assert sockets == HashDict.new
-    assert PubSub.subscribers(:my_app_pub, "topic1:subtopic") == HashSet.new
+    assert PubSub.subscribers(:phx_pub, "topic1:subtopic") == HashSet.new
     assert_received :everyone_leaving
     assert_received :leave_triggered
   end
@@ -228,46 +228,46 @@ defmodule Phoenix.ChannelTest do
   test "successful join authorizes and subscribes socket to topic" do
     message = join_message(fn socket -> {:ok, socket} end)
 
-    assert PubSub.subscribers(:my_app_pub, "topic1:subtopic") == HashSet.new
-    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    assert PubSub.subscribers(:phx_pub, "topic1:subtopic") == HashSet.new
+    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, WebSocket)
     socket = HashDict.get(sockets, "topic1:subtopic")
     assert socket
     assert Socket.authorized?(socket, "topic1:subtopic")
-    assert PubSub.subscribers(:my_app_pub, "topic1:subtopic") |> Enum.to_list == [socket.pid]
-    assert PubSub.subscribers(:my_app_pub, "topic1:subtopic") |> Enum.to_list == [self]
+    assert PubSub.subscribers(:phx_pub, "topic1:subtopic") |> Enum.to_list == [socket.pid]
+    assert PubSub.subscribers(:phx_pub, "topic1:subtopic") |> Enum.to_list == [self]
   end
 
   test "unsuccessful join denies socket access to topic" do
     message = join_message(fn _socket -> :ignore end)
 
-    assert PubSub.subscribers(:my_app_pub, "topic1:subtopic") == HashSet.new
-    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    assert PubSub.subscribers(:phx_pub, "topic1:subtopic") == HashSet.new
+    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, WebSocket)
     refute HashDict.get(sockets, "topic1:subtopic")
-    refute PubSub.subscribers(:my_app_pub, "topic1:subtopic") |> Enum.to_list == [self]
+    refute PubSub.subscribers(:phx_pub, "topic1:subtopic") |> Enum.to_list == [self]
   end
 
   test "#leave is called when the socket conn closes, and is unsubscribed" do
     message = join_message(fn socket -> {:ok, socket} end)
 
-    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
-    assert PubSub.subscribers(:my_app_pub, "topic1:subtopic") |> Enum.to_list == [self]
+    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, WebSocket)
+    assert PubSub.subscribers(:phx_pub, "topic1:subtopic") |> Enum.to_list == [self]
     Process.put(:leave, fn socket -> {:ok, socket} end)
     Transport.dispatch_leave(sockets, :reason)
-    assert PubSub.subscribers(:my_app_pub, "topic1:subtopic") == HashSet.new
+    assert PubSub.subscribers(:phx_pub, "topic1:subtopic") == HashSet.new
   end
 
   test "#join raise InvalidReturn exception when return type invalid" do
     message = join_message(fn _socket -> :badreturn end)
 
     assert_raise InvalidReturn, fn ->
-      Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+      Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, WebSocket)
     end
   end
 
   test "#leave raise InvalidReturn exception when return type invalid" do
     message = join_message(fn socket -> {:ok, socket} end)
 
-    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, WebSocket)
     sock = HashDict.get(sockets, "topic1:subtopic")
     assert Socket.authorized?(sock, "topic1:subtopic")
     Process.put(:leave, fn _ -> :badreturn end)
@@ -279,7 +279,7 @@ defmodule Phoenix.ChannelTest do
   test "#event raises InvalidReturn exception when return type is invalid" do
     message = join_message(fn socket -> {:ok, socket} end)
 
-    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, WebSocket)
     sock = HashDict.get(sockets, "topic1:subtopic")
     assert Socket.authorized?(sock, "topic1:subtopic")
     message = %Message{topic: "topic1:subtopic",
@@ -287,14 +287,14 @@ defmodule Phoenix.ChannelTest do
                        payload: fn _socket -> :badreturn end}
 
     assert_raise InvalidReturn, fn ->
-      Transport.dispatch(message, sockets, self, Router, WebSocket)
+      Transport.dispatch(message, sockets, self, Router, :phx_pub, WebSocket)
     end
   end
 
   test "returns heartbeat message when received, and does not store socket" do
     msg = %Message{topic: "phoenix", event: "heartbeat", payload: fn _socket -> :badreturn end}
 
-    assert {:ok, sockets} = Transport.dispatch(msg, HashDict.new, self, Router, WebSocket)
+    assert {:ok, sockets} = Transport.dispatch(msg, HashDict.new, self, Router, :phx_pub, WebSocket)
     assert_received {:socket_reply, %Message{topic: "phoenix", event: "heartbeat"}}
     assert sockets == HashDict.new
   end
@@ -308,8 +308,8 @@ defmodule Phoenix.ChannelTest do
   test "handle_out/3 can be overidden for custom broadcast handling" do
     message = join_message(fn socket -> {:ok, socket} end)
 
-    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
-    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router, WebSocket)
+    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, WebSocket)
+    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router, :phx_pub, WebSocket)
     Transport.dispatch_broadcast(sockets, %Message{event: "some:broadcast",
                                                    topic: "topic1:subtopic",
                                                    payload: "hello"})
@@ -320,25 +320,25 @@ defmodule Phoenix.ChannelTest do
     message = %Message{topic: "topic1:somesubtopic",
                        event: "join",
                        payload: fn socket -> {:ok, socket} end}
-    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, WebSocket)
     assert_received {:join, "topic1:somesubtopic"}
 
     message = %Message{topic: "topic1",
                        event: "join",
                        payload: fn socket -> {:ok, socket} end}
-    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router, WebSocket)
+    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router, :phx_pub, WebSocket)
     refute_received {:join, "topic1"}
 
     message = %Message{topic: "topic1:somesubtopic",
                        event: "some:event",
                        payload: fn socket -> {:ok, socket} end}
-    Transport.dispatch(message, sockets, self, Router, WebSocket)
+    Transport.dispatch(message, sockets, self, Router, :phx_pub, WebSocket)
     assert_received {:handle_in, "topic1:somesubtopic"}
 
     message = %Message{topic: "topic1",
                        event: "some:event",
                        payload: fn socket -> {:ok, socket} end}
-    Transport.dispatch(message, sockets, self, Router, WebSocket)
+    Transport.dispatch(message, sockets, self, Router, :phx_pub, WebSocket)
     refute_received {:handle_in, "topic1:somesubtopic"}
   end
 
@@ -346,27 +346,27 @@ defmodule Phoenix.ChannelTest do
     message = %Message{topic: "baretopic",
                        event: "join",
                        payload: fn socket -> {:ok, socket} end}
-    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, WebSocket)
     assert HashDict.get(sockets, "baretopic")
     assert_received {:join, "baretopic"}
 
     message = %Message{topic: "baretopic:sub",
                        event: "join",
                        payload: fn socket -> {:ok, socket} end}
-    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router, WebSocket)
+    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router, :phx_pub, WebSocket)
     refute HashDict.get(sockets, "baretopic:sub")
     refute_received {:join, "baretopic:sub"}
 
     message = %Message{topic: "baretopic",
                        event: "some:event",
                        payload: fn socket -> {:ok, socket} end}
-    Transport.dispatch(message, sockets, self, Router, WebSocket)
+    Transport.dispatch(message, sockets, self, Router, :phx_pub, WebSocket)
     assert_received {:handle_in, "baretopic"}
 
     message = %Message{topic: "baretopic:sub",
                        event: "some:event",
                        payload: fn socket -> {:ok, socket} end}
-    Transport.dispatch(message, sockets, self, Router, WebSocket)
+    Transport.dispatch(message, sockets, self, Router, :phx_pub, WebSocket)
     refute_received {:handle_in, "baretopic:sub"}
   end
 
@@ -375,11 +375,11 @@ defmodule Phoenix.ChannelTest do
     message = %Message{topic: "wsonly:somesubtopic",
                        event: "join",
                        payload: fn socket -> {:ok, socket} end}
-    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, WebSocket)
     assert HashDict.get(sockets, "wsonly:somesubtopic")
     assert_received {:join, "wsonly:somesubtopic"}
 
-    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, LongPoller)
+    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, LongPoller)
     refute HashDict.get(sockets, "wsonly:somesubtopic")
     refute_received {:join, "wsonly:somesubtopic"}
 
@@ -387,11 +387,11 @@ defmodule Phoenix.ChannelTest do
     message = %Message{topic: "lponly:somesubtopic",
                        event: "join",
                        payload: fn socket -> {:ok, socket} end}
-    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, LongPoller)
+    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, LongPoller)
     assert HashDict.get(sockets, "lponly:somesubtopic")
     assert_received {:join, "lponly:somesubtopic"}
 
-    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, WebSocket)
     refute HashDict.get(sockets, "lponly:somesubtopic")
     refute_received {:join, "lponly:somesubtopic"}
   end
@@ -402,7 +402,7 @@ defmodule Phoenix.ChannelTest do
                    payload: fn socket -> {:ok, socket} end}
     assert nil == Router.channel_for_topic(msg.topic, WebSocket)
     assert {:ok, sockets} =
-      Transport.dispatch(msg, HashDict.new, self, Router, WebSocket)
+      Transport.dispatch(msg, HashDict.new, self, Router, :phx_pub, WebSocket)
     assert sockets == HashDict.new
     refute_received {:join, "ensurebadmatch:somesubtopic"}
   end
@@ -411,7 +411,7 @@ defmodule Phoenix.ChannelTest do
     message = %Message{topic: "topic2:somesubtopic",
                        event: "join",
                        payload: fn socket -> {:ok, socket} end}
-    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, WebSocket)
     assert HashDict.get(sockets, "topic2:somesubtopic")
     assert_received {:join, "topic2:somesubtopic"}
   end
@@ -420,7 +420,7 @@ defmodule Phoenix.ChannelTest do
     message = %Message{topic: "topic3:somesubtopic",
                        event: "join",
                        payload: fn socket -> {:ok, socket} end}
-    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, WebSocket)
+    {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, WebSocket)
     assert HashDict.get(sockets, "topic3:somesubtopic")
     assert_received {:join, "topic3:somesubtopic"}
   end
@@ -430,17 +430,17 @@ defmodule Phoenix.ChannelTest do
                        event: "join",
                        payload: fn socket -> {:ok, socket} end}
     assert {:ok, sockets} =
-      Transport.dispatch(message, HashDict.new, self, Router, LongPoller)
+      Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, LongPoller)
     assert sockets == HashDict.new
     refute_received {:join, "topic2:somesubtopic"}
 
     message = %Message{topic: "topic2-override:somesubtopic",
                        event: "join",
                        payload: fn socket -> {:ok, socket} end}
-    assert {:ok, _sockets} = Transport.dispatch(message, sockets, self, Router, LongPoller)
+    assert {:ok, _sockets} = Transport.dispatch(message, sockets, self, Router, :phx_pub, LongPoller)
     assert_received {:join, "topic2-override:somesubtopic"}
     assert {:ok, sockets} =
-      Transport.dispatch(message, sockets, self, Router, WebSocket)
+      Transport.dispatch(message, sockets, self, Router, :phx_pub, WebSocket)
     assert sockets == HashDict.new
     refute_received {:join, "topic2-override:somesubtopic"}
   end
