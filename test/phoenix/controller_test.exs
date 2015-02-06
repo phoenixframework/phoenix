@@ -59,22 +59,22 @@ defmodule Phoenix.ControllerTest do
     end
   end
 
-  test "maybe_put_layout/2" do
-    conn = maybe_put_layout(conn(:get, "/"), false)
+  test "put_new_layout/2" do
+    conn = put_new_layout(conn(:get, "/"), false)
     assert layout(conn) == false
-    conn = maybe_put_layout(conn, {AppView, "application.html"})
+    conn = put_new_layout(conn, {AppView, "application.html"})
     assert layout(conn) == false
 
-    conn = maybe_put_layout(conn(:get, "/"), {AppView, "application.html"})
+    conn = put_new_layout(conn(:get, "/"), {AppView, "application.html"})
     assert layout(conn) == {AppView, "application.html"}
-    conn = maybe_put_layout(conn, false)
+    conn = put_new_layout(conn, false)
     assert layout(conn) == {AppView, "application.html"}
   end
 
-  test "put_view/2 and maybe_put_view/2" do
-    conn = maybe_put_view(conn(:get, "/"), Hello)
+  test "put_view/2 and put_new_view/2" do
+    conn = put_new_view(conn(:get, "/"), Hello)
     assert view_module(conn) == Hello
-    conn = maybe_put_view(conn, World)
+    conn = put_new_view(conn, World)
     assert view_module(conn) == Hello
     conn = put_view(conn, World)
     assert view_module(conn) == World
