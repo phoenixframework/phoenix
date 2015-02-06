@@ -3,7 +3,7 @@ use Mix.Config
 config :<%= application_name %>, <%= application_module %>.Endpoint,
   url: [host: "example.com"],
   http: [port: System.get_env("PORT")],
-  secret_key_base: "<%= secret_key_base %>"
+  secret_key_base: System.get_env("SECRET_KEY_BASE")
   
 # ## SSL Support
 #
