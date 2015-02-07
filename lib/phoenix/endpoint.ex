@@ -101,7 +101,7 @@ defmodule Phoenix.Endpoint do
     * `:pubsub` - configuration for this Endpoint's pubsub adapter.
       Configuration either requires a `:name` of the registered pubsub server
       or a `:name`, `:adapter`, and `:options` which starts the adapter in
-      the endpoints supervision tree. If no name is provided, the name is
+      the endpoint's supervision tree. If no name is provided, the name is
       inflected from the endpoint module. Defaults to:
 
           [adapter: Phoenix.PubSub.PG2]
@@ -169,10 +169,10 @@ defmodule Phoenix.Endpoint do
 
       def __pubsub_server__, do: @pubsub_server
 
-      def broadcast_from(from, topic, event, msg) when is_map(msg) do
+      def broadcast_from(from, topic, event, msg) do
         Phoenix.Channel.broadcast_from(@pubsub_server, from, topic, event, msg)
       end
-      def broadcast_from!(from, topic, event, msg) when is_map(msg) do
+      def broadcast_from!(from, topic, event, msg) do
         Phoenix.Channel.broadcast_from!(@pubsub_server, from, topic, event, msg)
       end
 

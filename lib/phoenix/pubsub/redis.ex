@@ -4,16 +4,15 @@ defmodule Phoenix.PubSub.Redis do
   @moduledoc """
   The Supervisor for the Redis `Phoenix.PubSub` adapter
 
-  To use Redis as your PubSub adapter, simply add it to your application's
-  supervision tree:
+  To use Redis as your PubSub adapter, simply add it to your Endpoint's config:
 
-      children = [
+      config :my_app, MyApp.Endpiont,
         ...
-        worker(...),
-        supervisor(Phoenix.PubSub.Redis, [MyApp.PubSub]),
-      ]
+        pubsub: [adapter: Phoenix.PubSub.Redis,
+                 options: [host: "192.168.1.100"]
 
-  add `:eredis`, and `:poolboy` to your deps:
+
+  next, add `:eredis`, and `:poolboy` to your deps:
 
       defp deps do
         [{:eredis, github: "wooga/eredis"},
@@ -21,7 +20,7 @@ defmodule Phoenix.PubSub.Redis do
         ...]
       end
 
-  and add `:poolboy` to your applications:
+  finally, add `:poolboy` to your applications:
 
       def application do
         [mod: {MyApp, []},

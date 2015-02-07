@@ -4,14 +4,12 @@ defmodule Phoenix.PubSub.PG2 do
   @moduledoc """
   The Supervisor for the `:pg2` `Phoenix.PubSub` adapter
 
-  To use PG2 as your PubSub adapter, simply add it to your application's
-  supervision tree:
+  To use PG2 as your PubSub adapter, simply add it to your Endpoint's config:
 
-      children = [
+      config :my_app, MyApp.Endpiont,
         ...
-        worker(...),
-        supervisor(Phoenix.PubSub.PG2, [MyApp.PubSub]),
-      ]
+        pubsub: [adapter: Phoenix.PubSub.PG2]
+
 
 
     * `name` - The required name to register the PubSub processes, ie: `MyApp.PubSub`
