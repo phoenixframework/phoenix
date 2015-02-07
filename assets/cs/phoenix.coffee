@@ -230,11 +230,25 @@
     normalizeEndpoint: (endPoint) ->
       endPoint.replace("ws://", "http://").replace("wss://", "https://")
 
-    endpointURL: -> @pollEndpoint + "?=token=#{@token ? ""}&sig=#{@sig ? ""}"
+    endpointURL: -> @pollEndpoint + "?token=#{encodeURI(@token ? "")}&sig=#{encodeURI(@sig ? "")}"
+
+
+    closeAndRetry: ->
+      @close()
+      setTimeout (=>
+        @readyState = @states.open
+        @poll()
+      ), @retryInMs
+
+
+    ontimeout: ->
+      @onerror("timeout")
+      @closeAndRetry()
+
 
     poll: ->
       return unless @readyState is @states.open
-      exports.Ajax.request "GET", @endpointURL(), "application/json", null, (status, resp) =>
+      exports.Ajax.request "GET", @endpointURL(), "application/json", null, (=> @ontimeout()), (status, resp) =>
         {@token, @sig, messages} = JSON.parse(resp)
         switch status
           when 200
@@ -246,13 +260,12 @@
             @onopen()
             @poll()
           else
-            @close()
-            setTimeout (=> @poll()), @retryInMs
+            @closeAndRetry()
 
 
     send: (body) ->
-      exports.Ajax.request "POST", @endpointURL(), "application/json", body, (status, resp) =>
-        @onerror() unless status is 200
+      exports.Ajax.request "POST", @endpointURL(), "application/json", body, (=> @onerror("timeout")), (status, resp) =>
+        @onerror(status) unless status is 200
 
 
     close: (code, reason) ->
@@ -264,7 +277,7 @@
 
     states: {complete: 4}
 
-    request: (method, endPoint, accept, body, callback) ->
+    request: (method, endPoint, accept, body, ontimeout, callback) ->
       req = if root.XMLHttpRequest?
         new root.XMLHttpRequest() # IE7+, Firefox, Chrome, Opera, Safari
       else
@@ -274,7 +287,10 @@
       req.onreadystatechange = =>
         callback?(req.status, req.responseText) if req.readyState is @states.complete
 
+      req.ontimeout = ontimeout if ontimeout?
+
       req.send(body)
+
 
 
 

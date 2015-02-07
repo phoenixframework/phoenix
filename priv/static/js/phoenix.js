@@ -447,14 +447,33 @@
 
       LongPoller.prototype.endpointURL = function() {
         var _ref, _ref1;
-        return this.pollEndpoint + ("?=token=" + ((_ref = this.token) != null ? _ref : "") + "&sig=" + ((_ref1 = this.sig) != null ? _ref1 : ""));
+        return this.pollEndpoint + ("?token=" + (encodeURI((_ref = this.token) != null ? _ref : "")) + "&sig=" + (encodeURI((_ref1 = this.sig) != null ? _ref1 : "")));
+      };
+
+      LongPoller.prototype.closeAndRetry = function() {
+        this.close();
+        return setTimeout(((function(_this) {
+          return function() {
+            _this.readyState = _this.states.open;
+            return _this.poll();
+          };
+        })(this)), this.retryInMs);
+      };
+
+      LongPoller.prototype.ontimeout = function() {
+        this.onerror("timeout");
+        return this.closeAndRetry();
       };
 
       LongPoller.prototype.poll = function() {
         if (this.readyState !== this.states.open) {
           return;
         }
-        return exports.Ajax.request("GET", this.endpointURL(), "application/json", null, (function(_this) {
+        return exports.Ajax.request("GET", this.endpointURL(), "application/json", null, ((function(_this) {
+          return function() {
+            return _this.ontimeout();
+          };
+        })(this)), (function(_this) {
           return function(status, resp) {
             var messages, msg, _i, _len, _ref;
             _ref = JSON.parse(resp), _this.token = _ref.token, _this.sig = _ref.sig, messages = _ref.messages;
@@ -473,20 +492,21 @@
                 _this.onopen();
                 return _this.poll();
               default:
-                _this.close();
-                return setTimeout((function() {
-                  return _this.poll();
-                }), _this.retryInMs);
+                return _this.closeAndRetry();
             }
           };
         })(this));
       };
 
       LongPoller.prototype.send = function(body) {
-        return exports.Ajax.request("POST", this.endpointURL(), "application/json", body, (function(_this) {
+        return exports.Ajax.request("POST", this.endpointURL(), "application/json", body, ((function(_this) {
+          return function() {
+            return _this.onerror("timeout");
+          };
+        })(this)), (function(_this) {
           return function(status, resp) {
             if (status !== 200) {
-              return _this.onerror();
+              return _this.onerror(status);
             }
           };
         })(this));
@@ -504,7 +524,7 @@
       states: {
         complete: 4
       },
-      request: function(method, endPoint, accept, body, callback) {
+      request: function(method, endPoint, accept, body, ontimeout, callback) {
         var req;
         req = root.XMLHttpRequest != null ? new root.XMLHttpRequest() : new root.ActiveXObject("Microsoft.XMLHTTP");
         req.open(method, endPoint, true);
@@ -516,6 +536,9 @@
             }
           };
         })(this);
+        if (ontimeout != null) {
+          req.ontimeout = ontimeout;
+        }
         return req.send(body);
       }
     };
