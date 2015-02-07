@@ -21,7 +21,7 @@ defmodule Phoenix.PubSub.PubSubTest do
     @adapter adapter
     @server name
     setup_all do
-      @adapter.start_link(@server)
+      @adapter.start_link(@server, [])
       :ok
     end
 
@@ -37,7 +37,7 @@ defmodule Phoenix.PubSub.PubSubTest do
 
     test "#{inspect @adapter} subscribe/3 with link does not down adapter" do
       server_name = Module.concat(@server, :link_pub)
-      {:ok, _super_pid} = @adapter.start_link(server_name)
+      {:ok, _super_pid} = @adapter.start_link(server_name, [])
       local_pid = Process.whereis(Module.concat(server_name, Local))
       assert Process.alive?(local_pid)
       pid = spawn_pid
@@ -51,7 +51,7 @@ defmodule Phoenix.PubSub.PubSubTest do
 
     test "#{inspect @adapter} subscribe/3 with link downs subscriber" do
       server_name = Module.concat(@server, :link_pub2)
-      {:ok, _super_pid} = @adapter.start_link(server_name)
+      {:ok, _super_pid} = @adapter.start_link(server_name, [])
       local_pid = Process.whereis(Module.concat(server_name, Local))
       assert Process.alive?(local_pid)
       pid = spawn_pid

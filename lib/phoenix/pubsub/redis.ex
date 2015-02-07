@@ -43,7 +43,7 @@ defmodule Phoenix.PubSub.Redis do
   @defaults [host: "127.0.0.1", port: 6379, password: ""]
 
 
-  def start_link(name, opts \\ []) do
+  def start_link(name, opts) do
     supervisor_name = Module.concat(name, Supervisor)
     Supervisor.start_link(__MODULE__, [name, opts], name: supervisor_name)
   end

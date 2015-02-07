@@ -6,8 +6,6 @@ defmodule Phoenix.Transports.LongPoller do
   alias Phoenix.Socket.Message
   alias Phoenix.Transports.LongPoller
 
-
-
   plug :action
 
   @doc """

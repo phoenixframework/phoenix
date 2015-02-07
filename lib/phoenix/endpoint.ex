@@ -99,17 +99,17 @@ defmodule Phoenix.Endpoint do
           [host: "localhost"]
 
     * `:pubsub` - configuration for this Endpoint's pubsub adapter.
-       Configuration either requires a `:name` of the registered pubsub server
-       or a `:name`, `:adapter`, and `:options` which starts the adapter in
-       the endpoints supervision tree. If no name is provided, the name is
-       inflected from the endpoint module. Defaults to:
+      Configuration either requires a `:name` of the registered pubsub server
+      or a `:name`, `:adapter`, and `:options` which starts the adapter in
+      the endpoints supervision tree. If no name is provided, the name is
+      inflected from the endpoint module. Defaults to:
 
           [adapter: Phoenix.PubSub.PG2]
 
-       with advanced adapter configuration:
+      with advanced adapter configuration:
 
           [name: :my_pubsub, adapter: Phoenix.PubSub.Redis,
-                             options: [host: "192.168.100.1]]
+                             options: [host: "192.168.100.1"]]
 
   ## Endpoint API
 
@@ -124,13 +124,13 @@ defmodule Phoenix.Endpoint do
     * `url(path)` - returns the URL for this endpoint with the given path
     * `static_path(path)` - returns the static path for a given asset
     * `broadcast_from(from, topic, event, msg)` - proxy to `Phoenix.Channel.broadcast_from/4`
-       using this endpoint's configured pubsub server
+      using this endpoint's configured pubsub server
     * `broadcast_from!(from, topic, event, msg)` - proxy to `Phoenix.Channel.broadcast_from!/4`
-       using this endpoint's configured pubsub server
+      using this endpoint's configured pubsub server
     * `broadcast(topic, event, msg)` - proxy to `Phoenix.Channel.broadcast/3`
-       using this endpoint's configured pubsub server
+      using this endpoint's configured pubsub server
     * `broadcast!(topic, event, msg)` - proxy to `Phoenix.Channel.broadcast!/3`
-       using this endpoint's configured pubsub server
+      using this endpoint's configured pubsub server
 
 
   Besides the functions above, it defines also the API expected by Plug
