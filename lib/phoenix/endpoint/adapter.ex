@@ -53,7 +53,7 @@ defmodule Phoenix.Endpoint.Adapter do
      secret_key_base: nil,
      server: Application.get_env(:phoenix, :serve_endpoints, false),
      url: [host: "localhost"],
-     pubsub: []]
+     pubsub: [adapter: Phoenix.PubSub.PG2]]
   end
 
   defp render_errors(module) do

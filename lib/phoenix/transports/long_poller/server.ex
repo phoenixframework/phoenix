@@ -45,9 +45,10 @@ defmodule Phoenix.Transports.LongPoller.Server do
               sockets: HashDict.new,
               window_ms: window_ms * 2,
               pubsub_server: pubsub_server,
-              priv_topic: priv_topic}
+              priv_topic: priv_topic,
+              client_ref: nil}
 
-    :ok = Phoenix.PubSub.subscribe(state.pubsub_server, self, state.priv_topic)
+    :ok = Phoenix.PubSub.subscribe(state.pubsub_server, self, state.priv_topic, link: true)
     {:ok, state, state.window_ms}
   end
 
@@ -77,7 +78,9 @@ defmodule Phoenix.Transports.LongPoller.Server do
   """
   def handle_info({:socket_reply, message = %Message{}}, state) do
     buffer = [message | state.buffer]
-    :ok = broadcast_from(state, {:messages, Enum.reverse(buffer)})
+    if state.client_ref do
+      :ok = broadcast_from(state, {:messages, Enum.reverse(buffer), state.client_ref})
+    end
     {:noreply, %{state | buffer: buffer}, state.window_ms}
   end
   def handle_info({:socket_broadcast, message = %Message{}}, %{sockets: sockets} = state) do
@@ -99,7 +102,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
     if Enum.any?(state.buffer) do
       :ok = broadcast_from(state, {:messages, Enum.reverse(state.buffer), ref})
     end
-    {:noreply, state, state.window_ms}
+    {:noreply, %{state | client_ref: ref}, state.window_ms}
   end
 
   # TODO: %Messages{}'s need unique ids so we can properly ack them
@@ -119,6 +122,10 @@ defmodule Phoenix.Transports.LongPoller.Server do
 
   def handle_info(:timeout, state) do
     {:stop, :normal, state}
+  end
+
+  def handle_info({:EXIT, _pubsub_server, :shutdown}, state) do
+    {:stop, :pubsub_server_terminated, state}
   end
 
   @doc """

@@ -5,7 +5,7 @@ defmodule Phoenix.Tranports.LongPollerTest do
   Application.put_env(:lp_app, __MODULE__.Endpoint, [
     server: false,
     transports: [longpoller_window_ms: 10_000, longpoller_pubsub_timeout_ms: 100],
-    pubsub: [name: :phx_pub]
+    pubsub: [name: :phx_lp_pub]
   ])
 
   alias Plug.Conn
