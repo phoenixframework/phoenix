@@ -5,7 +5,7 @@ defmodule Phoenix.Tranports.LongPollerTest do
   Application.put_env(:lp_app, __MODULE__.Endpoint, [
     server: false,
     transports: [longpoller_window_ms: 10_000, longpoller_pubsub_timeout_ms: 100],
-    pubsub: [name: :phx_lp_pub]
+    pubsub: [name: :phx_lp_pub, adapter: Phoenix.PubSub.PG2]
   ])
 
   alias Plug.Conn
@@ -66,7 +66,6 @@ defmodule Phoenix.Tranports.LongPollerTest do
   test "resume_session returns {:error, conn, :terminated} if dead session" do
     {conn = %Conn{}, _priv_topic, _sig, server_pid} = LongPoller.start_session(conn_with_sess)
     :ok = GenServer.call(server_pid, :stop)
-    refute Process.alive?(server_pid)
     assert {:error, %Conn{}, :terminated} = LongPoller.resume_session(conn)
   end
 

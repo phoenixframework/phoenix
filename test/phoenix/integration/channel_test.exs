@@ -8,12 +8,11 @@ defmodule Phoenix.Integration.ChannelTest do
   alias Phoenix.Integration.WebsocketClient
   alias Phoenix.Integration.HTTPClient
   alias Phoenix.Socket.Message
-  alias Phoenix.PubSub.PG2
   alias __MODULE__.Endpoint
 
   @port 5807
-  @window_ms 100
-  @pubsub_window_ms 100
+  @window_ms 200
+  @pubsub_window_ms 200
   @ensure_window_timeout_ms @window_ms * 4
 
   Application.put_env(:channel_app, Endpoint, [
@@ -23,7 +22,7 @@ defmodule Phoenix.Integration.ChannelTest do
     debug_errors: false,
     transports: [longpoller_window_ms: @window_ms, longpoller_pubsub_timeout_ms: @pubsub_window_ms],
     server: true,
-    pubsub: [adapter: PG2, name: :int_pub]
+    pubsub: [adapter: Phoenix.PubSub.PG2, name: :int_pub]
   ])
 
   defmodule RoomChannel do
