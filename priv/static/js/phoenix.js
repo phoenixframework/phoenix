@@ -437,7 +437,7 @@
         this.states = exports.Socket.states;
         this.upgradeEndpoint = this.normalizeEndpoint(endPoint);
         this.pollEndpoint = this.upgradeEndpoint + (/\/$/.test(endPoint) ? "poll" : "/poll");
-        this.readyState = this.states.open;
+        this.readyState = this.states.connecting;
         this.poll();
       }
 
@@ -447,17 +447,12 @@
 
       LongPoller.prototype.endpointURL = function() {
         var _ref, _ref1;
-        return this.pollEndpoint + ("?token=" + (encodeURI((_ref = this.token) != null ? _ref : "")) + "&sig=" + (encodeURI((_ref1 = this.sig) != null ? _ref1 : "")));
+        return this.pollEndpoint + ("?token=" + (encodeURIComponent((_ref = this.token) != null ? _ref : "")) + "&sig=" + (encodeURIComponent((_ref1 = this.sig) != null ? _ref1 : "")));
       };
 
       LongPoller.prototype.closeAndRetry = function() {
         this.close();
-        return setTimeout(((function(_this) {
-          return function() {
-            _this.readyState = _this.states.open;
-            return _this.poll();
-          };
-        })(this)), this.retryInMs);
+        return this.readyState = this.states.connecting;
       };
 
       LongPoller.prototype.ontimeout = function() {
@@ -466,7 +461,7 @@
       };
 
       LongPoller.prototype.poll = function() {
-        if (this.readyState !== this.states.open) {
+        if (!(this.readyState === this.states.open || this.readyState === this.states.connecting)) {
           return;
         }
         return exports.Ajax.request("GET", this.endpointURL(), "application/json", null, ((function(_this) {
@@ -475,10 +470,10 @@
           };
         })(this)), (function(_this) {
           return function(status, resp) {
-            var messages, msg, _i, _len, _ref;
-            _ref = JSON.parse(resp), _this.token = _ref.token, _this.sig = _ref.sig, messages = _ref.messages;
+            var messages, msg, _i, _len, _ref, _ref1, _ref2;
             switch (status) {
               case 200:
+                _ref = JSON.parse(resp), _this.token = _ref.token, _this.sig = _ref.sig, messages = _ref.messages;
                 for (_i = 0, _len = messages.length; _i < _len; _i++) {
                   msg = messages[_i];
                   _this.onmessage({
@@ -487,11 +482,15 @@
                 }
                 return _this.poll();
               case 204:
+                _ref1 = JSON.parse(resp), _this.token = _ref1.token, _this.sig = _ref1.sig;
                 return _this.poll();
               case 410:
+                _ref2 = JSON.parse(resp), _this.token = _ref2.token, _this.sig = _ref2.sig;
+                _this.readyState = _this.states.open;
                 _this.onopen();
                 return _this.poll();
-              default:
+              case 500:
+                _this.onerror();
                 return _this.closeAndRetry();
             }
           };
@@ -529,6 +528,9 @@
         req = root.XMLHttpRequest != null ? new root.XMLHttpRequest() : new root.ActiveXObject("Microsoft.XMLHTTP");
         req.open(method, endPoint, true);
         req.setRequestHeader("Content-type", accept);
+        req.onerror = function() {
+          return typeof callback === "function" ? callback(500, null) : void 0;
+        };
         req.onreadystatechange = (function(_this) {
           return function() {
             if (req.readyState === _this.states.complete) {

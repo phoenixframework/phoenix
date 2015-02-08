@@ -12,7 +12,7 @@ defmodule Phoenix.Integration.ChannelTest do
 
   @port 5807
   @window_ms 200
-  @pubsub_window_ms 1000
+  @pubsub_window_ms 100
   @ensure_window_timeout_ms @window_ms * 4
 
   Application.put_env(:channel_app, Endpoint, [
@@ -153,8 +153,8 @@ defmodule Phoenix.Integration.ChannelTest do
     assert resp.status == 204
 
     # messages are buffered between polls
-    Phoenix.Channel.broadcast! :int_pub, "rooms:lobby", "user:entered", %{name: "José"}
-    Phoenix.Channel.broadcast! :int_pub, "rooms:lobby", "user:entered", %{name: "Sonny"}
+    Endpoint.broadcast! "rooms:lobby", "user:entered", %{name: "José"}
+    Endpoint.broadcast! "rooms:lobby", "user:entered", %{name: "Sonny"}
     resp = poll(:get, "/ws/poll", session)
     session = Map.take(resp.body, ["token", "sig"])
     assert resp.status == 200
@@ -204,7 +204,7 @@ defmodule Phoenix.Integration.ChannelTest do
         "payload" => %{}
       }
       assert resp.status == 200
-      Phoenix.Channel.broadcast! :int_pub, "rooms:lobby", "new:msg", %{body: "Hello lobby"}
+      Endpoint.broadcast! "rooms:lobby", "new:msg", %{body: "Hello lobby"}
       # poll
       resp = poll(:get, "/ws/poll", session)
       session = Map.take(resp.body, ["token", "sig"])

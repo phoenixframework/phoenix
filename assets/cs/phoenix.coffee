@@ -223,22 +223,21 @@
       @states          = exports.Socket.states
       @upgradeEndpoint = @normalizeEndpoint(endPoint)
       @pollEndpoint    = @upgradeEndpoint + if /\/$/.test(endPoint) then "poll" else "/poll"
-      @readyState      = @states.open
+      @readyState      = @states.connecting
       @poll()
 
 
     normalizeEndpoint: (endPoint) ->
       endPoint.replace("ws://", "http://").replace("wss://", "https://")
 
-    endpointURL: -> @pollEndpoint + "?token=#{encodeURI(@token ? "")}&sig=#{encodeURI(@sig ? "")}"
+
+    endpointURL: ->
+      @pollEndpoint + "?token=#{encodeURIComponent(@token ? "")}&sig=#{encodeURIComponent(@sig ? "")}"
 
 
     closeAndRetry: ->
       @close()
-      setTimeout (=>
-        @readyState = @states.open
-        @poll()
-      ), @retryInMs
+      @readyState = @states.connecting
 
 
     ontimeout: ->
@@ -247,19 +246,23 @@
 
 
     poll: ->
-      return unless @readyState is @states.open
+      return unless @readyState is @states.open or @readyState is @states.connecting
       exports.Ajax.request "GET", @endpointURL(), "application/json", null, (=> @ontimeout()), (status, resp) =>
-        {@token, @sig, messages} = JSON.parse(resp)
         switch status
           when 200
+            {@token, @sig, messages} = JSON.parse(resp)
             @onmessage(data: JSON.stringify(msg)) for msg in messages
             @poll()
           when 204
+            {@token, @sig} = JSON.parse(resp)
             @poll()
           when 410
+            {@token, @sig} = JSON.parse(resp)
+            @readyState = @states.open
             @onopen()
             @poll()
-          else
+          when 500
+            @onerror()
             @closeAndRetry()
 
 
@@ -284,6 +287,7 @@
         new root.ActiveXObject("Microsoft.XMLHTTP") # IE6, IE5
       req.open method, endPoint, true
       req.setRequestHeader("Content-type", accept)
+      req.onerror = -> callback?(500, null)
       req.onreadystatechange = =>
         callback?(req.status, req.responseText) if req.readyState is @states.complete
 

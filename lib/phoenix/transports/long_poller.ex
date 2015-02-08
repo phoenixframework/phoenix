@@ -60,8 +60,8 @@ defmodule Phoenix.Transports.LongPoller do
     msg = Message.from_map!(message)
 
     case dispatch(conn, priv_topic, msg) do
-      :ok               -> send_resp(conn, :ok, "")
-      {:error, _reason} -> send_resp(conn, :unauthorized, "")
+      :ok               -> conn |> put_status(:ok) |> json(%{})
+      {:error, _reason} -> conn |> put_status(:unauthorized) |> json(%{})
     end
   end
 
