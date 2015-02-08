@@ -155,7 +155,7 @@ defmodule Phoenix.Transports.LongPoller do
   defp pubsub_server(conn), do: endpoint_module(conn).__pubsub_server__()
 
   defp subscribe(conn, priv_topic) do
-    Phoenix.PubSub.subscribe(pubsub_server(conn), self, priv_topic)
+    Phoenix.PubSub.subscribe(pubsub_server(conn), self, priv_topic, link: true)
   end
 
   defp broadcast_from(conn, priv_topic, msg) do
