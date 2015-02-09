@@ -38,6 +38,7 @@ defmodule Phoenix.Endpoint.Server do
       |> Keyword.put_new(:otp_app, otp_app)
       |> Keyword.put_new(:port, port)
 
+    if config[:port] == nil, do: raise ":port in config is nil. Use a valid port number."
     Keyword.put(config, :port, to_integer(config[:port]))
   end
 
