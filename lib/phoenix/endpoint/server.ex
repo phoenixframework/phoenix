@@ -38,10 +38,10 @@ defmodule Phoenix.Endpoint.Server do
       |> Keyword.put_new(:otp_app, otp_app)
       |> Keyword.put_new(:port, port)
 
-    if config[:port] == nil, do: raise ":port in config is nil. Use a valid port number."
-    Keyword.put(config, :port, to_integer(config[:port]))
+    Keyword.put(config, :port, to_port(config[:port]))
   end
 
-  defp to_integer(binary)  when is_binary(binary),   do: String.to_integer(binary)
-  defp to_integer(integer) when is_integer(integer), do: integer
+  defp to_port(nil), do: raise ":port in config is nil, please use a valid port number"
+  defp to_port(binary)  when is_binary(binary),   do: String.to_integer(binary)
+  defp to_port(integer) when is_integer(integer), do: integer
 end
