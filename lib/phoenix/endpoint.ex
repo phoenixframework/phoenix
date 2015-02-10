@@ -33,7 +33,7 @@ defmodule Phoenix.Endpoint do
         plug :router, YourApp.Router
       end
 
-  Before being used, an endpoint must be splicitly started as part
+  Before being used, an endpoint must be explicitly started as part
   of your application supervision tree too (which is again done by
   default in generated applications):
 
@@ -47,7 +47,7 @@ defmodule Phoenix.Endpoint do
       config :your_app, YourApp.Endpoint,
         secret_key_base: "kjoy3o1zeidquwy1398juxzldjlksahdk3"
 
-  Endpoint configuration is split in two categories. Compile-time
+  Endpoint configuration is split into two categories. Compile-time
   configuration means the configuration is read during compilation
   and changing it at runtime has no effect. The compile-time
   configuration is mostly related to error handling.
@@ -85,7 +85,7 @@ defmodule Phoenix.Endpoint do
       cowboy and accepts all options as defined by `Plug.Adapters.Cowboy`.
       Defaults to false.
 
-    * `:secret_key_base` - a secret key used as base to generate secrets
+    * `:secret_key_base` - a secret key used as a base to generate secrets
       to encode cookies, session and friends. Defaults to nil as it must
       be set per application.
 
