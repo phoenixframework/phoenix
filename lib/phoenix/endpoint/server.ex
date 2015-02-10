@@ -44,4 +44,5 @@ defmodule Phoenix.Endpoint.Server do
   defp to_port(nil), do: raise ":port in config is nil, please use a valid port number"
   defp to_port(binary)  when is_binary(binary),   do: String.to_integer(binary)
   defp to_port(integer) when is_integer(integer), do: integer
+  defp to_port({:system, env_var}), do: to_port(System.get_env(env_var))
 end

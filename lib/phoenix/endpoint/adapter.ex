@@ -90,7 +90,7 @@ defmodule Phoenix.Endpoint.Adapter do
     url    = endpoint.config(:url)
     scheme = url[:scheme] || scheme
     host   = url[:host]
-    port   = to_string(url[:port] || port)
+    port   = port_to_string(url[:port] || port)
 
     {:cache,
       case {scheme, port} do
@@ -125,4 +125,7 @@ defmodule Phoenix.Endpoint.Adapter do
   def static_path(_endpoint, path) when is_binary(path) do
     raise ArgumentError, "static_path/2 expects a path starting with / as argument"
   end
+
+  defp port_to_string({:system, env_var}), do: System.get_env(env_var)
+  defp port_to_string(port), do: to_string(port)
 end
