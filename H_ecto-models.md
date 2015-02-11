@@ -96,7 +96,7 @@ def start(_type, _args) do
 end
 ```
 
-At this point, let's make sure what we've done so far works by running `mix phoenix.start` at the root of our application. It should start up without errors and show the Phoenix welcome page at [localhost:4000](http://localhost:4000)
+At this point, let's make sure what we've done so far works by running `mix phoenix.server` at the root of our application. It should start up without errors and show the Phoenix welcome page at [localhost:4000](http://localhost:4000)
 
 ### Adding a Model
 
