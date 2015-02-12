@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.9.0-dev
+## v0.9.0 (2015-02-12)
 
 See these [`0.8.x` to `0.9.0` upgrade instructions](https://gist.github.com/chrismccord/def6f4dc444b6a8f8d8b) to bring your existing apps up to speed.
 
@@ -11,12 +11,12 @@ See these [`0.8.x` to `0.9.0` upgrade instructions](https://gist.github.com/chri
   * [Plug] Ensure session and flash are serializable to JSON
 
 * Backwards incompatible changes
-  * [PubSub] The new PubSub system requires the adapter's superviser to be added to your supervisione tree. Add `supervisor(Phoenix.PubSub.PG2, [MyApp.PubSub])` to your app supervistor.
+  * [PubSub] The new PubSub system requires the adapter's configuration to be added to your Endpoint's mix config.
   * [PubSub] The `Phoenix.PubSub` API now requires a registered server name, ie `Phoenix.PubSub.broadcast(MyApp.PubSub, "foo:bar", %{baz: :bang})`
-  * [Channel] Channel broadcasts from outside a socket connection now must be called off the Channel module directly, ie: `MyApp.MyChannel.broadcast("topic", "event", %{...})`
-  * [Channel] The error return signature has been changed from `{:error, socket, reason}` to {:error, reason, socket}`
+  * [Channel] Channel broadcasts from outside a socket connection now must be called from an Endpoint module directly, ie: `MyApp.Endpoint.broadcast("topic", "event", %{...})`
+  * [Channel] The error return signature has been changed from `{:error, socket, reason}` to `{:error, reason, socket}`
   * [Plug] `Plug.CSRFProtection` now uses a cookie instead of session and expects a `"_csrf_token"` parameter instead of `"csrf_token"`
-  * [Router] The `destroy` action has been renamed to `delete`, update your controller actions and url builders accordingly
+  * [Router/Controller] The `destroy` action has been renamed to `delete`, update your controller actions and url builders accordingly
 
 
 ## v0.8.0 (2015-01-11)
