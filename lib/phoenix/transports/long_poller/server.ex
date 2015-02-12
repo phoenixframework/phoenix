@@ -77,7 +77,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   Forwards replied/broadcasted `%Phoenix.Socket.Message{}`s from Channels back to client
   """
   def handle_info({:socket_reply, message = %Message{}}, state) do
-    buffer = [{:erlang.make_ref(), message} | state.buffer]
+    buffer = [message | state.buffer]
     if state.client_ref do
       :ok = broadcast_from(state, {:messages, Enum.reverse(buffer), state.client_ref})
     end
@@ -111,8 +111,8 @@ defmodule Phoenix.Transports.LongPoller.Server do
   `:ack` calls to the server also represent the client listener
   closing for repoll.
   """
-  def handle_info({:ack, msg_refs, ref}, state) do
-    buffer = state.buffer |> Enum.reject(fn {ref, _} -> ref in msg_refs end)
+  def handle_info({:ack, msg_count, ref}, state) do
+    buffer = Enum.drop(state.buffer, -msg_count)
     :ok = broadcast_from(state, {:ok, :ack, ref})
 
     {:noreply, %{state | buffer: buffer}, state.window_ms}
