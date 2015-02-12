@@ -2,7 +2,7 @@ Code.require_file "websocket_client.exs", __DIR__
 Code.require_file "http_client.exs", __DIR__
 
 defmodule Phoenix.Integration.ChannelTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
   import RouterHelper, only: [capture_log: 1]
 
   alias Phoenix.Integration.WebsocketClient
@@ -11,9 +11,9 @@ defmodule Phoenix.Integration.ChannelTest do
   alias __MODULE__.Endpoint
 
   @port 5807
-  @window_ms 200
-  @pubsub_window_ms 100
-  @ensure_window_timeout_ms @window_ms * 4
+  @window_ms 100
+  @pubsub_window_ms 1000
+  @ensure_window_timeout_ms @window_ms * 2
 
   Application.put_env(:channel_app, Endpoint, [
     https: false,

@@ -31,8 +31,9 @@ defmodule Phoenix.Transports.LongPoller do
     :ok = broadcast_from(conn, priv_topic, {:flush, ref})
 
     receive do
-      {:messages, msgs, ^ref} ->
-        :ok = ack(conn, priv_topic, msgs)
+      {:messages, msgs_with_refs, ^ref} ->
+        {refs, msgs} = :lists.unzip(msgs_with_refs)
+        :ok = ack(conn, priv_topic, refs)
         json(conn, %{messages: msgs, token: conn.params["token"], sig: conn.params["sig"]})
     after
       timeout_window_ms(conn) ->
@@ -115,13 +116,13 @@ defmodule Phoenix.Transports.LongPoller do
   def verify_longpoll_topic(_conn), do: :notopic
 
   @doc """
-  Ack's a list of `%Phoenix.Socket.Messages{}`'s back to the `Phoenix.LongPoller.Server`
+  Ack's a list of message refs back to the `Phoenix.LongPoller.Server`
 
   To be called after buffered messages have been relayed to client
   """
-  def ack(conn, priv_topic, messages) do
+  def ack(conn, priv_topic, msg_refs) do
     ref = :erlang.make_ref()
-    :ok = broadcast_from(conn, priv_topic, {:ack, messages, ref})
+    :ok = broadcast_from(conn, priv_topic, {:ack, msg_refs, ref})
     receive do
       {:ok, :ack, ^ref} -> :ok
     after
