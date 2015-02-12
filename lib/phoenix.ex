@@ -5,8 +5,10 @@ defmodule Phoenix do
   def start(_type, _args) do
     # Work around the fact consolidation for some
     # protocols is not working currently
-    :code.delete(Access)
-    :code.delete(Collectable)
+    if :code.get_mode == :interactive do
+      :code.delete(Access)
+      :code.delete(Collectable)
+    end
 
     # Warm up caches
     _ = Phoenix.Template.engines
