@@ -24,7 +24,7 @@ Each Channel will implement one or more clauses of each of these four callback f
 
 - PubSub
 
-The `Phoenix.PubSub` module contains functions which are the nuts and bolts of organizing Channel communication - creating topics, deleting topics, subscribing to topics, unsubscribing from topics, broadcasting messages on a topic, listing subscribers to a topic, checking if a topic is active, and checking if a topic exists.
+The `Phoenix.PubSub` module contains functions which are the nuts and bolts of organizing Channel communication - subscribing to topics, unsubscribing from topics, and broadcasting messages on a topic.
 
 It is worth noting that this module is intended for Phoenix's internal use. Channels use it under the hood to do much of their work. As end users, we shouldn't have any need to use PubSub directly.
 
@@ -382,4 +382,4 @@ end
 
 #### Example Application
 
-So far, we've only explored Channels through iex sessions. This was intentional; it is easier and quicker to get to the heart of the functionality in iex without having to build a whole client lyer to see behavior. Now that we have seen how channels works, it might be useful to see an example application. There is a great one [here](https://github.com/chrismccord/phoenix_chat_example).
+So far, we've only explored Channels through iex sessions. This was intentional; it is easier and quicker to get to the heart of the functionality in iex without having to build a whole client layer to see behavior. Now that we have seen how channels works, it might be useful to see an example application. There is a great one [here](https://github.com/chrismccord/phoenix_chat_example).
