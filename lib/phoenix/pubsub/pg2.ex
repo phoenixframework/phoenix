@@ -29,6 +29,6 @@ defmodule Phoenix.PubSub.PG2 do
       worker(Phoenix.PubSub.Local, [local_name]),
       worker(Phoenix.PubSub.PG2Server, [[name: server_name, local_name: local_name]]),
     ]
-    supervise children, strategy: :one_for_all
+    supervise children, strategy: :rest_for_one
   end
 end

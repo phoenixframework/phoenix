@@ -164,12 +164,12 @@ defmodule Phoenix.Transports.LongPoller do
 
   defp sign(conn, priv_topic) do
     salt = derive_salt(conn, to_string(pubsub_server(conn)), [])
-    Plug.Crypto.MessageVerifier.sign(priv_topic, conn.secret_key_base <> salt)
+    Plug.Crypto.MessageVerifier.sign(priv_topic, salt)
   end
 
   defp verify(conn, priv_topic, sig) do
     salt = derive_salt(conn, to_string(pubsub_server(conn)), [])
-    case Plug.Crypto.MessageVerifier.verify(sig, conn.secret_key_base <> salt) do
+    case Plug.Crypto.MessageVerifier.verify(sig, salt) do
       {:ok, ^priv_topic} -> {:ok, priv_topic}
       _ -> :error
     end
