@@ -23,19 +23,13 @@ defmodule Phoenix.HTML do
   defmacro __using__(_) do
     quote do
       import Phoenix.HTML
+
+      use Phoenix.HTML.Controller
     end
   end
 
   @type safe   :: {:safe, unsafe}
   @type unsafe :: iodata
-
-
-  @doc """
-  Gets the flash messages from the `%Plug.Conn{}`
-  See `Phoenix.Controller.get_flash/2` for details.
-  """
-  @spec get_flash(Plug.Conn.t, atom) :: binary
-  def get_flash(conn, key), do: Phoenix.Controller.get_flash(conn, key)
 
   @doc """
   Marks the given value as safe, therefore its contents won't be escaped.

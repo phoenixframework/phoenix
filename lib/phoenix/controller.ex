@@ -88,8 +88,8 @@ defmodule Phoenix.Controller do
       use Phoenix.Controller.Pipeline
 
       plug Phoenix.Controller.Logger
-      plug :maybe_put_layout, {Phoenix.Controller.__layout__(__MODULE__), :application}
-      plug :maybe_put_view, Phoenix.Controller.__view__(__MODULE__)
+      plug :put_new_layout, {Phoenix.Controller.__layout__(__MODULE__), :application}
+      plug :put_new_view, Phoenix.Controller.__view__(__MODULE__)
     end
   end
 
@@ -213,8 +213,8 @@ defmodule Phoenix.Controller do
   @doc """
   Stores the view for rendering if one was not stored yet.
   """
-  @spec maybe_put_view(Plug.Conn.t, atom) :: Plug.Conn.t
-  def maybe_put_view(conn, module) do
+  @spec put_new_view(Plug.Conn.t, atom) :: Plug.Conn.t
+  def put_new_view(conn, module) do
     update_in conn.private, &Map.put_new(&1, :phoenix_view, module)
   end
 
@@ -277,8 +277,8 @@ defmodule Phoenix.Controller do
   @doc """
   Stores the layout for rendering if one was not stored yet.
   """
-  @spec maybe_put_layout(Plug.Conn.t, {atom, binary} | false) :: Plug.Conn.t
-  def maybe_put_layout(conn, layout)
+  @spec put_new_layout(Plug.Conn.t, {atom, binary} | false) :: Plug.Conn.t
+  def put_new_layout(conn, layout)
       when tuple_size(layout) == 2
       when layout == false do
     update_in conn.private, &Map.put_new(&1, :phoenix_layout, layout)
