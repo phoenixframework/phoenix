@@ -1,5 +1,6 @@
 defmodule Phoenix.PubSub.PG2Server do
   use GenServer
+  alias Phoenix.PubSub.Local
 
   @moduledoc """
   `Phoenix.PubSub` adapter based on `:pg2`
@@ -22,13 +23,13 @@ defmodule Phoenix.PubSub.PG2Server do
     {:ok, %{local_name: local_name, namespace: pg2_namespace}}
   end
 
-  def handle_call({:subscribe, pid, topic, link}, _from, state) do
-    response = {:perform, {GenServer, :call, [state.local_name, {:subscribe, pid, topic, link}]}}
+  def handle_call({:subscribe, pid, topic, opts}, _from, state) do
+    response = {:perform, {Local, :subscribe, [state.local_name, pid, topic, opts]}}
     {:reply, response, state}
   end
 
   def handle_call({:unsubscribe, pid, topic}, _from, state) do
-    response = {:perform, {GenServer, :call, [state.local_name, {:unsubscribe, pid, topic}]}}
+    response = {:perform, {Local, :unsubscribe, [state.local_name, pid, topic]}}
     {:reply, response, state}
   end
 
@@ -44,7 +45,7 @@ defmodule Phoenix.PubSub.PG2Server do
   end
 
   def handle_call({:subscribers, topic}, _from, state) do
-    response = {:perform, {GenServer, :call, [state.local_name, {:subscribers, topic}]}}
+    response = {:perform, {Local, :subscribers, [state.local_name, topic]}}
     {:reply, response, state}
   end
 
@@ -53,7 +54,7 @@ defmodule Phoenix.PubSub.PG2Server do
   end
 
   def handle_info({:forward_to_local, from_pid, topic, msg}, state) do
-    GenServer.call(state.local_name, {:broadcast, from_pid, topic, msg})
+    Local.broadcast(state.local_name, from_pid, topic, msg)
     {:noreply, state}
   end
 

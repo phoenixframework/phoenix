@@ -20,13 +20,13 @@ defmodule Phoenix.PubSub.LocalTest do
     assert PubSub.Local.list(:localpub) |> Enum.sort == ["bar", "foo"]
 
     # broadcast
-    :ok = PubSub.Local.broadcast(:localpub, "foo", :hellofoo)
+    :ok = PubSub.Local.broadcast(:localpub, :none, "foo", :hellofoo)
     assert_received :hellofoo
     assert Process.info(pid)[:messages] == [:hellofoo]
-    :ok = PubSub.Local.broadcast(:localpub, "bar", :hellobar)
+    :ok = PubSub.Local.broadcast(:localpub, :none, "bar", :hellobar)
     assert_received :hellobar
     assert Process.info(pid)[:messages] == [:hellofoo]
-    :no_topic = PubSub.Local.broadcast(:localpub, "ksfjlfsf", :hellobar)
+    :no_topic = PubSub.Local.broadcast(:localpub, :none, "ksfjlfsf", :hellobar)
     assert Process.info(self)[:messages] == []
   end
 

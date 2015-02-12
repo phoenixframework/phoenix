@@ -71,7 +71,7 @@
 
       this.transport = opts.transport || root.WebSocket || exports.LongPoller
       this.heartbeatIntervalMs = opts.heartbeatIntervalMs || this.heartbeatIntervalMs
-      this.logger = opts.logger || function(){ /* noop */ }
+      this.logger = opts.logger || function(){} // noop
       this.endPoint = this.expandEndpoint(endPoint)
       this.resetBufferTimer()
       this.reconnect()

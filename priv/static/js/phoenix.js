@@ -122,7 +122,7 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
 
       this.transport = opts.transport || root.WebSocket || exports.LongPoller;
       this.heartbeatIntervalMs = opts.heartbeatIntervalMs || this.heartbeatIntervalMs;
-      this.logger = opts.logger || function () {};
+      this.logger = opts.logger || function () {}; // noop
       this.endPoint = this.expandEndpoint(endPoint);
       this.resetBufferTimer();
       this.reconnect();
@@ -563,4 +563,3 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
     }
   };
 });
-/* noop */

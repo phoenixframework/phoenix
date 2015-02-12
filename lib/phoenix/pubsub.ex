@@ -71,11 +71,8 @@ defmodule Phoenix.PubSub do
                only include `:link` to link the subscriber to
                the pubsub adapter
   """
-  def subscribe(server, pid, topic, opts \\ [])
-  def subscribe(server, pid, topic, link: link),
-    do: call(server, {:subscribe, pid, topic, link && true})
-  def subscribe(server, pid, topic, _opts),
-    do: call(server, {:subscribe, pid, topic, _link = false})
+  def subscribe(server, pid, topic, opts \\ []),
+    do: call(server, {:subscribe, pid, topic, opts})
 
   @doc """
   Unsubscribes the pid from the PubSub adapter's topic
@@ -121,12 +118,6 @@ defmodule Phoenix.PubSub do
       :ok -> :ok
       {:error, reason} -> raise BroadcastError, message: reason
     end
-  end
-
-  @doc false
-  # Returns list of all topics under local server, for debug and perf tuning
-  def list(server_name) do
-    GenServer.call(Module.concat(server_name, Local), :list)
   end
 
   defp call(server, msg) do

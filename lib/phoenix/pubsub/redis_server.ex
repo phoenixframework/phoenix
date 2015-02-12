@@ -1,6 +1,7 @@
 defmodule Phoenix.PubSub.RedisServer do
   use GenServer
   require Logger
+  alias Phoenix.PubSub.Local
 
   @moduledoc """
   `Phoenix.PubSub` adapter for Redis
@@ -56,18 +57,18 @@ defmodule Phoenix.PubSub.RedisServer do
             opts: opts}}
   end
 
-  def handle_call({:subscribe, pid, topic, link}, _from, state) do
-    response = {:perform, {GenServer, :call, [state.local_name, {:subscribe, pid, topic, link}]}}
+  def handle_call({:subscribe, pid, topic, opts}, _from, state) do
+    response = {:perform, {Local, :subscribe, [state.local_name, pid, topic, opts]}}
     {:reply, response, state}
   end
 
   def handle_call({:unsubscribe, pid, topic}, _from, state) do
-    response = {:perform, {GenServer, :call, [state.local_name, {:unsubscribe, pid, topic}]}}
+    response = {:perform, {Local, :unsubscribe, [state.local_name, pid, topic]}}
     {:reply, response, state}
   end
 
   def handle_call({:subscribers, topic}, _from, state) do
-    response = {:perform, {GenServer, :call, [state.local_name, {:subscribers, topic}]}}
+    response = {:perform, {Local, :subscribers, [state.local_name, topic]}}
     {:reply, response, state}
   end
 
@@ -84,9 +85,9 @@ defmodule Phoenix.PubSub.RedisServer do
     {_vsn, remote_node_ref, from_pid, topic, msg} = :erlang.binary_to_term(bin_msg)
 
     if remote_node_ref == state.node_ref do
-      GenServer.call(state.local_name, {:broadcast, from_pid, topic, msg})
+      Local.broadcast(state.local_name, from_pid, topic, msg)
     else
-      GenServer.call(state.local_name, {:broadcast, :none, topic, msg})
+      Local.broadcast(state.local_name, :none, topic, msg)
     end
 
     :eredis_sub.ack_message(state.eredis_sub_pid)

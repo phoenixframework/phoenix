@@ -35,12 +35,8 @@ defmodule Phoenix.PubSub.Local do
       :ok
 
   """
-  def subscribe(local_server, pid, topic, opts \\ [])
-  def subscribe(local_server, pid, topic, link: link),
-    do: GenServer.call(local_server, {:subscribe, pid, topic, link && true})
-  def subscribe(local_server, pid, topic, _opts),
-    do: GenServer.call(local_server, {:subscribe, pid, topic, _link = false})
-
+  def subscribe(local_server, pid, topic, opts \\ []),
+    do: GenServer.call(local_server, {:subscribe, pid, topic, opts})
 
   @doc """
   Unsubscribes the pid from the topic
@@ -67,14 +63,14 @@ defmodule Phoenix.PubSub.Local do
 
   ## Examples
 
-      iex> broadcast(:local_server, "foo")
+      iex> broadcast(:local_server, self, "foo")
       :ok
-      iex> broadcast(:local_server, "bar")
+      iex> broadcast(:local_server, :none, "bar")
       :no_topic
 
   """
-  def broadcast(local_server, topic, msg) do
-    GenServer.call(local_server, {:broadcast, :none, topic, msg})
+  def broadcast(local_server, from, topic, msg) do
+    GenServer.call(local_server, {:broadcast, from, topic, msg})
   end
 
   @doc """
@@ -124,8 +120,8 @@ defmodule Phoenix.PubSub.Local do
     {:reply, HashDict.get(state.topics, topic, HashSet.new), state}
   end
 
-  def handle_call({:subscribe, pid, topic, link}, _from, state) do
-    if link, do: Process.link(pid)
+  def handle_call({:subscribe, pid, topic, opts}, _from, state) do
+    if opts[:link], do: Process.link(pid)
     {:reply, :ok, put_subscription(state, pid, topic)}
   end
 
