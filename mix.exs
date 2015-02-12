@@ -23,7 +23,6 @@ defmodule Phoenix.Mixfile do
      env: [code_reloader: false,
            template_engines: [],
            format_encoders: [],
-           pubsub: [garbage_collect_after_ms: 60_000..300_000],
            filter_parameters: ["password"],
            serve_endpoints: false]]
   end
@@ -35,6 +34,8 @@ defmodule Phoenix.Mixfile do
      {:earmark, "~> 0.1", only: :docs},
      {:ex_doc, "~> 0.7", only: :docs},
      {:inch_ex, "~> 0.2", only: :docs},
+     {:eredis, github: "wooga/eredis", optional: true},
+     {:poolboy, "~> 1.4.2", optional: true},
      {:websocket_client, github: "jeremyong/websocket_client", only: :test}]
   end
 

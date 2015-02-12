@@ -16,10 +16,10 @@ API documentation is available at [http://hexdocs.pm/phoenix](http://hexdocs.pm/
 
 There are no guidelines yet. Do what feels natural. Submit a bug, join a discussion, open a pull request.
 
-### Building phoenix.coffee
+### Building phoenix.js
 
 ```bash
-$ coffee -o priv/static/js -cw assets/cs
+$ 6to5 -w assets/js/phoenix.js -o priv/static/js/phoenix.js
 ```
 
 ## Contributing

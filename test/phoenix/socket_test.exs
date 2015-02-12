@@ -8,6 +8,12 @@ defmodule Phoenix.SocketTest do
     %Socket{pid: self}
   end
 
+  defmodule MyChannel do
+    use Phoenix.Channel
+    def join(_topic, _msg, socket), do: {:ok, socket}
+    def handle_in(_event, _msg, socket), do: {:ok, socket}
+  end
+
   test "put_topic/2 sets the topic" do
     socket = new_socket |> Socket.put_topic("sometopic:somesubtopic")
     assert socket.topic == "sometopic:somesubtopic"

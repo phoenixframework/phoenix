@@ -2,24 +2,27 @@ Code.require_file "websocket_client.exs", __DIR__
 Code.require_file "http_client.exs", __DIR__
 
 defmodule Phoenix.Integration.ChannelTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
   import RouterHelper, only: [capture_log: 1]
 
   alias Phoenix.Integration.WebsocketClient
   alias Phoenix.Integration.HTTPClient
   alias Phoenix.Socket.Message
+  alias __MODULE__.Endpoint
 
   @port 5807
   @window_ms 100
-  @ensure_window_timeout_ms @window_ms * 3
+  @pubsub_window_ms 1000
+  @ensure_window_timeout_ms @window_ms * 2
 
-  Application.put_env(:channel_app, __MODULE__.Endpoint, [
+  Application.put_env(:channel_app, Endpoint, [
     https: false,
     http: [port: @port],
     secret_key_base: String.duplicate("abcdefgh", 8),
     debug_errors: false,
-    transports: [longpoller_window_ms: @window_ms],
-    server: true
+    transports: [longpoller_window_ms: @window_ms, longpoller_pubsub_timeout_ms: @pubsub_window_ms],
+    server: true,
+    pubsub: [adapter: Phoenix.PubSub.PG2, name: :int_pub]
   ])
 
   defmodule RoomChannel do
@@ -36,7 +39,7 @@ defmodule Phoenix.Integration.ChannelTest do
     end
 
     def handle_in("new:msg", message, socket) do
-      broadcast socket, "new:msg", message
+      broadcast! socket, "new:msg", message
     end
   end
 
@@ -103,82 +106,91 @@ defmodule Phoenix.Integration.ChannelTest do
   ## Longpoller Transport
 
   @doc """
-  Helper method to maintain cookie session state when making HTTP requests.
+  Helper method to maintain token session state when making HTTP requests.
 
   Returns a response with body decoded into JSON map.
   """
-  def poll(method, path, cookie, json \\ nil) do
-    headers = if cookie, do: %{"Cookie" => cookie}, else: %{}
+  def poll(method, path, params, json \\ nil) do
+    headers = %{"content-type" => "application/json"}
+    body = Poison.encode!(json)
+    url = "http://127.0.0.1:#{@port}#{path}?" <> URI.encode_query(params)
 
-    if json do
-      headers = Dict.merge(headers, %{"content-type" => "application/json"})
-      body    = Poison.encode!(json)
-    end
-
-    {:ok, resp} = HTTPClient.request(method, "http://127.0.0.1:#{@port}#{path}", headers, body)
+    {:ok, resp} = HTTPClient.request(method, url, headers, body)
 
     if resp.body != "" do
-      resp = put_in resp.body, Poison.decode!(resp.body)
-    end
-
-    case resp.headers |> Enum.into(%{}) |> Map.get('set-cookie') |> to_string do
-      ""         -> {resp, cookie}
-      new_cookie -> {resp, new_cookie}
+      put_in resp.body, Poison.decode!(resp.body)
+    else
+      resp
     end
   end
 
   test "adapter handles longpolling join, leave, and event messages" do
     # create session
-    {resp, cookie} = poll :post, "/ws", nil, %{}
-    assert resp.status == 200
+    resp = poll :get, "/ws/poll", %{}, %{}
+    session = Map.take(resp.body, ["token", "sig"])
+    assert resp.body["token"]
+    assert resp.body["sig"]
+    assert resp.status == 410
 
     # join
-    {resp, cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:lobby",
-                                                       "event" => "join",
-                                                       "payload" => %{}}
+    resp = poll :post, "/ws/poll", session, %{
+      "topic" => "rooms:lobby",
+      "event" => "join",
+      "payload" => %{}
+    }
     assert resp.status == 200
 
     # poll with messsages sends buffer
-    {resp, cookie} = poll(:get, "/ws/poll", cookie)
+    resp = poll(:get, "/ws/poll", session)
+    session = Map.take(resp.body, ["token", "sig"])
     assert resp.status == 200
-    [status_msg] = resp.body
+    [status_msg] = resp.body["messages"]
     assert status_msg["payload"] == %{"status" => "connected"}
 
     # poll without messages sends 204 no_content
-    {resp, cookie} = poll(:get, "/ws/poll", cookie)
+    resp = poll(:get, "/ws/poll", session)
+    session = Map.take(resp.body, ["token", "sig"])
     assert resp.status == 204
 
     # messages are buffered between polls
-    Phoenix.Channel.broadcast "rooms:lobby", "user:entered", %{name: "José"}
-    Phoenix.Channel.broadcast "rooms:lobby", "user:entered", %{name: "Sonny"}
-    {resp, cookie} = poll(:get, "/ws/poll", cookie)
+    Endpoint.broadcast! "rooms:lobby", "user:entered", %{name: "José"}
+    Endpoint.broadcast! "rooms:lobby", "user:entered", %{name: "Sonny"}
+    resp = poll(:get, "/ws/poll", session)
+    session = Map.take(resp.body, ["token", "sig"])
     assert resp.status == 200
-    assert Enum.count(resp.body) == 2
-    assert Enum.map(resp.body, &(&1["payload"]["name"])) == ["José", "Sonny"]
+    assert Enum.count(resp.body["messages"]) == 2
+    assert Enum.map(resp.body["messages"], &(&1["payload"]["name"])) == ["José", "Sonny"]
 
     # poll without messages sends 204 no_content
-    {resp, cookie} = poll(:get, "/ws/poll", cookie)
+    resp = poll(:get, "/ws/poll", session)
+    session = Map.take(resp.body, ["token", "sig"])
     assert resp.status == 204
 
-    {resp, cookie} = poll(:get, "/ws/poll", cookie)
+    resp = poll(:get, "/ws/poll", session)
+    session = Map.take(resp.body, ["token", "sig"])
     assert resp.status == 204
 
     # generic events
-    Phoenix.PubSub.subscribe(self, "rooms:lobby")
-    {resp, cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:lobby",
-                                                       "event" => "new:msg",
-                                                       "payload" => %{"body" => "hi!"}}
+    Phoenix.PubSub.subscribe(:int_pub, self, "rooms:lobby")
+    resp = poll :post, "/ws/poll", Map.take(resp.body, ["token", "sig"]), %{
+      "topic" => "rooms:lobby",
+      "event" => "new:msg",
+      "payload" => %{"body" => "hi!"}
+    }
     assert resp.status == 200
     assert_receive {:socket_broadcast, %Message{event: "new:msg", payload: %{"body" => "hi!"}}}
-    {resp, cookie} = poll(:get, "/ws/poll", cookie)
+    resp = poll(:get, "/ws/poll", session)
+    session = Map.take(resp.body, ["token", "sig"])
     assert resp.status == 200
 
     # unauthorized events
     capture_log fn ->
-      Phoenix.PubSub.subscribe(self, "rooms:private-room")
-      {resp, cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:private-room",
-                                                         "event" => "new:msg",
-                                                         "payload" => %{"body" => "this method shouldn't send!'"}}
+      Phoenix.PubSub.subscribe(:int_pub, self, "rooms:private-room")
+      resp = poll :post, "/ws/poll", session, %{
+        "topic" => "rooms:private-room",
+        "event" => "new:msg",
+        "payload" => %{"body" => "this method shouldn't send!'"}
+      }
       assert resp.status == 401
       refute_receive {:socket_broadcast, %Message{event: "new:msg"}}
 
@@ -186,44 +198,51 @@ defmodule Phoenix.Integration.ChannelTest do
       ## multiplexed sockets
 
       # join
-      {resp, cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:room123",
-                                                         "event" => "join",
-                                                         "payload" => %{}}
+      resp = poll :post, "/ws/poll", session, %{
+        "topic" => "rooms:room123",
+        "event" => "join",
+        "payload" => %{}
+      }
       assert resp.status == 200
-      Phoenix.Channel.broadcast "rooms:lobby", "new:msg", %{body: "Hello lobby"}
+      Endpoint.broadcast! "rooms:lobby", "new:msg", %{body: "Hello lobby"}
       # poll
-      {resp, cookie} = poll(:get, "/ws/poll", cookie)
+      resp = poll(:get, "/ws/poll", session)
+      session = Map.take(resp.body, ["token", "sig"])
       assert resp.status == 200
-      assert Enum.count(resp.body) == 2
-      assert Enum.at(resp.body, 0)["payload"]["status"] == "connected"
-      assert Enum.at(resp.body, 1)["payload"]["body"] == "Hello lobby"
+      assert Enum.count(resp.body["messages"]) == 2
+      assert Enum.at(resp.body["messages"], 0)["payload"]["status"] == "connected"
+      assert Enum.at(resp.body["messages"], 1)["payload"]["body"] == "Hello lobby"
 
 
       ## Server termination handling
 
       # 410 from crashed/terminated longpoller server when polling
       :timer.sleep @ensure_window_timeout_ms
-      {resp, cookie} = poll(:get, "/ws/poll", cookie)
+      resp = poll(:get, "/ws/poll", session)
+      session = Map.take(resp.body, ["token", "sig"])
       assert resp.status == 410
 
+      # join
+      resp = poll :post, "/ws/poll", session, %{
+        "topic" => "rooms:lobby",
+        "event" => "join",
+        "payload" => %{}
+      }
+      assert resp.status == 200
+      Phoenix.PubSub.subscribe(:int_pub, self, "rooms:lobby")
+      :timer.sleep @ensure_window_timeout_ms
+      resp = poll :post, "/ws/poll", session, %{
+        "topic" => "rooms:lobby",
+        "event" => "new:msg",
+        "payload" => %{"body" => "hi!"}
+      }
+      assert resp.status == 410
+      refute_receive {:socket_reply, %Message{event: "new:msg", payload: %{"body" => "hi!"}}}
 
       # 410 from crashed/terminated longpoller server when publishing
       # create new session
-      {resp, cookie} = poll :post, "/ws", cookie, %{}
-      assert resp.status == 200
-
-      # join
-      {resp, cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:lobby",
-                                                         "event" => "join",
-                                                         "payload" => %{}}
-      assert resp.status == 200
-      Phoenix.PubSub.subscribe(self, "rooms:lobby")
-      :timer.sleep @ensure_window_timeout_ms
-      {resp, _cookie} = poll :post, "/ws/poll", cookie, %{"topic" => "rooms:lobby",
-                                                          "event" => "new:msg",
-                                                          "payload" => %{"body" => "hi!"}}
+      resp = poll :post, "/ws/poll", %{"token" => "foo", "sig" => "bar"}, %{}
       assert resp.status == 410
-      refute_receive {:socket_reply, %Message{event: "new:msg", payload: %{"body" => "hi!"}}}
     end
   end
 end

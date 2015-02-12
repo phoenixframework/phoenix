@@ -48,7 +48,7 @@ defmodule Phoenix.Channel do
   After a client has successfully joined a channel, incoming events from the
   client are routed through the channel's `handle_in/3` callbacks. Within these
   callbacks, you can perform any action. Typically you'll either foward a
-  message out to all listeners with `Phoenix.Channel.broadcast/3`, or reply
+  message out to all listeners with `Phoenix.Channel.broadcast!/3`, or reply
   directly to the socket with `Phoenix.Channel.reply/3`.
   Incoming callbacks must return the `socket` to maintain ephemeral state.
 
@@ -56,7 +56,7 @@ defmodule Phoenix.Channel do
   and broadcasting the message to all topic subscribers for this socket.
 
       def handle_in("new:msg", %{"uid" => uid, "body" => body}, socket) do
-        broadcast socket, "new:msg", %{uid: uid, body: body}
+        broadcast! socket, "new:msg", %{uid: uid, body: body}
         {:ok, socket}
       end
 
@@ -75,10 +75,10 @@ defmodule Phoenix.Channel do
   subscribers' `handle_out/3` callback is triggered where the event can be
   relayed as is, or customized on a socket by socket basis to append extra
   information, or conditionally filter the message from being delivered.
-  *Note*: `broadcast/3` and `reply/3` both return `{:ok, socket}`.
+  *Note*: `broadcast/3`, `broadcast!/3` and `reply/3` both return `{:ok, socket}`.
 
       def handle_in("new:msg", %{"uid" => uid, "body" => body}, socket) do
-        broadcast socket, "new:msg", %{uid: uid, body: body}
+        broadcast! socket, "new:msg", %{uid: uid, body: body}
       end
 
       # for every socket subscribing on this topic, append an `is_editable`
@@ -103,6 +103,28 @@ defmodule Phoenix.Channel do
    but you'll need to define the catch-all clause yourself once you define an
    `handle_out/3` clause.
 
+
+  ## Broadcasting to an external topic
+  In some cases, you will want to broadcast messages without the context of a `soceket`.
+  This could be for broadcasting from within your channel to an external topic, or
+  broadcasting from elsewhere in your application like a Controller or GenServer.
+  For these cases, you can broadcast from your Endpoint its configured PubSub
+  server will be used:
+
+      # within channel
+      def handle_in("new:msg", %{"uid" => uid, "body" => body}, socket) do
+        broadcast! socket, "new:msg", %{uid: uid, body: body}
+        MyApp.Endpoint.broadcast! "rooms:superadmin", "new:msg", %{uid: uid, body: body}
+      end
+
+      # within controller
+      def create(conn, params) do
+        ...
+        MyApp.Endpoint.broadcast! "rooms:" <> rid, "new:msg", %{uid: uid, body: body}
+        MyApp.Endpoint.broadcast! "rooms:superadmin", "new:msg", %{uid: uid, body: body}
+        redirect conn, to: "/"
+      end
+
   """
 
   use Behaviour
@@ -124,19 +146,20 @@ defmodule Phoenix.Channel do
                                                                      {:leave, Socket.t} |
                                                                      {:error, reason :: term, Socket.t}
 
-  defmacro __using__(_options) do
+  defmacro __using__(_) do
     quote do
       @behaviour unquote(__MODULE__)
+
       import unquote(__MODULE__)
       import Phoenix.Socket
 
       def leave(message, socket), do: {:ok, socket}
-      def handle_in(_event, _message, socket), do: {:ok, socket}
+
       def handle_out(event, message, socket) do
         reply(socket, event, message)
       end
 
-      defoverridable leave: 2, handle_out: 3, handle_in: 3
+      defoverridable leave: 2, handle_out: 3
     end
   end
 
@@ -151,12 +174,29 @@ defmodule Phoenix.Channel do
       :ok
 
   """
-  def broadcast(topic, event, message) when is_binary(topic) do
-    broadcast_from :global, topic, event, message
+  def broadcast(%Socket{} = socket, event, msg) do
+    Phoenix.Channel.broadcast(socket.pubsub_server, socket, event, msg)
+  end
+  def broadcast(server, topic, event, message) when is_binary(topic) do
+    broadcast_from server, :none, topic, event, message
+  end
+  def broadcast(server, socket = %Socket{}, event, message) do
+    broadcast_from server, :none, socket.topic, event, message
+    {:ok, socket}
   end
 
-  def broadcast(socket = %Socket{}, event, message) do
-    broadcast_from :global, socket.topic, event, message
+  @doc """
+  Same as `Phoenix.Channel.broadcast/4`, but
+  raises `Phoenix.PubSub.BroadcastError` if broadcast fails
+  """
+  def broadcast!(%Socket{} = socket, event, msg) do
+    Phoenix.Channel.broadcast!(socket.pubsub_server, socket, event, msg)
+  end
+  def broadcast!(server, topic, event, message) when is_binary(topic) do
+    broadcast_from! server, :none, topic, event, message
+  end
+  def broadcast!(server, socket = %Socket{}, event, message) do
+    broadcast_from! server, :none, socket.topic, event, message
     {:ok, socket}
   end
 
@@ -171,19 +211,41 @@ defmodule Phoenix.Channel do
       :ok
 
   """
-  def broadcast_from(socket = %Socket{}, event, message) do
-    broadcast_from(socket.pid, socket.topic, event, message)
+  def broadcast_from(%Socket{} = socket, event, msg) do
+    Phoenix.Channel.broadcast_from(socket.pubsub_server, socket, event, msg)
+  end
+  def broadcast_from(pubsub_server, socket = %Socket{}, event, message) do
+    broadcast_from(pubsub_server, socket.pid, socket.topic, event, message)
     {:ok, socket}
   end
-  def broadcast_from(from, topic, event, message) when is_map(message) do
-    PubSub.create(topic)
-    PubSub.broadcast_from from, topic, {:socket_broadcast, %Message{
+  def broadcast_from(pubsub_server, from, topic, event, message) when is_map(message) do
+    PubSub.broadcast_from pubsub_server, from, topic, {:socket_broadcast, %Message{
       topic: topic,
       event: event,
       payload: message
     }}
   end
-  def broadcast_from(_, _, _, _), do: raise_invalid_message
+  def broadcast_from(_, _, _, _, _), do: raise_invalid_message
+
+  @doc """
+  Same as `Phoenix.Channel.broadcast_from/4`, but
+  raises `Phoenix.PubSub.BroadcastError` if broadcast fails
+  """
+  def broadcast_from!(%Socket{} = socket, event, msg) do
+    Phoenix.Channel.broadcast_from!(socket.pubsub_server, socket, event, msg)
+  end
+  def broadcast_from!(pubsub_server, socket = %Socket{}, event, message) do
+    broadcast_from!(pubsub_server, socket.pid, socket.topic, event, message)
+    {:ok, socket}
+  end
+  def broadcast_from!(pubsub_server, from, topic, event, message) when is_map(message) do
+    PubSub.broadcast_from! pubsub_server, from, topic, {:socket_broadcast, %Message{
+      topic: topic,
+      event: event,
+      payload: message
+    }}
+  end
+  def broadcast_from!(_, _, _, _, _), do: raise_invalid_message
 
   @doc """
   Sends Dict, JSON serializable message to socket

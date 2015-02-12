@@ -173,7 +173,7 @@ defmodule Phoenix.Router do
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
 
   @doc false
-  defmacro __using__(_opts) do
+  defmacro __using__(_) do
     quote do
       unquote(prelude())
       unquote(plug())

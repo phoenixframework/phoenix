@@ -3,122 +3,116 @@ defmodule Phoenix.PubSub.PubSubTest do
   use ExUnit.Case
   alias Phoenix.PubSub
 
+  @adapters [
+    {Phoenix.PubSub.Redis, :redis_pub},
+    {Phoenix.PubSub.PG2,   :pg2_pub}
+  ]
+
   def spawn_pid do
-    spawn fn ->
-      receive do
-      end
+    spawn fn -> :timer.sleep(:infinity) end
+  end
+
+  defmodule FailedBroadcaster do
+    def broadcast(_server, _topic, _msg), do: {:error, :boom}
+    def broadcast_from(_server, _from_pid, _topic, _msg), do: {:error, :boom}
+  end
+
+  for {adapter, name} <- @adapters do
+    @adapter adapter
+    @server name
+    setup_all do
+      @adapter.start_link(@server, [])
+      :ok
     end
-  end
 
-  setup_all do
-    :ok
-  end
+    test "#{inspect @adapter} #subscribers, #subscribe, #unsubscribe" do
+      pid = spawn_pid
+      assert Enum.empty?(PubSub.subscribers(@server, "topic4"))
+      assert PubSub.subscribe(@server, pid, "topic4")
+      assert PubSub.subscribers(@server, "topic4") |> Enum.to_list == [pid]
+      assert PubSub.unsubscribe(@server, pid, "topic4")
+      assert Enum.empty?(PubSub.subscribers(@server, "topic4"))
+      Process.exit pid, :kill
+    end
 
-  test "#create adds topic to process group" do
-    refute PubSub.exists?("topic1")
-    assert PubSub.create("topic1") == :ok
-    assert PubSub.exists?("topic1")
-  end
+    test "#{inspect @adapter} subscribe/3 with link does not down adapter" do
+      server_name = Module.concat(@server, :link_pub)
+      {:ok, _super_pid} = @adapter.start_link(server_name, [])
+      local_pid = Process.whereis(Module.concat(server_name, Local))
+      assert Process.alive?(local_pid)
+      pid = spawn_pid
 
-  test "#create with existing group returns :ok" do
-    refute PubSub.exists?("topic2")
-    assert PubSub.create("topic2") == :ok
-    assert PubSub.create("topic2") == :ok
-    assert PubSub.exists?("topic2")
-  end
+      assert Enum.empty?(PubSub.subscribers(server_name, "topic4"))
+      assert PubSub.subscribe(server_name, pid, "topic4", link: true)
+      Process.exit(pid, :kill)
+      refute Process.alive?(pid)
+      assert Process.alive?(local_pid)
+    end
 
-  test "#delete removes process group" do
-    assert PubSub.create("topic3") == :ok
-    assert PubSub.exists?("topic3")
-    assert PubSub.delete("topic3") == :ok
-    refute PubSub.exists?("topic3")
-  end
+    test "#{inspect @adapter} subscribe/3 with link downs subscriber" do
+      server_name = Module.concat(@server, :link_pub2)
+      {:ok, _super_pid} = @adapter.start_link(server_name, [])
+      local_pid = Process.whereis(Module.concat(server_name, Local))
+      assert Process.alive?(local_pid)
+      pid = spawn_pid
+      non_linked_pid = spawn_pid
+      non_linked_pid2 = spawn_pid
 
-  test "#delete does not remove active process groups" do
-    assert PubSub.create("topic3") == :ok
-    assert PubSub.exists?("topic3")
-    PubSub.subscribe(self, "topic3")
-    assert PubSub.delete("topic3") == {:error, :active}
-    assert PubSub.exists?("topic3")
-  end
+      assert PubSub.subscribe(server_name, pid, "topic4", link: true)
+      assert PubSub.subscribe(server_name, non_linked_pid, "topic4")
+      assert PubSub.subscribe(server_name, non_linked_pid2, "topic4", link: false)
+      Process.exit(local_pid, :kill)
+      refute Process.alive?(local_pid)
+      refute Process.alive?(pid)
+      assert Process.alive?(non_linked_pid)
+      assert Process.alive?(non_linked_pid2)
+    end
 
-  test "#subscribers, #subscribe, #unsubscribe" do
-    pid = spawn_pid
-    assert PubSub.create("topic4") == :ok
-    assert Enum.empty?(PubSub.subscribers("topic4"))
-    assert PubSub.subscribe(pid, "topic4")
-    assert PubSub.subscribers("topic4") == [pid]
-    assert PubSub.unsubscribe(pid, "topic4")
-    assert Enum.empty?(PubSub.subscribers("topic4"))
-    Process.exit pid, :kill
-  end
+    test "#{inspect @adapter} broadcast/3 and broadcast!/3 publishes message to each subscriber" do
+      PubSub.subscribe(@server, self, "topic9")
+      assert PubSub.subscribers(@server, "topic9") |> Enum.to_list == [self]
+      :ok = PubSub.broadcast(@server, "topic9", :ping)
+      assert_receive :ping
+      :ok = PubSub.broadcast!(@server, "topic9", :ping)
+      assert_receive :ping
+    end
 
-  test "#active? returns true if has subscribers" do
-    pid = spawn_pid
-    assert PubSub.create("topic5") == :ok
-    assert PubSub.subscribe(pid, "topic5")
-    assert PubSub.active?("topic5")
-    Process.exit pid, :kill
-  end
+    test "#{inspect @adapter} broadcast!/3 and broadcast_from!/4 raise if broadcast fails" do
+      PubSub.subscribe(@server, self, "topic9")
+      assert PubSub.subscribers(@server, "topic9") |> Enum.to_list == [self]
+      assert_raise PubSub.BroadcastError, fn ->
+        PubSub.broadcast!(@server, "topic9", :ping, FailedBroadcaster)
+      end
+      assert_raise PubSub.BroadcastError, fn ->
+        PubSub.broadcast_from!(@server, self, "topic9", :ping, FailedBroadcaster)
+      end
+      refute_receive :ping
+    end
 
-  test "#active? returns false if no subscribers" do
-    assert PubSub.create("topic6") == :ok
-    refute PubSub.active?("topic6")
-  end
+    test "#{inspect @adapter} broadcast/3 does not publish message to other topic subscribers" do
+      pids = Enum.map 0..10, fn _ -> spawn_pid end
+      pids |> Enum.each(&PubSub.subscribe(@server, &1, "topic10"))
+      :ok = PubSub.broadcast(@server, "topic10", :ping)
+      refute_receive :ping
+      pids |> Enum.each(&Process.exit &1, :kill)
+    end
 
-  test "topic is garbage collected if inactive" do
-    # assert true == Phoenix.PubSub.Supervisor.stop
-    # refute Phoenix.PubSub.Supervisor.running?
-    # PubSub.Supervisor.start_link garbage_collect_after_ms = 25
-    assert PubSub.create("topic7") == :ok
-    assert PubSub.exists?("topic7")
-    send PubSub.Server.leader_pid, {:garbage_collect, [{:phx, "topic7"}]}
-    refute PubSub.exists?("topic7")
-  end
+    test "#{inspect @adapter} broadcast_from/4 and broadcast_from!/4 skips sender" do
+      PubSub.subscribe(@server, self, "topic11")
+      PubSub.broadcast_from(@server, self, "topic11", :ping)
+      refute_receive :ping
 
-  test "topic is not garbage collected if active" do
-    # Phoenix.PubSub.Supervisor.stop
-    # PubSub.Supervisor.start_link garbage_collect_after_ms = 25
-    pid = spawn_pid
-    # PubSub.Supervisor.start_link garbage_collect_after_ms = 25
-    assert PubSub.create("topic8") == :ok
-    assert PubSub.exists?("topic8")
-    assert PubSub.subscribe(pid, "topic8")
-    send PubSub.Server.leader_pid, {:garbage_collect, [{:phx, "topic8"}]}
-    assert PubSub.exists?("topic8")
-    Process.exit pid, :kill
-  end
+      PubSub.broadcast_from!(@server, self, "topic11", :ping)
+      refute_receive :ping
+    end
 
-  test "#broadcast publishes message to each subscriber" do
-    assert PubSub.create("topic9") == :ok
-    PubSub.subscribe(self, "topic9")
-    PubSub.broadcast "topic9", :ping
-    assert_received :ping
-  end
-
-  test "#broadcast does not publish message to other topic subscribers" do
-    pids = Enum.map 0..10, fn _ -> spawn_pid end
-    assert PubSub.create("topic10") == :ok
-    pids |> Enum.each(&PubSub.subscribe(&1, "topic10"))
-    PubSub.broadcast "topic10", :ping
-    refute_received :ping
-    pids |> Enum.each(&Process.exit &1, :kill)
-  end
-
-  test "#broadcast_from does not publish to broadcaster pid when provided" do
-    assert PubSub.create("topic11") == :ok
-    PubSub.subscribe(self, "topic11")
-    PubSub.broadcast_from self, "topic11", :ping
-    refute_received :ping
-  end
-
-  test "processes automatically removed from topic when killed" do
-    pid = spawn_pid
-    assert PubSub.create("topic12") == :ok
-    assert PubSub.subscribe(pid, "topic12")
-    assert PubSub.subscribers("topic12") == [pid]
-    Process.exit pid, :kill
-    :timer.sleep 10 # wait until pg2 removes dead pid
-    assert PubSub.subscribers("topic12") == []
+    test "#{inspect @adapter} processes automatically removed from topic when killed" do
+      pid = spawn_pid
+      assert PubSub.subscribe(@server, pid, "topic12")
+      assert PubSub.subscribers(@server, "topic12") |> Enum.to_list == [pid]
+      Process.exit pid, :kill
+      :timer.sleep 10 # wait until adapter removes dead pid
+      assert PubSub.subscribers(@server, "topic12") |> Enum.to_list == []
+    end
   end
 end

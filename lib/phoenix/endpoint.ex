@@ -98,6 +98,19 @@ defmodule Phoenix.Endpoint do
 
           [host: "localhost"]
 
+    * `:pubsub` - configuration for this Endpoint's pubsub adapter.
+      Configuration either requires a `:name` of the registered pubsub server
+      or a `:name`, `:adapter`, and `:options` which starts the adapter in
+      the endpoint's supervision tree. If no name is provided, the name is
+      inflected from the endpoint module. Defaults to:
+
+          [adapter: Phoenix.PubSub.PG2]
+
+      with advanced adapter configuration:
+
+          [name: :my_pubsub, adapter: Phoenix.PubSub.Redis,
+                             options: [host: "192.168.100.1"]]
+
   ## Endpoint API
 
   In the previous section, we have used the `config/2` function which is
@@ -110,6 +123,15 @@ defmodule Phoenix.Endpoint do
     * `config_change(changed, removed)` - reload the endpoint configuration on application upgrades
     * `url(path)` - returns the URL for this endpoint with the given path
     * `static_path(path)` - returns the static path for a given asset
+    * `broadcast_from(from, topic, event, msg)` - proxy to `Phoenix.Channel.broadcast_from/4`
+      using this endpoint's configured pubsub server
+    * `broadcast_from!(from, topic, event, msg)` - proxy to `Phoenix.Channel.broadcast_from!/4`
+      using this endpoint's configured pubsub server
+    * `broadcast(topic, event, msg)` - proxy to `Phoenix.Channel.broadcast/3`
+      using this endpoint's configured pubsub server
+    * `broadcast!(topic, event, msg)` - proxy to `Phoenix.Channel.broadcast!/3`
+      using this endpoint's configured pubsub server
+
 
   Besides the functions above, it defines also the API expected by Plug
   for serving requests:
@@ -126,6 +148,7 @@ defmodule Phoenix.Endpoint do
   defmacro __using__(opts) do
     quote do
       unquote(config(opts))
+      unquote(pubsub())
       unquote(plug())
       unquote(server())
     end
@@ -136,6 +159,30 @@ defmodule Phoenix.Endpoint do
       otp_app = unquote(opts)[:otp_app] || raise "endpoint expects :otp_app to be given"
       config  = Adapter.config(otp_app, __MODULE__)
       @config config
+    end
+  end
+
+  defp pubsub() do
+    quote do
+      @pubsub_server get_in(@config, [:pubsub, :name]) ||
+        Phoenix.Naming.base_concat(__MODULE__, "PubSub")
+
+      def __pubsub_server__, do: @pubsub_server
+
+      def broadcast_from(from, topic, event, msg) do
+        Phoenix.Channel.broadcast_from(@pubsub_server, from, topic, event, msg)
+      end
+      def broadcast_from!(from, topic, event, msg) do
+        Phoenix.Channel.broadcast_from!(@pubsub_server, from, topic, event, msg)
+      end
+
+      def broadcast(topic, event, msg) do
+        Phoenix.Channel.broadcast(@pubsub_server, topic, event, msg)
+      end
+
+      def broadcast!(topic, event, msg) do
+        Phoenix.Channel.broadcast!(@pubsub_server, topic, event, msg)
+      end
     end
   end
 

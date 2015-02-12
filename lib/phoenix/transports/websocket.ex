@@ -27,15 +27,11 @@ defmodule Phoenix.Transports.WebSocket do
 
   alias Phoenix.Channel.Transport
   alias Phoenix.Socket.Message
-  alias Phoenix.Transports.LongPoller
 
   plug :action
 
   def upgrade(%Plug.Conn{method: "GET"} = conn, _) do
     put_private(conn, :phoenix_upgrade, {:websocket, __MODULE__}) |> halt
-  end
-  def upgrade(%Plug.Conn{method: "POST"} = conn, _) do
-    LongPoller.call(conn, LongPoller.init(:open))
   end
 
   @doc """
@@ -44,17 +40,19 @@ defmodule Phoenix.Transports.WebSocket do
   def ws_init(conn) do
     serializer = Dict.fetch!(endpoint_module(conn).config(:transports), :websocket_serializer)
     timeout = Dict.fetch!(endpoint_module(conn).config(:transports), :websocket_timeout)
-    {:ok, %{router: router_module(conn), sockets: HashDict.new, serializer: serializer}, timeout}
+    {:ok, %{router: router_module(conn),
+            pubsub_server: endpoint_module(conn).__pubsub_server__(),
+            sockets: HashDict.new, serializer: serializer}, timeout}
   end
 
   @doc """
   Receives JSON encoded `%Phoenix.Socket.Message{}` from client and dispatches
   to Transport layer
   """
-  def ws_handle(opcode, payload, state = %{router: router, sockets: sockets, serializer: serializer}) do
+  def ws_handle(opcode, payload, state) do
     payload
-    |> serializer.decode!(opcode)
-    |> Transport.dispatch(sockets, self, router, __MODULE__)
+    |> state.serializer.decode!(opcode)
+    |> Transport.dispatch(state.sockets, self, state.router, state.pubsub_server, __MODULE__)
     |> case do
       {:ok, sockets}             -> %{state | sockets: sockets}
       {:error, _reason, sockets} -> %{state | sockets: sockets}
@@ -64,7 +62,7 @@ defmodule Phoenix.Transports.WebSocket do
   @doc """
   Receives `%Phoenix.Socket.Message{}` and sends encoded message JSON to client
   """
-  def ws_info({:socket_broadcast, message = %Message{}}, state = %{sockets: sockets}) do
+  def ws_info({:socket_broadcast, message = %Message{}}, %{sockets: sockets} = state) do
     sockets = case Transport.dispatch_broadcast(sockets, message) do
       {:ok, socks} -> socks
       {:error, _reason, socks} -> socks
@@ -72,7 +70,7 @@ defmodule Phoenix.Transports.WebSocket do
 
     %{state | sockets: sockets}
   end
-  def ws_info({:socket_reply, message = %Message{}}, state = %{serializer: serializer}) do
+  def ws_info({:socket_reply, message = %Message{}}, %{serializer: serializer} = state) do
     reply(self, serializer.encode!(message))
     state
   end

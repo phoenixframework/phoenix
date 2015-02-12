@@ -53,6 +53,28 @@ defmodule Phoenix.Naming do
   end
 
   @doc """
+  Finds the Base Namespace of the module with optional concat
+
+  ## Examples
+
+      iex> Phoenix.Naming.base_concat(MyApp.MyChannel)
+      MyApp
+
+      iex> Phoenix.Naming.base_concat(MyApp.Admin.MyChannel, PubSub)
+      MyApp.PubSub
+
+      iex> Phoenix.Naming.base_concat(MyApp.Admin.MyChannel, "PubSub")
+      MyApp.PubSub
+
+  """
+  def base_concat(mod, submodule \\ nil) do
+    mod
+    |> Module.split
+    |> hd
+    |> Module.concat(submodule)
+  end
+
+  @doc """
   Converts String to underscore case.
 
   ## Examples

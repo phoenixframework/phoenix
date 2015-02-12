@@ -63,8 +63,12 @@ defmodule Phoenix.Channel.Transport do
 
   The returned `HashDict` of `%Phoenix.Socket{}`s must be held by the adapter
   """
-  def dispatch(msg = %Message{}, sockets, adapter_pid, router, transport) do
-    socket = %Socket{pid: adapter_pid, router: router, topic: msg.topic, transport: transport}
+  def dispatch(msg = %Message{}, sockets, adapter_pid, router, pubsub_server, transport) do
+    socket = %Socket{pid: adapter_pid,
+                     router: router,
+                     pubsub_server: pubsub_server,
+                     topic: msg.topic,
+                     transport: transport}
 
     sockets
     |> HashDict.get(msg.topic, socket)
@@ -135,11 +139,11 @@ defmodule Phoenix.Channel.Transport do
   end
 
   defp handle_result({:ok, %Socket{} = socket}, "join") do
-    PubSub.subscribe(socket.pid, socket.topic)
+    PubSub.subscribe(socket.pubsub_server, socket.pid, socket.topic, link: true)
     {:ok, Socket.authorize(socket, socket.topic)}
   end
   defp handle_result({:ok, %Socket{} = socket}, "leave") do
-    PubSub.unsubscribe(socket.pid, socket.topic)
+    PubSub.unsubscribe(socket.pubsub_server, socket.pid, socket.topic)
     {:leave, Socket.deauthorize(socket)}
   end
   defp handle_result({:ok, %Socket{} = socket}, _event) do

@@ -8,10 +8,13 @@ defmodule Phoenix.Socket do
   * `pid` - The Pid of the socket's transport process
   * `topic` - The string topic, ie `"rooms:123"`
   * `router` - The router module where this socket originated
+  * `endpoint` - The endpoint module where this socket originated
   * `channel` - The channel module where this socket originated
   * `authorized` - The boolean authorization status, default `false`
   * `assigns` - The map of socket assigns, default: `%{}`
   * `transport` - The socket's Transport, ie: `Phoenix.Transports.WebSocket`
+  * `pubsub_server` - The registered name of the socket's PubSub server
+
 
   """
 
@@ -24,6 +27,7 @@ defmodule Phoenix.Socket do
             channel: nil,
             authorized: false,
             transport: nil,
+            pubsub_server: nil,
             assigns: %{}
 
 

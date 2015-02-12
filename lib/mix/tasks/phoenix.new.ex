@@ -19,9 +19,13 @@ defmodule Mix.Tasks.Phoenix.New do
   def run([name, path], opts) do
     application_name   = Naming.underscore(name)
     application_module = Naming.camelize(application_name)
+    pubsub_server      = application_module
+                         |> Module.concat(nil)
+                         |> Naming.base_concat(PubSub)
 
     binding = [application_name: application_name,
                application_module: application_module,
+               pubsub_server: pubsub_server,
                phoenix_dep: phoenix_dep(opts[:dev]),
                secret_key_base: random_string(64),
                encryption_salt: random_string(8),

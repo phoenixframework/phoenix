@@ -7,15 +7,22 @@ defmodule Phoenix.Endpoint.Adapter do
   @doc """
   Starts the endpoint supervision tree.
   """
-  def start_link(otp_app, module) do
+  def start_link(otp_app, mod) do
     import Supervisor.Spec
+    pub_conf = config(otp_app, mod)[:pubsub]
 
-    children = [
-      worker(Phoenix.Config, [otp_app, module, defaults(otp_app, module)]),
-      supervisor(Phoenix.Endpoint.Server, [otp_app, module])
+    pubsub_children = case pub_conf[:adapter] do
+      nil     -> []
+      adapter ->
+        [supervisor(adapter, [mod.__pubsub_server__(), pub_conf[:options] || []])]
+    end
+
+    children = pubsub_children ++ [
+      worker(Phoenix.Config, [otp_app, mod, defaults(otp_app, mod)]),
+      supervisor(Phoenix.Endpoint.Server, [otp_app, mod])
     ]
 
-    Supervisor.start_link(children, strategy: :rest_for_one, name: module)
+    Supervisor.start_link(children, strategy: :rest_for_one, name: mod)
   end
 
   @doc """
@@ -35,6 +42,12 @@ defmodule Phoenix.Endpoint.Adapter do
      # Transports
      transports: [
        longpoller_window_ms: 10_000,
+       longpoller_pubsub_timeout_ms: 1000,
+       longpoller_crypto: [iterations: 1000,
+                           length: 32,
+                           digest: :sha256,
+                           cache: Plug.Keys],
+
        websocket_serializer: Phoenix.Transports.JSONSerializer,
        websocket_timeout: :infinity
      ],
@@ -46,7 +59,8 @@ defmodule Phoenix.Endpoint.Adapter do
      reloadable_paths: ["web"],
      secret_key_base: nil,
      server: Application.get_env(:phoenix, :serve_endpoints, false),
-     url: [host: "localhost"]]
+     url: [host: "localhost"],
+     pubsub: []]
   end
 
   defp render_errors(module) do
