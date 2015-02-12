@@ -69,15 +69,15 @@ Normally, we would not work with the `Phoenix.PubSub` module directly. Since we 
 Before we begin, let's make see if we have any subscribers for the topic we'll use for demo purposes.
 
 ```console
-iex(1)> Phoenix.PubSub.subscribers("rooms:demo")
+iex(1)> Phoenix.PubSub.subscribers(HelloPhoenix.PubSub, "rooms:demo")
 []
 ```
 Nobody there yet so let's subscribe ourselves and check again.
 
 ```console
-iex(2)> Phoenix.PubSub.subscribe(self, "rooms:demo")
-:ok
-iex(3)> Phoenix.PubSub.subscribers("rooms:demo")
+iex(2)> Phoenix.PubSub.subscribe(HelloPhoenix.PubSub, self, "rooms:demo")
+:ok 
+iex(3)> Phoenix.PubSub.subscribers(HelloPhoenix.PubSub, "rooms:demo")
 [#PID<0.142.0>]
 ```
 Great, now we will receive any messages broadcast to this topic.
@@ -85,19 +85,19 @@ Great, now we will receive any messages broadcast to this topic.
 Let's check that by broadcasting a message to see if we receive it.
 
 ```console
-iex(4)> Phoenix.PubSub.broadcast("rooms:demo", {:message, "It Works!"})
+iex(4)> HelloPhoenix.Endpoint.broadcast("rooms:demo", %{message: "It Works!"})
 :ok
 iex(5)> Process.info(self)[:messages]
-[message: "It Works!"]
+%{message: "It Works!"}
 ```
 Note that we check our own process info for messages.
 
 We can also unsubscribe ourselves from a topic.
 
 ```console
-iex(6)> Phoenix.PubSub.unsubscribe(self, "rooms:demo")
+iex(6)> Phoenix.PubSub.unsubscribe(HelloPhoenix.PubSub, self, "rooms:demo")
 :ok
-iex(7)> Phoenix.PubSub.subscribers("rooms:demo")
+iex(7)> Phoenix.PubSub.subscribers(HelloPhoenix.PubSub, "rooms:demo")
 []
 ```
 This is the simplest possible demonstration of sending messages about topics. Great, so let's dig a little deeper.
@@ -124,7 +124,7 @@ end
 #### Joining a Channel Topic
 In order to broadcast messages, senders need to join a Channel on a Topic. We facilitate that with the `join/3` function. `join/3` is an authorization mechanism. If we believe the sender should be authorized, we return `{:ok, socket}`. If not, we return `{:error, socket, :unauthorized}`.
 
-The three arguments to `join/3` are a topic, a message, and a socket. Since we're just experimenting, let's return `{:ok, socket}` no matter what. And since we aren't going to use the `message` argument for now, let's prepend it with an underscore to avoid compiler warnings.
+The three arguments to `join/3` are a topic, a message, and a socket. Since we're just experimenting, let's return `{:ok, socket}` no matter what for the `"foods:all"` topic. And since we aren't going to use the `message` argument for now, let's prepend it with an underscore to avoid compiler warnings.
 
 ```elixir
 defmodule HelloPhoenix.FoodChannel do
@@ -138,7 +138,7 @@ end
 Let's explore this a little bit in iex. Before we do anything, we should check to see if we have any subscribers on our "foods:all" topic.
 
 ```conole
-ex(1)> Phoenix.PubSub.subscribers "foods:all"
+ex(1)> Phoenix.PubSub.subscribers(HelloPhoenix.PubSub, "foods:all")
 []
 ```
 Ok, nobody has subscribed yet. What we're going to do is to dispatch a message to our `FoodChannel` which will be handled by the `join/3` function and authorize our socket.
@@ -166,19 +166,19 @@ iex(4)> {:ok, socket} = Phoenix.Channel.Transport.dispatch socket, "foods:all", 
     router: HelloPhoenix.Router, topic: "foods:all",
     transport: Phoenix.Transports.WebSocket}}
 ```
-Notice that from the response, we can tell that this socket is now authorized for the "foods:all" topic. This is the result of returning `{:ok, socket}` from the `join/3` function. We also took care to re-bind the socket so that if we need it again in subsequent steps, it will be authorized on this topic for this channel.
+Notice that from the response, we can tell that this socket is now authorized for the `"foods:all"` topic. This is the result of returning `{:ok, socket}` from the `join/3` function. We also took care to re-bind the socket so that if we need it again in subsequent steps, it will be authorized on this topic for this channel.
 
 The question is, did it really work? Were we subscribed to the topic? Let's find out using `subscribers/1`.
 
 ```console
-iex(5)> Phoenix.PubSub.subscribers "foods:all"
+iex(5)> Phoenix.PubSub.subscribers(HelloPhoenix.PubSub, "foods:all")
 [#PID<0.142.0>]
 iex(6)> self
 #PID<0.142.0>
 ```
-Yes, we clearly are subscribed to the "foods:all" topic.
+Yes, we clearly are subscribed to the `"foods:all"` topic.
 
-Let's take a look at what happens when we try to join a topic that does not authenticate us. We'll need an additional clause of the `join/3` function in our `FoodChannel`, like this.
+Let's take a look at what happens when we try to join a topic that does not authorize us. We'll need an additional clause of the `join/3` function in our `FoodChannel`, like this.
 
 ```elixir
 defmodule HelloPhoenix.FoodChannel do
@@ -187,13 +187,12 @@ defmodule HelloPhoenix.FoodChannel do
   def join("foods:all", _message, socket) do
     {:ok, socket}
   end
-
-  def join("foods:forbidden", _message, socket) do
-    {:error, socket, :unauthorized}
+  def join("foods:" <> _priv_topic, _message, socket) do
+    :ignore
   end
 end
 ```
-This time, we hard-code the return value of `{:error, socket, :unauthorized}`, so no attempt to join this topic should ever succeed.
+This time, we hard-code the return value of `:ignore`, so no attempt to join this topic should ever succeed.
 
 We'll use a new socket for this, one with the new topic we are matching on as well as the default value for `authorized`, which is false.
 
@@ -204,28 +203,16 @@ iex(1)> new_socket = %Phoenix.Socket{pid: self, router: HelloPhoenix.Router, top
   router: HelloPhoenix.Router, topic: "foods:forbidden",
   transport: Phoenix.Transports.WebSocket}
 ```
-When we dispatch again on our `new_socket`, we see that we get an error and that the socket is not authorized to join that topic on this channel.
+When we dispatch again on our `new_socket`, we see that we ignore the join attempt and throw away the unauthorized socket.
 
 ```console
-iex(3)> {:error, socket, :unauthorized} = Phoenix.Channel.Transport.dispatch new_socket, "foods:forbidden", "join", %{}
-
-{:error,
-  %Phoenix.Socket{assigns: [], authorized: false, pid: #PID<0.142.0>,
-    router: HelloPhoenix.Router, topic: "foods:forbidden",
-    transport: Phoenix.Transports.WebSocket}, :unauthorized}
+iex(3)> :ignore = Phoenix.Channel.Transport.dispatch new_socket, "foods:forbidden", "join", %{}
 ```
 Just to make sure, let's check the subscribers again.
 
 ```cosole
-iex(4)> Phoenix.PubSub.subscribers "foods:forbidden"
+iex(4)> Phoenix.PubSub.subscribers(HelloPhoenix.PubSub, "foods:forbidden")
 []
-```
-Of course, we can pattern match on more than just hard-coded topic strings. This clause of `join/3` works as well. Have fun and experiment with it as we have above.
-
-```elixir
-def join("foods:" <> _some_food_string, _message, socket) do
-  {:ok, socket}
-end
 ```
 
 #### Leaving a Channel Topic
@@ -238,10 +225,10 @@ Before we go further, let's make sure we really are subscribed to those topics.
 iex(10)> self
 #PID<0.151.0>
 
-iex(11)> Phoenix.PubSub.subscribers "foods:all"
+iex(11)> Phoenix.PubSub.subscribers(HelloPhoenix.PubSub, "foods:all")
 [#PID<0.151.0>]
 
-iex(12)> Phoenix.PubSub.subscribers "foods:delightful"
+iex(12)> Phoenix.PubSub.subscribers(HelloPhoenix.PubSub, "foods:delightful")
 [#PID<0.151.0>]
 ```
 Great, now let's add our `leave/2` function. For our purposes, we have no restrictions on leaving a topic, so let's always return `{:ok, socket}`.
@@ -266,7 +253,7 @@ Notice that the request processing didn't stop with the return of `leave/2`. The
 Did it really unsubscribe us? Let's see.
 
 ```console
-iex(23)> Phoenix.PubSub.subscribers "foods:all"
+iex(23)> Phoenix.PubSub.subscribers(HelloPhoenix.PubSub, "foods:all")
 []
 ```
 Indeed it did.
@@ -274,7 +261,7 @@ Indeed it did.
 And, of course, we are still subscribed to the "foods:delightful" topic.
 
 ```console
-iex(24)> Phoenix.PubSub.subscribers "foods:delightful"
+iex(24)> Phoenix.PubSub.subscribers(HelloPhoenix.PubSub, "foods:delightful")
 [#PID<0.151.0>]
 ```
 
@@ -286,19 +273,20 @@ Incoming events are handled by the `handle_in/3` function, so let's add one to o
 
 ```elixir
 def handle_in("new:msg", message, socket) do
-  broadcast socket, "new:msg", message
+  broadcast! socket, "new:msg", message
+  {:ok, socket}
 end
 ```
 In this clause of the `handle_in/3` function, we are being very specific about the event we will respond to. Only `"new:msg"` will match.
 
-We can respond to incoming events in any way we like, including just returning `{:ok, socket}` if we choose to. More commonly, we want to pass along the event coming into the server to one or more subscribers to the topic. For that, we have a choice of using either the `broadcast/3` or `reply/3` functions. `broadcast/3` will send the message to every subscriber to the topic, while `reply/3` will only reply back to the sender.
+We can respond to incoming events in any way we like, including just returning `{:ok, socket}` if we choose to. More commonly, we want to pass along the event coming into the server to one or more subscribers to the topic. For that, we have a choice of using either the `broadcast!/3` or `reply/3` functions. `broadcast!/3` will send the message to every subscriber to the topic, while `reply/3` will only reply back to the sender.
 
-Both `broadcast/3` and `reply/3` return `{:ok, socket}`, so we don't need to add them here. If neither of those functions are the last one we call in `handle_in/3`, then we would need to add `{:ok, socket}` as the last line so that it would be our return value.
+Both `broadcast!/3` and `reply/3` return `{:ok, socket}`, so we don't need to add them here. If neither of those functions are the last one we call in `handle_in/3`, then we would need to add `{:ok, socket}` as the last line so that it would be our return value.
 
 Let's see this in action. First, let's make sure we have joined the `"foods:all`" topic on the `FoodChannel`.
 
 ```console
-iex(7)> Phoenix.PubSub.subscribers "foods:all"
+iex(7)> Phoenix.PubSub.subscribers(HelloPhoenix.PubSub, "foods:all")
 [#PID<0.142.0>]
 ```
 If your pid isn't in the subscribers list, please follow the steps in "Joining a Channel Topic" above.
@@ -353,7 +341,7 @@ Of course, we could write a clause that is even more general, one which will res
 
 ```elixir
 def handle_in(event, message, socket) do
-  broadcast socket, event, message
+  broadcast! socket, event, message
 end
 ```
 
