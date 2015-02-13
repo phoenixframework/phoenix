@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.9.1-dev
+
+* Enhancements
+  [Endpiont] Runtime evaluation of `:port` configuration is now supported. When given a tuple like `{:system, "PORT"}`, the port will be referenced from `System.get_env("PORT")` at runtime as a workaround for releases where environment specific information is loaded only at compile-time.
+
+
 ## v0.9.0 (2015-02-12)
 
 See these [`0.8.x` to `0.9.0` upgrade instructions](https://gist.github.com/chrismccord/def6f4dc444b6a8f8d8b) to bring your existing apps up to speed.
