@@ -32,7 +32,7 @@ defmodule Phoenix.Mixfile do
      {:plug, "~> 0.10.0"},
      {:poison, "~> 1.3"},
      {:earmark, "~> 0.1", only: :docs},
-     {:ex_doc, "~> 0.7", only: :docs},
+     {:ex_doc, "~> 0.7.1", only: :docs},
      {:inch_ex, "~> 0.2", only: :docs},
      {:eredis, github: "wooga/eredis", optional: true},
      {:poolboy, "~> 1.4.2", optional: true},

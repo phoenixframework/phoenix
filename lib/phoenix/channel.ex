@@ -115,6 +115,7 @@ defmodule Phoenix.Channel do
       def handle_in("new:msg", %{"uid" => uid, "body" => body}, socket) do
         broadcast! socket, "new:msg", %{uid: uid, body: body}
         MyApp.Endpoint.broadcast! "rooms:superadmin", "new:msg", %{uid: uid, body: body}
+        {:ok, socket}
       end
 
       # within controller
