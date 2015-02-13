@@ -6,6 +6,7 @@ defmodule Phoenix.Endpoint.AdapterTest do
     config = [custom: true]
     Application.put_env(:phoenix, AdapterApp.Endpoint, config)
     :ok
+    System.put_env("PHOENIX_PORT", "8080")
   end
 
   test "loads router configuration" do
@@ -30,6 +31,14 @@ defmodule Phoenix.Endpoint.AdapterTest do
     def config(:cache_static_lookup), do: true
   end
 
+  defmodule HTTPEnvVarEndpoint do
+    def config(:https), do: false
+    def config(:http), do: [port: {:system,"PHOENIX_PORT"}]
+    def config(:url), do: [host: "example.com"]
+    def config(:otp_app), do: :phoenix
+    def config(:cache_static_lookup), do: true
+  end
+
   defmodule URLEndpoint do
     def config(:https), do: false
     def config(:http), do: false
@@ -40,6 +49,7 @@ defmodule Phoenix.Endpoint.AdapterTest do
     assert Adapter.url(URLEndpoint) == {:cache, "random://example.com:678"}
     assert Adapter.url(HTTPEndpoint) == {:cache, "http://example.com"}
     assert Adapter.url(HTTPSEndpoint) == {:cache, "https://example.com"}
+    assert Adapter.url(HTTPEnvVarEndpoint) == {:cache, "http://example.com:8080"}
   end
 
   test "static_path/2 returns file's path with lookup cache" do
