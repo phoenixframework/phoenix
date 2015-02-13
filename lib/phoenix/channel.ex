@@ -9,7 +9,7 @@ defmodule Phoenix.Channel do
   ## Topics & Callbacks
   When clients join a channel, they do so by subscribing a topic.
   Topics are string idenitifiers in the `Phoenix.PubSub` layer that allow
-  multiple processes to subscribe and broadcast messages about a give topic.
+  multiple processes to subscribe and broadcast messages about a given topic.
   Everytime you join a Channel, you need to choose which particular topic you
   want to listen to. The topic is just an identifier, but by convention it is
   often made of two parts: `"topic:subtopic"`. Using the `"topic:subtopic"`
