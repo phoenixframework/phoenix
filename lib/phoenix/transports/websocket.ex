@@ -42,7 +42,7 @@ defmodule Phoenix.Transports.WebSocket do
     timeout = Dict.fetch!(endpoint_module(conn).config(:transports), :websocket_timeout)
     {:ok, %{router: router_module(conn),
             pubsub_server: endpoint_module(conn).__pubsub_server__(),
-            sockets: HashDict.new, serializer: serializer}, timeout}
+            sockets: HashDict.new, serializer: serializer, conn: conn}, timeout}
   end
 
   @doc """
@@ -52,7 +52,7 @@ defmodule Phoenix.Transports.WebSocket do
   def ws_handle(opcode, payload, state) do
     payload
     |> state.serializer.decode!(opcode)
-    |> Transport.dispatch(state.sockets, self, state.router, state.pubsub_server, __MODULE__)
+    |> Transport.dispatch(state.conn, state.sockets, self, state.router, state.pubsub_server, __MODULE__)
     |> case do
       {:ok, sockets}             -> %{state | sockets: sockets}
       {:error, _reason, sockets} -> %{state | sockets: sockets}
