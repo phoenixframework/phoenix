@@ -94,9 +94,14 @@ defmodule Phoenix.Endpoint do
       task automatically sets this to true.
 
     * `:url` - configuration for generating URLs throughout the app.
-      Accepts the host, scheme and port. Defaults to:
+      Accepts the `:host`, `:scheme` and `:port`. Defaults to:
 
           [host: "localhost"]
+
+      The `:port` requires either an integer, string, or `{:system, "ENV_VAR"}`.
+      When given a tuple like `{:system, "PORT"}`, the port will be referenced
+      from `System.get_env("PORT")` at runtime as a workaround for releases where
+      environment specific information is loaded only at compile-time.
 
     * `:pubsub` - configuration for this Endpoint's pubsub adapter.
       Configuration either requires a `:name` of the registered pubsub server
