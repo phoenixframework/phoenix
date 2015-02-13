@@ -32,12 +32,12 @@ defmodule Phoenix.Transports.LongPoller.Server do
   If the server receives no message within `window_ms`, it terminates and
   clients are responsible for opening a new session.
   """
-  def start_link(router, window_ms, priv_topic, pubsub_server) do
-    GenServer.start_link(__MODULE__, [router, window_ms, priv_topic, pubsub_server])
+  def start_link(router, window_ms, priv_topic, pubsub_server, conn) do
+    GenServer.start_link(__MODULE__, [router, window_ms, priv_topic, pubsub_server, conn])
   end
 
   @doc false
-  def init([router, window_ms, priv_topic, pubsub_server]) do
+  def init([router, window_ms, priv_topic, pubsub_server, conn]) do
     Process.flag(:trap_exit, true)
 
     state = %{buffer: [],
@@ -46,7 +46,8 @@ defmodule Phoenix.Transports.LongPoller.Server do
               window_ms: window_ms * 2,
               pubsub_server: pubsub_server,
               priv_topic: priv_topic,
-              client_ref: nil}
+              client_ref: nil,
+              conn: conn}
 
     :ok = Phoenix.PubSub.subscribe(state.pubsub_server, self, state.priv_topic, link: true)
     {:ok, state, state.window_ms}
@@ -62,7 +63,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   """
   def handle_info({:dispatch, message, ref}, state) do
     message
-    |> Transport.dispatch(state.sockets, self, state.router, state.pubsub_server, LongPoller)
+    |> Transport.dispatch(state.conn, state.sockets, self, state.router, state.pubsub_server, LongPoller)
     |> case do
       {:ok, sockets} ->
         :ok = broadcast_from(state, {:ok, :dispatch, ref})
