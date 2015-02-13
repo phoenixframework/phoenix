@@ -4,7 +4,7 @@ config :<%= application_name %>, <%= application_module %>.Endpoint,
   url: [host: "example.com"],
   http: [port: System.get_env("PORT")],
   secret_key_base: "<%= secret_key_base %>"
-  
+
 # ## SSL Support
 #
 # To get SSL working, you will need to add the `https` key
@@ -18,9 +18,9 @@ config :<%= application_name %>, <%= application_module %>.Endpoint,
 #
 # Where those two env variables point to a file on
 # disk for the key and cert.
-  
 
-# Do not pring debug messages in production
+
+# Do not print debug messages in production
 config :logger, level: :info
 
 # ## Using releases
