@@ -285,16 +285,16 @@ defmodule Phoenix.Router do
   defp add_route(verb, path, controller, action, options) do
     quote bind_quoted: binding() do
       route = Scope.route(__MODULE__, verb, path, controller, action, options)
-      parts = {:%{}, [], route.binding}
+      exprs = Route.exprs(route)
 
       @phoenix_routes route
 
-      defp match(var!(conn), unquote(route.verb), unquote(route.path_segments),
-                 unquote(route.host_segments)) do
-        unquote(Route.maybe_merge(:private, route.private))
+      defp match(var!(conn), unquote(route.verb), unquote(route.segments),
+                 unquote(exprs.host)) do
+        unquote(exprs.private)
         var!(conn) = dispatch(var!(conn), unquote(route.controller), unquote(route.action),
-                              unquote(parts), unquote(route.pipe_through))
-        unquote(route.pipe_segments)
+                              unquote(exprs.params), unquote(route.pipe_through))
+        unquote(exprs.pipes)
       end
     end
   end

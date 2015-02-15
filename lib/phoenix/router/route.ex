@@ -12,18 +12,17 @@ defmodule Phoenix.Router.Route do
     * :verb - the HTTP verb as an upcased string
     * :path - the normalized path as string
     * :host - the request host or host prefix
-    * :binding - the route bindings
     * :controller - the controller module
     * :action - the action as an atom
     * :helper - the name of the helper as a string (may be nil)
+    * :private - the private route info
     * :pipe_through - the pipeline names as a list of atoms
-    * :path_segments - the path match as quoted segments
-    * :host_segments - the host match as quoted segments
-    * :pipe_segments - the quoted segments to pipe through
+    * :binding - the route bindings
+    * :segments - the route segment expression
 
   """
-  defstruct [:verb, :path, :host, :binding, :controller, :action, :helper,
-             :private, :pipe_through, :path_segments, :host_segments, :pipe_segments]
+  defstruct [:verb, :path, :host, :controller, :action, :helper,
+             :binding, :segments, :private, :pipe_through]
 
   @type t :: %Route{}
 
@@ -36,24 +35,28 @@ defmodule Phoenix.Router.Route do
       when is_binary(verb) and is_binary(path) and (is_binary(host) or is_nil(host)) and
            is_atom(controller) and is_atom(action) and (is_binary(helper) or is_nil(helper)) and
            is_list(pipe_through) and is_map(private) do
-    {params, path_segments} = Plug.Router.Utils.build_path_match(path)
+    {params, segments} = Plug.Router.Utils.build_path_match(path)
 
     binding = Enum.map(params, fn var ->
       {Atom.to_string(var), Macro.var(var, nil)}
     end)
 
-    %Route{verb: verb, path: path, host: host, binding: binding,
+    %Route{verb: verb, path: path, host: host, private: private,
            controller: controller, action: action, helper: helper,
-           private: private,
-           pipe_through: pipe_through, path_segments: path_segments,
-           host_segments: build_host(host), pipe_segments: build_pipes(pipe_through)}
+           pipe_through: pipe_through, binding: binding, segments: segments}
   end
 
   @doc """
-  Returns a code that merges route data into a connection
-  unless the data is empty.
+  Builds the expressions used by the route.
   """
-  def maybe_merge(key, data) do
+  def exprs(route) do
+    %{host: build_host(route.host),
+      pipes: build_pipes(route.pipe_through),
+      params: {:%{}, [], route.binding},
+      private: maybe_merge(:private, route.private)}
+  end
+
+  defp maybe_merge(key, data) do
     if map_size(data) > 0 do
       quote do
         var!(conn) =

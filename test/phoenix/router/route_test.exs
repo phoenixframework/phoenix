@@ -13,17 +13,22 @@ defmodule Phoenix.Router.RouteTest do
     assert route.action == :world
     assert route.helper == "hello_world"
     assert route.pipe_through == [:foo, :bar]
-    assert route.path_segments == ["foo", {:bar, [], nil}]
-    assert Macro.to_string(route.host_segments) == "_"
-    assert Macro.to_string(route.pipe_segments) == "bar(foo(var!(conn), []), [])"
+    assert route.segments == ["foo", {:bar, [], nil}]
     assert route.private == %{foo: "bar"}
   end
 
-  test "builds a route based on the host" do
-    route = build("GET", "/foo/:bar", "foo.", Hello, :world, "hello_world", [], %{foo: "bar"})
-    assert Macro.to_string(route.host_segments) == "\"foo.\" <> _"
+  test "builds expressions based on the route" do
+    exprs = build("GET", "/foo/:bar", nil, Hello, :world, "hello_world", [], %{}) |> exprs
+    assert Macro.to_string(exprs.host) == "_"
+    assert Macro.to_string(exprs.pipes) == "var!(conn)"
+    assert Macro.to_string(exprs.private) == "nil"
 
-    route = build("GET", "/foo/:bar", "foo.com", Hello, :world, "hello_world", [], %{foo: "bar"})
-    assert Macro.to_string(route.host_segments) == "\"foo.com\""
+    exprs = build("GET", "/foo/:bar", "foo.", Hello, :world, "hello_world", [:foo, :bar], %{foo: "bar"}) |> exprs
+    assert Macro.to_string(exprs.host) == "\"foo.\" <> _"
+    assert Macro.to_string(exprs.pipes) == "bar(foo(var!(conn), []), [])"
+    assert Macro.to_string(exprs.private) == "var!(conn) = update_in(var!(conn).private(), &Map.merge(&1, %{foo: \"bar\"}))"
+
+    exprs = build("GET", "/foo/:bar", "foo.com", Hello, :world, "hello_world", [], %{foo: "bar"}) |> exprs
+    assert Macro.to_string(exprs.host_segments) == "\"foo.com\""
   end
 end

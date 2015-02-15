@@ -95,7 +95,7 @@ defmodule Phoenix.Router.Helpers do
     action = route.action
 
     {bins, vars} = :lists.unzip(route.binding)
-    segs = optimize_segments(route.path_segments)
+    segs = optimize_segments(route.segments)
 
     # We are using -1 to avoid warnings in case a path has already been defined.
     quote line: -1 do
@@ -131,7 +131,6 @@ defmodule Phoenix.Router.Helpers do
     do: optimize_segments(t, quote(do: unquote(acc) <> "/" <> to_string(unquote(h))))
   defp optimize_segments([], acc),
     do: acc
-
 
   @doc """
   Receives the `@channels` accumulated module attribute and returns an AST of
