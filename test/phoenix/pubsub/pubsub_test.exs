@@ -4,8 +4,8 @@ defmodule Phoenix.PubSub.PubSubTest do
   alias Phoenix.PubSub
 
   @adapters [
-    {Phoenix.PubSub.Redis, :redis_pub},
-    {Phoenix.PubSub.PG2,   :pg2_pub}
+    {Phoenix.PubSub.Redis, :redis_pub, :redis},
+    {Phoenix.PubSub.PG2,   :pg2_pub, :pg2}
   ]
 
   def spawn_pid do
@@ -17,13 +17,15 @@ defmodule Phoenix.PubSub.PubSubTest do
     def broadcast_from(_server, _from_pid, _topic, _msg), do: {:error, :boom}
   end
 
-  for {adapter, name} <- @adapters do
+  for {adapter, name, tag} <- @adapters do
     @adapter adapter
     @server name
     setup_all do
       @adapter.start_link(@server, [])
       :ok
     end
+
+    @moduletag tag
 
     test "#{inspect @adapter} #subscribers, #subscribe, #unsubscribe" do
       pid = spawn_pid
