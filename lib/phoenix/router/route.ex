@@ -17,12 +17,10 @@ defmodule Phoenix.Router.Route do
     * :helper - the name of the helper as a string (may be nil)
     * :private - the private route info
     * :pipe_through - the pipeline names as a list of atoms
-    * :binding - the route bindings
-    * :segments - the route segment expression
 
   """
-  defstruct [:verb, :path, :host, :controller, :action, :helper,
-             :binding, :segments, :private, :pipe_through]
+  defstruct [:verb, :path, :host, :controller, :action,
+             :helper, :private, :pipe_through]
 
   @type t :: %Route{}
 
@@ -35,24 +33,21 @@ defmodule Phoenix.Router.Route do
       when is_binary(verb) and is_binary(path) and (is_binary(host) or is_nil(host)) and
            is_atom(controller) and is_atom(action) and (is_binary(helper) or is_nil(helper)) and
            is_list(pipe_through) and is_map(private) do
-    {params, segments} = Plug.Router.Utils.build_path_match(path)
-
-    binding = Enum.map(params, fn var ->
-      {Atom.to_string(var), Macro.var(var, nil)}
-    end)
-
     %Route{verb: verb, path: path, host: host, private: private,
            controller: controller, action: action, helper: helper,
-           pipe_through: pipe_through, binding: binding, segments: segments}
+           pipe_through: pipe_through}
   end
 
   @doc """
   Builds the expressions used by the route.
   """
   def exprs(route) do
-    %{host: build_host(route.host),
+    {path, binding} = build_path_and_binding(route.path)
+
+    %{path: path,
+      host: build_host(route.host),
       pipes: build_pipes(route.pipe_through),
-      params: {:%{}, [], route.binding},
+      binding: binding,
       private: maybe_merge(:private, route.private)}
   end
 
@@ -63,6 +58,16 @@ defmodule Phoenix.Router.Route do
           update_in var!(conn).unquote(key), &Map.merge(&1, unquote(Macro.escape(data)))
       end
     end
+  end
+
+  defp build_path_and_binding(path) do
+    {params, segments} = Plug.Router.Utils.build_path_match(path)
+
+    binding = Enum.map(params, fn var ->
+      {Atom.to_string(var), Macro.var(var, nil)}
+    end)
+
+    {segments, binding}
   end
 
   defp build_host(host) do

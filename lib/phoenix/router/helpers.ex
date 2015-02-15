@@ -11,7 +11,7 @@ defmodule Phoenix.Router.Helpers do
   Generates the helper module for the given environment and routes.
   """
   def define(env, routes) do
-    ast = for route <- routes, do: defhelper(route)
+    ast = for {route, exprs} <- routes, do: defhelper(route, exprs)
 
     # It is in general bad practice to generate large chunks of code
     # inside quoted expressions. However, we can get away with this
@@ -88,14 +88,14 @@ defmodule Phoenix.Router.Helpers do
 
   In case a helper name was not given, returns nil.
   """
-  def defhelper(%Route{helper: nil}), do: nil
+  def defhelper(%Route{helper: nil}, _exprs), do: nil
 
-  def defhelper(%Route{} = route) do
+  def defhelper(%Route{} = route, exprs) do
     helper = route.helper
     action = route.action
 
-    {bins, vars} = :lists.unzip(route.binding)
-    segs = optimize_segments(route.segments)
+    {bins, vars} = :lists.unzip(exprs.binding)
+    segs = optimize_segments(exprs.path)
 
     # We are using -1 to avoid warnings in case a path has already been defined.
     quote line: -1 do

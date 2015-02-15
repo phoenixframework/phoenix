@@ -43,8 +43,8 @@ defmodule Phoenix.Router.HelpersTest do
   end
 
   defp extract_defhelper(route, pos) do
-    {:__block__, _, block} = Helpers.defhelper(route)
-    Enum.at(block, pos) |> Macro.to_string()
+    {:__block__, _, block} = Helpers.defhelper(route, Phoenix.Router.Route.exprs(route))
+    Enum.fetch!(block, pos) |> Macro.to_string()
   end
 
   ## Integration tests

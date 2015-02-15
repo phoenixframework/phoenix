@@ -247,10 +247,11 @@ defmodule Phoenix.Router do
     channels = env.module |> Module.get_attribute(:phoenix_channels) |> Helpers.defchannels
 
     Helpers.define(env, routes)
+    escaped = Enum.map(routes, fn {route, _} -> Macro.escape(route) end)
 
     quote do
       @doc false
-      def __routes__,  do: unquote(Macro.escape(routes))
+      def __routes__,  do: unquote(escaped)
 
       @doc false
       def __helpers__, do: __MODULE__.Helpers
@@ -287,13 +288,12 @@ defmodule Phoenix.Router do
       route = Scope.route(__MODULE__, verb, path, controller, action, options)
       exprs = Route.exprs(route)
 
-      @phoenix_routes route
+      @phoenix_routes {route, exprs}
 
-      defp match(var!(conn), unquote(route.verb), unquote(route.segments),
-                 unquote(exprs.host)) do
+      defp match(var!(conn), unquote(route.verb), unquote(exprs.path), unquote(exprs.host)) do
         unquote(exprs.private)
         var!(conn) = dispatch(var!(conn), unquote(route.controller), unquote(route.action),
-                              unquote(exprs.params), unquote(route.pipe_through))
+                              unquote({:%{}, [], exprs.binding}), unquote(route.pipe_through))
         unquote(exprs.pipes)
       end
     end
@@ -513,7 +513,7 @@ defmodule Phoenix.Router do
       end
 
     quote do
-      opts     = Keyword.merge(unquote(options), singular: true)
+      opts     = Keyword.put(unquote(options), :singular, true)
       resource = Resource.build(unquote(path), unquote(controller), opts)
 
       path = resource.path
