@@ -29,6 +29,6 @@ defmodule Phoenix.Router.RouteTest do
     assert Macro.to_string(exprs.private) == "var!(conn) = update_in(var!(conn).private(), &Map.merge(&1, %{foo: \"bar\"}))"
 
     exprs = build("GET", "/foo/:bar", "foo.com", Hello, :world, "hello_world", [], %{foo: "bar"}) |> exprs
-    assert Macro.to_string(exprs.host_segments) == "\"foo.com\""
+    assert Macro.to_string(exprs.host) == "\"foo.com\""
   end
 end
