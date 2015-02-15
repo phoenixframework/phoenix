@@ -488,15 +488,15 @@ defmodule Phoenix.Router do
 
       Enum.each resource.actions, fn action ->
         case action do
-          :index   -> get    "#{path}",               ctrl, :index, opts
-          :show    -> get    "#{path}/:#{parm}",      ctrl, :show, opts
-          :new     -> get    "#{path}/new",           ctrl, :new, opts
-          :edit    -> get    "#{path}/:#{parm}/edit", ctrl, :edit, opts
-          :create  -> post   "#{path}",               ctrl, :create, opts
-          :delete  -> delete "#{path}/:#{parm}",      ctrl, :delete, opts
+          :index   -> get    path,                            ctrl, :index, opts
+          :show    -> get    path <> "/:" <> parm,            ctrl, :show, opts
+          :new     -> get    path <> "/new",                  ctrl, :new, opts
+          :edit    -> get    path <> "/:" <> parm <> "/edit", ctrl, :edit, opts
+          :create  -> post   path,                            ctrl, :create, opts
+          :delete  -> delete path <> "/:" <> parm,            ctrl, :delete, opts
           :update  ->
-            patch "#{path}/:#{parm}", ctrl, :update, opts
-            put   "#{path}/:#{parm}", ctrl, :update, Keyword.put(opts, :as, nil)
+            patch path <> "/:" <> parm, ctrl, :update, opts
+            put   path <> "/:" <> parm, ctrl, :update, Keyword.put(opts, :as, nil)
         end
       end
 
@@ -505,6 +505,13 @@ defmodule Phoenix.Router do
   end
 
   defp add_resource(path, controller, options, do: context) do
+    scope =
+      if context do
+        quote do
+          scope resource.member, do: unquote(context)
+        end
+      end
+
     quote do
       opts     = Keyword.merge(unquote(options), singular: true)
       resource = Resource.build(unquote(path), unquote(controller), opts)
@@ -515,20 +522,18 @@ defmodule Phoenix.Router do
 
       Enum.each resource.actions, fn action ->
         case action do
-          :show    -> get    "#{path}",      ctrl, :show, opts
-          :new     -> get    "#{path}/new",  ctrl, :new, opts
-          :edit    -> get    "#{path}/edit", ctrl, :edit, opts
-          :create  -> post   "#{path}",      ctrl, :create, opts
-          :delete  -> delete "#{path}",      ctrl, :delete, opts
+          :show    -> get    path,            ctrl, :show, opts
+          :new     -> get    path <> "/new",  ctrl, :new, opts
+          :edit    -> get    path <> "/edit", ctrl, :edit, opts
+          :create  -> post   path,            ctrl, :create, opts
+          :delete  -> delete path,            ctrl, :delete, opts
           :update  ->
-            patch "#{path}", ctrl, :update, opts
-            put   "#{path}", ctrl, :update, Keyword.put(opts, :as, nil)
+            patch path, ctrl, :update, opts
+            put   path, ctrl, :update, Keyword.put(opts, :as, nil)
         end
       end
 
-      scope resource.member do
-        unquote(context)
-      end
+      unquote(scope)
     end
   end
 
