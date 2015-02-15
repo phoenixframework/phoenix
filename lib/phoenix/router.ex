@@ -291,10 +291,7 @@ defmodule Phoenix.Router do
       @phoenix_routes {route, exprs}
 
       defp match(var!(conn), unquote(route.verb), unquote(exprs.path), unquote(exprs.host)) do
-        unquote(exprs.private)
-        var!(conn) = dispatch(var!(conn), unquote(route.controller), unquote(route.action),
-                              unquote({:%{}, [], exprs.binding}), unquote(route.pipe_through))
-        unquote(exprs.pipes)
+        unquote(exprs.dispatch)
       end
     end
   end

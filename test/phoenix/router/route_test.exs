@@ -21,13 +21,9 @@ defmodule Phoenix.Router.RouteTest do
     assert exprs.path == ["foo", {:bar, [], nil}]
     assert exprs.binding == [{"bar", {:bar, [], nil}}]
     assert Macro.to_string(exprs.host) == "_"
-    assert Macro.to_string(exprs.pipes) == "var!(conn)"
-    assert Macro.to_string(exprs.private) == "nil"
 
     exprs = build("GET", "/", "foo.", Hello, :world, "hello_world", [:foo, :bar], %{foo: "bar"}) |> exprs
     assert Macro.to_string(exprs.host) == "\"foo.\" <> _"
-    assert Macro.to_string(exprs.pipes) == "bar(foo(var!(conn), []), [])"
-    assert Macro.to_string(exprs.private) == "var!(conn) = update_in(var!(conn).private(), &Map.merge(&1, %{foo: \"bar\"}))"
 
     exprs = build("GET", "/", "foo.com", Hello, :world, "hello_world", [], %{foo: "bar"}) |> exprs
     assert Macro.to_string(exprs.host) == "\"foo.com\""

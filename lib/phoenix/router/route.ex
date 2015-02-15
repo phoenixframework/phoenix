@@ -44,20 +44,14 @@ defmodule Phoenix.Router.Route do
   def exprs(route) do
     {path, binding} = build_path_and_binding(route.path)
 
-    %{path: path,
-      host: build_host(route.host),
-      pipes: build_pipes(route.pipe_through),
-      binding: binding,
-      private: maybe_merge(:private, route.private)}
-  end
+    exprs = %{path: path,
+              host: build_host(route.host),
+              binding: binding,
+              private: maybe_merge(:private, route.private),
+              pipes: build_pipes(route.pipe_through),
+              dispatch: nil}
 
-  defp maybe_merge(key, data) do
-    if map_size(data) > 0 do
-      quote do
-        var!(conn) =
-          update_in var!(conn).unquote(key), &Map.merge(&1, unquote(Macro.escape(data)))
-      end
-    end
+    %{exprs | dispatch: build_dispatch(route, exprs)}
   end
 
   defp build_path_and_binding(path) do
@@ -75,6 +69,24 @@ defmodule Phoenix.Router.Route do
       is_nil(host)             -> quote do: _
       String.last(host) == "." -> quote do: unquote(host) <> _
       true                     -> host
+    end
+  end
+
+  defp build_dispatch(route, exprs) do
+    quote do
+      unquote(exprs.private)
+      var!(conn) = dispatch(var!(conn), unquote(route.controller), unquote(route.action),
+                            unquote({:%{}, [], exprs.binding}), unquote(route.pipe_through))
+      unquote(exprs.pipes)
+    end
+  end
+
+  defp maybe_merge(key, data) do
+    if map_size(data) > 0 do
+      quote do
+        var!(conn) =
+          update_in var!(conn).unquote(key), &Map.merge(&1, unquote(Macro.escape(data)))
+      end
     end
   end
 
