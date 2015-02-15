@@ -259,6 +259,15 @@ defmodule Phoenix.Router do
         raise NoRouteError, conn: conn, router: __MODULE__
       end
 
+      defp dispatch(conn, controller, action, parts, pipelines) do
+        update_in(conn.params, &Map.merge(&1, parts))
+        |> Plug.Conn.put_private(:phoenix_pipelines, pipelines)
+        |> Plug.Conn.put_private(:phoenix_route, fn conn ->
+            opts = controller.init(action)
+            controller.call(conn, opts)
+           end)
+      end
+
       unquote(channels)
     end
   end
@@ -283,15 +292,8 @@ defmodule Phoenix.Router do
       defp match(var!(conn), unquote(route.verb), unquote(route.path_segments),
                  unquote(route.host_segments)) do
         unquote(Route.maybe_merge(:private, route.private))
-
-        var!(conn) =
-          update_in(var!(conn).params, &Map.merge(&1, unquote(parts)))
-          |> Plug.Conn.put_private(:phoenix_pipelines, unquote(route.pipe_through))
-          |> Plug.Conn.put_private(:phoenix_route, fn conn ->
-              opts = unquote(route.controller).init(unquote(route.action))
-              unquote(route.controller).call(conn, opts)
-             end)
-
+        var!(conn) = dispatch(var!(conn), unquote(route.controller), unquote(route.action),
+                              unquote(parts), unquote(route.pipe_through))
         unquote(route.pipe_segments)
       end
     end
@@ -469,6 +471,13 @@ defmodule Phoenix.Router do
   end
 
   defp add_resources(path, controller, options, do: context) do
+    scope =
+      if context do
+        quote do
+          scope resource.member, do: unquote(context)
+        end
+      end
+
     quote do
       resource = Resource.build(unquote(path), unquote(controller), unquote(options))
 
@@ -491,9 +500,7 @@ defmodule Phoenix.Router do
         end
       end
 
-      scope resource.member do
-        unquote(context)
-      end
+      unquote(scope)
     end
   end
 
