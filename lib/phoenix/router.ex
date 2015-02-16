@@ -284,14 +284,27 @@ defmodule Phoenix.Router do
   end
 
   defp add_route(verb, path, controller, action, options) do
-    quote bind_quoted: binding() do
-      route = Scope.route(__MODULE__, verb, path, controller, action, options)
-      exprs = Route.exprs(route)
+    route =
+      quote do
+        route = Scope.route(__MODULE__, unquote(verb), unquote(path), unquote(controller),
+                                        unquote(action), unquote(options))
+        exprs = Route.exprs(route)
+        @phoenix_routes {route, exprs}
+      end
 
-      @phoenix_routes {route, exprs}
+    definition =
+      quote unquote: false do
+        defp match(var!(conn), unquote(route.verb), unquote(exprs.path), unquote(exprs.host)) do
+          unquote(exprs.dispatch)
+        end
+      end
 
-      defp match(var!(conn), unquote(route.verb), unquote(exprs.path), unquote(exprs.host)) do
-        unquote(exprs.dispatch)
+    quote do
+      try do
+        unquote(route)
+        unquote(definition)
+      after
+        :ok
       end
     end
   end
@@ -321,19 +334,27 @@ defmodule Phoenix.Router do
   defmacro pipeline(plug, do: block) do
     block =
       quote do
+        plug = unquote(plug)
         @phoenix_pipeline []
         unquote(block)
       end
 
     compiler =
-      quote bind_quoted: [plug: plug] do
+      quote unquote: false do
         Scope.pipeline(__MODULE__, plug)
         {conn, body} = Plug.Builder.compile(@phoenix_pipeline)
         defp unquote(plug)(unquote(conn), _), do: unquote(body)
         @phoenix_pipeline nil
       end
 
-    [block, compiler]
+    quote do
+      try do
+        unquote(block)
+        unquote(compiler)
+      after
+        :ok
+      end
+    end
   end
 
   @doc """
@@ -476,28 +497,32 @@ defmodule Phoenix.Router do
       end
 
     quote do
-      resource = Resource.build(unquote(path), unquote(controller), unquote(options))
+      try do
+        resource = Resource.build(unquote(path), unquote(controller), unquote(options))
 
-      parm = resource.param
-      path = resource.path
-      ctrl = resource.controller
-      opts = resource.route
+        parm = resource.param
+        path = resource.path
+        ctrl = resource.controller
+        opts = resource.route
 
-      Enum.each resource.actions, fn action ->
-        case action do
-          :index   -> get    path,                            ctrl, :index, opts
-          :show    -> get    path <> "/:" <> parm,            ctrl, :show, opts
-          :new     -> get    path <> "/new",                  ctrl, :new, opts
-          :edit    -> get    path <> "/:" <> parm <> "/edit", ctrl, :edit, opts
-          :create  -> post   path,                            ctrl, :create, opts
-          :delete  -> delete path <> "/:" <> parm,            ctrl, :delete, opts
-          :update  ->
-            patch path <> "/:" <> parm, ctrl, :update, opts
-            put   path <> "/:" <> parm, ctrl, :update, Keyword.put(opts, :as, nil)
+        Enum.each resource.actions, fn action ->
+          case action do
+            :index   -> get    path,                            ctrl, :index, opts
+            :show    -> get    path <> "/:" <> parm,            ctrl, :show, opts
+            :new     -> get    path <> "/new",                  ctrl, :new, opts
+            :edit    -> get    path <> "/:" <> parm <> "/edit", ctrl, :edit, opts
+            :create  -> post   path,                            ctrl, :create, opts
+            :delete  -> delete path <> "/:" <> parm,            ctrl, :delete, opts
+            :update  ->
+              patch path <> "/:" <> parm, ctrl, :update, opts
+              put   path <> "/:" <> parm, ctrl, :update, Keyword.put(opts, :as, nil)
+          end
         end
-      end
 
-      unquote(scope)
+        unquote(scope)
+      after
+        :ok
+      end
     end
   end
 
@@ -510,27 +535,31 @@ defmodule Phoenix.Router do
       end
 
     quote do
-      opts     = Keyword.put(unquote(options), :singular, true)
-      resource = Resource.build(unquote(path), unquote(controller), opts)
+      try do
+        opts     = Keyword.put(unquote(options), :singular, true)
+        resource = Resource.build(unquote(path), unquote(controller), opts)
 
-      path = resource.path
-      ctrl = resource.controller
-      opts = resource.route
+        path = resource.path
+        ctrl = resource.controller
+        opts = resource.route
 
-      Enum.each resource.actions, fn action ->
-        case action do
-          :show    -> get    path,            ctrl, :show, opts
-          :new     -> get    path <> "/new",  ctrl, :new, opts
-          :edit    -> get    path <> "/edit", ctrl, :edit, opts
-          :create  -> post   path,            ctrl, :create, opts
-          :delete  -> delete path,            ctrl, :delete, opts
-          :update  ->
-            patch path, ctrl, :update, opts
-            put   path, ctrl, :update, Keyword.put(opts, :as, nil)
+        Enum.each resource.actions, fn action ->
+          case action do
+            :show    -> get    path,            ctrl, :show, opts
+            :new     -> get    path <> "/new",  ctrl, :new, opts
+            :edit    -> get    path <> "/edit", ctrl, :edit, opts
+            :create  -> post   path,            ctrl, :create, opts
+            :delete  -> delete path,            ctrl, :delete, opts
+            :update  ->
+              patch path, ctrl, :update, opts
+              put   path, ctrl, :update, Keyword.put(opts, :as, nil)
+          end
         end
-      end
 
-      unquote(scope)
+        unquote(scope)
+      after
+        :ok
+      end
     end
   end
 
@@ -663,25 +692,32 @@ defmodule Phoenix.Router do
     add_socket(mount, Dict.merge(opts, alias: chan_alias), chan_block)
   end
   defp add_socket(mount, opts, chan_block) do
-    quote bind_quoted: [mount: mount, opts: opts], unquote: true do
-      if Scope.inside_scope?(__MODULE__) do
-        raise """
-        You are trying to call `socket` within a `scope` definition.
-        Please move your socket and channel definitions outside of any scope block.
-        """
-      end
+    quote do
+      try do
+        mount = unquote(mount)
+        opts  = unquote(opts)
 
-      @phoenix_socket_mount mount
-      @phoenix_transports opts[:via]
-      @phoenix_channel_alias opts[:alias]
-      get  @phoenix_socket_mount, Phoenix.Transports.WebSocket, :upgrade, Dict.take(opts, [:as])
-      post @phoenix_socket_mount, Phoenix.Transports.WebSocket, :upgrade
-      get  @phoenix_socket_mount <> "/poll", Phoenix.Transports.LongPoller, :poll
-      post @phoenix_socket_mount <> "/poll", Phoenix.Transports.LongPoller, :publish
-      unquote(chan_block)
-      @phoenix_socket_mount nil
-      @phoenix_transports nil
-      @phoenix_channel_alias nil
+        if Scope.inside_scope?(__MODULE__) do
+          raise """
+          You are trying to call `socket` within a `scope` definition.
+          Please move your socket and channel definitions outside of any scope block.
+          """
+        end
+
+        @phoenix_socket_mount mount
+        @phoenix_transports opts[:via]
+        @phoenix_channel_alias opts[:alias]
+        get  @phoenix_socket_mount, Phoenix.Transports.WebSocket, :upgrade, Dict.take(opts, [:as])
+        post @phoenix_socket_mount, Phoenix.Transports.WebSocket, :upgrade
+        get  @phoenix_socket_mount <> "/poll", Phoenix.Transports.LongPoller, :poll
+        post @phoenix_socket_mount <> "/poll", Phoenix.Transports.LongPoller, :publish
+        unquote(chan_block)
+        @phoenix_socket_mount nil
+        @phoenix_transports nil
+        @phoenix_channel_alias nil
+      after
+        :ok
+      end
     end
   end
 
