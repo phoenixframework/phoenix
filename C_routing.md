@@ -819,7 +819,7 @@ defmodule HelloPhoenix.Router do
 end
 ```
 
-Next, we need to define a channel, specifying a topic and associating it with the channel module which will implement its behavior. If we have a channel module called `RoomChannel` and a topic called `lobby`, the code to do this is straightforward.
+Next, we need to define a channel, specifying a topic and associating it with the channel module which will implement its behavior. If we have a channel module called `RoomChannel` and a topic called `rooms`, the code to do this is straightforward.
 
 ```elixir
 defmodule HelloPhoenix.Router do
