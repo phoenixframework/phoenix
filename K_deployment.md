@@ -30,7 +30,7 @@ To get started, we'll need to add `{:exrm, "~> 0.14.16"}` into the list of depen
 
 ```elixir
   def deps do
-    [{:phoenix, "~> 0.8.0"},
+    [{:phoenix, "~> 0.9.0"},
       {:cowboy, "~> 1.0.0"},
       {:exrm, "~> 0.14.16"}]
   end
@@ -197,7 +197,7 @@ drwxr-xr-x   4 lance  staff  136 Jan 16 16:03 hello_phoenix-0.0.1
 drwxr-xr-x   3 lance  staff  102 Jan 16 16:03 iex-1.0.2
 drwxr-xr-x   4 lance  staff  136 Jan 16 16:03 kernel-3.0
 drwxr-xr-x   3 lance  staff  102 Jan 16 16:03 logger-1.0.2
-drwxr-xr-x   4 lance  staff  136 Jan 16 16:03 phoenix-0.8.0
+drwxr-xr-x   4 lance  staff  136 Jan 16 16:03 phoenix-0.9.0
 drwxr-xr-x   3 lance  staff  102 Jan 16 16:03 plug-0.9.0
 drwxr-xr-x   3 lance  staff  102 Jan 16 16:03 poison-1.3.0
 drwxr-xr-x   3 lance  staff  102 Jan 16 16:03 ranch-1.0.0

@@ -66,7 +66,7 @@ Routes map unique HTTP verb/path pairs to controller/action pairs which will han
 
 The route for our "Welcome to Phoenix!" page from the previous Up And Running Guide looks like this.
 ```elixir
-get "/", HelloPhoenix.PageController, :index
+get "/", PageController, :index
 ```
 Let's digest what this route is telling us. Visiting [http://localhost:4000/](http://localhost:4000/) issues an http GET request to the root path. All requests like this will be handled by the `index` function in the `HelloPhoenix.PageController` module defined in `web/controllers/page_controller.ex`.
 
