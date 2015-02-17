@@ -44,11 +44,6 @@ defmodule Phoenix.PubSub.PG2Server do
     end
   end
 
-  def handle_call({:subscribers, topic}, _from, state) do
-    response = {:perform, {Local, :subscribers, [state.local_name, topic]}}
-    {:reply, response, state}
-  end
-
   def handle_call(:stop, _from, state) do
     {:stop, :normal, :ok, state}
   end

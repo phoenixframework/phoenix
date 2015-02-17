@@ -96,6 +96,10 @@ defmodule Phoenix.ChannelTest do
              payload: func}
   end
 
+  def subscribers(server, topic) do
+    PubSub.Local.subscribers(Module.concat(server, Local), topic)
+  end
+
   setup do
     Logger.disable(self())
     :ok
@@ -105,9 +109,9 @@ defmodule Phoenix.ChannelTest do
     socket = Socket.put_topic(new_socket, "top:subtop")
 
     assert PubSub.subscribe(:phx_pub, socket.pid, "top:subtop")
-    assert PubSub.subscribers(:phx_pub, "top:subtop") |> Enum.to_list == [socket.pid]
+    assert subscribers(:phx_pub, "top:subtop") == [socket.pid]
     assert PubSub.unsubscribe(:phx_pub, socket.pid, "top:subtop")
-    assert PubSub.subscribers(:phx_pub, "top:subtop") == HashSet.new
+    assert subscribers(:phx_pub, "top:subtop") == []
   end
 
   test "#broadcast and #broadcast! broadcasts global message on topic" do
@@ -193,14 +197,14 @@ defmodule Phoenix.ChannelTest do
     # join
     join = fn ->
       message = join_message(fn socket -> {:ok, socket} end)
-      assert PubSub.subscribers(:phx_pub, "topic1:subtopic") == HashSet.new
+      assert subscribers(:phx_pub, "topic1:subtopic") == []
       Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, WebSocket)
     end
 
     # incoming leave
     {:ok, sockets} = join.()
     assert HashDict.get(sockets, "topic1:subtopic")
-    assert PubSub.subscribers(:phx_pub, "topic1:subtopic") |> Enum.to_list == [self]
+    assert subscribers(:phx_pub, "topic1:subtopic") == [self]
     # send message that returns {:leave, socket} now that we've joined
     message = %Message{topic: "topic1:subtopic",
                        event: "should:be:going",
@@ -208,19 +212,19 @@ defmodule Phoenix.ChannelTest do
     {:ok, socks} = Transport.dispatch(message, sockets, self, Router, :phx_pub, WebSocket)
     refute HashDict.get(socks, "topic1:subtopic")
     assert socks == HashDict.new
-    assert PubSub.subscribers(:phx_pub, "topic1:subtopic") == HashSet.new
+    assert subscribers(:phx_pub, "topic1:subtopic") == []
     assert_received :leave_triggered
 
     # outgoing leave
     {:ok, sockets} = join.()
     assert HashDict.get(sockets, "topic1:subtopic")
-    assert PubSub.subscribers(:phx_pub, "topic1:subtopic") |> Enum.to_list == [self]
+    assert subscribers(:phx_pub, "topic1:subtopic") == [self]
     # send broadcast that returns {:leave, socket} now that we've joined
     msg = %Message{event: "everyone:leave", topic: "topic1:subtopic", payload: %{}}
     {:ok, sockets} = Transport.dispatch_broadcast(sockets, msg)
     refute HashDict.get(sockets, "topic1:subtopic")
     assert sockets == HashDict.new
-    assert PubSub.subscribers(:phx_pub, "topic1:subtopic") == HashSet.new
+    assert subscribers(:phx_pub, "topic1:subtopic") == []
     assert_received :everyone_leaving
     assert_received :leave_triggered
   end
@@ -228,32 +232,32 @@ defmodule Phoenix.ChannelTest do
   test "successful join authorizes and subscribes socket to topic" do
     message = join_message(fn socket -> {:ok, socket} end)
 
-    assert PubSub.subscribers(:phx_pub, "topic1:subtopic") == HashSet.new
+    assert subscribers(:phx_pub, "topic1:subtopic") == []
     {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, WebSocket)
     socket = HashDict.get(sockets, "topic1:subtopic")
     assert socket
     assert Socket.authorized?(socket, "topic1:subtopic")
-    assert PubSub.subscribers(:phx_pub, "topic1:subtopic") |> Enum.to_list == [socket.pid]
-    assert PubSub.subscribers(:phx_pub, "topic1:subtopic") |> Enum.to_list == [self]
+    assert socket.pid == self
+    assert subscribers(:phx_pub, "topic1:subtopic") == [socket.pid]
   end
 
   test "unsuccessful join denies socket access to topic" do
     message = join_message(fn _socket -> :ignore end)
 
-    assert PubSub.subscribers(:phx_pub, "topic1:subtopic") == HashSet.new
+    assert subscribers(:phx_pub, "topic1:subtopic") == []
     {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, WebSocket)
     refute HashDict.get(sockets, "topic1:subtopic")
-    refute PubSub.subscribers(:phx_pub, "topic1:subtopic") |> Enum.to_list == [self]
+    refute subscribers(:phx_pub, "topic1:subtopic") == [self]
   end
 
   test "#leave is called when the socket conn closes, and is unsubscribed" do
     message = join_message(fn socket -> {:ok, socket} end)
 
     {:ok, sockets} = Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, WebSocket)
-    assert PubSub.subscribers(:phx_pub, "topic1:subtopic") |> Enum.to_list == [self]
+    assert subscribers(:phx_pub, "topic1:subtopic") == [self]
     Process.put(:leave, fn socket -> {:ok, socket} end)
     Transport.dispatch_leave(sockets, :reason)
-    assert PubSub.subscribers(:phx_pub, "topic1:subtopic") == HashSet.new
+    assert subscribers(:phx_pub, "topic1:subtopic") == []
   end
 
   test "#join raise InvalidReturn exception when return type invalid" do

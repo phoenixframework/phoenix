@@ -1,15 +1,15 @@
 defmodule Phoenix.PubSub.PubSubTest do
-  # TODO: Should be async
-  use ExUnit.Case
-  alias Phoenix.PubSub
+  use ExUnit.Case, async: true
 
-  @adapters [
-    {Phoenix.PubSub.Redis, :redis_pub, :redis},
-    {Phoenix.PubSub.PG2,   :pg2_pub, :pg2}
-  ]
+  alias Phoenix.PubSub
+  alias Phoenix.PubSub.Local
+
+  @adapters [redis: Phoenix.PubSub.Redis,
+             pg2: Phoenix.PubSub.PG2]
 
   def spawn_pid do
-    spawn fn -> :timer.sleep(:infinity) end
+    {:ok, pid} = Task.start_link(fn -> :timer.sleep(:infinity) end)
+    pid
   end
 
   defmodule FailedBroadcaster do
@@ -17,114 +17,128 @@ defmodule Phoenix.PubSub.PubSubTest do
     def broadcast_from(_server, _from_pid, _topic, _msg), do: {:error, :boom}
   end
 
-  for {adapter, name, tag} <- @adapters do
+  for {tag, adapter} <- @adapters do
+    @key tag
+    @name adapter
+    @local Module.concat(adapter, Elixir.Local)
     @adapter adapter
-    @server name
 
-    setup_all do
-      @adapter.start_link(@server, [])
+    setup meta do
+      if meta[@key] do
+        {:ok, pid} = @adapter.start_link(@name, [])
+
+        on_exit fn ->
+          ref = Process.monitor(pid)
+          assert_receive {:DOWN, ^ref, :process, ^pid, _}
+        end
+      end
+
       :ok
     end
 
     @tag tag
-    test "#{inspect @adapter} #subscribers, #subscribe, #unsubscribe" do
+    test "#{inspect @adapter} subscribe and unsubscribe" do
       pid = spawn_pid
-      assert Enum.empty?(PubSub.subscribers(@server, "topic4"))
-      assert PubSub.subscribe(@server, pid, "topic4")
-      assert PubSub.subscribers(@server, "topic4") |> Enum.to_list == [pid]
-      assert PubSub.unsubscribe(@server, pid, "topic4")
-      assert Enum.empty?(PubSub.subscribers(@server, "topic4"))
-      Process.exit pid, :kill
+      assert Local.subscribers(@local, "topic4") == []
+      assert PubSub.subscribe(@name, pid, "topic4")
+      assert Local.subscribers(@local, "topic4") == [pid]
+      assert PubSub.unsubscribe(@name, pid, "topic4")
+      assert Local.subscribers(@local, "topic4") == []
     end
 
     @tag tag
     test "#{inspect @adapter} subscribe/3 with link does not down adapter" do
-      server_name = Module.concat(@server, :link_pub)
-      {:ok, _super_pid} = @adapter.start_link(server_name, [])
-      local_pid = Process.whereis(Module.concat(server_name, Local))
-      assert Process.alive?(local_pid)
-      pid = spawn_pid
+      Process.flag(:trap_exit, true)
 
-      assert Enum.empty?(PubSub.subscribers(server_name, "topic4"))
-      assert PubSub.subscribe(server_name, pid, "topic4", link: true)
+      pid   = spawn_pid
+      local = Process.whereis(@local)
+
+      assert PubSub.subscribe(@name, pid, "topic4", link: true)
       Process.exit(pid, :kill)
+
       refute Process.alive?(pid)
-      assert Process.alive?(local_pid)
+      assert Process.alive?(local)
     end
 
     @tag tag
     test "#{inspect @adapter} subscribe/3 with link downs subscriber" do
-      server_name = Module.concat(@server, :link_pub2)
-      {:ok, _super_pid} = @adapter.start_link(server_name, [])
-      local_pid = Process.whereis(Module.concat(server_name, Local))
-      assert Process.alive?(local_pid)
+      Process.flag(:trap_exit, true)
+
       pid = spawn_pid
-      non_linked_pid = spawn_pid
+      non_linked_pid1 = spawn_pid
       non_linked_pid2 = spawn_pid
 
-      assert PubSub.subscribe(server_name, pid, "topic4", link: true)
-      assert PubSub.subscribe(server_name, non_linked_pid, "topic4")
-      assert PubSub.subscribe(server_name, non_linked_pid2, "topic4", link: false)
-      Process.exit(local_pid, :kill)
-      refute Process.alive?(local_pid)
+      assert PubSub.subscribe(@name, pid, "topic4", link: true)
+      assert PubSub.subscribe(@name, non_linked_pid1, "topic4")
+      assert PubSub.subscribe(@name, non_linked_pid2, "topic4", link: false)
+
+      Process.exit(Process.whereis(@local), :kill)
+      Logger.flush()
+
       refute Process.alive?(pid)
-      assert Process.alive?(non_linked_pid)
+      assert Process.alive?(non_linked_pid1)
       assert Process.alive?(non_linked_pid2)
     end
 
     @tag tag
     test "#{inspect @adapter} broadcast/3 and broadcast!/3 publishes message to each subscriber" do
-      PubSub.subscribe(@server, self, "topic9")
-      assert PubSub.subscribers(@server, "topic9") |> Enum.to_list == [self]
-      :ok = PubSub.broadcast(@server, "topic9", :ping)
+      PubSub.subscribe(@name, self, "topic9")
+      :ok = PubSub.broadcast(@name, "topic9", :ping)
       assert_receive :ping
-      :ok = PubSub.broadcast!(@server, "topic9", :ping)
+      :ok = PubSub.broadcast!(@name, "topic9", :ping)
       assert_receive :ping
     end
 
     @tag tag
     test "#{inspect @adapter} broadcast!/3 and broadcast_from!/4 raise if broadcast fails" do
-      PubSub.subscribe(@server, self, "topic9")
-      assert PubSub.subscribers(@server, "topic9") |> Enum.to_list == [self]
+      PubSub.subscribe(@name, self, "topic9")
+
       assert_raise PubSub.BroadcastError, fn ->
-        PubSub.broadcast!(@server, "topic9", :ping, FailedBroadcaster)
+        PubSub.broadcast!(@name, "topic9", :ping, FailedBroadcaster)
       end
+
       assert_raise PubSub.BroadcastError, fn ->
-        PubSub.broadcast_from!(@server, self, "topic9", :ping, FailedBroadcaster)
+        PubSub.broadcast_from!(@name, self, "topic9", :ping, FailedBroadcaster)
       end
-      refute_receive :ping
+
+      refute_received :ping
     end
 
     @tag tag
     test "#{inspect @adapter} broadcast/3 does not publish message to other topic subscribers" do
-      pids = Enum.map 0..10, fn _ -> spawn_pid end
-      pids |> Enum.each(&PubSub.subscribe(@server, &1, "topic10"))
-      :ok = PubSub.broadcast(@server, "topic10", :ping)
-      refute_receive :ping
-      pids |> Enum.each(&Process.exit &1, :kill)
+      PubSub.subscribe(@name, self, "topic9")
+
+      Enum.each 0..10, fn _ ->
+        PubSub.subscribe(@name, spawn_pid, "topic10")
+      end
+
+      :ok = PubSub.broadcast(@name, "topic10", :ping)
+      refute_received :ping
     end
 
     @tag tag
     test "#{inspect @adapter} broadcast_from/4 and broadcast_from!/4 skips sender" do
-      PubSub.subscribe(@server, self, "topic11")
-      PubSub.broadcast_from(@server, self, "topic11", :ping)
-      refute_receive :ping
+      PubSub.subscribe(@name, self, "topic11")
 
-      PubSub.broadcast_from!(@server, self, "topic11", :ping)
-      refute_receive :ping
+      PubSub.broadcast_from(@name, self, "topic11", :ping)
+      refute_received :ping
+
+      PubSub.broadcast_from!(@name, self, "topic11", :ping)
+      refute_received :ping
     end
 
     @tag tag
     test "#{inspect @adapter} processes automatically removed from topic when killed" do
+      Process.flag(:trap_exit, true)
+
       pid = spawn_pid
-      assert PubSub.subscribe(@server, pid, "topic12")
-      assert PubSub.subscribers(@server, "topic12") |> Enum.to_list == [pid]
+      assert PubSub.subscribe(@name, pid, "topic12")
 
       ref = Process.monitor pid
       Process.exit pid, :kill
       assert_receive {:DOWN, ^ref, :process, ^pid, _}
 
-      assert PubSub.subscribers(@server, "topic12") |> Enum.to_list == []
+      assert Local.subscribers(@local, "topic12") == []
     end
   end
 end

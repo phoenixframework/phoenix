@@ -18,9 +18,6 @@ defmodule Phoenix.PubSub do
        sends:        `{:unsubscribe, pid, topic}`
        respond with: `:ok | {:error, reason} {:perform, {m, f a}}`
 
-    * `subscribers` -
-       respond with: `:ok | {:error, reason} {:perform, {m, f a}}`
-
     * `broadcast` -
        sends          `{:broadcast, :none, topic, message}`
        respond with: `:ok | {:error, reason} {:perform, {m, f a}}`
@@ -29,23 +26,20 @@ defmodule Phoenix.PubSub do
 
       def start_link(pubsub_server_name_to_locally_register, options)
 
-
   ### Offloading work to clients via MFA response
+
   The `Phoenix.PubSub` API allows any of its functions to handle a
   response from the adapter matching `{:perform, {m, f a}}`. The PubSub
   client will recursively invoke all MFA responses until a result is
   return. This is useful for offloading work to clients without blocking
   in your PubSub adapter. See `Phoenix.PubSub.PG2` for an example usage.
 
-
   ## Example
 
-      iex> PubSub.subscribe(MyApp.PubSub, self, "user:123")
+      iex> PubSub.subscribe MyApp.PubSub, self, "user:123"
       :ok
       iex> Process.info(self)[:messages]
       []
-      iex> PubSub.subscribers(MyApp.PubSub, "user:123")
-      [#PID<0.169.0>]
       iex> PubSub.broadcast MyApp.PubSub, "user:123", {:user_update, %{id: 123, name: "Shane"}}
       :ok
       iex> Process.info(self)[:messages]
@@ -79,12 +73,6 @@ defmodule Phoenix.PubSub do
   """
   def unsubscribe(server, pid, topic),
     do: call(server, {:unsubscribe, pid, topic})
-
-  @doc """
-  Returns list of subscriber pids of members of PubSub adapter's group for topic
-  """
-  def subscribers(server, topic),
-    do: call(server, {:subscribers, topic})
 
   @doc """
   Broadcasts message on given topic
@@ -127,5 +115,6 @@ defmodule Phoenix.PubSub do
   defp perform({:perform, {mod, func, args}}) do
     apply(mod, func, args) |> perform
   end
+
   defp perform(result), do: result
 end

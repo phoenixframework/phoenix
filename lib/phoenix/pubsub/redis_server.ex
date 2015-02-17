@@ -67,11 +67,6 @@ defmodule Phoenix.PubSub.RedisServer do
     {:reply, response, state}
   end
 
-  def handle_call({:subscribers, topic}, _from, state) do
-    response = {:perform, {Local, :subscribers, [state.local_name, topic]}}
-    {:reply, response, state}
-  end
-
   def handle_call({:broadcast, from_pid, topic, msg}, _from, state) do
     redis_msg = {@redis_msg_vsn, state.node_ref, from_pid, topic, msg}
     resp = {:perform, {__MODULE__, :broadcast, [state.namespace, state.pool_name, redis_msg]}}
