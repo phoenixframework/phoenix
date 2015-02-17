@@ -1,0 +1,21 @@
+{
+  "name": "phoenix-channels-client",
+  "version": "0.9.0",
+  "description": "Channels client for the Phoenix web framework",
+  "main": "phoenix.js",
+  "scripts": {
+    "test": "test"
+  },
+  "keywords": [
+    "phoenix"
+  ],
+  "author": "Chris McCord",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-core": "^4.0.2",
+    "babel-loader": "^4.0.0",
+    "mocha": "^2.1.0",
+    "mocha-loader": "^0.7.1",
+    "webpack": "^1.5.3"
+  }
+}
