@@ -20,13 +20,13 @@ defmodule Phoenix.PubSub.PubSubTest do
   for {adapter, name, tag} <- @adapters do
     @adapter adapter
     @server name
+
     setup_all do
       @adapter.start_link(@server, [])
       :ok
     end
 
-    @moduletag tag
-
+    @tag tag
     test "#{inspect @adapter} #subscribers, #subscribe, #unsubscribe" do
       pid = spawn_pid
       assert Enum.empty?(PubSub.subscribers(@server, "topic4"))
@@ -37,6 +37,7 @@ defmodule Phoenix.PubSub.PubSubTest do
       Process.exit pid, :kill
     end
 
+    @tag tag
     test "#{inspect @adapter} subscribe/3 with link does not down adapter" do
       server_name = Module.concat(@server, :link_pub)
       {:ok, _super_pid} = @adapter.start_link(server_name, [])
@@ -51,6 +52,7 @@ defmodule Phoenix.PubSub.PubSubTest do
       assert Process.alive?(local_pid)
     end
 
+    @tag tag
     test "#{inspect @adapter} subscribe/3 with link downs subscriber" do
       server_name = Module.concat(@server, :link_pub2)
       {:ok, _super_pid} = @adapter.start_link(server_name, [])
@@ -70,6 +72,7 @@ defmodule Phoenix.PubSub.PubSubTest do
       assert Process.alive?(non_linked_pid2)
     end
 
+    @tag tag
     test "#{inspect @adapter} broadcast/3 and broadcast!/3 publishes message to each subscriber" do
       PubSub.subscribe(@server, self, "topic9")
       assert PubSub.subscribers(@server, "topic9") |> Enum.to_list == [self]
@@ -79,6 +82,7 @@ defmodule Phoenix.PubSub.PubSubTest do
       assert_receive :ping
     end
 
+    @tag tag
     test "#{inspect @adapter} broadcast!/3 and broadcast_from!/4 raise if broadcast fails" do
       PubSub.subscribe(@server, self, "topic9")
       assert PubSub.subscribers(@server, "topic9") |> Enum.to_list == [self]
@@ -91,6 +95,7 @@ defmodule Phoenix.PubSub.PubSubTest do
       refute_receive :ping
     end
 
+    @tag tag
     test "#{inspect @adapter} broadcast/3 does not publish message to other topic subscribers" do
       pids = Enum.map 0..10, fn _ -> spawn_pid end
       pids |> Enum.each(&PubSub.subscribe(@server, &1, "topic10"))
@@ -99,6 +104,7 @@ defmodule Phoenix.PubSub.PubSubTest do
       pids |> Enum.each(&Process.exit &1, :kill)
     end
 
+    @tag tag
     test "#{inspect @adapter} broadcast_from/4 and broadcast_from!/4 skips sender" do
       PubSub.subscribe(@server, self, "topic11")
       PubSub.broadcast_from(@server, self, "topic11", :ping)
@@ -108,12 +114,16 @@ defmodule Phoenix.PubSub.PubSubTest do
       refute_receive :ping
     end
 
+    @tag tag
     test "#{inspect @adapter} processes automatically removed from topic when killed" do
       pid = spawn_pid
       assert PubSub.subscribe(@server, pid, "topic12")
       assert PubSub.subscribers(@server, "topic12") |> Enum.to_list == [pid]
+
+      ref = Process.monitor pid
       Process.exit pid, :kill
-      :timer.sleep 10 # wait until adapter removes dead pid
+      assert_receive {:DOWN, ^ref, :process, ^pid, _}
+
       assert PubSub.subscribers(@server, "topic12") |> Enum.to_list == []
     end
   end

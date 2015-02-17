@@ -11,8 +11,6 @@ Mix.shell(Mix.Shell.Process)
 # Starts web server applications
 Application.ensure_all_started(:cowboy)
 
-{:ok, _pid} = Phoenix.PubSub.PG2.start_link(:phx_pub, [])
-
 # Used whenever a router fails. We default to simply
 # rendering a short string.
 defmodule Phoenix.ErrorView do
@@ -21,13 +19,14 @@ defmodule Phoenix.ErrorView do
   end
 end
 
-:erlang.process_flag(:trap_exit, true)
+# Start transport levels
+{:ok, _pid} = Phoenix.PubSub.PG2.start_link(:phx_pub, [])
+Process.flag(:trap_exit, true)
 
-extra_options = case :eredis.start_link do
+options = case :eredis.start_link do
   {:ok, _} -> []
          _ -> [exclude: [:redis]]
 end
 
-:erlang.process_flag(:trap_exit, false)
-
-ExUnit.start(extra_options)
+Process.flag(:trap_exit, false)
+ExUnit.start(options)

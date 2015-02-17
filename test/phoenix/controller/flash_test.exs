@@ -92,7 +92,7 @@ defmodule Phoenix.Controller.FlashTest do
     assert get_flash(conn) == %{}
   end
 
-  test "fetch_flash/2 raises ArugmentError when session not previously fetched" do
+  test "fetch_flash/2 raises ArgumentError when session not previously fetched" do
     assert_raise ArgumentError, fn ->
       conn(:get, "/") |> fetch_flash([])
     end
