@@ -21,4 +21,13 @@ defmodule Phoenix.ErrorView do
   end
 end
 
-ExUnit.start()
+:erlang.process_flag(:trap_exit, true)
+
+extra_options = case :eredis.start_link do
+  {:ok, _} -> []
+         _ -> [exclude: [:redis]]
+end
+
+:erlang.process_flag(:trap_exit, false)
+
+ExUnit.start(extra_options)
