@@ -44,14 +44,10 @@ defmodule Phoenix.Router.Route do
   def exprs(route) do
     {path, binding} = build_path_and_binding(route.path)
 
-    exprs = %{path: path,
-              host: build_host(route.host),
-              binding: binding,
-              private: maybe_merge(:private, route.private),
-              pipes: build_pipes(route.pipe_through),
-              dispatch: nil}
-
-    %{exprs | dispatch: build_dispatch(route, exprs)}
+    %{path: path,
+      host: build_host(route.host),
+      binding: binding,
+      dispatch: build_dispatch(route, binding)}
   end
 
   defp build_path_and_binding(path) do
@@ -72,13 +68,13 @@ defmodule Phoenix.Router.Route do
     end
   end
 
-  defp build_dispatch(route, exprs) do
-    quote do
-      unquote(exprs.private)
-      var!(conn) = dispatch(var!(conn), unquote(route.controller), unquote(route.action),
-                            unquote({:%{}, [], exprs.binding}), unquote(route.pipe_through))
-      unquote(exprs.pipes)
-    end
+  defp build_dispatch(route, binding) do
+    exprs =
+      [maybe_binding(binding),
+       maybe_merge(:private, route.private),
+       build_pipes(route)]
+
+    {:__block__, [], Enum.filter(exprs, & &1 != nil)}
   end
 
   defp maybe_merge(key, data) do
@@ -90,7 +86,24 @@ defmodule Phoenix.Router.Route do
     end
   end
 
-  defp build_pipes(pipe_through) do
-    Enum.reduce(pipe_through, quote(do: var!(conn)), &{&1, [], [&2, []]})
+  defp maybe_binding([]), do: nil
+  defp maybe_binding(binding) do
+    quote do
+      var!(conn) =
+        update_in var!(conn).params, &Map.merge(&1, unquote({:%{}, [], binding}))
+    end
+  end
+
+  defp build_pipes(route) do
+    initial = quote do
+      var!(conn)
+      |> Plug.Conn.put_private(:phoenix_pipelines, unquote(route.pipe_through))
+      |> Plug.Conn.put_private(:phoenix_route, fn conn ->
+           opts = unquote(route.controller).init(unquote(route.action))
+           unquote(route.controller).call(conn, opts)
+         end)
+    end
+
+    Enum.reduce(route.pipe_through, initial, &{&1, [], [&2, []]})
   end
 end

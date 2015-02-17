@@ -260,15 +260,6 @@ defmodule Phoenix.Router do
         raise NoRouteError, conn: conn, router: __MODULE__
       end
 
-      defp dispatch(conn, controller, action, parts, pipelines) do
-        update_in(conn.params, &Map.merge(&1, parts))
-        |> Plug.Conn.put_private(:phoenix_pipelines, pipelines)
-        |> Plug.Conn.put_private(:phoenix_route, fn conn ->
-            opts = controller.init(action)
-            controller.call(conn, opts)
-           end)
-      end
-
       unquote(channels)
     end
   end
