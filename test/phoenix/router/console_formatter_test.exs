@@ -15,13 +15,14 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
 
   test "format multiple routes" do
     assert draw(RouterTestSingleRoutes) == """
-      web_socket_path  GET     /ws       Phoenix.Transports.WebSocket.upgrade/2
-      web_socket_path  POST    /ws       Phoenix.Transports.WebSocket.upgrade/2
-     long_poller_path  GET     /ws/poll  Phoenix.Transports.LongPoller.poll/2
-     long_poller_path  POST    /ws/poll  Phoenix.Transports.LongPoller.publish/2
-            page_path  GET     /         Phoenix.PageController.index/2
-    upload_image_path  POST    /images   Phoenix.ImageController.upload/2
-    remove_image_path  DELETE  /images   Phoenix.ImageController.delete/2
+      web_socket_path  GET      /ws       Phoenix.Transports.WebSocket.upgrade/2
+      web_socket_path  POST     /ws       Phoenix.Transports.WebSocket.upgrade/2
+     long_poller_path  OPTIONS  /ws/poll  Phoenix.Transports.LongPoller.options/2
+     long_poller_path  GET      /ws/poll  Phoenix.Transports.LongPoller.poll/2
+     long_poller_path  POST     /ws/poll  Phoenix.Transports.LongPoller.publish/2
+            page_path  GET      /         Phoenix.PageController.index/2
+    upload_image_path  POST     /images   Phoenix.ImageController.upload/2
+    remove_image_path  DELETE   /images   Phoenix.ImageController.delete/2
     """
   end
 

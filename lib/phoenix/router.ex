@@ -709,10 +709,11 @@ defmodule Phoenix.Router do
         @phoenix_socket_mount mount
         @phoenix_transports opts[:via]
         @phoenix_channel_alias opts[:alias]
-        get  @phoenix_socket_mount, Phoenix.Transports.WebSocket, :upgrade, Dict.take(opts, [:as])
-        post @phoenix_socket_mount, Phoenix.Transports.WebSocket, :upgrade
-        get  @phoenix_socket_mount <> "/poll", Phoenix.Transports.LongPoller, :poll
-        post @phoenix_socket_mount <> "/poll", Phoenix.Transports.LongPoller, :publish
+        get     @phoenix_socket_mount, Phoenix.Transports.WebSocket, :upgrade, Dict.take(opts, [:as])
+        post    @phoenix_socket_mount, Phoenix.Transports.WebSocket, :upgrade
+        options @phoenix_socket_mount <> "/poll", Phoenix.Transports.LongPoller, :options
+        get     @phoenix_socket_mount <> "/poll", Phoenix.Transports.LongPoller, :poll
+        post    @phoenix_socket_mount <> "/poll", Phoenix.Transports.LongPoller, :publish
         unquote(chan_block)
         @phoenix_socket_mount nil
         @phoenix_transports nil

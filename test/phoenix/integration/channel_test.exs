@@ -140,7 +140,8 @@ defmodule Phoenix.Integration.ChannelTest do
     session = Map.take(resp.body, ["token", "sig"])
     assert resp.body["token"]
     assert resp.body["sig"]
-    assert resp.status == 410
+    assert resp.body["status"] == 410
+    assert resp.status == 200
 
     # join
     resp = poll :post, "/ws/poll", session, %{
@@ -148,37 +149,37 @@ defmodule Phoenix.Integration.ChannelTest do
       "event" => "join",
       "payload" => %{}
     }
-    assert resp.status == 200
+    assert resp.body["status"] == 200
 
     # poll with messsages sends buffer
     resp = poll(:get, "/ws/poll", session)
     session = Map.take(resp.body, ["token", "sig"])
-    assert resp.status == 200
+    assert resp.body["status"] == 200
     [status_msg] = resp.body["messages"]
     assert status_msg["payload"] == %{"status" => "connected"}
 
     # poll without messages sends 204 no_content
     resp = poll(:get, "/ws/poll", session)
     session = Map.take(resp.body, ["token", "sig"])
-    assert resp.status == 204
+    assert resp.body["status"] == 204
 
     # messages are buffered between polls
     Endpoint.broadcast! "rooms:lobby", "user:entered", %{name: "José"}
     Endpoint.broadcast! "rooms:lobby", "user:entered", %{name: "Sonny"}
     resp = poll(:get, "/ws/poll", session)
     session = Map.take(resp.body, ["token", "sig"])
-    assert resp.status == 200
+    assert resp.body["status"] == 200
     assert Enum.count(resp.body["messages"]) == 2
     assert Enum.map(resp.body["messages"], &(&1["payload"]["name"])) == ["José", "Sonny"]
 
     # poll without messages sends 204 no_content
     resp = poll(:get, "/ws/poll", session)
     session = Map.take(resp.body, ["token", "sig"])
-    assert resp.status == 204
+    assert resp.body["status"] == 204
 
     resp = poll(:get, "/ws/poll", session)
     session = Map.take(resp.body, ["token", "sig"])
-    assert resp.status == 204
+    assert resp.body["status"] == 204
 
     # generic events
     Phoenix.PubSub.subscribe(:int_pub, self, "rooms:lobby")
@@ -187,11 +188,11 @@ defmodule Phoenix.Integration.ChannelTest do
       "event" => "new:msg",
       "payload" => %{"body" => "hi!"}
     }
-    assert resp.status == 200
+    assert resp.body["status"] == 200
     assert_receive {:socket_broadcast, %Message{event: "new:msg", payload: %{"body" => "hi!"}}}
     resp = poll(:get, "/ws/poll", session)
     session = Map.take(resp.body, ["token", "sig"])
-    assert resp.status == 200
+    assert resp.body["status"] == 200
 
     # unauthorized events
     capture_log fn ->
@@ -201,7 +202,7 @@ defmodule Phoenix.Integration.ChannelTest do
         "event" => "new:msg",
         "payload" => %{"body" => "this method shouldn't send!'"}
       }
-      assert resp.status == 401
+      assert resp.body["status"] == 401
       refute_receive {:socket_broadcast, %Message{event: "new:msg"}}
 
 
@@ -213,12 +214,12 @@ defmodule Phoenix.Integration.ChannelTest do
         "event" => "join",
         "payload" => %{}
       }
-      assert resp.status == 200
+      assert resp.body["status"] == 200
       Endpoint.broadcast! "rooms:lobby", "new:msg", %{body: "Hello lobby"}
       # poll
       resp = poll(:get, "/ws/poll", session)
       session = Map.take(resp.body, ["token", "sig"])
-      assert resp.status == 200
+      assert resp.body["status"] == 200
       assert Enum.count(resp.body["messages"]) == 2
       assert Enum.at(resp.body["messages"], 0)["payload"]["status"] == "connected"
       assert Enum.at(resp.body["messages"], 1)["payload"]["body"] == "Hello lobby"
@@ -230,7 +231,7 @@ defmodule Phoenix.Integration.ChannelTest do
       :timer.sleep @ensure_window_timeout_ms
       resp = poll(:get, "/ws/poll", session)
       session = Map.take(resp.body, ["token", "sig"])
-      assert resp.status == 410
+      assert resp.body["status"] == 410
 
       # join
       resp = poll :post, "/ws/poll", session, %{
@@ -238,7 +239,7 @@ defmodule Phoenix.Integration.ChannelTest do
         "event" => "join",
         "payload" => %{}
       }
-      assert resp.status == 200
+      assert resp.body["status"] == 200
       Phoenix.PubSub.subscribe(:int_pub, self, "rooms:lobby")
       :timer.sleep @ensure_window_timeout_ms
       resp = poll :post, "/ws/poll", session, %{
@@ -246,21 +247,21 @@ defmodule Phoenix.Integration.ChannelTest do
         "event" => "new:msg",
         "payload" => %{"body" => "hi!"}
       }
-      assert resp.status == 410
+      assert resp.body["status"] == 410
       refute_receive {:socket_reply, %Message{event: "new:msg", payload: %{"body" => "hi!"}}}
 
       # 410 from crashed/terminated longpoller server when publishing
       # create new session
       resp = poll :post, "/ws/poll", %{"token" => "foo", "sig" => "bar"}, %{}
-      assert resp.status == 410
+      assert resp.body["status"] == 410
     end
   end
 
   test "longpoller refuses unallowed origins" do
     conn = call(Endpoint, :get, "/ws/poll", [], headers: [{"origin", "https://example.com"}])
-    assert conn.status == 410
+    assert Poison.decode!(conn.resp_body)["status"] == 410
 
     conn = call(Endpoint, :get, "/ws/poll", [], headers: [{"origin", "http://notallowed.com"}])
-    refute conn.status == 410
+    assert Poison.decode!(conn.resp_body)["status"] == 403
   end
 end

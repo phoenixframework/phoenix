@@ -46,6 +46,10 @@ export class Socket {
   //   heartbeatIntervalMs - The millisecond interval to send a heartbeat message
   //   logger - The optional function for specialized logging, ie:
   //            `logger: (msg) -> console.log(msg)`
+  //   longpoller_timeout - The maximum timeout of a long poll AJAX request.
+  //                        Defaults to 20s (double the server long poll timer).
+  //
+  // For IE8 support use an ES5-shim (https://github.com/es-shims/es5-shim)
   //
   constructor(endPoint, opts = {}){
     this.states               = SOCKET_STATES
@@ -57,9 +61,10 @@ export class Socket {
     this.channels             = []
     this.sendBuffer           = []
 
-    this.transport = opts.transport || WebSocket || LongPoller
+    this.transport = opts.transport || window.WebSocket || LongPoller
     this.heartbeatIntervalMs = opts.heartbeatIntervalMs || this.heartbeatIntervalMs
     this.logger = opts.logger || function(){} // noop
+    this.longpoller_timeout = opts.longpoller_timeout || 20000
     this.endPoint = this.expandEndpoint(endPoint)
     this.resetBufferTimer()
     this.reconnect()
@@ -86,6 +91,7 @@ export class Socket {
   reconnect(){
     this.close(() => {
       this.conn = new this.transport(this.endPoint)
+      this.conn.timeout   = this.longpoller_timeout
       this.conn.onopen    = () => this.onConnOpen()
       this.conn.onerror   = error => this.onConnError(error)
       this.conn.onmessage = event => this.onConnMessage(event)
@@ -114,7 +120,8 @@ export class Socket {
 
   onConnOpen(){
     clearInterval(this.reconnectTimer)
-    if(!this.transport.skipHeartbeat){
+    if(!this.conn.skipHeartbeat){
+      clearInterval(this.heartbeatTimer)
       this.heartbeatTimer = setInterval(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
     }
     this.rejoinAll()
@@ -242,15 +249,18 @@ export class LongPoller {
   poll(){
     if(!(this.readyState === this.states.open || this.readyState === this.states.connecting)){ return }
 
-    Ajax.request("GET", this.endpointURL(), "application/json", null, this.ontimeout.bind(this), (status, resp) => {
-      if(resp && resp !== ""){
-        var {token, sig, messages} = JSON.parse(resp)
+    Ajax.request("GET", this.endpointURL(), "application/json", null, this.timeout, this.ontimeout.bind(this), (resp) => {
+      if(resp){
+        var {status, token, sig, messages} = resp
         this.token = token
         this.sig = sig
+      } else{
+        var status = 0
       }
+
       switch(status){
         case 200:
-          messages.forEach( msg =>  this.onmessage({data: JSON.stringify(msg)}) )
+          messages.forEach( msg => this.onmessage({data: JSON.stringify(msg)}) )
           this.poll()
           break
         case 204:
@@ -272,8 +282,8 @@ export class LongPoller {
   }
 
   send(body){
-    Ajax.request("POST", this.endpointURL(), "application/json", body, this.onerror.bind(this, "timeout"), (status, resp) => {
-      if(status !== 200){ this.onerror(status) }
+    Ajax.request("POST", this.endpointURL(), "application/json", body, this.timeout, this.onerror.bind(this, "timeout"), (resp) => {
+      if(!resp || resp.status !== 200){ this.onerror(status) }
     })
   }
 
@@ -284,21 +294,56 @@ export class LongPoller {
 }
 
 
-export var Ajax = {
+export class Ajax {
 
-  states: {complete: 4},
+  static request(method, endPoint, accept, body, timeout, ontimeout, callback){
+    if(window.XDomainRequest){
+      let req = new XDomainRequest() // IE8, IE9
+      this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback)
+    } else {
+      let req = window.XMLHttpRequest ?
+                  new XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
+                  new ActiveXObject("Microsoft.XMLHTTP") // IE6, IE5
+      this.xhrRequest(req, method, endPoint, accept, body, ontimeout, callback)
+    }
+  }
 
-  request: function(method, endPoint, accept, body, ontimeout, callback){
-    let req = XMLHttpRequest ? new XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
-                               new ActiveXObject("Microsoft.XMLHTTP") // IE6, IE5
+  static xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback){
+    req.timeout = timeout
+    req.open(method, endPoint)
+    req.onload = () => {
+      let response = this.parseJSON(req.responseText)
+      callback && callback(response)
+    }
+    if(ontimeout){ req.ontimeout = ontimeout }
+
+    // Work around bug in IE9 that requires an attached onprogress handler
+    req.onprogress = () => {}
+
+    req.send(body)
+  }
+
+  static xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback){
+    req.timeout = timeout
     req.open(method, endPoint, true)
-    req.setRequestHeader("Content-type", accept)
-    req.onerror = function(){ callback && callback(500, null) }
+    req.setRequestHeader("Content-Type", accept)
+    req.onerror = () => { callback && callback(null) }
     req.onreadystatechange = () => {
-      if(req.readyState === this.states.complete && callback){ callback(req.status, req.responseText) }
+      if(req.readyState === this.states.complete && callback){
+        let response = this.parseJSON(req.responseText)
+        callback(response)
+      }
     }
     if(ontimeout){ req.ontimeout = ontimeout }
 
     req.send(body)
   }
+
+  static parseJSON(resp){
+    return (resp && resp !== "") ?
+             JSON.parse(resp) :
+             null
+  }
 }
+
+Ajax.states = {complete: 4}
