@@ -34,9 +34,10 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "lib/photo_blog.ex", ~r/defmodule PhotoBlog do/
       assert_file "lib/photo_blog/endpoint.ex", ~r/defmodule PhotoBlog.Endpoint do/
 
-      assert_file "priv/static/css/phoenix.css"
+      assert_file "priv/static/css/app.css"
       assert_file "priv/static/images/phoenix.png"
       assert_file "priv/static/js/phoenix.js"
+      assert_file "priv/static/js/app.js"
 
       assert_file "test/photo_blog_test.exs"
       assert_file "test/test_helper.exs"

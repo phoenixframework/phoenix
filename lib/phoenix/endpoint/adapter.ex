@@ -9,7 +9,9 @@ defmodule Phoenix.Endpoint.Adapter do
   """
   def start_link(otp_app, mod) do
     import Supervisor.Spec
-    pub_conf = config(otp_app, mod)[:pubsub]
+    endpoint_conf = config(otp_app, mod)
+    pub_conf = endpoint_conf[:pubsub]
+    watch_paths = endpoint_conf[:watch]
 
     pubsub_children = case pub_conf[:adapter] do
       nil     -> []
@@ -21,8 +23,17 @@ defmodule Phoenix.Endpoint.Adapter do
       worker(Phoenix.Config, [otp_app, mod, defaults(otp_app, mod)]),
       supervisor(Phoenix.Endpoint.Server, [otp_app, mod])
     ]
+    if Application.get_env(:phoenix, :code_reloader) && Enum.any?(watch_paths) do
+      children = children ++ [
+        worker(Phoenix.CodeReloader.Watcher, [watch_paths, {__MODULE__, :assets_change, [mod]}])
+      ]
+    end
 
     Supervisor.start_link(children, strategy: :rest_for_one, name: mod)
+  end
+
+  def assets_change(endpoint) do
+    endpoint.broadcast!("phoenix", "assets:change", %{})
   end
 
   @doc """
@@ -57,6 +68,7 @@ defmodule Phoenix.Endpoint.Adapter do
      http: false,
      https: false,
      reloadable_paths: ["web"],
+     watch: [],
      secret_key_base: nil,
      server: Application.get_env(:phoenix, :serve_endpoints, false),
      url: [host: "localhost"],

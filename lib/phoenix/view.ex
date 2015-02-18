@@ -284,4 +284,3 @@ defmodule Phoenix.View do
     end
   end
 end
-

@@ -156,11 +156,13 @@ defmodule Phoenix.Channel do
 
       def leave(message, socket), do: {:ok, socket}
 
+      def handle_in(_event, _message, socket), do: {:ok, socket}
+
       def handle_out(event, message, socket) do
         reply(socket, event, message)
       end
 
-      defoverridable leave: 2, handle_out: 3
+      defoverridable leave: 2, handle_out: 3, handle_in: 3
     end
   end
 

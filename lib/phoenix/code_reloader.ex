@@ -63,6 +63,30 @@ defmodule Phoenix.CodeReloader do
     end
   end
 
+  @doc """
+  Injects script tag for simple live-reload of page on asset change detection
+
+  ## Examples
+
+      <%= reload_assets_tag() %>
+
+  """
+  defmacro reload_assets_tag() do
+    if Application.get_env(:phoenix, :code_reloader) do
+      quote do
+        """
+        <script>
+          var socket = new Phoenix.Socket("/phoenix")
+          socket.join("phoenix", {}, function(chan){
+            chan.on("assets:change", function(msg){ window.location.reload(); })
+          })
+        </script>
+        """ |> Phoenix.HTML.safe
+      end
+    end
+  end
+
+
   defp template(conn, output) do
     """
     <!DOCTYPE html>
