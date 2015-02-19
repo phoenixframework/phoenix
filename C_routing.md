@@ -801,13 +801,11 @@ end
 
 ###Channel Routes
 
-Channels are a very exciting, realtime component of the Phoenix framework. They are so important that they will have a guide of their own.
+Channels are a very exciting, realtime component of the Phoenix framework. Channels handle incoming and outgoing messages broadcast over a socket for a given topic. Channel routes, then, need to match requests by socket and topic in order to dispatch to the correct channel. (For a more detailed description of channels and their behavior, please see the [Channel Guide](http://www.phoenixframework.org/docs/channels).)
 
-Channels are roughly analogous to controllers except that they are capable of bi-directional communication and their connections persist beyond the initial response. They are also closely tied to a client - written for JavaScript, iOS or Android. For now, we'll focus on defining routes for them and leave a detailed discussion of their capabilities to the Channel Guide.
+We define sockets in the router with a block, a path to the socket's mount point, and (optionally) the name of our application to fully qualify our channel module name. This should look familiar after seeing our scope definitions above.
 
-Each channel depends on a socket mounted at a given point for its communication. We can define the socket in a way that looks a lot like a scope for a regular route. Which is to say we define a socket block with a path to the socket's mount point and the name of our application to fully qualify our channel name.
-
-Here's what that looks like in our router file.
+Here's an example.
 
 ```elixir
 defmodule HelloPhoenix.Router do
@@ -818,19 +816,92 @@ defmodule HelloPhoenix.Router do
   ...
 end
 ```
-
-Next, we need to define a channel, specifying a topic and associating it with the channel module which will implement its behavior. If we have a channel module called `RoomChannel` and a topic called `rooms`, the code to do this is straightforward.
+Next, we need to use the `channel/3` macro to match a topic to the channel which will handle its requests. If we have a channel module called `RoomChannel` and a topic called `"rooms:*"`, the code to do this is straightforward.
 
 ```elixir
 defmodule HelloPhoenix.Router do
   use Phoenix.Router
 
   socket "/ws", HelloPhoenix do
-    channel "rooms:*", RoomChannel # Will match all topics which begin with "rooms:"
+    channel "rooms:*", RoomChannel
   end
-  ...
+  . . .
 end
 ```
+Topics are just string identifiers. The form we are using here is a convention which allows us to define topics and subtopics in the same string - "topic:subtopic". The `*` is a wildcard character which allows us to match on any subtopic, so `"rooms:lobby"` and `"rooms:kitchen"` would both match this route.
+
+Now that we have a channel route defined, let's see what `$ mix phoenix.routes` shows us.
+
+```console
+$ mix phoenix.routes
+. . .
+web_socket_path  GET   /ws       Phoenix.Transports.WebSocket.upgrade/2
+web_socket_path  POST  /ws       Phoenix.Transports.WebSocket.upgrade/2
+long_poller_path  GET   /ws/poll  Phoenix.Transports.LongPoller.poll/2
+long_poller_path  POST  /ws/poll  Phoenix.Transports.LongPoller.publish/2
+```
+Notice that our socket definition expands out to four paths with two separate transport mechanisms - WebSockets and LongPolling. If we wanted to make sure that our channel is handled only one type of trasport, we could specify that using the `via` option, like this.
+
+```elixir
+socket "/ws", HelloPhoenix do
+  channel "rooms:*", RoomChannel, via: [WebSocket]
+end
+```
+If we do this, `$ mix phoenix.routes` will still show the same four paths, because they are related to the socket, not the channel. Messages for the `"rooms:*"` topic, however, would all be handled exclusively over WebSockets.
+
+Each socket can handle requests for multiple channels.
+
+```elixir
+socket "/ws", HelloPhoenix do
+  channel "rooms:*", RoomChannel, via: [WebSocket]
+  channel "foods:*", FoodChannel
+end
+```
+We can also define multiple sockets for our application.
+
+```elixir
+socket "/ws", HelloPhoenix do
+  channel "rooms:*", RoomChannel, via: [WebSocket]
+  channel "foods:*", FoodChannel
+end
+
+socket "/another_ws", HelloPhoenix do
+  channel "news:*", NewsChannel
+end
+```
+Here's what `$ mix phoenix.routes` says now.
+
+```console
+$ mix phoenix.routes
+. . .
+web_socket_path  GET   /ws               Phoenix.Transports.WebSocket.upgrade/2
+web_socket_path  POST  /ws               Phoenix.Transports.WebSocket.upgrade/2
+long_poller_path  GET   /ws/poll          Phoenix.Transports.LongPoller.poll/2
+long_poller_path  POST  /ws/poll          Phoenix.Transports.LongPoller.publish/2
+web_socket_path  GET   /another_ws       Phoenix.Transports.WebSocket.upgrade/2
+web_socket_path  POST  /another_ws       Phoenix.Transports.WebSocket.upgrade/2
+long_poller_path  GET   /another_ws/poll  Phoenix.Transports.LongPoller.poll/2
+long_poller_path  POST  /another_ws/poll  Phoenix.Transports.LongPoller.publish/2
+```
+Each socket gets four paths, two for WebSockets, two for LongPolling.
+
+Let's say we wanted all of the channels for a given socket to be handled by a single transport. We can accomplish that with the `via` option on the socket declaration itself, like this.
+```elixir
+socket "/another_ws", HelloPhoenix, via: [WebSocket] do
+  channel "news:*", NewsChannel
+  channel "pets:*", PetChannel
+end
+```
+What if we want all the channels to be handled by WebSockets, except for one? That's easy as well. Just use the `via` option on the exceptional channel.
+
+```elixir
+socket "/another_ws", HelloPhoenix, via: [WebSocket] do
+  channel "news:*", NewsChannel
+  channel "pets:*", PetChannel
+  channel "conversations:*", ConversationChannel, via: [LongPoller]
+end
+```
+
 ###Summary
 
 Routing is a big topic, and we have covered a lot of ground here. The important points to take away from this guide are:
