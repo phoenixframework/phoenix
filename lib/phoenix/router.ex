@@ -176,6 +176,7 @@ defmodule Phoenix.Router do
   defmacro __using__(_) do
     quote do
       unquote(prelude())
+      unquote(defs())
       unquote(plug())
     end
   end
@@ -193,6 +194,25 @@ defmodule Phoenix.Router do
       @phoenix_pipeline nil
       Phoenix.Router.Scope.init(__MODULE__)
       @before_compile unquote(__MODULE__)
+    end
+  end
+
+  # Because those macros are executed multiple times,
+  # we end-up generating a huge scope that drastically
+  # affects compilation. We work around it then by
+  # defining the add_route definition only once and
+  # simply calling it over and over again.
+  defp defs() do
+    quote unquote: false do
+      var!(add_route, Phoenix.Router) = fn route ->
+        exprs = Route.exprs(route)
+        @phoenix_routes {route, exprs}
+
+        defp match(var!(conn), unquote(route.verb), unquote(exprs.path),
+                   unquote(exprs.host)) do
+          unquote(exprs.dispatch)
+        end
+      end
     end
   end
 
@@ -275,28 +295,11 @@ defmodule Phoenix.Router do
   end
 
   defp add_route(verb, path, controller, action, options) do
-    route =
-      quote do
-        route = Scope.route(__MODULE__, unquote(verb), unquote(path), unquote(controller),
-                                        unquote(action), unquote(options))
-        exprs = Route.exprs(route)
-        @phoenix_routes {route, exprs}
-      end
-
-    definition =
-      quote unquote: false do
-        defp match(var!(conn), unquote(route.verb), unquote(exprs.path), unquote(exprs.host)) do
-          unquote(exprs.dispatch)
-        end
-      end
-
     quote do
-      try do
-        unquote(route)
-        unquote(definition)
-      after
-        :ok
-      end
+      var!(add_route, Phoenix.Router).(
+        Scope.route(__MODULE__, unquote(verb), unquote(path), unquote(controller),
+                                unquote(action), unquote(options))
+      )
     end
   end
 
