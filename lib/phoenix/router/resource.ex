@@ -25,10 +25,20 @@ defmodule Phoenix.Router.Resource do
   @type t :: %Resource{}
 
   @doc """
-  Receives the path, controller and a set of options and
-  returns a `Phoenix.Router.Resource` struct.
+  Builds a plural resource struct.
   """
-  def build(path, controller, options) when
+  def plural(path, controller, options) do
+    build(path, controller, options)
+  end
+
+  @doc """
+  Builds a singular resource struct.
+  """
+  def singular(path, controller, options) do
+    build(path, controller, Keyword.put(options, :singular, true))
+  end
+
+  defp build(path, controller, options) when
       is_binary(path) and is_atom(controller) and is_list(options) do
     alias    = Keyword.get(options, :alias)
     param    = Keyword.get(options, :param, @default_param_key)

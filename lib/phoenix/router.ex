@@ -213,6 +213,42 @@ defmodule Phoenix.Router do
           unquote(exprs.dispatch)
         end
       end
+
+      var!(add_resource, Phoenix.Router) = fn resource ->
+        path = resource.path
+        ctrl = resource.controller
+        opts = resource.route
+
+        Enum.each resource.actions, fn
+          :show    -> get    path,            ctrl, :show, opts
+          :new     -> get    path <> "/new",  ctrl, :new, opts
+          :edit    -> get    path <> "/edit", ctrl, :edit, opts
+          :create  -> post   path,            ctrl, :create, opts
+          :delete  -> delete path,            ctrl, :delete, opts
+          :update  ->
+            patch path, ctrl, :update, opts
+            put   path, ctrl, :update, Keyword.put(opts, :as, nil)
+        end
+      end
+
+      var!(add_resources, Phoenix.Router) = fn resource ->
+        parm = resource.param
+        path = resource.path
+        ctrl = resource.controller
+        opts = resource.route
+
+        Enum.each resource.actions, fn
+          :index   -> get    path,                            ctrl, :index, opts
+          :show    -> get    path <> "/:" <> parm,            ctrl, :show, opts
+          :new     -> get    path <> "/new",                  ctrl, :new, opts
+          :edit    -> get    path <> "/:" <> parm <> "/edit", ctrl, :edit, opts
+          :create  -> post   path,                            ctrl, :create, opts
+          :delete  -> delete path <> "/:" <> parm,            ctrl, :delete, opts
+          :update  ->
+            patch path <> "/:" <> parm, ctrl, :update, opts
+            put   path <> "/:" <> parm, ctrl, :update, Keyword.put(opts, :as, nil)
+        end
+      end
     end
   end
 
@@ -491,32 +527,9 @@ defmodule Phoenix.Router do
       end
 
     quote do
-      try do
-        resource = Resource.build(unquote(path), unquote(controller), unquote(options))
-
-        parm = resource.param
-        path = resource.path
-        ctrl = resource.controller
-        opts = resource.route
-
-        Enum.each resource.actions, fn action ->
-          case action do
-            :index   -> get    path,                            ctrl, :index, opts
-            :show    -> get    path <> "/:" <> parm,            ctrl, :show, opts
-            :new     -> get    path <> "/new",                  ctrl, :new, opts
-            :edit    -> get    path <> "/:" <> parm <> "/edit", ctrl, :edit, opts
-            :create  -> post   path,                            ctrl, :create, opts
-            :delete  -> delete path <> "/:" <> parm,            ctrl, :delete, opts
-            :update  ->
-              patch path <> "/:" <> parm, ctrl, :update, opts
-              put   path <> "/:" <> parm, ctrl, :update, Keyword.put(opts, :as, nil)
-          end
-        end
-
-        unquote(scope)
-      after
-        :ok
-      end
+      resource = Resource.plural(unquote(path), unquote(controller), unquote(options))
+      var!(add_resources, Phoenix.Router).(resource)
+      unquote(scope)
     end
   end
 
@@ -529,31 +542,9 @@ defmodule Phoenix.Router do
       end
 
     quote do
-      try do
-        opts     = Keyword.put(unquote(options), :singular, true)
-        resource = Resource.build(unquote(path), unquote(controller), opts)
-
-        path = resource.path
-        ctrl = resource.controller
-        opts = resource.route
-
-        Enum.each resource.actions, fn action ->
-          case action do
-            :show    -> get    path,            ctrl, :show, opts
-            :new     -> get    path <> "/new",  ctrl, :new, opts
-            :edit    -> get    path <> "/edit", ctrl, :edit, opts
-            :create  -> post   path,            ctrl, :create, opts
-            :delete  -> delete path,            ctrl, :delete, opts
-            :update  ->
-              patch path, ctrl, :update, opts
-              put   path, ctrl, :update, Keyword.put(opts, :as, nil)
-          end
-        end
-
-        unquote(scope)
-      after
-        :ok
-      end
+      resource = Resource.singular(unquote(path), unquote(controller), unquote(options))
+      var!(add_resource, Phoenix.Router).(resource)
+      unquote(scope)
     end
   end
 
@@ -687,7 +678,7 @@ defmodule Phoenix.Router do
   end
   defp add_socket(mount, opts, chan_block) do
     quote do
-      try do
+      (fn ->
         mount = unquote(mount)
         opts  = unquote(opts)
 
@@ -709,9 +700,7 @@ defmodule Phoenix.Router do
         @phoenix_socket_mount nil
         @phoenix_transports nil
         @phoenix_channel_alias nil
-      after
-        :ok
-      end
+      end).()
     end
   end
 
