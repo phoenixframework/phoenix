@@ -32,9 +32,9 @@ defmodule Mix.Tasks.Phoenix.New do
 
 
   def run(app, module, path, dev) do
-    pubsub_server      = module
-                         |> Module.concat(nil)
-                         |> Naming.base_concat(PubSub)
+    pubsub_server = module
+                    |> Module.concat(nil)
+                    |> Naming.base_concat(PubSub)
     binding = [application_name: app,
                application_module: module,
                phoenix_dep: phoenix_dep(dev),
