@@ -209,7 +209,7 @@ For example, if we point the browser at: [http://localhost:4000/hello/Frank](htt
 
 ###A New Action
 
-Requests to our new route will be handled by the `HelloPhoenix.HelloController` `show` action. We already have the controller, so all we need to do is add a `show` action to it. This time, we'll need to keep the params that get passed into the action so that we can pass the messenger to the template. To do that, we add this show function to the controller.
+Requests to our new route will be handled by the `HelloPhoenix.HelloController` `show` action. We already have the controller at `web/controllers/hello_controller.ex`, so all we need to do is edit that file and add a `show` action to it. This time, we'll need to keep the params that get passed into the action so that we can pass the messenger to the template. To do that, we add this show function to the controller.
 
 ```elixir
 def show(conn, %{"messenger" => messenger}) do
@@ -224,7 +224,7 @@ It's good to remember that the keys to the params [Dict](http://elixir-lang.org/
 
 ###A New Template
 
-For the last piece of this puzzle, we'll need a new template. Since it is for the `show` action of the `HelloController`, it will go the `web/templates/hello` directory and be called `show.html.eex`. It will look surprisingly like our `index.html.eex` template, except that we will need to display the name of our messenger.
+For the last piece of this puzzle, we'll need a new template. Since it is for the `show` action of the `HelloController`, it will go into the `web/templates/hello` directory and be called `show.html.eex`. It will look surprisingly like our `index.html.eex` template, except that we will need to display the name of our messenger.
 
 To do that, we'll use the special eex tags for executing Elixir expressions - `<%=  %>`. Notice that the initial tag has an equals sign like this: `<%=` . That means that any Elixir code that goes between those tags will be executed, and the resulting value will replace the tag. If the equals sign were missing, the code would still be executed, but the value would not appear on the page.
 
