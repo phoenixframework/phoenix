@@ -34,9 +34,12 @@ The `Phoenix.Socket` module defines functions for authorizing and de-authorizing
   - `pid` - The Pid of the socket's transport process
   - `topic` - The string topic, ie `"rooms:123"`
   - `router` - The router module where this socket originated
+  - `endpoint` - The endpoint module where this socket originated
+  - `channel` - The channel module where this socket originated
   - `authorized` - The boolean authorization status, default `false`
   - `assigns` - The map of socket assigns, default: `%{}`
   - `transport` - The socket's Transport, ie: `Phoenix.Transports.WebSocket`
+  - `pubsub_server` - The registered name of the socket's PubSub server
 
 - Messages
 
@@ -66,26 +69,26 @@ Before we go in-depth into Channels, let's do a quick test to get a feeling for 
 
 Normally, we would not work with the `Phoenix.PubSub` module directly. Since we won't be handling external requests, and since we want to keep this as simple as possible, we will be using it here.
 
-Before we begin, let's make see if we have any subscribers for the topic we'll use for demo purposes.
+Before we begin, let's see if we have any subscribers for the topic we'll use for demo purposes.
 
 ```console
 iex(1)> Phoenix.PubSub.subscribers(HelloPhoenix.PubSub, "rooms:demo")
-[]
+#HashSet<[]>
 ```
 Nobody there yet so let's subscribe ourselves and check again.
 
 ```console
 iex(2)> Phoenix.PubSub.subscribe(HelloPhoenix.PubSub, self, "rooms:demo")
-:ok 
+:ok
 iex(3)> Phoenix.PubSub.subscribers(HelloPhoenix.PubSub, "rooms:demo")
-[#PID<0.142.0>]
+#HashSet<[#PID<0.144.0>]>
 ```
 Great, now we will receive any messages broadcast to this topic.
 
 Let's check that by broadcasting a message to see if we receive it.
 
 ```console
-iex(4)> HelloPhoenix.Endpoint.broadcast("rooms:demo", %{message: "It Works!"})
+iex(4)> Phoenix.PubSub.broadcast(HelloPhoenix.PubSub, "rooms:demo", %{message: "It Works!"})
 :ok
 iex(5)> Process.info(self)[:messages]
 %{message: "It Works!"}
@@ -98,7 +101,7 @@ We can also unsubscribe ourselves from a topic.
 iex(6)> Phoenix.PubSub.unsubscribe(HelloPhoenix.PubSub, self, "rooms:demo")
 :ok
 iex(7)> Phoenix.PubSub.subscribers(HelloPhoenix.PubSub, "rooms:demo")
-[]
+#HashSet<[]>
 ```
 This is the simplest possible demonstration of sending messages about topics. Great, so let's dig a little deeper.
 
@@ -122,7 +125,7 @@ end
 ```
 
 #### Joining a Channel Topic
-In order to broadcast messages, senders need to join a Channel on a Topic. We facilitate that with the `join/3` function. `join/3` is an authorization mechanism. If we believe the sender should be authorized, we return `{:ok, socket}`. If not, we return `{:error, socket, :unauthorized}`.
+In order to broadcast messages, senders need to join a Channel on a Topic. We facilitate that with the `join/3` function. `join/3` is an authorization mechanism. If we believe the sender should be authorized, we return `{:ok, socket}`. If not, we can simply return `:ignore`.
 
 The three arguments to `join/3` are a topic, a message, and a socket. Since we're just experimenting, let's return `{:ok, socket}` no matter what for the `"foods:all"` topic. And since we aren't going to use the `message` argument for now, let's prepend it with an underscore to avoid compiler warnings.
 
@@ -139,16 +142,17 @@ Let's explore this a little bit in iex. Before we do anything, we should check t
 
 ```conole
 ex(1)> Phoenix.PubSub.subscribers(HelloPhoenix.PubSub, "foods:all")
-[]
+#HashSet<[]>
 ```
 Ok, nobody has subscribed yet. What we're going to do is to dispatch a message to our `FoodChannel` which will be handled by the `join/3` function and authorize our socket.
 
 The first thing we need to do is create a socket. This one will work.
 
 ```console
-iex(2)> socket = %Phoenix.Socket{pid: self, router: HelloPhoenix.Router, topic: "foods:all", assigns: [], transport: Phoenix.Transports.WebSocket}
+iex(2)> socket = %Phoenix.Socket{pid: self, router: HelloPhoenix.Router, topic: "foods:all", assigns: [], transport: Phoenix.Transports.WebSocket, pubsub_server: HelloPhoenix.PubSub}
 
-%Phoenix.Socket{assigns: [], authorized: false, pid: #PID<0.142.0>,
+%Phoenix.Socket{assigns: [], authorized: false, channel: nil,
+  pid: #PID<0.200.0>, pubsub_server: HelloPhoenix.PubSub,
   router: HelloPhoenix.Router, topic: "foods:all",
   transport: Phoenix.Transports.WebSocket}
 ```
@@ -162,9 +166,10 @@ In order to trigger the `join/3` function, we send the "join" event, and the top
 iex(4)> {:ok, socket} = Phoenix.Channel.Transport.dispatch socket, "foods:all", "join", %{}
 
 {:ok,
-  %Phoenix.Socket{assigns: [], authorized: true, pid: #PID<0.142.0>,
-    router: HelloPhoenix.Router, topic: "foods:all",
-    transport: Phoenix.Transports.WebSocket}}
+  %Phoenix.Socket{assigns: [], authorized: true,
+    channel: HelloPhoenix.FoodChannel, pid: #PID<0.200.0>,
+    pubsub_server: HelloPhoenix.PubSub, router: HelloPhoenix.Router,
+    topic: "foods:all", transport: Phoenix.Transports.WebSocket}}
 ```
 Notice that from the response, we can tell that this socket is now authorized for the `"foods:all"` topic. This is the result of returning `{:ok, socket}` from the `join/3` function. We also took care to re-bind the socket so that if we need it again in subsequent steps, it will be authorized on this topic for this channel.
 
@@ -172,9 +177,9 @@ The question is, did it really work? Were we subscribed to the topic? Let's find
 
 ```console
 iex(5)> Phoenix.PubSub.subscribers(HelloPhoenix.PubSub, "foods:all")
-[#PID<0.142.0>]
+#HashSet<[#PID<0.200.0>]>
 iex(6)> self
-#PID<0.142.0>
+#PID<0.200.0>
 ```
 Yes, we clearly are subscribed to the `"foods:all"` topic.
 
@@ -197,9 +202,10 @@ This time, we hard-code the return value of `:ignore`, so no attempt to join thi
 We'll use a new socket for this, one with the new topic we are matching on as well as the default value for `authorized`, which is false.
 
 ```console
-iex(1)> new_socket = %Phoenix.Socket{pid: self, router: HelloPhoenix.Router, topic: "foods:forbidden", assigns: [], transport: Phoenix.Transports.WebSocket}
+iex(1)> new_socket = %Phoenix.Socket{pid: self, router: HelloPhoenix.Router, topic: "foods:forbidden", assigns: [], transport: Phoenix.Transports.WebSocket, pubsub_server: HelloPhoenix.PubSub}
 
-%Phoenix.Socket{assigns: [], authorized: false, pid: #PID<0.142.0>,
+%Phoenix.Socket{assigns: [], authorized: false, channel: nil,
+  pid: #PID<0.144.0>, pubsub_server: HelloPhoenix.PubSub,
   router: HelloPhoenix.Router, topic: "foods:forbidden",
   transport: Phoenix.Transports.WebSocket}
 ```
@@ -212,7 +218,7 @@ Just to make sure, let's check the subscribers again.
 
 ```cosole
 iex(4)> Phoenix.PubSub.subscribers(HelloPhoenix.PubSub, "foods:forbidden")
-[]
+#HashSet<[]>
 ```
 
 #### Leaving a Channel Topic
@@ -226,10 +232,10 @@ iex(10)> self
 #PID<0.151.0>
 
 iex(11)> Phoenix.PubSub.subscribers(HelloPhoenix.PubSub, "foods:all")
-[#PID<0.151.0>]
+#HashSet<[#PID<0.151.0>]>
 
 iex(12)> Phoenix.PubSub.subscribers(HelloPhoenix.PubSub, "foods:delightful")
-[#PID<0.151.0>]
+#HashSet<[#PID<0.151.0>]>
 ```
 Great, now let's add our `leave/2` function. For our purposes, we have no restrictions on leaving a topic, so let's always return `{:ok, socket}`.
 
@@ -244,9 +250,10 @@ Great, now let's call the `dispatch/4` function again using the "foods:all" topi
 iex(22)> {:leave, socket} = Phoenix.Channel.Transport.dispatch socket, "foods:all", "leave", %{}
 
 {:leave,
-  %Phoenix.Socket{assigns: [], authorized: false, pid: #PID<0.151.0>,
-    router: HelloPhoenix.Router, topic: "foods:all",
-    transport: Phoenix.Transports.WebSocket}}
+  %Phoenix.Socket{assigns: [], authorized: false,
+    channel: HelloPhoenix.FoodChannel, pid: #PID<0.144.0>,
+    pubsub_server: HelloPhoenix.PubSub, router: HelloPhoenix.Router,
+    topic: "foods:all", transport: Phoenix.Transports.WebSocket}}
 ```
 Notice that the request processing didn't stop with the return of `leave/2`. The final tuple we get back is `{:leave, socket}` instead of `{:ok, socket}`. The socket also is no longer authorized for the "foods:all" topic for this channel.
 
@@ -254,7 +261,7 @@ Did it really unsubscribe us? Let's see.
 
 ```console
 iex(23)> Phoenix.PubSub.subscribers(HelloPhoenix.PubSub, "foods:all")
-[]
+#HashSet<[]>
 ```
 Indeed it did.
 
@@ -262,7 +269,7 @@ And, of course, we are still subscribed to the "foods:delightful" topic.
 
 ```console
 iex(24)> Phoenix.PubSub.subscribers(HelloPhoenix.PubSub, "foods:delightful")
-[#PID<0.151.0>]
+#HashSet<[#PID<0.151.0>]>
 ```
 
 #### Incoming Messages
@@ -287,7 +294,7 @@ Let's see this in action. First, let's make sure we have joined the `"foods:all`
 
 ```console
 iex(7)> Phoenix.PubSub.subscribers(HelloPhoenix.PubSub, "foods:all")
-[#PID<0.142.0>]
+#HashSet<[#PID<0.153.0>]>
 ```
 If your pid isn't in the subscribers list, please follow the steps in "Joining a Channel Topic" above.
 
@@ -302,11 +309,12 @@ Note: If this comes back false, it is probably due to not rebinding `socket` aft
 If the socket is not authorized for the topic, we can fix that with the `authorize/2` function.
 
 ```console
-iex(9)> Phoenix.Socket.authorize(socket, "foods:all")
+iex(9)> socket = Phoenix.Socket.authorize(socket, "foods:all")
 
-%Phoenix.Socket{assigns: [], authorized: true, pid: #PID<0.142.0>,
-  router: HelloPhoenix.Router, topic: "foods:all",
-  transport: Phoenix.Transports.WebSocket}
+%Phoenix.Socket{assigns: [], authorized: true,
+  channel: HelloPhoenix.FoodChannel, pid: #PID<0.153.0>,
+  pubsub_server: HelloPhoenix.PubSub, router: HelloPhoenix.Router,
+  topic: "foods:all", transport: Phoenix.Transports.WebSocket}
 ```
 Now that our socket is authorized, we can dispatch a message. This works exactly the same way that we have used it up to now, passing in a socket, topic, event, and message.
 
@@ -314,9 +322,10 @@ Now that our socket is authorized, we can dispatch a message. This works exactly
 iex(10)> {:ok, socket} = Phoenix.Channel.Transport.dispatch socket, "foods:all", "new:msg", %{say: "Success!"}
 
 {:ok,
-  %Phoenix.Socket{assigns: [], authorized: true, pid: #PID<0.142.0>,
-    router: HelloPhoenix.Router, topic: "foods:all",
-    transport: Phoenix.Transports.WebSocket}}
+  %Phoenix.Socket{assigns: [], authorized: true,
+    channel: HelloPhoenix.FoodChannel, pid: #PID<0.153.0>,
+    pubsub_server: HelloPhoenix.PubSub, router: HelloPhoenix.Router,
+    topic: "foods:all", transport: Phoenix.Transports.WebSocket}}
 ```
 Note: Again, the message must be a map. Any other type of value will throw an error.
 
