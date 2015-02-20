@@ -220,6 +220,41 @@ defmodule Phoenix.ControllerTest do
       accepts with_accept("text/html; q=0.7, application/json; q=0.8"), ~w(xml)
     end
   end
+  test "scrub_params/2 raises Phoenix.MissingParamError with key as the required_key when it's missing from the params" do
+    conn = conn(:get, "/?foo=bar")
+    |> Plug.Conn.fetch_params
+
+    assert_raise(Phoenix.MissingParamError, "Expected key for \"present\" to be present.", fn ->
+      scrub_params(conn, "present")
+    end)
+  end
+
+  test "scrub_params/2 keeps populated keys intact" do
+    conn = conn(:get, "/?foo=bar&baz=qux")
+    |> Plug.Conn.fetch_params
+    |> scrub_params("foo")
+
+    assert conn.params["foo"] == "bar"
+    assert conn.params["baz"] == "qux"
+  end
+
+  test "scrub_params/2 nils out keys with empty values" do
+    conn = conn(:get, "/?foo=bar&baz=")
+    |> Plug.Conn.fetch_params
+    |> scrub_params("foo")
+
+    assert conn.params["foo"] == "bar"
+    assert conn.params["baz"] == nil
+  end
+
+  test "scrub_params/2 allows the required key to be empty and nils it out" do
+    conn = conn(:get, "/?foo=&baz=qux")
+    |> Plug.Conn.fetch_params
+    |> scrub_params("foo")
+
+    assert conn.params["foo"] == nil
+    assert conn.params["baz"] == "qux"
+  end
 
   test "protect_from_forgery/2 doesn't blow up" do
     conn(:get, "/")

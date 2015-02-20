@@ -462,6 +462,37 @@ defmodule Phoenix.Controller do
     send_resp(conn, 200, content_type, data)
   end
 
+  @doc """
+    Scrubs the parameters from the request.
+
+    This process is two-fold:
+      * Checks to see if the required_key is present (can be empty)
+      * Changes all empty parameters to nils ("" -> nil).
+
+    If the required_key is not present, it will
+    `raise Phoenix.MissingParamError, key: required_key`
+
+    ## Examples
+
+        iex> scrub_params(conn, "user")
+
+  """
+  @spec scrub_params(Plug.Conn.t, [String.t]) :: Plug.Conn.t
+  def scrub_params(conn, required_key) do
+    unless Map.get(conn.params, required_key) do
+      raise Phoenix.MissingParamError, key: required_key
+    end
+
+    params = Enum.reduce(conn.params, %{}, fn({k, v}, acc) ->
+      case v do
+        "" -> Map.put(acc, k, nil)
+        _ -> Map.put(acc, k, v)
+      end
+    end)
+
+    %{conn | params: params}
+  end
+
   defp prepare_assigns(conn, assigns, format) do
     layout =
       case layout(conn, assigns, format) do
