@@ -18,14 +18,6 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     :ok
   end
 
-  test "new without a specified path" do
-    in_tmp "new_without_a_specified_path", fn ->
-      assert_raise Mix.Error, fn ->
-        Mix.Tasks.Phoenix.New.run([])
-      end
-    end
-  end
-
   test "new with path" do
     in_tmp "new_with_path", fn ->
       Mix.Tasks.Phoenix.New.run([@app_name])
@@ -131,6 +123,32 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     end
   after
     Application.put_env(:phoenix, :code_reloader, false)
+  end
+
+  test "new with invalid args" do
+    in_tmp "new with an invalid application name", fn ->
+      assert_raise Mix.Error, ~r"Application name must start with a letter and ", fn ->
+        Mix.Tasks.Phoenix.New.run ["007invalid"]
+      end
+    end
+
+    in_tmp "new with an invalid application name from the app option", fn ->
+      assert_raise Mix.Error, ~r"Application name must start with a letter and ", fn ->
+        Mix.Tasks.Phoenix.New.run ["valid", "--app", "007invalid"]
+      end
+    end
+
+    in_tmp "new with an invalid module name from the module options", fn ->
+      assert_raise Mix.Error, ~r"Module name must be a valid Elixir alias", fn ->
+        Mix.Tasks.Phoenix.New.run ["valid", "--module", "not.valid"]
+      end
+    end
+
+    in_tmp "new without a specified path", fn ->
+      assert_raise Mix.Error, "Expected PATH to be given, please use `mix phoenix.new PATH`", fn ->
+        Mix.Tasks.Phoenix.New.run []
+      end
+    end
   end
 
   defp delete_tmp_paths do

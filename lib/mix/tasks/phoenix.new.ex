@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Phoenix.New do
   use Mix.Task
   alias Phoenix.Naming
 
-  @shortdoc "Creates Phoenix application"
+  @shortdoc "Create a new Phoenix application"
 
   @moduledoc """
   Creates a new Phoenix project.
@@ -14,6 +14,20 @@ defmodule Mix.Tasks.Phoenix.New do
   application name and module name will be retrieved
   from the path, unless `--module` or `--app` is given.
 
+  An `--app` option can be given in order to
+  name the OTP application for the project.
+
+  A `--module` option can be given in order
+  to name the modules in the generated code skeleton.  
+
+  ## Examples
+
+      mix phoenix.new hello_world
+
+  Is equivalent to:
+
+      mix phoenix.new hello_world --module HelloWorld
+
   """
 
   def run(argv) do
@@ -24,19 +38,20 @@ defmodule Mix.Tasks.Phoenix.New do
         Mix.raise "Expected PATH to be given, please use `mix phoenix.new PATH`"
       [path|_] ->
         app    = opts[:app] || Path.basename(Path.expand(path))
-        module = opts[:module] || Naming.camelize(app)
+        check_application_name!(app, !!opts[:app])
+        mod = opts[:module] || Naming.camelize(app)
+        check_mod_name!(mod)
 
-        run(app, module, path, opts[:dev])
+        run(app, mod, path, opts[:dev])
     end
   end
 
-
-  def run(app, module, path, dev) do
-    pubsub_server = module
+  def run(app, mod, path, dev) do
+    pubsub_server = mod
                     |> Module.concat(nil)
                     |> Naming.base_concat(PubSub)
     binding = [application_name: app,
-               application_module: module,
+               application_module: mod,
                phoenix_dep: phoenix_dep(dev),
                pubsub_server: pubsub_server,
                secret_key_base: random_string(64),
@@ -75,6 +90,25 @@ defmodule Mix.Tasks.Phoenix.New do
     :ok
   end
 
+  defp check_application_name!(name, from_app_flag) do
+    unless name =~ ~r/^[a-z][\w_]*$/ do
+      Mix.raise "Application name must start with a letter and have only lowercase " <>
+                "letters, numbers and underscore, got: #{inspect name}" <>
+                (if !from_app_flag do
+                  ". The application name is inferred from the path, if you'd like to " <>
+                  "explicitly name the application then use the `--app APP` option."
+                else
+                  ""
+                end)
+    end
+  end
+
+  defp check_mod_name!(name) do
+    unless name =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/ do
+      Mix.raise "Module name must be a valid Elixir alias (for example: Foo.Bar), got: #{inspect name}"
+    end
+  end
+  
   defp make_destination_path(source_path, source_dir, target_dir, application_name) do
     target_path =
       source_path
