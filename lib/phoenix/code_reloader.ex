@@ -59,7 +59,7 @@ defmodule Phoenix.CodeReloader do
         |> send_resp(500, template(conn, output))
         |> halt()
       _ ->
-        conn
+        before_send_inject_reloader(conn)
     end
   end
 
@@ -187,4 +187,29 @@ defmodule Phoenix.CodeReloader do
 
   defp method(%Plug.Conn{method: method}), do:
     method
+
+  defp before_send_inject_reloader(conn) do
+    register_before_send conn, fn conn ->
+      content_type = hd(get_resp_header(conn, "content-type"))
+      if String.starts_with?(content_type, "text/html") do
+        [page | rest] = String.split(to_string(conn.resp_body), "</body>")
+        body = page <> reload_assets_tag() <> Enum.join(["</body>" | rest], "")
+
+        put_in conn.resp_body, body
+      else
+        conn
+      end
+    end
+  end
+
+  defp reload_assets_tag() do
+    """
+    <script>
+      var socket = new Phoenix.Socket("/phoenix")
+      socket.join("phoenix", {}, function(chan){
+        chan.on("assets:change", function(msg){ window.location.reload(); })
+      })
+    </script>
+    """
+  end
 end

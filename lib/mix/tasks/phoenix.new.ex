@@ -19,6 +19,7 @@ defmodule Mix.Tasks.Phoenix.New do
   def run([name, path], opts) do
     application_name   = Naming.underscore(name)
     application_module = Naming.camelize(application_name)
+    npm_path           = System.find_executable("npm")
     pubsub_server      = application_module
                          |> Module.concat(nil)
                          |> Naming.base_concat(PubSub)
@@ -33,6 +34,12 @@ defmodule Mix.Tasks.Phoenix.New do
 
     copy_from template_dir, path, application_name, &EEx.eval_file(&1, binding)
     copy_from static_dir, Path.join(path, "priv/static"), application_name, &File.read!(&1)
+
+    # TODO decide to auto npm install or not
+    if npm_path && Mix.env == :dev do
+      IO.puts "Installing brunch.io dependencies..."
+      System.cmd("npm", ["install", "--prefix", path])
+    end
   end
 
   def run(_, _opts) do

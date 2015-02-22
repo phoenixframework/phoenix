@@ -9,7 +9,10 @@ defmodule Phoenix.Endpoint.Adapter do
   """
   def start_link(otp_app, mod) do
     import Supervisor.Spec
-    pub_conf = config(otp_app, mod)[:pubsub]
+    conf       = config(otp_app, mod)
+    pub_conf   = conf[:pubsub]
+    asset_conf = conf[:assets]
+    asset_children = []
 
     pubsub_children = case pub_conf[:adapter] do
       nil     -> []
@@ -17,12 +20,31 @@ defmodule Phoenix.Endpoint.Adapter do
         [supervisor(adapter, [mod.__pubsub_server__(), pub_conf[:options] || []])]
     end
 
-    children = pubsub_children ++ [
+    asset_children =
+      Enum.reduce(asset_conf[:watchers], asset_children, fn {cmd, args}, acc ->
+        acc ++ [worker(Task, [fn ->
+          System.cmd(cmd, args, into: IO.stream(:stdio, :line), stderr_to_stdout: true)
+        end])]
+      end)
+
+    asset_children = case asset_conf[:live_reload] do
+      []    -> asset_children
+      paths ->
+        asset_children ++ [
+          worker(Phoenix.CodeReloader.ChangeDetector, [paths, {__MODULE__, :assets_change, [mod]}])
+        ]
+    end
+
+    children = asset_children ++ pubsub_children ++ [
       worker(Phoenix.Config, [otp_app, mod, defaults(otp_app, mod)]),
-      supervisor(Phoenix.Endpoint.Server, [otp_app, mod])
+      supervisor(Phoenix.Endpoint.Server, [otp_app, mod]),
     ]
 
     Supervisor.start_link(children, strategy: :rest_for_one, name: mod)
+  end
+
+  def assets_change(endpoint) do
+    endpoint.broadcast!("phoenix", "assets:change", %{})
   end
 
   @doc """
@@ -60,7 +82,13 @@ defmodule Phoenix.Endpoint.Adapter do
      secret_key_base: nil,
      server: Application.get_env(:phoenix, :serve_endpoints, false),
      url: [host: "localhost"],
-     pubsub: []]
+     pubsub: [],
+
+     # Assets
+     assets: [
+       watchers: [],
+       live_reload: []
+     ]]
   end
 
   defp render_errors(module) do
