@@ -1,1 +1,5 @@
-// This is is your main ES6 application entry point
+import {Socket} from "./phoenix"
+
+// let socket = new Socket("/ws")
+// socket.join("topic:subtopic", {}, chan => {
+// })

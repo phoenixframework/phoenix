@@ -5,7 +5,7 @@ config :<%= application_name %>, <%= application_module %>.Endpoint,
   debug_errors: true,
   cache_static_lookup: false,
   assets: [
-    build: true,
+    watchers: [{Path.expand("node_modules/brunch/bin/brunch"), ["watch"]}],
     live_reload: ["priv/static/app.js",
                   "priv/static/app.css",
                   Path.wildcard("web/templates/**/*")]

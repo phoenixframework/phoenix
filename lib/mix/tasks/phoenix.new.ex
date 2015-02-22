@@ -34,6 +34,8 @@ defmodule Mix.Tasks.Phoenix.New do
 
     copy_from template_dir, path, application_name, &EEx.eval_file(&1, binding)
     copy_from static_dir, Path.join(path, "priv/static"), application_name, &File.read!(&1)
+
+    # TODO decide to auto npm install or not
     if npm_path && Mix.env == :dev do
       IO.puts "Installing brunch.io dependencies..."
       System.cmd("npm", ["install", "--prefix", path])
@@ -63,7 +65,6 @@ defmodule Mix.Tasks.Phoenix.New do
       target_path = make_destination_path(source_path, source_dir,
                                           target_dir, application_name)
 
-      IO.inspect source_path
       cond do
         File.dir?(source_path) ->
           File.mkdir_p!(target_path)

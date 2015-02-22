@@ -1,4 +1,4 @@
-defmodule Phoenix.CodeReloader.Watcher do
+defmodule Phoenix.CodeReloader.ChangeDetector do
   use GenServer
 
   @moduledoc """

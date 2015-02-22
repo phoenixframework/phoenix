@@ -12,28 +12,26 @@ defmodule Phoenix.Endpoint.Adapter do
     conf       = config(otp_app, mod)
     pub_conf   = conf[:pubsub]
     asset_conf = conf[:assets]
-
     asset_children = []
+
     pubsub_children = case pub_conf[:adapter] do
       nil     -> []
       adapter ->
         [supervisor(adapter, [mod.__pubsub_server__(), pub_conf[:options] || []])]
     end
 
-    if asset_conf[:build] do
-      asset_children = asset_children ++ [worker(Task, [fn ->
-        System.cmd(
-          Path.expand("node_modules/brunch/bin/brunch"), ["watch"],
-          into: IO.stream(:stdio, :line),
-          stderr_to_stdout: true
-        )
-      end])]
-    end
+    asset_children =
+      Enum.reduce(asset_conf[:watchers], asset_children, fn {cmd, args}, acc ->
+        acc ++ [worker(Task, [fn ->
+          System.cmd(cmd, args, into: IO.stream(:stdio, :line), stderr_to_stdout: true)
+        end])]
+      end)
+
     asset_children = case asset_conf[:live_reload] do
       []    -> asset_children
       paths ->
         asset_children ++ [
-          worker(Phoenix.CodeReloader.Watcher, [paths, {__MODULE__, :assets_change, [mod]}])
+          worker(Phoenix.CodeReloader.ChangeDetector, [paths, {__MODULE__, :assets_change, [mod]}])
         ]
     end
 
@@ -88,7 +86,7 @@ defmodule Phoenix.Endpoint.Adapter do
 
      # Assets
      assets: [
-       build: false,
+       watchers: [],
        live_reload: []
      ]]
   end
