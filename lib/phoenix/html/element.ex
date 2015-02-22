@@ -13,10 +13,26 @@ defmodule Phoenix.HTML.Element do
     element(name, [], clauses)
   end
 
+  def element(name, content) when is_binary(content) do
+    element(name, [], do: content)
+  end
+
+  def element(name, {:safe, _} = content) do
+    element(name, [], do: content)
+  end
+
   def element(name, attributes \\ [], clauses \\ nil)
 
   def element(name, attributes, nil) do
     element(name, attributes, do: "")
+  end
+
+  def element(name, attributes, content) when is_binary(content) do
+    element(name, attributes, do: content)
+  end
+
+  def element(name, attributes, {:safe, _} = content) do
+    element(name, attributes, do: content)
   end
 
   def element(name, attributes, [do: do_clause]) do
