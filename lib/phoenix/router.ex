@@ -178,6 +178,7 @@ defmodule Phoenix.Router do
       unquote(prelude())
       unquote(defs())
       unquote(plug())
+      unquote(control_socket())
     end
   end
 
@@ -294,6 +295,16 @@ defmodule Phoenix.Router do
       end
 
       defoverridable [init: 1, call: 2]
+    end
+  end
+
+  defp control_socket() do
+    if Application.get_env(:phoenix, :code_reloader) do
+      quote do
+        socket "/phoenix" do
+          channel "phoenix", Phoenix.Channel.ControlChannel
+        end
+      end
     end
   end
 
