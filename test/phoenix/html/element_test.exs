@@ -3,22 +3,31 @@ defmodule Phoenix.HTMLTest do
 
   alias Phoenix.HTML.Element
 
-  test "element without do and attributes" do
+  test "element without do" do
     assert Element.element("span") == {:safe, [["<span>" | ""] | "</span>"]}
     assert Element.element(:span) == {:safe, [["<span>" | ""] | "</span>"]}
+    assert Element.element(:span, [foo: :bar, baz: "value"]) == {:safe, [["<span baz=\"value\" foo=\"bar\">" | ""] | "</span>"]}
   end
 
-  test "element with do but without attributes" do
+  test "element with do" do
+    out = Element.element :span do
+      "fun"
+    end
+    assert out == {:safe, [["<span>" | "fun"] | "</span>"]}
+
+    out = Element.element :span, [foo: :bar] do
+      {:safe, "safe"}
+    end
+    assert out == {:safe, [["<span foo=\"bar\">" | "safe"] | "</span>"]}
+  end
+
+  test "html safety" do
+    assert Element.element(:span, [foo: "&bar"]) == {:safe, [["<span foo=\"&amp;bar\">" | ""] | "</span>"]}
+
     out = Element.element :span do
       "&"
     end
     assert out == {:safe, [["<span>" | "&amp;"] | "</span>"]}
-  end
-
-  test "element without do, but with attributes" do
-    assert Element.element(:span, [class: "special"]) == {:safe, [["<span class=\"special\">" | ""] | "</span>"]}
-    assert Element.element(:span, [foo: "&bar"]) == {:safe, [["<span foo=\"&amp;bar\">" | ""] | "</span>"]}
-    assert Element.element(:span, [class: "special", "data-attr": "value"]) == {:safe, [["<span data-attr=\"value\" class=\"special\">" | ""] | "</span>"]}
   end
 end
 
