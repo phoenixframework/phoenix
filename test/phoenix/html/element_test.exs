@@ -1,4 +1,4 @@
-defmodule Phoenix.HTMLTest do
+defmodule Phoenix.HTML.ElementTest do
   use ExUnit.Case, async: true
 
   alias Phoenix.HTML.Element
