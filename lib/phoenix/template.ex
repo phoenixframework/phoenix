@@ -298,4 +298,3 @@ defmodule Phoenix.Template do
     end}
   end
 end
-

@@ -57,6 +57,7 @@ defmodule Phoenix.HTML do
   defmacro __using__(_) do
     quote do
       import Phoenix.HTML
+      import Phoenix.CodeReloader, only: [reload_assets_tag: 0]
 
       use Phoenix.HTML.Controller
     end

@@ -19,7 +19,10 @@ There are no guidelines yet. Do what feels natural. Submit a bug, join a discuss
 ### Building phoenix.js
 
 ```bash
-$ 6to5 -w assets/js/phoenix.js -o priv/static/js/phoenix.js
+$ cd assets/js/
+$ npm install -g webpack
+$ npm install
+$ webpack --progress --colors --watch
 ```
 
 ## Contributing

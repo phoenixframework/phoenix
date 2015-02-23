@@ -2,3 +2,4 @@
 /deps
 /tmp
 erl_crash.dump
+/assets/js/node_modules
