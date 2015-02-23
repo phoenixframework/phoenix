@@ -2,8 +2,12 @@ defmodule Phoenix.HTML do
   @moduledoc """
   Conveniences for working HTML strings and templates.
 
-  When used, it imports this module and, in the future,
-  many other modules under the `Phoenix.HTML` namespace.
+  When used, it brings the given functionality:
+
+    * `Phoenix.HTML`- imports functions for handle HTML safety;
+
+    * `Phoenix.HTML.Controller` - imports controllers functions
+      commonly used in views;
 
   ## HTML Safe
 
@@ -11,12 +15,42 @@ defmodule Phoenix.HTML do
   provide convenience functions for escaping and marking
   HTML code as safe.
 
-  In order to mark some code as safe, developers should
-  invoke the `safe/1` function. User data or data coming
-  from the database should never be marked as safe, it
-  should be kept as regular data or given to `html_escape/1`
-  so its contents are escaped and the end result is considered
-  to be safe.
+  By default, data output in templates is not considered
+  safe:
+
+      <%= "<hello>" %>
+
+  will be shown as:
+
+      &lt;hello&gt;
+
+  User data or data coming from the database is almost never
+  considered safe. However, in some cases, you may want to tag
+  it as safe and show its original contents:
+
+      <%= safe "<hello>" %>
+
+  Keep in mind most helpers will automatically escape your data
+  and return safe content:
+
+      <%= tag :p, "<hello>" %>
+
+  will properly output:
+
+      <p>&lt;hello&gt;</p>
+
+  This is done internally by using a combination of
+  `html_escape/1` and `safe/1`. Use `html_escape/1`
+  to escape any term that implements the `Phoenix.HTML.Safe`
+  protocol, modify its contents, and then use `safe` to
+  finally  mark the contents as safe (if you guarantee so):
+
+      def my_helper(input) do
+        data = html_escape(input)
+        ... change data ...
+        safe data
+      end
+
   """
 
   @doc false
@@ -28,11 +62,11 @@ defmodule Phoenix.HTML do
     end
   end
 
-  @type safe   :: {:safe, unsafe}
-  @type unsafe :: iodata
+  @type safe    :: {:safe, unsafe}
+  @type unsafe  :: iodata
 
   @doc """
-  Marks the given value as safe, therefore its contents won't be escaped.
+  Marks the given value as safe.
 
       iex> Phoenix.HTML.safe("<hello>")
       {:safe, "<hello>"}
@@ -66,32 +100,31 @@ defmodule Phoenix.HTML do
   def safe_concat(data1, {:safe, data2}), do: {:safe, [io_escape(data1)|data2]}
   def safe_concat(data1, data2), do: {:safe, [io_escape(data1)|io_escape(data2)]}
 
+  defp io_escape(data) when is_binary(data),
+    do: Phoenix.HTML.Safe.BitString.to_iodata(data)
+  defp io_escape(data) when is_list(data),
+    do: Phoenix.HTML.Safe.List.to_iodata(data)
+
   @doc """
-  Escapes the HTML entities in the given string, marking it as safe.
+  Escapes the HTML entities in the given term, returning iodata.
 
       iex> Phoenix.HTML.html_escape("<hello>")
-      {:safe, "&lt;hello&gt;"}
+      "&lt;hello&gt;"
 
       iex> Phoenix.HTML.html_escape('<hello>')
-      {:safe, ["&lt;", 104, 101, 108, 108, 111, "&gt;"]}
+      ["&lt;", 104, 101, 108, 108, 111, "&gt;"]
+
+      iex> Phoenix.HTML.html_escape(1)
+      "1"
 
       iex> Phoenix.HTML.html_escape({:safe, "<hello>"})
-      {:safe, "<hello>"}
+      "<hello>"
   """
-  @spec html_escape(safe | unsafe) :: safe
-  def html_escape({:safe, data}) do
-    {:safe, data}
-  end
-
-  def html_escape(data) do
-    {:safe, io_escape(data)}
-  end
-
-  defp io_escape(data) when is_binary(data) do
-    Phoenix.HTML.Safe.BitString.to_iodata(data)
-  end
-
-  defp io_escape(data) when is_list(data) do
-    Phoenix.HTML.Safe.List.to_iodata(data)
-  end
+  @spec html_escape(Phoenix.HTML.Safe.t) :: iodata
+  def html_escape({:safe, data}),
+    do: data
+  def html_escape(other) when is_binary(other), do:
+    Phoenix.HTML.Safe.BitString.to_iodata(other)
+  def html_escape(other),
+    do: Phoenix.HTML.Safe.to_iodata(other)
 end

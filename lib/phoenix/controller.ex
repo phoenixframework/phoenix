@@ -179,9 +179,9 @@ defmodule Phoenix.Controller do
 
   """
   def redirect(conn, opts) when is_list(opts) do
-    url = url(opts)
-    {:safe, safe} = Phoenix.HTML.html_escape(url)
-    body = "<html><body>You are being <a href=\"#{safe}\">redirected</a>.</body></html>"
+    url  = url(opts)
+    html = Phoenix.HTML.html_escape(url)
+    body = "<html><body>You are being <a href=\"#{html}\">redirected</a>.</body></html>"
 
     conn
     |> put_resp_header("Location", url)

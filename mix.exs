@@ -19,7 +19,7 @@ defmodule Phoenix.Mixfile do
 
   def application do
     [mod: {Phoenix, []},
-     applications: [:plug, :poison, :logger],
+     applications: [:plug, :poison, :logger, :eex],
      env: [code_reloader: false,
            template_engines: [],
            format_encoders: [],
