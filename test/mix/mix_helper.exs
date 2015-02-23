@@ -1,6 +1,3 @@
-# A shared router for Mix tasks
-Application.put_env(:phoenix, Mix.RouterTest, [port: 4567])
-
 defmodule Mix.RouterTest do
   use Phoenix.Router
   get "/", PageController, :index, as: :page
