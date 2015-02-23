@@ -43,7 +43,7 @@ defmodule Phoenix.Endpoint.ErrorHandler do
       fun.()
     rescue
       e in [Phoenix.Router.NoRouteError] ->
-        maybe_render(e.conn, :error, e, System.stacktrace, opts)
+        maybe_render(conn, :error, e, System.stacktrace, opts)
 
     catch
       kind, reason ->
