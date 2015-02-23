@@ -119,15 +119,16 @@ defmodule Phoenix.Endpoint do
   ## Endpoint API
 
   In the previous section, we have used the `config/2` function which is
-  automatically generated in your Endpoint. Here is a summary of all functions
-  defined in your endpoint:
+  automatically generated in your Endpoint. Here is a summary of all
+  functions defined in your endpoint.
 
-    * `start_link()` - starts the Endpoint supervision tree, including its
-      configuration cache and possibly the servers for handling requests
-    * `config(key, default)` - access the endpoint configuration given by key
-    * `config_change(changed, removed)` - reload the endpoint configuration on application upgrades
+  #### Paths and URLs
+
     * `url(path)` - returns the URL for this endpoint with the given path
     * `static_path(path)` - returns the static path for a given asset
+
+  #### Channels
+
     * `broadcast_from(from, topic, event, msg)` - proxy to `Phoenix.Channel.broadcast_from/4`
       using this endpoint's configured pubsub server
     * `broadcast_from!(from, topic, event, msg)` - proxy to `Phoenix.Channel.broadcast_from!/4`
@@ -137,9 +138,15 @@ defmodule Phoenix.Endpoint do
     * `broadcast!(topic, event, msg)` - proxy to `Phoenix.Channel.broadcast!/3`
       using this endpoint's configured pubsub server
 
+  #### Endpoint configuration
 
-  Besides the functions above, it defines also the API expected by Plug
-  for serving requests:
+    * `start_link()` - starts the Endpoint supervision tree, including its
+      configuration cache and possibly the servers for handling requests
+    * `config(key, default)` - access the endpoint configuration given by key
+    * `config_change(changed, removed)` - reload the endpoint configuration
+      on application upgrades
+
+  #### Plug API
 
     * `init(opts)` - invoked when starting the endpoint server
     * `call(conn, opts)` - invoked on every request and it simply dispatches to
@@ -177,6 +184,7 @@ defmodule Phoenix.Endpoint do
       def broadcast_from(from, topic, event, msg) do
         Phoenix.Channel.broadcast_from(@pubsub_server, from, topic, event, msg)
       end
+
       def broadcast_from!(from, topic, event, msg) do
         Phoenix.Channel.broadcast_from!(@pubsub_server, from, topic, event, msg)
       end
@@ -205,7 +213,7 @@ defmodule Phoenix.Endpoint do
 
       def call(conn, opts) do
         conn = put_in conn.secret_key_base, config(:secret_key_base)
-        conn = update_in conn.private, &Map.put(&1, :phoenix_endpoint, __MODULE__)
+        conn = Plug.Conn.put_private conn, :phoenix_endpoint, __MODULE__
         phoenix_endpoint_pipeline(conn, opts)
       end
 
@@ -290,49 +298,17 @@ defmodule Phoenix.Endpoint do
   @doc """
   Stores a plug to be executed as part of the pipeline.
   """
-  defmacro plug(plug, opts \\ []) do
+  defmacro plug(plug, opts \\ [])
+
+  defmacro plug(:router, router) do
     quote do
-      @plugs {unquote(plug), unquote(opts), true}
+      @plugs {unquote(router), [], true}
     end
   end
 
-  @doc """
-  A macro that can be plugged in order to handle routing errors.
-
-  By default, a Phoenix router will raise a `Phoenix.Router.NoRouteError`
-  struct in case no route is found. This macro wraps the router call so
-  the route error does not pass through.
-
-  It also wraps the router call to provide better debugger and error
-  rendering behaviour.
-
-  ## Examples
-
-      plug :router, MyApp.Router
-
-  """
-  defmacro router(conn, plug) do
-    conf = Module.get_attribute(__CALLER__.module, :config)
-
-    code =
-      if conf[:debug_errors] do
-        quote do
-          Plug.Debugger.wrap(conn, @plug_debugger, fn ->
-            plug.call(conn, plug.init([]))
-          end)
-        end
-      else
-        quote do
-          plug.call(conn, plug.init([]))
-        end
-      end
-
+  defmacro plug(plug, opts) do
     quote do
-      conn = unquote(conn)
-      plug = unquote(plug)
-      Phoenix.Endpoint.ErrorHandler.wrap(conn, @phoenix_handle_errors, fn ->
-        unquote(code)
-      end)
+      @plugs {unquote(plug), unquote(opts), true}
     end
   end
 end

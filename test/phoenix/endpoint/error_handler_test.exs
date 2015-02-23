@@ -33,6 +33,12 @@ defmodule Phoenix.Endpoint.ErrorHandlerTest do
       raise "oops"
     end
 
+    get "/send_and_wrapped" do
+      raise Plug.Conn.WrapperError, conn: conn,
+        kind: :error, stack: System.stacktrace,
+        reason: ArgumentError.exception("oops")
+    end
+
     match _ do
       raise Phoenix.Router.NoRouteError, conn: conn, router: __MODULE__
     end
@@ -62,13 +68,22 @@ defmodule Phoenix.Endpoint.ErrorHandlerTest do
     assert_received {:plug_conn, :sent}
   end
 
+  test "call/2 is overridden and unwrapps wrapped errors" do
+    assert_raise ArgumentError, "oops", fn ->
+      conn(:get, "/send_and_wrapped") |> Router.call([])
+    end
+
+    assert_received {:plug_conn, :sent}
+  end
+
   defp render(conn, opts, fun) do
     opts = opts |> Keyword.put_new(:view, __MODULE__)
 
     try do
       fun.()
     catch
-      kind, error -> Phoenix.Endpoint.ErrorHandler.render(conn, kind, error, System.stacktrace, opts)
+      kind, error ->
+        Phoenix.Endpoint.ErrorHandler.render(conn, kind, error, System.stacktrace, opts)
     else
       _ -> flunk "function should have failed"
     end

@@ -29,7 +29,7 @@ defmodule Phoenix.Mixfile do
 
   defp deps do
     [{:cowboy, "~> 1.0", optional: true},
-     {:plug, "~> 0.10.0"},
+     {:plug, github: "elixir-lang/plug"},
      {:poison, "~> 1.3"},
      {:earmark, "~> 0.1", only: :docs},
      {:ex_doc, "~> 0.7.1", only: :docs},

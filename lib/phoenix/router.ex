@@ -290,7 +290,12 @@ defmodule Phoenix.Router do
       end
 
       defp dispatch(conn, []) do
-        conn.private.phoenix_route.(conn)
+        try do
+          conn.private.phoenix_route.(conn)
+        catch
+          kind, reason ->
+            Plug.Conn.WrapperError.reraise(conn, kind, reason)
+        end
       end
 
       defoverridable [init: 1, call: 2]
@@ -373,7 +378,14 @@ defmodule Phoenix.Router do
       quote unquote: false do
         Scope.pipeline(__MODULE__, plug)
         {conn, body} = Plug.Builder.compile(@phoenix_pipeline)
-        defp unquote(plug)(unquote(conn), _), do: unquote(body)
+        defp unquote(plug)(unquote(conn), _) do
+          try do
+            unquote(body)
+          catch
+            kind, reason ->
+              Plug.Conn.WrapperError.reraise(unquote(conn), kind, reason)
+          end
+        end
         @phoenix_pipeline nil
       end
 
@@ -674,7 +686,7 @@ defmodule Phoenix.Router do
     add_socket(mount, [alias: chan_alias], chan_block)
   end
   defmacro socket(mount, chan_alias, opts, do: chan_block) do
-    add_socket(mount, Dict.merge(opts, alias: chan_alias), chan_block)
+    add_socket(mount, Keyword.put(opts, :alias, chan_alias), chan_block)
   end
   defp add_socket(mount, opts, chan_block) do
     quote do
