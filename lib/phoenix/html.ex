@@ -82,28 +82,33 @@ defmodule Phoenix.HTML do
   Concatenates data safely.
 
       iex> Phoenix.HTML.safe_concat("<hello>", "<world>")
-      {:safe, ["&lt;hello&gt;"|"&lt;world&gt;"]}
+      {:safe, "&lt;hello&gt;&lt;world&gt;"}
 
       iex> Phoenix.HTML.safe_concat({:safe, "<hello>"}, "<world>")
-      {:safe, ["<hello>"|"&lt;world&gt;"]}
+      {:safe, "<hello>&lt;world&gt;"}
 
       iex> Phoenix.HTML.safe_concat("<hello>", {:safe, "<world>"})
-      {:safe, ["&lt;hello&gt;"|"<world>"]}
+      {:safe, "&lt;hello&gt;<world>"}
 
       iex> Phoenix.HTML.safe_concat({:safe, "<hello>"}, {:safe, "<world>"})
-      {:safe, ["<hello>"|"<world>"]}
+      {:safe, "<hello><world>"}
 
   """
   @spec safe_concat(unsafe | safe, unsafe | safe) :: safe
-  def safe_concat({:safe, data1}, {:safe, data2}), do: {:safe, [data1|data2]}
-  def safe_concat({:safe, data1}, data2), do: {:safe, [data1|io_escape(data2)]}
-  def safe_concat(data1, {:safe, data2}), do: {:safe, [io_escape(data1)|data2]}
-  def safe_concat(data1, data2), do: {:safe, [io_escape(data1)|io_escape(data2)]}
+  def safe_concat({:safe, data1}, {:safe, data2}), do: {:safe, io_concat(data1, data2)}
+  def safe_concat({:safe, data1}, data2), do: {:safe, io_concat(data1, io_escape(data2))}
+  def safe_concat(data1, {:safe, data2}), do: {:safe, io_concat(io_escape(data1), data2)}
+  def safe_concat(data1, data2), do: {:safe, io_concat(io_escape(data1), io_escape(data2))}
 
   defp io_escape(data) when is_binary(data),
     do: Phoenix.HTML.Safe.BitString.to_iodata(data)
   defp io_escape(data) when is_list(data),
     do: Phoenix.HTML.Safe.List.to_iodata(data)
+
+  defp io_concat(d1, d2) when is_binary(d1) and is_binary(d2), do:
+    d1 <> d2
+  defp io_concat(d1, d2) when is_binary(d1) and is_binary(d2), do:
+    [d1|d2]
 
   @doc """
   Escapes the HTML entities in the given term, returning iodata.
