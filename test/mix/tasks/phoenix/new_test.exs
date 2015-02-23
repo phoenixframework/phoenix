@@ -9,26 +9,52 @@ defmodule Mix.Tasks.Phoenix.NewTest do
   import MixHelper
   import ExUnit.CaptureIO
 
-  @app_name  "photo_blog"
-  @tmp_path  tmp_path()
-  @project_path Path.join(@tmp_path, @app_name)
   @epoch {{1970, 1, 1}, {0, 0, 0}}
+  @app_name "photo_blog"
 
-  setup_all do
-    # Clean up and create a new project
-    File.rm_rf(@project_path)
-    Mix.Tasks.Phoenix.New.run([@app_name, @project_path])
-
-    # Copy artifacts from Phoenix so we can compile and run tests
-    File.cp_r "_build",   Path.join(@project_path, "_build")
-    File.cp_r "deps",     Path.join(@project_path, "deps")
-    File.cp_r "mix.lock", Path.join(@project_path, "mix.lock")
+  setup do
+    on_exit fn -> delete_tmp_paths end
 
     :ok
   end
 
-  test "creates files and directories" do
-    File.cd! @project_path, fn ->
+  test "new with path" do
+    in_tmp "new_with_path", fn ->
+      Mix.Tasks.Phoenix.New.run([@app_name])
+
+      project_path = Path.join(File.cwd!, @app_name)
+
+      setup_project(project_path)
+
+      creates_files_and_directories(project_path)
+      compiles_and_recompiles_project(project_path)
+    end
+  end
+
+  test "new with path and app name" do
+    in_tmp "new_with_path_and_app_name", fn ->
+      project_path = Path.join(File.cwd!, "custom_path")
+
+      Mix.Tasks.Phoenix.New.run([project_path, "--app", @app_name])
+
+      setup_project(project_path)
+
+      creates_files_and_directories(project_path)
+      compiles_and_recompiles_project(project_path)
+    end
+  end
+
+  defp setup_project(project_path) do
+    File.mkdir_p!(project_path)
+
+    # Copy artifacts from Phoenix so we can compile and run tests
+    File.cp_r "_build",   Path.join(project_path, "_build")
+    File.cp_r "deps",     Path.join(project_path, "deps")
+    File.cp_r "mix.lock", Path.join(project_path, "mix.lock")
+  end
+  
+  defp creates_files_and_directories(project_path) do
+    File.cd! project_path, fn ->
       assert_file ".gitignore"
       assert_file "README.md"
       assert_file "lib/photo_blog.ex", ~r/defmodule PhotoBlog do/
@@ -58,14 +84,15 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     end
   end
 
-  test "compiles and recompiles project" do
+  defp compiles_and_recompiles_project(project_path) do
     Logger.disable(self())
     Application.put_env(:phoenix, :code_reloader, true)
 
     Application.put_env(:photo_blog, PhotoBlog.Endpoint,
       secret_key_base: String.duplicate("abcdefgh", 8))
 
-    in_project :photo_blog, @project_path, fn _ ->
+    in_project :photo_blog, project_path, fn _ ->
+      Mix.Task.clear
       Mix.Task.run "compile", ["--no-deps-check"]
       assert_received {:mix_shell, :info, ["Compiled lib/photo_blog.ex"]}
       assert_received {:mix_shell, :info, ["Compiled web/router.ex"]}
@@ -98,10 +125,44 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     Application.put_env(:phoenix, :code_reloader, false)
   end
 
-  test "missing name and/or path arguments" do
-    assert_raise Mix.Error, fn ->
-      Mix.Tasks.Phoenix.New.run([])
+  test "new with invalid args" do
+    in_tmp "new with an invalid application name", fn ->
+      assert_raise Mix.Error, ~r"Application name must start with a letter and ", fn ->
+        Mix.Tasks.Phoenix.New.run ["007invalid"]
+      end
     end
+
+    in_tmp "new with an invalid application name from the app option", fn ->
+      assert_raise Mix.Error, ~r"Application name must start with a letter and ", fn ->
+        Mix.Tasks.Phoenix.New.run ["valid", "--app", "007invalid"]
+      end
+    end
+
+    in_tmp "new with an invalid module name from the module options", fn ->
+      assert_raise Mix.Error, ~r"Module name must be a valid Elixir alias", fn ->
+        Mix.Tasks.Phoenix.New.run ["valid", "--module", "not.valid"]
+      end
+    end
+
+    in_tmp "new without a specified path", fn ->
+      assert_raise Mix.Error, "Expected PATH to be given, please use `mix phoenix.new PATH`", fn ->
+        Mix.Tasks.Phoenix.New.run []
+      end
+    end
+  end
+
+  defp delete_tmp_paths do
+    tmp = tmp_path |> String.to_char_list
+    for path <- :code.get_path,
+      :string.str(path, tmp) != 0,
+      do: :code.del_path(path)
+  end
+
+  defp in_tmp(which, function) do
+    path = Path.join(tmp_path, which)
+    File.rm_rf! path
+    File.mkdir_p! path
+    File.cd! path, function
   end
 
   defp in_project(app, path, fun) do
