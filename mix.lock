@@ -5,7 +5,7 @@
   "ex_doc": {:hex, :ex_doc, "0.7.1"},
   "inch_ex": {:hex, :inch_ex, "0.2.3"},
   "linguist": {:hex, :linguist, "0.1.4"},
-  "plug": {:git, "git://github.com/elixir-lang/plug.git", "0915253cef824b7a2499f602ec45278fb4bc70a0", []},
+  "plug": {:hex, :plug, "0.11.0"},
   "poison": {:hex, :poison, "1.3.0"},
   "poolboy": {:hex, :poolboy, "1.4.2"},
   "ranch": {:hex, :ranch, "1.0.0"},
