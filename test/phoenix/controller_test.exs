@@ -230,30 +230,75 @@ defmodule Phoenix.ControllerTest do
   end
 
   test "scrub_params/2 keeps populated keys intact" do
-    conn = conn(:get, "/?foo=bar&baz=qux")
+    conn = conn(:get, "/?foo=bar")
     |> Plug.Conn.fetch_params
     |> scrub_params("foo")
 
     assert conn.params["foo"] == "bar"
-    assert conn.params["baz"] == "qux"
   end
 
-  test "scrub_params/2 nils out keys with empty values" do
-    conn = conn(:get, "/?foo=bar&baz=")
+  test "scrub_params/2 keeps populated keys intact if the value for the required key is a map" do
+    conn = conn(:get, "/?foo[bar]=baz&foo[qux]=quux")
     |> Plug.Conn.fetch_params
     |> scrub_params("foo")
 
-    assert conn.params["foo"] == "bar"
-    assert conn.params["baz"] == nil
+    assert conn.params["foo"] == %{"bar" => "baz", "qux" => "quux"}
   end
 
-  test "scrub_params/2 allows the required key to be empty and nils it out" do
-    conn = conn(:get, "/?foo=&baz=qux")
+  test "scrub_params/2 keeps populated keys intact if the value for the required key is a nested map" do
+    conn = conn(:get, "/?foo[bar][baz]=qux")
+    |> Plug.Conn.fetch_params
+    |> scrub_params("foo")
+
+    assert conn.params["foo"] == %{"bar" => %{"baz" => "qux"}}
+  end
+
+  test "scrub_params/2 nils out the passed in key if it's empty" do
+    conn = conn(:get, "/?foo=")
     |> Plug.Conn.fetch_params
     |> scrub_params("foo")
 
     assert conn.params["foo"] == nil
-    assert conn.params["baz"] == "qux"
+  end
+
+  test "scrub_params/2 nils out all empty keys in value for the passed in key if it is a map" do
+    conn = conn(:get, "/?foo[bar]=&foo[baz]=")
+    |> Plug.Conn.fetch_params
+    |> scrub_params("foo")
+
+    assert conn.params["foo"] == %{"bar" => nil, "baz" => nil}
+  end
+
+  test "scrub_params/2 nils out all empty keys in value for the passed in key if it is a nested map" do
+    conn = conn(:get, "/?foo[bar][baz]=")
+    |> Plug.Conn.fetch_params
+    |> scrub_params("foo")
+
+    assert conn.params["foo"] == %{"bar" => %{"baz" => nil}}
+  end
+
+  test "scrub_params/2 ignores the keys that don't match the passed in key" do
+    conn = conn(:get, "/?foo=bar&baz=")
+    |> Plug.Conn.fetch_params
+    |> scrub_params("foo")
+
+    assert conn.params["baz"] == ""
+  end
+
+  test "scrub_params/2 ignores the keys that don't match the passed in key for a map" do
+    conn = conn(:get, "/?foo=&bar[baz]=")
+    |> Plug.Conn.fetch_params
+    |> scrub_params("foo")
+
+    assert conn.params["bar"] == %{"baz" => ""}
+  end
+
+  test "scrub_params/2 ignores the keys that don't match the passed in key for a nested map" do
+    conn = conn(:get, "/?foo=&bar[baz][qux]=")
+    |> Plug.Conn.fetch_params
+    |> scrub_params("foo")
+
+    assert conn.params["bar"] == %{"baz" => %{"qux" => ""}}
   end
 
   test "protect_from_forgery/2 doesn't blow up" do
