@@ -493,6 +493,9 @@ defmodule Phoenix.Controller do
       Map.put(acc, k, scrub_param(v))
     end)
   end
+  defp scrub_param(param) when is_list(param) do
+    Enum.map(param, &scrub_param/1)
+  end
   defp scrub_param("") do
     nil
   end

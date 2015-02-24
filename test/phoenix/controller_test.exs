@@ -220,6 +220,7 @@ defmodule Phoenix.ControllerTest do
       accepts with_accept("text/html; q=0.7, application/json; q=0.8"), ~w(xml)
     end
   end
+
   test "scrub_params/2 raises Phoenix.MissingParamError with key as the required_key when it's missing from the params" do
     conn = conn(:get, "/?foo=bar")
     |> Plug.Conn.fetch_params
@@ -245,6 +246,14 @@ defmodule Phoenix.ControllerTest do
     assert conn.params["foo"] == %{"bar" => "baz", "qux" => "quux"}
   end
 
+  test "scrub_params/2 keeps populated keys intact if the value for the required key is a list" do
+    conn = conn(:get, "/?foo[]=bar&foo[]=baz")
+    |> Plug.Conn.fetch_params
+    |> scrub_params("foo")
+
+    assert conn.params["foo"] == ["bar", "baz"]
+  end
+
   test "scrub_params/2 keeps populated keys intact if the value for the required key is a nested map" do
     conn = conn(:get, "/?foo[bar][baz]=qux")
     |> Plug.Conn.fetch_params
@@ -259,6 +268,14 @@ defmodule Phoenix.ControllerTest do
     |> scrub_params("foo")
 
     assert conn.params["foo"] == nil
+  end
+
+  test "scrub_params/2 nils out all empty values for the passed in key if it is a list" do
+    conn = conn(:get, "/?foo[]=&foo[]=&foo[]=bar")
+    |> Plug.Conn.fetch_params
+    |> scrub_params("foo")
+
+    assert conn.params["foo"] == [nil, nil, "bar"]
   end
 
   test "scrub_params/2 nils out all empty keys in value for the passed in key if it is a map" do
