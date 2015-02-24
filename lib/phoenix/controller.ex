@@ -546,13 +546,27 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Currently used as a wrapper function for Plug.CSRFProtection and mainly serves
-  as a function plug in MyApp.Router. Makes CSRFProtection more easily extensible
-  from within Phoenix.
+  Enables CSRF protection.
+
+  Currently used as a wrapper function for `Plug.CSRFProtection`
+  and mainly serves as a function plug in `YourApp.Router`.
+
+  Check `get_csrf_token/0` and `delete_csrf_token/0` for
+  retrieving and deleting CSRF tokens.
   """
   def protect_from_forgery(conn, opts \\ []) do
     Plug.CSRFProtection.call(conn, opts)
   end
+
+  @doc """
+  Gets the CSRF token.
+  """
+  defdelegate get_csrf_token(), to: Plug.CSRFProtection
+
+  @doc """
+  Deletes any CSRF token set.
+  """
+  defdelegate delete_csrf_token(), to: Plug.CSRFProtection
 
   defp handle_params_accept(conn, format, accepted) do
     if format in accepted do

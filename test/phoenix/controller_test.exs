@@ -223,9 +223,11 @@ defmodule Phoenix.ControllerTest do
 
   test "protect_from_forgery/2 doesn't blow up" do
     conn(:get, "/")
-    |> fetch_cookies
-    |> fetch_params
+    |> with_session
     |> protect_from_forgery([])
+
+    assert is_binary get_csrf_token
+    assert is_binary delete_csrf_token
   end
 
   test "__view__ returns the view module based on controller module" do
