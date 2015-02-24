@@ -2,46 +2,64 @@ defmodule Mix.Tasks.Phoenix.New do
   use Mix.Task
   alias Phoenix.Naming
 
-  @shortdoc "Creates Phoenix application"
+  @shortdoc "Create a new Phoenix application"
 
   @moduledoc """
-  Creates a new Phoenix application
+  Creates a new Phoenix project.
+  It expects the path of the project as argument.
 
-      mix phoenix.new app_name path
+      mix phoenix.new PATH [--module MODULE] [--app APP]
+
+  A project at the given PATH  will be created. The
+  application name and module name will be retrieved
+  from the path, unless `--module` or `--app` is given.
+
+  An `--app` option can be given in order to
+  name the OTP application for the project.
+
+  A `--module` option can be given in order
+  to name the modules in the generated code skeleton.  
+
+  ## Examples
+
+      mix phoenix.new hello_world
+
+  Is equivalent to:
+
+      mix phoenix.new hello_world --module HelloWorld
 
   """
 
-  def run(args) do
-    {opts, args, _} = OptionParser.parse(args, strict: [dev: :boolean])
-    run(args, opts)
+  def run(argv) do
+    {opts, argv, _} = OptionParser.parse(argv, switches: [dev: :boolean])
+
+    case argv do
+      [] ->
+        Mix.raise "Expected PATH to be given, please use `mix phoenix.new PATH`"
+      [path|_] ->
+        app    = opts[:app] || Path.basename(Path.expand(path))
+        check_application_name!(app, !!opts[:app])
+        mod = opts[:module] || Naming.camelize(app)
+        check_mod_name!(mod)
+
+        run(app, mod, path, opts[:dev])
+    end
   end
 
-  def run([name, path], opts) do
-    application_name   = Naming.underscore(name)
-    application_module = Naming.camelize(application_name)
-    pubsub_server      = application_module
-                         |> Module.concat(nil)
-                         |> Naming.base_concat(PubSub)
-
-    binding = [application_name: application_name,
-               application_module: application_module,
+  def run(app, mod, path, dev) do
+    pubsub_server = mod
+                    |> Module.concat(nil)
+                    |> Naming.base_concat(PubSub)
+    binding = [application_name: app,
+               application_module: mod,
+               phoenix_dep: phoenix_dep(dev),
                pubsub_server: pubsub_server,
-               phoenix_dep: phoenix_dep(opts[:dev]),
                secret_key_base: random_string(64),
                encryption_salt: random_string(8),
                signing_salt: random_string(8)]
 
-    copy_from template_dir, path, application_name, &EEx.eval_file(&1, binding)
-    copy_from static_dir, Path.join(path, "priv/static"), application_name, &File.read!(&1)
-  end
-
-  def run(_, _opts) do
-    Mix.raise """
-    phoenix.new expects application name and destination path.
-
-        mix phoenix.new my_app /home/johndoe/my_app
-
-    """
+    copy_from template_dir, path, app, &EEx.eval_file(&1, binding)
+    copy_from static_dir, Path.join(path, "priv/static"), app, &File.read!(&1)
   end
 
   def random_string(length) do
@@ -72,6 +90,25 @@ defmodule Mix.Tasks.Phoenix.New do
     :ok
   end
 
+  defp check_application_name!(name, from_app_flag) do
+    unless name =~ ~r/^[a-z][\w_]*$/ do
+      Mix.raise "Application name must start with a letter and have only lowercase " <>
+                "letters, numbers and underscore, got: #{inspect name}" <>
+                (if !from_app_flag do
+                  ". The application name is inferred from the path, if you'd like to " <>
+                  "explicitly name the application then use the `--app APP` option."
+                else
+                  ""
+                end)
+    end
+  end
+
+  defp check_mod_name!(name) do
+    unless name =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/ do
+      Mix.raise "Module name must be a valid Elixir alias (for example: Foo.Bar), got: #{inspect name}"
+    end
+  end
+  
   defp make_destination_path(source_path, source_dir, target_dir, application_name) do
     target_path =
       source_path

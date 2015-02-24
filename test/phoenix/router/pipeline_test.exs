@@ -93,6 +93,12 @@ defmodule Phoenix.Router.PipelineTest do
     assert conn.assigns[:stack] == "api"
   end
 
+  test "wraps failures on call" do
+    assert_raise Plug.Conn.WrapperError, fn ->
+      call(Router, :get, "/route_that_crashes")
+    end
+  end
+
   test "merge parameters before invoking pipelines" do
     conn = call(Router, :get, "/browser/hello")
     assert conn.assigns[:params] == %{"id" => "hello"}

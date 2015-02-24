@@ -32,31 +32,41 @@ defmodule Phoenix.Integration.EndpointTest do
     match _ do
       raise Phoenix.Router.NoRouteError, conn: conn, router: __MODULE__
     end
+
+    # A wrapper to around the endpoint call to extract information.
+    defmacro __before_compile__(_) do
+      quote do
+        defoverridable [call: 2]
+
+        def call(conn, opts) do
+          # Assert we never have a lingering sent message in the inbox
+          refute_received {:plug_conn, :sent}
+
+          try do
+            super(conn, opts)
+          after
+            # When we pipe downstream, downstream will always render,
+            # either because the router is responding or because the
+            # endpoint error layer is kicking in.
+            assert_received {:plug_conn, :sent}
+            send self(), {:plug_conn, :sent}
+          end
+        end
+      end
+    end
   end
 
   for mod <- [ProdEndpoint, DevEndpoint] do
     defmodule mod do
       use Phoenix.Endpoint, otp_app: :endpoint_int
-
       plug :router, Router
+      @before_compile Router
 
       def call(conn, opts) do
-        # Assert we never have a lingering sent message in the inbox
-        refute_received {:plug_conn, :sent}
-
         if conn.path_info == ~w(oops) do
           raise "oops"
         end
-
-        try do
-          super(conn, opts)
-        after
-          # When we pipe downstream, downstream will always render,
-          # either because the router is responding or because the
-          # router error layer is kicking in.
-          assert_received {:plug_conn, :sent}
-          send self(), {:plug_conn, :sent}
-        end
+        super(conn, opts)
       end
     end
   end

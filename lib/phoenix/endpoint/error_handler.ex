@@ -4,6 +4,11 @@ defmodule Phoenix.Endpoint.ErrorHandler do
   # This module is automatically used in `Phoenix.Router` where it
   # overrides `call/2` to provide rendering. Once the error is
   # rendered, the error is reraised unless it is a NoRouteError.
+  #
+  # ## Options
+  #
+  #   * `:view` - the name of the view we render templates against
+  #
   @moduledoc false
 
   @already_sent {:plug_conn, :sent}
@@ -24,34 +29,36 @@ defmodule Phoenix.Endpoint.ErrorHandler do
       defoverridable [call: 2]
 
       def call(conn, opts) do
-        Phoenix.Endpoint.ErrorHandler.wrap(conn, @phoenix_handle_errors, fn -> super(conn, opts) end)
+        try do
+          super(conn, opts)
+        catch
+          kind, reason ->
+            Phoenix.Endpoint.ErrorHandler.__catch__(conn, kind, reason, @phoenix_handle_errors)
+        end
       end
     end
   end
 
-  @doc """
-  Wraps a given function and renders a nice error page
-  using the given view.
-
-  ## Options
-
-    * `:view` - the name of the view we render templates against
-
-  """
-  def wrap(conn, opts, fun) do
-    try do
-      fun.()
-    rescue
-      e in [Phoenix.Router.NoRouteError] ->
-        maybe_render(e.conn, :error, e, System.stacktrace, opts)
-
-    catch
-      kind, reason ->
-        stack = System.stacktrace
-        maybe_render(conn, kind, reason, stack, opts)
-        :erlang.raise(kind, reason, stack)
-    end
+  @doc false
+  def __catch__(_conn, :error, %Plug.Conn.WrapperError{} = wrapper, opts) do
+    %{conn: conn, kind: kind, reason: reason, stack: stack} = wrapper
+    __catch__(conn, kind, reason, stack, opts)
   end
+
+  def __catch__(conn, kind, reason, opts) do
+    __catch__(conn, kind, reason, System.stacktrace, opts)
+  end
+
+  defp __catch__(_conn, :error, %Phoenix.Router.NoRouteError{} = reason, stack, opts) do
+    maybe_render(reason.conn, :error, reason, stack, opts)
+  end
+
+  defp __catch__(conn, kind, reason, stack, opts) do
+    maybe_render(conn, kind, reason, stack, opts)
+    :erlang.raise(kind, reason, stack)
+  end
+
+  ## Rendering
 
   # Made public with @doc false for testing.
   @doc false
