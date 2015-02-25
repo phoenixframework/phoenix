@@ -467,8 +467,12 @@ defmodule Phoenix.Controller do
 
   This process is two-fold:
 
-    * Checks to see if the required_key is present (can be empty)
-    * Changes blank parameters of `required_key` (recursively) to nils
+    * Checks to see if the `required_key` is present
+    * Changes empty parameters of `required_key` (recursively) to nils
+
+  This function is useful to remove empty strings sent
+  via HTML forms. If you are providing an API, there
+  is likely no need to invoke `scrub_params/2`.
 
   If the `required_key` is not present, it will
   raise `Phoenix.MissingParamError`.
@@ -479,16 +483,17 @@ defmodule Phoenix.Controller do
 
   """
   @spec scrub_params(Plug.Conn.t, [String.t]) :: Plug.Conn.t
-  def scrub_params(conn, required_key) do
-    param = Map.get(conn.params, required_key)
+  def scrub_params(conn, required_key) when is_binary(required_key) do
+    param = Map.get(conn.params, required_key) |> scrub_param()
+
     unless param do
       raise Phoenix.MissingParamError, key: required_key
     end
 
-    params = Map.put(conn.params, required_key, scrub_param(param))
-
+    params = Map.put(conn.params, required_key, param)
     %{conn | params: params}
   end
+
   defp scrub_param(param) when is_map(param) do
     Enum.reduce(param, %{}, fn({k, v}, acc) ->
       Map.put(acc, k, scrub_param(v))
@@ -497,12 +502,13 @@ defmodule Phoenix.Controller do
   defp scrub_param(param) when is_list(param) do
     Enum.map(param, &scrub_param/1)
   end
-  defp scrub_param("") do
-    nil
-  end
   defp scrub_param(param) do
-    param
+    if scrub?(param), do: nil, else: param
   end
+
+  defp scrub?(" " <> rest), do: scrub?(rest)
+  defp scrub?(""), do: true
+  defp scrub?(_), do: false
 
   defp prepare_assigns(conn, assigns, format) do
     layout =

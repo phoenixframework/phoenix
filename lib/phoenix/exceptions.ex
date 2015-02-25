@@ -30,7 +30,7 @@ defmodule Phoenix.MissingParamError do
   defexception [:message, plug_status: 400]
 
   def exception([key: value]) do
-    msg = "Expected key for #{inspect value} to be present."
+    msg = "expected key for #{inspect value} to be present"
     %Phoenix.MissingParamError{message: msg}
   end
 end
