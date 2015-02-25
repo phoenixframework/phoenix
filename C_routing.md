@@ -300,7 +300,7 @@ end
 
 Note that Phoenix will assume that the path we set ought to begin with a slash, so `scope "/admin" do` and `scope "admin" do` will both produce the same results.
 
-Note also, that the way this scope is currently defined, we need to fully qualify our controller name, `Admin.ReviewController`. We'll fix that in a minute.
+Note also, that the way this scope is currently defined, we need to fully qualify our controller name, `HelloPhoenix.Admin.ReviewController`. We'll fix that in a minute.
 
 Running `$ mix phoenix.routes` again, in addition to the previous set of routes we get the following:
 
@@ -316,7 +316,7 @@ review_path  PATCH   /admin/reviews/:id       HelloPhoenix.Admin.ReviewControlle
 review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.delete/2
 ```
 
-This looks good, but there is a problem here. Remember that we wanted both user facing reviews routes `/reviews` as well as the admin `/admin/reviews` ones. If we now include the user facing reviews in our router like this:
+This looks good, but there is a problem here. Remember that we wanted both user facing reviews routes `/reviews` as well as the admin ones `/admin/reviews`. If we now include the user facing reviews in our router like this:
 
 ```elixir
 scope "/", HelloPhoenix do
@@ -354,7 +354,7 @@ review_path  PATCH   /admin/reviews/:id       HelloPhoenix.Admin.ReviewControlle
 review_path  DELETE  /admin/reviews/:id       HelloPhoenix.Admin.ReviewController.delete/2
 ```
 
-The actual routes we get all look right, except for the path helper `review_path` at the beginning of each line. We are getting the same helper for both the user facing review routes and the admin ones which is not correct. We can fix this problem by adding an `as: :admin` option to our admin scope.
+The actual routes we get all look right, except for the path helper `review_path` at the beginning of each line. We are getting the same helper for both the user facing review routes and the admin ones, which is not correct. We can fix this problem by adding an `as: :admin` option to our admin scope.
 
 ```elixir
 scope "/", HelloPhoenix do
@@ -540,7 +540,7 @@ api_v1_review_path  DELETE  /api/v1/reviews/:id       HelloPhoenix.Api.V1.Review
                     PUT     /api/v1/users/:id         HelloPhoenix.Api.V1.UserController.update/2
   api_v1_user_path  DELETE  /api/v1/users/:id         HelloPhoenix.Api.V1.UserController.delete/2
 ```
-Interestingly, we can use multiple scopes with the same path as long as we are careful not to duplicate routes (resources). If we do duplicate a route, we'll get this familiar warning.
+Interestingly, we can use multiple scopes with the same path as long as we are careful not to duplicate routes. If we do duplicate a route, we'll get this familiar warning.
 
 ```console
 warning: this clause cannot match because a previous clause at line 16 always matches
@@ -592,17 +592,11 @@ We have come quite a long way in this guide without talking about one of the fir
 
 Remember in the [Overview Guide](http://www.phoenixframework.org/docs/overview) when we described plugs as being stacked and executable in a pre-determined order, like a pipeline? Now we're going to take a closer look at how these plug stacks work in the router.
 
-Pipelines are simply plugs stacked up together in a specific order and given a name. They allow us to customize behaviors and transformations related to the handling of requests. Phoenix provides us with some default pipelines for a number of common tasks. In turn we can customize them as well as creating new pipelines to meet our needs.
+Pipelines are simply plugs stacked up together in a specific order and given a name. They allow us to customize behaviors and transformations related to the handling of requests. Phoenix provides us with some default pipelines for a number of common tasks. In turn we can customize them as well as create new pipelines to meet our needs.
 
 A newly generated Phoenix application defines two pipelines called `:browser` and `:api`. We'll get to those in a minute, but first we need to talk about the plug stack in the Endpoint plugs.
 
 #####The Endpoint Plugs
-
-The endpoint is the boundary where all requests start, thereby exposing the application interface to the underlying web services. It has three responsibilities:
-
-- Provide a wrapper for starting and stopping the endpoint as part of a supervision tree.
-- Define an initial plug pipeline to which requests are sent.
-- Host web specific configuration for your application.
 
 Older versions of Phoenix defined a third pipeline `:before`. Its purpose was to organize all the plugs common to every request, and make sure they were executed first, before the `:browser` or `:api` pipelines. Currently, the Endpoint has taken over this responsibility. These Endpoint plugs do quite a lot of work. Here they are in order.
 
@@ -628,15 +622,15 @@ Older versions of Phoenix defined a third pipeline `:before`. Its purpose was to
 
 Phoenix defines two other pipelines by default, `:browser` and `:api`. The router will invoke these after it matches a route, assuming we have called `pipe_through/1` with them in the enclosing scope.
 
-As their names suggest, the `:browser` pipeline prepares for routes which render HTML for a browser. The `:api` pipeline prepares for routes which produce data for an api, for example JSON.
+As their names suggest, the `:browser` pipeline prepares for routes which render HTML for a browser. The `:api` pipeline prepares for routes which produce data for an api.
 
 The `:browser` pipeline has four plugs: `plug :accepts, ~w(html)` which defines the request format or formats which will be accepted, `:fetch_session`, which, naturally, fetches the session data and makes it available in the connection, `:fetch_flash` which retrieves any flash messages which may have been set, and  `:protect_from_forgery`, which protects form posts from cross site forgery.
 
-Currently our example so far, the `:api` pipeline only defines `plug :accepts, ~w(json)`.
+Currently, the `:api` pipeline only defines `plug :accepts, ~w(json)`.
 
-The router invokes a pipeline on a route defined within a scope. If no scope is defined, the router will invoke the pipeline on all the routes in the router. If from within a nested scope we call `pipe_through/1`, the router will invoke it on the inner scope only.
+The router invokes a pipeline on a route defined within a scope. If no scope is defined, the router will invoke the pipeline on all the routes in the router. If we call `pipe_through/1` from within a nested scope, the router will invoke it on the inner scope only.
 
-That's quite a few words bunched up together, so let's take a closer look at some examples to untangle their meaning and clarify things.
+Those are a lot of words bunched up together. Let's take a look at some examples to untangle their meaning.
 
 Here's another look at the router from a newly generated Phoenix application, this time with the api scope uncommented back in and a route added.
 
@@ -749,8 +743,7 @@ defmodule HelloPhoenix.Router do
 end
 ```
 
-In general, the scoping rules for pipelines behave as you would expect. In this example, all routes will pipe through the `:browser` pipeline, because the `/` scope encloses all the routes. Only the `reviews` resources routes will additionally pipe through the `:review_checks` pipeline, because we declare `pipe_through :review_checks` within the `/reviews` scope, where the `reviews` resources routes are.
-
+In general, the scoping rules for pipelines behave as you might expect. In this example, all routes will pipe through the `:browser` pipeline, because the `/` scope encloses all the routes. Only the `reviews` resources routes will pipe through the `:review_checks` pipeline, however, because we declare `pipe_through :review_checks` within the `/reviews` scope, where the `reviews` resources routes are.
 
 #####Creating New Pipelines
 
@@ -798,7 +791,7 @@ defmodule HelloPhoenix.Router do
 end
 ```
 
-Next, we need to define a channel, specifying a topic and associating it with the channel module which will implement its behavior.  Assuming that we have a channel module called `RoomChannel` and a topic called `lobby`, the code to do this is pretty straightforward:
+Next, we need to use the `channel/3` macro to match a topic to the channel which will handle its requests. If we have a channel module called `RoomChannel` and a topic called `"rooms:*"`, the code to do this is straightforward.
 
 ```elixir
 defmodule HelloPhoenix.Router do
@@ -896,7 +889,7 @@ end
 
 Routing is a big topic, and we have covered a lot of ground here. The important points to take away from this guide are:
 - Routes which begin with an HTTP verb name expand to a single clause of the match function.
-- Routes which begin with 'resources' expand to 8 clauses of the match function: GET, POST, PUT, PATCH and DELETE.
+- Routes which begin with 'resources' expand to 8 clauses of the match function.
 - Resources may restrict the number of match function clauses by using the `only:` or `except:` options.
 - Any of these routes may be nested.
 - Any of these routes may be scoped to a given path.
