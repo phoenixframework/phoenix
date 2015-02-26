@@ -131,7 +131,7 @@ defmodule Phoenix.Router do
 
         pipeline :browser do
           plug :fetch_session
-          plug :accepts, ~w(html json)
+          plug :accepts, ["html"]
         end
 
         scope "/" do

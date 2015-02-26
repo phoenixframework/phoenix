@@ -292,7 +292,7 @@ defmodule Phoenix.Controller do
       iex> layout_formats conn
       ["html"]
 
-      iex> put_layout_formats conn, ~w(html mobile)
+      iex> put_layout_formats conn, ["html", "mobile"]
       iex> layout_formats conn
       ["html", "mobile"]
 
@@ -381,7 +381,7 @@ defmodule Phoenix.Controller do
   the accepts plug before rendering. You can do so by adding the following to your
   pipeline (in the router):
 
-      plug :accepts, ~w(html)
+      plug :accepts, ["html"]
 
   ## Views
 
@@ -576,10 +576,11 @@ defmodule Phoenix.Controller do
 
   `accepts/2` can be invoked as a function:
 
-      iex> accepts(conn, ~w(html json))
+      iex> accepts(conn, ["html", "json"])
 
   or used as a plug:
 
+      plug :accepts, ["html", "json"]
       plug :accepts, ~w(html json)
 
   """

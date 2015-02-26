@@ -2,14 +2,14 @@ defmodule <%= application_module %>.Router do
   use Phoenix.Router
 
   pipeline :browser do
-    plug :accepts, ~w(html)
+    plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_flash
     plug :protect_from_forgery
   end
 
   pipeline :api do
-    plug :accepts, ~w(json)
+    plug :accepts, ["json"]
   end
 
   scope "/", <%= application_module %> do
