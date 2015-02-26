@@ -14,6 +14,7 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
     return factory.call(root, root.Phoenix);
   }
 })(Function("return this")(), function (exports) {
+
   var root = this;
   var SOCKET_STATES = { connecting: 0, open: 1, closing: 2, closed: 3 };
 
@@ -82,6 +83,7 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
       leave: {
         value: function leave() {
           var message = arguments[0] === undefined ? {} : arguments[0];
+
           this.socket.leave(this.topic, message);
           this.reset();
         },
@@ -93,8 +95,8 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
     return Channel;
   })();
 
-
   exports.Socket = (function () {
+
     // Initializes the Socket
     //
     // endPoint - The string WebSocket endpoint, ie, "ws://example.com/ws",
@@ -107,8 +109,10 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
     //   logger - The optional function for specialized logging, ie:
     //            `logger: (msg) -> console.log(msg)`
     //
+
     function Socket(endPoint) {
       var opts = arguments[1] === undefined ? {} : arguments[1];
+
       _classCallCheck(this, Socket);
 
       this.states = SOCKET_STATES;
@@ -169,6 +173,7 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
       reconnect: {
         value: function reconnect() {
           var _this = this;
+
           this.close(function () {
             _this.conn = new _this.transport(_this.endPoint);
             _this.conn.onopen = function () {
@@ -191,6 +196,7 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
       resetBufferTimer: {
         value: function resetBufferTimer() {
           var _this = this;
+
           clearTimeout(this.sendBufferTimer);
           this.sendBufferTimer = setTimeout(function () {
             return _this.flushSendBuffer();
@@ -202,6 +208,7 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
       log: {
 
         // Logs the message. Override `this.logger` for specialized logging. noops by default
+
         value: function log(msg) {
           this.logger(msg);
         },
@@ -216,6 +223,7 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
         //
         //    socket.onError (error) -> alert("An error occurred")
         //
+
         value: function onOpen(callback) {
           this.stateChangeCallbacks.open.push(callback);
         },
@@ -246,6 +254,7 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
       onConnOpen: {
         value: function onConnOpen() {
           var _this = this;
+
           clearInterval(this.reconnectTimer);
           if (!this.transport.skipHeartbeat) {
             this.heartbeatTimer = setInterval(function () {
@@ -263,6 +272,7 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
       onConnClose: {
         value: function onConnClose(event) {
           var _this = this;
+
           this.log("WS close:");
           this.log(event);
           clearInterval(this.reconnectTimer);
@@ -314,6 +324,7 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
       rejoinAll: {
         value: function rejoinAll() {
           var _this = this;
+
           this.channels.forEach(function (chan) {
             return _this.rejoin(chan);
           });
@@ -344,6 +355,7 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
       leave: {
         value: function leave(topic) {
           var message = arguments[1] === undefined ? {} : arguments[1];
+
           this.send({ topic: topic, event: "leave", payload: message });
           this.channels = this.channels.filter(function (c) {
             return !c.isMember(topic);
@@ -355,6 +367,7 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
       send: {
         value: function send(data) {
           var _this = this;
+
           var callback = function () {
             return _this.conn.send(root.JSON.stringify(data));
           };
@@ -391,11 +404,13 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
         value: function onConnMessage(rawMessage) {
           this.log("message received:");
           this.log(rawMessage);
+
           var _root$JSON$parse = root.JSON.parse(rawMessage.data);
 
           var topic = _root$JSON$parse.topic;
           var event = _root$JSON$parse.event;
           var payload = _root$JSON$parse.payload;
+
           this.channels.filter(function (chan) {
             return chan.isMember(topic);
           }).forEach(function (chan) {
@@ -412,7 +427,6 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
 
     return Socket;
   })();
-
 
   exports.LongPoller = (function () {
     function LongPoller(endPoint) {
@@ -469,6 +483,7 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
       poll: {
         value: function poll() {
           var _this = this;
+
           if (!(this.readyState === this.states.open || this.readyState === this.states.connecting)) {
             return;
           }
@@ -480,6 +495,7 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
               var token = _root$JSON$parse.token;
               var sig = _root$JSON$parse.sig;
               var messages = _root$JSON$parse.messages;
+
               _this.token = token;
               _this.sig = sig;
             }
@@ -514,6 +530,7 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
       send: {
         value: function send(body) {
           var _this = this;
+
           exports.Ajax.request("POST", this.endpointURL(), "application/json", body, this.onerror.bind(this, "timeout"), function (status, resp) {
             if (status !== 200) {
               _this.onerror(status);
@@ -536,13 +553,13 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
     return LongPoller;
   })();
 
-
   exports.Ajax = {
 
     states: { complete: 4 },
 
-    request: function (method, endPoint, accept, body, ontimeout, callback) {
+    request: function request(method, endPoint, accept, body, ontimeout, callback) {
       var _this = this;
+
       var req = root.XMLHttpRequest ? new root.XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
       new root.ActiveXObject("Microsoft.XMLHTTP"); // IE6, IE5
       req.open(method, endPoint, true);
