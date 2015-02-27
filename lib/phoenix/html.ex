@@ -96,6 +96,9 @@ defmodule Phoenix.HTML do
       iex> Phoenix.HTML.safe_concat({:safe, "<hello>"}, {:safe, "<world>"})
       {:safe, "<hello><world>"}
 
+      iex> Phoenix.HTML.safe_concat({:safe, "<hello>"}, {:safe, '<world>'})
+      {:safe, ["<hello>"|'<world>']}
+
   """
   @spec safe_concat(unsafe | safe, unsafe | safe) :: safe
   def safe_concat({:safe, data1}, {:safe, data2}), do: {:safe, io_concat(data1, data2)}
@@ -110,7 +113,7 @@ defmodule Phoenix.HTML do
 
   defp io_concat(d1, d2) when is_binary(d1) and is_binary(d2), do:
     d1 <> d2
-  defp io_concat(d1, d2) when is_binary(d1) and is_binary(d2), do:
+  defp io_concat(d1, d2), do:
     [d1|d2]
 
   @doc """
