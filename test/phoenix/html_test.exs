@@ -8,9 +8,9 @@ defmodule Phoenix.HTMLTest do
   alias Phoenix.HTML.Safe
 
   test "html_escape/1 entities" do
-    assert html_escape("foo") == "foo"
-    assert html_escape("<foo>") == "&lt;foo&gt;"
-    assert html_escape("\" & \'") == "&quot; &amp; &#39;"
+    assert html_escape("foo") == {:safe, "foo"}
+    assert html_escape("<foo>") == {:safe, "&lt;foo&gt;"}
+    assert html_escape("\" & \'") == {:safe, "&quot; &amp; &#39;"}
   end
 
   test "imports controller functions" do

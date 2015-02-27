@@ -8,7 +8,7 @@ defmodule MyApp.View do
   end
 
   def escaped_title(title) do
-    safe html_escape title
+    html_escape title
   end
 end
 
@@ -37,6 +37,6 @@ defmodule MyApp.Nested.UserView do
   use Phoenix.HTML
 
   def escaped_title(title) do
-    safe html_escape title
+    html_escape title
   end
 end

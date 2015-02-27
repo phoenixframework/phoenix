@@ -60,9 +60,16 @@ defmodule Phoenix.HTML.Tag do
   defp tag_attrs([]), do: ""
   defp tag_attrs(attrs) do
     for {k, v} <- attrs, into: "" do
-      " " <> dasherize(k) <> "=" <> "\"" <> html_escape(v) <> "\""
+      " " <> k <> "=" <> "\"" <> attr_escape(v) <> "\""
     end
   end
+
+  defp attr_escape({:safe, data}),
+    do: data
+  defp attr_escape(other) when is_binary(other),
+    do: Phoenix.HTML.Safe.BitString.to_iodata(other)
+  defp attr_escape(other),
+    do: Phoenix.HTML.Safe.to_iodata(other)
 
   defp nested_attrs(attr, dict, acc) do
     Enum.reduce dict, acc, fn {k,v}, acc ->
@@ -79,12 +86,16 @@ defmodule Phoenix.HTML.Tag do
 
   defp build_attrs(_tag, [], acc),
     do: acc |> Enum.sort |> tag_attrs
-  defp build_attrs(tag, [{k,v}|t], acc) when k in @tag_prefixes and is_list(v),
-    do: build_attrs(tag, t, nested_attrs(k, v, acc))
-  defp build_attrs(tag, [{k,true}|t], acc),
-    do: build_attrs(tag, t, [{k,k}|acc])
-  defp build_attrs(tag, [{k,v}|t], acc),
-    do: build_attrs(tag, t, [{k,v}|acc])
+  defp build_attrs(tag, [{k, v}|t], acc) when k in @tag_prefixes and is_list(v) do
+    build_attrs(tag, t, nested_attrs(dasherize(k), v, acc))
+  end
+  defp build_attrs(tag, [{k, true}|t], acc) do
+    k = dasherize(k)
+    build_attrs(tag, t, [{k, k}|acc])
+  end
+  defp build_attrs(tag, [{k, v}|t], acc) do
+    build_attrs(tag, t, [{dasherize(k), v}|acc])
+  end
 
   defp dasherize(value) when is_atom(value),   do: dasherize(Atom.to_string(value))
   defp dasherize(value) when is_binary(value), do: String.replace(value, "_", "-")

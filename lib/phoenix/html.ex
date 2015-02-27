@@ -41,18 +41,6 @@ defmodule Phoenix.HTML do
 
       <p>&lt;hello&gt;</p>
 
-  This is done internally by using a combination of
-  `html_escape/1` and `safe/1`. Use `html_escape/1`
-  to escape any term that implements the `Phoenix.HTML.Safe`
-  protocol, modify its contents, and then use `safe` to
-  finally  mark the contents as safe (if you guarantee so):
-
-      def my_helper(input) do
-        data = html_escape(input)
-        ... change data ...
-        safe data
-      end
-
   """
 
   @doc false
@@ -117,22 +105,22 @@ defmodule Phoenix.HTML do
   Escapes the HTML entities in the given term, returning iodata.
 
       iex> Phoenix.HTML.html_escape("<hello>")
-      "&lt;hello&gt;"
+      {:safe, "&lt;hello&gt;"}
 
       iex> Phoenix.HTML.html_escape('<hello>')
-      ["&lt;", 104, 101, 108, 108, 111, "&gt;"]
+      {:safe, ["&lt;", 104, 101, 108, 108, 111, "&gt;"]}
 
       iex> Phoenix.HTML.html_escape(1)
-      "1"
+      {:safe, "1"}
 
       iex> Phoenix.HTML.html_escape({:safe, "<hello>"})
-      "<hello>"
+      {:safe, "<hello>"}
   """
   @spec html_escape(Phoenix.HTML.Safe.t) :: iodata
-  def html_escape({:safe, data}),
-    do: data
-  def html_escape(other) when is_binary(other), do:
-    Phoenix.HTML.Safe.BitString.to_iodata(other)
+  def html_escape({:safe, _} = safe),
+    do: safe
+  def html_escape(other) when is_binary(other),
+    do: {:safe, Phoenix.HTML.Safe.BitString.to_iodata(other)}
   def html_escape(other),
-    do: Phoenix.HTML.Safe.to_iodata(other)
+    do: {:safe, Phoenix.HTML.Safe.to_iodata(other)}
 end
