@@ -70,6 +70,18 @@ defmodule Phoenix.HTML do
   def safe(value) when is_binary(value) or is_list(value), do: {:safe, value}
 
   @doc """
+  Concatenates data in the given list safe.
+
+      iex> Phoenix.HTML.safe_concat(["<hello>", "safe", "<world>"])
+      {:safe, "&lt;hello&gt;safe&lt;world&gt;"}
+
+  """
+  @spec safe_concat([unsafe | safe]) :: safe
+  def safe_concat(list) when is_list(list) do
+    Enum.reduce(list, {:safe, ""}, &safe_concat/2)
+  end
+
+  @doc """
   Concatenates data safely.
 
       iex> Phoenix.HTML.safe_concat("<hello>", "<world>")
@@ -116,7 +128,7 @@ defmodule Phoenix.HTML do
       iex> Phoenix.HTML.html_escape({:safe, "<hello>"})
       {:safe, "<hello>"}
   """
-  @spec html_escape(Phoenix.HTML.Safe.t) :: iodata
+  @spec html_escape(Phoenix.HTML.Safe.t) :: safe
   def html_escape({:safe, _} = safe),
     do: safe
   def html_escape(other) when is_binary(other),
