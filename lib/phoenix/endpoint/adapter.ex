@@ -13,8 +13,7 @@ defmodule Phoenix.Endpoint.Adapter do
 
     pubsub_children = case pub_conf[:adapter] do
       nil     -> []
-      adapter ->
-        [supervisor(adapter, [mod.__pubsub_server__(), pub_conf[:options] || []])]
+      adapter -> [supervisor(adapter, [mod.__pubsub_server__(), pub_conf])]
     end
 
     children = pubsub_children ++ [

@@ -105,16 +105,16 @@ defmodule Phoenix.Endpoint do
 
     * `:pubsub` - configuration for this Endpoint's pubsub adapter.
       Configuration either requires a `:name` of the registered pubsub server
-      or a `:name`, `:adapter`, and `:options` which starts the adapter in
-      the endpoint's supervision tree. If no name is provided, the name is
-      inflected from the endpoint module. Defaults to:
+      or a `:name`, `:adapter`, and options which starts the adapter in
+      the endpoint's supervision tree. If no name is provided, the name
+      is inflected from the endpoint module. Defaults to:
 
           [adapter: Phoenix.PubSub.PG2]
 
       with advanced adapter configuration:
 
           [name: :my_pubsub, adapter: Phoenix.PubSub.Redis,
-                             options: [host: "192.168.100.1"]]
+           host: "192.168.100.1"]
 
   ## Endpoint API
 
