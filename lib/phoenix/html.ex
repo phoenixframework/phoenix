@@ -78,7 +78,7 @@ defmodule Phoenix.HTML do
   """
   @spec safe_concat([unsafe | safe]) :: safe
   def safe_concat(list) when is_list(list) do
-    Enum.reduce(list, {:safe, ""}, &safe_concat/2)
+    Enum.reduce(list, {:safe, ""}, &safe_concat(&2, &1))
   end
 
   @doc """

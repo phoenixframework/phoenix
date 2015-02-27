@@ -47,16 +47,6 @@ defmodule Phoenix.HTML.Tag do
     |> safe_concat({:safe, "</#{name}>"})
   end
 
-  @doc ~S"""
-  Creates an HTML input field with the given type and options.
-
-      iex> input_tag(:text, name: "name")
-      {:safe, "<input name=\"name\" type=\"text\">"}
-  """
-  def input_tag(type, opts \\ []) when is_atom(type) do
-    tag(:input, Keyword.put_new(opts, :type, type))
-  end
-
   defp tag_attrs([]), do: ""
   defp tag_attrs(attrs) do
     for {k, v} <- attrs, into: "" do

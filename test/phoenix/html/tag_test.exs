@@ -66,13 +66,4 @@ defmodule Phoenix.HTML.TagTest do
     assert content ==
            {:safe, ~s(<form action="/users" data-remote="true"><input name="user[name]"></form>)}
   end
-
-  test "input_tag" do
-    assert input_tag(:text, name: "name") ==
-      {:safe, ~s(<input name="name" type="text">)}
-    assert input_tag(:password, name: "password") ==
-      {:safe, ~s(<input name="password" type="password">)}
-    assert input_tag(:text, name: "username", required: true) ==
-      {:safe, ~s(<input name="username" required="required" type="text">)}
-  end
 end
