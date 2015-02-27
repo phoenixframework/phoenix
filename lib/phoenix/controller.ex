@@ -120,6 +120,21 @@ defmodule Phoenix.Controller do
   @doc """
   Sends JSON response.
 
+  It uses a already encoded json string.
+
+  ## Examples
+
+      iex> json conn, "{\"id\": 123}"
+
+  """
+  @spec json(Plug.Conn.t, String.Chars.t) :: Plug.Conn.t
+  def json(conn, data) when is_binary(data) do
+    send_resp(conn, conn.status || 200, "application/json", to_string(data))
+  end
+
+  @doc """
+  Sends JSON response.
+
   It uses the configured `:format_encoders` under the `:phoenix`
   application for `:json` to pick up the encoder module.
 

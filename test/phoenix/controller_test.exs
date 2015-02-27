@@ -80,6 +80,20 @@ defmodule Phoenix.ControllerTest do
     assert view_module(conn) == World
   end
 
+  test "json/2 with json string" do
+    conn = json(conn(:get, "/"), "{\"foo\":\"bar\"}")
+    assert conn.resp_body == "{\"foo\":\"bar\"}"
+    assert get_resp_content_type(conn) == "application/json"
+    refute conn.halted
+  end
+
+  test "json/2 with json string, allows status injection on connection" do
+    conn = conn(:get, "/") |> put_status(400)
+    conn = json(conn, "{\"foo\":\"bar\"}")
+    assert conn.resp_body == "{\"foo\":\"bar\"}"
+    assert conn.status == 400
+  end
+
   test "json/2" do
     conn = json(conn(:get, "/"), %{foo: :bar})
     assert conn.resp_body == "{\"foo\":\"bar\"}"
