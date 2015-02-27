@@ -1,7 +1,8 @@
 defmodule Phoenix.HTML.Controller do
   @moduledoc """
-  Imports the following functions from `Phoenix.Controller`
-  into your views:
+  Imports functions from `Phoenix.Controller` when used.
+
+  It imports:
 
     * `Phoenix.Controller.get_flash/2`
     * `Phoenix.Controller.action_name/1`

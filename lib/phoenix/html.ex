@@ -9,6 +9,8 @@ defmodule Phoenix.HTML do
     * `Phoenix.HTML.Controller` - imports controllers functions
       commonly used in views;
 
+    * `Phoenix.HTML.Tag` - imports functions for generating HTML tags;
+
   ## HTML Safe
 
   One of the main responsibilities of this module is to
@@ -56,9 +58,10 @@ defmodule Phoenix.HTML do
   @doc false
   defmacro __using__(_) do
     quote do
-      import Phoenix.HTML
-
       use Phoenix.HTML.Controller
+
+      import Phoenix.HTML
+      import Phoenix.HTML.Tag
     end
   end
 
