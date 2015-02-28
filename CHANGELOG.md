@@ -1,10 +1,17 @@
 # Changelog
 
-## v0.9.1-dev
+## v0.10.0-dev
 
 * Enhancements
-  [Endpiont] Runtime evaluation of `:port` configuration is now supported. When given a tuple like `{:system, "PORT"}`, the port will be referenced from `System.get_env("PORT")` at runtime as a workaround for releases where environment specific information is loaded only at compile-time.
+  * [CLI] Make `phoenix.new` in sync with `mix new` by making the project diretory optional
+  * [Controller] Add `scrub_params/2` which makes it easy to remove and prune blank string values from parameters (usually sent by forms)
+  * [Endpoint] Runtime evaluation of `:port` configuration is now supported. When given a tuple like `{:system, "PORT"}`, the port will be referenced from `System.get_env("PORT")` at runtime as a workaround for releases where environment specific information is loaded only at compile-time
+  * [HTML] Provide `tag/2`, `content_tag/2` and `content_tag/3` helpers to make tag generation easier and safer
+  * [Router] Speed up router compilation
 
+* Backwards incompatible changes
+  * [PubSub] Remove the option `:options` from `:pubsub`. Just define the options alongside the pubsub configuration
+  * [Plug] Update to Plug 0.10.0 which moves CSRF tokens from cookies back to sessions. To avoid future bumps on the road, a `get_csrf_token/0` function has been added to controllers
 
 ## v0.9.0 (2015-02-12)
 
