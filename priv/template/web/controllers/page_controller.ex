@@ -1,5 +1,5 @@
 defmodule <%= application_module %>.PageController do
-  use Phoenix.Controller
+  use <%= application_module %>.Web, :controller
 
   plug :action
 

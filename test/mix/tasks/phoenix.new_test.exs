@@ -93,7 +93,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
                   ~r/defmodule PhotoBlog.PageView/
 
       assert_file "photo_blog/web/router.ex", ~r/defmodule PhotoBlog.Router/
-      assert_file "photo_blog/web/view.ex", ~r/defmodule PhotoBlog.View/
+      assert_file "photo_blog/web/web.ex", ~r/defmodule PhotoBlog.Web/
     end
   end
 

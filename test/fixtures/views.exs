@@ -1,11 +1,7 @@
+import Phoenix.HTML
+
 defmodule MyApp.View do
   use Phoenix.View, root: "test/fixtures/templates"
-
-  using do
-    quote do
-      use Phoenix.HTML
-    end
-  end
 
   def escaped_title(title) do
     html_escape title
@@ -13,7 +9,7 @@ defmodule MyApp.View do
 end
 
 defmodule MyApp.LayoutView do
-  use MyApp.View
+  use Phoenix.View, root: "test/fixtures/templates"
 
   def default_title do
     "MyApp"
@@ -21,7 +17,11 @@ defmodule MyApp.LayoutView do
 end
 
 defmodule MyApp.UserView do
-  use MyApp.View
+  use Phoenix.View, root: "test/fixtures/templates"
+
+  def escaped_title(title) do
+    html_escape title
+  end
 
   def render("edit.html", %{} = assigns) do
     "EDIT#{assigns[:layout]} - #{assigns[:title]}"
@@ -29,12 +29,15 @@ defmodule MyApp.UserView do
 end
 
 defmodule MyApp.Templates.UserView do
-  use MyApp.View, root: "test/fixtures"
+  use Phoenix.View, root: "test/fixtures"
+
+  def escaped_title(title) do
+    html_escape title
+  end
 end
 
 defmodule MyApp.Nested.UserView do
   use Phoenix.View, root: "test/fixtures/templates", namespace: MyApp.Nested
-  use Phoenix.HTML
 
   def escaped_title(title) do
     html_escape title

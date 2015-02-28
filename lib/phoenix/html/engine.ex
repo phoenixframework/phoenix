@@ -27,11 +27,12 @@ defmodule Phoenix.HTML.Engine do
 
   @doc false
   def handle_expr(buffer, "=", expr) do
+    line   = line_from_expr(expr)
     expr   = expr(expr)
     buffer = unwrap(buffer)
     {:safe, quote do
       buff = unquote(buffer)
-      [buff|unquote(to_safe(expr))]
+      [buff|unquote(to_safe(expr, line))]
      end}
   end
 
@@ -47,20 +48,23 @@ defmodule Phoenix.HTML.Engine do
     end
   end
 
+  defp line_from_expr({_, meta, _}) when is_list(meta), do: Keyword.get(meta, :line)
+  defp line_from_expr(_), do: nil
+
   # We can do the work at compile time
-  defp to_safe(literal) when is_binary(literal) or is_atom(literal) or is_number(literal) do
+  defp to_safe(literal, _line) when is_binary(literal) or is_atom(literal) or is_number(literal) do
     HTML.Safe.to_iodata(literal)
   end
 
   # We can do the work at runtime
-  defp to_safe(literal) when is_list(literal) do
-    quote do: HTML.Safe.to_iodata(unquote(literal))
+  defp to_safe(literal, line) when is_list(literal) do
+    quote line: line, do: HTML.Safe.to_iodata(unquote(literal))
   end
 
   # We need to check at runtime and we do so by
   # optimizing common cases.
-  defp to_safe(expr) do
-    quote do
+  defp to_safe(expr, line) do
+    quote line: line do
       case unquote(expr) do
         {:safe, data} -> data
         bin when is_binary(bin) -> HTML.Safe.BitString.to_iodata(bin)

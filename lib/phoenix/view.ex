@@ -11,17 +11,14 @@ defmodule Phoenix.View do
 
   ## Examples
 
-  Phoenix defines the main view module at /web/view.ex:
+  Phoenix defines the view template at `web/web.ex`:
 
-      defmodule YourApp.View do
-        use Phoenix.View, root: "web/templates"
-
-        # The quoted expression returned by this block is applied
-        # to this module and all other views that use this module.
-        using do
+      defmodule YourApp.Web do
+        def view do
           quote do
+            use Phoenix.View, root: "web/templates"
+
             # Import common functionality
-            import YourApp.I18n
             import YourApp.Router.Helpers
 
             # Use Phoenix.HTML to import all HTML functions (forms, tags, etc)
@@ -29,13 +26,13 @@ defmodule Phoenix.View do
           end
         end
 
-        # Functions defined here are available to all other views/templates
+        # ...
       end
 
-  We can use the main view module to define other view modules:
+  We can use the definition above to define any view in your application:
 
       defmodule YourApp.UserView do
-        use YourApp.View
+        use YourApp.Web, :view
       end
 
   Because we have defined the template root to be "web/template", `Phoenix.View`
@@ -145,33 +142,10 @@ defmodule Phoenix.View do
     end
   end
 
-  @doc """
-  Implements the `__using__/1` callback for this view.
-
-  This macro expects a block that will be executed every time
-  the current module is used, including the current module itself.
-  The block must return a quoted expression that will then be
-  injected on the using module. For example, the following code:
-
-      defmodule MyApp.View do
-        use Phoenix.View, root: "web/templates"
-
-        using do
-          quote do
-            IO.inspect __MODULE__
-          end
-        end
-      end
-
-      defmodule MyApp.UserView do
-        use MyApp.View
-      end
-
-  will print both `MyApp.View` and `MyApp.UserView` names. By using
-  `MyApp.View`, `MyApp.UserView` will automatically be made a view
-  too.
-  """
+  @doc false
   defmacro using(do: block) do
+    IO.puts :stderr, "warning: using do...end in views is deprecated, please use the new " <>
+                     "YourApp.Web definitions\n#{Exception.format_stacktrace(Macro.Env.stacktrace(__CALLER__))}"
     evaled = Code.eval_quoted(block, [], __CALLER__)
     {evaled, __usable__(block)}
   end
