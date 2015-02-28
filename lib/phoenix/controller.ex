@@ -636,10 +636,24 @@ defmodule Phoenix.Controller do
   # But before we check for */* because if one exists and we serve html,
   # we unfortunately need to assume it is a browser sending us a request.
   defp handle_header_accept(conn, [header|_], accepted) do
-    if header =~ "*/*" and "html" in accepted do
+    types = String.split(header, ",")
+    if "html" in accepted and should_fall_back_to_html(types) do
       accept(conn, "html")
     else
-      parse_header_accept(conn, String.split(header, ","), [], accepted)
+      parse_header_accept(conn, types, [], accepted)
+    end
+  end
+
+  # We only fall back to html if */* has a q value of 1 (or is omitted,
+  # which means the same as being 1).  Otherwise, we would mishandle
+  # headers such as ones jquery sends, which include '*/*; q=0.01'.
+  defp should_fall_back_to_html(types) do
+    all_type = Enum.find(types, fn h -> h =~ "*/*" end)
+    case Plug.Conn.Utils.media_type(all_type) do
+      {:ok, _, _, args} ->
+        parse_q(args) === 1.0
+      :error ->
+        false
     end
   end
 
