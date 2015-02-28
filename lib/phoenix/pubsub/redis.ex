@@ -8,7 +8,8 @@ defmodule Phoenix.PubSub.Redis do
 
       config :my_app, MyApp.Endpiont,
         ...
-        pubsub: [adapter: Phoenix.PubSub.Redis,
+        pubsub: [name: MyApp.PubSub,
+                 adapter: Phoenix.PubSub.Redis,
                  host: "192.168.1.100"]
 
 
@@ -28,7 +29,7 @@ defmodule Phoenix.PubSub.Redis do
          ...]
       end
 
-
+  ## Options
 
     * `name` - The required name to register the PubSub processes, ie: `MyApp.PubSub`
     * `host` - The redis-server host IP, defaults `"127.0.0.1"`

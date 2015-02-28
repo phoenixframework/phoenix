@@ -10,8 +10,9 @@
   * [Router] Speed up router compilation
 
 * Backwards incompatible changes
-  * [PubSub] Remove the option `:options` from `:pubsub`. Just define the options alongside the pubsub configuration
   * [Plug] Update to Plug 0.10.0 which moves CSRF tokens from cookies back to sessions. To avoid future bumps on the road, a `get_csrf_token/0` function has been added to controllers
+  * [PubSub] Remove the option `:options` from `:pubsub`. Just define the options alongside the pubsub configuration
+  * [Pubsub] Require the `:name` option when configuring a pubsub adapter
 
 ## v0.9.0 (2015-02-12)
 

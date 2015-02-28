@@ -14,8 +14,8 @@ config :<%= application_name %>, <%= application_module %>.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "<%= secret_key_base %>",
   debug_errors: false,
-  pubsub: [adapter: Phoenix.PubSub.PG2]
-
+  pubsub: [name: <%= application_module %>.PubSub,
+           adapter: Phoenix.PubSub.PG2]
 
 # Configures Elixir's Logger
 config :logger, :console,

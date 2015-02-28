@@ -176,8 +176,11 @@ defmodule Phoenix.Endpoint do
 
   defp pubsub() do
     quote do
-      @pubsub_server get_in(@config, [:pubsub, :name]) ||
-        Phoenix.Naming.base_concat(__MODULE__, "PubSub")
+      @pubsub_server config[:pubsub][:name] ||
+        (if config[:pubsub][:adapter] do
+          raise ArgumentError, "an adapter was given to :pubsub but no :name was defined, " <>
+                               "please pass the :name option accordingly"
+        end)
 
       def __pubsub_server__, do: @pubsub_server
 

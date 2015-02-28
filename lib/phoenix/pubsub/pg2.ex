@@ -8,11 +8,11 @@ defmodule Phoenix.PubSub.PG2 do
 
       config :my_app, MyApp.Endpiont,
         ...
-        pubsub: [adapter: Phoenix.PubSub.PG2]
+        pubsub: [name: MyApp.PubSub, adapter: Phoenix.PubSub.PG2]
 
+  ## Options
 
-
-    * `name` - The required name to register the PubSub processes, ie: `MyApp.PubSub`
+    * `:name` - The required name to register the PubSub processes, ie: `MyApp.PubSub`
 
   """
 
