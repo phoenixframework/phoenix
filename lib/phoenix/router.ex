@@ -31,6 +31,11 @@ defmodule Phoenix.Router do
   The `get/3` macro above accepts a request of format "/pages/VALUE" and
   dispatches it to the show action in the `PageController`.
 
+  Routes can also match glob-like patterns, routing any path with a common
+  base to the same controller. For example:
+
+      get "/dynamic*anything", DynamicController, :show
+
   Phoenix's router is extremely efficient, as it relies on Elixir
   pattern matching for matching routes and serving requests.
 
