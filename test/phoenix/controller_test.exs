@@ -207,6 +207,9 @@ defmodule Phoenix.ControllerTest do
     conn = accepts with_accept("application/json, text/html; q=0.7"), ~w(html json)
     assert conn.params["format"] == "json"
 
+    conn = accepts with_accept("application/json, */*; q=0.7"), ~w(html json)
+    assert conn.params["format"] == "json"
+
     conn = accepts with_accept("application/json; q=1.0, text/html; q=0.7"), ~w(html json)
     assert conn.params["format"] == "json"
 
