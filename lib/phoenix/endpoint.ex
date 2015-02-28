@@ -8,19 +8,19 @@ defmodule Phoenix.Endpoint do
 
   Overall, an endpoint has three responsibilities:
 
-    * It provides a wrapper for starting and stopping the
-      endpoint as part of a supervision tree.
+    * to provide a wrapper for starting and stopping the
+      endpoint as part of a supervision tree;
 
-    * To define an initial plug pipeline where requests
-      are sent to.
+    * to define an initial plug pipeline where requests
+      are sent through;
 
-    * To host web specific configuration for your
+    * to host web specific configuration for your
       application.
 
   ## Endpoints
 
   An endpoint is simply a module defined with the help
-  of Phoenix.Endpoint. If you have used the phoenix.new
+  of `Phoenix.Endpoint`. If you have used the `mix phoenix.new`
   generator, an endpoint was automatically generated as
   part of your application:
 
@@ -52,19 +52,19 @@ defmodule Phoenix.Endpoint do
   and changing it at runtime has no effect. The compile-time
   configuration is mostly related to error handling.
 
-  On the other hand, runtime configuration is accessed during or
-  after your application is started and can be read through the
+  Runtime configuration, instead, is accessed during or
+  after your application is started and can be read and written through the
   `config/2` function:
 
       YourApp.Endpoint.config(:port)
       YourApp.Endpoint.config(:some_config, :default_value)
 
-  ### Compile-time
+  ### Compile-time configuration
 
-    * `:debug_errors` - when true, uses `Plug.Debugger` functionality for
-      debugging failures in the application. Recomended to be set to true
+    * `:debug_errors` - when `true`, uses `Plug.Debugger` functionality for
+      debugging failures in the application. Recommended to be set to `true`
       only in development as it allows listing of the application source
-      code during debugging. Defaults to false.
+      code during debugging. Defaults to `false`.
 
     * `:render_errors` - a module representing a view to render templates
       whenever there is a failure in the application. For example, if the
@@ -72,38 +72,40 @@ defmodule Phoenix.Endpoint do
       `render("500.html", assigns)` will be called in the view given to
       `:render_errors`. The default view is `MyApp.ErrorView`.
 
-  ### Runtime
+  ### Runtime configuration
 
-    * `:cache_static_lookup` - when true, static assets lookup in the
-      filesystem via the `static_path` function are cached. Defaults to true.
+    * `:cache_static_lookup` - when `true`, static assets lookup in the
+      filesystem via the `static_path` function are cached. Defaults to `true`.
 
-    * `:http` - the configuration for the http server. Currently uses
-      cowboy and accepts all options as defined by `Plug.Adapters.Cowboy`.
-      Defaults to false.
+    * `:http` - the configuration for the HTTP server. Currently uses
+      cowboy and accepts all options as defined by
+      [`Plug.Adapters.Cowboy`](http://hexdocs.pm/plug/Plug.Adapters.Cowboy.html).
+      Defaults to `false`.
 
-    * `:https` - the configuration for the https server. Currently uses
-      cowboy and accepts all options as defined by `Plug.Adapters.Cowboy`.
-      Defaults to false.
+    * `:https` - the configuration for the HTTPS server. Currently uses
+      cowboy and accepts all options as defined by
+      [`Plug.Adapters.Cowboy`](http://hexdocs.pm/plug/Plug.Adapters.Cowboy.html).
+      Defaults to `false`.
 
     * `:secret_key_base` - a secret key used as a base to generate secrets
-      to encode cookies, session and friends. Defaults to nil as it must
+      to encode cookies, session and friends. Defaults to `nil` as it must
       be set per application.
 
-    * `:server` - when true, starts the web server when the endpoint
-      supervision tree starts. Defaults to false. The `mix phoenix.server`
-      task automatically sets this to true.
+    * `:server` - when `true`, starts the web server when the endpoint
+      supervision tree starts. Defaults to `false`. The `mix phoenix.server`
+      task automatically sets this to `true`.
 
     * `:url` - configuration for generating URLs throughout the app.
-      Accepts the `:host`, `:scheme` and `:port`. Defaults to:
+      Accepts the `:host`, `:scheme` and `:port` options. Defaults to:
 
           [host: "localhost"]
 
-      The `:port` requires either an integer, string, or `{:system, "ENV_VAR"}`.
+      The `:port` options requires either an integer, string, or `{:system, "ENV_VAR"}`.
       When given a tuple like `{:system, "PORT"}`, the port will be referenced
       from `System.get_env("PORT")` at runtime as a workaround for releases where
       environment specific information is loaded only at compile-time.
 
-    * `:pubsub` - configuration for this Endpoint's pubsub adapter.
+    * `:pubsub` - configuration for this endpoint's pubsub adapter.
       Configuration either requires a `:name` of the registered pubsub server
       or a `:name`, `:adapter`, and options which starts the adapter in
       the endpoint's supervision tree. If no name is provided, the name
@@ -119,8 +121,8 @@ defmodule Phoenix.Endpoint do
   ## Endpoint API
 
   In the previous section, we have used the `config/2` function which is
-  automatically generated in your Endpoint. Here is a summary of all
-  functions defined in your endpoint.
+  automatically generated in your endpoint. Here is a summary of all the
+  functions that are automatically defined in your endpoint.
 
   #### Paths and URLs
 
@@ -131,11 +133,11 @@ defmodule Phoenix.Endpoint do
 
     * `broadcast_from(from, topic, event, msg)` - proxy to `Phoenix.Channel.broadcast_from/4`
       using this endpoint's configured pubsub server
-    * `broadcast_from!(from, topic, event, msg)` - proxy to `Phoenix.Channel.broadcast_from!/4`
+    * `broadcast_from!(from, topic, event, msg)` - proxies to `Phoenix.Channel.broadcast_from!/4`
       using this endpoint's configured pubsub server
-    * `broadcast(topic, event, msg)` - proxy to `Phoenix.Channel.broadcast/3`
+    * `broadcast(topic, event, msg)` - proxies to `Phoenix.Channel.broadcast/3`
       using this endpoint's configured pubsub server
-    * `broadcast!(topic, event, msg)` - proxy to `Phoenix.Channel.broadcast!/3`
+    * `broadcast!(topic, event, msg)` - proxies to `Phoenix.Channel.broadcast!/3`
       using this endpoint's configured pubsub server
 
   #### Endpoint configuration
@@ -149,8 +151,8 @@ defmodule Phoenix.Endpoint do
   #### Plug API
 
     * `init(opts)` - invoked when starting the endpoint server
-    * `call(conn, opts)` - invoked on every request and it simply dispatches to
-      the defined Plug pipeline
+    * `call(conn, opts)` - invoked on every request (simply dispatches to
+      the defined plug pipeline)
 
   """
 
