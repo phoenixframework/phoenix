@@ -64,6 +64,47 @@ defmodule Phoenix.HTML.TagTest do
     end
 
     assert content ==
-           {:safe, ~s(<form action="/users" data-remote="true"><input name="user[name]"></form>)}
+           {:safe, ~s(<form action="/users" data-remote="true">) <>
+                   ~s(<input name="user[name]"></form>)}
+  end
+
+  test "form_tag for get" do
+    assert form_tag() ==
+           {:safe, ~s(<form accept-charset="UTF-8">) <>
+                   ~s(<input name="_utf8" type="hidden" value="✓">)}
+
+    assert form_tag(method: :get) ==
+           {:safe, ~s(<form accept-charset="UTF-8" method="get">) <>
+                   ~s(<input name="_utf8" type="hidden" value="✓">)}
+
+    assert form_tag(method: :get, action: "/") ==
+           {:safe, ~s(<form accept-charset="UTF-8" action="/" method="get">) <>
+                   ~s(<input name="_utf8" type="hidden" value="✓">)}
+
+    assert form_tag(method: :get, action: "/", enforce_utf8: false) ==
+           {:safe, ~s(<form action="/" method="get">)}
+  end
+
+  test "form_tag for post" do
+    csrf_token = Phoenix.Controller.get_csrf_token()
+
+    assert form_tag(method: :post) ==
+           {:safe, ~s(<form accept-charset="UTF-8" method="post">) <>
+                   ~s(<input name="_csrf_token" type="hidden" value="#{csrf_token}">) <>
+                   ~s(<input name="_utf8" type="hidden" value="✓">)}
+
+    assert form_tag(method: :post, csrf_token: false, multipart: true) ==
+           {:safe, ~s(<form accept-charset="UTF-8" enctype="multipart/form-data" method="post">) <>
+                   ~s(<input name="_utf8" type="hidden" value="✓">)}
+  end
+
+  test "form_tag for other method" do
+    csrf_token = Phoenix.Controller.get_csrf_token()
+
+    assert form_tag(method: :put) ==
+           {:safe, ~s(<form accept-charset="UTF-8" method="post">) <>
+                   ~s(<input name="_method" type="hidden" value="put">) <>
+                   ~s(<input name="_csrf_token" type="hidden" value="#{csrf_token}">) <>
+                   ~s(<input name="_utf8" type="hidden" value="✓">)}
   end
 end

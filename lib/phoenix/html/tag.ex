@@ -4,6 +4,7 @@ defmodule Phoenix.HTML.Tag do
   """
 
   import Phoenix.HTML
+  import Phoenix.Controller, only: [get_csrf_token: 0]
 
   @tag_prefixes [:aria, :data]
 
@@ -89,4 +90,76 @@ defmodule Phoenix.HTML.Tag do
 
   defp dasherize(value) when is_atom(value),   do: dasherize(Atom.to_string(value))
   defp dasherize(value) when is_binary(value), do: String.replace(value, "_", "-")
+
+  @doc ~S"""
+  Generates a form tag.
+
+  This function generates the `<form>` tag without its
+  closing part.
+
+  ## Options
+
+    * `:method` - the HTTP method. If the method is not "get" nor "post",
+      an input tag with name `_method` is generated along-side the form tag
+
+    * `:multipart` - when true, sets enctype to "multipart/form-data".
+      Required when uploading files
+
+    * `:csrf_token` - for "post" requests, the form tag will automatically
+      include an input tag with name `_csrf_token`. When set to false, this
+      is disabled
+
+    * `:enforce_utf8` - when false, does not enforce utf8. Read below
+      for more information
+
+  All other options are passed to the underlying HTML tag.
+
+  ## Enforce UTF-8
+
+  Alhought forms provide the `accept-charset` attribute, which we set
+  to UTF-8, Internet Explorer 5 up to 8 may ignore the value of this
+  attribute if the user chooses their browser to do so. This ends up
+  triggering the browser to send data in a format that is not
+  understandable by the server.
+
+  For this reason, Phoenix automatically includes a "_utf8=✓" parameter
+  in your forms, to force those browsers to send the data in the proper
+  encoding. This technique has been seen in the Rails web framework and
+  reproduced here.
+  """
+  def form_tag(opts \\ []) do
+    {:safe, method} = html_escape(Keyword.get(opts, :method, "get"))
+
+    {opts, extra} =
+      case method do
+        "get"  -> {opts, ""}
+        "post" -> csrf_token_tag(opts, "")
+        _      -> csrf_token_tag(Keyword.put(opts, :method, "post"),
+                                 ~s'<input name="_method" type="hidden" value="#{method}">')
+      end
+
+    {opts, extra} =
+      case Keyword.pop(opts, :enforce_utf8, true) do
+        {false, opts} -> {opts, extra}
+        {true, opts}  -> {Keyword.put_new(opts, :accept_charset, "UTF-8"),
+                          extra <> ~s'<input name="_utf8" type="hidden" value="✓">'}
+      end
+
+    opts =
+      case Keyword.pop(opts, :multipart, false) do
+        {false, opts} -> opts
+        {true, opts}  -> Keyword.put(opts, :enctype, "multipart/form-data")
+      end
+
+    safe_concat tag(:form, opts), safe(extra)
+  end
+
+  defp csrf_token_tag(opts, extra) do
+    case Keyword.pop(opts, :csrf_token, true) do
+      {true, opts} ->
+        {opts, extra <> ~s'<input name="_csrf_token" type="hidden" value="#{get_csrf_token}">'}
+      {false, opts} ->
+        {opts, extra}
+    end
+  end
 end
