@@ -13,10 +13,10 @@ defmodule Phoenix.PubSub.Redis do
                  host: "192.168.1.100"]
 
 
-  next, add `:eredis`, and `:poolboy` to your deps:
+  next, add `:redo`, and `:poolboy` to your deps:
 
       defp deps do
-        [{:eredis, github: "wooga/eredis"},
+        [{:redo, github: "heroku/redo"},
          {:poolboy, "~> 1.4.2"},
         ...]
       end
@@ -39,7 +39,7 @@ defmodule Phoenix.PubSub.Redis do
   """
 
   @pool_size 5
-  @defaults [host: "127.0.0.1", port: 6379, password: ""]
+  @defaults [host: "127.0.0.1", port: 6379]
 
 
   def start_link(name, opts) do
@@ -50,8 +50,10 @@ defmodule Phoenix.PubSub.Redis do
   @doc false
   def init([server_name, opts]) do
     opts = Keyword.merge(@defaults, opts)
-    opts = Keyword.merge(opts, host: String.to_char_list(to_string(opts[:host])),
-                               password: String.to_char_list(to_string(opts[:password])))
+    opts = Keyword.merge(opts, host: String.to_char_list(opts[:host]))
+    if pass = opts[:password] do
+      opts = Keyword.put(opts, :pass, String.to_char_list(pass))
+    end
 
     pool_name   = Module.concat(server_name, Pool)
     local_name  = Module.concat(server_name, Local)

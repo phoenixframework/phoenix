@@ -9,4 +9,5 @@
   "poison": {:hex, :poison, "1.3.0"},
   "poolboy": {:hex, :poolboy, "1.4.2"},
   "ranch": {:hex, :ranch, "1.0.0"},
+  "redo": {:git, "git://github.com/heroku/redo.git", "b25e7bd3b197564192069d609d1e8e02183b71a6", []},
   "websocket_client": {:git, "git://github.com/jeremyong/websocket_client.git", "2b8d9805306d36f22330f432ae6472f1f2625c30", []}}

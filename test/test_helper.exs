@@ -23,7 +23,7 @@ end
 {:ok, _pid} = Phoenix.PubSub.PG2.start_link(:phx_pub, [])
 Process.flag(:trap_exit, true)
 
-options = case :eredis.start_link do
+options = case :redo.start_link(:undefined) do
   {:ok, _} -> []
          _ -> [exclude: [:redis]]
 end
