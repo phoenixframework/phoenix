@@ -302,6 +302,3 @@ export var Ajax = {
     req.send(body)
   }
 }
-
-// export for browser hack
-if(typeof(window) === "object"){ window.Phoenix = exports }

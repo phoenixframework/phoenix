@@ -90,29 +90,11 @@
   globals.require.list = list;
   globals.require.brunch = true;
 })();
-require.register("web/static/js/app", function(exports, require, module) {
-"use strict";
+require.define({phoenix: function(exports, require, module){ "use strict";
 
-var Socket = require("./phoenix").Socket;
+var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
 
-// let socket = new Socket("/ws")
-// socket.join("topic:subtopic", {}, chan => {
-// })
-
-console.log("Welcome to phoenix!");});
-
-;require.register("web/static/js/phoenix", function(exports, require, module) {
-"use strict";
-
-var _prototypeProperties = function _prototypeProperties(child, staticProps, instanceProps) {
-  if (staticProps) Object.defineProperties(child, staticProps);if (instanceProps) Object.defineProperties(child.prototype, instanceProps);
-};
-
-var _classCallCheck = function _classCallCheck(instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
-  }
-};
+var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
 var SOCKET_STATES = { connecting: 0, open: 1, closing: 2, closed: 3 };
 
@@ -181,6 +163,7 @@ var Channel = exports.Channel = (function () {
     leave: {
       value: function leave() {
         var message = arguments[0] === undefined ? {} : arguments[0];
+
         this.socket.leave(this.topic, message);
         this.reset();
       },
@@ -191,7 +174,9 @@ var Channel = exports.Channel = (function () {
 
   return Channel;
 })();
+
 var Socket = exports.Socket = (function () {
+
   // Initializes the Socket
   //
   // endPoint - The string WebSocket endpoint, ie, "ws://example.com/ws",
@@ -204,8 +189,10 @@ var Socket = exports.Socket = (function () {
   //   logger - The optional function for specialized logging, ie:
   //            `logger: (msg) -> console.log(msg)`
   //
+
   function Socket(endPoint) {
     var opts = arguments[1] === undefined ? {} : arguments[1];
+
     _classCallCheck(this, Socket);
 
     this.states = SOCKET_STATES;
@@ -266,6 +253,7 @@ var Socket = exports.Socket = (function () {
     reconnect: {
       value: function reconnect() {
         var _this = this;
+
         this.close(function () {
           _this.conn = new _this.transport(_this.endPoint);
           _this.conn.onopen = function () {
@@ -288,6 +276,7 @@ var Socket = exports.Socket = (function () {
     resetBufferTimer: {
       value: function resetBufferTimer() {
         var _this = this;
+
         clearTimeout(this.sendBufferTimer);
         this.sendBufferTimer = setTimeout(function () {
           return _this.flushSendBuffer();
@@ -299,6 +288,7 @@ var Socket = exports.Socket = (function () {
     log: {
 
       // Logs the message. Override `this.logger` for specialized logging. noops by default
+
       value: function log(msg) {
         this.logger(msg);
       },
@@ -313,6 +303,7 @@ var Socket = exports.Socket = (function () {
       //
       //    socket.onError (error) -> alert("An error occurred")
       //
+
       value: function onOpen(callback) {
         this.stateChangeCallbacks.open.push(callback);
       },
@@ -343,6 +334,7 @@ var Socket = exports.Socket = (function () {
     onConnOpen: {
       value: function onConnOpen() {
         var _this = this;
+
         clearInterval(this.reconnectTimer);
         if (!this.transport.skipHeartbeat) {
           this.heartbeatTimer = setInterval(function () {
@@ -360,6 +352,7 @@ var Socket = exports.Socket = (function () {
     onConnClose: {
       value: function onConnClose(event) {
         var _this = this;
+
         this.log("WS close:");
         this.log(event);
         clearInterval(this.reconnectTimer);
@@ -411,6 +404,7 @@ var Socket = exports.Socket = (function () {
     rejoinAll: {
       value: function rejoinAll() {
         var _this = this;
+
         this.channels.forEach(function (chan) {
           return _this.rejoin(chan);
         });
@@ -441,6 +435,7 @@ var Socket = exports.Socket = (function () {
     leave: {
       value: function leave(topic) {
         var message = arguments[1] === undefined ? {} : arguments[1];
+
         this.send({ topic: topic, event: "leave", payload: message });
         this.channels = this.channels.filter(function (c) {
           return !c.isMember(topic);
@@ -452,7 +447,8 @@ var Socket = exports.Socket = (function () {
     send: {
       value: function send(data) {
         var _this = this;
-        var callback = function callback() {
+
+        var callback = function () {
           return _this.conn.send(JSON.stringify(data));
         };
         if (this.isConnected()) {
@@ -488,11 +484,13 @@ var Socket = exports.Socket = (function () {
       value: function onConnMessage(rawMessage) {
         this.log("message received:");
         this.log(rawMessage);
+
         var _JSON$parse = JSON.parse(rawMessage.data);
 
         var topic = _JSON$parse.topic;
         var event = _JSON$parse.event;
         var payload = _JSON$parse.payload;
+
         this.channels.filter(function (chan) {
           return chan.isMember(topic);
         }).forEach(function (chan) {
@@ -509,6 +507,7 @@ var Socket = exports.Socket = (function () {
 
   return Socket;
 })();
+
 var LongPoller = exports.LongPoller = (function () {
   function LongPoller(endPoint) {
     _classCallCheck(this, LongPoller);
@@ -564,6 +563,7 @@ var LongPoller = exports.LongPoller = (function () {
     poll: {
       value: function poll() {
         var _this = this;
+
         if (!(this.readyState === this.states.open || this.readyState === this.states.connecting)) {
           return;
         }
@@ -575,6 +575,7 @@ var LongPoller = exports.LongPoller = (function () {
             var token = _JSON$parse.token;
             var sig = _JSON$parse.sig;
             var messages = _JSON$parse.messages;
+
             _this.token = token;
             _this.sig = sig;
           }
@@ -609,6 +610,7 @@ var LongPoller = exports.LongPoller = (function () {
     send: {
       value: function send(body) {
         var _this = this;
+
         Ajax.request("POST", this.endpointURL(), "application/json", body, this.onerror.bind(this, "timeout"), function (status, resp) {
           if (status !== 200) {
             _this.onerror(status);
@@ -630,12 +632,14 @@ var LongPoller = exports.LongPoller = (function () {
 
   return LongPoller;
 })();
+
 var Ajax = exports.Ajax = {
 
   states: { complete: 4 },
 
   request: function request(method, endPoint, accept, body, ontimeout, callback) {
     var _this = this;
+
     var req = XMLHttpRequest ? new XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
     new ActiveXObject("Microsoft.XMLHTTP"); // IE6, IE5
     req.open(method, endPoint, true);
@@ -655,14 +659,8 @@ var Ajax = exports.Ajax = {
     req.send(body);
   }
 };
-
-// export for browser hack
-if (typeof window === "object") {
-  window.Phoenix = exports;
-}
 Object.defineProperty(exports, "__esModule", {
   value: true
-});});
-
-
-//# sourceMappingURL=app.js.map
+}); }});
+if(typeof(window) === 'object' && !window.Phoenix){ window.Phoenix = require('phoenix') };;
+//# sourceMappingURL=phoenix.js.map

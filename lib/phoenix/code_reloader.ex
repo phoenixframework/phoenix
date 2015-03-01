@@ -10,6 +10,9 @@ defmodule Phoenix.CodeReloader do
   sequential call operation.
   """
 
+  @external_resource phx_js_path = "priv/static/phoenix.js"
+  @phoenix_js File.read!(phx_js_path)
+
   ## Server delegation
 
   @doc """
@@ -205,7 +208,9 @@ defmodule Phoenix.CodeReloader do
   defp reload_assets_tag() do
     """
     <script>
-      var socket = new Phoenix.Socket("/phoenix")
+      #{@phoenix_js}
+      var phx = require("phoenix")
+      var socket = new phx.Socket("/phoenix")
       socket.join("phoenix", {}, function(chan){
         chan.on("assets:change", function(msg){ window.location.reload(); })
       })
