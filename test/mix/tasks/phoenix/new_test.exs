@@ -36,7 +36,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       assert_file "priv/static/app.css"
       assert_file "priv/static/images/phoenix.png"
-      assert_file "priv/static/app.js"
+      assert_file "priv/static/phoenix.js"
 
       assert_file "test/photo_blog_test.exs"
       assert_file "test/test_helper.exs"
