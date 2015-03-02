@@ -15,6 +15,20 @@ defmodule Phoenix.HTML.Tag do
       {:safe, "<br>"}
       iex> tag(:input, type: "text", name: "user_id")
       {:safe, "<input name=\"user_id\" type=\"text\">"}
+
+  ## Boolean values
+
+  In case an attribute contains a boolean value, its key
+  is repeated when it is true, as expected in HTML, or
+  the attribute is completely removed if it is false:
+
+      iex> tag(:audio, autoplay: true)
+      {:safe, "<audio autoplay=\"autoplay\">"}
+      iex> tag(:audio, autoplay: false)
+      {:safe, "<audio>"}
+
+  If you want the boolean attribute to be sent as is,
+  you can explicitly convert it to a string before.
   """
   def tag(name), do: tag(name, [])
   def tag(name, attrs) when is_list(attrs) do
