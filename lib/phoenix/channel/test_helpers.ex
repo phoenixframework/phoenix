@@ -59,7 +59,6 @@ defmodule Phoenix.Channel.Test do
     # TODO: Get the App's configured PubSub server and Router
     %Socket{
       pid: self,
-      router: Constable.Router,
       topic: "foo:bar",
       pubsub_server: Constable.PubSub,
       assigns: []
