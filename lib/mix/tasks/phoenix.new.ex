@@ -56,7 +56,8 @@ defmodule Mix.Tasks.Phoenix.New do
                pubsub_server: pubsub_server,
                secret_key_base: random_string(64),
                encryption_salt: random_string(8),
-               signing_salt: random_string(8)]
+               signing_salt: random_string(8),
+               in_umbrella: in_umbrella?(path)]
 
     copy_from template_dir, path, app, &EEx.eval_file(&1, binding)
     copy_from static_dir, Path.join(path, "priv/static"), app, &File.read!(&1)
@@ -106,6 +107,19 @@ defmodule Mix.Tasks.Phoenix.New do
   defp check_mod_name!(name) do
     unless name =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/ do
       Mix.raise "Module name must be a valid Elixir alias (for example: Foo.Bar), got: #{inspect name}"
+    end
+  end
+
+  defp in_umbrella?(app_path) do
+    apps = Path.expand(Path.join [app_path, ".."])
+
+    try do
+      Mix.Project.in_project(:umbrella_check, Path.expand(Path.join [apps, ".."]), fn _ ->
+        path = Mix.Project.config[:apps_path]
+        path && Path.expand(path) == apps
+      end)
+    catch
+      _, _ -> false
     end
   end
   

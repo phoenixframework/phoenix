@@ -4,6 +4,10 @@ defmodule <%= application_module %>.Mixfile do
   def project do
     [app: :<%= application_name %>,
      version: "0.0.1",
+<%= if in_umbrella do %>
+     deps_path: "../../deps",
+     lockfile: "../../mix.lock",
+<% end %>
      elixir: "~> 1.0",
      elixirc_paths: ["lib", "web"],
      compilers: [:phoenix] ++ Mix.compilers,
