@@ -36,9 +36,10 @@ defmodule Phoenix.Channel.Test do
   """
 
   @doc """
-  Returns a socket ready for testing. You can pass it a map to override socket
-  attributes or just a binary to set the topic and keep the default socket
-  options.
+  Returns a socket ready for testing.
+
+  You can pass it a map to override socket attributes or just a binary to set
+  the topic and keep the default socket options.
 
   ## Examples
 
@@ -135,6 +136,16 @@ defmodule Phoenix.Channel.Test do
   end
 
   @doc """
+  The refutation of `assert_socket_broadcasted/2`
+  """
+  def refute_socket_broadcasted(topic, payload) do
+   refute_receive {
+      :socket_broadcast,
+      %Socket.Message{event: ^topic, payload: ^payload, topic: ^topic}
+    }
+  end
+
+  @doc """
   Test that a socket broadcasted a message with `topic` to `payload`.
 
   ## Examples
@@ -147,6 +158,16 @@ defmodule Phoenix.Channel.Test do
   """
   def assert_socket_replied(topic, payload) do
     assert_receive {
+      :socket_reply,
+      %Socket.Message{event: ^topic, payload: ^payload, topic: ^topic}
+    }
+  end
+
+  @doc """
+  The refutation of `assert_socket_replied/2`
+  """
+  def refute_socket_replied(topic, payload) do
+   refute_receive {
       :socket_reply,
       %Socket.Message{event: ^topic, payload: ^payload, topic: ^topic}
     }

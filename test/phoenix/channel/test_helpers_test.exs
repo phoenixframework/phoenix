@@ -80,39 +80,55 @@ defmodule Phoenix.Channel.TestHelper do
     assert_received {:handle_out_params, %{foo: "bar"}}
   end
 
-  test "assert_socket_broadcasted/2" do
-    defmodule BroadcastChannel do
-      use Phoenix.Channel
+  defmodule BroadcastChannel do
+    use Phoenix.Channel
 
-      def join(_, _, socket), do: {:ok, socket}
+    def join(_, _, socket), do: {:ok, socket}
 
-      def handle_in(topic, _params, socket) do
-        broadcast socket, topic, %{title: "Phoenix rocks"}
-      end
+    def handle_in(topic, _params, socket) do
+      broadcast socket, topic, %{title: "Phoenix rocks"}
     end
+  end
 
+  test "assert_socket_broadcasted/2" do
     build_socket("foo:bar")
     |> subscribe(:phx_pub)
     |> handle_in(BroadcastChannel)
 
+    # TODO: This is not good. I'm not sure of the best way to test assertions
     assert_socket_broadcasted("foo:bar", %{title: "Phoenix rocks"})
   end
 
-  test "assert_socket_replied/2" do
-    defmodule ReplyChannel do
-      use Phoenix.Channel
+  test "refute_socket_broadcasted/2" do
+    build_socket("foo:bar")
+    |> subscribe(:phx_pub)
+    |> handle_in(BroadcastChannel)
 
-      def join(_, _, socket), do: {:ok, socket}
+    refute_socket_broadcasted("non_existent:channel", %{title: "Sad"})
+  end
 
-      def handle_in(topic, _params, socket) do
-        reply socket, topic, %{title: "Phoenix rocks"}
-      end
+  defmodule ReplyChannel do
+    use Phoenix.Channel
+
+    def join(_, _, socket), do: {:ok, socket}
+
+    def handle_in(topic, _params, socket) do
+      reply socket, topic, %{title: "Phoenix rocks"}
     end
+  end
 
+  test "assert_socket_replied/2" do
     build_socket("foo:bar")
     |> handle_in(ReplyChannel)
 
     assert_socket_replied("foo:bar", %{title: "Phoenix rocks"})
+  end
+
+  test "refute_socket_replied/2" do
+    build_socket("foo:bar")
+    |> handle_in(ReplyChannel)
+
+    refute_socket_replied("non_existent:channel", %{title: "Sad"})
   end
 
   test "subscribe/2 sets the sockests pubsub_server and subscribes" do
