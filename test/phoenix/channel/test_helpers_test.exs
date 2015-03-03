@@ -41,31 +41,43 @@ defmodule Phoenix.Channel.TestHelper do
   test "join/3 calls the channel with socket and params" do
     socket = build_socket("foo:bar")
 
-    join(socket, FakeChannel, %{foo: "bar"})
+    join(socket, FakeChannel)
 
     assert_received {:join_topic, "foo:bar"}
-    assert_received {:join_params, %{foo: "bar"}}
+    assert_received {:join_params, %{}}
     assert_received {:join_socket, ^socket}
+
+    join(socket, FakeChannel, %{foo: "bar"})
+
+    assert_received {:join_params, %{foo: "bar"}}
   end
 
   test "handle_in/3 calls the channel with socket and params" do
     socket = build_socket("foo:bar")
 
-    handle_in(socket, FakeChannel, %{foo: "bar"})
+    handle_in(socket, FakeChannel)
 
     assert_received {:handle_in_topic, "foo:bar"}
-    assert_received {:handle_in_params, %{foo: "bar"}}
+    assert_received {:handle_in_params, %{}}
     assert_received {:handle_in_socket, ^socket}
+
+    handle_in(socket, FakeChannel, %{foo: "bar"})
+
+    assert_received {:handle_in_params, %{foo: "bar"}}
   end
 
   test "handle_out/3 calls the channel with socket and params" do
     socket = build_socket("foo:bar")
 
-    handle_out(socket, FakeChannel, %{foo: "bar"})
+    handle_out(socket, FakeChannel)
 
     assert_received {:handle_out_topic, "foo:bar"}
-    assert_received {:handle_out_params, %{foo: "bar"}}
+    assert_received {:handle_out_params, %{}}
     assert_received {:handle_out_socket, ^socket}
+
+    handle_out(socket, FakeChannel, %{foo: "bar"})
+
+    assert_received {:handle_out_params, %{foo: "bar"}}
   end
 
   test "assert_socket_broadcasted/2" do
