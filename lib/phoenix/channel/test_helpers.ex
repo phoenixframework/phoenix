@@ -40,9 +40,6 @@ defmodule Phoenix.Channel.Test do
   attributes or just a binary to set the topic and keep the default socket
   options.
 
-  Note: This also creates a subscription to this topic so that you can test
-  broadcasting using `assert_socket_broadcasted/2`
-
   ## Examples
 
       # returns a socket with topic "room:new_chat"
@@ -60,11 +57,9 @@ defmodule Phoenix.Channel.Test do
     %Socket{
       pid: self,
       topic: "foo:bar",
-      pubsub_server: Constable.PubSub,
       assigns: []
     }
     |> Map.merge(attributes)
-    |> subscribe
   end
 
   @doc """
@@ -121,12 +116,12 @@ defmodule Phoenix.Channel.Test do
   @doc """
   Test that a socket broadcasted a message with `topic` to `payload`.
 
-  If you decide not to use `build_socket` to build a socket, remember to
-  subscribe with like `Phoenix.PubSub.subscribe(MyApp.PubSub, self, "foo:bar")`.
+  Remember to subscribe using `subscribe/2` or there will be no broadcast
 
   ## Examples
 
       build_socket("room:new_chat")
+      |> subscribe(MyApp.PubSub)
       |> handle_in(RoomChannel)
 
       assert_socket_broadcasted("room:new_chat", %{name: "John Doe"})
@@ -157,9 +152,18 @@ defmodule Phoenix.Channel.Test do
     }
   end
 
-  defp subscribe(socket) do
-    # TODO: Get the App's configured PubSub server
-    Phoenix.PubSub.subscribe(MyApp.PubSub, self, socket.topic)
+  @doc """
+  Sets the pubsub_server of the socket and subscribes to it.
+
+  ## Examples
+
+      build_socket("room:user_info")
+      |> subscribe(MyApp.PubSub)
+
+  """
+  def subscribe(socket, pubsub) do
+    socket = socket |> Map.put(:pubsub_server, pubsub)
+    Phoenix.PubSub.subscribe(pubsub, self, socket.topic)
     socket
   end
 end
