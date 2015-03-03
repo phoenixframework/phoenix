@@ -71,6 +71,8 @@ defmodule Phoenix.HTML.Tag do
 
   defp attr_escape({:safe, data}),
     do: data
+  defp attr_escape(nil),
+    do: ""
   defp attr_escape(other) when is_binary(other),
     do: Phoenix.HTML.Safe.BitString.to_iodata(other)
   defp attr_escape(other),

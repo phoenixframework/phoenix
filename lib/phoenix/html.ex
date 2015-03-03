@@ -57,6 +57,44 @@ defmodule Phoenix.HTML do
   @type unsafe  :: iodata
 
   @doc """
+  Provides `~e` sigil with HTML safe EEx syntax inside source files.
+
+      iex> ~e"\""
+      ...> Hello <%= "world" %>
+      ...> "\""
+      {:safe, [[["" | "Hello "] | "world"] | "\\n"]}
+
+  """
+  defmacro sigil_e(expr, opts) do
+    handle_sigil(expr, opts, __CALLER__.line)
+  end
+
+  @doc """
+  Provides `~E` sigil with HTML safe EEx syntax inside source files.
+
+  This sigil does not support interpolation and is should be prefered
+  rather than `~e`.
+
+      iex> ~E"\""
+      ...> Hello <%= "world" %>
+      ...> "\""
+      {:safe, [[["" | "Hello "] | "world"] | "\\n"]}
+
+  """
+  defmacro sigil_E(expr, opts) do
+    handle_sigil(expr, opts, __CALLER__.line)
+  end
+
+  defp handle_sigil({:<<>>, _, [expr]}, [], line) do
+    EEx.compile_string(expr, engine: Phoenix.HTML.Engine, line: line + 1)
+  end
+
+  defp handle_sigil(_, _, _) do
+    raise ArgumentError, "interpolation not allowed in ~e sigil. " <>
+                         "Remove the interpolation or use ~E instead"
+  end
+
+  @doc """
   Marks the given value as safe.
 
       iex> Phoenix.HTML.safe("<hello>")
@@ -72,7 +110,7 @@ defmodule Phoenix.HTML do
   @doc """
   Concatenates data in the given list safe.
 
-      iex> Phoenix.HTML.safe_concat(["<hello>", "safe", "<world>"])
+      iex> safe_concat(["<hello>", "safe", "<world>"])
       {:safe, "&lt;hello&gt;safe&lt;world&gt;"}
 
   """
@@ -84,19 +122,19 @@ defmodule Phoenix.HTML do
   @doc """
   Concatenates data safely.
 
-      iex> Phoenix.HTML.safe_concat("<hello>", "<world>")
+      iex> safe_concat("<hello>", "<world>")
       {:safe, "&lt;hello&gt;&lt;world&gt;"}
 
-      iex> Phoenix.HTML.safe_concat({:safe, "<hello>"}, "<world>")
+      iex> safe_concat({:safe, "<hello>"}, "<world>")
       {:safe, "<hello>&lt;world&gt;"}
 
-      iex> Phoenix.HTML.safe_concat("<hello>", {:safe, "<world>"})
+      iex> safe_concat("<hello>", {:safe, "<world>"})
       {:safe, "&lt;hello&gt;<world>"}
 
-      iex> Phoenix.HTML.safe_concat({:safe, "<hello>"}, {:safe, "<world>"})
+      iex> safe_concat({:safe, "<hello>"}, {:safe, "<world>"})
       {:safe, "<hello><world>"}
 
-      iex> Phoenix.HTML.safe_concat({:safe, "<hello>"}, {:safe, '<world>'})
+      iex> safe_concat({:safe, "<hello>"}, {:safe, '<world>'})
       {:safe, ["<hello>"|'<world>']}
 
   """
@@ -119,21 +157,23 @@ defmodule Phoenix.HTML do
   @doc """
   Escapes the HTML entities in the given term, returning iodata.
 
-      iex> Phoenix.HTML.html_escape("<hello>")
+      iex> html_escape("<hello>")
       {:safe, "&lt;hello&gt;"}
 
-      iex> Phoenix.HTML.html_escape('<hello>')
+      iex> html_escape('<hello>')
       {:safe, ["&lt;", 104, 101, 108, 108, 111, "&gt;"]}
 
-      iex> Phoenix.HTML.html_escape(1)
+      iex> html_escape(1)
       {:safe, "1"}
 
-      iex> Phoenix.HTML.html_escape({:safe, "<hello>"})
+      iex> html_escape({:safe, "<hello>"})
       {:safe, "<hello>"}
   """
   @spec html_escape(Phoenix.HTML.Safe.t) :: safe
   def html_escape({:safe, _} = safe),
     do: safe
+  def html_escape(nil),
+    do: {:safe, ""}
   def html_escape(other) when is_binary(other),
     do: {:safe, Phoenix.HTML.Safe.BitString.to_iodata(other)}
   def html_escape(other),

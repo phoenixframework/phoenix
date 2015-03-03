@@ -2,9 +2,9 @@ defmodule Phoenix.HTMLTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
+  use Phoenix.HTML
   doctest Phoenix.HTML
 
-  use Phoenix.HTML
   alias Phoenix.HTML.Safe
 
   test "html_escape/1 entities" do
