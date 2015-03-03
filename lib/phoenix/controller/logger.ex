@@ -25,7 +25,7 @@ defmodule Phoenix.Controller.Logger do
   def init(opts), do: opts
 
   def call(conn, _level) do
-    Logger.debug fn ->
+    Logger.info fn ->
       module = conn |> controller_module |> inspect
       action = conn |> action_name |> Atom.to_string
 
