@@ -4,6 +4,8 @@ defmodule Phoenix.Endpoint.Adapter do
   # the adapters/handlers.
   @moduledoc false
 
+  alias Phoenix.CodeReloader.ChangeDetector
+
   @doc """
   Starts the endpoint supervision tree.
   """
@@ -11,8 +13,6 @@ defmodule Phoenix.Endpoint.Adapter do
     import Supervisor.Spec
     conf       = config(otp_app, mod)
     pub_conf   = conf[:pubsub]
-    asset_conf = conf[:assets]
-    asset_children = []
 
     pubsub_children = case pub_conf[:adapter] do
       nil     -> []
@@ -20,22 +20,19 @@ defmodule Phoenix.Endpoint.Adapter do
         [supervisor(adapter, [mod.__pubsub_server__(), pub_conf[:options] || []])]
     end
 
-    asset_children =
-      Enum.reduce(asset_conf[:watchers], asset_children, fn {cmd, args}, acc ->
+    watcher_children =
+      Enum.reduce(conf[:watchers], [], fn {cmd, args}, acc ->
         acc ++ [worker(Task, [fn ->
           System.cmd(cmd, args, into: IO.stream(:stdio, :line), stderr_to_stdout: true)
         end])]
       end)
 
-    asset_children = case asset_conf[:live_reload] do
-      []    -> asset_children
-      paths ->
-        asset_children ++ [
-          worker(Phoenix.CodeReloader.ChangeDetector, [paths, {__MODULE__, :assets_change, [mod]}])
-        ]
+    live_reload_children = case conf[:live_reload] do
+      [] -> []
+      paths -> [worker(ChangeDetector, [paths, {__MODULE__, :assets_change, [mod]}])]
     end
 
-    children = asset_children ++ pubsub_children ++ [
+    children = watcher_children ++ live_reload_children ++ pubsub_children ++ [
       worker(Phoenix.Config, [otp_app, mod, defaults(otp_app, mod)]),
       supervisor(Phoenix.Endpoint.Server, [otp_app, mod]),
     ]
@@ -84,11 +81,8 @@ defmodule Phoenix.Endpoint.Adapter do
      url: [host: "localhost"],
      pubsub: [],
 
-     # Assets
-     assets: [
-       watchers: [],
-       live_reload: []
-     ]]
+     watchers: [],
+     live_reload: []]
   end
 
   defp render_errors(module) do

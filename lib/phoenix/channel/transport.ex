@@ -42,7 +42,7 @@ defmodule Phoenix.Channel.Transport do
   However, a client can be implemented for other protocols and encodings by
   abiding by the `Phoenix.Socket.Message` format
 
-  See `assets/cs/phoenix.coffee` for an example transport client implementation.
+  See `web/static/js/phoenix.js` for an example transport client implementation.
   """
 
   defmodule InvalidReturn do
