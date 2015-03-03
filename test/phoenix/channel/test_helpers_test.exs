@@ -3,6 +3,7 @@ defmodule Phoenix.Channel.TestHelper do
 
   import Phoenix.Channel.Test
   alias Phoenix.PubSub
+  alias Phoenix.Socket
 
   defmodule FakeChannel do
     def join(topic, params, socket) do
@@ -86,17 +87,20 @@ defmodule Phoenix.Channel.TestHelper do
     def join(_, _, socket), do: {:ok, socket}
 
     def handle_in(topic, _params, socket) do
-      broadcast socket, topic, %{title: "Phoenix rocks"}
+      broadcast socket, topic, %{title: "foo"}
     end
   end
 
   test "assert_socket_broadcasted/2" do
-    build_socket("foo:bar")
+    topic = "foo:bar"
+    build_socket(topic)
     |> subscribe(:phx_pub)
     |> handle_in(BroadcastChannel)
 
-    # TODO: This is not good. I'm not sure of the best way to test assertions
-    assert_socket_broadcasted("foo:bar", %{title: "Phoenix rocks"})
+    # TODO: Find out best way to test this assertion
+    payload = %{title: "foo"}
+    message = build_socket_message(topic, payload)
+    {:socket_broadcast, ^message} = assert_socket_broadcasted(topic, payload)
   end
 
   test "refute_socket_broadcasted/2" do
@@ -104,7 +108,7 @@ defmodule Phoenix.Channel.TestHelper do
     |> subscribe(:phx_pub)
     |> handle_in(BroadcastChannel)
 
-    refute_socket_broadcasted("non_existent:channel", %{title: "Sad"})
+    false = refute_socket_broadcasted("non_existent:channel", %{title: "Sad"})
   end
 
   defmodule ReplyChannel do
@@ -113,22 +117,25 @@ defmodule Phoenix.Channel.TestHelper do
     def join(_, _, socket), do: {:ok, socket}
 
     def handle_in(topic, _params, socket) do
-      reply socket, topic, %{title: "Phoenix rocks"}
+      reply socket, topic, %{title: "foo"}
     end
   end
 
   test "assert_socket_replied/2" do
-    build_socket("foo:bar")
+    topic = "foo:bar"
+    build_socket(topic)
     |> handle_in(ReplyChannel)
 
-    assert_socket_replied("foo:bar", %{title: "Phoenix rocks"})
+    payload = %{title: "foo"}
+    message = build_socket_message(topic, payload)
+    {:socket_reply, ^message} = assert_socket_replied(topic, payload)
   end
 
   test "refute_socket_replied/2" do
     build_socket("foo:bar")
     |> handle_in(ReplyChannel)
 
-    refute_socket_replied("non_existent:channel", %{title: "Sad"})
+    false = refute_socket_replied("non_existent:channel", %{title: "Sad"})
   end
 
   test "subscribe/2 sets the sockests pubsub_server and subscribes" do
@@ -143,5 +150,9 @@ defmodule Phoenix.Channel.TestHelper do
 
   def subscribers(server, topic) do
     PubSub.Local.subscribers(Module.concat(server, Local), topic)
+  end
+
+  def build_socket_message(topic, payload \\ %{}) do
+    %Socket.Message{event: topic, payload: payload, topic: topic}
   end
 end
