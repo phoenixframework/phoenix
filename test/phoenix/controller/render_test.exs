@@ -64,6 +64,12 @@ defmodule Phoenix.Controller.RenderTest do
     assert html_response?(conn)
   end
 
+  test "renders with conn status code" do
+    conn = %Plug.Conn{conn | status: 404}
+    conn = render(conn, "index.html", title: "Hello", layout: {MyApp.LayoutView, "application.html"})
+    assert conn.status == 404
+  end
+
   test "skips layout depending on layout_formats with string template" do
     conn = layout_conn |> put_layout_formats([]) |> render("index.html", title: "Hello")
     assert conn.resp_body == "Hello\n"
