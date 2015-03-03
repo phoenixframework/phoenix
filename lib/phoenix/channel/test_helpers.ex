@@ -56,7 +56,7 @@ defmodule Phoenix.Channel.Test do
     # TODO: Get the App's configured PubSub server and Router
     %Socket{
       pid: self,
-      topic: "foo:bar",
+      topic: "",
       assigns: []
     }
     |> Map.merge(attributes)
@@ -73,7 +73,7 @@ defmodule Phoenix.Channel.Test do
 
   """
   def join(socket, channel, params \\ %{}) do
-    channel.join("", params, socket)
+    channel.join(socket.topic, params, socket)
   end
 
   @doc """
