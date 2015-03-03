@@ -4,12 +4,10 @@ config :<%= application_name %>, <%= application_module %>.Endpoint,
   http: [port: System.get_env("PORT") || 4000],
   debug_errors: true,
   cache_static_lookup: false,
-  assets: [
-    watchers: [{Path.expand("node_modules/brunch/bin/brunch"), ["watch"]}],
-    live_reload: ["priv/static/app.js",
-                  "priv/static/app.css",
-                  Path.wildcard("web/templates/**/*")]
-  ]
+  watchers: [{Path.expand("node_modules/brunch/bin/brunch"), ["watch"]}],
+  live_reload: ["priv/static/app.js",
+                "priv/static/app.css",
+                Path.wildcard("web/templates/**/*")]
 
 
 # Enables code reloading for development

@@ -90,7 +90,7 @@
   globals.require.list = list;
   globals.require.brunch = true;
 })();
-require.define({phoenix: function(exports, require, module){ "use strict";
+require.define({'phoenix': function(exports, require, module){ "use strict";
 
 var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
 
