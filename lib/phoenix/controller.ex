@@ -459,7 +459,7 @@ defmodule Phoenix.Controller do
             raise "a view module was not specified, set one with put_view/2"
     data = Phoenix.View.render_to_iodata(view, template,
                                          Map.put(conn.assigns, :conn, conn))
-    send_resp(conn, 200, content_type, data)
+    send_resp(conn, conn.status || 200, content_type, data)
   end
 
   @doc """
