@@ -7,8 +7,8 @@ defmodule Phoenix.Socket.Supervisor do
     Supervisor.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
-  def start_child(%Socket{} = socket) do
-    Supervisor.start_child(__MODULE__, [socket])
+  def start_child(%Socket{} = socket, channel, topic, message) do
+    Supervisor.start_child(__MODULE__, [socket, channel, topic, message])
   end
 
   def terminate_child(child) do
@@ -29,19 +29,13 @@ defmodule Phoenix.Socket.Server do
   Defines a server for socket operations. Delegates to the actual Transport.
   """
   use GenServer
-  require Logger
   alias Phoenix.Socket
-  alias Phoenix.Socket.Message
   alias Phoenix.PubSub
 
   # External API
 
-  def start_link(%Socket{} = socket) do
-    GenServer.start_link(__MODULE__, socket)
-  end
-
-  def dispatch_join(server, topic, message) do
-    GenServer.call(server, {:dispatch_join, topic, message})
+  def start_link(%Socket{} = socket, channel, topic, message) do
+    GenServer.start_link(__MODULE__, {socket, channel, topic, message})
   end
 
   def dispatch_in(server, topic, event, message) do
@@ -59,10 +53,6 @@ defmodule Phoenix.Socket.Server do
     GenServer.call(server, {:dispatch_leave, topic, message})
   end
 
-  def do_join(server) do
-    GenServer.call(server, :do_join)
-  end
-
   def do_leave(server) do
     GenServer.call(server, :do_leave)
   end
@@ -71,26 +61,12 @@ defmodule Phoenix.Socket.Server do
     GenServer.call(server, {:authorized, topic})
   end
 
-  def dispatch_reply(server, %Message{} = message) do
-    GenServer.cast(server, {:dispatch_reply, message})
-  end
-
   # Server internal
 
-  def init(%Socket{} = socket) do
-    {:ok, socket}
-  end
-
-  def handle_call({:dispatch_join, topic, message}, _from, socket) do
-    case socket.router.channel_for_topic(topic, socket.transport) do
-      nil ->
-        Logger.debug fn -> "Ignoring unmatched topic \"#{socket.topic}\" in #{inspect(socket.router)}" end
-        create_reply(:ignore)
-      channel ->
-        topic
-        |> channel.join(message, Socket.put_channel(socket, channel))
-        |> create_reply
-    end
+  def init({%Socket{} = socket, channel, topic, message}) do
+    topic
+    |> channel.join(message, Socket.put_channel(socket, channel))
+    |> handle_init
   end
 
   def handle_call({:dispatch_in, topic, event, message}, _from, socket) do
@@ -121,11 +97,6 @@ defmodule Phoenix.Socket.Server do
     end
   end
 
-  def handle_call(:do_join, _from, socket) do
-    PubSub.subscribe(socket.pubsub_server, socket.pid, socket.topic, link: true)
-    {:reply, :ok, Socket.authorize(socket, socket.topic)}
-  end
-
   def handle_call(:do_leave, _from, socket) do
     PubSub.unsubscribe(socket.pubsub_server, socket.pid, socket.topic)
     {:reply, :ok, Socket.deauthorize(socket)}
@@ -133,11 +104,6 @@ defmodule Phoenix.Socket.Server do
 
   def handle_call({:authorized, topic}, _from, socket) do
     {:reply, Socket.authorized?(socket, topic), socket}
-  end
-
-  def handle_cast({:dispatch_reply, message}, socket) do
-    send socket.pid, {:socket_reply, message}
-    {:noreply, socket}
   end
 
   def handle_info(message, socket) do
@@ -148,13 +114,15 @@ defmodule Phoenix.Socket.Server do
 
   # Internal
 
-  defp create_reply({result, socket}) do
-    {:reply, {result, self}, socket}
+  defp handle_init({:ok, %Socket{} = socket}) do
+    PubSub.subscribe(socket.pubsub_server, socket.pid, socket.topic, link: true)
+    {:ok, Socket.authorize(socket, socket.topic)}
   end
-  defp create_reply({:error, reason, socket}) do
-    {:reply, {:error, reason, self}, socket}
-  end
-  defp create_reply(reply) do
-    {:reply, reply, %{}}
-  end
+  defp handle_init(:ignore),                          do: :ignore
+  defp handle_init({:error, reason, %Socket{} = s}),  do: {:stop, {reason, s}}
+  defp handle_init(bad_return),                       do: {:stop, {{:invalid_return, bad_return}, :undefined}}
+
+  defp create_reply({result, %Socket{} = s}),         do: {:reply, {result, self}, s}
+  defp create_reply({:error, reason, %Socket{} = s}), do: {:reply, {:error, {reason, self}}, s}
+  defp create_reply(bad_return),                      do: {:reply, {:error, {{:invalid_return, bad_return}}, self}, %{}}
 end

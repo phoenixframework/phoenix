@@ -62,48 +62,64 @@ defmodule Phoenix.Channel.Transport do
 
   The returned `HashDict` of `%Phoenix.Socket{}`s must be held by the adapter
   """
-  def dispatch(msg = %Message{}, sockets, adapter_pid, router, pubsub_server, transport) do
-    {:ok, socket} =
-      case HashDict.fetch(sockets, msg.topic) do
-        :error ->
-          %Socket{pid: adapter_pid,
-                  router: router,
-                  pubsub_server: pubsub_server,
-                  topic: msg.topic,
-                  transport: transport} |> Socket.Supervisor.start_child
-        sock -> sock
-      end
-
-    socket
-    |> dispatch(msg.topic, msg.event, msg.payload)
-    |> transport_response(msg.topic, socket, sockets)
+  def dispatch(%Message{topic: "phoenix", event: "heartbeat"}, sockets, adapter_pid, _router, _pubsub_server, _transport) do
+    send adapter_pid, {:socket_reply, %Message{topic: "phoenix", event: "heartbeat", payload: %{}}}
+    {:ok, sockets}
   end
-  defp transport_response({:ok, _socket}, topic, socket, sockets) do
+  def dispatch(msg = %Message{event: "join"}, sockets, adapter_pid, router, pubsub_server, transport) do
+    case router.channel_for_topic(msg.topic, transport) do
+      nil ->
+        Logger.debug fn -> "Ignoring unmatched topic \"#{msg.topic}\" in #{inspect(router)}" end
+        transport_response({:ok, :undefined}, msg.topic, sockets)
+      channel ->
+        %Socket{pid: adapter_pid,
+                router: router,
+                pubsub_server: pubsub_server,
+                topic: msg.topic,
+                transport: transport}
+        |> Socket.Supervisor.start_child(channel, msg.topic, msg.payload)
+        |> handle_result("join")
+        |> transport_response(msg.topic, sockets)
+        |> log_error(router, msg.topic)
+    end
+  end
+  def dispatch(msg = %Message{}, sockets, _adapter_pid, router, _pubsub_server, _transport) do
+    sockets
+    |> HashDict.get(msg.topic)
+    |> dispatch(msg.topic, msg.event, msg.payload)
+    |> transport_response(msg.topic, sockets)
+    |> log_error(router, msg.topic)
+  end
+  defp transport_response({:ok, :undefined}, _topic, sockets) do
+    {:ok, sockets}
+  end
+  defp transport_response({:ok, socket}, topic, sockets) do
     {:ok, HashDict.put(sockets, topic, socket)}
   end
-  defp transport_response({:leave, _socket}, topic, socket, sockets) do
+  defp transport_response({:leave, socket}, topic, sockets) do
     Socket.Supervisor.terminate_child(socket)
     {:ok, HashDict.delete(sockets, topic)}
   end
-  defp transport_response({:heartbeat, _socket}, _topic, _socket1, sockets) do
+  defp transport_response({:heartbeat, _socket}, _topic, sockets) do
     {:ok, sockets}
   end
-  defp transport_response(:ignore, _topic, socket, sockets) do
-    Socket.Supervisor.terminate_child(socket)
-    {:ok, sockets}
-  end
-  defp transport_response({:error, reason, _socket}, topic, socket, sockets) do
-    Logger.error fn ->
-      """
-      Crashed dispatching topic \"#{inspect socket.topic}\" to #{inspect(socket.channel || socket.router)}
-        Reason: #{inspect(reason)}
-        Router: #{inspect(socket.router)}
-        State:  #{inspect(socket)}
-      """
-    end
+  defp transport_response({:error, {reason, socket}}, topic, sockets) do
     Socket.Supervisor.terminate_child(socket)
     {:error, reason, HashDict.delete(sockets, topic)}
   end
+
+
+  defp log_error({:error, reason, _sockets} = err, router, topic) do
+    Logger.error fn ->
+      """
+      Crashed dispatching topic \"#{inspect topic}\"
+        Reason: #{inspect(reason)}
+        Router: #{inspect(router)}
+      """
+    end
+    err
+  end
+  defp log_error(no_error, _router, _topic), do: no_error
 
 
   @doc """
@@ -117,16 +133,11 @@ defmodule Phoenix.Channel.Transport do
 
   The server will respond to heartbeats with the same message
   """
-  def dispatch(socket, "phoenix", "heartbeat", _msg) do
-    socket
-    |> Socket.Server.dispatch_reply(%Message{topic: "phoenix", event: "heartbeat", payload: %{}})
-
-    {:heartbeat, socket}
+  def dispatch(nil, _topic, event, _msg) do
+    handle_result({:error, {:unauthenticated, :undefined}}, event)
   end
-  def dispatch(socket, topic, "join", msg) do
-    socket
-    |> Socket.Server.dispatch_join(topic, msg)
-    |> handle_result("join")
+  def dispatch(socket, _topic, "join", _msg) do
+    handle_result({:error, {:invalid_method_call, socket}}, "join")
   end
   def dispatch(socket, topic, "leave", msg) do
     socket
@@ -139,10 +150,6 @@ defmodule Phoenix.Channel.Transport do
     |> handle_result(event)
   end
 
-  defp handle_result({:ok, socket}, "join") do
-    :ok = Socket.Server.do_join(socket)
-    {:ok, socket}
-  end
   defp handle_result({:ok, socket}, "leave") do
     :ok = Socket.Server.do_leave(socket)
     {:leave, socket}
@@ -150,26 +157,23 @@ defmodule Phoenix.Channel.Transport do
   defp handle_result({:ok, socket}, _event) do
     {:ok, socket}
   end
-  defp handle_result(:ignore, "join"), do: :ignore
   defp handle_result({:leave, socket}, event)
     when not event in ["join", "leave"] do
     socket
     |> Socket.Server.dispatch_leave(%{reason: :leave})
     |> handle_result("leave")
   end
-  defp handle_result({:error, reason, socket}, _event) do
-    {:error, reason, socket}
-  end
-  defp handle_result(bad_return, event) when event == "join" do
+  defp handle_result({:error, {{:invalid_return, bad_return}, _socket}}, event) when event == "join"  do
     raise InvalidReturn, message: """
-      expected `join` to return `{:ok, socket_pid} | :ignore | {:error, reason, socket_pid}` got `#{inspect bad_return}`
+      expected `join` to return `{:ok, %Socket{}} | :ignore | {:error, reason, socket}` got `#{inspect bad_return}`
     """
   end
-  defp handle_result(bad_return, event) when event == "leave" do
+  defp handle_result({:error, {{:invalid_return, bad_return}, _socket}}, event) when event == "leave" do
     raise InvalidReturn, message: """
       expected `leave` to return `{:ok, socket_pid} | {:error, reason, socket_pid}` got `#{inspect bad_return}`
     """
   end
+  defp handle_result({:error, {_reason, _socket}} = err, _event), do: err
   defp handle_result(bad_return, event) do
     raise InvalidReturn, message: """
       expected `#{event}` to return `{:ok, socket_pid} | {:leave, socket_pid}  | {:error, reason, socket_pid}` got `#{inspect bad_return}`
@@ -192,7 +196,8 @@ defmodule Phoenix.Channel.Transport do
         socket
         |> Socket.Server.dispatch_out(event, payload)
         |> handle_result(event)
-        |> transport_response(topic, socket, sockets)
+        |> transport_response(topic, sockets)
+        |> log_error(:norouter, topic)
     end
   end
 

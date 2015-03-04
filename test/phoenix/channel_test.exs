@@ -240,11 +240,11 @@ defmodule Phoenix.ChannelTest do
     # send broadcast that returns {:leave, socket} now that we've joined
     msg = %Message{event: "everyone:leave", topic: "topic1:subtopic", payload: %{}}
     {:ok, sockets} = Transport.dispatch_broadcast(sockets, msg)
+    assert_received :everyone_leaving
+    assert_received :leave_triggered
     refute HashDict.get(sockets, "topic1:subtopic")
     assert sockets == HashDict.new
     assert subscribers(:phx_pub, "topic1:subtopic") == []
-    assert_received :everyone_leaving
-    assert_received :leave_triggered
   end
 
   test "successful join authorizes and subscribes socket to topic" do
@@ -381,7 +381,7 @@ defmodule Phoenix.ChannelTest do
     message = %Message{topic: "baretopic",
                        event: "some:event",
                        payload: fn socket -> {:ok, socket} end}
-    Transport.dispatch(message, sockets, self, Router, :phx_pub, WebSocket)
+    {:ok, sockets} = Transport.dispatch(message, sockets, self, Router, :phx_pub, WebSocket)
     assert_received {:handle_in, "baretopic"}
 
     message = %Message{topic: "baretopic:sub",
