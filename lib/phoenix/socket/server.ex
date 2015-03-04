@@ -128,7 +128,7 @@ defmodule Phoenix.Socket.Server do
     {:stop, :normal, {result, self}, Socket.deauthorize(s)}
   end
   defp handle_stop({:error, reason, %Socket{} = s}) do
-    {:stop, :normal, {:error, {reason, self}}, Socket.deauthorize(s)}
+    {:stop, reason, {:error, {reason, self}}, Socket.deauthorize(s)}
   end
   defp handle_stop(bad_return) do
     {:stop, :bad_return, {:error, {{:invalid_return, bad_return}}, self}, %{}}
