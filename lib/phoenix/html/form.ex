@@ -190,6 +190,29 @@ defmodule Phoenix.HTML.Form do
   end
 
   @doc """
+  Generates a file input.
+
+  It requires the given form to be configured with `multipart: true`
+  when invokig `form_for/4`, otherwise it fails with `ArgumentError`.
+
+  See `text_input/3` for example and docs.
+  """
+  def file_input(form, field, opts \\ []) do
+    if match?(%Form{}, form) and !form.options[:multipart] do
+      raise ArgumentError, "file_input/3 requires the enclosing form_for/4 " <>
+                           "to be configured with multipart: true"
+    end
+
+    opts =
+      opts
+      |> Keyword.put_new(:type, :file)
+      |> Keyword.put_new(:id, id_from(form, field))
+      |> Keyword.put_new(:name, name_from(form, field))
+
+    tag(:input, opts)
+  end
+
+  @doc """
   Generates a submit input to send the form.
 
   All options are forwarded to the underlying input tag.

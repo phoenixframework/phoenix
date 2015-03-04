@@ -14,11 +14,11 @@ defmodule Phoenix.HTML.FormTest do
   A function that executes `form_for/4` and
   extracts its inner contents for assertion.
   """
-  def with_form(fun) do
+  def with_form(fun, opts \\ []) do
     mark = "--PLACEHOLDER--"
 
     {:safe, contents} =
-      form_for(@conn, "/", [name: :search], fn f ->
+      form_for(@conn, "/", [name: :search] ++ opts, fn f ->
         safe_concat [mark, fun.(f), mark]
       end)
 
@@ -125,6 +125,25 @@ defmodule Phoenix.HTML.FormTest do
 
     assert with_form(&email_input(&1, :key, value: "foo", id: "key", name: "search[key][]")) ==
            {:safe, ~s(<input id="key" name="search[key][]" type="email" value="foo">)}
+  end
+
+  ## file_input/3
+
+  test "file_input/3" do
+    assert file_input(:search, :key) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="file">)}
+
+    assert file_input(:search, :key, id: "key", name: "search[key][]") ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="file">)}
+  end
+
+  test "file_input/3 with form" do
+    assert_raise ArgumentError, fn ->
+      with_form(&file_input(&1, :key))
+    end
+
+    assert with_form(&file_input(&1, :key), multipart: true) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="file">)}
   end
 
   ## submit/2
