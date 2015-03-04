@@ -68,7 +68,11 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       assert_file "photo_blog/.gitignore"
       assert_file "photo_blog/README.md"
-      assert_file "photo_blog/mix.exs", ~r/app: :photo_blog/
+      assert_file "photo_blog/mix.exs", fn(file) ->
+        assert file =~ "app: :photo_blog"
+        refute file =~ "deps_path: \"../../deps\""
+        refute file =~ "lockfile: \"../../mix.lock\""
+      end
 
       assert_file "photo_blog/lib/photo_blog.ex", ~r/defmodule PhotoBlog do/
       assert_file "photo_blog/lib/photo_blog/endpoint.ex", ~r/defmodule PhotoBlog.Endpoint do/
@@ -108,6 +112,21 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     end
   end
 
+  test "new inside umbrella" do
+    in_tmp "new inside umbrella", fn ->
+      File.write! "mix.exs", umbrella_mixfile_contents
+      File.mkdir! "apps"
+      File.cd! "apps", fn ->
+        Mix.Tasks.Phoenix.New.run([@app_name])
+
+        assert_file "photo_blog/mix.exs", fn(file) ->
+          assert file =~ "deps_path: \"../../deps\""
+          assert file =~ "lockfile: \"../../mix.lock\""
+        end
+      end
+    end
+  end
+
   test "new with invalid args" do
     assert_raise Mix.Error, ~r"Application name must start with a letter and ", fn ->
       Mix.Tasks.Phoenix.New.run ["007invalid"]
@@ -143,5 +162,22 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     after
       Mix.Project.push name, file
     end
+  end
+
+  defp umbrella_mixfile_contents do
+    """
+defmodule Umbrella.Mixfile do
+  use Mix.Project
+
+  def project do
+    [apps_path: "apps",
+     deps: deps]
+  end
+
+  defp deps do
+    []
+  end
+end
+    """
   end
 end
