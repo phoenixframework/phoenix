@@ -23,8 +23,8 @@ defimpl Phoenix.HTML.FormData, for: Plug.Conn do
                            "when used with @conn"
     end
 
-    name   = name |> to_string
-    method = Keyword.get(opts, :method, "post") |> to_string
+    name   = to_string(name)
+    method = to_string(opts[:method] || "post")
 
     %Phoenix.HTML.Form{
       name: name,
