@@ -1,15 +1,17 @@
 defmodule Phoenix.HTML do
   @moduledoc """
-  Conveniences for working HTML strings and templates.
+  Helpers for working HTML strings and templates.
 
   When used, it brings the given functionality:
 
-    * `Phoenix.HTML`- imports functions for handle HTML safety;
-
-    * `Phoenix.HTML.Controller` - imports controllers functions
+    * `use Phoenix.HTML.Controller` - imports controllers functions
       commonly used in views;
 
-    * `Phoenix.HTML.Tag` - imports functions for generating HTML tags;
+    * `import Phoenix.HTML`- imports functions for handle HTML safety;
+
+    * `import Phoenix.HTML.Tag` - imports functions for generating HTML tags;
+
+    * `import Phoenix.HTML.Form` - imports functions for working with forms;
 
   ## HTML Safe
 
@@ -49,12 +51,16 @@ defmodule Phoenix.HTML do
       use Phoenix.HTML.Controller
 
       import Phoenix.HTML
+      import Phoenix.HTML.Form
       import Phoenix.HTML.Tag
     end
   end
 
-  @type safe    :: {:safe, unsafe}
-  @type unsafe  :: iodata
+  @typedoc "Guaranteed to be safe"
+  @type safe    :: {:safe, iodata}
+
+  @typedoc "May be safe or unsafe (i.e. it needs to be converted)"
+  @type unsafe  :: Phoenix.HTML.Safe.t
 
   @doc """
   Provides `~e` sigil with HTML safe EEx syntax inside source files.
@@ -103,7 +109,7 @@ defmodule Phoenix.HTML do
       {:safe, "<hello>"}
 
   """
-  @spec safe(unsafe | safe) :: safe
+  @spec safe(iodata | safe) :: safe
   def safe({:safe, value}), do: {:safe, value}
   def safe(value) when is_binary(value) or is_list(value), do: {:safe, value}
 
@@ -114,7 +120,7 @@ defmodule Phoenix.HTML do
       {:safe, "&lt;hello&gt;safe&lt;world&gt;"}
 
   """
-  @spec safe_concat([unsafe | safe]) :: safe
+  @spec safe_concat([iodata | safe]) :: safe
   def safe_concat(list) when is_list(list) do
     Enum.reduce(list, {:safe, ""}, &safe_concat(&2, &1))
   end
@@ -138,7 +144,7 @@ defmodule Phoenix.HTML do
       {:safe, ["<hello>"|'<world>']}
 
   """
-  @spec safe_concat(unsafe | safe, unsafe | safe) :: safe
+  @spec safe_concat(iodata | safe, iodata | safe) :: safe
   def safe_concat({:safe, data1}, {:safe, data2}), do: {:safe, io_concat(data1, data2)}
   def safe_concat({:safe, data1}, data2), do: {:safe, io_concat(data1, io_escape(data2))}
   def safe_concat(data1, {:safe, data2}), do: {:safe, io_concat(io_escape(data1), data2)}
@@ -169,7 +175,7 @@ defmodule Phoenix.HTML do
       iex> html_escape({:safe, "<hello>"})
       {:safe, "<hello>"}
   """
-  @spec html_escape(Phoenix.HTML.Safe.t) :: safe
+  @spec html_escape(unsafe) :: safe
   def html_escape({:safe, _} = safe),
     do: safe
   def html_escape(nil),
