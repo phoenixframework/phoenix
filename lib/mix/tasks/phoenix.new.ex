@@ -18,7 +18,7 @@ defmodule Mix.Tasks.Phoenix.New do
   name the OTP application for the project.
 
   A `--module` option can be given in order
-  to name the modules in the generated code skeleton.  
+  to name the modules in the generated code skeleton.
 
   ## Examples
 
@@ -111,18 +111,19 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   defp in_umbrella?(app_path) do
-    apps = Path.expand(Path.join [app_path, ".."])
+    umbrella = Path.expand(Path.join [app_path, "..", ".."])
 
     try do
-      Mix.Project.in_project(:umbrella_check, Path.expand(Path.join [apps, ".."]), fn _ ->
-        path = Mix.Project.config[:apps_path]
-        path && Path.expand(path) == apps
-      end)
+      File.exists?(Path.join(umbrella, "mix.exs")) &&
+        Mix.Project.in_project(:umbrella_check, umbrella, fn _ ->
+          path = Mix.Project.config[:apps_path]
+          path && Path.expand(path) == Path.join(umbrella, "apps")
+        end)
     catch
       _, _ -> false
     end
   end
-  
+
   defp make_destination_path(source_path, source_dir, target_dir, application_name) do
     target_path =
       source_path
