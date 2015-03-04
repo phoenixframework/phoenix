@@ -9,8 +9,9 @@ defmodule <%= application_module %>.ErrorView do
     "Server internal error - 500"
   end
 
-  # Render all other templates as 500
-  def render(_, assigns) do
+  # In case no render clause matches or no
+  # template is found, let's render it as 500
+  def template_not_found(_, assigns) do
     render "500.html", assigns
   end
 end

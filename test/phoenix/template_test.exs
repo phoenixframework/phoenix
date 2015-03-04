@@ -93,7 +93,13 @@ defmodule Phoenix.TemplateTest do
   test "compiler ignores missing template path" do
     defmodule OtherViews do
       use Phoenix.Template, root: Path.join(__DIR__, "not-exists")
+
+      def template_not_found(template, _assigns) do
+        "Not found: #{template}"
+      end
     end
+
+    assert OtherViews.render("foo") == "Not found: foo"
   end
 
   test "generates __phoenix_recompile__? function" do
