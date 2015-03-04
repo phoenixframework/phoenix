@@ -59,8 +59,9 @@ defmodule Phoenix.Socket.Server do
 
   # Server internal
 
-  def init({%Socket{} = socket, channel, topic, message}) do
+  def init({%Socket{pid: adapter_pid} = socket, channel, topic, message}) do
     Process.flag(:trap_exit, true)
+    Process.monitor(adapter_pid)
     topic
     |> channel.join(message, Socket.put_channel(socket, channel))
     |> handle_init
@@ -69,33 +70,40 @@ defmodule Phoenix.Socket.Server do
   def handle_call({:dispatch_in, topic, event, message}, _from, socket) do
     if Socket.authorized?(socket, topic) do
       socket.channel.handle_in(event, message, socket)
-      |> create_reply
+      |> create_reply(socket)
     else
-      create_reply({:error, :unauthenticated, socket})
+      create_reply({:error, :unauthenticated, socket}, socket)
     end
   end
 
   def handle_call({:dispatch_out, event, message}, _from, socket) do
     socket.channel.handle_out(event, message, socket)
-    |> create_reply
+    |> create_reply(socket)
   end
 
   def handle_call({:dispatch_leave, :ignore_topic, message}, _from, socket) do
     socket.channel.leave(message, socket)
-    |> handle_stop
+    |> handle_stop(socket)
   end
 
   def handle_call({:dispatch_leave, topic, message}, _from, socket) do
     if Socket.authorized?(socket, topic) do
       socket.channel.leave(message, socket)
-      |> handle_stop
+      |> handle_stop(socket)
     else
-      handle_stop({:error, :unauthenticated, socket})
+      handle_stop({:error, :unauthenticated, socket}, socket)
     end
   end
 
   def handle_call({:authorized, topic}, _from, socket) do
     {:reply, Socket.authorized?(socket, topic), socket}
+  end
+
+  def handle_info({:DOWN, _ref, _type, adapter_pid, _info}, %Socket{pid: adapter_pid} = socket) do
+    {:stop, reason, _reply, socket} =
+      socket.channel.leave(%{reason: :adapter_down}, socket)
+      |> handle_stop(socket)
+    {:stop, reason, socket}
   end
 
   def handle_info(message, socket) do
@@ -104,7 +112,6 @@ defmodule Phoenix.Socket.Server do
     {:noreply, socket}
   end
 
-  def terminate(:bad_return, socket), do: :ok
   def terminate(_reason, socket) do
     PubSub.unsubscribe(socket.pubsub_server, socket.pid, socket.topic)
     :ok
@@ -116,21 +123,27 @@ defmodule Phoenix.Socket.Server do
     PubSub.subscribe(socket.pubsub_server, socket.pid, socket.topic, link: true)
     {:ok, Socket.authorize(socket, socket.topic)}
   end
-  defp handle_init(:ignore),                          do: :ignore
-  defp handle_init({:error, reason, %Socket{} = s}),  do: {:stop, {reason, s}}
-  defp handle_init(bad_return),                       do: {:stop, {{:invalid_return, bad_return}, :undefined}}
+  defp handle_init(:ignore),                              do: :ignore
+  defp handle_init({:error, reason, %Socket{} = socket}), do: {:stop, {reason, socket}}
+  defp handle_init(bad_return),                           do: {:stop, {{:invalid_return, bad_return}, :undefined}}
 
-  defp create_reply({result, %Socket{} = s}),         do: {:reply, {result, self}, s}
-  defp create_reply({:error, reason, %Socket{} = s}), do: {:reply, {:error, {reason, self}}, s}
-  defp create_reply(bad_return),                      do: {:reply, {:error, {{:invalid_return, bad_return}}, self}, %{}}
+  defp create_reply({result, %Socket{} = socket}, _old_state) do
+    {:reply, {result, self}, socket}
+  end
+  defp create_reply({:error, reason, %Socket{} = socket}, _old_state) do
+    {:reply, {:error, {reason, self}}, socket}
+  end
+  defp create_reply(bad_return, old_state) do
+    {:reply, {:error, {{:invalid_return, bad_return}}, self}, old_state}
+  end
 
-  defp handle_stop({result, %Socket{} = s}) do
-    {:stop, :normal, {result, self}, Socket.deauthorize(s)}
+  defp handle_stop({result, %Socket{} = socket}, _old_state) do
+    {:stop, :normal, {result, self}, Socket.deauthorize(socket)}
   end
-  defp handle_stop({:error, reason, %Socket{} = s}) do
-    {:stop, reason, {:error, {reason, self}}, Socket.deauthorize(s)}
+  defp handle_stop({:error, reason, %Socket{} = socket}, _old_state) do
+    {:stop, reason, {:error, {reason, self}}, Socket.deauthorize(socket)}
   end
-  defp handle_stop(bad_return) do
-    {:stop, :bad_return, {:error, {{:invalid_return, bad_return}}, self}, %{}}
+  defp handle_stop(bad_return, old_state) do
+    {:stop, :invalid_return, {:error, {{:invalid_return, bad_return}}, self}, Socket.deauthorize(old_state)}
   end
 end
