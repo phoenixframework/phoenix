@@ -126,5 +126,6 @@ defmodule Phoenix.Endpoint.Adapter do
   end
 
   defp port_to_string({:system, env_var}), do: System.get_env(env_var)
-  defp port_to_string(port), do: to_string(port)
+  defp port_to_string(port) when is_binary(port), do: port
+  defp port_to_string(port) when is_integer(port), do: Integer.to_string(port)
 end

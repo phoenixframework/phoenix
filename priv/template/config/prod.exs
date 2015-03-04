@@ -1,9 +1,13 @@
 use Mix.Config
 
 config :<%= application_name %>, <%= application_module %>.Endpoint,
-  url: [host: "example.com"],
-  http: [port: System.get_env("PORT")],
-  secret_key_base: "<%= secret_key_base %>"
+  secret_key_base: "<%= secret_key_base %>",
+
+  # Read the port from the system environment variable PORT
+  http: [port: {:system, "PORT"}],
+
+  # Configure URLs to generate the proper application host
+  url: [host: "example.com"]
 
 # ## SSL Support
 #
@@ -18,7 +22,6 @@ config :<%= application_name %>, <%= application_module %>.Endpoint,
 #
 # Where those two env variables point to a file on
 # disk for the key and cert.
-
 
 # Do not print debug messages in production
 config :logger, level: :info
