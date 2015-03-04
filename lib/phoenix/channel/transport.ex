@@ -97,7 +97,6 @@ defmodule Phoenix.Channel.Transport do
     {:ok, HashDict.put(sockets, topic, socket)}
   end
   defp transport_response({:leave, socket}, topic, sockets) do
-    Socket.Supervisor.terminate_child(socket)
     {:ok, HashDict.delete(sockets, topic)}
   end
   defp transport_response({:heartbeat, _socket}, _topic, sockets) do
@@ -151,7 +150,6 @@ defmodule Phoenix.Channel.Transport do
   end
 
   defp handle_result({:ok, socket}, "leave") do
-    :ok = Socket.Server.do_leave(socket)
     {:leave, socket}
   end
   defp handle_result({:ok, socket}, _event) do
