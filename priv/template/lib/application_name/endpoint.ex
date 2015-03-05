@@ -4,8 +4,7 @@ defmodule <%= application_module %>.Endpoint do
   # Serve at "/" the given assets from "priv/static" directory
   plug Plug.Static,
     at: "/", from: :<%= application_name %>,
-    only: ~w(css images js favicon.ico robots.txt
-             app.js app.js.map app.css app.css.map)
+    only: ~w(css images js favicon.ico robots.txt)
 
   plug Plug.Logger
 
