@@ -548,7 +548,7 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Performs content negotiation based on the accepted formats.
+  Performs content negotiation based on the available formats.
 
   It receives a connection, a list of formats that the server
   is capable of rendering and then proceeds to perform content
