@@ -1,0 +1,13 @@
+{
+  "repository": {
+  },
+  "dependencies": {
+    "brunch": "git://github.com/brunch/brunch#5176b6b4bf70cd8cb9dad0058dd3e83e8d983218",
+    "babel-brunch": "^4.0.0",
+    "clean-css-brunch": ">= 1.0 < 1.8",
+    "css-brunch": ">= 1.0 < 1.8",
+    "javascript-brunch": ">= 1.0 < 1.8",
+    "sass-brunch": "git://github.com/brunch/sass-brunch.git#master",
+    "uglify-js-brunch": ">= 1.0 < 1.8"
+  }
+}

@@ -10,6 +10,9 @@ defmodule Phoenix.CodeReloader do
   sequential call operation.
   """
 
+  @external_resource phx_js_path = "priv/static/phoenix.js"
+  @phoenix_js File.read!(phx_js_path)
+
   ## Server delegation
 
   @doc """
@@ -59,7 +62,7 @@ defmodule Phoenix.CodeReloader do
         |> send_resp(500, template(conn, output))
         |> halt()
       _ ->
-        conn
+        before_send_inject_reloader(conn)
     end
   end
 
@@ -187,4 +190,31 @@ defmodule Phoenix.CodeReloader do
 
   defp method(%Plug.Conn{method: method}), do:
     method
+
+  defp before_send_inject_reloader(conn) do
+    register_before_send conn, fn conn ->
+      content_type = hd(get_resp_header(conn, "content-type"))
+      if String.starts_with?(content_type, "text/html") do
+        [page | rest] = String.split(to_string(conn.resp_body), "</body>")
+        body = page <> reload_assets_tag() <> Enum.join(["</body>" | rest], "")
+
+        put_in conn.resp_body, body
+      else
+        conn
+      end
+    end
+  end
+
+  defp reload_assets_tag() do
+    """
+    <script>
+      #{@phoenix_js}
+      var phx = require("phoenix")
+      var socket = new phx.Socket("/phoenix")
+      socket.join("phoenix", {}, function(chan){
+        chan.on("assets:change", function(msg){ window.location.reload(); })
+      })
+    </script>
+    """
+  end
 end

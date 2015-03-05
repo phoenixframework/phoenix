@@ -18,7 +18,7 @@ defmodule Mix.Tasks.Phoenix.New do
   name the OTP application for the project.
 
   A `--module` option can be given in order
-  to name the modules in the generated code skeleton.  
+  to name the modules in the generated code skeleton.
 
   ## Examples
 
@@ -50,16 +50,25 @@ defmodule Mix.Tasks.Phoenix.New do
     pubsub_server = mod
                     |> Module.concat(nil)
                     |> Naming.base_concat(PubSub)
+    npm_path = System.find_executable("npm")
     binding = [application_name: app,
                application_module: mod,
                phoenix_dep: phoenix_dep(dev),
                pubsub_server: pubsub_server,
                secret_key_base: random_string(64),
                encryption_salt: random_string(8),
-               signing_salt: random_string(8)]
+               signing_salt: random_string(8),
+               in_umbrella: in_umbrella?(path)]
 
     copy_from template_dir, path, app, &EEx.eval_file(&1, binding)
     copy_from static_dir, Path.join(path, "priv/static"), app, &File.read!(&1)
+
+    # TODO decide to auto npm install or not
+    if npm_path && Mix.env == :dev do
+      IO.puts "Installing brunch.io dependencies..."
+      IO.puts "npm install --prefix #{path}"
+      System.cmd("npm", ["install", "--prefix", path])
+    end
   end
 
   def random_string(length) do
@@ -108,7 +117,21 @@ defmodule Mix.Tasks.Phoenix.New do
       Mix.raise "Module name must be a valid Elixir alias (for example: Foo.Bar), got: #{inspect name}"
     end
   end
-  
+
+  defp in_umbrella?(app_path) do
+    umbrella = Path.expand(Path.join [app_path, "..", ".."])
+
+    try do
+      File.exists?(Path.join(umbrella, "mix.exs")) &&
+        Mix.Project.in_project(:umbrella_check, umbrella, fn _ ->
+          path = Mix.Project.config[:apps_path]
+          path && Path.expand(path) == Path.join(umbrella, "apps")
+        end)
+    catch
+      _, _ -> false
+    end
+  end
+
   defp make_destination_path(source_path, source_dir, target_dir, application_name) do
     target_path =
       source_path
