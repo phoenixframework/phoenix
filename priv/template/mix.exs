@@ -22,7 +22,7 @@ defmodule <%= application_module %>.Mixfile do
   #
   # Type `mix help deps` for examples and options
   defp deps do
-    [{:phoenix, github: "phoenixframework/phoenix", branch: "cm-brunch"},
+    [<%= phoenix_dep %>,
      {:cowboy, "~> 1.0"}]
   end
 end
