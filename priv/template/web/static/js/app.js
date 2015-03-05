@@ -1,4 +1,4 @@
-import {Socket} from "./phoenix"
+import {Socket} from "phoenix"
 
 // let socket = new Socket("/ws")
 // socket.join("topic:subtopic", {}, chan => {

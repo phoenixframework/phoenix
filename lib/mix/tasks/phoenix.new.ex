@@ -42,11 +42,11 @@ defmodule Mix.Tasks.Phoenix.New do
         mod = opts[:module] || Naming.camelize(app)
         check_mod_name!(mod)
 
-        run(app, mod, path, opts[:dev])
+        run(app, mod, path, opts[:dev], opts[:skip_brunch], opts[:skip_npm])
     end
   end
 
-  def run(app, mod, path, dev) do
+  def run(app, mod, path, dev, skip_brunch, skip_npm) do
     pubsub_server = mod
                     |> Module.concat(nil)
                     |> Naming.base_concat(PubSub)
@@ -60,19 +60,49 @@ defmodule Mix.Tasks.Phoenix.New do
                signing_salt: random_string(8),
                in_umbrella: in_umbrella?(path)]
 
-    copy_from template_dir, path, app, &EEx.eval_file(&1, binding)
-    copy_from static_dir, Path.join(path, "priv/static"), app, &File.read!(&1)
+    copy_from template_dir(), path, app, &EEx.eval_file(&1, binding)
 
-    # TODO decide to auto npm install or not
-    if npm_path && Mix.env == :dev do
-      IO.puts "Installing brunch.io dependencies..."
-      IO.puts "npm install --prefix #{path}"
-      System.cmd("npm", ["install", "--prefix", path])
+    cond do
+      Mix.env == :dev && !skip_brunch && !skip_npm && npm_path ->
+        setup_brunch_files(path)
+        IO.puts "Installing brunch.io dependencies..."
+        IO.puts "npm install --prefix #{path}"
+        System.cmd("npm", ["install", "--prefix", path])
+
+
+      Mix.env == :dev && !skip_brunch && (skip_npm || !npm_path)->
+        setup_brunch_files(path)
+        IO.puts """
+
+        Brunch was setup for static assets, but node deps were not installed via npm.
+        Installation instructions for nodejs, which includes npm, can be found
+        at http://nodejs.org
+
+        You can install your brunch dependencies by running:
+
+            $ cd #{path}
+            $ npm install
+
+        """
+
+      true ->
+        File.rm_rf!(Path.join(path, "web/static"))
+        File.rm!(Path.join(path, "brunch-config.js"))
+        File.rm!(Path.join(path, "package.json"))
+        copy_from static_dir(), Path.join(path, "priv/static"), app, &File.read!(&1)
     end
   end
 
   def random_string(length) do
     :crypto.strong_rand_bytes(length) |> Base.encode64 |> binary_part(0, length)
+  end
+
+  defp setup_brunch_files(path) do
+    path
+    |> Path.join(".gitignore")
+    |> File.open([:append], &IO.puts(&1, "/node_modules"))
+
+    File.cp!(Path.join(static_dir(), "phoenix.js"), Path.join(path, "web/static/vendor/phoenix.js"))
   end
 
   defp copy_from(source_dir, target_dir, application_name, fun) do
