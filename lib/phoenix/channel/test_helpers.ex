@@ -117,7 +117,10 @@ defmodule Phoenix.Channel.Test do
   @doc """
   Test that a socket broadcasted a message with `topic` to `payload`.
 
-  Remember to subscribe using `subscribe/2` or there will be no broadcast
+  Remember to subscribe using `subscribe/2` or there will be no broadcast.
+
+  Note: the payload will not be encoded. The payload will be the exact message
+  you passed to `broadcast` in your Channel.
 
   ## Examples
 
@@ -147,6 +150,9 @@ defmodule Phoenix.Channel.Test do
 
   @doc """
   Test that a socket broadcasted a message with `topic` to `payload`.
+
+  Note: the payload will not be encoded. The payload will be the exact message
+  you passed to `reply` in your Channel.
 
   ## Examples
 
