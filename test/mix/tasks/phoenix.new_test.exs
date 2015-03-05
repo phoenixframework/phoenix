@@ -101,6 +101,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/web/static/vendor/phoenix.js"
       assert_file "photo_blog/web/static/css/app.scss"
       assert_file "photo_blog/web/static/assets/images/phoenix.png"
+      assert File.read!("photo_blog/config/dev.exs") =~ ~r/watchers/
     end
   end
 
@@ -144,6 +145,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       refute stdout =~ ~r/npm install/
       refute File.read!("app_no_brunch/.gitignore") |> String.contains?("/node_modules")
+      refute File.read!("app_no_brunch/config/dev.exs") =~ ~r/watchers/
 
       assert_file "app_no_brunch/priv/static/app.css"
       assert_file "app_no_brunch/priv/static/images/phoenix.png"

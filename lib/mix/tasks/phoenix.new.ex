@@ -55,7 +55,7 @@ defmodule Mix.Tasks.Phoenix.New do
     end
   end
 
-  def run(app, mod, path, dev, skip_brunch, skip_npm) do
+  def run(app, mod, path, dev, skip_brunch?, skip_npm?) do
     pubsub_server = mod
                     |> Module.concat(nil)
                     |> Naming.base_concat(PubSub)
@@ -67,18 +67,19 @@ defmodule Mix.Tasks.Phoenix.New do
                secret_key_base: random_string(64),
                encryption_salt: random_string(8),
                signing_salt: random_string(8),
-               in_umbrella: in_umbrella?(path)]
+               in_umbrella: in_umbrella?(path),
+               skip_brunch?: skip_brunch?]
 
     copy_from template_dir(), path, app, &EEx.eval_file(&1, binding)
 
     cond do
-      !skip_brunch && !skip_npm && npm_path ->
+      !skip_brunch? && !skip_npm? && npm_path ->
         setup_brunch_files(app, path)
         IO.puts "Installing brunch.io dependencies..."
         IO.puts "npm install --prefix #{path}"
         if Mix.env == :dev, do: System.cmd("npm", ["install", "--prefix", path])
 
-      !skip_brunch && (skip_npm || !npm_path)->
+      !skip_brunch? && (skip_npm? || !npm_path)->
         setup_brunch_files(app, path)
         IO.puts """
 
