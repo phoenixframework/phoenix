@@ -75,10 +75,6 @@ defmodule Phoenix.HTML.TagTest do
   end
 
   test "form_tag for get" do
-    assert form_tag() ==
-           {:safe, ~s(<form accept-charset="UTF-8">) <>
-                   ~s(<input name="_utf8" type="hidden" value="✓">)}
-
     assert form_tag(method: :get) ==
            {:safe, ~s(<form accept-charset="UTF-8" method="get">) <>
                    ~s(<input name="_utf8" type="hidden" value="✓">)}
@@ -94,7 +90,7 @@ defmodule Phoenix.HTML.TagTest do
   test "form_tag for post" do
     csrf_token = Phoenix.Controller.get_csrf_token()
 
-    assert form_tag(method: :post) ==
+    assert form_tag() ==
            {:safe, ~s(<form accept-charset="UTF-8" method="post">) <>
                    ~s(<input name="_csrf_token" type="hidden" value="#{csrf_token}">) <>
                    ~s(<input name="_utf8" type="hidden" value="✓">)}

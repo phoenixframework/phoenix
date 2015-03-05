@@ -119,7 +119,8 @@ defmodule Phoenix.HTML.Tag do
   ## Options
 
     * `:method` - the HTTP method. If the method is not "get" nor "post",
-      an input tag with name `_method` is generated along-side the form tag
+      an input tag with name `_method` is generated along-side the form tag.
+      Defaults to "post".
 
     * `:multipart` - when true, sets enctype to "multipart/form-data".
       Required when uploading files
@@ -147,12 +148,12 @@ defmodule Phoenix.HTML.Tag do
   reproduced here.
   """
   def form_tag(opts \\ []) do
-    {:safe, method} = html_escape(Keyword.get(opts, :method, "get"))
+    {:safe, method} = html_escape(Keyword.get(opts, :method, "post"))
 
     {opts, extra} =
       case method do
         "get"  -> {opts, ""}
-        "post" -> csrf_token_tag(opts, "")
+        "post" -> csrf_token_tag(Keyword.put(opts, :method, "post"), "")
         _      -> csrf_token_tag(Keyword.put(opts, :method, "post"),
                                  ~s'<input name="_method" type="hidden" value="#{method}">')
       end

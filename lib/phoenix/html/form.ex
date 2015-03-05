@@ -94,35 +94,50 @@ defmodule Phoenix.HTML.Form do
 
   Its fields are:
 
+    * `:source` - the data structure given to `form_for/4` that
+      implements the form data protocol
     * `:name` - the name to be used when generating input fields
-    * `:method` - the http method to be used by the form
     * `:model` - the model used to lookup field data
     * `:params` - the parameters associated to this form in case
       they were sent as part of a previous request
     * `:options` - a copy of the options given when creating the
-      form via `form_for/4`
+      form via `form_for/4` without any form data specific key
   """
-  defstruct [:name, :method, :model, :params, :options]
-  @type t :: %Form{name: String.t, method: String.t, model: map,
+  defstruct [:source, :name, :model, :params, :options]
+  @type t :: %Form{source: term, name: String.t, model: map,
                    params: map, options: Keyword.t}
 
   @doc """
   Generates a form tag with a form builder.
 
-  See the module documentation for examples of using this
-  function. All options are passed to the underlying "form"
-  tag. See `Phoenix.HTML.Tag.form_tag/1` for more information.
+  See the module documentation for examples of using this function.
+
+  ## Options
+
+    * `:name` - the name to be used in the form. May be inflected
+      if a model is available
+
+    * `:method` - the HTTP method. If the method is not "get" nor "post",
+      an input tag with name `_method` is generated along-side the form tag.
+      Defaults to "post".
+
+    * `:multipart` - when true, sets enctype to "multipart/form-data".
+      Required when uploading files
+
+    * `:csrf_token` - for "post" requests, the form tag will automatically
+      include an input tag with name `_csrf_token`. When set to false, this
+      is disabled
+
+    * `:enforce_utf8` - when false, does not enforce utf8
+
+  See `Phoenix.HTML.Tag.form_tag/1` for more information on the
+  options above.
   """
   @spec form_for(Phoenix.HTML.FormData.t, String.t,
                  Keyword.t, (t -> Phoenix.HTML.unsafe)) :: Phoenix.HTML.safe
   def form_for(form_data, action, options \\ [], fun) when is_function(fun, 1) do
-    form = Phoenix.HTML.FormData.to_form(form_data, options)
-
-    options =
-      form.options
-      |> Keyword.put(:method, form.method)
-      |> Keyword.put(:action, action)
-
+    form    = Phoenix.HTML.FormData.to_form(form_data, options)
+    options = Keyword.put(form.options, :action, action)
     safe_concat [form_tag(options), fun.(form), safe("</form>")]
   end
 

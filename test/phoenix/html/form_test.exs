@@ -31,7 +31,6 @@ defmodule Phoenix.HTML.FormTest do
   test "form_for/4 with connection" do
     {:safe, form} = form_for(@conn, "/", [name: :search], fn f ->
       assert f.name == "search"
-      assert f.method == "post"
       assert f.params["key"] == "value"
       ""
     end)
@@ -42,7 +41,9 @@ defmodule Phoenix.HTML.FormTest do
 
   test "form_for/4 with custom options" do
     {:safe, form} = form_for(@conn, "/", [name: :search, method: :put, multipart: true], fn f ->
-      assert f.method == "put"
+      refute f.options[:name]
+      assert f.options[:multipart] == true
+      assert f.options[:method] == :put
       ""
     end)
 
