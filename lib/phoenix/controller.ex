@@ -552,7 +552,8 @@ defmodule Phoenix.Controller do
 
   It receives a connection, a list of formats that the server
   is capable of rendering and then proceeds to perform content
-  negotiation based on the request information.
+  negotiation based on the request information. If the client
+  accepts any of the given formats, the request proceeds.
 
   If the request contains a "format" parameter, it is
   considered to be the format desired by the client. If no
