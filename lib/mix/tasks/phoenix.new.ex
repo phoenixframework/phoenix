@@ -20,6 +20,11 @@ defmodule Mix.Tasks.Phoenix.New do
   A `--module` option can be given in order
   to name the modules in the generated code skeleton.
 
+  By default, Brunch is added for static asset building and nodejs
+  deps are automatically installed via npm.
+  To skip brunch related files, use the  `--skip-brunch` option.
+  To setup brunch, but skip npm install, use the `--skip-npm` option.
+
   ## Examples
 
       mix phoenix.new hello_world
@@ -27,6 +32,10 @@ defmodule Mix.Tasks.Phoenix.New do
   Is equivalent to:
 
       mix phoenix.new hello_world --module HelloWorld
+
+  Without brunch:
+
+      mix phoenix.new ~/Workspace/hello_world --skip-brunch
 
   """
 
