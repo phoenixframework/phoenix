@@ -72,15 +72,14 @@ defmodule Mix.Tasks.Phoenix.New do
     copy_from template_dir(), path, app, &EEx.eval_file(&1, binding)
 
     cond do
-      Mix.env == :dev && !skip_brunch && !skip_npm && npm_path ->
-        setup_brunch_files(path)
+      !skip_brunch && !skip_npm && npm_path ->
+        setup_brunch_files(app, path)
         IO.puts "Installing brunch.io dependencies..."
         IO.puts "npm install --prefix #{path}"
-        System.cmd("npm", ["install", "--prefix", path])
+        if Mix.env == :dev, do: System.cmd("npm", ["install", "--prefix", path])
 
-
-      Mix.env == :dev && !skip_brunch && (skip_npm || !npm_path)->
-        setup_brunch_files(path)
+      !skip_brunch && (skip_npm || !npm_path)->
+        setup_brunch_files(app, path)
         IO.puts """
 
         Brunch was setup for static assets, but node deps were not installed via npm.
@@ -106,12 +105,17 @@ defmodule Mix.Tasks.Phoenix.New do
     :crypto.strong_rand_bytes(length) |> Base.encode64 |> binary_part(0, length)
   end
 
-  defp setup_brunch_files(path) do
+  defp setup_brunch_files(app, path) do
     path
     |> Path.join(".gitignore")
     |> File.open([:append], &IO.puts(&1, "/node_modules"))
 
     File.cp!(Path.join(static_dir(), "phoenix.js"), Path.join(path, "web/static/vendor/phoenix.js"))
+    File.cp!(Path.join(static_dir(), "app.css"), Path.join(path, "web/static/css/app.scss"))
+    copy_from Path.join(static_dir(), "images"),
+              Path.join(path, "web/static/assets/images"),
+              app,
+              &File.read!(&1)
   end
 
   defp copy_from(source_dir, target_dir, application_name, fun) do

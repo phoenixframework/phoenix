@@ -19,7 +19,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       secret_key_base: String.duplicate("abcdefgh", 8))
 
     in_tmp "bootstrap", fn ->
-      Mix.Tasks.Phoenix.New.run([@app_name])
+      capture_io fn -> Mix.Tasks.Phoenix.New.run([@app_name]) end
     end
 
     # Copy artifacts from Phoenix so we can compile and run tests
@@ -64,7 +64,8 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
   test "new with path" do
     in_tmp "new with path", fn ->
-      Mix.Tasks.Phoenix.New.run([@app_name])
+      stdout = capture_io fn -> Mix.Tasks.Phoenix.New.run([@app_name]) end
+      assert stdout =~ ~r/npm install/
 
       assert_file "photo_blog/.gitignore"
       assert_file "photo_blog/README.md"
@@ -73,9 +74,9 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/lib/photo_blog.ex", ~r/defmodule PhotoBlog do/
       assert_file "photo_blog/lib/photo_blog/endpoint.ex", ~r/defmodule PhotoBlog.Endpoint do/
 
-      assert_file "photo_blog/priv/static/app.css"
-      assert_file "photo_blog/priv/static/images/phoenix.png"
-      assert_file "photo_blog/priv/static/phoenix.js"
+      refute File.exists? "photo_blog/priv/static/app.css"
+      refute File.exists? "photo_blog/priv/static/images/phoenix.png"
+      refute File.exists? "photo_blog/priv/static/phoenix.js"
 
       assert_file "photo_blog/test/photo_blog_test.exs"
       assert_file "photo_blog/test/test_helper.exs"
@@ -94,13 +95,21 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       assert_file "photo_blog/web/router.ex", ~r/defmodule PhotoBlog.Router/
       assert_file "photo_blog/web/web.ex", ~r/defmodule PhotoBlog.Web/
+
+      # brunch
+      assert File.read!("photo_blog/.gitignore") |> String.contains?("/node_modules")
+      assert_file "photo_blog/web/static/vendor/phoenix.js"
+      assert_file "photo_blog/web/static/css/app.scss"
+      assert_file "photo_blog/web/static/assets/images/phoenix.png"
     end
   end
 
   test "new with path and app name" do
     in_tmp "new with path and app name", fn ->
       project_path = Path.join(File.cwd!, "custom_path")
-      Mix.Tasks.Phoenix.New.run([project_path, "--app", @app_name])
+      capture_io fn ->
+        Mix.Tasks.Phoenix.New.run([project_path, "--app", @app_name])
+      end
 
       assert_file "custom_path/.gitignore"
       assert_file "custom_path/mix.exs", ~r/app: :photo_blog/
@@ -123,6 +132,22 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
     assert_raise Mix.Error, "Expected PATH to be given, please use `mix phoenix.new PATH`", fn ->
       Mix.Tasks.Phoenix.New.run []
+    end
+  end
+
+  test "new with skip-brunch" do
+    in_tmp "new with skip-brunch", fn ->
+      project_path = Path.join(File.cwd!, "app_no_brunch")
+      stdout = capture_io fn ->
+        Mix.Tasks.Phoenix.New.run([project_path, "--app", @app_name, "--skip-brunch"])
+      end
+
+      refute stdout =~ ~r/npm install/
+      refute File.read!("app_no_brunch/.gitignore") |> String.contains?("/node_modules")
+
+      assert_file "app_no_brunch/priv/static/app.css"
+      assert_file "app_no_brunch/priv/static/images/phoenix.png"
+      assert_file "app_no_brunch/priv/static/phoenix.js"
     end
   end
 
