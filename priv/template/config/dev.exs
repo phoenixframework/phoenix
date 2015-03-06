@@ -1,15 +1,17 @@
 use Mix.Config
 
+# For development, we disable any cache and enable
+# debugging and code reloading.
+#
+# The watchers configuration can be used to run external
+# watchers to your application. For example, we use it
+# with brunch.io to recompile .js and .css sources.
 config :<%= application_name %>, <%= application_module %>.Endpoint,
   http: [port: 4000],
   debug_errors: true,
   cache_static_lookup: false
-<%= if brunch do %>
-# Run brunch watch to recompile .js and .css
-# sources as they change.
-config :<%= application_name %>, <%= application_module %>.Endpoint,
-  watchers: [{Path.expand("node_modules/brunch/bin/brunch"), ["watch"]}],
-<% end %>
+  watchers: <%= if brunch do %>[{Path.expand("node_modules/brunch/bin/brunch"), ["watch"]}]<% else %>[]<% end %>
+
 # Watch static and templates for browser reloading.
 # *Note*: Be careful with wildcards. Larger projects
 # will use higher CPU in dev as the number of files

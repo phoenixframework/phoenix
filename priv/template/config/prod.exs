@@ -1,12 +1,14 @@
 use Mix.Config
 
+# For production, we configure the host to read the PORT
+# from the system environment. Therefore, you will need
+# to set PORT=80 before running your server.
+#
+# You should also configure the url host to something
+# meaningful, we use this information when generating URLs.
 config :<%= application_name %>, <%= application_module %>.Endpoint,
   secret_key_base: "<%= secret_key_base %>",
-
-  # Read the port from the system environment variable PORT
   http: [port: {:system, "PORT"}],
-
-  # Configure URLs to generate the proper application host
   url: [host: "example.com"]
 
 # ## SSL Support
