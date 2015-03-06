@@ -116,6 +116,10 @@ defmodule Phoenix.Template do
       """
       def render(template, assigns \\ %{})
 
+      def render(template, assigns) when is_list(assigns) do
+        render(template, Enum.into(assigns, %{}))
+      end
+
       @doc """
       Callback invoked when no template is found.
       By default it raises but can be customized

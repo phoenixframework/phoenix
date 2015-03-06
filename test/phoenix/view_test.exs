@@ -63,6 +63,10 @@ defmodule Phoenix.ViewTest do
                 "\n</html>\n"]
   end
 
+  test "converts assigns to maps even on local calls" do
+    assert MyApp.UserView.render("edit.html", title: "Test") == "EDIT - Test"
+  end
+
   test "renders views to iodata/string using encoders" do
     assert View.render_to_iodata(MyApp.UserView, "index.html", title: "Hello world") ==
            [["" | "Hello world"] | "\n"]
