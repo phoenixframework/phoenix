@@ -10,7 +10,7 @@ defmodule Phoenix.HTML.LinkTest do
     assert link("hello", to: "/world", method: :post) ==
            {:safe, ~s[<form action="/world" class="linkmethod" method="post">] <>
                    ~s[<input name="_csrf_token" type="hidden" value="#{csrf_token}">] <>
-                   ~s[<a onclick="this.parentNode.submit()">hello</a>] <>
+                   ~s[<a href="#" onclick="this.parentNode.submit(); return false;">hello</a>] <>
                    ~s[</form>]}
   end
 
@@ -21,7 +21,7 @@ defmodule Phoenix.HTML.LinkTest do
            {:safe, ~s[<form action="/world" class="linkmethod" method="post">] <>
                    ~s[<input name="_method" type="hidden" value="put">] <>
                    ~s[<input name="_csrf_token" type="hidden" value="#{csrf_token}">] <>
-                   ~s[<a onclick="this.parentNode.submit()">hello</a>] <>
+                   ~s[<a href="#" onclick="this.parentNode.submit(); return false;">hello</a>] <>
                    ~s[</form>]}
   end
 end

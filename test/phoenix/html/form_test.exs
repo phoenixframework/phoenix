@@ -40,29 +40,6 @@ defmodule Phoenix.HTML.FormTest do
     assert form =~ ~s(<input name="_utf8" type="hidden" value="✓">)
   end
 
-  test "form_for/4 with custom implementation" do
-    defimpl Phoenix.HTML.FormData, for: Reference do
-      def to_form(ref, options) do
-        %Phoenix.HTML.Form{
-          source: ref,
-          name: "ref",
-          hidden: [id: "ref"],
-          params: %{},
-          options: options
-        }
-      end
-    end
-
-    {:safe, form} = form_for(make_ref(), "/", [method: :put], fn f ->
-      assert is_reference(f.source)
-      assert f.options[:method] == :put
-      ""
-    end)
-
-    assert form =~
-           ~s(<input id="ref_id" name="ref[id]" type="hidden" value="ref">)
-  end
-
   test "form_for/4 with custom options" do
     {:safe, form} = form_for(@conn, "/", [name: :search, method: :put, multipart: true], fn f ->
       refute f.options[:name]

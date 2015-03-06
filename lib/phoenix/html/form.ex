@@ -139,12 +139,7 @@ defmodule Phoenix.HTML.Form do
                  Keyword.t, (t -> Phoenix.HTML.unsafe)) :: Phoenix.HTML.safe
   def form_for(form_data, action, options \\ [], fun) when is_function(fun, 1) do
     form = Phoenix.HTML.FormData.to_form(form_data, options)
-
-    hidden = Enum.reduce form.hidden, safe(""), fn {k, v}, acc ->
-      safe_concat hidden_input(form, k, value: v), acc
-    end
-
-    safe_concat [form_tag(action, form.options), hidden, fun.(form), safe("</form>")]
+    safe_concat [form_tag(action, form.options), fun.(form), safe("</form>")]
   end
 
   ## Form helpers
