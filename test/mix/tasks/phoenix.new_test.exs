@@ -27,7 +27,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       secret_key_base: String.duplicate("abcdefgh", 8))
 
     in_tmp "bootstrap", fn ->
-      Mix.Tasks.Phoenix.New.run([@app_name])
+      Mix.Tasks.Phoenix.New.run([@app_name, "--no-brunch", "--no-ecto"])
     end
 
     # Copy artifacts from Phoenix so we can compile and run tests
@@ -68,11 +68,10 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     Application.put_env(:phoenix, :code_reloader, false)
   end
 
-  test "new with path" do
-    in_tmp "new with path", fn ->
+  test "new with defaults" do
+    in_tmp "new with defaults", fn ->
       Mix.Tasks.Phoenix.New.run([@app_name])
 
-      assert_file "photo_blog/.gitignore"
       assert_file "photo_blog/README.md"
       assert_file "photo_blog/mix.exs", fn(file) ->
         assert file =~ "app: :photo_blog"
@@ -82,11 +81,6 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       assert_file "photo_blog/lib/photo_blog.ex", ~r/defmodule PhotoBlog do/
       assert_file "photo_blog/lib/photo_blog/endpoint.ex", ~r/defmodule PhotoBlog.Endpoint do/
-
-      refute File.exists? "photo_blog/priv/static/css/app.css"
-      refute File.exists? "photo_blog/priv/static/images/phoenix.png"
-      refute File.exists? "photo_blog/priv/static/js/phoenix.js"
-      refute File.exists? "photo_blog/priv/static/js/app.js"
 
       assert_file "photo_blog/test/photo_blog_test.exs"
       assert_file "photo_blog/test/test_helper.exs"
@@ -106,13 +100,27 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/web/router.ex", ~r/defmodule PhotoBlog.Router/
       assert_file "photo_blog/web/web.ex", ~r/defmodule PhotoBlog.Web/
 
-      # Brunch (default)
+      # Brunch
       assert_file "photo_blog/.gitignore", ~r"/node_modules"
       assert_file "photo_blog/web/static/vendor/phoenix.js"
       assert_file "photo_blog/web/static/js/app.js"
       assert_file "photo_blog/web/static/css/app.scss"
       assert_file "photo_blog/web/static/assets/images/phoenix.png"
-      assert_file "photo_blog/config/dev.exs", ~r/watchers:/
+      assert_file "photo_blog/config/dev.exs", ~r/watchers: \[\{/
+
+      refute File.exists? "photo_blog/priv/static/css/app.css"
+      refute File.exists? "photo_blog/priv/static/images/phoenix.png"
+      refute File.exists? "photo_blog/priv/static/js/phoenix.js"
+      refute File.exists? "photo_blog/priv/static/js/app.js"
+
+      # Ecto
+      config = ~r/config :photo_blog, PhotoBlog.Repo,/
+      assert_file "photo_blog/mix.exs", ~r"{:phoenix_ecto,"
+      assert_file "photo_blog/config/dev.exs", config
+      assert_file "photo_blog/config/test.exs", config
+      assert_file "photo_blog/config/prod.secret.exs", config
+      assert_file "photo_blog/lib/photo_blog/repo.ex", ~r"defmodule PhotoBlog.Repo"
+      assert_file "photo_blog/web/web.ex", ~r"alias PhotoBlog.Repo"
 
       # Questions
       assert_received {:mix_shell, :yes?, ["\nInstall brunch.io dependencies?"]}
@@ -120,17 +128,28 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     end
   end
 
-  test "new without brunch" do
-    in_tmp "new without brunch", fn ->
-      Mix.Tasks.Phoenix.New.run(["app_no_brunch", "--app", @app_name, "--no-brunch"])
+  test "new without defaults" do
+    in_tmp "new without defaults", fn ->
+      Mix.Tasks.Phoenix.New.run([@app_name, "--no-brunch", "--no-ecto"])
 
-      refute File.read!("app_no_brunch/config/dev.exs") =~ ~r/watchers:/
-      refute File.read!("app_no_brunch/.gitignore") |> String.contains?("/node_modules")
+      # No Brunch
+      refute File.read!("photo_blog/.gitignore") |> String.contains?("/node_modules")
+      assert_file "photo_blog/config/dev.exs", ~r/watchers: \[\]/
 
-      assert_file "app_no_brunch/priv/static/css/app.css"
-      assert_file "app_no_brunch/priv/static/images/phoenix.png"
-      assert_file "app_no_brunch/priv/static/js/phoenix.js"
-      assert_file "app_no_brunch/priv/static/js/app.js"
+      assert_file "photo_blog/priv/static/css/app.css"
+      assert_file "photo_blog/priv/static/images/phoenix.png"
+      assert_file "photo_blog/priv/static/js/phoenix.js"
+      assert_file "photo_blog/priv/static/js/app.js"
+
+      # No Ecto
+      config = ~r/config :photo_blog, PhotoBlog.Repo,/
+      refute File.exists?("photo_blog/lib/photo_blog/repo.ex")
+
+      assert_file "photo_blog/mix.exs", &refute(&1 =~ ~r":phoenix_ecto")
+      assert_file "photo_blog/config/dev.exs", &refute(&1 =~ config)
+      assert_file "photo_blog/config/test.exs", &refute(&1 =~ config)
+      assert_file "photo_blog/config/prod.secret.exs", &refute(&1 =~ config)
+      assert_file "photo_blog/web/web.ex", &refute(&1 =~ ~r"alias PhotoBlog.Repo")
     end
   end
 

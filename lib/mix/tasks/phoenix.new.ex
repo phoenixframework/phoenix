@@ -21,8 +21,11 @@ defmodule Mix.Tasks.Phoenix.New do
     * `--module` - the name of the base module in
       the generated skeleton
 
-    * `--no-brunch` - do not generate brunch file
+    * `--no-brunch` - do not generate brunch files
       for static asset building
+
+    * `--no-ecto` - do not generate ecto files for
+      the model layer
 
   ## Examples
 
@@ -56,7 +59,7 @@ defmodule Mix.Tasks.Phoenix.New do
     "images/phoenix.png"      => "priv/static/images/phoenix.png"
   }
 
-  @switches [dev: :boolean, brunch: :boolean]
+  @switches [dev: :boolean, brunch: :boolean, ecto: :boolean]
 
   def run(argv) do
     {opts, argv, _} = OptionParser.parse(argv, switches: @switches)
@@ -76,6 +79,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
   def run(app, mod, path, opts) do
     dev = Keyword.get(opts, :dev, false)
+    ecto = Keyword.get(opts, :ecto, true)
     brunch = Keyword.get(opts, :brunch, true)
 
     pubsub_server = [mod]
@@ -87,16 +91,18 @@ defmodule Mix.Tasks.Phoenix.New do
                phoenix_dep: phoenix_dep(dev),
                pubsub_server: pubsub_server,
                secret_key_base: random_string(64),
+               prod_secret_key_base: random_string(64),
                encryption_salt: random_string(8),
                signing_salt: random_string(8),
                in_umbrella: in_umbrella?(path),
-               brunch: brunch]
+               brunch: brunch,
+               ecto: ecto]
 
-    copy_from template_dir(), path, app, &EEx.eval_file(&1, binding)
+    copy_from priv_dir("template"), path, app, &EEx.eval_file(&1, binding)
 
     # Optional contents
-    copy_static path, binding
-    # copy_model path, binding
+    copy_static app, path, binding
+    copy_model app, path, binding
 
     # Parallel installs
     install_parallel path, binding
@@ -115,11 +121,49 @@ defmodule Mix.Tasks.Phoenix.New do
     """
   end
 
-  defp copy_static(path, binding) do
+  defp copy_static(_app, path, binding) do
     if binding[:brunch] do
-      copy_from static_dir(), path, @brunch
+      copy_from priv_dir("static"), path, @brunch
     else
-      copy_from static_dir(), path, @bare
+      copy_from priv_dir("static"), path, @bare
+    end
+  end
+
+  defp copy_model(app, path, binding) do
+    if binding[:ecto] do
+      copy_from priv_dir("ecto"), path, app, &EEx.eval_file(&1, binding)
+
+      append_to path, "config/dev.exs", """
+
+      # Configure your database
+      config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
+        adapter: Ecto.Adapters.Postgres,
+        username: "postgres",
+        password: "postgres",
+        database: "#{binding[:application_name]}_dev"
+      """
+
+      append_to path, "config/test.exs", """
+
+      # Configure your database
+      config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
+        adapter: Ecto.Adapters.Postgres,
+        username: "postgres",
+        password: "postgres",
+        database: "#{binding[:application_name]}_test",
+        size: 1,
+        max_overflow: false
+      """
+
+      append_to path, "config/prod.secret.exs", """
+
+      # Configure your database
+      config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
+        adapter: Ecto.Adapters.Postgres,
+        username: "postgres",
+        password: "postgres",
+        database: "#{binding[:application_name]}_prod"
+      """
     end
   end
 
@@ -199,6 +243,11 @@ defmodule Mix.Tasks.Phoenix.New do
     Path.join(target_dir, target_path)
   end
 
+  defp append_to(path, file, contents) do
+    file = Path.join(path, file)
+    File.write!(file, File.read!(file) <> contents)
+  end
+
   ## Helpers
 
   defp ask_and_run(question, command, args) do
@@ -245,18 +294,14 @@ defmodule Mix.Tasks.Phoenix.New do
     end
   end
 
-  defp phoenix_dep(true), do: ~s[{:phoenix, path: #{inspect File.cwd!}}]
-  defp phoenix_dep(_),    do: ~s[{:phoenix, github: "phoenixframework/phoenix"}]
+  defp phoenix_dep(true), do: ~s[{:phoenix, path: #{inspect File.cwd!}, override: true}]
+  defp phoenix_dep(_),    do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
 
   defp random_string(length) do
     :crypto.strong_rand_bytes(length) |> Base.encode64 |> binary_part(0, length)
   end
 
-  defp template_dir do
-    Application.app_dir(:phoenix, "priv/template")
-  end
-
-  defp static_dir do
-    Application.app_dir(:phoenix, "priv/static")
+  defp priv_dir(dir) do
+    Application.app_dir(:phoenix, Path.join("priv", dir))
   end
 end

@@ -3,11 +3,9 @@ defmodule <%= application_module %>.Mixfile do
 
   def project do
     [app: :<%= application_name %>,
-     version: "0.0.1",
-<%= if in_umbrella do %>
+     version: "0.0.1",<%= if in_umbrella do %>
      deps_path: "../../deps",
-     lockfile: "../../mix.lock",
-<% end %>
+     lockfile: "../../mix.lock",<% end %>
      elixir: "~> 1.0",
      elixirc_paths: ["lib", "web"],
      compilers: [:phoenix] ++ Mix.compilers,
@@ -26,7 +24,8 @@ defmodule <%= application_module %>.Mixfile do
   #
   # Type `mix help deps` for examples and options
   defp deps do
-    [<%= phoenix_dep %>,
+    [<%= phoenix_dep %>,<%= if ecto do %>
+     {:phoenix_ecto, "~> 0.1"},<% end %>
      {:cowboy, "~> 1.0"}]
   end
 end

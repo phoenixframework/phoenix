@@ -7,7 +7,6 @@ use Mix.Config
 # You should also configure the url host to something
 # meaningful, we use this information when generating URLs.
 config :<%= application_name %>, <%= application_module %>.Endpoint,
-  secret_key_base: "<%= secret_key_base %>",
   http: [port: {:system, "PORT"}],
   url: [host: "example.com"]
 
@@ -40,3 +39,7 @@ config :logger, level: :info
 #
 #     config :<%= application_name %>, <%= application_module %>.Endpoint, server: true
 #
+
+# Finally import the config/prod.secret.exs
+# which should be versioned separately.
+import_config "prod.secret.exs"

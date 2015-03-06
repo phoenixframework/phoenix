@@ -31,11 +31,15 @@ defmodule Phoenix.Mixfile do
     [{:cowboy, "~> 1.0", optional: true},
      {:plug, "~> 0.11.0"},
      {:poison, "~> 1.3"},
+     {:redo, github: "heroku/redo", optional: true},
+     {:poolboy, "~> 1.4.2", optional: true},
+
+     # Docs dependencies
      {:earmark, "~> 0.1", only: :docs},
      {:ex_doc, "~> 0.7.1", only: :docs},
      {:inch_ex, "~> 0.2", only: :docs},
-     {:redo, github: "heroku/redo", optional: true},
-     {:poolboy, "~> 1.4.2", optional: true},
+
+     # Test dependencies
      {:websocket_client, github: "jeremyong/websocket_client", only: :test}]
   end
 

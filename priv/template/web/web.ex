@@ -27,12 +27,27 @@ defmodule <%= application_module %>.Web do
   def controller do
     quote do
       use Phoenix.Controller
-
+<%= if ecto do %>
+      # Alias the data repository as a convenience
+      alias <%= application_module %>.Repo
+<% end %>
       # Import URL helpers from the router
       import <%= application_module %>.Router.Helpers
     end
   end
-
+<%= if ecto do %>
+  def model do
+    quote do
+      use Ecto.Model
+    end
+  end
+<% else %>
+  def model do
+    quote do
+      # Define common model functionality
+    end
+  end
+<% end %>
   @doc """
   When used, dispatch to the appropriate controller/view/etc.
   """
