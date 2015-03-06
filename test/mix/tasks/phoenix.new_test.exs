@@ -74,9 +74,10 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/lib/photo_blog.ex", ~r/defmodule PhotoBlog do/
       assert_file "photo_blog/lib/photo_blog/endpoint.ex", ~r/defmodule PhotoBlog.Endpoint do/
 
-      refute File.exists? "photo_blog/priv/static/app.css"
+      refute File.exists? "photo_blog/priv/static/css/app.css"
       refute File.exists? "photo_blog/priv/static/images/phoenix.png"
-      refute File.exists? "photo_blog/priv/static/phoenix.js"
+      refute File.exists? "photo_blog/priv/static/js/phoenix.js"
+      refute File.exists? "photo_blog/priv/static/js/app.js"
 
       assert_file "photo_blog/test/photo_blog_test.exs"
       assert_file "photo_blog/test/test_helper.exs"
@@ -99,6 +100,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       # brunch
       assert File.read!("photo_blog/.gitignore") |> String.contains?("/node_modules")
       assert_file "photo_blog/web/static/vendor/phoenix.js"
+      assert_file "photo_blog/web/static/js/app.js"
       assert_file "photo_blog/web/static/css/app.scss"
       assert_file "photo_blog/web/static/assets/images/phoenix.png"
       assert File.read!("photo_blog/config/dev.exs") =~ ~r/watchers/
@@ -147,9 +149,10 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       refute File.read!("app_no_brunch/.gitignore") |> String.contains?("/node_modules")
       refute File.read!("app_no_brunch/config/dev.exs") =~ ~r/watchers/
 
-      assert_file "app_no_brunch/priv/static/app.css"
+      assert_file "app_no_brunch/priv/static/css/app.css"
       assert_file "app_no_brunch/priv/static/images/phoenix.png"
-      assert_file "app_no_brunch/priv/static/phoenix.js"
+      assert_file "app_no_brunch/priv/static/js/phoenix.js"
+      assert_file "app_no_brunch/priv/static/js/app.js"
     end
   end
 

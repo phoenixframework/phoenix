@@ -39,6 +39,24 @@ defmodule Mix.Tasks.Phoenix.New do
 
   """
 
+  @brunch %{
+    "brunch/package.json"     => "package.json",
+    "brunch/brunch-config.js" => "brunch-config.js",
+    "brunch/app.js"           => "web/static/js/app.js",
+    "brunch/.gitignore"       => ".gitignore",
+    "phoenix.js"              => "web/static/vendor/phoenix.js",
+    "app.css"                 => "web/static/css/app.scss",
+    "images/phoenix.png"      => "web/static/assets/images/phoenix.png"
+  }
+
+  @bare %{
+    "bare/.gitignore"         => ".gitignore",
+    "bare/app.js"             => "priv/static/js/app.js",
+    "phoenix.js"              => "priv/static/js/phoenix.js",
+    "app.css"                 => "priv/static/css/app.css",
+    "images/phoenix.png"      => "priv/static/images/phoenix.png"
+  }
+
   def run(argv) do
     {opts, argv, _} = OptionParser.parse(argv, switches: [dev: :boolean])
 
@@ -74,13 +92,13 @@ defmodule Mix.Tasks.Phoenix.New do
 
     cond do
       !skip_brunch? && !skip_npm? && npm_path ->
-        setup_brunch_files(app, path)
+        copy_from static_dir(), path, @brunch
         IO.puts "Installing brunch.io dependencies..."
         IO.puts "npm install --prefix #{path}"
         if Mix.env == :dev, do: System.cmd("npm", ["install", "--prefix", path])
 
       !skip_brunch? && (skip_npm? || !npm_path)->
-        setup_brunch_files(app, path)
+        copy_from static_dir(), path, @brunch
         IO.puts """
 
         Brunch was setup for static assets, but node deps were not installed via npm.
@@ -94,11 +112,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
         """
 
-      true ->
-        File.rm_rf!(Path.join(path, "web/static"))
-        File.rm!(Path.join(path, "brunch-config.js"))
-        File.rm!(Path.join(path, "package.json"))
-        copy_from static_dir(), Path.join(path, "priv/static"), app, &File.read!(&1)
+      true -> copy_from static_dir(), path, @bare
     end
   end
 
@@ -106,19 +120,14 @@ defmodule Mix.Tasks.Phoenix.New do
     :crypto.strong_rand_bytes(length) |> Base.encode64 |> binary_part(0, length)
   end
 
-  defp setup_brunch_files(app, path) do
-    path
-    |> Path.join(".gitignore")
-    |> File.open([:append], &IO.puts(&1, "/node_modules"))
-
-    File.cp!(Path.join(static_dir(), "phoenix.js"), Path.join(path, "web/static/vendor/phoenix.js"))
-    File.cp!(Path.join(static_dir(), "app.css"), Path.join(path, "web/static/css/app.scss"))
-    copy_from Path.join(static_dir(), "images"),
-              Path.join(path, "web/static/assets/images"),
-              app,
-              &File.read!(&1)
+  defp copy_from(source_dir, target_dir, file_map) do
+    for {source_file_path, dest_file_path} <- file_map do
+      ensure_intermediate_dirs(target_dir, dest_file_path)
+      IO.puts "CP #{Path.join(target_dir, dest_file_path)}"
+      File.cp!(Path.join(source_dir, source_file_path),
+               Path.join(target_dir, dest_file_path))
+    end
   end
-
   defp copy_from(source_dir, target_dir, application_name, fun) do
     source_paths =
       source_dir
@@ -141,6 +150,16 @@ defmodule Mix.Tasks.Phoenix.New do
     end
 
     :ok
+  end
+
+  defp ensure_intermediate_dirs(path, dest_file_path) do
+    dest_file_path
+    |> Path.dirname
+    |> Path.split
+    |> Enum.reduce("", fn dir, acc ->
+      File.mkdir_p!(Path.join([path, acc, dir]))
+      Path.join(acc, dir)
+    end)
   end
 
   defp check_application_name!(name, from_app_flag) do
