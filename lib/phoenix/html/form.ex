@@ -100,12 +100,14 @@ defmodule Phoenix.HTML.Form do
     * `:model` - the model used to lookup field data
     * `:params` - the parameters associated to this form in case
       they were sent as part of a previous request
+    * `:hidden` - a keyword list of fields that are required for
+      submitting the form behind the scenes as hidden inputs
     * `:options` - a copy of the options given when creating the
       form via `form_for/4` without any form data specific key
   """
-  defstruct [:source, :name, :model, :params, :options]
+  defstruct source: nil, name: nil, model: %{}, hidden: [], params: %{}, options: []
   @type t :: %Form{source: term, name: String.t, model: map,
-                   params: map, options: Keyword.t}
+                   params: map, hidden: Keyword.t, options: Keyword.t}
 
   @doc """
   Generates a form tag with a form builder.
@@ -138,7 +140,12 @@ defmodule Phoenix.HTML.Form do
   def form_for(form_data, action, options \\ [], fun) when is_function(fun, 1) do
     form    = Phoenix.HTML.FormData.to_form(form_data, options)
     options = Keyword.put(form.options, :action, action)
-    safe_concat [form_tag(options), fun.(form), safe("</form>")]
+
+    hidden = Enum.reduce form.hidden, safe(""), fn {k, v}, acc ->
+      safe_concat hidden_input(form, k, value: v), acc
+    end
+
+    safe_concat [form_tag(options), hidden, fun.(form), safe("</form>")]
   end
 
   ## Form helpers

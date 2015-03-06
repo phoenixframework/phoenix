@@ -22,7 +22,6 @@ defimpl Phoenix.HTML.FormData, for: Plug.Conn do
     %Phoenix.HTML.Form{
       source: conn,
       name: name,
-      model: %{},
       params: Map.get(conn.params, name) || %{},
       options: opts
     }
