@@ -21,9 +21,8 @@ defmodule Phoenix.Endpoint.Adapter do
 
     watcher_children =
       Enum.map(conf[:watchers], fn {cmd, args} ->
-        worker(Task, [fn ->
-          System.cmd(cmd, args, into: IO.stream(:stdio, :line), stderr_to_stdout: true)
-        end])
+        worker(Phoenix.Endpoint.Watcher, [cmd, args],
+               id: {cmd, args}, restart: :transient)
       end)
 
     live_reload_children = case conf[:live_reload] do
