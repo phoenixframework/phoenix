@@ -114,7 +114,16 @@ defmodule Phoenix.HTML.Tag do
   Generates a form tag.
 
   This function generates the `<form>` tag without its
-  closing part.
+  closing part. Check `form_tag/2` for generating an
+  enclosing tag.
+
+  ## Examples
+
+      form_tag(action: "/hello")
+      <form action="/hello" method="post">
+
+      form_tag(action: "/hello", method: :get)
+      <form action="/hello" method="get">
 
   ## Options
 
@@ -172,6 +181,21 @@ defmodule Phoenix.HTML.Tag do
       end
 
     safe_concat tag(:form, opts), safe(extra)
+  end
+
+  @doc """
+  Generates a form tag with the given contents.
+
+  ## Examples
+
+      form_tag(action: "/hello") do
+        "Hello"
+      end
+      <form action="/hello" method="post">...Hello...</form>
+    
+  """
+  def form_tag(options, do: block) do
+    safe_concat [form_tag(options), block, safe("</form>")]
   end
 
   defp csrf_token_tag(opts, extra) do

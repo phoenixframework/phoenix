@@ -109,4 +109,12 @@ defmodule Phoenix.HTML.TagTest do
                    ~s(<input name="_csrf_token" type="hidden" value="#{csrf_token}">) <>
                    ~s(<input name="_utf8" type="hidden" value="✓">)}
   end
+
+  test "form_tag with do block" do
+    assert (form_tag(method: :get) do "<>" end) ==
+           {:safe, ~s(<form accept-charset="UTF-8" method="get">) <>
+                   ~s(<input name="_utf8" type="hidden" value="✓">) <>
+                   ~s(&lt;&gt;) <>
+                   ~s(</form>)}
+  end
 end

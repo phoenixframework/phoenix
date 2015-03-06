@@ -13,6 +13,8 @@ defmodule Phoenix.HTML do
 
     * `import Phoenix.HTML.Form` - imports functions for working with forms;
 
+    * `import Phoenix.HTML.Link` - imports functions for generating links and urls;
+
   ## HTML Safe
 
   One of the main responsibilities of this module is to
@@ -52,6 +54,7 @@ defmodule Phoenix.HTML do
 
       import Phoenix.HTML
       import Phoenix.HTML.Form
+      import Phoenix.HTML.Link
       import Phoenix.HTML.Tag
     end
   end
