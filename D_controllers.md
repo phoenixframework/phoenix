@@ -1,7 +1,6 @@
 Phoenix controllers act as intermediary modules. Their functions - called actions - are invoked from the router in response to HTTP requests. The actions, in turn, gather all the necessary data and perform all the necessary steps before - in a typical case - invoking the view layer to render a template.
 
-A newly generated Phoenix app will have a single controller, the `PageController`, which can be found in
-`web/controllers/page_controller.ex` and looks like this.
+A newly generated Phoenix app will have a single controller, the `PageController`, which can be found at `web/controllers/page_controller.ex` and looks like this.
 
 ```elixir
 defmodule HelloPhoenix.PageController do
@@ -24,7 +23,7 @@ In addition, the `PageController` gives us the `index` action to display the Pho
 ###Actions
 Controller actions are just functions. We can name them anything we like as long as they follow Elixir's naming rules. The only requirement we must fulfill is that the action name matches a route defined in the router.
 
-For example, in `web/router.ex` we could change the action name in the default route that Phoenix gives us in a different app than index, for example test:
+For example, in `web/router.ex` we could change the action name in the default route that that Phoenix gives us in a new app from index:
 
 ```elixir
 get "/", HelloPhoenix.PageController, :index
@@ -87,7 +86,7 @@ The data world is your oyster, but we won't be covering these options in these g
 
 There are times when we need to communicate with users during the course of an action. Maybe there was an error updating a model. Maybe we just want to welcome them back to the application. For this, we have flash messages.
 
-The `Phoenix.Controller` module provides the `put_flash/3` and `get_flash/2` functions to help us set and retrieve flash messages as a key value pair. Let's set two flash messages in our `HelloPhoenix.PageController` in `web/controllers/page_controller.ex` to try this out.
+The `Phoenix.Controller` module provides the `put_flash/3` and `get_flash/2` functions to help us set and retrieve flash messages as a key value pair. Let's set two flash messages in our `HelloPhoenix.PageController` to try this out.
 
 To do this we modify the `index` action as follows:
 
@@ -204,7 +203,7 @@ In order for the `render/3` function to work correctly, the controller must have
 
 There is also a rendering shortcut using the `plug/1` macro. Here's how it works.
 
-The first thing we need to do is to add a `plug :render` line to our controller in `web/controllers/page_controller.ex`.
+The first thing we need to do is to add a `plug :render` line to our controller at `web/controllers/page_controller.ex`.
 
 ```elixir
 defmodule HelloPhoenix.PageController do
@@ -255,7 +254,7 @@ What if we want to plug render, but only some of our actions should actually cal
 
 By default, the render plug takes over all rendering for all actions in a controller. Once we plug render, if we try to use any rendering-style function in any action - `text/2`, `json/2`, `html/2`, `render/2` or even `redirect/2`- we will get errors if that action is dispatched to. Even if the application appears to do the right thing, the server will be throwing errors.
 
-Phoenix offers a solution to this by using guard expressions to let us specify which actions `plug :render` should be applied to. If we only wanted `plug :render` to work on the `index` and `show` actions, we could do this.
+Phoenix offers a solution to this by letting us specify which actions `plug :render` should be applied to. If we only wanted `plug :render` to work on the `index` and `show` actions, we could do this.
 
 ```elixir
 defmodule HelloPhoenix.PageController do
@@ -280,7 +279,7 @@ Since layouts are really just templates, they need a view to render them. This i
 
 Before we create a new layout, though, let's do the simplest possible thing and render a template with no layout at all.
 
-The `Phoenix.Controller` module provides the `put_layout/2` function for us in order to switch layouts. This takes `conn` as its first argument and for the second argument a string for the basename of the layout we want to render. Another clause of the function will match on the boolean `false` for the second argument, and that's how we will render the Phoenix welcome page without a layout.
+The `Phoenix.Controller` module provides the `put_layout/2` function for us to switch layouts. This takes `conn` as its first argument and a string for the basename of the layout we want to render. Another clause of the function will match on the boolean `false` for the second argument, and that's how we will render the Phoenix welcome page without a layout.
 
 In a freshly generated Phoenix app, edit the `index` action of the `PageController` module
 `web/controllers/page_controller.ex` to look like this.
@@ -351,9 +350,7 @@ Rendering HTML through a template is fine, but what if we need to change the ren
 
 Phoenix allows us to change formats on the fly with the `format` query string parameter. To make this happen, Phoenix requires an appropriately named view and an appropriately named template in the correct directory.
 
-As an example let's take the `PageController` index action from a newly generated app. Out of the box, this has the right view, `PageView`, the right templates directory, `/web/templates/page`, and the right template for rendering HTML, `index.html.eex`.
-
-The freshly created controller `web/controllers/page_controller.ex` has the default index.
+As an example, let's take the `PageController` index action from a newly generated app. Out of the box, this has the right view, `PageView`, the right templates directory, `/web/templates/page`, and the right template for rendering HTML, `index.html.eex`.
 
 ```elixir
 def index(conn, _params) do
@@ -428,7 +425,7 @@ We can also set the HTTP status code of a response similarly to the way we set t
 
 `put_status/2` takes `conn` as the first parameter and as the second parameter either an integer or a "friendly name" used as an atom for the status code we want to set. Here is the list of supported [friendly names](https://github.com/elixir-lang/plug/blob/master/lib/plug/conn/status.ex#L7-L63).
 
-Let's change the status in our `PageController` `index` action in `web/controllers/page_controller.ex`.
+Let's change the status in our `PageController` `index` action.
 
 ```elixir
 def index(conn, _params) do
@@ -477,7 +474,7 @@ defmodule HelloPhoenix.Router do
 end
 ```
 
-Then we'll change the `index` action in `web/controllers/page_controller.ex` to do nothing but redirect to our new route.
+Then we'll change the `index` action to do nothing but redirect to our new route.
 
 ```elixir
 def index(conn, _params) do
@@ -497,7 +494,7 @@ When we reload our [Welcome Page](http://localhost:4000), we see that we've been
 
 If we care to, we can open up our developer tools, click on the network tab, and visit our root route again. We see two main requests for this page - a get to `/` with a status of `302`, and a get to `/redirect_test` with a status of `200`.
 
-Notice that the redirect function takes `conn` as well as a string representing a relative path within our application. It can also take `conn` and a string representing a fully-qualified url in `web/controllers/page_controller.ex`.
+Notice that the redirect function takes `conn` as well as a string representing a relative path within our application. It can also take `conn` and a string representing a fully-qualified url.
 
 ```elixir
 def index(conn, _params) do
