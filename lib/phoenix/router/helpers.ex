@@ -63,6 +63,10 @@ defmodule Phoenix.Router.Helpers do
 
       # Functions used by generated helpers
 
+      defp to_param(int) when is_integer(int), do: Integer.to_string(int)
+      defp to_param(bin) when is_binary(bin), do: bin
+      defp to_param(oth), do: Phoenix.Param.to_param(oth)
+
       defp to_path(segments, [], _reserved) do
         segments
       end
@@ -70,7 +74,7 @@ defmodule Phoenix.Router.Helpers do
       defp to_path(segments, query, reserved) do
         dict = for {k, v} <- query,
                not (k = to_string(k)) in reserved,
-               do: {k, v}
+               do: {k, if(is_nil(v), do: v, else: to_param(v))}
 
         case Conn.Query.encode dict do
           "" -> segments
@@ -95,7 +99,7 @@ defmodule Phoenix.Router.Helpers do
     action = route.action
 
     {bins, vars} = :lists.unzip(exprs.binding)
-    segs = optimize_segments(exprs.path)
+    segs = expand_segments(exprs.path)
 
     # We are using -1 to avoid warnings in case a path has already been defined.
     quote line: -1 do
@@ -117,19 +121,19 @@ defmodule Phoenix.Router.Helpers do
     end
   end
 
-  defp optimize_segments([]), do: "/"
-  defp optimize_segments(segments) when is_list(segments),
-    do: optimize_segments(segments, "")
-  defp optimize_segments(segments),
+  defp expand_segments([]), do: "/"
+  defp expand_segments(segments) when is_list(segments),
+    do: expand_segments(segments, "")
+  defp expand_segments(segments),
     do: quote(do: "/" <> Enum.join(unquote(segments), "/"))
 
-  defp optimize_segments([{:|, _, [h, t]}], acc),
-    do: quote(do: unquote(optimize_segments([h], acc)) <> "/" <> Enum.join(unquote(t), "/"))
-  defp optimize_segments([h|t], acc) when is_binary(h),
-    do: optimize_segments(t, quote(do: unquote(acc) <> unquote("/" <> h)))
-  defp optimize_segments([h|t], acc),
-    do: optimize_segments(t, quote(do: unquote(acc) <> "/" <> to_string(unquote(h))))
-  defp optimize_segments([], acc),
+  defp expand_segments([{:|, _, [h, t]}], acc),
+    do: quote(do: unquote(expand_segments([h], acc)) <> "/" <> Enum.join(unquote(t), "/"))
+  defp expand_segments([h|t], acc) when is_binary(h),
+    do: expand_segments(t, quote(do: unquote(acc) <> unquote("/" <> h)))
+  defp expand_segments([h|t], acc),
+    do: expand_segments(t, quote(do: unquote(acc) <> "/" <> to_param(unquote(h))))
+  defp expand_segments([], acc),
     do: acc
 
   @doc """

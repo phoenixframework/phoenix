@@ -17,7 +17,7 @@ defmodule Phoenix.Router.HelpersTest do
 
     assert extract_defhelper(route, 1) == String.strip """
     def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
-      to_path(("" <> "/foo") <> "/" <> to_string(bar), params, ["bar"])
+      to_path(("" <> "/foo") <> "/" <> to_param(bar), params, ["bar"])
     end
     """
   end
@@ -83,10 +83,41 @@ defmodule Phoenix.Router.HelpersTest do
     get "/", PageController, :root, as: :page
   end
 
+  def url(path) do
+    "https://example.com" <> path
+  end
+
+  def static_path(path) do
+    path
+  end
+
   alias Router.Helpers
 
   test "defines a __helpers__ function" do
     assert Router.__helpers__ == Router.Helpers
+  end
+
+  test "root helper" do
+    conn = conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
+    assert Helpers.page_path(conn, :root) == "/"
+    assert Helpers.page_path(__MODULE__, :root) == "/"
+  end
+
+  test "url helper with query strings" do
+    assert Helpers.post_path(__MODULE__, :show, 5, id: 3) == "/posts/5"
+    assert Helpers.post_path(__MODULE__, :show, 5, foo: "bar") == "/posts/5?foo=bar"
+    assert Helpers.post_path(__MODULE__, :show, 5, foo: :bar) == "/posts/5?foo=bar"
+    assert Helpers.post_path(__MODULE__, :show, 5, foo: true) == "/posts/5?foo=true"
+    assert Helpers.post_path(__MODULE__, :show, 5, foo: false) == "/posts/5?foo=false"
+    assert Helpers.post_path(__MODULE__, :show, 5, foo: nil) == "/posts/5?foo="
+  end
+
+  test "url helper with param protocol" do
+    assert Helpers.post_path(__MODULE__, :show, %{id: 5}) == "/posts/5"
+
+    assert_raise ArgumentError, fn ->
+      Helpers.post_path(__MODULE__, :show, nil)
+    end
   end
 
   test "top-level named route" do
@@ -102,17 +133,12 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.top_path(__MODULE__, :top, id: 5) == "/posts/top?id=5"
     assert Helpers.top_path(__MODULE__, :top, %{"id" => 5}) == "/posts/top?id=5"
 
-    assert Helpers.page_path(__MODULE__, :root) == "/"
-
     assert_raise UndefinedFunctionError, fn ->
       Helpers.post_path(__MODULE__, :skip)
     end
   end
 
   test "resources generates named routes for :index, :edit, :show, :new" do
-    conn = conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
-    # Can pass either conn or __MODULE__ to named path helpers
-    assert Helpers.user_path(conn, :index, []) == "/users"
     assert Helpers.user_path(__MODULE__, :index, []) == "/users"
     assert Helpers.user_path(__MODULE__, :index) == "/users"
     assert Helpers.user_path(__MODULE__, :edit, 123, []) == "/users/123/edit"
@@ -210,13 +236,7 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.admin_message_path(__MODULE__, :show, 1) == "/admin/new/messages/1"
   end
 
-  def url(path) do
-    "https://example.com" <> path
-  end
-
-  def static_path(path) do
-    path
-  end
+  ## URLS
 
   test "helpers module generates named routes url helpers" do
     conn = conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
@@ -232,6 +252,8 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.url(conn, "/foo/bar") == "https://example.com/foo/bar"
     assert Helpers.url(__MODULE__, "/foo/bar") == "https://example.com/foo/bar"
   end
+
+  ## Others
 
   test "helpers module generates a static_path helper" do
     conn = conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
