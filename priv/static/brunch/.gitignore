@@ -1,5 +1,15 @@
+# Mix artifacts
 /_build
 /deps
+/*.ez
+
+# Generate on crash by the VM
 erl_crash.dump
-*.ez
+
+# Static artifacts
 /node_modules
+
+# Since we are building static from web/static, we ignore
+# everything in priv/static. You may want to remove this
+# line depending on your deployment strategy.
+/priv/static

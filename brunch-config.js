@@ -16,9 +16,6 @@ exports.config = {
     javascripts: {
       joinTo: 'phoenix.js'
     },
-    stylesheets: {
-      joinTo: 'app.css'
-    },
   },
 
   // Phoenix paths configuration

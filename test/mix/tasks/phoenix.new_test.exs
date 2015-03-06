@@ -12,6 +12,14 @@ defmodule Mix.Tasks.Phoenix.NewTest do
   @epoch {{1970, 1, 1}, {0, 0, 0}}
   @app_name "photo_blog"
 
+  setup do
+    # The shell asks to install npm and mix deps.
+    # We will politely say not.
+    send self(), {:mix_shell_input, :yes?, false}
+    send self(), {:mix_shell_input, :yes?, false}
+    :ok
+  end
+
   test "bootstraps generated project" do
     Logger.disable(self())
     Application.put_env(:phoenix, :code_reloader, true)
@@ -19,7 +27,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       secret_key_base: String.duplicate("abcdefgh", 8))
 
     in_tmp "bootstrap", fn ->
-      capture_io fn -> Mix.Tasks.Phoenix.New.run([@app_name]) end
+      Mix.Tasks.Phoenix.New.run([@app_name])
     end
 
     # Copy artifacts from Phoenix so we can compile and run tests
@@ -49,14 +57,12 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       {:ok, _} = Application.ensure_all_started(:photo_blog)
       PhotoBlog.Endpoint.call(conn(:get, "/"), [])
-
       assert File.stat!("web/views/page_view.ex").mtime > @epoch
 
-      # TODO: We need to uncomment this after we move to Elixir v1.0.3
-      # as running tests would automatically shutdown the Logger.
-      # assert capture_io(fn ->
-      #   Mix.Task.run("test", ["--no-start", "--no-compile"])
-      # end) =~ "1 tests, 0 failures"
+      # We can run tests too, starting the app.
+      assert capture_io(fn ->
+        Mix.Task.run("test", ["--no-start", "--no-compile"])
+      end) =~ ~r"1 tests?, 0 failures"
     end
   after
     Application.put_env(:phoenix, :code_reloader, false)
@@ -64,8 +70,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
   test "new with path" do
     in_tmp "new with path", fn ->
-      stdout = capture_io fn -> Mix.Tasks.Phoenix.New.run([@app_name]) end
-      assert stdout =~ ~r/npm install/
+      Mix.Tasks.Phoenix.New.run([@app_name])
 
       assert_file "photo_blog/.gitignore"
       assert_file "photo_blog/README.md"
@@ -101,22 +106,38 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/web/router.ex", ~r/defmodule PhotoBlog.Router/
       assert_file "photo_blog/web/web.ex", ~r/defmodule PhotoBlog.Web/
 
-      # brunch
-      assert File.read!("photo_blog/.gitignore") |> String.contains?("/node_modules")
+      # Brunch (default)
+      assert_file "photo_blog/.gitignore", ~r"/node_modules"
       assert_file "photo_blog/web/static/vendor/phoenix.js"
       assert_file "photo_blog/web/static/js/app.js"
       assert_file "photo_blog/web/static/css/app.scss"
       assert_file "photo_blog/web/static/assets/images/phoenix.png"
-      assert File.read!("photo_blog/config/dev.exs") =~ ~r/watchers/
+      assert_file "photo_blog/config/dev.exs", ~r/watchers:/
+
+      # Questions
+      assert_received {:mix_shell, :yes?, ["\nInstall brunch.io dependencies?"]}
+      assert_received {:mix_shell, :yes?, ["\nInstall mix dependencies?"]}
+    end
+  end
+
+  test "new without brunch" do
+    in_tmp "new without brunch", fn ->
+      Mix.Tasks.Phoenix.New.run(["app_no_brunch", "--app", @app_name, "--no-brunch"])
+
+      refute File.read!("app_no_brunch/config/dev.exs") =~ ~r/watchers:/
+      refute File.read!("app_no_brunch/.gitignore") |> String.contains?("/node_modules")
+
+      assert_file "app_no_brunch/priv/static/css/app.css"
+      assert_file "app_no_brunch/priv/static/images/phoenix.png"
+      assert_file "app_no_brunch/priv/static/js/phoenix.js"
+      assert_file "app_no_brunch/priv/static/js/app.js"
     end
   end
 
   test "new with path and app name" do
     in_tmp "new with path and app name", fn ->
       project_path = Path.join(File.cwd!, "custom_path")
-      capture_io fn ->
-        Mix.Tasks.Phoenix.New.run([project_path, "--app", @app_name])
-      end
+      Mix.Tasks.Phoenix.New.run([project_path, "--app", @app_name])
 
       assert_file "custom_path/.gitignore"
       assert_file "custom_path/mix.exs", ~r/app: :photo_blog/
@@ -154,24 +175,6 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
     assert_raise Mix.Error, "Expected PATH to be given, please use `mix phoenix.new PATH`", fn ->
       Mix.Tasks.Phoenix.New.run []
-    end
-  end
-
-  test "new with skip-brunch" do
-    in_tmp "new with skip-brunch", fn ->
-      project_path = Path.join(File.cwd!, "app_no_brunch")
-      stdout = capture_io fn ->
-        Mix.Tasks.Phoenix.New.run([project_path, "--app", @app_name, "--skip-brunch"])
-      end
-
-      refute stdout =~ ~r/npm install/
-      refute File.read!("app_no_brunch/.gitignore") |> String.contains?("/node_modules")
-      refute File.read!("app_no_brunch/config/dev.exs") =~ ~r/watchers/
-
-      assert_file "app_no_brunch/priv/static/css/app.css"
-      assert_file "app_no_brunch/priv/static/images/phoenix.png"
-      assert_file "app_no_brunch/priv/static/js/phoenix.js"
-      assert_file "app_no_brunch/priv/static/js/app.js"
     end
   end
 

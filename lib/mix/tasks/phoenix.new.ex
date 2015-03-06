@@ -14,16 +14,15 @@ defmodule Mix.Tasks.Phoenix.New do
   application name and module name will be retrieved
   from the path, unless `--module` or `--app` is given.
 
-  An `--app` option can be given in order to
-  name the OTP application for the project.
+  ## Options
 
-  A `--module` option can be given in order
-  to name the modules in the generated code skeleton.
+    * `--app` - the name of the OTP application
 
-  By default, Brunch is added for static asset building and nodejs
-  deps are automatically installed via npm.
-  To skip brunch related files, use the  `--skip-brunch` option.
-  To setup brunch, but skip npm install, use the `--skip-npm` option.
+    * `--module` - the name of the base module in
+      the generated skeleton
+
+    * `--no-brunch` - do not generate brunch file
+      for static asset building
 
   ## Examples
 
@@ -35,15 +34,15 @@ defmodule Mix.Tasks.Phoenix.New do
 
   Without brunch:
 
-      mix phoenix.new ~/Workspace/hello_world --skip-brunch
+      mix phoenix.new ~/Workspace/hello_world --no-brunch
 
   """
 
   @brunch %{
-    "brunch/package.json"     => "package.json",
-    "brunch/brunch-config.js" => "brunch-config.js",
-    "brunch/app.js"           => "web/static/js/app.js",
     "brunch/.gitignore"       => ".gitignore",
+    "brunch/brunch-config.js" => "brunch-config.js",
+    "brunch/package.json"     => "package.json",
+    "brunch/app.js"           => "web/static/js/app.js",
     "phoenix.js"              => "web/static/vendor/phoenix.js",
     "app.css"                 => "web/static/css/app.scss",
     "images/phoenix.png"      => "web/static/assets/images/phoenix.png"
@@ -57,8 +56,10 @@ defmodule Mix.Tasks.Phoenix.New do
     "images/phoenix.png"      => "priv/static/images/phoenix.png"
   }
 
+  @switches [dev: :boolean, brunch: :boolean]
+
   def run(argv) do
-    {opts, argv, _} = OptionParser.parse(argv, switches: [dev: :boolean])
+    {opts, argv, _} = OptionParser.parse(argv, switches: @switches)
 
     case argv do
       [] ->
@@ -67,17 +68,20 @@ defmodule Mix.Tasks.Phoenix.New do
         app    = opts[:app] || Path.basename(Path.expand(path))
         check_application_name!(app, !!opts[:app])
         mod = opts[:module] || Naming.camelize(app)
-        check_mod_name!(mod)
+        check_module_name!(mod)
 
-        run(app, mod, path, opts[:dev], opts[:skip_brunch], opts[:skip_npm])
+        run(app, mod, path, opts)
     end
   end
 
-  def run(app, mod, path, dev, skip_brunch?, skip_npm?) do
-    pubsub_server = mod
-                    |> Module.concat(nil)
+  def run(app, mod, path, opts) do
+    dev = Keyword.get(opts, :dev, false)
+    brunch = Keyword.get(opts, :brunch, true)
+
+    pubsub_server = [mod]
+                    |> Module.concat()
                     |> Naming.base_concat(PubSub)
-    npm_path = System.find_executable("npm")
+
     binding = [application_name: app,
                application_module: mod,
                phoenix_dep: phoenix_dep(dev),
@@ -86,47 +90,84 @@ defmodule Mix.Tasks.Phoenix.New do
                encryption_salt: random_string(8),
                signing_salt: random_string(8),
                in_umbrella: in_umbrella?(path),
-               skip_brunch?: skip_brunch?]
+               brunch: brunch]
 
     copy_from template_dir(), path, app, &EEx.eval_file(&1, binding)
 
-    cond do
-      !skip_brunch? && !skip_npm? && npm_path ->
-        copy_from static_dir(), path, @brunch
-        IO.puts "Installing brunch.io dependencies..."
-        IO.puts "npm install --prefix #{path}"
-        if Mix.env == :dev, do: System.cmd("npm", ["install", "--prefix", path])
+    # Optional contents
+    copy_static path, binding
+    # copy_model path, binding
 
-      !skip_brunch? && (skip_npm? || !npm_path)->
-        copy_from static_dir(), path, @brunch
-        IO.puts """
+    # Parallel installs
+    install_parallel path, binding
 
-        Brunch was setup for static assets, but node deps were not installed via npm.
-        Installation instructions for nodejs, which includes npm, can be found
-        at http://nodejs.org
+    # All set!
+    Mix.shell.info """
 
-        You can install your brunch dependencies by running:
+    We are all set! Run your Phoenix application:
 
-            $ cd #{path}
-            $ npm install
+        $ cd #{path}
+        $ mix phoenix.server
 
-        """
+    You can also run it inside IEx (Interactive Elixir) as:
 
-      true -> copy_from static_dir(), path, @bare
+        $ iex -S mix phoenix.server
+    """
+  end
+
+  defp copy_static(path, binding) do
+    if binding[:brunch] do
+      copy_from static_dir(), path, @brunch
+    else
+      copy_from static_dir(), path, @bare
     end
   end
 
-  def random_string(length) do
-    :crypto.strong_rand_bytes(length) |> Base.encode64 |> binary_part(0, length)
+  defp install_parallel(path, binding) do
+    File.cd!(path, fn ->
+      mix    = install_mix(binding)
+      brunch = install_brunch(binding)
+
+      brunch && Task.await(brunch, :infinity)
+      mix    && Task.await(mix, :infinity)
+    end)
   end
 
-  defp copy_from(source_dir, target_dir, file_map) do
-    for {source_file_path, dest_file_path} <- file_map do
-      ensure_intermediate_dirs(target_dir, dest_file_path)
-      File.cp!(Path.join(source_dir, source_file_path),
-               Path.join(target_dir, dest_file_path))
+  defp install_brunch(binding) do
+    task = binding[:brunch] &&
+           ask_and_run("Install brunch.io dependencies?", "npm", ["install"])
+
+    unless task do
+      Mix.shell.info """
+
+      Brunch was setup for static assets, but node deps were not
+      installed via npm. Installation instructions for nodejs,
+      which includes npm, can be found at http://nodejs.org
+
+      Install your brunch dependencies by running inside your app:
+
+          $ npm install
+
+      """
+    end
+
+    task
+  end
+
+  defp install_mix(_) do
+    ask_and_run("Install mix dependencies?", "mix", ["deps.get"])
+  end
+
+  ## Copying functions
+
+  defp copy_from(source_dir, target_dir, file_map) when is_map(file_map) do
+    for {source_file_path, target_file_path} <- file_map do
+      source = Path.join(source_dir, source_file_path)
+      target = Path.join(target_dir, target_file_path)
+      Mix.Generator.create_file(target, File.read!(source))
     end
   end
+
   defp copy_from(source_dir, target_dir, application_name, fun) do
     source_paths =
       source_dir
@@ -151,30 +192,41 @@ defmodule Mix.Tasks.Phoenix.New do
     :ok
   end
 
-  defp ensure_intermediate_dirs(path, dest_file_path) do
-    dest_file_path
-    |> Path.dirname
-    |> Path.split
-    |> Enum.reduce("", fn dir, acc ->
-      File.mkdir_p!(Path.join([path, acc, dir]))
-      Path.join(acc, dir)
-    end)
+  defp make_destination_path(source_path, source_dir, target_dir, application_name) do
+    target_path =
+      source_path
+      |> String.replace("application_name", application_name)
+      |> Path.relative_to(source_dir)
+    Path.join(target_dir, target_path)
+  end
+
+  ## Helpers
+
+  defp ask_and_run(question, command, args) do
+    if System.find_executable(command) &&
+       Mix.shell.yes?("\n" <> question) do
+
+      Mix.shell.info [:green, "* running ", :reset, Enum.join([command|args], " ")]
+      Task.async(fn -> System.cmd(command, args) end)
+    end
   end
 
   defp check_application_name!(name, from_app_flag) do
     unless name =~ ~r/^[a-z][\w_]*$/ do
+      extra =
+        if !from_app_flag do
+          ". The application name is inferred from the path, if you'd like to " <>
+          "explicitly name the application then use the `--app APP` option."
+        else
+          ""
+        end
+
       Mix.raise "Application name must start with a letter and have only lowercase " <>
-                "letters, numbers and underscore, got: #{inspect name}" <>
-                (if !from_app_flag do
-                  ". The application name is inferred from the path, if you'd like to " <>
-                  "explicitly name the application then use the `--app APP` option."
-                else
-                  ""
-                end)
+                "letters, numbers and underscore, got: #{inspect name}" <> extra
     end
   end
 
-  defp check_mod_name!(name) do
+  defp check_module_name!(name) do
     unless name =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/ do
       Mix.raise "Module name must be a valid Elixir alias (for example: Foo.Bar), got: #{inspect name}"
     end
@@ -194,16 +246,12 @@ defmodule Mix.Tasks.Phoenix.New do
     end
   end
 
-  defp make_destination_path(source_path, source_dir, target_dir, application_name) do
-    target_path =
-      source_path
-      |> String.replace("application_name", application_name)
-      |> Path.relative_to(source_dir)
-    Path.join(target_dir, target_path)
-  end
-
   defp phoenix_dep(true), do: ~s[{:phoenix, path: #{inspect File.cwd!}}]
   defp phoenix_dep(_),    do: ~s[{:phoenix, github: "phoenixframework/phoenix"}]
+
+  defp random_string(length) do
+    :crypto.strong_rand_bytes(length) |> Base.encode64 |> binary_part(0, length)
+  end
 
   defp template_dir do
     Application.app_dir(:phoenix, "priv/template")
