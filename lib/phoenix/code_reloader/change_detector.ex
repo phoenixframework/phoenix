@@ -11,6 +11,7 @@ defmodule Phoenix.CodeReloader.ChangeDetector do
 
   def init([paths, mfa, poll_every_ms]) do
     paths = List.flatten(paths)
+
     :timer.send_interval(poll_every_ms, :poll)
     {:ok, {paths, mfa, ctimes(paths)}}
   end
@@ -26,7 +27,10 @@ defmodule Phoenix.CodeReloader.ChangeDetector do
   end
 
   defp ctimes(paths) do
-    Enum.map(paths, fn path ->
+    paths
+    |> Enum.map(&Path.wildcard(&1))
+    |> List.flatten
+    |> Enum.map(fn path ->
       case File.stat(path) do
         {:ok, stat} -> stat.ctime
         _ -> nil
