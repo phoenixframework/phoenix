@@ -55,7 +55,7 @@ defmodule Phoenix.TemplateTest do
     use Phoenix.Template, root: Path.join(__DIR__, "../fixtures/templates")
     import Phoenix.HTML
 
-    def render("user.json", [name: name]) do
+    def render("user.json", %{name: name}) do
       %{id: 123, name: name}
     end
   end
