@@ -41,7 +41,7 @@ defmodule Phoenix.HTML.Link do
     if method == :get do
       content_tag(:a, text, [href: to] ++ opts)
     else
-      form_tag(action: to, method: method, class: "linkmethod", enforce_utf8: false) do
+      form_tag(to, method: method, class: "linkmethod", enforce_utf8: false) do
         content_tag(:a, text, [onclick: "this.parentNode.submit()"] ++ opts)
       end
     end

@@ -114,15 +114,15 @@ defmodule Phoenix.HTML.Tag do
   Generates a form tag.
 
   This function generates the `<form>` tag without its
-  closing part. Check `form_tag/2` for generating an
+  closing part. Check `form_tag/3` for generating an
   enclosing tag.
 
   ## Examples
 
-      form_tag(action: "/hello")
+      form_tag("/hello")
       <form action="/hello" method="post">
 
-      form_tag(action: "/hello", method: :get)
+      form_tag("/hello", method: :get)
       <form action="/hello" method="get">
 
   ## Options
@@ -156,7 +156,13 @@ defmodule Phoenix.HTML.Tag do
   encoding. This technique has been seen in the Rails web framework and
   reproduced here.
   """
-  def form_tag(opts \\ []) do
+  def form_tag(action, opts \\ [])
+
+  def form_tag(action, do: block) do
+    form_tag(action, [], do: block)
+  end
+
+  def form_tag(action, opts) when is_list(opts) do
     {:safe, method} = html_escape(Keyword.get(opts, :method, "post"))
 
     {opts, extra} =
@@ -180,7 +186,7 @@ defmodule Phoenix.HTML.Tag do
         {true, opts}  -> Keyword.put(opts, :enctype, "multipart/form-data")
       end
 
-    safe_concat tag(:form, opts), safe(extra)
+    safe_concat tag(:form, [action: action] ++ opts), safe(extra)
   end
 
   @doc """
@@ -188,14 +194,14 @@ defmodule Phoenix.HTML.Tag do
 
   ## Examples
 
-      form_tag(action: "/hello") do
+      form_tag("/hello", method: "get") do
         "Hello"
       end
       <form action="/hello" method="post">...Hello...</form>
     
   """
-  def form_tag(options, do: block) do
-    safe_concat [form_tag(options), block, safe("</form>")]
+  def form_tag(action, options, do: block) do
+    safe_concat [form_tag(action, options), block, safe("</form>")]
   end
 
   defp csrf_token_tag(opts, extra) do

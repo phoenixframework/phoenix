@@ -75,44 +75,49 @@ defmodule Phoenix.HTML.TagTest do
   end
 
   test "form_tag for get" do
-    assert form_tag(method: :get) ==
-           {:safe, ~s(<form accept-charset="UTF-8" method="get">) <>
-                   ~s(<input name="_utf8" type="hidden" value="✓">)}
-
-    assert form_tag(method: :get, action: "/") ==
+    assert form_tag("/", method: :get) ==
            {:safe, ~s(<form accept-charset="UTF-8" action="/" method="get">) <>
                    ~s(<input name="_utf8" type="hidden" value="✓">)}
 
-    assert form_tag(method: :get, action: "/", enforce_utf8: false) ==
+    assert form_tag("/", method: :get, enforce_utf8: false) ==
            {:safe, ~s(<form action="/" method="get">)}
   end
 
   test "form_tag for post" do
     csrf_token = Phoenix.Controller.get_csrf_token()
 
-    assert form_tag() ==
-           {:safe, ~s(<form accept-charset="UTF-8" method="post">) <>
+    assert form_tag("/") ==
+           {:safe, ~s(<form accept-charset="UTF-8" action="/" method="post">) <>
                    ~s(<input name="_csrf_token" type="hidden" value="#{csrf_token}">) <>
                    ~s(<input name="_utf8" type="hidden" value="✓">)}
 
-    assert form_tag(method: :post, csrf_token: false, multipart: true) ==
-           {:safe, ~s(<form accept-charset="UTF-8" enctype="multipart/form-data" method="post">) <>
+    assert form_tag("/", method: :post, csrf_token: false, multipart: true) ==
+           {:safe, ~s(<form accept-charset="UTF-8" action="/" enctype="multipart/form-data" method="post">) <>
                    ~s(<input name="_utf8" type="hidden" value="✓">)}
   end
 
   test "form_tag for other method" do
     csrf_token = Phoenix.Controller.get_csrf_token()
 
-    assert form_tag(method: :put) ==
-           {:safe, ~s(<form accept-charset="UTF-8" method="post">) <>
+    assert form_tag("/", method: :put) ==
+           {:safe, ~s(<form accept-charset="UTF-8" action="/" method="post">) <>
                    ~s(<input name="_method" type="hidden" value="put">) <>
                    ~s(<input name="_csrf_token" type="hidden" value="#{csrf_token}">) <>
                    ~s(<input name="_utf8" type="hidden" value="✓">)}
   end
 
   test "form_tag with do block" do
-    assert (form_tag(method: :get) do "<>" end) ==
-           {:safe, ~s(<form accept-charset="UTF-8" method="get">) <>
+    csrf_token = Phoenix.Controller.get_csrf_token()
+
+    assert (form_tag("/") do "<>" end) ==
+           {:safe, ~s(<form accept-charset="UTF-8" action="/" method="post">) <>
+                   ~s(<input name="_csrf_token" type="hidden" value="#{csrf_token}">) <>
+                   ~s(<input name="_utf8" type="hidden" value="✓">) <>
+                   ~s(&lt;&gt;) <>
+                   ~s(</form>)}
+
+    assert (form_tag("/", method: :get) do "<>" end) ==
+           {:safe, ~s(<form accept-charset="UTF-8" action="/" method="get">) <>
                    ~s(<input name="_utf8" type="hidden" value="✓">) <>
                    ~s(&lt;&gt;) <>
                    ~s(</form>)}
