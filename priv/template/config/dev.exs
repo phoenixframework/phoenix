@@ -7,8 +7,11 @@ config :<%= application_name %>, <%= application_module %>.Endpoint,
   <%= unless skip_brunch? do %>
   watchers: [{Path.expand("node_modules/brunch/bin/brunch"), ["watch"]}],
   <% end %>
-  live_reload: ["priv/static/app.js",
-                "priv/static/app.css",
+  # Watch assets and templates for live-reload changes
+  # *Note*: Be careful with wildcards. Larger projects will use higher CPU in dev
+  # as the number of files grow. Adjust as necessary.
+  live_reload: ["priv/static/js/app.js",
+                "priv/static/css/app.css",
                 Path.wildcard("web/templates/**/*")]
 
 

@@ -20,10 +20,10 @@ defmodule Phoenix.Endpoint.Adapter do
     end
 
     watcher_children =
-      Enum.reduce(conf[:watchers], [], fn {cmd, args}, acc ->
-        acc ++ [worker(Task, [fn ->
+      Enum.map(conf[:watchers], fn {cmd, args} ->
+        worker(Task, [fn ->
           System.cmd(cmd, args, into: IO.stream(:stdio, :line), stderr_to_stdout: true)
-        end])]
+        end])
       end)
 
     live_reload_children = case conf[:live_reload] do
@@ -36,7 +36,7 @@ defmodule Phoenix.Endpoint.Adapter do
       supervisor(Phoenix.Endpoint.Server, [otp_app, mod]),
     ]
 
-    Supervisor.start_link(children, strategy: :rest_for_one, name: mod)
+    Supervisor.start_link(children, strategy: :one_for_one, name: mod)
   end
 
   def assets_change(endpoint) do

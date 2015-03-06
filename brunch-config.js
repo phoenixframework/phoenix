@@ -1,5 +1,7 @@
 exports.config = {
   // See http://brunch.io/#documentation for docs.
+  sourceMaps: false,
+  production: true,
   modules: {
     // use common js wrapper, but expose global `Phoenix` object for browser
     // truncate module path simple to "phoenix"
