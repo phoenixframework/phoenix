@@ -147,7 +147,6 @@ defmodule Mix.Tasks.Phoenix.New do
       Install your brunch dependencies by running inside your app:
 
           $ npm install
-
       """
     end
 
