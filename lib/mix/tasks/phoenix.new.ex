@@ -123,7 +123,6 @@ defmodule Mix.Tasks.Phoenix.New do
   defp copy_from(source_dir, target_dir, file_map) do
     for {source_file_path, dest_file_path} <- file_map do
       ensure_intermediate_dirs(target_dir, dest_file_path)
-      IO.puts "CP #{Path.join(target_dir, dest_file_path)}"
       File.cp!(Path.join(source_dir, source_file_path),
                Path.join(target_dir, dest_file_path))
     end
