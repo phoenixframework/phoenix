@@ -188,13 +188,11 @@ defmodule Phoenix.CodeReloader do
     """
   end
 
-  defp method(%Plug.Conn{method: method}), do:
-    method
+  defp method(%Plug.Conn{method: method}), do: method
 
   defp before_send_inject_reloader(conn) do
     register_before_send conn, fn conn ->
-      contents = get_resp_header(conn, "content-type")
-      if is_html_content_type(contents) do
+      if conn |> get_resp_header("content-type") |> html_content_type? do
         [page | rest] = String.split(to_string(conn.resp_body), "</body>")
         body = page <> reload_assets_tag() <> Enum.join(["</body>" | rest], "")
 
@@ -204,9 +202,8 @@ defmodule Phoenix.CodeReloader do
       end
     end
   end
-
-  defp is_html_content_type([]), do: false
-  defp is_html_content_type([content_type|_]), do: String.starts_with?(content_type, "text/html")
+  defp html_content_type?([]), do: false
+  defp html_content_type?([type | _]), do: String.starts_with?(type, "text/html")
 
   defp reload_assets_tag() do
     """
