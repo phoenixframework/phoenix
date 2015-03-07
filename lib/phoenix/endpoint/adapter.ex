@@ -4,38 +4,51 @@ defmodule Phoenix.Endpoint.Adapter do
   # the adapters/handlers.
   @moduledoc false
 
+  import Supervisor.Spec
   alias Phoenix.CodeReloader.ChangeDetector
 
   @doc """
   Starts the endpoint supervision tree.
   """
   def start_link(otp_app, mod) do
-    import Supervisor.Spec
-    conf       = config(otp_app, mod)
-    pub_conf   = conf[:pubsub]
+    conf = config(otp_app, mod)
 
-    pubsub_children = case pub_conf[:adapter] do
-      nil     -> []
-      adapter -> [supervisor(adapter, [mod.__pubsub_server__(), pub_conf])]
+    children =
+      [worker(Phoenix.Config, [otp_app, mod, defaults(otp_app, mod)])] ++
+      pubsub_children(mod, conf) ++
+      [supervisor(Phoenix.Endpoint.Server, [otp_app, mod])] ++
+      watcher_children(mod, conf) ++
+      live_reload_children(mod, conf)
+
+    Supervisor.start_link(children, strategy: :one_for_one, name: mod)
+  end
+
+  defp pubsub_children(mod, conf) do
+    pub_conf = conf[:pubsub]
+
+    if adapter = pub_conf[:adapter] do
+      [supervisor(adapter, [mod.__pubsub_server__(), pub_conf])]
+    else
+      []
     end
+  end
 
-    watcher_children =
+  defp watcher_children(_mod, conf) do
+    if conf[:server] do
       Enum.map(conf[:watchers], fn {cmd, args} ->
         worker(Phoenix.Endpoint.Watcher, [cmd, args],
                id: {cmd, args}, restart: :transient)
       end)
+    else
+      []
+    end
+  end
 
-    live_reload_children = case conf[:live_reload] do
-      [] -> []
+  defp live_reload_children(mod, conf) do
+    case conf[:live_reload] do
+      []    -> []
       paths -> [worker(ChangeDetector, [paths, {__MODULE__, :assets_change, [mod]}])]
     end
-
-    children = watcher_children ++ live_reload_children ++ pubsub_children ++ [
-      worker(Phoenix.Config, [otp_app, mod, defaults(otp_app, mod)]),
-      supervisor(Phoenix.Endpoint.Server, [otp_app, mod]),
-    ]
-
-    Supervisor.start_link(children, strategy: :one_for_one, name: mod)
   end
 
   def assets_change(endpoint) do

@@ -1,0 +1,22 @@
+<h2>Listing <%= plural %></h2>
+
+<table>
+  <tr>
+<%= for {k, _} <- attrs do %>    <th><%= Phoenix.Naming.camelize(k) %></th>
+<% end %>
+    <th></th>
+    <th></th>
+    <th></th>
+  </tr>
+<%= "<%=" %> for <%= singular %> <- @<%= plural %> do <%= "%\>" %>
+  <tr>
+<%= for {k, _} <- attrs do %>    <td><%= "<%=" %> <%= singular %>.<%= k %> <%= "%\>" %></td>
+<% end %>
+    <td><%= "<%=" %> link "Show", to: <%= singular %>_path(@conn, :show, <%= singular %>) <%= "%\>" %></td>
+    <td><%= "<%=" %> link "Edit", to: <%= singular %>_path(@conn, :edit, <%= singular %>) <%= "%\>" %></td>
+    <td><%= "<%=" %> link "Delete", to: <%= singular %>_path(@conn, :delete, <%= singular %>), method: :delete <%= "%\>" %></td>
+  </tr>
+<%% end %>
+</table>
+
+<%= "<%=" %> link "New <%= singular %>", to: <%= singular %>_path(@conn, :new) <%= "%\>" %>

@@ -1,0 +1,6 @@
+<h2>Edit <%= singular %></h2>
+
+<%= "<%=" %> render "form.html", changeset: @changeset,
+                        action: <%= singular %>_path(@conn, :update, @<%= singular %>) <%= "%\>" %>
+
+<%= "<%=" %> link "Back", to: <%= singular %>_path(@conn, :index) <%= "%\>" %>
