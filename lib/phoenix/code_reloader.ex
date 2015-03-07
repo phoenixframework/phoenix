@@ -193,8 +193,8 @@ defmodule Phoenix.CodeReloader do
 
   defp before_send_inject_reloader(conn) do
     register_before_send conn, fn conn ->
-      content_type = hd(get_resp_header(conn, "content-type"))
-      if String.starts_with?(content_type, "text/html") do
+      contents = get_resp_header(conn, "content-type")
+      if is_html_content_type(contents) do
         [page | rest] = String.split(to_string(conn.resp_body), "</body>")
         body = page <> reload_assets_tag() <> Enum.join(["</body>" | rest], "")
 
@@ -204,6 +204,9 @@ defmodule Phoenix.CodeReloader do
       end
     end
   end
+
+  defp is_html_content_type([]), do: false
+  defp is_html_content_type([content_type|_]), do: String.starts_with?(content_type, "text/html")
 
   defp reload_assets_tag() do
     """
