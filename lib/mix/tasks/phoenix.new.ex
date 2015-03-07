@@ -45,7 +45,7 @@ defmodule Mix.Tasks.Phoenix.New do
     {:text, "brunch/.gitignore",       ".gitignore"},
     {:text, "brunch/brunch-config.js", "brunch-config.js"},
     {:text, "brunch/package.json",     "package.json"},
-    {:text, "images/phoenix.png",      "web/static/assets/images/phoenix.png"},
+    {:text, "images/phoenix.png",      "priv/static/images/phoenix.png"},
     {:text, "app.css",                 "web/static/css/app.scss"},
     {:text, "brunch/app.js",           "web/static/js/app.js"},
     {:text, "phoenix.js",              "web/static/vendor/phoenix.js"},

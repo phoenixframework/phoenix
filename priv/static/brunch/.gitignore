@@ -9,7 +9,8 @@ erl_crash.dump
 # Static artifacts
 /node_modules
 
-# Since we are building static from web/static, we ignore
-# everything in priv/static. You may want to remove this
-# line depending on your deployment strategy.
-/priv/static
+# Since we are building js and css from web/static,
+# we ignore priv/static/{css,js}. You may want to
+# comment this depending on your deployment strategy.
+/priv/static/css
+/priv/static/js
