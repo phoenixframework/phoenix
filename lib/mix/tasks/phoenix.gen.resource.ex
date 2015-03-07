@@ -36,15 +36,33 @@ defmodule Mix.Tasks.Phoenix.Gen.Resource do
     module   = Module.concat(base, camelize) |> inspect
     alias    = Module.split(module) |> List.last
     route    = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
+    attrs    = split_attrs(attrs)
 
-    binding = [path: path, singular: singular, module: module,
-               plural: plural, route: route, base: base, alias: alias]
+    binding = [path: path, singular: singular, module: module, attrs: attrs,
+               plural: plural, route: route, base: base, alias: alias,
+               types: types(attrs), inputs: inputs(attrs), defaults: defaults(attrs)]
 
     Mix.Phoenix.copy_from source_dir, "", binding, [
-      {:eex, "model.ex",      "web/models/#{path}.ex"},
-      {:eex, "view.ex",       "web/views/#{path}_view.ex"},
-      {:eex, "controller.ex", "web/controllers/#{path}_controller.ex"},
+      {:eex, "controller.ex",  "web/controllers/#{path}_controller.ex"},
+      {:eex, "model.ex",       "web/models/#{path}.ex"},
+      {:eex, "view.ex",        "web/views/#{path}_view.ex"},
+      {:eex, "index.html.eex", "web/templates/#{path}/index.html.eex"},
+      {:eex, "edit.html.eex",  "web/templates/#{path}/edit.html.eex"},
+      {:eex, "form.html.eex",  "web/templates/#{path}/form.html.eex"},
+      {:eex, "new.html.eex",   "web/templates/#{path}/new.html.eex"},
+      {:eex, "show.html.eex",  "web/templates/#{path}/show.html.eex"},
     ]
+
+    Mix.shell.info """
+
+    Add the resource to the proper scope in web/router.ex:
+
+        resources "/#{route}", #{camelize}Controller
+
+    and then update your repository by running migrations:
+
+        $ mix ecto.migrate
+    """
   end
 
   def run(_) do
@@ -54,6 +72,45 @@ defmodule Mix.Tasks.Phoenix.Gen.Resource do
 
         mix phoenix.gen.resource User users name:string
     """
+  end
+
+  defp split_attrs(attrs) do
+    Enum.map attrs, fn attr ->
+      case String.split(attr, ":", parts: 2) do
+        [key, value] -> {String.to_atom(key), String.to_atom(value)}
+        [key]        -> {String.to_atom(key), :string}
+      end
+    end
+  end
+
+  defp types(attrs) do
+    Enum.into attrs, %{}, fn
+      {k, :uuid}     -> {k, Ecto.UUID}
+      {k, :date}     -> {k, Ecto.Date}
+      {k, :time}     -> {k, Ecto.Time}
+      {k, :datetime} -> {k, Ecto.DateTime}
+      {k, v}         -> {k, v}
+    end
+  end
+
+  defp inputs(attrs) do
+    Enum.into attrs, %{}, fn
+      {k, :integer}  -> {k, :number_input}
+      {k, :float}    -> {k, :number_input}
+      {k, :decimal}  -> {k, :number_input}
+      {k, :boolean}  -> {k, :checkbox}
+      {k, :date}     -> {k, :date_select}
+      {k, :time}     -> {k, :time_select}
+      {k, :datetime} -> {k, :datetime_select}
+      {k, _}         -> {k, :text_input}
+    end
+  end
+
+  defp defaults(attrs) do
+    Enum.into attrs, %{}, fn
+      {k, :boolean}  -> {k, ", default: false"}
+      {k, _}         -> {k, ""}
+    end
   end
 
   defp source_dir do

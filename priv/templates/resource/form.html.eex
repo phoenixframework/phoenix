@@ -1,0 +1,16 @@
+<%%= form_for @changeset, @action, fn f -> %>
+  <%%= if @changeset.errors != [] do %>
+    <p style="color: red">Oops, something went wrong!</p>
+  <%% end %>
+<%= for {k, _} <- attrs do %>
+  <p>
+    <label>
+      <span><%= Phoenix.Naming.camelize(k) %>:</span>
+      <%= "<%=" %> <%= inputs[k] %> f, <%= inspect k %> <%= "%\>" %>
+    </label>
+  </p>
+<% end %>
+  <p>
+    <%%= submit "Submit" %>
+  </p>
+<%% end %>
