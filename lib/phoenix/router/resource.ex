@@ -58,7 +58,11 @@ defmodule Phoenix.Router.Resource do
   end
 
   defp extract_actions(opts, singular) do
-    Keyword.get(opts, :only) || (default_actions(singular) -- Keyword.get(opts, :except, []))
+    if only = Keyword.get(opts, :only) do
+      @actions -- (@actions -- only)
+    else
+      default_actions(singular) -- Keyword.get(opts, :except, [])
+    end
   end
 
   defp default_actions(_singular=true), do: @actions -- [:index]

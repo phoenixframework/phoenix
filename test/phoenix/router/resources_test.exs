@@ -44,6 +44,8 @@ defmodule Phoenix.Router.ResourcesTest do
       resources "/files", FileController, except: [:delete]
     end
 
+    resources "/members", UserController, only: [:show, :new, :delete]
+
     resources "/files", Api.FileController, only: [:index]
 
     resources "/admin", UserController, param: "slug", name: "admin", only: [:show], alias: Api do
@@ -255,5 +257,16 @@ defmodule Phoenix.Router.ResourcesTest do
     assert conn.resp_body == "show comments"
     assert Router.Helpers.admin_post_path(conn, :show, "bar", "the_key") ==
            "/admin/bar/comments/the_key"
+  end
+
+  test "resources with :only sets propper match order for :show and :new" do
+    conn = call(Router, :get, "members/new")
+    assert conn.status == 200
+    assert conn.resp_body == "new users"
+
+    conn = call(Router, :get, "members/2")
+    assert conn.status == 200
+    assert conn.resp_body == "show users"
+    assert conn.params["id"] == "2"
   end
 end
