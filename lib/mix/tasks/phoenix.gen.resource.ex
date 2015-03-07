@@ -25,39 +25,42 @@ defmodule Mix.Tasks.Phoenix.Gen.Resource do
   Resources can be namespaced, for such, it is just necessary
   to namespace the first argument of the generator:
 
-      mix phoenix.gen.resource Admin.User admin_users name:string age:integer
+      mix phoenix.gen.resource Admin.User users name:string age:integer
 
   """
-  def run([singular, plural|attrs]) do
-    base     = Mix.Phoenix.base
-    camelize = Naming.camelize(singular)
-    path     = Naming.underscore(camelize)
-    singular = String.split(path, "/") |> List.last
-    module   = Module.concat(base, camelize) |> inspect
-    alias    = Module.split(module) |> List.last
-    route    = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
-    attrs    = split_attrs(attrs)
+  def run([singular,plural|attrs]) do
+    base      = Mix.Phoenix.base
+    scoped    = Naming.camelize(singular)
+    path      = Naming.underscore(scoped)
+    singular  = String.split(path, "/") |> List.last
+    module    = Module.concat(base, scoped) |> inspect
+    alias     = Module.split(module) |> List.last
+    route     = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
+    attrs     = split_attrs(attrs)
+    migration = String.replace(path, "/", "_")
+    timestamp = timestamp()
 
     binding = [path: path, singular: singular, module: module, attrs: attrs,
-               plural: plural, route: route, base: base, alias: alias,
+               plural: plural, route: route, base: base, alias: alias, scoped: scoped,
                types: types(attrs), inputs: inputs(attrs), defaults: defaults(attrs)]
 
     Mix.Phoenix.copy_from source_dir, "", binding, [
+      {:eex, "migration.ex",   "priv/repo/migrations/#{timestamp}_create_#{migration}.ex"},
       {:eex, "controller.ex",  "web/controllers/#{path}_controller.ex"},
       {:eex, "model.ex",       "web/models/#{path}.ex"},
-      {:eex, "view.ex",        "web/views/#{path}_view.ex"},
-      {:eex, "index.html.eex", "web/templates/#{path}/index.html.eex"},
       {:eex, "edit.html.eex",  "web/templates/#{path}/edit.html.eex"},
       {:eex, "form.html.eex",  "web/templates/#{path}/form.html.eex"},
+      {:eex, "index.html.eex", "web/templates/#{path}/index.html.eex"},
       {:eex, "new.html.eex",   "web/templates/#{path}/new.html.eex"},
       {:eex, "show.html.eex",  "web/templates/#{path}/show.html.eex"},
+      {:eex, "view.ex",        "web/views/#{path}_view.ex"},
     ]
 
     Mix.shell.info """
 
     Add the resource to the proper scope in web/router.ex:
 
-        resources "/#{route}", #{camelize}Controller
+        resources "/#{route}", #{scoped}Controller
 
     and then update your repository by running migrations:
 
@@ -73,6 +76,14 @@ defmodule Mix.Tasks.Phoenix.Gen.Resource do
         mix phoenix.gen.resource User users name:string
     """
   end
+
+  defp timestamp do
+    {{y, m, d}, {hh, mm, ss}} = :calendar.universal_time()
+    "#{y}#{pad(m)}#{pad(d)}#{pad(hh)}#{pad(mm)}#{pad(ss)}"
+  end
+
+  defp pad(i) when i < 10, do: << ?0, ?0 + i >>
+  defp pad(i), do: to_string(i)
 
   defp split_attrs(attrs) do
     Enum.map attrs, fn attr ->
