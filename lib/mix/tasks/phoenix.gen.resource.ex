@@ -45,7 +45,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Resource do
                types: types(attrs), inputs: inputs(attrs), defaults: defaults(attrs)]
 
     Mix.Phoenix.copy_from source_dir, "", binding, [
-      {:eex, "migration.ex",   "priv/repo/migrations/#{timestamp}_create_#{migration}.ex"},
+      {:eex, "migration.exs",  "priv/repo/migrations/#{timestamp}_create_#{migration}.exs"},
       {:eex, "controller.ex",  "web/controllers/#{path}_controller.ex"},
       {:eex, "model.ex",       "web/models/#{path}.ex"},
       {:eex, "edit.html.eex",  "web/templates/#{path}/edit.html.eex"},
