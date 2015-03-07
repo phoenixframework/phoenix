@@ -41,23 +41,23 @@ defmodule Mix.Tasks.Phoenix.New do
 
   """
 
-  @brunch %{
-    "brunch/.gitignore"       => ".gitignore",
-    "brunch/brunch-config.js" => "brunch-config.js",
-    "brunch/package.json"     => "package.json",
-    "brunch/app.js"           => "web/static/js/app.js",
-    "phoenix.js"              => "web/static/vendor/phoenix.js",
-    "app.css"                 => "web/static/css/app.scss",
-    "images/phoenix.png"      => "web/static/assets/images/phoenix.png"
-  }
+  @brunch [
+    {:text, "brunch/.gitignore",       ".gitignore"},
+    {:text, "brunch/brunch-config.js", "brunch-config.js"},
+    {:text, "brunch/package.json",     "package.json"},
+    {:text, "images/phoenix.png",      "web/static/assets/images/phoenix.png"},
+    {:text, "app.css",                 "web/static/css/app.scss"},
+    {:text, "brunch/app.js",           "web/static/js/app.js"},
+    {:text, "phoenix.js",              "web/static/vendor/phoenix.js"},
+  ]
 
-  @bare %{
-    "bare/.gitignore"         => ".gitignore",
-    "bare/app.js"             => "priv/static/js/app.js",
-    "phoenix.js"              => "priv/static/js/phoenix.js",
-    "app.css"                 => "priv/static/css/app.css",
-    "images/phoenix.png"      => "priv/static/images/phoenix.png"
-  }
+  @bare [
+    {:text, "bare/.gitignore",    ".gitignore"},
+    {:text, "app.css",            "priv/static/css/app.css"},
+    {:text, "images/phoenix.png", "priv/static/images/phoenix.png"},
+    {:text, "bare/app.js",        "priv/static/js/app.js"},
+    {:text, "phoenix.js",         "priv/static/js/phoenix.js"},
+  ]
 
   @switches [dev: :boolean, brunch: :boolean, ecto: :boolean]
 
@@ -98,11 +98,11 @@ defmodule Mix.Tasks.Phoenix.New do
                brunch: brunch,
                ecto: ecto]
 
-    copy_from priv_dir("template"), path, app, &EEx.eval_file(&1, binding)
+    copy_wildcard templates_dir("new"), path, app, binding
 
     # Optional contents
+    copy_model  app, path, binding
     copy_static app, path, binding
-    copy_model app, path, binding
 
     # Parallel installs
     install_parallel path, binding
@@ -121,17 +121,9 @@ defmodule Mix.Tasks.Phoenix.New do
     """
   end
 
-  defp copy_static(_app, path, binding) do
-    if binding[:brunch] do
-      copy_from priv_dir("static"), path, @brunch
-    else
-      copy_from priv_dir("static"), path, @bare
-    end
-  end
-
   defp copy_model(app, path, binding) do
     if binding[:ecto] do
-      copy_from priv_dir("ecto"), path, app, &EEx.eval_file(&1, binding)
+      copy_wildcard templates_dir("ecto"), path, app, binding
 
       append_to path, "config/dev.exs", """
 
@@ -164,6 +156,14 @@ defmodule Mix.Tasks.Phoenix.New do
         password: "postgres",
         database: "#{binding[:application_name]}_prod"
       """
+    end
+  end
+
+  defp copy_static(_app, path, binding) do
+    if binding[:brunch] do
+      Mix.Phoenix.copy_from priv_dir("static"), path, [], @brunch
+    else
+      Mix.Phoenix.copy_from priv_dir("static"), path, [], @bare
     end
   end
 
@@ -201,17 +201,12 @@ defmodule Mix.Tasks.Phoenix.New do
     ask_and_run("Install mix dependencies?", "mix", ["deps.get"])
   end
 
-  ## Copying functions
+  ## Specific functions
 
-  defp copy_from(source_dir, target_dir, file_map) when is_map(file_map) do
-    for {source_file_path, target_file_path} <- file_map do
-      source = Path.join(source_dir, source_file_path)
-      target = Path.join(target_dir, target_file_path)
-      Mix.Generator.create_file(target, File.read!(source))
-    end
-  end
-
-  defp copy_from(source_dir, target_dir, application_name, fun) do
+  # Copies all contents in source dir to target dir.
+  # If application_name is seen in the path, it is
+  # replaced by the actual application name.
+  defp copy_wildcard(source_dir, target_dir, application_name, binding) do
     source_paths =
       source_dir
       |> Path.join("**/*")
@@ -227,7 +222,7 @@ defmodule Mix.Tasks.Phoenix.New do
         Path.basename(source_path) == ".keep" ->
           :ok
         true ->
-          contents = fun.(source_path)
+          contents = EEx.eval_file(source_path, binding)
           Mix.Generator.create_file(target_path, contents)
       end
     end
@@ -303,5 +298,9 @@ defmodule Mix.Tasks.Phoenix.New do
 
   defp priv_dir(dir) do
     Application.app_dir(:phoenix, Path.join("priv", dir))
+  end
+
+  defp templates_dir(dir) do
+    priv_dir(Path.join("templates", dir))
   end
 end
