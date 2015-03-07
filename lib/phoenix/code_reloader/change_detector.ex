@@ -5,7 +5,7 @@ defmodule Phoenix.CodeReloader.ChangeDetector do
   Watches paths for ctime changes and calls MFA
   """
 
-  def start_link(paths, mfa, poll_every_ms \\ 500) do
+  def start_link(paths, mfa, poll_every_ms \\ 300) do
     GenServer.start_link(__MODULE__, [paths, mfa, poll_every_ms])
   end
 
