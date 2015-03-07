@@ -197,13 +197,6 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     end
   end
 
-  defp in_tmp(which, function) do
-    path = Path.join(tmp_path, which)
-    File.rm_rf! path
-    File.mkdir_p! path
-    File.cd! path, function
-  end
-
   defp in_project(app, path, fun) do
     %{name: name, file: file} = Mix.Project.pop
 

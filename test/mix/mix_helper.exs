@@ -10,6 +10,13 @@ defmodule MixHelper do
     Path.expand("../../tmp", __DIR__)
   end
 
+  def in_tmp(which, function) do
+    path = Path.join(tmp_path, which)
+    File.rm_rf! path
+    File.mkdir_p! path
+    File.cd! path, function
+  end
+
   def assert_file(file) do
     assert File.regular?(file), "Expected #{file} to exist, but does not"
   end
