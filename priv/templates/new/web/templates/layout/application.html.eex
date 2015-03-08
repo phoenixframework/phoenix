@@ -20,6 +20,9 @@
         <span class="logo"></span>
       </div>
 
+      <p class="info"><%%= get_flash(@conn, :info) %></p>
+      <p class="error"><%%= get_flash(@conn, :error) %></p>
+
       <%%= @inner %>
 
       <div class="footer">
