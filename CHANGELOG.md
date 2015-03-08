@@ -4,6 +4,8 @@
 
 ## v0.10.0 (2015-03-08)
 
+See these [`0.9.x` to `0.10.0` upgrade instructions](https://gist.github.com/chrismccord/cf51346c6636b5052885) to bring your existing apps up to speed.
+
 * Enhancements
   * [CLI] Make `phoenix.new` in sync with `mix new` by making the project diretory optional
   * [Controller] Add `scrub_params/2` which makes it easy to remove and prune blank string values from parameters (usually sent by forms)
