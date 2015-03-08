@@ -13,7 +13,7 @@ defmodule Phoenix.Socket.Message do
 
   alias Phoenix.Socket.Message
 
-  defstruct topic: nil, event: nil, payload: nil
+  defstruct topic: nil, event: nil, payload: nil, uuid: nil
 
   defmodule InvalidMessage do
     defexception [:message]
@@ -31,7 +31,8 @@ defmodule Phoenix.Socket.Message do
       %Message{
         topic: Map.fetch!(map, "topic"),
         event:   Map.fetch!(map, "event"),
-        payload: Map.fetch!(map, "payload")
+        payload: Map.fetch!(map, "payload"),
+        uuid: Map.get(map, "uuid", nil)
       }
     rescue
       err in [KeyError] -> raise InvalidMessage, message: "Missing key: '#{err.key}'"

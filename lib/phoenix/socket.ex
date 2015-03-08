@@ -28,7 +28,8 @@ defmodule Phoenix.Socket do
             authorized: false,
             transport: nil,
             pubsub_server: nil,
-            assigns: %{}
+            assigns: %{},
+            uuid: nil
 
 
   @doc """

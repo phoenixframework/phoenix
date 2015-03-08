@@ -448,4 +448,17 @@ defmodule Phoenix.ChannelTest do
     assert sockets == HashDict.new
     refute_received {:join, "topic2-override:somesubtopic"}
   end
+
+  test "#reply responds with uuid" do
+    socket = Socket.put_topic(new_socket, "top:subtop") |> Map.put(:uuid, "123")
+    assert Channel.reply(socket, "event", %{payload: "hello"})
+
+    assert Enum.any?(Process.info(self)[:messages], &match?({:socket_reply, %Message{}}, &1))
+    assert_received {:socket_reply, %Message{
+      uuid: "123",
+      topic: "top:subtop",
+      event: "event",
+      payload: %{payload: "hello"}
+    }}
+  end
 end

@@ -70,8 +70,10 @@ defmodule Phoenix.Channel.Transport do
                      topic: msg.topic,
                      transport: transport}
 
+
     sockets
     |> HashDict.get(msg.topic, socket)
+    |> Map.put(:uuid, msg.uuid)
     |> dispatch(msg.topic, msg.event, msg.payload)
     |> transport_response(sockets)
   end
@@ -98,7 +100,6 @@ defmodule Phoenix.Channel.Transport do
     end
     {:error, reason, HashDict.delete(sockets, socket.topic)}
   end
-
 
   @doc """
   Dispatches `%Phoenix.Socket.Message{}` in response to a heartbeat message sent from the client.

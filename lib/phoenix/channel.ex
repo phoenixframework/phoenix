@@ -257,7 +257,8 @@ defmodule Phoenix.Channel do
     send socket.pid, {:socket_reply, %Message{
       topic: socket.topic,
       event: event,
-      payload: message
+      payload: message,
+      uuid: socket.uuid
     }}
     {:ok, socket}
   end
