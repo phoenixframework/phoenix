@@ -24,7 +24,7 @@ defmodule <%= application_module %>.Mixfile do
   #
   # Type `mix help deps` for examples and options
   defp deps do
-    [<%= phoenix_dep %>,<%= if ecto do %>
+    [{:phoenix, "~> 0.10.0"},<%= if ecto do %>
      {:phoenix_ecto, "~> 0.1"},
      {:postgrex, ">= 0.0.0"},<% end %>
      {:cowboy, "~> 1.0"}]

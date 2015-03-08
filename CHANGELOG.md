@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.10.0-dev
+## v0.10.0 (2015-03-08)
 
 * Enhancements
   * [CLI] Make `phoenix.new` in sync with `mix new` by making the project diretory optional
