@@ -130,43 +130,14 @@ defmodule Phoenix.View do
         end
 
       quote do
-        @view_namespace unquote(namespace)
-        @view_root unquote(root)
         import Phoenix.View
+
         use Phoenix.Template, root:
-          Path.join(@view_root,
-                    Phoenix.Template.module_to_template_root(__MODULE__, @view_namespace, "View"))
+          Path.join(unquote(root),
+                    Phoenix.Template.module_to_template_root(__MODULE__, unquote(namespace), "View"))
       end
     else
       raise "expected :root to be given as an option"
-    end
-  end
-
-  @doc false
-  defmacro using(do: block) do
-    IO.puts :stderr, "warning: using do...end in views is deprecated, please use the new " <>
-                     "YourApp.Web definitions\n#{Exception.format_stacktrace(Macro.Env.stacktrace(__CALLER__))}"
-    evaled = Code.eval_quoted(block, [], __CALLER__)
-    {evaled, __usable__(block)}
-  end
-
-  defp __usable__(block) do
-    quote do
-      @doc false
-      defmacro __using__(opts) do
-        opts =
-          opts
-          |> Keyword.put_new(:root, @view_root)
-          |> Keyword.put_new(:namespace, @view_namespace)
-
-        block = unquote(block)
-
-        quote do
-          use Phoenix.View, unquote(opts)
-          unquote(block)
-          import unquote(__MODULE__), except: [render: 2]
-        end
-      end
     end
   end
 
