@@ -59,7 +59,7 @@ While we can name our actions whatever we like, there are conventions for action
 
 Each of these actions takes two parameters, which will be provided by Phoenix behind the scenes.
 
-The first parameter is always `conn`, a struct which holds information about the request such as the host, path elements, port, query string, and much more. `conn`, comes to Phoenix via Elixir's plug middleware framework. More detailed info about `conn` can be found in [plug's documentation](http://hexdocs.pm/plug/Plug.Conn.html).
+The first parameter is always `conn`, a struct which holds information about the request such as the host, path elements, port, query string, and much more. `conn`, comes to Phoenix via Elixir's Plug middleware framework. More detailed info about `conn` can be found in [plug's documentation](http://hexdocs.pm/plug/Plug.Conn.html).
 
 The second parameter is `params`. Not surprisingly, this is a map which holds any parameters passed along in the HTTP request. It is a good practice to pattern match against params in the function signature to provide data in a simple package we can pass on to rendering. We saw this in the [Adding Pages guide](http://www.phoenixframework.org/docs/adding-pages) when we added a messenger parameter to our `show` route in `web/controllers/hello_controller.ex`.
 
@@ -417,7 +417,7 @@ end
 
 We would then need to provide an `index.xml.eex` template which created valid xml, and we would be done.
 
-For a list of valid content mime-types, please see the [mime.types](https://github.com/elixir-lang/plug/blob/master/lib/plug/mime.types) documentation from the plug middleware framework.
+For a list of valid content mime-types, please see the [mime.types](https://github.com/elixir-lang/plug/blob/master/lib/plug/mime.types) documentation from the Plug middleware framework.
 
 ### Setting the HTTP Status
 
