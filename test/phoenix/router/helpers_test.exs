@@ -110,6 +110,7 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.post_path(__MODULE__, :show, 5, foo: true) == "/posts/5?foo=true"
     assert Helpers.post_path(__MODULE__, :show, 5, foo: false) == "/posts/5?foo=false"
     assert Helpers.post_path(__MODULE__, :show, 5, foo: nil) == "/posts/5?foo="
+    assert Helpers.post_path(__MODULE__, :show, 5, foo: ~w(bar baz)) == "/posts/5?foo[]=bar&foo[]=baz"
   end
 
   test "url helper with param protocol" do

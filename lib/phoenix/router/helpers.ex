@@ -74,7 +74,7 @@ defmodule Phoenix.Router.Helpers do
       defp to_path(segments, query, reserved) do
         dict = for {k, v} <- query,
                not (k = to_string(k)) in reserved,
-               do: {k, if(is_nil(v), do: v, else: to_param(v))}
+               do: {k, v}
 
         case Conn.Query.encode dict do
           "" -> segments
