@@ -105,7 +105,7 @@ defmodule Phoenix.Channel do
 
 
   ## Broadcasting to an external topic
-  In some cases, you will want to broadcast messages without the context of a `soceket`.
+  In some cases, you will want to broadcast messages without the context of a `socket`.
   This could be for broadcasting from within your channel to an external topic, or
   broadcasting from elsewhere in your application like a Controller or GenServer.
   For these cases, you can broadcast from your Endpoint its configured PubSub
