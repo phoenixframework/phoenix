@@ -1,5 +1,7 @@
 defmodule Phoenix.Transports.WebSocket do
-  use Phoenix.Controller
+  use Plug.Builder
+
+  import Phoenix.Controller, only: [endpoint_module: 1, router_module: 1]
 
   @moduledoc """
   Handles WebSocket clients for the Channel Transport layer
@@ -28,7 +30,9 @@ defmodule Phoenix.Transports.WebSocket do
   alias Phoenix.Channel.Transport
   alias Phoenix.Socket.Message
 
-  def call(%Plug.Conn{method: "GET"} = conn, _) do
+  plug :upgrade
+
+  def upgrade(%Plug.Conn{method: "GET"} = conn, _) do
     put_private(conn, :phoenix_upgrade, {:websocket, __MODULE__}) |> halt
   end
 
