@@ -28,9 +28,7 @@ defmodule Phoenix.Transports.WebSocket do
   alias Phoenix.Channel.Transport
   alias Phoenix.Socket.Message
 
-  plug :action
-
-  def upgrade(%Plug.Conn{method: "GET"} = conn, _) do
+  def call(%Plug.Conn{method: "GET"} = conn, _) do
     put_private(conn, :phoenix_upgrade, {:websocket, __MODULE__}) |> halt
   end
 
