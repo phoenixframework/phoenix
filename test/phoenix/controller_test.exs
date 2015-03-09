@@ -271,6 +271,14 @@ defmodule Phoenix.ControllerTest do
     assert conn.params["baz"] == ""
   end
 
+  test "scrub_params/2 keeps structs intact" do
+    conn = conn(:get, "/", %{"foo" => %{"bar" => %Plug.Upload{}}})
+    |> fetch_params
+    |> scrub_params("foo")
+
+    assert conn.params["foo"]["bar"] == %Plug.Upload{}
+  end
+
   test "protect_from_forgery/2 doesn't blow up" do
     conn(:get, "/")
     |> with_session

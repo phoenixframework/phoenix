@@ -494,7 +494,10 @@ defmodule Phoenix.Controller do
     %{conn | params: params}
   end
 
-  defp scrub_param(param) when is_map(param) do
+  defp scrub_param(%{__struct__: mod} = struct) when is_atom(mod) do
+    struct
+  end
+  defp scrub_param(%{} = param) do
     Enum.reduce(param, %{}, fn({k, v}, acc) ->
       Map.put(acc, k, scrub_param(v))
     end)
