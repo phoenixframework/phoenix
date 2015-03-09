@@ -203,7 +203,7 @@ In our application, we need to declare phoenix_haml as a dependency in `mix.exs`
 ```elixir
 defp deps do
   [
-    {:phoenix, "~> 0.9.0"},
+    {:phoenix, "~> 0.10.0"},
     {:cowboy, "~> 1.0"},
     {:phoenix_haml, github: "chrismccord/phoenix_haml"},
   ]
