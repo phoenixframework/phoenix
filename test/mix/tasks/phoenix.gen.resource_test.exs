@@ -130,4 +130,10 @@ defmodule Mix.Tasks.Phoenix.Gen.ResourceTest do
       assert message =~ ~s(resources "/admin/users", Admin.UserController)
     end
   end
+
+  test "plural can't contain a colon" do
+    assert_raise Mix.Error, fn ->
+      Mix.Tasks.Phoenix.Gen.Resource.run ["Admin.User", "name:string", "foo:string"]
+    end
+  end  
 end
