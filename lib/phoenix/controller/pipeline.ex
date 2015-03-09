@@ -5,7 +5,7 @@ defmodule Phoenix.Controller.Pipeline do
   ## The pipeline
 
   The goal of a controller is to receive a request and invoke the desired
-  action. The whole flow of the controller is managed by single pipeline:
+  action. The whole flow of the controller is managed by a single pipeline:
 
       defmodule UserController do
         use Phoenix.Controller
@@ -50,15 +50,15 @@ defmodule Phoenix.Controller.Pipeline do
 
   ## Guards
 
-  `plug/2` support guards, allowing a developer to configure a plug to only
+  `plug/2` supports guards, allowing a developer to configure a plug to only
   run in some particular action:
 
       plug :log_message, "before action" when action in [:show, :edit]
       plug :action
       plug :log_message, "after action" when not action in [:index]
 
-  The first plug will run only when action is show and edit, while the second
-  will always run except for the index action.
+  The first plug will run only when action is show and edit.
+  The second plug will always run, except for the index action.
 
   Those guards work like regular Elixir guards and the only variables accessible
   in the guard are `conn`, the `action` as an atom and the `controller` as an

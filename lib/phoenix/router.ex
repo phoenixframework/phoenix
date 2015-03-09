@@ -121,7 +121,7 @@ defmodule Phoenix.Router do
 
   ## Pipelines and plugs
 
-  Once a request arrives to the Phoenix router, it performs
+  Once a request arrives at the Phoenix router, it performs
   a series of transformations through pipelines until the
   request is dispatched to a desired end-point.
 
@@ -158,7 +158,7 @@ defmodule Phoenix.Router do
   Channels allow you to route pubsub events to channel handlers in your application.
   By default, Phoenix supports both WebSocket and LongPoller transports.
   See the `Phoenix.Channel.Transport` documentation for more information on writing
-  your own transports. Chanenls are defined with a `socket` mount, ie:
+  your own transports. Channels are defined with a `socket` mount, ie:
 
       defmodule MyApp.Router do
         use Phoenix.Router

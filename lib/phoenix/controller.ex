@@ -48,7 +48,7 @@ defmodule Phoenix.Controller do
   It is also important to not confuse `Phoenix.Controller.render/3`
   with `Phoenix.View.render/3` in the long term. The former expects
   a connection and relies on content negotiation while the latter is
-  connection-agnostnic and typically invoked from your views.
+  connection-agnostic and typically invoked from your views.
 
   ## Plug pipeline
 
@@ -337,7 +337,7 @@ defmodule Phoenix.Controller do
   Renders the given `template` and `assigns` based on the `conn` information.
 
   Once the template is rendered, the template format is set as the response
-  content type (for example, a HTML template will set "text/html" as response
+  content type (for example, an HTML template will set "text/html" as response
   content type) and the data is sent to the client with default status of 200.
 
   ## Arguments
@@ -367,7 +367,7 @@ defmodule Phoenix.Controller do
       end
 
   The example above renders a template "show.html" from the `MyApp.UserView`
-  and set the response content type to "text/html".
+  and sets the response content type to "text/html".
 
   In many cases, you may want the template format to be set dynamically based
   on the request. To do so, you can pass the template name as an atom (without
@@ -385,7 +385,7 @@ defmodule Phoenix.Controller do
 
   ## Views
 
-  Controllers render by default templates in a view with a similar name to the
+  By default, Controllers render templates in a view with a similar name to the
   controller. For example, `MyApp.UserController` will render templates inside
   the `MyApp.UserView`. This information can be changed any time by using the
   `put_view/2` function:
@@ -627,7 +627,7 @@ defmodule Phoenix.Controller do
     end
   end
 
-  # In case there is no accepts header or the header is */*
+  # In case there is no accept header or the header is */*
   # we use the first format specified in the accepts list.
   defp handle_header_accept(conn, header, [first|_]) when header == [] or header == ["*/*"] do
     accept(conn, first)

@@ -1,13 +1,13 @@
 defmodule Phoenix.HTML do
   @moduledoc """
-  Helpers for working HTML strings and templates.
+  Helpers for working with HTML strings and templates.
 
   When used, it brings the given functionality:
 
-    * `use Phoenix.HTML.Controller` - imports controllers functions
+    * `use Phoenix.HTML.Controller` - imports controller functions
       commonly used in views;
 
-    * `import Phoenix.HTML`- imports functions for handle HTML safety;
+    * `import Phoenix.HTML`- imports functions to handle HTML safety;
 
     * `import Phoenix.HTML.Tag` - imports functions for generating HTML tags;
 
@@ -117,7 +117,7 @@ defmodule Phoenix.HTML do
   def safe(value) when is_binary(value) or is_list(value), do: {:safe, value}
 
   @doc """
-  Concatenates data in the given list safe.
+  Concatenates data in the given list safely.
 
       iex> safe_concat(["<hello>", "safe", "<world>"])
       {:safe, "&lt;hello&gt;safe&lt;world&gt;"}

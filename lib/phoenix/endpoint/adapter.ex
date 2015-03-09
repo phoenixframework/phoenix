@@ -136,7 +136,7 @@ defmodule Phoenix.Endpoint.Adapter do
   @doc """
   Returns the static path of a file in the static root directory.
 
-  When file exists, it includes a timestamp. When it doesn't exist,
+  When the file exists, it includes a timestamp. When it doesn't exist,
   just the static path is returned.
 
   The result is wrapped in a `{:cache | :stale, value}` tuple so

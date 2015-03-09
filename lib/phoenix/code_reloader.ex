@@ -30,7 +30,7 @@ defmodule Phoenix.CodeReloader do
 
   This works by checking each compiled Phoenix module if
   `__phoenix_recompile__?/0` returns true and if so it touches
-  it sources file.
+  its source files.
 
   Returns the touched source files.
   """

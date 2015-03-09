@@ -53,7 +53,7 @@ defmodule Phoenix.Naming do
   end
 
   @doc """
-  Finds the Base Namespace of the module with optional concat
+  Finds the Base Namespace of the module with optional concat.
 
   ## Examples
 

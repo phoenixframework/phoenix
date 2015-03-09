@@ -11,7 +11,7 @@ defmodule Phoenix.Transports.LongPoller do
   @doc """
   Listens for `%Phoenix.Socket.Message{}`'s from `Phoenix.LongPoller.Server`.
 
-  As soon as messages are received, they are encoded as JSON and send down
+  As soon as messages are received, they are encoded as JSON and sent down
   to the longpolling client, which immediately repolls. If a timeout occurrs,
   a `:no_content` response is returned, and the client should immediately repoll.
   """
@@ -44,10 +44,10 @@ defmodule Phoenix.Transports.LongPoller do
   end
 
   @doc """
-  Publishes a `%Phoenix.Socket.Message{}` to a channel
+  Publishes a `%Phoenix.Socket.Message{}` to a channel.
 
   If the message was authorized by the Channel, a 200 OK response is returned,
-  otherwise a 401 Unauthorized response is returned
+  otherwise a 401 Unauthorized response is returned.
   """
   def publish(conn, message) do
     case resume_session(conn) do
@@ -68,7 +68,7 @@ defmodule Phoenix.Transports.LongPoller do
   ## Client
 
   @doc """
-  Starts the `Phoenix.LongPoller.Server` and stores the serialized pid in the session
+  Starts the `Phoenix.LongPoller.Server` and stores the serialized pid in the session.
   """
   def start_session(conn) do
     router = router_module(conn)
@@ -84,7 +84,7 @@ defmodule Phoenix.Transports.LongPoller do
   end
 
   @doc """
-  Finds the `Phoenix.LongPoller.Server` server from the session
+  Finds the `Phoenix.LongPoller.Server` server from the session.
   """
   def resume_session(conn) do
     case verify_longpoll_topic(conn) do
@@ -95,7 +95,7 @@ defmodule Phoenix.Transports.LongPoller do
   end
 
   @doc """
-  Retrieves the serialized `Phoenix.LongPoller.Server` pid from the encrypted token
+  Retrieves the serialized `Phoenix.LongPoller.Server` pid from the encrypted token.
   """
   def verify_longpoll_topic(%Plug.Conn{params: %{"token" => token, "sig" => sig}} = conn) do
     case verify(conn, token, sig) do
@@ -115,9 +115,9 @@ defmodule Phoenix.Transports.LongPoller do
   def verify_longpoll_topic(_conn), do: :notopic
 
   @doc """
-  Ack's a list of message refs back to the `Phoenix.LongPoller.Server`
+  Ack's a list of message refs back to the `Phoenix.LongPoller.Server`.
 
-  To be called after buffered messages have been relayed to client
+  To be called after buffered messages have been relayed to the client.
   """
   def ack(conn, priv_topic, msgs) do
     ref = :erlang.make_ref()
