@@ -7,7 +7,7 @@ defmodule Phoenix.Template do
   system into a particular directory, typically "web/templates".
 
   This module provides conveniences for reading all files from a
-  particular directory and embeding them into a single module.
+  particular directory and embedding them into a single module.
   Imagine you have a directory with templates:
 
       # templates/foo.html.eex
@@ -24,7 +24,7 @@ defmodule Phoenix.Template do
 
   In practice though, developers rarely use `Phoenix.Template`
   directly. Instead they use `Phoenix.View` which wraps the template
-  functionality and add some extra conveniences.
+  functionality and adds some extra conveniences.
 
   ## Terminology
 
@@ -160,14 +160,14 @@ defmodule Phoenix.Template do
       end
 
       @doc """
-      Returns the template root along-side all templates.
+      Returns the template root alongside all templates.
       """
       def __templates__ do
         {@template_root, unquote(names)}
       end
 
       @doc """
-      Returns true whenever the list of templates change in the filesystem.
+      Returns true whenever the list of templates changes in the filesystem.
       """
       def __phoenix_recompile__? do
         unquote(hash(root)) != Template.hash(@template_root)

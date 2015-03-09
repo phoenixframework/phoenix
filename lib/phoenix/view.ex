@@ -104,7 +104,7 @@ defmodule Phoenix.View do
     * `:root` - the template root to find templates
     * `:namespace` - the namespace to consider when calculating view paths
 
-  The `:root` option is required while the `:namespace` always to the
+  The `:root` option is required while the `:namespace` defaults to the
   first nesting in the module name. For instance, both `MyApp.UserView`
   and `MyApp.Admin.UserView` have namespace `MyApp`.
 
@@ -167,7 +167,7 @@ defmodule Phoenix.View do
 
   ## Layouts
 
-  Template can be rendered within other templates using the `:layout`
+  Templates can be rendered within other templates using the `:layout`
   option. `:layout` accepts a tuple of the form
   `{LayoutModule, "template.extension"}`.
 

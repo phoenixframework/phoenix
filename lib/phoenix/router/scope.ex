@@ -89,7 +89,7 @@ defmodule Phoenix.Router.Scope do
   end
 
   @doc """
-  Returns true if modules definition is currently within a scope block
+  Returns true if the module's definition is currently within a scope block
   """
   def inside_scope?(module), do: length(get_stack(module)) > 1
 

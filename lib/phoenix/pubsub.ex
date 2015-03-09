@@ -12,15 +12,15 @@ defmodule Phoenix.PubSub do
 
     * `subscribe` -
        sends:        `{:subscribe, pid, topic, link}`
-       respond with: `:ok | {:error, reason} {:perform, {m, f a}}`
+       respond with: `:ok | {:error, reason} {:perform, {m, f, a}}`
 
     * `unsubscribe` -
        sends:        `{:unsubscribe, pid, topic}`
-       respond with: `:ok | {:error, reason} {:perform, {m, f a}}`
+       respond with: `:ok | {:error, reason} {:perform, {m, f, a}}`
 
     * `broadcast` -
        sends          `{:broadcast, :none, topic, message}`
-       respond with: `:ok | {:error, reason} {:perform, {m, f a}}`
+       respond with: `:ok | {:error, reason} {:perform, {m, f, a}}`
 
   Additionally, adapters must implement `start_link/2` with the following format:
 
@@ -29,9 +29,9 @@ defmodule Phoenix.PubSub do
   ### Offloading work to clients via MFA response
 
   The `Phoenix.PubSub` API allows any of its functions to handle a
-  response from the adapter matching `{:perform, {m, f a}}`. The PubSub
+  response from the adapter matching `{:perform, {m, f, a}}`. The PubSub
   client will recursively invoke all MFA responses until a result is
-  return. This is useful for offloading work to clients without blocking
+  returned. This is useful for offloading work to clients without blocking
   in your PubSub adapter. See `Phoenix.PubSub.PG2` for an example usage.
 
   ## Example

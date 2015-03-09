@@ -244,7 +244,7 @@ defmodule Phoenix.Endpoint do
       @doc """
       Returns the endpoint configuration for `key`
 
-      Returns `default` if the router does not exist.
+      Returns `default` if the key does not exist.
       """
       def config(key, default \\ nil) do
         case :ets.lookup(__MODULE__, key) do

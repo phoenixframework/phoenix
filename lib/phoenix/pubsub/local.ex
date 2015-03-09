@@ -4,7 +4,7 @@ defmodule Phoenix.PubSub.Local do
   @moduledoc """
   PubSub implementation for handling local-node process groups
 
-  This modules is used by Phoenix pubsub adapters to handle their
+  This module is used by Phoenix pubsub adapters to handle their
   local node topic subscriptions. See `Phoenix.PubSub.PG2`
   for an example integration.
   """
@@ -57,7 +57,7 @@ defmodule Phoenix.PubSub.Local do
   end
 
   @doc """
-  Sends a message to allow subscribers of a topic
+  Sends a message to all subscribers of a topic
 
     * `local_server` - The registered server name or pid
     * `topic` - The string topic, ie "users:123"

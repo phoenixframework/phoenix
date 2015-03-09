@@ -24,7 +24,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   alias Phoenix.Transports.LongPoller
 
   @doc """
-  Starts the Server
+  Starts the Server.
 
     * `router` - The router module, ie. `MyApp.Router`
     * `window_ms` - The longpoll session timeout, in milliseconds
@@ -58,7 +58,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   def handle_call(:stop, _from, state), do: {:stop, :shutdown, :ok, state}
 
   @doc """
-  Dispatches client `%Phoenix.Socket.Messages{}` back through Transport layer
+  Dispatches client `%Phoenix.Socket.Messages{}` back through Transport layer.
   """
   def handle_info({:dispatch, message, ref}, state) do
     message
@@ -74,7 +74,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   end
 
   @doc """
-  Forwards replied/broadcasted `%Phoenix.Socket.Message{}`s from Channels back to client
+  Forwards replied/broadcasted `%Phoenix.Socket.Message{}`s from Channels back to client.
   """
   def handle_info({:socket_reply, message = %Message{}}, state) do
     buffer = [message | state.buffer]

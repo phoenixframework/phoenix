@@ -4,7 +4,7 @@ defmodule Phoenix.Transports.WebSocket do
   import Phoenix.Controller, only: [endpoint_module: 1, router_module: 1]
 
   @moduledoc """
-  Handles WebSocket clients for the Channel Transport layer
+  Handles WebSocket clients for the Channel Transport layer.
 
   ## Configuration
 
@@ -37,7 +37,7 @@ defmodule Phoenix.Transports.WebSocket do
   end
 
   @doc """
-  Handles initalization of the websocket
+  Handles initalization of the websocket.
   """
   def ws_init(conn) do
     serializer = Dict.fetch!(endpoint_module(conn).config(:transports), :websocket_serializer)
@@ -49,7 +49,7 @@ defmodule Phoenix.Transports.WebSocket do
 
   @doc """
   Receives JSON encoded `%Phoenix.Socket.Message{}` from client and dispatches
-  to Transport layer
+  to Transport layer.
   """
   def ws_handle(opcode, payload, state) do
     payload
@@ -62,7 +62,7 @@ defmodule Phoenix.Transports.WebSocket do
   end
 
   @doc """
-  Receives `%Phoenix.Socket.Message{}` and sends encoded message JSON to client
+  Receives `%Phoenix.Socket.Message{}` and sends encoded message JSON to client.
   """
   def ws_info({:socket_broadcast, message = %Message{}}, %{sockets: sockets} = state) do
     sockets = case Transport.dispatch_broadcast(sockets, message) do
@@ -78,7 +78,7 @@ defmodule Phoenix.Transports.WebSocket do
   end
 
   @doc """
-  Called on WS close. Dispatches the `leave` event back through Transport layer
+  Called on WS close. Dispatches the `leave` event back through Transport layer.
   """
   def ws_terminate(reason, %{sockets: sockets}) do
     :ok = Transport.dispatch_leave(sockets, reason)

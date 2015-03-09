@@ -5,7 +5,7 @@ defmodule Phoenix.Socket.Message do
 
   The Message format requires the following keys:
 
-    * topic - The String topic  or topic:subtopic pair namespace, ie "messages", "messages:123"
+    * topic - The String topic or topic:subtopic pair namespace, ie "messages", "messages:123"
     * event - The String event name, ie "join"
     * payload - The String JSON message payload
 
@@ -24,7 +24,7 @@ defmodule Phoenix.Socket.Message do
 
   @doc """
   Converts a map with string keys into a `%Phoenix.Socket.Message{}`.
-  Raises `Phoenix.Socket.Message.InvalidMessage` if not valid
+  Raises `Phoenix.Socket.Message.InvalidMessage` if not valid.
   """
   def from_map!(map) when is_map(map) do
     try do
