@@ -54,7 +54,8 @@ defmodule Phoenix.CodeReloader do
   API used by Plug to invoke the code reloader on every request.
   """
   def call(conn, opts) do
-    reloadable_paths = conn.private.phoenix_endpoint.config(:reloadable_paths)
+    reloadable_paths  = conn.private.phoenix_endpoint.config(:reloadable_paths)
+    live_reload_paths = conn.private.phoenix_endpoint.config(:live_reload)
     case opts[:reloader].(reloadable_paths) do
       {:error, output} ->
         conn
@@ -62,7 +63,7 @@ defmodule Phoenix.CodeReloader do
         |> send_resp(500, template(conn, output))
         |> halt()
       _ ->
-        before_send_inject_reloader(conn)
+        before_send_inject_reloader(conn, live_reload_paths)
     end
   end
 
@@ -190,7 +191,8 @@ defmodule Phoenix.CodeReloader do
 
   defp method(%Plug.Conn{method: method}), do: method
 
-  defp before_send_inject_reloader(conn) do
+  defp before_send_inject_reloader(conn, []), do: conn
+  defp before_send_inject_reloader(conn, _live_reload_paths) do
     register_before_send conn, fn conn ->
       if conn |> get_resp_header("content-type") |> html_content_type? do
         [page | rest] = String.split(to_string(conn.resp_body), "</body>")

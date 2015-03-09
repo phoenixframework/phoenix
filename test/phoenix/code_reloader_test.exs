@@ -3,10 +3,15 @@ defmodule Phoenix.CodeReloaderTest do
   use RouterHelper
 
   defmodule Endpoint do
-    def config(:reloadable_paths) do
-      ["web"]
-    end
+    def config(:reloadable_paths), do: ["web"]
+    def config(:live_reload),      do: ["some/path"]
   end
+
+  defmodule EndpointNoLiveReload do
+    def config(:reloadable_paths), do: ["web"]
+    def config(:live_reload),      do: []
+  end
+
 
   test "task touches files" do
     assert Mix.Tasks.Compile.Phoenix.run([]) == :noop
@@ -22,6 +27,36 @@ defmodule Phoenix.CodeReloaderTest do
            |> Plug.Conn.put_private(:phoenix_endpoint, Endpoint)
            |> Phoenix.CodeReloader.call(opts)
     assert conn.state == :unset
+  end
+
+  test "injects live_reload for html requests if configured" do
+    opts = Phoenix.CodeReloader.init([])
+    conn = conn(:get, "/")
+           |> Plug.Conn.put_private(:phoenix_endpoint, Endpoint)
+           |> put_resp_content_type("text/html")
+           |> Phoenix.CodeReloader.call(opts)
+           |> send_resp(200, "")
+    assert to_string(conn.resp_body) =~ ~r/require\("phoenix"\)/
+  end
+
+  test "skips live_reload if not configured" do
+    opts = Phoenix.CodeReloader.init([])
+    conn = conn(:get, "/")
+           |> Plug.Conn.put_private(:phoenix_endpoint, EndpointNoLiveReload)
+           |> put_resp_content_type("text/html")
+           |> Phoenix.CodeReloader.call(opts)
+           |> send_resp(200, "")
+    refute to_string(conn.resp_body) =~ ~r/require\("phoenix"\)/
+  end
+
+  test "skips live_reload if not html request" do
+    opts = Phoenix.CodeReloader.init([])
+    conn = conn(:get, "/")
+           |> Plug.Conn.put_private(:phoenix_endpoint, Endpoint)
+           |> put_resp_content_type("application/json")
+           |> Phoenix.CodeReloader.call(opts)
+           |> send_resp(200, "")
+    refute to_string(conn.resp_body) =~ ~r/require\("phoenix"\)/
   end
 
   def reload!(_) do
