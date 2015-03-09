@@ -29,6 +29,8 @@ defmodule Mix.Tasks.Phoenix.Gen.Resource do
 
   """
   def run([singular,plural|attrs]) do
+    if String.contains?(plural, ":"), do: raise_with_help
+      
     base      = Mix.Phoenix.base
     scoped    = Naming.camelize(singular)
     path      = Naming.underscore(scoped)
@@ -69,11 +71,15 @@ defmodule Mix.Tasks.Phoenix.Gen.Resource do
   end
 
   def run(_) do
+    raise_with_help
+  end
+
+  defp raise_with_help do 
     Mix.raise """
     mix phoenix.gen.resource expects both singular and plural names
     of the generated resource followed by any number of attributes:
 
-        mix phoenix.gen.resource User users name:string
+    mix phoenix.gen.resource User users name:string
     """
   end
 
