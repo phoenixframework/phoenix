@@ -105,6 +105,15 @@ defmodule Phoenix.Endpoint do
       from `System.get_env("PORT")` at runtime as a workaround for releases where
       environment specific information is loaded only at compile-time.
 
+    * `:watchers` - a set of watchers to run alongside your application.
+      It expects a list of tuples containing the executable and its
+      arguments. Watchers are guaranteed to run in the current application
+      working directory. For example, the watcher below will run the "watch"
+      mode of the brunch.io assets tool. You can configure it to whatever
+      asset related tool or command you want:
+
+          [{"node", ["node_modules/brunch/bin/brunch", "watch"]}]
+
     * `:pubsub` - configuration for this endpoint's pubsub adapter.
       Configuration either requires a `:name` of the registered pubsub server
       or a `:name`, `:adapter`, and options which starts the adapter in
