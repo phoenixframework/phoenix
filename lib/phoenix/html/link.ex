@@ -46,4 +46,40 @@ defmodule Phoenix.HTML.Link do
       end
     end
   end
+
+  @doc """
+  Generates a button that uses a regular HTML form to submit to the given URL.
+  Useful to ensure that links that change data are not triggered by
+  search engines and other spidering software.
+
+  ## Examples
+
+      <%= button("hello", to: "/world") %>
+
+  generates
+
+      <form action="/world" class="button" method="post">
+        <input name="_csrf_token" value=""><input type="submit" value="hello">
+      </form>
+
+  ## Options
+
+    * `:to` - the page to link to. This option is required
+
+    * `:method` - the method to use with the link. Defaults to :post.
+
+  """
+  def button(text, opts) do
+    {to, opts} = Keyword.pop(opts, :to)
+    {method, opts} = Keyword.pop(opts, :method, :post)
+    {htmlClass, opts} = Keyword.pop(opts, :class, :button)
+
+    unless to do
+      raise ArgumentError, "option :to is required in button/2"
+    end
+
+    form_tag(to, [method: method, class: htmlClass, enforce_utf8: false] ++ opts) do
+      tag(:input, [type: "submit", value: text])
+    end
+  end
 end
