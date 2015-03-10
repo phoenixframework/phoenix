@@ -10,7 +10,7 @@ config :<%= application_name %>, <%= application_module %>.Endpoint,
   http: [port: 4000],
   debug_errors: true,
   cache_static_lookup: false,
-  watchers: <%= if brunch do %>[{Path.expand("node_modules/brunch/bin/brunch"), ["watch"]}]<% else %>[]<% end %>
+  watchers: <%= if brunch do %>[node: ["node_modules/brunch/bin/brunch", "watch"]]<% else %>[]<% end %>
 
 # Watch static and templates for browser reloading.
 # *Note*: Be careful with wildcards. Larger projects

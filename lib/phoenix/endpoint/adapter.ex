@@ -33,10 +33,10 @@ defmodule Phoenix.Endpoint.Adapter do
     end
   end
 
-  defp watcher_children(_mod, conf) do
+  defp watcher_children(mod, conf) do
     if conf[:server] do
       Enum.map(conf[:watchers], fn {cmd, args} ->
-        worker(Phoenix.Endpoint.Watcher, [cmd, args],
+        worker(Phoenix.Endpoint.Watcher, [mod, cmd, args],
                id: {cmd, args}, restart: :transient)
       end)
     else

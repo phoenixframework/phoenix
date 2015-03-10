@@ -179,7 +179,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
   defp install_brunch(binding) do
     task = binding[:brunch] &&
-           ask_and_run("Install brunch.io dependencies?", "npm", ["install"])
+           ask_and_run("Install brunch.io dependencies?", "npm", "install")
 
     unless task do
       Mix.shell.info """
@@ -198,7 +198,7 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   defp install_mix(_) do
-    ask_and_run("Install mix dependencies?", "mix", ["deps.get"])
+    ask_and_run("Install mix dependencies?", "mix", "deps.get")
   end
 
   ## Specific functions
@@ -248,9 +248,15 @@ defmodule Mix.Tasks.Phoenix.New do
   defp ask_and_run(question, command, args) do
     if System.find_executable(command) &&
        Mix.shell.yes?("\n" <> question) do
-
-      Mix.shell.info [:green, "* running ", :reset, Enum.join([command|args], " ")]
-      Task.async(fn -> System.cmd(command, args) end)
+      exec = command <> " " <> args
+      Mix.shell.info [:green, "* running ", :reset, exec]
+      Task.async(fn ->
+        # We use :os.cmd/1 because there is a bug in OTP
+        # where we cannot execute .cmd files on Windows.
+        # We could use Mix.shell.cmd/1 but that automatically
+        # outputs to the terminal and we don't want that.
+        :os.cmd(String.to_char_list(exec))
+      end)
     end
   end
 
