@@ -62,33 +62,27 @@ Once this is done, we need to have Phoenix generate a new project for us, and we
 Phoenix will accept either an absolute or relative path for the directory of our new project. Either of these will work.
 
 ```console
-$ mix phoenix.new hello_phoenix /Users/me/work/elixir-stuff/hello_phoenix
+$ mix phoenix.new /Users/me/work/elixir-stuff/hello_phoenix
 ```
 
 ```console
-$ mix phoenix.new hello_phoenix ../hello_phoenix
+$ mix phoenix.new ../hello_phoenix
 ```
 
 For our purposes, a relative path will do.
 
 ```console
-$ mix phoenix.new hello_phoenix ../hello_phoenix
+$ mix phoenix.new ../hello_phoenix
 ```
 
-We can then `cd` into the new project directory.
+We'll be prompted to install mix depencies, followed by a brunch dependency prompt. Well answer `y` to both and then 
+we can then `cd` into the new project directory.
 
 ```console
 $ cd ../hello_phoenix
 ```
 
-The next step is to get and compile the dependencies that our phoenix application will need.
-
-```console
-$ mix do deps.get, compile
-```
-This is different from the similar step we did above. That step was compiling Phoenix itself. This is compiling our new application, which Phoenix just generated.
-
-Once the application compiles successfully, we can start it.
+Now that our application is set up with all its dependencies, we can start it.
 
 ```console
 $ mix phoenix.server
