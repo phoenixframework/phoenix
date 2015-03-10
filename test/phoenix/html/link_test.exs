@@ -37,8 +37,6 @@ defmodule Phoenix.HTML.LinkTest do
   end
 
   test "button with get does not generate CSRF" do
-    csrf_token = Phoenix.Controller.get_csrf_token()
-
     assert button("hello", to: "/world", method: :get) ==
            {:safe, ~s[<form action="/world" class="button" method="get">] <>
                    ~s[<input type="submit" value="hello">] <>
