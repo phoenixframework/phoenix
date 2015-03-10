@@ -26,7 +26,6 @@ defmodule Phoenix.HTML.LinkTest do
   end
 
   test "button with post (default)" do
-
     csrf_token = Phoenix.Controller.get_csrf_token()
 
     assert button("hello", to: "/world") ==
@@ -38,7 +37,6 @@ defmodule Phoenix.HTML.LinkTest do
   end
 
   test "button with get does not generate CSRF" do
-
     csrf_token = Phoenix.Controller.get_csrf_token()
 
     assert button("hello", to: "/world", method: :get) ==
@@ -49,7 +47,6 @@ defmodule Phoenix.HTML.LinkTest do
   end
 
   test "button with class overrides default" do
-
     csrf_token = Phoenix.Controller.get_csrf_token()
 
     assert button("hello", to: "/world", class: "btn rounded") ==
