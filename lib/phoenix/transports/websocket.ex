@@ -30,20 +30,10 @@ defmodule Phoenix.Transports.WebSocket do
   alias Phoenix.Channel.Transport
   alias Phoenix.Socket.Message
 
+  plug :check_origin
   plug :upgrade
 
   def upgrade(%Plug.Conn{method: "GET"} = conn, _) do
-    endpoint = endpoint_module(conn)
-    allowed_origins = Dict.get(endpoint.config(:transports), :origins)
-    origin = Plug.Conn.get_req_header(conn, "origin") |> List.first
-
-    if Transport.origin_allowed?(origin, allowed_origins) do
-      do_upgrade(conn)
-    else
-      Plug.Conn.send_resp(conn, :forbidden, "")
-    end
-  end
-  defp do_upgrade(conn) do
     put_private(conn, :phoenix_upgrade, {:websocket, __MODULE__}) |> halt
   end
 
@@ -100,5 +90,9 @@ defmodule Phoenix.Transports.WebSocket do
 
   defp reply(pid, msg) do
     send(pid, {:reply, msg})
+  end
+
+  defp check_origin(conn, _opts) do
+    Transport.check_origin(conn)
   end
 end

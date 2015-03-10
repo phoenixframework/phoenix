@@ -10,18 +10,6 @@ defmodule Phoenix.Transports.LongPoller do
   plug :check_origin
   plug :action
 
-  def check_origin(conn, _opts) do
-    endpoint = endpoint_module(conn)
-    allowed_origins = Dict.get(endpoint.config(:transports), :origins)
-    origin = Plug.Conn.get_req_header(conn, "origin") |> List.first
-
-    if Transport.origin_allowed?(origin, allowed_origins) do
-      conn
-    else
-      Plug.Conn.send_resp(conn, :forbidden, "") |> halt
-    end
-  end
-
   @doc """
   Listens for `%Phoenix.Socket.Message{}`'s from `Phoenix.LongPoller.Server`.
 
@@ -180,6 +168,10 @@ defmodule Phoenix.Transports.LongPoller do
 
   defp broadcast_from(conn, priv_topic, msg) do
     Phoenix.PubSub.broadcast_from(pubsub_server(conn), self, priv_topic, msg)
+  end
+
+  defp check_origin(conn, _opts) do
+    Transport.check_origin(conn)
   end
 
   defp sign(conn, priv_topic) do

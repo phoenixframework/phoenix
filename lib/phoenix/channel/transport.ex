@@ -207,15 +207,27 @@ defmodule Phoenix.Channel.Transport do
     :ok
   end
 
-  def origin_allowed?(nil, _) do
-    true
+  @doc """
+  """
+  def check_origin(conn) do
+    endpoint = Phoenix.Controller.endpoint_module(conn)
+    allowed_origins = Dict.get(endpoint.config(:transports), :origins)
+    origin = Plug.Conn.get_req_header(conn, "origin") |> List.first
+
+    if origin_allowed?(origin, allowed_origins) do
+      conn
+    else
+      Plug.Conn.send_resp(conn, :forbidden, "") |> Plug.Conn.halt
+    end
   end
 
-  def origin_allowed?(_, nil) do
+  defp origin_allowed?(nil, _) do
     true
   end
-
-  def origin_allowed?(origin, allowed_origins) do
+  defp origin_allowed?(_, nil) do
+    true
+  end
+  defp origin_allowed?(origin, allowed_origins) do
     origin = URI.parse(origin)
 
     Enum.any?(allowed_origins, fn allowed ->
