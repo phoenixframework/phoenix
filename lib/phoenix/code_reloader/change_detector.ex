@@ -32,7 +32,7 @@ defmodule Phoenix.CodeReloader.ChangeDetector do
     |> List.flatten
     |> Enum.map(fn path ->
       case File.stat(path) do
-        {:ok, stat} -> stat.ctime
+        {:ok, stat} -> {stat.ctime, stat.mtime}
         _ -> nil
       end
     end)
