@@ -221,15 +221,9 @@ defmodule Phoenix.Channel.Transport do
     Enum.any?(allowed_origins, fn allowed ->
       allowed = URI.parse(allowed)
 
-      success? = compare?(origin.scheme, allowed.scheme) and
-                 compare?(origin.port, allowed.port)
-
-      # "example.com" parses into path so compare it instead of host
-      if allowed.host == nil do
-        success? and compare?(origin.host, allowed.path)
-      else
-        success? and compare?(origin.host, allowed.host)
-      end
+      compare?(origin.scheme, allowed.scheme) and
+      compare?(origin.port, allowed.port) and
+      compare?(origin.host, allowed.host)
     end)
   end
 
