@@ -106,8 +106,8 @@ defmodule Phoenix.HTML.Form do
       form via `form_for/4` without any form data specific key
   """
   defstruct source: nil, name: nil, model: %{}, hidden: [], params: %{}, options: []
-  @type t :: %Form{source: term, name: String.t, model: map,
-                   params: map, hidden: Keyword.t, options: Keyword.t}
+  @type t :: %Form{source: term, name: String.t, model: %{ atom => term },
+                   params: %{ binary => term }, hidden: Keyword.t, options: Keyword.t}
 
   @doc """
   Generates a form tag with a form builder.
