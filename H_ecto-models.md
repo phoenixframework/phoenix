@@ -343,7 +343,7 @@ phoenix_demo=# select * from users;
 (1 row)
 ```
 
-The `%Ecto.DateTime` struct has clearly been tranlated into a proper PostgreSQL datetime format for both the `created_at` and `updated_at` columns.
+The `%Ecto.DateTime` struct has clearly been translated into a proper PostgreSQL datetime format for both the `created_at` and `updated_at` columns.
 
 Now that we have a row in the database, we can try out some of Ecto's query functions. Let's try to simply get all the users. Notice we pass the whole model module to the `HelloPhoenix.Repo.all` function.
 
