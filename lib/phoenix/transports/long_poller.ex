@@ -7,7 +7,20 @@ defmodule Phoenix.Transports.LongPoller do
   alias Phoenix.Transports.LongPoller
   alias Phoenix.Channel.Transport
 
+  plug :check_origin
   plug :action
+
+  def check_origin(conn, _opts) do
+    endpoint = endpoint_module(conn)
+    allowed_origins = Dict.get(endpoint.config(:transports), :origins)
+    origin = Plug.Conn.get_req_header(conn, "origin") |> List.first
+
+    if Transport.origin_allowed?(origin, allowed_origins) do
+      conn
+    else
+      Plug.Conn.send_resp(conn, :forbidden, "") |> halt
+    end
+  end
 
   @doc """
   Listens for `%Phoenix.Socket.Message{}`'s from `Phoenix.LongPoller.Server`.
@@ -20,17 +33,8 @@ defmodule Phoenix.Transports.LongPoller do
     case resume_session(conn) do
       {:ok, conn, priv_topic} ->
         listen(conn, priv_topic)
-
       {:error, conn, :terminated} ->
-        endpoint = endpoint_module(conn)
-        allowed_origins = Dict.get(endpoint.config(:transports), :origins)
-        origin = Plug.Conn.get_req_header(conn, "origin") |> List.first
-
-        if Transport.origin_allowed?(origin, allowed_origins) do
-          new_session(conn)
-        else
-          Plug.Conn.send_resp(conn, :forbidden, "")
-        end
+        new_session(conn)
     end
   end
 
