@@ -1,31 +1,53 @@
 defmodule Phoenix.Transports.LongPoller do
   use Phoenix.Controller
 
-  @moduledoc false
+  @moduledoc """
+  Handles LongPoller clients for the Channel Transport layer.
+
+  ## Configuration
+
+  The long poller is configurable via the Endpoint's transport configuration:
+
+      config :my_app, MyApp.Endpoint, transports: [
+        longpoller_window_ms: 10_000,
+        longpoller_pubsub_timeout_ms: 1000,
+        longpoller_crypto: [iterations: 1000,
+                            length: 32,
+                            digest: :sha256,
+                            cache: Plug.Keys],
+      ]
+
+    * `:longpoller_window_ms` - how long the client can wait for new messages
+      in it's poll request.
+    * `:longpoller_pubsub_timeout_ms` - how long a request can wait for the
+      pubsub layer to respond.
+    * `:longpoller_crypto` - configuration for the key generated to sign the
+      private topic used for the long poller session (see `Plug.Crypto.KeyGenerator`).
+  """
 
   alias Phoenix.Socket.Message
   alias Phoenix.Transports.LongPoller
+  alias Phoenix.Channel.Transport
 
+  plug :check_origin
   plug :action
 
   @doc """
   Listens for `%Phoenix.Socket.Message{}`'s from `Phoenix.LongPoller.Server`.
 
   As soon as messages are received, they are encoded as JSON and sent down
-  to the longpolling client, which immediately repolls. If a timeout occurrs,
+  to the longpolling client, which immediately repolls. If a timeout occurs,
   a `:no_content` response is returned, and the client should immediately repoll.
   """
   def poll(conn, _params) do
     case resume_session(conn) do
-      {:ok, conn, priv_topic}     -> listen(conn, priv_topic)
+      {:ok, conn, priv_topic} ->
+        listen(conn, priv_topic)
       {:error, conn, :terminated} ->
-        {conn, priv_topic, sig, _server_pid} = start_session(conn)
-
-        conn
-        |> put_status(:gone)
-        |> json(%{token: priv_topic, sig: sig})
+        new_session(conn)
     end
   end
+
   defp listen(conn, priv_topic) do
     ref = :erlang.make_ref()
     :ok = broadcast_from(conn, priv_topic, {:flush, ref})
@@ -41,6 +63,14 @@ defmodule Phoenix.Transports.LongPoller do
         |> put_status(:no_content)
         |> json(%{token: conn.params["token"], sig: conn.params["sig"]})
     end
+  end
+
+  defp new_session(conn) do
+    {conn, priv_topic, sig, _server_pid} = start_session(conn)
+
+    conn
+    |> put_status(:gone)
+    |> json(%{token: priv_topic, sig: sig})
   end
 
   @doc """
@@ -160,6 +190,10 @@ defmodule Phoenix.Transports.LongPoller do
 
   defp broadcast_from(conn, priv_topic, msg) do
     Phoenix.PubSub.broadcast_from(pubsub_server(conn), self, priv_topic, msg)
+  end
+
+  defp check_origin(conn, _opts) do
+    Transport.check_origin(conn)
   end
 
   defp sign(conn, priv_topic) do

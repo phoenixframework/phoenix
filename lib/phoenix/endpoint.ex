@@ -127,6 +127,18 @@ defmodule Phoenix.Endpoint do
           [name: :my_pubsub, adapter: Phoenix.PubSub.Redis,
            host: "192.168.100.1"]
 
+    * `:transports` - configuration for the channel transport. Check the
+      transport modules for transport specific options. A list of allowed
+      origins can be specified in the `:origins` key to restrict clients
+      based on the given Origin header.
+
+          [origins: ["//example.com", "http://example.com",
+                     "https://example.com:8080"]]
+
+      If no such header is sent no verification will be performed. If the
+      Origin header does not match the list of allowed origins a 403 Forbidden
+      response will be sent to the client.
+
   ## Endpoint API
 
   In the previous section, we have used the `config/2` function which is

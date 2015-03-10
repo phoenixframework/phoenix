@@ -206,4 +206,45 @@ defmodule Phoenix.Channel.Transport do
     end
     :ok
   end
+
+  @doc """
+  Checks the Origin request header against the list of allowed origins
+  configured on the `Phoenix.Endpoint` `:transports` config. If the Origin
+  header matches the allowed origins, no Origin header was sent or no origins
+  configured it will return the given `Plug.Conn`. Otherwise a 403 Forbidden
+  response will be send and the connection halted.
+  """
+  def check_origin(conn) do
+    endpoint = Phoenix.Controller.endpoint_module(conn)
+    allowed_origins = Dict.get(endpoint.config(:transports), :origins)
+    origin = Plug.Conn.get_req_header(conn, "origin") |> List.first
+
+    if origin_allowed?(origin, allowed_origins) do
+      conn
+    else
+      Plug.Conn.send_resp(conn, :forbidden, "") |> Plug.Conn.halt
+    end
+  end
+
+  defp origin_allowed?(nil, _) do
+    true
+  end
+  defp origin_allowed?(_, nil) do
+    true
+  end
+  defp origin_allowed?(origin, allowed_origins) do
+    origin = URI.parse(origin)
+
+    Enum.any?(allowed_origins, fn allowed ->
+      allowed = URI.parse(allowed)
+
+      compare?(origin.scheme, allowed.scheme) and
+      compare?(origin.port, allowed.port) and
+      compare?(origin.host, allowed.host)
+    end)
+  end
+
+  defp compare?(nil, _), do: true
+  defp compare?(_, nil), do: true
+  defp compare?(x, y),   do: x == y
 end

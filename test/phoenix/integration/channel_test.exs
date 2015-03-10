@@ -3,7 +3,7 @@ Code.require_file "http_client.exs", __DIR__
 
 defmodule Phoenix.Integration.ChannelTest do
   use ExUnit.Case, async: false
-  import RouterHelper, only: [capture_log: 1]
+  import RouterHelper, only: [capture_log: 1, call: 5]
 
   alias Phoenix.Integration.WebsocketClient
   alias Phoenix.Integration.HTTPClient
@@ -20,7 +20,10 @@ defmodule Phoenix.Integration.ChannelTest do
     http: [port: @port],
     secret_key_base: String.duplicate("abcdefgh", 8),
     debug_errors: false,
-    transports: [longpoller_window_ms: @window_ms, longpoller_pubsub_timeout_ms: @pubsub_window_ms],
+    transports: [
+      longpoller_window_ms: @window_ms,
+      longpoller_pubsub_timeout_ms: @pubsub_window_ms,
+      origins: ["//example.com"]],
     server: true,
     pubsub: [adapter: Phoenix.PubSub.PG2, name: :int_pub]
   ])
@@ -101,6 +104,13 @@ defmodule Phoenix.Integration.ChannelTest do
 
     WebsocketClient.send_event(sock, "rooms:lobby", "new:msg", %{body: "hi!"})
     refute_receive {:socket_reply, %Message{}}
+  end
+
+  test "websocket refuses unallowed origins" do
+    assert {:ok, _} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws",
+                                                 [{"origin", "https://example.com"}])
+    refute {:ok, _} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws",
+                                                 [{"origin", "http://notallowed.com"}])
   end
 
   ## Longpoller Transport
@@ -244,5 +254,13 @@ defmodule Phoenix.Integration.ChannelTest do
       resp = poll :post, "/ws/poll", %{"token" => "foo", "sig" => "bar"}, %{}
       assert resp.status == 410
     end
+  end
+
+  test "longpoller refuses unallowed origins" do
+    conn = call(Endpoint, :get, "/ws/poll", [], headers: [{"origin", "https://example.com"}])
+    assert conn.status == 410
+
+    conn = call(Endpoint, :get, "/ws/poll", [], headers: [{"origin", "http://notallowed.com"}])
+    refute conn.status == 410
   end
 end

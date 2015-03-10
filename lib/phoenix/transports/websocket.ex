@@ -30,6 +30,7 @@ defmodule Phoenix.Transports.WebSocket do
   alias Phoenix.Channel.Transport
   alias Phoenix.Socket.Message
 
+  plug :check_origin
   plug :upgrade
 
   def upgrade(%Plug.Conn{method: "GET"} = conn, _) do
@@ -89,5 +90,9 @@ defmodule Phoenix.Transports.WebSocket do
 
   defp reply(pid, msg) do
     send(pid, {:reply, msg})
+  end
+
+  defp check_origin(conn, _opts) do
+    Transport.check_origin(conn)
   end
 end
