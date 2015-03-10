@@ -27,6 +27,7 @@ $ git checkout v0.10.0
 ```console
 $ mix do deps.get, compile
 ```
+
 Note: This is passing a list of arguments to mix and is functionally equivalent to the two line version.
 
 ```console
@@ -36,6 +37,7 @@ $ mix deps.get
 ```console
 $ mix compile
 ```
+
 Note: On some Linux systems, Erlang installations do not include the Erlang ssl or inets packages. This will cause hex to fail. If you see an error message like this one,
 
 ```console
@@ -51,15 +53,17 @@ lib/hex.ex:8: Hex.start/0
 (elixir) lib/enum.ex:977: Enum."-map/2-lc$^0/1-0-"/2
 (mix) lib/mix/dep/loader.ex:234: Mix.Dep.Loader.mix_children/1
 ```
-(note this part especially `(module :ssl is not available)`), try installing those packages manually. Of course, substitute the package manager for your system if it doesn't use apt as the example does.
+
+Note this part especially: `(module :ssl is not available)`. Try installing those packages manually with the commands listed below. Of course, substitute the package manager for your system if it doesn't use apt as the example does.
 
 ```console
 $ sudo apt-get install erlang-ssl
 $ sudo apt-get install erlang-inets
 ```
-Once this is done, we need to have Phoenix generate a new project for us, and we need it to do so outside the Phoenix repo itself. Phoenix provides a mix task `phoenix.new` for this, and the task takes both the name of our new project and the path to where we want  the new application to live.
 
-Phoenix will accept either an absolute or relative path for the directory of our new project. Either of these will work.
+Once this is done, we need to have Phoenix generate a new project for us, and we generate it outside the Phoenix repo itself. Phoenix provides a mix task `phoenix.new` for this, and the task takes a path/application_name to where we want the new application to live.
+
+Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello_phoenix`, either of these will work.
 
 ```console
 $ mix phoenix.new /Users/me/work/elixir-stuff/hello_phoenix
@@ -69,22 +73,50 @@ $ mix phoenix.new /Users/me/work/elixir-stuff/hello_phoenix
 $ mix phoenix.new ../hello_phoenix
 ```
 
+Note: If we don't prepend a path to our application name, Phoenix will generate our new application inside of the Phoenix repo itself. That will work, but if we want our application to be in its own repo, we need to generate our application outside of Phoenix.
+
 For our purposes, a relative path will do.
 
 ```console
 $ mix phoenix.new ../hello_phoenix
+* creating ../hello_phoenix/README.md
+. . .
 ```
 
-We'll be prompted to install mix depencies, followed by a brunch dependency prompt. Well answer `y` to both and then 
-we can then `cd` into the new project directory.
+Phoenix generates the directory structure and all the files we will need for our application. When it's done, it will ask us if we want it to install our `mix` dependencies for us. Let's say yes to that.
+
+```console
+Install mix dependencies? [Yn] y
+* running mix deps.get
+```
+
+The task will also prompt us to install brunch.io dependencies. This will install the node package manager if we don't already have it, as well as a number of packages. Let's say yes to that as well.
+
+```console
+Install brunch.io dependencies? [Yn]
+* running npm install
+npm http GET https://registry.npmjs.org/clean-css-brunch
+npm http GET https://registry.npmjs.org/javascript-brunch
+. . .
+```
+
+Once our brunch.io dependencies are installed, the task will prompt us to change into our project directory and start our application.
+
+```console
+We are all set! Run your Phoenix application:
+
+$ cd ../hello_phoenix
+$ mix phoenix.server
+
+You can also run it inside IEx (Interactive Elixir) as:
+
+$ iex -S mix phoenix.server
+```
+
+Let's do that now.
 
 ```console
 $ cd ../hello_phoenix
-```
-
-Now that our application is set up with all its dependencies, we can start it.
-
-```console
 $ mix phoenix.server
 ```
 
