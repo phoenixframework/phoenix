@@ -1,7 +1,29 @@
 defmodule Phoenix.Transports.LongPoller do
   use Phoenix.Controller
 
-  @moduledoc false
+  @moduledoc """
+  Handles LongPoller clients for the Channel Transport layer.
+
+  ## Configuration
+
+  The long poller is configurable via the Endpoint's transport configuration:
+
+      config :my_app, MyApp.Endpoint, transports: [
+        longpoller_window_ms: 10_000,
+        longpoller_pubsub_timeout_ms: 1000,
+        longpoller_crypto: [iterations: 1000,
+                            length: 32,
+                            digest: :sha256,
+                            cache: Plug.Keys],
+      ]
+
+    * `:longpoller_window_ms` - how long the client can wait for new messages
+      in it's poll request.
+    * `:longpoller_pubsub_timeout_ms` - how long a request can wait for the
+      pubsub layer to respond.
+    * `:longpoller_crypto` - configuration for the key generated to sign the
+      private topic used for the long poller session (see `Plug.Crypto.KeyGenerator`).
+  """
 
   alias Phoenix.Socket.Message
   alias Phoenix.Transports.LongPoller
