@@ -96,7 +96,6 @@ The task will also prompt us to install brunch.io dependencies. This will instal
 Install brunch.io dependencies? [Yn]
 * running npm install
 npm http GET https://registry.npmjs.org/clean-css-brunch
-npm http GET https://registry.npmjs.org/javascript-brunch
 . . .
 ```
 
