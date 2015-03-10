@@ -85,13 +85,13 @@ defmodule Phoenix.HTML.Link do
   """
   def button(text, opts) do
     {to, opts} = Keyword.pop(opts, :to)
-    {htmlClass, opts} = Keyword.pop(opts, :class, :button)
+    {html_class, opts} = Keyword.pop(opts, :class, :button)
 
     unless to do
       raise ArgumentError, "option :to is required in button/2"
     end
 
-    form_tag(to, [class: htmlClass, enforce_utf8: false] ++ opts) do
+    form_tag(to, [class: html_class, enforce_utf8: false] ++ opts) do
       tag(:input, [type: "submit", value: text])
     end
   end
