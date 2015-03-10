@@ -23,12 +23,19 @@ This is a selected list of resources to help you find your way with Elixir, Phoe
 - [The Phoenix Project](https://github.com/phoenixframework/phoenix)
 - [Official Documentation](http://api.phoenixframework.org) (current stable release)
 
-#####Elixir Dose: Let's Build Web App With Phoenix And Ecto, by Riza Fahmi, edited by Augie De Blieck Jr.
-  - [Part 1](http://elixirdose.com/post/lets-build-web-app-with-phoenix-and-ecto)
-  - [Part 2](http://elixirdose.com/post/phoenix-ecto-and-jobs-portal-project-part-2)
-  - [Part 3](http://elixirdose.com/post/phoenix-ecto-and-jobs-portal-project-part-3)
-  - [Part 4](http://elixirdose.com/post/phoenix-part-4-registration-and-login)
-  - [Part 5](http://elixirdose.com/post/phoenix-flying-high-deploying-phoenix-the-final-part)
+#####Tutorial: A hands-on intro to building modern web applications with Elixir and Phoenix at [thefirehoseproject](http://phoenix.thefirehoseproject.com/)
+- [Intro](http://phoenix.thefirehoseproject.com/0.html)
+- [Lesson 1](http://phoenix.thefirehoseproject.com/1.html)
+- [Lesson 2](http://phoenix.thefirehoseproject.com/2.html)
+- [Lesson 3](http://phoenix.thefirehoseproject.com/3.html)
+- [Lesson 4](http://phoenix.thefirehoseproject.com/4.html)
+- [Lesson 5](http://phoenix.thefirehoseproject.com/5.html)
+- [Lesson 6](http://phoenix.thefirehoseproject.com/6.html)
+- [Lesson 7](http://phoenix.thefirehoseproject.com/7.html)
+- [Lesson 8](http://phoenix.thefirehoseproject.com/8.html)
+- [Lesson 9](http://phoenix.thefirehoseproject.com/9.html)
+- [Lesson 10](http://phoenix.thefirehoseproject.com/10.html)
+- [Lesson 11](http://phoenix.thefirehoseproject.com/11.html)
 
 #####Videos
   - [All Aboard The Elixir Express](http://www.confreaks.com/videos/3488-railsconf-workshop-all-aboard-the-elixir-expresse), Chris McCord
