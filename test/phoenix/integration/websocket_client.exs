@@ -5,10 +5,11 @@ defmodule Phoenix.Integration.WebsocketClient do
   Starts the WebSocket server for given ws URL. Received Socket.Message's
   are forwarded to the sender pid
   """
-  def start_link(sender, url) do
+  def start_link(sender, url, headers \\ []) do
     :crypto.start
     :ssl.start
-    :websocket_client.start_link(String.to_char_list(url), __MODULE__, [sender])
+    :websocket_client.start_link(String.to_char_list(url), __MODULE__, [sender],
+                                 extra_headers: headers)
   end
 
   def init([sender], _conn_state) do

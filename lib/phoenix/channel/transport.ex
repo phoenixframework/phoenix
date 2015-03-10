@@ -206,4 +206,34 @@ defmodule Phoenix.Channel.Transport do
     end
     :ok
   end
+
+  def origin_allowed?(nil, _) do
+    true
+  end
+
+  def origin_allowed?(_, nil) do
+    true
+  end
+
+  def origin_allowed?(origin, allowed_origins) do
+    origin = URI.parse(origin)
+
+    Enum.any?(allowed_origins, fn allowed ->
+      allowed = URI.parse(allowed)
+
+      success? = compare?(origin.scheme, allowed.scheme) and
+                 compare?(origin.port, allowed.port)
+
+      # "example.com" parses into path so compare it instead of host
+      if allowed.host == nil do
+        success? and compare?(origin.host, allowed.path)
+      else
+        success? and compare?(origin.host, allowed.host)
+      end
+    end)
+  end
+
+  defp compare?(nil, _), do: true
+  defp compare?(_, nil), do: true
+  defp compare?(x, y),   do: x == y
 end

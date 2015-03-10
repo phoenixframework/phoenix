@@ -5,6 +5,7 @@ defmodule Phoenix.Transports.LongPoller do
 
   alias Phoenix.Socket.Message
   alias Phoenix.Transports.LongPoller
+  alias Phoenix.Channel.Transport
 
   plug :action
 
@@ -12,20 +13,27 @@ defmodule Phoenix.Transports.LongPoller do
   Listens for `%Phoenix.Socket.Message{}`'s from `Phoenix.LongPoller.Server`.
 
   As soon as messages are received, they are encoded as JSON and sent down
-  to the longpolling client, which immediately repolls. If a timeout occurrs,
+  to the longpolling client, which immediately repolls. If a timeout occurs,
   a `:no_content` response is returned, and the client should immediately repoll.
   """
   def poll(conn, _params) do
     case resume_session(conn) do
-      {:ok, conn, priv_topic}     -> listen(conn, priv_topic)
-      {:error, conn, :terminated} ->
-        {conn, priv_topic, sig, _server_pid} = start_session(conn)
+      {:ok, conn, priv_topic} ->
+        listen(conn, priv_topic)
 
-        conn
-        |> put_status(:gone)
-        |> json(%{token: priv_topic, sig: sig})
+      {:error, conn, :terminated} ->
+        endpoint = endpoint_module(conn)
+        allowed_origins = Dict.get(endpoint.config(:transports), :origins)
+        origin = Plug.Conn.get_req_header(conn, "origin") |> List.first
+
+        if Transport.origin_allowed?(origin, allowed_origins) do
+          new_session(conn)
+        else
+          Plug.Conn.send_resp(conn, :forbidden, "")
+        end
     end
   end
+
   defp listen(conn, priv_topic) do
     ref = :erlang.make_ref()
     :ok = broadcast_from(conn, priv_topic, {:flush, ref})
@@ -41,6 +49,14 @@ defmodule Phoenix.Transports.LongPoller do
         |> put_status(:no_content)
         |> json(%{token: conn.params["token"], sig: conn.params["sig"]})
     end
+  end
+
+  defp new_session(conn) do
+    {conn, priv_topic, sig, _server_pid} = start_session(conn)
+
+    conn
+    |> put_status(:gone)
+    |> json(%{token: priv_topic, sig: sig})
   end
 
   @doc """
