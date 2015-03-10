@@ -33,7 +33,7 @@ p.info { color: green; }
 p.error { color: red; }
 
 /* Model forms */
-form.linkmethod {
+form.link, form.button {
   display: inline;
 }
 form label span {

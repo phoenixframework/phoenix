@@ -8,7 +8,7 @@ defmodule Phoenix.HTML.LinkTest do
     csrf_token = Phoenix.Controller.get_csrf_token()
 
     assert link("hello", to: "/world", method: :post) ==
-           {:safe, ~s[<form action="/world" class="linkmethod" method="post">] <>
+           {:safe, ~s[<form action="/world" class="link" method="post">] <>
                    ~s[<input name="_csrf_token" type="hidden" value="#{csrf_token}">] <>
                    ~s[<a href="#" onclick="this.parentNode.submit(); return false;">hello</a>] <>
                    ~s[</form>]}
@@ -17,7 +17,7 @@ defmodule Phoenix.HTML.LinkTest do
   test "link with put/delete" do
     csrf_token = Phoenix.Controller.get_csrf_token()
 
-    assert link("hello", to: "/world", method: :put) ==
+    assert link("hello", to: "/world", method: :put, form: [class: "linkmethod"]) ==
            {:safe, ~s[<form action="/world" class="linkmethod" method="post">] <>
                    ~s[<input name="_method" type="hidden" value="put">] <>
                    ~s[<input name="_csrf_token" type="hidden" value="#{csrf_token}">] <>
@@ -47,10 +47,10 @@ defmodule Phoenix.HTML.LinkTest do
   test "button with class overrides default" do
     csrf_token = Phoenix.Controller.get_csrf_token()
 
-    assert button("hello", to: "/world", class: "btn rounded") ==
+    assert button("hello", to: "/world", form: [class: "btn rounded"], id: "btn") ==
            {:safe, ~s[<form action="/world" class="btn rounded" method="post">] <>
                    ~s[<input name="_csrf_token" type="hidden" value="#{csrf_token}">] <>
-                   ~s[<input type="submit" value="hello">] <>
+                   ~s[<input id="btn" type="submit" value="hello">] <>
                    ~s[</form>]}
 
   end

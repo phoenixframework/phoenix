@@ -28,6 +28,9 @@ defmodule Phoenix.HTML.Link do
       which sets the proper information. In order to submit the
       form, JavaScript must be enabled
 
+    * `:form` - customize the underlying form when the method
+      is not `:get`
+
   All other options are forwarded to the underlying `<a>` tag.
   """
   def link(text, opts) do
@@ -41,7 +44,8 @@ defmodule Phoenix.HTML.Link do
     if method == :get do
       content_tag(:a, text, [href: to] ++ opts)
     else
-      form_tag(to, method: method, class: "linkmethod", enforce_utf8: false) do
+      {form, opts} = form_options(opts, method, "link")
+      form_tag(to, form) do
         content_tag(:a, text, [href: "#", onclick: "this.parentNode.submit(); return false;"] ++ opts)
       end
     end
@@ -55,44 +59,56 @@ defmodule Phoenix.HTML.Link do
 
   ## Examples
 
-      <%= button("hello", to: "/world") %>
+      button("hello", to: "/world")
+      #=> <form action="/world" class="button" method="post">
+            <input name="_csrf_token" value=""><input type="submit" value="hello">
+          </form>
 
-  generates
-
-      <form action="/world" class="button" method="post">
-        <input name="_csrf_token" value=""><input type="submit" value="hello">
-      </form>
-
-      <%= button("hello", to: "/world", method: "get", class: "btn") %>
-
-  generates
-
-      <form action="/world" class="btn" method="post">
-        <input type="submit" value="hello">
-      </form>
+      button("hello", to: "/world", method: "get", class: "btn")
+      #=> <form action="/world" class="btn" method="post">
+            <input type="submit" value="hello">
+          </form>
 
   ## Options
 
     * `:to` - the page to link to. This option is required
 
-    * `:method` - the method to use with the link. Defaults to :post.
+    * `:method` - the method to use with the button. Defaults to :post.
 
-    * `:class` - the CSS class for the form. Defaults to "button".
+    * `:form` - the options for the form. Defaults to
+      `[class: "button", enforce_utf8: false]`
 
-  All other options are forwarded to the underlying `<form>` tag.
-  See `Phoenix.HTML.Tag.form_tag/2` for more information on the
-  options above.
+  All other options are forwarded to the underlying button input.
   """
   def button(text, opts) do
     {to, opts} = Keyword.pop(opts, :to)
-    {html_class, opts} = Keyword.pop(opts, :class, :button)
+    {method, opts} = Keyword.pop(opts, :method, :post)
+
+    {form, opts} = form_options(opts, method, "button")
+
+    opts =
+      opts
+      |> Keyword.put_new(:type, "submit")
+      |> Keyword.put_new(:value, text)
 
     unless to do
       raise ArgumentError, "option :to is required in button/2"
     end
 
-    form_tag(to, [class: html_class, enforce_utf8: false] ++ opts) do
-      tag(:input, [type: "submit", value: text])
+    form_tag(to, form) do
+      tag(:input, opts)
     end
+  end
+
+  defp form_options(opts, method, class) do
+    {form, opts} = Keyword.pop(opts, :form, [])
+
+    form =
+      form
+      |> Keyword.put_new(:class, class)
+      |> Keyword.put_new(:method, method)
+      |> Keyword.put_new(:enforce_utf8, false)
+
+    {form, opts}
   end
 end
