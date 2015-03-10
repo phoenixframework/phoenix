@@ -157,11 +157,11 @@ defmodule Phoenix.HTML.Form do
   ## Examples
 
       # Assuming form contains a User model
-      iex> text_input(form, :name)
-      <input id="user_name" name="user[name]" type="text" value="">
+      text_input(form, :name)
+      #=> <input id="user_name" name="user[name]" type="text" value="">
 
-      iex> text_input(:user, :name)
-      <input id="user_name" name="user[name]" type="text" value="">
+      text_input(:user, :name)
+      #=> <input id="user_name" name="user[name]" type="text" value="">
 
   """
   def text_input(form, field, opts \\ []) do
@@ -235,8 +235,8 @@ defmodule Phoenix.HTML.Form do
 
   ## Examples
 
-      iex> submit "Submit"
-      <input type="submit" value="Submit">
+      submit "Submit"
+      #=> <input type="submit" value="Submit">
 
   """
   def submit(value, opts \\ []) do
@@ -256,8 +256,8 @@ defmodule Phoenix.HTML.Form do
   ## Examples
 
       # Assuming form contains a User model
-      iex> radio_button(form, :role, "admin")
-      <input id="user_role_admin" name="user[role]" type="radio" value="admin">
+      radio_button(form, :role, "admin")
+      #=> <input id="user_role_admin" name="user[role]" type="radio" value="admin">
 
   ## Options
 
@@ -287,9 +287,9 @@ defmodule Phoenix.HTML.Form do
   ## Examples
 
       # Assuming form contains a User model
-      iex> checkbox(form, :famous)
-      <input name="user[famous]" type="hidden" value="false">
-      <input checked="checked" id="user_famous" name="user[famous]"> type="checkbox" value="true")
+      checkbox(form, :famous)
+      #=> <input name="user[famous]" type="hidden" value="false">
+          <input checked="checked" id="user_famous" name="user[famous]"> type="checkbox" value="true")
 
   ## Options
 
@@ -347,25 +347,25 @@ defmodule Phoenix.HTML.Form do
   ## Examples
 
       # Assuming form contains a User model
-      iex> select(form, :age, 0..120)
-      <select id="user_age" name="user[age]">
-      <option value="0">0</option>
-      ...
-      <option value="120">120</option>
-      </select>
+      select(form, :age, 0..120)
+      #=> <select id="user_age" name="user[age]">
+          <option value="0">0</option>
+          ...
+          <option value="120">120</option>
+          </select>
 
-      iex> select(form, :role, [admin: "Admin", user: "User"])
-      <select id="user_role" name="user[role]">
-      <option value="admin">Admin</option>
-      <option value="user">User</option>
-      </select>
+      select(form, :role, [admin: "Admin", user: "User"])
+      #=> <select id="user_role" name="user[role]">
+          <option value="admin">Admin</option>
+          <option value="user">User</option>
+          </select>
 
-      iex> select(form, :role, [admin: "Admin", user: "User"], prompt: "Choose your role")
-      <select id="user_role" name="user[role]">
-      <option value="">Choose your role</option>
-      <option value="admin">Admin</option>
-      <option value="user">User</option>
-      </select>
+      select(form, :role, [admin: "Admin", user: "User"], prompt: "Choose your role")
+      #=> <select id="user_role" name="user[role]">
+          <option value="">Choose your role</option>
+          <option value="admin">Admin</option>
+          <option value="user">User</option>
+          </select>
 
   ## Options
 
@@ -423,22 +423,22 @@ defmodule Phoenix.HTML.Form do
   ## Examples
 
       # Assuming form contains a User model
-      iex> datetime_select form, :born_at
-      <select id="user_born_at_year" name="user[born_at][year]">...</select> /
-      <select id="user_born_at_month" name="user[born_at][month]">...</select> /
-      <select id="user_born_at_day" name="user[born_at][day]">...</select> —
-      <select id="user_born_at_hour" name="user[born_at][hour]">...</select> :
-      <select id="user_born_at_min" name="user[born_at][min]">...</select>
+      datetime_select form, :born_at
+      #=> <select id="user_born_at_year" name="user[born_at][year]">...</select> /
+          <select id="user_born_at_month" name="user[born_at][month]">...</select> /
+          <select id="user_born_at_day" name="user[born_at][day]">...</select> —
+          <select id="user_born_at_hour" name="user[born_at][hour]">...</select> :
+          <select id="user_born_at_min" name="user[born_at][min]">...</select>
 
   If you want to include the seconds field (hidden by default), pass `sec: []`:
 
       # Assuming form contains a User model
-      iex> datetime_select form, :born_at, sec: []
+      datetime_select form, :born_at, sec: []
 
   If you want to configure the years range:
 
       # Assuming form contains a User model
-      iex> datetime_select form, :born_at, year: [options: 1900..2100]
+      datetime_select form, :born_at, year: [options: 1900..2100]
 
   You are also able to configure `:month`, `:day`, `:hour`, `:min` and
   `:sec`. All options given to those keys will be forwarded to the
