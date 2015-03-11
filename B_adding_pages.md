@@ -26,9 +26,7 @@ Most of our work in this guide will be in the `web` directory, which looks like 
 │   ├── layout
 │   │   └── application.html.eex
 │   └── page
-│       ├── error.html.eex
-│       ├── index.html.eex
-│       └── not_found.html.eex
+│       └── index.html.eex
 ├── view.ex
 └── views
     ├── error_view.ex
@@ -43,19 +41,28 @@ All of our application's static assets live in `priv/static` in the directory ap
 ```text
 priv
 └── static
+    └── images
+        └── phoenix.png
+```
+
+```text
+web
+└── static
     ├── css
-    |   └── phoenix.css
-    ├── images
-    │   └── phoenix.png
-    └── js
+    |   └── app.css
+    ├── js
+    │   └── app.js
+    └── vendor
         └── phoenix.js
 ```
+
 The `lib` directory also contains files we should know about. Our application's endpoint is at `lib/hello_phoenix/endpoint.ex`, and our application file (which starts our application and it's supervision tree) is at `lib/hello_phoenix.ex`.
 
 ```text
 lib
 ├── hello_phoenix
-│   └── endpoint.ex
+|   ├── endpoint.ex
+│   └── repo.ex
 └── hello_phoenix.ex
 ```
 Enough prep, let's get on with our first new Phoenix page!
@@ -129,7 +136,7 @@ To make that happen, let's create a new `web/controllers/hello_controller.ex` fi
 
 ```elixir
 defmodule HelloPhoenix.HelloController do
-  use Phoenix.Controller
+  use HelloPhoenix.Web, :controller
 
   plug :action
 
@@ -138,7 +145,7 @@ defmodule HelloPhoenix.HelloController do
   end
 end
 ```
-We'll save a discussion of `use Phoenix.Controller` and `plug :action` for the [Controllers Guide](http://www.phoenixframework.org/docs/controllers). For now, let's focus on the `index/2` action.
+We'll save a discussion of `use HelloPhoenix.Web, :controller` and `plug :action` for the [Controllers Guide](http://www.phoenixframework.org/docs/controllers). For now, let's focus on the `index/2` action.
 
 All controller actions take two arguments. The first is `conn`, a struct which holds a ton of data about the request. The second is `params`, which are the request parameters. Here, we are not using `params`, and we avoid compiler warnings by adding the leading `_`.
 
@@ -154,13 +161,11 @@ Phoenix views have several important jobs. They actually render templates. They 
 
 As an example, say we have a data structure which represents a user with a `first_name` field and a `last_name` field, and in a template, we want to show the user's full name. We could write code in the template to merge those fields into a full name, but the better approach is to write a function in the view to do it for us, then call that function in the template. The result is a cleaner and more legible template.
 
-It's also important to note that each Phoenix application has a base view located at `web/view.ex`. Functions defined there will be available to all the views we define in the `web/views` directory.
-
 In order to render any templates for our `HelloController`, we need a `HelloView`. The names are significant here - the first part of the names of the view and controller must match. Let's create an empty one for now, and leave a more detailed description of views for later. Create `web/views/hello_view.ex` and make it look like this.
 
 ```elixir
 defmodule HelloPhoenix.HelloView do
-  use HelloPhoenix.View
+  use HelloPhoenix.Web, :view
 end
 ```
 
