@@ -4,7 +4,7 @@ A newly generated Phoenix app will have a single controller, the `PageController
 
 ```elixir
 defmodule HelloPhoenix.PageController do
-  use Phoenix.Controller
+  use HelloPhoenix.Web, :controller
 
   plug :action
 
@@ -14,7 +14,7 @@ defmodule HelloPhoenix.PageController do
 end
 ```
 
-The first line below the module definition invokes the `__using__/1` macro of the `Phoenix.Controller` module, which imports some useful modules.
+The first line below the module definition invokes the `__using__/1` macro of the `HelloPhoenix.Web` module, which imports some useful modules.
 
 Let's take a look at the second line `plug :action`. `plug/1` is a macro defined in the `Phoenix.Controller.Pipeline` module. Its purpose is to insert a new piece of middleware into the stack of middlewares which will be executed, in order, during a request cycle. Here, it is inserting `:action` which handles dispatching to the correct controller module and action according to the routes defined in the router.
 
@@ -186,7 +186,7 @@ We have already seen the render function in the [Adding Pages Guide](http://www.
 
 ```elixir
 defmodule HelloPhoenix.HelloController do
-  use Phoenix.Controller
+  use HelloPhoenix.Web, :controller
 
   plug :action
   . . .
@@ -207,7 +207,7 @@ The first thing we need to do is to add a `plug :render` line to our controller 
 
 ```elixir
 defmodule HelloPhoenix.PageController do
-  use Phoenix.Controller
+  use HelloPhoenix.Web, :controller
 
   plug :action
   plug :render
@@ -258,7 +258,7 @@ Phoenix offers a solution to this by letting us specify which actions `plug :ren
 
 ```elixir
 defmodule HelloPhoenix.PageController do
-  use Phoenix.Controller
+  use HelloPhoenix.Web, :controller
 
   plug :action
   plug :render when action in [:index, :show]
@@ -506,7 +506,7 @@ We can also make use of the path helpers we learned about in the [Routing Guide]
 
 ```elixir
 defmodule HelloPhoenix.PageController do
-  use Phoenix.Controller
+  use HelloPhoenix.Web, :controller
   alias HelloPhoenix.Router.Helpers
 
   def index(conn, _params) do
