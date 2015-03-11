@@ -7,6 +7,9 @@ defmodule <%= module %> do
     timestamps
   end
 
+  @required_fields ~w(<%= Enum.map_join(attrs, " ", &elem(&1, 0)) %>)
+  @optional_fields ~w()
+
   @doc """
   Creates a changeset based on the `model` and `params`.
 
@@ -14,6 +17,6 @@ defmodule <%= module %> do
   with no validation performed.
   """
   def changeset(model, params \\ nil) do
-    cast(model, params, ~w(<%= Enum.map_join(attrs, " ", &elem(&1, 0)) %>), ~w())
+    cast(model, params, @required_fields, @optional_fields)
   end
 end
