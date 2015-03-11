@@ -13,7 +13,6 @@ When Phoenix generates a new application for us, it builds a top level directory
 ├── web
 ```
 
-
 Most of our work in this guide will be in the `web` directory, which looks like this when expanded.
 
 ```text
@@ -29,9 +28,10 @@ Most of our work in this guide will be in the `web` directory, which looks like 
 │       └── index.html.eex
 ├── view.ex
 └── views
-    ├── error_view.ex
-    ├── layout_view.ex
-    └── page_view.ex
+|   ├── error_view.ex
+|   ├── layout_view.ex
+|   └── page_view.ex
+└── web.ex
 ```
 
 All of the files which are currently in the controllers, templates and views directories are there to create the "Welcome to Phoenix!" page we saw in the last guide. We will see how we can re-use some of that code shortly.
