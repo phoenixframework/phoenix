@@ -90,7 +90,7 @@ Install mix dependencies? [Yn] y
 * running mix deps.get
 ```
 
-The task will also prompt us to install brunch.io dependencies. This will install the node package manager if we don't already have it, as well as a number of packages. Let's say yes to that as well.
+The `phoenix.new` task will also prompt us to install brunch.io and its dependencies for asset management. This is optional, and will require that node.js and npm are installed on our system. For our example, let's say yes to that as well.
 
 ```console
 Install brunch.io dependencies? [Yn]
