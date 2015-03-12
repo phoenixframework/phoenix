@@ -251,7 +251,11 @@ end
 
 Now when we go back to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path), we should see exactly what we're looking for, our new template rendered within the application layout.
 
-Note: In Phoenix version 0.10.0 there is a problem which prevents this from rendering through the layout. This should be fixed in a patch release soon.
+Note: In Phoenix version 0.10.0 there is a problem which prevents this from rendering through the layout. This should be fixed in a patch release soon. This is a workaround render call.
+
+```elixir
+render(__MODULE__, "not_found.html", Dict.merge(assigns, layout: {HelloPhoenix.LayoutView, "application.html"}))
+```
 
 Of course, we can do these same steps with the `def render("500.html", _assigns) do` clause in our `ErrorView` and the `error.html.eex` template as well.
 
