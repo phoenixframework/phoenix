@@ -84,8 +84,8 @@ defmodule Phoenix.PubSub do
   Broadcasts message on given topic
   raises `Phoenix.PubSub.BroadcastError` if broadcast fails
   """
-  def broadcast!(server, topic, message, broadcaster \\ __MODULE__) do
-    case broadcaster.broadcast(server, topic, message) do
+  def broadcast!(server, topic, message) do
+    case broadcast(server, topic, message) do
       :ok -> :ok
       {:error, reason} -> raise BroadcastError, message: reason
     end
@@ -101,8 +101,8 @@ defmodule Phoenix.PubSub do
   Broadcasts message to all but sender on given topic
   raises `Phoenix.PubSub.BroadcastError` if broadcast fails
   """
-  def broadcast_from!(server, from_pid, topic, message, broadcaster \\ __MODULE__) do
-    case broadcaster.broadcast_from(server, from_pid, topic, message) do
+  def broadcast_from!(server, from_pid, topic, message) do
+    case broadcast_from(server, from_pid, topic, message) do
       :ok -> :ok
       {:error, reason} -> raise BroadcastError, message: reason
     end

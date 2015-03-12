@@ -13,8 +13,27 @@ defmodule Phoenix.PubSub.PubSubTest do
   end
 
   defmodule FailedBroadcaster do
-    def broadcast(_server, _topic, _msg), do: {:error, :boom}
-    def broadcast_from(_server, _from_pid, _topic, _msg), do: {:error, :boom}
+    use GenServer
+
+    def handle_call(_msg, _from, state) do
+      {:reply, {:error, :boom}, state}
+    end
+  end
+
+  test "broadcast!/3 and broadcast_from!/4 raises if broadcast fails" do
+    GenServer.start_link(FailedBroadcaster, :ok, name: FailedBroadcaster)
+
+    PubSub.subscribe(FailedBroadcaster, self, "topic")
+
+    assert_raise PubSub.BroadcastError, fn ->
+      PubSub.broadcast!(FailedBroadcaster, "topic", :ping)
+    end
+
+    assert_raise PubSub.BroadcastError, fn ->
+      PubSub.broadcast_from!(FailedBroadcaster, self, "topic", :ping)
+    end
+
+    refute_received :ping
   end
 
   for {tag, adapter} <- @adapters do
@@ -87,21 +106,6 @@ defmodule Phoenix.PubSub.PubSubTest do
       assert_receive :ping
       :ok = PubSub.broadcast!(@name, "topic9", :ping)
       assert_receive :ping
-    end
-
-    @tag tag
-    test "#{inspect @adapter} broadcast!/3 and broadcast_from!/4 raise if broadcast fails" do
-      PubSub.subscribe(@name, self, "topic9")
-
-      assert_raise PubSub.BroadcastError, fn ->
-        PubSub.broadcast!(@name, "topic9", :ping, FailedBroadcaster)
-      end
-
-      assert_raise PubSub.BroadcastError, fn ->
-        PubSub.broadcast_from!(@name, self, "topic9", :ping, FailedBroadcaster)
-      end
-
-      refute_received :ping
     end
 
     @tag tag
