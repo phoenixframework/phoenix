@@ -36,7 +36,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Resource do
     path      = Naming.underscore(scoped)
     singular  = String.split(path, "/") |> List.last
     module    = Module.concat(base, scoped) |> inspect
-    alias     = Module.split(module) |> List.last
+    alias     = String.split(module, ".") |> List.last
     route     = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
     attrs     = split_attrs(attrs)
     migration = String.replace(path, "/", "_")
