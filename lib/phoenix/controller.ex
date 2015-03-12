@@ -544,9 +544,11 @@ defmodule Phoenix.Controller do
   defp template_name(name, _format) when is_binary(name), do:
     name
 
-  defp send_resp(conn, default_status, content_type, body) do
-    conn
-    |> put_resp_content_type(content_type)
+  defp send_resp(conn, default_status, default_content_type, body) do
+    case get_resp_header(conn, "content-type") do
+      [] -> put_resp_content_type(conn, default_content_type)
+      _  -> conn
+    end
     |> send_resp(conn.status || default_status, body)
   end
 
