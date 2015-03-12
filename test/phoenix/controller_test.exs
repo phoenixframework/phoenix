@@ -94,6 +94,14 @@ defmodule Phoenix.ControllerTest do
     assert conn.status == 400
   end
 
+  test "json/2 allows content-type injection on connection" do
+    conn = conn(:get, "/") |> put_resp_content_type("application/vnd.api+json")
+    conn = json(conn, %{foo: :bar})
+    assert conn.resp_body == "{\"foo\":\"bar\"}"
+    assert Conn.get_resp_header(conn, "content-type") ==
+             ["application/vnd.api+json; charset=utf-8"]
+  end
+
   test "text/2" do
     conn = text(conn(:get, "/"), "foobar")
     assert conn.resp_body == "foobar"
