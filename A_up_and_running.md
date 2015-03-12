@@ -99,6 +99,12 @@ npm http GET https://registry.npmjs.org/clean-css-brunch
 . . .
 ```
 
+Note: If we don't want to use brunch.io for our static asset compilation, we can pass the `--no-brunch` flag to `phoenix.new`.
+
+```console
+$ mix phoenix.new ../hello_phoenix --no-brunch
+```
+
 Once our brunch.io dependencies are installed, the task will prompt us to change into our project directory and start our application.
 
 ```console
