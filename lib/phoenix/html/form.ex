@@ -96,18 +96,32 @@ defmodule Phoenix.HTML.Form do
 
     * `:source` - the data structure given to `form_for/4` that
       implements the form data protocol
+
     * `:name` - the name to be used when generating input fields
+
     * `:model` - the model used to lookup field data
+
     * `:params` - the parameters associated to this form in case
       they were sent as part of a previous request
+
     * `:hidden` - a keyword list of fields that are required for
       submitting the form behind the scenes as hidden inputs
+
     * `:options` - a copy of the options given when creating the
       form via `form_for/4` without any form data specific key
+
+    * `:errors` - a keyword list of errors that associated with
+      the form
+
+    * `:validations` - a keyword list of validations for the given
+      inputs
   """
-  defstruct source: nil, name: nil, model: %{}, hidden: [], params: %{}, options: []
-  @type t :: %Form{source: term, name: String.t, model: %{ atom => term },
-                   params: %{ binary => term }, hidden: Keyword.t, options: Keyword.t}
+  defstruct source: nil, name: nil, model: %{}, hidden: [], params: %{},
+            errors: [], validations: [], options: []
+
+  @type t :: %Form{source: term, name: String.t, model: %{atom => term},
+                   params: %{binary => term}, hidden: Keyword.t, options: Keyword.t,
+                   errors: Keyword.t, validations: Keyword.t}
 
   @doc """
   Generates a form tag with a form builder.
