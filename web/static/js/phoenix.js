@@ -78,7 +78,7 @@ export class Socket {
     return `${this.protocol()}://${location.host}${endPoint}`
   }
 
-  close(callback, code, reason){
+  disconnect(callback, code, reason){
     if(this.conn){
       this.conn.onclose = function(){} // noop
       if(code){ this.conn.close(code, reason || "") } else { this.conn.close() }
@@ -87,8 +87,8 @@ export class Socket {
     callback && callback()
   }
 
-    this.close(() => {
   connect(){
+    this.disconnect(() => {
       this.conn = new this.transport(this.endPoint)
       this.conn.timeout   = this.longpoller_timeout
       this.conn.onopen    = () => this.onConnOpen()
