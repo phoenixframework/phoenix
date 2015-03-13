@@ -3,6 +3,9 @@
 ## v0.11.0-dev
 
 * Backwards incompatible changes
+  * [phoenix.js] The `Socket` instance no long connects automatically. You must
+    explicitly call `connect()`
+  * [phoenix.js] `close()` has been renamed to `disconnect()`
   * Code reloader must now be configured in your endpoint instead of Phoenix. Therefore, upgrade your `config/dev.exs` replacing
 
           config :phoenix, :code_reloader, true
