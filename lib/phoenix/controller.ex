@@ -1,6 +1,8 @@
 defmodule Phoenix.Controller do
   import Plug.Conn
 
+  require Logger
+
   @moduledoc """
   Controllers are used to group common functionality in the same
   (pluggable) module.
@@ -560,6 +562,29 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
+  Enables CSRF protection.
+
+  Currently used as a wrapper function for `Plug.CSRFProtection`
+  and mainly serves as a function plug in `YourApp.Router`.
+
+  Check `get_csrf_token/0` and `delete_csrf_token/0` for
+  retrieving and deleting CSRF tokens.
+  """
+  def protect_from_forgery(conn, opts \\ []) do
+    Plug.CSRFProtection.call(conn, opts)
+  end
+
+  @doc """
+  Gets the CSRF token.
+  """
+  defdelegate get_csrf_token(), to: Plug.CSRFProtection
+
+  @doc """
+  Deletes any CSRF token set.
+  """
+  defdelegate delete_csrf_token(), to: Plug.CSRFProtection
+
+  @doc """
   Performs content negotiation based on the available formats.
 
   It receives a connection, a list of formats that the server
@@ -607,35 +632,13 @@ defmodule Phoenix.Controller do
     end
   end
 
-  @doc """
-  Enables CSRF protection.
-
-  Currently used as a wrapper function for `Plug.CSRFProtection`
-  and mainly serves as a function plug in `YourApp.Router`.
-
-  Check `get_csrf_token/0` and `delete_csrf_token/0` for
-  retrieving and deleting CSRF tokens.
-  """
-  def protect_from_forgery(conn, opts \\ []) do
-    Plug.CSRFProtection.call(conn, opts)
-  end
-
-  @doc """
-  Gets the CSRF token.
-  """
-  defdelegate get_csrf_token(), to: Plug.CSRFProtection
-
-  @doc """
-  Deletes any CSRF token set.
-  """
-  defdelegate delete_csrf_token(), to: Plug.CSRFProtection
-
   defp handle_params_accept(conn, format, accepted) do
     if format in accepted do
       conn
     else
-      raise Phoenix.NotAcceptableError,
-        message: "unknown format #{inspect format}, expected one of #{inspect accepted}"
+      Logger.error "Unknown format #{inspect format} in plug :accepts, " <>
+                   "expected one of #{inspect accepted}"
+      conn |> send_resp(406, "") |> halt()
     end
   end
 
@@ -707,9 +710,10 @@ defmodule Phoenix.Controller do
     put_in conn.params["format"], format
   end
 
-  defp refuse(_conn, accepted) do
-    raise Phoenix.NotAcceptableError,
-      message: "no supported media type in accept header, expected one of #{inspect accepted}"
+  defp refuse(conn, accepted) do
+    Logger.error "No supported media type in accept header in plug :accepts, " <>
+                 "expected one of #{inspect accepted}"
+    conn |> send_resp(406, "") |> halt()
   end
 
   @doc """

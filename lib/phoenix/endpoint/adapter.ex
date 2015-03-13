@@ -67,7 +67,7 @@ defmodule Phoenix.Endpoint.Adapter do
 
      # Compile-time config
      debug_errors: false,
-     render_errors: render_errors(module),
+     render_errors: [view: render_errors(module), format: "html"],
 
      # Transports
      transports: [

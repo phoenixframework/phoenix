@@ -1,4 +1,4 @@
-defmodule Phoenix.Endpoint.ErrorHandler do
+defmodule Phoenix.Endpoint.RenderErrors do
   # This module is used to catch failures and render them using a view.
   #
   # This module is automatically used in `Phoenix.Router` where it
@@ -8,6 +8,7 @@ defmodule Phoenix.Endpoint.ErrorHandler do
   # ## Options
   #
   #   * `:view` - the name of the view we render templates against
+  #   * `:format` - the format to use when none is available from the request
   #
   @moduledoc false
 
@@ -18,7 +19,7 @@ defmodule Phoenix.Endpoint.ErrorHandler do
   @doc false
   defmacro __using__(opts) do
     quote do
-      @before_compile Phoenix.Endpoint.ErrorHandler
+      @before_compile Phoenix.Endpoint.RenderErrors
       @phoenix_handle_errors unquote(opts)
     end
   end
@@ -33,7 +34,7 @@ defmodule Phoenix.Endpoint.ErrorHandler do
           super(conn, opts)
         catch
           kind, reason ->
-            Phoenix.Endpoint.ErrorHandler.__catch__(conn, kind, reason, @phoenix_handle_errors)
+            Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, @phoenix_handle_errors)
         end
       end
     end
@@ -64,7 +65,7 @@ defmodule Phoenix.Endpoint.ErrorHandler do
   @doc false
   def render(conn, kind, reason, stack, opts) do
     reason = Exception.normalize(kind, reason, stack)
-    format = format(conn)
+    format = format(conn, opts)
     status = status(kind, reason)
     format = "#{status}.#{format}"
 
@@ -86,10 +87,10 @@ defmodule Phoenix.Endpoint.ErrorHandler do
     end
   end
 
-  defp format(conn) do
+  defp format(conn, opts) do
     case conn.params do
       %{"format" => format} -> format
-      _ -> "html"
+      _ -> Keyword.get(opts, :format, "html")
     end
   end
 

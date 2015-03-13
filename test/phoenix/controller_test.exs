@@ -5,6 +5,11 @@ defmodule Phoenix.ControllerTest do
   import Phoenix.Controller
   alias Plug.Conn
 
+  setup do
+    Logger.disable(self)
+    :ok
+  end
+
   defp get_resp_content_type(conn) do
     [header]  = get_resp_header(conn, "content-type")
     header |> String.split(";") |> Enum.fetch!(0)
@@ -172,11 +177,9 @@ defmodule Phoenix.ControllerTest do
     conn = accepts conn(:get, "/", format: "json"), ~w(json)
     assert conn.params["format"] == "json"
 
-    exception = assert_raise Phoenix.NotAcceptableError,
-                             ~r/unknown format "json"/, fn ->
-      accepts conn(:get, "/", format: "json"), ~w(html)
-    end
-    assert Plug.Exception.status(exception) == 406
+    conn = accepts conn(:get, "/", format: "json"), ~w(html)
+    assert conn.status == 406
+    assert conn.halted
   end
 
   test "accepts/2 uses first accepts on empty or catch-all header" do
@@ -224,9 +227,9 @@ defmodule Phoenix.ControllerTest do
     conn = accepts with_accept("text/html; q=0.7, application/json; q=0.8"), ~w(html json)
     assert conn.params["format"] == "json"
 
-    assert_raise Phoenix.NotAcceptableError, ~r/no supported media type in accept/, fn ->
-      accepts with_accept("text/html; q=0.7, application/json; q=0.8"), ~w(xml)
-    end
+    conn = accepts with_accept("text/html; q=0.7, application/json; q=0.8"), ~w(xml)
+    assert conn.halted
+    assert conn.status == 406
   end
 
   test "scrub_params/2 raises Phoenix.MissingParamError for missing key" do

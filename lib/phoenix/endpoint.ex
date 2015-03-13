@@ -66,11 +66,14 @@ defmodule Phoenix.Endpoint do
       only in development as it allows listing of the application source
       code during debugging. Defaults to `false`.
 
-    * `:render_errors` - a module representing a view to render templates
-      whenever there is a failure in the application. For example, if the
-      application crashes with a 500 error during a HTML request,
-      `render("500.html", assigns)` will be called in the view given to
-      `:render_errors`. The default view is `MyApp.ErrorView`.
+    * `:render_errors` - responsible for rendering templates whenever there
+      is a failure in the application. For example, if the application crashes
+      with a 500 error during a HTML request, `render("500.html", assigns)`
+      will be called in the view given to `:render_errors`. Defaults to:
+
+          [view: MyApp.ErrorView, format: "html"]
+
+      The format is the default format when one was not set in the connection.
 
   ### Runtime configuration
 
@@ -249,7 +252,7 @@ defmodule Phoenix.Endpoint do
         use Plug.Debugger, otp_app: otp_app
       end
 
-      use Phoenix.Endpoint.ErrorHandler, view: config[:render_errors]
+      use Phoenix.Endpoint.RenderErrors, config[:render_errors]
     end
   end
 

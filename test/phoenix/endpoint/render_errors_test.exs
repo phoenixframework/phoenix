@@ -1,4 +1,4 @@
-defmodule Phoenix.Endpoint.ErrorHandlerTest do
+defmodule Phoenix.Endpoint.RenderErrorsTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
@@ -16,9 +16,13 @@ defmodule Phoenix.Endpoint.ErrorHandlerTest do
     "Got 500 from #{kind} with #{conn.method}"
   end
 
+  def render("500.text", _) do
+    "500 in TEXT"
+  end
+
   defmodule Router do
     use Plug.Router
-    use Phoenix.Endpoint.ErrorHandler, view: view
+    use Phoenix.Endpoint.RenderErrors, view: view
 
     plug :match
     plug :dispatch
@@ -83,7 +87,7 @@ defmodule Phoenix.Endpoint.ErrorHandlerTest do
       fun.()
     catch
       kind, error ->
-        Phoenix.Endpoint.ErrorHandler.render(conn, kind, error, System.stacktrace, opts)
+        Phoenix.Endpoint.RenderErrors.render(conn, kind, error, System.stacktrace, opts)
     else
       _ -> flunk "function should have failed"
     end
@@ -123,5 +127,23 @@ defmodule Phoenix.Endpoint.ErrorHandlerTest do
 
     assert conn.status == 500
     assert conn.resp_body == "Got 500 from exit with GET"
+  end
+
+  test "exception page with params format" do
+    conn = render(conn(:get, "/", [format: "text"]), [], fn ->
+      throw :hello
+    end)
+
+    assert conn.status == 500
+    assert conn.resp_body == "500 in TEXT"
+  end
+
+  test "exception page with custom format" do
+    conn = render(conn(:get, "/"), [format: "text"], fn ->
+      throw :hello
+    end)
+
+    assert conn.status == 500
+    assert conn.resp_body == "500 in TEXT"
   end
 end
