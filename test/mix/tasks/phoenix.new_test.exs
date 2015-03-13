@@ -79,6 +79,10 @@ defmodule Mix.Tasks.Phoenix.NewTest do
         refute file =~ "lockfile: \"../../mix.lock\""
       end
 
+      assert_file "photo_blog/config/config.exs", fn file ->
+        refute file =~ "app_namespace"
+      end
+
       assert_file "photo_blog/lib/photo_blog.ex", ~r/defmodule PhotoBlog do/
       assert_file "photo_blog/lib/photo_blog/endpoint.ex", ~r/defmodule PhotoBlog.Endpoint do/
 
@@ -152,14 +156,15 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     end
   end
 
-  test "new with path and app name" do
-    in_tmp "new with path and app name", fn ->
+  test "new with path, app and module" do
+    in_tmp "new with path, app and module", fn ->
       project_path = Path.join(File.cwd!, "custom_path")
-      Mix.Tasks.Phoenix.New.run([project_path, "--app", @app_name])
+      Mix.Tasks.Phoenix.New.run([project_path, "--app", @app_name, "--module", "PhoteuxBlog"])
 
       assert_file "custom_path/.gitignore"
       assert_file "custom_path/mix.exs", ~r/app: :photo_blog/
       assert_file "custom_path/lib/photo_blog/endpoint.ex", ~r/app: :photo_blog/
+      assert_file "custom_path/config/config.exs", ~r/app_namespace: PhoteuxBlog/
     end
   end
 

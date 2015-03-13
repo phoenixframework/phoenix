@@ -68,7 +68,7 @@ defmodule Mix.Tasks.Phoenix.New do
       [] ->
         Mix.raise "Expected PATH to be given, please use `mix phoenix.new PATH`"
       [path|_] ->
-        app    = opts[:app] || Path.basename(Path.expand(path))
+        app = opts[:app] || Path.basename(Path.expand(path))
         check_application_name!(app, !!opts[:app])
         mod = opts[:module] || Naming.camelize(app)
         check_module_name!(mod)
