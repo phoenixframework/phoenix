@@ -545,11 +545,18 @@ defmodule Phoenix.Controller do
     name
 
   defp send_resp(conn, default_status, default_content_type, body) do
-    case get_resp_header(conn, "content-type") do
-      [] -> put_resp_content_type(conn, default_content_type)
-      _  -> conn
-    end
+    conn
+    |> ensure_resp_content_type(default_content_type)
     |> send_resp(conn.status || default_status, body)
+  end
+
+  defp ensure_resp_content_type(%{resp_headers: resp_headers} = conn, content_type) do
+    if List.keyfind(resp_headers, "content-type", 0) do
+      conn
+    else
+      content_type = content_type <> "; charset=utf-8"
+      %{conn | resp_headers: [{"content-type", content_type}|resp_headers]}
+    end
   end
 
   @doc """
