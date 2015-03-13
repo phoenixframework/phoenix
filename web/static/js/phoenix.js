@@ -69,10 +69,6 @@ export class Socket {
     this.resetBufferTimer()
   }
 
-  connect() {
-    this.reconnect()
-  }
-
   protocol(){ return location.protocol.match(/^https/) ? "wss" : "ws" }
 
   expandEndpoint(endPoint){
@@ -91,8 +87,8 @@ export class Socket {
     callback && callback()
   }
 
-  reconnect(){
     this.close(() => {
+  connect(){
       this.conn = new this.transport(this.endPoint)
       this.conn.timeout   = this.longpoller_timeout
       this.conn.onopen    = () => this.onConnOpen()
