@@ -67,6 +67,9 @@ export class Socket {
     this.longpoller_timeout = opts.longpoller_timeout || 20000
     this.endPoint = this.expandEndpoint(endPoint)
     this.resetBufferTimer()
+  }
+
+  connect() {
     this.reconnect()
   }
 
