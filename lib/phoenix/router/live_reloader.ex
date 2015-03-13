@@ -42,6 +42,7 @@ defmodule Phoenix.Router.LiveReload do
       #{@phoenix_js}
       var phx = require("phoenix")
       var socket = new phx.Socket("/phoenix")
+      socket.connect()
       socket.join("phoenix", {}, function(chan){
         chan.on("assets:change", function(msg){ window.location.reload(); })
       })
