@@ -377,7 +377,7 @@ Note: These points hold true for Apache as well, but the steps to accomplish the
 
 ```console
 $ sudo touch /etc/nginx/sites-available/hello_phoenix
-$ sudo ln -s /etc/nginx/sites-available /etc/nginx/sites-enabled
+$ sudo ln -s /etc/nginx/sites-available/hello_phoenix /etc/nginx/sites-enabled
 $ sudo vi /etc/nginx/sites-available/hello_phoenix
 ```
 
