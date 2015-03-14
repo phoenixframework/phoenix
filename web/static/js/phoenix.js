@@ -132,7 +132,7 @@ export class Socket {
     this.log(event)
     clearInterval(this.reconnectTimer)
     clearInterval(this.heartbeatTimer)
-    this.reconnectTimer = setInterval(() => this.reconnect(), this.reconnectAfterMs)
+    this.reconnectTimer = setInterval(() => this.connect(), this.reconnectAfterMs)
     this.stateChangeCallbacks.close.forEach( callback => callback(event) )
   }
 
