@@ -468,3 +468,4 @@ test "select/4 with form" do
     assert content =~ ~s(Sec: <select class="sec" id="sec" name="search[datetime][sec]">)
   end
 end
+
