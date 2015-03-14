@@ -21,7 +21,7 @@ There are no guidelines yet. Do what feels natural. Submit a bug, join a discuss
 ```bash
 $ npm install
 $ npm install -g brunch
-$ brunch watch --production
+$ brunch watch
 ```
 
 ## Contributing
