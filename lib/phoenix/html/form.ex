@@ -88,6 +88,7 @@ defmodule Phoenix.HTML.Form do
   alias Phoenix.HTML.Form
   import Phoenix.HTML
   import Phoenix.HTML.Tag
+  import Phoenix.HTML.Form.Datetime
 
   @doc """
   Defines the Phoenix.HTML.Form struct.
@@ -606,30 +607,6 @@ defmodule Phoenix.HTML.Form do
   defp time_value(other),
     do: raise(ArgumentError, "unrecognized time #{inspect other}")
 
-  @months %{
-    "1"  => "January",
-    "2"  => "February",
-    "3"  => "March",
-    "4"  => "April",
-    "5"  => "May",
-    "6"  => "June",
-    "7"  => "July",
-    "8"  => "August",
-    "9"  => "September",
-    "10" => "October",
-    "11" => "November",
-    "12" => "December"
-  }
-
-  map = &Enum.into(&1, [], fn i ->
-    i = Integer.to_string(i)
-    {i, String.rjust(i, 2, ?0)}
-  end)
-
-  @days   map.(1..31)
-  @hours  map.(0..23)
-  @minsec map.(0..59)
-
   defp datetime_builder(form, field, date, time, parent) do
     id   = Keyword.get(parent, :id, id_from(form, field))
     name = Keyword.get(parent, :name, name_from(form, field))
@@ -640,19 +617,19 @@ defmodule Phoenix.HTML.Form do
         {value, opts} = datetime_options(:year, year-5..year+5, id, name, parent, date, opts)
         select(:datetime, :year, value, opts)
       :month, opts when date != nil ->
-        {value, opts} = datetime_options(:month, @months, id, name, parent, date, opts)
+        {value, opts} = datetime_options(:month, months, id, name, parent, date, opts)
         select(:datetime, :month, value, opts)
       :day, opts when date != nil ->
-        {value, opts} = datetime_options(:day, @days, id, name, parent, date, opts)
+        {value, opts} = datetime_options(:day, days, id, name, parent, date, opts)
         select(:datetime, :day, value, opts)
       :hour, opts when time != nil ->
-        {value, opts} = datetime_options(:hour, @hours, id, name, parent, time, opts)
+        {value, opts} = datetime_options(:hour, hours, id, name, parent, time, opts)
         select(:datetime, :hour, value, opts)
       :min, opts when time != nil ->
-        {value, opts} = datetime_options(:min, @minsec, id, name, parent, time, opts)
+        {value, opts} = datetime_options(:min, minsec, id, name, parent, time, opts)
         select(:datetime, :min, value, opts)
       :sec, opts when time != nil ->
-        {value, opts} = datetime_options(:sec, @minsec, id, name, parent, time, opts)
+        {value, opts} = datetime_options(:sec, minsec, id, name, parent, time, opts)
         select(:datetime, :sec, value, opts)
     end
   end
