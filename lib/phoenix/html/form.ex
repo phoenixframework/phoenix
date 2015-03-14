@@ -621,7 +621,7 @@ defmodule Phoenix.HTML.Form do
     "12" => "December"
   }
 
-  map = &Enum.into(&1, [], fn i ->
+  map = &Enum.map(&1, fn i ->
     i = Integer.to_string(i)
     {i, String.rjust(i, 2, ?0)}
   end)

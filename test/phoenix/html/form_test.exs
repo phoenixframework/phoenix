@@ -364,6 +364,7 @@ test "select/4 with form" do
     assert content =~ ~s(<option selected="selected" value="2">02</option>)
     assert content =~ ~s(<option selected="selected" value="11">11</option>)
     assert content =~ ~s(<option selected="selected" value="13">13</option>)
+    assert content =~ ~s(<option value="1">01</option><option value="2">02</option>)
 
     {:safe, content} = with_form(&time_select(&1, :unknown, default: {1, 2, 3}, sec: []))
     assert content =~ ~s(<option selected="selected" value="1">01</option>)
