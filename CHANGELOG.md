@@ -2,6 +2,28 @@
 
 ## v0.11.0-dev
 
+* Backwards incompatible changes
+  * Code reloader must now be configured in your endpoint instead of Phoenix. Therefore, upgrade your `config/dev.exs` replacing
+
+          config :phoenix, :code_reloader, true
+
+    by
+
+          config :your_app, Your.Endpoint, code_reloader: true
+
+    Furthermore, the Phoenix.CodeReloader plug must be plugged only if `code_reloading?` is enabled. So you'll need to wrap it accordingly in `lib/your_app/endpoint.ex`:
+
+          if code_reloading? do
+            use Phoenix.CodeReloader
+          end
+
+* Enhancements
+  * Allow the default format used when rendering errors to be customized in the `render_views` configuration
+  * Add `button/2` function to `Phoenix.HTML`
+
+* Bug fixes
+  * Fix out of order hours, minutes and days in date/time select
+
 ## v0.10.0 (2015-03-08)
 
 See these [`0.9.x` to `0.10.0` upgrade instructions](https://gist.github.com/chrismccord/cf51346c6636b5052885) to bring your existing apps up to speed.
