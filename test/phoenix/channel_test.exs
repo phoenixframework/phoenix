@@ -33,6 +33,15 @@ defmodule Phoenix.ChannelTest do
       end
     end
 
+    def handle_info({:ping, sender}, socket) do
+      send sender, :pong
+      {:ok, socket}
+    end
+    def handle_info({:close, sender}, socket) do
+      send sender, :closing
+      {:leave, socket}
+    end
+
     def handle_in("some:event", _msg, socket) do
       send socket.adapter_pid, {:handle_in, socket.topic}
       {:ok, socket}
@@ -226,6 +235,7 @@ defmodule Phoenix.ChannelTest do
     PubSub.broadcast!(:phx_pub, msg.topic, {:socket_broadcast, msg})
     Enum.each sockets, fn {_, pid} ->
       assert_receive {:DOWN, _ref, :process, ^pid, :normal}
+      assert_receive {:delete_socket, "topic:1subtopic"}
     end
 
     assert subscribers(:phx_pub, "topic:1subtopic") == []
@@ -266,6 +276,7 @@ defmodule Phoenix.ChannelTest do
     Process.put(:leave, fn socket -> {:ok, socket} end)
     Transport.dispatch_leave(sockets, :reason)
     assert_receive {:DOWN, _ref, :process, ^socket_pid, :normal}
+    assert_receive {:delete_socket, "topic:4subtopic"}
     assert subscribers(:phx_pub, "topic:4subtopic") == []
   end
 
@@ -289,6 +300,7 @@ defmodule Phoenix.ChannelTest do
 
     Transport.dispatch_leave(sockets, :reason)
     assert_receive {:DOWN, _ref, :process, ^socket_pid, :normal}
+    assert_receive {:delete_socket, "topic:6subtopic"}
   end
 
   test "#event raises InvalidReturnError exception when return type is invalid" do
@@ -306,6 +318,7 @@ defmodule Phoenix.ChannelTest do
     Process.monitor(socket_pid)
     Transport.dispatch(message, sockets, self, Router, :phx_pub, WebSocket)
     assert_receive {:DOWN, _, :process, ^socket_pid, _}
+    assert_receive {:delete_socket, "topic:7subtopic"}
   end
 
   test "returns heartbeat message when received, and does not store socket" do
@@ -477,4 +490,26 @@ defmodule Phoenix.ChannelTest do
     refute_received {:join, "topic2-override:somesubtopic"}
     refute_receive {:put_socket, "topic2-override:somesubtopic", _}
   end
+
+  test "handle_info/2 is triggered for any elixir message" do
+    message = join_message("topic:10subtopic", fn socket -> {:ok, socket} end)
+    Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, WebSocket)
+    assert_receive {:put_socket, "topic:10subtopic", socket_pid}
+
+    send(socket_pid, {:ping, self})
+    assert_receive :pong
+  end
+
+  test "handle_info/2 can close socket by returning {:leave, socket}" do
+    message = join_message("topic:10subtopic", fn socket -> {:ok, socket} end)
+    Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, WebSocket)
+    assert_receive {:put_socket, "topic:10subtopic", socket_pid}
+    Process.monitor(socket_pid)
+
+    send(socket_pid, {:close, self})
+    assert_receive :closing
+    assert_receive {:DOWN, _ref, :process, ^socket_pid, :normal}
+    assert_receive {:delete_socket, "topic:10subtopic"}
+  end
+
 end

@@ -3,12 +3,17 @@ defmodule Phoenix.Channel.Server do
   require Logger
   alias Phoenix.PubSub
 
-  # defmodule InvalidReturnError do
-  #   defexception [:message]
-  #   def exception(msg) do
-  #     %InvalidReturnError{message: "Invalid Handler return: #{inspect msg}"}
-  #   end
-  # end
+  @moduledoc """
+  Handles `%Phoenix.Socket{}` state and invokes channel callbacks.
+
+  ## handle_info/2
+  Regular Elixir messages are forwarded to the socket channel's
+  `handle_info/2` callback.
+
+  ## exits
+  Exists are trapped by default and the socket channel's `leave/2`
+  callback is triggered.
+  """
 
   def start_link(socket, auth_payload) do
     GenServer.start_link(__MODULE__, [socket, auth_payload])
@@ -43,21 +48,17 @@ defmodule Phoenix.Channel.Server do
     leave_and_stop(payload, socket)
   end
 
+  @doc """
+  Forwards incoming client messages through `handle_in/3` callbacks
+  """
   def handle_cast({:handle_in, event, payload}, socket) when event != "join" do
     event
     |> socket.channel.handle_in(payload, socket)
     |> handle_result
   end
 
-  # TODO probably can go away
-  # def handle_cast({:handle_out, event, payload}, socket) do
-  #   event
-  #   |> socket.channel.handle_out(payload, socket)
-  #   |> handle_result
-  # end
-
   @doc """
-  Receives `%Phoenix.Socket.Message{}` and sends encoded message JSON to client.
+  Forwards broadcast through `handle_out/3` callbacks
   """
   def handle_info({:socket_broadcast, msg}, socket) do
     msg.event
@@ -65,12 +66,22 @@ defmodule Phoenix.Channel.Server do
     |> handle_result
   end
 
+  @doc """
+  Forwards regular Elixir messages through `handle_info/2` callbacks
+  """
   def handle_info(msg, socket) do
     msg
     |> socket.channel.handle_info(socket)
     |> handle_result
   end
 
+  @doc """
+  Handles Socket termination.
+
+  If the socket shutdown normally with `{:leave, socket}`, the
+  `leave/2` callback has already been triggered, otherwise, we
+  notify the socket we are going down by invoke `leave/2`
+  """
   def terminate(_reason, :left) do
     :ok
   end

@@ -24,7 +24,7 @@ defmodule Phoenix.Channel.Transport do
       Elixir process messages, then encoding and fowarding to remote client.
     * Handle receiving `{:put_socket, topic, socket_pid}` messages and storing a
       HashDict of a string topics to Pid matches. The HashDict of topic => pids
-      is dispatched through the transport layer `Phoenix.Transport.dispatch/2`.
+      is dispatched through the transport layer's `Phoenix.Transport.dispatch/2`.
     * Handle receiving `{:delete_socket, topic}` messages and delete the entry
       from the kept HashDict of socket processes.
     * Handle remote client disconnects and relaying event through
