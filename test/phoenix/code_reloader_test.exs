@@ -25,18 +25,19 @@ defmodule Phoenix.CodeReloaderTest do
     assert Mix.Tasks.Compile.Phoenix.run([]) == :noop
   end
 
-  test "starts the code reloader server" do
-    children = Supervisor.which_children(Endpoint)
-    assert {Phoenix.CodeReloader.Server, _, _, _} =
-           List.keyfind(children, Phoenix.CodeReloader.Server, 0)
-  end
-
   test "reloads on every request" do
+    children = Supervisor.which_children(Endpoint)
+    assert {Phoenix.CodeReloader.Server, pid, _, _} =
+           List.keyfind(children, Phoenix.CodeReloader.Server, 0)
+    :erlang.trace(pid, true, [:receive])
+
     opts = Phoenix.CodeReloader.init([])
     conn = conn(:get, "/")
            |> Plug.Conn.put_private(:phoenix_endpoint, Endpoint)
            |> Phoenix.CodeReloader.call(opts)
     assert conn.state == :unset
+
+    assert_receive {:trace, ^pid, :receive, {_, _, :reload!}}
   end
 
   test "renders compilation error on failure" do
