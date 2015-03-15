@@ -13,29 +13,20 @@ defmodule Phoenix.CodeReloader do
   ## Server delegation
 
   @doc """
-  Reloads code within the paths specified in the `:reloadable_paths` config.
+  Reloads code within the paths specified in the `:reloadable_paths`
+  config for the endpoint.
+
   This is configured in your application environment like:
 
       config :your_app, YourApp.Endpoint,
         reloadable_paths: ["web"]
 
-  Keep in mind that the paths passed to :reloadable_paths must be a subset
-  of the paths specified in the :elixirc_paths option of `project/0` in mix.exs.
+  Keep in mind that the paths passed to :reloadable_paths must be
+  a subset of the paths specified in the :elixirc_paths option of
+  `project/0` in mix.exs.
   """
-  @spec reload!([binary]) :: :ok | :noop | {:error, binary()}
-  defdelegate reload!(paths), to: Phoenix.CodeReloader.Server
-
-  @doc """
-  Touches sources that should be recompiled.
-
-  This works by checking each compiled Phoenix module if
-  `__phoenix_recompile__?/0` returns true and if so it touches
-  its source files.
-
-  Returns the touched source files.
-  """
-  @spec touch :: [binary()]
-  defdelegate touch(), to: Phoenix.CodeReloader.Server
+  @spec reload!(module) :: :ok | :noop | {:error, binary()}
+  defdelegate reload!(endpoint), to: Phoenix.CodeReloader.Server
 
   ## Plug
 
@@ -51,8 +42,7 @@ defmodule Phoenix.CodeReloader do
   API used by Plug to invoke the code reloader on every request.
   """
   def call(conn, opts) do
-    reloadable_paths  = conn.private.phoenix_endpoint.config(:reloadable_paths)
-    case opts[:reloader].(reloadable_paths) do
+    case opts[:reloader].(conn.private.phoenix_endpoint) do
       {:error, output} ->
         conn
         |> put_resp_content_type("text/html")

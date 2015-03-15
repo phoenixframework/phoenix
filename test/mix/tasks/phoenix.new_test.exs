@@ -22,9 +22,11 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
   test "bootstraps generated project" do
     Logger.disable(self())
-    Application.put_env(:phoenix, :code_reloader, true)
+
     Application.put_env(:photo_blog, PhotoBlog.Endpoint,
-      secret_key_base: String.duplicate("abcdefgh", 8))
+      secret_key_base: String.duplicate("abcdefgh", 8),
+      code_reloader: true,
+      root: File.cwd!)
 
     in_tmp "bootstrap", fn ->
       Mix.Tasks.Phoenix.New.run([@app_name, "--no-brunch", "--no-ecto"])
@@ -64,8 +66,6 @@ defmodule Mix.Tasks.Phoenix.NewTest do
         Mix.Task.run("test", ["--no-start", "--no-compile"])
       end) =~ ~r"1 tests?, 0 failures"
     end
-  after
-    Application.put_env(:phoenix, :code_reloader, false)
   end
 
   test "new with defaults" do

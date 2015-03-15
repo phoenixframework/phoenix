@@ -61,6 +61,8 @@ defmodule Phoenix.Endpoint do
 
   ### Compile-time configuration
 
+    * `:code_reloader` - when `true`, enables code reloading functionality
+
     * `:debug_errors` - when `true`, uses `Plug.Debugger` functionality for
       debugging failures in the application. Recommended to be set to `true`
       only in development as it allows listing of the application source
@@ -76,6 +78,10 @@ defmodule Phoenix.Endpoint do
       The format is the default format when one was not set in the connection.
 
   ### Runtime configuration
+
+    * `:root` - the root of your application for running external commands.
+      This is only required if the watchers or cde reloading functionality
+      are enabled.
 
     * `:cache_static_lookup` - when `true`, static assets lookup in the
       filesystem via the `static_path` function are cached. Defaults to `true`.
@@ -108,12 +114,12 @@ defmodule Phoenix.Endpoint do
       from `System.get_env("PORT")` at runtime as a workaround for releases where
       environment specific information is loaded only at compile-time.
 
-    * `:watchers` - a set of watchers to run alongside your application.
-      It expects a list of tuples containing the executable and its
-      arguments. Watchers are guaranteed to run in the current application
-      working directory. For example, the watcher below will run the "watch"
-      mode of the brunch.io assets tool. You can configure it to whatever
-      asset related tool or command you want:
+    * `:watchers` - a set of watchers to run alongside your server. It
+      expects a list of tuples containing the executable and its arguments.
+      Watchers are guaranteed to run in the application directory but only
+      when the server is enabled. For example, the watcher below will run
+      the "watch" mode of the brunch build tool when the server starts.
+      You can configure it to whatever build tool or command you want:
 
           [{"node", ["node_modules/brunch/bin/brunch", "watch"]}]
 
@@ -194,16 +200,19 @@ defmodule Phoenix.Endpoint do
 
   defp config(opts) do
     quote do
-      otp_app = unquote(opts)[:otp_app] || raise "endpoint expects :otp_app to be given"
-      config  = Adapter.config(otp_app, __MODULE__)
-      @config config
+      var!(otp_app) = unquote(opts)[:otp_app] || raise "endpoint expects :otp_app to be given"
+      var!(config)  = Adapter.config(var!(otp_app), __MODULE__)
+      var!(code_reloading?) = var!(config)[:code_reloader]
+
+      # Avoid unused variable warnings
+      _ = var!(code_reloading?)
     end
   end
 
   defp pubsub() do
     quote do
-      @pubsub_server config[:pubsub][:name] ||
-        (if config[:pubsub][:adapter] do
+      @pubsub_server var!(config)[:pubsub][:name] ||
+        (if var!(config)[:pubsub][:adapter] do
           raise ArgumentError, "an adapter was given to :pubsub but no :name was defined, " <>
                                "please pass the :name option accordingly"
         end)
@@ -248,11 +257,11 @@ defmodule Phoenix.Endpoint do
 
       defoverridable [init: 1, call: 2]
 
-      if config[:debug_errors] do
-        use Plug.Debugger, otp_app: otp_app
+      if var!(config)[:debug_errors] do
+        use Plug.Debugger, otp_app: var!(otp_app)
       end
 
-      use Phoenix.Endpoint.RenderErrors, config[:render_errors]
+      use Phoenix.Endpoint.RenderErrors, var!(config)[:render_errors]
     end
   end
 
@@ -262,7 +271,7 @@ defmodule Phoenix.Endpoint do
       Starts the endpoint supervision tree.
       """
       def start_link do
-        Adapter.start_link(unquote(otp_app), __MODULE__)
+        Adapter.start_link(unquote(var!(otp_app)), __MODULE__)
       end
 
       @doc """
@@ -309,18 +318,12 @@ defmodule Phoenix.Endpoint do
   @doc false
   defmacro __before_compile__(env) do
     plugs = Module.get_attribute(env.module, :plugs)
-    plugs = for plug <- plugs, allow_plug?(plug), do: plug
     {conn, body} = Plug.Builder.compile(plugs)
 
     quote do
       defp phoenix_endpoint_pipeline(unquote(conn), _), do: unquote(body)
     end
   end
-
-  defp allow_plug?({Phoenix.CodeReloader, _, _}), do:
-    Application.get_env(:phoenix, :code_reloader, false)
-  defp allow_plug?(_), do:
-    true
 
   ## API
 

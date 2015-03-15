@@ -10,11 +10,10 @@ defmodule Phoenix.EndpointTest do
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
 
-    plug Phoenix.CodeReloader, reloader: &__MODULE__.reload!/0
-
-    def reload! do
-      flunk "reloading should have been disabled"
-    end
+    # Assert endpoint variables
+    assert is_list(config)
+    assert otp_app == :phoenix
+    assert code_reloading? == false
   end
 
   setup_all do
@@ -53,10 +52,6 @@ defmodule Phoenix.EndpointTest do
     assert Endpoint.static_path("/images/phoenix.png") == "/images/phoenix.png?vsn=#{new_vsn}"
     File.touch!(file, old_stat.mtime)
     assert Endpoint.static_path("/images/phoenix.png") == "/images/phoenix.png?vsn=#{new_vsn}"
-  end
-
-  test "does not include code reloading if disabled" do
-    assert is_map Endpoint.call(conn(:get, "/"), [])
   end
 
   test "injects pubsub broadcast with configured server" do

@@ -18,6 +18,7 @@ defmodule Phoenix.Endpoint.Adapter do
       pubsub_children(mod, conf) ++
       [supervisor(Phoenix.Endpoint.Server, [otp_app, mod])] ++
       watcher_children(mod, conf) ++
+      code_reloader_children(mod, conf) ++
       live_reload_children(mod, conf)
 
     Supervisor.start_link(children, strategy: :one_for_one, name: mod)
@@ -33,15 +34,30 @@ defmodule Phoenix.Endpoint.Adapter do
     end
   end
 
-  defp watcher_children(mod, conf) do
+  defp watcher_children(_mod, conf) do
     if conf[:server] do
       Enum.map(conf[:watchers], fn {cmd, args} ->
-        worker(Phoenix.Endpoint.Watcher, [mod, cmd, args],
+        worker(Phoenix.Endpoint.Watcher, [root!(conf), cmd, args],
                id: {cmd, args}, restart: :transient)
       end)
     else
       []
     end
+  end
+
+  defp code_reloader_children(_, conf) do
+    if conf[:code_reloader] do
+      [worker(Phoenix.CodeReloader.Server,
+              [conf[:otp_app], root!(conf), conf[:reloadable_paths]])]
+    else
+      []
+    end
+  end
+
+  defp root!(conf) do
+    conf[:root] ||
+      raise "please set root: Path.expand(\"..\", __DIR__) in your endpoint " <>
+            "inside config/config.exs in order to use code reloading or watchers"
   end
 
   defp live_reload_children(mod, conf) do
@@ -66,6 +82,7 @@ defmodule Phoenix.Endpoint.Adapter do
     [otp_app: otp_app,
 
      # Compile-time config
+     code_reloader: false,
      debug_errors: false,
      render_errors: [view: render_errors(module), format: "html"],
 
@@ -90,8 +107,9 @@ defmodule Phoenix.Endpoint.Adapter do
      secret_key_base: nil,
      server: Application.get_env(:phoenix, :serve_endpoints, false),
      url: [host: "localhost"],
-     pubsub: [],
 
+     # Supervisor config
+     pubsub: [],
      watchers: [],
      live_reload: []]
   end
