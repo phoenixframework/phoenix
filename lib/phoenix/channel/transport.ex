@@ -49,10 +49,10 @@ defmodule Phoenix.Channel.Transport do
   should be deserialized and forwarded through this function by adapters.
 
   The following return signatures must be handled by transport adapters:
-    * `{:ok, sockets}` - Successful dispatch, with updated `HashDict` of sockets
-    * `{:error, reason, sockets}` - Failed dispatched with updatd `HashDict` of sockets
+    * `{:ok, socket_pid}` - Successful dispatch, with pid of new socket
+    * `{:error, reason}` - Failed dispatch
+    * `:ignore` - Unauthorized or unmatched dispatch
 
-  The returned `HashDict` of `%Phoenix.Socket{}`s must be held by the adapter
   """
   def dispatch(%Message{} = msg, sockets, adapter_pid, router, pubsub_server, transport) do
     sockets

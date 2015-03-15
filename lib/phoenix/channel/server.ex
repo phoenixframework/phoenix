@@ -21,6 +21,7 @@ defmodule Phoenix.Channel.Server do
       {:ok, socket} ->
         {:ok, socket}
           socket = put_in(socket, [:pid], self)
+          Process.link(socket.adapter_pid)
           send(socket.adapter_pid, {:put_socket, socket.topic, self})
           PubSub.subscribe(socket.pubsub_server, socket.pid, socket.topic, link: true)
 
