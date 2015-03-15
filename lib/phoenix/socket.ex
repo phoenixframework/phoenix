@@ -5,7 +5,8 @@ defmodule Phoenix.Socket do
 
   ## Socket Fields
 
-  * `pid` - The Pid of the socket's transport process
+  * `pid` - The Pid of the socket's channel server
+  * `adapter_pid` - The Pid of the socket's transport process
   * `topic` - The string topic, ie `"rooms:123"`
   * `router` - The router module where this socket originated
   * `endpoint` - The endpoint module where this socket originated
@@ -22,6 +23,7 @@ defmodule Phoenix.Socket do
 
   @derive [Access]
   defstruct pid: nil,
+            adapter_pid: nil,
             topic: nil,
             router: nil,
             channel: nil,

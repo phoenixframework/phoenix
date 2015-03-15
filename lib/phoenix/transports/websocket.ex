@@ -56,23 +56,18 @@ defmodule Phoenix.Transports.WebSocket do
     payload
     |> state.serializer.decode!(opcode)
     |> Transport.dispatch(state.sockets, self, state.router, state.pubsub_server, __MODULE__)
-    |> case do
-      {:ok, sockets}             -> %{state | sockets: sockets}
-      {:error, _reason, sockets} -> %{state | sockets: sockets}
-    end
+
+    state
   end
 
-  @doc """
-  Receives `%Phoenix.Socket.Message{}` and sends encoded message JSON to client.
-  """
-  def ws_info({:socket_broadcast, message = %Message{}}, %{sockets: sockets} = state) do
-    sockets = case Transport.dispatch_broadcast(sockets, message) do
-      {:ok, socks} -> socks
-      {:error, _reason, socks} -> socks
-    end
-
-    %{state | sockets: sockets}
+  def ws_info({:put_socket, topic, socket_pid}, %{sockets: sockets} = state) do
+    %{state | sockets: HashDict.put(sockets, topic, socket_pid)}
   end
+
+  def ws_info({:delete_socket, topic}, %{sockets: sockets} = state) do
+    %{state | sockets: HashDict.delete(sockets, topic)}
+  end
+
   def ws_info({:socket_reply, message = %Message{}}, %{serializer: serializer} = state) do
     reply(self, serializer.encode!(message))
     state

@@ -64,12 +64,15 @@ defmodule Phoenix.Transports.LongPoller.Server do
     message
     |> Transport.dispatch(state.sockets, self, state.router, state.pubsub_server, LongPoller)
     |> case do
-      {:ok, sockets} ->
+      {:ok, _socket_pid} ->
         :ok = broadcast_from(state, {:ok, :dispatch, ref})
-        {:noreply, %{state | sockets: sockets}, state.window_ms}
-      {:error, reason, sockets} ->
+        {:noreply, state, state.window_ms}
+      {:error, reason} ->
         :ok = broadcast_from(state, {:error, :dispatch, reason, ref})
-        {:noreply, %{state | sockets: sockets}, state.window_ms}
+        {:noreply, state, state.window_ms}
+      :ignore ->
+        :ok = broadcast_from(state, {:error, :dispatch, :ignore, ref})
+        {:noreply, state, state.window_ms}
     end
   end
 
@@ -83,13 +86,15 @@ defmodule Phoenix.Transports.LongPoller.Server do
     end
     {:noreply, %{state | buffer: buffer}, state.window_ms}
   end
-  def handle_info({:socket_broadcast, message = %Message{}}, %{sockets: sockets} = state) do
-    sockets = case Transport.dispatch_broadcast(sockets, message) do
-      {:ok, socks} -> socks
-      {:error, _reason, socks} -> socks
-    end
 
-    {:noreply, %{state | sockets: sockets}, state.window_ms}
+  def handle_info({:put_socket, topic, socket_pid}, %{sockets: sockets} = state) do
+    new_sockets = HashDict.put(sockets, topic, socket_pid)
+    {:noreply, %{state | sockets: new_sockets}, state.window_ms}
+  end
+
+  def handle_info({:delete_socket, topic}, %{sockets: sockets} = state) do
+    new_sockets = HashDict.delete(sockets, topic)
+    {:noreply, %{state | sockets: new_sockets}, state.window_ms}
   end
 
   def handle_info({:subscribe, ref}, state) do

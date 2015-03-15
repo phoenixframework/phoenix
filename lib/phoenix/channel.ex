@@ -254,7 +254,7 @@ defmodule Phoenix.Channel do
   Sends Dict, JSON serializable message to socket.
   """
   def reply(socket, event, message) when is_map(message) do
-    send socket.pid, {:socket_reply, %Message{
+    send socket.adapter_pid, {:socket_reply, %Message{
       topic: socket.topic,
       event: event,
       payload: message
