@@ -246,8 +246,7 @@ defmodule Mix.Tasks.Phoenix.New do
   ## Helpers
 
   defp ask_and_run(question, command, args) do
-    if System.find_executable(command) &&
-       Mix.shell.yes?("\n" <> question) do
+    if System.find_executable(command) && Mix.shell.yes?("\n" <> question) do
       exec = command <> " " <> args
       Mix.shell.info [:green, "* running ", :reset, exec]
       Task.async(fn ->
