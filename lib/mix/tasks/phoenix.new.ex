@@ -181,7 +181,7 @@ defmodule Mix.Tasks.Phoenix.New do
     task = binding[:brunch] &&
            ask_and_run("Install brunch.io dependencies?", "npm", "install")
 
-    unless task do
+    if binding[:brunch] && !task do
       Mix.shell.info """
 
       Brunch was setup for static assets, but node deps were not
@@ -246,8 +246,7 @@ defmodule Mix.Tasks.Phoenix.New do
   ## Helpers
 
   defp ask_and_run(question, command, args) do
-    if System.find_executable(command) &&
-       Mix.shell.yes?("\n" <> question) do
+    if System.find_executable(command) && Mix.shell.yes?("\n" <> question) do
       exec = command <> " " <> args
       Mix.shell.info [:green, "* running ", :reset, exec]
       Task.async(fn ->
