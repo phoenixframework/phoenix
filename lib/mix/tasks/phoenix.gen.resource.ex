@@ -20,6 +20,20 @@ defmodule Mix.Tasks.Phoenix.Gen.Resource do
     * a migration file for the repository
     * default CRUD templates in web/templates
 
+  ## Attributes
+
+  The resource fields are given using `name:type` syntax
+  where type are the types supported by Ecto. Ommitting
+  the type makes it default to `:string`:
+
+      mix phoenix.gen.resource User users name age:integer
+
+  Furthermore an array type can also be given if it is
+  supported by your database, although it requires the
+  type of the underlying array element to be given too:
+
+      mix phoenix.gen.resource User users nicknames:array:string
+
   ## Namespaced resources
 
   Resources can be namespaced, for such, it is just necessary
@@ -30,7 +44,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Resource do
   """
   def run([singular,plural|attrs]) do
     if String.contains?(plural, ":"), do: raise_with_help
-      
+
     base      = Mix.Phoenix.base
     scoped    = Naming.camelize(singular)
     path      = Naming.underscore(scoped)
@@ -74,7 +88,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Resource do
     raise_with_help
   end
 
-  defp raise_with_help do 
+  defp raise_with_help do
     Mix.raise """
     mix phoenix.gen.resource expects both singular and plural names
     of the generated resource followed by any number of attributes:
@@ -93,31 +107,24 @@ defmodule Mix.Tasks.Phoenix.Gen.Resource do
 
   defp split_attrs(attrs) do
     Enum.map attrs, fn attr ->
-      case String.split(attr, ":", parts: 2) do
-        [key, value] -> {String.to_atom(key), String.to_atom(value)}
-        [key]        -> {String.to_atom(key), :string}
+      case String.split(attr, ":", parts: 3) do
+        [key, comp, value] -> {String.to_atom(key), {String.to_atom(comp), String.to_atom(value)}}
+        [key, value]       -> {String.to_atom(key), String.to_atom(value)}
+        [key]              -> {String.to_atom(key), :string}
       end
     end
   end
 
   defp types(attrs) do
     Enum.into attrs, %{}, fn
-      {k, :uuid}     -> {k, Ecto.UUID}
-      {k, :date}     -> {k, Ecto.Date}
-      {k, :time}     -> {k, Ecto.Time}
-      {k, :datetime} -> {k, Ecto.DateTime}
-      {k, :text}     -> {k, :string}
-      {k, v} ->
-        if Code.ensure_loaded?(Ecto.Type) and not Ecto.Type.primitive?(v) do
-          Mix.raise "Unknown type `#{v}` for field `#{k}` given to resource generator"
-        else
-          {k, v}
-        end
+      {k, {c, v}} -> {k, {c, value_to_type(v)}}
+      {k, v}      -> {k, value_to_type(v)}
     end
   end
 
   defp inputs(attrs) do
     Enum.into attrs, %{}, fn
+      {k, {_, _}}    -> {k, nil}
       {k, :integer}  -> {k, :number_input}
       {k, :float}    -> {k, :number_input}
       {k, :decimal}  -> {k, :number_input}
@@ -133,6 +140,19 @@ defmodule Mix.Tasks.Phoenix.Gen.Resource do
     Enum.into attrs, %{}, fn
       {k, :boolean}  -> {k, ", default: false"}
       {k, _}         -> {k, ""}
+    end
+  end
+
+  defp value_to_type(:text), do: :string
+  defp value_to_type(:uuid), do: Ecto.UUID
+  defp value_to_type(:date), do: Ecto.Date
+  defp value_to_type(:time), do: Ecto.Time
+  defp value_to_type(:datetime), do: Ecto.DateTime
+  defp value_to_type(v) do
+    if Code.ensure_loaded?(Ecto.Type) and not Ecto.Type.primitive?(v) do
+      Mix.raise "Unknown type `#{v}` given to resource generator"
+    else
+      v
     end
   end
 
