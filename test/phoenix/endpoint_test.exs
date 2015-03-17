@@ -2,7 +2,7 @@ defmodule Phoenix.EndpointTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
-  @config [url: [host: "example.com"],
+  @config [url: [host: "example.com", path: "/api"],
            server: false,
            pubsub: [adapter: Phoenix.PubSub.PG2, name: :endpoint_pub]]
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
@@ -22,13 +22,17 @@ defmodule Phoenix.EndpointTest do
   end
 
   test "has reloadable configuration" do
-    assert Endpoint.config(:url) == [host: "example.com"]
-    assert Endpoint.url("/") == "http://example.com/"
+    assert Endpoint.config(:url) == [host: "example.com", path: "/api"]
+    assert Endpoint.url == "http://example.com"
 
     config = put_in(@config[:url][:port], 1234)
     assert Endpoint.config_change([{Endpoint, config}], []) == :ok
-    assert Endpoint.config(:url) == [host: "example.com", port: 1234]
-    assert Endpoint.url("/") == "http://example.com:1234/"
+    assert Endpoint.config(:url) == [host: "example.com", path: "/api", port: 1234]
+    assert Endpoint.url == "http://example.com:1234"
+  end
+
+  test "sets script name when using path" do
+    assert Endpoint.call(conn(:get, "/"), []).script_name == ~w"api"
   end
 
   test "static_path/1 with and without caching" do
@@ -37,21 +41,21 @@ defmodule Phoenix.EndpointTest do
     # Old timestamp
     old_stat = File.stat!(file)
     old_vsn  = static_vsn(old_stat)
-    assert Endpoint.static_path("/images/phoenix.png") == "/images/phoenix.png?vsn=#{old_vsn}"
+    assert Endpoint.static_path("/images/phoenix.png") == "/api/images/phoenix.png?vsn=#{old_vsn}"
 
     # New timestamp
     File.touch!(file)
     new_stat = File.stat!(file)
     new_vsn  = static_vsn(new_stat)
-    assert Endpoint.static_path("/images/phoenix.png") == "/images/phoenix.png?vsn=#{new_vsn}"
+    assert Endpoint.static_path("/images/phoenix.png") == "/api/images/phoenix.png?vsn=#{new_vsn}"
 
     # Now with cache enabled
     config = put_in(@config[:cache_static_lookup], true)
     assert Endpoint.config_change([{Endpoint, config}], []) == :ok
 
-    assert Endpoint.static_path("/images/phoenix.png") == "/images/phoenix.png?vsn=#{new_vsn}"
+    assert Endpoint.static_path("/images/phoenix.png") == "/api/images/phoenix.png?vsn=#{new_vsn}"
     File.touch!(file, old_stat.mtime)
-    assert Endpoint.static_path("/images/phoenix.png") == "/images/phoenix.png?vsn=#{new_vsn}"
+    assert Endpoint.static_path("/images/phoenix.png") == "/api/images/phoenix.png?vsn=#{new_vsn}"
   end
 
   test "injects pubsub broadcast with configured server" do

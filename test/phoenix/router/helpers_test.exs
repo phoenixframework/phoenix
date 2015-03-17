@@ -17,7 +17,7 @@ defmodule Phoenix.Router.HelpersTest do
 
     assert extract_defhelper(route, 1) == String.strip """
     def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
-      script(conn_or_endpoint, path(("" <> "/foo") <> "/" <> to_param(bar), params, ["bar"]))
+      path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> to_param(bar), params, ["bar"]))
     end
     """
   end
@@ -33,7 +33,7 @@ defmodule Phoenix.Router.HelpersTest do
 
     assert extract_defhelper(route, 1) == String.strip """
     def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
-      script(conn_or_endpoint, path(("" <> "/foo") <> "/" <> Enum.join(bar, "/"), params, ["bar"]))
+      path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> Enum.join(bar, "/"), params, ["bar"]))
     end
     """
   end
@@ -83,8 +83,14 @@ defmodule Phoenix.Router.HelpersTest do
     get "/", PageController, :root, as: :page
   end
 
-  def url(path) do
-    "https://example.com" <> path
+  # Emulate regular endpoint functions
+
+  def url do
+    "https://example.com"
+  end
+
+  def path(path) do
+    path
   end
 
   def static_path(path) do
@@ -250,8 +256,8 @@ defmodule Phoenix.Router.HelpersTest do
 
   test "helpers module generates a url helper" do
     conn = conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
-    assert Helpers.url(conn, "/foo/bar") == "https://example.com/foo/bar"
-    assert Helpers.url(__MODULE__, "/foo/bar") == "https://example.com/foo/bar"
+    assert Helpers.url(conn) == "https://example.com"
+    assert Helpers.url(__MODULE__) == "https://example.com"
   end
 
   ## Others
@@ -280,30 +286,50 @@ defmodule Phoenix.Router.HelpersTest do
 
   ## Script name
 
-  def conn_with_script_name do
+  defmodule ScriptName do
+    def url do
+      "https://example.com"
+    end
+
+    def path(path) do
+      "/api" <> path
+    end
+
+    def static_path(path) do
+      "/api" <> path
+    end
+  end
+
+  def conn_with_script_name(script_name \\ ~w(api)) do
     conn = conn(:get, "/")
-           |> put_private(:phoenix_endpoint, __MODULE__)
-    put_in conn.script_name, ~w(api)
+           |> put_private(:phoenix_endpoint, ScriptName)
+    put_in conn.script_name, script_name
   end
 
   test "paths use script name" do
+    assert Helpers.page_path(ScriptName, :root) == "/api/"
     assert Helpers.page_path(conn_with_script_name(), :root) == "/api/"
+    assert Helpers.post_path(ScriptName, :show, 5) == "/api/posts/5"
     assert Helpers.post_path(conn_with_script_name(), :show, 5) == "/api/posts/5"
   end
 
   test "urls use script name" do
+    assert Helpers.page_url(ScriptName, :root) ==
+           "https://example.com/api/"
     assert Helpers.page_url(conn_with_script_name(), :root) ==
            "https://example.com/api/"
 
+    assert Helpers.post_url(ScriptName, :show, 5) ==
+           "https://example.com/api/posts/5"
     assert Helpers.post_url(conn_with_script_name(), :show, 5) ==
            "https://example.com/api/posts/5"
   end
 
-  test "static uses script name" do
-    assert Helpers.static_path(conn_with_script_name(), "/images/foo.png") ==
+  test "static does not use script name" do
+    assert Helpers.static_path(conn_with_script_name(~w(foo)), "/images/foo.png") ==
            "/api/images/foo.png"
 
-    assert Helpers.static_url(conn_with_script_name(), "/images/foo.png") ==
+    assert Helpers.static_url(conn_with_script_name(~w(foo)), "/images/foo.png") ==
            "https://example.com/api/images/foo.png"
   end
 end

@@ -106,7 +106,7 @@ defmodule Phoenix.Endpoint.Adapter do
      reloadable_paths: ["web"],
      secret_key_base: nil,
      server: Application.get_env(:phoenix, :serve_endpoints, false),
-     url: [host: "localhost"],
+     url: [host: "localhost", path: "/"],
 
      # Supervisor config
      pubsub: [],
@@ -167,9 +167,9 @@ defmodule Phoenix.Endpoint.Adapter do
       {:ok, %File.Stat{type: :regular, mtime: mtime, size: size}} ->
         key = if endpoint.config(:cache_static_lookup), do: :cache, else: :stale
         vsn = {size, mtime} |> :erlang.phash2() |> Integer.to_string(16)
-        {key, path <> "?vsn=" <> vsn}
+        {key, endpoint.path(path <> "?vsn=" <> vsn)}
       _ ->
-        {:stale, path}
+        {:stale, endpoint.path(path)}
     end
   end
 

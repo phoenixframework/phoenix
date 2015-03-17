@@ -29,36 +29,52 @@ defmodule Phoenix.Router.Helpers do
       unquote(ast)
 
       @doc """
-      Generates a URL for the given path considering the connection data or
-      Endpoint provided.
+      Generates the connection/endpoint base URL without any path information.
       """
-      def url(%Conn{private: private}, path) do
-        private.phoenix_endpoint.url(path)
+      def url(%Conn{private: private}) do
+        private.phoenix_endpoint.url
       end
-      def url(endpoint, path) when is_atom(endpoint) do
-        endpoint.url(path)
+      def url(endpoint) when is_atom(endpoint) do
+        endpoint.url
       end
 
       @doc """
-      Generates path to a static asset given its file path. It expects either a
-      conn or an Endpoint.
+      Generates the path information including any necessary prefix.
+      """
+      def path(%{script_name: []}, path) do
+        path
+      end
+
+      def path(%{script_name: [_|_] = script}, path) do
+        "/" <> Enum.join(script, "/") <> path
+      end
+
+      def path(endpoint, path) do
+        endpoint.path(path)
+      end
+
+      @doc """
+      Generates path to a static asset given its file path.
+
+      It expects either a conn or an endpoint.
       """
       def static_path(%Conn{private: private} = conn, path) do
-        script(conn, static_path(private.phoenix_endpoint, path))
+        private.phoenix_endpoint.static_path(path)
       end
       def static_path(endpoint, path) when is_atom(endpoint) do
         endpoint.static_path(path)
       end
 
       @doc """
-      Generates url to a static asset given its file path. It expects either a
-      conn or an Endpoint.
+      Generates url to a static asset given its file path.
+
+      It expects either a conn or an endpoint.
       """
       def static_url(%Conn{private: private} = conn, path) do
-        url(private.phoenix_endpoint, static_path(conn, path))
+        static_url(private.phoenix_endpoint, path)
       end
       def static_url(endpoint, path) do
-        url(endpoint, static_path(endpoint, path))
+        endpoint.url <> endpoint.static_path(path)
       end
 
       # Functions used by generated helpers
@@ -67,19 +83,11 @@ defmodule Phoenix.Router.Helpers do
       defp to_param(bin) when is_binary(bin), do: bin
       defp to_param(oth), do: Phoenix.Param.to_param(oth)
 
-      defp script(%{script_name: [_|_] = script}, path) do
-        "/" <> Enum.join(script, "/") <> path
-      end
-
-      defp script(_, path) do
-        path
-      end
-
-      defp path(segments, [], _reserved) do
+      defp segments(segments, [], _reserved) do
         segments
       end
 
-      defp path(segments, query, reserved) do
+      defp segments(segments, query, reserved) do
         dict = for {k, v} <- query,
                not (k = to_string(k)) in reserved,
                do: {k, v}
@@ -116,7 +124,7 @@ defmodule Phoenix.Router.Helpers do
       end
 
       def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(action), unquote_splicing(vars), params) do
-        script(conn_or_endpoint, path(unquote(segs), params, unquote(bins)))
+        path(conn_or_endpoint, segments(unquote(segs), params, unquote(bins)))
       end
 
       def unquote(:"#{helper}_url")(conn_or_endpoint, unquote(action), unquote_splicing(vars)) do
@@ -124,7 +132,7 @@ defmodule Phoenix.Router.Helpers do
       end
 
       def unquote(:"#{helper}_url")(conn_or_endpoint, unquote(action), unquote_splicing(vars), params) do
-        url(conn_or_endpoint, unquote(:"#{helper}_path")(conn_or_endpoint, unquote(action), unquote_splicing(vars), params))
+        url(conn_or_endpoint) <> unquote(:"#{helper}_path")(conn_or_endpoint, unquote(action), unquote_splicing(vars), params)
       end
     end
   end

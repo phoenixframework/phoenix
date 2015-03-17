@@ -105,14 +105,16 @@ defmodule Phoenix.Endpoint do
       task automatically sets this to `true`.
 
     * `:url` - configuration for generating URLs throughout the app.
-      Accepts the `:host`, `:scheme` and `:port` options. Defaults to:
+      Accepts the `:host`, `:scheme`, `:path` and `:port` options. All
+      keys except the `:path` one can be changed at runtime. Defaults to:
 
-          [host: "localhost"]
+          [host: "localhost", path: "/"]
 
-      The `:port` options requires either an integer, string, or `{:system, "ENV_VAR"}`.
-      When given a tuple like `{:system, "PORT"}`, the port will be referenced
-      from `System.get_env("PORT")` at runtime as a workaround for releases where
-      environment specific information is loaded only at compile-time.
+      The `:port` options requires either an integer, string, or
+      `{:system, "ENV_VAR"}`. When given a tuple like `{:system, "PORT"}`,
+      the port will be referenced from `System.get_env("PORT")` at runtime
+      as a workaround for releases where environment specific information
+      is loaded only at compile-time.
 
     * `:watchers` - a set of watchers to run alongside your server. It
       expects a list of tuples containing the executable and its arguments.
@@ -249,10 +251,12 @@ defmodule Phoenix.Endpoint do
         opts
       end
 
-      def call(conn, opts) do
+      def call(conn, _opts) do
         conn = put_in conn.secret_key_base, config(:secret_key_base)
-        conn = Plug.Conn.put_private conn, :phoenix_endpoint, __MODULE__
-        phoenix_endpoint_pipeline(conn, opts)
+        conn
+        |> Plug.Conn.put_private(:phoenix_endpoint, __MODULE__)
+        |> put_script_name()
+        |> phoenix_endpoint_pipeline()
       end
 
       defoverridable [init: 1, call: 2]
@@ -294,13 +298,31 @@ defmodule Phoenix.Endpoint do
       end
 
       @doc """
-      Generates a URL for the given path based on the
-      `:url` configuration for the endpoint.
+      Generates the endpoint base URL without any path information.
       """
-      def url(path) do
+      def url do
         Phoenix.Config.cache(__MODULE__,
           :__phoenix_url__,
-          &Phoenix.Endpoint.Adapter.url/1) <> path
+          &Phoenix.Endpoint.Adapter.url/1)
+      end
+
+      @doc """
+      Generates the path information including any necessary prefix.
+      """
+      script_name = var!(config)[:url][:path]
+
+      if script_name == "/" do
+        def path(path), do: path
+
+        defp put_script_name(conn) do
+          conn
+        end
+      else
+        def path(path), do: unquote(script_name) <> path
+
+        defp put_script_name(conn) do
+          update_in conn.script_name, &(&1 ++ unquote(Plug.Router.Utils.split(script_name)))
+        end
       end
 
       @doc """
@@ -321,7 +343,7 @@ defmodule Phoenix.Endpoint do
     {conn, body} = Plug.Builder.compile(plugs)
 
     quote do
-      defp phoenix_endpoint_pipeline(unquote(conn), _), do: unquote(body)
+      defp phoenix_endpoint_pipeline(unquote(conn)), do: unquote(body)
     end
   end
 
