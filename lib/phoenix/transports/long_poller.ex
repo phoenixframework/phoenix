@@ -30,7 +30,17 @@ defmodule Phoenix.Transports.LongPoller do
   alias Phoenix.Channel.Transport
 
   plug :check_origin
+  plug :allow_origin
+  plug :default_content_type
+  plug Plug.Parsers, parsers: [:json], json_decoder: Poison
   plug :action
+
+  @doc """
+  Responds to pre-flight CORS requests with Allow-Origin-* headers.
+  """
+  def options(conn, _params) do
+    send_resp(conn, :ok, "")
+  end
 
   @doc """
   Listens for `%Phoenix.Socket.Message{}`'s from `Phoenix.LongPoller.Server`.
@@ -55,13 +65,13 @@ defmodule Phoenix.Transports.LongPoller do
     receive do
       {:messages, msgs, ^ref} ->
         :ok = ack(conn, priv_topic, msgs)
-        json(conn, %{messages: msgs, token: conn.params["token"], sig: conn.params["sig"]})
+        status_json(conn, %{messages: msgs, token: conn.params["token"], sig: conn.params["sig"]})
     after
       timeout_window_ms(conn) ->
         :ok = ack(conn, priv_topic, [])
         conn
         |> put_status(:no_content)
-        |> json(%{token: conn.params["token"], sig: conn.params["sig"]})
+        |> status_json(%{token: conn.params["token"], sig: conn.params["sig"]})
     end
   end
 
@@ -70,7 +80,7 @@ defmodule Phoenix.Transports.LongPoller do
 
     conn
     |> put_status(:gone)
-    |> json(%{token: priv_topic, sig: sig})
+    |> status_json(%{token: priv_topic, sig: sig})
   end
 
   @doc """
@@ -82,7 +92,7 @@ defmodule Phoenix.Transports.LongPoller do
   def publish(conn, message) do
     case resume_session(conn) do
       {:ok, conn, priv_topic}     -> dispatch_publish(conn, message, priv_topic)
-      {:error, conn, :terminated} -> conn |> put_status(:gone) |> json(%{})
+      {:error, conn, :terminated} -> conn |> put_status(:gone) |> status_json(%{})
     end
   end
 
@@ -90,8 +100,8 @@ defmodule Phoenix.Transports.LongPoller do
     msg = Message.from_map!(message)
 
     case dispatch(conn, priv_topic, msg) do
-      :ok               -> conn |> put_status(:ok) |> json(%{})
-      {:error, _reason} -> conn |> put_status(:unauthorized) |> json(%{})
+      :ok               -> conn |> put_status(:ok) |> status_json(%{})
+      {:error, _reason} -> conn |> put_status(:unauthorized) |> status_json(%{})
     end
   end
 
@@ -193,7 +203,7 @@ defmodule Phoenix.Transports.LongPoller do
   end
 
   defp check_origin(conn, _opts) do
-    Transport.check_origin(conn)
+    Transport.check_origin(conn, send: &status_json(&1, %{}))
   end
 
   defp sign(conn, priv_topic) do
@@ -218,5 +228,33 @@ defmodule Phoenix.Transports.LongPoller do
     crypto_opts = get_in(endpoint_module(conn).config(:transports), [:longpoller_crypto])
 
     Plug.Crypto.KeyGenerator.generate(conn.secret_key_base, key, crypto_opts)
+  end
+
+  defp allow_origin(conn, _opts) do
+    headers = get_req_header(conn, "access-control-request-headers") |> Enum.join(", ")
+
+    conn
+    |> put_resp_header("access-control-allow-origin", "*")
+    |> put_resp_header("access-control-allow-headers", headers)
+    |> put_resp_header("access-control-allow-methods", "get, post, options")
+    |> put_resp_header("access-control-max-age", "3600")
+  end
+
+  # XDomainRequest doesn't allow you to set request headers so manually set
+  # Content-Type and run the JSON parser plug again
+  defp default_content_type(conn, _opts) do
+    if get_req_header(conn, "content-type") == [] do
+      update_in(conn.req_headers, &[{"content-type", "application/json"}|&1])
+    else
+      conn
+    end
+  end
+
+  defp status_json(conn, map) do
+    status = Plug.Conn.Status.code(conn.status || 200)
+    map = Map.put(map, :status, status)
+    conn
+    |> put_status(:ok)
+    |> json(map)
   end
 end

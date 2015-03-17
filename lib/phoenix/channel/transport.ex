@@ -214,15 +214,21 @@ defmodule Phoenix.Channel.Transport do
   configured it will return the given `Plug.Conn`. Otherwise a 403 Forbidden
   response will be send and the connection halted.
   """
-  def check_origin(conn) do
+  def check_origin(conn, opts \\ []) do
+    import Plug.Conn
+
     endpoint = Phoenix.Controller.endpoint_module(conn)
     allowed_origins = Dict.get(endpoint.config(:transports), :origins)
-    origin = Plug.Conn.get_req_header(conn, "origin") |> List.first
+    origin = get_req_header(conn, "origin") |> List.first
+
+    send = opts[:send] || &send_resp(&1)
 
     if origin_allowed?(origin, allowed_origins) do
       conn
     else
-      Plug.Conn.send_resp(conn, :forbidden, "") |> Plug.Conn.halt
+      resp(conn, :forbidden, "")
+      |> send.()
+      |> halt
     end
   end
 
