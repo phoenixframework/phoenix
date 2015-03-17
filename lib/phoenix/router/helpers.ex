@@ -43,8 +43,8 @@ defmodule Phoenix.Router.Helpers do
       Generates path to a static asset given its file path. It expects either a
       conn or an Endpoint.
       """
-      def static_path(%Conn{private: private}, path) do
-        static_path(private.phoenix_endpoint, path)
+      def static_path(%Conn{private: private} = conn, path) do
+        script(conn, static_path(private.phoenix_endpoint, path))
       end
       def static_path(endpoint, path) when is_atom(endpoint) do
         endpoint.static_path(path)
@@ -54,8 +54,8 @@ defmodule Phoenix.Router.Helpers do
       Generates url to a static asset given its file path. It expects either a
       conn or an Endpoint.
       """
-      def static_url(%Conn{private: private}, path) do
-        static_url(private.phoenix_endpoint, path)
+      def static_url(%Conn{private: private} = conn, path) do
+        url(private.phoenix_endpoint, static_path(conn, path))
       end
       def static_url(endpoint, path) do
         url(endpoint, static_path(endpoint, path))
@@ -67,11 +67,19 @@ defmodule Phoenix.Router.Helpers do
       defp to_param(bin) when is_binary(bin), do: bin
       defp to_param(oth), do: Phoenix.Param.to_param(oth)
 
-      defp to_path(segments, [], _reserved) do
+      defp script(%{script_name: [_|_] = script}, path) do
+        "/" <> Enum.join(script, "/") <> path
+      end
+
+      defp script(_, path) do
+        path
+      end
+
+      defp path(segments, [], _reserved) do
         segments
       end
 
-      defp to_path(segments, query, reserved) do
+      defp path(segments, query, reserved) do
         dict = for {k, v} <- query,
                not (k = to_string(k)) in reserved,
                do: {k, v}
@@ -108,7 +116,7 @@ defmodule Phoenix.Router.Helpers do
       end
 
       def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(action), unquote_splicing(vars), params) do
-        to_path(unquote(segs), params, unquote(bins))
+        script(conn_or_endpoint, path(unquote(segs), params, unquote(bins)))
       end
 
       def unquote(:"#{helper}_url")(conn_or_endpoint, unquote(action), unquote_splicing(vars)) do
