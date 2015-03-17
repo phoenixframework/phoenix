@@ -105,7 +105,8 @@ defmodule Phoenix.HTML.Form do
       they were sent as part of a previous request
 
     * `:hidden` - a keyword list of fields that are required for
-      submitting the form behind the scenes as hidden inputs
+      submitting the form behind the scenes as hidden inputs. This
+      information will be used by upcoming nested forms
 
     * `:options` - a copy of the options given when creating the
       form via `form_for/4` without any form data specific key

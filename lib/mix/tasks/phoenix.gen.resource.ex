@@ -106,7 +106,13 @@ defmodule Mix.Tasks.Phoenix.Gen.Resource do
       {k, :date}     -> {k, Ecto.Date}
       {k, :time}     -> {k, Ecto.Time}
       {k, :datetime} -> {k, Ecto.DateTime}
-      {k, v}         -> {k, v}
+      {k, :text}     -> {k, :string}
+      {k, v} ->
+        if Code.ensure_loaded?(Ecto.Type) and not Ecto.Type.primitive?(v) do
+          Mix.raise "Unknown type `#{v}` for field `#{k}` given to resource generator"
+        else
+          {k, v}
+        end
     end
   end
 
