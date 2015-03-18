@@ -223,11 +223,27 @@ defmodule Phoenix.HTML.Form do
   @doc """
   Generates a textarea input.
 
+  All given options are forwarded to the underlying input,
+  default values are provided for id, name and textarea
+  content if possible.
+
   ## Examples
 
       # Assuming form contains a User model
       textarea(form, :description)
       #=> <textarea id="user_description" name="user[description]"></textarea>
+
+  ## New lines
+
+  Notice the generated textarea includes a new line after
+  the opening tag. This is because the HTML spec says new
+  lines after tags must be ignored and all major browser
+  implementations do that.
+
+  So in order to avoid new lines provided by the user
+  from being ignored when the form is resubmitted, we
+  automatically add a new line before the text area
+  value.
   """
   def textarea(form, field, opts \\ []) do
     opts =
@@ -236,7 +252,7 @@ defmodule Phoenix.HTML.Form do
       |> Keyword.put_new(:name, name_from(form, field))
 
     {value, opts} = Keyword.pop(opts, :value, value_from(form, field) || "")
-    content_tag(:textarea, value, opts)
+    content_tag(:textarea, safe_concat("\n", value), opts)
   end
 
   @doc """

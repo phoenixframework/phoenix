@@ -79,21 +79,21 @@ defmodule Phoenix.HTML.FormTest do
 
   test "textarea/3" do
     assert textarea(:search, :key) ==
-           {:safe, ~s(<textarea id="search_key" name="search[key]"></textarea>)}
+           {:safe, ~s(<textarea id="search_key" name="search[key]">\n</textarea>)}
 
     assert textarea(:search, :key) ==
-           {:safe, ~s(<textarea id="search_key" name="search[key]"></textarea>)}
+           {:safe, ~s(<textarea id="search_key" name="search[key]">\n</textarea>)}
 
     assert textarea(:search, :key, id: "key", name: "search[key][]") ==
-           {:safe, ~s(<textarea id="key" name="search[key][]"></textarea>)}
+           {:safe, ~s(<textarea id="key" name="search[key][]">\n</textarea>)}
   end
 
   test "textarea/3 with form" do
     assert with_form(&textarea(&1, :key)) ==
-           {:safe, ~s(<textarea id="search_key" name="search[key]">value</textarea>)}
+           {:safe, ~s(<textarea id="search_key" name="search[key]">\nvalue</textarea>)}
 
     assert with_form(&textarea(&1, :key, value: "foo", id: "key", name: "search[key][]")) ==
-           {:safe, ~s(<textarea id="key" name="search[key][]">foo</textarea>)}
+           {:safe, ~s(<textarea id="key" name="search[key][]">\nfoo</textarea>)}
   end
 
   ## number_input/3
