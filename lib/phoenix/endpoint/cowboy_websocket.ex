@@ -53,7 +53,6 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
     {:shutdown, req, state}
   end
   def websocket_info(:hibernate, req, {handler, state}) do
-    :ok = handler.ws_hibernate(state)
     {:ok, req, {handler, state}, :hibernate}
   end
   def websocket_info(message, req, {handler, state}) do

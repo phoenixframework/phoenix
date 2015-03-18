@@ -22,6 +22,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   alias Phoenix.Socket.Message
   alias Phoenix.Channel.Transport
   alias Phoenix.Transports.LongPoller
+  alias Phoenix.PubSub
 
   @doc """
   Starts the Server.
@@ -49,7 +50,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
               priv_topic: priv_topic,
               client_ref: nil}
 
-    :ok = Phoenix.PubSub.subscribe(state.pubsub_server, self, state.priv_topic, link: true)
+    :ok = PubSub.subscribe(state.pubsub_server, self, state.priv_topic, link: true)
     {:ok, state, state.window_ms}
   end
 
@@ -151,13 +152,14 @@ defmodule Phoenix.Transports.LongPoller.Server do
   @doc """
   Handles forwarding arbitrary Elixir messages back to listening client
   """
+  # TODO figure out if dispatch_leave is still needed
   def terminate(reason, state) do
     :ok = Transport.dispatch_leave(state.sockets, reason)
     :ok
   end
 
   defp broadcast_from(state, msg) do
-    Phoenix.PubSub.broadcast_from(state.pubsub_server, self, state.priv_topic, msg)
+    PubSub.broadcast_from(state.pubsub_server, self, state.priv_topic, msg)
   end
 
   defp publish_reply(msg, state) do

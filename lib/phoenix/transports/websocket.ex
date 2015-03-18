@@ -42,8 +42,10 @@ defmodule Phoenix.Transports.WebSocket do
   """
   def ws_init(conn) do
     Process.flag(:trap_exit, true)
-    serializer = Dict.fetch!(endpoint_module(conn).config(:transports), :websocket_serializer)
-    timeout = Dict.fetch!(endpoint_module(conn).config(:transports), :websocket_timeout)
+    endpoint   = endpoint_module(conn)
+    serializer = Dict.fetch!(endpoint.config(:transports), :websocket_serializer)
+    timeout    = Dict.fetch!(endpoint.config(:transports), :websocket_timeout)
+
     {:ok, %{router: router_module(conn),
             pubsub_server: endpoint_module(conn).__pubsub_server__(),
             sockets: HashDict.new,
@@ -60,8 +62,7 @@ defmodule Phoenix.Transports.WebSocket do
 
     case Transport.dispatch(msg, state.sockets, self, state.router, state.pubsub_server, __MODULE__) do
       {:ok, socket_pid} ->
-        {:ok, %{state | sockets: HashDict.put(state.sockets, msg.topic, socket_pid),
-                  sockets_inverse: HashDict.put(state.sockets_inverse, socket_pid, msg.topic)}}
+        {:ok, put(state, msg.topic, socket_pid)}
       _ ->
         {:ok, state}
     end
@@ -71,8 +72,8 @@ defmodule Phoenix.Transports.WebSocket do
     case HashDict.get(state.sockets_inverse, socket_pid) do
       nil   -> {:ok, state}
       topic ->
-        new_state = %{state | sockets: HashDict.delete(state.sockets, topic),
-                              sockets_inverse: HashDict.delete(state.sockets_inverse, socket_pid)}
+        new_state = delete(state, topic, socket_pid)
+
         case reason do
           :normal ->
             {:reply, state.serializer.encode!(%Message{
@@ -88,25 +89,33 @@ defmodule Phoenix.Transports.WebSocket do
               payload: %{}
             }), new_state}
         end
-
     end
   end
 
-  def ws_info({:socket_reply, message = %Message{}}, %{serializer: serializer} = state) do
+  def ws_info({:socket_reply, message}, %{serializer: serializer} = state) do
     {:reply, serializer.encode!(message), state}
   end
 
   @doc """
   Called on WS close. Dispatches the `leave` event back through Transport layer.
   """
+  # TODO figure out if dispatch_leave is still needed
   def ws_terminate(reason, %{sockets: sockets}) do
     :ok = Transport.dispatch_leave(sockets, reason)
     :ok
   end
 
-  def ws_hibernate(_state), do: :ok
-
   defp check_origin(conn, _opts) do
     Transport.check_origin(conn)
+  end
+
+  defp put(state, topic, socket_pid) do
+    %{state | sockets: HashDict.put(state.sockets, topic, socket_pid),
+              sockets_inverse: HashDict.put(state.sockets_inverse, socket_pid, topic)}
+  end
+
+  defp delete(state, topic, socket_pid) do
+    %{state | sockets: HashDict.delete(state.sockets, topic),
+              sockets_inverse: HashDict.delete(state.sockets_inverse, socket_pid)}
   end
 end
