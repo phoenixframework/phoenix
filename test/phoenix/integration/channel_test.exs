@@ -284,13 +284,15 @@ defmodule Phoenix.Integration.ChannelTest do
     # create session
     resp = poll :get, "/ws/poll", %{}, %{}
     session = Map.take(resp.body, ["token", "sig"])
-    assert resp.status == 410
+    assert resp.body["status"] == 410
+    assert resp.status == 200
     # join
     resp = poll :post, "/ws/poll", session, %{
       "topic" => "rooms:lobby",
       "event" => "join",
       "payload" => %{}
     }
+    assert resp.body["status"] == 200
     assert resp.status == 200
     # poll
     resp = poll :post, "/ws/poll", session, %{
@@ -298,6 +300,7 @@ defmodule Phoenix.Integration.ChannelTest do
       "event" => "boom",
       "payload" => %{}
     }
+    assert resp.body["status"] == 200
     assert resp.status == 200
 
     resp = poll(:get, "/ws/poll", session)
@@ -310,20 +313,24 @@ defmodule Phoenix.Integration.ChannelTest do
     # create session
     resp = poll :get, "/ws/poll", %{}, %{}
     session = Map.take(resp.body, ["token", "sig"])
-    assert resp.status == 410
+    assert resp.body["status"] == 410
+    assert resp.status == 200
     # join
     resp = poll :post, "/ws/poll", session, %{
       "topic" => "rooms:lobby",
       "event" => "join",
       "payload" => %{}
     }
+    assert resp.body["status"] == 200
     assert resp.status == 200
+
     # poll
     resp = poll :post, "/ws/poll", session, %{
       "topic" => "rooms:lobby",
       "event" => "leave",
       "payload" => %{}
     }
+    assert resp.body["status"] == 200
     assert resp.status == 200
 
     resp = poll(:get, "/ws/poll", session)
