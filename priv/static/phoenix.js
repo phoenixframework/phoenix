@@ -1,1 +1,587 @@
-!function(){"use strict";var t="undefined"!=typeof window?window:global;if("function"!=typeof t.require){var n={},e={},o=function(t,n){return{}.hasOwnProperty.call(t,n)},i=function(t,n){var e,o,i=[];e=/^\.\.?(\/|$)/.test(n)?[t,n].join("/").split("/"):n.split("/");for(var s=0,r=e.length;r>s;s++)o=e[s],".."===o?i.pop():"."!==o&&""!==o&&i.push(o);return i.join("/")},s=function(t){return t.split("/").slice(0,-1).join("/")},r=function(n){return function(e){var o=s(n),r=i(o,e);return t.require(r,n)}},a=function(t,n){var o={id:t,exports:{}};return e[t]=o,n(o.exports,r(t),o),o.exports},c=function(t,s){var r=i(t,".");if(null==s&&(s="/"),o(e,r))return e[r].exports;if(o(n,r))return a(r,n[r]);var c=i(r,"./index");if(o(e,c))return e[c].exports;if(o(n,c))return a(c,n[c]);throw new Error('Cannot find module "'+t+'" from "'+s+'"')},u=function(t,e){if("object"==typeof t)for(var i in t)o(t,i)&&(n[i]=t[i]);else n[t]=e},h=function(){var t=[];for(var e in n)o(n,e)&&t.push(e);return t};t.require=c,t.require.define=u,t.require.register=u,t.require.list=h,t.require.brunch=!0}}(),require.define({phoenix:function(t){"use strict";var n=function(t,n){if(!(t instanceof n))throw new TypeError("Cannot call a class as a function")};t.__esModule=!0;var e={connecting:0,open:1,closing:2,closed:3},o=t.Channel=function(){function t(e,o,i,s){n(this,t),this.topic=e,this.message=o,this.callback=i,this.socket=s,this.bindings=null,this.reset()}return t.prototype.reset=function(){this.bindings=[]},t.prototype.on=function(t,n){this.bindings.push({event:t,callback:n})},t.prototype.isMember=function(t){return this.topic===t},t.prototype.off=function(t){this.bindings=this.bindings.filter(function(n){return n.event!==t})},t.prototype.trigger=function(t,n){this.bindings.filter(function(n){return n.event===t}).map(function(t){return t.callback(n)})},t.prototype.send=function(t,n){this.socket.send({topic:this.topic,event:t,payload:n})},t.prototype.leave=function(){var t=void 0===arguments[0]?{}:arguments[0];this.socket.leave(this.topic,t),this.reset()},t}(),i=(t.Socket=function(){function t(o){var s=void 0===arguments[1]?{}:arguments[1];n(this,t),this.states=e,this.stateChangeCallbacks={open:[],close:[],error:[],message:[]},this.flushEveryMs=50,this.reconnectTimer=null,this.reconnectAfterMs=5e3,this.heartbeatIntervalMs=3e4,this.channels=[],this.sendBuffer=[],this.transport=s.transport||window.WebSocket||i,this.heartbeatIntervalMs=s.heartbeatIntervalMs||this.heartbeatIntervalMs,this.logger=s.logger||function(){},this.longpoller_timeout=s.longpoller_timeout||2e4,this.endPoint=this.expandEndpoint(o),this.resetBufferTimer(),this.reconnect()}return t.prototype.protocol=function(){return location.protocol.match(/^https/)?"wss":"ws"},t.prototype.expandEndpoint=function(t){return"/"!==t.charAt(0)?t:"/"===t.charAt(1)?""+this.protocol()+":"+t:""+this.protocol()+"://"+location.host+t},t.prototype.close=function(t,n,e){this.conn&&(this.conn.onclose=function(){},n?this.conn.close(n,e||""):this.conn.close(),this.conn=null),t&&t()},t.prototype.reconnect=function(){var t=this;this.close(function(){t.conn=new t.transport(t.endPoint),t.conn.timeout=t.longpoller_timeout,t.conn.onopen=function(){return t.onConnOpen()},t.conn.onerror=function(n){return t.onConnError(n)},t.conn.onmessage=function(n){return t.onConnMessage(n)},t.conn.onclose=function(n){return t.onConnClose(n)}})},t.prototype.resetBufferTimer=function(){var t=this;clearTimeout(this.sendBufferTimer),this.sendBufferTimer=setTimeout(function(){return t.flushSendBuffer()},this.flushEveryMs)},t.prototype.log=function(t){this.logger(t)},t.prototype.onOpen=function(t){this.stateChangeCallbacks.open.push(t)},t.prototype.onClose=function(t){this.stateChangeCallbacks.close.push(t)},t.prototype.onError=function(t){this.stateChangeCallbacks.error.push(t)},t.prototype.onMessage=function(t){this.stateChangeCallbacks.message.push(t)},t.prototype.onConnOpen=function(){var t=this;clearInterval(this.reconnectTimer),this.conn.skipHeartbeat||(clearInterval(this.heartbeatTimer),this.heartbeatTimer=setInterval(function(){return t.sendHeartbeat()},this.heartbeatIntervalMs)),this.rejoinAll(),this.stateChangeCallbacks.open.forEach(function(t){return t()})},t.prototype.onConnClose=function(t){var n=this;this.log("WS close:"),this.log(t),clearInterval(this.reconnectTimer),clearInterval(this.heartbeatTimer),this.reconnectTimer=setInterval(function(){return n.reconnect()},this.reconnectAfterMs),this.stateChangeCallbacks.close.forEach(function(n){return n(t)})},t.prototype.onConnError=function(t){this.log("WS error:"),this.log(t),this.stateChangeCallbacks.error.forEach(function(n){return n(t)})},t.prototype.connectionState=function(){switch(this.conn&&this.conn.readyState){case this.states.connecting:return"connecting";case this.states.open:return"open";case this.states.closing:return"closing";default:return"closed"}},t.prototype.isConnected=function(){return"open"===this.connectionState()},t.prototype.rejoinAll=function(){var t=this;this.channels.forEach(function(n){return t.rejoin(n)})},t.prototype.rejoin=function(t){t.reset(),this.send({topic:t.topic,event:"join",payload:t.message}),t.callback(t)},t.prototype.join=function(t,n,e){var i=new o(t,n,e,this);this.channels.push(i),this.isConnected()&&this.rejoin(i)},t.prototype.leave=function(t){var n=void 0===arguments[1]?{}:arguments[1];this.send({topic:t,event:"leave",payload:n}),this.channels=this.channels.filter(function(n){return!n.isMember(t)})},t.prototype.send=function(t){var n=this,e=function(){return n.conn.send(JSON.stringify(t))};this.isConnected()?e():this.sendBuffer.push(e)},t.prototype.sendHeartbeat=function(){this.send({topic:"phoenix",event:"heartbeat",payload:{}})},t.prototype.flushSendBuffer=function(){this.isConnected()&&this.sendBuffer.length>0&&(this.sendBuffer.forEach(function(t){return t()}),this.sendBuffer=[]),this.resetBufferTimer()},t.prototype.onConnMessage=function(t){this.log("message received:"),this.log(t);var n=JSON.parse(t.data),e=n.topic,o=n.event,i=n.payload;this.channels.filter(function(t){return t.isMember(e)}).forEach(function(t){return t.trigger(o,i)}),this.stateChangeCallbacks.message.forEach(function(t){t(e,o,i)})},t}(),t.LongPoller=function(){function t(o){n(this,t),this.retryInMs=5e3,this.endPoint=null,this.token=null,this.sig=null,this.skipHeartbeat=!0,this.onopen=function(){},this.onerror=function(){},this.onmessage=function(){},this.onclose=function(){},this.states=e,this.upgradeEndpoint=this.normalizeEndpoint(o),this.pollEndpoint=this.upgradeEndpoint+(/\/$/.test(o)?"poll":"/poll"),this.readyState=this.states.connecting,this.poll()}return t.prototype.normalizeEndpoint=function(t){return t.replace("ws://","http://").replace("wss://","https://")},t.prototype.endpointURL=function(){return this.pollEndpoint+("?token="+encodeURIComponent(this.token)+"&sig="+encodeURIComponent(this.sig))},t.prototype.closeAndRetry=function(){this.close(),this.readyState=this.states.connecting},t.prototype.ontimeout=function(){this.onerror("timeout"),this.closeAndRetry()},t.prototype.poll=function(){var t=this;(this.readyState===this.states.open||this.readyState===this.states.connecting)&&s.request("GET",this.endpointURL(),"application/json",null,this.timeout,this.ontimeout.bind(this),function(n){if(n){var e=n.status,o=n.token,i=n.sig,s=n.messages;t.token=o,t.sig=i}else var e=0;switch(e){case 200:s.forEach(function(n){return t.onmessage({data:JSON.stringify(n)})}),t.poll();break;case 204:t.poll();break;case 410:t.readyState=t.states.open,t.onopen(),t.poll();break;case 0:case 500:t.onerror(),t.closeAndRetry();break;default:throw"unhandled poll status "+e}})},t.prototype.send=function(t){var n=this;s.request("POST",this.endpointURL(),"application/json",t,this.timeout,this.onerror.bind(this,"timeout"),function(t){t&&200===t.status||n.onerror(status)})},t.prototype.close=function(){this.readyState=this.states.closed,this.onclose()},t}()),s=t.Ajax=function(){function t(){n(this,t)}return t.request=function(t,n,e,o,i,s,r){if(window.XDomainRequest){var a=new XDomainRequest;this.xdomainRequest(a,t,n,o,i,s,r)}else{var a=window.XMLHttpRequest?new XMLHttpRequest:new ActiveXObject("Microsoft.XMLHTTP");this.xhrRequest(a,t,n,e,o,s,r)}},t.xdomainRequest=function(t,n,e,o,i,s,r){var a=this;t.timeout=i,t.open(n,e),t.onload=function(){var n=a.parseJSON(t.responseText);r&&r(n)},s&&(t.ontimeout=s),t.onprogress=function(){},t.send(o)},t.xhrRequest=function(t,n,e,o,i,s,r,a){var c=this;t.timeout=s,t.open(n,e,!0),t.setRequestHeader("Content-Type",o),t.onerror=function(){a&&a(null)},t.onreadystatechange=function(){if(t.readyState===c.states.complete&&a){var n=c.parseJSON(t.responseText);a(n)}},r&&(t.ontimeout=r),t.send(i)},t.parseJSON=function(t){return t&&""!==t?JSON.parse(t):null},t}();s.states={complete:4}}}),"object"!=typeof window||window.Phoenix||(window.Phoenix=require("phoenix"));
+(function(/*! Brunch !*/) {
+  'use strict';
+
+  var globals = typeof window !== 'undefined' ? window : global;
+  if (typeof globals.require === 'function') return;
+
+  var modules = {};
+  var cache = {};
+
+  var has = function(object, name) {
+    return ({}).hasOwnProperty.call(object, name);
+  };
+
+  var expand = function(root, name) {
+    var results = [], parts, part;
+    if (/^\.\.?(\/|$)/.test(name)) {
+      parts = [root, name].join('/').split('/');
+    } else {
+      parts = name.split('/');
+    }
+    for (var i = 0, length = parts.length; i < length; i++) {
+      part = parts[i];
+      if (part === '..') {
+        results.pop();
+      } else if (part !== '.' && part !== '') {
+        results.push(part);
+      }
+    }
+    return results.join('/');
+  };
+
+  var dirname = function(path) {
+    return path.split('/').slice(0, -1).join('/');
+  };
+
+  var localRequire = function(path) {
+    return function(name) {
+      var dir = dirname(path);
+      var absolute = expand(dir, name);
+      return globals.require(absolute, path);
+    };
+  };
+
+  var initModule = function(name, definition) {
+    var module = {id: name, exports: {}};
+    cache[name] = module;
+    definition(module.exports, localRequire(name), module);
+    return module.exports;
+  };
+
+  var require = function(name, loaderPath) {
+    var path = expand(name, '.');
+    if (loaderPath == null) loaderPath = '/';
+
+    if (has(cache, path)) return cache[path].exports;
+    if (has(modules, path)) return initModule(path, modules[path]);
+
+    var dirIndex = expand(path, './index');
+    if (has(cache, dirIndex)) return cache[dirIndex].exports;
+    if (has(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
+
+    throw new Error('Cannot find module "' + name + '" from '+ '"' + loaderPath + '"');
+  };
+
+  var define = function(bundle, fn) {
+    if (typeof bundle === 'object') {
+      for (var key in bundle) {
+        if (has(bundle, key)) {
+          modules[key] = bundle[key];
+        }
+      }
+    } else {
+      modules[bundle] = fn;
+    }
+  };
+
+  var list = function() {
+    var result = [];
+    for (var item in modules) {
+      if (has(modules, item)) {
+        result.push(item);
+      }
+    }
+    return result;
+  };
+
+  globals.require = require;
+  globals.require.define = define;
+  globals.require.register = define;
+  globals.require.list = list;
+  globals.require.brunch = true;
+})();
+require.define({'phoenix': function(exports, require, module){ "use strict";
+
+var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
+
+exports.__esModule = true;
+var SOCKET_STATES = { connecting: 0, open: 1, closing: 2, closed: 3 };
+
+var Channel = exports.Channel = (function () {
+  function Channel(topic, message, callback, socket) {
+    _classCallCheck(this, Channel);
+
+    this.topic = topic;
+    this.message = message;
+    this.callback = callback;
+    this.socket = socket;
+    this.bindings = null;
+
+    this.reset();
+  }
+
+  Channel.prototype.reset = function reset() {
+    this.bindings = [];
+  };
+
+  Channel.prototype.on = function on(event, callback) {
+    this.bindings.push({ event: event, callback: callback });
+  };
+
+  Channel.prototype.isMember = function isMember(topic) {
+    return this.topic === topic;
+  };
+
+  Channel.prototype.off = function off(event) {
+    this.bindings = this.bindings.filter(function (bind) {
+      return bind.event !== event;
+    });
+  };
+
+  Channel.prototype.trigger = function trigger(triggerEvent, msg) {
+    this.bindings.filter(function (bind) {
+      return bind.event === triggerEvent;
+    }).map(function (bind) {
+      return bind.callback(msg);
+    });
+  };
+
+  Channel.prototype.send = function send(event, payload) {
+    this.socket.send({ topic: this.topic, event: event, payload: payload });
+  };
+
+  Channel.prototype.leave = function leave() {
+    var message = arguments[0] === undefined ? {} : arguments[0];
+
+    this.socket.leave(this.topic, message);
+    this.reset();
+  };
+
+  return Channel;
+})();
+
+var Socket = exports.Socket = (function () {
+
+  // Initializes the Socket
+  //
+  // endPoint - The string WebSocket endpoint, ie, "ws://example.com/ws",
+  //                                               "wss://example.com"
+  //                                               "/ws" (inherited host & protocol)
+  // opts - Optional configuration
+  //   transport - The Websocket Transport, ie WebSocket, Phoenix.LongPoller.
+  //               Defaults to WebSocket with automatic LongPoller fallback.
+  //   heartbeatIntervalMs - The millisecond interval to send a heartbeat message
+  //   logger - The optional function for specialized logging, ie:
+  //            `logger: (msg) -> console.log(msg)`
+  //   longpoller_timeout - The maximum timeout of a long poll AJAX request.
+  //                        Defaults to 20s (double the server long poll timer).
+  //
+  // For IE8 support use an ES5-shim (https://github.com/es-shims/es5-shim)
+  //
+
+  function Socket(endPoint) {
+    var opts = arguments[1] === undefined ? {} : arguments[1];
+
+    _classCallCheck(this, Socket);
+
+    this.states = SOCKET_STATES;
+    this.stateChangeCallbacks = { open: [], close: [], error: [], message: [] };
+    this.flushEveryMs = 50;
+    this.reconnectTimer = null;
+    this.reconnectAfterMs = 5000;
+    this.heartbeatIntervalMs = 30000;
+    this.channels = [];
+    this.sendBuffer = [];
+
+    this.transport = opts.transport || window.WebSocket || LongPoller;
+    this.heartbeatIntervalMs = opts.heartbeatIntervalMs || this.heartbeatIntervalMs;
+    this.logger = opts.logger || function () {}; // noop
+    this.longpoller_timeout = opts.longpoller_timeout || 20000;
+    this.endPoint = this.expandEndpoint(endPoint);
+    this.resetBufferTimer();
+  }
+
+  Socket.prototype.protocol = function protocol() {
+    return location.protocol.match(/^https/) ? "wss" : "ws";
+  };
+
+  Socket.prototype.expandEndpoint = function expandEndpoint(endPoint) {
+    if (endPoint.charAt(0) !== "/") {
+      return endPoint;
+    }
+    if (endPoint.charAt(1) === "/") {
+      return "" + this.protocol() + ":" + endPoint;
+    }
+
+    return "" + this.protocol() + "://" + location.host + "" + endPoint;
+  };
+
+  Socket.prototype.disconnect = function disconnect(callback, code, reason) {
+    if (this.conn) {
+      this.conn.onclose = function () {}; // noop
+      if (code) {
+        this.conn.close(code, reason || "");
+      } else {
+        this.conn.close();
+      }
+      this.conn = null;
+    }
+    callback && callback();
+  };
+
+  Socket.prototype.connect = function connect() {
+    var _this = this;
+
+    this.disconnect(function () {
+      _this.conn = new _this.transport(_this.endPoint);
+      _this.conn.timeout = _this.longpoller_timeout;
+      _this.conn.onopen = function () {
+        return _this.onConnOpen();
+      };
+      _this.conn.onerror = function (error) {
+        return _this.onConnError(error);
+      };
+      _this.conn.onmessage = function (event) {
+        return _this.onConnMessage(event);
+      };
+      _this.conn.onclose = function (event) {
+        return _this.onConnClose(event);
+      };
+    });
+  };
+
+  Socket.prototype.resetBufferTimer = function resetBufferTimer() {
+    var _this = this;
+
+    clearTimeout(this.sendBufferTimer);
+    this.sendBufferTimer = setTimeout(function () {
+      return _this.flushSendBuffer();
+    }, this.flushEveryMs);
+  };
+
+  // Logs the message. Override `this.logger` for specialized logging. noops by default
+
+  Socket.prototype.log = function log(msg) {
+    this.logger(msg);
+  };
+
+  // Registers callbacks for connection state change events
+  //
+  // Examples
+  //
+  //    socket.onError (error) -> alert("An error occurred")
+  //
+
+  Socket.prototype.onOpen = function onOpen(callback) {
+    this.stateChangeCallbacks.open.push(callback);
+  };
+
+  Socket.prototype.onClose = function onClose(callback) {
+    this.stateChangeCallbacks.close.push(callback);
+  };
+
+  Socket.prototype.onError = function onError(callback) {
+    this.stateChangeCallbacks.error.push(callback);
+  };
+
+  Socket.prototype.onMessage = function onMessage(callback) {
+    this.stateChangeCallbacks.message.push(callback);
+  };
+
+  Socket.prototype.onConnOpen = function onConnOpen() {
+    var _this = this;
+
+    clearInterval(this.reconnectTimer);
+    if (!this.conn.skipHeartbeat) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = setInterval(function () {
+        return _this.sendHeartbeat();
+      }, this.heartbeatIntervalMs);
+    }
+    this.rejoinAll();
+    this.stateChangeCallbacks.open.forEach(function (callback) {
+      return callback();
+    });
+  };
+
+  Socket.prototype.onConnClose = function onConnClose(event) {
+    var _this = this;
+
+    this.log("WS close:");
+    this.log(event);
+    clearInterval(this.reconnectTimer);
+    clearInterval(this.heartbeatTimer);
+    this.reconnectTimer = setInterval(function () {
+      return _this.connect();
+    }, this.reconnectAfterMs);
+    this.stateChangeCallbacks.close.forEach(function (callback) {
+      return callback(event);
+    });
+  };
+
+  Socket.prototype.onConnError = function onConnError(error) {
+    this.log("WS error:");
+    this.log(error);
+    this.stateChangeCallbacks.error.forEach(function (callback) {
+      return callback(error);
+    });
+  };
+
+  Socket.prototype.connectionState = function connectionState() {
+    switch (this.conn && this.conn.readyState) {
+      case this.states.connecting:
+        return "connecting";
+      case this.states.open:
+        return "open";
+      case this.states.closing:
+        return "closing";
+      default:
+        return "closed";
+    }
+  };
+
+  Socket.prototype.isConnected = function isConnected() {
+    return this.connectionState() === "open";
+  };
+
+  Socket.prototype.rejoinAll = function rejoinAll() {
+    var _this = this;
+
+    this.channels.forEach(function (chan) {
+      return _this.rejoin(chan);
+    });
+  };
+
+  Socket.prototype.rejoin = function rejoin(chan) {
+    chan.reset();
+    this.send({ topic: chan.topic, event: "join", payload: chan.message });
+    chan.callback(chan);
+  };
+
+  Socket.prototype.join = function join(topic, message, callback) {
+    var chan = new Channel(topic, message, callback, this);
+    this.channels.push(chan);
+    if (this.isConnected()) {
+      this.rejoin(chan);
+    }
+  };
+
+  Socket.prototype.leave = function leave(topic) {
+    var message = arguments[1] === undefined ? {} : arguments[1];
+
+    this.send({ topic: topic, event: "leave", payload: message });
+    this.channels = this.channels.filter(function (c) {
+      return !c.isMember(topic);
+    });
+  };
+
+  Socket.prototype.send = function send(data) {
+    var _this = this;
+
+    var callback = function () {
+      return _this.conn.send(JSON.stringify(data));
+    };
+    if (this.isConnected()) {
+      callback();
+    } else {
+      this.sendBuffer.push(callback);
+    }
+  };
+
+  Socket.prototype.sendHeartbeat = function sendHeartbeat() {
+    this.send({ topic: "phoenix", event: "heartbeat", payload: {} });
+  };
+
+  Socket.prototype.flushSendBuffer = function flushSendBuffer() {
+    if (this.isConnected() && this.sendBuffer.length > 0) {
+      this.sendBuffer.forEach(function (callback) {
+        return callback();
+      });
+      this.sendBuffer = [];
+    }
+    this.resetBufferTimer();
+  };
+
+  Socket.prototype.onConnMessage = function onConnMessage(rawMessage) {
+    this.log("message received:");
+    this.log(rawMessage);
+
+    var _JSON$parse = JSON.parse(rawMessage.data);
+
+    var topic = _JSON$parse.topic;
+    var event = _JSON$parse.event;
+    var payload = _JSON$parse.payload;
+
+    this.channels.filter(function (chan) {
+      return chan.isMember(topic);
+    }).forEach(function (chan) {
+      return chan.trigger(event, payload);
+    });
+    this.stateChangeCallbacks.message.forEach(function (callback) {
+      callback(topic, event, payload);
+    });
+  };
+
+  return Socket;
+})();
+
+var LongPoller = exports.LongPoller = (function () {
+  function LongPoller(endPoint) {
+    _classCallCheck(this, LongPoller);
+
+    this.retryInMs = 5000;
+    this.endPoint = null;
+    this.token = null;
+    this.sig = null;
+    this.skipHeartbeat = true;
+    this.onopen = function () {}; // noop
+    this.onerror = function () {}; // noop
+    this.onmessage = function () {}; // noop
+    this.onclose = function () {}; // noop
+    this.states = SOCKET_STATES;
+    this.upgradeEndpoint = this.normalizeEndpoint(endPoint);
+    this.pollEndpoint = this.upgradeEndpoint + (/\/$/.test(endPoint) ? "poll" : "/poll");
+    this.readyState = this.states.connecting;
+
+    this.poll();
+  }
+
+  LongPoller.prototype.normalizeEndpoint = function normalizeEndpoint(endPoint) {
+    return endPoint.replace("ws://", "http://").replace("wss://", "https://");
+  };
+
+  LongPoller.prototype.endpointURL = function endpointURL() {
+    return this.pollEndpoint + ("?token=" + encodeURIComponent(this.token) + "&sig=" + encodeURIComponent(this.sig));
+  };
+
+  LongPoller.prototype.closeAndRetry = function closeAndRetry() {
+    this.close();
+    this.readyState = this.states.connecting;
+  };
+
+  LongPoller.prototype.ontimeout = function ontimeout() {
+    this.onerror("timeout");
+    this.closeAndRetry();
+  };
+
+  LongPoller.prototype.poll = function poll() {
+    var _this = this;
+
+    if (!(this.readyState === this.states.open || this.readyState === this.states.connecting)) {
+      return;
+    }
+
+    Ajax.request("GET", this.endpointURL(), "application/json", null, this.timeout, this.ontimeout.bind(this), function (resp) {
+      if (resp) {
+        var status = resp.status;
+        var token = resp.token;
+        var sig = resp.sig;
+        var messages = resp.messages;
+
+        _this.token = token;
+        _this.sig = sig;
+      } else {
+        var status = 0;
+      }
+
+      switch (status) {
+        case 200:
+          messages.forEach(function (msg) {
+            return _this.onmessage({ data: JSON.stringify(msg) });
+          });
+          _this.poll();
+          break;
+        case 204:
+          _this.poll();
+          break;
+        case 410:
+          _this.readyState = _this.states.open;
+          _this.onopen();
+          _this.poll();
+          break;
+        case 0:
+        case 500:
+          _this.onerror();
+          _this.closeAndRetry();
+          break;
+        default:
+          throw "unhandled poll status " + status;
+      }
+    });
+  };
+
+  LongPoller.prototype.send = function send(body) {
+    var _this = this;
+
+    Ajax.request("POST", this.endpointURL(), "application/json", body, this.timeout, this.onerror.bind(this, "timeout"), function (resp) {
+      if (!resp || resp.status !== 200) {
+        _this.onerror(status);
+      }
+    });
+  };
+
+  LongPoller.prototype.close = function close(code, reason) {
+    this.readyState = this.states.closed;
+    this.onclose();
+  };
+
+  return LongPoller;
+})();
+
+var Ajax = exports.Ajax = (function () {
+  function Ajax() {
+    _classCallCheck(this, Ajax);
+  }
+
+  Ajax.request = function request(method, endPoint, accept, body, timeout, ontimeout, callback) {
+    if (window.XDomainRequest) {
+      var req = new XDomainRequest(); // IE8, IE9
+      this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback);
+    } else {
+      var req = window.XMLHttpRequest ? new XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
+      new ActiveXObject("Microsoft.XMLHTTP"); // IE6, IE5
+      this.xhrRequest(req, method, endPoint, accept, body, ontimeout, callback);
+    }
+  };
+
+  Ajax.xdomainRequest = function xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback) {
+    var _this = this;
+
+    req.timeout = timeout;
+    req.open(method, endPoint);
+    req.onload = function () {
+      var response = _this.parseJSON(req.responseText);
+      callback && callback(response);
+    };
+    if (ontimeout) {
+      req.ontimeout = ontimeout;
+    }
+
+    // Work around bug in IE9 that requires an attached onprogress handler
+    req.onprogress = function () {};
+
+    req.send(body);
+  };
+
+  Ajax.xhrRequest = function xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback) {
+    var _this = this;
+
+    req.timeout = timeout;
+    req.open(method, endPoint, true);
+    req.setRequestHeader("Content-Type", accept);
+    req.onerror = function () {
+      callback && callback(null);
+    };
+    req.onreadystatechange = function () {
+      if (req.readyState === _this.states.complete && callback) {
+        var response = _this.parseJSON(req.responseText);
+        callback(response);
+      }
+    };
+    if (ontimeout) {
+      req.ontimeout = ontimeout;
+    }
+
+    req.send(body);
+  };
+
+  Ajax.parseJSON = function parseJSON(resp) {
+    return resp && resp !== "" ? JSON.parse(resp) : null;
+  };
+
+  return Ajax;
+})();
+
+Ajax.states = { complete: 4 };
+ }});
+if(typeof(window) === 'object' && !window.Phoenix){ window.Phoenix = require('phoenix') };
