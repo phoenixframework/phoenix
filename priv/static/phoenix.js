@@ -110,7 +110,12 @@ var Channel = exports.Channel = (function () {
   }
 
   Channel.prototype.rejoin = function rejoin() {
+    var _this = this;
+
     this.reset();
+    this.onError(function (reason) {
+      return _this.rejoin();
+    });
     this.socket.send({ topic: this.topic, event: "join", payload: this.message });
     this.callback(this);
   };
@@ -122,9 +127,9 @@ var Channel = exports.Channel = (function () {
   Channel.prototype.onError = function onError(callback) {
     var _this = this;
 
-    this.on("chan:error", function () {
-      callback();
-      _this.trigger("chan:close");
+    this.on("chan:error", function (reason) {
+      callback(reason);
+      _this.trigger("chan:close", "error");
     });
   };
 

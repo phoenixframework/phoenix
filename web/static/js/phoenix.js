@@ -13,6 +13,7 @@ export class Channel {
 
   rejoin(){
     this.reset()
+    this.onError( reason => this.rejoin() )
     this.socket.send({topic: this.topic, event: "join", payload: this.message})
     this.callback(this)
   }
@@ -20,9 +21,9 @@ export class Channel {
   onClose(callback){ this.on("chan:close", callback) }
 
   onError(callback){
-    this.on("chan:error", () => {
-      callback()
-      this.trigger("chan:close")
+    this.on("chan:error", reason => {
+      callback(reason)
+      this.trigger("chan:close", "error")
     })
   }
 
