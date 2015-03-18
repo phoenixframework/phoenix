@@ -303,7 +303,7 @@ export class Ajax {
       let req = window.XMLHttpRequest ?
                   new XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
                   new ActiveXObject("Microsoft.XMLHTTP") // IE6, IE5
-      this.xhrRequest(req, method, endPoint, accept, body, ontimeout, callback)
+      this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback)
     }
   }
 
