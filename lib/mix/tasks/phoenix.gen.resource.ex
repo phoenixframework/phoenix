@@ -129,6 +129,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Resource do
       {k, :float}    -> {k, :number_input}
       {k, :decimal}  -> {k, :number_input}
       {k, :boolean}  -> {k, :checkbox}
+      {k, :text}     -> {k, :textarea}
       {k, :date}     -> {k, :date_select}
       {k, :time}     -> {k, :time_select}
       {k, :datetime} -> {k, :datetime_select}
