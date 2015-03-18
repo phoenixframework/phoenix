@@ -250,7 +250,7 @@ defmodule Phoenix.HTML.FormTest do
     assert content =~ ~s(<option selected="selected" value="foo">foo</option>)
   end
 
-test "select/4 with form" do
+  test "select/4 with form" do
     assert with_form(&select(&1, :key, ~w(value novalue), default: "novalue")) ==
            {:safe, ~s(<select id="search_key" name="search[key]">) <>
                    ~s(<option selected="selected" value="value">value</option>) <>
