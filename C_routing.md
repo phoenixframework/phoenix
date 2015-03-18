@@ -215,10 +215,10 @@ iex(3)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :show, 17, admin: true, 
 "/users/17?admin=true&active=false"
 ```
 
-What if we need a full url instead of a path? Again, Phoenix has an answer. In order to get a full url, we pipe the result of the `user_path/2` function into `Endpoint.url/1`.
+What if we need a full url instead of a path? Just replace `_path` by `_url`:
 
 ```elixir
-iex(3)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :index) |> HelloPhoenix.Endpoint.url
+iex(3)> HelloPhoenix.Router.Helpers.user_url(Endpoint, :index)
 "http://localhost:4000/users"
 ```
 Application endpoints will have their own guide soon. For now, think of them as the entity that handles requests just up to the point where the router takes over. That includes starting the app/server, applying configuration, and applying the plugs common to all requests.
