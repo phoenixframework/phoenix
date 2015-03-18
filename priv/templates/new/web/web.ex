@@ -8,8 +8,12 @@ defmodule <%= application_module %>.Web do
       use <%= application_module %>.Web, :controller
       use <%= application_module %>.Web, :view
 
-  Keep the definitions in this module short and clean,
-  mostly focused on imports, uses and aliases.
+  The definitions below will be executed for every view,
+  controller, etc, so keep them short and clean, focused
+  on imports, uses and aliases.
+  
+  Do NOT define functions inside the quoted expressions
+  below.
   """
 
   def view do
