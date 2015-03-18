@@ -11,7 +11,7 @@ defmodule Phoenix.Integration.ChannelTest do
   alias __MODULE__.Endpoint
 
   @port 5807
-  @window_ms 100
+  @window_ms 200
   @pubsub_window_ms 1000
   @ensure_window_timeout_ms @window_ms * 2
 
@@ -43,6 +43,10 @@ defmodule Phoenix.Integration.ChannelTest do
 
     def handle_in("new:msg", message, socket) do
       broadcast! socket, "new:msg", message
+    end
+
+    def handle_in("boom", _message, _socket) do
+      raise "boom"
     end
   end
 
@@ -94,9 +98,20 @@ defmodule Phoenix.Integration.ChannelTest do
 
     WebsocketClient.leave(sock, "rooms:lobby", %{})
     assert_receive %Message{event: "you:left", payload: %{"message" => "bye!"}}
+    assert_receive %Message{event: "chan:close", payload: %{}}
 
     WebsocketClient.send_event(sock, "rooms:lobby", "new:msg", %{body: "hi!"})
     refute_receive %Message{}
+  end
+
+  test "websocket adapter sends chan:error if a channel server abnormally exits" do
+    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
+
+    WebsocketClient.join(sock, "rooms:lobby", %{})
+    assert_receive %Message{event: "join", payload: %{"status" => "connected"}}
+
+    WebsocketClient.send_event(sock, "rooms:lobby", "boom", %{})
+    assert_receive %Message{event: "chan:error", payload: %{}, topic: "rooms:lobby"}
   end
 
   test "adapter handles refuses websocket events that haven't joined" do
@@ -262,5 +277,56 @@ defmodule Phoenix.Integration.ChannelTest do
 
     conn = call(Endpoint, :get, "/ws/poll", [], headers: [{"origin", "http://notallowed.com"}])
     refute conn.status == 410
+  end
+
+  test "longpoller adapter sends chan:error if a channel server abnormally exits" do
+    # create session
+    resp = poll :get, "/ws/poll", %{}, %{}
+    session = Map.take(resp.body, ["token", "sig"])
+    assert resp.status == 410
+    # join
+    resp = poll :post, "/ws/poll", session, %{
+      "topic" => "rooms:lobby",
+      "event" => "join",
+      "payload" => %{}
+    }
+    assert resp.status == 200
+    # poll
+    resp = poll :post, "/ws/poll", session, %{
+      "topic" => "rooms:lobby",
+      "event" => "boom",
+      "payload" => %{}
+    }
+    assert resp.status == 200
+
+    resp = poll(:get, "/ws/poll", session)
+    [_join_msg, chan_error] = resp.body["messages"]
+    assert chan_error ==
+      %{"event" => "chan:error", "payload" => %{}, "topic" => "rooms:lobby"}
+  end
+
+  test "longpoller adapter sends chan:close if a channel server normally exits" do
+    # create session
+    resp = poll :get, "/ws/poll", %{}, %{}
+    session = Map.take(resp.body, ["token", "sig"])
+    assert resp.status == 410
+    # join
+    resp = poll :post, "/ws/poll", session, %{
+      "topic" => "rooms:lobby",
+      "event" => "join",
+      "payload" => %{}
+    }
+    assert resp.status == 200
+    # poll
+    resp = poll :post, "/ws/poll", session, %{
+      "topic" => "rooms:lobby",
+      "event" => "leave",
+      "payload" => %{}
+    }
+    assert resp.status == 200
+
+    resp = poll(:get, "/ws/poll", session)
+    [_join_msg, _you_left_msg, chan_close] = resp.body["messages"]
+    assert chan_close == %{"event" => "chan:close", "payload" => %{}, "topic" => "rooms:lobby"}
   end
 end

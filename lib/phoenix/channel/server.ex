@@ -10,9 +10,6 @@ defmodule Phoenix.Channel.Server do
   Regular Elixir messages are forwarded to the socket channel's
   `handle_info/2` callback.
 
-  ## exits
-  Exists are trapped by default and the socket channel's `leave/2`
-  callback is triggered.
   """
 
   def start_link(socket, auth_payload) do
@@ -20,14 +17,10 @@ defmodule Phoenix.Channel.Server do
   end
 
   def init([socket, auth_payload]) do
-    Process.flag(:trap_exit, true)
-
     case socket.channel.join(socket.topic, auth_payload, socket) do
       {:ok, socket} ->
         {:ok, socket}
           socket = put_in(socket, [:pid], self)
-          Process.link(socket.adapter_pid)
-          send(socket.adapter_pid, {:put_socket, socket.topic, self})
           PubSub.subscribe(socket.pubsub_server, socket.pid, socket.topic, link: true)
 
           {:ok, socket}
@@ -75,22 +68,6 @@ defmodule Phoenix.Channel.Server do
     |> handle_result
   end
 
-  @doc """
-  Handles Socket termination.
-
-  If the socket shutdown normally with `{:leave, socket}`, the
-  `leave/2` callback has already been triggered, otherwise, we
-  notify the socket we are going down by invoke `leave/2`
-  """
-  def terminate(_reason, :left) do
-    :ok
-  end
-  def terminate(reason, socket) do
-    {:stop, :normal, :left} = leave_and_stop(reason, socket)
-
-    :ok
-  end
-
 
   defp handle_result({:ok, socket}), do: {:noreply, socket}
   defp handle_result({:leave, socket}), do: leave_and_stop(:normal, socket)
@@ -108,7 +85,6 @@ defmodule Phoenix.Channel.Server do
     {:ok, socket} = socket.channel.leave(reason, socket)
 
     PubSub.unsubscribe(socket.pubsub_server, socket.pid, socket.topic)
-    send socket.adapter_pid, {:delete_socket, socket.topic}
 
     {:stop, :normal, :left}
   end

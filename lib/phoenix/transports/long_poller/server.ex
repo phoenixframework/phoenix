@@ -43,8 +43,9 @@ defmodule Phoenix.Transports.LongPoller.Server do
     state = %{buffer: [],
               router: router,
               sockets: HashDict.new,
+              sockets_inverse: HashDict.new,
               window_ms: window_ms * 2,
-              pubsub_server: pubsub_server,
+              pubsub_server: Process.whereis(pubsub_server),
               priv_topic: priv_topic,
               client_ref: nil}
 
@@ -60,11 +61,17 @@ defmodule Phoenix.Transports.LongPoller.Server do
   @doc """
   Dispatches client `%Phoenix.Socket.Messages{}` back through Transport layer.
   """
-  def handle_info({:dispatch, message, ref}, state) do
-    message
+  def handle_info({:dispatch, msg, ref}, state) do
+    msg
     |> Transport.dispatch(state.sockets, self, state.router, state.pubsub_server, LongPoller)
     |> case do
-      {:ok, _socket_pid} ->
+      {:ok, socket_pid} ->
+        :ok = broadcast_from(state, {:ok, :dispatch, ref})
+
+        new_state = %{state | sockets: HashDict.put(state.sockets, msg.topic, socket_pid),
+                              sockets_inverse: HashDict.put(state.sockets_inverse, socket_pid, msg.topic)}
+        {:noreply, new_state, state.window_ms}
+      :ok ->
         :ok = broadcast_from(state, {:ok, :dispatch, ref})
         {:noreply, state, state.window_ms}
       {:error, reason} ->
@@ -79,22 +86,26 @@ defmodule Phoenix.Transports.LongPoller.Server do
   @doc """
   Forwards replied/broadcasted `%Phoenix.Socket.Message{}`s from Channels back to client.
   """
-  def handle_info({:socket_reply, message = %Message{}}, state) do
-    buffer = [message | state.buffer]
-    if state.client_ref do
-      :ok = broadcast_from(state, {:messages, Enum.reverse(buffer), state.client_ref})
+  def handle_info({:socket_reply, msg}, state) do
+    publish_reply(msg, state)
+  end
+
+  def handle_info({:EXIT, pub_pid, :shutdown}, %{pubsub_server: pub_pid} = state) do
+    {:stop, :pubsub_server_terminated, state}
+  end
+  def handle_info({:EXIT, socket_pid, reason}, state) do
+    case HashDict.get(state.sockets_inverse, socket_pid) do
+      nil   -> {:noreply, state, state.window_ms}
+      topic ->
+        new_state = %{state | sockets: HashDict.delete(state.sockets, topic),
+                              sockets_inverse: HashDict.delete(state.sockets_inverse, socket_pid)}
+        case reason do
+          :normal ->
+            publish_reply(%Message{topic: topic, event: "chan:close", payload: %{}}, new_state)
+          _other ->
+            publish_reply(%Message{topic: topic, event: "chan:error", payload: %{}}, new_state)
+        end
     end
-    {:noreply, %{state | buffer: buffer}, state.window_ms}
-  end
-
-  def handle_info({:put_socket, topic, socket_pid}, %{sockets: sockets} = state) do
-    new_sockets = HashDict.put(sockets, topic, socket_pid)
-    {:noreply, %{state | sockets: new_sockets}, state.window_ms}
-  end
-
-  def handle_info({:delete_socket, topic}, %{sockets: sockets} = state) do
-    new_sockets = HashDict.delete(sockets, topic)
-    {:noreply, %{state | sockets: new_sockets}, state.window_ms}
   end
 
   def handle_info({:subscribe, ref}, state) do
@@ -123,13 +134,8 @@ defmodule Phoenix.Transports.LongPoller.Server do
     {:noreply, %{state | buffer: buffer}, state.window_ms}
   end
 
-
   def handle_info(:timeout, state) do
     {:stop, :normal, state}
-  end
-
-  def handle_info({:EXIT, _pubsub_server, :shutdown}, state) do
-    {:stop, :pubsub_server_terminated, state}
   end
 
   @doc """
@@ -142,5 +148,14 @@ defmodule Phoenix.Transports.LongPoller.Server do
 
   defp broadcast_from(state, msg) do
     Phoenix.PubSub.broadcast_from(state.pubsub_server, self, state.priv_topic, msg)
+  end
+
+  defp publish_reply(msg, state) do
+    buffer = [msg | state.buffer]
+    if state.client_ref do
+      :ok = broadcast_from(state, {:messages, Enum.reverse(buffer), state.client_ref})
+    end
+
+    {:noreply, %{state | buffer: buffer}, state.window_ms}
   end
 end

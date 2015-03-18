@@ -41,11 +41,14 @@ defmodule Phoenix.Transports.WebSocket do
   Handles initalization of the websocket.
   """
   def ws_init(conn) do
+    Process.flag(:trap_exit, true)
     serializer = Dict.fetch!(endpoint_module(conn).config(:transports), :websocket_serializer)
     timeout = Dict.fetch!(endpoint_module(conn).config(:transports), :websocket_timeout)
     {:ok, %{router: router_module(conn),
             pubsub_server: endpoint_module(conn).__pubsub_server__(),
-            sockets: HashDict.new, serializer: serializer}, timeout}
+            sockets: HashDict.new,
+            sockets_inverse: HashDict.new,
+            serializer: serializer}, timeout}
   end
 
   @doc """
@@ -53,19 +56,40 @@ defmodule Phoenix.Transports.WebSocket do
   to Transport layer.
   """
   def ws_handle(opcode, payload, state) do
-    payload
-    |> state.serializer.decode!(opcode)
-    |> Transport.dispatch(state.sockets, self, state.router, state.pubsub_server, __MODULE__)
+    msg = state.serializer.decode!(payload, opcode)
 
-    state
+    case Transport.dispatch(msg, state.sockets, self, state.router, state.pubsub_server, __MODULE__) do
+      {:ok, socket_pid} ->
+        %{state | sockets: HashDict.put(state.sockets, msg.topic, socket_pid),
+                  sockets_inverse: HashDict.put(state.sockets_inverse, socket_pid, msg.topic)}
+      _ ->
+        state
+    end
   end
 
-  def ws_info({:put_socket, topic, socket_pid}, %{sockets: sockets} = state) do
-    %{state | sockets: HashDict.put(sockets, topic, socket_pid)}
-  end
+  def ws_info({:EXIT, socket_pid, reason}, state) do
+    case HashDict.get(state.sockets_inverse, socket_pid) do
+      nil   -> state
+      topic ->
+        case reason do
+          :normal ->
+            reply(self, state.serializer.encode!(%Message{
+              topic: topic,
+              event: "chan:close",
+              payload: %{}
+            }))
 
-  def ws_info({:delete_socket, topic}, %{sockets: sockets} = state) do
-    %{state | sockets: HashDict.delete(sockets, topic)}
+          _other ->
+            reply(self, state.serializer.encode!(%Message{
+              topic: topic,
+              event: "chan:error",
+              payload: %{}
+            }))
+        end
+
+        %{state | sockets: HashDict.delete(state.sockets, topic),
+                  sockets_inverse: HashDict.delete(state.sockets_inverse, socket_pid)}
+    end
   end
 
   def ws_info({:socket_reply, message = %Message{}}, %{serializer: serializer} = state) do

@@ -85,11 +85,7 @@ defmodule Phoenix.Channel.Transport do
                   channel: channel,
                   transport: transport}
 
-        case Phoenix.Channel.Supervisor.start_child(socket, payload) do
-          {:ok, :undefined} -> :ignore
-          {:ok, socket_pid} -> {:ok, socket_pid}
-          {:error, reason}  -> {:error, reason}
-        end
+        Phoenix.Channel.Server.start_link(socket, payload)
     end
   end
   def dispatch(nil, topic, _event, _payload, _adapter_pid, router, _pubsub_server, _transport) do
@@ -98,28 +94,13 @@ defmodule Phoenix.Channel.Transport do
   end
   def dispatch(socket_pid, _topic, event, payload, _adapter_pid, _router, _pubsub_server, _transport) do
     GenServer.cast(socket_pid, {:handle_in, event, payload})
-    {:ok, socket_pid}
+    :ok
   end
 
   defp log_ignore(topic, router) do
     Logger.debug fn -> "Ignoring unmatched topic \"#{topic}\" in #{inspect(router)}" end
     :ignore
   end
-
-  # @doc """
-  # When an Adapter receives `{:socket_broadcast, %Message{}}`, it dispatches to this
-  # function with its socket state.
-
-  # The message is routed to the intended channel's outgoing/3 callback.
-  # """
-  # def dispatch_broadcast(sockets, %Message{event: event, payload: payload} = msg) do
-  #   sockets
-  #   |> HashDict.get(msg.topic)
-  #   |> case do
-  #     nil        -> :ok
-  #     socket_pid -> GenServer.cast(socket_pid, {:handle_out, event, payload})
-  #   end
-  # end
 
   @doc """
   Whenever a remote client disconnects, the adapter must forward the event through
