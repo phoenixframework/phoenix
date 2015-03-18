@@ -282,7 +282,10 @@ export class LongPoller {
 
   send(body){
     Ajax.request("POST", this.endpointURL(), "application/json", body, this.timeout, this.onerror.bind(this, "timeout"), (resp) => {
-      if(!resp || resp.status !== 200){ this.onerror(status) }
+      if(!resp || resp.status !== 200){
+        this.onerror(status)
+        this.closeAndRetry()
+      }
     })
   }
 

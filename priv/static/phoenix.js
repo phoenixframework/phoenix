@@ -505,6 +505,7 @@ var LongPoller = exports.LongPoller = (function () {
     Ajax.request("POST", this.endpointURL(), "application/json", body, this.timeout, this.onerror.bind(this, "timeout"), function (resp) {
       if (!resp || resp.status !== 200) {
         _this.onerror(status);
+        _this.closeAndRetry();
       }
     });
   };
