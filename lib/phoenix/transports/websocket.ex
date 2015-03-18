@@ -60,41 +60,40 @@ defmodule Phoenix.Transports.WebSocket do
 
     case Transport.dispatch(msg, state.sockets, self, state.router, state.pubsub_server, __MODULE__) do
       {:ok, socket_pid} ->
-        %{state | sockets: HashDict.put(state.sockets, msg.topic, socket_pid),
-                  sockets_inverse: HashDict.put(state.sockets_inverse, socket_pid, msg.topic)}
+        {:ok, %{state | sockets: HashDict.put(state.sockets, msg.topic, socket_pid),
+                  sockets_inverse: HashDict.put(state.sockets_inverse, socket_pid, msg.topic)}}
       _ ->
-        state
+        {:ok, state}
     end
   end
 
   def ws_info({:EXIT, socket_pid, reason}, state) do
     case HashDict.get(state.sockets_inverse, socket_pid) do
-      nil   -> state
+      nil   -> {:ok, state}
       topic ->
+        new_state = %{state | sockets: HashDict.delete(state.sockets, topic),
+                              sockets_inverse: HashDict.delete(state.sockets_inverse, socket_pid)}
         case reason do
           :normal ->
-            reply(self, state.serializer.encode!(%Message{
+            {:reply, state.serializer.encode!(%Message{
               topic: topic,
               event: "chan:close",
               payload: %{}
-            }))
+            }), new_state}
 
           _other ->
-            reply(self, state.serializer.encode!(%Message{
+            {:reply, state.serializer.encode!(%Message{
               topic: topic,
               event: "chan:error",
               payload: %{}
-            }))
+            }), new_state}
         end
 
-        %{state | sockets: HashDict.delete(state.sockets, topic),
-                  sockets_inverse: HashDict.delete(state.sockets_inverse, socket_pid)}
     end
   end
 
   def ws_info({:socket_reply, message = %Message{}}, %{serializer: serializer} = state) do
-    reply(self, serializer.encode!(message))
-    state
+    {:reply, serializer.encode!(message), state}
   end
 
   @doc """
@@ -106,10 +105,6 @@ defmodule Phoenix.Transports.WebSocket do
   end
 
   def ws_hibernate(_state), do: :ok
-
-  defp reply(pid, msg) do
-    send(pid, {:reply, msg})
-  end
 
   defp check_origin(conn, _opts) do
     Transport.check_origin(conn)

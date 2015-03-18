@@ -90,9 +90,19 @@ defmodule Phoenix.Transports.LongPoller.Server do
     publish_reply(msg, state)
   end
 
+  @doc """
+  Crash if pubsub adapter goes down
+  """
   def handle_info({:EXIT, pub_pid, :shutdown}, %{pubsub_server: pub_pid} = state) do
     {:stop, :pubsub_server_terminated, state}
   end
+
+  @doc """
+  Trap channel process exits and notify client of close or error events
+
+  `:normal` exits indicate the channel shutdown gracefully from a `{:leave, socket}`
+   return. Any other exit reason is treated as an error.
+  """
   def handle_info({:EXIT, socket_pid, reason}, state) do
     case HashDict.get(state.sockets_inverse, socket_pid) do
       nil   -> {:noreply, state, state.window_ms}
