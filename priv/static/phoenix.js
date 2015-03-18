@@ -94,7 +94,6 @@ require.define({'phoenix': function(exports, require, module){ "use strict";
 
 var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
-exports.__esModule = true;
 var SOCKET_STATES = { connecting: 0, open: 1, closing: 2, closed: 3 };
 
 var Channel = exports.Channel = (function () {
@@ -530,7 +529,7 @@ var Ajax = exports.Ajax = (function () {
     } else {
       var req = window.XMLHttpRequest ? new XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
       new ActiveXObject("Microsoft.XMLHTTP"); // IE6, IE5
-      this.xhrRequest(req, method, endPoint, accept, body, ontimeout, callback);
+      this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback);
     }
   };
 
@@ -583,5 +582,6 @@ var Ajax = exports.Ajax = (function () {
 })();
 
 Ajax.states = { complete: 4 };
+exports.__esModule = true;
  }});
 if(typeof(window) === 'object' && !window.Phoenix){ window.Phoenix = require('phoenix') };
