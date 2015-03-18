@@ -221,6 +221,25 @@ defmodule Phoenix.HTML.Form do
   end
 
   @doc """
+  Generates a textarea input.
+
+  ## Examples
+
+      # Assuming form contains a User model
+      textarea(form, :description)
+      #=> <textarea id="user_description" name="user[description]"></textarea>
+  """
+  def textarea(form, field, opts \\ []) do
+    opts =
+      opts
+      |> Keyword.put_new(:id, id_from(form, field))
+      |> Keyword.put_new(:name, name_from(form, field))
+
+    {value, opts} = Keyword.pop(opts, :value, value_from(form, field) || "")
+    content_tag(:textarea, value, opts)
+  end
+
+  @doc """
   Generates a file input.
 
   It requires the given form to be configured with `multipart: true`

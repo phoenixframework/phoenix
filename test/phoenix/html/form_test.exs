@@ -75,6 +75,27 @@ defmodule Phoenix.HTML.FormTest do
            {:safe, ~s(<input id="key" name="search[key][]" type="text" value="foo">)}
   end
 
+  ## textarea/3
+
+  test "textarea/3" do
+    assert textarea(:search, :key) ==
+           {:safe, ~s(<textarea id="search_key" name="search[key]"></textarea>)}
+
+    assert textarea(:search, :key) ==
+           {:safe, ~s(<textarea id="search_key" name="search[key]"></textarea>)}
+
+    assert textarea(:search, :key, id: "key", name: "search[key][]") ==
+           {:safe, ~s(<textarea id="key" name="search[key][]"></textarea>)}
+  end
+
+  test "textarea/3 with form" do
+    assert with_form(&textarea(&1, :key)) ==
+           {:safe, ~s(<textarea id="search_key" name="search[key]">value</textarea>)}
+
+    assert with_form(&textarea(&1, :key, value: "foo", id: "key", name: "search[key][]")) ==
+           {:safe, ~s(<textarea id="key" name="search[key][]">foo</textarea>)}
+  end
+
   ## number_input/3
 
   test "number_input/3" do
@@ -250,7 +271,7 @@ defmodule Phoenix.HTML.FormTest do
     assert content =~ ~s(<option selected="selected" value="foo">foo</option>)
   end
 
-test "select/4 with form" do
+  test "select/4 with form" do
     assert with_form(&select(&1, :key, ~w(value novalue), default: "novalue")) ==
            {:safe, ~s(<select id="search_key" name="search[key]">) <>
                    ~s(<option selected="selected" value="value">value</option>) <>

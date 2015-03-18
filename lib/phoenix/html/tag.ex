@@ -198,7 +198,7 @@ defmodule Phoenix.HTML.Tag do
         "Hello"
       end
       <form action="/hello" method="post">...Hello...</form>
-    
+
   """
   def form_tag(action, options, do: block) do
     safe_concat [form_tag(action, options), block, safe("</form>")]
