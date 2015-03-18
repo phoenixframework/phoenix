@@ -1,85 +1,244 @@
-There are currently three built-in Phoenix-specific mix tasks available to us within a newly-generated application.
+There are currently a number of built-in Phoenix-specific and ecto-specific mix tasks available to us within a newly-generated application. We can also create our own application specific tasks.
+
+##Phoenix Specific Mix Tasks
 
 ```console
 $ mix help | grep -i phoenix
-mix phoenix.new       # Creates Phoenix application
-mix phoenix.routes    # Prints all routes
-mix phoenix.server    # Starts applications and their servers
+mix phoenix.gen.resource # Generates resource files
+mix phoenix.new          # Creates Phoenix application
+mix phoenix.routes       # Prints all routes
+mix phoenix.server       # Starts applications and their servers
 ```
 We have seen all of these at one point or another in the guides, but having all the information about them in one place seems like a good idea. And here we are.
 
-#### `mix phoenix.new`
+####`mix phoenix.new`
 
 This is how we tell Phoenix the framework to generate a new Phoenix application for us. We saw it early on in the [Up and Running Guide](http://www.phoenixframework.org/docs/up-and-running)
 
-We need to pass this task a name for our application, and a path so Phoenix knows where to create it. Conventionally, we use all lower-case letters with underscores for the name (snake case). We can use either a relative or absolute path for the second argument. The only requirement is that the path must be outside of Phoenix itself.
+We need to pass this task a path/name for our application so Phoenix knows where to create it. Conventionally, we use all lower-case letters with underscores for the name (snake case). We can use either a relative or absolute path. The only requirement is that the path must be outside of Phoenix itself.
 
 This relative path works.
 
 ```console
-$ mix phoenix.new task_tester ../task_tester
+$ mix phoenix.new ../task_tester
 * creating ../task_tester/.gitignore
+. . .
+```
+
+This absolute path works as well.
+
+```console
+$ mix phoenix.new task_tester /Users/lance/work/task_tester
+* creating /Users/lance/work/task_tester/.gitignore
+. . .
+```
+
+The `phoenix.new` task will also ask us if we want to install our mix dependencies.
+
+```console
+Install mix dependencies? [Yn] y
+* running mix deps.get
+```
+
+And it will ask if we want to install our brunch dependencies.
+
+```console
+Install brunch.io dependencies? [Yn] y
+* running npm install
+npm http GET https://registry.npmjs.org/clean-css-brunch
+. . .
+```
+
+If we don't want to use brunch.io as our static asset build sytem, we can pass `--no-brunch` to `phoenix.new`, and it won't prompt us to install brunch.io dependencies. It will let us know how to do so after the install, if we choose to do so.
+
+```console
+install mix dependencies? [Yn] y
+* running mix deps.get
+
+Brunch was setup for static assets, but node deps were not
+installed via npm. Installation instructions for nodejs,
+which includes npm, can be found at http://nodejs.org
+
+Install your brunch dependencies by running inside your app:
+
+$ npm install
+```
+
+Once all of our dependencies are installed, `phoenix.new` will tell us what our next steps are.
+
+```console
+We are all set! Run your Phoenix application:
+
+$ cd ../task_tester
+$ mix phoenix.server
+
+You can also run it inside IEx (Interactive Elixir) as:
+
+$ iex -S mix phoenix.server
+```
+
+By default `phoenix.new` will assume we want to use ecto for our models. If we don't want to use ecto in our application, we can use the `--no-ecto` flag.
+
+```console
+$ mix phoenix.new ../task_tester --no-ecto
+* creating /Users/lance/work/task_tester/.gitignore
+. . .
+```
+
+With the `--no-ecto` flag, Phoenix will not make either ecto or postgrex a dependency of our application, and it will not create a `repo.ex` file.
+
+By default, Phoenix will name our OTP application after the name we pass into `phoenix.new`. If we want, we can specify a different OTP application name with the `--app` flag.
+
+```console
+$  mix phoenix.new ../task_tester --app hello_phoenix
 * creating ../task_tester/README.md
 * creating ../task_tester/config/config.exs
 * creating ../task_tester/config/dev.exs
-* creating ../task_tester/config/locales/en.exs
 * creating ../task_tester/config/prod.exs
+* creating ../task_tester/config/prod.secret.exs
+* creating ../task_tester/config/test.exs
+* creating ../task_tester/lib/hello_phoenix.ex
+* creating ../task_tester/lib/hello_phoenix/endpoint.ex
+* creating ../task_tester/mix.exs
+* creating ../task_tester/test/hello_phoenix_test.exs
+* creating ../task_tester/test/test_helper.exs
+* creating ../task_tester/web/controllers/page_controller.ex
+* creating ../task_tester/web/router.ex
+* creating ../task_tester/web/templates/layout/application.html.eex
+* creating ../task_tester/web/templates/page/index.html.eex
+* creating ../task_tester/web/views/error_view.ex
+* creating ../task_tester/web/views/layout_view.ex
+* creating ../task_tester/web/views/page_view.ex
+* creating ../task_tester/web/web.ex
+* creating ../task_tester/lib/hello_phoenix/repo.ex
+* creating ../task_tester/.gitignore
+* creating ../task_tester/brunch-config.js
+* creating ../task_tester/package.json
+* creating ../task_tester/priv/static/images/phoenix.png
+* creating ../task_tester/web/static/css/app.scss
+* creating ../task_tester/web/static/js/app.js
+* creating ../task_tester/web/static/vendor/phoenix.js
+```
+
+If we look in the resulting `mix.exs` file, we will see that our project app name is `hello_phoenix`.
+
+```elixir
+defmodule HelloPhoenix.Mixfile do
+  use Mix.Project
+
+  def project do
+    [app: :hello_phoenix,
+    version: "0.0.1",
+. . .
+```
+
+A quick check will show that all of our module names are qualified with `HelloPhoenix`.
+
+```elixir
+defmodule HelloPhoenix.PageController do
+  use HelloPhoenix.Web, :controller
+. . .
+```
+
+We can also see that files related to the application as a whole - eg. files in `lib/` and the test seed file - have `hello_phoenix` in their names.
+
+```console
+* creating ../task_tester/lib/hello_phoenix.ex
+* creating ../task_tester/lib/hello_phoenix/endpoint.ex
+* creating ../task_tester/lib/hello_phoenix/repo.ex
+* creating ../task_tester/test/hello_phoenix_test.exs
+```
+
+If we only want to change the qualifying prefix for module names, we can do that with the `--module` flag. It's important to note that the value of the `--module` must look like a valid module name with proper capitalization. The task will throw an error if it doesn't.
+
+```console
+$  mix phoenix.new ../task_tester --module HelloPhoenix
+* creating ../task_tester/README.md
+* creating ../task_tester/config/config.exs
+* creating ../task_tester/config/dev.exs
+* creating ../task_tester/config/prod.exs
+* creating ../task_tester/config/prod.secret.exs
 * creating ../task_tester/config/test.exs
 * creating ../task_tester/lib/task_tester.ex
 * creating ../task_tester/lib/task_tester/endpoint.ex
 * creating ../task_tester/mix.exs
 * creating ../task_tester/test/task_tester_test.exs
 * creating ../task_tester/test/test_helper.exs
-* creating ../task_tester/web/channels/.gitkeep
 * creating ../task_tester/web/controllers/page_controller.ex
-* creating ../task_tester/web/models/.gitkeep
 * creating ../task_tester/web/router.ex
 * creating ../task_tester/web/templates/layout/application.html.eex
-* creating ../task_tester/web/templates/page/error.html.eex
 * creating ../task_tester/web/templates/page/index.html.eex
-* creating ../task_tester/web/templates/page/not_found.html.eex
-* creating ../task_tester/web/view.ex
 * creating ../task_tester/web/views/error_view.ex
 * creating ../task_tester/web/views/layout_view.ex
 * creating ../task_tester/web/views/page_view.ex
-* creating ../task_tester/priv/static/css/phoenix.css
+* creating ../task_tester/web/web.ex
+* creating ../task_tester/lib/task_tester/repo.ex
+* creating ../task_tester/.gitignore
+* creating ../task_tester/brunch-config.js
+* creating ../task_tester/package.json
 * creating ../task_tester/priv/static/images/phoenix.png
-* creating ../task_tester/priv/static/js/phoenix.js
+* creating ../task_tester/web/static/css/app.scss
+* creating ../task_tester/web/static/js/app.js
+* creating ../task_tester/web/static/vendor/phoenix.js
 ```
-This absolute path works as well.
+
+Notice that none of the files have `hello_phoenix` in their names. All filenames related to the application name are `task_tester`.
+
+If we look at the project app name in `mix.exs`, we see that it is `task_tester`, but all the module qualifying names begin with `HelloPhoenix`.
+
+```elixir
+defmodule HelloPhoenix.Mixfile do
+  use Mix.Project
+
+  def project do
+    [app: :task_tester,
+. . .
+```
+
+####`mix phoenix.gen.resource`
+
+Phoenix now offers the ability to generate all the code to stand up a complete resource - ecto migration, ecto model, controller with all the necessary actions, view, and templates. This can be a tremendous timesaver. Let's take a look at how to make this happen.
+
+The `phoenix.gen.resource` task takes a number of arguments, the module name of the model, the resource name, and a list of column_name:type attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
 
 ```console
-$ mix phoenix.new task_tester /Users/lance/work/task_tester
-* creating /Users/lance/work/task_tester/.gitignore
-* creating /Users/lance/work/task_tester/README.md
-* creating /Users/lance/work/task_tester/config/config.exs
-* creating /Users/lance/work/task_tester/config/dev.exs
-* creating /Users/lance/work/task_tester/config/locales/en.exs
-* creating /Users/lance/work/task_tester/config/prod.exs
-* creating /Users/lance/work/task_tester/config/test.exs
-* creating /Users/lance/work/task_tester/lib/task_tester.ex
-* creating /Users/lance/work/task_tester/lib/task_tester/endpoint.ex
-* creating /Users/lance/work/task_tester/mix.exs
-* creating /Users/lance/work/task_tester/test/task_tester_test.exs
-* creating /Users/lance/work/task_tester/test/test_helper.exs
-* creating /Users/lance/work/task_tester/web/channels/.gitkeep
-* creating /Users/lance/work/task_tester/web/controllers/page_controller.ex
-* creating /Users/lance/work/task_tester/web/models/.gitkeep
-* creating /Users/lance/work/task_tester/web/router.ex
-* creating /Users/lance/work/task_tester/web/templates/layout/application.html.eex
-* creating /Users/lance/work/task_tester/web/templates/page/error.html.eex
-* creating /Users/lance/work/task_tester/web/templates/page/index.html.eex
-* creating /Users/lance/work/task_tester/web/templates/page/not_found.html.eex
-* creating /Users/lance/work/task_tester/web/view.ex
-* creating /Users/lance/work/task_tester/web/views/error_view.ex
-* creating /Users/lance/work/task_tester/web/views/layout_view.ex
-* creating /Users/lance/work/task_tester/web/views/page_view.ex
-* creating /Users/lance/work/task_tester/priv/static/css/phoenix.css
-* creating /Users/lance/work/task_tester/priv/static/images/phoenix.png
-* creating /Users/lance/work/task_tester/priv/static/js/phoenix.js
+$ mix phoenix.gen.resource Post posts body:string word_count:integer
+* creating priv/repo/migrations/20150314013326_create_post.exs
+* creating web/controllers/post_controller.ex
+* creating web/models/post.ex
+* creating web/templates/post/edit.html.eex
+* creating web/templates/post/form.html.eex
+* creating web/templates/post/index.html.eex
+* creating web/templates/post/new.html.eex
+* creating web/templates/post/show.html.eex
+* creating web/views/post_view.ex
 ```
 
-#### `mix phoenix.routes`
+When `phoenix.gen.resource` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our ecto migrations.
+
+```console
+Add the resource to the proper scope in web/router.ex:
+
+resources "/posts", PostController
+
+and then update your repository by running migrations:
+
+$ mix ecto.migrate
+```
+
+Important: If we don't do this, our application won't compile, and we'll get an error.
+
+```console
+$ mix phoenix.server
+Compiled web/models/post.ex
+
+== Compilation error on file web/controllers/post_controller.ex ==
+** (CompileError) web/controllers/post_controller.ex:27: function post_path/2 undefined
+(stdlib) lists.erl:1336: :lists.foreach/2
+(stdlib) erl_eval.erl:657: :erl_eval.do_apply/6
+```
+
+####`mix phoenix.routes`
 
 This task has a single purpose, to show us all the routes defined for a given router. We saw it used extensively in the [Routing Guide](http://www.phoenixframework.org/docs/routing).
 
@@ -96,7 +255,7 @@ $ mix phoenix.routes TaskTester.Router
 page_path  GET  /  TaskTester.PageController.index/2
 ```
 
-#### `mix phoenix.server`
+####`mix phoenix.server`
 
 This is the task we use to get our application running. It takes no arguments at all. If we pass any in, they will be silently ignored.
 
@@ -126,3 +285,337 @@ Running TaskTester.Endpoint with Cowboy on port 4000 (http)
 Interactive Elixir (1.0.2) - press Ctrl+C to exit (type h() ENTER for help)
 iex(1)>
 ```
+
+##Ecto Specific Mix Tasks
+
+Newly generated Phoenix applications now include ecto and postgrex as dependencies by default (which is to say, unless we use the `--no-ecto` flag with `phoenix.new`). With those dependencies come mix tasks to take care of common ecto operations. Let's see which tasks we get out of the box.
+
+```console
+$ mix help | grep -i ecto
+mix ecto.create          # Create the storage for the repo
+mix ecto.drop            # Drop the storage for the repo
+mix ecto.gen.migration   # Generate a new migration for the repo
+mix ecto.gen.repo        # Generates a new repository
+mix ecto.migrate         # Runs migrations up on a repo
+mix ecto.rollback        # Reverts migrations down on a repo
+```
+
+Note: We can run any of the tasks above with the `--no-start` flag to execute the task without starting the application.
+
+####`ecto.create`
+This task will create the database specified in our repo. By default it will look for the repo named after our application (the one generated with our app unless we opted out of ecto), but we can pass in another repo if we want.
+
+Here's what it looks like in action.
+
+```console
+$ mix ecto.create
+The database for repo HelloPhoenix.Repo has been created.
+```
+
+If we happen to have another repo called `OurCustom.Repo` that we want to create the database for, we can run this.
+
+```console
+$ mix ecto.create -r OurCustom.Repo
+The database for repo OurCustom.Repo has been created.
+```
+
+There are a few things that can go wrong with `ecto.create`. If our Postgres database doesn't have a "postgres" role (user), we'll get an error like this one.
+
+```console
+$ mix ecto.create
+** (Mix) The database for repo HelloPhoenix.Repo couldn't be created, reason given: psql: FATAL:  role "postgres" does not exist
+```
+
+We can fix this by creating the "postgres" role with the permissions needed to log in and create a database.
+
+```console
+=# CREATE ROLE postgres LOGIN CREATEDB;
+CREATE ROLE
+```
+
+If the "postgres" role does not have permission to log in to the application, we'll get this error.
+
+```console
+$ mix ecto.create
+** (Mix) The database for repo HelloPhoenix.Repo couldn't be created, reason given: psql: FATAL:  role "postgres" is not permitted to log in
+```
+
+To fix this, we need to change the permissions on our "postgres" user to allow login.
+
+```console
+=# ALTER ROLE postgres LOGIN;
+ALTER ROLE
+```
+
+If the "postgres" role does not have permission to create a database, we'll get this error.
+
+```console
+$ mix ecto.create
+** (Mix) The database for repo HelloPhoenix.Repo couldn't be created, reason given: ERROR:  permission denied to create database
+```
+
+To fix this, we need to change the permissions on our "postgres" user to allow database creation.
+
+```console
+=# ALTER ROLE postgres CREATEDB;
+ALTER ROLE
+```
+
+####`ecto.drop`
+
+This task will drop the database specified in our repo. By default it will look for the repo named after our application (the one generated with our app unless we opted out of ecto). It will not prompt us to check if we're sure we want to drop the db, so do exercise caution.
+
+```console
+$ mix ecto.drop
+The database for repo HelloPhoenix.Repo has been dropped.
+```
+
+If we happen to have another repo that we want to drop the database for, we can specify it with the `-r` flag.
+
+```console
+$ mix ecto.drop -r OurCustom.Repo
+The database for repo OurCustom.Repo has been dropped.
+```
+
+####`ecto.gen.repo`
+
+Many applications require more than one data store. For each data store, we'll need a new repo, and we can generate them automatically with `ecto.gen.repo`.
+
+If we name our repo `OurCustom.Repo`, this task will create it here `lib/our_custom/repo.ex`.
+
+```console
+$ mix ecto.gen.repo -r OurCustom.Repo
+* creating lib/our_custom
+* creating lib/our_custom/repo.ex
+* updating config/config.exs
+Don't forget to add your new repo to your supervision tree
+(typically in lib/hello_phoenix.ex):
+
+worker(OurCustom.Repo, [])
+```
+
+Notice that this task has updated `config/config.exs`. If we take a look, we'll see this extra configuration block for our new repo.
+
+```elixir
+. . .
+config :hello_phoenix, OurCustom.Repo,
+adapter: Ecto.Adapters.Postgres,
+database: "hello_phoenix_repo",
+username: "user",
+password: "pass",
+hostname: "localhost"
+. . .
+```
+
+Of course, we'll need to change the login credentials to match what our database expects. We'll also need to change the config for other environments.
+
+We certainly should follow the instructions and add our new repo to our supervision tree. In our `HelloPhoenix` application, we would open up `lib/hello_phoenix.ex`, and add our repo as a worker to the `children` list.
+
+```elixir
+. . .
+children = [
+  # Start the endpoint when the application starts
+  supervisor(HelloPhoenix.Endpoint, []),
+  # Start the Ecto repository
+  worker(HelloPhoenix.Repo, []),
+  # Here you could define other workers and supervisors as children
+  # worker(HelloPhoenix.Worker, [arg1, arg2, arg3]),
+  worker(OurCustom.Repo, []),
+]
+. . .
+```
+
+####`ecto.gen.migration`
+
+Migrations are a programmatic, repeatable way to affect changes to a database schema. Migrations are also just modules, and we can create them with the `ecto.gen.migration` task. Let's walk through the steps to create a migration for a new comments table.
+
+We simply need to invoke the task with a snake-case version of the module name that we want. Preferably, the name will describe what we want the migration to do.
+
+```console
+mix ecto.gen.migration add_comments_table
+* creating priv/repo/migrations
+* creating priv/repo/migrations/20150318001628_add_comments_table.exs
+```
+
+Notice that the migration's filename begins with a string representation of the date and time the file was created.
+
+Let's take a look at the file `ecto.gen.migration` has generated for us at `priv/repo/migrations/20150318001628_add_comments_table.exs`.
+
+```elixir
+defmodule HelloPhoenix.Repo.Migrations.AddCommentsTable do
+  use Ecto.Migration
+
+  def change do
+  end
+end
+```
+
+Notice that there is a single function `change/0` which will handle both forward migrations and rollbacks. We'll define the schema changes that we want using ecto's handy dsl, and ecto will figure out what to do depending on whether we are rolling forward or rolling back. Very nice indeed.
+
+What we want to do is create a `comments` table with a `body` column, a `word_count` column, and timestamp columns for `inserted_at` and `updated_at`.
+
+```elixir
+. . .
+def change do
+  create table(:comments) do
+    add :body,       :string
+    add :word_count, :integer
+    timestamps
+  end
+end
+. . .
+```
+
+Again, we can run this task with the `-r` flag and another repo if we need to.
+
+```console
+$ mix ecto.gen.migration -r OurCustom.Repo add_users
+* creating priv/repo/migrations
+* creating priv/repo/migrations/20150318172927_add_users.exs
+```
+
+For more infomation on ecto's migration dsl, please see the [ecto migration docs](http://hexdocs.pm/ecto/Ecto.Migration.html).
+
+That's it! We're ready to run our migration.
+
+####`ecto.migrate`
+
+Once we have our migration module ready, we can simply run `mix ecto.migrate` to have our changes applied to the database.
+
+```console
+$ mix ecto.migrate
+[info] == Running HelloPhoenix.Repo.Migrations.AddCommentsTable.change/0 forward
+[info] create table comments
+[info] == Migrated in 0.1s
+```
+
+When we first run `ecto.migrate`, it will create a table for us called `schema_migrations`. This will keep track of all the migrations which we run by storing the timestamp portion of the migration's filename.
+
+Here's what the `schema_migrations` table looks like.
+
+```console
+hello_phoenix_dev=# select * from schema_migrations;
+version     |     inserted_at
+----------------+---------------------
+20150317170448 | 2015-03-17 21:07:26
+20150318001628 | 2015-03-18 01:45:00
+(2 rows)
+```
+
+When we roll back a migration, `ecto.rollback` will remove the record representing this migration from `schema_migrations`.
+
+By default, `ecto.migrate` will execute all pending migrations. We can exercise more control over which migrations we run by specifying some options when we run the task.
+
+We can specify the number of pending migrations we would like to run with the `-n` or `--step` options.
+
+```console
+$ mix ecto.migrate -n 2
+[info] == Running HelloPhoenix.Repo.Migrations.CreatePost.change/0 forward
+[info] create table posts
+[info] == Migrated in 0.0s
+[info] == Running HelloPhoenix.Repo.Migrations.AddCommentsTable.change/0 forward
+[info] create table comments
+[info] == Migrated in 0.0s
+```
+
+The `--step` option will behave the same way.
+
+```console
+mix ecto.migrate --step 2
+```
+
+We can also specify an individual migration we would like to run with the `-v` option.
+
+```console
+mix ecto.migrate -v 20150317170448
+```
+
+The `--to` option will behave the same way.
+
+```console
+mix ecto.migrate --to 20150317170448
+```
+
+####`ecto.rollback`
+
+The `ecto.rollback` task will reverse the last migration we have run, undoing the schema changes. `ecto.migrate` and `ecto.rollback` are mirror images of each other.
+
+```console
+$ mix ecto.rollback
+[info] == Running HelloPhoenix.Repo.Migrations.AddCommentsTable.change/0 backward
+[info] drop table comments
+[info] == Migrated in 0.0s
+```
+
+`ecto.rollback` will handle the same options as `ecto.migrate`, so `-n`, `--step`, `-v`, and `--to` will behave as they do for `ecto.migrate`.
+
+##Creating Our Own Mix Tasks
+
+As we've seen throughout this guide, both mix itself and the dependencies we bring in to our application provide a number of really useful tasks for free. Since neither of these could possibly anticipate all our individual application's needs, mix allows us to create our own custom tasks. That's exactly what we are going to do now.
+
+The first thing we need to do is create a `mix/tasks` directory inside of `lib`. This is where any of our application specific mix tasks will go.
+
+```console
+$ mkdir -p lib/mix/tasks
+```
+
+Inside that directory, let's create a new file, `hello_phoenix.greeting.ex`, that looks like this.
+
+```elixir
+defmodule Mix.Tasks.Hellophoenix.Greeting do
+  use Mix.Task
+
+  @shortdoc "Sends a greeting to us from Hello Phoenix"
+
+  @moduledoc """
+    This is where we would put any long form documentation or doctests.
+  """
+
+  def run(_args) do
+    Mix.shell.info "Greetings from the Hello Phoenix Application!"
+  end
+
+  # We can define other functions as needed here.
+end
+```
+
+Let's take a quick look at the moving parts involved in a working mix task.
+
+The first thing we need to do is name our module. In order to properly namespace it, we begin with `Mix.Tasks`. We'd like to invoke this as `mix hellophoenix.greeting`, so we complete the module name with
+`Hellophoenix.Greeting`. It would be nice to use `HelloPhoenix.Greeting`, but currently that would create a `helloPhoenix.greeting` task.
+
+The `use Mix.Task` line clearly brings in functionality from mix that makes this module behave as a mix task.
+
+The `@shortdoc` module attribute holds a string which will describe our task when users invoke `mix help`.
+
+`@moduledoc` serves the same function that it does in any module. It's where we can put long-form documentation and doctests, if we have any.
+
+The `run/1` function is the critical heart of any mix task. It's the function that does all the work when users invoke our task. In ours, all we do is send a greeting from our app, but we can implement our `run/1` function to do whatever we need it to. Note that `Mix.shell.info/1` is the preferred way to print text back out to the user.
+
+Of course, our task is just a module, so we can define other private functions as needed to support our `run/1` function.
+
+Now that we have our task module defined, our next step is to compile the application.
+
+```console
+$ mix compile
+Compiled lib/tasks/hello_phoenix.greeting.ex
+Generated hello_phoenix.app
+```
+
+Now our new task should be visible to `mix help`.
+
+```console
+$ mix help | grep hello
+mix hellophoenix.greeting # Sends a greeting to us from Hello Phoenix
+```
+
+Notice that `mix help` displays the text we put into the `@shortdoc` along with the name of our task.
+
+So far, so good, but does it work?
+
+```console
+$ mix hellophoenix.greeting
+Greetings from the Hello Phoenix Application!
+```
+
+Indeed it does.
