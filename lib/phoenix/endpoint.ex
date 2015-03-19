@@ -125,6 +125,14 @@ defmodule Phoenix.Endpoint do
 
           [{"node", ["node_modules/brunch/bin/brunch", "watch"]}]
 
+    * `:live_reload` - configuration for the live reload option.
+      Configuration expects a `:paths` option which should be a list of
+      file paths. If you are using a tool like [pow](http://pow.cx) in
+      development, you may need to set the `:url` option appropriately.
+
+          [url: "ws://localhost:4000",
+           paths: [Path.expand("priv/static/js/phoenix.js")]]
+
     * `:pubsub` - configuration for this endpoint's pubsub adapter.
       Configuration either requires a `:name` of the registered pubsub server
       or a `:name`, `:adapter`, and options which starts the adapter in
