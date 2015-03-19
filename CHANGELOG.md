@@ -23,6 +23,7 @@
 * Enhancements
   * Allow the default format used when rendering errors to be customized in the `render_views` configuration
   * Add `button/2` function to `Phoenix.HTML`
+  * Add `textarea/3` function to `Phoenix.HTML.Form`
 
 * Bug fixes
   * Fix out of order hours, minutes and days in date/time select
