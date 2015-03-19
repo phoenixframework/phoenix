@@ -6,7 +6,7 @@ defmodule Phoenix.CodeReloaderTest do
     root: File.cwd!,
     code_reloader: true,
     reloadable_paths: ["web"],
-    live_reload: ["some/path"])
+    live_reload: [url: "ws://localhost:4000", paths: ["some/path"]])
 
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
@@ -58,6 +58,7 @@ defmodule Phoenix.CodeReloaderTest do
            |> put_resp_content_type("text/html")
            |> Phoenix.CodeReloader.call(opts)
            |> send_resp(200, "")
+    assert to_string(conn.resp_body) =~ ~r/"ws:\/\/localhost:4000\/phoenix"/
     assert to_string(conn.resp_body) =~ ~r/require\("phoenix"\)/
   end
 

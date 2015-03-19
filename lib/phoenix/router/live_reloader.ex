@@ -37,12 +37,13 @@ defmodule Phoenix.Router.LiveReload do
   defp html_content_type?([type | _]), do: String.starts_with?(type, "text/html")
 
   defp reload_assets_tag(conn) do
-    host = conn.private.phoenix_endpoint.config(:live_reload_host) || ""
+    config = conn.private.phoenix_endpoint.config(:live_reload)
+    url = config[:url] || ""
     """
     <script>
       #{@phoenix_js}
       var phx = require("phoenix")
-      var socket = new phx.Socket("#{host}/phoenix")
+      var socket = new phx.Socket("#{url}/phoenix")
       socket.connect()
       socket.join("phoenix", {}, function(chan){
         chan.on("assets:change", function(msg){ window.location.reload(); })

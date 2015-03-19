@@ -62,8 +62,8 @@ defmodule Phoenix.Endpoint.Adapter do
 
   defp live_reload_children(mod, conf) do
     case conf[:live_reload] do
-      []    -> []
-      paths -> [worker(ChangeDetector, [paths, {__MODULE__, :assets_change, [mod]}])]
+      []     -> []
+      config -> [worker(ChangeDetector, [config[:paths], {__MODULE__, :assets_change, [mod]}])]
     end
   end
 
