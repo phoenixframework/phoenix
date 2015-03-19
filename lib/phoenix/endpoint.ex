@@ -126,9 +126,10 @@ defmodule Phoenix.Endpoint do
           [{"node", ["node_modules/brunch/bin/brunch", "watch"]}]
 
     * `:live_reload` - configuration for the live reload option.
-      Configuration expects a `:paths` option which should be a list of
-      file paths. If you are using a tool like [pow](http://pow.cx) in
-      development, you may need to set the `:url` option appropriately.
+      Configuration requires a `:paths` option which should be a list of
+      files to watch. When these files change, it will trigger a reload.
+      If you are using a tool like [pow](http://pow.cx) in development,
+      you may need to set the `:url` option appropriately.
 
           [url: "ws://localhost:4000",
            paths: [Path.expand("priv/static/js/phoenix.js")]]
