@@ -41,6 +41,10 @@ defmodule Phoenix.ControllerTest do
 
     conn = put_layout_formats conn, ~w(json xml)
     assert layout_formats(conn) == ~w(json xml)
+
+    assert_raise Phoenix.Controller.AlreadySentError, fn ->
+      put_layout_formats sent_conn, ~w(json)
+    end
   end
 
   test "put_layout/2 and layout/1" do
@@ -62,6 +66,10 @@ defmodule Phoenix.ControllerTest do
     assert_raise RuntimeError, fn ->
       put_layout conn, "print"
     end
+
+    assert_raise Phoenix.Controller.AlreadySentError, fn ->
+      put_layout sent_conn, {AppView, :print}
+    end
   end
 
   test "put_new_layout/2" do
@@ -74,6 +82,10 @@ defmodule Phoenix.ControllerTest do
     assert layout(conn) == {AppView, "application.html"}
     conn = put_new_layout(conn, false)
     assert layout(conn) == {AppView, "application.html"}
+
+    assert_raise Phoenix.Controller.AlreadySentError, fn ->
+      put_new_layout sent_conn, false
+    end
   end
 
   test "put_view/2 and put_new_view/2" do
@@ -83,6 +95,13 @@ defmodule Phoenix.ControllerTest do
     assert view_module(conn) == Hello
     conn = put_view(conn, World)
     assert view_module(conn) == World
+
+    assert_raise Phoenix.Controller.AlreadySentError, fn ->
+      put_new_view sent_conn, Hello
+    end
+    assert_raise Phoenix.Controller.AlreadySentError, fn ->
+      put_view sent_conn, Hello
+    end
   end
 
   test "json/2" do
@@ -307,5 +326,9 @@ defmodule Phoenix.ControllerTest do
   test "__layout__ returns the layout modoule based on controller module" do
     assert Phoenix.Controller.__layout__(MyApp.UserController) == MyApp.LayoutView
     assert Phoenix.Controller.__layout__(MyApp.Admin.UserController) == MyApp.LayoutView
+  end
+
+  defp sent_conn do
+    conn(:get, "/") |> send_resp(:ok, "")
   end
 end
