@@ -42,7 +42,7 @@ defmodule Phoenix.ControllerTest do
     conn = put_layout_formats conn, ~w(json xml)
     assert layout_formats(conn) == ~w(json xml)
 
-    assert_raise Phoenix.Controller.AlreadySentError, fn ->
+    assert_raise Plug.Conn.AlreadySentError, fn ->
       put_layout_formats sent_conn, ~w(json)
     end
   end
@@ -67,7 +67,7 @@ defmodule Phoenix.ControllerTest do
       put_layout conn, "print"
     end
 
-    assert_raise Phoenix.Controller.AlreadySentError, fn ->
+    assert_raise Plug.Conn.AlreadySentError, fn ->
       put_layout sent_conn, {AppView, :print}
     end
   end
@@ -83,7 +83,7 @@ defmodule Phoenix.ControllerTest do
     conn = put_new_layout(conn, false)
     assert layout(conn) == {AppView, "application.html"}
 
-    assert_raise Phoenix.Controller.AlreadySentError, fn ->
+    assert_raise Plug.Conn.AlreadySentError, fn ->
       put_new_layout sent_conn, false
     end
   end
@@ -96,10 +96,10 @@ defmodule Phoenix.ControllerTest do
     conn = put_view(conn, World)
     assert view_module(conn) == World
 
-    assert_raise Phoenix.Controller.AlreadySentError, fn ->
+    assert_raise Plug.Conn.AlreadySentError, fn ->
       put_new_view sent_conn, Hello
     end
-    assert_raise Phoenix.Controller.AlreadySentError, fn ->
+    assert_raise Plug.Conn.AlreadySentError, fn ->
       put_view sent_conn, Hello
     end
   end
