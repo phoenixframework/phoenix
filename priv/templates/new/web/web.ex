@@ -20,10 +20,13 @@ defmodule <%= application_module %>.Web do
     quote do
       use Phoenix.View, root: "web/templates"
 
+      # Import convenience functions from controllers
+      import Phoenix.Controller, only: [get_flash: 2]
+
       # Import URL helpers from the router
       import <%= application_module %>.Router.Helpers
 
-      # Import all HTML functions (forms, tags, etc)
+      # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML
     end
   end

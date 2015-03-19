@@ -4,7 +4,7 @@ defmodule Phoenix.HTML.Tag do
   """
 
   import Phoenix.HTML
-  import Phoenix.Controller, only: [get_csrf_token: 0]
+  import Plug.CSRFProtection, only: [get_csrf_token: 0]
 
   @tag_prefixes [:aria, :data]
 

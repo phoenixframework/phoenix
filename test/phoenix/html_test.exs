@@ -13,11 +13,6 @@ defmodule Phoenix.HTMLTest do
     assert html_escape("\" & \'") == {:safe, "&quot; &amp; &#39;"}
   end
 
-  test "imports controller functions" do
-    conn = conn(:get, "/") |> put_private(:phoenix_action, :hello)
-    assert action_name(conn) == :hello
-  end
-
   test "Phoenix.HTML.Safe for binaries" do
     assert Safe.to_iodata("<foo>") == "&lt;foo&gt;"
   end

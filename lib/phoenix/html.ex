@@ -2,18 +2,15 @@ defmodule Phoenix.HTML do
   @moduledoc """
   Helpers for working with HTML strings and templates.
 
-  When used, it brings the given functionality:
+  When used, it imports the given modules:
 
-    * `use Phoenix.HTML.Controller` - imports controller functions
-      commonly used in views;
+    * `Phoenix.HTML`- functions to handle HTML safety;
 
-    * `import Phoenix.HTML`- imports functions to handle HTML safety;
+    * `Phoenix.HTML.Tag` - functions for generating HTML tags;
 
-    * `import Phoenix.HTML.Tag` - imports functions for generating HTML tags;
+    * `Phoenix.HTML.Form` - functions for working with forms;
 
-    * `import Phoenix.HTML.Form` - imports functions for working with forms;
-
-    * `import Phoenix.HTML.Link` - imports functions for generating links and urls;
+    * `Phoenix.HTML.Link` - functions for generating links and urls;
 
   ## HTML Safe
 
@@ -50,8 +47,6 @@ defmodule Phoenix.HTML do
   @doc false
   defmacro __using__(_) do
     quote do
-      use Phoenix.HTML.Controller
-
       import Phoenix.HTML
       import Phoenix.HTML.Form
       import Phoenix.HTML.Link

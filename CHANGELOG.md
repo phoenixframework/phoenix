@@ -2,10 +2,12 @@
 
 ## v0.11.0-dev
 
+* Javascript client backward incompatible changes
+  * The `Socket` instance no long connects automatically. You must explicitly call `connect()`
+  * `close()` has been renamed to `disconnect()`
+
 * Backwards incompatible changes
-  * [phoenix.js] The `Socket` instance no long connects automatically. You must
-    explicitly call `connect()`
-  * [phoenix.js] `close()` has been renamed to `disconnect()`
+  * `use Phoenix.HTML` no longer imports controller functions. You must add `import Phoenix.Controller, only: [get_flash: 2]` manually to your views or your `web.ex`
   * Code reloader must now be configured in your endpoint instead of Phoenix. Therefore, upgrade your `config/dev.exs` replacing
 
           config :phoenix, :code_reloader, true
