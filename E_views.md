@@ -199,7 +199,7 @@ cache_static_lookup: false
 
 Now let's go to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path) for a running local application and see what we get.
 
-Ok, that's not very exciting. We get the bare string "Page not found - 404", displayed without a layout.
+Ok, that's not very exciting. We get the bare string "Page not found - 404", displayed without any markup or styling.
 
 Let's see if we can use what we already know about views to make this a more interesting error page.
 
@@ -219,12 +219,45 @@ The `Endpoint.ErrorHandler` has determined that our request with the silly path 
 
 Now that we understand how we got here, let's make a better error page.
 
-Phoenix generates an `ErrorView` for us, but it doesn't give us a `web/templates/error` directory. Let's create one now. Inside our new directory, let's add a template, `not_found.html.eex` and give it some markup, like this.
+Phoenix generates an `ErrorView` for us, but it doesn't give us a `web/templates/error` directory. Let's create one now. Inside our new directory, let's add a template, `not_found.html.eex` and give it some markup - a mixture of our application layout and a new `div` with our message to the user.
+
 
 ```html
-<div class="jumbotron">
-  <p>Sorry, the page you are looking for does not exist.</p>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Welcome to Phoenix!</title>
+    <link rel="stylesheet" href="/css/app.css">
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://www.phoenixframework.org/docs">Get Started</a></li>
+        </ul>
+        <span class="logo"></span>
+      </div>
+
+      <div class="jumbotron">
+        <p>Sorry, the page you are looking for does not exist.</p>
+      </div>
+
+      <div class="footer">
+        <p><a href="http://phoenixframework.org">phoenixframework.org</a></p>
+      </div>
+
+    </div> <!-- /container -->
+    <script src="/js/app.js"></script>
+    <script>require("web/static/js/app")</script>
+  </body>
+</html>
 ```
 
 Now we can use the `render/2` function we saw above when we were experimenting with rendering in the `iex` session.
@@ -237,26 +270,12 @@ def render("404.html", _assigns) do
 end
 ```
 
-Let's go back to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path) and see what that looks like.
+When we go back to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path), we should see a much nicer error page.
 
-We've made progress; we're rendering our new template, complete with markup. We still don't have a layout, though.
+It is worth noting that we did not render our `not_found.html.eex` template through our application layout, even though we want our error page to have the look and feel of the rest of our site. The main reason is that it's easy to run into edge case issues while handling errors globally.
 
-In order to make that happen, we need to specify a layout, but where? It turns out that the `assigns` map - the one we passed as an empty map just now - can have a `:layout` key and a two element tuple as a value. The tuple consists of the layout view as the first element, and the layout template as the second. Let's try it.
+If we want to minimize duplication between our application layout and our `not_found.html.eex` template, we can implement shared partial templates for our header and footer. Please see the [Template Guide](http://www.phoenixframework.org/docs/templates#partials-shared-across-views) for more information.
 
-```elixir
-def render("404.html", _assigns) do
-  render("not_found.html", layout: {HelloPhoenix.LayoutView, "application.html"})
-end
-```
+Of course, we can do these same steps with the `def render("500.html", _assigns) do` clause in our `ErrorView` as well.
 
-Now when we go back to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path), we should see exactly what we're looking for, our new template rendered within the application layout.
-
-Note: In Phoenix version 0.10.0 there is a problem which prevents this from rendering through the layout. This should be fixed in a patch release soon. This is a workaround render call.
-
-```elixir
-render(__MODULE__, "not_found.html", Dict.merge(assigns, layout: {HelloPhoenix.LayoutView, "application.html"}))
-```
-
-Of course, we can do these same steps with the `def render("500.html", _assigns) do` clause in our `ErrorView` and the `error.html.eex` template as well.
-
-We can also use the `assigns` map passed into `render/2` in the `ErrorView` instead of discarding it. We can put the new layout key and value into it to display more information in our templates.
+We can also use the `assigns` map passed into any `render/2` clause in the `ErrorView`, instead of discarding it, in order to display more information in our templates.
