@@ -28,8 +28,8 @@ $ mix phoenix.new ../task_tester
 This absolute path works as well.
 
 ```console
-$ mix phoenix.new task_tester /Users/lance/work/task_tester
-* creating /Users/lance/work/task_tester/.gitignore
+$ mix phoenix.new /Users/me/work/task_tester
+* creating /Users/me/work/task_tester/.gitignore
 . . .
 ```
 
@@ -81,7 +81,7 @@ By default `phoenix.new` will assume we want to use ecto for our models. If we d
 
 ```console
 $ mix phoenix.new ../task_tester --no-ecto
-* creating /Users/lance/work/task_tester/.gitignore
+* creating /Users/me/work/task_tester/.gitignore
 . . .
 ```
 
