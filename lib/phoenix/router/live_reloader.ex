@@ -38,12 +38,12 @@ defmodule Phoenix.Router.LiveReload do
 
   defp reload_assets_tag(conn) do
     config = conn.private.phoenix_endpoint.config(:live_reload)
-    url = config[:url] || ""
+    url = Path.join((config[:url] || "/"), "phoenix")
     """
     <script>
       #{@phoenix_js}
       var phx = require("phoenix")
-      var socket = new phx.Socket("#{url}/phoenix")
+      var socket = new phx.Socket("#{url}")
       socket.connect()
       socket.join("phoenix", {}, function(chan){
         chan.on("assets:change", function(msg){ window.location.reload(); })
