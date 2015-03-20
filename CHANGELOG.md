@@ -30,10 +30,11 @@
 
         config :your_app, Your.Endpoint,
           code_reloader: true,
-          url: "ws://localhost:4000",
-          paths: [Path.expand("priv/static/javascripts/app.js"),
-                  Path.expand("priv/static/stylesheets/app.css"),
-                  Path.expand("web/templates/**/*.eex")]]
+          live_reload: [
+            url: "ws://localhost:4000",
+            paths: [Path.expand("priv/static/javascripts/app.js"),
+                    Path.expand("priv/static/stylesheets/app.css"),
+                    Path.expand("web/templates/**/*.eex")]]]
 
 * Enhancements
   * Allow the default format used when rendering errors to be customized in the `render_views` configuration
