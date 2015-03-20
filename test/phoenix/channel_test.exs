@@ -21,11 +21,11 @@ defmodule Phoenix.ChannelTest do
   defmodule MyChannel do
     use Phoenix.Channel
     def join(topic, msg, socket) do
-      send socket.adapter_pid, {:join, topic}
+      send socket.transport_pid, {:join, topic}
       msg.(socket)
     end
     def leave(_msg, socket) do
-      send socket.adapter_pid, :leave_triggered
+      send socket.transport_pid, :leave_triggered
       if on_leave = Process.get(:leave) do
         on_leave.(socket)
       else
@@ -43,7 +43,7 @@ defmodule Phoenix.ChannelTest do
     end
 
     def handle_in("some:event", _msg, socket) do
-      send socket.adapter_pid, {:handle_in, socket.topic}
+      send socket.transport_pid, {:handle_in, socket.topic}
       {:ok, socket}
     end
     def handle_in("boom", msg, socket), do: msg.(socket)
@@ -51,7 +51,7 @@ defmodule Phoenix.ChannelTest do
       {:ok, Enum.reduce(dict, socket, fn {k, v}, sock -> Socket.assign(sock, k, v) end)}
     end
     def handle_in("get", %{"key" => key}, socket) do
-      send socket.adapter_pid, socket.assigns[key]
+      send socket.transport_pid, socket.assigns[key]
       {:ok, socket}
     end
     def handle_in("should:be:going", _msg, socket) do
@@ -59,11 +59,11 @@ defmodule Phoenix.ChannelTest do
     end
 
     def handle_out("some:broadcast", _msg, socket) do
-      send socket.adapter_pid, :handle_out
+      send socket.transport_pid, :handle_out
       {:ok, socket}
     end
     def handle_out("everyone:leave", _msg, socket) do
-      send socket.adapter_pid, :everyone_leaving
+      send socket.transport_pid, :everyone_leaving
       {:leave, socket}
     end
     def handle_out(event, message, socket) do
@@ -92,7 +92,7 @@ defmodule Phoenix.ChannelTest do
   end
 
   def new_socket do
-    %Socket{adapter_pid: self,
+    %Socket{transport_pid: self,
             router: Router,
             topic: "topic1:subtopic",
             assigns: []}
@@ -117,9 +117,9 @@ defmodule Phoenix.ChannelTest do
   test "#subscribe/unsubscribe's socket to/from topic" do
     socket = Socket.put_topic(new_socket, "top:subtop")
 
-    assert PubSub.subscribe(:phx_pub, socket.adapter_pid, "top:subtop")
-    assert subscribers(:phx_pub, "top:subtop") == [socket.adapter_pid]
-    assert PubSub.unsubscribe(:phx_pub, socket.adapter_pid, "top:subtop")
+    assert PubSub.subscribe(:phx_pub, socket.transport_pid, "top:subtop")
+    assert subscribers(:phx_pub, "top:subtop") == [socket.transport_pid]
+    assert PubSub.unsubscribe(:phx_pub, socket.transport_pid, "top:subtop")
     assert subscribers(:phx_pub, "top:subtop") == []
   end
 
@@ -143,7 +143,7 @@ defmodule Phoenix.ChannelTest do
 
   test "#broadcast_from and #broadcast_from! broadcasts message, skipping publisher" do
     socket = new_socket |> Socket.put_topic("top:subtop")
-    PubSub.subscribe(:phx_pub, socket.adapter_pid, "top:subtop")
+    PubSub.subscribe(:phx_pub, socket.transport_pid, "top:subtop")
 
     assert Channel.broadcast_from(:phx_pub, socket, "event", %{payload: "hello"})
     refute Enum.any?(Process.info(self)[:messages], &match?(%Message{}, &1))

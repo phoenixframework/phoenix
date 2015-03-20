@@ -54,10 +54,10 @@ defmodule Phoenix.Channel.Transport do
     * `:ignore` - Unauthorized or unmatched dispatch
 
   """
-  def dispatch(%Message{} = msg, sockets, adapter_pid, router, pubsub_server, transport) do
+  def dispatch(%Message{} = msg, sockets, transport_pid, router, pubsub_server, transport) do
     sockets
     |> HashDict.get(msg.topic)
-    |> dispatch(msg.topic, msg.event, msg.payload, adapter_pid, router, pubsub_server, transport)
+    |> dispatch(msg.topic, msg.event, msg.payload, transport_pid, router, pubsub_server, transport)
   end
 
   @doc """
@@ -71,14 +71,14 @@ defmodule Phoenix.Channel.Transport do
 
   The server will respond to heartbeats with the same message
   """
-  def dispatch(_, "phoenix", "heartbeat", _payload, adapter_pid, _router, _pubsub_server, _transport) do
-    send adapter_pid, {:socket_reply, %Message{topic: "phoenix", event: "heartbeat", payload: %{}}}
+  def dispatch(_, "phoenix", "heartbeat", _payload, transport_pid, _router, _pubsub_server, _transport) do
+    send transport_pid, {:socket_reply, %Message{topic: "phoenix", event: "heartbeat", payload: %{}}}
   end
-  def dispatch(nil, topic, "join", payload, adapter_pid, router, pubsub_server, transport) do
+  def dispatch(nil, topic, "join", payload, transport_pid, router, pubsub_server, transport) do
     case router.channel_for_topic(topic, transport) do
       nil     -> log_ignore(topic, router)
       channel ->
-        socket = %Socket{adapter_pid: adapter_pid,
+        socket = %Socket{transport_pid: transport_pid,
                   router: router,
                   pubsub_server: pubsub_server,
                   topic: topic,
