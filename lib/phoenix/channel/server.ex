@@ -1,6 +1,5 @@
 defmodule Phoenix.Channel.Server do
   use GenServer
-  require Logger
   alias Phoenix.PubSub
 
   @moduledoc """
@@ -16,6 +15,15 @@ defmodule Phoenix.Channel.Server do
     GenServer.start_link(__MODULE__, [socket, auth_payload])
   end
 
+  @doc """
+  Initializes the Socket server for `Phoenix.Channel` joins.
+
+  To start the server, return `{:ok, socket}`.
+  To ignore the join request, return `:ignore`
+  Any other result will exit with `:badarg`
+
+  See `Phoenix.Channel.join/3` documentation.
+  """
   def init([socket, auth_payload]) do
     case socket.channel.join(socket.topic, auth_payload, socket) do
       {:ok, socket} ->
@@ -27,11 +35,6 @@ defmodule Phoenix.Channel.Server do
       :ignore -> :ignore
 
       result ->
-        Logger.error fn -> """
-            Expected `#{inspect socket.channel}.join/3` to return `{:ok, socket} | :ignore}`,
-            got #{inspect result}
-          """
-        end
         {:stop, {:badarg, result}}
     end
   end
