@@ -84,7 +84,7 @@ defmodule Phoenix.ControllerTest do
     assert layout(conn) == {AppView, "application.html"}
 
     assert_raise Plug.Conn.AlreadySentError, fn ->
-      put_new_layout sent_conn, false
+      put_new_layout sent_conn, {AppView, "application.html"}
     end
   end
 

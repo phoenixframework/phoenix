@@ -1,5 +1,6 @@
 defmodule Phoenix.Controller do
   import Plug.Conn
+  alias Plug.Conn.AlreadySentError
 
   require Logger
 
@@ -212,13 +213,11 @@ defmodule Phoenix.Controller do
   Raises `Plug.Conn.AlreadySentError` if the conn was already sent.
   """
   @spec put_view(Plug.Conn.t, atom) :: Plug.Conn.t
-  def put_view(%Plug.Conn{state: state}, _module) when not state in @unsent do
-    raise Plug.Conn.AlreadySentError
-  end
-
-  def put_view(conn, module) do
+  def put_view(%Plug.Conn{state: state} = conn, module) when state in @unsent do
     put_private(conn, :phoenix_view, module)
   end
+
+  def put_view(_conn, _module), do: raise AlreadySentError
 
   @doc """
   Stores the view for rendering if one was not stored yet.
@@ -226,13 +225,13 @@ defmodule Phoenix.Controller do
   Raises `Plug.Conn.AlreadySentError` if the conn was already sent.
   """
   @spec put_new_view(Plug.Conn.t, atom) :: Plug.Conn.t
-  def put_new_view(%Plug.Conn{state: state}, _module)
-      when not state in @unsent do
-    raise Plug.Conn.AlreadySentError
+  def put_new_view(%Plug.Conn{state: state} = conn, module)
+      when state in @unsent do
+    update_in conn.private, &Map.put_new(&1, :phoenix_view, module)
   end
 
-  def put_new_view(conn, module) do
-    update_in conn.private, &Map.put_new(&1, :phoenix_view, module)
+  def put_new_view(_conn, _module) do
+    raise Plug.Conn.AlreadySentError
   end
 
   @doc """
@@ -302,14 +301,14 @@ defmodule Phoenix.Controller do
   Raises `Plug.Conn.AlreadySentError` if the conn was already sent.
   """
   @spec put_new_layout(Plug.Conn.t, {atom, binary} | false) :: Plug.Conn.t
-  def put_new_layout(%Plug.Conn{state: state}, _layout) when not state in @unsent do
-    raise Plug.Conn.AlreadySentError
-  end
-
-  def put_new_layout(conn, layout)
+  def put_new_layout(%Plug.Conn{state: state} = conn, layout)
       when tuple_size(layout) == 2
       when layout == false do
-    update_in conn.private, &Map.put_new(&1, :phoenix_layout, layout)
+    if state in @unsent do
+      update_in conn.private, &Map.put_new(&1, :phoenix_layout, layout)
+    else
+      raise AlreadySentError
+    end
   end
 
   @doc """
@@ -327,13 +326,13 @@ defmodule Phoenix.Controller do
   Raises `Plug.Conn.AlreadySentError` if the conn was already sent.
   """
   @spec put_layout_formats(Plug.Conn.t, [String.t]) :: Plug.Conn.t
-  def put_layout_formats(%Plug.Conn{state: state}, _formats)
-      when not state in @unsent do
-    raise Plug.Conn.AlreadySentError
+  def put_layout_formats(%Plug.Conn{state: state} = conn, formats)
+      when state in @unsent and is_list(formats) do
+    put_private(conn, :phoenix_layout_formats, formats)
   end
 
-  def put_layout_formats(conn, formats) when is_list(formats) do
-    put_private(conn, :phoenix_layout_formats, formats)
+  def put_layout_formats(_conn, _formats) do
+    raise Plug.Conn.AlreadySentError
   end
 
   @doc """
