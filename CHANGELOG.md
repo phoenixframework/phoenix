@@ -22,6 +22,19 @@
             use Phoenix.CodeReloader
           end
 
+  * The `live_reload` configuration has changed to allow a `:url` option to be
+    customized for operation with tools like [pow](http://pow.cx) in
+    development. By default live reload WebSocket url is "/phoenix". This will
+    cause `window.location` to be used. As `pow` only works with HTTP, you need
+    to set the `:url` option accordingly with your localhost config and port.
+
+        config :your_app, Your.Endpoint,
+          code_reloader: true,
+          url: "ws://localhost:4000",
+          paths: [Path.expand("priv/static/javascripts/app.js"),
+                  Path.expand("priv/static/stylesheets/app.css"),
+                  Path.expand("web/templates/**/*.eex")]]
+
 * Enhancements
   * Allow the default format used when rendering errors to be customized in the `render_views` configuration
   * Add `button/2` function to `Phoenix.HTML`
