@@ -37,12 +37,10 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
   end
 
   def websocket_handle({opcode = :text, payload}, req, {handler, state}) do
-    state = handler.ws_handle(opcode, payload, state)
-    {:ok, req, {handler, state}}
+    handle_reply req, handler, handler.ws_handle(opcode, payload, state)
   end
   def websocket_handle({opcode = :binary, payload}, req, {handler, state}) do
-    state = handler.ws_handle(opcode, payload, state)
-    {:ok, req, {handler, state}}
+    handle_reply req, handler, handler.ws_handle(opcode, payload, state)
   end
   def websocket_handle(_other, req, {handler, state}) do
     {:ok, req, {handler, state}}
@@ -55,16 +53,22 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
     {:shutdown, req, state}
   end
   def websocket_info(:hibernate, req, {handler, state}) do
-    :ok = handler.ws_hibernate(state)
     {:ok, req, {handler, state}, :hibernate}
   end
   def websocket_info(message, req, {handler, state}) do
-    state = handler.ws_info(message, state)
-    {:ok, req, {handler, state}}
+    handle_reply req, handler, handler.ws_info(message, state)
   end
 
   def websocket_terminate(reason, _req, {handler, state}) do
     :ok = handler.ws_terminate(reason, state)
     :ok
+  end
+
+
+  defp handle_reply(req, handler, {:ok, new_state}) do
+    {:ok, req, {handler, new_state}}
+  end
+  defp handle_reply(req, handler, {:reply, {opcode, payload}, new_state}) do
+    {:reply, {opcode, payload}, req, {handler, new_state}}
   end
 end

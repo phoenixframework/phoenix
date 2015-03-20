@@ -11,6 +11,22 @@ export class Channel {
     this.reset()
   }
 
+  rejoin(){
+    this.reset()
+    this.onError( reason => this.rejoin() )
+    this.socket.send({topic: this.topic, event: "join", payload: this.message})
+    this.callback(this)
+  }
+
+  onClose(callback){ this.on("chan:close", callback) }
+
+  onError(callback){
+    this.on("chan:error", reason => {
+      callback(reason)
+      this.trigger("chan:close", "error")
+    })
+  }
+
   reset(){ this.bindings = [] }
 
   on(event, callback){ this.bindings.push({event, callback}) }
@@ -153,18 +169,12 @@ export class Socket {
 
   isConnected(){ return this.connectionState() === "open" }
 
-  rejoinAll(){ this.channels.forEach( chan => this.rejoin(chan) ) }
-
-  rejoin(chan){
-    chan.reset()
-    this.send({topic: chan.topic, event: "join", payload: chan.message})
-    chan.callback(chan)
-  }
+  rejoinAll(){ this.channels.forEach( chan => chan.rejoin() ) }
 
   join(topic, message, callback){
     let chan = new Channel(topic, message, callback, this)
     this.channels.push(chan)
-    if(this.isConnected()){ this.rejoin(chan) }
+    if(this.isConnected()){ chan.rejoin() }
   }
 
   leave(topic, message = {}){
@@ -282,7 +292,10 @@ export class LongPoller {
 
   send(body){
     Ajax.request("POST", this.endpointURL(), "application/json", body, this.timeout, this.onerror.bind(this, "timeout"), (resp) => {
-      if(!resp || resp.status !== 200){ this.onerror(status) }
+      if(!resp || resp.status !== 200){
+        this.onerror(status)
+        this.closeAndRetry()
+      }
     })
   }
 

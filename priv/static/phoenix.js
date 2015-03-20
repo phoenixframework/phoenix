@@ -109,6 +109,30 @@ var Channel = exports.Channel = (function () {
     this.reset();
   }
 
+  Channel.prototype.rejoin = function rejoin() {
+    var _this = this;
+
+    this.reset();
+    this.onError(function (reason) {
+      return _this.rejoin();
+    });
+    this.socket.send({ topic: this.topic, event: "join", payload: this.message });
+    this.callback(this);
+  };
+
+  Channel.prototype.onClose = function onClose(callback) {
+    this.on("chan:close", callback);
+  };
+
+  Channel.prototype.onError = function onError(callback) {
+    var _this = this;
+
+    this.on("chan:error", function (reason) {
+      callback(reason);
+      _this.trigger("chan:close", "error");
+    });
+  };
+
   Channel.prototype.reset = function reset() {
     this.bindings = [];
   };
@@ -334,24 +358,16 @@ var Socket = exports.Socket = (function () {
   };
 
   Socket.prototype.rejoinAll = function rejoinAll() {
-    var _this = this;
-
     this.channels.forEach(function (chan) {
-      return _this.rejoin(chan);
+      return chan.rejoin();
     });
-  };
-
-  Socket.prototype.rejoin = function rejoin(chan) {
-    chan.reset();
-    this.send({ topic: chan.topic, event: "join", payload: chan.message });
-    chan.callback(chan);
   };
 
   Socket.prototype.join = function join(topic, message, callback) {
     var chan = new Channel(topic, message, callback, this);
     this.channels.push(chan);
     if (this.isConnected()) {
-      this.rejoin(chan);
+      chan.rejoin();
     }
   };
 
@@ -505,6 +521,7 @@ var LongPoller = exports.LongPoller = (function () {
     Ajax.request("POST", this.endpointURL(), "application/json", body, this.timeout, this.onerror.bind(this, "timeout"), function (resp) {
       if (!resp || resp.status !== 200) {
         _this.onerror(status);
+        _this.closeAndRetry();
       }
     });
   };

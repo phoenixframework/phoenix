@@ -9,7 +9,6 @@ defmodule Phoenix.Supervisor do
     children = [
       worker(Phoenix.Transports.LongPoller.Supervisor, [])
     ]
-
     supervise(children, strategy: :one_for_one)
   end
 end

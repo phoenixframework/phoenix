@@ -41,11 +41,16 @@ defmodule Phoenix.Transports.WebSocket do
   Handles initalization of the websocket.
   """
   def ws_init(conn) do
-    serializer = Dict.fetch!(endpoint_module(conn).config(:transports), :websocket_serializer)
-    timeout = Dict.fetch!(endpoint_module(conn).config(:transports), :websocket_timeout)
+    Process.flag(:trap_exit, true)
+    endpoint   = endpoint_module(conn)
+    serializer = Dict.fetch!(endpoint.config(:transports), :websocket_serializer)
+    timeout    = Dict.fetch!(endpoint.config(:transports), :websocket_timeout)
+
     {:ok, %{router: router_module(conn),
             pubsub_server: endpoint_module(conn).__pubsub_server__(),
-            sockets: HashDict.new, serializer: serializer}, timeout}
+            sockets: HashDict.new,
+            sockets_inverse: HashDict.new,
+            serializer: serializer}, timeout}
   end
 
   @doc """
@@ -53,46 +58,64 @@ defmodule Phoenix.Transports.WebSocket do
   to Transport layer.
   """
   def ws_handle(opcode, payload, state) do
-    payload
-    |> state.serializer.decode!(opcode)
-    |> Transport.dispatch(state.sockets, self, state.router, state.pubsub_server, __MODULE__)
-    |> case do
-      {:ok, sockets}             -> %{state | sockets: sockets}
-      {:error, _reason, sockets} -> %{state | sockets: sockets}
+    msg = state.serializer.decode!(payload, opcode)
+
+    case Transport.dispatch(msg, state.sockets, self, state.router, state.pubsub_server, __MODULE__) do
+      {:ok, socket_pid} ->
+        {:ok, put(state, msg.topic, socket_pid)}
+      _ ->
+        {:ok, state}
     end
   end
 
-  @doc """
-  Receives `%Phoenix.Socket.Message{}` and sends encoded message JSON to client.
-  """
-  def ws_info({:socket_broadcast, message = %Message{}}, %{sockets: sockets} = state) do
-    sockets = case Transport.dispatch_broadcast(sockets, message) do
-      {:ok, socks} -> socks
-      {:error, _reason, socks} -> socks
-    end
+  def ws_info({:EXIT, socket_pid, reason}, state) do
+    case HashDict.get(state.sockets_inverse, socket_pid) do
+      nil   -> {:ok, state}
+      topic ->
+        new_state = delete(state, topic, socket_pid)
 
-    %{state | sockets: sockets}
+        case reason do
+          :normal ->
+            {:reply, state.serializer.encode!(%Message{
+              topic: topic,
+              event: "chan:close",
+              payload: %{}
+            }), new_state}
+
+          _other ->
+            {:reply, state.serializer.encode!(%Message{
+              topic: topic,
+              event: "chan:error",
+              payload: %{}
+            }), new_state}
+        end
+    end
   end
-  def ws_info({:socket_reply, message = %Message{}}, %{serializer: serializer} = state) do
-    reply(self, serializer.encode!(message))
-    state
+
+  def ws_info({:socket_reply, message}, %{serializer: serializer} = state) do
+    {:reply, serializer.encode!(message), state}
   end
 
   @doc """
   Called on WS close. Dispatches the `leave` event back through Transport layer.
   """
+  # TODO figure out if dispatch_leave is still needed
   def ws_terminate(reason, %{sockets: sockets}) do
     :ok = Transport.dispatch_leave(sockets, reason)
     :ok
   end
 
-  def ws_hibernate(_state), do: :ok
-
-  defp reply(pid, msg) do
-    send(pid, {:reply, msg})
-  end
-
   defp check_origin(conn, _opts) do
     Transport.check_origin(conn)
+  end
+
+  defp put(state, topic, socket_pid) do
+    %{state | sockets: HashDict.put(state.sockets, topic, socket_pid),
+              sockets_inverse: HashDict.put(state.sockets_inverse, socket_pid, topic)}
+  end
+
+  defp delete(state, topic, socket_pid) do
+    %{state | sockets: HashDict.delete(state.sockets, topic),
+              sockets_inverse: HashDict.delete(state.sockets_inverse, socket_pid)}
   end
 end
