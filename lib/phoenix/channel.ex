@@ -218,7 +218,7 @@ defmodule Phoenix.Channel do
     Phoenix.Channel.broadcast_from(socket.pubsub_server, socket, event, msg)
   end
   def broadcast_from(pubsub_server, socket = %Socket{}, event, message) do
-    broadcast_from(pubsub_server, socket.pid, socket.topic, event, message)
+    broadcast_from(pubsub_server, self, socket.topic, event, message)
     {:ok, socket}
   end
   def broadcast_from(pubsub_server, from, topic, event, message) when is_map(message) do
@@ -238,7 +238,7 @@ defmodule Phoenix.Channel do
     Phoenix.Channel.broadcast_from!(socket.pubsub_server, socket, event, msg)
   end
   def broadcast_from!(pubsub_server, socket = %Socket{}, event, message) do
-    broadcast_from!(pubsub_server, socket.pid, socket.topic, event, message)
+    broadcast_from!(pubsub_server, self, socket.topic, event, message)
     {:ok, socket}
   end
   def broadcast_from!(pubsub_server, from, topic, event, message) when is_map(message) do

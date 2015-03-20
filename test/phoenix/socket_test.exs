@@ -5,7 +5,7 @@ defmodule Phoenix.SocketTest do
   doctest Socket
 
   def new_socket do
-    %Socket{pid: self}
+    %Socket{}
   end
 
   defmodule MyChannel do

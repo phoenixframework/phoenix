@@ -20,8 +20,7 @@ defmodule Phoenix.Channel.Server do
     case socket.channel.join(socket.topic, auth_payload, socket) do
       {:ok, socket} ->
         {:ok, socket}
-          socket = put_in(socket, [:pid], self)
-          PubSub.subscribe(socket.pubsub_server, socket.pid, socket.topic, link: true)
+          PubSub.subscribe(socket.pubsub_server, self, socket.topic, link: true)
 
           {:ok, socket}
 
@@ -84,7 +83,7 @@ defmodule Phoenix.Channel.Server do
   defp leave_and_stop(reason, socket) do
     {:ok, socket} = socket.channel.leave(reason, socket)
 
-    PubSub.unsubscribe(socket.pubsub_server, socket.pid, socket.topic)
+    PubSub.unsubscribe(socket.pubsub_server, self, socket.topic)
 
     {:stop, :normal, :left}
   end
