@@ -31,29 +31,8 @@ body, form, ul {
 /* Flash messages */
 .alert:empty { display: none; }
 
-/* Model forms */
 form.link, form.button {
   display: inline;
-}
-form label span {
-  display: block;
-  line-height: 22px;
-}
-
-/* Listing tables */
-table {
-  margin: 20px 0 30px;
-  width: 100%;
-}
-table th, table td {
-  padding: 8px;
-  line-height: 20px;
-  text-align: left;
-  vertical-align: top;
-  border-bottom: 1px solid #dddddd;
-}
-table tr:nth-child(even) > td {
-  background-color: #f9f9f9;
 }
 
 /* Custom page header */
