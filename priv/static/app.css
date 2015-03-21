@@ -29,8 +29,7 @@ body, form, ul {
 }
 
 /* Flash messages */
-p.info { color: green; }
-p.error { color: red; }
+.alert:empty { display: none; }
 
 /* Model forms */
 form.link, form.button {
