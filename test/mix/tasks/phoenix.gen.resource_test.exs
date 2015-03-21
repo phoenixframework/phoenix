@@ -53,11 +53,11 @@ defmodule Mix.Tasks.Phoenix.Gen.ResourceTest do
       end
 
       assert_file "web/templates/user/form.html.eex", fn file ->
-        assert file =~ "<%= text_input f, :name %>"
-        assert file =~ "<%= number_input f, :age %>"
-        assert file =~ "<%= checkbox f, :famous %>"
-        assert file =~ "<%= datetime_select f, :born_at %>"
-        assert file =~ "<%= text_input f, :secret %>"
+        assert file =~ ~s(<%= text_input f, :name, class: "form-control" %>)
+        assert file =~ ~s(<%= number_input f, :age, class: "form-control" %>)
+        assert file =~ ~s(<%= checkbox f, :famous, class: "form-control" %>)
+        assert file =~ ~s(<%= datetime_select f, :born_at, class: "form-control" %>)
+        assert file =~ ~s(<%= text_input f, :secret, class: "form-control" %>)
         refute file =~ ":nicks"
       end
 
@@ -88,7 +88,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ResourceTest do
 
       assert_file migration, fn file ->
         assert file =~ "defmodule Phoenix.Repo.Migrations.CreateAdmin.User do"
-        assert file =~ "create table(:users) do"        
+        assert file =~ "create table(:users) do"
       end
 
       assert_file "web/controllers/admin/user_controller.ex", fn file ->
@@ -112,7 +112,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ResourceTest do
       end
 
       assert_file "web/templates/admin/user/form.html.eex", fn file ->
-        assert file =~ "<%= text_input f, :name %>"
+        assert file =~ ~s(<%= text_input f, :name, class: "form-control" %>)
       end
 
       assert_file "web/templates/admin/user/index.html.eex", fn file ->
@@ -138,5 +138,5 @@ defmodule Mix.Tasks.Phoenix.Gen.ResourceTest do
     assert_raise Mix.Error, fn ->
       Mix.Tasks.Phoenix.Gen.Resource.run ["Admin.User", "name:string", "foo:string"]
     end
-  end  
+  end
 end
