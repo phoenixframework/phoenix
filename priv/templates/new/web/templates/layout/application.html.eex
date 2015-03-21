@@ -20,8 +20,8 @@
         <span class="logo"></span>
       </div>
 
-      <p class="info"><%%= get_flash(@conn, :info) %></p>
-      <p class="error"><%%= get_flash(@conn, :error) %></p>
+      <p class="alert alert-info"><%%= get_flash(@conn, :info) %></p>
+      <p class="alert alert-danger"><%%= get_flash(@conn, :error) %></p>
 
       <%%= @inner %>
 
