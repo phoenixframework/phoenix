@@ -1,6 +1,13 @@
 <%%= form_for @changeset, @action, fn f -> %>
   <%%= if @changeset.errors != [] do %>
-    <p class="alert alert-danger">Oops, something went wrong!</p>
+    <div class="alert alert-danger">
+      <p>Oops, something went wrong! Please check the errors below:</p>
+      <ul>
+        <%%= for {attr, message} <- @changeset.errors do %>
+          <li><%%= humanize(attr) %> <%%= message %></li>
+        <% end %>
+      </ul>
+    </div>
   <%% end %>
 <%= for {k, _} <- attrs, inputs[k] do %>
   <div class="form-group">

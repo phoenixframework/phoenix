@@ -3,6 +3,7 @@ defmodule Phoenix.HTML.FormTest do
 
   import Phoenix.HTML
   import Phoenix.HTML.Form
+  doctest Phoenix.HTML.Form
 
   @conn Plug.Test.conn(:get, "/foo", %{"search" => %{
     "key" => "value",
