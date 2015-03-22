@@ -5,7 +5,7 @@
       <ul>
         <%%= for {attr, message} <- @changeset.errors do %>
           <li><%%= humanize(attr) %> <%%= message %></li>
-        <% end %>
+        <%% end %>
       </ul>
     </div>
   <%% end %>
