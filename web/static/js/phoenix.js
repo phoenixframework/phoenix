@@ -14,7 +14,7 @@ export class Channel {
   rejoin(){
     this.reset()
     this.onError( reason => this.rejoin() )
-    this.socket.send({topic: this.topic, event: "join", payload: this.message})
+    this.socket.push({topic: this.topic, event: "join", payload: this.message})
     this.callback(this)
   }
 
@@ -40,7 +40,7 @@ export class Channel {
                  .map( bind => bind.callback(msg) )
   }
 
-  send(event, payload){ this.socket.send({topic: this.topic, event: event, payload: payload}) }
+  push(event, payload){ this.socket.push({topic: this.topic, event: event, payload: payload}) }
 
   leave(message = {}){
     this.socket.leave(this.topic, message)
@@ -178,11 +178,11 @@ export class Socket {
   }
 
   leave(topic, message = {}){
-    this.send({topic: topic, event: "leave", payload: message})
+    this.push({topic: topic, event: "leave", payload: message})
     this.channels = this.channels.filter( c => !c.isMember(topic) )
   }
 
-  send(data){
+  push(data){
     let callback = () => this.conn.send(JSON.stringify(data))
     if(this.isConnected()){
       callback()
@@ -193,7 +193,7 @@ export class Socket {
   }
 
   sendHeartbeat(){
-    this.send({topic: "phoenix", event: "heartbeat", payload: {}})
+    this.push({topic: "phoenix", event: "heartbeat", payload: {}})
   }
 
   flushSendBuffer(){

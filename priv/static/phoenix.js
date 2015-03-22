@@ -116,7 +116,7 @@ var Channel = exports.Channel = (function () {
     this.onError(function (reason) {
       return _this.rejoin();
     });
-    this.socket.send({ topic: this.topic, event: "join", payload: this.message });
+    this.socket.push({ topic: this.topic, event: "join", payload: this.message });
     this.callback(this);
   };
 
@@ -159,8 +159,8 @@ var Channel = exports.Channel = (function () {
     });
   };
 
-  Channel.prototype.send = function send(event, payload) {
-    this.socket.send({ topic: this.topic, event: event, payload: payload });
+  Channel.prototype.push = function push(event, payload) {
+    this.socket.push({ topic: this.topic, event: event, payload: payload });
   };
 
   Channel.prototype.leave = function leave() {
@@ -374,13 +374,13 @@ var Socket = exports.Socket = (function () {
   Socket.prototype.leave = function leave(topic) {
     var message = arguments[1] === undefined ? {} : arguments[1];
 
-    this.send({ topic: topic, event: "leave", payload: message });
+    this.push({ topic: topic, event: "leave", payload: message });
     this.channels = this.channels.filter(function (c) {
       return !c.isMember(topic);
     });
   };
 
-  Socket.prototype.send = function send(data) {
+  Socket.prototype.push = function push(data) {
     var _this = this;
 
     var callback = function () {
@@ -394,7 +394,7 @@ var Socket = exports.Socket = (function () {
   };
 
   Socket.prototype.sendHeartbeat = function sendHeartbeat() {
-    this.send({ topic: "phoenix", event: "heartbeat", payload: {} });
+    this.push({ topic: "phoenix", event: "heartbeat", payload: {} });
   };
 
   Socket.prototype.flushSendBuffer = function flushSendBuffer() {
