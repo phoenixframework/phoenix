@@ -5,6 +5,7 @@
 * Javascript client backward incompatible changes
   * The `Socket` instance no long connects automatically. You must explicitly call `connect()`
   * `close()` has been renamed to `disconnect()`
+  * `send` has been renamed to `push` to unify client and server messaging commands
 
 * Backwards incompatible changes
   * [Channel] `reply` has been renamed to `push` to better signify we are only push a message down the socket, not replying to a specific request.

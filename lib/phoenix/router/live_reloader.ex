@@ -7,7 +7,7 @@ defmodule Phoenix.Router.LiveReload do
     |> halt
   end
   def call(conn, _opts) do
-    if conn.private.phoenix_endpoint.config(:live_reload) != [] do
+    if conn.private.phoenix_endpoint.config(:live_reload)[:paths] != [] do
       before_send_inject_reloader(conn)
     else
       conn
