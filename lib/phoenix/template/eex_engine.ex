@@ -6,9 +6,7 @@ defmodule Phoenix.Template.EExEngine do
   @behaviour Phoenix.Template.Engine
 
   def compile(path, name) do
-    path
-    |> File.read!
-    |> EEx.compile_string(engine: engine_for(name), file: path, line: 1)
+    EEx.compile_file(path, engine: engine_for(name), line: 1)
   end
 
   defp engine_for(name) do
