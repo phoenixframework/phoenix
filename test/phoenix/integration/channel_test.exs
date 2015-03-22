@@ -13,7 +13,7 @@ defmodule Phoenix.Integration.ChannelTest do
   @port 5807
   @window_ms 200
   @pubsub_window_ms 1000
-  @ensure_window_timeout_ms @window_ms * 2
+  @ensure_window_timeout_ms trunc(@window_ms * 2.5)
 
   Application.put_env(:channel_app, Endpoint, [
     https: false,

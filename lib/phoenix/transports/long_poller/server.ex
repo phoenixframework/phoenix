@@ -45,13 +45,16 @@ defmodule Phoenix.Transports.LongPoller.Server do
               router: router,
               sockets: HashDict.new,
               sockets_inverse: HashDict.new,
-              window_ms: window_ms * 2,
+              window_ms: trunc(window_ms * 1.5),
               pubsub_server: Process.whereis(pubsub_server),
               priv_topic: priv_topic,
+              last_client_poll: now_ms(),
               client_ref: nil}
 
     :ok = PubSub.subscribe(state.pubsub_server, self, state.priv_topic, link: true)
-    {:ok, state, state.window_ms}
+    :timer.send_interval(state.window_ms, :shutdown_if_inactive)
+
+    {:ok, state}
   end
 
   @doc """
@@ -71,16 +74,16 @@ defmodule Phoenix.Transports.LongPoller.Server do
 
         new_state = %{state | sockets: HashDict.put(state.sockets, msg.topic, socket_pid),
                               sockets_inverse: HashDict.put(state.sockets_inverse, socket_pid, msg.topic)}
-        {:noreply, new_state, state.window_ms}
+        {:noreply, new_state}
       :ok ->
         :ok = broadcast_from(state, {:ok, :dispatch, ref})
-        {:noreply, state, state.window_ms}
+        {:noreply, state}
       {:error, reason} ->
         :ok = broadcast_from(state, {:error, :dispatch, reason, ref})
-        {:noreply, state, state.window_ms}
+        {:noreply, state}
       :ignore ->
         :ok = broadcast_from(state, {:error, :dispatch, :ignore, ref})
-        {:noreply, state, state.window_ms}
+        {:noreply, state}
     end
   end
 
@@ -106,7 +109,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   """
   def handle_info({:EXIT, socket_pid, reason}, state) do
     case HashDict.get(state.sockets_inverse, socket_pid) do
-      nil   -> {:noreply, state, state.window_ms}
+      nil   -> {:noreply, state}
       topic ->
         new_state = %{state | sockets: HashDict.delete(state.sockets, topic),
                               sockets_inverse: HashDict.delete(state.sockets_inverse, socket_pid)}
@@ -122,14 +125,14 @@ defmodule Phoenix.Transports.LongPoller.Server do
   def handle_info({:subscribe, ref}, state) do
     :ok = broadcast_from(state, {:ok, :subscribe, ref})
 
-    {:noreply, state, state.window_ms}
+    {:noreply, state}
   end
 
   def handle_info({:flush, ref}, state) do
     if Enum.any?(state.buffer) do
       :ok = broadcast_from(state, {:messages, Enum.reverse(state.buffer), ref})
     end
-    {:noreply, %{state | client_ref: ref}, state.window_ms}
+    {:noreply, %{state | client_ref: ref, last_client_poll: now_ms()}}
   end
 
   # TODO: %Messages{}'s need unique ids so we can properly ack them
@@ -142,11 +145,15 @@ defmodule Phoenix.Transports.LongPoller.Server do
     buffer = Enum.drop(state.buffer, -msg_count)
     :ok = broadcast_from(state, {:ok, :ack, ref})
 
-    {:noreply, %{state | buffer: buffer}, state.window_ms}
+    {:noreply, %{state | buffer: buffer}}
   end
 
-  def handle_info(:timeout, state) do
-    {:stop, :normal, state}
+  def handle_info(:shutdown_if_inactive, state) do
+    if now_ms() - state.last_client_poll > state.window_ms do
+      {:stop, :normal, state}
+    else
+      {:noreply, state}
+    end
   end
 
   def terminate(_reason, _state) do
@@ -163,6 +170,10 @@ defmodule Phoenix.Transports.LongPoller.Server do
       :ok = broadcast_from(state, {:messages, Enum.reverse(buffer), state.client_ref})
     end
 
-    {:noreply, %{state | buffer: buffer}, state.window_ms}
+    {:noreply, %{state | buffer: buffer}}
   end
+
+  defp time_to_ms({mega, sec, micro}),
+    do: ((((mega * 1000000) + sec) * 1000000) + micro) / 1000 |> trunc()
+  defp now_ms, do: :os.timestamp() |> time_to_ms()
 end
