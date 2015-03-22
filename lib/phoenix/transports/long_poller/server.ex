@@ -87,7 +87,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   @doc """
   Forwards replied/broadcasted `%Phoenix.Socket.Message{}`s from Channels back to client.
   """
-  def handle_info({:socket_reply, msg}, state) do
+  def handle_info({:socket_push, msg}, state) do
     publish_reply(msg, state)
   end
 
@@ -149,12 +149,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
     {:stop, :normal, state}
   end
 
-  @doc """
-  Handles forwarding arbitrary Elixir messages back to listening client
-  """
-  # TODO figure out if dispatch_leave is still needed
-  def terminate(reason, state) do
-    :ok = Transport.dispatch_leave(state.sockets, reason)
+  def terminate(_reason, _state) do
     :ok
   end
 

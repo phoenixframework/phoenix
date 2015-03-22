@@ -67,7 +67,7 @@ defmodule Phoenix.ChannelTest do
       {:leave, socket}
     end
     def handle_out(event, message, socket) do
-      reply(socket, event, message)
+      push socket, event, message
     end
   end
 
@@ -173,23 +173,23 @@ defmodule Phoenix.ChannelTest do
     end
   end
 
-  test "#reply sends response to socket" do
+  test "#push sends response to socket" do
     socket = Socket.put_topic(new_socket, "top:subtop")
-    assert Channel.reply(socket, "event", %{payload: "hello"})
+    assert Channel.push(socket, "event", %{payload: "hello"})
 
-    assert Enum.any?(Process.info(self)[:messages], &match?({:socket_reply, %Message{}}, &1))
-    assert_received {:socket_reply, %Message{
+    assert Enum.any?(Process.info(self)[:messages], &match?({:socket_push, %Message{}}, &1))
+    assert_received {:socket_push, %Message{
       topic: "top:subtop",
       event: "event",
       payload: %{payload: "hello"}
     }}
   end
 
-  test "#reply raises friendly error when message arg isn't a Map" do
+  test "#push raises friendly error when message arg isn't a Map" do
     socket = Socket.put_topic(new_socket, "top:subtop")
     message = "Message argument must be a map"
     assert_raise RuntimeError, message, fn ->
-      Channel.reply(socket, "event", foo: "bar", bar: "foo")
+      Channel.push(socket, "event", foo: "bar", bar: "foo")
     end
   end
 
@@ -265,12 +265,12 @@ defmodule Phoenix.ChannelTest do
 
     {:ok, socket_pid} =
       Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, WebSocket)
-    sockets = HashDict.put(HashDict.new, "topic:4subtopic", socket_pid)
     Process.monitor(socket_pid)
     assert subscribers(:phx_pub, "topic:4subtopic") == [socket_pid]
     Process.put(:leave, fn socket -> {:ok, socket} end)
-    Transport.dispatch_leave(sockets, :reason)
-    assert_receive {:DOWN, _ref, :process, ^socket_pid, :normal}
+    Process.exit(socket_pid, :shutdown)
+
+    assert_receive {:EXIT, ^socket_pid, :shutdown}
     assert subscribers(:phx_pub, "topic:4subtopic") == []
   end
 
@@ -283,16 +283,14 @@ defmodule Phoenix.ChannelTest do
 
   test "#leave raise InvalidReturnError exception when return type invalid" do
     message = join_message("topic:6subtopic", fn socket -> {:ok, socket} end)
-    sockets = HashDict.new
 
     {:ok, socket_pid} =
       Transport.dispatch(message, HashDict.new, self, Router, :phx_pub, WebSocket)
-    sockets = HashDict.put(sockets, "topic:6subtopic", socket_pid)
     Process.put(:leave, fn _ -> :badreturn end)
     Process.monitor(socket_pid)
+    Process.exit(socket_pid, :shutdown)
 
-    Transport.dispatch_leave(sockets, :reason)
-    assert_receive {:DOWN, _ref, :process, ^socket_pid, :normal}
+    assert_receive {:EXIT, ^socket_pid, :shutdown}
   end
 
   test "#event raises InvalidReturnError exception when return type is invalid" do
@@ -315,7 +313,7 @@ defmodule Phoenix.ChannelTest do
     msg = %Message{topic: "phoenix", event: "heartbeat", payload: fn _socket -> :badreturn end}
 
     Transport.dispatch(msg, HashDict.new, self, Router, :phx_pub, WebSocket)
-    assert_received {:socket_reply, %Message{topic: "phoenix", event: "heartbeat"}}
+    assert_received {:socket_push, %Message{topic: "phoenix", event: "heartbeat"}}
   end
 
   test "Socket state can be put and retrieved" do

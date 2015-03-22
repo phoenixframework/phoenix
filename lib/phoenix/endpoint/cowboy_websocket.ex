@@ -59,12 +59,14 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
     handle_reply req, handler, handler.ws_info(message, state)
   end
 
-  def websocket_terminate(reason, _req, {handler, state}) do
-    :ok = handler.ws_terminate(reason, state)
-    :ok
+  def websocket_terminate(reason, req, {handler, state}) do
+    handle_reply req, handler, handler.ws_terminate(reason, state)
   end
 
 
+  defp handle_reply(req, handler, {:shutdown, new_state}) do
+    {:shutdown, req, {handler, new_state}}
+  end
   defp handle_reply(req, handler, {:ok, new_state}) do
     {:ok, req, {handler, new_state}}
   end

@@ -19,16 +19,15 @@ defmodule Phoenix.Channel.Transport do
 
     * Handle receiving incoming, encoded `%Phoenix.Socket.Message{}`'s from
       remote clients, then deserialing and fowarding message through
-      `Phoenix.Transport.dispatch/2`. Message keys must be deserialized as strings.
-    * Handle receiving outgoing `{:socket_reply, %Phoenix.Socket.Message{}}` as
+      `Phoenix.Transport.dispatch/6`. Message keys must be deserialized as strings.
+    * Handle receiving `{:ok, socket_pid}` results from Transport dispatch and storing a
+      HashDict of a string topics to Pid matches, and Pid to String topic matches.
+      The HashDict of topic => pids is dispatched through the transport layer's
+      `Phoenix.Transport.dispatch/6`.
+    * Handle receiving outgoing `{:socket_push, %Phoenix.Socket.Message{}}` as
       Elixir process messages, then encoding and fowarding to remote client.
-    * Handle receiving `{:put_socket, topic, socket_pid}` messages and storing a
-      HashDict of a string topics to Pid matches. The HashDict of topic => pids
-      is dispatched through the transport layer's `Phoenix.Transport.dispatch/2`.
-    * Handle receiving `{:delete_socket, topic}` messages and delete the entry
-      from the kept HashDict of socket processes.
-    * Handle remote client disconnects and relaying event through
-      `Phoenix.Transport.dispatch_leave/2`
+    * Trap exits and handle receiving `{:EXIT, socket_pid, reason}` messages
+      and delete the entries from the kept HashDict of socket processes.
 
   See `Phoenix.Transports.WebSocket` for an example transport server implementation.
 
@@ -72,7 +71,7 @@ defmodule Phoenix.Channel.Transport do
   The server will respond to heartbeats with the same message
   """
   def dispatch(_, "phoenix", "heartbeat", _payload, transport_pid, _router, _pubsub_server, _transport) do
-    send transport_pid, {:socket_reply, %Message{topic: "phoenix", event: "heartbeat", payload: %{}}}
+    send transport_pid, {:socket_push, %Message{topic: "phoenix", event: "heartbeat", payload: %{}}}
   end
   def dispatch(nil, topic, "join", payload, transport_pid, router, pubsub_server, transport) do
     case router.channel_for_topic(topic, transport) do
@@ -100,18 +99,6 @@ defmodule Phoenix.Channel.Transport do
   defp log_ignore(topic, router) do
     Logger.debug fn -> "Ignoring unmatched topic \"#{topic}\" in #{inspect(router)}" end
     :ignore
-  end
-
-  @doc """
-  Whenever a remote client disconnects, the adapter must forward the event through
-  this function to be dispatched as `"leave"` events on each socket channel.
-
-  Most adapters shutdown after this dispatch as they client has disconnected
-  """
-  def dispatch_leave(sockets, reason) do
-    Enum.each sockets, fn {_, socket_pid} ->
-      GenServer.cast(socket_pid, {:handle_in, "leave", reason})
-    end
   end
 
   @doc """

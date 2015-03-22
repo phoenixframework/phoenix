@@ -7,6 +7,7 @@
   * `close()` has been renamed to `disconnect()`
 
 * Backwards incompatible changes
+  * [Channel] `reply` has been renamed to `push` to better signify we are only push a message down the socket, not replying to a specific request.
   * `use Phoenix.HTML` no longer imports controller functions. You must add `import Phoenix.Controller, only: [get_flash: 2]` manually to your views or your `web.ex`
   * Code reloader must now be configured in your endpoint instead of Phoenix. Therefore, upgrade your `config/dev.exs` replacing
 

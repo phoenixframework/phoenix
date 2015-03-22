@@ -92,17 +92,12 @@ defmodule Phoenix.Transports.WebSocket do
     end
   end
 
-  def ws_info({:socket_reply, message}, %{serializer: serializer} = state) do
+  def ws_info({:socket_push, message}, %{serializer: serializer} = state) do
     {:reply, serializer.encode!(message), state}
   end
 
-  @doc """
-  Called on WS close. Dispatches the `leave` event back through Transport layer.
-  """
-  # TODO figure out if dispatch_leave is still needed
-  def ws_terminate(reason, %{sockets: sockets}) do
-    :ok = Transport.dispatch_leave(sockets, reason)
-    :ok
+  def ws_terminate(_reason, state) do
+    {:shutdown, state}
   end
 
   defp check_origin(conn, _opts) do

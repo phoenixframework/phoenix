@@ -32,13 +32,13 @@ defmodule Phoenix.Integration.ChannelTest do
     use Phoenix.Channel
 
     def join(_topic, message, socket) do
-      reply socket, "join", %{status: "connected"}
+      push socket, "join", %{status: "connected"}
       broadcast socket, "user:entered", %{user: message["user"]}
       {:ok, socket}
     end
 
     def leave(_message, socket) do
-      reply socket, "you:left", %{message: "bye!"}
+      push socket, "you:left", %{message: "bye!"}
     end
 
     def handle_in("new:msg", message, socket) do
@@ -118,7 +118,7 @@ defmodule Phoenix.Integration.ChannelTest do
     {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
 
     WebsocketClient.send_event(sock, "rooms:lobby", "new:msg", %{body: "hi!"})
-    refute_receive {:socket_reply, %Message{}}
+    refute_receive {:socket_push, %Message{}}
   end
 
   test "websocket refuses unallowed origins" do
@@ -263,7 +263,7 @@ defmodule Phoenix.Integration.ChannelTest do
         "payload" => %{"body" => "hi!"}
       }
       assert resp.body["status"] == 410
-      refute_receive {:socket_reply, %Message{event: "new:msg", payload: %{"body" => "hi!"}}}
+      refute_receive {:socket_push, %Message{event: "new:msg", payload: %{"body" => "hi!"}}}
 
       # 410 from crashed/terminated longpoller server when publishing
       # create new session
@@ -304,7 +304,7 @@ defmodule Phoenix.Integration.ChannelTest do
     assert resp.status == 200
 
     resp = poll(:get, "/ws/poll", session)
-    [_join_msg, chan_error] = resp.body["messages"]
+    [_join_msg, _you_left_msg, chan_error] = resp.body["messages"]
     assert chan_error ==
       %{"event" => "chan:error", "payload" => %{}, "topic" => "rooms:lobby"}
   end

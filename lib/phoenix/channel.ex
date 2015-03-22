@@ -48,8 +48,8 @@ defmodule Phoenix.Channel do
   After a client has successfully joined a channel, incoming events from the
   client are routed through the channel's `handle_in/3` callbacks. Within these
   callbacks, you can perform any action. Typically you'll either forward a
-  message to all listeners with `Phoenix.Channel.broadcast!/3`, or reply
-  directly to the socket with `Phoenix.Channel.reply/3`.
+  message to all listeners with `Phoenix.Channel.broadcast!/3`, or push a message
+  directly down the socket with `Phoenix.Channel.push/3`.
   Incoming callbacks must return the `socket` to maintain ephemeral state.
 
   Here's an example of receiving an incoming `"new:msg"` event from one client,
@@ -60,11 +60,11 @@ defmodule Phoenix.Channel do
         {:ok, socket}
       end
 
-  You can also send a reply directly to the socket:
+  You can also push a message directly down the socket:
 
-      # client asks for their current rank, reply sent directly as a new event.
+      # client asks for their current rank, push sent directly as a new event.
       def handle_in("current:rank", socket) do
-        reply socket, "current:rank", %{val: Game.get_rank(socket.assigns[:user])}
+        push socket, "current:rank", %{val: Game.get_rank(socket.assigns[:user])}
         {:ok, socket}
       end
 
@@ -75,7 +75,7 @@ defmodule Phoenix.Channel do
   subscriber's `handle_out/3` callback is triggered where the event can be
   relayed as is, or customized on a socket by socket basis to append extra
   information, or conditionally filter the message from being delivered.
-  *Note*: `broadcast/3`, `broadcast!/3` and `reply/3` both return `{:ok, socket}`.
+  *Note*: `broadcast/3`, `broadcast!/3` and `push/3` both return `{:ok, socket}`.
 
       def handle_in("new:msg", %{"uid" => uid, "body" => body}, socket) do
         broadcast! socket, "new:msg", %{uid: uid, body: body}
@@ -84,7 +84,7 @@ defmodule Phoenix.Channel do
       # for every socket subscribing to this topic, append an `is_editable`
       # value for client metadata.
       def handle_out("new:msg", msg, socket) do
-        reply socket, "new:msg", Dict.merge(msg,
+        push socket, "new:msg", Dict.merge(msg,
           is_editable: User.can_edit_message?(socket.assigns[:user], msg)
         )
       end
@@ -95,11 +95,11 @@ defmodule Phoenix.Channel do
         if User.ignoring?(socket.assigns[:user], msg.user_id) do
           {:ok, socket}
         else
-          reply socket, "user:joined", msg
+          push socket, "user:joined", msg
         end
       end
 
-   By default, unhandled outgoing events are forwarded to each client as a reply,
+   By default, unhandled outgoing events are forwarded to each client as a push,
    but you'll need to define the catch-all clause yourself once you define an
    `handle_out/3` clause.
 
@@ -159,7 +159,7 @@ defmodule Phoenix.Channel do
       def handle_in(_event, _message, socket), do: {:ok, socket}
 
       def handle_out(event, message, socket) do
-        reply(socket, event, message)
+        push(socket, event, message)
       end
 
       defoverridable leave: 2, handle_out: 3, handle_in: 3
@@ -253,15 +253,15 @@ defmodule Phoenix.Channel do
   @doc """
   Sends Dict, JSON serializable message to socket.
   """
-  def reply(socket, event, message) when is_map(message) do
-    send socket.transport_pid, {:socket_reply, %Message{
+  def push(socket, event, message) when is_map(message) do
+    send socket.transport_pid, {:socket_push, %Message{
       topic: socket.topic,
       event: event,
       payload: message
     }}
     {:ok, socket}
   end
-  def reply(_, _, _), do: raise_invalid_message
+  def push(_, _, _), do: raise_invalid_message
 
   defp raise_invalid_message, do: raise "Message argument must be a map"
 end

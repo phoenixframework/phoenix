@@ -10,7 +10,7 @@ defmodule Phoenix.Channel.ControlChannel do
   end
 
   def handle_out("assets:change", _message, socket) do
-    reply socket, "assets:change", %{}
+    push socket, "assets:change", %{}
     {:ok, socket}
   end
 end

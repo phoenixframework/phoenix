@@ -25,6 +25,7 @@ defmodule Phoenix.Channel.Server do
   See `Phoenix.Channel.join/3` documentation.
   """
   def init([socket, auth_payload]) do
+    Process.flag(:trap_exit, true)
     case socket.channel.join(socket.topic, auth_payload, socket) do
       {:ok, socket} ->
         {:ok, socket}
@@ -70,6 +71,13 @@ defmodule Phoenix.Channel.Server do
     |> handle_result
   end
 
+  def terminate(_reason, :left) do
+    :ok
+  end
+  def terminate(reason, socket) do
+    leave_and_stop(reason, socket)
+    :ok
+  end
 
   defp handle_result({:ok, socket}), do: {:noreply, socket}
   defp handle_result({:leave, socket}), do: leave_and_stop(:normal, socket)
