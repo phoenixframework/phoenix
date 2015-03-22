@@ -58,8 +58,7 @@ defmodule Phoenix.CodeReloaderTest do
            |> put_resp_content_type("text/html")
            |> Phoenix.CodeReloader.call(opts)
            |> send_resp(200, "")
-    assert to_string(conn.resp_body) =~ ~r/"ws:\/\/localhost:4000\/phoenix"/
-    assert to_string(conn.resp_body) =~ ~r/require\("phoenix"\)/
+    assert to_string(conn.resp_body) |> String.contains?("<iframe src=\"/phoenix/live-reloader\" width=\"0\" height=\"0\" scrolling=\"no\" frameborder=\"0\"></iframe>")
   end
 
   test "skips live_reload if not html request" do
@@ -69,6 +68,6 @@ defmodule Phoenix.CodeReloaderTest do
            |> put_resp_content_type("application/json")
            |> Phoenix.CodeReloader.call(opts)
            |> send_resp(200, "")
-    refute to_string(conn.resp_body) =~ ~r/require\("phoenix"\)/
+    refute to_string(conn.resp_body) |> String.contains?("<iframe src=\"/phoenix/live-reloader\" width=\"0\" height=\"0\" scrolling=\"no\" frameborder=\"0\"></iframe>")
   end
 end
