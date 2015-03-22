@@ -52,7 +52,7 @@ defmodule Phoenix.Router.LiveReload.Controller do
     config = conn.private.phoenix_endpoint.config(:live_reload)
     url = Path.join(config[:url] || "/", "phoenix")
 
-    html(conn, """
+    html conn, """
       <html><body>
       <script>
         #{@phoenix_js}
@@ -60,11 +60,10 @@ defmodule Phoenix.Router.LiveReload.Controller do
         var socket = new phx.Socket("#{url}")
         socket.connect()
         socket.join("phoenix", {}, function(chan){
-          chan.on("assets:change", function(msg){ window.parent.location.reload(); })
+          chan.on("assets:change", function(msg){ window.top.location.reload(); })
         })
       </script>
       </body></html>
-    """)
-    |> halt
+    """
   end
 end
