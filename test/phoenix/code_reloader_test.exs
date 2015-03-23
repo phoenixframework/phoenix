@@ -6,7 +6,7 @@ defmodule Phoenix.CodeReloaderTest do
     root: File.cwd!,
     code_reloader: true,
     reloadable_paths: ["web"],
-    live_reload: [url: "ws://localhost:4000", paths: ["some/path"]])
+    live_reload: [url: "ws://localhost:4000", patterns: [~r/some\/path/]])
 
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix

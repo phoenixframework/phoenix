@@ -7,7 +7,7 @@ defmodule Phoenix.Router.LiveReload do
     |> halt
   end
   def call(conn, _opts) do
-    if conn.private.phoenix_endpoint.config(:live_reload)[:paths] != [] do
+    if conn.private.phoenix_endpoint.config(:live_reload)[:patterns] != [] do
       before_send_inject_reloader(conn)
     else
       conn
@@ -60,7 +60,10 @@ defmodule Phoenix.Router.LiveReload.Controller do
         var socket = new phx.Socket("#{url}")
         socket.connect()
         socket.join("phoenix", {}, function(chan){
-          chan.on("assets:change", function(msg){ window.top.location.reload(); })
+          chan.on("assets:change", function(msg){
+            chan.off("assets:change")
+            window.top.location.reload()
+          })
         })
       </script>
       </body></html>

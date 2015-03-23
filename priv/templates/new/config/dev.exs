@@ -19,10 +19,11 @@ config :<%= application_name %>, <%= application_module %>.Endpoint,
 # grow. Adjust as necessary.
 config :<%= application_name %>, <%= application_module %>.Endpoint,
   live_reload: [
-    paths: [
-      Path.expand("priv/static/js/app.js"),
-      Path.expand("priv/static/css/app.css"),
-      Path.expand("web/templates/**/*.eex")]]
+    patterns: [
+      ~r{priv/static/.*(js|css|png|jpeg|jpg|gif)$},
+      ~r{web/templates/.*(eex)$}
+    ]
+  ]
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"

@@ -117,7 +117,7 @@ defmodule Phoenix.Transports.LongPoller do
       |> Kernel.<>(Base.encode64(:crypto.strong_rand_bytes(16)))
       |> Kernel.<>(:os.timestamp() |> Tuple.to_list |> Enum.join(""))
 
-    child = [router, timeout_window_ms(conn), priv_topic, pubsub_server(conn)]
+    child = [router, timeout_window_ms(conn), priv_topic, endpoint_module(conn)]
     {:ok, server_pid} = Supervisor.start_child(LongPoller.Supervisor, child)
 
     {conn, priv_topic, sign(conn, priv_topic), server_pid}

@@ -53,10 +53,10 @@ defmodule Phoenix.Channel.Transport do
     * `:ignore` - Unauthorized or unmatched dispatch
 
   """
-  def dispatch(%Message{} = msg, sockets, transport_pid, router, pubsub_server, transport) do
+  def dispatch(%Message{} = msg, sockets, transport_pid, router, endpoint, transport) do
     sockets
     |> HashDict.get(msg.topic)
-    |> dispatch(msg.topic, msg.event, msg.payload, transport_pid, router, pubsub_server, transport)
+    |> dispatch(msg.topic, msg.event, msg.payload, transport_pid, router, endpoint, transport)
   end
 
   @doc """
@@ -73,13 +73,14 @@ defmodule Phoenix.Channel.Transport do
   def dispatch(_, "phoenix", "heartbeat", _payload, transport_pid, _router, _pubsub_server, _transport) do
     send transport_pid, {:socket_push, %Message{topic: "phoenix", event: "heartbeat", payload: %{}}}
   end
-  def dispatch(nil, topic, "join", payload, transport_pid, router, pubsub_server, transport) do
+  def dispatch(nil, topic, "join", payload, transport_pid, router, endpoint, transport) do
     case router.channel_for_topic(topic, transport) do
       nil     -> log_ignore(topic, router)
       channel ->
         socket = %Socket{transport_pid: transport_pid,
                   router: router,
-                  pubsub_server: pubsub_server,
+                  endpoint: endpoint,
+                  pubsub_server: endpoint.__pubsub_server__(),
                   topic: topic,
                   channel: channel,
                   transport: transport}

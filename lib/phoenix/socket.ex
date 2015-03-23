@@ -24,6 +24,7 @@ defmodule Phoenix.Socket do
   defstruct transport_pid: nil,
             topic: nil,
             router: nil,
+            endpoint: nil,
             channel: nil,
             authorized: false,
             transport: nil,

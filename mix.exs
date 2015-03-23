@@ -32,6 +32,7 @@ defmodule Phoenix.Mixfile do
      {:poison, "~> 1.3"},
      {:redo, github: "heroku/redo", optional: true},
      {:poolboy, "~> 1.4.2", optional: true},
+     {:fs, github: "synrc/fs"},
 
      # Docs dependencies
      {:earmark, "~> 0.1", only: :docs},

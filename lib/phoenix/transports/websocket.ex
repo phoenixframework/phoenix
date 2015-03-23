@@ -47,7 +47,7 @@ defmodule Phoenix.Transports.WebSocket do
     timeout    = Dict.fetch!(endpoint.config(:transports), :websocket_timeout)
 
     {:ok, %{router: router_module(conn),
-            pubsub_server: endpoint_module(conn).__pubsub_server__(),
+            endpoint: endpoint,
             sockets: HashDict.new,
             sockets_inverse: HashDict.new,
             serializer: serializer}, timeout}
@@ -60,7 +60,7 @@ defmodule Phoenix.Transports.WebSocket do
   def ws_handle(opcode, payload, state) do
     msg = state.serializer.decode!(payload, opcode)
 
-    case Transport.dispatch(msg, state.sockets, self, state.router, state.pubsub_server, __MODULE__) do
+    case Transport.dispatch(msg, state.sockets, self, state.router, state.endpoint, __MODULE__) do
       {:ok, socket_pid} ->
         {:ok, put(state, msg.topic, socket_pid)}
       _ ->

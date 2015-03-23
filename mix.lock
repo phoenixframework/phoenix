@@ -3,6 +3,7 @@
   "earmark": {:hex, :earmark, "0.1.10"},
   "eredis": {:git, "git://github.com/wooga/eredis.git", "3c9dfc5cf4e2cd79276b138692d63d3b1d298a52", []},
   "ex_doc": {:hex, :ex_doc, "0.7.1"},
+  "fs": {:git, "git://github.com/synrc/fs.git", "1c9587c6c2651f2ac70f26e6cb8220e7b81a9d69", []},
   "inch_ex": {:hex, :inch_ex, "0.2.3"},
   "linguist": {:hex, :linguist, "0.1.4"},
   "plug": {:hex, :plug, "0.11.0"},
