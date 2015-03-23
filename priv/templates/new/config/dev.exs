@@ -14,13 +14,11 @@ config :<%= application_name %>, <%= application_module %>.Endpoint,
   watchers: <%= if brunch do %>[node: ["node_modules/brunch/bin/brunch", "watch"]]<% else %>[]<% end %>
 
 # Watch static and templates for browser reloading.
-# *Note*: Be careful with wildcards. Larger projects
-# will use higher CPU in dev as the number of files
-# grow. Adjust as necessary.
 config :<%= application_name %>, <%= application_module %>.Endpoint,
   live_reload: [
     patterns: [
       ~r{priv/static/.*(js|css|png|jpeg|jpg|gif)$},
+      ~r{web/views/.*(ex)$},
       ~r{web/templates/.*(eex)$}
     ]
   ]
