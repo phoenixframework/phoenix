@@ -5,7 +5,6 @@ defmodule Phoenix.Endpoint.Adapter do
   @moduledoc false
 
   import Supervisor.Spec
-  alias Phoenix.CodeReloader.ChangeDetector
 
   @doc """
   Starts the endpoint supervision tree.
@@ -18,8 +17,7 @@ defmodule Phoenix.Endpoint.Adapter do
       pubsub_children(mod, conf) ++
       [supervisor(Phoenix.Endpoint.Server, [otp_app, mod])] ++
       watcher_children(mod, conf) ++
-      code_reloader_children(mod, conf) ++
-      live_reload_children(mod, conf)
+      code_reloader_children(mod, conf)
 
     Supervisor.start_link(children, strategy: :one_for_one, name: mod)
   end
@@ -58,17 +56,6 @@ defmodule Phoenix.Endpoint.Adapter do
     conf[:root] ||
       raise "please set root: Path.expand(\"..\", __DIR__) in your endpoint " <>
             "inside config/config.exs in order to use code reloading or watchers"
-  end
-
-  defp live_reload_children(mod, conf) do
-    case Keyword.get(conf[:live_reload], :paths, []) do
-      []    -> []
-      paths -> [worker(ChangeDetector, [paths, {__MODULE__, :assets_change, [mod]}])]
-    end
-  end
-
-  def assets_change(endpoint) do
-    endpoint.broadcast!("phoenix", "assets:change", %{})
   end
 
   @doc """
@@ -110,8 +97,7 @@ defmodule Phoenix.Endpoint.Adapter do
 
      # Supervisor config
      pubsub: [],
-     watchers: [],
-     live_reload: [paths: []]]
+     watchers: []]
   end
 
   defp render_errors(module) do

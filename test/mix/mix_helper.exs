@@ -1,3 +1,9 @@
+# Mock live reload dependency.
+defmodule Phoenix.LiveReloader do
+  def init(opts), do: opts
+  def call(conn, _), do: conn
+end
+
 defmodule Mix.RouterTest do
   use Phoenix.Router
   get "/", PageController, :index, as: :page
