@@ -1,7 +1,7 @@
 <h2>Show <%= singular %></h2>
 
 <ul>
-<%= for {k, _} <- attrs do %>
+<%= for {k, _} <- inputs do %>
   <li>
     <strong><%= Phoenix.Naming.camelize(k) %>:</strong>
     <%= "<%=" %> @<%= singular %>.<%= k %> <%= "%\>" %>
