@@ -8,9 +8,9 @@
   * `send` has been renamed to `push` to unify client and server messaging commands
 
 * Backwards incompatible changes
-  * [Channel] `reply` has been renamed to `push` to better signify we are only push a message down the socket, not replying to a specific request.
-  * `use Phoenix.HTML` no longer imports controller functions. You must add `import Phoenix.Controller, only: [get_flash: 2]` manually to your views or your `web.ex`
-  * Code reloader must now be configured in your endpoint instead of Phoenix. Therefore, upgrade your `config/dev.exs` replacing
+  * [Channel] `reply` has been renamed to `push` to better signify we are only push a message down the socket, not replying to a specific request
+  * [HTML] `use Phoenix.HTML` no longer imports controller functions. You must add `import Phoenix.Controller, only: [get_flash: 2]` manually to your views or your `web.ex`
+  * [Endpoint] Code reloader must now be configured in your endpoint instead of Phoenix. Therefore, upgrade your `config/dev.exs` replacing
 
           config :phoenix, :code_reloader, true
 
@@ -18,33 +18,31 @@
 
           config :your_app, Your.Endpoint, code_reloader: true
 
-    Furthermore, the Phoenix.CodeReloader plug must be plugged only if `code_reloading?` is enabled. So you'll need to wrap it accordingly in `lib/your_app/endpoint.ex`:
-
-          if code_reloading? do
-            use Phoenix.CodeReloader
-          end
-
-  * The `live_reload` configuration has changed to allow a `:url` option to be
-    customized for operation with tools like [pow](http://pow.cx) in
-    development. By default live reload WebSocket url is "/phoenix". This will
-    cause `window.location` to be used. As `pow` only works with HTTP, you need
-    to set the `:url` option accordingly with your localhost config and port.
+  * [Endpoint] Live reloader is now a dependency instead of being shipped with Phoenix. Please add `{:phoenix_live_reload, "~> 0.2"}` to your dependencies
+  * [Endpoint] The `live_reload` configuration has changed to allow a `:url` option and work with `:patterns` instead of paths:
 
         config :your_app, Your.Endpoint,
           code_reloader: true,
           live_reload: [
             url: "ws://localhost:4000",
-            paths: [Path.expand("priv/static/javascripts/app.js"),
-                    Path.expand("priv/static/stylesheets/app.css"),
-                    Path.expand("web/templates/**/*.eex")]]]
+            patterns: [~r{priv/static/.*(js|css|png|jpeg|jpg|gif)$},
+                       ~r{web/views/.*(ex)$},
+                       ~r{web/templates/.*(eex)$}]]
+
+  * [Endpoint] Code and live reloader must now be explicitly plugged in your endpoint. Wrap them inside `lib/your_app/endpoint.ex` in a `code_reloading?` block:
+
+          if code_reloading? do
+            use Phoenix.LiveReloader
+            use Phoenix.CodeReloader
+          end
 
 * Enhancements
-  * Allow the default format used when rendering errors to be customized in the `render_views` configuration
-  * Add `button/2` function to `Phoenix.HTML`
-  * Add `textarea/3` function to `Phoenix.HTML.Form`
+  * [Endpoint] Allow the default format used when rendering errors to be customized in the `render_views` configuration
+  * [HTML] Add `button/2` function to `Phoenix.HTML`
+  * [HTML] Add `textarea/3` function to `Phoenix.HTML.Form`
 
 * Bug fixes
-  * Fix out of order hours, minutes and days in date/time select
+  * [HTML] Fix out of order hours, minutes and days in date/time select
 
 ## v0.10.0 (2015-03-08)
 
