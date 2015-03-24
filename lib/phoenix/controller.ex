@@ -1,7 +1,10 @@
 defmodule Phoenix.Controller do
   import Plug.Conn
+  alias Plug.Conn.AlreadySentError
 
   require Logger
+
+  @unsent [:unset, :set]
 
   @moduledoc """
   Controllers are used to group common functionality in the same
@@ -206,18 +209,29 @@ defmodule Phoenix.Controller do
 
   @doc """
   Stores the view for rendering.
+
+  Raises `Plug.Conn.AlreadySentError` if the conn was already sent.
   """
   @spec put_view(Plug.Conn.t, atom) :: Plug.Conn.t
-  def put_view(conn, module) do
+  def put_view(%Plug.Conn{state: state} = conn, module) when state in @unsent do
     put_private(conn, :phoenix_view, module)
   end
 
+  def put_view(_conn, _module), do: raise AlreadySentError
+
   @doc """
   Stores the view for rendering if one was not stored yet.
+
+  Raises `Plug.Conn.AlreadySentError` if the conn was already sent.
   """
   @spec put_new_view(Plug.Conn.t, atom) :: Plug.Conn.t
-  def put_new_view(conn, module) do
+  def put_new_view(%Plug.Conn{state: state} = conn, module)
+      when state in @unsent do
     update_in conn.private, &Map.put_new(&1, :phoenix_view, module)
+  end
+
+  def put_new_view(_conn, _module) do
+    raise Plug.Conn.AlreadySentError
   end
 
   @doc """
@@ -255,19 +269,28 @@ defmodule Phoenix.Controller do
       iex> layout(conn)
       {AppView, :print}
 
+  Raises `Plug.Conn.AlreadySentError` if the conn was already sent.
   """
   @spec put_layout(Plug.Conn.t, {atom, binary} | binary | false) :: Plug.Conn.t
-  def put_layout(conn, layout)
+  def put_layout(%Plug.Conn{state: state} = conn, layout) do
+    if state in @unsent do
+      _put_layout(conn, layout)
+    else
+      raise Plug.Conn.AlreadySentError
+    end
+  end
 
-  def put_layout(conn, false) do
+  def _put_layout(conn, layout)
+
+  def _put_layout(conn, false) do
     put_private(conn, :phoenix_layout, false)
   end
 
-  def put_layout(conn, {mod, layout}) when is_atom(mod) do
+  def _put_layout(conn, {mod, layout}) when is_atom(mod) do
     put_private(conn, :phoenix_layout, {mod, layout})
   end
 
-  def put_layout(conn, layout) when is_binary(layout) or is_atom(layout) do
+  def _put_layout(conn, layout) when is_binary(layout) or is_atom(layout) do
     update_in conn.private, fn private ->
       case Map.get(private, :phoenix_layout, false) do
         {mod, _} -> Map.put(private, :phoenix_layout, {mod, layout})
@@ -276,14 +299,22 @@ defmodule Phoenix.Controller do
     end
   end
 
+
+
   @doc """
   Stores the layout for rendering if one was not stored yet.
+
+  Raises `Plug.Conn.AlreadySentError` if the conn was already sent.
   """
   @spec put_new_layout(Plug.Conn.t, {atom, binary} | false) :: Plug.Conn.t
-  def put_new_layout(conn, layout)
+  def put_new_layout(%Plug.Conn{state: state} = conn, layout)
       when tuple_size(layout) == 2
       when layout == false do
-    update_in conn.private, &Map.put_new(&1, :phoenix_layout, layout)
+    if state in @unsent do
+      update_in conn.private, &Map.put_new(&1, :phoenix_layout, layout)
+    else
+      raise AlreadySentError
+    end
   end
 
   @doc """
@@ -298,10 +329,16 @@ defmodule Phoenix.Controller do
       iex> layout_formats conn
       ["html", "mobile"]
 
+  Raises `Plug.Conn.AlreadySentError` if the conn was already sent.
   """
   @spec put_layout_formats(Plug.Conn.t, [String.t]) :: Plug.Conn.t
-  def put_layout_formats(conn, formats) when is_list(formats) do
+  def put_layout_formats(%Plug.Conn{state: state} = conn, formats)
+      when state in @unsent and is_list(formats) do
     put_private(conn, :phoenix_layout_formats, formats)
+  end
+
+  def put_layout_formats(_conn, _formats) do
+    raise Plug.Conn.AlreadySentError
   end
 
   @doc """
