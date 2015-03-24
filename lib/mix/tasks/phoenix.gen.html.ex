@@ -1,12 +1,12 @@
-defmodule Mix.Tasks.Phoenix.Gen.Resource do
+defmodule Mix.Tasks.Phoenix.Gen.Html do
   use Mix.Task
 
-  @shortdoc "Generates resource files"
+  @shortdoc "Generates HTML files for a resource"
 
   @moduledoc """
   Generates a Phoenix resource.
 
-      mix phoenix.gen.resource User users name:string age:integer
+      mix phoenix.gen.html User users name:string age:integer
 
   The first argument is the module name followed by
   its plural name (used for resources and schema).
@@ -59,10 +59,10 @@ defmodule Mix.Tasks.Phoenix.Gen.Resource do
 
   defp raise_with_help do
     Mix.raise """
-    mix phoenix.gen.resource expects both singular and plural names
+    mix phoenix.gen.html expects both singular and plural names
     of the generated resource followed by any number of attributes:
 
-        mix phoenix.gen.resource User users name:string
+        mix phoenix.gen.html User users name:string
     """
   end
 

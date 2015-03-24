@@ -1,6 +1,6 @@
 Code.require_file "../mix_helper.exs", __DIR__
 
-defmodule Mix.Tasks.Phoenix.Gen.ResourceTest do
+defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
   use ExUnit.Case
   import MixHelper
 
@@ -11,8 +11,8 @@ defmodule Mix.Tasks.Phoenix.Gen.ResourceTest do
 
   test "generates resource" do
     in_tmp "generates resource", fn ->
-      Mix.Tasks.Phoenix.Gen.Resource.run ["user", "users", "name", "age:integer", "nicks:array:text",
-                                          "famous:boolean", "born_at:datetime", "secret:uuid"]
+      Mix.Tasks.Phoenix.Gen.Html.run ["user", "users", "name", "age:integer", "nicks:array:text",
+                                      "famous:boolean", "born_at:datetime", "secret:uuid"]
 
       assert_file "web/models/user.ex"
       assert [_] = Path.wildcard("priv/repo/migrations/*_create_user.exs")
@@ -61,7 +61,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ResourceTest do
 
   test "generates nested resource" do
     in_tmp "generates nested resource", fn ->
-      Mix.Tasks.Phoenix.Gen.Resource.run ["Admin.User", "users", "name:string"]
+      Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "users", "name:string"]
 
       assert_file "web/models/admin/user.ex"
       assert [_] = Path.wildcard("priv/repo/migrations/*_create_admin_user.exs")
@@ -105,7 +105,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ResourceTest do
 
   test "plural can't contain a colon" do
     assert_raise Mix.Error, fn ->
-      Mix.Tasks.Phoenix.Gen.Resource.run ["Admin.User", "name:string", "foo:string"]
+      Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "name:string", "foo:string"]
     end
   end
 end
