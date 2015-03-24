@@ -10,6 +10,7 @@ defmodule <%= application_module %>.Endpoint do
   # :code_reloader configuration of your endpoint.
   if code_reloading? do
     plug Phoenix.CodeReloader
+    plug Phoenix.LiveReloader
   end
 
   plug Plug.Logger

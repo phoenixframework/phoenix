@@ -49,7 +49,7 @@ defmodule Phoenix.CodeReloader do
         |> send_resp(500, template(conn, output))
         |> halt()
       _ ->
-        Phoenix.Router.LiveReload.call(conn, Phoenix.Router.LiveReload.init(opts))
+        conn
     end
   end
 

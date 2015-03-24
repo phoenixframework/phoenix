@@ -97,8 +97,7 @@ defmodule Phoenix.Endpoint.Adapter do
 
      # Supervisor config
      pubsub: [],
-     watchers: [],
-     live_reload: [patterns: []]]
+     watchers: []]
   end
 
   defp render_errors(module) do

@@ -50,24 +50,4 @@ defmodule Phoenix.CodeReloaderTest do
     assert conn.resp_body =~ "oops"
     assert conn.resp_body =~ "CompilationError at GET /"
   end
-
-  test "injects live_reload for html requests if configured" do
-    opts = Phoenix.CodeReloader.init([])
-    conn = conn(:get, "/")
-           |> Plug.Conn.put_private(:phoenix_endpoint, Endpoint)
-           |> put_resp_content_type("text/html")
-           |> Phoenix.CodeReloader.call(opts)
-           |> send_resp(200, "")
-    assert to_string(conn.resp_body) |> String.contains?("<iframe src=\"/phoenix/live-reloader\" width=\"0\" height=\"0\" scrolling=\"no\" frameborder=\"0\"></iframe>")
-  end
-
-  test "skips live_reload if not html request" do
-    opts = Phoenix.CodeReloader.init([])
-    conn = conn(:get, "/")
-           |> Plug.Conn.put_private(:phoenix_endpoint, Endpoint)
-           |> put_resp_content_type("application/json")
-           |> Phoenix.CodeReloader.call(opts)
-           |> send_resp(200, "")
-    refute to_string(conn.resp_body) |> String.contains?("<iframe src=\"/phoenix/live-reloader\" width=\"0\" height=\"0\" scrolling=\"no\" frameborder=\"0\"></iframe>")
-  end
 end
