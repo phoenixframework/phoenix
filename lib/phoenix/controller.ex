@@ -299,8 +299,6 @@ defmodule Phoenix.Controller do
     end
   end
 
-
-
   @doc """
   Stores the layout for rendering if one was not stored yet.
 
@@ -308,7 +306,7 @@ defmodule Phoenix.Controller do
   """
   @spec put_new_layout(Plug.Conn.t, {atom, binary} | false) :: Plug.Conn.t
   def put_new_layout(%Plug.Conn{state: state} = conn, layout)
-      when tuple_size(layout) == 2 or layout == false do
+      when (is_tuple(layout) and tuple_size(layout) == 2) or layout == false do
     if state in @unsent do
       update_in conn.private, &Map.put_new(&1, :phoenix_layout, layout)
     else
