@@ -1,6 +1,5 @@
 defmodule Mix.Tasks.Phoenix.Gen.Resource do
   use Mix.Task
-  alias Phoenix.Naming
 
   @shortdoc "Generates resource files"
 
@@ -45,23 +44,18 @@ defmodule Mix.Tasks.Phoenix.Gen.Resource do
   def run([singular,plural|attrs]) do
     if String.contains?(plural, ":"), do: raise_with_help
 
-    base      = Mix.Phoenix.base
-    scoped    = Naming.camelize(singular)
-    path      = Naming.underscore(scoped)
-    singular  = String.split(path, "/") |> List.last
-    module    = Module.concat(base, scoped) |> inspect
-    alias     = String.split(module, ".") |> List.last
-    route     = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
+    binding   = Mix.Phoenix.inflect(singular)
+    path      = binding[:path]
     attrs     = split_attrs(attrs)
     migration = String.replace(path, "/", "_")
-    timestamp = timestamp()
+    route     = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
 
-    binding = [path: path, singular: singular, module: module, attrs: attrs,
-               plural: plural, route: route, base: base, alias: alias, scoped: scoped,
+    binding = binding ++
+              [attrs: attrs, plural: plural, route: route,
                types: types(attrs), inputs: inputs(attrs), defaults: defaults(attrs)]
 
     Mix.Phoenix.copy_from source_dir, "", binding, [
-      {:eex, "migration.exs",  "priv/repo/migrations/#{timestamp}_create_#{migration}.exs"},
+      {:eex, "migration.exs",  "priv/repo/migrations/#{timestamp()}_create_#{migration}.exs"},
       {:eex, "controller.ex",  "web/controllers/#{path}_controller.ex"},
       {:eex, "model.ex",       "web/models/#{path}.ex"},
       {:eex, "edit.html.eex",  "web/templates/#{path}/edit.html.eex"},
@@ -76,7 +70,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Resource do
 
     Add the resource to the proper scope in web/router.ex:
 
-        resources "/#{route}", #{scoped}Controller
+        resources "/#{route}", #{binding[:scoped]}Controller
 
     and then update your repository by running migrations:
 

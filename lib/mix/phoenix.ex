@@ -25,6 +25,41 @@ defmodule Mix.Phoenix do
   end
 
   @doc """
+  Inflect path, scope, alias and more from the given name.
+
+      iex> Mix.Phoenix.inflect("user")
+      [alias: "User",
+       base: "Phoenix",
+       module: "Phoenix.User",
+       scoped: "User",
+       singular: "user",
+       path: "user"]
+
+      iex> Mix.Phoenix.inflect("Admin.User")
+      [alias: "User",
+       base: "Phoenix",
+       module: "Phoenix.Admin.User",
+       scoped: "Admin.User",
+       singular: "user",
+       path: "admin/user"]
+  """
+  def inflect(singular) do
+    base     = Mix.Phoenix.base
+    scoped   = Phoenix.Naming.camelize(singular)
+    path     = Phoenix.Naming.underscore(scoped)
+    singular = String.split(path, "/") |> List.last
+    module   = Module.concat(base, scoped) |> inspect
+    alias    = String.split(module, ".") |> List.last
+
+    [alias: alias,
+     base: base,
+     module: module,
+     scoped: scoped,
+     singular: singular,
+     path: path]
+  end
+
+  @doc """
   Returns the module base name based on the configuration value.
 
       config :my_app
