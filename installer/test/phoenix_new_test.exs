@@ -61,6 +61,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/web/static/vendor/phoenix.js"
       assert_file "photo_blog/web/static/js/app.js"
       assert_file "photo_blog/web/static/css/app.scss"
+      assert_file "photo_blog/web/static/css/_phoenix.scss"
       assert_file "photo_blog/config/dev.exs", ~r/watchers: \[node:/
 
       refute File.exists? "photo_blog/priv/static/css/app.css"

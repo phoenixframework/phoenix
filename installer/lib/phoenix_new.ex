@@ -41,13 +41,14 @@ defmodule Mix.Tasks.Phoenix.New do
     {:text, "static/brunch/.gitignore",       ".gitignore"},
     {:text, "static/brunch/brunch-config.js", "brunch-config.js"},
     {:text, "static/brunch/package.json",     "package.json"},
-    {:text, "static/app.css",                 "web/static/css/app.scss"},
+    {:text, "static/brunch/app.scss",         "web/static/css/app.scss"},
+    {:text, "static/brunch/_phoenix.scss",    "web/static/css/_phoenix.scss"},
     {:text, "static/brunch/app.js",           "web/static/js/app.js"},
   ]
 
   @bare [
     {:text, "static/bare/.gitignore", ".gitignore"},
-    {:text, "static/app.css",         "priv/static/css/app.css"},
+    {:text, "static/bare/app.css",    "priv/static/css/app.css"},
     {:text, "static/bare/app.js",     "priv/static/js/app.js"},
   ]
 
