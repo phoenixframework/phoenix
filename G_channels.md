@@ -64,7 +64,7 @@ The default transport mechanism is via WebSockets which will fall back to LongPo
 
 - Client Libraries
 
-Phoenix currently ships with it's own JavaScript client. There is a Swift client under construction, and an Android client would be great if anyone finds that project exciting and would like to write one.
+Phoenix currently ships with its own JavaScript client. There is a Swift client under construction, and an Android client would be great if anyone finds that project exciting and would like to write one.
 
 #### A Quick Test Run
 Before we go in-depth into Channels, let's do a quick test to get a feeling for how this works. We'll broadcast a simple message to ourselves in iex on the topic `"rooms:demo"`. Let's shut down our application if it is already running by hitting `ctrl-c` twice in the iex session. Then let's run `$ iex -S mix phoenix.server` at the root of our application.
@@ -315,7 +315,7 @@ web/channels/food_channel.ex:1: warning: redefining module HelloPhoenix.FoodChan
 {:reloaded, HelloPhoenix.FoodChannel, [HelloPhoenix.FoodChannel]}
 ```
 
-Great, now let's call the `dispatch/4` function again using the "foods:all" topic and the "leave" event. Again, this request will make it's way from the router all the way to the `leave/2` function in our `FoodChannel`.
+Great, now let's call the `dispatch/4` function again using the "foods:all" topic and the "leave" event. Again, this request will make its way from the router all the way to the `leave/2` function in our `FoodChannel`.
 
 ```console
 iex(40)> {:leave, socket} = Phoenix.Channel.Transport.dispatch socket, "foods:all", "leave", %{}
