@@ -13,13 +13,19 @@ defmodule Phoenix.Endpoint.Adapter do
     conf = config(otp_app, mod)
 
     children =
-      [worker(Phoenix.Config, [otp_app, mod, defaults(otp_app, mod)])] ++
+      config_children(mod, conf) ++
       pubsub_children(mod, conf) ++
-      [supervisor(Phoenix.Endpoint.Server, [otp_app, mod])] ++
+      server_children(mod, conf) ++
       watcher_children(mod, conf) ++
       code_reloader_children(mod, conf)
 
     Supervisor.start_link(children, strategy: :one_for_one, name: mod)
+  end
+
+  defp config_children(mod, conf) do
+    app  = conf[:otp_app]
+    args = [app, mod, defaults(app, mod), [name: Module.concat(mod, Config)]]
+    [worker(Phoenix.Config, args)]
   end
 
   defp pubsub_children(mod, conf) do
@@ -30,6 +36,11 @@ defmodule Phoenix.Endpoint.Adapter do
     else
       []
     end
+  end
+
+  defp server_children(mod, conf) do
+    args = [conf[:otp_app], mod, [name: Module.concat(mod, Server)]]
+    [supervisor(Phoenix.Endpoint.Server, args)]
   end
 
   defp watcher_children(_mod, conf) do
@@ -43,10 +54,11 @@ defmodule Phoenix.Endpoint.Adapter do
     end
   end
 
-  defp code_reloader_children(_, conf) do
+  defp code_reloader_children(mod, conf) do
     if conf[:code_reloader] do
-      [worker(Phoenix.CodeReloader.Server,
-              [conf[:otp_app], root!(conf), conf[:reloadable_paths]])]
+      args = [conf[:otp_app], root!(conf), conf[:reloadable_paths],
+              [name: Module.concat(mod, CodeReloader)]]
+      [worker(Phoenix.CodeReloader.Server, args)]
     else
       []
     end

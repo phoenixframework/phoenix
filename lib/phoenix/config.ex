@@ -11,8 +11,8 @@ defmodule Phoenix.Config do
   @doc """
   Starts a Phoenix configuration handler.
   """
-  def start_link(otp_app, module, defaults) do
-    GenServer.start_link(__MODULE__, {otp_app, module, defaults})
+  def start_link(otp_app, module, defaults, opts \\ []) do
+    GenServer.start_link(__MODULE__, {otp_app, module, defaults}, opts)
   end
 
   @doc """

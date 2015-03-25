@@ -5,9 +5,9 @@ defmodule Phoenix.Endpoint.Server do
   @handler Phoenix.Endpoint.CowboyHandler
   use Supervisor
 
-  def start_link(otp_app, endpoint) do
+  def start_link(otp_app, endpoint, opts \\ []) do
     if endpoint.config(:server) do
-      Supervisor.start_link(__MODULE__, {otp_app, endpoint})
+      Supervisor.start_link(__MODULE__, {otp_app, endpoint}, opts)
     else
       :ignore
     end
