@@ -129,7 +129,7 @@ Migrations are files which define changes to our database schema. They can run v
 Ecto provides a handy mix task to generate a blank migration file for us.
 
 ```console
-$ mix ecto.gen.migration HelloPhoenix.Repo initial_users_create
+$ mix ecto.gen.migration initial_users_create
 * creating priv/repo/migrations
 * creating priv/repo/migrations/20141125235524_initial_users_create.exs
 ```
@@ -141,42 +141,32 @@ Note also that the first part of the migration file itself is a timestamp. Ecto 
 Here's the empty migration file Ecto created.
 
 ```elixir
-defmodule HelloPhoenix.Repo.Migrations.InitialUsersCreate do
+efmodule HelloPhoenix.Repo.Migrations.InitialUsersCreate do
   use Ecto.Migration
 
-  def up do
-    ""
-  end
-
-  def down do
-    ""
+  def change do
   end
 end
 ```
 
-We need to fill out the strings in the `up/0` and `down/0` functions with the SQL statements which will create and drop out `users` table.
+We need to fill out the `change/0` function using ecto's DSL to create the `users` table.
 
 ```elixir
-defmodule HelloPhoenix.Repo.Migrations.InitialUsersCreate do
+efmodule HelloPhoenix.Repo.Migrations.InitialUsersCreate do
   use Ecto.Migration
 
-  def up do
-    """
-    CREATE TABLE users(
-    id serial primary key,
-    first_name varchar(255),
-    last_name varchar(255),
-    email varchar(255),
-    created_at timestamp,
-    updated_at timestamp)
-    """
-  end
+  def change do
+    create table(:users) do
+      add :first_name, :string
+      add :last_name,  :string
+      add :email,      :string
 
-  def down do
-    "DROP TABLE users"
+      timestamps
+    end
   end
 end
 ```
+
 Then we need to run our migration.
 
 ```console
@@ -421,7 +411,7 @@ phoenix_demo=# select * from users;
 
 We've taken a look at Ecto's basic built-in query functions above, but what if we need something a little more complex? Ecto has a very expressive query building DSL. It also allows us to define query modules in which to define functions to perform specific queries. We'll explore both of these next.
 
-For more complex queries, we have two options. If we have a one-off query, we might define a query using Ecto's dsl wherever we may be in the code, and have the `HelloPhoenix.Repo` execute our query right there. If, on the other hand, we might re-use our query, we can create a function in an Ecto query module to wrap the creation and execution of the query. That's the path we will persue here.
+For more complex queries, we have two options. If we have a one-off query, we might define a query using Ecto's dsl wherever we may be in the code, and have the `HelloPhoenix.Repo` execute our query right there. If, on the other hand, we might re-use our query, we can create a function in an Ecto query module to wrap the creation and execution of the query. That's the path we will pursue here.
 
 To begin with, let's start from a clean slate. We'll roll back and then migrate our database to reset both our tables and sequences.
 
@@ -435,7 +425,7 @@ $ mix ecto.migrate HelloPhoenix.Repo
 Now let's generate a migration to add a column to our `users` table.
 
 ```console
-$ mix ecto.gen.migration HelloPhoenix.Repo add-active-column-to-users
+$ mix ecto.gen.migration add-active-column-to-users
 * creating priv/repo/migrations
 * creating priv/repo/migrations/20141130053817_add-active-column-to-users.exs
 ```
@@ -457,16 +447,16 @@ end
 ```
 With the field added to the model, we can fill out the migration we just created.
 
+#FIXME - use dsl
+
 ```elixir
 defmodule :"Elixir.HelloPhoenix.Repo.Migrations.Add-active-column-to-users" do
   use Ecto.Migration
 
-  def up do
-    "ALTER TABLE users ADD COLUMN active boolean"
-  end
-
-  def down do
-    "ALTER TABLE users DROP COLUMN active"
+  def change do
+    alter table(:posts) do
+      add :active, :boolean
+    end
   end
 end
 ```

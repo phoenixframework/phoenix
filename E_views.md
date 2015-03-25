@@ -105,7 +105,7 @@ This doesn't correspond to any action in our controller, but we'll exercise it i
 
 ```console
 iex(1)> Phoenix.View.render(HelloPhoenix.PageView, "test.html", %{})
-{:safe, "This is the message: Hello from the view!\n"}
+  {:safe, [["" | "This is the message: "] | "Hello from the view!"]}
 ```
 As we can see, we're calling `render/3` with the individual view responsible for our test template, the name of our test template, and an empty map representing any data we might have wanted to pass in.
 
@@ -134,16 +134,18 @@ iex(3)> Phoenix.View.render(HelloPhoenix.PageView, "test.html", message: "Assign
 Let's test out the HTML escaping, just for fun.
 
 ```console
-iex(6)> Phoenix.View.render(HelloPhoenix.PageView, "test.html", message: "<script>badThings();</script>")
+iex(4)> Phoenix.View.render(HelloPhoenix.PageView, "test.html", message: "<script>badThings();</script>")
 {:safe,
- "I came from assigns: &lt;script&gt;badThings();&lt;/script&gt;\nThis is the message: Hello from the view!\n"}
+  [[[["" | "I came from assigns: "] | "Assigns has an @."] |
+  "\nThis is the message: "] | "Hello from the view!"]}
 ```
 
 If we need only the rendered string, without the whole tuple, we can use the `render_to_iodata/3`.
 
  ```console
- iex(3)> Phoenix.View.render_to_iodata(HelloPhoenix.PageView, "test.html", message: "Assigns has an @.")
-"I came from assigns: Assigns has an @.\nThis is the message: Hello from the view!\n"
+ iex(5)> Phoenix.View.render_to_iodata(HelloPhoenix.PageView, "test.html", message: "Assigns has an @.")
+ [[[["" | "I came from assigns: "] | "Assigns has an @."] |
+ "\nThis is the message: "] | "Hello from the view!"]
   ```
 
 ###A Word About Layouts
