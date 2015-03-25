@@ -7,4 +7,4 @@ MIX_ENV=prod mix compile.protocols
 MIX_ENV=prod PORT=4001 elixir -pa _build/prod/consolidated -S mix phoenix.server
 ```
 
-And you are up and running. If you find yourself needing guidance for a more advanced release procedure please checkout [Advanced Deployment](http://www.phoenixframework.org/docs/advanced-deployment)
+And you are up and running. If you find yourself needing guidance for a more advanced release procedure please check out [Advanced Deployment](http://www.phoenixframework.org/docs/advanced-deployment)
