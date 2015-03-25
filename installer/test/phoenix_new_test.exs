@@ -14,6 +14,11 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     :ok
   end
 
+  test "returns the versin" do
+    Mix.Tasks.Phoenix.New.run(["-v"])
+    assert_received {:mix_shell, :info, ["Phoenix v" <> _]}
+  end
+
   test "new with defaults" do
     in_tmp "new with defaults", fn ->
       Mix.Tasks.Phoenix.New.run([@app_name])

@@ -2,46 +2,9 @@ defmodule Mix.Tasks.Phoenix.New do
   use Mix.Task
   import Mix.Generator
 
-  version = Mix.Project.config[:version]
-  @shortdoc "Create a new Phoenix v#{version} application"
-
-  @moduledoc """
-  Creates a new Phoenix project.
-
-  It expects the path of the project as argument.
-
-      mix phoenix.new PATH [--module MODULE] [--app APP]
-
-  A project at the given PATH  will be created. The
-  application name and module name will be retrieved
-  from the path, unless `--module` or `--app` is given.
-
-  ## Options
-
-    * `--app` - the name of the OTP application
-
-    * `--module` - the name of the base module in
-      the generated skeleton
-
-    * `--no-brunch` - do not generate brunch files
-      for static asset building
-
-    * `--no-ecto` - do not generate ecto files for
-      the model layer
-
-  ## Examples
-
-      mix phoenix.new hello_world
-
-  Is equivalent to:
-
-      mix phoenix.new hello_world --module HelloWorld
-
-  Without brunch:
-
-      mix phoenix.new ~/Workspace/hello_world --no-brunch
-
-  """
+  @phoenix Path.expand("../..", __DIR__)
+  @version Mix.Project.config[:version]
+  @shortdoc "Create a new Phoenix v#{@version} application"
 
   # File mappings
 
@@ -102,8 +65,48 @@ defmodule Mix.Tasks.Phoenix.New do
   embed_text :phoenix_js, from_file("../../../priv/static/phoenix.js")
   embed_text :phoenix_png, from_file("../../../priv/static/phoenix.png")
 
-  @phoenix Path.expand("../..", __DIR__)
+  @moduledoc """
+  Creates a new Phoenix project.
+
+  It expects the path of the project as argument.
+
+      mix phoenix.new PATH [--module MODULE] [--app APP]
+
+  A project at the given PATH  will be created. The
+  application name and module name will be retrieved
+  from the path, unless `--module` or `--app` is given.
+
+  ## Options
+
+    * `--app` - the name of the OTP application
+
+    * `--module` - the name of the base module in
+      the generated skeleton
+
+    * `--no-brunch` - do not generate brunch files
+      for static asset building
+
+    * `--no-ecto` - do not generate ecto files for
+      the model layer
+
+  ## Examples
+
+      mix phoenix.new hello_world
+
+  Is equivalent to:
+
+      mix phoenix.new hello_world --module HelloWorld
+
+  Without brunch:
+
+      mix phoenix.new ~/Workspace/hello_world --no-brunch
+
+  """
   @switches [dev: :boolean, brunch: :boolean, ecto: :boolean]
+
+  def run([version]) when version in ~w(-v --version) do
+    Mix.shell.info "Phoenix v#{@version}"
+  end
 
   def run(argv) do
     {opts, argv, _} = OptionParser.parse(argv, switches: @switches)
