@@ -1,11 +1,13 @@
 defmodule Mix.Tasks.Phoenix.New do
   use Mix.Task
-  alias Phoenix.Naming
+  import Mix.Generator
 
-  @shortdoc "Create a new Phoenix application"
+  version = Mix.Project.config[:version]
+  @shortdoc "Create a new Phoenix v#{version} application"
 
   @moduledoc """
   Creates a new Phoenix project.
+
   It expects the path of the project as argument.
 
       mix phoenix.new PATH [--module MODULE] [--app APP]
@@ -41,24 +43,66 @@ defmodule Mix.Tasks.Phoenix.New do
 
   """
 
+  # File mappings
+
+  @new [
+    {:eex,  "new/config/config.exs",                         "config/config.exs"},
+    {:eex,  "new/config/dev.exs",                            "config/dev.exs"},
+    {:eex,  "new/config/prod.exs",                           "config/prod.exs"},
+    {:eex,  "new/config/prod.secret.exs",                    "config/prod.secret.exs"},
+    {:eex,  "new/config/test.exs",                           "config/test.exs"},
+    {:eex,  "new/lib/application_name.ex",                   "lib/application_name.ex"},
+    {:eex,  "new/lib/application_name/endpoint.ex",          "lib/application_name/endpoint.ex"},
+    {:eex,  "new/test/application_name_test.exs",            "test/application_name_test.exs"},
+    {:eex,  "new/test/test_helper.exs",                      "test/test_helper.exs"},
+    {:keep, "new/web/channels",                              "web/channels"},
+    {:eex,  "new/web/controllers/page_controller.ex",        "web/controllers/page_controller.ex"},
+    {:keep, "new/web/models",                                "web/models"},
+    {:eex,  "new/web/templates/layout/application.html.eex", "web/templates/layout/application.html.eex"},
+    {:eex,  "new/web/templates/page/index.html.eex",         "web/templates/page/index.html.eex"},
+    {:eex,  "new/web/views/error_view.ex",                   "web/views/error_view.ex"},
+    {:eex,  "new/web/views/layout_view.ex",                  "web/views/layout_view.ex"},
+    {:eex,  "new/web/views/page_view.ex",                    "web/views/page_view.ex"},
+    {:eex,  "new/web/router.ex",                             "web/router.ex"},
+    {:eex,  "new/web/web.ex",                                "web/web.ex"},
+    {:eex,  "new/mix.exs",                                   "mix.exs"},
+    {:eex,  "new/README.md",                                 "README.md"},
+  ]
+
+  @ecto [
+    {:eex,  "ecto/repo.ex",         "lib/application_name/repo.ex"},
+    {:keep, "priv/repo/migrations", "priv/repo/migrations"}
+  ]
+
   @brunch [
-    {:text, "brunch/.gitignore",       ".gitignore"},
-    {:text, "brunch/brunch-config.js", "brunch-config.js"},
-    {:text, "brunch/package.json",     "package.json"},
-    {:text, "images/phoenix.png",      "priv/static/images/phoenix.png"},
-    {:text, "app.css",                 "web/static/css/app.scss"},
-    {:text, "brunch/app.js",           "web/static/js/app.js"},
-    {:text, "phoenix.js",              "web/static/vendor/phoenix.js"},
+    {:text, "static/brunch/.gitignore",       ".gitignore"},
+    {:text, "static/brunch/brunch-config.js", "brunch-config.js"},
+    {:text, "static/brunch/package.json",     "package.json"},
+    {:text, "static/app.css",                 "web/static/css/app.scss"},
+    {:text, "static/brunch/app.js",           "web/static/js/app.js"},
   ]
 
   @bare [
-    {:text, "bare/.gitignore",    ".gitignore"},
-    {:text, "app.css",            "priv/static/css/app.css"},
-    {:text, "images/phoenix.png", "priv/static/images/phoenix.png"},
-    {:text, "bare/app.js",        "priv/static/js/app.js"},
-    {:text, "phoenix.js",         "priv/static/js/phoenix.js"},
+    {:text, "static/bare/.gitignore", ".gitignore"},
+    {:text, "static/app.css",         "priv/static/css/app.css"},
+    {:text, "static/bare/app.js",     "priv/static/js/app.js"},
   ]
 
+  # Embed all defined templates
+  root = Path.expand("../templates", __DIR__)
+
+  for {format, source, _} <- @new ++ @ecto ++ @brunch ++ @bare do
+    unless format == :keep do
+      @external_resource Path.join(root, source)
+      def render(unquote(source)), do: unquote(File.read!(Path.join(root, source)))
+    end
+  end
+
+  # Embed missing files from Phoenix static.
+  embed_text :phoenix_js, from_file("../../../priv/static/phoenix.js")
+  embed_text :phoenix_png, from_file("../../../priv/static/phoenix.png")
+
+  @phoenix Path.expand("../..", __DIR__)
   @switches [dev: :boolean, brunch: :boolean, ecto: :boolean]
 
   def run(argv) do
@@ -70,7 +114,7 @@ defmodule Mix.Tasks.Phoenix.New do
       [path|_] ->
         app = opts[:app] || Path.basename(Path.expand(path))
         check_application_name!(app, !!opts[:app])
-        mod = opts[:module] || Naming.camelize(app)
+        mod = opts[:module] || Mix.Utils.camelize(app)
         check_module_name!(mod)
 
         run(app, mod, path, opts)
@@ -82,9 +126,10 @@ defmodule Mix.Tasks.Phoenix.New do
     ecto = Keyword.get(opts, :ecto, true)
     brunch = Keyword.get(opts, :brunch, true)
 
-    pubsub_server = [mod]
-                    |> Module.concat()
-                    |> Naming.base_concat(PubSub)
+    pubsub_server = mod
+                    |> String.split(".")
+                    |> hd
+                    |> Module.concat(PubSub)
 
     binding = [application_name: app,
                application_module: mod,
@@ -98,7 +143,7 @@ defmodule Mix.Tasks.Phoenix.New do
                brunch: brunch,
                ecto: ecto]
 
-    copy_wildcard templates_dir("new"), path, app, binding
+    copy_from path, binding, @new
 
     # Optional contents
     copy_model  app, path, binding
@@ -121,9 +166,9 @@ defmodule Mix.Tasks.Phoenix.New do
     """
   end
 
-  defp copy_model(app, path, binding) do
+  defp copy_model(_app, path, binding) do
     if binding[:ecto] do
-      copy_wildcard templates_dir("ecto"), path, app, binding
+      copy_from path, binding, @ecto
 
       append_to path, "config/dev.exs", """
 
@@ -161,9 +206,13 @@ defmodule Mix.Tasks.Phoenix.New do
 
   defp copy_static(_app, path, binding) do
     if binding[:brunch] do
-      Mix.Phoenix.copy_from priv_dir("static"), path, [], @brunch
+      copy_from path, binding, @brunch
+      create_file Path.join(path, "web/static/vendor/phoenix.js"), phoenix_js_text()
+      create_file Path.join(path, "priv/static/images/phoenix.png"), phoenix_png_text()
     else
-      Mix.Phoenix.copy_from priv_dir("static"), path, [], @bare
+      copy_from path, binding, @bare
+      create_file Path.join(path, "priv/static/js/phoenix.js"), phoenix_js_text()
+      create_file Path.join(path, "priv/static/images/phoenix.png"), phoenix_png_text()
     end
   end
 
@@ -199,48 +248,6 @@ defmodule Mix.Tasks.Phoenix.New do
 
   defp install_mix(_) do
     ask_and_run("Install mix dependencies?", "mix", "deps.get")
-  end
-
-  ## Specific functions
-
-  # Copies all contents in source dir to target dir.
-  # If application_name is seen in the path, it is
-  # replaced by the actual application name.
-  defp copy_wildcard(source_dir, target_dir, application_name, binding) do
-    source_paths =
-      source_dir
-      |> Path.join("**/*")
-      |> Path.wildcard(match_dot: true)
-
-    for source_path <- source_paths do
-      target_path = make_destination_path(source_path, source_dir,
-                                          target_dir, application_name)
-
-      cond do
-        File.dir?(source_path) ->
-          File.mkdir_p!(target_path)
-        Path.basename(source_path) == ".keep" ->
-          :ok
-        true ->
-          contents = EEx.eval_file(source_path, binding)
-          Mix.Generator.create_file(target_path, contents)
-      end
-    end
-
-    :ok
-  end
-
-  defp make_destination_path(source_path, source_dir, target_dir, application_name) do
-    target_path =
-      source_path
-      |> String.replace("application_name", application_name)
-      |> Path.relative_to(source_dir)
-    Path.join(target_dir, target_path)
-  end
-
-  defp append_to(path, file, contents) do
-    file = Path.join(path, file)
-    File.write!(file, File.read!(file) <> contents)
   end
 
   ## Helpers
@@ -294,18 +301,35 @@ defmodule Mix.Tasks.Phoenix.New do
     end
   end
 
-  defp phoenix_dep(true), do: ~s[{:phoenix, path: #{inspect File.cwd!}, override: true}]
+  defp phoenix_dep(true), do: ~s[{:phoenix, path: #{inspect @phoenix}, override: true}]
   defp phoenix_dep(_),    do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
 
   defp random_string(length) do
     :crypto.strong_rand_bytes(length) |> Base.encode64 |> binary_part(0, length)
   end
 
-  defp priv_dir(dir) do
-    Application.app_dir(:phoenix, Path.join("priv", dir))
+  ## Template helpers
+
+  defp copy_from(target_dir, binding, mapping) when is_list(mapping) do
+    application_name = Keyword.fetch!(binding, :application_name)
+    for {format, source, target_path} <- mapping do
+      target = Path.join(target_dir,
+                         String.replace(target_path, "application_name", application_name))
+
+      case format do
+        :keep ->
+          File.mkdir_p!(target)
+        :text ->
+          create_file(target, render(source))
+        :eex  ->
+          contents = EEx.eval_string(render(source), binding, file: source)
+          create_file(target, contents)
+      end
+    end
   end
 
-  defp templates_dir(dir) do
-    priv_dir(Path.join("templates", dir))
+  defp append_to(path, file, contents) do
+    file = Path.join(path, file)
+    File.write!(file, File.read!(file) <> contents)
   end
 end

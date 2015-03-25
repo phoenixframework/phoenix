@@ -1,9 +1,5 @@
 Code.require_file("router_helper.exs", __DIR__)
 
-# Get Mix output sent to the current process to
-# avoid polluting tests.
-Mix.shell(Mix.Shell.Process)
-
 # Starts web server applications
 Application.ensure_all_started(:cowboy)
 

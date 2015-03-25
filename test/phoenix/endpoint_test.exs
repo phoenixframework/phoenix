@@ -36,26 +36,26 @@ defmodule Phoenix.EndpointTest do
   end
 
   test "static_path/1 with and without caching" do
-    file = Path.expand("priv/static/images/phoenix.png", File.cwd!)
+    file = Path.expand("priv/static/phoenix.png", File.cwd!)
 
     # Old timestamp
     old_stat = File.stat!(file)
     old_vsn  = static_vsn(old_stat)
-    assert Endpoint.static_path("/images/phoenix.png") == "/api/images/phoenix.png?vsn=#{old_vsn}"
+    assert Endpoint.static_path("/phoenix.png") == "/api/phoenix.png?vsn=#{old_vsn}"
 
     # New timestamp
     File.touch!(file)
     new_stat = File.stat!(file)
     new_vsn  = static_vsn(new_stat)
-    assert Endpoint.static_path("/images/phoenix.png") == "/api/images/phoenix.png?vsn=#{new_vsn}"
+    assert Endpoint.static_path("/phoenix.png") == "/api/phoenix.png?vsn=#{new_vsn}"
 
     # Now with cache enabled
     config = put_in(@config[:cache_static_lookup], true)
     assert Endpoint.config_change([{Endpoint, config}], []) == :ok
 
-    assert Endpoint.static_path("/images/phoenix.png") == "/api/images/phoenix.png?vsn=#{new_vsn}"
+    assert Endpoint.static_path("/phoenix.png") == "/api/phoenix.png?vsn=#{new_vsn}"
     File.touch!(file, old_stat.mtime)
-    assert Endpoint.static_path("/images/phoenix.png") == "/api/images/phoenix.png?vsn=#{new_vsn}"
+    assert Endpoint.static_path("/phoenix.png") == "/api/phoenix.png?vsn=#{new_vsn}"
   end
 
   test "injects pubsub broadcast with configured server" do

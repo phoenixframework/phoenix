@@ -11,7 +11,9 @@ before_script:
   - export PATH=`pwd`/elixir/bin:$PATH
   - mix local.hex --force
   - mix deps.get --only test
-script: mix test
+script:
+  - mix test
+  - cd installer && mix test
 after_script:
   - mix deps.get --only docs
   - MIX_ENV=docs mix inch.report

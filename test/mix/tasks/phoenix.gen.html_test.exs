@@ -1,4 +1,4 @@
-Code.require_file "../mix_helper.exs", __DIR__
+Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 
 defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
   use ExUnit.Case

@@ -1,5 +1,9 @@
 /_build
 /deps
 /tmp
-erl_crash.dump
 /node_modules
+
+/installer/_build
+/installer/tmp
+
+erl_crash.dump
