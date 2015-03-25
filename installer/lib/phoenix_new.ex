@@ -102,6 +102,7 @@ defmodule Mix.Tasks.Phoenix.New do
   embed_text :phoenix_js, from_file("../../../priv/static/phoenix.js")
   embed_text :phoenix_png, from_file("../../../priv/static/phoenix.png")
 
+  @phoenix Path.expand("../..", __DIR__)
   @switches [dev: :boolean, brunch: :boolean, ecto: :boolean]
 
   def run(argv) do
@@ -300,7 +301,7 @@ defmodule Mix.Tasks.Phoenix.New do
     end
   end
 
-  defp phoenix_dep(true), do: ~s[{:phoenix, path: #{inspect Path.dirname(File.cwd!)}, override: true}]
+  defp phoenix_dep(true), do: ~s[{:phoenix, path: #{inspect @phoenix}, override: true}]
   defp phoenix_dep(_),    do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
 
   defp random_string(length) do
