@@ -5,3 +5,5 @@
 
 # Generate on crash by the VM
 erl_crash.dump
+
+/config/prod.secret.exs
