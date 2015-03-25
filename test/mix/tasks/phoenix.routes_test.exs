@@ -1,3 +1,10 @@
+Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
+
+defmodule Mix.RouterTest do
+  use Phoenix.Router
+  get "/", PageController, :index, as: :page
+end
+
 defmodule Mix.Tasks.Phoenix.RoutesTest do
   use ExUnit.Case, async: true
 

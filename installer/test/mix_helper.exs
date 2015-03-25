@@ -1,13 +1,6 @@
-# Mock live reload dependency.
-defmodule Phoenix.LiveReloader do
-  def init(opts), do: opts
-  def call(conn, _), do: conn
-end
-
-defmodule Mix.RouterTest do
-  use Phoenix.Router
-  get "/", PageController, :index, as: :page
-end
+# Get Mix output sent to the current
+# process to avoid polluting tests.
+Mix.shell(Mix.Shell.Process)
 
 defmodule MixHelper do
   import ExUnit.Assertions
