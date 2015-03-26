@@ -8,6 +8,9 @@ defmodule Phoenix do
     if :code.get_mode == :interactive do
       :code.delete(Access)
       :code.delete(Collectable)
+      :code.delete(List.Chars)
+      :code.delete(Phoenix.HTML.Safe)
+      :code.delete(Phoenix.Param)
     end
 
     # Warm up caches

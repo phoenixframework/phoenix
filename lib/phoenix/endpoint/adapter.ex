@@ -19,7 +19,12 @@ defmodule Phoenix.Endpoint.Adapter do
       watcher_children(mod, conf) ++
       code_reloader_children(mod, conf)
 
-    Supervisor.start_link(children, strategy: :one_for_one, name: mod)
+    {:ok, pid} = Supervisor.start_link(children, strategy: :one_for_one, name: mod)
+
+    # Warm up caches
+    mod.url()
+
+    {:ok, pid}
   end
 
   defp config_children(mod, conf) do
@@ -99,7 +104,7 @@ defmodule Phoenix.Endpoint.Adapter do
      ],
 
      # Runtime config
-     cache_static_lookup: false,
+     cache_static_lookup: true,
      http: false,
      https: false,
      reloadable_paths: ["web"],

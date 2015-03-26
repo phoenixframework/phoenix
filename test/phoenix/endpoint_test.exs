@@ -3,7 +3,7 @@ defmodule Phoenix.EndpointTest do
   use RouterHelper
 
   @config [url: [host: "example.com", path: "/api"],
-           server: false,
+           server: false, cache_static_lookup: false,
            pubsub: [adapter: Phoenix.PubSub.PG2, name: :endpoint_pub]]
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
 
