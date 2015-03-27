@@ -71,6 +71,8 @@ Before we go in-depth into Channels, let's do a quick test to get a feeling for 
 
 Normally, we would not work with the `Phoenix.PubSub` module directly. Since we won't be handling external requests, and since we want to keep this as simple as possible, we will be using it here.
 
+Warning: We're about to use the `subscribers/2` function in a number of places in this guide. This is a function that nobody besides PubSub adapter authors should ever use. We use it here only as an expedient way to verify that we are able to join and leave topics.
+
 ```console
 $ iex -S mix phoenix.server
 Erlang/OTP 17 [erts-6.0] [source-07b8f44] [64-bit] [smp:8:8] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
@@ -189,6 +191,9 @@ Let's explore this a little bit in iex. Before we do anything, we should check t
 ex(1)> Phoenix.PubSub.Local.subscribers(local, "foods:all")
 []
 ```
+
+Warning: Again, we're only using `subscribers/2` for demo purposes. It's not something that we should ever use in our applications.
+
 Ok, nobody has subscribed yet. What we're going to do is to dispatch a message to our `FoodChannel` which will be handled by the `join/3` function and authorize our socket.
 
 The first thing we need to do is create a `socket` struct. This one will work.
@@ -299,6 +304,8 @@ iex(12)> Phoenix.PubSub.Local.subscribers(local, "foods:delightful")
 [#PID<0.269.0>]
 ```
 
+Warning: Once again, we're only using `subscribers/2` for demo purposes. It's not something that we should ever use in our applications.
+
 Great, now let's add our `leave/2` function. For our purposes, we have no restrictions on leaving a topic, so let's always return `{:ok, socket}`.
 
 ```elixir
@@ -368,6 +375,9 @@ Let's see this in action. First, let's make sure we have joined the `"foods:all`
 iex(7)> Phoenix.PubSub.Local.subscribers(local, "foods:all")
 [#PID<0.269.0>]
 ```
+
+Warning: As above, we're only using `subscribers/2` for demo purposes. It's not something that we should ever use in our applications.
+
 If your pid isn't in the subscribers list, please follow the steps in "Joining a Channel Topic" above.
 
 Also, let's take a second to check the `socket` to make sure it is authorized for our topic using `authorized?/2`.
