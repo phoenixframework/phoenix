@@ -224,6 +224,15 @@ defmodule Phoenix.HTML.Form do
     generic_input(:number, form, field, opts)
   end
 
+  @doc """
+  Generates a password input.
+
+  See `password_input/3` for example and docs.
+  """
+  def password_input(form, field, opts \\ []) do
+    generic_input(:password, form, field, opts)
+  end
+
   defp generic_input(type, form, field, opts) when is_atom(field) and is_list(opts) do
     opts =
       opts
