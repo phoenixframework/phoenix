@@ -92,6 +92,7 @@ defmodule Phoenix.Integration.ChannelTest do
 
     WebsocketClient.join(sock, "rooms:lobby", %{})
     assert_receive %Message{event: "join", payload: %{"status" => "connected"}}
+    assert_receive %Message{event: "phx_reply_ok", payload: %{"ref" => nil, "reply" => %{}}, ref: nil, topic: "rooms:lobby"}
 
     WebsocketClient.send_event(sock, "rooms:lobby", "new:msg", %{body: "hi!"})
     assert_receive %Message{event: "new:msg", payload: %{"body" => "hi!"}}
@@ -100,7 +101,7 @@ defmodule Phoenix.Integration.ChannelTest do
     assert_receive %Message{event: "you:left", payload: %{"message" => "bye!"}}
     assert_receive %Message{event: "phx_chan_close", payload: %{}}
 
-    WebsocketClient.send_event(sock, "rooms:lobby", "new:msg", %{body: "hi!"})
+    WebsocketClient.send_event(sock, "rooms:lobby", "new:msg", %{body: "Should ignore"})
     refute_receive %Message{}
   end
 

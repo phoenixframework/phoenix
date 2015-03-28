@@ -28,7 +28,6 @@ defmodule Phoenix.Transports.WebSocket do
   """
 
   alias Phoenix.Channel.Transport
-  alias Phoenix.Socket.Message
 
   plug :check_origin
   plug :upgrade
@@ -76,18 +75,10 @@ defmodule Phoenix.Transports.WebSocket do
 
         case reason do
           :normal ->
-            {:reply, state.serializer.encode!(%Message{
-              topic: topic,
-              event: "phx_chan_close",
-              payload: %{}
-            }), new_state}
+            {:reply, state.serializer.encode!(Transport.chan_close_message(topic)), new_state}
 
           _other ->
-            {:reply, state.serializer.encode!(%Message{
-              topic: topic,
-              event: "phx_chan_error",
-              payload: %{}
-            }), new_state}
+            {:reply, state.serializer.encode!(Transport.chan_error_message(topic)), new_state}
         end
     end
   end

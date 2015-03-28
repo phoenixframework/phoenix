@@ -97,10 +97,23 @@ defmodule Phoenix.Channel.Transport do
     GenServer.cast(socket_pid, {:handle_in, msg.event, msg.payload})
     :ok
   end
-
   defp log_ignore(topic, router) do
     Logger.debug fn -> "Ignoring unmatched topic \"#{topic}\" in #{inspect(router)}" end
     :ignore
+  end
+
+  @doc """
+  Returns the `%Phoenix.Message{}` for a channel close event
+  """
+  def chan_close_message(topic) do
+    %Message{topic: topic, event: "phx_chan_close", payload: %{}}
+  end
+
+  @doc """
+  Returns the `%Phoenix.Message{}` for a channel error event
+  """
+  def chan_error_message(topic) do
+    %Message{topic: topic, event: "phx_chan_error", payload: %{}}
   end
 
   @doc """
