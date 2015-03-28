@@ -26,7 +26,7 @@ defmodule Phoenix.HTML.Engine do
   end
 
   @doc false
-  def handle_expr(buffer, tag, expr) when tag in ["=", '='] do
+  def handle_expr(buffer, "=", expr) do
     line   = line_from_expr(expr)
     expr   = expr(expr)
     buffer = unwrap(buffer)
@@ -37,7 +37,7 @@ defmodule Phoenix.HTML.Engine do
   end
 
   @doc false
-  def handle_expr(buffer, tag, expr) when tag in ["", ''] do
+  def handle_expr(buffer, "", expr) do
     expr   = expr(expr)
     buffer = unwrap(buffer)
 
