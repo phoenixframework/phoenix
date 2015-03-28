@@ -31,9 +31,12 @@ defmodule Phoenix.Channel.Server do
         {:ok, socket}
           PubSub.subscribe(socket.pubsub_server, self, socket.topic, link: true)
 
+          Phoenix.Channel.push(socket, "phx_reply_ok", %{ref: socket.ref, reply: %{}})
           {:ok, socket}
 
-      :ignore -> :ignore
+      :ignore ->
+        Phoenix.Channel.push(socket, "phx_reply_error", %{ref: socket.ref, reply: %{error: "ignore"}})
+        :ignore
 
       result ->
         {:stop, {:badarg, result}}

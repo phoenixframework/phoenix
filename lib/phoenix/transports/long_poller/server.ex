@@ -116,9 +116,9 @@ defmodule Phoenix.Transports.LongPoller.Server do
                               sockets_inverse: HashDict.delete(state.sockets_inverse, socket_pid)}
         case reason do
           :normal ->
-            publish_reply(%Message{topic: topic, event: "chan:close", payload: %{}}, new_state)
+            publish_reply(%Message{topic: topic, event: "phx_chan_close", payload: %{}}, new_state)
           _other ->
-            publish_reply(%Message{topic: topic, event: "chan:error", payload: %{}}, new_state)
+            publish_reply(%Message{topic: topic, event: "phx_chan_error", payload: %{}}, new_state)
         end
     end
   end

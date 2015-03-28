@@ -78,14 +78,14 @@ defmodule Phoenix.Transports.WebSocket do
           :normal ->
             {:reply, state.serializer.encode!(%Message{
               topic: topic,
-              event: "chan:close",
+              event: "phx_chan_close",
               payload: %{}
             }), new_state}
 
           _other ->
             {:reply, state.serializer.encode!(%Message{
               topic: topic,
-              event: "chan:error",
+              event: "phx_chan_error",
               payload: %{}
             }), new_state}
         end

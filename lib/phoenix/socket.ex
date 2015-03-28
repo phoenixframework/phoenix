@@ -14,6 +14,7 @@ defmodule Phoenix.Socket do
   * `assigns` - The map of socket assigns, default: `%{}`
   * `transport` - The socket's Transport, ie: `Phoenix.Transports.WebSocket`
   * `pubsub_server` - The registered name of the socket's PubSub server
+  * `ref` - The latest ref sent by the client
 
 
   """
@@ -29,6 +30,7 @@ defmodule Phoenix.Socket do
             authorized: false,
             transport: nil,
             pubsub_server: nil,
+            ref: nil,
             assigns: %{}
 
 

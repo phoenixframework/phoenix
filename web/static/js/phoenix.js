@@ -1,33 +1,116 @@
 let SOCKET_STATES = {connecting: 0, open: 1, closing: 2, closed: 3}
 
+class Push {
+  constructor(chan, event, payload){
+    this.chan = chan
+    this.event = event
+    this.payload = payload
+    this.ref = chan.socket.makeRef()
+    this.refEventOk  = chan.replyEventName("ok", this.ref)
+    this.receivedOk   = null
+    this.receivedErr  = null
+    this.refEventErr = chan.replyEventName("error", this.ref)
+    this.afterHooks = []
+    this.errorHooks = []
+    this.okHooks    = []
+  }
+
+  send(){
+    this.chan.on(this.refEventOk, payload => {
+      this.receivedOk = payload
+      this.okHooks.forEach( cb => cb(payload) )
+      this.chan.off(this.refEventOk)
+      this.cancelAfters()
+    })
+    this.chan.on(this.refEventErr, payload => {
+      this.receivedErr = payload
+      this.errorHooks.forEach( cb => cb(payload) )
+      this.chan.off(this.refEventErr)
+      this.cancelAfters()
+    })
+
+    this.chan.socket.push({
+      topic: this.chan.topic,
+      event: this.event,
+      payload: this.payload,
+      ref: this.ref
+    })
+  }
+
+  ok(cb){
+    if(this.recievedOk){ cb(this.receivedOk) } else { this.okHooks.push(cb) }
+    return this
+  }
+
+  error(cb){
+    if(this.receivedErr){ cb(this.receivedErr) } else { this.errorHooks.push(cb) }
+    return this
+  }
+
+  after(millisec, cb){
+    if(!this.receivedOk && !this.recievedErr){ this.afterHooks.push(setTimeout(cb, millisec)) }
+    return this
+  }
+
+  cancelAfters(){ this.afterHooks.forEach( t => clearTimeout(t) ) }
+}
+
 export class Channel {
   constructor(topic, message, callback, socket) {
-    this.topic    = topic
-    this.message  = message
-    this.callback = callback
-    this.socket   = socket
-    this.bindings = null
+    this.topic      = topic
+    this.message    = message
+    this.callback   = callback
+    this.socket     = socket
+    this.bindings   = []
+    this.afterHooks = []
+    this.errorHooks = []
+    this.okHooks    = []
 
     this.reset()
+  }
+
+  after(ms, callback){
+    this.afterHooks.push({ms, callback})
+    return this
+  }
+
+  error(callback){
+    this.errorHooks.push(callback)
+    return this
+  }
+
+  ok(callback){
+    this.okHooks.push(callback)
+    return this
   }
 
   rejoin(){
     this.reset()
-    this.onError( reason => this.rejoin() )
-    this.socket.push({topic: this.topic, event: "join", payload: this.message})
-    this.callback(this)
+    let pushEvent = this.push("join", this.message)
+    this.okHooks.forEach( hook => pushEvent.ok( () => hook(this) ) )
+    this.errorHooks.forEach( hook => pushEvent.error( e => hook(e) ) )
+    this.afterHooks.forEach( ({ms, callback}) => pushEvent.after(ms, callback) )
   }
 
-  onClose(callback){ this.on("chan:close", callback) }
+  onClose(callback){ this.on("phx_chan_close", callback) }
 
   onError(callback){
-    this.on("chan:error", reason => {
+    this.on("phx_chan_error", reason => {
       callback(reason)
-      this.trigger("chan:close", "error")
+      this.trigger("phx_chan_close", "error")
     })
   }
 
-  reset(){ this.bindings = [] }
+  reset(){
+    this.bindings = []
+    this.onError( reason => this.rejoin() )
+    this.on("phx_reply_ok", payload => {
+      this.trigger(this.replyEventName("ok", payload.ref), payload.reply)
+    })
+    this.on("phx_reply_error", payload => {
+      this.trigger(this.replyEventName("error", payload.ref), payload.reply)
+    })
+  }
 
   on(event, callback){ this.bindings.push({event, callback}) }
 
@@ -40,7 +123,35 @@ export class Channel {
                  .map( bind => bind.callback(msg) )
   }
 
-  push(event, payload){ this.socket.push({topic: this.topic, event: event, payload: payload}) }
+  push(event, payload){
+    let pushEvent = new Push(this, event, payload)
+    pushEvent.send()
+
+    return pushEvent
+
+    // return({
+    //   ok: function(callback){
+    //     self.on(refEventOk, payload => {
+    //       callback(payload)
+    //       self.off(refEventOk)
+    //     })
+    //     return this
+    //   },
+    //   error: function(callback){
+    //     self.on(refEventErr, payload => {
+    //       callback(payload)
+    //       self.off(refEventErr)
+    //     })
+    //     return this
+    e//   },
+    //   after: function(ms, callback){
+    //     setTimeout(callback, ms)
+    //     return this
+    //   }
+    // })
+  }
+
+  replyEventName(type, ref){ return `chan:reply:${type}:${ref}` }
 
   leave(message = {}){
     this.socket.leave(this.topic, message)
@@ -76,6 +187,7 @@ export class Socket {
     this.heartbeatIntervalMs  = 30000
     this.channels             = []
     this.sendBuffer           = []
+    this.ref                  = 0
 
     this.transport = opts.transport || window.WebSocket || LongPoller
     this.heartbeatIntervalMs = opts.heartbeatIntervalMs || this.heartbeatIntervalMs
@@ -175,6 +287,7 @@ export class Socket {
     let chan = new Channel(topic, message, callback, this)
     this.channels.push(chan)
     if(this.isConnected()){ chan.rejoin() }
+    return chan
   }
 
   leave(topic, message = {}){
@@ -190,6 +303,14 @@ export class Socket {
     else {
       this.sendBuffer.push(callback)
     }
+  }
+
+  // Return the next message ref, accounting for overflows
+  makeRef(){
+    let newRef = this.ref + 1
+    if(newRef === this.ref){ this.ref = 0 } else { this.ref = newRef }
+
+    return this.ref.toString()
   }
 
   sendHeartbeat(){
