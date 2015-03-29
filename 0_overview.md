@@ -36,7 +36,7 @@ Phoenix is made up of a number of distinct parts, each with its own purpose and 
 
 ### Plug
 
-[Plug](http://hexdocs.pm/plug/) is Elixir's middleware layer. Conceptually, it shares a lot with other middleware layers like Rack for Ruby or WSGI for Python. Plugs are reusable modules that share the same very small, very regular public api. They provide discreet behaviors - like request header parsing or logging. Because the Plug api is so consistent, they can be stacked and executed in a set order, like a pipeline. They can also be re-used within a project or across projects.
+[Plug](http://hexdocs.pm/plug/) is Elixir's middleware layer. Conceptually, it shares a lot with other middleware layers like Rack for Ruby or WSGI for Python. Plugs are reusable modules that share the same very small, very regular public api. They provide discrete behaviors - like request header parsing or logging. Because the Plug api is so consistent, they can be stacked and executed in a set order, like a pipeline. They can also be re-used within a project or across projects.
 
 Plugs can be written to handle almost anything, from authentication to parameter pre-processing, and even rendering.
 
