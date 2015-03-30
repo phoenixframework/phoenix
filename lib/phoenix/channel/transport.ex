@@ -28,11 +28,26 @@ defmodule Phoenix.Channel.Transport do
       Elixir process messages, then encoding and fowarding to remote client.
     * Trap exits and handle receiving `{:EXIT, socket_pid, reason}` messages
       and delete the entries from the kept HashDict of socket processes.
+      When exists are received, the adapter transport must reply to their client
+      with one of two messages:
+
+        - for `:normal` exists, send a reply to the remote client of a message
+          from `Transport.chan_close_message/1`
+        - for abnormal exists, send a reply to the remote client of a message
+          from `Transport.chan_error_message/1`
+
 
   See `Phoenix.Transports.WebSocket` for an example transport server implementation.
 
 
   ### Remote Client
+
+  Synchronouse Replies and `ref`'s:
+
+  Channels can reply, synchronously, to any handle_in/3 event. To match pushes
+  with replies, clients must include a unique `ref` with every message and the
+  channel server will reply with a match ref where the client and pick up the
+  callback for the matching reply.
 
   Phoenix includes a JavaScript client for WebSocket and Longpolling support using JSON
   encodings.

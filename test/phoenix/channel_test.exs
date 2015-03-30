@@ -18,7 +18,7 @@ defmodule Phoenix.ChannelTest do
     def join(_topic, _msg, socket), do: {:ok, socket}
 
     def handle_in(_event, _msg, socket) do
-      {:ok, socket}
+      {:noreply, socket}
     end
   end
 
@@ -33,13 +33,13 @@ defmodule Phoenix.ChannelTest do
       if on_leave = Process.get(:leave) do
         on_leave.(socket)
       else
-        {:ok, socket}
+        :ok
       end
     end
 
     def handle_info({:ping, sender}, socket) do
       send sender, :pong
-      {:ok, socket}
+      {:noreply, socket}
     end
     def handle_info({:close, sender}, socket) do
       send sender, :closing
@@ -48,15 +48,15 @@ defmodule Phoenix.ChannelTest do
 
     def handle_in("some:event", _msg, socket) do
       send socket.transport_pid, {:handle_in, socket.topic}
-      {:ok, socket}
+      {:noreply, socket}
     end
     def handle_in("boom", msg, socket), do: msg.(socket)
     def handle_in("put", dict, socket) do
-      {:ok, Enum.reduce(dict, socket, fn {k, v}, sock -> Socket.assign(sock, k, v) end)}
+      {:noreply, Enum.reduce(dict, socket, fn {k, v}, sock -> Socket.assign(sock, k, v) end)}
     end
     def handle_in("get", %{"key" => key}, socket) do
       send socket.transport_pid, socket.assigns[key]
-      {:ok, socket}
+      {:noreply, socket}
     end
     def handle_in("should:be:going", _msg, socket) do
       {:leave, socket}
@@ -64,7 +64,7 @@ defmodule Phoenix.ChannelTest do
 
     def handle_out("some:broadcast", _msg, socket) do
       send socket.transport_pid, :handle_out
-      {:ok, socket}
+      {:noreply, socket}
     end
     def handle_out("everyone:leave", _msg, socket) do
       send socket.transport_pid, :everyone_leaving
@@ -72,6 +72,7 @@ defmodule Phoenix.ChannelTest do
     end
     def handle_out(event, message, socket) do
       push socket, event, message
+      {:noreply, socket}
     end
   end
 
@@ -228,7 +229,7 @@ defmodule Phoenix.ChannelTest do
   end
 
   test "Default #leave is generated as a noop" do
-    assert {:ok, %Socket{}} = BlankChannel.leave(%{}, new_socket)
+    assert :ok = BlankChannel.leave(%{}, new_socket)
   end
 
   test "#leave can be overridden" do
@@ -301,14 +302,14 @@ defmodule Phoenix.ChannelTest do
       Transport.dispatch(message, HashDict.new, self, Router, Endpoint, WebSocket)
     Process.monitor(socket_pid)
     assert subscribers(:phx_pub, "topic:4subtopic") == [socket_pid]
-    Process.put(:leave, fn socket -> {:ok, socket} end)
+    Process.put(:leave, fn _socket -> :ok end)
     Process.exit(socket_pid, :shutdown)
 
     assert_receive {:EXIT, ^socket_pid, :shutdown}
     assert subscribers(:phx_pub, "topic:4subtopic") == []
   end
 
-  test "#join raise InvalidReturnError exception when return type invalid" do
+  test "#join raises exception when return type invalid" do
     message = join_message("topic:5subtopic", fn _socket -> :badreturn end)
 
     assert {:error, {:badarg, :badreturn}} =
@@ -351,8 +352,8 @@ defmodule Phoenix.ChannelTest do
   end
 
   test "Socket state can be put and retrieved" do
-    {:ok, socket} = MyChannel.handle_in("put", %{val: 123}, new_socket)
-    {:ok, _socket} = MyChannel.handle_in("get", %{"key" => :val}, socket)
+    {:noreply, socket} = MyChannel.handle_in("put", %{val: 123}, new_socket)
+    {:noreply, _socket} = MyChannel.handle_in("get", %{"key" => :val}, socket)
     assert_received 123
   end
 

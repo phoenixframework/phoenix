@@ -52,12 +52,12 @@ defmodule Phoenix.Channel do
   directly down the socket with `Phoenix.Channel.push/3`.
   Incoming callbacks must return the `socket` to maintain ephemeral state.
 
-  Here's an example of receiving an incoming `"new:msg"` event from one client,
+  Here's an example of receiving an incoming `"new_msg"` event from one client,
   and broadcasting the message to all topic subscribers for this socket.
 
-      def handle_in("new:msg", %{"uid" => uid, "body" => body}, socket) do
-        broadcast! socket, "new:msg", %{uid: uid, body: body}
-        {:ok, socket}
+      def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
+        broadcast! socket, "new_msg", %{uid: uid, body: body}
+        {:noreply, socket}
       end
 
   You can also push a message directly down the socket:
@@ -65,7 +65,7 @@ defmodule Phoenix.Channel do
       # client asks for their current rank, push sent directly as a new event.
       def handle_in("current:rank", socket) do
         push socket, "current:rank", %{val: Game.get_rank(socket.assigns[:user])}
-        {:ok, socket}
+        {:noreply, socket}
       end
 
 
@@ -75,28 +75,28 @@ defmodule Phoenix.Channel do
   subscriber's `handle_out/3` callback is triggered where the event can be
   relayed as is, or customized on a socket by socket basis to append extra
   information, or conditionally filter the message from being delivered.
-  *Note*: `broadcast/3`, `broadcast!/3` and `push/3` both return `{:ok, socket}`.
 
-      def handle_in("new:msg", %{"uid" => uid, "body" => body}, socket) do
-        broadcast! socket, "new:msg", %{uid: uid, body: body}
+      def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
+        broadcast! socket, "new_msg", %{uid: uid, body: body}
+        {:noreply, socket}
       end
 
       # for every socket subscribing to this topic, append an `is_editable`
       # value for client metadata.
-      def handle_out("new:msg", msg, socket) do
-        push socket, "new:msg", Dict.merge(msg,
+      def handle_out("new_msg", msg, socket) do
+        push socket, "new_msg", Dict.merge(msg,
           is_editable: User.can_edit_message?(socket.assigns[:user], msg)
         )
+        {:noreply, socket}
       end
 
       # do not send broadcasted `"user:joined"` events if this socket's user
       # is ignoring the user who joined.
       def handle_out("user:joined", msg, socket) do
-        if User.ignoring?(socket.assigns[:user], msg.user_id) do
-          {:ok, socket}
-        else
+        unless User.ignoring?(socket.assigns[:user], msg.user_id) do
           push socket, "user:joined", msg
         end
+        {:noreply, socket}
       end
 
    By default, unhandled outgoing events are forwarded to each client as a push,
@@ -112,17 +112,17 @@ defmodule Phoenix.Channel do
   server will be used:
 
       # within channel
-      def handle_in("new:msg", %{"uid" => uid, "body" => body}, socket) do
-        broadcast! socket, "new:msg", %{uid: uid, body: body}
-        MyApp.Endpoint.broadcast! "rooms:superadmin", "new:msg", %{uid: uid, body: body}
-        {:ok, socket}
+      def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
+        broadcast! socket, "new_msg", %{uid: uid, body: body}
+        MyApp.Endpoint.broadcast! "rooms:superadmin", "new_msg", %{uid: uid, body: body}
+        {:noreply, socket}
       end
 
       # within controller
       def create(conn, params) do
         ...
-        MyApp.Endpoint.broadcast! "rooms:" <> rid, "new:msg", %{uid: uid, body: body}
-        MyApp.Endpoint.broadcast! "rooms:superadmin", "new:msg", %{uid: uid, body: body}
+        MyApp.Endpoint.broadcast! "rooms:" <> rid, "new_msg", %{uid: uid, body: body}
+        MyApp.Endpoint.broadcast! "rooms:superadmin", "new_msg", %{uid: uid, body: body}
         redirect conn, to: "/"
       end
 
@@ -137,14 +137,18 @@ defmodule Phoenix.Channel do
                                                                   :ignore |
                                                                   {:error, reason :: term, Socket.t}
 
-  defcallback leave(msg :: map, Socket.t) :: {:ok, Socket.t}
+  defcallback leave(msg :: map, Socket.t) :: :ok | {:error, reason :: term}
 
   defcallback handle_in(event :: String.t, msg :: map, Socket.t) :: {:ok, Socket.t} |
                                                                     {:leave, Socket.t} |
+                                                                    {:noreply, Socket.t} |
+                                                                    {:reply, {status :: atom, response :: map}, Socket.t} |
+                                                                    {:reply, status :: atom, Socket.t} |
                                                                     {:error, reason :: term, Socket.t}
 
   defcallback handle_out(event :: String.t, msg :: map, Socket.t) :: {:ok, Socket.t} |
                                                                      {:leave, Socket.t} |
+                                                                     {:noreply, Socket.t} |
                                                                      {:error, reason :: term, Socket.t}
 
   defmacro __using__(_) do
@@ -154,12 +158,13 @@ defmodule Phoenix.Channel do
       import unquote(__MODULE__)
       import Phoenix.Socket
 
-      def leave(message, socket), do: {:ok, socket}
+      def leave(message, socket), do: :ok
 
-      def handle_in(_event, _message, socket), do: {:ok, socket}
+      def handle_in(_event, _message, socket), do: {:noreply, socket}
 
       def handle_out(event, message, socket) do
         push(socket, event, message)
+        {:noreply, socket}
       end
 
       defoverridable leave: 2, handle_out: 3, handle_in: 3
@@ -171,9 +176,9 @@ defmodule Phoenix.Channel do
 
   ## Examples
 
-      iex> Channel.broadcast "rooms:global", "new:message", %{id: 1, content: "hello"}
+      iex> Channel.broadcast "rooms:global", "new_message", %{id: 1, content: "hello"}
       :ok
-      iex> Channel.broadcast socket, "new:message", %{id: 1, content: "hello"}
+      iex> Channel.broadcast socket, "new_message", %{id: 1, content: "hello"}
       :ok
 
   """
@@ -216,7 +221,7 @@ defmodule Phoenix.Channel do
 
   ## Examples
 
-      iex> Channel.broadcast_from self, "rooms:global", "new:message", %{id: 1, content: "hello"}
+      iex> Channel.broadcast_from self, "rooms:global", "new_message", %{id: 1, content: "hello"}
       :ok
 
   """
@@ -292,6 +297,7 @@ defmodule Phoenix.Channel do
 
         def handle_info(:after_join, socket) do
           push socket, "feed", %{list: feed_items(socket)}
+          {:noreply, socket}
         end
 
     """

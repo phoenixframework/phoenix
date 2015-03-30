@@ -37,7 +37,6 @@ defmodule Phoenix.Channel.Server do
         :ignore
 
       result ->
-        push(socket, "phx_reply", %{ref: socket.ref, status: "ignore", response: %{}})
         {:stop, {:badarg, result}}
     end
   end
@@ -60,7 +59,7 @@ defmodule Phoenix.Channel.Server do
   def handle_cast({:handle_in, event, payload, ref}, socket) when event != "phx_join" do
     event
     |> socket.channel.handle_in(payload, put_in(socket.ref, ref))
-    |> handle_result
+    |> handle_result(:handle_in)
   end
 
   @doc """
@@ -69,7 +68,7 @@ defmodule Phoenix.Channel.Server do
   def handle_info({:socket_broadcast, msg}, socket) do
     msg.event
     |> socket.channel.handle_out(msg.payload, socket)
-    |> handle_result
+    |> handle_result(:handle_out)
   end
 
   @doc """
@@ -78,7 +77,7 @@ defmodule Phoenix.Channel.Server do
   def handle_info(msg, socket) do
     msg
     |> socket.channel.handle_info(socket)
-    |> handle_result
+    |> handle_result(:handle_info)
   end
 
   def terminate(_reason, :left) do
@@ -89,37 +88,55 @@ defmodule Phoenix.Channel.Server do
     :ok
   end
 
-  defp handle_result({:reply, {status, response}, socket}) do
+  defp handle_result({:reply, {status, response}, socket}, :handle_in) do
     push socket, "phx_reply", %{status: to_string(status),
                                 ref: socket.ref,
                                 response: response}
     {:noreply, socket}
   end
-  defp handle_result({:reply, status, socket}) when is_atom(status) do
+  defp handle_result({:reply, status, socket}, :handle_in) when is_atom(status) do
     push socket, "phx_reply", %{status: to_string(status),
                                 ref: socket.ref,
                                 response: %{}}
     {:noreply, socket}
   end
-  # TODO deprecate or remove {:ok, socket} return
-  defp handle_result({:ok, socket}), do: {:noreply, socket}
-  defp handle_result({:noreply, socket}), do: {:noreply, socket}
-  defp handle_result({:leave, socket}), do: leave_and_stop(:normal, socket)
-  defp handle_result({:error, reason, socket}) do
+  defp handle_result({:reply, _, _socket}, _) do
+    raise """
+    Channel replies can only be sent from a `handle_in/3` callback.
+    Use `push/3` to send an out-of-bad message down the socket
+    """
+  end
+  defp handle_result({:noreply, socket}, _callback_type), do: {:noreply, socket}
+  defp handle_result({:leave, socket}, _callback_type), do: leave_and_stop(:normal, socket)
+  defp handle_result({:error, reason, socket}, _callback_type) do
     {:stop, {:error, reason}, socket}
   end
-  defp handle_result(result) do
+  defp handle_result(result, callback_type) do
     raise """
-      Expected callback to return `{:ok, socket} | {:error, reason, socket} || {:leave, socket}`,
-      got #{inspect result}
+    Expected `#{callback_type}` to return one of:
+
+        {:noreply, socket} |
+        {:reply, {status, response}, socket} |
+        {:reply, status, socket} |
+        {:error, reason, socket} |
+        {:leave, socket}
+
+    got #{inspect result}
     """
   end
 
   defp leave_and_stop(reason, socket) do
-    {:ok, socket} = socket.channel.leave(reason, socket)
-
     PubSub.unsubscribe(socket.pubsub_server, self, socket.topic)
-
-    {:stop, :normal, :left}
+    case socket.channel.leave(reason, socket) do
+      :ok ->
+        {:stop, :normal, :left}
+      {:error, reason} ->
+        {:stop, {:error, reason}, :left}
+      other ->
+        raise """
+        Expected `leave/2` to return one of `:ok | {:error, reason}` got:
+        `#{inspect other}`
+        """
+     end
   end
 end

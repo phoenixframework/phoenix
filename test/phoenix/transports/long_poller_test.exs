@@ -53,8 +53,8 @@ defmodule Phoenix.Tranports.LongPollerTest do
     assert {:ok, ^priv_topic} = LongPoller.verify_longpoll_topic(conn)
     assert Process.alive?(server_pid)
     :ok = GenServer.call(server_pid, :stop)
-    refute Process.alive?(server_pid)
     assert {:error, :terminated} = LongPoller.verify_longpoll_topic(conn)
+    refute Process.alive?(server_pid)
   end
 
   test "resume_session returns {:ok, conn, pid} if valid session" do

@@ -44,7 +44,7 @@ defmodule Phoenix.Integration.ChannelTest do
 
     def leave(_message, socket) do
       push socket, "you:left", %{message: "bye!"}
-      {:ok, socket}
+      :ok
     end
 
     def handle_in("new:msg", message, socket) do
