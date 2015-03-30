@@ -23,7 +23,7 @@ In addition, the `PageController` gives us the `index` action to display the Pho
 ###Actions
 Controller actions are just functions. We can name them anything we like as long as they follow Elixir's naming rules. The only requirement we must fulfill is that the action name matches a route defined in the router.
 
-For example, in `web/router.ex` we could change the action name in the default route that that Phoenix gives us in a new app from index:
+For example, in `web/router.ex` we could change the action name in the default route that Phoenix gives us in a new app from index:
 
 ```elixir
 get "/", HelloPhoenix.PageController, :index
@@ -123,9 +123,9 @@ To see this in action, let's put these blocks in our application layout `web/tem
 
 When we reload the [Welcome Page](http://localhost:4000/), our messages should appear just above "Welcome to Phoenix!"
 
-Besides `put_flash/2` and `get_flash/2`, the `Phoenix.Controller` module has two other useful functions worth knowing about.
+Besides `put_flash/3` and `get_flash/2`, the `Phoenix.Controller` module has two other useful functions worth knowing about.
 
-`persist/2` takes `conn` and value. It allows us to save that value as a flash message in the session so that it can persist beyond the current request cycle.
+`persist/2` takes `conn` and `value`. It allows us to save that value as a flash message in the session so that it can persist beyond the current request cycle.
 
 `clear/1` takes only `conn` and removes any flash messages which might be stored in the session.
 
