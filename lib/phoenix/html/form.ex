@@ -253,7 +253,7 @@ defmodule Phoenix.HTML.Form do
   ## Examples
 
       # Assuming form contains a User model
-      textarea(form, :description)
+      textarea_input(form, :description)
       #=> <textarea id="user_description" name="user[description]"></textarea>
 
   ## New lines
@@ -268,7 +268,7 @@ defmodule Phoenix.HTML.Form do
   automatically add a new line before the text area
   value.
   """
-  def textarea(form, field, opts \\ []) do
+  def textarea_input(form, field, opts \\ []) do
     opts =
       opts
       |> Keyword.put_new(:id, id_from(form, field))
