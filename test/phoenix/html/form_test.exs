@@ -76,24 +76,24 @@ defmodule Phoenix.HTML.FormTest do
            {:safe, ~s(<input id="key" name="search[key][]" type="text" value="foo">)}
   end
 
-  ## textarea/3
+  ## textarea_input/3
 
-  test "textarea/3" do
-    assert textarea(:search, :key) ==
+  test "textarea_input/3" do
+    assert textarea_input(:search, :key) ==
            {:safe, ~s(<textarea id="search_key" name="search[key]">\n</textarea>)}
 
-    assert textarea(:search, :key) ==
+    assert textarea_input(:search, :key) ==
            {:safe, ~s(<textarea id="search_key" name="search[key]">\n</textarea>)}
 
-    assert textarea(:search, :key, id: "key", name: "search[key][]") ==
+    assert textarea_input(:search, :key, id: "key", name: "search[key][]") ==
            {:safe, ~s(<textarea id="key" name="search[key][]">\n</textarea>)}
   end
 
-  test "textarea/3 with form" do
-    assert with_form(&textarea(&1, :key)) ==
+  test "textarea_input/3 with form" do
+    assert with_form(&textarea_input(&1, :key)) ==
            {:safe, ~s(<textarea id="search_key" name="search[key]">\nvalue</textarea>)}
 
-    assert with_form(&textarea(&1, :key, value: "foo", id: "key", name: "search[key][]")) ==
+    assert with_form(&textarea_input(&1, :key, value: "foo", id: "key", name: "search[key][]")) ==
            {:safe, ~s(<textarea id="key" name="search[key][]">\nfoo</textarea>)}
   end
 
