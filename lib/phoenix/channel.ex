@@ -177,13 +177,16 @@ defmodule Phoenix.Channel do
       :ok
 
   """
-  def broadcast(%Socket{} = socket, event, msg) do
-    Phoenix.Channel.broadcast(socket.pubsub_server, socket, event, msg)
+  def broadcast(%Socket{joined: true} = socket, event, msg) do
+    broadcast(socket.pubsub_server, socket, event, msg)
+  end
+  def broadcast(%Socket{joined: _}, _event, _msg) do
+    raise_not_joined()
   end
   def broadcast(server, topic, event, message) when is_binary(topic) do
     broadcast_from server, :none, topic, event, message
   end
-  def broadcast(server, socket = %Socket{}, event, message) do
+  def broadcast(server, %Socket{} = socket, event, message) do
     broadcast_from server, :none, socket.topic, event, message
     {:ok, socket}
   end
@@ -192,8 +195,11 @@ defmodule Phoenix.Channel do
   Same as `Phoenix.Channel.broadcast/4`, but
   raises `Phoenix.PubSub.BroadcastError` if broadcast fails.
   """
-  def broadcast!(%Socket{} = socket, event, msg) do
-    Phoenix.Channel.broadcast!(socket.pubsub_server, socket, event, msg)
+  def broadcast!(%Socket{joined: true} = socket, event, msg) do
+    broadcast!(socket.pubsub_server, socket, event, msg)
+  end
+  def broadcast!(%Socket{joined: _}, _event, _msg) do
+    raise_not_joined()
   end
   def broadcast!(server, topic, event, message) when is_binary(topic) do
     broadcast_from! server, :none, topic, event, message
@@ -215,11 +221,14 @@ defmodule Phoenix.Channel do
 
   """
   def broadcast_from(%Socket{} = socket, event, msg) do
-    Phoenix.Channel.broadcast_from(socket.pubsub_server, socket, event, msg)
+    broadcast_from(socket.pubsub_server, socket, event, msg)
   end
-  def broadcast_from(pubsub_server, socket = %Socket{}, event, message) do
+  def broadcast_from(pubsub_server, %Socket{joined: true} = socket, event, message) do
     broadcast_from(pubsub_server, self, socket.topic, event, message)
     {:ok, socket}
+  end
+  def broadcast_from(_pubsub_server, %Socket{joined: _}, _event, _message) do
+    raise_not_joined()
   end
   def broadcast_from(pubsub_server, from, topic, event, message) when is_map(message) do
     PubSub.broadcast_from pubsub_server, from, topic, {:socket_broadcast, %Message{
@@ -235,11 +244,14 @@ defmodule Phoenix.Channel do
   raises `Phoenix.PubSub.BroadcastError` if broadcast fails.
   """
   def broadcast_from!(%Socket{} = socket, event, msg) do
-    Phoenix.Channel.broadcast_from!(socket.pubsub_server, socket, event, msg)
+    broadcast_from!(socket.pubsub_server, socket, event, msg)
   end
-  def broadcast_from!(pubsub_server, socket = %Socket{}, event, message) do
+  def broadcast_from!(pubsub_server, %Socket{joined: true} = socket, event, message) do
     broadcast_from!(pubsub_server, self, socket.topic, event, message)
     {:ok, socket}
+  end
+  def broadcast_from!(_pubsub_server, %Socket{joined: _}, _event, _message) do
+    raise_not_joined()
   end
   def broadcast_from!(pubsub_server, from, topic, event, message) when is_map(message) do
     PubSub.broadcast_from! pubsub_server, from, topic, {:socket_broadcast, %Message{
@@ -253,7 +265,7 @@ defmodule Phoenix.Channel do
   @doc """
   Sends Dict, JSON serializable message to socket.
   """
-  def push(socket, event, message) when is_map(message) do
+  def push(%Socket{joined: true} = socket, event, message) when is_map(message) do
     send socket.transport_pid, {:socket_push, %Message{
       topic: socket.topic,
       event: event,
@@ -261,7 +273,27 @@ defmodule Phoenix.Channel do
     }}
     {:ok, socket}
   end
-  def push(_, _, _), do: raise_invalid_message
+  def push(_socket, _event, message) when is_map(message) do
+    raise_not_joined()
+  end
+  def push(_, _, _), do: raise_invalid_message()
 
   defp raise_invalid_message, do: raise "Message argument must be a map"
+  defp raise_not_joined do
+    raise """
+    `push` and `broadcast` can only be called after the socket has finished joining.
+    To push a message on join, send to self and handle in handle_info/2, ie:
+
+        def join(topic, auth_msg, socket) do
+          ...
+          send(self, :after_join)
+          {:ok, socket}
+        end
+
+        def handle_info(:after_join, socket) do
+          push socket, "feed", %{list: feed_items(socket)}
+        end
+
+    """
+  end
 end

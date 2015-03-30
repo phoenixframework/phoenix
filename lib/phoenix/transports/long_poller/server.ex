@@ -19,7 +19,6 @@ defmodule Phoenix.Transports.LongPoller.Server do
 
   @moduledoc false
 
-  alias Phoenix.Socket.Message
   alias Phoenix.Channel.Transport
   alias Phoenix.Transports.LongPoller
   alias Phoenix.PubSub

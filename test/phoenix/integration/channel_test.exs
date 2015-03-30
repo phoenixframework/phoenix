@@ -32,17 +32,24 @@ defmodule Phoenix.Integration.ChannelTest do
     use Phoenix.Channel
 
     def join(_topic, message, socket) do
-      push socket, "join", %{status: "connected"}
-      broadcast socket, "user:entered", %{user: message["user"]}
+      send(self, {:after_join, message})
       {:ok, socket}
+    end
+
+    def handle_info({:after_join, message}, socket) do
+      broadcast socket, "user:entered", %{user: message["user"]}
+      push socket, "joined", %{status: "connected"}
+      {:noreply, socket}
     end
 
     def leave(_message, socket) do
       push socket, "you:left", %{message: "bye!"}
+      {:ok, socket}
     end
 
     def handle_in("new:msg", message, socket) do
       broadcast! socket, "new:msg", message
+      {:noreply, socket}
     end
 
     def handle_in("boom", _message, _socket) do
@@ -91,8 +98,9 @@ defmodule Phoenix.Integration.ChannelTest do
     {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
 
     WebsocketClient.join(sock, "rooms:lobby", %{})
-    assert_receive %Message{event: "join", payload: %{"status" => "connected"}}
-    assert_receive %Message{event: "phx_reply_ok", payload: %{"ref" => nil, "reply" => %{}}, ref: nil, topic: "rooms:lobby"}
+    assert_receive %Message{event: "phx_reply", payload: %{"ref" => nil, "response" => %{}, "status" => "ok"}, ref: nil, topic: "rooms:lobby"}
+    assert_receive %Message{event: "joined", payload: %{"status" => "connected"}}
+    assert_receive %Message{event: "user:entered", payload: %{"user" => nil}, ref: nil, topic: "rooms:lobby"}
 
     WebsocketClient.send_event(sock, "rooms:lobby", "new:msg", %{body: "hi!"})
     assert_receive %Message{event: "new:msg", payload: %{"body" => "hi!"}}
@@ -109,7 +117,9 @@ defmodule Phoenix.Integration.ChannelTest do
     {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
 
     WebsocketClient.join(sock, "rooms:lobby", %{})
-    assert_receive %Message{event: "join", payload: %{"status" => "connected"}}
+    assert_receive %Message{event: "phx_reply", payload: %{"ref" => nil, "response" => %{}, "status" => "ok"}}
+    assert_receive %Message{event: "joined"}
+    assert_receive %Message{event: "user:entered"}
 
     WebsocketClient.send_event(sock, "rooms:lobby", "boom", %{})
     assert_receive %Message{event: "phx_chan_error", payload: %{}, topic: "rooms:lobby"}
@@ -162,7 +172,7 @@ defmodule Phoenix.Integration.ChannelTest do
     # join
     resp = poll :post, "/ws/poll", session, %{
       "topic" => "rooms:lobby",
-      "event" => "join",
+      "event" => "phx_join",
       "payload" => %{}
     }
     assert resp.body["status"] == 200
@@ -171,8 +181,11 @@ defmodule Phoenix.Integration.ChannelTest do
     resp = poll(:get, "/ws/poll", session)
     session = Map.take(resp.body, ["token", "sig"])
     assert resp.body["status"] == 200
-    [status_msg, _reply_msg] = resp.body["messages"]
-    assert status_msg["payload"] == %{"status" => "connected"}
+    [phx_reply, status_msg, user_entered] = resp.body["messages"]
+    assert phx_reply == %{"event" => "phx_reply", "payload" => %{"ref" => nil, "response" => %{}, "status" => "ok"}, "ref" => nil, "topic" => "rooms:lobby"}
+    assert status_msg == %{"event" => "joined", "payload" => %{"status" => "connected"}, "ref" => nil, "topic" => "rooms:lobby"}
+    assert user_entered == %{"event" => "user:entered", "payload" => %{"user" => nil}, "ref" => nil, "topic" => "rooms:lobby"}
+
 
     # poll without messages sends 204 no_content
     resp = poll(:get, "/ws/poll", session)
@@ -227,7 +240,7 @@ defmodule Phoenix.Integration.ChannelTest do
       # join
       resp = poll :post, "/ws/poll", session, %{
         "topic" => "rooms:room123",
-        "event" => "join",
+        "event" => "phx_join",
         "payload" => %{}
       }
       assert resp.body["status"] == 200
@@ -236,10 +249,11 @@ defmodule Phoenix.Integration.ChannelTest do
       resp = poll(:get, "/ws/poll", session)
       session = Map.take(resp.body, ["token", "sig"])
       assert resp.body["status"] == 200
-      assert Enum.count(resp.body["messages"]) == 3
-      assert Enum.at(resp.body["messages"], 0)["payload"]["status"] == "connected"
-      assert Enum.at(resp.body["messages"], 1)["event"] == "phx_reply_ok"
-      assert Enum.at(resp.body["messages"], 2)["payload"]["body"] == "Hello lobby"
+      assert Enum.count(resp.body["messages"]) == 4
+      assert Enum.at(resp.body["messages"], 0)["event"] == "phx_reply"
+      assert Enum.at(resp.body["messages"], 1)["payload"]["status"] == "connected"
+      assert Enum.at(resp.body["messages"], 2)["event"] == "user:entered"
+      assert Enum.at(resp.body["messages"], 3)["payload"]["body"] == "Hello lobby"
 
 
       ## Server termination handling
@@ -253,7 +267,7 @@ defmodule Phoenix.Integration.ChannelTest do
       # join
       resp = poll :post, "/ws/poll", session, %{
         "topic" => "rooms:lobby",
-        "event" => "join",
+        "event" => "phx_join",
         "payload" => %{}
       }
       assert resp.body["status"] == 200
@@ -291,7 +305,7 @@ defmodule Phoenix.Integration.ChannelTest do
     # join
     resp = poll :post, "/ws/poll", session, %{
       "topic" => "rooms:lobby",
-      "event" => "join",
+      "event" => "phx_join",
       "payload" => %{}
     }
     assert resp.body["status"] == 200
@@ -307,7 +321,8 @@ defmodule Phoenix.Integration.ChannelTest do
 
     resp = poll(:get, "/ws/poll", session)
 
-    [_join_msg, _phx_join_reply, _you_left_msg, chan_error] = resp.body["messages"]
+    [_phx_reply, _joined, _user_entered, _you_left_msg, chan_error] = resp.body["messages"]
+
     assert chan_error ==
       %{"event" => "phx_chan_error", "payload" => %{}, "topic" => "rooms:lobby", "ref" => nil}
   end
@@ -321,7 +336,7 @@ defmodule Phoenix.Integration.ChannelTest do
     # join
     resp = poll :post, "/ws/poll", session, %{
       "topic" => "rooms:lobby",
-      "event" => "join",
+      "event" => "phx_join",
       "payload" => %{}
     }
     assert resp.body["status"] == 200
@@ -330,14 +345,14 @@ defmodule Phoenix.Integration.ChannelTest do
     # poll
     resp = poll :post, "/ws/poll", session, %{
       "topic" => "rooms:lobby",
-      "event" => "leave",
+      "event" => "phx_leave",
       "payload" => %{}
     }
     assert resp.body["status"] == 200
     assert resp.status == 200
 
     resp = poll(:get, "/ws/poll", session)
-    [_join_msg, _phx_reply, _you_left_msg, chan_close] = resp.body["messages"]
+    [_phx_reply, _joined, _user_entered, _you_left_msg, chan_close] = resp.body["messages"]
 
     assert chan_close ==
       %{"event" => "phx_chan_close", "payload" => %{}, "topic" => "rooms:lobby", "ref" => nil}

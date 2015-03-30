@@ -31,6 +31,7 @@ defmodule Phoenix.Socket do
             transport: nil,
             pubsub_server: nil,
             ref: nil,
+            joined: false,
             assigns: %{}
 
 

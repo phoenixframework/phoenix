@@ -48,14 +48,14 @@ defmodule Phoenix.Integration.WebsocketClient do
   Sends join event to the WebSocket server per the Message protocol
   """
   def join(server_pid, topic, msg) do
-    send_event(server_pid, topic, "join", msg)
+    send_event(server_pid, topic, "phx_join", msg)
   end
 
   @doc """
   Sends leave event to the WebSocket server per the Message protocol
   """
   def leave(server_pid, topic, msg) do
-    send_event(server_pid, topic, "leave", msg)
+    send_event(server_pid, topic, "phx_leave", msg)
   end
 
   defp json!(map), do: JSON.encode!(map)

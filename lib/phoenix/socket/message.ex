@@ -6,7 +6,7 @@ defmodule Phoenix.Socket.Message do
   The Message format requires the following keys:
 
     * `topic` - The string topic or topic:subtopic pair namespace, ie "messages", "messages:123"
-    * `event`- The string event name, ie "join"
+    * `event`- The string event name, ie "phx_join"
     * `payload` - The string JSON message payload
     * `ref` - The unique string ref
 

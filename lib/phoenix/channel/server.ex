@@ -29,29 +29,37 @@ defmodule Phoenix.Channel.Server do
     case socket.channel.join(socket.topic, auth_payload, socket) do
       {:ok, socket} ->
         PubSub.subscribe(socket.pubsub_server, self, socket.topic, link: true)
-        Phoenix.Channel.push(socket, "phx_reply_ok", %{ref: socket.ref, reply: %{}})
-        {:ok, socket}
+        push(socket, "phx_reply", %{ref: socket.ref, status: "ok", response: %{}})
+        {:ok, put_in(socket.joined, true)}
 
       :ignore ->
-        Phoenix.Channel.push(socket, "phx_reply_error", %{ref: socket.ref, reply: %{error: "ignore"}})
+        push(socket, "phx_reply", %{ref: socket.ref, status: "ignore", response: %{}})
         :ignore
 
       result ->
-        Phoenix.Channel.push(socket, "phx_reply_error", %{ref: socket.ref, reply: %{error: "badarg"}})
+        push(socket, "phx_reply", %{ref: socket.ref, status: "ignore", response: %{}})
         {:stop, {:badarg, result}}
     end
   end
 
-  def handle_cast({:handle_in, "leave", payload}, socket) do
-    leave_and_stop(payload, socket)
+  defp push(socket, event, message) do
+    send socket.transport_pid, {:socket_push, %Phoenix.Socket.Message{
+      topic: socket.topic,
+      event: event,
+      payload: message
+    }}
+  end
+
+  def handle_cast({:handle_in, "phx_leave", payload, ref}, socket) do
+    leave_and_stop(payload, put_in(socket.ref, ref))
   end
 
   @doc """
   Forwards incoming client messages through `handle_in/3` callbacks
   """
-  def handle_cast({:handle_in, event, payload}, socket) when event != "join" do
+  def handle_cast({:handle_in, event, payload, ref}, socket) when event != "phx_join" do
     event
-    |> socket.channel.handle_in(payload, socket)
+    |> socket.channel.handle_in(payload, put_in(socket.ref, ref))
     |> handle_result
   end
 
@@ -81,7 +89,21 @@ defmodule Phoenix.Channel.Server do
     :ok
   end
 
+  defp handle_result({:reply, {status, response}, socket}) do
+    push socket, "phx_reply", %{status: to_string(status),
+                                ref: socket.ref,
+                                response: response}
+    {:noreply, socket}
+  end
+  defp handle_result({:reply, status, socket}) when is_atom(status) do
+    push socket, "phx_reply", %{status: to_string(status),
+                                ref: socket.ref,
+                                response: %{}}
+    {:noreply, socket}
+  end
+  # TODO deprecate or remove {:ok, socket} return
   defp handle_result({:ok, socket}), do: {:noreply, socket}
+  defp handle_result({:noreply, socket}), do: {:noreply, socket}
   defp handle_result({:leave, socket}), do: leave_and_stop(:normal, socket)
   defp handle_result({:error, reason, socket}) do
     {:stop, {:error, reason}, socket}

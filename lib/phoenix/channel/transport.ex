@@ -73,7 +73,7 @@ defmodule Phoenix.Channel.Transport do
   def dispatch(_, %{topic: "phoenix", event: "heartbeat"}, transport_pid, _router, _pubsub_server, _transport) do
     send transport_pid, {:socket_push, %Message{topic: "phoenix", event: "heartbeat", payload: %{}}}
   end
-  def dispatch(nil, %{event: "join"} = msg, transport_pid, router, endpoint, transport) do
+  def dispatch(nil, %{event: "phx_join"} = msg, transport_pid, router, endpoint, transport) do
     case router.channel_for_topic(msg.topic, transport) do
       nil     -> log_ignore(msg.topic, router)
       channel ->
@@ -94,7 +94,7 @@ defmodule Phoenix.Channel.Transport do
     :ignore
   end
   def dispatch(socket_pid, msg, _transport_pid, _router, _pubsub_server, _transport) do
-    GenServer.cast(socket_pid, {:handle_in, msg.event, msg.payload})
+    GenServer.cast(socket_pid, {:handle_in, msg.event, msg.payload, msg.ref})
     :ok
   end
   defp log_ignore(topic, router) do

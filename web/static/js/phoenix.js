@@ -1,58 +1,90 @@
 let SOCKET_STATES = {connecting: 0, open: 1, closing: 2, closed: 3}
 
 class Push {
-  constructor(chan, event, payload){
-    this.chan = chan
-    this.event = event
-    this.payload = payload
-    this.ref = chan.socket.makeRef()
-    this.refEventOk  = chan.replyEventName("ok", this.ref)
-    this.receivedOk   = null
-    this.receivedErr  = null
-    this.refEventErr = chan.replyEventName("error", this.ref)
-    this.afterHooks = []
-    this.errorHooks = []
-    this.okHooks    = []
+
+  // Initializes the Push
+  // chan - The Channel
+  // event - The event, ie `"phx_join"`
+  // payload - The payload, ie `{user_id: 123}`
+  // mergePush - The optional `Push` to merge hooks from
+  constructor(chan, event, payload, mergePush){
+    this.chan         = chan
+    this.event        = event
+    this.payload      = payload
+    this.receivedResp = null
+    this.afterHooks   = []
+    this.recHooks     = {}
+    this.sent         = false
+    if(mergePush){
+      mergePush.afterHooks.forEach( hook => this.after(hook.ms, hook.callback) )
+      for(var status in mergePush.recHooks){
+        if(mergePush.recHooks.hasOwnProperty(status)){
+          this.receive(status, mergePush.recHooks[status])
+        }
+      }
+    }
   }
 
   send(){
-    this.chan.on(this.refEventOk, payload => {
-      this.receivedOk = payload
-      this.okHooks.forEach( cb => cb(payload) )
-      this.chan.off(this.refEventOk)
-      this.cancelAfters()
-    })
-    this.chan.on(this.refEventErr, payload => {
-      this.receivedErr = payload
-      this.errorHooks.forEach( cb => cb(payload) )
-      this.chan.off(this.refEventErr)
+    var ref      = this.chan.socket.makeRef()
+    var refEvent = this.chan.replyEventName(ref)
+
+    this.chan.on(refEvent, payload => {
+      this.receivedResp = payload
+      this.matchReceive(payload)
+      this.chan.off(refEvent)
       this.cancelAfters()
     })
 
+    this.startAfters()
+    this.sent = true
     this.chan.socket.push({
       topic: this.chan.topic,
       event: this.event,
       payload: this.payload,
-      ref: this.ref
+      ref: ref
     })
   }
 
-  ok(cb){
-    if(this.recievedOk){ cb(this.receivedOk) } else { this.okHooks.push(cb) }
+  receive(status, callback){
+    if(this.receivedResp && this.receivedResp.status === status){
+      callback(this.receivedResp.response)
+    }
+    this.recHooks[status] = callback
     return this
   }
 
-  error(cb){
-    if(this.receivedErr){ cb(this.receivedErr) } else { this.errorHooks.push(cb) }
+  after(ms, callback){
+    let timer = null
+    if(this.sent){ timer = setTimeout(callback, ms) }
+    this.afterHooks.push({ms: ms, callback: callback, timer: timer})
     return this
   }
 
-  after(millisec, cb){
-    if(!this.receivedOk && !this.recievedErr){ this.afterHooks.push(setTimeout(cb, millisec)) }
-    return this
+
+  // private
+
+  matchReceive({status, response, ref}){
+    let callback = this.recHooks[status]
+    if(!callback){ return }
+
+    if(this.event === "phx_join"){ callback(this.chan) } else { callback(response) }
   }
 
-  cancelAfters(){ this.afterHooks.forEach( t => clearTimeout(t) ) }
+  cancelAfters(){
+    this.afterHooks.forEach( hook => {
+      clearTimeout(hook.timer)
+      hook.timer = null
+    })
+  }
+
+  startAfters(){
+    this.afterHooks.map( hook => {
+      if(!hook.timer){
+        hook.timer = setTimeout(() => hook.callback(), hook.ms)
+      }
+    })
+  }
 }
 
 export class Channel {
@@ -63,33 +95,25 @@ export class Channel {
     this.socket     = socket
     this.bindings   = []
     this.afterHooks = []
-    this.errorHooks = []
-    this.okHooks    = []
+    this.recHooks   = {}
+    this.joinPush   = new Push(this, "phx_join", this.message)
 
     this.reset()
   }
 
   after(ms, callback){
-    this.afterHooks.push({ms, callback})
+    this.joinPush.after(ms, callback)
     return this
   }
 
-  error(callback){
-    this.errorHooks.push(callback)
-    return this
-  }
-
-  ok(callback){
-    this.okHooks.push(callback)
+  receive(status, callback){
+    this.joinPush.receive(status, callback)
     return this
   }
 
   rejoin(){
     this.reset()
-    let pushEvent = this.push("join", this.message)
-    this.okHooks.forEach( hook => pushEvent.ok( () => hook(this) ) )
-    this.errorHooks.forEach( hook => pushEvent.error( e => hook(e) ) )
-    this.afterHooks.forEach( ({ms, callback}) => pushEvent.after(ms, callback) )
+    this.joinPush.send()
   }
 
   onClose(callback){ this.on("phx_chan_close", callback) }
@@ -103,12 +127,11 @@ export class Channel {
 
   reset(){
     this.bindings = []
+    let newJoinPush = new Push(this, "phx_join", this.message, this.joinPush)
+    this.joinPush = newJoinPush
     this.onError( reason => this.rejoin() )
-    this.on("phx_reply_ok", payload => {
-      this.trigger(this.replyEventName("ok", payload.ref), payload.reply)
-    })
-    this.on("phx_reply_error", payload => {
-      this.trigger(this.replyEventName("error", payload.ref), payload.reply)
+    this.on("phx_reply", payload => {
+      this.trigger(this.replyEventName(payload.ref), payload)
     })
   }
 
@@ -128,30 +151,9 @@ export class Channel {
     pushEvent.send()
 
     return pushEvent
-
-    // return({
-    //   ok: function(callback){
-    //     self.on(refEventOk, payload => {
-    //       callback(payload)
-    //       self.off(refEventOk)
-    //     })
-    //     return this
-    //   },
-    //   error: function(callback){
-    //     self.on(refEventErr, payload => {
-    //       callback(payload)
-    //       self.off(refEventErr)
-    //     })
-    //     return this
-    e//   },
-    //   after: function(ms, callback){
-    //     setTimeout(callback, ms)
-    //     return this
-    //   }
-    // })
   }
 
-  replyEventName(type, ref){ return `chan:reply:${type}:${ref}` }
+  replyEventName(ref){ return `chan_reply_${ref}` }
 
   leave(message = {}){
     this.socket.leave(this.topic, message)
@@ -172,7 +174,7 @@ export class Socket {
   //               Defaults to WebSocket with automatic LongPoller fallback.
   //   heartbeatIntervalMs - The millisecond interval to send a heartbeat message
   //   logger - The optional function for specialized logging, ie:
-  //            `logger: (msg) -> console.log(msg)`
+  //            `logger: function(msg){ console.log(msg) }`
   //   longpoller_timeout - The maximum timeout of a long poll AJAX request.
   //                        Defaults to 20s (double the server long poll timer).
   //
@@ -238,7 +240,7 @@ export class Socket {
   //
   // Examples
   //
-  //    socket.onError (error) -> alert("An error occurred")
+  //    socket.onError function(error){ alert("An error occurred") }
   //
   onOpen     (callback){ this.stateChangeCallbacks.open.push(callback) }
   onClose    (callback){ this.stateChangeCallbacks.close.push(callback) }
@@ -291,7 +293,7 @@ export class Socket {
   }
 
   leave(topic, message = {}){
-    this.push({topic: topic, event: "leave", payload: message})
+    this.push({topic: topic, event: "phx_leave", payload: message})
     this.channels = this.channels.filter( c => !c.isMember(topic) )
   }
 
