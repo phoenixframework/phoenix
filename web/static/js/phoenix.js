@@ -3,6 +3,7 @@ let SOCKET_STATES = {connecting: 0, open: 1, closing: 2, closed: 3}
 class Push {
 
   // Initializes the Push
+  //
   // chan - The Channel
   // event - The event, ie `"phx_join"`
   // payload - The payload, ie `{user_id: 123}`
@@ -129,7 +130,10 @@ export class Channel {
     this.bindings = []
     let newJoinPush = new Push(this, "phx_join", this.message, this.joinPush)
     this.joinPush = newJoinPush
-    this.onError( reason => this.rejoin() )
+    // TODO rate limit this w/ timeout ?
+    this.onError( reason => {
+      setTimeout(() => this.rejoin(), this.socket.reconnectAfterMs)
+    })
     this.on("phx_reply", payload => {
       this.trigger(this.replyEventName(payload.ref), payload)
     })
@@ -172,7 +176,8 @@ export class Socket {
   // opts - Optional configuration
   //   transport - The Websocket Transport, ie WebSocket, Phoenix.LongPoller.
   //               Defaults to WebSocket with automatic LongPoller fallback.
-  //   heartbeatIntervalMs - The millisecond interval to send a heartbeat message
+  //   heartbeatIntervalMs - The millisec interval to send a heartbeat message
+  //   reconnectAfterMs - The millisec interval to reconnect after connection loss
   //   logger - The optional function for specialized logging, ie:
   //            `logger: function(msg){ console.log(msg) }`
   //   longpoller_timeout - The maximum timeout of a long poll AJAX request.
@@ -185,17 +190,16 @@ export class Socket {
     this.stateChangeCallbacks = {open: [], close: [], error: [], message: []}
     this.flushEveryMs         = 50
     this.reconnectTimer       = null
-    this.reconnectAfterMs     = 5000
-    this.heartbeatIntervalMs  = 30000
     this.channels             = []
     this.sendBuffer           = []
     this.ref                  = 0
+    this.transport            = opts.transport || window.WebSocket || LongPoller
+    this.heartbeatIntervalMs  = opts.heartbeatIntervalMs || 30000
+    this.reconnectAfterMs     = opts.reconnectAfterMs || 5000
+    this.logger               = opts.logger || function(){} // noop
+    this.longpoller_timeout   = opts.longpoller_timeout || 20000
+    this.endPoint             = this.expandEndpoint(endPoint)
 
-    this.transport = opts.transport || window.WebSocket || LongPoller
-    this.heartbeatIntervalMs = opts.heartbeatIntervalMs || this.heartbeatIntervalMs
-    this.logger = opts.logger || function(){} // noop
-    this.longpoller_timeout = opts.longpoller_timeout || 20000
-    this.endPoint = this.expandEndpoint(endPoint)
     this.resetBufferTimer()
   }
 
