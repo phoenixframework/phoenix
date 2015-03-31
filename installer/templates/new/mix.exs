@@ -17,7 +17,7 @@ defmodule <%= application_module %>.Mixfile do
   # Type `mix help compile.app` for more information
   def application do
     [mod: {<%= application_module %>, []},
-     applications: [:phoenix, :cowboy, :logger]]
+     applications: [:phoenix, :cowboy, :logger<%= if ecto do %>, :ecto<% end %>]]
   end
 
   # Specifies your project dependencies
