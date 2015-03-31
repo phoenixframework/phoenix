@@ -129,15 +129,17 @@ web/views/page_view.ex:1: warning: redefining module HelloPhoenix.PageView
 
 iex(3)> Phoenix.View.render(HelloPhoenix.PageView, "test.html", message: "Assigns has an @.")
 {:safe,
- "I came from assigns: Assigns has an @.\nThis is the message: Hello from the view!\n"}
+  [[[["" | "I came from assigns: "] | "Assigns has an @."] |
+  "\nThis is the message: "] | "Hello from the view!"]}
  ```
 Let's test out the HTML escaping, just for fun.
 
 ```console
 iex(4)> Phoenix.View.render(HelloPhoenix.PageView, "test.html", message: "<script>badThings();</script>")
 {:safe,
-  [[[["" | "I came from assigns: "] | "Assigns has an @."] |
-  "\nThis is the message: "] | "Hello from the view!"]}
+  [[[["" | "I came from assigns: "] | 
+     "&lt;script&gt;badThings();&lt;/script&gt;"] |
+    "\nThis is the message: "] | "Hello from the view!"]}
 ```
 
 If we need only the rendered string, without the whole tuple, we can use the `render_to_iodata/3`.
@@ -145,7 +147,7 @@ If we need only the rendered string, without the whole tuple, we can use the `re
  ```console
  iex(5)> Phoenix.View.render_to_iodata(HelloPhoenix.PageView, "test.html", message: "Assigns has an @.")
  [[[["" | "I came from assigns: "] | "Assigns has an @."] |
- "\nThis is the message: "] | "Hello from the view!"]
+   "\nThis is the message: "] | "Hello from the view!"]
   ```
 
 ###A Word About Layouts
@@ -164,7 +166,7 @@ This is where the rendered string from the template will be placed.
 
 ###The ErrorView
 
-Phoenix recently added a new view to every generated application, the `ErrorView` which lives here `web/views/error_view.ex`. The purpose of the `ErrorView` is to handle two of the most common errors - `404 not found` and `500 internal error` - in a general way, from one centralized location. Let's see what it looks like.
+Phoenix recently added a new view to every generated application, the `ErrorView` which lives in `web/views/error_view.ex`. The purpose of the `ErrorView` is to handle two of the most common errors - `404 not found` and `500 internal error` - in a general way, from one centralized location. Let's see what it looks like.
 
 ```elixir
 defmodule HelloPhoenix.ErrorView do
