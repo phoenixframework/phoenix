@@ -11,10 +11,36 @@ defmodule <%= application_module %>.Web do
   The definitions below will be executed for every view,
   controller, etc, so keep them short and clean, focused
   on imports, uses and aliases.
-  
+
   Do NOT define functions inside the quoted expressions
   below.
   """
+<%= if ecto do %>
+  def model do
+    quote do
+      use Ecto.Model
+    end
+  end
+<% else %>
+  def model do
+    quote do
+      # Define common model functionality
+    end
+  end
+<% end %>
+  def controller do
+    quote do
+      use Phoenix.Controller
+<%= if ecto do %>
+      # Alias the data repository and import query/model functions
+      alias <%= application_module %>.Repo
+      import Ecto.Model
+      import Ecto.Query, only: [from: 2]
+<% end %>
+      # Import URL helpers from the router
+      import <%= application_module %>.Router.Helpers
+    end
+  end
 
   def view do
     quote do
@@ -31,30 +57,18 @@ defmodule <%= application_module %>.Web do
     end
   end
 
-  def controller do
+  def channel do
     quote do
-      use Phoenix.Controller
+      use Phoenix.Channel
 <%= if ecto do %>
-      # Alias the data repository as a convenience
+      # Alias the data repository and import query/model functions
       alias <%= application_module %>.Repo
+      import Ecto.Model
+      import Ecto.Query, only: [from: 2]
 <% end %>
-      # Import URL helpers from the router
-      import <%= application_module %>.Router.Helpers
     end
   end
-<%= if ecto do %>
-  def model do
-    quote do
-      use Ecto.Model
-    end
-  end
-<% else %>
-  def model do
-    quote do
-      # Define common model functionality
-    end
-  end
-<% end %>
+
   @doc """
   When used, dispatch to the appropriate controller/view/etc.
   """

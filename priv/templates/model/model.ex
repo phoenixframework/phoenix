@@ -17,6 +17,7 @@ defmodule <%= module %> do
   with no validation performed.
   """
   def changeset(model, params \\ nil) do
-    cast(model, params, @required_fields, @optional_fields)
+    model
+    |> cast(params, @required_fields, @optional_fields)
   end
 end
