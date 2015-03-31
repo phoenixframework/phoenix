@@ -62,7 +62,7 @@ defmodule Phoenix.HTML.FormTest do
 
   test "text_input/3" do
     assert text_input(:search, :key) ==
-           {:safe, ~s(<input id="search_key" name="search[key]" type="text" value="">)}
+           {:safe, ~s(<input id="search_key" name="search[key]" type="text">)}
 
     assert text_input(:search, :key, value: "foo", id: "key", name: "search[key][]") ==
            {:safe, ~s(<input id="key" name="search[key][]" type="text" value="foo">)}
@@ -101,7 +101,7 @@ defmodule Phoenix.HTML.FormTest do
 
   test "number_input/3" do
     assert number_input(:search, :key) ==
-           {:safe, ~s(<input id="search_key" name="search[key]" type="number" value="">)}
+           {:safe, ~s(<input id="search_key" name="search[key]" type="number">)}
 
     assert number_input(:search, :key, value: "foo", id: "key", name: "search[key][]") ==
            {:safe, ~s(<input id="key" name="search[key][]" type="number" value="foo">)}
@@ -119,7 +119,7 @@ defmodule Phoenix.HTML.FormTest do
 
   test "hidden_input/3" do
     assert hidden_input(:search, :key) ==
-           {:safe, ~s(<input id="search_key" name="search[key]" type="hidden" value="">)}
+           {:safe, ~s(<input id="search_key" name="search[key]" type="hidden">)}
 
     assert hidden_input(:search, :key, value: "foo", id: "key", name: "search[key][]") ==
            {:safe, ~s(<input id="key" name="search[key][]" type="hidden" value="foo">)}
@@ -137,7 +137,7 @@ defmodule Phoenix.HTML.FormTest do
 
   test "email_input/3" do
     assert email_input(:search, :key) ==
-           {:safe, ~s(<input id="search_key" name="search[key]" type="email" value="">)}
+           {:safe, ~s(<input id="search_key" name="search[key]" type="email">)}
 
     assert email_input(:search, :key, value: "foo", id: "key", name: "search[key][]") ==
            {:safe, ~s(<input id="key" name="search[key][]" type="email" value="foo">)}
@@ -155,7 +155,7 @@ defmodule Phoenix.HTML.FormTest do
 
   test "password_input/3" do
     assert password_input(:search, :key) ==
-           {:safe, ~s(<input id="search_key" name="search[key]" type="password" value="">)}
+           {:safe, ~s(<input id="search_key" name="search[key]" type="password">)}
 
     assert password_input(:search, :key, value: "foo", id: "key", name: "search[key][]") ==
            {:safe, ~s(<input id="key" name="search[key][]" type="password" value="foo">)}

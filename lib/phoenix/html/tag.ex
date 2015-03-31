@@ -103,6 +103,9 @@ defmodule Phoenix.HTML.Tag do
   defp build_attrs(tag, [{_, false}|t], acc) do
     build_attrs(tag, t, acc)
   end
+  defp build_attrs(tag, [{_, nil}|t], acc) do
+    build_attrs(tag, t, acc)
+  end
   defp build_attrs(tag, [{k, v}|t], acc) do
     build_attrs(tag, t, [{dasherize(k), v}|acc])
   end

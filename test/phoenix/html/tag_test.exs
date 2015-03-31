@@ -40,7 +40,7 @@ defmodule Phoenix.HTML.TagTest do
            {:safe, ~s(<audio>)}
 
     assert tag(:audio, autoplay: nil) ==
-           {:safe, ~s(<audio autoplay="">)}
+           {:safe, ~s(<audio>)}
   end
 
   test "content_tag" do
