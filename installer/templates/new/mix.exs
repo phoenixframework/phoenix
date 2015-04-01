@@ -27,6 +27,7 @@ defmodule <%= application_module %>.Mixfile do
     [<%= phoenix_dep %>,<%= if ecto do %>
      {:phoenix_ecto, "~> 0.2"},
      {:postgrex, ">= 0.0.0"},<% end %>
+     # TODO bump to 0.3 for phoenix 0.11 release
      {:phoenix_live_reload, "~> 0.2"},
      {:cowboy, "~> 1.0"}]
   end
