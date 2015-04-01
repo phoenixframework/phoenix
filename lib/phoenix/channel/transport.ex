@@ -28,12 +28,12 @@ defmodule Phoenix.Channel.Transport do
       Elixir process messages, then encoding and fowarding to remote client.
     * Trap exits and handle receiving `{:EXIT, socket_pid, reason}` messages
       and delete the entries from the kept HashDict of socket processes.
-      When exists are received, the adapter transport must reply to their client
+      When exits are received, the adapter transport must reply to their client
       with one of two messages:
 
-        - for `:normal` exists, send a reply to the remote client of a message
+        - for `:normal` exits, send a reply to the remote client of a message
           from `Transport.chan_close_message/1`
-        - for abnormal exists, send a reply to the remote client of a message
+        - for abnormal exits, send a reply to the remote client of a message
           from `Transport.chan_error_message/1`
 
 
@@ -44,9 +44,9 @@ defmodule Phoenix.Channel.Transport do
 
   Synchronouse Replies and `ref`'s:
 
-  Channels can reply, synchronously, to any handle_in/3 event. To match pushes
+  Channels can reply, synchronously, to any `handle_in/3` event. To match pushes
   with replies, clients must include a unique `ref` with every message and the
-  channel server will reply with a match ref where the client and pick up the
+  channel server will reply with a matching ref where the client and pick up the
   callback for the matching reply.
 
   Phoenix includes a JavaScript client for WebSocket and Longpolling support using JSON
@@ -121,14 +121,14 @@ defmodule Phoenix.Channel.Transport do
   Returns the `%Phoenix.Message{}` for a channel close event
   """
   def chan_close_message(topic) do
-    %Message{topic: topic, event: "phx_chan_close", payload: %{}}
+    %Message{topic: topic, event: "phx_close", payload: %{}}
   end
 
   @doc """
   Returns the `%Phoenix.Message{}` for a channel error event
   """
   def chan_error_message(topic) do
-    %Message{topic: topic, event: "phx_chan_error", payload: %{}}
+    %Message{topic: topic, event: "phx_error", payload: %{}}
   end
 
   @doc """

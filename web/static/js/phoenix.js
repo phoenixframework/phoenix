@@ -1,4 +1,11 @@
-let SOCKET_STATES = {connecting: 0, open: 1, closing: 2, closed: 3}
+const SOCKET_STATES = {connecting: 0, open: 1, closing: 2, closed: 3}
+const CHANNEL_EVENTS = {
+  close: "phx_close",
+  error: "phx_error",
+  join: "phx_join",
+  reply: "phx_reply",
+  leave: "phx_leave"
+}
 
 class Push {
 
@@ -27,8 +34,8 @@ class Push {
   }
 
   send(){
-    var ref      = this.chan.socket.makeRef()
-    var refEvent = this.chan.replyEventName(ref)
+    const ref      = this.chan.socket.makeRef()
+    const refEvent = this.chan.replyEventName(ref)
 
     this.chan.on(refEvent, payload => {
       this.receivedResp = payload
@@ -69,7 +76,11 @@ class Push {
     let callback = this.recHooks[status]
     if(!callback){ return }
 
-    if(this.event === "phx_join"){ callback(this.chan) } else { callback(response) }
+    if(this.event === CHANNEL_EVENTS.join){
+      callback(this.chan)
+    } else {
+      callback(response)
+    }
   }
 
   cancelAfters(){
@@ -97,7 +108,7 @@ export class Channel {
     this.bindings   = []
     this.afterHooks = []
     this.recHooks   = {}
-    this.joinPush   = new Push(this, "phx_join", this.message)
+    this.joinPush   = new Push(this, CHANNEL_EVENTS.join, this.message)
 
     this.reset()
   }
@@ -117,24 +128,24 @@ export class Channel {
     this.joinPush.send()
   }
 
-  onClose(callback){ this.on("phx_chan_close", callback) }
+  onClose(callback){ this.on(CHANNEL_EVENTS.close, callback) }
 
   onError(callback){
-    this.on("phx_chan_error", reason => {
+    this.on(CHANNEL_EVENTS.error, reason => {
       callback(reason)
-      this.trigger("phx_chan_close", "error")
+      this.trigger(CHANNEL_EVENTS.close, "error")
     })
   }
 
   reset(){
     this.bindings = []
-    let newJoinPush = new Push(this, "phx_join", this.message, this.joinPush)
+    let newJoinPush = new Push(this, CHANNEL_EVENTS.join, this.message, this.joinPush)
     this.joinPush = newJoinPush
     // TODO rate limit this w/ timeout ?
     this.onError( reason => {
       setTimeout(() => this.rejoin(), this.socket.reconnectAfterMs)
     })
-    this.on("phx_reply", payload => {
+    this.on(CHANNEL_EVENTS.reply, payload => {
       this.trigger(this.replyEventName(payload.ref), payload)
     })
   }
@@ -297,7 +308,7 @@ export class Socket {
   }
 
   leave(topic, message = {}){
-    this.push({topic: topic, event: "phx_leave", payload: message})
+    this.push({topic: topic, event: CHANNEL_EVENTS.leave, payload: message})
     this.channels = this.channels.filter( c => !c.isMember(topic) )
   }
 

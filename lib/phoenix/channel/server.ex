@@ -103,7 +103,7 @@ defmodule Phoenix.Channel.Server do
   defp handle_result({:reply, _, _socket}, _) do
     raise """
     Channel replies can only be sent from a `handle_in/3` callback.
-    Use `push/3` to send an out-of-bad message down the socket
+    Use `push/3` to send an out-of-band message down the socket
     """
   end
   defp handle_result({:noreply, socket}, _callback_type), do: {:noreply, socket}
@@ -126,7 +126,6 @@ defmodule Phoenix.Channel.Server do
   end
 
   defp leave_and_stop(reason, socket) do
-    PubSub.unsubscribe(socket.pubsub_server, self, socket.topic)
     case socket.channel.leave(reason, socket) do
       :ok ->
         {:stop, :normal, :left}

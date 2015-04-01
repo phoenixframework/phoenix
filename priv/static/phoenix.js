@@ -95,6 +95,13 @@ require.define({'phoenix': function(exports, require, module){ "use strict";
 var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
 var SOCKET_STATES = { connecting: 0, open: 1, closing: 2, closed: 3 };
+var CHANNEL_EVENTS = {
+  close: "phx_close",
+  error: "phx_error",
+  join: "phx_join",
+  reply: "phx_reply",
+  leave: "phx_leave"
+};
 
 var Push = (function () {
 
@@ -181,7 +188,7 @@ var Push = (function () {
       return;
     }
 
-    if (this.event === "phx_join") {
+    if (this.event === CHANNEL_EVENTS.join) {
       callback(this.chan);
     } else {
       callback(response);
@@ -219,7 +226,7 @@ var Channel = exports.Channel = (function () {
     this.bindings = [];
     this.afterHooks = [];
     this.recHooks = {};
-    this.joinPush = new Push(this, "phx_join", this.message);
+    this.joinPush = new Push(this, CHANNEL_EVENTS.join, this.message);
 
     this.reset();
   }
@@ -240,15 +247,15 @@ var Channel = exports.Channel = (function () {
   };
 
   Channel.prototype.onClose = function onClose(callback) {
-    this.on("phx_chan_close", callback);
+    this.on(CHANNEL_EVENTS.close, callback);
   };
 
   Channel.prototype.onError = function onError(callback) {
     var _this = this;
 
-    this.on("phx_chan_error", function (reason) {
+    this.on(CHANNEL_EVENTS.error, function (reason) {
       callback(reason);
-      _this.trigger("phx_chan_close", "error");
+      _this.trigger(CHANNEL_EVENTS.close, "error");
     });
   };
 
@@ -256,7 +263,7 @@ var Channel = exports.Channel = (function () {
     var _this = this;
 
     this.bindings = [];
-    var newJoinPush = new Push(this, "phx_join", this.message, this.joinPush);
+    var newJoinPush = new Push(this, CHANNEL_EVENTS.join, this.message, this.joinPush);
     this.joinPush = newJoinPush;
     // TODO rate limit this w/ timeout ?
     this.onError(function (reason) {
@@ -264,7 +271,7 @@ var Channel = exports.Channel = (function () {
         return _this.rejoin();
       }, _this.socket.reconnectAfterMs);
     });
-    this.on("phx_reply", function (payload) {
+    this.on(CHANNEL_EVENTS.reply, function (payload) {
       _this.trigger(_this.replyEventName(payload.ref), payload);
     });
   };
@@ -515,7 +522,7 @@ var Socket = exports.Socket = (function () {
   Socket.prototype.leave = function leave(topic) {
     var message = arguments[1] === undefined ? {} : arguments[1];
 
-    this.push({ topic: topic, event: "phx_leave", payload: message });
+    this.push({ topic: topic, event: CHANNEL_EVENTS.leave, payload: message });
     this.channels = this.channels.filter(function (c) {
       return !c.isMember(topic);
     });

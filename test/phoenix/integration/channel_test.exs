@@ -107,13 +107,13 @@ defmodule Phoenix.Integration.ChannelTest do
 
     WebsocketClient.leave(sock, "rooms:lobby", %{})
     assert_receive %Message{event: "you:left", payload: %{"message" => "bye!"}}
-    assert_receive %Message{event: "phx_chan_close", payload: %{}}
+    assert_receive %Message{event: "phx_close", payload: %{}}
 
     WebsocketClient.send_event(sock, "rooms:lobby", "new:msg", %{body: "Should ignore"})
     refute_receive %Message{}
   end
 
-  test "websocket adapter sends phx_chan_error if a channel server abnormally exits" do
+  test "websocket adapter sends phx_error if a channel server abnormally exits" do
     {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
 
     WebsocketClient.join(sock, "rooms:lobby", %{})
@@ -122,7 +122,7 @@ defmodule Phoenix.Integration.ChannelTest do
     assert_receive %Message{event: "user:entered"}
 
     WebsocketClient.send_event(sock, "rooms:lobby", "boom", %{})
-    assert_receive %Message{event: "phx_chan_error", payload: %{}, topic: "rooms:lobby"}
+    assert_receive %Message{event: "phx_error", payload: %{}, topic: "rooms:lobby"}
   end
 
   test "adapter handles refuses websocket events that haven't joined" do
@@ -296,7 +296,7 @@ defmodule Phoenix.Integration.ChannelTest do
     assert Poison.decode!(conn.resp_body)["status"] == 403
   end
 
-  test "longpoller adapter sends phx_chan_error if a channel server abnormally exits" do
+  test "longpoller adapter sends phx_error if a channel server abnormally exits" do
     # create session
     resp = poll :get, "/ws/poll", %{}, %{}
     session = Map.take(resp.body, ["token", "sig"])
@@ -324,10 +324,10 @@ defmodule Phoenix.Integration.ChannelTest do
     [_phx_reply, _joined, _user_entered, _you_left_msg, chan_error] = resp.body["messages"]
 
     assert chan_error ==
-      %{"event" => "phx_chan_error", "payload" => %{}, "topic" => "rooms:lobby", "ref" => nil}
+      %{"event" => "phx_error", "payload" => %{}, "topic" => "rooms:lobby", "ref" => nil}
   end
 
-  test "longpoller adapter sends phx_chan_close if a channel server normally exits" do
+  test "longpoller adapter sends phx_close if a channel server normally exits" do
     # create session
     resp = poll :get, "/ws/poll", %{}, %{}
     session = Map.take(resp.body, ["token", "sig"])
@@ -355,6 +355,6 @@ defmodule Phoenix.Integration.ChannelTest do
     [_phx_reply, _joined, _user_entered, _you_left_msg, chan_close] = resp.body["messages"]
 
     assert chan_close ==
-      %{"event" => "phx_chan_close", "payload" => %{}, "topic" => "rooms:lobby", "ref" => nil}
+      %{"event" => "phx_close", "payload" => %{}, "topic" => "rooms:lobby", "ref" => nil}
   end
 end
