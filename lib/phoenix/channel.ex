@@ -134,22 +134,23 @@ defmodule Phoenix.Channel do
   alias Phoenix.Socket.Message
 
   defcallback join(topic :: binary, auth_msg :: map, Socket.t) :: {:ok, Socket.t} |
-                                                                  :ignore |
-                                                                  {:error, reason :: term, Socket.t}
+                                                                  :ignore
 
-  defcallback leave(msg :: map, Socket.t) :: :ok | {:error, reason :: term}
+  defcallback terminate(msg :: map, Socket.t) :: :ok | {:error, reason :: term}
 
-  defcallback handle_in(event :: String.t, msg :: map, Socket.t) :: {:ok, Socket.t} |
-                                                                    {:leave, Socket.t} |
-                                                                    {:noreply, Socket.t} |
+  defcallback handle_in(event :: String.t, msg :: map, Socket.t) :: {:noreply, Socket.t} |
                                                                     {:reply, {status :: atom, response :: map}, Socket.t} |
                                                                     {:reply, status :: atom, Socket.t} |
-                                                                    {:error, reason :: term, Socket.t}
+                                                                    {:stop, reason :: term, Socket.t} |
+                                                                    {:stop, reason :: term, reply :: {status :: atom, response :: map}, Socket.t} |
+                                                                    {:stop, reason :: term, reply :: status :: atom, Socket.t}
 
   defcallback handle_out(event :: String.t, msg :: map, Socket.t) :: {:ok, Socket.t} |
-                                                                     {:leave, Socket.t} |
                                                                      {:noreply, Socket.t} |
-                                                                     {:error, reason :: term, Socket.t}
+                                                                     {:error, reason :: term, Socket.t} |
+                                                                     {:stop, reason :: term, Socket.t}
+
+
 
   defmacro __using__(_) do
     quote do
@@ -158,7 +159,7 @@ defmodule Phoenix.Channel do
       import unquote(__MODULE__)
       import Phoenix.Socket
 
-      def leave(message, socket), do: :ok
+      def terminate(reason, socket), do: :ok
 
       def handle_in(_event, _message, socket), do: {:noreply, socket}
 
@@ -167,7 +168,7 @@ defmodule Phoenix.Channel do
         {:noreply, socket}
       end
 
-      defoverridable leave: 2, handle_out: 3, handle_in: 3
+      defoverridable handle_out: 3, handle_in: 3, terminate: 2
     end
   end
 
@@ -193,7 +194,7 @@ defmodule Phoenix.Channel do
   end
   def broadcast(server, %Socket{} = socket, event, message) do
     broadcast_from server, :none, socket.topic, event, message
-    {:ok, socket}
+    :ok
   end
 
   @doc """
@@ -211,7 +212,7 @@ defmodule Phoenix.Channel do
   end
   def broadcast!(server, socket = %Socket{}, event, message) do
     broadcast_from! server, :none, socket.topic, event, message
-    {:ok, socket}
+    :ok
   end
 
   @doc """
@@ -230,7 +231,7 @@ defmodule Phoenix.Channel do
   end
   def broadcast_from(pubsub_server, %Socket{joined: true} = socket, event, message) do
     broadcast_from(pubsub_server, self, socket.topic, event, message)
-    {:ok, socket}
+    :ok
   end
   def broadcast_from(_pubsub_server, %Socket{joined: _}, _event, _message) do
     raise_not_joined()
@@ -253,7 +254,7 @@ defmodule Phoenix.Channel do
   end
   def broadcast_from!(pubsub_server, %Socket{joined: true} = socket, event, message) do
     broadcast_from!(pubsub_server, self, socket.topic, event, message)
-    {:ok, socket}
+    :ok
   end
   def broadcast_from!(_pubsub_server, %Socket{joined: _}, _event, _message) do
     raise_not_joined()
@@ -276,7 +277,7 @@ defmodule Phoenix.Channel do
       event: event,
       payload: message
     }}
-    {:ok, socket}
+    :ok
   end
   def push(_socket, _event, message) when is_map(message) do
     raise_not_joined()

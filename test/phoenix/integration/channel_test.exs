@@ -32,6 +32,7 @@ defmodule Phoenix.Integration.ChannelTest do
     use Phoenix.Channel
 
     def join(_topic, message, socket) do
+      Process.flag(:trap_exit, true)
       send(self, {:after_join, message})
       {:ok, socket}
     end
@@ -42,9 +43,8 @@ defmodule Phoenix.Integration.ChannelTest do
       {:noreply, socket}
     end
 
-    def leave(_message, socket) do
-      push socket, "you:left", %{message: "bye!"}
-      :ok
+    def handle_in("phx_leave", _message, socket) do
+      {:stop, :normal, socket}
     end
 
     def handle_in("new:msg", message, socket) do
@@ -54,6 +54,11 @@ defmodule Phoenix.Integration.ChannelTest do
 
     def handle_in("boom", _message, _socket) do
       raise "boom"
+    end
+
+    def terminate(_reason, socket) do
+      push socket, "you:left", %{message: "bye!"}
+      :ok
     end
   end
 
@@ -322,6 +327,11 @@ defmodule Phoenix.Integration.ChannelTest do
     resp = poll(:get, "/ws/poll", session)
 
     [_phx_reply, _joined, _user_entered, _you_left_msg, chan_error] = resp.body["messages"]
+    [%{"event" => "phx_reply", "payload" => %{"ref" => nil, "response" => %{}, "status" => "ok"}, "ref" => nil, "topic" => "rooms:lobby"},
+     %{"event" => "joined", "payload" => %{"status" => "connected"}, "ref" => nil, "topic" => "rooms:lobby"},
+     %{"event" => "user:entered", "payload" => %{"user" => nil}, "ref" => nil, "topic" => "rooms:lobby"},
+     %{"event" => "phx_error", "payload" => %{}, "ref" => nil, "topic" => "rooms:lobby"}]
+
 
     assert chan_error ==
       %{"event" => "phx_error", "payload" => %{}, "topic" => "rooms:lobby", "ref" => nil}

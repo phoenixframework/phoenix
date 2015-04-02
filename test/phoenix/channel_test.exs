@@ -25,25 +25,17 @@ defmodule Phoenix.ChannelTest do
   defmodule MyChannel do
     use Phoenix.Channel
     def join(topic, msg, socket) do
+      Process.flag(:trap_exit, true)
       send socket.transport_pid, {:join, topic}
       msg.(socket)
     end
-    def leave(_msg, socket) do
-      send socket.transport_pid, :leave_triggered
-      if on_leave = Process.get(:leave) do
-        on_leave.(socket)
-      else
-        :ok
-      end
-    end
-
     def handle_info({:ping, sender}, socket) do
       send sender, :pong
       {:noreply, socket}
     end
     def handle_info({:close, sender}, socket) do
       send sender, :closing
-      {:leave, socket}
+      {:stop, :normal, socket}
     end
 
     def handle_in("some_event", _msg, socket) do
@@ -59,7 +51,7 @@ defmodule Phoenix.ChannelTest do
       {:noreply, socket}
     end
     def handle_in("should_be_going", _msg, socket) do
-      {:leave, socket}
+      {:stop, :normal, socket}
     end
     def handle_in("msg_with_reply_response", msg, socket) do
       {:reply, {:ok, msg}, socket}
@@ -74,11 +66,16 @@ defmodule Phoenix.ChannelTest do
     end
     def handle_out("everyone_leave", _msg, socket) do
       send socket.transport_pid, :everyone_leaving
-      {:leave, socket}
+      {:stop, :normal, socket}
     end
     def handle_out(event, message, socket) do
       push socket, event, message
       {:noreply, socket}
+    end
+
+    def terminate(_reason, socket) do
+      send socket.transport_pid, :terminate_triggered
+      :ok
     end
   end
 
@@ -235,16 +232,11 @@ defmodule Phoenix.ChannelTest do
     end
   end
 
-  test "Default #leave is generated as a noop" do
-    assert :ok = BlankChannel.leave(%{}, new_socket)
+  test "Default terminate/2 is generated as a noop" do
+    assert :ok = BlankChannel.terminate(:normal, new_socket)
   end
 
-  test "#leave can be overridden" do
-    Process.put(:leave, fn _ -> :overridden end)
-    assert MyChannel.leave(%{}, new_socket) == :overridden
-  end
-
-  test "handle_in and handle_out callbacks can return {:leave, socket} to leave channel" do
+  test "handle_in and handle_out callbacks can return {:stop, reason, socket} to terminate channel" do
     # join
     join = fn ->
       message = join_message("topic:1subtopic", fn socket -> {:ok, socket} end)
@@ -253,25 +245,25 @@ defmodule Phoenix.ChannelTest do
     end
     sockets = HashDict.new
 
-    # incoming leave
+    # incoming stop
     {:ok, socket_pid} = join.()
     sockets = HashDict.put(sockets, "topic:1subtopic", socket_pid)
     assert subscribers(:phx_pub, "topic:1subtopic") == [socket_pid]
-    # send message that returns {:leave, socket} now that we've joined
+    # send message that returns {:stop, reaosn, socket} now that we've joined
     message = %Message{topic: "topic:1subtopic",
                        event: "should_be_going",
                        payload: %{}}
     :ok = Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
     Process.monitor(socket_pid)
-    assert_receive :leave_triggered
+    assert_receive :terminate_triggered
     assert_receive {:DOWN, _ref, :process, ^socket_pid, :normal}
     assert subscribers(:phx_pub, "topic:1subtopic") == []
 
-    # outgoing leave
+    # outgoing stop
     {:ok, sock_pid} = join.()
     sockets = HashDict.put(sockets, "topic:1subtopic", sock_pid)
     assert subscribers(:phx_pub, "topic:1subtopic") == [sock_pid]
-    # send broadcast that returns {:leave, socket} now that we've joined
+    # send broadcast that returns {:stop, reason, socket} now that we've joined
     msg = %Message{event: "everyone_leave", topic: "topic:1subtopic", payload: %{}}
     Enum.each sockets, fn {_, pid} -> Process.monitor(pid) end
     PubSub.broadcast!(:phx_pub, msg.topic, {:socket_broadcast, msg})
@@ -281,7 +273,7 @@ defmodule Phoenix.ChannelTest do
 
     assert subscribers(:phx_pub, "topic:1subtopic") == []
     assert_received :everyone_leaving
-    assert_received :leave_triggered
+    assert_received :terminate_triggered
   end
 
   test "successful join authorizes and subscribes socket to topic" do
@@ -302,40 +294,28 @@ defmodule Phoenix.ChannelTest do
     refute subscribers(:phx_pub, "topic:3subtopic") == [self]
   end
 
-  test "#leave is called when the socket conn closes, and is unsubscribed" do
+  test "terminate/2 is called when the socket conn closes and exits are trapped" do
     message = join_message("topic:4subtopic", fn socket -> {:ok, socket} end)
 
     {:ok, socket_pid} =
       Transport.dispatch(message, HashDict.new, self, Router, Endpoint, WebSocket)
     Process.monitor(socket_pid)
     assert subscribers(:phx_pub, "topic:4subtopic") == [socket_pid]
-    Process.put(:leave, fn _socket -> :ok end)
     Process.exit(socket_pid, :shutdown)
 
     assert_receive {:EXIT, ^socket_pid, :shutdown}
+    assert_receive :terminate_triggered
     assert subscribers(:phx_pub, "topic:4subtopic") == []
   end
 
-  test "#join raises exception when return type invalid" do
+  test "join/2 raises exception when return type invalid" do
     message = join_message("topic:5subtopic", fn _socket -> :badreturn end)
 
     assert {:error, {:badarg, :badreturn}} =
       Transport.dispatch(message, HashDict.new, self, Router, Endpoint, WebSocket)
   end
 
-  test "#leave raise InvalidReturnError exception when return type invalid" do
-    message = join_message("topic:6subtopic", fn socket -> {:ok, socket} end)
-
-    {:ok, socket_pid} =
-      Transport.dispatch(message, HashDict.new, self, Router, Endpoint, WebSocket)
-    Process.put(:leave, fn _ -> :badreturn end)
-    Process.monitor(socket_pid)
-    Process.exit(socket_pid, :shutdown)
-
-    assert_receive {:EXIT, ^socket_pid, :shutdown}
-  end
-
-  test "#event raises InvalidReturnError exception when return type is invalid" do
+  test "handle_in/3 raises InvalidReturnError exception when return type is invalid" do
     message = join_message("topic:7subtopic", fn socket -> {:ok, socket} end)
 
     {:ok, socket_pid} =
@@ -358,7 +338,7 @@ defmodule Phoenix.ChannelTest do
     assert_received {:socket_push, %Message{topic: "phoenix", event: "heartbeat"}}
   end
 
-  test "Socket state can be put and retrieved" do
+  test "socket state can be put and retrieved" do
     {:noreply, socket} = MyChannel.handle_in("put", %{val: 123}, new_socket)
     {:noreply, _socket} = MyChannel.handle_in("get", %{"key" => :val}, socket)
     assert_received 123
@@ -517,13 +497,14 @@ defmodule Phoenix.ChannelTest do
     assert_receive :pong
   end
 
-  test "handle_info/2 can close socket by returning {:leave, socket}" do
+  test "handle_info/2 can close socket by returning {:stop, reason, socket}" do
     message = join_message("topic:10subtopic", fn socket -> {:ok, socket} end)
     {:ok, socket_pid} = Transport.dispatch(message, HashDict.new, self, Router, Endpoint, WebSocket)
     Process.monitor(socket_pid)
 
     send(socket_pid, {:close, self})
     assert_receive :closing
+    assert_receive :terminate_triggered
     assert_receive {:DOWN, _ref, :process, ^socket_pid, :normal}
   end
 

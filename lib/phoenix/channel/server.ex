@@ -25,7 +25,6 @@ defmodule Phoenix.Channel.Server do
   See `Phoenix.Channel.join/3` documentation.
   """
   def init([socket, auth_payload]) do
-    Process.flag(:trap_exit, true)
     case socket.channel.join(socket.topic, auth_payload, socket) do
       {:ok, socket} ->
         PubSub.subscribe(socket.pubsub_server, self, socket.topic, link: true)
@@ -49,9 +48,10 @@ defmodule Phoenix.Channel.Server do
     }}
   end
 
-  def handle_cast({:handle_in, "phx_leave", payload, ref}, socket) do
-    leave_and_stop(payload, put_in(socket.ref, ref))
-  end
+  # TODO decide if leave is treated specially
+  # def handle_cast({:handle_in, "phx_leave", payload, ref}, socket) do
+  #   term_and_stop(payload, put_in(socket.ref, ref))
+  # end
 
   @doc """
   Forwards incoming client messages through `handle_in/3` callbacks
@@ -80,12 +80,8 @@ defmodule Phoenix.Channel.Server do
     |> handle_result(:handle_info)
   end
 
-  def terminate(_reason, :left) do
-    :ok
-  end
   def terminate(reason, socket) do
-    leave_and_stop(reason, socket)
-    :ok
+    socket.channel.terminate(reason, socket)
   end
 
   defp handle_result({:reply, {status, response}, socket}, :handle_in) do
@@ -107,35 +103,55 @@ defmodule Phoenix.Channel.Server do
     """
   end
   defp handle_result({:noreply, socket}, _callback_type), do: {:noreply, socket}
-  defp handle_result({:leave, socket}, _callback_type), do: leave_and_stop(:normal, socket)
-  defp handle_result({:error, reason, socket}, _callback_type) do
-    {:stop, {:error, reason}, socket}
+  defp handle_result({:stop, reason, {status, response}, socket}, :handle_in) do
+    push socket, "phx_reply", %{status: to_string(status),
+                                ref: socket.ref,
+                                response: response}
+    {:stop, reason, socket}
+  end
+  defp handle_result({:stop, reason, status, socket}, :handle_in) when is_atom(status) do
+    push socket, "phx_reply", %{status: to_string(status),
+                                ref: socket.ref,
+                                response: %{}}
+    {:stop, reason, socket}
+  end
+  defp handle_result({:stop, reason, socket}, _callback_type), do: {:stop, reason, socket}
+  defp handle_result(result, :handle_in) do
+    raise """
+    Expected `handle_in/3` to return one of:
+
+        {:noreply, Socket.t} |
+        {:reply, {status :: atom, response :: map}, Socket.t} |
+        {:reply, status :: atom, Socket.t} |
+        {:stop, reason :: term, Socket.t} |
+        {:stop, reason :: term, {status :: atom, response :: map}, Socket.t} |
+        {:stop, reason :: term, status :: atom, Socket.t}
+
+    got #{inspect result}
+    """
   end
   defp handle_result(result, callback_type) do
     raise """
     Expected `#{callback_type}` to return one of:
 
-        {:noreply, socket} |
-        {:reply, {status, response}, socket} |
-        {:reply, status, socket} |
-        {:error, reason, socket} |
-        {:leave, socket}
+        {:noreply, Socket.t} |
+        {:stop, reason :: term, Socket.t} |
 
     got #{inspect result}
     """
   end
 
-  defp leave_and_stop(reason, socket) do
-    case socket.channel.leave(reason, socket) do
-      :ok ->
-        {:stop, :normal, :left}
-      {:error, reason} ->
-        {:stop, {:error, reason}, :left}
-      other ->
-        raise """
-        Expected `leave/2` to return one of `:ok | {:error, reason}` got:
-        `#{inspect other}`
-        """
-     end
-  end
+  # defp term_and_stop(reason, socket) do
+  #   case socket.channel.leave(reason, socket) do
+  #     :ok ->
+  #       {:stop, :normal, :left}
+  #     {:error, reason} ->
+  #       {:stop, {:error, reason}, :left}
+  #     other ->
+  #       raise """
+  #       Expected `leave/2` to return one of `:ok | {:error, reason}` got:
+  #       `#{inspect other}`
+  #       """
+  #    end
+  # end
 end
