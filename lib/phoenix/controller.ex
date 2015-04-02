@@ -497,7 +497,7 @@ defmodule Phoenix.Controller do
     render(conn, view, template, [])
   end
 
-  @spec render(Plug.Conn.t, atom | binary, atom | binary, Dict.t) :: Plug.Conn.t
+  @spec render(Plug.Conn.t, atom, atom | binary, Dict.t) :: Plug.Conn.t
   def render(conn, view, template, assigns)
     when is_atom(view) and is_binary(template) or is_atom(template) do
     conn
