@@ -397,7 +397,7 @@ defmodule Phoenix.Controller do
 
         plug :action
 
-        def show(conn) do
+        def show(conn, _params) do
           render conn, "show.html", message: "Hello"
         end
       end
@@ -409,7 +409,7 @@ defmodule Phoenix.Controller do
   on the request. To do so, you can pass the template name as an atom (without
   the extension):
 
-      def show(conn) do
+      def show(conn, _params) do
         render conn, :show, message: "Hello"
       end
 
@@ -435,7 +435,7 @@ defmodule Phoenix.Controller do
         |> put_view(MyApp.SpecialView)
         |> render(:show, message: "Hello")
       end
-.
+
   `put_view/2` can also be used as a plug:
 
       defmodule MyApp.UserController do
@@ -444,7 +444,7 @@ defmodule Phoenix.Controller do
         plug :put_view, MyApp.SpecialView
         plug :action
 
-        def show(conn) do
+        def show(conn, _params) do
           render conn, :show, message: "Hello"
         end
       end
@@ -459,7 +459,7 @@ defmodule Phoenix.Controller do
 
         plug :action
 
-        def show(conn) do
+        def show(conn, _params) do
           render conn, "show.html", message: "Hello"
         end
       end
