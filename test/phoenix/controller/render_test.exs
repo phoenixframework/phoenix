@@ -33,6 +33,19 @@ defmodule Phoenix.Controller.RenderTest do
     refute conn.halted
   end
 
+  test "renders template from specified view" do
+    conn = conn(:get, "/") |> fetch_params
+    conn = render(conn, MyApp.UserView, "index.html")
+    assert html_response?(conn)
+  end
+
+  test "renders template from specified view with assigns" do
+    conn = conn(:get, "/") |> fetch_params
+    conn = render(conn, MyApp.UserView, "index.html", title: "Hello")
+    assert conn.resp_body == "Hello\n"
+    assert html_response?(conn)
+  end
+
   test "renders string template with put layout" do
     conn = render(layout_conn, "index.html", title: "Hello")
     assert conn.resp_body =~ ~r"<title>Hello</title>"
