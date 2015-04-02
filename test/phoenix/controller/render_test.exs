@@ -117,6 +117,14 @@ defmodule Phoenix.Controller.RenderTest do
     assert conn.resp_body == "Hello\n"
   end
 
+  test "render/3 renders with View and Template with atom for template" do
+    conn = put_in conn.params["format"], "json"
+    conn = put_in conn.private[:phoenix_action], :show
+    conn = put_view(conn, nil)
+    conn = render(conn, MyApp.UserView, :show)
+    assert conn.resp_body == ~s({"foo":"bar"})
+  end
+
   test "render/3 renders with View and Template" do
     conn = put_in conn.params["format"], "json"
     conn = put_in conn.private[:phoenix_action], :show
