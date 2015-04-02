@@ -474,7 +474,7 @@ defmodule Phoenix.Controller do
   """
   @spec render(Plug.Conn.t, binary | atom, atom | binary | Dict.t) :: Plug.Conn.t
   def render(conn, template, assigns)
-    when is_atom(template) and not is_binary(assigns) do
+    when is_atom(template) and is_list(assigns) do
     format =
       conn.params["format"] ||
       raise "cannot render template #{inspect template} because conn.params[\"format\"] is not set. " <>
@@ -492,13 +492,14 @@ defmodule Phoenix.Controller do
     end
   end
 
-  def render(conn, view, template) when is_atom(view) and is_binary(template) do
     conn |> render(view, template, [])
+  def render(conn, view, template)
+    when is_atom(view) and is_binary(template) or is_atom(template) do
   end
 
   @spec render(Plug.Conn.t, atom | binary, atom | binary, Dict.t) :: Plug.Conn.t
   def render(conn, view, template, assigns)
-    when is_atom(view) and is_binary(template) do
+    when is_atom(view) and is_binary(template) or is_atom(template) do
     conn
     |> put_view(view)
     |> render(template, assigns)
