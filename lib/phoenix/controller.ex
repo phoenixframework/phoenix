@@ -479,13 +479,13 @@ defmodule Phoenix.Controller do
       conn.params["format"] ||
       raise "cannot render template #{inspect template} because conn.params[\"format\"] is not set. " <>
             "Please set `plug :accepts, %w(html json ...)` in your pipeline."
-    render(conn, template_name(template, format), format, assigns)
+    do_render(conn, template_name(template, format), format, assigns)
   end
 
   def render(conn, template, assigns) when is_binary(template) do
     case Path.extname(template) do
       "." <> format ->
-        render(conn, template, format, assigns)
+        do_render(conn, template, format, assigns)
       "" ->
         raise "cannot render template #{inspect template} without format. Use an atom if the " <>
               "template format is meant to be set dynamically based on the request format"
@@ -504,7 +504,7 @@ defmodule Phoenix.Controller do
     |> render(template, assigns)
   end
 
-  def render(conn, template, format, assigns)
+  defp do_render(conn, template, format, assigns)
     when is_binary(template) and is_binary(format) do
     assigns = to_map(assigns)
     content_type = Plug.MIME.type(format)
