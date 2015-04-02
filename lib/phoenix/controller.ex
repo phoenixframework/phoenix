@@ -505,8 +505,7 @@ defmodule Phoenix.Controller do
     |> render(template, assigns)
   end
 
-  defp do_render(conn, template, format, assigns)
-    when is_binary(template) and is_binary(format) do
+  defp do_render(conn, template, format, assigns) do
     assigns = to_map(assigns)
     content_type = Plug.MIME.type(format)
     conn = prepare_assigns(conn, assigns, format)
