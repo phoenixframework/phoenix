@@ -468,8 +468,8 @@ defmodule Phoenix.Controller do
   `layout_formats/2` and `put_layout_formats/2` can be used to configure
   which formats support/require layout rendering (defaults to "html" only).
   """
-  @spec render(Plug.Conn.t, binary | atom, Dict.t) :: Plug.Conn.t
-  def render(conn, template, assigns) when is_atom(template) do
+  @spec render(Plug.Conn.t, binary | atom, Dict.t | binary | atom) :: Plug.Conn.t
+  def render(conn, template, assigns) when is_atom(template) and is_list(assigns) do
     format =
       conn.params["format"] ||
       raise "cannot render template #{inspect template} because conn.params[\"format\"] is not set. " <>
@@ -477,7 +477,7 @@ defmodule Phoenix.Controller do
     render(conn, template_name(template, format), format, assigns)
   end
 
-  def render(conn, template, assigns) when is_binary(template) do
+  def render(conn, template, assigns) when is_binary(template) and is_list(assigns) do
     case Path.extname(template) do
       "." <> format ->
         render(conn, template, format, assigns)
@@ -485,6 +485,19 @@ defmodule Phoenix.Controller do
         raise "cannot render template #{inspect template} without format. Use an atom if the " <>
               "template format is meant to be set dynamically based on the request format"
     end
+  end
+
+  def render(conn, view, template) do
+    conn
+    |> put_view(view)
+    |> render(template)
+  end
+
+  @spec render(Plug.Conn.t, atom | binary, binary | atom, Dict.t) :: Plug.Conn.t
+  def render(conn, view, template, assigns) when is_atom(view) do
+    conn
+    |> put_view(view)
+    |> render(template, assigns)
   end
 
   def render(conn, template, format, assigns) do
