@@ -397,7 +397,7 @@ defmodule Phoenix.Controller do
 
         plug :action
 
-        def show(conn) do
+        def show(conn, _params) do
           render conn, "show.html", message: "Hello"
         end
       end
@@ -409,7 +409,7 @@ defmodule Phoenix.Controller do
   on the request. To do so, you can pass the template name as an atom (without
   the extension):
 
-      def show(conn) do
+      def show(conn, _params) do
         render conn, :show, message: "Hello"
       end
 
@@ -423,15 +423,19 @@ defmodule Phoenix.Controller do
 
   By default, Controllers render templates in a view with a similar name to the
   controller. For example, `MyApp.UserController` will render templates inside
-  the `MyApp.UserView`. This information can be changed any time by using the
-  `put_view/2` function:
+  the `MyApp.UserView`. This information can be changed any time by using
+  `render/3`, `render/4` or the `put_view/2` function:
 
-      def show(conn) do
+      def show(conn, _params) do
+        render(conn, MyApp.SpecialView, :show, message: "Hello")
+      end
+
+      def show(conn, _params) do
         conn
         |> put_view(MyApp.SpecialView)
         |> render(:show, message: "Hello")
       end
-.
+
   `put_view/2` can also be used as a plug:
 
       defmodule MyApp.UserController do
@@ -440,7 +444,7 @@ defmodule Phoenix.Controller do
         plug :put_view, MyApp.SpecialView
         plug :action
 
-        def show(conn) do
+        def show(conn, _params) do
           render conn, :show, message: "Hello"
         end
       end
@@ -455,7 +459,7 @@ defmodule Phoenix.Controller do
 
         plug :action
 
-        def show(conn) do
+        def show(conn, _params) do
           render conn, "show.html", message: "Hello"
         end
       end
@@ -469,25 +473,40 @@ defmodule Phoenix.Controller do
   which formats support/require layout rendering (defaults to "html" only).
   """
   @spec render(Plug.Conn.t, binary | atom, Dict.t) :: Plug.Conn.t
-  def render(conn, template, assigns) when is_atom(template) do
+  @spec render(Plug.Conn.t, module, binary | atom) :: Plug.Conn.t
+  def render(conn, template, assigns)
+    when is_atom(template) and is_list(assigns) do
     format =
       conn.params["format"] ||
       raise "cannot render template #{inspect template} because conn.params[\"format\"] is not set. " <>
             "Please set `plug :accepts, %w(html json ...)` in your pipeline."
-    render(conn, template_name(template, format), format, assigns)
+    do_render(conn, template_name(template, format), format, assigns)
   end
 
   def render(conn, template, assigns) when is_binary(template) do
     case Path.extname(template) do
       "." <> format ->
-        render(conn, template, format, assigns)
+        do_render(conn, template, format, assigns)
       "" ->
         raise "cannot render template #{inspect template} without format. Use an atom if the " <>
               "template format is meant to be set dynamically based on the request format"
     end
   end
 
-  def render(conn, template, format, assigns) do
+  def render(conn, view, template)
+    when is_atom(view) and is_binary(template) or is_atom(template) do
+    render(conn, view, template, [])
+  end
+
+  @spec render(Plug.Conn.t, atom, atom | binary, Dict.t) :: Plug.Conn.t
+  def render(conn, view, template, assigns)
+    when is_atom(view) and is_binary(template) or is_atom(template) do
+    conn
+    |> put_view(view)
+    |> render(template, assigns)
+  end
+
+  defp do_render(conn, template, format, assigns) do
     assigns = to_map(assigns)
     content_type = Plug.MIME.type(format)
     conn = prepare_assigns(conn, assigns, format)

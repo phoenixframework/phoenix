@@ -41,6 +41,8 @@
   * [Endpoint] Allow the default format used when rendering errors to be customized in the `render_views` configuration
   * [HTML] Add `button/2` function to `Phoenix.HTML`
   * [HTML] Add `textarea/3` function to `Phoenix.HTML.Form`
+  * [Controller] `render/3` and `render/4` allows a view to be specified
+    directly.
 
 * Bug fixes
   * [HTML] Fix out of order hours, minutes and days in date/time select
