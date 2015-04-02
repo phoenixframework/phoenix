@@ -472,7 +472,8 @@ defmodule Phoenix.Controller do
   `layout_formats/2` and `put_layout_formats/2` can be used to configure
   which formats support/require layout rendering (defaults to "html" only).
   """
-  @spec render(Plug.Conn.t, binary | atom, atom | binary | Dict.t) :: Plug.Conn.t
+  @spec render(Plug.Conn.t, binary | atom, Dict.t) :: Plug.Conn.t
+  @spec render(Plug.Conn.t, module, binary | atom) :: Plug.Conn.t
   def render(conn, template, assigns)
     when is_atom(template) and is_list(assigns) do
     format =
