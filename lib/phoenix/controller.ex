@@ -423,10 +423,14 @@ defmodule Phoenix.Controller do
 
   By default, Controllers render templates in a view with a similar name to the
   controller. For example, `MyApp.UserController` will render templates inside
-  the `MyApp.UserView`. This information can be changed any time by using the
-  `put_view/2` function:
+  the `MyApp.UserView`. This information can be changed any time by using
+  `render/3`, `render/4` or the `put_view/2` function:
 
-      def show(conn) do
+      def show(conn, _params) do
+        render(conn, MyApp.SpecialView, :show, message: "Hello")
+      end
+
+      def show(conn, _params) do
         conn
         |> put_view(MyApp.SpecialView)
         |> render(:show, message: "Hello")
