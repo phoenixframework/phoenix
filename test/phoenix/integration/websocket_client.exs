@@ -13,23 +13,24 @@ defmodule Phoenix.Integration.WebsocketClient do
   end
 
   def init([sender], _conn_state) do
-    {:ok, sender}
+    {:ok, %{sender: sender, ref: 0}}
   end
 
   @doc """
   Receives JSON encoded Socket.Message from remote WS endpoint and
   forwards message to client sender process
   """
-  def websocket_handle({:text, msg}, _conn_state, sender) do
-    send sender, Phoenix.Transports.JSONSerializer.decode!(msg, :text)
-    {:ok, sender}
+  def websocket_handle({:text, msg}, _conn_state, state) do
+    send state.sender, Phoenix.Transports.JSONSerializer.decode!(msg, :text)
+    {:ok, state}
   end
 
   @doc """
   Sends JSON encoded Socket.Message to remote WS endpoint
   """
-  def websocket_info({:send, msg}, _conn_state, sender) do
-    {:reply, {:text, msg}, sender}
+  def websocket_info({:send, msg}, _conn_state, state) do
+    msg = Map.put(msg, :ref, to_string(state.ref + 1))
+    {:reply, {:text, json!(msg)}, put_in(state, [:ref], state.ref + 1)}
   end
 
   def websocket_terminate(_reason, _conn_state, _state) do
@@ -40,8 +41,7 @@ defmodule Phoenix.Integration.WebsocketClient do
   Sends an event to the WebSocket server per the Message protocol
   """
   def send_event(server_pid, topic, event, msg) do
-    msg = json!(%{topic: topic, event: event, payload: msg})
-    send server_pid, {:send, msg}
+    send server_pid, {:send, %{topic: topic, event: event, payload: msg}}
   end
 
   @doc """

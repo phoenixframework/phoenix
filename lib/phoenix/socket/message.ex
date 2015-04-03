@@ -33,7 +33,7 @@ defmodule Phoenix.Socket.Message do
         topic: Map.fetch!(map, "topic"),
         event: Map.fetch!(map, "event"),
         payload: Map.fetch!(map, "payload"),
-        ref: Map.get(map, "ref")
+        ref: Map.fetch!(map, "ref")
       }
     rescue
       err in [KeyError] -> raise InvalidMessage, message: "Missing key: '#{err.key}'"
