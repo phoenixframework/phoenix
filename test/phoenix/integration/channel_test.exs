@@ -43,10 +43,6 @@ defmodule Phoenix.Integration.ChannelTest do
       {:noreply, socket}
     end
 
-    def handle_in("phx_leave", _message, socket) do
-      {:stop, :normal, socket}
-    end
-
     def handle_in("new:msg", message, socket) do
       broadcast! socket, "new:msg", message
       {:noreply, socket}
@@ -113,6 +109,7 @@ defmodule Phoenix.Integration.ChannelTest do
     WebsocketClient.leave(sock, "rooms:lobby", %{})
     assert_receive %Message{event: "you:left", payload: %{"message" => "bye!"}}
     assert_receive %Message{event: "phx_close", payload: %{}}
+    assert_receive %Message{event: "phx_reply", payload: %{"status" => "ok"}}
 
     WebsocketClient.send_event(sock, "rooms:lobby", "new:msg", %{body: "Should ignore"})
     refute_receive %Message{}
@@ -327,11 +324,6 @@ defmodule Phoenix.Integration.ChannelTest do
     resp = poll(:get, "/ws/poll", session)
 
     [_phx_reply, _joined, _user_entered, _you_left_msg, chan_error] = resp.body["messages"]
-    [%{"event" => "phx_reply", "payload" => %{"ref" => nil, "response" => %{}, "status" => "ok"}, "ref" => nil, "topic" => "rooms:lobby"},
-     %{"event" => "joined", "payload" => %{"status" => "connected"}, "ref" => nil, "topic" => "rooms:lobby"},
-     %{"event" => "user:entered", "payload" => %{"user" => nil}, "ref" => nil, "topic" => "rooms:lobby"},
-     %{"event" => "phx_error", "payload" => %{}, "ref" => nil, "topic" => "rooms:lobby"}]
-
 
     assert chan_error ==
       %{"event" => "phx_error", "payload" => %{}, "topic" => "rooms:lobby", "ref" => nil}
@@ -347,6 +339,7 @@ defmodule Phoenix.Integration.ChannelTest do
     resp = poll :post, "/ws/poll", session, %{
       "topic" => "rooms:lobby",
       "event" => "phx_join",
+      "ref" => "1",
       "payload" => %{}
     }
     assert resp.body["status"] == 200
@@ -356,15 +349,21 @@ defmodule Phoenix.Integration.ChannelTest do
     resp = poll :post, "/ws/poll", session, %{
       "topic" => "rooms:lobby",
       "event" => "phx_leave",
+      "ref" => "2",
       "payload" => %{}
     }
     assert resp.body["status"] == 200
     assert resp.status == 200
 
+    # leave
     resp = poll(:get, "/ws/poll", session)
-    [_phx_reply, _joined, _user_entered, _you_left_msg, chan_close] = resp.body["messages"]
-
-    assert chan_close ==
-      %{"event" => "phx_close", "payload" => %{}, "topic" => "rooms:lobby", "ref" => nil}
+    assert resp.body["messages"] == [
+      %{"event" => "phx_reply", "payload" => %{"ref" => "1", "response" => %{}, "status" => "ok"}, "ref" => nil, "topic" => "rooms:lobby"},
+      %{"event" => "joined", "payload" => %{"status" => "connected"}, "ref" => nil, "topic" => "rooms:lobby"},
+      %{"event" => "user:entered", "payload" => %{"user" => nil}, "ref" => nil, "topic" => "rooms:lobby"},
+      %{"event" => "phx_reply", "payload" => %{"ref" => "2", "response" => %{}, "status" => "ok"}, "ref" => nil, "topic" => "rooms:lobby"},
+      %{"event" => "you:left", "payload" => %{"message" => "bye!"}, "ref" => nil, "topic" => "rooms:lobby"},
+      %{"event" => "phx_close", "payload" => %{}, "ref" => nil, "topic" => "rooms:lobby"}
+    ]
   end
 end

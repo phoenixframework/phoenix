@@ -534,4 +534,24 @@ defmodule Phoenix.ChannelTest do
     assert_receive {:socket_push, %Message{event: "phx_reply", payload: %{
       ref: "12345", response: %{}, status: "ok"}, topic: "topic:11subtopic"}}
   end
+
+  test "phx_leave event stops the server" do
+    sockets = HashDict.new
+    message = join_message("topic:12subtopic", fn socket -> {:ok, socket} end)
+    {:ok, socket_pid} = Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
+    sockets = HashDict.put(sockets, "topic:12subtopic", socket_pid)
+    Process.monitor(socket_pid)
+    %Message{event: "phx_leave",
+             topic: "topic:12subtopic",
+             ref: "12345",
+             payload: %{}}
+    |> Transport.dispatch(sockets, self, Router, Endpoint, WebSocket)
+
+    assert_receive {:socket_push, %Message{event: "phx_reply",
+      payload: %{ref: "12345", response: %{}, status: "ok"},
+      ref: nil, topic: "topic:12subtopic"}}
+
+    assert_receive :terminate_triggered
+    assert_receive {:DOWN, _ref, :process, ^socket_pid, :normal}
+  end
 end

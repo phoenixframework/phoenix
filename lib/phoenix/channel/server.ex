@@ -48,10 +48,9 @@ defmodule Phoenix.Channel.Server do
     }}
   end
 
-  # TODO decide if leave is treated specially
-  # def handle_cast({:handle_in, "phx_leave", payload, ref}, socket) do
-  #   term_and_stop(payload, put_in(socket.ref, ref))
-  # end
+  def handle_cast({:handle_in, "phx_leave", _payload, ref}, socket) do
+    handle_result({:stop, :normal, :ok, put_in(socket.ref, ref)}, :handle_in)
+  end
 
   @doc """
   Forwards incoming client messages through `handle_in/3` callbacks
@@ -140,18 +139,4 @@ defmodule Phoenix.Channel.Server do
     got #{inspect result}
     """
   end
-
-  # defp term_and_stop(reason, socket) do
-  #   case socket.channel.leave(reason, socket) do
-  #     :ok ->
-  #       {:stop, :normal, :left}
-  #     {:error, reason} ->
-  #       {:stop, {:error, reason}, :left}
-  #     other ->
-  #       raise """
-  #       Expected `leave/2` to return one of `:ok | {:error, reason}` got:
-  #       `#{inspect other}`
-  #       """
-  #    end
-  # end
 end

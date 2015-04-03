@@ -18,7 +18,7 @@ class Push {
   constructor(chan, event, payload, mergePush){
     this.chan         = chan
     this.event        = event
-    this.payload      = payload
+    this.payload      = payload || {}
     this.receivedResp = null
     this.afterHooks   = []
     this.recHooks     = {}
