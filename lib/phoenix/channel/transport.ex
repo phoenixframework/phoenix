@@ -28,11 +28,26 @@ defmodule Phoenix.Channel.Transport do
       Elixir process messages, then encoding and fowarding to remote client.
     * Trap exits and handle receiving `{:EXIT, socket_pid, reason}` messages
       and delete the entries from the kept HashDict of socket processes.
+      When exits are received, the adapter transport must reply to their client
+      with one of two messages:
+
+        - for `:normal` exits, send a reply to the remote client of a message
+          from `Transport.chan_close_message/1`
+        - for abnormal exits, send a reply to the remote client of a message
+          from `Transport.chan_error_message/1`
+
 
   See `Phoenix.Transports.WebSocket` for an example transport server implementation.
 
 
   ### Remote Client
+
+  Synchronouse Replies and `ref`'s:
+
+  Channels can reply, synchronously, to any `handle_in/3` event. To match pushes
+  with replies, clients must include a unique `ref` with every message and the
+  channel server will reply with a matching ref where the client and pick up the
+  callback for the matching reply.
 
   Phoenix includes a JavaScript client for WebSocket and Longpolling support using JSON
   encodings.
@@ -56,7 +71,7 @@ defmodule Phoenix.Channel.Transport do
   def dispatch(%Message{} = msg, sockets, transport_pid, router, endpoint, transport) do
     sockets
     |> HashDict.get(msg.topic)
-    |> dispatch(msg.topic, msg.event, msg.payload, transport_pid, router, endpoint, transport)
+    |> dispatch(msg, transport_pid, router, endpoint, transport)
   end
 
   @doc """
@@ -70,36 +85,50 @@ defmodule Phoenix.Channel.Transport do
 
   The server will respond to heartbeats with the same message
   """
-  def dispatch(_, "phoenix", "heartbeat", _payload, transport_pid, _router, _pubsub_server, _transport) do
+  def dispatch(_, %{topic: "phoenix", event: "heartbeat"}, transport_pid, _router, _pubsub_server, _transport) do
     send transport_pid, {:socket_push, %Message{topic: "phoenix", event: "heartbeat", payload: %{}}}
   end
-  def dispatch(nil, topic, "join", payload, transport_pid, router, endpoint, transport) do
-    case router.channel_for_topic(topic, transport) do
-      nil     -> log_ignore(topic, router)
+  def dispatch(nil, %{event: "phx_join"} = msg, transport_pid, router, endpoint, transport) do
+    case router.channel_for_topic(msg.topic, transport) do
+      nil     -> log_ignore(msg.topic, router)
       channel ->
         socket = %Socket{transport_pid: transport_pid,
                   router: router,
                   endpoint: endpoint,
                   pubsub_server: endpoint.__pubsub_server__(),
-                  topic: topic,
+                  topic: msg.topic,
+                  ref: msg.ref,
                   channel: channel,
                   transport: transport}
 
-        Phoenix.Channel.Server.start_link(socket, payload)
+        Phoenix.Channel.Server.start_link(socket, msg.payload)
     end
   end
-  def dispatch(nil, topic, _event, _payload, _adapter_pid, router, _pubsub_server, _transport) do
-    log_ignore(topic, router)
+  def dispatch(nil, msg, _transport_pid, router, _pubsub_server, _transport) do
+    log_ignore(msg.topic, router)
     :ignore
   end
-  def dispatch(socket_pid, _topic, event, payload, _adapter_pid, _router, _pubsub_server, _transport) do
-    GenServer.cast(socket_pid, {:handle_in, event, payload})
+  def dispatch(socket_pid, msg, _transport_pid, _router, _pubsub_server, _transport) do
+    GenServer.cast(socket_pid, {:handle_in, msg.event, msg.payload, msg.ref})
     :ok
   end
-
   defp log_ignore(topic, router) do
     Logger.debug fn -> "Ignoring unmatched topic \"#{topic}\" in #{inspect(router)}" end
     :ignore
+  end
+
+  @doc """
+  Returns the `%Phoenix.Message{}` for a channel close event
+  """
+  def chan_close_message(topic) do
+    %Message{topic: topic, event: "phx_close", payload: %{}}
+  end
+
+  @doc """
+  Returns the `%Phoenix.Message{}` for a channel error event
+  """
+  def chan_error_message(topic) do
+    %Message{topic: topic, event: "phx_error", payload: %{}}
   end
 
   @doc """

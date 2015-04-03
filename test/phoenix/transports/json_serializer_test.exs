@@ -4,7 +4,7 @@ defmodule Phoenix.Tranports.JSONSerializerTest do
   alias Phoenix.Transports.JSONSerializer
   alias Phoenix.Socket.Message
 
-  @msg_json "{\"topic\":\"t\",\"payload\":\"m\",\"event\":\"e\"}"
+  @msg_json "{\"topic\":\"t\",\"ref\":null,\"payload\":\"m\",\"event\":\"e\"}"
 
   test "encode!/1 encodes `Phoenix.Socket.Message` as JSON" do
     msg = %Message{topic: "t", event: "e", payload: "m"}

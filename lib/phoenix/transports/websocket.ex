@@ -1,5 +1,6 @@
 defmodule Phoenix.Transports.WebSocket do
   use Plug.Builder
+  require Logger
 
   import Phoenix.Controller, only: [endpoint_module: 1, router_module: 1]
 
@@ -28,7 +29,6 @@ defmodule Phoenix.Transports.WebSocket do
   """
 
   alias Phoenix.Channel.Transport
-  alias Phoenix.Socket.Message
 
   plug :check_origin
   plug :upgrade
@@ -63,7 +63,10 @@ defmodule Phoenix.Transports.WebSocket do
     case Transport.dispatch(msg, state.sockets, self, state.router, state.endpoint, __MODULE__) do
       {:ok, socket_pid} ->
         {:ok, put(state, msg.topic, socket_pid)}
-      _ ->
+      {:error, reason} ->
+        Logger.error fn -> Exception.format_exit(reason) end
+        {:ok, state}
+      _ignore ->
         {:ok, state}
     end
   end
@@ -76,18 +79,10 @@ defmodule Phoenix.Transports.WebSocket do
 
         case reason do
           :normal ->
-            {:reply, state.serializer.encode!(%Message{
-              topic: topic,
-              event: "chan:close",
-              payload: %{}
-            }), new_state}
+            {:reply, state.serializer.encode!(Transport.chan_close_message(topic)), new_state}
 
           _other ->
-            {:reply, state.serializer.encode!(%Message{
-              topic: topic,
-              event: "chan:error",
-              payload: %{}
-            }), new_state}
+            {:reply, state.serializer.encode!(Transport.chan_error_message(topic)), new_state}
         end
     end
   end

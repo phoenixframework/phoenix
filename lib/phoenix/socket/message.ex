@@ -5,15 +5,16 @@ defmodule Phoenix.Socket.Message do
 
   The Message format requires the following keys:
 
-    * topic - The String topic or topic:subtopic pair namespace, ie "messages", "messages:123"
-    * event - The String event name, ie "join"
-    * payload - The String JSON message payload
+    * `topic` - The string topic or topic:subtopic pair namespace, ie "messages", "messages:123"
+    * `event`- The string event name, ie "phx_join"
+    * `payload` - The string JSON message payload
+    * `ref` - The unique string ref
 
   """
 
   alias Phoenix.Socket.Message
 
-  defstruct topic: nil, event: nil, payload: nil
+  defstruct topic: nil, event: nil, payload: nil, ref: nil
 
   defmodule InvalidMessage do
     defexception [:message]
@@ -30,8 +31,9 @@ defmodule Phoenix.Socket.Message do
     try do
       %Message{
         topic: Map.fetch!(map, "topic"),
-        event:   Map.fetch!(map, "event"),
-        payload: Map.fetch!(map, "payload")
+        event: Map.fetch!(map, "event"),
+        payload: Map.fetch!(map, "payload"),
+        ref: Map.fetch!(map, "ref")
       }
     rescue
       err in [KeyError] -> raise InvalidMessage, message: "Missing key: '#{err.key}'"

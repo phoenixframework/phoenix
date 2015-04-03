@@ -1,33 +1,153 @@
-let SOCKET_STATES = {connecting: 0, open: 1, closing: 2, closed: 3}
+const SOCKET_STATES = {connecting: 0, open: 1, closing: 2, closed: 3}
+const CHANNEL_EVENTS = {
+  close: "phx_close",
+  error: "phx_error",
+  join: "phx_join",
+  reply: "phx_reply",
+  leave: "phx_leave"
+}
+
+class Push {
+
+  // Initializes the Push
+  //
+  // chan - The Channel
+  // event - The event, ie `"phx_join"`
+  // payload - The payload, ie `{user_id: 123}`
+  // mergePush - The optional `Push` to merge hooks from
+  constructor(chan, event, payload, mergePush){
+    this.chan         = chan
+    this.event        = event
+    this.payload      = payload || {}
+    this.receivedResp = null
+    this.afterHooks   = []
+    this.recHooks     = {}
+    this.sent         = false
+    if(mergePush){
+      mergePush.afterHooks.forEach( hook => this.after(hook.ms, hook.callback) )
+      for(var status in mergePush.recHooks){
+        if(mergePush.recHooks.hasOwnProperty(status)){
+          this.receive(status, mergePush.recHooks[status])
+        }
+      }
+    }
+  }
+
+  send(){
+    const ref      = this.chan.socket.makeRef()
+    const refEvent = this.chan.replyEventName(ref)
+
+    this.chan.on(refEvent, payload => {
+      this.receivedResp = payload
+      this.matchReceive(payload)
+      this.chan.off(refEvent)
+      this.cancelAfters()
+    })
+
+    this.startAfters()
+    this.sent = true
+    this.chan.socket.push({
+      topic: this.chan.topic,
+      event: this.event,
+      payload: this.payload,
+      ref: ref
+    })
+  }
+
+  receive(status, callback){
+    if(this.receivedResp && this.receivedResp.status === status){
+      callback(this.receivedResp.response)
+    }
+    this.recHooks[status] = callback
+    return this
+  }
+
+  after(ms, callback){
+    let timer = null
+    if(this.sent){ timer = setTimeout(callback, ms) }
+    this.afterHooks.push({ms: ms, callback: callback, timer: timer})
+    return this
+  }
+
+
+  // private
+
+  matchReceive({status, response, ref}){
+    let callback = this.recHooks[status]
+    if(!callback){ return }
+
+    if(this.event === CHANNEL_EVENTS.join){
+      callback(this.chan)
+    } else {
+      callback(response)
+    }
+  }
+
+  cancelAfters(){
+    this.afterHooks.forEach( hook => {
+      clearTimeout(hook.timer)
+      hook.timer = null
+    })
+  }
+
+  startAfters(){
+    this.afterHooks.map( hook => {
+      if(!hook.timer){
+        hook.timer = setTimeout(() => hook.callback(), hook.ms)
+      }
+    })
+  }
+}
 
 export class Channel {
   constructor(topic, message, callback, socket) {
-    this.topic    = topic
-    this.message  = message
-    this.callback = callback
-    this.socket   = socket
-    this.bindings = null
+    this.topic      = topic
+    this.message    = message
+    this.callback   = callback
+    this.socket     = socket
+    this.bindings   = []
+    this.afterHooks = []
+    this.recHooks   = {}
+    this.joinPush   = new Push(this, CHANNEL_EVENTS.join, this.message)
 
     this.reset()
+  }
+
+  after(ms, callback){
+    this.joinPush.after(ms, callback)
+    return this
+  }
+
+  receive(status, callback){
+    this.joinPush.receive(status, callback)
+    return this
   }
 
   rejoin(){
     this.reset()
-    this.onError( reason => this.rejoin() )
-    this.socket.push({topic: this.topic, event: "join", payload: this.message})
-    this.callback(this)
+    this.joinPush.send()
   }
 
-  onClose(callback){ this.on("chan:close", callback) }
+  onClose(callback){ this.on(CHANNEL_EVENTS.close, callback) }
 
   onError(callback){
-    this.on("chan:error", reason => {
+    this.on(CHANNEL_EVENTS.error, reason => {
       callback(reason)
-      this.trigger("chan:close", "error")
+      this.trigger(CHANNEL_EVENTS.close, "error")
     })
   }
 
-  reset(){ this.bindings = [] }
+  reset(){
+    this.bindings = []
+    let newJoinPush = new Push(this, CHANNEL_EVENTS.join, this.message, this.joinPush)
+    this.joinPush = newJoinPush
+    this.onError( reason => {
+      setTimeout(() => this.rejoin(), this.socket.reconnectAfterMs)
+    })
+    this.on(CHANNEL_EVENTS.reply, payload => {
+      this.trigger(this.replyEventName(payload.ref), payload)
+    })
+  }
 
   on(event, callback){ this.bindings.push({event, callback}) }
 
@@ -40,11 +160,20 @@ export class Channel {
                  .map( bind => bind.callback(msg) )
   }
 
-  push(event, payload){ this.socket.push({topic: this.topic, event: event, payload: payload}) }
+  push(event, payload){
+    let pushEvent = new Push(this, event, payload)
+    pushEvent.send()
 
-  leave(message = {}){
-    this.socket.leave(this.topic, message)
-    this.reset()
+    return pushEvent
+  }
+
+  replyEventName(ref){ return `chan_reply_${ref}` }
+
+  leave(){
+    return this.push(CHANNEL_EVENTS.leave).receive("ok", () => {
+      this.socket.leave(this)
+      chan.reset()
+    })
   }
 }
 
@@ -59,9 +188,10 @@ export class Socket {
   // opts - Optional configuration
   //   transport - The Websocket Transport, ie WebSocket, Phoenix.LongPoller.
   //               Defaults to WebSocket with automatic LongPoller fallback.
-  //   heartbeatIntervalMs - The millisecond interval to send a heartbeat message
+  //   heartbeatIntervalMs - The millisec interval to send a heartbeat message
+  //   reconnectAfterMs - The millisec interval to reconnect after connection loss
   //   logger - The optional function for specialized logging, ie:
-  //            `logger: (msg) -> console.log(msg)`
+  //            `logger: function(msg){ console.log(msg) }`
   //   longpoller_timeout - The maximum timeout of a long poll AJAX request.
   //                        Defaults to 20s (double the server long poll timer).
   //
@@ -72,16 +202,16 @@ export class Socket {
     this.stateChangeCallbacks = {open: [], close: [], error: [], message: []}
     this.flushEveryMs         = 50
     this.reconnectTimer       = null
-    this.reconnectAfterMs     = 5000
-    this.heartbeatIntervalMs  = 30000
     this.channels             = []
     this.sendBuffer           = []
+    this.ref                  = 0
+    this.transport            = opts.transport || window.WebSocket || LongPoller
+    this.heartbeatIntervalMs  = opts.heartbeatIntervalMs || 30000
+    this.reconnectAfterMs     = opts.reconnectAfterMs || 5000
+    this.logger               = opts.logger || function(){} // noop
+    this.longpoller_timeout   = opts.longpoller_timeout || 20000
+    this.endPoint             = this.expandEndpoint(endPoint)
 
-    this.transport = opts.transport || window.WebSocket || LongPoller
-    this.heartbeatIntervalMs = opts.heartbeatIntervalMs || this.heartbeatIntervalMs
-    this.logger = opts.logger || function(){} // noop
-    this.longpoller_timeout = opts.longpoller_timeout || 20000
-    this.endPoint = this.expandEndpoint(endPoint)
     this.resetBufferTimer()
   }
 
@@ -126,7 +256,7 @@ export class Socket {
   //
   // Examples
   //
-  //    socket.onError (error) -> alert("An error occurred")
+  //    socket.onError function(error){ alert("An error occurred") }
   //
   onOpen     (callback){ this.stateChangeCallbacks.open.push(callback) }
   onClose    (callback){ this.stateChangeCallbacks.close.push(callback) }
@@ -175,11 +305,11 @@ export class Socket {
     let chan = new Channel(topic, message, callback, this)
     this.channels.push(chan)
     if(this.isConnected()){ chan.rejoin() }
+    return chan
   }
 
-  leave(topic, message = {}){
-    this.push({topic: topic, event: "leave", payload: message})
-    this.channels = this.channels.filter( c => !c.isMember(topic) )
+  leave(chan){
+    this.channels = this.channels.filter( c => !c.isMember(chan.topic) )
   }
 
   push(data){
@@ -192,8 +322,16 @@ export class Socket {
     }
   }
 
+  // Return the next message ref, accounting for overflows
+  makeRef(){
+    let newRef = this.ref + 1
+    if(newRef === this.ref){ this.ref = 0 } else { this.ref = newRef }
+
+    return this.ref.toString()
+  }
+
   sendHeartbeat(){
-    this.push({topic: "phoenix", event: "heartbeat", payload: {}})
+    this.push({topic: "phoenix", event: "heartbeat", payload: {}, ref: this.makeRef()})
   }
 
   flushSendBuffer(){
