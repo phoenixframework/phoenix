@@ -265,7 +265,6 @@ var Channel = exports.Channel = (function () {
     this.bindings = [];
     var newJoinPush = new Push(this, CHANNEL_EVENTS.join, this.message, this.joinPush);
     this.joinPush = newJoinPush;
-    // TODO rate limit this w/ timeout ?
     this.onError(function (reason) {
       setTimeout(function () {
         return _this.rejoin();
@@ -310,10 +309,12 @@ var Channel = exports.Channel = (function () {
   };
 
   Channel.prototype.leave = function leave() {
-    var message = arguments[0] === undefined ? {} : arguments[0];
+    var _this = this;
 
-    this.socket.leave(this.topic, message);
-    this.reset();
+    return this.push(CHANNEL_EVENTS.leave).receive("ok", function () {
+      _this.socket.leave(_this);
+      chan.reset();
+    });
   };
 
   return Channel;
@@ -519,12 +520,9 @@ var Socket = exports.Socket = (function () {
     return chan;
   };
 
-  Socket.prototype.leave = function leave(topic) {
-    var message = arguments[1] === undefined ? {} : arguments[1];
-
-    this.push({ topic: topic, event: CHANNEL_EVENTS.leave, payload: message });
+  Socket.prototype.leave = function leave(chan) {
     this.channels = this.channels.filter(function (c) {
-      return !c.isMember(topic);
+      return !c.isMember(chan.topic);
     });
   };
 
@@ -555,7 +553,7 @@ var Socket = exports.Socket = (function () {
   };
 
   Socket.prototype.sendHeartbeat = function sendHeartbeat() {
-    this.push({ topic: "phoenix", event: "heartbeat", payload: {} });
+    this.push({ topic: "phoenix", event: "heartbeat", payload: {}, ref: this.makeRef() });
   };
 
   Socket.prototype.flushSendBuffer = function flushSendBuffer() {

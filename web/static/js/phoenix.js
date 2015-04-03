@@ -141,7 +141,6 @@ export class Channel {
     this.bindings = []
     let newJoinPush = new Push(this, CHANNEL_EVENTS.join, this.message, this.joinPush)
     this.joinPush = newJoinPush
-    // TODO rate limit this w/ timeout ?
     this.onError( reason => {
       setTimeout(() => this.rejoin(), this.socket.reconnectAfterMs)
     })
@@ -170,9 +169,11 @@ export class Channel {
 
   replyEventName(ref){ return `chan_reply_${ref}` }
 
-  leave(message = {}){
-    this.socket.leave(this.topic, message)
-    this.reset()
+  leave(){
+    return this.push(CHANNEL_EVENTS.leave).receive("ok", () => {
+      this.socket.leave(this)
+      chan.reset()
+    })
   }
 }
 
@@ -307,9 +308,8 @@ export class Socket {
     return chan
   }
 
-  leave(topic, message = {}){
-    this.push({topic: topic, event: CHANNEL_EVENTS.leave, payload: message})
-    this.channels = this.channels.filter( c => !c.isMember(topic) )
+  leave(chan){
+    this.channels = this.channels.filter( c => !c.isMember(chan.topic) )
   }
 
   push(data){
@@ -331,7 +331,7 @@ export class Socket {
   }
 
   sendHeartbeat(){
-    this.push({topic: "phoenix", event: "heartbeat", payload: {}})
+    this.push({topic: "phoenix", event: "heartbeat", payload: {}, ref: this.makeRef()})
   }
 
   flushSendBuffer(){
