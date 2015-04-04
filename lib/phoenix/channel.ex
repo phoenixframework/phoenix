@@ -69,6 +69,39 @@ defmodule Phoenix.Channel do
       end
 
 
+  ### Synchronous Replies
+  In addition to pushing messages out when you receive a `handle_in` event,
+  you can also reply directly to a client event for request/response style
+  messaging. This is useful when a client must know the result of an operation
+  or to simply ack messages.
+
+  For example, imagine creating a resource and replying with the created record:
+
+      def handle_in("create:post", attrs, socket) do
+        changeset = Post.changeset(%Post{}, attrs)
+
+        if changeset.valid? do
+          Repo.insert(changeset)
+          {:reply, {:ok, changeset}, socket}
+        else
+          {:reply, {:error, changeset.errors}, socket}
+        end
+      end
+
+  Alternatively, you may just want to ack the status of the operation:
+
+      def handle_in("create:post", attrs, socket) do
+        changeset = Post.changeset(%Post{}, attrs)
+
+        if changeset.valid? do
+          Repo.insert(changeset)
+          {:reply, :ok, socket}
+        else
+          {:reply, :error, socket}
+        end
+      end
+
+
   ### Outgoing Events
 
   When an event is broadcasted with `Phoenix.Channel.broadcast/3`, each channel
@@ -159,7 +192,7 @@ defmodule Phoenix.Channel do
       import unquote(__MODULE__)
       import Phoenix.Socket
 
-      def terminate(reason, socket), do: :ok
+      def terminate(_reason, _socket), do: :ok
 
       def handle_in(_event, _message, socket), do: {:noreply, socket}
 

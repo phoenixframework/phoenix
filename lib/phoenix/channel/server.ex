@@ -49,7 +49,7 @@ defmodule Phoenix.Channel.Server do
   end
 
   def handle_cast({:handle_in, "phx_leave", _payload, ref}, socket) do
-    handle_result({:stop, :normal, :ok, put_in(socket.ref, ref)}, :handle_in)
+    handle_result({:stop, {:shutdown, :client_left}, :ok, put_in(socket.ref, ref)}, :handle_in)
   end
 
   @doc """

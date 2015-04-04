@@ -35,7 +35,7 @@ defmodule Phoenix.ChannelTest do
     end
     def handle_info({:close, sender}, socket) do
       send sender, :closing
-      {:stop, :normal, socket}
+      {:stop, {:shutdown, :close}, socket}
     end
 
     def handle_in("some_event", _msg, socket) do
@@ -73,8 +73,8 @@ defmodule Phoenix.ChannelTest do
       {:noreply, socket}
     end
 
-    def terminate(_reason, socket) do
-      send socket.transport_pid, :terminate_triggered
+    def terminate(reason, socket) do
+      send socket.transport_pid, {:terminate_triggered, reason}
       :ok
     end
   end
@@ -255,7 +255,7 @@ defmodule Phoenix.ChannelTest do
                        payload: %{}}
     :ok = Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
     Process.monitor(socket_pid)
-    assert_receive :terminate_triggered
+    assert_receive {:terminate_triggered, :normal}
     assert_receive {:DOWN, _ref, :process, ^socket_pid, :normal}
     assert subscribers(:phx_pub, "topic:1subtopic") == []
 
@@ -273,7 +273,7 @@ defmodule Phoenix.ChannelTest do
 
     assert subscribers(:phx_pub, "topic:1subtopic") == []
     assert_received :everyone_leaving
-    assert_received :terminate_triggered
+    assert_received {:terminate_triggered, :normal}
   end
 
   test "successful join authorizes and subscribes socket to topic" do
@@ -304,7 +304,7 @@ defmodule Phoenix.ChannelTest do
     Process.exit(socket_pid, :shutdown)
 
     assert_receive {:EXIT, ^socket_pid, :shutdown}
-    assert_receive :terminate_triggered
+    assert_receive {:terminate_triggered, :shutdown}
     assert subscribers(:phx_pub, "topic:4subtopic") == []
   end
 
@@ -504,8 +504,8 @@ defmodule Phoenix.ChannelTest do
 
     send(socket_pid, {:close, self})
     assert_receive :closing
-    assert_receive :terminate_triggered
-    assert_receive {:DOWN, _ref, :process, ^socket_pid, :normal}
+    assert_receive {:terminate_triggered, {:shutdown, :close}}
+    assert_receive {:DOWN, _ref, :process, ^socket_pid, {:shutdown, :close}}
   end
 
   test "handle_in/3 can reply to the socket directly" do
@@ -551,7 +551,7 @@ defmodule Phoenix.ChannelTest do
       payload: %{ref: "12345", response: %{}, status: "ok"},
       ref: nil, topic: "topic:12subtopic"}}
 
-    assert_receive :terminate_triggered
-    assert_receive {:DOWN, _ref, :process, ^socket_pid, :normal}
+    assert_receive {:terminate_triggered, {:shutdown, :client_left}}
+    assert_receive {:DOWN, _ref, :process, ^socket_pid, {:shutdown, :client_left}}
   end
 end

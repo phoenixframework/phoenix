@@ -109,8 +109,8 @@ defmodule Phoenix.Integration.ChannelTest do
 
     WebsocketClient.leave(sock, "rooms:lobby", %{})
     assert_receive %Message{event: "you:left", payload: %{"message" => "bye!"}}
-    assert_receive %Message{event: "phx_close", payload: %{}}
     assert_receive %Message{event: "phx_reply", payload: %{"status" => "ok"}}
+    assert_receive %Message{event: "phx_close", payload: %{}}
 
     WebsocketClient.send_event(sock, "rooms:lobby", "new:msg", %{body: "Should ignore"})
     refute_receive %Message{}

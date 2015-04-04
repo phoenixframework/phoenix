@@ -10,6 +10,22 @@
 * Backwards incompatible changes
   * [Generator] `mix phoenix.gen.resource` renamed to `mix phoenix.gen.html`
   * [Channel] `reply` has been renamed to `push` to better signify we are only push a message down the socket, not replying to a specific request
+  * [Channel] The return signatures for `handle_in/3` and `handle_out/3` have changed, ie:
+
+  * [Channel] The `leave/2` callback has been removed. If you need to cleanup/teardown when a client disconnects, trap exits and handle in `terminate/2`, ie:
+
+      def join(topic, auth_msg, socket) do
+        Process.flag(:trap_exit, true)
+        {:ok, socket}
+      end
+
+      def terminate({:shutdown, :client_left}, socket) do
+        # client left intentionally
+      end
+      def terminate(reason, socket) do
+        # terminating for another reason (connection drop, crash, etc)
+      end
+
   * [HTML] `use Phoenix.HTML` no longer imports controller functions. You must add `import Phoenix.Controller, only: [get_flash: 2]` manually to your views or your `web.ex`
   * [Endpoint] Code reloader must now be configured in your endpoint instead of Phoenix. Therefore, upgrade your `config/dev.exs` replacing
 

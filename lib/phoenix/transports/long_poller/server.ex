@@ -104,7 +104,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   @doc """
   Trap channel process exits and notify client of close or error events
 
-  `:normal` exits indicate the channel shutdown gracefully from a `{:leave, socket}`
+  `:normal` exits and shutdowns indicate the channel shutdown gracefully from
    return. Any other exit reason is treated as an error.
   """
   def handle_info({:EXIT, socket_pid, reason}, state) do
@@ -115,6 +115,8 @@ defmodule Phoenix.Transports.LongPoller.Server do
                               sockets_inverse: HashDict.delete(state.sockets_inverse, socket_pid)}
         case reason do
           :normal ->
+            publish_reply(Transport.chan_close_message(topic), new_state)
+          {:shutdown, _} ->
             publish_reply(Transport.chan_close_message(topic), new_state)
           _other ->
             publish_reply(Transport.chan_error_message(topic), new_state)

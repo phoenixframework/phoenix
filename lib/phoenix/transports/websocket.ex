@@ -80,7 +80,8 @@ defmodule Phoenix.Transports.WebSocket do
         case reason do
           :normal ->
             {:reply, state.serializer.encode!(Transport.chan_close_message(topic)), new_state}
-
+          {:shutdown, _} ->
+            {:reply, state.serializer.encode!(Transport.chan_close_message(topic)), new_state}
           _other ->
             {:reply, state.serializer.encode!(Transport.chan_error_message(topic)), new_state}
         end

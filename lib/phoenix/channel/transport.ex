@@ -31,8 +31,8 @@ defmodule Phoenix.Channel.Transport do
       When exits are received, the adapter transport must reply to their client
       with one of two messages:
 
-        - for `:normal` exits, send a reply to the remote client of a message
-          from `Transport.chan_close_message/1`
+        - for `:normal` exits and shutdowns, send a reply to the remote
+          client of a message from `Transport.chan_close_message/1`
         - for abnormal exits, send a reply to the remote client of a message
           from `Transport.chan_error_message/1`
 
