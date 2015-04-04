@@ -33,5 +33,6 @@ defmodule Phoenix.PubSub.RedisConn do
     {:noreply, state}
   end
 
-  def terminate(_reason, _state), do: :ok
+  def terminate(_reason, {:disconnected, _}), do: :ok
+  def terminate(_reason, {pid, _}), do: :redo.shutdown(pid)
 end

@@ -100,6 +100,10 @@ defmodule Phoenix.PubSub.RedisServer do
     establish_failed(state)
   end
 
+  def handle_info({:EXIT, redo_pid, _}, %{redo_pid: redo_pid} = state) do
+    establish_failed(state)
+  end
+
   @doc """
   Connection establishment and shutdown loop
 
@@ -112,7 +116,11 @@ defmodule Phoenix.PubSub.RedisServer do
     end
   end
 
-  def terminate(_reason, _state) do
+  def terminate(_reason, %{status: :disconnected}) do
+     :ok
+  end
+  def terminate(_reason, state) do
+    :redo.shutdown(state.redo_pid)
     :ok
   end
 
