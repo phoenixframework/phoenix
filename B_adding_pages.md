@@ -26,7 +26,6 @@ Most of our work in this guide will be in the `web` directory, which looks like 
 │   │   └── application.html.eex
 │   └── page
 │       └── index.html.eex
-├── view.ex
 └── views
 |   ├── error_view.ex
 |   ├── layout_view.ex
@@ -36,7 +35,7 @@ Most of our work in this guide will be in the `web` directory, which looks like 
 
 All of the files which are currently in the controllers, templates and views directories are there to create the "Welcome to Phoenix!" page we saw in the last guide. We will see how we can re-use some of that code shortly.
 
-All of our application's static assets live in `priv/static` in the directory appropriate for each type of file - css, images or js. We won't be making any changes here for now, but it is good to know where to look for future reference.
+All of our application's static assets live in `priv/static` in the directory appropriate for each type of file - css, images or js. We place assets that require a build phase into `web/static`, and the source files are built into their respective `app.js/app.css` bundles within `priv/static`. We won't be making any changes here for now, but it is good to know where to look for future reference.
 
 ```text
 priv
@@ -56,7 +55,7 @@ web
         └── phoenix.js
 ```
 
-The `lib` directory also contains files we should know about. Our application's endpoint is at `lib/hello_phoenix/endpoint.ex`, and our application file (which starts our application and it's supervision tree) is at `lib/hello_phoenix.ex`.
+The `lib` directory also contains files we should know about. Our application's endpoint is at `lib/hello_phoenix/endpoint.ex`, and our application file (which starts our application and its supervision tree) is at `lib/hello_phoenix.ex`.
 
 ```text
 lib
@@ -151,13 +150,13 @@ All controller actions take two arguments. The first is `conn`, a struct which h
 
 The core of this action is `render conn, "index.html"`. This tells Phoenix to find a template called `index.html.eex` and render it. Phoenix will look for the template in a directory named after our controller, so `web/templates/hello`.
 
-Note: Using an atom as the template name will also work here, `render conn, :index`.
+Note: Using an atom as the template name will also work here, `render conn, :index`, but the template will be chosen based off the Accept headers, ie `"index.html"` or `"index.json"`, etc.
 
 The modules responsible for rendering are views, and we'll make a new one of those next.
 
 ###A New View
 
-Phoenix views have several important jobs. They actually render templates. They also act as a presentation layer for raw data from the controller, preparing it for use in a template. Functions which perform this transformation should go in a view.
+Phoenix views have several important jobs. They render templates. They also act as a presentation layer for raw data from the controller, preparing it for use in a template. Functions which perform this transformation should go in a view.
 
 As an example, say we have a data structure which represents a user with a `first_name` field and a `last_name` field, and in a template, we want to show the user's full name. We could write code in the template to merge those fields into a full name, but the better approach is to write a function in the view to do it for us, then call that function in the template. The result is a cleaner and more legible template.
 
@@ -171,9 +170,9 @@ end
 
 ###A New Template
 
-Phoenix templates are just that, templates into which data can be rendered. The standard templating engine Phoenix uses is eex, which stands for [Embedded Elixir](http://elixir-lang.org/docs/stable/eex/). All our template files will have the `.eex` file extension.
+Phoenix templates are just that, templates into which data can be rendered. The standard templating engine Phoenix uses is eex, which stands for [Embedded Elixir](http://elixir-lang.org/docs/stable/eex/). All of our template files will have the `.eex` file extension.
 
-Templates are scoped to a controller. In practice, this simply means that we create a directory named after the controller in the `web/templates` directory. For our hello page, that means we need to create a `hello` directory under `web/templates` and then create an `index.html.eex` file within it.
+Templates are scoped to a view, which are scoped to controller. In practice, this simply means that we create a directory named after the controller in the `web/templates` directory. For our hello page, that means we need to create a `hello` directory under `web/templates` and then create an `index.html.eex` file within it.
 
 Let's do that now. Create `web/templates/hello/index.html.eex` and make it look like this.
 
@@ -197,7 +196,7 @@ As we did last time, the first thing we'll do is create a new route.
 
 ###A New Route
 
-For this page, we're going to re-use the `HelloController` we just created and just add a new `show` action. We'll add a line just below our last route, like this.
+For this exercise, we're going to re-use the `HelloController` we just created and just add a new `show` action. We'll add a line just below our last route, like this.
 
 ```elixir
 scope "/", HelloPhoenix do
