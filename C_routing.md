@@ -1,4 +1,4 @@
-The router is the main hub of any Phoenix application. It matches HTTP requests to controller actions, wires up real-time channel handlers, and defines a series of pipeline transformations for scoping middleware to sets of routes.
+Routers are the main hubs of Phoenix applications. They match HTTP requests to controller actions, wire up real-time channel handlers, and define a series of pipeline transformations for scoping middleware to sets of routes.
 
 The router file that Phoenix generates, `web/router.ex`, will look something like this one.
 
@@ -45,12 +45,10 @@ Inside the scope block, however, we have our first actual route.
 
 The first argument to these macros is the path. Here, it is the root of the application, `/`. The next two arguments are the controller and action we want to have handle this request. These macros may also take other options, which we will see throughout the rest of this guide.
 
-If this were the only route in our router module, the clause of the `match/3` function would look like this after the macro expands.
+If this were the only route in our router module, the clause of the `match/3` function would look like this after the macro is expanded.
 
 ```elixir
-  def match(conn, "GET", ["/"]) do
-    Controller.perform_action(conn, HelloPhoenix.PageController, :index)
-  end
+  def match(conn, "GET", ["/"])
 ```
 
 The body of the match function sets up the connection and invokes the matched controller action.
@@ -86,7 +84,7 @@ page_path  GET  /  HelloPhoenix.PageController.index/2
 ```
 The output tells us that any HTTP GET request for the root of the application will be handled by the `index` action of the `HelloPhoenix.PageController`.
 
-`page_path` is an instance of a what Phoenix calls a path helper, and we'll talk about those very soon.
+`page_path` is an example of a what Phoenix calls a path helper, and we'll talk about those very soon.
 
 ###Resources
 
@@ -168,16 +166,16 @@ Path helpers are functions which are dynamically defined on the `Router.Helpers`
 That's a mouthful. Let's see it in action. Run `$ iex -S mix` at the root of the project. When we call the `page_path` function on our router helpers with the `Endpoint` or connection and action as arguments, it returns the path to us.
 
 ```elixir
-iex(4)> HelloPhoenix.Router.Helpers.page_path(Endpoint, :index)
+iex> HelloPhoenix.Router.Helpers.page_path(HelloPhoenix.Endpoint, :index)
 "/"
 ```
 
-This is significant because we can use the `page_path` function in a template to link to the root of our application.
+This is significant because we can use the `page_path` function in a template to link to the root of our application. Note: If that function invocation seems uncomfortably long, there is a solution. By including `import HelloPhoenix.Router.Helpers` in our main application view.
 
 ```html
-<a href="<%= HelloPhoenix.Router.Helpers.page_path(@conn, :index) %>">To the Welcome Page!</a>
+<a href="<%= page_path(@conn, :index) %>">To the Welcome Page!</a>
 ```
-Note: If that function invocation seems uncomfortably long, there is a solution. By including `import HelloPhoenix.Router.Helpers` in our main application view, we can shorten that to `page_path(@conn, :index)`. Please see the [View Guide](http://www.phoenixframework.org/docs/views) for more information.
+Please see the [View Guide](http://www.phoenixframework.org/docs/views) for more information.
 
 This pays off tremendously if we should ever have to change the path of our route in the router. Since the path helpers are built dynamically from the routes, any calls to `page_path` in our templates will still work.
 
@@ -186,32 +184,34 @@ This pays off tremendously if we should ever have to change the path of our rout
 When we ran the `phoenix.routes` task for our user resource, it listed the `user_path` as the path helper function for each line of output. Here is what that translates to for each action.
 
 ```elixir
-iex(2)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :index)
+iex> import HelloPhoenix.Router.Helpers
+iex> alias HelloPhoenix.Endpoint
+iex> user_path(Endpoint, :index)
 "/users"
 
-iex(3)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :show, 17)
+iex> user_path(Endpoint, :show, 17)
 "/users/17"
 
-iex(4)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :new)
+iex> user_path(Endpoint, :new)
 "/users/new"
 
-iex(5)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :create)
+iex> user_path(Endpoint, :create)
 "/users"
 
-iex(6)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :edit, 37)
+iex> user_path(Endpoint, :edit, 37)
 "/users/37/edit"
 
-iex(7)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :update, 37)
+iex> user_path(Endpoint, :update, 37)
 "/users/37"
 
-iex(8)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :delete, 17)
+iex> user_path(Endpoint, :delete, 17)
 "/users/17"
 ```
 
 What about paths with query strings? Phoenix has you covered. By adding an optional fourth argument of key value pairs, the path helpers will return those pairs in the query string.
 
 ```elixir
-iex(3)> HelloPhoenix.Router.Helpers.user_path(Endpoint, :show, 17, admin: true, active: false)
+iex> user_path(Endpoint, :show, 17, admin: true, active: false)
 "/users/17?admin=true&active=false"
 ```
 
@@ -223,7 +223,7 @@ iex(3)> HelloPhoenix.Router.Helpers.user_url(Endpoint, :index)
 ```
 Application endpoints will have their own guide soon. For now, think of them as the entity that handles requests just up to the point where the router takes over. That includes starting the app/server, applying configuration, and applying the plugs common to all requests.
 
-The `Endpoint.url/1` function will get the host, port, proxy port and ssl information needed to construct the full url from the configuration parameters set for each environment. We'll talk about configuration in more detail in its own guide. For now, you can take a look at `/config/dev.exs` file in your own project to see what those values are.
+The `_url` functions will get the host, port, proxy port and ssl information needed to construct the full url from the configuration parameters set for each environment. We'll talk about configuration in more detail in its own guide. For now, you can take a look at `/config/dev.exs` file in your own project to see what those values are.
 
 ###Nested Resources
 
@@ -266,7 +266,7 @@ iex> HelloPhoenix.Router.Helpers.user_post_path(Endpoint, :index, 42, active: tr
 
 ###Scoped Routes
 
-Scopes are a way to group routes under a common path prefix. We might want to do this for admin functionality, APIs  and especially for versioned APIs. Let's say we have user generated reviews on a site, and that those reviews first need to be approved by an admin. The semantics of these resources are quite different, and they may not share the same controller, so we want to keep them separate.
+Scopes are a way to group routes under a common path prefix and scoped set of plug middleware. We might want to do this for admin functionality, APIs  and especially for versioned APIs. Let's say we have user generated reviews on a site, and that those reviews first need to be approved by an admin. The semantics of these resources are quite different, and they may not share the same controller, so we want to keep them separate.
 
 The paths to the user facing reviews would look like a standard resource.
 
@@ -320,7 +320,7 @@ This looks good, but there is a problem here. Remember that we wanted both user 
 
 ```elixir
 scope "/", HelloPhoenix do
-pipe_through :browser
+  pipe_through :browser
   . . .
   resources "/reviews", ReviewController
   . . .
@@ -358,7 +358,7 @@ The actual routes we get all look right, except for the path helper `review_path
 
 ```elixir
 scope "/", HelloPhoenix do
-pipe_through :browser
+  pipe_through :browser
   . . .
   resources "/reviews", ReviewController
   . . .
@@ -450,9 +450,9 @@ This is great, exactly what we want, but we can make it even better. Notice that
 scope "/admin", HelloPhoenix.Admin, as: :admin do
   pipe_through :browser
 
-  resources "/images", ImageController
+  resources "/images",  ImageController
   resources "/reviews", ReviewController
-  resources "/users", UserController
+  resources "/users",   UserController
 end
 ```
 
@@ -471,7 +471,7 @@ defmodule HelloPhoenix.Router do
 
     get "/images", ImageController, :index
     resources "/reviews", ReviewController
-    resources "/users", UserController
+    resources "/users",   UserController
   end
 end
 ```
@@ -505,9 +505,9 @@ scope "/api", HelloPhoenix.Api, as: :api do
   pipe_through :api
 
   scope "/v1", V1, as: :v1 do
-    resources "/images", ImageController
+    resources "/images",  ImageController
     resources "/reviews", ReviewController
-    resources "/users", UserController
+    resources "/users",   UserController
   end
 end
 ```
@@ -598,7 +598,7 @@ A newly generated Phoenix application defines two pipelines called `:browser` an
 
 #####The Endpoint Plugs
 
-Older versions of Phoenix defined a third pipeline `:before`. Its purpose was to organize all the plugs common to every request, and make sure they were executed first, before the `:browser` or `:api` pipelines. Currently, the Endpoint has taken over this responsibility. These Endpoint plugs do quite a lot of work. Here they are in order.
+Endpoints organize all the plugs common to every request, and apply them before dispatching into the router(s) with their underlying `:browser`, `:api`, and custom pipelines. The default Endpoint plugs do quite a lot of work. Here they are in order.
 
 - [Plug.Static](http://hexdocs.pm/plug/Plug.Static.html) - serves static assets. Since this plug comes before the router, serving of static assets is not logged
 
@@ -616,13 +616,13 @@ Older versions of Phoenix defined a third pipeline `:before`. Its purpose was to
 - [Plug.Session](http://hexdocs.pm/plug/Plug.Session.html) - a plug that sets up session management.
   Note that fetch_session/2 must still be explicitly called before using the session as this plug just sets up how the session is fetched
 
-- [Plug.Router](http://hexdocs.pm/plug/Plug.Router.html) - plugs our router into the request cycle
+- [Plug.Router](http://hexdocs.pm/plug/Plug.Router.html) - plugs a router into the request cycle
 
 #####The `:browser` and `:api` Pipelines
 
 Phoenix defines two other pipelines by default, `:browser` and `:api`. The router will invoke these after it matches a route, assuming we have called `pipe_through/1` with them in the enclosing scope.
 
-As their names suggest, the `:browser` pipeline prepares for routes which render HTML for a browser. The `:api` pipeline prepares for routes which produce data for an api.
+As their names suggest, the `:browser` pipeline prepares for routes which render requests for a browser. The `:api` pipeline prepares for routes which produce data for an api.
 
 The `:browser` pipeline has four plugs: `plug :accepts, ~w(html)` which defines the request format or formats which will be accepted, `:fetch_session`, which, naturally, fetches the session data and makes it available in the connection, `:fetch_flash` which retrieves any flash messages which may have been set, and  `:protect_from_forgery`, which protects form posts from cross site forgery.
 
