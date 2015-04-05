@@ -18,24 +18,14 @@ $ git clone https://github.com/phoenixframework/phoenix.git
 $ cd phoenix
 ```
 
-- And make sure we are on the v0.10.0 branch.
+- And make sure we are on the v0.11.0 branch.
 ```console
-$ git checkout v0.10.0
+$ git checkout v0.11.0
 ```
 
 - Get the dependencies and compile the whole project
 ```console
 $ mix do deps.get, compile
-```
-
-Note: This is passing a list of arguments to mix and is functionally equivalent to the two line version.
-
-```console
-$ mix deps.get
-```
-
-```console
-$ mix compile
 ```
 
 Note: On some Linux systems, Erlang installations do not include the Erlang ssl or inets packages. This will cause hex to fail. If you see an error message like this one,
@@ -61,9 +51,18 @@ $ sudo apt-get install erlang-ssl
 $ sudo apt-get install erlang-inets
 ```
 
-Once this is done, we need to have Phoenix generate a new project for us, and we generate it outside the Phoenix repo itself. Phoenix provides a mix task `phoenix.new` for this, and the task takes a path/application_name to where we want the new application to live.
+Once this is done, we need to have Phoenix generate a new project for us. Phoenix includes a mix archive so that we can run the included `mix phoenix.new` task from any directory once installed. Let's get it set up.
 
-Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello_phoenix`, either of these will work.
+First `cd` into the installer directory from your cloned phoenix repo:
+
+    $ cd installer
+
+Next, build and install the ix archive:
+
+    $ MIX_ENV=prod mix archive.build
+    $ mix archive.install
+
+Now `mix phoenix.new` can be run from any directory to boostrap our phoenix application. Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello_phoenix`, either of these will work.
 
 ```console
 $ mix phoenix.new /Users/me/work/elixir-stuff/hello_phoenix
@@ -90,7 +89,7 @@ Install mix dependencies? [Yn] y
 * running mix deps.get
 ```
 
-The `phoenix.new` task will also prompt us to install brunch.io and its dependencies for asset management. This is optional, and will require that node.js and npm are installed on our system. For our example, let's say yes to that as well.
+The `phoenix.new` task will also prompt us to install [brunch.io](http://brunch.io) and its dependencies for asset management. This is optional, and will require that [node.js](https://nodejs.org/) and npm are installed on our system. For our example, let's say yes to that as well.
 
 ```console
 Install brunch.io dependencies? [Yn]
