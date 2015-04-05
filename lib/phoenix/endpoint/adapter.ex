@@ -19,12 +19,13 @@ defmodule Phoenix.Endpoint.Adapter do
       watcher_children(mod, conf) ++
       code_reloader_children(mod, conf)
 
-    {:ok, pid} = Supervisor.start_link(children, strategy: :one_for_one, name: mod)
-
-    # Warm up caches
-    mod.url()
-
-    {:ok, pid}
+    case Supervisor.start_link(children, strategy: :one_for_one, name: mod) do
+      {:ok, pid} ->
+        mod.url() # Warm up caches
+        {:ok, pid}
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
   defp config_children(mod, conf) do
