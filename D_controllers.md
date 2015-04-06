@@ -507,10 +507,9 @@ We can also make use of the path helpers we learned about in the [Routing Guide]
 ```elixir
 defmodule HelloPhoenix.PageController do
   use HelloPhoenix.Web, :controller
-  alias HelloPhoenix.Router.Helpers
 
   def index(conn, _params) do
-    redirect conn, to: Helpers.redirect_test_path(conn, :redirect_test)
+    redirect conn, to: redirect_test_path(conn, :redirect_test)
   end
 end
 ```
@@ -519,7 +518,7 @@ Note that we can't use the url helper here because `redirect/2` using the atom `
 
 ```elixir
 def index(conn, _params) do
-  redirect conn, to: Helpers.redirect_test_path(conn, :redirect_test) |> HelloPhoenix.Endpoint.url
+  redirect conn, to: redirect_test_url(conn, :redirect_test)
 end
 ```
 
@@ -527,6 +526,6 @@ If we want to use the url helper to pass a full url to `redirect/2`, we must use
 
 ```elixir
 def index(conn, _params) do
-  redirect conn, external: Helpers.redirect_test_path(:redirect_test) |> HelloPhoenix.Endpoint.url
+  redirect conn, external: redirect_test_url(conn, :redirect_test)
 end
 ```
