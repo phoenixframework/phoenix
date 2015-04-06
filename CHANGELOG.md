@@ -1,30 +1,53 @@
 # Changelog
 
-## v0.11.0-dev
+## v0.11.0
+
+See these [`0.10.x` to `0.11.0` upgrade instructions](https://gist.github.com/chrismccord/3603fd2735019f86c74b) to bring your existing apps up to speed.
+
+* Javascript client enhancements
+  * Joins are now synchronous, removing the prior issues of client race conditions
+  * Events can now be replied to from the server, for request/response style messaging
+  * Clients can now detect and react to individual channel errors and terminations
 
 * Javascript client backward incompatible changes
   * The `Socket` instance no long connects automatically. You must explicitly call `connect()`
   * `close()` has been renamed to `disconnect()`
   * `send` has been renamed to `push` to unify client and server messaging commands
+  * The `join` API has changed to use synchronous messaging. Check the upgrade guide for details
 
 * Backwards incompatible changes
   * [Generator] `mix phoenix.gen.resource` renamed to `mix phoenix.gen.html`
   * [Channel] `reply` has been renamed to `push` to better signify we are only push a message down the socket, not replying to a specific request
   * [Channel] The return signatures for `handle_in/3` and `handle_out/3` have changed, ie:
 
+        handle_in(event :: String.t, msg :: map, Socket.t) ::
+          {:noreply, Socket.t} |
+          {:reply, {status :: atom, response :: map}, Socket.t} |
+          {:reply, status :: atom, Socket.t} |
+          {:stop, reason :: term, Socket.t} |
+          {:stop, reason :: term, reply :: {status :: atom, response :: map}, Socket.t} |
+          {:stop, reason :: term, reply :: status :: atom, Socket.t}
+
+        handle_out(event :: String.t, msg :: map, Socket.t) ::
+          {:ok, Socket.t} |
+          {:noreply, Socket.t} |
+          {:error, reason :: term, Socket.t} |
+          {:stop, reason :: term, Socket.t}
+
+
   * [Channel] The `leave/2` callback has been removed. If you need to cleanup/teardown when a client disconnects, trap exits and handle in `terminate/2`, ie:
 
-      def join(topic, auth_msg, socket) do
-        Process.flag(:trap_exit, true)
-        {:ok, socket}
-      end
+        def join(topic, auth_msg, socket) do
+            Process.flag(:trap_exit, true)
+            {:ok, socket}
+        end
 
-      def terminate({:shutdown, :client_left}, socket) do
-        # client left intentionally
-      end
-      def terminate(reason, socket) do
-        # terminating for another reason (connection drop, crash, etc)
-      end
+        def terminate({:shutdown, :client_left}, socket) do
+            # client left intentionally
+        end
+        def terminate(reason, socket) do
+            # terminating for another reason (connection drop, crash, etc)
+        end
 
   * [HTML] `use Phoenix.HTML` no longer imports controller functions. You must add `import Phoenix.Controller, only: [get_flash: 2]` manually to your views or your `web.ex`
   * [Endpoint] Code reloader must now be configured in your endpoint instead of Phoenix. Therefore, upgrade your `config/dev.exs` replacing
