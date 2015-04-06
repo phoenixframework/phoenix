@@ -38,15 +38,15 @@ See these [`0.10.x` to `0.11.0` upgrade instructions](https://gist.github.com/ch
   * [Channel] The `leave/2` callback has been removed. If you need to cleanup/teardown when a client disconnects, trap exits and handle in `terminate/2`, ie:
 
         def join(topic, auth_msg, socket) do
-            Process.flag(:trap_exit, true)
-            {:ok, socket}
+          Process.flag(:trap_exit, true)
+          {:ok, socket}
         end
 
         def terminate({:shutdown, :client_left}, socket) do
-            # client left intentionally
+          # client left intentionally
         end
         def terminate(reason, socket) do
-            # terminating for another reason (connection drop, crash, etc)
+          # terminating for another reason (connection drop, crash, etc)
         end
 
   * [HTML] `use Phoenix.HTML` no longer imports controller functions. You must add `import Phoenix.Controller, only: [get_flash: 2]` manually to your views or your `web.ex`
