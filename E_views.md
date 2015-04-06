@@ -182,7 +182,7 @@ defmodule HelloPhoenix.ErrorView do
 
   # In case no render clause matches or no
   # template is found, let's render it as 500
-  def render(_, assigns) do
+  def template_not_found(_template, assigns) do
     render "500.html", assigns
   end
 end
@@ -218,8 +218,6 @@ end
 Great, so we have a `render/2` function that takes a template and an `assigns` map, which we ignore. Where is this `render/2` function being called from?
 
 The answer is the `render/5` function defined in the `Phoenix.Endpoint.ErrorHandler` module. The whole purpose of this module is to catch errors and render them with a view, in our case, the `HelloPhoenix.ErrorView`.
-
-The `Endpoint.ErrorHandler` has determined that our request with the silly path has led to a `404 not found` error. Our request is rendered through the `:browser` pipeline, meaning our format is `HTML`. This makes the `ErrorHandler` try to render a template called "404.html". That, in turn, makes this clause of `render/2` match.
 
 Now that we understand how we got here, let's make a better error page.
 
@@ -278,7 +276,7 @@ When we go back to [http://localhost:4000/such/a/wrong/path](http://localhost:40
 
 It is worth noting that we did not render our `not_found.html.eex` template through our application layout, even though we want our error page to have the look and feel of the rest of our site. The main reason is that it's easy to run into edge case issues while handling errors globally.
 
-If we want to minimize duplication between our application layout and our `not_found.html.eex` template, we can implement shared partial templates for our header and footer. Please see the [Template Guide](http://www.phoenixframework.org/docs/templates#partials-shared-across-views) for more information.
+If we want to minimize duplication between our application layout and our `not_found.html.eex` template, we can implement shared templates for our header and footer. Please see the [Template Guide](http://www.phoenixframework.org/docs/templates#partials-shared-across-views) for more information.
 
 Of course, we can do these same steps with the `def render("500.html", _assigns) do` clause in our `ErrorView` as well.
 
