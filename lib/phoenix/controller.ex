@@ -770,7 +770,7 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Fetches the flash so it can be used during the request.
+  Fetches the flash storage.
   """
   def fetch_flash(conn, _opts \\ []) do
     flash = get_session(conn, "phoenix_flash") || %{}

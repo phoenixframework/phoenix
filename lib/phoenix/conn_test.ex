@@ -3,6 +3,11 @@ defmodule Phoenix.ConnTest do
   Conveniences for testing Phoenix endpoints and
   connection related helpers.
 
+  You likely want to use this module or make it part of
+  your `ExUnit.CaseTemplate`. Once used, this module
+  automatically imports all functions defined here as
+  well as the functions in `Plug.Conn`.
+
   ## Endpoint testing
 
   `Phoenix.ConnTest` typically works against endpoints. That's
@@ -224,6 +229,36 @@ defmodule Phoenix.ConnTest do
   """
   @spec delete_req_cookie(Conn.t, binary) :: Conn.t
   defdelegate delete_req_cookie(conn, key), to: Plug.Test
+
+  @doc """
+  Fetches the flash storage.
+  """
+  @spec fetch_flash(Conn.t) :: Conn.t
+  defdelegate fetch_flash(conn), to: Phoenix.Controller
+
+  @doc """
+  Gets the whole flash storage.
+  """
+  @spec get_flash(Conn.t) :: Conn.t
+  defdelegate get_flash(conn), to: Phoenix.Controller
+
+  @doc """
+  Gets the given key from the flash storage.
+  """
+  @spec get_flash(Conn.t, term) :: Conn.t
+  defdelegate get_flash(conn, key), to: Phoenix.Controller
+
+  @doc """
+  Puts the given value udner key in the flash storage.
+  """
+  @spec put_flash(Conn.t, term, term) :: Conn.t
+  defdelegate put_flash(conn, key, value), to: Phoenix.Controller
+
+  @doc """
+  Clears up the flash storage.
+  """
+  @spec clear_flash(Conn.t) :: Conn.t
+  defdelegate clear_flash(conn), to: Phoenix.Controller
 
   @doc """
   Recycles the connection.

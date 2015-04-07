@@ -10,7 +10,7 @@ end
 # Here we test the installer is up to date.
 defmodule Mix.Tasks.Phoenix.NewTest do
   use ExUnit.Case
-  use Plug.Test
+  use RouterHelper
 
   import MixHelper
   import ExUnit.CaptureIO
