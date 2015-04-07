@@ -10,7 +10,7 @@ end
 # Here we test the installer is up to date.
 defmodule Mix.Tasks.Phoenix.NewTest do
   use ExUnit.Case
-  use Plug.Test
+  use RouterHelper
 
   import MixHelper
   import ExUnit.CaptureIO
@@ -68,7 +68,9 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       # We can run tests too, starting the app.
       assert capture_io(fn ->
-        Mix.Task.run("test", ["--no-start", "--no-compile"])
+        capture_log(fn ->
+          Mix.Task.run("test", ["--no-start", "--no-compile"])
+        end)
       end) =~ ~r"1 tests?, 0 failures"
     end
   end

@@ -3,7 +3,7 @@ Code.require_file "http_client.exs", __DIR__
 
 defmodule Phoenix.Integration.ChannelTest do
   use ExUnit.Case, async: false
-  import RouterHelper, only: [capture_log: 1, call: 5]
+  use RouterHelper
 
   alias Phoenix.Integration.WebsocketClient
   alias Phoenix.Integration.HTTPClient
@@ -298,10 +298,14 @@ defmodule Phoenix.Integration.ChannelTest do
   end
 
   test "longpoller refuses unallowed origins" do
-    conn = call(Endpoint, :get, "/ws/poll", [], headers: [{"origin", "https://example.com"}])
+    conn = conn(:get, "/ws/poll")
+           |> put_req_header("origin", "https://example.com")
+           |> Endpoint.call([])
     assert Poison.decode!(conn.resp_body)["status"] == 410
 
-    conn = call(Endpoint, :get, "/ws/poll", [], headers: [{"origin", "http://notallowed.com"}])
+    conn = conn(:get, "/ws/poll")
+           |> put_req_header("origin", "http://notallowed.com")
+           |> Endpoint.call([])
     assert Poison.decode!(conn.resp_body)["status"] == 403
   end
 

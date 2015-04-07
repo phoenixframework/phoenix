@@ -27,6 +27,9 @@ defmodule <%= application_module %>.ConnCase do
 <% end %>
       # Import URL helpers from the router
       import <%= application_module %>.Router.Helpers
+
+      # The default endpoint for testing
+      @endpoint <%= application_module %>.Endpoint
     end
   end
 

@@ -189,7 +189,8 @@ defmodule Phoenix.ControllerTest do
   end
 
   defp with_accept(header) do
-    conn(:get, "/", [], headers: [{"accept", header}])
+    conn(:get, "/", [])
+    |> put_req_header("accept", header)
   end
 
   test "accepts/2 uses params[:format] when available" do
