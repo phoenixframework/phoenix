@@ -74,8 +74,8 @@ See these [`0.10.x` to `0.11.0` upgrade instructions](https://gist.github.com/ch
   * [Endpoint] Code and live reloader must now be explicitly plugged in your endpoint. Wrap them inside `lib/your_app/endpoint.ex` in a `code_reloading?` block:
 
           if code_reloading? do
-            use Phoenix.LiveReloader
-            use Phoenix.CodeReloader
+            plug Phoenix.LiveReloader
+            plug Phoenix.CodeReloader
           end
 
 * Enhancements
