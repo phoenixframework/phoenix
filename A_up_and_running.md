@@ -57,12 +57,12 @@ First `cd` into the installer directory from your cloned phoenix repo:
 
     $ cd installer
 
-Next, build and install the ix archive:
+Next, build and install the mix archive:
 
     $ MIX_ENV=prod mix archive.build
     $ mix archive.install
 
-Now `mix phoenix.new` can be run from any directory to boostrap our phoenix application. Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello_phoenix`, either of these will work.
+Now `mix phoenix.new` can be run from any directory to bootstrap our phoenix application. Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello_phoenix`, either of these will work.
 
 ```console
 $ mix phoenix.new /Users/me/work/elixir-stuff/hello_phoenix
