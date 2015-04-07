@@ -349,7 +349,7 @@ defmodule Phoenix.Endpoint do
   @doc false
   defmacro __before_compile__(env) do
     plugs = Module.get_attribute(env.module, :plugs)
-    {conn, body} = Plug.Builder.compile(plugs)
+    {conn, body} = Plug.Builder.compile(env, plugs, [])
 
     quote do
       defp phoenix_endpoint_pipeline(unquote(conn)), do: unquote(body)
