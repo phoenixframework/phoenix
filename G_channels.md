@@ -20,7 +20,7 @@ For more details on channel routes, please see the [Routing Guide](http://www.ph
 
 Channels handle requests, so they are similar to Controllers, but there are two key differences. Channel requests can go both directions - incoming and outgoing. Channel connections also persist beyond a single request/response cycle. Channels are the highest level abstraction for realtime communication components in Phoenix.
 
-Each Channel will implement one or more clauses of each of these four callback functions - `join/3`, `leave/2`, `handle_in/3`, and `handle_out/3`.
+Each Channel will implement one or more clauses of each of these four callback functions - `join/3`, `terminate/2`, `handle_in/3`, and `handle_out/3`.
 
 - PubSub
 
@@ -30,33 +30,21 @@ We can also define our own PubSub adapters if we need to. Please see the [Phoeni
 
 It is worth noting that these modules are intended for Phoenix's internal use. Channels use them under the hood to do much of their work. As end users, we shouldn't have any need to use them directly in our applications.
 
-- Sockets
-
-The `Phoenix.Socket` module defines functions for authorizing and de-authorizing topics for a Channel. It also defines a struct with the following keys which holds state representing the socket connection. From the [Phoenix.Socket docs](http://hexdocs.pm/phoenix/Phoenix.Socket.html):
-  - `pid` - The Pid of the socket's transport process
-  - `topic` - The string topic, ie `"rooms:123"`
-  - `router` - The router module where this socket originated
-  - `endpoint` - The endpoint module where this socket originated
-  - `channel` - The channel module where this socket originated
-  - `authorized` - The boolean authorization status, default `false`
-  - `assigns` - The map of socket assigns, default: `%{}`
-  - `transport` - The socket's Transport, ie: `Phoenix.Transports.WebSocket`
-  - `pubsub_server` - The registered name of the socket's PubSub server
-
 - Messages
 
 The `Phoenix.Socket.Message` module defines a struct with the following keys which denotes a valid message. From the [Phoenix.Socket.Message docs](http://hexdocs.pm/phoenix/Phoenix.Socket.Message.html).
   - `topic` - The String topic or topic:subtopic pair namespace, ie “messages”, “messages:123”
   - `event` - The String event name, ie “join”
   - `payload` - The String JSON message payload
+  - `ref` - The unique string used for replying to incoming events
 
 - Topics
 
-Topics are currently used only as identifiers - names that the various layers use in order to make sure messages end up in the right place. As we saw above, topics can use wildcards. This allows for a useful "topic:subtopic" convention.
+Topics are string identifiers - names that the various layers use in order to make sure messages end up in the right place. As we saw above, topics can use wildcards. This allows for a useful "topic:subtopic" convention. Often, you'll compose topics using record IDs from your model layer, such as `"users:123"`.
 
 - Transports
 
-The transport layer is where the rubber meets the road. The `Phoenix.Channel.Transport` module handles all the message dispatching into and out of a Channel.
+The transport layer is where the rubber meets the road. The `Phoenix.Channel.Transport` module handles all the message dispatching into and out of a Channel. 
 
 - Transport Adapters
 
@@ -64,402 +52,172 @@ The default transport mechanism is via WebSockets which will fall back to LongPo
 
 - Client Libraries
 
-Phoenix currently ships with its own JavaScript client. There is a Swift client under construction, and an Android client would be great if anyone finds that project exciting and would like to write one.
+Phoenix currently ships with its own JavaScript client and iOS and Anrdoid clients are planned for release with Phoenix 1.0.
 
-#### A Quick Test Run
-Before we go in-depth into Channels, let's do a quick test to get a feeling for how this works. We'll broadcast a simple message to ourselves in iex on the topic `"rooms:demo"`. Let's shut down our application if it is already running by hitting `ctrl-c` twice in the iex session. Then let's run `$ iex -S mix phoenix.server` at the root of our application.
-
-Normally, we would not work with the `Phoenix.PubSub` module directly. Since we won't be handling external requests, and since we want to keep this as simple as possible, we will be using it here.
-
-Warning: We're about to use the `subscribers/2` function in a number of places in this guide. This is a function that nobody besides PubSub adapter authors should ever use. We use it here only as an expedient way to verify that we are able to join and leave topics.
-
-```console
-$ iex -S mix phoenix.server
-Erlang/OTP 17 [erts-6.0] [source-07b8f44] [64-bit] [smp:8:8] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
-
-[info] Running HelloPhoenix.Endpoint with Cowboy on port 4000 (http)
-Interactive Elixir (1.0.3) - press Ctrl+C to exit (type h() ENTER for help)
-iex(1)> 24 Mar 09:21:40 - info: compiled 3 files into 2 files in 559ms
-```
-
-Great, now we'll need to start our local PubSub gen_server. While we're at it, we can bind a few variables that will make things a little easier for ourselves.
-
-```console
-iex(2)> adapter = Phoenix.PubSub.PG2
-Phoenix.PubSub.PG2
-
-iex(3)> local = Phoenix.PubSub.PG2.Local
-Phoenix.PubSub.PG2.Local
-
-iex(4)> {:ok, pid} = adapter.start_link(adapter, [])
-{:ok, #PID<0.274.0>}
-```
-
-Now that we're up and running, let's see if we have any subscribers for the topic we'll use for demo purposes.
-
-```console
-iex(1)> Phoenix.PubSub.Local.subscribers(local, "rooms:demo")
-[]
-```
-Nobody there yet so let's subscribe ourselves and check again.
-
-```console
-iex(2)> Phoenix.PubSub.subscribe(adapter, self, "rooms:demo")
-:ok
-
-iex(3)> Phoenix.PubSub.Local.subscribers(local, "rooms:demo")
-[#PID<0.144.0>]
-```
-Great, now we will receive any messages broadcast to this topic.
-
-Let's check that by broadcasting a message to see if we receive it.
-
-```console
-iex(4)> Phoenix.PubSub.broadcast(adapter, "rooms:demo", %{message: "It Works!"})
-:ok
-
-iex(5)> Process.info(self)[:messages]
-%{message: "It Works!"}
-```
-Note that we check our own process info for messages.
-
-We can also unsubscribe ourselves from a topic.
-
-```console
-iex(6)> Phoenix.PubSub.unsubscribe(adapter, self, "rooms:demo")
-:ok
-
-iex(7)> Phoenix.PubSub.Local.subscribers(local, "rooms:demo")
-[]
-```
-This is the simplest possible demonstration of sending messages about topics.
-
-Now that we have this working, let's dig a little deeper.
-
-### Building a Channel
-
-The first thing we are going to need is a route, so let's add a channel route to our `web/router.ex` file.
+## Tying it all together
+Let's tie all these ideas together by building a simple chat application. Let's start by wiring up our channel routes.
 
 ```elixir
-socket "/ws", HelloPhoenix do
-  channel "foods:*", FoodChannel
-end
-```
-Again, please see the [Routing Guide](http://www.phoenixframework.org/docs/routing) for more information about channel routes.
+defmodule HelloPhoenix.Router do
+   use Phoenix.Router
 
-Next, we'll need a Channel, so let's create an empty one for now at `web/channels/food_channel.ex`.
-
-```elixir
-defmodule HelloPhoenix.FoodChannel do
-  use Phoenix.Channel
+   socket "/ws", HelloPhoenix do
+     channel "rooms:*", RoomChannel
+   end
+   ...
 end
 ```
 
-#### Joining a Channel Topic
-In order to broadcast messages, senders need to join a Channel on a Topic. We facilitate that with the `join/3` function. `join/3` is an authorization mechanism. If we believe the sender should be authorized, we return `{:ok, socket}`. If not, we can simply return `:ignore`.
+Now any topic sent by a client that starts with `"room:"` will be routed to our RoomChannel. Next, we'll define a `RoomChannel` module to manage our chat room messages.
 
-The three arguments to `join/3` are a topic, a message, and a socket. Since we're just experimenting, let's return `{:ok, socket}` no matter what for the `"foods:all"` topic. And since we aren't going to use the `message` argument for now, let's prepend it with an underscore to avoid compiler warnings.
+The first priority of your channels is to authorize clients to join a given topic. For authorization, we must implement `join/3`.
 
+### Incoming Events
+We handle incoming event
 ```elixir
-defmodule HelloPhoenix.FoodChannel do
+defmodule HelloPhoenix.RoomChannel do
   use Phoenix.Channel
-
-  def join("foods:all", _message, socket) do
+  
+  def join("rooms:lobby", auth_msg, socket) do
     {:ok, socket}
   end
-end
-```
-
-For this whole section, let's quit out of any iex sessions we have running and begin with a fresh session. We'll also bind some handy variables and start our PubSub server as we did before.
-
-```console
-$ iex -S mix phoenix.server
-. . .
-iex(2)> adapter = Phoenix.PubSub.PG2
-Phoenix.PubSub.PG2
-
-iex(3)> local = Phoenix.PubSub.PG2.Local
-Phoenix.PubSub.PG2.Local
-
-iex(4)> {:ok, pid} = adapter.start_link(adapter, [])
-{:ok, #PID<0.274.0>}
-```
-
-Let's explore this a little bit in iex. Before we do anything, we should check to see if we have any subscribers on our "foods:all" topic.
-
-```conole
-ex(1)> Phoenix.PubSub.Local.subscribers(local, "foods:all")
-[]
-```
-
-Warning: Again, we're only using `subscribers/2` for demo purposes. It's not something that we should ever use in our applications.
-
-Ok, nobody has subscribed yet. What we're going to do is to dispatch a message to our `FoodChannel` which will be handled by the `join/3` function and authorize our socket.
-
-The first thing we need to do is create a `socket` struct. This one will work.
-
-```console
-iex(2)> socket = %Phoenix.Socket{pid: self, router: HelloPhoenix.Router, topic: "foods:all", assigns: [], transport: Phoenix.Transports.WebSocket, pubsub_server: local}
-
-%Phoenix.Socket{assigns: [], authorized: false, channel: nil,
-  pid: #PID<0.269.0>, pubsub_server: Phoenix.PubSub.PG2.Local,
-  router: HelloPhoenix.Router, topic: "foods:all",
-  transport: Phoenix.Transports.WebSocket}
-```
-There are two things to note here. The first is that we really do need to specify a transport, otherwise this won't work. WebSocket is a great choice. Also note that this socket is not currently authorized - `authorized: false` is the default.
-
-Here comes the magic part. We can dispatch a message to the app from inside the app using `dispatch/4`. By using `dispatch/4`, we mimic the full request cycle - from the router through all the layers we talked about above - ending up in our `FoodChannel.join/3` function. The arguments for `dispatch/4` are a socket, a topic string, an event string, and a message which just needs to be a map. Here, we'll use an empty map for simplicity.
-
-In order to trigger the `join/3` function, we send the "join" event, and the topic is still "foods:all".
-
-```console
-iex(4)> {:ok, socket} = Phoenix.Channel.Transport.dispatch socket, "foods:all", "join", %{}
-
-{:ok,
-  %Phoenix.Socket{assigns: [], authorized: true,
-    channel: HelloPhoenix.FoodChannel, pid: #PID<0.269.0>,
-    pubsub_server: Phoenix.PubSub.PG2.Local, router: HelloPhoenix.Router,
-    topic: "foods:all", transport: Phoenix.Transports.WebSocket}}
-```
-Notice that from the response, we can tell that this socket is now authorized for the `"foods:all"` topic. This is the result of returning `{:ok, socket}` from the `join/3` function. We also took care to re-bind the socket so that if we need it again in subsequent steps, it will be authorized on this topic for this channel.
-
-The question is, did it really work? Were we subscribed to the topic? Let's find out using `subscribers/2`.
-
-```console
-iex(5)> Phoenix.PubSub.Local.subscribers(local, "foods:all")
-[#PID<0.269.0>]
-
-iex(6)> self
-#PID<0.269.0>
-```
-Yes, we clearly are subscribed to the `"foods:all"` topic.
-
-Let's take a look at what happens when we try to join a topic that does not authorize us. We'll need an additional clause of the `join/3` function in our `FoodChannel`.
-
-```elixir
-defmodule HelloPhoenix.FoodChannel do
-  use Phoenix.Channel
-
-  def join("foods:all", _message, socket) do
-    {:ok, socket}
-  end
-  def join("foods:" <> _priv_topic, _message, _socket) do
+  def join("rooms:" <> _private_room_id, _auth_msg, socket) do
     :ignore
   end
-end
-```
-
-This time, we hard-code the return value of `:ignore`, so no attempt to join this topic should ever succeed. We'll also need to recompile our `FoodChannel` module.
-
-```console
-iex(18)> r HelloPhoenix.FoodChannel
-web/channels/food_channel.ex:1: warning: redefining module HelloPhoenix.FoodChannel
-{:reloaded, HelloPhoenix.FoodChannel, [HelloPhoenix.FoodChannel]}
-```
-
-We'll use a new socket for this, one with the new topic we are matching on as well as the default value for `authorized`, which is false.
-
-```console
-iex(1)> new_socket = %Phoenix.Socket{pid: self, router: HelloPhoenix.Router, topic: "foods:forbidden", assigns: [], transport: Phoenix.Transports.WebSocket, pubsub_server: local}
-
-%Phoenix.Socket{assigns: [], authorized: false, channel: nil,
-  pid: #PID<0.269.0>, pubsub_server: Phoenix.PubSub.PG2.Local,
-  router: HelloPhoenix.Router, topic: "foods:forbidden",
-  transport: Phoenix.Transports.WebSocket}
-```
-When we dispatch again on our `new_socket`, we see that we ignore the join attempt and throw away the unauthorized socket.
-
-```console
-iex(3)> :ignore = Phoenix.Channel.Transport.dispatch(new_socket, "foods:forbidden", "join", %{})
-```
-Just to make sure, let's check the subscribers again.
-
-```cosole
-iex(4)> Phoenix.PubSub.Local.subscribers(local, "foods:forbidden")
-[]
-```
-
-#### Leaving a Channel Topic
-
-Once we can join topics on channels, the next step is being able to leave them. For this, we need the `leave/2` function defined in our `FoodChannel`. In a fresh iex session, let's join two topics on our `FoodChannel` using the steps above. For our example, let's use "foods:all" and "foods:delightful".
-
-Note: In order to make this work, we'll have to re-define the second clause of our `join/3` function to return `{:ok, socket}`.
-
-```elixir
-def join("foods:" <> _priv_topic, _message, _socket) do
-  {:ok, socket}
-end
-```
-
-Before we go further, let's make sure we really are subscribed to those topics.
-
-```console
-iex(10)> self
-#PID<0.269.0>
-
-iex(11)> Phoenix.PubSub.Local.subscribers(local, "foods:all")
-[#PID<0.269.0>]
-
-iex(12)> Phoenix.PubSub.Local.subscribers(local, "foods:delightful")
-[#PID<0.269.0>]
-```
-
-Warning: Once again, we're only using `subscribers/2` for demo purposes. It's not something that we should ever use in our applications.
-
-Great, now let's add our `leave/2` function. For our purposes, we have no restrictions on leaving a topic, so let's always return `{:ok, socket}`.
-
-```elixir
-def leave(_reason, socket) do
-  {:ok, socket}
-end
-```
-
-Again, we'll need to recompile our `FoodChannel` module.
-
-```console
-iex(18)> r HelloPhoenix.FoodChannel
-web/channels/food_channel.ex:1: warning: redefining module HelloPhoenix.FoodChannel
-{:reloaded, HelloPhoenix.FoodChannel, [HelloPhoenix.FoodChannel]}
-```
-
-Great, now let's call the `dispatch/4` function again using the "foods:all" topic and the "leave" event. Again, this request will make its way from the router all the way to the `leave/2` function in our `FoodChannel`.
-
-```console
-iex(40)> {:leave, socket} = Phoenix.Channel.Transport.dispatch socket, "foods:all", "leave", %{}
-{:leave,
-  %Phoenix.Socket{assigns: [], authorized: false,
-    channel: HelloPhoenix.FoodChannel, pid: #PID<0.269.0>,
-    pubsub_server: Phoenix.PubSub.PG2.Local, router: HelloPhoenix.Router,
-    topic: "foods:all", transport: Phoenix.Transports.WebSocket}}
-```
-
-Notice that the request processing didn't stop with the return of `leave/2`. The final tuple we get back is `{:leave, socket}` instead of `{:ok, socket}`. The socket also is no longer authorized for the "foods:all" topic for this channel.
-
-Did it really unsubscribe us? Let's see.
-
-```console
-iex(23)> Phoenix.PubSub.Local.subscribers(local, "foods:all")
-[]
-```
-
-Indeed it did.
-
-And, of course, we are still subscribed to the "foods:delightful" topic.
-
-```console
-iex(24)> Phoenix.PubSub.Local.subscribers(local, "foods:delightful")
-[#PID<0.269.0>]
-```
-
-#### Incoming Messages
-
-Joining and leaving topics are not the most exciting things in and of themselves, but they are necessary steps toward actually sending messages. That's what we're going to look at now.
-
-Incoming events are handled by the `handle_in/3` function, so let's add one to our `FoodChannel` module. The arguments are an event string, a map for the message, and a socket.
-
-```elixir
-def handle_in("new:msg", message, socket) do
-  broadcast! socket, "new:msg", message
-  {:ok, socket}
-end
-```
-In this clause of the `handle_in/3` function, we are being very specific about the event we will respond to. Only `"new:msg"` will match.
-
-We can respond to incoming events in any way we like, including just returning `{:ok, socket}` if we choose to. More commonly, we want to pass along the event coming into the server to one or more subscribers to the topic. For that, we have a choice of using either the `broadcast!/3` or `reply/3` functions. `broadcast!/3` will send the message to every subscriber to the topic, while `reply/3` will only reply back to the sender.
-
-Both `broadcast!/3` and `reply/3` return `{:ok, socket}`, so we don't need to add them here. If neither of those functions are the last one we call in `handle_in/3`, then we would need to add `{:ok, socket}` as the last line so that it would be our return value.
-
-Let's see this in action. First, let's make sure we have joined the `"foods:all`" topic on the `FoodChannel`.
-
-```console
-iex(7)> Phoenix.PubSub.Local.subscribers(local, "foods:all")
-[#PID<0.269.0>]
-```
-
-Warning: As above, we're only using `subscribers/2` for demo purposes. It's not something that we should ever use in our applications.
-
-If your pid isn't in the subscribers list, please follow the steps in "Joining a Channel Topic" above.
-
-Also, let's take a second to check the `socket` to make sure it is authorized for our topic using `authorized?/2`.
-
-```console
-iex(8)> Phoenix.Socket.authorized?(socket, "foods:all")
-true
-```
-Note: If this comes back false, it is probably due to not rebinding `socket` after dispatching to the `join` event above, like this: `{:ok, socket} = Phoenix.Channel.Transport.dispatch socket, "foods:all", "join", message`.
-
-If the socket is not authorized for the topic, we can fix that with the `authorize/2` function.
-
-```console
-iex(9)> socket = Phoenix.Socket.authorize(socket, "foods:all")
-
-%Phoenix.Socket{assigns: [], authorized: true,
-  channel: HelloPhoenix.FoodChannel, pid: #PID<0.269.0>,
-  pubsub_server: Phoenix.PubSub.PG2.Local, router: HelloPhoenix.Router,
-  topic: "foods:all", transport: Phoenix.Transports.WebSocket}
-```
-Now that our socket is authorized, we can dispatch a message. This works exactly the same way that we have used it up to now, passing in a socket, topic, event, and message.
-
-```console
-iex(10)> {:ok, socket} = Phoenix.Channel.Transport.dispatch socket, "foods:all", "new:msg", %{say: "Success!"}
-
-{:ok,
-  %Phoenix.Socket{assigns: [], authorized: true,
-    channel: HelloPhoenix.FoodChannel, pid: #PID<0.269.0>,
-    pubsub_server: Phoenix.PubSub.PG2.Local, router: HelloPhoenix.Router,
-    topic: "foods:all", transport: Phoenix.Transports.WebSocket}}
-```
-Note: Again, the message must be a map. Any other type of value will throw an error.
-
-Now let's see if our message has been delivered.
-
-```console
-iex(11)> Process.info(self)[:messages]
-
-[socket_broadcast: %Phoenix.Socket.Message{event: "new:msg",
-payload: %{say: "Success!"}, topic: "foods:all"}]
-```
-
-And it worked.
-
-We can use pattern matching to offer more flexibility for the events that `handle_in/3` will respond to. As an experiment, try creating a new clause of `handle_in/3` like the one below and dispatch a message to `"foods:all"` with a `"new:burrito"` event.
-
-```elixir
-def handle_in(event = "new:" <> _some_food, message, socket) do
-  reply socket, event, message
-end
-```
-Of course, we could write a clause that is even more general, one which will respond to any event, like the one below.
-
-```elixir
-def handle_in(event, message, socket) do
-  broadcast! socket, event, message
-end
-```
-
-#### Outgoing Messages
-
-We handle outgoing messages with `handle_out/3` in very much the same way as we handle incoming messages with `handle_in/3`. The arguments are the same. Our choices of using `broadcast/3` or `reply/3` is the same. We do get some extra flexibility to customize the behavior per subscriber, if we choose to use it.
-
-Here's an example from the [Phoenix Channel docs](http://hexdocs.pm/phoenix/Phoenix.Channel.html). Imagine we had a chat application in which we allowed users to ignore messages about new users joining a room. We could implement that behavior like this. (Of course, this assumes that we have a `User` model with an `ignorning?/2` function, and that we pass a user in via the `assigns` map.)
-
-```elixir
-def handle_out("user:joined", msg, socket) do
-  if User.ignoring?(socket.assigns[:user], msg.user_id) do
-    {:ok, socket}
-  else
-    reply socket, "user:joined", msg
+  
+  def handle_in("new_msg", %{"body" => body}, socket) do
+    broadcast! socket, "new_msg, %{body: body}
+    {:noreply, socket}
   end
 end
 ```
-Similarly, imagine we had a `MagicEightBall` module with a `prediction/0` function that returned a random prediction. We could customize each message from `handle_out/3` with a prediction like this.
+
+For our chat aEventson, we'll allow anyone to join the "rooms:lobby" topic, but any other room will be considered private and special authorization, say from a database, will be required. To authorize the socket to join a topic, we return `{:ok, socket}`. To deny access, we return `:ignore`.
+
+
+With our channel in place, lets head over to `web/static/js/app.js` and get the client and server talking.
+
+```javascript
+let socket = new Socket("/ws")
+socket.connect()
+socket.join("rooms:lobby", {}).receive("ok", chan => {
+  console.log("Welcome to Phoenix Chat!")
+})
+```
+
+Save the file and your browser should auto refresh, thanks to the Phoenix live reloader. If everything worked, we should see "Welcome to Phoenix Chat!" in the browser's javascript console. Our client and server are now talking over a persitant connection. Now let's make it useful by enabling chat.
+
+In your `web/templates/page/index.html.eex`, add a container to hold our chat messages, and an input field to send them.
+
+```html
+<div id="#messages"></div>
+<div id="#chat-input"></div>
+```
+
+We'll also add jQuery to our application layout in `web/templates/layout/application.html.eex`:
+
+```html
+    ...
+    <!-- Begin page content -->
+    <%= @inner %>
+    <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
+    <script>require("web/static/js/app")</script>
+  </body>
+```
+
+Now let's add a couple event listeners to `app.js`:
+
+```javascript
+let chatInput         = $("#chat-input")
+let messagesContainer = $("#messages")
+
+let socket = new Socket("/ws")
+socket.connect()
+socket.join("rooms:lobby", {}).receive("ok", chan => {
+  console.log("Welcome to Phoenix Chat!")
+
+  chatInput.off("keypress").on("keypress", event => {
+    if(event.keyCode === 13){
+      chan.push("new_msg", {body: chatInput.val()})
+      chatInput.val("")
+    }
+  })
+})
+```
+
+All we had to do is detect that enter was pressed and then `push` an event over the channel with the message body. We named the event "new_msg". With this in place, let's handle the other piece of a chat application where we listen for new messages and append them to our messages container.
+
+
+```javascript
+let chatInput         = $("#chat-input")
+let messagesContainer = $("#messages")
+
+let socket = new Socket("/ws")
+socket.connect()
+socket.join("rooms:lobby", {}).receive("ok", chan => {
+  console.log("Welcome to Phoenix Chat!")
+
+  chatInput.off("keypress").on("keypress", event => {
+    if(event.keyCode === 13){
+      chan.push("new_msg", {body: chatInput.val()})
+      chatInput.val("")
+    }
+  })
+  
+  chan.on("new_msg", payload => {
+    messagesContainer.append(`<br/>[${Date()}] ${payload.body}`)
+  })
+})
+```
+
+We listen for the `"new_msg"` event using `chan.on`, and then append the message body to the DOM. Now let's handle the incoming and outgong events on the server to complete the picture.
+
+### Incoming Events
+We handle incoming events with `handle_in/3`. We can pattern match on the event names, like `"new_msg"`, and then grab the payload that the client passed over the channel. For our chat application, we simply need to notify all other `rooms:lobby` subscribers of the new message with `broadcast!/3`. 
 
 ```elixir
-def handle_out("new:message", message, socket) do
-  reply socket, "new:message", Dict.merge(message, magic_8_ball_sez: MagicEightBall.prediction)
+defmodule HelloPhoenix.RoomChannel do
+  use Phoenix.Channel
+  
+  def join("rooms:lobby", auth_msg, socket) do
+    {:ok, socket}
+  end
+  def join("rooms:" <> _private_room_id, _auth_msg, socket) do
+    :ignore
+  end
+  
+  def handle_in("new_msg", %{"body" => body}, socket) do
+    broadcast! socket, "new_msg, %{body: body}
+    {:noreply, socket}
+  end
+  
+  def handle_out("new_msg", payload, socket) do
+    push socket, "new_msg", payload
+    {:noreply, socket}
+  end
 end
 ```
 
-#### Example Application
+`broadcast!/3` will notify all joined clients on this `socket`'s topic and invoke their `handle_out/3` callbacks. `handle_out/3` isn't required callback, but it allows us to customize and filter broadcasts before they reach each client. Here we also see `handle_out/3` for the first time. By default, `handl_out/3` is implemented for us and simply pushes the message on to the client, just like our definition. We included it here because hooking into outgoing events allows for poweful messages customization and filtering. Let's see how.
 
-So far, we've only explored Channels through iex sessions. This was intentional; it is easier and quicker to get to the heart of the functionality in iex without having to build a whole client layer to see behavior. Now that we have seen how channels works, it might be useful to see an example application. There is a great one [here](https://github.com/chrismccord/phoenix_chat_example).
+#### Outgoing Events
+We won't implement this for our application, but imagine our chat application allowed users to ignore messages about new users joining a room. We could implement that behavior like this. (Of course, this assumes that we have a `User` model with an `ignorning?/2` function, and that we pass a user in via the `assigns` map.)
+
+```elixir
+def handle_out("user_joined", msg, socket) do
+  if User.ignoring?(socket.assigns[:user], msg.user_id) do
+    {:noreply, socket}
+  else
+    push socket, "user_joined", msg
+  end
+end
+```
+
+That's all there is to our basic chat app. Fire up mulitple browser tabs and you should see your messages being pushed and broadcasted to all windows!
+
+
+#### Example Application
+To see an example of the application we just built, checkout this project (https://github.com/chrismccord/phoenix_chat_example).
+
+You can also see a live demo at (http://phoenixchat.herokuapp.com/).
