@@ -182,7 +182,7 @@ defmodule Phoenix.Router do
     quote do
       unquote(prelude())
       unquote(defs())
-      unquote(plug())
+      unquote(match_dispatch(__CALLER__))
     end
   end
 
@@ -257,11 +257,9 @@ defmodule Phoenix.Router do
     end
   end
 
-  defp plug() do
-    {conn, pipeline} =
-      [:dispatch, :match]
-      |> Enum.map(&{&1, [], true})
-      |> Plug.Builder.compile()
+  defp match_dispatch(env) do
+    plugs = [{:dispatch, [], true}, {:match, [], true}]
+    {conn, pipeline} = Plug.Builder.compile(env, plugs, [])
 
     call =
       quote do
@@ -382,7 +380,7 @@ defmodule Phoenix.Router do
     compiler =
       quote unquote: false do
         Scope.pipeline(__MODULE__, plug)
-        {conn, body} = Plug.Builder.compile(@phoenix_pipeline)
+        {conn, body} = Plug.Builder.compile(__ENV__, @phoenix_pipeline, [])
         defp unquote(plug)(unquote(conn), _) do
           try do
             unquote(body)

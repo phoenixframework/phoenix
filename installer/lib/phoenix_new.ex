@@ -16,6 +16,7 @@ defmodule Mix.Tasks.Phoenix.New do
     {:eex,  "new/config/test.exs",                           "config/test.exs"},
     {:eex,  "new/lib/application_name.ex",                   "lib/application_name.ex"},
     {:eex,  "new/lib/application_name/endpoint.ex",          "lib/application_name/endpoint.ex"},
+    {:eex,  "new/test/support/conn_case.ex",                 "test/support/conn_case.ex"},
     {:eex,  "new/test/application_name_test.exs",            "test/application_name_test.exs"},
     {:eex,  "new/test/test_helper.exs",                      "test/test_helper.exs"},
     {:keep, "new/web/channels",                              "web/channels"},

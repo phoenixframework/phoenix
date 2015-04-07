@@ -28,7 +28,7 @@ defmodule Phoenix.Mixfile do
 
   defp deps do
     [{:cowboy, "~> 1.0", optional: true},
-     {:plug, "~> 0.11.0"},
+     {:plug, "~> 0.11.2"},
      {:poison, "~> 1.3"},
      {:redo, github: "heroku/redo", optional: true},
      {:poolboy, "~> 1.4.2", optional: true},

@@ -118,7 +118,7 @@ defmodule Phoenix.Controller.Pipeline do
   @doc false
   defmacro __before_compile__(env) do
     plugs = Module.get_attribute(env.module, :plugs)
-    {conn, body} = Plug.Builder.compile(plugs)
+    {conn, body} = Plug.Builder.compile(env, plugs, log_on_halt: :debug)
     quote do
       defp phoenix_controller_pipeline(unquote(conn), var!(action)) do
         var!(conn) = unquote(conn)
