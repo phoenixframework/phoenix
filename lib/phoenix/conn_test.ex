@@ -38,8 +38,10 @@ defmodule Phoenix.ConnTest do
   ## Controller testing
 
   The functions in this module can also be used for controller
-  testing. While not the default way of testing in Phoenix
-  applications, it may be handful in some situations.
+  testing. While endpoint testing is preferred over controller
+  testing as a controller often depends on the pipelines invoked
+  in the router and before, unit testing controllers may be handful
+  in some situations.
 
   For such cases, just pass an atom representing the action
   to dispatch:
@@ -249,7 +251,7 @@ defmodule Phoenix.ConnTest do
   defdelegate get_flash(conn, key), to: Phoenix.Controller
 
   @doc """
-  Puts the given value udner key in the flash storage.
+  Puts the given value under key in the flash storage.
   """
   @spec put_flash(Conn.t, term, term) :: Conn.t
   defdelegate put_flash(conn, key, value), to: Phoenix.Controller
@@ -282,7 +284,7 @@ defmodule Phoenix.ConnTest do
 
   defp copy_headers(conn, headers, copy) do
     headers = for {k, v} <- headers, k in copy, do: {k, v}
-    %{conn | req_headers: headers}
+    %{conn | req_headers: headers ++ conn.req_headers}
   end
 
   @doc """

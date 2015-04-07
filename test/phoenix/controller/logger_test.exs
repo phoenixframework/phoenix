@@ -88,7 +88,8 @@ defmodule Phoenix.Controller.LoggerTest do
 
   test "does not filter unfetched parameters" do
     output = capture_log fn ->
-      conn(:get, "/", "{foo:bar}", headers: [{"content-type", "application/json"}])
+      conn(:get, "/", "{foo:bar}")
+      |> put_req_header("content-type", "application/json")
       |> action
     end
     assert output =~ "Parameters: [UNFETCHED]"
