@@ -58,7 +58,7 @@ See these [`0.10.x` to `0.11.0` upgrade instructions](https://gist.github.com/ch
 
           config :your_app, Your.Endpoint, code_reloader: true
 
-  * [Endpoint] Live reloader is now a dependency instead of being shipped with Phoenix. Please add `{:phoenix_live_reload, "~> 0.2"}` to your dependencies
+  * [Endpoint] Live reloader is now a dependency instead of being shipped with Phoenix. Please add `{:phoenix_live_reload, "~> 0.3"}` to your dependencies
   * [Endpoint] The `live_reload` configuration has changed to allow a `:url` option and work with `:patterns` instead of paths:
 
         config :your_app, Your.Endpoint,

@@ -30,10 +30,9 @@ defmodule <%= application_module %>.Mixfile do
   #
   # Type `mix help deps` for examples and options
   defp deps do
-    [<%= phoenix_dep %>,<%= if ecto do %>
+    [{:phoenix, "~> 0.11"},<%= if ecto do %>
      {:phoenix_ecto, "~> 0.3"},
      {:postgrex, ">= 0.0.0"},<% end %>
-     # TODO bump to 0.3 for phoenix 0.11 release
      {:phoenix_live_reload, "~> 0.3"},
      {:cowboy, "~> 1.0"}]
   end
