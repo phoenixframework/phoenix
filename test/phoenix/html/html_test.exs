@@ -1,4 +1,4 @@
-defmodule Phoenix.HTMLTest do
+defmodule Phoenix.HTML.HTMLTest do
   use ExUnit.Case, async: true
   use RouterHelper
 

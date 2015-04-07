@@ -1,4 +1,4 @@
-defmodule Phoenix.EndpointTest do
+defmodule Phoenix.Endpoint.EndpointTest do
   use ExUnit.Case, async: true
   use RouterHelper
 

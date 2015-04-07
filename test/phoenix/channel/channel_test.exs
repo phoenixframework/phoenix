@@ -1,4 +1,4 @@
-defmodule Phoenix.ChannelTest do
+defmodule Phoenix.Channel.ChannelTest do
   use ExUnit.Case, async: true
 
   alias Phoenix.PubSub
@@ -89,12 +89,12 @@ defmodule Phoenix.ChannelTest do
       channel "lponly:*", MyChannel, via: [LongPoller]
     end
 
-    socket "/ws2", Phoenix.ChannelTest, via: [WebSocket] do
+    socket "/ws2", Phoenix.Channel.ChannelTest, via: [WebSocket] do
       channel "topic2:*", Elixir.MyChannel
       channel "topic2-override:*", Elixir.MyChannel, via: [LongPoller]
     end
 
-    socket "/ws3", alias: Phoenix.ChannelTest do
+    socket "/ws3", alias: Phoenix.Channel.ChannelTest do
       channel "topic3:*", Elixir.MyChannel
     end
   end

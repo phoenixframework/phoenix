@@ -1,4 +1,4 @@
-defmodule Phoenix.SocketTest do
+defmodule Phoenix.Socket.SocketTest do
   # TODO: Should be async
   use ExUnit.Case
   alias Phoenix.Socket
