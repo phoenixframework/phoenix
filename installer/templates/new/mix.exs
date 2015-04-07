@@ -7,7 +7,7 @@ defmodule <%= application_module %>.Mixfile do
      deps_path: "../../deps",
      lockfile: "../../mix.lock",<% end %>
      elixir: "~> 1.0",
-     elixirc_paths: ["lib", "web"],
+     elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -21,6 +21,10 @@ defmodule <%= application_module %>.Mixfile do
     [mod: {<%= application_module %>, []},
      applications: [:phoenix, :cowboy, :logger<%= if ecto do %>, :ecto<% end %>]]
   end
+
+  # Specifies which paths to compile per environment
+  defp elixirc_paths(:test), do: ["lib", "web", "test/support"]
+  defp elixirc_paths(_),     do: ["lib", "web"]
 
   # Specifies your project dependencies
   #
