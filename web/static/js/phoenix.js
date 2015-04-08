@@ -172,7 +172,7 @@ export class Channel {
   leave(){
     return this.push(CHANNEL_EVENTS.leave).receive("ok", () => {
       this.socket.leave(this)
-      chan.reset()
+      this.reset()
     })
   }
 }

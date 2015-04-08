@@ -313,7 +313,7 @@ var Channel = exports.Channel = (function () {
 
     return this.push(CHANNEL_EVENTS.leave).receive("ok", function () {
       _this.socket.leave(_this);
-      chan.reset();
+      _this.reset();
     });
   };
 
