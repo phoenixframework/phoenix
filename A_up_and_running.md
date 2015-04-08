@@ -6,61 +6,11 @@ In order to install Phoenix, we will also need to have git installed on our syst
 
 Let's get started.
 
-The first thing we need to do is clone the Phoenix repo from github. Let's navigate into a directory that we want to contain Phoenix. Cloning the repo will create a new directory called `phoenix` wherever we run the clone command. Here are the steps.
-
-- First, clone the repo
-```console
-$ git clone https://github.com/phoenixframework/phoenix.git
-```
-
-- Then cd into the phoenix directory itself
-```console
-$ cd phoenix
-```
-
-- And make sure we are on the v0.11.0 branch.
-```console
-$ git checkout v0.11.0
-```
-
-- Get the dependencies and compile the whole project
-```console
-$ mix do deps.get, compile
-```
-
-Note: On some Linux systems, Erlang installations do not include the Erlang ssl or inets packages. This will cause hex to fail. If you see an error message like this one,
+First, lets install the `phoenix.new` mix archive:
 
 ```console
-$  mix do deps.get, compile
-Could not start Hex. Try fetching a new version with `mix local.hex` or uninstalling it with `mix archive.uninstall hex.ez`
-** (UndefinedFunctionError) undefined function: :ssl.start/0 (module :ssl is not available)
-:ssl.start()
-lib/hex.ex:16: Hex.start_api/0
-lib/hex.ex:8: Hex.start/0
-(mix) lib/mix/tasks/local.hex.ex:69: Mix.Tasks.Local.Hex.start/0
-(mix) lib/mix/dep/loader.ex:117: Mix.Dep.Loader.with_scm_and_app/1
-(mix) lib/mix/dep/loader.ex:86: Mix.Dep.Loader.to_dep/3
-(elixir) lib/enum.ex:977: Enum."-map/2-lc$^0/1-0-"/2
-(mix) lib/mix/dep/loader.ex:234: Mix.Dep.Loader.mix_children/1
+$ mix archive.install https://github.com/phoenixframework/phoenix/releases/download/v0.11.0/phoenix_new-0.11.0.ez
 ```
-
-Note this part especially: `(module :ssl is not available)`. Try installing those packages manually with the commands listed below. Of course, substitute the package manager for your system if it doesn't use apt as the example does.
-
-```console
-$ sudo apt-get install erlang-ssl
-$ sudo apt-get install erlang-inets
-```
-
-Once this is done, we need to have Phoenix generate a new project for us. Phoenix includes a mix archive so that we can run the included `mix phoenix.new` task from any directory once installed. Let's get it set up.
-
-First `cd` into the installer directory from your cloned phoenix repo:
-
-    $ cd installer
-
-Next, build and install the mix archive:
-
-    $ MIX_ENV=prod mix archive.build
-    $ mix archive.install
 
 Now `mix phoenix.new` can be run from any directory to bootstrap our phoenix application. Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello_phoenix`, either of these will work.
 
