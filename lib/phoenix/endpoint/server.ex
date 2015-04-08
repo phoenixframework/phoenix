@@ -1,9 +1,10 @@
 defmodule Phoenix.Endpoint.Server do
   # The supervisor for the underlying handlers.
   @moduledoc false
-
   @handler Phoenix.Endpoint.CowboyHandler
+
   use Supervisor
+  require Logger
 
   def start_link(otp_app, endpoint, opts \\ []) do
     if endpoint.config(:server) do
@@ -41,7 +42,10 @@ defmodule Phoenix.Endpoint.Server do
     Keyword.put(config, :port, to_port(config[:port]))
   end
 
-  defp to_port(nil), do: raise ":port in config is nil, please use a valid port number"
+  defp to_port(nil) do
+    Logger.error "Server can't start because :port in config is nil, please use a valid port number"
+    exit(:shutdown)
+  end
   defp to_port(binary)  when is_binary(binary),   do: String.to_integer(binary)
   defp to_port(integer) when is_integer(integer), do: integer
   defp to_port({:system, env_var}), do: to_port(System.get_env(env_var))
