@@ -2,8 +2,6 @@ The aim of this first guide is to get a Phoenix application up and running as qu
 
 Before we begin, we will need to install Elixir and Erlang. The Elixir site itself has the latest and most complete [installation information](http://elixir-lang.org/getting_started/1.html). Currently, Phoenix requires Elixir version 1.0.0 or greater which in turn requires Erlang version 17.0 or greater.
 
-In order to install Phoenix, we will also need to have git installed on our system. While git is extremely popular, for those of us who may not have it installed, this is an important step. Github has some good documentation on [getting set up with git](https://help.github.com/articles/set-up-git).
-
 Let's get started.
 
 First, lets install the `phoenix.new` mix archive:
