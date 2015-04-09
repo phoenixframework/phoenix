@@ -1,7 +1,6 @@
 use Mix.Config
 
-# In this file, we keep production configuration that
-# you likely want to automate and keep it away from
-# your version control system.
+# Do not keep production secrets in the repository,
+# instead read values from the environment.
 config :<%= application_name %>, <%= application_module %>.Endpoint,
-  secret_key_base: "<%= prod_secret_key_base %>"
+  secret_key_base: System.get_env("SECRET_KEY_BASE")
