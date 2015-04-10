@@ -10,7 +10,7 @@ We've already seen several ways in which templates are used, notably in the [Add
 
 ##### web.ex
 
-Phoenix generates `web/web.ex` file us that serves as place to group commons imports and aliases. All declrations here within the `view` block apply to all your templates.
+Phoenix generates `web/web.ex` file that serves as place to group commons imports and aliases. All declarations here within the `view` block apply to all your templates.
 
 Let's make some additions to our application so we can experiment a little.
 
@@ -50,7 +50,7 @@ defmodule HelloPhoenix.View do
   ... 
 ```
 
-Next, let's define a `handler_info/1` function at the bottom of the `web/views/page_view.ex` which makes use of the `controller_module/1` and `action_name/1` functions we just imported. We'll also define a `connection_keys/0` function that we'll use in a moment.
+Next, let's define a `handler_info/1` function at the bottom of the `web/views/page_view.ex` which makes use of the `controller_module/1` and `action_name/1` functions we just imported. We'll also define a `connection_keys/1` function that we'll use in a moment.
 
 ```elixir
 . . .
