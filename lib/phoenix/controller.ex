@@ -689,7 +689,7 @@ defmodule Phoenix.Controller do
     if format in accepted do
       conn
     else
-      Logger.error "Unknown format #{inspect format} in plug :accepts, " <>
+      Logger.debug "Unknown format #{inspect format} in plug :accepts, " <>
                    "expected one of #{inspect accepted}"
       conn |> send_resp(406, "") |> halt()
     end
@@ -764,7 +764,7 @@ defmodule Phoenix.Controller do
   end
 
   defp refuse(conn, accepted) do
-    Logger.error "No supported media type in accept header in plug :accepts, " <>
+    Logger.debug "No supported media type in accept header in plug :accepts, " <>
                  "expected one of #{inspect accepted}"
     conn |> send_resp(406, "") |> halt()
   end
