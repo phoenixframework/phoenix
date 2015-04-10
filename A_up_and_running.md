@@ -7,7 +7,7 @@ Let's get started.
 First, lets install the `phoenix.new` mix archive:
 
 ```console
-$ mix archive.install https://github.com/phoenixframework/phoenix/releases/download/v0.11.0/phoenix_new-0.11.0.ez
+$ mix archive.install http://get.phoenixframework.org/phoenix_new-0.11.0.ez
 ```
 
 Now `mix phoenix.new` can be run from any directory to bootstrap our phoenix application. Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello_phoenix`, either of these will work.
