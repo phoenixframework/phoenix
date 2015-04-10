@@ -1,6 +1,8 @@
 defmodule Mix.Tasks.Phoenix.Gen.Html do
   use Mix.Task
 
+  import String, only: [to_atom: 1]
+
   @shortdoc "Generates HTML files for a resource"
 
   @moduledoc """
@@ -71,18 +73,18 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
       {k, v} =
         case String.split(attr, ":", parts: 3) do
           [k, _, _]       -> {k, nil}
-          [k, "integer"]  -> {k, :number_input}
-          [k, "float"]    -> {k, :number_input}
-          [k, "decimal"]  -> {k, :number_input}
-          [k, "boolean"]  -> {k, :checkbox}
-          [k, "text"]     -> {k, :textarea}
-          [k, "date"]     -> {k, :date_select}
-          [k, "time"]     -> {k, :time_select}
-          [k, "datetime"] -> {k, :datetime_select}
-          [k, _]          -> {k, :text_input}
-          [k]             -> {k, :text_input}
+          [k, "integer"]  -> {k, "number_input f, #{to_atom(k) |> inspect}"}
+          [k, "float"]    -> {k, "number_input f, #{to_atom(k) |> inspect}, step: \"any\""}
+          [k, "decimal"]  -> {k, "number_input f, #{to_atom(k) |> inspect}, step: \"any\""}
+          [k, "boolean"]  -> {k, "checkbox f, #{to_atom(k) |> inspect}"}
+          [k, "text"]     -> {k, "textarea f, #{to_atom(k) |> inspect}"}
+          [k, "date"]     -> {k, "date_select f, #{to_atom(k) |> inspect}"}
+          [k, "time"]     -> {k, "time_select f, #{to_atom(k) |> inspect}"}
+          [k, "datetime"] -> {k, "datetime_select f, #{to_atom(k) |> inspect}"}
+          [k, _]          -> {k, "text_input f, #{to_atom(k) |> inspect}"}
+          [k]             -> {k, "text_input f, #{to_atom(k) |> inspect}"}
         end
-      {String.to_atom(k), v}
+      {to_atom(k), v}
     end
   end
 
