@@ -11,8 +11,9 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
 
   test "generates resource" do
     in_tmp "generates resource", fn ->
-      Mix.Tasks.Phoenix.Gen.Html.run ["user", "users", "name", "age:integer", "nicks:array:text",
-                                      "famous:boolean", "born_at:datetime", "secret:uuid"]
+      Mix.Tasks.Phoenix.Gen.Html.run ["user", "users", "name", "age:integer", "height:decimal",
+                                      "nicks:array:text", "famous:boolean", "born_at:datetime",
+                                      "secret:uuid"]
 
       assert_file "web/models/user.ex"
       assert [_] = Path.wildcard("priv/repo/migrations/*_create_user.exs")
@@ -34,6 +35,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
       assert_file "web/templates/user/form.html.eex", fn file ->
         assert file =~ ~s(<%= text_input f, :name, class: "form-control" %>)
         assert file =~ ~s(<%= number_input f, :age, class: "form-control" %>)
+        assert file =~ ~s(<%= number_input f, :height, step: "any", class: "form-control" %>)
         assert file =~ ~s(<%= checkbox f, :famous, class: "form-control" %>)
         assert file =~ ~s(<%= datetime_select f, :born_at, class: "form-control" %>)
         assert file =~ ~s(<%= text_input f, :secret, class: "form-control" %>)
