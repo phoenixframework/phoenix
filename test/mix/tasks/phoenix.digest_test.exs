@@ -8,13 +8,18 @@ defmodule Mix.Tasks.Phoenix.DigestTest do
   end
 
   test "digests and compress files" do
-    output_path = Path.join("tmp", "digested")
+    output_path = Path.join("tmp", "mix_phoenix_digest")
     input_path = "priv/static"
 
-    File.mkdir_p!(output_path)
-
     Mix.Tasks.Phoenix.Digest.run([input_path, "-o", output_path])
-    assert_received {:mix_shell, :info, ["Check your digested files at 'tmp/digested'."]}
+    assert_received {:mix_shell, :info, ["Check your digested files at 'tmp/mix_phoenix_digest'."]}
+  end
+
+  test "digests and compress files without the input path" do
+    output_path = Path.join("tmp", "mix_phoenix_digest_no_input")
+
+    Mix.Tasks.Phoenix.Digest.run(["-o", output_path])
+    assert_received {:mix_shell, :info, ["Check your digested files at 'tmp/mix_phoenix_digest_no_input'."]}
   end
 
   test "uses the input path as output path when no outputh path is given" do

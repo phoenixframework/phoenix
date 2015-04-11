@@ -7,7 +7,8 @@ defmodule Mix.Tasks.Phoenix.Digest do
   @moduledoc """
   Digests and compress static files.
 
-      mix phoenix.digest priv/static -o public/assets
+      mix phoenix.digest
+      mix phoenix.digest priv/static -o /www/public
 
   The first argument is the path where the static files are located. The
   `-o` option indicates the path that will be used to save the digested and
@@ -32,11 +33,10 @@ defmodule Mix.Tasks.Phoenix.Digest do
     * manifest.json
   """
 
-  @doc false
-  def run([input|args]) do
-    {args, _, _} = OptionParser.parse(args, aliases: [o: :output])
-    input_path = input || @default_input_path
-    output_path = args[:output] || input_path
+  def run(args) do
+    {opts, args, _} = OptionParser.parse(args, aliases: [o: :output])
+    input_path  = List.first(args) || @default_input_path
+    output_path = opts[:output] || input_path
 
     case Phoenix.Digester.compile(input_path, output_path) do
       :ok -> Mix.shell.info [:green, "Check your digested files at '#{output_path}'."]

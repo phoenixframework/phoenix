@@ -50,17 +50,17 @@ defmodule Phoenix.Digester do
 
   defp generate_manifest(files, output_path) do
     entries = Enum.reduce(files, %{}, fn (file, acc) ->
-      Map.put(acc, Path.join(file.relative_path, file.filename),
-        Path.join(file.relative_path, file.digested_filename))
+      Map.put(acc, file.filename, file.digested_filename)
     end)
 
-    manifest_content = Poison.Encoder.encode(entries, [])
+    manifest_content = Poison.encode!(entries, [])
     File.write!(Path.join(output_path, "manifest.json"), manifest_content)
   end
 
   defp compiled_file?(file_path) do
     Regex.match?(@digested_file_regex, Path.basename(file_path)) ||
-      Path.extname(file_path) == ".gz"
+      Path.extname(file_path) == ".gz" ||
+      Path.basename(file_path) == "manifest.json"
   end
 
   defp map_file(file_path, input_path) do

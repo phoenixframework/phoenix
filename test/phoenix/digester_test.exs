@@ -9,20 +9,29 @@ defmodule Phoenix.DigesterTest do
     output_path = Path.join("tmp", "phoenix_digest")
     input_path = "priv/static/"
 
+    File.rm_rf!(output_path)
     assert :ok = Phoenix.Digester.compile(input_path, output_path)
 
     output_files = assets_files(output_path)
 
-    assert Enum.member?(output_files, "phoenix.png.gz")
-    assert Enum.member?(output_files, "phoenix.png")
-    assert Enum.member?(output_files, "manifest.json")
+    assert "phoenix.png" in output_files
+    assert "phoenix.png.gz" in output_files
+    assert "manifest.json" in output_files
     assert Enum.any?(output_files, &(String.match?(&1, ~r/(phoenix-[a-fA-F\d]{32}.png)/)))
     assert Enum.any?(output_files, &(String.match?(&1, ~r/(phoenix-[a-fA-F\d]{32}.png.gz)/)))
+
+    json =
+      Path.join(output_path, "manifest.json")
+      |> File.read!()
+      |> Poison.decode!()
+    assert json["phoenix.png"] =~ ~r"phoenix-[a-fA-F\d]{32}.png"
   end
 
   test "doesn't duplicate files when digesting and compressing twice" do
     input_path = Path.join("tmp", "phoenix_digest_twice")
     input_file = Path.join(input_path, "file.js")
+
+    File.rm_rf!(input_path)
     File.mkdir_p!(input_path)
     File.write!(input_file, "console.log('test');")
 
@@ -31,11 +40,9 @@ defmodule Phoenix.DigesterTest do
 
     output_files = assets_files(input_path)
 
-    duplicated_digested_file_regex = ~r/(file-[a-fA-F\d]{32}.[\w|\d]*.[-[a-fA-F\d]{32})/
-    assert Enum.any?(output_files, fn (f) ->
-      !String.match?(f, duplicated_digested_file_regex)
-        !String.match?(f, ~r/(file.js.gz.gz)/)
-    end)
+    refute "file.js.gz.gz" in output_files
+    refute "manifest.json.gz" in output_files
+    refute Enum.any?(output_files, & &1 =~ ~r/file-[a-fA-F\d]{32}.[\w|\d]*.[-[a-fA-F\d]{32}/)
   end
 
   defp assets_files(path) do
