@@ -102,7 +102,7 @@ socket.join("rooms:lobby", {}).receive("ok", chan => {
 })
 ```
 
-Save the file and your browser should auto refresh, thanks to the Phoenix live reloader. If everything worked, we should see "Welcome to Phoenix Chat!" in the browser's javascript console. Our client and server are now talking over a persitant connection. Now let's make it useful by enabling chat.
+Save the file and your browser should auto refresh, thanks to the Phoenix live reloader. If everything worked, we should see "Welcome to Phoenix Chat!" in the browser's javascript console. Our client and server are now talking over a persistent connection. Now let's make it useful by enabling chat.
 
 In your `web/templates/page/index.html.eex`, add a container to hold our chat messages, and an input field to send them.
 
@@ -196,7 +196,7 @@ defmodule HelloPhoenix.RoomChannel do
 end
 ```
 
-`broadcast!/3` will notify all joined clients on this `socket`'s topic and invoke their `handle_out/3` callbacks. `handle_out/3` isn't required callback, but it allows us to customize and filter broadcasts before they reach each client. By default, `handl_out/3` is implemented for us and simply pushes the message on to the client, just like our definition. We included it here because hooking into outgoing events allows for poweful messages customization and filtering. Let's see how.
+`broadcast!/3` will notify all joined clients on this `socket`'s topic and invoke their `handle_out/3` callbacks. `handle_out/3` isn't required callback, but it allows us to customize and filter broadcasts before they reach each client. By default, `handle_out/3` is implemented for us and simply pushes the message on to the client, just like our definition. We included it here because hooking into outgoing events allows for powerful messages customization and filtering. Let's see how.
 
 #### Outgoing Events
 We won't implement this for our application, but imagine our chat app allowed users to ignore messages about new users joining a room. We could implement that behavior like this. (Of course, this assumes that we have a `User` model with an `ignorning?/2` function, and that we pass a user in via the `assigns` map.)
