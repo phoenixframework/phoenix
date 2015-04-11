@@ -7,7 +7,7 @@ defmodule Phoenix.DigesterTest do
 
   test "digests and compress files" do
     output_path = Path.join("tmp", "phoenix_digest")
-    input_path = "priv/static/"
+    input_path  = "priv/static/"
 
     File.rm_rf!(output_path)
     assert :ok = Phoenix.Digester.compile(input_path, output_path)
@@ -25,6 +25,28 @@ defmodule Phoenix.DigesterTest do
       |> File.read!()
       |> Poison.decode!()
     assert json["phoenix.png"] =~ ~r"phoenix-[a-fA-F\d]{32}.png"
+  end
+
+  test "digests and compress nested files" do
+    output_path = Path.join("tmp", "phoenix_digest_nested")
+    input_path  = "priv/"
+
+    File.rm_rf!(output_path)
+    assert :ok = Phoenix.Digester.compile(input_path, output_path)
+
+    output_files = assets_files(output_path)
+
+    assert "static/phoenix.png" in output_files
+    assert "static/phoenix.png.gz" in output_files
+    assert "manifest.json" in output_files
+    assert Enum.any?(output_files, &(String.match?(&1, ~r/(phoenix-[a-fA-F\d]{32}.png)/)))
+    assert Enum.any?(output_files, &(String.match?(&1, ~r/(phoenix-[a-fA-F\d]{32}.png.gz)/)))
+
+    json =
+      Path.join(output_path, "manifest.json")
+      |> File.read!()
+      |> Poison.decode!()
+    assert json["static/phoenix.png"] =~ ~r"static/phoenix-[a-fA-F\d]{32}.png"
   end
 
   test "doesn't duplicate files when digesting and compressing twice" do
@@ -47,9 +69,9 @@ defmodule Phoenix.DigesterTest do
 
   defp assets_files(path) do
     path
-    |> Path.join("**")
+    |> Path.join("**/*")
     |> Path.wildcard
     |> Enum.filter(&(!File.dir?(&1)))
-    |> Enum.map(&(Path.basename(&1)))
+    |> Enum.map(&(Path.relative_to(&1, path)))
   end
 end
