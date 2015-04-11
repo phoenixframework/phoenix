@@ -4,6 +4,7 @@ defmodule Phoenix.Endpoint.Adapter do
   # the adapters/handlers.
   @moduledoc false
 
+  require Logger
   import Supervisor.Spec
 
   @doc """
@@ -21,7 +22,7 @@ defmodule Phoenix.Endpoint.Adapter do
 
     case Supervisor.start_link(children, strategy: :one_for_one, name: mod) do
       {:ok, pid} ->
-        mod.url() # Warm up caches
+        warmup(mod)
         {:ok, pid}
       {:error, reason} ->
         {:error, reason}
@@ -106,6 +107,7 @@ defmodule Phoenix.Endpoint.Adapter do
 
      # Runtime config
      cache_static_lookup: true,
+     cache_static_manifest: nil,
      http: false,
      https: false,
      reloadable_paths: ["web"],
@@ -123,6 +125,15 @@ defmodule Phoenix.Endpoint.Adapter do
     |> Module.split
     |> Enum.at(0)
     |> Module.concat("ErrorView")
+  end
+
+  @doc """
+  Callback that changes the configuration from the app callback.
+  """
+  def config_change(endpoint, changed, removed) do
+    res = Phoenix.Config.config_change(endpoint, changed, removed)
+    warmup(endpoint)
+    res
   end
 
   @doc """
@@ -184,4 +195,45 @@ defmodule Phoenix.Endpoint.Adapter do
   defp port_to_string({:system, env_var}), do: System.get_env(env_var)
   defp port_to_string(port) when is_binary(port), do: port
   defp port_to_string(port) when is_integer(port), do: Integer.to_string(port)
+
+  @doc """
+  Invoked to warm up caches on start and config change.
+  """
+  def warmup(endpoint) do
+    warmup_url(endpoint)
+    warmup_static(endpoint)
+    :ok
+  rescue
+    _ -> :ok
+  end
+
+  defp warmup_url(endpoint) do
+    endpoint.url
+  end
+
+  defp warmup_static(endpoint) do
+    for {key, value} <- cache_static_manifest(endpoint) do
+      # This should be in sync with the endpoint lookup.
+      Phoenix.Config.cache(endpoint,
+        {:__phoenix_static__, "/" <> key},
+         fn _ -> {:cache, endpoint.path("/" <> value <> "?vsn=d")} end)
+    end
+  end
+
+  defp cache_static_manifest(endpoint) do
+    if endpoint.config(:cache_static_lookup) &&
+       (inner = endpoint.config(:cache_static_manifest)) do
+      outer = Application.app_dir(endpoint.config(:otp_app), inner)
+
+      if File.exists?(outer) do
+        Poison.decode!(File.read!(outer))
+      else
+        Logger.warn "Could not find static manifest at #{inspect outer}. " <>
+                    "Run mix phoenix.digest after building your static files " <>
+                    "or remove the configuration from config/prod.exs."
+      end
+    else
+      %{}
+    end
+  end
 end

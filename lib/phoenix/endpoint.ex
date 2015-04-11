@@ -83,8 +83,13 @@ defmodule Phoenix.Endpoint do
       This is only required if the watchers or cde reloading functionality
       are enabled.
 
-    * `:cache_static_lookup` - when `true`, static assets lookup in the
+    * `:cache_static_lookup` - when `true`, static file lookup in the
       filesystem via the `static_path` function are cached. Defaults to `true`.
+
+    * `:cache_static_manifest` - a path to a json manifest file that contains
+      static files and their digested version. This is typically set to
+      "priv/static/manifest.json" which is the file automatically generated
+      by `mix phoenix.digest`.
 
     * `:http` - the configuration for the HTTP server. Currently uses
       cowboy and accepts all options as defined by
@@ -303,7 +308,7 @@ defmodule Phoenix.Endpoint do
       Reloads the configuration given the application environment changes.
       """
       def config_change(changed, removed) do
-        Phoenix.Config.config_change(__MODULE__, changed, removed)
+        Phoenix.Endpoint.Adapter.config_change(__MODULE__, changed, removed)
       end
 
       @doc """
@@ -316,7 +321,7 @@ defmodule Phoenix.Endpoint do
       end
 
       @doc """
-      Generates the path information including any necessary prefix.
+      Generates the path information when routing to this endpoint.
       """
       script_name = var!(config)[:url][:path]
 
@@ -335,10 +340,10 @@ defmodule Phoenix.Endpoint do
       end
 
       @doc """
-      Generates a route to a static file based on the contents inside
-      `priv/static` for the endpoint otp application.
+      Generates a route to a static file in `priv/static`.
       """
       def static_path(path) do
+        # This should be in sync with the endpoint warmup.
         Phoenix.Config.cache(__MODULE__,
           {:__phoenix_static__, path},
           &Phoenix.Endpoint.Adapter.static_path(&1, path))

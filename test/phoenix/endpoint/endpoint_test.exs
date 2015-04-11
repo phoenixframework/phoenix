@@ -2,8 +2,8 @@ defmodule Phoenix.Endpoint.EndpointTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
-  @config [url: [host: "example.com", path: "/api"],
-           server: false, cache_static_lookup: false,
+  @config [url: [host: "example.com", path: "/api"], server: false,
+           cache_static_lookup: true, cache_static_manifest: "../../../../test/fixtures/manifest.json",
            pubsub: [adapter: Phoenix.PubSub.PG2, name: :endpoint_pub]]
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
 
@@ -35,13 +35,17 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert Endpoint.call(conn(:get, "/"), []).script_name == ~w"api"
   end
 
-  test "static_path/1 with and without caching" do
+  test "reads static path with and without caching" do
     file = Path.expand("priv/static/phoenix.png", File.cwd!)
 
     # Old timestamp
     old_stat = File.stat!(file)
     old_vsn  = static_vsn(old_stat)
     assert Endpoint.static_path("/phoenix.png") == "/api/phoenix.png?vsn=#{old_vsn}"
+
+    # Now with cache disabled
+    config = put_in(@config[:cache_static_lookup], false)
+    assert Endpoint.config_change([{Endpoint, config}], []) == :ok
 
     # New timestamp
     File.touch!(file)
@@ -56,6 +60,15 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert Endpoint.static_path("/phoenix.png") == "/api/phoenix.png?vsn=#{new_vsn}"
     File.touch!(file, old_stat.mtime)
     assert Endpoint.static_path("/phoenix.png") == "/api/phoenix.png?vsn=#{new_vsn}"
+  end
+
+  test "warms up caches on load and config change" do
+    assert Endpoint.static_path("/foo.css") == "/api/foo-abcdef.css?vsn=d"
+
+    # Trigger a config change and the cache should be warmed up again
+    assert Endpoint.config_change([{Endpoint, @config}], []) == :ok
+
+    assert Endpoint.static_path("/foo.css") == "/api/foo-abcdef.css?vsn=d"
   end
 
   test "injects pubsub broadcast with configured server" do

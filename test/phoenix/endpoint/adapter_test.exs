@@ -3,10 +3,9 @@ defmodule Phoenix.Endpoint.AdapterTest do
   alias Phoenix.Endpoint.Adapter
 
   setup do
-    config = [custom: true]
-    Application.put_env(:phoenix, AdapterApp.Endpoint, config)
-    :ok
+    Application.put_env(:phoenix, AdapterApp.Endpoint, custom: true)
     System.put_env("PHOENIX_PORT", "8080")
+    :ok
   end
 
   test "loads router configuration" do

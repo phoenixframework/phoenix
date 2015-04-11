@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Phoenix.Digest do
   use Mix.Task
   @default_input_path "priv/static"
 
-  @shortdoc "Digests and compress static files."
+  @shortdoc "Digests and compress static files"
 
   @moduledoc """
   Digests and compress static files.
