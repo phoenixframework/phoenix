@@ -102,7 +102,7 @@ socket.join("rooms:lobby", {}).receive("ok", chan => {
 })
 ```
 
-Save the file and your browser should auto refresh, thanks to the Phoenix live reloader. If everything worked, we should see "Welcome to Phoenix Chat!" in the browser's javascript console. Our client and server are now talking over a persitant connection. Now let's make it useful by enabling chat.
+Save the file and your browser should auto refresh, thanks to the Phoenix live reloader. If everything worked, we should see "Welcome to Phoenix Chat!" in the browser's javascript console. Our client and server are now talking over a persistent connection. Now let's make it useful by enabling chat.
 
 In your `web/templates/page/index.html.eex`, add a container to hold our chat messages, and an input field to send them.
 
