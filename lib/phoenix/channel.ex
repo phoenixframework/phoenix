@@ -178,12 +178,13 @@ defmodule Phoenix.Channel do
                                                                     {:stop, reason :: term, reply :: {status :: atom, response :: map}, Socket.t} |
                                                                     {:stop, reason :: term, reply :: status :: atom, Socket.t}
 
-  defcallback handle_out(event :: String.t, msg :: map, Socket.t) :: {:ok, Socket.t} |
-                                                                     {:noreply, Socket.t} |
+  defcallback handle_out(event :: String.t, msg :: map, Socket.t) :: {:noreply, Socket.t} |
                                                                      {:error, reason :: term, Socket.t} |
                                                                      {:stop, reason :: term, Socket.t}
 
-
+  defcallback handle_info(msg :: map, Socket.t) :: {:noreply, Socket.t} |
+                                                   {:error, reason :: term, Socket.t} |
+                                                   {:stop, reason :: term, Socket.t}
 
   defmacro __using__(_) do
     quote do
@@ -201,7 +202,9 @@ defmodule Phoenix.Channel do
         {:noreply, socket}
       end
 
-      defoverridable handle_out: 3, handle_in: 3, terminate: 2
+      def handle_info(_message, socket), do: {:noreply, socket}
+
+      defoverridable handle_info: 2, handle_out: 3, handle_in: 3, terminate: 2
     end
   end
 
