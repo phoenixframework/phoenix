@@ -208,8 +208,42 @@ defmodule Mix.Tasks.Phoenix.New do
     end
   end
 
+  @brunch_question String.rstrip """
+
+  Phoenix uses an optional build tool called brunch.io that
+  requires npm but you don't have npm in your system. Would
+  you still like to copy brunch.io files?
+  """
+
+  @brunch_install """
+
+  Brunch was setup for static assets, but dependencies were
+  not installed via npm. Installation instructions for node.js,
+  which includes npm, can be found at http://nodejs.org.
+
+  Install your brunch dependencies by running inside your app:
+
+      $ npm install
+  """
+
   defp copy_static(_app, path, binding) do
-    if binding[:brunch] do
+    brunch? =
+      cond do
+        binding[:brunch] == false ->
+          false
+        !System.find_executable("npm") ->
+          if Mix.shell.yes?(@brunch_question) do
+            Mix.shell.info(@brunch_install)
+            true
+          else
+            Mix.shell.info("")
+            false
+          end
+        true ->
+          true
+      end
+
+    if brunch? do
       copy_from path, binding, @brunch
       create_file Path.join(path, "web/static/vendor/phoenix.js"), phoenix_js_text()
       create_file Path.join(path, "priv/static/images/phoenix.png"), phoenix_png_text()
@@ -230,24 +264,12 @@ defmodule Mix.Tasks.Phoenix.New do
     end)
   end
 
-  defp install_brunch(binding) do
-    task = binding[:brunch] &&
-           ask_and_run("Install brunch.io dependencies?", "npm", "install")
-
-    if binding[:brunch] && !task do
-      Mix.shell.info """
-
-      Brunch was setup for static assets, but node deps were not
-      installed via npm. Installation instructions for nodejs,
-      which includes npm, can be found at http://nodejs.org
-
-      Install your brunch dependencies by running inside your app:
-
-          $ npm install
-      """
+  defp install_brunch(_binding) do
+    # Check for npm executable because if it is not
+    # available we have already asked a question before
+    if File.exists?("brunch-config.js") && System.find_executable("npm") do
+      ask_and_run("Install brunch.io dependencies?", "npm", "install")
     end
-
-    task
   end
 
   defp install_mix(_) do

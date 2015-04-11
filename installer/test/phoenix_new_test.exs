@@ -77,9 +77,12 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/lib/photo_blog/repo.ex", ~r"defmodule PhotoBlog.Repo"
       assert_file "photo_blog/web/web.ex", ~r"alias PhotoBlog.Repo"
 
-      # Questions
-      assert_received {:mix_shell, :yes?, ["\nInstall brunch.io dependencies?"]}
+      # Install mix dependencies?
       assert_received {:mix_shell, :yes?, ["\nInstall mix dependencies?"]}
+
+      # The other question is to skip or install brunch.io deps.
+      assert_received {:mix_shell, :yes?, [msg]}
+      assert msg =~ "brunch.io"
     end
   end
 
