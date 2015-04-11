@@ -3,16 +3,6 @@ defmodule Phoenix do
 
   @doc false
   def start(_type, _args) do
-    # Work around the fact consolidation for some
-    # protocols is not working currently
-    if :code.get_mode == :interactive do
-      :code.delete(Access)
-      :code.delete(Collectable)
-      :code.delete(List.Chars)
-      :code.delete(Phoenix.HTML.Safe)
-      :code.delete(Phoenix.Param)
-    end
-
     # Warm up caches
     _ = Phoenix.Template.engines
     _ = Phoenix.Template.format_encoder("index.html")
