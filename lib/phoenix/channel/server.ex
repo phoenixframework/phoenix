@@ -123,6 +123,16 @@ defmodule Phoenix.Channel.Server do
                                 response: %{}}
     {:noreply, socket}
   end
+  defp handle_result({:reply, status, _socket}, :handle_in) do
+    raise """
+    Channel replies from `handle_in/3` are expected to return one of:
+
+        {:reply, {status :: atom, response :: map}, Socket.t} |
+        {:reply, status :: atom, Socket.t}
+
+    got #{inspect status}
+    """
+  end
   defp handle_result({:reply, _, _socket}, _) do
     raise """
     Channel replies can only be sent from a `handle_in/3` callback.
