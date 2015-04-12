@@ -35,6 +35,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
 
     Mix.Phoenix.copy_from source_dir, "", binding, [
       {:eex, "controller.ex",  "web/controllers/#{path}_controller.ex"},
+      {:eex, "controller_test.exs",  "test/controllers/#{path}_controller_test.exs"},
       {:eex, "edit.html.eex",  "web/templates/#{path}/edit.html.eex"},
       {:eex, "form.html.eex",  "web/templates/#{path}/form.html.eex"},
       {:eex, "index.html.eex", "web/templates/#{path}/index.html.eex"},

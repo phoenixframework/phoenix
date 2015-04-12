@@ -28,6 +28,36 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
         assert file =~ "use Phoenix.Web, :view"
       end
 
+      assert_file "test/controllers/user_controller_test.exs", fn file ->
+        assert file =~ "defmodule Phoenix.UserControllerTest"
+        assert file =~ "use Phoenix.ConnCase"
+
+        assert file =~ ~S|test "GET /users"|
+        assert file =~ ~S|conn = get conn(), "/users"|
+        assert file =~ ~S|assert conn.resp_body =~ "Listing users"|
+
+        assert file =~ ~S|test "GET /users/new"|
+        assert file =~ ~S|conn = get conn(), "/users/new"|
+        assert file =~ ~S|assert conn.resp_body =~ "New user"|
+
+        assert file =~ ~S|test "POST /users"|
+        assert file =~ ~S|conn = post conn(), "/users", %{"users" => []}|
+        assert file =~ ~S|assert conn.status == 302|
+
+        assert file =~ ~S|test "GET /users/:id"|
+        assert file =~ ~S|user = Repo.insert %Phoenix.User{}|
+        assert file =~ ~S|conn = get conn(), "/users/#{user.id}"|
+        assert file =~ ~S|assert conn.resp_body =~ "Show user"|
+
+        assert file =~ ~S|test "PUT /users/:id"|
+        assert file =~ ~S|conn = put conn(), "/users/#{user.id}", %{"users" => []}|
+        assert file =~ ~S|assert conn.status == 302|
+
+        assert file =~ ~S|test "DELETE /users/:id"|
+        assert file =~ ~S|conn = put conn(), "/users/#{user.id}"|
+        assert file =~ ~S|assert conn.status == 302|
+      end
+
       assert_file "web/templates/user/edit.html.eex", fn file ->
         assert file =~ "action: user_path(@conn, :update, @user)"
       end
