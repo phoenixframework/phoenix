@@ -31,7 +31,7 @@ defmodule Phoenix.Mixfile do
      {:plug, "~> 0.11.3"},
      {:poison, "~> 1.3"},
      {:redo, github: "heroku/redo", optional: true},
-     {:poolboy, "~> 1.4.2", optional: true},
+     {:poolboy, "~> 1.5.1", optional: true},
 
      # Docs dependencies
      {:earmark, "~> 0.1", only: :docs},

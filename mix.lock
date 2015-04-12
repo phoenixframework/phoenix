@@ -5,7 +5,7 @@
   "inch_ex": {:hex, :inch_ex, "0.2.3"},
   "plug": {:hex, :plug, "0.11.3"},
   "poison": {:hex, :poison, "1.3.0"},
-  "poolboy": {:hex, :poolboy, "1.4.2"},
+  "poolboy": {:hex, :poolboy, "1.5.1"},
   "ranch": {:hex, :ranch, "1.0.0"},
   "redo": {:git, "git://github.com/heroku/redo.git", "b25e7bd3b197564192069d609d1e8e02183b71a6", []},
   "websocket_client": {:git, "git://github.com/jeremyong/websocket_client.git", "48c118682292f2e4d80491161134a665525c4934", []}}
