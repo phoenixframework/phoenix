@@ -40,7 +40,7 @@ defmodule Phoenix.ConnTest do
   The functions in this module can also be used for controller
   testing. While endpoint testing is preferred over controller
   testing as a controller often depends on the pipelines invoked
-  in the router and before, unit testing controllers may be handful
+  in the router and before, unit testing controllers may be helpful
   in some situations.
 
   For such cases, just pass an atom representing the action
