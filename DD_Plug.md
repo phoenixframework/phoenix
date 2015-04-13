@@ -1,15 +1,13 @@
-[Plug](https://github.com/elixir-lang/plug) is a specification for composable modules in between web applications and an abstraction layer for connection adapters of different web server. The basic idea of Plug is to unify the concept of a "connection" that you operate on. This differs from other HTTP middleware layers such as Rack, where the request and response are sepearated in the middleware stack.
+Plug lives at the heart of Phoenix's HTTP layer, and Phoenix puts Plug front and center. We interact with plugs at every step of the connection lifecycle, and the core Phoenix components like Endpoints, Routers, and Controllers are all Just Plugs internally. Let's jump in and find out just what makes Plug so special.
 
-## Plug and Phoenix
-Plug lives at the heart of Phoenix's HTTP layer and Phoenix puts plug front and center. You interact with plugs at every step of the connection lifecycle and the core Phoenix compontents like Endpoints, Routers, and Controllers are all Just Plugs internally. Let's jump in and find out just what makes Plug so special. 
-
+[Plug](https://github.com/elixir-lang/plug) is a specification for composable modules in between web applications. It is also an abstraction layer for connection adapters of different web servers. The basic idea of Plug is to unify the concept of a "connection" that we operate on. This differs from other HTTP middleware layers such as Rack, where the request and response are separated in the middleware stack.
 
 ## The Plug Specification
 
 At the simplest level, the Plug specification comes in two flavors, *function plugs* and *module plugs*
 
 ### Function Plugs
-A function plug is any 2-arity function that accepts a connection (a `%Plug.Conn{}` struct) and options and returns a connection. These are called "function plugs". They look like this:
+In order to act as a plug, a function simply needs to accept a connection struct (%Plug.Conn{}) and options. It also needs to return the connection struct. Any function that meets those criteria will do. Here's an example.
 
 ```elixir
 def put_headers(conn, key_values) do
@@ -19,21 +17,23 @@ def put_headers(conn, key_values) do
 end
 ```
 
-Pretty simple, right? Any function that accept a connection and options and returns a connection can be a plug. This is how we used them to compose a series of transformations on our connection in Phoenix:
+Pretty simple, right?
+
+This is how we use them to compose a series of transformations on our connection in Phoenix:
 
 ```elixir
 defmodule HelloPhoenix.MessageController do
   use HelloPhoenix.Web, :controller
-  
+
   plug :put_headers, %{content_encoding: "gzip", cache_control: "max-age=3600"}
   plug :put_layout, "bare.html"
   plug :action
-  
+
   ...
 end
 ```
 
-By abiding by the plug contract, `put_headers/2`, `put_layout/2`, and event `action/2` turn a request into our application into a series of explicit transformations. But, It doesn't stop at simple tranformations. To really see how effective Plug's design is, let's imagine a scenario where we need to apply a sieries of different conditions and redirect or halt if a pre-condition fails. Without plug, we would end up with something like this:
+By abiding by the plug contract, `put_headers/2`, `put_layout/2`, and even `action/2` turn an application request into a series of explicit transformations. It doesn't stop there. To really see how effective Plug's design is, let's imagine a scenario where we need to check a series of conditions and then either redirect or halt if a condition fails. Without plug, we would end up with something like this:
 
 ```elixir
 defmodule HelloPhoenix.MessageController do
@@ -43,11 +43,11 @@ defmodule HelloPhoenix.MessageController do
     case authenticate(conn) do
       {:ok, user} ->
         case find_message(params["id"]) do
-          nil -> 
+          nil ->
             conn |> put_flash("That message wasn't found") |> redirect(to: "/")
-          message -> 
+          message ->
             case authorize_message(conn, params["id"])
-              :ok -> 
+              :ok ->
                 render conn, :show, page: find_page(params["id"])
               :error ->
                 conn |> put_flash("You must be logged in") |> redirect(to: "/")
@@ -60,7 +60,7 @@ defmodule HelloPhoenix.MessageController do
 end
 ```
 
-Notice how just a few steps of authentication and authorization require complicated nested and duplication? Let's solve it with a couple plugs:
+Notice how just a few steps of authentication and authorization require complicated nesting and duplication? Let's improve this with a couple of plugs.
 
 ```elixir
 defmodule HelloPhoenix.MessageController do
@@ -70,11 +70,11 @@ defmodule HelloPhoenix.MessageController do
   plug :find_message
   plug :authorize_message
   plug :action
-  
+
   def show(conn, params) do
     render conn, :show, page: find_page(params["id"])
   end
-  
+
   defp authenticate(conn, _) do
     case Authenticator.find_user(conn) do
       {:ok, user} ->
@@ -86,13 +86,13 @@ defmodule HelloPhoenix.MessageController do
 
   defp find_message(conn, _) do  
     case find_message(params["id"]) do
-      nil -> 
+      nil ->
         conn |> put_flash("That message wasn't found") |> redirect(to: "/") |> halt
       message ->
         assign(conn, :message, message)
     end
   end
-  
+
   defp authorize_message(conn, _) do
     if Authorizer.can_acces?(conn.assigns[:user], conn.assigns[:message]) do
       conn
@@ -103,26 +103,26 @@ defmodule HelloPhoenix.MessageController do
 end
 ```
 
-By replacing the nested blocks of code with a flattened series of plug transformations, we were able to take almost the identical code and make it much more composable, clear, and resuable.
+By replacing the nested blocks of code with a flattened series of plug transformations, we are able to achieve the same functionality in a much more composable, clear, and reusable way.
 
-Now, let's look at the other flavor plugs come in: Module Plugs.
+Now let's look at the other flavor plugs come in, module plugs.
 
 ### Module Plugs
 
-Module plugs are another type of Plug that lets you group a connection transformation into a module. The module only needs to implement two functions:
+Module plugs are another type of Plug that let us define a connection transformation in a module. The module only needs to implement two functions:
 
-- `init/1` initializes any arguments or options passed to be pased to call/2
-- `call/2` carries out the connectiont transformation. `call/2` is just a function plug that we saw earlier
+- `init/1` which initializes any arguments or options passed to be pased to call/2
+- `call/2` which carries out the connection transformation. `call/2` is just a function plug that we saw earlier
 
 
-To see this in action, lets write a Module Plug that that puts the `:locale` assign into the connectiona assigns for downstream use in other plugs, the controller actions, and our views.
+To see this in action, lets write a module plug that that puts the `:locale` key and value into the connection assign for downstream use in other plugs, controller actions, and our views.
 
 ```elixir
 defmodule HelloPhoenix.Plugs.Locale
   import Plug.Conn
-  
+
   @locales ["en", "fr", "de"]
-  
+
   def init(default), do: default
 
   def call(%Plug.Conn{params: %{"locale" => loc}}, _default) when loc in @locales
@@ -144,10 +144,6 @@ defmodule HelloPhoenix.Router do
   ...
 ```
 
-By using a module plug, we were able to add it to our browser pipeline via `plug HelloPhoenix.Plugs.Locale, "en"`. We can see that using the `init/1` callback, we passed a default locale to fallback to if none is present. We also made use of pattern matching to define multiple `call/2` function heads to validate the locale in the params, and otherwise fallback to "en". 
+We are able to add this module plug to our browser pipeline via `plug HelloPhoenix.Plugs.Locale, "en"`. In the `init/1` callback, we pass a default locale to use if none is present in the params. We also use pattern matching to define multiple `call/2` function heads to validate the locale in the params, and fall back to "en" if there is no match.
 
-That's all there is to plug. Phoenix embraces the plug design of composable transformations all the way up and own the stack. This is just your first taste, but get used to asking yourself "Could I put this in a plug?". The answer is usually yes!
-
-
-
-
+That's all there is to Plug. Phoenix embraces the plug design of composable transformations all the way up and own the stack. This is just the first taste. If we ask ourselves, "Could I put this in a plug?" The answer is usually, "Yes!"
