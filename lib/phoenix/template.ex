@@ -86,13 +86,16 @@ defmodule Phoenix.Template do
     @moduledoc """
     Exception raised when a template cannot be found.
     """
-    defexception [:available, :template, :module, :root]
+    defexception [:available, :template, :module, :root, :assigns]
 
     def message(exception) do
       "Could not render #{inspect exception.template} for #{inspect exception.module}, "
-        <> "please define a clause for render/2 or define a template at "
+        <> "please define a matching clause for render/2 or define a template at "
         <> "#{inspect Path.relative_to_cwd exception.root}. "
         <> available_templates(exception.available)
+        <> "\nAssigns:\n\n"
+        <> inspect(exception.assigns)
+        <> "\n"
     end
 
     defp available_templates([]), do: "No templates were compiled for this module."
@@ -125,9 +128,10 @@ defmodule Phoenix.Template do
       By default it raises but can be customized
       to render a particular template.
       """
-      def template_not_found(template, _assigns) do
+      def template_not_found(template, assigns) do
         {root, names} = __templates__
         raise UndefinedError,
+          assigns: assigns,
           available: names,
           template: template,
           root: root,

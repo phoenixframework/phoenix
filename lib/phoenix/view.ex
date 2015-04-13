@@ -132,9 +132,15 @@ defmodule Phoenix.View do
       quote do
         import Phoenix.View
 
+        @view_resource String.to_atom(Phoenix.Naming.resource_name(__MODULE__, "View"))
+        @view_namespace unquote(namespace)
+
         use Phoenix.Template, root:
           Path.join(unquote(root),
-                    Phoenix.Template.module_to_template_root(__MODULE__, unquote(namespace), "View"))
+                    Phoenix.Template.module_to_template_root(__MODULE__, @view_namespace, "View"))
+
+        @doc "The resource name, as an atom, for this view"
+        def __resource__, do: @view_resource
       end
     else
       raise "expected :root to be given as an option"
@@ -187,10 +193,6 @@ defmodule Phoenix.View do
     |> render_within(module, template)
   end
 
-  defp to_map(assigns) when is_map(assigns), do: assigns
-  defp to_map(assigns) when is_list(assigns), do: :maps.from_list(assigns)
-  defp to_map(assigns), do: Dict.merge(%{}, assigns)
-
   defp render_within({{layout_mod, layout_tpl}, assigns}, inner_mod, template) do
     template
     |> inner_mod.render(assigns)
@@ -205,6 +207,173 @@ defmodule Phoenix.View do
   defp render_layout(inner_content, layout_mod, layout_tpl, assigns) do
     assigns = Map.put(assigns, :inner, inner_content)
     layout_mod.render(layout_tpl, assigns)
+  end
+
+  @doc """
+  See `render_many/4`.
+  """
+  def render_many(collection, template) when is_binary(template) do
+    render_many(collection, template, %{})
+  end
+
+  @doc """
+  See `render_many/4`.
+  """
+  def render_many(collection, template, assigns) when is_binary(template) do
+    assigns = to_map(assigns)
+
+    {result, _} =
+      Enum.map_reduce(collection, %{}, fn model, acc ->
+        {view, acc} = view_for_model(model, acc)
+        {render(view, template, assign_model(assigns, view, model)), acc}
+      end)
+
+    result
+  end
+
+  def render_many(collection, view, template) when is_atom(view) and is_binary(template) do
+    render_many(collection, view, template, %{})
+  end
+
+  @doc """
+  Renders a collection.
+
+  A collection is any enumerable of structs. This function
+  returns the rendered collection in a list:
+
+      render_many users, "show.html"
+
+  is roughly equivalent to:
+
+      Enum.map(users, fn user ->
+        render(UserView, "show.html", user: user)
+      end)
+
+  When a view is not given, it is automatically inflected
+  from the given struct. The underlying user is passed to
+  the view and template as `:user`, which is inflected from
+  the view name. The name of the key in assigns can be
+  customized with the `:as` option:
+
+      render_many users, "show.html", as: :data
+
+  is roughly equivalent to:
+
+      Enum.map(users, fn user ->
+        render(UserView, "show.html", data: user)
+      end)
+
+  Overall, this function has four signatures:
+
+      render_many(collection, template)
+      render_many(collection, template, assigns)
+      render_many(collection, view, template)
+      render_many(collection, view, template, assigns)
+
+  """
+  def render_many(collection, view, template, assigns) when is_atom(view) and is_binary(template) do
+    assigns = to_map(assigns)
+    Enum.map(collection, fn model ->
+      render view, template, assign_model(assigns, view, model)
+    end)
+  end
+
+  @doc """
+  See `render_one/4`.
+  """
+  def render_one(model, template) when is_binary(template) do
+    render_one(model, template, %{})
+  end
+
+  @doc """
+  See `render_one/4`.
+  """
+  def render_one(model, template, assigns) when is_binary(template) do
+    if model != nil do
+      assigns = to_map(assigns)
+      view    = view_for_model(model)
+      render(view, template, assign_model(assigns, view, model))
+    end
+  end
+
+  def render_one(model, view, template) when is_atom(view) and is_binary(template) do
+    render_one(model, view, template, %{})
+  end
+
+  @doc """
+  Renders a single item if not nil.
+
+  The following:
+
+      render_many user, "show.html"
+
+  is roughly equivalent to:
+
+      if user != nil do
+        render(UserView, "show.html", user: user)
+      end
+
+  When a view is not given, it is automatically inflected
+  from the given struct. The underlying user is passed to
+  the view and template as `:user`, which is inflected from
+  the view name. The name of the key in assigns can be
+  customized with the `:as` option:
+
+      render_one users, "show.html", as: :data
+
+  is roughly equivalent to:
+
+      if user != nil do
+        render(UserView, "show.html", data: user)
+      end
+
+  Overall, this function has four signatures:
+
+      render_one(model, template)
+      render_one(model, template, assigns)
+      render_one(model, view, template)
+      render_one(model, view, template, assigns)
+
+  """
+  def render_one(model, view, template, assigns) when is_atom(view) and is_binary(template) do
+    if model != nil do
+      assigns = to_map(assigns)
+      render view, template, assign_model(assigns, view, model)
+    end
+  end
+
+  defp to_map(assigns) when is_map(assigns), do: assigns
+  defp to_map(assigns) when is_list(assigns), do: :maps.from_list(assigns)
+  defp to_map(assigns), do: Dict.merge(%{}, assigns)
+
+  defp assign_model(assigns, view, model) do
+    as = Map.get(assigns, :as) || view.__resource__
+    Map.put(assigns, as, model)
+  end
+
+  defp view_for_model(%{__struct__: key} = model, cache) do
+    case Map.fetch(cache, key) do
+      {:ok, view} ->
+        {view, cache}
+      :error ->
+        view = view_for_model(model)
+        {view, Map.put(cache, key, view)}
+    end
+  end
+
+  defp view_for_model(other, _cache) do
+    view_for_model(other) # Let it crash below
+  end
+
+  defp view_for_model(%{__struct__: struct}) do
+    struct
+    |> Atom.to_string
+    |> Kernel.<>("View")
+    |> String.to_atom
+  end
+
+  defp view_for_model(other) do
+    raise ArgumentError, "expected a struct on render_one/render_many, got: #{inspect other}"
   end
 
   @doc """
@@ -229,4 +398,3 @@ defmodule Phoenix.View do
     end
   end
 end
-
