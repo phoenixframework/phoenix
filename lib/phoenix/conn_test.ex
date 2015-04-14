@@ -263,6 +263,20 @@ defmodule Phoenix.ConnTest do
   defdelegate clear_flash(conn), to: Phoenix.Controller
 
   @doc """
+  Returns the Location header from a redirect response.
+  Raises if the response is not a redirect.
+  """
+  @spec redirected_to(Conn.t) :: Conn.t
+  def redirected_to(%Conn{status: status} = conn) when status >= 300 and status <=308 do
+    Plug.Conn.get_resp_header(conn, "Location")
+  end
+
+  def redirected_to(_) do
+    raise ArgumentError,
+      message: "response was not a redirect"
+  end
+
+  @doc """
   Recycles the connection.
 
   Recycling receives an connection and returns a new connection,

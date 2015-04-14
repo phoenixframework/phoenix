@@ -137,4 +137,21 @@ defmodule Phoenix.Test.ConnTest do
     conn = conn |> delete_req_cookie("foo")
     assert get_req_header(conn, "cookie") == []
   end
+
+  test "redirected_to/1" do
+    Enum.each 300..308, fn(status) ->
+      conn = conn(:get, "/")
+              |> put_resp_header("Location", "new location")
+              |> send_resp(status, "foo")
+
+      assert redirected_to(conn) == ["new location"]
+    end
+
+    conn = conn(:get, "/")
+           |> send_resp(200, "foo")
+
+    assert_raise ArgumentError, fn ->
+      redirected_to(conn)
+    end
+  end
 end
