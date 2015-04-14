@@ -139,19 +139,39 @@ defmodule Phoenix.Test.ConnTest do
   end
 
   test "redirected_to/1" do
+    conn =
+      conn(:get, "/")
+      |> put_resp_header("location", "new location")
+      |> send_resp(302, "foo")
+
+    assert redirected_to(conn) == "new location"
+  end
+
+  test "redirected_to/2" do
     Enum.each 300..308, fn(status) ->
-      conn = conn(:get, "/")
-              |> put_resp_header("Location", "new location")
-              |> send_resp(status, "foo")
+      conn =
+        conn(:get, "/")
+        |> put_resp_header("location", "new location")
+        |> send_resp(status, "foo")
 
-      assert redirected_to(conn) == ["new location"]
+      assert redirected_to(conn, status) == "new location"
     end
+  end
 
-    conn = conn(:get, "/")
-           |> send_resp(200, "foo")
+  test "redirected_to/2 without header" do
+    assert_raise RuntimeError, "no location header was set on redirected_to", fn ->
+      assert conn(:get, "/")
+      |> send_resp(302, "ok")
+      |> redirected_to()
+    end
+  end
 
-    assert_raise ArgumentError, fn ->
-      redirected_to(conn)
+  test "redirected_to/2 without redirection" do
+    assert_raise RuntimeError, "expected redirection with status 302, got: 200", fn ->
+      conn(:get, "/")
+      |> put_resp_header("location", "new location")
+      |> send_resp(200, "ok")
+      |> redirected_to()
     end
   end
 end

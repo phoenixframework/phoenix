@@ -263,17 +263,21 @@ defmodule Phoenix.ConnTest do
   defdelegate clear_flash(conn), to: Phoenix.Controller
 
   @doc """
-  Returns the Location header from a redirect response.
-  Raises if the response is not a redirect.
+  Returns the location header from the given redirect response.
+
+  Raises if the response does not match the redirect status code
+  (defaults to 302).
   """
   @spec redirected_to(Conn.t) :: Conn.t
-  def redirected_to(%Conn{status: status} = conn) when status >= 300 and status <=308 do
-    Plug.Conn.get_resp_header(conn, "Location")
+  def redirected_to(conn, status \\ 302)
+
+  def redirected_to(%Conn{status: status} = conn, status) do
+    location = Conn.get_resp_header(conn, "location") |> List.first
+    location || raise "no location header was set on redirected_to"
   end
 
-  def redirected_to(_) do
-    raise ArgumentError,
-      message: "response was not a redirect"
+  def redirected_to(conn, status) do
+    raise "expected redirection with status #{status}, got: #{conn.status}"
   end
 
   @doc """
