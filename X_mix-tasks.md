@@ -4,7 +4,7 @@ There are currently a number of built-in Phoenix-specific and ecto-specific mix 
 
 ```console
 $ mix help | grep -i phoenix
-mix phoenix.gen.resource # Generates resource files
+mix phoenix.gen.html     # Generates HTML files for a resource
 mix phoenix.new          # Creates Phoenix application
 mix phoenix.routes       # Prints all routes
 mix phoenix.server       # Starts applications and their servers
@@ -195,14 +195,14 @@ defmodule HelloPhoenix.Mixfile do
 . . .
 ```
 
-####`mix phoenix.gen.resource`
+####`mix phoenix.gen.html`
 
-Phoenix now offers the ability to generate all the code to stand up a complete resource - ecto migration, ecto model, controller with all the necessary actions, view, and templates. This can be a tremendous timesaver. Let's take a look at how to make this happen.
+Phoenix now offers the ability to generate all the code to stand up a complete HTML resource - ecto migration, ecto model, controller with all the necessary actions, view, and templates. This can be a tremendous timesaver. Let's take a look at how to make this happen.
 
-The `phoenix.gen.resource` task takes a number of arguments, the module name of the model, the resource name, and a list of column_name:type attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
+The `phoenix.gen.html` task takes a number of arguments, the module name of the model, the resource name, and a list of column_name:type attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
 
 ```console
-$ mix phoenix.gen.resource Post posts body:string word_count:integer
+$ mix phoenix.gen.html Post posts body:string word_count:integer
 * creating priv/repo/migrations/20150314013326_create_post.exs
 * creating web/controllers/post_controller.ex
 * creating web/models/post.ex
@@ -214,7 +214,7 @@ $ mix phoenix.gen.resource Post posts body:string word_count:integer
 * creating web/views/post_view.ex
 ```
 
-When `phoenix.gen.resource` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our ecto migrations.
+When `phoenix.gen.html` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our ecto migrations.
 
 ```console
 Add the resource to the proper scope in web/router.ex:
