@@ -174,4 +174,11 @@ defmodule Phoenix.Test.ConnTest do
       |> redirected_to()
     end
   end
+
+  test "redirected_to/2 without response" do
+    assert_raise RuntimeError, "expected connection to have redirected but no response was set/sent", fn ->
+      conn(:get, "/")
+      |> redirected_to()
+    end
+  end
 end

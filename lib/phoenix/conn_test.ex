@@ -268,8 +268,12 @@ defmodule Phoenix.ConnTest do
   Raises if the response does not match the redirect status code
   (defaults to 302).
   """
-  @spec redirected_to(Conn.t) :: Conn.t
+  @spec redirected_to(Conn.t, status :: non_neg_integer) :: Conn.t
   def redirected_to(conn, status \\ 302)
+
+  def redirected_to(%Conn{state: :unset}, _status) do
+    raise "expected connection to have redirected but no response was set/sent"
+  end
 
   def redirected_to(%Conn{status: status} = conn, status) do
     location = Conn.get_resp_header(conn, "location") |> List.first
