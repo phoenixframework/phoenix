@@ -89,7 +89,10 @@ defimpl Phoenix.Param, for: Map do
     end
   end
 
-  def to_param(map), do: Phoenix.Param.Any.to_param(map)
+  def to_param(map) do
+    raise ArgumentError,
+      "maps cannot be converted to_param. A struct was expected, got: #{inspect map}"
+  end
 end
 
 defimpl Phoenix.Param, for: Any do
@@ -100,10 +103,10 @@ defimpl Phoenix.Param, for: Any do
   def to_param(%{id: id}) when is_binary(id), do: id
   def to_param(%{id: id}), do: Phoenix.Param.to_param(id)
 
-  def to_param(data) when is_map(data) do
-    raise ArgumentError, 
-      "maps/structs expect an `:id` key when converting to_param, " <>
-      "read Phoenix.Param documentation for more information"
+  def to_param(map) when is_map(map) do
+    raise ArgumentError,
+      "structs expect an :id key when converting to_param or a custom implementation "
+      "(read Phoenix.Param documentation for more information), got: #{inspect map}"
   end
 
   def to_param(data) do

@@ -7,7 +7,7 @@ defmodule Phoenix.Controller.RenderTest do
   import Phoenix.Controller
 
   defp conn() do
-    conn(:get, "/") |> put_view(MyApp.UserView) |> fetch_params
+    conn(:get, "/") |> put_view(MyApp.UserView) |> fetch_query_params
   end
 
   defp layout_conn() do

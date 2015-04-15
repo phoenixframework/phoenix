@@ -116,11 +116,17 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.post_path(__MODULE__, :show, 5, foo: true) == "/posts/5?foo=true"
     assert Helpers.post_path(__MODULE__, :show, 5, foo: false) == "/posts/5?foo=false"
     assert Helpers.post_path(__MODULE__, :show, 5, foo: nil) == "/posts/5?foo="
-    assert Helpers.post_path(__MODULE__, :show, 5, foo: ~w(bar baz)) == "/posts/5?foo[]=bar&foo[]=baz"
+
+    assert Helpers.post_path(__MODULE__, :show, 5, foo: ~w(bar baz)) ==
+           "/posts/5?foo[]=bar&foo[]=baz"
+    assert Helpers.post_path(__MODULE__, :show, 5, foo: %{id: 5}) ==
+           "/posts/5?foo[id]=5"
+    assert Helpers.post_path(__MODULE__, :show, 5, foo: %{__struct__: Foo, id: 5}) ==
+           "/posts/5?foo=5"
   end
 
   test "url helper with param protocol" do
-    assert Helpers.post_path(__MODULE__, :show, %{id: 5}) == "/posts/5"
+    assert Helpers.post_path(__MODULE__, :show, %{__struct__: Foo, id: 5}) == "/posts/5"
 
     assert_raise ArgumentError, fn ->
       Helpers.post_path(__MODULE__, :show, nil)

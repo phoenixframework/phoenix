@@ -13,7 +13,7 @@ defmodule Phoenix.Controller.LoggerTest do
   test "logs controller, action, format and parameters" do
     output = capture_log fn ->
       conn(:get, "/", foo: "bar", format: "html")
-      |> fetch_params
+      |> fetch_query_params
       |> put_private(:phoenix_pipelines, [:browser])
       |> action
     end
@@ -30,7 +30,7 @@ defmodule Phoenix.Controller.LoggerTest do
 
       output = capture_log fn ->
         conn(:get, "/", password: "should_show", PASS: "should_not_show")
-        |> fetch_params
+        |> fetch_query_params
         |> action
       end
 
@@ -43,7 +43,7 @@ defmodule Phoenix.Controller.LoggerTest do
   test "filter parameter when a map has secret key" do
     output = capture_log fn ->
       conn(:get, "/", foo: "bar", map: %{password: "should_not_show"})
-      |> fetch_params
+      |> fetch_query_params
       |> action
     end
 
@@ -53,7 +53,7 @@ defmodule Phoenix.Controller.LoggerTest do
   test "filter parameter when a list has a map with secret" do
     output = capture_log fn ->
       conn(:get, "/", foo: "bar", list: [%{password: "should_not_show"}])
-      |> fetch_params
+      |> fetch_query_params
       |> action
     end
 
@@ -63,14 +63,14 @@ defmodule Phoenix.Controller.LoggerTest do
   test "does not filter structs" do
     output = capture_log fn ->
       conn(:get, "/", %{foo: "bar", file: %Plug.Upload{}})
-      |> fetch_params
+      |> fetch_query_params
       |> action
     end
     assert output =~ "Parameters: %{\"file\" => %Plug.Upload{content_type: nil, filename: nil, path: nil}, \"foo\" => \"bar\"}"
 
     output = capture_log fn ->
       conn(:get, "/", %{foo: "bar", file: %{__struct__: "s"}})
-      |> fetch_params
+      |> fetch_query_params
       |> action
     end
     assert output =~ "Parameters: %{\"file\" => %{\"__struct__\" => \"s\"}, \"foo\" => \"bar\"}"
@@ -79,7 +79,7 @@ defmodule Phoenix.Controller.LoggerTest do
   test "does not fail on atomic keys" do
     output = capture_log fn ->
       conn(:get, "/", %{password: "should_not_show"})
-      |> fetch_params
+      |> fetch_query_params
       |> Map.update!(:params, &Dict.put(&1, :foo, "bar"))
       |> action
     end

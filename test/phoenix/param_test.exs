@@ -19,10 +19,7 @@ defmodule Phoenix.ParamTest do
   end
 
   test "to_param for maps" do
-    assert to_param(%{id: 1}) == "1"
-    assert to_param(%{id: "foo"}) == "foo"
-    assert to_param(%{id: %{id: "foo"}}) == "foo"
-    assert_raise ArgumentError, fn -> to_param(%{no_id: 1}) end
+    assert_raise ArgumentError, fn -> to_param(%{id: 1}) end
   end
 
   test "to_param for structs" do

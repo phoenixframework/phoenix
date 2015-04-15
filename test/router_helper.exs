@@ -32,12 +32,12 @@ defmodule RouterHelper do
   end
 
   def call(router, verb, path, params \\ nil, headers \\ []) do
-    conn = conn(verb, path, params, headers) |> Plug.Conn.fetch_params
+    conn = conn(verb, path, params, headers) |> Plug.Conn.fetch_query_params
     router.call(conn, router.init([]))
   end
 
   def action(controller, verb, action, params \\ nil, headers \\ []) do
-    conn = conn(verb, "/", params, headers) |> Plug.Conn.fetch_params
+    conn = conn(verb, "/", params, headers) |> Plug.Conn.fetch_query_params
     controller.call(conn, controller.init(action))
   end
 

@@ -254,17 +254,17 @@ defmodule Phoenix.Controller.ControllerTest do
 
   test "scrub_params/2 raises Phoenix.MissingParamError for missing key" do
     assert_raise(Phoenix.MissingParamError, "expected key for \"foo\" to be present", fn ->
-      conn(:get, "/") |> fetch_params |> scrub_params("foo")
+      conn(:get, "/") |> fetch_query_params |> scrub_params("foo")
     end)
 
     assert_raise(Phoenix.MissingParamError, "expected key for \"foo\" to be present", fn ->
-      conn(:get, "/?foo=") |> fetch_params |> scrub_params("foo")
+      conn(:get, "/?foo=") |> fetch_query_params |> scrub_params("foo")
     end)
   end
 
   test "scrub_params/2 keeps populated keys intact" do
     conn = conn(:get, "/?foo=bar")
-    |> fetch_params
+    |> fetch_query_params
     |> scrub_params("foo")
 
     assert conn.params["foo"] == "bar"
@@ -272,7 +272,7 @@ defmodule Phoenix.Controller.ControllerTest do
 
   test "scrub_params/2 nils out all empty values for the passed in key if it is a list" do
     conn = conn(:get, "/?foo[]=&foo[]=++&foo[]=bar")
-    |> fetch_params
+    |> fetch_query_params
     |> scrub_params("foo")
 
     assert conn.params["foo"] == [nil, nil, "bar"]
@@ -280,7 +280,7 @@ defmodule Phoenix.Controller.ControllerTest do
 
   test "scrub_params/2 nils out all empty keys in value for the passed in key if it is a map" do
     conn = conn(:get, "/?foo[bar]=++&foo[baz]=&foo[bat]=ok")
-    |> fetch_params
+    |> fetch_query_params
     |> scrub_params("foo")
 
     assert conn.params["foo"] == %{"bar" => nil, "baz" => nil, "bat" => "ok"}
@@ -288,7 +288,7 @@ defmodule Phoenix.Controller.ControllerTest do
 
   test "scrub_params/2 nils out all empty keys in value for the passed in key if it is a nested map" do
     conn = conn(:get, "/?foo[bar][baz]=")
-    |> fetch_params
+    |> fetch_query_params
     |> scrub_params("foo")
 
     assert conn.params["foo"] == %{"bar" => %{"baz" => nil}}
@@ -296,7 +296,7 @@ defmodule Phoenix.Controller.ControllerTest do
 
   test "scrub_params/2 ignores the keys that don't match the passed in key" do
     conn = conn(:get, "/?foo=bar&baz=")
-    |> fetch_params
+    |> fetch_query_params
     |> scrub_params("foo")
 
     assert conn.params["baz"] == ""
@@ -304,7 +304,7 @@ defmodule Phoenix.Controller.ControllerTest do
 
   test "scrub_params/2 keeps structs intact" do
     conn = conn(:get, "/", %{"foo" => %{"bar" => %Plug.Upload{}}})
-    |> fetch_params
+    |> fetch_query_params
     |> scrub_params("foo")
 
     assert conn.params["foo"]["bar"] == %Plug.Upload{}

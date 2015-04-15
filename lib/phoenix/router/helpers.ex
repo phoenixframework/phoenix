@@ -81,7 +81,9 @@ defmodule Phoenix.Router.Helpers do
 
       defp to_param(int) when is_integer(int), do: Integer.to_string(int)
       defp to_param(bin) when is_binary(bin), do: bin
-      defp to_param(oth), do: Phoenix.Param.to_param(oth)
+      defp to_param(false), do: "false"
+      defp to_param(true), do: "true"
+      defp to_param(data), do: Phoenix.Param.to_param(data)
 
       defp segments(segments, [], _reserved) do
         segments
@@ -92,7 +94,7 @@ defmodule Phoenix.Router.Helpers do
                not (k = to_string(k)) in reserved,
                do: {k, v}
 
-        case Conn.Query.encode dict do
+        case Conn.Query.encode dict, &to_param/1 do
           "" -> segments
           o  -> segments <> "?" <> o
         end

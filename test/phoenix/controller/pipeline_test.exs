@@ -61,7 +61,7 @@ defmodule Phoenix.Controller.PipelineTest do
 
   defp stack_conn() do
     conn(:get, "/")
-    |> fetch_params()
+    |> fetch_query_params()
     |> put_private(:stack, [])
   end
 end
