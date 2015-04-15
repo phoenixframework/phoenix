@@ -77,6 +77,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/config/test.exs", config
       assert_file "photo_blog/config/prod.secret.exs", config
       assert_file "photo_blog/lib/photo_blog/repo.ex", ~r"defmodule PhotoBlog.Repo"
+      assert_file "photo_blog/test/support/model_case.ex", ~r"defmodule PhotoBlog.ModelCase"
       assert_file "photo_blog/web/web.ex", ~r"alias PhotoBlog.Repo"
 
       # Install mix dependencies?

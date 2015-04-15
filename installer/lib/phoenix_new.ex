@@ -16,6 +16,7 @@ defmodule Mix.Tasks.Phoenix.New do
     {:eex,  "new/config/test.exs",                           "config/test.exs"},
     {:eex,  "new/lib/application_name.ex",                   "lib/application_name.ex"},
     {:eex,  "new/lib/application_name/endpoint.ex",          "lib/application_name/endpoint.ex"},
+    {:keep, "new/test/channels",                             "test/channels"},
     {:eex,  "new/test/controllers/page_controller_test.exs", "test/controllers/page_controller_test.exs"},
     {:eex,  "new/test/views/error_view_test.exs",            "test/views/error_view_test.exs"},
     {:eex,  "new/test/views/page_view_test.exs",             "test/views/page_view_test.exs"},
@@ -36,8 +37,10 @@ defmodule Mix.Tasks.Phoenix.New do
   ]
 
   @ecto [
-    {:eex,  "ecto/repo.ex",         "lib/application_name/repo.ex"},
-    {:keep, "priv/repo/migrations", "priv/repo/migrations"}
+    {:eex,  "ecto/repo.ex",              "lib/application_name/repo.ex"},
+    {:keep, "ecto/test/models",          "test/models"},
+    {:eex,  "ecto/model_case.ex",        "test/support/model_case.ex"},
+    {:keep, "ecto/priv/repo/migrations", "priv/repo/migrations"}
   ]
 
   @brunch [
