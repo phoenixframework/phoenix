@@ -1,5 +1,5 @@
 defmodule <%= application_module %>.Router do
-  use Phoenix.Router
+  use <%= application_module %>.Web, :router
 
   pipeline :browser do
     plug :accepts, ["html"]

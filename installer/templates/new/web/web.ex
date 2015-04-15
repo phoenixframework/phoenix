@@ -57,6 +57,12 @@ defmodule <%= application_module %>.Web do
     end
   end
 
+  def router do
+    quote do
+      use Phoenix.Router
+    end
+  end
+
   def channel do
     quote do
       use Phoenix.Channel
