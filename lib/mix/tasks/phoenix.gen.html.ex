@@ -31,7 +31,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
     binding = Mix.Phoenix.inflect(singular)
     path    = binding[:path]
     route   = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
-    binding = binding ++ [plural: plural, route: route, inputs: inputs(attrs)]
+    binding = binding ++ [plural: plural, route: route, inputs: inputs(attrs), sample_params: sample_params(attrs)]
 
     Mix.Phoenix.copy_from source_dir, "", binding, [
       {:eex, "controller.ex",  "web/controllers/#{path}_controller.ex"},
@@ -87,6 +87,29 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
         end
       {to_atom(k), v}
     end
+  end
+
+  defp sample_params(attrs) do
+    sample_params = Enum.map attrs, fn attr ->
+      {k, v} =
+        case String.split(attr, ":", parts: 3) do
+          [k, _, _]       -> {k, []}
+          [k, "integer"]  -> {k, 42}
+          [k, "float"]    -> {k, "120.5"}
+          [k, "decimal"]  -> {k, "120.5"}
+          [k, "boolean"]  -> {k, true}
+          [k, "text"]     -> {k, "a binary"}
+          [k, "date"]     -> {k, "a binary"}
+          [k, "time"]     -> {k, "a binary"}
+          [k, "datetime"]  -> {k, [year: 2014, month: 12, day: 1, hour: 12, min: 1]}
+          [k, "uuid"]     -> {k, "7488a646-e31f-11e4-aace-600308960662"}
+          [k, _]          -> {k, "a binary"}
+          [k]             -> {k, "a binary"}
+        end
+      {to_atom(k), v}
+    end
+
+    inspect(sample_params)
   end
 
   defp source_dir do
