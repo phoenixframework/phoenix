@@ -197,7 +197,7 @@ defmodule Phoenix.Controller do
     body = "<html><body>You are being <a href=\"#{html}\">redirected</a>.</body></html>"
 
     conn
-    |> put_resp_header("Location", url)
+    |> put_resp_header("location", url)
     |> send_resp(conn.status || 302, "text/html", body)
   end
 

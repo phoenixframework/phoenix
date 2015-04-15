@@ -163,7 +163,7 @@ defmodule Phoenix.Controller.ControllerTest do
     conn = redirect(conn(:get, "/"), to: "/foobar")
     assert conn.resp_body =~ "/foobar"
     assert get_resp_content_type(conn) == "text/html"
-    assert get_resp_header(conn, "Location") == ["/foobar"]
+    assert get_resp_header(conn, "location") == ["/foobar"]
     refute conn.halted
 
     conn = redirect(conn(:get, "/"), to: "/<foobar>")
@@ -177,7 +177,7 @@ defmodule Phoenix.Controller.ControllerTest do
   test "redirect/2 with :external" do
     conn = redirect(conn(:get, "/"), external: "http://example.com")
     assert conn.resp_body =~ "http://example.com"
-    assert get_resp_header(conn, "Location") == ["http://example.com"]
+    assert get_resp_header(conn, "location") == ["http://example.com"]
     refute conn.halted
   end
 
