@@ -132,12 +132,11 @@ defmodule Phoenix.View do
       quote do
         import Phoenix.View
 
-        @view_resource String.to_atom(Phoenix.Naming.resource_name(__MODULE__, "View"))
-        @view_namespace unquote(namespace)
-
         use Phoenix.Template, root:
           Path.join(unquote(root),
-                    Phoenix.Template.module_to_template_root(__MODULE__, @view_namespace, "View"))
+                    Phoenix.Template.module_to_template_root(__MODULE__, unquote(namespace), "View"))
+
+        @view_resource String.to_atom(Phoenix.Naming.resource_name(__MODULE__, "View"))
 
         @doc "The resource name, as an atom, for this view"
         def __resource__, do: @view_resource

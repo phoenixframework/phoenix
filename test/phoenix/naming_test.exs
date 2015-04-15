@@ -22,10 +22,4 @@ defmodule Phoenix.NamingTest do
     assert Naming.camelize("_foobar") == "Foobar"
     assert Naming.camelize("foobar_") == "Foobar"
   end
-
-  test "base_concat/1 returns the base namespace of a module with optional concat" do
-    assert Naming.base_concat(MyApp.MyChannel) == MyApp
-    assert Naming.base_concat(MyApp.Admin.MyChannel, PubSub) == MyApp.PubSub
-    assert Naming.base_concat(MyApp.Admin.MyChannel, "PubSub") == MyApp.PubSub
-  end
 end

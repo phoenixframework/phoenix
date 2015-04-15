@@ -12,12 +12,12 @@ defmodule Phoenix.Controller do
 
   For example, the route:
 
-      get "/users/:id", UserController, :show
+      get "/users/:id", MyApp.UserController, :show
 
-  will invoke the `show/2` action in the `UserController`:
+  will invoke the `show/2` action in the `MyApp.UserController`:
 
-      defmodule UserController do
-        use Phoenix.Controller
+      defmodule MyApp.UserController do
+        use MyApp.Web, :controller
 
         plug :action
 
@@ -60,8 +60,8 @@ defmodule Phoenix.Controller do
   As routers, controllers also have their own plug pipeline. However,
   different from routers, controllers have a single pipeline:
 
-      defmodule UserController do
-        use Phoenix.Controller
+      defmodule MyApp.UserController do
+        use MyApp.Web, :controller
 
         plug :authenticate, usernames: ["jose", "eric", "sonny"]
         plug :action
@@ -84,8 +84,16 @@ defmodule Phoenix.Controller do
 
   Check `Phoenix.Controller.Pipeline` for more information on `plug/2`
   and how to customize the plug pipeline.
+
+  ## Options
+
+  When used, the controller supports the following options:
+
+    * `:namespace` - sets the namespace to properly inflect
+      the layout view. By default it uses the base alias
+      in your controller name.
   """
-  defmacro __using__(_options) do
+  defmacro __using__(opts) do
     quote do
       import Plug.Conn
       import Phoenix.Controller
@@ -93,7 +101,7 @@ defmodule Phoenix.Controller do
       use Phoenix.Controller.Pipeline
 
       plug Phoenix.Controller.Logger
-      plug :put_new_layout, {Phoenix.Controller.__layout__(__MODULE__), :application}
+      plug :put_new_layout, {Phoenix.Controller.__layout__(__MODULE__, unquote(opts)), :application}
       plug :put_new_view, Phoenix.Controller.__view__(__MODULE__)
     end
   end
@@ -854,11 +862,22 @@ defmodule Phoenix.Controller do
     controller_module
     |> Phoenix.Naming.unsuffix("Controller")
     |> Kernel.<>("View")
-    |> Module.concat(nil)
+    |> String.to_atom()
   end
 
   @doc false
-  def __layout__(controller_module) do
-    Phoenix.Naming.base_concat(controller_module, "LayoutView")
+  def __layout__(controller_module, opts) do
+    namespace =
+      if given = Keyword.get(opts, :namespace) do
+        given
+      else
+        controller_module
+        |> Atom.to_string()
+        |> String.split(".")
+        |> Enum.drop(-1)
+        |> Enum.take(2)
+        |> Module.concat()
+      end
+    Module.concat(namespace, "LayoutView")
   end
 end
