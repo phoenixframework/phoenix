@@ -229,7 +229,7 @@ def changeset(model, params \\ nil) do
 end
 ```
 
-At this point, we only have one transformation in our pipeline. This `cast/3` function's main job is to separate required fields from optional ones. We define the fields for each category in the module attributes `@required_fields` and `@optional_fields`. By default, obviously, all of the fields are required.
+At this point, we only have one transformation in our pipeline. This `cast/4` function's main job is to separate required fields from optional ones. We define the fields for each category in the module attributes `@required_fields` and `@optional_fields`. By default, obviously, all of the fields are required.
 
 Let's take a look at two ways to validate that this is the case. The first and easiest way is to simply start our application by running the `mix phoenix.server` task at the root of our project. Then we can go to the [new users page](http://localhost:4000/users/new) and click the "submit" button without filling in any fields. We should get an error telling us that something went wrong and enumerating all the fields which can't be blank. That should be all the fields in our schema at this point.
 
