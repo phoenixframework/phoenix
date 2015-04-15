@@ -276,7 +276,7 @@ defmodule Phoenix.ConnTest do
   end
 
   def redirected_to(%Conn{status: status} = conn, status) do
-    location = Conn.get_resp_header(conn, "location") |> List.first
+    location = Conn.get_resp_header(conn, "Location") |> List.first
     location || raise "no location header was set on redirected_to"
   end
 
