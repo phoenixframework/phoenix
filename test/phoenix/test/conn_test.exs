@@ -138,6 +138,81 @@ defmodule Phoenix.Test.ConnTest do
     assert get_req_header(conn, "cookie") == []
   end
 
+  test "response/2" do
+    conn = conn(:get, "/")
+
+    assert conn |> resp(200, "ok") |> response(200) == "ok"
+    assert conn |> send_resp(200, "ok") |> response(200) == "ok"
+    assert conn |> send_resp(200, "ok") |> response(:ok) == "ok"
+
+    assert_raise RuntimeError,
+                 "expected connection to have a response but no response was set/sent", fn ->
+      conn(:get, "/") |> response(200)
+    end
+
+    assert_raise RuntimeError,
+                 "expected response with status 200, got: 404", fn ->
+      conn(:get, "/") |> resp(404, "oops") |> response(200)
+    end
+  end
+
+  test "html_response/2" do
+    assert conn(:get, "/") |> put_resp_content_type("text/html")
+                           |> resp(200, "ok") |> html_response(:ok) == "ok"
+
+    assert_raise RuntimeError,
+                 "no content-type was set, expected a html response", fn ->
+      conn(:get, "/") |> resp(200, "ok") |> html_response(200)
+    end
+  end
+
+  test "json_response/2" do
+    assert conn(:get, "/") |> put_resp_content_type("application/json")
+                           |> resp(200, "{}") |> json_response(:ok) == %{}
+
+    assert_raise RuntimeError,
+                 "no content-type was set, expected a json response", fn ->
+      conn(:get, "/") |> resp(200, "ok") |> json_response(200)
+    end
+
+    assert_raise RuntimeError,
+                 "could not decode JSON body, invalid token \"o\" in body:\n\nok", fn ->
+      conn(:get, "/") |> put_resp_content_type("application/json")
+                      |> resp(200, "ok") |> json_response(200)
+    end
+  end
+
+  test "text_response/2" do
+    assert conn(:get, "/") |> put_resp_content_type("text/plain")
+                           |> resp(200, "ok") |> text_response(:ok) == "ok"
+
+    assert_raise RuntimeError,
+                 "no content-type was set, expected a text response", fn ->
+      conn(:get, "/") |> resp(200, "ok") |> text_response(200)
+    end
+  end
+
+  test "response_content_type/2" do
+    conn = conn(:get, "/")
+
+    assert put_resp_content_type(conn, "text/html") |> response_content_type(:html) ==
+           "text/html; charset=utf-8"
+    assert put_resp_content_type(conn, "text/plain") |> response_content_type(:text) ==
+           "text/plain; charset=utf-8"
+    assert put_resp_content_type(conn, "application/json") |> response_content_type(:json) ==
+           "application/json; charset=utf-8"
+
+    assert_raise RuntimeError,
+                 "no content-type was set, expected a html response", fn ->
+      conn |> response_content_type(:html)
+    end
+
+    assert_raise RuntimeError,
+                 "expected content-type for html, got: \"text/plain; charset=utf-8\"", fn ->
+      put_resp_content_type(conn, "text/plain") |> response_content_type(:html)
+    end
+  end
+
   test "redirected_to/1" do
     conn =
       conn(:get, "/")
@@ -159,7 +234,8 @@ defmodule Phoenix.Test.ConnTest do
   end
 
   test "redirected_to/2 without header" do
-    assert_raise RuntimeError, "no location header was set on redirected_to", fn ->
+    assert_raise RuntimeError,
+                 "no location header was set on redirected_to", fn ->
       assert conn(:get, "/")
       |> send_resp(302, "ok")
       |> redirected_to()
@@ -167,7 +243,8 @@ defmodule Phoenix.Test.ConnTest do
   end
 
   test "redirected_to/2 without redirection" do
-    assert_raise RuntimeError, "expected redirection with status 302, got: 200", fn ->
+    assert_raise RuntimeError,
+                 "expected redirection with status 302, got: 200", fn ->
       conn(:get, "/")
       |> put_resp_header("location", "new location")
       |> send_resp(200, "ok")
@@ -176,7 +253,8 @@ defmodule Phoenix.Test.ConnTest do
   end
 
   test "redirected_to/2 without response" do
-    assert_raise RuntimeError, "expected connection to have redirected but no response was set/sent", fn ->
+    assert_raise RuntimeError,
+                 "expected connection to have redirected but no response was set/sent", fn ->
       conn(:get, "/")
       |> redirected_to()
     end
