@@ -3,6 +3,6 @@ defmodule <%= application_module %>.PageControllerTest do
 
   test "GET /" do
     conn = get conn(), "/"
-    assert conn.resp_body =~ "Welcome to Phoenix!"
+    assert html_response(conn, 200) =~ "Welcome to Phoenix!"
   end
 end

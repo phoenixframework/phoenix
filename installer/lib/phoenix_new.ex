@@ -17,6 +17,8 @@ defmodule Mix.Tasks.Phoenix.New do
     {:eex,  "new/lib/application_name.ex",                   "lib/application_name.ex"},
     {:eex,  "new/lib/application_name/endpoint.ex",          "lib/application_name/endpoint.ex"},
     {:eex,  "new/test/controllers/page_controller_test.exs", "test/controllers/page_controller_test.exs"},
+    {:eex,  "new/test/views/error_view_test.exs",            "test/views/error_view_test.exs"},
+    {:eex,  "new/test/views/page_view_test.exs",             "test/views/page_view_test.exs"},
     {:eex,  "new/test/support/conn_case.ex",                 "test/support/conn_case.ex"},
     {:eex,  "new/test/test_helper.exs",                      "test/test_helper.exs"},
     {:keep, "new/web/channels",                              "web/channels"},
