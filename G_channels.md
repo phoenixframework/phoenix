@@ -68,7 +68,7 @@ defmodule HelloPhoenix.Router do
 end
 ```
 
-Now any topic sent by a client that starts with `"room:"` will be routed to our RoomChannel. Next, we'll define a `RoomChannel` module to manage our chat room messages.
+Now any topic sent by a client that starts with `"rooms:"` will be routed to our RoomChannel. Next, we'll define a `RoomChannel` module to manage our chat room messages.
 
 
 ### Joining Channels
@@ -89,7 +89,7 @@ defmodule HelloPhoenix.RoomChannel do
 end
 ```
 
-For our chat app, we'll allow anyone to join the "rooms:lobby" topic, but any other room will be considered private and special authorization, say from a database, will be required. We won't worry about private chat rooms for this exercise, but feel free to explore after we finish. To authorize the socket to join a topic, we return `{:ok, socket}`. To deny access, we return `:ignore`.
+For our chat app, we'll allow anyone to join the `"rooms:lobby"` topic, but any other room will be considered private and special authorization, say from a database, will be required. We won't worry about private chat rooms for this exercise, but feel free to explore after we finish. To authorize the socket to join a topic, we return `{:ok, socket}`. To deny access, we return `:ignore`.
 
 
 With our channel in place, lets head over to `web/static/js/app.js` and get the client and server talking.
@@ -107,8 +107,8 @@ Save the file and your browser should auto refresh, thanks to the Phoenix live r
 In your `web/templates/page/index.html.eex`, add a container to hold our chat messages, and an input field to send them.
 
 ```html
-<div id="#messages"></div>
-<div id="#chat-input"></div>
+<div id="messages"></div>
+<div id="chat-input"></div>
 ```
 
 We'll also add jQuery to our application layout in `web/templates/layout/application.html.eex`:
@@ -199,7 +199,7 @@ end
 `broadcast!/3` will notify all joined clients on this `socket`'s topic and invoke their `handle_out/3` callbacks. `handle_out/3` isn't required callback, but it allows us to customize and filter broadcasts before they reach each client. By default, `handle_out/3` is implemented for us and simply pushes the message on to the client, just like our definition. We included it here because hooking into outgoing events allows for powerful messages customization and filtering. Let's see how.
 
 #### Outgoing Events
-We won't implement this for our application, but imagine our chat app allowed users to ignore messages about new users joining a room. We could implement that behavior like this. (Of course, this assumes that we have a `User` model with an `ignorning?/2` function, and that we pass a user in via the `assigns` map.)
+We won't implement this for our application, but imagine our chat app allowed users to ignore messages about new users joining a room. We could implement that behavior like this. (Of course, this assumes that we have a `User` model with an `ignoring?/2` function, and that we pass a user in via the `assigns` map.)
 
 ```elixir
 def handle_out("user_joined", msg, socket) do
@@ -211,7 +211,7 @@ def handle_out("user_joined", msg, socket) do
 end
 ```
 
-That's all there is to our basic chat app. Fire up mulitple browser tabs and you should see your messages being pushed and broadcasted to all windows!
+That's all there is to our basic chat app. Fire up multiple browser tabs and you should see your messages being pushed and broadcasted to all windows!
 
 
 #### Example Application
