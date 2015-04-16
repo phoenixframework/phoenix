@@ -6,12 +6,12 @@ defmodule <%= module %>ControllerTest do
 
   test "GET /<%= plural %>" do
     conn = get conn(), <%= singular %>_path(conn, :index)
-    assert conn.resp_body =~ "Listing <%= plural %>"
+    assert html_response(conn, 200) =~ "Listing <%= plural %>"
   end
 
   test "GET /<%= plural %>/new" do
     conn = get conn(), <%= singular %>_path(conn, :new)
-    assert conn.resp_body =~ "New <%= singular %>"
+    assert html_response(conn, 200) =~ "New <%= singular %>"
   end
 
   test "POST /<%= plural %>" do
@@ -22,7 +22,7 @@ defmodule <%= module %>ControllerTest do
   test "GET /<%= plural %>/:id" do
     <%= singular %> = Repo.insert %<%= alias %>{}
     conn = get conn(), <%= singular %>_path(conn, :show, <%= singular %>.id)
-    assert conn.resp_body =~ "Show <%= singular %>"
+    assert html_response(conn, 200) =~ "Show <%= singular %>"
   end
 
   test "PUT /<%= plural %>/:id" do

@@ -65,11 +65,11 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
 
         assert file =~ ~S|test "GET /users"|
         assert file =~ ~S|conn = get conn(), user_path(conn, :index)|
-        assert file =~ ~S|assert conn.resp_body =~ "Listing users"|
+        assert file =~ ~S|assert html_response(conn, 200) =~ "Listing users"|
 
         assert file =~ ~S|test "GET /users/new"|
         assert file =~ ~S|conn = get conn(), user_path(conn, :new)|
-        assert file =~ ~S|assert conn.resp_body =~ "New user"|
+        assert file =~ ~S|assert html_response(conn, 200) =~ "New user"|
 
         assert file =~ ~S|test "POST /users"|
         assert file =~ ~S|conn = post conn(), user_path(conn, :create), @valid_params|
@@ -77,7 +77,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
 
         assert file =~ ~S|test "GET /users/:id"|
         assert file =~ ~S|user = Repo.insert %User{}|
-        assert file =~ ~S|assert conn.resp_body =~ "Show user"|
+        assert file =~ ~S|assert html_response(conn, 200) =~ "Show user"|
 
         assert file =~ ~S|test "PUT /users/:id"|
         assert file =~ ~S|conn = put conn(), user_path(conn, :update, user.id), @valid_params|
