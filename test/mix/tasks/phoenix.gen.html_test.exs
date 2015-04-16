@@ -32,7 +32,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
         assert file =~ "defmodule Phoenix.UserControllerTest"
         assert file =~ "use Phoenix.ConnCase"
 
-        assert file =~ ~S|@valid_params [user: [name: "a binary", age: 42, height: "120.5", nicks: [], famous: true, born_at: [year: 2014, month: 12, day: 1, hour: 12, min: 1], secret: "7488a646-e31f-11e4-aace-600308960662"]]|
+        assert file =~ ~S|@valid_params [user: [name: "some content", age: 42, height: "120.5", nicks: [], famous: true, born_at: "2010-04-17 14:00:00", secret: "7488a646-e31f-11e4-aace-600308960662"]]|
 
         assert file =~ ~S|test "GET /users"|
         assert file =~ ~S|conn = get conn(), user_path(conn, :index)|

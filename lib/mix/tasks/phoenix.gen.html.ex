@@ -98,13 +98,13 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
           [k, "float"]    -> {k, "120.5"}
           [k, "decimal"]  -> {k, "120.5"}
           [k, "boolean"]  -> {k, true}
-          [k, "text"]     -> {k, "a binary"}
-          [k, "date"]     -> {k, "a binary"}
-          [k, "time"]     -> {k, "a binary"}
-          [k, "datetime"]  -> {k, [year: 2014, month: 12, day: 1, hour: 12, min: 1]}
+          [k, "text"]     -> {k, "some content"}
+          [k, "date"]     -> {k, "2010-04-17"}
+          [k, "time"]     -> {k, "14:00:00"}
+          [k, "datetime"]  -> {k, "2010-04-17 14:00:00"}
           [k, "uuid"]     -> {k, "7488a646-e31f-11e4-aace-600308960662"}
-          [k, _]          -> {k, "a binary"}
-          [k]             -> {k, "a binary"}
+          [k, _]          -> {k, "some content"}
+          [k]             -> {k, "some content"}
         end
       {to_atom(k), v}
     end
