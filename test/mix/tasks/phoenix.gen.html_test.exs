@@ -62,25 +62,35 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
         assert file =~ "use Phoenix.ConnCase"
 
         assert file =~ ~S|@valid_params user: %{age: 42|
+        assert file =~ ~S|@invalid_params user: %{}|
 
         assert file =~ ~S|test "GET /users"|
         assert file =~ ~S|conn = get conn(), user_path(conn, :index)|
-        assert file =~ ~S|assert conn.resp_body =~ "Listing users"|
+        assert file =~ ~S|assert html_response(conn, 200) =~ "Listing users"|
 
         assert file =~ ~S|test "GET /users/new"|
         assert file =~ ~S|conn = get conn(), user_path(conn, :new)|
-        assert file =~ ~S|assert conn.resp_body =~ "New user"|
+        assert file =~ ~S|assert html_response(conn, 200) =~ "New user"|
 
         assert file =~ ~S|test "POST /users"|
         assert file =~ ~S|conn = post conn(), user_path(conn, :create), @valid_params|
         assert file =~ ~S|assert redirected_to(conn) == user_path(conn, :index)|
 
+        assert file =~ ~S|test "POST /users failure returns to the New page"|
+        assert file =~ ~S|conn = post conn(), user_path(conn, :create), @invalid_params|
+
         assert file =~ ~S|test "GET /users/:id"|
         assert file =~ ~S|user = Repo.insert %User{}|
-        assert file =~ ~S|assert conn.resp_body =~ "Show user"|
+        assert file =~ ~S|assert html_response(conn, 200) =~ "Show user"|
+
+        assert file =~ ~S|test "GET /users/:id/edit"|
+        assert file =~ ~S|assert html_response(conn, 200) =~ "Edit user"|
 
         assert file =~ ~S|test "PUT /users/:id"|
         assert file =~ ~S|conn = put conn(), user_path(conn, :update, user.id), @valid_params|
+
+        assert file =~ ~S|test "PUT /users/:id failure returns to the Edit page"|
+        assert file =~ ~S|conn = put conn(), user_path(conn, :update, user.id), @invalid_params|
 
         assert file =~ ~S|test "DELETE /users/:id"|
         assert file =~ ~S|conn = delete conn(), user_path(conn, :delete, user.id)|
