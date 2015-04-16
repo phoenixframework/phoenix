@@ -32,7 +32,10 @@ defmodule Phoenix.Transports.LongPoller do
   plug :check_origin
   plug :allow_origin
   plug :default_content_type
-  plug Plug.Parsers, parsers: [:json], json_decoder: Poison
+
+  # We need to uncomment this when we remove channels from endpoints
+  # plug Plug.Parsers, parsers: [:json], json_decoder: Poison
+
   plug :action
 
   @doc """
