@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
     in_tmp "generates resource", fn ->
       Mix.Tasks.Phoenix.Gen.Html.run ["user", "users", "name", "age:integer", "height:decimal",
                                       "nicks:array:text", "famous:boolean", "born_at:datetime",
-                                      "secret:uuid"]
+                                      "secret:uuid", "first_login:date", "alarm:time"]
 
       assert_file "web/models/user.ex"
       assert [_] = Path.wildcard("priv/repo/migrations/*_create_user.exs")
@@ -32,7 +32,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
         assert file =~ "defmodule Phoenix.UserControllerTest"
         assert file =~ "use Phoenix.ConnCase"
 
-        assert file =~ ~S|@valid_params [user: [name: "some content", age: 42, height: "120.5", nicks: [], famous: true, born_at: "2010-04-17 14:00:00", secret: "7488a646-e31f-11e4-aace-600308960662"]]|
+        assert file =~ ~S|@valid_params [user: [name: "some content", age: 42, height: "120.5", nicks: [], famous: true, born_at: "2010-04-17 14:00:00", secret: "7488a646-e31f-11e4-aace-600308960662", first_login: "2010-04-17", alarm: "14:00:00"]]|
 
         assert file =~ ~S|test "GET /users"|
         assert file =~ ~S|conn = get conn(), user_path(conn, :index)|
