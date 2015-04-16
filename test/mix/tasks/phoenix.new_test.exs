@@ -71,7 +71,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
         capture_log(fn ->
           Mix.Task.run("test", ["--no-start", "--no-compile"])
         end)
-      end) =~ ~r"1 tests?, 0 failures"
+      end) =~ ~r"4 tests, 0 failures"
     end
   end
 
