@@ -31,10 +31,11 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
     binding = Mix.Phoenix.inflect(singular)
     path    = binding[:path]
     route   = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
-    binding = binding ++ [plural: plural, route: route, inputs: inputs(attrs)]
+    binding = binding ++ [plural: plural, route: route, inputs: inputs(attrs), sample_params: sample_params(attrs)]
 
     Mix.Phoenix.copy_from source_dir, "", binding, [
       {:eex, "controller.ex",  "web/controllers/#{path}_controller.ex"},
+      {:eex, "controller_test.exs",  "test/controllers/#{path}_controller_test.exs"},
       {:eex, "edit.html.eex",  "web/templates/#{path}/edit.html.eex"},
       {:eex, "form.html.eex",  "web/templates/#{path}/form.html.eex"},
       {:eex, "index.html.eex", "web/templates/#{path}/index.html.eex"},
@@ -86,6 +87,29 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
         end
       {to_atom(k), v}
     end
+  end
+
+  defp sample_params(attrs) do
+    sample_params = Enum.map attrs, fn attr ->
+      {k, v} =
+        case String.split(attr, ":", parts: 3) do
+          [k, _, _]       -> {k, []}
+          [k, "integer"]  -> {k, 42}
+          [k, "float"]    -> {k, "120.5"}
+          [k, "decimal"]  -> {k, "120.5"}
+          [k, "boolean"]  -> {k, true}
+          [k, "text"]     -> {k, "some content"}
+          [k, "date"]     -> {k, "2010-04-17"}
+          [k, "time"]     -> {k, "14:00:00"}
+          [k, "datetime"]  -> {k, "2010-04-17 14:00:00"}
+          [k, "uuid"]     -> {k, "7488a646-e31f-11e4-aace-600308960662"}
+          [k, _]          -> {k, "some content"}
+          [k]             -> {k, "some content"}
+        end
+      {to_atom(k), v}
+    end
+
+    inspect(sample_params)
   end
 
   defp source_dir do
