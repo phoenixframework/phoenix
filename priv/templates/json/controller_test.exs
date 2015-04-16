@@ -2,7 +2,6 @@ defmodule <%= module %>ControllerTest do
   use <%= base %>.ConnCase
 
   alias <%= module %>
-
   @valid_params <%= singular %>: <%= inspect params %>
 
   setup do
@@ -38,5 +37,6 @@ defmodule <%= module %>ControllerTest do
     <%= singular %> = Repo.insert %<%= alias %>{}
     conn = delete conn, <%= singular %>_path(conn, :delete, <%= singular %>)
     assert json_response(conn, 200)["data"]["id"]
+    refute Repo.get(<%= alias %>, <%= singular %>.id)
   end
 end
