@@ -1,5 +1,6 @@
 defmodule <%= module %>ControllerTest do
   use <%= base %>.ConnCase
+
   alias <%= module %>
 
   @valid_params <%= singular %>: <%= inspect params %>

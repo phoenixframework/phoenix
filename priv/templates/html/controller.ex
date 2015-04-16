@@ -8,12 +8,12 @@ defmodule <%= module %>Controller do
 
   def index(conn, _params) do
     <%= plural %> = Repo.all(<%= alias %>)
-    render conn, "index.html", <%= plural %>: <%= plural %>
+    render(conn, "index.html", <%= plural %>: <%= plural %>)
   end
 
   def new(conn, _params) do
     changeset = <%= alias %>.changeset(%<%= alias %>{})
-    render conn, "new.html", changeset: changeset
+    render(conn, "new.html", changeset: changeset)
   end
 
   def create(conn, %{<%= inspect singular %> => <%= singular %>_params}) do
@@ -26,19 +26,19 @@ defmodule <%= module %>Controller do
       |> put_flash(:info, "<%= alias %> created successfully.")
       |> redirect(to: <%= singular %>_path(conn, :index))
     else
-      render conn, "new.html", changeset: changeset
+      render(conn, "new.html", changeset: changeset)
     end
   end
 
   def show(conn, %{"id" => id}) do
     <%= singular %> = Repo.get(<%= alias %>, id)
-    render conn, "show.html", <%= singular %>: <%= singular %>
+    render(conn, "show.html", <%= singular %>: <%= singular %>)
   end
 
   def edit(conn, %{"id" => id}) do
     <%= singular %> = Repo.get(<%= alias %>, id)
     changeset = <%= alias %>.changeset(<%= singular %>)
-    render conn, "edit.html", <%= singular %>: <%= singular %>, changeset: changeset
+    render(conn, "edit.html", <%= singular %>: <%= singular %>, changeset: changeset)
   end
 
   def update(conn, %{"id" => id, <%= inspect singular %> => <%= singular %>_params}) do
@@ -52,7 +52,7 @@ defmodule <%= module %>Controller do
       |> put_flash(:info, "<%= alias %> updated successfully.")
       |> redirect(to: <%= singular %>_path(conn, :index))
     else
-      render conn, "edit.html", <%= singular %>: <%= singular %>, changeset: changeset
+      render(conn, "edit.html", <%= singular %>: <%= singular %>, changeset: changeset)
     end
   end
 
