@@ -20,6 +20,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
     * a controller in web/controllers
     * a migration file for the repository
     * default CRUD templates in web/templates
+    * test files for generated model and controller
 
   Read the documentation for `phoenix.gen.model` for more
   information on attributes and namespaced resources.
@@ -34,14 +35,14 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
     binding = binding ++ [plural: plural, route: route, inputs: inputs(attrs), sample_params: sample_params(attrs)]
 
     Mix.Phoenix.copy_from source_dir, "", binding, [
-      {:eex, "controller.ex",  "web/controllers/#{path}_controller.ex"},
-      {:eex, "controller_test.exs",  "test/controllers/#{path}_controller_test.exs"},
-      {:eex, "edit.html.eex",  "web/templates/#{path}/edit.html.eex"},
-      {:eex, "form.html.eex",  "web/templates/#{path}/form.html.eex"},
-      {:eex, "index.html.eex", "web/templates/#{path}/index.html.eex"},
-      {:eex, "new.html.eex",   "web/templates/#{path}/new.html.eex"},
-      {:eex, "show.html.eex",  "web/templates/#{path}/show.html.eex"},
-      {:eex, "view.ex",        "web/views/#{path}_view.ex"},
+      {:eex, "controller.ex",       "web/controllers/#{path}_controller.ex"},
+      {:eex, "edit.html.eex",       "web/templates/#{path}/edit.html.eex"},
+      {:eex, "form.html.eex",       "web/templates/#{path}/form.html.eex"},
+      {:eex, "index.html.eex",      "web/templates/#{path}/index.html.eex"},
+      {:eex, "new.html.eex",        "web/templates/#{path}/new.html.eex"},
+      {:eex, "show.html.eex",       "web/templates/#{path}/show.html.eex"},
+      {:eex, "view.ex",             "web/views/#{path}_view.ex"},
+      {:eex, "controller_test.exs", "test/controllers/#{path}_controller_test.exs"},
     ]
 
     Mix.shell.info """
@@ -101,7 +102,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
           [k, "text"]     -> {k, "some content"}
           [k, "date"]     -> {k, "2010-04-17"}
           [k, "time"]     -> {k, "14:00:00"}
-          [k, "datetime"]  -> {k, "2010-04-17 14:00:00"}
+          [k, "datetime"] -> {k, "2010-04-17 14:00:00"}
           [k, "uuid"]     -> {k, "7488a646-e31f-11e4-aace-600308960662"}
           [k, _]          -> {k, "some content"}
           [k]             -> {k, "some content"}
@@ -113,6 +114,6 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
   end
 
   defp source_dir do
-    Application.app_dir(:phoenix, "priv/templates/resource")
+    Application.app_dir(:phoenix, "priv/templates/html")
   end
 end
