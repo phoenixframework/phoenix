@@ -60,6 +60,38 @@ defmodule Mix.Phoenix do
   end
 
   @doc """
+  Parses the attrs as received by generators.
+  """
+  def attrs(attrs) do
+    Enum.map attrs, fn attr ->
+      case String.split(attr, ":", parts: 3) do
+        [key, comp, value] -> {String.to_atom(key), {String.to_atom(comp), String.to_atom(value)}}
+        [key, value]       -> {String.to_atom(key), String.to_atom(value)}
+        [key]              -> {String.to_atom(key), :string}
+      end
+    end
+  end
+
+  @doc """
+  Generates some sample params based on the parsed attributes.
+  """
+  def params(attrs) do
+    Enum.into attrs, %{}, fn
+      {k, {:array, _}} -> {k, []}
+      {k, :integer}    -> {k, 42}
+      {k, :float}      -> {k, "120.5"}
+      {k, :decimal}    -> {k, "120.5"}
+      {k, :boolean}    -> {k, true}
+      {k, :text}       -> {k, "some content"}
+      {k, :date}       -> {k, "2010-04-17"}
+      {k, :time}       -> {k, "14:00:00"}
+      {k, :datetime}   -> {k, "2010-04-17 14:00:00"}
+      {k, :uuid}       -> {k, "7488a646-e31f-11e4-aace-600308960662"}
+      {k, _}           -> {k, "some content"}
+    end
+  end
+
+  @doc """
   Returns the module base name based on the configuration value.
 
       config :my_app

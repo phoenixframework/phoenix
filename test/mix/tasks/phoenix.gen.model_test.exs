@@ -10,7 +10,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
   end
 
   test "generates model" do
-    in_tmp "generates resource", fn ->
+    in_tmp "generates model", fn ->
       Mix.Tasks.Phoenix.Gen.Model.run ["user", "users", "name", "age:integer", "nicks:array:text",
                                        "famous:boolean", "born_at:datetime", "secret:uuid"]
 
@@ -41,6 +41,19 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
         assert file =~ "timestamps"
         assert file =~ "def changeset"
         assert file =~ "~w(name age nicks famous born_at secret)"
+      end
+
+      assert_file "test/models/user_test.exs", fn file ->
+        assert file =~ "defmodule Phoenix.UserTest"
+        assert file =~ "use Phoenix.ModelCase"
+
+        assert file =~ ~S|@valid_attrs %{age: 42|
+        assert file =~ ~S|changeset(%User{}, @valid_attrs)|
+        assert file =~ ~S|assert changeset.valid?|
+
+        assert file =~ ~S|@invalid_attrs %{}|
+        assert file =~ ~S|changeset(%User{}, @invalid_attrs)|
+        assert file =~ ~S|refute changeset.valid?|
       end
     end
   end

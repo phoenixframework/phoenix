@@ -9,13 +9,14 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
     :ok
   end
 
-  test "generates resource" do
-    in_tmp "generates resource", fn ->
+  test "generates html resource" do
+    in_tmp "generates html resource", fn ->
       Mix.Tasks.Phoenix.Gen.Html.run ["user", "users", "name", "age:integer", "height:decimal",
                                       "nicks:array:text", "famous:boolean", "born_at:datetime",
                                       "secret:uuid", "first_login:date", "alarm:time"]
 
       assert_file "web/models/user.ex"
+      assert_file "test/models/user_test.exs"
       assert [_] = Path.wildcard("priv/repo/migrations/*_create_user.exs")
 
       assert_file "web/controllers/user_controller.ex", fn file ->
@@ -26,35 +27,6 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
       assert_file "web/views/user_view.ex", fn file ->
         assert file =~ "defmodule Phoenix.UserView do"
         assert file =~ "use Phoenix.Web, :view"
-      end
-
-      assert_file "test/controllers/user_controller_test.exs", fn file ->
-        assert file =~ "defmodule Phoenix.UserControllerTest"
-        assert file =~ "use Phoenix.ConnCase"
-
-        assert file =~ ~S|@valid_params [user: [name: "some content", age: 42, height: "120.5", nicks: [], famous: true, born_at: "2010-04-17 14:00:00", secret: "7488a646-e31f-11e4-aace-600308960662", first_login: "2010-04-17", alarm: "14:00:00"]]|
-
-        assert file =~ ~S|test "GET /users"|
-        assert file =~ ~S|conn = get conn(), user_path(conn, :index)|
-        assert file =~ ~S|assert conn.resp_body =~ "Listing users"|
-
-        assert file =~ ~S|test "GET /users/new"|
-        assert file =~ ~S|conn = get conn(), user_path(conn, :new)|
-        assert file =~ ~S|assert conn.resp_body =~ "New user"|
-
-        assert file =~ ~S|test "POST /users"|
-        assert file =~ ~S|conn = post conn(), user_path(conn, :create), @valid_params|
-        assert file =~ ~S|assert redirected_to(conn) == user_path(conn, :index)|
-
-        assert file =~ ~S|test "GET /users/:id"|
-        assert file =~ ~S|user = Repo.insert %Phoenix.User{}|
-        assert file =~ ~S|assert conn.resp_body =~ "Show user"|
-
-        assert file =~ ~S|test "PUT /users/:id"|
-        assert file =~ ~S|conn = put conn(), user_path(conn, :update, user.id), @valid_params|
-
-        assert file =~ ~S|test "DELETE /users/:id"|
-        assert file =~ ~S|conn = delete conn(), user_path(conn, :delete, user.id)|
       end
 
       assert_file "web/templates/user/edit.html.eex", fn file ->
@@ -83,6 +55,35 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
       assert_file "web/templates/user/show.html.eex", fn file ->
         assert file =~ "<strong>Name:</strong>"
         assert file =~ "<%= @user.name %>"
+      end
+
+      assert_file "test/controllers/user_controller_test.exs", fn file ->
+        assert file =~ "defmodule Phoenix.UserControllerTest"
+        assert file =~ "use Phoenix.ConnCase"
+
+        assert file =~ ~S|@valid_params user: %{age: 42|
+
+        assert file =~ ~S|test "GET /users"|
+        assert file =~ ~S|conn = get conn(), user_path(conn, :index)|
+        assert file =~ ~S|assert conn.resp_body =~ "Listing users"|
+
+        assert file =~ ~S|test "GET /users/new"|
+        assert file =~ ~S|conn = get conn(), user_path(conn, :new)|
+        assert file =~ ~S|assert conn.resp_body =~ "New user"|
+
+        assert file =~ ~S|test "POST /users"|
+        assert file =~ ~S|conn = post conn(), user_path(conn, :create), @valid_params|
+        assert file =~ ~S|assert redirected_to(conn) == user_path(conn, :index)|
+
+        assert file =~ ~S|test "GET /users/:id"|
+        assert file =~ ~S|user = Repo.insert %User{}|
+        assert file =~ ~S|assert conn.resp_body =~ "Show user"|
+
+        assert file =~ ~S|test "PUT /users/:id"|
+        assert file =~ ~S|conn = put conn(), user_path(conn, :update, user.id), @valid_params|
+
+        assert file =~ ~S|test "DELETE /users/:id"|
+        assert file =~ ~S|conn = delete conn(), user_path(conn, :delete, user.id)|
       end
 
       assert_received {:mix_shell, :info, ["\nAdd the resource" <> _ = message]}

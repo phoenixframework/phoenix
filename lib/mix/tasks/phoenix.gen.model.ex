@@ -41,17 +41,19 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
   def run([singular, plural|attrs]) do
     if String.contains?(plural, ":"), do: raise_with_help
 
+    attrs     = Mix.Phoenix.attrs(attrs)
     binding   = Mix.Phoenix.inflect(singular)
     path      = binding[:path]
-    attrs     = split_attrs(attrs)
     migration = String.replace(path, "/", "_")
 
     binding = binding ++
-              [attrs: attrs, plural: plural, types: types(attrs), defaults: defaults(attrs)]
+              [attrs: attrs, plural: plural, types: types(attrs),
+               defaults: defaults(attrs), params: Mix.Phoenix.params(attrs)]
 
     Mix.Phoenix.copy_from source_dir, "", binding, [
-      {:eex, "migration.exs", "priv/repo/migrations/#{timestamp()}_create_#{migration}.exs"},
-      {:eex, "model.ex",      "web/models/#{path}.ex"},
+      {:eex, "migration.exs",  "priv/repo/migrations/#{timestamp()}_create_#{migration}.exs"},
+      {:eex, "model.ex",       "web/models/#{path}.ex"},
+      {:eex, "model_test.exs", "test/models/#{path}_test.exs"},
     ]
   end
 
@@ -75,16 +77,6 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
   defp pad(i) when i < 10, do: << ?0, ?0 + i >>
   defp pad(i), do: to_string(i)
-
-  defp split_attrs(attrs) do
-    Enum.map attrs, fn attr ->
-      case String.split(attr, ":", parts: 3) do
-        [key, comp, value] -> {String.to_atom(key), {String.to_atom(comp), String.to_atom(value)}}
-        [key, value]       -> {String.to_atom(key), String.to_atom(value)}
-        [key]              -> {String.to_atom(key), :string}
-      end
-    end
-  end
 
   defp types(attrs) do
     Enum.into attrs, %{}, fn

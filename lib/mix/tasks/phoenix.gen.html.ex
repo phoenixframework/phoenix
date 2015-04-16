@@ -1,8 +1,6 @@
 defmodule Mix.Tasks.Phoenix.Gen.Html do
   use Mix.Task
 
-  import String, only: [to_atom: 1]
-
   @shortdoc "Generates HTML files for a resource"
 
   @moduledoc """
@@ -29,10 +27,12 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
     if String.contains?(plural, ":"), do: raise_with_help
     Mix.Task.run "phoenix.gen.model", args
 
+    attrs   = Mix.Phoenix.attrs(attrs)
     binding = Mix.Phoenix.inflect(singular)
     path    = binding[:path]
     route   = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
-    binding = binding ++ [plural: plural, route: route, inputs: inputs(attrs), sample_params: sample_params(attrs)]
+    binding = binding ++ [plural: plural, route: route,
+                          inputs: inputs(attrs), params: Mix.Phoenix.params(attrs)]
 
     Mix.Phoenix.copy_from source_dir, "", binding, [
       {:eex, "controller.ex",       "web/controllers/#{path}_controller.ex"},
@@ -71,46 +71,18 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
   end
 
   defp inputs(attrs) do
-    Enum.map attrs, fn attr ->
-      {k, v} =
-        case String.split(attr, ":", parts: 3) do
-          [k, _, _]       -> {k, nil}
-          [k, "integer"]  -> {k, "number_input f, #{to_atom(k) |> inspect}"}
-          [k, "float"]    -> {k, "number_input f, #{to_atom(k) |> inspect}, step: \"any\""}
-          [k, "decimal"]  -> {k, "number_input f, #{to_atom(k) |> inspect}, step: \"any\""}
-          [k, "boolean"]  -> {k, "checkbox f, #{to_atom(k) |> inspect}"}
-          [k, "text"]     -> {k, "textarea f, #{to_atom(k) |> inspect}"}
-          [k, "date"]     -> {k, "date_select f, #{to_atom(k) |> inspect}"}
-          [k, "time"]     -> {k, "time_select f, #{to_atom(k) |> inspect}"}
-          [k, "datetime"] -> {k, "datetime_select f, #{to_atom(k) |> inspect}"}
-          [k, _]          -> {k, "text_input f, #{to_atom(k) |> inspect}"}
-          [k]             -> {k, "text_input f, #{to_atom(k) |> inspect}"}
-        end
-      {to_atom(k), v}
+    Enum.map attrs, fn
+      {k, {:array, _}} -> {k, nil}
+      {k, :integer}    -> {k, "number_input f, #{inspect(k)}"}
+      {k, :float}      -> {k, "number_input f, #{inspect(k)}, step: \"any\""}
+      {k, :decimal}    -> {k, "number_input f, #{inspect(k)}, step: \"any\""}
+      {k, :boolean}    -> {k, "checkbox f, #{inspect(k)}"}
+      {k, :text}       -> {k, "textarea f, #{inspect(k)}"}
+      {k, :date}       -> {k, "date_select f, #{inspect(k)}"}
+      {k, :time}       -> {k, "time_select f, #{inspect(k)}"}
+      {k, :datetime}   -> {k, "datetime_select f, #{inspect(k)}"}
+      {k, _}           -> {k, "text_input f, #{inspect(k)}"}
     end
-  end
-
-  defp sample_params(attrs) do
-    sample_params = Enum.map attrs, fn attr ->
-      {k, v} =
-        case String.split(attr, ":", parts: 3) do
-          [k, _, _]       -> {k, []}
-          [k, "integer"]  -> {k, 42}
-          [k, "float"]    -> {k, "120.5"}
-          [k, "decimal"]  -> {k, "120.5"}
-          [k, "boolean"]  -> {k, true}
-          [k, "text"]     -> {k, "some content"}
-          [k, "date"]     -> {k, "2010-04-17"}
-          [k, "time"]     -> {k, "14:00:00"}
-          [k, "datetime"] -> {k, "2010-04-17 14:00:00"}
-          [k, "uuid"]     -> {k, "7488a646-e31f-11e4-aace-600308960662"}
-          [k, _]          -> {k, "some content"}
-          [k]             -> {k, "some content"}
-        end
-      {to_atom(k), v}
-    end
-
-    inspect(sample_params)
   end
 
   defp source_dir do
