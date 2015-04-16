@@ -32,11 +32,17 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
     route   = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
     binding = binding ++ [plural: plural, route: route, params: Mix.Phoenix.params(attrs)]
 
-    Mix.Phoenix.copy_from source_dir, "", binding, [
+    files = [
       {:eex, "controller.ex",       "web/controllers/#{path}_controller.ex"},
       {:eex, "view.ex",             "web/views/#{path}_view.ex"},
       {:eex, "controller_test.exs", "test/controllers/#{path}_controller_test.exs"},
     ]
+
+    unless File.exists?("web/views/changeset_view.ex") do
+      files = files ++ [{:eex, "changeset_view.ex", "web/views/changeset_view.ex"}]
+    end
+
+    Mix.Phoenix.copy_from source_dir, "", binding, files
 
     Mix.shell.info """
 

@@ -3,6 +3,7 @@ defmodule <%= module %>ControllerTest do
 
   alias <%= module %>
   @valid_params <%= singular %>: <%= inspect params %>
+  @invalid_params <%= singular %>: %{}
 
   setup do
     conn = conn() |> put_req_header("accept", "application/json")
@@ -22,15 +23,26 @@ defmodule <%= module %>ControllerTest do
     }
   end
 
-  test "POST /<%= plural %>", %{conn: conn} do
+  test "POST /<%= plural %> with valid data", %{conn: conn} do
     conn = post conn, <%= singular %>_path(conn, :create), @valid_params
     assert json_response(conn, 200)["data"]["id"]
   end
 
-  test "PUT /<%= plural %>/:id", %{conn: conn} do
+  test "POST /<%= plural %> with invalid data", %{conn: conn} do
+    conn = post conn, <%= singular %>_path(conn, :create), @invalid_params
+    assert json_response(conn, 422)["errors"] != %{}
+  end
+
+  test "PUT /<%= plural %>/:id with valid data", %{conn: conn} do
     <%= singular %> = Repo.insert %<%= alias %>{}
     conn = put conn, <%= singular %>_path(conn, :update, <%= singular %>), @valid_params
     assert json_response(conn, 200)["data"]["id"]
+  end
+
+  test "PUT /<%= plural %>/:id with invalid data", %{conn: conn} do
+    <%= singular %> = Repo.insert %<%= alias %>{}
+    conn = put conn, <%= singular %>_path(conn, :update, <%= singular %>), @invalid_params
+    assert json_response(conn, 422)["errors"] != %{}
   end
 
   test "DELETE /<%= plural %>/:id", %{conn: conn} do

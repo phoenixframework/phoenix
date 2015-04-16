@@ -37,14 +37,20 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
         assert file =~ ~S|test "GET /users"|
         assert file =~ ~S|conn = get conn, user_path(conn, :index)|
 
-        assert file =~ ~S|test "POST /users"|
+        assert file =~ ~S|test "POST /users with valid data"|
         assert file =~ ~S|conn = post conn, user_path(conn, :create), @valid_params|
+
+        assert file =~ ~S|test "POST /users with invalid data"|
+        assert file =~ ~S|conn = post conn, user_path(conn, :create), @invalid_params|
 
         assert file =~ ~S|test "GET /users/:id"|
         assert file =~ ~S|user = Repo.insert %User{}|
 
-        assert file =~ ~S|test "PUT /users/:id"|
+        assert file =~ ~S|test "PUT /users/:id with valid data"|
         assert file =~ ~S|conn = put conn, user_path(conn, :update, user), @valid_params|
+
+        assert file =~ ~S|test "PUT /users/:id with invalid data"|
+        assert file =~ ~S|conn = put conn, user_path(conn, :update, user), @invalid_params|
 
         assert file =~ ~S|test "DELETE /users/:id"|
         assert file =~ ~S|conn = delete conn, user_path(conn, :delete, user)|
