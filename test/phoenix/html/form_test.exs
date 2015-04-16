@@ -188,6 +188,24 @@ defmodule Phoenix.HTML.FormTest do
            {:safe, ~s(<input id="search_key" name="search[key]" type="file">)}
   end
 
+  ## url_input/3
+
+  test "url_input/3" do
+    assert url_input(:search, :key) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="url">)}
+
+    assert url_input(:search, :key, value: "foo", id: "key", name: "search[key][]") ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="url" value="foo">)}
+  end
+
+  test "url_input/3 with form" do
+    assert with_form(&url_input(&1, :key)) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="url" value="value">)}
+
+    assert with_form(&url_input(&1, :key, value: "foo", id: "key", name: "search[key][]")) ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="url" value="foo">)}
+  end
+
   ## submit/2
 
   test "submit/2" do

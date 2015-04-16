@@ -233,6 +233,15 @@ defmodule Phoenix.HTML.Form do
     generic_input(:password, form, field, opts)
   end
 
+  @doc """
+  Generates an url input.
+
+  See `text_input/3` for example and docs.
+  """
+  def url_input(form, field, opts \\ []) do
+    generic_input(:url, form, field, opts)
+  end
+
   defp generic_input(type, form, field, opts) when is_atom(field) and is_list(opts) do
     opts =
       opts
