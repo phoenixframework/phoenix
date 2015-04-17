@@ -242,7 +242,6 @@ defmodule Phoenix.HTML.FormTest do
            {:safe, ~s(<input id="key" name="search[key][]" type="tel" value="foo">)}
   end
 
-
   ## submit/2
 
   test "submit/2" do
