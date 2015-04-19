@@ -154,16 +154,16 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       Mix.Tasks.Phoenix.New.run ["valid", "--module", "not.valid"]
     end
 
-    assert_raise Mix.Error, ~r"Module name \w+ already taken", fn ->
-      Mix.Tasks.Phoenix.New.run ["phoenix"]
+    assert_raise Mix.Error, ~r"Module name \w+ is already taken", fn ->
+      Mix.Tasks.Phoenix.New.run ["string"]
     end
 
-    assert_raise Mix.Error, ~r"Module name \w+ already taken", fn ->
+    assert_raise Mix.Error, ~r"Module name \w+ is already taken", fn ->
       Mix.Tasks.Phoenix.New.run ["valid", "--app", "mix"]
     end
 
-    assert_raise Mix.Error, ~r"Module name \w+ already taken", fn ->
-      Mix.Tasks.Phoenix.New.run ["valid", "--module", "string"]
+    assert_raise Mix.Error, ~r"Module name \w+ is already taken", fn ->
+      Mix.Tasks.Phoenix.New.run ["valid", "--module", "String"]
     end
 
     assert_raise Mix.Error, "Expected PATH to be given, please use `mix phoenix.new PATH`", fn ->
