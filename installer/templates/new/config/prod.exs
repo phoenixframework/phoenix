@@ -21,7 +21,7 @@ config :<%= application_name %>, <%= application_module %>.Endpoint,
 # To get SSL working, you will need to add the `https` key
 # to the previous section:
 #
-#  config:<%= application_name %>, <%= application_module %>.Endpoint,
+#  config :<%= application_name %>, <%= application_module %>.Endpoint,
 #    ...
 #    https: [port: 443,
 #            keyfile: System.get_env("SOME_APP_SSL_KEY_PATH"),
