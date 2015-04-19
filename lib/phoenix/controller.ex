@@ -57,8 +57,8 @@ defmodule Phoenix.Controller do
 
   ## Plug pipeline
 
-  As routers, controllers also have their own plug pipeline. However,
-  different from routers, controllers have a single pipeline:
+  As with routers, controllers also have their own plug pipeline.
+  However, different from routers, controllers have a single pipeline:
 
       defmodule MyApp.UserController do
         use MyApp.Web, :controller
