@@ -189,15 +189,15 @@ defmodule HelloPhoenix.User do
   use HelloPhoenix.Web, :model
 
   schema "users" do
-    field :first_name, :string
-    field :last_name, :string
+    field :name, :string
     field :email, :string
+    field :bio, :string
     field :number_of_pets, :integer
 
     timestamps
   end
 
-  @required_fields ~w(first_name last_name email number_of_pets)
+  @required_fields ~w(name email bio number_of_pets)
   @optional_fields ~w()
 
   @doc """
@@ -245,13 +245,13 @@ Then let's create a changeset from our model with an empty `User` struct, and an
 ```console
 iex(2)> changeset = User.changeset(%User{}, %{})
   %Ecto.Changeset{changes: %{},
-    errors: [first_name: "can't be blank", last_name: "can't be blank",
-    email: "can't be blank", number_of_pets: "can't be blank"], filters: %{},
+    errors: [name: "can't be blank", email: "can't be blank",
+    bio: "can't be blank", number_of_pets: "can't be blank"], filters: %{},
       model: %HelloPhoenix.User{__meta__: %Ecto.Schema.Metadata{source: "users",
-      state: :built}, email: nil, first_name: nil, id: nil, inserted_at: nil,
-      last_name: nil, number_of_pets: nil, updated_at: nil}, optional: [],
+      state: :built}, bio: nil, email: nil, id: nil, inserted_at: nil,
+      name: nil, number_of_pets: nil, updated_at: nil}, optional: [],
       params: %{}, repo: nil,
-        required: [:first_name, :last_name, :email, :number_of_pets], valid?: false,
+        required: [:name, :email, :bio, :number_of_pets], valid?: false,
         validations: []}
 ```
 
@@ -266,8 +266,8 @@ Since this one is not valid, we can ask it what the errors are.
 
 ```console
 iex(4)> changeset.errors
-[first_name: "can't be blank", last_name: "can't be blank",
-email: "can't be blank", number_of_pets: "can't be blank"]
+[name: "can't be blank", email: "can't be blank",
+bio: "can't be blank", number_of_pets: "can't be blank"]
 ```
 
 It gives us the same list of fields that can't be blank that we got from the front end of our application.
@@ -275,11 +275,11 @@ It gives us the same list of fields that can't be blank that we got from the fro
 Now let's test this by moving the `number_of_pets` field from `@required_fields` to `@optional_fields`.
 
 ```elixir
-@required_fields ~w(first_name last_name email)
+@required_fields ~w(name email bio)
 @optional_fields ~w(number_of_pets)
 ```
 
-Now either method of verification should tell us that only `first_name`, `last_name`, and `email` can't be blank.
+Now either method of verification should tell us that only `name`, `email`, and `bio` can't be blank.
 
 What happens if we pass a key/value pair that in neither `@required_fields` nor `@optional_fields`? Let's find out.
 
@@ -293,8 +293,8 @@ nil
 Lets create a `params` map with valid values plus an extra `random_key: "random value"`.
 
 ```console
-iex(2)> params = %{first_name: "Joe", last_name: "Example", email: "joe@example.com", number_of_pets: 5, random_key: "random value"}
-%{email: "joe@example.com", first_name: "Joe", last_name: "Example",
+iex(2)> params = %{name: "Joe Example", email: "joe@example.com", bio: "An example to all", number_of_pets: 5, random_key: "random value"}
+%{email: "joe@example.com", name: "Joe Example", bio: "An example to all",
 number_of_pets: 5, random_key: "random value"}
 ```
 
@@ -302,16 +302,16 @@ Then let's use our new `params` map to create a changeset.
 
 ```console
 iex(3)> changeset = User.changeset(%User{}, params)
-  %Ecto.Changeset{changes: %{email: "joe@example.com", first_name: "Joe",
-  last_name: "Example", number_of_pets: 5}, errors: [], filters: %{},
+  %Ecto.Changeset{changes: %{bio: "An example to all", email: "joe@example.com",
+  name: "Joe Example", number_of_pets: 5}, errors: [], filters: %{},
     model: %HelloPhoenix.User{__meta__: %Ecto.Schema.Metadata{source: "users",
-    state: :built}, email: nil, first_name: nil, id: nil, inserted_at: nil,
-    last_name: nil, number_of_pets: nil, updated_at: nil},
+    state: :built}, bio: nil, email: nil, id: nil, inserted_at: nil,
+    name: nil, number_of_pets: nil, updated_at: nil},
     optional: [:number_of_pets],
-    params: %{"email" => "joe@example.com", "first_name" => "Joe",
-    "last_name" => "Example", "number_of_pets" => 5,
+    params: %{"bio" => "An example to all", "email" => "joe@example.com",
+    "name" => "Joe Example", "number_of_pets" => 5,
     "random_key" => "random value"}, repo: nil,
-    required: [:first_name, :last_name, :email], valid?: true,
+    required: [:name, :email, :bio], valid?: true,
     validations: []}
 ```
 
@@ -326,7 +326,7 @@ We can also check the changeset's changes - the map we get after all of the tran
 
 ```console
 iex(9)> changeset.changes
-%{email: "joe@example.com", first_name: "Joe", last_name: "Example",
+%{bio: "An example to all", email: "joe@example.com", name: "Joe Example",
 number_of_pets: 5}
 ```
 
@@ -334,39 +334,39 @@ Notice that our `random_key` and `random_value` have been removed from our final
 
 We can validate more than just whether a field is required or not. Let's take a look at some finer grained validations.
 
-What if we had a requirement that all last names in our system must be at least two characters long? We can do this easily by adding another transformation to the pipeline in our changeset which validates the length of the `last_name` field.
+What if we had a requirement that all biographies in our system must be at least two characters long? We can do this easily by adding another transformation to the pipeline in our changeset which validates the length of the `bio` field.
 
 ```elixir
 def changeset(model, params \\ nil) do
   model
   |> cast(params, @required_fields, @optional_fields)
-  |> validate_length(:last_name, min: 2)
+  |> validate_length(:bio, min: 2)
 end
 ```
 
-Now if we try to add add a new user through the front end of the application with a last name of "A", we should see this error message at the top of the page.
+Now if we try to add add a new user through the front end of the application with a bio of "A", we should see this error message at the top of the page.
 
 ```text
 Oops, something went wrong! Please check the errors below:
-Last name should be at least 2 characters
+Bio should be at least 2 characters
 ```
 
-If we also have a requirement for the maximum length that a last name can have, we can simply add another validation.
+If we also have a requirement for the maximum length that a bio can have, we can simply add another validation.
 
 ```elixir
 def changeset(model, params \\ nil) do
   model
   |> cast(params, @required_fields, @optional_fields)
-  |> validate_length(:last_name, min: 2)
-  |> validate_length(:last_name, max: 25)
+  |> validate_length(:bio, min: 2)
+  |> validate_length(:bio, max: 140)
 end
 ```
 
-Now if we try to add a new user with a twenty-six character last name, we would see this error.
+Now if we try to add a new user with a 141 character bio, we would see this error.
 
 ```text
 Oops, something went wrong! Please check the errors below:
-Last name should be at most 25 characters
+Bio should be at most 140 characters
 ```
 
 Let's say we want to perform at least some rudimentary format validation on the `email` field. All we want to check for is the presence of the "@". The `validate_format/3` function is just what we need.
@@ -375,8 +375,8 @@ Let's say we want to perform at least some rudimentary format validation on the 
 def changeset(model, params \\ nil) do
   model
   |> cast(params, @required_fields, @optional_fields)
-  |> validate_length(:last_name, min: 2)
-  |> validate_length(:last_name, max: 25)
+  |> validate_length(:bio, min: 2)
+  |> validate_length(:bio, max: 140)
   |> validate_format(:email, ~r/@/)
 end
 ```
