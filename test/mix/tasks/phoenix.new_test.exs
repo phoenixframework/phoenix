@@ -75,6 +75,22 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     end
   end
 
+  test "bootstraps generated project with adapter option" do
+    Logger.disable(self())
+
+    Application.put_env(:mysql_test, MySQLTest.Endpoint,
+      secret_key_base: String.duplicate("abcdefgh", 8),
+      root: File.cwd!)
+
+    in_tmp "bootstrap", fn ->
+      Mix.Tasks.Phoenix.New.run(["mysql_test", "--no-brunch", "--adapter", "mysql"])
+    end
+
+    in_project :mysql_test, Path.join(tmp_path, "bootstrap/mysql_test"), fn _ ->
+      assert_file "mix.exs", ~r/mariaex/
+    end
+  end
+
   defp in_project(app, path, fun) do
     %{name: name, file: file} = Mix.Project.pop
 

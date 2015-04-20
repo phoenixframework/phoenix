@@ -89,6 +89,10 @@ defmodule Mix.Tasks.Phoenix.New do
     * `--module` - the name of the base module in
       the generated skeleton
 
+    * `--adapter` - specify the database adapter
+      for ecto. values can be `mysql` or `pg`.
+      Defaults to `pg`
+
     * `--no-brunch` - do not generate brunch files
       for static asset building
 
@@ -136,10 +140,8 @@ defmodule Mix.Tasks.Phoenix.New do
     ecto = Keyword.get(opts, :ecto, true)
     brunch = Keyword.get(opts, :brunch, true)
 
-    pubsub_server = mod
-                    |> String.split(".")
-                    |> hd
-                    |> Module.concat(PubSub)
+    {adapter_app, adapter_module} = set_ecto_adapter(opts[:adapter])
+    pubsub_server = set_pubsub_server(mod)
 
     binding = [application_name: app,
                application_module: mod,
@@ -151,7 +153,9 @@ defmodule Mix.Tasks.Phoenix.New do
                signing_salt: random_string(8),
                in_umbrella: in_umbrella?(path),
                brunch: brunch,
-               ecto: ecto]
+               ecto: ecto,
+               adapter_app: adapter_app,
+               adapter_module: adapter_module]
 
     copy_from path, binding, @new
 
@@ -184,7 +188,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
       # Configure your database
       config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
-        adapter: Ecto.Adapters.Postgres,
+        adapter: #{binding[:adapter_module]},
         username: "postgres",
         password: "postgres",
         database: "#{binding[:application_name]}_dev"
@@ -194,7 +198,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
       # Configure your database
       config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
-        adapter: Ecto.Adapters.Postgres,
+        adapter: #{binding[:adapter_module]},
         username: "postgres",
         password: "postgres",
         database: "#{binding[:application_name]}_test",
@@ -206,7 +210,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
       # Configure your database
       config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
-        adapter: Ecto.Adapters.Postgres,
+        adapter: #{binding[:adapter_module]},
         username: "postgres",
         password: "postgres",
         database: "#{binding[:application_name]}_prod"
@@ -324,6 +328,16 @@ defmodule Mix.Tasks.Phoenix.New do
     if Code.ensure_loaded?(name) do
       Mix.raise "Module name #{inspect name} is already taken, please choose another name"
     end
+  end
+
+  defp set_ecto_adapter("mysql"), do: {:mariaex, Ecto.Adapters.MySQL}
+  defp set_ecto_adapter(_),       do: {:postgrex, Ecto.Adapters.Postgres}
+
+  defp set_pubsub_server(module) do
+    module
+    |> String.split(".")
+    |> hd
+    |> Module.concat(PubSub)
   end
 
   defp in_umbrella?(app_path) do
