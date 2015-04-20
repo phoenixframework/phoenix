@@ -187,7 +187,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
       # Configure your database
       config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
-        adapter: #{binding[:adapter_module]},
+        adapter: #{inspect binding[:adapter_module]},
         username: "postgres",
         password: "postgres",
         database: "#{binding[:application_name]}_dev"
@@ -197,7 +197,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
       # Configure your database
       config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
-        adapter: #{binding[:adapter_module]},
+        adapter: #{inspect binding[:adapter_module]},
         username: "postgres",
         password: "postgres",
         database: "#{binding[:application_name]}_test",
@@ -209,7 +209,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
       # Configure your database
       config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
-        adapter: #{binding[:adapter_module]},
+        adapter: #{inspect binding[:adapter_module]},
         username: "postgres",
         password: "postgres",
         database: "#{binding[:application_name]}_prod"
