@@ -29,8 +29,7 @@ defmodule <%= application_module %>.Endpoint do
   plug Plug.Session,
     store: :cookie,
     key: "_<%= application_name %>_key",
-    signing_salt: "<%= signing_salt %>",
-    encryption_salt: "<%= encryption_salt %>"
+    signing_salt: "<%= signing_salt %>"
 
   plug :router, <%= application_module %>.Router
 end

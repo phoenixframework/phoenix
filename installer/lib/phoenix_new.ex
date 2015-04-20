@@ -147,7 +147,6 @@ defmodule Mix.Tasks.Phoenix.New do
                pubsub_server: pubsub_server,
                secret_key_base: random_string(64),
                prod_secret_key_base: random_string(64),
-               encryption_salt: random_string(8),
                signing_salt: random_string(8),
                in_umbrella: in_umbrella?(path),
                brunch: brunch,
