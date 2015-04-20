@@ -89,7 +89,7 @@ defmodule Mix.Tasks.Phoenix.New do
     * `--module` - the name of the base module in
       the generated skeleton
 
-    * `--adapter` - specify the database adapter for ecto.
+    * `--db-adapter` - specify the database adapter for ecto.
       Values can be `mysql`, `tds`, or `pg`. Defaults to `pg`
 
     * `--no-brunch` - do not generate brunch files
@@ -139,7 +139,7 @@ defmodule Mix.Tasks.Phoenix.New do
     ecto = Keyword.get(opts, :ecto, true)
     brunch = Keyword.get(opts, :brunch, true)
 
-    {adapter_app, adapter_module} = set_ecto_adapter(opts[:adapter])
+    {adapter_app, adapter_module} = set_ecto_adapter(opts[:db_adapter])
     pubsub_server = set_pubsub_server(mod)
 
     binding = [application_name: app,

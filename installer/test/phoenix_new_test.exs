@@ -144,7 +144,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
   test "new with mysql adapter" do
     in_tmp "new with mysql adapter", fn ->
       project_path = Path.join(File.cwd!, "custom_path")
-      Mix.Tasks.Phoenix.New.run([project_path, "--adapter", "mysql"])
+      Mix.Tasks.Phoenix.New.run([project_path, "--db-adapter", "mysql"])
 
       assert_file "custom_path/mix.exs", ~r/:mariaex/
       assert_file "custom_path/config/dev.exs", ~r/Ecto.Adapters.MySQL/
@@ -156,7 +156,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
   test "new with tds adapter" do
     in_tmp "new with tds adapter", fn ->
       project_path = Path.join(File.cwd!, "custom_path")
-      Mix.Tasks.Phoenix.New.run([project_path, "--adapter", "tds"])
+      Mix.Tasks.Phoenix.New.run([project_path, "--db-adapter", "tds"])
 
       assert_file "custom_path/mix.exs", ~r/:tds_ecto/
       assert_file "custom_path/config/dev.exs", ~r/Tds.Ecto/
