@@ -34,7 +34,7 @@ Phoenix is made up of a number of distinct parts, each with its own purpose and 
   - Precompiled & fast
 - Channels
   - manage sockets for easy realtime communication
-  - analogous to controllers except that they allow bi-directional communication with persistant connections
+  - analogous to controllers except that they allow bi-directional communication with persistent connections
 - PubSub
   - Underlies the channel layer and allows *topics* to be subscribed to
   - Abstracts the underlying pubsub adapter for third-party pubsub integration
