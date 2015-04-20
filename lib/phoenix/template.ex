@@ -123,6 +123,10 @@ defmodule Phoenix.Template do
         render(template, Enum.into(assigns, %{}))
       end
 
+      def render(module, template) when is_atom(module) do
+        Phoenix.View.render(module, template, %{})
+      end
+
       @doc """
       Callback invoked when no template is found.
       By default it raises but can be customized

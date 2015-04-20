@@ -19,6 +19,10 @@ defmodule Phoenix.ViewTest do
            {:safe, [[[["" | "<div>Show! "] | "Hello world"] | "</div>\n"] | "\n"]}
   end
 
+  test "renders views without assigns" do
+    assert MyApp.View.render(MyApp.UserView, "show.json") == %{foo: "bar"}
+  end
+
   test "renders views keeping their template file info" do
     try do
       render(MyApp.View, "show.html", message: {:not, :a, :string})
