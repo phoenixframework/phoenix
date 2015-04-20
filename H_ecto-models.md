@@ -159,7 +159,7 @@ defmodule HelloPhoenix.Repo do
 end
 ```
 
-Our repo clearly has two main tasks - to bring in all the common query functions from `Ecto.Repo` and to set the `otp_app` name equal to our application name.
+Our repo has two main tasks - to bring in all the common query functions from `Ecto.Repo` and to set the `otp_app` name equal to our application name.
 
 When `phoenix.new` generated our application, it also generated some basic configuration as well. Let's look at `config/dev.exs`.
 
@@ -229,7 +229,7 @@ def changeset(model, params \\ nil) do
 end
 ```
 
-At this point, we only have one transformation in our pipeline. This `cast/4` function's main job is to separate required fields from optional ones. We define the fields for each category in the module attributes `@required_fields` and `@optional_fields`. By default, obviously, all of the fields are required.
+At this point, we only have one transformation in our pipeline. This `cast/4` function's main job is to separate required fields from optional ones. We define the fields for each category in the module attributes `@required_fields` and `@optional_fields`. By default all of the fields are required.
 
 Let's take a look at two ways to validate that this is the case. The first and easiest way is to simply start our application by running the `mix phoenix.server` task at the root of our project. Then we can go to the [new users page](http://localhost:4000/users/new) and click the "submit" button without filling in any fields. We should get an error telling us that something went wrong and enumerating all the fields which can't be blank. That should be all the fields in our schema at this point.
 
@@ -262,7 +262,7 @@ iex(3)> changeset.valid?
 false
 ```
 
-Since this one is clearly not valid, we can ask it what the errors are.
+Since this one is not valid, we can ask it what the errors are.
 
 ```console
 iex(4)> changeset.errors
@@ -458,7 +458,7 @@ If the changeset is invalid, we re-render `new.html` with the changeset to displ
 
 In the `show` action, we use the `Repo.get/2` built-in function to fetch the user record identified by the id we get from the request parameters. We don't generate a changeset here because we assume that the data has passed through a changeset on the way in to the database, and therefore is valid when we retrieve it here.
 
-Essentially, this is the singular version of `index` above.
+This is the singular version of `index` above.
 
 ```elixir
 def show(conn, %{"id" => id}) do
@@ -568,7 +568,7 @@ worker(HelloPhoenix.Repo, [])
 
 Note: Please see the "Repo" section above for information on what the repo does.
 
-This task clearly creates a directory for our repo as well as the repo itself.
+This task creates a directory for our repo as well as the repo itself.
 
 ```elixir
 defmodule HelloPhoenix.Repo do
