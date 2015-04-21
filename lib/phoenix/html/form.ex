@@ -305,6 +305,15 @@ defmodule Phoenix.HTML.Form do
     generic_input(:week, form, field, opts)
   end
 
+  @doc """
+  Generates a time input.
+
+  See `text_input/3` for example and docs.
+  """
+  def time_input(form, field, opts \\ []) do
+    generic_input(:time, form, field, opts)
+  end
+
   defp generic_input(type, form, field, opts) when is_atom(field) and is_list(opts) do
     opts =
       opts
