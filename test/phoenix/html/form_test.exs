@@ -242,6 +242,24 @@ defmodule Phoenix.HTML.FormTest do
            {:safe, ~s(<input id="key" name="search[key][]" type="tel" value="foo">)}
   end
 
+  ## range_input/3
+
+  test "range_input/3" do
+    assert range_input(:search, :key) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="range">)}
+
+    assert range_input(:search, :key, value: "foo", id: "key", name: "search[key][]") ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="range" value="foo">)}
+  end
+
+  test "range_input/3 with form" do
+    assert with_form(&range_input(&1, :key)) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="range" value="value">)}
+
+    assert with_form(&range_input(&1, :key, value: "foo", id: "key", name: "search[key][]")) ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="range" value="foo">)}
+  end
+
   ## submit/2
 
   test "submit/2" do
