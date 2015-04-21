@@ -296,6 +296,24 @@ defmodule Phoenix.HTML.FormTest do
            {:safe, ~s(<input id="key" name="search[key][]" type="date" value="foo">)}
   end
 
+  ## month_input/3
+
+  test "month_input/3" do
+    assert month_input(:search, :key) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="month">)}
+
+    assert month_input(:search, :key, value: "foo", id: "key", name: "search[key][]") ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="month" value="foo">)}
+  end
+
+  test "month_input/3 with form" do
+    assert with_form(&month_input(&1, :key)) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="month" value="value">)}
+
+    assert with_form(&month_input(&1, :key, value: "foo", id: "key", name: "search[key][]")) ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="month" value="foo">)}
+  end
+
   ## submit/2
 
   test "submit/2" do
