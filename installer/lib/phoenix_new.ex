@@ -136,11 +136,12 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   def run(app, mod, path, opts) do
+    db = Keyword.get(opts, :database, "postgres")
     dev = Keyword.get(opts, :dev, false)
     ecto = Keyword.get(opts, :ecto, true)
     brunch = Keyword.get(opts, :brunch, true)
 
-    {adapter_app, adapter_module} = set_ecto_adapter(opts[:database])
+    {adapter_app, adapter_module} = set_ecto_adapter(db)
     pubsub_server = set_pubsub_server(mod)
 
     binding = [application_name: app,
@@ -332,7 +333,8 @@ defmodule Mix.Tasks.Phoenix.New do
 
   defp set_ecto_adapter("mssql"), do: {:tds_ecto, Tds.Ecto}
   defp set_ecto_adapter("mysql"), do: {:mariaex, Ecto.Adapters.MySQL}
-  defp set_ecto_adapter(_),       do: {:postgrex, Ecto.Adapters.Postgres}
+  defp set_ecto_adapter("postgres"), do: {:postgrex, Ecto.Adapters.Postgres}
+  defp set_ecto_adapter(db), do: Mix.raise "Unknown database #{inspect db}"
 
   defp set_pubsub_server(module) do
     module
