@@ -448,6 +448,16 @@ def index(conn, _params) do
 end
 ```
 
+The correct way to render the 404 page from `HelloPhoenix.PageController` is:
+
+```elixir
+def index(conn, _params) do
+  conn
+  |> put_status(:not_found)
+  |> render(HelloPhoenix.ErrorView, "404.html")
+end
+```
+
 ### Redirection
 
 Often, we need to redirect to a new url in the middle of a request. A successful `create` action, for instance, will usually redirect to the `show` action for the model we just created. Alternately, it could redirect to the `index` action to show all the things of that same type. There are plenty of other cases where redirection is useful as well.
