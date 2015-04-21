@@ -177,6 +177,15 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     end
   end
 
+  test "new with invalid database adapter" do
+    in_tmp "new with invalid database adapter", fn ->
+      project_path = Path.join(File.cwd!, "custom_path")
+      assert_raise Mix.Error, ~s(Unknown database "invalid"), fn ->
+        Mix.Tasks.Phoenix.New.run([project_path, "--database", "invalid"])
+      end
+    end
+  end
+
   test "new with invalid args" do
     assert_raise Mix.Error, ~r"Application name must start with a letter and ", fn ->
       Mix.Tasks.Phoenix.New.run ["007invalid"]
