@@ -363,7 +363,7 @@ export PORT
 exec /bin/sh /app/bin/hello_phoenix start
 ```
 
-Here, we've told `upstart` a few basic things about how we want it to handle our application. If you need to know how to do somthing in particular, take a look at the [`upstart` cookbook](http://upstart.ubuntu.com/cookbook/) for loads of information on it. We'll kick off the first start of our application with `sudo start hello_phoenix`.
+Here, we've told `upstart` a few basic things about how we want it to handle our application. If you need to know how to do something in particular, take a look at the [`upstart` cookbook](http://upstart.ubuntu.com/cookbook/) for loads of information on it. We'll kick off the first start of our application with `sudo start hello_phoenix`.
 
 One key point to notice is that we're instructing `upstart` to run our release's `bin/hello_phoenix start` command, which boostraps our application and runs it as a daemon.
 
