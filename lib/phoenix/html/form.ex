@@ -269,6 +269,15 @@ defmodule Phoenix.HTML.Form do
     generic_input(:color, form, field, opts)
   end
 
+  @doc """
+  Generates a range input.
+
+  See `text_input/3` for example and docs.
+  """
+  def range_input(form, field, opts \\ []) do
+    generic_input(:range, form, field, opts)
+  end
+
   defp generic_input(type, form, field, opts) when is_atom(field) and is_list(opts) do
     opts =
       opts
