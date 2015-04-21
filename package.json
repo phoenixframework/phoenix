@@ -2,12 +2,12 @@
   "repository": {
   },
   "dependencies": {
-    "brunch": ">= 1.8 < 1.9",
+    "brunch": "^1.8.1",
     "babel-brunch": "^4.0.0",
     "clean-css-brunch": ">= 1.0 < 1.8",
     "css-brunch": ">= 1.0 < 1.8",
     "javascript-brunch": ">= 1.0 < 1.8",
-    "sass-brunch": ">= 1.8 < 1.9",
+    "sass-brunch": "^1.8.10",
     "uglify-js-brunch": ">= 1.0 < 1.8"
   }
 }
