@@ -278,6 +278,24 @@ defmodule Phoenix.HTML.FormTest do
            {:safe, ~s(<input id="key" name="search[key][]" type="range" value="foo">)}
   end
 
+  ## date_input/3
+
+  test "date_input/3" do
+    assert date_input(:search, :key) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="date">)}
+
+    assert date_input(:search, :key, value: "foo", id: "key", name: "search[key][]") ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="date" value="foo">)}
+  end
+
+  test "date_input/3 with form" do
+    assert with_form(&date_input(&1, :key)) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="date" value="value">)}
+
+    assert with_form(&date_input(&1, :key, value: "foo", id: "key", name: "search[key][]")) ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="date" value="foo">)}
+  end
+
   ## submit/2
 
   test "submit/2" do

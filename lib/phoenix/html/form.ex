@@ -278,6 +278,15 @@ defmodule Phoenix.HTML.Form do
     generic_input(:range, form, field, opts)
   end
 
+  @doc """
+  Generates a date input.
+
+  See `text_input/3` for example and docs.
+  """
+  def date_input(form, field, opts \\ []) do
+    generic_input(:date, form, field, opts)
+  end
+
   defp generic_input(type, form, field, opts) when is_atom(field) and is_list(opts) do
     opts =
       opts
