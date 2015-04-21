@@ -89,8 +89,8 @@ defmodule Mix.Tasks.Phoenix.New do
     * `--module` - the name of the base module in
       the generated skeleton
 
-    * `--db-adapter` - specify the database adapter for ecto.
-      Values can be `mysql`, `tds`, or `pg`. Defaults to `pg`
+    * `--database` - specify the database adapter for ecto.
+      Values can be `mysql` or `mssql`. Defaults to `postgres`
 
     * `--no-brunch` - do not generate brunch files
       for static asset building
@@ -139,7 +139,7 @@ defmodule Mix.Tasks.Phoenix.New do
     ecto = Keyword.get(opts, :ecto, true)
     brunch = Keyword.get(opts, :brunch, true)
 
-    {adapter_app, adapter_module} = set_ecto_adapter(opts[:db_adapter])
+    {adapter_app, adapter_module} = set_ecto_adapter(opts[:database])
     pubsub_server = set_pubsub_server(mod)
 
     binding = [application_name: app,
@@ -329,7 +329,7 @@ defmodule Mix.Tasks.Phoenix.New do
     end
   end
 
-  defp set_ecto_adapter("tds"),   do: {:tds_ecto, Tds.Ecto}
+  defp set_ecto_adapter("mssql"), do: {:tds_ecto, Tds.Ecto}
   defp set_ecto_adapter("mysql"), do: {:mariaex, Ecto.Adapters.MySQL}
   defp set_ecto_adapter(_),       do: {:postgrex, Ecto.Adapters.Postgres}
 
