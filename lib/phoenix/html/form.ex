@@ -320,7 +320,7 @@ defmodule Phoenix.HTML.Form do
   See `text_input/3` for example and docs.
   """
   def datetime_input(form, field, opts \\ []) do
-    generic_input(:datetime, form, field, opts)
+    generic_input(String.to_atom("datetime-local"), form, field, opts)
   end
 
   defp generic_input(type, form, field, opts) when is_atom(field) and is_list(opts) do
