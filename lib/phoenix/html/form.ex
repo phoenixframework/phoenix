@@ -227,7 +227,7 @@ defmodule Phoenix.HTML.Form do
   @doc """
   Generates a password input.
 
-  See `password_input/3` for example and docs.
+  See `text_input/3` for example and docs.
   """
   def password_input(form, field, opts \\ []) do
     generic_input(:password, form, field, opts)
