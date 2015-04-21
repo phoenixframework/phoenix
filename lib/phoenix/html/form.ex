@@ -227,7 +227,7 @@ defmodule Phoenix.HTML.Form do
   @doc """
   Generates a password input.
 
-  See `password_input/3` for example and docs.
+  See `text_input/3` for example and docs.
   """
   def password_input(form, field, opts \\ []) do
     generic_input(:password, form, field, opts)
@@ -258,6 +258,69 @@ defmodule Phoenix.HTML.Form do
   """
   def telephone_input(form, field, opts \\ []) do
     generic_input(:tel, form, field, opts)
+  end
+
+  @doc """
+  Generates a color input.
+
+  See `text_input/3` for example and docs.
+  """
+  def color_input(form, field, opts \\ []) do
+    generic_input(:color, form, field, opts)
+  end
+
+  @doc """
+  Generates a range input.
+
+  See `text_input/3` for example and docs.
+  """
+  def range_input(form, field, opts \\ []) do
+    generic_input(:range, form, field, opts)
+  end
+
+  @doc """
+  Generates a date input.
+
+  See `text_input/3` for example and docs.
+  """
+  def date_input(form, field, opts \\ []) do
+    generic_input(:date, form, field, opts)
+  end
+
+  @doc """
+  Generates a month input.
+
+  See `text_input/3` for example and docs.
+  """
+  def month_input(form, field, opts \\ []) do
+    generic_input(:month, form, field, opts)
+  end
+
+  @doc """
+  Generates a week input.
+
+  See `text_input/3` for example and docs.
+  """
+  def week_input(form, field, opts \\ []) do
+    generic_input(:week, form, field, opts)
+  end
+
+  @doc """
+  Generates a time input.
+
+  See `text_input/3` for example and docs.
+  """
+  def time_input(form, field, opts \\ []) do
+    generic_input(:time, form, field, opts)
+  end
+
+  @doc """
+  Generates a datetime input.
+
+  See `text_input/3` for example and docs.
+  """
+  def datetime_input(form, field, opts \\ []) do
+    generic_input(String.to_atom("datetime-local"), form, field, opts)
   end
 
   defp generic_input(type, form, field, opts) when is_atom(field) and is_list(opts) do

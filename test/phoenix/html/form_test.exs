@@ -242,6 +242,132 @@ defmodule Phoenix.HTML.FormTest do
            {:safe, ~s(<input id="key" name="search[key][]" type="tel" value="foo">)}
   end
 
+  ## color_input/3
+
+  test "color_input/3" do
+    assert color_input(:search, :key) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="color">)}
+
+    assert color_input(:search, :key, value: "foo", id: "key", name: "search[key][]") ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="color" value="foo">)}
+  end
+
+  test "color_input/3 with form" do
+    assert with_form(&color_input(&1, :key)) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="color" value="value">)}
+
+    assert with_form(&color_input(&1, :key, value: "foo", id: "key", name: "search[key][]")) ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="color" value="foo">)}
+  end
+
+  ## range_input/3
+
+  test "range_input/3" do
+    assert range_input(:search, :key) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="range">)}
+
+    assert range_input(:search, :key, value: "foo", id: "key", name: "search[key][]") ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="range" value="foo">)}
+  end
+
+  test "range_input/3 with form" do
+    assert with_form(&range_input(&1, :key)) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="range" value="value">)}
+
+    assert with_form(&range_input(&1, :key, value: "foo", id: "key", name: "search[key][]")) ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="range" value="foo">)}
+  end
+
+  ## date_input/3
+
+  test "date_input/3" do
+    assert date_input(:search, :key) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="date">)}
+
+    assert date_input(:search, :key, value: "foo", id: "key", name: "search[key][]") ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="date" value="foo">)}
+  end
+
+  test "date_input/3 with form" do
+    assert with_form(&date_input(&1, :key)) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="date" value="value">)}
+
+    assert with_form(&date_input(&1, :key, value: "foo", id: "key", name: "search[key][]")) ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="date" value="foo">)}
+  end
+
+  ## month_input/3
+
+  test "month_input/3" do
+    assert month_input(:search, :key) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="month">)}
+
+    assert month_input(:search, :key, value: "foo", id: "key", name: "search[key][]") ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="month" value="foo">)}
+  end
+
+  test "month_input/3 with form" do
+    assert with_form(&month_input(&1, :key)) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="month" value="value">)}
+
+    assert with_form(&month_input(&1, :key, value: "foo", id: "key", name: "search[key][]")) ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="month" value="foo">)}
+  end
+
+  ## week_input/3
+
+  test "week_input/3" do
+    assert week_input(:search, :key) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="week">)}
+
+    assert week_input(:search, :key, value: "foo", id: "key", name: "search[key][]") ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="week" value="foo">)}
+  end
+
+  test "week_input/3 with form" do
+    assert with_form(&week_input(&1, :key)) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="week" value="value">)}
+
+    assert with_form(&week_input(&1, :key, value: "foo", id: "key", name: "search[key][]")) ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="week" value="foo">)}
+  end
+
+  ## time_input/3
+
+  test "time_input/3" do
+    assert time_input(:search, :key) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="time">)}
+
+    assert time_input(:search, :key, value: "foo", id: "key", name: "search[key][]") ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="time" value="foo">)}
+  end
+
+  test "time_input/3 with form" do
+    assert with_form(&time_input(&1, :key)) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="time" value="value">)}
+
+    assert with_form(&time_input(&1, :key, value: "foo", id: "key", name: "search[key][]")) ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="time" value="foo">)}
+  end
+
+  ## datetime_input/3
+
+  test "datetime_input/3" do
+    assert datetime_input(:search, :key) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="datetime-local">)}
+
+    assert datetime_input(:search, :key, value: "foo", id: "key", name: "search[key][]") ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="datetime-local" value="foo">)}
+  end
+
+  test "datetime_input/3 with form" do
+    assert with_form(&datetime_input(&1, :key)) ==
+           {:safe, ~s(<input id="search_key" name="search[key]" type="datetime-local" value="value">)}
+
+    assert with_form(&datetime_input(&1, :key, value: "foo", id: "key", name: "search[key][]")) ==
+           {:safe, ~s(<input id="key" name="search[key][]" type="datetime-local" value="foo">)}
+  end
+
   ## submit/2
 
   test "submit/2" do
