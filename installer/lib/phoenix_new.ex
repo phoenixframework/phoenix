@@ -111,7 +111,8 @@ defmodule Mix.Tasks.Phoenix.New do
       mix phoenix.new ~/Workspace/hello_world --no-brunch
 
   """
-  @switches [dev: :boolean, brunch: :boolean, ecto: :boolean]
+  @switches [dev: :boolean, brunch: :boolean, ecto: :boolean,
+             app: :string, module: :string, database: :string]
 
   def run([version]) when version in ~w(-v --version) do
     Mix.shell.info "Phoenix v#{@version}"
