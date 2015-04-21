@@ -11,8 +11,8 @@ In order to act as a plug, a function simply needs to accept a connection struct
 
 ```elixir
 def put_headers(conn, key_values) do
-  Enum.reduce(key_values, conn, fn {k, v}, conn ->
-    Plug.Conn.put_resp_header(k, v)
+  Enum.reduce key_values, conn, fn {k, v}, conn ->
+    Plug.Conn.put_resp_header(conn, k, v)
   end
 end
 ```
@@ -146,4 +146,4 @@ defmodule HelloPhoenix.Router do
 
 We are able to add this module plug to our browser pipeline via `plug HelloPhoenix.Plugs.Locale, "en"`. In the `init/1` callback, we pass a default locale to use if none is present in the params. We also use pattern matching to define multiple `call/2` function heads to validate the locale in the params, and fall back to "en" if there is no match.
 
-That's all there is to Plug. Phoenix embraces the plug design of composable transformations all the way up and own the stack. This is just the first taste. If we ask ourselves, "Could I put this in a plug?" The answer is usually, "Yes!"
+That's all there is to Plug. Phoenix embraces the plug design of composable transformations all the way up and down the stack. This is just the first taste. If we ask ourselves, "Could I put this in a plug?" The answer is usually, "Yes!"
