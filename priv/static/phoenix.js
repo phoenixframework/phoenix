@@ -1,42 +1,59 @@
-(function(/*! Brunch !*/) {
+(function() {
   'use strict';
 
-  var globals = typeof window !== 'undefined' ? window : global;
+  var globals = typeof window === 'undefined' ? global : window;
   if (typeof globals.require === 'function') return;
 
   var modules = {};
   var cache = {};
+  var has = ({}).hasOwnProperty;
 
-  var has = function(object, name) {
-    return ({}).hasOwnProperty.call(object, name);
+  var aliases = {};
+
+  var endsWith = function(str, suffix) {
+    return str.indexOf(suffix, str.length - suffix.length) !== -1;
   };
 
-  var expand = function(root, name) {
-    var results = [], parts, part;
-    if (/^\.\.?(\/|$)/.test(name)) {
-      parts = [root, name].join('/').split('/');
-    } else {
-      parts = name.split('/');
-    }
-    for (var i = 0, length = parts.length; i < length; i++) {
-      part = parts[i];
-      if (part === '..') {
-        results.pop();
-      } else if (part !== '.' && part !== '') {
-        results.push(part);
+  var unalias = function(alias, loaderPath) {
+    var start = 0;
+    if (loaderPath) {
+      if (loaderPath.indexOf('components/' === 0)) {
+        start = 'components/'.length;
+      }
+      if (loaderPath.indexOf('/', start) > 0) {
+        loaderPath = loaderPath.substring(start, loaderPath.indexOf('/', start));
       }
     }
-    return results.join('/');
+    var result = aliases[alias + '/index.js'] || aliases[loaderPath + '/deps/' + alias + '/index.js'];
+    if (result) {
+      return 'components/' + result.substring(0, result.length - '.js'.length);
+    }
+    return alias;
   };
 
+  var expand = (function() {
+    var reg = /^\.\.?(\/|$)/;
+    return function(root, name) {
+      var results = [], parts, part;
+      parts = (reg.test(name) ? root + '/' + name : name).split('/');
+      for (var i = 0, length = parts.length; i < length; i++) {
+        part = parts[i];
+        if (part === '..') {
+          results.pop();
+        } else if (part !== '.' && part !== '') {
+          results.push(part);
+        }
+      }
+      return results.join('/');
+    };
+  })();
   var dirname = function(path) {
     return path.split('/').slice(0, -1).join('/');
   };
 
   var localRequire = function(path) {
     return function(name) {
-      var dir = dirname(path);
-      var absolute = expand(dir, name);
+      var absolute = expand(dirname(path), name);
       return globals.require(absolute, path);
     };
   };
@@ -51,21 +68,26 @@
   var require = function(name, loaderPath) {
     var path = expand(name, '.');
     if (loaderPath == null) loaderPath = '/';
+    path = unalias(name, loaderPath);
 
-    if (has(cache, path)) return cache[path].exports;
-    if (has(modules, path)) return initModule(path, modules[path]);
+    if (has.call(cache, path)) return cache[path].exports;
+    if (has.call(modules, path)) return initModule(path, modules[path]);
 
     var dirIndex = expand(path, './index');
-    if (has(cache, dirIndex)) return cache[dirIndex].exports;
-    if (has(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
+    if (has.call(cache, dirIndex)) return cache[dirIndex].exports;
+    if (has.call(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
 
     throw new Error('Cannot find module "' + name + '" from '+ '"' + loaderPath + '"');
   };
 
-  var define = function(bundle, fn) {
+  require.alias = function(from, to) {
+    aliases[to] = from;
+  };
+
+  require.register = require.define = function(bundle, fn) {
     if (typeof bundle === 'object') {
       for (var key in bundle) {
-        if (has(bundle, key)) {
+        if (has.call(bundle, key)) {
           modules[key] = bundle[key];
         }
       }
@@ -74,26 +96,24 @@
     }
   };
 
-  var list = function() {
+  require.list = function() {
     var result = [];
     for (var item in modules) {
-      if (has(modules, item)) {
+      if (has.call(modules, item)) {
         result.push(item);
       }
     }
     return result;
   };
 
+  require.brunch = true;
   globals.require = require;
-  globals.require.define = define;
-  globals.require.register = define;
-  globals.require.list = list;
-  globals.require.brunch = true;
 })();
 require.define({'phoenix': function(exports, require, module){ "use strict";
 
 var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
+exports.__esModule = true;
 var SOCKET_STATES = { connecting: 0, open: 1, closing: 2, closed: 3 };
 var CHANNEL_EVENTS = {
   close: "phx_close",
@@ -758,6 +778,5 @@ var Ajax = exports.Ajax = (function () {
 })();
 
 Ajax.states = { complete: 4 };
-exports.__esModule = true;
  }});
 if(typeof(window) === 'object' && !window.Phoenix){ window.Phoenix = require('phoenix') };
