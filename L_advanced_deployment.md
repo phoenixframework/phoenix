@@ -350,9 +350,10 @@ description "hello_phoenix"
 #setuid www-data
 #setgid www-data
 
-start on startup
-stop on shutdown
+start on runlevel [2345]
+stop on runlevel [016]
 
+expect stop
 respawn
 
 env MIX_ENV=prod
@@ -360,7 +361,10 @@ env PORT=8888
 export MIX_ENV
 export PORT
 
-exec /bin/sh /app/bin/hello_phoenix start
+
+pre-start exec /bin/sh /app/bin/hello_phoenix start
+
+post-stop exec /bin/sh /app/bin/hello_phoenix stop
 ```
 
 Here, we've told `upstart` a few basic things about how we want it to handle our application. If you need to know how to do something in particular, take a look at the [`upstart` cookbook](http://upstart.ubuntu.com/cookbook/) for loads of information on it. We'll kick off the first start of our application with `sudo start hello_phoenix`.
