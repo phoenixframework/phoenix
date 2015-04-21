@@ -260,6 +260,15 @@ defmodule Phoenix.HTML.Form do
     generic_input(:tel, form, field, opts)
   end
 
+  @doc """
+  Generates a color input.
+
+  See `text_input/3` for example and docs.
+  """
+  def color_input(form, field, opts \\ []) do
+    generic_input(:color, form, field, opts)
+  end
+
   defp generic_input(type, form, field, opts) when is_atom(field) and is_list(opts) do
     opts =
       opts
