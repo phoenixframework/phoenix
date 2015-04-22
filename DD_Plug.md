@@ -94,7 +94,7 @@ defmodule HelloPhoenix.MessageController do
   end
 
   defp authorize_message(conn, _) do
-    if Authorizer.can_acces?(conn.assigns[:user], conn.assigns[:message]) do
+    if Authorizer.can_access?(conn.assigns[:user], conn.assigns[:message]) do
       conn
     else
       conn |> put_flash("You can't access that page") |> redirect(to: "/") |> halt
@@ -111,7 +111,7 @@ Now let's look at the other flavor plugs come in, module plugs.
 
 Module plugs are another type of Plug that let us define a connection transformation in a module. The module only needs to implement two functions:
 
-- `init/1` which initializes any arguments or options to be pased to call/2
+- `init/1` which initializes any arguments or options to be passed to call/2
 - `call/2` which carries out the connection transformation. `call/2` is just a function plug that we saw earlier
 
 
