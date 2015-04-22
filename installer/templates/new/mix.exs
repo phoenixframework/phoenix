@@ -20,7 +20,7 @@ defmodule <%= application_module %>.Mixfile do
   def application do
     [mod: {<%= application_module %>, []},
      applications: [:phoenix, :cowboy, :logger<%= if ecto do %>,
-                    :phoenix_ecto, :postgrex<% end %>]]
+                    :phoenix_ecto, <%= inspect adapter_app %><% end %>]]
   end
 
   # Specifies which paths to compile per environment
@@ -33,7 +33,7 @@ defmodule <%= application_module %>.Mixfile do
   defp deps do
     [<%= phoenix_dep %>,<%= if ecto do %>
      {:phoenix_ecto, "~> 0.3"},
-     {:postgrex, ">= 0.0.0"},<% end %>
+     {<%= inspect adapter_app %>, ">= 0.0.0"},<% end %>
      {:phoenix_live_reload, "~> 0.3"},
      {:cowboy, "~> 1.0"}]
   end

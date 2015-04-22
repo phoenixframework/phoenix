@@ -14,7 +14,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     :ok
   end
 
-  test "returns the versin" do
+  test "returns the version" do
     Mix.Tasks.Phoenix.New.run(["-v"])
     assert_received {:mix_shell, :info, ["Phoenix v" <> _]}
   end
@@ -137,6 +137,51 @@ defmodule Mix.Tasks.Phoenix.NewTest do
           assert file =~ "deps_path: \"../../deps\""
           assert file =~ "lockfile: \"../../mix.lock\""
         end
+      end
+    end
+  end
+
+  test "new with mysql adapter" do
+    in_tmp "new with mysql adapter", fn ->
+      project_path = Path.join(File.cwd!, "custom_path")
+      Mix.Tasks.Phoenix.New.run([project_path, "--database", "mysql"])
+
+      assert_file "custom_path/mix.exs", ~r/:mariaex/
+      assert_file "custom_path/config/dev.exs", ~r/Ecto.Adapters.MySQL/
+      assert_file "custom_path/config/test.exs", ~r/Ecto.Adapters.MySQL/
+      assert_file "custom_path/config/prod.secret.exs", ~r/Ecto.Adapters.MySQL/
+    end
+  end
+
+  test "new with tds adapter" do
+    in_tmp "new with tds adapter", fn ->
+      project_path = Path.join(File.cwd!, "custom_path")
+      Mix.Tasks.Phoenix.New.run([project_path, "--database", "mssql"])
+
+      assert_file "custom_path/mix.exs", ~r/:tds_ecto/
+      assert_file "custom_path/config/dev.exs", ~r/Tds.Ecto/
+      assert_file "custom_path/config/test.exs", ~r/Tds.Ecto/
+      assert_file "custom_path/config/prod.secret.exs", ~r/Tds.Ecto/
+    end
+  end
+
+  test "new defaults to pg adapter" do
+    in_tmp "new defaults to pg adapter", fn ->
+      project_path = Path.join(File.cwd!, "custom_path")
+      Mix.Tasks.Phoenix.New.run([project_path])
+
+      assert_file "custom_path/mix.exs", ~r/:postgrex/
+      assert_file "custom_path/config/dev.exs", ~r/Ecto.Adapters.Postgres/
+      assert_file "custom_path/config/test.exs", ~r/Ecto.Adapters.Postgres/
+      assert_file "custom_path/config/prod.secret.exs", ~r/Ecto.Adapters.Postgres/
+    end
+  end
+
+  test "new with invalid database adapter" do
+    in_tmp "new with invalid database adapter", fn ->
+      project_path = Path.join(File.cwd!, "custom_path")
+      assert_raise Mix.Error, ~s(Unknown database "invalid"), fn ->
+        Mix.Tasks.Phoenix.New.run([project_path, "--database", "invalid"])
       end
     end
   end
