@@ -452,7 +452,7 @@ def create(conn, %{"user" => user_params}) do
 end
 ```
 
-Notice that we get the user paramaters by pattern matching with the `"user"` key in the function signature. Then we create a changeset with those params and check it's validity. If the changeset is valid, we invoke `Repo.insert/1` to save the data in the `users` table, set a flash message, and redirect to the `index` action.
+Notice that we get the user parameters by pattern matching with the `"user"` key in the function signature. Then we create a changeset with those params and check it's validity. If the changeset is valid, we invoke `Repo.insert/1` to save the data in the `users` table, set a flash message, and redirect to the `index` action.
 
 If the changeset is invalid, we re-render `new.html` with the changeset to display the errors to the user.
 
