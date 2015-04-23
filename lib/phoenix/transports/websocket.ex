@@ -92,10 +92,8 @@ defmodule Phoenix.Transports.WebSocket do
     {:reply, serializer.encode!(message), state}
   end
 
-  def ws_terminate(reason, state) do
-    for channel <- state.sockets |> HashDict.values do
-      :erlang.exit(channel, :die)
-    end
+  def ws_terminate(_reason, state) do
+    exit(:shutdown)
     {:shutdown, state}
   end
 
