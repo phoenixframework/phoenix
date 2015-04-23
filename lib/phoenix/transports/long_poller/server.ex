@@ -152,7 +152,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
 
   def handle_info(:shutdown_if_inactive, state) do
     if now_ms() - state.last_client_poll > state.window_ms do
-      {:stop, :normal, state}
+      {:stop, {:shutdown, :inactive}, state}
     else
       {:noreply, state}
     end

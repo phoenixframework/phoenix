@@ -31,8 +31,9 @@ defmodule Phoenix.Integration.ChannelTest do
   defmodule RoomChannel do
     use Phoenix.Channel
 
-    def join(_topic, message, socket) do
+    def join(topic, message, socket) do
       Process.flag(:trap_exit, true)
+      Process.register(self, String.to_atom(topic))
       send(self, {:after_join, message})
       {:ok, socket}
     end
@@ -103,6 +104,8 @@ defmodule Phoenix.Integration.ChannelTest do
 
     assert_receive %Message{event: "joined", payload: %{"status" => "connected"}}
     assert_receive %Message{event: "user:entered", payload: %{"user" => nil}, ref: nil, topic: "rooms:lobby"}
+    channel_pid = Process.whereis(:"rooms:lobby")
+    assert Process.alive?(channel_pid)
 
     WebsocketClient.send_event(sock, "rooms:lobby", "new:msg", %{body: "hi!"})
     assert_receive %Message{event: "new:msg", payload: %{"body" => "hi!"}}
@@ -111,6 +114,7 @@ defmodule Phoenix.Integration.ChannelTest do
     assert_receive %Message{event: "you:left", payload: %{"message" => "bye!"}}
     assert_receive %Message{event: "phx_reply", payload: %{"status" => "ok"}}
     assert_receive %Message{event: "phx_close", payload: %{}}
+    refute Process.alive?(channel_pid)
 
     WebsocketClient.send_event(sock, "rooms:lobby", "new:msg", %{body: "Should ignore"})
     refute_receive %Message{}
@@ -126,6 +130,19 @@ defmodule Phoenix.Integration.ChannelTest do
 
     WebsocketClient.send_event(sock, "rooms:lobby", "boom", %{})
     assert_receive %Message{event: "phx_error", payload: %{}, topic: "rooms:lobby"}
+  end
+
+  test "websocket channels are terminated if transport normally exits" do
+    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
+
+    WebsocketClient.join(sock, "rooms:lobby", %{})
+    assert_receive %Message{event: "phx_reply", payload: %{"ref" => "1", "response" => %{}, "status" => "ok"}}
+    assert_receive %Message{event: "joined"}
+    channel = Process.whereis(:"rooms:lobby")
+    Process.monitor(channel)
+    WebsocketClient.close(sock)
+
+    assert_receive {:DOWN, _, :process, ^channel, {:shutdown, _}}
   end
 
   test "adapter handles refuses websocket events that haven't joined" do
@@ -261,7 +278,8 @@ defmodule Phoenix.Integration.ChannelTest do
       assert Enum.at(resp.body["messages"], 1)["payload"]["status"] == "connected"
       assert Enum.at(resp.body["messages"], 2)["event"] == "user:entered"
       assert Enum.at(resp.body["messages"], 3)["payload"]["body"] == "Hello lobby"
-
+      channel = Process.whereis(:"rooms:room123")
+      Process.monitor(channel)
 
       ## Server termination handling
 
@@ -270,6 +288,8 @@ defmodule Phoenix.Integration.ChannelTest do
       resp = poll(:get, "/ws/poll", session)
       session = Map.take(resp.body, ["token", "sig"])
       assert resp.body["status"] == 410
+      # shutdowns terminate the channels
+      assert_receive {:DOWN, _, :process, ^channel, {:shutdown, _}}
 
       # join
       resp = poll :post, "/ws/poll", session, %{

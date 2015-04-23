@@ -17,6 +17,13 @@ defmodule Phoenix.Integration.WebsocketClient do
   end
 
   @doc """
+  Closes the socket
+  """
+  def close(socket) do
+    send(socket, :close)
+  end
+
+  @doc """
   Receives JSON encoded Socket.Message from remote WS endpoint and
   forwards message to client sender process
   """
@@ -31,6 +38,10 @@ defmodule Phoenix.Integration.WebsocketClient do
   def websocket_info({:send, msg}, _conn_state, state) do
     msg = Map.put(msg, :ref, to_string(state.ref + 1))
     {:reply, {:text, json!(msg)}, put_in(state, [:ref], state.ref + 1)}
+  end
+
+  def websocket_info(:close, _conn_state, _state) do
+    {:close, <<>>, "done"}
   end
 
   def websocket_terminate(_reason, _conn_state, _state) do
