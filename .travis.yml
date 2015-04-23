@@ -1,16 +1,15 @@
-language: erlang
-services:
-  - redis-server
+language: elixir
+elixir:
+  - 1.0.3
 otp_release:
   - 17.1
+matrix:
+  include:
+    - elixir: 1.0.4
+      otp_release: 17.5
+services:
+  - redis-server
 sudo: false
-before_install:
-  - wget http://s3.hex.pm/builds/elixir/v1.0.3.zip
-  - unzip -d elixir v1.0.3.zip
-before_script:
-  - export PATH=`pwd`/elixir/bin:$PATH
-  - mix local.hex --force
-  - mix deps.get --only test
 script:
   - mix test
   - cd installer && mix test
