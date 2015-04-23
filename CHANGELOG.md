@@ -16,6 +16,7 @@
   * [Mix] Ensure the serve endpoints configuration is persistent
   * [Mix] Declare missing applications in generated phoenix.new app
   * [Mix] No longer generate encryption salt in generated phoenix.new app
+  * [Channel] Ensure channels are terminated when WebSocket and LongPoller transports exit normally
 
 ## v0.11.0 (2015-04-07)
 
