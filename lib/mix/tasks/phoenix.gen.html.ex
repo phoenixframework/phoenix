@@ -1,7 +1,7 @@
 defmodule Mix.Tasks.Phoenix.Gen.Html do
   use Mix.Task
 
-  @shortdoc "Generates HTML files for a resource"
+  @shortdoc "Generates /web and /test files for an HTML resource"
 
   @moduledoc """
   Generates a Phoenix resource.
