@@ -60,7 +60,7 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
   end
 
   def websocket_terminate(reason, req, {handler, state}) do
-    handle_reply req, handler, handler.ws_terminate(reason, state)
+    handler.ws_terminate(reason, state)
   end
 
 

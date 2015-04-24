@@ -92,9 +92,20 @@ defmodule Phoenix.Transports.WebSocket do
     {:reply, serializer.encode!(message), state}
   end
 
-  def ws_terminate(_reason, state) do
+  @doc """
+  Exits with a reason other than `:normal` to ensure that linked channels
+  also exit.
+  If the original exit reason was normal or due to the remote end, an error-less
+  shutdown happens. Other reasons will log errors.
+  """
+  def ws_terminate({:normal, _}, _state) do
     exit(:shutdown)
-    {:shutdown, state}
+  end
+  def ws_terminate({:remote, _, _}, _state) do
+    exit(:shutdown)
+  end
+  def ws_terminate(reason, _state) do
+    exit(reason)
   end
 
   defp check_origin(conn, _opts) do
