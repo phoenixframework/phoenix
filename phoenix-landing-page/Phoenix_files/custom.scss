@@ -1,0 +1,87 @@
+@import url(http://fonts.googleapis.com/css?family=Lato:300,400,700);
+
+body, h1, h2, h3, h4, h5, h6 {
+  font-family: 'Lato', sans-serif !important;
+}
+
+.header {
+  background-image: radial-gradient(50% 127%, #F67938 29%, #EF4734 120%);
+  color: #fff !important;
+  min-height: 620px;
+}
+
+#jumbotron h2 {
+  color: #fff !important;
+  font-size: 36px;
+  line-height: 44px;
+  text-shadow: 0px 2px 0px #DD4C27;
+}
+
+.header #jumbotron p {
+  font-family: Lato-Light;
+  font-size: 21px;
+  color: #FFFFFF;
+  line-height: 36px;
+  max-width: 530px;
+  margin: 30px auto;
+  margin-bottom: 60px;
+}
+
+.navbar-nav > li > a {
+  color: #fff !important;
+  opacity: 0.6;
+  text-transform: uppercase;
+  border-bottom: 1px solid transparent;
+
+  &:hover {
+    opacity: 1;
+    border-bottom: 1px solid #fff;
+  }
+}
+
+
+body {
+  background-color: #F1F1F1 !important;
+}
+
+.header #jumbotron .btn {
+  background: rgba(255,255,255,0.07);
+  border: 3px solid #FEF4F2;
+  height: 86px;
+  width: 340px;
+  box-sizing: border-box;
+  padding-top: 14px;
+  border-radius: 48px;
+  text-align: center;
+
+  &:hover {
+    background: rgba(255,255,255,0.14);
+  }
+
+  span {
+    width: 100%;
+  }
+
+  .button-title {
+    font-weight: bold;
+    clear: both;
+    float: left;
+    font-size: 17px;
+  }
+
+  .button-teaser {
+    clear: both;
+    font-size: 14px;
+  }
+}
+
+.header .searchbox .typeahead {
+  border-radius: 20px;
+  color: #fff !important;
+  background: rgba(255,255,255,0.20) !important;
+}
+
+.header h1.navbar-brand a {
+  background-image: url("../Phoenix_files/phoenix-logo-white.png") !important;
+  background-size: 250px 34px;
+}
