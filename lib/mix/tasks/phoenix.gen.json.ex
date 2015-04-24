@@ -1,7 +1,7 @@
 defmodule Mix.Tasks.Phoenix.Gen.Json do
   use Mix.Task
 
-  @shortdoc "Generates JSON files for a resource"
+  @shortdoc "Generates /web and /test files for a JSON resource"
 
   @moduledoc """
   Generates a Phoenix resource.
