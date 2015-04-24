@@ -3,9 +3,12 @@ body, h1, h2, h3, h4, h5, h6 {
   font-family: 'Lato', sans-serif !important; }
 
 .header {
-  background-image: radial-gradient(50% 127%, #F67938 29%, #EF4734 120%);
-  color: #fff !important;
-  min-height: 620px; }
+  background-image: -webkit-radial-gradient(50% 50%, circle, #F67938 29%, #EF4734 120%);
+  background-image: radial-gradient(  circle at 50% 50%, #F67938 29%, #EF4734 120%);
+  color: #fff !important; }
+
+.header .searchbox .fa-search {
+  color: #fff !important; }
 
 #jumbotron h2 {
   color: #fff !important;
@@ -14,10 +17,10 @@ body, h1, h2, h3, h4, h5, h6 {
   text-shadow: 0px 2px 0px #DD4C27; }
 
 .header #jumbotron p {
-  font-family: Lato-Light;
+  font-weight: 300;
   font-size: 21px;
-  color: #FFFFFF;
-  line-height: 36px;
+  color: #fff;
+  line-height: 35.7px;
   max-width: 530px;
   margin: 30px auto;
   margin-bottom: 60px; }
@@ -31,9 +34,6 @@ body, h1, h2, h3, h4, h5, h6 {
     opacity: 1;
     border-bottom: 1px solid #fff; }
 
-body {
-  background-color: #F1F1F1 !important; }
-
 .header #jumbotron .btn {
   background: rgba(255, 255, 255, 0.07);
   border: 3px solid #FEF4F2;
@@ -42,6 +42,7 @@ body {
   box-sizing: border-box;
   padding-top: 14px;
   border-radius: 48px;
+  margin-bottom: 25px;
   text-align: center; }
   .header #jumbotron .btn:hover {
     background: rgba(255, 255, 255, 0.14); }
