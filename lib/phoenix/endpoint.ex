@@ -337,6 +337,13 @@ defmodule Phoenix.Endpoint do
       end
 
       @doc """
+      Generates the endpoint base URL without any path informat
+      """
+      def static_url do
+        url
+      end
+
+      @doc """
       Generates the path information when routing to this endpoint.
       """
       script_name = var!(config)[:url][:path]
