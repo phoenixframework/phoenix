@@ -89,8 +89,16 @@ defmodule Phoenix.Router.Route do
   defp maybe_binding([]), do: nil
   defp maybe_binding(binding) do
     quote do
+      decoded_params = unquote({:%{}, [], binding})
+         |> Enum.map(fn({k,v}) -> 
+           case v do
+             <<_::binary>> -> {k, URI.decode(v)} 
+             _ -> {k, v}
+           end
+         end)
+         |> Enum.into(%{})
       var!(conn) =
-        update_in var!(conn).params, &Map.merge(&1, unquote({:%{}, [], binding}))
+        update_in var!(conn).params, &Map.merge(&1, decoded_params)
     end
   end
 
