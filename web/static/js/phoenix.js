@@ -198,7 +198,6 @@ export class Socket {
   // For IE8 support use an ES5-shim (https://github.com/es-shims/es5-shim)
   //
   constructor(endPoint, opts = {}){
-    this.states               = SOCKET_STATES
     this.stateChangeCallbacks = {open: [], close: [], error: [], message: []}
     this.flushEveryMs         = 50
     this.reconnectTimer       = null
@@ -290,10 +289,10 @@ export class Socket {
 
   connectionState(){
     switch(this.conn && this.conn.readyState){
-      case this.states.connecting: return "connecting"
-      case this.states.open:       return "open"
-      case this.states.closing:    return "closing"
-      default:                     return "closed"
+      case SOCKET_STATES.connecting: return "connecting"
+      case SOCKET_STATES.open:       return "open"
+      case SOCKET_STATES.closing:    return "closing"
+      default:                       return "closed"
     }
   }
 
@@ -367,10 +366,9 @@ export class LongPoller {
     this.onerror         = function(){} // noop
     this.onmessage       = function(){} // noop
     this.onclose         = function(){} // noop
-    this.states          = SOCKET_STATES
     this.upgradeEndpoint = this.normalizeEndpoint(endPoint)
     this.pollEndpoint    = this.upgradeEndpoint + (/\/$/.test(endPoint) ? "poll" : "/poll")
-    this.readyState      = this.states.connecting
+    this.readyState      = SOCKET_STATES.connecting
 
     this.poll()
   }
@@ -385,7 +383,7 @@ export class LongPoller {
 
   closeAndRetry(){
     this.close()
-    this.readyState = this.states.connecting
+    this.readyState = SOCKET_STATES.connecting
   }
 
   ontimeout(){
@@ -394,7 +392,7 @@ export class LongPoller {
   }
 
   poll(){
-    if(!(this.readyState === this.states.open || this.readyState === this.states.connecting)){ return }
+    if(!(this.readyState === SOCKET_STATES.open || this.readyState === SOCKET_STATES.connecting)){ return }
 
     Ajax.request("GET", this.endpointURL(), "application/json", null, this.timeout, this.ontimeout.bind(this), (resp) => {
       if(resp){
@@ -414,7 +412,7 @@ export class LongPoller {
           this.poll()
           break
         case 410:
-          this.readyState = this.states.open
+          this.readyState = SOCKET_STATES.open
           this.onopen()
           this.poll()
           break
@@ -438,7 +436,7 @@ export class LongPoller {
   }
 
   close(code, reason){
-    this.readyState = this.states.closed
+    this.readyState = SOCKET_STATES.closed
     this.onclose()
   }
 }

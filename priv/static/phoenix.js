@@ -365,7 +365,6 @@ var Socket = exports.Socket = (function () {
 
     _classCallCheck(this, Socket);
 
-    this.states = SOCKET_STATES;
     this.stateChangeCallbacks = { open: [], close: [], error: [], message: [] };
     this.flushEveryMs = 50;
     this.reconnectTimer = null;
@@ -510,11 +509,11 @@ var Socket = exports.Socket = (function () {
 
   Socket.prototype.connectionState = function connectionState() {
     switch (this.conn && this.conn.readyState) {
-      case this.states.connecting:
+      case SOCKET_STATES.connecting:
         return "connecting";
-      case this.states.open:
+      case SOCKET_STATES.open:
         return "open";
-      case this.states.closing:
+      case SOCKET_STATES.closing:
         return "closing";
       default:
         return "closed";
@@ -622,10 +621,9 @@ var LongPoller = exports.LongPoller = (function () {
     this.onerror = function () {}; // noop
     this.onmessage = function () {}; // noop
     this.onclose = function () {}; // noop
-    this.states = SOCKET_STATES;
     this.upgradeEndpoint = this.normalizeEndpoint(endPoint);
     this.pollEndpoint = this.upgradeEndpoint + (/\/$/.test(endPoint) ? "poll" : "/poll");
-    this.readyState = this.states.connecting;
+    this.readyState = SOCKET_STATES.connecting;
 
     this.poll();
   }
@@ -640,7 +638,7 @@ var LongPoller = exports.LongPoller = (function () {
 
   LongPoller.prototype.closeAndRetry = function closeAndRetry() {
     this.close();
-    this.readyState = this.states.connecting;
+    this.readyState = SOCKET_STATES.connecting;
   };
 
   LongPoller.prototype.ontimeout = function ontimeout() {
@@ -651,7 +649,7 @@ var LongPoller = exports.LongPoller = (function () {
   LongPoller.prototype.poll = function poll() {
     var _this = this;
 
-    if (!(this.readyState === this.states.open || this.readyState === this.states.connecting)) {
+    if (!(this.readyState === SOCKET_STATES.open || this.readyState === SOCKET_STATES.connecting)) {
       return;
     }
 
@@ -679,7 +677,7 @@ var LongPoller = exports.LongPoller = (function () {
           _this.poll();
           break;
         case 410:
-          _this.readyState = _this.states.open;
+          _this.readyState = SOCKET_STATES.open;
           _this.onopen();
           _this.poll();
           break;
@@ -706,7 +704,7 @@ var LongPoller = exports.LongPoller = (function () {
   };
 
   LongPoller.prototype.close = function close(code, reason) {
-    this.readyState = this.states.closed;
+    this.readyState = SOCKET_STATES.closed;
     this.onclose();
   };
 
