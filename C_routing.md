@@ -124,7 +124,7 @@ This is the standard matrix of HTTP verbs, paths and controller actions. Let's l
 - A POST request to `/users` will invoke the `create` action to save a new user to the data store.
 - A GET request to `/users/:id/edit` will invoke the `edit` action with an id to retrieve an individual user from the data store and present the information in a form for editing.
 - A PATCH request to `/users/:id` will invoke the `update` action with an id to save the updated user to the data store.
-- A PUT request to `/users/:id` will also invoke the `update` action with an id to save the updated use to the data store.
+- A PUT request to `/users/:id` will also invoke the `update` action with an id to save the updated user to the data store.
 - A DELETE request to `/users/:id` will invoke the `delete` action with an id to remove the individual user from the data store.
 
 If we don't feel that we need all of these routes, we can be selective using the `:only` and `:except` options.
