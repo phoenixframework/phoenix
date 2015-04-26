@@ -179,6 +179,34 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
+  Sends an empty response with a status code.
+
+  ## Examples
+
+      iex> head conn, 200
+      iex> head conn, :ok
+
+  """
+  @spec head(Plug.Conn.t, binary | integer) :: Plug.Conn.t
+  def head(conn, status), do: send_resp(conn, status, "")
+
+  @doc """
+  Sends an empty response with a status code and content type.
+
+  ## Examples
+
+      iex> head conn, 200, "application/json"
+      iex> head conn, :ok, "application/json"
+
+  """
+  @spec head(Plug.Conn.t, binary | integer, binary) :: Plug.Conn.t
+  def head(conn, status, content_type) when is_binary(content_type) do
+    conn
+    |> put_resp_content_type(content_type)
+    |> head(status)
+  end
+
+  @doc """
   Sends redirect response to the given url.
 
   For security, `:to` only accepts paths. Use the `:external`

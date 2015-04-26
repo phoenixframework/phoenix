@@ -159,6 +159,26 @@ defmodule Phoenix.Controller.ControllerTest do
     assert conn.status == 400
   end
 
+  test "head/2" do
+    conn = head(conn(:get, "/"), 200)
+    assert conn.resp_body == ""
+    assert conn.status == 200
+    refute conn.halted
+
+    conn = head(conn(:get, "/"), :ok)
+    assert conn.resp_body == ""
+    assert conn.status == 200
+    refute conn.halted
+  end
+
+  test "head/3" do
+    conn = head(conn(:get, "/"), 200, "application/json")
+    assert get_resp_content_type(conn) == "application/json"
+    assert conn.resp_body == ""
+    assert conn.status == 200
+    refute conn.halted
+  end
+
   test "redirect/2 with :to" do
     conn = redirect(conn(:get, "/"), to: "/foobar")
     assert conn.resp_body =~ "/foobar"
