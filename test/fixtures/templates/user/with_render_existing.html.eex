@@ -1,2 +1,0 @@
-<%= render_existing MyApp.UserView, "banner.html", assigns %>
-<%= render_existing MyApp.UserView, "not_exists.html", assigns %>

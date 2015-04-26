@@ -42,6 +42,8 @@ defmodule MyApp.UserView do
   def render("edit.html", %{} = assigns) do
     "EDIT#{assigns[:layout]} - #{assigns[:title]}"
   end
+
+  def render("existing.html", _), do: "rendered existing"
 end
 
 defmodule MyApp.Templates.UserView do
@@ -50,6 +52,7 @@ defmodule MyApp.Templates.UserView do
   def escaped_title(title) do
     html_escape title
   end
+
 end
 
 defmodule MyApp.Nested.User do
