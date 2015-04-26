@@ -187,12 +187,14 @@ defmodule Phoenix.ViewTest do
   test "renders_existing/3 renders template if it exists" do
     assert render_existing(MyApp.UserView, "index.html", title: "Test") ==
       {:safe, [["" | "Test"] | "\n"]}
-
-    assert render_to_string(MyApp.UserView, "with_render_existing.html", []) |> String.strip() ==
-      "a banner"
   end
 
   test "renders_existing/3 returns nil if template does not exist" do
     assert render_existing(MyApp.UserView, "not-exists", title: "Test") == nil
+  end
+
+  test "render_existing/3 renders explicitly defined functions" do
+    assert render_existing(MyApp.UserView, "existing.html", []) ==
+      "rendered existing"
   end
 end

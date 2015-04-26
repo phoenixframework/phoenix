@@ -47,7 +47,7 @@ defmodule <%= application_module %>.Web do
       use Phoenix.View, root: "web/templates"<%= if namespaced? do %>, namespace: <%= application_module %><% end %>
 
       # Import convenience functions from controllers
-      import Phoenix.Controller, only: [get_flash: 2]
+      import Phoenix.Controller, only: [get_flash: 2, view_module: 1]
 
       # Import URL helpers from the router
       import <%= application_module %>.Router.Helpers
