@@ -304,7 +304,7 @@ defmodule Phoenix.View do
 
   The following:
 
-      render_many user, "show.html"
+      render_one user, "show.html"
 
   is roughly equivalent to:
 
@@ -318,7 +318,7 @@ defmodule Phoenix.View do
   the view name. The name of the key in assigns can be
   customized with the `:as` option:
 
-      render_one users, "show.html", as: :data
+      render_one user, "show.html", as: :data
 
   is roughly equivalent to:
 
