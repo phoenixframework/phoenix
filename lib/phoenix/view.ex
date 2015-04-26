@@ -209,6 +209,18 @@ defmodule Phoenix.View do
   end
 
   @doc """
+  Renders a template only if it exists
+
+  Same as `render/3`, but returns `nil` instead of raising
+  """
+  def render_existing(module, template, assigns) do
+    {_path, names} = module.__templates__()
+    if template in names do
+      render(module, template, assigns)
+    end
+  end
+
+  @doc """
   See `render_many/4`.
   """
   def render_many(collection, template) when is_binary(template) do

@@ -10,6 +10,7 @@
   * [Test] Add `html_response/2`, `json_response/2`, `text_response/2` and `response/2` to aid connection-based testing
   * [Generators] Add `phoenix.gen.json`
   * [Generators] Generate test files in `phoenix.gen.html`, `phoenix.gen.json` and `phoenix.gen.model`
+  * [Views] Add `render_existing/3` to render a template only if it exists without raising an error
 
 * Bug fixes
   * [Router] Ensure URL helpers know how to call `to_param` on query parameters

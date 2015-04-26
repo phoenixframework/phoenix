@@ -183,4 +183,16 @@ defmodule Phoenix.ViewTest do
     user = %MyApp.User{}
     assert render_one(user, MyApp.UserView, "data.text", as: :data) == "show data: name"
   end
+
+  test "renders_existing/3 renders template if it exists" do
+    assert render_existing(MyApp.UserView, "index.html", title: "Test") ==
+      {:safe, [["" | "Test"] | "\n"]}
+
+    assert render_to_string(MyApp.UserView, "with_render_existing.html", []) |> String.strip() ==
+      "a banner"
+  end
+
+  test "renders_existing/3 returns nil if template does not exist" do
+    assert render_existing(MyApp.UserView, "not-exists", title: "Test") == nil
+  end
 end
