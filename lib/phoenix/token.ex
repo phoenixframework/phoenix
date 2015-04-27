@@ -33,7 +33,7 @@ defmodule Phoenix.Token do
     case MessageEncryptor.verify_and_decrypt(token, secret, sign_secret) do
       :error -> :error
       {:ok, message} -> 
-        {:ok, %{ "data" => data, "exp" => exp}} = Poison.decode!(message)
+        %{ "data" => data, "exp" => exp} = Poison.decode!(message)
         if exp < now_ms() do
           :token_expired
         else
