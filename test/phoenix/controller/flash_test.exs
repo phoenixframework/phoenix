@@ -9,7 +9,7 @@ defmodule Phoenix.Controller.FlashTest do
     :ok
   end
 
-  test "flash is persisted when status is in redirect" do
+  test "flash is persisted when status is a redirect" do
     for status <- 300..308 do
       conn = conn(:get, "/") |> with_session |> fetch_flash()
                              |> put_flash(:notice, "elixir") |> send_resp(status, "ok")
@@ -31,7 +31,7 @@ defmodule Phoenix.Controller.FlashTest do
     end
   end
 
-  test "flash does not write to session in case it is empty" do
+  test "flash does not write to session when it is empty" do
     conn = conn(:get, "/") |> with_session |> fetch_flash() |> send_resp(200, "ok")
     assert get_resp_header(conn, "set-cookie") == []
   end
