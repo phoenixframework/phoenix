@@ -22,7 +22,7 @@ defmodule Phoenix.Test.TokenTest do
 
   test "happy path for the encoder" do
     id = 1
-    token = Token.gen_token(conn(), 1)
+    token = Token.gen_token(conn(), id)
     assert id == Token.verify_token(conn(), token)
   end
 
