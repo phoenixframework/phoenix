@@ -58,11 +58,12 @@ defmodule Phoenix.Token do
   @doc """
   Encrypts your data into a token you can send down to clients
   """
+  @spec gen_token(Plug.Conn.t | Phoenix.Socket.t, term, List) :: String.t | no_return
   def gen_token(context, data, opts \\ []) do
     {secret, sign_secret, max_age, encoder} = get_endpoint(context) |> encryptor()
 
-    if Dict.has_key?(opts, :max_age) do
-      max_age = opts[:max_age]
+    max_age = if Dict.has_key?(opts, :max_age) do
+      opts[:max_age]
     end
 
     if max_age do
@@ -81,12 +82,13 @@ defmodule Phoenix.Token do
   @doc """
   Decrypts the token into the originaly present data.
   """
+  @spec verify_token(Plug.Conn.t | Phoenix.Socket.t, String.t) :: :error | :token_expired | term | no_return
   def verify_token(context, token) do
-    {secret, sign_secret, max_age, encoder} = get_endpoint(context) |> encryptor()
+    {secret, sign_secret, _max_age, encoder} = get_endpoint(context) |> encryptor()
     case MessageEncryptor.verify_and_decrypt(token, secret, sign_secret) do
       :error -> :error
       {:ok, message} -> 
-        %{ "data" => data, "exp" => exp} = Poison.decode!(message)
+        %{ "data" => data, "exp" => exp} = encoder.decode!(message)
         if exp < now_ms() do
           :token_expired
         else
