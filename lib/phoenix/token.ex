@@ -1,14 +1,56 @@
 defmodule Phoenix.Token do
   @moduledoc """
-  Will generate, verify, and decrypt tokens for use in channel or API 
-  authentication. Typically you will want to store the basic information
-  you need to authorize a user. Typically as simple as a user id in a 
-  database. 
+  Tokens provide a way to  generate, verify, and decrypt bearer 
+  tokens for use in Channels or API authentication. 
+
+  ## Basic Usage
+  When generating a unique token for usage in an API or Channel
+  it is advised to use a unique identifier for the user typically
+  the id from a Database. For example: 
 
       iex> user_id = 1
-      iex> token = encrypt(user_id, endpoint)
-      iex> user_id == decrypt(token, endpoint)
+      iex> token = gen_token(endpoint, user_id)
+      iex> user_id == verify_token(endpoint, token)
       true
+
+  In that example we have a user's id, we generate a token and send
+  it to the client. When the client uses the token in a futher 
+  communication you verify the token, query the database and authorize 
+  the user. 
+
+  When using it with a socket a typical example might be:
+
+    defmodule MyChannel do
+      def join("my:" <> id = topic, %{token: token}, socket) do
+        case verify_token(socket, token) do
+        user_id ->
+          socket = assigns(socket, :user, Repo.get!(User, user_id))
+          reply socket, "join", %{}
+        :expired -> {:error, :auth_expired, socket}                                                                                                                                                           
+        :error -> {:error, :bad_auth, socket}
+        end
+      end
+    end
+
+  In this example the Phoenix.js client will be sending up the token
+  in the join command. 
+
+  If you want to provide an API to the user send it down to the user
+  by generating it in a controller or view action. 
+
+    def create(conn, params) do
+      user = User.create(params)
+      render conn, "user.json", %{token: gen_token(conn, user.id), user: user}
+    end
+
+    Then the client can use it all the way through. If you'd like to 
+    use the same token for API authorization then I suggest adding it
+    as a header to your authroized http requests
+    
+      Authorization: Bearer %{token}
+
+    Then create a plug to verify the token and authorize with the database.
+
   """
   alias Plug.Crypto.KeyGenerator
   alias Plug.Crypto.MessageEncryptor
