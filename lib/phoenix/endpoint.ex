@@ -340,7 +340,9 @@ defmodule Phoenix.Endpoint do
       Generates the endpoint base URL without any path informat
       """
       def static_url do
-        url
+        Phoenix.Config.cache(__MODULE__,
+          :__phoenix_static_url__,
+          &Phoenix.Endpoint.Adapter.static_url/1)
       end
 
       @doc """

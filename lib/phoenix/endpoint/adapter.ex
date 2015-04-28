@@ -113,6 +113,7 @@ defmodule Phoenix.Endpoint.Adapter do
      reloadable_paths: ["web"],
      secret_key_base: nil,
      server: Application.get_env(:phoenix, :serve_endpoints, false),
+     multiple_static_hosts: [],
      url: [host: "localhost", path: "/"],
 
      # Supervisor config
@@ -154,6 +155,38 @@ defmodule Phoenix.Endpoint.Adapter do
       end
 
     url    = endpoint.config(:url)
+    scheme = url[:scheme] || scheme
+    host   = url[:host]
+    port   = port_to_string(url[:port] || port)
+
+    {:cache,
+      case {scheme, port} do
+        {"https", "443"} -> "https://" <> host
+        {"http", "80"}   -> "http://" <> host
+        {_, _}           -> scheme <> "://" <> host <> ":" <> port
+      end}
+  end
+
+  @doc """
+  Builds the endpoint static url from its configuration based on the multiple
+  static hosts configured
+
+  The result is wrapped in a `{:cache, value}` tuple so
+  the Phoenix.Config layer knows how to cache it.
+  """
+  def static_url(endpoint) do
+    {scheme, port} =
+      cond do
+        config = endpoint.config(:https) ->
+          {"https", config[:port]}
+        config = endpoint.config(:http) ->
+          {"http", config[:port]}
+        true ->
+          {"http", "80"}
+      end
+
+    hosts  = endpoint.config(:multiple_static_hosts)
+    url    = Enum.at(hosts, :random.uniform(length(hosts) - 1))
     scheme = url[:scheme] || scheme
     host   = url[:host]
     port   = port_to_string(url[:port] || port)
