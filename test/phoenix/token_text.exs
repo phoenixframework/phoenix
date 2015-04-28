@@ -10,7 +10,7 @@ defmodule Phoenix.Test.TokenTest do
     token_auth: [ secret_key_base: "abc123",
                   encryption_salt: "foobar",
                   signing_salt: "chrismc",
-                  max_age: 20 ])
+                  max_age: 50 ])
 
   setup do 
     {:ok, pid} = TokenEndpoint.start_link
@@ -29,9 +29,10 @@ defmodule Phoenix.Test.TokenTest do
   test "given a junk token it fails" do
     assert :error == Token.verify_token(conn(), "garbage")
   end
+
   test "bad expiration it fails" do
     token = Token.gen_token(conn(), 1)
-    Stream.timer(30) |> Enum.map(fn (_) ->
+    Stream.timer(60) |> Enum.map(fn (_) ->
       assert :token_expired == Token.verify_token(conn(), token)
     end)
   end
@@ -40,6 +41,20 @@ defmodule Phoenix.Test.TokenTest do
     id = 1
     token = Token.gen_token(socket(), id)
     assert id == Token.verify_token(socket(), token)
+  end
+
+  test "overriding expiration" do
+    token = Token.gen_token(conn(), 1, max_age: 30)
+    Stream.timer(40) |> Enum.map(fn (_) ->
+      assert :token_expired == Token.verify_token(conn(), token)
+    end)
+  end
+
+  test "nil expiration" do
+    token = Token.gen_token(conn(), 1, max_age: nil)
+    Stream.timer(40) |> Enum.map(fn (_) ->
+      assert :token_expired != Token.verify_token(conn(), token)
+    end)
   end
 
   defp socket() do

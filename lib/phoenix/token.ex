@@ -58,11 +58,22 @@ defmodule Phoenix.Token do
   @doc """
   Encrypts your data into a token you can send down to clients
   """
-  def gen_token(context, data) do
+  def gen_token(context, data, opts \\ []) do
     {secret, sign_secret, max_age, encoder} = get_endpoint(context) |> encryptor()
+
+    if Dict.has_key?(opts, :max_age) do
+      max_age = opts[:max_age]
+    end
+
+    if max_age do
+      exp = now_ms() + max_age
+    else
+      exp = nil
+    end
+
     message = %{ 
       data: data,
-      exp: now_ms() + max_age
+      exp: exp
     } |> encoder.encode!()
     MessageEncryptor.encrypt_and_sign(message, secret, sign_secret)
   end
