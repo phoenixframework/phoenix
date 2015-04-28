@@ -44,7 +44,7 @@ Topics are string identifiers - names that the various layers use in order to ma
 
 - Transports
 
-The transport layer is where the rubber meets the road. The `Phoenix.Channel.Transport` module handles all the message dispatching into and out of a Channel. 
+The transport layer is where the rubber meets the road. The `Phoenix.Channel.Transport` module handles all the message dispatching into and out of a Channel.
 
 - Transport Adapters
 
@@ -78,14 +78,14 @@ The first priority of your channels is to authorize clients to join a given topi
 ```elixir
 defmodule HelloPhoenix.RoomChannel do
   use Phoenix.Channel
-  
+
   def join("rooms:lobby", auth_msg, socket) do
     {:ok, socket}
   end
   def join("rooms:" <> _private_room_id, _auth_msg, socket) do
     :ignore
   end
-  
+
 end
 ```
 
@@ -108,7 +108,7 @@ In your `web/templates/page/index.html.eex`, add a container to hold our chat me
 
 ```html
 <div id="messages"></div>
-<div id="chat-input"></div>
+<input id="chat-input" type="text"></input>
 ```
 
 We'll also add jQuery to our application layout in `web/templates/layout/application.html.eex`:
@@ -161,7 +161,7 @@ socket.join("rooms:lobby", {}).receive("ok", chan => {
       chatInput.val("")
     }
   })
-  
+
   chan.on("new_msg", payload => {
     messagesContainer.append(`<br/>[${Date()}] ${payload.body}`)
   })
@@ -171,24 +171,24 @@ socket.join("rooms:lobby", {}).receive("ok", chan => {
 We listen for the `"new_msg"` event using `chan.on`, and then append the message body to the DOM. Now let's handle the incoming and outgong events on the server to complete the picture.
 
 ### Incoming Events
-We handle incoming events with `handle_in/3`. We can pattern match on the event names, like `"new_msg"`, and then grab the payload that the client passed over the channel. For our chat application, we simply need to notify all other `rooms:lobby` subscribers of the new message with `broadcast!/3`. 
+We handle incoming events with `handle_in/3`. We can pattern match on the event names, like `"new_msg"`, and then grab the payload that the client passed over the channel. For our chat application, we simply need to notify all other `rooms:lobby` subscribers of the new message with `broadcast!/3`.
 
 ```elixir
 defmodule HelloPhoenix.RoomChannel do
   use Phoenix.Channel
-  
+
   def join("rooms:lobby", auth_msg, socket) do
     {:ok, socket}
   end
   def join("rooms:" <> _private_room_id, _auth_msg, socket) do
     :ignore
   end
-  
+
   def handle_in("new_msg", %{"body" => body}, socket) do
     broadcast! socket, "new_msg", %{body: body}
     {:noreply, socket}
   end
-  
+
   def handle_out("new_msg", payload, socket) do
     push socket, "new_msg", payload
     {:noreply, socket}

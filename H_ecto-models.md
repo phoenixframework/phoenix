@@ -2,7 +2,7 @@ Most web applications today need some form of data storage. In the Elixir ecosys
 
 This guide assumes that we have generated our new application with Ecto. If we're using an older Phoenix app, or we used the `--no-ecto` option to generate our application, all is not lost. Please follow the instructions in the "Integrating Ecto" section below.
 
-Now that we all have Ecto and Postgrex installed and configured, the easiest way to use Ecto models is to generate a resource through the `phoenix.gen.html` task. Let's generate a `User` resource with `name`, `email`, 'bio', and `number_of_pets` fields.
+Now that we all have Ecto and Postgrex installed and configured, the easiest way to use Ecto models is to generate a resource through the `phoenix.gen.html` task. Let's generate a `User` resource with `name`, `email`, `bio`, and `number_of_pets` fields.
 
 ```console
 $ mix phoenix.gen.html User users name:string email:string bio:string number_of_pets:integer
