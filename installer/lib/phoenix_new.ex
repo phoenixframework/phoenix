@@ -141,7 +141,7 @@ defmodule Mix.Tasks.Phoenix.New do
     ecto = Keyword.get(opts, :ecto, true)
     brunch = Keyword.get(opts, :brunch, true)
 
-    {adapter_app, adapter_module} = set_ecto_adapter(db)
+    {adapter_app, adapter_module, db_user, db_password} = set_ecto_adapter(db)
     pubsub_server = set_pubsub_server(mod)
 
     binding = [application_name: app,
@@ -155,7 +155,9 @@ defmodule Mix.Tasks.Phoenix.New do
                brunch: brunch,
                ecto: ecto,
                adapter_app: adapter_app,
-               adapter_module: adapter_module]
+               adapter_module: adapter_module,
+               db_user: db_user,
+               db_password: db_password]
 
     copy_from path, binding, @new
 
@@ -189,8 +191,8 @@ defmodule Mix.Tasks.Phoenix.New do
       # Configure your database
       config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
         adapter: #{inspect binding[:adapter_module]},
-        username: "postgres",
-        password: "postgres",
+        username: #{inspect binding[:db_user]},
+        password: #{inspect binding[:db_password]},
         database: "#{binding[:application_name]}_dev"
       """
 
@@ -199,8 +201,8 @@ defmodule Mix.Tasks.Phoenix.New do
       # Configure your database
       config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
         adapter: #{inspect binding[:adapter_module]},
-        username: "postgres",
-        password: "postgres",
+        username: #{inspect binding[:db_user]},
+        password: #{inspect binding[:db_password]},
         database: "#{binding[:application_name]}_test",
         size: 1,
         max_overflow: false
@@ -211,8 +213,8 @@ defmodule Mix.Tasks.Phoenix.New do
       # Configure your database
       config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
         adapter: #{inspect binding[:adapter_module]},
-        username: "postgres",
-        password: "postgres",
+        username: #{inspect binding[:db_user]},
+        password: #{inspect binding[:db_password]},
         database: "#{binding[:application_name]}_prod"
       """
     end
@@ -330,9 +332,9 @@ defmodule Mix.Tasks.Phoenix.New do
     end
   end
 
-  defp set_ecto_adapter("mssql"), do: {:tds_ecto, Tds.Ecto}
-  defp set_ecto_adapter("mysql"), do: {:mariaex, Ecto.Adapters.MySQL}
-  defp set_ecto_adapter("postgres"), do: {:postgrex, Ecto.Adapters.Postgres}
+  defp set_ecto_adapter("mssql"), do: {:tds_ecto, Tds.Ecto, "db_user", "db_password"}
+  defp set_ecto_adapter("mysql"), do: {:mariaex, Ecto.Adapters.MySQL, "root", ""}
+  defp set_ecto_adapter("postgres"), do: {:postgrex, Ecto.Adapters.Postgres, "postgres", "postgres"}
   defp set_ecto_adapter(db), do: Mix.raise "Unknown database #{inspect db}"
 
   defp set_pubsub_server(module) do
