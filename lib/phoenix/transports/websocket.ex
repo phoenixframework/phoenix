@@ -80,6 +80,8 @@ defmodule Phoenix.Transports.WebSocket do
         case reason do
           :normal ->
             {:reply, state.serializer.encode!(Transport.chan_close_message(topic)), new_state}
+          :shutdown ->
+            {:reply, state.serializer.encode!(Transport.chan_close_message(topic)), new_state}
           {:shutdown, _} ->
             {:reply, state.serializer.encode!(Transport.chan_close_message(topic)), new_state}
           _other ->
@@ -92,9 +94,14 @@ defmodule Phoenix.Transports.WebSocket do
     {:reply, serializer.encode!(message), state}
   end
 
-  def ws_terminate(_reason, state) do
-    exit(:shutdown)
-    {:shutdown, state}
+  def ws_terminate(_reason, _state) do
+    :ok
+  end
+
+  def ws_close(state) do
+    for {pid, _} <- state.sockets_inverse do
+      Phoenix.Channel.Server.close(pid)
+    end
   end
 
   defp check_origin(conn, _opts) do

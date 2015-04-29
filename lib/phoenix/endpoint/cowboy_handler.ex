@@ -37,7 +37,7 @@ defmodule Phoenix.Endpoint.CowboyHandler do
   ## Cowboy Handler
 
   @connection Plug.Adapters.Cowboy.Conn
-  @websockets Phoenix.Endpoint.CowboyWebSocket
+  @websockets Phoenix.Endpoint.CowboyWebsocket
   @already_sent {:plug_conn, :sent}
 
   def init({transport, :http}, req, {plug, opts}) when transport in [:tcp, :ssl] do

@@ -108,8 +108,12 @@ defmodule Phoenix.Channel.Transport do
     log_ignore(msg.topic, router)
     :ignore
   end
+  def dispatch(socket_pid, %{event: "phx_leave", ref: ref}, _transport_pid, _router, _pubsub_server, _transport) do
+    Phoenix.Channel.Server.leave(socket_pid, ref)
+    :ok
+  end
   def dispatch(socket_pid, msg, _transport_pid, _router, _pubsub_server, _transport) do
-    GenServer.cast(socket_pid, {:handle_in, msg.event, msg.payload, msg.ref})
+    Phoenix.Channel.Server.handle_in(socket_pid, msg.event, msg.payload, msg.ref)
     :ok
   end
   defp log_ignore(topic, router) do

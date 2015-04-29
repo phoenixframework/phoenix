@@ -551,7 +551,7 @@ defmodule Phoenix.Channel.ChannelTest do
       payload: %{ref: "12345", response: %{}, status: "ok"},
       ref: nil, topic: "topic:12subtopic"}}
 
-    assert_receive {:terminate_triggered, {:shutdown, :client_left}}
-    assert_receive {:DOWN, _ref, :process, ^socket_pid, {:shutdown, :client_left}}
+    assert_receive {:terminate_triggered, {:shutdown, :left}}
+    assert_receive {:DOWN, _ref, :process, ^socket_pid, {:shutdown, :left}}
   end
 end

@@ -11,6 +11,7 @@
   * [Generators] Add `phoenix.gen.json`
   * [Generators] Generate test files in `phoenix.gen.html`, `phoenix.gen.json` and `phoenix.gen.model`
   * [Views] Add `render_existing/3` to render a template only if it exists without raising an error
+  * [Channel] Leaving the channel or closing the client will now trigger terminate on the channel, regardless of traping exits, with reasons `{:shutdown, :left}` and `{:shutdown, :closed}` respectively
 
 * Bug fixes
   * [Router] Ensure URL helpers know how to call `to_param` on query parameters

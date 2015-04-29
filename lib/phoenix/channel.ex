@@ -7,6 +7,7 @@ defmodule Phoenix.Channel do
   integrate with the `Phoenix.PubSub` layer for soft-realtime functionality.
 
   ## Topics & Callbacks
+
   When clients join a channel, they do so by subscribing to a topic.
   Topics are string identifiers in the `Phoenix.PubSub` layer that allow
   multiple processes to subscribe and broadcast messages about a given topic.
@@ -35,6 +36,7 @@ defmodule Phoenix.Channel do
       end
 
   ### Authorization
+
   Clients must join a channel to send and receive PubSub events on that channel.
   Your channels must implement a `join/3` callback that authorizes the socket
   for the given topic. It is common for clients to send up authorization data,
@@ -43,8 +45,8 @@ defmodule Phoenix.Channel do
   To authorize a socket in `join/3`, return `{:ok, socket}`.
   To refuse authorization in `join/3, return `:ignore`.
 
-
   ### Incoming Events
+
   After a client has successfully joined a channel, incoming events from the
   client are routed through the channel's `handle_in/3` callbacks. Within these
   callbacks, you can perform any action. Typically you'll either forward a
@@ -68,8 +70,8 @@ defmodule Phoenix.Channel do
         {:noreply, socket}
       end
 
+  ### Replies
 
-  ### Synchronous Replies
   In addition to pushing messages out when you receive a `handle_in` event,
   you can also reply directly to a client event for request/response style
   messaging. This is useful when a client must know the result of an operation
@@ -101,7 +103,6 @@ defmodule Phoenix.Channel do
         end
       end
 
-
   ### Outgoing Events
 
   When an event is broadcasted with `Phoenix.Channel.broadcast/3`, each channel
@@ -132,12 +133,12 @@ defmodule Phoenix.Channel do
         {:noreply, socket}
       end
 
-   By default, unhandled outgoing events are forwarded to each client as a push,
-   but you'll need to define the catch-all clause yourself once you define an
-   `handle_out/3` clause.
-
+  By default, unhandled outgoing events are forwarded to each client as a push,
+  but you'll need to define the catch-all clause yourself once you define an
+  `handle_out/3` clause.
 
   ## Broadcasting to an external topic
+
   In some cases, you will want to broadcast messages without the context of a `socket`.
   This could be for broadcasting from within your channel to an external topic, or
   broadcasting from elsewhere in your application like a Controller or GenServer.
@@ -159,6 +160,21 @@ defmodule Phoenix.Channel do
         redirect conn, to: "/"
       end
 
+  ## Terminate
+
+  On termination, the channel callback `terminate/2` will be invoked with
+  the error reason and the socket.
+
+  If we are terminating because the client left, the reason will be
+  `{:shutdown, :left}`. Similarly, if we are terminating because the
+  client connection was closed, the reason will be `{:shutdown, :closed}`.
+
+  If any of the callbacks return a stop tuple, that will also trigger
+  terminate, with the given reason.
+
+  Note `terminate/2` may also be invoked in case of errors or exits
+  but only if the current process is trapping exits. This practice,
+  however, is typically not recommended.
   """
 
   use Behaviour

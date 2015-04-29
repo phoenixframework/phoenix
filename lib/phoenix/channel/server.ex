@@ -2,18 +2,42 @@ defmodule Phoenix.Channel.Server do
   use GenServer
   alias Phoenix.PubSub
 
-  @moduledoc """
-  Handles `%Phoenix.Socket{}` state and invokes channel callbacks.
-
-  ## handle_info/2
-  Regular Elixir messages are forwarded to the socket channel's
-  `handle_info/2` callback.
-
-  """
+  # TODO: Document me as the transport API.
+  @moduledoc false
 
   def start_link(socket, auth_payload) do
     GenServer.start_link(__MODULE__, [socket, auth_payload])
   end
+
+  @doc """
+  Pushes a new message from client to the channel.
+  """
+  def handle_in(pid, event, payload, ref) do
+    GenServer.cast(pid, {:handle_in, event, payload, ref})
+  end
+
+  @doc """
+  Notifies the channel the client left.
+
+  This event is async and a message is sent back to the
+  transport as soon the leave command is processed (but
+  before termination).
+  """
+  def leave(pid, ref) do
+    GenServer.cast(pid, {:leave, ref})
+  end
+
+  @doc """
+  Notifies the channel the client closed.
+
+  This event is synchronous as we want to guarantee
+  proper termination of the channel.
+  """
+  def close(pid) do
+    GenServer.call(pid, :close)
+  end
+
+  ## Callbacks
 
   @doc """
   Initializes the Socket server for `Phoenix.Channel` joins.
@@ -24,6 +48,8 @@ defmodule Phoenix.Channel.Server do
 
   See `Phoenix.Channel.join/3` documentation.
   """
+
+  # TODO: Modify the socket to not allow pushes
   def init([socket, auth_payload]) do
     case socket.channel.join(socket.topic, auth_payload, socket) do
       {:ok, socket} ->
@@ -48,14 +74,15 @@ defmodule Phoenix.Channel.Server do
     }}
   end
 
-  def handle_cast({:handle_in, "phx_leave", _payload, ref}, socket) do
-    handle_result({:stop, {:shutdown, :client_left}, :ok, put_in(socket.ref, ref)}, :handle_in)
+  def handle_call(:close, _from, socket) do
+    {:stop, {:shutdown, :closed}, socket}
   end
 
-  @doc """
-  Forwards incoming client messages through `handle_in/3` callbacks
-  """
-  def handle_cast({:handle_in, event, payload, ref}, socket) when event != "phx_join" do
+  def handle_cast({:leave, ref}, socket) do
+    handle_result({:stop, {:shutdown, :left}, :ok, put_in(socket.ref, ref)}, :handle_in)
+  end
+
+  def handle_cast({:handle_in, event, payload, ref}, socket) do
     event
     |> socket.channel.handle_in(payload, put_in(socket.ref, ref))
     |> handle_result(:handle_in)
@@ -79,6 +106,7 @@ defmodule Phoenix.Channel.Server do
     |> handle_result(:handle_info)
   end
 
+  # TODO: Modify the socket to not allow pushes
   def terminate(reason, socket) do
     socket.channel.terminate(reason, socket)
   end

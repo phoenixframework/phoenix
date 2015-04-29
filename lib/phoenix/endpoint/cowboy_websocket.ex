@@ -1,4 +1,4 @@
-defmodule Phoenix.Endpoint.CowboyWebSocket do
+defmodule Phoenix.Endpoint.CowboyWebsocket do
   @moduledoc false
   @behaviour :cowboy_websocket_handler
 
@@ -10,21 +10,18 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
     try do
       apply(module, fun, args)
     catch
-      class, [{:reason, reason}, {:mfa, _mfa}, {:stacktrace, stack} | _rest] ->
-        exit(class, reason, stack, conn)
+      kind, [{:reason, reason}, {:mfa, _mfa}, {:stacktrace, stack} | _rest] ->
+        reason = format_reason(kind, reason, stack)
+        exit({reason, {__MODULE__, :call, [conn, []]}})
     else
-      {:ok, _req, _env} = ok ->
-        ok
       {:suspend, module, fun, args} ->
         {:suspend, __MODULE__, :resume, [conn, module, fun, args]}
-      {:stop, _req} = stop ->
-        stop
+      _ ->
+        # We are forcing a shutdown exit because we want to make
+        # sure all transports exits with reason shutdown to guarantee
+        # all channels are closed.
+        exit(:shutdown)
     end
-  end
-
-  defp exit(class, reason, stack, conn) do
-    reason2 = format_reason(class, reason, stack)
-    exit({reason2, {__MODULE__, :call, [conn, []]}})
   end
 
   defp format_reason(:exit, reason, _), do: reason
@@ -46,27 +43,20 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
     {:ok, req, {handler, state}}
   end
 
-  def websocket_info({:reply, {opcode, payload}}, req, state) do
-    {:reply, {opcode, payload}, req, state}
-  end
-  def websocket_info(:shutdown, req, state) do
-    {:shutdown, req, state}
-  end
-  def websocket_info(:hibernate, req, {handler, state}) do
-    {:ok, req, {handler, state}, :hibernate}
-  end
   def websocket_info(message, req, {handler, state}) do
     handle_reply req, handler, handler.ws_info(message, state)
   end
 
-  def websocket_terminate(reason, req, {handler, state}) do
-    handle_reply req, handler, handler.ws_terminate(reason, state)
+  def websocket_terminate({:error, :closed}, _req, {handler, state}) do
+    handler.ws_close(state)
+    :ok
   end
 
-
-  defp handle_reply(req, handler, {:shutdown, new_state}) do
-    {:shutdown, req, {handler, new_state}}
+  def websocket_terminate(reason, _req, {handler, state}) do
+    handler.ws_terminate(reason, state)
+    :ok
   end
+
   defp handle_reply(req, handler, {:ok, new_state}) do
     {:ok, req, {handler, new_state}}
   end
