@@ -213,11 +213,8 @@ defmodule Phoenix.View do
 
   Same as `render/3`, but returns `nil` instead of raising
   """
-  def render_existing(module, template, assigns) do
-    {_path, names} = module.__templates__()
-    if template in names do
-      render(module, template, assigns)
-    end
+  def render_existing(module, template, assigns \\ []) do
+    render(module, template, Dict.put(assigns, :render_existing, {module, template}))
   end
 
   @doc """

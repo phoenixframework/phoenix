@@ -106,20 +106,6 @@ defmodule Phoenix.Template do
     end
   end
 
-  @doc """
-  Tracks the `render/2` definitions on view modules
-
-  Allows explicit templates to be included in the generated `__templates__/0`
-  """
-  def track_def_render(env, kind, :render, [tpl_name, _assigns] = args, guards, body)
-    when is_binary(tpl_name)
-    or is_atom(tpl_name) do
-
-    Module.put_attribute(env.module, :explicit_templates, tpl_name)
-  end
-  def track_def_render(_env, _kind, _name, _args, _guards, _body) do
-  end
-
   @doc false
   defmacro __using__(options) do
     root = Dict.fetch! options, :root
@@ -127,8 +113,6 @@ defmodule Phoenix.Template do
     quote do
       @template_root Path.relative_to_cwd(unquote(root))
       @before_compile unquote(__MODULE__)
-      Module.register_attribute(__MODULE__, :explicit_templates, accumulate: true)
-      @on_definition {unquote(__MODULE__), :track_def_render}
 
       @doc """
       Renders the given template locally.
@@ -179,6 +163,9 @@ defmodule Phoenix.Template do
     quote line: -1 do
       unquote(codes)
 
+      def render(tpl, %{render_existing: {__MODULE__, tpl}}) do
+        nil
+      end
       def render(template, assigns) do
         template_not_found(template, assigns)
       end
@@ -187,7 +174,7 @@ defmodule Phoenix.Template do
       Returns the template root alongside all templates.
       """
       def __templates__ do
-        {@template_root, unquote(names) ++ @explicit_templates}
+        {@template_root, unquote(names)}
       end
 
       @doc """
