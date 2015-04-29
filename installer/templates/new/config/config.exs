@@ -4,7 +4,7 @@
 # This configuration file is loaded before any dependency and
 # is restricted to this project.
 use Mix.Config
-<%= if application_module != Mix.Utils.camelize(application_name) do %>
+<%= if namespaced? do %>
 # Configures the namespace used by Phoenix generators
 config :<%= application_name %>,
   app_namespace: <%= application_module %>

@@ -157,7 +157,8 @@ defmodule Mix.Tasks.Phoenix.New do
                adapter_app: adapter_app,
                adapter_module: adapter_module,
                db_user: db_user,
-               db_password: db_password]
+               db_password: db_password,
+               namespaced?: Mix.Utils.camelize(app) != mod]
 
     copy_from path, binding, @new
 

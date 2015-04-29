@@ -123,6 +123,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "custom_path/mix.exs", ~r/app: :photo_blog/
       assert_file "custom_path/lib/photo_blog/endpoint.ex", ~r/app: :photo_blog/
       assert_file "custom_path/config/config.exs", ~r/app_namespace: PhoteuxBlog/
+      assert_file "custom_path/web/web.ex", ~r/use Phoenix.Controller, namespace: PhoteuxBlog/
     end
   end
 

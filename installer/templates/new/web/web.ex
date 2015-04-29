@@ -30,7 +30,7 @@ defmodule <%= application_module %>.Web do
 <% end %>
   def controller do
     quote do
-      use Phoenix.Controller
+      use Phoenix.Controller<%= if namespaced? do %>, namespace: <%= application_module %><% end %>
 <%= if ecto do %>
       # Alias the data repository and import query/model functions
       alias <%= application_module %>.Repo
@@ -44,7 +44,7 @@ defmodule <%= application_module %>.Web do
 
   def view do
     quote do
-      use Phoenix.View, root: "web/templates"
+      use Phoenix.View, root: "web/templates"<%= if namespaced? do %>, namespace: <%= application_module %><% end %>
 
       # Import convenience functions from controllers
       import Phoenix.Controller, only: [get_flash: 2]
