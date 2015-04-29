@@ -144,27 +144,7 @@ defmodule Phoenix.Endpoint.Adapter do
   the Phoenix.Config layer knows how to cache it.
   """
   def url(endpoint) do
-    {scheme, port} =
-      cond do
-        config = endpoint.config(:https) ->
-          {"https", config[:port]}
-        config = endpoint.config(:http) ->
-          {"http", config[:port]}
-        true ->
-          {"http", "80"}
-      end
-
-    url    = endpoint.config(:url)
-    scheme = url[:scheme] || scheme
-    host   = url[:host]
-    port   = port_to_string(url[:port] || port)
-
-    {:cache,
-      case {scheme, port} do
-        {"https", "443"} -> "https://" <> host
-        {"http", "80"}   -> "http://" <> host
-        {_, _}           -> scheme <> "://" <> host <> ":" <> port
-      end}
+    {:cache, calculate_url(endpoint, endpoint.config(:url))}
   end
 
   @doc """
@@ -175,6 +155,11 @@ defmodule Phoenix.Endpoint.Adapter do
   the Phoenix.Config layer knows how to cache it.
   """
   def static_url(endpoint) do
+    urls  = endpoint.config(:multiple_static_hosts)
+    {:cache, List.to_tuple(Enum.map(urls, &(calculate_url(endpoint, &1))))}
+  end
+
+  defp calculate_url(endpoint, url) do
     {scheme, port} =
       cond do
         config = endpoint.config(:https) ->
@@ -185,18 +170,15 @@ defmodule Phoenix.Endpoint.Adapter do
           {"http", "80"}
       end
 
-    hosts  = endpoint.config(:multiple_static_hosts)
-    url    = Enum.at(hosts, :random.uniform(length(hosts) - 1))
     scheme = url[:scheme] || scheme
     host   = url[:host]
     port   = port_to_string(url[:port] || port)
 
-    {:cache,
-      case {scheme, port} do
-        {"https", "443"} -> "https://" <> host
-        {"http", "80"}   -> "http://" <> host
-        {_, _}           -> scheme <> "://" <> host <> ":" <> port
-      end}
+    case {scheme, port} do
+      {"https", "443"} -> "https://" <> host
+      {"http", "80"}   -> "http://" <> host
+      {_, _}           -> scheme <> "://" <> host <> ":" <> port
+    end
   end
 
   @doc """

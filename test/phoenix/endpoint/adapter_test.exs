@@ -57,19 +57,13 @@ defmodule Phoenix.Endpoint.AdapterTest do
     end
   end
 
-  test "generates static url based on multiple assets hosts" do
-    available_static_hosts = [
-      {:cache, "http://example1.com:678"},
-      {:cache, "http://example2.com"},
-      {:cache, "http://example3.com:8888"},
-      {:cache, "http://example4.com:669"}
-    ]
-    :random.seed(:erlang.now)
+  test "generates all the possible url based on the multiple assets hosts" do
+    available_static_hosts = {:cache, {"random://example1.com:678",
+                                       "http://example2.com",
+                                       "http://example3.com:8888",
+                                       "http://example4.com:669"}}
 
-    assert Adapter.static_url(StaticURLEndpoint) in available_static_hosts
-    assert Adapter.static_url(StaticURLEndpoint) in available_static_hosts
-    assert Adapter.static_url(StaticURLEndpoint) in available_static_hosts
-    assert Adapter.static_url(StaticURLEndpoint) in available_static_hosts
+    assert Adapter.static_url(StaticURLEndpoint) == available_static_hosts
   end
 
   test "generates url" do
