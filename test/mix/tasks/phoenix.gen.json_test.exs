@@ -83,6 +83,17 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
     end
   end
 
+  test "generates resource without model" do
+    in_tmp "generates resource without model", fn ->
+      Mix.Tasks.Phoenix.Gen.Json.run ["Admin.User", "users", "--no-model", "name:string"]
+
+      refute File.exists? "web/models/admin/user.ex"
+      assert [] = Path.wildcard("priv/repo/migrations/*_create_admin_user.exs")
+
+      assert_file "web/controllers/admin/user_controller.ex"
+    end
+  end
+
   test "plural can't contain a colon" do
     assert_raise Mix.Error, fn ->
       Mix.Tasks.Phoenix.Gen.Json.run ["Admin.User", "name:string", "foo:string"]

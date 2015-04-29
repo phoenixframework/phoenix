@@ -38,8 +38,9 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
       mix phoenix.gen.model Admin.User users name:string age:integer
 
   """
-  def run([singular, plural|attrs]) do
-    if String.contains?(plural, ":"), do: raise_with_help
+  def run(args) do
+    {_opts, parsed, _} = OptionParser.parse(args, switches: [])
+    [singular, plural | attrs] = validate_args!(parsed)
 
     attrs     = Mix.Phoenix.attrs(attrs)
     binding   = Mix.Phoenix.inflect(singular)
@@ -57,7 +58,15 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     ]
   end
 
-  def run(_) do
+  defp validate_args!([_, plural | _] = args) do
+    if String.contains?(plural, ":") do
+      raise_with_help
+    else
+      args
+    end
+  end
+
+  defp validate_args!(_) do
     raise_with_help
   end
 

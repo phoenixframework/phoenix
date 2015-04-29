@@ -1,6 +1,6 @@
 defmodule Mix.Tasks.Phoenix.Gen.Json do
   use Mix.Task
-  
+
   @shortdoc "Generates a controller and model for an JSON-based resource"
 
   @moduledoc """
@@ -19,12 +19,17 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
     * a migration file for the repository
     * test files for generated model and controller
 
+  The generated model can be skipped with `--no-model`.
   Read the documentation for `phoenix.gen.model` for more
   information on attributes and namespaced resources.
   """
-  def run([singular, plural|attrs] = args) do
-    if String.contains?(plural, ":"), do: raise_with_help
-    Mix.Task.run "phoenix.gen.model", args
+  def run(args) do
+    {opts, parsed, _} = OptionParser.parse(args, switches: [model: :boolean])
+    [singular, plural | attrs] = validate_args!(parsed)
+
+    if opts[:model] != false do
+      Mix.Task.run "phoenix.gen.model", args
+    end
 
     attrs   = Mix.Phoenix.attrs(attrs)
     binding = Mix.Phoenix.inflect(singular)
@@ -49,14 +54,26 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
     Add the resource to the proper scope in web/router.ex:
 
         resources "/#{route}", #{binding[:scoped]}Controller
-
-    and then update your repository by running migrations:
-
-        $ mix ecto.migrate
     """
+
+    if opts[:model] != false do
+      Mix.shell.info """
+      and then update your repository by running migrations:
+
+          $ mix ecto.migrate
+      """
+    end
   end
 
-  def run(_) do
+  defp validate_args!([_, plural | _] = args) do
+    if String.contains?(plural, ":") do
+      raise_with_help
+    else
+      args
+    end
+  end
+
+  defp validate_args!(_) do
     raise_with_help
   end
 

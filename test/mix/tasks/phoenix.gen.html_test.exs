@@ -145,6 +145,19 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
     end
   end
 
+  test "generates resource without model" do
+    in_tmp "generates resource without model", fn ->
+      Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "users", "--no-model", "name:string"]
+
+      refute File.exists? "web/models/admin/user.ex"
+      assert [] = Path.wildcard("priv/repo/migrations/*_create_admin_user.exs")
+
+      assert_file "web/templates/admin/user/form.html.eex", fn file ->
+        refute file =~ ~s(--no-model)
+      end
+    end
+  end
+
   test "plural can't contain a colon" do
     assert_raise Mix.Error, fn ->
       Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "name:string", "foo:string"]
