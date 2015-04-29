@@ -48,6 +48,7 @@ defmodule Mix.Tasks.Phoenix.New do
     {:text, "static/brunch/brunch-config.js", "brunch-config.js"},
     {:text, "static/brunch/package.json",     "package.json"},
     {:text, "static/app.css",                 "web/static/css/app.scss"},
+    {:text, "static/bootstrap.min.css",       "web/static/css/bootstrap.min.css"},
     {:text, "static/brunch/app.js",           "web/static/js/app.js"},
   ]
 
