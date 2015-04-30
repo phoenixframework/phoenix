@@ -75,7 +75,7 @@ defmodule Phoenix.Channel.Server do
   end
 
   def handle_call(:close, _from, socket) do
-    {:stop, {:shutdown, :closed}, socket}
+    {:stop, {:shutdown, :closed}, :ok, socket}
   end
 
   def handle_cast({:leave, ref}, socket) do
