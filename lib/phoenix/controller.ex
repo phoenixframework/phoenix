@@ -134,7 +134,7 @@ defmodule Phoenix.Controller do
   Returns the template name rendered from the controller as a string
   """
   @spec controller_template(Plug.Conn.t) :: binary
-  def controller_template(conn), do: get_in(conn.private, [:phoenix_template])
+  def controller_template(conn), do: conn.private[:phoenix_template]
 
   @doc """
   Sends JSON response.

@@ -1,10 +1,13 @@
 # Changelog
 
-## v0.12.0-dev
+## v0.12.0 (2015-04-30)
+
+See these [`0.11.x` to `0.12.0` upgrade instructions](https://gist.github.com/chrismccord/b3975ba356dba902ec88) to bring your existing apps up to speed.
 
 * Enhancements
   * [Channel] Leaving the channel or closing the client will now trigger terminate on the channel, regardless of traping exits, with reasons `{:shutdown, :left}` and `{:shutdown, :closed}` respectively
   * [Controller] Support `:namespace` option in controllers in order to use proper layout in namespaced applications
+  * [Controller] Add `controller_template/1` to lookup the template rendered from the controller
   * [Generators] Add `phoenix.gen.json`
   * [Generators] Allow models to be skipped on `phoenix.gen.json` and `phoenix.gen.html` generators
   * [Generators] Generate test files in `phoenix.gen.html`, `phoenix.gen.json` and `phoenix.gen.model`
