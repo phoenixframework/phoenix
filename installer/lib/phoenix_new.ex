@@ -206,7 +206,7 @@ defmodule Mix.Tasks.Phoenix.New do
         password: #{inspect binding[:db_password]},
         database: "#{binding[:application_name]}_test",
         size: 1,
-        max_overflow: false
+        max_overflow: 0
       """
 
       append_to path, "config/prod.secret.exs", """
@@ -216,7 +216,8 @@ defmodule Mix.Tasks.Phoenix.New do
         adapter: #{inspect binding[:adapter_module]},
         username: #{inspect binding[:db_user]},
         password: #{inspect binding[:db_password]},
-        database: "#{binding[:application_name]}_prod"
+        database: "#{binding[:application_name]}_prod",
+        size: 20 # The amount of database connections in the pool
       """
     end
   end
