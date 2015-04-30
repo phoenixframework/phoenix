@@ -1,5 +1,7 @@
 # Changelog
 
+## v0.13.0-dev
+
 ## v0.12.0 (2015-04-30)
 
 See these [`0.11.x` to `0.12.0` upgrade instructions](https://gist.github.com/chrismccord/b3975ba356dba902ec88) to bring your existing apps up to speed.
