@@ -151,7 +151,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "#broadcast_from and #broadcast_from! broadcasts message, skipping publisher" do
-    socket = new_socket |> put_in([:joined], true) |> Socket.put_topic("top:subtop")
+    socket = put_in(new_socket.joined, true) |> Socket.put_topic("top:subtop")
     PubSub.subscribe(:phx_pub, socket.transport_pid, "top:subtop")
 
     assert Channel.broadcast_from(:phx_pub, socket, "event", %{payload: "hello"})
@@ -162,7 +162,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "#broadcast_from and #broadcast_from! raises error when msg isn't a Map" do
-    socket = new_socket |> put_in([:joined], true) |> Socket.put_topic("top:subtop")
+    socket = put_in(new_socket.joined, true) |> Socket.put_topic("top:subtop")
     message = "Message argument must be a map"
     assert_raise RuntimeError, message, fn ->
       Channel.broadcast_from(:phx_pub, socket, "event", bar: "foo", foo: "bar")
@@ -184,9 +184,7 @@ defmodule Phoenix.Channel.ChannelTest do
 
   test "#broadcast raises error when not joined" do
     socket =
-      new_socket()
-      |> put_in([:joined], false)
-      |> put_in([:pubsub_server], :phx_pub)
+      %{new_socket() | joined: false, pubsub_server: :phx_pub}
       |> Socket.put_topic("top:subtop")
 
     assert_raise RuntimeError, fn ->
@@ -204,7 +202,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "#push sends response to socket" do
-    socket = Socket.put_topic(put_in(new_socket, [:joined], true), "top:subtop")
+    socket = Socket.put_topic(put_in(new_socket.joined, true), "top:subtop")
     assert Channel.push(socket, "event", %{payload: "hello"})
 
     assert Enum.any?(Process.info(self)[:messages], &match?({:socket_push, %Message{}}, &1))
@@ -216,7 +214,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "#push raises error when not joined" do
-    socket = Socket.put_topic(put_in(new_socket, [:joined], false), "top:subtop")
+    socket = Socket.put_topic(put_in(new_socket.joined, false), "top:subtop")
 
     assert_raise RuntimeError, fn ->
       Channel.push(socket, "event", %{payload: "hello"})

@@ -21,7 +21,6 @@ defmodule Phoenix.Socket do
 
   alias Phoenix.Socket
 
-  @derive [Access]
   defstruct transport_pid: nil,
             topic: nil,
             router: nil,
