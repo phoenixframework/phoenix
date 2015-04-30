@@ -209,9 +209,29 @@ defmodule Phoenix.View do
   end
 
   @doc """
-  Renders a template only if it exists
+  Renders a template only if it exists.
 
-  Same as `render/3`, but returns `nil` instead of raising
+  Same as `render/3`, but returns `nil` instead of raising.
+  Useful for dynamically rendering templates in the layout that may or
+  may not be implemented by the `@inner` view.
+
+  ## Examples
+
+  Consider the case where the application layout allows views to dynamically
+  render a section of script tags in the head of the document. Some views
+  may wish to inject certain scripts, while others will not.
+
+      <head>
+        <%= render_existing view_module(@conn), "scripts.html", assigns %>
+      </head>
+
+  Then the module for the `@inner` view can decide to provide scripts with
+  either a precompiled template, or by implementing the function directly, ie:
+
+      def render("scripts.html", _assigns) do
+        "<script src=\"...\">"
+      end
+
   """
   def render_existing(module, template, assigns \\ []) do
     render(module, template, Dict.put(assigns, :render_existing, {module, template}))
