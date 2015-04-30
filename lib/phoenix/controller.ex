@@ -131,6 +131,12 @@ defmodule Phoenix.Controller do
   def endpoint_module(conn), do: conn.private.phoenix_endpoint
 
   @doc """
+  Returns the template name rendered from the controller as a string
+  """
+  @spec controller_template(Plug.Conn.t) :: binary
+  def controller_template(conn), do: get_in(conn.private, [:phoenix_template])
+
+  @doc """
   Sends JSON response.
 
   It uses the configured `:format_encoders` under the `:phoenix`
@@ -517,7 +523,11 @@ defmodule Phoenix.Controller do
   defp do_render(conn, template, format, assigns) do
     assigns = to_map(assigns)
     content_type = Plug.MIME.type(format)
-    conn = prepare_assigns(conn, assigns, format)
+    conn =
+      conn
+      |> put_private(:phoenix_template, template)
+      |> prepare_assigns(assigns, format)
+
     view = Map.get(conn.private, :phoenix_view) ||
             raise "a view module was not specified, set one with put_view/2"
     data = Phoenix.View.render_to_iodata(view, template,

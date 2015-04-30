@@ -23,6 +23,7 @@ defmodule Phoenix.Controller.RenderTest do
     assert conn.resp_body == "Hello\n"
     assert html_response?(conn)
     refute conn.halted
+    assert controller_template(conn) == "index.html"
   end
 
   test "renders atom template" do
@@ -31,6 +32,7 @@ defmodule Phoenix.Controller.RenderTest do
     assert conn.resp_body == "Hello\n"
     assert html_response?(conn)
     refute conn.halted
+    assert controller_template(conn) == "index.html"
   end
 
   test "renders string template with put layout" do

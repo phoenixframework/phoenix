@@ -232,6 +232,24 @@ defmodule Phoenix.View do
         "<script src=\"...\">"
       end
 
+
+  ## Rendering based on controller template
+
+  In some cases, you might need render based on the template from the controller.
+  For these cases, `Phoenix.Controller.controller_template/1` can pair with
+  `render_existing/3` for per-template based content, ie:
+
+      <head>
+        <%= render_existing view_module(@conn), "scripts." <> controller_template(conn), assigns %>
+      </head>
+
+      def render("scripts.show.html", _assigns) do
+        "<script src=\"...\">"
+      end
+      def render("scripts.index.html", _assigns) do
+        "<script src=\"...\">"
+      end
+
   """
   def render_existing(module, template, assigns \\ []) do
     render(module, template, Dict.put(assigns, :render_existing, {module, template}))
