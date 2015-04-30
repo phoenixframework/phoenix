@@ -23,4 +23,4 @@
   </tbody>
 </table>
 
-<%= "<%=" %> link "New <%= singular %>", to: <%= singular %>_path(@conn, :new), class: "btn btn-primary" <%= "%\>" %>
+<%= "<%=" %> link "New <%= singular %>", to: <%= singular %>_path(@conn, :new) %>

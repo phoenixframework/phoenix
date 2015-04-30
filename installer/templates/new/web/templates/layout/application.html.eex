@@ -25,10 +25,6 @@
 
       <%%= @inner %>
 
-      <div class="footer">
-        <p><a href="http://phoenixframework.org">phoenixframework.org</a></p>
-      </div>
-
     </div> <!-- /container -->
     <script src="<%%= static_path(@conn, "/js/app.js") %>"></script>
     <script>require("web/static/js/app")</script>
