@@ -9,7 +9,6 @@
 
     <title>Hello Phoenix!</title>
     <link rel="stylesheet" href="<%%= static_path(@conn, "/css/app.css") %>">
-    <link rel="stylesheet" href="<%%= static_path(@conn, "/css/bootstrap.min.css") %>">
   </head>
 
   <body>
