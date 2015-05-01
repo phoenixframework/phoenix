@@ -37,11 +37,7 @@ defmodule Phoenix.Naming do
       "MyApp.User"
 
   """
-  @spec unsuffix(String.Chars.t, String.t) :: String.t
-  def unsuffix(value, "") do
-    to_string(value)
-  end
-
+  @spec unsuffix(String.t, String.t) :: String.t
   def unsuffix(value, suffix) do
     string = to_string(value)
     suffix_size = byte_size(suffix)
@@ -60,12 +56,6 @@ defmodule Phoenix.Naming do
       iex> Phoenix.Naming.underscore("MyApp")
       "my_app"
 
-      iex> Phoenix.Naming.underscore(:MyApp)
-      "my_app"
-
-      iex> Phoenix.Naming.underscore("my-app")
-      "my_app"
-
   In general, `underscore` can be thought of as the reverse of
   `camelize`, however, in some cases formatting may be lost:
 
@@ -73,11 +63,7 @@ defmodule Phoenix.Naming do
       Phoenix.Naming.camelize   "sap_example" #=> "SapExample"
 
   """
-  @spec underscore(String.Chars.t) :: String.t
-
-  def underscore(value) when not is_binary(value) do
-    underscore(to_string(value))
-  end
+  @spec underscore(String.t) :: String.t
 
   def underscore(""), do: ""
 
@@ -92,16 +78,6 @@ defmodule Phoenix.Naming do
   defp do_underscore(<<h, t :: binary>>, prev) when h in ?A..?Z and not prev in ?A..?Z do
     <<?_, to_lower_char(h)>> <> do_underscore(t, h)
   end
-
-  defp do_underscore(<<?-, t :: binary>>, _) do
-    <<?_>> <> do_underscore(t, ?-)
-  end
-
-  defp do_underscore(<< "..", t :: binary>>, _) do
-    <<"..">> <> underscore(t)
-  end
-
-  defp do_underscore(<<?.>>, _), do: <<?.>>
 
   defp do_underscore(<<?., t :: binary>>, _) do
     <<?/>> <> underscore(t)
@@ -126,9 +102,6 @@ defmodule Phoenix.Naming do
       iex> Phoenix.Naming.camelize("my_app")
       "MyApp"
 
-      iex> Phoenix.Naming.camelize(:my_app)
-      "MyApp"
-
   In general, `camelize` can be thought of as the reverse of
   `underscore`, however, in some cases formatting may be lost:
 
@@ -136,11 +109,7 @@ defmodule Phoenix.Naming do
       Phoenix.Naming.camelize   "sap_example" #=> "SapExample"
 
   """
-  @spec camelize(String.Chars.t) :: String.t
-
-  def camelize(value) when not is_binary(value) do
-    camelize(to_string(value))
-  end
+  @spec camelize(String.t) :: String.t
 
   def camelize(""), do: ""
 

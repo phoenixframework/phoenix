@@ -11,7 +11,7 @@
   <%% end %>
 <%= for {k, input} <- inputs, input do %>
   <div class="form-group">
-    <label><%= Phoenix.Naming.camelize(k) %></label>
+    <label><%= Phoenix.Naming.camelize(Atom.to_string(k)) %></label>
     <%= "<%=" %> <%= input %>, class: "form-control" <%= "%\>" %>
   </div>
 <% end %>

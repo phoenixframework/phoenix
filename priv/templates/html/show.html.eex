@@ -3,7 +3,7 @@
 <ul>
 <%= for {k, _} <- inputs do %>
   <li>
-    <strong><%= Phoenix.Naming.camelize(k) %>:</strong>
+    <strong><%= Phoenix.Naming.camelize(Atom.to_string(k)) %>:</strong>
     <%= "<%=" %> @<%= singular %>.<%= k %> <%= "%\>" %>
   </li>
 <% end %>
