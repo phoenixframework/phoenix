@@ -131,12 +131,22 @@ defmodule Phoenix.HTML.Form do
       "Username"
       iex> humanize(:created_at)
       "Created at"
+      iex> humanize("user_id")
+      "User"
 
   """
   def humanize(atom) when is_atom(atom),
     do: humanize(Atom.to_string(atom))
-  def humanize(bin) when is_binary(bin),
-    do: bin |> String.replace("_", " ") |> String.capitalize
+  def humanize(bin) when is_binary(bin) do
+    bin =
+      if String.ends_with?(bin, "_id") do
+        binary_part(bin, 0, byte_size(bin) - 3)
+      else
+        bin
+      end
+
+    bin |> String.replace("_", " ") |> String.capitalize
+  end
 
   @doc """
   Generates a form tag with a form builder.
