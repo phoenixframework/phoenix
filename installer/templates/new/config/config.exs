@@ -12,7 +12,7 @@ config :<%= application_name %>,
 # Configures the endpoint
 config :<%= application_name %>, <%= application_module %>.Endpoint,
   url: [host: "localhost"],
-  root: Path.expand("..", __DIR__),
+  root: Path.dirname(__DIR__),
   secret_key_base: "<%= secret_key_base %>",
   debug_errors: false,
   pubsub: [name: <%= application_module %>.PubSub,
