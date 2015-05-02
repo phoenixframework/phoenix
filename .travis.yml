@@ -15,5 +15,6 @@ script:
   - mix test
   - cd installer && mix test
 after_script:
+  - cd $TRAVIS_BUILD_DIR
   - mix deps.get --only docs
   - MIX_ENV=docs mix inch.report
