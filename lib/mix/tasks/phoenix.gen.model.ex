@@ -24,6 +24,14 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
       mix phoenix.gen.model User users name age:integer
 
+  The generator also supports `belongs_to` associations:
+
+      mix phoenix.gen.model Post posts title user:belongs_to
+
+  This will result in a migration with an `:integer` column
+  of `:user_id` and create an index. It will also generate
+  the appropriate `belongs_to` entry in the model's schema.
+
   Furthermore an array type can also be given if it is
   supported by your database, although it requires the
   type of the underlying array element to be given too:
