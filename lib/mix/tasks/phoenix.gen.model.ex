@@ -44,12 +44,16 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
     attrs     = Mix.Phoenix.attrs(attrs)
     binding   = Mix.Phoenix.inflect(singular)
+    params    = Mix.Phoenix.params(attrs)
     path      = binding[:path]
     migration = String.replace(path, "/", "_")
 
+    {assocs, attrs} = partition_attrs_and_assocs(attrs)
+
     binding = binding ++
               [attrs: attrs, plural: plural, types: types(attrs),
-               defaults: defaults(attrs), params: Mix.Phoenix.params(attrs)]
+               assocs: assocs(assocs), indexes: indexes(plural, assocs),
+               defaults: defaults(attrs), params: params]
 
     Mix.Phoenix.copy_from source_dir, "", binding, [
       {:eex, "migration.exs",  "priv/repo/migrations/#{timestamp()}_create_#{migration}.exs"},
@@ -77,6 +81,25 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
         mix phoenix.gen.model User users name:string
     """
+  end
+
+  defp partition_attrs_and_assocs(attrs) do
+    Enum.partition attrs, fn {_, kind} ->
+      kind == :belongs_to
+    end
+  end
+
+  defp assocs(assocs) do
+    Enum.reduce assocs, [], fn {key, _}, acc ->
+      assoc = Mix.Phoenix.inflect(key)
+      [{key, :"#{key}_id", assoc[:module]} | acc]
+    end
+  end
+
+  defp indexes(plural, assocs) do
+    Enum.reduce assocs, [], fn {key, _}, acc ->
+      ["create index(:#{plural}, [:#{key}_id])" | acc]
+    end
   end
 
   defp timestamp do

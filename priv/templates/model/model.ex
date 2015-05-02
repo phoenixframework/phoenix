@@ -4,6 +4,8 @@ defmodule <%= module %> do
   schema <%= inspect plural %> do
 <%= for {k, _} <- attrs do %>    field <%= inspect k %>, <%= inspect types[k] %><%= defaults[k] %>
 <% end %>
+<%= for {k, _, m} <- assocs do %>    belongs_to <%= inspect k %>, <%= m %>
+<% end %>
     timestamps
   end
 

@@ -78,6 +78,7 @@ defmodule Mix.Phoenix do
   def params(attrs) do
     Enum.into attrs, %{}, fn
       {k, {:array, _}} -> {k, []}
+      {k, :belongs_to} -> {k, nil}
       {k, :integer}    -> {k, 42}
       {k, :float}      -> {k, "120.5"}
       {k, :decimal}    -> {k, "120.5"}

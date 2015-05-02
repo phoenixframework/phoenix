@@ -13,7 +13,8 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
     in_tmp "generates html resource", fn ->
       Mix.Tasks.Phoenix.Gen.Html.run ["user", "users", "name", "age:integer", "height:decimal",
                                       "nicks:array:text", "famous:boolean", "born_at:datetime",
-                                      "secret:uuid", "first_login:date", "alarm:time"]
+                                      "secret:uuid", "first_login:date", "alarm:time",
+                                      "address:belongs_to"]
 
       assert_file "web/models/user.ex"
       assert_file "test/models/user_test.exs"
@@ -37,6 +38,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
         assert file =~ ~s(<%= text_input f, :name, class: "form-control" %>)
         assert file =~ ~s(<%= number_input f, :age, class: "form-control" %>)
         assert file =~ ~s(<%= number_input f, :height, step: "any", class: "form-control" %>)
+        assert file =~ ~s(<%= number_input f, :address_id, class: "form-control" %>)
         assert file =~ ~s(<%= checkbox f, :famous, class: "form-control" %>)
         assert file =~ ~s(<%= datetime_select f, :born_at, class: "form-control" %>)
         assert file =~ ~s(<%= text_input f, :secret, class: "form-control" %>)
@@ -61,7 +63,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
         assert file =~ "defmodule Phoenix.UserControllerTest"
         assert file =~ "use Phoenix.ConnCase"
 
-        assert file =~ ~S|@valid_params user: %{age: 42|
+        assert file =~ ~S|@valid_params user: %{address: nil|
         assert file =~ ~S|@invalid_params user: %{}|
 
         assert file =~ ~S|test "GET /users"|
