@@ -77,6 +77,30 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
     end
   end
 
+  test "generates belongs_to associations" do
+    in_tmp "generates belongs_to associations", fn ->
+      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title", "user:belongs_to"]
+
+      assert [migration] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
+
+      assert_file migration, fn file ->
+        assert file =~ "defmodule Phoenix.Repo.Migrations.CreatePost do"
+        assert file =~ "create table(:posts) do"
+        assert file =~ "add :title, :string"
+        assert file =~ "add :user_id, :integer"
+        assert file =~ "create index(:posts, [:user_id])"
+      end
+
+      assert_file "web/models/post.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Post do"
+        assert file =~ "use Phoenix.Web, :model"
+        assert file =~ "schema \"posts\" do"
+        assert file =~ "field :title, :string"
+        assert file =~ "belongs_to :user, Phoenix.User"
+      end
+    end
+  end
+
   test "plural can't contain a colon" do
     assert_raise Mix.Error, fn ->
       Mix.Tasks.Phoenix.Gen.Model.run ["Admin.User", "name:string", "foo:string"]

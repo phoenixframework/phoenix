@@ -24,6 +24,14 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
       mix phoenix.gen.model User users name age:integer
 
+  The generator also supports `belongs_to` associations:
+
+      mix phoenix.gen.model Post posts title user:belongs_to
+
+  This will result in a migration with an `:integer` column
+  of `:user_id` and create an index. It will also generate
+  the appropriate `belongs_to` entry in the model's schema.
+
   Furthermore an array type can also be given if it is
   supported by your database, although it requires the
   type of the underlying array element to be given too:
@@ -44,12 +52,16 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
     attrs     = Mix.Phoenix.attrs(attrs)
     binding   = Mix.Phoenix.inflect(singular)
+    params    = Mix.Phoenix.params(attrs)
     path      = binding[:path]
     migration = String.replace(path, "/", "_")
 
+    {assocs, attrs} = partition_attrs_and_assocs(attrs)
+
     binding = binding ++
               [attrs: attrs, plural: plural, types: types(attrs),
-               defaults: defaults(attrs), params: Mix.Phoenix.params(attrs)]
+               assocs: assocs(assocs), indexes: indexes(plural, assocs),
+               defaults: defaults(attrs), params: params]
 
     Mix.Phoenix.copy_from source_dir, "", binding, [
       {:eex, "migration.exs",  "priv/repo/migrations/#{timestamp()}_create_#{migration}.exs"},
@@ -77,6 +89,25 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
         mix phoenix.gen.model User users name:string
     """
+  end
+
+  defp partition_attrs_and_assocs(attrs) do
+    Enum.partition attrs, fn {_, kind} ->
+      kind == :belongs_to
+    end
+  end
+
+  defp assocs(assocs) do
+    Enum.reduce assocs, [], fn {key, _}, acc ->
+      assoc = Mix.Phoenix.inflect Atom.to_string(key)
+      [{key, :"#{key}_id", assoc[:module]} | acc]
+    end
+  end
+
+  defp indexes(plural, assocs) do
+    Enum.reduce assocs, [], fn {key, _}, acc ->
+      ["create index(:#{plural}, [:#{key}_id])" | acc]
+    end
   end
 
   defp timestamp do

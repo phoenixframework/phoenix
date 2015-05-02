@@ -90,6 +90,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
   defp inputs(attrs) do
     Enum.map attrs, fn
       {k, {:array, _}} -> {k, nil}
+      {k, :belongs_to} -> {k, "number_input f, #{inspect(k)}_id"}
       {k, :integer}    -> {k, "number_input f, #{inspect(k)}"}
       {k, :float}      -> {k, "number_input f, #{inspect(k)}, step: \"any\""}
       {k, :decimal}    -> {k, "number_input f, #{inspect(k)}, step: \"any\""}
