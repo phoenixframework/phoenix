@@ -99,7 +99,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
   defp assocs(assocs) do
     Enum.reduce assocs, [], fn {key, _}, acc ->
-      assoc = Mix.Phoenix.inflect(key)
+      assoc = Mix.Phoenix.inflect Atom.to_string(key)
       [{key, :"#{key}_id", assoc[:module]} | acc]
     end
   end
