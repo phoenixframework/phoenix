@@ -59,7 +59,7 @@ defmodule Phoenix.Test.ConnTest do
     assert conn.params == %{"_json" => [1, 2, 3]}
   end
 
-  test "dispatch/5 with reclying" do
+  test "dispatch/5 with recycling" do
     conn =
       conn()
       |> put_req_header("hello", "world")
