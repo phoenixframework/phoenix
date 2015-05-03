@@ -342,13 +342,13 @@ defmodule Phoenix.HTML.FormTest do
                    ~s(<option value="bar">bar</option>) <>
                    ~s(</select>)}
 
-    assert select(:search, :key, [foo: "Foo", bar: "Bar"]) ==
+    assert select(:search, :key, [Foo: "foo", Bar: "bar"]) ==
            {:safe, ~s(<select id="search_key" name="search[key]">) <>
                    ~s(<option value="foo">Foo</option>) <>
                    ~s(<option value="bar">Bar</option>) <>
                    ~s(</select>)}
 
-    assert select(:search, :key, [foo: "Foo", bar: "Bar"], prompt: "Choose your destiny") ==
+    assert select(:search, :key, [Foo: "foo", Bar: "bar"], prompt: "Choose your destiny") ==
            {:safe, ~s(<select id="search_key" name="search[key]">) <>
                    ~s(<option value="">Choose your destiny</option>) <>
                    ~s(<option value="foo">Foo</option>) <>
@@ -418,6 +418,7 @@ defmodule Phoenix.HTML.FormTest do
     assert content =~ ~s(<option selected="selected" value="2020">2020</option>)
     assert content =~ ~s(<option selected="selected" value="4">April</option>)
     assert content =~ ~s(<option selected="selected" value="17">17</option>)
+    assert content =~ ~s(<option value="1">January</option><option value="2">February</option>)
 
     {:safe, content} = with_form(&date_select(&1, :unknown, default: {2020, 10, 13}))
     assert content =~ ~s(<option selected="selected" value="2020">2020</option>)

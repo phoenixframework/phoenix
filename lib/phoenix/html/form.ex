@@ -473,13 +473,13 @@ defmodule Phoenix.HTML.Form do
           <option value="120">120</option>
           </select>
 
-      select(form, :role, [admin: "Admin", user: "User"])
+      select(form, :role, ["Admin": "admin", "User": "user"])
       #=> <select id="user_role" name="user[role]">
           <option value="admin">Admin</option>
           <option value="user">User</option>
           </select>
 
-      select(form, :role, [admin: "Admin", user: "User"], prompt: "Choose your role")
+      select(form, :role, ["Admin": "admin", "User": "user"], prompt: "Choose your role")
       #=> <select id="user_role" name="user[role]">
           <option value="">Choose your role</option>
           <option value="admin">Admin</option>
@@ -519,7 +519,7 @@ defmodule Phoenix.HTML.Form do
 
   defp options_for_select(values, options, value) do
     Enum.reduce values, options, fn
-      {option_value, option_key}, acc ->
+      {option_key, option_value}, acc ->
         option_key   = html_escape(option_key)
         option_value = html_escape(option_value)
         option(option_key, option_value, value, acc)
@@ -711,24 +711,24 @@ defmodule Phoenix.HTML.Form do
   defp time_value(other),
     do: raise(ArgumentError, "unrecognized time #{inspect other}")
 
-  @months %{
-    "1"  => "January",
-    "2"  => "February",
-    "3"  => "March",
-    "4"  => "April",
-    "5"  => "May",
-    "6"  => "June",
-    "7"  => "July",
-    "8"  => "August",
-    "9"  => "September",
-    "10" => "October",
-    "11" => "November",
-    "12" => "December"
-  }
+  @months [
+    {"January", "1"},
+    {"February", "2"},
+    {"March", "3"},
+    {"April", "4"},
+    {"May", "5"},
+    {"June", "6"},
+    {"July", "7"},
+    {"August", "8"},
+    {"September", "9"},
+    {"October", "10"},
+    {"November", "11"},
+    {"December", "12"},
+  ]
 
   map = &Enum.map(&1, fn i ->
     i = Integer.to_string(i)
-    {i, String.rjust(i, 2, ?0)}
+    {String.rjust(i, 2, ?0), i}
   end)
 
   @days   map.(1..31)
