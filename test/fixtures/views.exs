@@ -1,10 +1,8 @@
-import Phoenix.HTML
-
 defmodule MyApp.View do
   use Phoenix.View, root: "test/fixtures/templates"
 
   def escaped_title(title) do
-    html_escape title
+    {:safe, Plug.HTML.html_escape(title)}
   end
 end
 
@@ -24,7 +22,7 @@ defmodule MyApp.UserView do
   use Phoenix.View, root: "test/fixtures/templates"
 
   def escaped_title(title) do
-    html_escape title
+    {:safe, Plug.HTML.html_escape(title)}
   end
 
   def render("show.text", %{user: user, prefix: prefix}) do
@@ -50,9 +48,8 @@ defmodule MyApp.Templates.UserView do
   use Phoenix.View, root: "test/fixtures"
 
   def escaped_title(title) do
-    html_escape title
+    {:safe, Plug.HTML.html_escape(title)}
   end
-
 end
 
 defmodule MyApp.Nested.User do
@@ -67,6 +64,6 @@ defmodule MyApp.Nested.UserView do
   end
 
   def escaped_title(title) do
-    html_escape title
+    {:safe, Plug.HTML.html_escape(title)}
   end
 end

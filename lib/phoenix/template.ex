@@ -79,7 +79,7 @@ defmodule Phoenix.Template do
 
   alias Phoenix.Template
 
-  @encoders [html: Phoenix.HTML.Engine, json: Poison]
+  @encoders [html: Phoenix.Template.HTML, json: Poison]
   @engines  [eex: Phoenix.Template.EExEngine, exs: Phoenix.Template.ExsEngine]
 
   defmodule UndefinedError do

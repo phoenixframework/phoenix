@@ -2,6 +2,9 @@
 
 ## v0.13.0-dev
 
+* Enhancements
+  * [HTML] `Phoenix.HTML` has been extracted to its own project. You need to explicitly depend on it by adding `{:phoenix_html, "~> 1.0"}` to `deps` in your `mix.exs` file
+
 * Bug fixes
   * [HTML] `select` no longer inverses the key and values in the given options
 
