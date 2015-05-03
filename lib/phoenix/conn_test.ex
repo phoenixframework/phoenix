@@ -59,14 +59,14 @@ defmodule Phoenix.ConnTest do
       MyApp.UserView.render "hello.html",
                              conn: conn(:get, "/")
 
-  ## Reclying
+  ## Recycling
 
   Browsers implement a storage by using cookies. When a cookie
   is set in the response, the browser stores it and sends it in
   the next request.
 
   To emulate this behaviour, this module provides the idea of
-  recyling. The `recycle/1` function receives a connection and
+  recycling. The `recycle/1` function receives a connection and
   returns a new connection, similar to the one returned by
   `conn/0` with all the response cookies from the previous
   connection defined as request headers. This is useful when
@@ -78,7 +78,7 @@ defmodule Phoenix.ConnTest do
   it may discard information if you are modifying the connection
   before the next dispatch:
 
-      # No reclycling as the connection is fresh
+      # No recycling as the connection is fresh
       conn = get conn(), "/"
 
       # The connection is recycled, creating a new one behind the scenes
@@ -88,10 +88,10 @@ defmodule Phoenix.ConnTest do
       conn = recycle(conn)
       conn = put_req_header("x-special", "nice")
 
-      # No reclycling as we did it explicitly
+      # No recycling as we did it explicitly
       conn = delete conn, "/logout"
 
-  Reclying also recycles the "accept" header.
+  Recycling also recycles the "accept" header.
   """
 
   @doc false
