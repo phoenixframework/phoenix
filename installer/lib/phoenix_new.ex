@@ -159,6 +159,7 @@ defmodule Mix.Tasks.Phoenix.New do
                adapter_module: adapter_module,
                db_user: db_user,
                db_password: db_password,
+               hex?: Code.ensure_loaded?(Hex),
                namespaced?: Mix.Utils.camelize(app) != mod]
 
     copy_from path, binding, @new
@@ -170,13 +171,18 @@ defmodule Mix.Tasks.Phoenix.New do
     # Parallel installs
     install_parallel path, binding
 
+    instructions = [
+      "$ cd #{path}",
+      unless(binding[:hex?], do: "$ mix deps.get"),
+      "$ mix phoenix.server"
+    ]
+
     # All set!
     Mix.shell.info """
 
     We are all set! Run your Phoenix application:
 
-        $ cd #{path}
-        $ mix phoenix.server
+        #{instructions |> Enum.filter(& &1) |> Enum.join("\n    ")}
 
     You can also run it inside IEx (Interactive Elixir) as:
 
@@ -287,8 +293,10 @@ defmodule Mix.Tasks.Phoenix.New do
     end
   end
 
-  defp install_mix(_) do
-    ask_and_run("Install mix dependencies?", "mix", "deps.get")
+  defp install_mix(binding) do
+    if binding[:hex?] do
+      ask_and_run("Install mix dependencies?", "mix", "deps.get")
+    end
   end
 
   ## Helpers
