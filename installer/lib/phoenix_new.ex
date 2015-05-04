@@ -201,7 +201,8 @@ defmodule Mix.Tasks.Phoenix.New do
         adapter: #{inspect binding[:adapter_module]},
         username: #{inspect binding[:db_user]},
         password: #{inspect binding[:db_password]},
-        database: "#{binding[:application_name]}_dev"
+        database: "#{binding[:application_name]}_dev",
+        size: 10 # The amount of database connections in the pool
       """
 
       append_to path, "config/test.exs", """
@@ -212,8 +213,7 @@ defmodule Mix.Tasks.Phoenix.New do
         username: #{inspect binding[:db_user]},
         password: #{inspect binding[:db_password]},
         database: "#{binding[:application_name]}_test",
-        size: 1,
-        max_overflow: 0
+        size: 1 # Use a single connection for transactional tests
       """
 
       append_to path, "config/prod.secret.exs", """
