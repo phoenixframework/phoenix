@@ -104,6 +104,11 @@ defmodule Phoenix.Router.PipelineTest do
     assert conn.assigns[:params] == %{"id" => "hello"}
   end
 
+  test "parameters are url decoded" do
+    conn = call(Router, :get, "/browser/hello%20matey")
+    assert conn.assigns[:params] == %{"id" => "hello matey"}
+  end
+
   test "invalid pipelines" do
     assert_raise ArgumentError, ~r"unknown pipeline :unknown", fn ->
       defmodule ErrorRouter do

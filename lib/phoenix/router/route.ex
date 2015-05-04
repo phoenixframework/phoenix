@@ -50,6 +50,20 @@ defmodule Phoenix.Router.Route do
       dispatch: build_dispatch(route, binding)}
   end
 
+  @doc """
+  Used by the binding macros built in maybe_binding, to URI decode params
+  embedded in paths.
+
+  Strings are decoded directly. Lists of strings decodes each string.
+  """
+  def uri_decode_param_value(value) do
+    case value do
+      <<str::binary>> -> URI.decode(str)
+      list when is_list(list) -> list |> Enum.map &uri_decode_param_value/1
+      other -> other
+    end
+  end
+
   defp build_path_and_binding(path) do
     {params, segments} = Plug.Router.Utils.build_path_match(path)
 
@@ -89,8 +103,11 @@ defmodule Phoenix.Router.Route do
   defp maybe_binding([]), do: nil
   defp maybe_binding(binding) do
     quote do
+      decoded_params = unquote({:%{}, [], binding})
+         |> Enum.map(fn({k,v}) -> {k, Phoenix.Router.Route.uri_decode_param_value(v)} end)
+         |> Enum.into(%{})
       var!(conn) =
-        update_in var!(conn).params, &Map.merge(&1, unquote({:%{}, [], binding}))
+        update_in var!(conn).params, &Map.merge(&1, decoded_params)
     end
   end
 

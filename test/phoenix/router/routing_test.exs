@@ -109,6 +109,12 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.params["image"] == ["elixir", "logos", "main.png"]
   end
 
+  test "splat args are %encodings in path" do
+    conn = call(Router, :get, "backups/silly%20name")
+    assert conn.status == 200
+    assert conn.params["path"] == ["silly name"]
+  end
+
   test "catch-all splat route matches" do
     conn = call(Router, :get, "foo/bar/baz")
     assert conn.status == 404
