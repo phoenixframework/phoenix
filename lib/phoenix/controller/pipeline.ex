@@ -118,6 +118,12 @@ defmodule Phoenix.Controller.Pipeline do
   @doc false
   defmacro __before_compile__(env) do
     plugs = Module.get_attribute(env.module, :plugs)
+
+    unless Enum.find(plugs, &match?({:action, _, _}, &1)) do
+      raise "could not compile #{inspect env.module} because " <>
+            "it does not have plug :action in its pipeline"
+    end
+
     {conn, body} = Plug.Builder.compile(env, plugs, log_on_halt: :debug)
     quote do
       defp phoenix_controller_pipeline(unquote(conn), var!(action)) do

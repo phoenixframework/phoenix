@@ -59,6 +59,14 @@ defmodule Phoenix.Controller.PipelineTest do
     assert layout(conn) == false
   end
 
+  test "complains if :action is not plugged" do
+    assert_raise RuntimeError, ~r"does not have plug :action in its pipeline", fn ->
+      defmodule InvalidController do
+        use Phoenix.Controller
+      end
+    end
+  end
+
   defp stack_conn() do
     conn(:get, "/")
     |> fetch_query_params()
