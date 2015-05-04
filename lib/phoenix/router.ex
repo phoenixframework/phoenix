@@ -289,7 +289,7 @@ defmodule Phoenix.Router do
       end
 
       defp match(conn, []) do
-        match(conn, conn.method, conn.path_info, conn.host)
+        match(conn, conn.method, Enum.map(conn.path_info, &URI.decode/1), conn.host)
       end
 
       defp dispatch(conn, []) do

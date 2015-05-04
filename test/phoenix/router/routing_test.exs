@@ -21,6 +21,7 @@ defmodule Phoenix.Router.RoutingTest do
     get "/", UserController, :index, as: :users
     get "/users/top", UserController, :top, as: :top
     get "/users/:id", UserController, :show, as: :users
+    get "/spaced users/:id", UserController, :show
     get "/profiles/profile-:id", UserController, :show
     get "/route_that_crashes", UserController, :crash
     get "/files/:user_name/*path", UserController, :image
@@ -64,6 +65,17 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.status == 200
     assert conn.resp_body == "users show"
     assert conn.params["id"] == "1"
+  end
+
+  test "parameters are url decoded" do
+    conn = call(Router, :get, "/users/hello%20matey")
+    assert conn.params == %{"id" => "hello matey"}
+
+    conn = call(Router, :get, "/spaced%20users/hello%20matey")
+    assert conn.params == %{"id" => "hello matey"}
+
+    conn = call(Router, :get, "/spaced users/hello matey")
+    assert conn.params == %{"id" => "hello matey"}
   end
 
   test "get to custom action" do
