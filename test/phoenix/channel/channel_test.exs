@@ -101,7 +101,6 @@ defmodule Phoenix.Channel.ChannelTest do
 
   def new_socket do
     %Socket{transport_pid: self,
-            router: Router,
             topic: "topic1:subtopic",
             assigns: []}
   end

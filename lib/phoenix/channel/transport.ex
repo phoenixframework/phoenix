@@ -93,7 +93,6 @@ defmodule Phoenix.Channel.Transport do
       nil     -> log_ignore(msg.topic, router)
       channel ->
         socket = %Socket{transport_pid: transport_pid,
-                  router: router,
                   endpoint: endpoint,
                   pubsub_server: endpoint.__pubsub_server__(),
                   topic: msg.topic,
