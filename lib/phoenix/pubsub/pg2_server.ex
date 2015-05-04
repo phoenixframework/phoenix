@@ -1,12 +1,8 @@
 defmodule Phoenix.PubSub.PG2Server do
+  @moduledoc false
+
   use GenServer
   alias Phoenix.PubSub.Local
-
-  @moduledoc """
-  `Phoenix.PubSub` adapter based on `:pg2`
-
-  See `Phoenix.PubSub.Redis` for details and configuration options.
-  """
 
   def start_link(opts) do
     GenServer.start_link __MODULE__, opts, name: Dict.fetch!(opts, :name)

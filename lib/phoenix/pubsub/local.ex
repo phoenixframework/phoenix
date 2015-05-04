@@ -2,17 +2,17 @@ defmodule Phoenix.PubSub.Local do
   use GenServer
 
   @moduledoc """
-  PubSub implementation for handling local-node process groups
+  PubSub implementation for handling local-node process groups.
 
-  This module is used by Phoenix pubsub adapters to handle their
-  local node topic subscriptions. See `Phoenix.PubSub.PG2`
-  for an example integration.
+  This module is used by Phoenix pubsub adapters to handle
+  their local node subscriptions and it is usually not accessed
+  directly. See `Phoenix.PubSub.PG2` for an example integration.
   """
 
   @doc """
-  Starts the server
+  Starts the server.
 
-    * `server_name` - The name to registered the server under
+    * `server_name` - The name to register the server under
 
   """
   def start_link(server_name) do
@@ -20,14 +20,13 @@ defmodule Phoenix.PubSub.Local do
   end
 
   @doc """
-  Subscribes the pid to the topic
+  Subscribes the pid to the topic.
 
     * `local_server` - The registered server name or pid
-    * `pid` - The subscriber Pid
+    * `pid` - The subscriber pid
     * `topic` - The string topic, ie "users:123"
     * `opts` - The optional list of options. Supported options
-               only include `:link` to link the subscriber to
-               the pubsub adapter
+      only include `:link` to link the subscriber to local
 
   ## Examples
 
@@ -40,10 +39,10 @@ defmodule Phoenix.PubSub.Local do
   end
 
   @doc """
-  Unsubscribes the pid from the topic
+  Unsubscribes the pid from the topic.
 
     * `local_server` - The registered server name or pid
-    * `pid` - The subscriber Pid
+    * `pid` - The subscriber pid
     * `topic` - The string topic, ie "users:123"
 
   ## Examples
@@ -57,7 +56,7 @@ defmodule Phoenix.PubSub.Local do
   end
 
   @doc """
-  Sends a message to all subscribers of a topic
+  Sends a message to all subscribers of a topic.
 
     * `local_server` - The registered server name or pid
     * `topic` - The string topic, ie "users:123"
@@ -75,7 +74,7 @@ defmodule Phoenix.PubSub.Local do
   end
 
   @doc """
-  Returns the `HashSet` of subscribers pids for the given topic
+  Returns a set of subscribers pids for the given topic.
 
     * `local_server` - The registered server name or pid
     * `topic` - The string topic, ie "users:123"
@@ -100,7 +99,6 @@ defmodule Phoenix.PubSub.Local do
     GenServer.call(local_server, {:subscription, pid})
   end
 
-  @doc false
   def init(_) do
     Process.flag(:trap_exit, true)
     {:ok, %{topics: HashDict.new, pids: HashDict.new}}
@@ -140,7 +138,7 @@ defmodule Phoenix.PubSub.Local do
         {:reply, :ok, state}
 
       :error ->
-        {:reply, :no_topic, state}
+        {:reply, {:error, :no_topic}, state}
     end
   end
 
@@ -194,7 +192,7 @@ defmodule Phoenix.PubSub.Local do
               if Enum.any?(subd_topics) do
                 HashDict.put(state.pids, pid, {ref, subd_topics})
               else
-                Process.demonitor(ref)
+                Process.demonitor(ref, [:flush])
                 HashDict.delete(state.pids, pid)
               end
 

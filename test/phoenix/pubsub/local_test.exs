@@ -1,92 +1,89 @@
-defmodule Phoenix.PubSub.LocalTest do
+defmodule Phoenix.LocalTest do
   use ExUnit.Case, async: true
-  alias Phoenix.PubSub
+  alias Phoenix.PubSub.Local
 
-  setup do
-    PubSub.Local.start_link(:localpub)
+  setup config do
+    {:ok, _} = Local.start_link(config.test)
     :ok
   end
 
-  test "subscribe/2 joins a pid to a topic and broadcast/2 sends messages" do
+  test "subscribe/2 joins a pid to a topic and broadcast/2 sends messages", config do
     # subscribe
     pid = spawn fn -> :timer.sleep(:infinity) end
-    assert PubSub.Local.subscribers(:localpub, "foo") |> Enum.to_list == []
-    :ok = PubSub.Local.subscribe(:localpub, self, "foo")
-    :ok = PubSub.Local.subscribe(:localpub, pid, "foo")
-    :ok = PubSub.Local.subscribe(:localpub, self, "bar")
-    assert PubSub.Local.subscribers(:localpub, "foo") |> Enum.to_list |> Enum.sort
-      == Enum.sort([self, pid])
-    assert PubSub.Local.subscribers(:localpub, "bar") |> Enum.to_list == [self]
-    assert PubSub.Local.list(:localpub) |> Enum.sort == ["bar", "foo"]
+    assert Local.subscribers(config.test, "foo") |> Enum.to_list == []
+    assert :ok = Local.subscribe(config.test, self, "foo")
+    assert :ok = Local.subscribe(config.test, pid, "foo")
+    assert :ok = Local.subscribe(config.test, self, "bar")
 
     # broadcast
-    :ok = PubSub.Local.broadcast(:localpub, :none, "foo", :hellofoo)
+    assert :ok = Local.broadcast(config.test, :none, "foo", :hellofoo)
     assert_received :hellofoo
     assert Process.info(pid)[:messages] == [:hellofoo]
-    :ok = PubSub.Local.broadcast(:localpub, :none, "bar", :hellobar)
+
+    assert :ok = Local.broadcast(config.test, :none, "bar", :hellobar)
     assert_received :hellobar
     assert Process.info(pid)[:messages] == [:hellofoo]
-    :no_topic = PubSub.Local.broadcast(:localpub, :none, "ksfjlfsf", :hellobar)
+
+    assert {:error, :no_topic} = Local.broadcast(config.test, :none, "ksfjlfsf", :hellobar)
     assert Process.info(self)[:messages] == []
   end
 
-  test "unsubscribe/2 leaves group and removes topics when last pid leaves" do
+  test "unsubscribe/2 leaves group", config do
     pid = spawn fn -> :timer.sleep(:infinity) end
-    :ok = PubSub.Local.subscribe(:localpub, self, "topic1")
-    :ok = PubSub.Local.subscribe(:localpub, pid, "topic1")
-    assert PubSub.Local.subscribers(:localpub, "topic1") |> Enum.to_list |> Enum.sort
-      == Enum.sort([self, pid])
-    :ok = PubSub.Local.unsubscribe(:localpub, self, "topic1")
-    assert PubSub.Local.subscribers(:localpub, "topic1") |> Enum.to_list == [pid]
+    assert :ok = Local.subscribe(config.test, self, "topic1")
+    assert :ok = Local.subscribe(config.test, pid, "topic1")
 
-    # garbage collection
-    assert PubSub.Local.list(:localpub) == ["topic1"]
-    :ok = PubSub.Local.unsubscribe(:localpub, pid, "topic1")
-    assert PubSub.Local.subscribers(:localpub, "topic1") |> Enum.to_list == []
-    assert PubSub.Local.list(:localpub) == []
+    assert Enum.sort(Local.subscribers(config.test, "topic1")) ==
+           Enum.sort([self, pid])
+
+    assert :ok = Local.unsubscribe(config.test, self, "topic1")
+    assert Enum.sort(Local.subscribers(config.test, "topic1")) ==
+           [pid]
   end
 
-  test "unsubscribe/2 when not a subscriber and topic not exists" do
-    pid = spawn fn -> :timer.sleep(:infinity) end
-    :ok = PubSub.Local.subscribe(:localpub, pid, "topic3")
-    :ok = PubSub.Local.unsubscribe(:localpub, self, "topic3")
-    assert PubSub.Local.subscribers(:localpub, "topic3") |> Enum.to_list == [pid]
+  test "unsubscribe/2 gargabes collect topic when there are no more subscribers", config do
+    assert :ok = Local.subscribe(config.test, self, "topic1")
 
-    :ok = PubSub.Local.unsubscribe(:localpub, pid, "notexists")
-    assert PubSub.Local.subscribers(:localpub, "notexists") |> Enum.to_list == []
+    assert Local.list(config.test) == ["topic1"]
+    assert Local.unsubscribe(config.test, self, "topic1")
+
+    assert Enum.count(Local.list(config.test)) == 0
+    assert Enum.count(Local.subscribers(config.test, "topic1")) == 0
   end
 
-  test "pid is removed when DOWN and topic dropped if last subscriber" do
-    pid = spawn fn -> :timer.sleep(:infinity) end
-    :ok = PubSub.Local.subscribe(:localpub, self, "topic5")
-    :ok = PubSub.Local.subscribe(:localpub, pid, "topic5")
-    :ok = PubSub.Local.subscribe(:localpub, pid, "topic6")
-    assert PubSub.Local.subscribers(:localpub, "topic6") |> Enum.to_list == [pid]
-    assert PubSub.Local.subscribers(:localpub, "topic5") |> Enum.to_list |> Enum.sort
-      == Enum.sort([self, pid])
-    Process.exit(pid, :kill)
-    refute Process.alive?(pid)
-
-    assert PubSub.Local.subscribers(:localpub, "topic5") |> Enum.to_list |> Enum.sort
-      == Enum.sort([self])
-
-    # garbage collection
-    assert PubSub.Local.list(:localpub) == ["topic5"]
+  test "unsubscribe/2 when topic does not exists", config do
+    assert :ok = Local.unsubscribe(config.test, self, "notexists")
+    assert Enum.count(Local.subscribers(config.test, "notexists")) == 0
   end
 
-  test "when subscriber leaves last topic, it is demonitored and removed" do
-    :ok = PubSub.Local.subscribe(:localpub, self, "topic7")
-    :ok = PubSub.Local.subscribe(:localpub, self, "topic8")
-    {:ok, topics} = PubSub.Local.subscription(:localpub, self)
-    assert topics |> Enum.to_list |> Enum.sort
-      == ["topic7", "topic8"]
+  test "pid is removed when DOWN", config do
+    {pid, ref} = spawn_monitor fn -> :timer.sleep(:infinity) end
+    assert :ok = Local.subscribe(config.test, self, "topic5")
+    assert :ok = Local.subscribe(config.test, pid, "topic5")
+    assert :ok = Local.subscribe(config.test, pid, "topic6")
 
-    :ok = PubSub.Local.unsubscribe(:localpub, self, "topic7")
-    {:ok, topics} = PubSub.Local.subscription(:localpub, self)
-    assert topics |> Enum.to_list |> Enum.sort
-      == ["topic8"]
+    Process.exit(pid,  :kill)
+    assert_receive {:DOWN, ^ref, _, _, _}
 
-    :ok = PubSub.Local.unsubscribe(:localpub, self, "topic8")
-    assert PubSub.Local.subscription(:localpub, self) == :error
+    assert Enum.sort(Local.subscribers(config.test, "topic5")) == Enum.sort([self])
+    assert Enum.sort(Local.subscribers(config.test, "topic6")) == Enum.sort([])
+
+    # Assert topic was also garbage collected
+    assert Local.list(config.test) == ["topic5"]
+  end
+
+  test "subscriber is demonitored when it leaves the last topic", config do
+    assert :ok = Local.subscribe(config.test, self, "topic7")
+    assert :ok = Local.subscribe(config.test, self, "topic8")
+
+    {:ok, topics} = Local.subscription(config.test, self)
+    assert Enum.sort(topics) == ["topic7", "topic8"]
+
+    assert :ok = Local.unsubscribe(config.test, self, "topic7")
+    assert {:ok, topics} = Local.subscription(config.test, self)
+    assert Enum.sort(topics) == ["topic8"]
+
+    :ok = Local.unsubscribe(config.test, self, "topic8")
+    assert :error = Local.subscription(config.test, self)
   end
 end

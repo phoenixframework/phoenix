@@ -1,10 +1,9 @@
 defmodule Phoenix.PubSub.RedisConn do
-  use GenServer
+  # The connection pool for the `Phoenix.PubSub.Redis` adapter
+  # See `Phoenix.PubSub.Redis` for configuration details.
+  @moduledoc false
 
-  @moduledoc """
-  The connection pool for the `Phoenix.PubSub.Redis` adapter
-  See `Phoenix.PubSub.Redis` for configuration details.
-  """
+  use GenServer
 
   def start_link(opts) do
     GenServer.start_link(__MODULE__, opts)

@@ -1,13 +1,9 @@
 defmodule Phoenix.PubSub.RedisServer do
+  @moduledoc false
+
   use GenServer
   require Logger
   alias Phoenix.PubSub.Local
-
-  @moduledoc """
-  `Phoenix.PubSub` adapter for Redis
-
-  See `Phoenix.PubSub.Redis` for details and configuration options.
-  """
 
   @reconnect_after_ms 5_000
   @redis_msg_vsn 1

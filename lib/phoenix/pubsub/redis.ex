@@ -2,39 +2,34 @@ defmodule Phoenix.PubSub.Redis do
   use Supervisor
 
   @moduledoc """
-  The Supervisor for the Redis `Phoenix.PubSub` adapter
+  Phoenix PubSub adapter based on Redis.
 
   To use Redis as your PubSub adapter, simply add it to your Endpoint's config:
 
       config :my_app, MyApp.Endpiont,
-        ...
-        pubsub: [name: MyApp.PubSub,
-                 adapter: Phoenix.PubSub.Redis,
+        pubsub: [adapter: Phoenix.PubSub.Redis,
                  host: "192.168.1.100"]
 
-
-  next, add `:redo`, and `:poolboy` to your deps:
+  You will also need to add `:redo` and `:poolboy` to your deps:
 
       defp deps do
         [{:redo, github: "heroku/redo"},
-         {:poolboy, "~> 1.4.2"},
-        ...]
+         {:poolboy, "~> 1.4.2"}]
       end
 
-  finally, add `:poolboy` to your applications:
+  And also add both `:redo` and `:poolboy` to your list of applications:
 
       def application do
         [mod: {MyApp, []},
-         applications: [..., :phoenix, :poolboy],
-         ...]
+         applications: [..., :phoenix, :poolboy]]
       end
 
   ## Options
 
-    * `name` - The required name to register the PubSub processes, ie: `MyApp.PubSub`
-    * `host` - The redis-server host IP, defaults `"127.0.0.1"`
-    * `port` - The redis-server port, defaults `6379`
-    * `password` - The redis-server password, defaults `""`
+    * `:name` - The required name to register the PubSub processes, ie: `MyApp.PubSub`
+    * `:host` - The redis-server host IP, defaults `"127.0.0.1"`
+    * `:port` - The redis-server port, defaults `6379`
+    * `:password` - The redis-server password, defaults `""`
 
   """
 
