@@ -5,17 +5,16 @@ defmodule Phoenix.Socket do
 
   ## Socket Fields
 
-  * `transport_pid` - The Pid of the socket's transport process
+  * `transport_pid` - The pid of the socket's transport process
   * `topic` - The string topic, ie `"rooms:123"`
   * `router` - The router module where this socket originated
   * `endpoint` - The endpoint module where this socket originated
   * `channel` - The channel module where this socket originated
-  * `authorized` - The boolean authorization status, default `false`
+  * `joined` - IF the socket has effectively joined the channel
   * `assigns` - The map of socket assigns, default: `%{}`
-  * `transport` - The socket's Transport, ie: `Phoenix.Transports.WebSocket`
+  * `transport` - The socket's transport, ie: `Phoenix.Transports.WebSocket`
   * `pubsub_server` - The registered name of the socket's PubSub server
   * `ref` - The latest ref sent by the client
-
 
   """
 
@@ -26,7 +25,6 @@ defmodule Phoenix.Socket do
             router: nil,
             endpoint: nil,
             channel: nil,
-            authorized: false,
             transport: nil,
             pubsub_server: nil,
             ref: nil,
@@ -46,52 +44,6 @@ defmodule Phoenix.Socket do
   """
   def put_channel(socket, channel) do
     %Socket{socket | channel: channel}
-  end
-
-  @doc """
-  Authorizes socket's topic
-
-  ## Examples
-
-      iex> Socket.authorize(%Socket{}, "rooms:lobby")
-      %Socket{topic: "rooms:lobby", authorized: true}
-
-  """
-  def authorize(socket, topic) do
-    %Socket{socket | topic: topic, authorized: true}
-  end
-
-  @doc """
-  Deauthorizes topic
-
-  ## Examples
-
-      iex> socket = Socket.authorize(%Socket{}, "rooms:lobby")
-      %Socket{topic: "rooms:lobby", authorized: true}
-      iex> Socket.deauthorize(socket)
-      %Socket{topic: "rooms:lobby", authorized: false}
-
-  """
-  def deauthorize(socket) do
-    %Socket{socket | authorized: false}
-  end
-
-  @doc """
-  Checks if a given String topic is authorized for this Socket
-
-  ## Examples
-
-      iex> socket = %Socket{}
-      iex> Socket.authorized?(socket, "rooms:lobby")
-      false
-      iex> socket = Socket.authorize(socket, "rooms:lobby")
-      %Socket{topic: "rooms:lobby", authorized: true}
-      iex> Socket.authorized?(socket, "rooms:lobby")
-      true
-
-  """
-  def authorized?(socket, topic) do
-    socket.authorized && socket.topic == topic
   end
 
   @doc """

@@ -63,7 +63,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   def handle_call(:stop, _from, state), do: {:stop, :shutdown, :ok, state}
 
   @doc """
-  Dispatches client `%Phoenix.Socket.Messages{}` back through Transport layer.
+  Dispatches client message back through Transport layer.
   """
   def handle_info({:dispatch, msg, ref}, state) do
     msg
@@ -88,7 +88,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   end
 
   @doc """
-  Forwards replied/broadcasted `%Phoenix.Socket.Message{}`s from Channels back to client.
+  Forwards replied/broadcasted message from Channels back to client.
   """
   def handle_info({:socket_push, msg}, state) do
     publish_reply(msg, state)
@@ -137,7 +137,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
     {:noreply, %{state | client_ref: ref, last_client_poll: now_ms()}}
   end
 
-  # TODO: %Messages{}'s need unique ids so we can properly ack them
+  # TODO: Messages need unique ids so we can properly ack them
   @doc """
   Handles acknowledged messages from client and removes from buffer.
   `:ack` calls to the server also represent the client listener
@@ -176,6 +176,6 @@ defmodule Phoenix.Transports.LongPoller.Server do
   end
 
   defp time_to_ms({mega, sec, micro}),
-    do: ((((mega * 1000000) + sec) * 1000000) + micro) / 1000 |> trunc()
+    do: div(((((mega * 1000000) + sec) * 1000000) + micro), 1000)
   defp now_ms, do: :os.timestamp() |> time_to_ms()
 end

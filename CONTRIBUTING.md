@@ -102,23 +102,7 @@ give a user a quick idea of what the documented "thing" does/is. The rest of the
 documentation string can contain the details, for example when a value and when
 `nil` is returned.
 
-If possible include examples, preferably in a form that works with doctests. For
-example:
-
-```elixir
-defmodule Phoenix.Socket do
-...
-  @doc """
-  Adds authorized channel/topic pair to Socket's channel list
-
-  ## Examples
-
-      iex> Socket.authorize(%Socket{}, "rooms", "lobby")
-      %Socket{channel: "rooms", topic: "lobby", authorized: true}
-  """
-  def authorize(socket, channel, topic) do ...
-```
-
+If possible include examples, preferably in a form that works with doctests.
 This makes it easy to test the examples so that they don't go stale and examples
 are often a great help in explaining what a function does.
 

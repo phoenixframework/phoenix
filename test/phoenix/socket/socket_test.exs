@@ -1,17 +1,11 @@
 defmodule Phoenix.Socket.SocketTest do
-  # TODO: Should be async
-  use ExUnit.Case
+  use ExUnit.Case, async: true
+
   alias Phoenix.Socket
-  doctest Socket
+  doctest Phoenix.Socket
 
   def new_socket do
-    %Socket{}
-  end
-
-  defmodule MyChannel do
-    use Phoenix.Channel
-    def join(_topic, _msg, socket), do: {:ok, socket}
-    def handle_in(_event, _msg, socket), do: {:ok, socket}
+    %Phoenix.Socket{}
   end
 
   test "put_topic/2 sets the topic" do
@@ -22,25 +16,6 @@ defmodule Phoenix.Socket.SocketTest do
   test "put_channel/2 sets the channel" do
     socket = new_socket |> Socket.put_channel(MyChannel)
     assert socket.channel == MyChannel
-  end
-
-  test "authorized?/2 returns true if socket belongs to topic" do
-    socket = new_socket
-    socket = Socket.authorize(socket, "topic:subtopic")
-    assert Socket.authorized?(socket, "topic:subtopic")
-    refute Socket.authorized?(socket, "topic:othertopic")
-  end
-
-  test "authorized?/3 returns false if socket does not belong to topic" do
-    socket = new_socket
-    refute Socket.authorized?(socket, "sometopic:subtopic")
-  end
-
-  test "deauthorize/1 deletes topic" do
-    socket = new_socket |> Socket.authorize("test:topic")
-    assert Socket.authorized?(socket, "test:topic")
-    socket = Socket.deauthorize(socket)
-    refute Socket.authorized?(socket, "test:topic")
   end
 
   test "socket assigns can be accessed from assigns map" do
