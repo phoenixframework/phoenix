@@ -249,38 +249,6 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.admin_message_path(__MODULE__, :show, 1) == "/admin/new/messages/1"
   end
 
-  ## URLS
-
-  test "helpers module generates named routes url helpers" do
-    conn = conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
-    url = "https://example.com/admin/new/messages/1"
-    assert Helpers.admin_message_url(conn, :show, 1) == url
-    assert Helpers.admin_message_url(conn, :show, 1, []) == url
-    assert Helpers.admin_message_url(__MODULE__, :show, 1) == url
-    assert Helpers.admin_message_url(__MODULE__, :show, 1, []) == url
-  end
-
-  test "helpers module generates a url helper" do
-    conn = conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
-    assert Helpers.url(conn) == "https://example.com"
-    assert Helpers.url(__MODULE__) == "https://example.com"
-  end
-
-  ## Others
-
-  test "helpers module generates a static_path helper" do
-    conn = conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
-    assert Helpers.static_path(conn, "/images/foo.png") == "/images/foo.png"
-    assert Helpers.static_path(__MODULE__, "/images/foo.png") == "/images/foo.png"
-  end
-
-  test "helpers module generates a static_url helper" do
-    conn = conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
-    url = "https://example.com/images/foo.png"
-    assert Helpers.static_url(conn, "/images/foo.png") == url
-    assert Helpers.static_url(__MODULE__, "/images/foo.png") == url
-  end
-
   test "socket defines helper with `:as` option" do
     conn = conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
     assert Helpers.socket_path(conn, :upgrade) == "/ws"
@@ -288,6 +256,51 @@ defmodule Phoenix.Router.HelpersTest do
     url = "https://example.com/ws"
     assert Helpers.socket_url(conn, :upgrade) == url
     assert Helpers.socket_url(__MODULE__, :upgrade) == url
+  end
+
+  ## Others
+
+  defp conn_with_endpoint do
+    conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
+  end
+
+  defp socket_with_endpoint do
+    %Phoenix.Socket{endpoint: __MODULE__}
+  end
+
+  test "helpers module generates a static_path helper" do
+    assert Helpers.static_path(__MODULE__, "/images/foo.png") == "/images/foo.png"
+    assert Helpers.static_path(conn_with_endpoint, "/images/foo.png") == "/images/foo.png"
+    assert Helpers.static_path(socket_with_endpoint, "/images/foo.png") == "/images/foo.png"
+  end
+
+  test "helpers module generates a static_url helper" do
+    url = "https://example.com/images/foo.png"
+    assert Helpers.static_url(__MODULE__, "/images/foo.png") == url
+    assert Helpers.static_url(conn_with_endpoint, "/images/foo.png") == url
+    assert Helpers.static_url(socket_with_endpoint, "/images/foo.png") == url
+  end
+
+  test "helpers module generates a url helper" do
+    assert Helpers.url(__MODULE__) == "https://example.com"
+    assert Helpers.url(conn_with_endpoint) == "https://example.com"
+    assert Helpers.url(socket_with_endpoint) == "https://example.com"
+  end
+
+  test "helpers module generates a path helper" do
+    assert Helpers.path(__MODULE__, "/") == "/"
+    assert Helpers.path(conn_with_endpoint, "/") == "/"
+    assert Helpers.path(socket_with_endpoint, "/") == "/"
+  end
+
+  test "helpers module generates named routes url helpers" do
+    url = "https://example.com/admin/new/messages/1"
+    assert Helpers.admin_message_url(__MODULE__, :show, 1) == url
+    assert Helpers.admin_message_url(__MODULE__, :show, 1, []) == url
+    assert Helpers.admin_message_url(conn_with_endpoint, :show, 1) == url
+    assert Helpers.admin_message_url(conn_with_endpoint, :show, 1, []) == url
+    assert Helpers.admin_message_url(socket_with_endpoint, :show, 1) == url
+    assert Helpers.admin_message_url(socket_with_endpoint, :show, 1, []) == url
   end
 
   ## Script name

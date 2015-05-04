@@ -3,6 +3,7 @@ defmodule Phoenix.Router.Helpers do
   @moduledoc false
 
   alias Phoenix.Router.Route
+  alias Phoenix.Socket
   alias Plug.Conn
 
   @transports [Phoenix.Transports.WebSocket, Phoenix.Transports.LongPoller]
@@ -34,6 +35,11 @@ defmodule Phoenix.Router.Helpers do
       def url(%Conn{private: private}) do
         private.phoenix_endpoint.url
       end
+
+      def url(%Socket{endpoint: endpoint}) do
+        endpoint.url
+      end
+
       def url(endpoint) when is_atom(endpoint) do
         endpoint.url
       end
@@ -41,15 +47,19 @@ defmodule Phoenix.Router.Helpers do
       @doc """
       Generates the path information including any necessary prefix.
       """
-      def path(%{script_name: []}, path) do
+      def path(%Conn{script_name: []}, path) do
         path
       end
 
-      def path(%{script_name: [_|_] = script}, path) do
+      def path(%Conn{script_name: [_|_] = script}, path) do
         "/" <> Enum.join(script, "/") <> path
       end
 
-      def path(endpoint, path) do
+      def path(%Socket{endpoint: endpoint}, path) do
+        endpoint.path(path)
+      end
+
+      def path(endpoint, path) when is_atom(endpoint) do
         endpoint.path(path)
       end
 
@@ -61,6 +71,11 @@ defmodule Phoenix.Router.Helpers do
       def static_path(%Conn{private: private} = conn, path) do
         private.phoenix_endpoint.static_path(path)
       end
+
+      def static_path(%Socket{endpoint: endpoint} = conn, path) do
+        endpoint.static_path(path)
+      end
+
       def static_path(endpoint, path) when is_atom(endpoint) do
         endpoint.static_path(path)
       end
@@ -73,7 +88,12 @@ defmodule Phoenix.Router.Helpers do
       def static_url(%Conn{private: private} = conn, path) do
         static_url(private.phoenix_endpoint, path)
       end
-      def static_url(endpoint, path) do
+
+      def static_url(%Socket{endpoint: endpoint} = conn, path) do
+        static_url(endpoint, path)
+      end
+
+      def static_url(endpoint, path) when is_atom(endpoint) do
         endpoint.url <> endpoint.static_path(path)
       end
 

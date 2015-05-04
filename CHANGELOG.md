@@ -3,6 +3,7 @@
 ## v0.13.0-dev
 
 * Enhancements
+  * [Channel] Allow router helpers to work in channels via the socket, for example: `user_path(socket, :index)`
   * [HTML] `Phoenix.HTML` has been extracted to its own project. You need to explicitly depend on it by adding `{:phoenix_html, "~> 1.0"}` to `deps` in your `mix.exs` file
 
 * Bug fixes
