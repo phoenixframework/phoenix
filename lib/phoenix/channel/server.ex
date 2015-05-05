@@ -56,6 +56,7 @@ defmodule Phoenix.Channel.Server do
       {:ok, reply, socket} -> successful_join(socket, reply)
 
       {:error, reply} ->
+        # TODO longpoller needs to handle reply on join without pushing out of band
         push(socket, "phx_reply", %{ref: socket.ref, status: "error", response: reply})
         :ignore
 
