@@ -97,7 +97,7 @@ defmodule Phoenix.Channel do
 
         if changeset.valid? do
           Repo.insert(changeset)
-          {:reply, :ok, socket}
+          {:ok, socket}
         else
           {:reply, :error, socket}
         end
@@ -346,7 +346,7 @@ defmodule Phoenix.Channel do
         def join(topic, auth_msg, socket) do
           ...
           send(self, :after_join)
-          {:reply, :ok, socket}
+          {:ok, socket}
         end
 
         def handle_info(:after_join, socket) do
