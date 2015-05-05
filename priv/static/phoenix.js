@@ -179,18 +179,11 @@ var Push = (function () {
     var response = _ref.response;
     var ref = _ref.ref;
 
-    var hook = this.recHooks.find(function (h) {
+    this.recHooks.filter(function (h) {
       return h.status === status;
+    }).forEach(function (h) {
+      return h.callback(response);
     });
-    if (!hook) {
-      return;
-    }
-
-    if (this.event === CHANNEL_EVENTS.join) {
-      hook.callback(this.chan);
-    } else {
-      hook.callback(response);
-    }
   };
 
   Push.prototype.cancelAfters = function cancelAfters() {

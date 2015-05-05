@@ -74,14 +74,8 @@ class Push {
   // private
 
   matchReceive({status, response, ref}){
-    let hook = this.recHooks.find( h => h.status === status )
-    if(!hook){ return }
-
-    if(this.event === CHANNEL_EVENTS.join){
-      hook.callback(this.chan)
-    } else {
-      hook.callback(response)
-    }
+    this.recHooks.filter( h => h.status === status )
+                 .forEach( h => h.callback(response) )
   }
 
   cancelAfters(){

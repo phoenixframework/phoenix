@@ -52,10 +52,8 @@ defmodule Phoenix.Channel.Server do
   # TODO: Modify the socket to not allow pushes
   def init([socket, auth_payload]) do
     case socket.channel.join(socket.topic, auth_payload, socket) do
-      {:ok, socket} ->
-        PubSub.subscribe(socket.pubsub_server, self, socket.topic, link: true)
-        push(socket, "phx_reply", %{ref: socket.ref, status: "ok", response: %{}})
-        {:ok, put_in(socket.joined, true)}
+      {:reply, :ok, socket} -> successful_join(socket)
+      {:reply, {:ok, response}, socket} -> successful_join(socket, response)
 
       :ignore ->
         push(socket, "phx_reply", %{ref: socket.ref, status: "ignore", response: %{}})
@@ -64,6 +62,11 @@ defmodule Phoenix.Channel.Server do
       result ->
         {:stop, {:badarg, result}}
     end
+  end
+  defp successful_join(socket, response \\ %{}) do
+    PubSub.subscribe(socket.pubsub_server, self, socket.topic, link: true)
+    push(socket, "phx_reply", %{ref: socket.ref, status: "ok", response: response})
+    {:ok, put_in(socket.joined, true)}
   end
 
   defp push(socket, event, message) do

@@ -15,7 +15,7 @@ defmodule Phoenix.Channel.ChannelTest do
 
   defmodule BlankChannel do
     use Phoenix.Channel
-    def join(_topic, _msg, socket), do: {:ok, socket}
+    def join(_topic, _msg, socket), do: {:reply, :ok, socket}
 
     def handle_in(_event, _msg, socket) do
       {:noreply, socket}
@@ -236,7 +236,7 @@ defmodule Phoenix.Channel.ChannelTest do
   test "handle_in and handle_out callbacks can return {:stop, reason, socket} to terminate channel" do
     # join
     join = fn ->
-      message = join_message("topic:1subtopic", fn socket -> {:ok, socket} end)
+      message = join_message("topic:1subtopic", fn socket -> {:reply, :ok, socket} end)
       assert subscribers(:phx_pub, "topic:1subtopic") == []
       Transport.dispatch(message, HashDict.new, self, Router, Endpoint, WebSocket)
     end
@@ -274,7 +274,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "successful join authorizes and subscribes socket to topic" do
-    message = join_message("topic:2subtopic", fn socket -> {:ok, socket} end)
+    message = join_message("topic:2subtopic", fn socket -> {:reply, :ok, socket} end)
     sockets = HashDict.new
 
     assert subscribers(:phx_pub, "topic:2subtopic") == []
@@ -292,7 +292,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "terminate/2 is called when the socket conn closes and exits are trapped" do
-    message = join_message("topic:4subtopic", fn socket -> {:ok, socket} end)
+    message = join_message("topic:4subtopic", fn socket -> {:reply, :ok, socket} end)
 
     {:ok, socket_pid} =
       Transport.dispatch(message, HashDict.new, self, Router, Endpoint, WebSocket)
@@ -313,7 +313,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "handle_in/3 raises InvalidReturnError exception when return type is invalid" do
-    message = join_message("topic:7subtopic", fn socket -> {:ok, socket} end)
+    message = join_message("topic:7subtopic", fn socket -> {:reply, :ok, socket} end)
 
     {:ok, socket_pid} =
       Transport.dispatch(message, HashDict.new, self, Router, Endpoint, WebSocket)
@@ -342,7 +342,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "handle_out/3 can be overidden for custom broadcast handling" do
-    message = join_message("topic:8subtopic", fn socket -> {:ok, socket} end)
+    message = join_message("topic:8subtopic", fn socket -> {:reply, :ok, socket} end)
     sockets = HashDict.new
 
     {:ok, _socket_pid} =
@@ -357,7 +357,7 @@ defmodule Phoenix.Channel.ChannelTest do
   test "join/3 and handle_in/3 match splat topics" do
     message = %Message{topic: "topic:9somesubtopic",
                        event: "phx_join",
-                       payload: fn socket -> {:ok, socket} end}
+                       payload: fn socket -> {:reply, :ok, socket} end}
     sockets = HashDict.new
 
     {:ok, socket_pid} =
@@ -367,19 +367,19 @@ defmodule Phoenix.Channel.ChannelTest do
 
     message = %Message{topic: "topic",
                        event: "phx_join",
-                       payload: fn socket -> {:ok, socket} end}
+                       payload: fn socket -> {:reply, :ok, socket} end}
     :ignore = Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
     refute_received {:join, "topic"}
 
     message = %Message{topic: "topic:9somesubtopic",
                        event: "some_event",
-                       payload: fn socket -> {:ok, socket} end}
+                       payload: fn socket -> {:reply, :ok, socket} end}
     :ok = Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
     assert_receive {:handle_in, "topic:9somesubtopic"}
 
     message = %Message{topic: "topic:somesub",
                        event: "some_event",
-                       payload: fn socket -> {:ok, socket} end}
+                       payload: fn socket -> {:reply, :ok, socket} end}
     :ignore = Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
     refute_received {:handle_in, "topic:somesub"}
   end
@@ -387,7 +387,7 @@ defmodule Phoenix.Channel.ChannelTest do
   test "join/3 and handle_in/3 match bare topics" do
     message = %Message{topic: "baretopic",
                        event: "phx_join",
-                       payload: fn socket -> {:ok, socket} end}
+                       payload: fn socket -> {:reply, :ok, socket} end}
     sockets = HashDict.new
 
     {:ok, socket_pid} =
@@ -397,19 +397,19 @@ defmodule Phoenix.Channel.ChannelTest do
 
     message = %Message{topic: "baretopic:sub",
                        event: "phx_join",
-                       payload: fn socket -> {:ok, socket} end}
+                       payload: fn socket -> {:reply, :ok, socket} end}
     :ignore = Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
     refute_received {:join, "baretopic:sub"}
 
     message = %Message{topic: "baretopic",
                        event: "some_event",
-                       payload: fn socket -> {:ok, socket} end}
+                       payload: fn socket -> {:reply, :ok, socket} end}
     :ok = Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
     assert_receive {:handle_in, "baretopic"}
 
     message = %Message{topic: "baretopic:sub",
                        event: "some_event",
-                       payload: fn socket -> {:ok, socket} end}
+                       payload: fn socket -> {:reply, :ok, socket} end}
     :ignore = Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
     refute_receive {:handle_in, "baretopic:sub"}
   end
@@ -418,7 +418,7 @@ defmodule Phoenix.Channel.ChannelTest do
     # via WS
     message = %Message{topic: "wsonly:somesubtopic",
                        event: "phx_join",
-                       payload: fn socket -> {:ok, socket} end}
+                       payload: fn socket -> {:reply, :ok, socket} end}
     sockets = HashDict.new
     {:ok, _socket_pid} =
       Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
@@ -430,7 +430,7 @@ defmodule Phoenix.Channel.ChannelTest do
     # via LP
     message = %Message{topic: "lponly:somesubtopic",
                        event: "phx_join",
-                       payload: fn socket -> {:ok, socket} end}
+                       payload: fn socket -> {:reply, :ok, socket} end}
     sockets = HashDict.new
     {:ok, _socket_pid} =
       Transport.dispatch(message, sockets, self, Router, Endpoint, LongPoller)
@@ -443,7 +443,7 @@ defmodule Phoenix.Channel.ChannelTest do
   test "unmatched channel message ignores message" do
     msg = %Message{topic: "ensurebadmatch:somesubtopic",
                    event: "phx_join",
-                   payload: fn socket -> {:ok, socket} end}
+                   payload: fn socket -> {:reply, :ok, socket} end}
     assert nil == Router.channel_for_topic(msg.topic, WebSocket)
     :ignore = Transport.dispatch(msg, HashDict.new, self, Router, Endpoint, WebSocket)
     refute_received {:join, "ensurebadmatch:somesubtopic"}
@@ -452,7 +452,7 @@ defmodule Phoenix.Channel.ChannelTest do
   test "socket/3 with alias option" do
     message = %Message{topic: "topic2:somesubtopic",
                        event: "phx_join",
-                       payload: fn socket -> {:ok, socket} end}
+                       payload: fn socket -> {:reply, :ok, socket} end}
     {:ok, _socket_pid} =
       Transport.dispatch(message, HashDict.new, self, Router, Endpoint, WebSocket)
     assert_received {:join, "topic2:somesubtopic"}
@@ -461,7 +461,7 @@ defmodule Phoenix.Channel.ChannelTest do
   test "socket/3 with alias applies :alias option" do
     message = %Message{topic: "topic3:somesubtopic",
                        event: "phx_join",
-                       payload: fn socket -> {:ok, socket} end}
+                       payload: fn socket -> {:reply, :ok, socket} end}
     {:ok, _socket_pid} =
       Transport.dispatch(message, HashDict.new, self, Router, Endpoint, WebSocket)
     assert_received {:join, "topic3:somesubtopic"}
@@ -470,13 +470,13 @@ defmodule Phoenix.Channel.ChannelTest do
   test "socket/3 with via applies overridable transport filters to all channels" do
     message = %Message{topic: "topic2:somesubtopic",
                        event: "phx_join",
-                       payload: fn socket -> {:ok, socket} end}
+                       payload: fn socket -> {:reply, :ok, socket} end}
     :ignore = Transport.dispatch(message, HashDict.new, self, Router, Endpoint, LongPoller)
     refute_received {:join, "topic2:somesubtopic"}
 
     message = %Message{topic: "topic2-override:somesubtopic",
                        event: "phx_join",
-                       payload: fn socket -> {:ok, socket} end}
+                       payload: fn socket -> {:reply, :ok, socket} end}
     {:ok, _socket_pid} =
       Transport.dispatch(message, HashDict.new, self, Router, Endpoint, LongPoller)
     assert_received {:join, "topic2-override:somesubtopic"}
@@ -486,7 +486,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "handle_info/2 is triggered for any elixir message" do
-    message = join_message("topic:10subtopic", fn socket -> {:ok, socket} end)
+    message = join_message("topic:10subtopic", fn socket -> {:reply, :ok, socket} end)
     {:ok, socket_pid} =
       Transport.dispatch(message, HashDict.new, self, Router, Endpoint, WebSocket)
 
@@ -495,7 +495,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "handle_info/2 can close socket by returning {:stop, reason, socket}" do
-    message = join_message("topic:10subtopic", fn socket -> {:ok, socket} end)
+    message = join_message("topic:10subtopic", fn socket -> {:reply, :ok, socket} end)
     {:ok, socket_pid} = Transport.dispatch(message, HashDict.new, self, Router, Endpoint, WebSocket)
     Process.monitor(socket_pid)
 
@@ -507,7 +507,7 @@ defmodule Phoenix.Channel.ChannelTest do
 
   test "handle_in/3 can reply to the socket directly" do
     sockets = HashDict.new
-    message = join_message("topic:11subtopic", fn socket -> {:ok, socket} end)
+    message = join_message("topic:11subtopic", fn socket -> {:reply, :ok, socket} end)
     {:ok, socket_pid} = Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
     sockets = HashDict.put(sockets, "topic:11subtopic", socket_pid)
     assert_receive {:socket_push,
@@ -534,7 +534,7 @@ defmodule Phoenix.Channel.ChannelTest do
 
   test "phx_leave event stops the server" do
     sockets = HashDict.new
-    message = join_message("topic:12subtopic", fn socket -> {:ok, socket} end)
+    message = join_message("topic:12subtopic", fn socket -> {:reply, :ok, socket} end)
     {:ok, socket_pid} = Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
     sockets = HashDict.put(sockets, "topic:12subtopic", socket_pid)
     Process.monitor(socket_pid)
