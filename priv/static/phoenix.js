@@ -1,59 +1,42 @@
-(function() {
+(function(/*! Brunch !*/) {
   'use strict';
 
-  var globals = typeof window === 'undefined' ? global : window;
+  var globals = typeof window !== 'undefined' ? window : global;
   if (typeof globals.require === 'function') return;
 
   var modules = {};
   var cache = {};
-  var has = ({}).hasOwnProperty;
 
-  var aliases = {};
-
-  var endsWith = function(str, suffix) {
-    return str.indexOf(suffix, str.length - suffix.length) !== -1;
+  var has = function(object, name) {
+    return ({}).hasOwnProperty.call(object, name);
   };
 
-  var unalias = function(alias, loaderPath) {
-    var start = 0;
-    if (loaderPath) {
-      if (loaderPath.indexOf('components/' === 0)) {
-        start = 'components/'.length;
-      }
-      if (loaderPath.indexOf('/', start) > 0) {
-        loaderPath = loaderPath.substring(start, loaderPath.indexOf('/', start));
+  var expand = function(root, name) {
+    var results = [], parts, part;
+    if (/^\.\.?(\/|$)/.test(name)) {
+      parts = [root, name].join('/').split('/');
+    } else {
+      parts = name.split('/');
+    }
+    for (var i = 0, length = parts.length; i < length; i++) {
+      part = parts[i];
+      if (part === '..') {
+        results.pop();
+      } else if (part !== '.' && part !== '') {
+        results.push(part);
       }
     }
-    var result = aliases[alias + '/index.js'] || aliases[loaderPath + '/deps/' + alias + '/index.js'];
-    if (result) {
-      return 'components/' + result.substring(0, result.length - '.js'.length);
-    }
-    return alias;
+    return results.join('/');
   };
 
-  var expand = (function() {
-    var reg = /^\.\.?(\/|$)/;
-    return function(root, name) {
-      var results = [], parts, part;
-      parts = (reg.test(name) ? root + '/' + name : name).split('/');
-      for (var i = 0, length = parts.length; i < length; i++) {
-        part = parts[i];
-        if (part === '..') {
-          results.pop();
-        } else if (part !== '.' && part !== '') {
-          results.push(part);
-        }
-      }
-      return results.join('/');
-    };
-  })();
   var dirname = function(path) {
     return path.split('/').slice(0, -1).join('/');
   };
 
   var localRequire = function(path) {
     return function(name) {
-      var absolute = expand(dirname(path), name);
+      var dir = dirname(path);
+      var absolute = expand(dir, name);
       return globals.require(absolute, path);
     };
   };
@@ -68,26 +51,21 @@
   var require = function(name, loaderPath) {
     var path = expand(name, '.');
     if (loaderPath == null) loaderPath = '/';
-    path = unalias(name, loaderPath);
 
-    if (has.call(cache, path)) return cache[path].exports;
-    if (has.call(modules, path)) return initModule(path, modules[path]);
+    if (has(cache, path)) return cache[path].exports;
+    if (has(modules, path)) return initModule(path, modules[path]);
 
     var dirIndex = expand(path, './index');
-    if (has.call(cache, dirIndex)) return cache[dirIndex].exports;
-    if (has.call(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
+    if (has(cache, dirIndex)) return cache[dirIndex].exports;
+    if (has(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
 
     throw new Error('Cannot find module "' + name + '" from '+ '"' + loaderPath + '"');
   };
 
-  require.alias = function(from, to) {
-    aliases[to] = from;
-  };
-
-  require.register = require.define = function(bundle, fn) {
+  var define = function(bundle, fn) {
     if (typeof bundle === 'object') {
       for (var key in bundle) {
-        if (has.call(bundle, key)) {
+        if (has(bundle, key)) {
           modules[key] = bundle[key];
         }
       }
@@ -96,25 +74,33 @@
     }
   };
 
-  require.list = function() {
+  var list = function() {
     var result = [];
     for (var item in modules) {
-      if (has.call(modules, item)) {
+      if (has(modules, item)) {
         result.push(item);
       }
     }
     return result;
   };
 
-  require.brunch = true;
   globals.require = require;
+  globals.require.define = define;
+  globals.require.register = define;
+  globals.require.list = list;
+  globals.require.brunch = true;
 })();
 require.define({'phoenix': function(exports, require, module){ "use strict";
 
 var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
-exports.__esModule = true;
 var SOCKET_STATES = { connecting: 0, open: 1, closing: 2, closed: 3 };
+var CHAN_STATES = {
+  closed: "closed",
+  errored: "errored",
+  joined: "joined",
+  joining: "joining",
+  left: "left" };
 var CHANNEL_EVENTS = {
   close: "phx_close",
   error: "phx_error",
@@ -130,11 +116,8 @@ var Push = (function () {
   // chan - The Channel
   // event - The event, ie `"phx_join"`
   // payload - The payload, ie `{user_id: 123}`
-  // mergePush - The optional `Push` to merge hooks from
 
-  function Push(chan, event, payload, mergePush) {
-    var _this = this;
-
+  function Push(chan, event, payload) {
     _classCallCheck(this, Push);
 
     this.chan = chan;
@@ -142,18 +125,8 @@ var Push = (function () {
     this.payload = payload || {};
     this.receivedResp = null;
     this.afterHooks = [];
-    this.recHooks = {};
+    this.recHooks = [];
     this.sent = false;
-    if (mergePush) {
-      mergePush.afterHooks.forEach(function (hook) {
-        return _this.after(hook.ms, hook.callback);
-      });
-      for (var status in mergePush.recHooks) {
-        if (mergePush.recHooks.hasOwnProperty(status)) {
-          this.receive(status, mergePush.recHooks[status]);
-        }
-      }
-    }
   }
 
   Push.prototype.send = function send() {
@@ -161,6 +134,8 @@ var Push = (function () {
 
     var ref = this.chan.socket.makeRef();
     var refEvent = this.chan.replyEventName(ref);
+    this.receivedResp = null;
+    this.sent = false;
 
     this.chan.on(refEvent, function (payload) {
       _this.receivedResp = payload;
@@ -183,7 +158,8 @@ var Push = (function () {
     if (this.receivedResp && this.receivedResp.status === status) {
       callback(this.receivedResp.response);
     }
-    this.recHooks[status] = callback;
+
+    this.recHooks.push({ status: status, callback: callback });
     return this;
   };
 
@@ -203,15 +179,17 @@ var Push = (function () {
     var response = _ref.response;
     var ref = _ref.ref;
 
-    var callback = this.recHooks[status];
-    if (!callback) {
+    var hook = this.recHooks.find(function (h) {
+      return h.status === status;
+    });
+    if (!hook) {
       return;
     }
 
     if (this.event === CHANNEL_EVENTS.join) {
-      callback(this.chan);
+      hook.callback(this.chan);
     } else {
-      callback(response);
+      hook.callback(response);
     }
   };
 
@@ -236,34 +214,58 @@ var Push = (function () {
 })();
 
 var Channel = exports.Channel = (function () {
-  function Channel(topic, message, callback, socket) {
+  function Channel(topic, message, socket) {
+    var _this = this;
+
     _classCallCheck(this, Channel);
 
+    this.state = CHAN_STATES.closed;
     this.topic = topic;
     this.message = message;
-    this.callback = callback;
     this.socket = socket;
     this.bindings = [];
-    this.afterHooks = [];
-    this.recHooks = {};
+    this.joinedOnce = false;
     this.joinPush = new Push(this, CHANNEL_EVENTS.join, this.message);
-
-    this.reset();
+    this.joinPush.receive("ok", function () {
+      _this.state = CHAN_STATES.joined;
+    });
+    this.onClose(function () {
+      return _this.state = CHAN_STATES.closed;
+    });
+    this.onError(function (reason) {
+      _this.state = CHAN_STATES.errored;
+      setTimeout(function () {
+        return _this.join();
+      }, _this.socket.reconnectAfterMs);
+    });
+    this.on(CHANNEL_EVENTS.reply, function (payload) {
+      _this.trigger(_this.replyEventName(payload.ref), payload);
+    });
   }
 
-  Channel.prototype.after = function after(ms, callback) {
-    this.joinPush.after(ms, callback);
-    return this;
+  Channel.prototype.isJoined = function isJoined() {
+    return this.state === CHAN_STATES.joined;
   };
 
-  Channel.prototype.receive = function receive(status, callback) {
-    this.joinPush.receive(status, callback);
-    return this;
+  Channel.prototype.isJoining = function isJoining() {
+    return this.state === CHAN_STATES.joining;
   };
 
-  Channel.prototype.rejoin = function rejoin() {
-    this.reset();
+  Channel.prototype.join = function join() {
+    var _this = this;
+
+    if (!this.joinedOnce) {
+      this.socket.onOpen(function () {
+        if (!_this.isJoined() && !_this.isJoining()) {
+          _this.join();
+        }
+      });
+      this.joinedOnce = true;
+    }
+    this.state = CHAN_STATES.joining;
     this.joinPush.send();
+
+    return this.joinPush;
   };
 
   Channel.prototype.onClose = function onClose(callback) {
@@ -276,22 +278,6 @@ var Channel = exports.Channel = (function () {
     this.on(CHANNEL_EVENTS.error, function (reason) {
       callback(reason);
       _this.trigger(CHANNEL_EVENTS.close, "error");
-    });
-  };
-
-  Channel.prototype.reset = function reset() {
-    var _this = this;
-
-    this.bindings = [];
-    var newJoinPush = new Push(this, CHANNEL_EVENTS.join, this.message, this.joinPush);
-    this.joinPush = newJoinPush;
-    this.onError(function (reason) {
-      setTimeout(function () {
-        return _this.rejoin();
-      }, _this.socket.reconnectAfterMs);
-    });
-    this.on(CHANNEL_EVENTS.reply, function (payload) {
-      _this.trigger(_this.replyEventName(payload.ref), payload);
     });
   };
 
@@ -318,6 +304,9 @@ var Channel = exports.Channel = (function () {
   };
 
   Channel.prototype.push = function push(event, payload) {
+    if (!this.isJoined()) {
+      throw "tried to push '" + event + "' to '" + this.topic + "' while in '" + this.state + "' state. Use chan.join() before pushing events";
+    }
     var pushEvent = new Push(this, event, payload);
     pushEvent.send();
 
@@ -328,12 +317,24 @@ var Channel = exports.Channel = (function () {
     return "chan_reply_" + ref;
   };
 
+  // Leaves the channel
+  //
+  // Unsubscribes from server events, and
+  // instructs channel to terminate on server
+  //
+  // Does not trigger onClose().
+  // To receive leave acknowledgements, use the a `receive`
+  // hook to bind to the server ack, ie:
+  //
+  //     chan.leave().receive("ok", () => alert("left!") )
+  //
+
   Channel.prototype.leave = function leave() {
     var _this = this;
 
     return this.push(CHANNEL_EVENTS.leave).receive("ok", function () {
-      _this.socket.leave(_this);
-      _this.reset();
+      _this.state = CHAN_STATES.left;
+      _this.socket.remove(_this);
     });
   };
 
@@ -478,7 +479,6 @@ var Socket = exports.Socket = (function () {
         return _this.sendHeartbeat();
       }, this.heartbeatIntervalMs);
     }
-    this.rejoinAll();
     this.stateChangeCallbacks.open.forEach(function (callback) {
       return callback();
     });
@@ -489,6 +489,7 @@ var Socket = exports.Socket = (function () {
 
     this.log("WS close:");
     this.log(event);
+    this.triggerChanClose();
     clearInterval(this.reconnectTimer);
     clearInterval(this.heartbeatTimer);
     this.reconnectTimer = setInterval(function () {
@@ -502,8 +503,15 @@ var Socket = exports.Socket = (function () {
   Socket.prototype.onConnError = function onConnError(error) {
     this.log("WS error:");
     this.log(error);
+    this.triggerChanClose();
     this.stateChangeCallbacks.error.forEach(function (callback) {
       return callback(error);
+    });
+  };
+
+  Socket.prototype.triggerChanClose = function triggerChanClose() {
+    this.channels.forEach(function (chan) {
+      return chan.trigger(CHANNEL_EVENTS.close);
     });
   };
 
@@ -524,25 +532,16 @@ var Socket = exports.Socket = (function () {
     return this.connectionState() === "open";
   };
 
-  Socket.prototype.rejoinAll = function rejoinAll() {
-    this.channels.forEach(function (chan) {
-      return chan.rejoin();
-    });
-  };
-
-  Socket.prototype.join = function join(topic, message, callback) {
-    var chan = new Channel(topic, message, callback, this);
-    this.channels.push(chan);
-    if (this.isConnected()) {
-      chan.rejoin();
-    }
-    return chan;
-  };
-
-  Socket.prototype.leave = function leave(chan) {
+  Socket.prototype.remove = function remove(chan) {
     this.channels = this.channels.filter(function (c) {
       return !c.isMember(chan.topic);
     });
+  };
+
+  Socket.prototype.chan = function chan(topic, authPayload) {
+    var chan = new Channel(topic, authPayload, this);
+    this.channels.push(chan);
+    return chan;
   };
 
   Socket.prototype.push = function push(data) {
@@ -776,5 +775,6 @@ var Ajax = exports.Ajax = (function () {
 })();
 
 Ajax.states = { complete: 4 };
+exports.__esModule = true;
  }});
 if(typeof(window) === 'object' && !window.Phoenix){ window.Phoenix = require('phoenix') };
