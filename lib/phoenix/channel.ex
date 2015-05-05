@@ -43,7 +43,7 @@ defmodule Phoenix.Channel do
   such as HMAC'd tokens for this purpose.
 
   To authorize a socket in `join/3`, return `{:ok, socket}`.
-  To refuse authorization in `join/3, return `:ignore`.
+  To refuse authorization in `join/3, return `{:error, reply}`.
 
   ### Incoming Events
 
@@ -183,7 +183,8 @@ defmodule Phoenix.Channel do
   alias Phoenix.Socket.Message
 
   defcallback join(topic :: binary, auth_msg :: map, Socket.t) :: {:ok, Socket.t} |
-                                                                  :ignore
+                                                                  {:ok, reply :: map, Socket.t} |
+                                                                  {:error, reply :: map}
 
   defcallback terminate(msg :: map, Socket.t) :: :ok | {:error, reason :: term}
 
@@ -345,7 +346,7 @@ defmodule Phoenix.Channel do
         def join(topic, auth_msg, socket) do
           ...
           send(self, :after_join)
-          {:ok, socket}
+          {:reply, :ok, socket}
         end
 
         def handle_info(:after_join, socket) do

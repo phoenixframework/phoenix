@@ -43,7 +43,7 @@ defmodule Phoenix.Channel.Server do
   Initializes the Socket server for `Phoenix.Channel` joins.
 
   To start the server, return `{:ok, socket}`.
-  To ignore the join request, return `:ignore`
+  To reject the join request, return `{:error, reply}`
   Any other result will exit with `:badarg`
 
   See `Phoenix.Channel.join/3` documentation.
@@ -52,18 +52,22 @@ defmodule Phoenix.Channel.Server do
   # TODO: Modify the socket to not allow pushes
   def init([socket, auth_payload]) do
     case socket.channel.join(socket.topic, auth_payload, socket) do
-      {:ok, socket} ->
-        PubSub.subscribe(socket.pubsub_server, self, socket.topic, link: true)
-        push(socket, "phx_reply", %{ref: socket.ref, status: "ok", response: %{}})
-        {:ok, put_in(socket.joined, true)}
+      {:ok, socket} -> successful_join(socket)
+      {:ok, reply, socket} -> successful_join(socket, reply)
 
-      :ignore ->
-        push(socket, "phx_reply", %{ref: socket.ref, status: "ignore", response: %{}})
+      {:error, reply} ->
+        # TODO longpoller needs to handle reply on join without pushing out of band
+        push(socket, "phx_reply", %{ref: socket.ref, status: "error", response: reply})
         :ignore
 
       result ->
         {:stop, {:badarg, result}}
     end
+  end
+  defp successful_join(socket, response \\ %{}) do
+    PubSub.subscribe(socket.pubsub_server, self, socket.topic, link: true)
+    push(socket, "phx_reply", %{ref: socket.ref, status: "ok", response: response})
+    {:ok, put_in(socket.joined, true)}
   end
 
   defp push(socket, event, message) do

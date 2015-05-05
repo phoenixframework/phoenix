@@ -1,4 +1,11 @@
 const SOCKET_STATES = {connecting: 0, open: 1, closing: 2, closed: 3}
+const CHAN_STATES = {
+  closed: "closed",
+  errored: "errored",
+  joined: "joined",
+  joining: "joining",
+  left: "left",
+}
 const CHANNEL_EVENTS = {
   close: "phx_close",
   error: "phx_error",
@@ -14,28 +21,21 @@ class Push {
   // chan - The Channel
   // event - The event, ie `"phx_join"`
   // payload - The payload, ie `{user_id: 123}`
-  // mergePush - The optional `Push` to merge hooks from
-  constructor(chan, event, payload, mergePush){
+  constructor(chan, event, payload){
     this.chan         = chan
     this.event        = event
     this.payload      = payload || {}
     this.receivedResp = null
     this.afterHooks   = []
-    this.recHooks     = {}
+    this.recHooks     = []
     this.sent         = false
-    if(mergePush){
-      mergePush.afterHooks.forEach( hook => this.after(hook.ms, hook.callback) )
-      for(var status in mergePush.recHooks){
-        if(mergePush.recHooks.hasOwnProperty(status)){
-          this.receive(status, mergePush.recHooks[status])
-        }
-      }
-    }
   }
 
   send(){
-    const ref      = this.chan.socket.makeRef()
-    const refEvent = this.chan.replyEventName(ref)
+    const ref         = this.chan.socket.makeRef()
+    const refEvent    = this.chan.replyEventName(ref)
+    this.receivedResp = null
+    this.sent         = false
 
     this.chan.on(refEvent, payload => {
       this.receivedResp = payload
@@ -58,7 +58,8 @@ class Push {
     if(this.receivedResp && this.receivedResp.status === status){
       callback(this.receivedResp.response)
     }
-    this.recHooks[status] = callback
+
+    this.recHooks.push({status, callback})
     return this
   }
 
@@ -73,14 +74,8 @@ class Push {
   // private
 
   matchReceive({status, response, ref}){
-    let callback = this.recHooks[status]
-    if(!callback){ return }
-
-    if(this.event === CHANNEL_EVENTS.join){
-      callback(this.chan)
-    } else {
-      callback(response)
-    }
+    this.recHooks.filter( h => h.status === status )
+                 .forEach( h => h.callback(response) )
   }
 
   cancelAfters(){
@@ -100,32 +95,41 @@ class Push {
 }
 
 export class Channel {
-  constructor(topic, message, callback, socket) {
+  constructor(topic, message, socket) {
+    this.state      = CHAN_STATES.closed
     this.topic      = topic
     this.message    = message
-    this.callback   = callback
     this.socket     = socket
     this.bindings   = []
-    this.afterHooks = []
-    this.recHooks   = {}
+    this.joinedOnce = false
     this.joinPush   = new Push(this, CHANNEL_EVENTS.join, this.message)
-
-    this.reset()
+    this.joinPush.receive("ok", () => {
+      this.state = CHAN_STATES.joined
+    })
+    this.onClose( () => this.state = CHAN_STATES.closed )
+    this.onError( reason => {
+      this.state = CHAN_STATES.errored
+      setTimeout(() => this.join(), this.socket.reconnectAfterMs)
+    })
+    this.on(CHANNEL_EVENTS.reply, payload => {
+      this.trigger(this.replyEventName(payload.ref), payload)
+    })
   }
 
-  after(ms, callback){
-    this.joinPush.after(ms, callback)
-    return this
-  }
+  isJoined(){ return this.state === CHAN_STATES.joined }
+  isJoining(){ return this.state === CHAN_STATES.joining }
 
-  receive(status, callback){
-    this.joinPush.receive(status, callback)
-    return this
-  }
-
-  rejoin(){
-    this.reset()
+  join(){
+    if(!this.joinedOnce){
+      this.socket.onOpen( () => {
+        if(!this.isJoined() && !this.isJoining()){ this.join() }
+      })
+      this.joinedOnce = true
+    }
+    this.state = CHAN_STATES.joining
     this.joinPush.send()
+
+    return this.joinPush
   }
 
   onClose(callback){ this.on(CHANNEL_EVENTS.close, callback) }
@@ -134,18 +138,6 @@ export class Channel {
     this.on(CHANNEL_EVENTS.error, reason => {
       callback(reason)
       this.trigger(CHANNEL_EVENTS.close, "error")
-    })
-  }
-
-  reset(){
-    this.bindings = []
-    let newJoinPush = new Push(this, CHANNEL_EVENTS.join, this.message, this.joinPush)
-    this.joinPush = newJoinPush
-    this.onError( reason => {
-      setTimeout(() => this.rejoin(), this.socket.reconnectAfterMs)
-    })
-    this.on(CHANNEL_EVENTS.reply, payload => {
-      this.trigger(this.replyEventName(payload.ref), payload)
     })
   }
 
@@ -161,6 +153,9 @@ export class Channel {
   }
 
   push(event, payload){
+    if(!this.isJoined()){
+      throw(`tried to push '${event}' to '${this.topic}' while in '${this.state}' state. Use chan.join() before pushing events`)
+    }
     let pushEvent = new Push(this, event, payload)
     pushEvent.send()
 
@@ -169,14 +164,24 @@ export class Channel {
 
   replyEventName(ref){ return `chan_reply_${ref}` }
 
+  // Leaves the channel
+  //
+  // Unsubscribes from server events, and
+  // instructs channel to terminate on server
+  //
+  // Does not trigger onClose().
+  // To receive leave acknowledgements, use the a `receive`
+  // hook to bind to the server ack, ie:
+  //
+  //     chan.leave().receive("ok", () => alert("left!") )
+  //
   leave(){
     return this.push(CHANNEL_EVENTS.leave).receive("ok", () => {
-      this.socket.leave(this)
-      this.reset()
+      this.state = CHAN_STATES.left
+      this.socket.remove(this)
     })
   }
 }
-
 
 export class Socket {
 
@@ -268,13 +273,13 @@ export class Socket {
       clearInterval(this.heartbeatTimer)
       this.heartbeatTimer = setInterval(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
     }
-    this.rejoinAll()
     this.stateChangeCallbacks.open.forEach( callback => callback() )
   }
 
   onConnClose(event){
     this.log("WS close:")
     this.log(event)
+    this.triggerChanClose()
     clearInterval(this.reconnectTimer)
     clearInterval(this.heartbeatTimer)
     this.reconnectTimer = setInterval(() => this.connect(), this.reconnectAfterMs)
@@ -284,7 +289,12 @@ export class Socket {
   onConnError(error){
     this.log("WS error:")
     this.log(error)
+    this.triggerChanClose()
     this.stateChangeCallbacks.error.forEach( callback => callback(error) )
+  }
+
+  triggerChanClose(){
+    this.channels.forEach( chan => chan.trigger(CHANNEL_EVENTS.close) )
   }
 
   connectionState(){
@@ -298,17 +308,14 @@ export class Socket {
 
   isConnected(){ return this.connectionState() === "open" }
 
-  rejoinAll(){ this.channels.forEach( chan => chan.rejoin() ) }
-
-  join(topic, message, callback){
-    let chan = new Channel(topic, message, callback, this)
-    this.channels.push(chan)
-    if(this.isConnected()){ chan.rejoin() }
-    return chan
+  remove(chan){
+    this.channels = this.channels.filter( c => !c.isMember(chan.topic) )
   }
 
-  leave(chan){
-    this.channels = this.channels.filter( c => !c.isMember(chan.topic) )
+  chan(topic, authPayload){
+    let chan = new Channel(topic, authPayload, this)
+    this.channels.push(chan)
+    return chan
   }
 
   push(data){

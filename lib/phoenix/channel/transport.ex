@@ -64,8 +64,7 @@ defmodule Phoenix.Channel.Transport do
 
   The following return signatures must be handled by transport adapters:
     * `{:ok, socket_pid}` - Successful dispatch, with pid of new socket
-    * `{:error, reason}` - Failed dispatch
-    * `:ignore` - Unauthorized or unmatched dispatch
+    * `{:error, reason}` - Unauthorized or unmatched dispatch
 
   """
   def dispatch(%Message{} = msg, sockets, transport_pid, router, endpoint, transport) do

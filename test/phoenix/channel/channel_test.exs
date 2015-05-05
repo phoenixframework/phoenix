@@ -284,7 +284,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "unsuccessful join denies socket access to topic" do
-    message = join_message("topic:3subtopic", fn _socket -> :ignore end)
+    message = join_message("topic:3subtopic", fn _socket -> {:error, %{reason: "unauthorized"}} end)
 
     assert subscribers(:phx_pub, "topic:3subtopic") == []
     :ignore = Transport.dispatch(message, HashDict.new, self, Router, Endpoint, WebSocket)
