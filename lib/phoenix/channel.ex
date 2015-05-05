@@ -27,12 +27,12 @@ defmodule Phoenix.Channel do
 
       # handles the special `"lobby"` subtopic
       def join("rooms:lobby", _auth_message, socket) do
-        {:reply, :ok, socket}
+        {:ok, socket}
       end
 
       # handles any other subtopic as the room ID, ie `"rooms:12"`, `"rooms:34"`
       def join("rooms:" <> room_id, auth_message, socket) do
-        {:reply, :ok, socket}
+        {:ok, socket}
       end
 
   ### Authorization
@@ -42,8 +42,8 @@ defmodule Phoenix.Channel do
   for the given topic. It is common for clients to send up authorization data,
   such as HMAC'd tokens for this purpose.
 
-  To authorize a socket in `join/3`, return `{:reply, :ok, socket}`.
-  To refuse authorization in `join/3, return `:ignore`.
+  To authorize a socket in `join/3`, return `{:ok, socket}`.
+  To refuse authorization in `join/3, return `{:error, reply}`.
 
   ### Incoming Events
 
@@ -183,7 +183,8 @@ defmodule Phoenix.Channel do
   alias Phoenix.Socket.Message
 
   defcallback join(topic :: binary, auth_msg :: map, Socket.t) :: {:ok, Socket.t} |
-                                                                  :ignore
+                                                                  {:ok, reply :: map, Socket.t} |
+                                                                  {:error, reply :: map}
 
   defcallback terminate(msg :: map, Socket.t) :: :ok | {:error, reason :: term}
 

@@ -35,7 +35,7 @@ defmodule Phoenix.Integration.ChannelTest do
       Process.flag(:trap_exit, true)
       Process.register(self, String.to_atom(topic))
       send(self, {:after_join, message})
-      {:reply, :ok, socket}
+      {:ok, socket}
     end
 
     def handle_info({:after_join, message}, socket) do
