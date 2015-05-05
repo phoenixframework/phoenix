@@ -281,7 +281,7 @@ Now let's test this by moving the `number_of_pets` field from `@required_fields`
 
 Now either method of verification should tell us that only `name`, `email`, and `bio` can't be blank.
 
-What happens if we pass a key/value pair that in neither `@required_fields` nor `@optional_fields`? Let's find out.
+What happens if we pass a key/value pair that is in neither `@required_fields` nor `@optional_fields`? Let's find out.
 
 In a new `iex -S mix phoenix.server` session, we should alias our module again.
 
@@ -332,7 +332,7 @@ number_of_pets: 5}
 
 Notice that our `random_key` and `random_value` have been removed from our final changeset.
 
-We can validate more than just whether a field is required or not. Let's take a look at some finer grained validations.
+We can validate more than just whether a field is required or not. Let's take a look at some finer-grained validations.
 
 What if we had a requirement that all biographies in our system must be at least two characters long? We can do this easily by adding another transformation to the pipeline in our changeset which validates the length of the `bio` field.
 
@@ -588,7 +588,7 @@ password: "pass",
 hostname: "localhost"
 ```
 
-We should also make sure to listen to the output of `ecto.gen.repo` and add our application repo as a chlid worker to our application's supervision tree.
+We should also make sure to listen to the output of `ecto.gen.repo` and add our application repo as a child worker to our application's supervision tree.
 
 Let's open up `lib/hello_phoenix.ex` and do that by adding `worker(HelloPhoenix.Repo, [])` to the list of children our application will start.
 
