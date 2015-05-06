@@ -99,9 +99,8 @@ var CHAN_STATES = {
   closed: "closed",
   errored: "errored",
   joined: "joined",
-  joining: "joining",
-  left: "left" };
-var CHANNEL_EVENTS = {
+  joining: "joining" };
+var CHAN_EVENTS = {
   close: "phx_close",
   error: "phx_error",
   join: "phx_join",
@@ -116,6 +115,7 @@ var Push = (function () {
   // chan - The Channel
   // event - The event, ie `"phx_join"`
   // payload - The payload, ie `{user_id: 123}`
+  //
 
   function Push(chan, event, payload) {
     _classCallCheck(this, Push);
@@ -124,7 +124,7 @@ var Push = (function () {
     this.event = event;
     this.payload = payload || {};
     this.receivedResp = null;
-    this.afterHooks = [];
+    this.afterHook = null;
     this.recHooks = [];
     this.sent = false;
   }
@@ -133,18 +133,18 @@ var Push = (function () {
     var _this = this;
 
     var ref = this.chan.socket.makeRef();
-    var refEvent = this.chan.replyEventName(ref);
+    this.refEvent = this.chan.replyEventName(ref);
     this.receivedResp = null;
     this.sent = false;
 
-    this.chan.on(refEvent, function (payload) {
+    this.chan.on(this.refEvent, function (payload) {
       _this.receivedResp = payload;
       _this.matchReceive(payload);
-      _this.chan.off(refEvent);
-      _this.cancelAfters();
+      _this.cancelRefEvent();
+      _this.cancelAfter();
     });
 
-    this.startAfters();
+    this.startAfter();
     this.sent = true;
     this.chan.socket.push({
       topic: this.chan.topic,
@@ -164,11 +164,14 @@ var Push = (function () {
   };
 
   Push.prototype.after = function after(ms, callback) {
+    if (this.afterHook) {
+      throw "only a single after hook can be applied to a push";
+    }
     var timer = null;
     if (this.sent) {
       timer = setTimeout(callback, ms);
     }
-    this.afterHooks.push({ ms: ms, callback: callback, timer: timer });
+    this.afterHook = { ms: ms, callback: callback, timer: timer };
     return this;
   };
 
@@ -186,91 +189,99 @@ var Push = (function () {
     });
   };
 
-  Push.prototype.cancelAfters = function cancelAfters() {
-    this.afterHooks.forEach(function (hook) {
-      clearTimeout(hook.timer);
-      hook.timer = null;
-    });
+  Push.prototype.cancelRefEvent = function cancelRefEvent() {
+    this.chan.off(this.refEvent);
   };
 
-  Push.prototype.startAfters = function startAfters() {
-    this.afterHooks.map(function (hook) {
-      if (!hook.timer) {
-        hook.timer = setTimeout(function () {
-          return hook.callback();
-        }, hook.ms);
-      }
-    });
+  Push.prototype.cancelAfter = function cancelAfter() {
+    if (!this.afterHook) {
+      return;
+    }
+    clearTimeout(this.afterHook.timer);
+    this.afterHook.timer = null;
+  };
+
+  Push.prototype.startAfter = function startAfter() {
+    var _this = this;
+
+    if (!this.afterHook) {
+      return;
+    }
+    var callback = function () {
+      _this.cancelRefEvent();
+      _this.afterHook.callback();
+    };
+    this.afterHook.timer = setTimeout(callback, this.afterHook.ms);
   };
 
   return Push;
 })();
 
 var Channel = exports.Channel = (function () {
-  function Channel(topic, message, socket) {
+  function Channel(topic, params, socket) {
     var _this = this;
 
     _classCallCheck(this, Channel);
 
     this.state = CHAN_STATES.closed;
     this.topic = topic;
-    this.message = message;
+    this.params = params || {};
     this.socket = socket;
     this.bindings = [];
     this.joinedOnce = false;
-    this.joinPush = new Push(this, CHANNEL_EVENTS.join, this.message);
+    this.joinPush = new Push(this, CHAN_EVENTS.join, this.params);
+    this.pushBuffer = [];
+
     this.joinPush.receive("ok", function () {
       _this.state = CHAN_STATES.joined;
     });
     this.onClose(function () {
-      return _this.state = CHAN_STATES.closed;
+      _this.state = CHAN_STATES.closed;
+      _this.socket.remove(_this);
     });
     this.onError(function (reason) {
       _this.state = CHAN_STATES.errored;
       setTimeout(function () {
-        return _this.join();
+        return _this.rejoinUntilConnected();
       }, _this.socket.reconnectAfterMs);
     });
-    this.on(CHANNEL_EVENTS.reply, function (payload) {
+    this.on(CHAN_EVENTS.reply, function (payload) {
       _this.trigger(_this.replyEventName(payload.ref), payload);
     });
   }
 
-  Channel.prototype.isJoined = function isJoined() {
-    return this.state === CHAN_STATES.joined;
-  };
+  Channel.prototype.rejoinUntilConnected = function rejoinUntilConnected() {
+    var _this = this;
 
-  Channel.prototype.isJoining = function isJoining() {
-    return this.state === CHAN_STATES.joining;
+    if (this.state !== CHAN_STATES.errored) {
+      return;
+    }
+    if (this.socket.isConnected()) {
+      this.rejoin();
+    } else {
+      setTimeout(function () {
+        return _this.rejoinUntilConnected();
+      }, this.socket.reconnectAfterMs);
+    }
   };
 
   Channel.prototype.join = function join() {
-    var _this = this;
-
-    if (!this.joinedOnce) {
-      this.socket.onOpen(function () {
-        if (!_this.isJoined() && !_this.isJoining()) {
-          _this.join();
-        }
-      });
+    if (this.joinedOnce) {
+      throw "tried to join mulitple times. 'join' can only be called a singe time per channel instance";
+    } else {
       this.joinedOnce = true;
     }
-    this.state = CHAN_STATES.joining;
-    this.joinPush.send();
-
+    this.sendJoin();
     return this.joinPush;
   };
 
   Channel.prototype.onClose = function onClose(callback) {
-    this.on(CHANNEL_EVENTS.close, callback);
+    this.on(CHAN_EVENTS.close, callback);
   };
 
   Channel.prototype.onError = function onError(callback) {
-    var _this = this;
-
-    this.on(CHANNEL_EVENTS.error, function (reason) {
-      callback(reason);
-      _this.trigger(CHANNEL_EVENTS.close, "error");
+    this.on(CHAN_EVENTS.error, function (reason) {
+      return callback(reason);
     });
   };
 
@@ -278,14 +289,68 @@ var Channel = exports.Channel = (function () {
     this.bindings.push({ event: event, callback: callback });
   };
 
-  Channel.prototype.isMember = function isMember(topic) {
-    return this.topic === topic;
-  };
-
   Channel.prototype.off = function off(event) {
     this.bindings = this.bindings.filter(function (bind) {
       return bind.event !== event;
     });
+  };
+
+  Channel.prototype.canPush = function canPush() {
+    return this.socket.isConnected() && this.state === CHAN_STATES.joined;
+  };
+
+  Channel.prototype.push = function push(event, payload) {
+    if (!this.joinedOnce) {
+      throw "tried to push '" + event + "' to '" + this.topic + "' before joining. Use chan.join() before pushing events";
+    }
+    var pushEvent = new Push(this, event, payload);
+    if (this.canPush()) {
+      pushEvent.send();
+    } else {
+      this.pushBuffer.push(pushEvent);
+    }
+
+    return pushEvent;
+  };
+
+  // Leaves the channel
+  //
+  // Unsubscribes from server events, and
+  // instructs channel to terminate on server
+  //
+  // Triggers onClose() hooks
+  //
+  // To receive leave acknowledgements, use the a `receive`
+  // hook to bind to the server ack, ie:
+  //
+  //     chan.leave().receive("ok", () => alert("left!") )
+  //
+
+  Channel.prototype.leave = function leave() {
+    var _this = this;
+
+    return this.push(CHAN_EVENTS.leave).receive("ok", function () {
+      _this.trigger(CHANNEl_EVENTS.close, "leave");
+    });
+  };
+
+  // private
+
+  Channel.prototype.isMember = function isMember(topic) {
+    return this.topic === topic;
+  };
+
+  Channel.prototype.sendJoin = function sendJoin() {
+    this.state = CHAN_STATES.joining;
+    this.joinPush.send();
+  };
+
+  Channel.prototype.rejoin = function rejoin() {
+    this.sendJoin();
+    this.pushBuffer.forEach(function (pushEvent) {
+      return pushEvent.send();
+    });
+    this.pushBuffer = [];
   };
 
   Channel.prototype.trigger = function trigger(triggerEvent, msg) {
@@ -296,39 +361,8 @@ var Channel = exports.Channel = (function () {
     });
   };
 
-  Channel.prototype.push = function push(event, payload) {
-    if (!this.isJoined()) {
-      throw "tried to push '" + event + "' to '" + this.topic + "' while in '" + this.state + "' state. Use chan.join() before pushing events";
-    }
-    var pushEvent = new Push(this, event, payload);
-    pushEvent.send();
-
-    return pushEvent;
-  };
-
   Channel.prototype.replyEventName = function replyEventName(ref) {
     return "chan_reply_" + ref;
-  };
-
-  // Leaves the channel
-  //
-  // Unsubscribes from server events, and
-  // instructs channel to terminate on server
-  //
-  // Does not trigger onClose().
-  // To receive leave acknowledgements, use the a `receive`
-  // hook to bind to the server ack, ie:
-  //
-  //     chan.leave().receive("ok", () => alert("left!") )
-  //
-
-  Channel.prototype.leave = function leave() {
-    var _this = this;
-
-    return this.push(CHANNEL_EVENTS.leave).receive("ok", function () {
-      _this.state = CHAN_STATES.left;
-      _this.socket.remove(_this);
-    });
   };
 
   return Channel;
@@ -443,7 +477,7 @@ var Socket = exports.Socket = (function () {
   //
   // Examples
   //
-  //    socket.onError function(error){ alert("An error occurred") }
+  //    socket.onError(function(error){ alert("An error occurred") })
   //
 
   Socket.prototype.onOpen = function onOpen(callback) {
@@ -482,7 +516,7 @@ var Socket = exports.Socket = (function () {
 
     this.log("WS close:");
     this.log(event);
-    this.triggerChanClose();
+    this.triggerChanError();
     clearInterval(this.reconnectTimer);
     clearInterval(this.heartbeatTimer);
     this.reconnectTimer = setInterval(function () {
@@ -496,15 +530,15 @@ var Socket = exports.Socket = (function () {
   Socket.prototype.onConnError = function onConnError(error) {
     this.log("WS error:");
     this.log(error);
-    this.triggerChanClose();
+    this.triggerChanError();
     this.stateChangeCallbacks.error.forEach(function (callback) {
       return callback(error);
     });
   };
 
-  Socket.prototype.triggerChanClose = function triggerChanClose() {
+  Socket.prototype.triggerChanError = function triggerChanError() {
     this.channels.forEach(function (chan) {
-      return chan.trigger(CHANNEL_EVENTS.close);
+      return chan.trigger(CHAN_EVENTS.error);
     });
   };
 
@@ -531,8 +565,8 @@ var Socket = exports.Socket = (function () {
     });
   };
 
-  Socket.prototype.chan = function chan(topic, authPayload) {
-    var chan = new Channel(topic, authPayload, this);
+  Socket.prototype.chan = function chan(topic, params) {
+    var chan = new Channel(topic, params, this);
     this.channels.push(chan);
     return chan;
   };
