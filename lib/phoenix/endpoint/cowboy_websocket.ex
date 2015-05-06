@@ -51,7 +51,14 @@ defmodule Phoenix.Endpoint.CowboyWebsocket do
     handler.ws_close(state)
     :ok
   end
+  def websocket_terminate({:remote, code, _}, _req, {handler, state})
+    when code in 1000..1003
+    or code in 1005..1011
+    or code == 1015 do
 
+    handler.ws_close(state)
+    :ok
+  end
   def websocket_terminate(reason, _req, {handler, state}) do
     handler.ws_terminate(reason, state)
     :ok
