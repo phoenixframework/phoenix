@@ -38,7 +38,7 @@ We're going to create a function that tells us which controller and action are h
 To do that, we need to import the `action_name/1` and `controller_module/1` functions from `Phoenix.Controller` in the main view.
 
 ```elixir
-defmodule HelloPhoenix.View do
+defmodule HelloPhoenix.Web do
   ...
   def view do
     quote do
@@ -47,7 +47,7 @@ defmodule HelloPhoenix.View do
       # Import convenience functions from controllers
       import Phoenix.Controller, only: [get_flash: 2
                                         action_name: 1, controller_module: 1] # Add these as imported functions
-  ... 
+  ...
 ```
 
 Next, let's define a `handler_info/1` function at the bottom of the `web/views/page_view.ex` which makes use of the `controller_module/1` and `action_name/1` functions we just imported. We'll also define a `connection_keys/1` function that we'll use in a moment.
@@ -59,7 +59,7 @@ defmodule HelloPhoenix.PageView do
   def handler_info(conn) do
     "Request Handled By: #{controller_module conn}.#{action_name conn}"
   end
-  
+
   def connection_keys(conn) do
     conn
     |> Map.from_struct()
@@ -168,4 +168,3 @@ Now we can move `key.html.eex` from the `web/templates/page` directory into the 
 <% end %>
 ```
 Going back to [localhost:4000/test](http://localhost:4000/test) again. The page should look exactly as it did before.
-

@@ -73,7 +73,7 @@ Now any topic sent by a client that starts with `"rooms:"` will be routed to our
 
 ### Joining Channels
 
-The first priority of your channels is to authorize clients to join a given topic. For authorization, we must implement `join/3`.
+The first priority of your channels is to authorize clients to join a given topic. For authorization, we must implement `join/3` in `web/channels/room_channel.ex`.
 
 ```elixir
 defmodule HelloPhoenix.RoomChannel do
