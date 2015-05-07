@@ -1,3 +1,90 @@
+// Phoenix Channels JavaScript client
+//
+// ## Socket Connection
+//
+// A single connection is established to the server and
+// channels are mulitplexed over the connection.
+// Connect to the server using the `Socket` class:
+//
+//     let socket = new Socket("/ws")
+//     socket.connect()
+//
+// The `Socket` constructor takes the mount point of the socket
+// as well as options that can be found in the Socket docs,
+// such as configuring the `LongPoller` transport, and heartbeat.
+//
+//
+// ## Channels
+//
+// Channels are isolated, concurrent processes on the server that
+// subscribe to topics and broker events between the client and server.
+// To join a channel, you must provide the topic, and channel params for
+// authorization. Here's an example chat room example where `"new_msg"`
+// events are listened for, messages are pushed to the server, and
+// the channel is joined with ok/error matches, and `after` hook:
+//
+//     let chan = socket.chan("rooms:123", {token: roomToken})
+//     chan.on("new_msg", msg => console.log("Got message", msg) )
+//     $input.onEnter( e => {
+//       chan.push("new_msg", {body: e.target.val})
+//           .receive("ok", (message) => console.log("created message", message) )
+//           .receive("error", (reasons) => console.log("create failed", reasons) )
+//           .after(10000, () => console.log("Networking issue. Still waiting...") )
+//     })
+//     chan.join()
+//         .receive("ok", ({messages}) => console.log("catching up", messages) )
+//         .receive("error", ({reason}) => console.log("failed join", reason) )
+//         .after(10000, () => console.log("Networking issue. Still waiting...") )
+//
+//
+// ## Joining
+//
+// Joining a channel with `chan.join(topic, params)`, binds the params to
+// `chan.params`. Subsequent rejoins will send up the modified params for
+// updating authorization params, or passing up last_message_id information.
+// Successful joins receive an "ok" status, while unsuccessful joins
+// receive "error".
+//
+//
+// ## Pushing Messages
+//
+// From the prevoius example, we can see that pushing messages to the server
+// can be done with `chan.push(eventName, payload)` and we can optionally
+// receive responses from the push. Additionally, we can use
+// `after(millsec, callback)` to abort waiting for our `receive` hooks and
+// take action after some period of waiting.
+//
+//
+// ## Socket Hooks
+//
+// Lifecycle events of the multiplexed connection can be hooked into via
+// `socket.onError()` and `socket.onClose()` events, ie:
+//
+//     socket.onError( () => console.log("there was an error with the connection!") )
+//     socket.onClose( () => console.log("the connection dropped") )
+//
+//
+// ## Channel Hooks
+//
+// For each joined channel, you can bind to `onError` and `onClose` events
+// to monitor the channel lifecycle, ie:
+//
+//     chan.onError( () => console.log("there was an error!") )
+//     chan.onClose( () => console.log("the channel has gone away gracefully") )
+//
+// ### onError hooks
+//
+// `onError` hooks are invoked if the socket connection drops, or the channel
+// crashes on the server. In either case, a channel rejoin is attemtped
+// automatically in an exponential backoff manner.
+//
+// ### onClose hooks
+//
+// `onClose` hooks are invoked only in two cases. 1) the channel explicitly
+// closed on the server, or 2). The client explicitly closed, by calling
+// `chan.leave()`
+//
+
 const SOCKET_STATES = {connecting: 0, open: 1, closing: 2, closed: 3}
 const CHAN_STATES = {
   closed: "closed",
