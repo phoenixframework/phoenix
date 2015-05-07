@@ -1,5 +1,5 @@
 defmodule Phoenix.ConnTest do
-  @doc """
+  @moduledoc """
   Conveniences for testing Phoenix endpoints and
   connection related helpers.
 
