@@ -74,23 +74,23 @@ There are a number of dependencies external to Phoenix which we will encounter a
 
 Let's take a look at each of them now.
 
-- Elixir
+##### Elixir
 Phoenix is written in Elixir, and our application code will also be written in Elixir. In order to do any work with Phoenix, we need Elixir installed on our system. The Elixir site itself has great [installation instructions](http://elixir-lang.org/install.html).
 
-- Erlang
+##### Erlang
 Elixir source code compiles to Erlang byte code which runs on the Erlang Virtual Machine. That means we must have Erlang installed on our system - in addition to Elixir - in order to work with Phoenix. The Elixir site also has [Erlang installation instructions](http://elixir-lang.org/install.html#installing-erlang).
 
-- node.js
+##### node.js
 Node is an optional dependency. Phoenix will use brunch.io to compile static assets (javascript, css, etc), by default. Brunch.io uses the node package manager (npm) to install its dependencies, and npm requires node.js.
 
 If we don't have any static assets, or we want to use another build tool, we can pass the `--no-brunch` flag when creating a new application and node won't be required at all.
 
-- PostgreSQL
+##### PostgreSQL
 PostgreSQL is a relational database server. Phoenix configures applications to use it by default, but we can switch to MySQL by passing the `--database mysql` flag when creating a new application.
 
 When we work with Ecto models in these guides, we will use PostgreSQL and the Postgrex adapter for it. In order to follow along with the examples, we will need to install PostgreSQL on our system. The PostgreSQL wiki has [installation guides](https://wiki.postgresql.org/wiki/Detailed_installation_guides) for a number of different systems.
 
-- inotify-tools
+##### inotify-tools
 This is a Linux-only filesystem watcher that Phoenix uses for live code reloading. (Mac OS X or Windows users can safely ignore it.)
 
 Linux users need to install this dependency. Please consult the [inotify-tools wiki](https://github.com/rvoicilas/inotify-tools/wiki) for distribution-specific installation instructions.
