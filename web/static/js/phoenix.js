@@ -267,7 +267,7 @@ export class Channel {
   //
   leave(){
     return this.push(CHAN_EVENTS.leave).receive("ok", () => {
-      this.trigger(CHANNEl_EVENTS.close, "leave")
+      this.trigger(CHAN_EVENTS.close, "leave")
     })
   }
 
