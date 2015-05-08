@@ -6,9 +6,9 @@ defmodule Mix.Tasks.Phoenix.Server do
   @moduledoc """
   Starts the application by configuring all endpoints servers to run.
   """
-  def run(_args) do
+  def run(args) do
     Application.put_env(:phoenix, :serve_endpoints, true, persistent: true)
-    Mix.Task.run "app.start", []
+    Mix.Task.run "app.start", args
     no_halt
   end
 
