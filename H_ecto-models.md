@@ -1,6 +1,8 @@
 Most web applications today need some form of data storage. In the Elixir ecosystem, we have Ecto to enable this. Ecto currently has adapters for the PostgreSQL and MySQL relational databases. More adapters will likely follow in the future. Newly generated Phoenix applications integrate both Ecto and the Postgrex adapter by default.
 
-This guide assumes that we have generated our new application with Ecto. If we're using an older Phoenix app, or we used the `--no-ecto` option to generate our application, all is not lost. Please follow the instructions in the "Integrating Ecto" section below.
+This guide assumes that we have generated our new application with Ecto. If we're using an older Phoenix app, or we used the `--no-ecto` option to generate our application, all is not lost. Please follow the instructions in the "Integrating Ecto into an Existing Application" section below.
+
+This guide also assumes that we will be using PostgreSQL. For instructions on switching to MySQL, please see the "Using MySQL" section below.
 
 Now that we all have Ecto and Postgrex installed and configured, the easiest way to use Ecto models is to generate a resource through the `phoenix.gen.html` task. Let's generate a `User` resource with `name`, `email`, `bio`, and `number_of_pets` fields.
 
@@ -513,11 +515,11 @@ end
 
 That's the end of our walk-through of Ecto usage in our controller actions. There is quite a bit more that Ecto models can do. Please take a look at the [Ecto documentation](http://hexdocs.pm/ecto/) for the rest of the story.
 
-###Integrating Ecto into an Existing Application
+### Integrating Ecto into an Existing Application
 
 Adding Ecto to a pre-existing Phoenix application is easy. Once we include Ecto and Postgrex as dependencies, there are mix tasks to help us.
 
-####Adding Ecto and Postgrex as Dependencies
+#### Adding Ecto and Postgrex as Dependencies
 
 We can add Ecto by way of the `phoenix_ecto` package, and we can add the `postgrex` package directly, just as we would add any other dependencies to our project.
 
@@ -609,3 +611,89 @@ end
 ```
 
 At this point, we are completely configured and ready to go. We can go back to the top of this guide and follow along.
+
+#### Using MySQL
+What if we want to use MySQL instead of PostgreSQL?
+
+If we are about to create a new application, we can simply pass the `--database mysql` flag to `phoenix.new`.
+
+```console
+$ mix phoenix.new hello_phoenix --database mysql
+```
+
+This will set up all the correct dependencies and configuration for us automatically. Once we install those dependencies with `mix deps.get`, we'll be ready to begin working with Ecto in our application.
+
+If we have an existing application, all we need to do is switch adapters and make some small configuration changes.
+
+To switch adapters, we need to remove the Postgrex dependency and add a new one for Mariaex instead.
+
+Let's open up our `mix.exs` file and do that now.
+
+```elixir
+defmodule HelloPhoenix.Mixfile do
+  use Mix.Project
+
+  . . .
+  # Specifies your project dependencies
+  #
+  # Type `mix help deps` for examples and options
+  defp deps do
+    [{:phoenix, "~> 0.12"},
+    {:phoenix_ecto, "~> 0.3"},
+    {:mariaex, ">= 0.0.0"},
+    {:phoenix_live_reload, "~> 0.3"},
+    {:cowboy, "~> 1.0"}]
+  end
+end
+```
+
+We also need to remove the `:postgrex` app from our list of applications and substitute the `:mariaex` app instead. Let's do that in `mix.exs` as well.
+
+```elixir
+defmodule HelloPhoenix.Mixfile do
+  use Mix.Project
+
+. . .
+def application do
+  [mod: {MysqlTester, []},
+  applications: [:phoenix, :cowboy, :logger,
+  :phoenix_ecto, :mariaex]]
+end
+. . .
+```
+
+Next, we need to configure our new adapter. Let's open up our `config/dev.exs` file and do that.
+
+```elixir
+config :hello_phoenix, HelloPhoenix.Repo,
+adapter: Ecto.Adapters.MySQL,
+username: "root",
+password: "",
+database: "hello_phoenix_dev"
+```
+
+If we have an existing configuration block for our `HelloPhoenix.Repo`, we can simply change the values to match our new ones. The most important thing is to make sure we are using the MySQL adapter `adapter: Ecto.Adapters.MySQL,`.
+
+We also need to configure the correct values in the `config/test.exs` and `config/prod.secret.exs` files as well.
+
+Now all we need to do is fetch our new dependency, and we'll be ready to go.
+
+```console
+$ mix do deps.get, compile
+```
+
+With our new adapter installed and configured, we're ready to create our database.
+
+```console
+$ mix ecto.create
+The database for HelloPhoenix.repo has been created.
+```
+
+We're also ready to run any migrations, or do anything else with Ecto that we might choose.
+
+```console
+$ mix ecto.migrate
+[info] == Running HelloPhoenix.Repo.Migrations.CreateUser.change/0 forward
+[info] create table users
+[info] == Migrated in 0.2s
+```
