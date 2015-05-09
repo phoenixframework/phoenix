@@ -12,7 +12,7 @@ defmodule <%= module %>Controller do
   end
 
   def new(conn, _params) do
-    changeset = <%= alias %>.changeset(%<%= alias %>{})
+    changeset = <%= alias %>.changeset(%<%= alias %>{}, :empty)
     render(conn, "new.html", changeset: changeset)
   end
 
@@ -37,7 +37,7 @@ defmodule <%= module %>Controller do
 
   def edit(conn, %{"id" => id}) do
     <%= singular %> = Repo.get(<%= alias %>, id)
-    changeset = <%= alias %>.changeset(<%= singular %>)
+    changeset = <%= alias %>.changeset(<%= singular %>, :empty)
     render(conn, "edit.html", <%= singular %>: <%= singular %>, changeset: changeset)
   end
 
