@@ -481,7 +481,6 @@ var Socket = exports.Socket = (function () {
     _classCallCheck(this, Socket);
 
     this.stateChangeCallbacks = { open: [], close: [], error: [], message: [] };
-    this.flushEveryMs = 50;
     this.reconnectTimer = null;
     this.channels = [];
     this.sendBuffer = [];
@@ -492,8 +491,6 @@ var Socket = exports.Socket = (function () {
     this.logger = opts.logger || function () {}; // noop
     this.longpoller_timeout = opts.longpoller_timeout || 20000;
     this.endPoint = this.expandEndpoint(endPoint);
-
-    this.resetBufferTimer();
   }
 
   Socket.prototype.protocol = function protocol() {
@@ -545,15 +542,6 @@ var Socket = exports.Socket = (function () {
     });
   };
 
-  Socket.prototype.resetBufferTimer = function resetBufferTimer() {
-    var _this = this;
-
-    clearTimeout(this.sendBufferTimer);
-    this.sendBufferTimer = setTimeout(function () {
-      return _this.flushSendBuffer();
-    }, this.flushEveryMs);
-  };
-
   // Logs the message. Override `this.logger` for specialized logging. noops by default
 
   Socket.prototype.log = function log(msg) {
@@ -586,6 +574,7 @@ var Socket = exports.Socket = (function () {
   Socket.prototype.onConnOpen = function onConnOpen() {
     var _this = this;
 
+    this.flushSendBuffer();
     clearInterval(this.reconnectTimer);
     if (!this.conn.skipHeartbeat) {
       clearInterval(this.heartbeatTimer);
@@ -695,7 +684,6 @@ var Socket = exports.Socket = (function () {
       });
       this.sendBuffer = [];
     }
-    this.resetBufferTimer();
   };
 
   Socket.prototype.onConnMessage = function onConnMessage(rawMessage) {

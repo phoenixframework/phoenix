@@ -316,7 +316,6 @@ export class Socket {
   //
   constructor(endPoint, opts = {}){
     this.stateChangeCallbacks = {open: [], close: [], error: [], message: []}
-    this.flushEveryMs         = 50
     this.reconnectTimer       = null
     this.channels             = []
     this.sendBuffer           = []
@@ -327,8 +326,6 @@ export class Socket {
     this.logger               = opts.logger || function(){} // noop
     this.longpoller_timeout   = opts.longpoller_timeout || 20000
     this.endPoint             = this.expandEndpoint(endPoint)
-
-    this.resetBufferTimer()
   }
 
   protocol(){ return location.protocol.match(/^https/) ? "wss" : "ws" }
@@ -360,11 +357,6 @@ export class Socket {
     })
   }
 
-  resetBufferTimer(){
-    clearTimeout(this.sendBufferTimer)
-    this.sendBufferTimer = setTimeout(() => this.flushSendBuffer(), this.flushEveryMs)
-  }
-
   // Logs the message. Override `this.logger` for specialized logging. noops by default
   log(msg){ this.logger(msg) }
 
@@ -380,6 +372,7 @@ export class Socket {
   onMessage  (callback){ this.stateChangeCallbacks.message.push(callback) }
 
   onConnOpen(){
+    this.flushSendBuffer()
     clearInterval(this.reconnectTimer)
     if(!this.conn.skipHeartbeat){
       clearInterval(this.heartbeatTimer)
@@ -457,7 +450,6 @@ export class Socket {
       this.sendBuffer.forEach( callback => callback() )
       this.sendBuffer = []
     }
-    this.resetBufferTimer()
   }
 
   onConnMessage(rawMessage){
