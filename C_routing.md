@@ -53,7 +53,7 @@ If this were the only route in our router module, the clause of the `match/3` fu
 
 The body of the match function sets up the connection and invokes the matched controller action.
 
-As we add more routes, more clauses of the match function will be added to our router module. These will behave like any other multi-clause function in Elixir. They will be tried in order from the top, and the first clause to match the parameters given (verb and path) will be executed. After a match is found, the search will stop and no other clauses will by tried.
+As we add more routes, more clauses of the match function will be added to our router module. These will behave like any other multi-clause function in Elixir. They will be tried in order from the top, and the first clause to match the parameters given (verb and path) will be executed. After a match is found, the search will stop and no other clauses will be tried.
 
 This means that it is possible to create a route which will never match, based on the HTTP verb and the path, regardless of the controller and action.
 
@@ -218,7 +218,7 @@ iex> user_path(Endpoint, :show, 17, admin: true, active: false)
 What if we need a full url instead of a path? Just replace `_path` by `_url`:
 
 ```elixir
-iex(3)> HelloPhoenix.Router.Helpers.user_url(Endpoint, :index)
+iex(3)> user_url(Endpoint, :index)
 "http://localhost:4000/users"
 ```
 Application endpoints will have their own guide soon. For now, think of them as the entity that handles requests just up to the point where the router takes over. That includes starting the app/server, applying configuration, and applying the plugs common to all requests.
