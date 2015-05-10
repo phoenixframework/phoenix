@@ -3,10 +3,24 @@ defmodule Phoenix.Channel.Server do
   alias Phoenix.PubSub
 
   # TODO: Document me as the transport API.
+  # TODO: Modify the socket to not allow pushes on join/terminate
   @moduledoc false
 
-  def start_link(socket, auth_payload) do
-    GenServer.start_link(__MODULE__, [socket, auth_payload])
+  @doc """
+  Joins the channel in socket with authentication payload.
+  """
+  @spec join(Phoenix.Socket.t, map) :: {:ok, map, pid} | {:error, map}
+  def join(socket, auth_payload) do
+    ref = make_ref()
+
+    case GenServer.start_link(__MODULE__, {socket, auth_payload, self(), ref}) do
+      {:ok, pid} ->
+        receive do: ({^ref, reply} -> {:ok, reply, pid})
+      :ignore ->
+        receive do: ({^ref, reply} -> {:error, reply})
+      {:error, _} ->
+        {:error, %{reason: "join crashed"}}
+    end
   end
 
   @doc """
@@ -39,49 +53,38 @@ defmodule Phoenix.Channel.Server do
 
   ## Callbacks
 
-  @doc """
-  Initializes the Socket server for `Phoenix.Channel` joins.
-
-  To start the server, return `{:ok, socket}`.
-  To reject the join request, return `{:error, reply}`
-  Any other result will exit with `:badarg`
-
-  See `Phoenix.Channel.join/3` documentation.
-  """
-
-  # TODO: Modify the socket to not allow pushes
-  def init([socket, auth_payload]) do
+  @doc false
+  def init({socket, auth_payload, parent, ref}) do
     case socket.channel.join(socket.topic, auth_payload, socket) do
-      {:ok, socket} -> successful_join(socket)
-      {:ok, reply, socket} -> successful_join(socket, reply)
-
+      {:ok, socket} ->
+        join(socket, %{}, parent, ref)
+      {:ok, reply, socket} ->
+        join(socket, reply, parent, ref)
       {:error, reply} ->
-        # TODO longpoller needs to handle reply on join without pushing out of band
-        push(socket, "phx_reply", %{ref: socket.ref, status: "error", response: reply})
+        send(parent, {ref, reply})
         :ignore
+      other ->
+        raise """
+        Channel join is expected to return one of:
 
-      result ->
-        {:stop, {:badarg, result}}
+            {:ok, Socket.t} |
+            {:ok, reply :: map, Socket.t} |
+            {:error, reply :: map, Socket.t}
+
+        got:
+
+            #{inspect other}
+        """
     end
   end
-  defp successful_join(socket, response \\ %{}) do
-    PubSub.subscribe(socket.pubsub_server, self, socket.topic, link: true)
-    push(socket, "phx_reply", %{ref: socket.ref, status: "ok", response: response})
+
+  defp join(socket, reply, parent, ref) do
+    PubSub.subscribe(socket.pubsub_server, self(), socket.topic, link: true)
+    send(parent, {ref, reply})
     {:ok, put_in(socket.joined, true)}
   end
 
-  defp push(socket, event, message) do
-    send socket.transport_pid, {:socket_push, %Phoenix.Socket.Message{
-      topic: socket.topic,
-      event: event,
-      payload: message
-    }}
-  end
-
-  def handle_call(:close, _from, socket) do
-    {:stop, {:shutdown, :closed}, :ok, socket}
-  end
-
+  @doc false
   def handle_cast({:leave, ref}, socket) do
     handle_result({:stop, {:shutdown, :left}, :ok, put_in(socket.ref, ref)}, :handle_in)
   end
@@ -92,27 +95,32 @@ defmodule Phoenix.Channel.Server do
     |> handle_result(:handle_in)
   end
 
-  @doc """
-  Forwards broadcast through `handle_out/3` callbacks
-  """
+  @doc false
   def handle_info({:socket_broadcast, msg}, socket) do
     msg.event
     |> socket.channel.handle_out(msg.payload, socket)
     |> handle_result(:handle_out)
   end
 
-  @doc """
-  Forwards regular Elixir messages through `handle_info/2` callbacks
-  """
   def handle_info(msg, socket) do
     msg
     |> socket.channel.handle_info(socket)
     |> handle_result(:handle_info)
   end
 
-  # TODO: Modify the socket to not allow pushes
+  @doc false
   def terminate(reason, socket) do
     socket.channel.terminate(reason, socket)
+  end
+
+  ## Helpers
+
+  defp push(socket, event, message) do
+    send socket.transport_pid, {:socket_push, %Phoenix.Socket.Message{
+      topic: socket.topic,
+      event: event,
+      payload: message
+    }}
   end
 
   defp handle_result({:reply, {status, response}, socket}, :handle_in) do

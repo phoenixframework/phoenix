@@ -63,11 +63,10 @@ defmodule Phoenix.Transports.WebSocket do
     case Transport.dispatch(msg, state.sockets, self, state.router, state.endpoint, __MODULE__) do
       {:ok, socket_pid} ->
         {:ok, put(state, msg.topic, socket_pid)}
+      :ok ->
+        {:ok, state}
       {:error, reason} ->
-        Logger.error fn -> Exception.format_exit(reason) end
-        {:ok, state}
-      _ignore ->
-        {:ok, state}
+        {:ok, state} # We are assuming the error was already logged elsewhere.
     end
   end
 

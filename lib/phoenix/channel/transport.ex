@@ -99,12 +99,18 @@ defmodule Phoenix.Channel.Transport do
                   channel: channel,
                   transport: transport}
 
-        Phoenix.Channel.Server.start_link(socket, msg.payload)
+        case Phoenix.Channel.Server.join(socket, msg.payload) do
+          {:ok, reply, pid} ->
+            push(socket, "phx_reply", %{ref: socket.ref, status: "ok", response: reply})
+            {:ok, pid}
+          {:error, reply} ->
+            push(socket, "phx_reply", %{ref: socket.ref, status: "error", response: reply})
+            {:error, reply}
+        end
     end
   end
   def dispatch(nil, msg, _transport_pid, router, _pubsub_server, _transport) do
     log_ignore(msg.topic, router)
-    :ignore
   end
   def dispatch(socket_pid, %{event: "phx_leave", ref: ref}, _transport_pid, _router, _pubsub_server, _transport) do
     Phoenix.Channel.Server.leave(socket_pid, ref)
@@ -114,9 +120,18 @@ defmodule Phoenix.Channel.Transport do
     Phoenix.Channel.Server.handle_in(socket_pid, msg.event, msg.payload, msg.ref)
     :ok
   end
+
+  defp push(socket, event, message) do
+    send socket.transport_pid, {:socket_push, %Phoenix.Socket.Message{
+      topic: socket.topic,
+      event: event,
+      payload: message
+    }}
+  end
+
   defp log_ignore(topic, router) do
     Logger.debug fn -> "Ignoring unmatched topic \"#{topic}\" in #{inspect(router)}" end
-    :ignore
+    {:error, %{reason: "unmatched topic"}}
   end
 
   @doc """

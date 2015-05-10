@@ -287,7 +287,8 @@ defmodule Phoenix.Channel.ChannelTest do
     message = join_message("topic:3subtopic", fn _socket -> {:error, %{reason: "unauthorized"}} end)
 
     assert subscribers(:phx_pub, "topic:3subtopic") == []
-    :ignore = Transport.dispatch(message, HashDict.new, self, Router, Endpoint, WebSocket)
+    assert {:error, %{reason: "unauthorized"}} =
+            Transport.dispatch(message, HashDict.new, self, Router, Endpoint, WebSocket)
     refute subscribers(:phx_pub, "topic:3subtopic") == [self]
   end
 
@@ -308,7 +309,7 @@ defmodule Phoenix.Channel.ChannelTest do
   test "join/2 raises exception when return type invalid" do
     message = join_message("topic:5subtopic", fn _socket -> :badreturn end)
 
-    assert {:error, {:badarg, :badreturn}} =
+    assert {:error, %{reason: "join crashed"}} =
       Transport.dispatch(message, HashDict.new, self, Router, Endpoint, WebSocket)
   end
 
@@ -368,7 +369,8 @@ defmodule Phoenix.Channel.ChannelTest do
     message = %Message{topic: "topic",
                        event: "phx_join",
                        payload: fn socket -> {:ok, socket} end}
-    :ignore = Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
+    {:error, %{reason: "unmatched topic"}} =
+      Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
     refute_received {:join, "topic"}
 
     message = %Message{topic: "topic:9somesubtopic",
@@ -380,7 +382,8 @@ defmodule Phoenix.Channel.ChannelTest do
     message = %Message{topic: "topic:somesub",
                        event: "some_event",
                        payload: fn socket -> {:ok, socket} end}
-    :ignore = Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
+    {:error, %{reason: "unmatched topic"}} =
+      Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
     refute_received {:handle_in, "topic:somesub"}
   end
 
@@ -398,7 +401,8 @@ defmodule Phoenix.Channel.ChannelTest do
     message = %Message{topic: "baretopic:sub",
                        event: "phx_join",
                        payload: fn socket -> {:ok, socket} end}
-    :ignore = Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
+    {:error, %{reason: "unmatched topic"}} =
+      Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
     refute_received {:join, "baretopic:sub"}
 
     message = %Message{topic: "baretopic",
@@ -410,7 +414,8 @@ defmodule Phoenix.Channel.ChannelTest do
     message = %Message{topic: "baretopic:sub",
                        event: "some_event",
                        payload: fn socket -> {:ok, socket} end}
-    :ignore = Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
+    {:error, %{reason: "unmatched topic"}} =
+      Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
     refute_receive {:handle_in, "baretopic:sub"}
   end
 
@@ -424,7 +429,8 @@ defmodule Phoenix.Channel.ChannelTest do
       Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
     assert_received {:join, "wsonly:somesubtopic"}
 
-    :ignore = Transport.dispatch(message, HashDict.new, self, Router, Endpoint, LongPoller)
+    {:error, %{reason: "unmatched topic"}} =
+      Transport.dispatch(message, HashDict.new, self, Router, Endpoint, LongPoller)
     refute_received {:join, "wsonly:somesubtopic"}
 
     # via LP
@@ -436,7 +442,8 @@ defmodule Phoenix.Channel.ChannelTest do
       Transport.dispatch(message, sockets, self, Router, Endpoint, LongPoller)
     assert_received {:join, "lponly:somesubtopic"}
 
-    :ignore = Transport.dispatch(message, HashDict.new, self, Router, Endpoint, WebSocket)
+    {:error, %{reason: "unmatched topic"}} =
+      Transport.dispatch(message, HashDict.new, self, Router, Endpoint, WebSocket)
     refute_received {:join, "lponly:somesubtopic"}
   end
 
@@ -445,7 +452,8 @@ defmodule Phoenix.Channel.ChannelTest do
                    event: "phx_join",
                    payload: fn socket -> {:ok, socket} end}
     assert nil == Router.channel_for_topic(msg.topic, WebSocket)
-    :ignore = Transport.dispatch(msg, HashDict.new, self, Router, Endpoint, WebSocket)
+    {:error, %{reason: "unmatched topic"}} =
+      Transport.dispatch(msg, HashDict.new, self, Router, Endpoint, WebSocket)
     refute_received {:join, "ensurebadmatch:somesubtopic"}
   end
 
@@ -471,7 +479,8 @@ defmodule Phoenix.Channel.ChannelTest do
     message = %Message{topic: "topic2:somesubtopic",
                        event: "phx_join",
                        payload: fn socket -> {:ok, socket} end}
-    :ignore = Transport.dispatch(message, HashDict.new, self, Router, Endpoint, LongPoller)
+    {:error, %{reason: "unmatched topic"}} =
+      Transport.dispatch(message, HashDict.new, self, Router, Endpoint, LongPoller)
     refute_received {:join, "topic2:somesubtopic"}
 
     message = %Message{topic: "topic2-override:somesubtopic",

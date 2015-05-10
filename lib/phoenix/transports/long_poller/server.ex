@@ -81,9 +81,6 @@ defmodule Phoenix.Transports.LongPoller.Server do
       {:error, reason} ->
         :ok = broadcast_from(state, {:error, :dispatch, reason, ref})
         {:noreply, state}
-      :ignore ->
-        :ok = broadcast_from(state, {:error, :dispatch, :ignore, ref})
-        {:noreply, state}
     end
   end
 
