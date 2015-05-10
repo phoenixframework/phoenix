@@ -3,11 +3,15 @@
 ## v0.13.0-dev
 
 * Enhancements
-  * [Channel] Allow router helpers to work in channels via the socket, for example: `user_path(socket, :index)`
+  * [Channel] Allow router helpers to work in channels by passing a socket (instead of connection), for example: `user_path(socket, :index)`
+  * [Channel] Support replies in `join/3`
   * [HTML] `Phoenix.HTML` has been extracted to its own project. You need to explicitly depend on it by adding `{:phoenix_html, "~> 1.0"}` to `deps` in your `mix.exs` file
+  * [HTML] `safe/1` in views is deprecated in favor of `raw/1`
+  * [Generators] Allow `belongs_to` in model generator which supports associations and indexes
 
 * Bug fixes
   * [HTML] `select` no longer inverses the key and values in the given options
+  * [phoenix.new] Do not run `deps.get` if there is no Hex
 
 ## v0.12.0 (2015-04-30)
 
