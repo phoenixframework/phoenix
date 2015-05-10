@@ -117,7 +117,7 @@ defmodule Phoenix.Channel.Transport do
     :ok
   end
   def dispatch(socket_pid, msg, _transport_pid, _router, _pubsub_server, _transport) do
-    Phoenix.Channel.Server.handle_in(socket_pid, msg.event, msg.payload, msg.ref)
+    Phoenix.Channel.Server.push(socket_pid, msg.event, msg.ref, msg.payload)
     :ok
   end
 

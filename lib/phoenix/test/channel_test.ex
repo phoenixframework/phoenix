@@ -50,4 +50,40 @@ defmodule Phoenix.ChannelTest do
                      transport: __MODULE__}
     Phoenix.Channel.Server.join(socket, payload)
   end
+
+  @doc """
+  Pushes a message into the channel.
+
+  The triggers the `handle_in/3` callback in the channel.
+  """
+  def push(pid, event, payload \\ %{}) do
+    ref = make_ref()
+    Phoenix.Channel.Server.push(pid, event, ref, payload)
+    ref
+  end
+
+  @doc """
+  Assets the channel has pushed a message back to the client
+  with the given event and payload under `timeout`.
+
+  Notice that event and payload are patterns. This means
+  one can write:
+
+      assert_pushed "some_event", %{"data" => _}
+
+  In the assertion above, we don't particularly care about
+  the data being sent, as long as something was sent.
+
+  The timeout is in miliseconds and defaults to 100ms.
+  """
+  defmacro assert_pushed(event, payload, timeout \\ 100) do
+    # TODO: It would be nice if we could remove the :socket_push tuple.
+    # As we would get better output. In theory, it is doable to remove
+    # both socket_broadcast and socket_push info (as they have different)
+    # targets.
+    quote do
+      assert_receive {:socket_push,
+        %Phoenix.Socket.Message{event: unquote(event), payload: unquote(payload)}}, unquote(timeout)
+    end
+  end
 end

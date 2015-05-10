@@ -1,6 +1,5 @@
 defmodule Phoenix.Test.ChannelTest do
   use ExUnit.Case
-  use Phoenix.ChannelTest
 
   defmodule Endpoint do
     def __pubsub_server__(), do: :phx_pub
@@ -10,6 +9,10 @@ defmodule Phoenix.Test.ChannelTest do
 
   defmodule Channel do
     use Phoenix.Channel
+
+    def join("foo:ok", _, socket) do
+      {:ok, socket}
+    end
 
     def join("foo:socket", _, socket) do
       {:ok, socket, socket}
@@ -22,7 +25,14 @@ defmodule Phoenix.Test.ChannelTest do
     def join("foo:crash", %{}, _socket) do
       :unknown
     end
+
+    def handle_in("noreply", %{"req" => arg}, socket) do
+      push socket, "noreply", %{"resp" => arg}
+      {:noreply, socket}
+    end
   end
+
+  use Phoenix.ChannelTest
 
   test "join/3 with success" do
     assert {:ok, socket, pid} = join(Channel, "foo:socket")
@@ -44,6 +54,12 @@ defmodule Phoenix.Test.ChannelTest do
   test "join/3 with crash" do
     Process.flag(:trap_exit, true)
     assert {:error, %{reason: "join crashed"}} = join(Channel, "foo:crash")
-    assert_received {:EXIT, _, _}
+    assert_receive {:EXIT, _, _}
+  end
+
+  test "pushes and receives pushed messages" do
+    {:ok, _, pid} = join(Channel, "foo:ok")
+    push pid, "noreply", %{"req" => "foo"}
+    assert_pushed "noreply", %{"resp" => "foo"}
   end
 end

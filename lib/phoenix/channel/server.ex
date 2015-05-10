@@ -1,6 +1,8 @@
 defmodule Phoenix.Channel.Server do
   use GenServer
+
   alias Phoenix.PubSub
+  alias Phoenix.Socket
 
   # TODO: Document me as the transport API.
   @moduledoc false
@@ -23,10 +25,10 @@ defmodule Phoenix.Channel.Server do
   end
 
   @doc """
-  Pushes a new message from client to the channel.
+  Pushes a message from client to the channel.
   """
-  def handle_in(pid, event, payload, ref) do
-    GenServer.cast(pid, {:handle_in, event, payload, ref})
+  def push(pid, event, ref, payload) do
+    GenServer.cast(pid, {:push, event, ref, payload})
   end
 
   @doc """
@@ -70,9 +72,7 @@ defmodule Phoenix.Channel.Server do
             {:ok, reply :: map, Socket.t} |
             {:error, reply :: map, Socket.t}
 
-        got:
-
-            #{inspect other}
+        got #{inspect other}
         """
     end
   end
@@ -88,7 +88,7 @@ defmodule Phoenix.Channel.Server do
     handle_result({:stop, {:shutdown, :left}, :ok, put_in(socket.ref, ref)}, :handle_in)
   end
 
-  def handle_cast({:handle_in, event, payload, ref}, socket) do
+  def handle_cast({:push, event, ref, payload}, socket) do
     event
     |> socket.channel.handle_in(payload, put_in(socket.ref, ref))
     |> handle_result(:handle_in)
@@ -112,58 +112,26 @@ defmodule Phoenix.Channel.Server do
     socket.channel.terminate(reason, socket)
   end
 
-  ## Helpers
+  ## Handle results
 
-  defp push(socket, event, message) do
-    send socket.transport_pid, {:socket_push, %Phoenix.Socket.Message{
-      topic: socket.topic,
-      event: event,
-      payload: message
-    }}
-  end
-
-  defp handle_result({:reply, {status, response}, socket}, :handle_in) do
-    push socket, "phx_reply", %{status: to_string(status),
-                                ref: socket.ref,
-                                response: response}
+  defp handle_result({:reply, reply, %Socket{} = socket}, callback) do
+    handle_reply(socket, reply, callback)
     {:noreply, socket}
   end
-  defp handle_result({:reply, status, socket}, :handle_in) when is_atom(status) do
-    push socket, "phx_reply", %{status: to_string(status),
-                                ref: socket.ref,
-                                response: %{}}
+
+  defp handle_result({:stop, reason, reply, socket}, callback) do
+    handle_reply(socket, reply, callback)
+    {:stop, reason, socket}
+  end
+
+  defp handle_result({:stop, reason, socket}, _callback) do
+    {:stop, reason, socket}
+  end
+
+  defp handle_result({:noreply, socket}, _callback) do
     {:noreply, socket}
   end
-  defp handle_result({:reply, status, _socket}, :handle_in) do
-    raise """
-    Channel replies from `handle_in/3` are expected to return one of:
 
-        {:reply, {status :: atom, response :: map}, Socket.t} |
-        {:reply, status :: atom, Socket.t}
-
-    got #{inspect status}
-    """
-  end
-  defp handle_result({:reply, _, _socket}, _) do
-    raise """
-    Channel replies can only be sent from a `handle_in/3` callback.
-    Use `push/3` to send an out-of-band message down the socket
-    """
-  end
-  defp handle_result({:noreply, socket}, _callback_type), do: {:noreply, socket}
-  defp handle_result({:stop, reason, {status, response}, socket}, :handle_in) do
-    push socket, "phx_reply", %{status: to_string(status),
-                                ref: socket.ref,
-                                response: response}
-    {:stop, reason, socket}
-  end
-  defp handle_result({:stop, reason, status, socket}, :handle_in) when is_atom(status) do
-    push socket, "phx_reply", %{status: to_string(status),
-                                ref: socket.ref,
-                                response: %{}}
-    {:stop, reason, socket}
-  end
-  defp handle_result({:stop, reason, socket}, _callback_type), do: {:stop, reason, socket}
   defp handle_result(result, :handle_in) do
     raise """
     Expected `handle_in/3` to return one of:
@@ -178,14 +146,52 @@ defmodule Phoenix.Channel.Server do
     got #{inspect result}
     """
   end
-  defp handle_result(result, callback_type) do
+
+  defp handle_result(result, callback) do
     raise """
-    Expected `#{callback_type}` to return one of:
+    Expected `#{callback}` to return one of:
 
         {:noreply, Socket.t} |
         {:stop, reason :: term, Socket.t} |
 
     got #{inspect result}
+    """
+  end
+
+  ## Handle replies
+
+  defp handle_reply(socket, {status, response}, :handle_in)
+       when is_atom(status) and is_map(response) do
+    Phoenix.Channel.push socket, "phx_reply", %{status: Atom.to_string(status),
+                                                ref: socket.ref,
+                                                response: response}
+  end
+
+  defp handle_reply(socket, status, :handle_in) when is_atom(status) do
+    handle_reply(socket, {status, %{}}, :handle_in)
+  end
+
+  defp handle_reply(_socket, reply, :handle_in) do
+    raise """
+    Channel replies from `handle_in/3` are expected to be one of:
+
+        status :: atom
+        {status :: atom, response :: map}
+
+    for example:
+
+        {:reply, :ok, socket}
+        {:reply, {:ok, %{}}, socket}
+        {:stop, :shutdown, {:error, %{}}, socket}
+
+    got #{inspect reply}
+    """
+  end
+
+  defp handle_reply(_socket, _reply, _other) do
+    raise """
+    Channel replies can only be sent from a `handle_in/3` callback.
+    Use `push/3` to send an out-of-band message down the socket
     """
   end
 end

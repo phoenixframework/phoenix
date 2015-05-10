@@ -44,7 +44,7 @@ defmodule Phoenix.Channel.ChannelTest do
     end
     def handle_in("boom", msg, socket), do: msg.(socket)
     def handle_in("put", dict, socket) do
-      {:noreply, Enum.reduce(dict, socket, fn {k, v}, sock -> Socket.assign(sock, k, v) end)}
+      {:noreply, Enum.reduce(dict, socket, fn {k, v}, sock -> assign(sock, k, v) end)}
     end
     def handle_in("get", %{"key" => key}, socket) do
       send socket.transport_pid, socket.assigns[key]
@@ -334,12 +334,6 @@ defmodule Phoenix.Channel.ChannelTest do
 
     Transport.dispatch(msg, HashDict.new, self, Router, Endpoint, WebSocket)
     assert_received {:socket_push, %Message{topic: "phoenix", event: "heartbeat"}}
-  end
-
-  test "socket state can be put and retrieved" do
-    {:noreply, socket} = MyChannel.handle_in("put", %{val: 123}, new_socket)
-    {:noreply, _socket} = MyChannel.handle_in("get", %{"key" => :val}, socket)
-    assert_received 123
   end
 
   test "handle_out/3 can be overidden for custom broadcast handling" do
