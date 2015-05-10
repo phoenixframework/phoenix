@@ -76,13 +76,9 @@ defmodule Phoenix.ChannelTest do
   The timeout is in miliseconds and defaults to 100ms.
   """
   defmacro assert_pushed(event, payload, timeout \\ 100) do
-    # TODO: It would be nice if we could remove the :socket_push tuple.
-    # As we would get better output. In theory, it is doable to remove
-    # both socket_broadcast and socket_push info (as they have different)
-    # targets.
     quote do
-      assert_receive {:socket_push,
-        %Phoenix.Socket.Message{event: unquote(event), payload: unquote(payload)}}, unquote(timeout)
+      assert_receive %Phoenix.Socket.Message{event: unquote(event),
+                                             payload: unquote(payload)}, unquote(timeout)
     end
   end
 

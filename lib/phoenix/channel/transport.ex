@@ -24,7 +24,7 @@ defmodule Phoenix.Channel.Transport do
       HashDict of a string topics to Pid matches, and Pid to String topic matches.
       The HashDict of topic => pids is dispatched through the transport layer's
       `Phoenix.Transport.dispatch/6`.
-    * Handle receiving outgoing `{:socket_push, %Phoenix.Socket.Message{}}` as
+    * Handle receiving outgoing `%Phoenix.Socket.Message{}` and `%Phoenix.Socket.Reply{}` as
       Elixir process messages, then encoding and fowarding to remote client.
     * Trap exits and handle receiving `{:EXIT, socket_pid, reason}` messages
       and delete the entries from the kept HashDict of socket processes.
@@ -85,7 +85,7 @@ defmodule Phoenix.Channel.Transport do
   The server will respond to heartbeats with the same message
   """
   def dispatch(_, %{topic: "phoenix", event: "heartbeat"}, transport_pid, _router, _pubsub_server, _transport) do
-    send transport_pid, {:socket_push, %Message{topic: "phoenix", event: "heartbeat", payload: %{}}}
+    send transport_pid, %Message{topic: "phoenix", event: "heartbeat", payload: %{}}
   end
   def dispatch(nil, %{event: "phx_join"} = msg, transport_pid, router, endpoint, transport) do
     case router.channel_for_topic(msg.topic, transport) do
@@ -122,11 +122,11 @@ defmodule Phoenix.Channel.Transport do
   end
 
   defp push(socket, event, message) do
-    send socket.transport_pid, {:socket_push, %Phoenix.Socket.Message{
+    send socket.transport_pid, %Phoenix.Socket.Message{
       topic: socket.topic,
       event: event,
       payload: message
-    }}
+    }
   end
 
   defp log_ignore(topic, router) do

@@ -205,12 +205,12 @@ defmodule Phoenix.Channel.ChannelTest do
     socket = put_topic(put_in(new_socket.joined, true), "top:subtop")
     assert Channel.push(socket, "event", %{payload: "hello"})
 
-    assert Enum.any?(Process.info(self)[:messages], &match?({:socket_push, %Message{}}, &1))
-    assert_received {:socket_push, %Message{
+    assert Enum.any?(Process.info(self)[:messages], &match?(%Message{}, &1))
+    assert_received %Message{
       topic: "top:subtop",
       event: "event",
       payload: %{payload: "hello"}
-    }}
+    }
   end
 
   test "#push raises error when not joined" do
@@ -264,7 +264,7 @@ defmodule Phoenix.Channel.ChannelTest do
     # send broadcast that returns {:stop, reason, socket} now that we've joined
     msg = %Message{event: "everyone_leave", topic: "topic:1subtopic", payload: %{}}
     Enum.each sockets, fn {_, pid} -> Process.monitor(pid) end
-    PubSub.broadcast!(:phx_pub, msg.topic, {:socket_broadcast, msg})
+    PubSub.broadcast!(:phx_pub, msg.topic, msg)
     Enum.each sockets, fn {_, pid} ->
       assert_receive {:DOWN, _ref, :process, ^pid, :normal}
     end
@@ -334,7 +334,7 @@ defmodule Phoenix.Channel.ChannelTest do
     msg = %Message{topic: "phoenix", event: "heartbeat", payload: fn _socket -> :badreturn end}
 
     Transport.dispatch(msg, HashDict.new, self, Router, Endpoint, WebSocket)
-    assert_received {:socket_push, %Message{topic: "phoenix", event: "heartbeat"}}
+    assert_received %Message{topic: "phoenix", event: "heartbeat"}
   end
 
   test "handle_out/3 can be overidden for custom broadcast handling" do
@@ -344,9 +344,9 @@ defmodule Phoenix.Channel.ChannelTest do
     {:ok, _socket_pid} =
       Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
 
-    PubSub.broadcast!(:phx_pub, "topic:8subtopic", {:socket_broadcast, %Message{event: "some_broadcast",
+    PubSub.broadcast!(:phx_pub, "topic:8subtopic", %Message{event: "some_broadcast",
                                          topic: "topic:8subtopic",
-                                         payload: "hello"}})
+                                         payload: "hello"})
     assert_receive :handle_out
   end
 

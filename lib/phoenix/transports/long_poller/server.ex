@@ -89,7 +89,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   @doc """
   Forwards replied/broadcasted message from Channels back to client.
   """
-  def handle_info({:socket_push, msg}, state) do
+  def handle_info(%Message{} = msg, state) do
     publish_reply(msg, state)
   end
 

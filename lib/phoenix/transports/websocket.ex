@@ -92,7 +92,7 @@ defmodule Phoenix.Transports.WebSocket do
     end
   end
 
-  def ws_info({:socket_push, message}, %{serializer: serializer} = state) do
+  def ws_info(%Message{} = message, %{serializer: serializer} = state) do
     {:reply, serializer.encode!(message), state}
   end
 

@@ -149,7 +149,7 @@ defmodule Phoenix.Integration.ChannelTest do
     {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
 
     WebsocketClient.send_event(sock, "rooms:lobby", "new:msg", %{body: "hi!"})
-    refute_receive {:socket_push, %Message{}}
+    refute_receive %Message{}
   end
 
   test "websocket refuses unallowed origins" do
@@ -240,7 +240,7 @@ defmodule Phoenix.Integration.ChannelTest do
       "payload" => %{"body" => "hi!"}
     }
     assert resp.body["status"] == 200
-    assert_receive {:socket_broadcast, %Message{event: "new:msg", payload: %{"body" => "hi!"}}}
+    assert_receive %Message{event: "new:msg", payload: %{"body" => "hi!"}}
     resp = poll(:get, "/ws/poll", session)
     session = Map.take(resp.body, ["token", "sig"])
     assert resp.body["status"] == 200
@@ -255,7 +255,7 @@ defmodule Phoenix.Integration.ChannelTest do
         "payload" => %{"body" => "this method shouldn't send!'"}
       }
       assert resp.body["status"] == 401
-      refute_receive {:socket_broadcast, %Message{event: "new:msg"}}
+      refute_receive %Message{event: "new:msg"}
 
 
       ## multiplexed sockets
@@ -308,7 +308,7 @@ defmodule Phoenix.Integration.ChannelTest do
         "payload" => %{"body" => "hi!"}
       }
       assert resp.body["status"] == 410
-      refute_receive {:socket_push, %Message{event: "new:msg", payload: %{"body" => "hi!"}}}
+      refute_receive %Message{event: "new:msg", payload: %{"body" => "hi!"}}
 
       # 410 from crashed/terminated longpoller server when publishing
       # create new session

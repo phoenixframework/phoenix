@@ -288,11 +288,11 @@ defmodule Phoenix.Channel do
     raise_not_joined()
   end
   def broadcast_from(pubsub_server, from, topic, event, message) when is_map(message) do
-    PubSub.broadcast_from pubsub_server, from, topic, {:socket_broadcast, %Message{
+    PubSub.broadcast_from pubsub_server, from, topic, %Message{
       topic: topic,
       event: event,
       payload: message
-    }}
+    }
   end
   def broadcast_from(_, _, _, _, _), do: raise_invalid_message
 
@@ -311,11 +311,11 @@ defmodule Phoenix.Channel do
     raise_not_joined()
   end
   def broadcast_from!(pubsub_server, from, topic, event, message) when is_map(message) do
-    PubSub.broadcast_from! pubsub_server, from, topic, {:socket_broadcast, %Message{
+    PubSub.broadcast_from! pubsub_server, from, topic, %Message{
       topic: topic,
       event: event,
       payload: message
-    }}
+    }
   end
   def broadcast_from!(_, _, _, _, _), do: raise_invalid_message
 
@@ -323,11 +323,11 @@ defmodule Phoenix.Channel do
   Sends Dict, JSON serializable message to socket.
   """
   def push(%Socket{joined: true} = socket, event, message) when is_map(message) do
-    send socket.transport_pid, {:socket_push, %Message{
+    send socket.transport_pid, %Message{
       topic: socket.topic,
       event: event,
       payload: message
-    }}
+    }
     :ok
   end
   def push(_socket, _event, message) when is_map(message) do
