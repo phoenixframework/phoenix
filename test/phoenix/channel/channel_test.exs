@@ -5,6 +5,7 @@ defmodule Phoenix.Channel.ChannelTest do
   alias Phoenix.Channel
   alias Phoenix.Socket
   alias Phoenix.Socket.Message
+  alias Phoenix.Socket.Reply
   alias Phoenix.Channel.Transport
   alias Phoenix.Transports.WebSocket
   alias Phoenix.Transports.LongPoller
@@ -508,33 +509,6 @@ defmodule Phoenix.Channel.ChannelTest do
     assert_receive {:DOWN, _ref, :process, ^socket_pid, {:shutdown, :close}}
   end
 
-  test "handle_in/3 can reply to the socket directly" do
-    sockets = HashDict.new
-    message = join_message("topic:11subtopic", fn socket -> {:ok, socket} end)
-    {:ok, socket_pid} = Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
-    sockets = HashDict.put(sockets, "topic:11subtopic", socket_pid)
-    assert_receive {:socket_push,
-      %{event: "phx_reply", payload: %{ref: "1", response: %{}, status: "ok"}, topic: "topic:11subtopic"}}
-
-    %Message{event: "msg_with_reply_response",
-             topic: "topic:11subtopic",
-             ref: "1234",
-             payload: %{some: "thing"}}
-    |> Transport.dispatch(sockets, self, Router, Endpoint, WebSocket)
-
-    assert_receive {:socket_push, %Message{event: "phx_reply", payload: %{
-      ref: "1234", response: %{some: "thing"}, status: "ok"}, topic: "topic:11subtopic"}}
-
-    %Message{event: "msg_with_reply_ack",
-             topic: "topic:11subtopic",
-             ref: "12345",
-             payload: %{some: "thing"}}
-    |> Transport.dispatch(sockets, self, Router, Endpoint, WebSocket)
-
-    assert_receive {:socket_push, %Message{event: "phx_reply", payload: %{
-      ref: "12345", response: %{}, status: "ok"}, topic: "topic:11subtopic"}}
-  end
-
   test "phx_leave event stops the server" do
     sockets = HashDict.new
     message = join_message("topic:12subtopic", fn socket -> {:ok, socket} end)
@@ -547,9 +521,8 @@ defmodule Phoenix.Channel.ChannelTest do
              payload: %{}}
     |> Transport.dispatch(sockets, self, Router, Endpoint, WebSocket)
 
-    assert_receive {:socket_push, %Message{event: "phx_reply",
-      payload: %{ref: "12345", response: %{}, status: "ok"},
-      ref: nil, topic: "topic:12subtopic"}}
+    assert_receive %Reply{ref: "12345", payload: %{},
+      status: :ok, topic: "topic:12subtopic"}
 
     assert_receive {:terminate_triggered, {:shutdown, :left}}
     assert_receive {:DOWN, _ref, :process, ^socket_pid, {:shutdown, :left}}

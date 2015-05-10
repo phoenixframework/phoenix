@@ -63,11 +63,10 @@ defmodule Phoenix.ChannelTest do
   end
 
   @doc """
-  Assets the channel has pushed a message back to the client
+  Asserts the channel has pushed a message back to the client
   with the given event and payload under `timeout`.
 
-  Notice that event and payload are patterns. This means
-  one can write:
+  Notice event and payload are patterns. This means one can write:
 
       assert_pushed "some_event", %{"data" => _}
 
@@ -84,6 +83,28 @@ defmodule Phoenix.ChannelTest do
     quote do
       assert_receive {:socket_push,
         %Phoenix.Socket.Message{event: unquote(event), payload: unquote(payload)}}, unquote(timeout)
+    end
+  end
+
+  @doc """
+  Asserts the channel has replies to the given message within
+  `timeout`.
+
+  Notice status and payload are patterns. This means one can write:
+
+      ref = push channel, "some_event"
+      assert_replied ref, :ok, %{"data" => _}
+
+  In the assertion above, we don't particularly care about
+  the data being sent, as long as something was replied.
+
+  The timeout is in miliseconds and defaults to 100ms.
+  """
+  defmacro assert_replied(ref, status, payload, timeout \\ 100) do
+    quote do
+      ref = unquote(ref)
+      assert_receive %Phoenix.Socket.Reply{status: unquote(status), ref: ^ref,
+                                           payload: unquote(payload)}, unquote(timeout)
     end
   end
 end

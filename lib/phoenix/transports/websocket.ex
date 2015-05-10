@@ -4,6 +4,9 @@ defmodule Phoenix.Transports.WebSocket do
 
   import Phoenix.Controller, only: [endpoint_module: 1, router_module: 1]
 
+  alias Phoenix.Socket.Message
+  alias Phoenix.Socket.Reply
+
   @moduledoc """
   Handles WebSocket clients for the Channel Transport layer.
 
@@ -91,6 +94,21 @@ defmodule Phoenix.Transports.WebSocket do
 
   def ws_info({:socket_push, message}, %{serializer: serializer} = state) do
     {:reply, serializer.encode!(message), state}
+  end
+
+  def ws_info(%Reply{} = reply, %{serializer: serializer} = state) do
+    %{topic: topic, status: status, payload: payload, ref: ref} = reply
+
+    # TODO: Don't duplicate the reference. The client
+    # should retrieve the reference from the message.
+    message = %Message{event: "phx_reply", topic: topic, ref: ref,
+                       payload: %{status: status, ref: ref, response: payload}}
+
+    {:reply, serializer.encode!(message), state}
+  end
+
+  def ws_info(_, state) do
+    {:ok, state}
   end
 
   def ws_terminate(_reason, _state) do

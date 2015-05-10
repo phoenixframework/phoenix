@@ -3,6 +3,7 @@ defmodule Phoenix.Channel.Server do
 
   alias Phoenix.PubSub
   alias Phoenix.Socket
+  alias Phoenix.Socket.Reply
 
   # TODO: Document me as the transport API.
   @moduledoc false
@@ -160,11 +161,10 @@ defmodule Phoenix.Channel.Server do
 
   ## Handle replies
 
-  defp handle_reply(socket, {status, response}, :handle_in)
-       when is_atom(status) and is_map(response) do
-    Phoenix.Channel.push socket, "phx_reply", %{status: Atom.to_string(status),
-                                                ref: socket.ref,
-                                                response: response}
+  defp handle_reply(socket, {status, payload}, :handle_in)
+       when is_atom(status) and is_map(payload) do
+    send socket.transport_pid, %Reply{status: status, topic: socket.topic,
+                                      ref: socket.ref, payload: payload}
   end
 
   defp handle_reply(socket, status, :handle_in) when is_atom(status) do

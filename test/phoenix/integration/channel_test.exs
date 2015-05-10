@@ -394,7 +394,7 @@ defmodule Phoenix.Integration.ChannelTest do
       %{"event" => "phx_reply", "payload" => %{"ref" => "1", "response" => %{}, "status" => "ok"}, "ref" => nil, "topic" => "rooms:lobby"},
       %{"event" => "joined", "payload" => %{"status" => "connected"}, "ref" => nil, "topic" => "rooms:lobby"},
       %{"event" => "user:entered", "payload" => %{"user" => nil}, "ref" => nil, "topic" => "rooms:lobby"},
-      %{"event" => "phx_reply", "payload" => %{"ref" => "2", "response" => %{}, "status" => "ok"}, "ref" => nil, "topic" => "rooms:lobby"},
+      %{"event" => "phx_reply", "payload" => %{"ref" => "2", "response" => %{}, "status" => "ok"}, "ref" => "2", "topic" => "rooms:lobby"},
       %{"event" => "you:left", "payload" => %{"message" => "bye!"}, "ref" => nil, "topic" => "rooms:lobby"},
       %{"event" => "phx_close", "payload" => %{}, "ref" => nil, "topic" => "rooms:lobby"}
     ]

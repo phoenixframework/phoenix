@@ -30,6 +30,14 @@ defmodule Phoenix.Test.ChannelTest do
       push socket, "noreply", %{"resp" => arg}
       {:noreply, socket}
     end
+
+    def handle_in("reply", %{"req" => arg}, socket) do
+      {:reply, {:ok, %{"resp" => arg}}, socket}
+    end
+
+    def handle_in("reply", %{}, socket) do
+      {:reply, :ok, socket}
+    end
   end
 
   use Phoenix.ChannelTest
@@ -61,5 +69,15 @@ defmodule Phoenix.Test.ChannelTest do
     {:ok, _, pid} = join(Channel, "foo:ok")
     push pid, "noreply", %{"req" => "foo"}
     assert_pushed "noreply", %{"resp" => "foo"}
+  end
+
+  test "pushes and receives replies" do
+    {:ok, _, pid} = join(Channel, "foo:ok")
+
+    ref = push pid, "reply", %{"req" => "foo"}
+    assert_replied ref, :ok, %{"resp" => "foo"}
+
+    ref = push pid, "reply", %{}
+    assert_replied ref, :ok, %{}
   end
 end
