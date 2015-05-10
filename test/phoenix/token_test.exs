@@ -6,11 +6,7 @@ defmodule Phoenix.TokenTest do
     use Phoenix.Endpoint, otp_app: :endpoint_token
   end
 
-  Application.put_env(:endpoint_token, TokenEndpoint,
-    token_auth: [ secret_key_base: "abc123",
-                  encryption_salt: "foobar",
-                  signing_salt: "chrismc",
-                  max_age: 50 ])
+  Application.put_env(:endpoint_token, TokenEndpoint, secret_key_base: "abc123")
 
   setup do 
     {:ok, pid} = TokenEndpoint.start_link
@@ -20,40 +16,33 @@ defmodule Phoenix.TokenTest do
     end)
   end
 
-  test "happy path for the encoder" do
+  test "happy path" do
     id = 1
-    token = Token.gen_token(conn(), id)
-    assert id == Token.verify_token(conn(), token)
+    token = Token.sign_token(conn(), "id", id)
+    assert id == Token.verify_token(conn(), "id", token)
   end
 
   test "given a junk token it fails" do
-    assert :error == Token.verify_token(conn(), "garbage")
-  end
-
-  test "bad expiration it fails" do
-    token = Token.gen_token(conn(), 1)
-    Stream.timer(60) |> Enum.map(fn (_) ->
-      assert :token_expired == Token.verify_token(conn(), token)
-    end)
+    assert :error == Token.verify_token(conn(), "garbage", "truck")
   end
 
   test "verify it works with a socket as well" do
     id = 1
-    token = Token.gen_token(socket(), id)
-    assert id == Token.verify_token(socket(), token)
+    token = Token.sign_token(socket(), "id", id)
+    assert id == Token.verify_token(socket(), "id", token)
   end
 
   test "overriding expiration" do
-    token = Token.gen_token(conn(), 1, max_age: 30)
+    token = Token.sign_token(conn(), "id", 1, max_age: 30)
     Stream.timer(40) |> Enum.map(fn (_) ->
-      assert :token_expired == Token.verify_token(conn(), token)
+      assert :expired == Token.verify_token(conn(), "id", token)
     end)
   end
 
   test "nil expiration" do
-    token = Token.gen_token(conn(), 1, max_age: nil)
+    token = Token.sign_token(conn(), "id", 1, max_age: nil)
     Stream.timer(40) |> Enum.map(fn (_) ->
-      assert :token_expired != Token.verify_token(conn(), token)
+      assert :expired != Token.verify_token(conn(), "id", token)
     end)
   end
 

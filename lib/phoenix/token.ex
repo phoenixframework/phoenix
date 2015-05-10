@@ -9,7 +9,7 @@ defmodule Phoenix.Token do
   the id from a Database. For example:
 
       iex> user_id = 1
-      iex> token = gen_token(endpoint, user_id)
+      iex> token = sign_token(endpoint, "user", user_id)
       iex> user_id == verify_token(endpoint, token)
       true
 
@@ -22,7 +22,7 @@ defmodule Phoenix.Token do
 
     defmodule MyChannel do
       def join("my:" <> id = topic, %{token: token}, socket) do
-        case verify_token(socket, token) do
+        case verify_token(socket, "user", token) do
           user_id ->
             socket = assigns(socket, :user, Repo.get!(User, user_id))
             reply socket, "join", %{}
@@ -40,27 +40,26 @@ defmodule Phoenix.Token do
 
     def create(conn, params) do
       user = User.create(params)
-      render conn, "user.json", %{token: gen_token(conn, user.id), user: user}
+      render conn, "user.json", %{token: sign_token(conn, "user", user.id), user: user}
     end
 
     Then the client can use it all the way through. If you'd like to
     use the same token for API authorization then I suggest adding it
     as a header to your authroized http requests
 
-      Authorization: Bearer {{token}}
+      Authorization: Bearer #\{token}
 
     Then create a plug to verify the token and authorize with the database.
 
   """
   alias Plug.Crypto.KeyGenerator
-  alias Plug.Crypto.MessageEncryptor
+  alias Plug.Crypto.MessageVerifier
 
   @doc """
-  Encrypts your data into a token you can send down to clients
+  Signs your data into a token you can send down to clients
   """
-  @spec gen_token(Plug.Conn.t | Phoenix.Socket.t, term, List) :: String.t | no_return
-  def gen_token(context, data, opts \\ []) when is_binary(data) or is_integer(data) or is_map(data) do
-    {secret, sign_secret, max_age} = get_endpoint(context) |> encryptor()
+  def sign_token(context, salt,  data, opts \\ []) when is_binary(data) or is_integer(data) or is_map(data) do
+    secret = get_endpoint(context) |> get_secret(salt)
 
     max_age = if Dict.has_key?(opts, :max_age) do
       opts[:max_age]
@@ -76,21 +75,20 @@ defmodule Phoenix.Token do
       data: data,
       exp: exp
     } |> :erlang.term_to_binary()
-    MessageEncryptor.encrypt_and_sign(message, secret, sign_secret)
+    MessageVerifier.sign(message, secret)
   end
 
   @doc """
   Decrypts the token into the originaly present data.
   """
-  @spec verify_token(Plug.Conn.t | Phoenix.Socket.t, String.t) :: :error | :token_expired | term | no_return
-  def verify_token(context, token) do
-    {secret, sign_secret, _max_age}= get_endpoint(context) |> encryptor()
-    case MessageEncryptor.verify_and_decrypt(token, secret, sign_secret) do
+  def verify_token(context, salt, token) do
+    secret = get_endpoint(context) |> get_secret(salt)
+    case MessageVerifier.verify(token, secret) do
       :error -> :error
       {:ok, message} ->
-        %{ "data" => data, "exp" => exp} = :erlang.binary_to_term(message)
-        if exp < now_ms() do
-          :token_expired
+        %{data: data, exp: exp} = :erlang.binary_to_term(message)
+        if exp && exp < now_ms() do
+          :expired
         else
           data
         end
@@ -101,16 +99,9 @@ defmodule Phoenix.Token do
   defp get_endpoint(%Phoenix.Socket{} = socket), do: socket.endpoint
 
   # Gathers configuration and generates the key secrets and signing secrets.
-  defp encryptor(endpoint) do
-    config = endpoint.config(:token_auth)
-    secret_key_base = Dict.get(config, :secret_key_base)
-    encryption_salt = Dict.get(config, :encryption_salt)
-    signing_salt = Dict.get(config, :signing_salt)
-    max_age_in_ms = Dict.get(config, :max_age)
-
-    secret = KeyGenerator.generate(secret_key_base, encryption_salt)
-    sign_secret = KeyGenerator.generate(secret_key_base, signing_salt)
-    {secret, sign_secret, max_age_in_ms}
+  defp get_secret(endpoint, salt) do
+    secret_key_base = endpoint.config(:secret_key_base)
+    KeyGenerator.generate(secret_key_base, salt)
   end
 
   defp time_to_ms({mega, sec, micro}),
