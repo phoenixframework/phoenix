@@ -5,6 +5,16 @@ defmodule Mix.Tasks.Phoenix.Server do
 
   @moduledoc """
   Starts the application by configuring all endpoints servers to run.
+
+  ## Command line options
+
+  This task accepts the same command-line arguments as `app.start`. For additional
+  information, refer to the documentation for `Mix.Tasks.App.Start`.
+
+  For example, to run `phoenix.server` without checking dependencies:
+
+    mix phoenix.server --no-deps-check
+
   """
   def run(args) do
     Application.put_env(:phoenix, :serve_endpoints, true, persistent: true)
