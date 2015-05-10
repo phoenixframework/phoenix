@@ -82,17 +82,17 @@ The first thing we need to do to create that page is define a route for it. Let'
 
 ```elixir
 defmodule HelloPhoenix.Router do
-  use Phoenix.Router
+  use HelloPhoenix.Web, :router
 
   pipeline :browser do
-    plug :accepts, ~w(html)
+    plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_flash
     plug :protect_from_forgery
   end
 
   pipeline :api do
-    plug :accepts, ~w(json)
+    plug :accepts, ["json"]
   end
 
   scope "/", HelloPhoenix do

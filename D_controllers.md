@@ -366,10 +366,10 @@ There are just few more things we need to do to make this work. We need to tell 
 
 ```elixir
 defmodule HelloPhoenix.Router do
-  use Phoenix.Router
+  use HelloPhoenix.Web, :router
 
   pipeline :browser do
-    plug :accepts, ~w(html text)
+    plug :accepts, ["html", "text"]
     plug :fetch_session
     plug :protect_from_forgery
   end
@@ -468,7 +468,7 @@ In order to try out `redirect/2`, let's create a new route in `web/router.ex`.
 
 ```elixir
 defmodule HelloPhoenix.Router do
-  use Phoenix.Router
+  use HelloPhoenix.Web, :router
   . . .
 
   scope "/", HelloPhoenix do

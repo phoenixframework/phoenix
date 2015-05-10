@@ -4,17 +4,17 @@ The router file that Phoenix generates, `web/router.ex`, will look something lik
 
 ```elixir
 defmodule HelloPhoenix.Router do
-  use Phoenix.Router
+  use HelloPhoenix.Web, :router
 
   pipeline :browser do
-    plug :accepts, ~w(html)
+    plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_flash
     plug :protect_from_forgery
   end
 
   pipeline :api do
-    plug :accepts, ~w(json)
+    plug :accepts, ["json"]
   end
 
   scope "/", HelloPhoenix do
@@ -464,7 +464,7 @@ Phoenix already does this now for us in the generated router for a new applicati
 
 ```elixir
 defmodule HelloPhoenix.Router do
-  use Phoenix.Router
+  use HelloPhoenix.Web, :router
 
   scope "/", HelloPhoenix do
     pipe_through :browser
@@ -624,9 +624,9 @@ Phoenix defines two other pipelines by default, `:browser` and `:api`. The route
 
 As their names suggest, the `:browser` pipeline prepares for routes which render requests for a browser. The `:api` pipeline prepares for routes which produce data for an api.
 
-The `:browser` pipeline has four plugs: `plug :accepts, ~w(html)` which defines the request format or formats which will be accepted, `:fetch_session`, which, naturally, fetches the session data and makes it available in the connection, `:fetch_flash` which retrieves any flash messages which may have been set, and  `:protect_from_forgery`, which protects form posts from cross site forgery.
+The `:browser` pipeline has four plugs: `plug :accepts, ["html"]` which defines the request format or formats which will be accepted, `:fetch_session`, which, naturally, fetches the session data and makes it available in the connection, `:fetch_flash` which retrieves any flash messages which may have been set, and  `:protect_from_forgery`, which protects form posts from cross site forgery.
 
-Currently, the `:api` pipeline only defines `plug :accepts, ~w(json)`.
+Currently, the `:api` pipeline only defines `plug :accepts, ["json"]`.
 
 The router invokes a pipeline on a route defined within a scope. If no scope is defined, the router will invoke the pipeline on all the routes in the router. If we call `pipe_through/1` from within a nested scope, the router will invoke it on the inner scope only.
 
@@ -636,17 +636,17 @@ Here's another look at the router from a newly generated Phoenix application, th
 
 ```elixir
 defmodule HelloPhoenix.Router do
-  use Phoenix.Router
+  use HelloPhoenix.Web, :router
 
   pipeline :browser do
-    plug :accepts, ~w(html)
+    plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_flash
     plug :protect_from_forgery
   end
 
   pipeline :api do
-    plug :accepts, ~w(json)
+    plug :accepts, ["json"]
   end
 
   scope "/", HelloPhoenix do
@@ -674,10 +674,10 @@ If we know that our application only renders views for the browser, we can simpl
 
 ```elixir
 defmodule HelloPhoenix.Router do
-  use Phoenix.Router
+  use HelloPhoenix.Web, :router
 
   pipeline :browser do
-    plug :accepts, ~w(html)
+    plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_flash
     plug :protect_from_forgery
@@ -696,10 +696,10 @@ Let's stretch these ideas out a little bit more. What if we need to pipe request
 
 ```elixir
 defmodule HelloPhoenix.Router do
-  use Phoenix.Router
+  use HelloPhoenix.Web, :router
 
   pipeline :browser do
-    plug :accepts, ~w(html)
+    plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_flash
     plug :protect_from_forgery
@@ -719,10 +719,10 @@ Here's another example where nested scopes have different pipelines:
 
 ```elixir
 defmodule HelloPhoenix.Router do
-  use Phoenix.Router
+  use HelloPhoenix.Web, :router
 
   pipeline :browser do
-    plug :accepts, ~w(html)
+    plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_flash
     plug :protect_from_forgery
@@ -751,10 +751,10 @@ Phoenix allows us to create our own custom pipelines anywhere in the router. It 
 
 ```elixir
 defmodule HelloPhoenix.Router do
-  use Phoenix.Router
+  use HelloPhoenix.Web, :router
 
   pipeline :browser do
-    plug :accepts, ~w(html)
+    plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_flash
     plug :protect_from_forgery
@@ -783,7 +783,7 @@ Here's what that looks like in our router file:
 
 ```elixir
 defmodule HelloPhoenix.Router do
-  use Phoenix.Router
+  use HelloPhoenix.Web, :router
 
   socket "/ws", HelloPhoenix do
   end
@@ -795,7 +795,7 @@ Next, we need to use the `channel/3` macro to match a topic to the channel which
 
 ```elixir
 defmodule HelloPhoenix.Router do
-  use Phoenix.Router
+  use HelloPhoenix.Web, :router
 
   socket "/ws", HelloPhoenix do
     channel "rooms:*", RoomChannel

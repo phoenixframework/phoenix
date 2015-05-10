@@ -87,7 +87,7 @@ Let's experiment a little with one of the generated views Phoenix provides us, `
 
 ```elixir
 defmodule HelloPhoenix.PageView do
-  use HelloPhoenix.View
+  use HelloPhoenix.Web, :view
 
   def message do
     "Hello from the view!"

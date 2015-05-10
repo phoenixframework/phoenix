@@ -33,7 +33,7 @@ Let's follow the instructions the task gives us and insert the `resources "/user
 
 ```elixir
 defmodule HelloPhoenix.Router do
-  use Phoenix.Router
+  use HelloPhoenix.Web, :router
 . . .
 
   scope "/", HelloPhoenix do
