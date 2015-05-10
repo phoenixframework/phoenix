@@ -63,7 +63,8 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
         assert file =~ "defmodule Phoenix.UserControllerTest"
         assert file =~ "use Phoenix.ConnCase"
 
-        assert file =~ ~S|@valid_params user: %{address: nil|
+        assert file =~ ~S|@valid_attrs %{address: nil|
+        assert file =~ ~S|@valid_params user: @valid_attrs|
         assert file =~ ~S|@invalid_params user: %{}|
 
         assert file =~ ~S|test "GET /users"|
@@ -77,6 +78,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
         assert file =~ ~S|test "POST /users with valid data"|
         assert file =~ ~S|conn = post conn, user_path(conn, :create), @valid_params|
         assert file =~ ~S|assert redirected_to(conn) == user_path(conn, :index)|
+        assert file =~ ~r/POST.*with valid.*?assert Repo\.get_by\(User, @valid_attrs\).*?end/s
 
         assert file =~ ~S|test "POST /users with invalid data"|
         assert file =~ ~S|conn = post conn, user_path(conn, :create), @invalid_params|
@@ -90,6 +92,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
 
         assert file =~ ~S|test "PUT /users/:id with valid data"|
         assert file =~ ~S|conn = put conn, user_path(conn, :update, user), @valid_params|
+        assert file =~ ~r/PUT.*with valid.*?assert Repo\.get_by\(User, @valid_attrs\).*?end/s
 
         assert file =~ ~S|test "PUT /users/:id with invalid data"|
         assert file =~ ~S|conn = put conn, user_path(conn, :update, user), @invalid_params|

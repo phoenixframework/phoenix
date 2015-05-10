@@ -2,7 +2,8 @@ defmodule <%= module %>ControllerTest do
   use <%= base %>.ConnCase
 
   alias <%= module %>
-  @valid_params <%= singular %>: <%= inspect params %>
+  @valid_attrs <%= inspect params %>
+  @valid_params <%= singular %>: @valid_attrs
   @invalid_params <%= singular %>: %{}
 
   setup do
@@ -26,6 +27,7 @@ defmodule <%= module %>ControllerTest do
   test "POST /<%= plural %> with valid data", %{conn: conn} do
     conn = post conn, <%= singular %>_path(conn, :create), @valid_params
     assert json_response(conn, 200)["data"]["id"]
+    assert Repo.get_by(<%= alias %>, @valid_attrs)
   end
 
   test "POST /<%= plural %> with invalid data", %{conn: conn} do
@@ -37,6 +39,7 @@ defmodule <%= module %>ControllerTest do
     <%= singular %> = Repo.insert %<%= alias %>{}
     conn = put conn, <%= singular %>_path(conn, :update, <%= singular %>), @valid_params
     assert json_response(conn, 200)["data"]["id"]
+    assert Repo.get_by(<%= alias %>, @valid_attrs)
   end
 
   test "PUT /<%= plural %>/:id with invalid data", %{conn: conn} do
