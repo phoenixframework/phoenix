@@ -132,10 +132,10 @@ defmodule HelloPhoenix.Plugs.Locale
 end
 
 defmodule HelloPhoenix.Router do
-  use Phoenix.Router
+  use HelloPhoenix.Web, :router
 
   pipeline :browser do
-    plug :accepts, ~w(html)
+    plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_flash
     plug :protect_from_forgery

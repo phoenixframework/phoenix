@@ -59,7 +59,7 @@ Let's tie all these ideas together by building a simple chat application. Let's 
 
 ```elixir
 defmodule HelloPhoenix.Router do
-   use Phoenix.Router
+   use HelloPhoenix.Web, :router
 
    socket "/ws", HelloPhoenix do
      channel "rooms:*", RoomChannel
