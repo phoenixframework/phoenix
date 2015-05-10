@@ -1,5 +1,5 @@
 defmodule Phoenix.Channel.ChannelTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
   alias Phoenix.PubSub
   alias Phoenix.Channel
@@ -123,7 +123,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "#subscribe/unsubscribe's socket to/from topic" do
-    socket = Socket.put_topic(new_socket, "top:subtop")
+    socket = put_topic(new_socket, "top:subtop")
 
     assert PubSub.subscribe(:phx_pub, socket.transport_pid, "top:subtop")
     assert subscribers(:phx_pub, "top:subtop") == [socket.transport_pid]
@@ -132,7 +132,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "#broadcast and #broadcast! broadcasts global message on topic" do
-    socket = Socket.put_topic(new_socket, "top:subtop")
+    socket = put_topic(new_socket, "top:subtop")
 
     assert Channel.broadcast(:phx_pub, socket, "event", %{foo: "bar"})
     assert Channel.broadcast!(:phx_pub, socket, "event", %{foo: "bar"})
@@ -150,7 +150,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "#broadcast_from and #broadcast_from! broadcasts message, skipping publisher" do
-    socket = put_in(new_socket.joined, true) |> Socket.put_topic("top:subtop")
+    socket = put_in(new_socket.joined, true) |> put_topic("top:subtop")
     PubSub.subscribe(:phx_pub, socket.transport_pid, "top:subtop")
 
     assert Channel.broadcast_from(:phx_pub, socket, "event", %{payload: "hello"})
@@ -161,7 +161,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "#broadcast_from and #broadcast_from! raises error when msg isn't a Map" do
-    socket = put_in(new_socket.joined, true) |> Socket.put_topic("top:subtop")
+    socket = put_in(new_socket.joined, true) |> put_topic("top:subtop")
     message = "Message argument must be a map"
     assert_raise RuntimeError, message, fn ->
       Channel.broadcast_from(:phx_pub, socket, "event", bar: "foo", foo: "bar")
@@ -184,7 +184,7 @@ defmodule Phoenix.Channel.ChannelTest do
   test "#broadcast raises error when not joined" do
     socket =
       %{new_socket() | joined: false, pubsub_server: :phx_pub}
-      |> Socket.put_topic("top:subtop")
+      |> put_topic("top:subtop")
 
     assert_raise RuntimeError, fn ->
       Channel.broadcast(socket, "event", %{payload: "hello"})
@@ -201,7 +201,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "#push sends response to socket" do
-    socket = Socket.put_topic(put_in(new_socket.joined, true), "top:subtop")
+    socket = put_topic(put_in(new_socket.joined, true), "top:subtop")
     assert Channel.push(socket, "event", %{payload: "hello"})
 
     assert Enum.any?(Process.info(self)[:messages], &match?({:socket_push, %Message{}}, &1))
@@ -213,7 +213,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "#push raises error when not joined" do
-    socket = Socket.put_topic(put_in(new_socket.joined, false), "top:subtop")
+    socket = put_topic(put_in(new_socket.joined, false), "top:subtop")
 
     assert_raise RuntimeError, fn ->
       Channel.push(socket, "event", %{payload: "hello"})
@@ -222,7 +222,7 @@ defmodule Phoenix.Channel.ChannelTest do
 
 
   test "#push raises friendly error when message arg isn't a Map" do
-    socket = Socket.put_topic(new_socket, "top:subtop")
+    socket = put_topic(new_socket, "top:subtop")
     message = "Message argument must be a map"
     assert_raise RuntimeError, message, fn ->
       Channel.push(socket, "event", foo: "bar", bar: "foo")
@@ -559,5 +559,9 @@ defmodule Phoenix.Channel.ChannelTest do
 
     assert_receive {:terminate_triggered, {:shutdown, :left}}
     assert_receive {:DOWN, _ref, :process, ^socket_pid, {:shutdown, :left}}
+  end
+
+  defp put_topic(socket, topic) do
+    %Socket{socket | topic: topic}
   end
 end

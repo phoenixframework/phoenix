@@ -13,7 +13,6 @@ defmodule Phoenix.Socket do
   * `topic` - The string topic, ie `"rooms:123"`
   * `transport` - The socket's transport, ie: `Phoenix.Transports.WebSocket`
   * `transport_pid` - The pid of the socket's transport process
-
   """
 
   alias Phoenix.Socket
@@ -37,27 +36,4 @@ defmodule Phoenix.Socket do
             topic: nil,
             transport: nil,
             transport_pid: nil
-
-  @doc """
-  Sets topic of socket.
-  """
-  def put_topic(socket, topic) do
-    %Socket{socket | topic: topic}
-  end
-
-  @doc """
-  Adds key/value pair to socket assigns.
-
-  ## Examples
-
-      iex> socket.assigns[:token]
-      nil
-      iex> socket = assign(socket, :token, "bar")
-      iex> socket.assigns[:token]
-      "bar"
-
-  """
-  def assign(socket = %Socket{}, key, value) do
-    put_in socket.assigns[key], value
-  end
 end

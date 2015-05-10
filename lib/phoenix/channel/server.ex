@@ -3,7 +3,6 @@ defmodule Phoenix.Channel.Server do
   alias Phoenix.PubSub
 
   # TODO: Document me as the transport API.
-  # TODO: Modify the socket to not allow pushes on join/terminate
   @moduledoc false
 
   @doc """

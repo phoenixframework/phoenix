@@ -206,9 +206,7 @@ defmodule Phoenix.Channel do
   defmacro __using__(_) do
     quote do
       @behaviour unquote(__MODULE__)
-
       import unquote(__MODULE__)
-      import Phoenix.Socket
 
       def terminate(_reason, _socket), do: :ok
 
@@ -355,5 +353,21 @@ defmodule Phoenix.Channel do
         end
 
     """
+  end
+
+  @doc """
+  Adds key/value pair to socket assigns.
+
+  ## Examples
+
+      iex> socket.assigns[:token]
+      nil
+      iex> socket = assign(socket, :token, "bar")
+      iex> socket.assigns[:token]
+      "bar"
+
+  """
+  def assign(socket = %Socket{}, key, value) do
+    put_in socket.assigns[key], value
   end
 end

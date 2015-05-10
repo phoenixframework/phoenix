@@ -65,7 +65,7 @@ defmodule Phoenix.Transports.WebSocket do
         {:ok, put(state, msg.topic, socket_pid)}
       :ok ->
         {:ok, state}
-      {:error, reason} ->
+      {:error, _reason} ->
         {:ok, state} # We are assuming the error was already logged elsewhere.
     end
   end
