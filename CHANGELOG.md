@@ -4,6 +4,8 @@
 
 ## v0.13.0 (2015-05-11)
 
+See these [`0.12.x` to `0.13.0` upgrade instructions](https://gist.github.com/chrismccord/0a3bf5229801d61f219b) to bring your existing apps up to speed.
+
 * Enhancements
   * [Channel] Allow router helpers to work in channels by passing a socket (instead of connection), for example: `user_path(socket, :index)`
   * [Channel] Support replies in `join/3`
