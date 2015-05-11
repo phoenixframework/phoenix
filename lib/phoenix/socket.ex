@@ -15,6 +15,13 @@ defmodule Phoenix.Socket do
   * `transport_pid` - The pid of the socket's transport process
   """
 
+  defmodule InvalidMessageError do
+    @moduledoc """
+    Raised when the socket message is invalid.
+    """
+    defexception [:message]
+  end
+
   alias Phoenix.Socket
 
   @type t :: %Socket{assigns: %{},
@@ -40,7 +47,7 @@ end
 
 defmodule Phoenix.Socket.Message do
   @moduledoc """
-  Defines a `Phoenix.Socket` message dispatched over channels.
+  Defines a message dispatched over transport to channels and vice-versa.
 
   The message format requires the following keys:
 
@@ -55,16 +62,10 @@ defmodule Phoenix.Socket.Message do
 
   defstruct topic: nil, event: nil, payload: nil, ref: nil
 
-  defmodule InvalidMessage do
-    defexception [:message]
-    def exception(msg) do
-      %InvalidMessage{message: "Invalid Socket Message: #{inspect msg}"}
-    end
-  end
-
   @doc """
-  Converts a map with string keys into a `%Phoenix.Socket.Message{}`.
-  Raises `Phoenix.Socket.Message.InvalidMessage` if not valid.
+  Converts a map with string keys into a message struct.
+
+  Raises `Phoenix.Socket.InvalidMessageError` if not valid.
   """
   def from_map!(map) when is_map(map) do
     try do
@@ -75,14 +76,15 @@ defmodule Phoenix.Socket.Message do
         ref: Map.fetch!(map, "ref")
       }
     rescue
-      err in [KeyError] -> raise InvalidMessage, message: "Missing key: '#{err.key}'"
+      err in [KeyError] ->
+        raise Phoenix.Socket.InvalidMessageError, message: "missing key #{inspect err.key}"
     end
   end
 end
 
 defmodule Phoenix.Socket.Reply do
   @moduledoc """
-  Defines a `Phoenix.Socket.Reply` message dispatched over channels.
+  Defines a reply sent from channels to transports.
 
   The message format requires the following keys:
 
@@ -94,4 +96,19 @@ defmodule Phoenix.Socket.Reply do
   """
 
   defstruct topic: nil, status: nil, payload: nil, ref: nil
+end
+
+defmodule Phoenix.Socket.Broadcast do
+  @moduledoc """
+  Defines a message sent from pubsub to channels and vice-versa.
+
+  The message format requires the following keys:
+
+    * `topic` - The string topic or topic:subtopic pair namespace, ie "messages", "messages:123"
+    * `event`- The string event name, ie "phx_join"
+    * `payload` - The message payload
+
+  """
+
+  defstruct topic: nil, event: nil, payload: nil
 end

@@ -8,6 +8,7 @@ defmodule Phoenix.Integration.ChannelTest do
   alias Phoenix.Integration.WebsocketClient
   alias Phoenix.Integration.HTTPClient
   alias Phoenix.Socket.Message
+  alias Phoenix.Socket.Broadcast
   alias __MODULE__.Endpoint
 
   @port 5807
@@ -240,7 +241,7 @@ defmodule Phoenix.Integration.ChannelTest do
       "payload" => %{"body" => "hi!"}
     }
     assert resp.body["status"] == 200
-    assert_receive %Message{event: "new:msg", payload: %{"body" => "hi!"}}
+    assert_receive %Broadcast{event: "new:msg", payload: %{"body" => "hi!"}}
     resp = poll(:get, "/ws/poll", session)
     session = Map.take(resp.body, ["token", "sig"])
     assert resp.body["status"] == 200
@@ -255,7 +256,7 @@ defmodule Phoenix.Integration.ChannelTest do
         "payload" => %{"body" => "this method shouldn't send!'"}
       }
       assert resp.body["status"] == 401
-      refute_receive %Message{event: "new:msg"}
+      refute_receive %Broadcast{event: "new:msg"}
 
 
       ## multiplexed sockets

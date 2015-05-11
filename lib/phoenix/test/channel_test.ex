@@ -96,7 +96,7 @@ defmodule Phoenix.ChannelTest do
 
   The timeout is in miliseconds and defaults to 100ms.
   """
-  defmacro assert_replied(ref, status, payload, timeout \\ 100) do
+  defmacro assert_replied(ref, status, payload \\ Macro.escape(%{}), timeout \\ 100) do
     quote do
       ref = unquote(ref)
       assert_receive %Phoenix.Socket.Reply{status: unquote(status), ref: ^ref,

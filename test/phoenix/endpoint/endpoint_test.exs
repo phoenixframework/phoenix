@@ -75,19 +75,19 @@ defmodule Phoenix.Endpoint.EndpointTest do
     Phoenix.PubSub.subscribe(:endpoint_pub, self, "sometopic")
 
     Endpoint.broadcast_from(:none, "sometopic", "event1", %{key: :val})
-    assert_receive %Phoenix.Socket.Message{
+    assert_receive %Phoenix.Socket.Broadcast{
       event: "event1", payload: %{key: :val}, topic: "sometopic"}
 
     Endpoint.broadcast_from!(:none, "sometopic", "event2", %{key: :val})
-    assert_receive %Phoenix.Socket.Message{
+    assert_receive %Phoenix.Socket.Broadcast{
       event: "event2", payload: %{key: :val}, topic: "sometopic"}
 
     Endpoint.broadcast("sometopic", "event3", %{key: :val})
-    assert_receive %Phoenix.Socket.Message{
+    assert_receive %Phoenix.Socket.Broadcast{
       event: "event3", payload: %{key: :val}, topic: "sometopic"}
 
     Endpoint.broadcast!("sometopic", "event4", %{key: :val})
-    assert_receive %Phoenix.Socket.Message{
+    assert_receive %Phoenix.Socket.Broadcast{
       event: "event4", payload: %{key: :val}, topic: "sometopic"}
   end
 

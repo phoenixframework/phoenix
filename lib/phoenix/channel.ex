@@ -1,5 +1,4 @@
 defmodule Phoenix.Channel do
-
   @moduledoc """
   Defines a Phoenix Channel.
 
@@ -181,6 +180,7 @@ defmodule Phoenix.Channel do
   alias Phoenix.PubSub
   alias Phoenix.Socket
   alias Phoenix.Socket.Message
+  alias Phoenix.Socket.Broadcast
 
   defcallback join(topic :: binary, auth_msg :: map, Socket.t) :: {:ok, Socket.t} |
                                                                   {:ok, reply :: map, Socket.t} |
@@ -288,7 +288,7 @@ defmodule Phoenix.Channel do
     raise_not_joined()
   end
   def broadcast_from(pubsub_server, from, topic, event, message) when is_map(message) do
-    PubSub.broadcast_from pubsub_server, from, topic, %Message{
+    PubSub.broadcast_from pubsub_server, from, topic, %Broadcast{
       topic: topic,
       event: event,
       payload: message
@@ -311,7 +311,7 @@ defmodule Phoenix.Channel do
     raise_not_joined()
   end
   def broadcast_from!(pubsub_server, from, topic, event, message) when is_map(message) do
-    PubSub.broadcast_from! pubsub_server, from, topic, %Message{
+    PubSub.broadcast_from! pubsub_server, from, topic, %Broadcast{
       topic: topic,
       event: event,
       payload: message

@@ -3,7 +3,7 @@ defmodule Phoenix.Channel.Server do
 
   alias Phoenix.PubSub
   alias Phoenix.Socket
-  alias Phoenix.Socket.Message
+  alias Phoenix.Socket.Broadcast
   alias Phoenix.Socket.Reply
 
   # TODO: Document me as the transport API.
@@ -97,7 +97,7 @@ defmodule Phoenix.Channel.Server do
   end
 
   @doc false
-  def handle_info(%Message{} = msg, socket) do
+  def handle_info(%Broadcast{} = msg, socket) do
     msg.event
     |> socket.channel.handle_out(msg.payload, socket)
     |> handle_result(:handle_out)

@@ -1,5 +1,5 @@
 defmodule Phoenix.Transports.JSONSerializer do
-
+  # TODO: Make this public
   @moduledoc false
 
   @behaviour Phoenix.Transports.Serializer

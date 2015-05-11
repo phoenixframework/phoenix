@@ -4,6 +4,7 @@ defmodule Phoenix.Channel.ChannelTest do
   alias Phoenix.PubSub
   alias Phoenix.Channel
   alias Phoenix.Socket
+  alias Phoenix.Socket.Broadcast
   alias Phoenix.Socket.Message
   alias Phoenix.Socket.Reply
   alias Phoenix.Channel.Transport
@@ -262,7 +263,7 @@ defmodule Phoenix.Channel.ChannelTest do
     sockets = HashDict.put(sockets, "topic:1subtopic", sock_pid)
     assert subscribers(:phx_pub, "topic:1subtopic") == [sock_pid]
     # send broadcast that returns {:stop, reason, socket} now that we've joined
-    msg = %Message{event: "everyone_leave", topic: "topic:1subtopic", payload: %{}}
+    msg = %Broadcast{event: "everyone_leave", topic: "topic:1subtopic", payload: %{}}
     Enum.each sockets, fn {_, pid} -> Process.monitor(pid) end
     PubSub.broadcast!(:phx_pub, msg.topic, msg)
     Enum.each sockets, fn {_, pid} ->
@@ -344,7 +345,7 @@ defmodule Phoenix.Channel.ChannelTest do
     {:ok, _socket_pid} =
       Transport.dispatch(message, sockets, self, Router, Endpoint, WebSocket)
 
-    PubSub.broadcast!(:phx_pub, "topic:8subtopic", %Message{event: "some_broadcast",
+    PubSub.broadcast!(:phx_pub, "topic:8subtopic", %Broadcast{event: "some_broadcast",
                                          topic: "topic:8subtopic",
                                          payload: "hello"})
     assert_receive :handle_out

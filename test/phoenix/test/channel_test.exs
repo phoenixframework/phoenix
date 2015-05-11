@@ -38,6 +38,18 @@ defmodule Phoenix.Test.ChannelTest do
     def handle_in("reply", %{}, socket) do
       {:reply, :ok, socket}
     end
+
+    def handle_in("stop", %{"reason" => stop}, socket) do
+      {:stop, stop, socket}
+    end
+
+    def handle_in("stop_and_reply", %{"req" => arg}, socket) do
+      {:stop, :shutdown, {:ok, %{"resp" => arg}}, socket}
+    end
+
+    def handle_in("stop_and_reply", %{}, socket) do
+      {:stop, :shutdown, :ok, socket}
+    end
   end
 
   use Phoenix.ChannelTest
@@ -74,10 +86,31 @@ defmodule Phoenix.Test.ChannelTest do
   test "pushes and receives replies" do
     {:ok, _, pid} = join(Channel, "foo:ok")
 
+    ref = push pid, "reply", %{}
+    assert_replied ref, :ok
+
     ref = push pid, "reply", %{"req" => "foo"}
     assert_replied ref, :ok, %{"resp" => "foo"}
+  end
 
-    ref = push pid, "reply", %{}
-    assert_replied ref, :ok, %{}
+  test "pushes on stop" do
+    Process.flag(:trap_exit, true)
+    {:ok, _, pid} = join(Channel, "foo:ok")
+    push pid, "stop", %{"reason" => :normal}
+    assert_receive {:EXIT, ^pid, :normal}
+  end
+
+  test "pushes and receives replies on stop" do
+    Process.flag(:trap_exit, true)
+
+    {:ok, _, pid} = join(Channel, "foo:ok")
+    ref = push pid, "stop_and_reply", %{}
+    assert_replied ref, :ok
+    assert_receive {:EXIT, ^pid, :shutdown}
+
+    {:ok, _, pid} = join(Channel, "foo:ok")
+    ref = push pid, "stop_and_reply", %{"req" => "foo"}
+    assert_replied ref, :ok, %{"resp" => "foo"}
+    assert_receive {:EXIT, ^pid, :shutdown}
   end
 end
