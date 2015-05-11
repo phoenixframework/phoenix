@@ -1,6 +1,6 @@
 The aim of this first guide is to get a Phoenix application up and running as quickly as possible.
 
-Before we begin, let's take a minute to review the "Dependencies" section of the [Overview Guide](http://www.phoenixframework.org/docs/overview). By installing any necessary external dependencies beforehand, we'll be able to get our application installed and running smoothly. 
+Before we begin, let's take a minute to review the "Dependencies" section of the [Overview Guide](http://www.phoenixframework.org/docs/overview). By installing any necessary external dependencies beforehand, we'll be able to get our application installed and running smoothly.
 
 We will need to install Elixir and Erlang. The Elixir site itself has the latest and most complete [installation information](http://elixir-lang.org/install.html). Currently, Phoenix requires Elixir version 1.0.4 or greater which in turn requires Erlang version 17.5 or greater.
 
@@ -15,7 +15,7 @@ $ mix local.hex
 Now we are ready to fetch the Phoenix installer:
 
 ```console
-$ mix archive.install https://github.com/phoenixframework/phoenix/releases/download/v0.12.0/phoenix_new-0.12.0.ez
+$ mix archive.install https://github.com/phoenixframework/phoenix/releases/download/v0.13.0/phoenix_new-0.13.0.ez
 ```
 
 > Note: if the Phoenix archive can't install, we can download the file directly from our browser, save it to the filesystem, and then run: `mix archive.install /path/to/local/phoenix_new.ez`.
