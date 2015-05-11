@@ -269,6 +269,29 @@ defmodule HelloPhoenix.PageController do
 
 Then we are free to call any of the rendering-style functions in any other actions besides `index` and `show` in `HelloPhoenix.PageController` without generating errors.
 
+If none of the rendering options above quite fits our needs, we can compose our own using some of the functions that Plug gives us. Let's say we want to send a response with a status of "201" and no body whatsoever. We cab easily do that with the `send_resp/3` function.
+
+```elixir
+def index(conn, _params) do
+  conn
+  |> send_resp(201, "")
+end
+```
+
+Reloading [http://localhost:4000](http://localhost:4000) should show us a completely blank page. The network tab of our browser's developer tools should show a response status of "201".
+
+If we would like to be really specific about the content type, we can use `put_resp_content_type/2` in conjunction with `send_resp/3`.
+
+```elixir
+def index(conn, _params) do
+  conn
+  |> put_resp_content_type("text/plain")
+  |> send_resp(201, "")
+end
+```
+
+Using Plug functions in this way, we can craft just the response we need.
+
 Rendering does not end with the template, though. By default, the results of the template render will be inserted into a layout, which will also be rendered.
 
 [Templates and layouts](http://www.phoenixframework.org/docs/templates) have their own guide, so we won't spend much time on them here. What we will look at is how to assign a different layout, or none at all, from inside a controller action.
