@@ -26,9 +26,11 @@ See these [`0.12.x` to `0.13.0` upgrade instructions](https://gist.github.com/ch
   * channel onClose now only triggered on explicit client `leave` or server `:stop`
   * Examples:
 
+      ```javascript
       let socket = new Phoenix.Socket("/ws")
       let chan = socket.chan("rooms:123", {})
       chan.join().receive("ok", ({resp} => ...).receive("error", ({reason}) => ...)
+      ```
 
 
 ## v0.12.0 (2015-04-30)
