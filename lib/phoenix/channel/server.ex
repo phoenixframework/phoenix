@@ -46,8 +46,21 @@ defmodule Phoenix.Channel.Server do
   This event is synchronous as we want to guarantee
   proper termination of the channel.
   """
-  def close(pid) do
+  def close(pid, timeout \\ 5000) do
+    # We need to guarantee that the channel has been closed
+    # otherwise the link in the transport will trigger it to
+    # crash.
+    ref = Process.monitor(pid)
     GenServer.cast(pid, :close)
+    receive do
+      {:DOWN, ^ref, _, _, _} -> :ok
+    after
+      timeout ->
+        Process.exit(pid, :kill)
+        receive do
+          {:DOWN, ^ref, _, _, _} -> :ok
+        end
+    end
   end
 
   ## Channel API

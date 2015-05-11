@@ -116,6 +116,25 @@ defmodule Phoenix.ChannelTest do
   end
 
   @doc """
+  Emulates the client leaving the channel.
+  """
+  def leave(socket) do
+    ref = make_ref()
+    Server.leave(socket.channel_pid, ref)
+    ref
+  end
+
+  @doc """
+  Emulates the client closing the channel.
+
+  Closing channels is synchronous and has a default timeout
+  of 5000 miliseconds.
+  """
+  def close(socket, timeout \\ 5000) do
+    Server.close(socket.channel_pid, timeout)
+  end
+
+  @doc """
   Broadcast event from pid to all subscribers of the socket topic.
 
   The test process will not receive the published message. This triggers
@@ -146,14 +165,14 @@ defmodule Phoenix.ChannelTest do
 
   Notice event and payload are patterns. This means one can write:
 
-      assert_pushed "some_event", %{"data" => _}
+      assert_push "some_event", %{"data" => _}
 
   In the assertion above, we don't particularly care about
   the data being sent, as long as something was sent.
 
   The timeout is in miliseconds and defaults to 100ms.
   """
-  defmacro assert_pushed(event, payload, timeout \\ 100) do
+  defmacro assert_push(event, payload, timeout \\ 100) do
     quote do
       assert_receive %Phoenix.Socket.Message{event: unquote(event),
                                              payload: unquote(payload)}, unquote(timeout)
@@ -167,14 +186,14 @@ defmodule Phoenix.ChannelTest do
   Notice status and payload are patterns. This means one can write:
 
       ref = push channel, "some_event"
-      assert_replied ref, :ok, %{"data" => _}
+      assert_reply ref, :ok, %{"data" => _}
 
   In the assertion above, we don't particularly care about
   the data being sent, as long as something was replied.
 
   The timeout is in miliseconds and defaults to 100ms.
   """
-  defmacro assert_replied(ref, status, payload \\ Macro.escape(%{}), timeout \\ 100) do
+  defmacro assert_reply(ref, status, payload \\ Macro.escape(%{}), timeout \\ 100) do
     quote do
       ref = unquote(ref)
       assert_receive %Phoenix.Socket.Reply{status: unquote(status), ref: ^ref,
