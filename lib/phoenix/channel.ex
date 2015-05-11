@@ -280,6 +280,7 @@ defmodule Phoenix.Channel do
   def broadcast_from(%Socket{} = socket, event, msg) do
     broadcast_from(socket.pubsub_server, socket, event, msg)
   end
+  # TODO: Make private and move public to server
   def broadcast_from(pubsub_server, %Socket{joined: true} = socket, event, message) do
     broadcast_from(pubsub_server, self, socket.topic, event, message)
     :ok

@@ -103,4 +103,28 @@ defmodule Phoenix.ChannelTest do
                                            payload: unquote(payload)}, unquote(timeout)
     end
   end
+
+  @doc """
+  Asserts the channel has broadcast a message within `timeout`.
+
+  Before asserting anything was broadcast, we must first
+  subscribe to the topic of the channel in the test process:
+
+      @endpoint.subscribe(self(), "foo:ok")
+
+  Now we can match on event and payload as patterns:
+
+      assert_broadcast "some_event", %{"data" => _}
+
+  In the assertion above, we don't particularly care about
+  the data being sent, as long as something was sent.
+
+  The timeout is in miliseconds and defaults to 100ms.
+  """
+  defmacro assert_broadcast(event, payload, timeout \\ 100) do
+    quote do
+      assert_receive %Phoenix.Socket.Broadcast{event: unquote(event),
+                                               payload: unquote(payload)}, unquote(timeout)
+    end
+  end
 end

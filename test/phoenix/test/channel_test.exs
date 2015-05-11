@@ -1,8 +1,11 @@
 defmodule Phoenix.Test.ChannelTest do
   use ExUnit.Case
 
+  config = [server: false, pubsub: [name: :phx_pub]]
+  Application.put_env(:phoenix, __MODULE__.Endpoint, config)
+
   defmodule Endpoint do
-    def __pubsub_server__(), do: :phx_pub
+    use Phoenix.Endpoint, otp_app: :phoenix
   end
 
   @endpoint Endpoint
@@ -24,6 +27,11 @@ defmodule Phoenix.Test.ChannelTest do
 
     def join("foo:crash", %{}, _socket) do
       :unknown
+    end
+
+    def handle_in("broadcast", broadcast, socket) do
+      broadcast_from! socket, "broadcast", broadcast
+      {:noreply, socket}
     end
 
     def handle_in("noreply", %{"req" => arg}, socket) do
@@ -54,6 +62,8 @@ defmodule Phoenix.Test.ChannelTest do
 
   use Phoenix.ChannelTest
 
+  ## join
+
   test "join/3 with success" do
     assert {:ok, socket, pid} = join(Channel, "foo:socket")
     assert socket.endpoint == @endpoint
@@ -77,6 +87,8 @@ defmodule Phoenix.Test.ChannelTest do
     assert_receive {:EXIT, _, _}
   end
 
+  ## handle_in
+
   test "pushes and receives pushed messages" do
     {:ok, _, pid} = join(Channel, "foo:ok")
     push pid, "noreply", %{"req" => "foo"}
@@ -98,6 +110,10 @@ defmodule Phoenix.Test.ChannelTest do
     {:ok, _, pid} = join(Channel, "foo:ok")
     push pid, "stop", %{"reason" => :normal}
     assert_receive {:EXIT, ^pid, :normal}
+
+    # Pushing after stop doesn't crash the client/transport
+    Process.flag(:trap_exit, false)
+    push pid, "stop", %{"reason" => :normal}
   end
 
   test "pushes and receives replies on stop" do
@@ -112,5 +128,21 @@ defmodule Phoenix.Test.ChannelTest do
     ref = push pid, "stop_and_reply", %{"req" => "foo"}
     assert_replied ref, :ok, %{"resp" => "foo"}
     assert_receive {:EXIT, ^pid, :shutdown}
+  end
+
+  test "pushes and broadcast messages" do
+    {:ok, _, pid} = join(Channel, "foo:ok")
+    @endpoint.subscribe(self(), "foo:ok")
+    push pid, "broadcast", %{"foo" => "bar"}
+    assert_broadcast "broadcast", %{"foo" => "bar"}
+  end
+
+  ## handle_out
+
+  test "pushes broadcasts by default" do
+    {:ok, _, _} = join(Channel, "foo:ok")
+    @endpoint.subscribe(self(), "foo:ok")
+    @endpoint.broadcast_from(self(), "foo:ok", "default", %{"foo" => "bar"})
+    assert_pushed "default", %{"foo" => "bar"}
   end
 end

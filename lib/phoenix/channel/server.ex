@@ -51,7 +51,7 @@ defmodule Phoenix.Channel.Server do
   proper termination of the channel.
   """
   def close(pid) do
-    GenServer.call(pid, :close)
+    GenServer.cast(pid, :close)
   end
 
   ## Callbacks
@@ -86,6 +86,10 @@ defmodule Phoenix.Channel.Server do
   end
 
   @doc false
+  def handle_cast(:close, socket) do
+    handle_result({:stop, {:shutdown, :closed}, socket}, :handle_in)
+  end
+
   def handle_cast({:leave, ref}, socket) do
     handle_result({:stop, {:shutdown, :left}, :ok, put_in(socket.ref, ref)}, :handle_in)
   end

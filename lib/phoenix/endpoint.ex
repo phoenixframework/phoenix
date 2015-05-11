@@ -177,6 +177,10 @@ defmodule Phoenix.Endpoint do
 
   #### Channels
 
+    * `subscribe(pid, topic, opts)` - proxies to `Phoenix.PubSub.subscribe/4`
+      using this endpoint's configured pubsub server
+    * `unsubscribe(pid, topic)` - proxies to `Phoenix.PubSub.unsubscribe/3`
+      using this endpoint's configured pubsub server
     * `broadcast_from(from, topic, event, msg)` - proxy to `Phoenix.Channel.broadcast_from/4`
       using this endpoint's configured pubsub server
     * `broadcast_from!(from, topic, event, msg)` - proxies to `Phoenix.Channel.broadcast_from!/4`
@@ -234,6 +238,14 @@ defmodule Phoenix.Endpoint do
         end)
 
       def __pubsub_server__, do: @pubsub_server
+
+      def subscribe(pid, topic, opts \\ []) do
+        Phoenix.PubSub.subscribe(@pubsub_server, pid, topic, opts)
+      end
+
+      def unsubscribe(pid, topic) do
+        Phoenix.PubSub.unsubscribe(@pubsub_server, pid, topic)
+      end
 
       def broadcast_from(from, topic, event, msg) do
         Phoenix.Channel.broadcast_from(@pubsub_server, from, topic, event, msg)
