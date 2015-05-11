@@ -20,7 +20,7 @@ defmodule <%= application_module %>.ModelCase do
       alias <%= application_module %>.Repo
       import Ecto.Model
       import Ecto.Query, only: [from: 2]
-      import unquote(__MODULE__)
+      import <%= application_module %>.ModelCase
     end
   end
 
