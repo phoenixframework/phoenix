@@ -23,7 +23,7 @@ defmodule Phoenix.TokenTest do
   end
 
   test "given a junk token it fails" do
-    assert :error == Token.verify_token(conn(), "garbage", "truck")
+    assert {:error, :invalid} == Token.verify_token(conn(), "garbage", "truck")
   end
 
   test "verify it works with a socket as well" do
@@ -33,16 +33,16 @@ defmodule Phoenix.TokenTest do
   end
 
   test "overriding expiration" do
-    token = Token.sign_token(conn(), "id", 1, max_age: 30)
+    token = Token.sign_token(conn(), "id", 1)
     Stream.timer(40) |> Enum.map(fn (_) ->
-      assert :expired == Token.verify_token(conn(), "id", token)
+      assert {:error, :expired} == Token.verify_token(conn(), "id", token, max_age: 30)
     end)
   end
 
   test "nil expiration" do
-    token = Token.sign_token(conn(), "id", 1, max_age: nil)
+    token = Token.sign_token(conn(), "id", 1)
     Stream.timer(40) |> Enum.map(fn (_) ->
-      assert :expired != Token.verify_token(conn(), "id", token)
+      assert {:error, :expired} != Token.verify_token(conn(), "id", token, max_age: nil)
     end)
   end
 

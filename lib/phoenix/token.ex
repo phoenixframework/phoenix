@@ -26,8 +26,8 @@ defmodule Phoenix.Token do
           user_id ->
             socket = assigns(socket, :user, Repo.get!(User, user_id))
             reply socket, "join", %{}
-          :expired -> :ignore
-          :error -> :ignore
+          {:error, :expired} -> :ignore
+          {:error, :invalid} -> :ignore
         end
       end
     end
@@ -59,21 +59,11 @@ defmodule Phoenix.Token do
   Signs your data into a token you can send down to clients
   """
   def sign_token(context, salt,  data, opts \\ []) when is_binary(data) or is_integer(data) or is_map(data) do
-    secret = get_endpoint(context) |> get_secret(salt)
-
-    max_age = if Dict.has_key?(opts, :max_age) do
-      opts[:max_age]
-    end
-
-    if max_age do
-      exp = now_ms() + max_age
-    else
-      exp = nil
-    end
+    secret = get_endpoint(context) |> get_secret(salt, opts)
 
     message = %{
       data: data,
-      exp: exp
+      signed: now_ms()
     } |> :erlang.term_to_binary()
     MessageVerifier.sign(message, secret)
   end
@@ -81,14 +71,19 @@ defmodule Phoenix.Token do
   @doc """
   Decrypts the token into the originaly present data.
   """
-  def verify_token(context, salt, token) do
-    secret = get_endpoint(context) |> get_secret(salt)
+  def verify_token(context, salt, token, opts \\ []) do
+    secret = get_endpoint(context) |> get_secret(salt, opts)
     case MessageVerifier.verify(token, secret) do
-      :error -> :error
+      :error -> {:error, :invalid}
       {:ok, message} ->
-        %{data: data, exp: exp} = :erlang.binary_to_term(message)
-        if exp && exp < now_ms() do
-          :expired
+        %{data: data, signed: signed} = :erlang.binary_to_term(message)
+
+        max_age = if Dict.has_key?(opts, :max_age) do
+          opts[:max_age]
+        end
+
+        if max_age && (signed + max_age) < now_ms() do
+          {:error, :expired}
         else
           data
         end
@@ -99,9 +94,16 @@ defmodule Phoenix.Token do
   defp get_endpoint(%Phoenix.Socket{} = socket), do: socket.endpoint
 
   # Gathers configuration and generates the key secrets and signing secrets.
-  defp get_secret(endpoint, salt) do
+  defp get_secret(endpoint, salt, opts \\ []) do
     secret_key_base = endpoint.config(:secret_key_base)
-    KeyGenerator.generate(secret_key_base, salt)
+    iterations = Keyword.get(opts, :key_iterations, 1000)
+    length = Keyword.get(opts, :key_length, 32)
+    digest = Keyword.get(opts, :key_digest, :sha256)
+    key_opts = [iterations: iterations,
+                length: length,
+                digest: digest,
+                cache: Plug.Keys]
+    KeyGenerator.generate(secret_key_base, salt, key_opts)
   end
 
   defp time_to_ms({mega, sec, micro}),
