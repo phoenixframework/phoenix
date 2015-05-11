@@ -57,6 +57,14 @@ defmodule Phoenix.Token do
 
   @doc """
   Signs your data into a token you can send down to clients
+
+  ## Options
+    * `:key_iterations` - option passed to `Plug.Crypto.KeyGenerator`
+      when generating the encryption and signing keys. Defaults to 1000;
+    * `:key_length` - option passed to `Plug.Crypto.KeyGenerator`
+      when generating the encryption and signing keys. Defaults to 32;
+    * `:key_digest` - option passed to `Plug.Crypto.KeyGenerator`
+      when generating the encryption and signing keys. Defaults to `:sha256';
   """
   def sign_token(context, salt,  data, opts \\ []) when is_binary(data) or is_integer(data) or is_map(data) do
     secret = get_endpoint(context) |> get_secret(salt, opts)
@@ -70,6 +78,14 @@ defmodule Phoenix.Token do
 
   @doc """
   Decrypts the token into the originaly present data.
+
+  ## Options
+    * `:key_iterations` - option passed to `Plug.Crypto.KeyGenerator`
+      when generating the encryption and signing keys. Defaults to 1000;
+    * `:key_length` - option passed to `Plug.Crypto.KeyGenerator`
+      when generating the encryption and signing keys. Defaults to 32;
+    * `:key_digest` - option passed to `Plug.Crypto.KeyGenerator`
+      when generating the encryption and signing keys. Defaults to `:sha256';
   """
   def verify_token(context, salt, token, opts \\ []) do
     secret = get_endpoint(context) |> get_secret(salt, opts)
