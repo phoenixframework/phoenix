@@ -8,6 +8,7 @@ defmodule Phoenix.ChannelTest do
 
   alias Phoenix.Socket
   alias Phoenix.Socket.Message
+  alias Phoenix.Channel.Server
 
   @doc false
   defmacro __using__(_) do
@@ -17,10 +18,49 @@ defmodule Phoenix.ChannelTest do
   end
 
   @doc """
+  Subscribes to the given topic and joins the channel
+  under the given topic and payload.
+
+  By subscribing to the topic, we can use `assert_broadcast/3`
+  to verify a message has been sent through the pubsub layer.
+
+  By joining the channel, we can interact with it directly.
+  The given channel is joined in a separate process which is
+  linked to the test process.
+
+  It returns `{:ok, reply, socket}` or `{:error, reply}`.
+
+  The endpoint is read from the `@endpoint` variable.
+  """
+  defmacro subscribe_and_join(channel, topic, payload \\ Macro.escape(%{})) do
+    quote do
+      subscribe_and_join(@endpoint, unquote(channel), unquote(topic), unquote(payload))
+    end
+  end
+
+  @doc """
+  Subscribes to the given topic and joins the channel powered
+  by the pubsub server in endpoint under the given topic and
+  payload.
+
+  This is useful when you need to join a channel in different
+  enpoints, in practice, `subscribe_and_join/3` is recommended.
+  """
+  def subscribe_and_join(endpoint, channel, topic, payload) do
+    unless endpoint do
+      raise "module attribute @endpoint not set for subscribe_and_join/3"
+    end
+    endpoint.subscribe(self(), topic)
+    join(endpoint, channel, topic, payload)
+  end
+
+  @doc """
   Joins the channel under the given topic and payload.
 
   The given channel is joined in a separate process
   which is linked to the test process.
+
+  It returns `{:ok, reply, socket}` or `{:error, reply}`.
 
   The endpoint is read from the `@endpoint` variable.
   """
@@ -49,7 +89,7 @@ defmodule Phoenix.ChannelTest do
                      channel: channel,
                      transport: __MODULE__}
 
-    case Phoenix.Channel.Server.join(socket, payload) do
+    case Server.join(socket, payload) do
       {:ok, reply, pid} ->
         {:ok, reply, %{socket | channel_pid: pid, joined: true}}
       {:error, _} = error ->
@@ -61,12 +101,43 @@ defmodule Phoenix.ChannelTest do
   Pushes a message into the channel.
 
   The triggers the `handle_in/3` callback in the channel.
+
+  ## Examples
+
+      iex> push socket, "new_message", %{id: 1, content: "hello"}
+      :ok
+
   """
   def push(socket, event, payload \\ %{}) do
     ref = make_ref()
     send(socket.channel_pid,
          %Message{event: event, topic: socket.topic, ref: ref, payload: payload})
     ref
+  end
+
+  @doc """
+  Broadcast event from pid to all subscribers of the socket topic.
+
+  The test process will not receive the published message. This triggers
+  the `handle_out/3` callback in the channel.
+
+  ## Examples
+
+      iex> broadcast_from socket, "new_message", %{id: 1, content: "hello"}
+      :ok
+
+  """
+  def broadcast_from(socket, event, message) do
+    %{pubsub_server: pubsub_server, topic: topic, transport_pid: transport_pid} = socket
+    Server.broadcast_from pubsub_server, transport_pid, topic, event, message
+  end
+
+  @doc """
+  Same as `broadcast_from/3` but raises if broadcast fails.
+  """
+  def broadcast_from!(socket, event, message) do
+    %{pubsub_server: pubsub_server, topic: topic, transport_pid: transport_pid} = socket
+    Server.broadcast_from! pubsub_server, transport_pid, topic, event, message
   end
 
   @doc """
