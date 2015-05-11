@@ -177,14 +177,22 @@ defmodule Phoenix.Endpoint do
 
   #### Channels
 
-    * `broadcast_from(from, topic, event, msg)` - proxy to `Phoenix.Channel.broadcast_from/4`
-      using this endpoint's configured pubsub server
-    * `broadcast_from!(from, topic, event, msg)` - proxies to `Phoenix.Channel.broadcast_from!/4`
-      using this endpoint's configured pubsub server
-    * `broadcast(topic, event, msg)` - proxies to `Phoenix.Channel.broadcast/3`
-      using this endpoint's configured pubsub server
-    * `broadcast!(topic, event, msg)` - proxies to `Phoenix.Channel.broadcast!/3`
-      using this endpoint's configured pubsub server
+    * `subscribe(pid, topic, opts)` - subscribes the pid to the given topic.
+      See `Phoenix.PubSub.subscribe/4` for options.
+
+    * `unsubscribe(pid, topic)` - unsubscribes the pid from the given topic.
+
+    * `broadcast(topic, event, msg)` - broadcasts a `msg` with as `event`
+      in the given `topic`.
+
+    * `broadcast!(topic, event, msg)` - broadcasts a `msg` with as `event`
+      in the given `topic`. Raises in case of failures.
+
+    * `broadcast_from(from, topic, event, msg)` - broadcasts a `msg` from
+      the given `from` as `event` in the given `topic`.
+
+    * `broadcast_from!(from, topic, event, msg)` - broadcasts a `msg` from
+      the given `from` as `event` in the given `topic`. Raises in case of failures.
 
   #### Endpoint configuration
 
@@ -235,20 +243,28 @@ defmodule Phoenix.Endpoint do
 
       def __pubsub_server__, do: @pubsub_server
 
+      def subscribe(pid, topic, opts \\ []) do
+        Phoenix.PubSub.subscribe(@pubsub_server, pid, topic, opts)
+      end
+
+      def unsubscribe(pid, topic) do
+        Phoenix.PubSub.unsubscribe(@pubsub_server, pid, topic)
+      end
+
       def broadcast_from(from, topic, event, msg) do
-        Phoenix.Channel.broadcast_from(@pubsub_server, from, topic, event, msg)
+        Phoenix.Channel.Server.broadcast_from(@pubsub_server, from, topic, event, msg)
       end
 
       def broadcast_from!(from, topic, event, msg) do
-        Phoenix.Channel.broadcast_from!(@pubsub_server, from, topic, event, msg)
+        Phoenix.Channel.Server.broadcast_from!(@pubsub_server, from, topic, event, msg)
       end
 
       def broadcast(topic, event, msg) do
-        Phoenix.Channel.broadcast(@pubsub_server, topic, event, msg)
+        Phoenix.Channel.Server.broadcast(@pubsub_server, topic, event, msg)
       end
 
       def broadcast!(topic, event, msg) do
-        Phoenix.Channel.broadcast!(@pubsub_server, topic, event, msg)
+        Phoenix.Channel.Server.broadcast!(@pubsub_server, topic, event, msg)
       end
     end
   end

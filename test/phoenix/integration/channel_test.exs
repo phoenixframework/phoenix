@@ -8,6 +8,7 @@ defmodule Phoenix.Integration.ChannelTest do
   alias Phoenix.Integration.WebsocketClient
   alias Phoenix.Integration.HTTPClient
   alias Phoenix.Socket.Message
+  alias Phoenix.Socket.Broadcast
   alias __MODULE__.Endpoint
 
   @port 5807
@@ -149,7 +150,7 @@ defmodule Phoenix.Integration.ChannelTest do
     {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
 
     WebsocketClient.send_event(sock, "rooms:lobby", "new:msg", %{body: "hi!"})
-    refute_receive {:socket_push, %Message{}}
+    refute_receive %Message{}
   end
 
   test "websocket refuses unallowed origins" do
@@ -240,7 +241,7 @@ defmodule Phoenix.Integration.ChannelTest do
       "payload" => %{"body" => "hi!"}
     }
     assert resp.body["status"] == 200
-    assert_receive {:socket_broadcast, %Message{event: "new:msg", payload: %{"body" => "hi!"}}}
+    assert_receive %Broadcast{event: "new:msg", payload: %{"body" => "hi!"}}
     resp = poll(:get, "/ws/poll", session)
     session = Map.take(resp.body, ["token", "sig"])
     assert resp.body["status"] == 200
@@ -255,7 +256,7 @@ defmodule Phoenix.Integration.ChannelTest do
         "payload" => %{"body" => "this method shouldn't send!'"}
       }
       assert resp.body["status"] == 401
-      refute_receive {:socket_broadcast, %Message{event: "new:msg"}}
+      refute_receive %Broadcast{event: "new:msg"}
 
 
       ## multiplexed sockets
@@ -308,7 +309,7 @@ defmodule Phoenix.Integration.ChannelTest do
         "payload" => %{"body" => "hi!"}
       }
       assert resp.body["status"] == 410
-      refute_receive {:socket_push, %Message{event: "new:msg", payload: %{"body" => "hi!"}}}
+      refute_receive %Message{event: "new:msg", payload: %{"body" => "hi!"}}
 
       # 410 from crashed/terminated longpoller server when publishing
       # create new session
@@ -394,7 +395,7 @@ defmodule Phoenix.Integration.ChannelTest do
       %{"event" => "phx_reply", "payload" => %{"ref" => "1", "response" => %{}, "status" => "ok"}, "ref" => nil, "topic" => "rooms:lobby"},
       %{"event" => "joined", "payload" => %{"status" => "connected"}, "ref" => nil, "topic" => "rooms:lobby"},
       %{"event" => "user:entered", "payload" => %{"user" => nil}, "ref" => nil, "topic" => "rooms:lobby"},
-      %{"event" => "phx_reply", "payload" => %{"ref" => "2", "response" => %{}, "status" => "ok"}, "ref" => nil, "topic" => "rooms:lobby"},
+      %{"event" => "phx_reply", "payload" => %{"ref" => "2", "response" => %{}, "status" => "ok"}, "ref" => "2", "topic" => "rooms:lobby"},
       %{"event" => "you:left", "payload" => %{"message" => "bye!"}, "ref" => nil, "topic" => "rooms:lobby"},
       %{"event" => "phx_close", "payload" => %{}, "ref" => nil, "topic" => "rooms:lobby"}
     ]

@@ -35,7 +35,6 @@ defmodule Phoenix.Tranports.LongPollerTest do
     :ok
   end
 
-
   test "start_session starts the LongPoller.Server and stores pid in session" do
     conn = conn_with_sess
     assert LongPoller.verify_longpoll_topic(conn) == :notopic

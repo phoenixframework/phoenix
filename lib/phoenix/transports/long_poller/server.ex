@@ -22,6 +22,8 @@ defmodule Phoenix.Transports.LongPoller.Server do
   alias Phoenix.Channel.Transport
   alias Phoenix.Transports.LongPoller
   alias Phoenix.PubSub
+  alias Phoenix.Socket.Message
+  alias Phoenix.Socket.Reply
 
   @doc """
   Starts the Server.
@@ -81,17 +83,25 @@ defmodule Phoenix.Transports.LongPoller.Server do
       {:error, reason} ->
         :ok = broadcast_from(state, {:error, :dispatch, reason, ref})
         {:noreply, state}
-      :ignore ->
-        :ok = broadcast_from(state, {:error, :dispatch, :ignore, ref})
-        {:noreply, state}
     end
   end
 
   @doc """
   Forwards replied/broadcasted message from Channels back to client.
   """
-  def handle_info({:socket_push, msg}, state) do
+  def handle_info(%Message{} = msg, state) do
     publish_reply(msg, state)
+  end
+
+  def handle_info(%Reply{} = reply, state) do
+    %{topic: topic, status: status, payload: payload, ref: ref} = reply
+
+    # TODO: Don't duplicate the reference. The client
+    # should retrieve the reference from the message.
+    message = %Message{event: "phx_reply", topic: topic, ref: ref,
+                       payload: %{status: status, ref: ref, response: payload}}
+
+    publish_reply(message, state)
   end
 
   @doc """

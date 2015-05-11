@@ -24,7 +24,7 @@ defmodule Phoenix.Channel.Transport do
       HashDict of a string topics to Pid matches, and Pid to String topic matches.
       The HashDict of topic => pids is dispatched through the transport layer's
       `Phoenix.Transport.dispatch/6`.
-    * Handle receiving outgoing `{:socket_push, %Phoenix.Socket.Message{}}` as
+    * Handle receiving outgoing `%Phoenix.Socket.Message{}` and `%Phoenix.Socket.Reply{}` as
       Elixir process messages, then encoding and fowarding to remote client.
     * Trap exits and handle receiving `{:EXIT, socket_pid, reason}` messages
       and delete the entries from the kept HashDict of socket processes.
@@ -85,7 +85,7 @@ defmodule Phoenix.Channel.Transport do
   The server will respond to heartbeats with the same message
   """
   def dispatch(_, %{topic: "phoenix", event: "heartbeat"}, transport_pid, _router, _pubsub_server, _transport) do
-    send transport_pid, {:socket_push, %Message{topic: "phoenix", event: "heartbeat", payload: %{}}}
+    send transport_pid, %Message{topic: "phoenix", event: "heartbeat", payload: %{}}
   end
   def dispatch(nil, %{event: "phx_join"} = msg, transport_pid, router, endpoint, transport) do
     case router.channel_for_topic(msg.topic, transport) do
@@ -95,28 +95,38 @@ defmodule Phoenix.Channel.Transport do
                   endpoint: endpoint,
                   pubsub_server: endpoint.__pubsub_server__(),
                   topic: msg.topic,
-                  ref: msg.ref,
                   channel: channel,
                   transport: transport}
 
-        Phoenix.Channel.Server.start_link(socket, msg.payload)
+        case Phoenix.Channel.Server.join(socket, msg.payload) do
+          {:ok, reply, pid} ->
+            push(socket, "phx_reply", %{ref: msg.ref, status: "ok", response: reply})
+            {:ok, pid}
+          {:error, reply} ->
+            push(socket, "phx_reply", %{ref: msg.ref, status: "error", response: reply})
+            {:error, reply}
+        end
     end
   end
   def dispatch(nil, msg, _transport_pid, router, _pubsub_server, _transport) do
     log_ignore(msg.topic, router)
-    :ignore
   end
   def dispatch(socket_pid, %{event: "phx_leave", ref: ref}, _transport_pid, _router, _pubsub_server, _transport) do
     Phoenix.Channel.Server.leave(socket_pid, ref)
     :ok
   end
   def dispatch(socket_pid, msg, _transport_pid, _router, _pubsub_server, _transport) do
-    Phoenix.Channel.Server.handle_in(socket_pid, msg.event, msg.payload, msg.ref)
+    send(socket_pid, msg)
     :ok
   end
+
+  defp push(socket, event, message) do
+    Phoenix.Channel.Server.push socket.transport_pid, socket.topic, event, message
+  end
+
   defp log_ignore(topic, router) do
     Logger.debug fn -> "Ignoring unmatched topic \"#{topic}\" in #{inspect(router)}" end
-    :ignore
+    {:error, %{reason: "unmatched topic"}}
   end
 
   @doc """
