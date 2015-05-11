@@ -179,7 +179,6 @@ defmodule Phoenix.Channel do
 
   use Behaviour
   alias Phoenix.Socket
-  alias Phoenix.Socket.Message
   alias Phoenix.Channel.Server
 
   @type reply :: status :: atom | {status :: atom, response :: map}
@@ -238,15 +237,17 @@ defmodule Phoenix.Channel do
       :ok
 
   """
-  def broadcast(socket, event, msg) do
-    broadcast_from(socket, :none, event, msg)
+  def broadcast(socket, event, message) do
+    %{pubsub_server: pubsub_server, topic: topic} = assert_joined!(socket)
+    Server.broadcast pubsub_server, topic, event, message
   end
 
   @doc """
   Same as `broadcast/3` but raises if broadcast fails.
   """
-  def broadcast!(socket, event, msg) do
-    broadcast_from!(socket, :none, event, msg)
+  def broadcast!(socket, event, message) do
+    %{pubsub_server: pubsub_server, topic: topic} = assert_joined!(socket)
+    Server.broadcast! pubsub_server, topic, event, message
   end
 
   @doc """
@@ -261,31 +262,17 @@ defmodule Phoenix.Channel do
       :ok
 
   """
-  def broadcast_from(socket, event, msg) do
-    broadcast_from(socket, socket.channel_pid, event, msg)
-  end
-
-  defp broadcast_from(%Socket{joined: true} = socket, from, event, message) do
-    %{pubsub_server: pubsub_server, topic: topic} = socket
-    Server.broadcast_from pubsub_server, from, topic, event, message
-  end
-  defp broadcast_from(%Socket{joined: false}, _from, _event, _message) do
-    raise_not_joined()
+  def broadcast_from(socket, event, message) do
+    %{pubsub_server: pubsub_server, topic: topic, channel_pid: channel_pid} = assert_joined!(socket)
+    Server.broadcast_from pubsub_server, channel_pid, topic, event, message
   end
 
   @doc """
   Same as `broadcast_from/3` but raises if broadcast fails.
   """
-  def broadcast_from!(socket, event, msg) do
-    broadcast_from!(socket, socket.channel_pid, event, msg)
-  end
-
-  defp broadcast_from!(%Socket{joined: true} = socket, from, event, message) do
-    %{pubsub_server: pubsub_server, topic: topic} = socket
-    Server.broadcast_from! pubsub_server, from, topic, event, message
-  end
-  defp broadcast_from!(%Socket{joined: false}, _from, _event, _message) do
-    raise_not_joined()
+  def broadcast_from!(socket, event, message) do
+    %{pubsub_server: pubsub_server, topic: topic, channel_pid: channel_pid} = assert_joined!(socket)
+    Server.broadcast_from! pubsub_server, channel_pid, topic, event, message
   end
 
   @doc """
@@ -299,25 +286,16 @@ defmodule Phoenix.Channel do
       :ok
 
   """
-  def push(%Socket{joined: true} = socket, event, message)
-      when is_binary(event) and is_map(message) do
-    send socket.transport_pid, %Message{
-      topic: socket.topic,
-      event: event,
-      payload: message
-    }
-    :ok
-  end
-  def push(%Socket{joined: false}, _event, _message) do
-    raise_not_joined()
-  end
-  def push(_, _, _), do: raise_invalid_message()
-
-  defp raise_invalid_message do
-    raise ArgumentError, "event must be a string, message must be a map"
+  def push(socket, event, message) do
+    %{transport_pid: transport_pid, topic: topic} = assert_joined!(socket)
+    Server.push(transport_pid, topic, event, message)
   end
 
-  defp raise_not_joined do
+  defp assert_joined!(%Socket{joined: true} = socket) do
+    socket
+  end
+
+  defp assert_joined!(%Socket{joined: false}) do
     raise """
     `push` and `broadcast` can only be called after the socket has finished joining.
     To push a message on join, send to self and handle in handle_info/2, ie:

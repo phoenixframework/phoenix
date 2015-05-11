@@ -4,6 +4,7 @@ defmodule Phoenix.Channel.Server do
   alias Phoenix.PubSub
   alias Phoenix.Socket
   alias Phoenix.Socket.Broadcast
+  alias Phoenix.Socket.Message
   alias Phoenix.Socket.Reply
 
   # TODO: Document me as the transport API.
@@ -14,7 +15,7 @@ defmodule Phoenix.Channel.Server do
   @doc """
   Joins the channel in socket with authentication payload.
   """
-  @spec join(Phoenix.Socket.t, map) :: {:ok, map, pid} | {:error, map}
+  @spec join(Socket.t, map) :: {:ok, map, pid} | {:error, map}
   def join(socket, auth_payload) do
     ref = make_ref()
 
@@ -26,13 +27,6 @@ defmodule Phoenix.Channel.Server do
       {:error, _} ->
         {:error, %{reason: "join crashed"}}
     end
-  end
-
-  @doc """
-  Pushes a message from client to the channel.
-  """
-  def push(pid, event, ref, payload) do
-    GenServer.cast(pid, {:push, event, ref, payload})
   end
 
   @doc """
@@ -60,36 +54,85 @@ defmodule Phoenix.Channel.Server do
 
   @doc """
   Broadcasts on the given pubsub server with the given
-  `from`, `topic`, `event` and `message`.
+  `topic`, `event` and `payload`.
+
+  The message is encoded as `Phoenix.Socket.Broadcast`.
   """
-  def broadcast_from(pubsub_server, from, topic, event, message)
-      when is_binary(topic) and is_binary(event) and is_map(message) do
+  def broadcast(pubsub_server, topic, event, payload)
+      when is_binary(topic) and is_binary(event) and is_map(payload) do
+    PubSub.broadcast pubsub_server, topic, %Broadcast{
+      topic: topic,
+      event: event,
+      payload: payload
+    }
+  end
+  def broadcast(_, _, _, _, _), do: raise_invalid_message
+
+  @doc """
+  Broadcasts on the given pubsub server with the given
+  `topic`, `event` and `payload`.
+
+  Raises in case of crashes.
+  """
+  def broadcast!(pubsub_server, topic, event, payload)
+      when is_binary(topic) and is_binary(event) and is_map(payload) do
+    PubSub.broadcast! pubsub_server, topic, %Broadcast{
+      topic: topic,
+      event: event,
+      payload: payload
+    }
+  end
+  def broadcast!(_, _, _, _), do: raise_invalid_message
+
+  @doc """
+  Broadcasts on the given pubsub server with the given
+  `from`, `topic`, `event` and `payload`.
+
+  The message is encoded as `Phoenix.Socket.Broadcast`.
+  """
+  def broadcast_from(pubsub_server, from, topic, event, payload)
+      when is_binary(topic) and is_binary(event) and is_map(payload) do
     PubSub.broadcast_from pubsub_server, from, topic, %Broadcast{
       topic: topic,
       event: event,
-      payload: message
+      payload: payload
     }
   end
   def broadcast_from(_, _, _, _, _), do: raise_invalid_message
 
   @doc """
   Broadcasts on the given pubsub server with the given
-  `from`, `topic`, `event` and `message`.
+  `from`, `topic`, `event` and `payload`.
 
   Raises in case of crashes.
   """
-  def broadcast_from!(pubsub_server, from, topic, event, message)
-      when is_binary(topic) and is_binary(event) and is_map(message) do
+  def broadcast_from!(pubsub_server, from, topic, event, payload)
+      when is_binary(topic) and is_binary(event) and is_map(payload) do
     PubSub.broadcast_from! pubsub_server, from, topic, %Broadcast{
       topic: topic,
       event: event,
-      payload: message
+      payload: payload
     }
   end
   def broadcast_from!(_, _, _, _, _), do: raise_invalid_message
 
+  @doc """
+  Pushes a message with the given topic, event and payload
+  to the given process.
+  """
+  def push(pid, topic, event, payload)
+      when is_binary(topic) and is_binary(event) and is_map(payload) do
+    send pid, %Message{
+      topic: topic,
+      event: event,
+      payload: payload
+    }
+    :ok
+  end
+  def push(_, _, _, _), do: raise_invalid_message
+
   defp raise_invalid_message do
-    raise ArgumentError, "event must be a string, message must be a map"
+    raise ArgumentError, "topic and event must be strings, message must be a map"
   end
 
   ## Callbacks
@@ -134,16 +177,18 @@ defmodule Phoenix.Channel.Server do
     handle_result({:stop, {:shutdown, :left}, :ok, put_in(socket.ref, ref)}, :handle_in)
   end
 
-  def handle_cast({:push, event, ref, payload}, socket) do
+  @doc false
+  def handle_info(%Message{topic: topic, event: event, payload: payload, ref: ref},
+                  %{topic: topic} = socket) do
     event
     |> socket.channel.handle_in(payload, put_in(socket.ref, ref))
     |> handle_result(:handle_in)
   end
 
-  @doc false
-  def handle_info(%Broadcast{} = msg, socket) do
-    msg.event
-    |> socket.channel.handle_out(msg.payload, socket)
+  def handle_info(%Broadcast{topic: topic, event: event, payload: payload},
+                  %{topic: topic} = socket) do
+    event
+    |> socket.channel.handle_out(payload, socket)
     |> handle_result(:handle_out)
   end
 

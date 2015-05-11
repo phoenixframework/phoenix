@@ -1,6 +1,7 @@
 defmodule Phoenix.Socket do
   @moduledoc """
-  Holds state for every channel pointing to its transport.
+  Holds state for every channel, pointing to its transport,
+  pubsub server and more.
 
   ## Socket Fields
 
@@ -31,7 +32,7 @@ defmodule Phoenix.Socket do
                      endpoint: atom,
                      joined: boolean,
                      pubsub_server: atom,
-                     ref: String.t,
+                     ref: term,
                      topic: String.t,
                      transport: atom,
                      transport_pid: pid}
@@ -61,8 +62,6 @@ defmodule Phoenix.Socket.Message do
 
   """
 
-  alias Phoenix.Socket.Message
-
   defstruct topic: nil, event: nil, payload: nil, ref: nil
 
   @doc """
@@ -72,7 +71,7 @@ defmodule Phoenix.Socket.Message do
   """
   def from_map!(map) when is_map(map) do
     try do
-      %Message{
+      %Phoenix.Socket.Message{
         topic: Map.fetch!(map, "topic"),
         event: Map.fetch!(map, "event"),
         payload: Map.fetch!(map, "payload"),

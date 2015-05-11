@@ -148,7 +148,7 @@ defmodule Phoenix.PubSub do
   Broadcasts message to all but `from_pid` on given topic.
   """
   @spec broadcast_from(atom, pid, binary, term) :: :ok | {:error, term}
-  def broadcast_from(server, from_pid, topic, message),
+  def broadcast_from(server, from_pid, topic, message) when is_pid(from_pid),
     do: call(server, {:broadcast, from_pid, topic, message})
 
   @doc """
@@ -157,7 +157,7 @@ defmodule Phoenix.PubSub do
   Raises `Phoenix.PubSub.BroadcastError` if broadcast fails.
   """
   @spec broadcast_from(atom, pid, binary, term) :: :ok | no_return
-  def broadcast_from!(server, from_pid, topic, message) do
+  def broadcast_from!(server, from_pid, topic, message) when is_pid(from_pid) do
     case broadcast_from(server, from_pid, topic, message) do
       :ok -> :ok
       {:error, reason} -> raise BroadcastError, message: reason

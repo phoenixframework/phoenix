@@ -260,11 +260,11 @@ defmodule Phoenix.Endpoint do
       end
 
       def broadcast(topic, event, msg) do
-        Phoenix.Channel.Server.broadcast_from(@pubsub_server, :none, topic, event, msg)
+        Phoenix.Channel.Server.broadcast(@pubsub_server, topic, event, msg)
       end
 
       def broadcast!(topic, event, msg) do
-        Phoenix.Channel.Server.broadcast_from!(@pubsub_server, :none, topic, event, msg)
+        Phoenix.Channel.Server.broadcast!(@pubsub_server, topic, event, msg)
       end
     end
   end

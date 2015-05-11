@@ -70,17 +70,17 @@ defmodule Phoenix.Test.ChannelTest do
   ## join
 
   test "join/3 with success" do
-    assert {:ok, socket, pid} = join(Channel, "foo:socket")
+    assert {:ok, socket, client} = join(Channel, "foo:socket")
     assert socket.channel == Channel
-    assert socket.channel_pid == pid
     assert socket.endpoint == @endpoint
     assert socket.pubsub_server == Phoenix.Test.ChannelTest.PubSub
     assert socket.topic == "foo:socket"
     assert socket.transport == Phoenix.ChannelTest
     assert socket.transport_pid == self()
+    assert %{socket | joined: true} == client
 
     {:links, links} = Process.info(self(), :links)
-    assert pid in links
+    assert client.channel_pid in links
   end
 
   test "join/3 with error reply" do
@@ -97,50 +97,53 @@ defmodule Phoenix.Test.ChannelTest do
   ## handle_in
 
   test "pushes and receives pushed messages" do
-    {:ok, _, pid} = join(Channel, "foo:ok")
-    push pid, "noreply", %{"req" => "foo"}
+    {:ok, _, socket} = join(Channel, "foo:ok")
+    push socket, "noreply", %{"req" => "foo"}
     assert_pushed "noreply", %{"resp" => "foo"}
   end
 
   test "pushes and receives replies" do
-    {:ok, _, pid} = join(Channel, "foo:ok")
+    {:ok, _, socket} = join(Channel, "foo:ok")
 
-    ref = push pid, "reply", %{}
+    ref = push socket, "reply", %{}
     assert_replied ref, :ok
 
-    ref = push pid, "reply", %{"req" => "foo"}
+    ref = push socket, "reply", %{"req" => "foo"}
     assert_replied ref, :ok, %{"resp" => "foo"}
   end
 
   test "pushes on stop" do
     Process.flag(:trap_exit, true)
-    {:ok, _, pid} = join(Channel, "foo:ok")
-    push pid, "stop", %{"reason" => :normal}
+    {:ok, _, socket} = join(Channel, "foo:ok")
+    push socket, "stop", %{"reason" => :normal}
+    pid = socket.channel_pid
     assert_receive {:EXIT, ^pid, :normal}
 
     # Pushing after stop doesn't crash the client/transport
     Process.flag(:trap_exit, false)
-    push pid, "stop", %{"reason" => :normal}
+    push socket, "stop", %{"reason" => :normal}
   end
 
   test "pushes and receives replies on stop" do
     Process.flag(:trap_exit, true)
 
-    {:ok, _, pid} = join(Channel, "foo:ok")
-    ref = push pid, "stop_and_reply", %{}
+    {:ok, _, socket} = join(Channel, "foo:ok")
+    ref = push socket, "stop_and_reply", %{}
     assert_replied ref, :ok
+    pid = socket.channel_pid
     assert_receive {:EXIT, ^pid, :shutdown}
 
-    {:ok, _, pid} = join(Channel, "foo:ok")
-    ref = push pid, "stop_and_reply", %{"req" => "foo"}
+    {:ok, _, socket} = join(Channel, "foo:ok")
+    ref = push socket, "stop_and_reply", %{"req" => "foo"}
     assert_replied ref, :ok, %{"resp" => "foo"}
+    pid = socket.channel_pid
     assert_receive {:EXIT, ^pid, :shutdown}
   end
 
   test "pushes and broadcast messages" do
-    {:ok, _, pid} = join(Channel, "foo:ok")
+    {:ok, _, socket} = join(Channel, "foo:ok")
     @endpoint.subscribe(self(), "foo:ok")
-    push pid, "broadcast", %{"foo" => "bar"}
+    push socket, "broadcast", %{"foo" => "bar"}
     assert_broadcast "broadcast", %{"foo" => "bar"}
   end
 

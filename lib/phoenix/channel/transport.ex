@@ -116,16 +116,12 @@ defmodule Phoenix.Channel.Transport do
     :ok
   end
   def dispatch(socket_pid, msg, _transport_pid, _router, _pubsub_server, _transport) do
-    Phoenix.Channel.Server.push(socket_pid, msg.event, msg.ref, msg.payload)
+    send(socket_pid, msg)
     :ok
   end
 
   defp push(socket, event, message) do
-    send socket.transport_pid, %Phoenix.Socket.Message{
-      topic: socket.topic,
-      event: event,
-      payload: message
-    }
+    Phoenix.Channel.Server.push socket.transport_pid, socket.topic, event, message
   end
 
   defp log_ignore(topic, router) do

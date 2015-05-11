@@ -7,6 +7,7 @@ defmodule Phoenix.ChannelTest do
   """
 
   alias Phoenix.Socket
+  alias Phoenix.Socket.Message
 
   @doc false
   defmacro __using__(_) do
@@ -45,10 +46,15 @@ defmodule Phoenix.ChannelTest do
                      endpoint: endpoint,
                      pubsub_server: endpoint.__pubsub_server__(),
                      topic: topic,
-                     ref: make_ref(),
                      channel: channel,
                      transport: __MODULE__}
-    Phoenix.Channel.Server.join(socket, payload)
+
+    case Phoenix.Channel.Server.join(socket, payload) do
+      {:ok, reply, pid} ->
+        {:ok, reply, %{socket | channel_pid: pid, joined: true}}
+      {:error, _} = error ->
+        error
+    end
   end
 
   @doc """
@@ -56,9 +62,10 @@ defmodule Phoenix.ChannelTest do
 
   The triggers the `handle_in/3` callback in the channel.
   """
-  def push(pid, event, payload \\ %{}) do
+  def push(socket, event, payload \\ %{}) do
     ref = make_ref()
-    Phoenix.Channel.Server.push(pid, event, ref, payload)
+    send(socket.channel_pid,
+         %Message{event: event, topic: socket.topic, ref: ref, payload: payload})
     ref
   end
 
