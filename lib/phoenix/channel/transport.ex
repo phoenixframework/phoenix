@@ -95,16 +95,15 @@ defmodule Phoenix.Channel.Transport do
                   endpoint: endpoint,
                   pubsub_server: endpoint.__pubsub_server__(),
                   topic: msg.topic,
-                  ref: msg.ref,
                   channel: channel,
                   transport: transport}
 
         case Phoenix.Channel.Server.join(socket, msg.payload) do
           {:ok, reply, pid} ->
-            push(socket, "phx_reply", %{ref: socket.ref, status: "ok", response: reply})
+            push(socket, "phx_reply", %{ref: msg.ref, status: "ok", response: reply})
             {:ok, pid}
           {:error, reply} ->
-            push(socket, "phx_reply", %{ref: socket.ref, status: "error", response: reply})
+            push(socket, "phx_reply", %{ref: msg.ref, status: "error", response: reply})
             {:error, reply}
         end
     end

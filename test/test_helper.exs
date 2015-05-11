@@ -12,7 +12,6 @@ defmodule Phoenix.ErrorView do
 end
 
 # Start transport levels
-{:ok, _pid} = Phoenix.PubSub.PG2.start_link(:phx_pub, [])
 Process.flag(:trap_exit, true)
 
 options = case :redo.start_link(:undefined) do

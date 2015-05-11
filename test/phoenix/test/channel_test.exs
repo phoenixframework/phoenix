@@ -1,14 +1,13 @@
 defmodule Phoenix.Test.ChannelTest do
   use ExUnit.Case
 
-  config = [server: false, pubsub: [name: :phx_pub]]
+  config = [pubsub: [adapter: Phoenix.PubSub.PG2,
+                     name: Phoenix.Test.ChannelTest.PubSub], server: false]
   Application.put_env(:phoenix, __MODULE__.Endpoint, config)
 
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
   end
-
-  @endpoint Endpoint
 
   defmodule Channel do
     use Phoenix.Channel
@@ -60,14 +59,22 @@ defmodule Phoenix.Test.ChannelTest do
     end
   end
 
+  @endpoint Endpoint
   use Phoenix.ChannelTest
+
+  setup_all do
+    @endpoint.start_link()
+    :ok
+  end
 
   ## join
 
   test "join/3 with success" do
     assert {:ok, socket, pid} = join(Channel, "foo:socket")
+    assert socket.channel == Channel
+    assert socket.channel_pid == pid
     assert socket.endpoint == @endpoint
-    assert socket.pubsub_server == :phx_pub
+    assert socket.pubsub_server == Phoenix.Test.ChannelTest.PubSub
     assert socket.topic == "foo:socket"
     assert socket.transport == Phoenix.ChannelTest
     assert socket.transport_pid == self()

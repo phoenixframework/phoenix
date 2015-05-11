@@ -6,6 +6,7 @@ defmodule Phoenix.Socket do
 
   * `assigns` - The map of socket assigns, default: `%{}`
   * `channel` - The channel module where this socket originated
+  * `channel_pid` - The channel pid
   * `endpoint` - The endpoint module where this socket originated
   * `joined` - If the socket has effectively joined the channel
   * `pubsub_server` - The registered name of the socket's PubSub server
@@ -26,6 +27,7 @@ defmodule Phoenix.Socket do
 
   @type t :: %Socket{assigns: %{},
                      channel: atom,
+                     channel_pid: pid,
                      endpoint: atom,
                      joined: boolean,
                      pubsub_server: atom,
@@ -36,6 +38,7 @@ defmodule Phoenix.Socket do
 
   defstruct assigns: %{},
             channel: nil,
+            channel_pid: nil,
             endpoint: nil,
             joined: false,
             pubsub_server: nil,

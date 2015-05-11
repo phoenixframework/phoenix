@@ -117,7 +117,7 @@ defmodule Phoenix.Channel do
       # for every socket subscribing to this topic, append an `is_editable`
       # value for client metadata.
       def handle_out("new_msg", msg, socket) do
-        push socket, "new_msg", Dict.merge(msg,
+        push socket, "new_msg", Map.merge(msg,
           is_editable: User.can_edit_message?(socket.assigns[:user], msg)
         )
         {:noreply, socket}
@@ -146,8 +146,9 @@ defmodule Phoenix.Channel do
 
       # within channel
       def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
-        broadcast! socket, "new_msg", %{uid: uid, body: body}
-        MyApp.Endpoint.broadcast! "rooms:superadmin", "new_msg", %{uid: uid, body: body}
+        ...
+        broadcast_from! socket, "new_msg", %{uid: uid, body: body}
+        MyApp.Endpoint.broadcast_from! self(), "rooms:superadmin", "new_msg", %{uid: uid, body: body}
         {:noreply, socket}
       end
 
@@ -177,40 +178,41 @@ defmodule Phoenix.Channel do
   """
 
   use Behaviour
-  alias Phoenix.PubSub
   alias Phoenix.Socket
   alias Phoenix.Socket.Message
-  alias Phoenix.Socket.Broadcast
+  alias Phoenix.Channel.Server
 
-  defcallback join(topic :: binary, auth_msg :: map, Socket.t) :: {:ok, Socket.t} |
-                                                                  {:ok, reply :: map, Socket.t} |
-                                                                  {:error, reply :: map}
+  @type reply :: status :: atom | {status :: atom, response :: map}
 
-  defcallback terminate(msg :: map, Socket.t) :: :ok | {:error, reason :: term}
+  defcallback join(topic :: binary, auth_msg :: map, Socket.t) ::
+              {:ok, Socket.t} |
+              {:ok, map, Socket.t} |
+              {:error, map}
 
-  defcallback handle_in(event :: String.t, msg :: map, Socket.t) :: {:noreply, Socket.t} |
-                                                                    {:reply, {status :: atom, response :: map}, Socket.t} |
-                                                                    {:reply, status :: atom, Socket.t} |
-                                                                    {:stop, reason :: term, Socket.t} |
-                                                                    {:stop, reason :: term, reply :: {status :: atom, response :: map}, Socket.t} |
-                                                                    {:stop, reason :: term, reply :: status :: atom, Socket.t}
+  defcallback handle_in(event :: String.t, msg :: map, Socket.t) ::
+              {:noreply, Socket.t} |
+              {:reply, reply, Socket.t} |
+              {:stop, reason :: term, Socket.t} |
+              {:stop, reason :: term, reply, Socket.t}
 
-  defcallback handle_out(event :: String.t, msg :: map, Socket.t) :: {:noreply, Socket.t} |
-                                                                     {:error, reason :: term, Socket.t} |
-                                                                     {:stop, reason :: term, Socket.t}
+  defcallback handle_out(event :: String.t, msg :: map, Socket.t) ::
+              {:noreply, Socket.t} |
+              {:stop, reason :: term, Socket.t}
 
-  defcallback handle_info(msg :: map, Socket.t) :: {:noreply, Socket.t} |
-                                                   {:error, reason :: term, Socket.t} |
-                                                   {:stop, reason :: term, Socket.t}
+  defcallback handle_info(term, Socket.t) ::
+              {:noreply, Socket.t} |
+              {:stop, reason :: term, Socket.t}
+
+  defcallback terminate(msg :: map, Socket.t) :: term
 
   defmacro __using__(_) do
     quote do
       @behaviour unquote(__MODULE__)
       import unquote(__MODULE__)
 
-      def terminate(_reason, _socket), do: :ok
-
-      def handle_in(_event, _message, socket), do: {:noreply, socket}
+      def handle_in(_event, _message, socket) do
+        {:noreply, socket}
+      end
 
       def handle_out(event, message, socket) do
         push(socket, event, message)
@@ -219,111 +221,86 @@ defmodule Phoenix.Channel do
 
       def handle_info(_message, socket), do: {:noreply, socket}
 
+      def terminate(_reason, _socket), do: :ok
+
       defoverridable handle_info: 2, handle_out: 3, handle_in: 3, terminate: 2
     end
   end
 
   @doc """
-  Broadcast event, serializable as JSON to a channel.
+  Broadcast an event to all subscribers of the socket topic.
+
+  The event's message must be a serializable map.
 
   ## Examples
 
-      iex> Channel.broadcast "rooms:global", "new_message", %{id: 1, content: "hello"}
-      :ok
-      iex> Channel.broadcast socket, "new_message", %{id: 1, content: "hello"}
+      iex> broadcast socket, "new_message", %{id: 1, content: "hello"}
       :ok
 
   """
-  def broadcast(%Socket{joined: true} = socket, event, msg) do
-    broadcast(socket.pubsub_server, socket, event, msg)
-  end
-  def broadcast(%Socket{joined: _}, _event, _msg) do
-    raise_not_joined()
-  end
-  def broadcast(server, topic, event, message) when is_binary(topic) do
-    broadcast_from server, :none, topic, event, message
-  end
-  def broadcast(server, %Socket{} = socket, event, message) do
-    broadcast_from server, :none, socket.topic, event, message
-    :ok
+  def broadcast(socket, event, msg) do
+    broadcast_from(socket, :none, event, msg)
   end
 
   @doc """
-  Same as `Phoenix.Channel.broadcast/4`, but
-  raises `Phoenix.PubSub.BroadcastError` if broadcast fails.
+  Same as `broadcast/3` but raises if broadcast fails.
   """
-  def broadcast!(%Socket{joined: true} = socket, event, msg) do
-    broadcast!(socket.pubsub_server, socket, event, msg)
-  end
-  def broadcast!(%Socket{joined: _}, _event, _msg) do
-    raise_not_joined()
-  end
-  def broadcast!(server, topic, event, message) when is_binary(topic) do
-    broadcast_from! server, :none, topic, event, message
-  end
-  def broadcast!(server, socket = %Socket{}, event, message) do
-    broadcast_from! server, :none, socket.topic, event, message
-    :ok
+  def broadcast!(socket, event, msg) do
+    broadcast_from!(socket, :none, event, msg)
   end
 
   @doc """
-  Broadcast event from pid, serializable as JSON to channel.
-  The broadcasting socket `from`, does not receive the published message.
-  The event's message must be a map serializable as JSON.
+  Broadcast event from pid to all subscribers of the socket topic.
+
+  The channel that owns the socket will not receive the published
+  message. The event's message must be a serializable map.
 
   ## Examples
 
-      iex> Channel.broadcast_from self, "rooms:global", "new_message", %{id: 1, content: "hello"}
+      iex> broadcast_from socket, "new_message", %{id: 1, content: "hello"}
       :ok
 
   """
-  def broadcast_from(%Socket{} = socket, event, msg) do
-    broadcast_from(socket.pubsub_server, socket, event, msg)
+  def broadcast_from(socket, event, msg) do
+    broadcast_from(socket, socket.channel_pid, event, msg)
   end
-  # TODO: Make private and move public to server
-  def broadcast_from(pubsub_server, %Socket{joined: true} = socket, event, message) do
-    broadcast_from(pubsub_server, self, socket.topic, event, message)
-    :ok
+
+  defp broadcast_from(%Socket{joined: true} = socket, from, event, message) do
+    %{pubsub_server: pubsub_server, topic: topic} = socket
+    Server.broadcast_from pubsub_server, from, topic, event, message
   end
-  def broadcast_from(_pubsub_server, %Socket{joined: _}, _event, _message) do
+  defp broadcast_from(%Socket{joined: false}, _from, _event, _message) do
     raise_not_joined()
   end
-  def broadcast_from(pubsub_server, from, topic, event, message) when is_map(message) do
-    PubSub.broadcast_from pubsub_server, from, topic, %Broadcast{
-      topic: topic,
-      event: event,
-      payload: message
-    }
-  end
-  def broadcast_from(_, _, _, _, _), do: raise_invalid_message
 
   @doc """
-  Same as `Phoenix.Channel.broadcast_from/4`, but
-  raises `Phoenix.PubSub.BroadcastError` if broadcast fails.
+  Same as `broadcast_from/3` but raises if broadcast fails.
   """
-  def broadcast_from!(%Socket{} = socket, event, msg) do
-    broadcast_from!(socket.pubsub_server, socket, event, msg)
+  def broadcast_from!(socket, event, msg) do
+    broadcast_from!(socket, socket.channel_pid, event, msg)
   end
-  def broadcast_from!(pubsub_server, %Socket{joined: true} = socket, event, message) do
-    broadcast_from!(pubsub_server, self, socket.topic, event, message)
-    :ok
+
+  defp broadcast_from!(%Socket{joined: true} = socket, from, event, message) do
+    %{pubsub_server: pubsub_server, topic: topic} = socket
+    Server.broadcast_from! pubsub_server, from, topic, event, message
   end
-  def broadcast_from!(_pubsub_server, %Socket{joined: _}, _event, _message) do
+  defp broadcast_from!(%Socket{joined: false}, _from, _event, _message) do
     raise_not_joined()
   end
-  def broadcast_from!(pubsub_server, from, topic, event, message) when is_map(message) do
-    PubSub.broadcast_from! pubsub_server, from, topic, %Broadcast{
-      topic: topic,
-      event: event,
-      payload: message
-    }
-  end
-  def broadcast_from!(_, _, _, _, _), do: raise_invalid_message
 
   @doc """
-  Sends Dict, JSON serializable message to socket.
+  Sends event to the socket.
+
+  The event's message must be a serializable map.
+
+  ## Examples
+
+      iex> push socket, "new_message", %{id: 1, content: "hello"}
+      :ok
+
   """
-  def push(%Socket{joined: true} = socket, event, message) when is_map(message) do
+  def push(%Socket{joined: true} = socket, event, message)
+      when is_binary(event) and is_map(message) do
     send socket.transport_pid, %Message{
       topic: socket.topic,
       event: event,
@@ -331,12 +308,15 @@ defmodule Phoenix.Channel do
     }
     :ok
   end
-  def push(_socket, _event, message) when is_map(message) do
+  def push(%Socket{joined: false}, _event, _message) do
     raise_not_joined()
   end
   def push(_, _, _), do: raise_invalid_message()
 
-  defp raise_invalid_message, do: raise "Message argument must be a map"
+  defp raise_invalid_message do
+    raise ArgumentError, "event must be a string, message must be a map"
+  end
+
   defp raise_not_joined do
     raise """
     `push` and `broadcast` can only be called after the socket has finished joining.
@@ -352,7 +332,6 @@ defmodule Phoenix.Channel do
           push socket, "feed", %{list: feed_items(socket)}
           {:noreply, socket}
         end
-
     """
   end
 
@@ -369,6 +348,6 @@ defmodule Phoenix.Channel do
 
   """
   def assign(socket = %Socket{}, key, value) do
-    put_in socket.assigns[key], value
+    update_in socket.assigns, &Map.put(&1, key, value)
   end
 end

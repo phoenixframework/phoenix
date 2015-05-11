@@ -9,6 +9,8 @@ defmodule Phoenix.Channel.Server do
   # TODO: Document me as the transport API.
   @moduledoc false
 
+  ## Transport API
+
   @doc """
   Joins the channel in socket with authentication payload.
   """
@@ -54,10 +56,48 @@ defmodule Phoenix.Channel.Server do
     GenServer.cast(pid, :close)
   end
 
+  ## Channel API
+
+  @doc """
+  Broadcasts on the given pubsub server with the given
+  `from`, `topic`, `event` and `message`.
+  """
+  def broadcast_from(pubsub_server, from, topic, event, message)
+      when is_binary(topic) and is_binary(event) and is_map(message) do
+    PubSub.broadcast_from pubsub_server, from, topic, %Broadcast{
+      topic: topic,
+      event: event,
+      payload: message
+    }
+  end
+  def broadcast_from(_, _, _, _, _), do: raise_invalid_message
+
+  @doc """
+  Broadcasts on the given pubsub server with the given
+  `from`, `topic`, `event` and `message`.
+
+  Raises in case of crashes.
+  """
+  def broadcast_from!(pubsub_server, from, topic, event, message)
+      when is_binary(topic) and is_binary(event) and is_map(message) do
+    PubSub.broadcast_from! pubsub_server, from, topic, %Broadcast{
+      topic: topic,
+      event: event,
+      payload: message
+    }
+  end
+  def broadcast_from!(_, _, _, _, _), do: raise_invalid_message
+
+  defp raise_invalid_message do
+    raise ArgumentError, "event must be a string, message must be a map"
+  end
+
   ## Callbacks
 
   @doc false
   def init({socket, auth_payload, parent, ref}) do
+    socket = %{socket | channel_pid: self()}
+
     case socket.channel.join(socket.topic, auth_payload, socket) do
       {:ok, socket} ->
         join(socket, %{}, parent, ref)
@@ -82,7 +122,7 @@ defmodule Phoenix.Channel.Server do
   defp join(socket, reply, parent, ref) do
     PubSub.subscribe(socket.pubsub_server, self(), socket.topic, link: true)
     send(parent, {ref, reply})
-    {:ok, put_in(socket.joined, true)}
+    {:ok, %{socket | joined: true}}
   end
 
   @doc false
