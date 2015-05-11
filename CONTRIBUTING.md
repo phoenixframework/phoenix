@@ -31,7 +31,7 @@ complete, the better.
 - We use backtics for filenames and directory paths.
 - We use backtics for module names, function names, and variable names.
 
-### Pull requests
+#### Pull requests
 
 Good pull requests - patches, improvements, new features - are a fantastic
 help. They should remain focused in scope and avoid containing unrelated
