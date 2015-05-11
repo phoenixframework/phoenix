@@ -8,6 +8,15 @@ Now that we've got our application prepared for production, getting it running i
 MIX_ENV=prod PORT=4001 iex -S mix phoenix.server
 ```
 
+We can run our application detached from the iex console. This effectively daemonizes the process so it can run independently in the background. The command to do that looks like the following.
+
+```elixir
+MIX_ENV=prod PORT=4001 elixir --detached -S mix phoenix.server
+```
+
+Running the application in detached mode allows us to keep the application running even after we terminate the shell connection with the server.
+
+
 For guidance on deploying with Erlang style releases, please check out the [Advanced Deployment Guide](http://www.phoenixframework.org/docs/advanced-deployment)
 
 Note, with new Phoenix projects created using Elixir 1.0.4, protocol consolidation happens automatically when we start a Phoenix server with `MIX_ENV=prod`. (Actually, any Phoenix specific mix task will consolidate protocols when invoked with `MIX_ENV=prod`.)
