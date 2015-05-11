@@ -86,6 +86,7 @@ defmodule Phoenix.Channel.Transport do
   """
   def dispatch(_, %{topic: "phoenix", event: "heartbeat"}, transport_pid, _router, _pubsub_server, _transport) do
     send transport_pid, %Message{topic: "phoenix", event: "heartbeat", payload: %{}}
+    :ok
   end
   def dispatch(nil, %{event: "phx_join"} = msg, transport_pid, router, endpoint, transport) do
     case router.channel_for_topic(msg.topic, transport) do

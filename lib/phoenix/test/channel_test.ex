@@ -81,7 +81,15 @@ defmodule Phoenix.ChannelTest do
   The issue is that we have no guarantees the channel has
   done processing our message after calling `push/3`. The
   best solution is to assert the channel sent us a reply
-  before doing any other assertion:
+  before doing any other assertion. First change the
+  channel to send replies:
+
+      def handle_in("publish", %{"id" => id}, socket) do
+        Repo.get!(Post, id) |> Post.publish() |> Repo.update()
+        {:reply, :ok, socket}
+      end
+
+  Then expect them in the test:
 
       ref = push socket, "publish", %{"id" => 3}
       assert_reply ref, :ok
