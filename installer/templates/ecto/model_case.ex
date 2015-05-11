@@ -3,6 +3,9 @@ defmodule <%= application_module %>.ModelCase do
   This module defines the test case to be used by
   model tests.
 
+  You may define functions here to be used as helpers in
+  your model tests. See `errors_on/2`'s definition as reference.
+
   Finally, if the test case interacts with the database,
   it cannot be async. For this reason, every test runs
   inside a transaction which is reset at the beginning
@@ -17,6 +20,7 @@ defmodule <%= application_module %>.ModelCase do
       alias <%= application_module %>.Repo
       import Ecto.Model
       import Ecto.Query, only: [from: 2]
+      import unquote(__MODULE__)
     end
   end
 
@@ -26,5 +30,24 @@ defmodule <%= application_module %>.ModelCase do
     end
 
     :ok
+  end
+
+  @doc """
+  Helper for returning list of errors in model when passed certain data.
+
+  ## Examples
+
+  Given a User model that has validation for the presence of a value for the
+  `:name` field and validation that `:password` is "safe":
+
+      iex> errors_on(%User{}, password: "password")
+      [{:password, "is unsafe"}, {:name, "is blank"}]
+
+  You would then write your assertion like:
+
+      assert {:password, "is unsafe"} in errors_on(%User{}, password: "password")
+  """
+  def errors_on(model, data) do
+    model.__struct__.changeset(model, data).errors
   end
 end
