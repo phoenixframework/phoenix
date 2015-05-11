@@ -31,7 +31,7 @@ defmodule <%= application_module %>.Mixfile do
   #
   # Type `mix help deps` for examples and options
   defp deps do
-    [<%= phoenix_dep %>,<%= if ecto do %>
+    [{:phoenix, "~> 0.13"},<%= if ecto do %>
      {:phoenix_ecto, "~> 0.4"},
      {<%= inspect adapter_app %>, ">= 0.0.0"},<% end %>
      {:phoenix_html, "~> 1.0"},

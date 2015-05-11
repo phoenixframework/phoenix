@@ -1,6 +1,8 @@
 # Changelog
 
-## v0.13.0-dev
+## v0.14.0-dev
+
+## v0.13.0 (2015-05-11)
 
 * Enhancements
   * [Channel] Allow router helpers to work in channels by passing a socket (instead of connection), for example: `user_path(socket, :index)`
@@ -12,6 +14,20 @@
 * Bug fixes
   * [HTML] `select` no longer inverses the key and values in the given options
   * [phoenix.new] Do not run `deps.get` if there is no Hex
+
+* Backward incompatible changes
+  * [Channel] To refuse joining a channel, `join/3` now requires `{:error, reason}`
+
+* Javascript client backward incompatible changes
+  * channel instances are now created from the `socket`
+  * channel joins are now called explicitly off channel instances
+  * channel onClose now only triggered on explicit client `leave` or server `:stop`
+  * Examples:
+
+      let socket = new Phoenix.Socket("/ws")
+      let chan = socket.chan("rooms:123", {})
+      chan.join().receive("ok", ({resp} => ...).receive("error", ({reason}) => ...)
+
 
 ## v0.12.0 (2015-04-30)
 
