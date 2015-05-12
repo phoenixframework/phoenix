@@ -148,8 +148,7 @@ defmodule Phoenix.Endpoint.Adapter do
   end
 
   @doc """
-  Builds the endpoint static url from its configuration based on the multiple
-  static hosts configured
+  Builds the static url from its configuration.
 
   The result is wrapped in a `{:cache, value}` tuple so
   the Phoenix.Config layer knows how to cache it.

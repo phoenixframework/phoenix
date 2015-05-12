@@ -121,6 +121,10 @@ defmodule Phoenix.Endpoint do
       as a workaround for releases where environment specific information
       is loaded only at compile-time.
 
+    * `:static_url` - configuration for generating URLs for static files.
+      It will fallback to `url` if no option is provided. Accepts the same
+      options as `url`.
+
     * `:watchers` - a set of watchers to run alongside your server. It
       expects a list of tuples containing the executable and its arguments.
       Watchers are guaranteed to run in the application directory but only
@@ -337,7 +341,7 @@ defmodule Phoenix.Endpoint do
       end
 
       @doc """
-      Generates the endpoint base URL without any path informat
+      Generates the static URL without any path information.
       """
       def static_url do
         Phoenix.Config.cache(__MODULE__,
