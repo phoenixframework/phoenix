@@ -155,7 +155,8 @@ defmodule Phoenix.Endpoint.Adapter do
   the Phoenix.Config layer knows how to cache it.
   """
   def static_url(endpoint) do
-    {:cache, calculate_url(endpoint, endpoint.config(:static_url))}
+    url = endpoint.config(:static_url) || endpoint.config(:url)
+    {:cache, calculate_url(endpoint, url)}
   end
 
   defp calculate_url(endpoint, url) do

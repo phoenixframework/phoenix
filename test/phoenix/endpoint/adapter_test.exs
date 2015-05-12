@@ -44,6 +44,7 @@ defmodule Phoenix.Endpoint.AdapterTest do
     def config(:https), do: false
     def config(:http), do: false
     def config(:url), do: [host: "example.com", port: 678, scheme: "random"]
+    def config(:static_url), do: nil
   end
 
   defmodule StaticURLEndpoint do
@@ -56,6 +57,10 @@ defmodule Phoenix.Endpoint.AdapterTest do
     static_host = {:cache, "http://static.example.com"}
 
     assert Adapter.static_url(StaticURLEndpoint) == static_host
+  end
+
+  test "static url fallbacks to url when there is no configuration for static_url" do
+    assert Adapter.static_url(URLEndpoint) == {:cache, "random://example.com:678"}
   end
 
   test "generates url" do
