@@ -72,7 +72,7 @@ defmodule Phoenix.Channel.Server do
   The message is encoded as `Phoenix.Socket.Broadcast`.
   """
   def broadcast(pubsub_server, topic, event, payload)
-      when is_binary(topic) and is_binary(event) and is_map(payload) do
+      when is_binary(topic) and is_binary(event) and (is_map(payload) or is_list(payload)) do
     PubSub.broadcast pubsub_server, topic, %Broadcast{
       topic: topic,
       event: event,
@@ -88,7 +88,7 @@ defmodule Phoenix.Channel.Server do
   Raises in case of crashes.
   """
   def broadcast!(pubsub_server, topic, event, payload)
-      when is_binary(topic) and is_binary(event) and is_map(payload) do
+      when is_binary(topic) and is_binary(event) and (is_map(payload) or is_list(payload)) do
     PubSub.broadcast! pubsub_server, topic, %Broadcast{
       topic: topic,
       event: event,
@@ -104,7 +104,7 @@ defmodule Phoenix.Channel.Server do
   The message is encoded as `Phoenix.Socket.Broadcast`.
   """
   def broadcast_from(pubsub_server, from, topic, event, payload)
-      when is_binary(topic) and is_binary(event) and is_map(payload) do
+      when is_binary(topic) and is_binary(event) and (is_map(payload) or is_list(payload)) do
     PubSub.broadcast_from pubsub_server, from, topic, %Broadcast{
       topic: topic,
       event: event,
@@ -120,7 +120,7 @@ defmodule Phoenix.Channel.Server do
   Raises in case of crashes.
   """
   def broadcast_from!(pubsub_server, from, topic, event, payload)
-      when is_binary(topic) and is_binary(event) and is_map(payload) do
+      when is_binary(topic) and is_binary(event) and (is_map(payload) or is_list(payload)) do
     PubSub.broadcast_from! pubsub_server, from, topic, %Broadcast{
       topic: topic,
       event: event,
@@ -134,7 +134,7 @@ defmodule Phoenix.Channel.Server do
   to the given process.
   """
   def push(pid, topic, event, payload)
-      when is_binary(topic) and is_binary(event) and is_map(payload) do
+      when is_binary(topic) and is_binary(event) and (is_map(payload) or is_list(payload)) do
     send pid, %Message{
       topic: topic,
       event: event,
@@ -145,7 +145,7 @@ defmodule Phoenix.Channel.Server do
   def push(_, _, _, _), do: raise_invalid_message
 
   defp raise_invalid_message do
-    raise ArgumentError, "topic and event must be strings, message must be a map"
+    raise ArgumentError, "topic and event must be strings, message must be a map or a list"
   end
 
   ## Callbacks
