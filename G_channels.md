@@ -83,13 +83,13 @@ defmodule HelloPhoenix.RoomChannel do
     {:ok, socket}
   end
   def join("rooms:" <> _private_room_id, _auth_msg, socket) do
-    :ignore
+    {:error, %{reason: "unauthorized"}}
   end
 
 end
 ```
 
-For our chat app, we'll allow anyone to join the `"rooms:lobby"` topic, but any other room will be considered private and special authorization, say from a database, will be required. We won't worry about private chat rooms for this exercise, but feel free to explore after we finish. To authorize the socket to join a topic, we return `{:ok, socket}`. To deny access, we return `:ignore`.
+For our chat app, we'll allow anyone to join the `"rooms:lobby"` topic, but any other room will be considered private and special authorization, say from a database, will be required. We won't worry about private chat rooms for this exercise, but feel free to explore after we finish. To authorize the socket to join a topic, we return `{:ok, socket}` or `{:ok, reply, socket}`. To deny access, we return `{:error, reply}`.
 
 
 With our channel in place, lets head over to `web/static/js/app.js` and get the client and server talking.
@@ -97,7 +97,8 @@ With our channel in place, lets head over to `web/static/js/app.js` and get the 
 ```javascript
 let socket = new Socket("/ws")
 socket.connect()
-socket.join("rooms:lobby", {}).receive("ok", chan => {
+let chan = socket.chan("rooms:lobby", {})
+chan.join().receive("ok", chan => {
   console.log("Welcome to Phoenix Chat!")
 })
 ```
@@ -131,15 +132,17 @@ let messagesContainer = $("#messages")
 
 let socket = new Socket("/ws")
 socket.connect()
-socket.join("rooms:lobby", {}).receive("ok", chan => {
-  console.log("Welcome to Phoenix Chat!")
+let chan = socket.chan("rooms:lobby", {})
 
-  chatInput.off("keypress").on("keypress", event => {
-    if(event.keyCode === 13){
-      chan.push("new_msg", {body: chatInput.val()})
-      chatInput.val("")
-    }
-  })
+chatInput.on("keypress", event => {
+  if(event.keyCode === 13){
+    chan.push("new_msg", {body: chatInput.val()})
+    chatInput.val("")
+  }
+})
+
+chan.join().receive("ok", chan => {
+  console.log("Welcome to Phoenix Chat!")
 })
 ```
 
@@ -152,19 +155,21 @@ let messagesContainer = $("#messages")
 
 let socket = new Socket("/ws")
 socket.connect()
-socket.join("rooms:lobby", {}).receive("ok", chan => {
+let chan = socket.chan("rooms:lobby", {})
+
+chatInput.on("keypress", event => {
+  if(event.keyCode === 13){
+    chan.push("new_msg", {body: chatInput.val()})
+    chatInput.val("")
+  }
+})
+
+chan.on("new_msg", payload => {
+  messagesContainer.append(`<br/>[${Date()}] ${payload.body}`)
+})
+
+chan.join().receive("ok", chan => {
   console.log("Welcome to Phoenix Chat!")
-
-  chatInput.off("keypress").on("keypress", event => {
-    if(event.keyCode === 13){
-      chan.push("new_msg", {body: chatInput.val()})
-      chatInput.val("")
-    }
-  })
-
-  chan.on("new_msg", payload => {
-    messagesContainer.append(`<br/>[${Date()}] ${payload.body}`)
-  })
 })
 ```
 
@@ -181,7 +186,7 @@ defmodule HelloPhoenix.RoomChannel do
     {:ok, socket}
   end
   def join("rooms:" <> _private_room_id, _auth_msg, socket) do
-    :ignore
+    {:error, %{reason: "unauthorized"}}
   end
 
   def handle_in("new_msg", %{"body" => body}, socket) do
