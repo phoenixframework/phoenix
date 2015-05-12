@@ -113,7 +113,7 @@ defmodule Phoenix.Endpoint.Adapter do
      reloadable_paths: ["web"],
      secret_key_base: nil,
      server: Application.get_env(:phoenix, :serve_endpoints, false),
-     multiple_static_hosts: [],
+     static_host: nil,
      url: [host: "localhost", path: "/"],
 
      # Supervisor config
@@ -155,8 +155,8 @@ defmodule Phoenix.Endpoint.Adapter do
   the Phoenix.Config layer knows how to cache it.
   """
   def static_url(endpoint) do
-    urls  = endpoint.config(:multiple_static_hosts)
-    {:cache, List.to_tuple(Enum.map(urls, &(calculate_url(endpoint, &1))))}
+    url  = endpoint.config(:static_host)
+    {:cache, calculate_url(endpoint, url) }
   end
 
   defp calculate_url(endpoint, url) do

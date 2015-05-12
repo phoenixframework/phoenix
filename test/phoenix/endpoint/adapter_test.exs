@@ -49,21 +49,13 @@ defmodule Phoenix.Endpoint.AdapterTest do
   defmodule StaticURLEndpoint do
     def config(:https), do: false
     def config(:http), do: false
-    def config(:multiple_static_hosts) do
-      [[host: "example1.com", port: 678, scheme: "random"],
-       [host: "example2.com"],
-       [host: "example3.com", port: 8888],
-       [host: "example4.com", port: 669]]
-    end
+    def config(:static_host), do: [host: "static.example.com"]
   end
 
-  test "generates all the possible url based on the multiple assets hosts" do
-    available_static_hosts = {:cache, {"random://example1.com:678",
-                                       "http://example2.com",
-                                       "http://example3.com:8888",
-                                       "http://example4.com:669"}}
+  test "generates the static url based on the static host configuration" do
+    static_host = {:cache, "http://static.example.com"}
 
-    assert Adapter.static_url(StaticURLEndpoint) == available_static_hosts
+    assert Adapter.static_url(StaticURLEndpoint) == static_host
   end
 
   test "generates url" do
