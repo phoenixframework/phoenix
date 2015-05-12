@@ -642,7 +642,7 @@ defmodule Phoenix.Controller do
   retrieving and deleting CSRF tokens.
   """
   def protect_from_forgery(conn, opts \\ []) do
-    Plug.CSRFProtection.call(conn, opts)
+    Plug.CSRFProtection.call(conn, Plug.CSRFProtection.init(opts))
   end
 
   @doc """
