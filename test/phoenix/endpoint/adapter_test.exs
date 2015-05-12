@@ -49,7 +49,7 @@ defmodule Phoenix.Endpoint.AdapterTest do
   defmodule StaticURLEndpoint do
     def config(:https), do: false
     def config(:http), do: false
-    def config(:static_host), do: [host: "static.example.com"]
+    def config(:static_url), do: [host: "static.example.com"]
   end
 
   test "generates the static url based on the static host configuration" do
