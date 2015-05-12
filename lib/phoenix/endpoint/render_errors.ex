@@ -1,7 +1,7 @@
 defmodule Phoenix.Endpoint.RenderErrors do
   # This module is used to catch failures and render them using a view.
   #
-  # This module is automatically used in `Phoenix.Router` where it
+  # This module is automatically used in `Phoenix.Endpoint` where it
   # overrides `call/2` to provide rendering. Once the error is
   # rendered, the error is reraised unless it is a NoRouteError.
   #
