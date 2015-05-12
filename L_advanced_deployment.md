@@ -27,10 +27,14 @@ Let's separate our release process into a few tasks so we can keep track of wher
 To get started, we'll need to add `{:exrm, "~> 0.14.16"}` into the list of dependencies in our `mix.exs` file.
 
 ```elixir
-  def deps do
-    [{:phoenix, "~> 0.10.0"},
-      {:cowboy, "~> 1.0.0"},
-      {:exrm, "~> 0.14.16"}]
+  defp deps do
+    [{:phoenix, "~> 0.13"},
+     {:phoenix_ecto, "~> 0.4"},
+     {:postgrex, ">= 0.0.0"},
+     {:phoenix_html, "~> 1.0"},
+     {:phoenix_live_reload, "~> 0.4", only: :dev},
+     {:cowboy, "~> 1.0"},
+     {:exrm, "~> 0.14.16"}]
   end
 ```
 With that taken care of, a simple `mix do deps.get, compile` will pull down exrm and its dependencies, along with the rest of our application's dependencies. It also ensures that everything compiles properly. If all goes well, exrm's mix tasks will be available.
