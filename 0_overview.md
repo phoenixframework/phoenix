@@ -82,7 +82,7 @@ Let's take a look at each of them now.
   
   Elixir source code compiles to Erlang byte code which runs on the Erlang Virtual Machine. That means we must have Erlang installed on our system - in addition to Elixir - in order to work with Phoenix. The Elixir site also has [Erlang installation instructions](http://elixir-lang.org/install.html#installing-erlang).
 
-- node.js
+- node.js (>= 0.12.0)
 
   Node is an optional dependency. Phoenix will use brunch.io to compile static assets (javascript, css, etc), by default. Brunch.io uses the node package manager (npm) to install its dependencies, and npm requires node.js.
 
