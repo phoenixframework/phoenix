@@ -113,7 +113,7 @@ defmodule Phoenix.Endpoint.Adapter do
      reloadable_paths: ["web"],
      secret_key_base: nil,
      server: Application.get_env(:phoenix, :serve_endpoints, false),
-     static_host: nil,
+     static_url: nil,
      url: [host: "localhost", path: "/"],
 
      # Supervisor config
@@ -155,8 +155,7 @@ defmodule Phoenix.Endpoint.Adapter do
   the Phoenix.Config layer knows how to cache it.
   """
   def static_url(endpoint) do
-    url  = endpoint.config(:static_host)
-    {:cache, calculate_url(endpoint, url) }
+    {:cache, calculate_url(endpoint, endpoint.config(:static_url))}
   end
 
   defp calculate_url(endpoint, url) do
