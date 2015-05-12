@@ -52,7 +52,7 @@ The default transport mechanism is via WebSockets which will fall back to LongPo
 
 - Client Libraries
 
-Phoenix currently ships with its own JavaScript client and iOS and Anrdoid clients are planned for release with Phoenix 1.0.
+Phoenix currently ships with its own JavaScript client and iOS and Android clients are planned for release with Phoenix 1.0.
 
 ## Tying it all together
 Let's tie all these ideas together by building a simple chat application. Let's start by wiring up our channel routes.
