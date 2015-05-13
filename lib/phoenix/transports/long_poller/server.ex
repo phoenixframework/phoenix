@@ -96,8 +96,6 @@ defmodule Phoenix.Transports.LongPoller.Server do
   def handle_info(%Reply{} = reply, state) do
     %{topic: topic, status: status, payload: payload, ref: ref} = reply
 
-    # TODO: Don't duplicate the reference. The client
-    # should retrieve the reference from the message.
     message = %Message{event: "phx_reply", topic: topic, ref: ref,
                        payload: %{status: status, response: payload}}
 

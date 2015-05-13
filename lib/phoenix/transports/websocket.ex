@@ -99,8 +99,6 @@ defmodule Phoenix.Transports.WebSocket do
   def ws_info(%Reply{} = reply, %{serializer: serializer} = state) do
     %{topic: topic, status: status, payload: payload, ref: ref} = reply
 
-    # TODO: Don't duplicate the reference. The client
-    # should retrieve the reference from the message.
     message = %Message{event: "phx_reply", topic: topic, ref: ref,
                        payload: %{status: status, response: payload}}
 
