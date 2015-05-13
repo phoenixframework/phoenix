@@ -50,12 +50,12 @@ mix release.plugins   # View information about active release plugins
 
 ### Configure Our Applications
 
-Now we need to update our `mix.exs` file to have all dependencies listed in the `applications` list in the `application/0` function.
+Now we need to update our `mix.exs` file to have all production dependencies listed in the `applications` list in the `application/0` function.
 
 ```elixir
   def application do
     [mod: {HelloPhoenix, []},
-      applications: [:phoenix, :cowboy, :logger]]
+      applications: [:phoenix, :cowboy, :logger, :postgrex, :phoenix_ecto, :phoenix_html]]
   end
 ```
 Doing this helps us overcome one of [exrm's common issues](https://github.com/bitwalker/exrm#common-issues) by helping exrm know about all our dependencies so that it can properly bundle them into our release. Without this, our application will probably alert us about missing modules or a failure to start a child application when we go to run our release.
