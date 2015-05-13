@@ -102,7 +102,7 @@ defmodule Phoenix.Transports.WebSocket do
     # TODO: Don't duplicate the reference. The client
     # should retrieve the reference from the message.
     message = %Message{event: "phx_reply", topic: topic, ref: ref,
-                       payload: %{status: status, ref: ref, response: payload}}
+                       payload: %{status: status, response: payload}}
 
     {:reply, serializer.encode!(message), state}
   end

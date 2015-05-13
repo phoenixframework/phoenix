@@ -101,7 +101,7 @@ defmodule Phoenix.Integration.ChannelTest do
     {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
 
     WebsocketClient.join(sock, "rooms:lobby", %{})
-    assert_receive %Message{event: "phx_reply", payload: %{"ref" => "1", "response" => %{}, "status" => "ok"}, ref: nil, topic: "rooms:lobby"}
+    assert_receive %Message{event: "phx_reply", payload: %{"response" => %{}, "status" => "ok"}, ref: "1", topic: "rooms:lobby"}
 
     assert_receive %Message{event: "joined", payload: %{"status" => "connected"}}
     assert_receive %Message{event: "user:entered", payload: %{"user" => nil}, ref: nil, topic: "rooms:lobby"}
@@ -125,7 +125,7 @@ defmodule Phoenix.Integration.ChannelTest do
     {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
 
     WebsocketClient.join(sock, "rooms:lobby", %{})
-    assert_receive %Message{event: "phx_reply", payload: %{"ref" => "1", "response" => %{}, "status" => "ok"}}
+    assert_receive %Message{event: "phx_reply", ref: "1", payload: %{"response" => %{}, "status" => "ok"}}
     assert_receive %Message{event: "joined"}
     assert_receive %Message{event: "user:entered"}
 
@@ -137,7 +137,7 @@ defmodule Phoenix.Integration.ChannelTest do
     {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
 
     WebsocketClient.join(sock, "rooms:lobby", %{})
-    assert_receive %Message{event: "phx_reply", payload: %{"ref" => "1", "response" => %{}, "status" => "ok"}}
+    assert_receive %Message{event: "phx_reply", ref: "1", payload: %{"response" => %{}, "status" => "ok"}}
     assert_receive %Message{event: "joined"}
     channel = Process.whereis(:"rooms:lobby")
     Process.monitor(channel)
@@ -204,7 +204,7 @@ defmodule Phoenix.Integration.ChannelTest do
     session = Map.take(resp.body, ["token", "sig"])
     assert resp.body["status"] == 200
     [phx_reply, status_msg, user_entered] = resp.body["messages"]
-    assert phx_reply == %{"event" => "phx_reply", "payload" => %{"ref" => "123", "response" => %{}, "status" => "ok"}, "ref" => nil, "topic" => "rooms:lobby"}
+    assert phx_reply == %{"event" => "phx_reply", "payload" => %{"response" => %{}, "status" => "ok"}, "ref" => "123", "topic" => "rooms:lobby"}
     assert status_msg == %{"event" => "joined", "payload" => %{"status" => "connected"}, "ref" => nil, "topic" => "rooms:lobby"}
     assert user_entered == %{"event" => "user:entered", "payload" => %{"user" => nil}, "ref" => nil, "topic" => "rooms:lobby"}
 
@@ -392,10 +392,10 @@ defmodule Phoenix.Integration.ChannelTest do
     # leave
     resp = poll(:get, "/ws/poll", session)
     assert resp.body["messages"] == [
-      %{"event" => "phx_reply", "payload" => %{"ref" => "1", "response" => %{}, "status" => "ok"}, "ref" => nil, "topic" => "rooms:lobby"},
+      %{"event" => "phx_reply", "payload" => %{"response" => %{}, "status" => "ok"}, "ref" => "1", "topic" => "rooms:lobby"},
       %{"event" => "joined", "payload" => %{"status" => "connected"}, "ref" => nil, "topic" => "rooms:lobby"},
       %{"event" => "user:entered", "payload" => %{"user" => nil}, "ref" => nil, "topic" => "rooms:lobby"},
-      %{"event" => "phx_reply", "payload" => %{"ref" => "2", "response" => %{}, "status" => "ok"}, "ref" => "2", "topic" => "rooms:lobby"},
+      %{"event" => "phx_reply", "payload" => %{"response" => %{}, "status" => "ok"}, "ref" => "2", "topic" => "rooms:lobby"},
       %{"event" => "you:left", "payload" => %{"message" => "bye!"}, "ref" => nil, "topic" => "rooms:lobby"},
       %{"event" => "phx_close", "payload" => %{}, "ref" => nil, "topic" => "rooms:lobby"}
     ]

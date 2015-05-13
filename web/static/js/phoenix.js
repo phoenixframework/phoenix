@@ -204,8 +204,8 @@ export class Channel {
       this.state = CHAN_STATES.errored
       setTimeout( () => this.rejoinUntilConnected(), this.socket.reconnectAfterMs)
     })
-    this.on(CHAN_EVENTS.reply, payload => {
-      this.trigger(this.replyEventName(payload.ref), payload)
+    this.on(CHAN_EVENTS.reply, (payload, ref) => {
+      this.trigger(this.replyEventName(ref), payload)
     })
   }
 
@@ -287,9 +287,9 @@ export class Channel {
     this.pushBuffer = []
   }
 
-  trigger(triggerEvent, msg){
+  trigger(triggerEvent, payload, ref){
     this.bindings.filter( bind => bind.event === triggerEvent )
-                 .map( bind => bind.callback(msg) )
+                 .map( bind => bind.callback(payload, ref) )
   }
 
   replyEventName(ref){ return `chan_reply_${ref}` }
@@ -455,12 +455,11 @@ export class Socket {
   onConnMessage(rawMessage){
     this.log("message received:")
     this.log(rawMessage)
-    let {topic, event, payload} = JSON.parse(rawMessage.data)
+    let msg = JSON.parse(rawMessage.data)
+    let {topic, event, payload, ref} = msg
     this.channels.filter( chan => chan.isMember(topic) )
-                 .forEach( chan => chan.trigger(event, payload) )
-    this.stateChangeCallbacks.message.forEach( callback => {
-      callback(topic, event, payload)
-    })
+                 .forEach( chan => chan.trigger(event, payload, ref) )
+    this.stateChangeCallbacks.message.forEach( callback => callback(msg) )
   }
 }
 

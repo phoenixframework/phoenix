@@ -144,6 +144,19 @@ defmodule Phoenix.Channel.Server do
   end
   def push(_, _, _, _), do: raise_invalid_message
 
+  @doc false
+  def push_reply(pid, ref, topic, payload)
+      when is_binary(topic) and is_map(payload) do
+    send pid, %Message{
+      ref: ref,
+      topic: topic,
+      event: "phx_reply",
+      payload: payload
+    }
+    :ok
+  end
+  def push_reply(_, _, _, _), do: raise_invalid_message
+
   defp raise_invalid_message do
     raise ArgumentError, "topic and event must be strings, message must be a map"
   end

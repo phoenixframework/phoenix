@@ -359,8 +359,8 @@ var Channel = exports.Channel = (function () {
         return _this.rejoinUntilConnected();
       }, _this.socket.reconnectAfterMs);
     });
-    this.on(CHAN_EVENTS.reply, function (payload) {
-      _this.trigger(_this.replyEventName(payload.ref), payload);
+    this.on(CHAN_EVENTS.reply, function (payload, ref) {
+      _this.trigger(_this.replyEventName(ref), payload);
     });
   }
 
@@ -507,11 +507,11 @@ var Channel = exports.Channel = (function () {
       configurable: true
     },
     trigger: {
-      value: function trigger(triggerEvent, msg) {
+      value: function trigger(triggerEvent, payload, ref) {
         this.bindings.filter(function (bind) {
           return bind.event === triggerEvent;
         }).map(function (bind) {
-          return bind.callback(msg);
+          return bind.callback(payload, ref);
         });
       },
       writable: true,
@@ -831,20 +831,19 @@ var Socket = exports.Socket = (function () {
       value: function onConnMessage(rawMessage) {
         this.log("message received:");
         this.log(rawMessage);
-
-        var _JSON$parse = JSON.parse(rawMessage.data);
-
-        var topic = _JSON$parse.topic;
-        var event = _JSON$parse.event;
-        var payload = _JSON$parse.payload;
+        var msg = JSON.parse(rawMessage.data);
+        var topic = msg.topic;
+        var event = msg.event;
+        var payload = msg.payload;
+        var ref = msg.ref;
 
         this.channels.filter(function (chan) {
           return chan.isMember(topic);
         }).forEach(function (chan) {
-          return chan.trigger(event, payload);
+          return chan.trigger(event, payload, ref);
         });
         this.stateChangeCallbacks.message.forEach(function (callback) {
-          callback(topic, event, payload);
+          return callback(msg);
         });
       },
       writable: true,
