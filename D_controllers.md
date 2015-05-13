@@ -22,7 +22,7 @@ Let's take a look at the second line `plug :action`. `plug/1` is a macro defined
 
 In addition, the `PageController` gives us the `index` action to display the Phoenix welcome page associated with the default route Phoenix defines in the router.
 
-###Actions
+### Actions
 Controller actions are just functions. We can name them anything we like as long as they follow Elixir's naming rules. The only requirement we must fulfill is that the action name matches a route defined in the router.
 
 For example, in `web/router.ex` we could change the action name in the default route that Phoenix gives us in a new app from index:
@@ -77,14 +77,14 @@ end
 
 In some cases - often in `index` actions, for instance - we don't care about parameters because our behavior doesn't depend on them. In those cases, we don't use the incoming params, and simply prepend the variable name with an underscore, `_params`. This will keep the compiler from complaining about the unused variable while still keeping the correct arity.
 
-###Gathering Data
+### Gathering Data
 While Phoenix does not ship with its own data access layer, the Elixir project [Ecto](http://hexdocs.pm/ecto) provides a very nice solution for those using the [Postgres](http://www.postgresql.org/) relational database. (There are plans to offer other adapters for Ecto in the future.) We cover how to use Ecto in a Phoenix project in the [Ecto Models Guide](http://www.phoenixframework.org/docs/ecto-models).
 
 Of course, there are many other data access options. [Ets](http://www.erlang.org/doc/man/ets.html) and [Dets](http://www.erlang.org/doc/man/ets.html) are key value data stores built into [OTP](http://www.erlang.org/doc/). OTP also provides a relational database called [mnesia](http://www.erlang.org/doc/man/mnesia.html) with its own query language called QLC. Both Elixir and Erlang also have a number of libraries for working with a wide range of popular data stores.
 
 The data world is your oyster, but we won't be covering these options in these guides.
 
-###Flash Messages
+### Flash Messages
 
 There are times when we need to communicate with users during the course of an action. Maybe there was an error updating a model. Maybe we just want to welcome them back to the application. For this, we have flash messages.
 
