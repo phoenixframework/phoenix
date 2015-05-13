@@ -1,4 +1,4 @@
-<%%= form_for @changeset, @action, fn f -> %>
+<%%= form_for @changeset, @action, [method: @method], fn f -> %>
   <%%= if f.errors != [] do %>
     <div class="alert alert-danger">
       <p>Oops, something went wrong! Please check the errors below:</p>
