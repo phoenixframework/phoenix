@@ -31,7 +31,7 @@ end
 ```
 The name you gave your application will appear instead of `HelloPhoenix` for both the router module and controller name.
 
-The first line of this module `use Phoenix.Router` simply makes Phoenix router functions available in our particular router.
+The first line of this module `use HelloPhoenix.Web, :router` simply makes Phoenix router functions available in our particular router.
 
 Scopes have their own section in this guide, so we won't spend time on the `scope "/", HelloPhoenix do` block here. The `pipe_through :browser` line will get a full treatment in the Pipeline section of this guide. For now, you only need to know that pipelines allow a set of middleware transformations to be applied to different sets of routes.
 
