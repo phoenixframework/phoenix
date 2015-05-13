@@ -21,7 +21,7 @@ This is a selected list of resources to help you find your way with Elixir, Phoe
 
 ##Phoenix
 - [The Phoenix Project](https://github.com/phoenixframework/phoenix)
-- [Official Documentation](http://api.phoenixframework.org) (current stable release)
+- [Official Documentation]((http://hexdocs.pm/phoenix/)) (current stable release)
 
 #####Tutorial: A hands-on intro to building modern web applications with Elixir and Phoenix at [thefirehoseproject](http://phoenix.thefirehoseproject.com/)
 - [Intro](http://phoenix.thefirehoseproject.com/0.html)
