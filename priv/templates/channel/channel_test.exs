@@ -11,7 +11,7 @@ defmodule <%= module %>ChannelTest do
   end
 
   test "successful join of <%= plural %>:lobby" do
-    assert {:ok, socket, _} = join(<%= scoped %>Channel, "<%= plural %>:lobby")
+    assert {:ok, _, socket} = join(<%= scoped %>Channel, "<%= plural %>:lobby")
     assert socket.topic == "<%= plural %>:lobby"
   end
 
