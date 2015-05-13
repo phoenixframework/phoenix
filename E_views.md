@@ -77,7 +77,7 @@ Now we can reload the page and view source to see what we have.
 
 Great, `page_path/2` evaluated to `/` as we would expect, and we didn't need to qualify it with `HelloPhoenix.View`.
 
-###More About Views
+### More About Views
 
 You might be wondering how views are able to work so closely with templates.
 
@@ -150,7 +150,7 @@ If we need only the rendered string, without the whole tuple, we can use the `re
    "\nThis is the message: "] | "Hello from the view!"]
   ```
 
-###A Word About Layouts
+### A Word About Layouts
 
 Layouts are just templates. They have a view, just like other templates. In a newly generated app, this is `web/views/layout_view.ex`. You may be wondering how the string resulting from a rendered view ends up inside a layout. That's a great question!
 
@@ -164,7 +164,7 @@ If we look at `web/templates/layout/application.html.eex`, just about in the mid
 
 This is where the rendered string from the template will be placed.
 
-###The ErrorView
+### The ErrorView
 
 Phoenix recently added a new view to every generated application, the `ErrorView` which lives in `web/views/error_view.ex`. The purpose of the `ErrorView` is to handle two of the most common errors - `404 not found` and `500 internal error` - in a general way, from one centralized location. Let's see what it looks like.
 

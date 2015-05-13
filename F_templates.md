@@ -4,7 +4,7 @@ EEx is the default template system in Phoenix, and it is quite similar to ERB in
 
 As we learned in the [View Guide](http://www.phoenixframework.org/docs/views), by default, templates live in the `web/templates` directory, organized into directories named after a view. Each directory has its own view module to render the templates in it. We can change the template root directory by specifying a new one in the `root: "web/templates"` declaration in the main application view.
 
-###Examples
+### Examples
 
 We've already seen several ways in which templates are used, notably in the [Adding Pages Guide](http://www.phoenixframework.org/docs/adding-pages) and the [Views Guide](http://www.phoenixframework.org/docs/views). We may cover some of the same territory here, but we will certainly add some new information.
 

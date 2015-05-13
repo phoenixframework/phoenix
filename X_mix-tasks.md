@@ -1,6 +1,6 @@
 There are currently a number of built-in Phoenix-specific and ecto-specific mix tasks available to us within a newly-generated application. We can also create our own application specific tasks.
 
-##Phoenix Specific Mix Tasks
+## Phoenix Specific Mix Tasks
 
 ```console
 $ mix help | grep -i phoenix
@@ -11,7 +11,7 @@ mix phoenix.server       # Starts applications and their servers
 ```
 We have seen all of these at one point or another in the guides, but having all the information about them in one place seems like a good idea. And here we are.
 
-####`mix phoenix.new`
+#### `mix phoenix.new`
 
 This is how we tell Phoenix the framework to generate a new Phoenix application for us. We saw it early on in the [Up and Running Guide](http://www.phoenixframework.org/docs/up-and-running)
 
@@ -195,7 +195,7 @@ defmodule HelloPhoenix.Mixfile do
 . . .
 ```
 
-####`mix phoenix.gen.html`
+#### `mix phoenix.gen.html`
 
 Phoenix now offers the ability to generate all the code to stand up a complete HTML resource - ecto migration, ecto model, controller with all the necessary actions, view, and templates. This can be a tremendous timesaver. Let's take a look at how to make this happen.
 
@@ -238,7 +238,7 @@ Compiled web/models/post.ex
 (stdlib) erl_eval.erl:657: :erl_eval.do_apply/6
 ```
 
-####`mix phoenix.routes`
+#### `mix phoenix.routes`
 
 This task has a single purpose, to show us all the routes defined for a given router. We saw it used extensively in the [Routing Guide](http://www.phoenixframework.org/docs/routing).
 
@@ -255,7 +255,7 @@ $ mix phoenix.routes TaskTester.Router
 page_path  GET  /  TaskTester.PageController.index/2
 ```
 
-####`mix phoenix.server`
+#### `mix phoenix.server`
 
 This is the task we use to get our application running. It takes no arguments at all. If we pass any in, they will be silently ignored.
 
@@ -286,7 +286,7 @@ Interactive Elixir (1.0.2) - press Ctrl+C to exit (type h() ENTER for help)
 iex(1)>
 ```
 
-##Ecto Specific Mix Tasks
+## Ecto Specific Mix Tasks
 
 Newly generated Phoenix applications now include ecto and postgrex as dependencies by default (which is to say, unless we use the `--no-ecto` flag with `phoenix.new`). With those dependencies come mix tasks to take care of common ecto operations. Let's see which tasks we get out of the box.
 
@@ -302,7 +302,7 @@ mix ecto.rollback        # Reverts migrations down on a repo
 
 Note: We can run any of the tasks above with the `--no-start` flag to execute the task without starting the application.
 
-####`ecto.create`
+#### `ecto.create`
 This task will create the database specified in our repo. By default it will look for the repo named after our application (the one generated with our app unless we opted out of ecto), but we can pass in another repo if we want.
 
 Here's what it looks like in action.
@@ -361,7 +361,7 @@ To fix this, we need to change the permissions on our "postgres" user to allow d
 ALTER ROLE
 ```
 
-####`ecto.drop`
+#### `ecto.drop`
 
 This task will drop the database specified in our repo. By default it will look for the repo named after our application (the one generated with our app unless we opted out of ecto). It will not prompt us to check if we're sure we want to drop the db, so do exercise caution.
 
@@ -377,7 +377,7 @@ $ mix ecto.drop -r OurCustom.Repo
 The database for repo OurCustom.Repo has been dropped.
 ```
 
-####`ecto.gen.repo`
+#### `ecto.gen.repo`
 
 Many applications require more than one data store. For each data store, we'll need a new repo, and we can generate them automatically with `ecto.gen.repo`.
 
@@ -425,7 +425,7 @@ children = [
 . . .
 ```
 
-####`ecto.gen.migration`
+#### `ecto.gen.migration`
 
 Migrations are a programmatic, repeatable way to affect changes to a database schema. Migrations are also just modules, and we can create them with the `ecto.gen.migration` task. Let's walk through the steps to create a migration for a new comments table.
 
@@ -478,7 +478,7 @@ For more infomation on ecto's migration dsl, please see the [ecto migration docs
 
 That's it! We're ready to run our migration.
 
-####`ecto.migrate`
+#### `ecto.migrate`
 
 Once we have our migration module ready, we can simply run `mix ecto.migrate` to have our changes applied to the database.
 
@@ -536,7 +536,7 @@ The `--to` option will behave the same way.
 mix ecto.migrate --to 20150317170448
 ```
 
-####`ecto.rollback`
+#### `ecto.rollback`
 
 The `ecto.rollback` task will reverse the last migration we have run, undoing the schema changes. `ecto.migrate` and `ecto.rollback` are mirror images of each other.
 
@@ -549,7 +549,7 @@ $ mix ecto.rollback
 
 `ecto.rollback` will handle the same options as `ecto.migrate`, so `-n`, `--step`, `-v`, and `--to` will behave as they do for `ecto.migrate`.
 
-##Creating Our Own Mix Tasks
+## Creating Our Own Mix Tasks
 
 As we've seen throughout this guide, both mix itself and the dependencies we bring in to our application provide a number of really useful tasks for free. Since neither of these could possibly anticipate all our individual application's needs, mix allows us to create our own custom tasks. That's exactly what we are going to do now.
 
