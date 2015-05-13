@@ -55,7 +55,7 @@ Let's open up the `templates/page/index.html.eex` and locate this stanza.
 ```html
 <div class="jumbotron">
   <h2>Welcome to Phoenix!</h2>
-  <p class="lead">Phoenix is an Elixir Web Framework targeting full-featured, fault tolerant applications with realtime functionality.</p>
+  <p class="lead">Most frameworks make you choose between speed and a productive environment. <a href="http://phoenixframework.org">Phoenix</a> and <a href="http://elixir-lang.org">Elixir</a> give you both.</p>
 </div>
 ```
 
@@ -137,7 +137,7 @@ Let's test out the HTML escaping, just for fun.
 ```console
 iex(4)> Phoenix.View.render(HelloPhoenix.PageView, "test.html", message: "<script>badThings();</script>")
 {:safe,
-  [[[["" | "I came from assigns: "] | 
+  [[[["" | "I came from assigns: "] |
      "&lt;script&gt;badThings();&lt;/script&gt;"] |
     "\nThis is the message: "] | "Hello from the view!"]}
 ```
@@ -173,11 +173,11 @@ defmodule HelloPhoenix.ErrorView do
   use HelloPhoenix.Web, :view
 
   def render("404.html", _assigns) do
-    "Page not found - 404"
+    "Page not found"
   end
 
   def render("500.html", _assigns) do
-    "Server internal error - 500"
+    "Server internal error"
   end
 
   # In case no render clause matches or no
@@ -194,16 +194,16 @@ Before we dive into this, let's see what the rendered `404 not found` message lo
 use Mix.Config
 
 config :hello_phoenix, HelloPhoenix.Endpoint,
-http: [port: System.get_env("PORT") || 4000],
-debug_errors: false,
-catch_errors: true,
-cache_static_lookup: false
-. . .
+  http: [port: 4000],
+  debug_errors: false,
+  catch_errors: true,
+  code_reloader: true,
+  . . .
 ```
 
 Now let's go to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path) for a running local application and see what we get.
 
-Ok, that's not very exciting. We get the bare string "Page not found - 404", displayed without any markup or styling.
+Ok, that's not very exciting. We get the bare string "Page not found", displayed without any markup or styling.
 
 Let's see if we can use what we already know about views to make this a more interesting error page.
 
@@ -211,7 +211,7 @@ The first question is, where does that error string come from? The answer is rig
 
 ```elixir
 def render("404.html", _assigns) do
-  "Page not found - 404"
+  "Page not found"
 end
 ```
 
