@@ -89,6 +89,10 @@ defmodule Phoenix.Router.HelpersTest do
     "https://example.com"
   end
 
+  def static_url do
+    url
+  end
+
   def path(path) do
     path
   end
@@ -308,6 +312,10 @@ defmodule Phoenix.Router.HelpersTest do
   defmodule ScriptName do
     def url do
       "https://example.com"
+    end
+
+    def static_url do
+      url
     end
 
     def path(path) do

@@ -113,6 +113,7 @@ defmodule Phoenix.Endpoint.Adapter do
      reloadable_paths: ["web"],
      secret_key_base: nil,
      server: Application.get_env(:phoenix, :serve_endpoints, false),
+     static_url: nil,
      url: [host: "localhost", path: "/"],
 
      # Supervisor config
@@ -143,6 +144,21 @@ defmodule Phoenix.Endpoint.Adapter do
   the Phoenix.Config layer knows how to cache it.
   """
   def url(endpoint) do
+    {:cache, calculate_url(endpoint, endpoint.config(:url))}
+  end
+
+  @doc """
+  Builds the static url from its configuration.
+
+  The result is wrapped in a `{:cache, value}` tuple so
+  the Phoenix.Config layer knows how to cache it.
+  """
+  def static_url(endpoint) do
+    url = endpoint.config(:static_url) || endpoint.config(:url)
+    {:cache, calculate_url(endpoint, url)}
+  end
+
+  defp calculate_url(endpoint, url) do
     {scheme, port} =
       cond do
         config = endpoint.config(:https) ->
@@ -153,17 +169,15 @@ defmodule Phoenix.Endpoint.Adapter do
           {"http", "80"}
       end
 
-    url    = endpoint.config(:url)
     scheme = url[:scheme] || scheme
     host   = url[:host]
     port   = port_to_string(url[:port] || port)
 
-    {:cache,
-      case {scheme, port} do
-        {"https", "443"} -> "https://" <> host
-        {"http", "80"}   -> "http://" <> host
-        {_, _}           -> scheme <> "://" <> host <> ":" <> port
-      end}
+    case {scheme, port} do
+      {"https", "443"} -> "https://" <> host
+      {"http", "80"}   -> "http://" <> host
+      {_, _}           -> scheme <> "://" <> host <> ":" <> port
+    end
   end
 
   @doc """
