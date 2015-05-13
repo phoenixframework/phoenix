@@ -1,21 +1,31 @@
 defmodule <%= module %>ChannelTest do
   use ExUnit.Case
-  import Phoenix.Channel.ChannelTest
   alias <%= module %>
 
-  test "<%= plural %>:lobby does not require authorization" do
-    {status, _socket} =
-      build_socket("<%= plural %>:lobby")
-      |> join(<%= scoped %>Channel)
+  @endpoint <%= base %>.Endpoint
+  use Phoenix.ChannelTest
 
-    assert status == :ok
+  setup_all do
+    @endpoint.start_link()
+    :ok
   end
 
-  test "<%= plural %>:<%= singular %>_id does not require authorization" do
-    {status, _socket} =
-      build_socket("<%= plural %>:1")
-      |> join(<%= scoped %>Channel)
+  test "successful join of <%= plural %>:lobby" do
+    assert {:ok, socket, _} = join(<%= scoped %>Channel, "<%= plural %>:lobby")
+    assert socket.topic == "<%= plural %>:lobby"
+  end
 
-    assert status == :ok
+  test "ping replies with pong" do
+    {:ok, _, socket} = join(<%= scoped %>Channel, "<%= plural %>:lobby")
+
+    ref = push socket, "ping", %{"hello" => "there"}
+    assert_reply ref, :pong, %{"hello" => "there"}
+  end
+
+  test "shout broadcasts to <%= plural %>:lobby" do
+    {:ok, _, socket} = subscribe_and_join(<%= scoped %>Channel, "<%= plural %>:lobby")
+
+    push socket, "broadcast", %{"foo" => "bar"}
+    assert_broadcast "broadcast", %{"foo" => "bar"}
   end
 end
