@@ -18,16 +18,4 @@ defmodule <%= module %>ChannelTest do
 
     assert status == :ok
   end
-
-  <%= for event <- events do %>
-    test "<%= event %> broadcasts message" do
-      message = %{message: "Test this"}
-
-      build_socket("<%= event %>")
-      |> subscribe(<%= base %>.PubSub)
-      |> handle_out(<%= scoped %>Channel, message)
-
-      assert_socket_broadcasted("<%= event %>", chat_message)
-    end
-  <% end %>
 end
