@@ -45,7 +45,7 @@ defmodule HelloPhoenix.Web do
       use Phoenix.View, root: "web/templates"
 
       # Import convenience functions from controllers
-      import Phoenix.Controller, only: [get_flash: 2
+      import Phoenix.Controller, only: [get_csrf_token: 0, get_flash: 2, view_module: 1,
                                         action_name: 1, controller_module: 1] # Add these as imported functions
   ...
 ```
