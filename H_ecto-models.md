@@ -151,7 +151,7 @@ Indexes:
 
 Notice that we do get an `id` column as our primary key by default, even though it isn't listed as a field in our migration.
 
-####The Repo
+#### The Repo
 
 Our `HelloPhoenix.Repo` module is the foundation we need to work with databases in a Phoenix application. Phoenix generated it for us here `lib/hello_phoenix/repo.ex`, and this is what it looks like.
 
@@ -180,7 +180,7 @@ It begins by configuring our `otp_app` name and repo module. Then it sets the ad
 
 We also have similar configuration in `config/test.exs` and `config/prod.secret.exs` which can also be changed to match our actual credentials.
 
-####The Model
+#### The Model
 
 Ecto models have several functions. Each model defines the fields of our schema as well as their types. They each define a struct with the same fields in our schema. Models are where we define relationships with other models. Our `User` model might have many `Post` models, and each `Post` would belong to a `User`. Models also handle data validation and type casting with changesets.
 
@@ -218,7 +218,7 @@ end
 
 The schema block at the top of the model should be pretty self-explanatory. We'll take a look at changesets next.
 
-####Changesets and Validations
+#### Changesets and Validations
 
 Changesets define a pipeline of transformations our data needs to undergo before it will be ready for our application to use. These transformations might include type casting, validation, and filtering out any extraneous parameters.
 
@@ -392,7 +392,7 @@ Email has invalid format
 
 There are many more validations and transformations we can perform in a changeset. Please see the [Ecto Changeset documentation](http://hexdocs.pm/ecto/Ecto.Changeset.html) for more information.
 
-####Controller Usage
+#### Controller Usage
 
 At this point, let's see how we can actually use Ecto in our application. Luckily, Phoenix gave us an example of this when we ran `mix phoenix.gen.html`, the `HelloPhoenix.UserController`.
 

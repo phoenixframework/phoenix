@@ -72,7 +72,7 @@ web/router.ex:1: warning: this clause cannot match because a previous clause at 
 Compiled web/router.ex
 ```
 
-###Examining Routes
+### Examining Routes
 
 Phoenix provides a great tool for investigating routes in an application, the mix task `phoenix.routes`.
 
@@ -86,7 +86,7 @@ The output tells us that any HTTP GET request for the root of the application wi
 
 `page_path` is an example of a what Phoenix calls a path helper, and we'll talk about those very soon.
 
-###Resources
+### Resources
 
 The router supports other macros besides those for HTTP verbs like `get`, `post` and `put`. The most important among them is `resources`, which expands out to eight clauses of the match function.
 
@@ -159,7 +159,7 @@ comment_path  POST    /comments                      HelloPhoenix.CommentControl
 comment_path  PATCH   /comments/:id                  HelloPhoenix.CommentController.update/2
               PUT     /comments/:id                  HelloPhoenix.CommentController.update/2
 ```
-###Path Helpers
+### Path Helpers
 
 Path helpers are functions which are dynamically defined on the `Router.Helpers` module for an individual application. For us, that is `HelloPhoenix.Router.Helpers`.  Their names are derived from the name of the controller used in the route definition. Our controller is `HelloPhoenix.PageController`, and `page_path` is the function which will return the path to the root of our application.
 
@@ -179,7 +179,7 @@ Please see the [View Guide](http://www.phoenixframework.org/docs/views) for more
 
 This pays off tremendously if we should ever have to change the path of our route in the router. Since the path helpers are built dynamically from the routes, any calls to `page_path` in our templates will still work.
 
-###More on Path Helpers
+### More on Path Helpers
 
 When we ran the `phoenix.routes` task for our user resource, it listed the `user_path` as the path helper function for each line of output. Here is what that translates to for each action.
 
@@ -225,7 +225,7 @@ Application endpoints will have their own guide soon. For now, think of them as 
 
 The `_url` functions will get the host, port, proxy port and ssl information needed to construct the full url from the configuration parameters set for each environment. We'll talk about configuration in more detail in its own guide. For now, you can take a look at `/config/dev.exs` file in your own project to see what those values are.
 
-###Nested Resources
+### Nested Resources
 
 It is also possible to nest resources in a Phoenix router. Let's say we also have a posts resource which has a one to many relationship with users. That is to say, a user can create many posts, and an individual post belongs to only one user. We can represent that by adding a nested route in `web/router.ex` like this.
 
@@ -264,7 +264,7 @@ iex> HelloPhoenix.Router.Helpers.user_post_path(Endpoint, :index, 42, active: tr
 "/users/42/posts?active=true"
 ```
 
-###Scoped Routes
+### Scoped Routes
 
 Scopes are a way to group routes under a common path prefix and scoped set of plug middleware. We might want to do this for admin functionality, APIs  and especially for versioned APIs. Let's say we have user generated reviews on a site, and that those reviews first need to be approved by an admin. The semantics of these resources are quite different, and they may not share the same controller, so we want to keep them separate.
 
@@ -586,7 +586,7 @@ post_path  PATCH   /posts/:id       AnotherApp.PostController.update/2
 post_path  DELETE  /posts/:id       AnotherApp.PostController.delete/2
 ```
 
-###Pipelines
+### Pipelines
 
 We have come quite a long way in this guide without talking about one of the first lines we saw in the router - `pipe_through :browser`. It's time to fix that.
 
@@ -596,7 +596,7 @@ Pipelines are simply plugs stacked up together in a specific order and given a n
 
 A newly generated Phoenix application defines two pipelines called `:browser` and `:api`. We'll get to those in a minute, but first we need to talk about the plug stack in the Endpoint plugs.
 
-#####The Endpoint Plugs
+##### The Endpoint Plugs
 
 Endpoints organize all the plugs common to every request, and apply them before dispatching into the router(s) with their underlying `:browser`, `:api`, and custom pipelines. The default Endpoint plugs do quite a lot of work. Here they are in order.
 
@@ -618,7 +618,7 @@ Endpoints organize all the plugs common to every request, and apply them before 
 
 - [Plug.Router](http://hexdocs.pm/plug/Plug.Router.html) - plugs a router into the request cycle
 
-#####The `:browser` and `:api` Pipelines
+##### The `:browser` and `:api` Pipelines
 
 Phoenix defines two other pipelines by default, `:browser` and `:api`. The router will invoke these after it matches a route, assuming we have called `pipe_through/1` with them in the enclosing scope.
 
@@ -745,7 +745,7 @@ end
 
 In general, the scoping rules for pipelines behave as you might expect. In this example, all routes will pipe through the `:browser` pipeline, because the `/` scope encloses all the routes. Only the `reviews` resources routes will pipe through the `:review_checks` pipeline, however, because we declare `pipe_through :review_checks` within the `/reviews` scope, where the `reviews` resources routes are.
 
-#####Creating New Pipelines
+##### Creating New Pipelines
 
 Phoenix allows us to create our own custom pipelines anywhere in the router. It couldn't be simpler. We just call the `pipeline/2` macro with an atom for the name of our new pipeline and a block with all the plugs we want in it.
 
@@ -773,7 +773,7 @@ defmodule HelloPhoenix.Router do
 end
 ```
 
-###Channel Routes
+### Channel Routes
 
 Channels are a very exciting, real-time component of the Phoenix framework. Channels handle incoming and outgoing messages broadcast over a socket for a given topic. Channel routes, then, need to match requests by socket and topic in order to dispatch to the correct channel. (For a more detailed description of channels and their behavior, please see the [Channel Guide](http://www.phoenixframework.org/docs/channels).)
 
@@ -885,7 +885,7 @@ socket "/another_ws", HelloPhoenix, via: [WebSocket] do
 end
 ```
 
-###Summary
+### Summary
 
 Routing is a big topic, and we have covered a lot of ground here. The important points to take away from this guide are:
 - Routes which begin with an HTTP verb name expand to a single clause of the match function.

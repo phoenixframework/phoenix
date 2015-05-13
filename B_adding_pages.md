@@ -66,7 +66,7 @@ lib
 ```
 Enough prep, let's get on with our first new Phoenix page!
 
-###A New Route
+### A New Route
 
 Routes map unique HTTP verb/path pairs to controller/action pairs which will handle them. Phoenix generates a router file for us in new applications at `web/router.ex`. This is where we will be working for this section.
 
@@ -127,7 +127,7 @@ scope "/", HelloPhoenix do
 end
 ```
 
-###A New Controller
+### A New Controller
 
 Controllers are Elixir modules, and actions are Elixir functions defined in them. The purpose of actions is to gather any data and perform any tasks needed for rendering. Our route specifies that we need a `HelloPhoenix.HelloController` module with an `index/2` action.
 
@@ -154,7 +154,7 @@ Note: Using an atom as the template name will also work here, `render conn, :ind
 
 The modules responsible for rendering are views, and we'll make a new one of those next.
 
-###A New View
+### A New View
 
 Phoenix views have several important jobs. They render templates. They also act as a presentation layer for raw data from the controller, preparing it for use in a template. Functions which perform this transformation should go in a view.
 
@@ -168,7 +168,7 @@ defmodule HelloPhoenix.HelloView do
 end
 ```
 
-###A New Template
+### A New Template
 
 Phoenix templates are just that, templates into which data can be rendered. The standard templating engine Phoenix uses is eex, which stands for [Embedded Elixir](http://elixir-lang.org/docs/stable/eex/). All of our template files will have the `.eex` file extension.
 
@@ -188,13 +188,13 @@ Now that we've got the route, controller, view and template, we should be able t
 
 There are a couple of interesting things to notice about what we just did. We didn't need to stop and re-start the server while we made these changes. Yes, Phoenix has hot code re-loading! Also, even though our `index.html.eex` file consisted of only a single div tag, The page we get is a full html document. Our index template is rendered into the application layout - `web/templates/layout/application.html.eex`. If you open it, you'll see a tag that looks like this: `<%= @inner %>`, which is what injects our rendered template into the layout before the html is sent off to the browser.
 
-##Another New Page
+## Another New Page
 
 Let's add just a little complexity to our application. We're going to add a new page that will recognize a piece of the url, label it as a "messenger" and pass it through the controller into the template so our messenger can say hello.
 
 As we did last time, the first thing we'll do is create a new route.
 
-###A New Route
+### A New Route
 
 For this exercise, we're going to re-use the `HelloController` we just created and just add a new `show` action. We'll add a line just below our last route, like this.
 
@@ -211,7 +211,7 @@ Notice that we put the atom `:messenger` in the path. Phoenix will take whatever
 
 For example, if we point the browser at: [http://localhost:4000/hello/Frank](http://localhost:4000/hello/Frank), the value of ":messenger" will be "Frank".
 
-###A New Action
+### A New Action
 
 Requests to our new route will be handled by the `HelloPhoenix.HelloController` `show` action. We already have the controller at `web/controllers/hello_controller.ex`, so all we need to do is edit that file and add a `show` action to it. This time, we'll need to keep the params that get passed into the action so that we can pass the messenger to the template. To do that, we add this show function to the controller.
 
@@ -226,7 +226,7 @@ Within the body of the `show` action, we also pass a third argument into the ren
 
 It's good to remember that the keys to the params [Dict](http://elixir-lang.org/docs/stable/elixir/Dict.html) will always be strings.
 
-###A New Template
+### A New Template
 
 For the last piece of this puzzle, we'll need a new template. Since it is for the `show` action of the `HelloController`, it will go into the `web/templates/hello` directory and be called `show.html.eex`. It will look surprisingly like our `index.html.eex` template, except that we will need to display the name of our messenger.
 
