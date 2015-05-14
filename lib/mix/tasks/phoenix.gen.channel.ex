@@ -34,7 +34,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Channel do
 
     Add the channel to the proper scope in web/router.ex:
 
-        channel "#{plural}:*", #{binding[:scoped]}Channel
+        channel "#{plural}:lobby", #{binding[:scoped]}Channel
     """
   end
 
