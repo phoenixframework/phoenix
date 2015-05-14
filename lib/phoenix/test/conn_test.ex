@@ -308,7 +308,8 @@ defmodule Phoenix.ConnTest do
   """
   @spec response(Conn.t, status :: integer | atom) :: binary | no_return
   def response(%Conn{state: :unset}, _status) do
-    raise "expected connection to have a response but no response was set/sent"
+    raise "expected a response from connection but no response was set/sent." <>
+      "please verify that you provided an active connection variable."
   end
 
   def response(%Conn{status: status, resp_body: body}, given) do

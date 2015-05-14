@@ -146,7 +146,8 @@ defmodule Phoenix.Test.ConnTest do
     assert conn |> send_resp(200, "ok") |> response(:ok) == "ok"
 
     assert_raise RuntimeError,
-                 "expected connection to have a response but no response was set/sent", fn ->
+                 "expected a response from connection but no response was set/sent." <>
+                 "please verify that you provided an active connection variable.", fn ->
       conn(:get, "/") |> response(200)
     end
 
