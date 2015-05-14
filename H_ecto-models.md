@@ -10,6 +10,7 @@ Now that we all have Ecto and Postgrex installed and configured, the easiest way
 $ mix phoenix.gen.html User users name:string email:string bio:string number_of_pets:integer
 * creating priv/repo/migrations/20150409213440_create_user.exs
 * creating web/models/user.ex
+* creating test/models/user_test.exs
 * creating web/controllers/user_controller.ex
 * creating web/templates/user/edit.html.eex
 * creating web/templates/user/form.html.eex
@@ -17,6 +18,7 @@ $ mix phoenix.gen.html User users name:string email:string bio:string number_of_
 * creating web/templates/user/new.html.eex
 * creating web/templates/user/show.html.eex
 * creating web/views/user_view.ex
+* creating test/controllers/user_controller_test.exs
 
 Add the resource to the proper scope in web/router.ex:
 
@@ -27,7 +29,7 @@ and then update your repository by running migrations:
 $ mix ecto.migrate
 ```
 
-Notice that we get a lot for free with this task - a migration, a controller, a model, a view, and a number of templates.
+Notice that we get a lot for free with this task - a migration, a controller, a controller test, a model, a model test, a view, and a number of templates.
 
 Let's follow the instructions the task gives us and insert the `resources "/users", UserController` line in the router `web/router.ex`.
 
