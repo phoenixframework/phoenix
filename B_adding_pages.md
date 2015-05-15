@@ -182,7 +182,7 @@ Let's do that now. Create `web/templates/hello/index.html.eex` and make it look 
 </div>
 ```
 
-Now that we've got the route, controller, view and template, we should be able to point our browsers at [http://localhost:4000/hello](http://localhost:4000/hello) and see our greeting from Phoenix!
+Now that we've got the route, controller, view and template, we should be able to point our browsers at [http://localhost:4000/hello](http://localhost:4000/hello) and see our greeting from Phoenix! (In case you stopped the server along the way, the task to restart it is `mix phoenix.server`.)
 
 ![Phoenix Greets Us](/images/hello-from-phoenix.png)
 
