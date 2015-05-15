@@ -7,9 +7,8 @@ defmodule Mix.Tasks.Phoenix.NewTest do
   @app_name "photo_blog"
 
   setup do
-    # The shell asks to install npm and mix deps.
+    # The shell asks to install deps.
     # We will politely say not.
-    send self(), {:mix_shell_input, :yes?, false}
     send self(), {:mix_shell_input, :yes?, false}
     :ok
   end
@@ -80,12 +79,8 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/test/support/model_case.ex", ~r"defmodule PhotoBlog.ModelCase"
       assert_file "photo_blog/web/web.ex", ~r"alias PhotoBlog.Repo"
 
-      # Install mix dependencies?
-      assert_received {:mix_shell, :yes?, ["\nInstall mix dependencies?"]}
-
-      # The other question is to skip or install brunch.io deps.
-      assert_received {:mix_shell, :yes?, [msg]}
-      assert msg =~ "brunch.io"
+      # Install dependencies?
+      assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
     end
   end
 

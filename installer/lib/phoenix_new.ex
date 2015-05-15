@@ -169,25 +169,27 @@ defmodule Mix.Tasks.Phoenix.New do
     copy_static app, path, binding
 
     # Parallel installs
-    install_parallel path, binding
+    install? = Mix.shell.yes?("\nFetch and install dependencies?")
 
-    instructions = [
-      "$ cd #{path}",
-      unless(binding[:hex?], do: "$ mix deps.get"),
-      "$ mix phoenix.server"
-    ]
+    File.cd!(path, fn ->
+      brunch =
+        case install_brunch(install?) do
+          {:ok, task}   -> task
+          :not_required -> nil
+          :not_allowed  -> print_brunch_info()
+        end
 
-    # All set!
-    Mix.shell.info """
+      {mix, extra} =
+        case install_mix(install?) do
+          {:ok, task}  -> {task, []}
+          :not_allowed -> {nil, ["$ mix deps.get"]}
+        end
 
-    We are all set! Run your Phoenix application:
+      brunch && Task.await(brunch, :infinity)
+      mix    && Task.await(mix, :infinity)
 
-        #{instructions |> Enum.filter(& &1) |> Enum.join("\n    ")}
-
-    You can also run it inside IEx (Interactive Elixir) as:
-
-        $ iex -S mix phoenix.server
-    """
+      print_mix_info(path, extra)
+    end)
   end
 
   defp copy_model(_app, path, binding) do
@@ -229,90 +231,83 @@ defmodule Mix.Tasks.Phoenix.New do
     end
   end
 
-  @brunch_question String.rstrip """
-
-  Phoenix uses an optional build tool called brunch.io that
-  requires npm but you don't have npm in your system. Would
-  you still like to copy brunch.io files?
-  """
-
-  @brunch_install """
-
-  Brunch was setup for static assets, but dependencies were
-  not installed via npm. Installation instructions for node.js,
-  which includes npm, can be found at http://nodejs.org.
-
-  Install your brunch dependencies by running inside your app:
-
-      $ npm install
-  """
-
   defp copy_static(_app, path, binding) do
-    brunch? =
-      cond do
-        binding[:brunch] == false ->
-          false
-        !System.find_executable("npm") ->
-          if Mix.shell.yes?(@brunch_question) do
-            Mix.shell.info(@brunch_install)
-            true
-          else
-            Mix.shell.info("")
-            false
-          end
-        true ->
-          true
-      end
-
-    if brunch? do
-      copy_from path, binding, @brunch
-      create_file Path.join(path, "web/static/vendor/phoenix.js"), phoenix_js_text()
-      create_file Path.join(path, "priv/static/images/phoenix.png"), phoenix_png_text()
-    else
+    if binding[:brunch] == false do
       copy_from path, binding, @bare
       create_file Path.join(path, "priv/static/js/phoenix.js"), phoenix_js_text()
       create_file Path.join(path, "priv/static/images/phoenix.png"), phoenix_png_text()
+    else
+      copy_from path, binding, @brunch
+      create_file Path.join(path, "web/static/vendor/phoenix.js"), phoenix_js_text()
+      create_file Path.join(path, "priv/static/images/phoenix.png"), phoenix_png_text()
     end
   end
 
-  defp install_parallel(path, binding) do
-    File.cd!(path, fn ->
-      mix    = install_mix(binding)
-      brunch = install_brunch(binding)
-
-      brunch && Task.await(brunch, :infinity)
-      mix    && Task.await(mix, :infinity)
-    end)
+  defp install_brunch(install?) do
+    maybe_run "npm", "install", File.exists?("brunch-config.js"),
+                                install? && System.find_executable("npm")
   end
 
-  defp install_brunch(_binding) do
-    # Check for npm executable because if it is not
-    # available we have already asked a question before
-    if File.exists?("brunch-config.js") && System.find_executable("npm") do
-      ask_and_run("Install brunch.io dependencies?", "npm", "install")
-    end
+  defp install_mix(install?) do
+    maybe_run "mix", "deps.get", true, install? && Code.ensure_loaded?(Hex)
   end
 
-  defp install_mix(binding) do
-    if binding[:hex?] do
-      ask_and_run("Install mix dependencies?", "mix", "deps.get")
-    end
+  defp print_brunch_info do
+    Mix.shell.info """
+
+    Phoenix uses an optional assets build tool called brunch.io
+    that requires node.js and npm. Installation instructions for
+    node.js, which includes npm, can be found at http://nodejs.org.
+
+    After npm is installed, install your brunch dependencies by
+    running inside your app:
+
+        $ npm install
+
+    If you don't want brunch.io, you can re-run this generator
+    with the --no-brunch option.
+    """
+    nil
+  end
+
+  defp print_mix_info(path, extra) do
+    steps = ["$ cd #{path}"] ++ extra ++ ["$ mix phoenix.server"]
+
+    Mix.shell.info """
+
+    We are all set! Run your Phoenix application:
+
+        #{Enum.join(steps, "\n    ")}
+
+    You can also run it inside IEx (Interactive Elixir) as:
+
+        $ iex -S mix phoenix.server
+    """
   end
 
   ## Helpers
 
-  defp ask_and_run(question, command, args) do
-    if System.find_executable(command) && Mix.shell.yes?("\n" <> question) do
-      exec = command <> " " <> args
-      Mix.shell.info [:green, "* running ", :reset, exec]
-      Task.async(fn ->
-        # We use :os.cmd/1 because there is a bug in OTP
-        # where we cannot execute .cmd files on Windows.
-        # We could use Mix.shell.cmd/1 but that automatically
-        # outputs to the terminal and we don't want that.
-        :os.cmd(String.to_char_list(exec))
-      end)
+  defp maybe_run(command, args, should_run?, can_run?) do
+    cond do
+      should_run? && can_run? ->
+        {:ok, run(command, args)}
+      should_run? ->
+        :not_allowed
+      true ->
+        :not_required
     end
+  end
+
+  defp run(command, args) do
+    exec = command <> " " <> args
+    Mix.shell.info [:green, "* running ", :reset, exec]
+    Task.async(fn ->
+      # We use :os.cmd/1 because there is a bug in OTP
+      # where we cannot execute .cmd files on Windows.
+      # We could use Mix.shell.cmd/1 but that automatically
+      # outputs to the terminal and we don't want that.
+      :os.cmd(String.to_char_list(exec))
+    end)
   end
 
   defp check_application_name!(name, from_app_flag) do
