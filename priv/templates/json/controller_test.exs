@@ -10,12 +10,12 @@ defmodule <%= module %>ControllerTest do
     {:ok, conn: conn}
   end
 
-  test "GET /<%= plural %>", %{conn: conn} do
+  test "lists all entries on index", %{conn: conn} do
     conn = get conn, <%= singular %>_path(conn, :index)
     assert json_response(conn, 200)["data"] == []
   end
 
-  test "GET /<%= plural %>/:id", %{conn: conn} do
+  test "shows chosen resource", %{conn: conn} do
     <%= singular %> = Repo.insert %<%= alias %>{}
     conn = get conn, <%= singular %>_path(conn, :show, <%= singular %>)
     assert json_response(conn, 200)["data"] == %{
@@ -23,29 +23,29 @@ defmodule <%= module %>ControllerTest do
     }
   end
 
-  test "POST /<%= plural %> with valid data", %{conn: conn} do
+  test "creates and renders resource when data is valid", %{conn: conn} do
     conn = post conn, <%= singular %>_path(conn, :create), @valid_params
     assert json_response(conn, 200)["data"]["id"]
   end
 
-  test "POST /<%= plural %> with invalid data", %{conn: conn} do
+  test "does not create resource and renders errors when data is invalid", %{conn: conn} do
     conn = post conn, <%= singular %>_path(conn, :create), @invalid_params
     assert json_response(conn, 422)["errors"] != %{}
   end
 
-  test "PUT /<%= plural %>/:id with valid data", %{conn: conn} do
+  test "updates and renders chosen resource when data is valid", %{conn: conn} do
     <%= singular %> = Repo.insert %<%= alias %>{}
     conn = put conn, <%= singular %>_path(conn, :update, <%= singular %>), @valid_params
     assert json_response(conn, 200)["data"]["id"]
   end
 
-  test "PUT /<%= plural %>/:id with invalid data", %{conn: conn} do
+  test "does not update chosen resource and renders errors when data is invalid", %{conn: conn} do
     <%= singular %> = Repo.insert %<%= alias %>{}
     conn = put conn, <%= singular %>_path(conn, :update, <%= singular %>), @invalid_params
     assert json_response(conn, 422)["errors"] != %{}
   end
 
-  test "DELETE /<%= plural %>/:id", %{conn: conn} do
+  test "deletes chosen resource", %{conn: conn} do
     <%= singular %> = Repo.insert %<%= alias %>{}
     conn = delete conn, <%= singular %>_path(conn, :delete, <%= singular %>)
     assert json_response(conn, 200)["data"]["id"]
