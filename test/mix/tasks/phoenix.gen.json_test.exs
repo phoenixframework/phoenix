@@ -32,13 +32,15 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
       assert_file "test/controllers/user_controller_test.exs", fn file ->
         assert file =~ "defmodule Phoenix.UserControllerTest"
         assert file =~ "use Phoenix.ConnCase"
-        assert file =~ ~S|@valid_params user: %{age: 42|
+        assert file =~ ~S|@valid_attrs %{age: 42|
+        assert file =~ ~S|@valid_params user: @valid_attrs|
 
         assert file =~ ~S|test "GET /users"|
         assert file =~ ~S|conn = get conn, user_path(conn, :index)|
 
         assert file =~ ~S|test "POST /users with valid data"|
         assert file =~ ~S|conn = post conn, user_path(conn, :create), @valid_params|
+        assert file =~ ~r/POST.*with valid.*?assert Repo\.get_by\(User, @valid_attrs\).*?end/s
 
         assert file =~ ~S|test "POST /users with invalid data"|
         assert file =~ ~S|conn = post conn, user_path(conn, :create), @invalid_params|
@@ -48,6 +50,7 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
 
         assert file =~ ~S|test "PUT /users/:id with valid data"|
         assert file =~ ~S|conn = put conn, user_path(conn, :update, user), @valid_params|
+        assert file =~ ~r/PUT.*with valid.*?assert Repo\.get_by\(User, @valid_attrs\).*?end/s
 
         assert file =~ ~S|test "PUT /users/:id with invalid data"|
         assert file =~ ~S|conn = put conn, user_path(conn, :update, user), @invalid_params|

@@ -2,7 +2,8 @@ defmodule <%= module %>ControllerTest do
   use <%= base %>.ConnCase
 
   alias <%= module %>
-  @valid_params <%= singular %>: <%= inspect params %>
+  @valid_attrs <%= inspect params %>
+  @valid_params <%= singular %>: @valid_attrs
   @invalid_params <%= singular %>: %{}
 
   setup do
@@ -23,6 +24,7 @@ defmodule <%= module %>ControllerTest do
   test "creates resource and redirects when data is valid", %{conn: conn} do
     conn = post conn, <%= singular %>_path(conn, :create), @valid_params
     assert redirected_to(conn) == <%= singular %>_path(conn, :index)
+    assert Repo.get_by(<%= alias %>, @valid_attrs)
   end
 
   test "does not create resource and renders errors when data is invalid", %{conn: conn} do
@@ -46,6 +48,7 @@ defmodule <%= module %>ControllerTest do
     <%= singular %> = Repo.insert %<%= alias %>{}
     conn = put conn, <%= singular %>_path(conn, :update, <%= singular %>), @valid_params
     assert redirected_to(conn) == <%= singular %>_path(conn, :index)
+    assert Repo.get_by(<%= alias %>, @valid_attrs)
   end
 
   test "does not update chosen resource and renders errors when data is invalid", %{conn: conn} do
