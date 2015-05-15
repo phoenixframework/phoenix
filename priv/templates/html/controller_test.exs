@@ -3,8 +3,7 @@ defmodule <%= module %>ControllerTest do
 
   alias <%= module %>
   @valid_attrs <%= inspect params %>
-  @valid_params <%= singular %>: @valid_attrs
-  @invalid_params <%= singular %>: %{}
+  @invalid_attrs %{}
 
   setup do
     conn = conn()
@@ -22,13 +21,13 @@ defmodule <%= module %>ControllerTest do
   end
 
   test "creates resource and redirects when data is valid", %{conn: conn} do
-    conn = post conn, <%= singular %>_path(conn, :create), @valid_params
+    conn = post conn, <%= singular %>_path(conn, :create), <%= singular %>: @valid_attrs
     assert redirected_to(conn) == <%= singular %>_path(conn, :index)
     assert Repo.get_by(<%= alias %>, @valid_attrs)
   end
 
   test "does not create resource and renders errors when data is invalid", %{conn: conn} do
-    conn = post conn, <%= singular %>_path(conn, :create), @invalid_params
+    conn = post conn, <%= singular %>_path(conn, :create), <%= singular %>: @invalid_attrs
     assert html_response(conn, 200) =~ "New <%= singular %>"
   end
 
@@ -46,14 +45,14 @@ defmodule <%= module %>ControllerTest do
 
   test "updates chosen resource and redirects when data is valid", %{conn: conn} do
     <%= singular %> = Repo.insert %<%= alias %>{}
-    conn = put conn, <%= singular %>_path(conn, :update, <%= singular %>), @valid_params
+    conn = put conn, <%= singular %>_path(conn, :update, <%= singular %>), <%= singular %>: @valid_attrs
     assert redirected_to(conn) == <%= singular %>_path(conn, :index)
     assert Repo.get_by(<%= alias %>, @valid_attrs)
   end
 
   test "does not update chosen resource and renders errors when data is invalid", %{conn: conn} do
     <%= singular %> = Repo.insert %<%= alias %>{}
-    conn = put conn, <%= singular %>_path(conn, :update, <%= singular %>), @invalid_params
+    conn = put conn, <%= singular %>_path(conn, :update, <%= singular %>), <%= singular %>: @invalid_attrs
     assert html_response(conn, 200) =~ "Edit <%= singular %>"
   end
 
