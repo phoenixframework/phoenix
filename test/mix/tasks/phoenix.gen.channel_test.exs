@@ -43,7 +43,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ChannelTest do
 
         assert file =~ ~S|test "broadcasts are pushed to the client"|
         assert file =~ ~S|broadcast_from! socket, "broadcast", %{"some" => "data"}|
-        assert file =~ ~S|assert_push socket, "broadcast", %{"some" => "data"}|
+        assert file =~ ~S|assert_push "broadcast", %{"some" => "data"}|
       end
     end
   end
@@ -57,7 +57,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ChannelTest do
         assert file =~ ~S|use Phoenix.Web, :channel|
       end
 
-      assert_file "test/channels/room_channel_test.exs", fn file ->
+      assert_file "test/channels/admin/room_channel_test.exs", fn file ->
         assert file =~ ~S|defmodule Phoenix.Admin.RoomChannelTest|
         assert file =~ ~S|use Phoenix.ChannelCase|
         assert file =~ ~S|alias Phoenix.Admin.RoomChannel|
