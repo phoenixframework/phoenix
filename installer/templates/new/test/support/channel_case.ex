@@ -31,11 +31,6 @@ defmodule <%= application_module %>.ChannelCase do
     end
   end
 
-  setup_all do
-    @endpoint.start_link()
-    :ok
-  end
-
   setup tags do
 <%= if ecto do %>    unless tags[:async] do
       Ecto.Adapters.SQL.restart_test_transaction(<%= application_module %>.Repo, [])

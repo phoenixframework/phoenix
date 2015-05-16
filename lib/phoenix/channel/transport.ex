@@ -101,10 +101,10 @@ defmodule Phoenix.Channel.Transport do
 
         case Phoenix.Channel.Server.join(socket, msg.payload) do
           {:ok, response, pid} ->
-            push_reply(socket, msg.ref, %{status: "ok", response: response})
+            reply(socket, msg.ref, %{status: :ok, response: response})
             {:ok, pid}
           {:error, response} ->
-            push_reply(socket, msg.ref, %{status: "error", response: response})
+            reply(socket, msg.ref, %{status: :error, response: response})
             {:error, response}
         end
     end
@@ -121,8 +121,8 @@ defmodule Phoenix.Channel.Transport do
     :ok
   end
 
-  defp push_reply(socket, ref, message) do
-    Phoenix.Channel.Server.push_reply socket.transport_pid, ref, socket.topic, message
+  defp reply(socket, ref, message) do
+    Phoenix.Channel.Server.reply socket.transport_pid, ref, socket.topic, message
   end
 
   defp log_ignore(topic, router) do

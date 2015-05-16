@@ -32,9 +32,11 @@ defmodule Mix.Tasks.Phoenix.Gen.Channel do
 
     Mix.shell.info """
 
-    Add the channel to the proper scope in web/router.ex:
+    Add the channel to a socket scope in web/router.ex:
 
-        channel "#{plural}:lobby", #{binding[:scoped]}Channel
+        socket "/ws", #{binding[:base]} do
+          channel "#{plural}:lobby", #{binding[:scoped]}Channel
+        end
     """
   end
 
@@ -42,7 +44,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Channel do
     Mix.raise """
     mix phoenix.gen.channel expects just the module name and topic name:
 
-        mix phoenix.gen.channel Room rooms new_msg
+        mix phoenix.gen.channel Room rooms
     """
   end
 

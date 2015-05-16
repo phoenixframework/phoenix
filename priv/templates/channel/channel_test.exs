@@ -1,24 +1,25 @@
 defmodule <%= module %>ChannelTest do
   use <%= base %>.ChannelCase
 
-  alias <%= module %>
+  alias <%= module %>Channel
 
-  test "successful join of <%= plural %>:lobby" do
-    assert {:ok, _, socket} = join(<%= scoped %>Channel, "<%= plural %>:lobby")
-    assert socket.topic == "<%= plural %>:lobby"
-  end
-
-  test "ping replies with pong" do
-    {:ok, _, socket} = join(<%= scoped %>Channel, "<%= plural %>:lobby")
-
-    ref = push socket, "ping", %{"hello" => "there"}
-    assert_reply ref, :pong, %{"hello" => "there"}
-  end
-
-  test "shout broadcasts to <%= plural %>:lobby" do
+  setup do
     {:ok, _, socket} = subscribe_and_join(<%= scoped %>Channel, "<%= plural %>:lobby")
+    {:ok, socket: socket}
+  end
 
-    push socket, "broadcast", %{"foo" => "bar"}
-    assert_broadcast "broadcast", %{"foo" => "bar"}
+  test "ping replies with status ok", %{socket: socket} do
+    ref = push socket, "ping", %{"hello" => "there"}
+    assert_reply ref, :ok, %{"hello" => "there"}
+  end
+
+  test "shout broadcasts to <%= plural %>:lobby", %{socket: socket} do
+    push socket, "shout", %{"hello" => "all"}
+    assert_broadcast "shout", %{"hello" => "all"}
+  end
+
+  test "broadcasts are pushed to the client", %{socket: socket} do
+    broadcast_from! socket, "broadcast", %{"some" => "data"}
+    assert_push "broadcast", %{"some" => "data"}
   end
 end
