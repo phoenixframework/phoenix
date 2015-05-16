@@ -146,7 +146,7 @@ defmodule Phoenix.Test.ConnTest do
     assert conn |> send_resp(200, "ok") |> response(:ok) == "ok"
 
     assert_raise RuntimeError,
-                 "expected connection to have a response but no response was set/sent", fn ->
+                 ~r"expected connection to have a response but no response was set/sent", fn ->
       conn(:get, "/") |> response(200)
     end
 
@@ -254,7 +254,7 @@ defmodule Phoenix.Test.ConnTest do
 
   test "redirected_to/2 without response" do
     assert_raise RuntimeError,
-                 "expected connection to have redirected but no response was set/sent", fn ->
+                 ~r"expected connection to have redirected but no response was set/sent", fn ->
       conn(:get, "/")
       |> redirected_to()
     end

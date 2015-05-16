@@ -308,7 +308,13 @@ defmodule Phoenix.ConnTest do
   """
   @spec response(Conn.t, status :: integer | atom) :: binary | no_return
   def response(%Conn{state: :unset}, _status) do
-    raise "expected connection to have a response but no response was set/sent"
+    raise """
+    expected connection to have a response but no response was set/sent.
+    Please verify that you assign to "conn" after a request:
+
+        conn = get conn, "/"
+        assert html_response(conn) =~ "Hello"
+    """
   end
 
   def response(%Conn{status: status, resp_body: body}, given) do
