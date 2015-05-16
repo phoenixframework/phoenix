@@ -28,8 +28,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ChannelTest do
 
       assert_file "test/channels/room_channel_test.exs", fn file ->
         assert file =~ ~S|defmodule Phoenix.RoomChannelTest|
-        assert file =~ ~S|@endpoint Phoenix.Endpoint|
-        assert file =~ ~S|use Phoenix.ChannelTest|
+        assert file =~ ~S|use Phoenix.ChannelCase|
 
         assert file =~ ~S|test "successful join of rooms:lobby" do|
         assert file =~ ~S|assert {:ok, _, socket} = join(RoomChannel, "rooms:lobby")|

@@ -1,14 +1,7 @@
 defmodule <%= module %>ChannelTest do
-  use ExUnit.Case
+  use <%= base %>.ChannelCase
+
   alias <%= module %>
-
-  @endpoint <%= base %>.Endpoint
-  use Phoenix.ChannelTest
-
-  setup_all do
-    @endpoint.start_link()
-    :ok
-  end
 
   test "successful join of <%= plural %>:lobby" do
     assert {:ok, _, socket} = join(<%= scoped %>Channel, "<%= plural %>:lobby")
