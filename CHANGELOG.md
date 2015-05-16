@@ -2,6 +2,15 @@
 
 ## v0.14.0-dev
 
+* Enhancements
+  * [Channel] Add `phoenix.new.channel Channel topic`
+  * [Channel] Add `Phoenix.ChannelCase`
+  * [Controller] Assert changes in the repository on generated controller tests
+  * [Endpoint] Add `static_url` to endpoint to configure host, port and more for static urls
+  * [phoenix.new] Generate a channel case for new apps
+  * [phoenix.new] Improve installation workflow by asking to install and fetch dependencies once
+  * [phoenix.new] Add `errors_on/1` to generated model case
+
 ## v0.13.0 (2015-05-11)
 
 See these [`0.12.x` to `0.13.0` upgrade instructions](https://gist.github.com/chrismccord/0a3bf5229801d61f219b) to bring your existing apps up to speed.
