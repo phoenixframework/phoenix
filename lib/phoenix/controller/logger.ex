@@ -23,7 +23,7 @@ defmodule Phoenix.Controller.Logger do
   """
 
   def init(opts) do
-    Keyword.get(opts, :log, :info)
+    Keyword.get(opts, :log, :debug)
   end
 
   def call(conn, false) do
