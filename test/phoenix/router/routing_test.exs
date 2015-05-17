@@ -4,7 +4,6 @@ defmodule Phoenix.Router.RoutingTest do
 
   defmodule UserController do
     use Phoenix.Controller
-    plug :action
     def index(conn, _params), do: text(conn, "users index")
     def show(conn, _params), do: text(conn, "users show")
     def top(conn, _params), do: text(conn, "users top")

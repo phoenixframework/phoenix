@@ -4,7 +4,6 @@ defmodule Phoenix.Router.ResourcesTest do
 
   defmodule UserController do
     use Phoenix.Controller
-    plug :action
     def show(conn, _params), do: text(conn, "show users")
     def index(conn, _params), do: text(conn, "index users")
     def new(conn, _params), do: text(conn, "new users")
@@ -16,7 +15,6 @@ defmodule Phoenix.Router.ResourcesTest do
 
   defmodule Api.FileController do
     use Phoenix.Controller
-    plug :action
     def show(conn, _params), do: text(conn, "show files")
     def index(conn, _params), do: text(conn, "index files")
     def new(conn, _params), do: text(conn, "new files")
@@ -24,7 +22,6 @@ defmodule Phoenix.Router.ResourcesTest do
 
   defmodule Api.CommentController do
     use Phoenix.Controller
-    plug :action
     def show(conn, _params), do: text(conn, "show comments")
     def index(conn, _params), do: text(conn, "index comments")
     def new(conn, _params), do: text(conn, "new comments")

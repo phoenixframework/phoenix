@@ -12,8 +12,6 @@ defmodule Phoenix.Controller.Pipeline do
         require Logger
 
         plug :log_message, "before action"
-        plug :action
-        plug :log_message, "after action"
 
         def show(conn, _params) do
           Logger.debug "show/2"
@@ -30,7 +28,6 @@ defmodule Phoenix.Controller.Pipeline do
 
       before action
       show/2
-      after action
 
   As any other Plug pipeline, we can halt at any step by calling
   `Plug.Conn.halt/1` (which is by default imported into controllers).
@@ -53,9 +50,8 @@ defmodule Phoenix.Controller.Pipeline do
   `plug/2` supports guards, allowing a developer to configure a plug to only
   run in some particular action:
 
-      plug :log_message, "before action" when action in [:show, :edit]
-      plug :action
-      plug :log_message, "after action" when not action in [:index]
+      plug :log_message, "before show and edit" when action in [:show, :edit]
+      plug :log_message, "before all but index" when not action in [:index]
 
   The first plug will run only when action is show and edit.
   The second plug will always run, except for the index action.
@@ -107,22 +103,14 @@ defmodule Phoenix.Controller.Pipeline do
         phoenix_controller_pipeline(conn, action)
       end
 
-      def action(%{private: %{phoenix_action: action}} = conn, _options) do
-        apply(__MODULE__, action, [conn, conn.params])
-      end
-
-      defoverridable [init: 1, call: 2, action: 2]
+      defoverridable [init: 1, call: 2]
     end
   end
 
   @doc false
   defmacro __before_compile__(env) do
-    plugs = Module.get_attribute(env.module, :plugs)
-
-    unless Enum.find(plugs, &match?({:action, _, _}, &1)) do
-      raise "could not compile #{inspect env.module} because " <>
-            "it does not have plug :action in its pipeline"
-    end
+    plugs = [{:invoke_afters, [], true},
+             {:perform_action, env.module, true} | Module.get_attribute(env.module, :plugs)]
 
     {conn, body} = Plug.Builder.compile(env, plugs, log_on_halt: :debug)
     quote do
@@ -132,10 +120,24 @@ defmodule Phoenix.Controller.Pipeline do
         _ = var!(conn)
         _ = var!(controller)
         _ = var!(action)
+
         unquote(body)
       end
     end
   end
+
+  @doc false
+  def perform_action(conn, controller) do
+    apply(controller, conn.private.phoenix_action, [conn, conn.params])
+  end
+
+  @doc false
+  def invoke_afters(%Plug.Conn{private: %{phoenix_afters: afters}} = conn, _) do
+    afters
+    |> Enum.reverse()
+    |> Enum.reduce(conn, fn func, acc_conn -> func.(acc_conn) end)
+  end
+  def invoke_afters(conn, _), do: conn
 
   @doc """
   Stores a plug to be executed as part of the plug pipeline.

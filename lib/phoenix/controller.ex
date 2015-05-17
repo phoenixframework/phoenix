@@ -19,8 +19,6 @@ defmodule Phoenix.Controller do
       defmodule MyApp.UserController do
         use MyApp.Web, :controller
 
-        plug :action
-
         def show(conn, %{"id" => id}) do
           user = Repo.get(User, id)
           render conn, "show.html", user: user
@@ -64,7 +62,6 @@ defmodule Phoenix.Controller do
         use MyApp.Web, :controller
 
         plug :authenticate, usernames: ["jose", "eric", "sonny"]
-        plug :action
 
         def show(conn, params) do
           # authenticated users only
@@ -78,9 +75,6 @@ defmodule Phoenix.Controller do
           end
         end
       end
-
-  The `:action` plug must always be invoked and it represents the action
-  to be dispatched to.
 
   Check `Phoenix.Controller.Pipeline` for more information on `plug/2`
   and how to customize the plug pipeline.
@@ -409,8 +403,6 @@ defmodule Phoenix.Controller do
       defmodule MyApp.UserController do
         use Phoenix.Controller
 
-        plug :action
-
         def show(conn, _params) do
           render conn, "show.html", message: "Hello"
         end
@@ -456,7 +448,6 @@ defmodule Phoenix.Controller do
         use Phoenix.Controller
 
         plug :put_view, MyApp.SpecialView
-        plug :action
 
         def show(conn, _params) do
           render conn, :show, message: "Hello"
@@ -470,8 +461,6 @@ defmodule Phoenix.Controller do
 
       defmodule MyApp.UserController do
         use Phoenix.Controller
-
-        plug :action
 
         def show(conn, _params) do
           render conn, "show.html", message: "Hello"
@@ -533,6 +522,23 @@ defmodule Phoenix.Controller do
     data = Phoenix.View.render_to_iodata(view, template,
                                          Map.put(conn.assigns, :conn, conn))
     send_resp(conn, conn.status || 200, content_type, data)
+  end
+
+  @doc """
+  Registers a callback to be invoked after the controller action.
+
+  All callbacks must respect the Plug contract by returning the `%Plug.Conn{}`
+
+  ## Examples
+
+      iex> register_after_action conn, fn conn ->
+        Logger.debug("action complete!")
+        conn
+      end
+
+  """
+  def register_after_action(conn, func) do
+    put_private(conn, :phoenix_afters, [func | (conn.private[:phoenix_afters] || [])])
   end
 
   @doc """

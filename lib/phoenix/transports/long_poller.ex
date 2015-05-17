@@ -33,10 +33,8 @@ defmodule Phoenix.Transports.LongPoller do
   plug :allow_origin
   plug :default_content_type
 
-  # We need to uncomment this when we remove channels from endpoints
+  # TODO We need to uncomment this when we remove channels from endpoints
   # plug Plug.Parsers, parsers: [:json], json_decoder: Poison
-
-  plug :action
 
   @doc """
   Responds to pre-flight CORS requests with Allow-Origin-* headers.

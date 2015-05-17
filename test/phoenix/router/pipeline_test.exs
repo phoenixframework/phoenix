@@ -3,7 +3,6 @@
 
 defmodule Phoenix.Router.PipelineTest.SampleController do
   use Phoenix.Controller
-  plug :action
   def index(conn, _params), do: text(conn, "index")
   def crash(_conn, _params), do: raise "crash!"
 end

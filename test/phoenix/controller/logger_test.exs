@@ -6,7 +6,6 @@ defmodule Phoenix.Controller.LoggerTest do
 
   defmodule LoggerController do
     use Phoenix.Controller
-    plug :action
     def index(conn, _params), do: text(conn, "index")
   end
 

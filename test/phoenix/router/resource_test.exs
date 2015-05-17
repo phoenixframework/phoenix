@@ -4,7 +4,6 @@ defmodule Phoenix.Router.ResourceTest do
 
   defmodule Api.GenericController do
     use Phoenix.Controller
-    plug :action
     def show(conn, _params), do: text(conn, "show")
     def new(conn, _params), do: text(conn, "new")
     def edit(conn, _params), do: text(conn, "edit")

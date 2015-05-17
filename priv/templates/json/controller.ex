@@ -4,7 +4,6 @@ defmodule <%= module %>Controller do
   alias <%= module %>
 
   plug :scrub_params, <%= inspect singular %> when action in [:create, :update]
-  plug :action
 
   def index(conn, _params) do
     <%= plural %> = Repo.all(<%= alias %>)
