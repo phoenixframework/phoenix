@@ -110,6 +110,8 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
 // The `Socket` constructor takes the mount point of the socket
 // as well as options that can be found in the Socket docs,
 // such as configuring the `LongPoller` transport, and heartbeat.
+// Socket params can also be passed as an option for default, but
+// overridable channel params to apply to all channels.
 //
 //
 // ## Channels
@@ -539,6 +541,7 @@ var Socket = exports.Socket = (function () {
   // opts - Optional configuration
   //   transport - The Websocket Transport, ie WebSocket, Phoenix.LongPoller.
   //               Defaults to WebSocket with automatic LongPoller fallback.
+  //   params - The defaults for all channel params, ie `{user_id: userToken}`
   //   heartbeatIntervalMs - The millisec interval to send a heartbeat message
   //   reconnectAfterMs - The millisec interval to reconnect after connection loss
   //   logger - The optional function for specialized logging, ie:
@@ -565,6 +568,7 @@ var Socket = exports.Socket = (function () {
     this.logger = opts.logger || function () {}; // noop
     this.longpoller_timeout = opts.longpoller_timeout || 20000;
     this.endPoint = this.expandEndpoint(endPoint);
+    this.params = opts.params || {};
   }
 
   _prototypeProperties(Socket, null, {
@@ -767,8 +771,18 @@ var Socket = exports.Socket = (function () {
       configurable: true
     },
     chan: {
-      value: function chan(topic, params) {
-        var chan = new Channel(topic, params, this);
+      value: function chan(topic) {
+        var chanParams = arguments[1] === undefined ? {} : arguments[1];
+
+        var mergedParams = {};
+        for (var key in this.params) {
+          mergedParams[key] = this.params[key];
+        }
+        for (var key in chanParams) {
+          mergedParams[key] = chanParams[key];
+        }
+
+        var chan = new Channel(topic, mergedParams, this);
         this.channels.push(chan);
         return chan;
       },
