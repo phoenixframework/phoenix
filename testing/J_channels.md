@@ -188,4 +188,15 @@ The line `broadcast_from! socket, "broadcast", %{"some" => "data"}` will trigger
 callback above which pushes the same event and payload back to the client. To test this, we do
 `assert_push "broadcast", %{"some" => "data"}`.
 
+
 #### Wrap-up
+
+In this guide we tackled all the special assertions that comes with `MyApp.ConnCase` and some of
+the functions provided that help you test channels by triggering its callbacks. We found
+the API for testing channels is largely consistent with the API for Phoenix Channels which makes
+it easy to work with.
+
+If interested in learning more about the helpers provided by `MyApp.ChannelCase`, check out the
+documentation for [`Phoenix.ChannelTest`](http://hexdocs.pm/phoenix/Phoenix.ChannelTest.html) which is the module that defines those functions.
+
+
