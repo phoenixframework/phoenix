@@ -15,7 +15,11 @@ We have seen all of these at one point or another in the guides, but having all 
 
 This is how we tell Phoenix the framework to generate a new Phoenix application for us. We saw it early on in the [Up and Running Guide](http://www.phoenixframework.org/docs/up-and-running)
 
-We need to pass this task a path/name for our application so Phoenix knows where to create it. Conventionally, we use all lower-case letters with underscores for the name (snake case). We can use either a relative or absolute path. The only requirement is that the path must be outside of Phoenix itself.
+Before we begin, we should note that Phoenix uses [Ecto](https://github.com/elixir-lang/ecto) for database access and [Brunch.io](http://brunch.io/) for asset management by default. We can pass `--no-ecto` to opt out of Ecto and  `--no-brunch` to opt out of Brunch.io.
+
+> Note: If we do use Brunch.io, we need to install its dependencies before we start our application. `phoenix.new` will ask to do this for us. Otherwise, we can install them with `npm install`. If we don't install them, the app will throw errors and may not serve our assets properly.
+
+We need to pass `phoenix.new` a path/name for our application so Phoenix knows where to create it. Conventionally, we use all lower-case letters with underscores for the name (snake case). We can use either a relative or absolute path. The only requirement is that the path must be outside of Phoenix itself.
 
 This relative path works.
 
@@ -40,28 +44,13 @@ Install mix dependencies? [Yn] y
 * running mix deps.get
 ```
 
-And it will ask if we want to install our brunch dependencies.
+And it will ask if we want to install our brunch dependencies. (Please see the note above about Brunch.io dependencies.)
 
 ```console
 Install brunch.io dependencies? [Yn] y
 * running npm install
 npm http GET https://registry.npmjs.org/clean-css-brunch
 . . .
-```
-
-If we don't want to use brunch.io as our static asset build sytem, we can pass `--no-brunch` to `phoenix.new`, and it won't prompt us to install brunch.io dependencies. It will let us know how to do so after the install, if we choose to do so.
-
-```console
-install mix dependencies? [Yn] y
-* running mix deps.get
-
-Brunch was setup for static assets, but node deps were not
-installed via npm. Installation instructions for nodejs,
-which includes npm, can be found at http://nodejs.org
-
-Install your brunch dependencies by running inside your app:
-
-$ npm install
 ```
 
 Once all of our dependencies are installed, `phoenix.new` will tell us what our next steps are.

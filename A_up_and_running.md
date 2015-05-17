@@ -1,6 +1,6 @@
 The aim of this first guide is to get a Phoenix application up and running as quickly as possible.
 
-Before we begin, let's take a minute to review the "Dependencies" section of the [Overview Guide](http://www.phoenixframework.org/docs/overview). By installing any necessary external dependencies beforehand, we'll be able to get our application installed and running smoothly.
+Before we begin, let's take a minute to review the "Dependencies" section of the [Overview Guide](http://www.phoenixframework.org/docs/overview). By installing any necessary system dependencies beforehand, we'll be able to get our application installed and running smoothly.
 
 We will need to install Elixir and Erlang. The Elixir site itself has the latest and most complete [installation information](http://elixir-lang.org/install.html). Currently, Phoenix requires Elixir version 1.0.4 or greater which in turn requires Erlang version 17.5 or greater.
 
@@ -18,7 +18,7 @@ Now we are ready to fetch the Phoenix installer:
 $ mix archive.install https://github.com/phoenixframework/phoenix/releases/download/v0.13.0/phoenix_new-0.13.0.ez
 ```
 
-> Note: if the Phoenix archive can't install, we can download the file directly from our browser, save it to the filesystem, and then run: `mix archive.install /path/to/local/phoenix_new.ez`.
+> Note: if the Phoenix archive won't install properly with this command, we can download the file directly from our browser, save it to the filesystem, and then run: `mix archive.install /path/to/local/phoenix_new.ez`.
 
 Now we can run `mix phoenix.new` from any directory in order to bootstrap our Phoenix application. Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello_phoenix`, either of these will work.
 
@@ -30,7 +30,9 @@ $ mix phoenix.new /Users/me/work/elixir-stuff/hello_phoenix
 $ mix phoenix.new hello_phoenix
 ```
 
-For our purposes, a relative path will do.
+> A note about [Brunch.io](http://brunch.io/) before we begin: Phoenix will use Brunch.io for asset management by default. Brunch.io's dependencies are installed via the node package manager, not mix. Phoenix will prompt us to install them at the end of the `mix phoenix.new` task. If we say "no" at that point, and if we don't install those dependencies later with `npm install`, our application will raise errors when we try to start it, and our assets may not load properly. If we don't want to use Brunch.io at all, we can simply pass `--no-brunch` to `mix phoenix.new`.
+
+Now that we're ready, let's call `phoenix.new` with a relative path.
 
 ```console
 $ mix phoenix.new hello_phoenix
@@ -45,16 +47,16 @@ Install mix dependencies? [Yn] y
 * running mix deps.get
 ```
 
-The `phoenix.new` task will also prompt us to install [brunch.io](http://brunch.io) and its dependencies for asset management. This is optional, and will require that [node.js](https://nodejs.org/) and npm are installed on our system. For our example, let's say yes to that as well.
+The `phoenix.new` task will also prompt us to install Brunch.io and its dependencies for asset management. (Please see the note about Brunch.io just above if this is unclear.)
+
+For our example, let's say yes to this as well.
 
 ```console
 Install brunch.io dependencies? [Yn]
 * running npm install
 ```
 
-Note: If we don't want to use brunch.io for our static asset compilation, we can pass the `--no-brunch` flag to `phoenix.new`: `$ mix phoenix.new hello_phoenix --no-brunch`.
-
-Once our brunch.io dependencies are installed, the task will prompt us to change into our project directory and start our application.
+Once our Brunch.io dependencies are installed, the task will prompt us to change into our project directory and start our application.
 
 ```console
 We are all set! Run your Phoenix application:
@@ -74,7 +76,7 @@ $ cd hello_phoenix
 $ mix phoenix.server
 ```
 
-> Note: if this is the first time you are running this command, Phoenix may also ask you to install Rebar. Go ahead with the installation as Rebar is used to build Erlang packages.
+> Note: if this is the first time you are running this command, Phoenix may also ask to install Rebar. Go ahead with the installation as Rebar is used to build Erlang packages.
 
 By default Phoenix accepts requests on port 4000. If we point our favorite web browser at [http://localhost:4000](http://localhost:4000), we should see the Phoenix Framework welcome page.
 
