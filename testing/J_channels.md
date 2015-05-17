@@ -166,6 +166,26 @@ all subscribers in the `"rooms:lobby"` should receive the message. To check that
 `assert_broadcast "shout", %{"hello" => "all"}`.
 
 
+#### Testing an Asynchronous Push from the Server
 
+The last test in our `MyApp.RoomChannelTest` verifies that broadcasts from the server are pushed
+to the client. Unlike the previous tests discussed, we are indirectly testing that our channel's
+`handle_out/3` callback is triggered. This `handle_out/3` is defined in our `MyApp.RoomChannel` as:
+
+```elixir
+def handle_out(event, payload, socket) do
+  push socket, event, payload
+  {:noreply, socket}
+end
+```
+
+Since the `handle_out/3` event is only triggered when we call `broadcast/3` from our channel,
+we will need to emulate that in our test. We do that by calling `broadcast_from` or
+`broadcast_from!`. Both serve the same purpose with the only difference of `broadcast_from!`
+raising an error when broadcast fails.
+
+The line `broadcast_from! socket, "broadcast", %{"some" => "data"}` will trigger our `handle_out/3`
+callback above which pushes the same event and payload back to the client. To test this, we do
+`assert_push "broadcast", %{"some" => "data"}`.
 
 #### Wrap-up
