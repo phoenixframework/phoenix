@@ -2,6 +2,13 @@
 
 ## v0.14.0-dev
 
+* Enhancements
+  * [Controller] Add `register_after_action/2` callback to be invoked after the controlle action has run.
+
+* Backward incompatible changes
+  * [Controller] `plug :action` has been removed and the action is called automatically.
+
+
 ## v0.13.1 (2015-05-16)
 
 * Enhancements
