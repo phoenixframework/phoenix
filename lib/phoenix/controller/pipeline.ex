@@ -118,8 +118,8 @@ defmodule Phoenix.Controller.Pipeline do
 
     plugs =
       if action in plugs do
-        IO.write :stderr, "plug :action is no longer required in controllers, " <>
-                          "please remove it from #{inspect env.module}"
+        IO.puts :stderr, "[deprecated] plug :action is no longer required in controllers, " <>
+                         "please remove it from #{inspect env.module}"
         plugs
       else
         [action|plugs]
