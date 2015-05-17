@@ -207,7 +207,7 @@ drwxr-xr-x   4 lance  staff  136 May 13 18:47 hello_phoenix-0.0.1
 drwxr-xr-x   3 lance  staff  102 May 13 18:47 iex-1.0.4
 drwxr-xr-x   4 lance  staff  136 May 13 18:47 kernel-3.0
 drwxr-xr-x   3 lance  staff  102 May 13 18:47 logger-1.0.4
-drwxr-xr-x   4 lance  staff  136 May 13 18:47 phoenix-0.13.0
+drwxr-xr-x   4 lance  staff  136 May 13 18:47 phoenix-0.13.1
 drwxr-xr-x   3 lance  staff  102 May 13 18:47 phoenix_ecto-0.4.0
 drwxr-xr-x   3 lance  staff  102 May 13 18:47 phoenix_html-1.0.1
 drwxr-xr-x   3 lance  staff  102 May 13 18:47 plug-0.12.2
