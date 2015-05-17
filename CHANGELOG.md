@@ -2,6 +2,8 @@
 
 ## v0.14.0-dev
 
+## v0.13.1 (2015-05-16)
+
 * Enhancements
   * [Channel] Add `phoenix.new.channel Channel topic`
   * [Channel] Add `Phoenix.ChannelCase`
