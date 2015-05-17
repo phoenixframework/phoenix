@@ -133,3 +133,39 @@ We emulate the client pushing a message to the channel with `push/3`. In the lin
 asserting the reply. With `assert_reply ref, :ok, %{"hello" => "there"}`, we assert that the
 server sends a synchronous reply `:ok, %{"hello" => "there"}`. This is how we check that the
 `handle_in/3` callback for the `"ping"` was triggered.
+
+
+#### Testing a Broadcast
+
+It is common to receive messages from the client and broadcast to everyone subscribed to a
+current topic. This common pattern is simple to express in Phoenix and is one of the generated
+`handle_in/3` callbacks in our `MyApp.RoomChannel`.
+
+```elixir
+def handle_in("shout", payload, socket) do
+  broadcast socket, "shout", payload
+  {:noreply, socket}
+end
+```
+
+Its corresponding test looks like:
+
+```elixir
+test "shout broadcasts to rooms:lobby", %{socket: socket} do
+  push socket, "shout", %{"hello" => "all"}
+  assert_broadcast "shout", %{"hello" => "all"}
+end
+```
+
+We notice that we access the same `socket` that is from the setup block. How handy! We also do the
+same `push/3` as we did in the synchronous reply test. So we `push` the `"shout"` event with the
+payload `%{"hello" => "all"}`.
+
+Since the `handle_in/3` callback for the `"shout"` event just broadcasts the same event and payload,
+all subscribers in the `"rooms:lobby"` should receive the message. To check that, we do
+`assert_broadcast "shout", %{"hello" => "all"}`.
+
+
+
+
+#### Wrap-up
