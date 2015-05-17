@@ -22,10 +22,16 @@ defmodule Phoenix.Controller.Logger do
   Phoenix's default is `["password"]`.
   """
 
-  def init(opts), do: opts
+  def init(opts) do
+    Keyword.get(opts, :log, :info)
+  end
 
-  def call(conn, _level) do
-    Logger.info fn ->
+  def call(conn, false) do
+    conn
+  end
+
+  def call(conn, level) do
+    Logger.log level, fn ->
       module = conn |> controller_module |> inspect
       action = conn |> action_name |> Atom.to_string
 

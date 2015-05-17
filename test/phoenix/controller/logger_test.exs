@@ -9,6 +9,11 @@ defmodule Phoenix.Controller.LoggerTest do
     def index(conn, _params), do: text(conn, "index")
   end
 
+  defmodule NoLoggerController do
+    use Phoenix.Controller, log: false
+    def index(conn, _params), do: text(conn, "index")
+  end
+
   test "logs controller, action, format and parameters" do
     output = capture_log fn ->
       conn(:get, "/", foo: "bar", format: "html")
@@ -19,6 +24,16 @@ defmodule Phoenix.Controller.LoggerTest do
     assert output =~ "[info]  Processing by Phoenix.Controller.LoggerTest.LoggerController.index/2"
     assert output =~ "Parameters: %{\"foo\" => \"bar\", \"format\" => \"html\"}"
     assert output =~ "Pipelines: [:browser]"
+  end
+
+  test "does not log when disabled" do
+    output = capture_log fn ->
+      conn(:get, "/", foo: "bar", format: "html")
+      |> fetch_query_params
+      |> put_private(:phoenix_pipelines, [:browser])
+      |> NoLoggerController.call(NoLoggerController.init(:index))
+    end
+    assert output == ""
   end
 
   test "filter parameter" do

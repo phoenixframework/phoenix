@@ -85,17 +85,20 @@ defmodule Phoenix.Controller do
 
     * `:namespace` - sets the namespace to properly inflect
       the layout view. By default it uses the base alias
-      in your controller name.
+      in your controller name
+
+    * `:log` - the level to log. When false, disables controller
+      logging
   """
   defmacro __using__(opts) do
-    quote do
+    quote bind_quoted: [opts: opts] do
       import Plug.Conn
       import Phoenix.Controller
 
       use Phoenix.Controller.Pipeline
 
-      plug Phoenix.Controller.Logger
-      plug :put_new_layout, {Phoenix.Controller.__layout__(__MODULE__, unquote(opts)), :application}
+      plug Phoenix.Controller.Logger, opts
+      plug :put_new_layout, {Phoenix.Controller.__layout__(__MODULE__, opts), :application}
       plug :put_new_view, Phoenix.Controller.__view__(__MODULE__)
     end
   end
