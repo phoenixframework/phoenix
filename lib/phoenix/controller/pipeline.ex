@@ -80,7 +80,7 @@ defmodule Phoenix.Controller.Pipeline do
   As controllers are plugs, they implement both `init/1` and
   `call/2`, and it also provides a function named `action/2`
   which is responsible for dispatching the appropriate action
-  in the middle of the plug stack (and is also overridable).
+  after the plug stack (and is also overridable).
   """
 
   @doc false
@@ -113,7 +113,17 @@ defmodule Phoenix.Controller.Pipeline do
 
   @doc false
   defmacro __before_compile__(env) do
-    plugs = [{:action, [], true} | Module.get_attribute(env.module, :plugs)]
+    action = {:action, [], true}
+    plugs  = Module.get_attribute(env.module, :plugs)
+
+    plugs =
+      if action in plugs do
+        IO.write :stderr, "plug :action is no longer required in controllers, " <>
+                          "please remove it from #{inspect env.module}"
+        plugs
+      else
+        [action|plugs]
+      end
 
     {conn, body} = Plug.Builder.compile(env, plugs, log_on_halt: :debug)
     quote do
