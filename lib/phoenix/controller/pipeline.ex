@@ -103,14 +103,17 @@ defmodule Phoenix.Controller.Pipeline do
         phoenix_controller_pipeline(conn, action)
       end
 
-      defoverridable [init: 1, call: 2]
+      def action(%{private: %{phoenix_action: action}} = conn, _options) do
+        apply(__MODULE__, action, [conn, conn.params])
+      end
+
+      defoverridable [init: 1, call: 2, action: 2]
     end
   end
 
   @doc false
   defmacro __before_compile__(env) do
-    plugs = [{:invoke_afters, [], true},
-             {:perform_action, env.module, true} | Module.get_attribute(env.module, :plugs)]
+    plugs = [{:action, [], true} | Module.get_attribute(env.module, :plugs)]
 
     {conn, body} = Plug.Builder.compile(env, plugs, log_on_halt: :debug)
     quote do
@@ -125,19 +128,6 @@ defmodule Phoenix.Controller.Pipeline do
       end
     end
   end
-
-  @doc false
-  def perform_action(conn, controller) do
-    apply(controller, conn.private.phoenix_action, [conn, conn.params])
-  end
-
-  @doc false
-  def invoke_afters(%Plug.Conn{private: %{phoenix_afters: afters}} = conn, _) do
-    afters
-    |> Enum.reverse()
-    |> Enum.reduce(conn, fn func, acc_conn -> func.(acc_conn) end)
-  end
-  def invoke_afters(conn, _), do: conn
 
   @doc """
   Stores a plug to be executed as part of the plug pipeline.

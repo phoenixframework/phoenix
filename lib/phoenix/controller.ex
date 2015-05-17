@@ -528,23 +528,6 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Registers a callback to be invoked after the controller action.
-
-  All callbacks must respect the Plug contract by returning the `%Plug.Conn{}`
-
-  ## Examples
-
-      iex> register_after_action conn, fn conn ->
-        Logger.debug("action complete!")
-        conn
-      end
-
-  """
-  def register_after_action(conn, func) do
-    put_private(conn, :phoenix_afters, [func | (conn.private[:phoenix_afters] || [])])
-  end
-
-  @doc """
   Scrubs the parameters from the request.
 
   This process is two-fold:

@@ -2,14 +2,11 @@
 
 ## v0.14.0-dev
 
-* Enhancements
-  * [Controller] Add `register_after_action/2` callback to be invoked after the controlle action has run.
-
 * Javascript client enhancements
   * Add socket params to apply default, overridable params to all channel params.
 
 * Backward incompatible changes
-  * [Controller] `plug :action` has been removed and the action is called automatically.
+  * [Controller] `plug :action` is now called automatically
 
 
 ## v0.13.1 (2015-05-16)
