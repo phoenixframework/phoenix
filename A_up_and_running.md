@@ -40,23 +40,15 @@ $ mix phoenix.new hello_phoenix
 . . .
 ```
 
-Phoenix generates the directory structure and all the files we will need for our application. When it's done, it will ask us if we want it to install our `mix` dependencies for us. Let's say yes to that.
+Phoenix generates the directory structure and all the files we will need for our application. When it's done, it will ask us if we want it to install our dependencies for us. Let's say yes to that.
 
 ```console
-Install mix dependencies? [Yn] y
+Fetch and install dependencies? [Yn] y
+* running npm install
 * running mix deps.get
 ```
 
-The `phoenix.new` task will also prompt us to install Brunch.io and its dependencies for asset management. (Please see the note about Brunch.io just above if this is unclear.)
-
-For our example, let's say yes to this as well.
-
-```console
-Install brunch.io dependencies? [Yn]
-* running npm install
-```
-
-Once our Brunch.io dependencies are installed, the task will prompt us to change into our project directory and start our application.
+Once our dependencies are installed, the task will prompt us to change into our project directory and start our application.
 
 ```console
 We are all set! Run your Phoenix application:
