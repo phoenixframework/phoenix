@@ -37,20 +37,12 @@ $ mix phoenix.new /Users/me/work/task_tester
 . . .
 ```
 
-The `phoenix.new` task will also ask us if we want to install our mix dependencies.
+The `phoenix.new` task will also ask us if we want to install our dependencies. (Please see the note above about Brunch.io dependencies.)
 
 ```console
-Install mix dependencies? [Yn] y
-* running mix deps.get
-```
-
-And it will ask if we want to install our brunch dependencies. (Please see the note above about Brunch.io dependencies.)
-
-```console
-Install brunch.io dependencies? [Yn] y
+Fetch and install dependencies? [Yn] y
 * running npm install
-npm http GET https://registry.npmjs.org/clean-css-brunch
-. . .
+* running mix deps.get
 ```
 
 Once all of our dependencies are installed, `phoenix.new` will tell us what our next steps are.
