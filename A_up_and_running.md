@@ -15,7 +15,7 @@ $ mix local.hex
 Now we are ready to fetch the Phoenix installer:
 
 ```console
-$ mix archive.install https://github.com/phoenixframework/phoenix/releases/download/v0.13.0/phoenix_new-0.13.0.ez
+$ mix archive.install https://github.com/phoenixframework/phoenix/releases/download/v0.13.1/phoenix_new-0.13.1.ez
 ```
 
 > Note: if the Phoenix archive won't install properly with this command, we can download the file directly from our browser, save it to the filesystem, and then run: `mix archive.install /path/to/local/phoenix_new.ez`.
