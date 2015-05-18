@@ -29,7 +29,7 @@
         <a href="https://github.com/phoenixframework/phoenix/issues?state=open">Issues</a>
       </li>
       <li>
-        <a href="irc://irc.freenode.net/elixir-lang">#elixir-lang on freenode IRC</a>
+        <a href="http://webchat.freenode.net/?channels=elixir-lang">#elixir-lang on freenode IRC</a>
       </li>
       <li>
         <a href="https://twitter.com/elixirphoenix">@elixirphoenix</a>
@@ -37,4 +37,3 @@
     </ul>
   </div>
 </div>
-
