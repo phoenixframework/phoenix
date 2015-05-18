@@ -23,7 +23,8 @@ body, h1, h2, h3, h4, h5, h6 {
   line-height: 35.7px;
   max-width: 530px;
   margin: 30px auto;
-  margin-bottom: 60px; }
+  margin-bottom: 60px;
+  text-shadow: 0px 0px 0px #FFF; }
 
 .navbar-nav > li > a {
   color: #fff !important;
@@ -65,5 +66,26 @@ body, h1, h2, h3, h4, h5, h6 {
 .header h1.navbar-brand a {
   background-image: url("../Phoenix_files/phoenix-logo-white.png") !important;
   background-size: 250px 34px; }
+
+#subheader-columns {
+  margin: 50px 30px 0; }
+
+.subheader h4 {
+  color: #000;
+  font-weight: 300;
+  font-size: 18px;
+  padding-bottom: 14px;
+  text-transform: uppercase; }
+
+.subheader p {
+  font-weight: 300;
+  color: #333;
+  font-size: 16px; }
+
+.subheader a {
+  color: #F67938;
+  display: block;
+  margin: 20px 0 0;
+  text-shadow: 0px 0px 0px #F67938; }
 
 /*# sourceMappingURL=custom.css.map */
