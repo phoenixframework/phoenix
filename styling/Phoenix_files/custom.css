@@ -38,7 +38,7 @@ body, h1, h2, h3, h4, h5, h6 {
 .header #jumbotron .btn {
   background: rgba(255, 255, 255, 0.07);
   border: 3px solid #FEF4F2;
-  height: 86px;
+  height: 80px;
   width: 340px;
   box-sizing: border-box;
   padding-top: 14px;
@@ -82,7 +82,7 @@ body, h1, h2, h3, h4, h5, h6 {
   color: #333;
   font-size: 16px; }
 
-.subheader a {
+.subheader-link {
   color: #F67938;
   display: block;
   margin: 20px 0 0;
