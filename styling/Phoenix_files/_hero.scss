@@ -28,6 +28,7 @@ body, h1, h2, h3, h4, h5, h6 {
   max-width: 530px;
   margin: 30px auto;
   margin-bottom: 60px;
+  text-shadow: 0px 0px 0px #FFF;
 }
 
 .navbar-nav > li > a {
@@ -45,7 +46,7 @@ body, h1, h2, h3, h4, h5, h6 {
 .header #jumbotron .btn {
   background: $header-button-background-color;
   border: 3px solid #FEF4F2;
-  height: 86px;
+  height: 80px;
   width: 340px;
   box-sizing: border-box;
   padding-top: 14px;
@@ -83,4 +84,29 @@ body, h1, h2, h3, h4, h5, h6 {
 .header h1.navbar-brand a {
   background-image: url("../Phoenix_files/phoenix-logo-white.png") !important;
   background-size: 250px 34px;
+}
+
+#subheader-columns {
+  margin: 50px 30px 0;
+}
+
+.subheader h4 {
+  color: $subheader-title-color;
+  font-weight: $light-font;
+  font-size: 18px;
+  padding-bottom: 14px;
+  text-transform: uppercase;
+}
+
+.subheader p {
+  font-weight: $light-font;
+  color: #subheader-body-color;
+  font-size: 16px;
+}
+
+.subheader-link {
+  color: $orange;
+  display: block;
+  margin: 20px 0 0;
+  text-shadow: 0px 0px 0px $orange;
 }
