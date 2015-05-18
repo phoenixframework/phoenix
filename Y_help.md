@@ -4,7 +4,7 @@ There are two really good places to get help if you have questions that these gu
 
 #### The [phoenix-talk](https://groups.google.com/forum/#!forum/phoenix-talk) Mailing List
 
-This is a google group dedicated to Phoenix framework discusssions, including any questions you might have. You can register to get emails of individual posts or digests.
+This is a google group dedicated to Phoenix framework discussions, including any questions you might have. You can register to get emails of individual posts or digests.
 
 #### The #elixir-lang IRC Channel on Freenode
 
