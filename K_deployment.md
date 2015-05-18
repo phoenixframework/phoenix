@@ -1,6 +1,6 @@
 Once we have a working application, we're ready to deploy it. If you're not quite finished with your own application, don't worry. Just follow the [Up and Running Guide](http://www.phoenixframework.org/docs/up-and-running) to create a basic application to work with.
 
-When preparing an application for deployment, static assets may require special handling. In order to create gzipped digests with a manifest for our static assets, the current Phoenix master branch includes a `phoenix.digest` mix task. (This will be included in the upcoming 0.12.0 release.) This task is designed to be run after `brunch build --production`, or whichever build command is correct for your application.
+When preparing an application for deployment, static assets may require special handling. In order to create gzipped digests with a manifest for our static assets, use the `phoenix.digest` mix task. This task is designed to be run after `brunch build --production`, or whichever build command is correct for your application.
 
 Now that we've got our application prepared for production, getting it running in a production environment is extremely simple. All we need to do is run this command.
 
