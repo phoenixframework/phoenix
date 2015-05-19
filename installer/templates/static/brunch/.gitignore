@@ -12,8 +12,7 @@ erl_crash.dump
 # Since we are building js and css from web/static,
 # we ignore priv/static/{css,js}. You may want to
 # comment this depending on your deployment strategy.
-/priv/static/css
-/priv/static/js
+/priv/static/
 
 # The config/prod.secret.exs file by default contains sensitive
 # data and you should not commit it into version control.
