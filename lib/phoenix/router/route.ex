@@ -20,7 +20,7 @@ defmodule Phoenix.Router.Route do
 
   """
   defstruct [:verb, :path, :host, :controller, :action,
-             :helper, :private, :pipe_through]
+             :helper, :private, :pipe_through, :assigns]
 
   @type t :: %Route{}
 
@@ -28,14 +28,14 @@ defmodule Phoenix.Router.Route do
   Receives the verb, path, controller, action and helper
   and returns a `Phoenix.Router.Route` struct.
   """
-  @spec build(String.t, String.t, String.t | nil, atom, atom, atom | nil, atom, %{}) :: t
-  def build(verb, path, host, controller, action, helper, pipe_through, private)
+  @spec build(String.t, String.t, String.t | nil, atom, atom, atom | nil, atom, %{}, %{}) :: t
+  def build(verb, path, host, controller, action, helper, pipe_through, private, assigns)
       when is_binary(verb) and is_binary(path) and (is_binary(host) or is_nil(host)) and
            is_atom(controller) and is_atom(action) and (is_binary(helper) or is_nil(helper)) and
-           is_list(pipe_through) and is_map(private) do
+           is_list(pipe_through) and is_map(private and is_map(assigns)) do
     %Route{verb: verb, path: path, host: host, private: private,
            controller: controller, action: action, helper: helper,
-           pipe_through: pipe_through}
+           pipe_through: pipe_through, assigns: assigns}
   end
 
   @doc """
@@ -72,6 +72,7 @@ defmodule Phoenix.Router.Route do
     exprs =
       [maybe_binding(binding),
        maybe_merge(:private, route.private),
+       maybe_merge(:assigns, route.assigns),
        build_pipes(route)]
 
     {:__block__, [], Enum.filter(exprs, & &1 != nil)}

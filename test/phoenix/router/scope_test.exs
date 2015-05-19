@@ -45,6 +45,15 @@ defmodule Phoenix.Router.ScopedRoutingTest do
       end
     end
 
+    scope "/assigns", Api, assigns: %{assigns_token: "foo"} do
+      get "/users", V1.UserController, :show
+      get "/users/:id", V1.UserController, :show, assigns: %{assigns_token: "bar"}
+
+      scope "/v1", alias: V1 do
+        resources "/users", UserController, only: [:delete], assigns: %{assigns_token: "baz"}
+      end
+    end
+
     scope "/host", host: "baz." do
       get "/users/:id", Api.V1.UserController, :baz_host
     end
@@ -148,5 +157,19 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     conn = call(Router, :delete, "/api/v1/users/13")
     assert conn.status == 200
     assert conn.private[:private_token] == "baz"
+  end
+
+  test "assigns data in scopes" do
+    conn = call(Router, :get, "/assigns/users")
+    assert conn.status == 200
+    assert conn.assigns[:assigns_token] == "foo"
+
+    conn = call(Router, :get, "/assigns/users/13")
+    assert conn.status == 200
+    assert conn.assigns[:assigns_token] == "bar"
+
+    conn = call(Router, :delete, "/assigns/v1/users/13")
+    assert conn.status == 200
+    assert conn.assigns[:assigns_token] == "baz"
   end
 end

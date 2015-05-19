@@ -5,7 +5,7 @@ defmodule Phoenix.Router.Scope do
   @stack :phoenix_router_scopes
   @pipes :phoenix_pipeline_scopes
 
-  defstruct path: nil, alias: nil, as: nil, pipes: [], host: nil, private: %{}
+  defstruct path: nil, alias: nil, as: nil, pipes: [], host: nil, private: %{}, assigns: %{}
 
   @doc """
   Initializes the scope.
@@ -20,10 +20,12 @@ defmodule Phoenix.Router.Scope do
   """
   def route(module, verb, path, controller, action, opts) do
     private = Keyword.get(opts, :private, %{})
+    assigns = Keyword.get(opts, :assigns, %{})
     as      = Keyword.get(opts, :as, Phoenix.Naming.resource_name(controller, "Controller"))
 
-    {path, host, alias, as, pipes, private} = join(module, path, controller, as, private)
-    Phoenix.Router.Route.build(verb, path, host, alias, action, as, pipes, private)
+    {path, host, alias, as, pipes, private, assigns} =
+      join(module, path, controller, as, private, assigns)
+    Phoenix.Router.Route.build(verb, path, host, alias, action, as, pipes, private, assigns)
   end
 
   @doc """
@@ -76,7 +78,8 @@ defmodule Phoenix.Router.Scope do
                    as: Keyword.get(opts, :as),
                    host: Keyword.get(opts, :host),
                    pipes: [],
-                   private: Keyword.get(opts, :private, %{})}
+                   private: Keyword.get(opts, :private, %{}),
+                   assigns: Keyword.get(opts, :assigns, %{})}
 
     update_stack(module, fn stack -> [scope|stack] end)
   end
@@ -93,10 +96,11 @@ defmodule Phoenix.Router.Scope do
   """
   def inside_scope?(module), do: length(get_stack(module)) > 1
 
-  defp join(module, path, alias, as, private) do
+  defp join(module, path, alias, as, private, assigns) do
     stack = get_stack(module)
     {join_path(stack, path), find_host(stack), join_alias(stack, alias),
-     join_as(stack, as), join_pipe_through(stack), join_private(stack, private)}
+     join_as(stack, as), join_pipe_through(stack), join_private(stack, private),
+     join_assigns(stack, assigns)}
   end
 
   defp join_path(stack, path) do
@@ -122,6 +126,10 @@ defmodule Phoenix.Router.Scope do
 
   defp join_private(stack, private) do
     Enum.reduce stack, private, &Map.merge(&1.private, &2)
+  end
+
+  defp join_assigns(stack, assigns) do
+    Enum.reduce stack, assigns, &Map.merge(&1.assigns, &2)
   end
 
   defp join_pipe_through(stack) do
