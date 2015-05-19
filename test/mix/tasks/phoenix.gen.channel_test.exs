@@ -65,6 +65,12 @@ defmodule Mix.Tasks.Phoenix.Gen.ChannelTest do
     end
   end
 
+  test "passing no args raises error" do
+    assert_raise Mix.Error, fn ->
+      Mix.Tasks.Phoenix.Gen.Channel.run []
+    end
+  end
+
   test "passing extra args raises error" do
     assert_raise Mix.Error, fn ->
       Mix.Tasks.Phoenix.Gen.Channel.run ["Admin.Room", "rooms", "new_message"]
