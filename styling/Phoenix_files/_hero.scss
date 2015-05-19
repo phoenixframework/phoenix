@@ -1,5 +1,12 @@
 @import url(http://fonts.googleapis.com/css?family=Lato:300,400,700);
 
+// Don't include this rule in Readme.io.
+// It is so the logo shows up during *local development*
+.header h1.navbar-brand a {
+  background-image: url("../Phoenix_files/phoenix-logo-white.png") !important;
+  background-size: 250px 34px;
+}
+
 body, h1, h2, h3, h4, h5, h6 {
   font-family: 'Lato', sans-serif !important;
 }
@@ -79,11 +86,6 @@ body, h1, h2, h3, h4, h5, h6 {
   border-radius: 20px;
   color: $header-color !important;
   background: rgba(255,255,255,0.20) !important;
-}
-
-.header h1.navbar-brand a {
-  background-image: url("../Phoenix_files/phoenix-logo-white.png") !important;
-  background-size: 250px 34px;
 }
 
 #subheader-columns {
