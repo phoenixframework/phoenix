@@ -59,7 +59,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       # Brunch
       assert_file "photo_blog/.gitignore", ~r"/node_modules"
-      assert_file "photo_blog/priv/static/images/phoenix.png"
+      assert_file "photo_blog/web/static/assets/images/phoenix.png"
       assert_file "photo_blog/web/static/vendor/phoenix.js"
       assert_file "photo_blog/web/static/js/app.js"
       assert_file "photo_blog/web/static/css/app.scss"
