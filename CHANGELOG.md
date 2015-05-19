@@ -11,6 +11,8 @@
 
 ## v0.13.1 (2015-05-16)
 
+See these [`0.13.0` to `0.13.1` upgrade instructions](https://gist.github.com/chrismccord/4a62780056b08c60542d) to bring your existing apps up to speed.
+
 * Enhancements
   * [Channel] Add `phoenix.new.channel Channel topic`
   * [Channel] Add `Phoenix.ChannelCase`
