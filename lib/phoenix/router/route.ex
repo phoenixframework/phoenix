@@ -16,6 +16,7 @@ defmodule Phoenix.Router.Route do
     * :action - the action as an atom
     * :helper - the name of the helper as a string (may be nil)
     * :private - the private route info
+    * :assigns - the route info
     * :pipe_through - the pipeline names as a list of atoms
 
   """
