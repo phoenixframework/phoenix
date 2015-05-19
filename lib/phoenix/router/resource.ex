@@ -46,12 +46,13 @@ defmodule Phoenix.Router.Resource do
     as       = Keyword.get(options, :as, name)
     singular = Keyword.get(options, :singular)
     private  = Keyword.get(options, :private, %{})
+    assigns  = Keyword.get(options, :assigns, %{})
     actions  = extract_actions(options, singular)
 
-    route       = [as: as, private: private]
-    collection  = [path: path, as: as, private: private]
+    route       = [as: as, private: private, assigns: assigns]
+    collection  = [path: path, as: as, private: private, assigns: assigns]
     member_path = if singular, do: path, else: Path.join(path, ":#{name}_#{param}")
-    member      = [path: member_path, as: as, alias: alias, private: private]
+    member      = [path: member_path, as: as, alias: alias, private: private, assigns: assigns]
 
     %Resource{path: path, actions: actions, param: param, route: route,
               member: member, collection: collection, controller: controller}

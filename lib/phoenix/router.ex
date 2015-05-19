@@ -586,6 +586,7 @@ defmodule Phoenix.Router do
     * `:host` - a string containing the host scope, or prefix host scope, ie
                 `"foo.bar.com"`, `"foo."`
     * `:private` - a map of private data to merge into the connection when a route matches
+    * `:assigns` - a map of data to merge into the connection when a route matches
 
   """
   defmacro scope(options, do: context) do
