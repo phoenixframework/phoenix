@@ -49,11 +49,10 @@ defmodule Mix.Tasks.Phoenix.Gen.Channel do
   end
 
   defp validate_args!(args) do
-    if length(args) > 2 do
+    unless length(args) == 2 do
       raise_with_help
-    else
-      args
     end
+    args
   end
 
   defp source_dir do
