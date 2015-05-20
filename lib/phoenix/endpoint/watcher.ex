@@ -7,21 +7,32 @@ defmodule Phoenix.Endpoint.Watcher do
   end
 
   def watch(root, cmd, args) do
-    if exists?(cmd) do
+    :ok = validate(root, cmd, args)
+
+    try do
       System.cmd(cmd, args, into: IO.stream(:stdio, :line),
-                 stderr_to_stdout: true, cd: root)
+                            stderr_to_stdout: true, cd: root)
+    catch
+      :error, :enoent ->
+        relative = Path.relative_to_cwd(cmd)
+        Logger.error "Could not start watcher #{inspect relative}, executable does not exist"
+        exit(:shutdown)
+    end
+  end
+
+  # We specially handle node to make sure we
+  # provide a good getting started experience.
+  defp validate(root, "node", [script|_]) do
+    if File.exists?(Path.expand(script, root)) do
+      :ok
     else
-      relative = Path.relative_to_cwd(cmd)
-      Logger.error "Could not start watcher #{inspect relative}, executable does not exist"
+      Logger.error "Could not start node watcher because script #{inspect script}, " <>
+                   "does not exist. Please make sure it has been installed with npm install"
       exit(:shutdown)
     end
   end
 
-  defp exists?(cmd) do
-    if Path.type(cmd) == :absolute do
-      File.exists?(cmd)
-    else
-      !!System.find_executable(cmd)
-    end
+  defp validate(_root, _cmd, _args) do
+    :ok
   end
 end
