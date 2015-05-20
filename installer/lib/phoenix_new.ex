@@ -16,7 +16,6 @@ defmodule Mix.Tasks.Phoenix.New do
     {:eex,  "new/config/test.exs",                           "config/test.exs"},
     {:eex,  "new/lib/application_name.ex",                   "lib/application_name.ex"},
     {:eex,  "new/lib/application_name/endpoint.ex",          "lib/application_name/endpoint.ex"},
-    {:text, "new/priv/static/robots.txt",                    "priv/static/robots.txt"},
     {:keep, "new/test/channels",                             "test/channels"},
     {:eex,  "new/test/controllers/page_controller_test.exs", "test/controllers/page_controller_test.exs"},
     {:eex,  "new/test/views/error_view_test.exs",            "test/views/error_view_test.exs"},
@@ -51,12 +50,14 @@ defmodule Mix.Tasks.Phoenix.New do
     {:text, "static/brunch/package.json",     "package.json"},
     {:text, "static/app.css",                 "web/static/css/app.scss"},
     {:text, "static/brunch/app.js",           "web/static/js/app.js"},
+    {:text, "static/robots.txt",              "web/static/assets/robots.txt"},
   ]
 
   @bare [
     {:text, "static/bare/.gitignore", ".gitignore"},
     {:text, "static/app.css",         "priv/static/css/app.css"},
     {:text, "static/bare/app.js",     "priv/static/js/app.js"},
+    {:text, "static/robots.txt",      "priv/static/robots.txt"},
   ]
 
   # Embed all defined templates
@@ -240,7 +241,7 @@ defmodule Mix.Tasks.Phoenix.New do
     else
       copy_from path, binding, @brunch
       create_file Path.join(path, "web/static/vendor/phoenix.js"), phoenix_js_text()
-      create_file Path.join(path, "priv/static/images/phoenix.png"), phoenix_png_text()
+      create_file Path.join(path, "web/static/assets/images/phoenix.png"), phoenix_png_text()
     end
   end
 
