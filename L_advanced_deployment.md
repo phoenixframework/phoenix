@@ -139,7 +139,7 @@ There are a couple of interesting things to note here.
 
 Exrm uses a set of default configuration options when building our release that will work for most applications. If we need more advanced configuration options, we can checkout [exrm's configuration section](https://github.com/bitwalker/exrm#configuration) for more detailed information.
 
-If we make a mistake, or if something doesn't go quite right, we can run `mix release.clean`, which will delete the release for the current application version number. If we add the `--implode` flag, expm will remove _all_ releases for all versions of our application. These will be permanently removed unless they are under version control. Obviously, this is a destructive operation, and expm will prompt us to make sure we want to continue.
+If we make a mistake, or if something doesn't go quite right, we can run `mix release.clean`, which will delete the release for the current application version number. If we add the `--implode` flag, exrm will remove _all_ releases for all versions of our application. These will be permanently removed unless they are under version control. Obviously, this is a destructive operation, and exrm will prompt us to make sure we want to continue.
 
 #### Contents of a Release
 
