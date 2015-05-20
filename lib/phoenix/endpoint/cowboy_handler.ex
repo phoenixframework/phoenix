@@ -24,10 +24,13 @@ defmodule Phoenix.Endpoint.CowboyHandler do
   end
 
   def child_spec(scheme, endpoint, config) do
+    ref = Module.concat(endpoint, scheme |> Atom.to_string |> String.upcase)
+
     # Use put_new to allow custom dispatches and refs
-    config = config
-    |> Keyword.put_new(:dispatch, [{:_, [{:_, __MODULE__, {endpoint, []}}]}])
-    |> Keyword.put_new(:ref, scheme)
+    config =
+      config
+      |> Keyword.put_new(:dispatch, [{:_, [{:_, __MODULE__, {endpoint, []}}]}])
+      |> Keyword.put_new(:ref, ref)
 
     {ref, mfa, type, timeout, kind, modules} =
       Plug.Adapters.Cowboy.child_spec(scheme, endpoint, [], config)

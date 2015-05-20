@@ -157,8 +157,6 @@ defmodule Phoenix.Integration.EndpointTest do
       assert resp.status == 500
       assert resp.body =~ "RuntimeError at GET /router/oops"
     end) =~ "** (RuntimeError) oops"
-
-    shutdown(DevEndpoint)
   end
 
   defp serve_endpoints(bool) do
