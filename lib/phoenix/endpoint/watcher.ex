@@ -26,8 +26,8 @@ defmodule Phoenix.Endpoint.Watcher do
     if File.exists?(Path.expand(script, root)) do
       :ok
     else
-      Logger.error "Could not start node watcher because script #{inspect script}, " <>
-                   "does not exist. Please make sure it has been installed with npm install"
+      Logger.error "Could not start node watcher because script #{inspect script} does not " <>
+                   "exist. Please make sure it has been installed by running: npm install"
       exit(:shutdown)
     end
   end
