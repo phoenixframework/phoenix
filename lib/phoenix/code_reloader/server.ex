@@ -17,10 +17,9 @@ defmodule Phoenix.CodeReloader.Server do
       {__MODULE__, pid, _, _} ->
         GenServer.call(pid, :reload!, :infinity)
       _ ->
-        # TODO: Improve this error message once users have migrated
         raise "Code reloader was invoked for #{inspect endpoint} but no code reloader " <>
               "server was started. Be sure to move `plug Phoenix.CodeReloader` inside " <>
-              "a `if code_reloading? do` block"
+              "a `if code_reloading? do` block in your endpoint"
     end
   end
 
@@ -49,6 +48,7 @@ defmodule Phoenix.CodeReloader.Server do
     Logger.error "If you want to use the code reload plug in production or " <>
                  "inside an escript, add :mix to your list of dependencies or " <>
                  "disable code reloading"
+    :ok
   end
 
   defp mix_compile({:module, Mix.Task}, app, root, paths) do

@@ -15,6 +15,10 @@ defmodule Phoenix.Integration.EndpointTest do
       http: [port: "4808"], debug_errors: true)
 
   defmodule Router do
+    @moduledoc """
+    Let's use a plug router to test this endpoint.
+    """
+
     use Plug.Router
 
     plug :match
@@ -32,8 +36,19 @@ defmodule Phoenix.Integration.EndpointTest do
     match _ do
       raise Phoenix.Router.NoRouteError, conn: conn, router: __MODULE__
     end
+  end
 
-    # A wrapper to around the endpoint call to extract information.
+  defmodule Wrapper do
+    @moduledoc """
+    A wrapper around the endpoint call to extract information.
+
+    This exists so we can verify that the exception handling
+    in the Phoenix endpoint is working as expected. In order
+    to do that, we we need wrap the endpoint.call/2 in a
+    before compile callback so it wraps the whole stack,
+    including render errors and debug errors functionality.
+    """
+
     defmacro __before_compile__(_) do
       quote do
         defoverridable [call: 2]
@@ -59,14 +74,20 @@ defmodule Phoenix.Integration.EndpointTest do
   for mod <- [ProdEndpoint, DevEndpoint] do
     defmodule mod do
       use Phoenix.Endpoint, otp_app: :endpoint_int
-      plug :router, Router
-      @before_compile Router
+      @before_compile Wrapper
 
-      def call(conn, opts) do
+      plug :oops
+      plug :router, Router
+
+      @doc """
+      Verify errors from the plug stack too (before the router).
+      """
+      def oops(conn, _opts) do
         if conn.path_info == ~w(oops) do
           raise "oops"
+        else
+          conn
         end
-        super(conn, opts)
       end
     end
   end
@@ -136,6 +157,8 @@ defmodule Phoenix.Integration.EndpointTest do
       assert resp.status == 500
       assert resp.body =~ "RuntimeError at GET /router/oops"
     end) =~ "** (RuntimeError) oops"
+
+    shutdown(DevEndpoint)
   end
 
   defp serve_endpoints(bool) do
@@ -144,14 +167,9 @@ defmodule Phoenix.Integration.EndpointTest do
 
   defp shutdown(endpoint) do
     pid = Process.whereis(endpoint)
+    ref = Process.monitor(pid)
     Process.unlink(pid)
     Process.exit(pid, :shutdown)
-    wait_until_dead(endpoint)
-  end
-
-  defp wait_until_dead(endpoint) do
-    if Process.whereis(endpoint) do
-      wait_until_dead(endpoint)
-    end
+    receive do: ({:DOWN, ^ref, _, _, _} -> :ok)
   end
 end
