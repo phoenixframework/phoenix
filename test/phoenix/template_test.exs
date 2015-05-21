@@ -65,7 +65,7 @@ defmodule Phoenix.TemplateTest do
   end
 
   test "render eex templates sanitizes against xss by default" do
-    assert View.render("show.html") ==
+    assert View.render("show.html", message: "") ==
            {:safe, [[[["" | "<div>Show! "] | ""] | "</div>\n"] | "\n"]}
 
     assert View.render("show.html", message: "<script>alert('xss');</script>") ==
@@ -105,4 +105,3 @@ defmodule Phoenix.TemplateTest do
     refute View.__phoenix_recompile__?
   end
 end
-

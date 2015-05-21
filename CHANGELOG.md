@@ -2,6 +2,9 @@
 
 ## v0.14.0-dev
 
+* Enhancements
+  [phoenix_html] Update to phoenix_html 1.1.0 raises on missing assigns
+
 * Javascript client enhancements
   * Add socket params to apply default, overridable params to all channel params.
 
