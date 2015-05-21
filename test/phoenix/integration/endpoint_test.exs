@@ -44,7 +44,7 @@ defmodule Phoenix.Integration.EndpointTest do
 
     This exists so we can verify that the exception handling
     in the Phoenix endpoint is working as expected. In order
-    to do that, we we need wrap the endpoint.call/2 in a
+    to do that, we need to wrap the endpoint.call/2 in a
     before compile callback so it wraps the whole stack,
     including render errors and debug errors functionality.
     """
