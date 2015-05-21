@@ -5,6 +5,7 @@ There are currently a number of built-in Phoenix-specific and ecto-specific mix 
 ```console
 $ mix help | grep -i phoenix
 mix phoenix.gen.html     # Generates HTML files for a resource
+mix phoenix.gen.json     # Generates a controller and model for an JSON-based resource
 mix phoenix.new          # Creates Phoenix application
 mix phoenix.routes       # Prints all routes
 mix phoenix.server       # Starts applications and their servers
