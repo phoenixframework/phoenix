@@ -36,7 +36,7 @@ defmodule Phoenix.PubSub do
 
       supervisor(Phoenix.PubSub.Redis, [:my_redis_pubsub, host: "192.168.100.1"])
 
-  The configurationa above will start a Redis pubsub and
+  The configuration above will start a Redis pubsub and
   register it with name `:my_redis_pubsub`.
 
   You can know use the functions in this module to subscribe
