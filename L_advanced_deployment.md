@@ -139,7 +139,7 @@ There are a couple of interesting things to note here.
 
 Exrm uses a set of default configuration options when building our release that will work for most applications. If we need more advanced configuration options, we can checkout [exrm's configuration section](https://github.com/bitwalker/exrm#configuration) for more detailed information.
 
-If we make a mistake, or if something doesn't go quite right, we can run `mix release.clean`, which will delete the release for the current application version number. If we add the `--implode` flag, expm will remove _all_ releases for all versions of our application. These will be permanently removed unless they are under version control. Obviously, this is a destructive operation, and expm will prompt us to make sure we want to continue.
+If we make a mistake, or if something doesn't go quite right, we can run `mix release.clean`, which will delete the release for the current application version number. If we add the `--implode` flag, exrm will remove _all_ releases for all versions of our application. These will be permanently removed unless they are under version control. Obviously, this is a destructive operation, and exrm will prompt us to make sure we want to continue.
 
 #### Contents of a Release
 
@@ -153,7 +153,7 @@ total 27216
 drwxr-xr-x   7 lance  staff       238 May 13 18:47 .
 drwxr-xr-x   3 lance  staff       102 May 13 18:47 ..
 drwxr-xr-x   6 lance  staff       204 May 13 18:47 bin
-drwxr-xr-x   8 lance  staff       272 May 13 18:47 erts-6.0
+drwxr-xr-x   8 lance  staff       272 May 13 18:47 erts-6.4
 -rw-r--r--   1 lance  staff  13933031 May 13 18:47 hello_phoenix-0.0.1.tar.gz
 drwxr-xr-x  26 lance  staff       884 May 13 18:47 lib
 drwxr-xr-x   5 lance  staff       170 May 13 18:47 releases
@@ -172,7 +172,7 @@ drwxr-xr-x  7 lance  staff    238 May 13 18:47 ..
 -rw-r--r--  1 lance  staff   5283 Apr 18  2014 start_clean.boot
 ```
 
-The `erts-6.3` directory contains all necessary files for the Erlang runtime system, pulled from our build environment.
+The `erts-6.4` directory contains all necessary files for the Erlang runtime system, pulled from our build environment.
 
 ```console
 $ ls -la rel/hello_phoenix/erts-6.3/
@@ -180,9 +180,7 @@ total 8
 drwxr-xr-x   8 lance  staff  272 May 13 18:47 .
 drwxr-xr-x   7 lance  staff  238 May 13 18:47 ..
 drwxr-xr-x  24 lance  staff  816 May 13 18:47 bin
-drwxr-xr-x   4 lance  staff  136 May 13 18:47 doc
 drwxr-xr-x  12 lance  staff  408 May 13 18:47 include
--rw-r--r--   1 lance  staff   88 Apr 18  2014 info
 drwxr-xr-x   5 lance  staff  170 May 13 18:47 lib
 drwxr-xr-x   3 lance  staff  102 May 13 18:47 src
 ```

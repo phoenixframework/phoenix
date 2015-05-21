@@ -115,13 +115,14 @@ In your `web/templates/page/index.html.eex`, add a container to hold our chat me
 We'll also add jQuery to our application layout in `web/templates/layout/application.html.eex`:
 
 ```html
-    ...
-    <!-- Begin page content -->
+  ...
     <%= @inner %>
-    <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
-    <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
-    <script>require("web/static/js/app")</script>
-  </body>
+
+  </div> <!-- /container -->
+  <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+  <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
+  <script>require("web/static/js/app")</script>
+</body>
 ```
 
 Now let's add a couple event listeners to `app.js`:
@@ -173,7 +174,7 @@ chan.join().receive("ok", chan => {
 })
 ```
 
-We listen for the `"new_msg"` event using `chan.on`, and then append the message body to the DOM. Now let's handle the incoming and outgong events on the server to complete the picture.
+We listen for the `"new_msg"` event using `chan.on`, and then append the message body to the DOM. Now let's handle the incoming and outgoing events on the server to complete the picture.
 
 ### Incoming Events
 We handle incoming events with `handle_in/3`. We can pattern match on the event names, like `"new_msg"`, and then grab the payload that the client passed over the channel. For our chat application, we simply need to notify all other `rooms:lobby` subscribers of the new message with `broadcast!/3`.

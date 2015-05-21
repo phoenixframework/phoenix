@@ -210,7 +210,7 @@ defmodule HelloPhoenix.User do
   If `params` are nil, an invalid changeset is returned
   with no validation performed.
   """
-  def changeset(model, params \\ nil) do
+  def changeset(model, params \\ :empty) do
     model
     |> cast(params, @required_fields, @optional_fields)
   end
@@ -227,7 +227,7 @@ Changesets define a pipeline of transformations our data needs to undergo before
 Let's take a closer look at our default changeset.
 
 ```elixir
-def changeset(model, params \\ nil) do
+def changeset(model, params \\ :empty) do
   model
   |> cast(params, @required_fields, @optional_fields)
 end
@@ -341,7 +341,7 @@ We can validate more than just whether a field is required or not. Let's take a 
 What if we had a requirement that all biographies in our system must be at least two characters long? We can do this easily by adding another transformation to the pipeline in our changeset which validates the length of the `bio` field.
 
 ```elixir
-def changeset(model, params \\ nil) do
+def changeset(model, params \\ :empty) do
   model
   |> cast(params, @required_fields, @optional_fields)
   |> validate_length(:bio, min: 2)
@@ -358,7 +358,7 @@ Bio should be at least 2 characters
 If we also have a requirement for the maximum length that a bio can have, we can simply add another validation.
 
 ```elixir
-def changeset(model, params \\ nil) do
+def changeset(model, params \\ :empty) do
   model
   |> cast(params, @required_fields, @optional_fields)
   |> validate_length(:bio, min: 2)
@@ -376,7 +376,7 @@ Bio should be at most 140 characters
 Let's say we want to perform at least some rudimentary format validation on the `email` field. All we want to check for is the presence of the "@". The `validate_format/3` function is just what we need.
 
 ```elixir
-def changeset(model, params \\ nil) do
+def changeset(model, params \\ :empty) do
   model
   |> cast(params, @required_fields, @optional_fields)
   |> validate_length(:bio, min: 2)
@@ -421,7 +421,7 @@ On to our first action, `index`.
 ```elixir
 def index(conn, _params) do
   users = Repo.all(User)
-  render conn, "index.html", users: users
+  render(conn, "index.html", users: users)
 end
 ```
 
@@ -434,7 +434,7 @@ Now, on to the `new` action. Notice that we do use a changeset, even though we d
 ```elixir
 def new(conn, _params) do
   changeset = User.changeset(%User{})
-  render conn, "new.html", changeset: changeset
+  render(conn, "new.html", changeset: changeset)
 end
 ```
 
@@ -451,7 +451,7 @@ def create(conn, %{"user" => user_params}) do
     |> put_flash(:info, "User created successfully.")
     |> redirect(to: user_path(conn, :index))
   else
-    render conn, "new.html", changeset: changeset
+    render(conn, "new.html", changeset: changeset)
   end
 end
 ```
@@ -467,7 +467,7 @@ This is the singular version of `index` above.
 ```elixir
 def show(conn, %{"id" => id}) do
   user = Repo.get(User, id)
-  render conn, "show.html", user: user
+  render(conn, "show.html", user: user)
 end
 ```
 
@@ -477,7 +477,7 @@ In the `edit` action, we use Ecto in a way which is a combination of `show` and 
 def edit(conn, %{"id" => id}) do
   user = Repo.get(User, id)
   changeset = User.changeset(user)
-  render conn, "edit.html", user: user, changeset: changeset
+  render(conn, "edit.html", user: user, changeset: changeset)
 end
 ```
 
@@ -495,7 +495,7 @@ def update(conn, %{"id" => id, "user" => user_params}) do
     |> put_flash(:info, "User updated successfully.")
     |> redirect(to: user_path(conn, :index))
   else
-    render conn, "edit.html", user: user, changeset: changeset
+    render(conn, "edit.html", user: user, changeset: changeset)
   end
 end
 ```
