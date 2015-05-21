@@ -246,12 +246,12 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   defp install_brunch(install?) do
-    maybe_run "npm", "install", File.exists?("brunch-config.js"),
-                                install? && System.find_executable("npm")
+    maybe_cmd "npm install && brunch build", File.exists?("brunch-config.js"),
+                                             install? && System.find_executable("npm")
   end
 
   defp install_mix(install?) do
-    maybe_run "mix", "deps.get", true, install? && Code.ensure_loaded?(Hex)
+    maybe_cmd "mix deps.get", true, install? && Code.ensure_loaded?(Hex)
   end
 
   defp print_brunch_info do
@@ -289,10 +289,10 @@ defmodule Mix.Tasks.Phoenix.New do
 
   ## Helpers
 
-  defp maybe_run(command, args, should_run?, can_run?) do
+  defp maybe_cmd(cmd, should_run?, can_run?) do
     cond do
       should_run? && can_run? ->
-        {:ok, run(command, args)}
+        {:ok, cmd(cmd)}
       should_run? ->
         :not_allowed
       true ->
@@ -300,15 +300,14 @@ defmodule Mix.Tasks.Phoenix.New do
     end
   end
 
-  defp run(command, args) do
-    exec = command <> " " <> args
-    Mix.shell.info [:green, "* running ", :reset, exec]
+  defp cmd(cmd) do
+    Mix.shell.info [:green, "* running ", :reset, cmd]
     Task.async(fn ->
       # We use :os.cmd/1 because there is a bug in OTP
       # where we cannot execute .cmd files on Windows.
       # We could use Mix.shell.cmd/1 but that automatically
       # outputs to the terminal and we don't want that.
-      :os.cmd(String.to_char_list(exec))
+      :os.cmd(String.to_char_list(cmd))
     end)
   end
 
