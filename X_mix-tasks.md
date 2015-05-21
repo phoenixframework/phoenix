@@ -5,6 +5,7 @@ There are currently a number of built-in Phoenix-specific and ecto-specific mix 
 ```console
 $ mix help | grep -i phoenix
 mix phoenix.gen.html     # Generates HTML files for a resource
+mix phoenix.gen.json     # Generates a controller and model for an JSON-based resource
 mix phoenix.new          # Creates Phoenix application
 mix phoenix.routes       # Prints all routes
 mix phoenix.server       # Starts applications and their servers
@@ -205,6 +206,47 @@ resources "/posts", PostController
 and then update your repository by running migrations:
 
 $ mix ecto.migrate
+```
+
+Important: If we don't do this, our application won't compile, and we'll get an error.
+
+```console
+$ mix phoenix.server
+Compiled web/models/post.ex
+
+== Compilation error on file web/controllers/post_controller.ex ==
+** (CompileError) web/controllers/post_controller.ex:27: function post_path/2 undefined
+(stdlib) lists.erl:1336: :lists.foreach/2
+(stdlib) erl_eval.erl:657: :erl_eval.do_apply/6
+```
+
+#### `mix phoenix.gen.json`
+
+Phoenix also offers the ability to generate all the code to stand up a complete JSON resource - ecto migration, ecto model, controller with all the necessary actions and view. This command will not create any template for the app.
+
+The `phoenix.gen.json` task takes a number of arguments, the module name of the model, the resource name, and a list of column_name:type attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
+
+```console
+$ mix phoenix.gen.json Post posts title:string content:string
+* creating priv/repo/migrations/20150521140551_create_post.exs
+* creating web/models/post.ex
+* creating test/models/post_test.exs
+* creating web/controllers/post_controller.ex
+* creating web/views/post_view.ex
+* creating test/controllers/post_controller_test.exs
+* creating web/views/changeset_view.ex
+```
+
+When `phoenix.gen.json` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our ecto migrations.
+
+```console
+Add the resource to the proper scope in web/router.ex:
+
+    resources "/posts", PostController
+
+and then update your repository by running migrations:
+
+    $ mix ecto.migrate
 ```
 
 Important: If we don't do this, our application won't compile, and we'll get an error.
