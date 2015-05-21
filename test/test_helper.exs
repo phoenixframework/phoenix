@@ -14,10 +14,5 @@ end
 # Start transport levels
 Process.flag(:trap_exit, true)
 
-options = case :redo.start_link(:undefined) do
-  {:ok, _} -> []
-         _ -> [exclude: [:redis]]
-end
-
 Process.flag(:trap_exit, false)
-ExUnit.start(options)
+ExUnit.start()
