@@ -221,7 +221,7 @@ Compiled web/models/post.ex
 
 #### `mix phoenix.gen.json`
 
-Phoenix also offers the ability to generate all the code to stand up a complete JSON resource - ecto migration, ecto model, controller with all the necessary actions, view. This can be a tremendous timesaver. Let's take a look at how to make this happen.
+Phoenix also offers the ability to generate all the code to stand up a complete JSON resource - ecto migration, ecto model, controller with all the necessary actions and view. This command will not create any template for the app.
 
 The `phoenix.gen.json` task takes a number of arguments, the module name of the model, the resource name, and a list of column_name:type attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
 
