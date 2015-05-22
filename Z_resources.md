@@ -40,6 +40,7 @@ This is a selected list of resources to help you find your way with Elixir, Phoe
 ##### Videos
   - [All Aboard The Elixir Express](http://www.confreaks.com/videos/3488-railsconf-workshop-all-aboard-the-elixir-expresse), Chris McCord
   - [The Rise of the Phoenix](http://www.confreaks.com/videos/4132-elixirconf2014-rise-of-the-phoenix-building-an-elixir-web-framework), Chris McCord
+  - [Phoenix Takes Flight](http://www.chrismccord.com/blog/2015/05/09/elixirconfeu-keynote-phoenix-takes-flight/), Chris McCord
 
 ## Plug
   The Elixir middleware layer Phoenix makes extensive use of.
