@@ -290,13 +290,13 @@ This is the task we use to get our application running. It takes no arguments at
 
 ```console
 $ mix phoenix.server
-16:09:43.435 [debug] Running TaskTester.Endpoint with Cowboy on port 4000 (http)
+[info] Running TaskTester.Endpoint with Cowboy on port 4000 (http)
 ```
 It silently ignores our `DoesNotExist` argument.
 
 ```console
 $ mix phoenix.server DoesNotExist
-16:10:17.018 [debug] Running TaskTester.Endpoint with Cowboy on port 4000 (http)
+[info] Running TaskTester.Endpoint with Cowboy on port 4000 (http)
 ```
 Prior to the 0.8.x versions of Phoenix, we used the `phoenix.start` task to get our applications running. That task no longer exists, and attempting to run it will cause an error.
 
@@ -308,10 +308,10 @@ If we would like to start our application and also have an `iex` session open to
 
 ```console
 $ iex -S mix phoenix.server
-Erlang/OTP 17 [erts-6.3] [source] [64-bit] [smp:4:4] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
+Erlang/OTP 17 [erts-6.4] [source] [64-bit] [smp:8:8] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
 
-Running TaskTester.Endpoint with Cowboy on port 4000 (http)
-Interactive Elixir (1.0.2) - press Ctrl+C to exit (type h() ENTER for help)
+[info] Running TaskTester.Endpoint with Cowboy on port 4000 (http)
+Interactive Elixir (1.0.4) - press Ctrl+C to exit (type h() ENTER for help)
 iex(1)>
 ```
 
@@ -338,21 +338,21 @@ Here's what it looks like in action.
 
 ```console
 $ mix ecto.create
-The database for repo HelloPhoenix.Repo has been created.
+The database for HelloPhoenix.Repo has been created.
 ```
 
 If we happen to have another repo called `OurCustom.Repo` that we want to create the database for, we can run this.
 
 ```console
 $ mix ecto.create -r OurCustom.Repo
-The database for repo OurCustom.Repo has been created.
+The database for OurCustom.Repo has been created.
 ```
 
 There are a few things that can go wrong with `ecto.create`. If our Postgres database doesn't have a "postgres" role (user), we'll get an error like this one.
 
 ```console
 $ mix ecto.create
-** (Mix) The database for repo HelloPhoenix.Repo couldn't be created, reason given: psql: FATAL:  role "postgres" does not exist
+** (Mix) The database for HelloPhoenix.Repo couldn't be created, reason given: psql: FATAL:  role "postgres" does not exist
 ```
 
 We can fix this by creating the "postgres" role with the permissions needed to log in and create a database.
@@ -366,7 +366,7 @@ If the "postgres" role does not have permission to log in to the application, we
 
 ```console
 $ mix ecto.create
-** (Mix) The database for repo HelloPhoenix.Repo couldn't be created, reason given: psql: FATAL:  role "postgres" is not permitted to log in
+** (Mix) The database for HelloPhoenix.Repo couldn't be created, reason given: psql: FATAL:  role "postgres" is not permitted to log in
 ```
 
 To fix this, we need to change the permissions on our "postgres" user to allow login.
@@ -380,7 +380,7 @@ If the "postgres" role does not have permission to create a database, we'll get 
 
 ```console
 $ mix ecto.create
-** (Mix) The database for repo HelloPhoenix.Repo couldn't be created, reason given: ERROR:  permission denied to create database
+** (Mix) The database for HelloPhoenix.Repo couldn't be created, reason given: ERROR:  permission denied to create database
 ```
 
 To fix this, we need to change the permissions on our "postgres" user to allow database creation.
@@ -396,14 +396,14 @@ This task will drop the database specified in our repo. By default it will look 
 
 ```console
 $ mix ecto.drop
-The database for repo HelloPhoenix.Repo has been dropped.
+The database for HelloPhoenix.Repo has been dropped.
 ```
 
 If we happen to have another repo that we want to drop the database for, we can specify it with the `-r` flag.
 
 ```console
 $ mix ecto.drop -r OurCustom.Repo
-The database for repo OurCustom.Repo has been dropped.
+The database for OurCustom.Repo has been dropped.
 ```
 
 #### `ecto.gen.repo`
@@ -458,7 +458,7 @@ children = [
 
 Migrations are a programmatic, repeatable way to affect changes to a database schema. Migrations are also just modules, and we can create them with the `ecto.gen.migration` task. Let's walk through the steps to create a migration for a new comments table.
 
-We simply need to invoke the task with a snake-case version of the module name that we want. Preferably, the name will describe what we want the migration to do.
+We simply need to invoke the task with a snake_case version of the module name that we want. Preferably, the name will describe what we want the migration to do.
 
 ```console
 mix ecto.gen.migration add_comments_table
