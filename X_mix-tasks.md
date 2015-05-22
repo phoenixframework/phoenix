@@ -14,13 +14,21 @@ We have seen all of these at one point or another in the guides, but having all 
 
 #### `mix phoenix.new`
 
-This is how we tell Phoenix the framework to generate a new Phoenix application for us. We saw it early on in the [Up and Running Guide](http://www.phoenixframework.org/docs/up-and-running)
+This is how we tell Phoenix the framework to generate a new Phoenix application for us. We saw it early on in the [Up and Running Guide](http://www.phoenixframework.org/docs/up-and-running).
 
 Before we begin, we should note that Phoenix uses [Ecto](https://github.com/elixir-lang/ecto) for database access and [Brunch.io](http://brunch.io/) for asset management by default. We can pass `--no-ecto` to opt out of Ecto and  `--no-brunch` to opt out of Brunch.io.
 
 > Note: If we do use Brunch.io, we need to install its dependencies before we start our application. `phoenix.new` will ask to do this for us. Otherwise, we can install them with `npm install`. If we don't install them, the app will throw errors and may not serve our assets properly.
 
-We need to pass `phoenix.new` a path/name for our application so Phoenix knows where to create it. Conventionally, we use all lower-case letters with underscores for the name (snake case). We can use either a relative or absolute path. The only requirement is that the path must be outside of Phoenix itself.
+We need to pass `phoenix.new` a name for our application. Conventionally, we use all lower-case letters with underscores.
+
+```console
+$ mix phoenix.new task_tester
+* creating task_tester/.gitignore
+. . .
+```
+
+We can also use either a relative or absolute path.
 
 This relative path works.
 
@@ -51,7 +59,7 @@ Once all of our dependencies are installed, `phoenix.new` will tell us what our 
 ```console
 We are all set! Run your Phoenix application:
 
-$ cd ../task_tester
+$ cd task_tester
 $ mix phoenix.server
 
 You can also run it inside IEx (Interactive Elixir) as:
@@ -62,8 +70,8 @@ $ iex -S mix phoenix.server
 By default `phoenix.new` will assume we want to use ecto for our models. If we don't want to use ecto in our application, we can use the `--no-ecto` flag.
 
 ```console
-$ mix phoenix.new ../task_tester --no-ecto
-* creating /Users/me/work/task_tester/.gitignore
+$ mix phoenix.new task_tester --no-ecto
+* creating task_tester/.gitignore
 . . .
 ```
 
@@ -72,34 +80,33 @@ With the `--no-ecto` flag, Phoenix will not make either ecto or postgrex a depen
 By default, Phoenix will name our OTP application after the name we pass into `phoenix.new`. If we want, we can specify a different OTP application name with the `--app` flag.
 
 ```console
-$  mix phoenix.new ../task_tester --app hello_phoenix
-* creating ../task_tester/README.md
-* creating ../task_tester/config/config.exs
-* creating ../task_tester/config/dev.exs
-* creating ../task_tester/config/prod.exs
-* creating ../task_tester/config/prod.secret.exs
-* creating ../task_tester/config/test.exs
-* creating ../task_tester/lib/hello_phoenix.ex
-* creating ../task_tester/lib/hello_phoenix/endpoint.ex
-* creating ../task_tester/mix.exs
-* creating ../task_tester/test/hello_phoenix_test.exs
-* creating ../task_tester/test/test_helper.exs
-* creating ../task_tester/web/controllers/page_controller.ex
-* creating ../task_tester/web/router.ex
-* creating ../task_tester/web/templates/layout/application.html.eex
-* creating ../task_tester/web/templates/page/index.html.eex
-* creating ../task_tester/web/views/error_view.ex
-* creating ../task_tester/web/views/layout_view.ex
-* creating ../task_tester/web/views/page_view.ex
-* creating ../task_tester/web/web.ex
-* creating ../task_tester/lib/hello_phoenix/repo.ex
-* creating ../task_tester/.gitignore
-* creating ../task_tester/brunch-config.js
-* creating ../task_tester/package.json
-* creating ../task_tester/priv/static/images/phoenix.png
-* creating ../task_tester/web/static/css/app.scss
-* creating ../task_tester/web/static/js/app.js
-* creating ../task_tester/web/static/vendor/phoenix.js
+$  mix phoenix.new task_tester --app hello_phoenix
+* creating task_tester/config/config.exs
+* creating task_tester/config/dev.exs
+* creating task_tester/config/prod.exs
+* creating task_tester/config/prod.secret.exs
+* creating task_tester/config/test.exs
+* creating task_tester/lib/hello_phoenix.ex
+* creating task_tester/lib/hello_phoenix/endpoint.ex
+* creating task_tester/priv/static/robots.txt
+* creating task_tester/test/controllers/page_controller_test.exs
+* creating task_tester/test/views/error_view_test.exs
+* creating task_tester/test/views/page_view_test.exs
+* creating task_tester/test/support/conn_case.ex
+* creating task_tester/test/support/channel_case.ex
+* creating task_tester/test/test_helper.exs
+* creating task_tester/web/controllers/page_controller.ex
+* creating task_tester/web/templates/layout/application.html.eex
+* creating task_tester/web/templates/page/index.html.eex
+* creating task_tester/web/views/error_view.ex
+* creating task_tester/web/views/layout_view.ex
+* creating task_tester/web/views/page_view.ex
+* creating task_tester/web/router.ex
+* creating task_tester/web/web.ex
+* creating task_tester/mix.exs
+* creating task_tester/README.md
+* creating task_tester/lib/hello_phoenix/repo.ex
+. . .
 ```
 
 If we look in the resulting `mix.exs` file, we will see that our project app name is `hello_phoenix`.
@@ -125,43 +132,42 @@ defmodule HelloPhoenix.PageController do
 We can also see that files related to the application as a whole - eg. files in `lib/` and the test seed file - have `hello_phoenix` in their names.
 
 ```console
-* creating ../task_tester/lib/hello_phoenix.ex
-* creating ../task_tester/lib/hello_phoenix/endpoint.ex
-* creating ../task_tester/lib/hello_phoenix/repo.ex
-* creating ../task_tester/test/hello_phoenix_test.exs
+* creating task_tester/lib/hello_phoenix.ex
+* creating task_tester/lib/hello_phoenix/endpoint.ex
+* creating task_tester/lib/hello_phoenix/repo.ex
+* creating task_tester/test/hello_phoenix_test.exs
 ```
 
 If we only want to change the qualifying prefix for module names, we can do that with the `--module` flag. It's important to note that the value of the `--module` must look like a valid module name with proper capitalization. The task will throw an error if it doesn't.
 
 ```console
-$  mix phoenix.new ../task_tester --module HelloPhoenix
-* creating ../task_tester/README.md
-* creating ../task_tester/config/config.exs
-* creating ../task_tester/config/dev.exs
-* creating ../task_tester/config/prod.exs
-* creating ../task_tester/config/prod.secret.exs
-* creating ../task_tester/config/test.exs
-* creating ../task_tester/lib/task_tester.ex
-* creating ../task_tester/lib/task_tester/endpoint.ex
-* creating ../task_tester/mix.exs
-* creating ../task_tester/test/task_tester_test.exs
-* creating ../task_tester/test/test_helper.exs
-* creating ../task_tester/web/controllers/page_controller.ex
-* creating ../task_tester/web/router.ex
-* creating ../task_tester/web/templates/layout/application.html.eex
-* creating ../task_tester/web/templates/page/index.html.eex
-* creating ../task_tester/web/views/error_view.ex
-* creating ../task_tester/web/views/layout_view.ex
-* creating ../task_tester/web/views/page_view.ex
-* creating ../task_tester/web/web.ex
-* creating ../task_tester/lib/task_tester/repo.ex
-* creating ../task_tester/.gitignore
-* creating ../task_tester/brunch-config.js
-* creating ../task_tester/package.json
-* creating ../task_tester/priv/static/images/phoenix.png
-* creating ../task_tester/web/static/css/app.scss
-* creating ../task_tester/web/static/js/app.js
-* creating ../task_tester/web/static/vendor/phoenix.js
+$  mix phoenix.new task_tester --module HelloPhoenix
+* creating task_tester/config/config.exs
+* creating task_tester/config/dev.exs
+* creating task_tester/config/prod.exs
+* creating task_tester/config/prod.secret.exs
+* creating task_tester/config/test.exs
+* creating task_tester/lib/task_tester.ex
+* creating task_tester/lib/task_tester/endpoint.ex
+* creating task_tester/priv/static/robots.txt
+* creating task_tester/test/controllers/page_controller_test.exs
+* creating task_tester/test/views/error_view_test.exs
+* creating task_tester/test/views/page_view_test.exs
+* creating task_tester/test/support/conn_case.ex
+* creating task_tester/test/support/channel_case.ex
+* creating task_tester/test/test_helper.exs
+* creating task_tester/web/controllers/page_controller.ex
+* creating task_tester/web/templates/layout/application.html.eex
+* creating task_tester/web/templates/page/index.html.eex
+* creating task_tester/web/views/error_view.ex
+* creating task_tester/web/views/layout_view.ex
+* creating task_tester/web/views/page_view.ex
+* creating task_tester/web/router.ex
+* creating task_tester/web/web.ex
+* creating task_tester/mix.exs
+* creating task_tester/README.md
+* creating task_tester/lib/task_tester/repo.ex
+. . .
 ```
 
 Notice that none of the files have `hello_phoenix` in their names. All filenames related to the application name are `task_tester`.
