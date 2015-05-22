@@ -591,7 +591,7 @@ $ mkdir -p lib/mix/tasks
 Inside that directory, let's create a new file, `hello_phoenix.greeting.ex`, that looks like this.
 
 ```elixir
-defmodule Mix.Tasks.Hellophoenix.Greeting do
+defmodule Mix.Tasks.HelloPhoenix.Greeting do
   use Mix.Task
 
   @shortdoc "Sends a greeting to us from Hello Phoenix"
@@ -610,8 +610,8 @@ end
 
 Let's take a quick look at the moving parts involved in a working mix task.
 
-The first thing we need to do is name our module. In order to properly namespace it, we begin with `Mix.Tasks`. We'd like to invoke this as `mix hellophoenix.greeting`, so we complete the module name with
-`Hellophoenix.Greeting`. It would be nice to use `HelloPhoenix.Greeting`, but currently that would create a `helloPhoenix.greeting` task.
+The first thing we need to do is name our module. In order to properly namespace it, we begin with `Mix.Tasks`. We'd like to invoke this as `mix hello_phoenix.greeting`, so we complete the module name with
+`HelloPhoenix.Greeting`.
 
 The `use Mix.Task` line clearly brings in functionality from mix that makes this module behave as a mix task.
 
@@ -635,7 +635,7 @@ Now our new task should be visible to `mix help`.
 
 ```console
 $ mix help | grep hello
-mix hellophoenix.greeting # Sends a greeting to us from Hello Phoenix
+mix hello_phoenix.greeting # Sends a greeting to us from Hello Phoenix
 ```
 
 Notice that `mix help` displays the text we put into the `@shortdoc` along with the name of our task.
@@ -643,7 +643,7 @@ Notice that `mix help` displays the text we put into the `@shortdoc` along with 
 So far, so good, but does it work?
 
 ```console
-$ mix hellophoenix.greeting
+$ mix hello_phoenix.greeting
 Greetings from the Hello Phoenix Application!
 ```
 
