@@ -33,7 +33,7 @@ defmodule Phoenix.Router.Helpers do
       Generates the connection/endpoint base URL without any path information.
       """
       def url(%Conn{private: private}) do
-        private.phoenix_endpoint.static_url
+        private.phoenix_endpoint.url
       end
 
       def url(%Socket{endpoint: endpoint}) do
@@ -41,7 +41,7 @@ defmodule Phoenix.Router.Helpers do
       end
 
       def url(endpoint) when is_atom(endpoint) do
-        endpoint.static_url
+        endpoint.url
       end
 
       @doc """
@@ -94,7 +94,7 @@ defmodule Phoenix.Router.Helpers do
       end
 
       def static_url(endpoint, path) when is_atom(endpoint) do
-        endpoint.url <> endpoint.static_path(path)
+        endpoint.static_url <> endpoint.static_path(path)
       end
 
       # Functions used by generated helpers

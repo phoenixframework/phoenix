@@ -90,7 +90,7 @@ defmodule Phoenix.Router.HelpersTest do
   end
 
   def static_url do
-    url
+    "https://static.example.com"
   end
 
   def path(path) do
@@ -279,7 +279,7 @@ defmodule Phoenix.Router.HelpersTest do
   end
 
   test "helpers module generates a static_url helper" do
-    url = "https://example.com/images/foo.png"
+    url = "https://static.example.com/images/foo.png"
     assert Helpers.static_url(__MODULE__, "/images/foo.png") == url
     assert Helpers.static_url(conn_with_endpoint, "/images/foo.png") == url
     assert Helpers.static_url(socket_with_endpoint, "/images/foo.png") == url
@@ -315,7 +315,7 @@ defmodule Phoenix.Router.HelpersTest do
     end
 
     def static_url do
-      url
+      "https://static.example.com"
     end
 
     def path(path) do
@@ -357,6 +357,6 @@ defmodule Phoenix.Router.HelpersTest do
            "/api/images/foo.png"
 
     assert Helpers.static_url(conn_with_script_name(~w(foo)), "/images/foo.png") ==
-           "https://example.com/api/images/foo.png"
+           "https://static.example.com/api/images/foo.png"
   end
 end
