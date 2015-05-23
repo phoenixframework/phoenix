@@ -255,10 +255,14 @@ resources "/posts", PostController
 
 Important: If we don't do this, our application won't compile, and we'll get an error.
 
+```console
+$ mix phoenix.server
+
 == Compilation error on file web/views/post_view.ex ==
 ** (CompileError) web/templates/post/edit.html.eex:4: function post_path/3 undefined
-(stdlib) lists.erl:1336: :lists.foreach/2
-(stdlib) erl_eval.erl:657: :erl_eval.do_apply/6
+    (stdlib) lists.erl:1336: :lists.foreach/2
+    (stdlib) erl_eval.erl:657: :erl_eval.do_apply/6
+```
 
 #### `mix phoenix.gen.json`
 
