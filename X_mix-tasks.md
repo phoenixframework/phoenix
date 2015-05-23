@@ -245,7 +245,7 @@ $ mix phoenix.gen.html Post posts body:string word_count:integer --no-model
 * creating test/controllers/post_controller_test.exs
 ```
 
-It will tell us we need to add a line to our router file but since we skipped model it won't mention anything about ecto.migrate.
+It will tell us we need to add a line to our router file, but since we skipped the model, it won't mention anything about `ecto.migrate`.
 
 ```console
 Add the resource to the proper scope in web/router.ex:
