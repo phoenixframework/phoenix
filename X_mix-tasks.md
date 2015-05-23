@@ -194,15 +194,17 @@ The `phoenix.gen.html` task takes a number of arguments, the module name of the 
 
 ```console
 $ mix phoenix.gen.html Post posts body:string word_count:integer
-* creating priv/repo/migrations/20150314013326_create_post.exs
-* creating web/controllers/post_controller.ex
+* creating priv/repo/migrations/20150523120903_create_post.exs
 * creating web/models/post.ex
+* creating test/models/post_test.exs
+* creating web/controllers/post_controller.ex
 * creating web/templates/post/edit.html.eex
 * creating web/templates/post/form.html.eex
 * creating web/templates/post/index.html.eex
 * creating web/templates/post/new.html.eex
 * creating web/templates/post/show.html.eex
 * creating web/views/post_view.ex
+* creating test/controllers/post_controller_test.exs
 ```
 
 When `phoenix.gen.html` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our ecto migrations.
