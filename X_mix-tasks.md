@@ -231,6 +231,35 @@ Compiled web/models/post.ex
 (stdlib) erl_eval.erl:657: :erl_eval.do_apply/6
 ```
 
+If we don't want to create a model for our resource we can use the `--no-model` flag.
+
+```console
+$ mix phoenix.gen.html Post posts body:string word_count:integer --no-model
+* creating web/controllers/post_controller.ex
+* creating web/templates/post/edit.html.eex
+* creating web/templates/post/form.html.eex
+* creating web/templates/post/index.html.eex
+* creating web/templates/post/new.html.eex
+* creating web/templates/post/show.html.eex
+* creating web/views/post_view.ex
+* creating test/controllers/post_controller_test.exs
+```
+
+It will tell us we need to add a line to our router file but since we skipped model it won't mention anything about ecto.migrate.
+
+```console
+Add the resource to the proper scope in web/router.ex:
+
+resources "/posts", PostController
+```
+
+Important: If we don't do this, our application won't compile, and we'll get an error.
+
+== Compilation error on file web/views/post_view.ex ==
+** (CompileError) web/templates/post/edit.html.eex:4: function post_path/3 undefined
+(stdlib) lists.erl:1336: :lists.foreach/2
+(stdlib) erl_eval.erl:657: :erl_eval.do_apply/6
+
 #### `mix phoenix.gen.json`
 
 Phoenix also offers the ability to generate all the code to stand up a complete JSON resource - ecto migration, ecto model, controller with all the necessary actions and view. This command will not create any template for the app.
