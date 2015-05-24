@@ -4,11 +4,14 @@ There are currently a number of built-in Phoenix-specific and ecto-specific mix 
 
 ```console
 $ mix help | grep -i phoenix
-mix phoenix.gen.html     # Generates HTML files for a resource
-mix phoenix.gen.json     # Generates a controller and model for an JSON-based resource
-mix phoenix.new          # Creates Phoenix application
-mix phoenix.routes       # Prints all routes
-mix phoenix.server       # Starts applications and their servers
+mix phoenix.digest      # Digests and compress static files
+mix phoenix.gen.channel # Generates a Phoenix channel
+mix phoenix.gen.html    # Generates controller, model and views for an HTML-based resource
+mix phoenix.gen.json    # Generates a controller and model for an JSON-based resource
+mix phoenix.gen.model   # Generates an Ecto model
+mix phoenix.new         # Create a new Phoenix v0.13.1 application
+mix phoenix.routes      # Prints all routes
+mix phoenix.server      # Starts applications and their servers
 ```
 We have seen all of these at one point or another in the guides, but having all the information about them in one place seems like a good idea. And here we are.
 
@@ -191,15 +194,17 @@ The `phoenix.gen.html` task takes a number of arguments, the module name of the 
 
 ```console
 $ mix phoenix.gen.html Post posts body:string word_count:integer
-* creating priv/repo/migrations/20150314013326_create_post.exs
-* creating web/controllers/post_controller.ex
+* creating priv/repo/migrations/20150523120903_create_post.exs
 * creating web/models/post.ex
+* creating test/models/post_test.exs
+* creating web/controllers/post_controller.ex
 * creating web/templates/post/edit.html.eex
 * creating web/templates/post/form.html.eex
 * creating web/templates/post/index.html.eex
 * creating web/templates/post/new.html.eex
 * creating web/templates/post/show.html.eex
 * creating web/views/post_view.ex
+* creating test/controllers/post_controller_test.exs
 ```
 
 When `phoenix.gen.html` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our ecto migrations.
@@ -224,6 +229,39 @@ Compiled web/models/post.ex
 ** (CompileError) web/controllers/post_controller.ex:27: function post_path/2 undefined
 (stdlib) lists.erl:1336: :lists.foreach/2
 (stdlib) erl_eval.erl:657: :erl_eval.do_apply/6
+```
+
+If we don't want to create a model for our resource we can use the `--no-model` flag.
+
+```console
+$ mix phoenix.gen.html Post posts body:string word_count:integer --no-model
+* creating web/controllers/post_controller.ex
+* creating web/templates/post/edit.html.eex
+* creating web/templates/post/form.html.eex
+* creating web/templates/post/index.html.eex
+* creating web/templates/post/new.html.eex
+* creating web/templates/post/show.html.eex
+* creating web/views/post_view.ex
+* creating test/controllers/post_controller_test.exs
+```
+
+It will tell us we need to add a line to our router file, but since we skipped the model, it won't mention anything about `ecto.migrate`.
+
+```console
+Add the resource to the proper scope in web/router.ex:
+
+resources "/posts", PostController
+```
+
+Important: If we don't do this, our application won't compile, and we'll get an error.
+
+```console
+$ mix phoenix.server
+
+== Compilation error on file web/views/post_view.ex ==
+** (CompileError) web/templates/post/edit.html.eex:4: function post_path/3 undefined
+    (stdlib) lists.erl:1336: :lists.foreach/2
+    (stdlib) erl_eval.erl:657: :erl_eval.do_apply/6
 ```
 
 #### `mix phoenix.gen.json`
