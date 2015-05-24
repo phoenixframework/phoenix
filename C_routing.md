@@ -817,7 +817,7 @@ long_poller_path  GET   /ws/poll  Phoenix.Transports.LongPoller.poll/2
 long_poller_path  POST  /ws/poll  Phoenix.Transports.LongPoller.publish/2
 ```
 
-Notice that our socket definition expands out to four paths with two separate transport mechanisms - WebSockets and LongPolling. If we wanted to make sure that our channel is handled only one type of trasport, we could specify that using the `via` option, like this.
+Notice that our socket definition expands out to four paths with two separate transport mechanisms - WebSockets and LongPolling. If we wanted to make sure that our channel is handled by only one type of transport, we could specify that using the `via` option, like this.
 
 ```elixir
 socket "/ws", HelloPhoenix do
