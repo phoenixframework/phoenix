@@ -133,6 +133,12 @@ defmodule Phoenix.Controller do
   @spec controller_template(Plug.Conn.t) :: binary
   def controller_template(conn), do: conn.private[:phoenix_template]
 
+  @compile {:inline, get_json_encoder: 0}
+  defp get_json_encoder do
+    Application.get_env(:phoenix, :format_encoders)
+    |> Keyword.get(:json, Poison)
+  end
+
   @doc """
   Sends JSON response.
 
@@ -146,11 +152,54 @@ defmodule Phoenix.Controller do
   """
   @spec json(Plug.Conn.t, term) :: Plug.Conn.t
   def json(conn, data) do
-    encoder =
-      Application.get_env(:phoenix, :format_encoders)
-      |> Keyword.get(:json, Poison)
-
+    encoder = get_json_encoder()
+    
     send_resp(conn, conn.status || 200, "application/json", encoder.encode_to_iodata!(data))
+  end
+
+  @doc """
+  Sends a JSON response with JSONP callback support.
+
+  It uses the configured `:format_encoders` under the `:phoenix`
+  application for `:json` to pick up the encoder module.
+
+  If the query params contain a key for the callback name, the 
+  response body is wrapped in an invocation of this callback.
+
+  The default key for the callback name is `"callback"`. It can be
+  overridden with the `:callback` option and is expected to be a 
+  string.
+
+  ## Examples
+
+      iex> jsonp conn, %{id: 123}, callback: "cb"
+
+  """
+  @spec jsonp(Plug.Conn.t, term, Keyword.t) :: Plug.Conn.t
+  def jsonp(conn, data, opts \\ []) do
+    callback_param = Keyword.get(opts, :callback, "callback")
+    callback = Dict.get(conn.query_params, callback_param)
+
+    unless callback do
+      json(conn, data)
+    else
+      encoder = get_json_encoder()
+
+      # Restrict callback name to alphanumeric characters, $, _, . and 
+      # square brackets
+      callback = Regex.replace(~r/[^\[\]\w$.]/, callback, "")
+  
+      # Replace unicode characters that are valid in json but not
+      # in javascript (line separator, paragraph separator)
+      body = encoder.encode!(data)
+      body = body
+      |> String.replace(<< 0x2028 :: utf8 >>, "\\u2028")
+      |> String.replace(<< 0x2029 :: utf8 >>, "\\u2029")
+      
+      body = "/**/ typeof " <> callback <> " === 'function' && " <> callback <> "(" <> body <> ");"
+
+      send_resp(conn, conn.status || 200, "text/javascript", body)
+    end
   end
 
   @doc """
