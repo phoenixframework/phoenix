@@ -11,7 +11,7 @@ defmodule Phoenix.Controller.RenderTest do
   end
 
   defp layout_conn() do
-    conn() |> put_layout({MyApp.LayoutView, :application})
+    conn() |> put_layout({MyApp.LayoutView, :app})
   end
 
   defp html_response?(conn) do
@@ -55,20 +55,20 @@ defmodule Phoenix.Controller.RenderTest do
   end
 
   test "renders template with atom layout option" do
-    conn = render(conn, "index.html", title: "Hello", layout: {MyApp.LayoutView, :application})
+    conn = render(conn, "index.html", title: "Hello", layout: {MyApp.LayoutView, :app})
     assert conn.resp_body =~ ~r"<title>Hello</title>"
     assert html_response?(conn)
   end
 
   test "renders template with string layout option" do
-    conn = render(conn, "index.html", title: "Hello", layout: {MyApp.LayoutView, "application.html"})
+    conn = render(conn, "index.html", title: "Hello", layout: {MyApp.LayoutView, "app.html"})
     assert conn.resp_body =~ ~r"<title>Hello</title>"
     assert html_response?(conn)
   end
 
   test "renders with conn status code" do
     conn = %Plug.Conn{conn | status: 404}
-    conn = render(conn, "index.html", title: "Hello", layout: {MyApp.LayoutView, "application.html"})
+    conn = render(conn, "index.html", title: "Hello", layout: {MyApp.LayoutView, "app.html"})
     assert conn.status == 404
   end
 
@@ -77,7 +77,7 @@ defmodule Phoenix.Controller.RenderTest do
     assert conn.resp_body == "Hello\n"
     assert html_response?(conn)
 
-    conn = render(conn(), "show.json", layout: {MyApp.LayoutView, :application})
+    conn = render(conn(), "show.json", layout: {MyApp.LayoutView, :app})
     assert conn.resp_body == ~s({"foo":"bar"})
   end
 
@@ -88,7 +88,7 @@ defmodule Phoenix.Controller.RenderTest do
     assert html_response?(conn)
 
     conn = put_in layout_conn.params["format"], "json"
-    conn = render(conn, :show, layout: {MyApp.LayoutView, :application})
+    conn = render(conn, :show, layout: {MyApp.LayoutView, :app})
     assert conn.resp_body == ~s({"foo":"bar"})
   end
 

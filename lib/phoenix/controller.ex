@@ -98,7 +98,7 @@ defmodule Phoenix.Controller do
       use Phoenix.Controller.Pipeline
 
       plug Phoenix.Controller.Logger, opts
-      plug :put_new_layout, {Phoenix.Controller.__layout__(__MODULE__, opts), :application}
+      plug :put_new_layout, {Phoenix.Controller.__layout__(__MODULE__, opts), :app}
       plug :put_new_view, Phoenix.Controller.__view__(__MODULE__)
     end
   end
@@ -470,7 +470,7 @@ defmodule Phoenix.Controller do
         end
       end
 
-  will render the  "show.html" template inside an "application.html"
+  will render the  "show.html" template inside an "app.html"
   template specified in `MyApp.LayoutView`. `put_layout/2` can be used
   to change the layout, similar to how `put_view/2` can be used to change
   the view.

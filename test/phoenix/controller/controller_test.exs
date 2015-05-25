@@ -57,8 +57,8 @@ defmodule Phoenix.Controller.ControllerTest do
     conn = conn(:get, "/")
     assert layout(conn) == false
 
-    conn = put_layout conn, {AppView, "application.html"}
-    assert layout(conn) == {AppView, "application.html"}
+    conn = put_layout conn, {AppView, "app.html"}
+    assert layout(conn) == {AppView, "app.html"}
 
     conn = put_layout conn, "print.html"
     assert layout(conn) == {AppView, "print.html"}
@@ -81,16 +81,16 @@ defmodule Phoenix.Controller.ControllerTest do
   test "put_new_layout/2" do
     conn = put_new_layout(conn(:get, "/"), false)
     assert layout(conn) == false
-    conn = put_new_layout(conn, {AppView, "application.html"})
+    conn = put_new_layout(conn, {AppView, "app.html"})
     assert layout(conn) == false
 
-    conn = put_new_layout(conn(:get, "/"), {AppView, "application.html"})
-    assert layout(conn) == {AppView, "application.html"}
+    conn = put_new_layout(conn(:get, "/"), {AppView, "app.html"})
+    assert layout(conn) == {AppView, "app.html"}
     conn = put_new_layout(conn, false)
-    assert layout(conn) == {AppView, "application.html"}
+    assert layout(conn) == {AppView, "app.html"}
 
     assert_raise Plug.Conn.AlreadySentError, fn ->
-      put_new_layout sent_conn, {AppView, "application.html"}
+      put_new_layout sent_conn, {AppView, "app.html"}
     end
   end
 
