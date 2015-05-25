@@ -26,7 +26,7 @@ defmodule Mix.Tasks.Phoenix.New do
     {:keep, "new/web/channels",                              "web/channels"},
     {:eex,  "new/web/controllers/page_controller.ex",        "web/controllers/page_controller.ex"},
     {:keep, "new/web/models",                                "web/models"},
-    {:eex,  "new/web/templates/layout/application.html.eex", "web/templates/layout/application.html.eex"},
+    {:eex,  "new/web/templates/layout/app.html.eex",         "web/templates/layout/app.html.eex"},
     {:eex,  "new/web/templates/page/index.html.eex",         "web/templates/page/index.html.eex"},
     {:eex,  "new/web/views/error_view.ex",                   "web/views/error_view.ex"},
     {:eex,  "new/web/views/layout_view.ex",                  "web/views/layout_view.ex"},

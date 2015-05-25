@@ -56,7 +56,7 @@ defmodule Phoenix.ViewTest do
     html = render(MyApp.View, "show.html",
       title: "Test",
       message: "Hello world",
-      layout: {MyApp.LayoutView, "application.html"}
+      layout: {MyApp.LayoutView, "app.html"}
     )
 
     assert html ==
@@ -67,7 +67,7 @@ defmodule Phoenix.ViewTest do
   test "converts assigns to maps and removes :layout" do
     html = render_to_iodata(MyApp.UserView, "edit.html",
       title: "Test",
-      layout: {MyApp.LayoutView, "application.html"}
+      layout: {MyApp.LayoutView, "app.html"}
     )
 
     assert html ==
@@ -93,7 +93,7 @@ defmodule Phoenix.ViewTest do
     html = render_to_iodata(MyApp.View, "show.html",
       title: "Test",
       message: "Hello world",
-      layout: {MyApp.LayoutView, "application.html"}
+      layout: {MyApp.LayoutView, "app.html"}
     )
 
     assert html ==
@@ -103,7 +103,7 @@ defmodule Phoenix.ViewTest do
     html = render_to_string(MyApp.View, "show.html",
       title: "Test",
       message: "Hello world",
-      layout: {MyApp.LayoutView, "application.html"}
+      layout: {MyApp.LayoutView, "app.html"}
     )
 
     assert html ==

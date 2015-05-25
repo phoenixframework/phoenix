@@ -181,7 +181,7 @@ defmodule Phoenix.View do
   templates, `@inner` will be always marked as safe.
 
       Phoenix.View.render(YourApp.UserView, "index.html",
-                          layout: {YourApp.LayoutView, "application.html"})
+                          layout: {YourApp.LayoutView, "app.html"})
       #=> {:safe, "<html><h1>Hello!</h1></html>"}
 
   """
