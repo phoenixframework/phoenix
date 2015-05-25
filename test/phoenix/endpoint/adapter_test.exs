@@ -55,7 +55,6 @@ defmodule Phoenix.Endpoint.AdapterTest do
 
   test "generates the static url based on the static host configuration" do
     static_host = {:cache, "http://static.example.com"}
-
     assert Adapter.static_url(StaticURLEndpoint) == static_host
   end
 

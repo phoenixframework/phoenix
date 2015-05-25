@@ -368,14 +368,20 @@ defmodule Phoenix.Endpoint do
         end
       end
 
+      # The static path should be properly scoped according to
+      # the static_url configuration. If one is not available,
+      # we fallback to the url configuration as in the adapter.
+      static_script_name = (var!(config)[:static_url] || var!(config)[:url])[:path] || "/"
+      static_script_name = if static_script_name == "/", do: "", else: static_script_name
+
       @doc """
       Generates a route to a static file in `priv/static`.
       """
       def static_path(path) do
         # This should be in sync with the endpoint warmup.
-        Phoenix.Config.cache(__MODULE__,
-          {:__phoenix_static__, path},
-          &Phoenix.Endpoint.Adapter.static_path(&1, path))
+        unquote(static_script_name) <>
+          Phoenix.Config.cache(__MODULE__, {:__phoenix_static__, path},
+                               &Phoenix.Endpoint.Adapter.static_path(&1, path))
       end
     end
   end

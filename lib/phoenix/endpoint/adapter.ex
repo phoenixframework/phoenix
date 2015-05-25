@@ -196,9 +196,9 @@ defmodule Phoenix.Endpoint.Adapter do
       {:ok, %File.Stat{type: :regular, mtime: mtime, size: size}} ->
         key = if endpoint.config(:cache_static_lookup), do: :cache, else: :stale
         vsn = {size, mtime} |> :erlang.phash2() |> Integer.to_string(16)
-        {key, endpoint.path(path <> "?vsn=" <> vsn)}
+        {key, path <> "?vsn=" <> vsn}
       _ ->
-        {:stale, endpoint.path(path)}
+        {:stale, path}
     end
   end
 
@@ -228,9 +228,9 @@ defmodule Phoenix.Endpoint.Adapter do
   defp warmup_static(endpoint) do
     for {key, value} <- cache_static_manifest(endpoint) do
       # This should be in sync with the endpoint lookup.
-      Phoenix.Config.cache(endpoint,
-        {:__phoenix_static__, "/" <> key},
-         fn _ -> {:cache, endpoint.path("/" <> value <> "?vsn=d")} end)
+      Phoenix.Config.cache(endpoint, {:__phoenix_static__, "/" <> key}, fn _ ->
+        {:cache, "/" <> value <> "?vsn=d"}
+      end)
     end
   end
 
