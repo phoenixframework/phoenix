@@ -97,30 +97,22 @@ defmodule HelloPhoenix.PageController do
   . . .
   def index(conn, _params) do
     conn
-    |> put_flash(:notice, "Welcome to Phoenix, from a flash notice!")
+    |> put_flash(:info, "Welcome to Phoenix, from flash info!")
     |> put_flash(:error, "Let's pretend we have an error.")
     |> render "index.html"
   end
 end
 ```
 
-The `Phoenix.Controller` module is not particular about the keys we use. As long as we are internally consistent, all will be well. `:notice`, `:error`, and `:alert`, however, are common.
+The `Phoenix.Controller` module is not particular about the keys we use. As long as we are internally consistent, all will be well. `:info` and `:error`, however, are common.
 
 In order to see our flash messages, we need to be able to retrieve them and display them in a template/layout. One way to do the first part is with `get_flash/2` which takes `conn` and the key we care about. It then returns the value for that key.
 
-To see this in action, let's put these blocks in our application layout `web/templates/layout/application.html.ex`, just above the `<%= @inner %>` line.
+Fortunately, our application layout, `web/templates/layout/application.html.eex`, already has markup for displaying flash messages.
 
 ```html
-<div class="flash_notice">
-  <div class="row">
-    <p><%= get_flash(@conn, :notice) %></p>
-  </div>
-</div>
-<div class="flash_error">
-  <div class="row">
-    <p><%= get_flash(@conn, :error) %></p>
-  </div>
-</div>
+<p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
+<p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
 ```
 
 When we reload the [Welcome Page](http://localhost:4000/), our messages should appear just above "Welcome to Phoenix!"
