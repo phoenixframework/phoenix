@@ -64,7 +64,7 @@ Then let's add a line with a link back to the same page. (The object is to see h
 ```html
 <div class="jumbotron">
   <h2>Welcome to Phoenix!</h2>
-  <p class="lead">Phoenix is an Elixir Web Framework targeting full-featured, fault tolerant applications with realtime functionality.</p>
+  <p class="lead">Most frameworks make you choose between speed and a productive environment. <a href="http://phoenixframework.org">Phoenix</a> and <a href="http://elixir-lang.org">Elixir</a> give you both.</p>
   <p><a href="<%= page_path @conn, :index %>">Link back to ourselves</a></p>
 </div>
 ```
