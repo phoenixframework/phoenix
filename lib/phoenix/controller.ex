@@ -667,7 +667,7 @@ defmodule Phoenix.Controller do
     * the accepted list of arguments contains the "html" format
 
     * the accept header specified more than one media type preceeded
-      or followed by the wildcard media type "*/*"
+      or followed by the wildcard media type "`*/*`"
 
   This function raises `Phoenix.NotAcceptableError`, which is rendered
   with status 406, whenever the server cannot serve a response in any
