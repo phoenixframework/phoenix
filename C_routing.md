@@ -250,10 +250,11 @@ user_post_path  DELETE  users/:user_id/posts/:id       HelloPhoenix.PostControll
 
 We see that each of these routes scopes the posts to a user id. For the first one, we will invoke the `PostController` `index` action, but we will pass in a `user_id`. This implies that we would display all the posts for that individual user only. The same scoping applies for all these routes.
 
-When calling path helper functions for nested routes, we will need to pass the ids in the order they came in the route definition. For the following `show` route, `42` is the `user_id`, and `17` is the `post_id`.
+When calling path helper functions for nested routes, we will need to pass the ids in the order they came in the route definition. For the following `show` route, `42` is the `user_id`, and `17` is the `post_id`. Let's remember to alias our `HelloPhoenix.Endpoint` before we begin.
 
 ```elixir
-iex(2)> HelloPhoenix.Router.Helpers.user_post_path(Endpoint, :show, 42, 17)
+iex> alias HelloPhoenix.Endpoint
+iex> HelloPhoenix.Router.Helpers.user_post_path(Endpoint, :show, 42, 17)
 "/users/42/posts/17"
 ```
 
