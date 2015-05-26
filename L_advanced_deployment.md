@@ -28,7 +28,7 @@ To get started, we'll need to add `{:exrm, "~> 0.15.3"}` into the list of depend
 
 ```elixir
   defp deps do
-    [{:phoenix, "~> 0.13"},
+    [{:phoenix, "~> 0.13.1"},
      {:phoenix_ecto, "~> 0.4"},
      {:postgrex, ">= 0.0.0"},
      {:phoenix_html, "~> 1.0"},
@@ -70,25 +70,41 @@ We also need to configure our Endpoint to act as a server in `config/prod.exs`.
 ```elixir
 # Configures the endpoint
 config :hello_phoenix, HelloPhoenix.Endpoint,
-http: [port: {:system, "PORT"}],
+http: [port: 8888],
 url: [host: "example.com"],
 cache_static_manifest: "priv/static/manifest.json",
 server: true
 ```
 
-When we run `mix phoenix.server` to start our application, the server parameter is automatically set to true. When we're creating a release, however, we need to configure this manually. If we get through this release guide, and we aren't seeing any pages coming from our server, this is a likely culprit.
+When we run `mix phoenix.server` to start our application, the `server` parameter is automatically set to true. When we're creating a release, however, we need to configure this manually. If we get through this release guide, and we aren't seeing any pages coming from our server, this is a likely culprit.
 
-There's one last thing we need to do before we create our release. We will be generating a production release, and our production config doesn't set a port by default. Let's open up `config/prod.exs` to fix that.
+If we take a quick look at our `config/prod.exs` again, we'll see that our port is set to `8888`.
+
+```elixir
+. . .
+config :hello_phoenix, HelloPhoenix.Endpoint,
+http: [port: 8888],
+. . .
+```
+
+Alternately, we can set the port from an environment variable on our system.
 
 ```elixir
 . . .
 config :hello_phoenix, HelloPhoenix.Endpoint,
 http: [port: {:system, "PORT"}],
-url: [host: "example.com"],
-cache_static_manifest: "priv/static/manifest.json",
-server: true,
-http: [port: 4001]
 . . .
+```
+
+If we don't currently have such an environment variable, we need to set it now, otherwise our release will not build properly.
+
+There's one last thing to do before we create our release. We need to pre-compile our static assets using the `phoenix.digest` task. We will be generating a production release, so we need to run this task with `MIX_ENV=prod`.
+
+```console
+$ MIX_ENV=prod mix phoenix.digest
+==> ranch (compile)
+. . .
+Check your digested files at 'priv/static'.
 ```
 
 ### Generating the Release
@@ -258,7 +274,7 @@ Interactive Elixir (1.0.2) - press Ctrl+C to exit (type h() ENTER for help)
 iex(hello_phoenix@127.0.0.1)1>
 ```
 
-This is the point where our application will crash if it fails to start a child application. If all goes well, however, we should end up at an `iex` prompt. We should also see our app running at [http://localhost:4001/](http://localhost:4001/).
+This is the point where our application will crash if it fails to start a child application. If all goes well, however, we should end up at an `iex` prompt. We should also see our app running at [http://localhost:8888/](http://localhost:8888/).
 
 Let's hit `ctrl-c` twice to get out of iex so that we can explore a couple of different ways to interact with our release.
 
@@ -388,9 +404,12 @@ expect stop
 respawn
 
 env MIX_ENV=prod
-env PORT=8888
 export MIX_ENV
-export PORT
+
+## Uncomment the following two lines if we configured
+## our port with an environment variable.
+#env PORT=8888
+#export PORT
 
 
 pre-start exec /bin/sh /app/bin/hello_phoenix start
