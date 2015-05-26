@@ -10,6 +10,7 @@
 
 * Backward incompatible changes
   * [Controller] `plug :action` is now called automatically
+  * [View] The default template `web/templates/layout/application.html.eex` has been renamed to `app.html.eex`
 
 
 ## v0.13.1 (2015-05-16)
