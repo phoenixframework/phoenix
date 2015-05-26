@@ -80,8 +80,8 @@ defmodule Mix.Phoenix do
       {k, {:array, _}} -> {k, []}
       {k, :belongs_to} -> {k, nil}
       {k, :integer}    -> {k, 42}
-      {k, :float}      -> {k, "120.5"}
-      {k, :decimal}    -> {k, "120.5"}
+      {k, :float}      -> {k, 120.5}
+      {k, :decimal}    -> {k, Decimal.new(43.20)}
       {k, :boolean}    -> {k, true}
       {k, :text}       -> {k, "some content"}
       {k, :date}       -> {k, %{year: 2010, month: 4, day: 17}}
