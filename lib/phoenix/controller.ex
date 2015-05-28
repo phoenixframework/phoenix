@@ -133,7 +133,6 @@ defmodule Phoenix.Controller do
   @spec controller_template(Plug.Conn.t) :: binary
   def controller_template(conn), do: conn.private[:phoenix_template]
 
-  @compile {:inline, get_json_encoder: 0}
   defp get_json_encoder do
     Application.get_env(:phoenix, :format_encoders)
     |> Keyword.get(:json, Poison)
@@ -170,6 +169,9 @@ defmodule Phoenix.Controller do
   overridden with the `:callback` option and is expected to be a 
   string.
 
+  Only alphanumeric characters and underscore is allowed in the
+  callback name. Otherwise an exception is raised.
+
   ## Examples
 
       iex> jsonp conn, %{id: 123}, callback: "cb"
@@ -180,18 +182,22 @@ defmodule Phoenix.Controller do
     callback_param = Keyword.get(opts, :callback, "callback")
     callback = Dict.get(conn.query_params, callback_param)
 
-    unless callback do
-      json(conn, data)
-    else
+    if callback && String.length(callback) > 0 do
       encoder = get_json_encoder()
 
-      # Restrict callback name to alphanumeric characters, $, _, . and 
-      # square brackets
-      callback = Regex.replace(~r/[^\[\]\w$.]/, callback, "")
-  
-      # Replace unicode characters that are valid in json but not
-      # in javascript (line separator, paragraph separator)
-      body = encoder.encode!(data)
+      allowed_chars = [?0..?9, ?A..?Z, ?a..?z, [?_]]
+      |> Enum.map(&Enum.to_list/1)
+      |> List.flatten()
+
+      callback_valid = callback
+      |> String.to_char_list()
+      |> Enum.all?(&(&1 in allowed_chars))
+
+      callback_valid || raise ArgumentError, "the callback name contains invalid characters"
+
+      body = encoder.encode_to_iodata!(data) 
+      |> IO.iodata_to_binary()
+
       body = body
       |> String.replace(<< 0x2028 :: utf8 >>, "\\u2028")
       |> String.replace(<< 0x2029 :: utf8 >>, "\\u2029")
@@ -199,6 +205,8 @@ defmodule Phoenix.Controller do
       body = "/**/ typeof " <> callback <> " === 'function' && " <> callback <> "(" <> body <> ");"
 
       send_resp(conn, conn.status || 200, "text/javascript", body)
+    else
+      json conn, data
     end
   end
 
