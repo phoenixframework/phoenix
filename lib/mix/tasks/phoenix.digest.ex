@@ -26,10 +26,10 @@ defmodule Mix.Tasks.Phoenix.Digest do
 
   Example of generated files:
 
-    * application.js.erb
-    * application.js.erb.gz
-    * application.js-eb0a5b9302e8d32828d8a73f137cc8f0.erb
-    * application.js-eb0a5b9302e8d32828d8a73f137cc8f0.erb.gz
+    * app.js
+    * app.js.gz
+    * app-eb0a5b9302e8d32828d8a73f137cc8f0.js
+    * app-eb0a5b9302e8d32828d8a73f137cc8f0.js.gz
     * manifest.json
   """
 
@@ -42,7 +42,7 @@ defmodule Mix.Tasks.Phoenix.Digest do
       :ok ->
         # We need to call build structure so everything we have
         # generated into priv is copied to _build in case we have
-        # build_embedded set to true. In case if it not true,
+        # build_embedded set to true. In case if it's not true,
         # build structure is mostly a no-op, so we are fine.
         Mix.Project.build_structure()
         Mix.shell.info [:green, "Check your digested files at '#{output_path}'."]
