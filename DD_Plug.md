@@ -50,11 +50,11 @@ defmodule HelloPhoenix.MessageController do
               :ok ->
                 render conn, :show, page: find_page(params["id"])
               :error ->
-                conn |> put_flash("You must be logged in") |> redirect(to: "/")
+                conn |> put_flash("You can't access that page") |> redirect(to: "/")
             end
         end
       :error ->
-        conn |> put_flash("You can't access that page") |> redirect(to: "/")
+        conn |> put_flash("You must be logged in") |> redirect(to: "/")
     end
   end
 end
