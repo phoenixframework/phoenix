@@ -1,4 +1,4 @@
-defmodule Phoenix.PubSub.PubSubSetup do
+defmodule Phoenix.PubSubTest do
 
   @moduledoc """
   Sets ups a PubSub Adapter testcases
@@ -11,7 +11,7 @@ defmodule Phoenix.PubSub.PubSubSetup do
 
       # your_pubsub_adapter_test.exs
       Application.put_env(:phoenix, :pubsub_test_adapter, Phoenix.PubSub.PG2)
-      Code.require_file "../deps/phoenix/test/support/pubsub_setup.exs", __DIR__
+      Code.require_file "../deps/phoenix/test/shared/pubsub_test.exs", __DIR__
 
   """
 

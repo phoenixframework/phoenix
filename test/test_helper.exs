@@ -11,8 +11,4 @@ defmodule Phoenix.ErrorView do
   end
 end
 
-# Start transport levels
-Process.flag(:trap_exit, true)
-
-Process.flag(:trap_exit, false)
 ExUnit.start()
