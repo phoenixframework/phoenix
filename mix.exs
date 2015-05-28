@@ -32,8 +32,6 @@ defmodule Phoenix.Mixfile do
     [{:cowboy, "~> 1.0", optional: true},
      {:plug, ">= 0.12.2 and < 2.0.0"},
      {:poison, "~> 1.3"},
-     {:redo, github: "heroku/redo", optional: true},
-     {:poolboy, "~> 1.5.1 or ~> 1.6", optional: true},
 
      # Docs dependencies
      {:earmark, "~> 0.1", only: :docs},
