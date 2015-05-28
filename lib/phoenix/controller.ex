@@ -169,7 +169,7 @@ defmodule Phoenix.Controller do
   overridden with the `:callback` option and is expected to be a 
   string.
 
-  Only alphanumeric characters and underscore is allowed in the
+  Only alphanumeric characters and underscore are allowed in the
   callback name. Otherwise an exception is raised.
 
   ## Examples
@@ -180,27 +180,19 @@ defmodule Phoenix.Controller do
   @spec jsonp(Plug.Conn.t, term, Keyword.t) :: Plug.Conn.t
   def jsonp(conn, data, opts \\ []) do
     callback_param = Keyword.get(opts, :callback, "callback")
-    callback = Dict.get(conn.query_params, callback_param)
+    callback = Dict.get(conn.query_params, callback_param, "")
 
-    if callback && String.length(callback) > 0 do
+    if callback != "" do
+      validate_jsonp_callback!(callback)
+
       encoder = get_json_encoder()
-
-      allowed_chars = [?0..?9, ?A..?Z, ?a..?z, [?_]]
-      |> Enum.map(&Enum.to_list/1)
-      |> List.flatten()
-
-      callback_valid = callback
-      |> String.to_char_list()
-      |> Enum.all?(&(&1 in allowed_chars))
-
-      callback_valid || raise ArgumentError, "the callback name contains invalid characters"
 
       body = encoder.encode_to_iodata!(data) 
       |> IO.iodata_to_binary()
 
       body = body
-      |> String.replace(<< 0x2028 :: utf8 >>, "\\u2028")
-      |> String.replace(<< 0x2029 :: utf8 >>, "\\u2029")
+      |> String.replace(<<0x2028::utf8>>, "\\u2028")
+      |> String.replace(<<0x2029::utf8>>, "\\u2029")
       
       body = "/**/ typeof " <> callback <> " === 'function' && " <> callback <> "(" <> body <> ");"
 
@@ -209,6 +201,12 @@ defmodule Phoenix.Controller do
       json conn, data
     end
   end
+
+  defp validate_jsonp_callback!(<<h, t::binary>>) 
+    when h in ?0..?9 or h in ?A..?Z or h in ?a..?z or h == ?_, do: validate_jsonp_callback!(t)
+
+  defp validate_jsonp_callback!(<<>>), do: :ok
+  defp validate_jsonp_callback!(_), do: raise(ArgumentError, "the callback name contains invalid characters")
 
   @doc """
   Sends text response.
