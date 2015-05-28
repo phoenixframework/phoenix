@@ -46,6 +46,8 @@ defmodule Phoenix.Mixfile do
   defp package do
     [contributors: ["Chris McCord", "Darko Fabijan", "José Valim"],
      licenses: ["MIT"],
-     links: %{github: "https://github.com/phoenixframework/phoenix"}]
+     links: %{github: "https://github.com/phoenixframework/phoenix"},
+     files: ~w(lib priv test/shared web) ++
+            ~w(brunch-config.js CHANGELOG.md LICENSE mix.exs package.json README.md)]
   end
 end
