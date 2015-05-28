@@ -11,6 +11,7 @@
 * Backward incompatible changes
   * [Controller] `plug :action` is now called automatically
   * [View] The default template `web/templates/layout/application.html.eex` has been renamed to `app.html.eex`
+  * [PubSub.Redis] The Redis PubSub adapter has been extracted into its own project. If using redis, see the [project's readme](https://github.com/phoenixframework/phoenix_pubsub_redis) for instructions
 
 
 ## v0.13.1 (2015-05-16)
