@@ -73,9 +73,9 @@ defmodule Phoenix.Endpoint do
       with a 500 error during a HTML request, `render("500.html", assigns)`
       will be called in the view given to `:render_errors`. Defaults to:
 
-          [view: MyApp.ErrorView, format: "html"]
+          [view: MyApp.ErrorView, default_format: "html"]
 
-      The format is the default format when one was not set in the connection.
+      The default format is used when none is set in the connection.
 
   ### Runtime configuration
 

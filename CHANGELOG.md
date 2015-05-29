@@ -3,17 +3,17 @@
 ## v0.14.0-dev
 
 * Enhancements
-  [phoenix_html] Update to phoenix_html 1.1.0 raises on missing assigns
-  [Controller] Add `jsonp/2` for handling JSONP responses
+  * [Phoenix.HTML] Update to phoenix_html 1.1.0 which raises on missing assigns
+  * [Controller] Add `jsonp/2` for handling JSONP responses
 
 * Javascript client enhancements
   * Add socket params to apply default, overridable params to all channel params.
 
 * Backward incompatible changes
   * [Controller] `plug :action` is now called automatically
-  * [View] The default template `web/templates/layout/application.html.eex` has been renamed to `app.html.eex`
+  * [Endpoint] The `:format` option in `:render_errors` has been renamed to `:default_format`
   * [PubSub.Redis] The Redis PubSub adapter has been extracted into its own project. If using redis, see the [project's readme](https://github.com/phoenixframework/phoenix_pubsub_redis) for instructions
-
+  * [View] The default template `web/templates/layout/application.html.eex` has been renamed to `app.html.eex`
 
 ## v0.13.1 (2015-05-16)
 

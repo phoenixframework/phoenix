@@ -139,7 +139,7 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
   end
 
   test "exception page with custom format" do
-    conn = render(conn(:get, "/"), [format: "text"], fn ->
+    conn = render(conn(:get, "/"), [default_format: "text"], fn ->
       throw :hello
     end)
 

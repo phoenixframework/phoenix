@@ -90,7 +90,7 @@ defmodule Phoenix.Endpoint.Adapter do
      # Compile-time config
      code_reloader: false,
      debug_errors: false,
-     render_errors: [view: render_errors(module), format: "html"],
+     render_errors: [view: render_errors(module), default_format: "html"],
 
      # Transports
      transports: [

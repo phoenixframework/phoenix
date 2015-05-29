@@ -90,7 +90,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
   defp format(conn, opts) do
     case conn.params do
       %{"format" => format} -> format
-      _ -> Keyword.get(opts, :format, "html")
+      _ -> Keyword.get(opts, :default_format, "html")
     end
   end
 
