@@ -4,6 +4,7 @@
 
 * Enhancements
   [phoenix_html] Update to phoenix_html 1.1.0 raises on missing assigns
+  [Controller] Add `jsonp/2` for handling JSONP responses
 
 * Javascript client enhancements
   * Add socket params to apply default, overridable params to all channel params.
