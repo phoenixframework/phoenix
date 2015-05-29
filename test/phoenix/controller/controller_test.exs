@@ -132,6 +132,51 @@ defmodule Phoenix.Controller.ControllerTest do
              ["application/vnd.api+json; charset=utf-8"]
   end
 
+  test "jsonp/3 returns json when no callback param is present" do
+    conn = jsonp(conn(:get, "/") |> fetch_query_params, %{foo: :bar})
+    assert conn.resp_body == "{\"foo\":\"bar\"}"
+    assert get_resp_content_type(conn) == "application/json"
+    refute conn.halted
+  end
+
+  test "jsonp/3 returns json when callback name is left empty" do
+    conn = jsonp(conn(:get, "/?callback=") |> fetch_query_params, %{foo: :bar})
+    assert conn.resp_body == "{\"foo\":\"bar\"}"
+    assert get_resp_content_type(conn) == "application/json"
+    refute conn.halted
+  end
+
+  test "jsonp/3 returns javascript when callback param is present" do
+    conn = conn(:get, "/?callback=cb") |> fetch_query_params()
+    conn = jsonp(conn, %{foo: :bar})
+    assert conn.resp_body == "/**/ typeof cb === 'function' && cb({\"foo\":\"bar\"});"
+    assert get_resp_content_type(conn) == "text/javascript"
+    refute conn.halted
+  end
+    
+  test "jsonp/3 allows to override the callback param" do
+    conn = conn(:get, "/?cb=cb") |> fetch_query_params()
+    conn = jsonp(conn, %{foo: :bar}, callback: "cb")
+    assert conn.resp_body == "/**/ typeof cb === 'function' && cb({\"foo\":\"bar\"});"
+    assert get_resp_content_type(conn) == "text/javascript"
+    refute conn.halted
+  end
+
+  test "jsonp/3 raises ArgumentError when callback contains invalid characters" do
+    conn = conn(:get, "/?cb=_c*b!()[0]") |> fetch_query_params()
+    assert_raise(ArgumentError, "the callback name contains invalid characters", fn ->
+    jsonp(conn, %{foo: :bar}, callback: "cb") end)
+    refute conn.halted
+  end
+
+  test "jsonp/3 escapes invalid javascript characters" do
+    conn = conn(:get, "/?cb=cb") |> fetch_query_params()
+    conn = jsonp(conn, %{foo: <<0x2028::utf8>> <> <<0x2029::utf8>>}, callback: "cb")
+    assert conn.resp_body == "/**/ typeof cb === 'function' && cb({\"foo\":\"\\u2028\\u2029\"});"
+    assert get_resp_content_type(conn) == "text/javascript"
+    refute conn.halted
+  end
+
   test "text/2" do
     conn = text(conn(:get, "/"), "foobar")
     assert conn.resp_body == "foobar"

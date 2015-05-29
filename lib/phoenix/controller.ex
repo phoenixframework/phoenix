@@ -133,6 +133,11 @@ defmodule Phoenix.Controller do
   @spec controller_template(Plug.Conn.t) :: binary
   def controller_template(conn), do: conn.private[:phoenix_template]
 
+  defp get_json_encoder do
+    Application.get_env(:phoenix, :format_encoders)
+    |> Keyword.get(:json, Poison)
+  end
+
   @doc """
   Sends JSON response.
 
@@ -146,12 +151,62 @@ defmodule Phoenix.Controller do
   """
   @spec json(Plug.Conn.t, term) :: Plug.Conn.t
   def json(conn, data) do
-    encoder =
-      Application.get_env(:phoenix, :format_encoders)
-      |> Keyword.get(:json, Poison)
-
+    encoder = get_json_encoder()
+    
     send_resp(conn, conn.status || 200, "application/json", encoder.encode_to_iodata!(data))
   end
+
+  @doc """
+  Sends a JSON response with JSONP callback support.
+
+  It uses the configured `:format_encoders` under the `:phoenix`
+  application for `:json` to pick up the encoder module.
+
+  If the query params contain a key for the callback name, the 
+  response body is wrapped in an invocation of this callback.
+
+  The default key for the callback name is `"callback"`. It can be
+  overridden with the `:callback` option and is expected to be a 
+  string.
+
+  Only alphanumeric characters and underscore are allowed in the
+  callback name. Otherwise an exception is raised.
+
+  ## Examples
+
+      iex> jsonp conn, %{id: 123}, callback: "cb"
+
+  """
+  @spec jsonp(Plug.Conn.t, term, Keyword.t) :: Plug.Conn.t
+  def jsonp(conn, data, opts \\ []) do
+    callback_param = Keyword.get(opts, :callback, "callback")
+    callback = Dict.get(conn.query_params, callback_param, "")
+
+    if callback != "" do
+      validate_jsonp_callback!(callback)
+
+      encoder = get_json_encoder()
+
+      body = encoder.encode_to_iodata!(data) 
+      |> IO.iodata_to_binary()
+
+      body = body
+      |> String.replace(<<0x2028::utf8>>, "\\u2028")
+      |> String.replace(<<0x2029::utf8>>, "\\u2029")
+      
+      body = "/**/ typeof " <> callback <> " === 'function' && " <> callback <> "(" <> body <> ");"
+
+      send_resp(conn, conn.status || 200, "text/javascript", body)
+    else
+      json conn, data
+    end
+  end
+
+  defp validate_jsonp_callback!(<<h, t::binary>>) 
+    when h in ?0..?9 or h in ?A..?Z or h in ?a..?z or h == ?_, do: validate_jsonp_callback!(t)
+
+  defp validate_jsonp_callback!(<<>>), do: :ok
+  defp validate_jsonp_callback!(_), do: raise(ArgumentError, "the callback name contains invalid characters")
 
   @doc """
   Sends text response.
