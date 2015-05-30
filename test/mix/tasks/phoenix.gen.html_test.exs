@@ -42,6 +42,13 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
         assert file =~ ~s(<%= checkbox f, :famous, class: "form-control" %>)
         assert file =~ ~s(<%= datetime_select f, :born_at, class: "form-control" %>)
         assert file =~ ~s(<%= text_input f, :secret, class: "form-control" %>)
+        assert file =~ ~S(<label for="user_name">)
+        assert file =~ ~S(<label for="user_age">)
+        assert file =~ ~S(<label for="user_height">)
+        assert file =~ ~S(<label for="user_address_id">)
+        assert file =~ ~S(<label for="user_famous">)
+        assert file =~ ~S(<label for="user_born_at">)
+        assert file =~ ~S(<label for="user_secret">)
         refute file =~ ":nicks"
       end
 
