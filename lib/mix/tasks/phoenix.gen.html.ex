@@ -36,7 +36,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
     binding = Mix.Phoenix.inflect(singular)
     path    = binding[:path]
     route   = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
-    binding = binding ++ [plural: plural, route: route,
+    binding = binding ++ [plural: plural, route: route, labels: labels(attrs),
                           inputs: inputs(attrs), params: Mix.Phoenix.params(attrs)]
 
     Mix.Phoenix.copy_from source_dir, "", binding, [
@@ -85,6 +85,17 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
 
         mix phoenix.gen.html User users name:string
     """
+  end
+
+  defp labels(attrs) do
+    Enum.map attrs, fn
+      {k, :belongs_to} ->
+        label_text = Phoenix.Naming.camelize(Atom.to_string(k) <> "_id")
+        {k, "<%= label f, #{inspect(k)}_id, \"#{label_text}\" %>"}
+      {k, _} ->
+        label_text = Phoenix.Naming.camelize(Atom.to_string(k))
+        {k, "<%= label f, #{inspect(k)}, \"#{label_text}\" %>"}
+    end
   end
 
   defp inputs(attrs) do
