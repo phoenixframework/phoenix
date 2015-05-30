@@ -39,6 +39,9 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
     binding = binding ++ [plural: plural, route: route,
                           inputs: inputs(attrs), params: Mix.Phoenix.params(attrs)]
 
+    Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Controller")
+    Mix.Phoenix.check_module_name_availability!(binding[:module] <> "View")
+
     Mix.Phoenix.copy_from source_dir, "", binding, [
       {:eex, "controller.ex",       "web/controllers/#{path}_controller.ex"},
       {:eex, "edit.html.eex",       "web/templates/#{path}/edit.html.eex"},

@@ -1,5 +1,8 @@
 Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 
+defmodule Phoenix.Dup do
+end
+
 defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
   use ExUnit.Case
   import MixHelper
@@ -104,6 +107,12 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
   test "plural can't contain a colon" do
     assert_raise Mix.Error, fn ->
       Mix.Tasks.Phoenix.Gen.Model.run ["Admin.User", "name:string", "foo:string"]
+    end
+  end
+
+  test "name can't already be defined" do
+    assert_raise Mix.Error, fn ->
+      Mix.Tasks.Phoenix.Gen.Model.run ["Dup", "dups"]
     end
   end
 end

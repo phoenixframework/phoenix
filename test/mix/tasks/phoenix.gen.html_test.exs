@@ -1,5 +1,11 @@
 Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 
+defmodule Phoenix.DupHTMLController do
+end
+
+defmodule Phoenix.DupHTMLView do
+end
+
 defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
   use ExUnit.Case
   import MixHelper
@@ -165,6 +171,12 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
   test "plural can't contain a colon" do
     assert_raise Mix.Error, fn ->
       Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "name:string", "foo:string"]
+    end
+  end
+
+  test "name can't already be defined" do
+    assert_raise Mix.Error, fn ->
+      Mix.Tasks.Phoenix.Gen.Html.run ["DupHTML", "duphtmls"]
     end
   end
 end

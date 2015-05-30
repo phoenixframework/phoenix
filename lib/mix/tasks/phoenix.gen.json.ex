@@ -37,6 +37,9 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
     route   = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
     binding = binding ++ [plural: plural, route: route, params: Mix.Phoenix.params(attrs)]
 
+    Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Controller")
+    Mix.Phoenix.check_module_name_availability!(binding[:module] <> "View")
+
     files = [
       {:eex, "controller.ex",       "web/controllers/#{path}_controller.ex"},
       {:eex, "view.ex",             "web/views/#{path}_view.ex"},

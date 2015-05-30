@@ -25,6 +25,8 @@ defmodule Mix.Tasks.Phoenix.Gen.Channel do
 
     binding = binding ++ [plural: plural]
 
+    Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Channel")
+
     Mix.Phoenix.copy_from source_dir, "", binding, [
       {:eex, "channel.ex",       "web/channels/#{path}_channel.ex"},
       {:eex, "channel_test.exs", "test/channels/#{path}_channel_test.exs"},

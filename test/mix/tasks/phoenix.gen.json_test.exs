@@ -1,5 +1,11 @@
 Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 
+defmodule Phoenix.DupJSONController do
+end
+
+defmodule Phoenix.DupJSONView do
+end
+
 defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
   use ExUnit.Case
   import MixHelper
@@ -100,6 +106,12 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
   test "plural can't contain a colon" do
     assert_raise Mix.Error, fn ->
       Mix.Tasks.Phoenix.Gen.Json.run ["Admin.User", "name:string", "foo:string"]
+    end
+  end
+
+  test "name can't already be defined" do
+    assert_raise Mix.Error, fn ->
+      Mix.Tasks.Phoenix.Gen.Json.run ["DupJSON", "dupjsons"]
     end
   end
 end
