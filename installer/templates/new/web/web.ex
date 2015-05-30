@@ -15,28 +15,21 @@ defmodule <%= application_module %>.Web do
   Do NOT define functions inside the quoted expressions
   below.
   """
-<%= if ecto do %>
   def model do
     quote do
-      use Ecto.Model
+      <%= if ecto do %> use Ecto.Model <% end %>
     end
   end
-<% else %>
-  def model do
-    quote do
-      # Define common model functionality
-    end
-  end
-<% end %>
+
   def controller do
     quote do
       use Phoenix.Controller<%= if namespaced? do %>, namespace: <%= application_module %><% end %>
-<%= if ecto do %>
+      <%= if ecto do %>
       # Alias the data repository and import query/model functions
       alias <%= application_module %>.Repo
       import Ecto.Model
       import Ecto.Query, only: [from: 2]
-<% end %>
+      <% end %>
       # Import URL helpers from the router
       import <%= application_module %>.Router.Helpers
     end
@@ -66,12 +59,12 @@ defmodule <%= application_module %>.Web do
   def channel do
     quote do
       use Phoenix.Channel
-<%= if ecto do %>
+      <%= if ecto do %>
       # Alias the data repository and import query/model functions
       alias <%= application_module %>.Repo
       import Ecto.Model
       import Ecto.Query, only: [from: 2]
-<% end %>
+      <% end %>
     end
   end
 
