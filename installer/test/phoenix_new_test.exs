@@ -23,7 +23,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       Mix.Tasks.Phoenix.New.run([@app_name])
 
       assert_file "photo_blog/README.md"
-      assert_file "photo_blog/mix.exs", fn(file) ->
+      assert_file "photo_blog/mix.exs", fn file ->
         assert file =~ "app: :photo_blog"
         refute file =~ "deps_path: \"../../deps\""
         refute file =~ "lockfile: \"../../mix.lock\""
