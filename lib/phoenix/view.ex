@@ -232,6 +232,9 @@ defmodule Phoenix.View do
         "<script src=\"...\">"
       end
 
+  To use a precompiled template, create a `scripts.html.eex` file in the `templates`
+  directory for the corresponding view you want it to render for. For example,
+  for the `UserView`, create the `scripts.html.eex` file at `web/templates/users/`.
 
   ## Rendering based on controller template
 
