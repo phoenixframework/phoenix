@@ -89,18 +89,38 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
 
   defp inputs(attrs) do
     Enum.map attrs, fn
-      {k, {:array, _}} -> {k, nil}
-      {k, :belongs_to} -> {k, "number_input f, #{inspect(k)}_id"}
-      {k, :integer}    -> {k, "number_input f, #{inspect(k)}"}
-      {k, :float}      -> {k, "number_input f, #{inspect(k)}, step: \"any\""}
-      {k, :decimal}    -> {k, "number_input f, #{inspect(k)}, step: \"any\""}
-      {k, :boolean}    -> {k, "checkbox f, #{inspect(k)}"}
-      {k, :text}       -> {k, "textarea f, #{inspect(k)}"}
-      {k, :date}       -> {k, "date_select f, #{inspect(k)}"}
-      {k, :time}       -> {k, "time_select f, #{inspect(k)}"}
-      {k, :datetime}   -> {k, "datetime_select f, #{inspect(k)}"}
-      {k, _}           -> {k, "text_input f, #{inspect(k)}"}
+      {k, {:array, _}} ->
+        {k, nil, nil}
+      {k, :belongs_to} ->
+        {k, ~s(<%= number_input f, #{inspect(k)}_id, class: "form-control" %>), label(k, :belongs_to)}
+      {k, :integer}    ->
+        {k, ~s(<%= number_input f, #{inspect(k)}, class: "form-control" %>), label(k)}
+      {k, :float}      ->
+        {k, ~s(<%= number_input f, #{inspect(k)}, step: "any", class: "form-control" %>), label(k)}
+      {k, :decimal}    ->
+        {k, ~s(<%= number_input f, #{inspect(k)}, step: "any", class: "form-control" %>), label(k)}
+      {k, :boolean}    ->
+        {k, ~s(<%= checkbox f, #{inspect(k)}, class: "form-control" %>), label(k)}
+      {k, :text}       ->
+        {k, ~s(<%= textarea f, #{inspect(k)}, class: "form-control" %>), label(k)}
+      {k, :date}       ->
+        {k, ~s(<%= date_select f, #{inspect(k)}, class: "form-control" %>), label(k)}
+      {k, :time}       ->
+        {k, ~s(<%= time_select f, #{inspect(k)}, class: "form-control" %>), label(k)}
+      {k, :datetime}   ->
+        {k, ~s(<%= datetime_select f, #{inspect(k)}, class: "form-control" %>), label(k)}
+      {k, _}           ->
+        {k, ~s(<%= text_input f, #{inspect(k)}, class: "form-control" %>), label(k)}
     end
+  end
+
+  defp label(key) do
+    label_text = Phoenix.Naming.humanize(key)
+    ~s(<%= label f, #{inspect(key)}, "#{label_text}" %>)
+  end
+  defp label(key, :belongs_to) do
+    label_text = Phoenix.Naming.humanize(Atom.to_string(key) <> "_id")
+    ~s(<%= label f, #{inspect(key)}_id, "#{label_text}" %>)
   end
 
   defp source_dir do

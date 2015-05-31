@@ -9,10 +9,10 @@
       </ul>
     </div>
   <%% end %>
-<%= for {k, input} <- inputs, input do %>
+<%= for {_k, input, label} <- inputs, input do %>
   <div class="form-group">
-    <label><%= Phoenix.Naming.camelize(Atom.to_string(k)) %></label>
-    <%= "<%=" %> <%= input %>, class: "form-control" <%= "%\>" %>
+    <%= label %>
+    <%= input %>
   </div>
 <% end %>
   <div class="form-group">
