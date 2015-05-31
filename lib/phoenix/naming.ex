@@ -110,7 +110,6 @@ defmodule Phoenix.Naming do
 
   """
   @spec camelize(String.t) :: String.t
-
   def camelize(""), do: ""
 
   def camelize(<<?_, t :: binary>>) do
@@ -150,13 +149,14 @@ defmodule Phoenix.Naming do
 
   @doc """
   Converts an attribute/form field into its humanize version.
-      iex> humanize(:username)
+      iex> Phoenix.Naming.humanize(:username)
       "Username"
-      iex> humanize(:created_at)
+      iex> Phoenix.Naming.humanize(:created_at)
       "Created at"
-      iex> humanize("user_id")
+      iex> Phoenix.Naming.humanize("user_id")
       "User"
   """
+  @spec humanize(atom | String.t) :: String.t
   def humanize(atom) when is_atom(atom),
     do: humanize(Atom.to_string(atom))
   def humanize(bin) when is_binary(bin) do
