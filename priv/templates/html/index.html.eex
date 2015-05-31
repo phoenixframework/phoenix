@@ -3,7 +3,7 @@
 <table class="table">
   <thead>
     <tr>
-<%= for {k, _} <- inputs do %>      <th><%= Phoenix.Naming.camelize(Atom.to_string(k)) %></th>
+<%= for {k, _, _} <- inputs do %>      <th><%= Phoenix.Naming.humanize(Atom.to_string(k)) %></th>
 <% end %>
       <th></th>
     </tr>

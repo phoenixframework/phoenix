@@ -45,9 +45,9 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
         assert file =~ ~s(<%= label f, :name, "Name" %>)
         assert file =~ ~s(<%= label f, :age, "Age" %>)
         assert file =~ ~s(<%= label f, :height, "Height" %>)
-        assert file =~ ~s(<%= label f, :address_id, "AddressId" %>)
+        assert file =~ ~s(<%= label f, :address_id, "Address" %>)
         assert file =~ ~s(<%= label f, :famous, "Famous" %>)
-        assert file =~ ~s(<%= label f, :born_at, "BornAt" %>)
+        assert file =~ ~s(<%= label f, :born_at, "Born at" %>)
         assert file =~ ~s(<%= label f, :secret, "Secret" %>)
         refute file =~ ":nicks"
       end

@@ -147,4 +147,26 @@ defmodule Phoenix.Naming do
 
   defp to_upper_char(char) when char in ?a..?z, do: char - 32
   defp to_upper_char(char), do: char
+
+  @doc """
+  Converts an attribute/form field into its humanize version.
+      iex> humanize(:username)
+      "Username"
+      iex> humanize(:created_at)
+      "Created at"
+      iex> humanize("user_id")
+      "User"
+  """
+  def humanize(atom) when is_atom(atom),
+    do: humanize(Atom.to_string(atom))
+  def humanize(bin) when is_binary(bin) do
+    bin =
+      if String.ends_with?(bin, "_id") do
+        binary_part(bin, 0, byte_size(bin) - 3)
+      else
+        bin
+      end
+
+    bin |> String.replace("_", " ") |> String.capitalize
+  end
 end
