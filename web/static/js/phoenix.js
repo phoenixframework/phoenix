@@ -50,7 +50,7 @@
 //
 // ## Pushing Messages
 //
-// From the prevoius example, we can see that pushing messages to the server
+// From the previous example, we can see that pushing messages to the server
 // can be done with `chan.push(eventName, payload)` and we can optionally
 // receive responses from the push. Additionally, we can use
 // `after(millsec, callback)` to abort waiting for our `receive` hooks and
