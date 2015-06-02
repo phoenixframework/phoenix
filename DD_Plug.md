@@ -111,7 +111,7 @@ Now let's look at the other flavor plugs come in, module plugs.
 
 Module plugs are another type of Plug that let us define a connection transformation in a module. The module only needs to implement two functions:
 
-- `init/1` which initializes any arguments or options to be passed to call/2
+- `init/1` which initializes any arguments or options to be passed to `call/2`
 - `call/2` which carries out the connection transformation. `call/2` is just a function plug that we saw earlier
 
 

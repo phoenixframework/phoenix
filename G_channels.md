@@ -213,6 +213,7 @@ def handle_out("user_joined", msg, socket) do
     {:noreply, socket}
   else
     push socket, "user_joined", msg
+    {:noreply, socket}
   end
 end
 ```
