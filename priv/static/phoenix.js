@@ -872,7 +872,6 @@ var LongPoller = exports.LongPoller = (function () {
   function LongPoller(endPoint) {
     _classCallCheck(this, LongPoller);
 
-    this.retryInMs = 5000;
     this.endPoint = null;
     this.token = null;
     this.sig = null;

@@ -475,7 +475,6 @@ export class Socket {
 export class LongPoller {
 
   constructor(endPoint){
-    this.retryInMs       = 5000
     this.endPoint        = null
     this.token           = null
     this.sig             = null
