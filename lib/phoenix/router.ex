@@ -237,21 +237,34 @@ defmodule Phoenix.Router do
       end
 
       var!(add_resources, Phoenix.Router) = fn resource ->
-        parm = resource.param
         path = resource.path
         ctrl = resource.controller
         opts = resource.route
 
-        Enum.each resource.actions, fn
-          :index   -> get    path,                            ctrl, :index, opts
-          :show    -> get    path <> "/:" <> parm,            ctrl, :show, opts
-          :new     -> get    path <> "/new",                  ctrl, :new, opts
-          :edit    -> get    path <> "/:" <> parm <> "/edit", ctrl, :edit, opts
-          :create  -> post   path,                            ctrl, :create, opts
-          :delete  -> delete path <> "/:" <> parm,            ctrl, :delete, opts
-          :update  ->
-            patch path <> "/:" <> parm, ctrl, :update, opts
-            put   path <> "/:" <> parm, ctrl, :update, Keyword.put(opts, :as, nil)
+        if !resource.singular do
+          parm = resource.param
+          Enum.each resource.actions, fn
+            :index   -> get    path,                            ctrl, :index, opts
+            :show    -> get    path <> "/:" <> parm,            ctrl, :show, opts
+            :new     -> get    path <> "/new",                  ctrl, :new, opts
+            :edit    -> get    path <> "/:" <> parm <> "/edit", ctrl, :edit, opts
+            :create  -> post   path,                            ctrl, :create, opts
+            :delete  -> delete path <> "/:" <> parm,            ctrl, :delete, opts
+            :update  ->
+              patch path <> "/:" <> parm, ctrl, :update, opts
+              put   path <> "/:" <> parm, ctrl, :update, Keyword.put(opts, :as, nil)
+          end
+        else
+          Enum.each resource.actions, fn
+            :show    -> get    path,            ctrl, :show, opts
+            :new     -> get    path <> "/new",  ctrl, :new, opts
+            :edit    -> get    path <> "/edit", ctrl, :edit, opts
+            :create  -> post   path,            ctrl, :create, opts
+            :delete  -> delete path,            ctrl, :delete, opts
+            :update  ->
+              patch path, ctrl, :update, opts
+              put   path, ctrl, :update, Keyword.put(opts, :as, nil)
+          end
         end
       end
     end
@@ -462,6 +475,15 @@ defmodule Phoenix.Router do
       is automatically derived from the controller name, i.e. `UserController` will
       have name `"user"`
     * `:as` - configures the named helper exclusively
+    * `:singleton` - Defines "RESTful" routes for a resource that client's lookup without referencing an ID, which will include the following routes instead:
+
+    * `GET /user` => `:show`
+    * `GET /user/new` => `:new`
+    * `POST /user` => `:create`
+    * `GET /user/edit` => `:edit`
+    * `PATCH /user` => `:update`
+    * `PUT /user` => `:update`
+    * `DELETE /user` => `:delete`
 
   """
   defmacro resources(path, controller, opts, do: nested_context) do
@@ -475,6 +497,9 @@ defmodule Phoenix.Router do
     add_resources path, controller, [], do: nested_context
   end
 
+  @doc """
+  See `resources/4`.
+  """
   defmacro resources(path, controller, opts) do
     add_resources path, controller, opts, do: nil
   end
@@ -487,28 +512,12 @@ defmodule Phoenix.Router do
   end
 
   @doc """
-  Defines "RESTful" routes for a resource that client's lookup without referencing an ID.
-
-  The given definition:
-
-      resource "/account", UserController
-
-  will include routes to the following actions:
-
-    * `GET /account` => `:show`
-    * `GET /account/new` => `:new`
-    * `POST /account` => `:create`
-    * `GET /account/edit` => `:edit`
-    * `PATCH /account` => `:update`
-    * `PUT /account` => `:update`
-    * `DELETE /account` => `:delete`
-
-  ## Options
-
-  This macro accepts the same options as `resources/4`
-
+  Deprecated, please use `resource/4` with option `singleton: true` instead
   """
   defmacro resource(path, controller, opts, do: nested_context) do
+    stacktrace = __CALLER__ |> Macro.Env.stacktrace |> Exception.format_stacktrace
+    IO.write :stderr, "[warning] resource/4 in Phoenix router is deprecated, please use " <>
+      "resources/3 with the singleton option instead.\n" <> stacktrace
     add_resource path, controller, opts, do: nested_context
   end
 
@@ -516,6 +525,9 @@ defmodule Phoenix.Router do
   See `resource/4`.
   """
   defmacro resource(path, controller, do: nested_context) do
+    stacktrace = __CALLER__ |> Macro.Env.stacktrace |> Exception.format_stacktrace
+    IO.write :stderr, "[warning] resource/4 in Phoenix router is deprecated, please use " <>
+      "resources/3 with the singleton option instead.\n" <> stacktrace
     add_resource path, controller, [], do: nested_context
   end
 
@@ -523,6 +535,9 @@ defmodule Phoenix.Router do
   See `resource/4`.
   """
   defmacro resource(path, controller, opts) do
+    stacktrace = __CALLER__ |> Macro.Env.stacktrace |> Exception.format_stacktrace
+    IO.write :stderr, "[warning] resource/4 in Phoenix router is deprecated, please use " <>
+      "resources/3 with the singleton option instead.\n" <> stacktrace
     add_resource path, controller, opts, do: nil
   end
 
@@ -530,6 +545,9 @@ defmodule Phoenix.Router do
   See `resource/4`.
   """
   defmacro resource(path, controller) do
+    stacktrace = __CALLER__ |> Macro.Env.stacktrace |> Exception.format_stacktrace
+    IO.write :stderr, "[warning] resource/4 in Phoenix router is deprecated, please use " <>
+      "resources/3 with the singleton option instead.\n" <> stacktrace
     add_resource path, controller, [], do: nil
   end
 
@@ -542,7 +560,7 @@ defmodule Phoenix.Router do
       end
 
     quote do
-      resource = Resource.plural(unquote(path), unquote(controller), unquote(options))
+      resource = Resource.build(unquote(path), unquote(controller), unquote(options))
       var!(add_resources, Phoenix.Router).(resource)
       unquote(scope)
     end

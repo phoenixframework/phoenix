@@ -44,6 +44,23 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
     """
   end
 
+  defmodule RouterTestResource do
+    use Phoenix.Router
+    resources "/image", Phoenix.ImageController, singleton: true
+  end
+
+  test "format single resource routes" do
+    assert draw(RouterTestResource) == """
+    image_path  GET     /image/edit  Phoenix.ImageController.edit/2
+    image_path  GET     /image/new   Phoenix.ImageController.new/2
+    image_path  GET     /image       Phoenix.ImageController.show/2
+    image_path  POST    /image       Phoenix.ImageController.create/2
+    image_path  PATCH   /image       Phoenix.ImageController.update/2
+                PUT     /image       Phoenix.ImageController.update/2
+    image_path  DELETE  /image       Phoenix.ImageController.delete/2
+    """
+  end
+
   defp draw(router) do
     ConsoleFormatter.format(router)
   end

@@ -21,30 +21,27 @@ defmodule Phoenix.Router.Resource do
     * :collection - the context for collection routes
 
   """
-  defstruct [:path, :actions, :param, :route, :controller, :route, :member, :collection]
+  defstruct [:path, :actions, :param, :route, :controller, :route, :member, :collection, :singular]
   @type t :: %Resource{}
 
   @doc """
-  Builds a plural resource struct.
-  """
-  def plural(path, controller, options) do
-    build(path, controller, options)
-  end
-
-  @doc """
   Builds a singular resource struct.
+  deprecated please use `build/3` with `singleton: true` instead.
   """
   def singular(path, controller, options) do
     build(path, controller, Keyword.put(options, :singular, true))
   end
 
-  defp build(path, controller, options) when
+  @doc """
+  Builds a resource struct.
+  """
+  def build(path, controller, options) when
       is_binary(path) and is_atom(controller) and is_list(options) do
     alias    = Keyword.get(options, :alias)
     param    = Keyword.get(options, :param, @default_param_key)
     name     = Keyword.get(options, :name, Phoenix.Naming.resource_name(controller, "Controller"))
     as       = Keyword.get(options, :as, name)
-    singular = Keyword.get(options, :singular)
+    singular = Keyword.get(options, :singular) || Keyword.get(options, :singleton)
     private  = Keyword.get(options, :private, %{})
     assigns  = Keyword.get(options, :assigns, %{})
     actions  = extract_actions(options, singular)
@@ -55,7 +52,7 @@ defmodule Phoenix.Router.Resource do
     member      = [path: member_path, as: as, alias: alias, private: private, assigns: assigns]
 
     %Resource{path: path, actions: actions, param: param, route: route,
-              member: member, collection: collection, controller: controller}
+              member: member, collection: collection, controller: controller, singular: singular}
   end
 
   defp extract_actions(opts, singular) do
