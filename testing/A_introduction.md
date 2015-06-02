@@ -513,6 +513,6 @@ Finished in 0.5 seconds (0.4s on load, 0.1s on tests)
 Randomized with seed 537537
 ```
 
-> Note: We didn't need to create or migrate our test  database because the test helper took care of all that for us.
+> Note: We didn't need to create or migrate our test database because the test helper took care of all that for us.
 
 At this point, we are at a great place to transition to the rest of the testing guides, in which we'll examine these tests in much more detail, and add some of our own.
