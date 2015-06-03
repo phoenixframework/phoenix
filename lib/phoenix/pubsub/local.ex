@@ -82,7 +82,7 @@ defmodule Phoenix.PubSub.Local do
   ## Examples
 
       iex> subscribers(:local_server, "foo")
-      #HashSet<[]>
+      [#PID<0.333.0>]
 
   """
   def subscribers(local_server, topic) do
