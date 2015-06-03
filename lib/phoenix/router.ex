@@ -464,7 +464,7 @@ defmodule Phoenix.Router do
 
   ## Singleton resources
 
-  When a resource needs to be looked up without reference an ID, because
+  When a resource needs to be looked up without referencing an ID, because
   it contains only a single entry in the given context, the `:singleton`
   option can be used to generate a set of routes that are specific to
   such single resource:
