@@ -4,7 +4,6 @@ defmodule Phoenix.Integration.EndpointTest do
   # This test case needs to be sync because we rely on
   # log capture which is global.
   use ExUnit.Case
-  import RouterHelper, only: [capture_log: 1]
 
   alias Phoenix.Integration.AdapterTest.ProdEndpoint
   alias Phoenix.Integration.AdapterTest.DevEndpoint
@@ -13,6 +12,20 @@ defmodule Phoenix.Integration.EndpointTest do
       http: [port: "4807"], url: [host: "example.com"], server: true)
   Application.put_env(:endpoint_int, DevEndpoint,
       http: [port: "4808"], debug_errors: true)
+
+  defp capture_log(fun) do
+    RouterHelper.capture_log(fn ->
+      fun.()
+
+      # Let's monitor the connection process.
+      # When it is DOWN, we are sure the error
+      # message has been logged. Otherwise the
+      # build can fail due to race conditions.
+      pid = Application.get_env(:phoenix, :integration_endpoint_pid)
+      ref = Process.monitor(pid)
+      assert_receive {:DOWN, ^ref, _, _, _}
+    end)
+  end
 
   defmodule Router do
     @moduledoc """
@@ -56,6 +69,9 @@ defmodule Phoenix.Integration.EndpointTest do
         def call(conn, opts) do
           # Assert we never have a lingering sent message in the inbox
           refute_received {:plug_conn, :sent}
+
+          # We store the current process so we can syncronize the log message
+          Application.put_env(:phoenix, :integration_endpoint_pid, self())
 
           try do
             super(conn, opts)
