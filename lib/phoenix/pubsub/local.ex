@@ -116,7 +116,7 @@ defmodule Phoenix.PubSub.Local do
   end
 
   def handle_call({:subscribers, topic}, _from, state) do
-    {:reply, HashDict.get(state.topics, topic, HashSet.new) |> Enum.to_list, state}
+    {:reply, HashDict.get(state.topics, topic, HashSet.new), state}
   end
 
   def handle_call({:subscribe, pid, topic, opts}, _from, state) do
