@@ -79,7 +79,7 @@ defmodule Phoenix.Channel.Server do
       payload: payload
     }
   end
-  def broadcast(_, _, _, _, _), do: raise_invalid_message
+  def broadcast(_, _, _, _), do: raise_invalid_message
 
   @doc """
   Broadcasts on the given pubsub server with the given
