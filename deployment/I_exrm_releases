@@ -441,6 +441,10 @@ These are the contents of our `/etc/nginx/sites-available/hello_phoenix` file.
 upstream hello_phoenix {
     server 127.0.0.1:8888;
 }
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
+}
 server{
     listen 80;
     server_name .hostname.com;
@@ -452,6 +456,8 @@ server{
     location @proxy {
         include proxy_params;
         proxy_redirect off;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
         proxy_pass http://hello_phoenix;
     }
 }
