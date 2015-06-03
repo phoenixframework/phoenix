@@ -93,6 +93,16 @@ defmodule Mix.Phoenix do
   end
 
   @doc """
+  Checks the availability of a given module name.
+  """
+  def check_module_name_availability!(name) do
+    name = Module.concat(Elixir, name)
+    if Code.ensure_loaded?(name) do
+      Mix.raise "Module name #{inspect name} is already taken, please choose another name"
+    end
+  end
+
+  @doc """
   Returns the module base name based on the configuration value.
 
       config :my_app

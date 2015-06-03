@@ -1,5 +1,8 @@
 Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 
+defmodule Phoenix.DupChannel do
+end
+
 defmodule Mix.Tasks.Phoenix.Gen.ChannelTest do
   use ExUnit.Case
   import MixHelper
@@ -74,6 +77,12 @@ defmodule Mix.Tasks.Phoenix.Gen.ChannelTest do
   test "passing extra args raises error" do
     assert_raise Mix.Error, fn ->
       Mix.Tasks.Phoenix.Gen.Channel.run ["Admin.Room", "rooms", "new_message"]
+    end
+  end
+
+  test "name can't already be defined" do
+    assert_raise Mix.Error, fn ->
+      Mix.Tasks.Phoenix.Gen.Channel.run ["Dup", "dups"]
     end
   end
 end

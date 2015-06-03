@@ -56,6 +56,8 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     path      = binding[:path]
     migration = String.replace(path, "/", "_")
 
+    Mix.Phoenix.check_module_name_availability!(binding[:module])
+
     {assocs, attrs} = partition_attrs_and_assocs(attrs)
 
     binding = binding ++
