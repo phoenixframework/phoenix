@@ -68,8 +68,8 @@ defmodule Phoenix.Router.HelpersTest do
 
     resources "/files", FileController
 
-    resource "/account", UserController, as: :account do
-      resource "/page", PagesController, as: :page, only: [:show]
+    resources "/account", UserController, as: :account, singleton: true do
+      resources "/page", PagesController, as: :page, only: [:show], singleton: true
     end
 
     scope "/admin", alias: Admin do

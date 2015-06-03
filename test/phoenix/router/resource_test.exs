@@ -15,12 +15,12 @@ defmodule Phoenix.Router.ResourceTest do
   defmodule Router do
     use Phoenix.Router
 
-    resource "/account", Api.GenericController, alias: Api do
+    resources "/account", Api.GenericController, alias: Api, singleton: true do
       resources "/comments", GenericController
-      resource "/session", GenericController, except: [:delete]
+      resources "/session", GenericController, except: [:delete], singleton: true
     end
 
-    resource "/session", Api.GenericController, only: [:show]
+    resources "/session", Api.GenericController, only: [:show], singleton: true
   end
 
   setup do
