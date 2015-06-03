@@ -82,7 +82,7 @@ defmodule Phoenix.PubSub.Local do
   ## Examples
 
       iex> subscribers(:local_server, "foo")
-      #HashSet<[]>
+      Enumerable.t
 
   """
   def subscribers(local_server, topic) do
