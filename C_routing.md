@@ -601,7 +601,7 @@ A newly generated Phoenix application defines two pipelines called `:browser` an
 
 Endpoints organize all the plugs common to every request, and apply them before dispatching into the router(s) with their underlying `:browser`, `:api`, and custom pipelines. The default Endpoint plugs do quite a lot of work. Here they are in order.
 
-- [Plug.Static](http://hexdocs.pm/plug/Plug.Static.html) - serves static assets. Since this plug comes before the router, serving of static assets is not logged
+- [Plug.Static](http://hexdocs.pm/plug/Plug.Static.html) - serves static assets. Since this plug comes before the logger, serving of static assets is not logged
 
 - [Plug.Logger](http://hexdocs.pm/plug/Plug.Logger.html) - logs incoming requests
 
