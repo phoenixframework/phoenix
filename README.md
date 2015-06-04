@@ -18,6 +18,14 @@ We appreciate any contribution to Phoenix, so check out our [CONTRIBUTING.md](CO
 
 ### Running a Phoenix master app
 
+If you have previously installed Phoenix using mix archive.install [as described here](http://www.phoenixframework.org/v0.13.1/docs/up-and-running) then you will have to remove the archive.
+
+```bash
+mix archive.uninstall phoenix_new-x.x.x.ez # where x.x.x is your version
+```
+
+After that you can run the installer from the current Phoenix checkout.
+
 ```bash
 $ cd installer
 $ mix phoenix.new path/to/your/app --dev
