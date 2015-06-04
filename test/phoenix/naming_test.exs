@@ -9,6 +9,7 @@ defmodule Phoenix.NamingTest do
     assert Naming.underscore("Foobar") == "foobar"
     assert Naming.underscore("APIWorld") == "api_world"
     assert Naming.underscore("ErlangVM") == "erlang_vm"
+    assert Naming.underscore("API.V1.User") == "api/v1/user"
   end
 
   test "camelize/1 converts Strings to camel case" do

@@ -163,8 +163,8 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
     end
   end
 
-  test "generates resource without model" do
-    in_tmp "generates resource without model", fn ->
+  test "generates html resource without model" do
+    in_tmp "generates html resource without model", fn ->
       Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "users", "--no-model", "name:string"]
 
       refute File.exists? "web/models/admin/user.ex"

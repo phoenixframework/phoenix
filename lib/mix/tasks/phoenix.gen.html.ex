@@ -28,10 +28,6 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
     {opts, parsed, _} = OptionParser.parse(args, switches: [model: :boolean])
     [singular, plural | attrs] = validate_args!(parsed)
 
-    if opts[:model] != false do
-      Mix.Task.run "phoenix.gen.model", args
-    end
-
     attrs   = Mix.Phoenix.attrs(attrs)
     binding = Mix.Phoenix.inflect(singular)
     path    = binding[:path]
@@ -41,6 +37,10 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
 
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Controller")
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "View")
+
+    if opts[:model] != false do
+      Mix.Task.run "phoenix.gen.model", args
+    end
 
     Mix.Phoenix.copy_from source_dir, "", binding, [
       {:eex, "controller.ex",       "web/controllers/#{path}_controller.ex"},
