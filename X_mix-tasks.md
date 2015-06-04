@@ -305,6 +305,76 @@ Compiled web/models/post.ex
 (stdlib) erl_eval.erl:657: :erl_eval.do_apply/6
 ```
 
+If we don't want to create a model for our resource we can use the `--no-model` flag.
+
+```console
+$ mix phoenix.gen.json Post posts title:string content:string --no-model
+* creating web/controllers/post_controller.ex
+* creating web/views/post_view.ex
+* creating test/controllers/post_controller_test.exs
+* creating web/views/changeset_view.ex
+```
+
+It will tell us we need to add a line to our router file, but since we skipped the model, it won't mention anything about `ecto.migrate`.
+
+```console
+Add the resource to the proper scope in web/router.ex:
+
+resources "/posts", PostController
+```
+
+Important: If we don't do this, our application won't compile, and we'll get an error.
+
+```console
+$ mix phoenix.server
+
+== Compilation error on file web/controllers/post_controller.ex ==
+** (CompileError) web/controllers/post_controller.ex:15: HelloPhoenix.Post.__struct__/0 is undefined, cannot expand struct HelloPhoenix.Post
+    (elixir) src/elixir_map.erl:55: :elixir_map.translate_struct/4
+    (stdlib) lists.erl:1352: :lists.mapfoldl/3
+```
+
+#### `mix phoenix.gen.model`
+
+If we don't need a complete HTML/JSON resource and instead are only interested in a model, we can use the `phoenix.gen.model` task. It will generate a model, a migration and a test case.
+
+The `phoenix.gen.model` task takes a number of arguments, the module name of the model, the plural model name used for the schema, and a list of column_name:type attributes.
+
+```console
+$ mix phoenix.gen.model User users name:string age:integer
+* creating priv/repo/migrations/20150527185323_create_user.exs
+* creating web/models/user.ex
+* creating test/models/user_test.exs
+```
+
+> Note: If we need to namespace our resource we can simply namespace the first argument of the generator.
+```console
+$ mix phoenix.gen.model Admin.User users name:string age:integer
+* creating priv/repo/migrations/20150527185940_create_admin_user.exs
+* creating web/models/admin/user.ex
+* creating test/models/admin/user_test.exs
+```
+
+#### `mix phoenix.gen.channel`
+
+This task will generate a basic Phoenix channel as well a test case for it. It takes only two arguments, the module name for the channel and plural used as the topic.
+
+```console
+$ mix phoenix.gen.channel Room rooms
+* creating web/channels/room_channel.ex
+* creating test/channels/room_channel_test.exs
+```
+
+When `phoenix.gen.channel` is done, it helpfully tells us that we need to add a channel route to our router file.
+
+```console
+Add the channel to a socket scope in web/router.ex:
+
+socket "/ws", HelloPhoenix do
+  channel "rooms:lobby", RoomChannel
+end
+```
+
 #### `mix phoenix.routes`
 
 This task has a single purpose, to show us all the routes defined for a given router. We saw it used extensively in the [Routing Guide](http://www.phoenixframework.org/docs/routing).
@@ -351,6 +421,53 @@ Erlang/OTP 17 [erts-6.4] [source] [64-bit] [smp:8:8] [async-threads:10] [hipe] [
 [info] Running TaskTester.Endpoint with Cowboy on port 4000 (http)
 Interactive Elixir (1.0.4) - press Ctrl+C to exit (type h() ENTER for help)
 iex(1)>
+```
+
+#### `mix phoenix.digest`
+
+This task does two things, it creates a digest for our static assets and then compresses them.
+
+"Digest" here refers to an MD5 digest of the contents of an asset which gets added to the filename of that asset. This creates a sort of "fingerprint" for it. If the digest doesn't change, browsers and CDNs will use a cached version. If it does change, they will re-fetch the new version.
+
+Before we run this task let's inspect the contents of two directories in our hello_phoenix application.
+
+First `priv/static` which should look similar to this:
+
+```text
+├── images
+│   └── phoenix.png
+├── robots.txt
+```
+
+And then `web/static/` which should look similar to this:
+
+```text
+├── css
+│   └── app.scss
+├── js
+│   └── app.js
+├── vendor
+│   └── phoenix.js
+```
+
+All of these files are our static assets. Now let's run the `mix phoenix.digest` task.
+
+```console
+$ mix phoenix.digest
+Check your digested files at 'priv/static'.
+```
+
+We can now do as the task suggests and inspect the contents of `priv/static` directory. We'll see that all files from `web/static/` have been copied over to `priv/static` and also each file now has a couple of versions. Those versions are:
+
+* the original file
+* a compressed file with gzip
+* a file containing the original file name and its digest
+* a compressed file containing the file name and its digest
+
+> Note: We can specify a different output folder where `phoenix.digest` will put processed files. The first argument is the path where the static files are located.
+```console
+$ mix phoenix.digest priv/static -o www/public
+Check your digested files at 'www/public'.
 ```
 
 ## Ecto Specific Mix Tasks
