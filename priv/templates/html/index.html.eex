@@ -11,7 +11,7 @@
   <tbody>
 <%= "<%=" %> for <%= singular %> <- @<%= plural %> do <%= "%\>" %>
     <tr>
-<%= for {k, _} <- inputs do %>      <td><%= "<%=" %> <%= singular %>.<%= k %> <%= "%\>" %></td>
+<%= for {k, _, _} <- inputs do %>      <td><%= "<%=" %> <%= singular %>.<%= k %> <%= "%\>" %></td>
 <% end %>
       <td class="text-right">
         <%= "<%=" %> link "Show", to: <%= singular %>_path(@conn, :show, <%= singular %>), class: "btn btn-default btn-xs" <%= "%\>" %>

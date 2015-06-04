@@ -61,6 +61,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
       assert_file "web/templates/user/index.html.eex", fn file ->
         assert file =~ "<th>Name</th>"
         assert file =~ "<%= for user <- @users do %>"
+        assert file =~ "<td><%= user.name %></td>"
       end
 
       assert_file "web/templates/user/new.html.eex", fn file ->
