@@ -14,6 +14,9 @@ defmodule Phoenix.Router.RoutingTest do
     def image(conn, _params), do: text(conn, conn.params["path"] || "show files")
   end
 
+  defmodule User do
+  end
+
   defmodule Router do
     use Phoenix.Router
 
@@ -32,6 +35,7 @@ defmodule Phoenix.Router.RoutingTest do
     connect "/connect", UserController, :connect
 
     get "/users/:user_id/files/:id", UserController, :image
+    get "/test", User, :test
     get "/*path", UserController, :not_found
   end
 
@@ -124,6 +128,15 @@ defmodule Phoenix.Router.RoutingTest do
     conn = call(Router, :get, "backups/silly%20name")
     assert conn.status == 200
     assert conn.params["path"] == ["silly name"]
+  end
+
+  test "get with non-Phoenix controller module" do
+    msg = "** (ArgumentError) The module passed to the route must be a Phoenix controller. " <>
+    "Double-check the module you passed to the route or make sure that you `use Phoenix.Controller` " <>
+    "in the module"
+    assert_raise Plug.Conn.WrapperError, msg, fn ->
+      call(Router, :get, "/test")
+    end
   end
 
   test "catch-all splat route matches" do
