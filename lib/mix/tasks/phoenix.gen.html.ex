@@ -55,7 +55,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
 
     Mix.shell.info """
 
-    Add the resource to the proper scope in web/router.ex:
+    Add the resource to your browser scope in web/router.ex:
 
         resources "/#{route}", #{binding[:scoped]}Controller
     """
