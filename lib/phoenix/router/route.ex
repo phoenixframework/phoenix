@@ -101,8 +101,17 @@ defmodule Phoenix.Router.Route do
       var!(conn)
       |> Plug.Conn.put_private(:phoenix_pipelines, unquote(route.pipe_through))
       |> Plug.Conn.put_private(:phoenix_route, fn conn ->
-           opts = unquote(route.controller).init(unquote(route.action))
-           unquote(route.controller).call(conn, opts)
+           controller   = unquote(route.controller)
+           defined_funs = controller.__info__(:functions)
+
+           if {:init, 1} in defined_funs && {:call, 2} in defined_funs do
+             opts = controller.init(unquote(route.action))
+             controller.call(conn, opts)
+           else
+             raise ArgumentError, "The module passed to the route must be a Phoenix controller." <>
+               " Double-check the module you passed to the route or make sure that you" <>
+               " `use Phoenix.Controller` in the module"
+           end
          end)
     end
 
