@@ -29,7 +29,7 @@ defmodule Phoenix.ConnTest do
   follows:
 
       conn()
-      |> put_req_header("accepts", "application/json")
+      |> put_req_header("accept", "application/json")
       |> get("/")
 
   The endpoint being tested is accessed via the `@endpoint` module
