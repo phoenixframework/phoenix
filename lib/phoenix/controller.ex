@@ -862,8 +862,8 @@ defmodule Phoenix.Controller do
 
   ## Examples
 
-      iex> conn = put_flash(conn, :notice, "Welcome Back!")
-      iex> get_flash(conn, :notice)
+      iex> conn = put_flash(conn, :info, "Welcome Back!")
+      iex> get_flash(conn, :info)
       "Welcome Back!"
 
   """
@@ -876,9 +876,9 @@ defmodule Phoenix.Controller do
 
   ## Examples
 
-      iex> conn = put_flash(conn, :notice, "Welcome Back!")
+      iex> conn = put_flash(conn, :info, "Welcome Back!")
       iex> get_flash(conn)
-      %{"notice" => "Welcome Back!"}
+      %{"info" => "Welcome Back!"}
 
   """
   def get_flash(conn) do
@@ -891,8 +891,8 @@ defmodule Phoenix.Controller do
 
   ## Examples
 
-      iex> conn = put_flash(conn, :notice, "Welcome Back!")
-      iex> get_flash(conn, :notice)
+      iex> conn = put_flash(conn, :info, "Welcome Back!")
+      iex> get_flash(conn, :info)
       "Welcome Back!"
 
   """
