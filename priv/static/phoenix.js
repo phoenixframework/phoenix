@@ -347,9 +347,12 @@ var Channel = exports.Channel = (function () {
     this.joinedOnce = false;
     this.joinPush = new Push(this, CHAN_EVENTS.join, this.params);
     this.pushBuffer = [];
-
+    this.rejoinTimer = new Timer(function () {
+      return _this.rejoinUntilConnected();
+    }, this.socket.reconnectAfterMs);
     this.joinPush.receive("ok", function () {
       _this.state = CHAN_STATES.joined;
+      _this.rejoinTimer.reset();
     });
     this.onClose(function () {
       _this.state = CHAN_STATES.closed;
@@ -357,9 +360,7 @@ var Channel = exports.Channel = (function () {
     });
     this.onError(function (reason) {
       _this.state = CHAN_STATES.errored;
-      setTimeout(function () {
-        return _this.rejoinUntilConnected();
-      }, _this.socket.reconnectAfterMs);
+      _this.rejoinTimer.setTimeout();
     });
     this.on(CHAN_EVENTS.reply, function (payload, ref) {
       _this.trigger(_this.replyEventName(ref), payload);
@@ -369,17 +370,9 @@ var Channel = exports.Channel = (function () {
   _prototypeProperties(Channel, null, {
     rejoinUntilConnected: {
       value: function rejoinUntilConnected() {
-        var _this = this;
-
-        if (this.state !== CHAN_STATES.errored) {
-          return;
-        }
+        this.rejoinTimer.setTimeout();
         if (this.socket.isConnected()) {
           this.rejoin();
-        } else {
-          setTimeout(function () {
-            return _this.rejoinUntilConnected();
-          }, this.socket.reconnectAfterMs);
         }
       },
       writable: true,
@@ -543,30 +536,42 @@ var Socket = exports.Socket = (function () {
   //               Defaults to WebSocket with automatic LongPoller fallback.
   //   params - The defaults for all channel params, ie `{user_id: userToken}`
   //   heartbeatIntervalMs - The millisec interval to send a heartbeat message
-  //   reconnectAfterMs - The millisec interval to reconnect after connection loss
+  //   reconnectAfterMs - The optional function that returns the millsec
+  //                      reconnect interval. Defaults to stepped backoff of:
+  //
+  //     function(tries){
+  //       return [1000, 5000, 10000][tries - 1] || 10000
+  //     }
+  //
   //   logger - The optional function for specialized logging, ie:
   //            `logger: function(msg){ console.log(msg) }`
-  //   longpoller_timeout - The maximum timeout of a long poll AJAX request.
+  //   longpollerTimeout - The maximum timeout of a long poll AJAX request.
   //                        Defaults to 20s (double the server long poll timer).
   //
   // For IE8 support use an ES5-shim (https://github.com/es-shims/es5-shim)
   //
 
   function Socket(endPoint) {
+    var _this = this;
+
     var opts = arguments[1] === undefined ? {} : arguments[1];
 
     _classCallCheck(this, Socket);
 
     this.stateChangeCallbacks = { open: [], close: [], error: [], message: [] };
-    this.reconnectTimer = null;
     this.channels = [];
     this.sendBuffer = [];
     this.ref = 0;
     this.transport = opts.transport || window.WebSocket || LongPoller;
     this.heartbeatIntervalMs = opts.heartbeatIntervalMs || 30000;
-    this.reconnectAfterMs = opts.reconnectAfterMs || 5000;
+    this.reconnectAfterMs = opts.reconnectAfterMs || function (tries) {
+      return [1000, 5000, 10000][tries - 1] || 10000;
+    };
+    this.reconnectTimer = new Timer(function () {
+      return _this.connect();
+    }, this.reconnectAfterMs);
     this.logger = opts.logger || function () {}; // noop
-    this.longpoller_timeout = opts.longpoller_timeout || 20000;
+    this.longpollerTimeout = opts.longpollerTimeout || 20000;
     this.endPoint = this.expandEndpoint(endPoint);
     this.params = opts.params || {};
   }
@@ -615,7 +620,7 @@ var Socket = exports.Socket = (function () {
 
         this.disconnect(function () {
           _this.conn = new _this.transport(_this.endPoint);
-          _this.conn.timeout = _this.longpoller_timeout;
+          _this.conn.timeout = _this.longpollerTimeout;
           _this.conn.onopen = function () {
             return _this.onConnOpen();
           };
@@ -684,7 +689,7 @@ var Socket = exports.Socket = (function () {
         var _this = this;
 
         this.flushSendBuffer();
-        clearInterval(this.reconnectTimer);
+        this.reconnectTimer.reset();
         if (!this.conn.skipHeartbeat) {
           clearInterval(this.heartbeatTimer);
           this.heartbeatTimer = setInterval(function () {
@@ -700,16 +705,11 @@ var Socket = exports.Socket = (function () {
     },
     onConnClose: {
       value: function onConnClose(event) {
-        var _this = this;
-
         this.log("WS close:");
         this.log(event);
         this.triggerChanError();
-        clearInterval(this.reconnectTimer);
         clearInterval(this.heartbeatTimer);
-        this.reconnectTimer = setInterval(function () {
-          return _this.connect();
-        }, this.reconnectAfterMs);
+        this.reconnectTimer.setTimeout();
         this.stateChangeCallbacks.close.forEach(function (callback) {
           return callback(event);
         });
@@ -1074,6 +1074,72 @@ var Ajax = exports.Ajax = (function () {
 })();
 
 Ajax.states = { complete: 4 };
+
+// Creates a timer that accepts a `timerCalc` function to perform
+// calculated timeout retries, such as exponential backoff.
+//
+// ## Examples
+//
+//    let reconnectTimer = new Timer(() => this.connect(), function(tries){
+//      return [1000, 5000, 10000][tries - 1] || 10000
+//    })
+//    reconnectTimer.setTimeout() // fires after 1000
+//    reconnectTimer.setTimeout() // fires after 5000
+//    reconnectTimer.reset()
+//    reconnectTimer.setTimeout() // fires after 1000
+//
+
+var Timer = (function () {
+  function Timer(callback, timerCalc) {
+    _classCallCheck(this, Timer);
+
+    this.callback = callback;
+    this.timerCalc = timerCalc;
+    this.timer = null;
+    this.tries = 0;
+  }
+
+  _prototypeProperties(Timer, null, {
+    reset: {
+      value: function reset() {
+        this.tries = 0;
+        clearTimeout(this.timer);
+      },
+      writable: true,
+      configurable: true
+    },
+    setTimeout: {
+
+      // Cancels any previous setTimeout and schedules callback
+
+      value: (function (_setTimeout) {
+        var _setTimeoutWrapper = function setTimeout() {
+          return _setTimeout.apply(this, arguments);
+        };
+
+        _setTimeoutWrapper.toString = function () {
+          return _setTimeout.toString();
+        };
+
+        return _setTimeoutWrapper;
+      })(function () {
+        var _this = this;
+
+        clearTimeout(this.timer);
+
+        this.timer = setTimeout(function () {
+          _this.tries = _this.tries + 1;
+          _this.callback();
+        }, this.timerCalc(this.tries + 1));
+      }),
+      writable: true,
+      configurable: true
+    }
+  });
+
+  return Timer;
+})();
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });

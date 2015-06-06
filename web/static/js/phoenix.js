@@ -193,10 +193,14 @@ export class Channel {
     this.bindings    = []
     this.joinedOnce  = false
     this.joinPush    = new Push(this, CHAN_EVENTS.join, this.params)
-    this.pushBuffer = []
-
+    this.pushBuffer  = []
+    this.rejoinTimer  = new Timer(
+      () => this.rejoinUntilConnected(),
+      this.socket.reconnectAfterMs
+    )
     this.joinPush.receive("ok", () => {
       this.state = CHAN_STATES.joined
+      this.rejoinTimer.reset()
     })
     this.onClose( () => {
       this.state = CHAN_STATES.closed
@@ -204,18 +208,17 @@ export class Channel {
     })
     this.onError( reason => {
       this.state = CHAN_STATES.errored
-      setTimeout( () => this.rejoinUntilConnected(), this.socket.reconnectAfterMs)
+      this.rejoinTimer.setTimeout()
     })
     this.on(CHAN_EVENTS.reply, (payload, ref) => {
       this.trigger(this.replyEventName(ref), payload)
     })
   }
 
-  rejoinUntilConnected(){ if(this.state !== CHAN_STATES.errored){ return }
+  rejoinUntilConnected(){
+    this.rejoinTimer.setTimeout()
     if(this.socket.isConnected()){
       this.rejoin()
-    } else {
-      setTimeout(() => this.rejoinUntilConnected(), this.socket.reconnectAfterMs)
     }
   }
 
@@ -309,25 +312,33 @@ export class Socket {
   //               Defaults to WebSocket with automatic LongPoller fallback.
   //   params - The defaults for all channel params, ie `{user_id: userToken}`
   //   heartbeatIntervalMs - The millisec interval to send a heartbeat message
-  //   reconnectAfterMs - The millisec interval to reconnect after connection loss
+  //   reconnectAfterMs - The optional function that returns the millsec
+  //                      reconnect interval. Defaults to stepped backoff of:
+  //
+  //     function(tries){
+  //       return [1000, 5000, 10000][tries - 1] || 10000
+  //     }
+  //
   //   logger - The optional function for specialized logging, ie:
   //            `logger: function(msg){ console.log(msg) }`
-  //   longpoller_timeout - The maximum timeout of a long poll AJAX request.
+  //   longpollerTimeout - The maximum timeout of a long poll AJAX request.
   //                        Defaults to 20s (double the server long poll timer).
   //
   // For IE8 support use an ES5-shim (https://github.com/es-shims/es5-shim)
   //
   constructor(endPoint, opts = {}){
     this.stateChangeCallbacks = {open: [], close: [], error: [], message: []}
-    this.reconnectTimer       = null
     this.channels             = []
     this.sendBuffer           = []
     this.ref                  = 0
     this.transport            = opts.transport || window.WebSocket || LongPoller
     this.heartbeatIntervalMs  = opts.heartbeatIntervalMs || 30000
-    this.reconnectAfterMs     = opts.reconnectAfterMs || 5000
+    this.reconnectAfterMs     = opts.reconnectAfterMs || function(tries){
+      return [1000, 5000, 10000][tries - 1] || 10000
+    }
+    this.reconnectTimer       = new Timer(() => this.connect(), this.reconnectAfterMs)
     this.logger               = opts.logger || function(){} // noop
-    this.longpoller_timeout   = opts.longpoller_timeout || 20000
+    this.longpollerTimeout    = opts.longpollerTimeout || 20000
     this.endPoint             = this.expandEndpoint(endPoint)
     this.params               = opts.params || {}
   }
@@ -353,7 +364,7 @@ export class Socket {
   connect(){
     this.disconnect(() => {
       this.conn = new this.transport(this.endPoint)
-      this.conn.timeout   = this.longpoller_timeout
+      this.conn.timeout   = this.longpollerTimeout
       this.conn.onopen    = () => this.onConnOpen()
       this.conn.onerror   = error => this.onConnError(error)
       this.conn.onmessage = event => this.onConnMessage(event)
@@ -377,7 +388,7 @@ export class Socket {
 
   onConnOpen(){
     this.flushSendBuffer()
-    clearInterval(this.reconnectTimer)
+    this.reconnectTimer.reset()
     if(!this.conn.skipHeartbeat){
       clearInterval(this.heartbeatTimer)
       this.heartbeatTimer = setInterval(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
@@ -389,9 +400,8 @@ export class Socket {
     this.log("WS close:")
     this.log(event)
     this.triggerChanError()
-    clearInterval(this.reconnectTimer)
     clearInterval(this.heartbeatTimer)
-    this.reconnectTimer = setInterval(() => this.connect(), this.reconnectAfterMs)
+    this.reconnectTimer.setTimeout()
     this.stateChangeCallbacks.close.forEach( callback => callback(event) )
   }
 
@@ -612,3 +622,41 @@ export class Ajax {
 }
 
 Ajax.states = {complete: 4}
+
+
+// Creates a timer that accepts a `timerCalc` function to perform
+// calculated timeout retries, such as exponential backoff.
+//
+// ## Examples
+//
+//    let reconnectTimer = new Timer(() => this.connect(), function(tries){
+//      return [1000, 5000, 10000][tries - 1] || 10000
+//    })
+//    reconnectTimer.setTimeout() // fires after 1000
+//    reconnectTimer.setTimeout() // fires after 5000
+//    reconnectTimer.reset()
+//    reconnectTimer.setTimeout() // fires after 1000
+//
+class Timer {
+  constructor(callback, timerCalc){
+    this.callback  = callback
+    this.timerCalc = timerCalc
+    this.timer     = null
+    this.tries     = 0
+  }
+
+  reset(){
+    this.tries = 0
+    clearTimeout(this.timer)
+  }
+
+  // Cancels any previous setTimeout and schedules callback
+  setTimeout(){
+    clearTimeout(this.timer)
+
+    this.timer = setTimeout(() => {
+      this.tries = this.tries + 1
+      this.callback()
+    }, this.timerCalc(this.tries + 1))
+  }
+}
