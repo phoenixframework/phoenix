@@ -72,7 +72,7 @@ defmodule HelloPhoenix.MessageController do
   plug :action
 
   def show(conn, params) do
-    render conn, :show, page: find_page(params["id"])
+    render conn, :show, page: find_message(params["id"])
   end
 
   defp authenticate(conn, _) do
@@ -118,7 +118,7 @@ Module plugs are another type of Plug that let us define a connection transforma
 To see this in action, lets write a module plug that puts the `:locale` key and value into the connection assign for downstream use in other plugs, controller actions, and our views.
 
 ```elixir
-defmodule HelloPhoenix.Plugs.Locale
+defmodule HelloPhoenix.Plugs.Locale do
   import Plug.Conn
 
   @locales ["en", "fr", "de"]
