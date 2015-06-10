@@ -519,16 +519,16 @@ That's the end of our walk-through of Ecto usage in our controller actions. Ther
 
 ### Data Relationship and Dependencies
 
-Handling individual tables is great, but if you want to build a modern web application, you will need a way to relate your data to each other. If you're a Ruby on Rails refugee, you'll be glad to know Ecto provides a very familiar API for building relationships between models:
+Handling individual tables is great, but if we want to build a modern web application, we will need a way to relate our data to each other. If we were Ruby on Rails refugees, we'll be glad to know Ecto provides a very familiar API for building relationships between models:
 
-- Schema.has_many/3 : declares one to many relationships, for example, if you were building Youtube, an user might have many uploaded videos.
-- Schema.belongs_to/3 : declares a one to one relationship between parent and children models. In the Youtube example, an uploaded video belongs to its user.
-- Schema.has_one/3 : declares a one to one relationship. Note that has_one is just like has_many except instead of returning a collection of model structs, you get just one model struct. Continuing with the Youtube example, while an user might have many uploaded videos, the user might only have one featured video.
+`Schema.has_many/3` declares one to many relationships, for example, if we were building Youtube, our user model might have many uploaded video models.
+`Schema.belongs_to/3` declares a one to one relationship between parent and children models. In the Youtube example, an uploaded video belongs to its user.
+`Schema.has_one/3` declares a one to one relationship. Note that has_one is just like has_many except instead of returning a collection of model structs, we get just one model struct. Continuing with the Youtube example, while an user might have many uploaded videos, the user might only have one featured video.
 
 ```elixir
 # models/user.ex
 defmodule HelloPhoenix.User do
-  # other stuff
+. . .
   schema "users" do
     field :name, :string
     field :email, :string
@@ -538,12 +538,12 @@ defmodule HelloPhoenix.User do
     has_many :videos, HelloPhoenix.Video
     timestamps
   end
-  # more stuff
+. . .
 end
 
 # models/video.ex
 defmodule HelloPhoenix.Video do
-  # other stuff
+. . .
   schema "videos" do
     field :name, :string
     field :approved_at, Ecto.DateTime
@@ -551,29 +551,29 @@ defmodule HelloPhoenix.Video do
     field :likes, :integer
     field :views, :integer
 
-    # if you don't provide a foreign_key, Ecto
+    # If we don't provide a foreign_key, Ecto
     # guesses it as the atom plus _id
     belongs_to :user, HelloPhoenix.User, foreign_key: :user_id 
 
-    # If your table's column for indictating when 
+    # If our table's column for indictating when 
     # a row was first inserted is named "created_at", 
-    # you need to let Ecto know. ActiveRecord 
+    # we'll need to let Ecto know. ActiveRecord 
     # immigrants in particular will need to do this as a 
     # signal of allegience to Ecto
     timestamps inserted_at: :created_at
   end
   @required_fields ~w(name approved_at description user_id)
-  # other stuff
+. . .
 end
 ```
-Note that you don't declare the field user_id in the video model, but, as a required (or optional) field, you do declare the user_id field.
+Note that we don't declare the field `user_id` in the video model, but, as a required (or optional) field, we do declare the `user_id` field.
 
-You can use your newly declared relationships in your controllers as thus:
+We can use our newly declared relationships in our controllers as thus:
 
 ```elixir
 controllers/user_controller.ex
-defmodule Apiv2.UserController do
-  # other stuff
+defmodule HelloPhoenix.UserController do
+. . .
   def index(conn, _params) do
     users = User |> Repo.all |> Repo.preload [:videos]
     render conn, "index.json", users: users
@@ -583,10 +583,10 @@ defmodule Apiv2.UserController do
     user = User |> Repo.get(id) |> Repo.preload [:videos]
     render conn, "show.json", user: user
   end
-  # other stuff
+. . .
 end
 ```
-Notice the Repo.preload/2 function. Because we declared a relationship in user, %User{} will now contain a videos property which starts out as an unloaded relationship. In order to properly display it in render, you'll need to tell Ecto to preload the field. Note that Repo.preload is smart enough to work on just one model or collection of them.
+Notice the `Repo.preload/2` function. Because we declared a relationship in `HelloPhoenix.User`, `%User{}` will now contain a videos property which starts out as an unloaded relationship. In order to properly display it in `render`, we'll need to tell Ecto to preload the field. Note that `Repo.preload/2` is smart enough to work on just one model or collection of them.
 
 ### Integrating Ecto into an Existing Application
 
