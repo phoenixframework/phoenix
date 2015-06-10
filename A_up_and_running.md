@@ -1,26 +1,12 @@
 The aim of this first guide is to get a Phoenix application up and running as quickly as possible.
 
-Before we begin, let's take a minute to review the "Dependencies" section of the [Overview Guide](http://www.phoenixframework.org/docs/overview). By installing any necessary system dependencies beforehand, we'll be able to get our application installed and running smoothly.
+Before we begin, please take a minute to read the [Installation Guide](http://www.phoenixframework.org/docs/installation). By installing any necessary dependencies beforehand, we'll be able to get our application up and running smoothly.
 
-We will need to install Elixir and Erlang. The Elixir site itself has the latest and most complete [installation information](http://elixir-lang.org/install.html). Currently, Phoenix requires Elixir version 1.0.4 or greater which in turn requires Erlang version 17.5 or greater.
+At this point, we should have Elixir, Erlang, Hex, and the Phoenix archive installed. We should also have PostgreSQL and node.js installed to build a default application.
 
-Let's get started.
+Ok, we're ready to go!
 
-First, if we have just installed Elixir, let's install the Hex package manager:
-
-```console
-$ mix local.hex
-```
-
-Now we are ready to fetch the Phoenix installer:
-
-```console
-$ mix archive.install https://github.com/phoenixframework/phoenix/releases/download/v0.13.1/phoenix_new-0.13.1.ez
-```
-
-> Note: if the Phoenix archive won't install properly with this command, we can download the file directly from our browser, save it to the filesystem, and then run: `mix archive.install /path/to/local/phoenix_new.ez`.
-
-Now we can run `mix phoenix.new` from any directory in order to bootstrap our Phoenix application. Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello_phoenix`, either of these will work.
+We can run `mix phoenix.new` from any directory in order to bootstrap our Phoenix application. Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello_phoenix`, either of these will work.
 
 ```console
 $ mix phoenix.new /Users/me/work/elixir-stuff/hello_phoenix
