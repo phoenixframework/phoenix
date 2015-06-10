@@ -571,7 +571,7 @@ Note that we don't declare the field `user_id` in the video model, but, as a req
 We can use our newly declared relationships in our controllers as thus:
 
 ```elixir
-controllers/user_controller.ex
+# controllers/user_controller.ex
 defmodule HelloPhoenix.UserController do
 . . .
   def index(conn, _params) do
