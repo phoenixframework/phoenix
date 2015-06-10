@@ -80,7 +80,7 @@ defmodule Phoenix.Endpoint do
   ### Runtime configuration
 
     * `:root` - the root of your application for running external commands.
-      This is only required if the watchers or cde reloading functionality
+      This is only required if the watchers or code reloading functionality
       are enabled.
 
     * `:cache_static_lookup` - when `true`, static file lookup in the
