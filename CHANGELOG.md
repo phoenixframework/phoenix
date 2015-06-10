@@ -265,7 +265,7 @@ See these [`0.6.x` to `0.7.0` upgrade instructions](https://gist.github.com/chri
   * [View] `ErrorsView` has been renamed to `ErrorView`, update your `MyApp.ErrorsView` accordingly
   * [Controller] `html/2`, `json/2`, `text/2`, `redirect/2` and
 `render/3` no longer halt automatically
-  * [Router] Configuration is no longer stored in the router but in the application endpoint. The before pipeline was also removed and move to the endpoint itself
+  * [Router] Configuration is no longer stored in the router but in the application endpoint. The before pipeline was also removed and moved to the endpoint itself
 
 ## v0.6.2 (2014-12-07)
 
