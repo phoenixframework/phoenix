@@ -29,6 +29,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
       assert_file "web/controllers/user_controller.ex", fn file ->
         assert file =~ "defmodule Phoenix.UserController"
         assert file =~ "use Phoenix.Web, :controller"
+        assert file =~ "Repo.get!"
       end
 
       assert_file "web/views/user_view.ex", fn file ->
@@ -129,6 +130,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
       assert_file "web/controllers/admin/user_controller.ex", fn file ->
         assert file =~ "defmodule Phoenix.Admin.UserController"
         assert file =~ "use Phoenix.Web, :controller"
+        assert file =~ "Repo.get!"
       end
 
       assert_file "web/views/admin/user_view.ex", fn file ->

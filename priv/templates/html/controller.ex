@@ -30,18 +30,18 @@ defmodule <%= module %>Controller do
   end
 
   def show(conn, %{"id" => id}) do
-    <%= singular %> = Repo.get(<%= alias %>, id)
+    <%= singular %> = Repo.get!(<%= alias %>, id)
     render(conn, "show.html", <%= singular %>: <%= singular %>)
   end
 
   def edit(conn, %{"id" => id}) do
-    <%= singular %> = Repo.get(<%= alias %>, id)
+    <%= singular %> = Repo.get!(<%= alias %>, id)
     changeset = <%= alias %>.changeset(<%= singular %>)
     render(conn, "edit.html", <%= singular %>: <%= singular %>, changeset: changeset)
   end
 
   def update(conn, %{"id" => id, <%= inspect singular %> => <%= singular %>_params}) do
-    <%= singular %> = Repo.get(<%= alias %>, id)
+    <%= singular %> = Repo.get!(<%= alias %>, id)
     changeset = <%= alias %>.changeset(<%= singular %>, <%= singular %>_params)
 
     if changeset.valid? do
@@ -56,7 +56,7 @@ defmodule <%= module %>Controller do
   end
 
   def delete(conn, %{"id" => id}) do
-    <%= singular %> = Repo.get(<%= alias %>, id)
+    <%= singular %> = Repo.get!(<%= alias %>, id)
     Repo.delete(<%= singular %>)
 
     conn
