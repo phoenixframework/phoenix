@@ -570,11 +570,7 @@ defmodule HelloPhoenix.Video do
     # guesses it as the atom plus _id
     belongs_to :user, HelloPhoenix.User, foreign_key: :user_id 
 
-    # If our table's column for indictating when 
-    # a row was first inserted is named "created_at", 
-    # we'll need to let Ecto know. ActiveRecord 
-    # users in particular may need to do this
-    timestamps inserted_at: :created_at
+    timestamps
   end
   @required_fields ~w(name approved_at description user_id)
 . . .
