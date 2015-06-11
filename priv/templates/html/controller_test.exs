@@ -37,6 +37,11 @@ defmodule <%= module %>ControllerTest do
     assert html_response(conn, 200) =~ "Show <%= singular %>"
   end
 
+  test "renders page not found when id is nonexistent", %{conn: conn} do
+    conn = get conn, <%= singular %>_path(conn, :show, -1)
+    assert html_response(conn, 404) =~ "not found"
+  end
+
   test "renders form for editing chosen resource", %{conn: conn} do
     <%= singular %> = Repo.insert %<%= alias %>{}
     conn = get conn, <%= singular %>_path(conn, :edit, <%= singular %>)
