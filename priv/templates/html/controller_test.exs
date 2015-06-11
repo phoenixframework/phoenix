@@ -38,8 +38,9 @@ defmodule <%= module %>ControllerTest do
   end
 
   test "renders page not found when id is nonexistent", %{conn: conn} do
-    conn = get conn, <%= singular %>_path(conn, :show, -1)
-    assert html_response(conn, 404) =~ "not found"
+    assert_raise Ecto.NoResultsError, fn ->
+      get conn, <%= singular %>_path(conn, :show, -1)
+    end
   end
 
   test "renders form for editing chosen resource", %{conn: conn} do

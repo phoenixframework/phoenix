@@ -24,8 +24,9 @@ defmodule <%= module %>ControllerTest do
   end
 
   test "does not show resource and instead throw error when id is nonexistent", %{conn: conn} do
-    conn = get conn, <%= singular %>_path(conn, :show, -1)
-    assert json_response(conn, 404)["data"] != %{}
+    assert_raise Ecto.NoResultsError, fn ->
+      get conn, <%= singular %>_path(conn, :show, -1)
+    end
   end
 
   test "creates and renders resource when data is valid", %{conn: conn} do
