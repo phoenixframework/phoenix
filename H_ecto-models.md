@@ -517,6 +517,86 @@ end
 
 That's the end of our walk-through of Ecto usage in our controller actions. There is quite a bit more that Ecto models can do. Please take a look at the [Ecto documentation](http://hexdocs.pm/ecto/) for the rest of the story.
 
+### Data Relationship and Dependencies
+
+Suppose we are building a very simple video-sharing web application, in addition to having users on our site, we might also want to have videos. We asked Phoenix to scaffold a `Video` model for us:
+
+```console
+$ mix phoenix.gen.model Video videos name:string approved_at:datetime description:text likes:integer views:integer user:belongs_to
+* creating priv/repo/migrations/20150611051558_create_video.exs
+* creating web/models/video.ex
+* creating test/models/video_test.exs
+
+$ mix ecto.migrate
+```
+
+Handling individual tables is great, but if we want to build a modern web application, we will need a way to relate our data to each other. Those of us with experience using Ruby's ActiveRecord will be glad to see that Ecto provides a very familiar API for building relationships. For example,
+
+`Schema.has_many/3` declares one to many relationships, for example, in our video sharing service, our user model might have many uploaded video models.
+
+`Schema.belongs_to/3` declares a one to one relationship between parent and children models. In our video site example, an uploaded video belongs to its user.
+
+`Schema.has_one/3` declares a one to one relationship. Note that has_one is just like has_many except instead of returning a collection of model structs, we get just one model struct. Continuing with the video-sharing example, while a user might have many uploaded videos, the user might only have one featured video.
+
+Here's how we would declare a `has_many` relationship in `web/models/user.ex`:
+```elixir
+defmodule HelloPhoenix.User do
+. . .
+  schema "users" do
+    field :name, :string
+    field :email, :string
+    field :bio, :string
+    field :number_of_pets, :integer
+
+    has_many :videos, HelloPhoenix.Video
+    timestamps
+  end
+. . .
+end
+```
+
+And here is how we would declare the complementary `belongs_to` relationship in `web/models/video.ex`:
+```elixir
+defmodule HelloPhoenix.Video do
+. . .
+  schema "videos" do
+    field :name, :string
+    field :approved_at, Ecto.DateTime
+    field :description, :text
+    field :likes, :integer
+    field :views, :integer
+
+    # If we don't provide a foreign_key, Ecto
+    # guesses it as the atom plus _id
+    belongs_to :user, HelloPhoenix.User, foreign_key: :user_id 
+
+    timestamps
+  end
+  @required_fields ~w(name approved_at description user_id)
+. . .
+end
+```
+Note that we don't declare the field `user_id` in the video model, but, as a required (or optional) field, we do declare the `user_id` field.
+
+We can use our newly declared relationships in our `web/controllers/user_controller.ex` like this:
+
+```elixir
+defmodule HelloPhoenix.UserController do
+. . .
+  def index(conn, _params) do
+    users = User |> Repo.all |> Repo.preload [:videos]
+    render conn, "index.html", users: users
+  end
+
+  def show(conn, %{"id" => id}) do
+    user = User |> Repo.get(id) |> Repo.preload [:videos]
+    render conn, "show.html", user: user
+  end
+. . .
+end
+```
+Because we declared a relationship in `HelloPhoenix.User`, `%User{}` will now contain a videos property which starts out as an unloaded relationship. In order to properly display it in `render`, we'll need to tell Ecto to preload the field. Note that `Repo.preload/2` is smart enough to work on just one model or collection of them.
+
 ### Integrating Ecto into an Existing Application
 
 Adding Ecto to a pre-existing Phoenix application is easy. Once we include Ecto and Postgrex as dependencies, there are mix tasks to help us.
