@@ -84,8 +84,8 @@ defmodule Phoenix.Channel.Transport do
 
   The server will respond to heartbeats with the same message
   """
-  def dispatch(_, %{topic: "phoenix", event: "heartbeat"}, transport_pid, _router, _pubsub_server, _transport) do
-    send transport_pid, %Message{topic: "phoenix", event: "heartbeat", payload: %{}}
+  def dispatch(_, %{ref: ref, topic: "phoenix", event: "heartbeat"}, transport_pid, _router, _pubsub_server, _transport) do
+    reply(transport_pid, ref, "phoenix", %{status: :ok, response: %{}})
     :ok
   end
   def dispatch(nil, %{event: "phx_join"} = msg, transport_pid, router, endpoint, transport) do
@@ -121,9 +121,13 @@ defmodule Phoenix.Channel.Transport do
     :ok
   end
 
-  defp reply(socket, ref, message) do
-    Phoenix.Channel.Server.reply socket.transport_pid, ref, socket.topic, message
+  defp reply(%Socket{transport_pid: trans_pid, topic: topic}, ref, payload) do
+    reply(trans_pid, ref, topic, payload)
   end
+  defp reply(transport_pid, ref, topic, payload) when is_pid(transport_pid) do
+    Phoenix.Channel.Server.reply transport_pid, ref, topic, payload
+  end
+
 
   defp log_ignore(topic, router) do
     Logger.debug fn -> "Ignoring unmatched topic \"#{topic}\" in #{inspect(router)}" end
