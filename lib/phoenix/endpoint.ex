@@ -222,7 +222,7 @@ defmodule Phoenix.Endpoint do
   [as shown in cowboy's examples](https://github.com/ninenines/cowboy/tree/1.0.x/examples)).
 
   The options are passed to both `:http` and `:https` keys in the endpoint
-  config section. In order to perserve the default dispatch of Phoenix's router
+  config section. In order to preserve the default dispatch of Phoenix's router
   you need to specify it explicitly when providing the `:dispatch` option, for
   example:
 
