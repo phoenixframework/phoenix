@@ -214,6 +214,9 @@ defmodule Phoenix.Endpoint do
 
   ## Custom dispatch options
 
+  *Disclaimer: This feature depends on the internals of cowboy 1.x API, which
+  might change in the future when cowboy 2.x is released.*
+
   You can provide custom dispatch options in order to use Phoenix's builtin
   cowboy server with a custom cowboy handler (for example to handle raw WebSockets
   [as shown in cowboy's examples](https://github.com/ninenines/cowboy/tree/1.0.x/examples)).
