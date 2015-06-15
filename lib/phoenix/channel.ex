@@ -42,7 +42,7 @@ defmodule Phoenix.Channel do
   such as HMAC'd tokens for this purpose.
 
   To authorize a socket in `join/3`, return `{:ok, socket}`.
-  To refuse authorization in `join/3, return `{:error, reply}`.
+  To refuse authorization in `join/3`, return `{:error, reply}`.
 
   ### Incoming Events
 
