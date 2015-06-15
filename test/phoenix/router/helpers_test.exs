@@ -321,6 +321,16 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.url_for(socket_with_endpoint, :admin_message, :show, 1, []) == url
   end
 
+  test "helpers module generates path_for helpers" do
+    url = "/admin/new/messages/1"
+    assert Helpers.path_for(__MODULE__, :admin_message, :show, 1) == url
+    assert Helpers.path_for(__MODULE__, :admin_message, :show, 1, []) == url
+    assert Helpers.path_for(conn_with_endpoint, :admin_message, :show, 1) == url
+    assert Helpers.path_for(conn_with_endpoint, :admin_message, :show, 1, []) == url
+    assert Helpers.path_for(socket_with_endpoint, :admin_message, :show, 1) == url
+    assert Helpers.path_for(socket_with_endpoint, :admin_message, :show, 1, []) == url
+  end
+
   ## Script name
 
   defmodule ScriptName do
