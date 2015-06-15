@@ -36,6 +36,10 @@ defmodule Phoenix.Router.HelpersTest do
       path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> Enum.join(bar, "/"), params, ["bar"]))
     end
     """
+
+    IO.inspect(extract_defhelper(route,3))
+    IO.inspect(extract_defhelper(route,4))
+
   end
 
   defp build(verb, path, host, controller, action, helper) do
@@ -305,6 +309,16 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.admin_message_url(conn_with_endpoint, :show, 1, []) == url
     assert Helpers.admin_message_url(socket_with_endpoint, :show, 1) == url
     assert Helpers.admin_message_url(socket_with_endpoint, :show, 1, []) == url
+  end
+
+  test "helpers module generates url_for helpers" do
+    url = "https://example.com/admin/new/messages/1"
+    assert Helpers.url_for(__MODULE__, :admin_message, :show, 1) == url
+    assert Helpers.url_for(__MODULE__, :admin_message, :show, 1, []) == url
+    assert Helpers.url_for(conn_with_endpoint, :admin_message, :show, 1) == url
+    assert Helpers.url_for(conn_with_endpoint, :admin_message, :show, 1, []) == url
+    assert Helpers.url_for(socket_with_endpoint, :admin_message, :show, 1) == url
+    assert Helpers.url_for(socket_with_endpoint, :admin_message, :show, 1, []) == url
   end
 
   ## Script name

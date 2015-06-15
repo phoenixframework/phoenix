@@ -156,6 +156,14 @@ defmodule Phoenix.Router.Helpers do
       def unquote(:"#{helper}_url")(conn_or_endpoint, unquote(action), unquote_splicing(vars), params) do
         url(conn_or_endpoint) <> unquote(:"#{helper}_path")(conn_or_endpoint, unquote(action), unquote_splicing(vars), params)
       end
+
+      def url_for(conn_or_endpoint, unquote(:"#{helper}"), unquote(action), unquote_splicing(vars)) do
+        url_for(conn_or_endpoint, unquote(:"#{helper}"), unquote(action), unquote_splicing(vars), [])
+      end
+
+      def url_for(conn_or_endpoint, unquote(:"#{helper}"), unquote(action), unquote_splicing(vars), params) do
+        unquote(:"#{helper}_url")(conn_or_endpoint, unquote(action), unquote_splicing(vars), params)
+      end
     end
   end
 
