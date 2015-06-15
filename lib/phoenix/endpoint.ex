@@ -212,6 +212,31 @@ defmodule Phoenix.Endpoint do
     * `call(conn, opts)` - invoked on every request (simply dispatches to
       the defined plug pipeline)
 
+  ## Custom dispatch options
+
+  *Disclaimer: This feature depends on the internals of cowboy 1.x API, which
+  might change in the future when cowboy 2.x is released.*
+
+  You can provide custom dispatch options in order to use Phoenix's builtin
+  cowboy server with a custom cowboy handler (for example to handle raw WebSockets
+  [as shown in cowboy's examples](https://github.com/ninenines/cowboy/tree/1.0.x/examples)).
+
+  The options are passed to both `:http` and `:https` keys in the endpoint
+  config section. In order to preserve the default dispatch of Phoenix's router
+  you need to specify it explicitly when providing the `:dispatch` option, for
+  example:
+
+      config :myapp, MyApp.Endpoint,
+        http: [dispatch: [
+                {:_, [
+                    {"/foo", MyApp.CustomHandler, []},
+                    {"/bar", MyApp.AnotherHandler, []},
+                    {:_, Phoenix.Endpoint.CowboyHandler, {MyApp.Endpoint, []}}
+                  ]}]]
+
+  It is also important to specify your handlers first, otherwise Phoenix will
+  intercept the requests before they get to your handler
+
   """
 
   alias Phoenix.Endpoint.Adapter
