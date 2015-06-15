@@ -243,7 +243,7 @@ defmodule Phoenix.View do
   `render_existing/3` for per-template based content, ie:
 
       <head>
-        <%= render_existing view_module(@conn), "scripts." <> controller_template(conn), assigns %>
+        <%= render_existing view_module(@conn), "scripts." <> controller_template(@conn), assigns %>
       </head>
 
       def render("scripts.show.html", _assigns) do
@@ -329,7 +329,7 @@ defmodule Phoenix.View do
 
   @doc """
   See `render_one/4`.
-  """
+  """
   def render_one(model, template) when is_binary(template) do
     render_one(model, template, %{})
   end
