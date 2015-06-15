@@ -77,6 +77,31 @@ defmodule Phoenix.Router do
       MyApp.Router.Helpers.special_page_path(conn, :show, "hello")
       "/pages/hello"
 
+  Apart from named helpers, a `url_for/5` and `path_for/5` helpers are also
+  generated. These helpers work much like the named helpers and are there to
+  provide you with a dynamic way of returning paths.
+
+  For example:
+
+    MyApp.Router.Helpers.path_for(conn_or_endpoint, :page, :show, 1)
+    "/pages/1"
+
+    # The above generated path is equivalent to:
+    MyApp.Router.Helpers.page_path(conn_or_endpoint, :show, 1)
+    "/pages/1"
+
+    MyApp.Router.Helpers.url_for(conn_or_endpoint, :page, :show, 1)
+    "http://example.com/pages/1"
+
+    # The above generated url is equivant to:
+    MyApp.Router.Helpers.page_url(conn_or_endpoint, :show, 1)
+    "/pages/1"
+
+  Note that the second argument is name of the helper which, in this case,
+  is `:page`. Given the named helper, `admin_user_path/4`, you will have
+  corresponding `url_for/5` and `path_for/5` functions that match on
+  `:admin_user` as the second argument.
+
   ### Scopes and Resources
 
   The router also supports scoping of routes:
