@@ -4,6 +4,34 @@ defmodule Phoenix.Endpoint.CowboyHandler do
 
   ## Phoenix API
 
+  @doc """
+  Starts the cowboy adapter
+
+  ## Custom dispatch options
+
+  *Disclaimer*: This feature depends on the internals of cowboy 1.x API, which
+  might change in the future when cowboy 2.x is released.
+
+  You can provide custom dispatch options in order to use Phoenix's builtin
+  cowboy server with custom handler(s), ie, to handle raw WebSockets
+  [as shown in cowboy's docs](https://github.com/ninenines/cowboy/tree/1.0.x/examples)).
+
+  The options are passed to both `:http` and `:https` keys in the endpoint
+  configuration. In order to preserve the default dispatch of Phoenix's router
+  you need to specify it explicitly when providing the `:dispatch` option, for
+  example:
+
+      config :myapp, MyApp.Endpoint,
+        http: [dispatch: [
+                {:_, [
+                    {"/foo", MyApp.CustomHandler, []},
+                    {"/bar", MyApp.AnotherHandler, []},
+                    {:_, Phoenix.Endpoint.CowboyHandler, {MyApp.Endpoint, []}}
+                  ]}]]
+
+  It is also important to specify your handlers first, otherwise Phoenix will
+  intercept the requests before they get to your handler
+  """
   def start_link(scheme, endpoint, config, {m, f, a}) do
     case apply(m, f, a) do
       {:ok, pid} ->
