@@ -202,7 +202,9 @@ defmodule Phoenix.Channel do
               {:noreply, Socket.t} |
               {:stop, reason :: term, Socket.t}
 
-  defcallback terminate(msg :: map, Socket.t) :: term
+  defcallback terminate(msg :: map, Socket.t) ::
+              {:shutdown, :left | :closed} |
+              term
 
   defmacro __using__(_) do
     quote do
