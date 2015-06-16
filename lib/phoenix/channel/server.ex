@@ -1,5 +1,6 @@
 defmodule Phoenix.Channel.Server do
   use GenServer
+  require Logger
 
   alias Phoenix.PubSub
   alias Phoenix.Socket
@@ -24,7 +25,8 @@ defmodule Phoenix.Channel.Server do
         receive do: ({^ref, reply} -> {:ok, reply, pid})
       :ignore ->
         receive do: ({^ref, reply} -> {:error, reply})
-      {:error, _} ->
+      {:error, reason} ->
+        Logger.error fn -> Exception.format_exit(reason) end
         {:error, %{reason: "join crashed"}}
     end
   end
