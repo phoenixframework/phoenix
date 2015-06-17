@@ -329,7 +329,7 @@ defmodule Phoenix.View do
 
   @doc """
   See `render_one/4`.
-  """
+  """
   def render_one(model, template) when is_binary(template) do
     render_one(model, template, %{})
   end
