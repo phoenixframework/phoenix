@@ -276,7 +276,7 @@ When we go back to [http://localhost:4000/such/a/wrong/path](http://localhost:40
 
 It is worth noting that we did not render our `not_found.html.eex` template through our application layout, even though we want our error page to have the look and feel of the rest of our site. The main reason is that it's easy to run into edge case issues while handling errors globally.
 
-If we want to minimize duplication between our application layout and our `not_found.html.eex` template, we can implement shared templates for our header and footer. Please see the [Template Guide](http://www.phoenixframework.org/docs/templates#partials-shared-across-views) for more information.
+If we want to minimize duplication between our application layout and our `not_found.html.eex` template, we can implement shared templates for our header and footer. Please see the [Template Guide](http://www.phoenixframework.org/v0.13.1/docs/templates#section-shared-templates-across-views) for more information.
 
 Of course, we can do these same steps with the `def render("500.html", _assigns) do` clause in our `ErrorView` as well.
 
