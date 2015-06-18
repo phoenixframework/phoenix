@@ -381,7 +381,7 @@ var Channel = exports.Channel = (function () {
     join: {
       value: function join() {
         if (this.joinedOnce) {
-          throw "tried to join mulitple times. 'join' can only be called a single time per channel instance";
+          throw "tried to join multiple times. 'join' can only be called a single time per channel instance";
         } else {
           this.joinedOnce = true;
         }
