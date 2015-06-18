@@ -549,7 +549,7 @@ def index(conn, _params) do
 end
 ```
 
-If we want to use the url helper to pass a full url to `redirect/2`, we must use the atom `:external`. Note that the url does not have to be truly external to our application to use `:exernal`, as we see in this example.
+If we want to use the url helper to pass a full url to `redirect/2`, we must use the atom `:external`. Note that the url does not have to be truly external to our application to use `:external`, as we see in this example.
 
 ```elixir
 def index(conn, _params) do
