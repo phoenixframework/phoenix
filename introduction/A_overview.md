@@ -44,28 +44,28 @@ Phoenix is made up of a number of distinct parts, each with its own purpose and 
 
 ### Plug
 
-[Plug](http://hexdocs.pm/plug/) is a specification for constructing composable modules to build web applications. Plugs are reusable modules or functions built to that specification. They provide discrete behaviors - like request header parsing or logging. Because the Plug api is small and consistent, plugs can be stacked and executed in a set order, like a pipeline. They can also be re-used within a project or across projects.
+[Plug](http://hexdocs.pm/plug/) is a specification for constructing composable modules to build web applications. Plugs are reusable modules or functions built to that specification. They provide discrete behaviors - like request header parsing or logging. Because the Plug API is small and consistent, plugs can be defined and executed in a set order, like a pipeline. They can also be re-used within a project or across projects.
 
 Plugs can be written to handle almost anything, from authentication to parameter pre-processing, and even rendering.
 
 Phoenix takes great advantage of Plug in general - the router and controllers especially so.
 
-One of the most important things about Plug is that it provides adapters to HTTP servers which will ultimately deliver application content to our users. Currently, Plug only provides an adapter for Cowboy, which we will talk about next, but there are plans to provide adapters for other servers in the future.
+One of the most important things about Plug is that it provides adapters to HTTP servers which will ultimately deliver application content to our users. Currently Plug only provides an adapter for [Cowboy](https://github.com/ninenines/cowboy), a web server written in Erlang by Loïc Hoguin of [99s](http://ninenines.eu/).
 
 Have a look at the [Plug Guide](http://www.phoenixframework.org/docs/understanding-plug) for more details.
 
-### Cowboy
+### Ecto
 
-Cowboy is an HTTP server written in Erlang by Loïc Hoguin of [99s](http://ninenines.eu/). Cowboy is built in a modular way on top of Ranch, Bullet, and Sheriff. This is how 99s describes them.
+[Ecto](http://hexdocs.pm/ecto) is a language integrated query and database wrapper in Elixir. With Ecto, you can read and write to different databases, model your domain data, write complex queries in a type safe way, protecting you from SQL injection and other attacks and more.
 
-- Cowboy is a small, fast, modular HTTP server supporting Websockets, SPDY and more.
+Ecto exists around four main abstractions:
 
-- Ranch is a socket acceptor pool for TCP protocols. It is also a standalone library for building networked applications.
+* Repo - the repository is your storage. Every operations against the database is done via the repository
 
-- Bullet is a simple, reliable, efficient streaming library.
+* Model - the model is your data definition. It defines the table name, fields and their respective types
 
-- Sheriff uses parse transforms for type based validation. Sheriff also validates data dynamically using Erlang's type system with no extra code required.
+* Query - queries tie both models and repositories together, allowing us to elegantly retrieve data from the repository and cast it into the models themselves
 
-Cowboy has fantastic documentation. The [Guides](http://ninenines.eu/docs/en/cowboy/HEAD/guide/) are especially helpful. Learning more about Cowboy will surely help you to understand Phoenix more fully.
+* Changeset - changesets are used to declare all changes to be performed against a model, providing type casting, validations and more
 
-Cowboy has its own section of links in the [Resources Guide](http://www.phoenixframework.org/docs/resources#section-cowboy).
+A new Phoenix application will use Ecto with PostgreSQL storage by default.

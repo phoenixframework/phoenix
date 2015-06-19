@@ -31,13 +31,9 @@ $ mix archive.install https://github.com/phoenixframework/phoenix/releases/downl
 ```
 > Note: if the Phoenix archive won't install properly with this command, we can download the file directly from our browser, save it to the filesystem, and then run: `mix archive.install /path/to/local/phoenix_new.ez`.
 
-### Plug
+### Plug, Cowboy and Ecto
 
-Plug is listed as a dependency in all Phoenix applications by default. We won't need to do anything special to install Plug besides `mix deps.get`. If we let mix install our dependencies as we create our new application, we won't even need to do that.
-
-### Cowboy
-
-Cowboy is also a direct dependency of all Phoenix applications, so it will be installed exactly as Plug is.
+Those are either Elixir or Erlang projects which are part of Phoenix applications by default. We won't need to do anything special to install them besides `mix deps.get`. If we let mix install our dependencies as we create our new application, we won't even need to do that.
 
 ### node.js (>= 0.12.0)
 
