@@ -52,7 +52,7 @@ Phoenix takes great advantage of Plug in general - the router and controllers es
 
 One of the most important things about Plug is that it provides adapters to HTTP servers which will ultimately deliver application content to our users. Currently, Plug only provides an adapter for Cowboy, which we will talk about next, but there are plans to provide adapters for other servers in the future.
 
-Have a look at the [Plug Guide](http://www.phoenixframework.org//docs/understanding-plug) for more details.
+Have a look at the [Plug Guide](http://www.phoenixframework.org/docs/understanding-plug) for more details.
 
 ### Cowboy
 
