@@ -18,6 +18,11 @@ The default data layer for Phoenix.
 - [Source Code and Readme](https://github.com/elixir-lang/ecto)
 - [Documentation](http://hexdocs.pm/ecto/)
 
+## Phoenix HTML
+The project which contains many HTML helper functions used in Phoenix.
+- [Source Code and Readme](https://github.com/phoenixframework/phoenix_html)
+- [Documentation](https://hexdocs.pm/phoenix_html/)
+
 ## ExUnit
 - [Documentation](http://elixir-lang.org/docs/stable/ex_unit/)
 
