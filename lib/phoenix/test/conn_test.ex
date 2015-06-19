@@ -51,7 +51,7 @@ defmodule Phoenix.ConnTest do
 
   ## Views testing
 
-  Under other circunstances, you may be testing a view or
+  Under other circumstances, you may be testing a view or
   another layer that requires a connection for processing.
   For such cases, a connection can be created using the
   `conn/3` helper:
@@ -160,7 +160,7 @@ defmodule Phoenix.ConnTest do
 
   ## Parameters and body
 
-  This function, as well as `get/3`, `post/3` and friends, accept the
+  This function, as well as `get/3`, `post/3` and friends, accepts the
   request body or parameters as last argument:
 
         get conn(), "/", some: "param"
