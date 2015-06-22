@@ -14,7 +14,7 @@ defmodule <%= module %>Controller do
     changeset = <%= alias %>.changeset(%<%= alias %>{}, <%= singular %>_params)
 
     if changeset.valid? do
-      <%= singular %> = Repo.insert(changeset)
+      <%= singular %> = Repo.insert!(changeset)
       render(conn, "show.json", <%= singular %>: <%= singular %>)
     else
       conn
@@ -33,7 +33,7 @@ defmodule <%= module %>Controller do
     changeset = <%= alias %>.changeset(<%= singular %>, <%= singular %>_params)
 
     if changeset.valid? do
-      <%= singular %> = Repo.update(changeset)
+      <%= singular %> = Repo.update!(changeset)
       render(conn, "show.json", <%= singular %>: <%= singular %>)
     else
       conn
@@ -45,7 +45,7 @@ defmodule <%= module %>Controller do
   def delete(conn, %{"id" => id}) do
     <%= singular %> = Repo.get!(<%= alias %>, id)
 
-    <%= singular %> = Repo.delete(<%= singular %>)
+    <%= singular %> = Repo.delete!(<%= singular %>)
     render(conn, "show.json", <%= singular %>: <%= singular %>)
   end
 end

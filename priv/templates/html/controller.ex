@@ -19,7 +19,7 @@ defmodule <%= module %>Controller do
     changeset = <%= alias %>.changeset(%<%= alias %>{}, <%= singular %>_params)
 
     if changeset.valid? do
-      Repo.insert(changeset)
+      Repo.insert!(changeset)
 
       conn
       |> put_flash(:info, "<%= alias %> created successfully.")
@@ -45,7 +45,7 @@ defmodule <%= module %>Controller do
     changeset = <%= alias %>.changeset(<%= singular %>, <%= singular %>_params)
 
     if changeset.valid? do
-      Repo.update(changeset)
+      Repo.update!(changeset)
 
       conn
       |> put_flash(:info, "<%= alias %> updated successfully.")
@@ -57,7 +57,7 @@ defmodule <%= module %>Controller do
 
   def delete(conn, %{"id" => id}) do
     <%= singular %> = Repo.get!(<%= alias %>, id)
-    Repo.delete(<%= singular %>)
+    Repo.delete!(<%= singular %>)
 
     conn
     |> put_flash(:info, "<%= alias %> deleted successfully.")

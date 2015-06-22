@@ -68,7 +68,7 @@ defmodule Phoenix.ChannelTest do
   Imagine the following `handle_in/3` inside a channel:
 
       def handle_in("publish", %{"id" => id}, socket) do
-        Repo.get!(Post, id) |> Post.publish() |> Repo.update()
+        Repo.get!(Post, id) |> Post.publish() |> Repo.update!()
         {:noreply, socket}
       end
 
@@ -85,7 +85,7 @@ defmodule Phoenix.ChannelTest do
   channel to send replies:
 
       def handle_in("publish", %{"id" => id}, socket) do
-        Repo.get!(Post, id) |> Post.publish() |> Repo.update()
+        Repo.get!(Post, id) |> Post.publish() |> Repo.update!()
         {:reply, :ok, socket}
       end
 

@@ -16,7 +16,7 @@ defmodule <%= module %>ControllerTest do
   end
 
   test "shows chosen resource", %{conn: conn} do
-    <%= singular %> = Repo.insert %<%= alias %>{}
+    <%= singular %> = Repo.insert! %<%= alias %>{}
     conn = get conn, <%= singular %>_path(conn, :show, <%= singular %>)
     assert json_response(conn, 200)["data"] == %{
       "id" => <%= singular %>.id
@@ -41,20 +41,20 @@ defmodule <%= module %>ControllerTest do
   end
 
   test "updates and renders chosen resource when data is valid", %{conn: conn} do
-    <%= singular %> = Repo.insert %<%= alias %>{}
+    <%= singular %> = Repo.insert! %<%= alias %>{}
     conn = put conn, <%= singular %>_path(conn, :update, <%= singular %>), <%= singular %>: @valid_attrs
     assert json_response(conn, 200)["data"]["id"]
     assert Repo.get_by(<%= alias %>, @valid_attrs)
   end
 
   test "does not update chosen resource and renders errors when data is invalid", %{conn: conn} do
-    <%= singular %> = Repo.insert %<%= alias %>{}
+    <%= singular %> = Repo.insert! %<%= alias %>{}
     conn = put conn, <%= singular %>_path(conn, :update, <%= singular %>), <%= singular %>: @invalid_attrs
     assert json_response(conn, 422)["errors"] != %{}
   end
 
   test "deletes chosen resource", %{conn: conn} do
-    <%= singular %> = Repo.insert %<%= alias %>{}
+    <%= singular %> = Repo.insert! %<%= alias %>{}
     conn = delete conn, <%= singular %>_path(conn, :delete, <%= singular %>)
     assert json_response(conn, 200)["data"]["id"]
     refute Repo.get(<%= alias %>, <%= singular %>.id)

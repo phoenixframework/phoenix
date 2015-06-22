@@ -53,7 +53,7 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
         assert file =~ ~S|conn = post conn, user_path(conn, :create), user: @invalid_attrs|
 
         assert file =~ ~S|test "shows chosen resource"|
-        assert file =~ ~S|user = Repo.insert %User{}|
+        assert file =~ ~S|user = Repo.insert! %User{}|
 
         assert file =~ ~S|test "updates and renders chosen resource when data is valid"|
         assert file =~ ~S|conn = put conn, user_path(conn, :update, user), user: @valid_attrs|

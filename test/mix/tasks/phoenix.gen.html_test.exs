@@ -98,7 +98,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
         assert file =~ ~S|conn = post conn, user_path(conn, :create), user: @invalid_attrs|
 
         assert file =~ ~S|test "shows chosen resource"|
-        assert file =~ ~S|user = Repo.insert %User{}|
+        assert file =~ ~S|user = Repo.insert! %User{}|
         assert file =~ ~S|assert html_response(conn, 200) =~ "Show user"|
 
         assert file =~ ~S|test "renders form for editing chosen resource"|

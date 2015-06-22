@@ -82,7 +82,7 @@ defmodule Phoenix.Channel do
         changeset = Post.changeset(%Post{}, attrs)
 
         if changeset.valid? do
-          Repo.insert(changeset)
+          Repo.insert!(changeset)
           {:reply, {:ok, changeset}, socket}
         else
           {:reply, {:error, changeset.errors}, socket}
@@ -95,7 +95,7 @@ defmodule Phoenix.Channel do
         changeset = Post.changeset(%Post{}, attrs)
 
         if changeset.valid? do
-          Repo.insert(changeset)
+          Repo.insert!(changeset)
           {:ok, socket}
         else
           {:reply, :error, socket}
