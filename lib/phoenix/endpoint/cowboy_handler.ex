@@ -32,14 +32,14 @@ defmodule Phoenix.Endpoint.CowboyHandler do
   It is also important to specify your handlers first, otherwise Phoenix will
   intercept the requests before they get to your handler
   """
-  def start_link(scheme, endpoint, config, {m, f, a}) do
+  def start_link(_scheme, endpoint, _config, {m, f, a}) do
     case apply(m, f, a) do
       {:ok, pid} ->
-        Logger.info info(scheme, endpoint, config)
+        Logger.info info(endpoint)
         {:ok, pid}
 
       {:error, {:shutdown, {_, _, {{_, {:error, :eaddrinuse}}, _}}}} = error ->
-        Logger.error [info(scheme, endpoint, config), " failed, port already in use"]
+        Logger.error [info(endpoint), " failed, port already in use"]
         error
 
       {:error, _} = error ->
@@ -47,8 +47,8 @@ defmodule Phoenix.Endpoint.CowboyHandler do
     end
   end
 
-  defp info(scheme, endpoint, config) do
-    "Running #{inspect endpoint} with Cowboy on port #{inspect config[:port]} (#{scheme})"
+  defp info(endpoint) do
+    "Running #{inspect endpoint} with Cowboy on #{endpoint.url}"
   end
 
   def child_spec(scheme, endpoint, config) do
