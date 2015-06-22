@@ -2,7 +2,7 @@ Here's a list of other resources for learning about Phoenix and some of the proj
 
 ## Phoenix
 - [The Phoenix Project](https://github.com/phoenixframework/phoenix)
-- [Official Documentation]((http://hexdocs.pm/phoenix/)) (current stable release)
+- [Official Documentation](http://hexdocs.pm/phoenix/) (current stable release)
 
 #### Videos
 Phoenix author Chris McCord's ElixirConfEu 2015 keynote covers the roadmap to Phoenix 1.0.

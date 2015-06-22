@@ -44,9 +44,9 @@ To learn more about custom error pages, please see [The Error View](http://www.p
 
 Elixir provides a macro called `defexception` for defining custom exceptions. Exceptions are represented as structs, and structs need to be defined inside of modules.
 
-In order to create a custom error, we need to define a new module, conventionally this will have "Error" in the name. Inside of that module, we need to define a new exception with `defexception`.
+In order to create a custom error, we need to define a new module. Conventionally this will have "Error" in the name. Inside of that module, we need to define a new exception with `defexception`.
 
-We can also define a module within a module to provide a namespace for the new module.
+We can also define a module within a module to provide a namespace for the inner module.
 
 Here's an example from the [Phoenix.Router](https://github.com/phoenixframework/phoenix/blob/master/lib/phoenix/router.ex) which demonstrates all of these ideas.
 

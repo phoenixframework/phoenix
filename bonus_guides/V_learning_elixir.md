@@ -1,7 +1,6 @@
-## Elixir
-
 Here is a selected list of resources to help with learning Elixir and Erlang.
 
+## Elixir
 - [Elixir Guides](http://elixir-lang.org/getting_started/1.html)
 - [Official Documentation](http://elixir-lang.org/docs/stable/elixir)
 
