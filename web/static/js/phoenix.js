@@ -505,7 +505,7 @@ export class LongPoller {
   }
 
   endpointURL(){
-    return this.pollEndpoint + `?token=${encodeURIComponent(this.token)}&sig=${encodeURIComponent(this.sig)}`
+    return this.pollEndpoint + `?token=${encodeURIComponent(this.token)}&sig=${encodeURIComponent(this.sig)}&format=json`
   }
 
   closeAndRetry(){

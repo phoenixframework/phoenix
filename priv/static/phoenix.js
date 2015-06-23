@@ -897,7 +897,7 @@ var LongPoller = exports.LongPoller = (function () {
     },
     endpointURL: {
       value: function endpointURL() {
-        return this.pollEndpoint + ("?token=" + encodeURIComponent(this.token) + "&sig=" + encodeURIComponent(this.sig));
+        return this.pollEndpoint + ("?token=" + encodeURIComponent(this.token) + "&sig=" + encodeURIComponent(this.sig) + "&format=json");
       },
       writable: true,
       configurable: true
