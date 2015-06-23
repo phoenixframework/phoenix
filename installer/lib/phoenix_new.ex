@@ -12,7 +12,6 @@ defmodule Mix.Tasks.Phoenix.New do
     {:eex,  "new/config/config.exs",                         "config/config.exs"},
     {:eex,  "new/config/dev.exs",                            "config/dev.exs"},
     {:eex,  "new/config/prod.exs",                           "config/prod.exs"},
-    {:eex,  "new/config/prod.secret.exs",                    "config/prod.secret.exs"},
     {:eex,  "new/config/test.exs",                           "config/test.exs"},
     {:eex,  "new/lib/application_name.ex",                   "lib/application_name.ex"},
     {:eex,  "new/lib/application_name/endpoint.ex",          "lib/application_name/endpoint.ex"},
@@ -35,6 +34,8 @@ defmodule Mix.Tasks.Phoenix.New do
     {:eex,  "new/web/web.ex",                                "web/web.ex"},
     {:eex,  "new/mix.exs",                                   "mix.exs"},
     {:eex,  "new/README.md",                                 "README.md"},
+    {:eex,  "new/app.json",                                  "app.json"},
+    {:text, "new/.buildpacks",                               ".buildpacks"},
   ]
 
   @ecto [
@@ -153,7 +154,6 @@ defmodule Mix.Tasks.Phoenix.New do
                phoenix_dep: phoenix_dep(dev),
                pubsub_server: pubsub_server,
                secret_key_base: random_string(64),
-               prod_secret_key_base: random_string(64),
                signing_salt: random_string(8),
                in_umbrella: in_umbrella?(path),
                brunch: brunch,
@@ -222,14 +222,12 @@ defmodule Mix.Tasks.Phoenix.New do
         size: 1
       """
 
-      append_to path, "config/prod.secret.exs", """
+      append_to path, "config/prod.exs", """
 
       # Configure your database
       config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
         adapter: #{inspect binding[:adapter_module]},
-        username: #{inspect binding[:db_user]},
-        password: #{inspect binding[:db_password]},
-        database: "#{binding[:application_name]}_prod",
+        url: System.get_env("DATABASE_URL"),
         size: 20 # The amount of database connections in the pool
       """
     end

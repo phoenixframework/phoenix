@@ -1,4 +1,5 @@
 Code.require_file "mix_helper.exs", __DIR__
+Code.require_file "phoenix_new.ex", "installer/lib"
 
 defmodule Mix.Tasks.Phoenix.NewTest do
   use ExUnit.Case
@@ -22,8 +23,8 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     in_tmp "new with defaults", fn ->
       Mix.Tasks.Phoenix.New.run([@app_name])
 
-      assert_file "photo_blog/README.md"
-      assert_file "photo_blog/mix.exs", fn file ->
+      assert_file "photo_blog/README.md", ~r|https://heroku.com/deploy|
+      assert_file "photo_blog/mix.exs", fn(file) ->
         assert file =~ "app: :photo_blog"
         refute file =~ "deps_path: \"../../deps\""
         refute file =~ "lockfile: \"../../mix.lock\""
@@ -61,6 +62,11 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/web/router.ex", ~r/defmodule PhotoBlog.Router/
       assert_file "photo_blog/web/web.ex", ~r/defmodule PhotoBlog.Web/
 
+      # Files required for Heroku deploy button
+      assert File.exists?("photo_blog/app.json")
+      assert_file "photo_blog/.buildpacks", [~r|https://github.com/HashNuke/heroku-buildpack-elixir|,
+        ~r|https://github.com/gjaldon/phoenix-static-buildpack|]
+
       # Brunch
       assert_file "photo_blog/.gitignore", ~r"/node_modules"
       assert_file "photo_blog/web/static/assets/images/phoenix.png"
@@ -80,10 +86,10 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/mix.exs", ~r"{:phoenix_ecto,"
       assert_file "photo_blog/config/dev.exs", config
       assert_file "photo_blog/config/test.exs", config
-      assert_file "photo_blog/config/prod.secret.exs", config
       assert_file "photo_blog/lib/photo_blog/repo.ex", ~r"defmodule PhotoBlog.Repo"
       assert_file "photo_blog/test/support/model_case.ex", ~r"defmodule PhotoBlog.ModelCase"
       assert_file "photo_blog/web/web.ex", ~r"alias PhotoBlog.Repo"
+      assert_file "photo_blog/app.json", ~r/postdeploy": "mix ecto.migrate"/
 
       # Install dependencies?
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
@@ -112,7 +118,6 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/mix.exs", &refute(&1 =~ ~r":phoenix_ecto")
       assert_file "photo_blog/config/dev.exs", &refute(&1 =~ config)
       assert_file "photo_blog/config/test.exs", &refute(&1 =~ config)
-      assert_file "photo_blog/config/prod.secret.exs", &refute(&1 =~ config)
       assert_file "photo_blog/web/web.ex", &refute(&1 =~ ~r"alias PhotoBlog.Repo")
     end
   end
@@ -153,7 +158,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "custom_path/mix.exs", ~r/:mariaex/
       assert_file "custom_path/config/dev.exs", [~r/Ecto.Adapters.MySQL/, ~r/username: "root"/, ~r/password: ""/]
       assert_file "custom_path/config/test.exs", [~r/Ecto.Adapters.MySQL/, ~r/username: "root"/, ~r/password: ""/]
-      assert_file "custom_path/config/prod.secret.exs", [~r/Ecto.Adapters.MySQL/, ~r/username: "root"/, ~r/password: ""/]
+      assert_file "custom_path/config/prod.exs", [~r/Ecto.Adapters.MySQL/, ~r/url: System.get_env\("DATABASE_URL"\)/]
     end
   end
 
@@ -165,7 +170,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "custom_path/mix.exs", ~r/:tds_ecto/
       assert_file "custom_path/config/dev.exs", ~r/Tds.Ecto/
       assert_file "custom_path/config/test.exs", ~r/Tds.Ecto/
-      assert_file "custom_path/config/prod.secret.exs", ~r/Tds.Ecto/
+      assert_file "custom_path/config/prod.exs", ~r/Tds.Ecto/
     end
   end
 
@@ -177,7 +182,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "custom_path/mix.exs", ~r/:postgrex/
       assert_file "custom_path/config/dev.exs", [~r/Ecto.Adapters.Postgres/, ~r/username: "postgres"/, ~r/password: "postgres"/]
       assert_file "custom_path/config/test.exs", [~r/Ecto.Adapters.Postgres/, ~r/username: "postgres"/, ~r/password: "postgres"/]
-      assert_file "custom_path/config/prod.secret.exs", [~r/Ecto.Adapters.Postgres/, ~r/username: "postgres"/, ~r/password: "postgres"/]
+      assert_file "custom_path/config/prod.exs", [~r/Ecto.Adapters.Postgres/, ~r/url: System.get_env\("DATABASE_URL"\)/]
     end
   end
 
