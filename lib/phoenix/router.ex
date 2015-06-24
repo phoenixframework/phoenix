@@ -213,7 +213,7 @@ defmodule Phoenix.Router do
         exprs = Route.exprs(route)
         @phoenix_routes {route, exprs}
 
-        defp match(var!(conn), unquote(route.verb), unquote(exprs.path),
+        defp match(var!(conn), unquote(exprs.verb_match), unquote(exprs.path),
                    unquote(exprs.host)) do
           unquote(exprs.dispatch)
         end
@@ -326,20 +326,19 @@ defmodule Phoenix.Router do
   end
 
   for verb <- @http_methods do
-    method = verb |> to_string |> String.upcase
     @doc """
     Generates a route to handle a #{verb} request to the given path.
     """
-    defmacro unquote(verb)(path, controller, action, options \\ []) do
-      add_route(unquote(method), path, controller, action, options)
+    defmacro unquote(verb)(path, plug, plug_opts, options \\ []) do
+      add_route(unquote(verb), path, plug, plug_opts, options)
     end
   end
 
-  defp add_route(verb, path, controller, action, options) do
+  defp add_route(verb, path, plug, plug_opts, options) do
     quote do
       var!(add_route, Phoenix.Router).(
-        Scope.route(__MODULE__, unquote(verb), unquote(path), unquote(controller),
-                                unquote(action), unquote(options))
+        Scope.route(__MODULE__, unquote(verb), unquote(path), unquote(plug),
+                                unquote(plug_opts), unquote(options))
       )
     end
   end
@@ -760,4 +759,28 @@ defmodule Phoenix.Router do
                          Dict.merge([via: @phoenix_transports], opts)}
     end
   end
+
+
+  @doc """
+  Forwards a request at the given path to a Plug, invoking the pipeline.
+
+  Forwarded routes allow another Plug, such as a Router, Endpoint, or module,
+  to be mounted at a path prefix where any matching requests will be
+  forwarded. The router pipelines will be invoked prior to forwarding the
+  connection.
+
+  ## Examples
+
+    scope "/", MyApp do
+      pipe_through [:browser, :admin]
+
+      forward "/admin", SomeLib.AdminDashboard
+      forward "/api/:version", ApiRouter
+    end
+
+  """
+  defmacro forward(path, plug, plug_opts \\ [], router_opts \\ []) do
+    add_route(:forward, path, plug, plug_opts, router_opts)
+  end
+
 end

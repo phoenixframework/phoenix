@@ -18,14 +18,14 @@ defmodule Phoenix.Router.Scope do
   @doc """
   Builds a route based on the top of the stack.
   """
-  def route(module, verb, path, controller, action, opts) do
+  def route(module, verb, path, plug, plug_opts, opts) do
     private = Keyword.get(opts, :private, %{})
     assigns = Keyword.get(opts, :assigns, %{})
-    as      = Keyword.get(opts, :as, Phoenix.Naming.resource_name(controller, "Controller"))
+    as      = Keyword.get(opts, :as, Phoenix.Naming.resource_name(plug, "Controller"))
 
     {path, host, alias, as, pipes, private, assigns} =
-      join(module, path, controller, as, private, assigns)
-    Phoenix.Router.Route.build(verb, path, host, alias, action, as, pipes, private, assigns)
+      join(module, path, plug, as, private, assigns)
+    Phoenix.Router.Route.build(verb, path, host, alias, plug_opts, as, pipes, private, assigns)
   end
 
   @doc """
