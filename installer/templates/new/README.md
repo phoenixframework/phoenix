@@ -12,16 +12,10 @@ Now you can visit `localhost:4000` from your browser.
 [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
 
 The deploy button above allows you to instantly deploy your applications to Heroku from your Github
-repo. This will work out-of-the-box when deploying from a public Github repo. If deploying from a
-private repo, you will need to provide an explicit `template` parameter to the button's `href`. Your
-deploy button will look like `[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/username/appname)`.
+repo. If deploying from a public Github repo, this will work as soon as you commit `prod.secret.exs` into version control. You can do this by commenting it out in your `.gitignore`. Keep in mind to remove all hardcoded secrets before committing `prod.secret.exs`!
 
-There are a few files generated for your Phoenix app so the Heroku deploy button would work. These are:
+If deploying from a private repo, you will also need to provide an explicit `template` parameter to the button's `href`. Your deploy button will look like `[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/username/appname)`.
 
-- app.json - this JSON schema is used by Heroku to customize your deploy. It includes a lot of useful
-  configuration. From here you can set deploy hooks, the buildpack URL and ENV variables for your app,
-  among other options. To learn more about it, refer to [app.json schema docs](https://devcenter.heroku.com/articles/app-json-schema) in Heroku.
-- .buildpacks - we rely on [heroku-buildpack-multi](https://github.com/ddollar/heroku-buildpack-multi)which requires this file so it knows which buildpacks to use. You may customize buildpacks from here.
+Phoenix generates an `app.json` file. This JSON schema is used by Heroku to customize your deploy. It includes a lot of useful configuration. From here you can set deploy hooks, the buildpacks used, and ENV variables for your app, among other options. To learn more about it, refer to [app.json schema docs](https://devcenter.heroku.com/articles/app-json-schema) in Heroku.
 
-If you want to learn more on customize or debugging the Heroku button, Heroku provides a [great resource](https://devcenter.heroku.com/articles/heroku-button)
-on the topic.
+If you want to learn more on customizing or debugging the Heroku button, Heroku provides a [great resource](https://devcenter.heroku.com/articles/heroku-button) on the topic.

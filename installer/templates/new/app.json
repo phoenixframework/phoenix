@@ -6,7 +6,6 @@
     "postdeploy": "mix ecto.migrate"
   },<% end %>
   "env": {
-    "BUILDPACK_URL": "https://github.com/ddollar/heroku-buildpack-multi",
     "SECRET_KEY_BASE": {
       "description": "A secret key for verifying the integrity of signed cookies.",
       "generator": "secret"
@@ -15,5 +14,9 @@
       "description": "The number of processes to run.",
       "value": "1"
     }
-  }
+  },
+  "buildpacks": [
+    {"url": "https://github.com/HashNuke/heroku-buildpack-elixir"},
+    {"url": "https://github.com/gjaldon/phoenix-static-buildpack"}
+  ]
 }
