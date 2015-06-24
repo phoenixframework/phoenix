@@ -31,7 +31,6 @@ defmodule Phoenix.Transports.LongPoller do
 
   plug :check_origin
   plug :allow_origin
-  plug :default_content_type
 
   # TODO We need to uncomment this when we remove channels from endpoints
   # plug Plug.Parsers, parsers: [:json], json_decoder: Poison
@@ -239,16 +238,6 @@ defmodule Phoenix.Transports.LongPoller do
     |> put_resp_header("access-control-allow-headers", headers)
     |> put_resp_header("access-control-allow-methods", "get, post, options")
     |> put_resp_header("access-control-max-age", "3600")
-  end
-
-  # XDomainRequest doesn't allow you to set request headers so manually set
-  # Content-Type and run the JSON parser plug again
-  defp default_content_type(conn, _opts) do
-    if get_req_header(conn, "content-type") == [] do
-      update_in(conn.req_headers, &[{"content-type", "application/json"}|&1])
-    else
-      conn
-    end
   end
 
   defp status_json(conn, map) do
