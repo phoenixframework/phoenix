@@ -14,7 +14,7 @@ defmodule <%= module %> do
   @doc """
   Creates a changeset based on the `model` and `params`.
 
-  If `params` are nil, an invalid changeset is returned
+  If the value of `params` is the symbol :empty, an invalid changeset is returned
   with no validation performed.
   """
   def changeset(model, params \\ :empty) do
