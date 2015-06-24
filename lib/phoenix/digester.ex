@@ -11,7 +11,7 @@ defmodule Phoenix.Digester do
   """
 
   @doc """
-  Digests and compress the static files and save them in the given output path.
+  Digests and compresses the static files and saves them in the given output path.
 
     * `input_path` - The path where the assets are located
     * `output_path` - The path where the compiled/compressed files will be saved

@@ -238,7 +238,7 @@ defmodule Phoenix.View do
 
   ## Rendering based on controller template
 
-  In some cases, you might need render based on the template from the controller.
+  In some cases, you might need to render based on the template from the controller.
   For these cases, `Phoenix.Controller.controller_template/1` can pair with
   `render_existing/3` for per-template based content, ie:
 
