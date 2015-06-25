@@ -131,7 +131,7 @@ defmodule Phoenix.Router.Helpers do
   In case a helper name was not given, or route is forwarded, returns nil.
   """
   def defhelper(%Route{helper: nil}, _exprs), do: nil
-  def defhelper(%Route{verb: :forward}, _exprs), do: nil
+  def defhelper(%Route{kind: :forward}, _exprs), do: nil
   def defhelper(%Route{} = route, exprs) do
     helper = route.helper
     opts = route.opts

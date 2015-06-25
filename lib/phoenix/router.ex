@@ -330,15 +330,15 @@ defmodule Phoenix.Router do
     Generates a route to handle a #{verb} request to the given path.
     """
     defmacro unquote(verb)(path, plug, plug_opts, options \\ []) do
-      add_route(unquote(verb), path, plug, plug_opts, options)
+      add_route(:match, unquote(verb), path, plug, plug_opts, options)
     end
   end
 
-  defp add_route(verb, path, plug, plug_opts, options) do
+  defp add_route(kind, verb, path, plug, plug_opts, options) do
     quote do
       var!(add_route, Phoenix.Router).(
-        Scope.route(__MODULE__, unquote(verb), unquote(path), unquote(plug),
-                                unquote(plug_opts), unquote(options))
+        Scope.route(__MODULE__, unquote(kind), unquote(verb), unquote(path),
+                                unquote(plug), unquote(plug_opts), unquote(options))
       )
     end
   end
@@ -780,7 +780,7 @@ defmodule Phoenix.Router do
 
   """
   defmacro forward(path, plug, plug_opts \\ [], router_opts \\ []) do
-    add_route(:forward, path, plug, plug_opts, router_opts)
+    add_route(:forward, :*, path, plug, plug_opts, router_opts)
   end
 
 end

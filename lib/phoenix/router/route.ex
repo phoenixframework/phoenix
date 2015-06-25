@@ -10,6 +10,7 @@ defmodule Phoenix.Router.Route do
   The `Phoenix.Router.Route` struct. It stores:
 
     * :verb - the HTTP verb as an upcased string
+    * :kind - the kind of route, one of `:match`, `:forward`
     * :path - the normalized path as string
     * :host - the request host or host prefix
     * :plug - the plug module
@@ -21,7 +22,7 @@ defmodule Phoenix.Router.Route do
 
   """
 
-  defstruct [:verb, :path, :host, :plug, :opts,
+  defstruct [:verb, :kind, :path, :host, :plug, :opts,
              :helper, :private, :pipe_through, :assigns]
 
   @type t :: %Route{}
@@ -30,13 +31,14 @@ defmodule Phoenix.Router.Route do
   Receives the verb, path, plug, options and helper
   and returns a `Phoenix.Router.Route` struct.
   """
-  @spec build(String.t, String.t, String.t | nil, atom, atom, atom | nil, atom, %{}, %{}) :: t
-  def build(verb, path, host, plug, opts, helper, pipe_through, private, assigns)
+  @spec build(:match | :forward, String.t, String.t, String.t | nil, atom, atom, atom | nil, atom, %{}, %{}) :: t
+  def build(kind, verb, path, host, plug, opts, helper, pipe_through, private, assigns)
       when is_atom(verb) and (is_binary(host) or is_nil(host)) and
            is_atom(plug) and (is_binary(helper) or is_nil(helper)) and
-           is_list(pipe_through) and is_map(private and is_map(assigns)) do
+           is_list(pipe_through) and is_map(private and is_map(assigns))
+           and kind in [:match, :forward] do
 
-    %Route{verb: verb, path: path, host: host, private: private,
+    %Route{kind: kind, verb: verb, path: path, host: host, private: private,
            plug: plug, opts: opts, helper: helper,
            pipe_through: pipe_through, assigns: assigns}
   end
@@ -54,13 +56,13 @@ defmodule Phoenix.Router.Route do
       dispatch: build_dispatch(route, binding)}
   end
 
-  defp verb_match(:forward), do: Macro.var(:_verb, nil)
+  defp verb_match(:*), do: Macro.var(:_verb, nil)
   defp verb_match(verb), do: verb |> to_string() |> String.upcase()
 
   defp build_path_and_binding(%Route{path: path} = route) do
-    {params, segments} = case route.verb do
+    {params, segments} = case route.kind do
       :forward -> Plug.Router.Utils.build_path_match(path <> "/*_forward_path_info")
-      _verb    -> Plug.Router.Utils.build_path_match(path)
+      :match   -> Plug.Router.Utils.build_path_match(path)
     end
 
     binding =
@@ -106,7 +108,7 @@ defmodule Phoenix.Router.Route do
     end
   end
 
-  defp build_pipes(%Route{verb: :forward} = route) do
+  defp build_pipes(%Route{kind: :forward} = route) do
     {_params, path_segments} = Plug.Router.Utils.build_path_match(route.path)
 
     quote do

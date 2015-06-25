@@ -40,6 +40,6 @@ defmodule Phoenix.Router.ConsoleFormatter do
   defp route_name(nil),  do: ""
   defp route_name(name), do: name <> "_path"
 
-  defp verb_name(:forward), do: "*"
+  defp verb_name(:*), do: "*"
   defp verb_name(verb), do: verb |> to_string() |> String.upcase()
 end
