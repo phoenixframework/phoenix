@@ -8,6 +8,41 @@ defmodule Phoenix.Router.Helpers do
 
   @transports [Phoenix.Transports.WebSocket, Phoenix.Transports.LongPoller]
 
+  @doc false
+  def build_path(router, %Conn{} = conn, path) do
+    conn
+    |> build_own_forward_path(router, path)
+    |> Kernel.||(build_conn_forward_path(conn, router, path))
+    |> Kernel.||(path_with_script(path, conn.script_name))
+  end
+
+  defp build_own_forward_path(conn, router, path) do
+    case Map.fetch(conn.private, router) do
+      {:ok, {local_script, _}} ->
+        path_with_script(path, local_script)
+      :error -> nil
+    end
+  end
+
+  defp build_conn_forward_path(conn, router, path) do
+    case Map.fetch(conn.private, conn.private[:phoenix_router]) do
+      {:ok, {_script_name, forwards}} ->
+        case Map.fetch(forwards, router) do
+          {:ok, local_script} ->
+            path_with_script(path, conn.script_name ++ local_script)
+          :error -> nil
+        end
+      :error -> nil
+    end
+  end
+
+  defp path_with_script(path, []) do
+    path
+  end
+  defp path_with_script(path, script) do
+    "/" <> Enum.join(script, "/") <> path
+  end
+
   @doc """
   Generates the helper module for the given environment and routes.
   """
@@ -47,12 +82,8 @@ defmodule Phoenix.Router.Helpers do
       @doc """
       Generates the path information including any necessary prefix.
       """
-      def path(%Conn{script_name: []}, path) do
-        path
-      end
-
-      def path(%Conn{script_name: [_|_] = script}, path) do
-        "/" <> Enum.join(script, "/") <> path
+      def path(%Conn{} = conn, path) do
+        Phoenix.Router.Helpers.build_path(unquote(env.module), conn, path)
       end
 
       def path(%Socket{endpoint: endpoint}, path) do

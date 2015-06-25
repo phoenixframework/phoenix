@@ -31,9 +31,12 @@ defmodule RouterHelper do
     |> Plug.Conn.fetch_session()
   end
 
-  def call(router, verb, path, params \\ nil, headers \\ []) do
-    conn = conn(verb, path, params, headers) |> Plug.Conn.fetch_query_params
-    router.call(conn, router.init([]))
+  def call(router, verb, path, params \\ nil, headers \\ [], script_name \\ []) do
+    verb
+    |> conn(path, params, headers)
+    |> Plug.Conn.fetch_query_params
+    |> Map.put(:script_name, script_name)
+    |> router.call(router.init([]))
   end
 
   def action(controller, verb, action, params \\ nil, headers \\ []) do

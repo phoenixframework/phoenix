@@ -143,5 +143,4 @@ defmodule Phoenix.Router.Route do
     conn = %{conn | path_info: new_path, script_name: script ++ base} |> target.call(opts)
     %{conn | path_info: path, script_name: script}
   end
-
 end
