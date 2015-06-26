@@ -99,11 +99,21 @@ defmodule Phoenix.Channel.Transport do
                   channel: channel,
                   transport: transport}
 
+        log_info msg.topic, fn ->
+          "JOIN #{msg.topic} to #{inspect(channel)}\n" <>
+          "  Transport:  #{inspect transport}\n" <>
+          "  Parameters: #{inspect msg.payload}"
+        end
+
         case Phoenix.Channel.Server.join(socket, msg.payload) do
           {:ok, response, pid} ->
+            log_info msg.topic, fn -> "Replied #{msg.topic} :ok" end
+
             reply(socket, msg.ref, %{status: :ok, response: response})
             {:ok, pid}
           {:error, response} ->
+            log_info msg.topic, fn -> "Replied #{msg.topic} :error" end
+
             reply(socket, msg.ref, %{status: :error, response: response})
             {:error, response}
         end
@@ -128,6 +138,8 @@ defmodule Phoenix.Channel.Transport do
     Phoenix.Channel.Server.reply transport_pid, ref, topic, payload
   end
 
+  defp log_info("phoenix" <> _, _func), do: :noop
+  defp log_info(_topic, func), do: Logger.info(func)
 
   defp log_ignore(topic, router) do
     Logger.debug fn -> "Ignoring unmatched topic \"#{topic}\" in #{inspect(router)}" end
