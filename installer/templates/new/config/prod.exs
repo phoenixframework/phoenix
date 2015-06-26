@@ -13,7 +13,7 @@ use Mix.Config
 # which you typically run after static files are built.
 config :<%= application_name %>, <%= application_module %>.Endpoint,
   http: [port: {:system, "PORT"}],
-  url: [host: "example.com"],
+  url: [host: "example.com", port: 80],
   cache_static_manifest: "priv/static/manifest.json"
 
 # ## SSL Support
