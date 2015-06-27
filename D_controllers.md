@@ -117,11 +117,7 @@ Fortunately, our application layout, `web/templates/layout/application.html.eex`
 
 When we reload the [Welcome Page](http://localhost:4000/), our messages should appear just above "Welcome to Phoenix!"
 
-Besides `put_flash/3` and `get_flash/2`, the `Phoenix.Controller` module has two other useful functions worth knowing about.
-
-`persist/2` takes `conn` and `value`. It allows us to save that value as a flash message in the session so that it can persist beyond the current request cycle.
-
-`clear_flash/1` takes only `conn` and removes any flash messages which might be stored in the session.
+Besides `put_flash/3` and `get_flash/2`, the `Phoenix.Controller` module has another useful function worth knowing about. `clear_flash/1` takes only `conn` and removes any flash messages which might be stored in the session.
 
 ### Rendering
 Controllers have several ways of rendering content. The simplest is to render some plain text using the `text/2` function which Phoenix provides.
