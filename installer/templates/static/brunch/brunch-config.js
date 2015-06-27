@@ -11,7 +11,7 @@ exports.config = {
       // }
       //
       // To change the order of concatenation of files, explictly mention here
-      // https://github.com/brunch/brunch/tree/stable/docs#concatenation
+      // https://github.com/brunch/brunch/tree/master/docs#concatenation
       // order: {
       //   before: [
       //     'web/static/vendor/js/jquery-2.1.1.js',
