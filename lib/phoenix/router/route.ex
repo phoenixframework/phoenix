@@ -143,4 +143,24 @@ defmodule Phoenix.Router.Route do
     conn = %{conn | path_info: new_path, script_name: script ++ base} |> target.call(opts)
     %{conn | path_info: path, script_name: script}
   end
+
+  @doc """
+  Validates and returns the list of forward path segments.
+
+  Raises RuntimeError plug is already forwarded or path contains
+  a dynamic segment.
+  """
+  def forward_path_segments(path, plug, phoenix_forwards) do
+    case Plug.Router.Utils.build_path_match(path) do
+      {[], path_segments} ->
+        if phoenix_forwards[plug] do
+          raise "`#{inspect plug}` has already been forwarded to. A module can only be forwarded a single time."
+        end
+        path_segments
+      _ ->
+        raise """
+        Dynamic segment `"#{path}"` not allowed when forwarding. Use a static path instead.
+        """
+    end
+  end
 end

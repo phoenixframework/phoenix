@@ -785,17 +785,8 @@ defmodule Phoenix.Router do
   """
   defmacro forward(path, plug, plug_opts \\ [], router_opts \\ []) do
     quote unquote: true, bind_quoted: [path: path, plug: plug] do
-      case Plug.Router.Utils.build_path_match(path) do
-        {[], path_segments} ->
-          if @phoenix_forwards[plug] do
-            raise "`#{inspect plug}` has already been forwarded to. A module can only be forwarded a single time."
-          end
-          @phoenix_forwards Map.put(@phoenix_forwards, plug, path_segments)
-        _ ->
-          raise """
-          Dynamic segment `"#{path}"` not allowed when forwarding. Use a static path instead.
-          """
-      end
+      path_segments = Route.forward_path_segments(path, plug, @phoenix_forwards)
+      @phoenix_forwards Map.put(@phoenix_forwards, plug, path_segments)
       unquote(add_route(:forward, :*, path, plug, plug_opts, router_opts))
     end
   end
