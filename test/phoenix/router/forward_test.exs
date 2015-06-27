@@ -5,13 +5,13 @@ defmodule Phoenix.Router.ForwardTest do
   defmodule Controller do
     use Phoenix.Controller
 
-    plug :assign_fwd_conn
+    plug :assign_fwd_script
 
     def index(conn, _params), do: text(conn, "admin index")
     def stats(conn, _params), do: text(conn, "stats")
     def api_users(conn, _params), do: text(conn, "api users")
     def api_root(conn, _params), do: text(conn, "api root")
-    defp assign_fwd_conn(conn, _), do: assign(conn, :fwd_conn, conn)
+    defp assign_fwd_script(conn, _), do: assign(conn, :fwd_script, conn.script_name)
   end
 
   defmodule ApiRouter do
@@ -48,18 +48,16 @@ defmodule Phoenix.Router.ForwardTest do
 
   test "forwards path to plug" do
     conn = call(Router, :get, "admin")
-    fwd_conn = conn.assigns[:fwd_conn]
     assert conn.script_name == []
-    assert fwd_conn.script_name == ["admin"]
+    assert conn.assigns[:fwd_script] == ["admin"]
     assert conn.status == 200
     assert conn.resp_body == "admin index"
   end
 
   test "forwards any request starting with forward path" do
     conn = call(Router, :get, "admin/stats")
-    fwd_conn = conn.assigns[:fwd_conn]
     assert conn.script_name == []
-    assert fwd_conn.script_name == ["admin"]
+    assert conn.assigns[:fwd_script] == ["admin"]
     assert conn.status == 200
     assert conn.resp_body == "stats"
   end
@@ -107,23 +105,15 @@ defmodule Phoenix.Router.ForwardTest do
     assert page_path(%Plug.Conn{}, :stats) == "/stats"
 
     conn = call(Router, :get, "stats")
-    fwd_conn = conn.assigns[:fwd_conn]
-    assert page_path(fwd_conn, :stats) == "/admin/stats"
     assert page_path(conn, :stats) == "/admin/stats"
 
     conn = call(Router, :get, "stats", _params = nil, _headers = [], ["phx"])
-    fwd_conn = conn.assigns[:fwd_conn]
-    assert page_path(fwd_conn, :stats) == "/phx/admin/stats"
     assert page_path(conn, :stats) == "/phx/admin/stats"
 
     conn = call(Router, :get, "admin/stats")
-    fwd_conn = conn.assigns[:fwd_conn]
-    assert page_path(fwd_conn, :stats) == "/admin/stats"
     assert page_path(conn, :stats) == "/admin/stats"
 
     conn = call(Router, :get, "admin/stats", _params = nil, _headers = [], ["phx"])
-    fwd_conn = conn.assigns[:fwd_conn]
-    assert page_path(fwd_conn, :stats) == "/phx/admin/stats"
     assert page_path(conn, :stats) == "/phx/admin/stats"
   end
 end
