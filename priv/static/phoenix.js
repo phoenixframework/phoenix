@@ -475,6 +475,16 @@ var Channel = exports.Channel = (function () {
       writable: true,
       configurable: true
     },
+    onMessage: {
+
+      // Overridable message hook
+      //
+      // Receives all events for specialized message handling
+
+      value: function onMessage(event, payload, ref) {},
+      writable: true,
+      configurable: true
+    },
     isMember: {
 
       // private
@@ -506,6 +516,7 @@ var Channel = exports.Channel = (function () {
     },
     trigger: {
       value: function trigger(triggerEvent, payload, ref) {
+        this.onMessage(triggerEvent, payload, ref);
         this.bindings.filter(function (bind) {
           return bind.event === triggerEvent;
         }).map(function (bind) {

@@ -279,6 +279,10 @@ export class Channel {
     })
   }
 
+  // Overridable message hook
+  //
+  // Receives all events for specialized message handling
+  onMessage(event, payload, ref){}
 
   // private
 
@@ -296,6 +300,7 @@ export class Channel {
   }
 
   trigger(triggerEvent, payload, ref){
+    this.onMessage(triggerEvent, payload, ref)
     this.bindings.filter( bind => bind.event === triggerEvent )
                  .map( bind => bind.callback(payload, ref) )
   }
