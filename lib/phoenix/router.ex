@@ -182,7 +182,7 @@ defmodule Phoenix.Router do
     quote do
       unquote(prelude())
       unquote(defs())
-      unquote(match_dispatch(__CALLER__))
+      unquote(match_dispatch())
     end
   end
 
@@ -190,6 +190,7 @@ defmodule Phoenix.Router do
     quote do
       Module.register_attribute __MODULE__, :phoenix_routes, accumulate: true
       Module.register_attribute __MODULE__, :phoenix_channels, accumulate: true
+      @phoenix_forwards %{}
 
       import Phoenix.Router
       import Plug.Conn
@@ -213,7 +214,7 @@ defmodule Phoenix.Router do
         exprs = Route.exprs(route)
         @phoenix_routes {route, exprs}
 
-        defp match(var!(conn), unquote(route.verb), unquote(exprs.path),
+        defp match(var!(conn), unquote(exprs.verb_match), unquote(exprs.path),
                    unquote(exprs.host)) do
           unquote(exprs.dispatch)
         end
@@ -254,19 +255,7 @@ defmodule Phoenix.Router do
     end
   end
 
-  defp match_dispatch(env) do
-    plugs = [{:dispatch, [], true}, {:match, [], true}]
-    {conn, pipeline} = Plug.Builder.compile(env, plugs, [])
-
-    call =
-      quote do
-        unquote(conn) =
-          update_in unquote(conn).private,
-            &(&1 |> Map.put(:phoenix_router, __MODULE__)
-                 |> Map.put(:phoenix_pipelines, []))
-        unquote(pipeline)
-      end
-
+  defp match_dispatch() do
     quote location: :keep do
       @behaviour Plug
 
@@ -281,9 +270,7 @@ defmodule Phoenix.Router do
       @doc """
       Callback invoked by Plug on every request.
       """
-      def call(unquote(conn), opts) do
-        unquote(call)
-      end
+      def call(conn, opts), do: do_call(conn, opts)
 
       defp match(conn, []) do
         match(conn, conn.method, Enum.map(conn.path_info, &URI.decode/1), conn.host)
@@ -310,7 +297,24 @@ defmodule Phoenix.Router do
     Helpers.define(env, routes)
     escaped = Enum.map(routes, fn {route, _} -> Macro.escape(route) end)
 
+    plugs = [{:dispatch, [], true}, {:match, [], true}]
+    {conn, pipeline} = Plug.Builder.compile(env, plugs, [])
+
+    call =
+      quote do
+        unquote(conn) =
+          update_in unquote(conn).private,
+            &(&1 |> Map.put(:phoenix_pipelines, [])
+                 |> Map.put(:phoenix_router, __MODULE__)
+                 |> Map.put(__MODULE__, {unquote(conn).script_name, @phoenix_forwards}))
+        unquote(pipeline)
+      end
+
     quote do
+      defp do_call(unquote(conn), opts) do
+        unquote(call)
+      end
+
       @doc false
       def __routes__,  do: unquote(escaped)
 
@@ -326,20 +330,19 @@ defmodule Phoenix.Router do
   end
 
   for verb <- @http_methods do
-    method = verb |> to_string |> String.upcase
     @doc """
     Generates a route to handle a #{verb} request to the given path.
     """
-    defmacro unquote(verb)(path, controller, action, options \\ []) do
-      add_route(unquote(method), path, controller, action, options)
+    defmacro unquote(verb)(path, plug, plug_opts, options \\ []) do
+      add_route(:match, unquote(verb), path, plug, plug_opts, options)
     end
   end
 
-  defp add_route(verb, path, controller, action, options) do
+  defp add_route(kind, verb, path, plug, plug_opts, options) do
     quote do
       var!(add_route, Phoenix.Router).(
-        Scope.route(__MODULE__, unquote(verb), unquote(path), unquote(controller),
-                                unquote(action), unquote(options))
+        Scope.route(__MODULE__, unquote(kind), unquote(verb), unquote(path),
+                                unquote(plug), unquote(plug_opts), unquote(options))
       )
     end
   end
@@ -760,4 +763,34 @@ defmodule Phoenix.Router do
                          Dict.merge([via: @phoenix_transports], opts)}
     end
   end
+
+
+  @doc """
+  Forwards a request at the given path to a Plug, invoking the pipeline.
+
+  Forwarded routes allow another Plug, such as a Router, Endpoint, or module,
+  to be mounted at a path prefix where any matching requests will be
+  forwarded. The router pipelines will be invoked prior to forwarding the
+  connection.
+
+  ## Examples
+
+    scope "/", MyApp do
+      pipe_through [:browser, :admin]
+
+      forward "/admin", SomeLib.AdminDashboard
+      forward "/api", ApiRouter
+    end
+
+  """
+  defmacro forward(path, plug, plug_opts \\ [], router_opts \\ []) do
+    router_opts = Keyword.put(router_opts, :as, nil)
+
+    quote unquote: true, bind_quoted: [path: path, plug: plug] do
+      path_segments = Route.forward_path_segments(path, plug, @phoenix_forwards)
+      @phoenix_forwards Map.put(@phoenix_forwards, plug, path_segments)
+      unquote(add_route(:forward, :*, path, plug, plug_opts, router_opts))
+    end
+  end
+
 end

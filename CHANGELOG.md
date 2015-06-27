@@ -6,9 +6,14 @@
   * [Phoenix.HTML] Update to phoenix_html 1.1.0 which raises on missing assigns
   * [Controller] Add `jsonp/2` for handling JSONP responses
   * [Channel] Enhance logging with join information
+  * [Router] Add `forward` macro to forward a requests to a Plug, invoking the pipeline
 
 * Javascript client enhancements
   * Add socket params to apply default, overridable params to all channel params.
+  * Enchance logging
+
+* Javascript client backwords incompatible changes
+  * `logger` option to `Phoenix.Socket`, now uses three arguments, ie: `logger: (kind, msg, data) => { console.log(`${kind}: ${msg}`, data) }`
 
 * Backward incompatible changes
   * [Controller] `plug :action` is now called automatically

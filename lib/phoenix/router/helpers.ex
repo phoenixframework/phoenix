@@ -9,6 +9,47 @@ defmodule Phoenix.Router.Helpers do
   @transports [Phoenix.Transports.WebSocket, Phoenix.Transports.LongPoller]
 
   @doc """
+  Callback invoked by path generated in each helper module.
+
+  Takes into consideration router forwardings so nested helpers
+  take the proper script_name into account.
+  """
+  def path(router, %Conn{} = conn, path) do
+    conn
+    |> build_own_forward_path(router, path)
+    |> Kernel.||(build_conn_forward_path(conn, router, path))
+    |> Kernel.||(path_with_script(path, conn.script_name))
+  end
+
+  defp build_own_forward_path(conn, router, path) do
+    case Map.fetch(conn.private, router) do
+      {:ok, {local_script, _}} ->
+        path_with_script(path, local_script)
+      :error -> nil
+    end
+  end
+
+  defp build_conn_forward_path(%Conn{private: %{phoenix_router: phx_router}} = conn, router, path) do
+    case Map.fetch(conn.private, phx_router) do
+      {:ok, {script_name, forwards}} ->
+        case Map.fetch(forwards, router) do
+          {:ok, local_script} ->
+            path_with_script(path, script_name ++ local_script)
+          :error -> nil
+        end
+      :error -> nil
+    end
+  end
+  defp build_conn_forward_path(_conn, _router, _path), do: nil
+
+  defp path_with_script(path, []) do
+    path
+  end
+  defp path_with_script(path, script) do
+    "/" <> Enum.join(script, "/") <> path
+  end
+
+  @doc """
   Generates the helper module for the given environment and routes.
   """
   def define(env, routes) do
@@ -47,12 +88,8 @@ defmodule Phoenix.Router.Helpers do
       @doc """
       Generates the path information including any necessary prefix.
       """
-      def path(%Conn{script_name: []}, path) do
-        path
-      end
-
-      def path(%Conn{script_name: [_|_] = script}, path) do
-        "/" <> Enum.join(script, "/") <> path
+      def path(%Conn{} = conn, path) do
+        Phoenix.Router.Helpers.path(unquote(env.module), conn, path)
       end
 
       def path(%Socket{endpoint: endpoint}, path) do
@@ -128,33 +165,33 @@ defmodule Phoenix.Router.Helpers do
   @doc """
   Receives a route and returns the quoted definition for its helper function.
 
-  In case a helper name was not given, returns nil.
+  In case a helper name was not given, or route is forwarded, returns nil.
   """
   def defhelper(%Route{helper: nil}, _exprs), do: nil
-
+  def defhelper(%Route{kind: :forward}, _exprs), do: nil
   def defhelper(%Route{} = route, exprs) do
     helper = route.helper
-    action = route.action
+    opts = route.opts
 
     {bins, vars} = :lists.unzip(exprs.binding)
     segs = expand_segments(exprs.path)
 
     # We are using -1 to avoid warnings in case a path has already been defined.
     quote line: -1 do
-      def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(action), unquote_splicing(vars)) do
-        unquote(:"#{helper}_path")(conn_or_endpoint, unquote(action), unquote_splicing(vars), [])
+      def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars)) do
+        unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), [])
       end
 
-      def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(action), unquote_splicing(vars), params) do
+      def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), params) do
         path(conn_or_endpoint, segments(unquote(segs), params, unquote(bins)))
       end
 
-      def unquote(:"#{helper}_url")(conn_or_endpoint, unquote(action), unquote_splicing(vars)) do
-        unquote(:"#{helper}_url")(conn_or_endpoint, unquote(action), unquote_splicing(vars), [])
+      def unquote(:"#{helper}_url")(conn_or_endpoint, unquote(opts), unquote_splicing(vars)) do
+        unquote(:"#{helper}_url")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), [])
       end
 
-      def unquote(:"#{helper}_url")(conn_or_endpoint, unquote(action), unquote_splicing(vars), params) do
-        url(conn_or_endpoint) <> unquote(:"#{helper}_path")(conn_or_endpoint, unquote(action), unquote_splicing(vars), params)
+      def unquote(:"#{helper}_url")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), params) do
+        url(conn_or_endpoint) <> unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), params)
       end
     end
   end

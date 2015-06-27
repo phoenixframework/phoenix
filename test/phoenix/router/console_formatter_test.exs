@@ -15,14 +15,14 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
 
   test "format multiple routes" do
     assert draw(RouterTestSingleRoutes) == """
-      web_socket_path  GET      /ws       Phoenix.Transports.WebSocket.upgrade/2
-      web_socket_path  POST     /ws       Phoenix.Transports.WebSocket.upgrade/2
-     long_poller_path  OPTIONS  /ws/poll  Phoenix.Transports.LongPoller.options/2
-     long_poller_path  GET      /ws/poll  Phoenix.Transports.LongPoller.poll/2
-     long_poller_path  POST     /ws/poll  Phoenix.Transports.LongPoller.publish/2
-            page_path  GET      /         Phoenix.PageController.index/2
-    upload_image_path  POST     /images   Phoenix.ImageController.upload/2
-    remove_image_path  DELETE   /images   Phoenix.ImageController.delete/2
+      web_socket_path  GET      /ws       Phoenix.Transports.WebSocket :upgrade
+      web_socket_path  POST     /ws       Phoenix.Transports.WebSocket :upgrade
+     long_poller_path  OPTIONS  /ws/poll  Phoenix.Transports.LongPoller :options
+     long_poller_path  GET      /ws/poll  Phoenix.Transports.LongPoller :poll
+     long_poller_path  POST     /ws/poll  Phoenix.Transports.LongPoller :publish
+            page_path  GET      /         Phoenix.PageController :index
+    upload_image_path  POST     /images   Phoenix.ImageController :upload
+    remove_image_path  DELETE   /images   Phoenix.ImageController :delete
     """
   end
 
@@ -33,31 +33,35 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
 
   test "format resource routes" do
     assert draw(RouterTestResources) == """
-    image_path  GET     /images           Phoenix.ImageController.index/2
-    image_path  GET     /images/:id/edit  Phoenix.ImageController.edit/2
-    image_path  GET     /images/new       Phoenix.ImageController.new/2
-    image_path  GET     /images/:id       Phoenix.ImageController.show/2
-    image_path  POST    /images           Phoenix.ImageController.create/2
-    image_path  PATCH   /images/:id       Phoenix.ImageController.update/2
-                PUT     /images/:id       Phoenix.ImageController.update/2
-    image_path  DELETE  /images/:id       Phoenix.ImageController.delete/2
+    image_path  GET     /images           Phoenix.ImageController :index
+    image_path  GET     /images/:id/edit  Phoenix.ImageController :edit
+    image_path  GET     /images/new       Phoenix.ImageController :new
+    image_path  GET     /images/:id       Phoenix.ImageController :show
+    image_path  POST    /images           Phoenix.ImageController :create
+    image_path  PATCH   /images/:id       Phoenix.ImageController :update
+                PUT     /images/:id       Phoenix.ImageController :update
+    image_path  DELETE  /images/:id       Phoenix.ImageController :delete
     """
   end
 
   defmodule RouterTestResource do
     use Phoenix.Router
     resources "/image", Phoenix.ImageController, singleton: true
+    forward "/admin", Phoenix.Admin.Router, [], as: :admin
+    forward "/f1", Phoenix.F1
   end
 
   test "format single resource routes" do
     assert draw(RouterTestResource) == """
-    image_path  GET     /image/edit  Phoenix.ImageController.edit/2
-    image_path  GET     /image/new   Phoenix.ImageController.new/2
-    image_path  GET     /image       Phoenix.ImageController.show/2
-    image_path  POST    /image       Phoenix.ImageController.create/2
-    image_path  PATCH   /image       Phoenix.ImageController.update/2
-                PUT     /image       Phoenix.ImageController.update/2
-    image_path  DELETE  /image       Phoenix.ImageController.delete/2
+    image_path  GET     /image/edit  Phoenix.ImageController :edit
+    image_path  GET     /image/new   Phoenix.ImageController :new
+    image_path  GET     /image       Phoenix.ImageController :show
+    image_path  POST    /image       Phoenix.ImageController :create
+    image_path  PATCH   /image       Phoenix.ImageController :update
+                PUT     /image       Phoenix.ImageController :update
+    image_path  DELETE  /image       Phoenix.ImageController :delete
+                *       /admin       Phoenix.Admin.Router []
+                *       /f1          Phoenix.F1 []
     """
   end
 
