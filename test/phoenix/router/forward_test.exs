@@ -81,11 +81,6 @@ defmodule Phoenix.Router.ForwardTest do
     assert conn.resp_body == "stats"
   end
 
-  test "phoenix_main_router is set for the first router" do
-    # conn = call(Router, :get, "internal/api/v1/users")
-    # assert conn.private.phoenix_main_router == Router
-  end
-
   test "forward with dynamic segments raises" do
     router = quote do
       defmodule BadRouter do

@@ -3,6 +3,10 @@ defmodule Phoenix.Router.RouteTest do
 
   import Phoenix.Router.Route
 
+  defmodule AdminRouter do
+    def call(conn, _), do: Plug.Conn.assign(conn, :fwd_conn, conn)
+  end
+
   test "builds a route based on verb, path, plug, plug options and helper" do
     route = build(:match, :get, "/foo/:bar", nil, Hello, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"})
     assert route.kind == :match
@@ -37,5 +41,15 @@ defmodule Phoenix.Router.RouteTest do
     assert route.verb == :*
     assert route.kind == :forward
     assert exprs(route).verb_match == {:_verb, [], nil}
+  end
+
+  test "forward sets path_info and script_name for target, then resumes" do
+    conn = %Plug.Conn{path_info: ["admin", "stats"], script_name: ["phoenix"]}
+    conn = forward(conn, ["admin"], AdminRouter, [])
+    fwd_conn = conn.assigns[:fwd_conn]
+    assert fwd_conn.path_info == ["stats"]
+    assert fwd_conn.script_name == ["phoenix", "admin"]
+    assert conn.path_info == ["admin", "stats"]
+    assert conn.script_name == ["phoenix"]
   end
 end
