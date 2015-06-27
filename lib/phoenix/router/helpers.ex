@@ -8,8 +8,13 @@ defmodule Phoenix.Router.Helpers do
 
   @transports [Phoenix.Transports.WebSocket, Phoenix.Transports.LongPoller]
 
-  @doc false
-  def build_path(router, %Conn{} = conn, path) do
+  @doc """
+  Callback invoked by path generated in each helper module.
+
+  Takes into consideration router forwardings so nested helpers
+  take the proper script_name into account.
+  """
+  def path(router, %Conn{} = conn, path) do
     conn
     |> build_own_forward_path(router, path)
     |> Kernel.||(build_conn_forward_path(conn, router, path))
@@ -84,7 +89,7 @@ defmodule Phoenix.Router.Helpers do
       Generates the path information including any necessary prefix.
       """
       def path(%Conn{} = conn, path) do
-        Phoenix.Router.Helpers.build_path(unquote(env.module), conn, path)
+        Phoenix.Router.Helpers.path(unquote(env.module), conn, path)
       end
 
       def path(%Socket{endpoint: endpoint}, path) do
