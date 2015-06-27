@@ -822,7 +822,7 @@ Notice that our socket definition expands out to four paths with two separate tr
 
 ```elixir
 socket "/ws", HelloPhoenix do
-  channel "rooms:*", RoomChannel, via: [WebSocket]
+  channel "rooms:*", RoomChannel, via: [Phoenix.Transports.WebSocket]
 end
 ```
 
@@ -832,7 +832,7 @@ Each socket can handle requests for multiple channels.
 
 ```elixir
 socket "/ws", HelloPhoenix do
-  channel "rooms:*", RoomChannel, via: [WebSocket]
+  channel "rooms:*", RoomChannel, via: [Phoenix.Transports.WebSocket]
   channel "foods:*", FoodChannel
 end
 ```
@@ -841,7 +841,7 @@ We can also define multiple sockets for our application.
 
 ```elixir
 socket "/ws", HelloPhoenix do
-  channel "rooms:*", RoomChannel, via: [WebSocket]
+  channel "rooms:*", RoomChannel, via: [Phoenix.Transports.WebSocket]
   channel "foods:*", FoodChannel
 end
 
@@ -870,7 +870,7 @@ Each socket gets four paths, two for WebSockets, two for LongPolling.
 Let's say we wanted all of the channels for a given socket to be handled by a single transport. We can accomplish that with the `via` option on the socket declaration itself, like this.
 
 ```elixir
-socket "/another_ws", HelloPhoenix, via: [WebSocket] do
+socket "/another_ws", HelloPhoenix, via: [Phoenix.Transports.WebSocket] do
   channel "news:*", NewsChannel
   channel "pets:*", PetChannel
 end
@@ -879,7 +879,7 @@ end
 What if we want all the channels to be handled by WebSockets, except for one? That's easy as well. Just use the `via` option on the exceptional channel.
 
 ```elixir
-socket "/another_ws", HelloPhoenix, via: [WebSocket] do
+socket "/another_ws", HelloPhoenix, via: [Phoenix.Transports.WebSocket] do
   channel "news:*", NewsChannel
   channel "pets:*", PetChannel
   channel "conversations:*", ConversationChannel, via: [LongPoller]
