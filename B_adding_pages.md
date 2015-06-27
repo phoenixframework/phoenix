@@ -35,7 +35,7 @@ Most of our work in this guide will be in the `web` directory, which looks like 
 
 All of the files which are currently in the controllers, templates and views directories are there to create the "Welcome to Phoenix!" page we saw in the last guide. We will see how we can re-use some of that code shortly.
 
-All of our application's static assets live in `priv/static` in the directory appropriate for each type of file - css, images or js. We place assets that require a build phase into `web/static`, and the source files are built into their respective `app.js/app.css` bundles within `priv/static`. We won't be making any changes here for now, but it is good to know where to look for future reference.
+All of our application's static assets live in `priv/static` in the directory appropriate for each type of file - css, images or js. We place assets that require a build phase into `web/static`, and the source files are built into their respective `app.js` / `app.css` bundles within `priv/static`. We won't be making any changes here for now, but it is good to know where to look for future reference.
 
 ```text
 priv
