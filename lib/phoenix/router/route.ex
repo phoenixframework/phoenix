@@ -65,10 +65,9 @@ defmodule Phoenix.Router.Route do
       :match   -> Plug.Router.Utils.build_path_match(path)
     end
 
-    binding =
-      params
-      |> Enum.reject(&(&1 == :_forward_path_info))
-      |> Enum.map(fn var -> {Atom.to_string(var), Macro.var(var, nil)} end)
+    binding = for var <- params, var != :_forward_path_info do
+      {Atom.to_string(var), Macro.var(var, nil)}
+    end
 
     {segments, binding}
   end
@@ -154,13 +153,11 @@ defmodule Phoenix.Router.Route do
     case Plug.Router.Utils.build_path_match(path) do
       {[], path_segments} ->
         if phoenix_forwards[plug] do
-          raise "`#{inspect plug}` has already been forwarded to. A module can only be forwarded a single time."
+          raise ArgumentError, "`#{inspect plug}` has already been forwarded to. A module can only be forwarded a single time."
         end
         path_segments
       _ ->
-        raise """
-        Dynamic segment `"#{path}"` not allowed when forwarding. Use a static path instead.
-        """
+        raise ArgumentError, "Dynamic segment `\"#{path}\"` not allowed when forwarding. Use a static path instead."
     end
   end
 end

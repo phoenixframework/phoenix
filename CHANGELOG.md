@@ -5,6 +5,8 @@
 * Enhancements
   * [Phoenix.HTML] Update to phoenix_html 1.1.0 which raises on missing assigns
   * [Controller] Add `jsonp/2` for handling JSONP responses
+  * [Router] Add `forward` macro to forward a requests to a Plug, invoking the pipeline
+
 
 * Javascript client enhancements
   * Add socket params to apply default, overridable params to all channel params.
