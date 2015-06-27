@@ -109,15 +109,14 @@ defmodule Phoenix.Router.Route do
   end
 
   defp build_pipes(%Route{kind: :forward} = route) do
-    {_params, path_segments} = Plug.Router.Utils.build_path_match(route.path)
+    {_params, fwd_segments} = Plug.Router.Utils.build_path_match(route.path)
 
     quote do
       var!(conn)
       |> Plug.Conn.put_private(:phoenix_pipelines, unquote(route.pipe_through))
       |> Plug.Conn.put_private(:phoenix_route, fn conn ->
         opts = unquote(route.plug).init(unquote(route.opts))
-        mount = conn.path_info -- unquote(path_segments)
-        Phoenix.Router.Route.forward(conn, mount, unquote(route.plug), opts)
+        Phoenix.Router.Route.forward(conn, unquote(fwd_segments), unquote(route.plug), opts)
       end)
     end |> pipe_through(route)
   end
@@ -138,7 +137,8 @@ defmodule Phoenix.Router.Route do
   @doc """
   Forwards requests to another Plug at a new path.
   """
-  def forward(%Plug.Conn{path_info: path, script_name: script} = conn, new_path, target, opts) do
+  def forward(%Plug.Conn{path_info: path, script_name: script} = conn, fwd_segments, target, opts) do
+    new_path = path -- fwd_segments
     {base, ^new_path} = Enum.split(path, length(path) - length(new_path))
     conn = %{conn | path_info: new_path, script_name: script ++ base} |> target.call(opts)
     %{conn | path_info: path, script_name: script}

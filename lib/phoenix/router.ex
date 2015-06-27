@@ -784,6 +784,8 @@ defmodule Phoenix.Router do
 
   """
   defmacro forward(path, plug, plug_opts \\ [], router_opts \\ []) do
+    router_opts = Keyword.put(router_opts, :as, nil)
+
     quote unquote: true, bind_quoted: [path: path, plug: plug] do
       path_segments = Route.forward_path_segments(path, plug, @phoenix_forwards)
       @phoenix_forwards Map.put(@phoenix_forwards, plug, path_segments)

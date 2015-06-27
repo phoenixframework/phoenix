@@ -60,8 +60,8 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
     image_path  PATCH   /image       Phoenix.ImageController :update
                 PUT     /image       Phoenix.ImageController :update
     image_path  DELETE  /image       Phoenix.ImageController :delete
-    admin_path  *       /admin       Phoenix.Admin.Router []
-       f1_path  *       /f1          Phoenix.F1 []
+                *       /admin       Phoenix.Admin.Router []
+                *       /f1          Phoenix.F1 []
     """
   end
 

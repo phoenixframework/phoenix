@@ -24,17 +24,18 @@ defmodule Phoenix.Router.Helpers do
     end
   end
 
-  defp build_conn_forward_path(conn, router, path) do
-    case Map.fetch(conn.private, conn.private[:phoenix_router]) do
-      {:ok, {_script_name, forwards}} ->
+  defp build_conn_forward_path(%Conn{private: %{phoenix_router: phx_router}} = conn, router, path) do
+    case Map.fetch(conn.private, phx_router) do
+      {:ok, {script_name, forwards}} ->
         case Map.fetch(forwards, router) do
           {:ok, local_script} ->
-            path_with_script(path, conn.script_name ++ local_script)
+            path_with_script(path, script_name ++ local_script)
           :error -> nil
         end
       :error -> nil
     end
   end
+  defp build_conn_forward_path(_conn, _router, _path), do: nil
 
   defp path_with_script(path, []) do
     path
