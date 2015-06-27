@@ -355,10 +355,12 @@ var Channel = exports.Channel = (function () {
       _this.rejoinTimer.reset();
     });
     this.onClose(function () {
+      _this.socket.log("channel", "close " + _this.topic);
       _this.state = CHAN_STATES.closed;
       _this.socket.remove(_this);
     });
     this.onError(function (reason) {
+      _this.socket.log("channel", "error " + _this.topic, reason);
       _this.state = CHAN_STATES.errored;
       _this.rejoinTimer.setTimeout();
     });
@@ -466,6 +468,7 @@ var Channel = exports.Channel = (function () {
         var _this = this;
 
         return this.push(CHAN_EVENTS.leave).receive("ok", function () {
+          _this.log("channel", "leave " + _this.topic);
           _this.trigger(CHAN_EVENTS.close, "leave");
         });
       },
@@ -544,7 +547,8 @@ var Socket = exports.Socket = (function () {
   //     }
   //
   //   logger - The optional function for specialized logging, ie:
-  //            `logger: function(msg){ console.log(msg) }`
+  //     `logger: (kind, msg, data) => { console.log(`${kind}: ${msg}`, data) }
+  //
   //   longpollerTimeout - The maximum timeout of a long poll AJAX request.
   //                        Defaults to 20s (double the server long poll timer).
   //
@@ -642,8 +646,8 @@ var Socket = exports.Socket = (function () {
 
       // Logs the message. Override `this.logger` for specialized logging. noops by default
 
-      value: function log(msg) {
-        this.logger(msg);
+      value: function log(kind, msg, data) {
+        this.logger(kind, msg, data);
       },
       writable: true,
       configurable: true
@@ -688,6 +692,7 @@ var Socket = exports.Socket = (function () {
       value: function onConnOpen() {
         var _this = this;
 
+        this.log("transport", "connected to " + this.endPoint, this.transport);
         this.flushSendBuffer();
         this.reconnectTimer.reset();
         if (!this.conn.skipHeartbeat) {
@@ -705,8 +710,7 @@ var Socket = exports.Socket = (function () {
     },
     onConnClose: {
       value: function onConnClose(event) {
-        this.log("WS close:");
-        this.log(event);
+        this.log("transport", "close", event);
         this.triggerChanError();
         clearInterval(this.heartbeatTimer);
         this.reconnectTimer.setTimeout();
@@ -719,8 +723,7 @@ var Socket = exports.Socket = (function () {
     },
     onConnError: {
       value: function onConnError(error) {
-        this.log("WS error:");
-        this.log(error);
+        this.log("transport", error);
         this.triggerChanError();
         this.stateChangeCallbacks.error.forEach(function (callback) {
           return callback(error);
@@ -793,9 +796,15 @@ var Socket = exports.Socket = (function () {
       value: function push(data) {
         var _this = this;
 
+        var topic = data.topic;
+        var event = data.event;
+        var payload = data.payload;
+        var ref = data.ref;
+
         var callback = function () {
           return _this.conn.send(JSON.stringify(data));
         };
+        this.log("push", "" + topic + " " + event + " (" + ref + ")", payload);
         if (this.isConnected()) {
           callback();
         } else {
@@ -843,14 +852,13 @@ var Socket = exports.Socket = (function () {
     },
     onConnMessage: {
       value: function onConnMessage(rawMessage) {
-        this.log("message received:");
-        this.log(rawMessage);
         var msg = JSON.parse(rawMessage.data);
         var topic = msg.topic;
         var event = msg.event;
         var payload = msg.payload;
         var ref = msg.ref;
 
+        this.log("receive", "" + (payload.status || "") + " " + topic + " " + event + " " + (ref && "(" + ref + ")" || ""), payload);
         this.channels.filter(function (chan) {
           return chan.isMember(topic);
         }).forEach(function (chan) {

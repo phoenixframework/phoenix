@@ -203,10 +203,12 @@ export class Channel {
       this.rejoinTimer.reset()
     })
     this.onClose( () => {
+      this.socket.log("channel", `close ${this.topic}`)
       this.state = CHAN_STATES.closed
       this.socket.remove(this)
     })
     this.onError( reason => {
+      this.socket.log("channel", `error ${this.topic}`, reason)
       this.state = CHAN_STATES.errored
       this.rejoinTimer.setTimeout()
     })
@@ -272,6 +274,7 @@ export class Channel {
   //
   leave(){
     return this.push(CHAN_EVENTS.leave).receive("ok", () => {
+      this.log("channel", `leave ${this.topic}`)
       this.trigger(CHAN_EVENTS.close, "leave")
     })
   }
@@ -320,7 +323,8 @@ export class Socket {
   //     }
   //
   //   logger - The optional function for specialized logging, ie:
-  //            `logger: function(msg){ console.log(msg) }`
+  //     `logger: (kind, msg, data) => { console.log(`${kind}: ${msg}`, data) }
+  //
   //   longpollerTimeout - The maximum timeout of a long poll AJAX request.
   //                        Defaults to 20s (double the server long poll timer).
   //
@@ -373,7 +377,7 @@ export class Socket {
   }
 
   // Logs the message. Override `this.logger` for specialized logging. noops by default
-  log(msg){ this.logger(msg) }
+  log(kind, msg, data){ this.logger(kind, msg, data) }
 
   // Registers callbacks for connection state change events
   //
@@ -387,6 +391,7 @@ export class Socket {
   onMessage  (callback){ this.stateChangeCallbacks.message.push(callback) }
 
   onConnOpen(){
+    this.log("transport", `connected to ${this.endPoint}`, this.transport)
     this.flushSendBuffer()
     this.reconnectTimer.reset()
     if(!this.conn.skipHeartbeat){
@@ -397,8 +402,7 @@ export class Socket {
   }
 
   onConnClose(event){
-    this.log("WS close:")
-    this.log(event)
+    this.log("transport", "close", event)
     this.triggerChanError()
     clearInterval(this.heartbeatTimer)
     this.reconnectTimer.setTimeout()
@@ -406,8 +410,7 @@ export class Socket {
   }
 
   onConnError(error){
-    this.log("WS error:")
-    this.log(error)
+    this.log("transport", error)
     this.triggerChanError()
     this.stateChangeCallbacks.error.forEach( callback => callback(error) )
   }
@@ -442,7 +445,9 @@ export class Socket {
   }
 
   push(data){
+    let {topic, event, payload, ref} = data
     let callback = () => this.conn.send(JSON.stringify(data))
+    this.log("push", `${topic} ${event} (${ref})`, payload)
     if(this.isConnected()){
       callback()
     }
@@ -471,10 +476,9 @@ export class Socket {
   }
 
   onConnMessage(rawMessage){
-    this.log("message received:")
-    this.log(rawMessage)
     let msg = JSON.parse(rawMessage.data)
     let {topic, event, payload, ref} = msg
+    this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
     this.channels.filter( chan => chan.isMember(topic) )
                  .forEach( chan => chan.trigger(event, payload, ref) )
     this.stateChangeCallbacks.message.forEach( callback => callback(msg) )
