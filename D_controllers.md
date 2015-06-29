@@ -8,8 +8,6 @@ A newly generated Phoenix app will have a single controller, the `PageController
 defmodule HelloPhoenix.PageController do
   use HelloPhoenix.Web, :controller
 
-  plug :action
-
   def index(conn, _params) do
     render conn, "index.html"
   end
@@ -18,9 +16,7 @@ end
 
 The first line below the module definition invokes the `__using__/1` macro of the `HelloPhoenix.Web` module, which imports some useful modules.
 
-Let's take a look at the second line `plug :action`. `plug/1` is a macro defined in the `Phoenix.Controller.Pipeline` module. Its purpose is to insert a new piece of middleware into the stack of middlewares which will be executed, in order, during a request cycle. Here, it is inserting `:action` which handles dispatching to the correct controller module and action according to the routes defined in the router.
-
-In addition, the `PageController` gives us the `index` action to display the Phoenix welcome page associated with the default route Phoenix defines in the router.
+The `PageController` gives us the `index` action to display the Phoenix welcome page associated with the default route Phoenix defines in the router.
 
 ### Actions
 Controller actions are just functions. We can name them anything we like as long as they follow Elixir's naming rules. The only requirement we must fulfill is that the action name matches a route defined in the router.
@@ -78,6 +74,7 @@ end
 In some cases - often in `index` actions, for instance - we don't care about parameters because our behavior doesn't depend on them. In those cases, we don't use the incoming params, and simply prepend the variable name with an underscore, `_params`. This will keep the compiler from complaining about the unused variable while still keeping the correct arity.
 
 ### Gathering Data
+
 While Phoenix does not ship with its own data access layer, the Elixir project [Ecto](http://hexdocs.pm/ecto) provides a very nice solution for those using the [Postgres](http://www.postgresql.org/) relational database. (There are plans to offer other adapters for Ecto in the future.) We cover how to use Ecto in a Phoenix project in the [Ecto Models Guide](http://www.phoenixframework.org/docs/ecto-models).
 
 Of course, there are many other data access options. [Ets](http://www.erlang.org/doc/man/ets.html) and [Dets](http://www.erlang.org/doc/man/ets.html) are key value data stores built into [OTP](http://www.erlang.org/doc/). OTP also provides a relational database called [mnesia](http://www.erlang.org/doc/man/mnesia.html) with its own query language called QLC. Both Elixir and Erlang also have a number of libraries for working with a wide range of popular data stores.
@@ -99,7 +96,7 @@ defmodule HelloPhoenix.PageController do
     conn
     |> put_flash(:info, "Welcome to Phoenix, from flash info!")
     |> put_flash(:error, "Let's pretend we have an error.")
-    |> render "index.html"
+    |> render("index.html")
   end
 end
 ```
@@ -120,6 +117,7 @@ When we reload the [Welcome Page](http://localhost:4000/), our messages should a
 Besides `put_flash/3` and `get_flash/2`, the `Phoenix.Controller` module has another useful function worth knowing about. `clear_flash/1` takes only `conn` and removes any flash messages which might be stored in the session.
 
 ### Rendering
+
 Controllers have several ways of rendering content. The simplest is to render some plain text using the `text/2` function which Phoenix provides.
 
 Let's say we have a `show` action which receives an id from the params map, and all we want to do is return some text with the id. For that, we could do the following.
@@ -142,7 +140,7 @@ If we again visit `our_path/15` in the browser, we should see a block of JSON wi
 
 ```elixir
 {
-  id: 15
+  id: "15"
 }
 ```
 Phoenix controllers can also render HTML without a template. As you may have already guessed, the `html/2` function does just that. This time, we implement the `show` action like this.
@@ -178,9 +176,6 @@ We have already seen the render function in the [Adding Pages Guide](http://www.
 defmodule HelloPhoenix.HelloController do
   use HelloPhoenix.Web, :controller
 
-  plug :action
-  . . .
-
   def show(conn, %{"messenger" => messenger}) do
     render conn, "show.html", messenger: messenger
   end
@@ -191,38 +186,13 @@ In order for the `render/3` function to work correctly, the controller must have
 
 `render/3` will also pass the value which the `show` action received for `messenger` from the params hash into the template for interpolation.
 
-There is also a rendering shortcut using the `plug/1` macro. Here's how it works.
-
-The first thing we need to do is to add a `plug :render` line to our controller at `web/controllers/page_controller.ex`.
-
-```elixir
-defmodule HelloPhoenix.PageController do
-  use HelloPhoenix.Web, :controller
-
-  plug :action
-  plug :render
-. . .
-```
-
-After that we can omit the render call in our actions as long as we return `conn` either directly or as the return value of a function.
-
-In a new Phoenix app, try plugging `:render` as above and then replacing the `index` action with this.
+If we need to pass values into the template when using `render`, that's easy. We can pass a dictionary like we've seen with `messenger: messenger`, or we can use `Plug.Conn.assign/3`, which conveniently returns `conn`.
 
 ```elixir
 def index(conn, _params) do
   conn
-end
-```
-
-Reloading [http://localhost:4000/](http://localhost:4000/), we should see the "Welcome to Phoenix!" page exactly as we did when we explicitly rendered the index template.
-
-Just as `plug :action` inserts a plug for dispatching to the correct module/function in a controller's plug stack, `plug :render` inserts a rendering plug in the stack for us. In essence, we've just moved rendering to a different layer.
-
-If we need to pass values into the template when using `plug :render`, that's easy. We can use `Plug.Conn.assign/3`, which conveniently returns `conn`.
-
-```elixir
-def index(conn, _params) do
-  assign(conn, :message, "Welcome Back!")
+  |> assign(:message, "Welcome Back!")
+  |> render("index.html")
 end
 ```
 Note: The `Phoenix.Controller` module imports `Plug.Conn`, so shortening the call to `assign/3` works just fine.
@@ -236,26 +206,38 @@ def index(conn, _params) do
   conn
   |> assign(:message, "Welcome Back!")
   |> assign(:name, "Dweezil")
+  |> render("index.html")
 end
 ```
 With this, both `@message` and `@name` will be available in the `index.html.eex` template.
 
-What if we want to plug render, but only some of our actions should actually call `render/2`? For example, some actions might need to do a redirect, or return JSON.
+What if we want to have a default welcome message that some actions can override? That's easy, we just use `plug` and transform `conn` on its way towards the controller action.
 
-By default, the render plug takes over all rendering for all actions in a controller. Once we plug render, if we try to use any rendering-style function in any action - `text/2`, `json/2`, `html/2`, `render/2` or even `redirect/2`- we will get errors if that action is dispatched to. Even if the application appears to do the right thing, the server will be throwing errors.
+```elixir
+plug :assign_welcome_message, "Welcome Back"
 
-Phoenix offers a solution to this by letting us specify which actions `plug :render` should be applied to. If we only wanted `plug :render` to work on the `index` and `show` actions, we could do this.
+def index(conn, _params) do
+  conn
+  |> assign(:name, "Dweezil")
+  |> render("index.html")
+end
+
+defp assign_welcome_message(conn, msg) do
+  assign(conn, :message, msg)
+end
+```
+
+What if we want to plug `assign_welcome_message`, but only for some of our actions? Phoenix offers a solution to this by letting us specify which actions a plug should be applied to. If we only wanted `plug :assign_welcome_message` to work on the `index` and `show` actions, we could do this.
 
 ```elixir
 defmodule HelloPhoenix.PageController do
   use HelloPhoenix.Web, :controller
 
-  plug :action
-  plug :render when action in [:index, :show]
+  plug :assign_welcome_message, "Hi!" when action in [:index, :show]
 . . .
 ```
 
-Then we are free to call any of the rendering-style functions in any other actions besides `index` and `show` in `HelloPhoenix.PageController` without generating errors.
+### Sending responses directly
 
 If none of the rendering options above quite fits our needs, we can compose our own using some of the functions that Plug gives us. Let's say we want to send a response with a status of "201" and no body whatsoever. We can easily do that with the `send_resp/3` function.
 
@@ -294,8 +276,7 @@ Before we create a new layout, though, let's do the simplest possible thing and 
 
 The `Phoenix.Controller` module provides the `put_layout/2` function for us to switch layouts. This takes `conn` as its first argument and a string for the basename of the layout we want to render. Another clause of the function will match on the boolean `false` for the second argument, and that's how we will render the Phoenix welcome page without a layout.
 
-In a freshly generated Phoenix app, edit the `index` action of the `PageController` module
-`web/controllers/page_controller.ex` to look like this.
+In a freshly generated Phoenix app, edit the `index` action of the `PageController` module `web/controllers/page_controller.ex` to look like this.
 
 ```elixir
 def index(conn, params) do
@@ -375,6 +356,7 @@ What it doesn't have is an alternative template for rendering text. Let's add on
 ```elixir
 "OMG, this is actually some text."
 ```
+
 There are just few more things we need to do to make this work. We need to tell our router that it should accept the `text` format. We do that by adding `text` to the list of accepted formats in the `:browser` pipeline. Let's open up `web/router.ex` and change the `plug :accepts` to include `text` as well as `html` like this.
 
 ```elixir
@@ -412,6 +394,7 @@ And let's add a bit to our text template.
 ```elixir
 "OMG, this is actually some text." <%= @message %>
 ```
+
 Now if we go to `http://localhost:4000/?format=text&message=CrazyTown`, we will see "OMG, this is actually some text. CrazyTown"
 
 ### Setting the Content Type
@@ -444,9 +427,10 @@ Let's change the status in our `PageController` `index` action.
 def index(conn, _params) do
   conn
   |> put_status(202)
-  |> render "index.html"
+  |> render("index.html")
 end
 ```
+
 The status code we provide must be valid - [Cowboy](https://github.com/ninenines/cowboy), the web server Phoenix runs on, will throw an error on invalid codes. If we look at our development logs (which is to say, the iex session), or use our browser's web inspection network tool, we will see the status code being set as we reload the page.
 
 If the action sends a response - either renders or redirects - changing the code will not change the behavior of the response. If, for example, we set the status to 404 or 500 and then `render "index.html"`, we do not get an error page. Similarly, no 300 level code will actually redirect. (It wouldn't know where to redirect to, even if the code did affect behavior.)
@@ -457,7 +441,7 @@ The following implementation of the `HelloPhoenix.PageController` `index` action
 def index(conn, _params) do
   conn
   |> put_status(:not_found)
-  |> render "index.html"
+  |> render("index.html")
 end
 ```
 
