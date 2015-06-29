@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.14.0-dev
+## v0.14.0 (2015-06-29)
 
 * Enhancements
   * [Phoenix.HTML] Update to phoenix_html 1.1.0 which raises on missing assigns
@@ -11,6 +11,9 @@
 * Javascript client enhancements
   * Add socket params to apply default, overridable params to all channel params.
   * Enchance logging
+
+* Bug fixes
+  * [Channel] Fix xdomain content type not being treated as JSON requests
 
 * Javascript client backwords incompatible changes
   * `logger` option to `Phoenix.Socket`, now uses three arguments, ie: `logger: (kind, msg, data) => { console.log(`${kind}: ${msg}`, data) }`
