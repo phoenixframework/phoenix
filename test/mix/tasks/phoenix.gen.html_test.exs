@@ -184,7 +184,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
     end
   end
 
-  test "name can't already be defined" do
+  test "name is already defined" do
     assert_raise Mix.Error, fn ->
       Mix.Tasks.Phoenix.Gen.Html.run ["DupHTML", "duphtmls"]
     end

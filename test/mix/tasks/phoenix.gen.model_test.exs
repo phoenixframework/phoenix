@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
   test "generates model" do
     in_tmp "generates model", fn ->
       Mix.Tasks.Phoenix.Gen.Model.run ["user", "users", "name", "age:integer", "nicks:array:text",
-                                       "famous:boolean", "born_at:datetime", "secret:uuid"]
+                                       "famous:boolean", "born_at:datetime", "secret:uuid", "desc:text"]
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_user.exs")
 
@@ -28,6 +28,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
         assert file =~ "add :famous, :boolean, default: false"
         assert file =~ "add :born_at, :datetime"
         assert file =~ "add :secret, :uuid"
+        assert file =~ "add :desc, :text"
         assert file =~ "timestamps"
       end
 
@@ -41,9 +42,10 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
         assert file =~ "field :famous, :boolean, default: false"
         assert file =~ "field :born_at, Ecto.DateTime"
         assert file =~ "field :secret, Ecto.UUID"
+        assert file =~ "field :desc, :string"
         assert file =~ "timestamps"
         assert file =~ "def changeset"
-        assert file =~ "~w(name age nicks famous born_at secret)"
+        assert file =~ "~w(name age nicks famous born_at secret desc)"
       end
 
       assert_file "test/models/user_test.exs", fn file ->
@@ -110,7 +112,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
     end
   end
 
-  test "name can't already be defined" do
+  test "name is already defined" do
     assert_raise Mix.Error, fn ->
       Mix.Tasks.Phoenix.Gen.Model.run ["Dup", "dups"]
     end

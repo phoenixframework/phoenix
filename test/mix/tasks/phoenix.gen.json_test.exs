@@ -111,7 +111,7 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
     end
   end
 
-  test "name can't already be defined" do
+  test "name is already defined" do
     assert_raise Mix.Error, fn ->
       Mix.Tasks.Phoenix.Gen.Json.run ["DupJSON", "dupjsons"]
     end
