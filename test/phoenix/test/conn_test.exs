@@ -4,6 +4,7 @@ defmodule Phoenix.Test.ConnTest do
 
   defmodule Endpoint do
     def init(opts), do: opts
+    def call(conn, :set), do: resp(conn, 200, "ok")
     def call(conn, opts), do: put_in(conn.private[:endpoint], opts)
   end
 
@@ -80,6 +81,14 @@ defmodule Phoenix.Test.ConnTest do
     assert get_req_header(conn, "hello") == ["world"]
   end
 
+  test "dispatch/5 with :set state automatically sends" do
+    conn = get conn(), :set
+    assert conn.state == :sent
+    assert conn.status == 200
+    assert conn.resp_body == "ok"
+    refute conn.private.phoenix_recycled
+  end
+
   test "recycle/1" do
     conn =
       conn()
@@ -98,7 +107,6 @@ defmodule Phoenix.Test.ConnTest do
                              "over_cookie" => "pos_cookie",
                              "resp_cookie" => "resp_cookie"}
   end
-
 
   test "ensure_recycled/1" do
     conn =

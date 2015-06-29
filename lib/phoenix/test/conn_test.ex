@@ -192,6 +192,7 @@ defmodule Phoenix.ConnTest do
     |> ensure_recycled()
     |> dispatch_endpoint(endpoint, method, path_or_action, params_or_body)
     |> Conn.put_private(:phoenix_recycled, false)
+    |> from_set_to_sent()
   end
 
   defp dispatch_endpoint(conn, endpoint, method, path, params_or_body) when is_binary(path) do
@@ -205,6 +206,9 @@ defmodule Phoenix.ConnTest do
     |> Plug.Adapters.Test.Conn.conn(method, "/", params_or_body)
     |> endpoint.call(endpoint.init(action))
   end
+
+  defp from_set_to_sent(%Conn{state: :set} = conn), do: Conn.send_resp(conn)
+  defp from_set_to_sent(conn), do: conn
 
   @doc """
   Puts a new request header.
