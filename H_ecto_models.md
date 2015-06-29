@@ -2,7 +2,7 @@ Most web applications today need some form of data storage. In the Elixir ecosys
 
 This guide assumes that we have generated our new application with Ecto. If we're using an older Phoenix app, or we used the `--no-ecto` option to generate our application, all is not lost. Please follow the instructions in the "Integrating Ecto into an Existing Application" section below.
 
-This guide also assumes that we will be using PostgreSQL. For instructions on switching to MySQL, please see the "Using MySQL" section below.
+This guide also assumes that we will be using PostgreSQL. For instructions on switching to MySQL, please see the [Using MySQL Guide](http://www.phoenixframework.org/docs/using-mysql).
 
 Now that we all have Ecto and Postgrex installed and configured, the easiest way to use Ecto models is to generate a resource through the `phoenix.gen.html` task. Let's generate a `User` resource with `name`, `email`, `bio`, and `number_of_pets` fields.
 
@@ -568,7 +568,7 @@ defmodule HelloPhoenix.Video do
 
     # If we don't provide a foreign_key, Ecto
     # guesses it as the atom plus _id
-    belongs_to :user, HelloPhoenix.User, foreign_key: :user_id 
+    belongs_to :user, HelloPhoenix.User, foreign_key: :user_id
 
     timestamps
   end
@@ -694,90 +694,3 @@ end
 ```
 
 At this point, we are completely configured and ready to go. We can go back to the top of this guide and follow along.
-
-#### Using MySQL
-What if we want to use MySQL instead of PostgreSQL?
-
-If we are about to create a new application, we can simply pass the `--database mysql` flag to `phoenix.new`.
-
-```console
-$ mix phoenix.new hello_phoenix --database mysql
-```
-
-This will set up all the correct dependencies and configuration for us automatically. Once we install those dependencies with `mix deps.get`, we'll be ready to begin working with Ecto in our application.
-
-If we have an existing application, all we need to do is switch adapters and make some small configuration changes.
-
-To switch adapters, we need to remove the Postgrex dependency and add a new one for Mariaex instead.
-
-Let's open up our `mix.exs` file and do that now.
-
-```elixir
-defmodule HelloPhoenix.Mixfile do
-  use Mix.Project
-
-  . . .
-  # Specifies your project dependencies
-  #
-  # Type `mix help deps` for examples and options
-  defp deps do
-    [{:phoenix, "~> 0.13"},
-     {:phoenix_ecto, "~> 0.4"},
-     {:mariaex, ">= 0.0.0"},
-     {:phoenix_html, "~> 1.0"},
-     {:phoenix_live_reload, "~> 0.4", only: :dev},
-     {:cowboy, "~> 1.0"}]
-  end
-end
-```
-
-We also need to remove the `:postgrex` app from our list of applications and substitute the `:mariaex` app instead. Let's do that in `mix.exs` as well.
-
-```elixir
-defmodule HelloPhoenix.Mixfile do
-  use Mix.Project
-
-. . .
-def application do
-  [mod: {MysqlTester, []},
-  applications: [:phoenix, :cowboy, :logger,
-  :phoenix_ecto, :mariaex]]
-end
-. . .
-```
-
-Next, we need to configure our new adapter. Let's open up our `config/dev.exs` file and do that.
-
-```elixir
-config :hello_phoenix, HelloPhoenix.Repo,
-adapter: Ecto.Adapters.MySQL,
-username: "root",
-password: "",
-database: "hello_phoenix_dev"
-```
-
-If we have an existing configuration block for our `HelloPhoenix.Repo`, we can simply change the values to match our new ones. The most important thing is to make sure we are using the MySQL adapter `adapter: Ecto.Adapters.MySQL,`.
-
-We also need to configure the correct values in the `config/test.exs` and `config/prod.secret.exs` files as well.
-
-Now all we need to do is fetch our new dependency, and we'll be ready to go.
-
-```console
-$ mix do deps.get, compile
-```
-
-With our new adapter installed and configured, we're ready to create our database.
-
-```console
-$ mix ecto.create
-The database for HelloPhoenix.repo has been created.
-```
-
-We're also ready to run any migrations, or do anything else with Ecto that we might choose.
-
-```console
-$ mix ecto.migrate
-[info] == Running HelloPhoenix.Repo.Migrations.CreateUser.change/0 forward
-[info] create table users
-[info] == Migrated in 0.2s
-```
