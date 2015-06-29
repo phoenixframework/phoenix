@@ -218,7 +218,8 @@ defmodule Mix.Tasks.Phoenix.New do
         username: #{inspect binding[:db_user]},
         password: #{inspect binding[:db_password]},
         database: "#{binding[:application_name]}_test",
-        size: 1 # Use a single connection for transactional tests
+        pool: Ecto.Adapters.SQL.Sandbox, # Use a sandbox for transactional testing
+        size: 1
       """
 
       append_to path, "config/prod.secret.exs", """
