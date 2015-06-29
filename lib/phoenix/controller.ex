@@ -316,7 +316,8 @@ defmodule Phoenix.Controller do
   accepts the layout name to be given as a string or as an atom. If a
   string, it must contain the format. Passing an atom means the layout
   format will be found at rendering time, similar to the template in
-  `render/3`.
+  `render/3`. It can also be set to `false`. In this case, no layout
+  would be used.
 
   ## Examples
 
