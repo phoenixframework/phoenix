@@ -310,6 +310,14 @@ defmodule Phoenix.Router do
         unquote(pipeline)
       end
 
+    # line: -1 is used here to avoid warnings if forwarding to root path
+    match_404 =
+      quote line: -1 do
+        defp match(conn, _method, _path_info, _host) do
+          raise NoRouteError, conn: conn, router: __MODULE__
+        end
+      end
+
     quote do
       defp do_call(unquote(conn), opts) do
         unquote(call)
@@ -321,12 +329,7 @@ defmodule Phoenix.Router do
       @doc false
       def __helpers__, do: __MODULE__.Helpers
 
-      # line: -1 is used here to avoid warnings if forwarding to root path
-      unquote(quote line: -1 do
-        defp match(conn, _method, _path_info, _host) do
-          raise NoRouteError, conn: conn, router: __MODULE__
-        end
-      end)
+      unquote(match_404)
       unquote(channels)
     end
   end
