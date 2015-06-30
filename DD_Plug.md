@@ -27,7 +27,6 @@ defmodule HelloPhoenix.MessageController do
 
   plug :put_headers, %{content_encoding: "gzip", cache_control: "max-age=3600"}
   plug :put_layout, "bare.html"
-  plug :action
 
   ...
 end
@@ -69,7 +68,6 @@ defmodule HelloPhoenix.MessageController do
   plug :authenticate
   plug :find_message
   plug :authorize_message
-  plug :action
 
   def show(conn, params) do
     render conn, :show, page: find_message(params["id"])
@@ -84,7 +82,7 @@ defmodule HelloPhoenix.MessageController do
     end
   end
 
-  defp find_message(conn, _) do  
+  defp find_message(conn, _) do
     case find_message(params["id"]) do
       nil ->
         conn |> put_flash("That message wasn't found") |> redirect(to: "/") |> halt

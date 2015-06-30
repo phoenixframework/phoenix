@@ -137,14 +137,12 @@ To make that happen, let's create a new `web/controllers/hello_controller.ex` fi
 defmodule HelloPhoenix.HelloController do
   use HelloPhoenix.Web, :controller
 
-  plug :action
-
   def index(conn, _params) do
     render conn, "index.html"
   end
 end
 ```
-We'll save a discussion of `use HelloPhoenix.Web, :controller` and `plug :action` for the [Controllers Guide](http://www.phoenixframework.org/docs/controllers). For now, let's focus on the `index/2` action.
+We'll save a discussion of `use HelloPhoenix.Web, :controller` for the [Controllers Guide](http://www.phoenixframework.org/docs/controllers). For now, let's focus on the `index/2` action.
 
 All controller actions take two arguments. The first is `conn`, a struct which holds a ton of data about the request. The second is `params`, which are the request parameters. Here, we are not using `params`, and we avoid compiler warnings by adding the leading `_`.
 
