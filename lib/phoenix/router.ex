@@ -321,10 +321,12 @@ defmodule Phoenix.Router do
       @doc false
       def __helpers__, do: __MODULE__.Helpers
 
-      defp match(conn, _method, _path_info, _host) do
-        raise NoRouteError, conn: conn, router: __MODULE__
-      end
-
+      # line: -1 is used here to avoid warnings if forwarding to root path
+      unquote(quote line: -1 do
+        defp match(conn, _method, _path_info, _host) do
+          raise NoRouteError, conn: conn, router: __MODULE__
+        end
+      end)
       unquote(channels)
     end
   end
