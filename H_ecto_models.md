@@ -597,6 +597,60 @@ end
 ```
 Because we declared a relationship in `HelloPhoenix.User`, `%User{}` will now contain a videos property which starts out as an unloaded relationship. In order to properly display it in `render`, we'll need to tell Ecto to preload the field. Note that `Repo.preload/2` is smart enough to work on just one model or collection of them.
 
+### Working with Callback Hooks
+
+Continuing with our video sharing app example, many web applications require moderation for user submitted content. Our Video model has an `approved_at` field to signify that a moderator has approved the video. The question is, what happens if the user edits the video? Ideally, we'd like to be able to "null out" a video's `approved_at` field when this happens. Fortunately, Ecto provides us with a handful of life-cycle callbacks to achieve this.
+
+We will instruct Ecto to use the `before_update` hook in `web/models/video.ex` like so:
+
+```elixir
+defmodule HelloPhoenix.Video do
+. . .
+  before_update :reset_approved_at
+  def reset_approved_at(changeset) do
+    changeset
+    |> Ecto.Changeset.put_change(:approved_at, nil)
+  end
+end
+```
+Now, when `Repo.update` is called for the `Video` model, the `approved_at` field will automatically be reset to nil. This should keep us safe from the ravages of an often hostile modern Internet!
+
+`Ecto.Model.Callbacks` actually ships with with a lot more than the `before_update` callback, in addition, it comes with:
+
+- `before_delete`: called before the adapter deletes our record from the database; if perhaps we have a foreign_key constraint from another table, we would use this hook to clean it up.
+- `after_delete`: called after the adapter deletes our record. If we wished to archive our record, we'd do it in this hook. 
+- `before_update`: called before the adapter updates our record. We used it above to reset the likes counter.
+- `after_update`: called after the adapter updates our record. If we wanted to update our user that the model has changed, now would do that here.
+- `before_insert`: called before the adapter first creates a new record. We would use it in cases when we wanted to infer default values to certain fields from the partial changeset we receive from the user.
+- `after_insert`: called after the adapter creates our record. We could use this to notify the user a new has been created under that user's account.
+- `after_load`: called after the model is loaded from the database. We might use this to load in other values based upon what we found in our record.
+
+Note: there is no `before_load` hook.
+
+In all cases, a hook expects to be passed an atom that is the name of the function it is to call if that function is defined in the current module:
+
+```elixir
+before_insert :name_of_function_to_call
+def name_of_function_to_call(changeset) do
+  # do stuff with the changeset
+  # and return the modified changeset
+end
+```
+If our callback function lives elsewhere, hooks can take the name of the module as the first argument:
+```elixir
+before_insert HelloPhoenix.AnotherPlace, :name_of_function_to_call
+```
+
+Our callback function must always take a changeset as its first argument, and return a changeset. In our callbacks, we can expect to often be calling `Ecto.Changeset` functions like:
+
+- `put_change(changeset, key, value)`
+- `get_field(changeset, key, defaultValue//nil)`
+- `add_error(changeset, key, error)`
+
+For the full reference, visit the docs at [Ecto Changeset documentation](http://hexdocs.pm/ecto/Ecto.Changeset.html).
+
+Ecto callbacks give can be very powerful, but we need to take care when using them. On one hand, they can add behaviors in a way which may not be apparent in the execution flow because callbacks can be defined far from the action in our model. On the other hand, it might seem tempting to put a lot of behavior in a single callback, which can make the model difficult to test and debug.
+
 ### Integrating Ecto into an Existing Application
 
 Adding Ecto to a pre-existing Phoenix application is easy. Once we include Ecto and Postgrex as dependencies, there are mix tasks to help us.
