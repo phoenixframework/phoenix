@@ -84,7 +84,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
 
   test "generates belongs_to associations" do
     in_tmp "generates belongs_to associations", fn ->
-      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title", "user:belongs_to"]
+      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title", "user:references"]
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
 
