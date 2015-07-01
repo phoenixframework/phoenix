@@ -64,7 +64,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       # File required for Heroku deploy button
       assert_file "photo_blog/app.json", [~r|https://github.com/HashNuke/heroku-buildpack-elixir|,
-        ~r|https://github.com/gjaldon/phoenix-static-buildpack|]
+        ~r|https://github.com/gjaldon/heroku-buildpack-phoenix-static|]
 
       # Brunch
       assert_file "photo_blog/.gitignore", ~r"/node_modules"
