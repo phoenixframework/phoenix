@@ -26,7 +26,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
   The generator also supports `belongs_to` associations:
 
-      mix phoenix.gen.model Post posts title user:belongs_to
+      mix phoenix.gen.model Post posts title user:references
 
   This will result in a migration with an `:integer` column
   of `:user_id` and create an index. It will also generate
@@ -95,7 +95,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
   defp partition_attrs_and_assocs(attrs) do
     Enum.partition attrs, fn {_, kind} ->
-      kind == :belongs_to
+      kind == :references
     end
   end
 
