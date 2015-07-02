@@ -112,7 +112,7 @@ In your `web/templates/page/index.html.eex`, add a container to hold our chat me
 <input id="chat-input" type="text"></input>
 ```
 
-We'll also add jQuery to our application layout in `web/templates/layout/application.html.eex`:
+We'll also add jQuery to our application layout in `web/templates/layout/app.html.eex`:
 
 ```html
   ...

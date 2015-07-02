@@ -23,7 +23,7 @@ Most of our work in this guide will be in the `web` directory, which looks like 
 ├── router.ex
 ├── templates
 │   ├── layout
-│   │   └── application.html.eex
+│   │   └── app.html.eex
 │   └── page
 │       └── index.html.eex
 └── views
@@ -184,7 +184,7 @@ Now that we've got the route, controller, view and template, we should be able t
 
 ![Phoenix Greets Us](/images/hello-from-phoenix.png)
 
-There are a couple of interesting things to notice about what we just did. We didn't need to stop and re-start the server while we made these changes. Yes, Phoenix has hot code re-loading! Also, even though our `index.html.eex` file consisted of only a single div tag, The page we get is a full html document. Our index template is rendered into the application layout - `web/templates/layout/application.html.eex`. If you open it, you'll see a tag that looks like this: `<%= @inner %>`, which is what injects our rendered template into the layout before the html is sent off to the browser.
+There are a couple of interesting things to notice about what we just did. We didn't need to stop and re-start the server while we made these changes. Yes, Phoenix has hot code re-loading! Also, even though our `index.html.eex` file consisted of only a single div tag, The page we get is a full html document. Our index template is rendered into the application layout - `web/templates/layout/app.html.eex`. If you open it, you'll see a tag that looks like this: `<%= @inner %>`, which is what injects our rendered template into the layout before the html is sent off to the browser.
 
 ## Another New Page
 

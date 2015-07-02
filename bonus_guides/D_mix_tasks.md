@@ -99,7 +99,7 @@ $  mix phoenix.new task_tester --app hello_phoenix
 * creating task_tester/test/support/channel_case.ex
 * creating task_tester/test/test_helper.exs
 * creating task_tester/web/controllers/page_controller.ex
-* creating task_tester/web/templates/layout/application.html.eex
+* creating task_tester/web/templates/layout/app.html.eex
 * creating task_tester/web/templates/page/index.html.eex
 * creating task_tester/web/views/error_view.ex
 * creating task_tester/web/views/layout_view.ex
@@ -160,7 +160,7 @@ $  mix phoenix.new task_tester --module HelloPhoenix
 * creating task_tester/test/support/channel_case.ex
 * creating task_tester/test/test_helper.exs
 * creating task_tester/web/controllers/page_controller.ex
-* creating task_tester/web/templates/layout/application.html.eex
+* creating task_tester/web/templates/layout/app.html.eex
 * creating task_tester/web/templates/page/index.html.eex
 * creating task_tester/web/views/error_view.ex
 * creating task_tester/web/views/layout_view.ex

@@ -18,7 +18,7 @@ That's simple enough. There's only one line, `use HelloPhoenix.Web, :view`. This
 
 At the top of this file, we mentioned that views are a place to put functions for use in our templates. Let's experiment with that a little bit.
 
-Let's open up our application layout template, `templates/layout/application.html.eex`, and change this line,
+Let's open up our application layout template, `templates/layout/app.html.eex`, and change this line,
 
 ```html
 <title>Hello Phoenix!</title>
@@ -156,7 +156,7 @@ Layouts are just templates. They have a view, just like other templates. In a ne
 
 When a template is rendered, the layout view will assign `@inner` with the rendered contents of the template. For HTML templates, `@inner` will be always marked as safe.
 
-If we look at `web/templates/layout/application.html.eex`, just about in the middle of the `<body>`, we will see this.
+If we look at `web/templates/layout/app.html.eex`, just about in the middle of the `<body>`, we will see this.
 
 ```html
 <%= @inner %>
