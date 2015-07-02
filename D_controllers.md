@@ -105,7 +105,7 @@ The `Phoenix.Controller` module is not particular about the keys we use. As long
 
 In order to see our flash messages, we need to be able to retrieve them and display them in a template/layout. One way to do the first part is with `get_flash/2` which takes `conn` and the key we care about. It then returns the value for that key.
 
-Fortunately, our application layout, `web/templates/layout/application.html.eex`, already has markup for displaying flash messages.
+Fortunately, our application layout, `web/templates/layout/app.html.eex`, already has markup for displaying flash messages.
 
 ```html
 <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
