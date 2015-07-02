@@ -268,7 +268,7 @@ Rendering does not end with the template, though. By default, the results of the
 
 ### Assigning Layouts
 
-Layouts are just a special subset of templates. They live in `/web/templates/layout`. Phoenix created one for us when we generated our app. It's called `application.html.eex`, and it is the layout into which all templates will be rendered by default.
+Layouts are just a special subset of templates. They live in `/web/templates/layout`. Phoenix created one for us when we generated our app. It's called `app.html.eex`, and it is the layout into which all templates will be rendered by default.
 
 Since layouts are really just templates, they need a view to render them. This is the `LayoutView` module defined in `/web/views/layout_view.ex`. Since Phoenix generated this view for us, we won't have to create a new one as long as we put the layouts we want to render inside the `/web/templates/layout` directory.
 
@@ -321,7 +321,7 @@ def index(conn, params) do
 end
 ```
 
-Now let's actually create another layout and render the index template into it. As an example, let's say we had a different layout for the admin section of our application which didn't have the logo image. To do this, let's copy the existing `application.html.eex` to a new file `admin.html.eex` in the same directory `web/templates/layout`. Then let's remove the line in `admin.html.eex` that displays the logo.
+Now let's actually create another layout and render the index template into it. As an example, let's say we had a different layout for the admin section of our application which didn't have the logo image. To do this, let's copy the existing `app.html.eex` to a new file `admin.html.eex` in the same directory `web/templates/layout`. Then let's remove the line in `admin.html.eex` that displays the logo.
 
 ```html
 <span class="logo"></span> <!-- remove this line -->
