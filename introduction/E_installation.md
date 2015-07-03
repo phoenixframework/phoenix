@@ -45,6 +45,24 @@ We can get node.js from the [download page](https://nodejs.org/download/). When 
 
 Mac OS X users can also install node.js via [homebrew](http://brew.sh/).
 
+Debin/Ubuntu users might see an error that looks like this:
+```console
+sh: 1: node: not found
+npm WARN This failure might be due to the use of legacy binary "node"
+```
+This due to Debian having conflicting binaries for node: [discussion on stackoverflow](http://stackoverflow.com/questions/21168141/can-not-install-packages-using-node-package-manager-in-ubuntu)
+
+There are two options to fix this problem, either:
+- install nodejs-legacy:
+```console
+$ apt-get install nodejs-legacy
+```
+or
+- create a symlink
+```console
+$ ln -s /usr/bin/nodejs /usr/bin/node
+```
+
 ### PostgreSQL
 
 PostgreSQL is a relational database server. Phoenix configures applications to use it by default, but we can switch to MySQL by passing the `--database mysql` flag when creating a new application.
