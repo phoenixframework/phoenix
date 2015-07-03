@@ -18,8 +18,20 @@ defmodule Mix.Tasks.Phoenix.Server do
   """
   def run(args) do
     Application.put_env(:phoenix, :serve_endpoints, true, persistent: true)
-    Mix.Task.run "app.start", args
-    no_halt
+    case Mix.Task.run "app.start", args do
+      :ok   -> no_halt()
+      :noop -> raise """
+        Unable to start. Server already running!
+
+        If you are trying to run multiple mix tasks that also start the app, ie:
+
+            $ mix do ecto.migrate, phoenix.server
+
+        chain the commands instead, ie:
+
+            $ mix ecto.migrate && mix phoenix.server
+      """
+    end
   end
 
   defp no_halt do
