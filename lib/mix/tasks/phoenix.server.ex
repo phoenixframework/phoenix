@@ -21,7 +21,7 @@ defmodule Mix.Tasks.Phoenix.Server do
     case Mix.Task.run "app.start", args do
       :ok   -> no_halt()
       :noop -> raise """
-        Unable to start. Server already running!
+        Unable to start server. Application already running!
 
         If you are trying to run multiple mix tasks that also start the app, ie:
 
