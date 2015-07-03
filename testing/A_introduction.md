@@ -6,6 +6,8 @@ ExUnit refers to a test module as a "test case", and we will do the same.
 
 Let's see this in action.
 
+> Note: Before we proceed, we'll need to have PostgreSQL installed and running on our system. We'll also need to configure our repo with the correct login credentials. [The section on ecto.create in the Mix Tasks guide](http://www.phoenixframework.org/docs/mix-tasks#section--ecto-create-) has more information on this, and the [Ecto Models Guide](http://www.phoenixframework.org/docs/ecto-models) dives into the details on how it all works.
+
 In a freshly generated application, let's run `mix test` at the root of the project. (Please see the [Up and Running Guide](http://www.phoenixframework.org/docs/up-and-running) for instructions on generating a new application.)
 
 ```console
@@ -23,6 +25,8 @@ Finished in 0.2 seconds (0.2s on load, 0.00s on tests)
 We already have four tests!
 
 In fact, we already have a directory structure completely set up for testing, including a test helper and support files.
+
+> Note: We didn't need to create or migrate our test database because the test helper took care of all that for us.
 
 ```console
 test
@@ -439,8 +443,6 @@ We've seen what Phoenix gives us with a newly generated app. Now let's see what 
 
 Let's borrow the resource we created in the [Mix Tasks Guide](http://www.phoenixframework.org/docs/ecto-models).
 
-> Note: Before we proceed, we'll need to have PostgreSQL installed and running on our system. We'll also need to configure our repo with the correct login credentials. Please see the [Ecto Models Guide](http://www.phoenixframework.org/docs/ecto-models) for more info.
-
 At the root of our new application, let's run the `mix phoenix.gen.html` task with the following options.
 
 ```console
@@ -512,7 +514,5 @@ Finished in 0.5 seconds (0.4s on load, 0.1s on tests)
 
 Randomized with seed 537537
 ```
-
-> Note: We didn't need to create or migrate our test database because the test helper took care of all that for us.
 
 At this point, we are at a great place to transition to the rest of the testing guides, in which we'll examine these tests in much more detail, and add some of our own.
