@@ -1,10 +1,4 @@
 defmodule Phoenix.Channel.Transport do
-
-  require Logger
-  alias Phoenix.Socket
-  alias Phoenix.Socket.Message
-
-
   @moduledoc """
   Handles dispatching incoming and outgoing Channel messages
 
@@ -40,7 +34,7 @@ defmodule Phoenix.Channel.Transport do
   See `Phoenix.Transports.WebSocket` for an example transport server implementation.
 
 
-  ### Remote Client
+  ## Remote Client
 
   Synchronouse Replies and `ref`'s:
 
@@ -53,10 +47,34 @@ defmodule Phoenix.Channel.Transport do
   encodings.
 
   However, a client can be implemented for other protocols and encodings by
-  abiding by the `Phoenix.Socket.Message` format
+  abiding by the `Phoenix.Socket.Message` format.
+
+
+  ### Protocol Versioning
+
+  Client are expected to send the Channel transport protocol version that they
+  expect to be talking to. The version can be retrieved on the server from
+  `Phoenix.Channel.Transport.protocol_version/0`. If no version is provided, the
+  Transport adapters should default to assume a `"~> 1.0"` version number.
 
   See `web/static/js/phoenix.js` for an example transport client implementation.
   """
+
+  require Logger
+  alias Phoenix.Socket
+  alias Phoenix.Socket.Message
+
+  @protocol_version "1.0.0"
+
+  defmodule ProtocolVersionError do
+    @moduledoc """
+    Raised when a client requests an incompatible transport protocol version
+    """
+    defexception [:message]
+  end
+
+
+  def protocol_version, do: @protocol_version
 
   @doc """
   Dispatches `%Phoenix.Socket.Message{}` to Channel. All serialized, remote client messages
@@ -67,10 +85,10 @@ defmodule Phoenix.Channel.Transport do
     * `{:error, reason}` - Unauthorized or unmatched dispatch
 
   """
-  def dispatch(%Message{} = msg, sockets, transport_pid, router, endpoint, transport) do
+  def dispatch(%Message{} = msg, sockets, transport_pid, router, endpoint, transport, vsn) do
     sockets
     |> HashDict.get(msg.topic)
-    |> dispatch(msg, transport_pid, router, endpoint, transport)
+    |> dispatch(msg, transport_pid, router, endpoint, transport, vsn)
   end
 
   @doc """
@@ -84,11 +102,11 @@ defmodule Phoenix.Channel.Transport do
 
   The server will respond to heartbeats with the same message
   """
-  def dispatch(_, %{ref: ref, topic: "phoenix", event: "heartbeat"}, transport_pid, _router, _pubsub_server, _transport) do
+  def dispatch(_, %{ref: ref, topic: "phoenix", event: "heartbeat"}, transport_pid, _router, _pubsub_server, _transport, _vsn) do
     reply(transport_pid, ref, "phoenix", %{status: :ok, response: %{}})
     :ok
   end
-  def dispatch(nil, %{event: "phx_join"} = msg, transport_pid, router, endpoint, transport) do
+  def dispatch(nil, %{event: "phx_join"} = msg, transport_pid, router, endpoint, transport, vsn) do
     case router.channel_for_topic(msg.topic, transport) do
       nil     -> log_ignore(msg.topic, router)
       channel ->
@@ -97,7 +115,8 @@ defmodule Phoenix.Channel.Transport do
                   pubsub_server: endpoint.__pubsub_server__(),
                   topic: msg.topic,
                   channel: channel,
-                  transport: transport}
+                  transport: transport,
+                  vsn: vsn}
 
         log_info msg.topic, fn ->
           "JOIN #{msg.topic} to #{inspect(channel)}\n" <>
@@ -119,14 +138,14 @@ defmodule Phoenix.Channel.Transport do
         end
     end
   end
-  def dispatch(nil, msg, _transport_pid, router, _pubsub_server, _transport) do
+  def dispatch(nil, msg, _transport_pid, router, _pubsub_server, _transport, _vsn) do
     log_ignore(msg.topic, router)
   end
-  def dispatch(socket_pid, %{event: "phx_leave", ref: ref}, _transport_pid, _router, _pubsub_server, _transport) do
+  def dispatch(socket_pid, %{event: "phx_leave", ref: ref}, _transport_pid, _router, _pubsub_server, _transport, _vsn) do
     Phoenix.Channel.Server.leave(socket_pid, ref)
     :ok
   end
-  def dispatch(socket_pid, msg, _transport_pid, _router, _pubsub_server, _transport) do
+  def dispatch(socket_pid, msg, _transport_pid, _router, _pubsub_server, _transport, _vsn) do
     send(socket_pid, msg)
     :ok
   end

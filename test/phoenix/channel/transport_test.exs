@@ -44,4 +44,8 @@ defmodule Phoenix.Channel.TransportTest do
     assert call("https://scheme.com").status == 403
     assert call("http://port.com:82").status == 403
   end
+
+  test "provides the protocol version" do
+    assert Version.match?(Phoenix.Channel.Transport.protocol_version(), "~> 1.0")
+  end
 end

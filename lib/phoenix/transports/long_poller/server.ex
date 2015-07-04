@@ -30,16 +30,17 @@ defmodule Phoenix.Transports.LongPoller.Server do
 
     * `router` - The router module, ie. `MyApp.Router`
     * `window_ms` - The longpoll session timeout, in milliseconds
+    * `vsn` - The transport protocol version of the client
 
   If the server receives no message within `window_ms`, it terminates and
   clients are responsible for opening a new session.
   """
-  def start_link(router, window_ms, priv_topic, endpoint) do
-    GenServer.start_link(__MODULE__, [router, window_ms, priv_topic, endpoint])
+  def start_link(router, window_ms, priv_topic, endpoint, vsn) do
+    GenServer.start_link(__MODULE__, [router, window_ms, priv_topic, endpoint, vsn])
   end
 
   @doc false
-  def init([router, window_ms, priv_topic, endpoint]) do
+  def init([router, window_ms, priv_topic, endpoint, vsn]) do
     Process.flag(:trap_exit, true)
 
     state = %{buffer: [],
@@ -51,7 +52,8 @@ defmodule Phoenix.Transports.LongPoller.Server do
               pubsub_server: Process.whereis(endpoint.__pubsub_server__()),
               priv_topic: priv_topic,
               last_client_poll: now_ms(),
-              client_ref: nil}
+              client_ref: nil,
+              vsn: vsn || "~> 1.0.0"}
 
     :ok = PubSub.subscribe(state.pubsub_server, self, state.priv_topic, link: true)
     :timer.send_interval(state.window_ms, :shutdown_if_inactive)
@@ -69,7 +71,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   """
   def handle_info({:dispatch, msg, ref}, state) do
     msg
-    |> Transport.dispatch(state.sockets, self, state.router, state.endpoint, LongPoller)
+    |> Transport.dispatch(state.sockets, self, state.router, state.endpoint, LongPoller, state.vsn)
     |> case do
       {:ok, socket_pid} ->
         :ok = broadcast_from(state, {:ok, :dispatch, ref})

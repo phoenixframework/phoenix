@@ -35,6 +35,7 @@ defmodule Phoenix.Socket do
                      ref: term,
                      topic: String.t,
                      transport: atom,
+                     vsn: String.t,
                      transport_pid: pid}
 
   defstruct assigns: %{},
@@ -46,6 +47,7 @@ defmodule Phoenix.Socket do
             ref: nil,
             topic: nil,
             transport: nil,
+            vsn: nil,
             transport_pid: nil
 end
 

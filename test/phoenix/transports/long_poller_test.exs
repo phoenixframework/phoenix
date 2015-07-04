@@ -14,6 +14,7 @@ defmodule Phoenix.Tranports.LongPollerTest do
 
   def conn_with_sess(session \\ %{}) do
     %Conn{private: %{plug_session: session}}
+    |> Conn.fetch_query_params()
     |> put_private(:phoenix_router, Router)
     |> put_private(:phoenix_endpoint, __MODULE__.Endpoint)
     |> with_session
