@@ -1,3 +1,5 @@
+// jshint asi: true, expr: true
+
 // Phoenix Channels JavaScript client
 //
 // ## Socket Connection
@@ -163,7 +165,7 @@ class Push {
 
   // private
 
-  matchReceive({status, response, ref}){
+  matchReceive({status, response}){
     this.recHooks.filter( h => h.status === status )
                  .forEach( h => h.callback(response) )
   }
@@ -282,7 +284,7 @@ export class Channel {
   // Overridable message hook
   //
   // Receives all events for specialized message handling
-  onMessage(event, payload, ref){}
+  onMessage(/* event, payload, ref */){}
 
   // private
 
@@ -441,8 +443,8 @@ export class Socket {
 
   chan(topic, chanParams = {}){
     let mergedParams = {}
-    for(var key in this.params){ mergedParams[key] = this.params[key] }
-    for(var key in chanParams){ mergedParams[key] = chanParams[key] }
+    for(let key in this.params){ mergedParams[key] = this.params[key] }
+    for(let key in chanParams){ mergedParams[key] = chanParams[key] }
 
     let chan = new Channel(topic, mergedParams, this)
     this.channels.push(chan)
@@ -531,13 +533,9 @@ export class LongPoller {
     if(!(this.readyState === SOCKET_STATES.open || this.readyState === SOCKET_STATES.connecting)){ return }
 
     Ajax.request("GET", this.endpointURL(), "application/json", null, this.timeout, this.ontimeout.bind(this), (resp) => {
-      if(resp){
-        var {status, token, sig, messages} = resp
-        this.token = token
-        this.sig = sig
-      } else{
-        var status = 0
-      }
+      const {status, token, sig, messages} = resp || {status: 0}
+      this.token = token
+      this.sig = sig
 
       switch(status){
         case 200:
@@ -571,7 +569,7 @@ export class LongPoller {
     })
   }
 
-  close(code, reason){
+  close(/* code, reason */){
     this.readyState = SOCKET_STATES.closed
     this.onclose()
   }
@@ -586,8 +584,8 @@ export class Ajax {
       this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback)
     } else {
       let req = window.XMLHttpRequest ?
-                  new XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
-                  new ActiveXObject("Microsoft.XMLHTTP") // IE6, IE5
+                  new window.XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
+                  new window.ActiveXObject("Microsoft.XMLHTTP") // IE6, IE5
       this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback)
     }
   }
