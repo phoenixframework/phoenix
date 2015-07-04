@@ -169,6 +169,18 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     end
   end
 
+  test "new with sqlite adapter" do
+    in_tmp "new with sqlite adapter", fn ->
+      project_path = Path.join(File.cwd!, "custom_path")
+      Mix.Tasks.Phoenix.New.run([project_path, "--database", "sqlite"])
+
+      assert_file "custom_path/mix.exs", ~r/:sqlite_ecto/
+      assert_file "custom_path/config/dev.exs", ~r/Sqlite.Ecto/
+      assert_file "custom_path/config/test.exs", ~r/Sqlite.Ecto/
+      assert_file "custom_path/config/prod.secret.exs", ~r/Sqlite.Ecto/
+    end
+  end
+
   test "new defaults to pg adapter" do
     in_tmp "new defaults to pg adapter", fn ->
       project_path = Path.join(File.cwd!, "custom_path")
