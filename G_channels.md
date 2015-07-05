@@ -68,8 +68,7 @@ defmodule HelloPhoenix.Router do
 end
 ```
 
-Now any topic sent by a client that starts with `"rooms:"` will be routed to our RoomChannel. Next, we'll define a `RoomChannel` module to manage our chat room messages.
-
+Now, whenever a client sends a message whose topic starts with `"rooms:"`, it will be routed to our RoomChannel. Next, we'll define a `RoomChannel` module to manage our chat room messages.
 
 ### Joining Channels
 
