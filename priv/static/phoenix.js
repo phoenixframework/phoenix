@@ -909,7 +909,7 @@ var LongPoller = exports.LongPoller = (function () {
   _prototypeProperties(LongPoller, null, {
     normalizeEndpoint: {
       value: function normalizeEndpoint(endPoint) {
-        return endPoint.replace("ws://", "http://").replace("wss://", "https://");
+        return endPoint.replace("http://", "ws://").replace("https://", "wss://");
       },
       writable: true,
       configurable: true
