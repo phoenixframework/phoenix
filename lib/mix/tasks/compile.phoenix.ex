@@ -21,7 +21,7 @@ defmodule Mix.Tasks.Compile.Phoenix do
     Mix.Phoenix.modules
     |> modules_for_recompilation
     |> modules_to_file_paths
-    |> Stream.each(&touch_if_exists(&1))
+    |> Stream.map(&touch_if_exists(&1))
     |> Stream.filter(&(&1 == :ok))
     |> Enum.to_list()
   end
