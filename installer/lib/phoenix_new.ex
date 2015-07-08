@@ -94,7 +94,7 @@ defmodule Mix.Tasks.Phoenix.New do
       the generated skeleton
 
     * `--database` - specify the database adapter for ecto.
-      Values can be `mysql` or `mssql`. Defaults to `postgres`
+      Values can be `mysql`, `mssql` or `sqlite`. Defaults to `postgres`
 
     * `--no-brunch` - do not generate brunch files
       for static asset building
@@ -346,6 +346,7 @@ defmodule Mix.Tasks.Phoenix.New do
   defp set_ecto_adapter("mssql"), do: {:tds_ecto, Tds.Ecto, "db_user", "db_password"}
   defp set_ecto_adapter("mysql"), do: {:mariaex, Ecto.Adapters.MySQL, "root", ""}
   defp set_ecto_adapter("postgres"), do: {:postgrex, Ecto.Adapters.Postgres, "postgres", "postgres"}
+  defp set_ecto_adapter("sqlite"), do: {:sqlite_ecto, Sqlite.Ecto, "", ""}
   defp set_ecto_adapter(db), do: Mix.raise "Unknown database #{inspect db}"
 
   defp set_pubsub_server(module) do
