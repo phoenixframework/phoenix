@@ -2,6 +2,9 @@
 
 ## v0.15-dev
 
+* Javascript client Bug fixes
+  * Fix https/wss detection
+
 ## v0.14.0 (2015-06-29)
 
 See these [`0.13.x` to `0.14.0` upgrade instructions](https://gist.github.com/chrismccord/57805158f463d3369103) to bring your existing apps up to speed.

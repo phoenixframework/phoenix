@@ -510,7 +510,7 @@ export class LongPoller {
   }
 
   normalizeEndpoint(endPoint){
-    return endPoint.replace("ws://", "http://").replace("wss://", "https://")
+    return endPoint.replace("http://", "ws://").replace("https://", "wss://")
   }
 
   endpointURL(){
