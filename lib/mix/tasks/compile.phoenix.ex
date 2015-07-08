@@ -21,8 +21,12 @@ defmodule Mix.Tasks.Compile.Phoenix do
     Mix.Phoenix.modules
     |> modules_for_recompilation
     |> modules_to_file_paths
-    |> Stream.each(&File.touch/1)
+    |> Stream.each(&touch_if_exists(&1))
+    |> Stream.filter(&(&1 == :ok))
     |> Enum.to_list()
+  end
+  defp touch_if_exists(path) do
+    :file.change_time(path, :calendar.local_time())
   end
 
   defp modules_for_recompilation(modules) do
