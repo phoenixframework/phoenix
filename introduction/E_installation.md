@@ -50,7 +50,7 @@ Debin/Ubuntu users might see an error that looks like this:
 sh: 1: node: not found
 npm WARN This failure might be due to the use of legacy binary "node"
 ```
-This due to Debian having conflicting binaries for node: [discussion on stackoverflow](http://stackoverflow.com/questions/21168141/can-not-install-packages-using-node-package-manager-in-ubuntu)
+This is due to Debian having conflicting binaries for node: [discussion on stackoverflow](http://stackoverflow.com/questions/21168141/can-not-install-packages-using-node-package-manager-in-ubuntu)
 
 There are two options to fix this problem, either:
 - install nodejs-legacy:
