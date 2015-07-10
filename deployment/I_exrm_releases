@@ -411,6 +411,10 @@ export MIX_ENV
 #env PORT=8888
 #export PORT
 
+## Add app HOME directory.
+env HOME /app
+export HOME
+
 
 pre-start exec /bin/sh /app/bin/hello_phoenix start
 
