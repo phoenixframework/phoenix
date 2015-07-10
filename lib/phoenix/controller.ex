@@ -110,6 +110,19 @@ defmodule Phoenix.Controller do
   def action_name(conn), do: conn.private.phoenix_action
 
   @doc """
+  Returns the controller name as a string, raises if unavailable.
+  """
+  @spec controller_name(Plug.Conn.t) :: atom
+  def controller_name(conn) do
+    conn.private.phoenix_controller
+    |> Atom.to_string
+    |> String.split(".")
+    |> List.last
+    |> String.replace("Controller", "")
+    |> String.downcase
+  end
+
+  @doc """
   Returns the controller module as an atom, raises if unavailable.
   """
   @spec controller_module(Plug.Conn.t) :: atom
