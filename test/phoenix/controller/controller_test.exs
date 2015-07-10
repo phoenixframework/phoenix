@@ -20,6 +20,11 @@ defmodule Phoenix.Controller.ControllerTest do
     assert action_name(conn) == :show
   end
 
+  test "controller_name/1" do
+    conn = put_private(%Conn{}, :phoenix_controller, Hello)
+    assert controller_name(conn) == "hello"
+  end
+
   test "controller_module/1" do
     conn = put_private(%Conn{}, :phoenix_controller, Hello)
     assert controller_module(conn) == Hello
