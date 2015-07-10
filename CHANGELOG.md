@@ -22,7 +22,7 @@ See these [`0.13.x` to `0.14.0` upgrade instructions](https://gist.github.com/ch
 * Bug fixes
   * [Channel] Fix xdomain content type not being treated as JSON requests
 
-* Javascript client backwords incompatible changes
+* Javascript client backwards incompatible changes
   * `logger` option to `Phoenix.Socket`, now uses three arguments, ie: `logger: (kind, msg, data) => { console.log(`${kind}: ${msg}`, data) }`
 
 * Backward incompatible changes
