@@ -45,6 +45,8 @@ We can get node.js from the [download page](https://nodejs.org/download/). When 
 
 Mac OS X users can also install node.js via [homebrew](http://brew.sh/).
 
+Note: io.js, which is an npm compatible platform originally based on Node.js, is not known to work with Phoenix.
+
 Debin/Ubuntu users might see an error that looks like this:
 ```console
 sh: 1: node: not found
