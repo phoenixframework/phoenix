@@ -211,7 +211,7 @@ For example, if we point the browser at: [http://localhost:4000/hello/Frank](htt
 
 ### A New Action
 
-Requests to our new route will be handled by the `HelloPhoenix.HelloController` `show` action. We already have the controller at `web/controllers/hello_controller.ex`, so all we need to do is edit that file and add a `show` action to it. This time, we'll need to keep the params that get passed into the action so that we can pass the messenger to the template. To do that, we add this show function to the controller.
+Requests to our new route will be handled by the `HelloPhoenix.HelloController` `show` action. We already have the controller at `web/controllers/hello_controller.ex`, so all we need to do is edit that file and add a `show` action to it. This time, we'll need to keep one of the items in the map of params that gets passed into the action, so that we can pass it (the messenger) to the template. To do that, we add this show function to the controller.
 
 ```elixir
 def show(conn, %{"messenger" => messenger}) do
@@ -222,7 +222,15 @@ There are a couple of things to notice here. We pattern match against the params
 
 Within the body of the `show` action, we also pass a third argument into the render function, a key value pair where `:messenger` is the key, and the messenger variable is passed as the value.
 
-It's good to remember that the keys to the params [Dict](http://elixir-lang.org/docs/stable/elixir/Dict.html) will always be strings.
+Note: If the body of the action needs access to the full map of parameters bound to the params variable in addition to the bound messenger variable, we could define `show/2` like this:
+
+```elixir
+def show(conn, %{"messenger" => messenger} = params) do
+  ...
+end
+```
+
+It's good to remember that the keys to the params [Dict](http://elixir-lang.org/docs/stable/elixir/Dict.html) will always be strings, and that the equals sign does not represent assignment, but is instead a [http://elixir-lang.org/getting-started/pattern-matching.html](pattern match) assertion.
 
 ### A New Template
 
