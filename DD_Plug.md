@@ -43,17 +43,17 @@ defmodule HelloPhoenix.MessageController do
       {:ok, user} ->
         case find_message(params["id"]) do
           nil ->
-            conn |> put_flash("That message wasn't found") |> redirect(to: "/")
+            conn |> put_flash(:info, "That message wasn't found") |> redirect(to: "/")
           message ->
             case authorize_message(conn, params["id"])
               :ok ->
-                render conn, :show, page: find_page(params["id"])
+                render conn, :show, page: find_message(params["id"])
               :error ->
-                conn |> put_flash("You can't access that page") |> redirect(to: "/")
+                conn |> put_flash(:info, "You can't access that page") |> redirect(to: "/")
             end
         end
       :error ->
-        conn |> put_flash("You must be logged in") |> redirect(to: "/")
+        conn |> put_flash(:info, "You must be logged in") |> redirect(to: "/")
     end
   end
 end
@@ -78,14 +78,14 @@ defmodule HelloPhoenix.MessageController do
       {:ok, user} ->
         assign(conn, :user, user)
       :error ->
-        conn |> put_flash("You must be logged in") |> redirect(to: "/") |> halt
+        conn |> put_flash(:info, "You must be logged in") |> redirect(to: "/") |> halt
     end
   end
 
   defp find_message(conn, _) do
     case find_message(params["id"]) do
       nil ->
-        conn |> put_flash("That message wasn't found") |> redirect(to: "/") |> halt
+        conn |> put_flash(:info, "That message wasn't found") |> redirect(to: "/") |> halt
       message ->
         assign(conn, :message, message)
     end
@@ -95,7 +95,7 @@ defmodule HelloPhoenix.MessageController do
     if Authorizer.can_access?(conn.assigns[:user], conn.assigns[:message]) do
       conn
     else
-      conn |> put_flash("You can't access that page") |> redirect(to: "/") |> halt
+      conn |> put_flash(:info, "You can't access that page") |> redirect(to: "/") |> halt
     end
   end
 end
