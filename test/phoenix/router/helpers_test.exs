@@ -52,9 +52,6 @@ defmodule Phoenix.Router.HelpersTest do
   defmodule Router do
     use Phoenix.Router
 
-    socket "/ws", as: :socket do
-    end
-
     get "/posts/top", PostController, :top, as: :top
     get "/posts/:id", PostController, :show
     get "/posts/file/*file", PostController, :file
@@ -253,14 +250,6 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.admin_message_path(__MODULE__, :show, 1) == "/admin/new/messages/1"
   end
 
-  test "socket defines helper with `:as` option" do
-    conn = conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
-    assert Helpers.socket_path(conn, :upgrade) == "/ws"
-    assert Helpers.socket_path(__MODULE__, :upgrade) == "/ws"
-    url = "https://example.com/ws"
-    assert Helpers.socket_url(conn, :upgrade) == url
-    assert Helpers.socket_url(__MODULE__, :upgrade) == url
-  end
 
   ## Others
 

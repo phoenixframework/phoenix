@@ -32,8 +32,7 @@ defmodule Phoenix.Transports.LongPoller do
   plug :check_origin
   plug :allow_origin
 
-  # TODO We need to uncomment this when we remove channels from endpoints
-  # plug Plug.Parsers, parsers: [:json], json_decoder: Poison
+  plug Plug.Parsers, parsers: [:json], json_decoder: Poison
 
   @doc """
   Responds to pre-flight CORS requests with Allow-Origin-* headers.
@@ -111,13 +110,13 @@ defmodule Phoenix.Transports.LongPoller do
   Starts the `Phoenix.LongPoller.Server` and stores the serialized pid in the session.
   """
   def start_session(conn) do
-    router = router_module(conn)
+    socket_handler = Map.fetch!(conn.private, :phoenix_socket)
     priv_topic =
       "phx:lp:"
       |> Kernel.<>(Base.encode64(:crypto.strong_rand_bytes(16)))
       |> Kernel.<>(:os.timestamp() |> Tuple.to_list |> Enum.join(""))
 
-    child = [router, timeout_window_ms(conn), priv_topic, endpoint_module(conn)]
+    child = [socket_handler, timeout_window_ms(conn), priv_topic, endpoint_module(conn)]
     {:ok, server_pid} = Supervisor.start_child(LongPoller.Supervisor, child)
 
     {conn, priv_topic, sign(conn, priv_topic), server_pid}

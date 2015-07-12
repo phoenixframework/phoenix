@@ -101,6 +101,9 @@ const CHAN_EVENTS = {
   reply: "phx_reply",
   leave: "phx_leave"
 }
+const SOCKET_TRANSPORTS = {
+  poll: "poll"
+}
 
 class Push {
 
@@ -502,8 +505,7 @@ export class LongPoller {
     this.onerror         = function(){} // noop
     this.onmessage       = function(){} // noop
     this.onclose         = function(){} // noop
-    this.upgradeEndpoint = this.normalizeEndpoint(endPoint)
-    this.pollEndpoint    = this.upgradeEndpoint + (/\/$/.test(endPoint) ? "poll" : "/poll")
+    this.pollEndpoint    = this.normalizeEndpoint(endPoint)
     this.readyState      = SOCKET_STATES.connecting
 
     this.poll()
@@ -514,7 +516,7 @@ export class LongPoller {
   }
 
   endpointURL(){
-    return this.pollEndpoint + `?token=${encodeURIComponent(this.token)}&sig=${encodeURIComponent(this.sig)}&format=json`
+    return this.pollEndpoint + `?transport=${SOCKET_TRANSPORTS.poll}&token=${encodeURIComponent(this.token)}&sig=${encodeURIComponent(this.sig)}&format=json`
   }
 
   closeAndRetry(){

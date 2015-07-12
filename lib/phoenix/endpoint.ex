@@ -279,6 +279,7 @@ defmodule Phoenix.Endpoint do
       import Phoenix.Endpoint
 
       Module.register_attribute(__MODULE__, :plugs, accumulate: true)
+      Module.register_attribute(__MODULE__, :phoenix_sockets, accumulate: true)
       @before_compile Phoenix.Endpoint
 
       def init(opts) do
@@ -290,7 +291,7 @@ defmodule Phoenix.Endpoint do
         conn
         |> Plug.Conn.put_private(:phoenix_endpoint, __MODULE__)
         |> put_script_name()
-        |> phoenix_endpoint_pipeline()
+        |> phoenix_pipeline()
       end
 
       defoverridable [init: 1, call: 2]
@@ -388,11 +389,23 @@ defmodule Phoenix.Endpoint do
 
   @doc false
   defmacro __before_compile__(env) do
+    sockets = Module.get_attribute(env.module, :phoenix_sockets)
     plugs = Module.get_attribute(env.module, :plugs)
     {conn, body} = Plug.Builder.compile(env, plugs, [])
 
+    socket_intercepts = for {path, mod} <- sockets do
+      path_info = Plug.Router.Utils.split(path)
+
+      quote do
+        defp phoenix_pipeline(%Plug.Conn{path_info: unquote(path_info)} = conn) do
+          Phoenix.Socket.Router.call(conn, Phoenix.Socket.Router.init(unquote(mod)))
+        end
+      end
+    end
+
     quote do
-      defp phoenix_endpoint_pipeline(unquote(conn)), do: unquote(body)
+      unquote(socket_intercepts)
+      defp phoenix_pipeline(unquote(conn)), do: unquote(body)
     end
   end
 
@@ -412,6 +425,24 @@ defmodule Phoenix.Endpoint do
   defmacro plug(plug, opts) do
     quote do
       @plugs {unquote(plug), unquote(opts), true}
+    end
+  end
+
+  @doc """
+  Defines a mount-point for a Socket module to handle channel definitions.
+
+  ## Examples
+
+      socket "/ws", MyApp.UserSocket
+      socket "/ws/admin", MyApp.AdminUserSocket
+
+  By default, the given path is a websocket upgrade endpoint,
+  with long-polling fallback. The transports can be configured
+  within the Socket handler
+  """
+  defmacro socket(path, module) do
+    quote do
+      @phoenix_sockets {unquote(path), unquote(module)}
     end
   end
 end

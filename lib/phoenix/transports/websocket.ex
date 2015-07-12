@@ -2,7 +2,7 @@ defmodule Phoenix.Transports.WebSocket do
   use Plug.Builder
   require Logger
 
-  import Phoenix.Controller, only: [endpoint_module: 1, router_module: 1]
+  import Phoenix.Controller, only: [endpoint_module: 1]
 
   alias Phoenix.Socket.Message
   alias Phoenix.Socket.Reply
@@ -49,7 +49,7 @@ defmodule Phoenix.Transports.WebSocket do
     serializer = Dict.fetch!(endpoint.config(:transports), :websocket_serializer)
     timeout    = Dict.fetch!(endpoint.config(:transports), :websocket_timeout)
 
-    {:ok, %{router: router_module(conn),
+    {:ok, %{socket_handler: Map.fetch!(conn.private, :phoenix_socket),
             endpoint: endpoint,
             sockets: HashDict.new,
             sockets_inverse: HashDict.new,
@@ -63,7 +63,7 @@ defmodule Phoenix.Transports.WebSocket do
   def ws_handle(opcode, payload, state) do
     msg = state.serializer.decode!(payload, opcode)
 
-    case Transport.dispatch(msg, state.sockets, self, state.router, state.endpoint, __MODULE__) do
+    case Transport.dispatch(msg, state.sockets, self, state.socket_handler, state.endpoint, __MODULE__) do
       {:ok, socket_pid} ->
         {:ok, put(state, msg.topic, socket_pid)}
       :ok ->

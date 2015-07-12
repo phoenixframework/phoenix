@@ -16,27 +16,36 @@ defmodule Phoenix.Tranports.LongPollerTest do
     %Conn{private: %{plug_session: session}}
     |> put_private(:phoenix_router, Router)
     |> put_private(:phoenix_endpoint, __MODULE__.Endpoint)
+    |> put_private(:phoenix_socket, __MODULE__.UserSocket)
     |> with_session
   end
 
+  defmodule UserSocket do
+    use Phoenix.Socket
+
+    def connect(_params), do: {:ok, %{}}
+
+    def id(_), do: "user_sockets:123"
+  end
+
+
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :lp_app
+
+    socket "/ws", UserSocket
   end
 
   defmodule Router do
     use Phoenix.Router
-
-    socket "/ws" do
-    end
   end
 
   setup_all do
-    capture_log fn -> Endpoint.start_link end
+    capture_log fn -> Endpoint.start_link() end
     :ok
   end
 
   test "start_session starts the LongPoller.Server and stores pid in session" do
-    conn = conn_with_sess
+    conn = conn_with_sess()
     assert LongPoller.verify_longpoll_topic(conn) == :notopic
     {conn = %Conn{}, priv_topic, sig, server_pid} = LongPoller.start_session(conn)
     conn = put_in conn.params, %{"token" => priv_topic, "sig" => sig}
@@ -47,7 +56,7 @@ defmodule Phoenix.Tranports.LongPollerTest do
   end
 
   test "verify_longpoll_topic returns {:error, :terminated} if serialized pid is dead" do
-    {conn = %Conn{}, priv_topic, sig, server_pid} = LongPoller.start_session(conn_with_sess)
+    {conn = %Conn{}, priv_topic, sig, server_pid} = LongPoller.start_session(conn_with_sess())
     conn = put_in conn.params, %{"token" => priv_topic, "sig" => sig}
     assert {:ok, ^priv_topic} = LongPoller.verify_longpoll_topic(conn)
     assert Process.alive?(server_pid)
@@ -57,19 +66,19 @@ defmodule Phoenix.Tranports.LongPollerTest do
   end
 
   test "resume_session returns {:ok, conn, pid} if valid session" do
-    {conn = %Conn{}, priv_topic, sig, _server_pid} = LongPoller.start_session(conn_with_sess)
+    {conn = %Conn{}, priv_topic, sig, _server_pid} = LongPoller.start_session(conn_with_sess())
     conn = put_in conn.params, %{"token" => priv_topic, "sig" => sig}
     assert {:ok, %Conn{}, ^priv_topic} = LongPoller.resume_session(conn)
   end
 
   test "resume_session returns {:error, conn, :terminated} if dead session" do
-    {conn = %Conn{}, _priv_topic, _sig, server_pid} = LongPoller.start_session(conn_with_sess)
+    {conn = %Conn{}, _priv_topic, _sig, server_pid} = LongPoller.start_session(conn_with_sess())
     :ok = GenServer.call(server_pid, :stop)
     assert {:error, %Conn{}, :terminated} = LongPoller.resume_session(conn)
   end
 
   test "resume_session returns {:error, conn, :terminated} if missing session" do
-    conn = conn_with_sess
+    conn = conn_with_sess()
     assert {:error, %Conn{}, :terminated} = LongPoller.resume_session(conn)
   end
 end

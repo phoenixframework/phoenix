@@ -15,7 +15,34 @@ defmodule Phoenix.Socket do
   * `topic` - The string topic, ie `"rooms:123"`
   * `transport` - The socket's transport, ie: `Phoenix.Transports.WebSocket`
   * `transport_pid` - The pid of the socket's transport process
+
+  ## Channels
+
+  Channels allow you to route pubsub events to channel handlers in your application.
+  By default, Phoenix supports both WebSocket and LongPoller transports.
+  See the `Phoenix.Channel.Transport` documentation for more information on writing
+  your own transports. Channels are defined with a `socket` mount, ie:
+
+      # TODO new approach w/ endpoint
+      defmodule MyApp.Router do
+        use Phoenix.Router
+
+        socket "/ws" do
+          channel "rooms:*", MyApp.RoomChannel
+        end
+      end
+
   """
+
+  use Behaviour
+  alias Phoenix.Socket
+  alias Phoenix.Socket.Helpers
+
+  defcallback connect(params :: map) :: {:ok, socket_assigns :: map} |
+                                        {:error, reason :: map}
+
+  defcallback id(socket_assigns :: map) :: String.t
+
 
   defmodule InvalidMessageError do
     @moduledoc """
@@ -24,7 +51,6 @@ defmodule Phoenix.Socket do
     defexception [:message]
   end
 
-  alias Phoenix.Socket
 
   @type t :: %Socket{assigns: %{},
                      channel: atom,
@@ -47,6 +73,60 @@ defmodule Phoenix.Socket do
             topic: nil,
             transport: nil,
             transport_pid: nil
+
+
+  defmacro __using__(_) do
+    quote do
+      @behavoiur Phoenix.Socket
+      import unquote(__MODULE__)
+      Module.register_attribute(__MODULE__, :phoenix_channels, accumulate: true)
+      @before_compile unquote(__MODULE__)
+    end
+  end
+
+  defmacro __before_compile__(env) do
+    channels = env.module |> Module.get_attribute(:phoenix_channels) |> Helpers.defchannels()
+
+    quote do
+      unquote(channels)
+    end
+  end
+
+  @doc """
+  Defines a channel matching the given topic and transports.
+
+    * `topic_pattern` - The string pattern, ie "rooms:*", "users:*", "system"
+    * `module` - The channel module handler, ie `MyApp.RoomChannel`
+    * `opts` - The optional list of options, see below
+
+  ## Options
+
+    * `:via` - the transport adapters to accept on this channel.
+      Defaults `[Phoenix.Transports.WebSocket, Phoenix.Transports.LongPoller]`
+
+  ## Examples
+
+      socket "/ws" do
+        channel "topic1:*", MyChannel
+        channel "topic2:*", MyChannel, via: [Phoenix.Transports.WebSocket]
+        channel "topic",    MyChannel, via: [Phoenix.Transports.LongPoller]
+      end
+
+  ## Topic Patterns
+
+  The `channel` macro accepts topic patterns in two flavors. A splat argument
+  can be provided as the last character to indicate a "topic:subtopic" match. If
+  a plain string is provied, only that topic will match the channel handler.
+  Most use-cases will use the "topic:*" pattern to allow more versatile topic
+  scoping.
+
+  See `Phoenix.Channel` for more information
+  """
+  defmacro channel(topic_pattern, module, opts \\ []) do
+    quote do
+      @phoenix_channels {unquote_splicing([topic_pattern, module, opts])}
+    end
+  end
 end
 
 defmodule Phoenix.Socket.Message do
