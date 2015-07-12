@@ -115,7 +115,6 @@ defmodule Phoenix.Controller do
   @spec controller_name(Plug.Conn.t) :: String.t
   def controller_name(conn) do
     Phoenix.Naming.resource_name(conn.private.phoenix_controller, "Controller")
-    |> String.replace("_", "-")
   end
 
   @doc """

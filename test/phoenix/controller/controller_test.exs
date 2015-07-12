@@ -25,7 +25,7 @@ defmodule Phoenix.Controller.ControllerTest do
     assert controller_name(conn) == "hello"
 
     conn_multi = put_private(%Conn{}, :phoenix_controller, HelloWorld)
-    assert controller_name(conn_multi) == "hello-world"
+    assert controller_name(conn_multi) == "hello_world"
   end
 
   test "controller_module/1" do
