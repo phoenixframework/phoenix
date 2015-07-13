@@ -198,6 +198,9 @@ var CHAN_EVENTS = {
   reply: "phx_reply",
   leave: "phx_leave"
 };
+var SOCKET_TRANSPORTS = {
+  poll: "poll"
+};
 
 var Push = (function () {
 
@@ -587,8 +590,8 @@ var Socket = exports.Socket = (function () {
     }, this.reconnectAfterMs);
     this.logger = opts.logger || function () {}; // noop
     this.longpollerTimeout = opts.longpollerTimeout || 20000;
-    this.endPoint = this.expandEndpoint(endPoint);
     this.params = opts.params || {};
+    this.endPoint = endPoint;
   }
 
   _prototypeProperties(Socket, null, {
@@ -599,16 +602,17 @@ var Socket = exports.Socket = (function () {
       writable: true,
       configurable: true
     },
-    expandEndpoint: {
-      value: function expandEndpoint(endPoint) {
-        if (endPoint.charAt(0) !== "/") {
-          return endPoint;
+    endPointURL: {
+      value: function endPointURL() {
+        var uri = Ajax.appendParams(this.endPoint, this.params);
+        if (uri.charAt(0) !== "/") {
+          return uri;
         }
-        if (endPoint.charAt(1) === "/") {
-          return "" + this.protocol() + ":" + endPoint;
+        if (uri.charAt(1) === "/") {
+          return "" + this.protocol() + ":" + uri;
         }
 
-        return "" + this.protocol() + "://" + location.host + "" + endPoint;
+        return "" + this.protocol() + "://" + location.host + "" + uri;
       },
       writable: true,
       configurable: true
@@ -634,7 +638,7 @@ var Socket = exports.Socket = (function () {
         var _this = this;
 
         this.disconnect(function () {
-          _this.conn = new _this.transport(_this.endPoint);
+          _this.conn = new _this.transport(_this.endPointURL());
           _this.conn.timeout = _this.longpollerTimeout;
           _this.conn.onopen = function () {
             return _this.onConnOpen();
@@ -703,7 +707,7 @@ var Socket = exports.Socket = (function () {
       value: function onConnOpen() {
         var _this = this;
 
-        this.log("transport", "connected to " + this.endPoint, this.transport);
+        this.log("transport", "connected to " + this.endPointURL(), this.transport);
         this.flushSendBuffer();
         this.reconnectTimer.reset();
         if (!this.conn.skipHeartbeat) {
@@ -899,8 +903,7 @@ var LongPoller = exports.LongPoller = (function () {
     this.onerror = function () {}; // noop
     this.onmessage = function () {}; // noop
     this.onclose = function () {}; // noop
-    this.upgradeEndpoint = this.normalizeEndpoint(endPoint);
-    this.pollEndpoint = this.upgradeEndpoint + (/\/$/.test(endPoint) ? "poll" : "/poll");
+    this.pollEndpoint = this.normalizeEndpoint(endPoint);
     this.readyState = SOCKET_STATES.connecting;
 
     this.poll();
@@ -909,14 +912,19 @@ var LongPoller = exports.LongPoller = (function () {
   _prototypeProperties(LongPoller, null, {
     normalizeEndpoint: {
       value: function normalizeEndpoint(endPoint) {
-        return endPoint.replace("http://", "ws://").replace("https://", "wss://");
+        return endPoint.replace("ws://", "http://").replace("wss://", "https://");
       },
       writable: true,
       configurable: true
     },
     endpointURL: {
       value: function endpointURL() {
-        return this.pollEndpoint + ("?token=" + encodeURIComponent(this.token) + "&sig=" + encodeURIComponent(this.sig) + "&format=json");
+        return Ajax.appendParams(this.pollEndpoint, {
+          transport: SOCKET_TRANSPORTS.poll,
+          token: this.token,
+          sig: this.sig,
+          format: "json"
+        });
       },
       writable: true,
       configurable: true
@@ -1083,6 +1091,38 @@ var Ajax = exports.Ajax = (function () {
     parseJSON: {
       value: function parseJSON(resp) {
         return resp && resp !== "" ? JSON.parse(resp) : null;
+      },
+      writable: true,
+      configurable: true
+    },
+    serialize: {
+      value: function serialize(obj, parentKey) {
+        var queryStr = [];
+        for (var key in obj) {
+          if (!obj.hasOwnProperty(key)) {
+            continue;
+          }
+          var paramKey = parentKey ? "" + parentKey + "[" + key + "]" : key;
+          var paramVal = obj[key];
+          if (typeof paramVal === "object") {
+            queryStr.push(this.serialize(paramVal, paramKey));
+          } else {
+            queryStr.push(encodeURIComponent(paramKey) + "=" + encodeURIComponent(paramVal));
+          }
+        }
+        return queryStr.join("&");
+      },
+      writable: true,
+      configurable: true
+    },
+    appendParams: {
+      value: function appendParams(url, params) {
+        if (Object.keys(params).length === 0) {
+          return url;
+        }
+
+        var prefix = url.match(/\?/) ? "&" : "?";
+        return "" + url + "" + prefix + "" + this.serialize(params);
       },
       writable: true,
       configurable: true

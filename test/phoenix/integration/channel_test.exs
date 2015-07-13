@@ -4,6 +4,7 @@ Code.require_file "http_client.exs", __DIR__
 defmodule Phoenix.Integration.ChannelTest do
   use ExUnit.Case, async: false
   use RouterHelper
+  import Plug.Conn, except: [assign: 3]
 
   alias Phoenix.Integration.WebsocketClient
   alias Phoenix.Integration.HTTPClient
@@ -41,7 +42,7 @@ defmodule Phoenix.Integration.ChannelTest do
 
     def handle_info({:after_join, message}, socket) do
       broadcast socket, "user:entered", %{user: message["user"]}
-      push socket, "joined", %{status: "connected"}
+      push socket, "joined", Map.merge(%{status: "connected"}, socket.assigns)
       {:noreply, socket}
     end
 
@@ -62,11 +63,6 @@ defmodule Phoenix.Integration.ChannelTest do
 
   defmodule Router do
     use Phoenix.Router
-
-    def call(conn, opts) do
-      Logger.disable(self)
-      super(conn, opts)
-    end
   end
 
   defmodule UserSocket do
@@ -74,13 +70,23 @@ defmodule Phoenix.Integration.ChannelTest do
 
     channel "rooms:*", RoomChannel
 
-    def connect(_params), do: {:ok, %{}}
+    def connect(%{"reject" => "true"}, _socket) do
+      :error
+    end
+    def connect(_params, socket) do
+      {:ok, assign(socket, :handler, "UserSocket")}
+    end
 
     def id(_), do: "user_sockets:123"
   end
 
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :channel_app
+
+    def call(conn, opts) do
+      Logger.disable(self)
+      super(conn, opts)
+    end
 
     socket "/ws", UserSocket
 
@@ -110,10 +116,15 @@ defmodule Phoenix.Integration.ChannelTest do
     {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
 
     WebsocketClient.join(sock, "rooms:lobby", %{})
-    assert_receive %Message{event: "phx_reply", payload: %{"response" => %{}, "status" => "ok"}, ref: "1", topic: "rooms:lobby"}
+    assert_receive %Message{event: "phx_reply",
+                            payload: %{"response" => %{}, "status" => "ok"},
+                            ref: "1", topic: "rooms:lobby"}
 
-    assert_receive %Message{event: "joined", payload: %{"status" => "connected"}}
-    assert_receive %Message{event: "user:entered", payload: %{"user" => nil}, ref: nil, topic: "rooms:lobby"}
+    assert_receive %Message{event: "joined", payload: %{"status" => "connected",
+                                                        "handler" => "UserSocket"}}
+    assert_receive %Message{event: "user:entered",
+                            payload: %{"user" => nil},
+                            ref: nil, topic: "rooms:lobby"}
     channel_pid = Process.whereis(:"rooms:lobby")
     assert Process.alive?(channel_pid)
 
@@ -169,6 +180,11 @@ defmodule Phoenix.Integration.ChannelTest do
                                                  [{"origin", "http://notallowed.com"}])
   end
 
+  test "websocket refuses UserSocket connects that error with 403 response" do
+    assert WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws?reject=true") ==
+      {:error, {403, "Forbidden"}}
+  end
+
   ## Longpoller Transport
 
   @doc """
@@ -213,10 +229,18 @@ defmodule Phoenix.Integration.ChannelTest do
     session = Map.take(resp.body, ["token", "sig"])
     assert resp.body["status"] == 200
     [phx_reply, status_msg, user_entered] = resp.body["messages"]
-    assert phx_reply == %{"event" => "phx_reply", "payload" => %{"response" => %{}, "status" => "ok"}, "ref" => "123", "topic" => "rooms:lobby"}
-    assert status_msg == %{"event" => "joined", "payload" => %{"status" => "connected"}, "ref" => nil, "topic" => "rooms:lobby"}
-    assert user_entered == %{"event" => "user:entered", "payload" => %{"user" => nil}, "ref" => nil, "topic" => "rooms:lobby"}
-
+    assert phx_reply ==
+      %{"event" => "phx_reply",
+        "payload" => %{"response" => %{}, "status" => "ok"},
+        "ref" => "123", "topic" => "rooms:lobby"}
+    assert status_msg ==
+      %{"event" => "joined",
+        "payload" => %{"status" => "connected", "handler" => "UserSocket"},
+        "ref" => nil, "topic" => "rooms:lobby"}
+    assert user_entered ==
+      %{"event" => "user:entered",
+        "payload" => %{"user" => nil},
+        "ref" => nil, "topic" => "rooms:lobby"}
 
     # poll without messages sends 204 no_content
     resp = poll(:get, "/ws", session)
@@ -398,11 +422,18 @@ defmodule Phoenix.Integration.ChannelTest do
     resp = poll(:get, "/ws", session)
     assert resp.body["messages"] == [
       %{"event" => "phx_reply", "payload" => %{"response" => %{}, "status" => "ok"}, "ref" => "1", "topic" => "rooms:lobby"},
-      %{"event" => "joined", "payload" => %{"status" => "connected"}, "ref" => nil, "topic" => "rooms:lobby"},
+      %{"event" => "joined", "payload" => %{"status" => "connected", "handler" => "UserSocket"}, "ref" => nil, "topic" => "rooms:lobby"},
       %{"event" => "user:entered", "payload" => %{"user" => nil}, "ref" => nil, "topic" => "rooms:lobby"},
       %{"event" => "phx_reply", "payload" => %{"response" => %{}, "status" => "ok"}, "ref" => "2", "topic" => "rooms:lobby"},
       %{"event" => "you:left", "payload" => %{"message" => "bye!"}, "ref" => nil, "topic" => "rooms:lobby"},
       %{"event" => "phx_close", "payload" => %{}, "ref" => nil, "topic" => "rooms:lobby"}
     ]
   end
+
+  test "longpoller refuses UserSocket connects that error with 403 response" do
+    resp = poll :get, "/ws", %{"reject" => "true"}, %{}
+    assert resp.body["status"] == 403
+  end
+
+
 end

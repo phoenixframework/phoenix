@@ -210,6 +210,7 @@ defmodule Phoenix.Channel do
     quote do
       @behaviour unquote(__MODULE__)
       import unquote(__MODULE__)
+      import Phoenix.Socket, only: [assign: 3]
 
       def handle_in(_event, _message, socket) do
         {:noreply, socket}
@@ -313,21 +314,5 @@ defmodule Phoenix.Channel do
           {:noreply, socket}
         end
     """
-  end
-
-  @doc """
-  Adds key/value pair to socket assigns.
-
-  ## Examples
-
-      iex> socket.assigns[:token]
-      nil
-      iex> socket = assign(socket, :token, "bar")
-      iex> socket.assigns[:token]
-      "bar"
-
-  """
-  def assign(socket = %Socket{}, key, value) do
-    update_in socket.assigns, &Map.put(&1, key, value)
   end
 end

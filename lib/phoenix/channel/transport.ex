@@ -67,10 +67,10 @@ defmodule Phoenix.Channel.Transport do
     * `{:error, reason}` - Unauthorized or unmatched dispatch
 
   """
-  def dispatch(%Message{} = msg, sockets, transport_pid, socket_handler, endpoint, transport) do
+  def dispatch(%Message{} = msg, sockets, transport_pid, socket_handler, socket, endpoint, transport) do
     sockets
     |> HashDict.get(msg.topic)
-    |> dispatch(msg, transport_pid, socket_handler, endpoint, transport)
+    |> dispatch(msg, transport_pid, socket_handler, socket, endpoint, transport)
   end
 
   @doc """
@@ -84,15 +84,16 @@ defmodule Phoenix.Channel.Transport do
 
   The server will respond to heartbeats with the same message
   """
-  def dispatch(_, %{ref: ref, topic: "phoenix", event: "heartbeat"}, transport_pid, _socket_handler, _pubsub_server, _transport) do
+  def dispatch(_, %{ref: ref, topic: "phoenix", event: "heartbeat"}, transport_pid, _socket_handler, _socket, _pubsub_server, _transport) do
     reply(transport_pid, ref, "phoenix", %{status: :ok, response: %{}})
     :ok
   end
-  def dispatch(nil, %{event: "phx_join"} = msg, transport_pid, socket_handler, endpoint, transport) do
+  def dispatch(nil, %{event: "phx_join"} = msg, transport_pid, socket_handler, base_socket, endpoint, transport) do
     case socket_handler.channel_for_topic(msg.topic, transport) do
       nil     -> log_ignore(msg.topic, socket_handler)
       channel ->
         socket = %Socket{transport_pid: transport_pid,
+                  assigns: base_socket.assigns,
                   endpoint: endpoint,
                   pubsub_server: endpoint.__pubsub_server__(),
                   topic: msg.topic,
@@ -119,14 +120,14 @@ defmodule Phoenix.Channel.Transport do
         end
     end
   end
-  def dispatch(nil, msg, _transport_pid, socket_handler, _pubsub_server, _transport) do
+  def dispatch(nil, msg, _transport_pid, socket_handler, _socket, _pubsub_server, _transport) do
     log_ignore(msg.topic, socket_handler)
   end
-  def dispatch(socket_pid, %{event: "phx_leave", ref: ref}, _transport_pid, _socket_handler, _pubsub_server, _transport) do
+  def dispatch(socket_pid, %{event: "phx_leave", ref: ref}, _transport_pid, _socket_handler, _socket, _pubsub_server, _transport) do
     Phoenix.Channel.Server.leave(socket_pid, ref)
     :ok
   end
-  def dispatch(socket_pid, msg, _transport_pid, _socket_handler, _pubsub_server, _transport) do
+  def dispatch(socket_pid, msg, _transport_pid, _socket_handler, _socket, _pubsub_server, _transport) do
     send(socket_pid, msg)
     :ok
   end

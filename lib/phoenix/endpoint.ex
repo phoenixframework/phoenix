@@ -393,12 +393,14 @@ defmodule Phoenix.Endpoint do
     plugs = Module.get_attribute(env.module, :plugs)
     {conn, body} = Plug.Builder.compile(env, plugs, [])
 
-    socket_intercepts = for {path, mod} <- sockets do
+    socket_intercepts = for {path, module} <- sockets do
       path_info = Plug.Router.Utils.split(path)
 
       quote do
         defp phoenix_pipeline(%Plug.Conn{path_info: unquote(path_info)} = conn) do
-          Phoenix.Socket.Router.call(conn, Phoenix.Socket.Router.init(unquote(mod)))
+          conn
+          |> Plug.Conn.put_private(:phoenix_socket_handler, unquote(module))
+          |> Phoenix.Socket.Router.call(Phoenix.Socket.Router.init([]))
         end
       end
     end

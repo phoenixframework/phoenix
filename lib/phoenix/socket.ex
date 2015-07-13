@@ -38,8 +38,8 @@ defmodule Phoenix.Socket do
   alias Phoenix.Socket
   alias Phoenix.Socket.Helpers
 
-  defcallback connect(params :: map) :: {:ok, socket_assigns :: map} |
-                                        {:error, reason :: map}
+  defcallback connect(params :: map) :: {:ok, Socket.t} |
+                                        :error
 
   defcallback id(socket_assigns :: map) :: String.t
 
@@ -90,6 +90,22 @@ defmodule Phoenix.Socket do
     quote do
       unquote(channels)
     end
+  end
+
+  @doc """
+  Adds key/value pair to socket assigns.
+
+  ## Examples
+
+      iex> socket.assigns[:token]
+      nil
+      iex> socket = assign(socket, :token, "bar")
+      iex> socket.assigns[:token]
+      "bar"
+
+  """
+  def assign(socket = %Socket{}, key, value) do
+    update_in socket.assigns, &Map.put(&1, key, value)
   end
 
   @doc """

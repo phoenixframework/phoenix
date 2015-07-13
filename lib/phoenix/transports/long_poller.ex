@@ -75,11 +75,17 @@ defmodule Phoenix.Transports.LongPoller do
   end
 
   defp new_session(conn) do
-    {conn, priv_topic, sig, _server_pid} = start_session(conn)
+    case conn.private.phoenix_socket_handler.connect(conn.params, %Phoenix.Socket{}) do
+      {:ok, socket} ->
+        {conn, priv_topic, sig, _server_pid} = start_session(conn, socket)
 
-    conn
-    |> put_status(:gone)
-    |> status_json(%{token: priv_topic, sig: sig})
+        conn
+        |> put_status(:gone)
+        |> status_json(%{token: priv_topic, sig: sig})
+
+      :error ->
+        conn |> put_status(:forbidden) |> status_json(%{})
+    end
   end
 
   @doc """
@@ -109,14 +115,14 @@ defmodule Phoenix.Transports.LongPoller do
   @doc """
   Starts the `Phoenix.LongPoller.Server` and stores the serialized pid in the session.
   """
-  def start_session(conn) do
-    socket_handler = Map.fetch!(conn.private, :phoenix_socket)
+  def start_session(conn, socket) do
+    socket_handler = conn.private.phoenix_socket_handler
     priv_topic =
       "phx:lp:"
       |> Kernel.<>(Base.encode64(:crypto.strong_rand_bytes(16)))
       |> Kernel.<>(:os.timestamp() |> Tuple.to_list |> Enum.join(""))
 
-    child = [socket_handler, timeout_window_ms(conn), priv_topic, endpoint_module(conn)]
+    child = [socket_handler, socket, timeout_window_ms(conn), priv_topic, endpoint_module(conn)]
     {:ok, server_pid} = Supervisor.start_child(LongPoller.Supervisor, child)
 
     {conn, priv_topic, sign(conn, priv_topic), server_pid}

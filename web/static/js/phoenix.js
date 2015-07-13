@@ -351,17 +351,18 @@ export class Socket {
     this.reconnectTimer       = new Timer(() => this.connect(), this.reconnectAfterMs)
     this.logger               = opts.logger || function(){} // noop
     this.longpollerTimeout    = opts.longpollerTimeout || 20000
-    this.endPoint             = this.expandEndpoint(endPoint)
     this.params               = opts.params || {}
+    this.endPoint             = endPoint
   }
 
   protocol(){ return location.protocol.match(/^https/) ? "wss" : "ws" }
 
-  expandEndpoint(endPoint){
-    if(endPoint.charAt(0) !== "/"){ return endPoint }
-    if(endPoint.charAt(1) === "/"){ return `${this.protocol()}:${endPoint}` }
+  endPointURL(){
+    let uri = Ajax.appendParams(this.endPoint, this.params)
+    if(uri.charAt(0) !== "/"){ return uri }
+    if(uri.charAt(1) === "/"){ return `${this.protocol()}:${uri}` }
 
-    return `${this.protocol()}://${location.host}${endPoint}`
+    return `${this.protocol()}://${location.host}${uri}`
   }
 
   disconnect(callback, code, reason){
@@ -375,7 +376,7 @@ export class Socket {
 
   connect(){
     this.disconnect(() => {
-      this.conn = new this.transport(this.endPoint)
+      this.conn = new this.transport(this.endPointURL())
       this.conn.timeout   = this.longpollerTimeout
       this.conn.onopen    = () => this.onConnOpen()
       this.conn.onerror   = error => this.onConnError(error)
@@ -399,7 +400,7 @@ export class Socket {
   onMessage  (callback){ this.stateChangeCallbacks.message.push(callback) }
 
   onConnOpen(){
-    this.log("transport", `connected to ${this.endPoint}`, this.transport)
+    this.log("transport", `connected to ${this.endPointURL()}`, this.transport)
     this.flushSendBuffer()
     this.reconnectTimer.reset()
     if(!this.conn.skipHeartbeat){
@@ -512,11 +513,16 @@ export class LongPoller {
   }
 
   normalizeEndpoint(endPoint){
-    return endPoint.replace("http://", "ws://").replace("https://", "wss://")
+    return endPoint.replace("ws://", "http://").replace("wss://", "https://")
   }
 
   endpointURL(){
-    return this.pollEndpoint + `?transport=${SOCKET_TRANSPORTS.poll}&token=${encodeURIComponent(this.token)}&sig=${encodeURIComponent(this.sig)}&format=json`
+    return Ajax.appendParams(this.pollEndpoint, {
+      transport: SOCKET_TRANSPORTS.poll,
+      token: this.token,
+      sig: this.sig,
+      format: "json"
+    })
   }
 
   closeAndRetry(){
@@ -629,6 +635,27 @@ export class Ajax {
     return (resp && resp !== "") ?
              JSON.parse(resp) :
              null
+  }
+
+  static serialize(obj, parentKey){
+    let queryStr = [];
+    for(var key in obj){ if(!obj.hasOwnProperty(key)){ continue }
+      let paramKey = parentKey ? `${parentKey}[${key}]` : key
+      let paramVal = obj[key]
+      if(typeof paramVal === "object"){
+        queryStr.push(this.serialize(paramVal, paramKey))
+      } else {
+        queryStr.push(encodeURIComponent(paramKey) + "=" + encodeURIComponent(paramVal))
+      }
+    }
+    return queryStr.join("&")
+  }
+
+  static appendParams(url, params){
+    if(Object.keys(params).length === 0){ return url }
+
+    let prefix = url.match(/\?/) ? "&" : "?"
+    return `${url}${prefix}${this.serialize(params)}`
   }
 }
 

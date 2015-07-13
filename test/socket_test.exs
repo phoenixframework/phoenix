@@ -1,6 +1,7 @@
 defmodule Phoenix.SocketTest do
   use ExUnit.Case, async: true
 
+  import Phoenix.Socket
   alias Phoenix.Socket.Message
   alias Phoenix.Socket.InvalidMessageError
 
@@ -22,5 +23,12 @@ defmodule Phoenix.SocketTest do
     assert_raise InvalidMessageError, fn ->
       Message.from_map!(%{"topic" => "c", "event" => "e"})
     end
+  end
+
+  test "assigning to socket" do
+    socket = %Phoenix.Socket{}
+    assert socket.assigns[:foo] == nil
+    socket = assign(socket, :foo, :bar)
+    assert socket.assigns[:foo] == :bar
   end
 end

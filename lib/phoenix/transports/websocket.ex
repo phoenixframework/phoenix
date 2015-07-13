@@ -37,7 +37,15 @@ defmodule Phoenix.Transports.WebSocket do
   plug :upgrade
 
   def upgrade(%Plug.Conn{method: "GET"} = conn, _) do
-    put_private(conn, :phoenix_upgrade, {:websocket, __MODULE__}) |> halt
+    case conn.private.phoenix_socket_handler.connect(conn.params, %Phoenix.Socket{}) do
+      {:ok, socket} ->
+        conn
+        |> put_private(:phoenix_upgrade, {:websocket, __MODULE__})
+        |> put_private(:phoenix_socket, socket)
+        |> halt()
+      :error ->
+        conn |> send_resp(403, "") |> halt()
+    end
   end
 
   @doc """
@@ -45,11 +53,14 @@ defmodule Phoenix.Transports.WebSocket do
   """
   def ws_init(conn) do
     Process.flag(:trap_exit, true)
-    endpoint   = endpoint_module(conn)
-    serializer = Dict.fetch!(endpoint.config(:transports), :websocket_serializer)
-    timeout    = Dict.fetch!(endpoint.config(:transports), :websocket_timeout)
+    endpoint       = endpoint_module(conn)
+    serializer     = Dict.fetch!(endpoint.config(:transports), :websocket_serializer)
+    timeout        = Dict.fetch!(endpoint.config(:transports), :websocket_timeout)
+    socket_handler = conn.private.phoenix_socket_handler
+    socket         = conn.private.phoenix_socket
 
-    {:ok, %{socket_handler: Map.fetch!(conn.private, :phoenix_socket),
+    {:ok, %{socket_handler: socket_handler,
+            socket: socket,
             endpoint: endpoint,
             sockets: HashDict.new,
             sockets_inverse: HashDict.new,
@@ -63,7 +74,7 @@ defmodule Phoenix.Transports.WebSocket do
   def ws_handle(opcode, payload, state) do
     msg = state.serializer.decode!(payload, opcode)
 
-    case Transport.dispatch(msg, state.sockets, self, state.socket_handler, state.endpoint, __MODULE__) do
+    case Transport.dispatch(msg, state.sockets, self, state.socket_handler, state.socket, state.endpoint, __MODULE__) do
       {:ok, socket_pid} ->
         {:ok, put(state, msg.topic, socket_pid)}
       :ok ->
