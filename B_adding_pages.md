@@ -230,7 +230,7 @@ def show(conn, %{"messenger" => messenger} = params) do
 end
 ```
 
-It's good to remember that the keys to the params [Dict](http://elixir-lang.org/docs/stable/elixir/Dict.html) will always be strings, and that the equals sign does not represent assignment, but is instead a [http://elixir-lang.org/getting-started/pattern-matching.html](pattern match) assertion.
+It's good to remember that the keys to the params [Dict](http://elixir-lang.org/docs/stable/elixir/Dict.html) will always be strings, and that the equals sign does not represent assignment, but is instead a [pattern match](http://elixir-lang.org/getting-started/pattern-matching.html) assertion.
 
 ### A New Template
 
