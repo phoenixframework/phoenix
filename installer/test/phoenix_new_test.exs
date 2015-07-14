@@ -117,6 +117,23 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     end
   end
 
+  test "new with uppercase" do
+    in_tmp "new with uppercase", fn ->
+      Mix.Tasks.Phoenix.New.run(["photoBlog"])
+
+      assert_file "photoBlog/README.md"
+
+      assert_file "photoBlog/mix.exs", fn file ->
+        assert file =~ "app: :photoBlog"
+      end
+
+      assert_file "photoBlog/config/dev.exs", fn file ->
+        assert file =~ ~r/config :photoBlog, PhotoBlog.Repo,/
+        assert file =~ "database: \"photoblog_dev\""
+      end
+    end
+  end
+
   test "new with path, app and module" do
     in_tmp "new with path, app and module", fn ->
       project_path = Path.join(File.cwd!, "custom_path")

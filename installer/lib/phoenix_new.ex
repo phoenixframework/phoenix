@@ -199,6 +199,12 @@ defmodule Mix.Tasks.Phoenix.New do
     if binding[:ecto] do
       copy_from path, binding, @ecto
 
+      # We lowercase the database name because according to the
+      # SQL spec, they are case insensitive unless quoted, which
+      # means creating a database like FoO is the same as foo in
+      # some storages.
+      database = String.downcase binding[:application_name]
+
       append_to path, "config/dev.exs", """
 
       # Configure your database
@@ -206,7 +212,7 @@ defmodule Mix.Tasks.Phoenix.New do
         adapter: #{inspect binding[:adapter_module]},
         username: #{inspect binding[:db_user]},
         password: #{inspect binding[:db_password]},
-        database: "#{binding[:application_name]}_dev",
+        database: "#{database}_dev",
         size: 10 # The amount of database connections in the pool
       """
 
@@ -217,7 +223,7 @@ defmodule Mix.Tasks.Phoenix.New do
         adapter: #{inspect binding[:adapter_module]},
         username: #{inspect binding[:db_user]},
         password: #{inspect binding[:db_password]},
-        database: "#{binding[:application_name]}_test",
+        database: "#{database}_test",
         pool: Ecto.Adapters.SQL.Sandbox, # Use a sandbox for transactional testing
         size: 1
       """
@@ -229,7 +235,7 @@ defmodule Mix.Tasks.Phoenix.New do
         adapter: #{inspect binding[:adapter_module]},
         username: #{inspect binding[:db_user]},
         password: #{inspect binding[:db_password]},
-        database: "#{binding[:application_name]}_prod",
+        database: "#{database}_prod",
         size: 20 # The amount of database connections in the pool
       """
     end
