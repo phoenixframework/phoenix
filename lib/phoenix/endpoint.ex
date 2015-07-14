@@ -440,7 +440,8 @@ defmodule Phoenix.Endpoint do
 
   By default, the given path is a websocket upgrade endpoint,
   with long-polling fallback. The transports can be configured
-  within the Socket handler
+  within the Socket handler. See `Phoenix.Socket` for more information
+  on defining socket handlers.
   """
   defmacro socket(path, module) do
     quote do

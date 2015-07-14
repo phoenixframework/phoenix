@@ -1,5 +1,5 @@
 defmodule Phoenix.Socket do
-  @moduledoc """
+  @moduledoc ~S"""
   Holds state for every channel, pointing to its transport,
   pubsub server and more.
 
@@ -22,16 +22,38 @@ defmodule Phoenix.Socket do
   Channels allow you to route pubsub events to channel handlers in your application.
   By default, Phoenix supports both WebSocket and LongPoller transports.
   See the `Phoenix.Channel.Transport` documentation for more information on writing
-  your own transports. Channels are defined with a `socket` mount, ie:
+  your own transports. Channels are defined within a socket handler, using the
+  `channel/2` macro, as seen below.
 
-      # TODO new approach w/ endpoint
-      defmodule MyApp.Router do
-        use Phoenix.Router
+  ## Socket Behaviour
 
-        socket "/ws" do
-          channel "rooms:*", MyApp.RoomChannel
+  Socket handlers are mounted in Endpoints and must define two callbacks:
+
+    * `connect/2` - receives the socket params and authenticates the connection.
+                    Often used to wire up default `%Phoenix.Socket{}` assigns
+                    for all channels.
+    * `id/1` - receives the socket returned by `connect/2`, and returns the
+               string id of this connection. Used for forcing a disconnect for
+               connection and all child channels. For sockets requiring no
+               authentication, `nil` can be returned.
+
+  Callback examples:
+
+      defmodule MyApp.UserSocket do
+        use Phoenix.Socket
+
+        channel "rooms:*", MyApp.RoomChannel
+
+        def connect(params, socket) do
+          {:ok, assign(socket, :user_id, params["user_id"])}
         end
+
+        def id(socket), do: "users_socket:#{socket.assigns.user_id}"
       end
+
+      ...
+      # disconnect all user's socket connections and their multiplexed channels
+      MyApp.Endpoint.broadcast("users_socket:" <> user.id, "disconnect")
 
   """
 
@@ -124,11 +146,9 @@ defmodule Phoenix.Socket do
 
   ## Examples
 
-      socket "/ws" do
-        channel "topic1:*", MyChannel
-        channel "topic2:*", MyChannel, via: [Phoenix.Transports.WebSocket]
-        channel "topic",    MyChannel, via: [Phoenix.Transports.LongPoller]
-      end
+      channel "topic1:*", MyChannel
+      channel "topic2:*", MyChannel, via: [Phoenix.Transports.WebSocket]
+      channel "topic",    MyChannel, via: [Phoenix.Transports.LongPoller]
 
   ## Topic Patterns
 

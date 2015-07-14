@@ -34,11 +34,9 @@ defmodule Mix.Tasks.Phoenix.Gen.Channel do
 
     Mix.shell.info """
 
-    Add the channel to a socket scope in web/router.ex:
+    Add the channel to a socket handler, ie:
 
-        socket "/ws", #{binding[:base]} do
-          channel "#{plural}:lobby", #{binding[:scoped]}Channel
-        end
+      channel "#{plural}:lobby", #{binding[:scoped]}Channel
     """
   end
 

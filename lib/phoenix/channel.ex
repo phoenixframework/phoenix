@@ -13,12 +13,10 @@ defmodule Phoenix.Channel do
   Everytime you join a Channel, you need to choose which particular topic you
   want to listen to. The topic is just an identifier, but by convention it is
   often made of two parts: `"topic:subtopic"`. Using the `"topic:subtopic"`
-  approach pairs nicely with the `Phoenix.Router.channel/3` macro to match
+  approach pairs nicely with the `Phoenix.Socket.channel/2` macro to match
   topic patterns in your router to your channel handlers:
 
-      socket "/ws", MyApp do
-        channel "rooms:*", RoomChannel
-      end
+      channel "rooms:*", MyApp.RoomChannel
 
   Any topic coming into the router with the `"rooms:"` prefix, would dispatch
   to `MyApp.RoomChannel` in the above example. Topics can also be pattern
