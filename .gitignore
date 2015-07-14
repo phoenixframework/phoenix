@@ -1,5 +1,6 @@
 /_build
 /deps
+/doc
 /tmp
 /node_modules
 

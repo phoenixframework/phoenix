@@ -9,7 +9,7 @@ defmodule Phoenix.Mixfile do
      elixir: "~> 1.0.2 or ~> 1.1-dev",
      deps: deps,
      package: package,
-     docs: [source_ref: "v#{@version}", main: "overview"],
+     docs: [source_ref: "v#{@version}", main: "Phoenix"],
      name: "Phoenix",
      source_url: "https://github.com/phoenixframework/phoenix",
      homepage_url: "http://www.phoenixframework.org",
