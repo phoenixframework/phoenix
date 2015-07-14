@@ -36,6 +36,12 @@ defmodule Phoenix.Channel.Transport do
         - for abnormal exits, send a reply to the remote client of a message
           from `Transport.chan_error_message/1`
 
+     * Call the `socket_connect/2` passing along socket params from client and
+       keep the state of the returned `%Socket{}` to pass into dispatch.
+     * Subscribe to the socket's `:id` on init and handle
+       `%Phoenix.Socket.Broadcast{}` messages with the `"disconnect"` event
+       and gracefully shutdown.
+
 
   See `Phoenix.Transports.WebSocket` for an example transport server implementation.
 
@@ -61,19 +67,17 @@ defmodule Phoenix.Channel.Transport do
   @doc """
   Calls the socket handler's `connect/2` callback and returns the result.
 
-  If the connection was successful, subscribes to the `Phoenix.PubSub` topic
-  returned by `id/1`
+  If the connection was successful, generates `Phoenix.PubSub` topic
+  from the `id/1` callback.
   """
   def socket_connect(endpoint, handler, params) do
     case handler.connect(params, %Socket{}) do
       {:ok, socket} ->
         case handler.id(socket) do
-          nil ->
-            :noop
-          id when is_binary(id) ->
-            endpoint.subscribe(self, id, link: true)
-            {:ok, socket}
-          _ -> raise ArgumentError, """
+          nil                   -> {:ok, socket}
+          id when is_binary(id) -> {:ok, %Socket{socket | id: id}}
+          _                     ->
+          raise ArgumentError, """
           Expected #{inspect endpoint}.id/1 to return one of `nil | id :: String.t`
           """
         end
@@ -106,9 +110,9 @@ defmodule Phoenix.Channel.Transport do
 
   The Message format sent to phoenix requires the following key / values:
 
-    * topic - The String value "phoenix"
-    * event - The String value "heartbeat"
-    * payload - An empty JSON message payload, ie {}
+    * `topic` - The String value "phoenix"
+    * `event` - The String value "heartbeat"
+    * `payload` - An empty JSON message payload, ie {}
 
   The server will respond to heartbeats with the same message
   """
@@ -120,13 +124,14 @@ defmodule Phoenix.Channel.Transport do
     case socket_handler.channel_for_topic(msg.topic, transport) do
       nil     -> log_ignore(msg.topic, socket_handler)
       channel ->
-        socket = %Socket{transport_pid: transport_pid,
-                  assigns: base_socket.assigns,
-                  endpoint: endpoint,
-                  pubsub_server: endpoint.__pubsub_server__(),
-                  topic: msg.topic,
-                  channel: channel,
-                  transport: transport}
+        socket = %Socket{id: base_socket.id,
+                         assigns: base_socket.assigns,
+                         transport_pid: transport_pid,
+                         endpoint: endpoint,
+                         pubsub_server: endpoint.__pubsub_server__(),
+                         topic: msg.topic,
+                         channel: channel,
+                         transport: transport}
 
         log_info msg.topic, fn ->
           "JOIN #{msg.topic} to #{inspect(channel)}\n" <>

@@ -6,6 +6,7 @@ defmodule Phoenix.Transports.WebSocket do
                                     socket_handler_module: 1]
 
   alias Phoenix.Socket.Message
+  alias Phoenix.Socket.Broadcast
   alias Phoenix.Socket.Reply
 
   @moduledoc """
@@ -63,6 +64,8 @@ defmodule Phoenix.Transports.WebSocket do
     socket_handler = socket_handler_module(conn)
     socket         = conn.private.phoenix_socket
 
+    if socket.id, do: endpoint.subscribe(self, socket.id, link: true)
+
     {:ok, %{socket_handler: socket_handler,
             socket: socket,
             endpoint: endpoint,
@@ -105,6 +108,13 @@ defmodule Phoenix.Transports.WebSocket do
             {:reply, state.serializer.encode!(Transport.chan_error_message(topic)), new_state}
         end
     end
+  end
+
+  @doc """
+  Detects disconnect broadcasts and shuts down
+  """
+  def ws_info(%Broadcast{event: "disconnect"}, state) do
+    {:shutdown, state}
   end
 
   def ws_info(%Message{} = message, %{serializer: serializer} = state) do

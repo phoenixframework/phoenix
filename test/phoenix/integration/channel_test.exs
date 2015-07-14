@@ -73,11 +73,13 @@ defmodule Phoenix.Integration.ChannelTest do
     def connect(%{"reject" => "true"}, _socket) do
       :error
     end
-    def connect(_params, socket) do
-      {:ok, assign(socket, :handler, "UserSocket")}
+    def connect(params, socket) do
+      {:ok, assign(socket, :user_id, params["user_id"])}
     end
 
-    def id(_), do: "user_sockets:123"
+    def id(socket) do
+      if id = socket.assigns.user_id, do: "user_sockets:#{id}"
+    end
   end
 
   defmodule Endpoint do
@@ -115,29 +117,30 @@ defmodule Phoenix.Integration.ChannelTest do
   test "adapter handles websocket join, leave, and event messages" do
     {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
 
-    WebsocketClient.join(sock, "rooms:lobby", %{})
+    WebsocketClient.join(sock, "rooms:lobby1", %{})
     assert_receive %Message{event: "phx_reply",
                             payload: %{"response" => %{}, "status" => "ok"},
-                            ref: "1", topic: "rooms:lobby"}
+                            ref: "1", topic: "rooms:lobby1"}
 
     assert_receive %Message{event: "joined", payload: %{"status" => "connected",
-                                                        "handler" => "UserSocket"}}
+                                                        "user_id" => nil}}
     assert_receive %Message{event: "user:entered",
                             payload: %{"user" => nil},
-                            ref: nil, topic: "rooms:lobby"}
-    channel_pid = Process.whereis(:"rooms:lobby")
+                            ref: nil, topic: "rooms:lobby1"}
+    channel_pid = Process.whereis(:"rooms:lobby1")
+    assert channel_pid
     assert Process.alive?(channel_pid)
 
-    WebsocketClient.send_event(sock, "rooms:lobby", "new:msg", %{body: "hi!"})
+    WebsocketClient.send_event(sock, "rooms:lobby1", "new:msg", %{body: "hi!"})
     assert_receive %Message{event: "new:msg", payload: %{"body" => "hi!"}}
 
-    WebsocketClient.leave(sock, "rooms:lobby", %{})
+    WebsocketClient.leave(sock, "rooms:lobby1", %{})
     assert_receive %Message{event: "you:left", payload: %{"message" => "bye!"}}
     assert_receive %Message{event: "phx_reply", payload: %{"status" => "ok"}}
     assert_receive %Message{event: "phx_close", payload: %{}}
     refute Process.alive?(channel_pid)
 
-    WebsocketClient.send_event(sock, "rooms:lobby", "new:msg", %{body: "Should ignore"})
+    WebsocketClient.send_event(sock, "rooms:lobby1", "new:msg", %{body: "Should ignore"})
     refute_receive %Message{}
   end
 
@@ -156,10 +159,11 @@ defmodule Phoenix.Integration.ChannelTest do
   test "websocket channels are terminated if transport normally exits" do
     {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
 
-    WebsocketClient.join(sock, "rooms:lobby", %{})
+    WebsocketClient.join(sock, "rooms:lobby2", %{})
     assert_receive %Message{event: "phx_reply", ref: "1", payload: %{"response" => %{}, "status" => "ok"}}
     assert_receive %Message{event: "joined"}
-    channel = Process.whereis(:"rooms:lobby")
+    channel = Process.whereis(:"rooms:lobby2")
+    assert channel
     Process.monitor(channel)
     WebsocketClient.close(sock)
 
@@ -184,6 +188,30 @@ defmodule Phoenix.Integration.ChannelTest do
     assert WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws?reject=true") ==
       {:error, {403, "Forbidden"}}
   end
+
+  test "websocket shuts down when receiving disconnect broadcasts on socket's id" do
+    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws?user_id=1001")
+    WebsocketClient.join(sock, "rooms:wsdisconnect1", %{})
+    assert_receive %Message{topic: "rooms:wsdisconnect1", event: "phx_reply",
+                            ref: "1", payload: %{"response" => %{}, "status" => "ok"}}
+    WebsocketClient.join(sock, "rooms:wsdisconnect2", %{})
+    assert_receive %Message{topic: "rooms:wsdisconnect2", event: "phx_reply",
+                            ref: "2", payload: %{"response" => %{}, "status" => "ok"}}
+    chan1 = Process.whereis(:"rooms:wsdisconnect1")
+    assert chan1
+    chan2 = Process.whereis(:"rooms:wsdisconnect2")
+    assert chan2
+    Process.monitor(sock)
+    Process.monitor(chan1)
+    Process.monitor(chan2)
+
+    Endpoint.broadcast("user_sockets:1001", "disconnect", %{})
+
+    assert_receive {:DOWN, _, :process, ^sock, :normal}
+    assert_receive {:DOWN, _, :process, ^chan1, :shutdown}
+    assert_receive {:DOWN, _, :process, ^chan2, :shutdown}
+  end
+
 
   ## Longpoller Transport
 
@@ -235,7 +263,7 @@ defmodule Phoenix.Integration.ChannelTest do
         "ref" => "123", "topic" => "rooms:lobby"}
     assert status_msg ==
       %{"event" => "joined",
-        "payload" => %{"status" => "connected", "handler" => "UserSocket"},
+        "payload" => %{"status" => "connected", "user_id" => nil},
         "ref" => nil, "topic" => "rooms:lobby"}
     assert user_entered ==
       %{"event" => "user:entered",
@@ -313,6 +341,7 @@ defmodule Phoenix.Integration.ChannelTest do
       assert Enum.at(resp.body["messages"], 2)["event"] == "user:entered"
       assert Enum.at(resp.body["messages"], 3)["payload"]["body"] == "Hello lobby"
       channel = Process.whereis(:"rooms:room123")
+      assert channel
       Process.monitor(channel)
 
       ## Server termination handling
@@ -394,7 +423,7 @@ defmodule Phoenix.Integration.ChannelTest do
 
   test "longpoller adapter sends phx_close if a channel server normally exits" do
     # create session
-    resp = poll :get, "/ws", %{}, %{}
+    resp = poll :get, "/ws", %{"user_id" => "123"}, %{}
     session = Map.take(resp.body, ["token", "sig"])
     assert resp.body["status"] == 410
     assert resp.status == 200
@@ -422,7 +451,7 @@ defmodule Phoenix.Integration.ChannelTest do
     resp = poll(:get, "/ws", session)
     assert resp.body["messages"] == [
       %{"event" => "phx_reply", "payload" => %{"response" => %{}, "status" => "ok"}, "ref" => "1", "topic" => "rooms:lobby"},
-      %{"event" => "joined", "payload" => %{"status" => "connected", "handler" => "UserSocket"}, "ref" => nil, "topic" => "rooms:lobby"},
+      %{"event" => "joined", "payload" => %{"status" => "connected", "user_id" => "123"}, "ref" => nil, "topic" => "rooms:lobby"},
       %{"event" => "user:entered", "payload" => %{"user" => nil}, "ref" => nil, "topic" => "rooms:lobby"},
       %{"event" => "phx_reply", "payload" => %{"response" => %{}, "status" => "ok"}, "ref" => "2", "topic" => "rooms:lobby"},
       %{"event" => "you:left", "payload" => %{"message" => "bye!"}, "ref" => nil, "topic" => "rooms:lobby"},
@@ -435,5 +464,37 @@ defmodule Phoenix.Integration.ChannelTest do
     assert resp.body["status"] == 403
   end
 
+  test "longpoller shuts down when receiving disconnect broadcasts on socket's id" do
+    # create session
+    resp = poll :get, "/ws", %{"user_id" => "456"}, %{}
+    session = Map.take(resp.body, ["token", "sig"])
+    # join
+    poll :post, "/ws", session, %{
+      "topic" => "rooms:lpdisconnect1",
+      "event" => "phx_join",
+      "ref" => "1",
+      "payload" => %{}
+    }
+    # join
+    poll :post, "/ws", session, %{
+      "topic" => "rooms:lpdisconnect2",
+      "event" => "phx_join",
+      "ref" => "1",
+      "payload" => %{}
+    }
+    chan1 = Process.whereis(:"rooms:lpdisconnect1")
+    assert chan1
+    chan2 = Process.whereis(:"rooms:lpdisconnect2")
+    assert chan2
+    Process.monitor(chan1)
+    Process.monitor(chan2)
 
+    Endpoint.broadcast("user_sockets:456", "disconnect", %{})
+
+    assert_receive {:DOWN, _, :process, ^chan1, :normal}
+    assert_receive {:DOWN, _, :process, ^chan2, :normal}
+
+    poll(:get, "/ws", session)
+    assert resp.body["status"] == 410
+  end
 end

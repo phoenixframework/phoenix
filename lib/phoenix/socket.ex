@@ -5,6 +5,7 @@ defmodule Phoenix.Socket do
 
   ## Socket Fields
 
+  * `id` - The string id of the socket
   * `assigns` - The map of socket assigns, default: `%{}`
   * `channel` - The channel module where this socket originated
   * `channel_pid` - The channel pid
@@ -51,7 +52,8 @@ defmodule Phoenix.Socket do
   end
 
 
-  @type t :: %Socket{assigns: %{},
+  @type t :: %Socket{id: nil,
+                     assigns: %{},
                      channel: atom,
                      channel_pid: pid,
                      endpoint: atom,
@@ -62,7 +64,8 @@ defmodule Phoenix.Socket do
                      transport: atom,
                      transport_pid: pid}
 
-  defstruct assigns: %{},
+  defstruct id: nil,
+            assigns: %{},
             channel: nil,
             channel_pid: nil,
             endpoint: nil,

@@ -24,6 +24,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   alias Phoenix.PubSub
   alias Phoenix.Socket.Message
   alias Phoenix.Socket.Reply
+  alias Phoenix.Socket.Broadcast
 
   @doc """
   Starts the Server.
@@ -56,6 +57,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
               last_client_poll: now_ms(),
               client_ref: nil}
 
+    if socket.id, do: endpoint.subscribe(self, socket.id, link: true)
     :ok = PubSub.subscribe(state.pubsub_server, self, state.priv_topic, link: true)
     :timer.send_interval(state.window_ms, :shutdown_if_inactive)
 
@@ -103,6 +105,13 @@ defmodule Phoenix.Transports.LongPoller.Server do
                        payload: %{status: status, response: payload}}
 
     publish_reply(message, state)
+  end
+
+  @doc """
+  Detects disconnect broadcasts and shuts down
+  """
+  def handle_info(%Broadcast{event: "disconnect"}, state) do
+    {:stop, :normal, state}
   end
 
   @doc """
