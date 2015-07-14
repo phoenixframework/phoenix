@@ -59,6 +59,34 @@ defmodule Phoenix.Channel.Transport do
   """
 
   @doc """
+  Calls the socket handler's `connect/2` callback and returns the result.
+
+  If the connection was successful, subscribes to the `Phoenix.PubSub` topic
+  returned by `id/1`
+  """
+  def socket_connect(endpoint, handler, params) do
+    case handler.connect(params, %Socket{}) do
+      {:ok, socket} ->
+        case handler.id(socket) do
+          nil ->
+            :noop
+          id when is_binary(id) ->
+            endpoint.subscribe(self, id, link: true)
+            {:ok, socket}
+          _ -> raise ArgumentError, """
+          Expected #{inspect endpoint}.id/1 to return one of `nil | id :: String.t`
+          """
+        end
+
+      :error -> :error
+
+      _ -> raise ArgumentError, """
+      Expected #{inspect endpoint}.connect/2 to return one of `{:ok, Socket.t} | :error`
+      """
+    end
+  end
+
+  @doc """
   Dispatches `%Phoenix.Socket.Message{}` to Channel. All serialized, remote client messages
   should be deserialized and forwarded through this function by adapters.
 

@@ -128,6 +128,12 @@ defmodule Phoenix.Controller do
   def endpoint_module(conn), do: conn.private.phoenix_endpoint
 
   @doc """
+  Returns the socket handler module as an atom, raises if unavailable.
+  """
+  @spec socket_handler_module(Plug.Conn.t) :: atom
+  def socket_handler_module(conn), do: conn.private.phoenix_socket_handler
+
+  @doc """
   Returns the template name rendered from the controller as a string
   """
   @spec controller_template(Plug.Conn.t) :: binary

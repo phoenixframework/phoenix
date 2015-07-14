@@ -38,10 +38,9 @@ defmodule Phoenix.Socket do
   alias Phoenix.Socket
   alias Phoenix.Socket.Helpers
 
-  defcallback connect(params :: map) :: {:ok, Socket.t} |
-                                        :error
+  defcallback connect(params :: map) :: {:ok, Socket.t} | :error
 
-  defcallback id(socket_assigns :: map) :: String.t
+  defcallback id(Socket.t) :: String.t | nil
 
 
   defmodule InvalidMessageError do
