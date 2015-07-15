@@ -111,7 +111,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   Detects disconnect broadcasts and shuts down
   """
   def handle_info(%Broadcast{event: "disconnect"}, state) do
-    {:stop, :normal, state}
+    {:stop, {:shutdown, :disconnected}, state}
   end
 
   @doc """

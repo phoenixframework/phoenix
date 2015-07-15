@@ -34,9 +34,9 @@ defmodule Mix.Tasks.Phoenix.Gen.Channel do
 
     Mix.shell.info """
 
-    Add the channel to a socket handler, ie:
+    Add the channel to a socket handler, for example:
 
-      channel "#{plural}:lobby", #{binding[:scoped]}Channel
+        channel "#{plural}:lobby", #{binding[:scoped]}Channel
     """
   end
 

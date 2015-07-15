@@ -501,8 +501,8 @@ defmodule Phoenix.Integration.ChannelTest do
 
     Endpoint.broadcast("user_sockets:456", "disconnect", %{})
 
-    assert_receive {:DOWN, _, :process, ^chan1, :normal}
-    assert_receive {:DOWN, _, :process, ^chan2, :normal}
+    assert_receive {:DOWN, _, :process, ^chan1, {:shutdown, :disconnected}}
+    assert_receive {:DOWN, _, :process, ^chan2, {:shutdown, :disconnected}}
 
     poll(:get, "/ws", session)
     assert resp.body["status"] == 410

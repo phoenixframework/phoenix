@@ -393,6 +393,7 @@ defmodule Phoenix.Endpoint do
     plugs = Module.get_attribute(env.module, :plugs)
     {conn, body} = Plug.Builder.compile(env, plugs, [])
 
+    # TODO move to adapter dispatch
     socket_intercepts = for {path, module} <- sockets do
       path_info = Plug.Router.Utils.split(path)
 
