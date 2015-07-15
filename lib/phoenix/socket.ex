@@ -30,12 +30,12 @@ defmodule Phoenix.Socket do
   Socket handlers are mounted in Endpoints and must define two callbacks:
 
     * `connect/2` - receives the socket params and authenticates the connection.
-                    Often used to wire up default `%Phoenix.Socket{}` assigns
-                    for all channels.
+      Often used to wire up default `%Phoenix.Socket{}` assigns
+      for all channels.
     * `id/1` - receives the socket returned by `connect/2`, and returns the
-               string id of this connection. Used for forcing a disconnect for
-               connection and all child channels. For sockets requiring no
-               authentication, `nil` can be returned.
+      string id of this connection. Used for forcing a disconnect for
+      connection and all child channels. For sockets requiring no
+      authentication, `nil` can be returned.
 
   Callback examples:
 
