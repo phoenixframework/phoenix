@@ -401,7 +401,7 @@ export class Socket {
   onMessage  (callback){ this.stateChangeCallbacks.message.push(callback) }
 
   onConnOpen(){
-    this.log("transport", `connected to ${this.endPointURL()}`, this.transport)
+    this.log("transport", `connected to ${this.endPointURL()}`, this.transport.prototype)
     this.flushSendBuffer()
     this.reconnectTimer.reset()
     if(!this.conn.skipHeartbeat){
@@ -514,12 +514,10 @@ export class LongPoller {
   }
 
   normalizeEndpoint(endPoint){
-    let prefix = endPoint
+    return(endPoint
       .replace("ws://", "http://")
       .replace("wss://", "https://")
-      .replace(new RegExp("(.*)\/" + TRANSPORTS.websocket), "$1/" + TRANSPORTS.longpoll)
-
-    return  `${prefix}/${TRANSPORTS.longpoll}`
+      .replace(new RegExp("(.*)\/" + TRANSPORTS.websocket), "$1/" + TRANSPORTS.longpoll))
   }
 
   endpointURL(){

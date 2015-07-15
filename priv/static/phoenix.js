@@ -708,7 +708,7 @@ var Socket = exports.Socket = (function () {
       value: function onConnOpen() {
         var _this = this;
 
-        this.log("transport", "connected to " + this.endPointURL(), this.transport);
+        this.log("transport", "connected to " + this.endPointURL(), this.transport.prototype);
         this.flushSendBuffer();
         this.reconnectTimer.reset();
         if (!this.conn.skipHeartbeat) {
@@ -913,9 +913,7 @@ var LongPoller = exports.LongPoller = (function () {
   _prototypeProperties(LongPoller, null, {
     normalizeEndpoint: {
       value: function normalizeEndpoint(endPoint) {
-        var prefix = endPoint.replace("ws://", "http://").replace("wss://", "https://").replace(new RegExp("(.*)/" + TRANSPORTS.websocket), "$1/" + TRANSPORTS.longpoll);
-
-        return "" + prefix + "/" + TRANSPORTS.longpoll;
+        return endPoint.replace("ws://", "http://").replace("wss://", "https://").replace(new RegExp("(.*)/" + TRANSPORTS.websocket), "$1/" + TRANSPORTS.longpoll);
       },
       writable: true,
       configurable: true
