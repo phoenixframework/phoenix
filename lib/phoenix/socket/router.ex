@@ -6,25 +6,32 @@ defmodule Phoenix.Socket.Router do
   alias Phoenix.Transports.WebSocket
   alias Phoenix.Transports.LongPoller
 
+  @longpoll "longpoll"
+  @websocket "websocket"
+
   plug Plug.Logger
   plug :fetch_query_params
-  plug :dispatch
+  plug :transport_dispatch
 
-  def dispatch(conn, _) do
-    case {conn.method, transport(conn)} do
-      {"GET",  WebSocket}     -> WebSocket.call(conn, [])
-      {"POST", WebSocket}     -> WebSocket.call(conn, [])
-      {"OPTIONS", LongPoller} -> LongPoller.call(conn, :options)
-      {"GET", LongPoller}     -> LongPoller.call(conn, :poll)
-      {"POST", LongPoller}    -> LongPoller.call(conn, :publish)
-      _                       -> conn |> send_resp(:bad_request, "") |> halt()
-    end
+  def transport_dispatch(conn, _) do
+    dispatch(conn, conn.method, conn.private.phoenix_socket_transport)
   end
 
-  defp transport(conn) do
-    case conn.query_params["transport"] do
-      "poll" -> LongPoller
-      _      -> WebSocket
-    end
+  defp dispatch(conn, method, @websocket) when method in ["GET", "POST"] do
+    WebSocket.call(conn, [])
+  end
+
+  defp dispatch(conn, "OPTIONS", @longpoll) do
+    LongPoller.call(conn, :options)
+  end
+  defp dispatch(conn, "GET", @longpoll) do
+    LongPoller.call(conn, :poll)
+  end
+  defp dispatch(conn, "POST", @longpoll) do
+    LongPoller.call(conn, :publish)
+  end
+
+  defp dispatch(conn, _method, _transport) do
+    conn |> send_resp(:bad_request, "") |> halt()
   end
 end

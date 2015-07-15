@@ -2,8 +2,7 @@ defmodule Phoenix.Transports.WebSocket do
   use Plug.Builder
   require Logger
 
-  import Phoenix.Controller, only: [endpoint_module: 1,
-                                    socket_handler_module: 1]
+  import Phoenix.Controller, only: [endpoint_module: 1]
 
   alias Phoenix.Socket.Message
   alias Phoenix.Socket.Broadcast
@@ -40,7 +39,7 @@ defmodule Phoenix.Transports.WebSocket do
 
   def upgrade(%Plug.Conn{method: "GET", params: params} = conn, _) do
     endpoint = endpoint_module(conn)
-    handler  = socket_handler_module(conn)
+    handler  = conn.private.phoenix_socket_handler
 
     case Transport.socket_connect(endpoint, handler, params) do
       {:ok, socket} ->
@@ -61,7 +60,7 @@ defmodule Phoenix.Transports.WebSocket do
     endpoint       = endpoint_module(conn)
     serializer     = Dict.fetch!(endpoint.config(:transports), :websocket_serializer)
     timeout        = Dict.fetch!(endpoint.config(:transports), :websocket_timeout)
-    socket_handler = socket_handler_module(conn)
+    socket_handler = conn.private.phoenix_socket_handler
     socket         = conn.private.phoenix_socket
 
     if socket.id, do: endpoint.subscribe(self, socket.id, link: true)

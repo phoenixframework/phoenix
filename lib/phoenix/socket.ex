@@ -61,7 +61,7 @@ defmodule Phoenix.Socket do
   alias Phoenix.Socket
   alias Phoenix.Socket.Helpers
 
-  defcallback connect(params :: map) :: {:ok, Socket.t} | :error
+  defcallback connect(params :: map, Socket.t) :: {:ok, Socket.t} | :error
 
   defcallback id(Socket.t) :: String.t | nil
 
@@ -101,7 +101,7 @@ defmodule Phoenix.Socket do
 
   defmacro __using__(_) do
     quote do
-      @behavoiur Phoenix.Socket
+      @behaviour Phoenix.Socket
       import unquote(__MODULE__)
       Module.register_attribute(__MODULE__, :phoenix_channels, accumulate: true)
       @before_compile unquote(__MODULE__)

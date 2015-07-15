@@ -91,6 +91,7 @@ defmodule Phoenix.Integration.ChannelTest do
     end
 
     socket "/ws", UserSocket
+    socket "/ws/admin", UserSocket
 
     plug Plug.Parsers,
       parsers: [:urlencoded, :json],
@@ -112,10 +113,19 @@ defmodule Phoenix.Integration.ChannelTest do
     :ok
   end
 
+  test "endpoint handles mulitple mount segments" do
+    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/admin/websocket")
+    WebsocketClient.join(sock, "rooms:admin-lobby", %{})
+    assert_receive %Message{event: "phx_reply",
+                            payload: %{"response" => %{}, "status" => "ok"},
+                            ref: "1", topic: "rooms:admin-lobby"}
+  end
+
+
   ## Websocket Transport
 
   test "adapter handles websocket join, leave, and event messages" do
-    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
+    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket")
 
     WebsocketClient.join(sock, "rooms:lobby1", %{})
     assert_receive %Message{event: "phx_reply",
@@ -145,7 +155,7 @@ defmodule Phoenix.Integration.ChannelTest do
   end
 
   test "websocket adapter sends phx_error if a channel server abnormally exits" do
-    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
+    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket")
 
     WebsocketClient.join(sock, "rooms:lobby", %{})
     assert_receive %Message{event: "phx_reply", ref: "1", payload: %{"response" => %{}, "status" => "ok"}}
@@ -157,7 +167,7 @@ defmodule Phoenix.Integration.ChannelTest do
   end
 
   test "websocket channels are terminated if transport normally exits" do
-    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
+    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket")
 
     WebsocketClient.join(sock, "rooms:lobby2", %{})
     assert_receive %Message{event: "phx_reply", ref: "1", payload: %{"response" => %{}, "status" => "ok"}}
@@ -171,26 +181,26 @@ defmodule Phoenix.Integration.ChannelTest do
   end
 
   test "adapter handles refuses websocket events that haven't joined" do
-    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws")
+    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket")
 
     WebsocketClient.send_event(sock, "rooms:lobby", "new:msg", %{body: "hi!"})
     refute_receive %Message{}
   end
 
   test "websocket refuses unallowed origins" do
-    assert {:ok, _} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws",
+    assert {:ok, _} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket",
                                                  [{"origin", "https://example.com"}])
-    refute {:ok, _} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws",
+    refute {:ok, _} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket",
                                                  [{"origin", "http://notallowed.com"}])
   end
 
   test "websocket refuses UserSocket connects that error with 403 response" do
-    assert WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws?reject=true") ==
+    assert WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket?reject=true") ==
       {:error, {403, "Forbidden"}}
   end
 
   test "websocket shuts down when receiving disconnect broadcasts on socket's id" do
-    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws?user_id=1001")
+    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket?user_id=1001")
     WebsocketClient.join(sock, "rooms:wsdisconnect1", %{})
     assert_receive %Message{topic: "rooms:wsdisconnect1", event: "phx_reply",
                             ref: "1", payload: %{"response" => %{}, "status" => "ok"}}
@@ -223,7 +233,7 @@ defmodule Phoenix.Integration.ChannelTest do
   def poll(method, path, params, json \\ nil, headers \\ %{}) do
     headers = Map.merge(%{"content-type" => "application/json"}, headers)
     body = Poison.encode!(json)
-    url = "http://127.0.0.1:#{@port}#{path}?transport=poll&" <> URI.encode_query(params)
+    url = "http://127.0.0.1:#{@port}#{path}/longpoll?" <> URI.encode_query(params)
 
     {:ok, resp} = HTTPClient.request(method, url, headers, body)
 

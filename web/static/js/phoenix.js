@@ -101,8 +101,9 @@ const CHAN_EVENTS = {
   reply: "phx_reply",
   leave: "phx_leave"
 }
-const SOCKET_TRANSPORTS = {
-  poll: "poll"
+const TRANSPORTS = {
+  longpoll: "longpoll",
+  websocket: "websocket"
 }
 
 class Push {
@@ -352,7 +353,7 @@ export class Socket {
     this.logger               = opts.logger || function(){} // noop
     this.longpollerTimeout    = opts.longpollerTimeout || 20000
     this.params               = opts.params || {}
-    this.endPoint             = endPoint
+    this.endPoint             = `${endPoint}/${TRANSPORTS.websocket}`
   }
 
   protocol(){ return location.protocol.match(/^https/) ? "wss" : "ws" }
@@ -513,12 +514,16 @@ export class LongPoller {
   }
 
   normalizeEndpoint(endPoint){
-    return endPoint.replace("ws://", "http://").replace("wss://", "https://")
+    let prefix = endPoint
+      .replace("ws://", "http://")
+      .replace("wss://", "https://")
+      .replace(new RegExp("(.*)\/" + TRANSPORTS.websocket), "$1/" + TRANSPORTS.longpoll)
+
+    return  `${prefix}/${TRANSPORTS.longpoll}`
   }
 
   endpointURL(){
     return Ajax.appendParams(this.pollEndpoint, {
-      transport: SOCKET_TRANSPORTS.poll,
       token: this.token,
       sig: this.sig,
       format: "json"

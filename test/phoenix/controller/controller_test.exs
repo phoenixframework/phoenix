@@ -35,11 +35,6 @@ defmodule Phoenix.Controller.ControllerTest do
     assert endpoint_module(conn) == Hello
   end
 
-  test "socket_handler_module/1" do
-    conn = put_private(%Conn{}, :phoenix_socket_handler, Handler)
-    assert socket_handler_module(conn) == Handler
-  end
-
   test "controller_template/1" do
     conn = put_private(%Conn{}, :phoenix_template, "hello.html")
     assert controller_template(conn) == "hello.html"

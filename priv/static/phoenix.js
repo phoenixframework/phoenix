@@ -198,8 +198,9 @@ var CHAN_EVENTS = {
   reply: "phx_reply",
   leave: "phx_leave"
 };
-var SOCKET_TRANSPORTS = {
-  poll: "poll"
+var TRANSPORTS = {
+  longpoll: "longpoll",
+  websocket: "websocket"
 };
 
 var Push = (function () {
@@ -591,7 +592,7 @@ var Socket = exports.Socket = (function () {
     this.logger = opts.logger || function () {}; // noop
     this.longpollerTimeout = opts.longpollerTimeout || 20000;
     this.params = opts.params || {};
-    this.endPoint = endPoint;
+    this.endPoint = "" + endPoint + "/" + TRANSPORTS.websocket;
   }
 
   _prototypeProperties(Socket, null, {
@@ -912,7 +913,9 @@ var LongPoller = exports.LongPoller = (function () {
   _prototypeProperties(LongPoller, null, {
     normalizeEndpoint: {
       value: function normalizeEndpoint(endPoint) {
-        return endPoint.replace("ws://", "http://").replace("wss://", "https://");
+        var prefix = endPoint.replace("ws://", "http://").replace("wss://", "https://").replace(new RegExp("(.*)/" + TRANSPORTS.websocket), "$1/" + TRANSPORTS.longpoll);
+
+        return "" + prefix + "/" + TRANSPORTS.longpoll;
       },
       writable: true,
       configurable: true
@@ -920,7 +923,6 @@ var LongPoller = exports.LongPoller = (function () {
     endpointURL: {
       value: function endpointURL() {
         return Ajax.appendParams(this.pollEndpoint, {
-          transport: SOCKET_TRANSPORTS.poll,
           token: this.token,
           sig: this.sig,
           format: "json"

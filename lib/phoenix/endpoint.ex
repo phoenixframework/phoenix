@@ -397,9 +397,10 @@ defmodule Phoenix.Endpoint do
       path_info = Plug.Router.Utils.split(path)
 
       quote do
-        defp phoenix_pipeline(%Plug.Conn{path_info: unquote(path_info)} = conn) do
+        defp phoenix_pipeline(%Plug.Conn{path_info: [unquote_splicing(path_info), transport]} = conn) do
           conn
           |> Plug.Conn.put_private(:phoenix_socket_handler, unquote(module))
+          |> Plug.Conn.put_private(:phoenix_socket_transport, transport)
           |> Phoenix.Socket.Router.call(Phoenix.Socket.Router.init([]))
         end
       end
