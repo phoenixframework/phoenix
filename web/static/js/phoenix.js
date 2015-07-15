@@ -87,6 +87,7 @@
 // `chan.leave()`
 //
 
+const CHAN_VSN = "~> 1.0.0"
 const SOCKET_STATES = {connecting: 0, open: 1, closing: 2, closed: 3}
 const CHAN_STATES = {
   closed: "closed",
@@ -355,6 +356,11 @@ export class Socket {
   protocol(){ return location.protocol.match(/^https/) ? "wss" : "ws" }
 
   expandEndpoint(endPoint){
+    if(endPoint.search(/\?/) >= 0){
+      endPoint = endPoint + `&vsn=${CHAN_VSN}`
+    } else {
+      endPoint = endPoint + `?vsn=${CHAN_VSN}`
+    }
     if(endPoint.charAt(0) !== "/"){ return endPoint }
     if(endPoint.charAt(1) === "/"){ return `${this.protocol()}:${endPoint}` }
 

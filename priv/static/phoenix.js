@@ -185,6 +185,7 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
 // `chan.leave()`
 //
 
+var CHAN_VSN = "~> 1.0.0";
 var SOCKET_STATES = { connecting: 0, open: 1, closing: 2, closed: 3 };
 var CHAN_STATES = {
   closed: "closed",
@@ -601,6 +602,11 @@ var Socket = exports.Socket = (function () {
     },
     expandEndpoint: {
       value: function expandEndpoint(endPoint) {
+        if (endPoint.search(/\?/) >= 0) {
+          endPoint = endPoint + ("&vsn=" + CHAN_VSN);
+        } else {
+          endPoint = endPoint + ("?vsn=" + CHAN_VSN);
+        }
         if (endPoint.charAt(0) !== "/") {
           return endPoint;
         }

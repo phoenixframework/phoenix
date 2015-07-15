@@ -1,12 +1,4 @@
 defmodule Phoenix.Transports.WebSocket do
-  use Plug.Builder
-  require Logger
-
-  import Phoenix.Controller, only: [endpoint_module: 1, router_module: 1]
-
-  alias Phoenix.Socket.Message
-  alias Phoenix.Socket.Reply
-
   @moduledoc """
   Handles WebSocket clients for the Channel Transport layer.
 
@@ -31,13 +23,20 @@ defmodule Phoenix.Transports.WebSocket do
       ]
   """
 
+  use Plug.Builder
+  require Logger
+
+  import Phoenix.Controller, only: [endpoint_module: 1, router_module: 1]
+
+  alias Phoenix.Socket.Message
+  alias Phoenix.Socket.Reply
   alias Phoenix.Channel.Transport
 
   plug :check_origin
   plug :upgrade
 
   def upgrade(%Plug.Conn{method: "GET"} = conn, _) do
-    put_private(conn, :phoenix_upgrade, {:websocket, __MODULE__}) |> halt
+    put_private(conn, :phoenix_upgrade, {:websocket, __MODULE__}) |> halt()
   end
 
   @doc """
@@ -45,15 +44,23 @@ defmodule Phoenix.Transports.WebSocket do
   """
   def ws_init(conn) do
     Process.flag(:trap_exit, true)
+    conn       = Plug.Conn.fetch_query_params(conn)
     endpoint   = endpoint_module(conn)
     serializer = Dict.fetch!(endpoint.config(:transports), :websocket_serializer)
     timeout    = Dict.fetch!(endpoint.config(:transports), :websocket_timeout)
+    vsn        = conn.params["vsn"] || "~> 1.0.0"
 
-    {:ok, %{router: router_module(conn),
-            endpoint: endpoint,
-            sockets: HashDict.new,
-            sockets_inverse: HashDict.new,
-            serializer: serializer}, timeout}
+    if Version.match?(Transport.protocol_version(), vsn) do
+      {:ok, %{router: router_module(conn),
+              endpoint: endpoint,
+              sockets: HashDict.new,
+              sockets_inverse: HashDict.new,
+              vsn: vsn,
+              serializer: serializer}, timeout}
+    else
+      raise Transport.ProtocolVersionError,
+        message: "The client's requested channel transport version \"#{vsn}\" does not match server's version \"#{Transport.protocol_version()}\""
+    end
   end
 
   @doc """
@@ -63,7 +70,7 @@ defmodule Phoenix.Transports.WebSocket do
   def ws_handle(opcode, payload, state) do
     msg = state.serializer.decode!(payload, opcode)
 
-    case Transport.dispatch(msg, state.sockets, self, state.router, state.endpoint, __MODULE__) do
+    case Transport.dispatch(msg, state.sockets, self, state.router, state.endpoint, __MODULE__, state.vsn) do
       {:ok, socket_pid} ->
         {:ok, put(state, msg.topic, socket_pid)}
       :ok ->
