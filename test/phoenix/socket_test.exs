@@ -8,13 +8,17 @@ defmodule Phoenix.SocketTest do
   defmodule UserSocket do
     use Phoenix.Socket
 
-    def connect(_, socket), do: {:ok, socket}
-    def id(_), do: nil
-
     transport :websocket, Phoenix.Transports.WebSocket,
       timeout: 1234
+    transport :longpoll, Phoenix.Transports.LongPoll
+
+    def connect(_, socket), do: {:ok, socket}
+    def id(_), do: nil
   end
 
+  defmodule SpdyTransport do
+    def default_config(), do: []
+  end
 
   test "from_map! converts a map with string keys into a %Message{}" do
     msg = Message.from_map!(%{"topic" => "c", "event" => "e", "payload" => "", "ref" => "r"})
@@ -44,12 +48,13 @@ defmodule Phoenix.SocketTest do
   end
 
   test "duplicate transports raises" do
-    assert_raise ArgumentError, ~r/Duplicate transports/, fn ->
+    assert_raise ArgumentError, ~r/duplicate transports/, fn ->
       defmodule MySocket do
         use Phoenix.Socket
+        transport :websocket, Phoenix.Transports.WebSocket
+        transport :websocket, SpdyTransport
         def connect(_, socket), do: {:ok, socket}
         def id(_), do: nil
-        transport :websocket, FooSocket
       end
     end
   end

@@ -1,7 +1,4 @@
 defmodule Phoenix.Transports.LongPoll do
-  use Plug.Builder
-  import Phoenix.Controller
-
   @moduledoc """
   Handles LongPoll clients for the Channel Transport layer.
 
@@ -24,10 +21,15 @@ defmodule Phoenix.Transports.LongPoll do
     * `:crypto` - configuration for the key generated to sign the
       private topic used for the long poller session (see `Plug.Crypto.KeyGenerator`).
   """
+  use Plug.Builder
 
+  @behaviour Phoenix.Channel.Transport
+
+  import Phoenix.Controller
   alias Phoenix.Socket.Message
   alias Phoenix.Transports.LongPoll
   alias Phoenix.Channel.Transport
+
 
   plug Plug.Logger
   plug :fetch_query_params
@@ -35,6 +37,16 @@ defmodule Phoenix.Transports.LongPoll do
   plug :allow_origin
   plug Plug.Parsers, parsers: [:json], json_decoder: Poison
   plug :dispatch
+
+  @doc """
+  Provides the deault transport configuration to sockets.
+  """
+  def default_config() do
+    [window_ms: 10_000,
+     pubsub_timeout_ms: 1000,
+     crypto: [iterations: 1000, length: 32,
+              digest: :sha256, cache: Plug.Keys]]
+  end
 
   defp dispatch(%Plug.Conn{method: "OPTIONS"} = conn, _) do
     options(conn, conn.params)

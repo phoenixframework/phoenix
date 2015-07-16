@@ -1,13 +1,4 @@
 defmodule Phoenix.Transports.WebSocket do
-  use Plug.Builder
-  require Logger
-
-  import Phoenix.Controller, only: [endpoint_module: 1]
-
-  alias Phoenix.Socket.Message
-  alias Phoenix.Socket.Broadcast
-  alias Phoenix.Socket.Reply
-
   @moduledoc """
   Handles WebSocket clients for the Channel Transport layer.
 
@@ -25,13 +16,31 @@ defmodule Phoenix.Transports.WebSocket do
   The `serializer` module needs only to implement the `encode!/1` and
   `decode!/2` functions defined by the `Phoenix.Transports.Serializer` behaviour.
   """
+  use Plug.Builder
 
+  @behaviour Phoenix.Channel.Transport
+
+  require Logger
+  import Phoenix.Controller, only: [endpoint_module: 1]
+
+  alias Phoenix.Socket.Message
+  alias Phoenix.Socket.Broadcast
+  alias Phoenix.Socket.Reply
   alias Phoenix.Channel.Transport
 
   plug Plug.Logger
   plug :fetch_query_params
   plug :check_origin
   plug :upgrade
+
+
+  @doc """
+  Provides the deault transport configuration to sockets.
+  """
+  def default_config() do
+    [serializer: Phoenix.Transports.JSONSerializer,
+     timeout: :infinity]
+  end
 
   def upgrade(%Plug.Conn{method: "GET", params: params} = conn, _) do
     endpoint = endpoint_module(conn)

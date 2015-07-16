@@ -3,6 +3,22 @@ defmodule Phoenix.Socket.Helpers do
   @moduledoc false
 
   @doc """
+  Registers the transport, with defaults and duplicate validation.
+  """
+  def register_transport(phoenix_transports, name, module, config) do
+    merged_conf = case phoenix_transports[name] do
+      nil -> Keyword.merge(module.default_config() , config)
+      {dup_module, _} ->
+        raise ArgumentError, """
+        duplicate transports (`#{inspect dup_module}`, `#{inspect module}`) defined for `:#{name}`".
+        Only a single transport adapter can be defined for a given name.
+        """
+    end
+
+    Map.put(phoenix_transports, name, {module, merged_conf})
+  end
+
+  @doc """
   Receives the `@phoenix_channels` accumulated attribute and returns AST of
   `match_channel` definitions
   """

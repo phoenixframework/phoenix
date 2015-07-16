@@ -125,17 +125,6 @@ defmodule Phoenix.Socket do
       import unquote(__MODULE__)
       Module.register_attribute(__MODULE__, :phoenix_channels, accumulate: true)
       @phoenix_transports %{}
-
-      transport :websocket, Phoenix.Transports.WebSocket,
-        serializer: Phoenix.Transports.JSONSerializer,
-        timeout: :infinity
-
-      transport :longpoll, Phoenix.Transports.LongPoll,
-        window_ms: 10_000,
-        pubsub_timeout_ms: 1000,
-        crypto: [iterations: 1000, length: 32, digest: :sha256, cache: Plug.Keys]
-
-
       @before_compile unquote(__MODULE__)
     end
   end
@@ -210,11 +199,11 @@ defmodule Phoenix.Socket do
   """
   defmacro channel(topic_pattern, module, opts \\ []) do
     quote do
-      @phoenix_channels {unquote_splicing([
-        topic_pattern,
-        module,
-        Keyword.put_new(opts, :via, @default_transports)
-      ])}
+      @phoenix_channels {
+        unquote(topic_pattern),
+        unquote(module),
+        unquote(Keyword.put_new(opts, :via, @default_transports))
+      }
     end
   end
 
@@ -232,18 +221,9 @@ defmodule Phoenix.Socket do
 
   """
   defmacro transport(name, module, config \\ []) do
-    quote bind_quoted: [name: name, module: module, config: config] do
-      merged_conf = case @phoenix_transports[name] do
-        nil -> config
-        {^module, existing_conf} -> Keyword.merge(existing_conf, config)
-        {dup_module, _} ->
-          raise ArgumentError, """
-          Duplicate transports (`#{inspect dup_module}`, `#{inspect module}`) defined for `:#{name}`".
-          Only a single transport adapter can be defined for a given name.
-          """
-      end
-
-      @phoenix_transports Map.put(@phoenix_transports, name, {module, merged_conf})
+    quote do
+      @phoenix_transports Phoenix.Socket.Helpers.register_transport(
+        @phoenix_transports, unquote(name), unquote(module), unquote(config))
     end
   end
 end

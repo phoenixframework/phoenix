@@ -1,10 +1,4 @@
 defmodule Phoenix.Channel.Transport do
-
-  require Logger
-  alias Phoenix.Socket
-  alias Phoenix.Socket.Message
-
-
   @moduledoc """
   Handles dispatching incoming and outgoing Channel messages
 
@@ -63,6 +57,17 @@ defmodule Phoenix.Channel.Transport do
 
   See `web/static/js/phoenix.js` for an example transport client implementation.
   """
+
+  use Behaviour
+  require Logger
+  alias Phoenix.Socket
+  alias Phoenix.Socket.Message
+
+  @doc """
+  Provides a keyword list of default configuration for socket transports
+  """
+  defcallback default_config() :: list
+
 
   @doc """
   Calls the socket handler's `connect/2` callback and returns the result.
