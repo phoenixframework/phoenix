@@ -190,13 +190,13 @@ defmodule Phoenix.Socket do
   ## Options
 
     * `:via` - the transport adapters to accept on this channel.
-      Defaults `[Phoenix.Transports.WebSocket, Phoenix.Transports.LongPoll]`
+      Defaults `[:websocket, :longpoll]`
 
   ## Examples
 
       channel "topic1:*", MyChannel
-      channel "topic2:*", MyChannel, via: [Phoenix.Transports.WebSocket]
-      channel "topic",    MyChannel, via: [Phoenix.Transports.LongPoll]
+      channel "topic2:*", MyChannel, via: [:websocket]
+      channel "topic",    MyChannel, via: [:longpoll]
 
   ## Topic Patterns
 
