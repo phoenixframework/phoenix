@@ -5,9 +5,6 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
   defmodule RouterTestSingleRoutes do
     use Phoenix.Router
 
-    socket "/ws" do
-    end
-
     get "/", Phoenix.PageController, :index, as: :page
     post "/images", Phoenix.ImageController, :upload, as: :upload_image
     delete "/images", Phoenix.ImageController, :delete, as: :remove_image
@@ -15,14 +12,9 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
 
   test "format multiple routes" do
     assert draw(RouterTestSingleRoutes) == """
-      web_socket_path  GET      /ws       Phoenix.Transports.WebSocket :upgrade
-      web_socket_path  POST     /ws       Phoenix.Transports.WebSocket :upgrade
-     long_poller_path  OPTIONS  /ws/poll  Phoenix.Transports.LongPoller :options
-     long_poller_path  GET      /ws/poll  Phoenix.Transports.LongPoller :poll
-     long_poller_path  POST     /ws/poll  Phoenix.Transports.LongPoller :publish
-            page_path  GET      /         Phoenix.PageController :index
-    upload_image_path  POST     /images   Phoenix.ImageController :upload
-    remove_image_path  DELETE   /images   Phoenix.ImageController :delete
+            page_path  GET     /        Phoenix.PageController :index
+    upload_image_path  POST    /images  Phoenix.ImageController :upload
+    remove_image_path  DELETE  /images  Phoenix.ImageController :delete
     """
   end
 

@@ -1,4 +1,4 @@
-defmodule Phoenix.Transports.LongPoller.Supervisor do
+defmodule Phoenix.Transports.LongPoll.Supervisor do
   @moduledoc false
   use Supervisor
 
@@ -8,42 +8,46 @@ defmodule Phoenix.Transports.LongPoller.Supervisor do
 
   def init([]) do
     children = [
-      worker(Phoenix.Transports.LongPoller.Server, [], restart: :transient)
+      worker(Phoenix.Transports.LongPoll.Server, [], restart: :transient)
     ]
     supervise(children, strategy: :simple_one_for_one)
   end
 end
 
-defmodule Phoenix.Transports.LongPoller.Server do
+defmodule Phoenix.Transports.LongPoll.Server do
   use GenServer
 
   @moduledoc false
 
   alias Phoenix.Channel.Transport
-  alias Phoenix.Transports.LongPoller
+  alias Phoenix.Transports.LongPoll
   alias Phoenix.PubSub
   alias Phoenix.Socket.Message
   alias Phoenix.Socket.Reply
+  alias Phoenix.Socket.Broadcast
 
   @doc """
   Starts the Server.
 
-    * `router` - The router module, ie. `MyApp.Router`
+    * `socket_handler` - The socket handler module, ie. `MyApp.UserSocket`
+    * `socket` - The `%Phoenix.Socket{}` struct returend from `connect/2` of the
+                 socket handler.
     * `window_ms` - The longpoll session timeout, in milliseconds
 
   If the server receives no message within `window_ms`, it terminates and
   clients are responsible for opening a new session.
   """
-  def start_link(router, window_ms, priv_topic, endpoint) do
-    GenServer.start_link(__MODULE__, [router, window_ms, priv_topic, endpoint])
+  def start_link(socket_handler, socket, window_ms, priv_topic, endpoint) do
+    GenServer.start_link(__MODULE__, [socket_handler, socket, window_ms, priv_topic, endpoint])
   end
 
   @doc false
-  def init([router, window_ms, priv_topic, endpoint]) do
+  def init([socket_handler, socket, window_ms, priv_topic, endpoint]) do
     Process.flag(:trap_exit, true)
 
     state = %{buffer: [],
-              router: router,
+              socket_handler: socket_handler,
+              socket: socket,
               sockets: HashDict.new,
               sockets_inverse: HashDict.new,
               window_ms: trunc(window_ms * 1.5),
@@ -53,6 +57,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
               last_client_poll: now_ms(),
               client_ref: nil}
 
+    if socket.id, do: endpoint.subscribe(self, socket.id, link: true)
     :ok = PubSub.subscribe(state.pubsub_server, self, state.priv_topic, link: true)
     :timer.send_interval(state.window_ms, :shutdown_if_inactive)
 
@@ -69,7 +74,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   """
   def handle_info({:dispatch, msg, ref}, state) do
     msg
-    |> Transport.dispatch(state.sockets, self, state.router, state.endpoint, LongPoller)
+    |> Transport.dispatch(state.sockets, self, state.socket_handler, state.socket, state.endpoint, LongPoll)
     |> case do
       {:ok, socket_pid} ->
         :ok = broadcast_from(state, {:ok, :dispatch, ref})
@@ -100,6 +105,13 @@ defmodule Phoenix.Transports.LongPoller.Server do
                        payload: %{status: status, response: payload}}
 
     publish_reply(message, state)
+  end
+
+  @doc """
+  Detects disconnect broadcasts and shuts down
+  """
+  def handle_info(%Broadcast{event: "disconnect"}, state) do
+    {:stop, {:shutdown, :disconnected}, state}
   end
 
   @doc """

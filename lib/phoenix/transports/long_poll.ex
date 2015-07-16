@@ -1,39 +1,66 @@
-defmodule Phoenix.Transports.LongPoller do
-  use Phoenix.Controller
-
+defmodule Phoenix.Transports.LongPoll do
   @moduledoc """
-  Handles LongPoller clients for the Channel Transport layer.
+  Handles LongPoll clients for the Channel Transport layer.
 
   ## Configuration
 
-  The long poller is configurable via the Endpoint's transport configuration:
+  The long poller is configurable in your Socket's transport configuration:
 
-      config :my_app, MyApp.Endpoint, transports: [
-        longpoller_window_ms: 10_000,
-        longpoller_pubsub_timeout_ms: 1000,
-        longpoller_crypto: [iterations: 1000,
-                            length: 32,
-                            digest: :sha256,
-                            cache: Plug.Keys],
-      ]
+      transport :longpoll, Phoenix.Transports.LongPoll,
+        window_ms: 10_000,
+        pubsub_timeout_ms: 1000,
+        crypto: [iterations: 1000,
+                 length: 32,
+                 digest: :sha256,
+                 cache: Plug.Keys],
 
-    * `:longpoller_window_ms` - how long the client can wait for new messages
+    * `:window_ms` - how long the client can wait for new messages
       in it's poll request.
-    * `:longpoller_pubsub_timeout_ms` - how long a request can wait for the
+    * `:pubsub_timeout_ms` - how long a request can wait for the
       pubsub layer to respond.
-    * `:longpoller_crypto` - configuration for the key generated to sign the
+    * `:crypto` - configuration for the key generated to sign the
       private topic used for the long poller session (see `Plug.Crypto.KeyGenerator`).
   """
+  use Plug.Builder
 
+  @behaviour Phoenix.Channel.Transport
+
+  import Phoenix.Controller
   alias Phoenix.Socket.Message
-  alias Phoenix.Transports.LongPoller
+  alias Phoenix.Transports.LongPoll
   alias Phoenix.Channel.Transport
 
+
+  plug Plug.Logger
+  plug :fetch_query_params
   plug :check_origin
   plug :allow_origin
+  plug Plug.Parsers, parsers: [:json], json_decoder: Poison
+  plug :dispatch
 
-  # TODO We need to uncomment this when we remove channels from endpoints
-  # plug Plug.Parsers, parsers: [:json], json_decoder: Poison
+  @doc """
+  Provides the deault transport configuration to sockets.
+  """
+  def default_config() do
+    [window_ms: 10_000,
+     pubsub_timeout_ms: 1000,
+     crypto: [iterations: 1000, length: 32,
+              digest: :sha256, cache: Plug.Keys]]
+  end
+
+  defp dispatch(%Plug.Conn{method: "OPTIONS"} = conn, _) do
+    options(conn, conn.params)
+  end
+  defp dispatch(%Plug.Conn{method: "GET"} = conn, _) do
+    poll(conn, conn.params)
+  end
+  defp dispatch(%Plug.Conn{method: "POST"} = conn, _) do
+    publish(conn, conn.params)
+  end
+  defp dispatch(conn, _) do
+    conn |> send_resp(:bad_request, "") |> halt()
+  end
+
 
   @doc """
   Responds to pre-flight CORS requests with Allow-Origin-* headers.
@@ -43,7 +70,7 @@ defmodule Phoenix.Transports.LongPoller do
   end
 
   @doc """
-  Listens for `%Phoenix.Socket.Message{}`'s from `Phoenix.LongPoller.Server`.
+  Listens for `%Phoenix.Socket.Message{}`'s from `Phoenix.LongPoll.Server`.
 
   As soon as messages are received, they are encoded as JSON and sent down
   to the longpolling client, which immediately repolls. If a timeout occurs,
@@ -76,11 +103,20 @@ defmodule Phoenix.Transports.LongPoller do
   end
 
   defp new_session(conn) do
-    {conn, priv_topic, sig, _server_pid} = start_session(conn)
+    endpoint = endpoint_module(conn)
+    handler  = conn.private.phoenix_socket_handler
 
-    conn
-    |> put_status(:gone)
-    |> status_json(%{token: priv_topic, sig: sig})
+    case Transport.socket_connect(endpoint, handler, conn.params) do
+      {:ok, socket} ->
+        {conn, priv_topic, sig, _server_pid} = start_session(conn, socket)
+
+        conn
+        |> put_status(:gone)
+        |> status_json(%{token: priv_topic, sig: sig})
+
+      :error ->
+        conn |> put_status(:forbidden) |> status_json(%{})
+    end
   end
 
   @doc """
@@ -108,23 +144,23 @@ defmodule Phoenix.Transports.LongPoller do
   ## Client
 
   @doc """
-  Starts the `Phoenix.LongPoller.Server` and stores the serialized pid in the session.
+  Starts the `Phoenix.LongPoll.Server` and stores the serialized pid in the session.
   """
-  def start_session(conn) do
-    router = router_module(conn)
+  def start_session(conn, socket) do
+    socket_handler = conn.private.phoenix_socket_handler
     priv_topic =
       "phx:lp:"
       |> Kernel.<>(Base.encode64(:crypto.strong_rand_bytes(16)))
       |> Kernel.<>(:os.timestamp() |> Tuple.to_list |> Enum.join(""))
 
-    child = [router, timeout_window_ms(conn), priv_topic, endpoint_module(conn)]
-    {:ok, server_pid} = Supervisor.start_child(LongPoller.Supervisor, child)
+    child = [socket_handler, socket, timeout_window_ms(conn), priv_topic, endpoint_module(conn)]
+    {:ok, server_pid} = Supervisor.start_child(LongPoll.Supervisor, child)
 
     {conn, priv_topic, sign(conn, priv_topic), server_pid}
   end
 
   @doc """
-  Finds the `Phoenix.LongPoller.Server` server from the session.
+  Finds the `Phoenix.LongPoll.Server` server from the session.
   """
   def resume_session(conn) do
     case verify_longpoll_topic(conn) do
@@ -135,7 +171,7 @@ defmodule Phoenix.Transports.LongPoller do
   end
 
   @doc """
-  Retrieves the serialized `Phoenix.LongPoller.Server` pid from the encrypted token.
+  Retrieves the serialized `Phoenix.LongPoll.Server` pid from the encrypted token.
   """
   def verify_longpoll_topic(%Plug.Conn{params: %{"token" => token, "sig" => sig}} = conn) do
     case verify(conn, token, sig) do
@@ -155,7 +191,7 @@ defmodule Phoenix.Transports.LongPoller do
   def verify_longpoll_topic(_conn), do: :notopic
 
   @doc """
-  Ack's a list of message refs back to the `Phoenix.LongPoller.Server`.
+  Ack's a list of message refs back to the `Phoenix.LongPoll.Server`.
 
   To be called after buffered messages have been relayed to the client.
   """
@@ -171,7 +207,7 @@ defmodule Phoenix.Transports.LongPoller do
 
   @doc """
   Dispatches deserialized `%Phoenix.Socket.Message{}` from client to
-  `Phoenix.LongPoller.Server`
+  `Phoenix.LongPoll.Server`
   """
   def dispatch(conn, priv_topic, msg) do
     ref = :erlang.make_ref()
@@ -185,11 +221,11 @@ defmodule Phoenix.Transports.LongPoller do
   end
 
   defp timeout_window_ms(conn) do
-    get_in endpoint_module(conn).config(:transports), [:longpoller_window_ms]
+    Keyword.fetch!(conn.private.phoenix_transport_conf, :window_ms)
   end
 
   defp pubsub_timeout_ms(conn) do
-    get_in endpoint_module(conn).config(:transports), [:longpoller_pubsub_timeout_ms]
+    Keyword.fetch!(conn.private.phoenix_transport_conf, :pubsub_timeout_ms)
   end
 
   defp pubsub_server(conn), do: endpoint_module(conn).__pubsub_server__()
@@ -203,7 +239,8 @@ defmodule Phoenix.Transports.LongPoller do
   end
 
   defp check_origin(conn, _opts) do
-    Transport.check_origin(conn, send: &status_json(&1, %{}))
+    allowed_origins = conn.private.phoenix_transport_conf[:origins]
+    Transport.check_origin(conn, allowed_origins, send: &status_json(&1, %{}))
   end
 
   defp sign(conn, priv_topic) do
@@ -225,8 +262,7 @@ defmodule Phoenix.Transports.LongPoller do
     raise "conn.secret_key_base must be at least 64 bytes for longpoll token verification"
   end
   defp derive_salt(conn, key) do
-    crypto_opts = get_in(endpoint_module(conn).config(:transports), [:longpoller_crypto])
-
+    crypto_opts = Keyword.fetch!(conn.private.phoenix_transport_conf, :crypto)
     Plug.Crypto.KeyGenerator.generate(conn.secret_key_base, key, crypto_opts)
   end
 

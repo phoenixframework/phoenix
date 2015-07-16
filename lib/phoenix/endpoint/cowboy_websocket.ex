@@ -64,6 +64,9 @@ defmodule Phoenix.Endpoint.CowboyWebsocket do
     :ok
   end
 
+  defp handle_reply(req, handler, {:shutdown, new_state}) do
+    {:shutdown, req, {handler, new_state}}
+  end
   defp handle_reply(req, handler, {:ok, new_state}) do
     {:ok, req, {handler, new_state}}
   end

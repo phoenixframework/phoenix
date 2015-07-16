@@ -89,11 +89,4 @@ defmodule Phoenix.Channel.ChannelTest do
       push(socket, "event", %{key: :val})
     end
   end
-
-  test "assigning to socket" do
-    socket = %Phoenix.Socket{}
-    assert socket.assigns[:foo] == nil
-    socket = assign(socket, :foo, :bar)
-    assert socket.assigns[:foo] == :bar
-  end
 end

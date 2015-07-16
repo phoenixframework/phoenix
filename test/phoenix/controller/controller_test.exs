@@ -153,7 +153,7 @@ defmodule Phoenix.Controller.ControllerTest do
     assert get_resp_content_type(conn) == "text/javascript"
     refute conn.halted
   end
-    
+
   test "jsonp/3 allows to override the callback param" do
     conn = conn(:get, "/?cb=cb") |> fetch_query_params()
     conn = jsonp(conn, %{foo: :bar}, callback: "cb")

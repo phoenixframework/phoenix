@@ -153,21 +153,6 @@ defmodule Phoenix.Router do
   Note that router pipelines are only invoked after a route is found.
   No plug is invoked in case no matches were found.
 
-  ### Channels
-
-  Channels allow you to route pubsub events to channel handlers in your application.
-  By default, Phoenix supports both WebSocket and LongPoller transports.
-  See the `Phoenix.Channel.Transport` documentation for more information on writing
-  your own transports. Channels are defined with a `socket` mount, ie:
-
-      defmodule MyApp.Router do
-        use Phoenix.Router
-
-        socket "/ws" do
-          channel "rooms:*", MyApp.RoomChannel
-        end
-      end
-
   """
 
   alias Phoenix.Router.Resource
@@ -189,7 +174,6 @@ defmodule Phoenix.Router do
   defp prelude() do
     quote do
       Module.register_attribute __MODULE__, :phoenix_routes, accumulate: true
-      Module.register_attribute __MODULE__, :phoenix_channels, accumulate: true
       @phoenix_forwards %{}
 
       import Phoenix.Router
@@ -292,7 +276,6 @@ defmodule Phoenix.Router do
   @doc false
   defmacro __before_compile__(env) do
     routes   = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse
-    channels = env.module |> Module.get_attribute(:phoenix_channels) |> Helpers.defchannels
 
     Helpers.define(env, routes)
     escaped = Enum.map(routes, fn {route, _} -> Macro.escape(route) end)
@@ -330,7 +313,6 @@ defmodule Phoenix.Router do
       def __helpers__, do: __MODULE__.Helpers
 
       unquote(match_404)
-      unquote(channels)
     end
   end
 
@@ -650,129 +632,6 @@ defmodule Phoenix.Router do
       end
     end
   end
-
-  @doc """
-  Defines a socket mount-point for channel definitions.
-
-  By default, the given path is a websocket upgrade endpoint,
-  with long-polling fallback. The transports can be configured
-  with the socket options or on each individual channel.
-
-  It expects the `mount` path as a string and a keyword list
-  of options.
-
-  ## Options
-
-    * `:via` - the optional transport modules to apply to all
-      channels in the block, ie: `[Phoenix.Transports.WebSocket]`
-
-    * `:as` - the optional named route helper function, ie `:socket`
-
-    * `:alias` - the optional alias to apply to all channel modules,
-      ie: `MyApp`. Alternatively, you can pass an alias as a standalone
-      second argument to apply the alias, similar to `scope/2`.
-
-  ## Examples
-
-      socket "/ws" do
-        channel "rooms:*", MyApp.RoomChannel
-      end
-
-      socket "/ws", MyApp do
-        channel "rooms:*", RoomChannel
-      end
-
-      socket "/ws", alias: MyApp, as: :socket, via: [Phoenix.Transports.WebSocket] do
-        channel "rooms:*", RoomChannel
-      end
-
-  """
-  defmacro socket(mount, do: chan_block) do
-    add_socket(mount, [], chan_block)
-  end
-  defmacro socket(mount, opts, do: chan_block) when is_list(opts) do
-    add_socket(mount, opts, chan_block)
-  end
-  defmacro socket(mount, chan_alias, do: chan_block) do
-    add_socket(mount, [alias: chan_alias], chan_block)
-  end
-  defmacro socket(mount, chan_alias, opts, do: chan_block) do
-    add_socket(mount, Keyword.put(opts, :alias, chan_alias), chan_block)
-  end
-  defp add_socket(mount, opts, chan_block) do
-    quote do
-      (fn ->
-        mount = unquote(mount)
-        opts  = unquote(opts)
-
-        if Scope.inside_scope?(__MODULE__) do
-          raise """
-          You are trying to call `socket` within a `scope` definition.
-          Please move your socket and channel definitions outside of any scope block.
-          """
-        end
-
-        @phoenix_socket_mount mount
-        @phoenix_transports opts[:via]
-        @phoenix_channel_alias opts[:alias]
-        get     @phoenix_socket_mount, Phoenix.Transports.WebSocket, :upgrade, Dict.take(opts, [:as])
-        post    @phoenix_socket_mount, Phoenix.Transports.WebSocket, :upgrade
-        options @phoenix_socket_mount <> "/poll", Phoenix.Transports.LongPoller, :options
-        get     @phoenix_socket_mount <> "/poll", Phoenix.Transports.LongPoller, :poll
-        post    @phoenix_socket_mount <> "/poll", Phoenix.Transports.LongPoller, :publish
-        unquote(chan_block)
-        @phoenix_socket_mount nil
-        @phoenix_transports nil
-        @phoenix_channel_alias nil
-      end).()
-    end
-  end
-
-  @doc """
-  Defines a channel matching the given topic and transports.
-
-    * `topic_pattern` - The string pattern, ie "rooms:*", "users:*", "system"
-    * `module` - The channel module handler, ie `MyApp.RoomChannel`
-    * `opts` - The optional list of options, see below
-
-  ## Options
-
-    * `:via` - the transport adapters to accept on this channel.
-      Defaults `[Phoenix.Transports.WebSocket, Phoenix.Transports.LongPoller]`
-
-  ## Examples
-
-      socket "/ws" do
-        channel "topic1:*", MyChannel
-        channel "topic2:*", MyChannel, via: [Phoenix.Transports.WebSocket]
-        channel "topic",    MyChannel, via: [Phoenix.Transports.LongPoller]
-      end
-
-  ## Topic Patterns
-
-  The `channel` macro accepts topic patterns in two flavors. A splat argument
-  can be provided as the last character to indicate a "topic:subtopic" match. If
-  a plain string is provied, only that topic will match the channel handler.
-  Most use-cases will use the "topic:*" pattern to allow more versatile topic
-  scoping.
-
-  See `Phoenix.Channel` for more information
-  """
-  defmacro channel(topic_pattern, module, opts \\ []) do
-    quote bind_quoted: binding do
-      unless @phoenix_socket_mount do
-        raise """
-        You are trying to call `channel` outside of a `socket` block.
-        Please move your channel definitions inside a `socket` block.
-        """
-      end
-
-      @phoenix_channels {topic_pattern,
-                         Module.concat(@phoenix_channel_alias, module),
-                         Dict.merge([via: @phoenix_transports], opts)}
-    end
-  end
-
 
   @doc """
   Forwards a request at the given path to a Plug, invoking the pipeline.

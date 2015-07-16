@@ -1,43 +1,63 @@
 defmodule Phoenix.Transports.WebSocket do
-  use Plug.Builder
-  require Logger
-
-  import Phoenix.Controller, only: [endpoint_module: 1, router_module: 1]
-
-  alias Phoenix.Socket.Message
-  alias Phoenix.Socket.Reply
-
   @moduledoc """
   Handles WebSocket clients for the Channel Transport layer.
 
   ## Configuration
 
-  By default, JSON encoding is used to broker messages to and from clients,
-  but the serializer is configurable via the Endpoint's transport configuration:
+  By default, JSON encoding is used to broker messages to and from clients and
+  Websockets, by default, do not timeout if the connection is lost. The
+  maximum timeout duration and serializer can be configured in your Socket's
+  transport configuration:
 
-      config :my_app, MyApp.Endpoint, transports: [
-        websocket_serializer: MySerializer
-      ]
+      transport :websocket, Phoenix.Transports.WebSocket,
+        serializer: MySerializer
+        timeout: 60000
 
-  The `websocket_serializer` module needs only to implement the `encode!/1` and
+  The `serializer` module needs only to implement the `encode!/1` and
   `decode!/2` functions defined by the `Phoenix.Transports.Serializer` behaviour.
-
-  Websockets, by default, do not timeout if the connection is lost. To set a
-  maximum timeout duration in milliseconds, add this to your Endpoint's transport
-  configuration:
-
-      config :my_app, MyApp.Endpoint, transports: [
-        websocket_timeout: 60000
-      ]
   """
+  use Plug.Builder
 
+  @behaviour Phoenix.Channel.Transport
+
+  require Logger
+  import Phoenix.Controller, only: [endpoint_module: 1]
+
+  alias Phoenix.Socket.Message
+  alias Phoenix.Socket.Broadcast
+  alias Phoenix.Socket.Reply
   alias Phoenix.Channel.Transport
 
+  plug Plug.Logger
+  plug :fetch_query_params
   plug :check_origin
   plug :upgrade
 
-  def upgrade(%Plug.Conn{method: "GET"} = conn, _) do
-    put_private(conn, :phoenix_upgrade, {:websocket, __MODULE__}) |> halt
+
+  @doc """
+  Provides the deault transport configuration to sockets.
+  """
+  def default_config() do
+    [serializer: Phoenix.Transports.JSONSerializer,
+     timeout: :infinity]
+  end
+
+  def upgrade(%Plug.Conn{method: "GET", params: params} = conn, _) do
+    endpoint = endpoint_module(conn)
+    handler  = conn.private.phoenix_socket_handler
+
+    case Transport.socket_connect(endpoint, handler, params) do
+      {:ok, socket} ->
+        conn
+        |> put_private(:phoenix_upgrade, {:websocket, __MODULE__})
+        |> put_private(:phoenix_socket, socket)
+        |> halt()
+      :error ->
+        conn |> send_resp(403, "") |> halt()
+    end
+  end
+  def upgrade(conn, _) do
+    conn |> send_resp(:bad_request, "") |> halt()
   end
 
   @doc """
@@ -45,11 +65,17 @@ defmodule Phoenix.Transports.WebSocket do
   """
   def ws_init(conn) do
     Process.flag(:trap_exit, true)
-    endpoint   = endpoint_module(conn)
-    serializer = Dict.fetch!(endpoint.config(:transports), :websocket_serializer)
-    timeout    = Dict.fetch!(endpoint.config(:transports), :websocket_timeout)
+    socket_handler = conn.private.phoenix_socket_handler
+    config         = conn.private.phoenix_transport_conf
+    endpoint       = endpoint_module(conn)
+    serializer     = Keyword.fetch!(config, :serializer)
+    timeout        = Keyword.fetch!(config, :timeout)
+    socket         = conn.private.phoenix_socket
 
-    {:ok, %{router: router_module(conn),
+    if socket.id, do: endpoint.subscribe(self, socket.id, link: true)
+
+    {:ok, %{socket_handler: socket_handler,
+            socket: socket,
             endpoint: endpoint,
             sockets: HashDict.new,
             sockets_inverse: HashDict.new,
@@ -63,7 +89,7 @@ defmodule Phoenix.Transports.WebSocket do
   def ws_handle(opcode, payload, state) do
     msg = state.serializer.decode!(payload, opcode)
 
-    case Transport.dispatch(msg, state.sockets, self, state.router, state.endpoint, __MODULE__) do
+    case Transport.dispatch(msg, state.sockets, self, state.socket_handler, state.socket, state.endpoint, __MODULE__) do
       {:ok, socket_pid} ->
         {:ok, put(state, msg.topic, socket_pid)}
       :ok ->
@@ -90,6 +116,13 @@ defmodule Phoenix.Transports.WebSocket do
             {:reply, state.serializer.encode!(Transport.chan_error_message(topic)), new_state}
         end
     end
+  end
+
+  @doc """
+  Detects disconnect broadcasts and shuts down
+  """
+  def ws_info(%Broadcast{event: "disconnect"}, state) do
+    {:shutdown, state}
   end
 
   def ws_info(%Message{} = message, %{serializer: serializer} = state) do
@@ -120,7 +153,7 @@ defmodule Phoenix.Transports.WebSocket do
   end
 
   defp check_origin(conn, _opts) do
-    Transport.check_origin(conn)
+    Transport.check_origin(conn, conn.private.phoenix_transport_conf[:origins])
   end
 
   defp put(state, topic, socket_pid) do

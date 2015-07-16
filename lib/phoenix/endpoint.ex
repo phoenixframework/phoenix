@@ -156,18 +156,6 @@ defmodule Phoenix.Endpoint do
           [name: :my_pubsub, adapter: Phoenix.PubSub.Redis,
            host: "192.168.100.1"]
 
-    * `:transports` - configuration for the channel transport. Check the
-      transport modules for transport specific options. A list of allowed
-      origins can be specified in the `:origins` key to restrict clients
-      based on the given Origin header.
-
-          [origins: ["//example.com", "http://example.com",
-                     "https://example.com:8080"]]
-
-      If no such header is sent no verification will be performed. If the
-      Origin header does not match the list of allowed origins a 403 Forbidden
-      response will be sent to the client.
-
   ## Endpoint API
 
   In the previous section, we have used the `config/2` function which is
@@ -279,6 +267,7 @@ defmodule Phoenix.Endpoint do
       import Phoenix.Endpoint
 
       Module.register_attribute(__MODULE__, :plugs, accumulate: true)
+      Module.register_attribute(__MODULE__, :phoenix_sockets, accumulate: true)
       @before_compile Phoenix.Endpoint
 
       def init(opts) do
@@ -290,7 +279,7 @@ defmodule Phoenix.Endpoint do
         conn
         |> Plug.Conn.put_private(:phoenix_endpoint, __MODULE__)
         |> put_script_name()
-        |> phoenix_endpoint_pipeline()
+        |> phoenix_pipeline()
       end
 
       defoverridable [init: 1, call: 2]
@@ -388,11 +377,25 @@ defmodule Phoenix.Endpoint do
 
   @doc false
   defmacro __before_compile__(env) do
+    sockets = Module.get_attribute(env.module, :phoenix_sockets)
     plugs = Module.get_attribute(env.module, :plugs)
     {conn, body} = Plug.Builder.compile(env, plugs, [])
 
+    # TODO move to adapter dispatch
+    socket_intercepts = for {path, socket_handler} <- sockets do
+      path_info = Plug.Router.Utils.split(path)
+
+      quote do
+        defp phoenix_pipeline(%Plug.Conn{path_info: [unquote_splicing(path_info), transport_name]} = conn) do
+          opts = Phoenix.Socket.Router.init({transport_name, unquote(socket_handler)})
+          Phoenix.Socket.Router.call(conn, opts)
+        end
+      end
+    end
+
     quote do
-      defp phoenix_endpoint_pipeline(unquote(conn)), do: unquote(body)
+      unquote(socket_intercepts)
+      defp phoenix_pipeline(unquote(conn)), do: unquote(body)
     end
   end
 
@@ -412,6 +415,25 @@ defmodule Phoenix.Endpoint do
   defmacro plug(plug, opts) do
     quote do
       @plugs {unquote(plug), unquote(opts), true}
+    end
+  end
+
+  @doc """
+  Defines a mount-point for a Socket module to handle channel definitions.
+
+  ## Examples
+
+      socket "/ws", MyApp.UserSocket
+      socket "/ws/admin", MyApp.AdminUserSocket
+
+  By default, the given path is a websocket upgrade endpoint,
+  with long-polling fallback. The transports can be configured
+  within the Socket handler. See `Phoenix.Socket` for more information
+  on defining socket handlers.
+  """
+  defmacro socket(path, module) do
+    quote do
+      @phoenix_sockets {unquote(path), unquote(module)}
     end
   end
 end
