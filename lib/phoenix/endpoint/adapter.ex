@@ -92,19 +92,6 @@ defmodule Phoenix.Endpoint.Adapter do
      debug_errors: false,
      render_errors: [view: render_errors(module), default_format: "html"],
 
-     # Transports
-     transports: [
-       longpoller_window_ms: 10_000,
-       longpoller_pubsub_timeout_ms: 1000,
-       longpoller_crypto: [iterations: 1000,
-                           length: 32,
-                           digest: :sha256,
-                           cache: Plug.Keys],
-
-       websocket_serializer: Phoenix.Transports.JSONSerializer,
-       websocket_timeout: :infinity
-     ],
-
      # Runtime config
      cache_static_lookup: true,
      cache_static_manifest: nil,

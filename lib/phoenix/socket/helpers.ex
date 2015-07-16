@@ -2,17 +2,18 @@ defmodule Phoenix.Socket.Helpers do
   # Module that generates the channel topic matches.
   @moduledoc false
 
-  @transports [Phoenix.Transports.WebSocket, Phoenix.Transports.LongPoller]
-
   @doc """
   Receives the `@phoenix_channels` accumulated attribute and returns AST of
   `match_channel` definitions
   """
-  def defchannels(channels) do
+  def defchannels(channels, transports) do
     channels_ast = for {topic_pattern, module, opts} <- channels do
+      transport_modules = for {name, {transport_mod, _}} <- transports,
+                          name in opts[:via],
+                          do: transport_mod
       topic_pattern
       |> to_topic_match
-      |> defchannel(module, opts[:via] || @transports)
+      |> defchannel(module, transport_modules)
     end
 
     quote do

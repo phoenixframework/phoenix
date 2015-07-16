@@ -13,19 +13,13 @@ defmodule Phoenix.Integration.ChannelTest do
   alias __MODULE__.Endpoint
 
   @port 5807
-  @window_ms 200
-  @pubsub_window_ms 1000
-  @ensure_window_timeout_ms trunc(@window_ms * 2.5)
+  @ensure_window_timeout_ms 500
 
   Application.put_env(:channel_app, Endpoint, [
     https: false,
     http: [port: @port],
     secret_key_base: String.duplicate("abcdefgh", 8),
-    debug_errors: false,
-    transports: [
-      longpoller_window_ms: @window_ms,
-      longpoller_pubsub_timeout_ms: @pubsub_window_ms,
-      origins: ["//example.com"]],
+    debug_errors: true,
     server: true,
     pubsub: [adapter: Phoenix.PubSub.PG2, name: :int_pub]
   ])
@@ -69,6 +63,13 @@ defmodule Phoenix.Integration.ChannelTest do
     use Phoenix.Socket
 
     channel "rooms:*", RoomChannel
+
+    transport :longpoll, Phoenix.Transports.LongPoll,
+      window_ms: 200,
+      origins: ["//example.com"]
+
+    transport :websocket, Phoenix.Transports.WebSocket,
+      origins: ["//example.com"]
 
     def connect(%{"reject" => "true"}, _socket) do
       :error

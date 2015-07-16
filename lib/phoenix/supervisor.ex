@@ -7,7 +7,7 @@ defmodule Phoenix.Supervisor do
 
   def init([]) do
     children = [
-      worker(Phoenix.Transports.LongPoller.Supervisor, [])
+      worker(Phoenix.Transports.LongPoll.Supervisor, [])
     ]
     supervise(children, strategy: :one_for_one)
   end

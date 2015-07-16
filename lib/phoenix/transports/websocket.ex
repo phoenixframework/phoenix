@@ -13,27 +13,23 @@ defmodule Phoenix.Transports.WebSocket do
 
   ## Configuration
 
-  By default, JSON encoding is used to broker messages to and from clients,
-  but the serializer is configurable via the Endpoint's transport configuration:
+  By default, JSON encoding is used to broker messages to and from clients and
+  Websockets, by default, do not timeout if the connection is lost. The
+  maximum timeout duration and serializer can be configured in your Socket's
+  transport configuration:
 
-      config :my_app, MyApp.Endpoint, transports: [
-        websocket_serializer: MySerializer
-      ]
+      transport :websocket, Phoenix.Transports.WebSocket,
+        serializer: MySerializer
+        timeout: 60000
 
-  The `websocket_serializer` module needs only to implement the `encode!/1` and
+  The `serializer` module needs only to implement the `encode!/1` and
   `decode!/2` functions defined by the `Phoenix.Transports.Serializer` behaviour.
-
-  Websockets, by default, do not timeout if the connection is lost. To set a
-  maximum timeout duration in milliseconds, add this to your Endpoint's transport
-  configuration:
-
-      config :my_app, MyApp.Endpoint, transports: [
-        websocket_timeout: 60000
-      ]
   """
 
   alias Phoenix.Channel.Transport
 
+  plug Plug.Logger
+  plug :fetch_query_params
   plug :check_origin
   plug :upgrade
 
@@ -51,16 +47,20 @@ defmodule Phoenix.Transports.WebSocket do
         conn |> send_resp(403, "") |> halt()
     end
   end
+  def upgrade(conn, _) do
+    conn |> send_resp(:bad_request, "") |> halt()
+  end
 
   @doc """
   Handles initalization of the websocket.
   """
   def ws_init(conn) do
     Process.flag(:trap_exit, true)
-    endpoint       = endpoint_module(conn)
-    serializer     = Dict.fetch!(endpoint.config(:transports), :websocket_serializer)
-    timeout        = Dict.fetch!(endpoint.config(:transports), :websocket_timeout)
     socket_handler = conn.private.phoenix_socket_handler
+    config         = conn.private.phoenix_transport_conf
+    endpoint       = endpoint_module(conn)
+    serializer     = Keyword.fetch!(config, :serializer)
+    timeout        = Keyword.fetch!(config, :timeout)
     socket         = conn.private.phoenix_socket
 
     if socket.id, do: endpoint.subscribe(self, socket.id, link: true)
@@ -144,7 +144,7 @@ defmodule Phoenix.Transports.WebSocket do
   end
 
   defp check_origin(conn, _opts) do
-    Transport.check_origin(conn)
+    Transport.check_origin(conn, conn.private.phoenix_transport_conf[:origins])
   end
 
   defp put(state, topic, socket_pid) do

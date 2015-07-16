@@ -196,18 +196,14 @@ defmodule Phoenix.Channel.Transport do
 
   @doc """
   Checks the Origin request header against the list of allowed origins
-  configured on the `Phoenix.Endpoint` `:transports` config. If the Origin
+  configured on the socket's transport config. If the Origin
   header matches the allowed origins, no Origin header was sent or no origins
   configured it will return the given `Plug.Conn`. Otherwise a 403 Forbidden
   response will be send and the connection halted.
   """
-  def check_origin(conn, opts \\ []) do
+  def check_origin(conn, allowed_origins, opts \\ []) do
     import Plug.Conn
-
-    endpoint = Phoenix.Controller.endpoint_module(conn)
-    allowed_origins = Dict.get(endpoint.config(:transports), :origins)
     origin = get_req_header(conn, "origin") |> List.first
-
     send = opts[:send] || &send_resp(&1)
 
     if origin_allowed?(origin, allowed_origins) do
@@ -215,7 +211,7 @@ defmodule Phoenix.Channel.Transport do
     else
       resp(conn, :forbidden, "")
       |> send.()
-      |> halt
+      |> halt()
     end
   end
 

@@ -109,7 +109,7 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
 //
 // The `Socket` constructor takes the mount point of the socket
 // as well as options that can be found in the Socket docs,
-// such as configuring the `LongPoller` transport, and heartbeat.
+// such as configuring the `LongPoll` transport, and heartbeat.
 // Socket params can also be passed as an option for default, but
 // overridable channel params to apply to all channels.
 //
@@ -550,8 +550,8 @@ var Socket = exports.Socket = (function () {
   //                                               "wss://example.com"
   //                                               "/ws" (inherited host & protocol)
   // opts - Optional configuration
-  //   transport - The Websocket Transport, ie WebSocket, Phoenix.LongPoller.
-  //               Defaults to WebSocket with automatic LongPoller fallback.
+  //   transport - The Websocket Transport, ie WebSocket, Phoenix.LongPoll.
+  //               Defaults to WebSocket with automatic LongPoll fallback.
   //   params - The defaults for all channel params, ie `{user_id: userToken}`
   //   heartbeatIntervalMs - The millisec interval to send a heartbeat message
   //   reconnectAfterMs - The optional function that returns the millsec
@@ -581,7 +581,7 @@ var Socket = exports.Socket = (function () {
     this.channels = [];
     this.sendBuffer = [];
     this.ref = 0;
-    this.transport = opts.transport || window.WebSocket || LongPoller;
+    this.transport = opts.transport || window.WebSocket || LongPoll;
     this.heartbeatIntervalMs = opts.heartbeatIntervalMs || 30000;
     this.reconnectAfterMs = opts.reconnectAfterMs || function (tries) {
       return [1000, 5000, 10000][tries - 1] || 10000;
@@ -892,9 +892,9 @@ var Socket = exports.Socket = (function () {
   return Socket;
 })();
 
-var LongPoller = exports.LongPoller = (function () {
-  function LongPoller(endPoint) {
-    _classCallCheck(this, LongPoller);
+var LongPoll = exports.LongPoll = (function () {
+  function LongPoll(endPoint) {
+    _classCallCheck(this, LongPoll);
 
     this.endPoint = null;
     this.token = null;
@@ -910,7 +910,7 @@ var LongPoller = exports.LongPoller = (function () {
     this.poll();
   }
 
-  _prototypeProperties(LongPoller, null, {
+  _prototypeProperties(LongPoll, null, {
     normalizeEndpoint: {
       value: function normalizeEndpoint(endPoint) {
         return endPoint.replace("ws://", "http://").replace("wss://", "https://").replace(new RegExp("(.*)/" + TRANSPORTS.websocket), "$1/" + TRANSPORTS.longpoll);
@@ -1018,7 +1018,7 @@ var LongPoller = exports.LongPoller = (function () {
     }
   });
 
-  return LongPoller;
+  return LongPoll;
 })();
 
 var Ajax = exports.Ajax = (function () {

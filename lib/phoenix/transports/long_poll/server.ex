@@ -1,4 +1,4 @@
-defmodule Phoenix.Transports.LongPoller.Supervisor do
+defmodule Phoenix.Transports.LongPoll.Supervisor do
   @moduledoc false
   use Supervisor
 
@@ -8,19 +8,19 @@ defmodule Phoenix.Transports.LongPoller.Supervisor do
 
   def init([]) do
     children = [
-      worker(Phoenix.Transports.LongPoller.Server, [], restart: :transient)
+      worker(Phoenix.Transports.LongPoll.Server, [], restart: :transient)
     ]
     supervise(children, strategy: :simple_one_for_one)
   end
 end
 
-defmodule Phoenix.Transports.LongPoller.Server do
+defmodule Phoenix.Transports.LongPoll.Server do
   use GenServer
 
   @moduledoc false
 
   alias Phoenix.Channel.Transport
-  alias Phoenix.Transports.LongPoller
+  alias Phoenix.Transports.LongPoll
   alias Phoenix.PubSub
   alias Phoenix.Socket.Message
   alias Phoenix.Socket.Reply
@@ -74,7 +74,7 @@ defmodule Phoenix.Transports.LongPoller.Server do
   """
   def handle_info({:dispatch, msg, ref}, state) do
     msg
-    |> Transport.dispatch(state.sockets, self, state.socket_handler, state.socket, state.endpoint, LongPoller)
+    |> Transport.dispatch(state.sockets, self, state.socket_handler, state.socket, state.endpoint, LongPoll)
     |> case do
       {:ok, socket_pid} ->
         :ok = broadcast_from(state, {:ok, :dispatch, ref})

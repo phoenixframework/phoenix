@@ -1,37 +1,28 @@
 defmodule Phoenix.Socket.Router do
-  # Routes WebSocket and LongPoller requests.
+  # Routes socket requests to transports
   @moduledoc false
+  import Plug.Conn
 
-  use Plug.Builder
-  alias Phoenix.Transports.WebSocket
-  alias Phoenix.Transports.LongPoller
+  def init(opts), do: opts
 
-  @longpoll "longpoll"
-  @websocket "websocket"
+  @doc """
+  Dispatches to the transport adapter configured in the socket handler.
 
-  plug Plug.Logger
-  plug :fetch_query_params
-  plug :transport_dispatch
+  Sets the following private `%Plug.Conn{}` assigns:
 
-  def transport_dispatch(conn, _) do
-    dispatch(conn, conn.method, conn.private.phoenix_socket_transport)
-  end
+    * `:phoenix_socket_handler` - the socket handler module requested by client
+    * `:phoenix_transport_conf` - the list of config for the transport from the
+      socket handler
+  """
+  def call(conn, {transport_name, socket_handler}) do
+    case socket_handler.__transport__(transport_name) do
+      {transport, config} ->
+        conn
+        |> put_private(:phoenix_socket_handler, socket_handler)
+        |> put_private(:phoenix_transport_conf, config)
+        |> transport.call(transport.init([]))
 
-  defp dispatch(conn, method, @websocket) when method in ["GET", "POST"] do
-    WebSocket.call(conn, [])
-  end
-
-  defp dispatch(conn, "OPTIONS", @longpoll) do
-    LongPoller.call(conn, :options)
-  end
-  defp dispatch(conn, "GET", @longpoll) do
-    LongPoller.call(conn, :poll)
-  end
-  defp dispatch(conn, "POST", @longpoll) do
-    LongPoller.call(conn, :publish)
-  end
-
-  defp dispatch(conn, _method, _transport) do
-    conn |> send_resp(:bad_request, "") |> halt()
+      :unsupported -> conn |> send_resp(:bad_request, "") |> halt()
+    end
   end
 end

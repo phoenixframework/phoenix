@@ -11,7 +11,7 @@
 //
 // The `Socket` constructor takes the mount point of the socket
 // as well as options that can be found in the Socket docs,
-// such as configuring the `LongPoller` transport, and heartbeat.
+// such as configuring the `LongPoll` transport, and heartbeat.
 // Socket params can also be passed as an option for default, but
 // overridable channel params to apply to all channels.
 //
@@ -320,8 +320,8 @@ export class Socket {
   //                                               "wss://example.com"
   //                                               "/ws" (inherited host & protocol)
   // opts - Optional configuration
-  //   transport - The Websocket Transport, ie WebSocket, Phoenix.LongPoller.
-  //               Defaults to WebSocket with automatic LongPoller fallback.
+  //   transport - The Websocket Transport, ie WebSocket, Phoenix.LongPoll.
+  //               Defaults to WebSocket with automatic LongPoll fallback.
   //   params - The defaults for all channel params, ie `{user_id: userToken}`
   //   heartbeatIntervalMs - The millisec interval to send a heartbeat message
   //   reconnectAfterMs - The optional function that returns the millsec
@@ -344,7 +344,7 @@ export class Socket {
     this.channels             = []
     this.sendBuffer           = []
     this.ref                  = 0
-    this.transport            = opts.transport || window.WebSocket || LongPoller
+    this.transport            = opts.transport || window.WebSocket || LongPoll
     this.heartbeatIntervalMs  = opts.heartbeatIntervalMs || 30000
     this.reconnectAfterMs     = opts.reconnectAfterMs || function(tries){
       return [1000, 5000, 10000][tries - 1] || 10000
@@ -496,7 +496,7 @@ export class Socket {
 }
 
 
-export class LongPoller {
+export class LongPoll {
 
   constructor(endPoint){
     this.endPoint        = null

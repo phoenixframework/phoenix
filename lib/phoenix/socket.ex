@@ -20,7 +20,7 @@ defmodule Phoenix.Socket do
   ## Channels
 
   Channels allow you to route pubsub events to channel handlers in your application.
-  By default, Phoenix supports both WebSocket and LongPoller transports.
+  By default, Phoenix supports both `:websocket` and `:longpoll` transports.
   See the `Phoenix.Channel.Transport` documentation for more information on writing
   your own transports. Channels are defined within a socket handler, using the
   `channel/2` macro, as seen below.
@@ -55,6 +55,25 @@ defmodule Phoenix.Socket do
       # disconnect all user's socket connections and their multiplexed channels
       MyApp.Endpoint.broadcast("users_socket:" <> user.id, "disconnect")
 
+
+  ## Transport Configuration
+
+  Transports are defined and configured within socket handlers. By default,
+  Phoenix defines the `:websocket`, and `:longpoll` transports automaticaly with
+  overridable options. Check the transport modules for transport specific
+  options. A list of allowed origins can be specified in the `:origins` key for
+  the `:websocket` and `:longpoll` transports. This will restrict clients based
+  on the given Origin header.
+
+      transport :longpoll, Phoenix.Transports.LongPoll,
+        origins: ["//example.com", "http://example.com", "https://example.com"]
+
+      transport :websocket, Phoenix.Transports.WebSocket,
+        origins: ["//example.com", "http://example.com", "https://example.com"]
+
+  If no such header is sent no verification will be performed. If the
+  Origin header does not match the list of allowed origins a 403 Forbidden
+  response will be sent to the client. See `transport/3` for more information.
   """
 
   use Behaviour
@@ -65,6 +84,7 @@ defmodule Phoenix.Socket do
 
   defcallback id(Socket.t) :: String.t | nil
 
+  @default_transports [:websocket, :longpoll]
 
   defmodule InvalidMessageError do
     @moduledoc """
@@ -104,15 +124,43 @@ defmodule Phoenix.Socket do
       @behaviour Phoenix.Socket
       import unquote(__MODULE__)
       Module.register_attribute(__MODULE__, :phoenix_channels, accumulate: true)
+      @phoenix_transports %{}
+
+      transport :websocket, Phoenix.Transports.WebSocket,
+        serializer: Phoenix.Transports.JSONSerializer,
+        timeout: :infinity
+
+      transport :longpoll, Phoenix.Transports.LongPoll,
+        window_ms: 10_000,
+        pubsub_timeout_ms: 1000,
+        crypto: [iterations: 1000, length: 32, digest: :sha256, cache: Plug.Keys]
+
+
       @before_compile unquote(__MODULE__)
     end
   end
 
   defmacro __before_compile__(env) do
-    channels = env.module |> Module.get_attribute(:phoenix_channels) |> Helpers.defchannels()
+    transports = Module.get_attribute(env.module, :phoenix_transports)
+    channel_defs =
+      env.module
+      |> Module.get_attribute(:phoenix_channels)
+      |> Helpers.defchannels(transports)
+
+    transport_defs =
+      for {name, {mod, conf}} <- transports do
+        quote do
+          def __transport__(name) when name in [unquote(name), unquote(to_string(name))] do
+            {unquote(mod), unquote(conf)}
+          end
+        end
+      end
 
     quote do
-      unquote(channels)
+      def __transports__, do: unquote(Macro.escape(transports))
+      unquote(transport_defs)
+      def __transport__(_name), do: :unsupported
+      unquote(channel_defs)
     end
   end
 
@@ -142,13 +190,13 @@ defmodule Phoenix.Socket do
   ## Options
 
     * `:via` - the transport adapters to accept on this channel.
-      Defaults `[Phoenix.Transports.WebSocket, Phoenix.Transports.LongPoller]`
+      Defaults `[Phoenix.Transports.WebSocket, Phoenix.Transports.LongPoll]`
 
   ## Examples
 
       channel "topic1:*", MyChannel
       channel "topic2:*", MyChannel, via: [Phoenix.Transports.WebSocket]
-      channel "topic",    MyChannel, via: [Phoenix.Transports.LongPoller]
+      channel "topic",    MyChannel, via: [Phoenix.Transports.LongPoll]
 
   ## Topic Patterns
 
@@ -162,7 +210,40 @@ defmodule Phoenix.Socket do
   """
   defmacro channel(topic_pattern, module, opts \\ []) do
     quote do
-      @phoenix_channels {unquote_splicing([topic_pattern, module, opts])}
+      @phoenix_channels {unquote_splicing([
+        topic_pattern,
+        module,
+        Keyword.put_new(opts, :via, @default_transports)
+      ])}
+    end
+  end
+
+  @doc """
+  Defines a transport with configuration.
+
+  ## Examples
+      # customize default `:websocket` transport options
+      transport :websocket, Phoenix.Transports.WebSocket,
+        timeout: 10_000
+
+      # define separate transport, using websocket handler
+      transport :websocket_slow_clients, Phoenix.Transports.WebSocket,
+        timeout: 60_000
+
+  """
+  defmacro transport(name, module, config \\ []) do
+    quote bind_quoted: [name: name, module: module, config: config] do
+      merged_conf = case @phoenix_transports[name] do
+        nil -> config
+        {^module, existing_conf} -> Keyword.merge(existing_conf, config)
+        {dup_module, _} ->
+          raise ArgumentError, """
+          Duplicate transports (`#{inspect dup_module}`, `#{inspect module}`) defined for `:#{name}`".
+          Only a single transport adapter can be defined for a given name.
+          """
+      end
+
+      @phoenix_transports Map.put(@phoenix_transports, name, {module, merged_conf})
     end
   end
 end

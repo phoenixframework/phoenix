@@ -6,23 +6,20 @@ defmodule Phoenix.Channel.TransportTest do
 
   alias __MODULE__.Endpoint
 
-  Application.put_env(:transport_app, Endpoint, [
-    transports: [
-      origins: ["//example.com", "http://scheme.com", "//port.com:81"]]
-  ])
-
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :transport_app
     plug :check_origin
     plug :render
-    defp check_origin(conn, _),
-      do: Phoenix.Channel.Transport.check_origin(conn)
+    defp check_origin(conn, _) do
+      allowed_origins = ["//example.com", "http://scheme.com", "//port.com:81"]
+      Phoenix.Channel.Transport.check_origin(conn, allowed_origins)
+    end
     defp render(conn, _),
       do: send_resp(conn, 200, "ok")
   end
 
   setup_all do
-    Endpoint.start_link
+    Endpoint.start_link()
     :ok
   end
 
