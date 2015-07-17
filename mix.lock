@@ -9,4 +9,4 @@
   "poolboy": {:hex, :poolboy, "1.5.1"},
   "ranch": {:hex, :ranch, "1.0.0"},
   "redo": {:git, "git://github.com/heroku/redo.git", "b25e7bd3b197564192069d609d1e8e02183b71a6", []},
-  "websocket_client": {:git, "https://github.com/jeremyong/websocket_client.git", "48c118682292f2e4d80491161134a665525c4934", []}}
+  "websocket_client": {:git, "git://github.com/jeremyong/websocket_client.git", "f6892c8b55004008ce2d52be7d98b156f3e34569", []}}
