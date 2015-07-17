@@ -46,9 +46,6 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/test/support/conn_case.ex"
       assert_file "photo_blog/test/test_helper.exs"
 
-      assert File.exists?("photo_blog/web/channels")
-      refute File.exists?("photo_blog/web/channels/.keep")
-
       assert_file "photo_blog/web/controllers/page_controller.ex",
                   ~r/defmodule PhotoBlog.PageController/
 
@@ -87,6 +84,12 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       # Install dependencies?
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
+
+      # Channels
+      assert File.exists?("photo_blog/web/channels")
+      refute File.exists?("photo_blog/web/channels/.keep")
+      assert_file "photo_blog/web/channels/user_socket.ex", ~r"defmodule PhotoBlog.UserSocket"
+      assert_file "photo_blog/lib/photo_blog/endpoint.ex", ~r"socket \"/socket\", PhotoBlog.UserSocket"
     end
   end
 
