@@ -74,7 +74,7 @@ The URL in the output is the URL to our application. If we open it in our browse
 
 ## Adding the Phoenix Static Buildpack
 
-We need to compile static assets for a successful Phoenix deployment. The [Phoenix static buildpack](https://github.com/gjaldon/heroku-buildpack-phoenix-static) can take of that for us, so let's add it now.
+We need to compile static assets for a successful Phoenix deployment. The [Phoenix static buildpack](https://github.com/gjaldon/heroku-buildpack-phoenix-static) can take care of that for us, so let's add it now.
 
 ```console
 $ heroku buildpacks:add https://github.com/gjaldon/heroku-buildpack-phoenix-static.git
