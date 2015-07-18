@@ -35,7 +35,7 @@ defmodule <%= application_module %>.Mixfile do
      {:phoenix_ecto, "~> 0.5"},
      {<%= inspect adapter_app %>, ">= 0.0.0"},<% end %>
      {:phoenix_html, "~> 1.1"},
-     {:phoenix_live_reload, "~> 0.4", only: :dev},
+     {:phoenix_live_reload, "~> 0.5", only: :dev},
      {:cowboy, "~> 1.0"}]
   end
 end
