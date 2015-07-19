@@ -18,14 +18,13 @@ defmodule <%= module %>Controller do
   def create(conn, %{<%= inspect singular %> => <%= singular %>_params}) do
     changeset = <%= alias %>.changeset(%<%= alias %>{}, <%= singular %>_params)
 
-    if changeset.valid? do
-      Repo.insert!(changeset)
-
-      conn
-      |> put_flash(:info, "<%= alias %> created successfully.")
-      |> redirect(to: <%= singular %>_path(conn, :index))
-    else
-      render(conn, "new.html", changeset: changeset)
+    case Repo.insert(changeset) do
+      {:ok, _<%= singular %>} ->
+        conn
+        |> put_flash(:info, "<%= alias %> created successfully.")
+        |> redirect(to: <%= singular %>_path(conn, :index))
+      {:error, changeset} ->
+        render(conn, "new.html", changeset: changeset)
     end
   end
 
@@ -44,19 +43,21 @@ defmodule <%= module %>Controller do
     <%= singular %> = Repo.get!(<%= alias %>, id)
     changeset = <%= alias %>.changeset(<%= singular %>, <%= singular %>_params)
 
-    if changeset.valid? do
-      Repo.update!(changeset)
-
-      conn
-      |> put_flash(:info, "<%= alias %> updated successfully.")
-      |> redirect(to: <%= singular %>_path(conn, :index))
-    else
-      render(conn, "edit.html", <%= singular %>: <%= singular %>, changeset: changeset)
+    case Repo.update(changeset) do
+      {:ok, <%= singular %>} ->
+        conn
+        |> put_flash(:info, "<%= alias %> updated successfully.")
+        |> redirect(to: <%= singular %>_path(conn, :show, <%= singular %>))
+      {:error, changeset} ->
+        render(conn, "edit.html", <%= singular %>: <%= singular %>, changeset: changeset)
     end
   end
 
   def delete(conn, %{"id" => id}) do
     <%= singular %> = Repo.get!(<%= alias %>, id)
+
+    # Here we use delete! (with a bang) because we expect
+    # it to always work (and if it does not, it will raise).
     Repo.delete!(<%= singular %>)
 
     conn

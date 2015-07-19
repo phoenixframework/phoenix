@@ -41,7 +41,8 @@ defmodule Mix.Tasks.Phoenix.New do
     {:eex,  "ecto/repo.ex",              "lib/application_name/repo.ex"},
     {:keep, "ecto/test/models",          "test/models"},
     {:eex,  "ecto/model_case.ex",        "test/support/model_case.ex"},
-    {:keep, "ecto/priv/repo/migrations", "priv/repo/migrations"}
+    {:keep, "ecto/priv/repo/migrations", "priv/repo/migrations"},
+    {:eex,  "ecto/seeds.exs",            "priv/repo/seeds.exs"}
   ]
 
   @brunch [
@@ -191,6 +192,10 @@ defmodule Mix.Tasks.Phoenix.New do
       brunch && Task.await(brunch, :infinity)
       mix    && Task.await(mix, :infinity)
 
+      if binding[:ecto] do
+        extra = extra ++ ["$ mix ecto.create"]
+      end
+
       print_mix_info(path, extra)
     end)
   end
@@ -224,8 +229,7 @@ defmodule Mix.Tasks.Phoenix.New do
         username: #{inspect binding[:db_user]},
         password: #{inspect binding[:db_password]},
         database: "#{database}_test",
-        pool: Ecto.Adapters.SQL.Sandbox, # Use a sandbox for transactional testing
-        size: 1
+        pool: Ecto.Adapters.SQL.Sandbox # Use a sandbox for transactional testing
       """
 
       append_to path, "config/prod.secret.exs", """
@@ -291,7 +295,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
         #{Enum.join(steps, "\n    ")}
 
-    You can also run it inside IEx (Interactive Elixir) as:
+    You can also run your app inside IEx (Interactive Elixir) as:
 
         $ iex -S mix phoenix.server
     """

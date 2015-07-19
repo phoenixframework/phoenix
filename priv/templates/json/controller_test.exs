@@ -56,7 +56,7 @@ defmodule <%= module %>ControllerTest do
   test "deletes chosen resource", %{conn: conn} do
     <%= singular %> = Repo.insert! %<%= alias %>{}
     conn = delete conn, <%= singular %>_path(conn, :delete, <%= singular %>)
-    assert json_response(conn, 200)["data"]["id"]
+    assert response(conn, 204)
     refute Repo.get(<%= alias %>, <%= singular %>.id)
   end
 end

@@ -13,13 +13,13 @@ defmodule <%= module %>Controller do
   def create(conn, %{<%= inspect singular %> => <%= singular %>_params}) do
     changeset = <%= alias %>.changeset(%<%= alias %>{}, <%= singular %>_params)
 
-    if changeset.valid? do
-      <%= singular %> = Repo.insert!(changeset)
-      render(conn, "show.json", <%= singular %>: <%= singular %>)
-    else
-      conn
-      |> put_status(:unprocessable_entity)
-      |> render(<%= base %>.ChangesetView, "error.json", changeset: changeset)
+    case Repo.insert(changeset) do
+      {:ok, <%= singular %>} ->
+        render(conn, "show.json", <%= singular %>: <%= singular %>)
+      {:error, changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(<%= base %>.ChangesetView, "error.json", changeset: changeset)
     end
   end
 
@@ -32,20 +32,23 @@ defmodule <%= module %>Controller do
     <%= singular %> = Repo.get!(<%= alias %>, id)
     changeset = <%= alias %>.changeset(<%= singular %>, <%= singular %>_params)
 
-    if changeset.valid? do
-      <%= singular %> = Repo.update!(changeset)
-      render(conn, "show.json", <%= singular %>: <%= singular %>)
-    else
-      conn
-      |> put_status(:unprocessable_entity)
-      |> render(<%= base %>.ChangesetView, "error.json", changeset: changeset)
+    case Repo.update(changeset) do
+      {:ok, <%= singular %>} ->
+        render(conn, "show.json", <%= singular %>: <%= singular %>)
+      {:error, changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(<%= base %>.ChangesetView, "error.json", changeset: changeset)
     end
   end
 
   def delete(conn, %{"id" => id}) do
     <%= singular %> = Repo.get!(<%= alias %>, id)
 
+    # Here we use delete! (with a bang) because we expect
+    # it to always work (and if it does not, it will raise).
     <%= singular %> = Repo.delete!(<%= singular %>)
-    render(conn, "show.json", <%= singular %>: <%= singular %>)
+
+    send_resp(conn, :no_content, "")
   end
 end

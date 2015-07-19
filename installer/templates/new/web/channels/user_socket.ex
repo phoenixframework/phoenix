@@ -16,7 +16,7 @@ defmodule <%= application_module %>.UserSocket do
   #     {:ok, assign(socket, :user_id, verified_user_id)}
   #
   #  To deny connection, return `:error`.
-  def connect(params, socket) do
+  def connect(_params, socket) do
     {:ok, socket}
   end
 

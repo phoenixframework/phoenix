@@ -79,11 +79,18 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/config/test.exs", config
       assert_file "photo_blog/config/prod.secret.exs", config
       assert_file "photo_blog/lib/photo_blog/repo.ex", ~r"defmodule PhotoBlog.Repo"
+      assert_file "photo_blog/priv/repo/seeds.exs", ~r"PhotoBlog.Repo.insert!"
       assert_file "photo_blog/test/support/model_case.ex", ~r"defmodule PhotoBlog.ModelCase"
       assert_file "photo_blog/web/web.ex", ~r"alias PhotoBlog.Repo"
 
       # Install dependencies?
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
+
+      # Instructions
+      assert_received {:mix_shell, :info, ["\nWe are all set!" <> _ = msg]}
+      assert msg =~ "$ cd photo_blog"
+      assert msg =~ "$ mix ecto.create"
+      assert msg =~ "$ mix phoenix.server"
 
       # Channels
       assert File.exists?("photo_blog/web/channels")

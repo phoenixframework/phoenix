@@ -52,7 +52,7 @@ defmodule <%= module %>ControllerTest do
   test "updates chosen resource and redirects when data is valid", %{conn: conn} do
     <%= singular %> = Repo.insert! %<%= alias %>{}
     conn = put conn, <%= singular %>_path(conn, :update, <%= singular %>), <%= singular %>: @valid_attrs
-    assert redirected_to(conn) == <%= singular %>_path(conn, :index)
+    assert redirected_to(conn) == <%= singular %>_path(conn, :show, <%= singular %>)
     assert Repo.get_by(<%= alias %>, @valid_attrs)
   end
 
