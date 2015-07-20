@@ -33,7 +33,7 @@ $ mix archive.install https://github.com/phoenixframework/phoenix/releases/downl
 
 ### Plug, Cowboy, and Ecto
 
-These are either Elixir or Erlang projects which are part of Phoenix applications by default. We won't need to do anything special to install them besides `mix deps.get`. If we let mix install our dependencies as we create our new application, we won't even need to do that.
+These are either Elixir or Erlang projects which are part of Phoenix applications by default. We won't need to do anything special to install them. If we let mix install our dependencies as we create our new application, these will be taken care of for us. If we don't, Phoenix will tell us how to do so after the app creation is done.
 
 ### node.js (>= 0.12.0)
 
