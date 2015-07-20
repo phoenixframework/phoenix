@@ -56,6 +56,35 @@ $ mix phoenix.server
 
 > Note: if this is the first time you are running this command, Phoenix may also ask to install Rebar. Go ahead with the installation as Rebar is used to build Erlang packages.
 
+If we choose not to have Phoenix install our dependencies when we generate a new application, the `phoenix.new` task will prompt us to take the necessary steps when we do want to install them.
+
+```console
+Fetch and install dependencies? [Yn] n
+
+Phoenix uses an optional assets build tool called brunch.io
+that requires node.js and npm. Installation instructions for
+node.js, which includes npm, can be found at http://nodejs.org.
+
+After npm is installed, install your brunch dependencies by
+running inside your app:
+
+    $ npm install
+
+If you don't want brunch.io, you can re-run this generator
+with the --no-brunch option.
+
+
+We are all set! Run your Phoenix application:
+
+    $ cd hello_phoenix
+    $ mix deps.get
+    $ mix phoenix.server
+
+You can also run it inside IEx (Interactive Elixir) as:
+
+    $ iex -S mix phoenix.server
+```
+
 By default Phoenix accepts requests on port 4000. If we point our favorite web browser at [http://localhost:4000](http://localhost:4000), we should see the Phoenix Framework welcome page.
 
 ![Phoenix Welcome Page](/images/welcome-to-phoenix.png)
