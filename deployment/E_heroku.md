@@ -92,7 +92,7 @@ This works great except Heroku uses [environment variables](https://devcenter.he
 
 First, let's copy over the content of `config/prod.secret.exs` to `config/prod.exs`.
 
-Now we need to replace the sensitive values by a tuple `{:system, "MY_CONFIG"}` which will tell Phoenix to load this configuration from an environment variable.
+Now we need to load the necessary environment variables in our configuration.
 
 In our case:
 
@@ -105,7 +105,7 @@ becomes:
 
 ```elixir
 config :hello_phoenix, HelloPhoenix.Endpoint,
-  secret_key_base: {:system, "SECRET_KEY_BASE"}
+  secret_key_base: System.get_env("SECRET_KEY_BASE")
 ```
 
 and:
@@ -124,11 +124,9 @@ becomes:
 ```elixir
 config :hello_phoenix, HelloPhoenix.Repo,
   adapter: Ecto.Adapters.Postgres,
-  url: {:system, "DATABASE_URL"},
+  url: System.get_env("DATABASE_URL"),
   size: 20 # The amount of database connections in the pool
 ```
-
-> Note: the use of a tuple instead of a call to `System.get_env/1` is a workaround for releases so that the environment variables are referenced at runtime when using releases. You can read more about it [here](https://github.com/phoenixframework/phoenix/blob/master/lib/phoenix/endpoint.ex#L118).
 
 Also we don't need to import the `config/prod.secret.exs` file in our prod config so you can delete the following line:
 
@@ -136,24 +134,24 @@ Also we don't need to import the `config/prod.secret.exs` file in our prod confi
 import_config "prod.secret.exs"
 ```
 
-Your final `config/prod.exs` you should now look like something like this (I've removed the comments for readability):
+Your final `config/prod.exs` should now look something like this (I've removed the comments for readability):
 
 ```
 use Mix.Config
 
 config :hello_phoenix, HelloPhoenix.Endpoint,
-  http: [port: {:system, "PORT"}],
-  url: [host: "example.com", port: 80],
+  http: [port: System.get_env("PORT")],
+  url: [host: System.get_env("HOST"), port: 80],
   cache_static_manifest: "priv/static/manifest.json"
 
 config :logger, level: :info
 
 config :hello_phoenix, HelloPhoenix.Endpoint,
-  secret_key_base: {:system, "SECRET_KEY_BASE"}
+  secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 config :hello_phoenix, HelloPhoenix.Repo,
   adapter: Ecto.Adapters.Postgres,
-  url: {:system, "DATABASE_URL"},
+  url: System.get_env("DATABASE_URL"),
   size: 20 # The amount of database connections in the pool
 ```
 
