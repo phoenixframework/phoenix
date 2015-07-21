@@ -16,7 +16,7 @@ defmodule Phoenix.PubSub.Local do
 
   """
   def start_link(server_name) do
-    GenServer.start_link(__MODULE__, [], name: server_name)
+    GenServer.start_link(__MODULE__, server_name, name: server_name)
   end
 
   @doc """
@@ -34,7 +34,7 @@ defmodule Phoenix.PubSub.Local do
       :ok
 
   """
-  def subscribe(local_server, pid, topic, opts \\ []) do
+  def subscribe(local_server, pid, topic, opts \\ []) when is_atom(local_server) do
     GenServer.call(local_server, {:subscribe, pid, topic, opts})
   end
 
@@ -51,7 +51,7 @@ defmodule Phoenix.PubSub.Local do
       :ok
 
   """
-  def unsubscribe(local_server, pid, topic) do
+  def unsubscribe(local_server, pid, topic) when is_atom(local_server) do
     GenServer.call(local_server, {:unsubscribe, pid, topic})
   end
 
@@ -66,11 +66,17 @@ defmodule Phoenix.PubSub.Local do
       iex> broadcast(:local_server, self, "foo")
       :ok
       iex> broadcast(:local_server, :none, "bar")
-      :no_topic
+      :ok
 
   """
-  def broadcast(local_server, from, topic, msg) do
-    GenServer.call(local_server, {:broadcast, from, topic, msg})
+  def broadcast(local_server, from, topic, msg) when is_atom(local_server) do
+    local_server
+    |> subscribers(topic)
+    |> Enum.each(fn
+          pid when pid == from -> :ok
+          pid -> send(pid, msg)
+       end)
+    :ok
   end
 
   @doc """
@@ -82,30 +88,35 @@ defmodule Phoenix.PubSub.Local do
   ## Examples
 
       iex> subscribers(:local_server, "foo")
-      Enumerable.t
+      [#PID<0.48.0>, #PID<0.49.0>]
 
   """
-  def subscribers(local_server, topic) do
-    GenServer.call(local_server, {:subscribers, topic})
+  def subscribers(local_server, topic) when is_atom(local_server) do
+    try do
+      :ets.lookup_element(local_server, topic, 2)
+    catch
+      :error, :badarg -> []
+    end
   end
 
   @doc false
-  def list(local_server) do
-    GenServer.call(local_server, :list)
+  # This is an expensive and private operation. DO NOT USE IT IN PROD.
+  def list(local_server) when is_atom(local_server) do
+    local_server
+    |> :ets.select([{{:'$1', :_}, [], [:'$1']}])
+    |> Enum.uniq
   end
 
   @doc false
-  def subscription(local_server, pid) do
+  # This is a private operation. DO NOT USE IT IN PROD.
+  def subscription(local_server, pid) when is_atom(local_server) do
     GenServer.call(local_server, {:subscription, pid})
   end
 
-  def init(_) do
+  def init(name) do
+    ^name = :ets.new(name, [:bag, :named_table, read_concurrency: true])
     Process.flag(:trap_exit, true)
-    {:ok, %{topics: HashDict.new, pids: HashDict.new}}
-  end
-
-  def handle_call(:list, _from, state) do
-    {:reply, Dict.keys(state.topics), state}
+    {:ok, %{topics: name, pids: HashDict.new}}
   end
 
   def handle_call({:subscription, pid}, _from, state) do
@@ -115,10 +126,6 @@ defmodule Phoenix.PubSub.Local do
     end
   end
 
-  def handle_call({:subscribers, topic}, _from, state) do
-    {:reply, HashDict.get(state.topics, topic, HashSet.new), state}
-  end
-
   def handle_call({:subscribe, pid, topic, opts}, _from, state) do
     if opts[:link], do: Process.link(pid)
     {:reply, :ok, put_subscription(state, pid, topic)}
@@ -126,20 +133,6 @@ defmodule Phoenix.PubSub.Local do
 
   def handle_call({:unsubscribe, pid, topic}, _from, state) do
     {:reply, :ok, drop_subscription(state, pid, topic)}
-  end
-
-  def handle_call({:broadcast, from_pid, topic, msg}, _from, state) do
-    case HashDict.fetch(state.topics, topic) do
-      {:ok, pids} ->
-        Enum.each(pids, fn
-          pid when pid != from_pid -> send(pid, msg)
-          _ -> :ok
-        end)
-        {:reply, :ok, state}
-
-      :error ->
-        {:reply, {:error, :no_topic}, state}
-    end
   end
 
   def handle_info({:DOWN, ref, _type, pid, _info}, state) do
@@ -162,53 +155,42 @@ defmodule Phoenix.PubSub.Local do
         {Process.monitor(pid), HashSet.put(HashSet.new, topic)}
     end
 
-    topic_pids = case HashDict.fetch(state.topics, topic) do
-      {:ok, pids} -> HashSet.put(pids, pid)
-      :error      -> HashSet.put(HashSet.new, pid)
-    end
-
-    %{state | topics: HashDict.put(state.topics, topic, topic_pids),
-              pids: HashDict.put(state.pids, pid, subscription)}
+    true = :ets.insert(state.topics, {topic, pid})
+    %{state | pids: HashDict.put(state.pids, pid, subscription)}
   end
 
   defp drop_subscription(state, pid, topic) do
-    case HashDict.fetch(state.topics, topic) do
-      :error      -> state
-      {:ok, topic_pids} ->
-        case HashDict.fetch(state.pids, pid) do
-          :error      -> state
-          {:ok, {ref, subd_topics}} ->
-            topic_pids  = HashSet.delete(topic_pids, pid)
-            subd_topics = HashSet.delete(subd_topics, topic)
+    case HashDict.fetch(state.pids, pid) do
+      {:ok, {ref, subd_topics}} ->
+        subd_topics = HashSet.delete(subd_topics, topic)
 
-            topics =
-              if Enum.any?(topic_pids) do
-                HashDict.put(state.topics, topic, topic_pids)
-              else
-                HashDict.delete(state.topics, topic)
-              end
+        pids =
+          if Enum.any?(subd_topics) do
+            HashDict.put(state.pids, pid, {ref, subd_topics})
+          else
+            Process.demonitor(ref, [:flush])
+            HashDict.delete(state.pids, pid)
+          end
 
-            pids =
-              if Enum.any?(subd_topics) do
-                HashDict.put(state.pids, pid, {ref, subd_topics})
-              else
-                Process.demonitor(ref, [:flush])
-                HashDict.delete(state.pids, pid)
-              end
+        true = :ets.delete_object(state.topics, {topic, pid})
+        %{state | pids: pids}
 
-            %{state | topics: topics, pids: pids}
-        end
+      :error ->
+        state
     end
   end
 
   defp drop_subscriber(state, pid, ref) do
     case HashDict.get(state.pids, pid) do
-      {^ref, topics}    ->
-        Enum.reduce(topics, state, fn topic, state ->
-          drop_subscription(state, pid, topic)
-        end)
+      {^ref, topics} ->
+        for topic <- topics do
+          true = :ets.delete_object(state.topics, {topic, pid})
+        end
+        Process.demonitor(ref, [:flush])
+        %{state | pids: HashDict.delete(state.pids, pid)}
 
-      _ref_pid_mismatch -> state
+      _ref_pid_mismatch ->
+        state
     end
   end
 end

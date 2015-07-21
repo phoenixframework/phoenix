@@ -52,6 +52,7 @@ defmodule Phoenix.PubSubTest do
 
     kill_and_wait(pid)
     assert Process.alive?(local)
+    assert Local.subscription(config.local, pid) == :error
     assert Local.subscribers(config.local, "topic4") |> Dict.size == 0
   end
 
