@@ -114,21 +114,31 @@ defmodule Phoenix.Router.Route do
       var!(conn)
       |> Plug.Conn.put_private(:phoenix_pipelines, unquote(route.pipe_through))
       |> Plug.Conn.put_private(:phoenix_route, fn conn ->
-        opts = unquote(route.plug).init(unquote(route.opts))
-        Phoenix.Router.Route.forward(conn, unquote(fwd_segments), unquote(route.plug), opts)
+        # We need to store this in a variable so the compiler
+        # does not see a call and then suddently start tracking
+        # changes in the controller.
+        plug = unquote(route.plug)
+        opts = plug.init(unquote(route.opts))
+        Phoenix.Router.Route.forward(conn, unquote(fwd_segments), plug, opts)
       end)
     end |> pipe_through(route)
   end
+
   defp build_pipes(route) do
     quote do
       var!(conn)
       |> Plug.Conn.put_private(:phoenix_pipelines, unquote(route.pipe_through))
       |> Plug.Conn.put_private(:phoenix_route, fn conn ->
-        opts = unquote(route.plug).init(unquote(route.opts))
-        unquote(route.plug).call(conn, opts)
+        # We need to store this in a variable so the compiler
+        # does not see a call and then suddently start tracking
+        # changes in the controller.
+        plug = unquote(route.plug)
+        opts = plug.init(unquote(route.opts))
+        plug.call(conn, opts)
       end)
     end |> pipe_through(route)
   end
+
   defp pipe_through(initial, route) do
     Enum.reduce(route.pipe_through, initial, &{&1, [], [&2, []]})
   end
