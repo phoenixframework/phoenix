@@ -24,9 +24,16 @@ defmodule Phoenix.PubSub.PG2 do
   def init(server_name) do
     local_name = Module.concat(server_name, Local)
 
+    # Define a dispatch table so we don't have to go through
+    # a bottleneck to get the instruction to perform.
+    :ets.new(server_name, [:set, :named_table, read_concurrency: true])
+    true = :ets.insert(server_name, {:broadcast, Phoenix.PubSub.PG2Server, [server_name, local_name]})
+    true = :ets.insert(server_name, {:subscribe, Phoenix.PubSub.Local, [local_name]})
+    true = :ets.insert(server_name, {:unsubscribe, Phoenix.PubSub.Local, [local_name]})
+
     children = [
       worker(Phoenix.PubSub.Local, [local_name]),
-      worker(Phoenix.PubSub.PG2Server, [[name: server_name, local_name: local_name]]),
+      worker(Phoenix.PubSub.PG2Server, [server_name, local_name]),
     ]
 
     supervise children, strategy: :rest_for_one

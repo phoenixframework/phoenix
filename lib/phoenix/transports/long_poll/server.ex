@@ -52,7 +52,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
               sockets_inverse: HashDict.new,
               window_ms: trunc(window_ms * 1.5),
               endpoint: endpoint,
-              pubsub_server: Process.whereis(endpoint.__pubsub_server__()),
+              pubsub_server: endpoint.__pubsub_server__(),
               priv_topic: priv_topic,
               last_client_poll: now_ms(),
               client_ref: nil}
