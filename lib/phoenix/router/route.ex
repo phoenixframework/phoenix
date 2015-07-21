@@ -115,7 +115,7 @@ defmodule Phoenix.Router.Route do
       |> Plug.Conn.put_private(:phoenix_pipelines, unquote(route.pipe_through))
       |> Plug.Conn.put_private(:phoenix_route, fn conn ->
         # We need to store this in a variable so the compiler
-        # does not see a call and then suddently start tracking
+        # does not see a call and then suddenly start tracking
         # changes in the controller.
         #
         # TODO: This should not be needed by Elixir v1.1
@@ -132,7 +132,7 @@ defmodule Phoenix.Router.Route do
       |> Plug.Conn.put_private(:phoenix_pipelines, unquote(route.pipe_through))
       |> Plug.Conn.put_private(:phoenix_route, fn conn ->
         # We need to store this in a variable so the compiler
-        # does not see a call and then suddently start tracking
+        # does not see a call and then suddenly start tracking
         # changes in the controller.
         #
         # TODO: This should not be needed by Elixir v1.1
