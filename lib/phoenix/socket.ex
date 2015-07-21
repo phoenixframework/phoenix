@@ -93,7 +93,6 @@ defmodule Phoenix.Socket do
     defexception [:message]
   end
 
-
   @type t :: %Socket{id: nil,
                      assigns: %{},
                      channel: atom,
@@ -198,6 +197,15 @@ defmodule Phoenix.Socket do
   See `Phoenix.Channel` for more information
   """
   defmacro channel(topic_pattern, module, opts \\ []) do
+    # Tear the alias to simply store the root in the AST.
+    # This will make Elixir unable to track the dependency
+    # between endpoint <-> socket and avoid recompiling the
+    # endpoint (alongside the whole project ) whenever the
+    # socket changes.
+    #
+    # TODO: This should not be needed in Elixir v1.1.
+    module = tear_alias(module)
+
     quote do
       @phoenix_channels {
         unquote(topic_pattern),
@@ -206,6 +214,14 @@ defmodule Phoenix.Socket do
       }
     end
   end
+
+  defp tear_alias({:__aliases__, meta, [h|t]}) do
+    alias = {:__aliases__, meta, [h]}
+    quote do
+      Module.concat([unquote(alias)|unquote(t)])
+    end
+  end
+  defp tear_alias(other), do: other
 
   @doc """
   Defines a transport with configuration.
