@@ -202,8 +202,6 @@ defmodule Phoenix.Socket do
     # between endpoint <-> socket and avoid recompiling the
     # endpoint (alongside the whole project ) whenever the
     # socket changes.
-    #
-    # TODO: This should not be needed in Elixir v1.1.
     module = tear_alias(module)
 
     quote do
