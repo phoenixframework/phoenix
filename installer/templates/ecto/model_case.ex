@@ -16,7 +16,6 @@ defmodule <%= application_module %>.ModelCase do
 
   using do
     quote do
-      # Alias the data repository and import query/model functions
       alias <%= application_module %>.Repo
       import Ecto.Model
       import Ecto.Query, only: [from: 2]

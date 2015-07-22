@@ -20,12 +20,10 @@ defmodule <%= application_module %>.ConnCase do
       # Import conveniences for testing with connections
       use Phoenix.ConnTest
 <%= if ecto do %>
-      # Alias the data repository and import query/model functions
       alias <%= application_module %>.Repo
       import Ecto.Model
       import Ecto.Query, only: [from: 2]
 <% end %>
-      # Import URL helpers from the router
       import <%= application_module %>.Router.Helpers
 
       # The default endpoint for testing
