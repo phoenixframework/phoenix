@@ -122,9 +122,10 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     else
       Mix.raise """
       The table name for the association is inferred from the assocation
-      module. This means that the association module must exist and be loaded
-      in your application. Otherwise, you will need to explicitly set the
-      association's table like:
+      module but could not load #{inspect module}. This means that the
+      association module must exist and be loaded in your application.
+      Otherwise, you will need to explicitly set the association's table
+      like:
 
           mix phoenix.gen.model Property properties user:references:users
       """
