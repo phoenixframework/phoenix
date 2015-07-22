@@ -129,6 +129,11 @@ defmodule Phoenix.ChannelTest do
   alias Phoenix.Socket.Message
   alias Phoenix.Channel.Server
 
+  defmodule NoopSerializer do
+    def encode!(message), do: message
+    def decode!(message, :text), do: message
+  end
+
   @doc false
   defmacro __using__(_) do
     quote do
@@ -201,7 +206,8 @@ defmodule Phoenix.ChannelTest do
       raise "module attribute @endpoint not set for join/3"
     end
 
-    socket = %Socket{transport_pid: self(),
+    socket = %Socket{serializer: NoopSerializer,
+                     transport_pid: self(),
                      endpoint: endpoint,
                      pubsub_server: endpoint.__pubsub_server__(),
                      topic: topic,
@@ -293,8 +299,9 @@ defmodule Phoenix.ChannelTest do
   """
   defmacro assert_push(event, payload, timeout \\ 100) do
     quote do
-      assert_receive %Phoenix.Socket.Message{event: unquote(event),
-                                             payload: unquote(payload)}, unquote(timeout)
+      assert_receive {:socket_push, %Phoenix.Socket.Message{
+                        event: unquote(event),
+                        payload: unquote(payload)}}, unquote(timeout)
     end
   end
 
@@ -315,8 +322,10 @@ defmodule Phoenix.ChannelTest do
   defmacro assert_reply(ref, status, payload \\ Macro.escape(%{}), timeout \\ 100) do
     quote do
       ref = unquote(ref)
-      assert_receive %Phoenix.Socket.Reply{status: unquote(status), ref: ^ref,
-                                           payload: unquote(payload)}, unquote(timeout)
+      assert_receive {:socket_push, %Phoenix.Socket.Reply{
+                        status: unquote(status),
+                        ref: ^ref,
+                        payload: unquote(payload)}}, unquote(timeout)
     end
   end
 

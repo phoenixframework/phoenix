@@ -13,9 +13,11 @@ defmodule Phoenix.Socket do
   * `joined` - If the socket has effectively joined the channel
   * `pubsub_server` - The registered name of the socket's PubSub server
   * `ref` - The latest ref sent by the client
-  * `topic` - The string topic, ie `"rooms:123"`
-  * `transport` - The socket's transport, ie: `Phoenix.Transports.WebSocket`
+  * `topic` - The string topic, for example `"rooms:123"`
+  * `transport` - The socket's transport, for example: `Phoenix.Transports.WebSocket`
   * `transport_pid` - The pid of the socket's transport process
+  * `serializer` - The `Phoenix.Socket.Message` serializer,
+    for example: `Phoenix.Transports.JSONSerializer`
 
   ## Channels
 
@@ -103,6 +105,7 @@ defmodule Phoenix.Socket do
                      ref: term,
                      topic: String.t,
                      transport: atom,
+                     serializer: atom,
                      transport_pid: pid}
 
   defstruct id: nil,
@@ -115,7 +118,8 @@ defmodule Phoenix.Socket do
             ref: nil,
             topic: nil,
             transport: nil,
-            transport_pid: nil
+            transport_pid: nil,
+            serializer: nil
 
 
   defmacro __using__(_) do
@@ -138,6 +142,7 @@ defmodule Phoenix.Socket do
     transport_defs =
       for {name, {mod, conf}} <- transports do
         quote do
+          def __transport__(unquote(mod)), do: unquote(conf)
           def __transport__(name) when name in [unquote(name), unquote(to_string(name))] do
             {unquote(mod), unquote(conf)}
           end
@@ -171,8 +176,8 @@ defmodule Phoenix.Socket do
   @doc """
   Defines a channel matching the given topic and transports.
 
-    * `topic_pattern` - The string pattern, ie "rooms:*", "users:*", "system"
-    * `module` - The channel module handler, ie `MyApp.RoomChannel`
+    * `topic_pattern` - The string pattern, for example "rooms:*", "users:*", "system"
+    * `module` - The channel module handler, for example `MyApp.RoomChannel`
     * `opts` - The optional list of options, see below
 
   ## Options
@@ -248,8 +253,8 @@ defmodule Phoenix.Socket.Message do
 
   The message format requires the following keys:
 
-    * `topic` - The string topic or topic:subtopic pair namespace, ie "messages", "messages:123"
-    * `event`- The string event name, ie "phx_join"
+    * `topic` - The string topic or topic:subtopic pair namespace, for example "messages", "messages:123"
+    * `event`- The string event name, for example "phx_join"
     * `payload` - The message payload
     * `ref` - The unique string ref
 
@@ -283,7 +288,7 @@ defmodule Phoenix.Socket.Reply do
 
   The message format requires the following keys:
 
-    * `topic` - The string topic or topic:subtopic pair namespace, ie "messages", "messages:123"
+    * `topic` - The string topic or topic:subtopic pair namespace, for example "messages", "messages:123"
     * `status` - The reply status as an atom
     * `payload` - The reply payload
     * `ref` - The unique string ref
@@ -299,8 +304,8 @@ defmodule Phoenix.Socket.Broadcast do
 
   The message format requires the following keys:
 
-    * `topic` - The string topic or topic:subtopic pair namespace, ie "messages", "messages:123"
-    * `event`- The string event name, ie "phx_join"
+    * `topic` - The string topic or topic:subtopic pair namespace, for example "messages", "messages:123"
+    * `event`- The string event name, for example "phx_join"
     * `payload` - The message payload
 
   """

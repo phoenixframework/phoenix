@@ -62,7 +62,7 @@ defmodule Phoenix.SocketTest do
   test "__transports__" do
     assert UserSocket.__transports__() == %{
       longpoll: {Phoenix.Transports.LongPoll,
-        [window_ms: 10000, pubsub_timeout_ms: 1000,
+        [window_ms: 10000, pubsub_timeout_ms: 1000, serializer: Phoenix.Transports.LongPollSerializer,
          crypto: [iterations: 1000, length: 32, digest: :sha256, cache: Plug.Keys]]},
       websocket: {Phoenix.Transports.WebSocket,
         [timeout: 1234, serializer: Phoenix.Transports.JSONSerializer]}
@@ -74,7 +74,7 @@ defmodule Phoenix.SocketTest do
       [timeout: 1234, serializer: Phoenix.Transports.JSONSerializer]}
 
     lp = {Phoenix.Transports.LongPoll,
-      [window_ms: 10000, pubsub_timeout_ms: 1000,
+      [window_ms: 10000, pubsub_timeout_ms: 1000, serializer: Phoenix.Transports.LongPollSerializer,
       crypto: [iterations: 1000, length: 32, digest: :sha256, cache: Plug.Keys]]}
 
     assert UserSocket.__transport__(:websocket) == ws
@@ -82,6 +82,9 @@ defmodule Phoenix.SocketTest do
 
     assert UserSocket.__transport__(:longpoll) == lp
     assert UserSocket.__transport__("longpoll") == lp
+
+    assert UserSocket.__transport__(Phoenix.Transports.WebSocket) == elem(ws, 1)
+    assert UserSocket.__transport__(Phoenix.Transports.LongPoll) == elem(lp, 1)
   end
 
   test "transport config for unsupported adapters" do

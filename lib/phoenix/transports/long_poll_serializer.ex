@@ -1,5 +1,4 @@
-defmodule Phoenix.Transports.JSONSerializer do
-  # TODO: Make this public
+defmodule Phoenix.Transports.LongPollSerializer do
   @moduledoc false
 
   @behaviour Phoenix.Transports.Serializer
@@ -8,19 +7,19 @@ defmodule Phoenix.Transports.JSONSerializer do
   alias Phoenix.Socket.Message
 
   @doc """
-  Encodes a `Phoenix.Socket.Message` struct to JSON string.
+  Normalizes a `Phoenix.Socket.Message` struct.
+
+  Encoding is handled downstream in the LongPoll controller.
   """
   def encode!(%Reply{} = reply) do
-    {:text, Poison.encode_to_iodata!(%Message{
+    %Message{
       topic: reply.topic,
       event: "phx_reply",
       ref: reply.ref,
       payload: %{status: reply.status, response: reply.payload}
-    })}
+    }
   end
-  def encode!(%Message{} = msg) do
-    {:text, Poison.encode_to_iodata!(msg)}
-  end
+  def encode!(%Message{} = msg), do: msg
 
   @doc """
   Decodes JSON String into `Phoenix.Socket.Message` struct.

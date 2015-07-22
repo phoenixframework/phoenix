@@ -113,6 +113,7 @@ defmodule Phoenix.Test.ChannelTest do
     assert socket.topic == "foo:socket"
     assert socket.transport == Phoenix.ChannelTest
     assert socket.transport_pid == self()
+    assert socket.serializer == Phoenix.ChannelTest.NoopSerializer
     assert %{socket | joined: true} == client
 
     {:links, links} = Process.info(self(), :links)

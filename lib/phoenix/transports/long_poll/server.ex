@@ -94,16 +94,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
   @doc """
   Forwards replied/broadcasted message from Channels back to client.
   """
-  def handle_info(%Message{} = msg, state) do
-    publish_reply(msg, state)
-  end
-
-  def handle_info(%Reply{} = reply, state) do
-    %{topic: topic, status: status, payload: payload, ref: ref} = reply
-
-    message = %Message{event: "phx_reply", topic: topic, ref: ref,
-                       payload: %{status: status, response: payload}}
-
+  def handle_info({:socket_push, message}, state) do
     publish_reply(message, state)
   end
 

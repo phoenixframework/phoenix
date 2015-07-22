@@ -135,13 +135,13 @@ defmodule Phoenix.Channel.Server do
   Pushes a message with the given topic, event and payload
   to the given process.
   """
-  def push(pid, topic, event, payload)
+  def push(pid, topic, event, payload, serializer)
       when is_binary(topic) and is_binary(event) and is_map(payload) do
-    send pid, %Message{
-      topic: topic,
-      event: event,
-      payload: payload
-    }
+
+    encoded_msg = serializer.encode!(%Message{topic: topic,
+                                              event: event,
+                                              payload: payload})
+    send pid, {:socket_push, encoded_msg}
     :ok
   end
   def push(_, _, _, _), do: raise_invalid_message
@@ -149,14 +149,12 @@ defmodule Phoenix.Channel.Server do
   @doc """
   Pushes a reply message to the given pid.
   """
-  def reply(pid, ref, topic, payload)
+  def reply(pid, ref, topic, payload, serializer)
       when is_binary(topic) and is_map(payload) do
-    send pid, %Message{
-      ref: ref,
-      topic: topic,
-      event: "phx_reply",
-      payload: payload
-    }
+
+    encoded_msg = serializer.encode!(%Reply{ref: ref, topic: topic, status: payload.status,
+                                            payload: payload.response})
+    send pid, {:socket_push, encoded_msg}
     :ok
   end
   def reply(_, _, _, _), do: raise_invalid_message
@@ -283,8 +281,10 @@ defmodule Phoenix.Channel.Server do
 
   defp handle_reply(socket, {status, payload}, :handle_in)
        when is_atom(status) and is_map(payload) do
-    send socket.transport_pid, %Reply{status: status, topic: socket.topic,
-                                      ref: socket.ref, payload: payload}
+
+    send socket.transport_pid, {:socket_push, socket.serializer.encode!(
+      %Reply{topic: socket.topic, ref: socket.ref, status: status, payload: payload}
+   )}
   end
 
   defp handle_reply(socket, status, :handle_in) when is_atom(status) do

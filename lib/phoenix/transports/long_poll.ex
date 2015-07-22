@@ -44,6 +44,7 @@ defmodule Phoenix.Transports.LongPoll do
   def default_config() do
     [window_ms: 10_000,
      pubsub_timeout_ms: 1000,
+     serializer: Phoenix.Transports.LongPollSerializer,
      crypto: [iterations: 1000, length: 32,
               digest: :sha256, cache: Plug.Keys]]
   end
@@ -103,10 +104,9 @@ defmodule Phoenix.Transports.LongPoll do
   end
 
   defp new_session(conn) do
-    endpoint = endpoint_module(conn)
     handler  = conn.private.phoenix_socket_handler
 
-    case Transport.socket_connect(endpoint, handler, conn.params) do
+    case Transport.socket_connect(Phoenix.Transports.LongPoll, handler, conn.params) do
       {:ok, socket} ->
         {conn, priv_topic, sig, _server_pid} = start_session(conn, socket)
 

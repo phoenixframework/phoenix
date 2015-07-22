@@ -43,10 +43,9 @@ defmodule Phoenix.Transports.WebSocket do
   end
 
   def upgrade(%Plug.Conn{method: "GET", params: params} = conn, _) do
-    endpoint = endpoint_module(conn)
     handler  = conn.private.phoenix_socket_handler
 
-    case Transport.socket_connect(endpoint, handler, params) do
+    case Transport.socket_connect(Phoenix.Transports.WebSocket, handler, params) do
       {:ok, socket} ->
         conn
         |> put_private(:phoenix_upgrade, {:websocket, __MODULE__})
@@ -125,17 +124,8 @@ defmodule Phoenix.Transports.WebSocket do
     {:shutdown, state}
   end
 
-  def ws_info(%Message{} = message, %{serializer: serializer} = state) do
-    {:reply, serializer.encode!(message), state}
-  end
-
-  def ws_info(%Reply{} = reply, %{serializer: serializer} = state) do
-    %{topic: topic, status: status, payload: payload, ref: ref} = reply
-
-    message = %Message{event: "phx_reply", topic: topic, ref: ref,
-                       payload: %{status: status, response: payload}}
-
-    {:reply, serializer.encode!(message), state}
+  def ws_info({:socket_push, encoded_payload}, state) do
+    {:reply, encoded_payload, state}
   end
 
   def ws_info(_, state) do

@@ -30,7 +30,7 @@ defmodule Phoenix.Channel.Transport do
         - for abnormal exits, send a reply to the remote client of a message
           from `Transport.chan_error_message/1`
 
-     * Call the `socket_connect/2` passing along socket params from client and
+     * Call the `socket_connect/3` passing along socket params from client and
        keep the state of the returned `%Socket{}` to pass into dispatch.
      * Subscribe to the socket's `:id` on init and handle
        `%Phoenix.Socket.Broadcast{}` messages with the `"disconnect"` event
@@ -75,22 +75,23 @@ defmodule Phoenix.Channel.Transport do
   If the connection was successful, generates `Phoenix.PubSub` topic
   from the `id/1` callback.
   """
-  def socket_connect(endpoint, handler, params) do
+  def socket_connect(transport_mod, handler, params) do
+    serializer = Keyword.fetch!(handler.__transport__(transport_mod), :serializer)
     case handler.connect(params, %Socket{}) do
       {:ok, socket} ->
         case handler.id(socket) do
-          nil                   -> {:ok, socket}
-          id when is_binary(id) -> {:ok, %Socket{socket | id: id}}
+          nil                   -> {:ok, %Socket{socket | serializer: serializer}}
+          id when is_binary(id) -> {:ok, %Socket{socket | id: id, serializer: serializer}}
           _                     ->
           raise ArgumentError, """
-          Expected #{inspect endpoint}.id/1 to return one of `nil | id :: String.t`
+          Expected #{inspect handler}.id/1 to return one of `nil | id :: String.t`
           """
         end
 
       :error -> :error
 
       _ -> raise ArgumentError, """
-      Expected #{inspect endpoint}.connect/2 to return one of `{:ok, Socket.t} | :error`
+      Expected #{inspect handler}.connect/2 to return one of `{:ok, Socket.t} | :error`
       """
     end
   end
@@ -121,16 +122,15 @@ defmodule Phoenix.Channel.Transport do
 
   The server will respond to heartbeats with the same message
   """
-  def dispatch(_, %{ref: ref, topic: "phoenix", event: "heartbeat"}, transport_pid, _socket_handler, _socket, _pubsub_server, _transport) do
-    reply(transport_pid, ref, "phoenix", %{status: :ok, response: %{}})
+  def dispatch(_, %{ref: ref, topic: "phoenix", event: "heartbeat"}, transport_pid, _socket_handler, socket, _pubsub_server, _transport) do
+    reply(transport_pid, ref, "phoenix", %{status: :ok, response: %{}}, socket.serializer)
     :ok
   end
   def dispatch(nil, %{event: "phx_join"} = msg, transport_pid, socket_handler, base_socket, endpoint, transport) do
     case socket_handler.channel_for_topic(msg.topic, transport) do
       nil     -> log_ignore(msg.topic, socket_handler)
       channel ->
-        socket = %Socket{id: base_socket.id,
-                         assigns: base_socket.assigns,
+        socket = %Socket{base_socket |
                          transport_pid: transport_pid,
                          endpoint: endpoint,
                          pubsub_server: endpoint.__pubsub_server__(),
@@ -170,11 +170,11 @@ defmodule Phoenix.Channel.Transport do
     :ok
   end
 
-  defp reply(%Socket{transport_pid: trans_pid, topic: topic}, ref, payload) do
-    reply(trans_pid, ref, topic, payload)
+  defp reply(%Socket{transport_pid: trans_pid, topic: topic, serializer: serializer}, ref, payload) do
+    reply(trans_pid, ref, topic, payload, serializer)
   end
-  defp reply(transport_pid, ref, topic, payload) when is_pid(transport_pid) do
-    Phoenix.Channel.Server.reply transport_pid, ref, topic, payload
+  defp reply(transport_pid, ref, topic, payload, serializer) when is_pid(transport_pid) do
+    Phoenix.Channel.Server.reply(transport_pid, ref, topic, payload, serializer)
   end
 
   defp log_info("phoenix" <> _, _func), do: :noop
