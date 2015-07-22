@@ -35,5 +35,5 @@ defmodule <%= application_module %>.Endpoint do
     key: "_<%= application_name %>_key",
     signing_salt: "<%= signing_salt %>"
 
-  plug :router, <%= application_module %>.Router
+  plug <%= application_module %>.Router
 end

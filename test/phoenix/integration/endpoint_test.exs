@@ -93,7 +93,7 @@ defmodule Phoenix.Integration.EndpointTest do
       @before_compile Wrapper
 
       plug :oops
-      plug :router, Router
+      plug Router
 
       @doc """
       Verify errors from the plug stack too (before the router).

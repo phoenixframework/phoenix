@@ -30,7 +30,7 @@ defmodule Phoenix.Endpoint do
         # plug ...
         # plug ...
 
-        plug :router, YourApp.Router
+        plug YourApp.Router
       end
 
   Before being used, an endpoint must be explicitly started as part
@@ -407,6 +407,9 @@ defmodule Phoenix.Endpoint do
   defmacro plug(plug, opts \\ [])
 
   defmacro plug(:router, router) do
+    IO.write "[warning] calling \"plug :router, YourApp.Router\" in your endpoint is deprecated, " <>
+             "plug your router directly instead: \"plug YourApp.Router\"\n" <>
+             Exception.format_stacktrace Macro.Env.stacktrace(__CALLER__)
     quote do
       @plugs {unquote(router), [], true}
     end
