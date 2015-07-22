@@ -20,7 +20,6 @@ defmodule <%= application_module %>.ChannelCase do
       # Import conveniences for testing with channels
       use Phoenix.ChannelTest
 <%= if ecto do %>
-      # Alias the data repository and import query/model functions
       alias <%= application_module %>.Repo
       import Ecto.Model
       import Ecto.Query, only: [from: 2]
