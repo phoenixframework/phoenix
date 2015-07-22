@@ -3,6 +3,10 @@ Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 defmodule Phoenix.Dup do
 end
 
+defmodule Phoenix.Article do
+  def __schema__(:source), do: "articles"
+end
+
 defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
   use ExUnit.Case
   import MixHelper
@@ -82,9 +86,9 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
     end
   end
 
-  test "generates belongs_to associations" do
+  test "generates belongs_to associations with association table provided by user" do
     in_tmp "generates belongs_to associations", fn ->
-      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title", "user:references"]
+      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title", "user:references:users"]
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
 
@@ -92,8 +96,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
         assert file =~ "defmodule Phoenix.Repo.Migrations.CreatePost do"
         assert file =~ "create table(:posts) do"
         assert file =~ "add :title, :string"
-        assert file =~ "add :user_id, :integer"
-        assert file =~ "create index(:posts, [:user_id])"
+        assert file =~ "add :user_id, references(:users)"
       end
 
       assert_file "web/models/post.ex", fn file ->
@@ -103,6 +106,35 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
         assert file =~ "field :title, :string"
         assert file =~ "belongs_to :user, Phoenix.User"
       end
+    end
+  end
+
+  test "generates belongs_to associations with association table inferred from assocation module" do
+    in_tmp "generates belongs_to associations", fn ->
+      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title", "article:references"]
+
+      assert [migration] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
+
+      assert_file migration, fn file ->
+        assert file =~ "defmodule Phoenix.Repo.Migrations.CreatePost do"
+        assert file =~ "create table(:posts) do"
+        assert file =~ "add :title, :string"
+        assert file =~ "add :article_id, references(:articles)"
+      end
+
+      assert_file "web/models/post.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Post do"
+        assert file =~ "use Phoenix.Web, :model"
+        assert file =~ "schema \"posts\" do"
+        assert file =~ "field :title, :string"
+        assert file =~ "belongs_to :article, Phoenix.Article"
+      end
+    end
+  end
+
+  test "raises error when association module does not exist and association table not provided" do
+    assert_raise Mix.Error, fn ->
+      Mix.Tasks.Phoenix.Gen.Model.run ["Tag", "tags", "title", "user:references"]
     end
   end
 
