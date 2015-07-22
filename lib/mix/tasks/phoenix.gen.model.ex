@@ -94,15 +94,40 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
   end
 
   defp partition_attrs_and_assocs(attrs) do
-    Enum.partition attrs, fn {_, kind} ->
-      kind == :references
-    end
+    Enum.partition attrs,
+      fn
+        {_, {kind, _}} -> kind == :references
+        {_, kind} -> kind == :references
+      end
   end
 
   defp assocs(assocs) do
-    Enum.reduce assocs, [], fn {key, _}, acc ->
-      assoc = Mix.Phoenix.inflect Atom.to_string(key)
-      [{key, :"#{key}_id", assoc[:module]} | acc]
+    Enum.reduce assocs, [],
+      fn
+        {key, {_, source}}, acc -> do_assocs(key, source, acc)
+        {key, _}, acc -> do_assocs(key, get_assoc_source(key), acc)
+      end
+  end
+
+  defp do_assocs(key, source, acc) do
+    assoc  = Mix.Phoenix.inflect Atom.to_string(key)
+    [{key, :"#{key}_id", assoc[:module], source} | acc]
+  end
+
+  defp get_assoc_source(key) do
+    assoc  = Mix.Phoenix.inflect Atom.to_string(key)
+    module = Module.concat(Elixir, assoc[:module])
+    if Code.ensure_loaded?(module) do
+      module.__schema__(:source) |> String.to_atom()
+    else
+      Mix.raise """
+      The table name for the association is inferred from the assocation
+      module. This means that the association module must exist and be loaded
+      in your application. Otherwise, you will need to explicitly set the
+      association's table like:
+
+          mix phoenix.gen.model Property properties user:references:users
+      """
     end
   end
 

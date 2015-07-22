@@ -3,6 +3,14 @@ Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 defmodule Phoenix.Dup do
 end
 
+defmodule Phoenix.Web do
+  defmacro __using__(_) do
+    quote do
+      use Ecto.Model
+    end
+  end
+end
+
 defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
   use ExUnit.Case
   import MixHelper
@@ -84,6 +92,8 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
 
   test "generates belongs_to associations" do
     in_tmp "generates belongs_to associations", fn ->
+      Mix.Tasks.Phoenix.Gen.Model.run ["user", "users", "name"]
+      Code.load_file "web/models/user.ex", Path.join(tmp_path(), "generates belongs_to associations")
       Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title", "user:references"]
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
@@ -92,8 +102,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
         assert file =~ "defmodule Phoenix.Repo.Migrations.CreatePost do"
         assert file =~ "create table(:posts) do"
         assert file =~ "add :title, :string"
-        assert file =~ "add :user_id, :integer"
-        assert file =~ "create index(:posts, [:user_id])"
+        assert file =~ "add :user_id, references(:users)"
       end
 
       assert_file "web/models/post.ex", fn file ->
@@ -102,6 +111,18 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
         assert file =~ "schema \"posts\" do"
         assert file =~ "field :title, :string"
         assert file =~ "belongs_to :user, Phoenix.User"
+      end
+
+      assert_raise Mix.Error, fn ->
+        Mix.Tasks.Phoenix.Gen.Model.run ["Tag", "tags", "title", "article:references"]
+      end
+
+      Mix.Tasks.Phoenix.Gen.Model.run ["Tag", "tags", "title", "article:references:articles"]
+
+      assert [migration] = Path.wildcard("priv/repo/migrations/*_create_tag.exs")
+
+      assert_file migration, fn file ->
+        assert file =~ "add :article_id, references(:articles)"
       end
     end
   end
