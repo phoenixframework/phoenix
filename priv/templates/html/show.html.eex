@@ -9,4 +9,6 @@
 <% end %>
 </ul>
 
+
+<%= "<%=" %> link "Edit", to: <%= singular %>_path(@conn, :edit, @<%= singular %>) <%= "%\>" %>
 <%= "<%=" %> link "Back", to: <%= singular %>_path(@conn, :index) <%= "%\>" %>
