@@ -67,10 +67,6 @@ defmodule Phoenix.Test.ChannelTest do
       {:stop, :shutdown, socket}
     end
 
-    def handle_out(event, payload, socket) do
-      super(event, payload, socket)
-    end
-
     def handle_info(:stop, socket) do
       {:stop, :shutdown, socket}
     end

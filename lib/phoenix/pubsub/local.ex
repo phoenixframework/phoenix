@@ -72,10 +72,22 @@ defmodule Phoenix.PubSub.Local do
   def broadcast(local_server, from, topic, msg) when is_atom(local_server) do
     local_server
     |> subscribers(topic)
-    |> Enum.each(fn
-          pid when pid == from -> :ok
-          pid -> send(pid, msg)
-       end)
+    |> Enum.reduce(%{}, fn
+      {pid, _fastlanes}, cache when pid == from ->
+        cache
+
+      {pid, nil}, cache ->
+        send(pid, msg)
+        cache
+
+      {pid, {fastlane_handler, func, args}}, cache ->
+        case apply(fastlane_handler, func, [topic, msg, cache | args]) do
+          :noop ->
+            send(pid, msg)
+            cache
+          {:sent, cache} -> cache
+        end
+    end)
     :ok
   end
 
@@ -121,14 +133,14 @@ defmodule Phoenix.PubSub.Local do
 
   def handle_call({:subscription, pid}, _from, state) do
     case HashDict.fetch(state.pids, pid) do
-      {:ok, {_ref, topics}} -> {:reply, {:ok, topics}, state}
-      :error                -> {:reply, :error, state}
+      {:ok, {_ref, topics, fastlanes}} -> {:reply, {:ok, topics, fastlanes}, state}
+      :error                           -> {:reply, :error, state}
     end
   end
 
   def handle_call({:subscribe, pid, topic, opts}, _from, state) do
     if opts[:link], do: Process.link(pid)
-    {:reply, :ok, put_subscription(state, pid, topic)}
+    {:reply, :ok, put_subscription(state, pid, topic, opts[:fastlane])}
   end
 
   def handle_call({:unsubscribe, pid, topic}, _from, state) do
@@ -147,32 +159,37 @@ defmodule Phoenix.PubSub.Local do
     :ok
   end
 
-  defp put_subscription(state, pid, topic) do
+  defp put_subscription(state, pid, topic, fastlane) do
     subscription = case HashDict.fetch(state.pids, pid) do
-      {:ok, {ref, topics}} ->
-        {ref, HashSet.put(topics, topic)}
+      {:ok, {ref, topics, fastlanes}} ->
+        fastlanes = if fastlane, do: HashDict.put(fastlanes, topic, fastlane),
+                                 else: fastlanes
+        {ref, HashSet.put(topics, topic), fastlanes}
       :error ->
-        {Process.monitor(pid), HashSet.put(HashSet.new, topic)}
+        fastlanes = if fastlane, do: HashDict.put(HashDict.new, topic, fastlane),
+                                 else: HashDict.new
+        {Process.monitor(pid), HashSet.put(HashSet.new, topic), fastlanes}
     end
 
-    true = :ets.insert(state.topics, {topic, pid})
+    true = :ets.insert(state.topics, {topic, {pid, fastlane}})
     %{state | pids: HashDict.put(state.pids, pid, subscription)}
   end
 
   defp drop_subscription(state, pid, topic) do
     case HashDict.fetch(state.pids, pid) do
-      {:ok, {ref, subd_topics}} ->
+      {:ok, {ref, subd_topics, fastlanes}} ->
         subd_topics = HashSet.delete(subd_topics, topic)
+        {fastlane, fastlanes} = HashDict.pop(fastlanes, topic)
 
         pids =
           if Enum.any?(subd_topics) do
-            HashDict.put(state.pids, pid, {ref, subd_topics})
+            HashDict.put(state.pids, pid, {ref, subd_topics, fastlanes})
           else
             Process.demonitor(ref, [:flush])
             HashDict.delete(state.pids, pid)
           end
 
-        true = :ets.delete_object(state.topics, {topic, pid})
+        true = :ets.delete_object(state.topics, {topic, {pid, fastlane}})
         %{state | pids: pids}
 
       :error ->
@@ -182,9 +199,10 @@ defmodule Phoenix.PubSub.Local do
 
   defp drop_subscriber(state, pid, ref) do
     case HashDict.get(state.pids, pid) do
-      {^ref, topics} ->
+      {^ref, topics, fastlanes} ->
         for topic <- topics do
-          true = :ets.delete_object(state.topics, {topic, pid})
+          fastlane = HashDict.get(fastlanes, topic)
+          true = :ets.delete_object(state.topics, {topic, {pid, fastlane}})
         end
         Process.demonitor(ref, [:flush])
         %{state | pids: HashDict.delete(state.pids, pid)}

@@ -34,11 +34,11 @@ defmodule Phoenix.LocalTest do
     assert :ok = Local.subscribe(config.test, pid, "topic1")
 
     assert Local.subscribers(config.test, "topic1") ==
-           [self, pid]
+           [{self, nil}, {pid, nil}]
 
     assert :ok = Local.unsubscribe(config.test, self, "topic1")
     assert Local.subscribers(config.test, "topic1") ==
-           [pid]
+           [{pid, nil}]
   end
 
   test "unsubscribe/2 gargabes collect topic when there are no more subscribers", config do
@@ -66,7 +66,7 @@ defmodule Phoenix.LocalTest do
     assert_receive {:DOWN, ^ref, _, _, _}
 
     assert Local.subscription(config.test, pid) == :error
-    assert Local.subscribers(config.test, "topic5") == [self]
+    assert Local.subscribers(config.test, "topic5") == [{self, nil}]
     assert Local.subscribers(config.test, "topic6") == []
 
     # Assert topic was also garbage collected
@@ -77,11 +77,11 @@ defmodule Phoenix.LocalTest do
     assert :ok = Local.subscribe(config.test, self, "topic7")
     assert :ok = Local.subscribe(config.test, self, "topic8")
 
-    {:ok, topics} = Local.subscription(config.test, self)
+    {:ok, topics, _fastlanes} = Local.subscription(config.test, self)
     assert Enum.sort(topics) == ["topic7", "topic8"]
 
     assert :ok = Local.unsubscribe(config.test, self, "topic7")
-    assert {:ok, topics} = Local.subscription(config.test, self)
+    assert {:ok, topics, _fastlanes} = Local.subscription(config.test, self)
     assert Enum.sort(topics) == ["topic8"]
 
     :ok = Local.unsubscribe(config.test, self, "topic8")

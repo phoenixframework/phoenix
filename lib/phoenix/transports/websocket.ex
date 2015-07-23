@@ -23,9 +23,7 @@ defmodule Phoenix.Transports.WebSocket do
   require Logger
   import Phoenix.Controller, only: [endpoint_module: 1]
 
-  alias Phoenix.Socket.Message
   alias Phoenix.Socket.Broadcast
-  alias Phoenix.Socket.Reply
   alias Phoenix.Channel.Transport
 
   plug Plug.Logger

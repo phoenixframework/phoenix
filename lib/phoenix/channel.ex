@@ -192,10 +192,6 @@ defmodule Phoenix.Channel do
               {:stop, reason :: term, Socket.t} |
               {:stop, reason :: term, reply, Socket.t}
 
-  defcallback handle_out(event :: String.t, msg :: map, Socket.t) ::
-              {:noreply, Socket.t} |
-              {:stop, reason :: term, Socket.t}
-
   defcallback handle_info(term, Socket.t) ::
               {:noreply, Socket.t} |
               {:stop, reason :: term, Socket.t}
@@ -207,15 +203,13 @@ defmodule Phoenix.Channel do
   defmacro __using__(_) do
     quote do
       @behaviour unquote(__MODULE__)
+      @on_definition unquote(__MODULE__)
+      @before_compile unquote(__MODULE__)
       import unquote(__MODULE__)
       import Phoenix.Socket, only: [assign: 3]
+      Module.register_attribute(__MODULE__, :phoenix_handle_outs, accumulate: true)
 
       def handle_in(_event, _message, socket) do
-        {:noreply, socket}
-      end
-
-      def handle_out(event, message, socket) do
-        push(socket, event, message)
         {:noreply, socket}
       end
 
@@ -223,8 +217,24 @@ defmodule Phoenix.Channel do
 
       def terminate(_reason, _socket), do: :ok
 
-      defoverridable handle_info: 2, handle_out: 3, handle_in: 3, terminate: 2
+      defoverridable handle_info: 2, handle_in: 3, terminate: 2
     end
+  end
+
+  defmacro __before_compile__(_) do
+    quote do
+      if @phoenix_handle_outs != [] do
+        def __fastlane__?(event) when event in @phoenix_handle_outs, do: false
+      end
+      def __fastlane__?(event), do: true
+    end
+  end
+
+  def __on_definition__(env, :def, :handle_out, [event, _payload, _socket], _, _)
+    when is_binary(event) do
+    Module.put_attribute(env.module, :phoenix_handle_outs, event)
+  end
+  def __on_definition__(_env, _kind, _name, _args, _guards, _body) do
   end
 
   @doc """

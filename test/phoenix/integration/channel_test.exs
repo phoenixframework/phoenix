@@ -267,7 +267,8 @@ defmodule Phoenix.Integration.ChannelTest do
     resp = poll(:get, "/ws", session)
     session = Map.take(resp.body, ["token", "sig"])
     assert resp.body["status"] == 200
-    [phx_reply, status_msg, user_entered] = resp.body["messages"]
+
+    [status_msg, phx_reply, user_entered] = Enum.sort(resp.body["messages"])
     assert phx_reply ==
       %{"event" => "phx_reply",
         "payload" => %{"response" => %{}, "status" => "ok"},
@@ -346,11 +347,12 @@ defmodule Phoenix.Integration.ChannelTest do
       resp = poll(:get, "/ws", session)
       session = Map.take(resp.body, ["token", "sig"])
       assert resp.body["status"] == 200
-      assert Enum.count(resp.body["messages"]) == 4
-      assert Enum.at(resp.body["messages"], 0)["event"] == "phx_reply"
-      assert Enum.at(resp.body["messages"], 1)["payload"]["status"] == "connected"
-      assert Enum.at(resp.body["messages"], 2)["event"] == "user:entered"
-      assert Enum.at(resp.body["messages"], 3)["payload"]["body"] == "Hello lobby"
+      assert Enum.sort(resp.body["messages"]) == Enum.sort([
+        %{"event" => "joined", "payload" => %{"status" => "connected", "user_id" => nil}, "ref" => nil, "topic" => "rooms:room123"},
+        %{"event" => "new:msg", "payload" => %{"body" => "Hello lobby"}, "ref" => nil, "topic" => "rooms:lobby"},
+        %{"event" => "phx_reply", "payload" => %{"response" => %{}, "status" => "ok"}, "ref" => "123", "topic" => "rooms:room123"},
+        %{"event" => "user:entered", "payload" => %{"user" => nil}, "ref" => nil, "topic" => "rooms:room123"}])
+
       channel = Process.whereis(:"rooms:room123")
       assert channel
       Process.monitor(channel)
@@ -460,14 +462,14 @@ defmodule Phoenix.Integration.ChannelTest do
 
     # leave
     resp = poll(:get, "/ws", session)
-    assert resp.body["messages"] == [
+    assert Enum.sort(resp.body["messages"]) == Enum.sort([
       %{"event" => "phx_reply", "payload" => %{"response" => %{}, "status" => "ok"}, "ref" => "1", "topic" => "rooms:lobby"},
-      %{"event" => "joined", "payload" => %{"status" => "connected", "user_id" => "123"}, "ref" => nil, "topic" => "rooms:lobby"},
       %{"event" => "user:entered", "payload" => %{"user" => nil}, "ref" => nil, "topic" => "rooms:lobby"},
+      %{"event" => "joined", "payload" => %{"status" => "connected", "user_id" => "123"}, "ref" => nil, "topic" => "rooms:lobby"},
       %{"event" => "phx_reply", "payload" => %{"response" => %{}, "status" => "ok"}, "ref" => "2", "topic" => "rooms:lobby"},
       %{"event" => "you:left", "payload" => %{"message" => "bye!"}, "ref" => nil, "topic" => "rooms:lobby"},
       %{"event" => "phx_close", "payload" => %{}, "ref" => nil, "topic" => "rooms:lobby"}
-    ]
+    ])
   end
 
   test "longpoller refuses UserSocket connects that error with 403 response" do

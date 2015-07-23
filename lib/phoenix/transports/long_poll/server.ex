@@ -22,8 +22,6 @@ defmodule Phoenix.Transports.LongPoll.Server do
   alias Phoenix.Channel.Transport
   alias Phoenix.Transports.LongPoll
   alias Phoenix.PubSub
-  alias Phoenix.Socket.Message
-  alias Phoenix.Socket.Reply
   alias Phoenix.Socket.Broadcast
 
   @doc """

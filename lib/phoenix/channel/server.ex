@@ -191,7 +191,11 @@ defmodule Phoenix.Channel.Server do
   end
 
   defp join(socket, reply, parent, ref) do
-    PubSub.subscribe(socket.pubsub_server, self(), socket.topic, link: true)
+    PubSub.subscribe(socket.pubsub_server, self(), socket.topic,
+      link: true,
+      fastlane: {__MODULE__, :fastlane, [socket.transport_pid,
+                                         socket.channel,
+                                         socket.serializer]})
     send(parent, {ref, reply})
     {:ok, %{socket | joined: true}}
   end
@@ -230,6 +234,29 @@ defmodule Phoenix.Channel.Server do
   def terminate(reason, socket) do
     socket.channel.terminate(reason, socket)
   end
+
+  def fastlane(topic, %Broadcast{event: event} = msg, cache, transport_pid, channel, serializer) do
+    if channel.__fastlane__?(event) do
+      cache_key = {channel, event, serializer}
+      case Map.fetch(cache, cache_key) do
+        :error ->
+          encoded_msg = serializer.encode!(%Message{event: event, topic: topic,
+                                                    payload: msg.payload})
+          send transport_pid, {:socket_push, encoded_msg}
+          {:sent, Map.put(cache, cache_key, encoded_msg)}
+
+        {:ok, encoded_msg} ->
+          send transport_pid, {:socket_push, encoded_msg}
+          {:sent, cache}
+      end
+    else
+      :noop
+    end
+  end
+  def fastlane(_topic, _msg, _cache, _transport_pid, _channel, _serializer) do
+    :noop
+  end
+
 
   ## Handle results
 
