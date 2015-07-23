@@ -1,0 +1,22 @@
+{
+  "name": "Phoenix",
+  "description": "Elixir Web Framework targeting full-featured, fault tolerant applications with realtime functionality",
+  "website": "http://www.phoenixframework.org/",
+  <%= if ecto do %>"scripts": {
+    "postdeploy": "mix ecto.migrate"
+  },<% end %>
+  "env": {
+    "SECRET_KEY_BASE": {
+      "description": "A secret key for verifying the integrity of signed cookies.",
+      "generator": "secret"
+    },
+    "WEB_CONCURRENCY": {
+      "description": "The number of processes to run.",
+      "value": "1"
+    }
+  },
+  "buildpacks": [
+    {"url": "https://github.com/HashNuke/heroku-buildpack-elixir"},
+    {"url": "https://github.com/gjaldon/heroku-buildpack-phoenix-static"}
+  ]
+}

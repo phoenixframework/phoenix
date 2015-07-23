@@ -35,6 +35,7 @@ defmodule Mix.Tasks.Phoenix.New do
     {:eex,  "new/web/web.ex",                                "web/web.ex"},
     {:eex,  "new/mix.exs",                                   "mix.exs"},
     {:eex,  "new/README.md",                                 "README.md"},
+    {:eex,  "new/app.json",                                  "app.json"},
   ]
 
   @ecto [
@@ -237,6 +238,7 @@ defmodule Mix.Tasks.Phoenix.New do
       # Configure your database
       config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
         adapter: #{inspect binding[:adapter_module]},
+        url: System.get_env("DATABASE_URL"),
         username: #{inspect binding[:db_user]},
         password: #{inspect binding[:db_password]},
         database: "#{database}_prod",
