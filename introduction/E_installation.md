@@ -47,7 +47,7 @@ Mac OS X users can also install node.js via [homebrew](http://brew.sh/).
 
 Note: io.js, which is an npm compatible platform originally based on Node.js, is not known to work with Phoenix.
 
-Debin/Ubuntu users might see an error that looks like this:
+Debian/Ubuntu users might see an error that looks like this:
 ```console
 sh: 1: node: not found
 npm WARN This failure might be due to the use of legacy binary "node"

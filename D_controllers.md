@@ -299,7 +299,7 @@ Stacktrace
     (plug) lib/plug/conn.ex:353: Plug.Conn.get_resp_header(false, "content-type")
 ```
 
-where your argument replaces `conn` as the first argument, one of the first things to check is whether there are parens in the right places.
+where your argument replaces `conn` as the first argument, one of the first things to check is whether there are parentheses in the right places.
 
 This is fine.
 
