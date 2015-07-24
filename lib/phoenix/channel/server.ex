@@ -141,7 +141,7 @@ defmodule Phoenix.Channel.Server do
     encoded_msg = serializer.encode!(%Message{topic: topic,
                                               event: event,
                                               payload: payload})
-    send pid, {:socket_push, encoded_msg}
+    send pid, encoded_msg
     :ok
   end
   def push(_, _, _, _), do: raise_invalid_message
@@ -154,7 +154,7 @@ defmodule Phoenix.Channel.Server do
 
     encoded_msg = serializer.encode!(%Reply{ref: ref, topic: topic, status: payload.status,
                                             payload: payload.response})
-    send pid, {:socket_push, encoded_msg}
+    send pid, encoded_msg
     :ok
   end
   def reply(_, _, _, _), do: raise_invalid_message
@@ -193,9 +193,10 @@ defmodule Phoenix.Channel.Server do
   defp join(socket, reply, parent, ref) do
     PubSub.subscribe(socket.pubsub_server, self(), socket.topic,
       link: true,
-      fastlane: {__MODULE__, :fastlane, [socket.transport_pid,
-                                         socket.channel,
-                                         socket.serializer]})
+      fastlane: {socket.transport_pid,
+                 socket.serializer,
+                 socket.channel.__phoenix_intercepts__()})
+
     send(parent, {ref, reply})
     {:ok, %{socket | joined: true}}
   end
@@ -233,28 +234,6 @@ defmodule Phoenix.Channel.Server do
   @doc false
   def terminate(reason, socket) do
     socket.channel.terminate(reason, socket)
-  end
-
-  def fastlane(topic, %Broadcast{event: event} = msg, cache, transport_pid, channel, serializer) do
-    if channel.__fastlane__?(event) do
-      cache_key = {channel, event, serializer}
-      case Map.fetch(cache, cache_key) do
-        :error ->
-          encoded_msg = serializer.encode!(%Message{event: event, topic: topic,
-                                                    payload: msg.payload})
-          send transport_pid, {:socket_push, encoded_msg}
-          {:sent, Map.put(cache, cache_key, encoded_msg)}
-
-        {:ok, encoded_msg} ->
-          send transport_pid, {:socket_push, encoded_msg}
-          {:sent, cache}
-      end
-    else
-      :noop
-    end
-  end
-  def fastlane(_topic, _msg, _cache, _transport_pid, _channel, _serializer) do
-    :noop
   end
 
 
@@ -309,9 +288,9 @@ defmodule Phoenix.Channel.Server do
   defp handle_reply(socket, {status, payload}, :handle_in)
        when is_atom(status) and is_map(payload) do
 
-    send socket.transport_pid, {:socket_push, socket.serializer.encode!(
+    send socket.transport_pid, socket.serializer.encode!(
       %Reply{topic: socket.topic, ref: socket.ref, status: status, payload: payload}
-   )}
+    )
   end
 
   defp handle_reply(socket, status, :handle_in) when is_atom(status) do

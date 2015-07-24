@@ -79,8 +79,8 @@ defmodule Phoenix.Channel.ChannelTest do
     socket = %Phoenix.Socket{serializer: Phoenix.ChannelTest.NoopSerializer,
                              topic: "sometopic", transport_pid: self(), joined: true}
     push(socket, "event1", %{key: :val})
-    assert_receive {:socket_push, %Phoenix.Socket.Message{
-      event: "event1", payload: %{key: :val}, topic: "sometopic"}}
+    assert_receive %Phoenix.Socket.Message{
+      event: "event1", payload: %{key: :val}, topic: "sometopic"}
   end
 
   test "pushing when not joined" do

@@ -1,6 +1,4 @@
 defmodule Phoenix.PubSub.Local do
-  use GenServer
-
   @moduledoc """
   PubSub implementation for handling local-node process groups.
 
@@ -15,6 +13,11 @@ defmodule Phoenix.PubSub.Local do
     * `server_name` - The name to register the server under
 
   """
+
+  use GenServer
+  alias Phoenix.Socket.Message
+  alias Phoenix.Socket.Broadcast
+
   def start_link(server_name) do
     GenServer.start_link(__MODULE__, server_name, name: server_name)
   end
@@ -69,24 +72,43 @@ defmodule Phoenix.PubSub.Local do
       :ok
 
   """
-  def broadcast(local_server, from, topic, msg) when is_atom(local_server) do
+  def broadcast(local_server, from, topic, %Broadcast{event: event} = msg)
+    when is_atom(local_server) do
+
     local_server
     |> subscribers(topic)
     |> Enum.reduce(%{}, fn
-      {pid, _fastlanes}, cache when pid == from ->
-        cache
+      {pid, _fastlanes}, cache when pid == from ->  cache
 
       {pid, nil}, cache ->
         send(pid, msg)
         cache
 
-      {pid, {fastlane_handler, func, args}}, cache ->
-        case apply(fastlane_handler, func, [topic, msg, cache | args]) do
-          :noop ->
-            send(pid, msg)
-            cache
-          {:sent, cache} -> cache
+      {pid, {fastlane_pid, serializer, event_intercepts}}, cache ->
+        if event in event_intercepts do
+          send(pid, msg)
+          cache
+        else
+          case Map.fetch(cache, serializer) do
+            {:ok, encoded_msg} ->
+              send fastlane_pid, encoded_msg
+              cache
+            :error ->
+              encoded_msg = serializer.encode!(%Message{event: event, topic: topic,
+                                                        payload: msg.payload})
+              send fastlane_pid, encoded_msg
+              Map.put(cache, serializer, encoded_msg)
+          end
         end
+    end)
+    :ok
+  end
+  def broadcast(local_server, from, topic, msg) when is_atom(local_server) do
+    local_server
+    |> subscribers(topic)
+    |> Enum.each(fn
+      {pid, _fastlanes} when pid == from -> :noop
+      {pid, _fastlanes} -> send(pid, msg)
     end)
     :ok
   end

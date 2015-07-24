@@ -19,7 +19,7 @@ defmodule Phoenix.Integration.ChannelTest do
     https: false,
     http: [port: @port],
     secret_key_base: String.duplicate("abcdefgh", 8),
-    debug_errors: true,
+    debug_errors: false,
     server: true,
     pubsub: [adapter: Phoenix.PubSub.PG2, name: :int_pub]
   ])

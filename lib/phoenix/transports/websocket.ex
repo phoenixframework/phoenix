@@ -104,13 +104,13 @@ defmodule Phoenix.Transports.WebSocket do
 
         case reason do
           :normal ->
-            {:reply, state.serializer.encode!(Transport.chan_close_message(topic)), new_state}
+            format_reply(state.serializer.encode!(Transport.chan_close_message(topic)), new_state)
           :shutdown ->
-            {:reply, state.serializer.encode!(Transport.chan_close_message(topic)), new_state}
+            format_reply(state.serializer.encode!(Transport.chan_close_message(topic)), new_state)
           {:shutdown, _} ->
-            {:reply, state.serializer.encode!(Transport.chan_close_message(topic)), new_state}
+            format_reply(state.serializer.encode!(Transport.chan_close_message(topic)), new_state)
           _other ->
-            {:reply, state.serializer.encode!(Transport.chan_error_message(topic)), new_state}
+            format_reply(state.serializer.encode!(Transport.chan_error_message(topic)), new_state)
         end
     end
   end
@@ -122,8 +122,8 @@ defmodule Phoenix.Transports.WebSocket do
     {:shutdown, state}
   end
 
-  def ws_info({:socket_push, encoded_payload}, state) do
-    {:reply, encoded_payload, state}
+  def ws_info({:socket_push, :text, _encoded_payload} = msg, state) do
+    format_reply(msg, state)
   end
 
   def ws_info(_, state) do
@@ -152,5 +152,9 @@ defmodule Phoenix.Transports.WebSocket do
   defp delete(state, topic, socket_pid) do
     %{state | sockets: HashDict.delete(state.sockets, topic),
               sockets_inverse: HashDict.delete(state.sockets_inverse, socket_pid)}
+  end
+
+  defp format_reply({:socket_push, :text, encoded_payload}, state) do
+    {:reply, {:text, encoded_payload}, state}
   end
 end

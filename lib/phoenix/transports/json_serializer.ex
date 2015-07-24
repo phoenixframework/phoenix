@@ -11,7 +11,7 @@ defmodule Phoenix.Transports.JSONSerializer do
   Encodes a `Phoenix.Socket.Message` struct to JSON string.
   """
   def encode!(%Reply{} = reply) do
-    {:text, Poison.encode_to_iodata!(%Message{
+    {:socket_push, :text, Poison.encode_to_iodata!(%Message{
       topic: reply.topic,
       event: "phx_reply",
       ref: reply.ref,
@@ -19,7 +19,7 @@ defmodule Phoenix.Transports.JSONSerializer do
     })}
   end
   def encode!(%Message{} = msg) do
-    {:text, Poison.encode_to_iodata!(msg)}
+    {:socket_push, :text, Poison.encode_to_iodata!(msg)}
   end
 
   @doc """

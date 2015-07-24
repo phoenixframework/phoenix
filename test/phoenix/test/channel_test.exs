@@ -12,6 +12,8 @@ defmodule Phoenix.Test.ChannelTest do
   defmodule Channel do
     use Phoenix.Channel
 
+    intercept ["stop"]
+
     def join("foo:ok", _, socket) do
       {:ok, socket}
     end

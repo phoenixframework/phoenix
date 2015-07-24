@@ -12,14 +12,14 @@ defmodule Phoenix.Transports.LongPollSerializer do
   Encoding is handled downstream in the LongPoll controller.
   """
   def encode!(%Reply{} = reply) do
-    %Message{
+    {:socket_push, :text, %Message{
       topic: reply.topic,
       event: "phx_reply",
       ref: reply.ref,
       payload: %{status: reply.status, response: reply.payload}
-    }
+    }}
   end
-  def encode!(%Message{} = msg), do: msg
+  def encode!(%Message{} = msg), do: {:socket_push, :text, msg}
 
   @doc """
   Decodes JSON String into `Phoenix.Socket.Message` struct.
