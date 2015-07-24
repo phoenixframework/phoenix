@@ -135,7 +135,7 @@ defmodule Phoenix.Transports.LongPoll do
   defp dispatch_publish(conn, message, priv_topic) do
     msg = Message.from_map!(message)
 
-    case dispatch(conn, priv_topic, msg) do
+    case transport_dispatch(conn, priv_topic, msg) do
       :ok               -> conn |> put_status(:ok) |> status_json(%{})
       {:error, _reason} -> conn |> put_status(:unauthorized) |> status_json(%{})
     end
@@ -209,7 +209,7 @@ defmodule Phoenix.Transports.LongPoll do
   Dispatches deserialized `%Phoenix.Socket.Message{}` from client to
   `Phoenix.LongPoll.Server`
   """
-  def dispatch(conn, priv_topic, msg) do
+  def transport_dispatch(conn, priv_topic, msg) do
     ref = :erlang.make_ref()
     :ok = broadcast_from(conn, priv_topic, {:dispatch, msg, ref})
     receive do

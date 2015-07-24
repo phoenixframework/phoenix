@@ -159,7 +159,11 @@ defmodule Phoenix.Integration.ChannelTest do
     refute Process.alive?(channel_pid)
 
     WebsocketClient.send_event(sock, "rooms:lobby1", "new_msg", %{body: "Should ignore"})
-    refute_receive %Message{}
+    refute_receive %Message{event: "new_msg"}
+    assert_receive %Message{event: "phx_reply", payload: %{"response" => %{"reason" => "unmatched topic"}}}
+
+    WebsocketClient.send_event(sock, "rooms:lobby1", "new_msg", %{body: "Should ignore"})
+    refute_receive %Message{event: "new_msg"}
   end
 
   test "websocket adapter sends phx_error if a channel server abnormally exits" do
@@ -192,8 +196,12 @@ defmodule Phoenix.Integration.ChannelTest do
     {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket")
 
     WebsocketClient.send_event(sock, "rooms:lobby", "new_msg", %{body: "hi!"})
-    refute_receive %Message{}
-  end
+    refute_receive %Message{event: "new_msg"}
+    assert_receive %Message{event: "phx_reply", payload: %{"response" => %{"reason" => "unmatched topic"}}}
+
+    WebsocketClient.send_event(sock, "rooms:lobby1", "new_msg", %{body: "Should ignore"})
+    refute_receive %Message{event: "new_msg"}
+ end
 
   test "websocket refuses unallowed origins" do
     assert {:ok, _} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket",
@@ -338,9 +346,10 @@ defmodule Phoenix.Integration.ChannelTest do
       resp = poll :post, "/ws", session, %{
         "topic" => "rooms:private-room",
         "event" => "new_msg",
-        "ref" => "123",
+        "ref" => "12300",
         "payload" => %{"body" => "this method shouldn't send!'"}
       }
+      IO.inspect resp
       assert resp.body["status"] == 401
       refute_receive %Broadcast{event: "new_msg"}
 
@@ -360,10 +369,12 @@ defmodule Phoenix.Integration.ChannelTest do
       resp = poll(:get, "/ws", session)
       session = Map.take(resp.body, ["token", "sig"])
       assert resp.body["status"] == 200
+
       assert Enum.sort(resp.body["messages"]) == Enum.sort([
         %{"event" => "joined", "payload" => %{"status" => "connected", "user_id" => nil}, "ref" => nil, "topic" => "rooms:room123"},
         %{"event" => "new_msg", "payload" => %{"transport" => "Phoenix.Transports.LongPoll", "body" => "Hello lobby"}, "ref" => nil, "topic" => "rooms:lobby"},
         %{"event" => "phx_reply", "payload" => %{"response" => %{}, "status" => "ok"}, "ref" => "123", "topic" => "rooms:room123"},
+        %{"event" => "phx_reply", "payload" => %{"response" => %{"reason" => "unmatched topic"}, "status" => "error"}, "ref" => "12300", "topic" => "rooms:private-room"},
         %{"event" => "user_entered", "payload" => %{"user" => nil}, "ref" => nil, "topic" => "rooms:room123"}])
 
       channel = Process.whereis(:"rooms:room123")

@@ -87,12 +87,15 @@ defmodule Phoenix.Transports.WebSocket do
     msg = state.serializer.decode!(payload, opcode)
 
     case Transport.dispatch(msg, state.sockets, self, state.socket_handler, state.socket, state.endpoint, __MODULE__) do
-      {:ok, socket_pid} ->
-        {:ok, put(state, msg.topic, socket_pid)}
+      {:ok, socket_pid, reply_msg} ->
+        format_reply(state.serializer.encode!(reply_msg), put(state, msg.topic, socket_pid))
+      {:ok, reply_msg} ->
+        format_reply(state.serializer.encode!(reply_msg), state)
       :ok ->
         {:ok, state}
-      {:error, _reason} ->
-        {:ok, state} # We are assuming the error was already logged elsewhere.
+      {:error, _reason, error_reply_msg} ->
+        # We are assuming the error was already logged elsewhere.
+        format_reply(state.serializer.encode!(error_reply_msg), state)
     end
   end
 
