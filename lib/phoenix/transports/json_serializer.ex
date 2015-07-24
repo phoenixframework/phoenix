@@ -6,6 +6,7 @@ defmodule Phoenix.Transports.JSONSerializer do
 
   alias Phoenix.Socket.Reply
   alias Phoenix.Socket.Message
+  alias Phoenix.Socket.Broadcast
 
   @doc """
   Encodes a `Phoenix.Socket.Message` struct to JSON string.
@@ -16,6 +17,13 @@ defmodule Phoenix.Transports.JSONSerializer do
       event: "phx_reply",
       ref: reply.ref,
       payload: %{status: reply.status, response: reply.payload}
+    })}
+  end
+  def encode!(%Broadcast{} = msg) do
+    {:socket_push, :text, Poison.encode_to_iodata!(%Message{
+      topic: msg.topic,
+      event: msg.event,
+      payload: msg.payload
     })}
   end
   def encode!(%Message{} = msg) do

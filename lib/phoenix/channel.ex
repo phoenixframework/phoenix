@@ -62,8 +62,8 @@ defmodule Phoenix.Channel do
   You can also push a message directly down the socket:
 
       # client asks for their current rank, push sent directly as a new event.
-      def handle_in("current:rank", socket) do
-        push socket, "current:rank", %{val: Game.get_rank(socket.assigns[:user])}
+      def handle_in("current_rank", socket) do
+        push socket, "current_rank", %{val: Game.get_rank(socket.assigns[:user])}
         {:noreply, socket}
       end
 
@@ -100,12 +100,16 @@ defmodule Phoenix.Channel do
         end
       end
 
-  ### Outgoing Events
+  ### Intercepting Outgoing Events
 
   When an event is broadcasted with `Phoenix.Channel.broadcast/3`, each channel
-  subscriber's `handle_out/3` callback is triggered where the event can be
-  relayed as is, or customized on a socket by socket basis to append extra
-  information, or conditionally filter the message from being delivered.
+  subscriber can choose to intercept the event and have their `handle_out/3`
+  callback triggered. This allows the event's payload can be to customized on a
+  socket by socket basis to append extra information, or conditionally filter
+  the message from being delivered. If the event is not intercepted with
+  `Phoenix.Channel.intercept/1`, then the message is pushed to directly to the client:
+
+      intercept ["new_msg", "user_joined"]
 
       def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
         broadcast! socket, "new_msg", %{uid: uid, body: body}
@@ -121,18 +125,15 @@ defmodule Phoenix.Channel do
         {:noreply, socket}
       end
 
-      # do not send broadcasted `"user:joined"` events if this socket's user
+      # do not send broadcasted `"user_joined"` events if this socket's user
       # is ignoring the user who joined.
-      def handle_out("user:joined", msg, socket) do
+      def handle_out("user_joined", msg, socket) do
         unless User.ignoring?(socket.assigns[:user], msg.user_id) do
-          push socket, "user:joined", msg
+          push socket, "user_joined", msg
         end
         {:noreply, socket}
       end
 
-  By default, unhandled outgoing events are forwarded to each client as a push,
-  but you'll need to define the catch-all clause yourself once you define an
-  `handle_out/3` clause.
 
   ## Broadcasting to an external topic
 
@@ -157,6 +158,7 @@ defmodule Phoenix.Channel do
         MyApp.Endpoint.broadcast! "rooms:superadmin", "new_msg", %{uid: uid, body: body}
         redirect conn, to: "/"
       end
+
 
   ## Terminate
 
@@ -192,10 +194,6 @@ defmodule Phoenix.Channel do
               {:stop, reason :: term, Socket.t} |
               {:stop, reason :: term, reply, Socket.t}
 
-  defcallback handle_out(event :: String.t, msg :: map, Socket.t) ::
-              {:noreply, Socket.t} |
-              {:stop, reason :: term, Socket.t}
-
   defcallback handle_info(term, Socket.t) ::
               {:noreply, Socket.t} |
               {:stop, reason :: term, Socket.t}
@@ -203,6 +201,7 @@ defmodule Phoenix.Channel do
   defcallback terminate(msg :: map, Socket.t) ::
               {:shutdown, :left | :closed} |
               term
+
 
   defmacro __using__(_) do
     quote do
@@ -219,16 +218,11 @@ defmodule Phoenix.Channel do
         {:noreply, socket}
       end
 
-      def handle_out(event, message, socket) do
-        push(socket, event, message)
-        {:noreply, socket}
-      end
-
       def handle_info(_message, socket), do: {:noreply, socket}
 
       def terminate(_reason, _socket), do: :ok
 
-      defoverridable handle_info: 2, handle_out: 3, handle_in: 3, terminate: 2
+      defoverridable handle_info: 2, handle_in: 3, terminate: 2
     end
   end
 
@@ -245,6 +239,35 @@ defmodule Phoenix.Channel do
     end
   end
 
+  @doc """
+  Defines which Channel events to intercept for `handle_out/3` callbacks.
+
+  By default, broadcasted events are pushed directly to the client, but
+  intercepting events gives your channel a chance to customize the event
+  for the client to append extra information or filter the message from being
+  delivered.
+
+  *Note*: intercepting events can introduce significantly more overhead if a
+  large number of subscribers must customize a message since the broadcast will
+  be encoded N times instead of a single shared encoding across all subscribers.
+
+  ## Examples
+
+      intercept ["new_msg"]
+
+      def handle_out("new_msg", payload, socket) do
+        push socket, "new_msg", Map.merge(payload,
+          is_editable: User.can_edit_message?(socket.assigns[:user], payload)
+        )
+        {:noreply, socket}
+      end
+
+  `handle_out/3` callbacks must return one of:
+
+      {:noreply, Socket.t} |
+      {:stop, reason :: term, Socket.t}
+
+  """
   defmacro intercept(events) when is_list(events) do
     quote do
       @phoenix_intercepts unquote(events)

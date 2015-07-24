@@ -127,10 +127,30 @@ defmodule Phoenix.ChannelTest do
 
   alias Phoenix.Socket
   alias Phoenix.Socket.Message
+  alias Phoenix.Socket.Broadcast
+  alias Phoenix.Socket.Reply
   alias Phoenix.Channel.Server
 
   defmodule NoopSerializer do
-    def encode!(message), do: message
+    def encode!(%Reply{} = reply) do
+      %Message{
+        topic: reply.topic,
+        event: "phx_reply",
+        ref: reply.ref,
+        payload: %{status: reply.status, response: reply.payload}
+      }
+    end
+    def encode!(%Broadcast{} = msg) do
+      %Message{
+        topic: msg.topic,
+        event: msg.event,
+        payload: msg.payload
+      }
+    end
+    def encode!(%Message{} = msg) do
+      msg
+    end
+
     def decode!(message, :text), do: message
   end
 
@@ -322,10 +342,12 @@ defmodule Phoenix.ChannelTest do
   defmacro assert_reply(ref, status, payload \\ Macro.escape(%{}), timeout \\ 100) do
     quote do
       ref = unquote(ref)
-      assert_receive %Phoenix.Socket.Reply{
-                        status: unquote(status),
+      assert_receive %Phoenix.Socket.Message{
+                        event: "phx_reply",
                         ref: ^ref,
-                        payload: unquote(payload)}, unquote(timeout)
+                        payload: %{status: unquote(status),
+                                   response: unquote(payload)}},
+                      unquote(timeout)
     end
   end
 

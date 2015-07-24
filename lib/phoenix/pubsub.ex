@@ -108,10 +108,16 @@ defmodule Phoenix.PubSub do
     * `server` - The Pid registered name of the server
     * `pid` - The subscriber pid to receive pubsub messages
     * `topic` - The topic to subscribe to, ie: `"users:123"`
-    * `opts` - The optional list of options. Supported options
-      only include `:link` to link the subscriber to the pubsub
-      adapter
+    * `opts` - The optional list of options. Supported options:
+      * `:link` - links the subscriber to the pubsub adapter
+      * `:fastlane` - Provides a fastlane path for the broadcasts for
+        `%Phoenix.Socket.Broadcast{}` events. The fastlane process is
+        notified of a cached serialized message instead of the normal subscriber.
+        Serializers must implement the `Phoenix.Transports.Serializer` behaviour.
+        For example:
 
+            PubSub.subscribe(MyApp.PubSub, self(), "topic1",
+              fastlane: {fast_pid, Phoenix.Transports.JSONSerializer, ["event1"]})
   """
   @spec subscribe(atom, pid, binary, Keyword.t) :: :ok | {:error, term}
   def subscribe(server, pid, topic, opts \\ []) when is_atom(server),

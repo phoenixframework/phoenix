@@ -15,7 +15,6 @@ defmodule Phoenix.PubSub.Local do
   """
 
   use GenServer
-  alias Phoenix.Socket.Message
   alias Phoenix.Socket.Broadcast
 
   def start_link(server_name) do
@@ -91,12 +90,11 @@ defmodule Phoenix.PubSub.Local do
         else
           case Map.fetch(cache, serializer) do
             {:ok, encoded_msg} ->
-              send fastlane_pid, encoded_msg
+              send(fastlane_pid, encoded_msg)
               cache
             :error ->
-              encoded_msg = serializer.encode!(%Message{event: event, topic: topic,
-                                                        payload: msg.payload})
-              send fastlane_pid, encoded_msg
+              encoded_msg = serializer.encode!(msg)
+              send(fastlane_pid, encoded_msg)
               Map.put(cache, serializer, encoded_msg)
           end
         end

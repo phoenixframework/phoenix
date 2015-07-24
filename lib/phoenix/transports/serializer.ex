@@ -6,7 +6,7 @@ defmodule Phoenix.Transports.Serializer do
   """
 
   @doc "Encodes `Phoenix.Socket.Message` struct to transport respresentation."
-  defcallback encode!(Phoenix.Socket.Message.t) :: term
+  defcallback encode!(Phoenix.Socket.Message.t | Phoenix.Socket.Broadcast.t | Phoenix.Socket.Reply.t) :: term
 
   @doc "Decodes iodata into `Phoenix.Socket.Message` struct."
   defcallback decode!(iodata, :text | :binary) :: Phoenix.Socket.Message.t

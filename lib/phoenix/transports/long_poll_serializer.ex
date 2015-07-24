@@ -5,6 +5,7 @@ defmodule Phoenix.Transports.LongPollSerializer do
 
   alias Phoenix.Socket.Reply
   alias Phoenix.Socket.Message
+  alias Phoenix.Socket.Broadcast
 
   @doc """
   Normalizes a `Phoenix.Socket.Message` struct.
@@ -17,6 +18,13 @@ defmodule Phoenix.Transports.LongPollSerializer do
       event: "phx_reply",
       ref: reply.ref,
       payload: %{status: reply.status, response: reply.payload}
+    }}
+  end
+  def encode!(%Broadcast{} = msg) do
+    {:socket_push, :text, %Message{
+      topic: msg.topic,
+      event: msg.event,
+      payload: msg.payload
     }}
   end
   def encode!(%Message{} = msg), do: {:socket_push, :text, msg}
