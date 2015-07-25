@@ -269,7 +269,8 @@ defmodule Phoenix.Channel do
     when is_binary(event) do
 
     unless event in Module.get_attribute(env.module, :phoenix_intercepts) do
-      IO.write "[warning] An intercept for event \"#{event}\" has not yet been defined in #{env.module}.handle_out/3. " <>
+      IO.write "#{Path.relative_to(env.file, File.cwd!)}:#{env.line}: [warning] " <>
+               "An intercept for event \"#{event}\" has not yet been defined in #{env.module}.handle_out/3. " <>
                "Add \"#{event}\" to your list of intercepted events with intercept/1"
     end
     Module.put_attribute(env.module, :phoenix_handle_outs, event)
