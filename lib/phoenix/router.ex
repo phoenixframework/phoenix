@@ -634,12 +634,18 @@ defmodule Phoenix.Router do
   end
 
   @doc """
-  Forwards a request at the given path to a Plug, invoking the pipeline.
+  Forwards a request at the given path to a plug.
 
-  Forwarded routes allow another Plug, such as a Router, Endpoint, or module,
-  to be mounted at a path prefix where any matching requests will be
-  forwarded. The router pipelines will be invoked prior to forwarding the
+  All paths that matches the forwarded prefix will be sent to
+  the forwarded plug. This is useful to share router between
+  applications or even break a big router into smaller ones.
+  The router pipelines will be invoked prior to forwarding the
   connection.
+
+  Note, however, that we don't advise forwarding to another
+  endpoint. The reason is that plugs defined by your app
+  and the forwarded endpoint would be invoked twice, which
+  may lead to errors.
 
   ## Examples
 
