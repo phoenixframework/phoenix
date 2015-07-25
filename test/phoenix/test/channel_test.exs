@@ -12,6 +12,8 @@ defmodule Phoenix.Test.ChannelTest do
   defmodule Channel do
     use Phoenix.Channel
 
+    intercept ["stop"]
+
     def join("foo:ok", _, socket) do
       {:ok, socket}
     end
@@ -67,10 +69,6 @@ defmodule Phoenix.Test.ChannelTest do
       {:stop, :shutdown, socket}
     end
 
-    def handle_out(event, payload, socket) do
-      super(event, payload, socket)
-    end
-
     def handle_info(:stop, socket) do
       {:stop, :shutdown, socket}
     end
@@ -113,6 +111,7 @@ defmodule Phoenix.Test.ChannelTest do
     assert socket.topic == "foo:socket"
     assert socket.transport == Phoenix.ChannelTest
     assert socket.transport_pid == self()
+    assert socket.serializer == Phoenix.ChannelTest.NoopSerializer
     assert %{socket | joined: true} == client
 
     {:links, links} = Process.info(self(), :links)

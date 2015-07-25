@@ -22,9 +22,8 @@ defmodule Phoenix.Transports.LongPoll.Server do
   alias Phoenix.Channel.Transport
   alias Phoenix.Transports.LongPoll
   alias Phoenix.PubSub
-  alias Phoenix.Socket.Message
-  alias Phoenix.Socket.Reply
   alias Phoenix.Socket.Broadcast
+  alias Phoenix.Socket.Message
 
   @doc """
   Starts the Server.
@@ -76,18 +75,24 @@ defmodule Phoenix.Transports.LongPoll.Server do
     msg
     |> Transport.dispatch(state.sockets, self, state.socket_handler, state.socket, state.endpoint, LongPoll)
     |> case do
-      {:ok, socket_pid} ->
+      {:ok, socket_pid, reply_msg} ->
         :ok = broadcast_from(state, {:ok, :dispatch, ref})
 
         new_state = %{state | sockets: HashDict.put(state.sockets, msg.topic, socket_pid),
                               sockets_inverse: HashDict.put(state.sockets_inverse, socket_pid, msg.topic)}
-        {:noreply, new_state}
+        publish_reply(reply_msg, new_state)
+
+      {:ok, reply_msg} ->
+        :ok = broadcast_from(state, {:ok, :dispatch, ref})
+        publish_reply(reply_msg, state)
+
       :ok ->
         :ok = broadcast_from(state, {:ok, :dispatch, ref})
         {:noreply, state}
-      {:error, reason} ->
+
+      {:error, reason, error_reply_msg} ->
         :ok = broadcast_from(state, {:error, :dispatch, reason, ref})
-        {:noreply, state}
+        publish_reply(error_reply_msg, state)
     end
   end
 
@@ -95,16 +100,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
   Forwards replied/broadcasted message from Channels back to client.
   """
   def handle_info(%Message{} = msg, state) do
-    publish_reply(msg, state)
-  end
-
-  def handle_info(%Reply{} = reply, state) do
-    %{topic: topic, status: status, payload: payload, ref: ref} = reply
-
-    message = %Message{event: "phx_reply", topic: topic, ref: ref,
-                       payload: %{status: status, response: payload}}
-
-    publish_reply(message, state)
+    publish_encoded_reply(msg, state)
   end
 
   @doc """
@@ -187,6 +183,9 @@ defmodule Phoenix.Transports.LongPoll.Server do
   end
 
   defp publish_reply(msg, state) do
+    publish_encoded_reply(state.socket.serializer.encode!(msg), state)
+  end
+  defp publish_encoded_reply(msg, state) do
     buffer = [msg | state.buffer]
     if state.client_ref do
       :ok = broadcast_from(state, {:messages, Enum.reverse(buffer), state.client_ref})

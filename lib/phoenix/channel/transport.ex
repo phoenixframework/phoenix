@@ -30,7 +30,7 @@ defmodule Phoenix.Channel.Transport do
         - for abnormal exits, send a reply to the remote client of a message
           from `Transport.chan_error_message/1`
 
-     * Call the `socket_connect/2` passing along socket params from client and
+     * Call the `socket_connect/3` passing along socket params from client and
        keep the state of the returned `%Socket{}` to pass into dispatch.
      * Subscribe to the socket's `:id` on init and handle
        `%Phoenix.Socket.Broadcast{}` messages with the `"disconnect"` event
@@ -62,6 +62,7 @@ defmodule Phoenix.Channel.Transport do
   require Logger
   alias Phoenix.Socket
   alias Phoenix.Socket.Message
+  alias Phoenix.Socket.Reply
 
   @doc """
   Provides a keyword list of default configuration for socket transports
@@ -75,22 +76,23 @@ defmodule Phoenix.Channel.Transport do
   If the connection was successful, generates `Phoenix.PubSub` topic
   from the `id/1` callback.
   """
-  def socket_connect(endpoint, handler, params) do
+  def socket_connect(transport_mod, handler, params) do
+    serializer = Keyword.fetch!(handler.__transport__(transport_mod), :serializer)
     case handler.connect(params, %Socket{}) do
       {:ok, socket} ->
         case handler.id(socket) do
-          nil                   -> {:ok, socket}
-          id when is_binary(id) -> {:ok, %Socket{socket | id: id}}
+          nil                   -> {:ok, %Socket{socket | serializer: serializer}}
+          id when is_binary(id) -> {:ok, %Socket{socket | id: id, serializer: serializer}}
           _                     ->
           raise ArgumentError, """
-          Expected #{inspect endpoint}.id/1 to return one of `nil | id :: String.t`
+          Expected #{inspect handler}.id/1 to return one of `nil | id :: String.t`
           """
         end
 
       :error -> :error
 
       _ -> raise ArgumentError, """
-      Expected #{inspect endpoint}.connect/2 to return one of `{:ok, Socket.t} | :error`
+      Expected #{inspect handler}.connect/2 to return one of `{:ok, Socket.t} | :error`
       """
     end
   end
@@ -121,45 +123,41 @@ defmodule Phoenix.Channel.Transport do
 
   The server will respond to heartbeats with the same message
   """
-  def dispatch(_, %{ref: ref, topic: "phoenix", event: "heartbeat"}, transport_pid, _socket_handler, _socket, _pubsub_server, _transport) do
-    reply(transport_pid, ref, "phoenix", %{status: :ok, response: %{}})
-    :ok
+  def dispatch(_, %{ref: ref, topic: "phoenix", event: "heartbeat"}, _transport_pid, _socket_handler, _socket, _pubsub_server, _transport) do
+    {:ok, %Reply{ref: ref, topic: "phoenix", status: :ok, payload: %{}}}
   end
-  def dispatch(nil, %{event: "phx_join"} = msg, transport_pid, socket_handler, base_socket, endpoint, transport) do
-    case socket_handler.channel_for_topic(msg.topic, transport) do
-      nil     -> log_ignore(msg.topic, socket_handler)
+  def dispatch(nil, %{event: "phx_join", topic: topic} = msg, transport_pid, socket_handler, base_socket, endpoint, transport) do
+    case socket_handler.channel_for_topic(topic, transport) do
+      nil -> reply_ignore(msg, socket_handler)
+
       channel ->
-        socket = %Socket{id: base_socket.id,
-                         assigns: base_socket.assigns,
+        socket = %Socket{base_socket |
                          transport_pid: transport_pid,
                          endpoint: endpoint,
                          pubsub_server: endpoint.__pubsub_server__(),
-                         topic: msg.topic,
+                         topic: topic,
                          channel: channel,
                          transport: transport}
 
-        log_info msg.topic, fn ->
-          "JOIN #{msg.topic} to #{inspect(channel)}\n" <>
+        log_info topic, fn ->
+          "JOIN #{topic} to #{inspect(channel)}\n" <>
           "  Transport:  #{inspect transport}\n" <>
           "  Parameters: #{inspect msg.payload}"
         end
 
         case Phoenix.Channel.Server.join(socket, msg.payload) do
           {:ok, response, pid} ->
-            log_info msg.topic, fn -> "Replied #{msg.topic} :ok" end
+            log_info topic, fn -> "Replied #{topic} :ok" end
+            {:ok, pid, %Reply{ref: msg.ref, topic: topic, status: :ok, payload: response}}
 
-            reply(socket, msg.ref, %{status: :ok, response: response})
-            {:ok, pid}
-          {:error, response} ->
-            log_info msg.topic, fn -> "Replied #{msg.topic} :error" end
-
-            reply(socket, msg.ref, %{status: :error, response: response})
-            {:error, response}
+          {:error, reason} ->
+            log_info topic, fn -> "Replied #{topic} :error" end
+            {:error, reason, %Reply{ref: msg.ref, topic: topic, status: :error, payload: reason}}
         end
     end
   end
   def dispatch(nil, msg, _transport_pid, socket_handler, _socket, _pubsub_server, _transport) do
-    log_ignore(msg.topic, socket_handler)
+    reply_ignore(msg, socket_handler)
   end
   def dispatch(socket_pid, %{event: "phx_leave", ref: ref}, _transport_pid, _socket_handler, _socket, _pubsub_server, _transport) do
     Phoenix.Channel.Server.leave(socket_pid, ref)
@@ -170,19 +168,15 @@ defmodule Phoenix.Channel.Transport do
     :ok
   end
 
-  defp reply(%Socket{transport_pid: trans_pid, topic: topic}, ref, payload) do
-    reply(trans_pid, ref, topic, payload)
-  end
-  defp reply(transport_pid, ref, topic, payload) when is_pid(transport_pid) do
-    Phoenix.Channel.Server.reply transport_pid, ref, topic, payload
-  end
-
   defp log_info("phoenix" <> _, _func), do: :noop
   defp log_info(_topic, func), do: Logger.info(func)
 
-  defp log_ignore(topic, socket_handler) do
-    Logger.debug fn -> "Ignoring unmatched topic \"#{topic}\" in #{inspect(socket_handler)}" end
-    {:error, %{reason: "unmatched topic"}}
+  defp reply_ignore(msg, socket_handler) do
+    Logger.debug fn -> "Ignoring unmatched topic \"#{msg.topic}\" in #{inspect(socket_handler)}" end
+
+    {:error, :unmatched_topic, %Reply{ref: msg.ref, topic: msg.topic,
+                                      status: :error,
+                                      payload: %{reason: "unmatched topic"}}}
   end
 
   @doc """

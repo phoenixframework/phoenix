@@ -23,9 +23,7 @@ defmodule Phoenix.Transports.WebSocket do
   require Logger
   import Phoenix.Controller, only: [endpoint_module: 1]
 
-  alias Phoenix.Socket.Message
   alias Phoenix.Socket.Broadcast
-  alias Phoenix.Socket.Reply
   alias Phoenix.Channel.Transport
 
   plug Plug.Logger
@@ -38,15 +36,14 @@ defmodule Phoenix.Transports.WebSocket do
   Provides the deault transport configuration to sockets.
   """
   def default_config() do
-    [serializer: Phoenix.Transports.JSONSerializer,
+    [serializer: Phoenix.Transports.WebSocketSerializer,
      timeout: :infinity]
   end
 
   def upgrade(%Plug.Conn{method: "GET", params: params} = conn, _) do
-    endpoint = endpoint_module(conn)
     handler  = conn.private.phoenix_socket_handler
 
-    case Transport.socket_connect(endpoint, handler, params) do
+    case Transport.socket_connect(Phoenix.Transports.WebSocket, handler, params) do
       {:ok, socket} ->
         conn
         |> put_private(:phoenix_upgrade, {:websocket, __MODULE__})
@@ -87,15 +84,18 @@ defmodule Phoenix.Transports.WebSocket do
   to Transport layer.
   """
   def ws_handle(opcode, payload, state) do
-    msg = state.serializer.decode!(payload, opcode)
+    msg = state.serializer.decode!(payload, opcode: opcode)
 
     case Transport.dispatch(msg, state.sockets, self, state.socket_handler, state.socket, state.endpoint, __MODULE__) do
-      {:ok, socket_pid} ->
-        {:ok, put(state, msg.topic, socket_pid)}
+      {:ok, socket_pid, reply_msg} ->
+        format_reply(state.serializer.encode!(reply_msg), put(state, msg.topic, socket_pid))
+      {:ok, reply_msg} ->
+        format_reply(state.serializer.encode!(reply_msg), state)
       :ok ->
         {:ok, state}
-      {:error, _reason} ->
-        {:ok, state} # We are assuming the error was already logged elsewhere.
+      {:error, _reason, error_reply_msg} ->
+        # We are assuming the error was already logged elsewhere.
+        format_reply(state.serializer.encode!(error_reply_msg), state)
     end
   end
 
@@ -107,13 +107,13 @@ defmodule Phoenix.Transports.WebSocket do
 
         case reason do
           :normal ->
-            {:reply, state.serializer.encode!(Transport.chan_close_message(topic)), new_state}
+            format_reply(state.serializer.encode!(Transport.chan_close_message(topic)), new_state)
           :shutdown ->
-            {:reply, state.serializer.encode!(Transport.chan_close_message(topic)), new_state}
+            format_reply(state.serializer.encode!(Transport.chan_close_message(topic)), new_state)
           {:shutdown, _} ->
-            {:reply, state.serializer.encode!(Transport.chan_close_message(topic)), new_state}
+            format_reply(state.serializer.encode!(Transport.chan_close_message(topic)), new_state)
           _other ->
-            {:reply, state.serializer.encode!(Transport.chan_error_message(topic)), new_state}
+            format_reply(state.serializer.encode!(Transport.chan_error_message(topic)), new_state)
         end
     end
   end
@@ -125,17 +125,8 @@ defmodule Phoenix.Transports.WebSocket do
     {:shutdown, state}
   end
 
-  def ws_info(%Message{} = message, %{serializer: serializer} = state) do
-    {:reply, serializer.encode!(message), state}
-  end
-
-  def ws_info(%Reply{} = reply, %{serializer: serializer} = state) do
-    %{topic: topic, status: status, payload: payload, ref: ref} = reply
-
-    message = %Message{event: "phx_reply", topic: topic, ref: ref,
-                       payload: %{status: status, response: payload}}
-
-    {:reply, serializer.encode!(message), state}
+  def ws_info({:socket_push, :text, _encoded_payload} = msg, state) do
+    format_reply(msg, state)
   end
 
   def ws_info(_, state) do
@@ -164,5 +155,9 @@ defmodule Phoenix.Transports.WebSocket do
   defp delete(state, topic, socket_pid) do
     %{state | sockets: HashDict.delete(state.sockets, topic),
               sockets_inverse: HashDict.delete(state.sockets_inverse, socket_pid)}
+  end
+
+  defp format_reply({:socket_push, :text, encoded_payload}, state) do
+    {:reply, {:text, encoded_payload}, state}
   end
 end

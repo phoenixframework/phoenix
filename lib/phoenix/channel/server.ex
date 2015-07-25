@@ -135,31 +135,16 @@ defmodule Phoenix.Channel.Server do
   Pushes a message with the given topic, event and payload
   to the given process.
   """
-  def push(pid, topic, event, payload)
+  def push(pid, topic, event, payload, serializer)
       when is_binary(topic) and is_binary(event) and is_map(payload) do
-    send pid, %Message{
-      topic: topic,
-      event: event,
-      payload: payload
-    }
+
+    encoded_msg = serializer.encode!(%Message{topic: topic,
+                                              event: event,
+                                              payload: payload})
+    send pid, encoded_msg
     :ok
   end
   def push(_, _, _, _), do: raise_invalid_message
-
-  @doc """
-  Pushes a reply message to the given pid.
-  """
-  def reply(pid, ref, topic, payload)
-      when is_binary(topic) and is_map(payload) do
-    send pid, %Message{
-      ref: ref,
-      topic: topic,
-      event: "phx_reply",
-      payload: payload
-    }
-    :ok
-  end
-  def reply(_, _, _, _), do: raise_invalid_message
 
   defp raise_invalid_message do
     raise ArgumentError, "topic and event must be strings, message must be a map"
@@ -193,7 +178,12 @@ defmodule Phoenix.Channel.Server do
   end
 
   defp join(socket, reply, parent, ref) do
-    PubSub.subscribe(socket.pubsub_server, self(), socket.topic, link: true)
+    PubSub.subscribe(socket.pubsub_server, self(), socket.topic,
+      link: true,
+      fastlane: {socket.transport_pid,
+                 socket.serializer,
+                 socket.channel.__intercepts__()})
+
     send(parent, {ref, reply})
     {:ok, %{socket | joined: true}}
   end
@@ -232,6 +222,7 @@ defmodule Phoenix.Channel.Server do
   def terminate(reason, socket) do
     socket.channel.terminate(reason, socket)
   end
+
 
   ## Handle results
 
@@ -283,8 +274,10 @@ defmodule Phoenix.Channel.Server do
 
   defp handle_reply(socket, {status, payload}, :handle_in)
        when is_atom(status) and is_map(payload) do
-    send socket.transport_pid, %Reply{status: status, topic: socket.topic,
-                                      ref: socket.ref, payload: payload}
+
+    send socket.transport_pid, socket.serializer.encode!(
+      %Reply{topic: socket.topic, ref: socket.ref, status: status, payload: payload}
+    )
   end
 
   defp handle_reply(socket, status, :handle_in) when is_atom(status) do
