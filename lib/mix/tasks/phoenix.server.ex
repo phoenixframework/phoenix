@@ -8,12 +8,13 @@ defmodule Mix.Tasks.Phoenix.Server do
 
   ## Command line options
 
-  This task accepts the same command-line arguments as `app.start`. For additional
-  information, refer to the documentation for `Mix.Tasks.App.Start`.
+  This task accepts the same command-line arguments as `app.start`.
+  For additional information, refer to the documentation for
+  `Mix.Tasks.App.Start`.
 
   For example, to run `phoenix.server` without checking dependencies:
 
-    mix phoenix.server --no-deps-check
+      mix phoenix.server --no-deps-check
 
   """
   def run(args) do

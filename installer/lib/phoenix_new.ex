@@ -146,8 +146,13 @@ defmodule Mix.Tasks.Phoenix.New do
     ecto = Keyword.get(opts, :ecto, true)
     brunch = Keyword.get(opts, :brunch, true)
 
-    {adapter_app, adapter_module, db_user, db_password} = set_ecto_adapter(db)
-    pubsub_server = set_pubsub_server(mod)
+
+    # We lowercase the database name because according to the
+    # SQL spec, they are case insensitive unless quoted, which
+    # means creating a database like FoO is the same as foo in
+    # some storages.
+    {adapter_app, adapter_module, adapter_config} = get_ecto_adapter(db, String.downcase(app))
+    pubsub_server = get_pubsub_server(mod)
 
     binding = [application_name: app,
                application_module: mod,
@@ -161,8 +166,7 @@ defmodule Mix.Tasks.Phoenix.New do
                ecto: ecto,
                adapter_app: adapter_app,
                adapter_module: adapter_module,
-               db_user: db_user,
-               db_password: db_password,
+               adapter_config: adapter_config,
                hex?: Code.ensure_loaded?(Hex),
                namespaced?: Mix.Utils.camelize(app) != mod]
 
@@ -204,20 +208,13 @@ defmodule Mix.Tasks.Phoenix.New do
     if binding[:ecto] do
       copy_from path, binding, @ecto
 
-      # We lowercase the database name because according to the
-      # SQL spec, they are case insensitive unless quoted, which
-      # means creating a database like FoO is the same as foo in
-      # some storages.
-      database = String.downcase binding[:application_name]
+      adapter_config = binding[:adapter_config]
 
       append_to path, "config/dev.exs", """
 
       # Configure your database
       config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
-        adapter: #{inspect binding[:adapter_module]},
-        username: #{inspect binding[:db_user]},
-        password: #{inspect binding[:db_password]},
-        database: "#{database}_dev",
+        adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:dev]},
         size: 10 # The amount of database connections in the pool
       """
 
@@ -225,21 +222,14 @@ defmodule Mix.Tasks.Phoenix.New do
 
       # Configure your database
       config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
-        adapter: #{inspect binding[:adapter_module]},
-        username: #{inspect binding[:db_user]},
-        password: #{inspect binding[:db_password]},
-        database: "#{database}_test",
-        pool: Ecto.Adapters.SQL.Sandbox # Use a sandbox for transactional testing
+        adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:test]}
       """
 
       append_to path, "config/prod.secret.exs", """
 
       # Configure your database
       config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
-        adapter: #{inspect binding[:adapter_module]},
-        username: #{inspect binding[:db_user]},
-        password: #{inspect binding[:db_password]},
-        database: "#{database}_prod",
+        adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:prod]},
         size: 20 # The amount of database connections in the pool
       """
     end
@@ -353,13 +343,38 @@ defmodule Mix.Tasks.Phoenix.New do
     end
   end
 
-  defp set_ecto_adapter("mssql"), do: {:tds_ecto, Tds.Ecto, "db_user", "db_password"}
-  defp set_ecto_adapter("mysql"), do: {:mariaex, Ecto.Adapters.MySQL, "root", ""}
-  defp set_ecto_adapter("postgres"), do: {:postgrex, Ecto.Adapters.Postgres, "postgres", "postgres"}
-  defp set_ecto_adapter("sqlite"), do: {:sqlite_ecto, Sqlite.Ecto, "", ""}
-  defp set_ecto_adapter(db), do: Mix.raise "Unknown database #{inspect db}"
+  defp get_ecto_adapter("mssql", app) do
+    {:tds_ecto, Tds.Ecto, db_config(app, "db_user", "db_password")}
+  end
+  defp get_ecto_adapter("mysql", app) do
+    {:mariaex, Ecto.Adapters.MySQL, db_config(app, "root", "")}
+  end
+  defp get_ecto_adapter("postgres", app) do
+    {:postgrex, Ecto.Adapters.Postgres, db_config(app, "postgres", "postgres")}
+  end
+  defp get_ecto_adapter("sqlite", app) do
+    {:sqlite_ecto, Sqlite.Ecto,
+      dev:  [database: "db/#{app}_dev.sqlite"],
+      test: [database: "db/#{app}_test.sqlite", pool: Ecto.Adapters.SQL.Sandbox],
+      prod: [database: "db/#{app}_prod.sqlite"]}
+  end
+  defp get_ecto_adapter(db, _app) do
+    Mix.raise "Unknown database #{inspect db}"
+  end
 
-  defp set_pubsub_server(module) do
+  defp db_config(app, user, pass) do
+    [dev:  [username: user, password: pass, database: "#{app}_dev"],
+     test: [username: user, password: pass, database: "#{app}_test", pool: Ecto.Adapters.SQL.Sandbox],
+     prod: [username: user, password: pass, database: "#{app}_prod"]]
+  end
+
+  defp kw_to_config(kw) do
+    Enum.map(kw, fn {k, v} ->
+      ",\n  #{k}: #{inspect v}"
+    end)
+  end
+
+  defp get_pubsub_server(module) do
     module
     |> String.split(".")
     |> hd
