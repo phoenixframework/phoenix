@@ -205,7 +205,6 @@ defmodule Phoenix.Channel do
       @before_compile unquote(__MODULE__)
       import unquote(__MODULE__)
       import Phoenix.Socket, only: [assign: 3]
-      Module.register_attribute(__MODULE__, :phoenix_handle_outs, accumulate: true)
 
       @phoenix_intercepts []
 
@@ -273,7 +272,6 @@ defmodule Phoenix.Channel do
                "An intercept for event \"#{event}\" has not yet been defined in #{env.module}.handle_out/3. " <>
                "Add \"#{event}\" to your list of intercepted events with intercept/1"
     end
-    Module.put_attribute(env.module, :phoenix_handle_outs, event)
   end
   def __on_definition__(_env, _kind, _name, _args, _guards, _body) do
   end
