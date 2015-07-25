@@ -16,6 +16,18 @@ defmodule Phoenix.PubSub.PubSubTest do
   end
 
   defmodule Serializer do
+
+    @behaviour Phoenix.Transports.Serializer
+
+    def fastlane!(%Broadcast{} = msg) do
+      send(self(), {:fastlaned, msg})
+      %Message{
+        topic: msg.topic,
+        event: msg.event,
+        payload: msg.payload
+      }
+    end
+
     def encode!(%Reply{} = reply) do
       %Message{
         topic: reply.topic,
@@ -24,19 +36,11 @@ defmodule Phoenix.PubSub.PubSubTest do
         payload: %{status: reply.status, response: reply.payload}
       }
     end
-    def encode!(%Broadcast{} = msg) do
-      send(self(), {:serialized, msg})
-      %Message{
-        topic: msg.topic,
-        event: msg.event,
-        payload: msg.payload
-      }
-    end
     def encode!(%Message{} = msg) do
       msg
     end
 
-    def decode!(message, :text), do: message
+    def decode!(message, _opts \\ []), do: message
   end
 
 
@@ -69,9 +73,9 @@ defmodule Phoenix.PubSub.PubSubTest do
     fastlaned = %Message{event: "fastlaned", topic: "topic1", payload: %{}}
     refute_receive %Broadcast{}
     refute_receive %Message{}
-    assert_receive {:serialized, %Broadcast{}}
+    assert_receive {:fastlaned, %Broadcast{}}
     assert Process.info(fastlane_pid)[:messages] == [fastlaned, fastlaned]
-    assert Process.info(self())[:messages] == [] # cached and serialized only sent once
+    assert Process.info(self())[:messages] == [] # cached and fastlaned only sent once
 
     PubSub.broadcast(__MODULE__, "topic1", %Broadcast{event: "intercepted", topic: "topic1", payload: %{}})
 

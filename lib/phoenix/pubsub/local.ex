@@ -75,7 +75,7 @@ defmodule Phoenix.PubSub.Local do
     when is_atom(local_server) do
 
     local_server
-    |> subscribers(topic)
+    |> subscribers_with_fastlanes(topic)
     |> Enum.reduce(%{}, fn
       {pid, _fastlanes}, cache when pid == from ->  cache
 
@@ -93,7 +93,7 @@ defmodule Phoenix.PubSub.Local do
               send(fastlane_pid, encoded_msg)
               cache
             :error ->
-              encoded_msg = serializer.encode!(msg)
+              encoded_msg = serializer.fastlane!(msg)
               send(fastlane_pid, encoded_msg)
               Map.put(cache, serializer, encoded_msg)
           end
@@ -105,8 +105,8 @@ defmodule Phoenix.PubSub.Local do
     local_server
     |> subscribers(topic)
     |> Enum.each(fn
-      {pid, _fastlanes} when pid == from -> :noop
-      {pid, _fastlanes} -> send(pid, msg)
+      pid when pid == from -> :noop
+      pid -> send(pid, msg)
     end)
     :ok
   end
@@ -124,6 +124,16 @@ defmodule Phoenix.PubSub.Local do
 
   """
   def subscribers(local_server, topic) when is_atom(local_server) do
+    local_server
+    |> subscribers_with_fastlanes(topic)
+    |> Enum.map(fn {pid, _fastlanes} -> pid end)
+  end
+
+  @doc """
+  Returns a set of subscribers pids for the given topic with fastlane tuples.
+  See `subscribers/1` for more information.
+  """
+  def subscribers_with_fastlanes(local_server, topic) when is_atom(local_server) do
     try do
       :ets.lookup_element(local_server, topic, 2)
     catch

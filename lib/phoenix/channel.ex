@@ -111,11 +111,6 @@ defmodule Phoenix.Channel do
 
       intercept ["new_msg", "user_joined"]
 
-      def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
-        broadcast! socket, "new_msg", %{uid: uid, body: body}
-        {:noreply, socket}
-      end
-
       # for every socket subscribing to this topic, append an `is_editable`
       # value for client metadata.
       def handle_out("new_msg", msg, socket) do
@@ -228,14 +223,9 @@ defmodule Phoenix.Channel do
 
   defmacro __before_compile__(env) do
     intercepts = Module.get_attribute(env.module, :phoenix_intercepts)
-    handle_outs = Module.get_attribute(env.module, :phoenix_handle_outs)
-    for event <- handle_outs -- intercepts do
-      IO.write "[warning] #{__MODULE__}.handle_out/3 defined for \"#{event}\", but event not intercepted. " <>
-               "Add \"#{event}\" to your list of intercepted events with intercept/1"
-    end
 
     quote do
-      def __phoenix_intercepts__(), do: unquote(intercepts)
+      def __intercepts__(), do: unquote(intercepts)
     end
   end
 
@@ -274,8 +264,14 @@ defmodule Phoenix.Channel do
     end
   end
 
+  @doc false
   def __on_definition__(env, :def, :handle_out, [event, _payload, _socket], _, _)
     when is_binary(event) do
+
+    unless event in Module.get_attribute(env.module, :phoenix_intercepts) do
+      IO.write "[warning] An intercept for event \"#{event}\" has not yet been defined in #{env.module}.handle_out/3. " <>
+               "Add \"#{event}\" to your list of intercepted events with intercept/1"
+    end
     Module.put_attribute(env.module, :phoenix_handle_outs, event)
   end
   def __on_definition__(_env, _kind, _name, _args, _guards, _body) do

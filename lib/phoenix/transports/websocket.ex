@@ -36,7 +36,7 @@ defmodule Phoenix.Transports.WebSocket do
   Provides the deault transport configuration to sockets.
   """
   def default_config() do
-    [serializer: Phoenix.Transports.JSONSerializer,
+    [serializer: Phoenix.Transports.WebSocketSerializer,
      timeout: :infinity]
   end
 
@@ -84,7 +84,7 @@ defmodule Phoenix.Transports.WebSocket do
   to Transport layer.
   """
   def ws_handle(opcode, payload, state) do
-    msg = state.serializer.decode!(payload, opcode)
+    msg = state.serializer.decode!(payload, opcode: opcode)
 
     case Transport.dispatch(msg, state.sockets, self, state.socket_handler, state.socket, state.endpoint, __MODULE__) do
       {:ok, socket_pid, reply_msg} ->

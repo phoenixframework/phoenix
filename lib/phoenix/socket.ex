@@ -17,7 +17,7 @@ defmodule Phoenix.Socket do
   * `transport` - The socket's transport, for example: `Phoenix.Transports.WebSocket`
   * `transport_pid` - The pid of the socket's transport process
   * `serializer` - The `Phoenix.Socket.Message` serializer,
-    for example: `Phoenix.Transports.JSONSerializer`
+    for example: `Phoenix.Transports.WebSocketSerializer`
 
   ## Channels
 

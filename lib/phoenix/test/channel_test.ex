@@ -132,26 +132,21 @@ defmodule Phoenix.ChannelTest do
   alias Phoenix.Channel.Server
 
   defmodule NoopSerializer do
-    def encode!(%Reply{} = reply) do
-      %Message{
-        topic: reply.topic,
-        event: "phx_reply",
-        ref: reply.ref,
-        payload: %{status: reply.status, response: reply.payload}
-      }
-    end
-    def encode!(%Broadcast{} = msg) do
+
+    @behaviour Phoenix.Transports.Serializer
+
+    def fastlane!(%Broadcast{} = msg) do
       %Message{
         topic: msg.topic,
         event: msg.event,
         payload: msg.payload
       }
     end
-    def encode!(%Message{} = msg) do
-      msg
-    end
 
-    def decode!(message, :text), do: message
+    def encode!(%Reply{} = reply), do: reply
+    def encode!(%Message{} = msg), do: msg
+
+    def decode!(message, _opts \\ []), do: message
   end
 
   @doc false
@@ -342,12 +337,10 @@ defmodule Phoenix.ChannelTest do
   defmacro assert_reply(ref, status, payload \\ Macro.escape(%{}), timeout \\ 100) do
     quote do
       ref = unquote(ref)
-      assert_receive %Phoenix.Socket.Message{
-                        event: "phx_reply",
+      assert_receive %Phoenix.Socket.Reply{
                         ref: ^ref,
-                        payload: %{status: unquote(status),
-                                   response: unquote(payload)}},
-                      unquote(timeout)
+                        status: unquote(status),
+                        payload: unquote(payload)}, unquote(timeout)
     end
   end
 

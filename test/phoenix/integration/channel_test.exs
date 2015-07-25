@@ -349,7 +349,6 @@ defmodule Phoenix.Integration.ChannelTest do
         "ref" => "12300",
         "payload" => %{"body" => "this method shouldn't send!'"}
       }
-      IO.inspect resp
       assert resp.body["status"] == 401
       refute_receive %Broadcast{event: "new_msg"}
 

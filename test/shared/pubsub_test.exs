@@ -40,7 +40,8 @@ defmodule Phoenix.PubSubTest do
     pid = spawn_pid
     assert Local.subscribers(config.local, "topic4") |> Dict.size == 0
     assert PubSub.subscribe(config.test, pid, "topic4")
-    assert Local.subscribers(config.local, "topic4") |> Enum.to_list == [{pid, nil}]
+    assert Local.subscribers(config.local, "topic4") |> Enum.to_list == [pid]
+    assert Local.subscribers_with_fastlanes(config.local, "topic4") |> Enum.to_list == [{pid, nil}]
     assert PubSub.unsubscribe(config.test, pid, "topic4")
     assert Local.subscribers(config.local, "topic4") |> Dict.size == 0
   end

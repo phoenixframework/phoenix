@@ -1,4 +1,4 @@
-defmodule Phoenix.Transports.JSONSerializer do
+defmodule Phoenix.Transports.WebSocketSerializer do
   # TODO: Make this public
   @moduledoc false
 
@@ -7,6 +7,18 @@ defmodule Phoenix.Transports.JSONSerializer do
   alias Phoenix.Socket.Reply
   alias Phoenix.Socket.Message
   alias Phoenix.Socket.Broadcast
+
+
+  @doc """
+  Translates a `Phoenix.Socket.Broadcast` into a `Phoenix.Socket.Message`.
+  """
+  def fastlane!(%Broadcast{} = msg) do
+    {:socket_push, :text, Poison.encode_to_iodata!(%Message{
+      topic: msg.topic,
+      event: msg.event,
+      payload: msg.payload
+    })}
+  end
 
   @doc """
   Encodes a `Phoenix.Socket.Message` struct to JSON string.
@@ -19,13 +31,6 @@ defmodule Phoenix.Transports.JSONSerializer do
       payload: %{status: reply.status, response: reply.payload}
     })}
   end
-  def encode!(%Broadcast{} = msg) do
-    {:socket_push, :text, Poison.encode_to_iodata!(%Message{
-      topic: msg.topic,
-      event: msg.event,
-      payload: msg.payload
-    })}
-  end
   def encode!(%Message{} = msg) do
     {:socket_push, :text, Poison.encode_to_iodata!(msg)}
   end
@@ -33,7 +38,7 @@ defmodule Phoenix.Transports.JSONSerializer do
   @doc """
   Decodes JSON String into `Phoenix.Socket.Message` struct.
   """
-  def decode!(message, :text) do
+  def decode!(message, _opts \\ []) do
     message
     |> Poison.decode!()
     |> Phoenix.Socket.Message.from_map!()

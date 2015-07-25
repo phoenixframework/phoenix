@@ -182,7 +182,7 @@ defmodule Phoenix.Channel.Server do
       link: true,
       fastlane: {socket.transport_pid,
                  socket.serializer,
-                 socket.channel.__phoenix_intercepts__()})
+                 socket.channel.__intercepts__()})
 
     send(parent, {ref, reply})
     {:ok, %{socket | joined: true}}

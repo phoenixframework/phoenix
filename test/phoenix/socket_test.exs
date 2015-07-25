@@ -65,13 +65,13 @@ defmodule Phoenix.SocketTest do
         [window_ms: 10000, pubsub_timeout_ms: 1000, serializer: Phoenix.Transports.LongPollSerializer,
          crypto: [iterations: 1000, length: 32, digest: :sha256, cache: Plug.Keys]]},
       websocket: {Phoenix.Transports.WebSocket,
-        [timeout: 1234, serializer: Phoenix.Transports.JSONSerializer]}
+        [timeout: 1234, serializer: Phoenix.Transports.WebSocketSerializer]}
     }
   end
 
   test "transport config is exposted and merged with prior registrations" do
     ws = {Phoenix.Transports.WebSocket,
-      [timeout: 1234, serializer: Phoenix.Transports.JSONSerializer]}
+      [timeout: 1234, serializer: Phoenix.Transports.WebSocketSerializer]}
 
     lp = {Phoenix.Transports.LongPoll,
       [window_ms: 10000, pubsub_timeout_ms: 1000, serializer: Phoenix.Transports.LongPollSerializer,
