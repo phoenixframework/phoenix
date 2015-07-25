@@ -146,7 +146,7 @@ defmodule Phoenix.ChannelTest do
     def encode!(%Reply{} = reply), do: reply
     def encode!(%Message{} = msg), do: msg
 
-    def decode!(message, _opts \\ []), do: message
+    def decode!(message, _opts), do: message
   end
 
   @doc false

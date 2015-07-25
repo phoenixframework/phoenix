@@ -38,7 +38,7 @@ defmodule Phoenix.Transports.WebSocketSerializer do
   @doc """
   Decodes JSON String into `Phoenix.Socket.Message` struct.
   """
-  def decode!(message, _opts \\ []) do
+  def decode!(message, _opts) do
     message
     |> Poison.decode!()
     |> Phoenix.Socket.Message.from_map!()

@@ -13,6 +13,6 @@ defmodule Phoenix.Tranports.WebSocketSerializerTest do
 
   test "decode!/2 decodes `Phoenix.Socket.Message` from JSON" do
     assert %Message{topic: "t", event: "e", payload: "m"} ==
-      WebSocketSerializer.decode!(@msg_json)
+      WebSocketSerializer.decode!(@msg_json, opcode: :text)
   end
 end

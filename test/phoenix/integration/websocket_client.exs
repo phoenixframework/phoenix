@@ -28,7 +28,7 @@ defmodule Phoenix.Integration.WebsocketClient do
   forwards message to client sender process
   """
   def websocket_handle({:text, msg}, _conn_state, state) do
-    send state.sender, Phoenix.Transports.WebSocketSerializer.decode!(msg)
+    send state.sender, Phoenix.Transports.WebSocketSerializer.decode!(msg, opcode: :text)
     {:ok, state}
   end
 

@@ -40,7 +40,7 @@ defmodule Phoenix.PubSub.PubSubTest do
       msg
     end
 
-    def decode!(message, _opts \\ []), do: message
+    def decode!(message, _opts), do: message
   end
 
 
