@@ -7,11 +7,7 @@ defmodule Phoenix.Endpoint.Server do
   require Logger
 
   def start_link(otp_app, endpoint, opts \\ []) do
-    if endpoint.config(:server) do
-      Supervisor.start_link(__MODULE__, {otp_app, endpoint}, opts)
-    else
-      :ignore
-    end
+    Supervisor.start_link(__MODULE__, {otp_app, endpoint}, opts)
   end
 
   def init({otp_app, endpoint}) do

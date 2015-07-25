@@ -12,12 +12,14 @@ defmodule Phoenix.Endpoint.Adapter do
   """
   def start_link(otp_app, mod) do
     conf = config(otp_app, mod)
+    server? = Keyword.get(conf, :server,
+                          Application.get_env(:phoenix, :serve_endpoints, false))
 
     children =
       config_children(mod, conf) ++
       pubsub_children(mod, conf) ++
-      server_children(mod, conf) ++
-      watcher_children(mod, conf) ++
+      server_children(mod, conf, server?) ++
+      watcher_children(mod, conf, server?) ++
       code_reloader_children(mod, conf)
 
     case Supervisor.start_link(children, strategy: :one_for_one, name: mod) do
@@ -45,13 +47,17 @@ defmodule Phoenix.Endpoint.Adapter do
     end
   end
 
-  defp server_children(mod, conf) do
-    args = [conf[:otp_app], mod, [name: Module.concat(mod, Server)]]
-    [supervisor(Phoenix.Endpoint.Server, args)]
+  defp server_children(mod, conf, server?) do
+    if server? do
+      args = [conf[:otp_app], mod, [name: Module.concat(mod, Server)]]
+      [supervisor(Phoenix.Endpoint.Server, args)]
+    else
+      []
+    end
   end
 
-  defp watcher_children(_mod, conf) do
-    if conf[:server] do
+  defp watcher_children(_mod, conf, server?) do
+    if server? do
       Enum.map(conf[:watchers], fn {cmd, args} ->
         worker(Phoenix.Endpoint.Watcher, [root!(conf), cmd, args],
                id: {cmd, args}, restart: :transient)
@@ -99,7 +105,6 @@ defmodule Phoenix.Endpoint.Adapter do
      https: false,
      reloadable_paths: ["web"],
      secret_key_base: nil,
-     server: Application.get_env(:phoenix, :serve_endpoints, false),
      static_url: nil,
      url: [host: "localhost", path: "/"],
 
