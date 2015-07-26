@@ -32,9 +32,9 @@ defmodule <%= application_module %>.Mixfile do
   # Type `mix help deps` for examples and options
   defp deps do
     [<%= phoenix_dep %>,<%= if ecto do %>
-     {:phoenix_ecto, "~> 0.7"},
+     {:phoenix_ecto, "~> 0.8"},
      {<%= inspect adapter_app %>, ">= 0.0.0"},<% end %>
-     {:phoenix_html, "~> 1.3"},
+     {:phoenix_html, "~> 1.4"},
      {:phoenix_live_reload, "~> 0.5", only: :dev},
      {:cowboy, "~> 1.0"}]
   end
