@@ -58,7 +58,7 @@ defmodule Phoenix.CodeReloader do
     <!DOCTYPE html>
     <html>
     <head>
-        <title>CompilationError at #{method(conn)} #{full_path(conn)}</title>
+        <title>CompilationError at #{method(conn)} #{conn.request_path}</title>
         <style>
         * {
             margin: 0;
@@ -160,7 +160,7 @@ defmodule Phoenix.CodeReloader do
     <body>
         <div class="top">
             <header class="exception">
-                <h2><strong>CompilationError</strong> <span>at #{method(conn)} #{full_path(conn)}</span></h2>
+                <h2><strong>CompilationError</strong> <span>at #{method(conn)} #{conn.request_path}</span></h2>
                 <p>Showing console output</p>
             </header>
         </div>

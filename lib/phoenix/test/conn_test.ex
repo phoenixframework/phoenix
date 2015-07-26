@@ -211,20 +211,6 @@ defmodule Phoenix.ConnTest do
   defp from_set_to_sent(conn), do: conn
 
   @doc """
-  Puts a new request header.
-
-  Previous entries of the same header are overridden.
-  """
-  @spec put_req_header(Conn.t, binary, binary) :: Conn.t
-  defdelegate put_req_header(conn, key, value), to: Plug.Test
-
-  @doc """
-  Deletes a request header.
-  """
-  @spec delete_req_header(Conn.t, binary) :: Conn.t
-  defdelegate delete_req_header(conn, key), to: Plug.Test
-
-  @doc """
   Puts a request cookie.
   """
   @spec put_req_cookie(Conn.t, binary, binary) :: Conn.t
