@@ -2,6 +2,8 @@
 
 ## v0.15-dev
 
+See these [`0.14.x` to `0.15.0` upgrade instructions](https://gist.github.com/chrismccord/931373940f320bf41a50) to bring your existing apps up to speed.
+
 * Enhancements
   * [Socket] Introduce `Phoenix.Socket` behaviour that allows socket authentication, termination, and default channel socket assigns
   * [PubSub] Use ETS dispatch table for increased broadcast performance
@@ -11,6 +13,7 @@
   * [Router] channel routes are now defined on a socket handler module instead of the Router
   * [Router] `socket` mounts have been moved from the Router to the Endpoint
   * [Channel] `handle_out` callbacks now require explicit event intercept for callback to be invoked, with `Phoenix.Channel.intercept/1`
+  * [Transports] WebSocket and LongPoll transport configuration has been moved from mix config to the UserSocket
 
 * JavaScript client backwards incompatible changes
   * `Phoenix.LongPoller` has been renamed to `Phoenix.LongPoll`
