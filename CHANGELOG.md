@@ -2,6 +2,22 @@
 
 ## v0.15-dev
 
+* Enhancements
+  * [Socket] Introduce `Phoenix.Socket` behaviour that allows socket authentication, termination, and default channel socket assigns
+  * [PubSub] Use ETS dispatch table for increased broadcast performance
+  * [Channel] Use event intercept for increased broadcast performance
+
+* Backward incompatible changes
+  * [Router] channel routes are now defined on a socket handler module instead of the Router
+  * [Router] `socket` mounts have been moved from the Router to the Endpoint
+  * [Channel] `handle_out` callbacks now require explicit event intercept for callback to be invoked, with `Phoenix.Channel.intercept/1`
+
+* JavaScript client backwards incompatible changes
+  * `Phoenix.LongPoller` has been renamed to `Phoenix.LongPoll`
+  * A new client version is required to   accommodate server changes
+
+
+
 ## v0.14.0 (2015-06-29)
 
 See these [`0.13.x` to `0.14.0` upgrade instructions](https://gist.github.com/chrismccord/57805158f463d3369103) to bring your existing apps up to speed.
