@@ -43,6 +43,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/test/controllers/page_controller_test.exs"
       assert_file "photo_blog/test/views/page_view_test.exs"
       assert_file "photo_blog/test/views/error_view_test.exs"
+      assert_file "photo_blog/test/views/layout_view_test.exs"
       assert_file "photo_blog/test/support/conn_case.ex"
       assert_file "photo_blog/test/test_helper.exs"
 

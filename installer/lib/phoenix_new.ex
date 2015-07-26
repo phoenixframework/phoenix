@@ -20,6 +20,7 @@ defmodule Mix.Tasks.Phoenix.New do
     {:eex,  "new/test/controllers/page_controller_test.exs", "test/controllers/page_controller_test.exs"},
     {:eex,  "new/test/views/error_view_test.exs",            "test/views/error_view_test.exs"},
     {:eex,  "new/test/views/page_view_test.exs",             "test/views/page_view_test.exs"},
+    {:eex,  "new/test/views/layout_view_test.exs",           "test/views/layout_view_test.exs"},
     {:eex,  "new/test/support/conn_case.ex",                 "test/support/conn_case.ex"},
     {:eex,  "new/test/support/channel_case.ex",              "test/support/channel_case.ex"},
     {:eex,  "new/test/test_helper.exs",                      "test/test_helper.exs"},
