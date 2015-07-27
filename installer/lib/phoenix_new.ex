@@ -397,7 +397,7 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   defp phoenix_dep(true), do: ~s[{:phoenix, path: #{inspect @phoenix}, override: true}]
-  defp phoenix_dep(_),    do: ~s[{:phoenix, "~> 0.15"}]
+  defp phoenix_dep(_),    do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
 
   defp random_string(length) do
     :crypto.strong_rand_bytes(length) |> Base.encode64 |> binary_part(0, length)
