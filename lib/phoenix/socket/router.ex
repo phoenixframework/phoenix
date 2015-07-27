@@ -18,11 +18,24 @@ defmodule Phoenix.Socket.Router do
     case socket_handler.__transport__(transport_name) do
       {transport, config} ->
         conn
+        |> log(config)
         |> put_private(:phoenix_socket_handler, socket_handler)
         |> put_private(:phoenix_transport_conf, config)
         |> transport.call(transport.init([]))
 
-      :unsupported -> conn |> send_resp(:bad_request, "") |> halt()
+      :unsupported ->
+        conn
+        |> Plug.Logger.call(Plug.Logger.init([]))
+        |> send_resp(:bad_request, "")
+        |> halt()
+    end
+  end
+
+  defp log(conn, config) do
+    if config[:log] do
+      Plug.Logger.call(conn, Plug.Logger.init([]))
+    else
+      conn
     end
   end
 end

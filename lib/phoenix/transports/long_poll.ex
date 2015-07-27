@@ -31,7 +31,6 @@ defmodule Phoenix.Transports.LongPoll do
   alias Phoenix.Channel.Transport
 
 
-  plug :log
   plug :fetch_query_params
   plug :check_origin
   plug :allow_origin
@@ -283,13 +282,5 @@ defmodule Phoenix.Transports.LongPoll do
     conn
     |> put_status(:ok)
     |> json(map)
-  end
-
-  defp log(conn, _) do
-    if conn.private.phoenix_socket_handler.__transport__(__MODULE__)[:log] do
-      Plug.Logger.call(conn, Plug.Logger.init([]))
-    else
-      conn
-    end
   end
 end

@@ -25,7 +25,6 @@ defmodule Phoenix.Transports.WebSocket do
   alias Phoenix.Socket.Broadcast
   alias Phoenix.Channel.Transport
 
-  plug :log
   plug :fetch_query_params
   plug :check_origin
   plug :upgrade
@@ -159,13 +158,5 @@ defmodule Phoenix.Transports.WebSocket do
 
   defp format_reply({:socket_push, :text, encoded_payload}, state) do
     {:reply, {:text, encoded_payload}, state}
-  end
-
-  defp log(conn, _) do
-    if conn.private.phoenix_socket_handler.__transport__(__MODULE__)[:log] do
-      Plug.Logger.call(conn, Plug.Logger.init([]))
-    else
-      conn
-    end
   end
 end
