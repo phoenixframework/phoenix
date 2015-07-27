@@ -5,20 +5,22 @@ Since Elixir is based on message passing, you may wonder why we need this extra 
 The word "Channel" is really shorthand for a layered system with a number of components. Let's take a quick look at them now so we can see the big picture a little better.
 
 #### The Moving Parts
+
+- Socket Handlers
+
+Phoenix holds a single connection to the server and mutiplexes your channel sockets over that one connection. Socket handlers, such as your `web/channels/user_socket.ex`, are modules that authenticate and identify a socket connection and allow you to set default socket assigns for use in all channels.
+
 - Channel Routes
 
-These are defined in the `router.ex` file as all other routes are. They match on the topic string and dispatch matching requests to the given Channel module. The star character `*` acts as a wildcard matcher, so in the following example route, requests for `sample_topic:pizza` and `sample_topic:oranges` would both be dispatched to the `SampleTopicChannel`.
+These are defined in Socket handlers, such as your `web/channels/user_socket.ex` file, which makes them distinct from other routes. They match on the topic string and dispatch matching requests to the given Channel module. The star character `*` acts as a wildcard matcher, so in the following example route, requests for `sample_topic:pizza` and `sample_topic:oranges` would both be dispatched to the `SampleTopicChannel`.
 
 ```elixir
-socket "/ws", HelloPhoenix do
-  channel "sample_topic:*", SampleTopicChannel
-end
+channel "sample_topic:*", HelloPhoenix.SampleTopicChannel
 ```
-For more details on channel routes, please see the [Routing Guide](http://www.phoenixframework.org/docs/routing).
 
 - Channels
 
-Channels handle requests, so they are similar to Controllers, but there are two key differences. Channel requests can go both directions - incoming and outgoing. Channel connections also persist beyond a single request/response cycle. Channels are the highest level abstraction for realtime communication components in Phoenix.
+Channels handle events from clients, so they are similar to Controllers, but there are two key differences. Channel events can go both directions - incoming and outgoing. Channel connections also persist beyond a single request/response cycle. Channels are the highest level abstraction for realtime communication components in Phoenix.
 
 Each Channel will implement one or more clauses of each of these four callback functions - `join/3`, `terminate/2`, `handle_in/3`, and `handle_out/3`.
 
@@ -55,18 +57,26 @@ The default transport mechanism is via WebSockets which will fall back to LongPo
 Phoenix currently ships with its own JavaScript client and iOS and Android clients are planned for release with Phoenix 1.0.
 
 ## Tying it all together
-Let's tie all these ideas together by building a simple chat application. Let's start by wiring up our channel routes.
+Let's tie all these ideas together by building a simple chat application. Let's start by mounting our socket in our endpoint and wiring up our channel routes.
 
 ```elixir
-defmodule HelloPhoenix.Router do
-   use HelloPhoenix.Web, :router
+# lib/hello_phoenix/endpoint.ex
+defmodule HelloPhoenix.Endpoint do
+  use Phoenix.Endpoint
 
-   socket "/ws", HelloPhoenix do
-     channel "rooms:*", RoomChannel
-   end
-   ...
+  socket "/socket", HelloPhoenix.UserSocket
+  ...
+end
+
+# web/channels/user_socket.ex
+defmodule HelloPhoenix.UserSocket do
+  use Phoenix.Socket
+
+  channel "rooms:*", HelloPhoenix.RoomChannel
+  ...
 end
 ```
+
 
 Now, whenever a client sends a message whose topic starts with `"rooms:"`, it will be routed to our RoomChannel. Next, we'll define a `RoomChannel` module to manage our chat room messages.
 
@@ -94,7 +104,7 @@ For our chat app, we'll allow anyone to join the `"rooms:lobby"` topic, but any 
 With our channel in place, lets head over to `web/static/js/app.js` and get the client and server talking.
 
 ```javascript
-let socket = new Socket("/ws")
+let socket = new Socket("/socket")
 socket.connect()
 let chan = socket.chan("rooms:lobby", {})
 chan.join().receive("ok", chan => {
@@ -130,7 +140,7 @@ Now let's add a couple event listeners to `app.js`:
 let chatInput         = $("#chat-input")
 let messagesContainer = $("#messages")
 
-let socket = new Socket("/ws")
+let socket = new Socket("/socket")
 socket.connect()
 let chan = socket.chan("rooms:lobby", {})
 
@@ -153,7 +163,7 @@ All we had to do is detect that enter was pressed and then `push` an event over 
 let chatInput         = $("#chat-input")
 let messagesContainer = $("#messages")
 
-let socket = new Socket("/ws")
+let socket = new Socket("/socket")
 socket.connect()
 let chan = socket.chan("rooms:lobby", {})
 
@@ -203,10 +213,12 @@ end
 
 `broadcast!/3` will notify all joined clients on this `socket`'s topic and invoke their `handle_out/3` callbacks. `handle_out/3` isn't required callback, but it allows us to customize and filter broadcasts before they reach each client. By default, `handle_out/3` is implemented for us and simply pushes the message on to the client, just like our definition. We included it here because hooking into outgoing events allows for powerful messages customization and filtering. Let's see how.
 
-#### Outgoing Events
-We won't implement this for our application, but imagine our chat app allowed users to ignore messages about new users joining a room. We could implement that behavior like this. (Of course, this assumes that we have a `User` model with an `ignoring?/2` function, and that we pass a user in via the `assigns` map.)
+#### Intercepting Outgoing Events
+We won't implement this for our application, but imagine our chat app allowed users to ignore messages about new users joining a room. We could implement that behavior like this where we explicitly tell phoenix which outgoing event we want to intercept, then defined a `handle_out/3` callback for those events. (Of course, this assumes that we have a `User` model with an `ignoring?/2` function, and that we pass a user in via the `assigns` map.)
 
 ```elixir
+intercept ["user_joined"]
+
 def handle_out("user_joined", msg, socket) do
   if User.ignoring?(socket.assigns[:user], msg.user_id) do
     {:noreply, socket}

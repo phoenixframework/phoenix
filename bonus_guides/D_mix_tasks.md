@@ -368,11 +368,9 @@ $ mix phoenix.gen.channel Room rooms
 When `phoenix.gen.channel` is done, it helpfully tells us that we need to add a channel route to our router file.
 
 ```console
-Add the channel to a socket scope in web/router.ex:
+Add the channel to your `web/channels/user_socket.ex` handler, for example:
 
-socket "/ws", HelloPhoenix do
-  channel "rooms:lobby", RoomChannel
-end
+    channel "rooms:lobby", HelloPhoenix.RoomChannel
 ```
 
 #### `mix phoenix.routes`

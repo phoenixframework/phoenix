@@ -138,8 +138,8 @@ resources "posts", PostController, only: [:index, :show]
 Running `$ mix phoenix.routes` shows that we now only have the routes to the index and show actions defined.
 
 ```elixir
-post_path  GET     /posts                         HelloPhoenix.PostsController :index
-post_path  GET     /posts/:id                     HelloPhoenix.PostsController :show
+post_path  GET     /posts                         HelloPhoenix.PostController :index
+post_path  GET     /posts/:id                     HelloPhoenix.PostController :show
 ```
 
 Similarly, if we have a comments resource, and we don't want to provide a route to delete one, we could define a route like this.
@@ -778,113 +778,50 @@ end
 
 Channels are a very exciting, real-time component of the Phoenix framework. Channels handle incoming and outgoing messages broadcast over a socket for a given topic. Channel routes, then, need to match requests by socket and topic in order to dispatch to the correct channel. (For a more detailed description of channels and their behavior, please see the [Channel Guide](http://www.phoenixframework.org/docs/channels).)
 
-We define sockets in the router with a block, a path to the socket's mount point, and (optionally) the name of our application to fully qualify our channel module name. This should look familiar after seeing our scope definitions above.
-
-Here's what that looks like in our router file:
+We mount socket handlers in our endpoint. Socket handlers take care of authentication callbacks and channel routes.
 
 ```elixir
-defmodule HelloPhoenix.Router do
-  use HelloPhoenix.Web, :router
+defmodule HelloPhoenix.Endpoint do
+  use Phoenix.Endpoint
 
-  socket "/ws", HelloPhoenix do
-  end
+  socket "/socket", HelloPhoenix.UserSocket
   ...
 end
 ```
 
-Next, we need to use the `channel/3` macro to match a topic to the channel which will handle its requests. If we have a channel module called `RoomChannel` and a topic called `"rooms:*"`, the code to do this is straightforward.
+Next, we need to open our `web/channels/user_socket.ex` file and use the `channel/3` macro to define our channel routes. The routes will match a topic pattern to a channel to handle events. If we have a channel module called `RoomChannel` and a topic called `"rooms:*"`, the code to do this is straightforward.
 
 ```elixir
-defmodule HelloPhoenix.Router do
-  use HelloPhoenix.Web, :router
+defmodule HelloPhoenix.UserSocket do
+  use Phoenix.Socket
 
-  socket "/ws", HelloPhoenix do
-    channel "rooms:*", RoomChannel
-  end
-  . . .
+  channel "rooms:*", HelloPhoenix.RoomChannel
+  ...
 end
 ```
 
 Topics are just string identifiers. The form we are using here is a convention which allows us to define topics and subtopics in the same string - "topic:subtopic". The `*` is a wildcard character which allows us to match on any subtopic, so `"rooms:lobby"` and `"rooms:kitchen"` would both match this route.
 
-Now that we have a channel route defined, let's see what `$ mix phoenix.routes` shows us.
-
-```console
-$ mix phoenix.routes
-. . .
-web_socket_path  GET   /ws       Phoenix.Transports.WebSocket.upgrade/2
-web_socket_path  POST  /ws       Phoenix.Transports.WebSocket.upgrade/2
-long_poller_path  GET   /ws/poll  Phoenix.Transports.LongPoller.poll/2
-long_poller_path  POST  /ws/poll  Phoenix.Transports.LongPoller.publish/2
-```
-
-Notice that our socket definition expands out to four paths with two separate transport mechanisms - WebSockets and LongPolling. If we wanted to make sure that our channel is handled by only one type of transport, we could specify that using the `via` option, like this.
+Phoenix abstracts the socket transport layer and includes two transport mechanisms out of the box - WebSockets and Long-Polling. If we wanted to make sure that our channel is handled by only one type of transport, we could specify that using the `via` option, like this.
 
 ```elixir
-socket "/ws", HelloPhoenix do
-  channel "rooms:*", RoomChannel, via: [Phoenix.Transports.WebSocket]
-end
+channel "rooms:*", HelloPhoenix.RoomChannel, via: [Phoenix.Transports.WebSocket]
 ```
-
-If we do this, `$ mix phoenix.routes` will still show the same four paths, because they are related to the socket, not the channel. Messages for the `"rooms:*"` topic, however, would all be handled exclusively over WebSockets.
 
 Each socket can handle requests for multiple channels.
 
 ```elixir
-socket "/ws", HelloPhoenix do
-  channel "rooms:*", RoomChannel, via: [Phoenix.Transports.WebSocket]
-  channel "foods:*", FoodChannel
-end
+channel "rooms:*", HelloPhoenix.RoomChannel, via: [Phoenix.Transports.WebSocket]
+channel "foods:*", HelloPhoenix.FoodChannel
 ```
 
-We can also define multiple sockets for our application.
+We can mount multiple socket handlers in our endpoint:
 
 ```elixir
-socket "/ws", HelloPhoenix do
-  channel "rooms:*", RoomChannel, via: [Phoenix.Transports.WebSocket]
-  channel "foods:*", FoodChannel
-end
-
-socket "/another_ws", HelloPhoenix do
-  channel "news:*", NewsChannel
-end
+socket "/socket", HelloPhoenix.UserSocket
+socket "/admin-socket", HelloPhoenix.AdminSocket do
 ```
 
-Here's what `$ mix phoenix.routes` says now.
-
-```console
-$ mix phoenix.routes
-. . .
-web_socket_path  GET   /ws               Phoenix.Transports.WebSocket.upgrade/2
-web_socket_path  POST  /ws               Phoenix.Transports.WebSocket.upgrade/2
-long_poller_path  GET   /ws/poll          Phoenix.Transports.LongPoller.poll/2
-long_poller_path  POST  /ws/poll          Phoenix.Transports.LongPoller.publish/2
-web_socket_path  GET   /another_ws       Phoenix.Transports.WebSocket.upgrade/2
-web_socket_path  POST  /another_ws       Phoenix.Transports.WebSocket.upgrade/2
-long_poller_path  GET   /another_ws/poll  Phoenix.Transports.LongPoller.poll/2
-long_poller_path  POST  /another_ws/poll  Phoenix.Transports.LongPoller.publish/2
-```
-
-Each socket gets four paths, two for WebSockets, two for LongPolling.
-
-Let's say we wanted all of the channels for a given socket to be handled by a single transport. We can accomplish that with the `via` option on the socket declaration itself, like this.
-
-```elixir
-socket "/another_ws", HelloPhoenix, via: [Phoenix.Transports.WebSocket] do
-  channel "news:*", NewsChannel
-  channel "pets:*", PetChannel
-end
-```
-
-What if we want all the channels to be handled by WebSockets, except for one? That's easy as well. Just use the `via` option on the exceptional channel.
-
-```elixir
-socket "/another_ws", HelloPhoenix, via: [Phoenix.Transports.WebSocket] do
-  channel "news:*", NewsChannel
-  channel "pets:*", PetChannel
-  channel "conversations:*", ConversationChannel, via: [LongPoller]
-end
-```
 
 ### Summary
 
