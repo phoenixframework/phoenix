@@ -40,6 +40,7 @@ Once our dependencies are installed, the task will prompt us to change into our 
 We are all set! Run your Phoenix application:
 
 $ cd hello_phoenix
+$ mix ecto.create
 $ mix phoenix.server
 
 You can also run it inside IEx (Interactive Elixir) as:
@@ -47,10 +48,11 @@ You can also run it inside IEx (Interactive Elixir) as:
 $ iex -S mix phoenix.server
 ```
 
-Let's do that now.
+Let's do that now to setup our database
 
 ```console
 $ cd hello_phoenix
+$ mix ecto.create
 $ mix phoenix.server
 ```
 

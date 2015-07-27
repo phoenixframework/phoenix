@@ -444,21 +444,20 @@ Once a user submits the form rendered from `new.html` above, the form elements a
 def create(conn, %{"user" => user_params}) do
   changeset = User.changeset(%User{}, user_params)
 
-  if changeset.valid? do
-    Repo.insert!(changeset)
-
-    conn
-    |> put_flash(:info, "User created successfully.")
-    |> redirect(to: user_path(conn, :index))
-  else
-    render(conn, "new.html", changeset: changeset)
+  case Repo.insert(changeset) do
+    {:ok, _user} ->
+      conn
+      |> put_flash(:info, "User created successfully.")
+      |> redirect(to: user_path(conn, :index))
+    {:error, changeset} ->
+      render(conn, "new.html", changeset: changeset)
   end
 end
 ```
 
-Notice that we get the user parameters by pattern matching with the `"user"` key in the function signature. Then we create a changeset with those params and check it's validity. If the changeset is valid, we invoke `Repo.insert!/1` to save the data in the `users` table, set a flash message, and redirect to the `index` action.
+Notice that we get the user parameters by pattern matching with the `"user"` key in the function signature. Then we create a changeset with those params and call `Repo.insert/1`. If the changeset is valid, it will return `{:ok, user}` with the inserted user model, then we set a flash message, and redirect to the `index` action.
 
-If the changeset is invalid, we re-render `new.html` with the changeset to display the errors to the user.
+If insert errored, we re-render `new.html` with the changeset to display the errors to the user.
 
 In the `show` action, we use the `Repo.get/2` built-in function to fetch the user record identified by the id we get from the request parameters. We don't generate a changeset here because we assume that the data has passed through a changeset on the way in to the database, and therefore is valid when we retrieve it here.
 
@@ -481,32 +480,31 @@ def edit(conn, %{"id" => id}) do
 end
 ```
 
-The `update` action is nearly identical to `create`. The only difference is that we use `Repo.update!/1` instead of `Repo.insert!/1`. `Repo.update!/1`, when used with a changeset, keeps track of fields which have changed. If no fields have changed, `Repo.update!/1` won't send any data to the database. `Repo.insert!/1` will always send all the data to the database.
+The `update` action is nearly identical to `create`. The only difference is that we use `Repo.update/1` instead of `Repo.insert/1`. `Repo.update/1`, when used with a changeset, keeps track of fields which have changed. If no fields have changed, `Repo.update/1` won't send any data to the database. `Repo.insert/1` will always send all the data to the database.
 
 ```elixir
 def update(conn, %{"id" => id, "user" => user_params}) do
   user = Repo.get(User, id)
   changeset = User.changeset(user, user_params)
 
-  if changeset.valid? do
-    Repo.update!(changeset)
-
-    conn
-    |> put_flash(:info, "User updated successfully.")
-    |> redirect(to: user_path(conn, :index))
-  else
-    render(conn, "edit.html", user: user, changeset: changeset)
+  case Repo.update(changeset) do
+    {:ok, user} ->
+      conn
+      |> put_flash(:info, "User updated successfully.")
+      |> redirect(to: user_path(conn, :show, user))
+    {:error, changeset} ->
+      render(conn, "edit.html", user: user, changeset: changeset)
   end
 end
 ```
 
-Finally, we come to the `delete` action. Here we also pattern match for the record id from the incoming params in order to use `Repo.get/2` to fetch the user. From there, we simply call `Repo.delete!/1`, set a flash message, and redirect to the `index` action.
+Finally, we come to the `delete` action. Here we also pattern match for the record id from the incoming params in order to use `Repo.get!/2` to fetch the user. From there, we simply call `Repo.delete!/1`, set a flash message, and redirect to the `index` action.
 
 Note: There is nothing in this generated code to allow a user to change their mind about the deletion. In other words, there is no "Are you sure?" modal, so an errant mouse click will delete data without further warning. It's up to us as developers to add this in ourselves if we feel we need it.
 
 ```elixir
 def delete(conn, %{"id" => id}) do
-  user = Repo.get(User, id)
+  user = Repo.get!(User, id)
   Repo.delete!(user)
 
   conn
