@@ -26,10 +26,9 @@ $ mix phoenix.gen.channel Room rooms
 
 Add the channel to a socket scope in web/router.ex:
 
-    socket "/ws", Phoenix do
-      channel "rooms:lobby", RoomChannel
-    end
+Add the channel to your `web/channels/user_socket.ex` handler, for example:
 
+    channel "rooms:lobby", HelloPhoenix.RoomChannel
 ```
 
 This creates a channel, its test and instructs us to add a channel route in `web/router.ex`.
@@ -198,5 +197,3 @@ it easy to work with.
 
 If interested in learning more about the helpers provided by `MyApp.ChannelCase`, check out the
 documentation for [`Phoenix.ChannelTest`](http://hexdocs.pm/phoenix/Phoenix.ChannelTest.html) which is the module that defines those functions.
-
-
