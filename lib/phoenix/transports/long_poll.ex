@@ -31,7 +31,7 @@ defmodule Phoenix.Transports.LongPoll do
   alias Phoenix.Channel.Transport
 
 
-  plug Plug.Logger
+  plug :log
   plug :fetch_query_params
   plug :check_origin
   plug :allow_origin
@@ -45,6 +45,7 @@ defmodule Phoenix.Transports.LongPoll do
     [window_ms: 10_000,
      pubsub_timeout_ms: 1000,
      serializer: Phoenix.Transports.LongPollSerializer,
+     log: false,
      crypto: [iterations: 1000, length: 32,
               digest: :sha256, cache: Plug.Keys]]
   end
@@ -282,5 +283,13 @@ defmodule Phoenix.Transports.LongPoll do
     conn
     |> put_status(:ok)
     |> json(map)
+  end
+
+  defp log(conn, _) do
+    if conn.private.phoenix_socket_handler.__transport__(__MODULE__)[:log] do
+      Plug.Logger.call(conn, Plug.Logger.init([]))
+    else
+      conn
+    end
   end
 end

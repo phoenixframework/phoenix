@@ -63,19 +63,19 @@ defmodule Phoenix.SocketTest do
     assert UserSocket.__transports__() == %{
       longpoll: {Phoenix.Transports.LongPoll,
         [window_ms: 10000, pubsub_timeout_ms: 1000, serializer: Phoenix.Transports.LongPollSerializer,
-         crypto: [iterations: 1000, length: 32, digest: :sha256, cache: Plug.Keys]]},
+         log: false, crypto: [iterations: 1000, length: 32, digest: :sha256, cache: Plug.Keys]]},
       websocket: {Phoenix.Transports.WebSocket,
-        [timeout: 1234, serializer: Phoenix.Transports.WebSocketSerializer]}
+        [timeout: 1234, serializer: Phoenix.Transports.WebSocketSerializer, log: false]}
     }
   end
 
   test "transport config is exposted and merged with prior registrations" do
     ws = {Phoenix.Transports.WebSocket,
-      [timeout: 1234, serializer: Phoenix.Transports.WebSocketSerializer]}
+      [timeout: 1234, serializer: Phoenix.Transports.WebSocketSerializer, log: false]}
 
     lp = {Phoenix.Transports.LongPoll,
       [window_ms: 10000, pubsub_timeout_ms: 1000, serializer: Phoenix.Transports.LongPollSerializer,
-      crypto: [iterations: 1000, length: 32, digest: :sha256, cache: Plug.Keys]]}
+      log: false, crypto: [iterations: 1000, length: 32, digest: :sha256, cache: Plug.Keys]]}
 
     assert UserSocket.__transport__(:websocket) == ws
     assert UserSocket.__transport__("websocket") == ws

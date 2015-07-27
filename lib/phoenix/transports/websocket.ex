@@ -20,13 +20,12 @@ defmodule Phoenix.Transports.WebSocket do
 
   @behaviour Phoenix.Channel.Transport
 
-  require Logger
   import Phoenix.Controller, only: [endpoint_module: 1]
 
   alias Phoenix.Socket.Broadcast
   alias Phoenix.Channel.Transport
 
-  plug Plug.Logger
+  plug :log
   plug :fetch_query_params
   plug :check_origin
   plug :upgrade
@@ -37,7 +36,8 @@ defmodule Phoenix.Transports.WebSocket do
   """
   def default_config() do
     [serializer: Phoenix.Transports.WebSocketSerializer,
-     timeout: :infinity]
+     timeout: :infinity,
+     log: false]
   end
 
   def upgrade(%Plug.Conn{method: "GET", params: params} = conn, _) do
@@ -159,5 +159,13 @@ defmodule Phoenix.Transports.WebSocket do
 
   defp format_reply({:socket_push, :text, encoded_payload}, state) do
     {:reply, {:text, encoded_payload}, state}
+  end
+
+  defp log(conn, _) do
+    if conn.private.phoenix_socket_handler.__transport__(__MODULE__)[:log] do
+      Plug.Logger.call(conn, Plug.Logger.init([]))
+    else
+      conn
+    end
   end
 end
