@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.15-dev
+## v0.15 (2015-7-27)
 
 See these [`0.14.x` to `0.15.0` upgrade instructions](https://gist.github.com/chrismccord/931373940f320bf41a50) to bring your existing apps up to speed.
 
