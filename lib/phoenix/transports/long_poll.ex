@@ -39,6 +39,12 @@ defmodule Phoenix.Transports.LongPoll do
 
   @doc """
   Provides the deault transport configuration to sockets.
+
+  * `:serializer` - The `Phoenix.Socket.Message` serializer
+  * `:pubsub_timeout_ms` - The timeout to wait for the LongPoll.Server ack
+  * `:log` - The log level, for example `:info`. Disabled by default
+  * `:timeout` - The connection timeout in milliseconds, defaults to `:infinity`
+  * `:crypto` - The list of encryption options for the `Plug.Session`
   """
   def default_config() do
     [window_ms: 10_000,

@@ -32,8 +32,8 @@ defmodule Phoenix.Socket.Router do
   end
 
   defp log(conn, config) do
-    if config[:log] do
-      Plug.Logger.call(conn, Plug.Logger.init([]))
+    if level = config[:log] do
+      Plug.Logger.call(conn, Plug.Logger.init(log: level))
     else
       conn
     end

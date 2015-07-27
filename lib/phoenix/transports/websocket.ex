@@ -32,6 +32,10 @@ defmodule Phoenix.Transports.WebSocket do
 
   @doc """
   Provides the deault transport configuration to sockets.
+
+  * `:serializer` - The `Phoenix.Socket.Message` serializer
+  * `:log` - The log level, for example `:info`. Disabled by default
+  * `:timeout` - The connection timeout in milliseconds, defaults to `:infinity`
   """
   def default_config() do
     [serializer: Phoenix.Transports.WebSocketSerializer,
