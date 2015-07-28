@@ -111,8 +111,8 @@ class Push {
   // Initializes the Push
   //
   // chan - The Channel
-  // event - The event, ie `"phx_join"`
-  // payload - The payload, ie `{user_id: 123}`
+  // event - The event, for example `"phx_join"`
+  // payload - The payload, for example `{user_id: 123}`
   //
   constructor(chan, event, payload){
     this.chan         = chan
@@ -320,9 +320,9 @@ export class Socket {
   //                                               "wss://example.com"
   //                                               "/ws" (inherited host & protocol)
   // opts - Optional configuration
-  //   transport - The Websocket Transport, ie WebSocket, Phoenix.LongPoll.
+  //   transport - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
   //               Defaults to WebSocket with automatic LongPoll fallback.
-  //   params - The defaults for all channel params, ie `{user_id: userToken}`
+  //   params - The defaults for all channel params, for example `{user_id: userToken}`
   //   heartbeatIntervalMs - The millisec interval to send a heartbeat message
   //   reconnectAfterMs - The optional function that returns the millsec
   //                      reconnect interval. Defaults to stepped backoff of:

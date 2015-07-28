@@ -27,7 +27,7 @@ defmodule Phoenix.Channel do
         {:ok, socket}
       end
 
-      # handles any other subtopic as the room ID, ie `"rooms:12"`, `"rooms:34"`
+      # handles any other subtopic as the room ID, for example `"rooms:12"`, `"rooms:34"`
       def join("rooms:" <> room_id, auth_message, socket) do
         {:ok, socket}
       end

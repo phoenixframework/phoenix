@@ -26,7 +26,7 @@ defmodule Phoenix.PubSub.Local do
 
     * `local_server` - The registered server name or pid
     * `pid` - The subscriber pid
-    * `topic` - The string topic, ie "users:123"
+    * `topic` - The string topic, for example "users:123"
     * `opts` - The optional list of options. Supported options
       only include `:link` to link the subscriber to local
 
@@ -45,7 +45,7 @@ defmodule Phoenix.PubSub.Local do
 
     * `local_server` - The registered server name or pid
     * `pid` - The subscriber pid
-    * `topic` - The string topic, ie "users:123"
+    * `topic` - The string topic, for example "users:123"
 
   ## Examples
 
@@ -61,7 +61,7 @@ defmodule Phoenix.PubSub.Local do
   Sends a message to all subscribers of a topic.
 
     * `local_server` - The registered server name or pid
-    * `topic` - The string topic, ie "users:123"
+    * `topic` - The string topic, for example "users:123"
 
   ## Examples
 
@@ -115,7 +115,7 @@ defmodule Phoenix.PubSub.Local do
   Returns a set of subscribers pids for the given topic.
 
     * `local_server` - The registered server name or pid
-    * `topic` - The string topic, ie "users:123"
+    * `topic` - The string topic, for example "users:123"
 
   ## Examples
 
