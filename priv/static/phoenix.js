@@ -105,14 +105,12 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
 // Connect to the server using the `Socket` class:
 //
 //     let socket = new Socket("/ws")
-//     socket.connect()
+//     socket.connect({userToken: "123"})
 //
 // The `Socket` constructor takes the mount point of the socket
 // as well as options that can be found in the Socket docs,
 // such as configuring the `LongPoll` transport, and heartbeat.
-// Socket params can also be passed as an option for default, but
-// overridable channel params to apply to all channels.
-//
+// Socket params can also be passed as an object literal to `connect`.
 //
 // ## Channels
 //
@@ -552,7 +550,6 @@ var Socket = exports.Socket = (function () {
   // opts - Optional configuration
   //   transport - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
   //               Defaults to WebSocket with automatic LongPoll fallback.
-  //   params - The defaults for all channel params, for example `{user_id: userToken}`
   //   heartbeatIntervalMs - The millisec interval to send a heartbeat message
   //   reconnectAfterMs - The optional function that returns the millsec
   //                      reconnect interval. Defaults to stepped backoff of:
@@ -591,7 +588,7 @@ var Socket = exports.Socket = (function () {
     }, this.reconnectAfterMs);
     this.logger = opts.logger || function () {}; // noop
     this.longpollerTimeout = opts.longpollerTimeout || 20000;
-    this.params = opts.params || {};
+    this.params = {};
     this.endPoint = "" + endPoint + "/" + TRANSPORTS.websocket;
   }
 
@@ -635,9 +632,14 @@ var Socket = exports.Socket = (function () {
       configurable: true
     },
     connect: {
+
+      // params - The params to send when connecting, for example `{user_id: userToken}`
+
       value: function connect() {
         var _this = this;
 
+        var params = arguments[0] === undefined ? {} : arguments[0];
+        this.params = params;
         this.disconnect(function () {
           _this.conn = new _this.transport(_this.endPointURL());
           _this.conn.timeout = _this.longpollerTimeout;
@@ -793,15 +795,7 @@ var Socket = exports.Socket = (function () {
       value: function chan(topic) {
         var chanParams = arguments[1] === undefined ? {} : arguments[1];
 
-        var mergedParams = {};
-        for (var key in this.params) {
-          mergedParams[key] = this.params[key];
-        }
-        for (var key in chanParams) {
-          mergedParams[key] = chanParams[key];
-        }
-
-        var chan = new Channel(topic, mergedParams, this);
+        var chan = new Channel(topic, chanParams, this);
         this.channels.push(chan);
         return chan;
       },

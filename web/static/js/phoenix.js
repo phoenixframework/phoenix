@@ -7,14 +7,12 @@
 // Connect to the server using the `Socket` class:
 //
 //     let socket = new Socket("/ws")
-//     socket.connect()
+//     socket.connect({userToken: "123"})
 //
 // The `Socket` constructor takes the mount point of the socket
 // as well as options that can be found in the Socket docs,
 // such as configuring the `LongPoll` transport, and heartbeat.
-// Socket params can also be passed as an option for default, but
-// overridable channel params to apply to all channels.
-//
+// Socket params can also be passed as an object literal to `connect`.
 //
 // ## Channels
 //
@@ -322,7 +320,6 @@ export class Socket {
   // opts - Optional configuration
   //   transport - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
   //               Defaults to WebSocket with automatic LongPoll fallback.
-  //   params - The defaults for all channel params, for example `{user_id: userToken}`
   //   heartbeatIntervalMs - The millisec interval to send a heartbeat message
   //   reconnectAfterMs - The optional function that returns the millsec
   //                      reconnect interval. Defaults to stepped backoff of:
@@ -352,7 +349,7 @@ export class Socket {
     this.reconnectTimer       = new Timer(() => this.connect(), this.reconnectAfterMs)
     this.logger               = opts.logger || function(){} // noop
     this.longpollerTimeout    = opts.longpollerTimeout || 20000
-    this.params               = opts.params || {}
+    this.params               = {}
     this.endPoint             = `${endPoint}/${TRANSPORTS.websocket}`
   }
 
@@ -375,7 +372,8 @@ export class Socket {
     callback && callback()
   }
 
-  connect(){
+  // params - The params to send when connecting, for example `{user_id: userToken}`
+  connect(params = {}){ this.params = params
     this.disconnect(() => {
       this.conn = new this.transport(this.endPointURL())
       this.conn.timeout   = this.longpollerTimeout
@@ -445,11 +443,7 @@ export class Socket {
   }
 
   chan(topic, chanParams = {}){
-    let mergedParams = {}
-    for(var key in this.params){ mergedParams[key] = this.params[key] }
-    for(var key in chanParams){ mergedParams[key] = chanParams[key] }
-
-    let chan = new Channel(topic, mergedParams, this)
+    let chan = new Channel(topic, chanParams, this)
     this.channels.push(chan)
     return chan
   }
