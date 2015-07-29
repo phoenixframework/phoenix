@@ -4,7 +4,7 @@
 
 * JavaScript client backwards incompatible changes
   * Socket params are now passed to `socket.connect()` instead of an option on the constructor.
-  * Socket params are now longer merged as default params for channel params. Use `connect/2` on the server to wire up default channel assigns.
+  * Socket params are no longer merged as default params for channel params. Use `connect/2` on the server to wire up default channel assigns.
 
 
 ## v0.15.0 (2015-7-27)
