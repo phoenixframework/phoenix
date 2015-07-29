@@ -104,10 +104,10 @@ defmodule Phoenix.Channel do
 
   When an event is broadcasted with `Phoenix.Channel.broadcast/3`, each channel
   subscriber can choose to intercept the event and have their `handle_out/3`
-  callback triggered. This allows the event's payload can be to customized on a
+  callback triggered. This allows the event's payload to be customized on a
   socket by socket basis to append extra information, or conditionally filter
   the message from being delivered. If the event is not intercepted with
-  `Phoenix.Channel.intercept/1`, then the message is pushed to directly to the client:
+  `Phoenix.Channel.intercept/1`, then the message is pushed directly to the client:
 
       intercept ["new_msg", "user_joined"]
 
