@@ -119,7 +119,7 @@ defmodule Phoenix.Channel.Transport do
 
     * `topic` - The String value "phoenix"
     * `event` - The String value "heartbeat"
-    * `payload` - An empty JSON message payload, ie {}
+    * `payload` - An empty JSON message payload (`{}`)
 
   The server will respond to heartbeats with the same message
   """
