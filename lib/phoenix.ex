@@ -20,7 +20,7 @@ defmodule Phoenix do
 
   There are also optional packages depending on your configuration:
 
-    * [Phoenix PubSub Redis](http://hexdocs.pm/phoenix_live_reload) - use
+    * [Phoenix PubSub Redis](http://hexdocs.pm/phoenix_pubsub_redis) - use
       Redis to power Phoenix PubSub system
 
   """
