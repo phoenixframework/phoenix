@@ -56,18 +56,20 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/web/views/page_view.ex",
                   ~r/defmodule PhotoBlog.PageView/
 
-      assert_file "photo_blog/web/router.ex", ~r/defmodule PhotoBlog.Router/
-      assert_file "photo_blog/web/web.ex", ~r/defmodule PhotoBlog.Web/
+      assert_file "photo_blog/web/router.ex", "defmodule PhotoBlog.Router"
+      assert_file "photo_blog/web/web.ex", "defmodule PhotoBlog.Web"
 
       # Brunch
-      assert_file "photo_blog/.gitignore", ~r"/node_modules"
+      assert_file "photo_blog/.gitignore", "/node_modules"
+      assert_file "photo_blog/brunch-config.js", ~s["deps/phoenix/web/static"]
+      assert_file "photo_blog/config/dev.exs", "watchers: [node:"
       assert_file "photo_blog/web/static/assets/images/phoenix.png"
       assert_file "photo_blog/web/static/assets/images/favicon.ico"
-      assert_file "photo_blog/web/static/vendor/phoenix.js"
-      assert_file "photo_blog/web/static/js/app.js"
       assert_file "photo_blog/web/static/css/app.css"
-      assert_file "photo_blog/config/dev.exs", ~r/watchers: \[node:/
-      assert File.read!("photo_blog/web/templates/layout/app.html.eex") |> String.contains?(~s{require("web/static/js/app")})
+      assert_file "photo_blog/web/static/js/app.js",
+                  ~s[import {Socket} from "deps/phoenix/web/static/js/phoenix"]
+      assert_file "photo_blog/web/templates/layout/app.html.eex",
+                  ~s[require("web/static/js/app")]
 
       refute File.exists? "photo_blog/priv/static/css/app.css"
       refute File.exists? "photo_blog/priv/static/js/phoenix.js"
