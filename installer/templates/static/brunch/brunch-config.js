@@ -36,8 +36,9 @@ exports.config = {
 
   // Phoenix paths configuration
   paths: {
-    // Which directories to watch
-    watched: ["web/static", "test/static"],
+    // Dependencies and current project directories to watch
+    watched: ["<%= phoenix_path %>/web/static",
+              "web/static", "test/static"],
 
     // Where to compile files to
     public: "priv/static"
@@ -47,7 +48,7 @@ exports.config = {
   plugins: {
     babel: {
       // Do not use ES6 compiler in vendor code
-      ignore: [/^(web\/static\/vendor)/]
+      ignore: [/web\/static\/vendor/]
     }
   },
   npm: {

@@ -48,10 +48,10 @@ defmodule Mix.Tasks.Phoenix.New do
 
   @brunch [
     {:text, "static/brunch/.gitignore",       ".gitignore"},
-    {:text, "static/brunch/brunch-config.js", "brunch-config.js"},
+    {:eex,  "static/brunch/brunch-config.js", "brunch-config.js"},
     {:text, "static/brunch/package.json",     "package.json"},
     {:text, "static/app.css",                 "web/static/css/app.scss"},
-    {:text, "static/brunch/app.js",           "web/static/js/app.js"},
+    {:eex,  "static/brunch/app.js",           "web/static/js/app.js"},
     {:text, "static/robots.txt",              "web/static/assets/robots.txt"},
   ]
 
@@ -143,10 +143,9 @@ defmodule Mix.Tasks.Phoenix.New do
 
   def run(app, mod, path, opts) do
     db = Keyword.get(opts, :database, "postgres")
-    dev = Keyword.get(opts, :dev, false)
     ecto = Keyword.get(opts, :ecto, true)
     brunch = Keyword.get(opts, :brunch, true)
-
+    phoenix_path = phoenix_path(path, Keyword.get(opts, :dev, false))
 
     # We lowercase the database name because according to the
     # SQL spec, they are case insensitive unless quoted, which
@@ -157,7 +156,9 @@ defmodule Mix.Tasks.Phoenix.New do
 
     binding = [application_name: app,
                application_module: mod,
-               phoenix_dep: phoenix_dep(dev),
+               phoenix_dep: phoenix_dep(phoenix_path),
+               phoenix_path: phoenix_path,
+               phoenix_static_path: phoenix_static_path(phoenix_path),
                pubsub_server: pubsub_server,
                secret_key_base: random_string(64),
                prod_secret_key_base: random_string(64),
@@ -244,7 +245,6 @@ defmodule Mix.Tasks.Phoenix.New do
       create_file Path.join(path, "priv/static/images/favicon.ico"), phoenix_favicon_text()
     else
       copy_from path, binding, @brunch
-      create_file Path.join(path, "web/static/vendor/phoenix.js"), phoenix_js_text()
       create_file Path.join(path, "web/static/assets/images/phoenix.png"), phoenix_png_text()
       create_file Path.join(path, "web/static/assets/images/favicon.ico"), phoenix_favicon_text()
     end
@@ -396,11 +396,32 @@ defmodule Mix.Tasks.Phoenix.New do
     end
   end
 
-  defp phoenix_dep(true), do: ~s[{:phoenix, path: #{inspect @phoenix}, override: true}]
-  defp phoenix_dep(_),    do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
-
   defp random_string(length) do
     :crypto.strong_rand_bytes(length) |> Base.encode64 |> binary_part(0, length)
+  end
+
+  defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
+  defp phoenix_dep(path), do: ~s[{:phoenix, path: #{inspect path}, override: true}]
+
+  defp phoenix_static_path("deps/phoenix"), do: "deps/phoenix"
+  defp phoenix_static_path(path), do: Path.join("..", path)
+
+  defp phoenix_path(path, true) do
+    absolute = Path.expand(path)
+    relative = Path.relative_to(absolute, @phoenix)
+
+    if absolute == relative do
+      Mix.raise "--dev version must be inside Phoenix directory"
+    end
+
+    relative
+    |> Path.split
+    |> Enum.map(fn _ -> ".." end)
+    |> Path.join
+  end
+
+  defp phoenix_path(_path, false) do
+    "deps/phoenix"
   end
 
   ## Template helpers
