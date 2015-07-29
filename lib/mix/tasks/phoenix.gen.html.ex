@@ -32,7 +32,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
     binding = Mix.Phoenix.inflect(singular)
     path    = binding[:path]
     route   = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
-    binding = binding ++ [plural: plural, route: route,
+    binding = binding ++ [plural: plural, route: route, attrs: attrs,
                           inputs: inputs(attrs), params: Mix.Phoenix.params(attrs)]
 
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Controller")
@@ -92,28 +92,28 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
 
   defp inputs(attrs) do
     Enum.map attrs, fn
-      {k, {:array, _}} ->
-        {k, nil, nil}
+      {_k, {:array, _}} ->
+        {nil, nil}
       {k, :belongs_to} ->
-        {k, ~s(<%= number_input f, #{inspect(k)}_id, class: "form-control" %>), label(k, :belongs_to)}
+        {~s(<%= number_input f, #{inspect(k)}_id, class: "form-control" %>), label(k, :belongs_to)}
       {k, :integer}    ->
-        {k, ~s(<%= number_input f, #{inspect(k)}, class: "form-control" %>), label(k)}
+        {~s(<%= number_input f, #{inspect(k)}, class: "form-control" %>), label(k)}
       {k, :float}      ->
-        {k, ~s(<%= number_input f, #{inspect(k)}, step: "any", class: "form-control" %>), label(k)}
+        {~s(<%= number_input f, #{inspect(k)}, step: "any", class: "form-control" %>), label(k)}
       {k, :decimal}    ->
-        {k, ~s(<%= number_input f, #{inspect(k)}, step: "any", class: "form-control" %>), label(k)}
+        {~s(<%= number_input f, #{inspect(k)}, step: "any", class: "form-control" %>), label(k)}
       {k, :boolean}    ->
-        {k, ~s(<%= checkbox f, #{inspect(k)}, class: "form-control" %>), label(k)}
+        {~s(<%= checkbox f, #{inspect(k)}, class: "form-control" %>), label(k)}
       {k, :text}       ->
-        {k, ~s(<%= textarea f, #{inspect(k)}, class: "form-control" %>), label(k)}
+        {~s(<%= textarea f, #{inspect(k)}, class: "form-control" %>), label(k)}
       {k, :date}       ->
-        {k, ~s(<%= date_select f, #{inspect(k)}, class: "form-control" %>), label(k)}
+        {~s(<%= date_select f, #{inspect(k)}, class: "form-control" %>), label(k)}
       {k, :time}       ->
-        {k, ~s(<%= time_select f, #{inspect(k)}, class: "form-control" %>), label(k)}
+        {~s(<%= time_select f, #{inspect(k)}, class: "form-control" %>), label(k)}
       {k, :datetime}   ->
-        {k, ~s(<%= datetime_select f, #{inspect(k)}, class: "form-control" %>), label(k)}
+        {~s(<%= datetime_select f, #{inspect(k)}, class: "form-control" %>), label(k)}
       {k, _}           ->
-        {k, ~s(<%= text_input f, #{inspect(k)}, class: "form-control" %>), label(k)}
+        {~s(<%= text_input f, #{inspect(k)}, class: "form-control" %>), label(k)}
     end
   end
 

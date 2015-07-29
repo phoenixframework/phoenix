@@ -1,7 +1,7 @@
 <h2>Show <%= singular %></h2>
 
 <ul>
-<%= for {k, _, _} <- inputs do %>
+<%= for {k, _} <- attrs do %>
   <li>
     <strong><%= Phoenix.Naming.humanize(Atom.to_string(k)) %>:</strong>
     <%= "<%=" %> @<%= singular %>.<%= k %> <%= "%\>" %>

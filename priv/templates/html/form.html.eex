@@ -9,7 +9,7 @@
       </ul>
     </div>
   <%% end %>
-<%= for {_k, input, label} <- inputs, input do %>
+<%= for {input, label} <- inputs, input do %>
   <div class="form-group">
     <%= label %>
     <%= input %>
