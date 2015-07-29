@@ -50,7 +50,7 @@ defmodule Mix.Tasks.Phoenix.New do
     {:text, "static/brunch/.gitignore",       ".gitignore"},
     {:eex,  "static/brunch/brunch-config.js", "brunch-config.js"},
     {:text, "static/brunch/package.json",     "package.json"},
-    {:text, "static/app.css",                 "web/static/css/app.scss"},
+    {:text, "static/app.css",                 "web/static/css/app.css"},
     {:eex,  "static/brunch/app.js",           "web/static/js/app.js"},
     {:text, "static/robots.txt",              "web/static/assets/robots.txt"},
   ]

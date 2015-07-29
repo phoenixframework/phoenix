@@ -65,7 +65,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/web/static/assets/images/favicon.ico"
       assert_file "photo_blog/web/static/vendor/phoenix.js"
       assert_file "photo_blog/web/static/js/app.js"
-      assert_file "photo_blog/web/static/css/app.scss"
+      assert_file "photo_blog/web/static/css/app.css"
       assert_file "photo_blog/config/dev.exs", ~r/watchers: \[node:/
       assert File.read!("photo_blog/web/templates/layout/app.html.eex") |> String.contains?(~s{require("web/static/js/app")})
 
