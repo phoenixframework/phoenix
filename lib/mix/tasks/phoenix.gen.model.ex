@@ -70,6 +70,11 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
       {:eex, "model.ex",       "web/models/#{path}.ex"},
       {:eex, "model_test.exs", "test/models/#{path}_test.exs"},
     ]
+    
+    Mix.shell.info """
+      Update your repository by running migrations:
+        $ mix ecto.migrate
+    """
   end
 
   defp validate_args!([_, plural | _] = args) do
