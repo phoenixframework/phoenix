@@ -208,8 +208,8 @@ var Push = (function () {
   // Initializes the Push
   //
   // chan - The Channel
-  // event - The event, e.g. `"phx_join"`
-  // payload - The payload, e.g. `{user_id: 123}`
+  // event - The event, for example `"phx_join"`
+  // payload - The payload, for example `{user_id: 123}`
   //
 
   function Push(chan, event, payload) {
@@ -550,9 +550,9 @@ var Socket = exports.Socket = (function () {
   //                                               "wss://example.com"
   //                                               "/ws" (inherited host & protocol)
   // opts - Optional configuration
-  //   transport - The Websocket Transport, e.g. WebSocket, Phoenix.LongPoll.
+  //   transport - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
   //               Defaults to WebSocket with automatic LongPoll fallback.
-  //   params - The defaults for all channel params, e.g. `{user_id: userToken}`
+  //   params - The defaults for all channel params, for example `{user_id: userToken}`
   //   heartbeatIntervalMs - The millisec interval to send a heartbeat message
   //   reconnectAfterMs - The optional function that returns the millsec
   //                      reconnect interval. Defaults to stepped backoff of:
