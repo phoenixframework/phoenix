@@ -370,6 +370,13 @@ defmodule Phoenix.Controller.ControllerTest do
     assert is_binary delete_csrf_token
   end
 
+  test "put_secure_browser_headers/2" do
+    conn = conn(:get, "/") |> put_secure_browser_headers()
+    assert get_resp_header(conn, "x-frame-options") == ["SAMEORIGIN"]
+    assert get_resp_header(conn, "x-xss-protection") == ["1; mode=block"]
+    assert get_resp_header(conn, "x-content-type-options") == ["nosniff"]
+  end
+
   test "__view__ returns the view module based on controller module" do
     assert Phoenix.Controller.__view__(MyApp.UserController) == MyApp.UserView
     assert Phoenix.Controller.__view__(MyApp.Admin.UserController) == MyApp.Admin.UserView

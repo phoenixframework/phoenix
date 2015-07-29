@@ -107,13 +107,13 @@ defmodule Phoenix.Router.ForwardTest do
     conn = call(Router, :get, "stats")
     assert page_path(conn, :stats) == "/admin/stats"
 
-    conn = call(Router, :get, "stats", _params = nil, _headers = [], ["phx"])
+    conn = call(Router, :get, "stats", _params = nil, ["phx"])
     assert page_path(conn, :stats) == "/phx/admin/stats"
 
     conn = call(Router, :get, "admin/stats")
     assert page_path(conn, :stats) == "/admin/stats"
 
-    conn = call(Router, :get, "admin/stats", _params = nil, _headers = [], ["phx"])
+    conn = call(Router, :get, "admin/stats", _params = nil, ["phx"])
     assert page_path(conn, :stats) == "/phx/admin/stats"
   end
 end

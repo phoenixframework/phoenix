@@ -694,6 +694,28 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
+  Put headers that improve browser security.
+
+  It sets the following headers:
+
+      * x-frame-options - set to SAMEORIGIN to avoid clickjacking
+        through iframes unless in the same origin
+      * x-content-type-options - set to nosniff. This requires
+        script and style tags to be sent with proper content type
+      * x-xss-protection - set to "1; mode=block" to improve XSS
+        protection on both Chrome and IE
+
+  Custom headers may also be given.
+  """
+  def put_secure_browser_headers(conn, _opts \\ []) do
+    merge_resp_headers(conn, [
+      {"x-frame-options", "SAMEORIGIN"},
+      {"x-xss-protection", "1; mode=block"},
+      {"x-content-type-options", "nosniff"}
+    ])
+  end
+
+  @doc """
   Gets the CSRF token.
   """
   defdelegate get_csrf_token(), to: Plug.CSRFProtection
