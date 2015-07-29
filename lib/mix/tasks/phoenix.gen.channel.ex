@@ -27,7 +27,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Channel do
 
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Channel")
 
-    Mix.Phoenix.copy_from source_dir, "", binding, [
+    Mix.Phoenix.copy_from apps(), "priv/templates/phoenix.gen.channel", "", binding, [
       {:eex, "channel.ex",       "web/channels/#{path}_channel.ex"},
       {:eex, "channel_test.exs", "test/channels/#{path}_channel_test.exs"},
     ]
@@ -55,7 +55,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Channel do
     args
   end
 
-  defp source_dir do
-    Application.app_dir(:phoenix, "priv/templates/channel")
+  defp apps do
+    [Mix.Project.config[:app], :phoenix]
   end
 end

@@ -65,7 +65,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
                assocs: assocs(assocs), indexes: indexes(plural, assocs),
                defaults: defaults(attrs), params: params]
 
-    Mix.Phoenix.copy_from source_dir, "", binding, [
+    Mix.Phoenix.copy_from apps(), "priv/templates/phoenix.gen.model", "", binding, [
       {:eex, "migration.exs",  "priv/repo/migrations/#{timestamp()}_create_#{migration}.exs"},
       {:eex, "model.ex",       "web/models/#{path}.ex"},
       {:eex, "model_test.exs", "test/models/#{path}_test.exs"},
@@ -173,7 +173,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     end
   end
 
-  defp source_dir do
-    Application.app_dir(:phoenix, "priv/templates/model")
+  defp apps do
+    [Mix.Project.config[:app], :phoenix]
   end
 end

@@ -9,9 +9,16 @@ defmodule Mix.Phoenix do
   Files are evaluated against EEx according to
   the given binding.
   """
-  def copy_from(source_dir, target_dir, binding, mapping) when is_list(mapping) do
+  def copy_from(apps, source_dir, target_dir, binding, mapping) when is_list(mapping) do
+    roots = Enum.map(apps, &Application.app_dir(&1, source_dir))
+
     for {format, source_file_path, target_file_path} <- mapping do
-      source = Path.join(source_dir, source_file_path)
+      source =
+        Enum.find_value(roots, fn root ->
+          source = Path.join(root, source_file_path)
+          if File.exists?(source), do: source
+        end) || raise "could not find #{source_file_path} in any of the sources"
+
       target = Path.join(target_dir, target_file_path)
 
       contents =

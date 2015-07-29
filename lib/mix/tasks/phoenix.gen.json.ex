@@ -50,7 +50,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
       files = files ++ [{:eex, "changeset_view.ex", "web/views/changeset_view.ex"}]
     end
 
-    Mix.Phoenix.copy_from source_dir, "", binding, files
+    Mix.Phoenix.copy_from apps(), "priv/templates/phoenix.gen.json", "", binding, files
 
     Mix.shell.info """
 
@@ -89,7 +89,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
     """
   end
 
-  defp source_dir do
-    Application.app_dir(:phoenix, "priv/templates/json")
+  defp apps do
+    [Mix.Project.config[:app], :phoenix]
   end
 end
