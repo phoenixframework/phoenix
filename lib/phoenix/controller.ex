@@ -157,43 +157,59 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Sends a JSON response with JSONP callback support.
+  A plug that may convert a JSON response into a JSONP one.
 
-  It uses the configured `:format_encoders` under the `:phoenix`
-  application for `:json` to pick up the encoder module.
+  In case a JSON response is returned, it will be converted
+  to a JSONP as long as the callback field is present in
+  the query string. The callback field itself defaults to
+  "callback" but may be configured with the callback option.
 
-  If the query params contain a key for the callback name, the
-  response body is wrapped in an invocation of this callback.
-
-  The default key for the callback name is `"callback"`. It can be
-  overridden with the `:callback` option and is expected to be a
-  string.
+  In case there is no callback or the response is not encoded
+  in JSON format, it is a no-op.
 
   Only alphanumeric characters and underscore are allowed in the
   callback name. Otherwise an exception is raised.
 
   ## Examples
 
-      iex> jsonp conn, %{id: 123}, callback: "cb"
+      # Will convert JSON to JSONP if callback=someFunction is given
+      plug :allow_jsonp
+
+      # Will convert JSON to JSONP if cb=someFunction is given
+      plug :allow_jsonp, callback: "cb"
 
   """
-  @spec jsonp(Plug.Conn.t, term, Keyword.t) :: Plug.Conn.t
-  def jsonp(conn, data, opts \\ []) do
-    case Map.fetch(conn.query_params, opts[:callback] || "callback") do
-      :error    -> json conn, data
-      {:ok, ""} -> json conn, data
+  @spec allow_jsonp(Plug.Conn.t, Keyword.t) :: Plug.Conn.t
+  def allow_jsonp(conn, opts \\ []) do
+    callback = Keyword.get(opts, :callback, "callback")
+    case Map.fetch(conn.query_params, callback) do
+      :error    -> conn
+      {:ok, ""} -> conn
       {:ok, cb} ->
         validate_jsonp_callback!(cb)
+        register_before_send(conn, fn conn ->
+          if json_response?(conn) do
+            conn
+            |> put_resp_header("content-type", "application/javascript")
+            |> resp(conn.status, jsonp_body(conn.resp_body, cb))
+          else
+            conn
+          end
+        end)
+    end
+  end
 
-        send_resp(conn, conn.status || 200, "text/javascript", jsonp_body(data, cb))
+  defp json_response?(conn) do
+    case get_resp_header(conn, "content-type") do
+      ["application/json;" <> _] -> true
+      ["application/json"] -> true
+      _ -> false
     end
   end
 
   defp jsonp_body(data, callback) do
-    encoder = get_json_encoder()
     body =
       data
-      |> encoder.encode_to_iodata!()
       |> IO.iodata_to_binary()
       |> String.replace(<<0x2028::utf8>>, "\\u2028")
       |> String.replace(<<0x2029::utf8>>, "\\u2029")
@@ -206,7 +222,7 @@ defmodule Phoenix.Controller do
     do: validate_jsonp_callback!(t)
   defp validate_jsonp_callback!(<<>>), do: :ok
   defp validate_jsonp_callback!(_),
-    do: raise(ArgumentError, "the callback name contains invalid characters")
+    do: raise(ArgumentError, "the JSONP callback name contains invalid characters")
 
   @doc """
   Sends text response.
