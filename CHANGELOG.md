@@ -2,6 +2,9 @@
 
 ## v0.16-dev
 
+* Backward incompatible changes
+  * [Controller] `jsonp/3` function has been removed in favor of the `plug :allow_jsonp`  
+
 * JavaScript client backwards incompatible changes
   * Socket params are now passed to `socket.connect()` instead of an option on the constructor.
   * Socket params are no longer merged as default params for channel params. Use `connect/2` on the server to wire up default channel assigns.
