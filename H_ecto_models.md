@@ -520,7 +520,7 @@ That's the end of our walk-through of Ecto usage in our controller actions. Ther
 Suppose we are building a very simple video-sharing web application, in addition to having users on our site, we might also want to have videos. We asked Phoenix to scaffold a `Video` model for us:
 
 ```console
-$ mix phoenix.gen.model Video videos name:string approved_at:datetime description:text likes:integer views:integer user:belongs_to
+$ mix phoenix.gen.model Video videos name:string approved_at:datetime description:text likes:integer views:integer user:references
 * creating priv/repo/migrations/20150611051558_create_video.exs
 * creating web/models/video.ex
 * creating test/models/video_test.exs
