@@ -45,17 +45,18 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
         assert file =~ ~s(<%= text_input f, :name, class: "form-control" %>)
         assert file =~ ~s(<%= number_input f, :age, class: "form-control" %>)
         assert file =~ ~s(<%= number_input f, :height, step: "any", class: "form-control" %>)
-        assert file =~ ~s(<%= number_input f, :address_id, class: "form-control" %>)
         assert file =~ ~s(<%= checkbox f, :famous, class: "form-control" %>)
         assert file =~ ~s(<%= datetime_select f, :born_at, class: "form-control" %>)
         assert file =~ ~s(<%= text_input f, :secret, class: "form-control" %>)
         assert file =~ ~s(<%= label f, :name, "Name", class: "control-label" %>)
         assert file =~ ~s(<%= label f, :age, "Age", class: "control-label" %>)
         assert file =~ ~s(<%= label f, :height, "Height", class: "control-label" %>)
-        assert file =~ ~s(<%= label f, :address_id, "Address", class: "control-label" %>)
         assert file =~ ~s(<%= label f, :famous, "Famous", class: "control-label" %>)
         assert file =~ ~s(<%= label f, :born_at, "Born at", class: "control-label" %>)
         assert file =~ ~s(<%= label f, :secret, "Secret", class: "control-label" %>)
+
+        refute file =~ ~s(<%= label f, :address_id)
+        refute file =~ ~s(<%= number_input f, :address_id)
         refute file =~ ":nicks"
       end
 
@@ -78,8 +79,9 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
         assert file =~ "defmodule Phoenix.UserControllerTest"
         assert file =~ "use Phoenix.ConnCase"
 
-        assert file =~ ~S|@valid_attrs %{address_id: nil|
+        assert file =~ ~S|@valid_attrs %{age: 42|
         assert file =~ ~S|@invalid_attrs %{}|
+        refute file =~ ~S|address_id: nil|
 
         assert file =~ ~S|test "lists all entries on index"|
         assert file =~ ~S|conn = get conn, user_path(conn, :index)|

@@ -92,10 +92,10 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
 
   defp inputs(attrs) do
     Enum.map attrs, fn
-      {_k, {:array, _}} ->
+      {_, {:array, _}} ->
         {nil, nil}
-      {k, {:references, _}} ->
-        {label(k), ~s(<%= number_input f, #{inspect(k)}, class: "form-control" %>)}
+      {_, {:references, _}} ->
+        {nil, nil}
       {k, :integer}    ->
         {label(k), ~s(<%= number_input f, #{inspect(k)}, class: "form-control" %>)}
       {k, :float}      ->

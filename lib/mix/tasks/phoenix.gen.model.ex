@@ -16,6 +16,8 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     * a model in web/models
     * a migration file for the repository
 
+  The generated model can be skipped with `--no-migration`.
+
   ## Attributes
 
   The resource fields are given using `name:type` syntax
@@ -48,7 +50,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
   """
   def run(args) do
-    {_opts, parsed, _} = OptionParser.parse(args, switches: [])
+    {opts, parsed, _} = OptionParser.parse(args, switches: [migration: :boolean])
     [singular, plural | attrs] = validate_args!(parsed)
 
     attrs     = Mix.Phoenix.attrs(attrs)
@@ -66,11 +68,17 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
                assocs: assocs(assocs), indexes: indexes(plural, assocs),
                defaults: defaults(attrs), params: params]
 
-    Mix.Phoenix.copy_from apps(), "priv/templates/phoenix.gen.model", "", binding, [
-      {:eex, "migration.exs",  "priv/repo/migrations/#{timestamp()}_create_#{migration}.exs"},
+    files = [
       {:eex, "model.ex",       "web/models/#{path}.ex"},
       {:eex, "model_test.exs", "test/models/#{path}_test.exs"},
     ]
+
+    if opts[:migration] != false do
+      files =
+        [{:eex, "migration.exs", "priv/repo/migrations/#{timestamp()}_create_#{migration}.exs"}|files]
+    end
+
+    Mix.Phoenix.copy_from apps(), "priv/templates/phoenix.gen.model", "", binding, files
   end
 
   defp validate_args!([_, plural | _] = args) do
