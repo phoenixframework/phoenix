@@ -198,6 +198,11 @@ defmodule Phoenix.Channel.Server do
   end
 
   @doc false
+  def handle_info(%Message{topic: topic, event: "phx_join"}, %{topic: topic} = socket) do
+    Logger.info fn -> "#{inspect socket.channel} received join event with topic \"#{topic}\" but channel already joined" end
+
+    handle_result({:reply, {:error, %{reason: "already joined"}}, socket}, :handle_in)
+  end
   def handle_info(%Message{topic: topic, event: event, payload: payload, ref: ref},
                   %{topic: topic} = socket) do
     event

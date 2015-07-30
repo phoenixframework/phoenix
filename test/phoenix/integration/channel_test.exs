@@ -238,6 +238,21 @@ defmodule Phoenix.Integration.ChannelTest do
     assert_receive {:DOWN, _, :process, ^chan2, :shutdown}
   end
 
+  test "sending join event when already join logs and ignores messages" do
+    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket?user_id=1001")
+    WebsocketClient.join(sock, "rooms:joiner", %{})
+    assert_receive %Message{topic: "rooms:joiner", event: "phx_reply",
+                            ref: "1", payload: %{"response" => %{}, "status" => "ok"}}
+
+    log = capture_log fn ->
+      WebsocketClient.join(sock, "rooms:joiner", %{})
+      assert_receive %Message{topic: "rooms:joiner", event: "phx_reply",
+                              payload: %{"response" => %{"reason" => "already joined"},
+                                         "status" => "error"}}
+    end
+    assert log =~ "Phoenix.Integration.ChannelTest.RoomChannel received join event with topic \"rooms:joiner\" but channel already joined"
+  end
+
 
   ## Longpoller Transport
 
