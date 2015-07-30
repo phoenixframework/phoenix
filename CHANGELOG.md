@@ -2,13 +2,20 @@
 
 ## v0.16-dev
 
+* Enhancements
+  * [Brunch] No longer ship with `sass-brunch` dependency
+  * [Mix] Allow `phoenix.gen.*` tasks templates to be customized by the target application by placing copies at `priv/template/phoenix.gen.*`
+  * [Mix] Support `mix phoenix.gen.model Comment comment post_id:references:posts`
+  * [Router] Provide `put_secure_browser_headers/2` and use it by default in the browser pipeline
+  * [Token] Add `Phoenix.Token` for easy signing and verification of tokens
+
 * Backward incompatible changes
   * [Controller] `jsonp/3` function has been removed in favor of the `plug :allow_jsonp`  
+  * [HTML] Use `phoenix_html ~> 2.0` which includes its own `phoenix_html.js` version
 
 * JavaScript client backwards incompatible changes
   * Socket params are now passed to `socket.connect()` instead of an option on the constructor.
   * Socket params are no longer merged as default params for channel params. Use `connect/2` on the server to wire up default channel assigns.
-
 
 ## v0.15.0 (2015-7-27)
 
@@ -28,8 +35,6 @@ See these [`0.14.x` to `0.15.0` upgrade instructions](https://gist.github.com/ch
 * JavaScript client backwards incompatible changes
   * `Phoenix.LongPoller` has been renamed to `Phoenix.LongPoll`
   * A new client version is required to   accommodate server changes
-
-
 
 ## v0.14.0 (2015-06-29)
 
