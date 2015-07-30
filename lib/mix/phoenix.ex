@@ -84,18 +84,20 @@ defmodule Mix.Phoenix do
   """
   def params(attrs) do
     Enum.into attrs, %{}, fn
-      {k, {:array, _}} -> {k, []}
-      {k, :belongs_to} -> {k, nil}
-      {k, :integer}    -> {k, 42}
-      {k, :float}      -> {k, "120.5"}
-      {k, :decimal}    -> {k, "120.5"}
-      {k, :boolean}    -> {k, true}
-      {k, :text}       -> {k, "some content"}
-      {k, :date}       -> {k, %{year: 2010, month: 4, day: 17}}
-      {k, :time}       -> {k, %{hour: 14, min: 0}}
-      {k, :datetime}   -> {k, %{year: 2010, month: 4, day: 17, hour: 14, min: 0}}
-      {k, :uuid}       -> {k, "7488a646-e31f-11e4-aace-600308960662"}
-      {k, _}           -> {k, "some content"}
+      {k, {:array, _}}      -> {k, []}
+      {k, {:references, _}} -> {k, nil}
+      {k, :references}      -> {k, nil}
+      {k, :belongs_to}      -> {k, nil}
+      {k, :integer}         -> {k, 42}
+      {k, :float}           -> {k, "120.5"}
+      {k, :decimal}         -> {k, "120.5"}
+      {k, :boolean}         -> {k, true}
+      {k, :text}            -> {k, "some content"}
+      {k, :date}            -> {k, %{year: 2010, month: 4, day: 17}}
+      {k, :time}            -> {k, %{hour: 14, min: 0}}
+      {k, :datetime}        -> {k, %{year: 2010, month: 4, day: 17, hour: 14, min: 0}}
+      {k, :uuid}            -> {k, "7488a646-e31f-11e4-aace-600308960662"}
+      {k, _}                -> {k, "some content"}
     end
   end
 
