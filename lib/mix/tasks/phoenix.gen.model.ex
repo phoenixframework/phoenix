@@ -24,9 +24,10 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
       mix phoenix.gen.model User users name age:integer
 
-  The generator also supports `belongs_to` associations:
+  The generator also supports `belongs_to` associations
+  via references:
 
-      mix phoenix.gen.model Post posts title user:references
+      mix phoenix.gen.model Post posts title user_id:references:users
 
   This will result in a migration with an `:integer` column
   of `:user_id` and create an index. It will also generate
@@ -94,47 +95,32 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
   end
 
   defp partition_attrs_and_assocs(attrs) do
-    Enum.partition attrs,
-      fn
-        {_, {kind, _}} -> kind == :references
-        {_, kind} -> kind == :references
-      end
+    Enum.partition attrs, fn
+      {_, {:references, _}} ->
+        true
+      {key, :references} ->
+        Mix.raise """
+        Phoenix generators expect the table to be given to #{key}:references.
+        For example:
+
+            mix phoenix.gen.model Comment comments body:text post_id:references:posts
+        """
+      _ ->
+        false
+    end
   end
 
   defp assocs(assocs) do
-    Enum.reduce assocs, [],
-      fn
-        {key, {_, source}}, acc -> do_assocs(key, source, acc)
-        {key, _}, acc -> do_assocs(key, get_assoc_source(key), acc)
-      end
-  end
-
-  defp do_assocs(key, source, acc) do
-    assoc  = Mix.Phoenix.inflect Atom.to_string(key)
-    [{key, :"#{key}_id", assoc[:module], source} | acc]
-  end
-
-  defp get_assoc_source(key) do
-    assoc  = Mix.Phoenix.inflect Atom.to_string(key)
-    module = Module.concat(Elixir, assoc[:module])
-    if Code.ensure_loaded?(module) do
-      module.__schema__(:source) |> String.to_atom()
-    else
-      Mix.raise """
-      The table name for the association is inferred from the assocation
-      module but could not load #{inspect module}. This means that the
-      association module must exist and be loaded in your application.
-      Otherwise, you will need to explicitly set the association's table
-      like:
-
-          mix phoenix.gen.model Property properties user:references:users
-      """
+    Enum.map assocs, fn {key_id, {:references, source}} ->
+      key   = String.replace(Atom.to_string(key_id), "_id", "")
+      assoc = Mix.Phoenix.inflect key
+      {String.to_atom(key), key_id, assoc[:module], source}
     end
   end
 
   defp indexes(plural, assocs) do
-    Enum.reduce assocs, [], fn {key, _}, acc ->
-      ["create index(:#{plural}, [:#{key}_id])" | acc]
+    Enum.map assocs, fn {key, _} ->
+      "create index(:#{plural}, [:#{key}])"
     end
   end
 

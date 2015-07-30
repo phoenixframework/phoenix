@@ -94,36 +94,32 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
     Enum.map attrs, fn
       {_k, {:array, _}} ->
         {nil, nil}
-      {k, :belongs_to} ->
-        {~s(<%= number_input f, #{inspect(k)}_id, class: "form-control" %>), label(k, :belongs_to)}
+      {k, {:references, _}} ->
+        {label(k), ~s(<%= number_input f, #{inspect(k)}, class: "form-control" %>)}
       {k, :integer}    ->
-        {~s(<%= number_input f, #{inspect(k)}, class: "form-control" %>), label(k)}
+        {label(k), ~s(<%= number_input f, #{inspect(k)}, class: "form-control" %>)}
       {k, :float}      ->
-        {~s(<%= number_input f, #{inspect(k)}, step: "any", class: "form-control" %>), label(k)}
+        {label(k), ~s(<%= number_input f, #{inspect(k)}, step: "any", class: "form-control" %>)}
       {k, :decimal}    ->
-        {~s(<%= number_input f, #{inspect(k)}, step: "any", class: "form-control" %>), label(k)}
+        {label(k), ~s(<%= number_input f, #{inspect(k)}, step: "any", class: "form-control" %>)}
       {k, :boolean}    ->
-        {~s(<%= checkbox f, #{inspect(k)}, class: "form-control" %>), label(k)}
+        {label(k), ~s(<%= checkbox f, #{inspect(k)}, class: "form-control" %>)}
       {k, :text}       ->
-        {~s(<%= textarea f, #{inspect(k)}, class: "form-control" %>), label(k)}
+        {label(k), ~s(<%= textarea f, #{inspect(k)}, class: "form-control" %>)}
       {k, :date}       ->
-        {~s(<%= date_select f, #{inspect(k)}, class: "form-control" %>), label(k)}
+        {label(k), ~s(<%= date_select f, #{inspect(k)}, class: "form-control" %>)}
       {k, :time}       ->
-        {~s(<%= time_select f, #{inspect(k)}, class: "form-control" %>), label(k)}
+        {label(k), ~s(<%= time_select f, #{inspect(k)}, class: "form-control" %>)}
       {k, :datetime}   ->
-        {~s(<%= datetime_select f, #{inspect(k)}, class: "form-control" %>), label(k)}
+        {label(k), ~s(<%= datetime_select f, #{inspect(k)}, class: "form-control" %>)}
       {k, _}           ->
-        {~s(<%= text_input f, #{inspect(k)}, class: "form-control" %>), label(k)}
+        {label(k), ~s(<%= text_input f, #{inspect(k)}, class: "form-control" %>)}
     end
   end
 
   defp label(key) do
     label_text = Phoenix.Naming.humanize(key)
-    ~s(<%= label f, #{inspect(key)}, "#{label_text}" %>)
-  end
-  defp label(key, :belongs_to) do
-    label_text = Phoenix.Naming.humanize(Atom.to_string(key) <> "_id")
-    ~s(<%= label f, #{inspect(key)}_id, "#{label_text}" %>)
+    ~s(<%= label f, #{inspect(key)}, "#{label_text}", class: "control-label" %>)
   end
 
   defp apps do

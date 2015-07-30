@@ -20,7 +20,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
       Mix.Tasks.Phoenix.Gen.Html.run ["user", "users", "name", "age:integer", "height:decimal",
                                       "nicks:array:text", "famous:boolean", "born_at:datetime",
                                       "secret:uuid", "first_login:date", "alarm:time",
-                                      "address:belongs_to"]
+                                      "address_id:references:addresses"]
 
       assert_file "web/models/user.ex"
       assert_file "test/models/user_test.exs"
@@ -49,13 +49,13 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
         assert file =~ ~s(<%= checkbox f, :famous, class: "form-control" %>)
         assert file =~ ~s(<%= datetime_select f, :born_at, class: "form-control" %>)
         assert file =~ ~s(<%= text_input f, :secret, class: "form-control" %>)
-        assert file =~ ~s(<%= label f, :name, "Name" %>)
-        assert file =~ ~s(<%= label f, :age, "Age" %>)
-        assert file =~ ~s(<%= label f, :height, "Height" %>)
-        assert file =~ ~s(<%= label f, :address_id, "Address" %>)
-        assert file =~ ~s(<%= label f, :famous, "Famous" %>)
-        assert file =~ ~s(<%= label f, :born_at, "Born at" %>)
-        assert file =~ ~s(<%= label f, :secret, "Secret" %>)
+        assert file =~ ~s(<%= label f, :name, "Name", class: "control-label" %>)
+        assert file =~ ~s(<%= label f, :age, "Age", class: "control-label" %>)
+        assert file =~ ~s(<%= label f, :height, "Height", class: "control-label" %>)
+        assert file =~ ~s(<%= label f, :address_id, "Address", class: "control-label" %>)
+        assert file =~ ~s(<%= label f, :famous, "Famous", class: "control-label" %>)
+        assert file =~ ~s(<%= label f, :born_at, "Born at", class: "control-label" %>)
+        assert file =~ ~s(<%= label f, :secret, "Secret", class: "control-label" %>)
         refute file =~ ":nicks"
       end
 
@@ -78,7 +78,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
         assert file =~ "defmodule Phoenix.UserControllerTest"
         assert file =~ "use Phoenix.ConnCase"
 
-        assert file =~ ~S|@valid_attrs %{address: nil|
+        assert file =~ ~S|@valid_attrs %{address_id: nil|
         assert file =~ ~S|@invalid_attrs %{}|
 
         assert file =~ ~S|test "lists all entries on index"|

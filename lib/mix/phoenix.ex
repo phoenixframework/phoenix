@@ -84,14 +84,13 @@ defmodule Mix.Phoenix do
   """
   def params(attrs) do
     Enum.into attrs, %{}, fn
-      {k, {:array, _}}      -> {k, []}
       {k, {:references, _}} -> {k, nil}
-      {k, :references}      -> {k, nil}
-      {k, :belongs_to}      -> {k, nil}
+      {k, {:array, _}}      -> {k, []}
       {k, :integer}         -> {k, 42}
       {k, :float}           -> {k, "120.5"}
       {k, :decimal}         -> {k, "120.5"}
       {k, :boolean}         -> {k, true}
+      {k, :map}             -> {k, %{}}
       {k, :text}            -> {k, "some content"}
       {k, :date}            -> {k, %{year: 2010, month: 4, day: 17}}
       {k, :time}            -> {k, %{hour: 14, min: 0}}
