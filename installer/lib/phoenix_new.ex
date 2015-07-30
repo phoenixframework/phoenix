@@ -99,7 +99,9 @@ defmodule Mix.Tasks.Phoenix.New do
       Values can be `mysql`, `mssql` or `sqlite`. Defaults to `postgres`
 
     * `--no-brunch` - do not generate brunch files
-      for static asset building
+      for static asset building. When choosing this
+      option, you will need to manually handle
+      JavaScript dependencies if building HTML apps
 
     * `--no-ecto` - do not generate ecto files for
       the model layer

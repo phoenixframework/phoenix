@@ -16,7 +16,7 @@
       <td class="text-right">
         <%= "<%=" %> link "Show", to: <%= singular %>_path(@conn, :show, <%= singular %>), class: "btn btn-default btn-xs" <%= "%\>" %>
         <%= "<%=" %> link "Edit", to: <%= singular %>_path(@conn, :edit, <%= singular %>), class: "btn btn-default btn-xs" <%= "%\>" %>
-        <%= "<%=" %> link "Delete", to: <%= singular %>_path(@conn, :delete, <%= singular %>), method: :delete, class: "btn btn-danger btn-xs" <%= "%\>" %>
+        <%= "<%=" %> link "Delete", to: <%= singular %>_path(@conn, :delete, <%= singular %>), method: :delete, data: [confirm: "Are you sure?"], class: "btn btn-danger btn-xs" <%= "%\>" %>
       </td>
     </tr>
 <%% end %>

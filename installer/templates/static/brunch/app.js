@@ -1,4 +1,5 @@
 import {Socket} from "<%= phoenix_static_path %>/web/static/js/phoenix"
+import "deps/phoenix_html/web/static/js/phoenix_html"
 
 // let socket = new Socket("/ws")
 // socket.connect()
