@@ -27,8 +27,5 @@
 
     </div> <!-- /container -->
     <script src="<%%= static_path(@conn, "/js/app.js") %>"></script>
-    <%= if brunch do %>
-    <script>require("web/static/js/app")</script>
-    <% end %>
   </body>
 </html>

@@ -68,8 +68,6 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/web/static/css/app.css"
       assert_file "photo_blog/web/static/js/app.js",
                   ~s[import {Socket} from "deps/phoenix/web/static/js/phoenix"]
-      assert_file "photo_blog/web/templates/layout/app.html.eex",
-                  ~s[require("web/static/js/app")]
 
       refute File.exists? "photo_blog/priv/static/css/app.css"
       refute File.exists? "photo_blog/priv/static/js/phoenix.js"
@@ -110,8 +108,6 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       # No Brunch
       refute File.read!("photo_blog/.gitignore") |> String.contains?("/node_modules")
       assert_file "photo_blog/config/dev.exs", ~r/watchers: \[\]/
-      refute File.read!("photo_blog/web/templates/layout/app.html.eex") |> String.contains?(~s{require("web/static/js/app")})
-
       assert_file "photo_blog/priv/static/css/app.css"
       assert_file "photo_blog/priv/static/images/phoenix.png"
       assert_file "photo_blog/priv/static/images/favicon.ico"

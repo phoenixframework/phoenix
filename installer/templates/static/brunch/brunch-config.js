@@ -52,6 +52,13 @@ exports.config = {
       ignore: [/web\/static\/vendor/]
     }
   },
+
+  modules: {
+    autoRequire: {
+      'js/app.js': ['web/static/js/app']
+    }
+  },
+
   npm: {
     enabled: true
   }
