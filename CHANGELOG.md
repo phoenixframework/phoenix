@@ -4,10 +4,16 @@
 
 * Enhancements
   * [Brunch] No longer ship with `sass-brunch` dependency
+  * [Endpoint] Add `force_ssl` support
   * [Mix] Allow `phoenix.gen.*` tasks templates to be customized by the target application by placing copies at `priv/template/phoenix.gen.*`
   * [Mix] Support `mix phoenix.gen.model Comment comment post_id:references:posts`
+  * [Mix] Add `mix phoenix.gen.secret`
   * [Router] Provide `put_secure_browser_headers/2` and use it by default in the browser pipeline
   * [Token] Add `Phoenix.Token` for easy signing and verification of tokens
+
+* Bug fixes
+  * [Cowboy] Ensure we print proper URL when starting the server with both http and https
+  * [Digest] Do not gzip binary files like png and jpg. Default only to known text files and make them configurable via `config :phoenix, :gzippable_exts, ~w(.txt .html .js .css)` and so on
 
 * Backward incompatible changes
   * [Controller] `jsonp/3` function has been removed in favor of the `plug :allow_jsonp`  

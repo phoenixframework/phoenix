@@ -101,6 +101,11 @@ defmodule Phoenix.Endpoint do
       [`Plug.Adapters.Cowboy`](http://hexdocs.pm/plug/Plug.Adapters.Cowboy.html).
       Defaults to `false`.
 
+    * `:force_ssl` - ensures no data is ever sent via http, always redirecting
+      to https. It expects a list of options which are forwarded to `Plug.SSl`.
+      By default, it redirects http requests and sets the
+      "strict-transport-security" header for https ones.
+
     * `:secret_key_base` - a secret key used as a base to generate secrets
       to encode cookies, session and friends. Defaults to `nil` as it must
       be set per application.
