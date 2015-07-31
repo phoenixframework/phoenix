@@ -31,7 +31,7 @@ defmodule <%= module %>ControllerTest do
 
   test "creates and renders resource when data is valid", %{conn: conn} do
     conn = post conn, <%= singular %>_path(conn, :create), <%= singular %>: @valid_attrs
-    assert json_response(conn, 200)["data"]["id"]
+    assert json_response(conn, 201)["data"]["id"]
     assert Repo.get_by(<%= alias %>, @valid_attrs)
   end
 

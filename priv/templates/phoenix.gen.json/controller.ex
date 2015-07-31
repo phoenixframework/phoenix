@@ -15,7 +15,9 @@ defmodule <%= module %>Controller do
 
     case Repo.insert(changeset) do
       {:ok, <%= singular %>} ->
-        render(conn, "show.json", <%= singular %>: <%= singular %>)
+        conn
+        |> put_status(:created)
+        |> render("show.json", <%= singular %>: <%= singular %>)
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
