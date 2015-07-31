@@ -128,10 +128,11 @@ defmodule Phoenix.Controller do
   def endpoint_module(conn), do: conn.private.phoenix_endpoint
 
   @doc """
-  Returns the template name rendered from the controller as a string
+  Returns the template name rendered in the view as a string
+  (or nil if no template was rendered).
   """
-  @spec controller_template(Plug.Conn.t) :: binary
-  def controller_template(conn), do: conn.private[:phoenix_template]
+  @spec view_template(Plug.Conn.t) :: binary | nil
+  def view_template(conn), do: conn.private[:phoenix_template]
 
   defp get_json_encoder do
     Application.get_env(:phoenix, :format_encoders)

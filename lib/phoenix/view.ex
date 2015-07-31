@@ -239,11 +239,11 @@ defmodule Phoenix.View do
   ## Rendering based on controller template
 
   In some cases, you might need to render based on the template from the controller.
-  For these cases, `Phoenix.Controller.controller_template/1` can pair with
+  For these cases, `Phoenix.Controller.view_template/1` can pair with
   `render_existing/3` for per-template based content, ie:
 
       <head>
-        <%= render_existing view_module(@conn), "scripts." <> controller_template(@conn), assigns %>
+        <%= render_existing view_module(@conn), "scripts." <> view_template(@conn), assigns %>
       </head>
 
       def render("scripts.show.html", _assigns) do

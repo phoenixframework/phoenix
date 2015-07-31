@@ -17,6 +17,7 @@
 
 * Backward incompatible changes
   * [Controller] `jsonp/3` function has been removed in favor of the `plug :allow_jsonp`  
+  * [Controller] `controller_template/1` has been renamed to `view_template/1`
   * [HTML] Use `phoenix_html ~> 2.0` which includes its own `phoenix_html.js` version
 
 * JavaScript client backwards incompatible changes

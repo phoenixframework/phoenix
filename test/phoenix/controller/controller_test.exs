@@ -35,10 +35,10 @@ defmodule Phoenix.Controller.ControllerTest do
     assert endpoint_module(conn) == Hello
   end
 
-  test "controller_template/1" do
+  test "view_template/1" do
     conn = put_private(%Conn{}, :phoenix_template, "hello.html")
-    assert controller_template(conn) == "hello.html"
-    assert controller_template(%Conn{}) == nil
+    assert view_template(conn) == "hello.html"
+    assert view_template(%Conn{}) == nil
   end
 
   test "put_layout_formats/2 and layout_formats/1" do
