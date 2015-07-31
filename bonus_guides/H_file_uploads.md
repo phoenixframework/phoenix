@@ -75,7 +75,7 @@ To make this easier to read, let's just focus on the struct itself.
 
 > Note: This file is temporary, and Plug will remove it from the directory as the request completes. If we need to do anything with this file, we need to do it before then.
 
-Once we have the `Plug.Upload` struct available in our controller, we can perform any operation on in we want. We can check to make sure the file exists with `File.exists?/1`, copy it somewhere else on the filesystem with `File.cp/2`, send it to S3 with an external library, or even email it with [Plug.Conn.send_file/5](http://hexdocs.pm/plug/Plug.Conn.html#send_file/5).
+Once we have the `Plug.Upload` struct available in our controller, we can perform any operation on in we want. We can check to make sure the file exists with `File.exists?/1`, copy it somewhere else on the filesystem with `File.cp/2`, send it to S3 with an external library, or even send it back to the client with [Plug.Conn.send_file/5](http://hexdocs.pm/plug/Plug.Conn.html#send_file/5).
 
 There's one last thing to note about file uploads. Let's create another user, this time without selecting a photo.
 
@@ -84,3 +84,24 @@ With no data from the `file` input, we get neither the "photo" key nor a `Plug.U
 ```elixir
 %{"bio" => "Guitarist", "email" => "dweezil@example.com", "name" => "Dweezil Zappa", "number_of_pets" => "3"}
 ```
+
+## Configuring upload limits
+
+The conversion from the data being sent by the form to an actual `Plug.Upload` is done by the `Plug.Parsers` plug which we can find inside `HelloPhoenix.Endpoint`:
+
+```elixir
+plug Plug.Parsers,
+  parsers: [:urlencoded, :multipart, :json],
+  pass: ["*/*"],
+  json_decoder: Poison
+```
+
+Besides the options above, `Plug.Parsers` accepts other options to control data upload:
+
+  * `:length` - sets the max body length to read, defaults to `8_000_000` bytes
+  * `:read_length` - set the amount of bytes to read at one time, defaults to `1_000_000` bytes
+  * `:read_timeout` - set the timeout for each chunk received, defaults to `15_000` ms
+
+The first option configures the maximum data allowed. The remaining ones configure how much data we expect to read and its frequency. If the client cannot push data fast enough, the connection will be terminated. Phoenix ships with reasonable defaults but you may want to customize it under special circumnstances, for example, if you are expecting really slow clients to send large chunks of data.
+
+It is also worth pointing out those limits are important as a security mechanism. For example, if we don't set a limit for data upload, attackers could open up thousands of connections to your application and send one byte every 2 minutes, which would take very long to complete while using up all connections to your server. The limits above expect at least a reasonable amount of progress, making attackers' lives a bit harder.
