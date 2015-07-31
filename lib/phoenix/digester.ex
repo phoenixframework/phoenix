@@ -1,5 +1,6 @@
 defmodule Phoenix.Digester do
   @digested_file_regex ~r/(-[a-fA-F\d]{32})/
+  @gzippable_files ~w(.js .css .txt .text .html .json)
 
   @moduledoc """
   Digests and compress static files.
@@ -71,11 +72,16 @@ defmodule Phoenix.Digester do
     %{absolute_path: file_path,
       relative_path: Path.relative_to(file_path, input_path) |> Path.dirname,
       filename: Path.basename(file_path),
-      content: File.read!(file_path)}
+      content: File.read!(file_path),
+      compressed_content: nil}
   end
 
   defp compress(file) do
-    Map.put(file, :compressed_content, :zlib.gzip(file.content))
+    if Enum.member?(@gzippable_files, Path.extname(file.filename)) do
+      Map.put(file, :compressed_content, :zlib.gzip(file.content))
+    else
+      file
+    end
   end
 
   defp digest(file) do
@@ -90,8 +96,11 @@ defmodule Phoenix.Digester do
     File.mkdir_p!(path)
 
     # compressed files
-    File.write!(Path.join(path, file.digested_filename <> ".gz"), file.compressed_content)
-    File.write!(Path.join(path, file.filename <> ".gz"), file.compressed_content)
+    if file.compressed_content do
+      File.write!(Path.join(path, file.digested_filename <> ".gz"), file.compressed_content)
+      File.write!(Path.join(path, file.filename <> ".gz"), file.compressed_content)
+    end
+
     # uncompressed files
     File.write!(Path.join(path, file.digested_filename), file.content)
     File.write!(Path.join(path, file.filename), file.content)

@@ -15,10 +15,12 @@ defmodule Phoenix.DigesterTest do
     output_files = assets_files(output_path)
 
     assert "phoenix.png" in output_files
-    assert "phoenix.png.gz" in output_files
+    refute "phoenix.png.gz" in output_files
+    assert "phoenix.js" in output_files
+    assert "phoenix.js.gz" in output_files
     assert "manifest.json" in output_files
     assert Enum.any?(output_files, &(String.match?(&1, ~r/(phoenix-[a-fA-F\d]{32}.png)/)))
-    assert Enum.any?(output_files, &(String.match?(&1, ~r/(phoenix-[a-fA-F\d]{32}.png.gz)/)))
+    refute Enum.any?(output_files, &(String.match?(&1, ~r/(phoenix-[a-fA-F\d]{32}.png.gz)/)))
 
     json =
       Path.join(output_path, "manifest.json")
@@ -37,10 +39,10 @@ defmodule Phoenix.DigesterTest do
     output_files = assets_files(output_path)
 
     assert "static/phoenix.png" in output_files
-    assert "static/phoenix.png.gz" in output_files
+    refute "static/phoenix.png.gz" in output_files
     assert "manifest.json" in output_files
     assert Enum.any?(output_files, &(String.match?(&1, ~r/(phoenix-[a-fA-F\d]{32}.png)/)))
-    assert Enum.any?(output_files, &(String.match?(&1, ~r/(phoenix-[a-fA-F\d]{32}.png.gz)/)))
+    refute Enum.any?(output_files, &(String.match?(&1, ~r/(phoenix-[a-fA-F\d]{32}.png.gz)/)))
 
     json =
       Path.join(output_path, "manifest.json")
