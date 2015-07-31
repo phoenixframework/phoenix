@@ -67,6 +67,8 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/web/static/assets/images/favicon.ico"
       assert_file "photo_blog/web/static/css/app.css"
       assert_file "photo_blog/web/static/js/app.js",
+                  ~s[import "./socket"]
+      assert_file "photo_blog/web/static/js/socket.js",
                   ~s[import {Socket} from "deps/phoenix/web/static/js/phoenix"]
 
       refute File.exists? "photo_blog/priv/static/css/app.css"

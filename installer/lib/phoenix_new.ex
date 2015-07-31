@@ -52,6 +52,7 @@ defmodule Mix.Tasks.Phoenix.New do
     {:text, "static/brunch/package.json",     "package.json"},
     {:text, "static/app.css",                 "web/static/css/app.css"},
     {:eex,  "static/brunch/app.js",           "web/static/js/app.js"},
+    {:eex,  "static/brunch/socket.js",        "web/static/js/socket.js"},
     {:text, "static/robots.txt",              "web/static/assets/robots.txt"},
   ]
 
