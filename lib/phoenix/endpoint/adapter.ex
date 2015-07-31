@@ -235,8 +235,8 @@ defmodule Phoenix.Endpoint.Adapter do
         Poison.decode!(File.read!(outer))
       else
         Logger.error "Could not find static manifest at #{inspect outer}. " <>
-                     "Run mix phoenix.digest after building your static files " <>
-                     "or remove the configuration from config/prod.exs."
+                     "Run \"mix phoenix.digest\" after building your static files " <>
+                     "or remove the configuration from \"config/prod.exs.\""
       end
     else
       %{}
