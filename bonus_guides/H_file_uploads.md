@@ -102,6 +102,6 @@ Besides the options above, `Plug.Parsers` accepts other options to control data 
   * `:read_length` - set the amount of bytes to read at one time, defaults to `1_000_000` bytes
   * `:read_timeout` - set the timeout for each chunk received, defaults to `15_000` ms
 
-The first option configures the maximum data allowed. The remaining ones configure how much data we expect to read and its frequency. If the client cannot push data fast enough, the connection will be terminated. Phoenix ships with reasonable defaults but you may want to customize it under special circumnstances, for example, if you are expecting really slow clients to send large chunks of data.
+The first option configures the maximum data allowed. The remaining ones configure how much data we expect to read and its frequency. If the client cannot push data fast enough, the connection will be terminated. Phoenix ships with reasonable defaults but you may want to customize it under special circumstances, for example, if you are expecting really slow clients to send large chunks of data.
 
 It is also worth pointing out those limits are important as a security mechanism. For example, if we don't set a limit for data upload, attackers could open up thousands of connections to your application and send one byte every 2 minutes, which would take very long to complete while using up all connections to your server. The limits above expect at least a reasonable amount of progress, making attackers' lives a bit harder.
