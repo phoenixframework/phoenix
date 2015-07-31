@@ -25,7 +25,8 @@ defmodule Phoenix.Mixfile do
      env: [template_engines: [],
            format_encoders: [],
            filter_parameters: ["password"],
-           serve_endpoints: false]]
+           serve_endpoints: false,
+           gzippable_exts: ~w(.js .css .txt .text .html .json)]]
   end
 
   defp deps do

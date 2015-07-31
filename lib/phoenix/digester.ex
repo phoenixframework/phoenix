@@ -1,6 +1,5 @@
 defmodule Phoenix.Digester do
   @digested_file_regex ~r/(-[a-fA-F\d]{32})/
-  @gzippable_files ~w(.js .css .txt .text .html .json)
 
   @moduledoc """
   Digests and compress static files.
@@ -77,7 +76,7 @@ defmodule Phoenix.Digester do
   end
 
   defp compress(file) do
-    if Enum.member?(@gzippable_files, Path.extname(file.filename)) do
+    if Path.extname(file.filename) in Application.get_env(:phoenix, :gzippable_exts) do
       Map.put(file, :compressed_content, :zlib.gzip(file.content))
     else
       file
