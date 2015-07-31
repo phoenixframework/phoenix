@@ -284,6 +284,11 @@ defmodule Phoenix.Endpoint do
 
       defoverridable [init: 1, call: 2]
 
+      if force_ssl = var!(config)[:force_ssl] do
+        plug Plug.SSL,
+          Keyword.put_new(force_ssl, :host, var!(config)[:url][:host] || "localhost")
+      end
+
       if var!(config)[:debug_errors] do
         use Plug.Debugger, otp_app: var!(otp_app)
       end
@@ -381,7 +386,11 @@ defmodule Phoenix.Endpoint do
     plugs = Module.get_attribute(env.module, :plugs)
     {conn, body} = Plug.Builder.compile(env, plugs, [])
 
-    # TODO move to adapter dispatch
+    # TODO: Move this to the adapter dispatch.
+    #
+    # Keep in mind that moving this will also require
+    # moving force_ssl inside the adapters too, as today
+    # it is handled by the endpoint.
     socket_intercepts = for {path, socket_handler} <- sockets do
       path_info = Plug.Router.Utils.split(path)
 

@@ -3,7 +3,9 @@ defmodule Phoenix.Endpoint.EndpointTest do
   use RouterHelper
 
   @config [url: [host: "example.com", path: "/api"],
-           static_url: [host: "static.example.com"], server: false,
+           static_url: [host: "static.example.com"],
+           server: false, http: [port: 80], https: [port: 443],
+           force_ssl: [subdomains: true],
            cache_static_lookup: true, cache_static_manifest: "../../../../test/fixtures/manifest.json",
            pubsub: [adapter: Phoenix.PubSub.PG2, name: :endpoint_pub]]
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
@@ -25,8 +27,8 @@ defmodule Phoenix.Endpoint.EndpointTest do
   test "has reloadable configuration" do
     assert Endpoint.config(:url) == [host: "example.com", path: "/api"]
     assert Endpoint.config(:static_url) == [host: "static.example.com"]
-    assert Endpoint.url == "http://example.com"
-    assert Endpoint.static_url == "http://static.example.com"
+    assert Endpoint.url == "https://example.com"
+    assert Endpoint.static_url == "https://static.example.com"
 
     config = put_in(@config[:url][:port], 1234)
     |> put_in([:static_url, :port], 456)
@@ -34,12 +36,24 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert Endpoint.config_change([{Endpoint, config}], []) == :ok
     assert Endpoint.config(:url) == [host: "example.com", path: "/api", port: 1234]
     assert Endpoint.config(:static_url) == [port: 456, host: "static.example.com"]
-    assert Endpoint.url == "http://example.com:1234"
-    assert Endpoint.static_url == "http://static.example.com:456"
+    assert Endpoint.url == "https://example.com:1234"
+    assert Endpoint.static_url == "https://static.example.com:456"
   end
 
   test "sets script name when using path" do
     assert Endpoint.call(conn(:get, "/"), []).script_name == ~w"api"
+  end
+
+  test "redirects http requests to https on force_ssl" do
+    conn = Endpoint.call(conn(:get, "/"), [])
+    assert get_resp_header(conn, "location") == ["https://example.com/"]
+    assert conn.halted
+  end
+
+  test "sends hsts on https requests on force_ssl" do
+    conn = Endpoint.call(conn(:get, "https://example.com/"), [])
+    assert get_resp_header(conn, "strict-transport-security") ==
+           ["max-age=31536000; includeSubDomains"]
   end
 
   test "reads static path with and without caching" do
