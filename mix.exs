@@ -40,7 +40,7 @@ defmodule Phoenix.Mixfile do
 
      # Test dependencies
      {:phoenix_html, "~> 1.2", only: :test},
-     {:websocket_client, github: "jeremyong/websocket_client", only: :test}]
+     {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test}]
   end
 
   defp package do
