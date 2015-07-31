@@ -134,7 +134,7 @@ Also we don't need to import the `config/prod.secret.exs` file in our prod confi
 import_config "prod.secret.exs"
 ```
 
-Your final `config/prod.exs` should now look something like this (I've removed the comments for readability):
+Your final `config/prod.exs` should now look something like this (we've removed the comments for readability):
 
 ```
 use Mix.Config
@@ -161,44 +161,21 @@ We can now remove the `config/prod.secret.exs` from the disk:
 $ rm config/prod.secret.exs
 ```
 
-And from our `.gitignore` file:
-
-```
-# Mix artifacts
-/_build
-/deps
-/*.ez
-
-# Generate on crash by the VM
-erl_crash.dump
-
-# Static artifacts
-/node_modules
-
-# Since we are building assets from web/static,
-# we ignore priv/static. You may want to comment
-# this depending on your deployment strategy.
-/priv/static/
-
-### DELETE ALL THE LINES BELOW ###
-
-# The config/prod.secret.exs file by default contains sensitive
-# data and you should not commit it into version control.
-#
-# Alternatively, you may comment the line below and commit the
-# secrets file as long as you replace its contents by environment
-# variables.
-/config/prod.secret.exs
-```
-
 ## Creating Environment Variables in Heroku
 
 The `DATABASE_URL` config var is automatically created by Heroku when we add the [Heroku Postgres add-on]().
 
-We still have to create the `SECRET_KEY_BASE` config:
+We still have to create the `SECRET_KEY_BASE` config based on a random string. First, use `mix phoenix.gen.secret` to get a new secret:
 
 ```console
-$ heroku config:set SECRET_KEY_BASE="my_secret_key_base" # This needs a randomly generated string
+$ mix phoenix.gen.secret
+A_LONG_STRING_WILL_BE_PRINTED
+```
+
+Now set it in Heroku:
+
+```console
+$ heroku config:set SECRET_KEY_BASE="A_LONG_STRING_WILL_BE_PRINTED"
 Setting config vars and restarting mysterious-meadow-6277... done, v3
 SECRET_KEY_BASE: my_secret_key_base
 ```
