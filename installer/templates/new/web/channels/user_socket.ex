@@ -15,7 +15,10 @@ defmodule <%= application_module %>.UserSocket do
   #
   #     {:ok, assign(socket, :user_id, verified_user_id)}
   #
-  #  To deny connection, return `:error`.
+  # To deny connection, return `:error`.
+  #
+  # See `Phoenix.Token` documentation for examples in
+  # performing token verification on connect.
   def connect(_params, socket) do
     {:ok, socket}
   end
