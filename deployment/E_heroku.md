@@ -180,6 +180,12 @@ Setting config vars and restarting mysterious-meadow-6277... done, v3
 SECRET_KEY_BASE: my_secret_key_base
 ```
 
+You will also need to define the `HOST` and `PORT` configs at this time:
+
+```console
+$ heroku config:set HOST=mysterious-meadow-6277.herokuapp.com PORT=80
+```
+
 ## Deploy Time!
 
 Our project is now ready to be deployed on Heroku.
