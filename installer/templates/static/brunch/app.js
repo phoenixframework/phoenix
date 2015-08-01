@@ -17,4 +17,5 @@ import "deps/phoenix_html/web/static/js/phoenix_html"
 //
 // Local files can be imported directly using relative
 // paths "./socket" or full ones "web/static/js/socket".
-import "./socket"
+
+// import socket from "./socket"

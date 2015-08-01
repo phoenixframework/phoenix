@@ -13,11 +13,11 @@ defmodule Phoenix.Channel.Transport do
 
     * Handle receiving incoming, encoded `%Phoenix.Socket.Message{}`'s from
       remote clients, then deserialing and fowarding message through
-      `Phoenix.Transport.dispatch/6`. Message keys must be deserialized as strings.
+      `Phoenix.Transport.dispatch/4`. Message keys must be deserialized as strings.
     * Handle receiving `{:ok, socket_pid}` results from Transport dispatch and storing a
       HashDict of a string topics to Pid matches, and Pid to String topic matches.
       The HashDict of topic => pids is dispatched through the transport layer's
-      `Phoenix.Transport.dispatch/6`.
+      `Phoenix.Transport.dispatch/4`.
     * Handle receiving outgoing `%Phoenix.Socket.Message{}` and `%Phoenix.Socket.Reply{}` as
       Elixir process messages, then encoding and fowarding to remote client.
     * Trap exits and handle receiving `{:EXIT, socket_pid, reason}` messages
@@ -77,12 +77,18 @@ defmodule Phoenix.Channel.Transport do
   from the `id/1` callback.
   """
   def socket_connect(endpoint, transport_mod, handler, params) do
-    serializer = Keyword.fetch!(handler.__transport__(transport_mod), :serializer)
-    case handler.connect(params, %Socket{endpoint: endpoint}) do
+    serializer  = Keyword.fetch!(handler.__transport__(transport_mod), :serializer)
+    base_socket = %Socket{endpoint: endpoint,
+                          transport: transport_mod,
+                          handler: handler,
+                          pubsub_server: endpoint.__pubsub_server__(),
+                          serializer: serializer}
+
+    case handler.connect(params, base_socket) do
       {:ok, socket} ->
         case handler.id(socket) do
-          nil                   -> {:ok, %Socket{socket | serializer: serializer}}
-          id when is_binary(id) -> {:ok, %Socket{socket | id: id, serializer: serializer}}
+          nil                   -> {:ok, socket}
+          id when is_binary(id) -> {:ok, %Socket{socket | id: id}}
           _                     ->
           raise ArgumentError, """
           Expected #{inspect handler}.id/1 to return one of `nil | id :: String.t`
@@ -106,10 +112,10 @@ defmodule Phoenix.Channel.Transport do
     * `{:error, reason}` - Unauthorized or unmatched dispatch
 
   """
-  def dispatch(%Message{} = msg, sockets, transport_pid, socket_handler, socket, endpoint, transport) do
+  def dispatch(%Message{} = msg, sockets, transport_pid, socket) do
     sockets
     |> HashDict.get(msg.topic)
-    |> dispatch(msg, transport_pid, socket_handler, socket, endpoint, transport)
+    |> dispatch(msg, transport_pid, socket)
   end
 
   @doc """
@@ -123,25 +129,22 @@ defmodule Phoenix.Channel.Transport do
 
   The server will respond to heartbeats with the same message
   """
-  def dispatch(_, %{ref: ref, topic: "phoenix", event: "heartbeat"}, _transport_pid, _socket_handler, _socket, _pubsub_server, _transport) do
+  def dispatch(_, %{ref: ref, topic: "phoenix", event: "heartbeat"}, _transport_pid, _socket) do
     {:ok, %Reply{ref: ref, topic: "phoenix", status: :ok, payload: %{}}}
   end
-  def dispatch(nil, %{event: "phx_join", topic: topic} = msg, transport_pid, socket_handler, base_socket, endpoint, transport) do
-    case socket_handler.channel_for_topic(topic, transport) do
-      nil -> reply_ignore(msg, socket_handler)
+  def dispatch(nil, %{event: "phx_join", topic: topic} = msg, transport_pid, base_socket) do
+    case base_socket.handler.channel_for_topic(topic, base_socket.transport) do
+      nil -> reply_ignore(msg, base_socket)
 
       channel ->
         socket = %Socket{base_socket |
                          transport_pid: transport_pid,
-                         endpoint: endpoint,
-                         pubsub_server: endpoint.__pubsub_server__(),
                          topic: topic,
-                         channel: channel,
-                         transport: transport}
+                         channel: channel}
 
         log_info topic, fn ->
           "JOIN #{topic} to #{inspect(channel)}\n" <>
-          "  Transport:  #{inspect transport}\n" <>
+          "  Transport:  #{inspect socket.transport}\n" <>
           "  Parameters: #{inspect msg.payload}"
         end
 
@@ -156,14 +159,14 @@ defmodule Phoenix.Channel.Transport do
         end
     end
   end
-  def dispatch(nil, msg, _transport_pid, socket_handler, _socket, _pubsub_server, _transport) do
-    reply_ignore(msg, socket_handler)
+  def dispatch(nil, msg, _transport_pid, socket) do
+    reply_ignore(msg, socket)
   end
-  def dispatch(socket_pid, %{event: "phx_leave", ref: ref}, _transport_pid, _socket_handler, _socket, _pubsub_server, _transport) do
+  def dispatch(socket_pid, %{event: "phx_leave", ref: ref}, _transport_pid,  _socket) do
     Phoenix.Channel.Server.leave(socket_pid, ref)
     :ok
   end
-  def dispatch(socket_pid, msg, _transport_pid, _socket_handler, _socket, _pubsub_server, _transport) do
+  def dispatch(socket_pid, msg, _transport_pid, _socket) do
     send(socket_pid, msg)
     :ok
   end
@@ -171,8 +174,8 @@ defmodule Phoenix.Channel.Transport do
   defp log_info("phoenix" <> _, _func), do: :noop
   defp log_info(_topic, func), do: Logger.info(func)
 
-  defp reply_ignore(msg, socket_handler) do
-    Logger.debug fn -> "Ignoring unmatched topic \"#{msg.topic}\" in #{inspect(socket_handler)}" end
+  defp reply_ignore(msg, socket) do
+    Logger.debug fn -> "Ignoring unmatched topic \"#{msg.topic}\" in #{inspect(socket.handler)}" end
 
     {:error, :unmatched_topic, %Reply{ref: msg.ref, topic: msg.topic,
                                       status: :error,

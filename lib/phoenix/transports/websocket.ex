@@ -44,7 +44,7 @@ defmodule Phoenix.Transports.WebSocket do
   end
 
   def upgrade(%Plug.Conn{method: "GET", params: params} = conn, _) do
-    handler  = conn.private.phoenix_socket_handler
+    handler = conn.private.phoenix_socket_handler
 
     case Transport.socket_connect(endpoint_module(conn), Phoenix.Transports.WebSocket, handler, params) do
       {:ok, socket} ->
@@ -65,18 +65,14 @@ defmodule Phoenix.Transports.WebSocket do
   """
   def ws_init(conn) do
     Process.flag(:trap_exit, true)
-    socket_handler = conn.private.phoenix_socket_handler
     config         = conn.private.phoenix_transport_conf
-    endpoint       = endpoint_module(conn)
+    socket         = conn.private.phoenix_socket
     serializer     = Keyword.fetch!(config, :serializer)
     timeout        = Keyword.fetch!(config, :timeout)
-    socket         = conn.private.phoenix_socket
 
-    if socket.id, do: endpoint.subscribe(self, socket.id, link: true)
+    if socket.id, do: socket.endpoint.subscribe(self, socket.id, link: true)
 
-    {:ok, %{socket_handler: socket_handler,
-            socket: socket,
-            endpoint: endpoint,
+    {:ok, %{socket: socket,
             sockets: HashDict.new,
             sockets_inverse: HashDict.new,
             serializer: serializer}, timeout}
@@ -89,7 +85,7 @@ defmodule Phoenix.Transports.WebSocket do
   def ws_handle(opcode, payload, state) do
     msg = state.serializer.decode!(payload, opcode: opcode)
 
-    case Transport.dispatch(msg, state.sockets, self, state.socket_handler, state.socket, state.endpoint, __MODULE__) do
+    case Transport.dispatch(msg, state.sockets, self, state.socket) do
       {:ok, socket_pid, reply_msg} ->
         format_reply(state.serializer.encode!(reply_msg), put(state, msg.topic, socket_pid))
       {:ok, reply_msg} ->

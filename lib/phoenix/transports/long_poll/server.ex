@@ -20,7 +20,6 @@ defmodule Phoenix.Transports.LongPoll.Server do
   @moduledoc false
 
   alias Phoenix.Channel.Transport
-  alias Phoenix.Transports.LongPoll
   alias Phoenix.PubSub
   alias Phoenix.Socket.Broadcast
   alias Phoenix.Socket.Message
@@ -28,7 +27,6 @@ defmodule Phoenix.Transports.LongPoll.Server do
   @doc """
   Starts the Server.
 
-    * `socket_handler` - The socket handler module, ie. `MyApp.UserSocket`
     * `socket` - The `%Phoenix.Socket{}` struct returend from `connect/2` of the
                  socket handler.
     * `window_ms` - The longpoll session timeout, in milliseconds
@@ -36,27 +34,25 @@ defmodule Phoenix.Transports.LongPoll.Server do
   If the server receives no message within `window_ms`, it terminates and
   clients are responsible for opening a new session.
   """
-  def start_link(socket_handler, socket, window_ms, priv_topic, endpoint) do
-    GenServer.start_link(__MODULE__, [socket_handler, socket, window_ms, priv_topic, endpoint])
+  def start_link(socket, window_ms, priv_topic) do
+    GenServer.start_link(__MODULE__, [socket, window_ms, priv_topic])
   end
 
   @doc false
-  def init([socket_handler, socket, window_ms, priv_topic, endpoint]) do
+  def init([socket, window_ms, priv_topic]) do
     Process.flag(:trap_exit, true)
 
     state = %{buffer: [],
-              socket_handler: socket_handler,
               socket: socket,
               sockets: HashDict.new,
               sockets_inverse: HashDict.new,
               window_ms: trunc(window_ms * 1.5),
-              endpoint: endpoint,
-              pubsub_server: endpoint.__pubsub_server__(),
+              pubsub_server: socket.endpoint.__pubsub_server__(),
               priv_topic: priv_topic,
               last_client_poll: now_ms(),
               client_ref: nil}
 
-    if socket.id, do: endpoint.subscribe(self, socket.id, link: true)
+    if socket.id, do: socket.endpoint.subscribe(self, socket.id, link: true)
     :ok = PubSub.subscribe(state.pubsub_server, self, state.priv_topic, link: true)
     :timer.send_interval(state.window_ms, :shutdown_if_inactive)
 
@@ -73,7 +69,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
   """
   def handle_info({:dispatch, msg, ref}, state) do
     msg
-    |> Transport.dispatch(state.sockets, self, state.socket_handler, state.socket, state.endpoint, LongPoll)
+    |> Transport.dispatch(state.sockets, self, state.socket)
     |> case do
       {:ok, socket_pid, reply_msg} ->
         :ok = broadcast_from(state, {:ok, :dispatch, ref})

@@ -10,6 +10,7 @@ defmodule Phoenix.Socket do
   * `channel` - The channel module where this socket originated
   * `channel_pid` - The channel pid
   * `endpoint` - The endpoint module where this socket originated
+  * `handler` - The socket handler module where this socket connected
   * `joined` - If the socket has effectively joined the channel
   * `pubsub_server` - The registered name of the socket's PubSub server
   * `ref` - The latest ref sent by the client
@@ -100,6 +101,7 @@ defmodule Phoenix.Socket do
                      channel: atom,
                      channel_pid: pid,
                      endpoint: atom,
+                     handler: atom,
                      joined: boolean,
                      pubsub_server: atom,
                      ref: term,
@@ -113,6 +115,7 @@ defmodule Phoenix.Socket do
             channel: nil,
             channel_pid: nil,
             endpoint: nil,
+            handler: nil,
             joined: false,
             pubsub_server: nil,
             ref: nil,

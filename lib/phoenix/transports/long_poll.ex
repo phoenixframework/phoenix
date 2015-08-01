@@ -153,13 +153,12 @@ defmodule Phoenix.Transports.LongPoll do
   Starts the `Phoenix.LongPoll.Server` and stores the serialized pid in the session.
   """
   def start_session(conn, socket) do
-    socket_handler = conn.private.phoenix_socket_handler
     priv_topic =
       "phx:lp:"
       |> Kernel.<>(Base.encode64(:crypto.strong_rand_bytes(16)))
       |> Kernel.<>(:os.timestamp() |> Tuple.to_list |> Enum.join(""))
 
-    child = [socket_handler, socket, timeout_window_ms(conn), priv_topic, endpoint_module(conn)]
+    child = [socket, timeout_window_ms(conn), priv_topic]
     {:ok, server_pid} = Supervisor.start_child(LongPoll.Supervisor, child)
 
     {conn, priv_topic, sign(conn, priv_topic), server_pid}
