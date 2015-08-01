@@ -46,7 +46,7 @@ defmodule Phoenix.Transports.WebSocket do
   def upgrade(%Plug.Conn{method: "GET", params: params} = conn, _) do
     handler  = conn.private.phoenix_socket_handler
 
-    case Transport.socket_connect(Phoenix.Transports.WebSocket, handler, params) do
+    case Transport.socket_connect(endpoint_module(conn), Phoenix.Transports.WebSocket, handler, params) do
       {:ok, socket} ->
         conn
         |> put_private(:phoenix_upgrade, {:websocket, __MODULE__})

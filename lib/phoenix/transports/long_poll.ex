@@ -112,7 +112,7 @@ defmodule Phoenix.Transports.LongPoll do
   defp new_session(conn) do
     handler  = conn.private.phoenix_socket_handler
 
-    case Transport.socket_connect(Phoenix.Transports.LongPoll, handler, conn.params) do
+    case Transport.socket_connect(endpoint_module(conn), Phoenix.Transports.LongPoll, handler, conn.params) do
       {:ok, socket} ->
         {conn, priv_topic, sig, _server_pid} = start_session(conn, socket)
 

@@ -30,7 +30,7 @@ defmodule Phoenix.Channel.Transport do
         - for abnormal exits, send a reply to the remote client of a message
           from `Transport.chan_error_message/1`
 
-     * Call the `socket_connect/3` passing along socket params from client and
+     * Call the `socket_connect/4` passing along socket params from client and
        keep the state of the returned `%Socket{}` to pass into dispatch.
      * Subscribe to the socket's `:id` on init and handle
        `%Phoenix.Socket.Broadcast{}` messages with the `"disconnect"` event
@@ -76,9 +76,9 @@ defmodule Phoenix.Channel.Transport do
   If the connection was successful, generates `Phoenix.PubSub` topic
   from the `id/1` callback.
   """
-  def socket_connect(transport_mod, handler, params) do
+  def socket_connect(endpoint, transport_mod, handler, params) do
     serializer = Keyword.fetch!(handler.__transport__(transport_mod), :serializer)
-    case handler.connect(params, %Socket{}) do
+    case handler.connect(params, %Socket{endpoint: endpoint}) do
       {:ok, socket} ->
         case handler.id(socket) do
           nil                   -> {:ok, %Socket{socket | serializer: serializer}}

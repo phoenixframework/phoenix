@@ -11,7 +11,7 @@ defmodule Phoenix.Token do
 
       iex> user_id = 1
       iex> token = Phoenix.Token.sign(endpoint, "user", user_id)
-      iex> Phoenix.Token.verify(endpoint, token)
+      iex> Phoenix.Token.verify(endpoint, "user", token)
       {:ok, 1}
 
   In that example we have a user's id, we generate a token and send
@@ -38,7 +38,7 @@ defmodule Phoenix.Token do
         # Max age of 2 weeks (1209600 seconds)
         case Phoenix.Token.verify(socket, "user", token, max_age: 1209600) do
           {:ok, user_id} ->
-            socket = assigns(socket, :user, Repo.get!(User, user_id))
+            socket = assign(socket, :user, Repo.get!(User, user_id))
             {:ok, socket}
           {:error, _} ->
             :error
