@@ -53,7 +53,7 @@ let socket = new Socket("/socket")
 
 socket.connect({token: window.userToken})
 
-// Now that you are conneted, you can join channels with a topic:
+// Now that you are connected, you can join channels with a topic:
 let chan = socket.chan("topic:subtopic", {})
 chan.join()
   .receive("ok", resp => { console.log("Joined succesffuly", resp) })
