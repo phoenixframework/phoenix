@@ -1,8 +1,6 @@
 ### What we'll need
 
-The only thing we'll need for this guide is a working Phoenix application.
-
-If you don't already have one, follow the [Up and Running guide](http://www.phoenixframework.org/docs/up-and-running) to create your first Phoenix application.
+The only thing we'll need for this guide is a working Phoenix application. For those of us who need a simple application to deploy, please follow the [Up and Running guide](http://www.phoenixframework.org/docs/up-and-running).
 
 ### Goals
 
@@ -33,7 +31,7 @@ $ git add .
 $ git commit -m "Initial commit"
 ```
 
-You can learn more about how Heroku is using Git [here](https://devcenter.heroku.com/articles/git#tracking-your-app-in-git).
+Heroku offers some great information on how it is using Git [here](https://devcenter.heroku.com/articles/git#tracking-your-app-in-git).
 
 ## Signing up for Heroku
 
@@ -41,7 +39,7 @@ Signing up to Heroku is very simple, just head over to [https://signup.heroku.co
 
 The Free plan will give us one web [dyno](https://devcenter.heroku.com/articles/dynos#dynos) and one worker dyno, as well as a PostgreSQL and Redis instance for free.
 
-These are meant to be used for testing and development, and come with some limitations. If you plan to run some serious business on Heroku you should definitely considering upgrading to a paid plan.
+These are meant to be used for testing and development, and come with some limitations. In order to run a production application, please consider upgrading to a paid plan.
 
 ## Installing the Heroku Toolbelt
 
@@ -53,7 +51,7 @@ The Heroku CLI, part of the Toolbelt, is useful to create Heroku applications, l
 
 Now that we have the Toolbelt installed, let's create the Heroku application. In our project directory, run:
 
-> Note: the first time you use a Heroku command you need to log in. When prompted, just enter the email and password you gave during signup.
+> Note: the first time we use a Heroku command, it may prompt us to log in. If this happens, just enter the email and password you specified during signup.
 
 ```console
 $ heroku create --buildpack "https://github.com/HashNuke/heroku-buildpack-elixir.git"
@@ -63,14 +61,14 @@ https://mysterious-meadow-6277.herokuapp.com/ | https://git.heroku.com/mysteriou
 Git remote heroku added
 ```
 
-> Note: the name of the Heroku application is the random string after "Creating" in the output above (mysterious-meadow-6277). It will be different when you create the application on your computer.
+> Note: the name of the Heroku application is the random string after "Creating" in the output above (mysterious-meadow-6277). This will be unique, so expect to see a different name from "mysterious-meadow-6277".
 
 The `--buildpack` option we are passing allows us to specify the [Elixir buildpack](https://github.com/HashNuke/heroku-buildpack-elixir) we want Heroku to use.
 A [buildpack](https://devcenter.heroku.com/articles/buildpacks) is a convenient way of packaging framework and/or runtime support. In our case it's installing Erlang, Elixir, fetching our application dependencies, and so on, before we run it.
 
 The URL in the output is the URL to our application. If we open it in our browser now, we will get the default Heroku welcome page.
 
-> Note: if you forgot to initialize your Git repository before running the `heroku create` command you can add the Git remote manually by running the following command: `heroku git:remote -a [your app name].`
+> Note: if we hadn't initialized our Git repository before we ran the `heroku create` command, we won't have our Heroku remote repository properly set up at this point. We can set that up manually by running: `heroku git:remote -a [our-app-name].`
 
 ## Adding the Phoenix Static Buildpack
 
@@ -128,13 +126,13 @@ config :hello_phoenix, HelloPhoenix.Repo,
   size: 20 # The amount of database connections in the pool
 ```
 
-Also we don't need to import the `config/prod.secret.exs` file in our prod config so you can delete the following line:
+We don't need to import the `config/prod.secret.exs` file in our prod config any longer so we can delete the following line:
 
 ```elixir
 import_config "prod.secret.exs"
 ```
 
-Your final `config/prod.exs` should now look something like this (we've removed the comments for readability):
+The final `config/prod.exs` should now look something like this (we've removed the comments for readability):
 
 ```
 use Mix.Config
@@ -180,10 +178,10 @@ Setting config vars and restarting mysterious-meadow-6277... done, v3
 SECRET_KEY_BASE: my_secret_key_base
 ```
 
-You will also need to define the `HOST` and `PORT` configs at this time:
+There's one last thing to think about before we deploy. We created our application via the command line, and we accepted the application name that Heroku generated for us. If we had specified a custom application name, we would also need to define the `HOST` and `PORT` configuration in order to deploy our app.
 
 ```console
-$ heroku config:set HOST=mysterious-meadow-6277.herokuapp.com PORT=80
+$ heroku config:set HOST=our-custom-app-name.herokuapp.com PORT=80
 ```
 
 ## Deploy Time!
@@ -308,5 +306,3 @@ In fact, we can run anything using the `heroku run` command, like the Ecto migra
 ```console
 $ heroku run mix ecto.migrate
 ```
-
-
