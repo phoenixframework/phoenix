@@ -2,7 +2,7 @@ defmodule Phoenix.DigesterTest do
   use ExUnit.Case, async: true
 
   test "fails when the given paths are invalid" do
-    assert {:error, :invalid_path} = Phoenix.Digester.compile("inexistent path", "/ ?? /path")
+    assert {:error, :invalid_path} = Phoenix.Digester.compile("nonexistent path", "/ ?? /path")
   end
 
   test "digests and compress files" do
