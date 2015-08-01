@@ -93,7 +93,9 @@ defmodule Phoenix.Token do
       when generating the encryption and signing keys. Defaults to `:sha256';
 
   """
-  def verify(context, salt, token, opts \\ []) when is_binary(salt) and is_binary(token) do
+  def verify(context, salt, token, opts \\ [])
+
+  def verify(context, salt, token, opts) when is_binary(salt) and is_binary(token) do
     secret = get_endpoint(context) |> get_secret(salt, opts)
     case MessageVerifier.verify(token, secret) do
       {:ok, message} ->
@@ -107,6 +109,10 @@ defmodule Phoenix.Token do
       :error ->
         {:error, :invalid}
     end
+  end
+
+  def verify(_context, salt, nil, _opts) when is_binary(salt) do
+    {:error, :missing}
   end
 
   defp get_endpoint(%Plug.Conn{} = conn), do: Phoenix.Controller.endpoint_module(conn)

@@ -18,6 +18,10 @@ defmodule Phoenix.TokenTest do
     assert Token.verify(socket(), "id", token) == {:ok, id}
   end
 
+  test "fails on missing token" do
+    assert Token.verify(TokenEndpoint, "id", nil) == {:error, :missing}
+  end
+
   test "fails on invalid token" do
     token = Token.sign(TokenEndpoint, "id", 1)
 

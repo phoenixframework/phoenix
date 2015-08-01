@@ -10,7 +10,7 @@ defmodule Phoenix.Socket do
   * `channel` - The channel module where this socket originated
   * `channel_pid` - The channel pid
   * `endpoint` - The endpoint module where this socket originated
-  * `handler` - The socket handler module where this socket connected
+  * `handler` - The socket handler for this socket connected, for example: `MyApp.UserSocket`
   * `joined` - If the socket has effectively joined the channel
   * `pubsub_server` - The registered name of the socket's PubSub server
   * `ref` - The latest ref sent by the client
