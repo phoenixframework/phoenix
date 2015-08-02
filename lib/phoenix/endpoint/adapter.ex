@@ -178,7 +178,7 @@ defmodule Phoenix.Endpoint.Adapter do
   When the file exists, it includes a timestamp. When it doesn't exist,
   just the static path is returned.
 
-  The result is wrapped in a `{:cache | :stale, value}` tuple so
+  The result is wrapped in a `{:cache | :nocache, value}` tuple so
   the Phoenix.Config layer knows how to cache it.
   """
   def static_path(endpoint, "/" <> _ = path) do
@@ -186,11 +186,11 @@ defmodule Phoenix.Endpoint.Adapter do
 
     case File.stat(file) do
       {:ok, %File.Stat{type: :regular, mtime: mtime, size: size}} ->
-        key = if endpoint.config(:cache_static_lookup), do: :cache, else: :stale
+        key = if endpoint.config(:cache_static_lookup), do: :cache, else: :nocache
         vsn = {size, mtime} |> :erlang.phash2() |> Integer.to_string(16)
         {key, path <> "?vsn=" <> vsn}
       _ ->
-        {:stale, path}
+        {:nocache, path}
     end
   end
 

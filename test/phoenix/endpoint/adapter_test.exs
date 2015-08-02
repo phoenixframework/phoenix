@@ -72,14 +72,14 @@ defmodule Phoenix.Endpoint.AdapterTest do
   test "static_path/2 returns file's path with lookup cache" do
     assert {:cache, "/phoenix.png?" <> _} =
              Adapter.static_path(HTTPEndpoint, "/phoenix.png")
-    assert {:stale, "/images/unknown.png"} =
+    assert {:nocache, "/images/unknown.png"} =
              Adapter.static_path(HTTPEndpoint, "/images/unknown.png")
   end
 
   test "static_path/2 returns file's path without lookup cache" do
-    assert {:stale, "/phoenix.png?" <> _} =
+    assert {:nocache, "/phoenix.png?" <> _} =
              Adapter.static_path(HTTPSEndpoint, "/phoenix.png")
-    assert {:stale, "/images/unknown.png"} =
+    assert {:nocache, "/images/unknown.png"} =
              Adapter.static_path(HTTPSEndpoint, "/images/unknown.png")
   end
 end

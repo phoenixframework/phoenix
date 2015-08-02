@@ -34,25 +34,34 @@ defmodule Phoenix.Config do
   Caches a value in Phoenix configuration handler for the module.
 
   The given function needs to return a tuple with `:cache` if the
-  value should be cached or `:stale` if the value should not be
+  value should be cached or `:nocache` if the value should not be
   cached because it can be consequently considered stale.
 
   Notice writes are not serialized to the server, we expect the
   function that generates the cache to be idempotent.
   """
-  @spec cache(module, term, (module -> {:cache | :stale, term})) :: term
+  @spec cache(module, term, (module -> {:cache | :nocache, term})) :: term
   def cache(module, key, fun) do
     case :ets.lookup(module, key) do
-      [{^key, val}] -> val
+      [{^key, :cache, val}] -> val
       [] ->
         case fun.(module) do
           {:cache, val} ->
-            store(module, [{key, val}])
+            :ets.insert(module, {key, :cache, val})
             val
-          {:stale, val} ->
+          {:nocache, val} ->
             val
         end
     end
+  end
+
+  @doc """
+  Clears all cached entries in the endpoint.
+  """
+  @spec clear_cache(module) :: :ok
+  def clear_cache(module) do
+    :ets.match_delete(module, {:_, :cache, :_})
+    :ok
   end
 
   @doc """
@@ -63,14 +72,6 @@ defmodule Phoenix.Config do
   def from_env(otp_app, module, defaults) do
     config = Application.get_env(otp_app, module, [])
     merge(defaults, config)
-  end
-
-  @doc """
-  Stores the given keywords in the Phoenix configuration handler for the module.
-  """
-  def store(module, pairs) do
-    pid = :ets.lookup_element(module, :__config__, 2)
-    GenServer.call(pid, {:store, pairs})
   end
 
   @doc """
@@ -89,15 +90,10 @@ defmodule Phoenix.Config do
   # Callbacks
 
   def init({otp_app, module, defaults}) do
-    :ets.new(module, [:named_table, :protected, read_concurrency: true])
+    :ets.new(module, [:named_table, :public, read_concurrency: true])
     :ets.insert(module, [__config__: self()])
     update(module, from_env(otp_app, module, defaults))
     {:ok, {module, defaults}}
-  end
-
-  def handle_call({:store, config}, _from, {module, defaults}) do
-    :ets.insert(module, config)
-    {:reply, :ok, {module, defaults}}
   end
 
   def handle_call({:config_change, changed, removed}, _from, {module, defaults}) do

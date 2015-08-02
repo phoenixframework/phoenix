@@ -54,15 +54,21 @@ defmodule Phoenix.ConfigTest do
   test "can cache", meta do
     {:ok, _pid} = start_link(:config_app, meta.test, @defaults)
 
-    assert cache(meta.test, :__hello__, fn _ -> {:stale, 1} end) == 1
+    assert cache(meta.test, :__hello__, fn _ -> {:nocache, 1} end) == 1
     assert cache(meta.test, :__hello__, fn _ -> {:cache, 2} end) == 2
     assert cache(meta.test, :__hello__, fn _ -> {:cache, 3} end) == 2
-    assert cache(meta.test, :__hello__, fn _ -> {:stale, 3} end) == 2
+    assert cache(meta.test, :__hello__, fn _ -> {:nocache, 3} end) == 2
 
     # Cache is reloaded on config_change
     config_change(meta.test, [{meta.test, []}], [])
-    assert cache(meta.test, :__hello__, fn _ -> {:stale, 4} end) == 4
+    assert cache(meta.test, :__hello__, fn _ -> {:nocache, 4} end) == 4
     assert cache(meta.test, :__hello__, fn _ -> {:cache, 5} end) == 5
     assert cache(meta.test, :__hello__, fn _ -> {:cache, 6} end) == 5
+
+    # Cache is cleaned on clear_cache
+    clear_cache(meta.test)
+    assert cache(meta.test, :__hello__, fn _ -> {:nocache, 7} end) == 7
+    assert cache(meta.test, :__hello__, fn _ -> {:cache, 8} end) == 8
+    assert cache(meta.test, :__hello__, fn _ -> {:cache, 9} end) == 8
   end
 end
