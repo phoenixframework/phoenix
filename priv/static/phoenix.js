@@ -470,7 +470,7 @@ var Channel = exports.Channel = (function () {
         var _this = this;
 
         return this.push(CHAN_EVENTS.leave).receive("ok", function () {
-          _this.log("channel", "leave " + _this.topic);
+          _this.socket.log("channel", "leave " + _this.topic);
           _this.trigger(CHAN_EVENTS.close, "leave");
         });
       },
