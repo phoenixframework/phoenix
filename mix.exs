@@ -14,8 +14,8 @@ defmodule Phoenix.Mixfile do
      source_url: "https://github.com/phoenixframework/phoenix",
      homepage_url: "http://www.phoenixframework.org",
      description: """
-     Productive. Reliable. Fast. Most web frameworks make you choose between
-     speed and a productive environment. Phoenix gives you both.
+     Productive. Reliable. Fast. A productive web framework that
+     does not compromise speed and maintainability.
      """]
   end
 
