@@ -276,7 +276,7 @@ export class Channel {
   //
   leave(){
     return this.push(CHAN_EVENTS.leave).receive("ok", () => {
-      this.log("channel", `leave ${this.topic}`)
+      this.socket.log("channel", `leave ${this.topic}`)
       this.trigger(CHAN_EVENTS.close, "leave")
     })
   }
