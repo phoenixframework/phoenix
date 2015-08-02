@@ -1,5 +1,6 @@
 ![phoenix logo](https://raw.githubusercontent.com/phoenixframework/phoenix/master/priv/static/phoenix.png)
-> Productive. Reliable. Fast. Most web frameworks make you choose between speed and a productive environment. Phoenix gives you both.
+> ### Productive. Reliable. Fast.
+> A productive web framework that does not compromise speed and maintainability.
 
 [![Build Status](https://api.travis-ci.org/phoenixframework/phoenix.svg)](https://travis-ci.org/phoenixframework/phoenix)
 [![Inline docs](http://inch-ci.org/github/phoenixframework/phoenix.svg)](http://inch-ci.org/github/phoenixframework/phoenix)
