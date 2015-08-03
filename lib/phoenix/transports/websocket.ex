@@ -29,6 +29,8 @@ defmodule Phoenix.Transports.WebSocket do
     conn =
       conn
       |> Plug.Conn.fetch_query_params
+      |> Transport.transport_log(opts[:log])
+      |> Transport.force_ssl(handler, endpoint)
       |> Transport.check_origin(opts[:origins])
 
     case conn do
@@ -63,7 +65,8 @@ defmodule Phoenix.Transports.WebSocket do
   def default_config() do
     [serializer: Phoenix.Transports.WebSocketSerializer,
      timeout: :infinity,
-     log: false]
+     log: false,
+     check_origin: true]
   end
 
   def handler_for(:cowboy), do: Phoenix.Endpoint.CowboyWebSocket

@@ -201,16 +201,65 @@ defmodule Phoenix.Channel.Transport do
   end
 
   @doc """
-  Checks the Origin request header against the list of allowed origins
-  configured on the socket's transport config. If the Origin
-  header matches the allowed origins, no Origin header was sent or no origins
-  configured it will return the given `Plug.Conn`. Otherwise a 403 Forbidden
-  response will be send and the connection halted.
+  Forces SSL in the socket connection.
+
+  Uses the endpoint configuration to decide so. It is a
+  noop if the connection has been halted.
   """
-  def check_origin(conn, allowed_origins, opts \\ []) do
+  def force_ssl(%Plug.Conn{halted: true} = conn, _socket, _endpoint) do
+    conn
+  end
+
+  def force_ssl(conn, socket, endpoint) do
+    if force_ssl = force_ssl_config(socket, endpoint) do
+      Plug.SSL.call(conn, Plug.SSL.init(force_ssl))
+    else
+      conn
+    end
+  end
+
+  defp force_ssl_config(socket, endpoint) do
+    Phoenix.Config.cache(endpoint, {:force_ssl, socket}, fn _ ->
+      {:cache,
+        if force_ssl = endpoint.config(:force_ssl) do
+          Keyword.put_new(force_ssl, :host, endpoint.config(:url)[:host] || "localhost")
+        end}
+    end)
+  end
+
+  @doc """
+  Logs the transport request.
+
+  Available for transports that generate a connection.
+  """
+  def transport_log(conn, level) do
+    if level do
+      Plug.Logger.call(conn, Plug.Logger.init(log: level))
+    else
+      conn
+    end
+  end
+
+  @doc """
+  Checks the origin request header against the list of allowed origins.
+
+  Should be called by transports before connecting when appropriate.
+  If the origin header matches the allowed origins, no origin header was
+  sent or no origin was configured, it will return the given connection.
+
+  Otherwise a otherwise a 403 Forbidden response will be sent and
+  the connection halted.  It is a noop if the connection has been halted.
+  """
+  def check_origin(conn, allowed_origins, opts \\ [])
+
+  def check_origin(%Plug.Conn{halted: true} = conn, _allowed_origins, _opts) do
+    conn
+  end
+
+  def check_origin(conn, allowed_origins, opts) do
     import Plug.Conn
     origin = get_req_header(conn, "origin") |> List.first
-    send = opts[:send] || &send_resp(&1)
+    send   = opts[:send] || &send_resp/1
 
     if origin_allowed?(origin, allowed_origins) do
       conn
@@ -239,7 +288,6 @@ defmodule Phoenix.Channel.Transport do
     end)
   end
 
-  defp compare?(nil, _), do: true
   defp compare?(_, nil), do: true
   defp compare?(x, y),   do: x == y
 end

@@ -30,8 +30,9 @@ defmodule Phoenix.Transports.LongPoll do
   alias Phoenix.Transports.LongPoll
   alias Phoenix.Channel.Transport
 
-
   plug :fetch_query_params
+  plug :transport_log
+  plug :force_ssl
   plug :check_origin
   plug :allow_origin
   plug Plug.Parsers, parsers: [:json], json_decoder: Poison
@@ -255,6 +256,17 @@ defmodule Phoenix.Transports.LongPoll do
 
   defp broadcast_from(conn, priv_topic, msg) do
     Phoenix.PubSub.broadcast_from(pubsub_server(conn), self, priv_topic, msg)
+  end
+
+  defp transport_log(conn, _opts) do
+    log = conn.private.phoenix_transport_conf[:log]
+    Transport.transport_log(conn, log)
+  end
+
+  defp force_ssl(conn, _opts) do
+    handler  = conn.private.phoenix_socket_handler
+    endpoint = conn.private.phoenix_endpoint
+    Transport.force_ssl(conn, handler, endpoint)
   end
 
   defp check_origin(conn, _opts) do

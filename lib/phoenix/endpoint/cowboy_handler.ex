@@ -54,7 +54,7 @@ defmodule Phoenix.Endpoint.CowboyHandler do
   require Logger
 
   @doc """
-  Generates sa childspec to be used in the supervision tree.
+  Generates a childspec to be used in the supervision tree.
   """
   def child_spec(scheme, endpoint, config) do
     dispatches =
