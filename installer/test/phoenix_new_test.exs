@@ -63,8 +63,8 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/.gitignore", "/node_modules"
       assert_file "photo_blog/brunch-config.js", ~s["deps/phoenix/web/static"]
       assert_file "photo_blog/config/dev.exs", "watchers: [node:"
+      assert_file "photo_blog/web/static/assets/favicon.ico"
       assert_file "photo_blog/web/static/assets/images/phoenix.png"
-      assert_file "photo_blog/web/static/assets/images/favicon.ico"
       assert_file "photo_blog/web/static/css/app.css"
       assert_file "photo_blog/web/static/js/app.js",
                   ~s[import socket from "./socket"]
@@ -111,8 +111,8 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       refute File.read!("photo_blog/.gitignore") |> String.contains?("/node_modules")
       assert_file "photo_blog/config/dev.exs", ~r/watchers: \[\]/
       assert_file "photo_blog/priv/static/css/app.css"
+      assert_file "photo_blog/priv/static/favicon.ico"
       assert_file "photo_blog/priv/static/images/phoenix.png"
-      assert_file "photo_blog/priv/static/images/favicon.ico"
       assert_file "photo_blog/priv/static/js/phoenix.js"
       assert_file "photo_blog/priv/static/js/app.js"
 

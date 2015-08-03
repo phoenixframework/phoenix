@@ -245,11 +245,11 @@ defmodule Mix.Tasks.Phoenix.New do
       copy_from path, binding, @bare
       create_file Path.join(path, "priv/static/js/phoenix.js"), phoenix_js_text()
       create_file Path.join(path, "priv/static/images/phoenix.png"), phoenix_png_text()
-      create_file Path.join(path, "priv/static/images/favicon.ico"), phoenix_favicon_text()
+      create_file Path.join(path, "priv/static/favicon.ico"), phoenix_favicon_text()
     else
       copy_from path, binding, @brunch
       create_file Path.join(path, "web/static/assets/images/phoenix.png"), phoenix_png_text()
-      create_file Path.join(path, "web/static/assets/images/favicon.ico"), phoenix_favicon_text()
+      create_file Path.join(path, "web/static/assets/favicon.ico"), phoenix_favicon_text()
     end
   end
 
