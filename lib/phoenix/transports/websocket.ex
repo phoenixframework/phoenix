@@ -65,8 +65,7 @@ defmodule Phoenix.Transports.WebSocket do
   def default_config() do
     [serializer: Phoenix.Transports.WebSocketSerializer,
      timeout: :infinity,
-     log: false,
-     check_origin: true]
+     log: false]
   end
 
   def handler_for(:cowboy), do: Phoenix.Endpoint.CowboyWebSocket

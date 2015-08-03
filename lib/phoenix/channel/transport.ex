@@ -250,22 +250,21 @@ defmodule Phoenix.Channel.Transport do
   Otherwise a otherwise a 403 Forbidden response will be sent and
   the connection halted.  It is a noop if the connection has been halted.
   """
-  def check_origin(conn, allowed_origins, opts \\ [])
+  def check_origin(conn, allowed_origins, sender \\ &Plug.Conn.send_resp/1)
 
-  def check_origin(%Plug.Conn{halted: true} = conn, _allowed_origins, _opts) do
+  def check_origin(%Plug.Conn{halted: true} = conn, _allowed_origins, _sender) do
     conn
   end
 
-  def check_origin(conn, allowed_origins, opts) do
+  def check_origin(conn, allowed_origins, sender) do
     import Plug.Conn
     origin = get_req_header(conn, "origin") |> List.first
-    send   = opts[:send] || &send_resp/1
 
     if origin_allowed?(origin, allowed_origins) do
       conn
     else
       resp(conn, :forbidden, "")
-      |> send.()
+      |> sender.()
       |> halt()
     end
   end

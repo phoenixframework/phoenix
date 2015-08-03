@@ -495,7 +495,6 @@ export class LongPoll {
   constructor(endPoint){
     this.endPoint        = null
     this.token           = null
-    this.sig             = null
     this.skipHeartbeat   = true
     this.onopen          = function(){} // noop
     this.onerror         = function(){} // noop
@@ -517,7 +516,6 @@ export class LongPoll {
   endpointURL(){
     return Ajax.appendParams(this.pollEndpoint, {
       token: this.token,
-      sig: this.sig,
       format: "json"
     })
   }
@@ -537,9 +535,8 @@ export class LongPoll {
 
     Ajax.request("GET", this.endpointURL(), "application/json", null, this.timeout, this.ontimeout.bind(this), (resp) => {
       if(resp){
-        var {status, token, sig, messages} = resp
+        var {status, token, messages} = resp
         this.token = token
-        this.sig = sig
       } else{
         var status = 0
       }

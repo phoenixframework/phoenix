@@ -278,9 +278,8 @@ defmodule Phoenix.Integration.ChannelTest do
   test "adapter handles longpolling join, leave, and event messages" do
     # create session
     resp = poll :get, "/ws", %{}, %{}
-    session = Map.take(resp.body, ["token", "sig"])
+    session = Map.take(resp.body, ["token"])
     assert resp.body["token"]
-    assert resp.body["sig"]
     assert resp.body["status"] == 410
     assert resp.status == 200
 
@@ -442,9 +441,10 @@ defmodule Phoenix.Integration.ChannelTest do
   test "longpoller adapter sends phx_error if a channel server abnormally exits" do
     # create session
     resp = poll :get, "/ws", %{}, %{}
-    session = Map.take(resp.body, ["token", "sig"])
+    session = Map.take(resp.body, ["token"])
     assert resp.body["status"] == 410
     assert resp.status == 200
+
     # join
     resp = poll :post, "/ws", session, %{
       "topic" => "rooms:lobby",
@@ -454,6 +454,7 @@ defmodule Phoenix.Integration.ChannelTest do
     }
     assert resp.body["status"] == 200
     assert resp.status == 200
+
     # poll
     resp = poll :post, "/ws", session, %{
       "topic" => "rooms:lobby",
