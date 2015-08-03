@@ -9,12 +9,11 @@ defmodule Phoenix.Tranports.LongPollTest do
 
   alias Plug.Conn
   alias Phoenix.Transports.LongPoll
-  alias Phoenix.Tranports.LongPollTest.Router
+  alias Phoenix.Channel.Transport
 
   def conn_with_sess(session \\ %{}) do
     {_, longpoll_conf} = __MODULE__.UserSocket.__transport__(:longpoll)
     %Conn{private: %{plug_session: session}}
-    |> put_private(:phoenix_router, Router)
     |> put_private(:phoenix_endpoint, __MODULE__.Endpoint)
     |> put_private(:phoenix_socket_handler, __MODULE__.UserSocket)
     |> put_private(:phoenix_transport_conf, longpoll_conf)
@@ -46,7 +45,8 @@ defmodule Phoenix.Tranports.LongPollTest do
   end
 
   defp new_socket() do
-    {:ok, socket} = Phoenix.Channel.Transport.socket_connect(Endpoint, LongPoll, UserSocket, %{})
+    {_, opts} = UserSocket.__transport__(:longpoll)
+    {:ok, socket} = Transport.connect(Endpoint, UserSocket, :longpool, LongPoll, opts[:serializer], %{})
     socket
   end
 

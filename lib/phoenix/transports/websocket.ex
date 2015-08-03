@@ -33,7 +33,10 @@ defmodule Phoenix.Transports.WebSocket do
 
     case conn do
       %{halted: false} = conn ->
-        case Transport.socket_connect(endpoint, Phoenix.Transports.WebSocket, handler, conn.params) do
+        params     = conn.params
+        serializer = Keyword.fetch!(opts, :serializer)
+
+        case Transport.connect(endpoint, handler, transport, __MODULE__, serializer, params) do
           {:ok, socket} ->
             {:ok, conn, {__MODULE__, {socket, opts}}}
           :error ->
@@ -49,7 +52,6 @@ defmodule Phoenix.Transports.WebSocket do
     send_resp(conn, :bad_request, "")
     {:error, conn}
   end
-
 
   @doc """
   Provides the deault transport configuration to sockets.

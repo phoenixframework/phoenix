@@ -78,17 +78,6 @@ defmodule Phoenix.SocketTest do
       log: false, crypto: [iterations: 1000, length: 32, digest: :sha256, cache: Plug.Keys]]}
 
     assert UserSocket.__transport__(:websocket) == ws
-    assert UserSocket.__transport__("websocket") == ws
-
     assert UserSocket.__transport__(:longpoll) == lp
-    assert UserSocket.__transport__("longpoll") == lp
-
-    assert UserSocket.__transport__(Phoenix.Transports.WebSocket) == elem(ws, 1)
-    assert UserSocket.__transport__(Phoenix.Transports.LongPoll) == elem(lp, 1)
-  end
-
-  test "transport config for unsupported adapters" do
-    assert UserSocket.__transport__(:not_exists) == :unsupported
-    assert UserSocket.__transport__("not_exists") == :unsupported
   end
 end

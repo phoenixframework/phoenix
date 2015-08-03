@@ -76,7 +76,8 @@ defmodule Phoenix.Transports.LongPoll do
     |> put_private(:phoenix_endpoint, endpoint)
     |> put_private(:phoenix_transport_conf, opts)
     |> put_private(:phoenix_socket_handler, handler)
-    |> super(opts)
+    |> put_private(:phoenix_socket_transport, transport)
+    |> super([])
   end
 
   @doc """
@@ -120,9 +121,12 @@ defmodule Phoenix.Transports.LongPoll do
   end
 
   defp new_session(conn) do
-    handler  = conn.private.phoenix_socket_handler
+    endpoint   = conn.private.phoenix_endpoint
+    handler    = conn.private.phoenix_socket_handler
+    transport  = conn.private.phoenix_socket_transport
+    serializer = conn.private.phoenix_transport_conf[:serializer]
 
-    case Transport.socket_connect(endpoint_module(conn), Phoenix.Transports.LongPoll, handler, conn.params) do
+    case Transport.connect(endpoint, handler, transport, __MODULE__, serializer, conn.params) do
       {:ok, socket} ->
         {conn, priv_topic, sig, _server_pid} = start_session(conn, socket)
 

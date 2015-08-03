@@ -37,7 +37,7 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
     catch
       kind, [{:reason, reason}, {:mfa, _mfa}, {:stacktrace, stack} | _rest] ->
         reason = format_reason(kind, reason, stack)
-        exit({reason, {__MODULE__, :resume, [module, fun, args]}})
+        exit({reason, {__MODULE__, :resume, []}})
     else
       {:suspend, module, fun, args} ->
         {:suspend, __MODULE__, :resume, [module, fun, args]}
