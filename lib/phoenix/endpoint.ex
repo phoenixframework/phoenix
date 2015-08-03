@@ -391,25 +391,13 @@ defmodule Phoenix.Endpoint do
     plugs = Module.get_attribute(env.module, :plugs)
     {conn, body} = Plug.Builder.compile(env, plugs, [])
 
-    # TODO: Move this to the adapter dispatch.
-    #
-    # Keep in mind that moving this will also require
-    # moving force_ssl inside the adapters too, as today
-    # it is handled by the endpoint.
-    socket_intercepts = for {path, socket_handler} <- sockets do
-      path_info = Plug.Router.Utils.split(path)
-
-      quote do
-        defp phoenix_pipeline(%Plug.Conn{path_info: [unquote_splicing(path_info), transport_name]} = conn) do
-          opts = Phoenix.Socket.Router.init({transport_name, unquote(socket_handler)})
-          Phoenix.Socket.Router.call(conn, opts)
-        end
-      end
-    end
-
     quote do
-      unquote(socket_intercepts)
       defp phoenix_pipeline(unquote(conn)), do: unquote(body)
+
+      @doc """
+      Returns all sockets configured in this endpoint.
+      """
+      def __sockets__, do: unquote(sockets)
     end
   end
 

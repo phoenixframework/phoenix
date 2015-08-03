@@ -55,6 +55,8 @@ defmodule Phoenix.Transports.LongPoll do
               digest: :sha256, cache: Plug.Keys]]
   end
 
+  def handler_for(:cowboy), do: Plug.Adapters.Cowboy.Handler
+
   defp dispatch(%Plug.Conn{method: "OPTIONS"} = conn, _) do
     options(conn, conn.params)
   end
@@ -68,6 +70,14 @@ defmodule Phoenix.Transports.LongPoll do
     conn |> send_resp(:bad_request, "") |> halt()
   end
 
+  def call(conn, {endpoint, handler, transport}) do
+    {_, opts} = handler.__transport__(transport)
+    put_in(conn.secret_key_base, endpoint.config(:secret_key_base))
+    |> put_private(:phoenix_endpoint, endpoint)
+    |> put_private(:phoenix_transport_conf, opts)
+    |> put_private(:phoenix_socket_handler, handler)
+    |> super(opts)
+  end
 
   @doc """
   Responds to pre-flight CORS requests with Allow-Origin-* headers.

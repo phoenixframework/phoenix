@@ -1,21 +1,46 @@
-defmodule Phoenix.Endpoint.CowboyWebsocket do
+defmodule Phoenix.Endpoint.CowboyWebSocket do
+  # Implementation of the WebSocket transport for Cowboy.
   @moduledoc false
-  @behaviour :cowboy_websocket_handler
 
-  def call(conn, args) do
-    resume(conn, :cowboy_websocket, :upgrade, args)
+  @behaviour :cowboy_websocket_handler
+  @connection Plug.Adapters.Cowboy.Conn
+  @already_sent {:plug_conn, :sent}
+
+  def init({transport, :http}, req, {module, opts}) when transport in [:tcp, :ssl] do
+    conn = @connection.conn(req, transport)
+    case module.init(conn, opts) do
+      {:ok, %{adapter: {@connection, req}}, args} ->
+        {:upgrade, :protocol, __MODULE__, req, args}
+      {:error, %{adapter: {@connection, req}}} ->
+        {:shutdown, req, :no_state}
+    end
+  after
+    receive do
+      @already_sent -> :ok
+    after
+      0 -> :ok
+    end
   end
 
-  def resume(conn, module, fun, args) do
+  def upgrade(req, env, __MODULE__, {handler, opts}) do
+    args = [req, env, __MODULE__, {handler, opts}]
+    resume(:cowboy_websocket, :upgrade, args)
+  end
+
+  def terminate(_reason,  _req, _state) do
+    :ok
+  end
+
+  def resume(module, fun, args) do
     try do
       apply(module, fun, args)
     catch
       kind, [{:reason, reason}, {:mfa, _mfa}, {:stacktrace, stack} | _rest] ->
         reason = format_reason(kind, reason, stack)
-        exit({reason, {__MODULE__, :call, [conn, []]}})
+        exit({reason, {__MODULE__, :resume, [module, fun, args]}})
     else
       {:suspend, module, fun, args} ->
-        {:suspend, __MODULE__, :resume, [conn, module, fun, args]}
+        {:suspend, __MODULE__, :resume, [module, fun, args]}
       _ ->
         # We are forcing a shutdown exit because we want to make
         # sure all transports exits with reason shutdown to guarantee
@@ -28,8 +53,10 @@ defmodule Phoenix.Endpoint.CowboyWebsocket do
   defp format_reason(:throw, reason, stack), do: {{:nocatch, reason}, stack}
   defp format_reason(:error, reason, stack), do: {reason, stack}
 
-  def websocket_init(_transport, req, {handler, conn}) do
-    {:ok, state, timeout} = handler.ws_init(conn)
+  ## Websocket callbacks
+
+  def websocket_init(_transport, req, {handler, args}) do
+    {:ok, state, timeout} = handler.ws_init(args)
     {:ok, :cowboy_req.compact(req), {handler, state}, timeout}
   end
 
@@ -52,10 +79,7 @@ defmodule Phoenix.Endpoint.CowboyWebsocket do
     :ok
   end
   def websocket_terminate({:remote, code, _}, _req, {handler, state})
-    when code in 1000..1003
-    or code in 1005..1011
-    or code == 1015 do
-
+      when code in 1000..1003 or code in 1005..1011 or code == 1015 do
     handler.ws_close(state)
     :ok
   end

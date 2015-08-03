@@ -16,18 +16,39 @@ defmodule Phoenix.Transports.WebSocket do
   The `serializer` module needs only to implement the `encode!/1` and
   `decode!/2` functions defined by the `Phoenix.Transports.Serializer` behaviour.
   """
-  use Plug.Builder
-
   @behaviour Phoenix.Channel.Transport
 
-  import Phoenix.Controller, only: [endpoint_module: 1]
+  import Plug.Conn, only: [fetch_query_params: 1, send_resp: 3]
 
   alias Phoenix.Socket.Broadcast
   alias Phoenix.Channel.Transport
 
-  plug :fetch_query_params
-  plug :check_origin
-  plug :upgrade
+  def init(%Plug.Conn{method: "GET"} = conn, {endpoint, handler, transport}) do
+    {_, opts} = handler.__transport__(transport)
+
+    conn =
+      conn
+      |> Plug.Conn.fetch_query_params
+      |> Transport.check_origin(opts[:origins])
+
+    case conn do
+      %{halted: false} = conn ->
+        case Transport.socket_connect(endpoint, Phoenix.Transports.WebSocket, handler, conn.params) do
+          {:ok, socket} ->
+            {:ok, conn, {__MODULE__, {socket, opts}}}
+          :error ->
+            send_resp(conn, 403, "")
+            {:error, conn}
+        end
+      %{halted: true} = conn ->
+        {:error, conn}
+    end
+  end
+
+  def init(conn, _) do
+    send_resp(conn, :bad_request, "")
+    {:error, conn}
+  end
 
 
   @doc """
@@ -43,32 +64,15 @@ defmodule Phoenix.Transports.WebSocket do
      log: false]
   end
 
-  def upgrade(%Plug.Conn{method: "GET", params: params} = conn, _) do
-    handler = conn.private.phoenix_socket_handler
-
-    case Transport.socket_connect(endpoint_module(conn), Phoenix.Transports.WebSocket, handler, params) do
-      {:ok, socket} ->
-        conn
-        |> put_private(:phoenix_upgrade, {:websocket, __MODULE__})
-        |> put_private(:phoenix_socket, socket)
-        |> halt()
-      :error ->
-        conn |> send_resp(403, "") |> halt()
-    end
-  end
-  def upgrade(conn, _) do
-    conn |> send_resp(:bad_request, "") |> halt()
-  end
+  def handler_for(:cowboy), do: Phoenix.Endpoint.CowboyWebSocket
 
   @doc """
   Handles initalization of the websocket.
   """
-  def ws_init(conn) do
+  def ws_init({socket, config}) do
     Process.flag(:trap_exit, true)
-    config         = conn.private.phoenix_transport_conf
-    socket         = conn.private.phoenix_socket
-    serializer     = Keyword.fetch!(config, :serializer)
-    timeout        = Keyword.fetch!(config, :timeout)
+    serializer = Keyword.fetch!(config, :serializer)
+    timeout    = Keyword.fetch!(config, :timeout)
 
     if socket.id, do: socket.endpoint.subscribe(self, socket.id, link: true)
 
@@ -140,10 +144,6 @@ defmodule Phoenix.Transports.WebSocket do
     for {pid, _} <- state.sockets_inverse do
       Phoenix.Channel.Server.close(pid)
     end
-  end
-
-  defp check_origin(conn, _opts) do
-    Transport.check_origin(conn, conn.private.phoenix_transport_conf[:origins])
   end
 
   defp put(state, topic, socket_pid) do
