@@ -231,6 +231,16 @@ end
 
 That's all there is to our basic chat app. Fire up multiple browser tabs and you should see your messages being pushed and broadcasted to all windows!
 
+#### Socket Assigns
+
+Similar to connection structs, `%Plug.Conn{}`, it is possible to assign values to a channel socket. `Phoenix.Socket.assign/3` is conveniently imported into a channel module as `assign/3`:
+
+```elixir
+  socket = assign(socket, :user, msg["user"])
+```
+
+Sockets store assigned values as a map in `socket.assigns`.
+
 
 #### Example Application
 To see an example of the application we just built, checkout this project (https://github.com/chrismccord/phoenix_chat_example).
