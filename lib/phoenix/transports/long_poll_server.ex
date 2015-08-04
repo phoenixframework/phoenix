@@ -1,5 +1,6 @@
 defmodule Phoenix.Transports.LongPoll.Supervisor do
   @moduledoc false
+
   use Supervisor
 
   def start_link do
@@ -19,7 +20,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
 
   use GenServer
 
-  alias Phoenix.Channel.Transport
+  alias Phoenix.Socket.Transport
   alias Phoenix.PubSub
   alias Phoenix.Socket.Broadcast
   alias Phoenix.Socket.Message
@@ -27,12 +28,12 @@ defmodule Phoenix.Transports.LongPoll.Server do
   @doc """
   Starts the Server.
 
-    * `socket` - The `%Phoenix.Socket{}` struct returend from `connect/2` of the
-                 socket handler.
+    * `socket` - The `Phoenix.Socket` struct returend from `connect/2`
+      of the socket handler.
     * `window_ms` - The longpoll session timeout, in milliseconds
 
-  If the server receives no message within `window_ms`, it terminates and
-  clients are responsible for opening a new session.
+  If the server receives no message within `window_ms`, it terminates
+  and clients are responsible for opening a new session.
   """
   def start_link(socket, window_ms, priv_topic) do
     GenServer.start_link(__MODULE__, [socket, window_ms, priv_topic])
@@ -67,18 +68,18 @@ defmodule Phoenix.Transports.LongPoll.Server do
     msg
     |> Transport.dispatch(state.channels, state.socket)
     |> case do
-      {:ok, channel_pid, reply_msg} ->
+      {:joined, channel_pid, reply_msg} ->
         :ok = broadcast_from(state, {:ok, :dispatch, ref})
 
         new_state = %{state | channels: HashDict.put(state.channels, msg.topic, channel_pid),
                               channels_inverse: HashDict.put(state.channels_inverse, channel_pid, msg.topic)}
         publish_reply(reply_msg, new_state)
 
-      {:ok, reply_msg} ->
+      {:reply, reply_msg} ->
         :ok = broadcast_from(state, {:ok, :dispatch, ref})
         publish_reply(reply_msg, state)
 
-      :ok ->
+      :noreply ->
         :ok = broadcast_from(state, {:ok, :dispatch, ref})
         {:noreply, state}
 
@@ -100,7 +101,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
 
   # Crash if pubsub adapter goes down
   def handle_info({:EXIT, pub_pid, :shutdown}, %{pubsub_server: pub_pid} = state) do
-    {:stop, {:shutdown,:pubsub_server_terminated}, state}
+    {:stop, {:shutdown, :pubsub_server_terminated}, state}
   end
 
   # Trap channel process exits and notify client of close or error events
@@ -115,11 +116,11 @@ defmodule Phoenix.Transports.LongPoll.Server do
                               channels_inverse: HashDict.delete(state.channels_inverse, channel_pid)}
         case reason do
           :normal ->
-            publish_reply(Transport.chan_close_message(topic), new_state)
+            publish_reply(Transport.channel_close_message(topic), new_state)
           {:shutdown, _} ->
-            publish_reply(Transport.chan_close_message(topic), new_state)
+            publish_reply(Transport.channel_close_message(topic), new_state)
           _other ->
-            publish_reply(Transport.chan_error_message(topic), new_state)
+            publish_reply(Transport.channel_error_message(topic), new_state)
         end
     end
   end

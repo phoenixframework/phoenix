@@ -60,8 +60,9 @@ defmodule Phoenix.Endpoint.CowboyHandler do
     dispatches =
       for {path, socket} <- endpoint.__sockets__,
           {transport, {module, _config}} <- socket.__transports__,
+          handler = module.handlers[:cowboy],
           do: {Path.join(path, Atom.to_string(transport)),
-               module.handler_for(:cowboy),
+               handler,
                {module, {endpoint, socket, transport}}}
 
     dispatches =

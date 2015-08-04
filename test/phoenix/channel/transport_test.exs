@@ -1,16 +1,27 @@
-defmodule Phoenix.Channel.TransportTest do
+defmodule Phoenix.Socket.TransportTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
-  alias Phoenix.Channel.Transport
+  alias Phoenix.Socket.Transport
 
-  def config(:url) do
-    [host: "host.com"]
+  Application.put_env :phoenix, __MODULE__.Endpoint,
+    force_ssl: [],
+    url: [host: "host.com"]
+
+  defmodule Endpoint do
+    use Phoenix.Endpoint, otp_app: :phoenix
   end
+
+  setup_all do
+    Endpoint.start_link
+    :ok
+  end
+
+  ## Check origin
 
   defp check_origin(origin, origins) do
     conn = conn(:get, "/") |> put_req_header("origin", origin)
-    Transport.check_origin(conn, __MODULE__, origins)
+    Transport.check_origin(conn, Endpoint, origins)
   end
 
   test "does not check origin if disabled" do
@@ -41,5 +52,23 @@ defmodule Phoenix.Channel.TransportTest do
     conn = check_origin("http://port.com:82/", origins)
     assert conn.halted
     assert conn.status == 403
+  end
+
+  ## force_ssl
+
+  test "forces SSL" do
+    # Halts
+    conn = Transport.force_ssl(conn(:get, "http://foo.com/"), :socket, Endpoint)
+    assert conn.halted
+    assert get_resp_header(conn, "location") == ["https://host.com/"]
+
+    # No-op when already halted
+    conn = Transport.force_ssl(conn(:get, "http://foo.com/") |> halt(), :socket, Endpoint)
+    assert conn.halted
+    assert get_resp_header(conn, "location") == []
+
+    # Valid
+    conn = Transport.force_ssl(conn(:get, "https://foo.com/"), :socket, Endpoint)
+    refute conn.halted
   end
 end

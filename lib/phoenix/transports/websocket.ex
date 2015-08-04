@@ -35,7 +35,8 @@ defmodule Phoenix.Transports.WebSocket do
   The `encode!/1` function must return a tuple in the format
   `{:socket_push, :text | :binary, String.t | binary}`.
   """
-  @behaviour Phoenix.Channel.Transport
+
+  @behaviour Phoenix.Socket.Transport
 
   def default_config() do
     [serializer: Phoenix.Transports.WebSocketSerializer,
@@ -44,14 +45,16 @@ defmodule Phoenix.Transports.WebSocket do
      check_origin: true]
   end
 
-  def handler_for(:cowboy), do: Phoenix.Endpoint.CowboyWebSocket
+  def handlers() do
+    %{cowboy: Phoenix.Endpoint.CowboyWebSocket}
+  end
 
   ## Callbacks
 
   import Plug.Conn, only: [fetch_query_params: 1, send_resp: 3]
 
   alias Phoenix.Socket.Broadcast
-  alias Phoenix.Channel.Transport
+  alias Phoenix.Socket.Transport
 
   @doc false
   def init(%Plug.Conn{method: "GET"} = conn, {endpoint, handler, transport}) do
@@ -106,14 +109,13 @@ defmodule Phoenix.Transports.WebSocket do
     msg = state.serializer.decode!(payload, opcode: opcode)
 
     case Transport.dispatch(msg, state.channels, state.socket) do
-      {:ok, channel_pid, reply_msg} ->
-        format_reply(state.serializer.encode!(reply_msg), put(state, msg.topic, channel_pid))
-      {:ok, reply_msg} ->
-        format_reply(state.serializer.encode!(reply_msg), state)
-      :ok ->
+      :noreply ->
         {:ok, state}
+      {:reply, reply_msg} ->
+        format_reply(state.serializer.encode!(reply_msg), state)
+      {:joined, channel_pid, reply_msg} ->
+        format_reply(state.serializer.encode!(reply_msg), put(state, msg.topic, channel_pid))
       {:error, _reason, error_reply_msg} ->
-        # We are assuming the error was already logged elsewhere.
         format_reply(state.serializer.encode!(error_reply_msg), state)
     end
   end
@@ -127,13 +129,13 @@ defmodule Phoenix.Transports.WebSocket do
 
         case reason do
           :normal ->
-            format_reply(state.serializer.encode!(Transport.chan_close_message(topic)), new_state)
+            format_reply(state.serializer.encode!(Transport.channel_close_message(topic)), new_state)
           :shutdown ->
-            format_reply(state.serializer.encode!(Transport.chan_close_message(topic)), new_state)
+            format_reply(state.serializer.encode!(Transport.channel_close_message(topic)), new_state)
           {:shutdown, _} ->
-            format_reply(state.serializer.encode!(Transport.chan_close_message(topic)), new_state)
+            format_reply(state.serializer.encode!(Transport.channel_close_message(topic)), new_state)
           _other ->
-            format_reply(state.serializer.encode!(Transport.chan_error_message(topic)), new_state)
+            format_reply(state.serializer.encode!(Transport.channel_error_message(topic)), new_state)
         end
     end
   end

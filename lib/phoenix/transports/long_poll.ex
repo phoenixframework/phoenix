@@ -33,7 +33,7 @@ defmodule Phoenix.Transports.LongPoll do
 
   ## Transport callbacks
 
-  @behaviour Phoenix.Channel.Transport
+  @behaviour Phoenix.Socket.Transport
 
   def default_config() do
     [window_ms: 10_000,
@@ -44,19 +44,21 @@ defmodule Phoenix.Transports.LongPoll do
      crypto: [max_age: 1209600]]
   end
 
-  def handler_for(:cowboy), do: Plug.Adapters.Cowboy.Handler
+  def handlers() do
+    %{cowboy: Plug.Adapters.Cowboy.Handler}
+  end
 
   ## Plug callbacks
 
   @behaviour Plug
-  @behaviour Phoenix.Channel.Transport
+  @behaviour Phoenix.Socket.Transport
   @plug_parsers Plug.Parsers.init(parsers: [:json], json_decoder: Poison)
 
   import Plug.Conn
 
   alias Phoenix.Socket.Message
   alias Phoenix.Transports.LongPoll
-  alias Phoenix.Channel.Transport
+  alias Phoenix.Socket.Transport
 
   @doc false
   def init(opts) do

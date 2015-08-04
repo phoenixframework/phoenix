@@ -259,9 +259,7 @@ defmodule Phoenix.ChannelTest do
   Emulates the client leaving the channel.
   """
   def leave(socket) do
-    ref = make_ref()
-    Server.leave(socket.channel_pid, ref)
-    ref
+    push(socket, "phx_leave", %{})
   end
 
   @doc """

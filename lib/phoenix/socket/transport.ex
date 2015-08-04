@@ -1,61 +1,98 @@
-defmodule Phoenix.Channel.Transport do
+defmodule Phoenix.Socket.Transport do
   @moduledoc """
-  Handles dispatching incoming and outgoing Channel messages
+  API for building transports.
 
-  ## The Transport Adapter Contract
+  This module describes what is required to build a Phoenix transport.
+  The transport sits between the socket and channels, forwarding client
+  messages to channels and vice-versa.
 
-  The Transport layer dispatches `%Phoenix.Socket.Message{}`'s from remote clients,
-  backed by different Channel transport implementations and serializations.
+  A transport is responsible for:
 
-  ### Server
+    * Implementing the transport behaviour
+    * Establishing the socket connection
+    * Handling of incoming messages
+    * Handling of outgoing messages
+    * Managing channels
+    * Providing secure defaults
 
-  To implement a Transport adapter, the Server must broker the following actions:
+  ## The transport behaviour
+  
+  The transport requires two functions:
 
-    * Handle receiving incoming, encoded `%Phoenix.Socket.Message{}`'s from
-      remote clients, then deserialing and fowarding message through
-      `Phoenix.Transport.dispatch/4`. Message keys must be deserialized as strings.
-    * Handle receiving `{:ok, socket_pid}` results from Transport dispatch and storing a
-      HashDict of a string topics to Pid matches, and Pid to String topic matches.
-      The HashDict of topic => pids is dispatched through the transport layer's
-      `Phoenix.Transport.dispatch/4`.
-    * Handle receiving outgoing `%Phoenix.Socket.Message{}` and `%Phoenix.Socket.Reply{}` as
-      Elixir process messages, then encoding and fowarding to remote client.
-    * Trap exits and handle receiving `{:EXIT, socket_pid, reason}` messages
-      and delete the entries from the kept HashDict of socket processes.
-      When exits are received, the adapter transport must reply to their client
-      with one of two messages:
+    * `default_config/0` - returns the default transport configuration
+      to be merged whent the transport is declare in the socket module
 
-        - for `:normal` exits and shutdowns, send a reply to the remote
-          client of a message from `Transport.chan_close_message/1`
-        - for abnormal exits, send a reply to the remote client of a message
-          from `Transport.chan_error_message/1`
+    * `handlers/0` - returns a map of handlers. For example, if the
+      transport can be run cowboy, it just need to specify the
+      appropriate cowboy handler
 
-     * Call the `socket_connect/4` passing along socket params from client and
-       keep the state of the returned `%Socket{}` to pass into dispatch.
-     * Subscribe to the socket's `:id` on init and handle
-       `%Phoenix.Socket.Broadcast{}` messages with the `"disconnect"` event
-       and gracefully shutdown.
+  ## Socket connections
 
+  Once a connection is established, the transport is responsible
+  for invoking the `Phoenix.Socket.connect/2` callback and acting
+  accordingly. Once connected, the transport should request the
+  `Phoenix.Socket.id/1` and subscribe to the topic if one exists.
+  On subscribed, the transport must be able to handle "disconnect"
+  broadcasts on the given id topic.
 
-  See `Phoenix.Transports.WebSocket` for an example transport server implementation.
+  The `connect/6` function in this module can be used as a
+  convenience or a documentation on such steps.
 
+  ## Incoming messages
 
-  ### Remote Client
+  Incoming messages are encoded in whatever way the transport
+  chooses. Those messages must be decoded in the transport into a
+  `Phoenix.Socket.Message` before being forwarded to a channel.
 
-  Synchronouse Replies and `ref`'s:
+  Most of those messages are user messages except by:
 
-  Channels can reply, synchronously, to any `handle_in/3` event. To match pushes
-  with replies, clients must include a unique `ref` with every message and the
-  channel server will reply with a matching ref where the client and pick up the
-  callback for the matching reply.
+    * "heartbeat" events in the "phoenix" topic - should just emit
+      an OK reply
+    * "phx_join" on any topic - should join the topic
+    * "phx_leave" on any topic - should leave the topic
 
-  Phoenix includes a JavaScript client for WebSocket and Longpolling support using JSON
-  encodings.
+  The function `dispatch/3` can help with handling of such messages.
+
+  ## Outgoing messages
+
+  Channels can send two types of messages back to a transport:
+  `Phoenix.Socket.Message` and `Phoenix.Socket.Reply`. Those
+  messages are encoded in the channel into a format defined by
+  the transport. That's why transports are required to pass a
+  serializer that abides to the behaviour described in
+  `Phoenix.Transports.Serializer`.
+
+  ## Managing channels
+
+  Because channels are spawned from the transport process, transports
+  must trap exists and correctly handle the `{:EXIT, _, _}` messages
+  arriving from channels, relaying the proper response to the client.
+
+  The function `on_exit/3` should aid with that.
+
+  ## Security
+
+  This module also provides functions to enable a secure environment
+  on transports that, at some point, have access to a `Plug.Conn`.
+
+  The functionality provided by this module help with doing "origin"
+  header checks and ensuring only SSL connections are allowed.
+
+  ## Remote Client
+
+  Channels can reply, synchronously, to any `handle_in/3` event. To match
+  pushes with replies, clients must include a unique `ref` with every
+  message and the channel server will reply with a matching ref where
+  the client and pick up the callback for the matching reply.
+
+  Phoenix includes a JavaScript client for WebSocket and Longpolling
+  support using JSON encodings.
 
   However, a client can be implemented for other protocols and encodings by
-  abiding by the `Phoenix.Socket.Message` format
+  abiding by the `Phoenix.Socket.Message` format.
 
-  See `web/static/js/phoenix.js` for an example transport client implementation.
+  See `web/static/js/phoenix.js` for an example transport client
+  implementation.
   """
 
   use Behaviour
@@ -65,9 +102,14 @@ defmodule Phoenix.Channel.Transport do
   alias Phoenix.Socket.Reply
 
   @doc """
-  Provides a keyword list of default configuration for socket transports
+  Provides a keyword list of default configuration for socket transports.
   """
-  defcallback default_config() :: list
+  defcallback default_config() :: Keyword.t
+
+  @doc """
+  Provides handlers for different applications.
+  """
+  defcallback handlers() :: map
 
   @doc """
   Handles the socket connection.
@@ -116,62 +158,49 @@ defmodule Phoenix.Channel.Transport do
     * `{:error, reason}` - Unauthorized or unmatched dispatch
 
   """
+  def dispatch(msg, sockets, socket)
+
+  def dispatch(%{ref: ref, topic: "phoenix", event: "heartbeat"}, _sockets, _socket) do
+    {:reply, %Reply{ref: ref, topic: "phoenix", status: :ok, payload: %{}}}
+  end
+
   def dispatch(%Message{} = msg, sockets, socket) do
     sockets
     |> HashDict.get(msg.topic)
-    |> dispatch(msg, socket)
+    |> do_dispatch(msg, socket)
   end
 
-  @doc """
-  Dispatches `%Phoenix.Socket.Message{}` in response to a heartbeat message sent from the client.
+  defp do_dispatch(nil, %{event: "phx_join", topic: topic} = msg, socket) do
+    if channel = socket.handler.__channel__(topic, socket.transport_name) do
+      socket = %Socket{socket | topic: topic, channel: channel}
 
-  The Message format sent to phoenix requires the following key / values:
+      log_info topic, fn ->
+        "JOIN #{topic} to #{inspect(channel)}\n" <>
+        "  Transport:  #{inspect socket.transport}\n" <>
+        "  Parameters: #{inspect msg.payload}"
+      end
 
-    * `topic` - The String value "phoenix"
-    * `event` - The String value "heartbeat"
-    * `payload` - An empty JSON message payload (`{}`)
+      case Phoenix.Channel.Server.join(socket, msg.payload) do
+        {:ok, response, pid} ->
+          log_info topic, fn -> "Replied #{topic} :ok" end
+          {:joined, pid, %Reply{ref: msg.ref, topic: topic, status: :ok, payload: response}}
 
-  The server will respond to heartbeats with the same message
-  """
-  def dispatch(_, %{ref: ref, topic: "phoenix", event: "heartbeat"}, _socket) do
-    {:ok, %Reply{ref: ref, topic: "phoenix", status: :ok, payload: %{}}}
-  end
-  def dispatch(nil, %{event: "phx_join", topic: topic} = msg, base_socket) do
-    case base_socket.handler.__channel__(topic, base_socket.transport_name) do
-      nil -> reply_ignore(msg, base_socket)
-
-      channel ->
-        socket = %Socket{base_socket |
-                         topic: topic,
-                         channel: channel}
-
-        log_info topic, fn ->
-          "JOIN #{topic} to #{inspect(channel)}\n" <>
-          "  Transport:  #{inspect socket.transport}\n" <>
-          "  Parameters: #{inspect msg.payload}"
-        end
-
-        case Phoenix.Channel.Server.join(socket, msg.payload) do
-          {:ok, response, pid} ->
-            log_info topic, fn -> "Replied #{topic} :ok" end
-            {:ok, pid, %Reply{ref: msg.ref, topic: topic, status: :ok, payload: response}}
-
-          {:error, reason} ->
-            log_info topic, fn -> "Replied #{topic} :error" end
-            {:error, reason, %Reply{ref: msg.ref, topic: topic, status: :error, payload: reason}}
-        end
+        {:error, reason} ->
+          log_info topic, fn -> "Replied #{topic} :error" end
+          {:error, reason, %Reply{ref: msg.ref, topic: topic, status: :error, payload: reason}}
+      end
+    else
+      reply_ignore(msg, socket)
     end
   end
-  def dispatch(nil, msg, socket) do
+
+  defp do_dispatch(nil, msg, socket) do
     reply_ignore(msg, socket)
   end
-  def dispatch(socket_pid, %{event: "phx_leave", ref: ref},  _socket) do
-    Phoenix.Channel.Server.leave(socket_pid, ref)
-    :ok
-  end
-  def dispatch(socket_pid, msg, _socket) do
+
+  defp do_dispatch(socket_pid, msg, _socket) do
     send(socket_pid, msg)
-    :ok
+    :noreply
   end
 
   defp log_info("phoenix" <> _, _func), do: :noop
@@ -179,23 +208,21 @@ defmodule Phoenix.Channel.Transport do
 
   defp reply_ignore(msg, socket) do
     Logger.debug fn -> "Ignoring unmatched topic \"#{msg.topic}\" in #{inspect(socket.handler)}" end
-
-    {:error, :unmatched_topic, %Reply{ref: msg.ref, topic: msg.topic,
-                                      status: :error,
+    {:error, :unmatched_topic, %Reply{ref: msg.ref, topic: msg.topic, status: :error,
                                       payload: %{reason: "unmatched topic"}}}
   end
 
   @doc """
   Returns the `%Phoenix.Message{}` for a channel close event
   """
-  def chan_close_message(topic) do
+  def channel_close_message(topic) do
     %Message{topic: topic, event: "phx_close", payload: %{}}
   end
 
   @doc """
   Returns the `%Phoenix.Message{}` for a channel error event
   """
-  def chan_error_message(topic) do
+  def channel_error_message(topic) do
     %Message{topic: topic, event: "phx_error", payload: %{}}
   end
 

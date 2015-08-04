@@ -8,7 +8,6 @@ defmodule Phoenix.Channel.Server do
   alias Phoenix.Socket.Message
   alias Phoenix.Socket.Reply
 
-  # TODO: Document me as the transport API.
   @moduledoc false
 
   ## Transport API
@@ -29,17 +28,6 @@ defmodule Phoenix.Channel.Server do
         Logger.error fn -> Exception.format_exit(reason) end
         {:error, %{reason: "join crashed"}}
     end
-  end
-
-  @doc """
-  Notifies the channel the client left.
-
-  This event is async and a message is sent back to the
-  transport as soon the leave command is processed (but
-  before termination).
-  """
-  def leave(pid, ref) do
-    GenServer.cast(pid, {:leave, ref})
   end
 
   @doc """
@@ -193,16 +181,17 @@ defmodule Phoenix.Channel.Server do
     handle_result({:stop, {:shutdown, :closed}, socket}, :handle_in)
   end
 
-  def handle_cast({:leave, ref}, socket) do
-    handle_result({:stop, {:shutdown, :left}, :ok, put_in(socket.ref, ref)}, :handle_in)
-  end
-
   @doc false
   def handle_info(%Message{topic: topic, event: "phx_join"}, %{topic: topic} = socket) do
     Logger.info fn -> "#{inspect socket.channel} received join event with topic \"#{topic}\" but channel already joined" end
 
     handle_result({:reply, {:error, %{reason: "already joined"}}, socket}, :handle_in)
   end
+
+  def handle_info(%Message{topic: topic, event: "phx_leave", ref: ref}, %{topic: topic} = socket) do
+    handle_result({:stop, {:shutdown, :left}, :ok, put_in(socket.ref, ref)}, :handle_in)
+  end
+
   def handle_info(%Message{topic: topic, event: event, payload: payload, ref: ref},
                   %{topic: topic} = socket) do
     event

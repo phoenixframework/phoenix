@@ -25,7 +25,7 @@ defmodule Phoenix.Tranports.LongPollTest do
   end
 
   alias Phoenix.Transports.LongPoll
-  alias Phoenix.Channel.Transport
+  alias Phoenix.Socket.Transport
 
   defp new_socket do
     serializer = transport_opts()[:serializer]
