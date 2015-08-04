@@ -68,7 +68,7 @@ defmodule Phoenix.Socket.Transport do
   must trap exists and correctly handle the `{:EXIT, _, _}` messages
   arriving from channels, relaying the proper response to the client.
 
-  The function `on_exit/3` should aid with that.
+  The function `on_exit_message/2` should aid with that.
 
   ## Security
 
@@ -213,17 +213,15 @@ defmodule Phoenix.Socket.Transport do
   end
 
   @doc """
-  Returns the `%Phoenix.Message{}` for a channel close event
+  Returns the message to be relayed when a channel exists.
   """
-  def channel_close_message(topic) do
-    %Message{topic: topic, event: "phx_close", payload: %{}}
-  end
-
-  @doc """
-  Returns the `%Phoenix.Message{}` for a channel error event
-  """
-  def channel_error_message(topic) do
-    %Message{topic: topic, event: "phx_error", payload: %{}}
+  def on_exit_message(topic, reason) do
+    case reason do
+      :normal        -> %Message{topic: topic, event: "phx_close", payload: %{}}
+      :shutdown      -> %Message{topic: topic, event: "phx_close", payload: %{}}
+      {:shutdown, _} -> %Message{topic: topic, event: "phx_close", payload: %{}}
+      _              -> %Message{topic: topic, event: "phx_error", payload: %{}}
+    end
   end
 
   @doc """

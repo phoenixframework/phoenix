@@ -114,14 +114,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
       topic ->
         new_state = %{state | channels: HashDict.delete(state.channels, topic),
                               channels_inverse: HashDict.delete(state.channels_inverse, channel_pid)}
-        case reason do
-          :normal ->
-            publish_reply(Transport.channel_close_message(topic), new_state)
-          {:shutdown, _} ->
-            publish_reply(Transport.channel_close_message(topic), new_state)
-          _other ->
-            publish_reply(Transport.channel_error_message(topic), new_state)
-        end
+        publish_reply(Transport.on_exit_message(topic, reason), new_state)
     end
   end
 
