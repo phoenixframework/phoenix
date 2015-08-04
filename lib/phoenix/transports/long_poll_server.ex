@@ -69,22 +69,21 @@ defmodule Phoenix.Transports.LongPoll.Server do
     |> Transport.dispatch(state.channels, state.socket)
     |> case do
       {:joined, channel_pid, reply_msg} ->
-        :ok = broadcast_from(state, {:ok, :dispatch, ref})
-
+        :ok = broadcast_from(state, {:dispatch, ref})
         new_state = %{state | channels: HashDict.put(state.channels, msg.topic, channel_pid),
                               channels_inverse: HashDict.put(state.channels_inverse, channel_pid, msg.topic)}
         publish_reply(reply_msg, new_state)
 
       {:reply, reply_msg} ->
-        :ok = broadcast_from(state, {:ok, :dispatch, ref})
+        :ok = broadcast_from(state, {:dispatch, ref})
         publish_reply(reply_msg, state)
 
       :noreply ->
-        :ok = broadcast_from(state, {:ok, :dispatch, ref})
+        :ok = broadcast_from(state, {:dispatch, ref})
         {:noreply, state}
 
       {:error, reason, error_reply_msg} ->
-        :ok = broadcast_from(state, {:error, :dispatch, reason, ref})
+        :ok = broadcast_from(state, {:error, reason, ref})
         publish_reply(error_reply_msg, state)
     end
   end
@@ -119,28 +118,18 @@ defmodule Phoenix.Transports.LongPoll.Server do
   end
 
   def handle_info({:subscribe, ref}, state) do
-    :ok = broadcast_from(state, {:ok, :subscribe, ref})
+    :ok = broadcast_from(state, {:subscribe, ref})
     {:noreply, state}
   end
 
   def handle_info({:flush, ref}, state) do
-    if Enum.any?(state.buffer) do
-      :ok = broadcast_from(state, {:messages, Enum.reverse(state.buffer), ref})
+    case state.buffer do
+      [] ->
+        {:noreply, %{state | client_ref: ref, last_client_poll: now_ms()}}
+      buffer ->
+        :ok = broadcast_from(state, {:messages, Enum.reverse(buffer), ref})
+        {:noreply, %{state | client_ref: nil, last_client_poll: now_ms(), buffer: []}}
     end
-    {:noreply, %{state | client_ref: ref, last_client_poll: now_ms()}}
-  end
-
-  # TODO: Messages need unique ids so we can properly ack them
-  @doc """
-  Handles acknowledged messages from client and removes from buffer.
-  `:ack` calls to the server also represent the client listener
-  closing for repoll.
-  """
-  def handle_info({:ack, msg_count, ref}, state) do
-    buffer = Enum.drop(state.buffer, -msg_count)
-    :ok = broadcast_from(state, {:ok, :ack, ref})
-
-    {:noreply, %{state | buffer: buffer}}
   end
 
   def handle_info(:shutdown_if_inactive, state) do
@@ -163,12 +152,11 @@ defmodule Phoenix.Transports.LongPoll.Server do
     publish_encoded_reply(state.socket.serializer.encode!(msg), state)
   end
   defp publish_encoded_reply(msg, state) do
-    buffer = [msg | state.buffer]
-    if state.client_ref do
-      :ok = broadcast_from(state, {:messages, Enum.reverse(buffer), state.client_ref})
+    if ref = state.client_ref do
+      :ok = broadcast_from(state, {:now_available, ref})
     end
 
-    {:noreply, %{state | buffer: buffer}}
+    {:noreply, %{state | buffer: [msg | state.buffer]}}
   end
 
   defp time_to_ms({mega, sec, micro}),

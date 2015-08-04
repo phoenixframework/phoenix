@@ -8,7 +8,7 @@ defmodule Phoenix.Transports.LongPoll do
 
       transport :longpoll, Phoenix.Transports.LongPoll,
         window_ms: 10_000,
-        pubsub_timeout_ms: 1000,
+        pubsub_timeout_ms: 2_000,
         log: false,
         check_origin: true,
         crypto: [max_age: 1209600]
@@ -37,7 +37,7 @@ defmodule Phoenix.Transports.LongPoll do
 
   def default_config() do
     [window_ms: 10_000,
-     pubsub_timeout_ms: 1000,
+     pubsub_timeout_ms: 2_000,
      serializer: Phoenix.Transports.LongPollSerializer,
      log: false,
      check_origin: true,
@@ -139,15 +139,26 @@ defmodule Phoenix.Transports.LongPoll do
     ref = :erlang.make_ref()
     :ok = broadcast_from(endpoint, priv_topic, {:flush, ref})
 
-    receive do
-      {:messages, msgs, ^ref} ->
-        :ok = ack(endpoint, priv_topic, msgs, opts)
-        status_json(conn, %{messages: msgs, token: conn.params["token"]})
-    after
-      opts[:window_ms] ->
-        :ok = ack(endpoint, priv_topic, [], opts)
-        conn |> put_status(:no_content) |> status_json(%{token: conn.params["token"]})
-    end
+    {status, messages} =
+      receive do
+        {:messages, messages, ^ref} ->
+          {:ok, messages}
+
+        {:now_available, ^ref} ->
+          :ok = broadcast_from(endpoint, priv_topic, {:flush, ref})
+          receive do
+            {:messages, messages, ^ref} -> {:ok, messages}
+          after
+            opts[:window_ms]  -> {:no_content, []}
+          end
+      after
+        opts[:window_ms] ->
+          {:no_content, []}
+      end
+
+    conn
+    |> put_status(status)
+    |> status_json(%{token: conn.params["token"], messages: messages})
   end
 
   defp publish(conn, priv_topic, endpoint, opts) do
@@ -185,7 +196,7 @@ defmodule Phoenix.Transports.LongPoll do
         :ok = broadcast_from(endpoint, priv_topic, {:subscribe, ref})
 
         receive do
-          {:ok, :subscribe, ^ref} -> {:ok, priv_topic}
+          {:subscribe, ^ref} -> {:ok, priv_topic}
         after
           opts[:pubsub_timeout_ms]  -> :error
         end
@@ -196,28 +207,16 @@ defmodule Phoenix.Transports.LongPoll do
   end
   def resume_session(_params, _endpoint, _opts), do: :error
 
-  # Ack's a list of message refs back to the `Phoenix.LongPoll.Server`.
-  # To be called after buffered messages have been relayed to the client.
-  defp ack(endpoint, priv_topic, msgs, opts) do
-    ref = :erlang.make_ref()
-    :ok = broadcast_from(endpoint, priv_topic, {:ack, length(msgs), ref})
-    receive do
-      {:ok, :ack, ^ref} -> :ok
-    after
-      opts[:pubsub_timeout_ms] -> :error
-    end
-  end
-
   # Dispatches a message to the pubsub system.
   defp transport_dispatch(endpoint, priv_topic, msg, opts) do
     ref = :erlang.make_ref()
     :ok = broadcast_from(endpoint, priv_topic, {:dispatch, msg, ref})
 
     receive do
-      {:ok, :dispatch, ^ref}            -> :ok
-      {:error, :dispatch, reason, ^ref} -> {:error, reason}
+      {:dispatch, ^ref}      -> :ok
+      {:error, reason, ^ref} -> {:error, reason}
     after
-      opts[:pubsub_timeout_ms] -> {:error, :timeout}
+      opts[:window_ms] -> {:error, :timeout}
     end
   end
 

@@ -70,7 +70,7 @@ defmodule Phoenix.SocketTest do
        log: false, check_origin: true]}
 
     lp = {Phoenix.Transports.LongPoll,
-      [window_ms: 10000, pubsub_timeout_ms: 1000, serializer: Phoenix.Transports.LongPollSerializer,
+      [window_ms: 10000, pubsub_timeout_ms: 2000, serializer: Phoenix.Transports.LongPollSerializer,
       log: false, check_origin: true, crypto: [max_age: 1209600]]}
 
     assert UserSocket.__transport__(:websocket) == ws
