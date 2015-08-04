@@ -73,10 +73,10 @@ defmodule Phoenix.Integration.ChannelTest do
 
     transport :longpoll, Phoenix.Transports.LongPoll,
       window_ms: 200,
-      origins: ["//example.com"]
+      check_origin: ["//example.com"]
 
     transport :websocket, Phoenix.Transports.WebSocket,
-      origins: ["//example.com"]
+      check_origin: ["//example.com"]
 
     def connect(%{"reject" => "true"}, _socket) do
       :error

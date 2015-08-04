@@ -1,28 +1,59 @@
 defmodule Phoenix.Transports.WebSocket do
   @moduledoc """
-  Handles WebSocket clients for the Channel Transport layer.
+  Socket transport for websocket clients.
 
   ## Configuration
 
-  By default, JSON encoding is used to broker messages to and from clients and
-  Websockets, by default, do not timeout if the connection is lost. The
-  maximum timeout duration and serializer can be configured in your Socket's
-  transport configuration:
+  The websocket is configurable in your socket:
 
       transport :websocket, Phoenix.Transports.WebSocket,
-        serializer: MySerializer
-        timeout: 60000
+        timeout: :infinity,
+        serializer: Phoenix.Transports.WebSocketSerializer,
+        log: false,
+        check_origin: true
 
-  The `serializer` module needs only to implement the `encode!/1` and
-  `decode!/2` functions defined by the `Phoenix.Transports.Serializer` behaviour.
+    * `:timeout` - the timeout for keeping websocket connections
+      open after it last received data
+
+    * `:log` - if the transport layer itself should log and, if so, the level
+
+    * `:serializer` - the serializer for websocket messages
+
+    * `:check_origin` - if we should check the origin of requests when the
+      origin header is present. It defaults to true and, in such cases,
+      it will check against the host value in `YourApp.Endpoint.config(:url)[:host]`.
+      It may be set to `false` (not recommended) or to a list of explicitly
+      allowed origins
+
+  ## Serializer
+
+  By default, JSON encoding is used to broker messages to and from clients.
+  A custom serializer may be given as module which implements the `encode!/1`
+  and `decode!/2` functions defined by the `Phoenix.Transports.Serializer`
+  behaviour.
+
+  The `encode!/1` function must return a tuple in the format
+  `{:socket_push, :text | :binary, String.t | binary}`.
   """
   @behaviour Phoenix.Channel.Transport
+
+  def default_config() do
+    [serializer: Phoenix.Transports.WebSocketSerializer,
+     timeout: :infinity,
+     log: false,
+     check_origin: true]
+  end
+
+  def handler_for(:cowboy), do: Phoenix.Endpoint.CowboyWebSocket
+
+  ## Callbacks
 
   import Plug.Conn, only: [fetch_query_params: 1, send_resp: 3]
 
   alias Phoenix.Socket.Broadcast
   alias Phoenix.Channel.Transport
 
+  @doc false
   def init(%Plug.Conn{method: "GET"} = conn, {endpoint, handler, transport}) do
     {_, opts} = handler.__transport__(transport)
 
@@ -31,7 +62,7 @@ defmodule Phoenix.Transports.WebSocket do
       |> Plug.Conn.fetch_query_params
       |> Transport.transport_log(opts[:log])
       |> Transport.force_ssl(handler, endpoint)
-      |> Transport.check_origin(opts[:origins])
+      |> Transport.check_origin(endpoint, opts[:check_origin])
 
     case conn do
       %{halted: false} = conn ->
@@ -55,24 +86,7 @@ defmodule Phoenix.Transports.WebSocket do
     {:error, conn}
   end
 
-  @doc """
-  Provides the deault transport configuration to sockets.
-
-  * `:serializer` - The `Phoenix.Socket.Message` serializer
-  * `:log` - The log level, for example `:info`. Disabled by default
-  * `:timeout` - The connection timeout in milliseconds, defaults to `:infinity`
-  """
-  def default_config() do
-    [serializer: Phoenix.Transports.WebSocketSerializer,
-     timeout: :infinity,
-     log: false]
-  end
-
-  def handler_for(:cowboy), do: Phoenix.Endpoint.CowboyWebSocket
-
-  @doc """
-  Handles initalization of the websocket.
-  """
+  @doc false
   def ws_init({socket, config}) do
     Process.flag(:trap_exit, true)
     serializer = Keyword.fetch!(config, :serializer)
@@ -81,21 +95,18 @@ defmodule Phoenix.Transports.WebSocket do
     if socket.id, do: socket.endpoint.subscribe(self, socket.id, link: true)
 
     {:ok, %{socket: socket,
-            sockets: HashDict.new,
-            sockets_inverse: HashDict.new,
+            channels: HashDict.new,
+            channels_inverse: HashDict.new,
             serializer: serializer}, timeout}
   end
 
-  @doc """
-  Receives JSON encoded `%Phoenix.Socket.Message{}` from client and dispatches
-  to Transport layer.
-  """
+  @doc false
   def ws_handle(opcode, payload, state) do
     msg = state.serializer.decode!(payload, opcode: opcode)
 
-    case Transport.dispatch(msg, state.sockets, self, state.socket) do
-      {:ok, socket_pid, reply_msg} ->
-        format_reply(state.serializer.encode!(reply_msg), put(state, msg.topic, socket_pid))
+    case Transport.dispatch(msg, state.channels, self, state.socket) do
+      {:ok, channel_pid, reply_msg} ->
+        format_reply(state.serializer.encode!(reply_msg), put(state, msg.topic, channel_pid))
       {:ok, reply_msg} ->
         format_reply(state.serializer.encode!(reply_msg), state)
       :ok ->
@@ -106,11 +117,12 @@ defmodule Phoenix.Transports.WebSocket do
     end
   end
 
-  def ws_info({:EXIT, socket_pid, reason}, state) do
-    case HashDict.get(state.sockets_inverse, socket_pid) do
+  @doc false
+  def ws_info({:EXIT, channel_pid, reason}, state) do
+    case HashDict.get(state.channels_inverse, channel_pid) do
       nil   -> {:ok, state}
       topic ->
-        new_state = delete(state, topic, socket_pid)
+        new_state = delete(state, topic, channel_pid)
 
         case reason do
           :normal ->
@@ -125,14 +137,12 @@ defmodule Phoenix.Transports.WebSocket do
     end
   end
 
-  @doc """
-  Detects disconnect broadcasts and shuts down
-  """
+  @doc false
   def ws_info(%Broadcast{event: "disconnect"}, state) do
     {:shutdown, state}
   end
 
-  def ws_info({:socket_push, :text, _encoded_payload} = msg, state) do
+  def ws_info({:socket_push, _, _encoded_payload} = msg, state) do
     format_reply(msg, state)
   end
 
@@ -140,27 +150,29 @@ defmodule Phoenix.Transports.WebSocket do
     {:ok, state}
   end
 
+  @doc false
   def ws_terminate(_reason, _state) do
     :ok
   end
 
+  @doc false
   def ws_close(state) do
-    for {pid, _} <- state.sockets_inverse do
+    for {pid, _} <- state.channels_inverse do
       Phoenix.Channel.Server.close(pid)
     end
   end
 
-  defp put(state, topic, socket_pid) do
-    %{state | sockets: HashDict.put(state.sockets, topic, socket_pid),
-              sockets_inverse: HashDict.put(state.sockets_inverse, socket_pid, topic)}
+  defp put(state, topic, channel_pid) do
+    %{state | channels: HashDict.put(state.channels, topic, channel_pid),
+              channels_inverse: HashDict.put(state.channels_inverse, channel_pid, topic)}
   end
 
-  defp delete(state, topic, socket_pid) do
-    %{state | sockets: HashDict.delete(state.sockets, topic),
-              sockets_inverse: HashDict.delete(state.sockets_inverse, socket_pid)}
+  defp delete(state, topic, channel_pid) do
+    %{state | channels: HashDict.delete(state.channels, topic),
+              channels_inverse: HashDict.delete(state.channels_inverse, channel_pid)}
   end
 
-  defp format_reply({:socket_push, :text, encoded_payload}, state) do
-    {:reply, {:text, encoded_payload}, state}
+  defp format_reply({:socket_push, encoding, encoded_payload}, state) do
+    {:reply, {encoding, encoded_payload}, state}
   end
 end

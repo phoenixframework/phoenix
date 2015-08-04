@@ -1,47 +1,47 @@
 defmodule Phoenix.Transports.LongPoll do
   @moduledoc """
-  Handles LongPoll clients for the Channel Transport layer.
+  Socket transport for long poll clients.
 
   ## Configuration
 
-  The long poller is configurable in your Socket's transport configuration:
+  The long poll is configurable in your socket:
 
       transport :longpoll, Phoenix.Transports.LongPoll,
         window_ms: 10_000,
         pubsub_timeout_ms: 1000,
-        crypto: [iterations: 1000,
-                 length: 32,
-                 digest: :sha256,
-                 cache: Plug.Keys],
+        log: false,
+        check_origin: true,
+        crypto: [max_age: 1209600]
 
     * `:window_ms` - how long the client can wait for new messages
-      in it's poll request.
+      in its poll request
+
     * `:pubsub_timeout_ms` - how long a request can wait for the
-      pubsub layer to respond.
-    * `:crypto` - configuration for the key generated to sign the
-      private topic used for the long poller session (see `Plug.Crypto.KeyGenerator`).
+      pubsub layer to respond
+
+    * `:crypto` - options for verifying and signing the token, accepted
+      by `Phoenix.Token`. By default tokens are valid for 2 weeks
+
+    * `:log` - if the transport layer itself should log and, if so, the level
+
+    * `:check_origin` - if we should check the origin of requests when the
+      origin header is present. It defaults to true and, in such cases,
+      it will check against the host value in `YourApp.Endpoint.config(:url)[:host]`.
+      It may be set to `false` (not recommended) or to a list of explicitly
+      allowed origins
   """
 
   ## Transport callbacks
 
   @behaviour Phoenix.Channel.Transport
 
-  @doc """
-  Provides the deault transport configuration to sockets.
-
-  * `:serializer` - The `Phoenix.Socket.Message` serializer
-  * `:pubsub_timeout_ms` - The timeout to wait for the LongPoll.Server ack
-  * `:log` - The log level, for example `:info`. Disabled by default
-  * `:timeout` - The connection timeout in milliseconds, defaults to `:infinity`
-  * `:crypto` - The list of encryption options for the `Plug.Session`
-  """
   def default_config() do
     [window_ms: 10_000,
      pubsub_timeout_ms: 1000,
      serializer: Phoenix.Transports.LongPollSerializer,
      log: false,
-     crypto: [iterations: 1000, length: 32,
-              digest: :sha256, cache: Plug.Keys]]
+     check_origin: true,
+     crypto: [max_age: 1209600]]
   end
 
   def handler_for(:cowboy), do: Plug.Adapters.Cowboy.Handler
@@ -58,10 +58,12 @@ defmodule Phoenix.Transports.LongPoll do
   alias Phoenix.Transports.LongPoll
   alias Phoenix.Channel.Transport
 
+  @doc false
   def init(opts) do
     opts
   end
 
+  @doc false
   def call(conn, {endpoint, handler, transport}) do
     {_, opts} = handler.__transport__(transport)
 
@@ -70,7 +72,7 @@ defmodule Phoenix.Transports.LongPoll do
     |> Plug.Conn.fetch_query_params
     |> Transport.transport_log(opts[:log])
     |> Transport.force_ssl(handler, endpoint)
-    |> Transport.check_origin(opts[:origins], &status_json(&1, %{}))
+    |> Transport.check_origin(endpoint, opts[:check_origin], &status_json(&1, %{}))
     |> dispatch(endpoint, handler, transport, opts)
   end
 
@@ -167,14 +169,14 @@ defmodule Phoenix.Transports.LongPoll do
 
     child = [socket, opts[:window_ms], priv_topic]
     {:ok, server_pid} = Supervisor.start_child(LongPoll.Supervisor, child)
-    {priv_topic, sign_token(endpoint, priv_topic), server_pid}
+    {priv_topic, sign_token(endpoint, priv_topic, opts), server_pid}
   end
 
   # Retrieves the serialized `Phoenix.LongPoll.Server` pid
   # by publishing a message in the encrypted private topic.
   @doc false
   def resume_session(%{"token" => token}, endpoint, opts) do
-    case verify_token(endpoint, token) do
+    case verify_token(endpoint, token, opts) do
       {:ok, priv_topic} ->
         ref = :erlang.make_ref()
         :ok = subscribe(endpoint, priv_topic)
@@ -225,12 +227,12 @@ defmodule Phoenix.Transports.LongPoll do
     Phoenix.PubSub.broadcast_from(endpoint.__pubsub_server__, self, priv_topic, msg)
   end
 
-  defp sign_token(endpoint, priv_topic) do
-    Phoenix.Token.sign(endpoint, Atom.to_string(endpoint.__pubsub_server__), priv_topic)
+  defp sign_token(endpoint, priv_topic, opts) do
+    Phoenix.Token.sign(endpoint, Atom.to_string(endpoint.__pubsub_server__), priv_topic, opts[:crypto])
   end
 
-  defp verify_token(endpoint, signed) do
-    Phoenix.Token.verify(endpoint, Atom.to_string(endpoint.__pubsub_server__), signed)
+  defp verify_token(endpoint, signed, opts) do
+    Phoenix.Token.verify(endpoint, Atom.to_string(endpoint.__pubsub_server__), signed, opts[:crypto])
   end
 
   defp status_json(conn, data) do

@@ -250,31 +250,34 @@ defmodule Phoenix.Channel.Transport do
   Otherwise a otherwise a 403 Forbidden response will be sent and
   the connection halted.  It is a noop if the connection has been halted.
   """
-  def check_origin(conn, allowed_origins, sender \\ &Plug.Conn.send_resp/1)
+  def check_origin(conn, endpoint, check_origin, sender \\ &Plug.Conn.send_resp/1)
 
-  def check_origin(%Plug.Conn{halted: true} = conn, _allowed_origins, _sender) do
-    conn
-  end
+  def check_origin(%Plug.Conn{halted: true} = conn, _endpoint, _check_origin, _sender),
+    do: conn
 
-  def check_origin(conn, allowed_origins, sender) do
+  def check_origin(conn, endpoint, check_origin, sender) do
     import Plug.Conn
     origin = get_req_header(conn, "origin") |> List.first
 
-    if origin_allowed?(origin, allowed_origins) do
-      conn
-    else
-      resp(conn, :forbidden, "")
-      |> sender.()
-      |> halt()
+    cond do
+      is_nil(origin) ->
+        conn
+      origin_allowed?(check_origin, origin, endpoint) ->
+        conn
+      true ->
+        resp(conn, :forbidden, "")
+        |> sender.()
+        |> halt()
     end
   end
 
-  defp origin_allowed?(nil, _) do
-    true
-  end
-  defp origin_allowed?(_, nil) do
-    true
-  end
+  defp origin_allowed?(false, _, _),
+    do: true
+  defp origin_allowed?(true, origin, endpoint),
+    do: compare?(URI.parse(origin).host, endpoint.config(:url)[:host])
+  defp origin_allowed?(check_origin, origin, _endpoint) when is_list(check_origin),
+    do: origin_allowed?(origin, check_origin)
+
   defp origin_allowed?(origin, allowed_origins) do
     origin = URI.parse(origin)
 
