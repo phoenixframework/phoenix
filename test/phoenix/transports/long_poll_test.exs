@@ -18,6 +18,7 @@ defmodule Phoenix.Tranports.LongPollTest do
     transport :longpoll, Phoenix.Transports.LongPoll,
       window_ms: 10_000,
       pubsub_timeout_ms: 100,
+      server: false,
       crypto: [iterations: 1000, length: 32, digest: :sha256, cache: Plug.Keys]
 
     def connect(_params, socket), do: {:ok, socket}
@@ -39,7 +40,7 @@ defmodule Phoenix.Tranports.LongPollTest do
   end
 
   setup_all do
-    capture_log fn -> Endpoint.start_link() end
+    Endpoint.start_link
     :ok
   end
 
@@ -47,8 +48,16 @@ defmodule Phoenix.Tranports.LongPollTest do
     assert LongPoll.resume_session(%{}, Endpoint, transport_opts()) == :error
     {topic, token, server_pid} = LongPoll.start_session(Endpoint, new_socket(), transport_opts())
     assert Process.alive?(server_pid)
+
     assert Phoenix.Token.verify(Endpoint, "phx_lp_pub", token) ==
-           {:ok, topic}
+           {:ok, {:v1, Endpoint.config(:endpoint_id), server_pid, topic}}
+
+    # Resume session with valid server_pid
+    assert LongPoll.resume_session(%{"token" => token}, Endpoint, transport_opts()) ==
+           {:ok, server_pid}
+
+    # Resume session with invalid server_pid
+    :ets.insert(Endpoint, {:endpoint_id, "abc"})
     assert LongPoll.resume_session(%{"token" => token}, Endpoint, transport_opts()) ==
            {:ok, topic}
   end

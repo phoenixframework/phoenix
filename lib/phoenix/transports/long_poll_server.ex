@@ -64,33 +64,28 @@ defmodule Phoenix.Transports.LongPoll.Server do
   def handle_call(:stop, _from, state), do: {:stop, :shutdown, :ok, state}
 
   # Handle client dispatches
-  def handle_info({:dispatch, msg, ref}, state) do
+  def handle_info({:dispatch, client_ref, msg, ref}, state) do
     msg
     |> Transport.dispatch(state.channels, state.socket)
     |> case do
       {:joined, channel_pid, reply_msg} ->
-        :ok = broadcast_from(state, {:dispatch, ref})
+        broadcast_from!(state, client_ref, {:dispatch, ref})
         new_state = %{state | channels: HashDict.put(state.channels, msg.topic, channel_pid),
                               channels_inverse: HashDict.put(state.channels_inverse, channel_pid, msg.topic)}
         publish_reply(reply_msg, new_state)
 
       {:reply, reply_msg} ->
-        :ok = broadcast_from(state, {:dispatch, ref})
+        broadcast_from!(state, client_ref, {:dispatch, ref})
         publish_reply(reply_msg, state)
 
       :noreply ->
-        :ok = broadcast_from(state, {:dispatch, ref})
+        broadcast_from!(state, client_ref, {:dispatch, ref})
         {:noreply, state}
 
       {:error, reason, error_reply_msg} ->
-        :ok = broadcast_from(state, {:error, reason, ref})
+        broadcast_from!(state, client_ref, {:error, reason, ref})
         publish_reply(error_reply_msg, state)
     end
-  end
-
-  # Forwards replied/broadcasted message from Channels back to client.
-  def handle_info(%Message{} = msg, state) do
-    publish_encoded_reply(msg, state)
   end
 
   # Detects disconnect broadcasts and shuts down
@@ -117,17 +112,17 @@ defmodule Phoenix.Transports.LongPoll.Server do
     end
   end
 
-  def handle_info({:subscribe, ref}, state) do
-    :ok = broadcast_from(state, {:subscribe, ref})
+  def handle_info({:subscribe, client_ref, ref}, state) do
+    broadcast_from!(state, client_ref, {:subscribe, ref})
     {:noreply, state}
   end
 
-  def handle_info({:flush, ref}, state) do
+  def handle_info({:flush, client_ref, ref}, state) do
     case state.buffer do
       [] ->
-        {:noreply, %{state | client_ref: ref, last_client_poll: now_ms()}}
+        {:noreply, %{state | client_ref: {client_ref, ref}, last_client_poll: now_ms()}}
       buffer ->
-        :ok = broadcast_from(state, {:messages, Enum.reverse(buffer), ref})
+        broadcast_from!(state, client_ref, {:messages, Enum.reverse(buffer), ref})
         {:noreply, %{state | client_ref: nil, last_client_poll: now_ms(), buffer: []}}
     end
   end
@@ -140,20 +135,27 @@ defmodule Phoenix.Transports.LongPoll.Server do
     end
   end
 
+  def handle_info(%Message{} = msg, state) do
+    publish_reply(msg, state)
+  end
+
   def terminate(_reason, _state) do
     :ok
   end
 
-  defp broadcast_from(state, msg) do
-    PubSub.broadcast_from(state.pubsub_server, self, state.priv_topic, msg)
-  end
+  defp broadcast_from!(state, client_ref, msg) when is_binary(client_ref),
+    do: PubSub.broadcast_from!(state.pubsub_server, self, client_ref, msg)
+  defp broadcast_from!(_state, client_ref, msg) when is_pid(client_ref),
+    do: send(client_ref, msg)
 
   defp publish_reply(msg, state) do
-    publish_encoded_reply(state.socket.serializer.encode!(msg), state)
-  end
-  defp publish_encoded_reply(msg, state) do
-    if ref = state.client_ref do
-      :ok = broadcast_from(state, {:now_available, ref})
+    msg = state.socket.serializer.encode!(msg)
+
+    case state.client_ref do
+      {client_ref, ref} ->
+        broadcast_from!(state, client_ref, {:now_available, ref})
+      nil ->
+        :ok
     end
 
     {:noreply, %{state | buffer: [msg | state.buffer]}}

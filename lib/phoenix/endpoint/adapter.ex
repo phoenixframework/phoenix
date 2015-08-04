@@ -32,8 +32,10 @@ defmodule Phoenix.Endpoint.Adapter do
   end
 
   defp config_children(mod, conf) do
+    id   = :crypto.strong_rand_bytes(16) |> Base.encode64
     app  = conf[:otp_app]
-    args = [app, mod, defaults(app, mod), [name: Module.concat(mod, Config)]]
+    conf = [endpoint_id: id] ++ defaults(app, mod)
+    args = [app, mod, conf, [name: Module.concat(mod, Config)]]
     [worker(Phoenix.Config, args)]
   end
 

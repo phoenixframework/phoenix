@@ -98,8 +98,8 @@ defmodule Phoenix.Transports.LongPoll do
   # Starts a new session or listen to a message if one already exists.
   defp dispatch(%{method: "GET"} = conn, endpoint, handler, transport, opts) do
     case resume_session(conn.params, endpoint, opts) do
-      {:ok, priv_topic} ->
-        listen(conn, priv_topic, endpoint, opts)
+      {:ok, server_ref} ->
+        listen(conn, server_ref, endpoint, opts)
       :error ->
         new_session(conn, endpoint, handler, transport, opts)
     end
@@ -108,8 +108,8 @@ defmodule Phoenix.Transports.LongPoll do
   # Publish the message encoded as a JSON body.
   defp dispatch(%{method: "POST"} = conn, endpoint, _, _, opts) do
     case resume_session(conn.params, endpoint, opts) do
-      {:ok, priv_topic} ->
-        conn |> Plug.Parsers.call(@plug_parsers) |> publish(priv_topic, endpoint, opts)
+      {:ok, server_ref} ->
+        conn |> Plug.Parsers.call(@plug_parsers) |> publish(server_ref, endpoint, opts)
       :error ->
         conn |> put_status(:gone) |> status_json(%{})
     end
@@ -135,9 +135,9 @@ defmodule Phoenix.Transports.LongPoll do
     end
   end
 
-  defp listen(conn, priv_topic, endpoint, opts) do
+  defp listen(conn, server_ref, endpoint, opts) do
     ref = :erlang.make_ref()
-    :ok = broadcast_from(endpoint, priv_topic, {:flush, ref})
+    broadcast_from!(endpoint, server_ref, {:flush, client_ref(server_ref), ref})
 
     {status, messages} =
       receive do
@@ -145,7 +145,7 @@ defmodule Phoenix.Transports.LongPoll do
           {:ok, messages}
 
         {:now_available, ^ref} ->
-          :ok = broadcast_from(endpoint, priv_topic, {:flush, ref})
+          broadcast_from!(endpoint, server_ref, {:flush, client_ref(server_ref), ref})
           receive do
             {:messages, messages, ^ref} -> {:ok, messages}
           after
@@ -161,10 +161,10 @@ defmodule Phoenix.Transports.LongPoll do
     |> status_json(%{token: conn.params["token"], messages: messages})
   end
 
-  defp publish(conn, priv_topic, endpoint, opts) do
+  defp publish(conn, server_ref, endpoint, opts) do
     msg = Message.from_map!(conn.body_params)
 
-    case transport_dispatch(endpoint, priv_topic, msg, opts) do
+    case transport_dispatch(endpoint, server_ref, msg, opts) do
       :ok               -> conn |> put_status(:ok) |> status_json(%{})
       {:error, _reason} -> conn |> put_status(:unauthorized) |> status_json(%{})
     end
@@ -182,7 +182,9 @@ defmodule Phoenix.Transports.LongPoll do
 
     child = [socket, opts[:window_ms], priv_topic]
     {:ok, server_pid} = Supervisor.start_child(LongPoll.Supervisor, child)
-    {priv_topic, sign_token(endpoint, priv_topic, opts), server_pid}
+
+    data  = {:v1, endpoint.config(:endpoint_id), server_pid, priv_topic}
+    {priv_topic, sign_token(endpoint, data, opts), server_pid}
   end
 
   # Retrieves the serialized `Phoenix.LongPoll.Server` pid
@@ -190,27 +192,29 @@ defmodule Phoenix.Transports.LongPoll do
   @doc false
   def resume_session(%{"token" => token}, endpoint, opts) do
     case verify_token(endpoint, token, opts) do
-      {:ok, priv_topic} ->
+      {:ok, {:v1, id, pid, priv_topic}} ->
+        server_ref = server_ref(endpoint.config(:endpoint_id), id, pid, priv_topic)
+
         ref = :erlang.make_ref()
-        :ok = subscribe(endpoint, priv_topic)
-        :ok = broadcast_from(endpoint, priv_topic, {:subscribe, ref})
+        :ok = subscribe(endpoint, server_ref)
+        broadcast_from!(endpoint, server_ref, {:subscribe, client_ref(server_ref), ref})
 
         receive do
-          {:subscribe, ^ref} -> {:ok, priv_topic}
+          {:subscribe, ^ref} -> {:ok, server_ref}
         after
           opts[:pubsub_timeout_ms]  -> :error
         end
 
-      {:error, _} ->
+      _ ->
         :error
     end
   end
   def resume_session(_params, _endpoint, _opts), do: :error
 
-  # Dispatches a message to the pubsub system.
-  defp transport_dispatch(endpoint, priv_topic, msg, opts) do
+  # Publishes a message to the pubsub system.
+  defp transport_dispatch(endpoint, server_ref, msg, opts) do
     ref = :erlang.make_ref()
-    :ok = broadcast_from(endpoint, priv_topic, {:dispatch, msg, ref})
+    broadcast_from!(endpoint, server_ref, {:dispatch, client_ref(server_ref), msg, ref})
 
     receive do
       {:dispatch, ^ref}      -> :ok
@@ -220,16 +224,29 @@ defmodule Phoenix.Transports.LongPoll do
     end
   end
 
-  defp subscribe(endpoint, priv_topic) do
-    Phoenix.PubSub.subscribe(endpoint.__pubsub_server__, self, priv_topic, link: true)
+  defp server_ref(endpoint_id, id, pid, topic) do
+    if endpoint_id == id and Process.alive?(pid) do
+      pid
+    else
+      topic
+    end
   end
 
-  defp broadcast_from(endpoint, priv_topic, msg) do
-    Phoenix.PubSub.broadcast_from(endpoint.__pubsub_server__, self, priv_topic, msg)
-  end
+  defp client_ref(topic) when is_binary(topic), do: topic
+  defp client_ref(pid) when is_pid(pid), do: self()
 
-  defp sign_token(endpoint, priv_topic, opts) do
-    Phoenix.Token.sign(endpoint, Atom.to_string(endpoint.__pubsub_server__), priv_topic, opts[:crypto])
+  defp subscribe(endpoint, topic) when is_binary(topic),
+    do: Phoenix.PubSub.subscribe(endpoint.__pubsub_server__, self(), topic, link: true)
+  defp subscribe(_endpoint, pid) when is_pid(pid),
+    do: :ok
+
+  defp broadcast_from!(endpoint, topic, msg) when is_binary(topic),
+    do: Phoenix.PubSub.broadcast_from!(endpoint.__pubsub_server__, self, topic, msg)
+  defp broadcast_from!(_endpoint, pid, msg) when is_pid(pid),
+    do: send(pid, msg)
+
+  defp sign_token(endpoint, data, opts) do
+    Phoenix.Token.sign(endpoint, Atom.to_string(endpoint.__pubsub_server__), data, opts[:crypto])
   end
 
   defp verify_token(endpoint, signed, opts) do
