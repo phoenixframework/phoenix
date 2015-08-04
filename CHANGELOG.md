@@ -9,6 +9,7 @@
   * [Mix] Support `mix phoenix.gen.model Comment comment post_id:references:posts`
   * [Mix] Add `mix phoenix.gen.secret`
   * [Router] Provide `put_secure_browser_headers/2` and use it by default in the browser pipeline
+  * [Socket] Automatically check origins on socket transports
   * [Token] Add `Phoenix.Token` for easy signing and verification of tokens
 
 * Bug fixes
@@ -19,6 +20,7 @@
   * [Controller] `jsonp/3` function has been removed in favor of the `plug :allow_jsonp`  
   * [Controller] `controller_template/1` has been renamed to `view_template/1`
   * [HTML] Use `phoenix_html ~> 2.0` which includes its own `phoenix_html.js` version
+  * [Socket] `:origins` transport option has been renamed to `:check_origin`
 
 * JavaScript client backwards incompatible changes
   * Socket params are now passed to `socket.connect()` instead of an option on the constructor.
