@@ -1,6 +1,6 @@
 <div class="jumbotron">
   <h2>Welcome to Phoenix!</h2>
-  <p class="lead">A productive web framework that does not compromise speed and maintainability.</p>
+  <p class="lead">A productive web framework that<br />does not compromise speed and maintainability.</p>
 </div>
 
 <div class="row marketing">
