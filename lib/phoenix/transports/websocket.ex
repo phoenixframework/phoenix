@@ -71,6 +71,7 @@ defmodule Phoenix.Transports.WebSocket do
 
         case Transport.connect(endpoint, handler, transport, __MODULE__, serializer, params) do
           {:ok, socket} ->
+            socket = %{socket | transport_pid: self()}
             {:ok, conn, {__MODULE__, {socket, opts}}}
           :error ->
             send_resp(conn, 403, "")
@@ -104,7 +105,7 @@ defmodule Phoenix.Transports.WebSocket do
   def ws_handle(opcode, payload, state) do
     msg = state.serializer.decode!(payload, opcode: opcode)
 
-    case Transport.dispatch(msg, state.channels, self, state.socket) do
+    case Transport.dispatch(msg, state.channels, state.socket) do
       {:ok, channel_pid, reply_msg} ->
         format_reply(state.serializer.encode!(reply_msg), put(state, msg.topic, channel_pid))
       {:ok, reply_msg} ->

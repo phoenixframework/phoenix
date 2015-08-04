@@ -44,7 +44,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
     Process.flag(:trap_exit, true)
 
     state = %{buffer: [],
-              socket: socket,
+              socket: %{socket | transport_pid: self()},
               channels: HashDict.new,
               channels_inverse: HashDict.new,
               window_ms: trunc(window_ms * 1.5),
@@ -65,7 +65,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
   # Handle client dispatches
   def handle_info({:dispatch, msg, ref}, state) do
     msg
-    |> Transport.dispatch(state.channels, self, state.socket)
+    |> Transport.dispatch(state.channels, state.socket)
     |> case do
       {:ok, channel_pid, reply_msg} ->
         :ok = broadcast_from(state, {:ok, :dispatch, ref})

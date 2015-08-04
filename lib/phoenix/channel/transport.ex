@@ -116,10 +116,10 @@ defmodule Phoenix.Channel.Transport do
     * `{:error, reason}` - Unauthorized or unmatched dispatch
 
   """
-  def dispatch(%Message{} = msg, sockets, transport_pid, socket) do
+  def dispatch(%Message{} = msg, sockets, socket) do
     sockets
     |> HashDict.get(msg.topic)
-    |> dispatch(msg, transport_pid, socket)
+    |> dispatch(msg, socket)
   end
 
   @doc """
@@ -133,16 +133,15 @@ defmodule Phoenix.Channel.Transport do
 
   The server will respond to heartbeats with the same message
   """
-  def dispatch(_, %{ref: ref, topic: "phoenix", event: "heartbeat"}, _transport_pid, _socket) do
+  def dispatch(_, %{ref: ref, topic: "phoenix", event: "heartbeat"}, _socket) do
     {:ok, %Reply{ref: ref, topic: "phoenix", status: :ok, payload: %{}}}
   end
-  def dispatch(nil, %{event: "phx_join", topic: topic} = msg, transport_pid, base_socket) do
+  def dispatch(nil, %{event: "phx_join", topic: topic} = msg, base_socket) do
     case base_socket.handler.__channel__(topic, base_socket.transport_name) do
       nil -> reply_ignore(msg, base_socket)
 
       channel ->
         socket = %Socket{base_socket |
-                         transport_pid: transport_pid,
                          topic: topic,
                          channel: channel}
 
@@ -163,14 +162,14 @@ defmodule Phoenix.Channel.Transport do
         end
     end
   end
-  def dispatch(nil, msg, _transport_pid, socket) do
+  def dispatch(nil, msg, socket) do
     reply_ignore(msg, socket)
   end
-  def dispatch(socket_pid, %{event: "phx_leave", ref: ref}, _transport_pid,  _socket) do
+  def dispatch(socket_pid, %{event: "phx_leave", ref: ref},  _socket) do
     Phoenix.Channel.Server.leave(socket_pid, ref)
     :ok
   end
-  def dispatch(socket_pid, msg, _transport_pid, _socket) do
+  def dispatch(socket_pid, msg, _socket) do
     send(socket_pid, msg)
     :ok
   end
