@@ -9,7 +9,7 @@ defmodule Phoenix.Transports.LongPoll do
       transport :longpoll, Phoenix.Transports.LongPoll,
         window_ms: 10_000,
         pubsub_timeout_ms: 2_000,
-        log: false,
+        transport_log: false,
         check_origin: true,
         crypto: [max_age: 1209600]
 
@@ -22,7 +22,7 @@ defmodule Phoenix.Transports.LongPoll do
     * `:crypto` - options for verifying and signing the token, accepted
       by `Phoenix.Token`. By default tokens are valid for 2 weeks
 
-    * `:log` - if the transport layer itself should log and, if so, the level
+    * `:transport_log` - if the transport layer itself should log and, if so, the level
 
     * `:check_origin` - if we should check the origin of requests when the
       origin header is present. It defaults to true and, in such cases,
@@ -39,7 +39,7 @@ defmodule Phoenix.Transports.LongPoll do
     [window_ms: 10_000,
      pubsub_timeout_ms: 2_000,
      serializer: Phoenix.Transports.LongPollSerializer,
-     log: false,
+     transport_log: false,
      check_origin: true,
      crypto: [max_age: 1209600]]
   end
@@ -72,7 +72,7 @@ defmodule Phoenix.Transports.LongPoll do
     conn
     |> fetch_query_params
     |> Plug.Conn.fetch_query_params
-    |> Transport.transport_log(opts[:log])
+    |> Transport.transport_log(opts[:transport_log])
     |> Transport.force_ssl(handler, endpoint)
     |> Transport.check_origin(endpoint, opts[:check_origin], &status_json(&1, %{}))
     |> dispatch(endpoint, handler, transport, opts)

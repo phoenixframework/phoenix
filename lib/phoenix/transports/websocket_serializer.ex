@@ -1,5 +1,4 @@
 defmodule Phoenix.Transports.WebSocketSerializer do
-  # TODO: Make this public
   @moduledoc false
 
   @behaviour Phoenix.Transports.Serializer
@@ -7,7 +6,6 @@ defmodule Phoenix.Transports.WebSocketSerializer do
   alias Phoenix.Socket.Reply
   alias Phoenix.Socket.Message
   alias Phoenix.Socket.Broadcast
-
 
   @doc """
   Translates a `Phoenix.Socket.Broadcast` into a `Phoenix.Socket.Message`.
