@@ -60,35 +60,20 @@ defmodule Phoenix.SocketTest do
   end
 
   test "__transports__" do
-    assert UserSocket.__transports__() == %{
-      longpoll: {Phoenix.Transports.LongPoll,
-        [window_ms: 10000, pubsub_timeout_ms: 1000, serializer: Phoenix.Transports.LongPollSerializer,
-         log: false, crypto: [iterations: 1000, length: 32, digest: :sha256, cache: Plug.Keys]]},
-      websocket: {Phoenix.Transports.WebSocket,
-        [timeout: 1234, serializer: Phoenix.Transports.WebSocketSerializer, log: false]}
-    }
+    assert %{longpoll: {Phoenix.Transports.LongPoll, _},
+             websocket: {Phoenix.Transports.WebSocket, _}} = UserSocket.__transports__()
   end
 
   test "transport config is exposted and merged with prior registrations" do
     ws = {Phoenix.Transports.WebSocket,
-      [timeout: 1234, serializer: Phoenix.Transports.WebSocketSerializer, log: false]}
+      [timeout: 1234, serializer: Phoenix.Transports.WebSocketSerializer,
+       log: false, check_origin: true]}
 
     lp = {Phoenix.Transports.LongPoll,
       [window_ms: 10000, pubsub_timeout_ms: 1000, serializer: Phoenix.Transports.LongPollSerializer,
-      log: false, crypto: [iterations: 1000, length: 32, digest: :sha256, cache: Plug.Keys]]}
+      log: false, check_origin: true, crypto: [max_age: 1209600]]}
 
     assert UserSocket.__transport__(:websocket) == ws
-    assert UserSocket.__transport__("websocket") == ws
-
     assert UserSocket.__transport__(:longpoll) == lp
-    assert UserSocket.__transport__("longpoll") == lp
-
-    assert UserSocket.__transport__(Phoenix.Transports.WebSocket) == elem(ws, 1)
-    assert UserSocket.__transport__(Phoenix.Transports.LongPoll) == elem(lp, 1)
-  end
-
-  test "transport config for unsupported adapters" do
-    assert UserSocket.__transport__(:not_exists) == :unsupported
-    assert UserSocket.__transport__("not_exists") == :unsupported
   end
 end

@@ -1,50 +1,45 @@
 defmodule Phoenix.Socket do
   @moduledoc ~S"""
-  Holds state for every channel, pointing to its transport,
-  pubsub server and more.
+  Defines a socket and its state.
 
-  ## Socket Fields
+  `Phoenix.Socket` is used as a module for establishing and maintaing
+  the socket state via the `Phoenix.Socket` struct.
 
-  * `id` - The string id of the socket
-  * `assigns` - The map of socket assigns, default: `%{}`
-  * `channel` - The channel module where this socket originated
-  * `channel_pid` - The channel pid
-  * `endpoint` - The endpoint module where this socket originated
-  * `handler` - The socket handler for this socket connected, for example: `MyApp.UserSocket`
-  * `joined` - If the socket has effectively joined the channel
-  * `pubsub_server` - The registered name of the socket's PubSub server
-  * `ref` - The latest ref sent by the client
-  * `topic` - The string topic, for example `"rooms:123"`
-  * `transport` - The socket's transport, for example: `Phoenix.Transports.WebSocket`
-  * `transport_pid` - The pid of the socket's transport process
-  * `serializer` - The `Phoenix.Socket.Message` serializer,
-    for example: `Phoenix.Transports.WebSocketSerializer`
+  Once connected to a socket, incoming  and pubsub events are routed
+  to channels. The incoming client data is routed to channels via transports.
+  It is the responsibility of the socket to tie transports and channels
+  together.
 
-  ## Channels
+  By default, Phoenix supports both websockets and longpoll transports.
+  For example:
 
-  Channels allow you to route pubsub events to channel handlers in your application.
-  By default, Phoenix supports both `:websocket` and `:longpoll` transports.
-  See the `Phoenix.Channel.Transport` documentation for more information on writing
-  your own transports. Channels are defined within a socket handler, using the
-  `channel/2` macro, as seen below.
+      transport :websockets, Phoenix.Transports.WebSocket
+
+  The command above means incoming socket connections can be done via
+  the WebSocket transport. Events are router by topic to channels:
+
+      channel "rooms:lobby", MyApp.LobbyChannel
+
+  See `Phoenix.Channel` for more information on channels. Check each
+  transport module to check the options specific to each transport.
 
   ## Socket Behaviour
 
   Socket handlers are mounted in Endpoints and must define two callbacks:
 
     * `connect/2` - receives the socket params and authenticates the connection.
-      Often used to wire up default `%Phoenix.Socket{}` assigns
-      for all channels.
-    * `id/1` - receives the socket returned by `connect/2`, and returns the
-      string id of this connection. Used for forcing a disconnect for
-      connection and all child channels. For sockets requiring no
-      authentication, `nil` can be returned.
+      Must return a `Phoenix.Socket` struct, often with custom assigns.
+    * `id/1` - receives the socket returned by `connect/2` and returns the
+      id of this connection as a string. The `id` is used to identify socket
+      connections, often to a particular user, allowing us to force disconnections.
+      For sockets requiring no authentication, `nil` can be returned.
 
-  Callback examples:
+  ## Examples
 
       defmodule MyApp.UserSocket do
         use Phoenix.Socket
 
+        transport :websockets, Phoenix.Transports.WebSocket
         channel "rooms:*", MyApp.RoomChannel
 
         def connect(params, socket) do
@@ -54,40 +49,39 @@ defmodule Phoenix.Socket do
         def id(socket), do: "users_socket:#{socket.assigns.user_id}"
       end
 
-      ...
-      # disconnect all user's socket connections and their multiplexed channels
+      # Disconnect all user's socket connections and their multiplexed channels
       MyApp.Endpoint.broadcast("users_socket:" <> user.id, "disconnect")
 
+  ## Socket Fields
 
-  ## Transport Configuration
+    * `id` - The string id of the socket
+    * `assigns` - The map of socket assigns, default: `%{}`
+    * `channel` - The current channel module
+    * `channel_pid` - The channel pid
+    * `endpoint` - The endpoint module where this socket originated, for example: `MyApp.Endpoint`
+    * `handler` - The socket module where this socket originated, for example: `MyApp.UserSocket`
+    * `joined` - If the socket has effectively joined the channel
+    * `pubsub_server` - The registered name of the socket's pubsub server
+    * `ref` - The latest ref sent by the client
+    * `topic` - The string topic, for example `"rooms:123"`
+    * `transport` - The socket's transport, for example: `Phoenix.Transports.WebSocket`
+    * `transport_pid` - The pid of the socket's transport process
+    * `transport_name` - The socket's transport, for example: `:websocket`
+    * `serializer` - The serializer for socket messages,
+      for example: `Phoenix.Transports.WebSocketSerializer`
 
-  Transports are defined and configured within socket handlers. By default,
-  Phoenix defines the `:websocket`, and `:longpoll` transports automaticaly with
-  overridable options. Check the transport modules for transport specific
-  options. A list of allowed origins can be specified in the `:origins` key for
-  the `:websocket` and `:longpoll` transports. This will restrict clients based
-  on the given Origin header.
+  ## Custom transports
 
-      transport :longpoll, Phoenix.Transports.LongPoll,
-        origins: ["//example.com", "http://example.com", "https://example.com"]
-
-      transport :websocket, Phoenix.Transports.WebSocket,
-        origins: ["//example.com", "http://example.com", "https://example.com"]
-
-  If no such header is sent no verification will be performed. If the
-  Origin header does not match the list of allowed origins a 403 Forbidden
-  response will be sent to the client. See `transport/3` for more information.
+  See the `Phoenix.Channel.Transport` documentation for more information on
+  writing your own transports.
   """
 
   use Behaviour
   alias Phoenix.Socket
-  alias Phoenix.Socket.Helpers
 
   defcallback connect(params :: map, Socket.t) :: {:ok, Socket.t} | :error
 
   defcallback id(Socket.t) :: String.t | nil
-
-  @default_transports [:websocket, :longpoll]
 
   defmodule InvalidMessageError do
     @moduledoc """
@@ -107,6 +101,7 @@ defmodule Phoenix.Socket do
                      ref: term,
                      topic: String.t,
                      transport: atom,
+                     transport_name: atom,
                      serializer: atom,
                      transport_pid: pid}
 
@@ -122,8 +117,8 @@ defmodule Phoenix.Socket do
             topic: nil,
             transport: nil,
             transport_pid: nil,
+            transport_name: nil,
             serializer: nil
-
 
   defmacro __using__(_) do
     quote do
@@ -137,26 +132,50 @@ defmodule Phoenix.Socket do
 
   defmacro __before_compile__(env) do
     transports = Module.get_attribute(env.module, :phoenix_transports)
-    channel_defs =
-      env.module
-      |> Module.get_attribute(:phoenix_channels)
-      |> Helpers.defchannels(transports)
+    channels   = Module.get_attribute(env.module, :phoenix_channels)
 
     transport_defs =
       for {name, {mod, conf}} <- transports do
         quote do
-          def __transport__(unquote(mod)), do: unquote(conf)
-          def __transport__(name) when name in [unquote(name), unquote(to_string(name))] do
+          def __transport__(unquote(name)) do
             {unquote(mod), unquote(conf)}
           end
         end
       end
 
+    channel_defs =
+      for {topic_pattern, module, opts} <- channels do
+        topic_pattern
+        |> to_topic_match
+        |> defchannel(module, opts[:via])
+      end
+
     quote do
       def __transports__, do: unquote(Macro.escape(transports))
       unquote(transport_defs)
-      def __transport__(_name), do: :unsupported
       unquote(channel_defs)
+      def __channel__(_topic, _transport), do: nil
+    end
+  end
+
+  defp to_topic_match(topic_pattern) do
+    case String.split(topic_pattern, "*") do
+      [prefix, ""] -> quote do: <<unquote(prefix) <> _rest>>
+      [bare_topic] -> bare_topic
+      _            -> raise ArgumentError, "channels using splat patterns must end with *"
+    end
+  end
+
+  defp defchannel(topic_match, channel_module, nil) do
+    quote do
+      def __channel__(unquote(topic_match), _transport), do: unquote(channel_module)
+    end
+  end
+
+  defp defchannel(topic_match, channel_module, transports) do
+    quote do
+      def __channel__(unquote(topic_match), transport)
+          when transport in unquote(List.wrap(transports)), do: unquote(channel_module)
     end
   end
 
@@ -213,11 +232,7 @@ defmodule Phoenix.Socket do
     module = tear_alias(module)
 
     quote do
-      @phoenix_channels {
-        unquote(topic_pattern),
-        unquote(module),
-        unquote(Keyword.put_new(opts, :via, @default_transports))
-      }
+      @phoenix_channels {unquote(topic_pattern), unquote(module), unquote(opts)}
     end
   end
 
@@ -233,6 +248,7 @@ defmodule Phoenix.Socket do
   Defines a transport with configuration.
 
   ## Examples
+
       # customize default `:websocket` transport options
       transport :websocket, Phoenix.Transports.WebSocket,
         timeout: 10_000
@@ -244,9 +260,19 @@ defmodule Phoenix.Socket do
   """
   defmacro transport(name, module, config \\ []) do
     quote do
-      @phoenix_transports Phoenix.Socket.Helpers.register_transport(
+      @phoenix_transports Phoenix.Socket.__transport__(
         @phoenix_transports, unquote(name), unquote(module), unquote(config))
     end
+  end
+
+  @doc false
+  def __transport__(transports, name, module, config) do
+    config = Keyword.merge(module.default_config() , config)
+
+    Map.update(transports, name, {module, config}, fn {dup_module, _} ->
+      raise ArgumentError,
+        "duplicate transports (#{inspect dup_module} and #{inspect module}) defined for #{inspect name}."
+    end)
   end
 end
 

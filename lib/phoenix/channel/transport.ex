@@ -69,37 +69,41 @@ defmodule Phoenix.Channel.Transport do
   """
   defcallback default_config() :: list
 
-
   @doc """
-  Calls the socket handler's `connect/2` callback and returns the result.
+  Handles the socket connection.
 
-  If the connection was successful, generates `Phoenix.PubSub` topic
-  from the `id/1` callback.
+  It builds a new `Phoenix.Socket` and invokes the handler
+  `connect/2` callback and returns the result.
+
+  If the connection was successful, generates `Phoenix.PubSub`
+  topic from the `id/1` callback.
   """
-  def socket_connect(endpoint, transport_mod, handler, params) do
-    serializer  = Keyword.fetch!(handler.__transport__(transport_mod), :serializer)
-    base_socket = %Socket{endpoint: endpoint,
-                          transport: transport_mod,
-                          handler: handler,
-                          pubsub_server: endpoint.__pubsub_server__(),
-                          serializer: serializer}
+  def connect(endpoint, handler, transport_name, transport, serializer, params) do
+    socket = %Socket{endpoint: endpoint,
+                     transport: transport,
+                     transport_name: transport_name,
+                     handler: handler,
+                     pubsub_server: endpoint.__pubsub_server__,
+                     serializer: serializer}
 
-    case handler.connect(params, base_socket) do
+    case handler.connect(params, socket) do
       {:ok, socket} ->
         case handler.id(socket) do
           nil                   -> {:ok, socket}
           id when is_binary(id) -> {:ok, %Socket{socket | id: id}}
-          _                     ->
-          raise ArgumentError, """
-          Expected #{inspect handler}.id/1 to return one of `nil | id :: String.t`
-          """
+          invalid               ->
+            Logger.error "#{inspect handler}.id/1 returned invalid identifier #{inspect invalid}. " <>
+                         "Expected nil or a string."
+            :error
         end
 
-      :error -> :error
+      :error ->
+        :error
 
-      _ -> raise ArgumentError, """
-      Expected #{inspect handler}.connect/2 to return one of `{:ok, Socket.t} | :error`
-      """
+      invalid ->
+        Logger.error "#{inspect handler}.connect/2 returned invalid value #{inspect invalid}. " <>
+                     "Expected {:ok, socket} or :error"
+        :error
     end
   end
 
@@ -133,7 +137,7 @@ defmodule Phoenix.Channel.Transport do
     {:ok, %Reply{ref: ref, topic: "phoenix", status: :ok, payload: %{}}}
   end
   def dispatch(nil, %{event: "phx_join", topic: topic} = msg, transport_pid, base_socket) do
-    case base_socket.handler.channel_for_topic(topic, base_socket.transport) do
+    case base_socket.handler.__channel__(topic, base_socket.transport_name) do
       nil -> reply_ignore(msg, base_socket)
 
       channel ->
@@ -197,32 +201,83 @@ defmodule Phoenix.Channel.Transport do
   end
 
   @doc """
-  Checks the Origin request header against the list of allowed origins
-  configured on the socket's transport config. If the Origin
-  header matches the allowed origins, no Origin header was sent or no origins
-  configured it will return the given `Plug.Conn`. Otherwise a 403 Forbidden
-  response will be send and the connection halted.
-  """
-  def check_origin(conn, allowed_origins, opts \\ []) do
-    import Plug.Conn
-    origin = get_req_header(conn, "origin") |> List.first
-    send = opts[:send] || &send_resp(&1)
+  Forces SSL in the socket connection.
 
-    if origin_allowed?(origin, allowed_origins) do
-      conn
+  Uses the endpoint configuration to decide so. It is a
+  noop if the connection has been halted.
+  """
+  def force_ssl(%Plug.Conn{halted: true} = conn, _socket, _endpoint) do
+    conn
+  end
+
+  def force_ssl(conn, socket, endpoint) do
+    if force_ssl = force_ssl_config(socket, endpoint) do
+      Plug.SSL.call(conn, Plug.SSL.init(force_ssl))
     else
-      resp(conn, :forbidden, "")
-      |> send.()
-      |> halt()
+      conn
     end
   end
 
-  defp origin_allowed?(nil, _) do
-    true
+  defp force_ssl_config(socket, endpoint) do
+    Phoenix.Config.cache(endpoint, {:force_ssl, socket}, fn _ ->
+      {:cache,
+        if force_ssl = endpoint.config(:force_ssl) do
+          Keyword.put_new(force_ssl, :host, endpoint.config(:url)[:host] || "localhost")
+        end}
+    end)
   end
-  defp origin_allowed?(_, nil) do
-    true
+
+  @doc """
+  Logs the transport request.
+
+  Available for transports that generate a connection.
+  """
+  def transport_log(conn, level) do
+    if level do
+      Plug.Logger.call(conn, Plug.Logger.init(log: level))
+    else
+      conn
+    end
   end
+
+  @doc """
+  Checks the origin request header against the list of allowed origins.
+
+  Should be called by transports before connecting when appropriate.
+  If the origin header matches the allowed origins, no origin header was
+  sent or no origin was configured, it will return the given connection.
+
+  Otherwise a otherwise a 403 Forbidden response will be sent and
+  the connection halted.  It is a noop if the connection has been halted.
+  """
+  def check_origin(conn, endpoint, check_origin, sender \\ &Plug.Conn.send_resp/1)
+
+  def check_origin(%Plug.Conn{halted: true} = conn, _endpoint, _check_origin, _sender),
+    do: conn
+
+  def check_origin(conn, endpoint, check_origin, sender) do
+    import Plug.Conn
+    origin = get_req_header(conn, "origin") |> List.first
+
+    cond do
+      is_nil(origin) ->
+        conn
+      origin_allowed?(check_origin, origin, endpoint) ->
+        conn
+      true ->
+        resp(conn, :forbidden, "")
+        |> sender.()
+        |> halt()
+    end
+  end
+
+  defp origin_allowed?(false, _, _),
+    do: true
+  defp origin_allowed?(true, origin, endpoint),
+    do: compare?(URI.parse(origin).host, endpoint.config(:url)[:host])
+  defp origin_allowed?(check_origin, origin, _endpoint) when is_list(check_origin),
+    do: origin_allowed?(origin, check_origin)
+
   defp origin_allowed?(origin, allowed_origins) do
     origin = URI.parse(origin)
 
@@ -235,7 +290,6 @@ defmodule Phoenix.Channel.Transport do
     end)
   end
 
-  defp compare?(nil, _), do: true
   defp compare?(_, nil), do: true
   defp compare?(x, y),   do: x == y
 end

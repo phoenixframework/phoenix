@@ -7,18 +7,15 @@ defmodule Phoenix.Channel do
 
   ## Topics & Callbacks
 
-  When clients join a channel, they do so by subscribing to a topic.
-  Topics are string identifiers in the `Phoenix.PubSub` layer that allow
-  multiple processes to subscribe and broadcast messages about a given topic.
-  Everytime you join a Channel, you need to choose which particular topic you
+  Everytime you join a channel, you need to choose which particular topic you
   want to listen to. The topic is just an identifier, but by convention it is
   often made of two parts: `"topic:subtopic"`. Using the `"topic:subtopic"`
-  approach pairs nicely with the `Phoenix.Socket.channel/2` macro to match
-  topic patterns in your router to your channel handlers:
+  approach pairs nicely with the `Phoenix.Socket.channel/2` allowing you to
+  match on all topics starting with a given prefix:
 
       channel "rooms:*", MyApp.RoomChannel
 
-  Any topic coming into the router with the `"rooms:"` prefix, would dispatch
+  Any topic coming into the router with the `"rooms:"` prefix would dispatch
   to `MyApp.RoomChannel` in the above example. Topics can also be pattern
   matched in your channels' `join/3` callback to pluck out the scoped pattern:
 
@@ -32,24 +29,24 @@ defmodule Phoenix.Channel do
         {:ok, socket}
       end
 
-  ### Authorization
+  ## Authorization
 
   Clients must join a channel to send and receive PubSub events on that channel.
   Your channels must implement a `join/3` callback that authorizes the socket
-  for the given topic. It is common for clients to send up authorization data,
-  such as HMAC'd tokens for this purpose.
+  for the given topic. For example, you could check if the user is allowed to
+  join that particular room.
 
   To authorize a socket in `join/3`, return `{:ok, socket}`.
   To refuse authorization in `join/3`, return `{:error, reply}`.
 
-  ### Incoming Events
+  ## Incoming Events
 
   After a client has successfully joined a channel, incoming events from the
   client are routed through the channel's `handle_in/3` callbacks. Within these
   callbacks, you can perform any action. Typically you'll either forward a
-  message to all listeners with `Phoenix.Channel.broadcast!/3`, or push a message
-  directly down the socket with `Phoenix.Channel.push/3`.
-  Incoming callbacks must return the `socket` to maintain ephemeral state.
+  message to all listeners with `broadcast!/3`, or push a message directly down
+  the socket with `push/3`. Incoming callbacks must return the `socket` to
+  maintain ephemeral state.
 
   Here's an example of receiving an incoming `"new_msg"` event from one client,
   and broadcasting the message to all topic subscribers for this socket.
@@ -67,7 +64,7 @@ defmodule Phoenix.Channel do
         {:noreply, socket}
       end
 
-  ### Replies
+  ## Replies
 
   In addition to pushing messages out when you receive a `handle_in` event,
   you can also reply directly to a client event for request/response style
@@ -100,14 +97,14 @@ defmodule Phoenix.Channel do
         end
       end
 
-  ### Intercepting Outgoing Events
+  ## Intercepting Outgoing Events
 
-  When an event is broadcasted with `Phoenix.Channel.broadcast/3`, each channel
-  subscriber can choose to intercept the event and have their `handle_out/3`
-  callback triggered. This allows the event's payload to be customized on a
-  socket by socket basis to append extra information, or conditionally filter
-  the message from being delivered. If the event is not intercepted with
-  `Phoenix.Channel.intercept/1`, then the message is pushed directly to the client:
+  When an event is broadcasted with `broadcast/3`, each channel subscriber can
+  choose to intercept the event and have their `handle_out/3` callback triggered.
+  This allows the event's payload to be customized on a socket by socket basis
+  to append extra information, or conditionally filter the message from being
+  delivered. If the event is not intercepted with `Phoenix.Channel.intercept/1`,
+  then the message is pushed directly to the client:
 
       intercept ["new_msg", "user_joined"]
 
@@ -129,20 +126,19 @@ defmodule Phoenix.Channel do
         {:noreply, socket}
       end
 
-
   ## Broadcasting to an external topic
 
-  In some cases, you will want to broadcast messages without the context of a `socket`.
-  This could be for broadcasting from within your channel to an external topic, or
-  broadcasting from elsewhere in your application like a Controller or GenServer.
-  For these cases, you can broadcast from your Endpoint. Its configured PubSub
-  server will be used:
+  In some cases, you will want to broadcast messages without the context of
+  a `socket`. This could be for broadcasting from within your channel to an
+  external topic, or broadcasting from elsewhere in your application like a
+  controller or another process. Such can be done via your endpoint:
 
       # within channel
       def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
         ...
         broadcast_from! socket, "new_msg", %{uid: uid, body: body}
-        MyApp.Endpoint.broadcast_from! self(), "rooms:superadmin", "new_msg", %{uid: uid, body: body}
+        MyApp.Endpoint.broadcast_from! self(), "rooms:superadmin",
+          "new_msg", %{uid: uid, body: body}
         {:noreply, socket}
       end
 
@@ -153,7 +149,6 @@ defmodule Phoenix.Channel do
         MyApp.Endpoint.broadcast! "rooms:superadmin", "new_msg", %{uid: uid, body: body}
         redirect conn, to: "/"
       end
-
 
   ## Terminate
 
@@ -167,9 +162,9 @@ defmodule Phoenix.Channel do
   If any of the callbacks return a stop tuple, that will also trigger
   terminate, with the given reason.
 
-  Note `terminate/2` may also be invoked in case of errors or exits
-  but only if the current process is trapping exits. This practice,
-  however, is typically not recommended.
+  Note `terminate/2` will be invoked in case of errors or exits only if
+  the current process is trapping exits. This practice, however, is
+  typically not recommended.
   """
 
   use Behaviour
@@ -203,10 +198,10 @@ defmodule Phoenix.Channel do
       @behaviour unquote(__MODULE__)
       @on_definition unquote(__MODULE__)
       @before_compile unquote(__MODULE__)
+      @phoenix_intercepts []
+
       import unquote(__MODULE__)
       import Phoenix.Socket, only: [assign: 3]
-
-      @phoenix_intercepts []
 
       def handle_in(_event, _message, socket) do
         {:noreply, socket}
@@ -220,11 +215,9 @@ defmodule Phoenix.Channel do
     end
   end
 
-  defmacro __before_compile__(env) do
-    intercepts = Module.get_attribute(env.module, :phoenix_intercepts)
-
+  defmacro __before_compile__(_) do
     quote do
-      def __intercepts__(), do: unquote(intercepts)
+      def __intercepts__, do: @phoenix_intercepts
     end
   end
 
