@@ -112,26 +112,7 @@ defmodule Phoenix.ViewTest do
 
   ## render_many
 
-  test "renders many without view" do
-    user = %MyApp.User{}
-    assert render_many([], "show.text") == []
-    assert render_many([user], "show.text") == ["show user: name"]
-    assert render_many([user], "show.text", prefix: "Dr. ") == ["show user: Dr. name"]
-    assert render_many([user], "show.text", %{prefix: "Dr. "}) == ["show user: Dr. name"]
-
-    stream = Stream.concat([user], [%MyApp.Nested.User{}])
-    assert render_many(stream, "show.text") ==
-           ["show user: name", "show nested user: nested name"]
-    assert render_many(stream, "show.text", prefix: "Dr. ") ==
-           ["show user: Dr. name", "show nested user: nested name"]
-  end
-
-  test "renders many without view with custom as" do
-    user = %MyApp.User{}
-    assert render_many([user], "data.text", as: :data) == ["show data: name"]
-  end
-
-  test "renders many with view" do
+  test "renders many" do
     user = %MyApp.User{}
     assert render_many([], MyApp.UserView, "show.text") == []
     assert render_many([user], MyApp.UserView, "show.text") ==
@@ -148,27 +129,14 @@ defmodule Phoenix.ViewTest do
            ["show user: Dr. name", "show user: Dr. nested name"]
   end
 
-  test "renders many with view with custom as" do
+  test "renders many with custom as" do
     user = %MyApp.User{}
     assert render_many([user], MyApp.UserView, "data.text", as: :data) == ["show data: name"]
   end
 
   ## render_one
 
-  test "renders one without view" do
-    user = %MyApp.User{}
-    assert render_one(nil, "show.text") == nil
-    assert render_one(user, "show.text") == "show user: name"
-    assert render_one(user, "show.text", prefix: "Dr. ") == "show user: Dr. name"
-    assert render_one(user, "show.text", %{prefix: "Dr. "}) == "show user: Dr. name"
-  end
-
-  test "renders one without view with custom as" do
-    user = %MyApp.User{}
-    assert render_one(user, "data.text", as: :data) == "show data: name"
-  end
-
-  test "renders one with view" do
+  test "renders one" do
     user = %MyApp.User{}
     assert render_one(nil, MyApp.UserView, "show.text") == nil
     assert render_one(user, MyApp.UserView, "show.text") ==
@@ -179,7 +147,7 @@ defmodule Phoenix.ViewTest do
            "show user: Dr. name"
   end
 
-  test "renders one with view with custom as" do
+  test "renders one with custom as" do
     user = %MyApp.User{}
     assert render_one(user, MyApp.UserView, "data.text", as: :data) == "show data: name"
   end
