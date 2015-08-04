@@ -125,13 +125,21 @@ defmodule Phoenix.Transports.LongPoll do
   defp new_session(conn, endpoint, handler, transport, opts) do
     serializer = opts[:serializer]
 
-    case Transport.connect(endpoint, handler, transport, __MODULE__, serializer, conn.params) do
-      {:ok, socket} ->
-        {_, token, _} = start_session(endpoint, socket, opts)
-        conn |> put_status(:gone) |> status_json(%{token: token})
+    priv_topic =
+      "phx:lp:"
+      <> Base.encode64(:crypto.strong_rand_bytes(16))
+      <> (:os.timestamp() |> Tuple.to_list |> Enum.join(""))
 
-      :error ->
+    args = [endpoint, handler, transport, __MODULE__, serializer,
+            conn.params, opts[:window_ms], priv_topic]
+
+    case Supervisor.start_child(LongPoll.Supervisor, args) do
+      {:ok, :undefined} ->
         conn |> put_status(:forbidden) |> status_json(%{})
+      {:ok, server_pid} ->
+        data  = {:v1, endpoint.config(:endpoint_id), server_pid, priv_topic}
+        token = sign_token(endpoint, data, opts)
+        conn |> put_status(:gone) |> status_json(%{token: token})
     end
   end
 
@@ -172,25 +180,9 @@ defmodule Phoenix.Transports.LongPoll do
 
   ## Endpoint helpers
 
-  # Starts the `Phoenix.LongPoll.Server` and retunrs the encrypted token.
-  @doc false
-  def start_session(endpoint, socket, opts) do
-    priv_topic =
-      "phx:lp:"
-      <> Base.encode64(:crypto.strong_rand_bytes(16))
-      <> (:os.timestamp() |> Tuple.to_list |> Enum.join(""))
-
-    child = [socket, opts[:window_ms], priv_topic]
-    {:ok, server_pid} = Supervisor.start_child(LongPoll.Supervisor, child)
-
-    data  = {:v1, endpoint.config(:endpoint_id), server_pid, priv_topic}
-    {priv_topic, sign_token(endpoint, data, opts), server_pid}
-  end
-
   # Retrieves the serialized `Phoenix.LongPoll.Server` pid
   # by publishing a message in the encrypted private topic.
-  @doc false
-  def resume_session(%{"token" => token}, endpoint, opts) do
+  defp resume_session(%{"token" => token}, endpoint, opts) do
     case verify_token(endpoint, token, opts) do
       {:ok, {:v1, id, pid, priv_topic}} ->
         server_ref = server_ref(endpoint.config(:endpoint_id), id, pid, priv_topic)
@@ -209,7 +201,7 @@ defmodule Phoenix.Transports.LongPoll do
         :error
     end
   end
-  def resume_session(_params, _endpoint, _opts), do: :error
+  defp resume_session(_params, _endpoint, _opts), do: :error
 
   # Publishes a message to the pubsub system.
   defp transport_dispatch(endpoint, server_ref, msg, opts) do

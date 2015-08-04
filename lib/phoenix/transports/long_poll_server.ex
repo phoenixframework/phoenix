@@ -9,7 +9,7 @@ defmodule Phoenix.Transports.LongPoll.Supervisor do
 
   def init([]) do
     children = [
-      worker(Phoenix.Transports.LongPoll.Server, [], restart: :transient)
+      worker(Phoenix.Transports.LongPoll.Server, [], restart: :temporary)
     ]
     supervise(children, strategy: :simple_one_for_one)
   end
@@ -20,8 +20,8 @@ defmodule Phoenix.Transports.LongPoll.Server do
 
   use GenServer
 
-  alias Phoenix.Socket.Transport
   alias Phoenix.PubSub
+  alias Phoenix.Socket.Transport
   alias Phoenix.Socket.Broadcast
   alias Phoenix.Socket.Message
 
@@ -35,30 +35,38 @@ defmodule Phoenix.Transports.LongPoll.Server do
   If the server receives no message within `window_ms`, it terminates
   and clients are responsible for opening a new session.
   """
-  def start_link(socket, window_ms, priv_topic) do
-    GenServer.start_link(__MODULE__, [socket, window_ms, priv_topic])
+  def start_link(endpoint, handler, transport_name, transport,
+                 serializer, params, window_ms, priv_topic) do
+    GenServer.start_link(__MODULE__, [endpoint, handler, transport_name, transport,
+                                      serializer, params, window_ms, priv_topic])
   end
 
   ## Callbacks
 
-  def init([socket, window_ms, priv_topic]) do
+  def init([endpoint, handler, transport_name, transport,
+            serializer, params, window_ms, priv_topic]) do
     Process.flag(:trap_exit, true)
 
-    state = %{buffer: [],
-              socket: %{socket | transport_pid: self()},
-              channels: HashDict.new,
-              channels_inverse: HashDict.new,
-              window_ms: trunc(window_ms * 1.5),
-              pubsub_server: socket.endpoint.__pubsub_server__(),
-              priv_topic: priv_topic,
-              last_client_poll: now_ms(),
-              client_ref: nil}
+    case Transport.connect(endpoint, handler, transport_name, transport, serializer, params) do
+      {:ok, socket} ->
+        state = %{buffer: [],
+                  socket: socket,
+                  channels: HashDict.new,
+                  channels_inverse: HashDict.new,
+                  window_ms: trunc(window_ms * 1.5),
+                  pubsub_server: socket.endpoint.__pubsub_server__(),
+                  priv_topic: priv_topic,
+                  last_client_poll: now_ms(),
+                  client_ref: nil}
 
-    if socket.id, do: socket.endpoint.subscribe(self, socket.id, link: true)
-    :ok = PubSub.subscribe(state.pubsub_server, self, state.priv_topic, link: true)
-    :timer.send_interval(state.window_ms, :shutdown_if_inactive)
+        if socket.id, do: socket.endpoint.subscribe(self, socket.id, link: true)
+        :ok = PubSub.subscribe(state.pubsub_server, self, priv_topic, link: true)
+        :timer.send_interval(state.window_ms, :shutdown_if_inactive)
 
-    {:ok, state}
+        {:ok, state}
+      :error ->
+        :ignore
+    end
   end
 
   def handle_call(:stop, _from, state), do: {:stop, :shutdown, :ok, state}
@@ -93,18 +101,10 @@ defmodule Phoenix.Transports.LongPoll.Server do
     {:stop, {:shutdown, :disconnected}, state}
   end
 
-  # Crash if pubsub adapter goes down
-  def handle_info({:EXIT, pub_pid, :shutdown}, %{pubsub_server: pub_pid} = state) do
-    {:stop, {:shutdown, :pubsub_server_terminated}, state}
-  end
-
-  # Trap channel process exits and notify client of close or error events
-  #
-  # Normal exits and shutdowns indicate the channel shutdown gracefully
-  # from return. Any other exit reason is treated as an error.
   def handle_info({:EXIT, channel_pid, reason}, state) do
     case HashDict.get(state.channels_inverse, channel_pid) do
-      nil   -> {:noreply, state}
+      nil ->
+        {:stop, {:shutdown, :pubsub_server_terminated}, state}
       topic ->
         new_state = %{state | channels: HashDict.delete(state.channels, topic),
                               channels_inverse: HashDict.delete(state.channels_inverse, channel_pid)}

@@ -1,4 +1,4 @@
-Code.require_file("router_helper.exs", __DIR__)
+Code.require_file("support/router_helper.exs", __DIR__)
 
 # Starts web server applications
 Application.ensure_all_started(:cowboy)

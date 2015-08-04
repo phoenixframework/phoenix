@@ -74,7 +74,6 @@ defmodule Phoenix.Transports.WebSocket do
 
         case Transport.connect(endpoint, handler, transport, __MODULE__, serializer, params) do
           {:ok, socket} ->
-            socket = %{socket | transport_pid: self()}
             {:ok, conn, {__MODULE__, {socket, opts}}}
           :error ->
             send_resp(conn, 403, "")

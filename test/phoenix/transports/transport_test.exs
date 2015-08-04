@@ -1,4 +1,4 @@
-defmodule Phoenix.Socket.TransportTest do
+defmodule Phoenix.Transports.TransportTest do
   use ExUnit.Case, async: true
   use RouterHelper
 

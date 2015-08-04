@@ -123,6 +123,7 @@ defmodule Phoenix.Socket.Transport do
   def connect(endpoint, handler, transport_name, transport, serializer, params) do
     socket = %Socket{endpoint: endpoint,
                      transport: transport,
+                     transport_pid: self(),
                      transport_name: transport_name,
                      handler: handler,
                      pubsub_server: endpoint.__pubsub_server__,

@@ -1,5 +1,5 @@
 defmodule Phoenix.Test.ChannelTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   config = [pubsub: [adapter: Phoenix.PubSub.PG2,
                      name: Phoenix.Test.ChannelTest.PubSub], server: false]
@@ -125,6 +125,7 @@ defmodule Phoenix.Test.ChannelTest do
 
   test "join/3 with crash" do
     Process.flag(:trap_exit, true)
+    Logger.disable(self())
     assert {:error, %{reason: "join crashed"}} = join(Channel, "foo:crash")
     assert_receive {:EXIT, _, _}
   end
