@@ -16,7 +16,7 @@ defmodule Phoenix.Socket.Transport do
     * Providing secure defaults
 
   ## The transport behaviour
-  
+
   The transport requires two functions:
 
     * `default_config/0` - returns the default transport configuration
@@ -151,12 +151,19 @@ defmodule Phoenix.Socket.Transport do
   end
 
   @doc """
-  Dispatches `%Phoenix.Socket.Message{}` to Channel. All serialized, remote client messages
-  should be deserialized and forwarded through this function by adapters.
+  Dispatches `Phoenix.Socket.Message` to a channel.
 
-  The following return signatures must be handled by transport adapters:
-    * `{:ok, socket_pid}` - Successful dispatch, with pid of new socket
-    * `{:error, reason}` - Unauthorized or unmatched dispatch
+  All serialized, remote client messages should be deserialized and
+  forwarded through this function by adapters.
+
+  The following returns must be handled by transports:
+
+    * `:noreply` - Nothing to be done by the transport
+    * `{:reply, reply}` - The reply to be sent to the client
+    * `{:joined, channel_pid, reply}` - The channel was joined
+      and the reply must be sent as result
+    * `{:error, reason, reply}` - An error happened and the reply
+      must be sent as result
 
   """
   def dispatch(msg, sockets, socket)

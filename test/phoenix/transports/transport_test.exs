@@ -3,6 +3,7 @@ defmodule Phoenix.Transports.TransportTest do
   use RouterHelper
 
   alias Phoenix.Socket.Transport
+  alias Phoenix.Socket.Message
 
   Application.put_env :phoenix, __MODULE__.Endpoint,
     force_ssl: [],
@@ -15,6 +16,19 @@ defmodule Phoenix.Transports.TransportTest do
   setup_all do
     Endpoint.start_link
     :ok
+  end
+
+  ## on_exit_message
+
+  test "on_exit_message/2" do
+    assert Transport.on_exit_message("foo", :normal) ==
+           %Message{event: "phx_close", payload: %{}, topic: "foo"}
+    assert Transport.on_exit_message("foo", :shutdown) ==
+           %Message{event: "phx_close", payload: %{}, topic: "foo"}
+    assert Transport.on_exit_message("foo", {:shutdown, :whatever}) ==
+           %Message{event: "phx_close", payload: %{}, topic: "foo"}
+    assert Transport.on_exit_message("foo", :oops) ==
+           %Message{event: "phx_error", payload: %{}, topic: "foo"}
   end
 
   ## Check origin
