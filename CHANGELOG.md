@@ -17,10 +17,11 @@
   * [Digest] Do not gzip binary files like png and jpg. Default only to known text files and make them configurable via `config :phoenix, :gzippable_exts, ~w(.txt .html .js .css)` and so on
 
 * Backward incompatible changes
-  * [Controller] `jsonp/3` function has been removed in favor of the `plug :allow_jsonp`  
+  * [Controller] `jsonp/3` function has been removed in favor of the `plug :allow_jsonp`
   * [Controller] `controller_template/1` has been renamed to `view_template/1`
   * [HTML] Use `phoenix_html ~> 2.0` which includes its own `phoenix_html.js` version
   * [Socket] `:origins` transport option has been renamed to `:check_origin`
+  * [View] `render_one` and `render_many` no longer inflect the view module from the model in favor of explicitly passing the view
 
 * JavaScript client backwards incompatible changes
   * Socket params are now passed to `socket.connect()` instead of an option on the constructor.
