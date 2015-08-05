@@ -126,6 +126,18 @@ config :hello_phoenix, HelloPhoenix.Repo,
   size: 20 # The amount of database connections in the pool
 ```
 
+Finally, let's tell Phoenix to use our Heroku URL. Find the following:
+
+```elixir
+url: [host: "example.com", port: 80],
+```
+
+and change it to (you will want to set your Heroku application name):
+
+```elixir
+url: [host: "mysterious-meadow-6277.heroku.com", port: 80],
+```
+
 We don't need to import the `config/prod.secret.exs` file in our prod config any longer so we can delete the following line:
 
 ```elixir
@@ -134,12 +146,12 @@ import_config "prod.secret.exs"
 
 The final `config/prod.exs` should now look something like this (we've removed the comments for readability):
 
-```
+```elixir
 use Mix.Config
 
 config :hello_phoenix, HelloPhoenix.Endpoint,
   http: [port: System.get_env("PORT")],
-  url: [host: System.get_env("HOST"), port: 80],
+  url: [host: "mysterious-meadow-6277.heroku.com", port: 80],
   cache_static_manifest: "priv/static/manifest.json"
 
 config :logger, level: :info
@@ -151,12 +163,6 @@ config :hello_phoenix, HelloPhoenix.Repo,
   adapter: Ecto.Adapters.Postgres,
   url: System.get_env("DATABASE_URL"),
   size: 20 # The amount of database connections in the pool
-```
-
-We can now remove the `config/prod.secret.exs` from the disk:
-
-```console
-$ rm config/prod.secret.exs
 ```
 
 ## Creating Environment Variables in Heroku
