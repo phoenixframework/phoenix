@@ -2,7 +2,7 @@ defmodule Phoenix.Socket do
   @moduledoc ~S"""
   Defines a socket and its state.
 
-  `Phoenix.Socket` is used as a module for establishing and maintaing
+  `Phoenix.Socket` is used as a module for establishing and maintaining
   the socket state via the `Phoenix.Socket` struct.
 
   Once connected to a socket, incoming  and pubsub events are routed
