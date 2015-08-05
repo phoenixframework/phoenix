@@ -23,12 +23,21 @@ defmodule Phoenix.Endpoint.Watcher do
   # We specially handle node to make sure we
   # provide a good getting started experience.
   defp validate(root, "node", [script|_]) do
-    if File.exists?(Path.expand(script, root)) do
-      :ok
-    else
-      Logger.error "Could not start node watcher because script #{inspect script} does not " <>
-                   "exist. Please make sure it has been installed by running: npm install"
-      exit(:shutdown)
+    cond do
+      !System.find_executable("node") ->
+        Logger.error "Could not start watcher because \"node\" is not available. Your Phoenix " <>
+                     "application is still running, however assets won't be compiled. " <>
+                     "You may fix this by installing \"node\" and then running \"npm install\"."
+        exit(:shutdown)
+
+      !File.exists?(Path.expand(script, root)) ->
+        Logger.error "Could not start node watcher because script #{inspect script} does not " <>
+                     "exist. Your Phoenix application is still running, however assets " <>
+                     "won't be compiled. You may fix this by running \"npm install\"."
+        exit(:shutdown)
+
+      true ->
+        :ok
     end
   end
 
