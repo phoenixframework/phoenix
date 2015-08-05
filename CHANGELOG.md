@@ -1,6 +1,8 @@
 # Changelog
 
-## v0.16-dev
+## v0.16.0 (2015-8-5)
+
+See these [`0.15.x` to `0.16.0` upgrade instructions](https://gist.github.com/chrismccord/969d75d1562979a3ae37) to bring your existing apps up to speed.
 
 * Enhancements
   * [Brunch] No longer ship with `sass-brunch` dependency
