@@ -31,20 +31,20 @@ defmodule Phoenix.Token do
 
   When using it with a socket a typical example might be:
 
-    defmodule MyApp.UserSocket do
-      use Phoenix.Socket
+      defmodule MyApp.UserSocket do
+        use Phoenix.Socket
 
-      def connect(%{"token" => token}, socket) do
-        # Max age of 2 weeks (1209600 seconds)
-        case Phoenix.Token.verify(socket, "user", token, max_age: 1209600) do
-          {:ok, user_id} ->
-            socket = assign(socket, :user, Repo.get!(User, user_id))
-            {:ok, socket}
-          {:error, _} ->
-            :error
+        def connect(%{"token" => token}, socket) do
+          # Max age of 2 weeks (1209600 seconds)
+          case Phoenix.Token.verify(socket, "user", token, max_age: 1209600) do
+            {:ok, user_id} ->
+              socket = assign(socket, :user, Repo.get!(User, user_id))
+              {:ok, socket}
+            {:error, _} ->
+              :error
+          end
         end
       end
-    end
 
   In this example the phoenix.js client will be sending up the token
   in the connect command.
