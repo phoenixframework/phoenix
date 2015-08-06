@@ -149,6 +149,7 @@ defmodule Phoenix.Naming do
 
   @doc """
   Converts an attribute/form field into its humanize version.
+
       iex> Phoenix.Naming.humanize(:username)
       "Username"
       iex> Phoenix.Naming.humanize(:created_at)

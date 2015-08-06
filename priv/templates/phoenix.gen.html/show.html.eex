@@ -1,4 +1,4 @@
-<h2>Show <%= singular %></h2>
+<h2>Show <%= String.replace(singular, "_", " ") %></h2>
 
 <ul>
 <%= for {k, _} <- attrs do %>
@@ -8,7 +8,6 @@
   </li>
 <% end %>
 </ul>
-
 
 <%= "<%=" %> link "Edit", to: <%= singular %>_path(@conn, :edit, @<%= singular %>) <%= "%\>" %>
 <%= "<%=" %> link "Back", to: <%= singular %>_path(@conn, :index) <%= "%\>" %>

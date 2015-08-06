@@ -36,6 +36,7 @@ defmodule Mix.Phoenix do
 
       iex> Mix.Phoenix.inflect("user")
       [alias: "User",
+       human: "User",
        base: "Phoenix",
        module: "Phoenix.User",
        scoped: "User",
@@ -44,11 +45,21 @@ defmodule Mix.Phoenix do
 
       iex> Mix.Phoenix.inflect("Admin.User")
       [alias: "User",
+       human: "User",
        base: "Phoenix",
        module: "Phoenix.Admin.User",
        scoped: "Admin.User",
        singular: "user",
        path: "admin/user"]
+
+      iex> Mix.Phoenix.inflect("Admin.SuperUser")
+      [alias: "SuperUser",
+       human: "Super user",
+       base: "Phoenix",
+       module: "Phoenix.Admin.SuperUser",
+       scoped: "Admin.SuperUser",
+       singular: "super_user",
+       path: "admin/super_user"]
   """
   def inflect(singular) do
     base     = Mix.Phoenix.base
@@ -57,8 +68,10 @@ defmodule Mix.Phoenix do
     singular = String.split(path, "/") |> List.last
     module   = Module.concat(base, scoped) |> inspect
     alias    = String.split(module, ".") |> List.last
+    human    = Phoenix.Naming.humanize(singular)
 
     [alias: alias,
+     human: human,
      base: base,
      module: module,
      scoped: scoped,

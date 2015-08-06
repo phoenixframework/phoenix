@@ -21,7 +21,7 @@ defmodule <%= module %>Controller do
     case Repo.insert(changeset) do
       {:ok, _<%= singular %>} ->
         conn
-        |> put_flash(:info, "<%= alias %> created successfully.")
+        |> put_flash(:info, "<%= human %> created successfully.")
         |> redirect(to: <%= singular %>_path(conn, :index))
       {:error, changeset} ->
         render(conn, "new.html", changeset: changeset)
@@ -46,7 +46,7 @@ defmodule <%= module %>Controller do
     case Repo.update(changeset) do
       {:ok, <%= singular %>} ->
         conn
-        |> put_flash(:info, "<%= alias %> updated successfully.")
+        |> put_flash(:info, "<%= human %> updated successfully.")
         |> redirect(to: <%= singular %>_path(conn, :show, <%= singular %>))
       {:error, changeset} ->
         render(conn, "edit.html", <%= singular %>: <%= singular %>, changeset: changeset)
@@ -61,7 +61,7 @@ defmodule <%= module %>Controller do
     Repo.delete!(<%= singular %>)
 
     conn
-    |> put_flash(:info, "<%= alias %> deleted successfully.")
+    |> put_flash(:info, "<%= human %> deleted successfully.")
     |> redirect(to: <%= singular %>_path(conn, :index))
   end
 end

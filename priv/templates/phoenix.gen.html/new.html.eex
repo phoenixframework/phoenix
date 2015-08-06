@@ -1,4 +1,4 @@
-<h2>New <%= singular %></h2>
+<h2>New <%= String.replace(singular, "_", " ") %></h2>
 
 <%= "<%=" %> render "form.html", changeset: @changeset,
                         action: <%= singular %>_path(@conn, :create) <%= "%\>" %>
