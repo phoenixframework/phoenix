@@ -106,7 +106,7 @@ With our channel in place, lets head over to `web/static/js/app.js` and get the 
 ```javascript
 let socket = new Socket("/socket")
 socket.connect()
-let chan = socket.chan("rooms:lobby", {})
+let chan = socket.channel("rooms:lobby", {})
 chan.join().receive("ok", chan => {
   console.log("Welcome to Phoenix Chat!")
 })
@@ -130,7 +130,6 @@ We'll also add jQuery to our application layout in `web/templates/layout/app.htm
   </div> <!-- /container -->
   <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
   <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
-  <script>require("web/static/js/app")</script>
 </body>
 ```
 
@@ -142,7 +141,7 @@ let messagesContainer = $("#messages")
 
 let socket = new Socket("/socket")
 socket.connect()
-let chan = socket.chan("rooms:lobby", {})
+let chan = socket.channel("rooms:lobby", {})
 
 chatInput.on("keypress", event => {
   if(event.keyCode === 13){
@@ -165,7 +164,7 @@ let messagesContainer = $("#messages")
 
 let socket = new Socket("/socket")
 socket.connect()
-let chan = socket.chan("rooms:lobby", {})
+let chan = socket.channel("rooms:lobby", {})
 
 chatInput.on("keypress", event => {
   if(event.keyCode === 13){

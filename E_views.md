@@ -257,7 +257,6 @@ Phoenix generates an `ErrorView` for us, but it doesn't give us a `web/templates
 
     </div> <!-- /container -->
     <script src="/js/app.js"></script>
-    <script>require("web/static/js/app")</script>
   </body>
 </html>
 ```
