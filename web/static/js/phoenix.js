@@ -346,7 +346,7 @@ export class Socket {
     this.reconnectAfterMs     = opts.reconnectAfterMs || function(tries){
       return [1000, 5000, 10000][tries - 1] || 10000
     }
-    this.reconnectTimer       = new Timer(() => this.connect(), this.reconnectAfterMs)
+    this.reconnectTimer       = new Timer(() => this.connect(this.params), this.reconnectAfterMs)
     this.logger               = opts.logger || function(){} // noop
     this.longpollerTimeout    = opts.longpollerTimeout || 20000
     this.params               = {}
