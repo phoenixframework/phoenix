@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.16.1 (2015-8-6)
+
+* JavaScript client bug fixes
+  * Pass socket params on reconnect
+
 ## v0.16.0 (2015-8-5)
 
 See these [`0.15.x` to `0.16.0` upgrade instructions](https://gist.github.com/chrismccord/969d75d1562979a3ae37) to bring your existing apps up to speed.

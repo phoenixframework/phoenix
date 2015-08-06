@@ -583,12 +583,12 @@ var Socket = exports.Socket = (function () {
     this.reconnectAfterMs = opts.reconnectAfterMs || function (tries) {
       return [1000, 5000, 10000][tries - 1] || 10000;
     };
-    this.reconnectTimer = new Timer(function () {
-      return _this.connect();
-    }, this.reconnectAfterMs);
     this.logger = opts.logger || function () {}; // noop
     this.longpollerTimeout = opts.longpollerTimeout || 20000;
     this.params = {};
+    this.reconnectTimer = new Timer(function () {
+      return _this.connect(_this.params);
+    }, this.reconnectAfterMs);
     this.endPoint = "" + endPoint + "/" + TRANSPORTS.websocket;
   }
 
