@@ -10,7 +10,7 @@ defmodule Phoenix.Integration.LongPollTest do
   alias Phoenix.Socket.Broadcast
   alias __MODULE__.Endpoint
 
-  @port 5807
+  @port 5808
   @ensure_window_timeout_ms 500
 
   Application.put_env(:phoenix, Endpoint, [

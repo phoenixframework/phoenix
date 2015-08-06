@@ -10,7 +10,6 @@ defmodule Phoenix.Integration.WebSocketTest do
   alias __MODULE__.Endpoint
 
   @port 5807
-  @ensure_window_timeout_ms 500
 
   Application.put_env(:phoenix, Endpoint, [
     https: false,
