@@ -15,7 +15,9 @@ config :hello_phoenix, HelloPhoenix.Endpoint,
   https: [port: 443,
           otp_app: :hello_phoenix,
           keyfile: System.get_env("SOME_APP_SSL_KEY_PATH"),
-          certfile: System.get_env("SOME_APP_SSL_CERT_PATH")]
+          certfile: System.get_env("SOME_APP_SSL_CERT_PATH"),
+          cacertfile: System.get_env("INTERMEDIATE_CERTFILE_PATH") # OPTIONAL Key for intermediate certificates
+          ]
 
 ```
 
