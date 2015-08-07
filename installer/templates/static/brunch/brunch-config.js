@@ -8,7 +8,7 @@ exports.config = {
       // https://github.com/brunch/brunch/blob/stable/docs/config.md#files
       // joinTo: {
       //  'js/app.js': /^(web\/static\/js)/,
-      //  'js/vendor.js': /^(web\/static\/vendor)/
+      //  'js/vendor.js': /^(web\/static\/vendor)|(deps)/
       // }
       //
       // To change the order of concatenation of files, explictly mention here

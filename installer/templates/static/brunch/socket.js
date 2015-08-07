@@ -2,7 +2,7 @@
 // you uncomment its entry in "web/static/js/app.js".
 
 // To use Phoenix channels, the first step is to import Socket
-// and connect at the socket path in "web/endpoint.ex":
+// and connect at the socket path in "lib/my_app/endpoint.ex":
 import {Socket} from "<%= phoenix_static_path %>/web/static/js/phoenix"
 
 let socket = new Socket("/socket")
