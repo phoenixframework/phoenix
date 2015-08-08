@@ -4,6 +4,7 @@
 
 [![Build Status](https://api.travis-ci.org/phoenixframework/phoenix.svg)](https://travis-ci.org/phoenixframework/phoenix)
 [![Inline docs](http://inch-ci.org/github/phoenixframework/phoenix.svg)](http://inch-ci.org/github/phoenixframework/phoenix)
+[![Coverage](https://img.shields.io/coveralls/phoenixframework/phoenix.svg)](https://coveralls.io/github/phoenixframework/phoenix)
 
 ## Getting started
 
