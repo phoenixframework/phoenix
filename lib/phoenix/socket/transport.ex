@@ -297,6 +297,7 @@ defmodule Phoenix.Socket.Transport do
       origin_allowed?(check_origin, origin, endpoint) ->
         conn
       true ->
+        Logger.error "Phoenix.Socket.Transport.check_origin/4 fails, because #{origin} is not allowed."
         resp(conn, :forbidden, "")
         |> sender.()
         |> halt()
