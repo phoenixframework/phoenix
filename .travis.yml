@@ -1,9 +1,10 @@
 language: elixir
-elixir: 1.0.4
+elixir: 1.0.5
 services:
   - redis-server
 otp_release:
-  - 17.1
+  - 17.5
+  - 18.0
 sudo: false
 before_script:
   - mix deps.get --only test
