@@ -104,6 +104,8 @@ For our chat app, we'll allow anyone to join the `"rooms:lobby"` topic, but any 
 With our channel in place, lets head over to `web/static/js/app.js` and get the client and server talking.
 
 ```javascript
+import {Socket} from "deps/phoenix/web/static/js/phoenix"
+
 let socket = new Socket("/socket")
 socket.connect()
 let chan = socket.channel("rooms:lobby", {})
