@@ -10,6 +10,7 @@ defmodule Phoenix.Mixfile do
      deps: deps,
      package: package,
      docs: [source_ref: "v#{@version}", main: "Phoenix"],
+     test_coverage: [tool: ExCoveralls],
      name: "Phoenix",
      source_url: "https://github.com/phoenixframework/phoenix",
      homepage_url: "http://www.phoenixframework.org",
@@ -41,7 +42,8 @@ defmodule Phoenix.Mixfile do
 
      # Test dependencies
      {:phoenix_html, "~> 1.2", only: :test},
-     {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test}]
+     {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test},
+     {:excoveralls, "~> 0.3.11", only: :test}]
   end
 
   defp package do
