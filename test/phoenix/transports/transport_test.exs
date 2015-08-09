@@ -18,6 +18,10 @@ defmodule Phoenix.Transports.TransportTest do
     :ok
   end
 
+  setup do
+    Logger.disable(self())
+  end
+
   ## on_exit_message
 
   test "on_exit_message/2" do

@@ -297,6 +297,24 @@ defmodule Phoenix.Socket.Transport do
       origin_allowed?(check_origin, origin, endpoint) ->
         conn
       true ->
+        Logger.debug """
+        Could not check origin for Phoenix.Socket transport.
+
+        This happens when you are attempting a socket connection to
+        a different host than the one configured in your config/
+        files. For example, in development the host is configured
+        to "localhost" but you may be trying to access it from
+        "127.0.0.1". To fix this issue, you may either:
+
+          1. update [url: [host: ...]] to your actual host in the
+             config file for your current environment (recommended)
+
+          2. pass the :check_origin option when configuring
+             the transport in your UserSocket module, explicitly
+             outlining which origins are allowed:
+
+                check_origin: ["https://example.com", "//another.com"]
+        """
         resp(conn, :forbidden, "")
         |> sender.()
         |> halt()

@@ -246,11 +246,13 @@ defmodule Phoenix.Integration.LongPollTest do
   end
 
   test "refuses unallowed origins" do
-    resp = poll(:get, "/ws", %{}, nil, %{"origin" => "https://example.com"})
-    assert resp.body["status"] == 410
+    capture_log fn ->
+      resp = poll(:get, "/ws", %{}, nil, %{"origin" => "https://example.com"})
+      assert resp.body["status"] == 410
 
-    resp = poll(:get, "/ws", %{}, nil, %{"origin" => "http://notallowed.com"})
-    assert resp.body["status"] == 403
+      resp = poll(:get, "/ws", %{}, nil, %{"origin" => "http://notallowed.com"})
+      assert resp.body["status"] == 403
+    end
   end
 
   test "shuts down on pubsub crash" do
