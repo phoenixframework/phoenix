@@ -78,7 +78,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
         [{:eex, "migration.exs", "priv/repo/migrations/#{timestamp()}_create_#{migration}.exs"}|files]
     end
 
-    Mix.Phoenix.copy_from apps(), "priv/templates/phoenix.gen.model", "", binding, files
+    Mix.Phoenix.copy_from paths(), "priv/templates/phoenix.gen.model", "", binding, files
   end
 
   defp validate_args!([_, plural | _] = args) do
@@ -167,7 +167,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     end
   end
 
-  defp apps do
-    [Mix.Project.config[:app], :phoenix]
+  defp paths do
+    [".", :phoenix]
   end
 end

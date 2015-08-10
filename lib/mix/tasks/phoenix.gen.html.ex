@@ -42,7 +42,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
       Mix.Task.run "phoenix.gen.model", args
     end
 
-    Mix.Phoenix.copy_from apps(), "priv/templates/phoenix.gen.html", "", binding, [
+    Mix.Phoenix.copy_from paths(), "priv/templates/phoenix.gen.html", "", binding, [
       {:eex, "controller.ex",       "web/controllers/#{path}_controller.ex"},
       {:eex, "edit.html.eex",       "web/templates/#{path}/edit.html.eex"},
       {:eex, "form.html.eex",       "web/templates/#{path}/form.html.eex"},
@@ -122,7 +122,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
     ~s(<%= label f, #{inspect(key)}, "#{label_text}", class: "control-label" %>)
   end
 
-  defp apps do
-    [Mix.Project.config[:app], :phoenix]
+  defp paths do
+    [".", :phoenix]
   end
 end

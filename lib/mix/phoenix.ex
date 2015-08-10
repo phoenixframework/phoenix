@@ -10,7 +10,7 @@ defmodule Mix.Phoenix do
   the given binding.
   """
   def copy_from(apps, source_dir, target_dir, binding, mapping) when is_list(mapping) do
-    roots = Enum.map(apps, &Application.app_dir(&1, source_dir))
+    roots = Enum.map(apps, &to_app_source(&1, source_dir))
 
     for {format, source_file_path, target_file_path} <- mapping do
       source =
@@ -30,6 +30,11 @@ defmodule Mix.Phoenix do
       Mix.Generator.create_file(target, contents)
     end
   end
+
+  defp to_app_source(path, source_dir) when is_binary(path),
+    do: Path.join(path, source_dir)
+  defp to_app_source(app, source_dir) when is_atom(app),
+    do: Application.app_dir(app, source_dir)
 
   @doc """
   Inflect path, scope, alias and more from the given name.
