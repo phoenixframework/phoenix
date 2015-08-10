@@ -22,7 +22,7 @@ According to this configuration Brunch will look for asset source files in `web/
 
 Files and directories in `web/static/assets` will be copied to the destination without changes.
 
-As for directories `css` and `js` inside `web/static`, this is rather a convention. Brunch will simply look for all files in `web/static` excluding `web/static/assets` and sort all found files by their type.
+The `css` and `js` directories inside of `web/static` are a convention. Brunch will simply look for all files in `web/static` excluding `web/static/assets` and sort all found files by their type.
 
 Processed and concatenated javascript will be put into `priv/static/js/app.js`, styles will be in `priv/static/css/app.css`.
 
@@ -164,7 +164,7 @@ All transformations Brunch performs are actually done by plugins. Brunch automat
 - [`css-brunch`](https://github.com/brunch/css-brunch) is the main CSS processing plugin. Without it  CSS files will be ignored.
 
 
-It is very easy to add more plugins. We can find a plethora of Brunch plugins [here](http://brunch.io/plugins.html) and [here](https://www.npmjs.com/search?q=brunch).
+It is very easy to add more plugins. We can find a plethora of Brunch plugins [on the Brunch website](http://brunch.io/plugins.html) and [among NPM packages](https://www.npmjs.com/search?q=brunch).
 
 The order in which plugins run is defined by the order in which they appear in `package.json`.
 
@@ -278,7 +278,7 @@ module.exports = {
 };
 ```
 
-Now let's let Phoenix know how to run Webpack. Replace the `:watchers` definition by the following:
+Now we let Phoenix know how to run Webpack. Replace the `:watchers` definition by the following:
 
 ```elixir
 watchers: [node: ["node_modules/webpack/bin/webpack.js", "--watch", "--color"]]
