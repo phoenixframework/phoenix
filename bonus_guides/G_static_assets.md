@@ -1,4 +1,4 @@
-Instead of implementing its own asset pipeline Phoenix uses [Brunch](http://brunch.io), a fast and developer-friendly asset build tool. Phoenix comes with a default configuration for Brunch and it will work out of the box, but it is very easy to bend it to our needs, add support for various script and style languages, like CoffeeScript, JSX, or LESS.
+Instead of implementing its own asset pipeline, Phoenix uses [Brunch](http://brunch.io), a fast and developer-friendly asset build tool. Phoenix comes with a default configuration for Brunch and it will work out of the box, but it is very easy to bend it to our needs, add support for various script and style languages, like CoffeeScript, JSX, or LESS.
 
 Brunch has [a very good tutorial](https://github.com/brunch/brunch-guide), but this short guide should be enough to get us started with asset management from the Phoenix perspective.
 
@@ -11,12 +11,12 @@ Brunch is a [Node.js](https://nodejs.org/) application. A newly generated Phoeni
 npm install
 ```
 
-This will install Brunch and its plugins into directory `node_modules`.
+This will install Brunch and its plugins into the `node_modules` directory .
 
 
 #### Default Configuration And Workflow
 
-The second important file is `brunch-config.js`. This is a configuration for Brunch itself. Let's see how it configures asset management for Phoenix.
+The second important file is `brunch-config.js`. This is configuration for Brunch itself. Let's see how it configures asset management for Phoenix.
 
 According to this configuration Brunch will look for asset source files in `web/static`.
 
@@ -26,7 +26,7 @@ As for directories `css` and `js` inside `web/static`, this is rather a conventi
 
 Processed and concatenated javascript will be put into `priv/static/js/app.js`, styles will be in `priv/static/css/app.css`.
 
-When Phoenix is running asset source files are processed automatically when changed, but we can also run Brunch ourselves:
+When Phoenix is running, asset source files are processed automatically when changed, but we can also run Brunch ourselves:
 
 ```
 node node_modules/brunch/bin/brunch build
@@ -82,7 +82,7 @@ module.exports = {
 };
 ```
 
-Open  default application layout `web/templates/layout/app.html.eex`, find line
+Open default application layout `web/templates/layout/app.html.eex`, find line
 
 ```html
 <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
@@ -136,7 +136,7 @@ Please pay attention to how differently we required module `web/static/js/app.js
 
 #### Legacy Non-modularized Code
 
-If we have some legacy Javascript code which doesn't play well with module systems and/or we need global variables it defines, all we need to do is  place our Javascript into directory `web/static/vendor`. Brunch will not wrap these files in modules.
+If we have some legacy Javascript code which doesn't play well with module systems and/or we need global variables it defines, all we need to do is place our Javascript into directory `web/static/vendor`. Brunch will not wrap these files in modules.
 
 Let's test it. Create `web/static/vendor` if it does not exist yet and create file `web/static/vendor/meaning_of_life.js` with just one line in it:
 
@@ -207,7 +207,7 @@ There are many more nice tricks we can do with Brunch which are not covered in t
 - Instead of manually copying third-party libraries into `web/static/vendor` we can [use Bower to download and install them](https://github.com/brunch/brunch-guide/blob/master/content/en/chapter05-using-third-party-registries.md).
 
 
-Should we want one of these, please read  [Brunch documentation](https://github.com/brunch/brunch/tree/master/docs).
+Should we want one of these, please read [the Brunch documentation](https://github.com/brunch/brunch/tree/master/docs).
 
 #### Phoenix Without Brunch
 
