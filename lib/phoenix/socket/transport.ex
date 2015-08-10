@@ -297,7 +297,7 @@ defmodule Phoenix.Socket.Transport do
       origin_allowed?(check_origin, origin, endpoint) ->
         conn
       true ->
-        Logger.debug """
+        Logger.error """
         Could not check origin for Phoenix.Socket transport.
 
         This happens when you are attempting a socket connection to
