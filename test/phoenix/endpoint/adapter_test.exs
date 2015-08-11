@@ -53,6 +53,12 @@ defmodule Phoenix.Endpoint.AdapterTest do
     def config(:static_url), do: [host: "static.example.com"]
   end
 
+  defmodule URLPortEndpoint do
+    def config(:url), do: [host: "example.com", port: 80]
+    def config(:https), do: [port: 4001]
+    def config(:http), do: [port: 4000]
+  end
+
   test "generates the static url based on the static host configuration" do
     static_host = {:cache, "http://static.example.com"}
     assert Adapter.static_url(StaticURLEndpoint) == static_host
@@ -67,6 +73,7 @@ defmodule Phoenix.Endpoint.AdapterTest do
     assert Adapter.url(HTTPEndpoint) == {:cache, "http://example.com"}
     assert Adapter.url(HTTPSEndpoint) == {:cache, "https://example.com"}
     assert Adapter.url(HTTPEnvVarEndpoint) == {:cache, "http://example.com:8080"}
+    assert Adapter.url(URLPortEndpoint) == {:cache, "https://example.com"}
   end
 
   test "static_path/2 returns file's path with lookup cache" do
