@@ -168,7 +168,7 @@ defmodule Phoenix.Endpoint.Adapter do
     port   = port_to_string(url[:port] || port)
 
     case {scheme, port} do
-      {"https", "443"} -> "https://" <> host
+      {"https", _} when port in ~w(443 80) -> "https://" <> host
       {"http", "80"}   -> "http://" <> host
       {_, _}           -> scheme <> "://" <> host <> ":" <> port
     end
