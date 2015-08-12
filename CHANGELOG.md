@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.16.2
+
+* Enhancements
+  * [Endpoint] Allow `check_origin` and `force_ssl` to be config in transports and fallback to endpoint config
+  * [Transport] Log when `check_origin` fails
+
+* Bug fixes
+  * [Mix] Properly humanize names in the generator
+
+* Deprecations
+  * [Endpoint] `render_errors: [default_format: "html"]` is deprecated in favor of `render_errors: [accepts: ["html"]]`
+
 ## v0.16.1 (2015-8-6)
 
 * JavaScript client bug fixes
