@@ -12,7 +12,7 @@ defmodule Phoenix.Endpoint.AdapterTest do
     config = Adapter.config(:phoenix, AdapterApp.Endpoint)
     assert config[:otp_app] == :phoenix
     assert config[:custom] == true
-    assert config[:render_errors] == [view: AdapterApp.ErrorView, default_format: "html"]
+    assert config[:render_errors] == [view: AdapterApp.ErrorView, accepts: ~w(html)]
   end
 
   defmodule HTTPSEndpoint do

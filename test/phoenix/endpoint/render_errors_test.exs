@@ -22,7 +22,7 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
 
   defmodule Router do
     use Plug.Router
-    use Phoenix.Endpoint.RenderErrors, view: view
+    use Phoenix.Endpoint.RenderErrors, view: view, accepts: ~w(html)
 
     plug :match
     plug :dispatch
@@ -81,7 +81,10 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
   end
 
   defp render(conn, opts, fun) do
-    opts = opts |> Keyword.put_new(:view, __MODULE__)
+    opts =
+      opts
+      |> Keyword.put_new(:view, __MODULE__)
+      |> Keyword.put_new(:accepts, ~w(html))
 
     try do
       fun.()
@@ -139,11 +142,21 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
   end
 
   test "exception page with custom format" do
-    conn = render(conn(:get, "/"), [default_format: "text"], fn ->
+    conn = render(conn(:get, "/"), [accepts: ~w(text)], fn ->
       throw :hello
     end)
 
     assert conn.status == 500
     assert conn.resp_body == "500 in TEXT"
+  end
+
+  test "exception page with invalid format" do
+    conn =
+      conn(:get, "/")
+      |> put_req_header("accept", "unknown/unknown")
+      |> render([], fn -> throw :hello end)
+
+    assert conn.status == 406
+    assert conn.resp_body == ""
   end
 end
