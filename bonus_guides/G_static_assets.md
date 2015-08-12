@@ -1,4 +1,4 @@
-Instead of implementing its own asset pipeline, Phoenix uses [Brunch](http://brunch.io), a fast and developer-friendly asset build tool. Phoenix comes with a default configuration for Brunch and it will work out of the box, but it is very easy to bend it to our needs, add support for various script and style languages, like CoffeeScript, JSX, or LESS.
+Instead of implementing its own asset pipeline, Phoenix uses [Brunch](http://brunch.io), a fast and developer-friendly asset build tool. Phoenix comes with a default configuration for Brunch and it will work out of the box, but it is very easy to bend it to our needs, add support for various script and style languages, like CoffeeScript, TypeScript, or LESS.
 
 Brunch has [a very good tutorial](https://github.com/brunch/brunch-guide), but this short guide should be enough to get us started with asset management from the Phoenix perspective.
 
@@ -196,7 +196,7 @@ module.exports =
 
 Once Brunch has built our assets, reload our page, and we should see `Hello!` in the browser Javascript console, just like before.
 
-Adding support for other languages like SASS or React's JSX is as simple as this. Some plugins can be configured in `brunch-config.js`, but they will all work out of the box once installed.
+Adding support for other languages like SASS or TypeScript is as simple as this. Some plugins can be configured in `brunch-config.js`, but they will all work out of the box once installed.
 
 #### Other Things Possible With Brunch
 
