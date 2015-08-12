@@ -42,7 +42,7 @@ defmodule Phoenix.Config do
   """
   @spec cache(module, term, (module -> {:cache | :nocache, term})) :: term
   def cache(module, key, fun) do
-    case :ets.lookup(module, key) do
+    case cache_lookup(module, key) do
       [{^key, :cache, val}] -> val
       [] ->
         case fun.(module) do
@@ -53,6 +53,13 @@ defmodule Phoenix.Config do
             val
         end
     end
+  end
+
+  defp cache_lookup(module, key) do
+    :ets.lookup(module, key)
+  rescue
+    ArgumentError ->
+      raise ArgumentError, "module #{inspect module} is not started."
   end
 
   @doc """
