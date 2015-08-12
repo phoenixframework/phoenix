@@ -7,7 +7,8 @@ defmodule Phoenix.Transports.TransportTest do
 
   Application.put_env :phoenix, __MODULE__.Endpoint,
     force_ssl: [],
-    url: [host: "host.com"]
+    url: [host: "host.com"],
+    check_origin: ["//endpoint.com"]
 
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
@@ -37,18 +38,25 @@ defmodule Phoenix.Transports.TransportTest do
 
   ## Check origin
 
-  defp check_origin(origin, origins) do
+  defp check_origin(origin, opts) do
     conn = conn(:get, "/") |> put_req_header("origin", origin)
-    Transport.check_origin(conn, Endpoint, origins)
+    Transport.check_origin(conn, make_ref(), Endpoint, opts)
   end
 
   test "does not check origin if disabled" do
-    refute check_origin("/", false).halted
+    refute check_origin("/", check_origin: false).halted
   end
 
   test "checks origin against host" do
-    refute check_origin("https://host.com/", true).halted
-    conn = check_origin("https://another.com/", true)
+    refute check_origin("https://host.com/", check_origin: true).halted
+    conn = check_origin("https://another.com/", check_origin: true)
+    assert conn.halted
+    assert conn.status == 403
+  end
+
+  test "checks origin from endpoint config" do
+    refute check_origin("https://endpoint.com/", []).halted
+    conn = check_origin("https://another.com/", [])
     assert conn.halted
     assert conn.status == 403
   end
@@ -56,18 +64,26 @@ defmodule Phoenix.Transports.TransportTest do
   test "checks the origin of requests against allowed origins" do
     origins = ["//example.com", "http://scheme.com", "//port.com:81"]
 
-    refute check_origin("https://example.com/", origins).halted
-    refute check_origin("http://port.com:81/", origins).halted
+    refute check_origin("https://example.com/", check_origin: origins).halted
+    refute check_origin("http://port.com:81/", check_origin: origins).halted
 
-    conn = check_origin("http://notallowed.com/", origins)
+    conn = check_origin("http://notallowed.com/", check_origin: origins)
     assert conn.halted
     assert conn.status == 403
 
-    conn = check_origin("https://scheme.com/", origins)
+    conn = check_origin("https://scheme.com/", check_origin: origins)
     assert conn.halted
     assert conn.status == 403
 
-    conn = check_origin("http://port.com:82/", origins)
+    conn = check_origin("http://scheme.com:8080/", check_origin: origins)
+    assert conn.halted
+    assert conn.status == 403
+
+    conn = check_origin("http://port.com:82/", check_origin: origins)
+    assert conn.halted
+    assert conn.status == 403
+
+    conn = check_origin("", check_origin: origins)
     assert conn.halted
     assert conn.status == 403
   end
@@ -76,17 +92,21 @@ defmodule Phoenix.Transports.TransportTest do
 
   test "forces SSL" do
     # Halts
-    conn = Transport.force_ssl(conn(:get, "http://foo.com/"), :socket, Endpoint)
+    conn = Transport.force_ssl(conn(:get, "http://foo.com/"), make_ref(), Endpoint, [])
     assert conn.halted
     assert get_resp_header(conn, "location") == ["https://host.com/"]
 
+    # Disabled
+    conn = Transport.force_ssl(conn(:get, "http://foo.com/"), make_ref(), Endpoint, force_ssl: false)
+    refute conn.halted
+
     # No-op when already halted
-    conn = Transport.force_ssl(conn(:get, "http://foo.com/") |> halt(), :socket, Endpoint)
+    conn = Transport.force_ssl(conn(:get, "http://foo.com/") |> halt(), make_ref(), Endpoint, [])
     assert conn.halted
     assert get_resp_header(conn, "location") == []
 
     # Valid
-    conn = Transport.force_ssl(conn(:get, "https://foo.com/"), :socket, Endpoint)
+    conn = Transport.force_ssl(conn(:get, "https://foo.com/"), make_ref(), Endpoint, [])
     refute conn.halted
   end
 end

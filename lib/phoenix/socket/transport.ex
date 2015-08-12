@@ -238,24 +238,27 @@ defmodule Phoenix.Socket.Transport do
   Uses the endpoint configuration to decide so. It is a
   noop if the connection has been halted.
   """
-  def force_ssl(%Plug.Conn{halted: true} = conn, _socket, _endpoint) do
+  def force_ssl(%Plug.Conn{halted: true} = conn, _socket, _endpoint, _opts) do
     conn
   end
 
-  def force_ssl(conn, socket, endpoint) do
-    if force_ssl = force_ssl_config(socket, endpoint) do
-      Plug.SSL.call(conn, Plug.SSL.init(force_ssl))
+  def force_ssl(conn, socket, endpoint, opts) do
+    if force_ssl = force_ssl_config(socket, endpoint, opts) do
+      Plug.SSL.call(conn, force_ssl)
     else
       conn
     end
   end
 
-  defp force_ssl_config(socket, endpoint) do
+  defp force_ssl_config(socket, endpoint, opts) do
     Phoenix.Config.cache(endpoint, {:force_ssl, socket}, fn _ ->
-      {:cache,
-        if force_ssl = endpoint.config(:force_ssl) do
-          Keyword.put_new(force_ssl, :host, endpoint.config(:url)[:host] || "localhost")
-        end}
+      opts =
+        if force_ssl = Keyword.get(opts, :force_ssl, endpoint.config(:force_ssl)) do
+          force_ssl
+          |> Keyword.put_new(:host, endpoint.config(:url)[:host] || "localhost")
+          |> Plug.SSL.init()
+        end
+      {:cache, opts}
     end)
   end
 
@@ -282,14 +285,15 @@ defmodule Phoenix.Socket.Transport do
   Otherwise a otherwise a 403 Forbidden response will be sent and
   the connection halted.  It is a noop if the connection has been halted.
   """
-  def check_origin(conn, endpoint, check_origin, sender \\ &Plug.Conn.send_resp/1)
+  def check_origin(conn, handler, endpoint, opts, sender \\ &Plug.Conn.send_resp/1)
 
-  def check_origin(%Plug.Conn{halted: true} = conn, _endpoint, _check_origin, _sender),
+  def check_origin(%Plug.Conn{halted: true} = conn, _handler, _endpoint, _opts, _sender),
     do: conn
 
-  def check_origin(conn, endpoint, check_origin, sender) do
+  def check_origin(conn, handler, endpoint, opts, sender) do
     import Plug.Conn
     origin = get_req_header(conn, "origin") |> List.first
+    check_origin = check_origin_config(handler, endpoint, opts)
 
     cond do
       is_nil(origin) ->
@@ -309,15 +313,40 @@ defmodule Phoenix.Socket.Transport do
           1. update [url: [host: ...]] to your actual host in the
              config file for your current environment (recommended)
 
-          2. pass the :check_origin option when configuring
-             the transport in your UserSocket module, explicitly
-             outlining which origins are allowed:
+          2. pass the :check_origin option when configuring your
+             endpoint or when configuring the transport in your
+             UserSocket module, explicitly outlining which origins
+             are allowed:
 
-                check_origin: ["https://example.com", "//another.com"]
+                check_origin: ["https://example.com",
+                               "//another.com:888", "//other.com"]
         """
         resp(conn, :forbidden, "")
         |> sender.()
         |> halt()
+    end
+  end
+
+  defp check_origin_config(handler, endpoint, opts) do
+    Phoenix.Config.cache(endpoint, {:check_origin, handler}, fn _ ->
+      check_origin =
+        case Keyword.get(opts, :check_origin, endpoint.config(:check_origin)) do
+          origins when is_list(origins) ->
+            Enum.map(origins, &parse_origin/1)
+          boolean when is_boolean(boolean) ->
+            boolean
+        end
+      {:cache, check_origin}
+    end)
+  end
+
+  defp parse_origin(origin) do
+    case URI.parse(origin) do
+      %{host: nil} ->
+        raise ArgumentError,
+          "invalid check_origin: #{inspect origin} (expected a origin with a host)"
+      %{scheme: scheme, port: port, host: host} ->
+        {scheme, host, port}
     end
   end
 
@@ -329,14 +358,12 @@ defmodule Phoenix.Socket.Transport do
     do: origin_allowed?(origin, check_origin)
 
   defp origin_allowed?(origin, allowed_origins) do
-    origin = URI.parse(origin)
+    %{scheme: origin_scheme, host: origin_host, port: origin_port} = URI.parse(origin)
 
-    Enum.any?(allowed_origins, fn allowed ->
-      allowed = URI.parse(allowed)
-
-      compare?(origin.scheme, allowed.scheme) and
-      compare?(origin.port, allowed.port) and
-      compare?(origin.host, allowed.host)
+    Enum.any?(allowed_origins, fn {allowed_scheme, allowed_host, allowed_port} ->
+      compare?(origin_scheme, allowed_scheme) and
+      compare?(origin_port, allowed_port) and
+      compare?(origin_host, allowed_host)
     end)
   end
 

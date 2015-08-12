@@ -9,8 +9,7 @@ defmodule Phoenix.Transports.WebSocket do
       transport :websocket, Phoenix.Transports.WebSocket,
         timeout: :infinity,
         serializer: Phoenix.Transports.WebSocketSerializer,
-        transport_log: false,
-        check_origin: true
+        transport_log: false
 
     * `:timeout` - the timeout for keeping websocket connections
       open after it last received data
@@ -41,8 +40,7 @@ defmodule Phoenix.Transports.WebSocket do
   def default_config() do
     [serializer: Phoenix.Transports.WebSocketSerializer,
      timeout: :infinity,
-     transport_log: false,
-     check_origin: true]
+     transport_log: false]
   end
 
   def handlers() do
@@ -64,8 +62,8 @@ defmodule Phoenix.Transports.WebSocket do
       conn
       |> Plug.Conn.fetch_query_params
       |> Transport.transport_log(opts[:transport_log])
-      |> Transport.force_ssl(handler, endpoint)
-      |> Transport.check_origin(endpoint, opts[:check_origin])
+      |> Transport.force_ssl(handler, endpoint, opts)
+      |> Transport.check_origin(handler, endpoint, opts)
 
     case conn do
       %{halted: false} = conn ->

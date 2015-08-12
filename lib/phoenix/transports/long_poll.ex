@@ -10,7 +10,6 @@ defmodule Phoenix.Transports.LongPoll do
         window_ms: 10_000,
         pubsub_timeout_ms: 2_000,
         transport_log: false,
-        check_origin: true,
         crypto: [max_age: 1209600]
 
     * `:window_ms` - how long the client can wait for new messages
@@ -40,7 +39,6 @@ defmodule Phoenix.Transports.LongPoll do
      pubsub_timeout_ms: 2_000,
      serializer: Phoenix.Transports.LongPollSerializer,
      transport_log: false,
-     check_origin: true,
      crypto: [max_age: 1209600]]
   end
 
@@ -73,8 +71,8 @@ defmodule Phoenix.Transports.LongPoll do
     |> fetch_query_params
     |> Plug.Conn.fetch_query_params
     |> Transport.transport_log(opts[:transport_log])
-    |> Transport.force_ssl(handler, endpoint)
-    |> Transport.check_origin(endpoint, opts[:check_origin], &status_json(&1, %{}))
+    |> Transport.force_ssl(handler, endpoint, opts)
+    |> Transport.check_origin(handler, endpoint, opts, &status_json(&1, %{}))
     |> dispatch(endpoint, handler, transport, opts)
   end
 

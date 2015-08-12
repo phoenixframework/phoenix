@@ -103,6 +103,7 @@ defmodule Phoenix.Endpoint.Adapter do
      # Runtime config
      cache_static_lookup: true,
      cache_static_manifest: nil,
+     check_origin: true,
      http: false,
      https: false,
      reloadable_paths: ["web"],

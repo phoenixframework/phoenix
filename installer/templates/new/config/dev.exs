@@ -11,6 +11,7 @@ config :<%= application_name %>, <%= application_module %>.Endpoint,
   debug_errors: true,
   code_reloader: true,
   cache_static_lookup: false,
+  check_origin: false,
   watchers: <%= if brunch do %>[node: ["node_modules/brunch/bin/brunch", "watch", "--stdin"]]<% else %>[]<% end %>
 
 # Watch static and templates for browser reloading.

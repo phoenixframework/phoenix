@@ -91,6 +91,9 @@ defmodule Phoenix.Endpoint do
       "priv/static/manifest.json" which is the file automatically generated
       by `mix phoenix.digest`.
 
+    * `:check_origin` - configure transports to check origins or not. May
+      be false, true or a list of hosts that are allowed.
+
     * `:http` - the configuration for the HTTP server. Currently uses
       cowboy and accepts all options as defined by
       [`Plug.Adapters.Cowboy`](http://hexdocs.pm/plug/Plug.Adapters.Cowboy.html).

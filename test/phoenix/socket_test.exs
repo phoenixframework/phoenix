@@ -66,12 +66,11 @@ defmodule Phoenix.SocketTest do
 
   test "transport config is exposted and merged with prior registrations" do
     ws = {Phoenix.Transports.WebSocket,
-      [timeout: 1234, serializer: Phoenix.Transports.WebSocketSerializer,
-       transport_log: false, check_origin: true]}
+      [timeout: 1234, serializer: Phoenix.Transports.WebSocketSerializer, transport_log: false]}
 
     lp = {Phoenix.Transports.LongPoll,
       [window_ms: 10000, pubsub_timeout_ms: 2000, serializer: Phoenix.Transports.LongPollSerializer,
-       transport_log: false, check_origin: true, crypto: [max_age: 1209600]]}
+       transport_log: false, crypto: [max_age: 1209600]]}
 
     assert UserSocket.__transport__(:websocket) == ws
     assert UserSocket.__transport__(:longpoll) == lp
