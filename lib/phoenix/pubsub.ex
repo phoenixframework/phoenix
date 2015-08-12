@@ -53,7 +53,7 @@ defmodule Phoenix.PubSub do
 
   ## Implementing your own adapter
 
-  PubSub adapters run isnide their own supervision tree.
+  PubSub adapters run inside their own supervision tree.
   If you are interested in providing your own adapter,  let's
   call it `Phoenix.PubSub.MyQueue`, the first step is to provide
   a supervisor module that receives the server name and a bunch
