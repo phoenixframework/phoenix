@@ -64,6 +64,8 @@ defmodule Phoenix.Endpoint.RenderErrors do
   # Made public with @doc false for testing.
   @doc false
   def render(conn, kind, reason, stack, opts) do
+    opts = warn_opts(opts)
+
     case fetch_format(conn, opts) do
       %{halted: true} = conn ->
         conn
@@ -78,6 +80,16 @@ defmodule Phoenix.Endpoint.RenderErrors do
         |> put_view(opts[:view])
         |> put_status(status)
         |> render(format, %{kind: kind, reason: reason, stack: stack})
+    end
+  end
+
+  defp warn_opts(opts) do
+    if format = opts[:default_format] do
+      IO.puts :stderr, "[warning] :default_format configuration in :render_errors is deprecated, " <>
+                       "please set render_errors: [accepts: [#{inspect format}]] in your config/config.exs instead"
+      Keyword.put(opts, :accepts, [format])
+    else
+      opts
     end
   end
 
