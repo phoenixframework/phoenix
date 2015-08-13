@@ -114,9 +114,9 @@ defmodule Mix.Phoenix do
         {k, :boolean}         -> {k, true}
         {k, :map}             -> {k, %{}}
         {k, :text}            -> {k, "some content"}
-        {k, :date}            -> {k, %{year: 2010, month: 4, day: 17}}
-        {k, :time}            -> {k, %{hour: 14, min: 0}}
-        {k, :datetime}        -> {k, %{year: 2010, month: 4, day: 17, hour: 14, min: 0}}
+        {k, :date}            -> {k, "2010-04-17"}
+        {k, :time}            -> {k, "14:00:00"}
+        {k, :datetime}        -> {k, "2010-04-17 14:00:00"}
         {k, :uuid}            -> {k, "7488a646-e31f-11e4-aace-600308960662"}
         {k, _}                -> {k, "some content"}
     end)
