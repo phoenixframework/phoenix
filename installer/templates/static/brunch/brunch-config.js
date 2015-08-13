@@ -11,7 +11,7 @@ exports.config = {
       //  'js/vendor.js': /^(web\/static\/vendor)|(deps)/
       // }
       //
-      // To change the order of concatenation of files, explictly mention here
+      // To change the order of concatenation of files, explicitly mention here
       // https://github.com/brunch/brunch/tree/master/docs#concatenation
       // order: {
       //   before: [
