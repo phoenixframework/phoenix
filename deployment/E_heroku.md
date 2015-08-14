@@ -114,7 +114,7 @@ config :hello_phoenix, HelloPhoenix.Repo,
   username: "postgres",
   password: "postgres",
   database: "hello_phoenix_prod",
-  size: 20 # The amount of database connections in the pool
+  pool_size: 20
 ```
 
 becomes:
@@ -123,7 +123,7 @@ becomes:
 config :hello_phoenix, HelloPhoenix.Repo,
   adapter: Ecto.Adapters.Postgres,
   url: System.get_env("DATABASE_URL"),
-  size: 20 # The amount of database connections in the pool
+  pool_size: 20
 ```
 
 Finally, let's tell Phoenix to use our Heroku URL. Find the following:
@@ -162,12 +162,12 @@ config :hello_phoenix, HelloPhoenix.Endpoint,
 config :hello_phoenix, HelloPhoenix.Repo,
   adapter: Ecto.Adapters.Postgres,
   url: System.get_env("DATABASE_URL"),
-  size: 20 # The amount of database connections in the pool
+  pool_size: 20
 ```
 
 ## Creating Environment Variables in Heroku
 
-The `DATABASE_URL` config var is automatically created by Heroku when we add the [Heroku Postgres add-on]().
+The `DATABASE_URL` config var is automatically created by Heroku when we add the [Heroku Postgres add-on](https://addons.heroku.com/heroku-postgresq://addons.heroku.com/heroku-postgresql).
 
 We still have to create the `SECRET_KEY_BASE` config based on a random string. First, use `mix phoenix.gen.secret` to get a new secret:
 
