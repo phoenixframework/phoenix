@@ -34,6 +34,8 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
       assert_file "web/views/user_view.ex", fn file ->
         assert file =~ "defmodule Phoenix.UserView do"
         assert file =~ "use Phoenix.Web, :view"
+        assert file =~ "id: user.id"
+        assert file =~ "name: user.name"
       end
 
       assert_file "test/controllers/user_controller_test.exs", fn file ->
