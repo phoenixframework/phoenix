@@ -6,7 +6,7 @@ defmodule Phoenix.Integration.HTTPClient do
     * url - The string url, for example "http://example.com"
     * headers - The map of headers
     * body - The optional string body. If the body is a map, it is convered
-             to a URI encoded string of parameters
+      to a URI encoded string of parameters
 
   ## Examples
 
