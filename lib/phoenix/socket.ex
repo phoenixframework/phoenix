@@ -13,7 +13,7 @@ defmodule Phoenix.Socket do
   By default, Phoenix supports both websockets and longpoll transports.
   For example:
 
-      transport :websockets, Phoenix.Transports.WebSocket
+      transport :websocket, Phoenix.Transports.WebSocket
 
   The command above means incoming socket connections can be done via
   the WebSocket transport. Events are router by topic to channels:
@@ -39,7 +39,7 @@ defmodule Phoenix.Socket do
       defmodule MyApp.UserSocket do
         use Phoenix.Socket
 
-        transport :websockets, Phoenix.Transports.WebSocket
+        transport :websocket, Phoenix.Transports.WebSocket
         channel "rooms:*", MyApp.RoomChannel
 
         def connect(params, socket) do
