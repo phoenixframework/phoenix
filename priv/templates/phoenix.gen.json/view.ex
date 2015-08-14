@@ -10,6 +10,6 @@ defmodule <%= module %>View do
   end
 
   def render("<%= singular %>.json", %{<%= singular %>: <%= singular %>}) do
-    %{id: <%= singular %>.id}
+    %{<%= json_fields %>}
   end
 end
