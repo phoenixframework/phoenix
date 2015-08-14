@@ -572,8 +572,8 @@ defmodule Phoenix.Router do
     * `:path` - a string containing the path scope
     * `:as` - a string or atom containing the named helper scope
     * `:alias` - an alias (atom) containing the controller scope
-    * `:host` - a string containing the host scope, or prefix host scope, ie
-                `"foo.bar.com"`, `"foo."`
+    * `:host` - a string containing the host scope, or prefix host scope,
+      ie `"foo.bar.com"`, `"foo."`
     * `:private` - a map of private data to merge into the connection when a route matches
     * `:assigns` - a map of data to merge into the connection when a route matches
 
