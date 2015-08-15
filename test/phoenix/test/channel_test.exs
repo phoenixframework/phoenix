@@ -180,7 +180,7 @@ defmodule Phoenix.Test.ChannelTest do
   end
 
   test "pushes and broadcast messages" do
-    {:ok, _, socket} = subscribe_and_join(Channel, "foo:ok")
+    socket = subscribe_and_join!(Channel, "foo:ok")
     push socket, "broadcast", %{"foo" => "bar"}
     assert_broadcast "broadcast", %{"foo" => "bar"}
   end
@@ -188,7 +188,7 @@ defmodule Phoenix.Test.ChannelTest do
   ## handle_out
 
   test "push broadcasts by default" do
-    {:ok, _, socket} = subscribe_and_join(Channel, "foo:ok")
+    socket = subscribe_and_join!(Channel, "foo:ok")
     broadcast_from! socket, "default", %{"foo" => "bar"}
     assert_push "default", %{"foo" => "bar"}
   end
@@ -206,7 +206,7 @@ defmodule Phoenix.Test.ChannelTest do
 
   test "handles messages and stops" do
     Process.flag(:trap_exit, true)
-    {:ok, _, socket} = subscribe_and_join(Channel, "foo:ok")
+    socket = subscribe_and_join!(Channel, "foo:ok")
     pid = socket.channel_pid
     send pid, :stop
     assert_receive {:terminate, :shutdown}
@@ -214,13 +214,13 @@ defmodule Phoenix.Test.ChannelTest do
   end
 
   test "handles messages and pushes" do
-    {:ok, _, socket} = subscribe_and_join(Channel, "foo:ok")
+    socket = subscribe_and_join!(Channel, "foo:ok")
     send socket.channel_pid, :push
     assert_push "info", %{"reason" => "push"}
   end
 
   test "handles messages and broadcasts" do
-    {:ok, _, socket} = subscribe_and_join(Channel, "foo:ok")
+    socket = subscribe_and_join!(Channel, "foo:ok")
     send socket.channel_pid, :broadcast
     assert_broadcast "info", %{"reason" => "broadcast"}
   end

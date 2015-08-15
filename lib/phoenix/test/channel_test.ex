@@ -157,6 +157,21 @@ defmodule Phoenix.ChannelTest do
   end
 
   @doc """
+  Same as subscribe_and_join/3 but returns either the socket or throws an error
+
+  This is helpful when you are not testing authentication and just need the
+  socket.
+  """
+  defmacro subscribe_and_join!(channel, topic, payload \\ Macro.escape(%{})) do
+    quote do
+      case subscribe_and_join(@endpoint, unquote(channel), unquote(topic), unquote(payload)) do
+        {:ok, _, socket} -> socket
+        {:error, error} -> raise "Could not join channel. Got error: #{inspect(error)}"
+      end
+    end
+  end
+
+  @doc """
   Subscribes to the given topic and joins the channel
   under the given topic and payload.
 
