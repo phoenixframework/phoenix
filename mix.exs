@@ -31,7 +31,7 @@ defmodule Phoenix.Mixfile do
 
   defp deps do
     [{:cowboy, "~> 1.0", optional: true},
-     {:plug, "~> 0.14 or ~> 1.0"},
+     {:plug, "~> 1.0"},
      {:poison, "~> 1.3"},
 
      # Docs dependencies
