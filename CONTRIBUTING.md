@@ -137,11 +137,12 @@ in order to craft an excellent pull request:
    git remote add upstream https://github.com/phoenixframework/phoenix
    ```
 
-2. If you cloned a while ago, get the latest changes from upstream:
+2. If you cloned a while ago, get the latest changes from upstream, and update your fork:
 
    ```bash
    git checkout master
    git pull upstream master
+   git push
    ```
 
 3. Create a new topic branch (off of `master`) to contain your feature, change,
