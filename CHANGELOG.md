@@ -12,6 +12,10 @@
 * Deprecations
   * [Endpoint] `render_errors: [default_format: "html"]` is deprecated in favor of `render_errors: [accepts: ["html"]]`
 
+* Backward incompatible changes
+  * [Controller] - The "format" param for overriding the accept header has been renamed to "_format" and is no longer injected into the params when parsing the Accept headers. Use `get_format/1` to access the negotiated format.
+
+
 ## v0.16.1 (2015-8-6)
 
 * JavaScript client bug fixes

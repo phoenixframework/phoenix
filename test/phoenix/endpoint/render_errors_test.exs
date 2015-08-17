@@ -132,8 +132,8 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
     assert conn.resp_body == "Got 500 from exit with GET"
   end
 
-  test "exception page with params format" do
-    conn = render(conn(:get, "/", [format: "text"]), [], fn ->
+  test "exception page with params _format" do
+    conn = render(conn(:get, "/", [_format: "text"]), [], fn ->
       throw :hello
     end)
 

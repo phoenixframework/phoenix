@@ -469,8 +469,8 @@ defmodule Phoenix.Controller do
     * `conn` - the `Plug.Conn` struct
 
     * `template` - which may be an atom or a string. If an atom, like `:index`,
-      it will render a template with the same format as the one found in
-      `conn.params["format"]`. For example, for an HTML request, it will render
+      it will render a template with the same format as the one returned by
+      `get_format/1`. For example, for an HTML request, it will render
       the "index.html" template. If the template is a string, it must contain
       the extension too, like "index.json"
 
@@ -560,8 +560,8 @@ defmodule Phoenix.Controller do
   def render(conn, template, assigns)
     when is_atom(template) and is_list(assigns) do
     format =
-      conn.params["format"] ||
-      raise "cannot render template #{inspect template} because conn.params[\"format\"] is not set. " <>
+      get_format(conn) ||
+      raise "cannot render template #{inspect template} because conn.params[\"_format\"] is not set. " <>
             "Please set `plug :accepts, %w(html json ...)` in your pipeline."
     do_render(conn, template_name(template, format), format, assigns)
   end
@@ -602,6 +602,20 @@ defmodule Phoenix.Controller do
     data = Phoenix.View.render_to_iodata(view, template,
                                          Map.put(conn.assigns, :conn, conn))
     send_resp(conn, conn.status || 200, content_type, data)
+  end
+
+  @doc """
+  Puts the format in the connection.
+
+  See `get_format/1` for retrieval
+  """
+  def put_format(conn, format), do: put_private(conn, :phoenix_format, format)
+
+  @doc """
+  Returns the request format, such as "json", "html".
+  """
+  def get_format(conn) do
+    conn.private[:phoenix_format] || conn.params["_format"]
   end
 
   @doc """
@@ -754,9 +768,9 @@ defmodule Phoenix.Controller do
   negotiation based on the request information. If the client
   accepts any of the given formats, the request proceeds.
 
-  If the request contains a "format" parameter, it is
+  If the request contains a "_format" parameter, it is
   considered to be the format desired by the client. If no
-  "format" parameter is available, this function will parse
+  "_format" parameter is available, this function will parse
   the "accept" header and find a matching format accordingly.
 
   It is important to notice that browsers have historically
@@ -786,7 +800,7 @@ defmodule Phoenix.Controller do
   """
   @spec accepts(Plug.Conn.t, [binary]) :: Plug.Conn.t | no_return
   def accepts(conn, [_|_] = accepted) do
-    case Map.fetch conn.params, "format" do
+    case Map.fetch(conn.params, "_format") do
       {:ok, format} ->
         handle_params_accept(conn, format, accepted)
       :error ->
@@ -796,7 +810,7 @@ defmodule Phoenix.Controller do
 
   defp handle_params_accept(conn, format, accepted) do
     if format in accepted do
-      conn
+      put_format(conn, format)
     else
       Logger.debug "Unknown format #{inspect format} in plug :accepts, " <>
                    "expected one of #{inspect accepted}"
@@ -807,7 +821,7 @@ defmodule Phoenix.Controller do
   # In case there is no accept header or the header is */*
   # we use the first format specified in the accepts list.
   defp handle_header_accept(conn, header, [first|_]) when header == [] or header == ["*/*"] do
-    accept(conn, first)
+    put_format(conn, first)
   end
 
   # In case there is a header, we need to parse it.
@@ -815,7 +829,7 @@ defmodule Phoenix.Controller do
   # we unfortunately need to assume it is a browser sending us a request.
   defp handle_header_accept(conn, [header|_], accepted) do
     if header =~ "*/*" and "html" in accepted do
-      accept(conn, "html")
+      put_format(conn, "html")
     else
       parse_header_accept(conn, String.split(header, ","), [], accepted)
     end
@@ -828,7 +842,7 @@ defmodule Phoenix.Controller do
         q    = parse_q(args)
 
         if q === 1.0 && (format = find_format(exts, accepted)) do
-          accept(conn, format)
+          put_format(conn, format)
         else
           parse_header_accept(conn, t, [{-q, exts}|acc], accepted)
         end
@@ -846,7 +860,7 @@ defmodule Phoenix.Controller do
 
   defp parse_header_accept(conn, {_, exts}, accepted) do
     if format = find_format(exts, accepted) do
-      accept(conn, format)
+      put_format(conn, format)
     end
   end
 
@@ -867,10 +881,6 @@ defmodule Phoenix.Controller do
 
   defp find_format("*/*", accepted), do: Enum.fetch!(accepted, 0)
   defp find_format(exts, accepted),  do: Enum.find(exts, &(&1 in accepted))
-
-  defp accept(conn, format) do
-    put_in conn.params["format"], format
-  end
 
   defp refuse(conn, accepted) do
     Logger.debug "No supported media type in accept header in plug :accepts, " <>

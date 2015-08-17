@@ -64,6 +64,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
   # Made public with @doc false for testing.
   @doc false
   def render(conn, kind, reason, stack, opts) do
+    conn = fetch_query_params(conn)
     opts = warn_opts(opts)
 
     case fetch_format(conn, opts) do
@@ -71,7 +72,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
         conn
       conn ->
         reason = Exception.normalize(kind, reason, stack)
-        format = conn.params["format"]
+        format = get_format(conn)
         status = status(kind, reason)
         format = "#{status}.#{format}"
 
@@ -105,8 +106,8 @@ defmodule Phoenix.Endpoint.RenderErrors do
   end
 
   defp fetch_format(conn, opts) do
-    case conn.params do
-      %{"format" => format} when is_binary(format) -> conn
+    case get_format(conn) do
+      format when is_binary(format) -> conn
       _ -> conn |> fetch_query_params |> accepts(Keyword.fetch!(opts, :accepts))
     end
   end

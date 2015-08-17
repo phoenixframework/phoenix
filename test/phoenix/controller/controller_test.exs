@@ -260,59 +260,72 @@ defmodule Phoenix.Controller.ControllerTest do
     |> put_req_header("accept", header)
   end
 
-  test "accepts/2 uses params[:format] when available" do
-    conn = accepts conn(:get, "/", format: "json"), ~w(json)
-    assert conn.params["format"] == "json"
+  test "accepts/2 uses params[\"_format\"] when available" do
+    conn = accepts conn(:get, "/", _format: "json"), ~w(json)
+    assert get_format(conn) == "json"
+    assert conn.params["_format"] == "json"
 
-    conn = accepts conn(:get, "/", format: "json"), ~w(html)
+    conn = accepts conn(:get, "/", _format: "json"), ~w(html)
     assert conn.status == 406
     assert conn.halted
   end
 
   test "accepts/2 uses first accepts on empty or catch-all header" do
     conn = accepts conn(:get, "/", []), ~w(json)
-    assert conn.params["format"] == "json"
+    assert get_format(conn) == "json"
+    assert conn.params["_format"] == nil
 
     conn = accepts with_accept("*/*"), ~w(json)
-    assert conn.params["format"] == "json"
+    assert get_format(conn) == "json"
+    assert conn.params["_format"] == nil
   end
 
   test "accepts/2 on non-empty */*" do
     # Fallbacks to HTML due to browsers behavior
     conn = accepts with_accept("application/json, */*"), ~w(html json)
-    assert conn.params["format"] == "html"
+    assert get_format(conn) == "html"
+    assert conn.params["_format"] == nil
 
     conn = accepts with_accept("*/*, application/json"), ~w(html json)
-    assert conn.params["format"] == "html"
+    assert get_format(conn) == "html"
+    assert conn.params["_format"] == nil
 
     # No HTML is treated normally
     conn = accepts with_accept("*/*, text/plain, application/json"), ~w(json text)
-    assert conn.params["format"] == "json"
+    assert get_format(conn) == "json"
+    assert conn.params["_format"] == nil
 
     conn = accepts with_accept("text/plain, application/json, */*"), ~w(json text)
-    assert conn.params["format"] == "text"
+    assert get_format(conn) == "text"
+    assert conn.params["_format"] == nil
   end
 
   test "accepts/2 ignores invalid media types" do
     conn = accepts with_accept("foo/bar, bar baz, application/json"), ~w(html json)
-    assert conn.params["format"] == "json"
+    assert get_format(conn) == "json"
+    assert conn.params["_format"] == nil
   end
 
   test "accepts/2 considers q params" do
     conn = accepts with_accept("text/html; q=0.7, application/json"), ~w(html json)
-    assert conn.params["format"] == "json"
+    assert get_format(conn) == "json"
+    assert conn.params["_format"] == nil
 
     conn = accepts with_accept("application/json, text/html; q=0.7"), ~w(html json)
-    assert conn.params["format"] == "json"
+    assert get_format(conn) == "json"
+    assert conn.params["_format"] == nil
 
     conn = accepts with_accept("application/json; q=1.0, text/html; q=0.7"), ~w(html json)
-    assert conn.params["format"] == "json"
+    assert get_format(conn) == "json"
+    assert conn.params["_format"] == nil
 
     conn = accepts with_accept("application/json; q=0.8, text/html; q=0.7"), ~w(html json)
-    assert conn.params["format"] == "json"
+    assert get_format(conn) == "json"
+    assert conn.params["_format"] == nil
 
     conn = accepts with_accept("text/html; q=0.7, application/json; q=0.8"), ~w(html json)
-    assert conn.params["format"] == "json"
+    assert get_format(conn) == "json"
+    assert conn.params["_format"] == nil
 
     conn = accepts with_accept("text/html; q=0.7, application/json; q=0.8"), ~w(xml)
     assert conn.halted
