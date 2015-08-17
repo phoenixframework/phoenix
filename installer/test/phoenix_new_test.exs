@@ -75,6 +75,9 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       refute File.exists? "photo_blog/priv/static/js/phoenix.js"
       refute File.exists? "photo_blog/priv/static/js/app.js"
 
+      assert File.exists?("photo_blog/web/static/vendor")
+      refute File.exists?("photo_blog/web/static/vendor/.keep")
+
       # Ecto
       config = ~r/config :photo_blog, PhotoBlog.Repo,/
       assert_file "photo_blog/mix.exs", ~r"{:phoenix_ecto,"

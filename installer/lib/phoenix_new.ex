@@ -33,6 +33,7 @@ defmodule Mix.Tasks.Phoenix.New do
     {:eex,  "new/web/views/layout_view.ex",                  "web/views/layout_view.ex"},
     {:eex,  "new/web/views/page_view.ex",                    "web/views/page_view.ex"},
     {:eex,  "new/web/router.ex",                             "web/router.ex"},
+    {:keep, "new/web/static/vendor",                         "web/static/vendor"},
     {:eex,  "new/web/web.ex",                                "web/web.ex"},
     {:eex,  "new/mix.exs",                                   "mix.exs"},
     {:eex,  "new/README.md",                                 "README.md"},
