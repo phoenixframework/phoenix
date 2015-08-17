@@ -414,7 +414,7 @@ defmodule Mix.Tasks.Phoenix.New do
     relative = Path.relative_to(absolute, @phoenix)
 
     if absolute == relative do
-      Mix.raise "--dev version must be inside Phoenix directory"
+      Mix.raise "--dev project must be inside Phoenix directory"
     end
 
     relative
