@@ -607,7 +607,7 @@ defmodule Phoenix.Controller do
   @doc """
   Puts the format in the connection.
 
-  See `get_format/1` for retrieval
+  See `get_format/1` for retrieval.
   """
   def put_format(conn, format), do: put_private(conn, :phoenix_format, format)
 
