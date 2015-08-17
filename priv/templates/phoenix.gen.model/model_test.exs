@@ -3,16 +3,16 @@ defmodule <%= module %>Test do
 
   alias <%= module %>
 
-  @valid_attrs <%= inspect params %>
-  @invalid_attrs %{}
+  @valid_params <%= inspect params %>
+  @invalid_params %{}
 
   test "changeset with valid attributes" do
-    changeset = <%= alias %>.changeset(%<%= alias %>{}, @valid_attrs)
+    changeset = <%= alias %>.changeset(%<%= alias %>{}, @valid_params)
     assert changeset.valid?
   end
 
   test "changeset with invalid attributes" do
-    changeset = <%= alias %>.changeset(%<%= alias %>{}, @invalid_attrs)
+    changeset = <%= alias %>.changeset(%<%= alias %>{}, @invalid_params)
     refute changeset.valid?
   end
 end

@@ -32,7 +32,8 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
     path    = binding[:path]
     route   = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
     binding = binding ++ [plural: plural, route: route, json_fields: json_fields(binding, attrs),
-                          params: Mix.Phoenix.params(attrs)]
+                          params: Mix.Phoenix.params(attrs),
+                          expected_attrs: Mix.Phoenix.expected_attrs(attrs)]
 
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Controller")
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "View")

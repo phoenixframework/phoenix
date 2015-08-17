@@ -79,8 +79,9 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
         assert file =~ "defmodule Phoenix.UserControllerTest"
         assert file =~ "use Phoenix.ConnCase"
 
-        assert file =~ ~S|@valid_attrs %{age: 42|
-        assert file =~ ~S|@invalid_attrs %{}|
+        assert file =~ ~S|@valid_params %{"age" => 42|
+        assert file =~ ~S|@expected_attrs %{age: 42|
+        assert file =~ ~S|@invalid_params %{}|
         refute file =~ ~S|address_id: nil|
 
         assert file =~ ~S|test "lists all entries on index"|
@@ -92,12 +93,12 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
         assert file =~ ~S|assert html_response(conn, 200) =~ "New user"|
 
         assert file =~ ~S|test "creates resource and redirects when data is valid"|
-        assert file =~ ~S|conn = post conn, user_path(conn, :create), user: @valid_attrs|
+        assert file =~ ~S|conn = post conn, user_path(conn, :create), user: @valid_params|
         assert file =~ ~S|assert redirected_to(conn) == user_path(conn, :index)|
-        assert file =~ ~r/creates.*when data is valid.*?assert Repo\.get_by\(User, @valid_attrs\).*?end/s
+        assert file =~ ~r/creates.*when data is valid.*?assert Repo\.get_by\(User, @expected_attrs\).*?end/s
 
         assert file =~ ~S|test "does not create resource and renders errors when data is invalid"|
-        assert file =~ ~S|conn = post conn, user_path(conn, :create), user: @invalid_attrs|
+        assert file =~ ~S|conn = post conn, user_path(conn, :create), user: @invalid_params|
 
         assert file =~ ~S|test "shows chosen resource"|
         assert file =~ ~S|user = Repo.insert! %User{}|
@@ -107,11 +108,11 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
         assert file =~ ~S|assert html_response(conn, 200) =~ "Edit user"|
 
         assert file =~ ~S|test "updates chosen resource and redirects when data is valid"|
-        assert file =~ ~S|conn = put conn, user_path(conn, :update, user), user: @valid_attrs|
-        assert file =~ ~r/updates.*when data is valid.*?assert Repo\.get_by\(User, @valid_attrs\).*?end/s
+        assert file =~ ~S|conn = put conn, user_path(conn, :update, user), user: @valid_params|
+        assert file =~ ~r/updates.*when data is valid.*?assert Repo\.get_by\(User, @expected_attrs\).*?end/s
 
         assert file =~ ~S|test "does not update chosen resource and renders errors when data is invalid"|
-        assert file =~ ~S|conn = put conn, user_path(conn, :update, user), user: @invalid_attrs|
+        assert file =~ ~S|conn = put conn, user_path(conn, :update, user), user: @invalid_params|
 
         assert file =~ ~S|test "deletes chosen resource"|
         assert file =~ ~S|conn = delete conn, user_path(conn, :delete, user)|

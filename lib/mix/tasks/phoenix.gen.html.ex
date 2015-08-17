@@ -33,7 +33,8 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
     path    = binding[:path]
     route   = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
     binding = binding ++ [plural: plural, route: route, attrs: attrs,
-                          inputs: inputs(attrs), params: Mix.Phoenix.params(attrs)]
+                          inputs: inputs(attrs), params: Mix.Phoenix.params(attrs),
+                          expected_attrs: Mix.Phoenix.expected_attrs(attrs)]
 
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Controller")
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "View")
