@@ -67,7 +67,7 @@ The "get/2" function gives us a connection struct set up as if it had been used 
 
 The assertion actually tests three things - that we got an HTML response (by checking for a content-type of "text/html"), that our response code was 200, and that the body of our response matched the string "Welcome to Phoenix!"
 
-The error view test case, `test/views/error_view_test.exs`, illustrates a few interesting things of it's own.
+The error view test case, `test/views/error_view_test.exs`, illustrates a few interesting things of its own.
 
 ```elixir
 defmodule HelloPhoenix.ErrorViewTest do
