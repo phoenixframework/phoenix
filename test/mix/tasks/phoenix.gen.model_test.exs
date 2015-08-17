@@ -56,12 +56,12 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
         assert file =~ "defmodule Phoenix.UserTest"
         assert file =~ "use Phoenix.ModelCase"
 
-        assert file =~ ~S|@valid_attrs %{age: 42|
-        assert file =~ ~S|changeset(%User{}, @valid_attrs)|
+        assert file =~ ~S|@valid_params %{"age" => 42|
+        assert file =~ ~S|changeset(%User{}, @valid_params)|
         assert file =~ ~S|assert changeset.valid?|
 
-        assert file =~ ~S|@invalid_attrs %{}|
-        assert file =~ ~S|changeset(%User{}, @invalid_attrs)|
+        assert file =~ ~S|@invalid_params %{}|
+        assert file =~ ~S|changeset(%User{}, @invalid_params)|
         assert file =~ ~S|refute changeset.valid?|
       end
     end

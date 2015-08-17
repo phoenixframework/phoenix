@@ -2,8 +2,9 @@ defmodule <%= module %>ControllerTest do
   use <%= base %>.ConnCase
 
   alias <%= module %>
-  @valid_attrs <%= inspect params %>
-  @invalid_attrs %{}
+  @valid_params <%= inspect params %>
+  @expected_attrs <%= inspect expected_attrs %>
+  @invalid_params %{}
 
   setup do
     conn = conn()
@@ -21,13 +22,13 @@ defmodule <%= module %>ControllerTest do
   end
 
   test "creates resource and redirects when data is valid", %{conn: conn} do
-    conn = post conn, <%= singular %>_path(conn, :create), <%= singular %>: @valid_attrs
+    conn = post conn, <%= singular %>_path(conn, :create), <%= singular %>: @valid_params
     assert redirected_to(conn) == <%= singular %>_path(conn, :index)
-    assert Repo.get_by(<%= alias %>, @valid_attrs)
+    assert Repo.get_by(<%= alias %>, @expected_attrs)
   end
 
   test "does not create resource and renders errors when data is invalid", %{conn: conn} do
-    conn = post conn, <%= singular %>_path(conn, :create), <%= singular %>: @invalid_attrs
+    conn = post conn, <%= singular %>_path(conn, :create), <%= singular %>: @invalid_params
     assert html_response(conn, 200) =~ "New <%= singular %>"
   end
 
@@ -51,14 +52,14 @@ defmodule <%= module %>ControllerTest do
 
   test "updates chosen resource and redirects when data is valid", %{conn: conn} do
     <%= singular %> = Repo.insert! %<%= alias %>{}
-    conn = put conn, <%= singular %>_path(conn, :update, <%= singular %>), <%= singular %>: @valid_attrs
+    conn = put conn, <%= singular %>_path(conn, :update, <%= singular %>), <%= singular %>: @valid_params
     assert redirected_to(conn) == <%= singular %>_path(conn, :show, <%= singular %>)
-    assert Repo.get_by(<%= alias %>, @valid_attrs)
+    assert Repo.get_by(<%= alias %>, @expected_attrs)
   end
 
   test "does not update chosen resource and renders errors when data is invalid", %{conn: conn} do
     <%= singular %> = Repo.insert! %<%= alias %>{}
-    conn = put conn, <%= singular %>_path(conn, :update, <%= singular %>), <%= singular %>: @invalid_attrs
+    conn = put conn, <%= singular %>_path(conn, :update, <%= singular %>), <%= singular %>: @invalid_params
     assert html_response(conn, 200) =~ "Edit <%= singular %>"
   end
 

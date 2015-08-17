@@ -106,6 +106,7 @@ defmodule Mix.Phoenix do
         {_, {:references, _}} -> true
         {_, _} -> false
        end)
+    |> Enum.map(fn({k, v}) -> {Atom.to_string(k), v} end)
     |> Enum.into(%{}, fn
         {k, {:array, _}}      -> {k, []}
         {k, :integer}         -> {k, 42}
@@ -120,6 +121,15 @@ defmodule Mix.Phoenix do
         {k, :uuid}            -> {k, "7488a646-e31f-11e4-aace-600308960662"}
         {k, _}                -> {k, "some content"}
     end)
+  end
+
+  @doc """
+  Generates some sample expected attributes based on sample params.
+  """
+  def expected_attrs(attrs) do
+    for {k, v} <- params(attrs), into: %{} do
+      {String.to_atom(k), v}
+    end
   end
 
   @doc """
