@@ -1,4 +1,12 @@
-Most web applications today need some form of data storage. In the Elixir ecosystem, we have Ecto to enable this. Ecto currently has adapters for the PostgreSQL and MySQL relational databases. More adapters will likely follow in the future. Newly generated Phoenix applications integrate both Ecto and the Postgrex adapter by default.
+Most web applications today need some form of data storage. In the Elixir ecosystem, we have Ecto to enable this. Ecto currently has adapters for the following databases:
+
+* PostgreSQL
+* MySQL
+* MSSQL
+* SQLite3
+* (coming soon) MongoDB
+
+Newly generated Phoenix applications integrate both Ecto and the PostgreSQL adapter by default.
 
 This guide assumes that we have generated our new application with Ecto. If we're using an older Phoenix app, or we used the `--no-ecto` option to generate our application, all is not lost. Please follow the instructions in the "Integrating Ecto into an Existing Application" section below.
 
