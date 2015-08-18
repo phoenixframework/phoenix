@@ -13,8 +13,8 @@
   * [Endpoint] `render_errors: [default_format: "html"]` is deprecated in favor of `render_errors: [accepts: ["html"]]`
 
 * Backward incompatible changes
-  * [Controller] - The "format" param for overriding the accept header has been renamed to "_format" and is no longer injected into the params when parsing the Accept headers. Use `get_format/1` to access the negotiated format.
-
+  * [Controller] The "format" param for overriding the accept header has been renamed to "_format" and is no longer injected into the params when parsing the Accept headers. Use `get_format/1` to access the negotiated format.
+  * [ChannelTest] In order to test channels, one must now explicitly create a socket and pass it to `subscribe_and_join`. For example, `subscribe_and_join(MyChannel, "my_topic")` should now become `socket() |> subscribe_and_join(MyChannel, "my_topic")` or `socket("user:id", %{user_id: 13}) |> subscribe_and_join(MyChannel, "my_topic")`.
 
 ## v0.16.1 (2015-8-6)
 

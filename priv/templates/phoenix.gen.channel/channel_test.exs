@@ -4,7 +4,10 @@ defmodule <%= module %>ChannelTest do
   alias <%= module %>Channel
 
   setup do
-    {:ok, _, socket} = subscribe_and_join(<%= scoped %>Channel, "<%= plural %>:lobby")
+    {:ok, _, socket} =
+      socket("user_id", %{some: :assign})
+      |> subscribe_and_join(<%= scoped %>Channel, "<%= plural %>:lobby")
+
     {:ok, socket: socket}
   end
 
