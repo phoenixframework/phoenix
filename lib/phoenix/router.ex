@@ -497,26 +497,6 @@ defmodule Phoenix.Router do
     add_resources path, controller, [], do: nil
   end
 
-  @doc false
-  defmacro resource(path, controller, opts, do: nested_context) do
-    add_resource __CALLER__, path, controller, opts, do: nested_context
-  end
-
-  @doc false
-  defmacro resource(path, controller, do: nested_context) do
-    add_resource __CALLER__, path, controller, [], do: nested_context
-  end
-
-  @doc false
-  defmacro resource(path, controller, opts) do
-    add_resource __CALLER__, path, controller, opts, do: nil
-  end
-
-  @doc false
-  defmacro resource(path, controller) do
-    add_resource __CALLER__, path, controller, [], do: nil
-  end
-
   defp add_resources(path, controller, options, do: context) do
     scope =
       if context do
@@ -527,26 +507,6 @@ defmodule Phoenix.Router do
 
     quote do
       resource = Resource.build(unquote(path), unquote(controller), unquote(options))
-      var!(add_resources, Phoenix.Router).(resource)
-      unquote(scope)
-    end
-  end
-
-  defp add_resource(caller, path, controller, options, do: context) do
-    stacktrace = caller |> Macro.Env.stacktrace |> Exception.format_stacktrace
-    IO.write :stderr, "[warning] resource/4 in Phoenix router is deprecated, please use " <>
-      "resources/3 with the singleton option instead.\n" <> stacktrace
-
-    scope =
-      if context do
-        quote do
-          scope resource.member, do: unquote(context)
-        end
-      end
-
-    quote do
-      resource = Resource.build(unquote(path), unquote(controller),
-                                Keyword.put(unquote(options), :singleton, true))
       var!(add_resources, Phoenix.Router).(resource)
       unquote(scope)
     end

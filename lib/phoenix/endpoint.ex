@@ -409,18 +409,7 @@ defmodule Phoenix.Endpoint do
   @doc """
   Stores a plug to be executed as part of the pipeline.
   """
-  defmacro plug(plug, opts \\ [])
-
-  defmacro plug(:router, router) do
-    IO.write "[warning] calling \"plug :router, YourApp.Router\" in your endpoint is deprecated, " <>
-             "plug your router directly instead: \"plug YourApp.Router\"\n" <>
-             Exception.format_stacktrace Macro.Env.stacktrace(__CALLER__)
-    quote do
-      @plugs {unquote(router), [], true}
-    end
-  end
-
-  defmacro plug(plug, opts) do
+  defmacro plug(plug, opts \\ []) do
     quote do
       @plugs {unquote(plug), unquote(opts), true}
     end

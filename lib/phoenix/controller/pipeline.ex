@@ -114,18 +114,9 @@ defmodule Phoenix.Controller.Pipeline do
   @doc false
   defmacro __before_compile__(env) do
     action = {:action, [], true}
-    plugs  = Module.get_attribute(env.module, :plugs)
-
-    plugs =
-      if action in plugs do
-        IO.puts :stderr, "[deprecated] plug :action is no longer required in controllers, " <>
-                         "please remove it from #{inspect env.module}"
-        plugs
-      else
-        [action|plugs]
-      end
-
+    plugs  = [action|Module.get_attribute(env.module, :plugs)]
     {conn, body} = Plug.Builder.compile(env, plugs, log_on_halt: :debug)
+
     quote do
       defp phoenix_controller_pipeline(unquote(conn), var!(action)) do
         var!(conn) = unquote(conn)
