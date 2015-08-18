@@ -151,7 +151,7 @@ use Mix.Config
 
 config :hello_phoenix, HelloPhoenix.Endpoint,
   http: [port: System.get_env("PORT")],
-  url: [host: "mysterious-meadow-6277.heroku.com", port: 80],
+  url: [scheme: "https", host: "mysterious-meadow-6277.heroku.com", port: 443],
   cache_static_manifest: "priv/static/manifest.json"
 
 config :logger, level: :info
@@ -182,12 +182,6 @@ Now set it in Heroku:
 $ heroku config:set SECRET_KEY_BASE="A_LONG_STRING_WILL_BE_PRINTED"
 Setting config vars and restarting mysterious-meadow-6277... done, v3
 SECRET_KEY_BASE: my_secret_key_base
-```
-
-There's one last thing to think about before we deploy. We created our application via the command line, and we accepted the application name that Heroku generated for us. If we had specified a custom application name, we would also need to define the `HOST` and `PORT` configuration in order to deploy our app.
-
-```console
-$ heroku config:set HOST=our-custom-app-name.herokuapp.com PORT=80
 ```
 
 ## Deploy Time!
