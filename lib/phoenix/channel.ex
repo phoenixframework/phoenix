@@ -159,12 +159,16 @@ defmodule Phoenix.Channel do
   `{:shutdown, :left}`. Similarly, if we are terminating because the
   client connection was closed, the reason will be `{:shutdown, :closed}`.
 
-  If any of the callbacks return a stop tuple, that will also trigger
-  terminate, with the given reason.
+  If any of the callbacks return a `:stop` tuple, it will also
+  trigger terminate with the reason given in the tuple.
 
-  Note `terminate/2` will be invoked in case of errors or exits only if
-  the current process is trapping exits. This practice, however, is
-  typically not recommended.
+  `terminate/2`, however, won't be invoked in case of errors nor in
+  case of exits. This is the same behaviour as you find in Elixir
+  abstractions like `GenServer` and others. Typically speaking, if you
+  want to clean something up, it is better to monitor your channel
+  process and do the clean up from another process.  Similar to GenServer,
+  it would also be possible `:trap_exit` to guarantee that `terminate/2`
+  is invoked. This practice is not encouraged though.
   """
 
   use Behaviour
