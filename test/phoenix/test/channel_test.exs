@@ -24,6 +24,7 @@ defmodule Phoenix.Test.ChannelTest do
     end
 
     def join("foo:socket", _, socket) do
+      socket = assign(socket, :hello, :world)
       {:ok, socket, socket}
     end
 
@@ -112,6 +113,7 @@ defmodule Phoenix.Test.ChannelTest do
     assert socket.transport == Phoenix.ChannelTest
     assert socket.transport_pid == self()
     assert socket.serializer == Phoenix.ChannelTest.NoopSerializer
+    assert socket.assigns == %{hello: :world}
     assert %{socket | joined: true} == client
 
     {:links, links} = Process.info(self(), :links)

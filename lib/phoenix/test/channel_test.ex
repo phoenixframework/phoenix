@@ -246,7 +246,7 @@ defmodule Phoenix.ChannelTest do
 
     case Server.join(socket, payload) do
       {:ok, reply, pid} ->
-        {:ok, reply, %{socket | channel_pid: pid, joined: true}}
+        {:ok, reply, Server.socket(pid)}
       {:error, _} = error ->
         error
     end

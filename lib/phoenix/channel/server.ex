@@ -53,6 +53,13 @@ defmodule Phoenix.Channel.Server do
     end
   end
 
+  @doc """
+  Gets the socket from the channel.
+  """
+  def socket(pid) do
+    GenServer.call(pid, :socket)
+  end
+
   ## Channel API
 
   @doc """
@@ -177,6 +184,11 @@ defmodule Phoenix.Channel.Server do
   end
 
   @doc false
+  def handle_call(:socket, _from, socket) do
+    {:reply, socket, socket}
+  end
+
+  @doc false
   def handle_cast(:close, socket) do
     handle_result({:stop, {:shutdown, :closed}, socket}, :handle_in)
   end
@@ -216,7 +228,6 @@ defmodule Phoenix.Channel.Server do
   def terminate(reason, socket) do
     socket.channel.terminate(reason, socket)
   end
-
 
   ## Handle results
 
