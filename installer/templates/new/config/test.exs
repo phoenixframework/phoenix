@@ -8,3 +8,6 @@ config :<%= application_name %>, <%= application_module %>.Endpoint,
 
 # Print only warnings and errors during test
 config :logger, level: :warn
+
+# Set a higher stacktrace during test
+config :phoenix, :stacktrace_depth, 20

@@ -22,7 +22,8 @@ defmodule Phoenix.Mixfile do
   def application do
     [mod: {Phoenix, []},
      applications: [:plug, :poison, :logger, :eex],
-     env: [template_engines: [],
+     env: [stacktrace_depth: nil,
+           template_engines: [],
            format_encoders: [],
            filter_parameters: ["password"],
            serve_endpoints: false,
