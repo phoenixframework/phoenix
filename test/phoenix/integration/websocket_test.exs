@@ -175,10 +175,12 @@ defmodule Phoenix.Integration.WebSocketTest do
 
   test "refuses unallowed origins" do
     capture_log fn ->
-      assert {:ok, _} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket",
-                                                   [{"origin", "https://example.com"}])
-      refute {:ok, _} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket",
-                                                   [{"origin", "http://notallowed.com"}])
+      assert {:ok, _} =
+        WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket",
+                                          [{"origin", "https://example.com"}])
+      assert {:error, {403, _}} =
+        WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket",
+                                         [{"origin", "http://notallowed.com"}])
     end
   end
 
