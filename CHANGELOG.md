@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.16.2
+## v0.17.0-dev
 
 * Enhancements
   * [Endpoint] Allow `check_origin` and `force_ssl` to be config in transports and fallback to endpoint config
