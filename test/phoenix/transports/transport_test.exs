@@ -109,4 +109,8 @@ defmodule Phoenix.Transports.TransportTest do
     conn = Transport.force_ssl(conn(:get, "https://foo.com/"), make_ref(), Endpoint, [])
     refute conn.halted
   end
+
+  test "provides the protocol version" do
+    assert Version.match?(Transport.protocol_version(), "~> 1.0")
+  end
 end

@@ -91,6 +91,12 @@ defmodule Phoenix.Socket.Transport do
   However, a client can be implemented for other protocols and encodings by
   abiding by the `Phoenix.Socket.Message` format.
 
+  ## Protocol Versioning
+
+  Clients are expected to send the Channel Transport protocol version that they
+  expect to be talking to. The version can be retrieved on the server from
+  `Phoenix.Channel.Transport.protocol_version/0`. If no version is provided, the
+  Transport adapters should default to assume a `"1.0.0"` version number.
   See `web/static/js/phoenix.js` for an example transport client
   implementation.
   """
@@ -100,6 +106,9 @@ defmodule Phoenix.Socket.Transport do
   alias Phoenix.Socket
   alias Phoenix.Socket.Message
   alias Phoenix.Socket.Reply
+
+  @protocol_version "1.0.0"
+  @client_vsn_requirements "~> 1.0"
 
   @doc """
   Provides a keyword list of default configuration for socket transports.
@@ -112,6 +121,11 @@ defmodule Phoenix.Socket.Transport do
   defcallback handlers() :: map
 
   @doc """
+  Returns the Channel Transport protocol version.
+  """
+  def protocol_version, do: @protocol_version
+
+  @doc """
   Handles the socket connection.
 
   It builds a new `Phoenix.Socket` and invokes the handler
@@ -121,6 +135,17 @@ defmodule Phoenix.Socket.Transport do
   topic from the `id/1` callback.
   """
   def connect(endpoint, handler, transport_name, transport, serializer, params) do
+    vsn = params["vsn"] || "1.0.0"
+
+    if Version.match?(vsn, @client_vsn_requirements) do
+      connect_vsn(endpoint, handler, transport_name, transport, serializer, params)
+    else
+      Logger.error "The client's requested channel transport version \"#{vsn}\" " <>
+                   "does not match server's version requirements of \"#{@client_vsn_requirements}\""
+      :error
+    end
+  end
+  defp connect_vsn(endpoint, handler, transport_name, transport, serializer, params) do
     socket = %Socket{endpoint: endpoint,
                      transport: transport,
                      transport_pid: self(),

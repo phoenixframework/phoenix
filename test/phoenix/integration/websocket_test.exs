@@ -228,4 +228,13 @@ defmodule Phoenix.Integration.WebSocketTest do
     end
     assert log =~ "Phoenix.Integration.WebSocketTest.RoomChannel received join event with topic \"rooms:joiner\" but channel already joined"
   end
+
+  test "returns 403 when versions to not match" do
+    log = capture_log fn ->
+      url = "ws://127.0.0.1:#{@port}/ws/websocket?vsn=123.1.1"
+      assert WebsocketClient.start_link(self, url) ==
+             {:error, {403, "Forbidden"}}
+    end
+    assert log =~ "The client's requested channel transport version \"123.1.1\" does not match server's version"
+  end
 end

@@ -85,6 +85,7 @@
 // `channel.leave()`
 //
 
+const VSN = "1.0.0"
 const SOCKET_STATES = {connecting: 0, open: 1, closing: 2, closed: 3}
 const CHANNEL_STATES = {
   closed: "closed",
@@ -356,7 +357,8 @@ export class Socket {
   protocol(){ return location.protocol.match(/^https/) ? "wss" : "ws" }
 
   endPointURL(){
-    let uri = Ajax.appendParams(this.endPoint, this.params)
+    let uri = Ajax.appendParams(
+      Ajax.appendParams(this.endPoint, this.params), {vsn: VSN})
     if(uri.charAt(0) !== "/"){ return uri }
     if(uri.charAt(1) === "/"){ return `${this.protocol()}:${uri}` }
 
@@ -514,10 +516,7 @@ export class LongPoll {
   }
 
   endpointURL(){
-    return Ajax.appendParams(this.pollEndpoint, {
-      token: this.token,
-      format: "json"
-    })
+    return Ajax.appendParams(this.pollEndpoint, {token: this.token})
   }
 
   closeAndRetry(){

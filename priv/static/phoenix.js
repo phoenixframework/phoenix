@@ -183,6 +183,7 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
 // `channel.leave()`
 //
 
+var VSN = "1.0.0";
 var SOCKET_STATES = { connecting: 0, open: 1, closing: 2, closed: 3 };
 var CHANNEL_STATES = {
   closed: "closed",
@@ -602,7 +603,7 @@ var Socket = exports.Socket = (function () {
     },
     endPointURL: {
       value: function endPointURL() {
-        var uri = Ajax.appendParams(this.endPoint, this.params);
+        var uri = Ajax.appendParams(Ajax.appendParams(this.endPoint, this.params), { vsn: VSN });
         if (uri.charAt(0) !== "/") {
           return uri;
         }
@@ -913,10 +914,7 @@ var LongPoll = exports.LongPoll = (function () {
     },
     endpointURL: {
       value: function endpointURL() {
-        return Ajax.appendParams(this.pollEndpoint, {
-          token: this.token,
-          format: "json"
-        });
+        return Ajax.appendParams(this.pollEndpoint, { token: this.token });
       },
       writable: true,
       configurable: true

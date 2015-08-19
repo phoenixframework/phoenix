@@ -346,4 +346,12 @@ defmodule Phoenix.Integration.LongPollTest do
     poll(:get, "/ws", session)
     assert resp.body["status"] == 410
   end
+
+  test "refuses non-matching versions" do
+    log = capture_log fn ->
+      resp = poll(:get, "/ws", %{vsn: "123.1.1"}, nil, %{"origin" => "https://example.com"})
+      assert resp.body["status"] == 403
+    end
+    assert log =~ "The client's requested channel transport version \"123.1.1\" does not match server's version"
+  end
 end
