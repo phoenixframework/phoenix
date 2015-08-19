@@ -528,7 +528,7 @@ That's the end of our walk-through of Ecto usage in our controller actions. Ther
 Suppose we are building a very simple video-sharing web application, in addition to having users on our site, we might also want to have videos. We asked Phoenix to scaffold a `Video` model for us:
 
 ```console
-$ mix phoenix.gen.model Video videos name:string approved_at:datetime description:text likes:integer views:integer user:references:users
+$ mix phoenix.gen.model Video videos name:string approved_at:datetime description:text likes:integer views:integer user_id:references:users
 * creating priv/repo/migrations/20150611051558_create_video.exs
 * creating web/models/video.ex
 * creating test/models/video_test.exs
@@ -624,7 +624,7 @@ Now, when `Repo.update` is called for the `Video` model, the `approved_at` field
 `Ecto.Model.Callbacks` actually ships with with a lot more than the `before_update` callback, in addition, it comes with:
 
 - `before_delete`: called before the adapter deletes our record from the database; if perhaps we have a foreign_key constraint from another table, we would use this hook to clean it up.
-- `after_delete`: called after the adapter deletes our record. If we wished to archive our record, we'd do it in this hook. 
+- `after_delete`: called after the adapter deletes our record. If we wished to archive our record, we'd do it in this hook.
 - `before_update`: called before the adapter updates our record. We used it above to reset the likes counter.
 - `after_update`: called after the adapter updates our record. If we wanted to update our user that the model has changed, now would do that here.
 - `before_insert`: called before the adapter first creates a new record. We would use it in cases when we wanted to infer default values to certain fields from the partial changeset we receive from the user.
