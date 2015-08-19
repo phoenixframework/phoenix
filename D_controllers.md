@@ -342,7 +342,7 @@ When we load the page, and we should be rendering the admin layout without a log
 
 Rendering HTML through a template is fine, but what if we need to change the rendering format on the fly? Let's say that sometimes we need HTML, sometimes we need plain text, and sometimes we need JSON. Then what?
 
-Phoenix allows us to change formats on the fly with the `format` query string parameter. To make this happen, Phoenix requires an appropriately named view and an appropriately named template in the correct directory.
+Phoenix allows us to change formats on the fly with the `_format` query string parameter. To make this happen, Phoenix requires an appropriately named view and an appropriately named template in the correct directory.
 
 As an example, let's take the `PageController` index action from a newly generated app. Out of the box, this has the right view, `PageView`, the right templates directory, `/web/templates/page`, and the right template for rendering HTML, `index.html.eex`.
 
@@ -372,7 +372,7 @@ defmodule HelloPhoenix.Router do
 . . .
 ```
 
-We also need to tell the controller to render a template with the same format as the one found in `conn.params["format"]`. We do that by substituting the atom version of the template `:index` for the string version `"index.html"`.
+We also need to tell the controller to render a template with the same format as the one returned by `Phoenix.Controller.get_format/1`. We do that by substituting the atom version of the template `:index` for the string version `"index.html"`.
 
 ```elixir
 def index(conn, _params) do
@@ -380,7 +380,7 @@ def index(conn, _params) do
 end
 ```
 
-If we go to [http://localhost:4000/?format=text](http://localhost:4000/?format=text), we will see `OMG, this is actually some text.`
+If we go to [http://localhost:4000/?_format=text](http://localhost:4000/?_format=text), we will see `OMG, this is actually some text.`
 
 Of course, we can pass data into our template as well. Let's change our action to take in a message parameter by removing the `_` in front of `params` in the function definition. This time, we'll use the somewhat less-flexible string version of our text template, just to see that it works as well.
 
@@ -396,11 +396,11 @@ And let's add a bit to our text template.
 "OMG, this is actually some text." <%= @message %>
 ```
 
-Now if we go to `http://localhost:4000/?format=text&message=CrazyTown`, we will see "OMG, this is actually some text. CrazyTown"
+Now if we go to `http://localhost:4000/?_format=text&message=CrazyTown`, we will see "OMG, this is actually some text. CrazyTown"
 
 ### Setting the Content Type
 
-Analogous to the `format` query string param, we can render any sort of format we want by modifying the HTTP Accepts Header and providing the appropriate template.
+Analogous to the `_format` query string param, we can render any sort of format we want by modifying the HTTP Accepts Header and providing the appropriate template.
 
 If we wanted to render an xml version of our `index` action, we might implement the action like this in `web/page_controller.ex`.
 
