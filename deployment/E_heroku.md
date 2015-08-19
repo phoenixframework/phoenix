@@ -126,7 +126,7 @@ config :hello_phoenix, HelloPhoenix.Repo,
   pool_size: 20
 ```
 
-Finally, let's tell Phoenix to use our Heroku URL. Find the following:
+Finally, let's tell Phoenix to use our Heroku URL and enforce we only use the SSL version of the website. Find the following:
 
 ```elixir
 url: [host: "example.com", port: 80],
@@ -135,7 +135,8 @@ url: [host: "example.com", port: 80],
 and change it to (you will want to set your Heroku application name):
 
 ```elixir
-url: [host: "mysterious-meadow-6277.heroku.com", port: 80],
+url: [scheme: "https", host: "mysterious-meadow-6277.heroku.com", port: 443],
+force_ssl: [rewrite_on: [:x_forwarded_proto]],
 ```
 
 We don't need to import the `config/prod.secret.exs` file in our prod config any longer so we can delete the following line:
@@ -152,6 +153,7 @@ use Mix.Config
 config :hello_phoenix, HelloPhoenix.Endpoint,
   http: [port: System.get_env("PORT")],
   url: [scheme: "https", host: "mysterious-meadow-6277.heroku.com", port: 443],
+  force_ssl: [rewrite_on: [:x_forwarded_proto]],
   cache_static_manifest: "priv/static/manifest.json"
 
 config :logger, level: :info
@@ -283,7 +285,11 @@ To https://git.heroku.com/mysterious-meadow-6277.git
  * [new branch]      master -> master
 ```
 
-Typing `heroku open` in the terminal should launch a browser with the Phoenix welcome page opened.
+Typing `heroku open` in the terminal should launch a browser with the Phoenix welcome page opened. In case you are using Ecto to access a database, you will also need to run migrations after the first deploy:
+
+```console
+$ heroku run mix ecto.migrate
+```
 
 And that's it!
 
@@ -301,7 +307,7 @@ We can also start an IEx session attached to our terminal for experimenting in o
 $ heroku run iex -S mix
 ```
 
-In fact, we can run anything using the `heroku run` command, like the Ecto migration task for instance:
+In fact, we can run anything using the `heroku run` command, like the Ecto migration task from above:
 
 ```console
 $ heroku run mix ecto.migrate
