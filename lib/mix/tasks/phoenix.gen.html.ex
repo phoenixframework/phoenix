@@ -1,7 +1,7 @@
 defmodule Mix.Tasks.Phoenix.Gen.Html do
   use Mix.Task
 
-  @shortdoc "Generates controller, model and views for an HTML-based resource"
+  @shortdoc "Generates controller, model and views for an HTML based resource"
 
   @moduledoc """
   Generates a Phoenix resource.
