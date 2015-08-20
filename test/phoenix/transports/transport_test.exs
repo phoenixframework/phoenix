@@ -64,12 +64,21 @@ defmodule Phoenix.Transports.TransportTest do
   test "checks the origin of requests against allowed origins" do
     origins = ["//example.com", "http://scheme.com", "//port.com:81"]
 
-    refute check_origin("https://example.com/", check_origin: origins).halted
-    refute check_origin("http://port.com:81/", check_origin: origins).halted
-
+    # Completely invalid
     conn = check_origin("http://notallowed.com/", check_origin: origins)
     assert conn.halted
     assert conn.status == 403
+
+    conn = check_origin("", check_origin: origins)
+    assert conn.halted
+    assert conn.status == 403
+
+    # Only host match
+    refute check_origin("http://example.com/", check_origin: origins).halted
+    refute check_origin("https://example.com/", check_origin: origins).halted
+
+    # Scheme + host match (checks port due to scheme)
+    refute check_origin("http://scheme.com/", check_origin: origins).halted
 
     conn = check_origin("https://scheme.com/", check_origin: origins)
     assert conn.halted
@@ -79,11 +88,10 @@ defmodule Phoenix.Transports.TransportTest do
     assert conn.halted
     assert conn.status == 403
 
-    conn = check_origin("http://port.com:82/", check_origin: origins)
-    assert conn.halted
-    assert conn.status == 403
+    # Scheme + host + port match
+    refute check_origin("http://port.com:81/", check_origin: origins).halted
 
-    conn = check_origin("", check_origin: origins)
+    conn = check_origin("http://port.com:82/", check_origin: origins)
     assert conn.halted
     assert conn.status == 403
   end
