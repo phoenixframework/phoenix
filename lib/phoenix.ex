@@ -40,4 +40,12 @@ defmodule Phoenix do
     # Start the supervision tree
     Phoenix.Supervisor.start_link
   end
+
+  @doc """
+  Returns the version of Phoenix
+  """
+  def version do
+    {:ok, vsn} = :application.get_key(:phoenix, :vsn)
+    vsn
+  end
 end
