@@ -24,6 +24,14 @@ defmodule Phoenix.Router.PipelineTest.Router do
     plug :put_params
   end
 
+  pipeline :halt do
+    plug :stop
+  end
+
+  pipeline :halt_again do
+    plug :stop
+  end
+
   get "/root", SampleController, :index
   put "/root/:id", SampleController, :index
   get "/route_that_crashes", SampleController, :crash
@@ -46,6 +54,15 @@ defmodule Phoenix.Router.PipelineTest.Router do
   scope "/browser-api" do
     pipe_through [:browser, :api]
     get "/root", SampleController, :index
+  end
+
+  scope "/stop" do
+    pipe_through [:halt, :halt_again]
+    get "/", SampleController, :index
+  end
+
+  defp stop(conn, _) do
+    conn |> send_resp(200, "stop") |> halt
   end
 
   defp put_assign(conn, value) do
@@ -90,6 +107,13 @@ defmodule Phoenix.Router.PipelineTest do
     conn = call(Router, :get, "/browser-api/root")
     assert conn.private[:phoenix_pipelines] == [:browser, :api]
     assert conn.assigns[:stack] == "api"
+  end
+
+  test "halts on pipeline multiple pipelines" do
+    conn = call(Router, :get, "/stop")
+    assert conn.halted
+    assert conn.status == 200
+    assert conn.resp_body == "stop"
   end
 
   test "wraps failures on call" do
