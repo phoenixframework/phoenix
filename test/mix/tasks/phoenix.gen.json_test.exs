@@ -89,6 +89,8 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
       assert_file "web/views/admin/user_view.ex", fn file ->
         assert file =~ "defmodule Phoenix.Admin.UserView do"
         assert file =~ "use Phoenix.Web, :view"
+        assert file =~ "id: user.id,"
+        assert file =~ "name: user.name"
       end
 
       assert_received {:mix_shell, :info, ["\nAdd the resource" <> _ = message]}
@@ -104,6 +106,30 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
       assert [] = Path.wildcard("priv/repo/migrations/*_create_api_v1_user.exs")
 
       assert_file "web/controllers/api/v1/user_controller.ex"
+
+      assert_file "web/views/api/v1/user_view.ex", fn file ->
+        assert file =~ "defmodule Phoenix.API.V1.UserView do"
+        assert file =~ "use Phoenix.Web, :view"
+        assert file =~ "id: user.id,"
+        assert file =~ "name: user.name"
+      end
+    end
+  end
+
+  test "generates json resource with only id field" do
+    in_tmp "generates json resource with only id field", fn ->
+      Mix.Tasks.Phoenix.Gen.Json.run ["User", "users"]
+
+      assert File.exists? "web/models/user.ex"
+      assert [_] = Path.wildcard("priv/repo/migrations/*_create_user.exs")
+
+      assert_file "web/controllers/user_controller.ex"
+
+      assert_file "web/views/user_view.ex", fn file ->
+        assert file =~ "defmodule Phoenix.UserView do"
+        assert file =~ "use Phoenix.Web, :view"
+        assert file =~ ~S|%{id: user.id}|
+      end
     end
   end
 
