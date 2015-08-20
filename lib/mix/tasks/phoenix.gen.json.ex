@@ -72,7 +72,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
   defp json_fields(binding, attrs) do
     [{:id, nil}] ++ attrs
     |> Enum.map(fn {k, _} -> "#{k}: #{binding[:singular]}.#{k}" end)
-    |> Enum.join("\n      ")
+    |> Enum.join(",\n      ")
   end
 
   defp validate_args!([_, plural | _] = args) do
