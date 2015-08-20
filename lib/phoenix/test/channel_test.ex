@@ -25,9 +25,8 @@ defmodule Phoenix.ChannelTest do
   you can call your `UserSocket.connect/2` function with an
   empty socket:
 
-      {:ok, _, socket} =
-        UserSocket.connect(%{"some" => "params"}, socket())
-        |> subscribe_and_join(RoomChannel, "rooms:lobby", %{"id" => 3})
+      {:ok, socket} = UserSocket.connect(%{"some" => "params"}, socket())
+      {:ok, _, socket} = subscribe_and_join(socket, RoomChannel, "rooms:lobby", %{"id" => 3})
 
   Once called, `subscribe_and_join/4` will subscribe the
   current test process to the "rooms:lobby" topic and start a
