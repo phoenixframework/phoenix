@@ -22,11 +22,11 @@ defmodule Phoenix.ChannelTest do
 
   You usually want to set the same ID and assigns your
   `UserSocket.connect/2` callback would set. Alternatively,
-  you can call your `UserSocket.connect/2` function with an
-  empty socket:
+  you can use the `connect/3` helper to call your `UserSocket.connect/2`
+  callback and initialize the socket with the socket id:
 
-      {:ok, socket} = UserSocket.connect(%{"some" => "params"}, socket())
-      {:ok, _, socket} = subscribe_and_join(socket, RoomChannel, "rooms:lobby", %{"id" => 3})
+      {:ok, socket} = connect(UserSocket, %{"some" => "params"})
+      {:ok, _, socket} = subscribe_and_join(socket, "rooms:lobby", %{"id" => 3})
 
   Once called, `subscribe_and_join/4` will subscribe the
   current test process to the "rooms:lobby" topic and start a
@@ -139,6 +139,7 @@ defmodule Phoenix.ChannelTest do
   alias Phoenix.Socket.Message
   alias Phoenix.Socket.Broadcast
   alias Phoenix.Socket.Reply
+  alias Phoenix.Socket.Transport
   alias Phoenix.Channel.Server
 
   defmodule NoopSerializer do
@@ -212,12 +213,37 @@ defmodule Phoenix.ChannelTest do
   end
 
   @doc """
+  Initiates a transport connection for the socket handler.
+
+  Useful for testing UserSocket authentication. Returns
+  the result of the handler's `connect/2` callback.
+  """
+  defmacro connect(handler, params, transport_name \\ :websocket) do
+    quote bind_quoted: [handler: handler,
+                        params: params,
+                        transport_name: transport_name] do
+
+      %Socket{endpoint: endpoint, serializer: serializer} = socket()
+      {transport, _conf} = handler.__transport__(transport_name)
+      Transport.connect(endpoint, handler, transport_name, transport, serializer, params)
+    end
+  end
+
+  @doc """
   Same as subscribe_and_join/4 but returns either the socket
   or throws an error.
 
   This is helpful when you are not testing joining the channel
   and just need the socket.
   """
+  def subscribe_and_join!(%Socket{} = socket, topic) when is_binary(topic) do
+    subscribe_and_join!(socket, topic, %{})
+  end
+  def subscribe_and_join!(%Socket{} = socket, topic, payload)
+      when is_binary(topic) and is_map(payload) do
+    channel = match_topic_to_channel!(socket, topic)
+    subscribe_and_join!(socket, channel, topic, payload)
+  end
   def subscribe_and_join!(%Socket{} = socket, channel, topic, payload \\ %{})
       when is_atom(channel) and is_binary(topic) and is_map(payload) do
     case subscribe_and_join(socket, channel, topic, payload) do
@@ -237,8 +263,19 @@ defmodule Phoenix.ChannelTest do
   The given channel is joined in a separate process which is
   linked to the test process.
 
+  If no channel module is provied, the socket's handler is used to
+  lookup the matching channel for the given topic.
+
   It returns `{:ok, reply, socket}` or `{:error, reply}`.
   """
+  def subscribe_and_join(%Socket{} = socket, topic) when is_binary(topic) do
+    subscribe_and_join(socket, topic, %{})
+  end
+  def subscribe_and_join(%Socket{} = socket, topic, payload)
+      when is_binary(topic) and is_map(payload) do
+    channel = match_topic_to_channel!(socket, topic)
+    subscribe_and_join(socket, channel, topic, payload)
+  end
   def subscribe_and_join(%Socket{} = socket, channel, topic, payload \\ %{})
       when is_atom(channel) and is_binary(topic) and is_map(payload) do
     socket.endpoint.subscribe(self(), topic)
@@ -391,6 +428,23 @@ defmodule Phoenix.ChannelTest do
     quote do
       assert_receive %Phoenix.Socket.Broadcast{event: unquote(event),
                                                payload: unquote(payload)}, unquote(timeout)
+    end
+  end
+
+  defp match_topic_to_channel!(socket, topic) do
+    unless socket.handler do
+      raise """
+      No socket handler found to lookup channel for topic #{inspect topic}.
+      Use `connect/2` when calling `subscribe_and_join` without a channel, for example:
+
+          {:ok, socket} = connect(UserSocket, %{})
+          socket = subscribe_and_join!(socket, "foo:bar", %{})
+      """
+    end
+
+    case socket.handler.__channel__(topic, socket.transport_name) do
+      channel when is_atom(channel) -> channel
+      _ -> raise "no channel found for topic #{inspect topic} in #{inspect socket.handler}"
     end
   end
 end

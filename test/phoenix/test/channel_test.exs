@@ -96,6 +96,25 @@ defmodule Phoenix.Test.ChannelTest do
     end
   end
 
+  defmodule UserSocket do
+    use Phoenix.Socket
+
+    channel "foo:*", Channel
+
+    transport :websocket, Phoenix.Transports.WebSocket
+
+    def connect(params, socket) do
+      if params["reject"] == true do
+        :error
+      else
+        {:ok, socket}
+      end
+    end
+
+    def id(_), do: "123"
+  end
+
+
   @endpoint Endpoint
   use Phoenix.ChannelTest
 
@@ -210,6 +229,20 @@ defmodule Phoenix.Test.ChannelTest do
   test "pushes and broadcast messages" do
     socket = subscribe_and_join!(socket(), Channel, "foo:ok")
     push socket, "broadcast", %{"foo" => "bar"}
+    assert_broadcast "broadcast", %{"foo" => "bar"}
+  end
+
+  test "connects and joins topics directly" do
+    :error = connect(UserSocket, %{"reject" => true})
+    {:ok, socket} = connect(UserSocket, %{})
+    socket = subscribe_and_join!(socket, "foo:ok")
+    push socket, "broadcast", %{"foo" => "bar"}
+    assert socket.id == "123"
+    assert_broadcast "broadcast", %{"foo" => "bar"}
+
+    {:ok, _, socket} = subscribe_and_join(socket, "foo:ok")
+    push socket, "broadcast", %{"foo" => "bar"}
+    assert socket.id == "123"
     assert_broadcast "broadcast", %{"foo" => "bar"}
   end
 
