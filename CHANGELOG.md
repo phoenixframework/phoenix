@@ -2,6 +2,12 @@
 
 ## 1.0.0-dev
 
+* Enhancements
+  [ChannelTest] Add `connect/2` helper for test UserSocket handlers
+
+* Bug fixes
+  * [Router] Fix pipe_through not respeting halting when piping through mulitple pipelines
+
 ## v0.17.0 (2015-8-19)
 
 See these [`0.16.x` to `0.17.0` upgrade instructions](https://gist.github.com/chrismccord/ee5ae90b949a9768b871) to bring your existing apps up to speed.
