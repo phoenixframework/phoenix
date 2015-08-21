@@ -8,7 +8,7 @@ The word "Channel" is really shorthand for a layered system with a number of com
 
 - Socket Handlers
 
-Phoenix holds a single connection to the server and mutiplexes your channel sockets over that one connection. Socket handlers, such as your `web/channels/user_socket.ex`, are modules that authenticate and identify a socket connection and allow you to set default socket assigns for use in all channels.
+Phoenix holds a single connection to the server and multiplexes your channel sockets over that one connection. Socket handlers, such as your `web/channels/user_socket.ex`, are modules that authenticate and identify a socket connection and allow you to set default socket assigns for use in all channels.
 
 - Channel Routes
 
