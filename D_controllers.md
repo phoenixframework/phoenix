@@ -51,7 +51,7 @@ While we can name our actions whatever we like, there are conventions for action
 - show    - renders an individual item by id
 - new     - renders a form for creating a new item
 - create  - receives params for one new item and saves it in a datastore
-- edit    - retrieves and individual item by id and displays it in a form for editing
+- edit    - retrieves an individual item by id and displays it in a form for editing
 - update  - receives params for one edited item and saves it to a datastore
 - delete  - receives an id for an item to be deleted and deletes it from a datastore
 
