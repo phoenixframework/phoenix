@@ -130,6 +130,7 @@ defmodule Phoenix.Test.ChannelTest do
       endpoint: @endpoint,
       pubsub_server: Phoenix.Test.ChannelTest.PubSub,
       transport: Phoenix.ChannelTest,
+      transport_name: :channel_test,
       transport_pid: self(),
       serializer: Phoenix.ChannelTest.NoopSerializer
     }
@@ -142,6 +143,7 @@ defmodule Phoenix.Test.ChannelTest do
       endpoint: @endpoint,
       pubsub_server: Phoenix.Test.ChannelTest.PubSub,
       transport: Phoenix.ChannelTest,
+      transport_name: :channel_test,
       transport_pid: self(),
       serializer: Phoenix.ChannelTest.NoopSerializer
     }

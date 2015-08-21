@@ -184,7 +184,8 @@ defmodule Phoenix.ChannelTest do
                 transport_pid: self(),
                 endpoint: unquote(endpoint),
                 pubsub_server: unquote(endpoint).__pubsub_server__(),
-                transport: unquote(__MODULE__)}
+                transport: unquote(__MODULE__),
+                transport_name: :channel_test}
       end
     else
       raise "module attribute @endpoint not set for socket/0"
@@ -205,7 +206,8 @@ defmodule Phoenix.ChannelTest do
                 pubsub_server: unquote(endpoint).__pubsub_server__(),
                 id: unquote(id),
                 assigns: Enum.into(unquote(assigns), %{}),
-                transport: unquote(__MODULE__)}
+                transport: unquote(__MODULE__),
+                transport_name: :channel_test}
       end
     else
       raise "module attribute @endpoint not set for socket/2"
@@ -218,32 +220,34 @@ defmodule Phoenix.ChannelTest do
   Useful for testing UserSocket authentication. Returns
   the result of the handler's `connect/2` callback.
   """
-  defmacro connect(handler, params, transport_name \\ :websocket) do
-    quote bind_quoted: [handler: handler,
-                        params: params,
-                        transport_name: transport_name] do
-
-      %Socket{endpoint: endpoint, serializer: serializer} = socket()
-      {transport, _conf} = handler.__transport__(transport_name)
-      Transport.connect(endpoint, handler, transport_name, transport, serializer, params)
+  defmacro connect(handler, params) do
+    if endpoint = Module.get_attribute(__CALLER__.module, :endpoint) do
+      quote do
+        Transport.connect(unquote(endpoint), unquote(handler), :channel_test,
+                          unquote(__MODULE__), NoopSerializer, unquote(params))
+      end
+    else
+      raise "module attribute @endpoint not set for socket/2"
     end
   end
 
-  @doc """
-  Same as subscribe_and_join/4 but returns either the socket
-  or throws an error.
-
-  This is helpful when you are not testing joining the channel
-  and just need the socket.
-  """
+  @doc "See `subscribe_and_join!/4`."
   def subscribe_and_join!(%Socket{} = socket, topic) when is_binary(topic) do
     subscribe_and_join!(socket, topic, %{})
   end
+  @doc "See `subscribe_and_join!/4`."
   def subscribe_and_join!(%Socket{} = socket, topic, payload)
       when is_binary(topic) and is_map(payload) do
     channel = match_topic_to_channel!(socket, topic)
     subscribe_and_join!(socket, channel, topic, payload)
   end
+  @doc """
+  Same as `subscribe_and_join/4` but returns either the socket
+  or throws an error.
+
+  This is helpful when you are not testing joining the channel
+  and just need the socket.
+  """
   def subscribe_and_join!(%Socket{} = socket, channel, topic, payload \\ %{})
       when is_atom(channel) and is_binary(topic) and is_map(payload) do
     case subscribe_and_join(socket, channel, topic, payload) do
@@ -252,6 +256,16 @@ defmodule Phoenix.ChannelTest do
     end
   end
 
+  @doc "See `subscribe_and_join/4`."
+  def subscribe_and_join(%Socket{} = socket, topic) when is_binary(topic) do
+    subscribe_and_join(socket, topic, %{})
+  end
+  @doc "See `subscribe_and_join/4`."
+  def subscribe_and_join(%Socket{} = socket, topic, payload)
+      when is_binary(topic) and is_map(payload) do
+    channel = match_topic_to_channel!(socket, topic)
+    subscribe_and_join(socket, channel, topic, payload)
+  end
   @doc """
   Subscribes to the given topic and joins the channel
   under the given topic and payload.
@@ -263,25 +277,27 @@ defmodule Phoenix.ChannelTest do
   The given channel is joined in a separate process which is
   linked to the test process.
 
-  If no channel module is provied, the socket's handler is used to
+  If no channel module is provided, the socket's handler is used to
   lookup the matching channel for the given topic.
 
   It returns `{:ok, reply, socket}` or `{:error, reply}`.
   """
-  def subscribe_and_join(%Socket{} = socket, topic) when is_binary(topic) do
-    subscribe_and_join(socket, topic, %{})
-  end
-  def subscribe_and_join(%Socket{} = socket, topic, payload)
-      when is_binary(topic) and is_map(payload) do
-    channel = match_topic_to_channel!(socket, topic)
-    subscribe_and_join(socket, channel, topic, payload)
-  end
   def subscribe_and_join(%Socket{} = socket, channel, topic, payload \\ %{})
       when is_atom(channel) and is_binary(topic) and is_map(payload) do
     socket.endpoint.subscribe(self(), topic)
     join(socket, channel, topic, payload)
   end
 
+  @doc "See `join/4`."
+  def join(%Socket{} = socket, topic) when is_binary(topic) do
+    join(socket, topic, %{})
+  end
+  @doc "See `join/4`."
+  def join(%Socket{} = socket, topic, payload)
+      when is_binary(topic) and is_map(payload) do
+    channel = match_topic_to_channel!(socket, topic)
+    join(socket, channel, topic, payload)
+  end
   @doc """
   Joins the channel under the given topic and payload.
 
