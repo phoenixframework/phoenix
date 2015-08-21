@@ -34,7 +34,7 @@ defmodule <%= application_module %>.Web do
 <%= if ecto do %>
       alias <%= application_module %>.Repo
       import Ecto.Model
-      import Ecto.Query, only: [from: 2]
+      import Ecto.Query, only: [from: 1, from: 2]
 <% end %>
       import <%= application_module %>.Router.Helpers
     end
@@ -66,7 +66,7 @@ defmodule <%= application_module %>.Web do
 <%= if ecto do %>
       alias <%= application_module %>.Repo
       import Ecto.Model
-      import Ecto.Query, only: [from: 2]
+      import Ecto.Query, only: [from: 1, from: 2]
 <% end %>
     end
   end
