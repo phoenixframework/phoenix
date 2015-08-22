@@ -144,6 +144,7 @@ defmodule Phoenix.ChannelTest do
 
   defmodule NoopSerializer do
     @behaviour Phoenix.Transports.Serializer
+    @moduledoc false
 
     def fastlane!(%Broadcast{} = msg) do
       %Message{
