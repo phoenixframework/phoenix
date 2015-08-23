@@ -96,6 +96,30 @@ defmodule Phoenix.Test.ChannelTest do
     end
   end
 
+  defmodule OverrideChannel do
+    use Phoenix.Channel
+
+    intercept ["outgoing"]
+
+    def join("override", _, socket) do
+      {:ok, assign(socket, :user, :some_user)}
+    end
+
+    def event(type, name, params, socket) do
+      apply(__MODULE__, type, [name, params, socket.assigns.user, socket])
+    end
+
+    def handle_in("incoming", _params, user, socket) do
+      push socket, "incoming_info", %{"user" => user}
+      {:noreply, socket}
+    end
+
+    def handle_out("outgoing", _params, user, socket) do
+      push socket, "outgoing_info", %{"user" => user}
+      {:noreply, socket}
+    end
+  end
+
   defmodule UserSocket do
     use Phoenix.Socket
 
@@ -328,5 +352,13 @@ defmodule Phoenix.Test.ChannelTest do
 
     # Closing again doesn't crash
     _ = close(socket)
+  end
+
+  test "event/4 can be overriden for custom handle_in/out event handling" do
+    socket = subscribe_and_join!(socket(), OverrideChannel, "override")
+    push socket, "incoming", %{"foo" => "bar"}
+    assert_push "incoming_info", %{"user" => :some_user}
+    socket.endpoint.broadcast!("override", "outgoing", %{})
+    assert_push "outgoing_info", %{"user" => :some_user}
   end
 end

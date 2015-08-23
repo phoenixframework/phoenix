@@ -207,7 +207,11 @@ defmodule Phoenix.Channel do
       import unquote(__MODULE__)
       import Phoenix.Socket, only: [assign: 3]
 
-      def handle_in(_event, _message, socket) do
+      def event(type, event, params, socket) do
+        apply(__MODULE__, type, [event, params, socket])
+      end
+
+      def handle_in(_event, _params, socket) do
         {:noreply, socket}
       end
 
@@ -215,7 +219,7 @@ defmodule Phoenix.Channel do
 
       def terminate(_reason, _socket), do: :ok
 
-      defoverridable handle_info: 2, handle_in: 3, terminate: 2
+      defoverridable handle_info: 2, handle_in: 3, terminate: 2, event: 4
     end
   end
 
