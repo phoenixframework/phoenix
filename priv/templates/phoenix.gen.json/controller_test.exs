@@ -18,9 +18,7 @@ defmodule <%= module %>ControllerTest do
   test "shows chosen resource", %{conn: conn} do
     <%= singular %> = Repo.insert! %<%= alias %>{}
     conn = get conn, <%= singular %>_path(conn, :show, <%= singular %>)
-    assert json_response(conn, 200)["data"] == %{
-      "id" => <%= singular %>.id
-    }
+    assert json_response(conn, 200)["data"] == %{<%= json_fields %>}
   end
 
   test "does not show resource and instead throw error when id is nonexistent", %{conn: conn} do
