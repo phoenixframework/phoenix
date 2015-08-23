@@ -517,9 +517,9 @@ defmodule Phoenix.Router do
 
   ## Examples
 
-    scope "/api/v1", as: :api_v1, alias: API.V1 do
-      get "/pages/:id", PageController, :show
-    end
+      scope "/api/v1", as: :api_v1, alias: API.V1 do
+        get "/pages/:id", PageController, :show
+      end
 
   The generated route above will match on the path `"/api/v1/pages/:id"
   and will dispatch to `:show` action in `API.V1.PageController`. A named
