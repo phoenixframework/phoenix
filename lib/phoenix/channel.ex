@@ -169,6 +169,25 @@ defmodule Phoenix.Channel do
   process and do the clean up from another process.  Similar to GenServer,
   it would also be possible `:trap_exit` to guarantee that `terminate/2`
   is invoked. This practice is not encouraged though.
+
+
+  ## Customizing Event Handling
+
+  Event handling can be customized by overriding the injected `event/4`
+  callback. This is useful when you want all events to receive certain
+  arguments, such as the socket user. For example, the following override
+  adds the `socket.assigns.user` to the arguments of `handle_in` and `handle_out`
+  in your channel:
+
+
+      def event(type, name, params, socket) do
+        apply(__MODULE__, type, [name, params, socket.assigns.user, socket])
+      end
+
+      def handle_in("new_msg", params, user, socket) do
+        broadcast! socket, "new_msg", %{uid: user.id, body: body}
+        {:noreply, socket}
+      end
   """
 
   use Behaviour
