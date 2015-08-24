@@ -92,7 +92,7 @@ defmodule Phoenix.Controller do
 
   ## Overriding `action/2` for custom arguments
 
-  Phoenix inject an `action/2` plug in your controller which calls the
+  Phoenix injects an `action/2` plug in your controller which calls the
   function matched from the router. By default, it passes the conn and params.
   In some cases, overriding the `action/2` plug in your controller is a
   useful way to inject certain argument to your actions that you
