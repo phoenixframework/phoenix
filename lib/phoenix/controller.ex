@@ -89,6 +89,32 @@ defmodule Phoenix.Controller do
 
     * `:log` - the level to log. When false, disables controller
       logging
+
+  ## Overriding `action/2` for custom arguments
+
+  Phoenix inject an `action/2` plug in your controller which calls the
+  function matched from the router. By default, it passes the conn and params.
+  In some cases, overriding the `action/2` plug in your controller is a
+  useful way to inject certain argument to your actions that you
+  would otherwise need to fetch off the connection repeatedly. For example,
+  imagine if you stored a `conn.assigns.current_user` in the connection
+  and wanted quick access to the user for every action in your controller:
+
+    def action(conn, _) do
+      apply(__MODULE__, action_name(conn), [conn,
+                                            conn.params,
+                                            conn.assigns.current_user])
+    end
+
+    def index(conn, _params, user) do
+      videos = Repo.all(user_videos(user))
+      ...
+    end
+
+    def delete(conn, %{"id" => id}, user) do
+      video = Repo.get!(user_videos(user), id)
+      ...
+    end
   """
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
