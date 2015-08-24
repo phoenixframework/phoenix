@@ -72,8 +72,17 @@ defmodule Phoenix.Router.Helpers do
       @doc """
       Generates the connection/endpoint base URL without any path information.
       """
-      def url(%Conn{private: private}) do
-        private.phoenix_endpoint.url
+
+      def url(%Conn{host: host, port: 80, scheme: :http}) do
+        "http://" <> host
+      end
+
+      def url(%Conn{host: host, port: 443, scheme: :https}) do
+        "https://" <> host
+      end
+
+      def url(%Conn{host: host, port: port, scheme: scheme}) do
+        "#{scheme}://" <> host <> ":#{port}"
       end
 
       def url(%Socket{endpoint: endpoint}) do

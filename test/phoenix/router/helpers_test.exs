@@ -257,6 +257,14 @@ defmodule Phoenix.Router.HelpersTest do
     conn(:get, "/") |> put_private(:phoenix_endpoint, __MODULE__)
   end
 
+  defp conn_with_options(opts \\ []) do
+    conn(:get, "/") |> :maps.merge(:maps.from_list(opts))
+  end
+
+  def ssl_conn do
+    conn_with_options(scheme: :https, port: 443)
+  end
+
   defp socket_with_endpoint do
     %Phoenix.Socket{endpoint: __MODULE__}
   end
@@ -276,7 +284,7 @@ defmodule Phoenix.Router.HelpersTest do
 
   test "helpers module generates a url helper" do
     assert Helpers.url(__MODULE__) == "https://example.com"
-    assert Helpers.url(conn_with_endpoint) == "https://example.com"
+    assert Helpers.url(ssl_conn) == "https://www.example.com"
     assert Helpers.url(socket_with_endpoint) == "https://example.com"
   end
 
@@ -290,10 +298,31 @@ defmodule Phoenix.Router.HelpersTest do
     url = "https://example.com/admin/new/messages/1"
     assert Helpers.admin_message_url(__MODULE__, :show, 1) == url
     assert Helpers.admin_message_url(__MODULE__, :show, 1, []) == url
-    assert Helpers.admin_message_url(conn_with_endpoint, :show, 1) == url
-    assert Helpers.admin_message_url(conn_with_endpoint, :show, 1, []) == url
     assert Helpers.admin_message_url(socket_with_endpoint, :show, 1) == url
     assert Helpers.admin_message_url(socket_with_endpoint, :show, 1, []) == url
+  end
+
+  test "helpers module generates named url helpers using request data when called with a connection" do
+    url = "https://www.example.com/admin/new/messages/1"
+
+    assert Helpers.admin_message_url(ssl_conn, :show, 1) == url
+    assert Helpers.admin_message_url(ssl_conn, :show, 1, []) == url
+  end
+
+  test "helpers module generates named url helpers using request data interpolate if it is non-default for the request scheme" do
+    https = "https://www.example.com/admin/new/messages/1"
+    https_with_port = "https://www.example.com:444/admin/new/messages/1"
+    http = "http://www.example.com/admin/new/messages/1"
+    http_with_port = "http://www.example.com:8080/admin/new/messages/1"
+
+    assert Helpers.admin_message_url(ssl_conn, :show, 1) == https
+    assert Helpers.admin_message_url(ssl_conn, :show, 1, []) == https
+    assert Helpers.admin_message_url(conn_with_options(scheme: :https, port: 444), :show, 1) == https_with_port
+    assert Helpers.admin_message_url(conn_with_options(scheme: :https, port: 444), :show, 1, []) == https_with_port
+    assert Helpers.admin_message_url(conn_with_options([]), :show, 1) == http
+    assert Helpers.admin_message_url(conn_with_options([]), :show, 1, []) == http
+    assert Helpers.admin_message_url(conn_with_options(port: 8080), :show, 1) == http_with_port
+    assert Helpers.admin_message_url(conn_with_options(port: 8080), :show, 1, []) == http_with_port
   end
 
   ## Script name
@@ -317,7 +346,7 @@ defmodule Phoenix.Router.HelpersTest do
   end
 
   def conn_with_script_name(script_name \\ ~w(api)) do
-    conn = conn(:get, "/")
+    conn = ssl_conn
            |> put_private(:phoenix_endpoint, ScriptName)
     put_in conn.script_name, script_name
   end
