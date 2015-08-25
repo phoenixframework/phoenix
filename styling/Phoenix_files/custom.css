@@ -1,4 +1,12 @@
 @import url(http://fonts.googleapis.com/css?family=Lato:300,400,700);
+.theme-solid .main-content .docs-body a {
+  color: #000 !important;
+  text-decoration: underline !important; }
+
+.header h1.navbar-brand a {
+  background-image: url("../Phoenix_files/phoenix-logo-white.png") !important;
+  background-size: 250px 34px; }
+
 body, h1, h2, h3, h4, h5, h6 {
   font-family: 'Lato', sans-serif !important; }
 
@@ -63,10 +71,6 @@ body, h1, h2, h3, h4, h5, h6 {
   color: #fff !important;
   background: rgba(255, 255, 255, 0.2) !important; }
 
-.header h1.navbar-brand a {
-  background-image: url("../Phoenix_files/phoenix-logo-white.png") !important;
-  background-size: 250px 34px; }
-
 #subheader-columns {
   margin: 50px 30px 0; }
 
@@ -79,7 +83,7 @@ body, h1, h2, h3, h4, h5, h6 {
 
 .subheader p {
   font-weight: 300;
-  color: #333;
+  color: #subheader-body-color;
   font-size: 16px; }
 
 .subheader-link {
