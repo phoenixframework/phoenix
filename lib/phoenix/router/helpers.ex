@@ -6,18 +6,68 @@ defmodule Phoenix.Router.Helpers do
   alias Phoenix.Socket
   alias Plug.Conn
 
+  @doc """
+  Callback invoked by url generated in each helper module.
+  """
+  def url(_router, %Conn{private: private}) do
+    private.phoenix_endpoint.url
+  end
+
+  def url(_router, %Socket{endpoint: endpoint}) do
+    endpoint.url
+  end
+
+  def url(_router, %URI{} = uri) do
+    uri_to_string(uri)
+  end
+
+  def url(_router, endpoint) when is_atom(endpoint) do
+    endpoint.url
+  end
 
   @doc """
   Callback invoked by path generated in each helper module.
-
-  Takes into consideration router forwardings so nested helpers
-  take the proper script_name into account.
   """
   def path(router, %Conn{} = conn, path) do
     conn
     |> build_own_forward_path(router, path)
     |> Kernel.||(build_conn_forward_path(conn, router, path))
     |> Kernel.||(path_with_script(path, conn.script_name))
+  end
+
+  def path(_router, %URI{} = uri, path) do
+    (uri.path || "") <> path
+  end
+
+  def path(_router, %Socket{endpoint: endpoint}, path) do
+    endpoint.path(path)
+  end
+
+  def path(_router, endpoint, path) when is_atom(endpoint) do
+    endpoint.path(path)
+  end
+
+  ## Helpers
+
+  defp uri_to_string(uri) do
+    scheme = uri.scheme
+
+    if scheme && (port = URI.default_port(scheme)) do
+      if uri.port == port, do: uri = %{uri | port: nil}
+    end
+
+    if uri.host do
+      authority = uri.host
+      if uri.userinfo, do: authority = uri.userinfo <> "@" <> authority
+      if uri.port, do: authority = authority <> ":" <> Integer.to_string(uri.port)
+    else
+      authority = uri.authority
+    end
+
+    result = ""
+    if uri.scheme, do: result = result <> uri.scheme <> ":"
+    if authority,  do: result = result <> "//" <> authority
+    result
   end
 
   defp build_own_forward_path(conn, router, path) do
@@ -72,37 +122,19 @@ defmodule Phoenix.Router.Helpers do
       @doc """
       Generates the connection/endpoint base URL without any path information.
       """
-      def url(%Conn{private: private}) do
-        private.phoenix_endpoint.url
-      end
-
-      def url(%Socket{endpoint: endpoint}) do
-        endpoint.url
-      end
-
-      def url(endpoint) when is_atom(endpoint) do
-        endpoint.url
+      def url(data) do
+        Phoenix.Router.Helpers.url(unquote(env.module), data)
       end
 
       @doc """
       Generates the path information including any necessary prefix.
       """
-      def path(%Conn{} = conn, path) do
-        Phoenix.Router.Helpers.path(unquote(env.module), conn, path)
-      end
-
-      def path(%Socket{endpoint: endpoint}, path) do
-        endpoint.path(path)
-      end
-
-      def path(endpoint, path) when is_atom(endpoint) do
-        endpoint.path(path)
+      def path(data, path) do
+        Phoenix.Router.Helpers.path(unquote(env.module), data, path)
       end
 
       @doc """
       Generates path to a static asset given its file path.
-
-      It expects either a conn or an endpoint.
       """
       def static_path(%Conn{private: private} = conn, path) do
         private.phoenix_endpoint.static_path(path)
@@ -118,8 +150,6 @@ defmodule Phoenix.Router.Helpers do
 
       @doc """
       Generates url to a static asset given its file path.
-
-      It expects either a conn or an endpoint.
       """
       def static_url(%Conn{private: private} = conn, path) do
         static_url(private.phoenix_endpoint, path)
@@ -134,6 +164,7 @@ defmodule Phoenix.Router.Helpers do
       end
 
       # Functions used by generated helpers
+      # Those are inlined here for performance
 
       defp to_param(int) when is_integer(int), do: Integer.to_string(int)
       defp to_param(bin) when is_binary(bin), do: bin
@@ -209,5 +240,4 @@ defmodule Phoenix.Router.Helpers do
     do: expand_segments(t, quote(do: unquote(acc) <> "/" <> to_param(unquote(h))))
   defp expand_segments([], acc),
     do: acc
-
 end

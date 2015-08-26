@@ -139,7 +139,7 @@ defmodule Phoenix.Endpoint.Adapter do
   the Phoenix.Config layer knows how to cache it.
   """
   def url(endpoint) do
-    {:cache, struct_url(endpoint, endpoint.config(:url)) |> String.Chars.URI.to_string()}
+    {:cache, build_url(endpoint, endpoint.config(:url)) |> String.Chars.URI.to_string()}
   end
 
   @doc """
@@ -150,7 +150,7 @@ defmodule Phoenix.Endpoint.Adapter do
   """
   def static_url(endpoint) do
     url = endpoint.config(:static_url) || endpoint.config(:url)
-    {:cache, struct_url(endpoint, url) |> String.Chars.URI.to_string()}
+    {:cache, build_url(endpoint, url) |> String.Chars.URI.to_string()}
   end
 
   @doc """
@@ -160,11 +160,17 @@ defmodule Phoenix.Endpoint.Adapter do
   the Phoenix.Config layer knows how to cache it.
   """
   def struct_url(endpoint) do
-    {:cache, struct_url(endpoint, endpoint.config(:url))}
+    url    = endpoint.config(:url)
+    struct = build_url(endpoint, url)
+    {:cache,
+      case url[:path] do
+        "/"  -> struct
+        path -> %{struct | path: path}
+      end}
   end
 
-  defp struct_url(endpoint, url) do
-    struct_url(endpoint.config(:https), endpoint.config(:http), url)
+  defp build_url(endpoint, url) do
+    build_url(endpoint.config(:https), endpoint.config(:http), url)
   end
 
   @doc """
@@ -173,7 +179,7 @@ defmodule Phoenix.Endpoint.Adapter do
   This is used during compilation time and at runtime
   with the endpoint configuration.
   """
-  def struct_url(https, http, url) do
+  def build_url(https, http, url) do
     {scheme, port} =
       cond do
         https ->

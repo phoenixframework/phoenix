@@ -293,7 +293,7 @@ defmodule Phoenix.Endpoint do
       defoverridable [init: 1, call: 2]
 
       if force_ssl = var!(config)[:force_ssl] do
-        url = Phoenix.Endpoint.Adapter.struct_url(var!(config)[:https], var!(config)[:http], var!(config)[:url])
+        url = Phoenix.Endpoint.Adapter.build_url(var!(config)[:https], var!(config)[:http], var!(config)[:url])
         plug Plug.SSL,
           force_ssl
           |> Keyword.put_new(:host, url.host)
