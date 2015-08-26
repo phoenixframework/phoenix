@@ -3,10 +3,14 @@
 ## 1.0.0-dev
 
 * Enhancements
-  [ChannelTest] Add `connect/2` helper for test UserSocket handlers
+  * [ChannelTest] Add `connect/2` helper for test UserSocket handlers
+  * [Endpoint] Expose `struct_url/0` in the endpoint that returns the URL as struct for further manipulation
+  * [Router] Allow `URI` structs to be given to generated `url/1` and `path/2` helpers
 
 * Bug fixes
-  * [Router] Fix pipe_through not respeting halting when piping through mulitple pipelines
+  * [Endpoint] Pass port configuration when configuring force_ssl  
+  * [Mix] By default include all attributes in generated JSON views  
+  * [Router] Fix `pipe_through` not respecting halting when piping through mulitple pipelines
 
 ## v0.17.0 (2015-8-19)
 
