@@ -293,8 +293,11 @@ defmodule Phoenix.Endpoint do
       defoverridable [init: 1, call: 2]
 
       if force_ssl = var!(config)[:force_ssl] do
+        url = Phoenix.Endpoint.Adapter.struct_url(var!(config)[:https], var!(config)[:http], var!(config)[:url])
         plug Plug.SSL,
-          Keyword.put_new(force_ssl, :host, var!(config)[:url][:host] || "localhost")
+          force_ssl
+          |> Keyword.put_new(:host, url.host)
+          |> Keyword.put_new(:port, url.port)
       end
 
       if var!(config)[:debug_errors] do
@@ -335,6 +338,8 @@ defmodule Phoenix.Endpoint do
 
       @doc """
       Generates the endpoint base URL without any path information.
+
+      It uses the configuration under `:url` to generate such.
       """
       def url do
         Phoenix.Config.cache(__MODULE__,
@@ -344,11 +349,27 @@ defmodule Phoenix.Endpoint do
 
       @doc """
       Generates the static URL without any path information.
+
+      It uses the configuration under `:static_url` to generate
+      such. It fallsback to `:url` if `:static_url` is not set.
       """
       def static_url do
         Phoenix.Config.cache(__MODULE__,
           :__phoenix_static_url__,
           &Phoenix.Endpoint.Adapter.static_url/1)
+      end
+
+      @doc """
+      Generates the endpoint base URL but as a `URI` struct.
+
+      It uses the configuration under `:url` to generate such.
+      Useful for manipulating the url data and passing to
+      URL helpers.
+      """
+      def struct_url do
+        Phoenix.Config.cache(__MODULE__,
+          :__phoenix_struct_url__,
+          &Phoenix.Endpoint.Adapter.struct_url/1)
       end
 
       @doc """

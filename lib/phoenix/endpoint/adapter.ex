@@ -139,7 +139,7 @@ defmodule Phoenix.Endpoint.Adapter do
   the Phoenix.Config layer knows how to cache it.
   """
   def url(endpoint) do
-    {:cache, calculate_url(endpoint, endpoint.config(:url))}
+    {:cache, struct_url(endpoint, endpoint.config(:url)) |> String.Chars.URI.to_string()}
   end
 
   @doc """
@@ -150,29 +150,45 @@ defmodule Phoenix.Endpoint.Adapter do
   """
   def static_url(endpoint) do
     url = endpoint.config(:static_url) || endpoint.config(:url)
-    {:cache, calculate_url(endpoint, url)}
+    {:cache, struct_url(endpoint, url) |> String.Chars.URI.to_string()}
   end
 
-  defp calculate_url(endpoint, url) do
+  @doc """
+  Builds a struct url for user processing.
+
+  The result is wrapped in a `{:cache, value}` tuple so
+  the Phoenix.Config layer knows how to cache it.
+  """
+  def struct_url(endpoint) do
+    {:cache, struct_url(endpoint, endpoint.config(:url))}
+  end
+
+  defp struct_url(endpoint, url) do
+    struct_url(endpoint.config(:https), endpoint.config(:http), url)
+  end
+
+  @doc """
+  Builds a URL struct.
+
+  This is used during compilation time and at runtime
+  with the endpoint configuration.
+  """
+  def struct_url(https, http, url) do
     {scheme, port} =
       cond do
-        config = endpoint.config(:https) ->
-          {"https", config[:port]}
-        config = endpoint.config(:http) ->
-          {"http", config[:port]}
+        https ->
+          {"https", https[:port]}
+        http ->
+          {"http", http[:port]}
         true ->
-          {"http", "80"}
+          {"http", 80}
       end
 
     scheme = url[:scheme] || scheme
     host   = url[:host]
-    port   = port_to_string(url[:port] || port)
+    port   = port_to_integer(url[:port] || port)
 
-    case {scheme, port} do
-      {"https", "443"} -> "https://" <> host
-      {"http", "80"}   -> "http://" <> host
-      {_, _}           -> scheme <> "://" <> host <> ":" <> port
-    end
+    %URI{scheme: scheme, port: port, host: host}
   end
 
   @doc """
@@ -201,9 +217,9 @@ defmodule Phoenix.Endpoint.Adapter do
     raise ArgumentError, "static_path/2 expects a path starting with / as argument"
   end
 
-  defp port_to_string({:system, env_var}), do: System.get_env(env_var)
-  defp port_to_string(port) when is_binary(port), do: port
-  defp port_to_string(port) when is_integer(port), do: Integer.to_string(port)
+  defp port_to_integer({:system, env_var}), do: port_to_integer(System.get_env(env_var))
+  defp port_to_integer(port) when is_binary(port), do: String.to_integer(port)
+  defp port_to_integer(port) when is_integer(port), do: port
 
   @doc """
   Invoked to warm up caches on start and config change.

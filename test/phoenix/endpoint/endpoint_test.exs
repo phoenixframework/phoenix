@@ -29,6 +29,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert Endpoint.config(:static_url) == [host: "static.example.com"]
     assert Endpoint.url == "https://example.com"
     assert Endpoint.static_url == "https://static.example.com"
+    assert Endpoint.struct_url == %URI{scheme: "https", host: "example.com", port: 443}
 
     config = put_in(@config[:url][:port], 1234)
     |> put_in([:static_url, :port], 456)
@@ -38,6 +39,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert Endpoint.config(:static_url) == [port: 456, host: "static.example.com"]
     assert Endpoint.url == "https://example.com:1234"
     assert Endpoint.static_url == "https://static.example.com:456"
+    assert Endpoint.struct_url == %URI{scheme: "https", host: "example.com", port: 1234}
   end
 
   test "sets script name when using path" do

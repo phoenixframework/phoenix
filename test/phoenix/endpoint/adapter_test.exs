@@ -17,6 +17,7 @@ defmodule Phoenix.Endpoint.AdapterTest do
 
   defmodule HTTPSEndpoint do
     def path(path), do: path
+    def config(:http), do: false
     def config(:https), do: [port: 443]
     def config(:url), do: [host: "example.com"]
     def config(:otp_app), do: :phoenix
