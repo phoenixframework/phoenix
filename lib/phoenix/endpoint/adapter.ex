@@ -173,13 +173,7 @@ defmodule Phoenix.Endpoint.Adapter do
     build_url(endpoint.config(:https), endpoint.config(:http), url)
   end
 
-  @doc """
-  Builds a URL struct.
-
-  This is used during compilation time and at runtime
-  with the endpoint configuration.
-  """
-  def build_url(https, http, url) do
+  defp build_url(https, http, url) do
     {scheme, port} =
       cond do
         https ->
