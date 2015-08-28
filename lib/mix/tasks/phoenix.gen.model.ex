@@ -16,7 +16,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     * a model in web/models
     * a migration file for the repository
 
-  The generated model can be skipped with `--no-migration`.
+  The generated migration can be skipped with `--no-migration`.
 
   ## Attributes
 
@@ -48,9 +48,25 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
       mix phoenix.gen.model Admin.User users name:string age:integer
 
+  ## binary_id
+
+  Migration can use `binary_id` for model's primary key and it's
+  references with option `--binary-id`.
+
+  This option assumes the project was generated with the `--binary-id` option,
+  that sets up models to use `binary_id` by default. If that's not the case
+  you can still set all your models to use `binary_id` by default, by adding
+  following to your `model` function in `web/web.ex`option or by adding
+  following to the generated model before the `schema` declaration:
+
+      @primary_key {:id, :binary_id, autogenerate: true}
+      @foreign_key_type :binary_id
+
   """
   def run(args) do
-    {opts, parsed, _} = OptionParser.parse(args, switches: [migration: :boolean])
+    switches = [migration: :boolean, binary_id: :boolean]
+
+    {opts, parsed, _} = OptionParser.parse(args, switches: switches)
     [singular, plural | attrs] = validate_args!(parsed)
 
     attrs     = Mix.Phoenix.attrs(attrs)
@@ -66,7 +82,8 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     binding = binding ++
               [attrs: attrs, plural: plural, types: types(attrs),
                assocs: assocs(assocs), indexes: indexes(plural, assocs),
-               defaults: defaults(attrs), params: params]
+               defaults: defaults(attrs), params: params,
+               binary_id: opts[:binary_id]]
 
     files = [
       {:eex, "model.ex",       "web/models/#{path}.ex"},

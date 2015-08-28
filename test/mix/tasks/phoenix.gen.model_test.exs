@@ -109,6 +109,20 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
     end
   end
 
+  test "generates migration with binary_id" do
+    in_tmp "generates migration with binary_id", fn ->
+      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title", "user_id:references:users", "--binary-id"]
+
+      assert [migration] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
+
+      assert_file migration, fn file ->
+        assert file =~ "create table(:posts, primary_key: false) do"
+        assert file =~ "add :id, :binary_id, primary_key: true"
+        assert file =~ "add :user_id, references(:users, type: :binary_id)"
+      end
+    end
+  end
+
   test "plural can't contain a colon" do
     assert_raise Mix.Error, fn ->
       Mix.Tasks.Phoenix.Gen.Model.run ["Admin.User", "name:string", "foo:string"]
