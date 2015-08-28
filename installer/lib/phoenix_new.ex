@@ -377,6 +377,14 @@ defmodule Mix.Tasks.Phoenix.New do
       prod: [database: "db/#{app}_prod.sqlite"],
       test_reset: "Ecto.Adapters.SQL.restart_test_transaction"}
   end
+  defp get_ecto_adapter("mongodb", app) do
+    {:mongodb_ecto, Mongo.Ecto,
+     dev:  [database: "#{app}_dev"],
+     test: [database: "#{app}_test", pool_size: 1],
+     prod: [database: "#{app}_prod"],
+     binary_id: true,
+     test_reset: "Mongo.Ecto.truncate"}
+  end
   defp get_ecto_adapter(db, _app) do
     Mix.raise "Unknown database #{inspect db}"
   end
