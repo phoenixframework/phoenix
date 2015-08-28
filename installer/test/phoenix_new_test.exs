@@ -131,6 +131,17 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     end
   end
 
+  test "new with binary_id" do
+    in_tmp "new with binary_id", fn ->
+      Mix.Tasks.Phoenix.New.run([@app_name, "--binary-id"])
+
+      assert_file "photo_blog/web/web.ex", fn file ->
+        assert file =~ ~r/@primary_key {:id, :binary_id, autogenerate: true}/
+        assert file =~ ~r/@foreign_key_type :binary_id/
+      end
+    end
+  end
+
   test "new with uppercase" do
     in_tmp "new with uppercase", fn ->
       Mix.Tasks.Phoenix.New.run(["photoBlog"])
