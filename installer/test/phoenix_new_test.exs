@@ -207,6 +207,13 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "custom_path/config/dev.exs", [~r/Ecto.Adapters.MySQL/, ~r/username: "root"/, ~r/password: ""/]
       assert_file "custom_path/config/test.exs", [~r/Ecto.Adapters.MySQL/, ~r/username: "root"/, ~r/password: ""/]
       assert_file "custom_path/config/prod.secret.exs", [~r/Ecto.Adapters.MySQL/, ~r/username: "root"/, ~r/password: ""/]
+
+      assert_file "custom_path/test/support/conn_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/channel_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/model_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
     end
   end
 
@@ -219,6 +226,13 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "custom_path/config/dev.exs", ~r/Tds.Ecto/
       assert_file "custom_path/config/test.exs", ~r/Tds.Ecto/
       assert_file "custom_path/config/prod.secret.exs", ~r/Tds.Ecto/
+
+      assert_file "custom_path/test/support/conn_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/channel_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/model_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
     end
   end
 
@@ -243,6 +257,13 @@ defmodule Mix.Tasks.Phoenix.NewTest do
         assert file =~ ~r/Sqlite.Ecto/
         assert file =~ ~r/database: "db\/custom_path_prod.sqlite"/
       end
+
+      assert_file "custom_path/test/support/conn_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/channel_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/model_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
     end
   end
 
@@ -255,6 +276,13 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "custom_path/config/dev.exs", [~r/Ecto.Adapters.Postgres/, ~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
       assert_file "custom_path/config/test.exs", [~r/Ecto.Adapters.Postgres/, ~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
       assert_file "custom_path/config/prod.secret.exs", [~r/Ecto.Adapters.Postgres/, ~r/username: "postgres"/, ~r/password: "postgres"/]
+
+      assert_file "custom_path/test/support/conn_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/channel_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/model_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
     end
   end
 

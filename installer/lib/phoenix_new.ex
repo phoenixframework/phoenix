@@ -374,7 +374,8 @@ defmodule Mix.Tasks.Phoenix.New do
     {:sqlite_ecto, Sqlite.Ecto,
       dev:  [database: "db/#{app}_dev.sqlite"],
       test: [database: "db/#{app}_test.sqlite", pool: Ecto.Adapters.SQL.Sandbox],
-      prod: [database: "db/#{app}_prod.sqlite"]}
+      prod: [database: "db/#{app}_prod.sqlite"],
+      test_reset: "Ecto.Adapters.SQL.restart_test_transaction"}
   end
   defp get_ecto_adapter(db, _app) do
     Mix.raise "Unknown database #{inspect db}"
@@ -384,7 +385,8 @@ defmodule Mix.Tasks.Phoenix.New do
     [dev:  [username: user, password: pass, database: "#{app}_dev", hostname: "localhost"],
      test: [username: user, password: pass, database: "#{app}_test", hostname: "localhost",
             pool: Ecto.Adapters.SQL.Sandbox],
-     prod: [username: user, password: pass, database: "#{app}_prod"]]
+     prod: [username: user, password: pass, database: "#{app}_prod"],
+     test_reset: "Ecto.Adapters.SQL.restart_test_transaction"]
   end
 
   defp kw_to_config(kw) do
