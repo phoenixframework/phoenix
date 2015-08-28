@@ -251,6 +251,14 @@ defmodule Mix.Tasks.Phoenix.New do
         adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:prod]},
         pool_size: 20
       """
+
+      append_to path, "config/config.exs", """
+
+      # Configure phoenix generators
+      config :phoenix, :generators,
+        migration: #{adapter_config[:migration]},
+        binary_id: #{adapter_config[:binary_id]}
+      """
     end
   end
 
@@ -375,7 +383,8 @@ defmodule Mix.Tasks.Phoenix.New do
       dev:  [database: "db/#{app}_dev.sqlite"],
       test: [database: "db/#{app}_test.sqlite", pool: Ecto.Adapters.SQL.Sandbox],
       prod: [database: "db/#{app}_prod.sqlite"],
-      test_reset: "Ecto.Adapters.SQL.restart_test_transaction"}
+      test_reset: "Ecto.Adapters.SQL.restart_test_transaction",
+      migration: true}
   end
   defp get_ecto_adapter("mongodb", app) do
     {:mongodb_ecto, Mongo.Ecto,
@@ -383,7 +392,8 @@ defmodule Mix.Tasks.Phoenix.New do
      test: [database: "#{app}_test", pool_size: 1],
      prod: [database: "#{app}_prod"],
      binary_id: true,
-     test_reset: "Mongo.Ecto.truncate"}
+     test_reset: "Mongo.Ecto.truncate",
+     migration: false}
   end
   defp get_ecto_adapter(db, _app) do
     Mix.raise "Unknown database #{inspect db}"
@@ -394,7 +404,8 @@ defmodule Mix.Tasks.Phoenix.New do
      test: [username: user, password: pass, database: "#{app}_test", hostname: "localhost",
             pool: Ecto.Adapters.SQL.Sandbox],
      prod: [username: user, password: pass, database: "#{app}_prod"],
-     test_reset: "Ecto.Adapters.SQL.restart_test_transaction"]
+     test_reset: "Ecto.Adapters.SQL.restart_test_transaction",
+     migration: true]
   end
 
   defp kw_to_config(kw) do

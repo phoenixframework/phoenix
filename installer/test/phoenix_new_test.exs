@@ -31,6 +31,11 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       assert_file "photo_blog/config/config.exs", fn file ->
         refute file =~ "app_namespace"
+        assert file =~ """
+        config :phoenix, :generators,
+          migration: true,
+          binary_id: false
+        """
       end
 
       assert_file "photo_blog/config/prod.exs", fn file ->
@@ -124,6 +129,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       refute File.exists?("photo_blog/lib/photo_blog/repo.ex")
 
       assert_file "photo_blog/mix.exs", &refute(&1 =~ ~r":phoenix_ecto")
+      assert_file "photo_blog/config/config.exs", &refute(&1 =~ "config :phoenix, :generators")
       assert_file "photo_blog/config/dev.exs", &refute(&1 =~ config)
       assert_file "photo_blog/config/test.exs", &refute(&1 =~ config)
       assert_file "photo_blog/config/prod.secret.exs", &refute(&1 =~ config)
@@ -139,6 +145,8 @@ defmodule Mix.Tasks.Phoenix.NewTest do
         assert file =~ ~r/@primary_key {:id, :binary_id, autogenerate: true}/
         assert file =~ ~r/@foreign_key_type :binary_id/
       end
+
+      assert_file "photo_blog/config/config.exs", ~r/binary_id: true/
     end
   end
 
@@ -286,6 +294,11 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "custom_path/test/support/conn_case.ex", ~r/Mongo.Ecto.truncate/
       assert_file "custom_path/test/support/model_case.ex", ~r/Mongo.Ecto.truncate/
       assert_file "custom_path/test/support/channel_case.ex", ~r/Mongo.Ecto.truncate/
+
+      assert_file "custom_path/config/config.exs", fn file ->
+        assert file =~ ~r/binary_id: true/
+        assert file =~ ~r/migration: false/
+      end
     end
   end
 

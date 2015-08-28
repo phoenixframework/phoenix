@@ -50,7 +50,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
   ## binary_id
 
-  Migration can use `binary_id` for model's primary key and it's
+  Generated migration can use `binary_id` for model's primary key and it's
   references with option `--binary-id`.
 
   This option assumes the project was generated with the `--binary-id` option,
@@ -62,12 +62,22 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
       @primary_key {:id, :binary_id, autogenerate: true}
       @foreign_key_type :binary_id
 
+  ## Default options
+
+  This generator uses default options provided in the `:generators` configuration
+  of the `:phoenix` application. You can override those options providing
+  corresponding switches, e.g. `--no-binary-id` to use normal ids despite
+  the default configuration or `--migration` to force generation of the migration.
+
   """
   def run(args) do
     switches = [migration: :boolean, binary_id: :boolean]
 
     {opts, parsed, _} = OptionParser.parse(args, switches: switches)
     [singular, plural | attrs] = validate_args!(parsed)
+
+    default_opts = Application.get_env(:phoenix, :generators, [])
+    opts = Keyword.merge(default_opts, opts)
 
     attrs     = Mix.Phoenix.attrs(attrs)
     binding   = Mix.Phoenix.inflect(singular)
