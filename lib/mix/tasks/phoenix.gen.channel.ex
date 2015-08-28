@@ -36,7 +36,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Channel do
 
     Add the channel to your `web/channels/user_socket.ex` handler, for example:
 
-        channel "#{plural}:lobby", #{binding[:scoped]}Channel
+        channel "#{plural}:lobby", #{binding[:module]}Channel
     """
   end
 
