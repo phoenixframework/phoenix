@@ -105,7 +105,7 @@ defmodule Phoenix.Endpoint do
       Defaults to `false`.
 
     * `:force_ssl` - ensures no data is ever sent via http, always redirecting
-      to https. It expects a list of options which are forwarded to `Plug.SSl`.
+      to https. It expects a list of options which are forwarded to `Plug.SSL`.
       By default, it redirects http requests and sets the
       "strict-transport-security" header for https ones.
 
