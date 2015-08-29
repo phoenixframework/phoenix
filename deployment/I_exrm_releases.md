@@ -387,7 +387,7 @@ We're getting close.
 
 First step in exposing our application to the world is ensuring that our application will start running in case of a system restart - expected or unexpected. To do this, we will need to create an init script for our hosting environment's init system, be it `systemd`, `upstart`, or whatever.
 
-Let's use `upstart` as an example. We'll edit our init script with `sudo vi /etc/init/my_app.conf` (this is on Ubuntu Linux).
+Let's use `upstart` as an example. We'll edit our init script with `sudo vi /etc/init/hello_phoenix.conf` (this is on Ubuntu Linux).
 
 ```text
 description "hello_phoenix"
@@ -412,7 +412,7 @@ export MIX_ENV
 #export PORT
 
 ## Add app HOME directory.
-env HOME /app
+env HOME=/app
 export HOME
 
 
