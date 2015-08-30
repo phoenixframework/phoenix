@@ -784,7 +784,7 @@ end
 
 Channels are a very exciting, real-time component of the Phoenix framework. Channels handle incoming and outgoing messages broadcast over a socket for a given topic. Channel routes, then, need to match requests by socket and topic in order to dispatch to the correct channel. (For a more detailed description of channels and their behavior, please see the [Channel Guide](http://www.phoenixframework.org/docs/channels).)
 
-We mount socket handlers in our endpoint. Socket handlers take care of authentication callbacks and channel routes.
+We mount socket handlers in our endpoint at `lib/hello_phoenix/endpoint.ex`. Socket handlers take care of authentication callbacks and channel routes.
 
 ```elixir
 defmodule HelloPhoenix.Endpoint do

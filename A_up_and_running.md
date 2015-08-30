@@ -30,7 +30,7 @@ Phoenix generates the directory structure and all the files we will need for our
 
 ```console
 Fetch and install dependencies? [Yn] y
-* running npm install
+* running npm install && node node_modules/brunch/bin/brunch build
 * running mix deps.get
 ```
 
@@ -45,10 +45,12 @@ $ mix phoenix.server
 
 You can also run it inside IEx (Interactive Elixir) as:
 
-$ iex -S mix phoenix.server
+    $ iex -S mix phoenix.server
 ```
 
-Let's do that now to setup our database
+Phoenix assumes that our PostgreSQL database will have a `postgres` user account with the correct permissions and a password of "postgres". If that isn't the case, please see the instructions for the [ecto.create](http://www.phoenixframework.org/docs/mix-tasks#section--ecto-create-) mix task.
+
+Ok, let's give it a try.
 
 ```console
 $ cd hello_phoenix
