@@ -333,11 +333,11 @@ defmodule Phoenix.Controller.ControllerTest do
   end
 
   test "scrub_params/2 raises Phoenix.MissingParamError for missing key" do
-    assert_raise(Phoenix.MissingParamError, "expected key for \"foo\" to be present", fn ->
+    assert_raise(Phoenix.MissingParamError, ~r"expected key \"foo\" to be present in params", fn ->
       conn(:get, "/") |> fetch_query_params |> scrub_params("foo")
     end)
 
-    assert_raise(Phoenix.MissingParamError, "expected key for \"foo\" to be present", fn ->
+    assert_raise(Phoenix.MissingParamError, ~r"expected key \"foo\" to be present in params", fn ->
       conn(:get, "/?foo=") |> fetch_query_params |> scrub_params("foo")
     end)
   end
