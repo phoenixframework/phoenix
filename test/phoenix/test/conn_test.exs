@@ -178,6 +178,18 @@ defmodule Phoenix.Test.ConnTest do
     assert conn(:get, "/") |> put_resp_content_type("application/json")
                            |> resp(200, "{}") |> json_response(:ok) == %{}
 
+    assert conn(:get, "/") |> put_resp_content_type("application/vnd.api+json")
+                           |> resp(200, "{}") |> json_response(:ok) == %{}
+
+    assert conn(:get, "/") |> put_resp_content_type("application/vnd.collection+json")
+                           |> resp(200, "{}") |> json_response(:ok) == %{}
+
+    assert conn(:get, "/") |> put_resp_content_type("application/vnd.hal+json")
+                           |> resp(200, "{}") |> json_response(:ok) == %{}
+
+    assert conn(:get, "/") |> put_resp_content_type("application/ld+json")
+                           |> resp(200, "{}") |> json_response(:ok) == %{}
+
     assert_raise RuntimeError,
                  "no content-type was set, expected a json response", fn ->
       conn(:get, "/") |> resp(200, "ok") |> json_response(200)

@@ -278,9 +278,20 @@ defmodule Phoenix.ConnTest do
   end
 
   defp response_content_type?(header, format) do
+    case parse_content_type(header) do
+      {part, subpart} ->
+        format = Atom.to_string(format)
+        format in Plug.MIME.extensions(part <> "/" <> subpart) or
+          format == subpart or String.ends_with?(subpart, "+" <> format)
+      _  ->
+        false
+    end
+  end
+
+  defp parse_content_type(header) do
     case Plug.Conn.Utils.content_type(header) do
       {:ok, part, subpart, _params} ->
-        Atom.to_string(format) in Plug.MIME.extensions(part <> "/" <> subpart)
+        {part, subpart}
       _ ->
         false
     end
