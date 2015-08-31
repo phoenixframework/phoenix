@@ -277,10 +277,27 @@ defmodule Phoenix.ConnTest do
     end
   end
 
+  defp response_content_type?(header, :json) do
+    case parse_content_type(header) do
+      {"application", subpart} ->
+        subpart == "json" || String.ends_with?(subpart, "+json")
+      _  ->
+        false
+    end
+  end
   defp response_content_type?(header, format) do
+    case parse_content_type(header) do
+      {part, subpart} ->
+        Atom.to_string(format) in Plug.MIME.extensions(part <> "/" <> subpart)
+      _  ->
+        false
+    end
+  end
+
+  defp parse_content_type(header) do
     case Plug.Conn.Utils.content_type(header) do
       {:ok, part, subpart, _params} ->
-        Atom.to_string(format) in Plug.MIME.extensions(part <> "/" <> subpart)
+        {part, subpart}
       _ ->
         false
     end
