@@ -17,6 +17,7 @@ defmodule <%= module %>Controller do
       {:ok, <%= singular %>} ->
         conn
         |> put_status(:created)
+        |> put_resp_header("location", <%= singular %>_path(conn, :show, <%= singular %>))
         |> render("show.json", <%= singular %>: <%= singular %>)
       {:error, changeset} ->
         conn
@@ -49,7 +50,7 @@ defmodule <%= module %>Controller do
 
     # Here we use delete! (with a bang) because we expect
     # it to always work (and if it does not, it will raise).
-    <%= singular %> = Repo.delete!(<%= singular %>)
+    Repo.delete!(<%= singular %>)
 
     send_resp(conn, :no_content, "")
   end
