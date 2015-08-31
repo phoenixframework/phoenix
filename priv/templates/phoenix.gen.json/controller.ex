@@ -50,7 +50,7 @@ defmodule <%= module %>Controller do
 
     # Here we use delete! (with a bang) because we expect
     # it to always work (and if it does not, it will raise).
-    <%= singular %> = Repo.delete!(<%= singular %>)
+    Repo.delete!(<%= singular %>)
 
     send_resp(conn, :no_content, "")
   end
