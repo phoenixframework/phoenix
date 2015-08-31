@@ -17,6 +17,7 @@ defmodule <%= module %>Controller do
       {:ok, <%= singular %>} ->
         conn
         |> put_status(:created)
+        |> put_resp_header("location", <%= singular %>_path(conn, :show, <%= singular %>))
         |> render("show.json", <%= singular %>: <%= singular %>)
       {:error, changeset} ->
         conn
