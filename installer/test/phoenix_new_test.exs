@@ -172,6 +172,17 @@ defmodule Mix.Tasks.Phoenix.NewTest do
           assert file =~ "deps_path: \"../../deps\""
           assert file =~ "lockfile: \"../../mix.lock\""
         end
+
+        assert_file "photo_blog/brunch-config.js", fn(file) ->
+          assert file =~ ~s["../../deps/phoenix/web/static"]
+          assert file =~ ~s["../../deps/phoenix_html/web/static"]
+        end
+
+        assert_file "photo_blog/web/static/js/socket.js",
+                    ~s["../../../deps/phoenix/web/static/js/phoenix"]
+
+        assert_file "photo_blog/web/static/js/app.js",
+                    ~s["../../../deps/phoenix_html/web/static/js/phoenix_html"]
       end
     end
   end

@@ -38,8 +38,8 @@ exports.config = {
   // Phoenix paths configuration
   paths: {
     // Dependencies and current project directories to watch
-    watched: ["<%= phoenix_path %>/web/static",
-              "deps/phoenix_html/web/static",
+    watched: ["<%= brunch_deps_prefix %><%= phoenix_path %>/web/static",
+              "<%= brunch_deps_prefix %>deps/phoenix_html/web/static",
               "web/static", "test/static"],
 
     // Where to compile files to

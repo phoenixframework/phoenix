@@ -157,6 +157,10 @@ defmodule Mix.Tasks.Phoenix.New do
     # some storages.
     {adapter_app, adapter_module, adapter_config} = get_ecto_adapter(db, String.downcase(app))
     pubsub_server = get_pubsub_server(mod)
+    in_umbrella? = in_umbrella?(path)
+
+    {brunch_deps_prefix, static_deps_prefix} =
+      if in_umbrella?, do: {"../../", "../../../"}, else: {"", ""}
 
     binding = [application_name: app,
                application_module: mod,
@@ -167,7 +171,9 @@ defmodule Mix.Tasks.Phoenix.New do
                secret_key_base: random_string(64),
                prod_secret_key_base: random_string(64),
                signing_salt: random_string(8),
-               in_umbrella: in_umbrella?(path),
+               in_umbrella: in_umbrella?,
+               brunch_deps_prefix: brunch_deps_prefix,
+               static_deps_prefix: static_deps_prefix,
                brunch: brunch,
                ecto: ecto,
                adapter_app: adapter_app,
