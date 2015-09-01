@@ -61,7 +61,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       # Brunch
       assert_file "photo_blog/.gitignore", "/node_modules"
-      assert_file "photo_blog/brunch-config.js", ~s["deps/phoenix/web/static"]
+      assert_file "photo_blog/brunch-config.js", ~s['deps/phoenix/web/static']
       assert_file "photo_blog/config/dev.exs", "watchers: [node:"
       assert_file "photo_blog/web/static/assets/favicon.ico"
       assert_file "photo_blog/web/static/assets/images/phoenix.png"
@@ -174,8 +174,8 @@ defmodule Mix.Tasks.Phoenix.NewTest do
         end
 
         assert_file "photo_blog/brunch-config.js", fn(file) ->
-          assert file =~ ~s["../../deps/phoenix/web/static"]
-          assert file =~ ~s["../../deps/phoenix_html/web/static"]
+          assert file =~ ~s['../../deps/phoenix/web/static']
+          assert file =~ ~s['../../deps/phoenix_html/web/static']
         end
 
         assert_file "photo_blog/web/static/js/socket.js",
