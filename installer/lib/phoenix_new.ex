@@ -374,8 +374,9 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   defp db_config(app, user, pass) do
-    [dev:  [username: user, password: pass, database: "#{app}_dev"],
-     test: [username: user, password: pass, database: "#{app}_test", pool: Ecto.Adapters.SQL.Sandbox],
+    [dev:  [username: user, password: pass, database: "#{app}_dev", hostname: "localhost"],
+     test: [username: user, password: pass, database: "#{app}_test", hostname: "localhost",
+            pool: Ecto.Adapters.SQL.Sandbox],
      prod: [username: user, password: pass, database: "#{app}_prod"]]
   end
 
