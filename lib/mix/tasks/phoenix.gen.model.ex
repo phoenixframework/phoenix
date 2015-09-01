@@ -106,6 +106,15 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     end
 
     Mix.Phoenix.copy_from paths(), "priv/templates/phoenix.gen.model", "", binding, files
+
+    if opts[:migration] != false do
+      Mix.shell.info """
+
+      Remeber to update your repository by running migrations:
+
+          $ mix ecto.migrate
+      """
+    end
   end
 
   defp validate_args!([_, plural | _] = args) do

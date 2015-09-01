@@ -38,10 +38,6 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Controller")
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "View")
 
-    if opts[:model] != false do
-      Mix.Task.run "phoenix.gen.model", args
-    end
-
     Mix.Phoenix.copy_from paths(), "priv/templates/phoenix.gen.html", "", binding, [
       {:eex, "controller.ex",       "web/controllers/#{path}_controller.ex"},
       {:eex, "edit.html.eex",       "web/templates/#{path}/edit.html.eex"},
@@ -61,11 +57,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
     """
 
     if opts[:model] != false do
-      Mix.shell.info """
-      and then update your repository by running migrations:
-
-          $ mix ecto.migrate
-      """
+      Mix.Task.run "phoenix.gen.model", args
     end
   end
 

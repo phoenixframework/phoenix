@@ -37,10 +37,6 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Controller")
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "View")
 
-    if opts[:model] != false do
-      Mix.Task.run "phoenix.gen.model", args
-    end
-
     files = [
       {:eex, "controller.ex",       "web/controllers/#{path}_controller.ex"},
       {:eex, "view.ex",             "web/views/#{path}_view.ex"},
@@ -61,11 +57,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
     """
 
     if opts[:model] != false do
-      Mix.shell.info """
-      and then update your repository by running migrations:
-
-          $ mix ecto.migrate
-      """
+      Mix.Task.run "phoenix.gen.model", args
     end
   end
 
