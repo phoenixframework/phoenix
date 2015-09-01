@@ -140,7 +140,7 @@ defmodule Phoenix.Endpoint do
       the "watch" mode of the brunch build tool when the server starts.
       You can configure it to whatever build tool or command you want:
 
-          [{"node", ["node_modules/brunch/bin/brunch", "watch"]}]
+          [node: ["node_modules/brunch/bin/brunch", "watch"]]
 
     * `:live_reload` - configuration for the live reload option.
       Configuration requires a `:paths` option which should be a list of
