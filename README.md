@@ -39,10 +39,12 @@ $ brunch watch
 ## Important links
 
 * \#elixir-lang on freenode IRC
-* [Issue tracker][1]
-* [phoenix-talk Mailing list (questions)][2]
-* [phoenix-core Mailing list (development)][3]
+* [elixir-lang slack channel][1]
+* [Issue tracker][2]
+* [phoenix-talk Mailing list (questions)][3]
+* [phoenix-core Mailing list (development)][4]
 
-  [1]: https://github.com/phoenixframework/phoenix/issues
-  [2]: http://groups.google.com/group/phoenix-talk
-  [3]: http://groups.google.com/group/phoenix-core
+  [1]: https://elixir-slackin.herokuapp.com/
+  [2]: https://github.com/phoenixframework/phoenix/issues
+  [3]: http://groups.google.com/group/phoenix-talk
+  [4]: http://groups.google.com/group/phoenix-core
