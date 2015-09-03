@@ -75,7 +75,7 @@ To make this easier to read, let's just focus on the struct itself.
 
 > Note: This file is temporary, and Plug will remove it from the directory as the request completes. If we need to do anything with this file, we need to do it before then.
 
-Once we have the `Plug.Upload` struct available in our controller, we can perform any operation on in we want. We can check to make sure the file exists with `File.exists?/1`, copy it somewhere else on the filesystem with `File.cp/2`, send it to S3 with an external library, or even send it back to the client with [Plug.Conn.send_file/5](http://hexdocs.pm/plug/Plug.Conn.html#send_file/5).
+Once we have the `Plug.Upload` struct available in our controller, we can perform any operation on it we want. We can check to make sure the file exists with `File.exists?/1`, copy it somewhere else on the filesystem with `File.cp/2`, send it to S3 with an external library, or even send it back to the client with [Plug.Conn.send_file/5](http://hexdocs.pm/plug/Plug.Conn.html#send_file/5).
 
 There's one last thing to note about file uploads. Let's create another user, this time without selecting a photo.
 
