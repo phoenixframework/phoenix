@@ -45,10 +45,10 @@ defmodule <%= application_module %>.ModelCase do
   You could then write your assertion like:
 
       assert {:password, "is unsafe"} in errors_on(%User{}, password: "password")
-  
+
   You can also create the changeset manually and retrieve the errors
   field directly:
-  
+
       iex> changeset = User.changeset(%User{}, password: "password")
       iex> {:password, "is unsafe"} in changeset.errors
       true
