@@ -57,7 +57,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
 
     Add the resource to your api scope in web/router.ex:
 
-        resources "/#{route}", #{binding[:scoped]}Controller
+        resources "/#{route}", #{binding[:scoped]}Controller, except: [:new, :edit]
     """
 
     if opts[:model] != false do

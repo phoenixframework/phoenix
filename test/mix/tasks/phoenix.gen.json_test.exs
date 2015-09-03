@@ -71,7 +71,7 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
       end
 
       assert_received {:mix_shell, :info, ["\nAdd the resource" <> _ = message]}
-      assert message =~ ~s(resources "/users", UserController)
+      assert message =~ ~s(resources "/users", UserController, except: [:new, :edit])
     end
   end
 
