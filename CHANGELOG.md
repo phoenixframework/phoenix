@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1 (2015-9-3)
+
+* Enhancements
+  * [Controller] `phoenix.gen.json` generator now excludes `:new` and `:edit` actions
+  * [Endpoint] Set hostname to "localhost" by default for dev and test
+  * [ConnTest] Support multiple json mime types in `json_response/2`
+
 ## 1.0.0 (2015-8-28) 🚀
 
 ## v0.17.1 (2015-8-26)
