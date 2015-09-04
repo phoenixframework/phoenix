@@ -166,6 +166,13 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
         assert file =~ "<%= @super_user.name %>"
       end
 
+      assert_file "test/controllers/admin/super_user_controller_test.exs", fn file ->
+        assert file =~ ~S|assert html_response(conn, 200) =~ "Listing super users"|
+        assert file =~ ~S|assert html_response(conn, 200) =~ "New super user"|
+        assert file =~ ~S|assert html_response(conn, 200) =~ "Show super user"|
+        assert file =~ ~S|assert html_response(conn, 200) =~ "Edit super user"|
+      end
+
       assert_received {:mix_shell, :info, ["\nAdd the resource" <> _ = message]}
       assert message =~ ~s(resources "/admin/super_users", Admin.SuperUserController)
     end
