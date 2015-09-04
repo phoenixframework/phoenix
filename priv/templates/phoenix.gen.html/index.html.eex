@@ -1,4 +1,4 @@
-<h2>Listing <%= String.replace(plural, "_", " ") %></h2>
+<h2>Listing <%= template_plural %></h2>
 
 <table class="table">
   <thead>
@@ -23,4 +23,4 @@
   </tbody>
 </table>
 
-<%= "<%=" %> link "New <%= String.replace(singular, "_", " ") %>", to: <%= singular %>_path(@conn, :new) %>
+<%= "<%=" %> link "New <%= template_singular %>", to: <%= singular %>_path(@conn, :new) %>
