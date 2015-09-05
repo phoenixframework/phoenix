@@ -26,7 +26,7 @@ defmodule HelloPhoenix.ErrorView do
 end
 ```
 
-> NOTE: In the development environment, this behavior will be overridden. Instead, we will get a really great debugging page. In order to see the `ErrorView` in action, we'll need to configure two options - `debug_errors: false` and `catch_errors: true` in `config/dev.exs`. The server must be restarted for the changes to be become effective.
+> NOTE: In the development environment, this behavior will be overridden. Instead, we will get a really great debugging page. In order to see the `ErrorView` in action, we'll need to configure two options - `debug_errors: false` and `catch_errors: true` in `config/dev.exs`. The server must be restarted for the changes to become effective.
 
 ```elixir
 config :hello_phoenix, HelloPhoenix.Endpoint,
