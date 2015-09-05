@@ -38,6 +38,8 @@ defmodule Mix.Tasks.Phoenix.Digest do
     input_path  = List.first(args) || @default_input_path
     output_path = opts[:output] || input_path
 
+    {:ok, _} = Application.ensure_all_started(:phoenix)
+
     case Phoenix.Digester.compile(input_path, output_path) do
       :ok ->
         # We need to call build structure so everything we have
