@@ -209,7 +209,7 @@ iex> user_path(Endpoint, :delete, 17)
 "/users/17"
 ```
 
-What about paths with query strings? Phoenix has you covered. By adding an optional fourth argument of key value pairs, the path helpers will return those pairs in the query string.
+What about paths with query strings? By adding an optional fourth argument of key value pairs, the path helpers will return those pairs in the query string.
 
 ```elixir
 iex> user_path(Endpoint, :show, 17, admin: true, active: false)
@@ -224,7 +224,7 @@ iex(3)> user_url(Endpoint, :index)
 ```
 Application endpoints will have their own guide soon. For now, think of them as the entity that handles requests just up to the point where the router takes over. That includes starting the app/server, applying configuration, and applying the plugs common to all requests.
 
-The `_url` functions will get the host, port, proxy port and ssl information needed to construct the full url from the configuration parameters set for each environment. We'll talk about configuration in more detail in its own guide. For now, you can take a look at `/config/dev.exs` file in your own project to see what those values are.
+The `_url` functions will get the host, port, proxy port and ssl information needed to construct the full url from the configuration parameters set for each environment. We'll talk about configuration in more detail in its own guide. For now, you can take a look at `/config/dev.exs` file in your own project to see those values.
 
 ### Nested Resources
 
@@ -268,7 +268,7 @@ iex> HelloPhoenix.Router.Helpers.user_post_path(Endpoint, :index, 42, active: tr
 
 ### Scoped Routes
 
-Scopes are a way to group routes under a common path prefix and scoped set of plug middleware. We might want to do this for admin functionality, APIs  and especially for versioned APIs. Let's say we have user generated reviews on a site, and that those reviews first need to be approved by an admin. The semantics of these resources are quite different, and they may not share the same controller, so we want to keep them separate.
+Scopes are a way to group routes under a common path prefix and scoped set of plug middleware. We might want to do this for admin functionality, APIs, and especially for versioned APIs. Let's say we have user generated reviews on a site, and that those reviews first need to be approved by an admin. The semantics of these resources are quite different, and they might not share the same controller. Scopes enable us to segregate these routes.
 
 The paths to the user facing reviews would look like a standard resource.
 
@@ -276,8 +276,7 @@ The paths to the user facing reviews would look like a standard resource.
 /reviews
 /reviews/1234
 /reviews/1234/edit
-
-and so on
+. . .
 ```
 
 The admin review paths could be prefixed with `/admin`.
@@ -286,8 +285,7 @@ The admin review paths could be prefixed with `/admin`.
 /admin/reviews
 /admin/reviews/1234
 /admin/reviews/1234/edit
-
-and so on
+. . .
 ```
 
 We accomplish this with a scoped route that sets a path option to `/admin` like this one. For now, let's not nest this scope inside of any other scopes (like the `scope "/", HelloPhoenix do` one provided for us in a new app).
@@ -749,11 +747,11 @@ defmodule HelloPhoenix.Router do
 end
 ```
 
-In general, the scoping rules for pipelines behave as you might expect. In this example, all routes will pipe through the `:browser` pipeline, because the `/` scope encloses all the routes. Only the `reviews` resources routes will pipe through the `:review_checks` pipeline, however, because we declare `pipe_through :review_checks` within the `/reviews` scope, where the `reviews` resources routes are.
+In general, the scoping rules for pipelines behave as you might expect. In this example, all routes will pipe through the `:browser` pipeline, because the `/` scope encloses all the routes. Only the `reviews` resources routes will pipe through the `:review_checks` pipeline, because we declare `pipe_through :review_checks` within the `/reviews` scope, where the `reviews` resources routes are located.
 
 ##### Creating New Pipelines
 
-Phoenix allows us to create our own custom pipelines anywhere in the router. It couldn't be simpler. We just call the `pipeline/2` macro with an atom for the name of our new pipeline and a block with all the plugs we want in it.
+Phoenix allows us to create our own custom pipelines anywhere in the router. To do so, we call the `pipeline/2` macro with these arguments: an atom for the name of our new pipeline and a block with all the plugs we want in it.
 
 ```elixir
 defmodule HelloPhoenix.Router do
@@ -825,7 +823,7 @@ We can mount multiple socket handlers in our endpoint:
 
 ```elixir
 socket "/socket", HelloPhoenix.UserSocket
-socket "/admin-socket", HelloPhoenix.AdminSocket do
+socket "/admin-socket", HelloPhoenix.AdminSocket
 ```
 
 
