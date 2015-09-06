@@ -71,7 +71,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
   """
   def run(args) do
-    switches = [migration: :boolean, binary_id: :boolean]
+    switches = [migration: :boolean, binary_id: :boolean, instructions: :string]
 
     {opts, parsed, _} = OptionParser.parse(args, switches: switches)
     [singular, plural | attrs] = validate_args!(parsed)
@@ -107,9 +107,11 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
     Mix.Phoenix.copy_from paths(), "priv/templates/phoenix.gen.model", "", binding, files
 
+    # Print any extra instruction given by parent generators
+    Mix.shell.info opts[:instructions] || ""
+
     if opts[:migration] != false do
       Mix.shell.info """
-
       Remeber to update your repository by running migrations:
 
           $ mix ecto.migrate

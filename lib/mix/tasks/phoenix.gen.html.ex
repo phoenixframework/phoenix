@@ -51,7 +51,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
       {:eex, "controller_test.exs", "test/controllers/#{path}_controller_test.exs"},
     ]
 
-    Mix.shell.info """
+    instructions = """
 
     Add the resource to your browser scope in web/router.ex:
 
@@ -59,7 +59,9 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
     """
 
     if opts[:model] != false do
-      Mix.Task.run "phoenix.gen.model", args
+      Mix.Task.run "phoenix.gen.model", ["--instructions", instructions|args]
+    else
+      Mix.shell.info instructions
     end
   end
 

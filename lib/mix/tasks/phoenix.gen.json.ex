@@ -19,9 +19,9 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
     * a migration file for the repository
     * test files for generated model and controller
 
-  The generated model can be skipped with `--no-model`.
-  Read the documentation for `phoenix.gen.model` for more
-  information on attributes and namespaced resources.
+  If you already have a model, the generated model can be skipped
+  with `--no-model`. Read the documentation for `phoenix.gen.model`
+  for more information on attributes and namespaced resources.
   """
   def run(args) do
     {opts, parsed, _} = OptionParser.parse(args, switches: [model: :boolean])
@@ -49,7 +49,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
 
     Mix.Phoenix.copy_from paths(), "priv/templates/phoenix.gen.json", "", binding, files
 
-    Mix.shell.info """
+    instructions = """
 
     Add the resource to your api scope in web/router.ex:
 
@@ -57,7 +57,9 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
     """
 
     if opts[:model] != false do
-      Mix.Task.run "phoenix.gen.model", args
+      Mix.Task.run "phoenix.gen.model", ["--instructions", instructions|args]
+    else
+      Mix.shell.info instructions
     end
   end
 
