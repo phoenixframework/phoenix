@@ -26,6 +26,7 @@ defmodule Mix.Tasks.Phoenix.Routes do
   """
 
   def run(args) do
+    Mix.Task.run "compile", args
     Mix.shell.info ConsoleFormatter.format(router(args))
   end
 
