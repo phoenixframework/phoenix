@@ -31,6 +31,11 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       assert_file "photo_blog/config/config.exs", fn file ->
         refute file =~ "app_namespace"
+        assert file =~ """
+        config :phoenix, :generators,
+          migration: true,
+          binary_id: false
+        """
       end
 
       assert_file "photo_blog/config/prod.exs", fn file ->
@@ -124,10 +129,24 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       refute File.exists?("photo_blog/lib/photo_blog/repo.ex")
 
       assert_file "photo_blog/mix.exs", &refute(&1 =~ ~r":phoenix_ecto")
+      assert_file "photo_blog/config/config.exs", &refute(&1 =~ "config :phoenix, :generators")
       assert_file "photo_blog/config/dev.exs", &refute(&1 =~ config)
       assert_file "photo_blog/config/test.exs", &refute(&1 =~ config)
       assert_file "photo_blog/config/prod.secret.exs", &refute(&1 =~ config)
       assert_file "photo_blog/web/web.ex", &refute(&1 =~ ~r"alias PhotoBlog.Repo")
+    end
+  end
+
+  test "new with binary_id" do
+    in_tmp "new with binary_id", fn ->
+      Mix.Tasks.Phoenix.New.run([@app_name, "--binary-id"])
+
+      assert_file "photo_blog/web/web.ex", fn file ->
+        assert file =~ ~r/@primary_key {:id, :binary_id, autogenerate: true}/
+        assert file =~ ~r/@foreign_key_type :binary_id/
+      end
+
+      assert_file "photo_blog/config/config.exs", ~r/binary_id: true/
     end
   end
 
@@ -196,6 +215,13 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "custom_path/config/dev.exs", [~r/Ecto.Adapters.MySQL/, ~r/username: "root"/, ~r/password: ""/]
       assert_file "custom_path/config/test.exs", [~r/Ecto.Adapters.MySQL/, ~r/username: "root"/, ~r/password: ""/]
       assert_file "custom_path/config/prod.secret.exs", [~r/Ecto.Adapters.MySQL/, ~r/username: "root"/, ~r/password: ""/]
+
+      assert_file "custom_path/test/support/conn_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/channel_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/model_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
     end
   end
 
@@ -208,6 +234,13 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "custom_path/config/dev.exs", ~r/Tds.Ecto/
       assert_file "custom_path/config/test.exs", ~r/Tds.Ecto/
       assert_file "custom_path/config/prod.secret.exs", ~r/Tds.Ecto/
+
+      assert_file "custom_path/test/support/conn_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/channel_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/model_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
     end
   end
 
@@ -232,6 +265,40 @@ defmodule Mix.Tasks.Phoenix.NewTest do
         assert file =~ ~r/Sqlite.Ecto/
         assert file =~ ~r/database: "db\/custom_path_prod.sqlite"/
       end
+
+      assert_file "custom_path/test/support/conn_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/channel_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/model_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+    end
+  end
+
+  test "new with mongodb adapter" do
+    in_tmp "new with mongodb adapter", fn ->
+      project_path = Path.join(File.cwd!, "custom_path")
+      Mix.Tasks.Phoenix.New.run([project_path, "--database", "mongodb"])
+
+      assert_file "custom_path/mix.exs", ~r/:mongodb_ecto/
+
+      assert_file "custom_path/config/dev.exs", ~r/Mongo.Ecto/
+      assert_file "custom_path/config/test.exs", [~r/Mongo.Ecto/, ~r/pool_size: 1/]
+      assert_file "custom_path/config/prod.secret.exs", ~r/Mongo.Ecto/
+
+      assert_file "custom_path/web/web.ex", fn file ->
+        assert file =~ ~r/@primary_key {:id, :binary_id, autogenerate: true}/
+        assert file =~ ~r/@foreign_key_type :binary_id/
+      end
+
+      assert_file "custom_path/test/support/conn_case.ex", ~r/Mongo.Ecto.truncate/
+      assert_file "custom_path/test/support/model_case.ex", ~r/Mongo.Ecto.truncate/
+      assert_file "custom_path/test/support/channel_case.ex", ~r/Mongo.Ecto.truncate/
+
+      assert_file "custom_path/config/config.exs", fn file ->
+        assert file =~ ~r/binary_id: true/
+        assert file =~ ~r/migration: false/
+      end
     end
   end
 
@@ -244,6 +311,13 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "custom_path/config/dev.exs", [~r/Ecto.Adapters.Postgres/, ~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
       assert_file "custom_path/config/test.exs", [~r/Ecto.Adapters.Postgres/, ~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
       assert_file "custom_path/config/prod.secret.exs", [~r/Ecto.Adapters.Postgres/, ~r/username: "postgres"/, ~r/password: "postgres"/]
+
+      assert_file "custom_path/test/support/conn_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/channel_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/model_case.ex",
+        ~r/Ecto.Adapters.SQL.restart_test_transaction/
     end
   end
 

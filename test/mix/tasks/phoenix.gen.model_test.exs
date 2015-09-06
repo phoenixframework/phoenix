@@ -109,6 +109,51 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
     end
   end
 
+  test "generates migration with binary_id" do
+    in_tmp "generates migration with binary_id", fn ->
+      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title", "user_id:references:users", "--binary-id"]
+
+      assert [migration] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
+
+      assert_file migration, fn file ->
+        assert file =~ "create table(:posts, primary_key: false) do"
+        assert file =~ "add :id, :binary_id, primary_key: true"
+        assert file =~ "add :user_id, references(:users, type: :binary_id)"
+      end
+    end
+  end
+
+  test "skips migration with --no-migration option" do
+    in_tmp "skips migration with -no-migration option", fn ->
+      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "--no-migration"]
+
+      assert [] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
+    end
+  end
+
+  test "uses defaults from :generators configuration" do
+    in_tmp "uses defaults from :generators configuration (migration)", fn ->
+      with_generators_config [migration: false], fn ->
+        Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts"]
+
+        assert [] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
+      end
+    end
+
+    in_tmp "uses defaults from :generators configuration (binary_id)", fn ->
+      with_generators_config [binary_id: true], fn ->
+        Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts"]
+
+        assert [migration] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
+
+        assert_file migration, fn file ->
+          assert file =~ "create table(:posts, primary_key: false) do"
+          assert file =~ "add :id, :binary_id, primary_key: true"
+        end
+      end
+    end
+  end
+
   test "plural can't contain a colon" do
     assert_raise Mix.Error, fn ->
       Mix.Tasks.Phoenix.Gen.Model.run ["Admin.User", "name:string", "foo:string"]
@@ -118,6 +163,16 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
   test "name is already defined" do
     assert_raise Mix.Error, fn ->
       Mix.Tasks.Phoenix.Gen.Model.run ["Dup", "dups"]
+    end
+  end
+
+  defp with_generators_config(config, fun) do
+    old_value = Application.get_env(:phoenix, :generators, [])
+    try do
+      Application.put_env(:phoenix, :generators, config)
+      fun.()
+    after
+      Application.put_env(:phoenix, :generators, old_value)
     end
   end
 end

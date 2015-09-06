@@ -108,6 +108,9 @@ defmodule Mix.Tasks.Phoenix.New do
     * `--no-ecto` - do not generate ecto files for
       the model layer
 
+    * `--binary-id` - use `binary_id` as primary key type
+      in ecto models
+
   ## Examples
 
       mix phoenix.new hello_world
@@ -122,7 +125,8 @@ defmodule Mix.Tasks.Phoenix.New do
 
   """
   @switches [dev: :boolean, brunch: :boolean, ecto: :boolean,
-             app: :string, module: :string, database: :string]
+             app: :string, module: :string, database: :string,
+             binary_id: :boolean]
 
   def run([version]) when version in ~w(-v --version) do
     Mix.shell.info "Phoenix v#{@version}"
@@ -161,6 +165,9 @@ defmodule Mix.Tasks.Phoenix.New do
 
     {brunch_deps_prefix, static_deps_prefix} =
       if in_umbrella?, do: {"../../", "../../../"}, else: {"", ""}
+
+    binary_id = Keyword.get(opts, :binary_id, false)
+    adapter_config = Keyword.put_new(adapter_config, :binary_id, binary_id)
 
     binding = [application_name: app,
                application_module: mod,
@@ -243,6 +250,14 @@ defmodule Mix.Tasks.Phoenix.New do
       config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
         adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:prod]},
         pool_size: 20
+      """
+
+      append_to path, "config/config.exs", """
+
+      # Configure phoenix generators
+      config :phoenix, :generators,
+        migration: #{adapter_config[:migration]},
+        binary_id: #{adapter_config[:binary_id]}
       """
     end
   end
@@ -367,7 +382,18 @@ defmodule Mix.Tasks.Phoenix.New do
     {:sqlite_ecto, Sqlite.Ecto,
       dev:  [database: "db/#{app}_dev.sqlite"],
       test: [database: "db/#{app}_test.sqlite", pool: Ecto.Adapters.SQL.Sandbox],
-      prod: [database: "db/#{app}_prod.sqlite"]}
+      prod: [database: "db/#{app}_prod.sqlite"],
+      test_reset: "Ecto.Adapters.SQL.restart_test_transaction",
+      migration: true}
+  end
+  defp get_ecto_adapter("mongodb", app) do
+    {:mongodb_ecto, Mongo.Ecto,
+     dev:  [database: "#{app}_dev"],
+     test: [database: "#{app}_test", pool_size: 1],
+     prod: [database: "#{app}_prod"],
+     binary_id: true,
+     test_reset: "Mongo.Ecto.truncate",
+     migration: false}
   end
   defp get_ecto_adapter(db, _app) do
     Mix.raise "Unknown database #{inspect db}"
@@ -377,7 +403,9 @@ defmodule Mix.Tasks.Phoenix.New do
     [dev:  [username: user, password: pass, database: "#{app}_dev", hostname: "localhost"],
      test: [username: user, password: pass, database: "#{app}_test", hostname: "localhost",
             pool: Ecto.Adapters.SQL.Sandbox],
-     prod: [username: user, password: pass, database: "#{app}_prod"]]
+     prod: [username: user, password: pass, database: "#{app}_prod"],
+     test_reset: "Ecto.Adapters.SQL.restart_test_transaction",
+     migration: true]
   end
 
   defp kw_to_config(kw) do

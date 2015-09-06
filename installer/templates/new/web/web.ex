@@ -19,6 +19,8 @@ defmodule <%= application_module %>.Web do
   def model do
     quote do
       use Ecto.Model
+      <%= if adapter_config[:binary_id] do %>@primary_key {:id, :binary_id, autogenerate: true}
+      @foreign_key_type :binary_id<% end %>
     end
   end
 <% else %>

@@ -16,7 +16,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     * a model in web/models
     * a migration file for the repository
 
-  The generated model can be skipped with `--no-migration`.
+  The generated migration can be skipped with `--no-migration`.
 
   ## Attributes
 
@@ -48,10 +48,36 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
       mix phoenix.gen.model Admin.User users name:string age:integer
 
+  ## binary_id
+
+  Generated migration can use `binary_id` for model's primary key and it's
+  references with option `--binary-id`.
+
+  This option assumes the project was generated with the `--binary-id` option,
+  that sets up models to use `binary_id` by default. If that's not the case
+  you can still set all your models to use `binary_id` by default, by adding
+  following to your `model` function in `web/web.ex`option or by adding
+  following to the generated model before the `schema` declaration:
+
+      @primary_key {:id, :binary_id, autogenerate: true}
+      @foreign_key_type :binary_id
+
+  ## Default options
+
+  This generator uses default options provided in the `:generators` configuration
+  of the `:phoenix` application. You can override those options providing
+  corresponding switches, e.g. `--no-binary-id` to use normal ids despite
+  the default configuration or `--migration` to force generation of the migration.
+
   """
   def run(args) do
-    {opts, parsed, _} = OptionParser.parse(args, switches: [migration: :boolean])
+    switches = [migration: :boolean, binary_id: :boolean]
+
+    {opts, parsed, _} = OptionParser.parse(args, switches: switches)
     [singular, plural | attrs] = validate_args!(parsed)
+
+    default_opts = Application.get_env(:phoenix, :generators, [])
+    opts = Keyword.merge(default_opts, opts)
 
     attrs     = Mix.Phoenix.attrs(attrs)
     binding   = Mix.Phoenix.inflect(singular)
@@ -66,7 +92,8 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     binding = binding ++
               [attrs: attrs, plural: plural, types: types(attrs),
                assocs: assocs(assocs), indexes: indexes(plural, assocs),
-               defaults: defaults(attrs), params: params]
+               defaults: defaults(attrs), params: params,
+               binary_id: opts[:binary_id]]
 
     files = [
       {:eex, "model.ex",       "web/models/#{path}.ex"},
@@ -79,6 +106,15 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     end
 
     Mix.Phoenix.copy_from paths(), "priv/templates/phoenix.gen.model", "", binding, files
+
+    if opts[:migration] != false do
+      Mix.shell.info """
+
+      Remeber to update your repository by running migrations:
+
+          $ mix ecto.migrate
+      """
+    end
   end
 
   defp validate_args!([_, plural | _] = args) do

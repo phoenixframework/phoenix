@@ -33,7 +33,7 @@ defmodule <%= application_module %>.ConnCase do
 
   setup tags do
 <%= if ecto do %>    unless tags[:async] do
-      Ecto.Adapters.SQL.restart_test_transaction(<%= application_module %>.Repo, [])
+      <%= adapter_config[:test_reset] %>(<%= application_module %>.Repo, [])
     end
 <% end %>
     :ok
