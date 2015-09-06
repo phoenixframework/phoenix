@@ -10,6 +10,7 @@
   * [Digest] Ensure Phoenix app is loaded before digesting
   * [Generator] Ensure proper keys are generated in JSON views and tests
   * [Generator] Ensure proper titles are generated in HTML views and tests
+  * [Token] Ensure max age is counted in seconds and not in miliseconds
 
 ## 1.0.1 (2015-9-3)
 
