@@ -15,7 +15,7 @@ config :hello_phoenix, HelloPhoenix.Endpoint,
 . . .
 ```
 
-If we need our port configuration to be flexible, perhaps even change for every host we deploy do, we can get the port value from an existing environment value set on the system. Again, here is our `config/prod.exs` file.
+If we need our port configuration to be flexible, perhaps even change for every host we deploy to, we can get the port value from an existing environment value set on the system. Again, here is our `config/prod.exs` file.
 
 ```elixir
 use Mix.Config

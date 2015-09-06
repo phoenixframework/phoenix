@@ -188,7 +188,7 @@ defmodule HelloPhoenix.ErrorView do
 end
 ```
 
-Before we dive into this, let's see what the rendered `404 not found` message looks like in a browser. In the development environment, Phoenix will debug errors by default, showing us a very informative debugging page. What we want here, however, is to see what page the application would serve in production. In order to do that we need to change some configuration in `config/dev.exs`. We change `debug_errors: false` and add `catch_errors: true`.
+Before we dive into this, let's see what the rendered `404 not found` message looks like in a browser. In the development environment, Phoenix will debug errors by default, showing us a very informative debugging page. What we want here, however, is to see what page the application would serve in production. In order to do that we need to set `debug_errors: false` in `config/dev.exs`.
 
 ```elixir
 use Mix.Config
@@ -196,7 +196,6 @@ use Mix.Config
 config :hello_phoenix, HelloPhoenix.Endpoint,
   http: [port: 4000],
   debug_errors: false,
-  catch_errors: true,
   code_reloader: true,
   . . .
 ```

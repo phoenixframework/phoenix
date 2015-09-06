@@ -356,7 +356,7 @@ def changeset(model, params \\ :empty) do
 end
 ```
 
-Now if we try to add add a new user through the front end of the application with a bio of "A", we should see this error message at the top of the page.
+Now if we try to add a new user through the front end of the application with a bio of "A", we should see this error message at the top of the page.
 
 ```text
 Oops, something went wrong! Please check the errors below:
