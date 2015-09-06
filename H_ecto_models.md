@@ -4,7 +4,7 @@ Most web applications today need some form of data storage. In the Elixir ecosys
 * MySQL
 * MSSQL
 * SQLite3
-* (coming soon) MongoDB
+* MongoDB
 
 Newly generated Phoenix applications integrate both Ecto and the PostgreSQL adapter by default.
 
@@ -28,13 +28,13 @@ $ mix phoenix.gen.html User users name:string email:string bio:string number_of_
 * creating web/views/user_view.ex
 * creating test/controllers/user_controller_test.exs
 
-Add the resource to the proper scope in web/router.ex:
+Add the resource to your browser scope in web/router.ex:
 
-resources "/users", UserController
+    resources "/users", UserController
 
 and then update your repository by running migrations:
 
-$ mix ecto.migrate
+    $ mix ecto.migrate
 ```
 
 Notice that we get a lot for free with this task - a migration, a controller, a controller test, a model, a model test, a view, and a number of templates.
@@ -215,7 +215,7 @@ defmodule HelloPhoenix.User do
   @doc """
   Creates a changeset based on the `model` and `params`.
 
-  If `params` are nil, an invalid changeset is returned
+  If no params are provided, an invalid changeset is returned
   with no validation performed.
   """
   def changeset(model, params \\ :empty) do
@@ -256,15 +256,16 @@ Then let's create a changeset from our model with an empty `User` struct, and an
 
 ```console
 iex(2)> changeset = User.changeset(%User{}, %{})
-  %Ecto.Changeset{changes: %{},
-    errors: [name: "can't be blank", email: "can't be blank",
-    bio: "can't be blank", number_of_pets: "can't be blank"], filters: %{},
-      model: %HelloPhoenix.User{__meta__: %Ecto.Schema.Metadata{source: "users",
-      state: :built}, bio: nil, email: nil, id: nil, inserted_at: nil,
-      name: nil, number_of_pets: nil, updated_at: nil}, optional: [],
-      params: %{}, repo: nil,
-        required: [:name, :email, :bio, :number_of_pets], valid?: false,
-        validations: []}
+%Ecto.Changeset{action: nil, changes: %{}, constraints: [],
+ errors: [name: "can't be blank", email: "can't be blank",
+  bio: "can't be blank", number_of_pets: "can't be blank"], filters: %{},
+ model: %HelloPhoenix.User{__meta__: #Ecto.Schema.Metadata<:built>, bio: nil,
+  email: nil, id: nil, inserted_at: nil, name: nil, number_of_pets: nil,
+  updated_at: nil}, optional: [], params: %{}, repo: nil,
+ required: [:name, :email, :bio, :number_of_pets],
+ types: %{bio: :string, email: :string, id: :id, inserted_at: Ecto.DateTime,
+   name: :string, number_of_pets: :integer, updated_at: Ecto.DateTime},
+ valid?: false, validations: []}
 ```
 
 Once we have a changeset, we can ask it if it is valid.
@@ -314,17 +315,19 @@ Then let's use our new `params` map to create a changeset.
 
 ```console
 iex(3)> changeset = User.changeset(%User{}, params)
-  %Ecto.Changeset{changes: %{bio: "An example to all", email: "joe@example.com",
-  name: "Joe Example", number_of_pets: 5}, errors: [], filters: %{},
-    model: %HelloPhoenix.User{__meta__: %Ecto.Schema.Metadata{source: "users",
-    state: :built}, bio: nil, email: nil, id: nil, inserted_at: nil,
-    name: nil, number_of_pets: nil, updated_at: nil},
-    optional: [:number_of_pets],
-    params: %{"bio" => "An example to all", "email" => "joe@example.com",
-    "name" => "Joe Example", "number_of_pets" => 5,
-    "random_key" => "random value"}, repo: nil,
-    required: [:name, :email, :bio], valid?: true,
-    validations: []}
+%Ecto.Changeset{action: nil,
+ changes: %{bio: "An example to all", email: "joe@example.com",
+   name: "Joe Example", number_of_pets: 5}, constraints: [], errors: [],
+ filters: %{},
+ model: %HelloPhoenix.User{__meta__: #Ecto.Schema.Metadata<:built>, bio: nil,
+  email: nil, id: nil, inserted_at: nil, name: nil, number_of_pets: nil,
+  updated_at: nil}, optional: [:number_of_pets],
+ params: %{"bio" => "An example to all", "email" => "joe@example.com",
+   "name" => "Joe Example", "number_of_pets" => 5,
+   "random_key" => "random value"}, repo: nil, required: [:name, :email, :bio],
+ types: %{bio: :string, email: :string, id: :id, inserted_at: Ecto.DateTime,
+   name: :string, number_of_pets: :integer, updated_at: Ecto.DateTime},
+ valid?: true, validations: []}
 ```
 
 Our new changeset is valid.
@@ -467,22 +470,22 @@ Notice that we get the user parameters by pattern matching with the `"user"` key
 
 If insert errored, we re-render `new.html` with the changeset to display the errors to the user.
 
-In the `show` action, we use the `Repo.get/2` built-in function to fetch the user record identified by the id we get from the request parameters. We don't generate a changeset here because we assume that the data has passed through a changeset on the way in to the database, and therefore is valid when we retrieve it here.
+In the `show` action, we use the `Repo.get!/2` built-in function to fetch the user record identified by the id we get from the request parameters. We don't generate a changeset here because we assume that the data has passed through a changeset on the way in to the database, and therefore is valid when we retrieve it here.
 
 This is the singular version of `index` above.
 
 ```elixir
 def show(conn, %{"id" => id}) do
-  user = Repo.get(User, id)
+  user = Repo.get!(User, id)
   render(conn, "show.html", user: user)
 end
 ```
 
-In the `edit` action, we use Ecto in a way which is a combination of `show` and `new`. We pattern match for the `id` from the incoming params so that we can use `Repo.get/2` to retrieve the correct user from the database, as we did in `show`. We also create a changeset from that user because when the user submits a `PUT` request to `update`, there might be errors, which we can track in the changeset when re-rendering `edit.html`.
+In the `edit` action, we use Ecto in a way which is a combination of `show` and `new`. We pattern match for the `id` from the incoming params so that we can use `Repo.get!/2` to retrieve the correct user from the database, as we did in `show`. We also create a changeset from that user because when the user submits a `PUT` request to `update`, there might be errors, which we can track in the changeset when re-rendering `edit.html`.
 
 ```elixir
 def edit(conn, %{"id" => id}) do
-  user = Repo.get(User, id)
+  user = Repo.get!(User, id)
   changeset = User.changeset(user)
   render(conn, "edit.html", user: user, changeset: changeset)
 end
@@ -492,7 +495,7 @@ The `update` action is nearly identical to `create`. The only difference is that
 
 ```elixir
 def update(conn, %{"id" => id, "user" => user_params}) do
-  user = Repo.get(User, id)
+  user = Repo.get!(User, id)
   changeset = User.changeset(user, user_params)
 
   case Repo.update(changeset) do
@@ -513,6 +516,9 @@ Note: There is nothing in this generated code to allow a user to change their mi
 ```elixir
 def delete(conn, %{"id" => id}) do
   user = Repo.get!(User, id)
+
+  # Here we use delete! (with a bang) because we expect
+  # it to always work (and if it does not, it will raise).
   Repo.delete!(user)
 
   conn
@@ -561,20 +567,17 @@ defmodule HelloPhoenix.User do
 end
 ```
 
-And here is how we would declare the complementary `belongs_to` relationship in `web/models/video.ex`:
+Since we used the generator to scaffold our `Video` model and specified the user association with `user_id:references:users`, the `belongs_to` relationship will already be defined for us in `web/models/video.ex`:
 ```elixir
 defmodule HelloPhoenix.Video do
 . . .
   schema "videos" do
     field :name, :string
     field :approved_at, Ecto.DateTime
-    field :description, :text
+    field :description, :string
     field :likes, :integer
     field :views, :integer
-
-    # If we don't provide a foreign_key, Ecto
-    # guesses it as the atom plus _id
-    belongs_to :user, HelloPhoenix.User, foreign_key: :user_id
+    belongs_to :user, HelloPhoenix.User
 
     timestamps
   end
@@ -582,7 +585,7 @@ defmodule HelloPhoenix.Video do
 . . .
 end
 ```
-Note that we don't declare the field `user_id` in the video model, but, as a required (or optional) field, we do declare the `user_id` field.
+Note that we don't declare the field `user_id` in the video model schema. We add it to the required (or optional) field list instead.
 
 We can use our newly declared relationships in our `web/controllers/user_controller.ex` like this:
 
@@ -591,12 +594,12 @@ defmodule HelloPhoenix.UserController do
 . . .
   def index(conn, _params) do
     users = User |> Repo.all |> Repo.preload [:videos]
-    render conn, "index.html", users: users
+    render(conn, "index.html", users: users)
   end
 
   def show(conn, %{"id" => id}) do
-    user = User |> Repo.get(id) |> Repo.preload [:videos]
-    render conn, "show.html", user: user
+    user = User |> Repo.get!(id) |> Repo.preload [:videos]
+    render(conn, "show.html", user: user)
   end
 . . .
 end
@@ -621,14 +624,14 @@ end
 ```
 Now, when `Repo.update` is called for the `Video` model, the `approved_at` field will automatically be reset to nil. This should keep us safe from the ravages of an often hostile modern Internet!
 
-`Ecto.Model.Callbacks` actually ships with with a lot more than the `before_update` callback, in addition, it comes with:
+`Ecto.Model.Callbacks` actually ships with a lot more than the `before_update` callback, in addition, it comes with:
 
 - `before_delete`: called before the adapter deletes our record from the database; if perhaps we have a foreign_key constraint from another table, we would use this hook to clean it up.
 - `after_delete`: called after the adapter deletes our record. If we wished to archive our record, we'd do it in this hook.
-- `before_update`: called before the adapter updates our record. We used it above to reset the likes counter.
-- `after_update`: called after the adapter updates our record. If we wanted to update our user that the model has changed, now would do that here.
+- `before_update`: called before the adapter updates our record. We used it above to "null out" a video's `approved_at` field.
+- `after_update`: called after the adapter updates our record. If we wanted to notify user that the model has changed, we would do that here.
 - `before_insert`: called before the adapter first creates a new record. We would use it in cases when we wanted to infer default values to certain fields from the partial changeset we receive from the user.
-- `after_insert`: called after the adapter creates our record. We could use this to notify the user a new has been created under that user's account.
+- `after_insert`: called after the adapter creates our record. We could use this to notify the user a new video has been created under that user's account.
 - `after_load`: called after the model is loaded from the database. We might use this to load in other values based upon what we found in our record.
 
 Note: there is no `before_load` hook.
@@ -655,7 +658,7 @@ Our callback function must always take a changeset as its first argument, and re
 
 For the full reference, visit the docs at [Ecto Changeset documentation](http://hexdocs.pm/ecto/Ecto.Changeset.html).
 
-Ecto callbacks give can be very powerful, but we need to take care when using them. On one hand, they can add behaviors in a way which may not be apparent in the execution flow because callbacks can be defined far from the action in our model. On the other hand, it might seem tempting to put a lot of behavior in a single callback, which can make the model difficult to test and debug.
+Ecto callbacks can be very powerful, but we need to be careful when using them. On one hand, they can add behaviors in a way which may not be apparent in the execution flow because callbacks can be defined far from the action in our model. On the other hand, it might seem tempting to put a lot of behavior in a single callback, which can make the model difficult to test and debug.
 
 ### Integrating Ecto into an Existing Application
 
