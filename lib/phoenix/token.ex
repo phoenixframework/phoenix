@@ -72,7 +72,7 @@ defmodule Phoenix.Token do
 
     message = %{
       data: data,
-      signed: now_seconds()
+      signed: now_ms(),
     } |> :erlang.term_to_binary()
     MessageVerifier.sign(message, secret)
   end
@@ -97,11 +97,13 @@ defmodule Phoenix.Token do
 
   def verify(context, salt, token, opts) when is_binary(salt) and is_binary(token) do
     secret = get_endpoint(context) |> get_secret(salt, opts)
+    max_age_ms = if max_age_secs = opts[:max_age], do: trunc(max_age_secs * 1000)
+
     case MessageVerifier.verify(token, secret) do
       {:ok, message} ->
         %{data: data, signed: signed} = :erlang.binary_to_term(message)
 
-        if (max_age = opts[:max_age]) && (signed + max_age) < now_seconds() do
+        if max_age_ms && (signed + max_age_ms) < now_ms() do
           {:error, :expired}
         else
           {:ok, data}
@@ -132,6 +134,8 @@ defmodule Phoenix.Token do
     KeyGenerator.generate(secret_key_base, salt, key_opts)
   end
 
-  defp time_to_seconds({mega, sec, _micro}), do: mega * 1000000 + sec
-  defp now_seconds, do: :os.timestamp() |> time_to_seconds()
+  def time_to_ms({mega, sec, micro}) do
+    trunc(((mega * 1000000 + sec) * 1000) + (micro / 1000))
+  end
+  def now_ms, do: :os.timestamp() |> time_to_ms()
 end

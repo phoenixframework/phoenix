@@ -31,10 +31,17 @@ defmodule Phoenix.TokenTest do
            {:error, :invalid}
   end
 
-  test "supports max age" do
+  test "supports max age in seconds" do
     token = Token.sign(conn(), "id", 1)
     assert Token.verify(conn(), "id", token, max_age: 1000) == {:ok, 1}
     assert Token.verify(conn(), "id", token, max_age: -1000) == {:error, :expired}
+    assert Token.verify(conn(), "id", token, max_age: 100) == {:ok, 1}
+    assert Token.verify(conn(), "id", token, max_age: -100) == {:error, :expired}
+
+    token = Token.sign(conn(), "id", 1)
+    assert Token.verify(conn(), "id", token, max_age: 0.1) == {:ok, 1}
+    :timer.sleep(150)
+    assert Token.verify(conn(), "id", token, max_age: 0.1) == {:error, :expired}
   end
 
   defp socket() do
