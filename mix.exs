@@ -6,7 +6,7 @@ defmodule Phoenix.Mixfile do
   def project do
     [app: :phoenix,
      version: @version,
-     elixir: "~> 1.0.2 or ~> 1.1-dev",
+     elixir: "~> 1.0.2 or ~> 1.1-beta",
      deps: deps,
      package: package,
      docs: [source_ref: "v#{@version}", main: "Phoenix"],

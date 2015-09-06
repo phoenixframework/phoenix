@@ -31,9 +31,8 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
     binding = Mix.Phoenix.inflect(singular)
     path    = binding[:path]
     route   = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
-    binding = binding ++ [plural: plural, route: route, json_fields: json_fields(binding, attrs),
-                          json_fields_string_keys: json_fields_string_keys(binding, attrs),
-                          params: Mix.Phoenix.params(attrs)]
+    binding = binding ++ [plural: plural, route: route,
+                          attrs: attrs, params: Mix.Phoenix.params(attrs)]
 
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Controller")
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "View")
@@ -68,21 +67,6 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
           $ mix ecto.migrate
       """
     end
-  end
-
-  defp json_fields(binding, attrs, key_value_to_template_representation) do
-    [{:id, nil}] ++ attrs
-    |> Enum.map(fn {k, _} -> {k, "#{binding[:singular]}.#{k}"} end)
-    |> Enum.map(key_value_to_template_representation)
-    |> Enum.join(",\n      ")
-  end
-
-  defp json_fields(binding, attrs) do
-    json_fields(binding, attrs, fn {k, v} -> "#{k}: #{v}" end)
-  end
-
-  defp json_fields_string_keys(binding, attrs) do
-    json_fields(binding, attrs, fn {k, v} -> "\"#{k}\" => #{v}" end)
   end
 
   defp validate_args!([_, plural | _] = args) do
