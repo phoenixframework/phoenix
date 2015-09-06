@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.2-dev
+
+* Enhancements
+  * [Installer] Support `--database mongodb` when generating new apps
+  * [Installer] Support `binary_id` and `migration` configuration for models
+
+* Bug fixes
+  * [Digest] Ensure Phoenix app is loaded before digesting
+  * [Generator] Ensure proper keys are generated in JSON views and tests
+  * [Generator] Ensure proper titles are generated in HTML views and tests
+
 ## 1.0.1 (2015-9-3)
 
 * Enhancements

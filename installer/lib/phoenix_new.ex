@@ -98,7 +98,8 @@ defmodule Mix.Tasks.Phoenix.New do
       the generated skeleton
 
     * `--database` - specify the database adapter for ecto.
-      Values can be `mysql`, `mssql` or `sqlite`. Defaults to `postgres`
+      Values can be `postgres` `mysql`, `mssql`, `sqlite` or
+      `mongodb`. Defaults to `postgres`
 
     * `--no-brunch` - do not generate brunch files
       for static asset building. When choosing this

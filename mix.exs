@@ -1,7 +1,7 @@
 defmodule Phoenix.Mixfile do
   use Mix.Project
 
-  @version "1.0.1"
+  @version "1.0.2-dev"
 
   def project do
     [app: :phoenix,
