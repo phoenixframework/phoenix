@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.2-dev
+## 1.0.2 (2015-9-6)
 
 * Enhancements
   * [Installer] Support `--database mongodb` when generating new apps
