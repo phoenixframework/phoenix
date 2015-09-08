@@ -662,7 +662,7 @@ Ecto callbacks can be very powerful, but we need to be careful when using them. 
 
 ### Integrating Ecto into an Existing Application
 
-Adding Ecto to a pre-existing Phoenix application is easy. Once we include Ecto and Postgrex as dependencies, there are mix tasks to help us.
+Adding Ecto to an existing Phoenix application which wasn't using it before is easy. Once we include Ecto and Postgrex as dependencies, there are mix tasks to help us.
 
 #### Adding Ecto and Postgrex as Dependencies
 
@@ -677,11 +677,11 @@ defmodule HelloPhoenix.Mixfile do
   #
   # Type `mix help deps` for examples and options
   defp deps do
-    [{:phoenix, "~> 0.13"},
-     {:phoenix_ecto, "~> 0.4"},
+    [{:phoenix, "~> 1.0.2"},
+     {:phoenix_ecto, "~> 1.1"},
      {:postgrex, ">= 0.0.0"},
-     {:phoenix_html, "~> 1.0"},
-     {:phoenix_live_reload, "~> 0.4", only: :dev},
+     {:phoenix_html, "~> 2.1"},
+     {:phoenix_live_reload, "~> 1.0", only: :dev},
      {:cowboy, "~> 1.0"}]
   end
 end
@@ -693,11 +693,6 @@ Then we run `mix do deps.get, compile` to get them into our application.
 $ mix do deps.get, compile
 Running dependency resolution
 Dependency resolution completed successfully
-postgrex: v0.8.1
-decimal: v1.1.0
-phoenix_ecto: v0.3.0
-poolboy: v1.4.2
-ecto: v0.10.2
 . . .
 ```
 
