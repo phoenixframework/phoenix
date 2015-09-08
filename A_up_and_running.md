@@ -93,7 +93,7 @@ By default Phoenix accepts requests on port 4000. If we point our favorite web b
 
 ![Phoenix Welcome Page](/images/welcome-to-phoenix.png)
 
-If your screen looks like the image above, congratulations! You now have a working Phoenix application.
+If your screen looks like the image above, congratulations! You now have a working Phoenix application. In case you can't see the page above, try accessing it via [http://127.0.0.1:4000](http://127.0.0.1:4000) and later make sure your OS has defined "localhost" as "127.0.0.1".
 
 Locally, our application is running in an iex session. To stop it, we hit ctrl-c twice, just as we would to stop iex normally.
 
