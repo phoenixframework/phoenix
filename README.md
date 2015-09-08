@@ -36,6 +36,12 @@ $ npm install -g brunch
 $ brunch watch
 ```
 
+### Building docs from source
+
+```bash
+$ MIX_ENV=docs mix docs
+```
+
 ## Important links
 
 * \#elixir-lang on freenode IRC
