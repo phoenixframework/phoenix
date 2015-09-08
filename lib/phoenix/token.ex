@@ -18,7 +18,7 @@ defmodule Phoenix.Token do
   it to the client. We could send it to the client in multiple ways.
   One is via the meta tag:
 
-      <%= tag :meta, name: "channel_token"
+      <%= tag :meta, name: "channel_token",
                      content: Phoenix.Token.sign(@conn, "user", @current_user.id) %>
 
   Or an endpoint that returns it:
