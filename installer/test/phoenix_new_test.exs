@@ -291,6 +291,10 @@ defmodule Mix.Tasks.Phoenix.NewTest do
         assert file =~ ~r/@foreign_key_type :binary_id/
       end
 
+      assert_file "custom_path/test/test_helper.exs", fn file ->
+        refute file =~ ~r/Ecto.Adapters.SQL/
+      end
+
       assert_file "custom_path/test/support/conn_case.ex", ~r/Mongo.Ecto.truncate/
       assert_file "custom_path/test/support/model_case.ex", ~r/Mongo.Ecto.truncate/
       assert_file "custom_path/test/support/channel_case.ex", ~r/Mongo.Ecto.truncate/

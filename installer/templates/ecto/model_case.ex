@@ -25,7 +25,7 @@ defmodule <%= application_module %>.ModelCase do
 
   setup tags do
     unless tags[:async] do
-      <%= adapter_config[:test_reset] %>(<%= application_module %>.Repo, [])
+      <%= adapter_config[:test_restart] %>
     end
 
     :ok

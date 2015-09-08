@@ -32,7 +32,7 @@ defmodule <%= application_module %>.ChannelCase do
 
   setup tags do
 <%= if ecto do %>    unless tags[:async] do
-      <%= adapter_config[:test_reset] %>(<%= application_module %>.Repo, [])
+      <%= adapter_config[:test_restart] %>
     end
 <% end %>
     :ok

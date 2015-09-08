@@ -160,7 +160,7 @@ defmodule Mix.Tasks.Phoenix.New do
     # SQL spec, they are case insensitive unless quoted, which
     # means creating a database like FoO is the same as foo in
     # some storages.
-    {adapter_app, adapter_module, adapter_config} = get_ecto_adapter(db, String.downcase(app))
+    {adapter_app, adapter_module, adapter_config} = get_ecto_adapter(db, String.downcase(app), mod)
     pubsub_server = get_pubsub_server(mod)
     in_umbrella? = in_umbrella?(path)
 
@@ -370,42 +370,45 @@ defmodule Mix.Tasks.Phoenix.New do
     end
   end
 
-  defp get_ecto_adapter("mssql", app) do
-    {:tds_ecto, Tds.Ecto, db_config(app, "db_user", "db_password")}
+  defp get_ecto_adapter("mssql", app, module) do
+    {:tds_ecto, Tds.Ecto, db_config(app, module, "db_user", "db_password")}
   end
-  defp get_ecto_adapter("mysql", app) do
-    {:mariaex, Ecto.Adapters.MySQL, db_config(app, "root", "")}
+  defp get_ecto_adapter("mysql", app, module) do
+    {:mariaex, Ecto.Adapters.MySQL, db_config(app, module, "root", "")}
   end
-  defp get_ecto_adapter("postgres", app) do
-    {:postgrex, Ecto.Adapters.Postgres, db_config(app, "postgres", "postgres")}
+  defp get_ecto_adapter("postgres", app, module) do
+    {:postgrex, Ecto.Adapters.Postgres, db_config(app, module, "postgres", "postgres")}
   end
-  defp get_ecto_adapter("sqlite", app) do
+  defp get_ecto_adapter("sqlite", app, module) do
     {:sqlite_ecto, Sqlite.Ecto,
       dev:  [database: "db/#{app}_dev.sqlite"],
       test: [database: "db/#{app}_test.sqlite", pool: Ecto.Adapters.SQL.Sandbox],
       prod: [database: "db/#{app}_prod.sqlite"],
-      test_reset: "Ecto.Adapters.SQL.restart_test_transaction",
+      test_begin: "Ecto.Adapters.SQL.begin_test_transaction(#{module}.Repo)",
+      test_restart: "Ecto.Adapters.SQL.restart_test_transaction(#{module}.Repo, [])",
       migration: true}
   end
-  defp get_ecto_adapter("mongodb", app) do
+  defp get_ecto_adapter("mongodb", app, module) do
     {:mongodb_ecto, Mongo.Ecto,
      dev:  [database: "#{app}_dev"],
      test: [database: "#{app}_test", pool_size: 1],
      prod: [database: "#{app}_prod"],
+     test_begin: "",
+     test_restart: "Mongo.Ecto.truncate(#{module}.Repo, [])",
      binary_id: true,
-     test_reset: "Mongo.Ecto.truncate",
      migration: false}
   end
-  defp get_ecto_adapter(db, _app) do
+  defp get_ecto_adapter(db, _app, _mod) do
     Mix.raise "Unknown database #{inspect db}"
   end
 
-  defp db_config(app, user, pass) do
+  defp db_config(app, module, user, pass) do
     [dev:  [username: user, password: pass, database: "#{app}_dev", hostname: "localhost"],
      test: [username: user, password: pass, database: "#{app}_test", hostname: "localhost",
             pool: Ecto.Adapters.SQL.Sandbox],
      prod: [username: user, password: pass, database: "#{app}_prod"],
-     test_reset: "Ecto.Adapters.SQL.restart_test_transaction",
+     test_begin: "Ecto.Adapters.SQL.begin_test_transaction(#{module}.Repo)",
+     test_restart: "Ecto.Adapters.SQL.restart_test_transaction(#{module}.Repo, [])",
      migration: true]
   end
 
