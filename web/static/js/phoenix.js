@@ -109,7 +109,7 @@ class Push {
 
   // Initializes the Push
   //
-  // channel - The Channelnel
+  // channel - The Channel
   // event - The event, for example `"phx_join"`
   // payload - The payload, for example `{user_id: 123}`
   //
