@@ -85,7 +85,12 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       # Ecto
       config = ~r/config :photo_blog, PhotoBlog.Repo,/
-      assert_file "photo_blog/mix.exs", ~r"{:phoenix_ecto,"
+      assert_file "photo_blog/mix.exs", fn file ->
+        assert file =~ "{:phoenix_ecto,"
+        assert file =~ "aliases: aliases"
+        assert file =~ "ecto.setup"
+        assert file =~ "ecto.reset"
+      end
       assert_file "photo_blog/config/dev.exs", config
       assert_file "photo_blog/config/test.exs", config
       assert_file "photo_blog/config/prod.secret.exs", config
