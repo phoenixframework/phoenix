@@ -18,8 +18,9 @@ defmodule <%= application_module %>.Web do
 <%= if ecto do %>
   def model do
     quote do
-      use Ecto.Model
-      <%= if adapter_config[:binary_id] do %>@primary_key {:id, :binary_id, autogenerate: true}
+      use Ecto.Model<%= if adapter_config[:binary_id] do %>
+
+      @primary_key {:id, :binary_id, autogenerate: true}
       @foreign_key_type :binary_id<% end %>
     end
   end
@@ -64,12 +65,11 @@ defmodule <%= application_module %>.Web do
 
   def channel do
     quote do
-      use Phoenix.Channel
-<%= if ecto do %>
+      use Phoenix.Channel<%= if ecto do %>
+
       alias <%= application_module %>.Repo
       import Ecto.Model
-      import Ecto.Query, only: [from: 1, from: 2]
-<% end %>
+      import Ecto.Query, only: [from: 1, from: 2]<% end %>
     end
   end
 
