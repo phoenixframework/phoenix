@@ -100,21 +100,21 @@ defmodule Phoenix.Controller do
   imagine if you stored a `conn.assigns.current_user` in the connection
   and wanted quick access to the user for every action in your controller:
 
-    def action(conn, _) do
-      apply(__MODULE__, action_name(conn), [conn,
-                                            conn.params,
-                                            conn.assigns.current_user])
-    end
+      def action(conn, _) do
+        apply(__MODULE__, action_name(conn), [conn,
+                                              conn.params,
+                                              conn.assigns.current_user])
+      end
 
-    def index(conn, _params, user) do
-      videos = Repo.all(user_videos(user))
-      ...
-    end
+      def index(conn, _params, user) do
+        videos = Repo.all(user_videos(user))
+        # ...
+      end
 
-    def delete(conn, %{"id" => id}, user) do
-      video = Repo.get!(user_videos(user), id)
-      ...
-    end
+      def delete(conn, %{"id" => id}, user) do
+        video = Repo.get!(user_videos(user), id)
+        # ...
+      end
   """
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
