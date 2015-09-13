@@ -14,16 +14,18 @@ defmodule Phoenix.CodeReloader do
 
   @doc """
   Reloads code within the paths specified in the `:reloadable_paths`
-  config for the endpoint.
+  config for the endpoint by invoking the `:reloadable_compilers`.
 
   This is configured in your application environment like:
 
       config :your_app, YourApp.Endpoint,
-        reloadable_paths: ["web"]
+        reloadable_paths: ["web"],
+        reloadable_compilers: [:gettext, :phoenix, :elixir]
 
-  Keep in mind that the paths passed to :reloadable_paths must be
-  a subset of the paths specified in the :elixirc_paths option of
-  `project/0` in mix.exs.
+  Keep in mind that the paths passed to `:reloadable_paths` must be
+  a subset of the paths specified in the `:elixirc_paths` option of
+  `project/0` in `mix.exs` while `:reloadable_compilers` is a subset
+  of `:compilers`.
   """
   @spec reload!(module) :: :ok | :noop | {:error, binary()}
   defdelegate reload!(endpoint), to: Phoenix.CodeReloader.Server

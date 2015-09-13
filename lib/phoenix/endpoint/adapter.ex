@@ -71,7 +71,7 @@ defmodule Phoenix.Endpoint.Adapter do
 
   defp code_reloader_children(mod, conf) do
     if conf[:code_reloader] do
-      args = [conf[:otp_app], root!(conf), conf[:reloadable_paths],
+      args = [conf[:otp_app], root!(conf), conf[:reloadable_paths], conf[:reloadable_compilers],
               [name: Module.concat(mod, CodeReloader)]]
       [worker(Phoenix.CodeReloader.Server, args)]
     else
@@ -106,6 +106,7 @@ defmodule Phoenix.Endpoint.Adapter do
      check_origin: true,
      http: false,
      https: false,
+     reloadable_compilers: [:gettext, :phoenix, :elixir],
      reloadable_paths: ["web"],
      secret_key_base: nil,
      static_url: nil,

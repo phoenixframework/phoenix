@@ -6,8 +6,8 @@ defmodule Phoenix.CodeReloader.Server do
   require Logger
   alias Phoenix.CodeReloader.Proxy
 
-  def start_link(app, root, paths, opts \\ []) do
-    GenServer.start_link(__MODULE__, {app, root, paths}, opts)
+  def start_link(app, root, paths, compilers, opts \\ []) do
+    GenServer.start_link(__MODULE__, {app, root, paths, compilers}, opts)
   end
 
   def reload!(endpoint) do
@@ -25,13 +25,15 @@ defmodule Phoenix.CodeReloader.Server do
 
   ## Callbacks
 
-  def init({app, root, paths}) do
-    {:ok, {app, root, paths}}
+  def init({app, root, paths, compilers}) do
+    all = Mix.Project.config[:compilers] || Mix.compilers
+    compilers = all -- (all -- compilers)
+    {:ok, {app, root, paths, compilers}}
   end
 
-  def handle_call(:reload!, from, {app, root, paths} = state) do
+  def handle_call(:reload!, from, {app, root, paths, compilers} = state) do
     froms = all_waiting([from])
-    reply = mix_compile(Code.ensure_loaded(Mix.Task), app, root, paths)
+    reply = mix_compile(Code.ensure_loaded(Mix.Task), app, root, paths, compilers)
     Enum.each(froms, &GenServer.reply(&1, reply))
     {:noreply, state}
   end
@@ -44,31 +46,29 @@ defmodule Phoenix.CodeReloader.Server do
     end
   end
 
-  defp mix_compile({:error, _reason}, _, _, _) do
+  defp mix_compile({:error, _reason}, _, _, _, _) do
     Logger.error "If you want to use the code reload plug in production or " <>
                  "inside an escript, add :mix to your list of dependencies or " <>
                  "disable code reloading"
     :ok
   end
 
-  defp mix_compile({:module, Mix.Task}, app, root, paths) do
+  defp mix_compile({:module, Mix.Task}, app, root, paths, compilers) do
     if Mix.Project.umbrella? do
-      Mix.Project.in_project(app, root, fn _ -> mix_compile(paths) end)
+      Mix.Project.in_project(app, root, fn _ -> mix_compile(paths, compilers) end)
     else
-      mix_compile(paths)
+      mix_compile(paths, compilers)
     end
   end
 
-  defp mix_compile(paths) do
+  defp mix_compile(paths, compilers) do
     reloadable_paths = Enum.flat_map(paths, &["--elixirc-paths", &1])
-    Mix.Task.reenable "compile.phoenix"
-    Mix.Task.reenable "compile.elixir"
+    Enum.each compilers, &Mix.Task.reenable("compile.#{&1}")
 
     {res, out} =
       proxy_io(fn ->
         try do
-          Mix.Task.run "compile.phoenix"
-          Mix.Task.run "compile.elixir", reloadable_paths
+          Enum.each compilers, &Mix.Task.run("compile.#{&1}", reloadable_paths)
         catch
           _, _ -> :error
         end
