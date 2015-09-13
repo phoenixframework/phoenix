@@ -68,6 +68,10 @@ defmodule Phoenix.CodeReloader.Server do
     {res, out} =
       proxy_io(fn ->
         try do
+          # We call build_structure mostly for Windows
+          # so any new assets in priv is copied to the
+          # build directory.
+          Mix.Project.build_structure
           Enum.each compilers, &Mix.Task.run("compile.#{&1}", reloadable_paths)
         catch
           _, _ -> :error
