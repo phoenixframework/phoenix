@@ -1,7 +1,7 @@
 %{"cowboy": {:hex, :cowboy, "1.0.2"},
   "cowlib": {:hex, :cowlib, "1.0.1"},
   "earmark": {:hex, :earmark, "0.1.17"},
-  "ex_doc": {:hex, :ex_doc, "0.8.4"},
+  "ex_doc": {:hex, :ex_doc, "0.9.0"},
   "inch_ex": {:hex, :inch_ex, "0.2.3"},
   "phoenix_html": {:hex, :phoenix_html, "1.2.0"},
   "plug": {:hex, :plug, "1.0.0"},
