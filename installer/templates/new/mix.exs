@@ -10,7 +10,8 @@ defmodule <%= application_module %>.Mixfile do
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
+     start_permanent: Mix.env == :prod,<%= if ecto do %>
+     aliases: aliases,<% end %>
      deps: deps]
   end
 
@@ -37,5 +38,11 @@ defmodule <%= application_module %>.Mixfile do
      {:phoenix_html, "~> 2.1"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},
      {:cowboy, "~> 1.0"}]
-  end
+  end<%= if ecto do %>
+
+  # Aliases are shortcut or tasks specific to the current project.
+  defp aliases do
+    ["ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
+     "ecto.reset": ["ecto.drop", "ecto.setup"]]
+  end<% end %>
 end
