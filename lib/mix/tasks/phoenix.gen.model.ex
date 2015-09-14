@@ -120,10 +120,13 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
   end
 
   defp validate_args!([_, plural | _] = args) do
-    if String.contains?(plural, ":") do
-      raise_with_help
-    else
-      args
+    cond do
+      String.contains?(plural, ":") ->
+        raise_with_help
+      plural != Phoenix.Naming.underscore(plural) ->
+        Mix.raise "expected the second argument, #{inspect plural}, to be all lowercase using snake_case convention"
+      true ->
+        args
     end
   end
 

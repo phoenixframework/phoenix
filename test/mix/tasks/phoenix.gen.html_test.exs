@@ -197,6 +197,16 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
     end
   end
 
+  test "plural can't have uppercased characters or camelized format" do
+    assert_raise Mix.Error, fn ->
+      Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "Users", "foo:string"]
+    end
+
+    assert_raise Mix.Error, fn ->
+      Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "AdminUsers", "foo:string"]
+    end
+  end
+
   test "name is already defined" do
     assert_raise Mix.Error, fn ->
       Mix.Tasks.Phoenix.Gen.Html.run ["DupHTML", "duphtmls"]
