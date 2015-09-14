@@ -2,11 +2,11 @@ The Elixir and Phoenix communities are friendly and welcoming. All questions and
 
 There are a number of places to connect with community members at all experience levels.
 
-* We're on freenode IRC in [\#elixir-lang](http://webchat.freenode.net/?channels=elixir-lang) channel.
-* We have a [Slack channel](https://elixir-slackin.herokuapp.com/).
-* The Phoenix repo has an [issue tracker](https://github.com/phoenixframework/phoenix/issues).
+* We're on Freenode IRC in the [\#elixir-lang](http://webchat.freenode.net/?channels=elixir-lang) channel.
+* [Request an invitation](https://elixir-slackin.herokuapp.com/) and join the #phoenix channel on [Slack](https://elixir-lang.slack.com).
 * For general Phoenix questions, email the [phoenix-talk mailing list](http://groups.google.com/group/phoenix-talk).
 * To discuss new features in the framework, email the [phoenix-core mailing list](http://groups.google.com/group/phoenix-core).
-* Ask or answer questions about Phoenix on [stackoverflow](http://stackoverflow.com/questions/tagged/phoenix-framework).
+* Read about [bug reports](https://github.com/phoenixframework/phoenix/blob/master/CONTRIBUTING.md#bug-reports) or open an issue in the Phoenix [issue tracker](https://github.com/phoenixframework/phoenix/issues).
+* Ask or answer questions about Phoenix on [Stack Overflow](http://stackoverflow.com/questions/tagged/phoenix-framework).
 * Follow the Phoenix Framework on [Twitter](https://twitter.com/elixirphoenix).
-* For questions about these guides, please report an [issue](https://github.com/phoenixframework/phoenix_guides/issues) or open a [pull request](https://github.com/phoenixframework/phoenix_guides/pulls).
+* The source for these guides is [on GitHub](https://github.com/phoenixframework/phoenix_guides). To help improve the guides, please report an [issue](https://github.com/phoenixframework/phoenix_guides/issues) or open a [pull request](https://github.com/phoenixframework/phoenix_guides/pulls).
