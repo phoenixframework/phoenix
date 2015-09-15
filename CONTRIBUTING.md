@@ -2,6 +2,7 @@
 
 Please take a moment to review this document in order to make the contribution
 process easy and effective for everyone involved!
+Also make sure you read our [Code of Conduct](CODE_OF_CONDUCT.md) that outlines our commitment towards an open and welcoming environment.
 
 ## Using the issue tracker
 

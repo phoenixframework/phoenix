@@ -15,7 +15,7 @@ API documentation is available at [http://hexdocs.pm/phoenix](http://hexdocs.pm/
 
 ## Contributing
 
-We appreciate any contribution to Phoenix, so check out our [CONTRIBUTING.md](CONTRIBUTING.md) guide for more information. We usually keep a list of features and bugs [in the issue tracker][1].
+We appreciate any contribution to Elixir. Check our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) and [CONTRIBUTING.md](CONTRIBUTING.md) guides for more information. We usually keep a list of features and bugs [in the issue tracker][2].
 
 ### Running a Phoenix master app
 
