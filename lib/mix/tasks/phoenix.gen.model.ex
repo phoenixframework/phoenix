@@ -112,7 +112,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
     if opts[:migration] != false do
       Mix.shell.info """
-      Remeber to update your repository by running migrations:
+      Remember to update your repository by running migrations:
 
           $ mix ecto.migrate
       """
