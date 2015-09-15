@@ -28,11 +28,11 @@ To get started, we'll need to add `{:exrm, "~> 0.15.3"}` into the list of depend
 
 ```elixir
   defp deps do
-    [{:phoenix, "~> 0.13.1"},
-     {:phoenix_ecto, "~> 0.4"},
+    [{:phoenix, "~> 1.0.2"},
+     {:phoenix_ecto, "~> 1.1"},
      {:postgrex, ">= 0.0.0"},
-     {:phoenix_html, "~> 1.0"},
-     {:phoenix_live_reload, "~> 0.4", only: :dev},
+     {:phoenix_html, "~> 2.1"},
+     {:phoenix_live_reload, "~> 1.0", only: :dev},
      {:cowboy, "~> 1.0"},
      {:exrm, "~> 0.15.3"}]
   end
@@ -445,7 +445,7 @@ These are the contents of our `/etc/nginx/sites-available/hello_phoenix` file.
 upstream hello_phoenix {
     server 127.0.0.1:8888;
 }
-# The following map statement is required 
+# The following map statement is required
 # if you plan to support channels. See http://nginx.com/blog/websocket-nginx/
 map $http_upgrade $connection_upgrade {
     default upgrade;
@@ -463,7 +463,7 @@ server{
         include proxy_params;
         proxy_redirect off;
         proxy_pass http://hello_phoenix;
-        # The following two headers need to be set in order 
+        # The following two headers need to be set in order
         # to keep the websocket connection open. Otherwise you'll see
         # HTTP 400's being returned from websocket connections.
         proxy_set_header Upgrade $http_upgrade;

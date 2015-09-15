@@ -8,13 +8,13 @@ Now that we have an account, we'll need to add `mailgun` as a dependency to our 
 
 ```elixir
 defp deps do
-  [{:phoenix, "~> 0.17"},
-   {:phoenix_ecto, "~> 0.9"},
+  [{:phoenix, "~> 1.0.2"},
+   {:phoenix_ecto, "~> 1.1"},
    {:postgrex, ">= 0.0.0"},
-   {:phoenix_html, "~> 2.0"},
-   {:phoenix_live_reload, "~> 0.6", only: :dev},
+   {:phoenix_html, "~> 2.1"},
+   {:phoenix_live_reload, "~> 1.0", only: :dev},
    {:cowboy, "~> 1.0"},
-   {:mailgun, "~> 0.1.1"}]
+   {:mailgun, "~> 0.1.2"}]
 end
 ```
 
