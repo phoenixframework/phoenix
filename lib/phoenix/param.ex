@@ -39,6 +39,13 @@ defprotocol Phoenix.Param do
       end
 
   will automatically use `:username` in URLs.
+
+  When using Ecto, you must call `@derive` before
+  your `schema` call:
+
+      @derive {Phoenix.Param, key: :username}
+      schema "users" do
+
   """
 
   @fallback_to_any true
@@ -114,8 +121,9 @@ defimpl Phoenix.Param, for: Any do
 
   def to_param(map) when is_map(map) do
     raise ArgumentError,
-      "structs expect an :id key when converting to_param or a custom implementation "
-      "(read Phoenix.Param documentation for more information), got: #{inspect map}"
+      "structs expect an :id key when converting to_param or a custom implementation " <>
+      "of the Phoenix.Param protocol (read Phoenix.Param docs for more information), " <>
+      "got: #{inspect map}"
   end
 
   def to_param(data) do
