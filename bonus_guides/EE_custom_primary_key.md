@@ -61,7 +61,7 @@ defmodule HelloPhoenix.Repo.Migrations.CreatePlayer do
 end
 ```
 
-Let's move on to `web/models/player.ex` next. We'll need to add a module attribute `@primary_key {:name, :string, []}` describing our primary key as a string. And we need to tell Phoenix how to convert our data structure to an ID that is used in the routes: `@derive {Phoenix.Param, key: :name}` We'll also need to remove the `field :name, :string` line because this is our new primary key. If this seems unusual, recall that the schema doesn't list the `id` field in models where `id` is the primary key.
+Let's move on to `web/models/player.ex` next. We'll need to add a module attribute `@primary_key {:name, :string, []}` describing our primary key as a string. Then we'll need to tell Phoenix how to convert our data structure to an ID that is used in the routes: `@derive {Phoenix.Param, key: :name}`. We'll also need to remove the `field :name, :string` line because this is our new primary key. If this seems unusual, recall that the schema doesn't list the `id` field in models where `id` is the primary key.
 
 ```elixir
 defmodule HelloPhoenix.Player do
