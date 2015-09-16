@@ -2,6 +2,9 @@ defmodule Mix.Phoenix do
   # Conveniences for Phoenix tasks.
   @moduledoc false
 
+  @valid_attributes [:integer, :float, :decimal, :boolean, :map, :string,
+                     :array, :references, :text, :date, :time, :datetime, :uuid]
+
   @doc """
   Copies files from source dir to target dir
   according to the given map.
@@ -88,13 +91,12 @@ defmodule Mix.Phoenix do
   Parses the attrs as received by generators.
   """
   def attrs(attrs) do
-    Enum.map attrs, fn attr ->
-      case String.split(attr, ":", parts: 3) do
-        [key, comp, value] -> {String.to_atom(key), {String.to_atom(comp), String.to_atom(value)}}
-        [key, value]       -> {String.to_atom(key), String.to_atom(value)}
-        [key]              -> {String.to_atom(key), :string}
-      end
-    end
+    Enum.map(attrs, fn attr ->
+      attr
+      |> String.split(":", parts: 3)
+      |> list_to_attr()
+      |> validate_attr!()
+    end)
   end
 
   @doc """
@@ -161,4 +163,14 @@ defmodule Mix.Phoenix do
   defp beam_to_module(path) do
     path |> Path.basename(".beam") |> String.to_atom()
   end
+
+  defp list_to_attr([key]), do: {String.to_atom(key), :string}
+  defp list_to_attr([key, value]), do: {String.to_atom(key), String.to_atom(value)}
+  defp list_to_attr([key, comp, value]) do
+    {String.to_atom(key), {String.to_atom(comp), String.to_atom(value)}}
+  end
+
+  defp validate_attr!({_name, type} = attr) when type in @valid_attributes, do: attr
+  defp validate_attr!({_name, {type, _}} = attr) when type in @valid_attributes, do: attr
+  defp validate_attr!({_, type}), do: Mix.raise "Unknown type `#{type}` given to generator"
 end

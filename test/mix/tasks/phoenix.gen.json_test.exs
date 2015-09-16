@@ -75,6 +75,20 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
     end
   end
 
+  test "doesn't generate a resource when there is an error" do
+    in_tmp "doesnt generate resource on error", fn ->
+      assert_raise(Mix.Error, fn ->
+        Mix.Tasks.Phoenix.Gen.Json.run ["user", "users", "name", "age:integer", "info:notvalid"]
+      end)
+
+      refute_file "web/models/user.ex"
+      refute_file "test/models/user_test.exs"
+      refute_file "web/controllers/user_controller.ex"
+      refute_file "test/controllers/user_controller_test.exs"
+      refute_file "web/views/user_view.ex"
+    end
+  end
+
   test "generates nested resource" do
     in_tmp "generates nested resource", fn ->
       Mix.Tasks.Phoenix.Gen.Json.run ["Admin.User", "users", "name:string"]
