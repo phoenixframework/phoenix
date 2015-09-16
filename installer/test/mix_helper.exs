@@ -20,6 +20,10 @@ defmodule MixHelper do
     assert File.regular?(file), "Expected #{file} to exist, but does not"
   end
 
+  def refute_file(file) do
+    refute File.regular?(file), "Expected #{file} to not exist, but it does"
+  end
+
   def assert_file(file, match) do
     cond do
       is_list(match) ->
