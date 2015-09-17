@@ -63,7 +63,7 @@ defmodule Phoenix.Integration.WebSocketTest do
     channel "rooms:*", RoomChannel
 
     transport :websocket, Phoenix.Transports.WebSocket,
-      check_origin: ["//example.com"]
+      check_origin: ["//example.com"], heartbeat: 100
 
     def connect(%{"reject" => "true"}, _socket) do
       :error
@@ -236,5 +236,23 @@ defmodule Phoenix.Integration.WebSocketTest do
              {:error, {403, "Forbidden"}}
     end
     assert log =~ "The client's requested channel transport version \"123.1.1\" does not match server's version"
+  end
+
+  test "sends heartbeat and shuts down if client goes quiet" do
+    {:ok, socket} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket")
+    Process.monitor(socket)
+    WebsocketClient.send_heartbeat(socket)
+    assert_receive %Message{event: "phx_reply",
+                            payload: %{"response" => %{}, "status" => "ok"},
+                            ref: "1", topic: "phoenix"}
+
+    assert_receive %Message{event: "heartbeat", topic: "phoenix", payload: %{}}, 200
+
+    WebsocketClient.send_heartbeat(socket)
+    assert_receive %Message{event: "phx_reply",
+                            payload: %{"response" => %{}, "status" => "ok"},
+                            ref: "2", topic: "phoenix"}, 200
+
+    assert_receive {:DOWN, _, :process, ^socket, :normal}, 400
   end
 end

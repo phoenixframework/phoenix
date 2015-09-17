@@ -24,6 +24,8 @@ defmodule Phoenix.Transports.WebSocket do
       It may be set to `false` (not recommended) or to a list of explicitly
       allowed origins
 
+    * `:heartbeat` - the heartbeat interval in milliseconds, default `30_000`
+
   ## Serializer
 
   By default, JSON encoding is used to broker messages to and from clients.
@@ -40,7 +42,8 @@ defmodule Phoenix.Transports.WebSocket do
   def default_config() do
     [serializer: Phoenix.Transports.WebSocketSerializer,
      timeout: :infinity,
-     transport_log: false]
+     transport_log: false,
+     heartbeat: 30_000]
   end
 
   def handlers() do
@@ -50,6 +53,7 @@ defmodule Phoenix.Transports.WebSocket do
   ## Callbacks
 
   import Plug.Conn, only: [fetch_query_params: 1, send_resp: 3]
+  import Phoenix.Utils, only: [now_ms: 0]
 
   alias Phoenix.Socket.Broadcast
   alias Phoenix.Socket.Transport
@@ -92,18 +96,24 @@ defmodule Phoenix.Transports.WebSocket do
     Process.flag(:trap_exit, true)
     serializer = Keyword.fetch!(config, :serializer)
     timeout    = Keyword.fetch!(config, :timeout)
+    heartbeat  = Keyword.fetch!(config, :heartbeat)
 
     if socket.id, do: socket.endpoint.subscribe(self, socket.id, link: true)
+
+    :timer.send_interval(heartbeat, :phoenix_heartbeat)
 
     {:ok, %{socket: socket,
             channels: HashDict.new,
             channels_inverse: HashDict.new,
+            client_last_active: now_ms(),
+            heartbeat_interval: heartbeat,
             serializer: serializer}, timeout}
   end
 
   @doc false
   def ws_handle(opcode, payload, state) do
-    msg = state.serializer.decode!(payload, opcode: opcode)
+    msg   = state.serializer.decode!(payload, opcode: opcode)
+    state = bump_client_last_active(state)
 
     case Transport.dispatch(msg, state.channels, state.socket) do
       :noreply ->
@@ -136,8 +146,20 @@ defmodule Phoenix.Transports.WebSocket do
     format_reply(msg, state)
   end
 
+  def ws_info(:phoenix_heartbeat, state) do
+    if client_unresponsive?(state) do
+      {:shutdown, state}
+    else
+      encode_reply Transport.heartbeat_message(), state
+    end
+  end
+
   def ws_info(_, state) do
     {:ok, state}
+  end
+
+  defp client_unresponsive?(state) do
+    now_ms() - state.client_last_active > (state.heartbeat_interval * 2)
   end
 
   @doc false
@@ -168,5 +190,9 @@ defmodule Phoenix.Transports.WebSocket do
 
   defp format_reply({:socket_push, encoding, encoded_payload}, state) do
     {:reply, {encoding, encoded_payload}, state}
+  end
+
+  defp bump_client_last_active(state) do
+    %{state | client_last_active: now_ms()}
   end
 end

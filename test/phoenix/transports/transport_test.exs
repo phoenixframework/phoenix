@@ -23,6 +23,13 @@ defmodule Phoenix.Transports.TransportTest do
     Logger.disable(self())
   end
 
+  ## heartbeat_message
+
+  test "heartbeat_message/2" do
+    assert Transport.heartbeat_message() ==
+           %Message{event: "heartbeat", payload: %{}, topic: "phoenix"}
+  end
+
   ## on_exit_message
 
   test "on_exit_message/2" do

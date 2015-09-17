@@ -56,6 +56,13 @@ defmodule Phoenix.Integration.WebsocketClient do
   end
 
   @doc """
+  Sends a heartbeat event
+  """
+  def send_heartbeat(server_pid) do
+    send_event(server_pid, "phoenix", "heartbeat", %{})
+  end
+
+  @doc """
   Sends join event to the WebSocket server per the Message protocol
   """
   def join(server_pid, topic, msg) do
