@@ -20,7 +20,7 @@ defmodule <%= application_module %>.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [mod: {<%= application_module %>, []},
-     applications: [:phoenix, :phoenix_html, :cowboy, :logger<%= if ecto do %>,
+     applications: [:phoenix<%= if html do %>, :phoenix_html<% end %>, :cowboy, :logger<%= if ecto do %>,
                     :phoenix_ecto, <%= inspect adapter_app %><% end %>]]
   end
 
@@ -34,9 +34,9 @@ defmodule <%= application_module %>.Mixfile do
   defp deps do
     [<%= phoenix_dep %>,<%= if ecto do %>
      {:phoenix_ecto, "~> 1.1"},
-     {<%= inspect adapter_app %>, ">= 0.0.0"},<% end %>
+     {<%= inspect adapter_app %>, ">= 0.0.0"},<% end %><%= if html do %>
      {:phoenix_html, "~> 2.1"},
-     {:phoenix_live_reload, "~> 1.0", only: :dev},
+     {:phoenix_live_reload, "~> 1.0", only: :dev},<% end %>
      {:cowboy, "~> 1.0"}]
   end<%= if ecto do %>
 

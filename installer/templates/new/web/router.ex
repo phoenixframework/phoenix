@@ -1,5 +1,5 @@
 defmodule <%= application_module %>.Router do
-  use <%= application_module %>.Web, :router
+  use <%= application_module %>.Web, :router<%= if html do %>
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -7,11 +7,11 @@ defmodule <%= application_module %>.Router do
     plug :fetch_flash
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-  end
+  end<% end %>
 
   pipeline :api do
     plug :accepts, ["json"]
-  end
+  end<%= if html do %>
 
   scope "/", <%= application_module %> do
     pipe_through :browser # Use the default browser stack
@@ -22,5 +22,9 @@ defmodule <%= application_module %>.Router do
   # Other scopes may use custom stacks.
   # scope "/api", <%= application_module %> do
   #   pipe_through :api
-  # end
+  # end<% else %>
+
+  scope "/api", <%= application_module %> do
+    pipe_through :api
+  end<% end %>
 end
