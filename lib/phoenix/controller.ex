@@ -823,6 +823,30 @@ defmodule Phoenix.Controller do
       plug :accepts, ["html", "json"]
       plug :accepts, ~w(html json)
 
+  ## Custom media types
+
+  It is possible to add custom media types to your Phoenix application.
+  The first step is to teach Plug about those new media types in
+  your `config/config.exs` file:
+
+      config :plug, :mimes, %{
+        "application/vnd.api+json" => ["json-api"]
+      }
+
+  The key is the media type, the value is a list of formats the
+  media type can be identified with. For example, by using
+  "json-api", you will be able to use templates with extension
+  "index.json-api" or to force a particular format in a given
+  URL by sending "?_format=json-api".
+
+  After this change, you must recompile plug:
+
+      $ touch deps/plug/mix.exs
+      $ mix deps.compile plug
+
+  And now you can use it in accepts too:
+
+      plug :accepts, ["html", "json-api"]
   """
   @spec accepts(Plug.Conn.t, [binary]) :: Plug.Conn.t | no_return
   def accepts(conn, [_|_] = accepted) do
