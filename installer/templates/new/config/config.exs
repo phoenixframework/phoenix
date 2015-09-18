@@ -14,7 +14,7 @@ config :<%= application_name %>, <%= application_module %>.Endpoint,
   url: [host: "localhost"],
   root: Path.dirname(__DIR__),
   secret_key_base: "<%= secret_key_base %>",
-  render_errors: [accepts: ~w(html json)],
+  render_errors: [accepts: ~w(<%= if html do %>html <% end %>json)],
   pubsub: [name: <%= application_module %>.PubSub,
            adapter: Phoenix.PubSub.PG2]
 

@@ -17,23 +17,17 @@ defmodule Mix.Tasks.Phoenix.New do
     {:eex,  "new/lib/application_name.ex",                   "lib/application_name.ex"},
     {:eex,  "new/lib/application_name/endpoint.ex",          "lib/application_name/endpoint.ex"},
     {:keep, "new/test/channels",                             "test/channels"},
-    {:eex,  "new/test/controllers/page_controller_test.exs", "test/controllers/page_controller_test.exs"},
+    {:keep, "new/test/controllers",                          "test/controllers"},
     {:eex,  "new/test/views/error_view_test.exs",            "test/views/error_view_test.exs"},
-    {:eex,  "new/test/views/page_view_test.exs",             "test/views/page_view_test.exs"},
-    {:eex,  "new/test/views/layout_view_test.exs",           "test/views/layout_view_test.exs"},
     {:eex,  "new/test/support/conn_case.ex",                 "test/support/conn_case.ex"},
     {:eex,  "new/test/support/channel_case.ex",              "test/support/channel_case.ex"},
     {:eex,  "new/test/test_helper.exs",                      "test/test_helper.exs"},
     {:eex,  "new/web/channels/user_socket.ex",               "web/channels/user_socket.ex"},
-    {:eex,  "new/web/controllers/page_controller.ex",        "web/controllers/page_controller.ex"},
+    {:keep, "new/web/controllers",                           "web/controllers"},
     {:keep, "new/web/models",                                "web/models"},
-    {:eex,  "new/web/templates/layout/app.html.eex",         "web/templates/layout/app.html.eex"},
-    {:eex,  "new/web/templates/page/index.html.eex",         "web/templates/page/index.html.eex"},
-    {:eex,  "new/web/views/error_view.ex",                   "web/views/error_view.ex"},
-    {:eex,  "new/web/views/layout_view.ex",                  "web/views/layout_view.ex"},
-    {:eex,  "new/web/views/page_view.ex",                    "web/views/page_view.ex"},
     {:eex,  "new/web/router.ex",                             "web/router.ex"},
     {:keep, "new/web/static/vendor",                         "web/static/vendor"},
+    {:eex,  "new/web/views/error_view.ex",                   "web/views/error_view.ex"},
     {:eex,  "new/web/web.ex",                                "web/web.ex"},
     {:eex,  "new/mix.exs",                                   "mix.exs"},
     {:eex,  "new/README.md",                                 "README.md"},
@@ -57,6 +51,17 @@ defmodule Mix.Tasks.Phoenix.New do
     {:text, "static/robots.txt",              "web/static/assets/robots.txt"},
   ]
 
+  @html [
+    {:eex,  "new/test/controllers/page_controller_test.exs", "test/controllers/page_controller_test.exs"},
+    {:eex,  "new/test/views/layout_view_test.exs",           "test/views/layout_view_test.exs"},
+    {:eex,  "new/test/views/page_view_test.exs",             "test/views/page_view_test.exs"},
+    {:eex,  "new/web/controllers/page_controller.ex",        "web/controllers/page_controller.ex"},
+    {:eex,  "new/web/templates/layout/app.html.eex",         "web/templates/layout/app.html.eex"},
+    {:eex,  "new/web/templates/page/index.html.eex",         "web/templates/page/index.html.eex"},
+    {:eex,  "new/web/views/layout_view.ex",                  "web/views/layout_view.ex"},
+    {:eex,  "new/web/views/page_view.ex",                    "web/views/page_view.ex"},
+  ]
+
   @bare [
     {:text, "static/bare/.gitignore", ".gitignore"},
     {:text, "static/app.css",         "priv/static/css/app.css"},
@@ -67,7 +72,7 @@ defmodule Mix.Tasks.Phoenix.New do
   # Embed all defined templates
   root = Path.expand("../templates", __DIR__)
 
-  for {format, source, _} <- @new ++ @ecto ++ @brunch ++ @bare do
+  for {format, source, _} <- @new ++ @ecto ++ @brunch ++ @html ++ @bare do
     unless format == :keep do
       @external_resource Path.join(root, source)
       def render(unquote(source)), do: unquote(File.read!(Path.join(root, source)))
@@ -109,6 +114,8 @@ defmodule Mix.Tasks.Phoenix.New do
     * `--no-ecto` - do not generate ecto files for
       the model layer
 
+    * `--no-html` - do not generate HTML views.
+
     * `--binary-id` - use `binary_id` as primary key type
       in ecto models
 
@@ -127,7 +134,7 @@ defmodule Mix.Tasks.Phoenix.New do
   """
   @switches [dev: :boolean, brunch: :boolean, ecto: :boolean,
              app: :string, module: :string, database: :string,
-             binary_id: :boolean]
+             binary_id: :boolean, html: :boolean]
 
   def run([version]) when version in ~w(-v --version) do
     Mix.shell.info "Phoenix v#{@version}"
@@ -153,6 +160,7 @@ defmodule Mix.Tasks.Phoenix.New do
   def run(app, mod, path, opts) do
     db = Keyword.get(opts, :database, "postgres")
     ecto = Keyword.get(opts, :ecto, true)
+    html = Keyword.get(opts, :html, true)
     brunch = Keyword.get(opts, :brunch, true)
     phoenix_path = phoenix_path(path, Keyword.get(opts, :dev, false))
 
@@ -184,6 +192,7 @@ defmodule Mix.Tasks.Phoenix.New do
                static_deps_prefix: static_deps_prefix,
                brunch: brunch,
                ecto: ecto,
+               html: html,
                adapter_app: adapter_app,
                adapter_module: adapter_module,
                adapter_config: adapter_config,
@@ -195,6 +204,7 @@ defmodule Mix.Tasks.Phoenix.New do
     # Optional contents
     copy_model  app, path, binding
     copy_static app, path, binding
+    copy_html   app, path, binding
 
     # Parallel installs
     install? = Mix.shell.yes?("\nFetch and install dependencies?")
@@ -273,6 +283,12 @@ defmodule Mix.Tasks.Phoenix.New do
       copy_from path, binding, @brunch
       create_file Path.join(path, "web/static/assets/images/phoenix.png"), phoenix_png_text()
       create_file Path.join(path, "web/static/assets/favicon.ico"), phoenix_favicon_text()
+    end
+  end
+
+  defp copy_html(_app, path, binding) do
+    if binding[:html] do
+      copy_from path, binding, @html
     end
   end
 

@@ -118,7 +118,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
   test "new without defaults" do
     in_tmp "new without defaults", fn ->
-      Mix.Tasks.Phoenix.New.run([@app_name, "--no-brunch", "--no-ecto"])
+      Mix.Tasks.Phoenix.New.run([@app_name, "--no-html", "--no-brunch", "--no-ecto"])
 
       # No Brunch
       refute File.read!("photo_blog/.gitignore") |> String.contains?("/node_modules")
@@ -139,6 +139,33 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/config/test.exs", &refute(&1 =~ config)
       assert_file "photo_blog/config/prod.secret.exs", &refute(&1 =~ config)
       assert_file "photo_blog/web/web.ex", &refute(&1 =~ ~r"alias PhotoBlog.Repo")
+
+      # No HTML
+      assert File.exists?("photo_blog/test/controllers")
+      refute File.exists?("photo_blog/test/controllers/.keep")
+
+      assert File.exists?("photo_blog/web/controllers")
+      refute File.exists?("photo_blog/web/controllers/.keep")
+      assert File.exists?("photo_blog/web/views")
+      refute File.exists?("photo_blog/web/views/.keep")
+
+      refute File.exists? "photo_blog/test/controllers/pager_controller_test.exs"
+      refute File.exists? "photo_blog/test/views/layout_view_test.exs"
+      refute File.exists? "photo_blog/test/views/page_view_test.exs"
+      refute File.exists? "photo_blog/web/controllers/page_controller.ex"
+      refute File.exists? "photo_blog/web/templates/layout/app.html.eex"
+      refute File.exists? "photo_blog/web/templates/page/index.html.eex"
+      refute File.exists? "photo_blog/web/views/layout_view.ex"
+      refute File.exists? "photo_blog/web/views/page_view.ex"
+
+      assert_file "photo_blog/mix.exs", &refute(&1 =~ ~r":phoenix_html")
+      assert_file "photo_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_reload")
+      assert_file "photo_blog/lib/photo_blog/endpoint.ex",
+                  &refute(&1 =~ ~r"Phoenix.LiveReloader")
+      assert_file "photo_blog/lib/photo_blog/endpoint.ex",
+                  &refute(&1 =~ ~r"Phoenix.LiveReloader.Socket")
+      assert_file "photo_blog/web/views/error_view.ex", ~r".json"
+      assert_file "photo_blog/web/router.ex", &refute(&1 =~ ~r"pipeline :browser")
     end
   end
 

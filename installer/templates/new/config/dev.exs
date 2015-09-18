@@ -14,7 +14,7 @@ config :<%= application_name %>, <%= application_module %>.Endpoint,
   check_origin: false,
   watchers: <%= if brunch do %>[node: ["node_modules/brunch/bin/brunch", "watch", "--stdin"]]<% else %>[]<% end %>
 
-# Watch static and templates for browser reloading.
+<%= if html do %># Watch static and templates for browser reloading.
 config :<%= application_name %>, <%= application_module %>.Endpoint,
   live_reload: [
     patterns: [
@@ -24,7 +24,7 @@ config :<%= application_name %>, <%= application_module %>.Endpoint,
     ]
   ]
 
-# Do not include metadata nor timestamps in development logs
+<% end %># Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
 
 # Set a higher stacktrace during development.
