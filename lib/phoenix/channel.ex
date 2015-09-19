@@ -91,7 +91,7 @@ defmodule Phoenix.Channel do
 
         if changeset.valid? do
           Repo.insert!(changeset)
-          {:ok, socket}
+          {:reply, :ok, socket}
         else
           {:reply, :error, socket}
         end
