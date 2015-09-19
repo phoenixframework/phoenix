@@ -182,7 +182,6 @@ defmodule Mix.Tasks.Phoenix.New do
                application_module: mod,
                phoenix_dep: phoenix_dep(phoenix_path),
                phoenix_path: phoenix_path,
-               phoenix_static_path: phoenix_static_path(phoenix_path),
                pubsub_server: pubsub_server,
                secret_key_base: random_string(64),
                prod_secret_key_base: random_string(64),
@@ -462,8 +461,6 @@ defmodule Mix.Tasks.Phoenix.New do
   defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> 1.0.2"}]
   defp phoenix_dep(path), do: ~s[{:phoenix, path: #{inspect path}, override: true}]
 
-  defp phoenix_static_path("deps/phoenix"), do: "deps/phoenix"
-  defp phoenix_static_path(path), do: Path.join("..", path)
 
   defp phoenix_path(true), do: @phoenix
   defp phoenix_path(false), do: "deps/phoenix"
