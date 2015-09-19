@@ -162,7 +162,7 @@ defmodule Mix.Tasks.Phoenix.New do
     ecto = Keyword.get(opts, :ecto, true)
     html = Keyword.get(opts, :html, true)
     brunch = Keyword.get(opts, :brunch, true)
-    phoenix_path = phoenix_path(path, Keyword.get(opts, :dev, false))
+    phoenix_path = phoenix_path(Keyword.get(opts, :dev, false))
 
     # We lowercase the database name because according to the
     # SQL spec, they are case insensitive unless quoted, which
@@ -182,7 +182,6 @@ defmodule Mix.Tasks.Phoenix.New do
                application_module: mod,
                phoenix_dep: phoenix_dep(phoenix_path),
                phoenix_path: phoenix_path,
-               phoenix_static_path: phoenix_static_path(phoenix_path),
                pubsub_server: pubsub_server,
                secret_key_base: random_string(64),
                prod_secret_key_base: random_string(64),
@@ -462,26 +461,9 @@ defmodule Mix.Tasks.Phoenix.New do
   defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> 1.0.2"}]
   defp phoenix_dep(path), do: ~s[{:phoenix, path: #{inspect path}, override: true}]
 
-  defp phoenix_static_path("deps/phoenix"), do: "deps/phoenix"
-  defp phoenix_static_path(path), do: Path.join("..", path)
 
-  defp phoenix_path(path, true) do
-    absolute = Path.expand(path)
-    relative = Path.relative_to(absolute, @phoenix)
-
-    if absolute == relative do
-      Mix.raise "--dev project must be inside Phoenix directory"
-    end
-
-    relative
-    |> Path.split
-    |> Enum.map(fn _ -> ".." end)
-    |> Path.join
-  end
-
-  defp phoenix_path(_path, false) do
-    "deps/phoenix"
-  end
+  defp phoenix_path(true), do: @phoenix
+  defp phoenix_path(false), do: "deps/phoenix"
 
   ## Template helpers
 

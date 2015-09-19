@@ -24,6 +24,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       assert_file "photo_blog/README.md"
       assert_file "photo_blog/mix.exs", fn file ->
+        assert file =~ "[{:phoenix, \"~> "
         assert file =~ "app: :photo_blog"
         refute file =~ "deps_path: \"../../deps\""
         refute file =~ "lockfile: \"../../mix.lock\""
@@ -337,6 +338,18 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       end
     end
   end
+
+  test "new with --dev" do
+    in_tmp "new with --dev", fn ->
+      Mix.Tasks.Phoenix.New.run([@app_name, "--dev"])
+
+      assert_file "photo_blog/mix.exs", fn file ->
+        path = Path.expand("../..", __DIR__)
+        assert file =~ "{:phoenix, path: \"#{path}\", override: true},"
+      end
+    end
+  end
+
 
   test "new defaults to pg adapter" do
     in_tmp "new defaults to pg adapter", fn ->
