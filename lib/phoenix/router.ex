@@ -189,21 +189,11 @@ defmodule Phoenix.Router do
 
   # Because those macros are executed multiple times,
   # we end-up generating a huge scope that drastically
-  # affects compilation. We work around it then by
-  # defining the add_route definition only once and
-  # simply calling it over and over again.
+  # affects compilation. We work around it by defining
+  # those functions only once and calling it over and
+  # over again.
   defp defs() do
     quote unquote: false do
-      var!(add_route, Phoenix.Router) = fn route ->
-        exprs = Route.exprs(route)
-        @phoenix_routes {route, exprs}
-
-        defp match(var!(conn), unquote(exprs.verb_match), unquote(exprs.path),
-                   unquote(exprs.host)) do
-          unquote(exprs.dispatch)
-        end
-      end
-
       var!(add_resources, Phoenix.Router) = fn resource ->
         path = resource.path
         ctrl = resource.controller
@@ -275,10 +265,11 @@ defmodule Phoenix.Router do
 
   @doc false
   defmacro __before_compile__(env) do
-    routes   = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse
+    routes = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse
+    routes_with_exprs = Enum.map(routes, &{&1, Route.exprs(&1)})
 
-    Helpers.define(env, routes)
-    escaped = Enum.map(routes, fn {route, _} -> Macro.escape(route) end)
+    Helpers.define(env, routes_with_exprs)
+    matches = Enum.map(routes_with_exprs, &build_match/1)
 
     plugs = [{:dispatch, [], true}, {:match, [], true}]
     {conn, pipeline} = Plug.Builder.compile(env, plugs, [])
@@ -307,12 +298,22 @@ defmodule Phoenix.Router do
       end
 
       @doc false
-      def __routes__,  do: unquote(escaped)
+      def __routes__,  do: unquote(Macro.escape(routes))
 
       @doc false
       def __helpers__, do: __MODULE__.Helpers
 
+      unquote(matches)
       unquote(match_404)
+    end
+  end
+
+  defp build_match({_route, exprs}) do
+    quote do
+      defp match(var!(conn), unquote(exprs.verb_match), unquote(exprs.path),
+                 unquote(exprs.host)) do
+        unquote(exprs.dispatch)
+      end
     end
   end
 
@@ -327,10 +328,8 @@ defmodule Phoenix.Router do
 
   defp add_route(kind, verb, path, plug, plug_opts, options) do
     quote do
-      var!(add_route, Phoenix.Router).(
-        Scope.route(__MODULE__, unquote(kind), unquote(verb), unquote(path),
-                                unquote(plug), unquote(plug_opts), unquote(options))
-      )
+      @phoenix_routes Scope.route(__MODULE__, unquote(kind), unquote(verb), unquote(path),
+                                  unquote(plug), unquote(plug_opts), unquote(options))
     end
   end
 

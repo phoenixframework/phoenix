@@ -40,18 +40,6 @@ defmodule Phoenix.Router.Scope do
   """
   def pipe_through(module, pipes) do
     pipes = List.wrap(pipes)
-    available = get_pipes(module)
-
-    Enum.each pipes, fn pipe ->
-      cond do
-        pipe == :before ->
-          raise ArgumentError, "the :before pipeline is always piped through"
-        pipe in available ->
-          :ok
-        true ->
-          raise ArgumentError, "unknown pipeline #{inspect pipe}"
-      end
-    end
 
     update_stack(module, fn [scope|stack] ->
       scope = put_in scope.pipes, scope.pipes ++ pipes
@@ -154,10 +142,6 @@ defmodule Phoenix.Router.Scope do
 
   defp update_stack(module, fun) do
     update_attribute(module, @stack, fun)
-  end
-
-  defp get_pipes(module) do
-    get_attribute(module, @pipes)
   end
 
   defp update_pipes(module, fun) do
