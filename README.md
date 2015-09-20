@@ -17,16 +17,20 @@ API documentation is available at [http://hexdocs.pm/phoenix](http://hexdocs.pm/
 
 We appreciate any contribution to Phoenix. Check our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) and [CONTRIBUTING.md](CONTRIBUTING.md) guides for more information. We usually keep a list of features and bugs [in the issue tracker][2].
 
-### Running a Phoenix master app
+### Running a Phoenix master project
 
 ```bash
 $ cd installer
-$ mix phoenix.new path/to/your/app --dev
+$ mix phoenix.new path/to/your/project --dev
 ```
 
-The command above will create a new application, using your current Phoenix checkout thanks to the `--dev` flag.
+The command above will create a new project using your current Phoenix checkout, thanks to the `--dev` flag.
 
-Note that `path/to/your/app` must be within the directory containing the Phoenix source code. This is so that a relative path can be used for the `:phoenix` dependency.
+Note that `path/to/your/project` must be within the directory containing the Phoenix source code. This is so that a relative path can be used for the `:phoenix` dependency.
+
+The command must be run from the `installer` directory. See the discussion in [PR 1224](https://github.com/phoenixframework/phoenix/pull/1224) for more information.
+
+In order to test changes to the installer (the `phoenix.new` Mix task) itself, first remove any installed archive so that Mix will pick up the local source code.  This can be done with `mix archive.uninstall phoenix_new-#.#.#.ez` or by simply deleting the file, which is usually in `~/.mix/archives/`. See [issue 3376](https://github.com/elixir-lang/elixir/issues/3376) for more information.
 
 ### Building phoenix.js
 
