@@ -4,7 +4,7 @@ The only thing we'll need for this guide is a working Phoenix application. For t
 
 ### Goals
 
-Our main goal for this is guide is to get a Phoenix application running on Heroku.
+Our main goal for this guide is to get a Phoenix application running on Heroku.
 
 ## Steps
 
