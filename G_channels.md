@@ -1,4 +1,4 @@
-Channels are a really exciting and powerful part of Phoenix, one that allows us to easily add soft-realtime features to our applications. Channels are based on a simple idea - sending and receiving messages. Senders broadcast messages about topics. Receivers subscribe to topics so that they can get those messages. Senders and receivers can switch roles on the same topic at any time.
+Channels are a really exciting and powerful part of Phoenix that allow us to easily add soft-realtime features to our applications. Channels are based on a simple idea - sending and receiving messages. Senders broadcast messages about topics. Receivers subscribe to topics so that they can get those messages. Senders and receivers can switch roles on the same topic at any time.
 
 Since Elixir is based on message passing, you may wonder why we need this extra mechanism to send and receive messages. With Channels, neither senders nor receivers have to be Elixir processes. They can be anything that we can teach to communicate over a Channel - a JavaScript client, an iOS app, another Phoenix application, our watch. Also, messages broadcast over a Channel may have many receivers. Elixir processes communicate one to one.
 
@@ -8,11 +8,11 @@ The word "Channel" is really shorthand for a layered system with a number of com
 
 - Socket Handlers
 
-Phoenix holds a single connection to the server and multiplexes your channel sockets over that one connection. Socket handlers, such as your `web/channels/user_socket.ex`, are modules that authenticate and identify a socket connection and allow you to set default socket assigns for use in all channels.
+Phoenix holds a single connection to the server and multiplexes your channel sockets over that one connection. Socket handlers, such as `web/channels/user_socket.ex`, are modules that authenticate and identify a socket connection and allow you to set default socket assigns for use in all channels.
 
 - Channel Routes
 
-These are defined in Socket handlers, such as your `web/channels/user_socket.ex` file, which makes them distinct from other routes. They match on the topic string and dispatch matching requests to the given Channel module. The star character `*` acts as a wildcard matcher, so in the following example route, requests for `sample_topic:pizza` and `sample_topic:oranges` would both be dispatched to the `SampleTopicChannel`.
+These are defined in Socket handlers, such as `web/channels/user_socket.ex`, which makes them distinct from other routes. They match on the topic string and dispatch matching requests to the given Channel module. The star character `*` acts as a wildcard matcher, so in the following example route, requests for `sample_topic:pizza` and `sample_topic:oranges` would both be dispatched to the `SampleTopicChannel`.
 
 ```elixir
 channel "sample_topic:*", HelloPhoenix.SampleTopicChannel
@@ -35,7 +35,7 @@ It is worth noting that these modules are intended for Phoenix's internal use. C
 - Messages
 
 The `Phoenix.Socket.Message` module defines a struct with the following keys which denotes a valid message. From the [Phoenix.Socket.Message docs](http://hexdocs.pm/phoenix/Phoenix.Socket.Message.html).
-  - `topic` - The String topic or topic:subtopic pair namespace, ie “messages”, “messages:123”
+  - `topic` - The String topic or topic:subtopic pair namespace, i.e. “messages”, “messages:123”
   - `event` - The String event name, ie “join”
   - `payload` - The String JSON message payload
   - `ref` - The unique string used for replying to incoming events
@@ -50,7 +50,7 @@ The transport layer is where the rubber meets the road. The `Phoenix.Channel.Tra
 
 - Transport Adapters
 
-The default transport mechanism is via WebSockets which will fall back to LongPolling if WebSockets are not available/working. Other transport adapters are possible, and indeed, we can write our own if we follow the adapter contract. Please see `Phoenix.Transports.WebSocket` for an example.
+The default transport mechanism is via WebSockets which will fall back to LongPolling if WebSockets are not available. Other transport adapters are possible, and we can write our own if we follow the adapter contract. Please see `Phoenix.Transports.WebSocket` for an example.
 
 - Client Libraries
 
@@ -82,7 +82,6 @@ defmodule HelloPhoenix.UserSocket do
 end
 ```
 
-
 Now, whenever a client sends a message whose topic starts with `"rooms:"`, it will be routed to our RoomChannel. Next, we'll define a `RoomChannel` module to manage our chat room messages.
 
 ### Joining Channels
@@ -99,14 +98,12 @@ defmodule HelloPhoenix.RoomChannel do
   def join("rooms:" <> _private_room_id, _auth_msg, socket) do
     {:error, %{reason: "unauthorized"}}
   end
-
 end
 ```
 
 For our chat app, we'll allow anyone to join the `"rooms:lobby"` topic, but any other room will be considered private and special authorization, say from a database, will be required. We won't worry about private chat rooms for this exercise, but feel free to explore after we finish. To authorize the socket to join a topic, we return `{:ok, socket}` or `{:ok, reply, socket}`. To deny access, we return `{:error, reply}`. More information about authorization with tokens can be found in the [`Phoenix.Token` documentation](http://hexdocs.pm/phoenix/Phoenix.Token.html).
 
-
-With our channel in place, lets head over to `web/static/js/app.js` and get the client and server talking.
+With our channel in place, let’s head over to `web/static/js/app.js` and get the client and server talking.
 
 ```javascript
 import {Socket} from "deps/phoenix/web/static/js/phoenix"
@@ -121,7 +118,7 @@ chan.join().receive("ok", chan => {
 
 Save the file and your browser should auto refresh, thanks to the Phoenix live reloader. If everything worked, we should see "Welcome to Phoenix Chat!" in the browser's JavaScript console. Our client and server are now talking over a persistent connection. Now let's make it useful by enabling chat.
 
-In your `web/templates/page/index.html.eex`, add a container to hold our chat messages, and an input field to send them.
+In `web/templates/page/index.html.eex`, add a container to hold our chat messages, and an input field to send them.
 
 ```html
 <div id="messages"></div>
@@ -140,7 +137,7 @@ We'll also add jQuery to our application layout in `web/templates/layout/app.htm
 </body>
 ```
 
-Now let's add a couple event listeners to `app.js`:
+Now let's add a couple of event listeners to `app.js`:
 
 ```javascript
 let chatInput         = $("#chat-input")
@@ -246,7 +243,6 @@ Similar to connection structs, `%Plug.Conn{}`, it is possible to assign values t
 ```
 
 Sockets store assigned values as a map in `socket.assigns`.
-
 
 #### Example Application
 To see an example of the application we just built, checkout this project (https://github.com/chrismccord/phoenix_chat_example).
