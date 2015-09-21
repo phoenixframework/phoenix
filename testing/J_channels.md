@@ -26,7 +26,7 @@ $ mix phoenix.gen.channel Room rooms
 
 Add the channel to a socket scope in web/router.ex:
 
-Add the channel to your `web/channels/user_socket.ex` handler, for example:
+Add the channel to `web/channels/user_socket.ex` handler, for example:
 
     channel "rooms:lobby", HelloPhoenix.RoomChannel
 ```
