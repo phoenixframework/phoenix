@@ -206,7 +206,7 @@ var Push = (function () {
 
   // Initializes the Push
   //
-  // channel - The Channelnel
+  // channel - The Channel
   // event - The event, for example `"phx_join"`
   // payload - The payload, for example `{user_id: 123}`
   //
@@ -565,6 +565,8 @@ var Socket = exports.Socket = (function () {
   //   longpollerTimeout - The maximum timeout of a long poll AJAX request.
   //                        Defaults to 20s (double the server long poll timer).
   //
+  //   params - The optional params to pass when connecting
+  //
   // For IE8 support use an ES5-shim (https://github.com/es-shims/es5-shim)
   //
 
@@ -586,7 +588,7 @@ var Socket = exports.Socket = (function () {
     };
     this.logger = opts.logger || function () {}; // noop
     this.longpollerTimeout = opts.longpollerTimeout || 20000;
-    this.params = {};
+    this.params = opts.params || {};
     this.reconnectTimer = new Timer(function () {
       return _this.connect(_this.params);
     }, this.reconnectAfterMs);
@@ -636,11 +638,19 @@ var Socket = exports.Socket = (function () {
 
       // params - The params to send when connecting, for example `{user_id: userToken}`
 
-      value: function connect() {
+      value: function connect(params) {
         var _this = this;
 
-        var params = arguments[0] === undefined ? {} : arguments[0];
-        this.params = params;
+        if (this.isConnected()) {
+          return;
+        }
+        if (params && Object.keys(this.params).length > 0) {
+          throw "You can only provide socket params to either the Socket constructor or connect, not both.";
+        }
+        if (params) {
+          this.params = params;
+        }
+
         this.disconnect(function () {
           _this.conn = new _this.transport(_this.endPointURL());
           _this.conn.timeout = _this.longpollerTimeout;

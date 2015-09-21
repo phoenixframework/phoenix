@@ -335,6 +335,8 @@ export class Socket {
   //   longpollerTimeout - The maximum timeout of a long poll AJAX request.
   //                        Defaults to 20s (double the server long poll timer).
   //
+  //   params - The optional params to pass when connecting
+  //
   // For IE8 support use an ES5-shim (https://github.com/es-shims/es5-shim)
   //
   constructor(endPoint, opts = {}){
@@ -349,7 +351,7 @@ export class Socket {
     }
     this.logger               = opts.logger || function(){} // noop
     this.longpollerTimeout    = opts.longpollerTimeout || 20000
-    this.params               = {}
+    this.params               = opts.params || {}
     this.reconnectTimer       = new Timer(() => this.connect(this.params), this.reconnectAfterMs)
     this.endPoint             = `${endPoint}/${TRANSPORTS.websocket}`
   }
@@ -375,7 +377,12 @@ export class Socket {
   }
 
   // params - The params to send when connecting, for example `{user_id: userToken}`
-  connect(params = {}){ this.params = params
+  connect(params){ if(this.isConnected()){ return }
+    if(params && Object.keys(this.params).length > 0){
+      throw(`You can only provide socket params to either the Socket constructor or connect, not both.`)
+    }
+    if(params){ this.params = params }
+
     this.disconnect(() => {
       this.conn = new this.transport(this.endPointURL())
       this.conn.timeout   = this.longpollerTimeout
