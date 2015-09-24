@@ -82,6 +82,7 @@ defmodule Phoenix.Controller.Pipeline do
   which is responsible for dispatching the appropriate action
   after the plug stack (and is also overridable).
   """
+  require Logger
 
   @doc false
   defmacro __using__(_) do
@@ -125,9 +126,38 @@ defmodule Phoenix.Controller.Pipeline do
         _ = var!(controller)
         _ = var!(action)
 
-        unquote(body)
+        try do
+          unquote(body)
+        catch
+          kind, reason ->
+            Phoenix.Controller.Pipeline.__catch__(
+              var!(conn), kind, reason, System.stacktrace, var!(controller), var!(action)
+            )
+        end
       end
     end
+  end
+
+  @doc false
+  def __catch__(conn, :error = kind, :function_clause = reason, stack, controller, action) do
+    case stack do
+      [{^controller, ^action, [%Plug.Conn{}, %{} | _], location} | _] ->
+        Logger.debug "Bad request to #{inspect controller}.#{action}. No matching action clause to process request\n" <>
+                     "  File: #{location[:file]}:#{location[:line]}\n" <>
+                     "  Parameters: #{inspect conn.params}"
+
+        Phoenix.Endpoint.RenderErrors.maybe_send_resp(conn, fn ->
+          conn
+          |> Plug.Conn.send_resp(400, "Bad Request")
+          |> Plug.Conn.halt()
+        end)
+
+       _ ->
+         :erlang.raise(kind, reason, stack)
+     end
+  end
+  def __catch__(_conn, kind, reason, stack, _controller, _action) do
+    :erlang.raise(kind, reason, stack)
   end
 
   @doc """
