@@ -20,3 +20,14 @@ defmodule Phoenix.MissingParamError do
     %Phoenix.MissingParamError{message: msg}
   end
 end
+
+defmodule Phoenix.ActionClauseError do
+  defexception [message: nil, plug_status: 400, controller: nil, action: nil]
+
+  def exception(opts) do
+    msg = "bad request to #{inspect opts[:controller]}.#{opts[:action]}, " <>
+          "no matching action clause to process request"
+    %Phoenix.ActionClauseError{message: msg}
+  end
+
+end
