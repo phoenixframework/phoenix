@@ -51,11 +51,11 @@ defmodule Phoenix.Endpoint.RenderErrors do
   end
 
   defp __catch__(_conn, :error, %Phoenix.Router.NoRouteError{} = reason, stack, opts) do
-    maybe_send_resp(reason.conn, fn -> render(reason.conn, :error, reason, stack, opts) end)
+    maybe_render(reason.conn, :error, reason, stack, opts)
   end
 
   defp __catch__(conn, kind, reason, stack, opts) do
-    maybe_send_resp(conn, fn -> render(conn, kind, reason, stack, opts) end)
+    maybe_render(conn, kind, reason, stack, opts)
     :erlang.raise(kind, reason, stack)
   end
 
@@ -83,17 +83,14 @@ defmodule Phoenix.Endpoint.RenderErrors do
     end
   end
 
-  @doc """
-  Sends the response only if it hasn't already been sent
-  """
-  def maybe_send_resp(conn, func) do
+  defp maybe_render(conn, kind, reason, stack, opts) do
     receive do
       @already_sent ->
         send self(), @already_sent
         %{conn | state: :sent}
     after
       0 ->
-        func.()
+        render conn, kind, reason, stack, opts
     end
   end
 

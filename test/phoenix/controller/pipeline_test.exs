@@ -10,7 +10,6 @@ defmodule Phoenix.Controller.PipelineTest do
     plug :prepend, :before1 when action in [:show, :create, :secret]
     plug :prepend, :before2
     plug :do_halt when action in [:secret]
-    plug :send_early when action in [:already_sent_no_match]
 
     def show(conn, _) do
       prepend(conn, :action)
@@ -28,10 +27,6 @@ defmodule Phoenix.Controller.PipelineTest do
       raise "Shouldn't have matched"
     end
 
-    def already_sent_no_match(_conn, %{"no" => "match"}) do
-      raise "Shouldn't have matched"
-    end
-
     def non_top_level_function_clause_error(conn, params) do
       send_resp(conn, :ok, trigger_func_clause_error(params))
     end
@@ -43,9 +38,23 @@ defmodule Phoenix.Controller.PipelineTest do
     defp prepend(conn, val) do
       update_in conn.private.stack, &[val|&1]
     end
-
-    defp send_early(conn, _), do: send_resp(conn, :ok, "")
   end
+
+  defmodule ActionController do
+    use Phoenix.Controller
+
+    def action(conn, _) do
+      apply(__MODULE__, conn.private.phoenix_action, [conn, conn.body_params,
+                                                      conn.query_params])
+    end
+
+    def show(conn, _, _), do: text(conn, "show")
+
+    def no_match(_conn, _, %{"no" => "match"}) do
+      raise "Shouldn't have matched"
+    end
+  end
+
 
   setup do
     Logger.disable(self())
@@ -79,17 +88,10 @@ defmodule Phoenix.Controller.PipelineTest do
     assert layout(conn) == false
   end
 
-  test "transforms top-level action function clause errors into 400 responses" do
-    conn = MyController.call(stack_conn(), :no_match)
-
-    assert conn.status == 400
-  end
-
-  test "does not send 400 if response already sent when action FunctionClauseError's" do
-    conn = MyController.call(stack_conn(), :already_sent_no_match)
-
-    assert conn.state == :sent
-    assert conn.status == nil
+  test "transforms top-level function clause errors into Phoenix.ActionClauseError" do
+    assert_raise Phoenix.ActionClauseError, fn ->
+      MyController.call(stack_conn(), :no_match)
+    end
   end
 
   test "does not transform function clause errors lower in action stack" do
@@ -98,6 +100,15 @@ defmodule Phoenix.Controller.PipelineTest do
     end
   end
 
+  test "action/2 is overridable and still wraps function clause transforms" do
+    conn = ActionController.call(stack_conn(), :show)
+    assert conn.status == 200
+    assert conn.resp_body == "show"
+
+    assert_raise Phoenix.ActionClauseError, fn ->
+      ActionController.call(stack_conn(), :no_match)
+    end
+  end
 
   defp stack_conn() do
     conn(:get, "/")
