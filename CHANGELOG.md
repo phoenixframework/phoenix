@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.3-dev
+
+* JavaScript client deprecations
+  * Passing params to socket.connect() has been deprecated in favor of the `:params` option of the Socket constructor
+
 ## 1.0.2 (2015-9-6)
 
 * Enhancements

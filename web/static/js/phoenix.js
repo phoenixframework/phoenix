@@ -6,13 +6,13 @@
 // channels are mulitplexed over the connection.
 // Connect to the server using the `Socket` class:
 //
-//     let socket = new Socket("/ws")
-//     socket.connect({userToken: "123"})
+//     let socket = new Socket("/ws", {params: {userToken: "123"}})
+//     socket.connect()
 //
-// The `Socket` constructor takes the mount point of the socket
-// as well as options that can be found in the Socket docs,
-// such as configuring the `LongPoll` transport, and heartbeat.
-// Socket params can also be passed as an object literal to `connect`.
+// The `Socket` constructor takes the mount point of the socket,
+// the authentication params, as well as options that can be found in
+// the Socket docs, such as configuring the `LongPoll` transport, and
+// heartbeat.
 //
 // ## Channels
 //
@@ -352,8 +352,10 @@ export class Socket {
     this.logger               = opts.logger || function(){} // noop
     this.longpollerTimeout    = opts.longpollerTimeout || 20000
     this.params               = opts.params || {}
-    this.reconnectTimer       = new Timer(() => this.connect(this.params), this.reconnectAfterMs)
     this.endPoint             = `${endPoint}/${TRANSPORTS.websocket}`
+    this.reconnectTimer       = new Timer(() => {
+      this.disconnect(() => this.connect())
+    }, this.reconnectAfterMs)
   }
 
   protocol(){ return location.protocol.match(/^https/) ? "wss" : "ws" }
@@ -377,20 +379,19 @@ export class Socket {
   }
 
   // params - The params to send when connecting, for example `{user_id: userToken}`
-  connect(params){ if(this.isConnected()){ return }
-    if(params && Object.keys(this.params).length > 0){
-      throw(`You can only provide socket params to either the Socket constructor or connect, not both.`)
+  connect(params){
+    if(params){
+      console && console.log("passing params to connect is deprecated. Instead pass :params to the Socket constructor")
+      this.params = params
     }
-    if(params){ this.params = params }
+    if(this.conn){ return }
 
-    this.disconnect(() => {
-      this.conn = new this.transport(this.endPointURL())
-      this.conn.timeout   = this.longpollerTimeout
-      this.conn.onopen    = () => this.onConnOpen()
-      this.conn.onerror   = error => this.onConnError(error)
-      this.conn.onmessage = event => this.onConnMessage(event)
-      this.conn.onclose   = event => this.onConnClose(event)
-    })
+    this.conn = new this.transport(this.endPointURL())
+    this.conn.timeout   = this.longpollerTimeout
+    this.conn.onopen    = () => this.onConnOpen()
+    this.conn.onerror   = error => this.onConnError(error)
+    this.conn.onmessage = event => this.onConnMessage(event)
+    this.conn.onclose   = event => this.onConnClose(event)
   }
 
   // Logs the message. Override `this.logger` for specialized logging. noops by default

@@ -104,13 +104,13 @@ var _classCallCheck = function (instance, Constructor) { if (!(instance instance
 // channels are mulitplexed over the connection.
 // Connect to the server using the `Socket` class:
 //
-//     let socket = new Socket("/ws")
-//     socket.connect({userToken: "123"})
+//     let socket = new Socket("/ws", {params: {userToken: "123"}})
+//     socket.connect()
 //
-// The `Socket` constructor takes the mount point of the socket
-// as well as options that can be found in the Socket docs,
-// such as configuring the `LongPoll` transport, and heartbeat.
-// Socket params can also be passed as an object literal to `connect`.
+// The `Socket` constructor takes the mount point of the socket,
+// the authentication params, as well as options that can be found in
+// the Socket docs, such as configuring the `LongPoll` transport, and
+// heartbeat.
 //
 // ## Channels
 //
@@ -589,10 +589,12 @@ var Socket = exports.Socket = (function () {
     this.logger = opts.logger || function () {}; // noop
     this.longpollerTimeout = opts.longpollerTimeout || 20000;
     this.params = opts.params || {};
-    this.reconnectTimer = new Timer(function () {
-      return _this.connect(_this.params);
-    }, this.reconnectAfterMs);
     this.endPoint = "" + endPoint + "/" + TRANSPORTS.websocket;
+    this.reconnectTimer = new Timer(function () {
+      _this.disconnect(function () {
+        return _this.connect();
+      });
+    }, this.reconnectAfterMs);
   }
 
   _prototypeProperties(Socket, null, {
@@ -641,32 +643,28 @@ var Socket = exports.Socket = (function () {
       value: function connect(params) {
         var _this = this;
 
-        if (this.isConnected()) {
-          return;
-        }
-        if (params && Object.keys(this.params).length > 0) {
-          throw "You can only provide socket params to either the Socket constructor or connect, not both.";
-        }
         if (params) {
+          console && console.log("passing params to connect is deprecated. Instead pass :params to the Socket constructor");
           this.params = params;
         }
+        if (this.conn) {
+          return;
+        }
 
-        this.disconnect(function () {
-          _this.conn = new _this.transport(_this.endPointURL());
-          _this.conn.timeout = _this.longpollerTimeout;
-          _this.conn.onopen = function () {
-            return _this.onConnOpen();
-          };
-          _this.conn.onerror = function (error) {
-            return _this.onConnError(error);
-          };
-          _this.conn.onmessage = function (event) {
-            return _this.onConnMessage(event);
-          };
-          _this.conn.onclose = function (event) {
-            return _this.onConnClose(event);
-          };
-        });
+        this.conn = new this.transport(this.endPointURL());
+        this.conn.timeout = this.longpollerTimeout;
+        this.conn.onopen = function () {
+          return _this.onConnOpen();
+        };
+        this.conn.onerror = function (error) {
+          return _this.onConnError(error);
+        };
+        this.conn.onmessage = function (event) {
+          return _this.onConnMessage(event);
+        };
+        this.conn.onclose = function (event) {
+          return _this.onConnClose(event);
+        };
       },
       writable: true,
       configurable: true
