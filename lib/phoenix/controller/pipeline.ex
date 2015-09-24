@@ -145,8 +145,11 @@ defmodule Phoenix.Controller.Pipeline do
 
   @doc false
   def __catch__(:error, :function_clause, controller, action,
-                [{controller, action, [%Plug.Conn{} | _], _loc} | _]) do
-    raise Phoenix.ActionClauseError, controller: controller, action: action
+                [{controller, action, [%Plug.Conn{} | _], _loc} | _] = stack) do
+
+    msg = "bad request to #{inspect controller}.#{action}, " <>
+          "no matching action clause to process request"
+    reraise Phoenix.ActionClauseError, [message: msg], stack
   end
   def __catch__(kind, reason, _controller, _action, stack) do
     :erlang.raise(kind, reason, stack)
