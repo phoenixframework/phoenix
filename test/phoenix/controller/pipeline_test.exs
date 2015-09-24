@@ -10,6 +10,7 @@ defmodule Phoenix.Controller.PipelineTest do
     plug :prepend, :before1 when action in [:show, :create, :secret]
     plug :prepend, :before2
     plug :do_halt when action in [:secret]
+    plug :send_early when action in [:already_sent_no_match]
 
     def show(conn, _) do
       prepend(conn, :action)
@@ -23,11 +24,27 @@ defmodule Phoenix.Controller.PipelineTest do
       prepend(conn, :secret_action)
     end
 
+    def no_match(_conn, %{"no" => "match"}) do
+      raise "Shouldn't have matched"
+    end
+
+    def already_sent_no_match(_conn, %{"no" => "match"}) do
+      raise "Shouldn't have matched"
+    end
+
+    def non_top_level_function_clause_error(conn, params) do
+      send_resp(conn, :ok, trigger_func_clause_error(params))
+    end
+
+    defp trigger_func_clause_error(%{"no" => "match"}), do: :nomatch
+
     defp do_halt(conn, _), do: halt(conn)
 
     defp prepend(conn, val) do
       update_in conn.private.stack, &[val|&1]
     end
+
+    defp send_early(conn, _), do: send_resp(conn, :ok, "")
   end
 
   setup do
@@ -61,6 +78,26 @@ defmodule Phoenix.Controller.PipelineTest do
     assert view_module(conn) == Hello
     assert layout(conn) == false
   end
+
+  test "transforms top-level action function clause errors into 400 responses" do
+    conn = MyController.call(stack_conn(), :no_match)
+
+    assert conn.status == 400
+  end
+
+  test "does not send 400 if response already sent when action FunctionClauseError's" do
+    conn = MyController.call(stack_conn(), :already_sent_no_match)
+
+    assert conn.state == :sent
+    assert conn.status == nil
+  end
+
+  test "does not transform function clause errors lower in action stack" do
+    assert_raise FunctionClauseError, fn ->
+      MyController.call(stack_conn(), :non_top_level_function_clause_error)
+    end
+  end
+
 
   defp stack_conn() do
     conn(:get, "/")
