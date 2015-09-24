@@ -165,7 +165,7 @@ defmodule Phoenix.Channel.Server do
 
             {:ok, Socket.t} |
             {:ok, reply :: map, Socket.t} |
-            {:error, reply :: map, Socket.t}
+            {:error, reply :: map}
 
         got #{inspect other}
         """
