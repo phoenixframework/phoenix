@@ -24,8 +24,8 @@ end
 defmodule Phoenix.ActionClauseError do
   defexception [message: nil, plug_status: 400]
 
-  def exception(opts) do
-    %Phoenix.ActionClauseError{message: opts[:msg]}
+  def exception(message: msg) do
+    %Phoenix.ActionClauseError{message: msg}
   end
 
 end
