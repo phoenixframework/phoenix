@@ -2,6 +2,10 @@
 
 ## 1.0.3-dev
 
+* Enhancements
+  * [Controller] Transform FunctionClauseError's from controller actions into ActionClauseError, and send 400 response
+  * [Router] Allow plugs to be passed to `pipe_through`
+
 * JavaScript client deprecations
   * Passing params to socket.connect() has been deprecated in favor of the `:params` option of the Socket constructor
 
