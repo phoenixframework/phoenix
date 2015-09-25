@@ -24,8 +24,11 @@ end
 defmodule Phoenix.ActionClauseError do
   defexception [message: nil, plug_status: 400]
 
-  def exception(message: msg) do
+  def exception(opts) do
+    controller = Keyword.fetch!(opts, :controller)
+    action = Keyword.fetch!(opts, :action)
+    msg = "bad request to #{inspect controller}.#{action}, " <>
+          "no matching action clause to process request"
     %Phoenix.ActionClauseError{message: msg}
   end
-
 end
