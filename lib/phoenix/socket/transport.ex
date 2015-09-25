@@ -191,14 +191,14 @@ defmodule Phoenix.Socket.Transport do
       must be sent as result
 
   """
-  def dispatch(msg, sockets, socket)
+  def dispatch(msg, channels, socket)
 
-  def dispatch(%{ref: ref, topic: "phoenix", event: "heartbeat"}, _sockets, _socket) do
+  def dispatch(%{ref: ref, topic: "phoenix", event: "heartbeat"}, _channels, _socket) do
     {:reply, %Reply{ref: ref, topic: "phoenix", status: :ok, payload: %{}}}
   end
 
-  def dispatch(%Message{} = msg, sockets, socket) do
-    sockets
+  def dispatch(%Message{} = msg, channels, socket) do
+    channels
     |> HashDict.get(msg.topic)
     |> do_dispatch(msg, socket)
   end
@@ -231,8 +231,8 @@ defmodule Phoenix.Socket.Transport do
     reply_ignore(msg, socket)
   end
 
-  defp do_dispatch(socket_pid, msg, _socket) do
-    send(socket_pid, msg)
+  defp do_dispatch(channel_pid, msg, _socket) do
+    send(channel_pid, msg)
     :noreply
   end
 
