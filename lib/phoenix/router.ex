@@ -317,7 +317,19 @@ defmodule Phoenix.Router do
     end
   end
 
-  for verb <- @http_methods do
+  # Allow additional http methods being set by using the project's config file:
+  # 
+  # ## Example config.exs:
+  # 
+  #   config :phoenix, :router,
+  #     additional_http_methods: [:mymethod]
+  #       
+  additional_http_methods = Application.get_env(:phoenix, :router) || []
+    |> Keyword.get(:additional_http_methods)
+
+  http_methods = @http_methods ++ (additional_http_methods || [])
+
+  for verb <- http_methods do
     @doc """
     Generates a route to handle a #{verb} request to the given path.
     """
