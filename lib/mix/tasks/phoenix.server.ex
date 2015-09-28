@@ -8,23 +8,23 @@ defmodule Mix.Tasks.Phoenix.Server do
 
   ## Command line options
 
-  This task accepts the same command-line arguments as `app.start`.
+  This task accepts the same command-line arguments as `run`.
   For additional information, refer to the documentation for
-  `Mix.Tasks.App.Start`.
+  `Mix.Tasks.Run`.
 
   For example, to run `phoenix.server` without checking dependencies:
 
       mix phoenix.server --no-deps-check
 
+  The `--no-halt` flag is automatically added.
   """
   def run(args) do
     Application.put_env(:phoenix, :serve_endpoints, true, persistent: true)
-    Mix.Task.run "app.start", args
-    no_halt()
+    Mix.Task.run "run", run_args() ++ args
   end
 
-  defp no_halt do
-    unless iex_running?, do: :timer.sleep(:infinity)
+  defp run_args do
+    if iex_running?, do: [], else: ["--no-halt"]
   end
 
   defp iex_running? do

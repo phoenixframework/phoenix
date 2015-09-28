@@ -3,6 +3,7 @@ defmodule Mix.Tasks.Phoenix.Digest do
   @default_input_path "priv/static"
 
   @shortdoc "Digests and compress static files"
+  @recursive true
 
   @moduledoc """
   Digests and compress static files.
