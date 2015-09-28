@@ -11,4 +11,7 @@ defmodule Phoenix.ErrorView do
   end
 end
 
+# For mix tests
+Mix.shell(Mix.Shell.Process)
+
 ExUnit.start()
