@@ -3,7 +3,7 @@ defmodule Phoenix.New.Mixfile do
 
   def project do
     [app: :phoenix_new,
-     version: "1.0.2",
+     version: "1.0.3",
      elixir: "~> 1.0-dev"]
   end
 

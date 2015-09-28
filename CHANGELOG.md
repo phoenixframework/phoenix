@@ -1,10 +1,11 @@
 # Changelog
 
-## 1.0.3-dev
+## 1.0.3 (2015-9-28)
 
 * Enhancements
   * [Controller] Transform FunctionClauseError's from controller actions into ActionClauseError, and send 400 response
   * [Router] Allow plugs to be passed to `pipe_through`
+  * [Channel] WebSocket transport now sends server heartbeats and shutdowns if client heartbeats stop. Fixes timeout issues when clients keep connection open, but hang with suspended js runtimes
 
 * JavaScript client deprecations
   * Passing params to socket.connect() has been deprecated in favor of the `:params` option of the Socket constructor
