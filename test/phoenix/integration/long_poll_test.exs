@@ -235,7 +235,7 @@ defmodule Phoenix.Integration.LongPollTest do
       :timer.sleep @ensure_window_timeout_ms
 
       resp = poll(:post, "/ws", session)
-      assert resp.body["status"] == 410
+      assert Dict.get(resp.body, "status") == 410
       assert_receive {:DOWN, _, :process, ^channel, {:shutdown, :inactive}}
     end
   end
