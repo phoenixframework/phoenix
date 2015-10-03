@@ -51,6 +51,6 @@ defmodule Phoenix.Mixfile do
      licenses: ["MIT"],
      links: %{github: "https://github.com/phoenixframework/phoenix"},
      files: ~w(lib priv test/shared web) ++
-            ~w(brunch-config.js CHANGELOG.md LICENSE mix.exs package.json README.md)]
+            ~w(brunch-config.js CHANGELOG.md LICENSE.md mix.exs package.json README.md)]
   end
 end
