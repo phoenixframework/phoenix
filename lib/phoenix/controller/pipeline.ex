@@ -53,7 +53,7 @@ defmodule Phoenix.Controller.Pipeline do
       plug :log_message, "before show and edit" when action in [:show, :edit]
       plug :log_message, "before all but index" when not action in [:index]
 
-  The first plug will run only when action is show and edit.
+  The first plug will run only when action is show or edit.
   The second plug will always run, except for the index action.
 
   Those guards work like regular Elixir guards and the only variables accessible
