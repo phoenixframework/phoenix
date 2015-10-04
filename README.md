@@ -58,3 +58,9 @@ $ MIX_ENV=docs mix docs
   [2]: https://github.com/phoenixframework/phoenix/issues
   [3]: http://groups.google.com/group/phoenix-talk
   [4]: http://groups.google.com/group/phoenix-core
+
+## Copyright and License
+
+Copyright (c) 2014, Chris McCord.
+
+Phoenix source code is licensed under the [MIT License](LICENSE.md).
