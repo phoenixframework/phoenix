@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.4-dev
+
+* Enhancements
+  * [Router] Enable defining routes for custom http methods with a new `match` macro
+
+
 ## 1.0.3 (2015-9-28)
 
 * Enhancements
