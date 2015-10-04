@@ -12,11 +12,7 @@ In a freshly generated application, let's run `mix test` at the root of the proj
 
 ```console
 $ mix test
-==> ranch (compile)
-
-. . .
-
-Generated hello_phoenix app
+....
 
 Finished in 0.2 seconds (0.2s on load, 0.00s on tests)
 4 tests, 0 failures
@@ -41,10 +37,11 @@ test
 ├── test_helper.exs
 └── views
     ├── error_view_test.exs
+    ├── layout_view_test.exs
     └── page_view_test.exs
 ```
 
-The test cases we get for free include `test/controllers/page_controller_test.exs`,  `test/views/error_view_test.exs`, and `test/views/page_view_test.exs`. Nice.
+The test cases we get for free include `test/controllers/page_controller_test.exs`, `test/views/error_view_test.exs`, and `test/views/page_view_test.exs`. Nice.
 
 We're going to look at test cases in detail throughout the testing guides, but let's take a quick look at these three, just to get our feet wet.
 
@@ -63,7 +60,7 @@ end
 
 There are a couple of interesting things happening here.
 
-The "get/2" function gives us a connection struct set up as if it had been used for a get request to "/". This saves us a considerable amount of tedious setup.
+The `get/2` function gives us a connection struct set up as if it had been used for a get request to "/". This saves us a considerable amount of tedious setup.
 
 The assertion actually tests three things - that we got an HTML response (by checking for a content-type of "text/html"), that our response code was 200, and that the body of our response matched the string "Welcome to Phoenix!"
 
@@ -107,14 +104,13 @@ end
 
 Let's also take a look at the support and helper files Phoenix provides us.
 
-The default test helper file, `test/test_helper.ex`, creates and migrates our test database for us. It also starts a transaction for each test to run in. This will "clean" the database by rolling back the transaction as each test completes.
+The default test helper file, `test/test_helper.exs`, creates and migrates our test database for us. It also starts a transaction for each test to run in. This will "clean" the database by rolling back the transaction as each test completes.
 
 The test helper can also hold any testing-specific configuration our application might need.
 
 ```elixir
 ExUnit.start
 
-# Create the database, run migrations, and start the test transaction.
 Mix.Task.run "ecto.create", ["--quiet"]
 Mix.Task.run "ecto.migrate", ["--quiet"]
 Ecto.Adapters.SQL.begin_test_transaction(HelloPhoenix.Repo)
@@ -194,8 +190,8 @@ defmodule HelloPhoenix.ErrorViewTest do
   use HelloPhoenix.ConnCase, async: true
 
   @moduletag :error_view_case
-
-  . . .
+  ...
+end
 ```
 
 If we use only an atom for our module tag, ExUnit assumes that it has a value of `true`. We could also specify a different value if we wanted.
@@ -205,8 +201,8 @@ defmodule HelloPhoenix.ErrorViewTest do
   use HelloPhoenix.ConnCase, async: true
 
   @moduletag error_view_case: "some_interesting_value"
-
-  . . .
+  ...
+end
 ```
 
 For now, let's leave it as a simple atom `@moduletag :error_view_case`.
@@ -230,6 +226,14 @@ Randomized with seed 125659
 ```console
 $ mix test test/views/error_view_test.exs:12
 Including tags: [line: "12"]
+Excluding tags: [:test]
+
+.
+
+Finished in 0.2 seconds (0.2s on load, 0.00s on tests)
+1 tests, 0 failures
+
+Randomized with seed 364723
 ```
 
 Specifying a value of `true` for `error_view_case` yields the same results.
@@ -265,7 +269,7 @@ Randomized with seed 622422
 We can use the `--exclude` flag in a similar way. This will run all of the tests except those in the error view case.
 
 ```console
-mix test --exclude error_view_case
+$ mix test --exclude error_view_case
 Excluding tags: [:error_view_case]
 
 .
@@ -284,23 +288,24 @@ We can tag individual tests as well as full test cases. Let's tag a few tests in
 defmodule HelloPhoenix.ErrorViewTest do
   use HelloPhoenix.ConnCase, async: true
 
-  . . .
+  @moduletag :error_view_case
+
+  # Bring render/3 and render_to_string/3 for testing custom views
+  import Phoenix.View
 
   @tag individual_test: "yup"
   test "renders 404.html" do
     assert render_to_string(HelloPhoenix.ErrorView, "404.html", []) ==
-    "Page not found"
+           "Page not found"
   end
 
   @tag individual_test: "nope"
   test "render 500.html" do
     assert render_to_string(HelloPhoenix.ErrorView, "500.html", []) ==
-    "Server internal error"
+           "Server internal error"
   end
-
-  . . .
+  ...
 end
-
 ```
 
 If we would like to run only tests tagged as `individual_test`, regardless of their value, this will work.
@@ -318,7 +323,7 @@ Finished in 0.1 seconds (0.1s on load, 0.00s on tests)
 Randomized with seed 813729
 ```
 
-We can also specify a value and run only tests with that value.
+We can also specify a value and run only tests with that.
 
 ```console
 $ mix test --only individual_test:yup
@@ -379,12 +384,11 @@ Finished in 0.2 seconds (0.1s on load, 0.03s on tests)
 Randomized with seed 61472
 ```
 
-Finally, we can configure ExUnit to exclude tags by default. Let's configure it to always exclude tests with the `error_view_case` tag.
+Finally, we can configure ExUnit to exclude tags by default. Let's configure it to always exclude tests with the `error_view_case` tag in `test/test_helper.exs`.
 
 ```elixir
 ExUnit.start
 
-# Create the database, run migrations, and start the test transaction.
 Mix.Task.run "ecto.create", ["--quiet"]
 Mix.Task.run "ecto.migrate", ["--quiet"]
 Ecto.Adapters.SQL.begin_test_transaction(HelloPhoenix.Repo)
