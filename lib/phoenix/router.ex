@@ -246,8 +246,8 @@ defmodule Phoenix.Router do
       """
       def call(conn, opts), do: do_call(conn, opts)
 
-      defp match(conn, []) do
-        match(conn, conn.method, Enum.map(conn.path_info, &URI.decode/1), conn.host)
+      defp match_route(conn, []) do
+        match_route(conn, conn.method, Enum.map(conn.path_info, &URI.decode/1), conn.host)
       end
 
       defp dispatch(conn, []) do
@@ -271,7 +271,7 @@ defmodule Phoenix.Router do
     Helpers.define(env, routes_with_exprs)
     matches = Enum.map(routes_with_exprs, &build_match/1)
 
-    plugs = [{:dispatch, [], true}, {:match, [], true}]
+    plugs = [{:dispatch, [], true}, {:match_route, [], true}]
     {conn, pipeline} = Plug.Builder.compile(env, plugs, [])
 
     call =
@@ -287,7 +287,7 @@ defmodule Phoenix.Router do
     # line: -1 is used here to avoid warnings if forwarding to root path
     match_404 =
       quote line: -1 do
-        defp match(conn, _method, _path_info, _host) do
+        defp match_route(conn, _method, _path_info, _host) do
           raise NoRouteError, conn: conn, router: __MODULE__
         end
       end
@@ -310,11 +310,27 @@ defmodule Phoenix.Router do
 
   defp build_match({_route, exprs}) do
     quote do
-      defp match(var!(conn), unquote(exprs.verb_match), unquote(exprs.path),
+      defp match_route(var!(conn), unquote(exprs.verb_match), unquote(exprs.path),
                  unquote(exprs.host)) do
         unquote(exprs.dispatch)
       end
     end
+  end
+
+  @doc """
+  Generates a route match based on an arbitrary HTTP method
+
+  Useful for defining routes not included in the builtin macros:
+
+  #{Enum.map_join(@http_methods, ", ", &"`#{&1}`")}
+
+  ## Examples
+
+      match(:move, "/events/:id", EventController, :move)
+
+  """
+  defmacro match(verb, path, plug, plug_opts, options \\ []) do
+    add_route(:match, verb, path, plug, plug_opts, options)
   end
 
   for verb <- @http_methods do
@@ -322,7 +338,10 @@ defmodule Phoenix.Router do
     Generates a route to handle a #{verb} request to the given path.
     """
     defmacro unquote(verb)(path, plug, plug_opts, options \\ []) do
-      add_route(:match, unquote(verb), path, plug, plug_opts, options)
+      verb = unquote(verb)
+      quote bind_quoted: binding do
+        match(verb, path, plug, plug_opts, options)
+      end
     end
   end
 
@@ -625,5 +644,4 @@ defmodule Phoenix.Router do
       unquote(add_route(:forward, :*, path, plug, plug_opts, router_opts))
     end
   end
-
 end

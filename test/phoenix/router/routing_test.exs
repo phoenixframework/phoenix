@@ -12,6 +12,7 @@ defmodule Phoenix.Router.RoutingTest do
     def trace(conn, _params), do: text(conn, "users trace")
     def not_found(conn, _params), do: text(put_status(conn, :not_found), "not found")
     def image(conn, _params), do: text(conn, conn.params["path"] || "show files")
+    def move(conn, _params), do: text(conn, "users move")
   end
 
   defmodule Router do
@@ -30,6 +31,7 @@ defmodule Phoenix.Router.RoutingTest do
     trace "/trace", UserController, :trace
     options "/options", UserController, :options
     connect "/connect", UserController, :connect
+    match :move, "/move", UserController, :move
 
     get "/users/:user_id/files/:id", UserController, :image
     get "/*path", UserController, :not_found
@@ -131,5 +133,12 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.status == 404
     assert conn.params == %{"path" => ~w"foo bar baz"}
     assert conn.resp_body == "not found"
+  end
+
+  test "match on arbitrary http methods" do
+    conn = call(Router, :move, "/move")
+    assert conn.method == "MOVE"
+    assert conn.status == 200
+    assert conn.resp_body == "users move"
   end
 end
