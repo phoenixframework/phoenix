@@ -201,7 +201,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
   defp value_to_type(:time), do: Ecto.Time
   defp value_to_type(:datetime), do: Ecto.DateTime
   defp value_to_type(:point), do: Geo.Point
-  defp value_to_type(:polygon), do: Geo.Poligon
+  defp value_to_type(:polygon), do: Geo.Polygon
   defp value_to_type(:linestring), do: Geo.LineString
   defp value_to_type(:multipoint), do: Geo.MultiPoint
   defp value_to_type(:multipolygon), do: Geo.MultiPolygon 
