@@ -254,7 +254,7 @@ defmodule Phoenix.Channel do
       {:stop, reason :: term, Socket.t}
 
   """
-  defmacro intercept(events) when is_list(events) do
+  defmacro intercept(events) do
     quote do
       @phoenix_intercepts unquote(events)
     end
