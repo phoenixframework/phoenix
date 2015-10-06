@@ -35,7 +35,7 @@ Heroku offers some great information on how it is using Git [here](https://devce
 
 ## Signing up for Heroku
 
-Signing up to Heroku is very simple, just head over to [https://signup.heroku.com/www-header](https://signup.heroku.com/www-header) and fill in the form.
+Signing up to Heroku is very simple, just head over to [https://signup.heroku.com/](https://signup.heroku.com/) and fill in the form.
 
 The Free plan will give us one web [dyno](https://devcenter.heroku.com/articles/dynos#dynos) and one worker dyno, as well as a PostgreSQL and Redis instance for free.
 
