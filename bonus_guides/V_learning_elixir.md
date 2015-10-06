@@ -27,8 +27,8 @@ Here is a selected list of resources to help with learning Elixir and Erlang.
 ##### Books
 - [Programming Erlang](http://pragprog.com/book/jaerlang2/programming-erlang), 2nd Edition, Joe Armstrong
 - [Introducing Erlang](http://shop.oreilly.com/product/0636920025818.do), Simon St. Laurent
-- [Learn You Some Erlang for Great Good!](http://www.nostarch.com/erlang), Fred Hebert
+- [Learn You Some Erlang for Great Good!](http://www.nostarch.com/erlang), Fred Hébert
 - [Erlang and OTP in Action](http://www.manning.com/logan/), Martin Logan, Eric Merritt, and Richard Carlsson
 - [Erlang Programming](http://shop.oreilly.com/product/9780596518189.do), Francesco Cesarini and Simon Thompson
 - [Designing for Scalability with Erlang/OTP](http://shop.oreilly.com/product/0636920024149.do), Francesco Cesarini, Steve Vinoski
-- [Erlang in Anger](http://www.erlang-in-anger.com/), Fred Hebert
+- [Erlang in Anger](http://www.erlang-in-anger.com/), Fred Hébert
