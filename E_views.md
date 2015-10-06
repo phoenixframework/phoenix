@@ -16,7 +16,7 @@ end
 
 That's simple enough. There's only one line, `use HelloPhoenix.Web, :view`. This line calls the `view/0` function we just saw above. Besides allowing us to change our template root, `view/0` exercises the `__using__` macro in the `Phoenix.View` module. It also handles any module imports or aliases our application's view modules might need.
 
-At the top of this file, we mentioned that views are a place to put functions for use in our templates. Let's experiment with that a little bit.
+At the top of this guide, we mentioned that views are a place to put functions for use in our templates. Let's experiment with that a little bit.
 
 Let's open up our application layout template, `templates/layout/app.html.eex`, and change this line,
 
@@ -55,17 +55,17 @@ Let's open up the `templates/page/index.html.eex` and locate this stanza.
 ```html
 <div class="jumbotron">
   <h2>Welcome to Phoenix!</h2>
-  <p class="lead">Most frameworks make you choose between speed and a productive environment. <a href="http://phoenixframework.org">Phoenix</a> and <a href="http://elixir-lang.org">Elixir</a> give you both.</p>
+  <p class="lead">A productive web framework that<br>does not compromise speed and maintainability.</p>
 </div>
 ```
 
-Then let's add a line with a link back to the same page. (The object is to see how path helpers respond in a template, not to add any functionality.)
+Then let's add a line with a link back to the same page. (The objective is to see how path helpers respond in a template, not to add any functionality.)
 
 ```html
 <div class="jumbotron">
   <h2>Welcome to Phoenix!</h2>
-  <p class="lead">Most frameworks make you choose between speed and a productive environment. <a href="http://phoenixframework.org">Phoenix</a> and <a href="http://elixir-lang.org">Elixir</a> give you both.</p>
-  <p><a href="<%= page_path @conn, :index %>">Link back to ourselves</a></p>
+  <p class="lead">A productive web framework that<br>does not compromise speed and maintainability.</p>
+  <p><a href="<%= page_path @conn, :index %>">Link back to this page</a></p>
 </div>
 ```
 
