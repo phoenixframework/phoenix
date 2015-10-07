@@ -445,7 +445,7 @@ Randomized with seed 401472
 
 We've seen what Phoenix gives us with a newly generated app. Now let's see what happens when we generate a new HTML resource.
 
-Let's borrow the resource we created in the [Mix Tasks Guide](http://www.phoenixframework.org/docs/ecto-models).
+Let's borrow the `users` resource we created in the [Ecto Models Guide](http://www.phoenixframework.org/docs/ecto-models).
 
 At the root of our new application, let's run the `mix phoenix.gen.html` task with the following options.
 

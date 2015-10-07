@@ -548,7 +548,7 @@ Handling individual tables is great, but if we want to build a modern web applic
 
 `Schema.belongs_to/3` declares a one to one relationship between parent and children models. In our video site example, an uploaded video belongs to its user.
 
-`Schema.has_one/3` declares a one to one relationship. Note that has_one is just like has_many except instead of returning a collection of model structs, we get just one model struct. Continuing with the video-sharing example, while a user might have many uploaded videos, the user might only have one featured video.
+`Schema.has_one/3` declares a one to one relationship. Note that has_one is just like has_many except instead of returning a collection of model structs, it returns only one model struct. Continuing with the video-sharing example, while a user might have many uploaded videos, the user might only have one featured video.
 
 Here's how we would declare a `has_many` relationship in `web/models/user.ex`:
 ```elixir
@@ -604,11 +604,11 @@ defmodule HelloPhoenix.UserController do
 . . .
 end
 ```
-Because we declared a relationship in `HelloPhoenix.User`, `%User{}` will now contain a videos property which starts out as an unloaded relationship. In order to properly display it in `render`, we'll need to tell Ecto to preload the field. Note that `Repo.preload/2` is smart enough to work on just one model or collection of them.
+Because we declared a relationship in `HelloPhoenix.User`, `%User{}` will now contain a videos property which starts out as an unloaded relationship. In order to properly display it in `render`, we'll need to tell Ecto to preload the field. Note that `Repo.preload/2` is smart enough to work on just one model or a collection of them.
 
 ### Working with Callback Hooks
 
-Continuing with our video sharing app example, many web applications require moderation for user submitted content. Our Video model has an `approved_at` field to signify that a moderator has approved the video. The question is, what happens if the user edits the video? Ideally, we'd like to be able to "null out" a video's `approved_at` field when this happens. Fortunately, Ecto provides us with a handful of life-cycle callbacks to achieve this.
+Continuing with our video sharing app example, it requires moderation for user submitted content just like many other web applications. Our Video model has an `approved_at` field to signify that a moderator has approved the video. The question is, what happens if the user edits the video? Ideally, we'd like to be able to "null out" a video's `approved_at` field when this happens. Fortunately, Ecto provides us with a handful of life-cycle callbacks to achieve this.
 
 We will instruct Ecto to use the `before_update` hook in `web/models/video.ex` like so:
 
