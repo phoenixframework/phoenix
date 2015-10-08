@@ -16,7 +16,7 @@ defmodule Phoenix.Socket do
       transport :websocket, Phoenix.Transports.WebSocket
 
   The command above means incoming socket connections can be done via
-  the WebSocket transport. Events are router by topic to channels:
+  the WebSocket transport. Events are routed by topic to channels:
 
       channel "rooms:lobby", MyApp.LobbyChannel
 
