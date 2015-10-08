@@ -72,7 +72,7 @@ Then let's add a line with a link back to the same page. (The objective is to se
 Now we can reload the page and view source to see what we have.
 
 ```html
-<a href="/">Link back to ourselves</a>
+<a href="/">Link back to this page</a>
 ```
 
 Great, `page_path/2` evaluated to `/` as we would expect, and we didn't need to qualify it with `HelloPhoenix.View`.
