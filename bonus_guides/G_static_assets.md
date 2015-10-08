@@ -1,17 +1,17 @@
-Instead of implementing its own asset pipeline, Phoenix uses [Brunch](http://brunch.io), a fast and developer-friendly asset build tool. Phoenix comes with a default configuration for Brunch and it will work out of the box, but it is very easy to bend it to our needs, add support for various script and style languages, like CoffeeScript, TypeScript, or LESS.
+Instead of implementing its own asset pipeline, Phoenix uses [Brunch](http://brunch.io), a fast and developer-friendly asset build tool. Phoenix comes with a default configuration for Brunch, which works out of the box for Javascript and CSS, and it is very easy to bend it to our needs by adding support for various script and style languages, like CoffeeScript, TypeScript, or LESS.
 
-Brunch has [a very good tutorial](https://github.com/brunch/brunch-guide), but this short guide should be enough to get us started with asset management from the Phoenix perspective.
+Brunch has [a very brief but good tutorial](https://github.com/brunch/brunch-guide), which should be enough to get us started with asset management from the Phoenix perspective.
 
 
 #### Installation
 
-Brunch is a [Node.js](https://nodejs.org/) application. A newly generated Phoenix project contains `package.json` which lists packages for installation with [npm](https://www.npmjs.com/), the Node Package Manager . If we agree to install dependencies when running `mix phoenix.new`, Phoenix will run `npm` for us. If we don't, or if we change `package.json`, we can always do this ourselves:
+Brunch is a [Node.js](https://nodejs.org/) application. A newly generated Phoenix project contains `package.json` which lists packages for installation with [npm](https://www.npmjs.com/), the Node Package Manager. If we agree to install dependencies when running `mix phoenix.new`, Phoenix will run `npm` for us. If we don't, or if we change `package.json`, we can always do this ourselves:
 
 ```
 npm install
 ```
 
-This will install Brunch and its plugins into the `node_modules` directory .
+This will install Brunch and its plugins into the `node_modules` directory.
 
 
 #### Default Configuration And Workflow

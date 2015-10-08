@@ -279,7 +279,7 @@ defmodule HelloPhoenix.ModelCase do
   . . .
 
   def long_string(length) do
-    Enum.reduce (0..length), "", fn _, acc ->  acc <> "a" end
+    Enum.reduce (1..length), "", fn _, acc ->  acc <> "a" end
   end
 end
 ```
