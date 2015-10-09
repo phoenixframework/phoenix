@@ -69,6 +69,7 @@ defmodule Phoenix.Transports.LongPoll do
 
     conn
     |> fetch_query_params
+    |> put_resp_header("access-control-allow-origin", "*")
     |> Plug.Conn.fetch_query_params
     |> Transport.transport_log(opts[:transport_log])
     |> Transport.force_ssl(handler, endpoint, opts)
@@ -86,7 +87,6 @@ defmodule Phoenix.Transports.LongPoll do
     headers = get_req_header(conn, "access-control-request-headers") |> Enum.join(", ")
 
     conn
-    |> put_resp_header("access-control-allow-origin", "*")
     |> put_resp_header("access-control-allow-headers", headers)
     |> put_resp_header("access-control-allow-methods", "get, post, options")
     |> put_resp_header("access-control-max-age", "3600")
