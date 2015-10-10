@@ -47,7 +47,8 @@ defmodule Phoenix.Mixfile do
   end
 
   defp package do
-    [contributors: ["Chris McCord", "Darko Fabijan", "José Valim"],
+    [contributors: ["Chris McCord", "José Valim", "Lance Halvorsen",
+                    "Jason Stiebs", "Eric Meadows-Jönsson", "Sonny Scroggin"],
      licenses: ["MIT"],
      links: %{github: "https://github.com/phoenixframework/phoenix"},
      files: ~w(lib priv test/shared web) ++
