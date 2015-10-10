@@ -354,4 +354,17 @@ defmodule Phoenix.Integration.LongPollTest do
     end
     assert log =~ "The client's requested channel transport version \"123.1.1\" does not match server's version"
   end
+
+  test "forces application/json content-type" do
+    session = join("/ws", "rooms:lobby")
+
+    resp = poll :post, "/ws", session, %{
+      "topic" => "rooms:lobby",
+      "event" => "phx_leave",
+      "ref" => "2",
+      "payload" => %{}
+    }, %{"content-type" => ""}
+    assert resp.body["status"] == 200
+    assert resp.status == 200
+  end
 end
