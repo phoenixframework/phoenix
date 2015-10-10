@@ -1,6 +1,6 @@
 Instead of implementing its own asset pipeline, Phoenix uses [Brunch](http://brunch.io), a fast and developer-friendly asset build tool. Phoenix comes with a default configuration for Brunch, which works out of the box for Javascript and CSS, and it is very easy to bend it to our needs by adding support for various script and style languages, like CoffeeScript, TypeScript, or LESS.
 
-Brunch has [a very brief but good tutorial](https://github.com/brunch/brunch-guide), which should be enough to get us started with asset management from the Phoenix perspective.
+Brunch has [a good tutorial](https://github.com/brunch/brunch-guide), which should be enough to get us started with asset management from the Phoenix perspective.
 
 
 #### Installation
