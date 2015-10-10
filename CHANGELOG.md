@@ -5,6 +5,8 @@
 * Enhancements
   * [Router] Enable defining routes for custom http methods with a new `match` macro
 
+* Bug fixes
+  * [LongPoll] force application/json content-type to fix blank JSON bodies on older IE clients using xdomain
 
 ## 1.0.3 (2015-9-28)
 
