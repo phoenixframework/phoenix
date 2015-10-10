@@ -107,7 +107,7 @@ defmodule Phoenix.Transports.LongPoll do
   defp dispatch(%{method: "POST"} = conn, endpoint, _, _, opts) do
     case resume_session(conn.params, endpoint, opts) do
       {:ok, server_ref} ->
-        conn |> Plug.Parsers.call(@plug_parsers) |> publish(server_ref, endpoint, opts)
+        conn |> parse_json() |> publish(server_ref, endpoint, opts)
       :error ->
         conn |> put_status(:gone) |> status_json(%{})
     end
@@ -116,6 +116,13 @@ defmodule Phoenix.Transports.LongPoll do
   # All other requests should fail.
   defp dispatch(conn, _, _, _, _) do
     conn |> send_resp(:bad_request, "")
+  end
+
+  # force application/json for xdomain clients
+  defp parse_json(conn) do
+    conn
+    |> put_req_header("content-type", "application/json")
+    |> Plug.Parsers.call(@plug_parsers)
   end
 
   ## Connection helpers
