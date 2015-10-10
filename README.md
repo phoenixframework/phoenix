@@ -53,6 +53,7 @@ $ MIX_ENV=docs mix docs
 * [Issue tracker][2]
 * [phoenix-talk Mailing list (questions)][3]
 * [phoenix-core Mailing list (development)][4]
+* Privately disclose security vulnerabilities to phoenix-security@googlegroups.com
 
   [1]: https://elixir-slackin.herokuapp.com/
   [2]: https://github.com/phoenixframework/phoenix/issues
