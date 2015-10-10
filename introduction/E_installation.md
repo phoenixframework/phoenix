@@ -41,7 +41,7 @@ Node is an optional dependency. Phoenix will use [brunch.io](http://brunch.io/) 
 
 If we don't have any static assets, or we want to use another build tool, we can pass the `--no-brunch` flag when creating a new application and node won't be required at all.
 
-We can get node.js from the [download page](https://nodejs.org/download/). When selecting a package to download, it's important to note that Phoenix requires version 0.12.0 or greater.
+We can get node.js from the [download page](https://nodejs.org/en/download/). When selecting a package to download, it's important to note that Phoenix requires version 0.12.0 or greater.
 
 Mac OS X users can also install node.js via [homebrew](http://brew.sh/).
 
