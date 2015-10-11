@@ -11,8 +11,6 @@ defmodule Phoenix.Endpoint.Server do
   end
 
   def init({otp_app, endpoint}) do
-    import Supervisor.Spec
-
     children = []
 
     if config = endpoint.config(:http) do

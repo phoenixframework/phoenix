@@ -49,7 +49,6 @@ defmodule Phoenix.Transports.LongPoll do
   ## Plug callbacks
 
   @behaviour Plug
-  @behaviour Phoenix.Socket.Transport
   @plug_parsers Plug.Parsers.init(parsers: [:json], json_decoder: Poison)
 
   import Plug.Conn
