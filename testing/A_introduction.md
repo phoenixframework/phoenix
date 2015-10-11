@@ -341,7 +341,7 @@ Randomized with seed 770938
 Similarly, we can run all tests except for those tagged with a given value.
 
 ```console
-mix test --exclude individual_test:nope
+$ mix test --exclude individual_test:nope
 Excluding tags: [individual_test: "nope"]
 
 ...
@@ -452,7 +452,7 @@ At the root of our new application, let's run the `mix phoenix.gen.html` task wi
 ```console
 $ mix phoenix.gen.html User users name:string email:string bio:string number_of_pets:integer
 
-. . . (lots of compilation)
+...
 
 Generated hello_phoenix app
 * creating priv/repo/migrations/20150519043351_create_user.exs
@@ -482,7 +482,7 @@ Now let's follow the directions and add the new resources route to our `web/rout
 defmodule HelloPhoenix.Router do
   use HelloPhoenix.Web, :router
 
-. . .
+  ...
 
   scope "/", HelloPhoenix do
     pipe_through :browser # Use the default browser stack
@@ -491,30 +491,32 @@ defmodule HelloPhoenix.Router do
     resources "/users", UserController
   end
 
-. . .
+  # Other scopes may use custom stacks.
+  # scope "/api", HelloPhoenix do
+  #   pipe_through :api
+  # end
 end
-
 ```
 
-When we run `mix test` again, we see that we already have fifteen tests!
+When we run `mix test` again, we see that we already have sixteen tests!
 
 ```console
 $ mix test
 Compiled lib/hello_phoenix.ex
 Compiled web/models/user.ex
-Compiled web/router.ex
-Compiled web/views/error_view.ex
-Compiled web/controllers/page_controller.ex
 Compiled web/views/page_view.ex
-Compiled lib/hello_phoenix/endpoint.ex
 Compiled web/views/layout_view.ex
+Compiled web/views/error_view.ex
+Compiled web/router.ex
+Compiled web/controllers/page_controller.ex
 Compiled web/controllers/user_controller.ex
+Compiled lib/hello_phoenix/endpoint.ex
 Compiled web/views/user_view.ex
 Generated hello_phoenix app
 ...............
 
 Finished in 0.5 seconds (0.4s on load, 0.1s on tests)
-15 tests, 0 failures
+16 tests, 0 failures
 
 Randomized with seed 537537
 ```
