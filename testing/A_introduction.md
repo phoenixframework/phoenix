@@ -223,6 +223,7 @@ Randomized with seed 125659
 ```
 
 > Note: ExUnit tells us exactly which tags it is including and excluding for each test run. If we look back to the previous section on running tests, we'll see that line numbers specified for individual tests are actually treated as tags.
+
 ```console
 $ mix test test/views/error_view_test.exs:12
 Including tags: [line: "12"]
