@@ -653,7 +653,7 @@ before_insert HelloPhoenix.AnotherPlace, :name_of_function_to_call
 Our callback function must always take a changeset as its first argument, and return a changeset. In our callbacks, we can expect to often be calling `Ecto.Changeset` functions like:
 
 - `put_change(changeset, key, value)`
-- `get_field(changeset, key, defaultValue//nil)`
+- `get_field(changeset, key, defaultValue \\ nil)`
 - `add_error(changeset, key, error)`
 
 For the full reference, visit the docs at [Ecto Changeset documentation](http://hexdocs.pm/ecto/Ecto.Changeset.html).
