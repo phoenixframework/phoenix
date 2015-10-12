@@ -411,7 +411,7 @@ Randomized with seed 330955
 
 For this section, we're going to assume that we all have a PostgreSQL database installed on our system, and that we generated a default application - one in which Ecto and Postgrex are installed and configured automatically.
 
-If this is not the case, please see the section on adding Ecto and Postrex of the  [Ecto Models Guide](http://www.phoenixframework.org/docs/ecto-models#section-adding-ecto-and-postgrex-as-dependencies) and join us when that's done.
+If this is not the case, please see the section on adding Ecto and Postgrex of the  [Ecto Models Guide](http://www.phoenixframework.org/docs/ecto-models#section-adding-ecto-and-postgrex-as-dependencies) and join us when that's done.
 
 Ok, once we're all configured properly, we need to run the `phoenix.gen.html` task with the list of attributes we have here.
 
