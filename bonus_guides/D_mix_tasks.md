@@ -441,7 +441,7 @@ And then `web/static/` which should look similar to this:
 
 ```text
 ├── css
-│   └── app.scss
+│   └── app.css
 ├── js
 │   └── app.js
 ├── vendor
