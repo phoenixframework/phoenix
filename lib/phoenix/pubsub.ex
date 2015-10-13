@@ -39,7 +39,7 @@ defmodule Phoenix.PubSub do
   The configuration above will start a Redis pubsub and
   register it with name `:my_redis_pubsub`.
 
-  You can know use the functions in this module to subscribe
+  You can now use the functions in this module to subscribe
   and broadcast messages:
 
       iex> PubSub.subscribe MyApp.PubSub, self, "user:123"
