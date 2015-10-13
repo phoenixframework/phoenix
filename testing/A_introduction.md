@@ -16,6 +16,8 @@ $ mix test
 
 Finished in 0.2 seconds (0.2s on load, 0.00s on tests)
 4 tests, 0 failures
+
+Randomized with seed 652656
 ```
 
 We already have four tests!
@@ -468,11 +470,11 @@ Generated hello_phoenix app
 * creating web/views/user_view.ex
 * creating test/controllers/user_controller_test.exs
 
-Add the resource to the proper scope in web/router.ex:
+Add the resource to your browser scope in web/router.ex:
 
     resources "/users", UserController
 
-and then update your repository by running migrations:
+Remember to update your repository by running migrations:
 
     $ mix ecto.migrate
 ```
@@ -514,7 +516,7 @@ Compiled web/controllers/user_controller.ex
 Compiled lib/hello_phoenix/endpoint.ex
 Compiled web/views/user_view.ex
 Generated hello_phoenix app
-...............
+................
 
 Finished in 0.5 seconds (0.4s on load, 0.1s on tests)
 16 tests, 0 failures
