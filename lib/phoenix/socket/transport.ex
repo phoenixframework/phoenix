@@ -376,7 +376,7 @@ defmodule Phoenix.Socket.Transport do
     case URI.parse(origin) do
       %{host: nil} ->
         raise ArgumentError,
-          "invalid check_origin: #{inspect origin} (expected a origin with a host)"
+          "invalid check_origin: #{inspect origin} (expected an origin with a host)"
       %{scheme: scheme, port: port, host: host} ->
         {scheme, host, port}
     end
