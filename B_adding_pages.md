@@ -48,7 +48,7 @@ priv
 web
 └── static
     ├── css
-    |   └── app.scss
+    |   └── app.css
     ├── js
     │   └── app.js
     └── vendor
