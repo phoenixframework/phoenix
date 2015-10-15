@@ -105,8 +105,10 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       # Instructions
       assert_received {:mix_shell, :info, ["\nWe are all set!" <> _ = msg]}
       assert msg =~ "$ cd photo_blog"
-      assert msg =~ "$ mix ecto.create"
       assert msg =~ "$ mix phoenix.server"
+
+      assert_received {:mix_shell, :info, ["Before moving on," <> _ = msg]}
+      assert msg =~ "$ mix ecto.create"
 
       # Channels
       assert File.exists?("photo_blog/web/channels")
