@@ -74,7 +74,7 @@ Here's a really quick example of putting a value into the session and getting it
 
 ```elixir
 defmodule HelloPhoenix.PageController do
-  use Phoenix.Controller
+  use HelloPhoenix.Web, :controller
 
   def index(conn, _params) do
     conn = put_session(conn, :message, "new stuff we just set in the session")
