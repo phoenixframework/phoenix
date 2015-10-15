@@ -226,11 +226,11 @@ defmodule Mix.Tasks.Phoenix.New do
       brunch && Task.await(brunch, :infinity)
       mix    && Task.await(mix, :infinity)
 
-      if binding[:ecto] do
-        extra = extra ++ ["$ mix ecto.create"]
-      end
-
       print_mix_info(path, extra)
+
+      if binding[:ecto] do
+        print_ecto_info
+      end
     end)
   end
 
@@ -317,6 +317,14 @@ defmodule Mix.Tasks.Phoenix.New do
     with the --no-brunch option.
     """
     nil
+  end
+
+  defp print_ecto_info do
+    Mix.shell.info """
+    Before moving on, configure your database in config/dev.exs and run:
+
+        $ mix ecto.create
+    """
   end
 
   defp print_mix_info(path, extra) do
