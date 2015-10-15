@@ -145,7 +145,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
     case argv do
       [] ->
-        Mix.raise "Expected PATH to be given, please use `mix phoenix.new PATH`"
+        Mix.Task.run "help", ["phoenix.new"]
       [path|_] ->
         app = opts[:app] || Path.basename(Path.expand(path))
         check_application_name!(app, !!opts[:app])

@@ -4,6 +4,8 @@ defmodule Mix.Tasks.Phoenix.NewTest do
   use ExUnit.Case
   import MixHelper
 
+  import ExUnit.CaptureIO
+
   @app_name "photo_blog"
 
   setup do
@@ -390,9 +392,18 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     assert_raise Mix.Error, ~r"Module name \w+ is already taken", fn ->
       Mix.Tasks.Phoenix.New.run ["valid", "--module", "String"]
     end
+  end
 
-    assert_raise Mix.Error, "Expected PATH to be given, please use `mix phoenix.new PATH`", fn ->
-      Mix.Tasks.Phoenix.New.run []
+  test "new without args" do
+    in_tmp "new without args", fn ->
+
+      output =
+        capture_io fn ->
+          Mix.Tasks.Phoenix.New.run []
+        end
+
+      assert output =~ "mix phoenix.new"
+      assert output =~ "Creates a new Phoenix project."
     end
   end
 
