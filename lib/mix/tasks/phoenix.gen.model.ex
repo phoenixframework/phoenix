@@ -48,7 +48,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
   If no data type is given, it defaults to a string. This also works for 
   unique foreign keys and arrays:
 
-    mix phoenix.gen.model UserInfo user_info user_id:references:users:unique nicknames:array:string:unique
+      mix phoenix.gen.model UserInfo user_info user_id:references:users:unique nicknames:array:string:unique
 
   ## Namespaced resources
 
@@ -98,7 +98,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
     {uniques, attrs} = extract_uniques(attrs)
     {assocs, attrs} = partition_attrs_and_assocs(attrs)
-    
+
     binding = binding ++
               [attrs: attrs, plural: plural, types: types(attrs), uniques: uniques,
                assocs: assocs(assocs), indexes: indexes(plural, assocs, uniques),
