@@ -171,7 +171,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     Enum.partition attrs, fn
       {_, {:references, _}} ->
         true
-      {_, {:references, _, _}} ->
+      {_, {:references, _, :unique}} ->
         true
       {key, :references} ->
         Mix.raise """
