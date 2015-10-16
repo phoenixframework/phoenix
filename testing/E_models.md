@@ -6,18 +6,15 @@ Before we do anything else, let's run `mix test` to make sure our test suite run
 
 ```console
 $ mix test
-Compiled lib/hello_phoenix.ex
-. . .
-Generated hello_phoenix app
-...............
+................
 
 Finished in 0.6 seconds (0.5s on load, 0.1s on tests)
-15 tests, 0 failures
+16 tests, 0 failures
 
 Randomized with seed 638414
 ```
 
-Great. We've got fifteen tests and they are all passing!
+Great. We've got sixteen tests and they are all passing!
 
 ## Test Driving a Changeset
 
@@ -65,11 +62,25 @@ defmodule HelloPhoenix.UserTest do
   @valid_attrs %{bio: "my life", email: "pat@example.com", name: "Pat Example", number_of_pets: 4}
   @invalid_attrs %{}
 
-. . .
+  ...
 end
 ```
 
-> Note: We should change the `@valid_attrs` module attribute in `test/controllers/user_controller_test.exs` to match these as well for consistency. If we run the tests again, all fifteen should still pass.
+We should change the `@valid_attrs` module attribute in `test/controllers/user_controller_test.exs` to match these as well for consistency.
+
+```elixir
+defmodule HelloPhoenix.UserControllerTest do
+  use HelloPhoenix.ConnCase
+
+  alias HelloPhoenix.User
+  @valid_attrs %{bio: "my life", email: "pat@example.com", name: "Pat Example", number_of_pets: 4}
+  @invalid_attrs %{}
+
+  ...
+end
+```
+
+If we run the tests again, all sixteen should still pass.
 
 #### Number of Pets
 
@@ -81,7 +92,7 @@ To test this, we can delete the `:number_of_pets` key and value from the `@valid
 
 ```elixir
 defmodule HelloPhoenix.UserTest do
-. . .
+  ...
 
   test "number_of_pets is not required" do
     changeset = User.changeset(%User{}, Map.delete(@valid_attrs, :number_of_pets))
@@ -90,39 +101,46 @@ defmodule HelloPhoenix.UserTest do
 end
 ```
 
-When we run the tests again . . .
+Now, let's run the tests again.
 
 ```console
 $ mix test
 .............
 
-1) test number_of_pets is not required (HelloPhoenix.UserTest)
-test/models/user_test.exs:19
-Expected truthy, got false
-code: changeset.valid?()
-stacktrace:
-test/models/user_test.exs:21
+  1) test number_of_pets is not required (HelloPhoenix.UserTest)
+     test/models/user_test.exs:19
+     Expected truthy, got false
+     code: changeset.valid?()
+     stacktrace:
+       test/models/user_test.exs:21
 
-..
+...
 
 Finished in 0.4 seconds (0.2s on load, 0.1s on tests)
-16 tests, 1 failures
+17 tests, 1 failure
 
 Randomized with seed 780208
 ```
 
-. . . it fails - which is exactly what it should do! We haven't written the code to make it pass yet. To  do that, we need to move the `number_of_pets` attribute from `@required_fields` to `@optional_fields` in `web/models/user.ex`.
+It fails - which is exactly what it should do! We haven't written the code to make it pass yet. To  do that, we need to move the `number_of_pets` attribute from `@required_fields` to `@optional_fields` in `web/models/user.ex`.
 
 ```elixir
 defmodule HelloPhoenix.User do
   use HelloPhoenix.Web, :model
 
-. . .
+  schema "users" do
+    field :name, :string
+    field :email, :string
+    field :bio, :string
+    field :number_of_pets, :integer
+
+    timestamps
+  end
 
   @required_fields ~w(name email bio)
   @optional_fields ~w(number_of_pets)
 
-. . .
+  ...
 end
 ```
 
@@ -130,13 +148,10 @@ Now our tests are all passing again.
 
 ```console
 $ mix test
-Compiled lib/hello_phoenix.ex
-. . .
-Generated hello_phoenix app
-................
+.................
 
 Finished in 0.3 seconds (0.2s on load, 0.09s on tests)
-16 tests, 0 failures
+17 tests, 0 failures
 
 Randomized with seed 963040
 ```
@@ -148,10 +163,14 @@ In the Ecto Models Guide, we learned that the user's `:bio` attribute has two bu
 First, we change the `:bio` attribute to have a value of a single character. Then we create a changeset with the new attributes and test its validity.
 
 ```elixir
-test "bio must be at least two characters long" do
-  attrs = %{@valid_attrs | bio: "I"}
-  changeset = User.changeset(%User{}, attrs)
-  refute changeset.valid?
+defmodule HelloPhoenix.UserTest do
+  ...
+
+  test "bio must be at least two characters long" do
+    attrs = %{@valid_attrs | bio: "I"}
+    changeset = User.changeset(%User{}, attrs)
+    refute changeset.valid?
+  end
 end
 ```
 
@@ -159,24 +178,21 @@ When we run the test, it fails, as we would expect.
 
 ```console
 $ mix test
-Compiled lib/hello_phoenix.ex
-. . .
-Generated hello_phoenix app
-...............
+.....
 
-1) test bio must be at least two characters long (HelloPhoenix.UserTest)
-test/models/user_test.exs:24
-Expected false or nil, got true
-code: User.changeset(%User{}, attrs).valid?()
-  stacktrace:
-  test/models/user_test.exs:28
+  1) test bio must be at least two characters long (HelloPhoenix.UserTest)
+     test/models/user_test.exs:24
+     Expected false or nil, got true
+     code: changeset.valid?()
+     stacktrace:
+       test/models/user_test.exs:27
 
-  .
+............
 
-  Finished in 0.3 seconds (0.2s on load, 0.09s on tests)
-  17 tests, 1 failures
+Finished in 0.3 seconds (0.2s on load, 0.09s on tests)
+18 tests, 1 failure
 
-  Randomized with seed 327779
+Randomized with seed 327779
 ```
 
 Hmmm. Yes, this test behaved as we expected, but the error message doesn't seems reflect our test. We're validating the length of the `:bio` attribute, and the message we get is "Expected false or nil, got true". There's no mention of our `:bio` attribute at all.
@@ -186,9 +202,13 @@ We can do better.
 Let's change our test to get a better message while still testing the same behavior. We can leave the code to set the new `:bio` value in place. In the `assert`, however, we'll use the `errors_on/2` function we get from `ModelCase` to generate a list of errors, and check that the `:bio` attribute error is in that list.
 
 ```elixir
-test "bio must be at least two characters long" do
-  attrs = %{@valid_attrs | bio: "I"}
-  assert {:bio, {"should be at least %{count} characters", [count: 2]}} in errors_on(%User{}, attrs)
+defmodule HelloPhoenix.UserTest do
+  ...
+
+  test "bio must be at least two characters long" do
+    attrs = %{@valid_attrs | bio: "I"}
+    assert {:bio, {"should be at least %{count} characters", [count: 2]}} in errors_on(%User{}, attrs)
+  end
 end
 ```
 
@@ -198,23 +218,23 @@ When we run the tests again, we get a different message entirely.
 
 ```console
 $ mix test
-..............
+...............
 
-1) test bio must be at least two characters long (HelloPhoenix.UserTest)
-test/models/user_test.exs:24
-Assertion with in failed
-code: {:bio, {"should be at least %{count} characters", [count: 2]}} in errors_on(%User{}, attrs)
-  lhs:  {:bio, {"should be at least %{count} characters", [count: 2]}}
-  rhs:  []
-  stacktrace:
-  test/models/user_test.exs:26
+  1) test bio must be at least two characters long (HelloPhoenix.UserTest)
+     test/models/user_test.exs:24
+     Assertion with in failed
+     code: {:bio, {"should be at least %{count} characters", [count: 2]}} in errors_on(%User{}, attrs)
+     lhs:  {:bio,
+            {"should be at least %{count} characters",
+             [count: 2]}}
+     rhs:  []
 
-  ...
+..
 
-  Finished in 0.4 seconds (0.2s on load, 0.1s on tests)
-  17 tests, 1 failures
+Finished in 0.4 seconds (0.2s on load, 0.1s on tests)
+18 tests, 1 failure
 
-  Randomized with seed 435902
+Randomized with seed 435902
 ```
 
 This shows us the assertion we are testing - that our error is in the list of errors from the model's changeset.
@@ -241,9 +261,7 @@ Our test has pointed the way. Now let's make it pass by adding that validation.
 
 ```elixir
 defmodule HelloPhoenix.User do
-use HelloPhoenix.Web, :model
-
-. . .
+  ...
 
   def changeset(model, params \\ :empty) do
     model
@@ -251,20 +269,16 @@ use HelloPhoenix.Web, :model
     |> validate_length(:bio, min: 2)
   end
 end
-
 ```
 
 When we run the tests again, they all pass.
 
 ```console
 $ mix test
-Compiled lib/hello_phoenix.ex
-. . .
-Generated hello_phoenix app
-.................
+..................
 
 Finished in 0.3 seconds (0.2s on load, 0.09s on tests)
-17 tests, 0 failures
+18 tests, 0 failures
 
 Randomized with seed 305958
 ```
@@ -275,8 +289,7 @@ Before we actually write the test, how are we going to handle a string that long
 
 ```elixir
 defmodule HelloPhoenix.ModelCase do
-
-  . . .
+  ...
 
   def long_string(length) do
     Enum.reduce (1..length), "", fn _, acc ->  acc <> "a" end
@@ -287,9 +300,13 @@ end
 We can now use `long_string/1` when changing the value of the `:bio` key in our `attrs`.
 
 ```elixir
-test "bio must be at most 140 characters long" do
-  attrs = %{@valid_attrs | bio: long_string(141)}
-  assert {:bio, {"should be at most %{count} characters", [count: 140]}} in errors_on(%User{}, attrs)
+defmodule HelloPhoenix.UserTest do
+  ...
+
+  test "bio must be at most 140 characters long" do
+    attrs = %{@valid_attrs | bio: long_string(141)}
+    assert {:bio, {"should be at most %{count} characters", [count: 140]}} in errors_on(%User{}, attrs)
+  end
 end
 ```
 
@@ -297,23 +314,19 @@ When we run the test, it fails as we want it to.
 
 ```console
 $ mix test
-Compiled test/support/model_case.ex
-Generated hello_phoenix app
-.............
-
-1) test bio must be at most 140 characters long (HelloPhoenix.UserTest)
-test/models/user_test.exs:29
-Assertion with in failed
-code: {:bio, {"should be at most %{count} characters", [count: 140]}} in errors_on(%User{}, attrs)
-  lhs:  {:bio, {"should be at most %{count} characters", [count: 140]}}
-  rhs:  []
-  stacktrace:
-  test/models/user_test.exs:33
-
 ....
 
+  1) test bio must be at most 140 characters long (HelloPhoenix.UserTest)
+     test/models/user_test.exs:29
+     Assertion with in failed
+     code: {:bio, {"should be at most %{count} characters", [count: 140]}} in errors_on(%User{}, attrs)
+     lhs:  {:bio,
+            {"should be at most %{count} characters",
+
+..............
+
 Finished in 0.3 seconds (0.2s on load, 0.1s on tests)
-18 tests, 1 failures
+19 tests, 1 failure
 
 Randomized with seed 593838
 ```
@@ -321,11 +334,15 @@ Randomized with seed 593838
 To make this test pass, we need to add a new validation for the maximum length of the `:bio` attribute.
 
 ```elixir
-def changeset(model, params \\ :empty) do
-  model
-  |> cast(params, @required_fields, @optional_fields)
-  |> validate_length(:bio, min: 2)
-  |> validate_length(:bio, max: 140)
+defmodule HelloPhoenix.User do
+  ...
+
+  def changeset(model, params \\ :empty) do
+    model
+    |> cast(params, @required_fields, @optional_fields)
+    |> validate_length(:bio, min: 2)
+    |> validate_length(:bio, max: 140)
+  end
 end
 ```
 
@@ -333,13 +350,10 @@ When we run the tests, they all pass.
 
 ```console
 $ mix test
-Compiled lib/hello_phoenix.ex
-. . .
-Generated hello_phoenix app
-..................
+...................
 
 Finished in 0.4 seconds (0.3s on load, 0.1s on tests)
-18 tests, 0 failures
+19 tests, 0 failures
 
 Randomized with seed 468975
 ```
@@ -351,9 +365,13 @@ We have one last attribute to validate. Currently, `:email` is just a string lik
 This process will feel familiar by now. First, we change the value of the `:email` attribute to omit the "@". Then we write an assertion which uses `errors_on/2` to check for the correct validation error on the `:email` attribute.
 
 ```elixir
-test "email must contain at least an @" do
-  attrs = %{@valid_attrs | email: "fooexample.com"}
-  assert {:email, "has invalid format"} in errors_on(%User{}, attrs)
+defmodule HelloPhoenix.UserTest do
+  ...
+
+  test "email must contain at least an @" do
+    attrs = %{@valid_attrs | email: "fooexample.com"}
+    assert {:email, "has invalid format"} in errors_on(%User{}, attrs)
+  end
 end
 ```
 
@@ -363,19 +381,19 @@ When we run the tests, it fails. We see that we're getting an empty list of erro
 $ mix test
 ................
 
-1) test email must contain at least an @ sign (HelloPhoenix.UserTest)
-test/models/user_test.exs:34
-Assertion with in failed
-code: {:email, "has invalid format"} in errors_on(%User{}, attrs)
-  lhs:  {:email, "has invalid format"}
-  rhs:  []
-  stacktrace:
-  test/models/user_test.exs:38
+  1) test email must contain at least an @ (HelloPhoenix.UserTest)
+     test/models/user_test.exs:34
+     Assertion with in failed
+     code: {:email, "has invalid format"} in errors_on(%User{}, attrs)
+     lhs:  {:email, "has invalid format"}
+     rhs:  []
+     stacktrace:
+       test/models/user_test.exs:36
 
-  ..
+...
 
 Finished in 0.4 seconds (0.2s on load, 0.1s on tests)
-19 tests, 1 failures
+20 tests, 1 failure
 
 Randomized with seed 962127
 ```
@@ -383,12 +401,16 @@ Randomized with seed 962127
 Then we add the new validation to generate the error our test is looking for.
 
 ```elixir
-def changeset(model, params \\ :empty) do
-  model
-  |> cast(params, @required_fields, @optional_fields)
-  |> validate_length(:bio, min: 2)
-  |> validate_length(:bio, max: 140)
-  |> validate_format(:email, ~r/@/)
+defmodule HelloPhoenix.User do
+  ...
+
+  def changeset(model, params \\ :empty) do
+    model
+    |> cast(params, @required_fields, @optional_fields)
+    |> validate_length(:bio, min: 2)
+    |> validate_length(:bio, max: 140)
+    |> validate_format(:email, ~r/@/)
+  end
 end
 ```
 
@@ -396,13 +418,10 @@ Now all the tests are passing again.
 
 ```console
 $ mix test
-Compiled lib/hello_phoenix.ex
-. . .
-Generated hello_phoenix app
-...................
+....................
 
 Finished in 0.3 seconds (0.2s on load, 0.09s on tests)
-19 tests, 0 failures
+20 tests, 0 failures
 
 Randomized with seed 330955
 ```
