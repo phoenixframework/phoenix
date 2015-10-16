@@ -111,7 +111,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
 
   test "generates unique_index" do
     in_tmp "generates unique_index", fn ->
-      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title:unique", "unique_int:unique:integer"]
+      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title:unique", "unique_int:integer:unique", "unique_float:float:unique"]
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
 
@@ -120,8 +120,10 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
         assert file =~ "create table(:posts) do"
         assert file =~ "add :title, :string"
         assert file =~ "add :unique_int, :integer"
+        assert file =~ "add :unique_float, :float"
         assert file =~ "create unique_index(:posts, [:title])"
         assert file =~ "create unique_index(:posts, [:unique_int])"
+        assert file =~ "create unique_index(:posts, [:unique_float])"
       end
 
       assert_file "web/models/post.ex", fn file ->

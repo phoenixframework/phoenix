@@ -110,21 +110,9 @@ defmodule Mix.Phoenix do
         {_, _} -> false
        end)
     |> Enum.into(%{}, fn
-        {k, {:array, _}}         -> {k, []}
-        {k, :integer}            -> {k, 42}
-        {k, :float}              -> {k, "120.5"}
-        {k, :decimal}            -> {k, "120.5"}
-        {k, :boolean}            -> {k, true}
-        {k, :map}                -> {k, %{}}
-        {k, :text}               -> {k, "some content"}
-        {k, :date}               -> {k, "2010-04-17"}
-        {k, :time}               -> {k, "14:00:00"}
-        {k, :datetime}           -> {k, "2010-04-17 14:00:00"}
-        {k, :uuid}               -> {k, "7488a646-e31f-11e4-aace-600308960662"}
-        {k, {:unique, :integer}} -> {k, 42}
-        {k, {:unique, :string}}  -> {k, "some content"}
-        {k, _}                   -> {k, "some content"}
-    end)
+        {k, {t, :unique}} -> {k, type_to_default(t)}
+        {k, t}            -> {k, type_to_default(t)}
+       end)
   end
 
   @doc """
@@ -168,10 +156,27 @@ defmodule Mix.Phoenix do
   end
 
   defp list_to_attr([key]), do: {String.to_atom(key), :string}
-  defp list_to_attr([key, "unique"]), do: {String.to_atom(key), {:unique, :string}}
+  defp list_to_attr([key, "unique"]), do: {String.to_atom(key), {:string, :unique}}
   defp list_to_attr([key, value]), do: {String.to_atom(key), String.to_atom(value)}
   defp list_to_attr([key, comp, value]) do
     {String.to_atom(key), {String.to_atom(comp), String.to_atom(value)}}
+  end
+
+  defp type_to_default(t) do
+    case t do
+        {:array, _} -> []
+        :integer    -> 42
+        :float      -> "120.5"
+        :decimal    -> "120.5"
+        :boolean    -> true
+        :map        -> %{}
+        :text       -> "some content"
+        :date       -> "2010-04-17"
+        :time       -> "14:00:00"
+        :datetime   -> "2010-04-17 14:00:00"
+        :uuid       -> "7488a646-e31f-11e4-aace-600308960662"
+        _           -> "some content"
+    end
   end
 
   defp validate_attr!({_name, type} = attr) when type in @valid_attributes, do: attr

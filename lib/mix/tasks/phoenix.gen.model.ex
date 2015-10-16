@@ -168,7 +168,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
   defp extract_uniques(attrs) do
     {uniques, attrs} = Enum.reduce attrs, {[], []}, fn
-      {k, {:unique, v}} = unique, {uniques, attrs} ->
+      {k, {v, :unique}} = unique, {uniques, attrs} ->
         {[unique|uniques], [{k, v}|attrs]}
       {_k, _v} = attr, {uniques, attrs} ->
         {uniques, [attr|attrs]}
@@ -204,7 +204,6 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
   defp types(attrs) do
     Enum.into attrs, %{}, fn
-      {k, {:unique, v}} -> {k, value_to_type(v)}
       {k, {c, v}}       -> {k, {c, value_to_type(v)}}
       {k, v}            -> {k, value_to_type(v)}
     end
