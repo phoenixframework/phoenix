@@ -46,7 +46,6 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
       mix phoenix.gen.model Post posts title:unique unique_int:unique:integer
 
   If no data type is given, it defaults to a string.
-      
 
   ## Namespaced resources
 
@@ -82,7 +81,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
     {opts, parsed, _} = OptionParser.parse(args, switches: switches)
     [singular, plural | attrs] = validate_args!(parsed)
-    
+
     default_opts = Application.get_env(:phoenix, :generators, [])
     opts = Keyword.merge(default_opts, opts)
 
@@ -96,7 +95,6 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
     {uniques, attrs} = extract_uniques(attrs)
     {assocs, attrs} = partition_attrs_and_assocs(attrs)
-    
 
     binding = binding ++
               [attrs: attrs, plural: plural, types: types(attrs), uniques: uniques,
