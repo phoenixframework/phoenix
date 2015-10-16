@@ -94,7 +94,7 @@ defmodule Mix.Phoenix do
   def attrs(attrs) do
     Enum.map(attrs, fn attr ->
       attr
-      |> String.split(":", parts: 3)
+      |> String.split(":", parts: 4)
       |> list_to_attr()
       |> validate_attr!()
     end)
@@ -107,11 +107,13 @@ defmodule Mix.Phoenix do
     attrs
     |> Enum.reject(fn
         {_, {:references, _}} -> true
+        {_, {:references, _, _}} -> true
         {_, _} -> false
        end)
     |> Enum.into(%{}, fn
-        {k, {t, :unique}} -> {k, type_to_default(t)}
-        {k, t}            -> {k, type_to_default(t)}
+        {k, {t, :unique}}         -> {k, type_to_default(t)}
+        {k, {:array, t, :unique}} -> {k, type_to_default({:array, t})}
+        {k, t}                    -> {k, type_to_default(t)}
        end)
   end
 
@@ -161,7 +163,9 @@ defmodule Mix.Phoenix do
   defp list_to_attr([key, comp, value]) do
     {String.to_atom(key), {String.to_atom(comp), String.to_atom(value)}}
   end
-
+  defp list_to_attr([key, comp, value, "unique"]) do
+    {String.to_atom(key), {String.to_atom(comp), String.to_atom(value), :unique}}
+  end
   defp type_to_default(t) do
     case t do
         {:array, _} -> []
@@ -181,5 +185,6 @@ defmodule Mix.Phoenix do
 
   defp validate_attr!({_name, type} = attr) when type in @valid_attributes, do: attr
   defp validate_attr!({_name, {type, _}} = attr) when type in @valid_attributes, do: attr
+  defp validate_attr!({_name, {type, _, :unique}} = attr) when type in @valid_attributes, do: attr
   defp validate_attr!({_, type}), do: Mix.raise "Unknown type `#{type}` given to generator"
 end

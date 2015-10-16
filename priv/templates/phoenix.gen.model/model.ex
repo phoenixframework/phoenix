@@ -8,7 +8,7 @@ defmodule <%= module %> do
     timestamps
   end
 
-  @required_fields ~w(<%= Enum.map_join(attrs, " ", &elem(&1, 0)) %>)
+  @required_fields ~w(<%= Enum.map_join(Enum.concat(attrs, required_unique_keys), " ", &elem(&1, 0)) %>)
   @optional_fields ~w()
 
   @doc """

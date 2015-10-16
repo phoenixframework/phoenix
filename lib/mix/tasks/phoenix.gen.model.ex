@@ -45,7 +45,10 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
       mix phoenix.gen.model Post posts title:unique unique_int:integer:unique
 
-  If no data type is given, it defaults to a string.
+  If no data type is given, it defaults to a string. This also works for 
+  unique foreign keys and arrays:
+
+    mix phoenix.gen.model UserInfo user_info user_id:references:users:unique nicknames:array:string:unique
 
   ## Namespaced resources
 
@@ -95,12 +98,12 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
     {uniques, attrs} = extract_uniques(attrs)
     {assocs, attrs} = partition_attrs_and_assocs(attrs)
-
+    
     binding = binding ++
               [attrs: attrs, plural: plural, types: types(attrs), uniques: uniques,
                assocs: assocs(assocs), indexes: indexes(plural, assocs, uniques),
-               defaults: defaults(attrs), params: params,
-               binary_id: opts[:binary_id]]
+               defaults: defaults(attrs), params: params, binary_id: opts[:binary_id], 
+               required_unique_keys: required_unique_keys(assocs)]
 
     files = [
       {:eex, "model.ex",       "web/models/#{path}.ex"},
@@ -150,9 +153,25 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     """
   end
 
+  defp extract_uniques(attrs) do
+    {uniques, attrs} = Enum.reduce attrs, {[], []}, fn
+      {k, {v, :unique}} = unique, {uniques, attrs} ->
+        {[unique|uniques], [{k, v}|attrs]}
+      {k, {:array, v, :unique}} = unique, {uniques, attrs} ->
+        {[unique|uniques], [{k, {:array, v}}|attrs]}
+      {_k, {:references, _v, :unique}} = unique, {uniques, attrs} ->
+        {[unique|uniques], [unique|attrs]}
+      {_k, _v} = attr, {uniques, attrs} ->
+        {uniques, [attr|attrs]}
+    end
+    {Enum.reverse(uniques), Enum.reverse(attrs)}
+  end
+
   defp partition_attrs_and_assocs(attrs) do
     Enum.partition attrs, fn
       {_, {:references, _}} ->
+        true
+      {_, {:references, _, _}} ->
         true
       {key, :references} ->
         Mix.raise """
@@ -166,18 +185,9 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     end
   end
 
-  defp extract_uniques(attrs) do
-    {uniques, attrs} = Enum.reduce attrs, {[], []}, fn
-      {k, {v, :unique}} = unique, {uniques, attrs} ->
-        {[unique|uniques], [{k, v}|attrs]}
-      {_k, _v} = attr, {uniques, attrs} ->
-        {uniques, [attr|attrs]}
-    end
-    {Enum.reverse(uniques), Enum.reverse(attrs)}
-  end
-
   defp assocs(assocs) do
-    Enum.map assocs, fn {key_id, {:references, source}} ->
+    Enum.map assocs, fn {key_id, assoc_v} ->
+      source = elem(assoc_v, 1)        
       key   = String.replace(Atom.to_string(key_id), "_id", "")
       assoc = Mix.Phoenix.inflect key
       {String.to_atom(key), key_id, assoc[:module], source}
@@ -186,12 +196,17 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
   defp indexes(plural, assocs, uniques) do
     Enum.concat(
-      Enum.map(assocs, fn {key, _} ->
-        "create index(:#{plural}, [:#{key}])"
+      Enum.filter_map(assocs, fn({_key, v}) -> tuple_size(v) == 2 end, fn
+        {key, _} ->
+          "create index(:#{plural}, [:#{key}])"
       end),
       Enum.map(uniques, fn {key, _} ->
         "create unique_index(:#{plural}, [:#{key}])"
       end))
+  end
+
+  defp required_unique_keys(assocs) do
+    for {key, {_, _, :unique}} <- assocs, do: {key}
   end
 
   defp timestamp do
