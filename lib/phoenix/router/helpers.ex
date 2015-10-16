@@ -237,7 +237,7 @@ defmodule Phoenix.Router.Helpers do
   defp expand_segments([h|t], acc) when is_binary(h),
     do: expand_segments(t, quote(do: unquote(acc) <> unquote("/" <> h)))
   defp expand_segments([h|t], acc),
-    do: expand_segments(t, quote(do: unquote(acc) <> "/" <> to_param(unquote(h))))
+    do: expand_segments(t, quote(do: unquote(acc) <> "/" <> URI.encode_www_form(to_param(unquote(h)))))
   defp expand_segments([], acc),
     do: acc
 end

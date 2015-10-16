@@ -17,7 +17,7 @@ defmodule Phoenix.Router.HelpersTest do
 
     assert extract_defhelper(route, 1) == String.strip """
     def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
-      path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> to_param(bar), params, ["bar"]))
+      path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> URI.encode_www_form(to_param(bar)), params, ["bar"]))
     end
     """
   end
@@ -161,6 +161,21 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.user_path(__MODULE__, :show, 123) == "/users/123"
     assert Helpers.user_path(__MODULE__, :new, []) == "/users/new"
     assert Helpers.user_path(__MODULE__, :new) == "/users/new"
+  end
+
+  test "resources generated named routes with complex ids" do
+    assert Helpers.user_path(__MODULE__, :edit, "1a+/31d", []) == "/users/1a%2B%2F31d/edit"
+    assert Helpers.user_path(__MODULE__, :edit, "1a+/31d") == "/users/1a%2B%2F31d/edit"
+    assert Helpers.user_path(__MODULE__, :show, "1a+/31d", []) == "/users/1a%2B%2F31d"
+    assert Helpers.user_path(__MODULE__, :show, "1a+/31d") == "/users/1a%2B%2F31d"
+
+    assert Helpers.message_path(__MODULE__, :update, "8=/=d", []) == "/admin/messages/8%3D%2F%3Dd"
+    assert Helpers.message_path(__MODULE__, :update, "8=/=d") == "/admin/messages/8%3D%2F%3Dd"
+    assert Helpers.message_path(__MODULE__, :delete, "8=/=d", []) == "/admin/messages/8%3D%2F%3Dd"
+    assert Helpers.message_path(__MODULE__, :delete, "8=/=d") == "/admin/messages/8%3D%2F%3Dd"
+
+    assert Helpers.user_path(__MODULE__, :show, "1a+/31d", [dog: "8d="]) == "/users/1a%2B%2F31d?dog=8d%3D"
+    assert Helpers.user_path(__MODULE__, :index, [cat: "=8+/&"]) == "/users?cat=%3D8%2B%2F%26"
   end
 
   test "resources generates named routes for :create, :update, :delete" do
