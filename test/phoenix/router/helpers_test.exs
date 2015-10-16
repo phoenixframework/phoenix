@@ -33,7 +33,7 @@ defmodule Phoenix.Router.HelpersTest do
 
     assert extract_defhelper(route, 1) == String.strip """
     def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
-      path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> Enum.map_join(bar, "/", &(URI.encode_www_form() / 1)), params, ["bar"]))
+      path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> Enum.map_join(bar, "/", &URI.encode_www_form/1), params, ["bar"]))
     end
     """
   end
