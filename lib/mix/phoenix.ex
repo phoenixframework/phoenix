@@ -3,7 +3,8 @@ defmodule Mix.Phoenix do
   @moduledoc false
 
   @valid_attributes [:integer, :float, :decimal, :boolean, :map, :string,
-                     :array, :references, :text, :date, :time, :datetime, :uuid]
+                     :array, :references, :text, :date, :time, :datetime, 
+                     :uuid, :unique]
 
   @doc """
   Copies files from source dir to target dir
@@ -106,21 +107,25 @@ defmodule Mix.Phoenix do
     attrs
     |> Enum.reject(fn
         {_, {:references, _}} -> true
+        {_, {:unique, _}} -> false
+        {_, :unique} -> false
         {_, _} -> false
        end)
     |> Enum.into(%{}, fn
-        {k, {:array, _}}      -> {k, []}
-        {k, :integer}         -> {k, 42}
-        {k, :float}           -> {k, "120.5"}
-        {k, :decimal}         -> {k, "120.5"}
-        {k, :boolean}         -> {k, true}
-        {k, :map}             -> {k, %{}}
-        {k, :text}            -> {k, "some content"}
-        {k, :date}            -> {k, "2010-04-17"}
-        {k, :time}            -> {k, "14:00:00"}
-        {k, :datetime}        -> {k, "2010-04-17 14:00:00"}
-        {k, :uuid}            -> {k, "7488a646-e31f-11e4-aace-600308960662"}
-        {k, _}                -> {k, "some content"}
+        {k, {:array, _}}         -> {k, []}
+        {k, :integer}            -> {k, 42}
+        {k, :float}              -> {k, "120.5"}
+        {k, :decimal}            -> {k, "120.5"}
+        {k, :boolean}            -> {k, true}
+        {k, :map}                -> {k, %{}}
+        {k, :text}               -> {k, "some content"}
+        {k, :date}               -> {k, "2010-04-17"}
+        {k, :time}               -> {k, "14:00:00"}
+        {k, :datetime}           -> {k, "2010-04-17 14:00:00"}
+        {k, :uuid}               -> {k, "7488a646-e31f-11e4-aace-600308960662"}
+        {k, {:unique, :integer}} -> {k, 42}
+        {k, {:unique, :string}}  -> {k, "some content"}
+        {k, _}                   -> {k, "some content"}
     end)
   end
 
@@ -165,6 +170,7 @@ defmodule Mix.Phoenix do
   end
 
   defp list_to_attr([key]), do: {String.to_atom(key), :string}
+  defp list_to_attr([key, "unique"]), do: {String.to_atom(key), {:unique, :string}}
   defp list_to_attr([key, value]), do: {String.to_atom(key), String.to_atom(value)}
   defp list_to_attr([key, comp, value]) do
     {String.to_atom(key), {String.to_atom(comp), String.to_atom(value)}}
