@@ -229,7 +229,7 @@ defmodule Phoenix.View do
   either a precompiled template, or by implementing the function directly, ie:
 
       def render("scripts.html", _assigns) do
-        "<script src=\"...\">"
+        raw("<script src=\"...\">")
       end
 
   To use a precompiled template, create a `scripts.html.eex` file in the `templates`
@@ -247,10 +247,10 @@ defmodule Phoenix.View do
       </head>
 
       def render("scripts.show.html", _assigns) do
-        "<script src=\"...\">"
+        raw("<script src=\"...\">")
       end
       def render("scripts.index.html", _assigns) do
-        "<script src=\"...\">"
+        raw("<script src=\"...\">")
       end
 
   """
