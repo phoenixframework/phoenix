@@ -107,8 +107,6 @@ defmodule Mix.Phoenix do
     attrs
     |> Enum.reject(fn
         {_, {:references, _}} -> true
-        {_, {:unique, _}} -> false
-        {_, :unique} -> false
         {_, _} -> false
        end)
     |> Enum.into(%{}, fn
