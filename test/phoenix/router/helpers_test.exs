@@ -153,19 +153,19 @@ defmodule Phoenix.Router.HelpersTest do
   end
 
   test "top-level named routes with complex ids" do
-    assert Helpers.post_path(__MODULE__, :show, "8==D--+") == 
-      "/posts/8%3D%3DD--%2B"
-    assert Helpers.post_path(__MODULE__, :show, "8==D--+", []) == 
-      "/posts/8%3D%3DD--%2B"
-    assert Helpers.top_path(__MODULE__, :top, id: "8==D--+") == 
-      "/posts/top?id=8%3D%3DD--%2B"
+    assert Helpers.post_path(__MODULE__, :show, "==d--+") == 
+      "/posts/%3D%3Dd--%2B"
+    assert Helpers.post_path(__MODULE__, :show, "==d--+", []) == 
+      "/posts/%3D%3Dd--%2B"
+    assert Helpers.top_path(__MODULE__, :top, id: "==d--+") == 
+      "/posts/top?id=%3D%3Dd--%2B"
 
-    assert Helpers.post_path(__MODULE__, :file, ["8==D--+", ":O.jpg"]) == 
-      "/posts/file/8%3D%3DD--%2B/%3AO.jpg"
-    assert Helpers.post_path(__MODULE__, :file, ["8==D--+", ":O.jpg"], []) == 
-      "/posts/file/8%3D%3DD--%2B/%3AO.jpg"
-    assert Helpers.post_path(__MODULE__, :file, ["8==D--+", ":O.jpg"], xx: "/=+/") == 
-      "/posts/file/8%3D%3DD--%2B/%3AO.jpg?xx=%2F%3D%2B%2F"
+    assert Helpers.post_path(__MODULE__, :file, ["==d--+", ":O.jpg"]) == 
+      "/posts/file/%3D%3Dd--%2B/%3AO.jpg"
+    assert Helpers.post_path(__MODULE__, :file, ["==d--+", ":O.jpg"], []) == 
+      "/posts/file/%3D%3Dd--%2B/%3AO.jpg"
+    assert Helpers.post_path(__MODULE__, :file, ["==d--+", ":O.jpg"], xx: "/=+/") == 
+      "/posts/file/%3D%3Dd--%2B/%3AO.jpg?xx=%2F%3D%2B%2F"
   end
 
   test "resources generates named routes for :index, :edit, :show, :new" do
