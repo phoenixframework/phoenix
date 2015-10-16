@@ -55,8 +55,8 @@ config :logger, level: :info
 #
 #     config :<%= application_name %>, <%= application_module %>.Endpoint, server: true
 #
-# You will also need to set the application root to `.` in order for the new static
-# assets to be served after a hot upgrade.
+# You will also need to set the application root to `.` in order
+# for the new static assets to be served after a hot upgrade:
 #
 #     config :<%= application_name %>, <%= application_module %>.Endpoint, root: "."
 
