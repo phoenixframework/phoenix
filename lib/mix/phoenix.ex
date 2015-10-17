@@ -94,7 +94,7 @@ defmodule Mix.Phoenix do
   def attrs(attrs) do
     Enum.map(attrs, fn attr ->
       attr
-      |> String.split(":", parts: 4)
+      |> String.split(":", parts: 3)
       |> list_to_attr()
       |> validate_attr!()
     end)
@@ -106,12 +106,12 @@ defmodule Mix.Phoenix do
   def params(attrs) do
     attrs
     |> Enum.reject(fn
-         {_, {_, {:references, _}}} -> true
-         {_, {_, _}}                -> false
+         {_, {:references, _}} -> true
+         {_, _}                -> false
        end)
     |> Enum.into(%{}, fn
-         {_, {k, {:array, t}}} -> {k, type_to_default({:array, t})}
-         {_, {k, t}}           -> {k, type_to_default(t)}
+         {k, {:array, t}} -> {k, type_to_default({:array, t})}
+         {k, t}           -> {k, type_to_default(t)}
        end)
   end
 
@@ -154,21 +154,35 @@ defmodule Mix.Phoenix do
   @doc """
   Strips the unique tags from the attrs received by the generator.
   """
-  def strip_unique_tags(attrs), do: Enum.map(attrs, fn {_, attr} -> attr end)
+  def unique_attrs(attrs) do
+    {sanitized_attrs, unique_fields, unique_keys} = Enum.reduce(attrs, 
+      {[], HashSet.new, HashSet.new},  
+        fn(attr, {sanitized_attrs, unique_fields, unique_keys}) ->
+          if String.ends_with? attr, ":unique" do
+            split_attr = String.split(attr, ":", parts: 2) |> List.first
+            attr = String.replace(attr, ":unique", "")
+
+            if attr =~ ":references" do
+              {[attr|sanitized_attrs], unique_fields, HashSet.put(unique_keys, split_attr)}
+            else
+              {[attr|sanitized_attrs], HashSet.put(unique_fields, split_attr), unique_keys}
+            end
+          else
+            {[attr|sanitized_attrs], unique_fields, unique_keys}
+          end
+        end)
+
+    {Enum.reverse(sanitized_attrs), unique_fields, unique_keys}
+  end
 
   defp beam_to_module(path) do
     path |> Path.basename(".beam") |> String.to_atom()
   end
 
-  defp list_to_attr([key]), do: {:not_unique, {String.to_atom(key), :string}}  
-  defp list_to_attr([key, "unique"]), do: {:unique, {String.to_atom(key), :string}}
-  defp list_to_attr([key, value]), do: {:not_unique, {String.to_atom(key), String.to_atom(value)}}
-  defp list_to_attr([key, value, "unique"]), do: {:unique, {String.to_atom(key), String.to_atom(value)}}
+  defp list_to_attr([key]), do: {String.to_atom(key), :string}
+  defp list_to_attr([key, value]), do: {String.to_atom(key), String.to_atom(value)}
   defp list_to_attr([key, comp, value]) do
-    {:not_unique, {String.to_atom(key), {String.to_atom(comp), String.to_atom(value)}}}
-  end
-  defp list_to_attr([key, comp, value, "unique"]) do
-    {:unique, {String.to_atom(key), {String.to_atom(comp), String.to_atom(value)}}}
+    {String.to_atom(key), {String.to_atom(comp), String.to_atom(value)}}
   end
 
   defp type_to_default(t) do
@@ -188,7 +202,7 @@ defmodule Mix.Phoenix do
     end
   end
 
-  defp validate_attr!({_, {_, type}} = attr) when type in @valid_attributes, do: attr
-  defp validate_attr!({_, {_, {type, _}}} = attr) when type in @valid_attributes, do: attr
-  defp validate_attr!({_, {_, type}}), do: Mix.raise "Unknown type `#{type}` given to generator"
+  defp validate_attr!({_name, type} = attr) when type in @valid_attributes, do: attr
+  defp validate_attr!({_name, {type, _}} = attr) when type in @valid_attributes, do: attr
+  defp validate_attr!({_, type}), do: Mix.raise "Unknown type `#{type}` given to generator"
 end
