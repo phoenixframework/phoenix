@@ -7,16 +7,15 @@ defmodule Phoenix.PubSub.Local do
   directly. See `Phoenix.PubSub.PG2` for an example integration.
   """
 
+  use GenServer
+  alias Phoenix.Socket.Broadcast
+
   @doc """
   Starts the server.
 
     * `server_name` - The name to register the server under
 
   """
-
-  use GenServer
-  alias Phoenix.Socket.Broadcast
-
   def start_link(server_name) do
     GenServer.start_link(__MODULE__, server_name, name: server_name)
   end

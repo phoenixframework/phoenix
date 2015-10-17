@@ -1,5 +1,5 @@
 defmodule Phoenix.Endpoint.CowboyHandler do
-  @doc """
+  @moduledoc """
   The Cowboy adapter for Phoenix.
 
   It implements the required `child_spec/3` function as well
