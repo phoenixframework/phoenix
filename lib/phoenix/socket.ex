@@ -50,7 +50,7 @@ defmodule Phoenix.Socket do
       end
 
       # Disconnect all user's socket connections and their multiplexed channels
-      MyApp.Endpoint.broadcast("users_socket:" <> user.id, "disconnect")
+      MyApp.Endpoint.broadcast("users_socket:" <> user.id, "disconnect", %{})
 
   ## Socket Fields
 
