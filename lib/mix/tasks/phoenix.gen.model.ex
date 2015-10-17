@@ -45,7 +45,10 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
       mix phoenix.gen.model Post posts title:unique unique_int:integer:unique
 
-  If no data type is given, it defaults to a string.
+  If no data type is given, it defaults to a string. This also works for 
+  unique foreign keys and arrays:
+
+      mix phoenix.gen.model UserInfo user_info user_id:references:users:unique nicknames:array:string:unique
 
   ## Namespaced resources
 
@@ -84,23 +87,25 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
     default_opts = Application.get_env(:phoenix, :generators, [])
     opts = Keyword.merge(default_opts, opts)
-
-    attrs     = Mix.Phoenix.attrs(attrs)
-    binding   = Mix.Phoenix.inflect(singular)
-    params    = Mix.Phoenix.params(attrs)
-    path      = binding[:path]
-    migration = String.replace(path, "/", "_")
+    
+    {attrs, unique_fields, unique_keys} = Mix.Phoenix.unique_attrs(attrs)
+    attrs                               = Mix.Phoenix.attrs(attrs)
+    binding                             = Mix.Phoenix.inflect(singular)
+    params                              = Mix.Phoenix.params(attrs)
+    path                                = binding[:path]
+    migration                           = String.replace(path, "/", "_")
 
     Mix.Phoenix.check_module_name_availability!(binding[:module])
 
-    {uniques, attrs} = extract_uniques(attrs)
-    {assocs, attrs} = partition_attrs_and_assocs(attrs)
+    {attrs, assocs} = partition_attrs_and_assocs(attrs) 
+    unique_constraints = unique_constraints(unique_fields, unique_keys)
 
     binding = binding ++
-              [attrs: attrs, plural: plural, types: types(attrs), uniques: uniques,
-               assocs: assocs(assocs), indexes: indexes(plural, assocs, uniques),
-               defaults: defaults(attrs), params: params,
-               binary_id: opts[:binary_id]]
+              [attrs: attrs, plural: plural, types: types(attrs),
+               defaults: defaults(attrs), params: params, assocs: assocs(assocs), 
+               indexes: indexes(plural, assocs, unique_fields, unique_keys),
+               binary_id: opts[:binary_id], unique_constraints: unique_constraints,
+               required_attrs: required_attrs(attrs, unique_keys)]
 
     files = [
       {:eex, "model.ex",       "web/models/#{path}.ex"},
@@ -153,7 +158,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
   defp partition_attrs_and_assocs(attrs) do
     Enum.partition attrs, fn
       {_, {:references, _}} ->
-        true
+        false
       {key, :references} ->
         Mix.raise """
         Phoenix generators expect the table to be given to #{key}:references.
@@ -162,36 +167,50 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
             mix phoenix.gen.model Comment comments body:text post_id:references:posts
         """
       _ ->
-        false
+        true
     end
-  end
-
-  defp extract_uniques(attrs) do
-    {uniques, attrs} = Enum.reduce attrs, {[], []}, fn
-      {k, {v, :unique}} = unique, {uniques, attrs} ->
-        {[unique|uniques], [{k, v}|attrs]}
-      {_k, _v} = attr, {uniques, attrs} ->
-        {uniques, [attr|attrs]}
-    end
-    {Enum.reverse(uniques), Enum.reverse(attrs)}
   end
 
   defp assocs(assocs) do
-    Enum.map assocs, fn {key_id, {:references, source}} ->
-      key   = String.replace(Atom.to_string(key_id), "_id", "")
-      assoc = Mix.Phoenix.inflect key
-      {String.to_atom(key), key_id, assoc[:module], source}
+    Enum.map assocs, fn
+      {key_id, {:references, source}} ->
+        key   = String.replace(Atom.to_string(key_id), "_id", "")
+        assoc = Mix.Phoenix.inflect key
+        {String.to_atom(key), key_id, assoc[:module], source}
     end
   end
 
-  defp indexes(plural, assocs, uniques) do
-    Enum.concat(
-      Enum.map(assocs, fn {key, _} ->
+  defp indexes(plural, assocs, unique_fields, unique_keys) do
+    indexes = Enum.filter_map(assocs, fn({key, _}) -> !HashSet.member?(unique_keys, key) end,
+      fn {key, _} ->
         "create index(:#{plural}, [:#{key}])"
-      end),
-      Enum.map(uniques, fn {key, _} ->
-        "create unique_index(:#{plural}, [:#{key}])"
-      end))
+      end)
+
+    HashSet.union(unique_fields, unique_keys) 
+    |> HashSet.to_list
+    |> Enum.map(fn key ->
+         "create unique_index(:#{plural}, [:#{key}])"
+       end)
+    |> Enum.concat(indexes)
+  end
+
+  defp unique_constraints(unique_fields, unique_keys) do
+    HashSet.union(unique_fields, unique_keys)
+    |> HashSet.to_list
+    |> Enum.map &String.to_atom(&1)
+  end
+
+  defp required_attrs(attrs, unique_keys) do
+    fields = Enum.map_join(attrs, " ", &(elem(&1, 0)))
+
+    unique_keys = HashSet.to_list(unique_keys)
+    |> Enum.join(" ") 
+
+    if unique_keys == "" do
+      fields
+    else
+      fields <> " " <> unique_keys
+    end
   end
 
   defp timestamp do
@@ -204,8 +223,8 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
   defp types(attrs) do
     Enum.into attrs, %{}, fn
-      {k, {c, v}}       -> {k, {c, value_to_type(v)}}
-      {k, v}            -> {k, value_to_type(v)}
+      {k, {c, v}} -> {k, {c, value_to_type(v)}}
+      {k, v}      -> {k, value_to_type(v)}
     end
   end
 

@@ -9,6 +9,7 @@ defmodule <%= base %>.Repo.Migrations.Create<%= scoped %> do
 <% end %>
       timestamps
     end
+
 <%= for index <- indexes do %>    <%= index %>
 <% end %>
   end

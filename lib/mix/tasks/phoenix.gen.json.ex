@@ -27,12 +27,13 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
     {opts, parsed, _} = OptionParser.parse(args, switches: [model: :boolean])
     [singular, plural | attrs] = validate_args!(parsed)
 
-    attrs   = Mix.Phoenix.attrs(attrs)
-    binding = Mix.Phoenix.inflect(singular)
-    path    = binding[:path]
-    route   = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
-    binding = binding ++ [plural: plural, route: route,
-                          attrs: attrs, params: Mix.Phoenix.params(attrs)]
+    {attrs, _, _} = Mix.Phoenix.unique_attrs(attrs)
+    attrs         = Mix.Phoenix.attrs(attrs)
+    binding       = Mix.Phoenix.inflect(singular)
+    path          = binding[:path]
+    route         = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
+    binding       = binding ++ [plural: plural, attrs: attrs, route: route,
+                                params: Mix.Phoenix.params(attrs)]
 
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Controller")
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "View")

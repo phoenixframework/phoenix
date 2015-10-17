@@ -111,7 +111,8 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
 
   test "generates unique_index" do
     in_tmp "generates unique_index", fn ->
-      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title:unique", "unique_int:integer:unique", "unique_float:float:unique"]
+      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title:unique", "unique_int:integer:unique",
+        "unique_float:float:unique", "user_id:references:users:unique", "unique_array:array:text:unique"]
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
 
@@ -121,9 +122,13 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
         assert file =~ "add :title, :string"
         assert file =~ "add :unique_int, :integer"
         assert file =~ "add :unique_float, :float"
+        assert file =~ "add :unique_array, {:array, :text}"
+        assert file =~ "add :user_id, references(:users)"
         assert file =~ "create unique_index(:posts, [:title])"
         assert file =~ "create unique_index(:posts, [:unique_int])"
         assert file =~ "create unique_index(:posts, [:unique_float])"
+        assert file =~ "create unique_index(:posts, [:user_id])"
+        assert file =~ "create unique_index(:posts, [:unique_array])"
       end
 
       assert_file "web/models/post.ex", fn file ->
@@ -132,8 +137,15 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
         assert file =~ "schema \"posts\" do"
         assert file =~ "field :title, :string"
         assert file =~ "field :unique_int, :integer"
+        assert file =~ "field :unique_float, :float"
+        refute file =~ "field :user_id"
+        assert file =~ "belongs_to :user, Phoenix.User"
+        assert file =~ "@required_fields ~w(title unique_int unique_float unique_array user_id)"
         assert file =~ "|> unique_constraint(:title)"
         assert file =~ "|> unique_constraint(:unique_int)"
+        assert file =~ "|> unique_constraint(:unique_float)"
+        assert file =~ "|> unique_constraint(:user_id)"
+        assert file =~ "|> unique_constraint(:unique_array)"
       end
     end
   end
