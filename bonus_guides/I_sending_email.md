@@ -32,7 +32,7 @@ One way is quick, but it requires us to set environment variables for our mailgu
 
 ```elixir
 config :hello_phoenix,
-       mailgun_domain: System.get_env("MAILGUN_DOMAIN")
+       mailgun_domain: System.get_env("MAILGUN_DOMAIN"),
        mailgun_key: System.get_env("MAILGUN_API_KEY")
 ```
 
