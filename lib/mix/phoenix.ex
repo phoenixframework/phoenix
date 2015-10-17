@@ -4,7 +4,7 @@ defmodule Mix.Phoenix do
 
   @valid_attributes [:integer, :float, :decimal, :boolean, :map, :string,
                      :array, :references, :text, :date, :time, :datetime, 
-                     :uuid, :unique]
+                     :uuid]
 
   @doc """
   Copies files from source dir to target dir
@@ -94,10 +94,20 @@ defmodule Mix.Phoenix do
   def attrs(attrs) do
     Enum.map(attrs, fn attr ->
       attr
+      |> drop_unique()
       |> String.split(":", parts: 3)
       |> list_to_attr()
       |> validate_attr!()
     end)
+  end
+
+  @doc """
+  Fetches the unique attributes from attrs.
+  """
+  def uniques(attrs) do
+    attrs
+    |> Enum.filter(&String.ends_with?(&1, ":unique"))
+    |> Enum.map(& &1 |> String.split(":", parts: 2) |> hd |> String.to_atom)
   end
 
   @doc """
@@ -109,10 +119,7 @@ defmodule Mix.Phoenix do
         {_, {:references, _}} -> true
         {_, _} -> false
        end)
-    |> Enum.into(%{}, fn
-        {k, {t, :unique}} -> {k, type_to_default(t)}
-        {k, t}            -> {k, type_to_default(t)}
-       end)
+    |> Enum.into(%{}, fn {k, t} -> {k, type_to_default(t)} end)
   end
 
   @doc """
@@ -155,8 +162,15 @@ defmodule Mix.Phoenix do
     path |> Path.basename(".beam") |> String.to_atom()
   end
 
+  defp drop_unique(info) do
+    prefix = byte_size(info) - 7
+    case info do
+      <<attr::size(prefix)-binary, ":unique">> -> attr
+      _ -> info
+    end
+  end
+
   defp list_to_attr([key]), do: {String.to_atom(key), :string}
-  defp list_to_attr([key, "unique"]), do: {String.to_atom(key), {:string, :unique}}
   defp list_to_attr([key, value]), do: {String.to_atom(key), String.to_atom(value)}
   defp list_to_attr([key, comp, value]) do
     {String.to_atom(key), {String.to_atom(comp), String.to_atom(value)}}

@@ -85,6 +85,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     default_opts = Application.get_env(:phoenix, :generators, [])
     opts = Keyword.merge(default_opts, opts)
 
+    uniques   = Mix.Phoenix.uniques(attrs)
     attrs     = Mix.Phoenix.attrs(attrs)
     binding   = Mix.Phoenix.inflect(singular)
     params    = Mix.Phoenix.params(attrs)
@@ -92,8 +93,6 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     migration = String.replace(path, "/", "_")
 
     Mix.Phoenix.check_module_name_availability!(binding[:module])
-
-    {uniques, attrs} = extract_uniques(attrs)
     {assocs, attrs} = partition_attrs_and_assocs(attrs)
 
     binding = binding ++
@@ -166,16 +165,6 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     end
   end
 
-  defp extract_uniques(attrs) do
-    {uniques, attrs} = Enum.reduce attrs, {[], []}, fn
-      {k, {v, :unique}} = unique, {uniques, attrs} ->
-        {[unique|uniques], [{k, v}|attrs]}
-      {_k, _v} = attr, {uniques, attrs} ->
-        {uniques, [attr|attrs]}
-    end
-    {Enum.reverse(uniques), Enum.reverse(attrs)}
-  end
-
   defp assocs(assocs) do
     Enum.map assocs, fn {key_id, {:references, source}} ->
       key   = String.replace(Atom.to_string(key_id), "_id", "")
@@ -189,7 +178,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
       Enum.map(assocs, fn {key, _} ->
         "create index(:#{plural}, [:#{key}])"
       end),
-      Enum.map(uniques, fn {key, _} ->
+      Enum.map(uniques, fn key ->
         "create unique_index(:#{plural}, [:#{key}])"
       end))
   end

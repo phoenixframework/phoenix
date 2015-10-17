@@ -20,6 +20,6 @@ defmodule <%= module %> do
   def changeset(model, params \\ :empty) do
     model
     |> cast(params, @required_fields, @optional_fields)
-<%= for {k, _} <- uniques do %>    |> unique_constraint(<%= inspect k %>)
+<%= for k <- uniques do %>    |> unique_constraint(<%= inspect k %>)
 <% end %>  end
 end
