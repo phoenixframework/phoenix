@@ -9,8 +9,14 @@ defmodule Phoenix.Mixfile do
      elixir: "~> 1.0.2 or ~> 1.1-beta",
      deps: deps,
      package: package,
-     docs: [source_ref: "v#{@version}", main: "Phoenix", logo: "logo.png"],
+
+     # Because we define protocols on the fly to test
+     # Phoenix.Param, we need to disable consolidation
+     # for the test environment for Elixir v1.2 onward.
+     consolidate_protocols: Mix.env != :test,
+
      name: "Phoenix",
+     docs: [source_ref: "v#{@version}", main: "Phoenix", logo: "logo.png"],
      source_url: "https://github.com/phoenixframework/phoenix",
      homepage_url: "http://www.phoenixframework.org",
      description: """

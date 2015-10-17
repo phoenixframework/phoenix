@@ -44,6 +44,7 @@ defmodule RouterHelper do
     controller.call(conn, controller.init(action))
   end
 
+  # TODO: Use ExUnit capture_log on Elixir v1.1 forward
   def capture_log(fun) do
     capture_io(:user, fn ->
       fun.()
