@@ -28,13 +28,11 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
     [singular, plural | attrs] = validate_args!(parsed)
 
     attrs   = Mix.Phoenix.attrs(attrs)
-    params  = Mix.Phoenix.params(attrs)
-    attrs   = Mix.Phoenix.strip_unique_tags(attrs)
     binding = Mix.Phoenix.inflect(singular)
     path    = binding[:path]
     route   = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
-    binding = binding ++ [plural: plural, route: route,
-                          attrs: attrs, params: params]
+    binding = binding ++ [plural: plural, attrs: Mix.Phoenix.strip_unique_tags(attrs), 
+                          route: route, params: Mix.Phoenix.params(attrs)]
 
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Controller")
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "View")

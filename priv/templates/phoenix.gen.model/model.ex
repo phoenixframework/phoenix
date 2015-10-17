@@ -8,7 +8,7 @@ defmodule <%= module %> do
     timestamps
   end
 
-  @required_fields ~w(<%= required_fields %>)
+  @required_fields ~w(<%= required_attrs %>)
   @optional_fields ~w()
 
   @doc """

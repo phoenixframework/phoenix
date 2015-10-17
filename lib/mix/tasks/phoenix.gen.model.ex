@@ -102,10 +102,10 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     
     binding = binding ++
               [attrs: attrs, plural: plural, types: types(attrs),
-               assocs: assocs(assocs, unique_keys), indexes: indexes(plural, assocs, unique_fields, unique_keys),
-               defaults: defaults(attrs), params: params, binary_id: opts[:binary_id], unique_constraints: unique_constraints,
-               required_fields: required_fields(attrs, unique_keys)
-               ]
+               defaults: defaults(attrs), params: params, assocs: assocs(assocs, unique_keys), 
+               indexes: indexes(plural, assocs, unique_fields, unique_keys),
+               binary_id: opts[:binary_id], unique_constraints: unique_constraints,
+               required_attrs: required_attrs(attrs, unique_keys)]
 
     files = [
       {:eex, "model.ex",       "web/models/#{path}.ex"},
@@ -209,7 +209,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     end)
   end
 
-  defp required_fields(attrs, unique_keys) do
+  defp required_attrs(attrs, unique_keys) do
     Enum.map_join(Enum.concat(attrs, unique_keys), " ", &elem(elem(&1, 1), 0))
   end
 
