@@ -2,13 +2,13 @@ defmodule <%= module %> do
   use <%= base %>.Web, :model
 
   schema <%= inspect plural %> do
-<%= for {k, _} <- attrs do %>    field <%= inspect k %>, <%= inspect types[k] %><%= defaults[k] %>
-<% end %><%= for {k, _, m, _} <- assocs do %>    belongs_to <%= inspect k %>, <%= m %>
+<%= for {_, {k, _}} <- attrs do %>    field <%= inspect k %>, <%= inspect types[k] %><%= defaults[k] %>
+<% end %><%= for {_, {k, _, m, _}} <- assocs do %>    belongs_to <%= inspect k %>, <%= m %>
 <% end %>
     timestamps
   end
 
-  @required_fields ~w(<%= Enum.map_join(Enum.concat(attrs, required_unique_keys), " ", &elem(&1, 0)) %>)
+  @required_fields ~w(<%= required_fields %>)
   @optional_fields ~w()
 
   @doc """
@@ -20,6 +20,6 @@ defmodule <%= module %> do
   def changeset(model, params \\ :empty) do
     model
     |> cast(params, @required_fields, @optional_fields)
-<%= for {k, _} <- uniques do %>    |> unique_constraint(<%= inspect k %>)
+<%= for {_, {_, k}} <- unique_constraints do %>    |> unique_constraint(<%= inspect k %>)
 <% end %>  end
 end

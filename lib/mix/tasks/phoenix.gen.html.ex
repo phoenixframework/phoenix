@@ -29,11 +29,13 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
     [singular, plural | attrs] = validate_args!(parsed)
 
     attrs   = Mix.Phoenix.attrs(attrs)
+    params  = Mix.Phoenix.params(attrs)
+    attrs   = Mix.Phoenix.strip_unique_tags(attrs)
     binding = Mix.Phoenix.inflect(singular)
     path    = binding[:path]
     route   = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
     binding = binding ++ [plural: plural, route: route, attrs: attrs,
-                          inputs: inputs(attrs), params: Mix.Phoenix.params(attrs),
+                          inputs: inputs(attrs), params: params,
                           template_singular: String.replace(binding[:singular], "_", " "),
                           template_plural: String.replace(plural, "_", " ")]
 
