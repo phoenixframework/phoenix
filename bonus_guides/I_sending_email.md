@@ -1,8 +1,8 @@
-Sending email from a Phoenix application is really easy. Before we begin, we'll need an account with mailgun.com - we won't actually be able to send mail without it. Once we have an account, though, the rest will be straightforward.
+Sending email from a Phoenix application is really easy. Before we begin, we'll need an account with Mailgun - we won't actually be able to send mail without it. Once we have an account, though, the rest will be straightforward.
 
-In order to sign up for a mailgun.com account, just head over to `http://www.mailgun.com/`, click on the "sign up" link, and fill out the form. They have a generous number of free emails per month, so we can get going with a free account.
+First, [sign up at Mailgun](https://mailgun.com/signup). They have a generous number of free emails per month, so we can get going with a free account.
 
-Once we have an account, we'll get a sandbox through which we can send mail. The url of that sandbox will be our domain unless we choose to create a custom one through mailgun.com.
+Once we have an account, we'll get a sandbox through which we can send mail. The url of that sandbox will be our domain unless we choose to create a custom one through Mailgun.
 
 Now that we have an account, we'll need to add `mailgun` as a dependency to our project. We'll do that in the `deps/0` function in `mix.exs`.
 
@@ -18,17 +18,17 @@ defp deps do
 end
 ```
 
-Next, we'll need to run `mix deps.get` to bring the mailgun package into our application.
+Next, we'll need to run `mix deps.get` to bring the `mailgun` package into our application.
 
 ### Configuration
 
-We'll also need to configure our mailgun domain and api key in `config/config.ex`.
+We'll also need to configure our `:mailgun_domain` and `:mailgun_key` in `config/config.ex`.
 
-The mailgun domain will be a full url, something like this `https://api.mailgun.net/v3/sandbox-our-domain.mailgun.org`. The key will be a long string - "key-another-long-string".
+The `:mailgun_domain` will be a full url, something like this `https://api.mailgun.net/v3/sandbox-our-domain.mailgun.org`. The `:mailgun_key` will be a long string - "key-another-long-string".
 
 For security reasons, it's important to not commit these values to a public source code repository. There are a couple of ways we can accomplish this.
 
-One way is quick, but it requires us to set environment variables for our mailgun domain and api key in all of our environments - development, production, and whichever other environments we might define. With the environment variables set, we can reference them in our `config/config.exs` file.
+One way is quick, but it requires us to set environment variables for our `:mailgun_domain` and `:mailgun_key` in all of our environments - development, production, and whichever other environments we might define. With the environment variables set, we can reference them in our `config/config.exs` file.
 
 ```elixir
 config :hello_phoenix,
@@ -52,7 +52,7 @@ The first thing we will do is add a line to the `.gitignore` file for a new `con
 /config/config.secret.exs
 ```
 
-The next step is to create the `config/config.secret.exs` file with our mailgun configuration in it.
+The next step is to create the `config/config.secret.exs` file with our `mailgun` configuration in it.
 
 ```elixir
 use Mix.Config
@@ -76,7 +76,7 @@ Since our `config/config.secret.exs` file won't be in our repository, we'll need
 
 ### The Client Module
 
-In order for our application to interact with mailgun.com, we'll need a client module. Let's define one here `lib/hello_phoenix/mailer.ex`. When we `use` the `Mailgun.Client` module in the second line, we pass our configuration to the Mailgun package, and we import mailgun's `send_email/1` function into our mailer.
+In order for our application to interact with Mailgun, we'll need a client module. Let's define one here `lib/hello_phoenix/mailer.ex`. When we `use` the `Mailgun.Client` module in the second line, we pass our configuration to the `mailgun` package, and we import `mailgun`'s `send_email/1` function into our mailer.
 
 ```elixir
 defmodule HelloPhoenix.Mailer do
@@ -107,7 +107,7 @@ Sending this email is as easy as invoking the function with an email address, fr
 HelloPhoenix.Mailer.send_welcome_text_email("us@example.com")
 ```
 
-Since we're just getting started, it would be great to test this out locally without hitting mailgun.com. The mailgun package gives us a very easy way to do this. In the client module, we set the mode to `:test` and provide a path to a file for mailgun to write out the JSON representation of our emails.
+Since we're just getting started, it would be great to test this out locally without hitting Mailgun. The `mailgun` package gives us a very easy way to do this. In the client module, we set the mode to `:test` and provide a path to a file for `mailgun` to write out the JSON representation of our emails.
 
 Let's add those to our client module at `lib/hello_phoenix/mailer.ex`.
 
@@ -223,7 +223,7 @@ defmodule HelloPhoenix.Mailer do
   . . .
 ```
 
-When we restart the application and call our `send_welcome_email/1` function, we actually get a response back from mailgun.com telling us our email has been queued.
+When we restart the application and call our `send_welcome_email/1` function, we actually get a response back from Mailgun telling us our email has been queued.
 
 ```console
 iex> HelloPhoenix.Mailer.send_welcome_email("us@example.com")
@@ -352,7 +352,7 @@ end
 
 ### Sending attachments
 
-Mailgun also lets us send attachments with an email. We'll use the `:attachments` key to tell mailgun that we want to include one or more of them. The value we give it needs to be a list of two element maps. One element of each map needs to be the path to a file we want to attach. The other needs to be the filename.
+Mailgun also lets us send attachments with an email. We'll use the `:attachments` key to tell `mailgun` that we want to include one or more of them. The value we give it needs to be a list of two element maps. One element of each map needs to be the path to a file we want to attach. The other needs to be the filename.
 
 Sending new users a copy of the Phoenix framework logo with their welcome email would look like this.
 
