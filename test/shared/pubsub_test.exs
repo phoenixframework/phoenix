@@ -1,6 +1,6 @@
 defmodule Phoenix.PubSubTest do
   @moduledoc """
-  Sets ups a PubSub Adapter testcases
+  Sets up PubSub Adapter testcases
 
   ## Usage
 
