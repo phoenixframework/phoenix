@@ -148,7 +148,7 @@ defmodule Phoenix.ChannelTest do
 
       Process.monitor(socket.channel_pid)
       send(socket.channel_pid, :some_message)
-      assert_receive {:DOWN, _, _, _, _}
+      assert_receive {:DOWN, _, _, _, :normal}
   """
 
   alias Phoenix.Socket
