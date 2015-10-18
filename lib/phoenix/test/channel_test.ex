@@ -133,6 +133,22 @@ defmodule Phoenix.ChannelTest do
       :ok = close(socket)
 
   This mimics the behaviour existing in clients.
+
+  To assert that your channel closes or errors asynchronously,
+  you can monitor the channel process with the tools provided
+  by Elixir, and wait for the `:DOWN` message.
+  Imagine an implementation of the `handle_info/2` function
+  that closes the channel when it receives `:some_message`:
+
+      def handle_info(:some_message, socket) do
+        {:stop, :normal, socket}
+      end
+
+  In your test, you can assert that the close happened by:
+
+      Process.monitor(socket.channel_pid)
+      send(socket.channel_pid, :some_message)
+      assert_receive {:DOWN, _, _, _, :normal}
   """
 
   alias Phoenix.Socket
