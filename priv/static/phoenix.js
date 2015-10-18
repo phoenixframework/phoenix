@@ -132,20 +132,20 @@ require.define({'phoenix': function(exports, require, module){ // Phoenix Channe
 // To join a channel, you must provide the topic, and channel params for
 // authorization. Here's an example chat room example where `"new_msg"`
 // events are listened for, messages are pushed to the server, and
-// the channel is joined with ok/error matches, and `after` hook:
+// the channel is joined with ok/error/timeout matches:
 //
 //     let channel = socket.channel("rooms:123", {token: roomToken})
 //     channel.on("new_msg", msg => console.log("Got message", msg) )
 //     $input.onEnter( e => {
-//       channel.push("new_msg", {body: e.target.val})
+//       channel.push("new_msg", {body: e.target.val}, 10000)
 //        .receive("ok", (msg) => console.log("created message", msg) )
 //        .receive("error", (reasons) => console.log("create failed", reasons) )
-//        .after(10000, () => console.log("Networking issue. Still waiting...") )
+//        .receive("timeout", () => console.log("Networking issue...") )
 //     })
 //     channel.join()
 //       .receive("ok", ({messages}) => console.log("catching up", messages) )
 //       .receive("error", ({reason}) => console.log("failed join", reason) )
-//       .after(10000, () => console.log("Networking issue. Still waiting...") )
+//       .receive("timeout", () => console.log("Networking issue. Still waiting...") )
 //
 //
 // ## Joining
@@ -162,8 +162,8 @@ require.define({'phoenix': function(exports, require, module){ // Phoenix Channe
 // From the previous example, we can see that pushing messages to the server
 // can be done with `channel.push(eventName, payload)` and we can optionally
 // receive responses from the push. Additionally, we can use
-// `after(millsec, callback)` to abort waiting for our `receive` hooks and
-// take action after some period of waiting.
+// `receive("timeout", callback)` to abort waiting for our other `receive` hooks
+//  and take action after some period of waiting.
 //
 //
 // ## Socket Hooks
