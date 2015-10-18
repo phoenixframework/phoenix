@@ -138,12 +138,16 @@ class Push {
 
     this.startAfter()
     this.sent = true
-    this.channel.socket.push({
-      topic: this.channel.topic,
-      event: this.event,
-      payload: this.payload,
-      ref: ref
-    })
+    if(this.channel.canPush() || this.event === CHANNEL_EVENTS.join){
+      this.channel.socket.push({
+        topic: this.channel.topic,
+        event: this.event,
+        payload: this.payload,
+        ref: ref
+      })
+    } else {
+      this.triggerError()
+    }
   }
 
   receive(status, callback){
@@ -165,6 +169,11 @@ class Push {
 
 
   // private
+
+  triggerError(){
+    let errorPayload = {status: "error", response: {reason: "notjoined"}}
+    this.channel.trigger(this.refEvent, errorPayload)
+  }
 
   matchReceive({status, response, ref}){
     this.recHooks.filter( h => h.status === status )
@@ -254,11 +263,8 @@ export class Channel {
       throw(`tried to push '${event}' to '${this.topic}' before joining. Use channel.join() before pushing events`)
     }
     let pushEvent = new Push(this, event, payload)
-    if(this.canPush()){
-      pushEvent.send()
-    } else {
-      this.pushBuffer.push(pushEvent)
-    }
+
+    pushEvent.send()
 
     return pushEvent
   }
@@ -276,10 +282,14 @@ export class Channel {
   //     channel.leave().receive("ok", () => alert("left!") )
   //
   leave(){
-    return this.push(CHANNEL_EVENTS.leave).receive("ok", () => {
+    let close = () => {
       this.socket.log("channel", `leave ${this.topic}`)
       this.trigger(CHANNEL_EVENTS.close, "leave")
-    })
+    }
+
+    return this.push(CHANNEL_EVENTS.leave)
+               .receive("ok", () => close() )
+               .receive("error", () => close() )
   }
 
   // Overridable message hook
