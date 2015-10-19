@@ -67,6 +67,7 @@ defmodule Phoenix.Transports.LongPoll do
     {_, opts} = handler.__transport__(transport)
 
     conn
+    |> code_reload(endpoint)
     |> fetch_query_params
     |> put_resp_header("access-control-allow-origin", "*")
     |> Plug.Conn.fetch_query_params
@@ -255,5 +256,11 @@ defmodule Phoenix.Transports.LongPoll do
     conn
     |> put_status(200)
     |> Phoenix.Controller.json(data)
+  end
+
+  defp code_reload(conn, endpoint) do
+    if endpoint.config(:code_reloader), do: Phoenix.CodeReloader.reload!(endpoint)
+
+    conn
   end
 end

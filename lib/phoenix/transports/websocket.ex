@@ -64,6 +64,7 @@ defmodule Phoenix.Transports.WebSocket do
 
     conn =
       conn
+      |> code_reload(endpoint)
       |> Plug.Conn.fetch_query_params
       |> Transport.transport_log(opts[:transport_log])
       |> Transport.force_ssl(handler, endpoint, opts)
@@ -194,5 +195,11 @@ defmodule Phoenix.Transports.WebSocket do
 
   defp bump_client_last_active(state) do
     %{state | client_last_active: now_ms()}
+  end
+
+  defp code_reload(conn, endpoint) do
+    if endpoint.config(:code_reloader), do: Phoenix.CodeReloader.reload!(endpoint)
+
+    conn
   end
 end
