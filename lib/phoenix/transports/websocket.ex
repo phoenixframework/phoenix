@@ -26,6 +26,9 @@ defmodule Phoenix.Transports.WebSocket do
 
     * `:heartbeat` - the heartbeat interval in milliseconds, default `30_000`
 
+    * `:code_reloader` - optionally override the default `:code_reloader` value
+      from the socket's endpoint
+
   ## Serializer
 
   By default, JSON encoding is used to broker messages to and from clients.
@@ -64,7 +67,7 @@ defmodule Phoenix.Transports.WebSocket do
 
     conn =
       conn
-      |> code_reload(endpoint)
+      |> code_reload(opts, endpoint)
       |> Plug.Conn.fetch_query_params
       |> Transport.transport_log(opts[:transport_log])
       |> Transport.force_ssl(handler, endpoint, opts)
@@ -197,8 +200,9 @@ defmodule Phoenix.Transports.WebSocket do
     %{state | client_last_active: now_ms()}
   end
 
-  defp code_reload(conn, endpoint) do
-    if endpoint.config(:code_reloader), do: Phoenix.CodeReloader.reload!(endpoint)
+  defp code_reload(conn, opts, endpoint) do
+    reload? = Keyword.get(opts, :code_reloader, endpoint.config(:code_reloader))
+    if reload?, do: Phoenix.CodeReloader.reload!(endpoint)
 
     conn
   end

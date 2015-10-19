@@ -28,6 +28,9 @@ defmodule Phoenix.Transports.LongPoll do
       it will check against the host value in `YourApp.Endpoint.config(:url)[:host]`.
       It may be set to `false` (not recommended) or to a list of explicitly
       allowed origins
+
+    * `:code_reloader` - optionally override the default `:code_reloader` value
+      from the socket's endpoint
   """
 
   ## Transport callbacks
@@ -67,7 +70,7 @@ defmodule Phoenix.Transports.LongPoll do
     {_, opts} = handler.__transport__(transport)
 
     conn
-    |> code_reload(endpoint)
+    |> code_reload(opts, endpoint)
     |> fetch_query_params
     |> put_resp_header("access-control-allow-origin", "*")
     |> Plug.Conn.fetch_query_params
@@ -258,8 +261,9 @@ defmodule Phoenix.Transports.LongPoll do
     |> Phoenix.Controller.json(data)
   end
 
-  defp code_reload(conn, endpoint) do
-    if endpoint.config(:code_reloader), do: Phoenix.CodeReloader.reload!(endpoint)
+  defp code_reload(conn, opts, endpoint) do
+    reload? = Keyword.get(opts, :code_reloader, endpoint.config(:code_reloader))
+    if reload?, do: Phoenix.CodeReloader.reload!(endpoint)
 
     conn
   end
