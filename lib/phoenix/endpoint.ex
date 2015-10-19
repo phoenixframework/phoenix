@@ -152,14 +152,15 @@ defmodule Phoenix.Endpoint do
            paths: [Path.expand("priv/static/js/phoenix.js")]]
 
     * `:pubsub` - configuration for this endpoint's pubsub adapter.
-      Configuration either requires a `:name` of the registered pubsub server
-      or a `:name`, `:adapter`, and options which starts the adapter in
-      the endpoint's supervision tree. If no name is provided, the name
-      is inflected from the endpoint module. Defaults to:
+      Configuration either requires a `:name` of the registered pubsub
+      server or a `:name` and `:adapter` pair. The given adapter and
+      name pair will be started as part of the supervision tree. if
+      no adapter is specified, the pubsub system will work by sending
+      events and subscribing to the given name. Defaults to:
 
-          [adapter: Phoenix.PubSub.PG2]
+          [adapter: Phoenix.PubSub.PG2, name: MyApp.PubSub]
 
-      with advanced adapter configuration:
+      It also supports custom adpater configuration:
 
           [name: :my_pubsub, adapter: Phoenix.PubSub.Redis,
            host: "192.168.100.1"]

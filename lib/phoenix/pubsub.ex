@@ -19,11 +19,15 @@ defmodule Phoenix.PubSub do
   Pubsub adapters are often configured in your endpoint:
 
       config :my_app, MyApp.Endpoint,
-        pubsub: [adapter: Phoenix.PubSub.PG2]
+        pubsub: [adapter: Phoenix.PubSub.PG2,
+                 name: MyApp.PubSub]
 
   The configuration above takes care of starting the
   pubsub backend and exposing its functions via the
-  endpoint module.
+  endpoint module. If no adapter but a name is given,
+  nothing will be started, but the pubsub system will
+  work by sending events and subscribing to the given
+  name.
 
   ## Direct usage
 
