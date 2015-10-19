@@ -159,7 +159,8 @@ defmodule Phoenix.PubSub.Local do
   end
 
   def init(name) do
-    ^name = :ets.new(name, [:bag, :named_table, :public, read_concurrency: true])
+    ^name = :ets.new(name, [:bag, :named_table, :public,
+                            read_concurrency: true, write_concurrency: true])
     Process.flag(:trap_exit, true)
     {:ok, name}
   end
