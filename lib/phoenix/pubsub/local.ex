@@ -36,7 +36,9 @@ defmodule Phoenix.PubSub.Local do
 
   """
   def subscribe(local_server, pid, topic, opts \\ []) when is_atom(local_server) do
-    GenServer.call(local_server, {:subscribe, pid, topic, opts})
+    {:ok, table} = GenServer.call(local_server, {:subscribe, pid, topic, opts[:link]})
+    true = :ets.insert(table, {topic, {pid, opts[:fastlane]}})
+    :ok
   end
 
   @doc """
@@ -101,6 +103,7 @@ defmodule Phoenix.PubSub.Local do
     end)
     :ok
   end
+
   def broadcast(local_server, from, topic, msg) when is_atom(local_server) do
     local_server
     |> subscribers(topic)
@@ -156,16 +159,15 @@ defmodule Phoenix.PubSub.Local do
   end
 
   def init(name) do
-    ^name = :ets.new(name, [:bag, :named_table, read_concurrency: true])
+    ^name = :ets.new(name, [:bag, :named_table, :public, read_concurrency: true])
     Process.flag(:trap_exit, true)
     {:ok, name}
   end
 
-  def handle_call({:subscribe, pid, topic, opts}, _from, state) do
-    if opts[:link], do: Process.link(pid)
+  def handle_call({:subscribe, pid, topic, link}, _from, state) do
+    if link, do: Process.link(pid)
     Process.monitor(pid)
-    true = :ets.insert(state, {topic, {pid, opts[:fastlane]}})
-    {:reply, :ok, state}
+    {:reply, {:ok, state}, state}
   end
 
   def handle_call({:unsubscribe, pid, topic}, _from, state) do
