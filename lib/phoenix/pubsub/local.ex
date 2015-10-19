@@ -76,7 +76,8 @@ defmodule Phoenix.PubSub.Local do
     local_server
     |> subscribers_with_fastlanes(topic)
     |> Enum.reduce(%{}, fn
-      {pid, _fastlanes}, cache when pid == from ->  cache
+      {pid, _fastlanes}, cache when pid == from ->
+        cache
 
       {pid, nil}, cache ->
         send(pid, msg)
@@ -149,95 +150,39 @@ defmodule Phoenix.PubSub.Local do
   end
 
   @doc false
-  # This is a private operation. DO NOT USE IT IN PROD.
+  # This is an expensive and private operation. DO NOT USE IT IN PROD.
   def subscription(local_server, pid) when is_atom(local_server) do
-    GenServer.call(local_server, {:subscription, pid})
+    # TODO: Implement it using ETS similar to the list function above
   end
 
   def init(name) do
     ^name = :ets.new(name, [:bag, :named_table, read_concurrency: true])
     Process.flag(:trap_exit, true)
-    {:ok, %{topics: name, pids: HashDict.new}}
-  end
-
-  def handle_call({:subscription, pid}, _from, state) do
-    case HashDict.fetch(state.pids, pid) do
-      {:ok, {_ref, topics, fastlanes}} -> {:reply, {:ok, topics, fastlanes}, state}
-      :error                           -> {:reply, :error, state}
-    end
+    {:ok, name}
   end
 
   def handle_call({:subscribe, pid, topic, opts}, _from, state) do
     if opts[:link], do: Process.link(pid)
-    {:reply, :ok, put_subscription(state, pid, topic, opts[:fastlane])}
+    Process.monitor(pid)
+    true = :ets.insert(state, {topic, {pid, opts[:fastlane]}})
+    {:reply, :ok, state}
   end
 
   def handle_call({:unsubscribe, pid, topic}, _from, state) do
-    {:reply, :ok, drop_subscription(state, pid, topic)}
+    true = :ets.match_delete(state, {topic, {pid, :_}})
+    {:reply, :ok, state}
   end
 
-  def handle_info({:DOWN, ref, _type, pid, _info}, state) do
-    {:noreply, drop_subscriber(state, pid, ref)}
+  def handle_info({:DOWN, _ref, _type, pid, _info}, state) do
+    true = :ets.match_delete(state, {:_, {pid, :_}})
+    {:noreply, state}
   end
 
-  def handle_info({:EXIT, _linked_pid, _reason}, state) do
+  def handle_info(_, state) do
     {:noreply, state}
   end
 
   def terminate(_reason, _state) do
     :ok
-  end
-
-  defp put_subscription(state, pid, topic, fastlane) do
-    subscription = case HashDict.fetch(state.pids, pid) do
-      {:ok, {ref, topics, fastlanes}} ->
-        fastlanes = if fastlane, do: HashDict.put(fastlanes, topic, fastlane),
-                                 else: fastlanes
-        {ref, HashSet.put(topics, topic), fastlanes}
-      :error ->
-        fastlanes = if fastlane, do: HashDict.put(HashDict.new, topic, fastlane),
-                                 else: HashDict.new
-        {Process.monitor(pid), HashSet.put(HashSet.new, topic), fastlanes}
-    end
-
-    true = :ets.insert(state.topics, {topic, {pid, fastlane}})
-    %{state | pids: HashDict.put(state.pids, pid, subscription)}
-  end
-
-  defp drop_subscription(state, pid, topic) do
-    case HashDict.fetch(state.pids, pid) do
-      {:ok, {ref, subd_topics, fastlanes}} ->
-        subd_topics = HashSet.delete(subd_topics, topic)
-        {fastlane, fastlanes} = HashDict.pop(fastlanes, topic)
-
-        pids =
-          if Enum.any?(subd_topics) do
-            HashDict.put(state.pids, pid, {ref, subd_topics, fastlanes})
-          else
-            Process.demonitor(ref, [:flush])
-            HashDict.delete(state.pids, pid)
-          end
-
-        true = :ets.delete_object(state.topics, {topic, {pid, fastlane}})
-        %{state | pids: pids}
-
-      :error ->
-        state
-    end
-  end
-
-  defp drop_subscriber(state, pid, ref) do
-    case HashDict.get(state.pids, pid) do
-      {^ref, topics, fastlanes} ->
-        for topic <- topics do
-          fastlane = HashDict.get(fastlanes, topic)
-          true = :ets.delete_object(state.topics, {topic, {pid, fastlane}})
-        end
-        Process.demonitor(ref, [:flush])
-        %{state | pids: HashDict.delete(state.pids, pid)}
-
-      _ref_pid_mismatch ->
-        state
-    end
   end
 end
