@@ -8,6 +8,10 @@ defmodule Phoenix.Digester do
   and also compress in `.gz` format. The filename and its digest will be
   used to generate the manifest file. It also avoid duplications checking
   for already digested files.
+
+  For stylesheet files found under the given path, Phoenix will replace
+  asset references with the digested paths, as long as the asset exists
+  in the generated manifest.
   """
 
   @doc """
@@ -21,11 +25,14 @@ defmodule Phoenix.Digester do
     if File.exists?(input_path) do
       unless File.exists?(output_path), do: File.mkdir_p!(output_path)
 
-      input_path
-      |> filter_files
-      |> do_compile(output_path)
-      |> generate_manifest(output_path)
-      :ok
+      digested_files =
+        input_path
+        |> filter_files
+        |> Enum.map(&digest/1)
+
+      manifest = generate_manifest(digested_files, output_path)
+
+      Enum.each(digested_files, &(write_to_disk(&1, manifest, output_path)))
     else
       {:error, :invalid_path}
     end
@@ -39,15 +46,6 @@ defmodule Phoenix.Digester do
     |> Enum.map(&(map_file(&1, input_path)))
   end
 
-  defp do_compile(files, output_path) do
-    Enum.map(files, fn (file) ->
-      file
-      |> digest
-      |> compress
-      |> write_to_disk(output_path)
-    end)
-  end
-
   defp generate_manifest(files, output_path) do
     entries = Enum.reduce(files, %{}, fn (file, acc) ->
       Map.put(acc, manifest_join(file.relative_path, file.filename),
@@ -56,6 +54,8 @@ defmodule Phoenix.Digester do
 
     manifest_content = Poison.encode!(entries, [])
     File.write!(Path.join(output_path, "manifest.json"), manifest_content)
+
+    entries
   end
 
   defp manifest_join(".", filename),  do: filename
@@ -69,18 +69,9 @@ defmodule Phoenix.Digester do
 
   defp map_file(file_path, input_path) do
     %{absolute_path: file_path,
-      relative_path: Path.relative_to(file_path, input_path) |> Path.dirname,
+      relative_path: Path.relative_to(file_path, input_path) |> Path.dirname(),
       filename: Path.basename(file_path),
-      content: File.read!(file_path),
-      compressed_content: nil}
-  end
-
-  defp compress(file) do
-    if Path.extname(file.filename) in Application.get_env(:phoenix, :gzippable_exts) do
-      Map.put(file, :compressed_content, :zlib.gzip(file.content))
-    else
-      file
-    end
+      content: File.read!(file_path)}
   end
 
   defp digest(file) do
@@ -90,20 +81,72 @@ defmodule Phoenix.Digester do
     Map.put(file, :digested_filename, "#{name}-#{digest}#{extension}")
   end
 
-  defp write_to_disk(file, output_path) do
+  defp write_to_disk(file, manifest, output_path) do
     path = Path.join(output_path, file.relative_path)
     File.mkdir_p!(path)
 
+    digested_file_contents = digested_contents(file, manifest)
+
     # compressed files
-    if file.compressed_content do
-      File.write!(Path.join(path, file.digested_filename <> ".gz"), file.compressed_content)
-      File.write!(Path.join(path, file.filename <> ".gz"), file.compressed_content)
+    if compress_file?(file) do
+      File.write!(Path.join(path, file.digested_filename <> ".gz"), :zlib.gzip(digested_file_contents))
+      File.write!(Path.join(path, file.filename <> ".gz"), :zlib.gzip(file.content))
     end
 
     # uncompressed files
-    File.write!(Path.join(path, file.digested_filename), file.content)
+    File.write!(Path.join(path, file.digested_filename), digested_file_contents)
     File.write!(Path.join(path, file.filename), file.content)
 
     file
+  end
+
+  defp compress_file?(file) do
+    Path.extname(file.filename) in Application.get_env(:phoenix, :gzippable_exts)
+  end
+
+  defp digested_contents(file, manifest) do
+    if Path.extname(file.filename) == ".css" do
+      digest_asset_references(file, manifest)
+    else
+      file.content
+    end
+  end
+
+  @stylesheet_url_regex ~r{(url\(\s*)(\S+)(\s*\))}
+  @quoted_text_regex ~r{\A(['"])(.+)\1\z}
+
+  defp digest_asset_references(file, manifest) do
+    Regex.replace(@stylesheet_url_regex, file.content, fn _, open, url, close ->
+      case Regex.run(@quoted_text_regex, url) do
+        [_, quote_symbol, url] ->
+          open <> quote_symbol <> digested_url(url, file, manifest) <> quote_symbol <> close
+        nil ->
+          open <> digested_url(url, file, manifest) <> close
+      end
+    end)
+  end
+
+  defp digested_url("/" <> relative_path, _file, manifest) do
+    "/" <> Map.get(manifest, relative_path, relative_path)
+  end
+
+  defp digested_url(url, file, manifest) do
+    case URI.parse(url) do
+      %URI{scheme: nil, host: nil} ->
+        manifest_path =
+          file.relative_path
+          |> Path.join(url)
+          |> Path.expand()
+          |> Path.relative_to_cwd()
+
+        case Map.fetch(manifest, manifest_path) do
+          {:ok, digested_path} ->
+            url
+            |> Path.dirname()
+            |> Path.join(Path.basename(digested_path))
+          :error -> url
+        end
+      _ -> url
+    end
   end
 end

@@ -7,7 +7,7 @@ defmodule Phoenix.DigesterTest do
 
   test "digests and compress files" do
     output_path = Path.join("tmp", "phoenix_digest")
-    input_path  = "priv/static/"
+    input_path  = "test/fixtures/digest/priv/static/"
 
     File.rm_rf!(output_path)
     assert :ok = Phoenix.Digester.compile(input_path, output_path)
@@ -16,8 +16,10 @@ defmodule Phoenix.DigesterTest do
 
     assert "phoenix.png" in output_files
     refute "phoenix.png.gz" in output_files
-    assert "phoenix.js" in output_files
-    assert "phoenix.js.gz" in output_files
+    assert "app.js" in output_files
+    assert "app.js.gz" in output_files
+    assert "css/app.css" in output_files
+    assert "css/app.css.gz" in output_files
     assert "manifest.json" in output_files
     assert Enum.any?(output_files, &(String.match?(&1, ~r/(phoenix-[a-fA-F\d]{32}.png)/)))
     refute Enum.any?(output_files, &(String.match?(&1, ~r/(phoenix-[a-fA-F\d]{32}.png.gz)/)))
@@ -31,7 +33,7 @@ defmodule Phoenix.DigesterTest do
 
   test "digests and compress nested files" do
     output_path = Path.join("tmp", "phoenix_digest_nested")
-    input_path  = "priv/"
+    input_path  = "test/fixtures/digest/priv/"
 
     File.rm_rf!(output_path)
     assert :ok = Phoenix.Digester.compile(input_path, output_path)
@@ -67,6 +69,47 @@ defmodule Phoenix.DigesterTest do
     refute "file.js.gz.gz" in output_files
     refute "manifest.json.gz" in output_files
     refute Enum.any?(output_files, & &1 =~ ~r/file-[a-fA-F\d]{32}.[\w|\d]*.[-[a-fA-F\d]{32}/)
+  end
+
+  test "digests only absolute and relative asset paths found within stylesheets" do
+    output_path = Path.join("tmp", "phoenix_digest_stylesheets")
+    input_path  = "test/fixtures/digest/priv/static/"
+
+    File.rm_rf!(output_path)
+    assert :ok = Phoenix.Digester.compile(input_path, output_path)
+
+    digested_css_filename =
+      assets_files(output_path)
+      |> Enum.find(&(&1 =~ ~r"app-[a-fA-F\d]{32}.css"))
+
+    digested_css =
+      Path.join(output_path, digested_css_filename)
+      |> File.read!()
+
+    refute digested_css =~ ~r"/phoenix.png"
+    refute digested_css =~ ~r"../images/relative.png"
+    assert digested_css =~ ~r"/phoenix-[a-fA-F\d]{32}.png"
+    assert digested_css =~ ~r"../images/relative-[a-fA-F\d]{32}.png"
+
+    refute digested_css =~ ~r"http://www.phoenixframework.org/absolute-[a-fA-F\d]{32}.png"
+    assert digested_css =~ ~r"http://www.phoenixframework.org/absolute.png"
+  end
+
+  test "does not digest assets within undigested files" do
+    output_path = Path.join("tmp", "phoenix_digest_stylesheets_undigested")
+    input_path  = "test/fixtures/digest/priv/static/"
+
+    File.rm_rf!(output_path)
+    assert :ok = Phoenix.Digester.compile(input_path, output_path)
+
+    undigested_css =
+      Path.join(output_path, "css/app.css")
+      |> File.read!()
+
+    assert undigested_css =~ ~r"/phoenix.png"
+    assert undigested_css =~ ~r"../images/relative.png"
+    refute undigested_css =~ ~r"/phoenix-[a-fA-F\d]{32}.png"
+    refute undigested_css =~ ~r"../images/relative-[a-fA-F\d]{32}.png"
   end
 
   defp assets_files(path) do

@@ -4,6 +4,8 @@
 
 * Enhancements
   * [Router] Enable defining routes for custom http methods with a new `match` macro
+  * [CodeReloader] The socket transports now trigger the code reloader when enabled for external clients that only connect to channels without trigger a recompile through the normal page request.
+  * [phoenix.digest] The `phoenix.digest` task now digests asset urls in stylesheets automatically
 
 * Bug fixes
   * [LongPoll] force application/json content-type to fix blank JSON bodies on older IE clients using xdomain
