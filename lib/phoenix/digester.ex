@@ -25,7 +25,8 @@ defmodule Phoenix.Digester do
     if File.exists?(input_path) do
       unless File.exists?(output_path), do: File.mkdir_p!(output_path)
 
-      digested_files = input_path
+      digested_files =
+        input_path
         |> filter_files
         |> Enum.map(&digest/1)
 
@@ -53,6 +54,7 @@ defmodule Phoenix.Digester do
 
     manifest_content = Poison.encode!(entries, [])
     File.write!(Path.join(output_path, "manifest.json"), manifest_content)
+
     entries
   end
 
@@ -67,7 +69,7 @@ defmodule Phoenix.Digester do
 
   defp map_file(file_path, input_path) do
     %{absolute_path: file_path,
-      relative_path: Path.relative_to(file_path, input_path) |> Path.dirname,
+      relative_path: Path.relative_to(file_path, input_path) |> Path.dirname(),
       filename: Path.basename(file_path),
       content: File.read!(file_path)}
   end
@@ -131,13 +133,16 @@ defmodule Phoenix.Digester do
   defp digested_url(url, file, manifest) do
     case URI.parse(url) do
       %URI{scheme: nil, host: nil} ->
-        manifest_path = Path.join(file.relative_path, url)
-          |> Path.expand
-          |> Path.relative_to_cwd
+        manifest_path =
+          file.relative_path
+          |> Path.join(url)
+          |> Path.expand()
+          |> Path.relative_to_cwd()
 
         case Map.fetch(manifest, manifest_path) do
           {:ok, digested_path} ->
-            Path.dirname(url)
+            url
+            |> Path.dirname()
             |> Path.join(Path.basename(digested_path))
           :error -> url
         end
