@@ -104,7 +104,7 @@ defmodule Phoenix.Transports.WebSocket do
 
     if socket.id, do: socket.endpoint.subscribe(self, socket.id, link: true)
 
-    :timer.send_interval(heartbeat, :phoenix_heartbeat)
+    Process.send_after(self, :phoenix_heartbeat, heartbeat)
 
     {:ok, %{socket: socket,
             channels: HashDict.new,
@@ -154,6 +154,7 @@ defmodule Phoenix.Transports.WebSocket do
     if client_unresponsive?(state) do
       {:shutdown, state}
     else
+      Process.send_after(self, :phoenix_heartbeat, state.heartbeat_interval)
       encode_reply Transport.heartbeat_message(), state
     end
   end
