@@ -53,7 +53,7 @@ The `phoenix.new` task will also ask us if we want to install our dependencies. 
 
 ```console
 Fetch and install dependencies? [Yn] y
-* running npm install
+* running npm install && node node_modules/brunch/bin/brunch build
 * running mix deps.get
 ```
 
