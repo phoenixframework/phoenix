@@ -53,7 +53,6 @@ defmodule Phoenix.Token do
   password resets, e-mail confirmation and more.
   """
 
-  import Phoenix.Utils, only: [now_ms: 0]
   alias Plug.Crypto.KeyGenerator
   alias Plug.Crypto.MessageVerifier
 
@@ -133,5 +132,10 @@ defmodule Phoenix.Token do
                 digest: digest,
                 cache: Plug.Keys]
     KeyGenerator.generate(secret_key_base, salt, key_opts)
+  end
+
+  defp now_ms, do: :os.timestamp() |> time_to_ms()
+  defp time_to_ms({mega, sec, micro}) do
+    trunc(((mega * 1000000 + sec) * 1000) + (micro / 1000))
   end
 end
