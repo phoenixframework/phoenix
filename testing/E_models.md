@@ -430,7 +430,7 @@ Randomized with seed 330955
 
 For this section, we're going to assume that we all have a PostgreSQL database installed on our system, and that we generated a default application - one in which Ecto and Postgrex are installed and configured automatically.
 
-If this is not the case, please see the section on adding Ecto and Postgrex of the  [Ecto Models Guide](http://www.phoenixframework.org/docs/ecto-models#section-adding-ecto-and-postgrex-as-dependencies) and join us when that's done.
+If this is not the case, please see the section on adding Ecto and Postgrex of the [Ecto Models Guide](http://www.phoenixframework.org/docs/ecto-models#section-adding-ecto-and-postgrex-as-dependencies) and join us when that's done.
 
 Ok, once we're all configured properly, we need to run the `phoenix.gen.html` task with the list of attributes we have here.
 
@@ -448,21 +448,20 @@ $ mix phoenix.gen.html User users name:string email:string bio:string number_of_
 * creating web/views/user_view.ex
 * creating test/controllers/user_controller_test.exs
 
-Add the resource to the proper scope in web/router.ex:
+Add the resource to your browser scope in web/router.ex:
 
-resources "/users", UserController
+    resources "/users", UserController
 
-and then update your repository by running migrations:
+Remember to update your repository by running migrations:
 
-$ mix ecto.migrate
+    $ mix ecto.migrate
 ```
 
 Then we need to follow the instructions the task gives us and insert the `resources "/users", UserController` line in the router `web/router.ex`.
 
 ```elixir
 defmodule HelloPhoenix.Router do
-  use HelloPhoenix.Web, :router
-  . . .
+  ...
 
   scope "/", HelloPhoenix do
     pipe_through :browser # Use the default browser stack
@@ -471,7 +470,10 @@ defmodule HelloPhoenix.Router do
     resources "/users", UserController
   end
 
-  . . .
+  # Other scopes may use custom stacks.
+  # scope "/api", HelloPhoenix do
+  #   pipe_through :api
+  # end
 end
 ```
 
@@ -479,16 +481,19 @@ With that done, we can create our database with `ecto.create`.
 
 ```console
 $ mix ecto.create
-The database for repo HelloPhoenix.Repo has been created.
+The database for HelloPhoenix.Repo has been created.
 ```
 
 Then we can migrate our database to create our `users` table with `ecto.migrate`.
 
 ```console
 $ mix ecto.migrate
-[info] == Running HelloPhoenix.Repo.Migrations.CreateUser.change/0 forward
-[info] create table users
-[info] == Migrated in 0.3s
+
+[info]  == Running HelloPhoenix.Repo.Migrations.CreateUser.change/0 forward
+
+[info]  create table users
+
+[info]  == Migrated in 0.0s
 ```
 
 With that, we are ready to continue with the testing guide.
