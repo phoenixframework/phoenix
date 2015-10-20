@@ -12,7 +12,7 @@ defmodule Phoenix.Transports.WebSocket do
         transport_log: false
 
     * `:timeout` - the timeout for keeping websocket connections
-      open after it last received data
+      open after it last received data, defaults to 60_000ms
 
     * `:transport_log` - if the transport layer itself should log and, if so, the level
 
