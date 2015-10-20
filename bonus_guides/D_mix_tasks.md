@@ -6,10 +6,10 @@ There are currently a number of built-in Phoenix-specific and ecto-specific mix 
 $ mix help | grep -i phoenix
 mix phoenix.digest      # Digests and compress static files
 mix phoenix.gen.channel # Generates a Phoenix channel
-mix phoenix.gen.html    # Generates controller, model and views for an HTML-based resource
-mix phoenix.gen.json    # Generates a controller and model for an JSON-based resource
+mix phoenix.gen.html    # Generates controller, model and views for an HTML based resource
+mix phoenix.gen.json    # Generates a controller and model for a JSON based resource
 mix phoenix.gen.model   # Generates an Ecto model
-mix phoenix.new         # Create a new Phoenix v1.0.0 application
+mix phoenix.new         # Create a new Phoenix v1.0.3 application
 mix phoenix.routes      # Prints all routes
 mix phoenix.server      # Starts applications and their servers
 ```
