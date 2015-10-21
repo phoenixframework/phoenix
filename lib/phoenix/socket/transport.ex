@@ -246,13 +246,6 @@ defmodule Phoenix.Socket.Transport do
   end
 
   @doc """
-  Returns the message to send as a heartbeat
-  """
-  def heartbeat_message() do
-    %Message{topic: "phoenix", event: "heartbeat", payload: %{}}
-  end
-
-  @doc """
   Returns the message to be relayed when a channel exists.
   """
   def on_exit_message(topic, reason) do
