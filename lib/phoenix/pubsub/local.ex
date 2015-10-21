@@ -16,8 +16,8 @@ defmodule Phoenix.PubSub.Local do
     * `server_name` - The name to register the server under
 
   """
-  def start_link(server_name) do
-    GenServer.start_link(__MODULE__, server_name, name: server_name)
+  def start_link(server_name, gc_name) do
+    GenServer.start_link(__MODULE__, {server_name, gc_name}, name: server_name)
   end
 
   @doc """
@@ -39,23 +39,6 @@ defmodule Phoenix.PubSub.Local do
     :ok = GenServer.call(local_server, {:subscribe, pid, opts[:link]})
     true = :ets.insert(local_server, {topic, {pid, opts[:fastlane]}})
     :ok
-  end
-
-  @doc """
-  Unsubscribes the pid from the topic.
-
-    * `local_server` - The registered server name or pid
-    * `pid` - The subscriber pid
-    * `topic` - The string topic, for example "users:123"
-
-  ## Examples
-
-      iex> unsubscribe(:local_server, self, "foo")
-      :ok
-
-  """
-  def unsubscribe(local_server, pid, topic) when is_atom(local_server) do
-    GenServer.call(local_server, {:unsubscribe, pid, topic})
   end
 
   @doc """
@@ -160,11 +143,11 @@ defmodule Phoenix.PubSub.Local do
     |> Enum.uniq
   end
 
-  def init(name) do
-    ^name = :ets.new(name, [:bag, :named_table, :public,
-                            read_concurrency: true, write_concurrency: true])
+  def init({local, gc}) do
+    ^local = :ets.new(local, [:bag, :named_table, :public,
+                              read_concurrency: true, write_concurrency: true])
     Process.flag(:trap_exit, true)
-    {:ok, name}
+    {:ok, gc}
   end
 
   def handle_call({:subscribe, pid, link}, _from, state) do
@@ -173,21 +156,12 @@ defmodule Phoenix.PubSub.Local do
     {:reply, :ok, state}
   end
 
-  def handle_call({:unsubscribe, pid, topic}, _from, state) do
-    true = :ets.match_delete(state, {topic, {pid, :_}})
-    {:reply, :ok, state}
-  end
-
   def handle_info({:DOWN, _ref, _type, pid, _info}, state) do
-    true = :ets.match_delete(state, {:_, {pid, :_}})
+    Phoenix.PubSub.GC.down(state, pid)
     {:noreply, state}
   end
 
   def handle_info(_, state) do
     {:noreply, state}
-  end
-
-  def terminate(_reason, _state) do
-    :ok
   end
 end

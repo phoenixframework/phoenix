@@ -18,6 +18,7 @@ defmodule Phoenix.PubSubTest do
 
   alias Phoenix.PubSub
   alias Phoenix.PubSub.Local
+  alias Phoenix.PubSub.GC
 
   def spawn_pid do
     {:ok, pid} = Task.start(fn -> :timer.sleep(:infinity) end)
@@ -33,17 +34,17 @@ defmodule Phoenix.PubSubTest do
   setup config do
     adapter = Application.get_env(:phoenix, :pubsub_test_adapter)
     {:ok, _} = adapter.start_link(config.test, [])
-    {:ok, local: Module.concat(config.test, Elixir.Local)}
+    {:ok, local: Module.concat(config.test, Elixir.Local),
+          gc: Module.concat(config.test, Elixir.GC)}
   end
 
   test "subscribe and unsubscribe", config do
     pid = spawn_pid
-    assert Local.subscribers(config.local, "topic4") |> Dict.size == 0
+    assert Local.subscribers(config.local, "topic4") |> length == 0
     assert PubSub.subscribe(config.test, pid, "topic4")
-    assert Local.subscribers(config.local, "topic4") |> Enum.to_list == [pid]
-    assert Local.subscribers_with_fastlanes(config.local, "topic4") |> Enum.to_list == [{pid, nil}]
+    assert Local.subscribers(config.local, "topic4") == [pid]
     assert PubSub.unsubscribe(config.test, pid, "topic4")
-    assert Local.subscribers(config.local, "topic4") |> Dict.size == 0
+    assert Local.subscribers(config.local, "topic4") |> length == 0
   end
 
   test "subscribe/3 with link does not down adapter", config do
@@ -53,8 +54,11 @@ defmodule Phoenix.PubSubTest do
 
     kill_and_wait(pid)
     assert Process.alive?(local)
+    # Ensure DOWN is processed to avoid races
+    GC.unsubscribe(config.gc, pid, "unknown")
+
     assert Local.subscription(config.local, pid) == []
-    assert Local.subscribers(config.local, "topic4") |> Dict.size == 0
+    assert Local.subscribers(config.local, "topic4") |> length == 0
   end
 
   test "subscribe/3 with link downs subscriber", config do
