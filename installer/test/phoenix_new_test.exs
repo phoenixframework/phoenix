@@ -65,6 +65,8 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       assert_file "photo_blog/web/router.ex", "defmodule PhotoBlog.Router"
       assert_file "photo_blog/web/web.ex", "defmodule PhotoBlog.Web"
+      assert_file "photo_blog/web/templates/layout/app.html.eex",
+                  "<title>Hello PhotoBlog!</title>"
 
       # Brunch
       assert_file "photo_blog/.gitignore", "/node_modules"

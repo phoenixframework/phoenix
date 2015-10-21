@@ -7,7 +7,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Hello Phoenix!</title>
+    <title>Hello <%= application_module %>!</title>
     <link rel="stylesheet" href="<%%= static_path(@conn, "/css/app.css") %>">
   </head>
 
