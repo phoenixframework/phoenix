@@ -65,7 +65,10 @@ defmodule Phoenix.LocalTest do
     Process.exit(pid,  :kill)
     assert_receive {:DOWN, ^ref, _, _, _}
 
-    assert Local.subscription(config.test, pid) == :error
+    # Ensure DOWN is processed to avoid races
+    Local.unsubscribe(config.test, pid, "unknown")
+
+    assert Local.subscription(config.test, pid) == []
     assert Local.subscribers(config.test, "topic5") == [self]
     assert Local.subscribers(config.test, "topic6") == []
 
@@ -77,14 +80,14 @@ defmodule Phoenix.LocalTest do
     assert :ok = Local.subscribe(config.test, self, "topic7")
     assert :ok = Local.subscribe(config.test, self, "topic8")
 
-    {:ok, topics, _fastlanes} = Local.subscription(config.test, self)
+    topics = Local.subscription(config.test, self)
     assert Enum.sort(topics) == ["topic7", "topic8"]
 
     assert :ok = Local.unsubscribe(config.test, self, "topic7")
-    assert {:ok, topics, _fastlanes} = Local.subscription(config.test, self)
+    topics = Local.subscription(config.test, self)
     assert Enum.sort(topics) == ["topic8"]
 
     :ok = Local.unsubscribe(config.test, self, "topic8")
-    assert :error = Local.subscription(config.test, self)
+    assert Local.subscription(config.test, self) == []
   end
 end

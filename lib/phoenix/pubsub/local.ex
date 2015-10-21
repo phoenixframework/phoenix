@@ -36,8 +36,8 @@ defmodule Phoenix.PubSub.Local do
 
   """
   def subscribe(local_server, pid, topic, opts \\ []) when is_atom(local_server) do
-    {:ok, table} = GenServer.call(local_server, {:subscribe, pid, topic, opts[:link]})
-    true = :ets.insert(table, {topic, {pid, opts[:fastlane]}})
+    :ok = GenServer.call(local_server, {:subscribe, pid, opts[:link]})
+    true = :ets.insert(local_server, {topic, {pid, opts[:fastlane]}})
     :ok
   end
 
@@ -155,7 +155,9 @@ defmodule Phoenix.PubSub.Local do
   @doc false
   # This is an expensive and private operation. DO NOT USE IT IN PROD.
   def subscription(local_server, pid) when is_atom(local_server) do
-    # TODO: Implement it using ETS similar to the list function above
+    local_server
+    |> :ets.select([{{:'$1', {pid, :_}}, [], [:'$1']}])
+    |> Enum.uniq
   end
 
   def init(name) do
@@ -165,10 +167,10 @@ defmodule Phoenix.PubSub.Local do
     {:ok, name}
   end
 
-  def handle_call({:subscribe, pid, topic, link}, _from, state) do
+  def handle_call({:subscribe, pid, link}, _from, state) do
     if link, do: Process.link(pid)
     Process.monitor(pid)
-    {:reply, {:ok, state}, state}
+    {:reply, :ok, state}
   end
 
   def handle_call({:unsubscribe, pid, topic}, _from, state) do
