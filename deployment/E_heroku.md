@@ -88,11 +88,11 @@ Every new Phoenix project ships with a config file `config/prod.secret.exs` whic
 
 This works great except Heroku uses [environment variables](https://devcenter.heroku.com/articles/config-vars) to pass sensitive informations to our application. It means we need to make some changes to our config before we can deploy.
 
-First, let's make sure our secret key and port number are loaded from Heroku's environment variables instead of `config/prod.secret.exs` by adding a `secret_key_base` line and updating the port number from `80` to `System.get_env("PORT")` in `config/prod.exs`:
+First, let's make sure our secret key is loaded from Heroku's environment variables instead of `config/prod.secret.exs` by adding a `secret_key_base` line  in `config/prod.exs`:
 
 ```elixir
 config :hello_phoenix, HelloPhoenix.Endpoint,
-  http: [port: System.get_env("PORT")],
+  http: [port: {:system, "PORT"}],
   url: [host: "example.com", port: 80],
   cache_static_manifest: "priv/static/manifest.json",
   secret_key_base: System.get_env("SECRET_KEY_BASE")
@@ -135,7 +135,7 @@ use Mix.Config
 ...
 
 config :hello_phoenix, HelloPhoenix.Endpoint,
-  http: [port: System.get_env("PORT")],
+  http: [port: {:system, "PORT"}],
   url: [scheme: "https", host: "mysterious-meadow-6277.herokuapp.com", port: 443],
   force_ssl: [rewrite_on: [:x_forwarded_proto]],
   cache_static_manifest: "priv/static/manifest.json",
@@ -162,11 +162,12 @@ $ mix phoenix.gen.secret
 xvafzY4y01jYuzLm3ecJqo008dVnU3CN4f+MamNd1Zue4pXvfvUjbiXT8akaIF53
 ```
 
+Your random string will be different; don't use this example value.
+
 Now set it in Heroku:
 
 ```console
 $ heroku config:set SECRET_KEY_BASE="xvafzY4y01jYuzLm3ecJqo008dVnU3CN4f+MamNd1Zue4pXvfvUjbiXT8akaIF53"
-A_LONG_STRING_WILL_BE_PRINTED
 Setting config vars and restarting mysterious-meadow-6277... done, v3
 SECRET_KEY_BASE: xvafzY4y01jYuzLm3ecJqo008dVnU3CN4f+MamNd1Zue4pXvfvUjbiXT8akaIF53
 ```
