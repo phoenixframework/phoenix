@@ -284,7 +284,7 @@ $ mix phoenix.gen.json Post posts title:string content:string
 When `phoenix.gen.json` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our ecto migrations.
 
 ```console
-Add the resource to the proper scope in web/router.ex:
+Add the resource to your browser scope in web/router.ex:
 
     resources "/posts", PostController
 
