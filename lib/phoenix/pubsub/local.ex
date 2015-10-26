@@ -151,35 +151,50 @@ defmodule Phoenix.PubSub.Local do
   end
 
   @doc false
-  # This is an expensive and private operation. DO NOT USE IT IN PROD.
   def subscription(local_server, pid) when is_atom(local_server) do
-    local_server
-    |> :ets.select([{{:'$1', {pid, :_}}, [], [:'$1']}])
-    |> Enum.uniq
+    try do
+      Module.concat(local_server, Pids)
+      |> :ets.lookup_element(pid, 2)
+    catch
+      :error, :badarg -> []
+    end
   end
 
   def init(local) do
+    local_pids = Module.concat(local, Pids)
     ^local = :ets.new(local, [:duplicate_bag, :named_table,
                               read_concurrency: true])
+    ^local_pids = :ets.new(local_pids, [:duplicate_bag, :named_table])
 
     Process.flag(:trap_exit, true)
-    {:ok, local}
+    {:ok, %{topics: local, pids: local_pids}}
   end
 
   def handle_call({:subscribe, pid, topic, opts}, _from, state) do
     if opts[:link], do: Process.link(pid)
     Process.monitor(pid)
-    true = :ets.insert(state, {topic, {pid, opts[:fastlane]}})
+    true = :ets.insert(state.topics, {topic, {pid, opts[:fastlane]}})
+    true = :ets.insert(state.pids, {pid, topic})
     {:reply, :ok, state}
   end
 
   def handle_call({:unsubscribe, pid, topic}, _from, state) do
-    true = :ets.match_delete(state, {topic, {pid, :_}})
+    true = :ets.match_delete(state.topics, {topic, {pid, :_}})
+    true = :ets.delete_object(state.pids, {pid, topic})
     {:reply, :ok, state}
   end
 
   def handle_info({:DOWN, _ref, _type, pid, _info}, state) do
-    true = :ets.match_delete(state, {:_, {pid, :_}})
+    try do
+      topics = :ets.lookup_element(state.pids, pid, 2)
+      for topic <- topics do
+        true = :ets.match_delete(state.topics, {topic, {pid, :_}})
+      end
+      true = :ets.match_delete(state.pids, {pid, :_})
+    catch
+      :error, :badarg ->
+    end
+
     {:noreply, state}
   end
 
