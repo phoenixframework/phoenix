@@ -16,8 +16,8 @@ defmodule Phoenix.PubSub.Local do
     * `server_name` - The name to register the server under
 
   """
-  def start_link(server_name, gc_name) do
-    GenServer.start_link(__MODULE__, {server_name, gc_name}, name: server_name)
+  def start_link(server_name) do
+    GenServer.start_link(__MODULE__, server_name, name: server_name)
   end
 
   @doc """
@@ -36,9 +36,24 @@ defmodule Phoenix.PubSub.Local do
 
   """
   def subscribe(local_server, pid, topic, opts \\ []) when is_atom(local_server) do
-    :ok = GenServer.call(local_server, {:subscribe, pid, opts[:link]})
-    true = :ets.insert(local_server, {topic, {pid, opts[:fastlane]}})
-    :ok
+    GenServer.call(local_server, {:subscribe, pid, topic, opts})
+  end
+
+  @doc """
+  Unsubscribes the pid from the topic.
+
+    * `local_server` - The registered server name or pid
+    * `pid` - The subscriber pid
+    * `topic` - The string topic, for example "users:123"
+
+  ## Examples
+
+      iex> unsubscribe(:local_server, self, "foo")
+      :ok
+
+  """
+  def unsubscribe(local_server, pid, topic) when is_atom(local_server) do
+    GenServer.call(local_server, {:unsubscribe, pid, topic})
   end
 
   @doc """
@@ -143,21 +158,28 @@ defmodule Phoenix.PubSub.Local do
     |> Enum.uniq
   end
 
-  def init({local, gc}) do
-    ^local = :ets.new(local, [:duplicate_bag, :named_table, :public,
-                              read_concurrency: true, write_concurrency: true])
+  def init(local) do
+    ^local = :ets.new(local, [:duplicate_bag, :named_table,
+                              read_concurrency: true])
+
     Process.flag(:trap_exit, true)
-    {:ok, gc}
+    {:ok, local}
   end
 
-  def handle_call({:subscribe, pid, link}, _from, state) do
-    if link, do: Process.link(pid)
+  def handle_call({:subscribe, pid, topic, opts}, _from, state) do
+    if opts[:link], do: Process.link(pid)
     Process.monitor(pid)
+    true = :ets.insert(state, {topic, {pid, opts[:fastlane]}})
+    {:reply, :ok, state}
+  end
+
+  def handle_call({:unsubscribe, pid, topic}, _from, state) do
+    true = :ets.match_delete(state, {topic, {pid, :_}})
     {:reply, :ok, state}
   end
 
   def handle_info({:DOWN, _ref, _type, pid, _info}, state) do
-    Phoenix.PubSub.GC.down(state, pid)
+    true = :ets.match_delete(state, {:_, {pid, :_}})
     {:noreply, state}
   end
 
