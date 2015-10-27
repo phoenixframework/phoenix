@@ -189,7 +189,7 @@ defmodule Phoenix.PubSub.Local do
     ^local = :ets.new(local, [:duplicate_bag, :named_table, :public,
                               read_concurrency: true, write_concurrency: true])
     ^local_pids = :ets.new(local_pids, [:duplicate_bag, :named_table, :public,
-                                       write_concurrency: true])
+                                        read_concurrency: true, write_concurrency: true])
 
     Process.flag(:trap_exit, true)
     {:ok, %{topics: local, pids: local_pids, gc: gc}}
