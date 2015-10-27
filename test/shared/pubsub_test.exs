@@ -35,7 +35,8 @@ defmodule Phoenix.PubSubTest do
   setup config do
     adapter = Application.get_env(:phoenix, :pubsub_test_adapter)
     {:ok, _} = adapter.start_link(config.test, pool_size: @pool_size)
-    {:ok, local: Module.concat(config.test, Elixir.Local)}
+    {:ok, local: Module.concat(config.test, Elixir.Local),
+          gc: Module.concat(config.test, Elixir.GC)}
   end
 
   test "subscribe and unsubscribe", config do

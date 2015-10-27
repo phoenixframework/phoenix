@@ -2,15 +2,18 @@ defmodule Phoenix.LocalTest do
   use ExUnit.Case, async: true
 
   alias Phoenix.PubSub.Local
+  alias Phoenix.PubSub.GC
 
   @pool_size 1
 
   setup config do
     local = :"#{config.test}_local"
-    pool1 = :"#{local}0"
+    local1 = :"#{local}0"
+    gc1    = :"#{config.test}_gc"
     ^local = :ets.new(local, [:bag, :named_table, :public, read_concurrency: true])
-    true = :ets.insert(local, {0, pool1})
-    {:ok, _} = Local.start_link(pool1)
+    true = :ets.insert(local, {0, local1})
+    {:ok, _} = Local.start_link(local1, gc1)
+    {:ok, _} = GC.start_link(gc1, local1)
     {:ok, local: local}
   end
 

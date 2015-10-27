@@ -23,7 +23,9 @@ defmodule Phoenix.PubSub.PG2 do
   @doc false
   def init([server, opts]) do
     pool_size = Keyword.fetch!(opts, :pool_size)
+    IO.puts ">> Starting PG2 with a pool size of #{pool_size}"
     local = Module.concat(server, Local)
+    gc = Module.concat(server, GC)
 
     # Define a dispatch table so we don't have to go through
     # a bottleneck to get the instruction to perform.
@@ -35,11 +37,18 @@ defmodule Phoenix.PubSub.PG2 do
 
     locals = for shard <- 0..(pool_size - 1) do
       local_shard_name = Module.concat(["#{local}#{shard}"])
+      gc_shard_name = Module.concat(["#{gc}#{shard}"])
       true = :ets.insert(local, {shard, local_shard_name})
-      worker(Phoenix.PubSub.Local, [local_shard_name], id: local_shard_name)
+      worker(Phoenix.PubSub.Local, [local_shard_name, gc_shard_name], id: local_shard_name)
     end
 
-    children = locals ++ [
+    gcs = for shard <- 0..(pool_size - 1) do
+      gc_shard_name = Module.concat(["#{gc}#{shard}"])
+      local_shard_name = Module.concat(["#{local}#{shard}"])
+      worker(Phoenix.PubSub.GC, [gc_shard_name, local_shard_name], id: gc_shard_name)
+    end
+
+    children = locals ++ gcs ++ [
       worker(Phoenix.PubSub.PG2Server, [server, local]),
     ]
 
