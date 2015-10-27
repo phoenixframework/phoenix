@@ -85,8 +85,10 @@ defmodule Phoenix.PubSub.Local do
 
     for shard <- 0..(pool_size - 1) do
       Task.async(fn ->
-        local_server
-        |> subscribers_with_fastlanes(topic, shard)
+        subs = local_server
+          |> subscribers_with_fastlanes(topic, shard)
+
+        subs
         |> Enum.reduce(%{}, fn
           {pid, _fastlanes}, cache when pid == from ->
             cache
@@ -111,8 +113,10 @@ defmodule Phoenix.PubSub.Local do
               end
             end
         end)
+
+        Enum.count(subs)
       end)
-    end |> Enum.map(&Task.await(&1))
+    end |> Enum.map(&Task.await(&1)) |> Enum.sum() |> IO.puts()
     :ok
   end
 
