@@ -36,9 +36,15 @@ defmodule Phoenix.PubSub.Local do
 
   """
   def subscribe(local_server, pool_size, pid, topic, opts \\ []) when is_atom(local_server) do
-    local_server
-    |> pool_for_pid(pid, pool_size)
-    |> GenServer.call({:subscribe, pid, topic, opts})
+    {:ok, {topics, pids}} =
+      local_server
+      |> pool_for_pid(pid, pool_size)
+      |> GenServer.call({:subscribe, pid, topic, opts})
+
+    true = :ets.insert(topics, {topic, {pid, opts[:fastlane]}})
+    true = :ets.insert(pids, {pid, topic})
+
+    :ok
   end
 
   @doc """
@@ -189,12 +195,10 @@ defmodule Phoenix.PubSub.Local do
     {:ok, %{topics: local, pids: local_pids, gc: gc}}
   end
 
-  def handle_call({:subscribe, pid, topic, opts}, _from, state) do
+  def handle_call({:subscribe, pid, _topic, opts}, _from, state) do
     if opts[:link], do: Process.link(pid)
     Process.monitor(pid)
-    true = :ets.insert(state.topics, {topic, {pid, opts[:fastlane]}})
-    true = :ets.insert(state.pids, {pid, topic})
-    {:reply, :ok, state}
+    {:reply, {:ok, {state.topics, state.pids}}, state}
   end
 
   def handle_call({:unsubscribe, pid, topic}, _from, state) do
