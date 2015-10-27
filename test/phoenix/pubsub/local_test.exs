@@ -2,11 +2,14 @@ defmodule Phoenix.LocalTest do
   use ExUnit.Case, async: true
 
   alias Phoenix.PubSub.Local
+  alias Phoenix.PubSub.GC
 
   setup config do
     local = :"#{config.test}_local"
-    {:ok, _} = Local.start_link(local)
-    {:ok, local: local}
+    gc    = :"#{config.test}_gc"
+    {:ok, _} = Local.start_link(local, gc)
+    {:ok, _} = GC.start_link(gc, local)
+    {:ok, local: local, gc: gc}
   end
 
   test "subscribe/2 joins a pid to a topic and broadcast/2 sends messages", config do
@@ -65,8 +68,9 @@ defmodule Phoenix.LocalTest do
     assert_receive {:DOWN, ^ref, _, _, _}
 
     # Ensure DOWN is processed to avoid races
-    Local.unsubscribe(config.local, pid, "unknown")
-
+    GenServer.call(config.gc, {})
+    GenServer.call(config.gc, {})
+ 
     assert Local.subscription(config.local, pid) == []
     assert Local.subscribers(config.local, "topic5") == [self]
     assert Local.subscribers(config.local, "topic6") == []

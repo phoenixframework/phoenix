@@ -16,8 +16,8 @@ defmodule Phoenix.PubSub.Local do
     * `server_name` - The name to register the server under
 
   """
-  def start_link(server_name) do
-    GenServer.start_link(__MODULE__, server_name, name: server_name)
+  def start_link(server_name, gc_name) do
+    GenServer.start_link(__MODULE__, {server_name, gc_name}, name: server_name)
   end
 
   @doc """
@@ -36,7 +36,10 @@ defmodule Phoenix.PubSub.Local do
 
   """
   def subscribe(local_server, pid, topic, opts \\ []) when is_atom(local_server) do
-    GenServer.call(local_server, {:subscribe, pid, topic, opts})
+    :ok = GenServer.call(local_server, {:subscribe, pid, opts[:link]})
+    true = :ets.insert(local_server, {topic, {pid, opts[:fastlane]}})
+    true = local_server |> Module.concat(Pids) |> :ets.insert({pid, topic})
+    :ok
   end
 
   @doc """
@@ -53,8 +56,11 @@ defmodule Phoenix.PubSub.Local do
 
   """
   def unsubscribe(local_server, pid, topic) when is_atom(local_server) do
-    GenServer.call(local_server, {:unsubscribe, pid, topic})
+    true = :ets.match_delete(local_server, {topic, {pid, :_}})
+    true = local_server |> Module.concat(Pids) |> :ets.delete_object({pid, topic})
+    :ok
   end
+
 
   @doc """
   Sends a message to all subscribers of a topic.
@@ -160,41 +166,24 @@ defmodule Phoenix.PubSub.Local do
     end
   end
 
-  def init(local) do
+  def init({local, gc}) do
     local_pids = Module.concat(local, Pids)
-    ^local = :ets.new(local, [:duplicate_bag, :named_table,
-                              read_concurrency: true])
-    ^local_pids = :ets.new(local_pids, [:duplicate_bag, :named_table])
-
+    ^local = :ets.new(local, [:duplicate_bag, :named_table, :public,
+                              read_concurrency: true, write_concurrency: true])
+    ^local_pids = :ets.new(local_pids, [:duplicate_bag, :named_table, :public,
+                                        write_concurrency: true])
     Process.flag(:trap_exit, true)
-    {:ok, %{topics: local, pids: local_pids}}
+    {:ok, gc}
   end
 
-  def handle_call({:subscribe, pid, topic, opts}, _from, state) do
-    if opts[:link], do: Process.link(pid)
+  def handle_call({:subscribe, pid, link}, _from, state) do
+    if link, do: Process.link(pid)
     Process.monitor(pid)
-    true = :ets.insert(state.topics, {topic, {pid, opts[:fastlane]}})
-    true = :ets.insert(state.pids, {pid, topic})
-    {:reply, :ok, state}
-  end
-
-  def handle_call({:unsubscribe, pid, topic}, _from, state) do
-    true = :ets.match_delete(state.topics, {topic, {pid, :_}})
-    true = :ets.delete_object(state.pids, {pid, topic})
     {:reply, :ok, state}
   end
 
   def handle_info({:DOWN, _ref, _type, pid, _info}, state) do
-    try do
-      topics = :ets.lookup_element(state.pids, pid, 2)
-      for topic <- topics do
-        true = :ets.match_delete(state.topics, {topic, {pid, :_}})
-      end
-      true = :ets.match_delete(state.pids, {pid, :_})
-    catch
-      :error, :badarg ->
-    end
-
+    Phoenix.PubSub.GC.down(state, pid)
     {:noreply, state}
   end
 

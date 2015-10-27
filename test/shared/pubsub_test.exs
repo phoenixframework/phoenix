@@ -33,7 +33,8 @@ defmodule Phoenix.PubSubTest do
   setup config do
     adapter = Application.get_env(:phoenix, :pubsub_test_adapter)
     {:ok, _} = adapter.start_link(config.test, [])
-    {:ok, local: Module.concat(config.test, Elixir.Local)}
+    {:ok, local: Module.concat(config.test, Elixir.Local),
+          gc: Module.concat(config.test, Elixir.GC)}
   end
 
   test "subscribe and unsubscribe", config do
@@ -53,7 +54,8 @@ defmodule Phoenix.PubSubTest do
     kill_and_wait(pid)
     assert Process.alive?(local)
     # Ensure DOWN is processed to avoid races
-    Local.unsubscribe(config.local, pid, "unknown")
+    GenServer.call(config.gc, {})
+    GenServer.call(config.gc, {})
 
     assert Local.subscription(config.local, pid) == []
     assert Local.subscribers(config.local, "topic4") |> length == 0
