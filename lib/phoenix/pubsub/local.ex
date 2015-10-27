@@ -37,13 +37,8 @@ defmodule Phoenix.PubSub.Local do
   """
   def subscribe(local_server, pool_size, pid, topic, opts \\ []) when is_atom(local_server) do
     local_server
-    |> random_local_pool(pool_size)
+    |> pool_for_pid(pid, pool_size)
     |> GenServer.call({:subscribe, pid, topic, opts})
-  end
-
-  def random_local_pool(local_server, pool_size) do
-    :random.seed(:os.timestamp())
-    Module.concat(["#{local_server}#{Enum.random(1..pool_size)}"])
   end
 
   @doc """
@@ -61,7 +56,7 @@ defmodule Phoenix.PubSub.Local do
   """
   def unsubscribe(local_server, pool_size, pid, topic) when is_atom(local_server) do
     local_server
-    |> random_local_pool(pool_size)
+    |> pool_for_pid(pid, pool_size)
     |> GenServer.call({:unsubscribe, pid, topic})
   end
 
@@ -82,7 +77,7 @@ defmodule Phoenix.PubSub.Local do
   def broadcast(local_server, from, pool_size, topic, %Broadcast{event: event} = msg)
     when is_atom(local_server) do
 
-    for shard <- 1..pool_size do
+    for shard <- 0..(pool_size - 1) do
       Task.async(fn ->
         local_server
         |> subscribers_with_fastlanes(topic, shard)
@@ -116,7 +111,7 @@ defmodule Phoenix.PubSub.Local do
   end
 
   def broadcast(local_server, from, pool_size, topic, msg) when is_atom(local_server) do
-    for shard <- 1..pool_size do
+    for shard <- 0..(pool_size - 1) do
       Task.async(fn ->
         local_server
         |> subscribers(topic, shard)
@@ -153,7 +148,9 @@ defmodule Phoenix.PubSub.Local do
   """
   def subscribers_with_fastlanes(local_server, topic, shard) when is_atom(local_server) do
     try do
-      :ets.lookup_element(Module.concat(["#{local_server}#{shard}"]), topic, 2)
+      shard
+      |> pool_for_shard(local_server)
+      |> :ets.lookup_element(topic, 2)
     catch
       :error, :badarg -> []
     end
@@ -161,16 +158,20 @@ defmodule Phoenix.PubSub.Local do
 
   @doc false
   # This is an expensive and private operation. DO NOT USE IT IN PROD.
-  def list(local_server) when is_atom(local_server) do
-    local_server
+  def list(local_server, shard) when is_atom(local_server) do
+    shard
+    |> pool_for_shard(local_server)
     |> :ets.select([{{:'$1', :_}, [], [:'$1']}])
     |> Enum.uniq
   end
 
   @doc false
-  def subscription(local_server, pid) when is_atom(local_server) do
+  def subscription(local_server, pool_size, pid) when is_atom(local_server) do
     try do
-      Module.concat(local_server, Pids)
+      pid
+      |> pid_to_shard(pool_size)
+      |> pool_for_shard(local_server)
+      |> Module.concat(Pids)
       |> :ets.lookup_element(pid, 2)
     catch
       :error, :badarg -> []
@@ -217,5 +218,29 @@ defmodule Phoenix.PubSub.Local do
 
   def handle_info(_, state) do
     {:noreply, state}
+  end
+
+  defp pool_for_pid(local_server, pid, pool_size) do
+    pid
+    |> pid_to_shard(pool_size)
+    |> pool_for_shard(local_server)
+  end
+
+  def pool_for_shard(shard, local_server) do
+    [pool_server] =:ets.lookup_element(local_server, shard, 2)
+    pool_server
+  end
+
+  defp pid_to_shard(pid, shard_size) do
+    pid
+    |> pid_id()
+    |> rem(shard_size)
+  end
+  defp pid_id(pid) do
+    binary = :erlang.term_to_binary(pid)
+    prefix = (byte_size(binary) - 9) * 8
+    <<_::size(prefix), id::size(32), _::size(40)>> = binary
+
+    id
   end
 end

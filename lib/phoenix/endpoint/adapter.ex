@@ -113,7 +113,7 @@ defmodule Phoenix.Endpoint.Adapter do
      url: [host: "localhost", path: "/"],
 
      # Supervisor config
-     pubsub: [],
+     pubsub: [pool_size: 1],
      watchers: []]
   end
 

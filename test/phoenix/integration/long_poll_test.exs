@@ -18,7 +18,7 @@ defmodule Phoenix.Integration.LongPollTest do
     http: [port: @port],
     secret_key_base: String.duplicate("abcdefgh", 8),
     server: true,
-    pubsub: [adapter: Phoenix.PubSub.PG2, name: __MODULE__]
+    pubsub: [adapter: Phoenix.PubSub.PG2, name: __MODULE__, pool_size: 1]
   ])
 
   defmodule RoomChannel do
@@ -262,7 +262,7 @@ defmodule Phoenix.Integration.LongPollTest do
     assert channel
     Process.monitor(channel)
 
-    pubsub = Process.whereis(__MODULE__.Local)
+    pubsub = Process.whereis(__MODULE__.Local0)
     Process.monitor(pubsub)
     Process.exit(pubsub, :kill)
     assert_receive {:DOWN, _, :process, ^pubsub, :killed}

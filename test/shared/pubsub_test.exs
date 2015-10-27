@@ -19,6 +19,8 @@ defmodule Phoenix.PubSubTest do
   alias Phoenix.PubSub
   alias Phoenix.PubSub.Local
 
+  @pool_size 1
+
   def spawn_pid do
     {:ok, pid} = Task.start(fn -> :timer.sleep(:infinity) end)
     pid
@@ -32,31 +34,31 @@ defmodule Phoenix.PubSubTest do
 
   setup config do
     adapter = Application.get_env(:phoenix, :pubsub_test_adapter)
-    {:ok, _} = adapter.start_link(config.test, [])
+    {:ok, _} = adapter.start_link(config.test, pool_size: @pool_size)
     {:ok, local: Module.concat(config.test, Elixir.Local)}
   end
 
   test "subscribe and unsubscribe", config do
     pid = spawn_pid
-    assert Local.subscribers(config.local, "topic4") |> length == 0
+    assert Local.subscribers(config.local, "topic4", 0) |> length == 0
     assert PubSub.subscribe(config.test, pid, "topic4")
-    assert Local.subscribers(config.local, "topic4") == [pid]
+    assert Local.subscribers(config.local, "topic4", 0) == [pid]
     assert PubSub.unsubscribe(config.test, pid, "topic4")
-    assert Local.subscribers(config.local, "topic4") |> length == 0
+    assert Local.subscribers(config.local, "topic4", 0) |> length == 0
   end
 
   test "subscribe/3 with link does not down adapter", config do
     pid   = spawn_pid()
-    local = Process.whereis(config.local)
+    local = Process.whereis(:"#{config.local}0")
     assert PubSub.subscribe(config.test, pid, "topic4", link: true)
 
     kill_and_wait(pid)
     assert Process.alive?(local)
     # Ensure DOWN is processed to avoid races
-    Local.unsubscribe(config.local, pid, "unknown")
+    Local.unsubscribe(config.local, @pool_size, pid, "unknown")
 
-    assert Local.subscription(config.local, pid) == []
-    assert Local.subscribers(config.local, "topic4") |> length == 0
+    assert Local.subscription(config.local, @pool_size, pid) == []
+    assert Local.subscribers(config.local, "topic4", 0) |> length == 0
   end
 
   test "subscribe/3 with link downs subscriber", config do
@@ -68,7 +70,9 @@ defmodule Phoenix.PubSubTest do
     assert PubSub.subscribe(config.test, non_linked_pid1, "topic4")
     assert PubSub.subscribe(config.test, non_linked_pid2, "topic4", link: false)
 
-    kill_and_wait(Process.whereis(config.local))
+    for shard <- 0..(@pool_size - 1) do
+      kill_and_wait(Process.whereis(:"#{config.local}#{shard}"))
+    end
 
     refute Process.alive?(pid)
     assert Process.alive?(non_linked_pid1)

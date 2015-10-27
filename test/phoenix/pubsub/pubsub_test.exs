@@ -6,8 +6,15 @@ defmodule Phoenix.PubSub.PubSubTest do
   alias Phoenix.Socket.Message
   alias Phoenix.Socket.Reply
 
+  @pool_size 1
+
   setup_all do
-    {:ok, _} = Phoenix.PubSub.PG2.start_link(__MODULE__, [])
+    {:ok, _} = Phoenix.PubSub.PG2.start_link(__MODULE__, [pool_size: @pool_size])
+    :ok
+  end
+
+  setup do
+    Process.register(self(), :phx_pubsub_test_subscriber)
     :ok
   end
 
@@ -20,7 +27,7 @@ defmodule Phoenix.PubSub.PubSubTest do
     @behaviour Phoenix.Transports.Serializer
 
     def fastlane!(%Broadcast{} = msg) do
-      send(self(), {:fastlaned, msg})
+      send(Process.whereis(:phx_pubsub_test_subscriber), {:fastlaned, msg})
       %Message{
         topic: msg.topic,
         event: msg.event,
