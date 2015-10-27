@@ -35,8 +35,15 @@ defmodule Phoenix.PubSub.Local do
       :ok
 
   """
-  def subscribe(local_server, pid, topic, opts \\ []) when is_atom(local_server) do
-    GenServer.call(local_server, {:subscribe, pid, topic, opts})
+  def subscribe(local_server, pool_size, pid, topic, opts \\ []) when is_atom(local_server) do
+    local_server
+    |> random_local_pool(pool_size)
+    |> GenServer.call({:subscribe, pid, topic, opts})
+  end
+
+  def random_local_pool(local_server, pool_size) do
+    :random.seed(:os.timestamp())
+    Module.concat(["#{local_server}#{Enum.random(1..pool_size)}"])
   end
 
   @doc """
@@ -52,8 +59,10 @@ defmodule Phoenix.PubSub.Local do
       :ok
 
   """
-  def unsubscribe(local_server, pid, topic) when is_atom(local_server) do
-    GenServer.call(local_server, {:unsubscribe, pid, topic})
+  def unsubscribe(local_server, pool_size, pid, topic) when is_atom(local_server) do
+    local_server
+    |> random_local_pool(pool_size)
+    |> GenServer.call({:unsubscribe, pid, topic})
   end
 
   @doc """
@@ -70,45 +79,53 @@ defmodule Phoenix.PubSub.Local do
       :ok
 
   """
-  def broadcast(local_server, from, topic, %Broadcast{event: event} = msg)
+  def broadcast(local_server, from, pool_size, topic, %Broadcast{event: event} = msg)
     when is_atom(local_server) do
 
-    local_server
-    |> subscribers_with_fastlanes(topic)
-    |> Enum.reduce(%{}, fn
-      {pid, _fastlanes}, cache when pid == from ->
-        cache
+    for shard <- 1..pool_size do
+      Task.async(fn ->
+        local_server
+        |> subscribers_with_fastlanes(topic, shard)
+        |> Enum.reduce(%{}, fn
+          {pid, _fastlanes}, cache when pid == from ->
+            cache
 
-      {pid, nil}, cache ->
-        send(pid, msg)
-        cache
+          {pid, nil}, cache ->
+            send(pid, msg)
+            cache
 
-      {pid, {fastlane_pid, serializer, event_intercepts}}, cache ->
-        if event in event_intercepts do
-          send(pid, msg)
-          cache
-        else
-          case Map.fetch(cache, serializer) do
-            {:ok, encoded_msg} ->
-              send(fastlane_pid, encoded_msg)
+          {pid, {fastlane_pid, serializer, event_intercepts}}, cache ->
+            if event in event_intercepts do
+              send(pid, msg)
               cache
-            :error ->
-              encoded_msg = serializer.fastlane!(msg)
-              send(fastlane_pid, encoded_msg)
-              Map.put(cache, serializer, encoded_msg)
-          end
-        end
-    end)
+            else
+              case Map.fetch(cache, serializer) do
+                {:ok, encoded_msg} ->
+                  send(fastlane_pid, encoded_msg)
+                  cache
+                :error ->
+                  encoded_msg = serializer.fastlane!(msg)
+                  send(fastlane_pid, encoded_msg)
+                  Map.put(cache, serializer, encoded_msg)
+              end
+            end
+        end)
+      end)
+    end |> Enum.map(&Task.await(&1))
     :ok
   end
 
-  def broadcast(local_server, from, topic, msg) when is_atom(local_server) do
-    local_server
-    |> subscribers(topic)
-    |> Enum.each(fn
-      pid when pid == from -> :noop
-      pid -> send(pid, msg)
-    end)
+  def broadcast(local_server, from, pool_size, topic, msg) when is_atom(local_server) do
+    for shard <- 1..pool_size do
+      Task.async(fn ->
+        local_server
+        |> subscribers(topic, shard)
+        |> Enum.each(fn
+          pid when pid == from -> :noop
+          pid -> send(pid, msg)
+        end)
+      end)
+    end |> Enum.map(&Task.await(&1))
     :ok
   end
 
@@ -124,9 +141,9 @@ defmodule Phoenix.PubSub.Local do
       [#PID<0.48.0>, #PID<0.49.0>]
 
   """
-  def subscribers(local_server, topic) when is_atom(local_server) do
+  def subscribers(local_server, topic, shard) when is_atom(local_server) do
     local_server
-    |> subscribers_with_fastlanes(topic)
+    |> subscribers_with_fastlanes(topic, shard)
     |> Enum.map(fn {pid, _fastlanes} -> pid end)
   end
 
@@ -134,9 +151,9 @@ defmodule Phoenix.PubSub.Local do
   Returns a set of subscribers pids for the given topic with fastlane tuples.
   See `subscribers/1` for more information.
   """
-  def subscribers_with_fastlanes(local_server, topic) when is_atom(local_server) do
+  def subscribers_with_fastlanes(local_server, topic, shard) when is_atom(local_server) do
     try do
-      :ets.lookup_element(local_server, topic, 2)
+      :ets.lookup_element(Module.concat(["#{local_server}#{shard}"]), topic, 2)
     catch
       :error, :badarg -> []
     end
