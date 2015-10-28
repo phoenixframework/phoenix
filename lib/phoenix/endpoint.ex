@@ -173,8 +173,14 @@ defmodule Phoenix.Endpoint do
 
   #### Paths and URLs
 
-    * `url(path)` - returns the URL for this endpoint with the given path
-    * `static_path(path)` - returns the static path for a given asset
+    * `url()` - generates the endpoint base URL without any path information
+    * `static_url()` - generates the static URL without any path information
+
+    * `struct_url()` - generates the endpoint base URL but as a `URI` struct
+
+    * `path(path)` - generates the path information when routing to this
+      endpoint
+    * `static_path(path)` - generates a route to a static file in `priv/static`
 
   #### Channels
 
