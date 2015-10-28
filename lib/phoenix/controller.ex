@@ -664,7 +664,7 @@ defmodule Phoenix.Controller do
       iex> scrub_params(conn, "user")
 
   """
-  @spec scrub_params(Plug.Conn.t, [String.t]) :: Plug.Conn.t
+  @spec scrub_params(Plug.Conn.t, String.t) :: Plug.Conn.t
   def scrub_params(conn, required_key) when is_binary(required_key) do
     param = Map.get(conn.params, required_key) |> scrub_param()
 
