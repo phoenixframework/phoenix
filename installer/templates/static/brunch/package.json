@@ -2,8 +2,7 @@
   "repository": {
   },
   "scripts": {
-    "brunch-build": "brunch build",
-    "brunch-watch": "brunch watch --stdin"
+    "brunch-build": "brunch build"
   },
   "dependencies": {
     "brunch": "^1.8.5",

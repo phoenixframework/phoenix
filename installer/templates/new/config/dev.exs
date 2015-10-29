@@ -12,7 +12,7 @@ config :<%= application_name %>, <%= application_module %>.Endpoint,
   code_reloader: true,
   cache_static_lookup: false,
   check_origin: false,
-  watchers: <%= if brunch do %>[npm: ["run", "brunch-watch"]]<% else %>[]<% end %>
+  watchers: <%= if brunch do %>[node: ["node_modules/brunch/bin/brunch", "watch", "--stdin"]]<% else %>[]<% end %>
 
 <%= if html do %># Watch static and templates for browser reloading.
 config :<%= application_name %>, <%= application_module %>.Endpoint,
