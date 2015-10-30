@@ -338,13 +338,39 @@ defmodule Phoenix.Channel do
     Server.push(transport_pid, topic, event, message, socket.serializer)
   end
 
+  @doc """
+  Replies asynchronously to a socket push.
+
+  Useful when you need to reply to a push that can't otherwise be handled using
+  the `{:reply, {status, payload}, socket}` return from your `handle_in`
+  callbacks. `reply/3` will be used in the rare cases you need to perform work in
+  another process and reply when finished by providing the push's `socket.ref`.
+
+  ## Examples
+
+      def handle_in("work", payload, socket) do
+        Worker.perform(payload, socket.ref)
+        {:noreply, socket}
+      end
+
+      def handle_info({:work_complete, result, ref}, socket) do
+        reply socket, ref, {:ok, result}
+        {:noreply, socket}
+      end
+
+  """
+  def reply(socket, ref, {status, payload}) do
+    %{transport_pid: transport_pid, topic: topic} = assert_joined!(socket)
+    Server.reply(transport_pid, ref, topic, {status, payload}, socket.serializer)
+  end
+
   defp assert_joined!(%Socket{joined: true} = socket) do
     socket
   end
 
   defp assert_joined!(%Socket{joined: false}) do
     raise """
-    `push` and `broadcast` can only be called after the socket has finished joining.
+    `push`, `reply`, and `broadcast` can only be called after the socket has finished joining.
     To push a message on join, send to self and handle in handle_info/2, ie:
 
         def join(topic, auth_msg, socket) do

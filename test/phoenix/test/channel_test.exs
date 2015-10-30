@@ -56,6 +56,12 @@ defmodule Phoenix.Test.ChannelTest do
       {:reply, :ok, socket}
     end
 
+    def handle_in("async_reply", %{"req" => arg}, socket) do
+      ref = socket.ref
+      Task.start(fn -> reply(socket, ref, {:ok, %{"async_resp" => arg}}) end)
+      {:noreply, socket}
+    end
+
     def handle_in("stop", %{"reason" => stop}, socket) do
       {:stop, stop, socket}
     end
@@ -195,6 +201,13 @@ defmodule Phoenix.Test.ChannelTest do
 
     ref = push socket, "reply", %{"req" => "foo"}
     assert_reply ref, :ok, %{"resp" => "foo"}
+  end
+
+  test "receives async replies" do
+    {:ok, _, socket} = join(socket(), Channel, "foo:ok")
+
+    ref = push socket, "async_reply", %{"req" => "foo"}
+    assert_reply ref, :ok, %{"async_resp" => "foo"}
   end
 
   test "pushes on stop" do
