@@ -119,11 +119,11 @@ defmodule Phoenix.Endpoint do
 
     * `:url` - configuration for generating URLs throughout the app.
       Accepts the `:host`, `:scheme`, `:path` and `:port` options. All
-      keys except the `:path` one can be changed at runtime. Defaults to:
+      keys except `:path` can be changed at runtime. Defaults to:
 
           [host: "localhost", path: "/"]
 
-      The `:port` options requires either an integer, string, or
+      The `:port` option requires either an integer, string, or
       `{:system, "ENV_VAR"}`. When given a tuple like `{:system, "PORT"}`,
       the port will be referenced from `System.get_env("PORT")` at runtime
       as a workaround for releases where environment specific information
