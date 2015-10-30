@@ -57,8 +57,8 @@ defmodule Phoenix.Test.ChannelTest do
     end
 
     def handle_in("async_reply", %{"req" => arg}, socket) do
-      ref = socket.ref
-      Task.start(fn -> reply(socket, ref, {:ok, %{"async_resp" => arg}}) end)
+      ref = socket_ref(socket)
+      Task.start(fn -> reply(ref, {:ok, %{"async_resp" => arg}}) end)
       {:noreply, socket}
     end
 

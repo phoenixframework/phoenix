@@ -176,6 +176,9 @@ defmodule Phoenix.Channel do
   alias Phoenix.Channel.Server
 
   @type reply :: status :: atom | {status :: atom, response :: map}
+  @type socket_ref :: {transport_pid :: Pid, serializer :: Module.t,
+                       topic :: binary, ref :: binary}
+
 
   defcallback join(topic :: binary, auth_msg :: map, Socket.t) ::
               {:ok, Socket.t} |
@@ -344,24 +347,40 @@ defmodule Phoenix.Channel do
   Useful when you need to reply to a push that can't otherwise be handled using
   the `{:reply, {status, payload}, socket}` return from your `handle_in`
   callbacks. `reply/3` will be used in the rare cases you need to perform work in
-  another process and reply when finished by providing the push's `socket.ref`.
+  another process and reply when finished by generating a reference to the push
+  with `socket_ref/1`.
 
   ## Examples
 
       def handle_in("work", payload, socket) do
-        Worker.perform(payload, socket.ref)
+        Worker.perform(payload, socket_ref(socket))
         {:noreply, socket}
       end
 
       def handle_info({:work_complete, result, ref}, socket) do
-        reply socket, ref, {:ok, result}
+        reply ref, {:ok, result}
         {:noreply, socket}
       end
 
   """
-  def reply(socket, ref, {status, payload}) do
-    %{transport_pid: transport_pid, topic: topic} = assert_joined!(socket)
-    Server.reply(transport_pid, ref, topic, {status, payload}, socket.serializer)
+  @spec reply(socket_ref, reply) :: :ok
+  def reply({transport_pid, serializer, topic, ref}, {status, payload}) do
+    Server.reply(transport_pid, ref, topic, {status, payload}, serializer)
+  end
+
+  @doc """
+  Generates a `socket_ref` for an async reply.
+
+  See `reply/2` for example usage.
+  """
+  @spec socket_ref(Socket.t) :: socket_ref
+  def socket_ref(%Socket{joined: true, ref: ref} = socket) when not is_nil(ref) do
+    {socket.transport_pid, socket.serializer, socket.topic, ref}
+  end
+  def socket_ref(_socket) do
+    raise ArgumentError, """
+    Socket refs can only be generated for a socket that has joined with a push ref
+    """
   end
 
   defp assert_joined!(%Socket{joined: true} = socket) do
