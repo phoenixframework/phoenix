@@ -247,7 +247,7 @@ defmodule Phoenix.Channel.Server do
 
   defp handle_result({:reply, reply, %Socket{} = socket}, callback) do
     handle_reply(socket, reply, callback)
-    {:noreply, socket}
+    {:noreply, put_in(socket.ref, nil)}
   end
 
   defp handle_result({:stop, reason, reply, socket}, callback) do
@@ -260,7 +260,7 @@ defmodule Phoenix.Channel.Server do
   end
 
   defp handle_result({:noreply, socket}, _callback) do
-    {:noreply, socket}
+    {:noreply, put_in(socket.ref, nil)}
   end
 
   defp handle_result(result, :handle_in) do
