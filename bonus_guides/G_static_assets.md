@@ -150,7 +150,7 @@ Important detail: according to the default configuration there is no ES6 support
 
 #### JavaScript Libraries
 
-If you want to use a JS library like jQuery, underscore or whatever you need, you could copy it to the `web/static/vendor` folder, as mentioned above. It may be a little bit easier to use `npm` to install it. Simply add `"jquery": ">= 2.1"` to the dependencies in the `package.json` file in your projects root and run `npm install --save`. Now you can `import $ from "jquery"` in your `app.js`.
+We may need to use a JavaScript library like jQuery or underscore in our application. As we mentioned above, we could copy the libraries into `web/static/vendor`. It may be a little bit easier to use `npm` to install it: We can simply add `"jquery": ">= 2.1"` to the dependencies in the `package.json` file in our projects root and run `npm install --save`. Now we can `import $ from "jquery"` in our `app.js`.
 
 #### Brunch Plugin Pipeline
 
