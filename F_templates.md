@@ -2,7 +2,7 @@ Templates are what they sound like they should be - files into which we pass dat
 
 EEx is the default template system in Phoenix, and it is quite similar to ERB in Ruby. It is actually part of Elixir itself, and Phoenix uses EEx templates to create files like the router and the main application view while generating a new application.
 
-As we learned in the [View Guide](http://www.phoenixframework.org/docs/views), by default, templates live in the `web/templates` directory, organized into directories named after a view. Each directory has its own view module to render the templates in it. We can change the template root directory by specifying a new one in the `root: "web/templates"` declaration in the main application view.
+As we learned in the [View Guide](http://www.phoenixframework.org/docs/views), by default, templates live in the `web/templates` directory, organized into directories named after a view. Each directory has its own view module to render the templates in it.
 
 ### Examples
 
