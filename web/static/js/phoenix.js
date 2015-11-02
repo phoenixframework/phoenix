@@ -481,9 +481,9 @@ export class Socket {
   }
 
   channel(topic, chanParams = {}){
-    let channelInstance = new Channel(topic, chanParams, this)
-    this.channels.push(channelInstance)
-    return channelInstance
+    let chan = new Channel(topic, chanParams, this)
+    this.channels.push(chan)
+    return chan
   }
 
   push(data){

@@ -736,9 +736,9 @@ var Socket = (function () {
   Socket.prototype.channel = function channel(topic) {
     var chanParams = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-    var channel = new Channel(topic, chanParams, this);
-    this.channels.push(channel);
-    return channel;
+    var chan = new Channel(topic, chanParams, this);
+    this.channels.push(chan);
+    return chan;
   };
 
   Socket.prototype.push = function push(data) {
