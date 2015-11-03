@@ -90,4 +90,22 @@ defmodule Phoenix.Channel.ChannelTest do
       push(socket, "event", %{key: :val})
     end
   end
+
+  test "replying to transport" do
+    socket = %Phoenix.Socket{serializer: Phoenix.ChannelTest.NoopSerializer, ref: "123",
+                             topic: "sometopic", transport_pid: self(), joined: true,}
+    ref = socket_ref(socket)
+    reply(ref, {:ok, %{key: :val}})
+    assert_receive %Phoenix.Socket.Reply{
+      payload: %{key: :val}, ref: "123", status: :ok, topic: "sometopic"}
+  end
+
+  test "socket_ref raises ArgumentError when socket is not joined or has no ref" do
+    assert_raise ArgumentError, ~r"join", fn ->
+      socket_ref(%Phoenix.Socket{joined: false})
+    end
+    assert_raise ArgumentError, ~r"ref", fn ->
+      socket_ref(%Phoenix.Socket{joined: true})
+    end
+  end
 end

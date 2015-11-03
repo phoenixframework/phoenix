@@ -176,6 +176,9 @@ defmodule Phoenix.Channel do
   alias Phoenix.Channel.Server
 
   @type reply :: status :: atom | {status :: atom, response :: map}
+  @type socket_ref :: {transport_pid :: Pid, serializer :: Module.t,
+                       topic :: binary, ref :: binary}
+
 
   defcallback join(topic :: binary, auth_msg :: map, Socket.t) ::
               {:ok, Socket.t} |
@@ -338,13 +341,61 @@ defmodule Phoenix.Channel do
     Server.push(transport_pid, topic, event, message, socket.serializer)
   end
 
+  @doc """
+  Replies asynchronously to a socket push.
+
+  Useful when you need to reply to a push that can't otherwise be handled using
+  the `{:reply, {status, payload}, socket}` return from your `handle_in`
+  callbacks. `reply/3` will be used in the rare cases you need to perform work in
+  another process and reply when finished by generating a reference to the push
+  with `socket_ref/1`.
+
+  *Note*: In such cases, a `socket_ref` should be generated and
+  passed to the external process, so the `socket` itself is not leaked outside
+  the channel. The `socket` holds information such as assigns and transport
+  configuration, so it's important to not copy this information outside of the
+  channel that owns it.
+
+  ## Examples
+
+      def handle_in("work", payload, socket) do
+        Worker.perform(payload, socket_ref(socket))
+        {:noreply, socket}
+      end
+
+      def handle_info({:work_complete, result, ref}, socket) do
+        reply ref, {:ok, result}
+        {:noreply, socket}
+      end
+
+  """
+  @spec reply(socket_ref, reply) :: :ok
+  def reply({transport_pid, serializer, topic, ref}, {status, payload}) do
+    Server.reply(transport_pid, ref, topic, {status, payload}, serializer)
+  end
+
+  @doc """
+  Generates a `socket_ref` for an async reply.
+
+  See `reply/2` for example usage.
+  """
+  @spec socket_ref(Socket.t) :: socket_ref
+  def socket_ref(%Socket{joined: true, ref: ref} = socket) when not is_nil(ref) do
+    {socket.transport_pid, socket.serializer, socket.topic, ref}
+  end
+  def socket_ref(_socket) do
+    raise ArgumentError, """
+    Socket refs can only be generated for a socket that has joined with a push ref
+    """
+  end
+
   defp assert_joined!(%Socket{joined: true} = socket) do
     socket
   end
 
   defp assert_joined!(%Socket{joined: false}) do
     raise """
-    `push` and `broadcast` can only be called after the socket has finished joining.
+    `push`, `reply`, and `broadcast` can only be called after the socket has finished joining.
     To push a message on join, send to self and handle in handle_info/2, ie:
 
         def join(topic, auth_msg, socket) do

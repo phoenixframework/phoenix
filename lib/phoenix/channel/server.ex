@@ -141,6 +141,20 @@ defmodule Phoenix.Channel.Server do
   end
   def push(_, _, _, _), do: raise_invalid_message
 
+  @doc """
+  Replies to a given ref to the transport process.
+  """
+  def reply(pid, ref, topic, {status, payload}, serializer)
+      when is_binary(topic) and is_map(payload) do
+
+    send pid, serializer.encode!(
+      %Reply{topic: topic, ref: ref, status: status, payload: payload}
+    )
+    :ok
+  end
+  def reply(_, _, _, _, _), do: raise_invalid_message
+
+
   defp raise_invalid_message do
     raise ArgumentError, "topic and event must be strings, message must be a map"
   end
@@ -233,7 +247,7 @@ defmodule Phoenix.Channel.Server do
 
   defp handle_result({:reply, reply, %Socket{} = socket}, callback) do
     handle_reply(socket, reply, callback)
-    {:noreply, socket}
+    {:noreply, put_in(socket.ref, nil)}
   end
 
   defp handle_result({:stop, reason, reply, socket}, callback) do
@@ -246,7 +260,7 @@ defmodule Phoenix.Channel.Server do
   end
 
   defp handle_result({:noreply, socket}, _callback) do
-    {:noreply, socket}
+    {:noreply, put_in(socket.ref, nil)}
   end
 
   defp handle_result(result, :handle_in) do
@@ -280,9 +294,8 @@ defmodule Phoenix.Channel.Server do
   defp handle_reply(socket, {status, payload}, :handle_in)
        when is_atom(status) and is_map(payload) do
 
-    send socket.transport_pid, socket.serializer.encode!(
-      %Reply{topic: socket.topic, ref: socket.ref, status: status, payload: payload}
-    )
+    reply(socket.transport_pid, socket.ref, socket.topic, {status, payload},
+          socket.serializer)
   end
 
   defp handle_reply(socket, status, :handle_in) when is_atom(status) do
