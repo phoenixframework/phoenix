@@ -350,6 +350,12 @@ defmodule Phoenix.Channel do
   another process and reply when finished by generating a reference to the push
   with `socket_ref/1`.
 
+  *Note*: In such cases, a `socket_ref` should be generated and
+  passed to the external process, so the `socket` itself is not leaked outside
+  the channel. The `socket` holds information such as assigns and transport
+  configuration, so it's important to not copy this information outside of the
+  channel that owns it.
+
   ## Examples
 
       def handle_in("work", payload, socket) do
