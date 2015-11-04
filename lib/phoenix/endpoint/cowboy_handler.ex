@@ -37,7 +37,7 @@ defmodule Phoenix.Endpoint.CowboyHandler do
 
     * For the endpoint:
 
-          {:_, Plug.Adapters.Cowboy.Handler, {YourApp.Endpoint, []}}
+          {:_, Plug.Adapters.Cowboy.Handler, {MyApp.Endpoint, []}}
 
   For example:
 
