@@ -38,8 +38,29 @@ defmodule Phoenix.PubSub.Local do
   def subscribe(local_server, pid, topic, opts \\ []) when is_atom(local_server) do
     :ok = GenServer.call(local_server, {:subscribe, pid, opts[:link]})
     true = :ets.insert(local_server, {topic, {pid, opts[:fastlane]}})
+    true = local_server |> Module.concat(Pids) |> :ets.insert({pid, topic})
     :ok
   end
+
+  @doc """
+  Unsubscribes the pid from the topic.
+
+    * `local_server` - The registered server name or pid
+    * `pid` - The subscriber pid
+    * `topic` - The string topic, for example "users:123"
+
+  ## Examples
+
+      iex> unsubscribe(:local_server, self, "foo")
+      :ok
+
+  """
+  def unsubscribe(local_server, pid, topic) when is_atom(local_server) do
+    true = :ets.match_delete(local_server, {topic, {pid, :_}})
+    true = local_server |> Module.concat(Pids) |> :ets.delete_object({pid, topic})
+    :ok
+  end
+
 
   @doc """
   Sends a message to all subscribers of a topic.
@@ -136,16 +157,21 @@ defmodule Phoenix.PubSub.Local do
   end
 
   @doc false
-  # This is an expensive and private operation. DO NOT USE IT IN PROD.
   def subscription(local_server, pid) when is_atom(local_server) do
-    local_server
-    |> :ets.select([{{:'$1', {pid, :_}}, [], [:'$1']}])
-    |> Enum.uniq
+    try do
+      Module.concat(local_server, Pids)
+      |> :ets.lookup_element(pid, 2)
+    catch
+      :error, :badarg -> []
+    end
   end
 
   def init({local, gc}) do
+    local_pids = Module.concat(local, Pids)
     ^local = :ets.new(local, [:duplicate_bag, :named_table, :public,
                               read_concurrency: true, write_concurrency: true])
+    ^local_pids = :ets.new(local_pids, [:duplicate_bag, :named_table, :public,
+                                        write_concurrency: true])
     Process.flag(:trap_exit, true)
     {:ok, gc}
   end

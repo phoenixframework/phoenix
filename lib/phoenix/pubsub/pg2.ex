@@ -30,7 +30,7 @@ defmodule Phoenix.PubSub.PG2 do
     :ets.new(server_name, [:set, :named_table, read_concurrency: true])
     true = :ets.insert(server_name, {:broadcast, Phoenix.PubSub.PG2Server, [server_name, local_name]})
     true = :ets.insert(server_name, {:subscribe, Phoenix.PubSub.Local, [local_name]})
-    true = :ets.insert(server_name, {:unsubscribe, Phoenix.PubSub.GC, [gc_name]})
+    true = :ets.insert(server_name, {:unsubscribe, Phoenix.PubSub.Local, [local_name]})
 
     children = [
       worker(Phoenix.PubSub.Local, [local_name, gc_name]),

@@ -39,7 +39,7 @@ defmodule Phoenix.LocalTest do
     assert :ok = Local.subscribe(config.local, pid, "topic1")
 
     assert Local.subscribers(config.local, "topic1") == [self, pid]
-    assert :ok = GC.unsubscribe(config.gc, self, "topic1")
+    assert :ok = Local.unsubscribe(config.local, self, "topic1")
     assert Local.subscribers(config.local, "topic1") == [pid]
   end
 
@@ -47,14 +47,14 @@ defmodule Phoenix.LocalTest do
     assert :ok = Local.subscribe(config.local, self, "topic1")
 
     assert Local.list(config.local) == ["topic1"]
-    assert GC.unsubscribe(config.gc, self, "topic1")
+    assert Local.unsubscribe(config.local, self, "topic1")
 
     assert Enum.count(Local.list(config.local)) == 0
     assert Enum.count(Local.subscribers(config.local, "topic1")) == 0
   end
 
   test "unsubscribe/2 when topic does not exists", config do
-    assert :ok = GC.unsubscribe(config.gc, self, "notexists")
+    assert :ok = Local.unsubscribe(config.local, self, "notexists")
     assert Enum.count(Local.subscribers(config.local, "notexists")) == 0
   end
 
@@ -68,8 +68,9 @@ defmodule Phoenix.LocalTest do
     assert_receive {:DOWN, ^ref, _, _, _}
 
     # Ensure DOWN is processed to avoid races
-    GC.unsubscribe(config.gc, pid, "unknown")
-
+    GenServer.call(config.gc, {})
+    GenServer.call(config.gc, {})
+ 
     assert Local.subscription(config.local, pid) == []
     assert Local.subscribers(config.local, "topic5") == [self]
     assert Local.subscribers(config.local, "topic6") == []
@@ -85,11 +86,11 @@ defmodule Phoenix.LocalTest do
     topics = Local.subscription(config.local, self)
     assert Enum.sort(topics) == ["topic7", "topic8"]
 
-    assert :ok = GC.unsubscribe(config.gc, self, "topic7")
+    assert :ok = Local.unsubscribe(config.local, self, "topic7")
     topics = Local.subscription(config.local, self)
     assert Enum.sort(topics) == ["topic8"]
 
-    :ok = GC.unsubscribe(config.gc, self, "topic8")
+    :ok = Local.unsubscribe(config.local, self, "topic8")
     assert Local.subscription(config.local, self) == []
   end
 end

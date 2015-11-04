@@ -18,7 +18,6 @@ defmodule Phoenix.PubSubTest do
 
   alias Phoenix.PubSub
   alias Phoenix.PubSub.Local
-  alias Phoenix.PubSub.GC
 
   def spawn_pid do
     {:ok, pid} = Task.start(fn -> :timer.sleep(:infinity) end)
@@ -55,7 +54,8 @@ defmodule Phoenix.PubSubTest do
     kill_and_wait(pid)
     assert Process.alive?(local)
     # Ensure DOWN is processed to avoid races
-    GC.unsubscribe(config.gc, pid, "unknown")
+    GenServer.call(config.gc, {})
+    GenServer.call(config.gc, {})
 
     assert Local.subscription(config.local, pid) == []
     assert Local.subscribers(config.local, "topic4") |> length == 0
