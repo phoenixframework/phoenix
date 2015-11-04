@@ -26,12 +26,14 @@ defmodule Phoenix.Endpoint.CowboyHandler do
     * Per websocket transport:
 
           {"/socket/websocket", Phoenix.Endpoint.CowboyWebSocket,
-            {MyApp.Endpoint, MyApp.UserSocket, :websocket}}
+            {Phoenix.Transports.WebSocket,
+              {MyApp.Endpoint, MyApp.UserSocket, :websocket}}}
 
     * Per longpoll transport:
 
           {"/socket/long_poll", Plug.Adapters.Cowboy.Handler,
-            {MyApp.Endpoint, MyApp.UserSocket, :long_poll}}
+            {Phoenix.Transports.LongPoll,
+              {MyApp.Endpoint, MyApp.UserSocket, :longpoll}}}
 
     * For the endpoint:
 
