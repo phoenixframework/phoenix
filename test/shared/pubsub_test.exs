@@ -19,15 +19,19 @@ defmodule Phoenix.PubSubTest do
   alias Phoenix.PubSub
   alias Phoenix.PubSub.Local
 
-  @pool_size 1
+  defp subscribers(config, topic) do
+    Enum.reduce(0..(config.pool_size - 1), [], fn shard, acc ->
+      acc ++ Local.subscribers(config.pubsub, topic, shard)
+    end)
+  end
 
   defp spawn_pid do
     {:ok, pid} = Task.start(fn -> :timer.sleep(:infinity) end)
     pid
   end
 
-  defp each_shard(func) do
-    for shard <- 0..(@pool_size - 1), do: func.(shard)
+  defp each_shard(config, func) do
+    for shard <- 0..(config.pool_size - 1), do: func.(shard)
   end
 
   defp kill_and_wait(pid) do
@@ -37,84 +41,93 @@ defmodule Phoenix.PubSubTest do
   end
 
   setup config do
+    size = config[:pool_size] || 1
     adapter = Application.get_env(:phoenix, :pubsub_test_adapter)
-    {:ok, _} = adapter.start_link(config.test, pool_size: @pool_size)
-    {:ok, %{pubsub: config.test, gc: Local.gc_name(config.test, 0)}}
+    {:ok, _} = adapter.start_link(config.test, pool_size: size)
+    {:ok, %{pubsub: config.test,
+            gc: Local.gc_name(config.test, 0),
+            pool_size: size}}
   end
 
-  test "subscribe and unsubscribe", config do
-    pid = spawn_pid()
-    assert Local.subscribers(config.pubsub, "topic4", 0) |> length == 0
-    assert PubSub.subscribe(config.test, pid, "topic4")
-    assert Local.subscribers(config.pubsub, "topic4", 0) == [pid]
-    assert PubSub.unsubscribe(config.test, pid, "topic4")
-    assert Local.subscribers(config.pubsub, "topic4", 0) |> length == 0
-  end
-
-  test "subscribe/3 with link does not down adapter", config do
-    pid = spawn_pid()
-    assert PubSub.subscribe(config.test, pid, "topic4", link: true)
-
-    kill_and_wait(pid)
-    each_shard(fn shard ->
-      local = Process.whereis(Local.local_name(config.pubsub, shard))
-      assert Process.alive?(local)
-    end)
-    # Ensure DOWN is processed to avoid races
-    Local.subscribe(config.pubsub, @pool_size, pid, "unknown")
-    Local.unsubscribe(config.pubsub, @pool_size, pid, "unknown")
-    GenServer.call(config.gc, :noop)
-
-    assert Local.subscription(config.pubsub, @pool_size, pid) == []
-    each_shard(fn shard ->
-      assert Local.subscribers(config.pubsub, "topic4", shard) |> length == 0
-    end)
-  end
-
-  test "subscribe/3 with link downs subscriber", config do
-    pid = spawn_pid()
-    non_linked_pid1 = spawn_pid()
-    non_linked_pid2 = spawn_pid()
-
-    assert PubSub.subscribe(config.test, pid, "topic4", link: true)
-    assert PubSub.subscribe(config.test, non_linked_pid1, "topic4")
-    assert PubSub.subscribe(config.test, non_linked_pid2, "topic4", link: false)
-
-    each_shard(fn shard ->
-      kill_and_wait(Process.whereis(Local.local_name(config.pubsub, shard)))
-    end)
-
-    refute Process.alive?(pid)
-    assert Process.alive?(non_linked_pid1)
-    assert Process.alive?(non_linked_pid2)
-  end
-
-  test "broadcast/3 and broadcast!/3 publishes message to each subscriber", config do
-    PubSub.subscribe(config.test, self, "topic9")
-    :ok = PubSub.broadcast(config.test, "topic9", :ping)
-    assert_receive :ping
-    :ok = PubSub.broadcast!(config.test, "topic9", :ping)
-    assert_receive :ping
-  end
-
-  test "broadcast/3 does not publish message to other topic subscribers", config do
-    PubSub.subscribe(config.test, self, "topic9")
-
-    Enum.each 0..10, fn _ ->
-      PubSub.subscribe(config.test, spawn_pid(), "topic10")
+  for size <- [1, 8] do
+    @tag pool_size: size
+    test "pool #{size}: subscribe and unsubscribe", config do
+      pid = spawn_pid()
+      assert subscribers(config, "topic4") |> length == 0
+      assert PubSub.subscribe(config.test, pid, "topic4")
+      assert subscribers(config, "topic4") == [pid]
+      assert PubSub.unsubscribe(config.test, pid, "topic4")
+      assert subscribers(config, "topic4") |> length == 0
     end
 
-    :ok = PubSub.broadcast(config.test, "topic10", :ping)
-    refute_received :ping
-  end
+    @tag pool_size: size
+    test "pool #{size}: subscribe/3 with link does not down adapter", config do
+      pid = spawn_pid()
+      assert PubSub.subscribe(config.test, pid, "topic4", link: true)
 
-  test "broadcast_from/4 and broadcast_from!/4 skips sender", config do
-    PubSub.subscribe(config.test, self, "topic11")
+      kill_and_wait(pid)
+      each_shard(config, fn shard ->
+        local = Process.whereis(Local.local_name(config.pubsub, shard))
+        assert Process.alive?(local)
+      end)
+      # Ensure DOWN is processed to avoid races
+      Local.subscribe(config.pubsub, config.pool_size, pid, "unknown")
+      Local.unsubscribe(config.pubsub, config.pool_size, pid, "unknown")
+      GenServer.call(config.gc, :noop)
 
-    PubSub.broadcast_from(config.test, self, "topic11", :ping)
-    refute_received :ping
+      assert Local.subscription(config.pubsub, config.pool_size, pid) == []
+      assert subscribers(config, "topic4") |> length == 0
+    end
 
-    PubSub.broadcast_from!(config.test, self, "topic11", :ping)
-    refute_received :ping
+    @tag pool_size: size
+    test "pool #{size}: subscribe/3 with link downs subscriber", config do
+      pid = spawn_pid()
+      non_linked_pid1 = spawn_pid()
+      non_linked_pid2 = spawn_pid()
+
+      assert PubSub.subscribe(config.test, pid, "topic4", link: true)
+      assert PubSub.subscribe(config.test, non_linked_pid1, "topic4")
+      assert PubSub.subscribe(config.test, non_linked_pid2, "topic4", link: false)
+
+      each_shard(config, fn shard ->
+        kill_and_wait(Process.whereis(Local.local_name(config.pubsub, shard)))
+      end)
+
+      refute Process.alive?(pid)
+      assert Process.alive?(non_linked_pid1)
+      assert Process.alive?(non_linked_pid2)
+    end
+
+    @tag pool_size: size
+    test "pool #{size}: broadcast/3 and broadcast!/3 publishes message to each subscriber", config do
+      PubSub.subscribe(config.test, self, "topic9")
+      :ok = PubSub.broadcast(config.test, "topic9", :ping)
+      assert_receive :ping
+      :ok = PubSub.broadcast!(config.test, "topic9", :ping)
+      assert_receive :ping
+    end
+
+    @tag pool_size: size
+    test "pool #{size}: broadcast/3 does not publish message to other topic subscribers", config do
+      PubSub.subscribe(config.test, self, "topic9")
+
+      Enum.each 0..10, fn _ ->
+        PubSub.subscribe(config.test, spawn_pid(), "topic10")
+      end
+
+      :ok = PubSub.broadcast(config.test, "topic10", :ping)
+      refute_received :ping
+    end
+
+    @tag pool_size: size
+    test "pool #{size}: broadcast_from/4 and broadcast_from!/4 skips sender", config do
+      PubSub.subscribe(config.test, self, "topic11")
+
+      PubSub.broadcast_from(config.test, self, "topic11", :ping)
+      refute_received :ping
+
+      PubSub.broadcast_from!(config.test, self, "topic11", :ping)
+      refute_received :ping
+    end
   end
 end

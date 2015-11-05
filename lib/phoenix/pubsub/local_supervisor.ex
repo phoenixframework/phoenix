@@ -34,8 +34,8 @@ defmodule Phoenix.PubSub.LocalSupervisor do
       true = :ets.insert(server, {shard, {local_shard_name, gc_shard_name}})
 
       shard_children = [
+        worker(Phoenix.PubSub.GC, [gc_shard_name, local_shard_name]),
         worker(Phoenix.PubSub.Local, [local_shard_name, gc_shard_name]),
-        worker(Phoenix.PubSub.GC, [gc_shard_name, local_shard_name])
       ]
 
       supervisor(Supervisor, [shard_children, [strategy: :one_for_all]], id: shard)

@@ -83,59 +83,60 @@ defmodule Phoenix.PubSub.Local do
       :ok
 
   """
-  def broadcast(pubsub_server, from, pool_size, topic, %Broadcast{event: event} = msg)
+  def broadcast(pubsub_server, from, 1 = _pool_size, topic, msg)
     when is_atom(pubsub_server) do
+
+    do_broadcast(pubsub_server, _shard = 0, from, topic, msg)
+    :ok
+  end
+  def broadcast(pubsub_server, from, pool_size, topic, msg)
+    when is_atom(pubsub_server) do
+
     parent = self
     for shard <- 0..(pool_size - 1) do
       Task.async(fn ->
-        pubsub_server
-        |> subscribers_with_fastlanes(topic, shard)
-        |> Enum.reduce(%{}, fn
-          {pid, _fastlanes}, cache when pid == from ->
-            cache
-
-          {pid, nil}, cache ->
-            send(pid, msg)
-            cache
-
-          {pid, {fastlane_pid, serializer, event_intercepts}}, cache ->
-            if event in event_intercepts do
-              send(pid, msg)
-              cache
-            else
-              case Map.fetch(cache, serializer) do
-                {:ok, encoded_msg} ->
-                  send(fastlane_pid, encoded_msg)
-                  cache
-                :error ->
-                  encoded_msg = serializer.fastlane!(msg)
-                  send(fastlane_pid, encoded_msg)
-                  Map.put(cache, serializer, encoded_msg)
-              end
-            end
-        end)
-
+        do_broadcast(pubsub_server, shard, from, topic, msg)
         Process.unlink(parent)
       end)
     end |> Enum.map(&Task.await(&1, :infinity))
     :ok
   end
 
-  def broadcast(pubsub_server, from, pool_size, topic, msg) when is_atom(pubsub_server) do
-    parent = self
-    for shard <- 0..(pool_size - 1) do
-      Task.async(fn ->
-        pubsub_server
-        |> subscribers(topic, shard)
-        |> Enum.each(fn
-          pid when pid == from -> :noop
-          pid -> send(pid, msg)
-        end)
+  defp do_broadcast(pubsub_server, shard, from, topic, %Broadcast{event: event} = msg) do
+    pubsub_server
+    |> subscribers_with_fastlanes(topic, shard)
+    |> Enum.reduce(%{}, fn
+      {pid, _fastlanes}, cache when pid == from ->
+        cache
 
-        Process.unlink(parent)
-      end)
-    end |> Enum.map(&Task.await(&1, :infinity))
-    :ok
+      {pid, nil}, cache ->
+        send(pid, msg)
+      cache
+
+      {pid, {fastlane_pid, serializer, event_intercepts}}, cache ->
+      if event in event_intercepts do
+        send(pid, msg)
+        cache
+      else
+        case Map.fetch(cache, serializer) do
+          {:ok, encoded_msg} ->
+            send(fastlane_pid, encoded_msg)
+            cache
+          :error ->
+            encoded_msg = serializer.fastlane!(msg)
+            send(fastlane_pid, encoded_msg)
+            Map.put(cache, serializer, encoded_msg)
+        end
+      end
+    end)
+  end
+  defp do_broadcast(pubsub_server, shard, from, topic, msg) do
+    pubsub_server
+    |> subscribers(topic, shard)
+    |> Enum.each(fn
+      pid when pid == from -> :noop
+      pid -> send(pid, msg)
+    end)
   end
 
   @doc """
