@@ -8,17 +8,19 @@ defmodule Phoenix.Integration.LongPollTest do
   alias Phoenix.Integration.HTTPClient
   alias Phoenix.Transports.LongPoll
   alias Phoenix.Socket.Broadcast
+  alias Phoenix.PubSub.Local
   alias __MODULE__.Endpoint
 
   @port 5808
   @ensure_window_timeout_ms 500
+  @pool_size 1
 
   Application.put_env(:phoenix, Endpoint, [
     https: false,
     http: [port: @port],
     secret_key_base: String.duplicate("abcdefgh", 8),
     server: true,
-    pubsub: [adapter: Phoenix.PubSub.PG2, name: __MODULE__]
+    pubsub: [adapter: Phoenix.PubSub.PG2, name: __MODULE__, pool_size: @pool_size]
   ])
 
   defmodule RoomChannel do
@@ -262,10 +264,12 @@ defmodule Phoenix.Integration.LongPollTest do
     assert channel
     Process.monitor(channel)
 
-    pubsub = Process.whereis(__MODULE__.Local)
-    Process.monitor(pubsub)
-    Process.exit(pubsub, :kill)
-    assert_receive {:DOWN, _, :process, ^pubsub, :killed}
+    for shard <- 0..(@pool_size - 1) do
+      local_pubsub_server = Process.whereis(Local.local_name(__MODULE__, shard))
+      Process.monitor(local_pubsub_server)
+      Process.exit(local_pubsub_server, :kill)
+      assert_receive {:DOWN, _, :process, ^local_pubsub_server, :killed}
+    end
 
     resp = poll :post, "/ws", session, %{
       "topic" => "rooms:lobby",
@@ -274,7 +278,7 @@ defmodule Phoenix.Integration.LongPollTest do
       "payload" => %{"body" => "hi!"}
     }
     assert resp.body["status"] == 410
-    assert_receive {:DOWN, _, :process, ^channel, :killed}
+    assert_receive {:DOWN, _, :process, ^channel, _}
   end
 
   test "sends phx_error if a channel server abnormally exits" do

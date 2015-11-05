@@ -14,30 +14,13 @@ defmodule Phoenix.PubSub.GC do
 
   """
   def start_link(server_name, local_name) do
-    GenServer.start_link(__MODULE__, local_name, name: server_name)
-  end
-
-  @doc """
-  Unsubscribes the pid from the topic synchronously.
-
-    * `gc_server` - The registered server name or pid
-    * `pid` - The subscriber pid
-    * `topic` - The string topic, for example "users:123"
-
-  ## Examples
-
-      iex> unsubscribe(:gc_server, self, "foo")
-      :ok
-
-  """
-  def unsubscribe(gc_server, pid, topic) when is_atom(gc_server) do
-    GenServer.call(gc_server, {:unsubscribe, pid, topic})
+    GenServer.start_link(__MODULE__, {server_name, local_name}, name: server_name)
   end
 
   @doc """
   Force table clean up because the given pid is down asynchronously.
 
-    * `local_server` - The registered server name or pid
+    * `gc_server` - The registered server name or pid
     * `pid` - The subscriber pid
 
   ## Examples
@@ -50,13 +33,38 @@ defmodule Phoenix.PubSub.GC do
     GenServer.cast(gc_server, {:down, pid})
   end
 
-  def handle_call({:unsubscribe, pid, topic}, _from, state) do
-    true = :ets.match_delete(state, {topic, {pid, :_}})
-    {:reply, :ok, state}
+  @doc """
+  Removes subscriber's subscription for topic
+  """
+  def unsubscribe(pid, topic, topics_table, pids_table) do
+    true = :ets.match_delete(topics_table, {topic, {pid, :_}})
+    true = :ets.delete_object(pids_table, {pid, topic})
+    :ok
+  end
+
+  def init({server_name, local_name}) do
+    {:ok, %{topics: local_name, pids: server_name}}
+  end
+
+  def handle_call({:subscription, pid}, _from, state) do
+    try do
+      {:reply, :ets.lookup_element(state.pids, pid, 2), state}
+    catch
+      :error, :badarg -> {:reply, [], state}
+    end
   end
 
   def handle_cast({:down, pid}, state) do
-    true = :ets.match_delete(state, {:_, {pid, :_}})
+    try do
+      topics = :ets.lookup_element(state.pids, pid, 2)
+      for topic <- topics do
+        true = :ets.match_delete(state.topics, {topic, {pid, :_}})
+      end
+      true = :ets.match_delete(state.pids, {pid, :_})
+    catch
+      :error, :badarg -> :badarg
+    end
+
     {:noreply, state}
   end
 end

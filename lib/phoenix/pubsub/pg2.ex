@@ -12,30 +12,27 @@ defmodule Phoenix.PubSub.PG2 do
   ## Options
 
     * `:name` - The name to register the PubSub processes, ie: `MyApp.PubSub`
+    * `:pool_size` - Both the size of the local pubsub server pool and subscriber
+      shard size. Defaults `1`. A single pool is often enough for most use-cases,
+      but for high subscriber counts on a single topic or greater than 1M
+      clients, a pool size equal to the number of schedulers (cores) is a well
+      rounded size.
 
   """
 
-  def start_link(name, _opts) do
+  def start_link(name, opts) do
     supervisor_name = Module.concat(name, Supervisor)
-    Supervisor.start_link(__MODULE__, name, name: supervisor_name)
+    Supervisor.start_link(__MODULE__, [name, opts], name: supervisor_name)
   end
 
   @doc false
-  def init(server_name) do
-    local_name = Module.concat(server_name, Local)
-    gc_name = Module.concat(server_name, GC)
-
-    # Define a dispatch table so we don't have to go through
-    # a bottleneck to get the instruction to perform.
-    :ets.new(server_name, [:set, :named_table, read_concurrency: true])
-    true = :ets.insert(server_name, {:broadcast, Phoenix.PubSub.PG2Server, [server_name, local_name]})
-    true = :ets.insert(server_name, {:subscribe, Phoenix.PubSub.Local, [local_name]})
-    true = :ets.insert(server_name, {:unsubscribe, Phoenix.PubSub.GC, [gc_name]})
+  def init([server, opts]) do
+    pool_size = Keyword.fetch!(opts, :pool_size)
+    dispatch_rules = [{:broadcast, Phoenix.PubSub.PG2Server, [server, pool_size]}]
 
     children = [
-      worker(Phoenix.PubSub.Local, [local_name, gc_name]),
-      worker(Phoenix.PubSub.GC, [gc_name, local_name]),
-      worker(Phoenix.PubSub.PG2Server, [server_name, local_name]),
+      supervisor(Phoenix.PubSub.LocalSupervisor, [server, pool_size, dispatch_rules]),
+      worker(Phoenix.PubSub.PG2Server, [server]),
     ]
 
     supervise children, strategy: :rest_for_one

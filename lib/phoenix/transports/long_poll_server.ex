@@ -59,9 +59,10 @@ defmodule Phoenix.Transports.LongPoll.Server do
                   last_client_poll: now_ms(),
                   client_ref: nil}
 
-        if socket.id, do: socket.endpoint.subscribe(self, socket.id, link: true)
+        if socket.id, do: PubSub.subscribe(state.pubsub_server, self, socket.id, link: true)
         :ok = PubSub.subscribe(state.pubsub_server, self, priv_topic, link: true)
-        :timer.send_interval(state.window_ms, :shutdown_if_inactive)
+
+        schedule_inactive_shutdown(state.window_ms)
 
         {:ok, state}
       :error ->
@@ -131,6 +132,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
     if now_ms() - state.last_client_poll > state.window_ms do
       {:stop, {:shutdown, :inactive}, state}
     else
+      schedule_inactive_shutdown(state.window_ms)
       {:noreply, state}
     end
   end
@@ -164,4 +166,8 @@ defmodule Phoenix.Transports.LongPoll.Server do
   defp time_to_ms({mega, sec, micro}),
     do: div(((((mega * 1000000) + sec) * 1000000) + micro), 1000)
   defp now_ms, do: :os.timestamp() |> time_to_ms()
+
+  defp schedule_inactive_shutdown(window_ms) do
+    Process.send_after(self, :shutdown_if_inactive, window_ms)
+  end
 end

@@ -63,7 +63,7 @@ defmodule Phoenix.Integration.WebSocketTest do
     channel "rooms:*", RoomChannel
 
     transport :websocket, Phoenix.Transports.WebSocket,
-      check_origin: ["//example.com"], timeout: 100
+      check_origin: ["//example.com"], timeout: 200
 
     def connect(%{"reject" => "true"}, _socket) do
       :error
