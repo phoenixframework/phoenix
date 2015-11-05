@@ -14,7 +14,7 @@ defmodule Phoenix.PubSub.GC do
 
   """
   def start_link(server_name, local_name) do
-    GenServer.start_link(__MODULE__, local_name, name: server_name)
+    GenServer.start_link(__MODULE__, {server_name, local_name}, name: server_name)
   end
 
   @doc """
@@ -33,14 +33,26 @@ defmodule Phoenix.PubSub.GC do
     GenServer.cast(gc_server, {:down, pid})
   end
 
+  @doc """
+  Removes subscriber's subscription for topic
+  """
+  def unsubscribe(pid, topic, topics_table, pids_table) do
+    true = :ets.match_delete(topics_table, {topic, {pid, :_}})
+    true = :ets.delete_object(pids_table, {pid, topic})
+    :ok
+  end
+
+  def init({server_name, local_name}) do
+    {:ok, %{topics: local_name, pids: server_name}}
+  end
+
   def handle_cast({:down, pid}, state) do
     try do
-      local_pids = Module.concat(state, Pids)
-      topics = :ets.lookup_element(local_pids, pid, 2)
+      topics = :ets.lookup_element(state.pids, pid, 2)
       for topic <- topics do
-        true = :ets.match_delete(state, {topic, {pid, :_}})
+        true = :ets.match_delete(state.topics, {topic, {pid, :_}})
       end
-      true = :ets.match_delete(local_pids, {pid, :_})
+      true = :ets.match_delete(state.pids, {pid, :_})
     catch
       :error, :badarg -> :badarg
     end

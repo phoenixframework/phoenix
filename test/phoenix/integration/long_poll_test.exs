@@ -8,6 +8,7 @@ defmodule Phoenix.Integration.LongPollTest do
   alias Phoenix.Integration.HTTPClient
   alias Phoenix.Transports.LongPoll
   alias Phoenix.Socket.Broadcast
+  alias Phoenix.PubSub.Local
   alias __MODULE__.Endpoint
 
   @port 5808
@@ -262,10 +263,10 @@ defmodule Phoenix.Integration.LongPollTest do
     assert channel
     Process.monitor(channel)
 
-    pubsub = Process.whereis(__MODULE__.Local0)
-    Process.monitor(pubsub)
-    Process.exit(pubsub, :kill)
-    assert_receive {:DOWN, _, :process, ^pubsub, :killed}
+    local_pubsub_server = Process.whereis(Local.local_name(__MODULE__, 0))
+    Process.monitor(local_pubsub_server)
+    Process.exit(local_pubsub_server, :kill)
+    assert_receive {:DOWN, _, :process, ^local_pubsub_server, :killed}
 
     resp = poll :post, "/ws", session, %{
       "topic" => "rooms:lobby",

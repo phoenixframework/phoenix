@@ -153,6 +153,7 @@ defmodule Phoenix.Transports.LongPoll do
 
   defp listen(conn, server_ref, endpoint, opts) do
     ref = :erlang.make_ref()
+
     broadcast_from!(endpoint, server_ref, {:flush, client_ref(server_ref), ref})
 
     {status, messages} =

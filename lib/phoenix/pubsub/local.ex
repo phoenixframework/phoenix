@@ -23,7 +23,7 @@ defmodule Phoenix.PubSub.Local do
   @doc """
   Subscribes the pid to the topic.
 
-    * `local_server` - The registered server name or pid
+    * `pubsub_server` - The registered server name or pid
     * `pid` - The subscriber pid
     * `topic` - The string topic, for example "users:123"
     * `opts` - The optional list of options. Supported options
@@ -31,14 +31,14 @@ defmodule Phoenix.PubSub.Local do
 
   ## Examples
 
-      iex> subscribe(:local_server, self, "foo")
+      iex> subscribe(:pubsub_server, self, "foo")
       :ok
 
   """
-  def subscribe(local_server, pool_size, pid, topic, opts \\ []) when is_atom(local_server) do
+  def subscribe(pubsub_server, pool_size, pid, topic, opts \\ []) when is_atom(pubsub_server) do
     {:ok, {topics, pids}} =
-      local_server
-      |> pool_for_pid(pid, pool_size)
+      pubsub_server
+      |> local_for_pid(pid, pool_size)
       |> GenServer.call({:subscribe, pid, topic, opts})
 
     true = :ets.insert(topics, {topic, {pid, opts[:fastlane]}})
@@ -50,42 +50,45 @@ defmodule Phoenix.PubSub.Local do
   @doc """
   Unsubscribes the pid from the topic.
 
-    * `local_server` - The registered server name or pid
+    * `pubsub_server` - The registered server name or pid
     * `pid` - The subscriber pid
     * `topic` - The string topic, for example "users:123"
 
   ## Examples
 
-      iex> unsubscribe(:local_server, self, "foo")
+      iex> unsubscribe(:pubsub_server, self, "foo")
       :ok
 
   """
-  def unsubscribe(local_server, pool_size, pid, topic) when is_atom(local_server) do
-    local_server
-    |> pool_for_pid(pid, pool_size)
-    |> GenServer.call({:unsubscribe, pid, topic})
+  def unsubscribe(pubsub_server, pool_size, pid, topic) when is_atom(pubsub_server) do
+    {local_server, gc_server} =
+      pid
+      |> pid_to_shard(pool_size)
+      |> pools_for_shard(pubsub_server)
+
+    :ok = Phoenix.PubSub.GC.unsubscribe(pid, topic, local_server, gc_server)
   end
 
   @doc """
   Sends a message to all subscribers of a topic.
 
-    * `local_server` - The registered server name or pid
+    * `pubsub_server` - The registered server name or pid
     * `topic` - The string topic, for example "users:123"
 
   ## Examples
 
-      iex> broadcast(:local_server, self, "foo")
+      iex> broadcast(:pubsub_server, self, "foo")
       :ok
-      iex> broadcast(:local_server, :none, "bar")
+      iex> broadcast(:pubsub_server, :none, "bar")
       :ok
 
   """
-  def broadcast(local_server, from, pool_size, topic, %Broadcast{event: event} = msg)
-    when is_atom(local_server) do
-
+  def broadcast(pubsub_server, from, pool_size, topic, %Broadcast{event: event} = msg)
+    when is_atom(pubsub_server) do
+    parent = self
     for shard <- 0..(pool_size - 1) do
       Task.async(fn ->
-        local_server
+        pubsub_server
         |> subscribers_with_fastlanes(topic, shard)
         |> Enum.reduce(%{}, fn
           {pid, _fastlanes}, cache when pid == from ->
@@ -111,39 +114,44 @@ defmodule Phoenix.PubSub.Local do
               end
             end
         end)
+
+        Process.unlink(parent)
       end)
     end |> Enum.map(&Task.await(&1, :infinity))
     :ok
   end
 
-  def broadcast(local_server, from, pool_size, topic, msg) when is_atom(local_server) do
+  def broadcast(pubsub_server, from, pool_size, topic, msg) when is_atom(pubsub_server) do
+    parent = self
     for shard <- 0..(pool_size - 1) do
       Task.async(fn ->
-        local_server
+        pubsub_server
         |> subscribers(topic, shard)
         |> Enum.each(fn
           pid when pid == from -> :noop
           pid -> send(pid, msg)
         end)
+
+        Process.unlink(parent)
       end)
-    end |> Enum.map(&Task.await(&1))
+    end |> Enum.map(&Task.await(&1, :infinity))
     :ok
   end
 
   @doc """
   Returns a set of subscribers pids for the given topic.
 
-    * `local_server` - The registered server name or pid
+    * `pubsub_server` - The registered server name or pid
     * `topic` - The string topic, for example "users:123"
 
   ## Examples
 
-      iex> subscribers(:local_server, "foo")
+      iex> subscribers(:pubsub_server, "foo")
       [#PID<0.48.0>, #PID<0.49.0>]
 
   """
-  def subscribers(local_server, topic, shard) when is_atom(local_server) do
-    local_server
+  def subscribers(pubsub_server, topic, shard) when is_atom(pubsub_server) do
+    pubsub_server
     |> subscribers_with_fastlanes(topic, shard)
     |> Enum.map(fn {pid, _fastlanes} -> pid end)
   end
@@ -152,10 +160,10 @@ defmodule Phoenix.PubSub.Local do
   Returns a set of subscribers pids for the given topic with fastlane tuples.
   See `subscribers/1` for more information.
   """
-  def subscribers_with_fastlanes(local_server, topic, shard) when is_atom(local_server) do
+  def subscribers_with_fastlanes(pubsub_server, topic, shard) when is_atom(pubsub_server) do
     try do
       shard
-      |> pool_for_shard(local_server)
+      |> local_for_shard(pubsub_server)
       |> :ets.lookup_element(topic, 2)
     catch
       :error, :badarg -> []
@@ -164,35 +172,39 @@ defmodule Phoenix.PubSub.Local do
 
   @doc false
   # This is an expensive and private operation. DO NOT USE IT IN PROD.
-  def list(local_server, shard) when is_atom(local_server) do
+  def list(pubsub_server, shard) when is_atom(pubsub_server) do
     shard
-    |> pool_for_shard(local_server)
+    |> local_for_shard(pubsub_server)
     |> :ets.select([{{:'$1', :_}, [], [:'$1']}])
     |> Enum.uniq
   end
 
   @doc false
-  def subscription(local_server, pool_size, pid) when is_atom(local_server) do
-    try do
-      pid
-      |> pid_to_shard(pool_size)
-      |> pool_for_shard(local_server)
-      |> Module.concat(Pids)
-      |> :ets.lookup_element(pid, 2)
-    catch
-      :error, :badarg -> []
-    end
+  def subscription(pubsub_server, pool_size, pid) when is_atom(pubsub_server) do
+    pid
+    |> pid_to_shard(pool_size)
+    |> local_for_shard(pubsub_server)
+    |> GenServer.call({:subscription, pid})
+  end
+
+  @doc false
+  def local_name(pubsub_server, shard) do
+    Module.concat(["#{pubsub_server}.Local#{shard}"])
+  end
+
+  @doc false
+  def gc_name(pubsub_server, shard) do
+    Module.concat(["#{pubsub_server}.GC#{shard}"])
   end
 
   def init({local, gc}) do
-    local_pids = Module.concat(local, Pids)
     ^local = :ets.new(local, [:duplicate_bag, :named_table, :public,
                               read_concurrency: true, write_concurrency: true])
-    ^local_pids = :ets.new(local_pids, [:duplicate_bag, :named_table, :public,
-                                        read_concurrency: true, write_concurrency: true])
+    ^gc = :ets.new(gc, [:duplicate_bag, :named_table, :public,
+                        read_concurrency: true, write_concurrency: true])
 
     Process.flag(:trap_exit, true)
-    {:ok, %{topics: local, pids: local_pids, gc: gc}}
+    {:ok, %{topics: local, pids: gc, gc_server: gc}}
   end
 
   def handle_call({:subscribe, pid, _topic, opts}, _from, state) do
@@ -201,14 +213,16 @@ defmodule Phoenix.PubSub.Local do
     {:reply, {:ok, {state.topics, state.pids}}, state}
   end
 
-  def handle_call({:unsubscribe, pid, topic}, _from, state) do
-    true = :ets.match_delete(state.topics, {topic, {pid, :_}})
-    true = :ets.delete_object(state.pids, {pid, topic})
-    {:reply, :ok, state}
+  def handle_call({:subscription, pid}, _from, state) do
+    try do
+      {:reply, :ets.lookup_element(state.pids, pid, 2), state}
+    catch
+      :error, :badarg -> {:reply, [], state}
+    end
   end
 
   def handle_info({:DOWN, _ref, _type, pid, _info}, state) do
-    Phoenix.PubSub.GC.down(state.gc, pid)
+    Phoenix.PubSub.GC.down(state.gc_server, pid)
     {:noreply, state}
   end
 
@@ -216,15 +230,20 @@ defmodule Phoenix.PubSub.Local do
     {:noreply, state}
   end
 
-  defp pool_for_pid(local_server, pid, pool_size) do
+  defp local_for_pid(pubsub_server, pid, pool_size) do
     pid
     |> pid_to_shard(pool_size)
-    |> pool_for_shard(local_server)
+    |> local_for_shard(pubsub_server)
   end
 
-  def pool_for_shard(shard, local_server) do
-    [{^shard, local_server}] = :ets.lookup(local_server, shard)
+  defp local_for_shard(shard, pubsub_server) do
+    {local_server, _gc_server} = pools_for_shard(shard, pubsub_server)
     local_server
+  end
+
+  defp pools_for_shard(shard, pubsub_server) do
+    [{^shard, {local_server, gc_server}}] = :ets.lookup(pubsub_server, shard)
+    {local_server, gc_server}
   end
 
   defp pid_to_shard(pid, shard_size) do
