@@ -24,9 +24,7 @@ defmodule Phoenix.PubSub.LocalSupervisor do
     ^server = :ets.new(server, [:set, :named_table, read_concurrency: true])
     true = :ets.insert(server, {:subscribe, Phoenix.PubSub.Local, [server, pool_size]})
     true = :ets.insert(server, {:unsubscribe, Phoenix.PubSub.Local, [server, pool_size]})
-    for rule <- dispatch_rules do
-      true = :ets.insert(server, rule)
-    end
+    true = :ets.insert(server, dispatch_rules)
 
     children = for shard <- 0..(pool_size - 1) do
       local_shard_name = Local.local_name(server, shard)

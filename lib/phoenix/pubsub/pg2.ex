@@ -12,6 +12,11 @@ defmodule Phoenix.PubSub.PG2 do
   ## Options
 
     * `:name` - The name to register the PubSub processes, ie: `MyApp.PubSub`
+    * `:pool_size` - Both the size of the local pubsub server pool and subscriber
+      shard size. Defaults `1`. A single pool is often enough for most use-cases,
+      but for high subscriber counts on a single topic or greater than 1M
+      clients, a pool size equal to the number of schedulers (cores) is a well
+      rounded size.
 
   """
 
@@ -30,6 +35,6 @@ defmodule Phoenix.PubSub.PG2 do
       worker(Phoenix.PubSub.PG2Server, [server]),
     ]
 
-    supervise children, strategy: :one_for_one
+    supervise children, strategy: :rest_for_one
   end
 end

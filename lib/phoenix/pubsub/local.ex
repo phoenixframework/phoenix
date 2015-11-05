@@ -181,11 +181,14 @@ defmodule Phoenix.PubSub.Local do
   end
 
   @doc false
+  # This is an expensive and private operation. DO NOT USE IT IN PROD.
   def subscription(pubsub_server, pool_size, pid) when is_atom(pubsub_server) do
-    pid
-    |> pid_to_shard(pool_size)
-    |> local_for_shard(pubsub_server)
-    |> GenServer.call({:subscription, pid})
+    {_local, gc_server} =
+      pid
+      |> pid_to_shard(pool_size)
+      |> pools_for_shard(pubsub_server)
+
+    GenServer.call(gc_server, {:subscription, pid})
   end
 
   @doc false
@@ -214,14 +217,6 @@ defmodule Phoenix.PubSub.Local do
     {:reply, {:ok, {state.topics, state.pids}}, state}
   end
 
-  def handle_call({:subscription, pid}, _from, state) do
-    try do
-      {:reply, :ets.lookup_element(state.pids, pid, 2), state}
-    catch
-      :error, :badarg -> {:reply, [], state}
-    end
-  end
-
   def handle_info({:DOWN, _ref, _type, pid, _info}, state) do
     Phoenix.PubSub.GC.down(state.gc_server, pid)
     {:noreply, state}
@@ -243,8 +238,8 @@ defmodule Phoenix.PubSub.Local do
   end
 
   defp pools_for_shard(shard, pubsub_server) do
-    [{^shard, {local_server, gc_server}}] = :ets.lookup(pubsub_server, shard)
-    {local_server, gc_server}
+    [{^shard, {_, _} = servers}] = :ets.lookup(pubsub_server, shard)
+    servers
   end
 
   defp pid_to_shard(pid, shard_size) do

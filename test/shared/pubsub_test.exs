@@ -45,7 +45,6 @@ defmodule Phoenix.PubSubTest do
     adapter = Application.get_env(:phoenix, :pubsub_test_adapter)
     {:ok, _} = adapter.start_link(config.test, pool_size: size)
     {:ok, %{pubsub: config.test,
-            gc: Local.gc_name(config.test, 0),
             pool_size: size}}
   end
 
@@ -70,10 +69,6 @@ defmodule Phoenix.PubSubTest do
         local = Process.whereis(Local.local_name(config.pubsub, shard))
         assert Process.alive?(local)
       end)
-      # Ensure DOWN is processed to avoid races
-      Local.subscribe(config.pubsub, config.pool_size, pid, "unknown")
-      Local.unsubscribe(config.pubsub, config.pool_size, pid, "unknown")
-      GenServer.call(config.gc, :noop)
 
       assert Local.subscription(config.pubsub, config.pool_size, pid) == []
       assert subscribers(config, "topic4") |> length == 0

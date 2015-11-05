@@ -20,6 +20,7 @@ defmodule Phoenix.PubSub do
 
       config :my_app, MyApp.Endpoint,
         pubsub: [adapter: Phoenix.PubSub.PG2,
+                 pool_size: 1,
                  name: MyApp.PubSub]
 
   The configuration above takes care of starting the

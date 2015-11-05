@@ -19,7 +19,6 @@ defmodule Phoenix.LocalTest do
     size = config[:pool_size] || 1
     {:ok, _} = Phoenix.PubSub.LocalSupervisor.start_link(config.test, size, [])
     {:ok, %{pubsub: config.test,
-            gc: Local.gc_name(config.test, 0),
             pool_size: size}}
   end
 
@@ -87,7 +86,6 @@ defmodule Phoenix.LocalTest do
       # Ensure DOWN is processed to avoid races
       Local.subscribe(config.pubsub, config.pool_size, pid, "unknown")
       Local.unsubscribe(config.pubsub, config.pool_size, pid, "unknown")
-      GenServer.call(config.gc, :noop)
 
       assert Local.subscription(config.pubsub, config.pool_size, pid) == []
       assert subscribers(config, "topic5") == [self]

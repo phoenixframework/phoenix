@@ -46,6 +46,14 @@ defmodule Phoenix.PubSub.GC do
     {:ok, %{topics: local_name, pids: server_name}}
   end
 
+  def handle_call({:subscription, pid}, _from, state) do
+    try do
+      {:reply, :ets.lookup_element(state.pids, pid, 2), state}
+    catch
+      :error, :badarg -> {:reply, [], state}
+    end
+  end
+
   def handle_cast({:down, pid}, state) do
     try do
       topics = :ets.lookup_element(state.pids, pid, 2)
@@ -58,9 +66,5 @@ defmodule Phoenix.PubSub.GC do
     end
 
     {:noreply, state}
-  end
-
-  def handle_call(_, _from, state) do
-    {:reply, :ok, state}
   end
 end
