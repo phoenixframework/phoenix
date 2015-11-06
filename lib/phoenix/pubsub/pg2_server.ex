@@ -16,7 +16,7 @@ defmodule Phoenix.PubSub.PG2Server do
       pids when is_list(pids) ->
         Enum.each(pids, fn
           pid when node(pid) == node() ->
-            Local.broadcast(name, from_pid, pool_size, topic, msg)
+            Local.broadcast(name, pool_size, from_pid, topic, msg)
           pid ->
             send(pid, {:forward_to_local, from_pid, pool_size, topic, msg})
         end)
@@ -34,7 +34,7 @@ defmodule Phoenix.PubSub.PG2Server do
   def handle_info({:forward_to_local, from_pid, pool_size, topic, msg}, name) do
     # The whole broadcast will happen inside the current process
     # but only for messages coming from the distributed system.
-    Local.broadcast(name, from_pid, pool_size, topic, msg)
+    Local.broadcast(name, pool_size, from_pid, topic, msg)
     {:noreply, name}
   end
 

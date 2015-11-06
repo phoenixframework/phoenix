@@ -83,13 +83,13 @@ defmodule Phoenix.PubSub.Local do
       :ok
 
   """
-  def broadcast(pubsub_server, from, 1 = _pool_size, topic, msg)
+  def broadcast(pubsub_server, 1 = _pool_size, from, topic, msg)
     when is_atom(pubsub_server) do
 
     do_broadcast(pubsub_server, _shard = 0, from, topic, msg)
     :ok
   end
-  def broadcast(pubsub_server, from, pool_size, topic, msg)
+  def broadcast(pubsub_server, pool_size, from, topic, msg)
     when is_atom(pubsub_server) do
 
     parent = self
