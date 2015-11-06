@@ -7,6 +7,7 @@
   * [CodeReloader] The socket transports now trigger the code reloader when enabled for external clients that only connect to channels without trigger a recompile through the normal page request.
   * [phoenix.digest] The `phoenix.digest` task now digests asset urls in stylesheets automatically
   * [Channel] Add `Phoenix.Channel.reply/3` to reply asynchronously to a channel push
+  * [Channel] `code_change/3` is now supported to uprade channel servers
 
 * Bug fixes
   * [LongPoll] force application/json content-type to fix blank JSON bodies on older IE clients using xdomain

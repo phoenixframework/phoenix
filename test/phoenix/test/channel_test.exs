@@ -102,6 +102,16 @@ defmodule Phoenix.Test.ChannelTest do
     end
   end
 
+  defmodule CodeChangeChannel do
+    use Phoenix.Channel
+
+    def join(_topic, _params, socket), do: {:ok, socket}
+
+    def code_change(_old, _socket, _extra) do
+      {:error, :cant}
+    end
+  end
+
   defmodule UserSocket do
     use Phoenix.Socket
 
@@ -341,5 +351,17 @@ defmodule Phoenix.Test.ChannelTest do
 
     # Closing again doesn't crash
     _ = close(socket)
+  end
+
+  test "code_change/3 proxies to channel" do
+    socket = %Socket{channel: Channel}
+    assert Phoenix.Channel.Server.code_change(:old, socket, :extra) ==
+      {:ok, socket}
+  end
+
+  test "code_change/3 is overridable" do
+    socket = %Socket{channel: CodeChangeChannel}
+    assert Phoenix.Channel.Server.code_change(:old, socket, :extra) ==
+      {:error, :cant}
   end
 end
