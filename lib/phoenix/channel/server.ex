@@ -186,6 +186,11 @@ defmodule Phoenix.Channel.Server do
     end
   end
 
+  @doc false
+  def code_change(old, socket, extra) do
+    socket.channel.code_change(old, socket, extra)
+  end
+
   defp join(socket, reply, parent, ref) do
     PubSub.subscribe(socket.pubsub_server, self(), socket.topic,
       link: true,

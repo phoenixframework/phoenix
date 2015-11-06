@@ -180,6 +180,10 @@ defmodule Phoenix.Channel do
                        topic :: binary, ref :: binary}
 
 
+  defcallback code_change(old_vsn, Socket.t, extra :: term) ::
+              {:ok, Socket.t} |
+              {:error, reason :: term} when old_vsn: term | {:down, term}
+
   defcallback join(topic :: binary, auth_msg :: map, Socket.t) ::
               {:ok, Socket.t} |
               {:ok, map, Socket.t} |
@@ -210,6 +214,8 @@ defmodule Phoenix.Channel do
       import unquote(__MODULE__)
       import Phoenix.Socket, only: [assign: 3]
 
+      def code_change(_old, socket, _extra), do: {:ok, socket}
+
       def handle_in(_event, _message, socket) do
         {:noreply, socket}
       end
@@ -218,7 +224,7 @@ defmodule Phoenix.Channel do
 
       def terminate(_reason, _socket), do: :ok
 
-      defoverridable handle_info: 2, handle_in: 3, terminate: 2
+      defoverridable code_change: 3, handle_info: 2, handle_in: 3, terminate: 2
     end
   end
 
