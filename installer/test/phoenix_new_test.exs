@@ -71,7 +71,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       # Brunch
       assert_file "photo_blog/.gitignore", "/node_modules"
       assert_file "photo_blog/brunch-config.js", ~s["deps/phoenix/web/static"]
-      assert_file "photo_blog/config/dev.exs", "watchers: [npm:"
+      assert_file "photo_blog/config/dev.exs", "watchers: [node:"
       assert_file "photo_blog/web/static/assets/favicon.ico"
       assert_file "photo_blog/web/static/assets/images/phoenix.png"
       assert_file "photo_blog/web/static/css/app.css"
