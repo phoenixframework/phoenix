@@ -1,6 +1,6 @@
 defmodule Phoenix.Token do
   @moduledoc """
-  Tokens provide a way to  generate, verify bearer
+  Tokens provide a way to generate and verify bearer
   tokens for use in Channels or API authentication.
 
   ## Basic Usage
@@ -57,7 +57,7 @@ defmodule Phoenix.Token do
   alias Plug.Crypto.MessageVerifier
 
   @doc """
-  Signs your data into a token you can send down to clients
+  Encodes data and signs it resulting in a token you can send down to clients.
 
   ## Options
     * `:key_iterations` - option passed to `Plug.Crypto.KeyGenerator`
@@ -78,7 +78,7 @@ defmodule Phoenix.Token do
   end
 
   @doc """
-  Decrypts the token into the originaly present data.
+  Decodes the original data from the token and verifies its integrity.
 
   ## Options
 
