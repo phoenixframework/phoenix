@@ -102,12 +102,14 @@ For our chat app, we'll allow anyone to join the `"rooms:lobby"` topic, but any 
 
 With our channel in place, let's get the client and server talking.
 
-Phoenix projects come with [brunch.io] built in, unless disabled with the `--no-brunch` option when you run `mix phoenix.new`.
+Phoenix projects come with [Brunch](http://www.phoenixframework.org/docs/static-assets) built in, unless disabled with the `--no-brunch` option when you run `mix phoenix.new`.
 
-If you are using brunch, there's some code in `web/static/js/socket.js` that defines a simple client utilizing the phoenix javascript library, which is used to connect to our socket and join our channel, we just need to set our room name to "rooms:lobby" in that file.
+If you are using brunch, there's some code in `web/static/js/socket.js` that defines a simple client based on the socket implementation that ships with Phoenix.
+
+We can use that library to connect to our socket and join our channel, we just need to set our room name to "rooms:lobby" in that file.
 
 ```javascript
-//web/static/js/socket.js
+// web/static/js/socket.js
 ...
 socket.connect()
 
