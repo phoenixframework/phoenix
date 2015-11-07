@@ -31,11 +31,11 @@ config :hello_phoenix, HelloPhoenix.Endpoint,
 ```
 
 ### Nginx Considerations
-Nginx requires some additional configuration in order to utilize channels.  Websockets, which are based on HTTP requests, operate on the notion that you are _Upgrading_ the connection from standard stateless mechanisms to a persistant connection.
+Nginx requires some additional configuration in order to utilize channels.  Websockets, which are based on HTTP requests, operate on the notion that you are _Upgrading_ the connection from standard stateless HTTP to a persistant websocket connection.
 
-Thankfully, this is relatively straightforward to accomplish.
+Thankfully, this is relatively straightforward to accomplish with nginx.
 
-Presuming you are using a reverse proxy configuration to serve from, You will potentially see a configuration section as such:
+Below is a standard `sites-enabled` style nginx configuration, for a given domain `my-app.domain`.
 
 ```
 // /etc/nginx/sites-enabled/my-app.domain
@@ -69,4 +69,4 @@ This configures two objects - The Proxy endpoint, defined as an `upstream`, as w
 
 The `server` is the primary concern, here.  With this configuraiton, you have ensured that the correct headers are passed down to the Phoenix process for channels to work, through the `Upgrade` and `Connection` headers.
 
-These headers do not immediately turn on channels, you're still responsible for that in your javascript code, these headers simply allow for the correct capabilities to be passed to Phoenix from the browser.
+These headers do not immediately turn on websockets, you're still responsible for that in your javascript code, the headers simply allow for the correct capabilities to be passed to Phoenix from the browser.
