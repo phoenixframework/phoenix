@@ -150,6 +150,9 @@ defmodule Phoenix.Channel do
         redirect conn, to: "/"
       end
 
+  Note: You cannot use a splat when broadcasting via your endpoint.
+  For example, broadcasting to `"rooms:*"` wouldn't work here.
+
   ## Terminate
 
   On termination, the channel callback `terminate/2` will be invoked with
