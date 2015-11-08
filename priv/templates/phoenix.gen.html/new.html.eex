@@ -1,6 +1,5 @@
 <h2>New <%= template_singular %></h2>
 
-<%= "<%=" %> render "form.html", changeset: @changeset,
-                        action: <%= singular %>_path(@conn, :create) <%= "%\>" %>
+<%= "<%=" %> render "form.html", Dict.merge(@conn.assigns, action: <%= singular %>_path(@conn, :create)) <%= "%\>" %>
 
 <%= "<%=" %> link "Back", to: <%= singular %>_path(@conn, :index) <%= "%\>" %>
