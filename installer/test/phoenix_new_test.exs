@@ -350,9 +350,9 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       Mix.Tasks.Phoenix.New.run([project_path])
 
       assert_file "custom_path/mix.exs", ~r/:postgrex/
-      assert_file "custom_path/config/dev.exs", [~r/Ecto.Adapters.Postgres/, ~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
-      assert_file "custom_path/config/test.exs", [~r/Ecto.Adapters.Postgres/, ~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
-      assert_file "custom_path/config/prod.secret.exs", [~r/Ecto.Adapters.Postgres/, ~r/username: "postgres"/, ~r/password: "postgres"/]
+      assert_file "custom_path/config/dev.exs", ~r/Ecto.Adapters.Postgres/
+      assert_file "custom_path/config/test.exs", ~r/Ecto.Adapters.Postgres/
+      assert_file "custom_path/config/prod.secret.exs", ~r/Ecto.Adapters.Postgres/
 
       assert_file "custom_path/test/support/conn_case.ex",
         ~r/Ecto.Adapters.SQL.restart_test_transaction/
