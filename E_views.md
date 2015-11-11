@@ -44,7 +44,7 @@ end
 
 When we reload the Welcome to Phoenix page, we should see our new title.
 
-The `<%=` and `%>` are from the Elixir [Eex](http://elixir-lang.org/docs/stable/eex/) project. They enclose executable Elixir code within a template. The `=` tells Eex to print the result. If the `=` is not there, Eex will still execute the code, but there will be no output. In our example, we are calling the `title/0` function from our `LayoutView` and printing the output into the title tag.
+The `<%=` and `%>` are from the Elixir [EEx](http://elixir-lang.org/docs/stable/eex/) project. They enclose executable Elixir code within a template. The `=` tells EEx to print the result. If the `=` is not there, EEx will still execute the code, but there will be no output. In our example, we are calling the `title/0` function from our `LayoutView` and printing the output into the title tag.
 
 Note that we didn't need to fully qualify `title/0` with `HelloPhoenix.LayoutView` because our `LayoutView` actually does the rendering.
 
