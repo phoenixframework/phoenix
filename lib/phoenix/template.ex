@@ -237,7 +237,8 @@ defmodule Phoenix.Template do
     Application.get_env(:phoenix, name) ||
       raise "could not load #{name} configuration for Phoenix. " <>
             "Please ensure you have listed :phoenix under :applications in your " <>
-            "mix.exs file and have enabled the :phoenix compiler under :compilers"
+            "mix.exs file and have enabled the :phoenix compiler under :compilers, " <>
+            "for example: [:phoenix] ++ Mix.compilers"
   end
 
   @doc """
