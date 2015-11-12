@@ -3,6 +3,9 @@ defmodule Phoenix.Token do
   Tokens provide a way to generate and verify bearer
   tokens for use in Channels or API authentication.
 
+  The data can be read by clients, but the message is signed to prevent
+  tampering.
+
   ## Basic Usage
 
   When generating a unique token for usage in an API or Channel
