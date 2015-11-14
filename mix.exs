@@ -53,7 +53,7 @@ defmodule Phoenix.Mixfile do
   end
 
   defp package do
-    [contributors: ["Chris McCord", "José Valim", "Lance Halvorsen",
+    [maintainers: ["Chris McCord", "José Valim", "Lance Halvorsen",
                     "Jason Stiebs", "Eric Meadows-Jönsson", "Sonny Scroggin"],
      licenses: ["MIT"],
      links: %{github: "https://github.com/phoenixframework/phoenix"},
