@@ -317,13 +317,12 @@ defmodule Phoenix.Socket.Transport do
 
   def check_origin(conn, handler, endpoint, opts, sender) do
     import Plug.Conn
-    origin = get_req_header(conn, "origin") |> List.first
+    origin       = get_req_header(conn, "origin") |> List.first
     check_origin = check_origin_config(handler, endpoint, opts)
 
     cond do
       is_nil(origin) or check_origin == false ->
         conn
-
       origin_allowed?(check_origin, URI.parse(origin), endpoint) ->
         conn
       true ->
@@ -366,6 +365,9 @@ defmodule Phoenix.Socket.Transport do
     end)
   end
 
+  defp parse_origin("http://*." <> orig),  do: parse_origin("http://" <> orig)
+  defp parse_origin("https://*." <> orig), do: parse_origin("https://" <> orig)
+  defp parse_origin("//*." <> orig),       do: parse_origin("//" <> orig)
   defp parse_origin(origin) do
     case URI.parse(origin) do
       %{host: nil} ->
@@ -389,10 +391,11 @@ defmodule Phoenix.Socket.Transport do
     Enum.any?(allowed_origins, fn {allowed_scheme, allowed_host, allowed_port} ->
       compare?(origin_scheme, allowed_scheme) and
       compare?(origin_port, allowed_port) and
-      compare?(origin_host, allowed_host)
+      (compare?(origin_host, allowed_host) or
+       String.ends_with?(origin_host, allowed_host))
     end)
   end
 
-  defp compare?(_, nil), do: true
-  defp compare?(x, y),   do: x == y
+  defp compare?(_request_val, _allowed_val = nil), do: true
+  defp compare?(request_val, allowed_val), do: request_val == allowed_val
 end

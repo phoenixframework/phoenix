@@ -61,6 +61,26 @@ defmodule Phoenix.Transports.TransportTest do
     assert conn.status == 403
   end
 
+  test "wildcard subdomains" do
+    origins = ["https://*.ex.com", "http://*.ex.com"]
+
+    conn = check_origin("http://org1.ex.com", check_origin: origins)
+    refute conn.halted
+    conn = check_origin("https://org1.ex.com", check_origin: origins)
+    refute conn.halted
+  end
+
+  test "nested wildcard subdomains" do
+    origins = ["http://*.foo.example.com"]
+
+    conn = check_origin("http://org1.foo.example.com", check_origin: origins)
+    refute conn.halted
+
+    conn = check_origin("http://org1.bar.example.com", check_origin: origins)
+    assert conn.halted
+    assert conn.status == 403
+  end
+
   test "allows invalid URIs" do
     origins = ["//example.com", "http://scheme.com", "//port.com:81"]
 
