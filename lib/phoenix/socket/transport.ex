@@ -321,9 +321,10 @@ defmodule Phoenix.Socket.Transport do
     check_origin = check_origin_config(handler, endpoint, opts)
 
     cond do
-      is_nil(origin) ->
+      is_nil(origin) or check_origin == false ->
         conn
-      origin_allowed?(check_origin, origin, endpoint) ->
+
+      origin_allowed?(check_origin, URI.parse(origin), endpoint) ->
         conn
       true ->
         Logger.error """
@@ -375,15 +376,15 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
-  defp origin_allowed?(false, _, _),
+  defp origin_allowed?(_check_origin, %URI{host: nil}, _endpoint),
     do: true
-  defp origin_allowed?(true, origin, endpoint),
-    do: compare?(URI.parse(origin).host, endpoint.config(:url)[:host])
-  defp origin_allowed?(check_origin, origin, _endpoint) when is_list(check_origin),
-    do: origin_allowed?(origin, check_origin)
+  defp origin_allowed?(true, uri, endpoint),
+    do: compare?(uri.host, endpoint.config(:url)[:host])
+  defp origin_allowed?(check_origin, uri, _endpoint) when is_list(check_origin),
+    do: origin_allowed?(uri, check_origin)
 
-  defp origin_allowed?(origin, allowed_origins) do
-    %{scheme: origin_scheme, host: origin_host, port: origin_port} = URI.parse(origin)
+  defp origin_allowed?(uri, allowed_origins) do
+    %{scheme: origin_scheme, host: origin_host, port: origin_port} = uri
 
     Enum.any?(allowed_origins, fn {allowed_scheme, allowed_host, allowed_port} ->
       compare?(origin_scheme, allowed_scheme) and

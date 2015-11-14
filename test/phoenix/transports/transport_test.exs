@@ -61,15 +61,22 @@ defmodule Phoenix.Transports.TransportTest do
     assert conn.status == 403
   end
 
+  test "allows invalid URIs" do
+    origins = ["//example.com", "http://scheme.com", "//port.com:81"]
+
+    for config <- [origins, false, true] do
+      conn = check_origin("file://", check_origin: config)
+      refute conn.halted
+      conn = check_origin("", check_origin: config)
+      refute conn.halted
+    end
+  end
+
   test "checks the origin of requests against allowed origins" do
     origins = ["//example.com", "http://scheme.com", "//port.com:81"]
 
-    # Completely invalid
+    # not allowed host
     conn = check_origin("http://notallowed.com/", check_origin: origins)
-    assert conn.halted
-    assert conn.status == 403
-
-    conn = check_origin("", check_origin: origins)
     assert conn.halted
     assert conn.status == 403
 
