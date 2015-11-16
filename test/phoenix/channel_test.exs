@@ -36,7 +36,7 @@ defmodule Phoenix.Channel.ChannelTest do
     Phoenix.PubSub.subscribe(@pubsub, self, "sometopic")
 
     socket = %Phoenix.Socket{pubsub_server: @pubsub, topic: "sometopic",
-                             channel_pid: spawn_link(fn -> end), joined: true}
+                             channel_pid: spawn_link(fn -> :ok end), joined: true}
 
     broadcast_from(socket, "event1", %{key: :val})
     assert_receive %Phoenix.Socket.Broadcast{

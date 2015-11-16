@@ -56,18 +56,23 @@ defmodule Phoenix.Router.Helpers do
       if uri.port == port, do: uri = %{uri | port: nil}
     end
 
-    if uri.host do
-      authority = uri.host
-      if uri.userinfo, do: authority = uri.userinfo <> "@" <> authority
-      if uri.port, do: authority = authority <> ":" <> Integer.to_string(uri.port)
-    else
-      authority = uri.authority
-    end
+    authority = extract_authority(uri)
 
     result = ""
     if uri.scheme, do: result = result <> uri.scheme <> ":"
     if authority,  do: result = result <> "//" <> authority
     result
+  end
+
+  defp extract_authority(%{host: nil, authority: authority}) do
+    authority
+  end
+
+  defp extract_authority(%{host: host, userinfo: userinfo, port: port}) do
+    authority = host
+    if userinfo, do: authority = userinfo <> "@" <> authority
+    if port, do: authority = authority <> ":" <> Integer.to_string(port)
+    authority
   end
 
   defp build_own_forward_path(conn, router, path) do

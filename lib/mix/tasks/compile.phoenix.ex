@@ -30,8 +30,7 @@ defmodule Mix.Tasks.Compile.Phoenix do
   end
 
   defp modules_for_recompilation(modules) do
-    modules
-    |> Stream.filter fn mod ->
+    Stream.filter modules, fn mod ->
       Code.ensure_loaded?(mod) and
         function_exported?(mod, :__phoenix_recompile__?, 0) and
         mod.__phoenix_recompile__?

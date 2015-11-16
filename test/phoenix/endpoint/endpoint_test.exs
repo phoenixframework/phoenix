@@ -117,7 +117,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
 
   test "injects pubsub broadcast with configured server" do
     Endpoint.subscribe(self, "sometopic")
-    some = spawn fn -> end
+    some = spawn fn -> :ok end
 
     Endpoint.broadcast_from(some, "sometopic", "event1", %{key: :val})
     assert_receive %Phoenix.Socket.Broadcast{
