@@ -368,7 +368,8 @@ defmodule Phoenix.Socket.Transport do
   defp parse_origin("http://*." <> orig),  do: parse_origin("http://" <> orig, :wildcard)
   defp parse_origin("https://*." <> orig), do: parse_origin("https://" <> orig, :wildcard)
   defp parse_origin("//*." <> orig),       do: parse_origin("//" <> orig, :wildcard)
-  defp parse_origin(origin, type \\ :static) do
+  defp parse_origin(origin),               do: parse_origin(origin, :static)
+  defp parse_origin(origin, type) do
     case URI.parse(origin) do
       %{host: nil} ->
         raise ArgumentError,
