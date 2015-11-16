@@ -20,6 +20,7 @@ Most of our work in this guide will be in the `web` directory, which looks like 
 ├── controllers
 │   └── page_controller.ex
 ├── models
+├── static
 ├── router.ex
 ├── templates
 │   ├── layout
