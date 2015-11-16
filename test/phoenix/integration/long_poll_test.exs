@@ -12,7 +12,6 @@ defmodule Phoenix.Integration.LongPollTest do
   alias __MODULE__.Endpoint
 
   @port 5808
-  @ensure_window_timeout_ms 500
   @pool_size 1
 
   Application.put_env(:phoenix, Endpoint, [
@@ -233,12 +232,9 @@ defmodule Phoenix.Integration.LongPollTest do
       assert channel
       Process.monitor(channel)
 
-      # 410 from crashed/terminated longpoller server when polling
-      :timer.sleep @ensure_window_timeout_ms
-
+      assert_receive({:DOWN, _, :process, ^channel, {:shutdown, :inactive}}, 5000)
       resp = poll(:post, "/ws", session)
       assert resp.body["status"] == 410
-      assert_receive {:DOWN, _, :process, ^channel, {:shutdown, :inactive}}
     end
   end
 
