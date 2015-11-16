@@ -317,13 +317,13 @@ defmodule Phoenix.Socket.Transport do
 
   def check_origin(conn, handler, endpoint, opts, sender) do
     import Plug.Conn
-    origin = get_req_header(conn, "origin") |> List.first
+    origin       = get_req_header(conn, "origin") |> List.first
     check_origin = check_origin_config(handler, endpoint, opts)
 
     cond do
-      is_nil(origin) ->
+      is_nil(origin) or check_origin == false ->
         conn
-      origin_allowed?(check_origin, origin, endpoint) ->
+      origin_allowed?(check_origin, URI.parse(origin), endpoint) ->
         conn
       true ->
         Logger.error """
@@ -365,33 +365,40 @@ defmodule Phoenix.Socket.Transport do
     end)
   end
 
-  defp parse_origin(origin) do
+  defp parse_origin("http://*." <> orig),  do: parse_origin("http://" <> orig, :wildcard)
+  defp parse_origin("https://*." <> orig), do: parse_origin("https://" <> orig, :wildcard)
+  defp parse_origin("//*." <> orig),       do: parse_origin("//" <> orig, :wildcard)
+  defp parse_origin(origin),               do: parse_origin(origin, :static)
+  defp parse_origin(origin, type) do
     case URI.parse(origin) do
       %{host: nil} ->
         raise ArgumentError,
           "invalid check_origin: #{inspect origin} (expected an origin with a host)"
       %{scheme: scheme, port: port, host: host} ->
-        {scheme, host, port}
+        {type, scheme, host, port}
     end
   end
 
-  defp origin_allowed?(false, _, _),
+  defp origin_allowed?(_check_origin, %URI{host: nil}, _endpoint),
     do: true
-  defp origin_allowed?(true, origin, endpoint),
-    do: compare?(URI.parse(origin).host, endpoint.config(:url)[:host])
-  defp origin_allowed?(check_origin, origin, _endpoint) when is_list(check_origin),
-    do: origin_allowed?(origin, check_origin)
+  defp origin_allowed?(true, uri, endpoint),
+    do: compare?(uri.host, endpoint.config(:url)[:host])
+  defp origin_allowed?(check_origin, uri, _endpoint) when is_list(check_origin),
+    do: origin_allowed?(uri, check_origin)
 
-  defp origin_allowed?(origin, allowed_origins) do
-    %{scheme: origin_scheme, host: origin_host, port: origin_port} = URI.parse(origin)
+  defp origin_allowed?(uri, allowed_origins) do
+    %{scheme: origin_scheme, host: origin_host, port: origin_port} = uri
 
-    Enum.any?(allowed_origins, fn {allowed_scheme, allowed_host, allowed_port} ->
+    Enum.any?(allowed_origins, fn {type, allowed_scheme, allowed_host, allowed_port} ->
       compare?(origin_scheme, allowed_scheme) and
       compare?(origin_port, allowed_port) and
-      compare?(origin_host, allowed_host)
+      compare_host?(type, origin_host, allowed_host)
     end)
   end
 
-  defp compare?(_, nil), do: true
-  defp compare?(x, y),   do: x == y
+  defp compare?(_request_val, _allowed_val = nil), do: true
+  defp compare?(request_val, allowed_val), do: request_val == allowed_val
+  defp compare_host?(:static, request_val, allowed_val), do: request_val == allowed_val
+  defp compare_host?(:wildcard, request_host, allowed_host),
+    do: String.ends_with?(request_host, allowed_host)
 end
