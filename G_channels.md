@@ -35,10 +35,10 @@ It is worth noting that these modules are intended for Phoenix's internal use. C
 - Messages
 
 The `Phoenix.Socket.Message` module defines a struct with the following keys which denotes a valid message. From the [Phoenix.Socket.Message docs](http://hexdocs.pm/phoenix/Phoenix.Socket.Message.html).
-  - `topic` - The String topic or topic:subtopic pair namespace, i.e. “messages”, “messages:123”
-  - `event` - The String event name, ie “join”
-  - `payload` - The String JSON message payload
-  - `ref` - The unique string used for replying to incoming events
+  - `topic` - The string topic or topic:subtopic pair namespace, for example “messages”, “messages:123”
+  - `event` - The string event name, for example “phx_join”
+  - `payload` - The message payload
+  - `ref` - The unique string ref
 
 - Topics
 
