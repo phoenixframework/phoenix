@@ -365,17 +365,13 @@ defmodule Phoenix.Socket.Transport do
     end)
   end
 
-  defp parse_origin("http://*." <> orig),  do: parse_origin("http://" <> orig, :wildcard)
-  defp parse_origin("https://*." <> orig), do: parse_origin("https://" <> orig, :wildcard)
-  defp parse_origin("//*." <> orig),       do: parse_origin("//" <> orig, :wildcard)
-  defp parse_origin(origin),               do: parse_origin(origin, :static)
-  defp parse_origin(origin, type) do
+  defp parse_origin(origin) do
     case URI.parse(origin) do
       %{host: nil} ->
         raise ArgumentError,
           "invalid check_origin: #{inspect origin} (expected an origin with a host)"
       %{scheme: scheme, port: port, host: host} ->
-        {type, scheme, host, port}
+        {scheme, host, port}
     end
   end
 
@@ -389,16 +385,21 @@ defmodule Phoenix.Socket.Transport do
   defp origin_allowed?(uri, allowed_origins) do
     %{scheme: origin_scheme, host: origin_host, port: origin_port} = uri
 
-    Enum.any?(allowed_origins, fn {type, allowed_scheme, allowed_host, allowed_port} ->
+    Enum.any?(allowed_origins, fn {allowed_scheme, allowed_host, allowed_port} ->
       compare?(origin_scheme, allowed_scheme) and
       compare?(origin_port, allowed_port) and
-      compare_host?(type, origin_host, allowed_host)
+      compare_host?(origin_host, allowed_host)
     end)
   end
 
-  defp compare?(_request_val, _allowed_val = nil), do: true
-  defp compare?(request_val, allowed_val), do: request_val == allowed_val
-  defp compare_host?(:static, request_val, allowed_val), do: request_val == allowed_val
-  defp compare_host?(:wildcard, request_host, allowed_host),
+  defp compare?(request_val, allowed_val) do
+    is_nil(allowed_val) or request_val == allowed_val
+  end
+
+  defp compare_host?(_request_host, nil),
+    do: true
+  defp compare_host?(request_host, "*." <> allowed_host),
     do: String.ends_with?(request_host, allowed_host)
+  defp compare_host?(request_host, allowed_host),
+    do: request_host == allowed_host
 end
