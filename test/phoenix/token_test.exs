@@ -12,12 +12,6 @@ defmodule Phoenix.TokenTest do
     assert Token.verify(conn(), "id", token) == {:ok, id}
   end
 
-  test "signes and verifies token with socket" do
-    id = 1
-    token = Token.sign(socket(), "id", id)
-    assert Token.verify(socket(), "id", token) == {:ok, id}
-  end
-
   test "fails on missing token" do
     assert Token.verify(TokenEndpoint, "id", nil) == {:error, :missing}
   end
@@ -42,10 +36,6 @@ defmodule Phoenix.TokenTest do
     assert Token.verify(conn(), "id", token, max_age: 0.1) == {:ok, 1}
     :timer.sleep(150)
     assert Token.verify(conn(), "id", token, max_age: 0.1) == {:error, :expired}
-  end
-
-  defp socket() do
-    %Phoenix.Socket{endpoint: TokenEndpoint}
   end
 
   defp conn() do
