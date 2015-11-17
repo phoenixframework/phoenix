@@ -152,7 +152,7 @@ defmodule Phoenix.Transports.LongPoll do
   end
 
   defp listen(conn, server_ref, endpoint, opts) do
-    ref = :erlang.make_ref()
+    ref = make_ref()
 
     broadcast_from!(endpoint, server_ref, {:flush, client_ref(server_ref), ref})
 
@@ -196,7 +196,7 @@ defmodule Phoenix.Transports.LongPoll do
       {:ok, {:v1, id, pid, priv_topic}} ->
         server_ref = server_ref(endpoint.config(:endpoint_id), id, pid, priv_topic)
 
-        ref = :erlang.make_ref()
+        ref = make_ref()
         :ok = subscribe(endpoint, server_ref)
         broadcast_from!(endpoint, server_ref, {:subscribe, client_ref(server_ref), ref})
 
@@ -214,7 +214,7 @@ defmodule Phoenix.Transports.LongPoll do
 
   # Publishes a message to the pubsub system.
   defp transport_dispatch(endpoint, server_ref, msg, opts) do
-    ref = :erlang.make_ref()
+    ref = make_ref()
     broadcast_from!(endpoint, server_ref, {:dispatch, client_ref(server_ref), msg, ref})
 
     receive do
