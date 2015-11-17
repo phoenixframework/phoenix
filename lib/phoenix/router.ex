@@ -59,7 +59,7 @@ defmodule Phoenix.Router do
       "/pages/hello?some=query"
 
       MyApp.Router.Helpers.page_url(conn_or_endpoint, :show, "hello")
-      "http://example.com/pages/hello?some=query"
+      "http://example.com/pages/hello"
 
       MyApp.Router.Helpers.page_url(conn_or_endpoint, :show, "hello", some: "query")
       "http://example.com/pages/hello?some=query"
