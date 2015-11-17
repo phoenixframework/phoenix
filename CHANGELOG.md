@@ -8,6 +8,8 @@
   * [phoenix.digest] The `phoenix.digest` task now digests asset urls in stylesheets automatically
   * [Channel] Add `Phoenix.Channel.reply/3` to reply asynchronously to a channel push
   * [Channel] `code_change/3` is now supported to uprade channel servers
+  * [Endpoint] `check_origin` now supports wildcard hosts, ie `check_origin: ["//*.example.com"]`
+  * [Endpoint] `check_origin` treats invalid origin hosts as missing for misbehaving clients
 
 * Bug fixes
   * [LongPoll] force application/json content-type to fix blank JSON bodies on older IE clients using xdomain
