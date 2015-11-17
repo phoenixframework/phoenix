@@ -18,11 +18,6 @@ defmodule Phoenix do
     * [Plug](http://hexdocs.pm/plug) - a specification and conveniences
       for composable modules in between web applications
 
-  There are also optional packages depending on your configuration:
-
-    * [Phoenix PubSub Redis](http://hexdocs.pm/phoenix_pubsub_redis) - use
-      Redis to power Phoenix PubSub system
-
   """
   use Application
 

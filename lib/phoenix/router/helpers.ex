@@ -3,7 +3,6 @@ defmodule Phoenix.Router.Helpers do
   @moduledoc false
 
   alias Phoenix.Router.Route
-  alias Phoenix.Socket
   alias Plug.Conn
 
   @doc """
@@ -11,10 +10,6 @@ defmodule Phoenix.Router.Helpers do
   """
   def url(_router, %Conn{private: private}) do
     private.phoenix_endpoint.url
-  end
-
-  def url(_router, %Socket{endpoint: endpoint}) do
-    endpoint.url
   end
 
   def url(_router, %URI{} = uri) do
@@ -37,10 +32,6 @@ defmodule Phoenix.Router.Helpers do
 
   def path(_router, %URI{} = uri, path) do
     (uri.path || "") <> path
-  end
-
-  def path(_router, %Socket{endpoint: endpoint}, path) do
-    endpoint.path(path)
   end
 
   def path(_router, endpoint, path) when is_atom(endpoint) do
@@ -145,10 +136,6 @@ defmodule Phoenix.Router.Helpers do
         private.phoenix_endpoint.static_path(path)
       end
 
-      def static_path(%Socket{endpoint: endpoint} = conn, path) do
-        endpoint.static_path(path)
-      end
-
       def static_path(endpoint, path) when is_atom(endpoint) do
         endpoint.static_path(path)
       end
@@ -158,10 +145,6 @@ defmodule Phoenix.Router.Helpers do
       """
       def static_url(%Conn{private: private} = conn, path) do
         static_url(private.phoenix_endpoint, path)
-      end
-
-      def static_url(%Socket{endpoint: endpoint} = conn, path) do
-        static_url(endpoint, path)
       end
 
       def static_url(endpoint, path) when is_atom(endpoint) do

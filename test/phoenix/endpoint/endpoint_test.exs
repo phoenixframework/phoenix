@@ -6,8 +6,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
            static_url: [host: "static.example.com"],
            server: false, http: [port: 80], https: [port: 443],
            force_ssl: [subdomains: true],
-           cache_static_lookup: true, cache_static_manifest: "../../../../test/fixtures/manifest.json",
-           pubsub: [adapter: Phoenix.PubSub.PG2, name: :endpoint_pub]]
+           cache_static_lookup: true, cache_static_manifest: "../../../../test/fixtures/manifest.json"]
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
 
   defmodule Endpoint do
@@ -113,27 +112,6 @@ defmodule Phoenix.Endpoint.EndpointTest do
     end
     StaticEndpoint.start_link
     assert StaticEndpoint.static_path("/phoenix.png") =~ "/static/phoenix.png?vsn="
-  end
-
-  test "injects pubsub broadcast with configured server" do
-    Endpoint.subscribe(self, "sometopic")
-    some = spawn fn -> :ok end
-
-    Endpoint.broadcast_from(some, "sometopic", "event1", %{key: :val})
-    assert_receive %Phoenix.Socket.Broadcast{
-      event: "event1", payload: %{key: :val}, topic: "sometopic"}
-
-    Endpoint.broadcast_from!(some, "sometopic", "event2", %{key: :val})
-    assert_receive %Phoenix.Socket.Broadcast{
-      event: "event2", payload: %{key: :val}, topic: "sometopic"}
-
-    Endpoint.broadcast("sometopic", "event3", %{key: :val})
-    assert_receive %Phoenix.Socket.Broadcast{
-      event: "event3", payload: %{key: :val}, topic: "sometopic"}
-
-    Endpoint.broadcast!("sometopic", "event4", %{key: :val})
-    assert_receive %Phoenix.Socket.Broadcast{
-      event: "event4", payload: %{key: :val}, topic: "sometopic"}
   end
 
   defp static_vsn(file) do

@@ -121,7 +121,6 @@ defmodule Phoenix.Token do
   end
 
   defp get_endpoint(%Plug.Conn{} = conn), do: Phoenix.Controller.endpoint_module(conn)
-  defp get_endpoint(%Phoenix.Socket{} = socket), do: socket.endpoint
   defp get_endpoint(endpoint) when is_atom(endpoint), do: endpoint
 
   # Gathers configuration and generates the key secrets and signing secrets.

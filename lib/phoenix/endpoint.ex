@@ -151,20 +151,6 @@ defmodule Phoenix.Endpoint do
           [url: "ws://localhost:4000",
            paths: [Path.expand("priv/static/js/phoenix.js")]]
 
-    * `:pubsub` - configuration for this endpoint's pubsub adapter.
-      Configuration either requires a `:name` of the registered pubsub
-      server or a `:name` and `:adapter` pair. The given adapter and
-      name pair will be started as part of the supervision tree. if
-      no adapter is specified, the pubsub system will work by sending
-      events and subscribing to the given name. Defaults to:
-
-          [adapter: Phoenix.PubSub.PG2, name: MyApp.PubSub]
-
-      It also supports custom adpater configuration:
-
-          [name: :my_pubsub, adapter: Phoenix.PubSub.Redis,
-           host: "192.168.100.1"]
-
   ## Endpoint API
 
   In the previous section, we have used the `config/2` function which is
@@ -181,25 +167,6 @@ defmodule Phoenix.Endpoint do
     * `path(path)` - generates the path information when routing to this
       endpoint
     * `static_path(path)` - generates a route to a static file in `priv/static`
-
-  #### Channels
-
-    * `subscribe(pid, topic, opts)` - subscribes the pid to the given topic.
-      See `Phoenix.PubSub.subscribe/4` for options.
-
-    * `unsubscribe(pid, topic)` - unsubscribes the pid from the given topic.
-
-    * `broadcast(topic, event, msg)` - broadcasts a `msg` with as `event`
-      in the given `topic`.
-
-    * `broadcast!(topic, event, msg)` - broadcasts a `msg` with as `event`
-      in the given `topic`. Raises in case of failures.
-
-    * `broadcast_from(from, topic, event, msg)` - broadcasts a `msg` from
-      the given `from` as `event` in the given `topic`.
-
-    * `broadcast_from!(from, topic, event, msg)` - broadcasts a `msg` from
-      the given `from` as `event` in the given `topic`. Raises in case of failures.
 
   #### Endpoint configuration
 
@@ -223,7 +190,6 @@ defmodule Phoenix.Endpoint do
   defmacro __using__(opts) do
     quote do
       unquote(config(opts))
-      unquote(pubsub())
       unquote(plug())
       unquote(server())
     end
@@ -237,42 +203,6 @@ defmodule Phoenix.Endpoint do
 
       # Avoid unused variable warnings
       _ = var!(code_reloading?)
-    end
-  end
-
-  defp pubsub() do
-    quote do
-      @pubsub_server var!(config)[:pubsub][:name] ||
-        (if var!(config)[:pubsub][:adapter] do
-          raise ArgumentError, "an adapter was given to :pubsub but no :name was defined, " <>
-                               "please pass the :name option accordingly"
-        end)
-
-      def __pubsub_server__, do: @pubsub_server
-
-      def subscribe(pid, topic, opts \\ []) do
-        Phoenix.PubSub.subscribe(@pubsub_server, pid, topic, opts)
-      end
-
-      def unsubscribe(pid, topic) do
-        Phoenix.PubSub.unsubscribe(@pubsub_server, pid, topic)
-      end
-
-      def broadcast_from(from, topic, event, msg) do
-        Phoenix.Channel.Server.broadcast_from(@pubsub_server, from, topic, event, msg)
-      end
-
-      def broadcast_from!(from, topic, event, msg) do
-        Phoenix.Channel.Server.broadcast_from!(@pubsub_server, from, topic, event, msg)
-      end
-
-      def broadcast(topic, event, msg) do
-        Phoenix.Channel.Server.broadcast(@pubsub_server, topic, event, msg)
-      end
-
-      def broadcast!(topic, event, msg) do
-        Phoenix.Channel.Server.broadcast!(@pubsub_server, topic, event, msg)
-      end
     end
   end
 
@@ -441,17 +371,14 @@ defmodule Phoenix.Endpoint do
   end
 
   @doc """
-  Defines a mount-point for a Socket module to handle channel definitions.
+  Defines a mount-point for a Socket module to handle WebSocket connections.
 
   ## Examples
 
       socket "/ws", MyApp.UserSocket
       socket "/ws/admin", MyApp.AdminUserSocket
 
-  By default, the given path is a websocket upgrade endpoint,
-  with long-polling fallback. The transports can be configured
-  within the Socket handler. See `Phoenix.Socket` for more information
-  on defining socket handlers.
+  See `Phoenix.Socket` for more information on defining socket handlers.
   """
   defmacro socket(path, module) do
     # Tear the alias to simply store the root in the AST.

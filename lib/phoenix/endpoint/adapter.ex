@@ -17,7 +17,6 @@ defmodule Phoenix.Endpoint.Adapter do
 
     children =
       config_children(mod, conf) ++
-      pubsub_children(mod, conf) ++
       server_children(mod, conf, server?) ++
       watcher_children(mod, conf, server?) ++
       code_reloader_children(mod, conf)
@@ -37,16 +36,6 @@ defmodule Phoenix.Endpoint.Adapter do
     conf = [endpoint_id: id] ++ defaults(app, mod)
     args = [app, mod, conf, [name: Module.concat(mod, Config)]]
     [worker(Phoenix.Config, args)]
-  end
-
-  defp pubsub_children(mod, conf) do
-    pub_conf = conf[:pubsub]
-
-    if adapter = pub_conf[:adapter] do
-      [supervisor(adapter, [mod.__pubsub_server__(), pub_conf])]
-    else
-      []
-    end
   end
 
   defp server_children(mod, conf, server?) do
@@ -113,7 +102,6 @@ defmodule Phoenix.Endpoint.Adapter do
      url: [host: "localhost", path: "/"],
 
      # Supervisor config
-     pubsub: [pool_size: 1],
      watchers: []]
   end
 

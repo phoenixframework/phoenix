@@ -22,7 +22,6 @@ defmodule Mix.Tasks.Phoenix.New do
     {:eex,  "new/test/support/conn_case.ex",                 "test/support/conn_case.ex"},
     {:eex,  "new/test/support/channel_case.ex",              "test/support/channel_case.ex"},
     {:eex,  "new/test/test_helper.exs",                      "test/test_helper.exs"},
-    {:eex,  "new/web/channels/user_socket.ex",               "web/channels/user_socket.ex"},
     {:keep, "new/web/controllers",                           "web/controllers"},
     {:keep, "new/web/models",                                "web/models"},
     {:eex,  "new/web/router.ex",                             "web/router.ex"},
@@ -47,7 +46,6 @@ defmodule Mix.Tasks.Phoenix.New do
     {:text, "static/brunch/package.json",     "package.json"},
     {:text, "static/app.css",                 "web/static/css/app.css"},
     {:eex,  "static/brunch/app.js",           "web/static/js/app.js"},
-    {:eex,  "static/brunch/socket.js",        "web/static/js/socket.js"},
     {:text, "static/robots.txt",              "web/static/assets/robots.txt"},
   ]
 
@@ -80,7 +78,6 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   # Embed missing files from Phoenix static.
-  embed_text :phoenix_js, from_file: Path.expand("../../priv/static/phoenix.js", __DIR__)
   embed_text :phoenix_png, from_file: Path.expand("../../priv/static/phoenix.png", __DIR__)
   embed_text :phoenix_favicon, from_file: Path.expand("../../priv/static/favicon.ico", __DIR__)
 
@@ -169,7 +166,6 @@ defmodule Mix.Tasks.Phoenix.New do
     # means creating a database like FoO is the same as foo in
     # some storages.
     {adapter_app, adapter_module, adapter_config} = get_ecto_adapter(db, String.downcase(app), mod)
-    pubsub_server = get_pubsub_server(mod)
     in_umbrella? = in_umbrella?(path)
 
     {brunch_deps_prefix, static_deps_prefix} =
@@ -183,7 +179,6 @@ defmodule Mix.Tasks.Phoenix.New do
                phoenix_dep: phoenix_dep(phoenix_path),
                phoenix_path: phoenix_path,
                phoenix_static_path: phoenix_static_path(phoenix_path),
-               pubsub_server: pubsub_server,
                secret_key_base: random_string(64),
                prod_secret_key_base: random_string(64),
                signing_salt: random_string(8),
@@ -276,7 +271,6 @@ defmodule Mix.Tasks.Phoenix.New do
   defp copy_static(_app, path, binding) do
     if binding[:brunch] == false do
       copy_from path, binding, @bare
-      create_file Path.join(path, "priv/static/js/phoenix.js"), phoenix_js_text()
       create_file Path.join(path, "priv/static/images/phoenix.png"), phoenix_png_text()
       create_file Path.join(path, "priv/static/favicon.ico"), phoenix_favicon_text()
     else
@@ -440,13 +434,6 @@ defmodule Mix.Tasks.Phoenix.New do
     Enum.map(kw, fn {k, v} ->
       ",\n  #{k}: #{inspect v}"
     end)
-  end
-
-  defp get_pubsub_server(module) do
-    module
-    |> String.split(".")
-    |> hd
-    |> Module.concat(PubSub)
   end
 
   defp in_umbrella?(app_path) do
