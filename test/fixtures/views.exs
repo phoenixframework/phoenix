@@ -42,6 +42,12 @@ defmodule MyApp.UserView do
   end
 
   def render("existing.html", _), do: "rendered existing"
+
+  def render("inner.html", assigns) do
+    if assigns[:view_module] || assigns[:view_template] do
+      raise "view module/template shouldn't be set"
+    end
+  end
 end
 
 defmodule MyApp.Templates.UserView do

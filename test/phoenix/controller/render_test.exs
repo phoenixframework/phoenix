@@ -66,6 +66,10 @@ defmodule Phoenix.Controller.RenderTest do
     assert html_response?(conn)
   end
 
+  test "render does not forward inner view assigns with no layout" do
+    assert render(conn, "inner.html", title: "Hello", layout: {MyApp.LayoutView, :app})
+  end
+
   test "renders with conn status code" do
     conn = %Plug.Conn{conn | status: 404}
     conn = render(conn, "index.html", title: "Hello", layout: {MyApp.LayoutView, "app.html"})

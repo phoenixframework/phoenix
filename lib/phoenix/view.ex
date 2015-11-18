@@ -192,19 +192,20 @@ defmodule Phoenix.View do
     |> render_within(module, template)
   end
 
-  defp render_within({{layout_mod, layout_tpl}, assigns}, inner_mod, template) do
-    template
-    |> inner_mod.render(assigns)
-    |> render_layout(layout_mod, layout_tpl, assigns)
+  defp render_within({{layout_mod, layout_tpl}, assigns}, inner_mod, inner_tpl) do
+    assigns =
+      assigns
+      |> Map.put(:view_module, inner_mod)
+      |> Map.put(:view_template, inner_tpl)
+
+    render_layout(layout_mod, layout_tpl, assigns)
   end
 
   defp render_within({false, assigns}, module, template) do
-    template
-    |> module.render(assigns)
+    module.render(template, Map.drop(assigns, [:view_module, :view_template]))
   end
 
-  defp render_layout(inner_content, layout_mod, layout_tpl, assigns) do
-    assigns = Map.put(assigns, :inner, inner_content)
+  defp render_layout(layout_mod, layout_tpl, assigns) do
     layout_mod.render(layout_tpl, assigns)
   end
 
