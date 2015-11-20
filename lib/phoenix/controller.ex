@@ -371,13 +371,13 @@ defmodule Phoenix.Controller do
       iex> layout(conn)
       false
 
-      iex> conn = put_layout conn, {AppView, "application"}
+      iex> conn = put_layout conn, {AppView, "application.html"}
       iex> layout(conn)
-      {AppView, "application"}
+      {AppView, "application.html"}
 
-      iex> conn = put_layout conn, "print"
+      iex> conn = put_layout conn, "print.html"
       iex> layout(conn)
-      {AppView, "print"}
+      {AppView, "print.html"}
 
       iex> conn = put_layout :print
       iex> layout(conn)
