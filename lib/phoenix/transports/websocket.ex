@@ -146,8 +146,8 @@ defmodule Phoenix.Transports.WebSocket do
   end
 
   @doc false
-  def ws_terminate(_reason, _state) do
-    :ok
+  def ws_terminate(_reason, state) do
+    {:shutdown, state}
   end
 
   @doc false
