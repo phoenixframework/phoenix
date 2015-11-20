@@ -627,12 +627,12 @@ defmodule Phoenix.Router do
 
   ## Examples
 
-    scope "/", MyApp do
-      pipe_through [:browser, :admin]
+      scope "/", MyApp do
+        pipe_through [:browser, :admin]
 
-      forward "/admin", SomeLib.AdminDashboard
-      forward "/api", ApiRouter
-    end
+        forward "/admin", SomeLib.AdminDashboard
+        forward "/api", ApiRouter
+      end
 
   """
   defmacro forward(path, plug, plug_opts \\ [], router_opts \\ []) do
