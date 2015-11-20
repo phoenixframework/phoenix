@@ -45,6 +45,10 @@ defmodule Phoenix.Integration.WebSocketTest do
     def handle_in("boom", _message, _socket) do
       raise "boom"
     end
+    
+    def handle_in("timeout", _message, _socket) do
+      :timer.sleep(1000)
+    end
 
     def handle_out("new_msg", payload, socket) do
       push socket, "new_msg", Map.put(payload, "transport", inspect(socket.transport))
@@ -160,6 +164,21 @@ defmodule Phoenix.Integration.WebSocketTest do
     WebsocketClient.close(sock)
 
     assert_receive {:DOWN, _, :process, ^channel, {:shutdown, :closed}}
+  end
+  
+  test "channels are terminated if transport times out" do
+    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket")
+
+    WebsocketClient.join(sock, "rooms:timeout", %{})
+    assert_receive %Message{event: "phx_reply", ref: "1", payload: %{"response" => %{}, "status" => "ok"}}
+    assert_receive %Message{event: "joined"}
+    channel = Process.whereis(:"rooms:timeout")
+    assert channel
+    Process.monitor(channel)
+    WebsocketClient.send_event(sock, "rooms:timeout", "timeout", %{})
+    :timer.sleep(200)
+
+    assert_receive {:DOWN, _, :process, ^channel, :shutdown}
   end
 
   test "refuses websocket events that haven't joined" do
