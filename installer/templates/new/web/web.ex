@@ -43,6 +43,7 @@ defmodule <%= application_module %>.Web do
       import Ecto.Query, only: [from: 1, from: 2]
 <% end %>
       import <%= application_module %>.Router.Helpers
+      import <%= application_module %>.Gettext
     end
   end
 
@@ -57,6 +58,7 @@ defmodule <%= application_module %>.Web do
       use Phoenix.HTML<% end %>
 
       import <%= application_module %>.Router.Helpers
+      import <%= application_module %>.Gettext
     end
   end
 
@@ -73,6 +75,7 @@ defmodule <%= application_module %>.Web do
       alias <%= application_module %>.Repo
       import Ecto.Model
       import Ecto.Query, only: [from: 1, from: 2]<% end %>
+      import <%= application_module %>.Gettext
     end
   end
 

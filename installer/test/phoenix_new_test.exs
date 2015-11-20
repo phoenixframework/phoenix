@@ -119,6 +119,10 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       refute File.exists?("photo_blog/web/channels/.keep")
       assert_file "photo_blog/web/channels/user_socket.ex", ~r"defmodule PhotoBlog.UserSocket"
       assert_file "photo_blog/lib/photo_blog/endpoint.ex", ~r"socket \"/socket\", PhotoBlog.UserSocket"
+
+      # Gettext
+      assert_file "photo_blog/web/gettext.ex", ~r"defmodule PhotoBlog.Gettext"
+      assert File.exists?("photo_blog/priv/gettext/en/LC_MESSAGES/default.po")
     end
   end
 

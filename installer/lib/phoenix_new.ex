@@ -31,6 +31,8 @@ defmodule Mix.Tasks.Phoenix.New do
     {:eex,  "new/web/web.ex",                                "web/web.ex"},
     {:eex,  "new/mix.exs",                                   "mix.exs"},
     {:eex,  "new/README.md",                                 "README.md"},
+    {:eex,  "new/web/gettext.ex",                            "web/gettext.ex"},
+    {:eex,  "new/priv/gettext/en/LC_MESSAGES/default.po",    "priv/gettext/en/LC_MESSAGES/default.po"},
   ]
 
   @ecto [

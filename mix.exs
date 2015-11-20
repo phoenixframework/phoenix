@@ -41,6 +41,7 @@ defmodule Phoenix.Mixfile do
     [{:cowboy, "~> 1.0", optional: true},
      {:plug, "~> 1.0"},
      {:poison, "~> 1.3"},
+     {:gettext, "~> 0.7", optional: true},
 
      # Docs dependencies
      {:earmark, "~> 0.1", only: :docs},
