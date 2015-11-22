@@ -170,19 +170,21 @@ defmodule Phoenix.View do
     * `:layout` - tells Phoenix to wrap the rendered result in the
       given layout. See next section.
 
+  The following assigns are reserved, and cannot be set directly:
+
+    * `@view_module` - The view module being rendered
+    * `@view_template` - The `@view_module`'s template being rendered
+
   ## Layouts
 
   Templates can be rendered within other templates using the `:layout`
   option. `:layout` accepts a tuple of the form
   `{LayoutModule, "template.extension"}`.
 
-  When a template is rendered, the layout template will have an `@inner`
-  assign containing the rendered contents of the sub-template. For HTML
-  templates, `@inner` will be always marked as safe.
+  To render the template within the layout, simply call `render/3`
+  using the `@view_module` and `@view_template` assign:
 
-      Phoenix.View.render(YourApp.UserView, "index.html",
-                          layout: {YourApp.LayoutView, "app.html"})
-      #=> {:safe, "<html><h1>Hello!</h1></html>"}
+      <%= render @view_module, @view_template, assigns %>
 
   """
   def render(module, template, assigns) do
@@ -192,19 +194,20 @@ defmodule Phoenix.View do
     |> render_within(module, template)
   end
 
-  defp render_within({{layout_mod, layout_tpl}, assigns}, inner_mod, template) do
-    template
-    |> inner_mod.render(assigns)
-    |> render_layout(layout_mod, layout_tpl, assigns)
+  defp render_within({{layout_mod, layout_tpl}, assigns}, inner_mod, inner_tpl) do
+    assigns = Map.merge(assigns, %{view_module: inner_mod,
+                                   view_template: inner_tpl})
+
+    render_layout(layout_mod, layout_tpl, assigns)
   end
 
   defp render_within({false, assigns}, module, template) do
-    template
-    |> module.render(assigns)
+    assigns = Map.merge(assigns, %{view_module: module,
+                                   view_template: template})
+    module.render(template, assigns)
   end
 
-  defp render_layout(inner_content, layout_mod, layout_tpl, assigns) do
-    assigns = Map.put(assigns, :inner, inner_content)
+  defp render_layout(layout_mod, layout_tpl, assigns) do
     layout_mod.render(layout_tpl, assigns)
   end
 
@@ -213,7 +216,7 @@ defmodule Phoenix.View do
 
   Same as `render/3`, but returns `nil` instead of raising.
   Useful for dynamically rendering templates in the layout that may or
-  may not be implemented by the `@inner` view.
+  may not be implemented by the `@view_module` view.
 
   ## Examples
 
@@ -222,10 +225,10 @@ defmodule Phoenix.View do
   may wish to inject certain scripts, while others will not.
 
       <head>
-        <%= render_existing view_module(@conn), "scripts.html", assigns %>
+        <%= render_existing @view_module, "scripts.html", assigns %>
       </head>
 
-  Then the module for the `@inner` view can decide to provide scripts with
+  Then the module for the `@view_module` view can decide to provide scripts with
   either a precompiled template, or by implementing the function directly, ie:
 
       def render("scripts.html", _assigns) do
@@ -238,12 +241,12 @@ defmodule Phoenix.View do
 
   ## Rendering based on controller template
 
-  In some cases, you might need to render based on the template from the controller.
-  For these cases, `Phoenix.Controller.view_template/1` can pair with
+  In some cases, you might need to render based on the template.
+  For these cases, `@view_template` can pair with
   `render_existing/3` for per-template based content, ie:
 
       <head>
-        <%= render_existing view_module(@conn), "scripts." <> view_template(@conn), assigns %>
+        <%= render_existing @view_module, "scripts." <> @view_template, assigns %>
       </head>
 
       def render("scripts.show.html", _assigns) do

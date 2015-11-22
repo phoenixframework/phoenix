@@ -42,6 +42,12 @@ defmodule MyApp.UserView do
   end
 
   def render("existing.html", _), do: "rendered existing"
+
+  def render("inner.html", assigns) do
+    """
+    View module is #{assigns.view_module} and view template is #{assigns.view_template}
+    """
+  end
 end
 
 defmodule MyApp.Templates.UserView do
