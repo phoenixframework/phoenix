@@ -10,7 +10,7 @@ defmodule <%= application_module %> do
       # Start the endpoint when the application starts
       supervisor(<%= application_module %>.Endpoint, []),<%= if ecto do %>
       # Start the Ecto repository
-      worker(<%= application_module %>.Repo, []),<% end %>
+      supervisor(<%= application_module %>.Repo, []),<% end %>
       # Here you could define other workers and supervisors as children
       # worker(<%= application_module %>.Worker, [arg1, arg2, arg3]),
     ]
