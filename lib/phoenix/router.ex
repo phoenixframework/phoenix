@@ -28,7 +28,7 @@ defmodule Phoenix.Router do
         get "/pages/:page", PageController, :show
       end
 
-  The `get/3` macro above accepts a request of format "/pages/VALUE" and
+  The `get/3` macro above accepts a request of format `"/pages/VALUE"` and
   dispatches it to the show action in the `PageController`.
 
   Routes can also match glob-like patterns, routing any path with a common
@@ -85,7 +85,7 @@ defmodule Phoenix.Router do
         get "/pages/:id", PageController, :show
       end
 
-  For example, the route above will match on the path `"/api/v1/pages/:id"
+  For example, the route above will match on the path `"/api/v1/pages/:id"`
   and the named route will be `api_v1_page_path`, as expected from the
   values given to `scope/2` option.
 
@@ -539,7 +539,7 @@ defmodule Phoenix.Router do
         get "/pages/:id", PageController, :show
       end
 
-  The generated route above will match on the path `"/api/v1/pages/:id"
+  The generated route above will match on the path `"/api/v1/pages/:id"`
   and will dispatch to `:show` action in `API.V1.PageController`. A named
   helper `api_v1_page_path` will also be generated.
 
