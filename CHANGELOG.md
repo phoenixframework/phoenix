@@ -14,6 +14,9 @@
 * Bug fixes
   * [LongPoll] force application/json content-type to fix blank JSON bodies on older IE clients using xdomain
 
+* Backward incompatible changes
+  * [View] The `@inner` assign has been removed in favor of explicit rendering with `render/3` and the new `@view_module` and `view_template` assigns, for example: `<%= @inner %>` is replaced by `<%= render @view_module, @view_template, assigns %>`
+
 ## 1.0.3 (2015-9-28)
 
 * Enhancements
