@@ -159,7 +159,6 @@ defmodule Phoenix.Controller do
   """
   @spec view_template(Plug.Conn.t) :: binary | nil
   def view_template(conn) do
-    IO.puts :stderr, "[deprecation] view_template/1 has been deprecated in favor of the @view_template assign"
     conn.private[:phoenix_template]
   end
 
@@ -355,7 +354,6 @@ defmodule Phoenix.Controller do
   """
   @spec view_module(Plug.Conn.t) :: atom
   def view_module(conn) do
-    IO.puts :stderr, "[deprecation] view_module/1 has been deprecated in favor of the @view_module assign"
     conn.private.phoenix_view
   end
 
