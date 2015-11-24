@@ -38,8 +38,10 @@ defmodule Phoenix.Endpoint.EndpointTest do
       |> put_in([:static_url, :port], 456)
 
     assert Endpoint.config_change([{Endpoint, config}], []) == :ok
-    assert Endpoint.config(:url) == [host: "example.com", path: "/", port: 1234]
-    assert Endpoint.config(:static_url) == [port: 456, host: "static.example.com"]
+    assert Enum.sort(Endpoint.config(:url)) ==
+           [host: "example.com", path: "/", port: 1234]
+    assert Enum.sort(Endpoint.config(:static_url)) ==
+           [host: "static.example.com", port: 456]
     assert Endpoint.url == "https://example.com:1234"
     assert Endpoint.static_url == "https://static.example.com:456"
     assert Endpoint.struct_url == %URI{scheme: "https", host: "example.com", port: 1234, path: nil}

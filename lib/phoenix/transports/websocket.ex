@@ -43,11 +43,8 @@ defmodule Phoenix.Transports.WebSocket do
   def default_config() do
     [serializer: Phoenix.Transports.WebSocketSerializer,
      timeout: 60_000,
-     transport_log: false]
-  end
-
-  def handlers() do
-    %{cowboy: Phoenix.Endpoint.CowboyWebSocket}
+     transport_log: false,
+     cowboy: Phoenix.Endpoint.CowboyWebSocket]
   end
 
   ## Callbacks

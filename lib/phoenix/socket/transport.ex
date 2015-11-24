@@ -116,11 +116,6 @@ defmodule Phoenix.Socket.Transport do
   defcallback default_config() :: Keyword.t
 
   @doc """
-  Provides handlers for different applications.
-  """
-  defcallback handlers() :: map
-
-  @doc """
   Returns the Channel Transport protocol version.
   """
   def protocol_version, do: @protocol_version

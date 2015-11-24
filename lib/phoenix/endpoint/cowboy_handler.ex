@@ -61,8 +61,8 @@ defmodule Phoenix.Endpoint.CowboyHandler do
   def child_spec(scheme, endpoint, config) do
     dispatches =
       for {path, socket} <- endpoint.__sockets__,
-          {transport, {module, _config}} <- socket.__transports__,
-          handler = module.handlers[:cowboy],
+          {transport, {module, config}} <- socket.__transports__,
+          handler = config[:cowboy],
           do: {Path.join(path, Atom.to_string(transport)),
                handler,
                {module, {endpoint, socket, transport}}}
