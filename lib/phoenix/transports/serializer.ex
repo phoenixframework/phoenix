@@ -1,6 +1,6 @@
 defmodule Phoenix.Transports.Serializer do
   @moduledoc """
-  Defines a behaviour for `Phoenix.Socket.Message` serializiation.
+  Defines a behaviour for `Phoenix.Socket.Message` serialization.
   """
 
   use Behaviour
