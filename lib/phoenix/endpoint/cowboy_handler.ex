@@ -62,7 +62,8 @@ defmodule Phoenix.Endpoint.CowboyHandler do
     dispatches =
       for {path, socket} <- endpoint.__sockets__,
           {transport, {module, config}} <- socket.__transports__,
-          handler = config[:cowboy],
+          # Allow handlers to be configured at the transport level
+          handler = config[:cowboy] || default_for(module),
           do: {Path.join(path, Atom.to_string(transport)),
                handler,
                {module, {endpoint, socket, transport}}}
@@ -80,6 +81,10 @@ defmodule Phoenix.Endpoint.CowboyHandler do
     mfa = {__MODULE__, :start_link, [scheme, endpoint, config, mfa]}
     {ref, mfa, type, timeout, kind, modules}
   end
+
+  defp default_for(Phoenix.Transports.LongPoll), do: Plug.Adapters.Cowboy.Handler
+  defp default_for(Phoenix.Transports.WebSocket), do: Phoenix.Endpoint.CowboyWebSocket
+  defp default_for(_), do: nil
 
   @doc """
   Callback to start the Cowboy endpoint.

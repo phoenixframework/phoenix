@@ -67,14 +67,13 @@ defmodule Phoenix.SocketTest do
   test "transport config is exposted and merged with prior registrations" do
     {Phoenix.Transports.WebSocket, opts} = UserSocket.__transport__(:websocket)
     assert Enum.sort(opts) ==
-           [cowboy: Phoenix.Endpoint.CowboyWebSocket,
-            serializer: Phoenix.Transports.WebSocketSerializer,
+           [serializer: Phoenix.Transports.WebSocketSerializer,
             timeout: 1234, transport_log: false]
 
     {Phoenix.Transports.LongPoll, opts} = UserSocket.__transport__(:longpoll)
     assert Enum.sort(opts) ==
-           [cowboy: Plug.Adapters.Cowboy.Handler, crypto: [max_age: 1209600],
-            pubsub_timeout_ms: 2000, serializer: Phoenix.Transports.LongPollSerializer,
+           [crypto: [max_age: 1209600], pubsub_timeout_ms: 2000,
+            serializer: Phoenix.Transports.LongPollSerializer,
             transport_log: false, window_ms: 10000]
   end
 end

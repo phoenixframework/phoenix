@@ -42,8 +42,7 @@ defmodule Phoenix.Transports.LongPoll do
      pubsub_timeout_ms: 2_000,
      serializer: Phoenix.Transports.LongPollSerializer,
      transport_log: false,
-     crypto: [max_age: 1209600],
-     cowboy: Plug.Adapters.Cowboy.Handler]
+     crypto: [max_age: 1209600]]
   end
 
   ## Plug callbacks
