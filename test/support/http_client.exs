@@ -2,10 +2,10 @@ defmodule Phoenix.Integration.HTTPClient do
   @doc """
   Performs HTTP Request and returns Response
 
-    * method - The http methid, for example :get, :post, :put, etc
+    * method - The http method, for example :get, :post, :put, etc
     * url - The string url, for example "http://example.com"
     * headers - The map of headers
-    * body - The optional string body. If the body is a map, it is convered
+    * body - The optional string body. If the body is a map, it is converted
       to a URI encoded string of parameters
 
   ## Examples
