@@ -232,7 +232,7 @@ export class Channel {
     this.joinPush.receive("timeout", () => {
       if(this.state !== CHANNEL_STATES.joining){ return }
 
-      this.socket.log("channel", `timeout ${this.topic}`, reason)
+      this.socket.log("channel", `timeout ${this.topic}`, this.joinPush.timeout)
       this.state = CHANNEL_STATES.errored
       this.rejoinTimer.setTimeout()
     })
