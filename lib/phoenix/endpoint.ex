@@ -226,6 +226,9 @@ defmodule Phoenix.Endpoint do
       unquote(pubsub())
       unquote(plug())
       unquote(server())
+
+      require Phoenix.Endpoint.Instrument
+      Phoenix.Endpoint.Instrument.definstrument(var!(otp_app))
     end
   end
 
