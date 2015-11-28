@@ -76,7 +76,6 @@ defmodule Phoenix.Socket do
   writing your own transports.
   """
 
-  use Behaviour
   alias Phoenix.Socket
 
 
@@ -97,7 +96,7 @@ defmodule Phoenix.Socket do
   See `Phoenix.Token` documentation for examples in
   performing token verification on connect.
   """
-  defcallback connect(params :: map, Socket.t) :: {:ok, Socket.t} | :error
+  @callback connect(params :: map, Socket.t) :: {:ok, Socket.t} | :error
 
   @doc ~S"""
   Identifies the socket connection.
@@ -113,7 +112,7 @@ defmodule Phoenix.Socket do
 
   Returning `nil` makes this socket anonymous.
   """
-  defcallback id(Socket.t) :: String.t | nil
+  @callback id(Socket.t) :: String.t | nil
 
   defmodule InvalidMessageError do
     @moduledoc """

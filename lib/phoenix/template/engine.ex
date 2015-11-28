@@ -11,7 +11,5 @@ defmodule Phoenix.Template.Engine do
   See `Phoenix.Template.EExEngine` for an example engine implementation.
   """
 
-  use Behaviour
-
-  defcallback compile(template_path :: binary, template_name :: binary) :: Macro.t
+  @callback compile(template_path :: binary, template_name :: binary) :: Macro.t
 end
