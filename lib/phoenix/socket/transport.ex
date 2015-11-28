@@ -101,7 +101,6 @@ defmodule Phoenix.Socket.Transport do
   implementation.
   """
 
-  use Behaviour
   require Logger
   alias Phoenix.Socket
   alias Phoenix.Socket.Message
@@ -113,7 +112,7 @@ defmodule Phoenix.Socket.Transport do
   @doc """
   Provides a keyword list of default configuration for socket transports.
   """
-  defcallback default_config() :: Keyword.t
+  @callback default_config() :: Keyword.t
 
   @doc """
   Returns the Channel Transport protocol version.
