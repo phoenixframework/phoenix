@@ -79,6 +79,7 @@ defmodule Phoenix.Endpoint.Instrument do
 
       # Let's define the current_time/0 and time_diff/2 functions based on the
       # existence of :erlang.monotonic_time/1.
+      # TODO: remove this once Phoenix supports only Elixir 1.2.
       @compile {:inline, current_time: 0, time_diff: 2}
       if function_exported?(:erlang, :monotonic_time, 1) do
         defp current_time, do: :erlang.monotonic_time(:micro_seconds)

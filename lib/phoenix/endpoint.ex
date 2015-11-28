@@ -50,7 +50,7 @@ defmodule Phoenix.Endpoint do
   Endpoint configuration is split into two categories. Compile-time
   configuration means the configuration is read during compilation
   and changing it at runtime has no effect. The compile-time
-  configuration is mostly related to error handling.
+  configuration is mostly related to error handling and instrumentation.
 
   Runtime configuration, instead, is accessed during or
   after your application is started and can be read and written through the
@@ -76,6 +76,10 @@ defmodule Phoenix.Endpoint do
           [view: MyApp.ErrorView, accepts: ~w(html)]
 
       The default format is used when none is set in the connection.
+
+    * `:instrumentation` - a list of instrumenters modules whose callbacks will
+      be fired on instrumentation events. Read more on instrumentation in the
+      "Instrumentation" section below.
 
   ### Runtime configuration
 
@@ -214,6 +218,65 @@ defmodule Phoenix.Endpoint do
     * `init(opts)` - invoked when starting the endpoint server
     * `call(conn, opts)` - invoked on every request (simply dispatches to
       the defined plug pipeline)
+
+  #### Instrumentation API
+
+    * `instrument(event, runtime_metadata \\ nil, function)` - read more about
+      instrumentation in the "Instrumentation" section
+
+  ## Instrumentation
+
+  Phoenix supports instrumentation through an extensible API. Each endpoint
+  defines an `instrument/3` macro that both users and Phoenix internals can call
+  to instrument generic events. This macro is responsible for measuring the time
+  it takes for the event to happen and for notifying a list of interested
+  instrumenter modules of this measurement.
+
+  You can configure this list of instrumenter modules in the compile-time
+  configuration of your endpoint. (see the `:instrumentation` option above). The
+  way these modules express their interest in events is by exporting public
+  functions where the name of each function is the name of an event. For
+  example, if someone instruments the `:render_view` event, then each
+  instrumenter module interested in that event will have to export
+  `render_view/3`.
+
+  ### Callbacks cycle
+
+  The way event callbacks are called is the following.
+
+    1. The event callback is called *before* the event happens (in this case,
+       before the view is rendered). The callback is called with the following
+       arguments:
+
+           MyInstrumenter.render_view(:start, compile_meta, runtime_meta)
+
+       `compile_meta` is a map of compile-time metadata (like the file and line
+       where the instrumentation is being done). `runtime_meta` is a term that
+       is passed on by the caller of the instrumentation. The result of this
+       call is stored and later passed to the after callback.
+    2. The event happens (in this case, the view is rendered).
+    3. The event callback is called again, this time with the following arguments:
+
+           MyInstrumenter.render_view(:stop, time_diff, start_result)
+
+       `time_diff` is the time *in microseconds* it took for the event to
+       happen (in this case, the view rendering time). `start_result` is
+       whatever the event callback returned when called with `:start` as the
+       first argument: instrumenters can use this to pass "state" from the
+       before callback to the after callback.
+
+  ### Using instrumentation
+
+  Each Phoenix endpoint defines its own `instrument/3` macro. This macro is
+  called like this:
+
+      require MyApp.Endpoint
+      MyApp.Endpoint.instrument :render_view, "index.html", fn ->
+        # actual view rendering
+      end
+
+  All the instrumenter modules that export a `render_view/3` function will be
+  notified of the event so that they can perform their respective actions.
 
   """
 
