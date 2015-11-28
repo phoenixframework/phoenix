@@ -226,16 +226,13 @@ defmodule Phoenix.Endpoint do
       unquote(pubsub())
       unquote(plug())
       unquote(server())
-
-      require Phoenix.Endpoint.Instrument
-      Phoenix.Endpoint.Instrument.definstrument(var!(otp_app))
     end
   end
 
   defp config(opts) do
     quote do
-      var!(otp_app) = unquote(opts)[:otp_app] || raise "endpoint expects :otp_app to be given"
-      var!(config)  = Adapter.config(var!(otp_app), __MODULE__)
+      @otp_app unquote(opts)[:otp_app] || raise "endpoint expects :otp_app to be given"
+      var!(config) = Adapter.config(@otp_app, __MODULE__)
       var!(code_reloading?) = var!(config)[:code_reloader]
 
       # Avoid unused variable warnings
@@ -308,7 +305,7 @@ defmodule Phoenix.Endpoint do
       end
 
       if var!(config)[:debug_errors] do
-        use Plug.Debugger, otp_app: var!(otp_app)
+        use Plug.Debugger, otp_app: @otp_app
       end
 
       use Phoenix.Endpoint.RenderErrors, var!(config)[:render_errors]
@@ -321,7 +318,7 @@ defmodule Phoenix.Endpoint do
       Starts the endpoint supervision tree.
       """
       def start_link do
-        Adapter.start_link(unquote(var!(otp_app)), __MODULE__)
+        Adapter.start_link(@otp_app, __MODULE__)
       end
 
       @doc """
@@ -421,6 +418,8 @@ defmodule Phoenix.Endpoint do
     sockets = Module.get_attribute(env.module, :phoenix_sockets)
     plugs = Module.get_attribute(env.module, :plugs)
     {conn, body} = Plug.Builder.compile(env, plugs, [])
+    otp_app = Module.get_attribute(env.module, :otp_app)
+    instrumentation = Phoenix.Endpoint.Instrument.definstrument(otp_app, env.module)
 
     quote do
       defp phoenix_pipeline(unquote(conn)), do: unquote(body)
@@ -429,6 +428,8 @@ defmodule Phoenix.Endpoint do
       Returns all sockets configured in this endpoint.
       """
       def __sockets__, do: unquote(sockets)
+
+      unquote(instrumentation)
     end
   end
 

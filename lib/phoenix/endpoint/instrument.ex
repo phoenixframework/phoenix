@@ -5,16 +5,10 @@ defmodule Phoenix.Endpoint.Instrument do
   # have.
   @event_callback_arity 3
 
-  @doc """
-  Defines the `instrument/3` macro and `instrument/4` function on the caller
-  module.
+  def definstrument(otp_app, endpoint) do
+    app_instrumenters = app_instrumenters(otp_app, endpoint)
 
-  `app` is an OTP app used in order to retrieve the correct configuration.
-  """
-  defmacro definstrument(app) do
-    quote bind_quoted: [app: app] do
-      app_instrumenters = Phoenix.Endpoint.Instrument.app_instrumenters(app, __MODULE__)
-
+    quote bind_quoted: [app_instrumenters: app_instrumenters] do
       @doc """
       Instruments the given function.
 
@@ -60,6 +54,9 @@ defmodule Phoenix.Endpoint.Instrument do
       #     end
       #   end
       #
+      @doc false
+      def instrument(event, compile, runtime, fun)
+
       for {event, instrumenters} <- app_instrumenters do
         def instrument(unquote(event), var!(compile), var!(runtime), fun)
             when is_map(var!(compile)) and is_function(fun, 0) do
@@ -93,21 +90,12 @@ defmodule Phoenix.Endpoint.Instrument do
     end
   end
 
-  @doc """
-  Reads a list of the instrumnters from the config of `otp_app` and finds all
-  events in those instrumenters.
-
-  `endpoint` is used because the list of instrumenters is stored under
-  `endpoint` in the config for `otp_app`:
-
-      config :my_app, MyApp.Endpoint, instrumentation: [Instr1, Instr2, ...]
-
-  The return value is a list of `{event, instrumenters}` tuples, one for each
-  event defined by any instrumenters (with no duplicated events);
-  `instrumenters` is the list of instrumenters interested in `event`.
-  """
-  @spec app_instrumenters(atom, module) :: [{term, module}]
-  def app_instrumenters(otp_app, endpoint) do
+  # Reads a list of the instrumenters from the config of `otp_app` and finds all
+  # events in those instrumenters. The return value is a list of `{event,
+  # instrumenters}` tuples, one for each event defined by any instrumenters
+  # (with no duplicated events); `instrumenters` is the list of instrumenters
+  # interested in `event`.
+  defp app_instrumenters(otp_app, endpoint) do
     config        = Application.get_env(otp_app, endpoint, [])
     instrumenters = config[:instrumentation] || []
 
@@ -119,7 +107,7 @@ defmodule Phoenix.Endpoint.Instrument do
   end
 
   @doc """
-  Strips a `Macro.Env` struct, leaving only intereseting compile-time metadata.
+  Strips a `Macro.Env` struct, leaving only interesting compile-time metadata.
   """
   @spec strip_caller(Macro.Env.t) :: %{}
   def strip_caller(%Macro.Env{module: mod, function: fun, file: file, line: line}) do
