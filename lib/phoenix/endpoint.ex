@@ -233,7 +233,7 @@ defmodule Phoenix.Endpoint do
   instrumenter modules of this measurement.
 
   You can configure this list of instrumenter modules in the compile-time
-  configuration of your endpoint. (see the `:instrumentation` option above). The
+  configuration of your endpoint. (see the `:instrumenters` option above). The
   way these modules express their interest in events is by exporting public
   functions where the name of each function is the name of an event. For
   example, if someone instruments the `:render_view` event, then each
