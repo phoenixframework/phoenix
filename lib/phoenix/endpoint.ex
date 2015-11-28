@@ -77,7 +77,7 @@ defmodule Phoenix.Endpoint do
 
       The default format is used when none is set in the connection.
 
-    * `:instrumentation` - a list of instrumenters modules whose callbacks will
+    * `:instrumenters` - a list of instrumenters modules whose callbacks will
       be fired on instrumentation events. Read more on instrumentation in the
       "Instrumentation" section below.
 

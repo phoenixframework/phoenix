@@ -1,7 +1,7 @@
 defmodule Phoenix.Endpoint.InstrumentTest do
   use ExUnit.Case
 
-  @config [instrumentation: [__MODULE__.MyInstrumenter, __MODULE__.MyOtherInstrumenter]]
+  @config [instrumenters: [__MODULE__.MyInstrumenter, __MODULE__.MyOtherInstrumenter]]
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
 
   defmodule MyInstrumenter do

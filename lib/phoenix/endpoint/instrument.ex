@@ -98,10 +98,10 @@ defmodule Phoenix.Endpoint.Instrument do
   # interested in `event`.
   defp app_instrumenters(otp_app, endpoint) do
     config        = Application.get_env(otp_app, endpoint, [])
-    instrumenters = config[:instrumentation] || []
+    instrumenters = config[:instrumenters] || []
 
     unless is_list(instrumenters) and Enum.all?(instrumenters, &is_atom/1) do
-      raise ":instrumentation must be a list of instrumenter modules"
+      raise ":instrumenters must be a list of instrumenter modules"
     end
 
     events_to_instrumenters(instrumenters)
