@@ -15,7 +15,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
 
     # Assert endpoint variables
     assert is_list(config)
-    assert otp_app == :phoenix
+    assert @otp_app == :phoenix
     assert code_reloading? == false
   end
 
