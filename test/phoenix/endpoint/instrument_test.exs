@@ -6,12 +6,12 @@ defmodule Phoenix.Endpoint.InstrumentTest do
 
   defmodule MyInstrumenter do
     def my_event(:start, compile_meta, runtime_meta) do
-      send self(), {:inst_start, %{compile_meta: compile_meta, runtime_meta: runtime_meta}}
+      send self(), {__MODULE__, {:my_event_start, %{compile_meta: compile_meta, runtime_meta: runtime_meta}}}
       :ok
     end
 
     def my_event(:stop, duration, res) do
-      send self(), {:inst_stop, %{result_from_start: res, duration: duration}}
+      send self(), {__MODULE__, {:my_event_stop, %{duration: duration, res: res}}}
     end
 
     def common_event(:start, _, _) do
@@ -40,23 +40,23 @@ defmodule Phoenix.Endpoint.InstrumentTest do
   test "basic usage of instrument/3" do
     import Endpoint
 
-    val = instrument :my_event, %{runtime: :ok}, fn ->
+    return_value = instrument :my_event, :runtime, fn ->
       send self(), :inside_instrument_block
       :normal_return_value
     end
 
-    assert val == :normal_return_value
+    assert return_value == :normal_return_value
 
-    assert_receive {:inst_start, start_data}
+    assert_receive {__MODULE__.MyInstrumenter, {:my_event_start, start_data}}
     assert start_data.compile_meta.file == __ENV__.file
-    assert start_data.runtime_meta == %{runtime: :ok}
+    assert start_data.runtime_meta == :runtime
 
     assert_receive :inside_instrument_block
 
-    assert_receive {:inst_stop, stop_data}
-    assert stop_data.result_from_start == :ok
+    assert_receive {__MODULE__.MyInstrumenter, {:my_event_stop, stop_data}}
+    assert stop_data.res == :ok
     assert is_integer(stop_data.duration)
-    assert stop_data.duration > 0
+    assert stop_data.duration >= 0
   end
 
   test "raising inside the block passed to instrument/3" do
@@ -66,8 +66,8 @@ defmodule Phoenix.Endpoint.InstrumentTest do
       instrument :my_event, %{runtime: :ok}, fn -> raise("oops") end
     end
 
-    assert_receive {:inst_start, _}
-    assert_receive {:inst_stop, _}
+    assert_receive {__MODULE__.MyInstrumenter, {:my_event_start, _}}
+    assert_receive {__MODULE__.MyInstrumenter, {:my_event_stop, _}}
   end
 
   test "if no instrumenter is interested in an event, nothing is called" do
@@ -78,8 +78,7 @@ defmodule Phoenix.Endpoint.InstrumentTest do
     end
 
     assert_receive :uninteresting_event_happened
-    refute_receive {:inst_start, _}
-    refute_receive {:inst_stop, _}
+    refute_receive {_, _}
   end
 
   test "multiple instrumenters interested in the same event" do
