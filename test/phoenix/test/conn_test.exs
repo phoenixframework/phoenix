@@ -315,7 +315,7 @@ defmodule Phoenix.Test.ConnTest do
 
     conn =
       conn()
-      |> bypass_through(Router, [:browser])
+      |> bypass_through(Router, :browser)
       |> get("/")
 
     assert conn.assigns[:bypassed] == [:browser]
