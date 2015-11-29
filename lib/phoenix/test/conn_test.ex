@@ -446,4 +446,52 @@ defmodule Phoenix.ConnTest do
       recycle(conn)
     end
   end
+
+  @doc """
+  Calls the Endpoint and bypasses Router match.
+
+  Useful for unit testing Plugs where Endpoint and/or
+  router pipline plugs are required for proper setup.
+
+  ## Examples
+
+  For example, imagine you are testing an authentication
+  plug in isolation, but you need to invoke the Endpoint plugs
+  and `:browser` pipeline of your Router for session and flash
+  related dependencies:
+
+      conn =
+        conn
+        |> bypass_through(MyApp.Router, [:browser])
+        |> get("/")
+        |> MyApp.RequireAuthentication.call([])
+      assert conn.halted
+
+  Alternatively, you could inoke only the Endpoint, and Router:
+
+      conn =
+        conn
+        |> bypass_through(MyApp.Router, [])
+        |> get("/")
+        |> MyApp.RequireAuthentication.call([])
+      assert conn.halted
+
+  Or only invoke the Endpoint's plugs:
+
+    conn =
+      conn
+      |> bypass_through()
+      |> get("/")
+      |> MyApp.RequireAuthentication.call([])
+    assert conn.halted
+  """
+  @spec bypass_through(Conn.t) :: Conn.t
+  def bypass_through(conn) do
+    Plug.Conn.put_private(conn, :phoenix_bypass, :all)
+  end
+
+  @spec bypass_through(Conn.t, Module.t, :atom | List.t) :: Conn.t
+  def bypass_through(conn, router, pipelines \\ []) do
+    Plug.Conn.put_private(conn, :phoenix_bypass, {router, List.wrap(pipelines)})
+  end
 end

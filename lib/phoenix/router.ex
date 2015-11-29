@@ -293,6 +293,12 @@ defmodule Phoenix.Router do
       end
 
     quote do
+      defp do_call(%Plug.Conn{private: %{phoenix_bypass: {__MODULE__, pipes}}} = conn, _opts) do
+        Phoenix.Router.__bypass__(conn, __MODULE__, pipes)
+      end
+      defp do_call(%Plug.Conn{private: %{phoenix_bypass: :all}} = conn, _opts) do
+        conn
+      end
       defp do_call(unquote(conn), opts) do
         unquote(call)
       end
@@ -386,7 +392,7 @@ defmodule Phoenix.Router do
       quote unquote: false do
         Scope.pipeline(__MODULE__, plug)
         {conn, body} = Plug.Builder.compile(__ENV__, @phoenix_pipeline, [])
-        defp unquote(plug)(unquote(conn), _) do
+        def unquote(plug)(unquote(conn), _) do
           try do
             unquote(body)
           catch
@@ -643,5 +649,12 @@ defmodule Phoenix.Router do
       @phoenix_forwards Map.put(@phoenix_forwards, plug, path_segments)
       unquote(add_route(:forward, :*, path, plug, plug_opts, router_opts))
     end
+  end
+
+  @doc false
+  def __bypass__(conn, router, pipelines) do
+    pipelines
+    |> Enum.reduce(conn, fn pipe, acc -> apply(router, pipe, [acc, []]) end)
+    |> Plug.Conn.halt()
   end
 end

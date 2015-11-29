@@ -1,11 +1,40 @@
+defmodule Phoenix.Test.ConnTest.CatchAll do
+  def init(opts), do: opts
+  def call(conn, _opts), do: Plug.Conn.assign(conn, :catch_all, true)
+end
+
+defmodule Phoenix.Test.ConnTest.Router do
+  use Phoenix.Router
+  alias Phoenix.Test.ConnTest.CatchAll
+
+  pipeline :browser do
+    plug :put_bypass, :browser
+  end
+
+  pipeline :api do
+    plug :put_bypass, :api
+  end
+
+  forward "/", CatchAll
+
+  def put_bypass(conn, pipeline) do
+    bypassed = (conn.assigns[:bypassed] || []) ++ [pipeline]
+    Plug.Conn.assign(conn, :bypassed, bypassed)
+  end
+end
+
 defmodule Phoenix.Test.ConnTest do
   use ExUnit.Case, async: true
   use Phoenix.ConnTest
+  alias Phoenix.Test.ConnTest.Router
 
   defmodule Endpoint do
     def init(opts), do: opts
     def call(conn, :set), do: resp(conn, 200, "ok")
-    def call(conn, opts), do: put_in(conn.private[:endpoint], opts)
+    def call(conn, opts) do
+      put_in(conn.private[:endpoint], opts)
+      |> Router.call(Router.init([]))
+    end
   end
 
   @endpoint Endpoint
@@ -278,5 +307,51 @@ defmodule Phoenix.Test.ConnTest do
       conn(:get, "/")
       |> redirected_to()
     end
+  end
+
+  test "bypass_through/3 bypasses route match and invokes pipeline" do
+    conn = get(conn(), "/")
+    assert conn.assigns[:catch_all]
+
+    conn =
+      conn()
+      |> bypass_through(Router, :browser)
+      |> get("/")
+
+    assert conn.assigns[:bypassed] == [:browser]
+    refute conn.assigns[:catch_all]
+
+    conn =
+      conn()
+      |> bypass_through(Router, [:api])
+      |> get("/")
+
+    assert conn.assigns[:bypassed] == [:api]
+    refute conn.assigns[:catch_all]
+
+    conn =
+      conn()
+      |> bypass_through(Router, [:browser, :api])
+      |> get("/")
+
+    assert conn.assigns[:bypassed] == [:browser, :api]
+    refute conn.assigns[:catch_all]
+  end
+
+  test "bypass_through/2 bypasses route match" do
+    conn =
+      conn()
+      |> bypass_through(Router, [])
+      |> get("/")
+    refute conn.assigns[:catch_all]
+  end
+
+  test "bypass_through/1 bypasses router" do
+    conn =
+      conn()
+      |> bypass_through()
+      |> get("/")
+
+    refute conn.assigns[:catch_all]
   end
 end
