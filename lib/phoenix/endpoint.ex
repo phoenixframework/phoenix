@@ -533,6 +533,33 @@ defmodule Phoenix.Endpoint do
     end
   end
 
+  @doc """
+  Instruments the given function using the instrumentation provided by
+  `endpoint`.
+
+  Usually, users should prefer to instrument events using the `instrument/3`
+  macro defined in every Phoenix endpoint. This macro should only be used for
+  cases when the endpoint is dynamic and not known at compile time:
+
+  ## Examples
+
+      endpoint = MyApp.Endpoint
+      Phoenix.Endpoint.instrument endpoint, :render_view, fn -> ... end
+
+  """
+  defmacro instrument(endpoint, event, runtime \\ nil, fun) do
+    compile = Phoenix.Endpoint.Instrument.strip_caller(__CALLER__)
+
+    quote do
+      unquote(endpoint).instrument(
+        unquote(event),
+        unquote(Macro.escape(compile)),
+        unquote(runtime),
+        unquote(fun)
+      )
+    end
+  end
+
   defp tear_alias({:__aliases__, meta, [h|t]}) do
     alias = {:__aliases__, meta, [h]}
     quote do
