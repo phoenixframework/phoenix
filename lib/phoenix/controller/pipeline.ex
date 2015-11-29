@@ -88,6 +88,8 @@ defmodule Phoenix.Controller.Pipeline do
     quote do
       @behaviour Plug
 
+      require Phoenix.Endpoint
+
       import Phoenix.Controller.Pipeline
       Module.register_attribute(__MODULE__, :plugs, accumulate: true)
       @before_compile Phoenix.Controller.Pipeline
@@ -100,7 +102,14 @@ defmodule Phoenix.Controller.Pipeline do
         conn = update_in conn.private,
                  &(&1 |> Map.put(:phoenix_controller, __MODULE__)
                       |> Map.put(:phoenix_action, action))
-        phoenix_controller_pipeline(conn, action)
+
+        if endpoint = conn.private[:phoenix_endpoint] do
+          Phoenix.Endpoint.instrument endpoint, :phoenix_controller_call, fn ->
+            phoenix_controller_pipeline(conn, action)
+          end
+        else
+          phoenix_controller_pipeline(conn, action)
+        end
       end
 
       def action(%{private: %{phoenix_action: action}} = conn, _options) do
