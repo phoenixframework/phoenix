@@ -294,7 +294,7 @@ defmodule Phoenix.Router do
 
     quote do
       defp do_call(%Plug.Conn{private: %{phoenix_bypass: {__MODULE__, pipes}}} = conn, _opts) do
-        Phoenix.Router.bypass(conn, __MODULE__, pipes)
+        Phoenix.Router.__bypass__(conn, __MODULE__, pipes)
       end
       defp do_call(%Plug.Conn{private: %{phoenix_bypass: :all}} = conn, _opts) do
         conn
@@ -633,7 +633,7 @@ defmodule Phoenix.Router do
   end
 
   @doc false
-  def bypass(conn, router, pipelines) do
+  def __bypass__(conn, router, pipelines) do
     pipelines
     |> Enum.reduce(conn, fn pipe, acc -> apply(router, pipe, [acc, []]) end)
     |> Plug.Conn.halt()

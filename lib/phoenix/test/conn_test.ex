@@ -455,14 +455,14 @@ defmodule Phoenix.ConnTest do
 
   ## Examples
 
-  For example, Imagine you are testing an authentication
+  For example, imagine you are testing an authentication
   plug in isolation, but you need to invoke the Endpoint plugs
   and `:browser` pipeline of your Router for session and flash
   related dependencies:
 
       conn =
         conn
-        |> bypass(MyApp.Router, [:browser])
+        |> bypass_through(MyApp.Router, [:browser])
         |> get("/")
         |> MyApp.RequireAuthentication.call([])
       assert conn.halted
@@ -476,7 +476,7 @@ defmodule Phoenix.ConnTest do
         |> MyApp.RequireAuthentication.call([])
       assert conn.halted
 
-  Or only inoke the Endpoint's plugs:
+  Or only invoke the Endpoint's plugs:
 
     conn =
       conn
