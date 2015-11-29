@@ -618,6 +618,8 @@ defmodule Phoenix.Controller do
   end
 
   defp do_render(conn, template, format, assigns) do
+    import Phoenix.Endpoint, only: [instrument: 3, instrument: 4]
+
     assigns = to_map(assigns)
     content_type = Plug.MIME.type(format)
     conn =
@@ -627,8 +629,17 @@ defmodule Phoenix.Controller do
 
     view = Map.get(conn.private, :phoenix_view) ||
             raise "a view module was not specified, set one with put_view/2"
-    data = Phoenix.View.render_to_iodata(view, template,
-                                         Map.put(conn.assigns, :conn, conn))
+
+    data =
+      if endpoint = conn.private[:phoenix_endpoint] do
+        instrument endpoint, :phoenix_controller_render, template <> format, fn ->
+          Phoenix.View.render_to_iodata(view, template,
+                                        Map.put(conn.assigns, :conn, conn))
+        end
+      else
+        Phoenix.View.render_to_iodata(view, template, Map.put(conn.assigns, :conn, conn))
+      end
+
     send_resp(conn, conn.status || 200, content_type, data)
   end
 
