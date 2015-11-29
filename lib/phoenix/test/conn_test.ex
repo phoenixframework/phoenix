@@ -467,24 +467,55 @@ defmodule Phoenix.ConnTest do
   end
 
   @doc """
-  Calls the Endpoint and invokes router pipeline while bypassing route match.
+  Calls the Endpoint and bypasses Router match.
+
+  Useful for unit testing Plugs where Endpoint and/or
+  router pipline plugs are required for proper setup.
+
+  ## Examples
+
+  For example, Imagine you are testing an authentication
+  plug in isolation, but you need to invoke the Endpoint plugs
+  and `:browser` pipeline of your Router for session and flash
+  related dependencies:
+
+      conn =
+        conn
+        |> bypass(MyApp.Router, :browser)
+        |> MyApp.RequireAuthentication.call([])
+      assert conn.halted
+
+  Alternatively, you could inoke only the Endpoint, and Router:
+
+      conn =
+        conn
+        |> bypass(MyApp.Router)
+        |> MyApp.RequireAuthentication.call([])
+      assert conn.halted
+
+  Or only inoke the Endpoint's plugs:
+
+    conn =
+      conn
+      |> bypass()
+      |> MyApp.RequireAuthentication.call([])
+    assert conn.halted
   """
   @spec bypass_pipeline(Conn.t, Module.t) :: Conn.t
-  def bypass_pipeline(conn, endpoint) do
-    conn
-    |> Plug.Conn.put_private(:phoenix_bypass, true)
-    |> endpoint.call([])
-  end
+  def bypass_pipeline(conn, endpoint),
+    do: call_bypass(conn, endpoint, true)
+
   @spec bypass_pipeline(Conn.t, Module.t, Module.t) :: Conn.t
-  def bypass_pipeline(conn, endpoint, router) do
-    conn
-    |> Plug.Conn.put_private(:phoenix_bypass, router)
-    |> endpoint.call([])
-  end
+  def bypass_pipeline(conn, endpoint, router),
+    do: call_bypass(conn, endpoint, router)
+
   @spec bypass_pipeline(Conn.t, Module.t, Module.t, atom) :: Conn.t
-  def bypass_pipeline(conn, endpoint, router, pipeline) do
+  def bypass_pipeline(conn, endpoint, router, pipeline),
+    do: call_bypass(conn, endpoint, {router, pipeline})
+
+  defp call_bypass(conn, endpoint, val) do
     conn
-    |> Plug.Conn.put_private(:phoenix_bypass, {router, pipeline})
+    |> Plug.Conn.put_private(:phoenix_bypass, val)
     |> endpoint.call([])
   end
 end
