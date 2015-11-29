@@ -293,8 +293,15 @@ defmodule Phoenix.Router do
       end
 
     quote do
-      defp do_call(unquote(conn), opts) do
-        unquote(call)
+      defp do_call(unquote(conn) = conn, opts) do
+        case conn.private[:phoenix_bypass] do
+          nil -> unquote(call)
+          {__MODULE__, pipeline} ->
+            Plug.Conn.halt(apply(__MODULE__, :__pipeline__, [conn, pipeline]))
+          __MODULE__ ->
+            Plug.Conn.halt(conn)
+          _ -> conn
+        end
       end
 
       @doc false
@@ -375,6 +382,7 @@ defmodule Phoenix.Router do
               Plug.Conn.WrapperError.reraise(unquote(conn), kind, reason)
           end
         end
+        def __pipeline__(conn, unquote(plug)), do: unquote(plug)(conn, [])
         @phoenix_pipeline nil
       end
 

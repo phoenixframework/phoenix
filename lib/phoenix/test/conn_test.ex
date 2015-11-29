@@ -446,4 +446,45 @@ defmodule Phoenix.ConnTest do
       recycle(conn)
     end
   end
+
+  @doc """
+  Calls the `@endpoint` and invokes router pipeline while bypassing route match.
+  """
+  defmacro bypass(conn) do
+    quote bind_quoted: [conn: conn] do
+      Phoenix.ConnTest.bypass_pipeline(conn, @endpoint)
+    end
+  end
+  defmacro bypass(conn, router) do
+    quote bind_quoted: [conn: conn, router: router] do
+      Phoenix.ConnTest.bypass_pipeline(conn, @endpoint, router)
+    end
+  end
+  defmacro bypass(conn, router, pipeline) do
+    quote bind_quoted: [conn: conn, router: router, pipeline: pipeline] do
+      Phoenix.ConnTest.bypass_pipeline(conn, @endpoint, router, pipeline)
+    end
+  end
+
+  @doc """
+  Calls the Endpoint and invokes router pipeline while bypassing route match.
+  """
+  @spec bypass_pipeline(Conn.t, Module.t) :: Conn.t
+  def bypass_pipeline(conn, endpoint) do
+    conn
+    |> Plug.Conn.put_private(:phoenix_bypass, true)
+    |> endpoint.call([])
+  end
+  @spec bypass_pipeline(Conn.t, Module.t, Module.t) :: Conn.t
+  def bypass_pipeline(conn, endpoint, router) do
+    conn
+    |> Plug.Conn.put_private(:phoenix_bypass, router)
+    |> endpoint.call([])
+  end
+  @spec bypass_pipeline(Conn.t, Module.t, Module.t, atom) :: Conn.t
+  def bypass_pipeline(conn, endpoint, router, pipeline) do
+    conn
+    |> Plug.Conn.put_private(:phoenix_bypass, {router, pipeline})
+    |> endpoint.call([])
+  end
 end
