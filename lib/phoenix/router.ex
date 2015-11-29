@@ -293,12 +293,14 @@ defmodule Phoenix.Router do
       end
 
     quote do
-      defp do_call(unquote(conn) = conn, opts) do
-        case conn.private[:phoenix_bypass] do
-          nil  -> unquote(call)
-          :all -> conn
-          {__MODULE__, pipes} -> Phoenix.Router.bypass(conn, __MODULE__, pipes)
-        end
+      defp do_call(%Plug.Conn{private: %{phoenix_bypass: {__MODULE__, pipes}}} = conn, _opts) do
+        Phoenix.Router.bypass(conn, __MODULE__, pipes)
+      end
+      defp do_call(%Plug.Conn{private: %{phoenix_bypass: :all}} = conn, _opts) do
+        conn
+      end
+      defp do_call(unquote(conn), opts) do
+        unquote(call)
       end
 
       @doc false
