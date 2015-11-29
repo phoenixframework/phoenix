@@ -8,18 +8,18 @@ defmodule Phoenix.Test.ConnTest.Router do
   alias Phoenix.Test.ConnTest.CatchAll
 
   pipeline :browser do
-    plug :put_assigns, %{bypassed: :browser}
+    plug :put_bypass, :browser
   end
+
   pipeline :api do
-    plug :put_assigns, %{bypassed: :api}
+    plug :put_bypass, :api
   end
 
   forward "/", CatchAll
 
-  def put_assigns(conn, assigns) do
-    Enum.reduce(assigns, conn, fn {key, val}, acc ->
-      assign(acc, key, val)
-    end)
+  def put_bypass(conn, pipeline) do
+    bypassed = (conn.assigns[:bypassed] || []) ++ [pipeline]
+    Plug.Conn.assign(conn, :bypassed, bypassed)
   end
 end
 
@@ -309,26 +309,49 @@ defmodule Phoenix.Test.ConnTest do
     end
   end
 
-  test "bypass/3 bypasses route match and invokes pipeline" do
+  test "bypass_through/3 bypasses route match and invokes pipeline" do
     conn = get(conn(), "/")
     assert conn.assigns[:catch_all]
 
-    conn = bypass(conn(), Router, :browser)
-    assert conn.assigns[:bypassed] == :browser
+    conn =
+      conn()
+      |> bypass_through(Router, [:browser])
+      |> get("/")
+
+    assert conn.assigns[:bypassed] == [:browser]
     refute conn.assigns[:catch_all]
 
-    conn = bypass(conn(), Router, :api)
-    assert conn.assigns[:bypassed] == :api
+    conn =
+      conn()
+      |> bypass_through(Router, [:api])
+      |> get("/")
+
+    assert conn.assigns[:bypassed] == [:api]
+    refute conn.assigns[:catch_all]
+
+    conn =
+      conn()
+      |> bypass_through(Router, [:browser, :api])
+      |> get("/")
+
+    assert conn.assigns[:bypassed] == [:browser, :api]
     refute conn.assigns[:catch_all]
   end
 
-  test "bypass/2 bypasses route match" do
-    conn = bypass(conn(), Router)
+  test "bypass_through/2 bypasses route match" do
+    conn =
+      conn()
+      |> bypass_through(Router, [])
+      |> get("/")
     refute conn.assigns[:catch_all]
   end
 
-  test "bypass/1 bypasses router" do
-    conn = bypass(conn())
+  test "bypass_through/1 bypasses router" do
+    conn =
+      conn()
+      |> bypass_through()
+      |> get("/")
+
     refute conn.assigns[:catch_all]
   end
 end

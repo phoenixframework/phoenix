@@ -448,25 +448,6 @@ defmodule Phoenix.ConnTest do
   end
 
   @doc """
-  Calls the `@endpoint` and invokes router pipeline while bypassing route match.
-  """
-  defmacro bypass(conn) do
-    quote bind_quoted: [conn: conn] do
-      Phoenix.ConnTest.bypass_pipeline(conn, @endpoint)
-    end
-  end
-  defmacro bypass(conn, router) do
-    quote bind_quoted: [conn: conn, router: router] do
-      Phoenix.ConnTest.bypass_pipeline(conn, @endpoint, router)
-    end
-  end
-  defmacro bypass(conn, router, pipeline) do
-    quote bind_quoted: [conn: conn, router: router, pipeline: pipeline] do
-      Phoenix.ConnTest.bypass_pipeline(conn, @endpoint, router, pipeline)
-    end
-  end
-
-  @doc """
   Calls the Endpoint and bypasses Router match.
 
   Useful for unit testing Plugs where Endpoint and/or
@@ -481,7 +462,8 @@ defmodule Phoenix.ConnTest do
 
       conn =
         conn
-        |> bypass(MyApp.Router, :browser)
+        |> bypass(MyApp.Router, [:browser])
+        |> get("/")
         |> MyApp.RequireAuthentication.call([])
       assert conn.halted
 
@@ -489,7 +471,8 @@ defmodule Phoenix.ConnTest do
 
       conn =
         conn
-        |> bypass(MyApp.Router)
+        |> bypass_through(MyApp.Router, [])
+        |> get("/")
         |> MyApp.RequireAuthentication.call([])
       assert conn.halted
 
@@ -497,25 +480,18 @@ defmodule Phoenix.ConnTest do
 
     conn =
       conn
-      |> bypass()
+      |> bypass_through()
+      |> get("/")
       |> MyApp.RequireAuthentication.call([])
     assert conn.halted
   """
-  @spec bypass_pipeline(Conn.t, Module.t) :: Conn.t
-  def bypass_pipeline(conn, endpoint),
-    do: call_bypass(conn, endpoint, true)
+  @spec bypass_through(Conn.t) :: Conn.t
+  def bypass_through(conn) do
+    Plug.Conn.put_private(conn, :phoenix_bypass, :all)
+  end
 
-  @spec bypass_pipeline(Conn.t, Module.t, Module.t) :: Conn.t
-  def bypass_pipeline(conn, endpoint, router),
-    do: call_bypass(conn, endpoint, router)
-
-  @spec bypass_pipeline(Conn.t, Module.t, Module.t, atom) :: Conn.t
-  def bypass_pipeline(conn, endpoint, router, pipeline),
-    do: call_bypass(conn, endpoint, {router, pipeline})
-
-  defp call_bypass(conn, endpoint, val) do
-    conn
-    |> Plug.Conn.put_private(:phoenix_bypass, val)
-    |> endpoint.call([])
+  @spec bypass_through(Conn.t, Module.t, List.t) :: Conn.t
+  def bypass_through(conn, router, pipelines \\ []) do
+    Plug.Conn.put_private(conn, :phoenix_bypass, {router, pipelines})
   end
 end
