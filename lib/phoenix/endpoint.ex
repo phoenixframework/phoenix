@@ -558,7 +558,7 @@ defmodule Phoenix.Endpoint do
       Phoenix.Endpoint.instrument endpoint, :render_view, fn -> ... end
 
   """
-  defmacro instrument(endpoint_or_conn_or_socket, event, runtime \\ nil, fun) do
+  defmacro instrument(endpoint_or_conn_or_socket, event, runtime \\ Macro.escape(%{}), fun) do
     compile = Phoenix.Endpoint.Instrument.strip_caller(__CALLER__) |> Macro.escape()
 
     quote do
