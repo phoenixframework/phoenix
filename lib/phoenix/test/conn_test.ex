@@ -467,7 +467,7 @@ defmodule Phoenix.ConnTest do
         |> MyApp.RequireAuthentication.call([])
       assert conn.halted
 
-  Alternatively, you could inoke only the Endpoint, and Router:
+  Alternatively, you could invoke only the Endpoint, and Router:
 
       conn =
         conn
