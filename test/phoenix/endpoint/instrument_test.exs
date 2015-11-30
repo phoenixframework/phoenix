@@ -44,7 +44,7 @@ defmodule Phoenix.Endpoint.InstrumentTest do
   test "basic usage of instrument/3" do
     import Endpoint
 
-    return_value = instrument :my_event, :runtime, fn ->
+    return_value = instrument :my_event, %{run: :time}, fn ->
       send self(), :inside_instrument_block
       :normal_return_value
     end
@@ -53,7 +53,7 @@ defmodule Phoenix.Endpoint.InstrumentTest do
 
     assert_receive {__MODULE__.MyInstrumenter, {:my_event_start, start_data}}
     assert start_data.compile_meta.file == __ENV__.file
-    assert start_data.runtime_meta == :runtime
+    assert start_data.runtime_meta == %{run: :time}
 
     assert_receive :inside_instrument_block
 
@@ -122,14 +122,14 @@ defmodule Phoenix.Endpoint.InstrumentTest do
     require Phoenix.Endpoint
     endpoint = Endpoint
 
-    :ok = Phoenix.Endpoint.instrument endpoint, :my_event, :runtime, fn ->
+    :ok = Phoenix.Endpoint.instrument endpoint, :my_event, %{run: :time}, fn ->
       send self(), :inside_instrument_block
       :ok
     end
 
     assert_receive {__MODULE__.MyInstrumenter, {:my_event_start, start_data}}
     assert start_data.compile_meta.file == __ENV__.file
-    assert start_data.runtime_meta == :runtime
+    assert start_data.runtime_meta == %{run: :time}
 
     assert_receive :inside_instrument_block
 

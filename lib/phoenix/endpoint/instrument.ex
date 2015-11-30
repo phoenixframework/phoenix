@@ -26,7 +26,7 @@ defmodule Phoenix.Endpoint.Instrument do
           end
 
       """
-      defmacro instrument(event, runtime \\ nil, fun) do
+      defmacro instrument(event, runtime \\ Macro.escape(%{}), fun) do
         compile = Macro.escape(Phoenix.Endpoint.Instrument.strip_caller(__CALLER__))
 
         quote do
@@ -61,7 +61,7 @@ defmodule Phoenix.Endpoint.Instrument do
 
       for {event, instrumenters} <- app_instrumenters do
         def instrument(unquote(event), var!(compile), var!(runtime), fun)
-            when is_map(var!(compile)) and is_function(fun, 0) do
+            when is_map(var!(compile)) and is_map(var!(runtime)) and is_function(fun, 0) do
           unquote(Phoenix.Endpoint.Instrument.compile_start_callbacks(event, instrumenters))
           start = current_time()
           try do
@@ -74,8 +74,8 @@ defmodule Phoenix.Endpoint.Instrument do
       end
 
       # Catch-all clause
-      def instrument(_event, compile, _runtime, fun)
-          when is_map(compile) and is_function(fun, 0) do
+      def instrument(event, compile, runtime, fun)
+          when is_atom(event) and is_map(compile) and is_map(runtime) and is_function(fun, 0) do
         fun.()
       end
 
