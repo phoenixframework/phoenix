@@ -117,4 +117,25 @@ defmodule Phoenix.Endpoint.InstrumentTest do
     err = "** (RuntimeError) oops"
     assert Regex.scan(~r/#{Regex.escape(err)}$/m, log) == [[err], [err]]
   end
+
+  test "Phoenix.Endpoint.instrument/4 macro proxies to the endpoint instrument function" do
+    require Phoenix.Endpoint
+    endpoint = Endpoint
+
+    :ok = Phoenix.Endpoint.instrument endpoint, :my_event, :runtime, fn ->
+      send self(), :inside_instrument_block
+      :ok
+    end
+
+    assert_receive {__MODULE__.MyInstrumenter, {:my_event_start, start_data}}
+    assert start_data.compile_meta.file == __ENV__.file
+    assert start_data.runtime_meta == :runtime
+
+    assert_receive :inside_instrument_block
+
+    assert_receive {__MODULE__.MyInstrumenter, {:my_event_stop, stop_data}}
+    assert stop_data.res == :ok
+    assert is_integer(stop_data.duration)
+    assert stop_data.duration >= 0
+  end
 end
