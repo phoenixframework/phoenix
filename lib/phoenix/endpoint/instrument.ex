@@ -9,6 +9,8 @@ defmodule Phoenix.Endpoint.Instrument do
     app_instrumenters = app_instrumenters(otp_app, endpoint)
 
     quote bind_quoted: [app_instrumenters: app_instrumenters] do
+      require Logger
+
       @doc """
       Instruments the given function.
 
@@ -136,9 +138,15 @@ defmodule Phoenix.Endpoint.Instrument do
   @spec compile_start_callbacks(term, [module]) :: Macro.t
   def compile_start_callbacks(event, instrumenters) do
     Enum.map Enum.with_index(instrumenters), fn {inst, index} ->
+      error_prefix = "Instrumenter #{inspect inst}.#{event}/3 failed.\n"
       quote do
         unquote(build_result_variable(index)) =
-          unquote(inst).unquote(event)(:start, var!(compile), var!(runtime))
+          try do
+            unquote(inst).unquote(event)(:start, var!(compile), var!(runtime))
+          catch
+            kind, error ->
+              Logger.error unquote(error_prefix) <> Exception.format(kind, error)
+          end
       end
     end
   end
@@ -155,8 +163,14 @@ defmodule Phoenix.Endpoint.Instrument do
   @spec compile_start_callbacks(term, [module]) :: Macro.t
   def compile_stop_callbacks(event, instrumenters) do
     Enum.map Enum.with_index(instrumenters), fn {inst, index} ->
+      error_prefix = "Instrumenter #{inspect inst}.#{event}/3 failed.\n"
       quote do
-        unquote(inst).unquote(event)(:stop, var!(diff), unquote(build_result_variable(index)))
+        try do
+          unquote(inst).unquote(event)(:stop, var!(diff), unquote(build_result_variable(index)))
+        catch
+          kind, error ->
+            Logger.error unquote(error_prefix) <> Exception.format(kind, error)
+        end
       end
     end
   end

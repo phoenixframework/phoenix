@@ -21,6 +21,10 @@ defmodule Phoenix.Endpoint.InstrumentTest do
     def common_event(:stop, _, _) do
       send self(), {__MODULE__, :common_event_stop}
     end
+
+    def raising_event(_, _, _) do
+      raise "oops"
+    end
   end
 
   defmodule MyOtherInstrumenter do
@@ -94,5 +98,23 @@ defmodule Phoenix.Endpoint.InstrumentTest do
     refute_receive :common_event_happened # just once!
     assert_receive {__MODULE__.MyInstrumenter, :common_event_stop}
     assert_receive {__MODULE__.MyOtherInstrumenter, :common_event_stop}
+  end
+
+  test "event callbacks that raise/throw" do
+    import Endpoint
+
+    log = RouterHelper.capture_log fn ->
+      :ok = instrument :raising_event, fn ->
+        send self(), :ok
+      end
+    end
+
+    assert_receive :ok
+    # We have the correct stacktrace.
+    assert log =~ Path.relative_to_cwd(__ENV__.file)
+    assert log =~ "Instrumenter #{inspect __MODULE__.MyInstrumenter}.raising_event/3 failed.\n"
+    # And we're sure the exception is logged twice:
+    err = "** (RuntimeError) oops"
+    assert Regex.scan(~r/#{Regex.escape(err)}$/m, log) == [[err], [err]]
   end
 end
