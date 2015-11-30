@@ -103,11 +103,7 @@ defmodule Phoenix.Controller.Pipeline do
                  &(&1 |> Map.put(:phoenix_controller, __MODULE__)
                       |> Map.put(:phoenix_action, action))
 
-        if endpoint = conn.private[:phoenix_endpoint] do
-          Phoenix.Endpoint.instrument endpoint, :phoenix_controller_call, fn ->
-            phoenix_controller_pipeline(conn, action)
-          end
-        else
+        Phoenix.Endpoint.instrument conn, :phoenix_controller_call, fn ->
           phoenix_controller_pipeline(conn, action)
         end
       end
