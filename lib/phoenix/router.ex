@@ -633,9 +633,7 @@ defmodule Phoenix.Router do
   end
 
   @doc false
-  def __bypass__(conn, router, pipelines) do
-    pipelines
-    |> Enum.reduce(conn, fn pipe, acc -> apply(router, pipe, [acc, []]) end)
-    |> Plug.Conn.halt()
+  def __bypass__(conn, router, pipes) do
+    Enum.reduce(pipes, conn, fn pipe, acc -> apply(router, pipe, [acc, []]) end)
   end
 end
