@@ -75,7 +75,7 @@ defmodule Phoenix.CodeReloader.Server do
 
           if :ok in res && consolidate_protocols? do
             Mix.Task.reenable("compile.protocols")
-            Mix.Task.run("compile.protocols")
+            mix_compile_each("protocols", [])
           else
             res
           end
@@ -84,10 +84,10 @@ defmodule Phoenix.CodeReloader.Server do
         end
       end)
 
-    case res do
-      :error -> {:error, out}
-      :noop -> :noop
-      _ -> :ok
+    cond do
+      :error in res -> {:error, out}
+      :ok in res    -> :ok
+      true          -> :noop
     end
   end
 
@@ -108,7 +108,7 @@ defmodule Phoenix.CodeReloader.Server do
 
     try do
       res = fun.()
-      {res, Proxy.stop(proxy_gl)}
+      {List.wrap(res), Proxy.stop(proxy_gl)}
     after
       Process.group_leader(self(), original_gl)
       Process.exit(proxy_gl, :kill)
