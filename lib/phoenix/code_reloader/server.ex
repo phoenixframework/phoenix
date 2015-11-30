@@ -62,17 +62,23 @@ defmodule Phoenix.CodeReloader.Server do
   end
 
   defp mix_compile(paths, compilers) do
-    reloadable_paths = Enum.flat_map(paths, &["--elixirc-paths", &1])
+    opts = Enum.flat_map(paths, &["--elixirc-paths", &1])
     Enum.each compilers, &Mix.Task.reenable("compile.#{&1}")
 
     {res, out} =
       proxy_io(fn ->
         try do
-          # We call build_structure mostly for Windows
-          # so any new assets in priv is copied to the
-          # build directory.
+          # We call build_structure mostly for Windows so any
+          # new assets in priv is copied to the build directory.
           Mix.Project.build_structure
-          Enum.each compilers, &Mix.Task.run("compile.#{&1}", reloadable_paths)
+          res = Enum.flat_map(compilers, &mix_compile_each(&1, opts))
+
+          if :ok in res && consolidate_protocols? do
+            Mix.Task.reenable("compile.protocols")
+            mix_compile_each("protocols", [])
+          else
+            res
+          end
         catch
           _, _ -> :error
         end
@@ -83,6 +89,16 @@ defmodule Phoenix.CodeReloader.Server do
       :ok in res    -> :ok
       true          -> :noop
     end
+  end
+
+  defp mix_compile_each(compiler, opts) do
+    # We always wrap in a list because Mix.Task.run
+    # will return a list in case of umbrella applications.
+    List.wrap(Mix.Task.run("compile.#{compiler}", opts))
+  end
+
+  defp consolidate_protocols? do
+    Mix.Project.config[:consolidate_protocols]
   end
 
   defp proxy_io(fun) do

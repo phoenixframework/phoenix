@@ -50,7 +50,7 @@ defmodule Phoenix.Endpoint do
   Endpoint configuration is split into two categories. Compile-time
   configuration means the configuration is read during compilation
   and changing it at runtime has no effect. The compile-time
-  configuration is mostly related to error handling.
+  configuration is mostly related to error handling and instrumentation.
 
   Runtime configuration, instead, is accessed during or
   after your application is started and can be read and written through the
@@ -76,6 +76,10 @@ defmodule Phoenix.Endpoint do
           [view: MyApp.ErrorView, accepts: ~w(html)]
 
       The default format is used when none is set in the connection.
+
+    * `:instrumenters` - a list of instrumenters modules whose callbacks will
+      be fired on instrumentation events. Read more on instrumentation in the
+      "Instrumentation" section below.
 
   ### Runtime configuration
 
@@ -215,6 +219,65 @@ defmodule Phoenix.Endpoint do
     * `call(conn, opts)` - invoked on every request (simply dispatches to
       the defined plug pipeline)
 
+  #### Instrumentation API
+
+    * `instrument(event, runtime_metadata \\ nil, function)` - read more about
+      instrumentation in the "Instrumentation" section
+
+  ## Instrumentation
+
+  Phoenix supports instrumentation through an extensible API. Each endpoint
+  defines an `instrument/3` macro that both users and Phoenix internals can call
+  to instrument generic events. This macro is responsible for measuring the time
+  it takes for the event to happen and for notifying a list of interested
+  instrumenter modules of this measurement.
+
+  You can configure this list of instrumenter modules in the compile-time
+  configuration of your endpoint. (see the `:instrumenters` option above). The
+  way these modules express their interest in events is by exporting public
+  functions where the name of each function is the name of an event. For
+  example, if someone instruments the `:render_view` event, then each
+  instrumenter module interested in that event will have to export
+  `render_view/3`.
+
+  ### Callbacks cycle
+
+  The way event callbacks are called is the following.
+
+    1. The event callback is called *before* the event happens (in this case,
+       before the view is rendered). The callback is called with the following
+       arguments:
+
+           MyInstrumenter.render_view(:start, compile_meta, runtime_meta)
+
+       `compile_meta` is a map of compile-time metadata (like the file and line
+       where the instrumentation is being done). `runtime_meta` is a term that
+       is passed on by the caller of the instrumentation. The result of this
+       call is stored and later passed to the after callback.
+    2. The event happens (in this case, the view is rendered).
+    3. The event callback is called again, this time with the following arguments:
+
+           MyInstrumenter.render_view(:stop, time_diff, start_result)
+
+       `time_diff` is the time *in microseconds* it took for the event to
+       happen (in this case, the view rendering time). `start_result` is
+       whatever the event callback returned when called with `:start` as the
+       first argument: instrumenters can use this to pass "state" from the
+       before callback to the after callback.
+
+  ### Using instrumentation
+
+  Each Phoenix endpoint defines its own `instrument/3` macro. This macro is
+  called like this:
+
+      require MyApp.Endpoint
+      MyApp.Endpoint.instrument :render_view, "index.html", fn ->
+        # actual view rendering
+      end
+
+  All the instrumenter modules that export a `render_view/3` function will be
+  notified of the event so that they can perform their respective actions.
+
   """
 
   alias Phoenix.Endpoint.Adapter
@@ -231,8 +294,8 @@ defmodule Phoenix.Endpoint do
 
   defp config(opts) do
     quote do
-      var!(otp_app) = unquote(opts)[:otp_app] || raise "endpoint expects :otp_app to be given"
-      var!(config)  = Adapter.config(var!(otp_app), __MODULE__)
+      @otp_app unquote(opts)[:otp_app] || raise "endpoint expects :otp_app to be given"
+      var!(config) = Adapter.config(@otp_app, __MODULE__)
       var!(code_reloading?) = var!(config)[:code_reloader]
 
       # Avoid unused variable warnings
@@ -305,7 +368,7 @@ defmodule Phoenix.Endpoint do
       end
 
       if var!(config)[:debug_errors] do
-        use Plug.Debugger, otp_app: var!(otp_app)
+        use Plug.Debugger, otp_app: @otp_app
       end
 
       use Phoenix.Endpoint.RenderErrors, var!(config)[:render_errors]
@@ -318,7 +381,7 @@ defmodule Phoenix.Endpoint do
       Starts the endpoint supervision tree.
       """
       def start_link do
-        Adapter.start_link(unquote(var!(otp_app)), __MODULE__)
+        Adapter.start_link(@otp_app, __MODULE__)
       end
 
       @doc """
@@ -418,6 +481,8 @@ defmodule Phoenix.Endpoint do
     sockets = Module.get_attribute(env.module, :phoenix_sockets)
     plugs = Module.get_attribute(env.module, :plugs)
     {conn, body} = Plug.Builder.compile(env, plugs, [])
+    otp_app = Module.get_attribute(env.module, :otp_app)
+    instrumentation = Phoenix.Endpoint.Instrument.definstrument(otp_app, env.module)
 
     quote do
       defp phoenix_pipeline(unquote(conn)), do: unquote(body)
@@ -426,6 +491,8 @@ defmodule Phoenix.Endpoint do
       Returns all sockets configured in this endpoint.
       """
       def __sockets__, do: unquote(sockets)
+
+      unquote(instrumentation)
     end
   end
 
@@ -463,6 +530,48 @@ defmodule Phoenix.Endpoint do
 
     quote do
       @phoenix_sockets {unquote(path), unquote(module)}
+    end
+  end
+
+  @doc """
+  Instruments the given function using the instrumentation provided by
+  the given endpoint.
+
+  To specify the endpoint that will provide instrumentation, the first argument
+  can be:
+
+    * a module name -  the endpoint itself
+    * a `Plug.Conn` struct - this macro will look for the endpoint module in the
+      `:private` field of the connection; if it's not there, `fun` will be
+      executed with no instrumentation
+    * a `Phoenix.Socket` struct - this macro will look for the endpoint module in the
+      `:endpoint` field of the socket; if it's not there, `fun` will be
+      executed with no instrumentation
+
+  Usually, users should prefer to instrument events using the `instrument/3`
+  macro defined in every Phoenix endpoint. This macro should only be used for
+  cases when the endpoint is dynamic and not known at compile time instead.
+
+  ## Examples
+
+      endpoint = MyApp.Endpoint
+      Phoenix.Endpoint.instrument endpoint, :render_view, fn -> ... end
+
+  """
+  defmacro instrument(endpoint_or_conn_or_socket, event, runtime \\ Macro.escape(%{}), fun) do
+    compile = Phoenix.Endpoint.Instrument.strip_caller(__CALLER__) |> Macro.escape()
+
+    quote do
+      case unquote(endpoint_or_conn_or_socket) do
+        %Plug.Conn{private: %{phoenix_endpoint: endpoint}} ->
+          endpoint.instrument(unquote(event), unquote(compile), unquote(runtime), unquote(fun))
+        %Phoenix.Socket{endpoint: endpoint} ->
+          endpoint.instrument(unquote(event), unquote(compile), unquote(runtime), unquote(fun))
+        %{__struct__: struct} when struct in [Plug.Conn, Phoenix.Socket] ->
+          unquote(fun).()
+        endpoint ->
+          endpoint.instrument(unquote(event), unquote(compile), unquote(runtime), unquote(fun))
+      end
     end
   end
 
