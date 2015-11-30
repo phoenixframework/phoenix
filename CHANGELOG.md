@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.4 (2015-11-30)
+
+* Enhancements
+  * [ConnTest] Add `bypass_through` to pass a connection through a Router and pipelines while bypassing route dispatch.
+
+* Bug fixes
+  * [LongPoll] force application/json content-type to fix blank JSON bodies on older IE clients using xdomain
+
+
 ## 1.0.3 (2015-9-28)
 
 * Enhancements

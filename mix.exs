@@ -1,7 +1,7 @@
 defmodule Phoenix.Mixfile do
   use Mix.Project
 
-  @version "1.0.3"
+  @version "1.0.4"
 
   def project do
     [app: :phoenix,
@@ -47,7 +47,7 @@ defmodule Phoenix.Mixfile do
   end
 
   defp package do
-    [contributors: ["Chris McCord", "Darko Fabijan", "José Valim"],
+    [maintainers: ["Chris McCord", "Darko Fabijan", "José Valim"],
      licenses: ["MIT"],
      links: %{github: "https://github.com/phoenixframework/phoenix"},
      files: ~w(lib priv test/shared web) ++
