@@ -9,6 +9,8 @@ defmodule Phoenix.Endpoint.Instrument do
     app_instrumenters = app_instrumenters(otp_app, endpoint)
 
     quote bind_quoted: [app_instrumenters: app_instrumenters] do
+      require Logger
+
       @doc """
       Instruments the given function.
 
@@ -24,7 +26,7 @@ defmodule Phoenix.Endpoint.Instrument do
           end
 
       """
-      defmacro instrument(event, runtime \\ nil, fun) do
+      defmacro instrument(event, runtime \\ Macro.escape(%{}), fun) do
         compile = Macro.escape(Phoenix.Endpoint.Instrument.strip_caller(__CALLER__))
 
         quote do
@@ -59,7 +61,7 @@ defmodule Phoenix.Endpoint.Instrument do
 
       for {event, instrumenters} <- app_instrumenters do
         def instrument(unquote(event), var!(compile), var!(runtime), fun)
-            when is_map(var!(compile)) and is_function(fun, 0) do
+            when is_map(var!(compile)) and is_map(var!(runtime)) and is_function(fun, 0) do
           unquote(Phoenix.Endpoint.Instrument.compile_start_callbacks(event, instrumenters))
           start = current_time()
           try do
@@ -72,8 +74,8 @@ defmodule Phoenix.Endpoint.Instrument do
       end
 
       # Catch-all clause
-      def instrument(_event, compile, _runtime, fun)
-          when is_map(compile) and is_function(fun, 0) do
+      def instrument(event, compile, runtime, fun)
+          when is_atom(event) and is_map(compile) and is_map(runtime) and is_function(fun, 0) do
         fun.()
       end
 
@@ -136,9 +138,15 @@ defmodule Phoenix.Endpoint.Instrument do
   @spec compile_start_callbacks(term, [module]) :: Macro.t
   def compile_start_callbacks(event, instrumenters) do
     Enum.map Enum.with_index(instrumenters), fn {inst, index} ->
+      error_prefix = "Instrumenter #{inspect inst}.#{event}/3 failed.\n"
       quote do
         unquote(build_result_variable(index)) =
-          unquote(inst).unquote(event)(:start, var!(compile), var!(runtime))
+          try do
+            unquote(inst).unquote(event)(:start, var!(compile), var!(runtime))
+          catch
+            kind, error ->
+              Logger.error unquote(error_prefix) <> Exception.format(kind, error)
+          end
       end
     end
   end
@@ -155,8 +163,14 @@ defmodule Phoenix.Endpoint.Instrument do
   @spec compile_start_callbacks(term, [module]) :: Macro.t
   def compile_stop_callbacks(event, instrumenters) do
     Enum.map Enum.with_index(instrumenters), fn {inst, index} ->
+      error_prefix = "Instrumenter #{inspect inst}.#{event}/3 failed.\n"
       quote do
-        unquote(inst).unquote(event)(:stop, var!(diff), unquote(build_result_variable(index)))
+        try do
+          unquote(inst).unquote(event)(:stop, var!(diff), unquote(build_result_variable(index)))
+        catch
+          kind, error ->
+            Logger.error unquote(error_prefix) <> Exception.format(kind, error)
+        end
       end
     end
   end

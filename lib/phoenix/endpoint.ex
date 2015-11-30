@@ -533,6 +533,48 @@ defmodule Phoenix.Endpoint do
     end
   end
 
+  @doc """
+  Instruments the given function using the instrumentation provided by
+  the given endpoint.
+
+  To specify the endpoint that will provide instrumentation, the first argument
+  can be:
+
+    * a module name -  the endpoint itself
+    * a `Plug.Conn` struct - this macro will look for the endpoint module in the
+      `:private` field of the connection; if it's not there, `fun` will be
+      executed with no instrumentation
+    * a `Phoenix.Socket` struct - this macro will look for the endpoint module in the
+      `:endpoint` field of the socket; if it's not there, `fun` will be
+      executed with no instrumentation
+
+  Usually, users should prefer to instrument events using the `instrument/3`
+  macro defined in every Phoenix endpoint. This macro should only be used for
+  cases when the endpoint is dynamic and not known at compile time instead.
+
+  ## Examples
+
+      endpoint = MyApp.Endpoint
+      Phoenix.Endpoint.instrument endpoint, :render_view, fn -> ... end
+
+  """
+  defmacro instrument(endpoint_or_conn_or_socket, event, runtime \\ nil, fun) do
+    compile = Phoenix.Endpoint.Instrument.strip_caller(__CALLER__) |> Macro.escape()
+
+    quote do
+      case unquote(endpoint_or_conn_or_socket) do
+        %Plug.Conn{private: %{phoenix_endpoint: endpoint}} ->
+          endpoint.instrument(unquote(event), unquote(compile), unquote(runtime), unquote(fun))
+        %Phoenix.Socket{endpoint: endpoint} ->
+          endpoint.instrument(unquote(event), unquote(compile), unquote(runtime), unquote(fun))
+        %{__struct__: struct} when struct in [Plug.Conn, Phoenix.Socket] ->
+          unquote(fun).()
+        endpoint ->
+          endpoint.instrument(unquote(event), unquote(compile), unquote(runtime), unquote(fun))
+      end
+    end
+  end
+
   defp tear_alias({:__aliases__, meta, [h|t]}) do
     alias = {:__aliases__, meta, [h]}
     quote do
