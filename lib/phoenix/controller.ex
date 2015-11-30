@@ -3,6 +3,7 @@ defmodule Phoenix.Controller do
   alias Plug.Conn.AlreadySentError
 
   require Logger
+  require Phoenix.Endpoint
 
   @unsent [:unset, :set]
 
@@ -618,8 +619,6 @@ defmodule Phoenix.Controller do
   end
 
   defp do_render(conn, template, format, assigns) do
-    import Phoenix.Endpoint, only: [instrument: 3, instrument: 4]
-
     assigns = to_map(assigns)
     content_type = Plug.MIME.type(format)
     conn =
@@ -630,7 +629,7 @@ defmodule Phoenix.Controller do
     view = Map.get(conn.private, :phoenix_view) ||
             raise "a view module was not specified, set one with put_view/2"
 
-    data = instrument conn, :phoenix_controller_render, template <> format, fn ->
+    data = Phoenix.Endpoint.instrument conn, :phoenix_controller_render, template <> format, fn ->
       Phoenix.View.render_to_iodata(view, template, Map.put(conn.assigns, :conn, conn))
     end
 
