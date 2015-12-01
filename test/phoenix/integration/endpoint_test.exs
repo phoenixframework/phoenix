@@ -112,7 +112,7 @@ defmodule Phoenix.Integration.EndpointTest do
 
   test "adapters starts on configured port and serves requests and stops for prod" do
     # Has server: true
-    capture_log fn -> ProdEndpoint.start_link end
+    capture_log fn -> {:ok, _} = ProdEndpoint.start_link end
 
     # Requests
     {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
@@ -141,14 +141,14 @@ defmodule Phoenix.Integration.EndpointTest do
 
   test "adapters starts on configured port and serves requests and stops for dev" do
     # Has server: false
-    DevEndpoint.start_link
+    {:ok, _} = DevEndpoint.start_link
     {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
     shutdown(DevEndpoint)
 
     # Toggle globally
     serve_endpoints(true)
     on_exit(fn -> serve_endpoints(false) end)
-    capture_log fn -> DevEndpoint.start_link end
+    capture_log fn -> {:ok, _} = DevEndpoint.start_link end
 
     # Requests
     {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
