@@ -36,6 +36,6 @@ defmodule <%= application_module %>.ConnCase do
       <%= adapter_config[:test_restart] %>
     end
 <% end %>
-    :ok
+    {:ok, conn: Phoenix.ConnTest.conn()}
   end
 end
