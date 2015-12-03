@@ -21,6 +21,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
 
   setup_all do
     Endpoint.start_link()
+    on_exit fn -> Application.delete_env(:phoenix, :serve_endpoints) end
     :ok
   end
 
