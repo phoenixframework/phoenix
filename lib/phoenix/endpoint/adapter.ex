@@ -12,8 +12,7 @@ defmodule Phoenix.Endpoint.Adapter do
   """
   def start_link(otp_app, mod) do
     conf = config(otp_app, mod)
-    server? = Keyword.get(conf, :server,
-                          Application.get_env(:phoenix, :serve_endpoints, false))
+    server? = Phoenix.Endpoint.server?(conf)
 
     children =
       config_children(mod, conf) ++

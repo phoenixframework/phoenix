@@ -575,6 +575,26 @@ defmodule Phoenix.Endpoint do
     end
   end
 
+  @doc """
+  Checks if Endpoint's web server has been configured to start.
+
+    * `otp_app` - The otp app running the endpoint, for example `:my_app`
+    * `endpoint` - The endpoint module, for example `MyApp.Endpoint`
+
+  ## Exampes
+
+      iex> server?(:my_app, MyApp.Endpoint)
+      true
+  """
+  def server?(otp_app, endpoint) when is_atom(otp_app) and is_atom(endpoint) do
+    otp_app
+    |> Adapter.config(endpoint)
+    |> server?()
+  end
+  def server?(conf) when is_list(conf) do
+    Keyword.get(conf, :server, Application.get_env(:phoenix, :serve_endpoints, false))
+  end
+
   defp tear_alias({:__aliases__, meta, [h|t]}) do
     alias = {:__aliases__, meta, [h]}
     quote do

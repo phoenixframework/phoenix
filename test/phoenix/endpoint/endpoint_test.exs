@@ -138,6 +138,33 @@ defmodule Phoenix.Endpoint.EndpointTest do
       event: "event4", payload: %{key: :val}, topic: "sometopic"}
   end
 
+  test "server?/2 returns true for explicitly true server", config do
+    endpoint = Module.concat(__MODULE__, config.test)
+    Application.put_env(:phoenix, endpoint, server: true)
+    assert Phoenix.Endpoint.server?(:phoenix, endpoint)
+  end
+
+  test "server?/2 returns false for explicitly false server", config do
+    Application.put_env(:phoenix, :serve_endpoints, true)
+    endpoint = Module.concat(__MODULE__, config.test)
+    Application.put_env(:phoenix, endpoint, server: false)
+    refute Phoenix.Endpoint.server?(:phoenix, endpoint)
+  end
+
+  test "server?/2 returns true for global serve_endpoints as true", config do
+    Application.put_env(:phoenix, :serve_endpoints, true)
+    endpoint = Module.concat(__MODULE__, config.test)
+    Application.put_env(:phoenix, endpoint, [])
+    assert Phoenix.Endpoint.server?(:phoenix, endpoint)
+  end
+
+  test "server?/2 returns false for no global serve_endpoints config", config do
+    Application.delete_env(:phoenix, :serve_endpoints)
+    endpoint = Module.concat(__MODULE__, config.test)
+    Application.put_env(:phoenix, endpoint, [])
+    refute Phoenix.Endpoint.server?(:phoenix, endpoint)
+  end
+
   defp static_vsn(file) do
     {file.size, file.mtime} |> :erlang.phash2() |> Integer.to_string(16)
   end
