@@ -12,7 +12,7 @@ defmodule Phoenix.Endpoint.Adapter do
   """
   def start_link(otp_app, mod) do
     conf = config(otp_app, mod)
-    server? = Phoenix.Endpoint.server?(conf)
+    server? = server?(conf)
 
     children =
       config_children(mod, conf) ++
@@ -89,6 +89,18 @@ defmodule Phoenix.Endpoint.Adapter do
   """
   def config(otp_app, endpoint) do
     Phoenix.Config.from_env(otp_app, endpoint, defaults(otp_app, endpoint))
+  end
+
+  @doc """
+  Checks if Endpoint's web server has been configured to start.
+  """
+  def server?(otp_app, endpoint) when is_atom(otp_app) and is_atom(endpoint) do
+    otp_app
+    |> config(endpoint)
+    |> server?()
+  end
+  def server?(conf) when is_list(conf) do
+    Keyword.get(conf, :server, Application.get_env(:phoenix, :serve_endpoints, false))
   end
 
   defp defaults(otp_app, module) do

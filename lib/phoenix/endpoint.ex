@@ -583,16 +583,11 @@ defmodule Phoenix.Endpoint do
 
   ## Exampes
 
-      iex> server?(:my_app, MyApp.Endpoint)
+      iex> Phoenix.Endpoint.server?(:my_app, MyApp.Endpoint)
       true
   """
   def server?(otp_app, endpoint) when is_atom(otp_app) and is_atom(endpoint) do
-    otp_app
-    |> Adapter.config(endpoint)
-    |> server?()
-  end
-  def server?(conf) when is_list(conf) do
-    Keyword.get(conf, :server, Application.get_env(:phoenix, :serve_endpoints, false))
+    Adapter.server?(otp_app, endpoint)
   end
 
   defp tear_alias({:__aliases__, meta, [h|t]}) do
