@@ -5,11 +5,6 @@ defmodule <%= module %>ControllerTest do
   @valid_attrs <%= inspect params %>
   @invalid_attrs %{}
 
-  setup do
-    conn = conn()
-    {:ok, conn: conn}
-  end
-
   test "lists all entries on index", %{conn: conn} do
     conn = get conn, <%= singular %>_path(conn, :index)
     assert html_response(conn, 200) =~ "Listing <%= template_plural %>"

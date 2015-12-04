@@ -5,9 +5,8 @@ defmodule <%= module %>ControllerTest do
   @valid_attrs <%= inspect params %>
   @invalid_attrs %{}
 
-  setup do
-    conn = conn() |> put_req_header("accept", "application/json")
-    {:ok, conn: conn}
+  setup %{conn: conn} do
+    {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
   test "lists all entries on index", %{conn: conn} do
