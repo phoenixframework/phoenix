@@ -450,9 +450,8 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   defp in_umbrella?(app_path) do
-    umbrella = Path.expand(Path.join [app_path, "..", ".."])
-
     try do
+      umbrella = Path.expand(Path.join [app_path, "..", ".."])
       File.exists?(Path.join(umbrella, "mix.exs")) &&
         Mix.Project.in_project(:umbrella_check, umbrella, fn _ ->
           path = Mix.Project.config[:apps_path]
