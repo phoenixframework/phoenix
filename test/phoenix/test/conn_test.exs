@@ -1,5 +1,6 @@
 defmodule Phoenix.Test.ConnTest.CatchAll do
   def init(opts), do: opts
+  def call(conn, :stat), do: conn.params["action"].(conn)
   def call(conn, _opts), do: Plug.Conn.assign(conn, :catch_all, true)
 end
 
@@ -15,6 +16,7 @@ defmodule Phoenix.Test.ConnTest.Router do
     plug :put_bypass, :api
   end
 
+  get "/stat", CatchAll, :stat
   forward "/", CatchAll
 
   def put_bypass(conn, pipeline) do
@@ -28,16 +30,26 @@ defmodule Phoenix.Test.ConnTest do
   use Phoenix.ConnTest
   alias Phoenix.Test.ConnTest.Router
 
+  defmodule ConnError do
+    defexception [message: nil, plug_status: 500]
+  end
+
   defmodule Endpoint do
+    use Phoenix.Endpoint, otp_app: :phoenix
     def init(opts), do: opts
     def call(conn, :set), do: resp(conn, 200, "ok")
     def call(conn, opts) do
-      put_in(conn.private[:endpoint], opts)
+      put_in(super(conn, opts).private[:endpoint], opts)
       |> Router.call(Router.init([]))
     end
   end
 
   @endpoint Endpoint
+
+  setup_all do
+    Endpoint.start_link()
+    :ok
+  end
 
   test "conn/0 returns a new connection" do
     conn = conn()
@@ -353,5 +365,45 @@ defmodule Phoenix.Test.ConnTest do
       |> get("/")
 
     refute conn.assigns[:catch_all]
+  end
+
+  test "assert_sent/2 with expected error response" do
+    assert_sent :not_found, fn ->
+      get(conn(), "/stat", action: fn _ -> raise ConnError, plug_status: 404 end)
+    end
+
+    assert_sent 400, fn ->
+      get(conn(), "/stat", action: fn _ -> raise ConnError, plug_status: 400 end)
+    end
+  end
+
+  test "assert_sent/2 with failed assertion" do
+    assert_raise ExUnit.AssertionError, ~r/expected response status to be 400, but got 500.*RuntimeError/s, fn ->
+      assert_sent 400, fn ->
+        get(conn(), "/stat", action: fn _conn -> raise RuntimeError end)
+      end
+    end
+  end
+
+  test "assert_sent/2 with no response sent" do
+    assert_raise ExUnit.AssertionError, ~r/expected 404 response but no response sent/, fn ->
+      assert_sent 404, fn -> get(conn(), "/") end
+    end
+  end
+
+  test "assert_sent/2 with successful response and status match" do
+    assert_raise ExUnit.AssertionError, ~r/expected error to be rendered with status 400, but response sent with 400 without error/, fn ->
+      assert_sent :bad_request, fn ->
+        get(conn(), "/stat", action: fn conn -> Plug.Conn.send_resp(conn, 400, "") end)
+      end
+    end
+  end
+
+  test "assert_sent/2 with successful response and status mismatch" do
+    assert_raise ExUnit.AssertionError, ~r/expected error to be rendered with status 404, but response sent with 400 without error/, fn ->
+      assert_sent :not_found, fn ->
+        get(conn(), "/stat", action: fn conn -> Plug.Conn.send_resp(conn, 400, "") end)
+      end
+    end
   end
 end

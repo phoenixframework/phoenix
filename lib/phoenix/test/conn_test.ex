@@ -103,6 +103,7 @@ defmodule Phoenix.ConnTest do
   end
 
   alias Plug.Conn
+  import ExUnit.Assertions, only: [flunk: 1]
 
   @doc """
   Creates a connection to be used in upcoming requests.
@@ -493,5 +494,68 @@ defmodule Phoenix.ConnTest do
   @spec bypass_through(Conn.t, Module.t, :atom | List.t) :: Conn.t
   def bypass_through(conn, router, pipelines \\ []) do
     Plug.Conn.put_private(conn, :phoenix_bypass, {router, List.wrap(pipelines)})
+  end
+
+  @doc """
+  Asserts an error was wrapped with the given status.
+  """
+  def assert_sent(status_int_or_atom, func) do
+    expected_status = Plug.Conn.Status.code(status_int_or_atom)
+    discard_previously_sent()
+
+    func
+    |> wrap_request()
+    |> receive_response(expected_status)
+
+    discard_previously_sent()
+  end
+
+  defp receive_response({:ok, conn}, expected_status) do
+    if conn.state == :sent do
+      flunk "expected error to be rendered with status #{expected_status}, but response sent with #{conn.status} without error"
+    else
+      flunk_not_sent(expected_status)
+    end
+  end
+  defp receive_response({:error, {exception, stack}}, expected_status) do
+    receive do
+      {ref, {^expected_status, _headers, body}} when is_reference(ref) ->
+        body
+
+      {ref, {sent_status, _headers, _body}} when is_reference(ref) ->
+        reraise_error(expected_status, sent_status, exception, stack)
+
+    after 0 -> flunk_not_sent(expected_status)
+    end
+  end
+
+  defp flunk_not_sent(expected_status) do
+    flunk "expected #{expected_status} response but no response sent"
+  end
+
+  defp discard_previously_sent() do
+    receive do
+      {ref, {_, _, _}} when is_reference(ref) -> discard_previously_sent()
+      {:plug_conn, :sent}                     -> discard_previously_sent()
+    after
+      0 -> :ok
+    end
+  end
+
+  defp wrap_request(func) do
+    try do
+      {:ok, func.()}
+    rescue
+      exception -> {:error, {exception, System.stacktrace()}}
+    end
+  end
+
+  defp reraise_error(expected_stat, sent_stat, exception, stack) do
+    wrapper = %ExUnit.AssertionError{message: """
+    expected response status to be #{expected_stat}, but got #{sent_stat} from:
+
+    #{Exception.format_banner(:error, exception)}
+    """}
+    reraise(wrapper, stack)
   end
 end
