@@ -467,7 +467,7 @@ defmodule Phoenix.Router do
 
     * `:only` - a list of actions to generate routes for, for example: `[:show, :edit]`
     * `:except` - a list of actions to exclude generated routes from, for example: `[:delete]`
-    * `:param` - the name of the paramter for this resource, defaults to `"id"`
+    * `:param` - the name of the parameter for this resource, defaults to `"id"`
     * `:name` - the prefix for this resource. This is used for the named helper
       and as the prefix for the parameter in nested resources. The default value
       is automatically derived from the controller name, i.e. `UserController` will
