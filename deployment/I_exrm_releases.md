@@ -24,7 +24,7 @@ Let's separate our release process into a few tasks so we can keep track of wher
 
 ## Add exrm as a Dependency
 
-To get started, we'll need to add `{:exrm, "~> 0.15.3"}` into the list of dependencies in our `mix.exs` file.
+To get started, we'll need to add `{:exrm, "~> 0.19.9"}` into the list of dependencies in our `mix.exs` file.
 
 ```elixir
   defp deps do
