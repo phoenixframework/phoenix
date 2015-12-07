@@ -36,7 +36,7 @@ It is important to add the channel route or our channel won't function at all!
 
 #### The Channel Test Helpers Module
 
-Upon inspecting the file `test/channles/room_channel_test.exs`, we see a line that looks like
+Upon inspecting the file `test/channels/room_channel_test.exs`, we see a line that looks like
 `use MyApp.ChannelCase`. Note - we assume that our app is named `MyApp` throughout this guide.
 Where does this come from?
 
