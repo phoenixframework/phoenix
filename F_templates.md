@@ -70,7 +70,7 @@ Next, let's define a `handler_info/1` function at the bottom of the `web/views/p
 defmodule HelloPhoenix.PageView do
   use HelloPhoenix.Web, :view
 
-    def handler_info(conn) do
+  def handler_info(conn) do
     "Request Handled By: #{controller_module conn}.#{action_name conn}"
   end
 
