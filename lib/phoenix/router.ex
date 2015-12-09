@@ -64,6 +64,12 @@ defmodule Phoenix.Router do
       MyApp.Router.Helpers.page_url(conn_or_endpoint, :show, "hello", some: "query")
       "http://example.com/pages/hello?some=query"
 
+  If the route contains glob-like patterns, parameters for those have to be given as
+  list:
+
+      MyApp.Router.Helpers.dynamic_path(conn_or_endpoint, :show, ["dynamic", "something"])
+      "/dynamic/something"
+
   The url generated in the named url helpers is based on the configuration for
   `:url`, `:http` and `:https`.
 
