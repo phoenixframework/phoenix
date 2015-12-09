@@ -57,6 +57,8 @@ defmodule Phoenix.Router.HelpersTest do
     get "/posts/file/*file", PostController, :file
     get "/posts/skip", PostController, :skip, as: nil
 
+    get "/chat*js_route", ChatController, :show
+
     resources "/users", UserController do
       resources "/comments", CommentController do
         resources "/files", FileController
@@ -140,8 +142,13 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.post_path(__MODULE__, :show, 5, id: 5) == "/posts/5"
     assert Helpers.post_path(__MODULE__, :show, 5, %{"id" => 5}) == "/posts/5"
 
-    assert Helpers.post_path(__MODULE__, :file, ["foo", "bar"]) == "/posts/file/foo/bar"
+    assert Helpers.post_path(__MODULE__, :file, ["foo", "bar/baz"]) == "/posts/file/foo/bar%2Fbaz"
     assert Helpers.post_path(__MODULE__, :file, ["foo", "bar"], []) == "/posts/file/foo/bar"
+
+    assert Helpers.chat_path(__MODULE__, :show, ["chat"]) == "/chat"
+    assert Helpers.chat_path(__MODULE__, :show, ["chat", "foo"]) == "/chat/foo"
+    assert Helpers.chat_path(__MODULE__, :show, ["chat/foo"]) == "/chat%2Ffoo"
+    assert Helpers.chat_path(__MODULE__, :show, ["chat/foo", "bar/baz"]) == "/chat%2Ffoo/bar%2Fbaz"
 
     assert Helpers.top_path(__MODULE__, :top) == "/posts/top"
     assert Helpers.top_path(__MODULE__, :top, id: 5) == "/posts/top?id=5"
