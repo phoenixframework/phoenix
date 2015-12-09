@@ -234,11 +234,13 @@ defmodule Phoenix.Router.Helpers do
   defp expand_segments([]), do: "/"
   defp expand_segments(segments) when is_list(segments),
     do: expand_segments(segments, "")
-  defp expand_segments(segments),
-    do: quote(do: "/" <> Enum.join(unquote(segments), "/"))
+  defp expand_segments(segments) do
+    quote(do: "/" <> Enum.map_join(unquote(segments), "/", &URI.encode_www_form/1))
+  end
 
   defp expand_segments([{:|, _, [h, t]}], acc),
     do: quote(do: unquote(expand_segments([h], acc)) <> "/" <> Enum.map_join(unquote(t), "/", &URI.encode_www_form/1))
+
   defp expand_segments([h|t], acc) when is_binary(h),
     do: expand_segments(t, quote(do: unquote(acc) <> unquote("/" <> h)))
   defp expand_segments([h|t], acc),
