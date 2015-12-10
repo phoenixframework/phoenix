@@ -1,0 +1,72 @@
+# Ecto validations
+msgid "is invalid"
+msgstr "is invalid"
+
+msgid "can't be blank"
+msgstr "can't be blank"
+
+msgid "has invalid format"
+msgstr "has invalid format"
+
+msgid "has an invalid entry"
+msgstr "has an invalid entry"
+
+msgid "is reserved"
+msgstr "is reserved"
+
+msgid "does not match confirmation"
+msgstr "does not match confirmation"
+
+## constrains
+msgid "is still associated to this entry"
+msgstr "is still associated to this entry"
+
+msgid "are still associated to this entry"
+msgstr "are still associated to this entry"
+
+## length
+msgid "should be %{count} character(s)"
+msgid_plural "should be %{count} character(s)"
+msgstr[0] "should be %{count} character(s)"
+msgstr[1] "should be %{count} character(s)"
+
+msgid "should have %{count} item(s)"
+msgid_plural "should have %{count} item(s)"
+msgstr[0] "should have %{count} item(s)"
+msgstr[1] "should have %{count} item(s)"
+
+msgid "should be at least %{count} character(s)"
+msgid_plural "should be at least %{count} character(s)"
+msgstr[0] "should be at least %{count} character(s)"
+msgstr[1] "should be at least %{count} character(s)"
+
+msgid "should have at least %{count} item(s)"
+msgid_plural "should have at least %{count} item(s)"
+msgstr[0] "should have at least %{count} item(s)"
+msgstr[1] "should have at least %{count} item(s)"
+
+msgid "should be at most %{count} character(s)"
+msgid_plural "should be at most %{count} character(s)"
+msgstr[0] "should be at most %{count} character(s)"
+msgstr[1] "should be at most %{count} character(s)"
+
+msgid "should have at most %{count} item(s)"
+msgid_plural "should have at most %{count} item(s)"
+msgstr[0] "should have at most %{count} item(s)"
+msgstr[1] "should have at most %{count} item(s)"
+
+## numbers
+msgid "must be less than %{count}"
+msgstr "must be less than %{count}"
+
+msgid "must be greater than %{count}"
+msgstr "must be greater than %{count}"
+
+msgid "must be less than or equal to %{count}"
+msgstr "must be less than or equal to %{count}"
+
+msgid "must be greater than or equal to %{count}"
+msgstr "must be greater than or equal to %{count}"
+
+msgid "must be equal to %{count}"
+msgstr "must be equal to %{count}"

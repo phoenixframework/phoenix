@@ -19,7 +19,7 @@ config :<%= application_name %>, <%= application_module %>.Endpoint,
   live_reload: [
     patterns: [
       ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
-      ~r{priv/gettext/.*(po)$},
+      ~r{priv/gettext/.*(po[t]?)$},
       ~r{web/views/.*(ex)$},
       ~r{web/templates/.*(eex)$}
     ]

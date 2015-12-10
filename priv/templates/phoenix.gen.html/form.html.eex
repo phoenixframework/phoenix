@@ -4,7 +4,7 @@
       <p>Oops, something went wrong! Please check the errors below:</p>
       <ul>
         <%%= for {attr, message} <- f.errors do %>
-          <li><%%= humanize(attr) %> <%%= message %></li>
+          <li><%%= humanize(attr) %> <%%= translate_error(message) %></li>
         <%% end %>
       </ul>
     </div>

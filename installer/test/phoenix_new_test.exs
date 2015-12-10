@@ -122,7 +122,10 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       # Gettext
       assert_file "photo_blog/web/gettext.ex", ~r"defmodule PhotoBlog.Gettext"
-      assert File.exists?("photo_blog/priv/gettext/en/LC_MESSAGES/default.po")
+      assert File.exists?("photo_blog/priv/gettext/default.pot")
+      assert File.exists?("photo_blog/priv/gettext/errors.pot")
+      assert File.exists?("photo_blog/priv/gettext/en/LC_MESSAGES/")
+      refute File.exists?("photo_blog/priv/gettext/en/LC_MESSAGES/.keep")
     end
   end
 
