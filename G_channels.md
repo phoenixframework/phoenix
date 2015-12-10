@@ -249,6 +249,24 @@ socket = assign(socket, :user, msg["user"])
 
 Sockets store assigned values as a map in `socket.assigns`.
 
+#### Fault Tolerance and Reliability Guarantees 
+
+Servers will restart and clients will fail - understanding how Phoenix responds to these events and the guarantees it offers will help yus design robust systems. 
+
+- Subscriptions
+ 
+On the server, subscriptions are held in an ETS table (which resides in memory). If a server restarts or crashes, the subscriptions will need to be recreated for clients to receive updates. Fortunately, this functionality is built into the Phoenix JavaScript client. The clients will attempt to reconnect to the server using an exponential back off strategy. Once they reconnect, they'll rejoin the channels to which they were previously subscribed.
+
+- Channel Crashes
+
+If a channel crashes on the server, the clients will be notified and the `channel.onError` callback is invoked. The clients will then rejoin using exponential back off.
+
+- Messages
+
+On the client, messages are queued into a `PushBuffer` and sent to the server when there is a connection. If there isn't a connection available, they'll be held in memory until a connection is established. The messages are not persisted in LocalStorage or IndexedDb, so if the client's browser tab closes before the messages are sent, the messages are lost. The messages will be held in memory until a connection is established, or until they receive a "timeout" event, which defaults to 5s.
+
+When sending messages from the server to the client, Phoenix uses at-most-once message semantics. If the client is offline and misses the message, the message won't be resent. In addition, messages are not persisted on the server. If the server restarts, messages that have not been sent will be lost. For applications that need guaranteed message delivery, the application developer will need to implement this functionality. Common approaches involve persisting messages on the server and having clients request missing messages. For an example, see Chris McCord's Phoenix training: [client code](https://github.com/chrismccord/elixirconf_training/blob/master/web/static/js/app.js#L38-L39) and [server code](https://github.com/chrismccord/elixirconf_training/blob/master/web/channels/document_channel.ex#L13-L19). 
+
 #### Example Application
 To see an example of the application we just built, checkout this project (https://github.com/chrismccord/phoenix_chat_example).
 
