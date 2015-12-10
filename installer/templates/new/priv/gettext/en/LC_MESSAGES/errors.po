@@ -1,3 +1,7 @@
+msgid ""
+msgstr ""
+"Language: en\n"
+
 #################################################################
 #
 # # Gettext Usage
@@ -25,7 +29,6 @@
 #
 # See http://hexdocs.pm/gettext for detailed docs
 #################################################################
-
 # Ecto validations
 msgid "is invalid"
 msgstr ""

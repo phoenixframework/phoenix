@@ -32,9 +32,10 @@ defmodule Mix.Tasks.Phoenix.New do
     {:eex,  "new/mix.exs",                                   "mix.exs"},
     {:eex,  "new/README.md",                                 "README.md"},
     {:eex,  "new/web/gettext.ex",                            "web/gettext.ex"},
-    {:keep, "new/priv/gettext/en/LC_MESSAGES",               "priv/gettext/en/LC_MESSAGES"},
     {:eex,  "new/priv/gettext/default.pot",                  "priv/gettext/default.pot"},
     {:eex,  "new/priv/gettext/errors.pot",                   "priv/gettext/errors.pot"},
+    {:eex,  "new/priv/gettext/en/LC_MESSAGES/default.po",    "priv/gettext/en/LC_MESSAGES/default.po"},
+    {:eex,  "new/priv/gettext/en/LC_MESSAGES/errors.po",     "priv/gettext/en/LC_MESSAGES/errors.po"},
   ]
 
   @ecto [

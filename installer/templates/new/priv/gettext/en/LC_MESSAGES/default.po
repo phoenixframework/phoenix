@@ -1,3 +1,7 @@
+msgid ""
+msgstr ""
+"Language: en\n"
+
 #################################################################
 #
 # # Gettext Usage
@@ -25,7 +29,6 @@
 #
 # See http://hexdocs.pm/gettext for detailed docs
 #################################################################
-
 #: web/templates/page/index.html.eex:2
 msgid "Welcome to %{name}"
 msgstr ""
