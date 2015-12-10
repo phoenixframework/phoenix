@@ -20,8 +20,8 @@ defmodule <%= application_module %>.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [mod: {<%= application_module %>, []},
-     applications: [:phoenix<%= if html do %>, :phoenix_html<% end %>, :cowboy, :logger<%= if ecto do %>,
-                    :phoenix_ecto, <%= inspect adapter_app %><% end %>, :gettext]]
+     applications: [:phoenix<%= if html do %>, :phoenix_html<% end %>, :cowboy, :logger, :gettext<%= if ecto do %>,
+                    :phoenix_ecto, <%= inspect adapter_app %><% end %>]]
   end
 
   # Specifies which paths to compile per environment.

@@ -18,6 +18,9 @@ defmodule Phoenix do
     * [Plug](http://hexdocs.pm/plug) - a specification and conveniences
       for composable modules in between web applications
 
+    * [Gettext](http://hexdocs.pm/gettext) - Internationalization and
+      localization through gettext
+
   There are also optional packages depending on your configuration:
 
     * [Phoenix PubSub Redis](http://hexdocs.pm/phoenix_pubsub_redis) - use

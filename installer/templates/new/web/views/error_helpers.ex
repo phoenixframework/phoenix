@@ -1,8 +1,19 @@
 defmodule <%= application_module %>.ErrorHelpers do
   @moduledoc """
-  Helpers for translating and formatting error messages.
+  Conveniences for translating and building error messages.
   """
+  <%= if html do %>
+  use Phoenix.HTML
 
+  @doc """
+  Generates tag for inlined form input errors.
+  """
+  def error_tag(form, field) do
+    if error = form.errors[field] do
+      content_tag :span, translate_error(error), class: "help-block"
+    end
+  end
+  <% end %>
   @doc """
   Translates an error message using gettext.
   """

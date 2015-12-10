@@ -95,24 +95,24 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
         {nil, nil}
       {_, {:references, _}} ->
         {nil, nil}
-      {k, :integer}    ->
-        {label(k), ~s(<%= number_input f, #{inspect(k)}, class: "form-control" %>)}
-      {k, :float}      ->
-        {label(k), ~s(<%= number_input f, #{inspect(k)}, step: "any", class: "form-control" %>)}
-      {k, :decimal}    ->
-        {label(k), ~s(<%= number_input f, #{inspect(k)}, step: "any", class: "form-control" %>)}
-      {k, :boolean}    ->
-        {label(k), ~s(<%= checkbox f, #{inspect(k)}, class: "form-control" %>)}
-      {k, :text}       ->
-        {label(k), ~s(<%= textarea f, #{inspect(k)}, class: "form-control" %>)}
-      {k, :date}       ->
-        {label(k), ~s(<%= date_select f, #{inspect(k)}, class: "form-control" %>)}
-      {k, :time}       ->
-        {label(k), ~s(<%= time_select f, #{inspect(k)}, class: "form-control" %>)}
-      {k, :datetime}   ->
-        {label(k), ~s(<%= datetime_select f, #{inspect(k)}, class: "form-control" %>)}
-      {k, _}           ->
-        {label(k), ~s(<%= text_input f, #{inspect(k)}, class: "form-control" %>)}
+      {key, :integer}    ->
+        {inspect(key), label(key), ~s(<%= number_input f, #{inspect(key)}, class: "form-control" %>)}
+      {key, :float}      ->
+        {inspect(key), label(key), ~s(<%= number_input f, #{inspect(key)}, step: "any", class: "form-control" %>)}
+      {key, :decimal}    ->
+        {inspect(key), label(key), ~s(<%= number_input f, #{inspect(key)}, step: "any", class: "form-control" %>)}
+      {key, :boolean}    ->
+        {inspect(key), label(key), ~s(<%= checkbox f, #{inspect(key)}, class: "form-control" %>)}
+      {key, :text}       ->
+        {inspect(key), label(key), ~s(<%= textarea f, #{inspect(key)}, class: "form-control" %>)}
+      {key, :date}       ->
+        {inspect(key), label(key), ~s(<%= date_select f, #{inspect(key)}, class: "form-control" %>)}
+      {key, :time}       ->
+        {inspect(key), label(key), ~s(<%= time_select f, #{inspect(key)}, class: "form-control" %>)}
+      {key, :datetime}   ->
+        {inspect(key), label(key), ~s(<%= datetime_select f, #{inspect(key)}, class: "form-control" %>)}
+      {key, _}           ->
+        {inspect(key), label(key), ~s(<%= text_input f, #{inspect(key)}, class: "form-control" %>)}
     end
   end
 

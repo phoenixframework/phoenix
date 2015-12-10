@@ -1,29 +1,3 @@
-# # Gettext Usage
-#
-# ## .pot files
-#
-#  .pot files hold your translation msgid's for Gettext
-#
-#  .pot entries are *extracted from source automatically*.
-#  You should only add msgid entries to .pot files for dynamic
-#  keys that are not compile-time literals, such as Ecto msgid's.
-#  The msgstr's for .pot entries will always be blank strings.
-#
-# ## .po files
-#
-# Translations for the msgid's defined in .pot files go in the
-# corresponding .po file, located in:
-#
-#     /priv/gettext/[locale]/LC_MESSAGES/[domain].po
-#
-#  where `locale` could be "en" and `domain` "default", "errors"
-#
-#  For .po files, you only enter the msgstr translations.
-#  The msgid's are extracted and merged into the po files for you.
-#
-# See http://hexdocs.pm/gettext for detailed docs
-
-
 # Ecto validations
 msgid "is invalid"
 msgstr ""
@@ -83,16 +57,26 @@ msgstr[1] ""
 
 ## numbers
 msgid "must be less than %{count}"
-msgstr ""
+msgid_plural "must be less than %{count}"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "must be greater than %{count}"
-msgstr ""
+msgid_plural "must be greater than %{count}"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "must be less than or equal to %{count}"
-msgstr ""
+msgid_plural "must be less than or equal to %{count}"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "must be greater than or equal to %{count}"
-msgstr ""
+msgid_plural "must be greater than or equal to %{count}"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "must be equal to %{count}"
-msgstr ""
+msgid_plural "must be equal to %{count}"
+msgstr[0] ""
+msgstr[1] ""
