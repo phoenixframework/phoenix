@@ -117,8 +117,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
   end
 
   defp label(key) do
-    label_text = Phoenix.Naming.humanize(key)
-    ~s(<%= label f, #{inspect(key)}, "#{label_text}", class: "control-label" %>)
+    ~s(<%= label f, #{inspect(key)}, class: "control-label" %>)
   end
 
   defp paths do
