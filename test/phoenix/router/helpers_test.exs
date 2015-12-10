@@ -154,8 +154,39 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.top_path(__MODULE__, :top, id: 5) == "/posts/top?id=5"
     assert Helpers.top_path(__MODULE__, :top, %{"id" => 5}) == "/posts/top?id=5"
 
+    error_message = (fn (helper, arity) ->
+    """
+    No route helper clause for #{helper}/#{arity} defined for action :skip.
+    The following #{helper} actions are defined under your router:
+
+      * :file
+      * :show
+
+    """ |> String.strip
+    end)
+
     assert_raise UndefinedFunctionError, fn ->
       Helpers.post_path(__MODULE__, :skip)
+    end
+
+    assert_raise UndefinedFunctionError, fn ->
+      Helpers.post_url(__MODULE__, :skip)
+    end
+
+    assert_raise ArgumentError, error_message.("post_path", 3), fn ->
+      Helpers.post_path(__MODULE__, :skip, 5)
+    end
+
+    assert_raise ArgumentError, error_message.("post_url", 3), fn ->
+      Helpers.post_url(__MODULE__, :skip, 5)
+    end
+
+    assert_raise ArgumentError, error_message.("post_path", 4), fn ->
+      Helpers.post_path(__MODULE__, :skip, 5, foo: "bar", other: "param")
+    end
+
+    assert_raise ArgumentError, error_message.("post_url", 4), fn ->
+      Helpers.post_url(__MODULE__, :skip, 5, foo: "bar", other: "param")
     end
   end
 
@@ -221,6 +252,51 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.user_comment_path(__MODULE__, :show, 123, 2) == "/users/123/comments/2"
     assert Helpers.user_comment_path(__MODULE__, :new, 88, []) == "/users/88/comments/new"
     assert Helpers.user_comment_path(__MODULE__, :new, 88) == "/users/88/comments/new"
+
+    error_message = (fn (helper, arity) ->
+    """
+    No route helper clause for #{helper}/#{arity} defined for action :skip.
+    The following #{helper} actions are defined under your router:
+
+      * :create
+      * :delete
+      * :edit
+      * :index
+      * :new
+      * :show
+      * :update
+    """ |> String.strip
+    end)
+
+    assert_raise ArgumentError, error_message.("user_comment_path", 3), fn ->
+      Helpers.user_comment_path(__MODULE__, :skip, 123)
+    end
+
+    assert_raise ArgumentError, error_message.("user_comment_file_path", 4), fn ->
+      Helpers.user_comment_file_path(__MODULE__, :skip, 123, 456)
+    end
+
+    assert_raise ArgumentError, error_message.("user_comment_file_path", 5), fn ->
+      Helpers.user_comment_file_path(__MODULE__, :skip, 123, 456, foo: "bar")
+    end
+
+    arity_error_message =
+    """
+    No route helper clause for user_comment_path/3 defined for action :show with an arity of 3. Please check that the function, arity and action are correct.
+   The following user_comment_path actions are defined under your router:
+
+      * :create
+      * :delete
+      * :edit
+      * :index
+      * :new
+      * :show
+      * :update
+    """ |> String.strip
+
+    assert_raise ArgumentError, arity_error_message, fn ->
+      Helpers.user_comment_path(__MODULE__, :show, 123)
+    end
   end
 
   test "multi-level nested resources generated named routes with complex ids" do
