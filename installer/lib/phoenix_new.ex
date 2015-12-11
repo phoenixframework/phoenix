@@ -395,22 +395,22 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   defp get_ecto_adapter("mssql", app, module) do
-    {:tds_ecto, Tds.Ecto, db_config(app, module, "db_user", "db_password")}
+    {:tds_ecto, Tds.Ecto, sql_db_config(app, module, "db_user", "db_password")}
   end
   defp get_ecto_adapter("mysql", app, module) do
-    {:mariaex, Ecto.Adapters.MySQL, db_config(app, module, "root", "")}
+    {:mariaex, Ecto.Adapters.MySQL, sql_db_config(app, module, "root", "")}
   end
   defp get_ecto_adapter("postgres", app, module) do
-    {:postgrex, Ecto.Adapters.Postgres, db_config(app, module, "postgres", "postgres")}
+    {:postgrex, Ecto.Adapters.Postgres,
+      [dev:  [database: "#{app}_dev"],
+       test: [database: "#{app}_test", pool: Ecto.Adapters.SQL.Sandbox],
+       prod: [database: "#{app}_prod"]] ++ sql_base_config(module)}
   end
   defp get_ecto_adapter("sqlite", app, module) do
     {:sqlite_ecto, Sqlite.Ecto,
-      dev:  [database: "db/#{app}_dev.sqlite"],
-      test: [database: "db/#{app}_test.sqlite", pool: Ecto.Adapters.SQL.Sandbox],
-      prod: [database: "db/#{app}_prod.sqlite"],
-      test_begin: "Ecto.Adapters.SQL.begin_test_transaction(#{module}.Repo)",
-      test_restart: "Ecto.Adapters.SQL.restart_test_transaction(#{module}.Repo, [])",
-      migration: true}
+      [dev:  [database: "db/#{app}_dev.sqlite"],
+       test: [database: "db/#{app}_test.sqlite", pool: Ecto.Adapters.SQL.Sandbox],
+       prod: [database: "db/#{app}_prod.sqlite"]] ++ sql_base_config(module)}
   end
   defp get_ecto_adapter("mongodb", app, module) do
     {:mongodb_ecto, Mongo.Ecto,
@@ -426,12 +426,15 @@ defmodule Mix.Tasks.Phoenix.New do
     Mix.raise "Unknown database #{inspect db}"
   end
 
-  defp db_config(app, module, user, pass) do
+  defp sql_db_config(app, module, user, pass) do
     [dev:  [username: user, password: pass, database: "#{app}_dev", hostname: "localhost"],
      test: [username: user, password: pass, database: "#{app}_test", hostname: "localhost",
             pool: Ecto.Adapters.SQL.Sandbox],
-     prod: [username: user, password: pass, database: "#{app}_prod"],
-     test_begin: "Ecto.Adapters.SQL.begin_test_transaction(#{module}.Repo)",
+     prod: [username: user, password: pass, database: "#{app}_prod"]] ++ sql_base_config(module)
+  end
+
+  defp sql_base_config(module) do
+    [test_begin: "Ecto.Adapters.SQL.begin_test_transaction(#{module}.Repo)",
      test_restart: "Ecto.Adapters.SQL.restart_test_transaction(#{module}.Repo, [])",
      migration: true]
   end
