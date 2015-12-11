@@ -241,6 +241,20 @@ defmodule Phoenix.Controller.ControllerTest do
     end
   end
 
+  test "redirect/2 with to: :back" do
+    conn = conn(:get, "/") |> put_req_header("referer", "/foobar")
+    conn = redirect(conn, to: :back)
+    assert conn.resp_body =~ "/foobar"
+    assert get_resp_content_type(conn) == "text/html"
+    assert get_resp_header(conn, "location") == ["/foobar"]
+    refute conn.halted
+
+    assert_raise ArgumentError, ~r/cannot redirect back without a referer/, fn ->
+      redirect(conn(:get, "/"), to: :back)
+    end
+  end
+
+
   test "redirect/2 with :external" do
     conn = redirect(conn(:get, "/"), external: "http://example.com")
     assert conn.resp_body =~ "http://example.com"
