@@ -11,6 +11,7 @@
   * [Endpoint] `check_origin` now supports wildcard hosts, ie `check_origin: ["//*.example.com"]`
   * [Endpoint] `check_origin` treats invalid origin hosts as missing for misbehaving clients
   * [Endpoint] Add `Phoenix.Endpoint.server?/2` to check if webserver has been configured to start
+  * [ConnTest] Add `assert_error_sent` to assert an error was wrapped and sent with a given status
 
 * Backward incompatible changes
   * [View] The `@inner` assign has been removed in favor of explicit rendering with `render/3` and the new `@view_module` and `view_template` assigns, for example: `<%= @inner %>` is replaced by `<%= render @view_module, @view_template, assigns %>`

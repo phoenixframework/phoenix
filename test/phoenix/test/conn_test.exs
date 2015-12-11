@@ -394,7 +394,7 @@ defmodule Phoenix.Test.ConnTest do
   end
 
   test "assert_error_sent/2 with successful response and status match" do
-    assert_raise ExUnit.AssertionError, ~r/expected error to be rendered with status 400, but response sent with 400 without error/, fn ->
+    assert_raise ExUnit.AssertionError, ~r/expected error to be sent as 400 status, but response sent 400 without error/, fn ->
       assert_error_sent :bad_request, fn ->
         get(conn(), "/stat", action: fn conn -> Plug.Conn.send_resp(conn, 400, "") end)
       end
@@ -402,7 +402,7 @@ defmodule Phoenix.Test.ConnTest do
   end
 
   test "assert_error_sent/2 with successful response and status mismatch" do
-    assert_raise ExUnit.AssertionError, ~r/expected error to be rendered with status 404, but response sent with 400 without error/, fn ->
+    assert_raise ExUnit.AssertionError, ~r/expected error to be sent as 404 status, but response sent 400 without error/, fn ->
       assert_error_sent :not_found, fn ->
         get(conn(), "/stat", action: fn conn -> Plug.Conn.send_resp(conn, 400, "") end)
       end
