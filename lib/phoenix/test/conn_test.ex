@@ -508,7 +508,7 @@ defmodule Phoenix.ConnTest do
   3-tuple of the wrapped response is returned matching the
   status, headers, and body of the response:
 
-      {404, [{"conent-type", "text/html"} | _], "Page not found"}
+      {404, [{"content-type", "text/html"} | _], "Page not found"}
 
   ## Examples
 
