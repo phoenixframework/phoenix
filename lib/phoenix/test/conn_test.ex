@@ -500,8 +500,8 @@ defmodule Phoenix.ConnTest do
   Asserts an error was wrapped and sent with the given status.
 
   Useful for testing actions that you expect raise an error and have
-  the response wrapped in an HTTP status, with content usually renered
-  by your ErrorView.
+  the response wrapped in an HTTP status, with content usually rendered
+  by your MyApp.ErrorView.
 
   The function accepts a status either as an integer HTTP status or
   atom, such as `404` or `:not_found`. If an error is raised, a
