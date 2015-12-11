@@ -296,7 +296,7 @@ defmodule Phoenix.Controller do
 
   """
   def redirect(conn, opts) when is_list(opts) do
-    url  = url(opts)
+    url  = url(conn, opts)
     html = Plug.HTML.html_escape(url)
     body = "<html><body>You are being <a href=\"#{html}\">redirected</a>.</body></html>"
 
@@ -305,12 +305,13 @@ defmodule Phoenix.Controller do
     |> send_resp(conn.status || 302, "text/html", body)
   end
 
-  defp url(opts) do
+  defp url(conn, opts) do
     cond do
       to = opts[:to] ->
         case to do
           "//" <> _ -> raise_invalid_url()
           "/" <> _  -> to
+          :back     -> referer(conn)
           _         -> raise_invalid_url()
         end
       external = opts[:external] ->
@@ -321,6 +322,12 @@ defmodule Phoenix.Controller do
   end
   defp raise_invalid_url do
     raise ArgumentError, "the :to option in redirect expects a path"
+  end
+  defp referer(conn) do
+    case get_req_header(conn, "referer") do
+      [referer] -> referer
+      _         -> raise ArgumentError, "cannot redirect back without a referer"
+    end
   end
 
   @doc """
