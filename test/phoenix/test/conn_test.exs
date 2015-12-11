@@ -367,41 +367,43 @@ defmodule Phoenix.Test.ConnTest do
     refute conn.assigns[:catch_all]
   end
 
-  test "assert_sent/2 with expected error response" do
-    assert_sent :not_found, fn ->
+  test "assert_error_sent/2 with expected error response" do
+    response = assert_error_sent :not_found, fn ->
       get(conn(), "/stat", action: fn _ -> raise ConnError, plug_status: 404 end)
     end
+    assert {404, [_h | _t], "404.html from Phoenix.ErrorView"} = response
 
-    assert_sent 400, fn ->
+    response = assert_error_sent 400, fn ->
       get(conn(), "/stat", action: fn _ -> raise ConnError, plug_status: 400 end)
     end
+    assert {400, [_h | _t], "400.html from Phoenix.ErrorView"} = response
   end
 
-  test "assert_sent/2 with failed assertion" do
+  test "assert_error_sent/2 with failed assertion" do
     assert_raise ExUnit.AssertionError, ~r/expected response status to be 400, but got 500.*RuntimeError/s, fn ->
-      assert_sent 400, fn ->
+      assert_error_sent 400, fn ->
         get(conn(), "/stat", action: fn _conn -> raise RuntimeError end)
       end
     end
   end
 
-  test "assert_sent/2 with no response sent" do
+  test "assert_error_sent/2 with no response sent" do
     assert_raise ExUnit.AssertionError, ~r/expected 404 response but no response sent/, fn ->
-      assert_sent 404, fn -> get(conn(), "/") end
+      assert_error_sent 404, fn -> get(conn(), "/") end
     end
   end
 
-  test "assert_sent/2 with successful response and status match" do
+  test "assert_error_sent/2 with successful response and status match" do
     assert_raise ExUnit.AssertionError, ~r/expected error to be rendered with status 400, but response sent with 400 without error/, fn ->
-      assert_sent :bad_request, fn ->
+      assert_error_sent :bad_request, fn ->
         get(conn(), "/stat", action: fn conn -> Plug.Conn.send_resp(conn, 400, "") end)
       end
     end
   end
 
-  test "assert_sent/2 with successful response and status mismatch" do
+  test "assert_error_sent/2 with successful response and status mismatch" do
     assert_raise ExUnit.AssertionError, ~r/expected error to be rendered with status 404, but response sent with 400 without error/, fn ->
-      assert_sent :not_found, fn ->
+      assert_error_sent :not_found, fn ->
         get(conn(), "/stat", action: fn conn -> Plug.Conn.send_resp(conn, 400, "") end)
       end
     end
