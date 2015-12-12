@@ -7,7 +7,7 @@
   * [CodeReloader] The socket transports now trigger the code reloader when enabled for external clients that only connect to channels without trigger a recompile through the normal page request.
   * [phoenix.digest] The `phoenix.digest` task now digests asset urls in stylesheets automatically
   * [Channel] Add `Phoenix.Channel.reply/3` to reply asynchronously to a channel push
-  * [Channel] `code_change/3` is now supported to uprade channel servers
+  * [Channel] `code_change/3` is now supported to upgrade channel servers
   * [Endpoint] `check_origin` now supports wildcard hosts, ie `check_origin: ["//*.example.com"]`
   * [Endpoint] `check_origin` treats invalid origin hosts as missing for misbehaving clients
   * [Endpoint] Add `Phoenix.Endpoint.server?/2` to check if webserver has been configured to start
@@ -46,7 +46,7 @@
   * [Generator] Ensure proper keys are generated in JSON views and tests
   * [Generator] Ensure proper titles are generated in HTML views and tests
   * [Mix] Ensure app is compiled before showing routes with `mix phoenix.routes`
-  * [Token] Ensure max age is counted in seconds and not in miliseconds
+  * [Token] Ensure max age is counted in seconds and not in milliseconds
 
 ## 1.0.1 (2015-9-3)
 
@@ -67,7 +67,7 @@
 * Bug fixes
   * [Endpoint] Pass port configuration when configuring force_ssl
   * [Mix] By default include all attributes in generated JSON views
-  * [Router] Fix `pipe_through` not respecting halting when piping through mulitple pipelines
+  * [Router] Fix `pipe_through` not respecting halting when piping through multiple pipelines
 
 ## v0.17.0 (2015-8-19)
 
@@ -328,7 +328,7 @@ See these [`0.10.x` to `0.11.0` upgrade instructions](https://gist.github.com/ch
 See these [`0.9.x` to `0.10.0` upgrade instructions](https://gist.github.com/chrismccord/cf51346c6636b5052885) to bring your existing apps up to speed.
 
 * Enhancements
-  * [CLI] Make `phoenix.new` in sync with `mix new` by making the project diretory optional
+  * [CLI] Make `phoenix.new` in sync with `mix new` by making the project directory optional
   * [Controller] Add `scrub_params/2` which makes it easy to remove and prune blank string values from parameters (usually sent by forms)
   * [Endpoint] Runtime evaluation of `:port` configuration is now supported. When given a tuple like `{:system, "PORT"}`, the port will be referenced from `System.get_env("PORT")` at runtime as a workaround for releases where environment specific information is loaded only at compile-time
   * [HTML] Provide `tag/2`, `content_tag/2` and `content_tag/3` helpers to make tag generation easier and safer
