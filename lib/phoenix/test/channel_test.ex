@@ -364,7 +364,7 @@ defmodule Phoenix.ChannelTest do
   Emulates the client closing the channel.
 
   Closing channels is synchronous and has a default timeout
-  of 5000 miliseconds.
+  of 5000 milliseconds.
   """
   def close(socket, timeout \\ 5000) do
     Server.close(socket.channel_pid, timeout)
@@ -406,7 +406,7 @@ defmodule Phoenix.ChannelTest do
   In the assertion above, we don't particularly care about
   the data being sent, as long as something was sent.
 
-  The timeout is in miliseconds and defaults to 100ms.
+  The timeout is in milliseconds and defaults to 100ms.
   """
   defmacro assert_push(event, payload, timeout \\ 100) do
     quote do
@@ -428,7 +428,7 @@ defmodule Phoenix.ChannelTest do
   In the assertion above, we don't particularly care about
   the data being sent, as long as something was replied.
 
-  The timeout is in miliseconds and defaults to 100ms.
+  The timeout is in milliseconds and defaults to 100ms.
   """
   defmacro assert_reply(ref, status, payload \\ Macro.escape(%{}), timeout \\ 100) do
     quote do
@@ -455,7 +455,7 @@ defmodule Phoenix.ChannelTest do
   In the assertion above, we don't particularly care about
   the data being sent, as long as something was sent.
 
-  The timeout is in miliseconds and defaults to 100ms.
+  The timeout is in milliseconds and defaults to 100ms.
   """
   defmacro assert_broadcast(event, payload, timeout \\ 100) do
     quote do
