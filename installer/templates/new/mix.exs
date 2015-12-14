@@ -33,8 +33,7 @@ defmodule <%= application_module %>.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [<%= phoenix_dep %>,<%= if ecto do %>
-     {:phoenix_ecto, "~> 1.1"},
-     {:ecto, github: "elixir-lang/ecto", override: true},
+     {:phoenix_ecto, "~> 2.0"},
      {<%= inspect adapter_app %>, ">= 0.0.0"},<% end %><%= if html do %>
      {:phoenix_html, "~> 2.1"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},<% end %>
