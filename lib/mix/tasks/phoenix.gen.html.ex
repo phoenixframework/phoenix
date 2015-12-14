@@ -96,23 +96,23 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
       {_, {:references, _}} ->
         {nil, nil, nil}
       {key, :integer}    ->
-        {label(key), ~s(<%= number_input f, #{inspect(key)}, class: "form-control" %>), error_tag(key)}
+        {label(key), ~s(<%= number_input f, #{inspect(key)}, class: "form-control" %>), error(key)}
       {key, :float}      ->
-        {label(key), ~s(<%= number_input f, #{inspect(key)}, step: "any", class: "form-control" %>), error_tag(key)}
+        {label(key), ~s(<%= number_input f, #{inspect(key)}, step: "any", class: "form-control" %>), error(key)}
       {key, :decimal}    ->
-        {label(key), ~s(<%= number_input f, #{inspect(key)}, step: "any", class: "form-control" %>), error_tag(key)}
+        {label(key), ~s(<%= number_input f, #{inspect(key)}, step: "any", class: "form-control" %>), error(key)}
       {key, :boolean}    ->
-        {label(key), ~s(<%= checkbox f, #{inspect(key)}, class: "form-control" %>), error_tag(key)}
+        {label(key), ~s(<%= checkbox f, #{inspect(key)}, class: "form-control" %>), error(key)}
       {key, :text}       ->
-        {label(key), ~s(<%= textarea f, #{inspect(key)}, class: "form-control" %>), error_tag(key)}
+        {label(key), ~s(<%= textarea f, #{inspect(key)}, class: "form-control" %>), error(key)}
       {key, :date}       ->
-        {label(key), ~s(<%= date_select f, #{inspect(key)}, class: "form-control" %>), error_tag(key)}
+        {label(key), ~s(<%= date_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
       {key, :time}       ->
-        {label(key), ~s(<%= time_select f, #{inspect(key)}, class: "form-control" %>), error_tag(key)}
+        {label(key), ~s(<%= time_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
       {key, :datetime}   ->
-        {label(key), ~s(<%= datetime_select f, #{inspect(key)}, class: "form-control" %>), error_tag(key)}
+        {label(key), ~s(<%= datetime_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
       {key, _}           ->
-        {label(key), ~s(<%= text_input f, #{inspect(key)}, class: "form-control" %>), error_tag(key)}
+        {label(key), ~s(<%= text_input f, #{inspect(key)}, class: "form-control" %>), error(key)}
     end
   end
 
@@ -120,7 +120,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
     ~s(<%= label f, #{inspect(key)}, class: "control-label" %>)
   end
 
-  defp error_tag(field) do
+  defp error(field) do
     ~s(<%= error_tag f, #{inspect(field)} %>)
   end
 

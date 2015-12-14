@@ -4,11 +4,11 @@
       <p>Oops, something went wrong! Please check the errors below.</p>
     </div>
   <%% end %>
-<%= for {label, input, error_tag} <- inputs, input do %>
+<%= for {label, input, error} <- inputs, input do %>
   <div class="form-group">
     <%= label %>
     <%= input %>
-    <%= error_tag %>
+    <%= error %>
   </div>
 <% end %>
   <div class="form-group">
