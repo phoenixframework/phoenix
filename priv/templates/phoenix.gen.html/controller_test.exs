@@ -33,7 +33,7 @@ defmodule <%= module %>ControllerTest do
   end
 
   test "renders page not found when id is nonexistent", %{conn: conn} do
-    assert_raise Ecto.NoResultsError, fn ->
+    assert_error_sent 404, fn ->
       get conn, <%= singular %>_path(conn, :show, -1)
     end
   end
