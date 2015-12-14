@@ -92,32 +92,36 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
   defp inputs(attrs) do
     Enum.map attrs, fn
       {_, {:array, _}} ->
-        {nil, nil}
+        {nil, nil, nil}
       {_, {:references, _}} ->
-        {nil, nil}
-      {k, :integer}    ->
-        {label(k), ~s(<%= number_input f, #{inspect(k)}, class: "form-control" %>)}
-      {k, :float}      ->
-        {label(k), ~s(<%= number_input f, #{inspect(k)}, step: "any", class: "form-control" %>)}
-      {k, :decimal}    ->
-        {label(k), ~s(<%= number_input f, #{inspect(k)}, step: "any", class: "form-control" %>)}
-      {k, :boolean}    ->
-        {label(k), ~s(<%= checkbox f, #{inspect(k)}, class: "form-control" %>)}
-      {k, :text}       ->
-        {label(k), ~s(<%= textarea f, #{inspect(k)}, class: "form-control" %>)}
-      {k, :date}       ->
-        {label(k), ~s(<%= date_select f, #{inspect(k)}, class: "form-control" %>)}
-      {k, :time}       ->
-        {label(k), ~s(<%= time_select f, #{inspect(k)}, class: "form-control" %>)}
-      {k, :datetime}   ->
-        {label(k), ~s(<%= datetime_select f, #{inspect(k)}, class: "form-control" %>)}
-      {k, _}           ->
-        {label(k), ~s(<%= text_input f, #{inspect(k)}, class: "form-control" %>)}
+        {nil, nil, nil}
+      {key, :integer}    ->
+        {label(key), ~s(<%= number_input f, #{inspect(key)}, class: "form-control" %>), error_tag(key)}
+      {key, :float}      ->
+        {label(key), ~s(<%= number_input f, #{inspect(key)}, step: "any", class: "form-control" %>), error_tag(key)}
+      {key, :decimal}    ->
+        {label(key), ~s(<%= number_input f, #{inspect(key)}, step: "any", class: "form-control" %>), error_tag(key)}
+      {key, :boolean}    ->
+        {label(key), ~s(<%= checkbox f, #{inspect(key)}, class: "form-control" %>), error_tag(key)}
+      {key, :text}       ->
+        {label(key), ~s(<%= textarea f, #{inspect(key)}, class: "form-control" %>), error_tag(key)}
+      {key, :date}       ->
+        {label(key), ~s(<%= date_select f, #{inspect(key)}, class: "form-control" %>), error_tag(key)}
+      {key, :time}       ->
+        {label(key), ~s(<%= time_select f, #{inspect(key)}, class: "form-control" %>), error_tag(key)}
+      {key, :datetime}   ->
+        {label(key), ~s(<%= datetime_select f, #{inspect(key)}, class: "form-control" %>), error_tag(key)}
+      {key, _}           ->
+        {label(key), ~s(<%= text_input f, #{inspect(key)}, class: "form-control" %>), error_tag(key)}
     end
   end
 
   defp label(key) do
     ~s(<%= label f, #{inspect(key)}, class: "control-label" %>)
+  end
+
+  defp error_tag(field) do
+    ~s(<%= error_tag f, #{inspect(field)} %>)
   end
 
   defp paths do

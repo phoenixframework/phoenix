@@ -31,6 +31,9 @@ defmodule Mix.Tasks.Phoenix.New do
     {:eex,  "new/web/web.ex",                                "web/web.ex"},
     {:eex,  "new/mix.exs",                                   "mix.exs"},
     {:eex,  "new/README.md",                                 "README.md"},
+    {:eex,  "new/web/gettext.ex",                            "web/gettext.ex"},
+    {:eex,  "new/priv/gettext/errors.pot",                   "priv/gettext/errors.pot"},
+    {:eex,  "new/priv/gettext/en/LC_MESSAGES/errors.po",     "priv/gettext/en/LC_MESSAGES/errors.po"},
   ]
 
   @ecto [
@@ -60,6 +63,7 @@ defmodule Mix.Tasks.Phoenix.New do
     {:eex,  "new/web/templates/page/index.html.eex",         "web/templates/page/index.html.eex"},
     {:eex,  "new/web/views/layout_view.ex",                  "web/views/layout_view.ex"},
     {:eex,  "new/web/views/page_view.ex",                    "web/views/page_view.ex"},
+    {:eex,  "new/web/views/error_helpers.ex",                "web/views/error_helpers.ex"},
   ]
 
   @bare [

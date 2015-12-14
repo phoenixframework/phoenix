@@ -8,7 +8,7 @@ defmodule <%= application_module %>.Mixfile do
      lockfile: "../../mix.lock",<% end %>
      elixir: "~> 1.0",
      elixirc_paths: elixirc_paths(Mix.env),
-     compilers: [:phoenix] ++ Mix.compilers,
+     compilers: [:phoenix, :gettext] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,<%= if ecto do %>
      aliases: aliases,<% end %>
@@ -20,7 +20,7 @@ defmodule <%= application_module %>.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [mod: {<%= application_module %>, []},
-     applications: [:phoenix<%= if html do %>, :phoenix_html<% end %>, :cowboy, :logger<%= if ecto do %>,
+     applications: [:phoenix<%= if html do %>, :phoenix_html<% end %>, :cowboy, :logger, :gettext<%= if ecto do %>,
                     :phoenix_ecto, <%= inspect adapter_app %><% end %>]]
   end
 
@@ -34,9 +34,11 @@ defmodule <%= application_module %>.Mixfile do
   defp deps do
     [<%= phoenix_dep %>,<%= if ecto do %>
      {:phoenix_ecto, "~> 1.1"},
+     {:ecto, github: "elixir-lang/ecto", override: true},
      {<%= inspect adapter_app %>, ">= 0.0.0"},<% end %><%= if html do %>
      {:phoenix_html, "~> 2.1"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},<% end %>
+     {:gettext, "~> 0.8"},
      {:cowboy, "~> 1.0"}]
   end<%= if ecto do %>
 
