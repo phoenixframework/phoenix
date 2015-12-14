@@ -18,7 +18,7 @@ defmodule <%= application_module %>.Web do
 <%= if ecto do %>
   def model do
     quote do
-      use Ecto.Model
+      use Ecto.Schema
 
       import Ecto.Changeset
       import Ecto.Query, only: [from: 1, from: 2]<%= if adapter_config[:binary_id] do %>
@@ -39,7 +39,7 @@ defmodule <%= application_module %>.Web do
       use Phoenix.Controller<%= if namespaced? do %>, namespace: <%= application_module %><% end %>
 <%= if ecto do %>
       alias <%= application_module %>.Repo
-      import Ecto.Model
+      import Ecto
       import Ecto.Query, only: [from: 1, from: 2]
 <% end %>
       import <%= application_module %>.Router.Helpers
@@ -74,7 +74,7 @@ defmodule <%= application_module %>.Web do
       use Phoenix.Channel<%= if ecto do %>
 
       alias <%= application_module %>.Repo
-      import Ecto.Model
+      import Ecto
       import Ecto.Query, only: [from: 1, from: 2]<% end %>
       import <%= application_module %>.Gettext
     end
