@@ -1,7 +1,6 @@
 defmodule Phoenix.Endpoint.Server do
   # The supervisor for the underlying handlers.
   @moduledoc false
-  @handler Phoenix.Endpoint.CowboyHandler
 
   use Supervisor
   require Logger
@@ -14,14 +13,14 @@ defmodule Phoenix.Endpoint.Server do
     children = []
 
     if config = endpoint.config(:http) do
-      children =
-        [@handler.child_spec(:http, endpoint, default(config, otp_app, 4000))|children]
+      config = default(config, otp_app, 4000)
+      children = [config[:handler].child_spec(:http, endpoint, config)|children]
     end
 
     if config = endpoint.config(:https) do
       {:ok, _} = Application.ensure_all_started(:ssl)
-      children =
-        [@handler.child_spec(:https, endpoint, default(config, otp_app, 4040))|children]
+      config = default(config, otp_app, 4040)
+      children = [config[:handler].child_spec(:https, endpoint, config)|children]
     end
 
     supervise(children, strategy: :one_for_one)
@@ -30,6 +29,7 @@ defmodule Phoenix.Endpoint.Server do
   defp default(config, otp_app, port) do
     config =
       config
+      |> Keyword.put_new(:handler, Phoenix.Endpoint.CowboyHandler)
       |> Keyword.put_new(:otp_app, otp_app)
       |> Keyword.put_new(:port, port)
 

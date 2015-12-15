@@ -52,7 +52,7 @@ defmodule Phoenix.Endpoint.CowboyHandler do
   It is also important to specify your handlers first, otherwise
   Phoenix will intercept the requests before they get to your handler.
   """
-
+  @behaviour Phoenix.Endpoint.Handler
   require Logger
 
   @doc """
