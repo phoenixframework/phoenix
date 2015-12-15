@@ -105,6 +105,7 @@ defmodule Phoenix.Endpoint.Adapter do
 
   defp defaults(otp_app, module) do
     [otp_app: otp_app,
+     handler: Phoenix.Endpoint.CowboyHandler,
 
      # Compile-time config
      code_reloader: false,
