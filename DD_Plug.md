@@ -45,7 +45,7 @@ defmodule HelloPhoenix.MessageController do
           nil ->
             conn |> put_flash(:info, "That message wasn't found") |> redirect(to: "/")
           message ->
-            case authorize_message(conn, params["id"])
+            case authorize_message(conn, params["id"]) do
               :ok ->
                 render conn, :show, page: find_message(params["id"])
               :error ->
@@ -83,7 +83,7 @@ defmodule HelloPhoenix.MessageController do
   end
 
   defp find_message(conn, _) do
-    case find_message(params["id"]) do
+    case find_message(conn.params["id"]) do
       nil ->
         conn |> put_flash(:info, "That message wasn't found") |> redirect(to: "/") |> halt
       message ->
