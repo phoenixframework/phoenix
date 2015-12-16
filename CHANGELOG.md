@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.1.1-dev
+
 ## 1.1.0 (2015-12-16)
 
 See these [`1.0.x` to `1.1.0` upgrade instructions](https://gist.github.com/chrismccord/557ef22e2a03a7992624) to bring your existing apps up to speed.
