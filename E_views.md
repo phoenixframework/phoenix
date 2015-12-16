@@ -154,15 +154,13 @@ If we need only the rendered string, without the whole tuple, we can use the `re
 
 Layouts are just templates. They have a view, just like other templates. In a newly generated app, this is `web/views/layout_view.ex`. You may be wondering how the string resulting from a rendered view ends up inside a layout. That's a great question!
 
-When a template is rendered, the layout view will assign `@inner` with the rendered contents of the template. For HTML templates, `@inner` will be always marked as safe.
-
 If we look at `web/templates/layout/app.html.eex`, just about in the middle of the `<body>`, we will see this.
 
 ```html
-<%= @inner %>
+<%= render @view_module, @view_template, assigns %>
 ```
 
-This is where the rendered string from the template will be placed.
+This is where the view module and its template from the controller are rendered to a string and placed in the layout.
 
 ### The ErrorView
 
