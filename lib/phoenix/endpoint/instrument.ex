@@ -5,6 +5,7 @@ defmodule Phoenix.Endpoint.Instrument do
   # have.
   @event_callback_arity 3
 
+  @doc false
   def definstrument(otp_app, endpoint) do
     app_instrumenters = app_instrumenters(otp_app, endpoint)
 
@@ -21,7 +22,7 @@ defmodule Phoenix.Endpoint.Instrument do
 
       ## Examples
 
-          instrument :render_view, [view: "index.html"], fn ->
+          instrument :render_view, %{view: "index.html"}, fn ->
             render conn, "index.html"
           end
 
@@ -109,9 +110,8 @@ defmodule Phoenix.Endpoint.Instrument do
     events_to_instrumenters(instrumenters)
   end
 
-  @doc """
-  Strips a `Macro.Env` struct, leaving only interesting compile-time metadata.
-  """
+  # Strips a `Macro.Env` struct, leaving only interesting compile-time metadata.
+  @doc false
   @spec strip_caller(Macro.Env.t) :: %{}
   def strip_caller(%Macro.Env{module: mod, function: fun, file: file, line: line}) do
     caller = %{module: mod, function: form_fa(fun), file: file, line: line}
@@ -126,15 +126,13 @@ defmodule Phoenix.Endpoint.Instrument do
   defp form_fa({name, arity}), do: Atom.to_string(name) <> "/" <> Integer.to_string(arity)
   defp form_fa(nil), do: nil
 
-  @doc """
-  Returns the AST for all the calls to the "start event" callbacks in the given
-  list of `instrumenters`.
-
-  Each function call looks like this:
-
-      res0 = Instr0.my_event(:start, compile, runtime)
-
-  """
+  # Returns the AST for all the calls to the "start event" callbacks in the given
+  # list of `instrumenters`.
+  # Each function call looks like this:
+  #
+  #     res0 = Instr0.my_event(:start, compile, runtime)
+  #
+  @doc false
   @spec compile_start_callbacks(term, [module]) :: Macro.t
   def compile_start_callbacks(event, instrumenters) do
     Enum.map Enum.with_index(instrumenters), fn {inst, index} ->
@@ -151,15 +149,13 @@ defmodule Phoenix.Endpoint.Instrument do
     end
   end
 
-  @doc """
-  Returns the AST for all the calls to the "stop event" callbacks in the given
-  list of `instrumenters`.
-
-  Each function call looks like this:
-
-      Instr0.my_event(:stop, diff, res0)
-
-  """
+  # Returns the AST for all the calls to the "stop event" callbacks in the given
+  # list of `instrumenters`.
+  # Each function call looks like this:
+  #
+  #     Instr0.my_event(:stop, diff, res0)
+  #
+  @doc false
   @spec compile_start_callbacks(term, [module]) :: Macro.t
   def compile_stop_callbacks(event, instrumenters) do
     Enum.map Enum.with_index(instrumenters), fn {inst, index} ->

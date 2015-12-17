@@ -240,30 +240,88 @@ defmodule Phoenix.Endpoint do
   instrumenter module interested in that event will have to export
   `render_view/3`.
 
+  **Note**: since the configuration for the list of instrumenters is specified
+  at compile time but it's used inside Phoenix itself, if you change this
+  configuration you'll have to recompile Phoenix manually:
+
+      $ mix deps.compile phoenix
+      $ mix compile
+
   ### Callbacks cycle
 
   The way event callbacks are called is the following.
 
     1. The event callback is called *before* the event happens (in this case,
-       before the view is rendered). The callback is called with the following
-       arguments:
-
-           MyInstrumenter.render_view(:start, compile_meta, runtime_meta)
-
-       `compile_meta` is a map of compile-time metadata (like the file and line
-       where the instrumentation is being done). `runtime_meta` is a term that
-       is passed on by the caller of the instrumentation. The result of this
-       call is stored and later passed to the after callback.
+       before the view is rendered) with the atom `:start` as the first
+       argument; see the "Before clause" section below.
     2. The event happens (in this case, the view is rendered).
-    3. The event callback is called again, this time with the following arguments:
+    3. The same event callback is called again, this time with the atom `:stop`
+       as the first argument; see the "After clause" section below.
 
-           MyInstrumenter.render_view(:stop, time_diff, start_result)
+  The second and third argument that each event callback takes depend on the
+  callback being an "after" or a "before" callback (i.e., they depend on the
+  value of the first argument, `:start` or `:stop`). For this reason, most of
+  the time you will want to define (at least) two separate clauses for each
+  event callback, one for the "before" and one for the "after" callbacks.
 
-       `time_diff` is the time *in microseconds* it took for the event to
-       happen (in this case, the view rendering time). `start_result` is
-       whatever the event callback returned when called with `:start` as the
-       first argument: instrumenters can use this to pass "state" from the
-       before callback to the after callback.
+  All event callbacks are run in the same process that calls the `instrument/3`
+  macro; hence, instrumenters should be careful in performing blocking actions.
+  If an event callback fails in any way (exits, throws, or raises), it won't
+  affect anything (the error is caught) but the failure will be logged. Note
+  that "after" callbacks are not guaranteed to be called as, for example, a link
+  may break before they've been called.
+
+  #### "Before" clause
+
+  When the first argument to an event callback is `:start`, the signature of
+  that callback is:
+
+      event_callback(:start, compile_metadata, runtime_metadata)
+
+  where:
+
+    * `compile_metadata` is a map of compile-time metadata about the environment
+      where `instrument/3` has been called. It contains the module where the
+      instrumentation is happening (under the `:module` key), the file and line
+      (`:file` and `:line`), and the function inside which the instrumentation
+      is happening (under `:function`). This information can be used arbitrarely
+      by the callback.
+    * `runtime_metadata` is a map of runtime data that the instrumentation
+      passes to the callbacks. This can be used for any purposes: for example,
+      when instrumenting the rendering of a view, the name of the view could be
+      passed in these runtime data so that instrumenters know which view is
+      being rendered (`instrument(:view_render, %{view: "index.html"}, fn
+      ...)`).
+
+  #### "After" clause
+
+  When the first argument to an event callback is `:stop`, the signature of that
+  callback is:
+
+      event_callback(:stop, time_diff, result_of_before_callback)
+
+  where:
+
+    * `time_diff` is an integer representing the time it took to execute the
+      instrumented function **in microseconds**.
+    * `result_of_before_callback` is the return value of the "before" clause of
+      the same `event_callback`. This is a means of passing data from the
+      "before" clause to the "after" clause when instrumenting. For example, an
+      instrumenter can implement custom time measuring with this:
+
+          defmodule MyInstrumenter do
+            def event_callback(:start, _compile, _runtime) do
+              :erlang.monotonic_time(:micro_seconds)
+            end
+
+            def event_callback(:stop, _time_diff, start_time) do
+              stop_time = :erlang.monotonic_time(:micro_seconds)
+              do_something_with_diff(stop_time - start_time)
+            end
+          end
+
+  The return value of each "before" event callback will be stored and passed to
+  the corresponding "after" callback.
 
   ### Using instrumentation
 
@@ -277,6 +335,25 @@ defmodule Phoenix.Endpoint do
 
   All the instrumenter modules that export a `render_view/3` function will be
   notified of the event so that they can perform their respective actions.
+
+  ### Phoenix default events
+
+  By default, Phoenix instruments the following events:
+
+    * `:phoenix_controller_call` - it's the whole controller pipeline. No
+      runtime metadata is passed to the instrumentation here.
+    * `:phoenix_controller_render` - the rendering of a view from a
+      controller. The map of runtime metadata passed to instrumentation
+      callbacks has the `:template` key - for the name of the template, e.g.,
+      `"index.html"` - and the `:format` key - for the format of the template.
+
+  ### Dynamic instrumentation
+
+  If you want to instrument a piece of code but the endpoint that should
+  instrument it (the one that contains the `instrument/3` macro you want to use)
+  is not known at compile time, but only at runtime, then you can use the
+  `Phoenix.Endpoint.instrument/4` macro. Refer to its documentation for more
+  information.
 
   """
 
