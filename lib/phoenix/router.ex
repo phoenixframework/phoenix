@@ -650,9 +650,10 @@ defmodule Phoenix.Router do
   defmacro forward(path, plug, plug_opts \\ [], router_opts \\ []) do
     router_opts = Keyword.put(router_opts, :as, nil)
 
-    quote unquote: true, bind_quoted: [path: path, plug: plug] do
-      path_segments = Route.forward_path_segments(path, plug, @phoenix_forwards)
-      @phoenix_forwards Map.put(@phoenix_forwards, plug, path_segments)
+    quote unquote: true, bind_quoted: [path: path, plug: plug, plug_opts: plug_opts] do
+      plug_with_opts = {plug, plug_opts}
+      path_segments = Route.forward_path_segments(path, plug_with_opts, @phoenix_forwards)
+      @phoenix_forwards Map.put(@phoenix_forwards, plug_with_opts, path_segments)
       unquote(add_route(:forward, :*, path, plug, plug_opts, router_opts))
     end
   end

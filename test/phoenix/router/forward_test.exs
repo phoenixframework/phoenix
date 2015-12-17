@@ -84,7 +84,7 @@ defmodule Phoenix.Router.ForwardTest do
       end
     end
 
-    assert_raise ArgumentError, ~r{`Phoenix.Router.ForwardTest.ApiRouter` has already been forwarded}, fn ->
+    assert_raise ArgumentError, ~r(`\{Phoenix.Router.ForwardTest.ApiRouter, \[\]\}` has already been forwarded), fn ->
       Code.eval_quoted(router)
     end
   end
@@ -92,11 +92,11 @@ defmodule Phoenix.Router.ForwardTest do
   test "accumulates phoenix_forwards" do
     conn = call(Router, :get, "admin")
     assert conn.private[Router] == {[], %{
-      Phoenix.Router.ForwardTest.AdminDashboard => ["admin"],
-      Phoenix.Router.ForwardTest.ApiRouter => ["api", "v1"]
+      {Phoenix.Router.ForwardTest.AdminDashboard, []} => ["admin"],
+      {Phoenix.Router.ForwardTest.ApiRouter, []} => ["api", "v1"]
     }}
     assert conn.private[AdminDashboard] ==
-      {["admin"], %{Phoenix.Router.ForwardTest.ApiRouter => ["api-admin"]}}
+      {["admin"], %{{Phoenix.Router.ForwardTest.ApiRouter, []} => ["api-admin"]}}
 
   end
 
