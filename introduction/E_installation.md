@@ -20,6 +20,12 @@ Elixir code compiles to Erlang byte code to run on the Erlang virtual machine. W
 
 When we install Elixir using instructions from the Elixir [Installation Page](http://elixir-lang.org/install.html),  we will usually get Erlang too. If Erlang was not installed along with Elixir, please see the [Erlang Instructions](http://elixir-lang.org/install.html#installing-erlang) section of the Elixir Installation Page for instructions.
 
+On Debian-based systems you may have to explictly install Erlang to get all the needed packages.
+
+```console
+$ sudo apt-get install erlang
+```
+
 ### Phoenix
 
 Once we have Elixir and Erlang, we are ready to install the Phoenix mix archive. A mix archive is a zip file which contains an application as well as its compiled beam files. It is tied to a specific version of the application. The archive is what we will use to generate a new, base Phoenix application which we can build from.
