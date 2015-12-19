@@ -59,7 +59,9 @@ defmodule <%= application_module %>.Web do
       use Phoenix.HTML<% end %>
 
       import <%= application_module %>.Router.Helpers
+<%= if html do %>
       import <%= application_module %>.ErrorHelpers
+<% end %>
       import <%= application_module %>.Gettext
     end
   end
