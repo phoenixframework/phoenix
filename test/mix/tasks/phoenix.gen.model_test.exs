@@ -161,7 +161,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
   end
 
   test "uses defaults from :generators configuration" do
-    in_tmp "uses defaults from :generators configuration (migration)", fn ->
+    in_tmp "uses defaults from generators configuration (migration)", fn ->
       with_generators_config [migration: false], fn ->
         Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts"]
 
@@ -169,7 +169,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
       end
     end
 
-    in_tmp "uses defaults from :generators configuration (binary_id)", fn ->
+    in_tmp "uses defaults from generators configuration (binary_id)", fn ->
       with_generators_config [binary_id: true], fn ->
         Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts"]
 
