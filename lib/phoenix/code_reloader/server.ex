@@ -15,7 +15,10 @@ defmodule Phoenix.CodeReloader.Server do
 
     case List.keyfind(children, __MODULE__, 0) do
       {__MODULE__, pid, _, _} ->
-        GenServer.call(pid, :reload!, :infinity)
+        case GenServer.call(pid, :reload!, :infinity) do
+          {:raise, error} -> raise error
+          other -> other
+        end
       _ ->
         raise "Code reloader was invoked for #{inspect endpoint} but no code reloader " <>
               "server was started. Be sure to move `plug Phoenix.CodeReloader` inside " <>
@@ -47,17 +50,35 @@ defmodule Phoenix.CodeReloader.Server do
   end
 
   defp mix_compile({:error, _reason}, _, _, _, _) do
-    Logger.error "If you want to use the code reload plug in production or " <>
-                 "inside an escript, add :mix to your list of dependencies or " <>
-                 "disable code reloading"
-    :ok
+    message = "If you want to use the code reload plug in production or " <>
+              "inside an escript, add :mix to your list of dependencies or " <>
+              "disable code reloading"
+    {:raise, RuntimeError.exception(message)}
   end
 
   defp mix_compile({:module, Mix.Task}, app, root, paths, compilers) do
     if Mix.Project.umbrella? do
-      Mix.Project.in_project(app, root, fn _ -> mix_compile(paths, compilers) end)
+      Mix.Project.in_project(app, root, fn _ ->
+        mix_compile_unless_stale_config(paths, compilers)
+      end)
     else
-      mix_compile(paths, compilers)
+      mix_compile_unless_stale_config(paths, compilers)
+    end
+  end
+
+  defp mix_compile_unless_stale_config(paths, compilers) do
+    manifests = Mix.Tasks.Compile.Elixir.manifests
+    configs   = Mix.Project.config_files
+    case Mix.Utils.extract_stale(configs, manifests) do
+      [] ->
+        mix_compile(paths, compilers)
+      files ->
+        message = """
+        you must restart your servder after changing the following configuration files:
+
+          * #{Enum.map_join(files, "\n  * ", &Path.relative_to_cwd/1)}
+        """
+        {:raise, RuntimeError.exception(message)}
     end
   end
 
