@@ -96,7 +96,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
         assert file =~ "defmodule Phoenix.Repo.Migrations.CreatePost do"
         assert file =~ "create table(:posts) do"
         assert file =~ "add :title, :string"
-        assert file =~ "add :user_id, references(:users)"
+        assert file =~ "add :user_id, references(:users, on_delete: :nothing)"
       end
 
       assert_file "web/models/post.ex", fn file ->
@@ -147,7 +147,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
       assert_file migration, fn file ->
         assert file =~ "create table(:posts, primary_key: false) do"
         assert file =~ "add :id, :binary_id, primary_key: true"
-        assert file =~ "add :user_id, references(:users, type: :binary_id)"
+        assert file =~ "add :user_id, references(:users, on_delete: :nothing, type: :binary_id)"
       end
     end
   end
