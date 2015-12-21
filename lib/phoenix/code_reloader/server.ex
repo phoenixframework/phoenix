@@ -74,7 +74,7 @@ defmodule Phoenix.CodeReloader.Server do
         mix_compile(paths, compilers)
       files ->
         message = """
-        you must restart your servder after changing the following configuration files:
+        you must restart your server after changing the following configuration files:
 
           * #{Enum.map_join(files, "\n  * ", &Path.relative_to_cwd/1)}
         """
