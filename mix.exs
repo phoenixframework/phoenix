@@ -6,7 +6,7 @@ defmodule Phoenix.Mixfile do
   def project do
     [app: :phoenix,
      version: @version,
-     elixir: "~> 1.0.2 or ~> 1.1-beta",
+     elixir: "~> 1.0.2 or ~> 1.1",
      deps: deps,
      package: package,
 
@@ -45,7 +45,7 @@ defmodule Phoenix.Mixfile do
 
      # Docs dependencies
      {:earmark, "~> 0.1", only: :docs},
-     {:ex_doc, "~> 0.10", only: :docs},
+     {:ex_doc, "~> 0.11", only: :docs},
      {:inch_ex, "~> 0.2", only: :docs},
 
      # Test dependencies
