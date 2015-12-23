@@ -78,7 +78,7 @@ defmodule Phoenix.Endpoint.CowboyHandler do
       Plug.Adapters.Cowboy.child_spec(scheme, endpoint, [], config)
 
     # Rewrite MFA for proper error reporting
-    mfa = {__MODULE__, :start_link, [scheme, endpoint, config, mfa]}
+    mfa = {__MODULE__, :start_link, [scheme, endpoint, mfa]}
     {ref, mfa, type, timeout, kind, modules}
   end
 
@@ -89,13 +89,9 @@ defmodule Phoenix.Endpoint.CowboyHandler do
   @doc """
   Callback to start the Cowboy endpoint.
   """
-  def start_link(scheme, endpoint, config, {m, f, [ref | _] = a}) do
-    # nb on [ref | _] above; ref is used by Ranch to identify its listeners,
-    # defaulting to plug.HTTP and plug.HTTPS and overridable by users.
-    # See the following for more information:
-    # https://github.com/elixir-lang/plug/blob/6ef08ce/lib/plug/adapters/cowboy.ex#L39-L47
-    # https://github.com/elixir-lang/plug/blob/6ef08ce/lib/plug/adapters/cowboy.ex#L164-L166
-    # https://github.com/ninenines/ranch/blob/236d0f8/src/ranch.erl#L88-L95
+  def start_link(scheme, endpoint, {m, f, [ref | _] = a}) do
+    # ref is used by Ranch to identify its listeners, defaulting
+    # to plug.HTTP and plug.HTTPS and overridable by users.
     case apply(m, f, a) do
       {:ok, pid} ->
         Logger.info info(scheme, endpoint, ref)
@@ -110,17 +106,8 @@ defmodule Phoenix.Endpoint.CowboyHandler do
     end
   end
 
-  # TODO: remove this when we depend on plug 1.1
-  defp get_listener_port(ref) do
-    case function_exported?(Plug.Adapters.Cowboy, :info, 1) do
-      true  -> Plug.Adapters.Cowboy.info(ref)[:port]
-      false -> :ranch.get_port(ref)
-    end
-  end
-
   defp info(scheme, endpoint, ref) do
-    port = get_listener_port(ref)
-    host = endpoint.config(:url)[:host] || "localhost"
-    "Running #{inspect endpoint} with Cowboy on #{scheme}://#{host}:#{port}"
+    port = :ranch.get_port(ref)
+    "Running #{inspect endpoint} with Cowboy using #{scheme} on port #{port}"
   end
 end
