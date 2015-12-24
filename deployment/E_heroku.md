@@ -298,3 +298,35 @@ In fact, we can run anything using the `heroku run` command, like the Ecto migra
 ```console
 $ heroku run mix ecto.migrate
 ```
+
+## Troubleshooting
+
+### Compilation Error
+
+If you are getting compile error, that are not happening in your local machine, like this:
+
+```console
+remote: == Compilation error on file lib/postgrex/connection.ex ==
+remote: could not compile dependency :postgrex, "mix compile" failed. You can recompile this dependency with "mix deps.compile postgrex", update it with "mix deps.update postgrex" or clean it with "mix deps.clean postgrex"
+remote: ** (CompileError) lib/postgrex/connection.ex:207: Postgrex.Connection.__struct__/0 is undefined, cannot expand struct Postgrex.Connection
+remote:     (elixir) src/elixir_map.erl:58: :elixir_map.translate_struct/4
+remote:     (stdlib) lists.erl:1353: :lists.mapfoldl/3
+remote:     (stdlib) lists.erl:1354: :lists.mapfoldl/3
+remote: 
+remote: 
+remote:  !     Push rejected, failed to compile elixir app
+remote: 
+remote: Verifying deploy...
+remote: 
+remote: !   Push rejected to mysterious-meadow-6277.
+remote: 
+To https://git.heroku.com/mysterious-meadow-6277.git
+```
+
+You should force heroku rebuild all your application, for this, you must add elixir_buildpack.config in your root application folder with this content:
+
+```
+always_rebuild=true
+```
+
+Commit this and try to push again to Heroku
