@@ -1,6 +1,9 @@
 # Changelog
 
-## 1.1.1-dev
+## 1.1.1 (2015-12-26)
+
+* Bug fixes
+  * Fix `--no-html` flag on `phoenix.new` task failing to generate ErrorHelpers module
 
 ## 1.1.0 (2015-12-16)
 
