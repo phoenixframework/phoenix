@@ -470,8 +470,8 @@ defmodule Mix.Tasks.Phoenix.New do
     :crypto.strong_rand_bytes(length) |> Base.encode64 |> binary_part(0, length)
   end
 
-  defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> 1.1.1"}]
-  # defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
+  # defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> 1.1.1"}]
+  defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
   defp phoenix_dep(path), do: ~s[{:phoenix, path: #{inspect path}, override: true}]
 
   defp phoenix_static_path("deps/phoenix"), do: "deps/phoenix"
