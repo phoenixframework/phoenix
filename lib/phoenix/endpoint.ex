@@ -639,15 +639,15 @@ defmodule Phoenix.Endpoint do
     compile = Phoenix.Endpoint.Instrument.strip_caller(__CALLER__) |> Macro.escape()
 
     quote do
-      case unquote(endpoint_or_conn_or_socket) do
-        %Plug.Conn{private: %{phoenix_endpoint: endpoint}} ->
-          endpoint.instrument(unquote(event), unquote(compile), unquote(runtime), unquote(fun))
-        %Phoenix.Socket{endpoint: endpoint} ->
-          endpoint.instrument(unquote(event), unquote(compile), unquote(runtime), unquote(fun))
-        %{__struct__: struct} when struct in [Plug.Conn, Phoenix.Socket] ->
-          unquote(fun).()
-        endpoint ->
-          endpoint.instrument(unquote(event), unquote(compile), unquote(runtime), unquote(fun))
+      endpoint = case unquote(endpoint_or_conn_or_socket) do
+        %Plug.Conn{private: %{phoenix_endpoint: endpoint}} -> endpoint
+        %Phoenix.Socket{endpoint: endpoint} -> endpoint
+        %{__struct__: struct} when struct in [Plug.Conn, Phoenix.Socket] -> nil
+        endpoint -> endpoint
+      end
+      case endpoint do
+        nil -> unquote(fun).()
+        endpoint -> endpoint.instrument(unquote(event), unquote(compile), unquote(runtime), unquote(fun))
       end
     end
   end
