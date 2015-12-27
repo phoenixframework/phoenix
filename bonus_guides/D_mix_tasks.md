@@ -543,14 +543,14 @@ To fix this, we need to change the permissions on our "postgres" user to allow d
 ALTER ROLE
 ```
 
-If the "postgres" role is using a password different to the default "postgres", we'll get this error.
+If the "postgres" role is using a password different from the default "postgres", we'll get this error.
 
 ```console
 $ mix ecto.create
 ** (Mix) The database for HelloPhoenix.Repo couldn't be created, reason given: psql: FATAL:  password authentication failed for user "postgres"
 ```
 
-To fix this, we can change the password in the environment specific configuration file. For development environment the password used can be found at the bottom of the `config/dev.exs` file.
+To fix this, we can change the password in the environment specific configuration file. For the development environment the password used can be found at the bottom of the `config/dev.exs` file.
 
 #### `ecto.drop`
 
