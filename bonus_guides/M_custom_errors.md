@@ -79,3 +79,5 @@ defimpl Plug.Exception, for: Ecto.NoResultsError do
   def status(_exception), do: 404
 end
 ```
+
+Note that this is just an example: Phoenix [already does this](https://github.com/phoenixframework/phoenix_ecto/blob/master/lib/phoenix_ecto/plug.ex) for `Ecto.NoResultsError`, so you don't have to.
