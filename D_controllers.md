@@ -354,7 +354,7 @@ end
 What it doesn't have is an alternative template for rendering text. Let's add one at `/web/templates/page/index.text.eex`. Here is our example `index.text.eex` template.
 
 ```elixir
-"OMG, this is actually some text."
+OMG, this is actually some text.
 ```
 
 There are just few more things we need to do to make this work. We need to tell our router that it should accept the `text` format. We do that by adding `text` to the list of accepted formats in the `:browser` pipeline. Let's open up `web/router.ex` and change the `plug :accepts` to include `text` as well as `html` like this.
@@ -393,7 +393,7 @@ end
 And let's add a bit to our text template.
 
 ```elixir
-"OMG, this is actually some text." <%= @message %>
+OMG, this is actually some text. <%= @message %>
 ```
 
 Now if we go to `http://localhost:4000/?_format=text&message=CrazyTown`, we will see "OMG, this is actually some text. CrazyTown"
