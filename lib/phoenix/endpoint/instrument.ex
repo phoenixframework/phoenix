@@ -126,6 +126,18 @@ defmodule Phoenix.Endpoint.Instrument do
   defp form_fa({name, arity}), do: Atom.to_string(name) <> "/" <> Integer.to_string(arity)
   defp form_fa(nil), do: nil
 
+  # called by Phoenix.Endpoint.instrument/4, see docs there
+  @doc false
+  @spec extract_endpoint(Plug.Conn.t | Phoenix.Socket.t | module) :: module | nil
+  def extract_endpoint(endpoint_or_conn_or_socket) do
+    case endpoint_or_conn_or_socket do
+      %Plug.Conn{private: %{phoenix_endpoint: endpoint}} -> endpoint
+      %Phoenix.Socket{endpoint: endpoint} -> endpoint
+      %{__struct__: struct} when struct in [Plug.Conn, Phoenix.Socket] -> nil
+      endpoint -> endpoint
+    end
+  end
+
   # Returns the AST for all the calls to the "start event" callbacks in the given
   # list of `instrumenters`.
   # Each function call looks like this:
