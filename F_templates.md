@@ -10,7 +10,7 @@ We've already seen several ways in which templates are used, notably in the [Add
 
 ##### web.ex
 
-Phoenix generates a `web/web.ex` file that serves as place to group commons imports and aliases. All declarations here within the `view` block apply to all your templates.
+Phoenix generates a `web/web.ex` file that serves as place to group common imports and aliases. All declarations here within the `view` block apply to all your templates.
 
 Let's make some additions to our application so we can experiment a little.
 
