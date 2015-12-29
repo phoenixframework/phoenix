@@ -68,13 +68,17 @@ defmodule Phoenix.CodeReloader.Server do
 
   defp mix_compile_unless_stale_config(paths, compilers) do
     manifests = Mix.Tasks.Compile.Elixir.manifests
-    configs   = Mix.Project.config_files
-    case Mix.Utils.extract_stale(configs, manifests) do
+    all_paths = Mix.Project.config[:elixirc_paths]
+
+    others  = Mix.Utils.extract_files(all_paths -- paths, [:ex])
+    configs = Mix.Project.config_files
+
+    case Mix.Utils.extract_stale(others ++ configs, manifests) do
       [] ->
         mix_compile(paths, compilers)
       files ->
         message = """
-        you must restart your server after changing the following configuration files:
+        you must restart your server after changing the following config or lib files:
 
           * #{Enum.map_join(files, "\n  * ", &Path.relative_to_cwd/1)}
         """
