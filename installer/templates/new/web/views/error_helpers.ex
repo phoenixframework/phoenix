@@ -2,7 +2,7 @@ defmodule <%= application_module %>.ErrorHelpers do
   @moduledoc """
   Conveniences for translating and building error messages.
   """
-  <%= if html do %>
+<%= if html do %>
   use Phoenix.HTML
 
   @doc """
@@ -13,7 +13,7 @@ defmodule <%= application_module %>.ErrorHelpers do
       content_tag :span, translate_error(error), class: "help-block"
     end
   end
-  <% end %>
+<% end %>
   @doc """
   Translates an error message using gettext.
   """
