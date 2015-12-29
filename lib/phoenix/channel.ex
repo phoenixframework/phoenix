@@ -112,7 +112,7 @@ defmodule Phoenix.Channel do
       # value for client metadata.
       def handle_out("new_msg", msg, socket) do
         push socket, "new_msg", Map.merge(msg,
-          is_editable: User.can_edit_message?(socket.assigns[:user], msg)
+          %{is_editable: User.can_edit_message?(socket.assigns[:user], msg)}
         )
         {:noreply, socket}
       end
