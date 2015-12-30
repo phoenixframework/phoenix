@@ -303,7 +303,7 @@ $ heroku run mix ecto.migrate
 
 ### Compilation Error
 
-If you are getting compile error, that are not happening in your local machine, like this:
+Occasionally, an application will compile locally, but not on Heroku. The compilation error on Heroku will look something like this:
 
 ```console
 remote: == Compilation error on file lib/postgrex/connection.ex ==
@@ -323,10 +323,10 @@ remote:
 To https://git.heroku.com/mysterious-meadow-6277.git
 ```
 
-You should force heroku rebuild all your application, for this, you must add elixir_buildpack.config in your root application folder with this content:
+This has to do with stale dependencies which are not getting recompiled properly. It's possible to force Heroku to recompile all dependencies on each deploy, which should fix this problem. The way to do it is to add a new file called `elixir_buildpack.config` at the root of the application. The file should contain this line:
 
 ```
 always_rebuild=true
 ```
 
-Commit this and try to push again to Heroku
+Commit this file to the repository and try to push again to Heroku.
