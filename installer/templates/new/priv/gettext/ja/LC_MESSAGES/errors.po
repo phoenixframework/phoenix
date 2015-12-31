@@ -1,0 +1,101 @@
+## `msgid`s in this file come from POT (.pot) files. Do not add, change, or
+## remove `msgid`s manually here as they're tied to the ones in the
+## corresponding POT file (with the same domain). Use `mix gettext.extract
+## --merge` or `mix gettext.merge` to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: ja\n"
+"Plural-Forms: nplurals=2; plural=0;\n"
+
+
+## From Ecto.Changeset.cast/4
+msgid "can't be blank"
+msgstr "の値が空です"
+
+## From Ecto.Changeset.unique_constraint/3
+msgid "has already been taken"
+msgstr "の値はもう使われています"
+
+## From Ecto.Changeset.put_change/3
+msgid "is invalid"
+msgstr "の値は無効です"
+
+## From Ecto.Changeset.validate_format/3
+msgid "has invalid format"
+msgstr "に無効な値が含まれています"
+
+## From Ecto.Changeset.validate_subset/3
+msgid "has an invalid entry"
+msgstr "に無効な値が含まれています"
+
+## From Ecto.Changeset.validate_exclusion/3
+msgid "is reserved"
+msgstr "の値はもう使われています"
+
+## From Ecto.Changeset.validate_confirmation/3
+msgid "does not match confirmation"
+msgstr "の値が一致しません"
+
+## From Ecto.Changeset.no_assoc_constraint/3
+msgid "is still associated to this entry"
+msgstr "に関連付けられたエントリがあります"
+
+msgid "are still associated to this entry"
+msgstr "に関連付けられたエントリがあります"
+
+## From Ecto.Changeset.validate_length/3
+msgid "should be %{count} character(s)"
+msgid_plural "should be %{count} character(s)"
+msgstr[0] "は %{count} 文字以上必要です"
+msgstr[1] "は %{count} 文字以上必要です"
+
+msgid "should have %{count} item(s)"
+msgid_plural "should have %{count} item(s)"
+msgstr[0] "は %{count} 個以上必要です"
+msgstr[1] "は %{count} 個以上必要です"
+
+msgid "should be at least %{count} character(s)"
+msgid_plural "should be at least %{count} character(s)"
+msgstr[0] "は最低 %{count} 文字以上必要です"
+msgstr[1] "は最低 %{count} 文字以上必要です"
+
+msgid "should have at least %{count} item(s)"
+msgid_plural "should have at least %{count} item(s)"
+msgstr[0] "は最低 %{count} 個以上必要です"
+msgstr[1] "は最低 %{count} 個以上必要です"
+
+msgid "should be at most %{count} character(s)"
+msgid_plural "should be at most %{count} character(s)"
+msgstr[0] "は最大 %{count} 文字までです"
+msgstr[1] "は最大 %{count} 文字までです"
+
+msgid "should have at most %{count} item(s)"
+msgid_plural "should have at most %{count} item(s)"
+msgstr[0] "は最大 %{count} 個までです"
+msgstr[1] "は最大 %{count} 個までです"
+
+## From Ecto.Changeset.validate_number/3
+msgid "must be less than %{count}"
+msgid_plural "must be less than %{count}"
+msgstr[0] "は %{count} 未満までです"
+msgstr[1] "は %{count} 未満までです"
+
+msgid "must be greater than %{count}"
+msgid_plural "must be greater than %{count}"
+msgstr[0] "は %{count} より多い必要があります"
+msgstr[1] "は %{count} より多い必要があります"
+
+msgid "must be less than or equal to %{count}"
+msgid_plural "must be less than or equal to %{count}"
+msgstr[0] "は %{count} 以下の必要があります"
+msgstr[1] "は %{count} 以下の必要があります"
+
+msgid "must be greater than or equal to %{count}"
+msgid_plural "must be greater than or equal to %{count}"
+msgstr[0] "は %{count} 以上の必要があります"
+msgstr[1] "は %{count} 以上の必要があります"
+
+msgid "must be equal to %{count}"
+msgid_plural "must be equal to %{count}"
+msgstr[0] "は %{count} である必要があります"
+msgstr[1] "は %{count} である必要があります"
