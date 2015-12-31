@@ -8,23 +8,36 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
 
   def init({transport, :http}, req, {module, opts}) when transport in [:tcp, :ssl] do
     conn = @connection.conn(req, transport)
-    case module.init(conn, opts) do
-      {:ok, %{adapter: {@connection, req}}, args} ->
-        {:upgrade, :protocol, __MODULE__, req, args}
-      {:error, %{adapter: {@connection, req}}} ->
-        {:shutdown, req, :no_state}
-    end
-  after
-    receive do
-      @already_sent -> :ok
+    try do
+      case module.init(conn, opts) do
+        {:ok, %{adapter: {@connection, req}}, args} ->
+          {:upgrade, :protocol, __MODULE__, req, args}
+        {:error, %{adapter: {@connection, req}}} ->
+          {:shutdown, req, :no_state}
+      end
+    catch
+      kind, reason ->
+        # Although we are not performing a call, we are using the call
+        # function for now so it is properly handled in error reports.
+        mfa = {module, :call, [conn, opts]}
+        {:upgrade, :protocol, __MODULE__, req, {:error, mfa, kind, reason, System.stacktrace}}
     after
-      0 -> :ok
+      receive do
+        @already_sent -> :ok
+      after
+        0 -> :ok
+      end
     end
   end
 
   def upgrade(req, env, __MODULE__, {handler, opts}) do
     args = [req, env, __MODULE__, {handler, opts}]
     resume(:cowboy_websocket, :upgrade, args)
+  end
+
+  def upgrade(_req, _env, __MODULE__, {:error, mfa, kind, reason, stack}) do
+    reason = format_reason(kind, reason, stack)
+    exit({reason, mfa})
   end
 
   def terminate(_reason,  _req, _state) do
