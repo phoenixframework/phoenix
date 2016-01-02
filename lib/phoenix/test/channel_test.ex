@@ -397,7 +397,7 @@ defmodule Phoenix.ChannelTest do
 
   @doc """
   Asserts the channel has pushed a message back to the client
-  with the given event and payload under `timeout`.
+  with the given event and payload within `timeout`.
 
   Notice event and payload are patterns. This means one can write:
 
@@ -417,7 +417,23 @@ defmodule Phoenix.ChannelTest do
   end
 
   @doc """
-  Asserts the channel has replies to the given message within
+  Asserts the channel has not pushed a message to the client
+  matching the given event and payload within `timeout`.
+
+  Like `assert_push`, the event and payload are patterns.
+
+  The timeout is in milliseconds and defaults to 100ms.
+  """
+  defmacro refute_push(event, payload, timeout \\ 100) do
+    quote do
+      refute_receive %Phoenix.Socket.Message{
+                        event: unquote(event),
+                        payload: unquote(payload)}, unquote(timeout)
+    end
+  end
+
+  @doc """
+  Asserts the channel has replied to the given message within
   `timeout`.
 
   Notice status and payload are patterns. This means one can write:
@@ -434,6 +450,24 @@ defmodule Phoenix.ChannelTest do
     quote do
       ref = unquote(ref)
       assert_receive %Phoenix.Socket.Reply{
+                        ref: ^ref,
+                        status: unquote(status),
+                        payload: unquote(payload)}, unquote(timeout)
+    end
+  end
+
+  @doc """
+  Asserts the channel has not replied with a matching payload within
+  `timeout`.
+
+  Like `assert_reply`, the event and payload are patterns.
+
+  The timeout is in milliseconds and defaults to 100ms.
+  """
+  defmacro refute_reply(ref, status, payload \\ Macro.escape(%{}), timeout \\ 100) do
+    quote do
+      ref = unquote(ref)
+      refute_receive %Phoenix.Socket.Reply{
                         ref: ^ref,
                         status: unquote(status),
                         payload: unquote(payload)}, unquote(timeout)
@@ -460,6 +494,20 @@ defmodule Phoenix.ChannelTest do
   defmacro assert_broadcast(event, payload, timeout \\ 100) do
     quote do
       assert_receive %Phoenix.Socket.Broadcast{event: unquote(event),
+                                               payload: unquote(payload)}, unquote(timeout)
+    end
+  end
+
+  @doc """
+  Asserts the channel has not broadcast a message within `timeout`.
+
+  Like assert_broadcast, the event and payload are patterns.
+
+  The timeout is in milliseconds and defaults to 100ms.
+  """
+  defmacro refute_broadcast(event, payload, timeout \\ 100) do
+    quote do
+      refute_receive %Phoenix.Socket.Broadcast{event: unquote(event),
                                                payload: unquote(payload)}, unquote(timeout)
     end
   end

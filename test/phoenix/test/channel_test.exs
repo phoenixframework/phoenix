@@ -199,8 +199,9 @@ defmodule Phoenix.Test.ChannelTest do
 
   test "pushes and receives pushed messages" do
     {:ok, _, socket} = join(socket(), Channel, "foo:ok")
-    push socket, "noreply", %{"req" => "foo"}
+    ref = push socket, "noreply", %{"req" => "foo"}
     assert_push "noreply", %{"resp" => "foo"}
+    refute_reply ref, _status
   end
 
   test "pushes and receives replies" do
@@ -208,6 +209,7 @@ defmodule Phoenix.Test.ChannelTest do
 
     ref = push socket, "reply", %{}
     assert_reply ref, :ok
+    refute_push _status, _payload
 
     ref = push socket, "reply", %{"req" => "foo"}
     assert_reply ref, :ok, %{"resp" => "foo"}
@@ -253,6 +255,7 @@ defmodule Phoenix.Test.ChannelTest do
 
   test "pushes and broadcast messages" do
     socket = subscribe_and_join!(socket(), Channel, "foo:ok")
+    refute_broadcast "broadcast", _params
     push socket, "broadcast", %{"foo" => "bar"}
     assert_broadcast "broadcast", %{"foo" => "bar"}
   end
