@@ -417,10 +417,10 @@ defmodule Phoenix.ChannelTest do
   end
 
   @doc """
-  Asserts the channel has not pushed a message back to the client
-  with the given event and payload within `timeout`.
+  Asserts the channel has not pushed a message to the client
+  matching the given event and payload within `timeout`.
 
-  Like assert_push, the event and payload are patterns.
+  Like `assert_push`, the event and payload are patterns.
 
   The timeout is in milliseconds and defaults to 100ms.
   """
@@ -457,10 +457,10 @@ defmodule Phoenix.ChannelTest do
   end
 
   @doc """
-  Asserts the channel has not replied to the given message within
+  Asserts the channel has not replied with a matching payload within
   `timeout`.
 
-  Like assert_reply, the event and payload are patterns.
+  Like `assert_reply`, the event and payload are patterns.
 
   The timeout is in milliseconds and defaults to 100ms.
   """

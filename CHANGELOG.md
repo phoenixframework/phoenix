@@ -2,6 +2,9 @@
 
 ## 1.1.2-dev
 
+* Enhancements
+  [ChannelTest] Add `refute_push` and `refute_reply`
+
 ## 1.1.1 (2015-12-26)
 
 * Bug fixes
