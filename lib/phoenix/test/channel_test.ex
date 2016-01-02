@@ -423,6 +423,9 @@ defmodule Phoenix.ChannelTest do
   Like `assert_push`, the event and payload are patterns.
 
   The timeout is in milliseconds and defaults to 100ms.
+  Keep in mind this macro will block the test by the
+  timeout value, so use it only when necessary as overuse
+  will certainly slow down your test suite.
   """
   defmacro refute_push(event, payload, timeout \\ 100) do
     quote do
@@ -463,6 +466,9 @@ defmodule Phoenix.ChannelTest do
   Like `assert_reply`, the event and payload are patterns.
 
   The timeout is in milliseconds and defaults to 100ms.
+  Keep in mind this macro will block the test by the
+  timeout value, so use it only when necessary as overuse
+  will certainly slow down your test suite.
   """
   defmacro refute_reply(ref, status, payload \\ Macro.escape(%{}), timeout \\ 100) do
     quote do
@@ -501,9 +507,12 @@ defmodule Phoenix.ChannelTest do
   @doc """
   Asserts the channel has not broadcast a message within `timeout`.
 
-  Like assert_broadcast, the event and payload are patterns.
+  Like `assert_broadcast`, the event and payload are patterns.
 
   The timeout is in milliseconds and defaults to 100ms.
+  Keep in mind this macro will block the test by the
+  timeout value, so use it only when necessary as overuse
+  will certainly slow down your test suite.
   """
   defmacro refute_broadcast(event, payload, timeout \\ 100) do
     quote do
