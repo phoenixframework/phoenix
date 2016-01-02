@@ -198,7 +198,7 @@ config :hello_phoenix, HelloPhoenix.Endpoint,
   . . .
 ```
 
-Now let's go to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path) for a running local application and see what we get.
+After modifying our config file, we need to restart our server in order for this change to take effect. After restarting the server, let's go to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path) for a running local application and see what we get.
 
 Ok, that's not very exciting. We get the bare string "Page not found", displayed without any markup or styling.
 
