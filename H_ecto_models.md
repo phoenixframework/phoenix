@@ -173,7 +173,7 @@ end
 
 Our repo has two main tasks - to bring in all the common query functions from `Ecto.Repo` and to set the `otp_app` name equal to our application name.
 
-When `phoenix.new` generated our application, it also generated some basic configuration as well. Let's look at `config/dev.exs`.
+When `phoenix.new` generated our application, it generated some basic configuration as well. Let's look at `config/dev.exs`.
 
 ```elixir
 . . .
