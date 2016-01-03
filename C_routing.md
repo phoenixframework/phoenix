@@ -498,7 +498,7 @@ review_path  DELETE  /reviews/:id       HelloPhoenix.ReviewController :delete
   user_path  DELETE  /users/:id         HelloPhoenix.UserController :delete
 ```
 
-Scopes can also be nested, just like resources. Suppose that we had a versioned API with resources defined for images, reviews and users. We could then setup routes for the versioned API like this:
+Although technically scopes can also be nested (just like resources), the use of nested scopes is generally discouraged because it can sometimes make our code confusing and less clear. With that said, suppose that we had a versioned API with resources defined for images, reviews and users. Then technically we could  setup routes for the versioned API like this:
 
 ```elixir
 scope "/api", HelloPhoenix.Api, as: :api do
@@ -628,7 +628,7 @@ The `:browser` pipeline has five plugs: `plug :accepts, ["html"]` which defines 
 
 Currently, the `:api` pipeline only defines `plug :accepts, ["json"]`.
 
-The router invokes a pipeline on a route defined within a scope. If no scope is defined, the router will invoke the pipeline on all the routes in the router. If we call `pipe_through/1` from within a nested scope, the router will invoke it on the inner scope only.
+The router invokes a pipeline on a route defined within a scope. If no scope is defined, the router will invoke the pipeline on all the routes in the router. Although the use of nested scopes is discouraged (see above), if we call `pipe_through` within a nested scope, the router will invoke all `pipe_through`'s from parent scopes, followed by the nested one.
 
 Those are a lot of words bunched up together. Let's take a look at some examples to untangle their meaning.
 
@@ -718,7 +718,7 @@ defmodule HelloPhoenix.Router do
 end
 ```
 
-Here's another example where nested scopes have different pipelines:
+Here's another example with two scopes that have different pipelines:
 
 ```elixir
 defmodule HelloPhoenix.Router do
@@ -737,17 +737,17 @@ defmodule HelloPhoenix.Router do
     pipe_through :browser
 
     resources "posts", PostController
+  end
+  
+  scope "/reviews", HelloPhoenix do
+    pipe_through [:browser, :review_checks]
 
-    scope "/reviews" do
-      pipe_through :review_checks
-
-      resources "reviews", ReviewController
-    end
+    resources "reviews", ReviewController
   end
 end
 ```
 
-In general, the scoping rules for pipelines behave as you might expect. In this example, all routes will pipe through the `:browser` pipeline, because the `/` scope encloses all the routes. Only the `reviews` resources routes will pipe through the `:review_checks` pipeline, because we declare `pipe_through :review_checks` within the `/reviews` scope, where the `reviews` resources routes are located.
+In general, the scoping rules for pipelines behave as you might expect. In this example, all routes will pipe through the `:browser` pipeline. However, only the `reviews` resources routes will  pipe through the `:review_checks` pipeline. Since we declared both pipes `pipe_through [:browser, :review_checks]` in a list of pipelines, Phoenix will `pipe_through` each of them as it invokes them in order.
 
 ##### Creating New Pipelines
 
@@ -837,4 +837,3 @@ Routing is a big topic, and we have covered a lot of ground here. The important 
 - Any of these routes may be scoped to a given path.
 - Using the `as:` option in a scope can reduce duplication.
 - Using the helper option for scoped routes eliminates unreachable paths.
-- Scoped routes may also be nested.
