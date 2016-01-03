@@ -20,7 +20,7 @@ Elixir code compiles to Erlang byte code to run on the Erlang virtual machine. W
 
 When we install Elixir using instructions from the Elixir [Installation Page](http://elixir-lang.org/install.html),  we will usually get Erlang too. If Erlang was not installed along with Elixir, please see the [Erlang Instructions](http://elixir-lang.org/install.html#installing-erlang) section of the Elixir Installation Page for instructions.
 
-People using Debian-based systems may need to explictly install Erlang to get all the needed packages.
+People using Debian-based systems may need to explicitly install Erlang to get all the needed packages.
 
 ```console
 $ sudo apt-get install erlang
