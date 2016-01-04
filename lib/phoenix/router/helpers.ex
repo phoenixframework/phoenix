@@ -109,6 +109,13 @@ defmodule Phoenix.Router.Helpers do
   def define(env, routes) do
     ast = for {route, exprs} <- routes, do: defhelper(route, exprs)
 
+    catch_all =
+      routes
+      |> Enum.filter(fn {route, _exprs} ->
+        (not is_nil(route.helper) and not (route.kind == :forward)) end)
+      |> Enum.group_by(fn {route, _exprs} -> route.helper end)
+      |> Enum.map(&defhelper_catch_all/1)
+
     # It is in general bad practice to generate large chunks of code
     # inside quoted expressions. However, we can get away with this
     # here for two reasons:
@@ -123,6 +130,8 @@ defmodule Phoenix.Router.Helpers do
       Module with named helpers generated from #{inspect unquote(env.module)}.
       """
       unquote(ast)
+
+      unquote(catch_all)
 
       @doc """
       Generates the connection/endpoint base URL without any path information.
@@ -229,6 +238,55 @@ defmodule Phoenix.Router.Helpers do
         url(conn_or_endpoint) <> unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), params)
       end
     end
+  end
+
+  def defhelper_catch_all({helper, routes_and_exprs}) do
+    valid_routes = Enum.map(routes_and_exprs, fn {routes, _exrs} -> routes.opts end)
+    route_vars =
+      routes_and_exprs
+      |> Enum.map(fn {_routes, exprs} -> :lists.unzip(exprs.binding) end)
+      |> Enum.uniq
+
+    for {_, binds} <- route_vars, vars = Enum.map(binds, fn (_) -> {:_, [], nil} end) do
+      arity = Enum.count(vars) + 2
+
+      # We are using -1 to avoid warnings in case a path has already been defined.
+      quote line: -1 do
+        def unquote(:"#{helper}_path")(_conn_or_endpoint, action, unquote_splicing(vars)) do
+          Phoenix.Router.Helpers.raise_route_error(__MODULE__, "#{unquote(helper)}_path", unquote(arity), action, unquote(valid_routes))
+        end
+
+        def unquote(:"#{helper}_path")(_conn_or_endpoint, action, unquote_splicing(vars), params) do
+          Phoenix.Router.Helpers.raise_route_error(__MODULE__, "#{unquote(helper)}_path", unquote(arity) + 1, action, unquote(valid_routes))
+        end
+
+        def unquote(:"#{helper}_url")(_conn_or_endpoint, action, unquote_splicing(vars)) do
+          Phoenix.Router.Helpers.raise_route_error(__MODULE__, "#{unquote(helper)}_url", unquote(arity), action, unquote(valid_routes))
+        end
+
+        def unquote(:"#{helper}_url")(_conn_or_endpoint, action, unquote_splicing(vars), params) do
+          Phoenix.Router.Helpers.raise_route_error(__MODULE__, "#{unquote(helper)}_url", unquote(arity) + 1, action, unquote(valid_routes))
+        end
+      end
+    end
+  end
+
+  @doc false
+  def raise_route_error(mod, fun, arity, action, valid_routes) do
+    valid_actions = valid_routes |> Enum.sort |> Enum.map(&("\n  * :#{&1}")) |> Enum.join("")
+    message = case action in valid_routes do
+      true ->
+        "No helper clause for #{inspect mod}.#{fun} defined for action :#{action} with arity #{arity}.\n" <>
+        "Please check that the function, arity and action are correct.\n" <>
+        "The following #{fun} actions are defined under your router:\n" <>
+        valid_actions
+      _ ->
+        "No helper clause for #{inspect mod}.#{fun}/#{arity} defined for action :#{action}.\n" <>
+        "The following #{fun} actions are defined under your router:\n" <>
+        valid_actions
+    end
+
+    raise ArgumentError, message: String.strip(message)
   end
 
   defp expand_segments([]), do: "/"
