@@ -329,7 +329,7 @@ defmodule Phoenix.Endpoint do
   called like this:
 
       require MyApp.Endpoint
-      MyApp.Endpoint.instrument :render_view, "index.html", fn ->
+      MyApp.Endpoint.instrument :render_view, %{view: "index.html"}, fn ->
         # actual view rendering
       end
 
