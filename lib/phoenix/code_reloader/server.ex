@@ -6,8 +6,8 @@ defmodule Phoenix.CodeReloader.Server do
   require Logger
   alias Phoenix.CodeReloader.Proxy
 
-  def start_link(app, root, paths, compilers, opts \\ []) do
-    GenServer.start_link(__MODULE__, {app, root, paths, compilers}, opts)
+  def start_link(app, paths, compilers, opts \\ []) do
+    GenServer.start_link(__MODULE__, {app, paths, compilers}, opts)
   end
 
   def reload!(endpoint) do
@@ -28,15 +28,15 @@ defmodule Phoenix.CodeReloader.Server do
 
   ## Callbacks
 
-  def init({app, root, paths, compilers}) do
+  def init({app, paths, compilers}) do
     all = Mix.Project.config[:compilers] || Mix.compilers
     compilers = all -- (all -- compilers)
-    {:ok, {app, root, paths, compilers}}
+    {:ok, {app, paths, compilers}}
   end
 
-  def handle_call(:reload!, from, {app, root, paths, compilers} = state) do
+  def handle_call(:reload!, from, {app, paths, compilers} = state) do
     froms = all_waiting([from])
-    reply = mix_compile(Code.ensure_loaded(Mix.Task), app, root, paths, compilers)
+    reply = mix_compile(Code.ensure_loaded(Mix.Task), app, paths, compilers)
     Enum.each(froms, &GenServer.reply(&1, reply))
     {:noreply, state}
   end
@@ -49,16 +49,17 @@ defmodule Phoenix.CodeReloader.Server do
     end
   end
 
-  defp mix_compile({:error, _reason}, _, _, _, _) do
+  defp mix_compile({:error, _reason}, _, _, _) do
     message = "If you want to use the code reload plug in production or " <>
               "inside an escript, add :mix to your list of dependencies or " <>
               "disable code reloading"
     {:raise, RuntimeError.exception(message)}
   end
 
-  defp mix_compile({:module, Mix.Task}, app, root, paths, compilers) do
+  defp mix_compile({:module, Mix.Task}, app, paths, compilers) do
     if Mix.Project.umbrella? do
-      Mix.Project.in_project(app, root, fn _ ->
+      dep = Enum.find Mix.Dep.Umbrella.loaded, &(&1.app == app)
+      Mix.Dep.in_dependency(dep, fn _ ->
         mix_compile_unless_stale_config(paths, compilers)
       end)
     else
