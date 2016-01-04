@@ -154,16 +154,16 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.top_path(__MODULE__, :top, id: 5) == "/posts/top?id=5"
     assert Helpers.top_path(__MODULE__, :top, %{"id" => 5}) == "/posts/top?id=5"
 
-    error_message = (fn (helper, arity) ->
-    """
-    No route helper clause for #{helper}/#{arity} defined for action :skip.
-    The following #{helper} actions are defined under your router:
+    error_message = fn helper, arity ->
+      """
+      No helper clause for #{inspect Helpers}.#{helper}/#{arity} defined for action :skip.
+      The following #{helper} actions are defined under your router:
 
-      * :file
-      * :show
+        * :file
+        * :show
 
-    """ |> String.strip
-    end)
+      """ |> String.strip
+    end
 
     assert_raise UndefinedFunctionError, fn ->
       Helpers.post_path(__MODULE__, :skip)
@@ -253,20 +253,20 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.user_comment_path(__MODULE__, :new, 88, []) == "/users/88/comments/new"
     assert Helpers.user_comment_path(__MODULE__, :new, 88) == "/users/88/comments/new"
 
-    error_message = (fn (helper, arity) ->
-    """
-    No route helper clause for #{helper}/#{arity} defined for action :skip.
-    The following #{helper} actions are defined under your router:
+    error_message = fn helper, arity ->
+      """
+      No helper clause for #{inspect Helpers}.#{helper}/#{arity} defined for action :skip.
+      The following #{helper} actions are defined under your router:
 
-      * :create
-      * :delete
-      * :edit
-      * :index
-      * :new
-      * :show
-      * :update
-    """ |> String.strip
-    end)
+        * :create
+        * :delete
+        * :edit
+        * :index
+        * :new
+        * :show
+        * :update
+      """ |> String.strip
+    end
 
     assert_raise ArgumentError, error_message.("user_comment_path", 3), fn ->
       Helpers.user_comment_path(__MODULE__, :skip, 123)
@@ -281,18 +281,19 @@ defmodule Phoenix.Router.HelpersTest do
     end
 
     arity_error_message =
-    """
-    No route helper clause for user_comment_path/3 defined for action :show with an arity of 3. Please check that the function, arity and action are correct.
-   The following user_comment_path actions are defined under your router:
+      """
+      No helper clause for #{inspect Helpers}.user_comment_path defined for action :show with arity 3.
+      Please check that the function, arity and action are correct.
+      The following user_comment_path actions are defined under your router:
 
-      * :create
-      * :delete
-      * :edit
-      * :index
-      * :new
-      * :show
-      * :update
-    """ |> String.strip
+        * :create
+        * :delete
+        * :edit
+        * :index
+        * :new
+        * :show
+        * :update
+      """ |> String.strip
 
     assert_raise ArgumentError, arity_error_message, fn ->
       Helpers.user_comment_path(__MODULE__, :show, 123)

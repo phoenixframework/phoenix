@@ -253,36 +253,35 @@ defmodule Phoenix.Router.Helpers do
       # We are using -1 to avoid warnings in case a path has already been defined.
       quote line: -1 do
         def unquote(:"#{helper}_path")(_conn_or_endpoint, action, unquote_splicing(vars)) do
-          Phoenix.Router.Helpers.raise_route_error("#{unquote(helper)}_path", unquote(arity), action, unquote(valid_routes))
+          Phoenix.Router.Helpers.raise_route_error(__MODULE__, "#{unquote(helper)}_path", unquote(arity), action, unquote(valid_routes))
         end
 
         def unquote(:"#{helper}_path")(_conn_or_endpoint, action, unquote_splicing(vars), params) do
-          Phoenix.Router.Helpers.raise_route_error("#{unquote(helper)}_path", unquote(arity) + 1, action, unquote(valid_routes))
+          Phoenix.Router.Helpers.raise_route_error(__MODULE__, "#{unquote(helper)}_path", unquote(arity) + 1, action, unquote(valid_routes))
         end
 
         def unquote(:"#{helper}_url")(_conn_or_endpoint, action, unquote_splicing(vars)) do
-          Phoenix.Router.Helpers.raise_route_error("#{unquote(helper)}_url", unquote(arity), action, unquote(valid_routes))
+          Phoenix.Router.Helpers.raise_route_error(__MODULE__, "#{unquote(helper)}_url", unquote(arity), action, unquote(valid_routes))
         end
 
         def unquote(:"#{helper}_url")(_conn_or_endpoint, action, unquote_splicing(vars), params) do
-          Phoenix.Router.Helpers.raise_route_error("#{unquote(helper)}_url", unquote(arity) + 1, action, unquote(valid_routes))
+          Phoenix.Router.Helpers.raise_route_error(__MODULE__, "#{unquote(helper)}_url", unquote(arity) + 1, action, unquote(valid_routes))
         end
       end
     end
   end
 
   @doc false
-  def raise_route_error(fun, arity, action, valid_routes) do
+  def raise_route_error(mod, fun, arity, action, valid_routes) do
     valid_actions = valid_routes |> Enum.sort |> Enum.map(&("\n  * :#{&1}")) |> Enum.join("")
     message = case action in valid_routes do
       true ->
-        "No route helper clause for #{fun}/#{arity} " <>
-        "defined for action :#{action} with an arity of #{arity}. Please " <>
-        "check that the function, arity and action are correct.\n" <>
+        "No helper clause for #{inspect mod}.#{fun} defined for action :#{action} with arity #{arity}.\n" <>
+        "Please check that the function, arity and action are correct.\n" <>
         "The following #{fun} actions are defined under your router:\n" <>
         valid_actions
-      _    ->
-        "No route helper clause for #{fun}/#{arity} defined for action :#{action}.\n" <>
+      _ ->
+        "No helper clause for #{inspect mod}.#{fun}/#{arity} defined for action :#{action}.\n" <>
         "The following #{fun} actions are defined under your router:\n" <>
         valid_actions
     end

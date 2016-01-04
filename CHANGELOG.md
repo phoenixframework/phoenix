@@ -4,6 +4,7 @@
 
 * Enhancements
   [ChannelTest] Add `refute_push` and `refute_reply`
+  [Router] Improve error messages when calling Router helpers without matching clauses
 
 ## 1.1.1 (2015-12-26)
 
