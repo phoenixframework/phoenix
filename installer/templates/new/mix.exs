@@ -23,7 +23,7 @@ defmodule <%= application_module %>.Mixfile do
   def application do
     [mod: {<%= application_module %>, []},
      applications: [:phoenix<%= if html do %>, :phoenix_html<% end %>, :cowboy, :logger, :gettext<%= if ecto do %>,
-                    :phoenix_ecto, <%= inspect adapter_app %><% end %>]]
+                    :phoenix_ecto, :connection, <%= inspect adapter_app %><% end %>]]
   end
 
   # Specifies which paths to compile per environment.
