@@ -48,17 +48,19 @@ $ MIX_ENV=docs mix docs
 
 ## Important links
 
-* \#elixir-lang on freenode IRC
-* [elixir-lang slack channel][1]
-* [Issue tracker][2]
-* [phoenix-talk Mailing list (questions)][3]
-* [phoenix-core Mailing list (development)][4]
+* [#elixir-lang][1] on [Freenode][2] IRC
+* [elixir-lang slack channel][3]
+* [Issue tracker][4]
+* [phoenix-talk Mailing list (questions)][5]
+* [phoenix-core Mailing list (development)][6]
 * Privately disclose security vulnerabilities to phoenix-security@googlegroups.com
 
-  [1]: https://elixir-slackin.herokuapp.com/
-  [2]: https://github.com/phoenixframework/phoenix/issues
-  [3]: http://groups.google.com/group/phoenix-talk
-  [4]: http://groups.google.com/group/phoenix-core
+  [1]: https://webchat.freenode.net/?channels=#elixir-lang
+  [2]: http://www.freenode.net/
+  [3]: https://elixir-slackin.herokuapp.com/
+  [4]: https://github.com/phoenixframework/phoenix/issues
+  [5]: http://groups.google.com/group/phoenix-talk
+  [6]: http://groups.google.com/group/phoenix-core
 
 ## Copyright and License
 
