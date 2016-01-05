@@ -141,17 +141,26 @@ defmodule Phoenix.PubSub do
 
   @doc """
   Broadcasts message on given topic.
+
+    * `server` - The Pid or registered server name and optional node to
+      scope the broadcast, for example: `MyApp.PubSub`, `{MyApp.PubSub, :a@node}`
+    * `topic` - The topic to broadcast to, ie: `"users:123"`
+    * `message` - The payload of the broadcast
+
   """
-  @spec broadcast(atom, binary, term) :: :ok | {:error, term}
-  def broadcast(server, topic, message) when is_atom(server),
-    do: call(server, :broadcast, [:none, topic, message])
+  @spec broadcast(atom | {atom, atom}, binary, term) :: :ok | {:error, term}
+  def broadcast({server, dest_node}, topic, message) when is_atom(server),
+    do: call(server, :broadcast, [dest_node, :none, topic, message])
+  def broadcast(server, topic, message) when is_atom(server) or is_tuple(server),
+    do: call(server, :broadcast, [:global, :none, topic, message])
 
   @doc """
   Broadcasts message on given topic.
 
   Raises `Phoenix.PubSub.BroadcastError` if broadcast fails.
+  See `Phoenix.PubSub.broadcast/3` for usage details.
   """
-  @spec broadcast!(atom, binary, term) :: :ok | no_return
+  @spec broadcast!(atom | {atom, atom}, binary, term) :: :ok | no_return
   def broadcast!(server, topic, message) do
     case broadcast(server, topic, message) do
       :ok -> :ok
@@ -161,17 +170,21 @@ defmodule Phoenix.PubSub do
 
   @doc """
   Broadcasts message to all but `from_pid` on given topic.
+  See `Phoenix.PubSub.broadcast/3` for usage details.
   """
-  @spec broadcast_from(atom, pid, binary, term) :: :ok | {:error, term}
+  @spec broadcast_from(atom | {atom, atom}, pid, binary, term) :: :ok | {:error, term}
+  def broadcast_from({server, dest_node}, from_pid, topic, message) when is_atom(server),
+    do: call(server, :broadcast, [dest_node, from_pid, topic, message])
   def broadcast_from(server, from_pid, topic, message) when is_atom(server) and is_pid(from_pid),
-    do: call(server, :broadcast, [from_pid, topic, message])
+    do: call(server, :broadcast, [:global, from_pid, topic, message])
 
   @doc """
   Broadcasts message to all but `from_pid` on given topic.
 
   Raises `Phoenix.PubSub.BroadcastError` if broadcast fails.
+  See `Phoenix.PubSub.broadcast/3` for usage details.
   """
-  @spec broadcast_from(atom, pid, binary, term) :: :ok | no_return
+  @spec broadcast_from(atom | {atom, atom}, pid, binary, term) :: :ok | no_return
   def broadcast_from!(server, from_pid, topic, message) when is_atom(server) and is_pid(from_pid) do
     case broadcast_from(server, from_pid, topic, message) do
       :ok -> :ok
