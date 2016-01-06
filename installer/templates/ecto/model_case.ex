@@ -17,8 +17,10 @@ defmodule <%= application_module %>.ModelCase do
   using do
     quote do
       alias <%= application_module %>.Repo
-      import Ecto.Model
-      import Ecto.Query, only: [from: 2]
+
+      import Ecto
+      import Ecto.Changeset
+      import Ecto.Query, only: [from: 1, from: 2]
       import <%= application_module %>.ModelCase
     end
   end

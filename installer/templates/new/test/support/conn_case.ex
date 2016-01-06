@@ -21,8 +21,9 @@ defmodule <%= application_module %>.ConnCase do
       use Phoenix.ConnTest
 <%= if ecto do %>
       alias <%= application_module %>.Repo
-      import Ecto.Model
-      import Ecto.Query, only: [from: 2]
+      import Ecto
+      import Ecto.Changeset
+      import Ecto.Query, only: [from: 1, from: 2]
 <% end %>
       import <%= application_module %>.Router.Helpers
 
