@@ -276,7 +276,7 @@ defmodule Phoenix.View do
       end)
 
   The underlying user is passed to the view and template as `:user`,
-  which is inflected from the view name. The name of the key
+  which is inferred from the view name. The name of the key
   in assigns can be customized with the `:as` option:
 
       render_many users, UserView, "show.html", as: :data
