@@ -72,7 +72,7 @@ defmodule Phoenix.Controller do
           if get_session(conn, :username) in options[:usernames] do
             conn
           else
-            conn |> redirect(Router.root_path) |> halt
+            conn |> redirect(to: "/") |> halt()
           end
         end
       end
