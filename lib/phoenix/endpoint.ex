@@ -528,7 +528,7 @@ defmodule Phoenix.Endpoint do
         def path(path), do: unquote(script_name) <> path
 
         defp put_script_name(conn) do
-          update_in conn.script_name, &(&1 ++ unquote(Plug.Router.Utils.split(script_name)))
+          put_in conn.script_name, unquote(Plug.Router.Utils.split(script_name))
         end
       end
 
