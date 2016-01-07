@@ -8,5 +8,6 @@
     "brunch": "^2.1.1",
     "babel-brunch": "^6.0.0",
     "uglify-js-brunch": ">= 1.0 < 1.8"
-  }
+  },
+  "files": ["LICENSE.md", "package.json", "priv/static/phoenix.js"]
 }
