@@ -207,7 +207,7 @@ defmodule HelloPhoenix.UserTest do
 
   test "bio must be at least two characters long" do
     attrs = %{@valid_attrs | bio: "I"}
-    assert {:bio, {"should be at least %{count} characters", [count: 2]}} in errors_on(%User{}, attrs)
+    assert {:bio, {"should be at least %{count} character(s)", [count: 2]}} in errors_on(%User{}, attrs)
   end
 end
 ```
@@ -223,9 +223,9 @@ $ mix test
   1) test bio must be at least two characters long (HelloPhoenix.UserTest)
      test/models/user_test.exs:24
      Assertion with in failed
-     code: {:bio, {"should be at least %{count} characters", [count: 2]}} in errors_on(%User{}, attrs)
+     code: {:bio, {"should be at least %{count} character(s)", [count: 2]}} in errors_on(%User{}, attrs)
      lhs:  {:bio,
-            {"should be at least %{count} characters",
+            {"should be at least %{count} character(s)",
              [count: 2]}}
      rhs:  []
 
@@ -240,13 +240,13 @@ Randomized with seed 435902
 This shows us the assertion we are testing - that our error is in the list of errors from the model's changeset.
 
 ```console
-code: {"should be at least %{count} characters", [count: 2]} in errors_on(%User{}, attrs)
+code: {"should be at least %{count} character(s)", [count: 2]} in errors_on(%User{}, attrs)
 ```
 
 We see that the left hand side of the expression evaluates to our error.
 
 ```console
-lhs:  {"should be at least %{count} characters", [count: 2]}
+lhs:  {"should be at least %{count} character(s)", [count: 2]}
 ```
 
 And we see that the right hand side of the expression evaluates to an empty list.
@@ -305,7 +305,7 @@ defmodule HelloPhoenix.UserTest do
 
   test "bio must be at most 140 characters long" do
     attrs = %{@valid_attrs | bio: long_string(141)}
-    assert {:bio, {"should be at most %{count} characters", [count: 140]}} in errors_on(%User{}, attrs)
+    assert {:bio, {"should be at most %{count} character(s)", [count: 140]}} in errors_on(%User{}, attrs)
   end
 end
 ```
@@ -319,9 +319,9 @@ $ mix test
   1) test bio must be at most 140 characters long (HelloPhoenix.UserTest)
      test/models/user_test.exs:29
      Assertion with in failed
-     code: {:bio, {"should be at most %{count} characters", [count: 140]}} in errors_on(%User{}, attrs)
+     code: {:bio, {"should be at most %{count} character(s)", [count: 140]}} in errors_on(%User{}, attrs)
      lhs:  {:bio,
-            {"should be at most %{count} characters",
+            {"should be at most %{count} character(s)",
 
 ..............
 
