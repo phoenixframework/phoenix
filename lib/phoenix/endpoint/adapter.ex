@@ -113,7 +113,6 @@ defmodule Phoenix.Endpoint.Adapter do
      render_errors: [view: render_errors(module), accepts: ~w(html)],
 
      # Runtime config
-     cache_static_lookup: true,
      cache_static_manifest: nil,
      check_origin: true,
      http: false,
@@ -213,17 +212,8 @@ defmodule Phoenix.Endpoint.Adapter do
   The result is wrapped in a `{:cache | :nocache, value}` tuple so
   the Phoenix.Config layer knows how to cache it.
   """
-  def static_path(endpoint, "/" <> _ = path) do
-    file = Application.app_dir(endpoint.config(:otp_app), Path.join("priv/static", path))
-
-    case File.stat(file) do
-      {:ok, %File.Stat{type: :regular, mtime: mtime, size: size}} ->
-        key = if endpoint.config(:cache_static_lookup), do: :cache, else: :nocache
-        vsn = {size, mtime} |> :erlang.phash2() |> Integer.to_string(16)
-        {key, path <> "?vsn=" <> vsn}
-      _ ->
-        {:nocache, path}
-    end
+  def static_path(_endpoint, "/" <> _ = path) do
+    {:nocache, path}
   end
 
   def static_path(_endpoint, path) when is_binary(path) do
@@ -259,8 +249,7 @@ defmodule Phoenix.Endpoint.Adapter do
   end
 
   defp cache_static_manifest(endpoint) do
-    if endpoint.config(:cache_static_lookup) &&
-       (inner = endpoint.config(:cache_static_manifest)) do
+    if inner = endpoint.config(:cache_static_manifest) do
       outer = Application.app_dir(endpoint.config(:otp_app), inner)
 
       if File.exists?(outer) do

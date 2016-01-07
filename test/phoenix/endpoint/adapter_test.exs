@@ -21,7 +21,6 @@ defmodule Phoenix.Endpoint.AdapterTest do
     def config(:https), do: [port: 443]
     def config(:url), do: [host: "example.com"]
     def config(:otp_app), do: :phoenix
-    def config(:cache_static_lookup), do: false
   end
 
   defmodule HTTPEndpoint do
@@ -30,7 +29,6 @@ defmodule Phoenix.Endpoint.AdapterTest do
     def config(:http), do: [port: 80]
     def config(:url), do: [host: "example.com"]
     def config(:otp_app), do: :phoenix
-    def config(:cache_static_lookup), do: true
   end
 
   defmodule HTTPEnvVarEndpoint do
@@ -38,7 +36,6 @@ defmodule Phoenix.Endpoint.AdapterTest do
     def config(:http), do: [port: {:system,"PHOENIX_PORT"}]
     def config(:url), do: [host: "example.com"]
     def config(:otp_app), do: :phoenix
-    def config(:cache_static_lookup), do: true
   end
 
   defmodule URLEndpoint do
@@ -71,16 +68,9 @@ defmodule Phoenix.Endpoint.AdapterTest do
   end
 
   test "static_path/2 returns file's path with lookup cache" do
-    assert {:cache, "/phoenix.png?" <> _} =
+    assert {:nocache, "/phoenix.png"} =
              Adapter.static_path(HTTPEndpoint, "/phoenix.png")
     assert {:nocache, "/images/unknown.png"} =
              Adapter.static_path(HTTPEndpoint, "/images/unknown.png")
-  end
-
-  test "static_path/2 returns file's path without lookup cache" do
-    assert {:nocache, "/phoenix.png?" <> _} =
-             Adapter.static_path(HTTPSEndpoint, "/phoenix.png")
-    assert {:nocache, "/images/unknown.png"} =
-             Adapter.static_path(HTTPSEndpoint, "/images/unknown.png")
   end
 end

@@ -6,7 +6,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
            static_url: [host: "static.example.com"],
            server: false, http: [port: 80], https: [port: 443],
            force_ssl: [subdomains: true],
-           cache_static_lookup: true, cache_static_manifest: "../../../../test/fixtures/manifest.json",
+           cache_static_manifest: "../../../../test/fixtures/manifest.json",
            pubsub: [adapter: Phoenix.PubSub.PG2, name: :endpoint_pub]]
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
 
@@ -64,33 +64,6 @@ defmodule Phoenix.Endpoint.EndpointTest do
            ["max-age=31536000; includeSubDomains"]
   end
 
-  test "reads static path with and without caching" do
-    file = Path.expand("priv/static/phoenix.png", File.cwd!)
-
-    # Old timestamp
-    old_stat = File.stat!(file)
-    old_vsn  = static_vsn(old_stat)
-    assert Endpoint.static_path("/phoenix.png") == "/phoenix.png?vsn=#{old_vsn}"
-
-    # Now with cache disabled
-    config = put_in(@config[:cache_static_lookup], false)
-    assert Endpoint.config_change([{Endpoint, config}], []) == :ok
-
-    # New timestamp
-    File.touch!(file)
-    new_stat = File.stat!(file)
-    new_vsn  = static_vsn(new_stat)
-    assert Endpoint.static_path("/phoenix.png") == "/phoenix.png?vsn=#{new_vsn}"
-
-    # Now with cache enabled
-    config = put_in(@config[:cache_static_lookup], true)
-    assert Endpoint.config_change([{Endpoint, config}], []) == :ok
-
-    assert Endpoint.static_path("/phoenix.png") == "/phoenix.png?vsn=#{new_vsn}"
-    File.touch!(file, old_stat.mtime)
-    assert Endpoint.static_path("/phoenix.png") == "/phoenix.png?vsn=#{new_vsn}"
-  end
-
   test "warms up caches on load and config change" do
     assert Endpoint.static_path("/foo.css") == "/foo-abcdef.css?vsn=d"
 
@@ -106,7 +79,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
       use Phoenix.Endpoint, otp_app: :phoenix
     end
     UrlEndpoint.start_link
-    assert UrlEndpoint.static_path("/phoenix.png") =~ "/api/phoenix.png?vsn="
+    assert UrlEndpoint.static_path("/phoenix.png") =~ "/api/phoenix.png"
   end
 
   test "uses static_url configuration for static path" do
@@ -115,7 +88,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
       use Phoenix.Endpoint, otp_app: :phoenix
     end
     StaticEndpoint.start_link
-    assert StaticEndpoint.static_path("/phoenix.png") =~ "/static/phoenix.png?vsn="
+    assert StaticEndpoint.static_path("/phoenix.png") =~ "/static/phoenix.png"
   end
 
   test "injects pubsub broadcast with configured server" do
@@ -164,9 +137,5 @@ defmodule Phoenix.Endpoint.EndpointTest do
     endpoint = Module.concat(__MODULE__, config.test)
     Application.put_env(:phoenix, endpoint, [])
     refute Phoenix.Endpoint.server?(:phoenix, endpoint)
-  end
-
-  defp static_vsn(file) do
-    {file.size, file.mtime} |> :erlang.phash2() |> Integer.to_string(16)
   end
 end

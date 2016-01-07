@@ -87,9 +87,6 @@ defmodule Phoenix.Endpoint do
       This is only required if the watchers or code reloading functionality
       are enabled.
 
-    * `:cache_static_lookup` - when `true`, static file lookup in the
-      filesystem via the `static_path` function are cached. Defaults to `true`.
-
     * `:cache_static_manifest` - a path to a json manifest file that contains
       static files and their digested version. This is typically set to
       "priv/static/manifest.json" which is the file automatically generated
