@@ -1,8 +1,12 @@
 {
+  "name": "phoenix",
+  "version": "1.1.1",
+  "main": "./priv/static/phoenix.js",
   "repository": {
   },
-  "dependencies": {
+  "devDependencies": {
     "brunch": "^2.1.1",
-    "babel-brunch": "^6.0.0"
+    "babel-brunch": "^6.0.0",
+    "uglify-js-brunch": ">= 1.0 < 1.8"
   }
 }

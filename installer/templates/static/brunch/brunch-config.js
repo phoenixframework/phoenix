@@ -39,8 +39,6 @@ exports.config = {
   paths: {
     // Dependencies and current project directories to watch
     watched: [
-      "<%= brunch_deps_prefix %><%= phoenix_path %>/web/static",
-      "<%= brunch_deps_prefix %>deps/phoenix_html/web/static",
       "web/static",
       "test/static"
     ],
@@ -64,6 +62,7 @@ exports.config = {
   },
 
   npm: {
-    enabled: true
+    enabled: true,
+    whitelist: ["phoenix", "phoenix_html"]
   }
 };
