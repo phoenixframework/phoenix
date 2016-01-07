@@ -1,12 +1,15 @@
+if(typeof(exports) === "undefined" && !window.Phoenix){ window.Phoenix = {}; var exports = window.Phoenix; }
+
+(function(){
 "use strict";
 
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -118,7 +121,7 @@ var TRANSPORTS = {
   websocket: "websocket"
 };
 
-var Push = (function () {
+var Push = function () {
 
   // Initializes the Push
   //
@@ -242,9 +245,9 @@ var Push = (function () {
   }]);
 
   return Push;
-})();
+}();
 
-var Channel = exports.Channel = (function () {
+var Channel = exports.Channel = function () {
   function Channel(topic, params, socket) {
     var _this2 = this;
 
@@ -446,9 +449,9 @@ var Channel = exports.Channel = (function () {
   }]);
 
   return Channel;
-})();
+}();
 
-var Socket = exports.Socket = (function () {
+var Socket = exports.Socket = function () {
 
   // Initializes the Socket
   //
@@ -761,9 +764,9 @@ var Socket = exports.Socket = (function () {
   }]);
 
   return Socket;
-})();
+}();
 
-var LongPoll = exports.LongPoll = (function () {
+var LongPoll = exports.LongPoll = function () {
   function LongPoll(endPoint) {
     _classCallCheck(this, LongPoll);
 
@@ -868,9 +871,9 @@ var LongPoll = exports.LongPoll = (function () {
   }]);
 
   return LongPoll;
-})();
+}();
 
-var Ajax = exports.Ajax = (function () {
+var Ajax = exports.Ajax = function () {
   function Ajax() {
     _classCallCheck(this, Ajax);
   }
@@ -966,7 +969,7 @@ var Ajax = exports.Ajax = (function () {
   }]);
 
   return Ajax;
-})();
+}();
 
 Ajax.states = { complete: 4 };
 
@@ -984,7 +987,7 @@ Ajax.states = { complete: 4 };
 //    reconnectTimer.setTimeout() // fires after 1000
 //
 
-var Timer = (function () {
+var Timer = function () {
   function Timer(callback, timerCalc) {
     _classCallCheck(this, Timer);
 
@@ -1005,7 +1008,7 @@ var Timer = (function () {
 
   }, {
     key: "setTimeout",
-    value: (function (_setTimeout) {
+    value: function (_setTimeout) {
       function setTimeout() {
         return _setTimeout.apply(this, arguments);
       }
@@ -1015,7 +1018,7 @@ var Timer = (function () {
       };
 
       return setTimeout;
-    })(function () {
+    }(function () {
       var _this12 = this;
 
       clearTimeout(this.timer);
@@ -1028,5 +1031,7 @@ var Timer = (function () {
   }]);
 
   return Timer;
-})();
+}();
 
+
+})();
