@@ -48,7 +48,7 @@ defmodule Mix.Tasks.Phoenix.New do
   @brunch [
     {:text, "static/brunch/.gitignore",       ".gitignore"},
     {:eex,  "static/brunch/brunch-config.js", "brunch-config.js"},
-    {:text, "static/brunch/package.json",     "package.json"},
+    {:eex,  "static/brunch/package.json",     "package.json"},
     {:text, "static/app.css",                 "web/static/css/app.css"},
     {:eex,  "static/brunch/app.js",           "web/static/js/app.js"},
     {:eex,  "static/brunch/socket.js",        "web/static/js/socket.js"},
@@ -175,9 +175,7 @@ defmodule Mix.Tasks.Phoenix.New do
     {adapter_app, adapter_module, adapter_config} = get_ecto_adapter(db, String.downcase(app), mod)
     pubsub_server = get_pubsub_server(mod)
     in_umbrella? = in_umbrella?(path)
-
-    {brunch_deps_prefix, static_deps_prefix} =
-      if in_umbrella?, do: {"../../", "../../../"}, else: {"", ""}
+    brunch_deps_prefix = if in_umbrella?, do: "../../", else: ""
 
     binary_id = Keyword.get(opts, :binary_id, false)
     adapter_config = Keyword.put_new(adapter_config, :binary_id, binary_id)
@@ -193,7 +191,6 @@ defmodule Mix.Tasks.Phoenix.New do
                signing_salt: random_string(8),
                in_umbrella: in_umbrella?,
                brunch_deps_prefix: brunch_deps_prefix,
-               static_deps_prefix: static_deps_prefix,
                brunch: brunch,
                ecto: ecto,
                html: html,
@@ -214,26 +211,18 @@ defmodule Mix.Tasks.Phoenix.New do
     install? = Mix.shell.yes?("\nFetch and install dependencies?")
 
     File.cd!(path, fn ->
-      brunch =
-        case install_brunch(install?) do
-          {:ok, task}   -> task
-          :not_required -> nil
-          :not_allowed  -> print_brunch_info()
-        end
-
-      {mix, extra} =
-        case install_mix(install?) do
-          {:ok, task}  -> {task, []}
-          :not_allowed -> {nil, ["$ mix deps.get"]}
-        end
-
-      brunch && Task.await(brunch, :infinity)
-      mix    && Task.await(mix, :infinity)
+      mix?    = install_mix(install?)
+      brunch? = install_brunch(install?)
+      extra   = if mix?, do: [], else: ["$ mix deps.get"]
 
       print_mix_info(path, extra)
 
       if binding[:ecto] do
-        print_ecto_info
+        print_ecto_info()
+      end
+
+      if not brunch? do
+        print_brunch_info()
       end
     end)
   end
@@ -351,23 +340,24 @@ defmodule Mix.Tasks.Phoenix.New do
   defp maybe_cmd(cmd, should_run?, can_run?) do
     cond do
       should_run? && can_run? ->
-        {:ok, cmd(cmd)}
+        cmd(cmd)
+        true
       should_run? ->
-        :not_allowed
+        false
       true ->
-        :not_required
+        true
     end
   end
 
   defp cmd(cmd) do
     Mix.shell.info [:green, "* running ", :reset, cmd]
-    Task.async(fn ->
+
       # We use :os.cmd/1 because there is a bug in OTP
       # where we cannot execute .cmd files on Windows.
       # We could use Mix.shell.cmd/1 but that automatically
       # outputs to the terminal and we don't want that.
       :os.cmd(String.to_char_list(cmd))
-    end)
+
   end
 
   defp check_application_name!(name, from_app_flag) do

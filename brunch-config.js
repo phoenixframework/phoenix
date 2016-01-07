@@ -1,17 +1,14 @@
 exports.config = {
-  // See http://brunch.io/#documentation for docs.
   sourceMaps: false,
   production: true,
+
   modules: {
-    // use common js wrapper, but expose global `Phoenix` object for browser
-    // truncate module path simple to "phoenix"
-    wrapper: function(path, data){
-      return(
-        "require.define({'phoenix': function(exports, require, module){ " + data + " }});\n" +
-        "if(typeof(window) === 'object' && !window.Phoenix){ window.Phoenix = require('phoenix') };"
-      )
+    definition: false,
+    wrapper: function(path, code){
+      return "if(typeof(exports) === \"undefined\" && !window.Phoenix){ window.Phoenix = {}; var exports = window.Phoenix; }\n\n(function(){\n" + code + "\n})();\n";
     }
   },
+
   files: {
     javascripts: {
       joinTo: 'phoenix.js'

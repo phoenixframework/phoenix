@@ -1,123 +1,15 @@
-(function() {
-  'use strict';
+if(typeof(exports) === "undefined" && !window.Phoenix){ window.Phoenix = {}; var exports = window.Phoenix; }
 
-  var globals = typeof window === 'undefined' ? global : window;
-  if (typeof globals.require === 'function') return;
+(function(){
+"use strict";
 
-  var modules = {};
-  var cache = {};
-  var aliases = {};
-  var has = ({}).hasOwnProperty;
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
-  var endsWith = function(str, suffix) {
-    return str.indexOf(suffix, str.length - suffix.length) !== -1;
-  };
-
-  var _cmp = 'components/';
-  var unalias = function(alias, loaderPath) {
-    var start = 0;
-    if (loaderPath) {
-      if (loaderPath.indexOf(_cmp) === 0) {
-        start = _cmp.length;
-      }
-      if (loaderPath.indexOf('/', start) > 0) {
-        loaderPath = loaderPath.substring(start, loaderPath.indexOf('/', start));
-      }
-    }
-    var result = aliases[alias + '/index.js'] || aliases[loaderPath + '/deps/' + alias + '/index.js'];
-    if (result) {
-      return _cmp + result.substring(0, result.length - '.js'.length);
-    }
-    return alias;
-  };
-
-  var _reg = /^\.\.?(\/|$)/;
-  var expand = function(root, name) {
-    var results = [], part;
-    var parts = (_reg.test(name) ? root + '/' + name : name).split('/');
-    for (var i = 0, length = parts.length; i < length; i++) {
-      part = parts[i];
-      if (part === '..') {
-        results.pop();
-      } else if (part !== '.' && part !== '') {
-        results.push(part);
-      }
-    }
-    return results.join('/');
-  };
-
-  var dirname = function(path) {
-    return path.split('/').slice(0, -1).join('/');
-  };
-
-  var localRequire = function(path) {
-    return function expanded(name) {
-      var absolute = expand(dirname(path), name);
-      return globals.require(absolute, path);
-    };
-  };
-
-  var initModule = function(name, definition) {
-    var module = {id: name, exports: {}};
-    cache[name] = module;
-    definition(module.exports, localRequire(name), module);
-    return module.exports;
-  };
-
-  var require = function(name, loaderPath) {
-    var path = expand(name, '.');
-    if (loaderPath == null) loaderPath = '/';
-    path = unalias(name, loaderPath);
-
-    if (has.call(cache, path)) return cache[path].exports;
-    if (has.call(modules, path)) return initModule(path, modules[path]);
-
-    var dirIndex = expand(path, './index');
-    if (has.call(cache, dirIndex)) return cache[dirIndex].exports;
-    if (has.call(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
-
-    throw new Error('Cannot find module "' + name + '" from '+ '"' + loaderPath + '"');
-  };
-
-  require.alias = function(from, to) {
-    aliases[to] = from;
-  };
-
-  require.register = require.define = function(bundle, fn) {
-    if (typeof bundle === 'object') {
-      for (var key in bundle) {
-        if (has.call(bundle, key)) {
-          modules[key] = bundle[key];
-        }
-      }
-    } else {
-      modules[bundle] = fn;
-    }
-  };
-
-  require.list = function() {
-    var result = [];
-    for (var item in modules) {
-      if (has.call(modules, item)) {
-        result.push(item);
-      }
-    }
-    return result;
-  };
-
-  require.brunch = true;
-  require._cache = cache;
-  globals.require = require;
-})();
-require.define({'phoenix': function(exports, require, module){ "use strict";
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -229,7 +121,7 @@ var TRANSPORTS = {
   websocket: "websocket"
 };
 
-var Push = (function () {
+var Push = function () {
 
   // Initializes the Push
   //
@@ -353,9 +245,9 @@ var Push = (function () {
   }]);
 
   return Push;
-})();
+}();
 
-var Channel = exports.Channel = (function () {
+var Channel = exports.Channel = function () {
   function Channel(topic, params, socket) {
     var _this2 = this;
 
@@ -557,9 +449,9 @@ var Channel = exports.Channel = (function () {
   }]);
 
   return Channel;
-})();
+}();
 
-var Socket = exports.Socket = (function () {
+var Socket = exports.Socket = function () {
 
   // Initializes the Socket
   //
@@ -872,9 +764,9 @@ var Socket = exports.Socket = (function () {
   }]);
 
   return Socket;
-})();
+}();
 
-var LongPoll = exports.LongPoll = (function () {
+var LongPoll = exports.LongPoll = function () {
   function LongPoll(endPoint) {
     _classCallCheck(this, LongPoll);
 
@@ -979,9 +871,9 @@ var LongPoll = exports.LongPoll = (function () {
   }]);
 
   return LongPoll;
-})();
+}();
 
-var Ajax = exports.Ajax = (function () {
+var Ajax = exports.Ajax = function () {
   function Ajax() {
     _classCallCheck(this, Ajax);
   }
@@ -1077,7 +969,7 @@ var Ajax = exports.Ajax = (function () {
   }]);
 
   return Ajax;
-})();
+}();
 
 Ajax.states = { complete: 4 };
 
@@ -1095,7 +987,7 @@ Ajax.states = { complete: 4 };
 //    reconnectTimer.setTimeout() // fires after 1000
 //
 
-var Timer = (function () {
+var Timer = function () {
   function Timer(callback, timerCalc) {
     _classCallCheck(this, Timer);
 
@@ -1116,7 +1008,7 @@ var Timer = (function () {
 
   }, {
     key: "setTimeout",
-    value: (function (_setTimeout) {
+    value: function (_setTimeout) {
       function setTimeout() {
         return _setTimeout.apply(this, arguments);
       }
@@ -1126,7 +1018,7 @@ var Timer = (function () {
       };
 
       return setTimeout;
-    })(function () {
+    }(function () {
       var _this12 = this;
 
       clearTimeout(this.timer);
@@ -1139,7 +1031,7 @@ var Timer = (function () {
   }]);
 
   return Timer;
-})();
+}();
 
- }});
-if(typeof(window) === 'object' && !window.Phoenix){ window.Phoenix = require('phoenix') };
+
+})();

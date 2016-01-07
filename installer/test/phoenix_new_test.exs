@@ -70,7 +70,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       # Brunch
       assert_file "photo_blog/.gitignore", "/node_modules"
-      assert_file "photo_blog/brunch-config.js", ~s["deps/phoenix/web/static"]
+      assert_file "photo_blog/brunch-config.js", ~s["phoenix", "phoenix_html"]
       assert_file "photo_blog/config/dev.exs", "watchers: [node:"
       assert_file "photo_blog/web/static/assets/favicon.ico"
       assert_file "photo_blog/web/static/assets/images/phoenix.png"
@@ -78,7 +78,12 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/web/static/js/app.js",
                   ~s[import socket from "./socket"]
       assert_file "photo_blog/web/static/js/socket.js",
-                  ~s[import {Socket} from "deps/phoenix/web/static/js/phoenix"]
+                  ~s[import {Socket} from "phoenix"]
+
+      assert_file "photo_blog/package.json", fn(file) ->
+        assert file =~ ~s["file:deps/phoenix"]
+        assert file =~ ~s["file:deps/phoenix_html"]
+      end
 
       refute File.exists? "photo_blog/priv/static/css/app.css"
       refute File.exists? "photo_blog/priv/static/js/phoenix.js"
@@ -235,16 +240,10 @@ defmodule Mix.Tasks.Phoenix.NewTest do
           assert file =~ "lockfile: \"../../mix.lock\""
         end
 
-        assert_file "photo_blog/brunch-config.js", fn(file) ->
-          assert file =~ ~s["../../deps/phoenix/web/static"]
-          assert file =~ ~s["../../deps/phoenix_html/web/static"]
+        assert_file "photo_blog/package.json", fn(file) ->
+          assert file =~ ~s["file:../../deps/phoenix"]
+          assert file =~ ~s["file:../../deps/phoenix_html"]
         end
-
-        assert_file "photo_blog/web/static/js/socket.js",
-                    ~s["../../../deps/phoenix/web/static/js/phoenix"]
-
-        assert_file "photo_blog/web/static/js/app.js",
-                    ~s["../../../deps/phoenix_html/web/static/js/phoenix_html"]
       end
     end
   end
