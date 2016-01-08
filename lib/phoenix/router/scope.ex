@@ -38,9 +38,7 @@ defmodule Phoenix.Router.Scope do
   @doc """
   Appends the given pipes to the current scope pipe through.
   """
-  def pipe_through(module, pipes) do
-    pipes = List.wrap(pipes)
-
+  def pipe_through(module, pipes) when is_list(pipes) do
     update_stack(module, fn [scope|stack] ->
       scope = put_in scope.pipes, scope.pipes ++ pipes
       [scope|stack]
