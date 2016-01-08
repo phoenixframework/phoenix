@@ -5,9 +5,10 @@
 See these *optional* [`1.1.1` to `1.1.2` upgrade instructions](https://gist.github.com/chrismccord/d5bc5f8e38c8f76cad33) to bring your existing apps up to speed.
 
 * Enhancements
-  [ChannelTest] Add `refute_push` and `refute_reply`
-  [Router] Improve error messages when calling Router helpers without matching clauses
-  [phoenix.new] Use brunch 2.1.1 npm integration to load `phoenix` and `phoenix_html` js deps
+  * [Cowboy] Improve log report for errors from the UserSocket
+  * [ChannelTest] Add `refute_push` and `refute_reply`
+  * [Router] Improve error messages when calling Router helpers without matching clauses
+  * [phoenix.new] Use brunch 2.1.1 npm integration to load `phoenix` and `phoenix_html` js deps
 
 ## 1.1.1 (2015-12-26)
 
