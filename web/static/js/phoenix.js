@@ -39,8 +39,9 @@
 //
 // ## Joining
 //
-// Joining a channel with `channel.join(topic, params)`, binds the params to
-// `channel.params`. Subsequent rejoins will send up the modified params for
+// Creating a channel with `socket.channel(topic, params)`, binds the params to
+// `channel.params`, which are sent up on `channel.join()`.
+// Subsequent rejoins will send up the modified params for
 // updating authorization params, or passing up last_message_id information.
 // Successful joins receive an "ok" status, while unsuccessful joins
 // receive "error".
@@ -52,7 +53,7 @@
 // can be done with `channel.push(eventName, payload)` and we can optionally
 // receive responses from the push. Additionally, we can use
 // `receive("timeout", callback)` to abort waiting for our other `receive` hooks
-//  and take action after some period of waiting.
+//  and take action after some period of waiting. The default timeout is 5000ms.
 //
 //
 // ## Socket Hooks
