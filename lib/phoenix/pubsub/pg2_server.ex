@@ -4,18 +4,20 @@ defmodule Phoenix.PubSub.PG2Server do
   use GenServer
   alias Phoenix.PubSub.Local
 
-  def start_link({server_name, node_name}) do
-    GenServer.start_link __MODULE__, {server_name, node_name}, name: server_name
+  def start_link(server_name) do
+    GenServer.start_link __MODULE__, server_name, name: server_name
   end
 
   def broadcast(server_name, pool_size, dest_node, from_pid, topic, msg) do
-    case :pg2.get_members(pg2_namespace(server_name, dest_node)) do
+    case get_members(server_name, dest_node) do
       {:error, {:no_such_group, _}} ->
         {:error, :no_such_group}
 
       pids when is_list(pids) ->
         Enum.each(pids, fn
-          pid when node(pid) == node() ->
+          pid when is_pid(pid) and node(pid) == node() ->
+            Local.broadcast(server_name, pool_size, from_pid, topic, msg)
+          {^server_name, dest_node} when dest_node == node() ->
             Local.broadcast(server_name, pool_size, from_pid, topic, msg)
           pid ->
             send(pid, {:forward_to_local, from_pid, pool_size, topic, msg})
@@ -24,13 +26,10 @@ defmodule Phoenix.PubSub.PG2Server do
     end
   end
 
-  def init({server_name, node_name}) do
-    public_pg2_namespace = pg2_namespace(server_name, :global)
-    private_pg2_namespace = pg2_namespace(server_name, node_name)
-    :ok = :pg2.create(public_pg2_namespace)
-    :ok = :pg2.create(private_pg2_namespace)
-    :ok = :pg2.join(public_pg2_namespace, self)
-    :ok = :pg2.join(private_pg2_namespace, self)
+  def init(server_name) do
+    pg2_group = pg2_namespace(server_name)
+    :ok = :pg2.create(pg2_group)
+    :ok = :pg2.join(pg2_group, self)
 
     {:ok, server_name}
   end
@@ -42,5 +41,12 @@ defmodule Phoenix.PubSub.PG2Server do
     {:noreply, name}
   end
 
-  defp pg2_namespace(server_name, node_name), do: {:phx, server_name, node_name}
+  defp get_members(server_name, :global) do
+    :pg2.get_members(pg2_namespace(server_name))
+  end
+  defp get_members(server_name, dest_node) do
+    [{server_name, dest_node}]
+  end
+
+  defp pg2_namespace(server_name), do: {:phx, server_name}
 end

@@ -30,16 +30,13 @@ defmodule Phoenix.PubSub.PG2 do
   end
 
   @doc false
-  def init([server, opts]) when is_atom(server) do
-    init([{server, node()}, opts])
-  end
-  def init([{server, node_name}, opts]) do
+  def init([server, opts]) do
     pool_size = Keyword.fetch!(opts, :pool_size)
     dispatch_rules = [{:broadcast, Phoenix.PubSub.PG2Server, [server, pool_size]}]
 
     children = [
       supervisor(Phoenix.PubSub.LocalSupervisor, [server, pool_size, dispatch_rules]),
-      worker(Phoenix.PubSub.PG2Server, [{server, node_name}]),
+      worker(Phoenix.PubSub.PG2Server, [server]),
     ]
 
     supervise children, strategy: :rest_for_one
