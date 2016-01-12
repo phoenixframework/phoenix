@@ -1,4 +1,4 @@
-Since our Phoenix apps are simply Elixir applications, they  have the same configuration and structure as other Mix projects. Recall that Mix is the build tool used by most Exixir apps.
+Since our Phoenix apps are simply Elixir applications, they  have the same configuration and structure as other Mix projects. Recall that Mix is the build tool used by most Elixir apps.
 
 #### .ex and .exs Files Types
 
