@@ -65,6 +65,8 @@ $ mix ecto.create
 The database for HelloPhoenix.Repo has been created.
 ```
 
+> Note: if this is the first time you are running this command, Phoenix may also ask to install Rebar. Go ahead with the installation as Rebar is used to build Erlang packages.
+
 And finally, we'll start the Phoenix server:
 
 ```console
@@ -72,8 +74,6 @@ $ mix phoenix.server
 [info] Running HelloPhoenix.Endpoint with Cowboy on http://localhost:4000
 23 Nov 05:25:14 - info: compiled 5 files into 2 files, copied 3 in 1724ms
 ```
-
-> Note: if this is the first time you are running this command, Phoenix may also ask to install Rebar. Go ahead with the installation as Rebar is used to build Erlang packages.
 
 If we choose not to have Phoenix install our dependencies when we generate a new application, the `phoenix.new` task will prompt us to take the necessary steps when we do want to install them.
 
