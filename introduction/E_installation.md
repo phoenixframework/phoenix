@@ -28,9 +28,9 @@ $ sudo apt-get install erlang
 
 ### Phoenix
 
-Once we have Elixir and Erlang, we are ready to install the Phoenix mix archive. A mix archive is a zip file which contains an application as well as its compiled beam files. It is tied to a specific version of the application. The archive is what we will use to generate a new, base Phoenix application which we can build from.
+Once we have Elixir and Erlang, we are ready to install the Phoenix Mix archive. A Mix archive is a Zip file which contains an application as well as its compiled BEAM files. It is tied to a specific version of the application. The archive is what we will use to generate a new, base Phoenix application which we can build from.
 
-Here's the command to install the Phoenix archive.
+Here's the command to install the Phoenix archive:
 
 ```console
 $ mix archive.install https://github.com/phoenixframework/phoenix/releases/download/v1.1.2/phoenix_new-1.1.2.ez
@@ -39,7 +39,7 @@ $ mix archive.install https://github.com/phoenixframework/phoenix/releases/downl
 
 ### Plug, Cowboy, and Ecto
 
-These are either Elixir or Erlang projects which are part of Phoenix applications by default. We won't need to do anything special to install them. If we let mix install our dependencies as we create our new application, these will be taken care of for us. If we don't, Phoenix will tell us how to do so after the app creation is done.
+These are either Elixir or Erlang projects which are part of Phoenix applications by default. We won't need to do anything special to install them. If we let Mix install our dependencies as we create our new application, these will be taken care of for us. If we don't, Phoenix will tell us how to do so after the app creation is done.
 
 ### node.js (>= 5.0.0)
 
