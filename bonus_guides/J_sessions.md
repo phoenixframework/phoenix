@@ -70,7 +70,7 @@ While we can use ETS for session storage, it might not be the best idea. This is
 
 With the proper configuration in place, we can access session data in our application's controllers.
 
-Here's a really quick example of putting a value into the session and getting it out again. We can change the `index` action of our generated `HelloPhoenix.PageController` at `web/controllers/page_controller.ex` to use `put_session/2`, `get_session/2`, and then render only the text that made the session round-trip.
+Here's a really quick example of putting a value into the session and getting it out again. We can change the `index` action of our generated `HelloPhoenix.PageController` at `web/controllers/page_controller.ex` to use `put_session/3`, `get_session/2`, and then render only the text that made the session round-trip.
 
 ```elixir
 defmodule HelloPhoenix.PageController do
