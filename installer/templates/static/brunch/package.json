@@ -8,7 +8,7 @@
     "css-brunch": ">= 1.0 < 1.8",
     "javascript-brunch": ">= 1.0 < 1.8",
     "uglify-js-brunch": ">= 1.0 < 1.8",
-    "phoenix": "file:<%= brunch_deps_prefix %><%= phoenix_path %>",
-    "phoenix_html": "file:<%= brunch_deps_prefix %>deps/phoenix_html"
+    "phoenix": "file:<%= brunch_deps_prefix %><%= phoenix_path %>"<%= if html do %>,
+    "phoenix_html": "file:<%= brunch_deps_prefix %>deps/phoenix_html"<% end %>
   }
 }
