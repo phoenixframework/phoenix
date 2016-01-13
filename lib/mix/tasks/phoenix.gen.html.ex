@@ -25,14 +25,20 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
   information on attributes and namespaced resources.
   """
   def run(args) do
-    {opts, parsed, _} = OptionParser.parse(args, switches: [model: :boolean])
+    switches = [binary_id: :boolean, model: :boolean]
+
+    {opts, parsed, _} = OptionParser.parse(args, switches: switches)
     [singular, plural | attrs] = validate_args!(parsed)
+
+    default_opts = Application.get_env(:phoenix, :generators, [])
+    opts = Keyword.merge(default_opts, opts)
 
     attrs   = Mix.Phoenix.attrs(attrs)
     binding = Mix.Phoenix.inflect(singular)
     path    = binding[:path]
     route   = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
     binding = binding ++ [plural: plural, route: route, attrs: attrs,
+                          binary_id: opts[:binary_id],
                           inputs: inputs(attrs), params: Mix.Phoenix.params(attrs),
                           template_singular: String.replace(binding[:singular], "_", " "),
                           template_plural: String.replace(plural, "_", " ")]
