@@ -24,14 +24,20 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
   for more information on attributes and namespaced resources.
   """
   def run(args) do
-    {opts, parsed, _} = OptionParser.parse(args, switches: [model: :boolean])
+    switches = [binary_id: :boolean, model: :boolean]
+
+    {opts, parsed, _} = OptionParser.parse(args, switches: switches)
     [singular, plural | attrs] = validate_args!(parsed)
+
+    default_opts = Application.get_env(:phoenix, :generators, [])
+    opts = Keyword.merge(default_opts, opts)
 
     attrs   = Mix.Phoenix.attrs(attrs)
     binding = Mix.Phoenix.inflect(singular)
     path    = binding[:path]
     route   = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
     binding = binding ++ [plural: plural, route: route,
+                          binary_id: opts[:binary_id],
                           attrs: attrs, params: Mix.Phoenix.params(attrs)]
 
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Controller")

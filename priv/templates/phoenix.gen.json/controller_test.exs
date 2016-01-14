@@ -23,7 +23,7 @@ defmodule <%= module %>ControllerTest do
 
   test "does not show resource and instead throw error when id is nonexistent", %{conn: conn} do
     assert_error_sent 404, fn ->
-      get conn, <%= singular %>_path(conn, :show, -1)
+      get conn, <%= singular %>_path(conn, :show, <%= if binary_id do %>"11111111-1111-1111-1111-111111111111"<% else %>-1<% end %>)
     end
   end
 
