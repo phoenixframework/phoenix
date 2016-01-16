@@ -998,7 +998,7 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Returns a message from flash by key
+  Returns a message from flash by key.
 
   ## Examples
 
