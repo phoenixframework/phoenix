@@ -332,7 +332,7 @@ We can put the render call behind a private function as well, just as we did wit
 
 ```elixir
 . . .
-defp welcome_html
+defp welcome_html do
   Phoenix.View.render_to_string(HelloPhoenix.EmailView, "welcome.html", %{})
 end
 . . .
