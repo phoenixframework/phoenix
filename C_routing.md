@@ -1,6 +1,6 @@
 Routers are the main hubs of Phoenix applications. They match HTTP requests to controller actions, wire up real-time channel handlers, and define a series of pipeline transformations for scoping middleware to sets of routes.
 
-The router file that Phoenix generates, `web/router.ex`, will look something like this one.
+The router file that Phoenix generates, `web/router.ex`, will look something like this one:
 
 ```elixir
 defmodule HelloPhoenix.Router do
@@ -32,11 +32,11 @@ end
 ```
 The name you gave your application will appear instead of `HelloPhoenix` for both the router module and controller name.
 
-The first line of this module `use HelloPhoenix.Web, :router` simply makes Phoenix router functions available in our particular router.
+The first line of this module, `use HelloPhoenix.Web, :router`, simply makes Phoenix router functions available in our particular router.
 
 Scopes have their own section in this guide, so we won't spend time on the `scope "/", HelloPhoenix do` block here. The `pipe_through :browser` line will get a full treatment in the Pipeline section of this guide. For now, you only need to know that pipelines allow a set of middleware transformations to be applied to different sets of routes.
 
-Inside the scope block, however, we have our first actual route.
+Inside the scope block, however, we have our first actual route:
 
 ```elixir
   get "/", PageController, :index
@@ -46,13 +46,13 @@ Inside the scope block, however, we have our first actual route.
 
 The first argument to these macros is the path. Here, it is the root of the application, `/`. The next two arguments are the controller and action we want to have handle this request. These macros may also take other options, which we will see throughout the rest of this guide.
 
-If this were the only route in our router module, the clause of the `match/3` function would look like this after the macro is expanded.
+If this were the only route in our router module, the clause of the `match/3` function would look like this after the macro is expanded:
 
 ```elixir
   def match(conn, "GET", ["/"])
 ```
 
-The body of the match function sets up the connection and invokes the matched controller action.
+The body of the `match/3` function sets up the connection and invokes the matched controller action.
 
 As we add more routes, more clauses of the match function will be added to our router module. These will behave like any other multi-clause function in Elixir. They will be tried in order from the top, and the first clause to match the parameters given (verb and path) will be executed. After a match is found, the search will stop and no other clauses will be tried.
 
@@ -66,7 +66,7 @@ Define this route at the bottom of the `scope "/", HelloPhoenix do` block in the
 get "/", RootController, :index
 ```
 
-Then run `$ mix compile` at the root of your project. You will see the following warning from the compiler.
+Then run `$ mix compile` at the root of your project. You will see the following warning from the compiler:
 
 ```text
 web/router.ex:1: warning: this clause cannot match because a previous clause at line 1 always matches
@@ -77,7 +77,7 @@ Compiled web/router.ex
 
 Phoenix provides a great tool for investigating routes in an application, the mix task `phoenix.routes`.
 
-Let's see how this works. Go to the root of a newly-generated Phoenix application and run `$ mix phoenix.routes`. (If you haven't already done so, you'll need to run `$ mix do deps.get, compile` before running the routes task.) You should see something like the following, generated from the only route we currently have.
+Let's see how this works. Go to the root of a newly-generated Phoenix application and run `$ mix phoenix.routes`. (If you haven't already done so, you'll need to run `$ mix do deps.get, compile` before running the `routes` task.) You should see something like the following, generated from the only route we currently have:
 
 ```console
 $ mix phoenix.routes
@@ -89,9 +89,9 @@ The output tells us that any HTTP GET request for the root of the application wi
 
 ### Resources
 
-The router supports other macros besides those for HTTP verbs like `get`, `post` and `put`. The most important among them is `resources`, which expands out to eight clauses of the match function.
+The router supports other macros besides those for HTTP verbs like `get`, `post`, and `put`. The most important among them is `resources`, which expands out to eight clauses of the `match/3` function.
 
-Let's add a resource to our `web/router.ex` file like this.
+Let's add a resource to our `web/router.ex` file like this:
 
 ```elixir
 scope "/", HelloPhoenix do
@@ -105,7 +105,7 @@ For this purpose, it doesn't matter that we don't actually have a `HelloPhoenix.
 
 Then go to the root of your project, and run `$ mix phoenix.routes`
 
-You should see something like the following. Of course, the name of your project will replace `HelloPhoenix`.
+You should see something like the following:
 
 ```elixir
 user_path  GET     /users           HelloPhoenix.UserController :index
@@ -117,20 +117,23 @@ user_path  PATCH   /users/:id       HelloPhoenix.UserController :update
            PUT     /users/:id       HelloPhoenix.UserController :update
 user_path  DELETE  /users/:id       HelloPhoenix.UserController :delete
 ```
-This is the standard matrix of HTTP verbs, paths and controller actions. Let's look at them individually, in a slightly different order.
+
+Of course, the name of your project will replace `HelloPhoenix`.
+
+This is the standard matrix of HTTP verbs, paths, and controller actions. Let's look at them individually, in a slightly different order.
 
 - A GET request to `/users` will invoke the `index` action to show all the users.
-- A GET request to `/users/:id` will invoke the `show` action with an id to show an individual user identified by that id.
+- A GET request to `/users/:id` will invoke the `show` action with an id to show an individual user identified by that ID.
 - A GET request to `/users/new` will invoke the `new` action to present a form for creating a new user.
 - A POST request to `/users` will invoke the `create` action to save a new user to the data store.
-- A GET request to `/users/:id/edit` will invoke the `edit` action with an id to retrieve an individual user from the data store and present the information in a form for editing.
-- A PATCH request to `/users/:id` will invoke the `update` action with an id to save the updated user to the data store.
-- A PUT request to `/users/:id` will also invoke the `update` action with an id to save the updated user to the data store.
-- A DELETE request to `/users/:id` will invoke the `delete` action with an id to remove the individual user from the data store.
+- A GET request to `/users/:id/edit` will invoke the `edit` action with an ID to retrieve an individual user from the data store and present the information in a form for editing.
+- A PATCH request to `/users/:id` will invoke the `update` action with an ID to save the updated user to the data store.
+- A PUT request to `/users/:id` will also invoke the `update` action with an ID to save the updated user to the data store.
+- A DELETE request to `/users/:id` will invoke the `delete` action with an ID to remove the individual user from the data store.
 
 If we don't feel that we need all of these routes, we can be selective using the `:only` and `:except` options.
 
-Let's say we have a read-only posts resource. We could define it like this.
+Let's say we have a read-only posts resource. We could define it like this:
 
 ```elixir
 resources "posts", PostController, only: [:index, :show]
@@ -171,7 +174,7 @@ iex> HelloPhoenix.Router.Helpers.page_path(HelloPhoenix.Endpoint, :index)
 "/"
 ```
 
-This is significant because we can use the `page_path` function in a template to link to the root of our application. Note: If that function invocation seems uncomfortably long, there is a solution. By including `import HelloPhoenix.Router.Helpers` in our main application view.
+This is significant because we can use the `page_path` function in a template to link to the root of our application. Note: If that function invocation seems uncomfortably long, there is a solution, including `import HelloPhoenix.Router.Helpers` in our main application view.
 
 ```html
 <a href="<%= page_path(@conn, :index) %>">To the Welcome Page!</a>
@@ -182,7 +185,7 @@ This pays off tremendously if we should ever have to change the path of our rout
 
 ### More on Path Helpers
 
-When we ran the `phoenix.routes` task for our user resource, it listed the `user_path` as the path helper function for each line of output. Here is what that translates to for each action.
+When we ran the `phoenix.routes` task for our user resource, it listed the `user_path` as the path helper function for each line of output. Here is what that translates to for each action:
 
 ```elixir
 iex> import HelloPhoenix.Router.Helpers
@@ -224,18 +227,18 @@ iex(3)> user_url(Endpoint, :index)
 ```
 Application endpoints will have their own guide soon. For now, think of them as the entity that handles requests just up to the point where the router takes over. That includes starting the app/server, applying configuration, and applying the plugs common to all requests.
 
-The `_url` functions will get the host, port, proxy port and ssl information needed to construct the full url from the configuration parameters set for each environment. We'll talk about configuration in more detail in its own guide. For now, you can take a look at `/config/dev.exs` file in your own project to see those values.
+The `_url` functions will get the host, port, proxy port, and SSL information needed to construct the full URL from the configuration parameters set for each environment. We'll talk about configuration in more detail in its own guide. For now, you can take a look at `/config/dev.exs` file in your own project to see those values.
 
 ### Nested Resources
 
-It is also possible to nest resources in a Phoenix router. Let's say we also have a posts resource which has a one to many relationship with users. That is to say, a user can create many posts, and an individual post belongs to only one user. We can represent that by adding a nested route in `web/router.ex` like this.
+It is also possible to nest resources in a Phoenix router. Let's say we also have a `posts` resource which has a one to many relationship with `users`. That is to say, a user can create many posts, and an individual post belongs to only one user. We can represent that by adding a nested route in `web/router.ex` like this:
 
 ```elixir
 resources "users", UserController do
   resources "posts", PostController
 end
 ```
-When we run `$ mix phoenix.routes` now, in addition to the routes we saw for users above, we get the following set of routes:
+When we run `$ mix phoenix.routes` now, in addition to the routes we saw for `users` above, we get the following set of routes:
 
 ```elixir
 . . .
@@ -249,9 +252,9 @@ user_post_path  PATCH   users/:user_id/posts/:id HelloPhoenix.PostController :up
 user_post_path  DELETE  users/:user_id/posts/:id HelloPhoenix.PostController :delete
 ```
 
-We see that each of these routes scopes the posts to a user id. For the first one, we will invoke the `PostController` `index` action, but we will pass in a `user_id`. This implies that we would display all the posts for that individual user only. The same scoping applies for all these routes.
+We see that each of these routes scopes the posts to a user ID. For the first one, we will invoke the `PostController` `index` action, but we will pass in a `user_id`. This implies that we would display all the posts for that individual user only. The same scoping applies for all these routes.
 
-When calling path helper functions for nested routes, we will need to pass the ids in the order they came in the route definition. For the following `show` route, `42` is the `user_id`, and `17` is the `post_id`. Let's remember to alias our `HelloPhoenix.Endpoint` before we begin.
+When calling path helper functions for nested routes, we will need to pass the IDs in the order they came in the route definition. For the following `show` route, `42` is the `user_id`, and `17` is the `post_id`. Let's remember to alias our `HelloPhoenix.Endpoint` before we begin.
 
 ```elixir
 iex> alias HelloPhoenix.Endpoint
@@ -259,7 +262,7 @@ iex> HelloPhoenix.Router.Helpers.user_post_path(Endpoint, :show, 42, 17)
 "/users/42/posts/17"
 ```
 
-Again, if we add a key value pair to the end of the function call, it is added to the query string.
+Again, if we add a key/value pair to the end of the function call, it is added to the query string.
 
 ```elixir
 iex> HelloPhoenix.Router.Helpers.user_post_path(Endpoint, :index, 42, active: true)
@@ -738,7 +741,7 @@ defmodule HelloPhoenix.Router do
 
     resources "posts", PostController
   end
-  
+
   scope "/reviews", HelloPhoenix do
     pipe_through [:browser, :review_checks]
 
