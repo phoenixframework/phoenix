@@ -77,7 +77,7 @@ The route for our "Welcome to Phoenix!" page from the previous Up And Running Gu
 ```elixir
 get "/", PageController, :index
 ```
-Let's digest what this route is telling us. Visiting [http://localhost:4000/](http://localhost:4000/) issues an http GET request to the root path. All requests like this will be handled by the `index` function in the `HelloPhoenix.PageController` module defined in `web/controllers/page_controller.ex`.
+Let's digest what this route is telling us. Visiting [http://localhost:4000/](http://localhost:4000/) issues an HTTP GET request to the root path. All requests like this will be handled by the `index` function in the `HelloPhoenix.PageController` module defined in `web/controllers/page_controller.ex`.
 
 The page we are going to build will simply say "Hello World, from Phoenix!" when we point our browser to [http://localhost:4000/hello](http://localhost:4000/hello).
 
