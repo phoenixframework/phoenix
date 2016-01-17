@@ -56,7 +56,7 @@ Now we need to update our `mix.exs` file to have all production dependencies lis
 ```elixir
   def application do
     [mod: {HelloPhoenix, []},
-     applications: [:phoenix, :cowboy, :logger, :postgrex,
+     applications: [:phoenix, :cowboy, :logger, :postgrex, :gettext,
                     :phoenix_ecto, :phoenix_html]]
   end
 ```
