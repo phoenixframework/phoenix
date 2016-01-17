@@ -1,6 +1,5 @@
 Our task for this guide is to add two new pages to our Phoenix application. One will be a purely static page, and the other will take part of the path from the url as input and pass it through to a template for display. Along the way, we will gain familiarity with the basic components of a Phoenix application: the router, controllers, views and templates.
 
-
 When Phoenix generates a new application for us, it builds a top level directory structure like this.
 
 ```text
@@ -34,7 +33,7 @@ Most of our work in this guide will be in the `web` directory, which looks like 
 └── web.ex
 ```
 
-All of the files which are currently in the controllers, templates and views directories are there to create the "Welcome to Phoenix!" page we saw in the last guide. We will see how we can re-use some of that code shortly.
+All of the files which are currently in the controllers, templates and views directories are there to create the "Welcome to Phoenix!" page we saw in the last guide. We will see how we can re-use some of that code shortly. By convention, in the development environment, anything in the `web` directory will be automatically recompiled when there is a new web request.
 
 All of our application's static assets live in `priv/static` in the directory appropriate for each type of file - css, images or js. We place assets that require a build phase into `web/static`, and the source files are built into their respective `app.js` / `app.css` bundles within `priv/static`. We won't be making any changes here for now, but it is good to know where to look for future reference.
 
@@ -65,6 +64,9 @@ lib
 │   └── repo.ex
 └── hello_phoenix.ex
 ```
+
+Unlike the `web` directory directory, files inside of `lib` won't be recompiled when there is a new web request. This is intentional! The distinction between `web` and `lib` provides a convention for the different ways that we handle state inside of our application. The 'web' directory contains anything whose state lasts for the duration of a web request. The `lib` directory contains anything both shared modules and anything that needs to manage state outside of the duration of a web request.
+
 Enough prep, let's get on with our first new Phoenix page!
 
 ### A New Route
