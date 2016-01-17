@@ -115,7 +115,7 @@ channel.join()
 export default socket
 ```
 
-After that, we need to make sure `web/static/socket.js` gets imported into our application javascript file. To do that, uncomment the last line in `web/static/js/app.js`.
+After that, we need to make sure `web/static/js/socket.js` gets imported into our application javascript file. To do that, uncomment the last line in `web/static/js/app.js`.
 
 ```javascript
 ...
