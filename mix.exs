@@ -40,7 +40,7 @@ defmodule Phoenix.Mixfile do
   defp deps do
     [{:cowboy, "~> 1.0", optional: true},
      {:plug, "~> 1.0"},
-     {:poison, "~> 1.3"},
+     {:poison, "~> 1.5 or ~> 2.0"},
      {:gettext, "~> 0.8", only: :test},
 
      # Docs dependencies
