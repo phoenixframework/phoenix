@@ -4,7 +4,7 @@
 ## --merge` or `mix gettext.merge` to merge POT files into PO files.
 msgid ""
 msgstr ""
-"Language: en\n"
+"Language: en\n"<%= if ecto do %>
 
 ## From Ecto.Changeset.cast/4
 msgid "can't be blank"
@@ -96,4 +96,4 @@ msgstr[1] ""
 msgid "must be equal to %{count}"
 msgid_plural "must be equal to %{count}"
 msgstr[0] ""
-msgstr[1] ""
+msgstr[1] ""<% end %>

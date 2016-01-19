@@ -3,6 +3,7 @@
 ## translations that can't be statically extracted. Run `mix
 ## gettext.extract` to bring this file up to date. Leave `msgstr`s empty as
 ## changing them here as no effect; edit them in PO (`.po`) files instead.
+<%= if ecto do %>
 ## From Ecto.Changeset.cast/4
 msgid "can't be blank"
 msgstr ""
@@ -93,4 +94,4 @@ msgstr[1] ""
 msgid "must be equal to %{count}"
 msgid_plural "must be equal to %{count}"
 msgstr[0] ""
-msgstr[1] ""
+msgstr[1] ""<% end %>
