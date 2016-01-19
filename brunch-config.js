@@ -4,8 +4,13 @@ exports.config = {
 
   modules: {
     definition: false,
+    // The wrapper for browsers in a way that:
+    //
+    // 1. Phoenix.Socket, Phoenix.Channel and so on are available
+    // 2. the exports variable does not leak
+    // 3. the Socket, Channel variables and so on do not leak
     wrapper: function(path, code){
-      return "if(typeof(exports) === \"undefined\" && !window.Phoenix){ window.Phoenix = {}; var exports = window.Phoenix; }\n\n(function(){\n" + code + "\n})();\n";
+      return "(function(){\nif(typeof(exports) === \"undefined\" && !window.Phoenix){ window.Phoenix = {}; var exports = window.Phoenix; }\n" + code + "\n})();\n";
     }
   },
 
