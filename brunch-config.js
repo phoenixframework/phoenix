@@ -10,7 +10,7 @@ exports.config = {
     // 2. the exports variable does not leak
     // 3. the Socket, Channel variables and so on do not leak
     wrapper: function(path, code){
-      return "(function(){\nif(typeof(exports) === \"undefined\" && !window.Phoenix){ window.Phoenix = {}; var exports = window.Phoenix; }\n" + code + "\n})();\n";
+      return "(function(exports){\n" + code + "\n})(typeof(exports) === \"undefined\" ? window.Phoenix = window.Phoenix || {} : exports);\n";
     }
   },
 

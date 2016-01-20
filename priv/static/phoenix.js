@@ -1,5 +1,4 @@
-(function(){
-if(typeof(exports) === "undefined" && !window.Phoenix){ window.Phoenix = {}; var exports = window.Phoenix; }
+(function(exports){
 "use strict";
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
@@ -1024,4 +1023,4 @@ var Timer = function () {
 }();
 
 
-})();
+})(typeof(exports) === "undefined" ? window.Phoenix = window.Phoenix || {} : exports);
