@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.2.0-dev
+
 ## 1.1.3 (2016-1-20)
 
 * Enhancements
