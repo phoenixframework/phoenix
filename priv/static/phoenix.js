@@ -281,7 +281,7 @@ var Channel = exports.Channel = function () {
     this.onError(function (reason) {
       _this2.socket.log("channel", "error " + _this2.topic, reason);
       _this2.state = CHANNEL_STATES.errored;
-      _this2.rejoinTimer.setTimeout();
+      _this2.rejoinTimer.scheduleTimeout();
     });
     this.joinPush.receive("timeout", function () {
       if (_this2.state !== CHANNEL_STATES.joining) {
@@ -290,7 +290,7 @@ var Channel = exports.Channel = function () {
 
       _this2.socket.log("channel", "timeout " + _this2.topic, _this2.joinPush.timeout);
       _this2.state = CHANNEL_STATES.errored;
-      _this2.rejoinTimer.setTimeout();
+      _this2.rejoinTimer.scheduleTimeout();
     });
     this.on(CHANNEL_EVENTS.reply, function (payload, ref) {
       _this2.trigger(_this2.replyEventName(ref), payload);
@@ -300,7 +300,7 @@ var Channel = exports.Channel = function () {
   _createClass(Channel, [{
     key: "rejoinUntilConnected",
     value: function rejoinUntilConnected() {
-      this.rejoinTimer.setTimeout();
+      this.rejoinTimer.scheduleTimeout();
       if (this.socket.isConnected()) {
         this.rejoin();
       }
@@ -633,7 +633,7 @@ var Socket = exports.Socket = function () {
       this.log("transport", "close", event);
       this.triggerChanError();
       clearInterval(this.heartbeatTimer);
-      this.reconnectTimer.setTimeout();
+      this.reconnectTimer.scheduleTimeout();
       this.stateChangeCallbacks.close.forEach(function (callback) {
         return callback(event);
       });
@@ -981,10 +981,10 @@ Ajax.states = { complete: 4 };
 //    let reconnectTimer = new Timer(() => this.connect(), function(tries){
 //      return [1000, 5000, 10000][tries - 1] || 10000
 //    })
-//    reconnectTimer.setTimeout() // fires after 1000
-//    reconnectTimer.setTimeout() // fires after 5000
+//    reconnectTimer.scheduleTimeout() // fires after 1000
+//    reconnectTimer.scheduleTimeout() // fires after 5000
 //    reconnectTimer.reset()
-//    reconnectTimer.setTimeout() // fires after 1000
+//    reconnectTimer.scheduleTimeout() // fires after 1000
 //
 
 var Timer = function () {
@@ -1004,16 +1004,16 @@ var Timer = function () {
       clearTimeout(this.timer);
     }
 
-    // Cancels any previous setTimeout and schedules callback
+    // Cancels any previous scheduleTimeout and schedules callback
 
   }, {
-    key: "setTimeout",
-    value: function setTimeout() {
+    key: "scheduleTimeout",
+    value: function scheduleTimeout() {
       var _this12 = this;
 
       clearTimeout(this.timer);
 
-      this.timer = window.setTimeout(function () {
+      this.timer = setTimeout(function () {
         _this12.tries = _this12.tries + 1;
         _this12.callback();
       }, this.timerCalc(this.tries + 1));

@@ -228,14 +228,14 @@ export class Channel {
     this.onError( reason => {
       this.socket.log("channel", `error ${this.topic}`, reason)
       this.state = CHANNEL_STATES.errored
-      this.rejoinTimer.setTimeout()
+      this.rejoinTimer.scheduleTimeout()
     })
     this.joinPush.receive("timeout", () => {
       if(this.state !== CHANNEL_STATES.joining){ return }
 
       this.socket.log("channel", `timeout ${this.topic}`, this.joinPush.timeout)
       this.state = CHANNEL_STATES.errored
-      this.rejoinTimer.setTimeout()
+      this.rejoinTimer.scheduleTimeout()
     })
     this.on(CHANNEL_EVENTS.reply, (payload, ref) => {
       this.trigger(this.replyEventName(ref), payload)
@@ -243,7 +243,7 @@ export class Channel {
   }
 
   rejoinUntilConnected(){
-    this.rejoinTimer.setTimeout()
+    this.rejoinTimer.scheduleTimeout()
     if(this.socket.isConnected()){
       this.rejoin()
     }
@@ -452,7 +452,7 @@ export class Socket {
     this.log("transport", "close", event)
     this.triggerChanError()
     clearInterval(this.heartbeatTimer)
-    this.reconnectTimer.setTimeout()
+    this.reconnectTimer.scheduleTimeout()
     this.stateChangeCallbacks.close.forEach( callback => callback(event) )
   }
 
@@ -700,10 +700,10 @@ Ajax.states = {complete: 4}
 //    let reconnectTimer = new Timer(() => this.connect(), function(tries){
 //      return [1000, 5000, 10000][tries - 1] || 10000
 //    })
-//    reconnectTimer.setTimeout() // fires after 1000
-//    reconnectTimer.setTimeout() // fires after 5000
+//    reconnectTimer.scheduleTimeout() // fires after 1000
+//    reconnectTimer.scheduleTimeout() // fires after 5000
 //    reconnectTimer.reset()
-//    reconnectTimer.setTimeout() // fires after 1000
+//    reconnectTimer.scheduleTimeout() // fires after 1000
 //
 class Timer {
   constructor(callback, timerCalc){
@@ -718,11 +718,11 @@ class Timer {
     clearTimeout(this.timer)
   }
 
-  // Cancels any previous setTimeout and schedules callback
-  setTimeout(){
+  // Cancels any previous scheduleTimeout and schedules callback
+  scheduleTimeout(){
     clearTimeout(this.timer)
 
-    this.timer = window.setTimeout(() => {
+    this.timer = setTimeout(() => {
       this.tries = this.tries + 1
       this.callback()
     }, this.timerCalc(this.tries + 1))
