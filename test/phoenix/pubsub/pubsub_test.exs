@@ -18,7 +18,7 @@ defmodule Phoenix.PubSub.PubSubTest do
     :ok
   end
 
-  def broadcast(error, _, _, _) do
+  def broadcast(error, _, _, _, _) do
     {:error, error}
   end
 

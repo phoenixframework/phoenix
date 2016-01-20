@@ -7,11 +7,15 @@ defmodule Phoenix.PubSub.PG2 do
   To use it as your PubSub adapter, simply add it to your Endpoint's config:
 
       config :my_app, MyApp.Endpoint,
-        pubsub: [adapter: Phoenix.PubSub.PG2]
+        pubsub: [name: MyApp.PubSub,
+                 adapter: Phoenix.PubSub.PG2]
 
   ## Options
 
-    * `:name` - The name to register the PubSub processes, ie: `MyApp.PubSub`
+    * `:name` - The registered name and optional node name to for the PubSub
+      processes, for example: `MyApp.PubSub`, `{MyApp.PubSub, :node@host}`.
+      When only a server name is provided, the node name defaults to `node()`.
+
     * `:pool_size` - Both the size of the local pubsub server pool and subscriber
       shard size. Defaults `1`. A single pool is often enough for most use-cases,
       but for high subscriber counts on a single topic or greater than 1M
