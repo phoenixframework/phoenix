@@ -722,7 +722,7 @@ class Timer {
   setTimeout(){
     clearTimeout(this.timer)
 
-    this.timer = setTimeout(() => {
+    this.timer = window.setTimeout(() => {
       this.tries = this.tries + 1
       this.callback()
     }, this.timerCalc(this.tries + 1))

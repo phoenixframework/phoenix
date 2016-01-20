@@ -1008,26 +1008,16 @@ var Timer = function () {
 
   }, {
     key: "setTimeout",
-    value: function (_setTimeout) {
-      function setTimeout() {
-        return _setTimeout.apply(this, arguments);
-      }
-
-      setTimeout.toString = function () {
-        return _setTimeout.toString();
-      };
-
-      return setTimeout;
-    }(function () {
+    value: function setTimeout() {
       var _this12 = this;
 
       clearTimeout(this.timer);
 
-      this.timer = setTimeout(function () {
+      this.timer = window.setTimeout(function () {
         _this12.tries = _this12.tries + 1;
         _this12.callback();
       }, this.timerCalc(this.tries + 1));
-    })
+    }
   }]);
 
   return Timer;
