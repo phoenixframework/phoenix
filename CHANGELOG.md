@@ -1,6 +1,14 @@
 # Changelog
 
-## 1.1.3-dev
+## 1.1.3 (2016-1-20)
+
+* Enhancements
+  * [phoenix.gen] Support `--binary-id` option when generating scaffold
+  * [phoenix.new] Don't include Ecto gettext translations if `--no-ecto` is passed
+
+* JavaScript client bug fixes
+  * Ensure exports variable does not leak
+  * Fix `setTimeout` scoping issue for Babel
 
 ## 1.1.2 (2015-1-8)
 
