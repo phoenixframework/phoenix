@@ -67,11 +67,11 @@ defmodule Phoenix.TemplateTest do
 
   test "render eex templates sanitizes against xss by default" do
     assert View.render("show.html", message: "") ==
-           {:safe, [[[["" | "<div>Show! "] | ""] | "</div>\n"] | "\n"]}
+           {:safe, [[["" | "<div>Show! "] | ""] | "</div>\n"]}
 
     assert View.render("show.html", message: "<script>alert('xss');</script>") ==
-           {:safe, [[[["" | "<div>Show! "] | "&lt;script&gt;alert(&#39;xss&#39;);&lt;/script&gt;"] |
-                   "</div>\n"] | "\n"]}
+           {:safe, [[["" | "<div>Show! "] | "&lt;script&gt;alert(&#39;xss&#39;);&lt;/script&gt;"]
+                    | "</div>\n"]}
   end
 
   test "render eex templates allows raw data to be injected" do
@@ -81,7 +81,7 @@ defmodule Phoenix.TemplateTest do
 
   test "compiles templates from path" do
     assert View.render("show.html", message: "hello!") ==
-           {:safe, [[[["" | "<div>Show! "] | "hello!"] | "</div>\n"] | "\n"]}
+           {:safe, [[["" | "<div>Show! "] | "hello!"] | "</div>\n"]}
   end
 
   test "compiler adds catch-all render/2 that raises UndefinedError" do

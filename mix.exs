@@ -49,7 +49,7 @@ defmodule Phoenix.Mixfile do
      {:inch_ex, "~> 0.2", only: :docs},
 
      # Test dependencies
-     {:phoenix_html, "~> 1.2", only: :test},
+     {:phoenix_html, "~> 2.4", only: :test},
      {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test}]
   end
 

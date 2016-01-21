@@ -16,7 +16,7 @@ defmodule Phoenix.ViewTest do
 
   test "renders views defined on root" do
     assert render(MyApp.View, "show.html", message: "Hello world") ==
-           {:safe, [[[["" | "<div>Show! "] | "Hello world"] | "</div>\n"] | "\n"]}
+           {:safe, [[["" | "<div>Show! "] | "Hello world"] | "</div>\n"]}
   end
 
   test "renders views without assigns" do
@@ -38,7 +38,7 @@ defmodule Phoenix.ViewTest do
 
   test "renders subviews with helpers" do
     assert render(MyApp.UserView, "index.html", title: "Hello world") ==
-           {:safe, [["" | "Hello world"] | "\n"]}
+           {:safe, ["" | "Hello world"]}
 
     assert render(MyApp.UserView, "show.json", []) ==
            %{foo: "bar"}
@@ -60,8 +60,8 @@ defmodule Phoenix.ViewTest do
     )
 
     assert html ==
-           {:safe, [[[[["" | "<html>\n  <title>"] | "Test"] | "</title>\n  "],
-                   [[["" | "<div>Show! "] | "Hello world"] | "</div>\n"] | "\n"] | "\n</html>\n"]}
+           {:safe, [[[[["" | "<html>\n  <title>"] | "Test"] | "</title>\n"],
+                      [["" | "<div>Show! "] | "Hello world"] | "</div>\n"] | "</html>\n"]}
   end
 
   test "converts assigns to maps and removes :layout" do
@@ -71,19 +71,18 @@ defmodule Phoenix.ViewTest do
     )
 
     assert html ==
-           [[[[["" | "<html>\n  <title>"] | "Test"] | "</title>\n  "] | "EDIT - Test"] |
-                "\n</html>\n"]
+           [[[[["" | "<html>\n  <title>"] | "Test"] | "</title>\n"] | "EDIT - Test"] | "</html>\n"]
   end
 
   test "renders views to iodata/string using encoders" do
     assert render_to_iodata(MyApp.UserView, "index.html", title: "Hello world") ==
-           [["" | "Hello world"] | "\n"]
+           ["" | "Hello world"]
 
     assert render_to_iodata(MyApp.UserView, "show.json", []) ==
            [123, [[34, ["foo"], 34], 58, [34, ["bar"], 34]], 125]
 
     assert render_to_string(MyApp.UserView, "index.html", title: "Hello world") ==
-           "Hello world\n"
+           "Hello world"
 
     assert render_to_string(MyApp.UserView, "show.json", []) ==
            "{\"foo\":\"bar\"}"
@@ -97,8 +96,8 @@ defmodule Phoenix.ViewTest do
     )
 
     assert html ==
-           [[[[["" | "<html>\n  <title>"] | "Test"] | "</title>\n  "],
-                [[["" | "<div>Show! "] | "Hello world"] | "</div>\n"] | "\n"] | "\n</html>\n"]
+           [[[[["" | "<html>\n  <title>"] | "Test"] | "</title>\n"],
+              [["" | "<div>Show! "] | "Hello world"] | "</div>\n"] | "</html>\n"]
 
     html = render_to_string(MyApp.View, "show.html",
       title: "Test",
@@ -107,7 +106,7 @@ defmodule Phoenix.ViewTest do
     )
 
     assert html ==
-           "<html>\n  <title>Test</title>\n  <div>Show! Hello world</div>\n\n\n</html>\n"
+           "<html>\n  <title>Test</title>\n<div>Show! Hello world</div>\n</html>\n"
   end
 
   ## render_many
@@ -154,7 +153,7 @@ defmodule Phoenix.ViewTest do
 
   test "renders_existing/3 renders template if it exists" do
     assert render_existing(MyApp.UserView, "index.html", title: "Test") ==
-      {:safe, [["" | "Test"] | "\n"]}
+           {:safe, ["" | "Test"]}
   end
 
   test "renders_existing/3 returns nil if template does not exist" do
