@@ -33,10 +33,18 @@ defmodule Phoenix.Integration.HTTPClient do
       {String.to_char_list(k), String.to_char_list(v)}
     end
 
-    case method do
-      :get -> :httpc.request(:get, {url, header}, [], body_format: :binary)
-      _    -> :httpc.request(method, {url, header, ct_type, body}, [], body_format: :binary)
-    end |> format_resp
+    # Generate a random profile per request to avoid reuse
+    profile = :crypto.rand_bytes(4) |> Base.encode16 |> String.to_atom
+    {:ok, pid} = :inets.start(:httpc, profile: profile)
+
+    resp =
+      case method do
+        :get -> :httpc.request(:get, {url, header}, [], [body_format: :binary], pid)
+        _    -> :httpc.request(method, {url, header, ct_type, body}, [], [body_format: :binary], pid)
+      end
+
+    :inets.stop(:httpc, pid)
+    format_resp(resp)
   end
 
   defp format_resp({:ok, {{_http, status, _status_phrase}, headers, body}}) do
