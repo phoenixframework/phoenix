@@ -73,11 +73,6 @@ defimpl Phoenix.Param, for: Atom do
 end
 
 defimpl Phoenix.Param, for: Map do
-  # TODO: Remove this module once we depend only on Elixir 1.1
-  defmacro __deriving__(module, struct, options) do
-    Phoenix.Param.Any.deriving(module, struct, options)
-  end
-
   def to_param(map) do
     raise ArgumentError,
       "maps cannot be converted to_param. A struct was expected, got: #{inspect map}"
@@ -113,7 +108,7 @@ defimpl Phoenix.Param, for: Any do
   end
 
   def to_param(%{id: nil}) do
-    raise ArgumentError, "cannot convert map/struct to param, key :id contains a nil value"
+    raise ArgumentError, "cannot convert struct to param, key :id contains a nil value"
   end
   def to_param(%{id: id}) when is_integer(id), do: Integer.to_string(id)
   def to_param(%{id: id}) when is_binary(id), do: id

@@ -17,7 +17,7 @@ defmodule Phoenix.PubSub.PG2Server do
         Enum.each(pids, fn
           pid when is_pid(pid) and node(pid) == node() ->
             Local.broadcast(server_name, pool_size, from_pid, topic, msg)
-          {name, dest_node} when dest_node == node() and name == server_name ->
+          {^server_name, dest_node} when dest_node == node() ->
             Local.broadcast(server_name, pool_size, from_pid, topic, msg)
           pid_or_tuple ->
             send(pid_or_tuple, {:forward_to_local, from_pid, pool_size, topic, msg})

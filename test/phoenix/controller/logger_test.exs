@@ -1,8 +1,7 @@
 defmodule Phoenix.Controller.LoggerTest do
-  # This test case needs to be sync because we rely on
-  # log capture which is global.
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   use RouterHelper
+  import ExUnit.CaptureLog
 
   defmodule LoggerController do
     use Phoenix.Controller

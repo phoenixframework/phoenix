@@ -6,6 +6,7 @@ defmodule Phoenix.Template.EExEngine do
   @behaviour Phoenix.Template.Engine
 
   def compile(path, name) do
+    # TODO: Pass trim: true
     EEx.compile_file(path, engine: engine_for(name), line: 1)
   end
 

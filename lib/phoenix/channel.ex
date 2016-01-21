@@ -171,7 +171,6 @@ defmodule Phoenix.Channel do
   is invoked. This practice is not encouraged though.
   """
 
-  use Behaviour
   alias Phoenix.Socket
   alias Phoenix.Channel.Server
 
@@ -180,29 +179,28 @@ defmodule Phoenix.Channel do
                        topic :: binary, ref :: binary}
 
 
-  defcallback code_change(old_vsn, Socket.t, extra :: term) ::
+  @callback code_change(old_vsn, Socket.t, extra :: term) ::
               {:ok, Socket.t} |
               {:error, reason :: term} when old_vsn: term | {:down, term}
 
-  defcallback join(topic :: binary, auth_msg :: map, Socket.t) ::
+  @callback join(topic :: binary, auth_msg :: map, Socket.t) ::
               {:ok, Socket.t} |
               {:ok, map, Socket.t} |
               {:error, map}
 
-  defcallback handle_in(event :: String.t, msg :: map, Socket.t) ::
+  @callback handle_in(event :: String.t, msg :: map, Socket.t) ::
               {:noreply, Socket.t} |
               {:reply, reply, Socket.t} |
               {:stop, reason :: term, Socket.t} |
               {:stop, reason :: term, reply, Socket.t}
 
-  defcallback handle_info(term, Socket.t) ::
+  @callback handle_info(term, Socket.t) ::
               {:noreply, Socket.t} |
               {:stop, reason :: term, Socket.t}
 
-  defcallback terminate(msg :: map, Socket.t) ::
+  @callback terminate(msg :: map, Socket.t) ::
               {:shutdown, :left | :closed} |
               term
-
 
   defmacro __using__(_) do
     quote do

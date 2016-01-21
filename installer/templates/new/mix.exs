@@ -3,12 +3,12 @@ defmodule <%= application_module %>.Mixfile do
 
   def project do
     [app: :<%= application_name %>,
-     version: "0.0.1",<%= if in_umbrella do %><%= if Version.match? System.version, "~> 1.2-rc" do %>
+     version: "0.0.1",<%= if in_umbrella do %>
      build_path: "../../_build",
-     config_path: "../../config/config.exs",<% end %>
+     config_path: "../../config/config.exs",
      deps_path: "../../deps",
      lockfile: "../../mix.lock",<% end %>
-     elixir: "~> 1.0",
+     elixir: "~> 1.2",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,

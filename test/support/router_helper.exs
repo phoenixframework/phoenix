@@ -8,7 +8,6 @@ defmodule RouterHelper do
   """
 
   import Plug.Test
-  import ExUnit.CaptureIO
 
   @session Plug.Session.init(
     store: :cookie,
@@ -42,13 +41,5 @@ defmodule RouterHelper do
   def action(controller, verb, action, params \\ nil) do
     conn = conn(verb, "/", params) |> Plug.Conn.fetch_query_params
     controller.call(conn, controller.init(action))
-  end
-
-  # TODO: Use ExUnit capture_log on Elixir v1.1 forward
-  def capture_log(fun) do
-    capture_io(:user, fn ->
-      fun.()
-      Logger.flush()
-    end)
   end
 end

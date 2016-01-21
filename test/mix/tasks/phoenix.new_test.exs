@@ -68,7 +68,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       # We can run tests too, starting the app.
       assert capture_io(fn ->
-        capture_log(fn ->
+        capture_io(:user, fn ->
           Mix.Task.run("test", ["--no-start", "--no-compile"])
         end)
       end) =~ ~r"4 tests, 0 failures"

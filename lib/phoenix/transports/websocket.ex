@@ -97,8 +97,8 @@ defmodule Phoenix.Transports.WebSocket do
 
 
     {:ok, %{socket: socket,
-            channels: HashDict.new,
-            channels_inverse: HashDict.new,
+            channels: %{},
+            channels_inverse: %{},
             serializer: serializer}, timeout}
   end
 
@@ -120,7 +120,7 @@ defmodule Phoenix.Transports.WebSocket do
 
   @doc false
   def ws_info({:EXIT, channel_pid, reason}, state) do
-    case HashDict.get(state.channels_inverse, channel_pid) do
+    case Map.get(state.channels_inverse, channel_pid) do
       nil   -> {:ok, state}
       topic ->
         new_state = delete(state, topic, channel_pid)
@@ -154,13 +154,13 @@ defmodule Phoenix.Transports.WebSocket do
   end
 
   defp put(state, topic, channel_pid) do
-    %{state | channels: HashDict.put(state.channels, topic, channel_pid),
-              channels_inverse: HashDict.put(state.channels_inverse, channel_pid, topic)}
+    %{state | channels: Map.put(state.channels, topic, channel_pid),
+              channels_inverse: Map.put(state.channels_inverse, channel_pid, topic)}
   end
 
   defp delete(state, topic, channel_pid) do
-    %{state | channels: HashDict.delete(state.channels, topic),
-              channels_inverse: HashDict.delete(state.channels_inverse, channel_pid)}
+    %{state | channels: Map.delete(state.channels, topic),
+              channels_inverse: Map.delete(state.channels_inverse, channel_pid)}
   end
 
   defp encode_reply(reply, state) do

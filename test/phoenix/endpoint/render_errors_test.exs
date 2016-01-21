@@ -150,6 +150,7 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
     assert conn.resp_body == "500 in TEXT"
   end
 
+  @tag :capture_log
   test "exception page with invalid format" do
     conn =
       conn(:get, "/")

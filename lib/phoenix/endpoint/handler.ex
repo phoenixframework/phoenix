@@ -11,11 +11,10 @@ defmodule Phoenix.Endpoint.Handler do
 
   it has to return a child_spec.
   """
-  use Behaviour
 
   @doc """
   Provides the children specification to be passed
   to `Phoenix.Endpoint.Server` supervisor.
   """
-  defcallback child_spec(scheme :: atom, endpoint :: module, config :: Keyword.t) :: Supervisor.Spec.spec
+  @callback child_spec(scheme :: atom, endpoint :: module, config :: Keyword.t) :: Supervisor.Spec.spec
 end

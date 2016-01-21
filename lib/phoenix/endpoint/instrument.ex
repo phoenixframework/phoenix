@@ -47,7 +47,7 @@ defmodule Phoenix.Endpoint.Instrument do
       #     res0 = Inst0.my_event(:start, compile, runtime)
       #     ...
       #
-      #     start = current_time()
+      #     start = :erlang.monotonic_time(:micro_seconds)
       #     try do
       #       fun.()
       #     after
@@ -64,11 +64,11 @@ defmodule Phoenix.Endpoint.Instrument do
         def instrument(unquote(event), var!(compile), var!(runtime), fun)
             when is_map(var!(compile)) and is_map(var!(runtime)) and is_function(fun, 0) do
           unquote(Phoenix.Endpoint.Instrument.compile_start_callbacks(event, instrumenters))
-          start = current_time()
+          start = :erlang.monotonic_time(:micro_seconds)
           try do
             fun.()
           after
-            var!(diff) = time_diff(start, current_time())
+            var!(diff) = :erlang.monotonic_time(:micro_seconds) - start
             unquote(Phoenix.Endpoint.Instrument.compile_stop_callbacks(event, instrumenters))
           end
         end
@@ -78,18 +78,6 @@ defmodule Phoenix.Endpoint.Instrument do
       def instrument(event, compile, runtime, fun)
           when is_atom(event) and is_map(compile) and is_map(runtime) and is_function(fun, 0) do
         fun.()
-      end
-
-      # Let's define the current_time/0 and time_diff/2 functions based on the
-      # existence of :erlang.monotonic_time/1.
-      # TODO: remove this once Phoenix supports only Elixir 1.2.
-      @compile {:inline, current_time: 0, time_diff: 2}
-      if function_exported?(:erlang, :monotonic_time, 1) do
-        defp current_time, do: :erlang.monotonic_time(:micro_seconds)
-        defp time_diff(start, stop), do: stop - start
-      else
-        defp current_time, do: :os.timestamp()
-        defp time_diff(start, stop), do: :timer.now_diff(stop, start)
       end
     end
   end

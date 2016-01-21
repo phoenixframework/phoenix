@@ -12,7 +12,7 @@ defmodule Phoenix.Router.Scope do
   """
   def init(module) do
     Module.put_attribute(module, @stack, [%Scope{}])
-    Module.put_attribute(module, @pipes, HashSet.new)
+    Module.put_attribute(module, @pipes, MapSet.new)
   end
 
   @doc """
@@ -32,7 +32,7 @@ defmodule Phoenix.Router.Scope do
   Defines the given pipeline.
   """
   def pipeline(module, pipe) when is_atom(pipe) do
-    update_pipes module, &HashSet.put(&1, pipe)
+    update_pipes module, &MapSet.put(&1, pipe)
   end
 
   @doc """

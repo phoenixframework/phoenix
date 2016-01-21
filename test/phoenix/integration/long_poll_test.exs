@@ -1,9 +1,9 @@
 Code.require_file "../../support/http_client.exs", __DIR__
 
 defmodule Phoenix.Integration.LongPollTest do
+  # TODO: Make this test async
   use ExUnit.Case
-
-  import RouterHelper, only: [capture_log: 1]
+  import ExUnit.CaptureLog
 
   alias Phoenix.Integration.HTTPClient
   alias Phoenix.Transports.LongPoll
@@ -260,11 +260,13 @@ defmodule Phoenix.Integration.LongPollTest do
     assert channel
     Process.monitor(channel)
 
-    for shard <- 0..(@pool_size - 1) do
-      local_pubsub_server = Process.whereis(Local.local_name(__MODULE__, shard))
-      Process.monitor(local_pubsub_server)
-      Process.exit(local_pubsub_server, :kill)
-      assert_receive {:DOWN, _, :process, ^local_pubsub_server, :killed}
+    capture_log fn ->
+      for shard <- 0..(@pool_size - 1) do
+        local_pubsub_server = Process.whereis(Local.local_name(__MODULE__, shard))
+        Process.monitor(local_pubsub_server)
+        Process.exit(local_pubsub_server, :kill)
+        assert_receive {:DOWN, _, :process, ^local_pubsub_server, :killed}
+      end
     end
 
     resp = poll :post, "/ws", session, %{

@@ -147,13 +147,18 @@ defmodule Mix.Tasks.Phoenix.New do
   def run(argv) do
     {opts, argv, _} = OptionParser.parse(argv, switches: @switches)
 
+    unless Version.match? System.version, "~> 1.2" do
+      Mix.raise "Phoenix v#{@version} requires at least Elixir v1.2.\n " <>
+                "You have #{System.version}. Please update accordingly."
+    end
+
     case argv do
       [] ->
         Mix.Task.run "help", ["phoenix.new"]
       [path|_] ->
         app = opts[:app] || Path.basename(Path.expand(path))
         check_application_name!(app, !!opts[:app])
-        mod = opts[:module] || Mix.Utils.camelize(app)
+        mod = opts[:module] || Macro.camelize(app)
         check_module_name_validity!(mod)
         check_module_name_availability!(mod)
 
@@ -198,7 +203,7 @@ defmodule Mix.Tasks.Phoenix.New do
                adapter_module: adapter_module,
                adapter_config: adapter_config,
                hex?: Code.ensure_loaded?(Hex),
-               namespaced?: Mix.Utils.camelize(app) != mod]
+               namespaced?: Macro.camelize(app) != mod]
 
     copy_from path, binding, @new
 
@@ -352,12 +357,11 @@ defmodule Mix.Tasks.Phoenix.New do
   defp cmd(cmd) do
     Mix.shell.info [:green, "* running ", :reset, cmd]
 
-      # We use :os.cmd/1 because there is a bug in OTP
-      # where we cannot execute .cmd files on Windows.
-      # We could use Mix.shell.cmd/1 but that automatically
-      # outputs to the terminal and we don't want that.
-      :os.cmd(String.to_char_list(cmd))
-
+    # We use :os.cmd/1 because there is a bug in OTP
+    # where we cannot execute .cmd files on Windows.
+    # We could use Mix.shell.cmd/1 but that automatically
+    # outputs to the terminal and we don't want that.
+    :os.cmd(String.to_char_list(cmd))
   end
 
   defp check_application_name!(name, from_app_flag) do

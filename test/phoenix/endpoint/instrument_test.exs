@@ -1,5 +1,7 @@
 defmodule Phoenix.Endpoint.InstrumentTest do
+  # Cannot run async because of capture_log related assertions
   use ExUnit.Case
+  import ExUnit.CaptureLog
 
   @config [instrumenters: [__MODULE__.MyInstrumenter, __MODULE__.MyOtherInstrumenter]]
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
@@ -103,7 +105,7 @@ defmodule Phoenix.Endpoint.InstrumentTest do
   test "event callbacks that raise/throw" do
     import Endpoint
 
-    log = RouterHelper.capture_log fn ->
+    log = capture_log fn ->
       :ok = instrument :raising_event, fn ->
         send self(), :ok
       end

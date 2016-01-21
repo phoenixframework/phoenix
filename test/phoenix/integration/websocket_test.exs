@@ -1,9 +1,9 @@
 Code.require_file "../../support/websocket_client.exs", __DIR__
 
 defmodule Phoenix.Integration.WebSocketTest do
+  # TODO: Make this test async
   use ExUnit.Case
-
-  import RouterHelper, only: [capture_log: 1]
+  import ExUnit.CaptureLog
 
   alias Phoenix.Integration.WebsocketClient
   alias Phoenix.Socket.Message
