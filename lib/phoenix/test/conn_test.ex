@@ -14,21 +14,21 @@ defmodule Phoenix.ConnTest do
   the preferred way to test anything that your router dispatches
   to.
 
-      conn = get conn(), "/"
+      conn = get build_conn(), "/"
       assert conn.resp_body =~ "Welcome!"
 
-      conn = post conn(), "/login", [username: "john", password: "doe"]
+      conn = post build_conn(), "/login", [username: "john", password: "doe"]
       assert conn.resp_body =~ "Logged in!"
 
   As in your application, the connection is also the main abstraction
-  in testing. `conn()` returns a new connection and functions in this
+  in testing. `build_conn()` returns a new connection and functions in this
   module can be used to manipulate the connection before dispatching
   to the endpoint.
 
   For example, one could set the accepts header for json requests as
   follows:
 
-      conn()
+      build_conn()
       |> put_req_header("accept", "application/json")
       |> get("/")
 
@@ -46,7 +46,7 @@ defmodule Phoenix.ConnTest do
   For such cases, just pass an atom representing the action
   to dispatch:
 
-      conn = get conn(), :index
+      conn = get build_conn(), :index
       assert conn.resp_body =~ "Welcome!"
 
   ## Views testing
@@ -79,7 +79,7 @@ defmodule Phoenix.ConnTest do
   before the next dispatch:
 
       # No recycling as the connection is fresh
-      conn = get conn(), "/"
+      conn = get build_conn(), "/"
 
       # The connection is recycled, creating a new one behind the scenes
       conn = post conn, "/login"
@@ -108,9 +108,21 @@ defmodule Phoenix.ConnTest do
   @doc """
   Creates a connection to be used in upcoming requests.
   """
-  @spec conn() :: Conn.t
+  @spec build_conn() :: Conn.t
+  def build_conn() do
+    build_conn(:get, "/", nil)
+  end
+
+  @doc """
+  Deprecated version of build_conn/0. Use build_conn/0 instead
+  """
+  @spec build_conn() :: Conn.t
   def conn() do
-    conn(:get, "/", nil)
+    IO.write :stderr, """
+    warning: using conn/0 to build a connection is deprecated. Use build_conn/0 instead.
+    #{Exception.format_stacktrace}
+    """
+    build_conn()
   end
 
   @doc """
@@ -120,11 +132,23 @@ defmodule Phoenix.ConnTest do
   This is useful when a specific connection is required
   for testing a plug or a particular function.
   """
-  @spec conn() :: Conn.t
-  def conn(method, path, params_or_body \\ nil) do
+  @spec build_conn() :: Conn.t
+  def build_conn(method, path, params_or_body \\ nil) do
     Plug.Adapters.Test.Conn.conn(%Conn{}, method, path, params_or_body)
     |> Conn.put_private(:plug_skip_csrf_protection, true)
     |> Conn.put_private(:phoenix_recycled, true)
+  end
+
+  @doc """
+  Deprecated version of build_conn/3. Use build_conn/3 instead
+  """
+  @spec build_conn() :: Conn.t
+  def conn(method, path, params_or_body \\ nil) do
+    IO.write :stderr, """
+    warning: using conn/3 to build a connection is deprecated. Use build_conn/3 instead.
+    #{Exception.format_stacktrace}
+    """
+    build_conn(method, path, params_or_body)
   end
 
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
@@ -164,8 +188,8 @@ defmodule Phoenix.ConnTest do
   This function, as well as `get/3`, `post/3` and friends, accepts the
   request body or parameters as last argument:
 
-        get conn(), "/", some: "param"
-        get conn(), "/", "some=param&url=encoded"
+        get build_conn(), "/", some: "param"
+        get build_conn(), "/", "some=param&url=encoded"
 
   The allowed values are:
 
@@ -304,7 +328,7 @@ defmodule Phoenix.ConnTest do
 
   ## Examples
 
-      conn = get conn(), "/"
+      conn = get build_conn(), "/"
       assert response(conn, 200) =~ "hello world"
 
   """
@@ -424,7 +448,7 @@ defmodule Phoenix.ConnTest do
   """
   @spec recycle(Conn.t) :: Conn.t
   def recycle(conn) do
-    conn()
+    build_conn()
     |> Plug.Test.recycle_cookies(conn)
     |> copy_headers(conn.req_headers, ~w(accept))
   end
@@ -513,11 +537,11 @@ defmodule Phoenix.ConnTest do
   ## Examples
 
       assert_error_sent :not_found, fn ->
-        get conn(), "/users/not-found"
+        get build_conn(), "/users/not-found"
       end
 
       response = assert_error_sent 404, fn ->
-        get conn(), "/users/not-found"
+        get build_conn(), "/users/not-found"
       end
       assert {404, [_h | _t], "Page not found"} = response
   """
