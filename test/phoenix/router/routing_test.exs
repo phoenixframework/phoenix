@@ -2,6 +2,11 @@ defmodule Phoenix.Router.RoutingTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
+  defmodule StandardPlug do
+    def init(opts), do: opts
+    def call(conn, _), do: Plug.Conn.resp(conn, 200, "standard plug")
+  end
+
   defmodule UserController do
     use Phoenix.Controller
     def index(conn, _params), do: text(conn, "users index")
@@ -34,6 +39,8 @@ defmodule Phoenix.Router.RoutingTest do
     match :move, "/move", UserController, :move
 
     get "/users/:user_id/files/:id", UserController, :image
+    get "/standard", StandardPlug
+
     get "/*path", UserController, :not_found
   end
 
@@ -46,6 +53,12 @@ defmodule Phoenix.Router.RoutingTest do
     conn = call(Router, :get, "/")
     assert conn.status == 200
     assert conn.resp_body == "users index"
+  end
+
+  test "standard plugs" do
+    conn = call(Router, :get, "/standard")
+    assert conn.status == 200
+    assert conn.resp_body == "standard plug"
   end
 
   test "get to named param with dashes" do

@@ -2,6 +2,10 @@
 
 ## 1.2.0-dev
 
+* Enhancements
+  * [Router] Router macros now default to an empty list for `plug_opts`. This
+    allows any module satifying the plug behaviour to be used as a controller.
+
 ## 1.1.3 (2016-1-20)
 
 * Enhancements
