@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
   @phoenix Path.expand("../..", __DIR__)
   @version Mix.Project.config[:version]
-  @shortdoc "Create a new Phoenix v#{@version} application"
+  @shortdoc "Creates a new Phoenix v#{@version} application"
 
   # File mappings
 
