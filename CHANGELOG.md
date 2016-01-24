@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.4
+
+* Enhancements
+  * [phoenix.new] Update dependencies and solve problem where Mix may take too long to resolve deps
+  * [phoenix.new] Be more conservative regarding brunch dependencies
+  * [phoenix.new] Provide `local.phoenix` task
+
 ## 1.1.3 (2016-1-20)
 
 * Enhancements
