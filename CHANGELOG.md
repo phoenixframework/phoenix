@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.4
+## 1.1.4 (2016-1-25)
 
 * Enhancements
   * [phoenix.new] Update dependencies and solve problem where Mix may take too long to resolve deps
