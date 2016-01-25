@@ -21,8 +21,8 @@ defmodule Phoenix.DigesterTest do
     assert "css/app.css" in output_files
     assert "css/app.css.gz" in output_files
     assert "manifest.json" in output_files
-    assert Enum.any?(output_files, &(String.match?(&1, ~r/(phoenix-[a-fA-F\d]{32}.png)/)))
-    refute Enum.any?(output_files, &(String.match?(&1, ~r/(phoenix-[a-fA-F\d]{32}.png.gz)/)))
+    assert Enum.any?(output_files, &(String.match?(&1, ~r/(phoenix-[a-fA-F\d]{32}\.png)/)))
+    refute Enum.any?(output_files, &(String.match?(&1, ~r/(phoenix-[a-fA-F\d]{32}\.png\.gz)/)))
 
     json =
       Path.join(output_path, "manifest.json")
@@ -43,14 +43,14 @@ defmodule Phoenix.DigesterTest do
     assert "static/phoenix.png" in output_files
     refute "static/phoenix.png.gz" in output_files
     assert "manifest.json" in output_files
-    assert Enum.any?(output_files, &(String.match?(&1, ~r/(phoenix-[a-fA-F\d]{32}.png)/)))
-    refute Enum.any?(output_files, &(String.match?(&1, ~r/(phoenix-[a-fA-F\d]{32}.png.gz)/)))
+    assert Enum.any?(output_files, &(String.match?(&1, ~r/(phoenix-[a-fA-F\d]{32}\.png)/)))
+    refute Enum.any?(output_files, &(String.match?(&1, ~r/(phoenix-[a-fA-F\d]{32}\.png\.gz)/)))
 
     json =
       Path.join(output_path, "manifest.json")
       |> File.read!()
       |> Poison.decode!()
-    assert json["static/phoenix.png"] =~ ~r"static/phoenix-[a-fA-F\d]{32}.png"
+    assert json["static/phoenix.png"] =~ ~r"static/phoenix-[a-fA-F\d]{32}\.png"
   end
 
   test "doesn't duplicate files when digesting and compressing twice" do
@@ -86,10 +86,10 @@ defmodule Phoenix.DigesterTest do
       Path.join(output_path, digested_css_filename)
       |> File.read!()
 
-    refute digested_css =~ ~r"/phoenix.png"
-    refute digested_css =~ ~r"../images/relative.png"
-    assert digested_css =~ ~r"/phoenix-[a-fA-F\d]{32}.png"
-    assert digested_css =~ ~r"../images/relative-[a-fA-F\d]{32}.png"
+    refute digested_css =~ ~r"/phoenix\.png"
+    refute digested_css =~ ~r"\.\./images/relative\.png"
+    assert digested_css =~ ~r"/phoenix-[a-fA-F\d]{32}\.png\?vsn=d"
+    assert digested_css =~ ~r"\.\./images/relative-[a-fA-F\d]{32}\.png\?vsn=d"
 
     refute digested_css =~ ~r"http://www.phoenixframework.org/absolute-[a-fA-F\d]{32}.png"
     assert digested_css =~ ~r"http://www.phoenixframework.org/absolute.png"
@@ -106,10 +106,10 @@ defmodule Phoenix.DigesterTest do
       Path.join(output_path, "css/app.css")
       |> File.read!()
 
-    assert undigested_css =~ ~r"/phoenix.png"
-    assert undigested_css =~ ~r"../images/relative.png"
-    refute undigested_css =~ ~r"/phoenix-[a-fA-F\d]{32}.png"
-    refute undigested_css =~ ~r"../images/relative-[a-fA-F\d]{32}.png"
+    assert undigested_css =~ ~r"/phoenix\.png"
+    assert undigested_css =~ ~r"\.\./images/relative\.png"
+    refute undigested_css =~ ~r"/phoenix-[a-fA-F\d]{32}\.png"
+    refute undigested_css =~ ~r"\.\./images/relative-[a-fA-F\d]{32}\.png"
   end
 
   defp assets_files(path) do

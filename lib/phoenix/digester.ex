@@ -127,7 +127,10 @@ defmodule Phoenix.Digester do
   end
 
   defp digested_url("/" <> relative_path, _file, manifest) do
-    "/" <> Map.get(manifest, relative_path, relative_path)
+    case Map.fetch(manifest, relative_path) do
+      {:ok, digested_path} -> "/" <> digested_path <> "?vsn=d"
+      :error -> "/" <> relative_path
+    end
   end
 
   defp digested_url(url, file, manifest) do
@@ -144,6 +147,7 @@ defmodule Phoenix.Digester do
             url
             |> Path.dirname()
             |> Path.join(Path.basename(digested_path))
+            |> Kernel.<>("?vsn=d")
           :error -> url
         end
       _ -> url
