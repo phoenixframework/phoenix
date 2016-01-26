@@ -32,7 +32,7 @@ defmodule Phoenix.PubSub.PG2 do
   @doc false
   def init([server, opts]) do
     pool_size = Keyword.fetch!(opts, :pool_size)
-    dispatch_rules = [{:broadcast, Phoenix.PubSub.PG2Server, [server, pool_size]}]
+    dispatch_rules = [{:broadcast, Phoenix.PubSub.PG2Server, [opts[:fastlane], server, pool_size]}]
 
     children = [
       supervisor(Phoenix.PubSub.LocalSupervisor, [server, pool_size, dispatch_rules]),

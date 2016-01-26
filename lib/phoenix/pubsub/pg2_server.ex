@@ -8,7 +8,7 @@ defmodule Phoenix.PubSub.PG2Server do
     GenServer.start_link __MODULE__, server_name, name: server_name
   end
 
-  def broadcast(server_name, pool_size, dest_node, from_pid, topic, msg) do
+  def broadcast(fastlane, server_name, pool_size, dest_node, from_pid, topic, msg) do
     case get_members(server_name, dest_node) do
       {:error, {:no_such_group, _}} ->
         {:error, :no_such_group}
@@ -16,9 +16,9 @@ defmodule Phoenix.PubSub.PG2Server do
       pids when is_list(pids) ->
         Enum.each(pids, fn
           pid when is_pid(pid) and node(pid) == node() ->
-            Local.broadcast(server_name, pool_size, from_pid, topic, msg)
+            Local.broadcast(fastlane, server_name, pool_size, from_pid, topic, msg)
           {^server_name, dest_node} when dest_node == node() ->
-            Local.broadcast(server_name, pool_size, from_pid, topic, msg)
+            Local.broadcast(fastlane, server_name, pool_size, from_pid, topic, msg)
           pid_or_tuple ->
             send(pid_or_tuple, {:forward_to_local, from_pid, pool_size, topic, msg})
         end)

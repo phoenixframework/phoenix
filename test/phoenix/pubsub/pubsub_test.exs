@@ -9,7 +9,9 @@ defmodule Phoenix.PubSub.PubSubTest do
   @pool_size 1
 
   setup_all do
-    {:ok, _} = Phoenix.PubSub.PG2.start_link(__MODULE__, [pool_size: @pool_size])
+    # TODO: Do not depend on Phoenix.Channel.Server
+    {:ok, _} =
+      Phoenix.PubSub.PG2.start_link(__MODULE__, [pool_size: @pool_size, fastlane: Phoenix.Channel.Server])
     :ok
   end
 
@@ -23,7 +25,6 @@ defmodule Phoenix.PubSub.PubSubTest do
   end
 
   defmodule Serializer do
-
     @behaviour Phoenix.Transports.Serializer
 
     def fastlane!(%Broadcast{} = msg) do
@@ -49,7 +50,6 @@ defmodule Phoenix.PubSub.PubSubTest do
 
     def decode!(message, _opts), do: message
   end
-
 
   test "broadcast!/3 and broadcast_from!/4 raises if broadcast fails" do
     :ets.new(FailedBroadcaster, [:named_table])
