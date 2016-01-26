@@ -136,7 +136,7 @@ If we don't feel that we need all of these routes, we can be selective using the
 Let's say we have a read-only posts resource. We could define it like this:
 
 ```elixir
-resources "posts", PostController, only: [:index, :show]
+resources "/posts", PostController, only: [:index, :show]
 ```
 
 Running `$ mix phoenix.routes` shows that we now only have the routes to the index and show actions defined.
@@ -149,7 +149,7 @@ post_path  GET     /posts/:id HelloPhoenix.PostController :show
 Similarly, if we have a comments resource, and we don't want to provide a route to delete one, we could define a route like this.
 
 ```elixir
-resources "comments", CommentController, except: [:delete]
+resources "/comments", CommentController, except: [:delete]
 ```
 
 Running `$ mix phoenix.routes` now shows that we have all the routes except the DELETE request to the delete action.
@@ -234,8 +234,8 @@ The `_url` functions will get the host, port, proxy port, and SSL information ne
 It is also possible to nest resources in a Phoenix router. Let's say we also have a `posts` resource which has a one to many relationship with `users`. That is to say, a user can create many posts, and an individual post belongs to only one user. We can represent that by adding a nested route in `web/router.ex` like this:
 
 ```elixir
-resources "users", UserController do
-  resources "posts", PostController
+resources "/users", UserController do
+  resources "/posts", PostController
 end
 ```
 When we run `$ mix phoenix.routes` now, in addition to the routes we saw for `users` above, we get the following set of routes:
@@ -557,13 +557,13 @@ defmodule HelloPhoenix.Router do
   scope "/", HelloPhoenix do
     pipe_through :browser
 
-    resources "users", UserController
+    resources "/users", UserController
   end
 
   scope "/", AnotherApp do
     pipe_through :browser
 
-    resources "posts", PostController
+    resources "/posts", PostController
   end
   . . .
 end
@@ -663,7 +663,7 @@ defmodule HelloPhoenix.Router do
   scope "/api", HelloPhoenix do
     pipe_through :api
 
-    resources "reviews", ReviewController
+    resources "/reviews", ReviewController
   end
 end
 ```
@@ -692,7 +692,7 @@ defmodule HelloPhoenix.Router do
 
   get "/", HelloPhoenix.PageController, :index
 
-  resources "reviews", HelloPhoenix.ReviewController
+  resources "/reviews", HelloPhoenix.ReviewController
 end
 ```
 Removing all scopes forces the router to invoke the `:browser` pipeline on all routes.
@@ -716,7 +716,7 @@ defmodule HelloPhoenix.Router do
     # Use the default browser stack.
     pipe_through [:browser, :review_checks, :other_great_stuff]
 
-    resources "reviews", HelloPhoenix.ReviewController
+    resources "/reviews", HelloPhoenix.ReviewController
   end
 end
 ```
@@ -739,13 +739,13 @@ defmodule HelloPhoenix.Router do
   scope "/", HelloPhoenix do
     pipe_through :browser
 
-    resources "posts", PostController
+    resources "/posts", PostController
   end
 
   scope "/reviews", HelloPhoenix do
     pipe_through [:browser, :review_checks]
 
-    resources "reviews", ReviewController
+    resources "/reviews", ReviewController
   end
 end
 ```
@@ -776,7 +776,7 @@ defmodule HelloPhoenix.Router do
   scope "/reviews", HelloPhoenix do
     pipe_through :review_checks
 
-    resources "reviews", ReviewController
+    resources "/reviews", ReviewController
   end
 end
 ```
