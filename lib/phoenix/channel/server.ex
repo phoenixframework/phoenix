@@ -248,6 +248,41 @@ defmodule Phoenix.Channel.Server do
     socket.channel.terminate(reason, socket)
   end
 
+  @doc false
+  def fastlane(subscribers, from, %Broadcast{event: event} = msg) do
+    Enum.reduce(subscribers, %{}, fn
+      {pid, _fastlanes}, cache when pid == from ->
+        cache
+
+      {pid, nil}, cache ->
+        send(pid, msg)
+        cache
+
+      {pid, {fastlane_pid, serializer, event_intercepts}}, cache ->
+        if event in event_intercepts do
+          send(pid, msg)
+          cache
+        else
+          case Map.fetch(cache, serializer) do
+            {:ok, encoded_msg} ->
+              send(fastlane_pid, encoded_msg)
+              cache
+            :error ->
+              encoded_msg = serializer.fastlane!(msg)
+              send(fastlane_pid, encoded_msg)
+              Map.put(cache, serializer, encoded_msg)
+          end
+        end
+    end)
+  end
+
+  def fastlane(subscribers, from, msg) do
+    Enum.each(subscribers, fn
+      {pid, _} when pid == from -> :noop
+      {pid, _} -> send(pid, msg)
+    end)
+  end
+
   ## Handle results
 
   defp handle_result({:reply, reply, %Socket{} = socket}, callback) do
