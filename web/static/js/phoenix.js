@@ -403,6 +403,7 @@ export class Socket {
       this.conn.onclose = function(){} // noop
       if(code){ this.conn.close(code, reason || "") } else { this.conn.close() }
       this.conn = null
+      this.channels = []
     }
     callback && callback()
   }
