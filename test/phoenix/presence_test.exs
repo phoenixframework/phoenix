@@ -3,11 +3,11 @@ defmodule Phoenix.PresenceTest do
   alias Phoenix.Socket.Broadcast
 
   defmodule DefaultPresence do
-    use Phoenix.Presence
+    use Phoenix.Presence, otp_app: :phoenix
   end
 
   defmodule MyPresence do
-    use Phoenix.Presence
+    use Phoenix.Presence, otp_app: :phoenix
 
     def fetch(_topic, entries) do
       for {key, %{metas: metas}} <- entries, into: %{} do
@@ -16,9 +16,11 @@ defmodule Phoenix.PresenceTest do
     end
   end
 
+  Application.put_env(:phoenix, MyPresence, pubsub_server: PresPub)
+
   setup_all do
     {:ok, _} = Phoenix.PubSub.PG2.start_link(PresPub, pool_size: 1)
-    assert {:ok, _pid} = MyPresence.start_link(pubsub_server: PresPub)
+    assert {:ok, _pid} = MyPresence.start_link([])
     {:ok, pubsub: PresPub}
   end
 

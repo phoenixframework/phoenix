@@ -21,7 +21,7 @@ defmodule Phoenix.Presence do
   """
   alias Phoenix.Socket.Broadcast
 
-  @type presences :: %{ String.t => %{metas: List.t}}
+  @type presences :: %{ String.t => %{metas: [map]}}
   @type presence :: %{key: String.t, meta: map}
   @type topic :: String.t
 
@@ -34,13 +34,14 @@ defmodule Phoenix.Presence do
   @callback handle_join(topic, presence, state :: term) :: {:ok, state :: term}
   @callback handle_leave(topic, presence, state :: term) :: {:ok, state :: term}
 
-  defmacro __using__(_) do
+  defmacro __using__(opts) do
     quote do
+      @otp_app unquote(opts)[:otp_app] || raise "presence expects :otp_app to be given"
       @behaviour unquote(__MODULE__)
       @task_supervisor Module.concat(__MODULE__, TaskSupervisor)
 
       def start_link(opts) do
-        Phoenix.Presence.start_link(__MODULE__, @task_supervisor, opts)
+        Phoenix.Presence.start_link(__MODULE__, @otp_app, @task_supervisor, opts)
       end
 
       def init(opts) do
@@ -84,9 +85,12 @@ defmodule Phoenix.Presence do
   @doc """
   Starts the presence supervisor.
   """
-  def start_link(module, task_supervisor, opts) do
+  def start_link(module, otp_app, task_supervisor, opts) do
     import Supervisor.Spec
-    opts = Keyword.put(opts, :name, module)
+    opts =
+      opts
+      |> Keyword.merge(Application.get_env(otp_app, module) || [])
+      |> Keyword.put(:name, module)
 
     children = [
       supervisor(Task.Supervisor, [[name: task_supervisor]]),
@@ -116,5 +120,4 @@ defmodule Phoenix.Presence do
       Phoenix.PubSub.direct_broadcast!(node_name, pubsub_server, topic, msg)
     end)
   end
-
 end
