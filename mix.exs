@@ -40,6 +40,7 @@ defmodule Phoenix.Mixfile do
   defp deps do
     [{:cowboy, "~> 1.0", optional: true},
      {:plug, "~> 1.0"},
+     {:phoenix_pubsub, github: "phoenixframework/phoenix_pubsub"},
      {:poison, "~> 1.5 or ~> 2.0"},
      {:gettext, "~> 0.8", only: :test},
 
@@ -58,7 +59,7 @@ defmodule Phoenix.Mixfile do
                     "Jason Stiebs", "Eric Meadows-Jönsson", "Sonny Scroggin"],
      licenses: ["MIT"],
      links: %{github: "https://github.com/phoenixframework/phoenix"},
-     files: ~w(lib priv test/shared web) ++
+     files: ~w(lib priv web) ++
             ~w(brunch-config.js CHANGELOG.md LICENSE.md mix.exs package.json README.md)]
   end
 end

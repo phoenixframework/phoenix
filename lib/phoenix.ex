@@ -12,6 +12,9 @@ defmodule Phoenix do
     * [Phoenix](http://hexdocs.pm/phoenix) - the Phoenix web framework
       (these docs)
 
+    * [Phoenix](http://hexdocs.pm/phoenix_pubsub) - a distributed pubsub
+      system with presence support
+
     * [Phoenix HTML](http://hexdocs.pm/phoenix_html) - conveniences for
       working with HTML in Phoenix
 
