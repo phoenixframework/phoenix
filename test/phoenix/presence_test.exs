@@ -31,7 +31,7 @@ defmodule Phoenix.PresenceTest do
 
   test "list/1 lists presences from tracker" do
     assert MyPresence.list("topic") == %{}
-    assert MyPresence.track(self(), "topic", "u1", %{name: "u1"}) == :ok
+    assert MyPresence.track_presence(self(), "topic", "u1", %{name: "u1"}) == :ok
     assert %{"u1" => %{extra: "extra", metas: [%{name: "u1", phx_ref: _}]}} =
            MyPresence.list("topic")
   end
@@ -40,7 +40,7 @@ defmodule Phoenix.PresenceTest do
     pid = spawn(fn -> :timer.sleep(:infinity) end)
     Phoenix.PubSub.subscribe(config.pubsub, self(), "topic")
     {:ok, _pid} = DefaultPresence.start_link(pubsub_server: config.pubsub)
-    DefaultPresence.track(pid, "topic", "u1", %{name: "u1"})
+    DefaultPresence.track_presence(pid, "topic", "u1", %{name: "u1"})
 
     assert_receive %Broadcast{topic: "topic", event: "presence_join", payload: %{
       "u1" => %{metas: [%{name: "u1", phx_ref: u1_ref}]}
@@ -58,7 +58,7 @@ defmodule Phoenix.PresenceTest do
   test "handle_join and handle_leave broadcasts events with custom fetched data", config do
     pid = spawn(fn -> :timer.sleep(:infinity) end)
     Phoenix.PubSub.subscribe(config.pubsub, self(), "topic")
-    MyPresence.track(pid, "topic", "u1", %{name: "u1"})
+    MyPresence.track_presence(pid, "topic", "u1", %{name: "u1"})
 
     assert_receive %Broadcast{topic: "topic", event: "presence_join", payload: %{
       "u1" => %{extra: "extra", metas: [%{name: "u1", phx_ref: u1_ref}]}
@@ -71,5 +71,16 @@ defmodule Phoenix.PresenceTest do
       "u1" => %{extra: "extra", metas: [%{name: "u1", phx_ref: ^u1_ref}]}
     }}
     assert MyPresence.list("topic") == %{}
+  end
+
+  test "list maintains join order when grouping", config do
+    pid = spawn(fn -> :timer.sleep(:infinity) end)
+    pid2 = spawn(fn -> :timer.sleep(:infinity) end)
+    Phoenix.PubSub.subscribe(config.pubsub, self(), "topic")
+    MyPresence.track_presence(pid, "topic", "u1", %{name: "1st"})
+    MyPresence.track_presence(pid2, "topic", "u1", %{name: "2nd"})
+
+    assert %{"u1" => %{metas: [%{name: "1st"}, %{name: "2nd"}]}} =
+           MyPresence.list("topic")
   end
 end

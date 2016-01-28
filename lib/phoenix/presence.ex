@@ -5,7 +5,7 @@ defmodule Phoenix.Presence do
 
   ## Fetching Presence Information
 
-      def fetch(topic, entries) do
+      def fetch(_topic, entries) do
         query =
           from p in Post,
             where: p.id in ^Map.keys(entries),
@@ -27,8 +27,8 @@ defmodule Phoenix.Presence do
 
   @callback start_link(Keyword.t) :: {:ok, pid} | {:error, reason :: term} :: :ignore
   @callback init(Keyword.t) :: {:ok, pid} | {:error, reason :: term}
-  @callback track(Phoenix.Socket.t, key :: String.t, meta :: map) :: :ok
-  @callback track(pid, topic, key :: String.t, meta ::map) :: :ok
+  @callback track_presence(Phoenix.Socket.t, key :: String.t, meta :: map) :: :ok
+  @callback track_presence(pid, topic, key :: String.t, meta ::map) :: :ok
   @callback fetch(topic, presences) :: presences
   @callback list(topic) :: presences
   @callback handle_join(topic, presence, state :: term) :: {:ok, state :: term}
@@ -40,7 +40,7 @@ defmodule Phoenix.Presence do
       @behaviour unquote(__MODULE__)
       @task_supervisor Module.concat(__MODULE__, TaskSupervisor)
 
-      def start_link(opts) do
+      def start_link(opts \\ []) do
         Phoenix.Presence.start_link(__MODULE__, @otp_app, @task_supervisor, opts)
       end
 
@@ -51,17 +51,17 @@ defmodule Phoenix.Presence do
                 task_sup: @task_supervisor}}
       end
 
-      def track(%Phoenix.Socket{} = socket, key, meta) do
-        track(socket.channel_pid, socket.topic, key, meta)
+      def track_presence(%Phoenix.Socket{} = socket, key, meta) do
+        track_presence(socket.channel_pid, socket.topic, key, meta)
       end
-      def track(pid, topic, key, meta) do
+      def track_presence(pid, topic, key, meta) do
         Phoenix.Tracker.track(__MODULE__, pid, topic, key, meta)
       end
 
       def fetch(_topic, presences), do: presences
 
       def list(topic) do
-        fetch(topic, Phoenix.Tracker.list(__MODULE__, topic))
+        Phoenix.Presence.list(__MODULE__, topic)
       end
 
       def handle_join(topic, presence, state) do
@@ -102,7 +102,7 @@ defmodule Phoenix.Presence do
   @doc """
   TODO
   """
-  def handle_join(module, topic, %{key: key, meta: meta}, node_name, pubsub_server, sup_name) do
+  def handle_join(module, topic, {key, meta}, node_name, pubsub_server, sup_name) do
     Task.Supervisor.start_child(sup_name, fn ->
       presence_info = module.fetch(topic, %{key => %{metas: [meta]}})
       msg = %Broadcast{topic: topic, event: "presence_join", payload: presence_info}
@@ -113,11 +113,28 @@ defmodule Phoenix.Presence do
   @doc """
   TODO
   """
-  def handle_leave(module, topic, %{key: key, meta: meta}, node_name, pubsub_server, sup_name) do
+  def handle_leave(module, topic, {key, meta}, node_name, pubsub_server, sup_name) do
     Task.Supervisor.start_child(sup_name, fn ->
       presence_info = module.fetch(topic, %{key => %{metas: [meta]}})
       msg = %Broadcast{topic: topic, event: "presence_leave", payload: presence_info}
       Phoenix.PubSub.direct_broadcast!(node_name, pubsub_server, topic, msg)
     end)
+  end
+
+  @doc """
+  TODO
+  """
+  def list(module, topic) do
+    grouped =
+      module
+      |> Phoenix.Tracker.list(topic)
+      |> Enum.reverse()
+      |> Enum.reduce(%{}, fn {key, meta}, acc ->
+        Map.update(acc, key, %{metas: [meta]}, fn %{metas: metas} ->
+          %{metas: [meta | metas]}
+        end)
+      end)
+
+    module.fetch(topic, grouped)
   end
 end
