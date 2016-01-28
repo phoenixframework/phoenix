@@ -1,5 +1,6 @@
 defmodule Phoenix.PresenceTest do
   use ExUnit.Case, async: true
+  alias Phoenix.Socket.Broadcast
 
   defmodule DefaultPresence do
     use Phoenix.Presence
@@ -8,9 +9,9 @@ defmodule Phoenix.PresenceTest do
   defmodule MyPresence do
     use Phoenix.Presence
 
-    def fetch(_topic, presences) do
-      for %{key: user_id, meta: meta, ref: ref} <- presences do
-        %{key: user_id, meta: %{name: String.upcase(meta.name)}, ref: ref}
+    def fetch(_topic, entries) do
+      for {key, %{metas: metas}} <- entries, into: %{} do
+        {key, %{metas: metas, extra: "extra"}}
       end
     end
   end
@@ -22,13 +23,51 @@ defmodule Phoenix.PresenceTest do
   end
 
   test "default fetch/2 returns pass-through data" do
-    presences = [%{key: "key", meta: %{}, ref: "ref"}]
+    presences = %{"u1" => %{metas: [%{name: "u1", phx_ref: "ref"}]}}
     assert DefaultPresence.fetch("topic", presences) == presences
   end
 
   test "list/1 lists presences from tracker" do
     assert MyPresence.list("topic") == %{}
     assert MyPresence.track(self(), "topic", "u1", %{name: "u1"}) == :ok
-    assert %{"u1" => [%{meta: %{name: "U1"}, ref: _}]} = MyPresence.list("topic")
+    assert %{"u1" => %{extra: "extra", metas: [%{name: "u1", phx_ref: _}]}} =
+           MyPresence.list("topic")
+  end
+
+  test "handle_join and handle_leave broadcasts events with default fetched data", config do
+    pid = spawn(fn -> :timer.sleep(:infinity) end)
+    Phoenix.PubSub.subscribe(config.pubsub, self(), "topic")
+    {:ok, _pid} = DefaultPresence.start_link(pubsub_server: config.pubsub)
+    DefaultPresence.track(pid, "topic", "u1", %{name: "u1"})
+
+    assert_receive %Broadcast{topic: "topic", event: "presence_join", payload: %{
+      "u1" => %{metas: [%{name: "u1", phx_ref: u1_ref}]}
+    }}
+    assert %{"u1" => %{metas: [%{name: "u1", phx_ref: ^u1_ref}]}} =
+           DefaultPresence.list("topic")
+
+    Process.exit(pid, :kill)
+    assert_receive %Broadcast{topic: "topic", event: "presence_leave", payload: %{
+      "u1" => %{metas: [%{name: "u1", phx_ref: ^u1_ref}]}
+    }}
+    assert DefaultPresence.list("topic") == %{}
+  end
+
+  test "handle_join and handle_leave broadcasts events with custom fetched data", config do
+    pid = spawn(fn -> :timer.sleep(:infinity) end)
+    Phoenix.PubSub.subscribe(config.pubsub, self(), "topic")
+    MyPresence.track(pid, "topic", "u1", %{name: "u1"})
+
+    assert_receive %Broadcast{topic: "topic", event: "presence_join", payload: %{
+      "u1" => %{extra: "extra", metas: [%{name: "u1", phx_ref: u1_ref}]}
+    }}
+    assert %{"u1" => %{extra: "extra", metas: [%{name: "u1", phx_ref: ^u1_ref}]}} =
+           MyPresence.list("topic")
+
+    Process.exit(pid, :kill)
+    assert_receive %Broadcast{topic: "topic", event: "presence_leave", payload: %{
+      "u1" => %{extra: "extra", metas: [%{name: "u1", phx_ref: ^u1_ref}]}
+    }}
+    assert MyPresence.list("topic") == %{}
   end
 end

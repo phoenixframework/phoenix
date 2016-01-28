@@ -1,6 +1,23 @@
 defmodule Phoenix.Presence do
   @moduledoc """
   TODO
+
+
+  ## Fetching Presence Information
+
+      def fetch(topic, entries) do
+        query =
+          from p in Post,
+            where: p.id in ^Map.keys(entries),
+            select: {p.id, p}
+
+        posts = query |> Repo.all |> Enum.into(%{})
+
+        for {key, %{metas: metas}} <- entries, into: %{} do
+          {key, %{metas: metas, post: posts[key]}}
+        end
+      end
+
   """
   alias Phoenix.Socket.Broadcast
 
@@ -25,12 +42,11 @@ defmodule Phoenix.Presence do
         Phoenix.Tracker.track(__MODULE__, pid, topic, key, meta)
       end
 
-      def fetch(_topic, presences), do: IO.inspect presences
+      def fetch(_topic, presences), do: presences
 
       def list(topic) do
         topic
         |> fetch(Phoenix.Tracker.list(__MODULE__, topic))
-        |> Phoenix.Presence.group_by_key()
       end
 
       def handle_join(topic, presence, state) do
@@ -47,8 +63,7 @@ defmodule Phoenix.Presence do
         {:ok, state}
       end
 
-      defoverridable start_link: 1, init: 1, track: 4, fetch: 2, list: 1,
-                     handle_join: 3, handle_leave: 3
+      defoverridable fetch: 2
     end
   end
 
@@ -69,9 +84,9 @@ defmodule Phoenix.Presence do
   @doc """
   TODO
   """
-  def handle_join(module, topic, presence, node_name, pubsub_server, sup_name) do
+  def handle_join(module, topic, %{key: key, meta: meta}, node_name, pubsub_server, sup_name) do
     Task.Supervisor.start_child(sup_name, fn ->
-      presence_info = module.fetch(topic, [presence])
+      presence_info = module.fetch(topic, %{key => %{metas: [meta]}})
       msg = %Broadcast{topic: topic, event: "presence_join", payload: presence_info}
       Phoenix.PubSub.direct_broadcast!(node_name, pubsub_server, topic, msg)
     end)
@@ -80,25 +95,12 @@ defmodule Phoenix.Presence do
   @doc """
   TODO
   """
-  def handle_leave(module, topic, presence, node_name, pubsub_server, sup_name) do
+  def handle_leave(module, topic, %{key: key, meta: meta}, node_name, pubsub_server, sup_name) do
     Task.Supervisor.start_child(sup_name, fn ->
-      presence_info = module.fetch(topic, [presence])
+      presence_info = module.fetch(topic, %{key => %{metas: [meta]}})
       msg = %Broadcast{topic: topic, event: "presence_leave", payload: presence_info}
       Phoenix.PubSub.direct_broadcast!(node_name, pubsub_server, topic, msg)
     end)
   end
 
-  @doc """
-  TODO
-  """
-  def group_by_key(presences) do
-    presences
-    |> Enum.group_by(fn %{key: key} -> key end)
-    |> Enum.into(%{}, fn {key, grouped} ->
-      metas = for %{meta: meta, ref: ref} <- grouped do
-        %{meta: meta, ref: ref}
-      end
-      {key, metas}
-    end)
-  end
 end

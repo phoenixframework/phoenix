@@ -5,7 +5,7 @@
   "gettext": {:hex, :gettext, "0.8.0"},
   "inch_ex": {:hex, :inch_ex, "0.2.3"},
   "phoenix_html": {:hex, :phoenix_html, "2.4.0"},
-  "phoenix_pubsub": {:git, "https://github.com/phoenixframework/phoenix_pubsub.git", "bf762cf0fbd823d135889ac262b5aaacf0463b58", []},
+  "phoenix_pubsub": {:hex, :phoenix_pubsub, "0.0.1"},
   "plug": {:hex, :plug, "1.1.0"},
   "poison": {:hex, :poison, "1.5.0"},
   "ranch": {:hex, :ranch, "1.2.1"},
