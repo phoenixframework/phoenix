@@ -21,9 +21,24 @@ defmodule Phoenix.Presence do
   """
   alias Phoenix.Socket.Broadcast
 
+  @type presences :: %{ String.t => %{metas: List.t}}
+  @type presence :: %{key: String.t, meta: map}
+  @type topic :: String.t
+
+  @callback start_link(Keyword.t) :: {:ok, pid} | {:error, reason :: term} :: :ignore
+  @callback init(Keyword.t) :: {:ok, pid} | {:error, reason :: term}
+  @callback track(Phoenix.Socket.t, key :: String.t, meta :: map) :: :ok
+  @callback track(pid, topic, key :: String.t, meta ::map) :: :ok
+  @callback fetch(topic, presences) :: presences
+  @callback list(topic) :: presences
+  @callback handle_join(topic, presence, state :: term) :: {:ok, state :: term}
+  @callback handle_leave(topic, presence, state :: term) :: {:ok, state :: term}
+
   defmacro __using__(_) do
     quote do
+      @behaviour unquote(__MODULE__)
       @task_supervisor Module.concat(__MODULE__, TaskSupervisor)
+
       def start_link(opts) do
         Phoenix.Presence.start_link(__MODULE__, @task_supervisor, opts)
       end
@@ -45,8 +60,7 @@ defmodule Phoenix.Presence do
       def fetch(_topic, presences), do: presences
 
       def list(topic) do
-        topic
-        |> fetch(Phoenix.Tracker.list(__MODULE__, topic))
+        fetch(topic, Phoenix.Tracker.list(__MODULE__, topic))
       end
 
       def handle_join(topic, presence, state) do
