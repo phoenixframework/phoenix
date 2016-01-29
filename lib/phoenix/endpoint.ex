@@ -436,9 +436,8 @@ defmodule Phoenix.Endpoint do
 
       defoverridable [init: 1, call: 2]
 
-      if force_ssl = var!(config)[:force_ssl] do
-        plug Plug.SSL,
-          Keyword.put_new(force_ssl, :host, var!(config)[:url][:host] || "localhost")
+      if force_ssl = Phoenix.Endpoint.__force_ssl__(__MODULE__, var!(config)) do
+        plug Plug.SSL, force_ssl
       end
 
       if var!(config)[:debug_errors] do
@@ -547,6 +546,24 @@ defmodule Phoenix.Endpoint do
           Phoenix.Config.cache(__MODULE__, {:__phoenix_static__, path},
                                &Phoenix.Endpoint.Adapter.static_path(&1, path))
       end
+    end
+  end
+
+  @doc false
+  def __force_ssl__(module, config) do
+    if force_ssl = config[:force_ssl] do
+      force_ssl = Keyword.put_new(force_ssl, :host, var!(config)[:url][:host] || "localhost")
+
+      if force_ssl[:host] == "localhost" do
+        IO.puts :stderr, """
+        warning: you have enabled :force_ssl but your host is currently set to localhost.
+        Please configure your endpoint url host properly:
+
+            config #{inspect module}, url: [host: "YOURHOST.com"]
+        """
+      end
+
+      force_ssl
     end
   end
 
