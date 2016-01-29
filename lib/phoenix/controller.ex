@@ -388,26 +388,24 @@ defmodule Phoenix.Controller do
 
   Raises `Plug.Conn.AlreadySentError` if the conn was already sent.
   """
-  @spec put_layout(Plug.Conn.t, {atom, binary} | binary | false) :: Plug.Conn.t
+  @spec put_layout(Plug.Conn.t, {atom, binary | atom} | binary | false) :: Plug.Conn.t
   def put_layout(%Plug.Conn{state: state} = conn, layout) do
     if state in @unsent do
-      _put_layout(conn, layout)
+      do_put_layout(conn, layout)
     else
       raise Plug.Conn.AlreadySentError
     end
   end
 
-  def _put_layout(conn, layout)
-
-  def _put_layout(conn, false) do
+  defp do_put_layout(conn, false) do
     put_private(conn, :phoenix_layout, false)
   end
 
-  def _put_layout(conn, {mod, layout}) when is_atom(mod) do
+  defp do_put_layout(conn, {mod, layout}) when is_atom(mod) do
     put_private(conn, :phoenix_layout, {mod, layout})
   end
 
-  def _put_layout(conn, layout) when is_binary(layout) or is_atom(layout) do
+  defp do_put_layout(conn, layout) when is_binary(layout) or is_atom(layout) do
     update_in conn.private, fn private ->
       case Map.get(private, :phoenix_layout, false) do
         {mod, _} -> Map.put(private, :phoenix_layout, {mod, layout})
