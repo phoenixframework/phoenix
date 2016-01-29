@@ -40,7 +40,7 @@ defmodule Phoenix.PresenceTest do
            MyPresence.list(config.topic)
   end
 
-  test "handle_join and handle_leave broadcasts events with default fetched data",
+  test "handle_diff broadcasts events with default fetched data",
     %{topic: topic} = config do
 
     pid = spawn(fn -> :timer.sleep(:infinity) end)
@@ -48,35 +48,39 @@ defmodule Phoenix.PresenceTest do
     {:ok, _pid} = DefaultPresence.start_link(pubsub_server: config.pubsub)
     DefaultPresence.track_presence(pid, topic, "u1", %{name: "u1"})
 
-    assert_receive %Broadcast{topic: ^topic, event: "presence_join", payload: %{
-      "u1" => %{metas: [%{name: "u1", phx_ref: u1_ref}]}
+    assert_receive %Broadcast{topic: ^topic, event: "presence_diff", payload: %{
+      joins: %{"u1" => %{metas: [%{name: "u1", phx_ref: u1_ref}]}},
+      leaves: %{}
     }}
     assert %{"u1" => %{metas: [%{name: "u1", phx_ref: ^u1_ref}]}} =
            DefaultPresence.list(topic)
 
     Process.exit(pid, :kill)
-    assert_receive %Broadcast{topic: ^topic, event: "presence_leave", payload: %{
-      "u1" => %{metas: [%{name: "u1", phx_ref: ^u1_ref}]}
+    assert_receive %Broadcast{topic: ^topic, event: "presence_diff", payload: %{
+      joins: %{},
+      leaves: %{"u1" => %{metas: [%{name: "u1", phx_ref: ^u1_ref}]}}
     }}
     assert DefaultPresence.list(topic) == %{}
   end
 
-  test "handle_join and handle_leave broadcasts events with custom fetched data",
+  test "handle_diff broadcasts events with custom fetched data",
     %{topic: topic} = config do
 
     pid = spawn(fn -> :timer.sleep(:infinity) end)
     Phoenix.PubSub.subscribe(config.pubsub, self(), topic)
     MyPresence.track_presence(pid, topic, "u1", %{name: "u1"})
 
-    assert_receive %Broadcast{topic: ^topic, event: "presence_join", payload: %{
-      "u1" => %{extra: "extra", metas: [%{name: "u1", phx_ref: u1_ref}]}
+    assert_receive %Broadcast{topic: ^topic, event: "presence_diff", payload: %{
+      joins: %{"u1" => %{extra: "extra", metas: [%{name: "u1", phx_ref: u1_ref}]}},
+      leaves: %{}
     }}
     assert %{"u1" => %{extra: "extra", metas: [%{name: "u1", phx_ref: ^u1_ref}]}} =
            MyPresence.list(topic)
 
     Process.exit(pid, :kill)
-    assert_receive %Broadcast{topic: ^topic, event: "presence_leave", payload: %{
-      "u1" => %{extra: "extra", metas: [%{name: "u1", phx_ref: ^u1_ref}]}
+    assert_receive %Broadcast{topic: ^topic, event: "presence_diff", payload: %{
+      joins: %{},
+      leaves: %{"u1" => %{extra: "extra", metas: [%{name: "u1", phx_ref: ^u1_ref}]}}
     }}
     assert MyPresence.list(topic) == %{}
   end
