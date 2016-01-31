@@ -20,12 +20,12 @@ For example, if we were creating an app called Linker and wanted to seed a Link 
     title: "Phoenix Framework",
     url: "http://www.phoenixframework.org/"
   }
-  
+
   Repo.insert! %Link{
     title: "Elixir",
     url: "http://elixir-lang.org/"
   }
-  
+
   Repo.insert! %Link{
     title: "Erlang",
     url: "https://www.erlang.org/"
@@ -37,7 +37,7 @@ With this script, we've set up some aliases and then progressed through a list o
 ```elixir
   mix run priv/repo/seeds.exs
 ```
-Note that if we wanted to delete/scrub all prior data that we seeded in the Link table, we could also include `Repo.delete_all Link` in your script immediate above `Repo.insert!` 
+Note that if we wanted to delete/scrub all prior data that we seeded in the Link table, we could also include `Repo.delete_all Link` in your script immediate above `Repo.insert!`
 
 #### Models are Initialized
 
