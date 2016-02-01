@@ -3,8 +3,8 @@ defmodule Mix.Phoenix do
   @moduledoc false
 
   @valid_attributes [:integer, :float, :decimal, :boolean, :map, :string,
-                     :array, :references, :text, :date, :time, :datetime, 
-                     :uuid]
+                     :array, :references, :text, :date, :time, :datetime,
+                     :uuid, :binary]
 
   @doc """
   Copies files from source dir to target dir
