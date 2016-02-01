@@ -515,6 +515,11 @@ defmodule Phoenix.ConnTest do
     Plug.Conn.put_private(conn, :phoenix_bypass, :all)
   end
 
+  @doc """
+  Calls the Endpoint and bypasses Router match.
+  
+  See `bypass_through/1`.
+  """
   @spec bypass_through(Conn.t, Module.t, :atom | List.t) :: Conn.t
   def bypass_through(conn, router, pipelines \\ []) do
     Plug.Conn.put_private(conn, :phoenix_bypass, {router, List.wrap(pipelines)})
