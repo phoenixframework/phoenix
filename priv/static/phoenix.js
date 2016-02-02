@@ -9,6 +9,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 // Phoenix Channels JavaScript client
@@ -972,6 +974,111 @@ var Ajax = exports.Ajax = function () {
 
 Ajax.states = { complete: 4 };
 
+var Presence = exports.Presence = {
+  syncState: function syncState(state, newState, onJoin, onLeave) {
+    var _this12 = this;
+
+    var joins = {};
+    var leaves = {};
+
+    this.map(state, function (key, presence) {
+      if (!newState[key]) {
+        leaves[key] = _this12.clone(presence);
+      }
+    });
+    this.map(newState, function (key, newPresence) {
+      var currentPresence = state[key];
+      if (currentPresence) {
+        (function () {
+          var newRefs = newPresence.metas.map(function (m) {
+            return m.phx_ref;
+          });
+          var curRefs = currentPresence.metas.map(function (m) {
+            return m.phx_ref;
+          });
+          var joinedMetas = newPresence.metas.filter(function (m) {
+            return curRefs.indexOf(m.phx_ref) < 0;
+          });
+          var leftMetas = currentPresence.metas.filter(function (m) {
+            return newRefs.indexOf(m.phx_ref) < 0;
+          });
+          if (joinedMetas.length > 0) {
+            joins[key] = newPresence;
+            joins[key].metas = joinedMetas;
+          }
+          if (leftMetas.length > 0) {
+            leaves[key] = _this12.clone(currentPresence);
+            leaves[key].metas = leftMetas;
+          }
+        })();
+      } else {
+        joins[key] = newPresence;
+      }
+    });
+    this.syncDiff(state, { joins: joins, leaves: leaves }, onJoin, onLeave);
+  },
+  syncDiff: function syncDiff(state, _ref2, onJoin, onLeave) {
+    var joins = _ref2.joins;
+    var leaves = _ref2.leaves;
+
+    if (!onJoin) {
+      onJoin = function onJoin() {};
+    }
+    if (!onLeave) {
+      onLeave = function onLeave() {};
+    }
+
+    this.map(joins, function (key, newPresence) {
+      var currentPresence = state[key];
+      state[key] = newPresence;
+      if (currentPresence) {
+        var _state$key$metas;
+
+        (_state$key$metas = state[key].metas).unshift.apply(_state$key$metas, _toConsumableArray(currentPresence.metas));
+      }
+      onJoin(key, currentPresence, newPresence);
+    });
+    this.map(leaves, function (key, leftPresence) {
+      var currentPresence = state[key];
+      if (!currentPresence) {
+        return;
+      }
+      var refsToRemove = leftPresence.metas.map(function (m) {
+        return m.phx_ref;
+      });
+      currentPresence.metas = currentPresence.metas.filter(function (p) {
+        return refsToRemove.indexOf(p.phx_ref) < 0;
+      });
+      onLeave(key, currentPresence, leftPresence);
+      if (currentPresence.metas.length === 0) {
+        delete state[key];
+      }
+    });
+  },
+  list: function list(presences, chooser) {
+    if (!chooser) {
+      chooser = function chooser(key, pres) {
+        return pres;
+      };
+    }
+
+    return this.map(presences, function (key, presence) {
+      return chooser(key, presence);
+    });
+  },
+
+  // private
+
+  map: function map(obj, func) {
+    return Object.getOwnPropertyNames(obj).map(function (key) {
+      return func(key, obj[key]);
+    });
+  },
+  clone: function clone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+};
+
 // Creates a timer that accepts a `timerCalc` function to perform
 // calculated timeout retries, such as exponential backoff.
 //
@@ -1008,19 +1115,133 @@ var Timer = function () {
   }, {
     key: "scheduleTimeout",
     value: function scheduleTimeout() {
-      var _this12 = this;
+      var _this13 = this;
 
       clearTimeout(this.timer);
 
       this.timer = setTimeout(function () {
-        _this12.tries = _this12.tries + 1;
-        _this12.callback();
+        _this13.tries = _this13.tries + 1;
+        _this13.callback();
       }, this.timerCalc(this.tries + 1));
     }
   }]);
 
   return Timer;
 }();
+
+
+})(typeof(exports) === "undefined" ? window.Phoenix = window.Phoenix || {} : exports);
+(function(exports){
+"use strict";
+
+var _assert = require("assert");
+
+var _assert2 = _interopRequireDefault(_assert);
+
+var _phoenix = require("../js/phoenix");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var fixtures = {
+  joins: function joins() {
+    return { u1: { metas: [{ id: 1, phx_ref: "1.2" }] } };
+  },
+  leaves: function leaves() {
+    return { u2: { metas: [{ id: 2, phx_ref: "2" }] } };
+  },
+  state: function state() {
+    return {
+      u1: { metas: [{ id: 1, phx_ref: "1" }] },
+      u2: { metas: [{ id: 2, phx_ref: "2" }] },
+      u3: { metas: [{ id: 3, phx_ref: "3" }] }
+    };
+  }
+};
+
+describe("syncState", function () {
+  it("syncs empty state", function () {
+    var newState = { u1: { metas: [{ id: 1, phx_ref: "1" }] } };
+    var state = {};
+    _phoenix.Presence.syncState(state, newState);
+    _assert2.default.deepEqual(state, newState);
+  });
+
+  it("onJoins new presences and onLeave's left presences", function () {
+    var newState = fixtures.state();
+    var state = { u4: { metas: [{ id: 4, phx_ref: "4" }] } };
+    var joined = {};
+    var left = {};
+    var onJoin = function onJoin(key, current, newPres) {
+      joined[key] = { current: current, newPres: newPres };
+    };
+    var onLeave = function onLeave(key, current, leftPres) {
+      left[key] = { current: current, leftPres: leftPres };
+    };
+    _phoenix.Presence.syncState(state, newState, onJoin, onLeave);
+    _assert2.default.deepEqual(state, newState);
+    _assert2.default.deepEqual(joined, {
+      u1: { current: null, newPres: { metas: [{ id: 1, phx_ref: "1" }] } },
+      u2: { current: null, newPres: { metas: [{ id: 2, phx_ref: "2" }] } },
+      u3: { current: null, newPres: { metas: [{ id: 3, phx_ref: "3" }] } }
+    });
+    _assert2.default.deepEqual(left, {
+      u4: { current: { metas: [] }, leftPres: { metas: [{ id: 4, phx_ref: "4" }] } }
+    });
+  });
+
+  it("onJoins only newly added metas", function () {
+    var newState = { u3: { metas: [{ id: 3, phx_ref: "3" }, { id: 3, phx_ref: "3.new" }] } };
+    var state = { u3: { metas: [{ id: 3, phx_ref: "3" }] } };
+    var joined = {};
+    var left = {};
+    var onJoin = function onJoin(key, current, newPres) {
+      joined[key] = { current: current, newPres: newPres };
+    };
+    var onLeave = function onLeave(key, current, leftPres) {
+      left[key] = { current: current, leftPres: leftPres };
+    };
+    _phoenix.Presence.syncState(state, newState, onJoin, onLeave);
+    _assert2.default.deepEqual(state, newState);
+    _assert2.default.deepEqual(joined, {
+      u3: { current: { metas: [{ id: 3, phx_ref: "3" }] },
+        newPres: { metas: [{ id: 3, phx_ref: "3" }, { id: 3, phx_ref: "3.new" }] } }
+    });
+    _assert2.default.deepEqual(left, {});
+  });
+});
+
+describe("syncDiff", function () {
+  it("syncs empty state", function () {
+    var joins = { u1: { metas: [{ id: 1, phx_ref: "1" }] } };
+    var state = {};
+    _phoenix.Presence.syncDiff(state, {
+      joins: joins,
+      leaves: {}
+    });
+    _assert2.default.deepEqual(state, joins);
+  });
+
+  it("removes presence when meta is empty and adds additional meta", function () {
+    var state = fixtures.state();
+    _phoenix.Presence.syncDiff(state, { joins: fixtures.joins(), leaves: fixtures.leaves() });
+
+    _assert2.default.deepEqual(state, {
+      u1: { metas: [{ id: 1, phx_ref: "1" }, { id: 1, phx_ref: "1.2" }] },
+      u3: { metas: [{ id: 3, phx_ref: "3" }] }
+    });
+  });
+
+  it("removes meta while leaving key if other metas exist", function () {
+    var state = {
+      u1: { metas: [{ id: 1, phx_ref: "1" }, { id: 1, phx_ref: "1.2" }] }
+    };
+    _phoenix.Presence.syncDiff(state, { joins: {}, leaves: { u1: { metas: [{ id: 1, phx_ref: "1" }] } } });
+
+    _assert2.default.deepEqual(state, {
+      u1: { metas: [{ id: 1, phx_ref: "1.2" }] }
+    });
+  });
+});
 
 
 })(typeof(exports) === "undefined" ? window.Phoenix = window.Phoenix || {} : exports);
