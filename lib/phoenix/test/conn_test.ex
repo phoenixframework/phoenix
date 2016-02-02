@@ -503,12 +503,12 @@ defmodule Phoenix.ConnTest do
 
   Or only invoke the Endpoint's plugs:
 
-    conn =
-      conn
-      |> bypass_through()
-      |> get("/")
-      |> MyApp.RequireAuthentication.call([])
-    assert conn.halted
+      conn =
+        conn
+        |> bypass_through()
+        |> get("/")
+        |> MyApp.RequireAuthentication.call([])
+      assert conn.halted
   """
   @spec bypass_through(Conn.t) :: Conn.t
   def bypass_through(conn) do
