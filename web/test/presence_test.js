@@ -101,5 +101,31 @@ describe("syncDiff", () => {
       u1: {metas: [{id: 1, phx_ref: "1.2"}]},
     })
   })
+})
 
+
+describe("list", () => {
+  it("lists full presence by default", () => {
+    let state = fixtures.state()
+    assert.deepEqual(Presence.list(state), [
+      {metas: [{id: 1, phx_ref: "1"}]},
+      {metas: [{id: 2, phx_ref: "2"}]},
+      {metas: [{id: 3, phx_ref: "3"}]}
+    ])
+  })
+
+  it("lists with custom function", () => {
+    let state = {u1: {metas: [
+      {id: 1, phx_ref: "1.first"},
+      {id: 1, phx_ref: "1.second"}]
+    }}
+
+    let listBy = (key, {metas: [first, ...rest]}) => {
+      return first
+    }
+
+    assert.deepEqual(Presence.list(state, listBy), [
+      {id: 1, phx_ref: "1.first"}
+    ])
+  })
 })
