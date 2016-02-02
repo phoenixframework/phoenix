@@ -13,10 +13,15 @@ defmodule <%= application_module %>.Endpoint do
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
-  if code_reloading? do<%= if html do %>
+  if code_reloading? do
+    plug Phoenix.CodeReloader
+  end
+
+  # Live reloading can be explicitly enabled under the
+  # :live_reloader configuration of your endpoint.
+  if live_reloading? do<%= if html do %>
     socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
     plug Phoenix.LiveReloader<% end %>
-    plug Phoenix.CodeReloader
   end
 
   plug Plug.RequestId

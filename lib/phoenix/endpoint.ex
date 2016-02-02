@@ -63,6 +63,8 @@ defmodule Phoenix.Endpoint do
 
     * `:code_reloader` - when `true`, enables code reloading functionality
 
+    * `:live_reloader` - when `true`, enables live reloading functionality
+
     * `:debug_errors` - when `true`, uses `Plug.Debugger` functionality for
       debugging failures in the application. Recommended to be set to `true`
       only in development as it allows listing of the application source
@@ -370,10 +372,14 @@ defmodule Phoenix.Endpoint do
     quote do
       @otp_app unquote(opts)[:otp_app] || raise "endpoint expects :otp_app to be given"
       var!(config) = Adapter.config(@otp_app, __MODULE__)
-      var!(code_reloading?) = var!(config)[:code_reloader]
 
+      var!(code_reloading?) = var!(config)[:code_reloader]
       # Avoid unused variable warnings
       _ = var!(code_reloading?)
+
+      var!(live_reloading?) = var!(config)[:live_reloader]
+      # Avoid unused variable warnings
+      _ = var!(live_reloading?)
     end
   end
 

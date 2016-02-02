@@ -8,6 +8,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
            force_ssl: [subdomains: true],
            cache_static_manifest: "../../../../test/fixtures/manifest.json",
            pubsub: [adapter: Phoenix.PubSub.PG2, name: :endpoint_pub]]
+
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
 
   defmodule Endpoint do
@@ -17,6 +18,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert is_list(config)
     assert @otp_app == :phoenix
     assert code_reloading? == false
+    assert live_reloading? == false
   end
 
   setup_all do
