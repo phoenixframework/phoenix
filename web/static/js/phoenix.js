@@ -692,6 +692,74 @@ export class Ajax {
 Ajax.states = {complete: 4}
 
 
+
+export var Presence = {
+
+  syncState(state, newState, onJoin, onLeave){
+    if(!onJoin){ onJoin = function(){} }
+    if(!onLeave){ onLeave = function(){} }
+
+    this.map(state, (key, presence) => {
+      let currentPresence = state[key]
+      if(!newState[key]){
+        currentPresence.metas = [] // dup
+        onLeave(key, currentPresence, presence)
+        delete state[key]
+      }
+    })
+    this.map(newState, (key, newPresence) => {
+      let currentPresence = state[key]
+      state[key] = newPresence
+      // filter metas, call onLeave if removed, onJoin if added
+      if(!currentPresence){
+        // get metas in currentPresence
+        onJoin(key, currentPresence, newPresence)
+      }
+    })
+  },
+
+  syncDiff(state, {joins, leaves}, onJoin, onLeave){
+    if(!onJoin){ onJoin = function(){} }
+    if(!onLeave){ onLeave = function(){} }
+
+    this.map(joins, (key, newPresence) => {
+      let currentPresence = state[key]
+      state[key] = newPresence
+      if(currentPresence){
+        state[key].metas.unshift(...currentPresence.metas)
+      }
+      onJoin(key, currentPresence, newPresence)
+    })
+    this.map(leaves, (key, leftPresence) => {
+      let currentPresence = state[key]
+      if(!currentPresence){ return }
+      let refsToRemove = leftPresence.metas.map(m => m.phx_ref)
+      currentPresence.metas = currentPresence.metas.filter(p => {
+        return refsToRemove.indexOf(p.phx_ref) < 0
+      })
+      onLeave(key, currentPresence, leftPresence)
+      if(currentPresence.metas.length === 0){
+        delete state[key]
+      }
+    })
+  },
+
+  list(presences, chooser){
+    if(!chooser){ chooser = function(key, pres){ return pres } }
+
+    return this.map(presences, (key, presence) => {
+      return chooser(key, presence)
+    })
+  },
+
+  // private
+
+  map(obj, func){
+    return Object.getOwnPropertyNames(obj).map(key => func(key, obj[key]))
+  }
+}
+
+
 // Creates a timer that accepts a `timerCalc` function to perform
 // calculated timeout retries, such as exponential backoff.
 //

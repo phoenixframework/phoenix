@@ -6,8 +6,12 @@
   },
   "devDependencies": {
     "brunch": "^2.1.1",
+    "mocha": "^2.4.4",
     "babel-brunch": "^6.0.0",
     "uglify-js-brunch": ">= 1.0 < 1.8"
   },
-  "files": ["LICENSE.md", "package.json", "priv/static/phoenix.js"]
+  "files": ["LICENSE.md", "package.json", "priv/static/phoenix.js"],
+  "scripts": {
+    "test": "./node_modules/.bin/mocha ./web/static/test/**/*.js --compilers js:babel-register"
+  }
 }
