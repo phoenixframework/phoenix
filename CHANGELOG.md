@@ -1,6 +1,8 @@
 # Changelog
 
 ## 1.2.0-dev
+* Enhancments
+  * [Endpoint] Live reloader is now broken out to its own config option. Set `live_reloader = true` in your endpoint to turn it on.
 
 ## 1.1.4 (2016-1-25)
 

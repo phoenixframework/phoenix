@@ -110,6 +110,7 @@ defmodule Phoenix.Endpoint.Adapter do
 
      # Compile-time config
      code_reloader: false,
+     live_reloader: false,
      debug_errors: false,
      render_errors: [view: render_errors(module), accepts: ~w(html)],
 

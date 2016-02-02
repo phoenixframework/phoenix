@@ -5,6 +5,7 @@ defmodule Phoenix.CodeReloaderTest do
   Application.put_env(:phoenix, __MODULE__.Endpoint,
     root: File.cwd!,
     code_reloader: true,
+    live_reloader: true,
     reloadable_paths: ["web"],
     live_reload: [url: "ws://localhost:4000", patterns: [~r/some\/path/]])
 
