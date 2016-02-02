@@ -1,6 +1,6 @@
 import assert from "assert"
 
-import {Presence} from "../js/phoenix"
+import {Presence} from "../static/js/phoenix"
 
 let fixtures = {
   joins(){

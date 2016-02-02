@@ -12,6 +12,6 @@
   },
   "files": ["LICENSE.md", "package.json", "priv/static/phoenix.js"],
   "scripts": {
-    "test": "./node_modules/.bin/mocha ./web/static/test/**/*.js --compilers js:babel-register"
+    "test": "./node_modules/.bin/mocha ./web/test/**/*.js --compilers js:babel-register"
   }
 }
