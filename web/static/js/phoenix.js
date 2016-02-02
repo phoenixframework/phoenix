@@ -696,26 +696,34 @@ Ajax.states = {complete: 4}
 export var Presence = {
 
   syncState(state, newState, onJoin, onLeave){
-    if(!onJoin){ onJoin = function(){} }
-    if(!onLeave){ onLeave = function(){} }
+    let joins = {}
+    let leaves = {}
 
     this.map(state, (key, presence) => {
-      let currentPresence = state[key]
       if(!newState[key]){
-        currentPresence.metas = [] // dup
-        onLeave(key, currentPresence, presence)
-        delete state[key]
+        leaves[key] = this.clone(presence)
       }
     })
     this.map(newState, (key, newPresence) => {
       let currentPresence = state[key]
-      state[key] = newPresence
-      // filter metas, call onLeave if removed, onJoin if added
-      if(!currentPresence){
-        // get metas in currentPresence
-        onJoin(key, currentPresence, newPresence)
+      if(currentPresence){
+        let newRefs = newPresence.metas.map(m => m.phx_ref)
+        let curRefs = currentPresence.metas.map(m => m.phx_ref)
+        let joinedMetas = newPresence.metas.filter(m => curRefs.indexOf(m.phx_ref) < 0)
+        let leftMetas = currentPresence.metas.filter(m => newRefs.indexOf(m.phx_ref) < 0)
+        if(joinedMetas.length > 0){
+          joins[key] = newPresence
+          joins[key].metas = joinedMetas
+        }
+        if(leftMetas.length > 0){
+          leaves[key] = this.clone(currentPresence)
+          leaves[key].metas = leftMetas
+        }
+      } else {
+        joins[key] = newPresence
       }
     })
+    this.syncDiff(state, {joins: joins, leaves: leaves}, onJoin, onLeave)
   },
 
   syncDiff(state, {joins, leaves}, onJoin, onLeave){
@@ -756,7 +764,9 @@ export var Presence = {
 
   map(obj, func){
     return Object.getOwnPropertyNames(obj).map(key => func(key, obj[key]))
-  }
+  },
+
+  clone(obj){ return JSON.parse(JSON.stringify(obj)) }
 }
 
 
