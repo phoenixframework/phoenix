@@ -80,7 +80,8 @@ defmodule Phoenix.Channel do
           Repo.insert!(changeset)
           {:reply, {:ok, changeset}, socket}
         else
-          {:reply, {:error, changeset.errors}, socket}
+          {:reply,{:error, MyApp.ChangesetView.render("errors.json",
+            %{changeset: changeset}), socket}
         end
       end
 
