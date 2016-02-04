@@ -85,6 +85,7 @@
 // closed on the server, or 2). The client explicitly closed, by calling
 // `channel.leave()`
 //
+//
 // ## Presence
 //
 // The `Presence` object provides features for syncing presence information
@@ -93,8 +94,8 @@
 // ### Syncing initial state from the server
 //
 // `Presence.syncState` is used to sync the list of presences on the server
-// with the clients state. An optional `onJoin` and `onLeave` callback can
-// be provided to react changes in the client's local presences across
+// with the client's state. An optional `onJoin` and `onLeave` callback can
+// be provided to react to changes in the client's local presences across
 // disconnects and reconnects with the server.
 //
 // `Presence.syncDiff` is used to sync a diff of presence join and leave
@@ -107,8 +108,8 @@
 // `Presence.list` is used to return a list of presence information
 // based on the local state of metadata. By default, all presence
 // metadata is returned, but a `listBy` function can be supplied to
-// allow the client to select which metadata for each presence to use.
-// For example, you may have a user online form different devices with a
+// allow the client to select which metadata to use for a given presence.
+// For example, you may have a user online from different devices with a
 // a metadata status of "online", but they have set themselves to "away"
 // on another device. In this case, they app may choose to use the "away"
 // status for what appears on the UI. The example below defines a `listBy`
@@ -119,7 +120,7 @@
 //     let state = {}
 //     Presence.syncState(state, stateFromServer)
 //     let listBy = (id, {metas: [first, ...rest]}) => {
-//       first.count = rest.length + 1
+//       first.count = rest.length + 1 // count of this user's presences
 //       first.id = id
 //       return first
 //     }

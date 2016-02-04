@@ -35,9 +35,12 @@ defmodule Phoenix.PresenceTest do
 
   test "list/1 lists presences from tracker", config do
     assert MyPresence.list(config.topic) == %{}
-    assert MyPresence.track_presence(self(), config.topic, "u1", %{name: "u1"}) == :ok
+    assert MyPresence.list(%Phoenix.Socket{topic: config.topic}) == %{}
+    assert MyPresence.track(self(), config.topic, "u1", %{name: "u1"}) == :ok
     assert %{"u1" => %{extra: "extra", metas: [%{name: "u1", phx_ref: _}]}} =
            MyPresence.list(config.topic)
+    assert %{"u1" => %{extra: "extra", metas: [%{name: "u1", phx_ref: _}]}} =
+           MyPresence.list(%Phoenix.Socket{topic: config.topic})
   end
 
   test "handle_diff broadcasts events with default fetched data",
@@ -46,7 +49,7 @@ defmodule Phoenix.PresenceTest do
     pid = spawn(fn -> :timer.sleep(:infinity) end)
     Phoenix.PubSub.subscribe(config.pubsub, self(), topic)
     {:ok, _pid} = DefaultPresence.start_link(pubsub_server: config.pubsub)
-    DefaultPresence.track_presence(pid, topic, "u1", %{name: "u1"})
+    DefaultPresence.track(pid, topic, "u1", %{name: "u1"})
 
     assert_receive %Broadcast{topic: ^topic, event: "presence_diff", payload: %{
       joins: %{"u1" => %{metas: [%{name: "u1", phx_ref: u1_ref}]}},
@@ -68,7 +71,7 @@ defmodule Phoenix.PresenceTest do
 
     pid = spawn(fn -> :timer.sleep(:infinity) end)
     Phoenix.PubSub.subscribe(config.pubsub, self(), topic)
-    MyPresence.track_presence(pid, topic, "u1", %{name: "u1"})
+    MyPresence.track(pid, topic, "u1", %{name: "u1"})
 
     assert_receive %Broadcast{topic: ^topic, event: "presence_diff", payload: %{
       joins: %{"u1" => %{extra: "extra", metas: [%{name: "u1", phx_ref: u1_ref}]}},
@@ -89,10 +92,56 @@ defmodule Phoenix.PresenceTest do
     pid = spawn(fn -> :timer.sleep(:infinity) end)
     pid2 = spawn(fn -> :timer.sleep(:infinity) end)
     Phoenix.PubSub.subscribe(config.pubsub, self(), config.topic)
-    MyPresence.track_presence(pid, config.topic, "u1", %{name: "1st"})
-    MyPresence.track_presence(pid2, config.topic, "u1", %{name: "2nd"})
+    MyPresence.track(pid, config.topic, "u1", %{name: "1st"})
+    MyPresence.track(pid2, config.topic, "u1", %{name: "2nd"})
 
     assert %{"u1" => %{metas: [%{name: "1st"}, %{name: "2nd"}]}} =
            MyPresence.list(config.topic)
+  end
+
+  test "untrack with pid", %{topic: topic} = config do
+    Phoenix.PubSub.subscribe(config.pubsub, self(), config.topic)
+    MyPresence.track(self(), config.topic, "u1", %{})
+    assert %{"u1" => %{metas: [%{}]}} = MyPresence.list(config.topic)
+    assert MyPresence.untrack(self(), config.topic, "u1") == :ok
+    assert_receive %Broadcast{topic: ^topic, event: "presence_diff", payload: %{
+      joins: %{},
+      leaves: %{"u1" => %{metas: [%{}]}}
+    }}
+    assert %{} = MyPresence.list(config.topic)
+  end
+
+  test "track and untrack with %Socket{}", %{topic: topic} = config do
+    Phoenix.PubSub.subscribe(config.pubsub, self(), topic)
+    socket = %Phoenix.Socket{topic: topic, channel_pid: self()}
+    MyPresence.track(socket, "u1", %{})
+    assert %{"u1" => %{metas: [%{}]}} = MyPresence.list(topic)
+    assert MyPresence.untrack(socket, "u1") == :ok
+    assert_receive %Broadcast{topic: ^topic, event: "presence_diff", payload: %{
+      joins: %{},
+      leaves: %{"u1" => %{metas: [%{}]}}
+    }}
+    assert %{} = MyPresence.list(topic)
+  end
+
+  test "untrack with no tracked presence", config do
+    assert MyPresence.untrack(self(), config.topic, "u1") == :ok
+  end
+
+  test "update sends join and leave diff", %{topic: topic} = config do
+    Phoenix.PubSub.subscribe(config.pubsub, self(), topic)
+    MyPresence.track(self(), topic, "u1", %{name: "u1"})
+    assert %{"u1" => %{metas: [%{name: "u1"}]}} = MyPresence.list(topic)
+    assert MyPresence.update(self(), topic, "u1", %{name: "updated"}) == :ok
+    assert_receive %Broadcast{topic: ^topic, event: "presence_diff", payload: %{
+      joins: %{"u1" => %{metas: [%{name: "updated"}]}},
+      leaves: %{"u1" => %{metas: [%{name: "u1"}]}}
+    }}
+    assert %{} = MyPresence.list(topic)
+    assert %{"u1" => %{metas: [%{name: "updated"}]}} = MyPresence.list(topic)
+  end
+
+  test "update with no tracked presence" do
+    assert MyPresence.update(self(), "topic", "u1", %{}) == {:error, :nopresence}
   end
 end
