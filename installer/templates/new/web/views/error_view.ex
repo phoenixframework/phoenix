@@ -6,7 +6,7 @@ defmodule <%= application_module %>.ErrorView do
   end
 
   def render("500.html", _assigns) do
-    "Server internal error"
+    "Internal server error"
   end
 
   # In case no render clause matches or no
@@ -18,7 +18,7 @@ defmodule <%= application_module %>.ErrorView do
   end
 
   def render("500.json", _assigns) do
-    %{errors: %{detail: "Server internal error"}}
+    %{errors: %{detail: "Internal server error"}}
   end
 
   # In case no render clause matches or no
