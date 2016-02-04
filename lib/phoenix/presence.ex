@@ -77,18 +77,18 @@ defmodule Phoenix.Presence do
   More detailed information, such as user details that need to
   be fetched from the database can be achieved overriding the `fetch/2`
   function. The `fetch/2` callback is triggered when using `list/1`
-  and serves as a mechansim to fetch presence information a single time,
-  before broadcasting the the information to all channel subscribers.
+  and serves as a mechanism to fetch presence information a single time,
+  before broadcasting the information to all channel subscribers.
   This prevents N query problems and gives you a single place to group
   solated data fetching to extend presence metadata. The function must
-  eturn a map of data matching the outlined Presence datastructure,
+  return a map of data matching the outlined Presence datastructure,
   including the `:metas` key, but can extend the map of information
   to include any additional information. For example:
 
 
       def fetch(_topic, entries) do
         query =
-          from  in User,
+          from u in User,
             where: u.id in ^Map.keys(entries),
             select: {u.id, u}
 
@@ -99,10 +99,10 @@ defmodule Phoenix.Presence do
         end
       end
 
-  The function agove fetches all users from the database who
+  The function above fetches all users from the database who
   have registered presences for the given topic. The fetched
   information is then extended with a `:user` key of the user's
-  information, while mainting the required `:metas` field from the
+  information, while maintaining the required `:metas` field from the
   original presence data.
   """
   alias Phoenix.Socket.Broadcast
@@ -227,7 +227,7 @@ defmodule Phoenix.Presence do
 
   The keys of the map will usually point to a resource ID. The value
   will contain a map with a `:metas` key containing a list of metadata
-  for each resource. Additonally, every metadata entry will contain a
+  for each resource. Additionally, every metadata entry will contain a
   `:phx_ref` key which can be used to uniquely identify metadata for a
   given key. In the event that the metadata was previously updated,
   a `:phx_ref_prev` key will be present containing the previous
