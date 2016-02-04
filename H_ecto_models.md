@@ -653,7 +653,7 @@ $ mix ecto.gen.repo
 Don't forget to add your new repo to your supervision tree
 (typically in lib/hello_phoenix.ex):
 
-worker(HelloPhoenix.Repo, [])
+supervisor(HelloPhoenix.Repo, [])
 ```
 
 Note: Please see the "Repo" section above for information on what the repo does.
@@ -680,7 +680,7 @@ hostname: "localhost"
 
 We should also make sure to listen to the output of `ecto.gen.repo` and add our application repo as a child worker to our application's supervision tree.
 
-Let's open up `lib/hello_phoenix.ex` and do that by adding `worker(HelloPhoenix.Repo, [])` to the list of children our application will start.
+Let's open up `lib/hello_phoenix.ex` and do that by adding `supervisor(HelloPhoenix.Repo, [])` to the list of children our application will start.
 
 ```elixir
 defmodule HelloPhoenix do
@@ -690,7 +690,7 @@ defmodule HelloPhoenix do
       # Start the endpoint when the application starts
       supervisor(HelloPhoenix.Endpoint, []),
       # Start the Ecto repository
-      worker(HelloPhoenix.Repo, []),
+      supervisor(HelloPhoenix.Repo, []),
       # Here you could define other workers and supervisors as children
       # worker(HelloPhoenix.Worker, [arg1, arg2, arg3]),
     ]
