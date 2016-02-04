@@ -11,12 +11,12 @@ defmodule <%= application_module %>.ErrorViewTest do
 
   test "render 500.html" do
     assert render_to_string(<%= application_module %>.ErrorView, "500.html", []) ==
-           "Server internal error"
+           "Internal server error"
   end
 
   test "render any other" do
     assert render_to_string(<%= application_module %>.ErrorView, "505.html", []) ==
-           "Server internal error"
+           "Internal server error"
   end<% else %>test "renders 404.json" do
     assert render(<%= application_module %>.ErrorView, "404.json", []) ==
            %{errors: %{detail: "Page not found"}}
@@ -24,11 +24,11 @@ defmodule <%= application_module %>.ErrorViewTest do
 
   test "render 500.json" do
     assert render(<%= application_module %>.ErrorView, "500.json", []) ==
-           %{errors: %{detail: "Server internal error"}}
+           %{errors: %{detail: "Internal server error"}}
   end
 
   test "render any other" do
     assert render(<%= application_module %>.ErrorView, "505.json", []) ==
-           %{errors: %{detail: "Server internal error"}}
+           %{errors: %{detail: "Internal server error"}}
   end<% end %>
 end
