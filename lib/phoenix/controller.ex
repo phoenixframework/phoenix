@@ -813,8 +813,9 @@ defmodule Phoenix.Controller do
     * the accept header specified more than one media type preceeded
       or followed by the wildcard media type "`*/*`"
 
-  This function will send a 406 response and log whenever the server
-  cannot serve a response in any of the formats expected by the client.
+  This function raises `Phoenix.NotAcceptableError`, which is rendered
+  with status 406, whenever the server cannot serve a response in any
+  of the formats expected by the client.
 
   ## Examples
 
@@ -866,9 +867,8 @@ defmodule Phoenix.Controller do
     if format in accepted do
       put_format(conn, format)
     else
-      Logger.debug "Unknown format #{inspect format} in plug :accepts, " <>
-                   "expected one of #{inspect accepted}"
-      conn |> send_resp(406, "") |> halt()
+      raise Phoenix.NotAcceptableError,
+        message: "unknown format #{inspect format}, expected one of #{inspect accepted}"
     end
   end
 
@@ -937,9 +937,8 @@ defmodule Phoenix.Controller do
   defp find_format(exts, accepted),  do: Enum.find(exts, &(&1 in accepted))
 
   defp refuse(conn, accepted) do
-    Logger.debug "No supported media type in accept header in plug :accepts, " <>
-                 "expected one of #{inspect accepted}"
-    conn |> send_resp(406, "") |> halt()
+    raise Phoenix.NotAcceptableError,
+      message: "no supported media type in accept header, expected one of #{inspect accepted}"
   end
 
   @doc """
