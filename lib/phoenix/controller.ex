@@ -813,9 +813,8 @@ defmodule Phoenix.Controller do
     * the accept header specified more than one media type preceeded
       or followed by the wildcard media type "`*/*`"
 
-  This function raises `Phoenix.NotAcceptableError`, which is rendered
-  with status 406, whenever the server cannot serve a response in any
-  of the formats expected by the client.
+  This function will send a 406 response and log whenever the server
+  cannot serve a response in any of the formats expected by the client.
 
   ## Examples
 
