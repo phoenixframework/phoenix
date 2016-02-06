@@ -420,31 +420,28 @@ defmodule Phoenix.Endpoint do
 
       Module.register_attribute(__MODULE__, :plugs, accumulate: true)
       Module.register_attribute(__MODULE__, :phoenix_sockets, accumulate: true)
-      @before_compile Phoenix.Endpoint
+
+      if force_ssl = Phoenix.Endpoint.__force_ssl__(__MODULE__, var!(config)) do
+        plug Plug.SSL, force_ssl
+      end
 
       def init(opts) do
         opts
       end
 
       def call(conn, _opts) do
-        conn = put_in conn.secret_key_base, config(:secret_key_base)
-        conn
-        |> Plug.Conn.put_private(:phoenix_endpoint, __MODULE__)
-        |> put_script_name()
-        |> phoenix_pipeline()
-      end
-
-      defoverridable [init: 1, call: 2]
-
-      if force_ssl = Phoenix.Endpoint.__force_ssl__(__MODULE__, var!(config)) do
-        plug Plug.SSL, force_ssl
+        phoenix_pipeline(conn)
       end
 
       if var!(config)[:debug_errors] do
         use Plug.Debugger, otp_app: @otp_app
       end
 
-      use Phoenix.Endpoint.RenderErrors, var!(config)[:render_errors]
+      # Compile after the debugger so we properly wrap it.
+      @before_compile Phoenix.Endpoint
+      @phoenix_render_errors var!(config)[:render_errors]
+
+      defoverridable [init: 1, call: 2]
     end
   end
 
@@ -576,6 +573,24 @@ defmodule Phoenix.Endpoint do
     instrumentation = Phoenix.Endpoint.Instrument.definstrument(otp_app, env.module)
 
     quote do
+      defoverridable [call: 2]
+
+      # Inline render errors so we set the endpoint before calling it.
+      def call(conn, opts) do
+        conn = put_in conn.secret_key_base, config(:secret_key_base)
+        conn =
+          conn
+          |> Plug.Conn.put_private(:phoenix_endpoint, __MODULE__)
+          |> put_script_name()
+
+        try do
+          super(conn, opts)
+        catch
+          kind, reason ->
+            Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, @phoenix_render_errors)
+        end
+      end
+
       defp phoenix_pipeline(unquote(conn)), do: unquote(body)
 
       @doc """

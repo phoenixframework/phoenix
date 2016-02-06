@@ -20,7 +20,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
   defmacro __using__(opts) do
     quote do
       @before_compile Phoenix.Endpoint.RenderErrors
-      @phoenix_handle_errors unquote(opts)
+      @phoenix_render_errors unquote(opts)
     end
   end
 
@@ -34,7 +34,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
           super(conn, opts)
         catch
           kind, reason ->
-            Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, @phoenix_handle_errors)
+            Phoenix.Endpoint.RenderErrors.__catch__(conn, kind, reason, @phoenix_render_errors)
         end
       end
     end
