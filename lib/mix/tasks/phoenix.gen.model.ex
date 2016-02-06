@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
   The generated model will contain:
 
-    * a model in web/models
+    * a schema file in web/models
     * a migration file for the repository
 
   The generated migration can be skipped with `--no-migration`.
@@ -33,7 +33,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
   This will result in a migration with an `:integer` column
   of `:user_id` and create an index. It will also generate
-  the appropriate `belongs_to` entry in the model's schema.
+  the appropriate `belongs_to` entry in the schema.
 
   Furthermore an array type can also be given if it is
   supported by your database, although it requires the
@@ -56,25 +56,25 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
   ## binary_id
 
-  Generated migration can use `binary_id` for model's primary key and it's
-  references with option `--binary-id`.
+  Generated migration can use `binary_id` for schema's primary key
+  and its references with option `--binary-id`.
 
-  This option assumes the project was generated with the `--binary-id` option,
-  that sets up models to use `binary_id` by default. If that's not the case
-  you can still set all your models to use `binary_id` by default, by adding
-  following to your `model` function in `web/web.ex`option or by adding
-  following to the generated model before the `schema` declaration:
+  This option assumes the project was generated with the `--binary-id`
+  option, that sets up models to use `binary_id` by default. If that's
+  not the case you can still set all your models to use `binary_id`
+  by default, by adding the following to your `model` function in
+  `web/web.ex` or before the `schema` declaration:
 
       @primary_key {:id, :binary_id, autogenerate: true}
       @foreign_key_type :binary_id
 
   ## Default options
 
-  This generator uses default options provided in the `:generators` configuration
-  of the `:phoenix` application. You can override those options providing
-  corresponding switches, e.g. `--no-binary-id` to use normal ids despite
-  the default configuration or `--migration` to force generation of the migration.
-
+  This generator uses default options provided in the `:generators`
+  configuration of the `:phoenix` application. You can override those options
+  providing corresponding switches, e.g. `--no-binary-id` to use normal ids
+  despite the default configuration or `--migration` to force generation of
+  the migration.
   """
   def run(args) do
     switches = [migration: :boolean, binary_id: :boolean, instructions: :string]

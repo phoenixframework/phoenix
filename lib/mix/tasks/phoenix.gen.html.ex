@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
 
   The generated resource will contain:
 
-    * a model in web/models
+    * a schema in web/models
     * a view in web/views
     * a controller in web/controllers
     * a migration file for the repository
