@@ -98,8 +98,8 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     binding = binding ++
               [attrs: attrs, plural: plural, types: types(attrs), uniques: uniques,
                assocs: assocs(assocs), indexes: indexes(plural, assocs, uniques),
-               defaults: defaults(attrs), params: params,
-               binary_id: opts[:binary_id]]
+               schema_defaults: schema_defaults(attrs), binary_id: opts[:binary_id],
+               migration_defaults: migration_defaults(attrs), params: params]
 
     files = [
       {:eex, "model.ex",       "web/models/#{path}.ex"},
@@ -198,9 +198,16 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     end
   end
 
-  defp defaults(attrs) do
+  defp schema_defaults(attrs) do
     Enum.into attrs, %{}, fn
       {k, :boolean}  -> {k, ", default: false"}
+      {k, _}         -> {k, ""}
+    end
+  end
+
+  defp migration_defaults(attrs) do
+    Enum.into attrs, %{}, fn
+      {k, :boolean}  -> {k, ", default: false, null: false"}
       {k, _}         -> {k, ""}
     end
   end

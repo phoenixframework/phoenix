@@ -30,7 +30,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
         assert file =~ "add :name, :string"
         assert file =~ "add :age, :integer"
         assert file =~ "add :nicks, {:array, :text}"
-        assert file =~ "add :famous, :boolean, default: false"
+        assert file =~ "add :famous, :boolean, default: false, null: false"
         assert file =~ "add :born_at, :datetime"
         assert file =~ "add :secret, :uuid"
         assert file =~ "add :desc, :text"
