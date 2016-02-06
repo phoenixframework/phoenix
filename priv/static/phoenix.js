@@ -1,15 +1,15 @@
 (function(exports){
 "use strict";
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -100,6 +100,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // closed on the server, or 2). The client explicitly closed, by calling
 // `channel.leave()`
 //
+//
 // ## Presence
 //
 // The `Presence` object provides features for syncing presence information
@@ -108,8 +109,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // ### Syncing initial state from the server
 //
 // `Presence.syncState` is used to sync the list of presences on the server
-// with the clients state. An optional `onJoin` and `onLeave` callback can
-// be provided to react changes in the client's local presences across
+// with the client's state. An optional `onJoin` and `onLeave` callback can
+// be provided to react to changes in the client's local presences across
 // disconnects and reconnects with the server.
 //
 // `Presence.syncDiff` is used to sync a diff of presence join and leave
@@ -122,8 +123,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // `Presence.list` is used to return a list of presence information
 // based on the local state of metadata. By default, all presence
 // metadata is returned, but a `listBy` function can be supplied to
-// allow the client to select which metadata for each presence to use.
-// For example, you may have a user online form different devices with a
+// allow the client to select which metadata to use for a given presence.
+// For example, you may have a user online from different devices with a
 // a metadata status of "online", but they have set themselves to "away"
 // on another device. In this case, they app may choose to use the "away"
 // status for what appears on the UI. The example below defines a `listBy`
@@ -134,7 +135,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 //     let state = {}
 //     Presence.syncState(state, stateFromServer)
 //     let listBy = (id, {metas: [first, ...rest]}) => {
-//       first.count = rest.length + 1
+//       first.count = rest.length + 1 // count of this user's presences
 //       first.id = id
 //       return first
 //     }
@@ -192,7 +193,7 @@ var TRANSPORTS = {
   websocket: "websocket"
 };
 
-var Push = function () {
+var Push = (function () {
 
   // Initializes the Push
   //
@@ -316,9 +317,9 @@ var Push = function () {
   }]);
 
   return Push;
-}();
+})();
 
-var Channel = exports.Channel = function () {
+var Channel = exports.Channel = (function () {
   function Channel(topic, params, socket) {
     var _this2 = this;
 
@@ -520,9 +521,9 @@ var Channel = exports.Channel = function () {
   }]);
 
   return Channel;
-}();
+})();
 
-var Socket = exports.Socket = function () {
+var Socket = exports.Socket = (function () {
 
   // Initializes the Socket
   //
@@ -835,9 +836,9 @@ var Socket = exports.Socket = function () {
   }]);
 
   return Socket;
-}();
+})();
 
-var LongPoll = exports.LongPoll = function () {
+var LongPoll = exports.LongPoll = (function () {
   function LongPoll(endPoint) {
     _classCallCheck(this, LongPoll);
 
@@ -942,9 +943,9 @@ var LongPoll = exports.LongPoll = function () {
   }]);
 
   return LongPoll;
-}();
+})();
 
-var Ajax = exports.Ajax = function () {
+var Ajax = exports.Ajax = (function () {
   function Ajax() {
     _classCallCheck(this, Ajax);
   }
@@ -1040,7 +1041,7 @@ var Ajax = exports.Ajax = function () {
   }]);
 
   return Ajax;
-}();
+})();
 
 Ajax.states = { complete: 4 };
 
@@ -1092,10 +1093,10 @@ var Presence = exports.Presence = {
     var leaves = _ref2.leaves;
 
     if (!onJoin) {
-      onJoin = function onJoin() {};
+      onJoin = function () {};
     }
     if (!onLeave) {
-      onLeave = function onLeave() {};
+      onLeave = function () {};
     }
 
     this.map(joins, function (key, newPresence) {
@@ -1127,7 +1128,7 @@ var Presence = exports.Presence = {
   },
   list: function list(presences, chooser) {
     if (!chooser) {
-      chooser = function chooser(key, pres) {
+      chooser = function (key, pres) {
         return pres;
       };
     }
@@ -1163,7 +1164,7 @@ var Presence = exports.Presence = {
 //    reconnectTimer.scheduleTimeout() // fires after 1000
 //
 
-var Timer = function () {
+var Timer = (function () {
   function Timer(callback, timerCalc) {
     _classCallCheck(this, Timer);
 
@@ -1197,7 +1198,7 @@ var Timer = function () {
   }]);
 
   return Timer;
-}();
+})();
 
 
 })(typeof(exports) === "undefined" ? window.Phoenix = window.Phoenix || {} : exports);

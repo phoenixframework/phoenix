@@ -3,11 +3,11 @@
   },
   "dependencies": {
     "babel-brunch": "~6.0.0",
-    "brunch": "~2.1.3",
-    "clean-css-brunch": "~1.8.0",
-    "css-brunch": "~1.7.0",
-    "javascript-brunch": "~1.8.0",
-    "uglify-js-brunch": "~1.7.0",
+    "brunch": "~2.2.3",
+    "clean-css-brunch": "~2.0.0",
+    "css-brunch": "~2.0.0",
+    "javascript-brunch": "~2.0.0",
+    "uglify-js-brunch": "~2.0.1",
     "phoenix": "file:<%= brunch_deps_prefix %><%= phoenix_path %>"<%= if html do %>,
     "phoenix_html": "file:<%= brunch_deps_prefix %>deps/phoenix_html"<% end %>
   }
