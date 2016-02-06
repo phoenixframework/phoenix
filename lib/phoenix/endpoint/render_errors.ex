@@ -76,7 +76,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
         format = "#{status}.#{format}"
 
         conn
-        |> put_layout(false)
+        |> put_layout(opts[:layout] || false)
         |> put_view(opts[:view])
         |> put_status(status)
         |> render(format, %{kind: kind, reason: reason, stack: stack})

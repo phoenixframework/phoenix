@@ -4,6 +4,10 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
 
   view = __MODULE__
 
+  def render("app.html", %{view_template: view_template} = assigns) do
+    "Layout: " <> render(view_template, assigns)
+  end
+
   def render("404.html", %{kind: kind, reason: _reason, stack: _stack, conn: conn}) do
     "Got 404 from #{kind} with #{conn.method}"
   end
@@ -148,6 +152,15 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
 
     assert conn.status == 500
     assert conn.resp_body == "500 in TEXT"
+  end
+
+  test "exception page with layout" do
+    conn =
+      conn(:get, "/")
+      |> render([layout: {__MODULE__, :app}], fn -> throw :hello end)
+
+    assert conn.status == 500
+    assert conn.resp_body == "Layout: Got 500 from throw with GET"
   end
 
   @tag :capture_log
