@@ -55,11 +55,11 @@ defmodule Phoenix.Router.Scope do
   end
 
   def push(module, opts) when is_list(opts) do
-    path  = Keyword.get(opts, :path)
-    if path, do: path = Plug.Router.Utils.split(path)
+    path = Keyword.get(opts, :path)
+    path = path && Plug.Router.Utils.split(path)
 
     alias = Keyword.get(opts, :alias)
-    if alias, do: alias = Atom.to_string(alias)
+    alias = alias && Atom.to_string(alias)
 
     scope = %Scope{path: path,
                    alias: alias,

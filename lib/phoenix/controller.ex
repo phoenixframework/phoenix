@@ -895,7 +895,7 @@ defmodule Phoenix.Controller do
         exts = parse_exts(type <> "/" <> subtype)
         q    = parse_q(args)
 
-        if q === 1.0 && (format = find_format(exts, accepted)) do
+        if format = (q === 1.0 && find_format(exts, accepted)) do
           put_format(conn, format)
         else
           parse_header_accept(conn, t, [{-q, exts}|acc], accepted)

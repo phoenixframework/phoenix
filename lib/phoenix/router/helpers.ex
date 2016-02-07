@@ -49,31 +49,33 @@ defmodule Phoenix.Router.Helpers do
 
   ## Helpers
 
-  defp uri_to_string(uri) do
-    scheme = uri.scheme
-
-    if scheme && (port = URI.default_port(scheme)) do
-      if uri.port == port, do: uri = %{uri | port: nil}
+  defp uri_to_string(%{scheme: scheme} = uri) do
+    if scheme do
+      scheme <> ":" <> authority(uri)
+    else
+      authority(uri)
     end
-
-    authority = extract_authority(uri)
-
-    result = ""
-    if uri.scheme, do: result = result <> uri.scheme <> ":"
-    if authority,  do: result = result <> "//" <> authority
-    result
   end
 
-  defp extract_authority(%{host: nil, authority: authority}) do
-    authority
+  defp authority(%{host: nil, authority: nil}), do: ""
+  defp authority(%{host: nil, authority: authority}), do: "//" <> authority
+  defp authority(%{host: host, userinfo: userinfo, scheme: scheme, port: port}) do
+    host
+    |> if_value(userinfo, fn acc ->
+          userinfo <> "@" <> acc
+        end)
+    |> if_value(port, fn acc ->
+          case scheme && URI.default_port(scheme) do
+            ^port -> acc
+            _     -> acc <> ":" <> Integer.to_string(port)
+          end
+        end)
+    |> prepend("//")
   end
 
-  defp extract_authority(%{host: host, userinfo: userinfo, port: port}) do
-    authority = host
-    if userinfo, do: authority = userinfo <> "@" <> authority
-    if port, do: authority = authority <> ":" <> Integer.to_string(port)
-    authority
-  end
+  defp prepend(acc, prefix), do: prefix <> acc
+  defp if_value(result, nil, _fun), do: result
+  defp if_value(result, _value, fun), do: fun.(result)
 
   defp build_own_forward_path(conn, router, path) do
     case Map.fetch(conn.private, router) do

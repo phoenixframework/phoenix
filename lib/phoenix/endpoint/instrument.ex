@@ -105,10 +105,10 @@ defmodule Phoenix.Endpoint.Instrument do
     caller = %{module: mod, function: form_fa(fun), file: file, line: line}
 
     if app = Application.get_env(:logger, :compile_time_application) do
-      caller = Map.put(caller, :application, app)
+       Map.put(caller, :application, app)
+    else
+      caller
     end
-
-    caller
   end
 
   defp form_fa({name, arity}), do: Atom.to_string(name) <> "/" <> Integer.to_string(arity)

@@ -59,6 +59,10 @@ defmodule Phoenix.Endpoint.CowboyHandler do
   Generates a childspec to be used in the supervision tree.
   """
   def child_spec(scheme, endpoint, config) do
+    if scheme == :https do
+      Application.ensure_all_started(:ssl)
+    end
+
     dispatches =
       for {path, socket} <- endpoint.__sockets__,
           {transport, {module, config}} <- socket.__transports__,
