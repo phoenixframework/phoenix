@@ -3,6 +3,8 @@ defmodule Phoenix.Router.RouteTest do
 
   import Phoenix.Router.Route
 
+  def init(opts), do: opts
+
   defmodule AdminRouter do
     def call(conn, _), do: Plug.Conn.assign(conn, :fwd_conn, conn)
   end
@@ -37,7 +39,7 @@ defmodule Phoenix.Router.RouteTest do
   end
 
   test "builds a catch-all verb_match for forwarded routes" do
-    route = build(:forward, :*, "/foo/:bar", nil, Hello, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"})
+    route = build(:forward, :*, "/foo/:bar", nil, __MODULE__, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"})
     assert route.verb == :*
     assert route.kind == :forward
     assert exprs(route).verb_match == {:_verb, [], nil}

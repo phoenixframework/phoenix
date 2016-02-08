@@ -109,6 +109,7 @@ defmodule Phoenix.Router.Route do
 
   defp build_pipes(%Route{kind: :forward} = route) do
     {_params, fwd_segments} = Plug.Router.Utils.build_path_match(route.path)
+    opts = route.plug.init(route.opts)
 
     quote do
       var!(conn)
@@ -118,7 +119,7 @@ defmodule Phoenix.Router.Route do
         # does not see a call and then suddenly start tracking
         # changes in the controller.
         plug = unquote(route.plug)
-        opts = plug.init(unquote(route.opts))
+        opts = unquote(opts)
         Phoenix.Router.Route.forward(conn, unquote(fwd_segments), plug, opts)
       end)
     end |> pipe_through(route)

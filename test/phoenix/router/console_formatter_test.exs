@@ -39,8 +39,8 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
   defmodule RouterTestResource do
     use Phoenix.Router
     resources "/image", Phoenix.ImageController, singleton: true
-    forward "/admin", Phoenix.Admin.Router, [], as: :admin
-    forward "/f1", Phoenix.F1
+    forward "/admin", RouterTestResources, [], as: :admin
+    forward "/f1", RouterTestSingleRoutes
   end
 
   test "format single resource routes" do
@@ -52,8 +52,8 @@ defmodule Phoenix.Router.ConsoleFormatterTest do
     image_path  PATCH   /image       Phoenix.ImageController :update
                 PUT     /image       Phoenix.ImageController :update
     image_path  DELETE  /image       Phoenix.ImageController :delete
-                *       /admin       Phoenix.Admin.Router []
-                *       /f1          Phoenix.F1 []
+                *       /admin       Phoenix.Router.ConsoleFormatterTest.RouterTestResources []
+                *       /f1          Phoenix.Router.ConsoleFormatterTest.RouterTestSingleRoutes []
     """
   end
 
