@@ -222,7 +222,7 @@ defmodule Phoenix.Socket do
 
   """
   def assign(socket = %Socket{}, key, value) do
-    update_in socket.assigns, &Map.put(&1, key, value)
+    put_in socket.assigns[key], value
   end
 
   @doc """

@@ -115,12 +115,8 @@ defmodule Phoenix.Router.Route do
       var!(conn)
       |> Plug.Conn.put_private(:phoenix_pipelines, unquote(route.pipe_through))
       |> Plug.Conn.put_private(:phoenix_route, fn conn ->
-        # We need to store this in a variable so the compiler
-        # does not see a call and then suddenly start tracking
-        # changes in the controller.
-        plug = unquote(route.plug)
-        opts = unquote(opts)
-        Phoenix.Router.Route.forward(conn, unquote(fwd_segments), plug, opts)
+        Phoenix.Router.Route.forward(conn, unquote(fwd_segments),
+                                     unquote(route.plug), unquote(opts))
       end)
     end |> pipe_through(route)
   end

@@ -632,6 +632,8 @@ defmodule Phoenix.Router do
   The router pipelines will be invoked prior to forwarding the
   connection.
 
+  The forwarded plug will be initialized at compile time.
+
   Note, however, that we don't advise forwarding to another
   endpoint. The reason is that plugs defined by your app
   and the forwarded endpoint would be invoked twice, which
