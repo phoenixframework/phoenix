@@ -264,11 +264,15 @@ defmodule Mix.Tasks.Phoenix.New do
       append_to path, "config/config.exs", """
 
       # Configure phoenix generators
-      config :phoenix, :generators,
-        migration: #{adapter_config[:migration]},
-        binary_id: #{adapter_config[:binary_id]}
+      config :phoenix, :generators#{kw_to_config(generator_config(adapter_config))}
       """
     end
+  end
+
+  defp generator_config(adapter_config) do
+    adapter_config
+    |> Keyword.take([:binary_id, :migration, :sample_binary_id])
+    |> Enum.filter(fn {_, value} -> not is_nil(value) end)
   end
 
   defp copy_static(_app, path, binding) do
@@ -418,7 +422,8 @@ defmodule Mix.Tasks.Phoenix.New do
      test_begin: "",
      test_restart: "Mongo.Ecto.truncate(#{module}.Repo, [])",
      binary_id: true,
-     migration: false}
+     migration: false,
+     sample_binary_id: "111111111111111111111111"}
   end
   defp get_ecto_adapter(db, _app, _mod) do
     Mix.raise "Unknown database #{inspect db}"

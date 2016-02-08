@@ -35,8 +35,8 @@ defmodule Mix.Tasks.Phoenix.NewTest do
         refute file =~ "app_namespace"
         assert file =~ """
         config :phoenix, :generators,
-          migration: true,
-          binary_id: false
+          binary_id: false,
+          migration: true
         """
       end
 
@@ -344,6 +344,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "custom_path/config/config.exs", fn file ->
         assert file =~ ~r/binary_id: true/
         assert file =~ ~r/migration: false/
+        assert file =~ ~r/sample_binary_id: "111111111111111111111111"/
       end
     end
   end

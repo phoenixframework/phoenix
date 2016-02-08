@@ -35,4 +35,14 @@ defmodule MixHelper do
         match.(File.read!(file))
     end
   end
+
+  def with_generator_env(new_env, fun) do
+    old = Application.get_env(:phoenix, :generators)
+    Application.put_env(:phoenix, :generators, new_env)
+    try do
+      fun.()
+    after
+      Application.put_env(:phoenix, :generators, old)
+    end
+  end
 end
