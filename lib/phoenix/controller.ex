@@ -868,7 +868,8 @@ defmodule Phoenix.Controller do
       put_format(conn, format)
     else
       raise Phoenix.NotAcceptableError,
-        message: "unknown format #{inspect format}, expected one of #{inspect accepted}"
+        message: "unknown format #{inspect format}, expected one of #{inspect accepted}",
+        accepts: accepted
     end
   end
 
@@ -938,7 +939,8 @@ defmodule Phoenix.Controller do
 
   defp refuse(conn, accepted) do
     raise Phoenix.NotAcceptableError,
-      message: "no supported media type in accept header, expected one of #{inspect accepted}"
+      message: "no supported media type in accept header, expected one of #{inspect accepted}",
+      accepts: accepted
   end
 
   @doc """

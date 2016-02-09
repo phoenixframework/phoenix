@@ -269,6 +269,7 @@ defmodule Phoenix.Controller.ControllerTest do
       accepts conn(:get, "/", _format: "json"), ~w(html)
     end
     assert Plug.Exception.status(exception) == 406
+    assert exception.accepts == ["html"]
   end
 
   test "accepts/2 uses first accepts on empty or catch-all header" do
@@ -332,6 +333,7 @@ defmodule Phoenix.Controller.ControllerTest do
       accepts with_accept("text/html; q=0.7, application/json; q=0.8"), ~w(xml)
     end
     assert Plug.Exception.status(exception) == 406
+    assert exception.accepts == ["xml"]
   end
 
   test "scrub_params/2 raises Phoenix.MissingParamError for missing key" do
