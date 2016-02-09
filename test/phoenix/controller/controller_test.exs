@@ -265,9 +265,10 @@ defmodule Phoenix.Controller.ControllerTest do
     assert get_format(conn) == "json"
     assert conn.params["_format"] == "json"
 
-    conn = accepts conn(:get, "/", _format: "json"), ~w(html)
-    assert conn.status == 406
-    assert conn.halted
+    exception = assert_raise Phoenix.NotAcceptableError, ~r/unknown format "json"/, fn ->
+      accepts conn(:get, "/", _format: "json"), ~w(html)
+    end
+    assert Plug.Exception.status(exception) == 406
   end
 
   test "accepts/2 uses first accepts on empty or catch-all header" do
@@ -327,9 +328,10 @@ defmodule Phoenix.Controller.ControllerTest do
     assert get_format(conn) == "json"
     assert conn.params["_format"] == nil
 
-    conn = accepts with_accept("text/html; q=0.7, application/json; q=0.8"), ~w(xml)
-    assert conn.halted
-    assert conn.status == 406
+    exception = assert_raise Phoenix.NotAcceptableError, ~r/no supported media type in accept/, fn ->
+      accepts with_accept("text/html; q=0.7, application/json; q=0.8"), ~w(xml)
+    end
+    assert Plug.Exception.status(exception) == 406
   end
 
   test "scrub_params/2 raises Phoenix.MissingParamError for missing key" do

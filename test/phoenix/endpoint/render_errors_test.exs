@@ -170,7 +170,7 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
       |> put_req_header("accept", "unknown/unknown")
       |> render([], fn -> throw :hello end)
 
-    assert conn.status == 406
-    assert conn.resp_body == ""
+    assert conn.status == 500
+    assert conn.resp_body == "Got 500 from throw with GET"
   end
 end
