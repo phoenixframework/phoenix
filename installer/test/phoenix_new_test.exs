@@ -33,11 +33,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       assert_file "photo_blog/config/config.exs", fn file ->
         refute file =~ "app_namespace"
-        assert file =~ """
-        config :phoenix, :generators,
-          binary_id: false,
-          migration: true
-        """
+        refute file =~ "config :phoenix, :generators"
       end
 
       assert_file "photo_blog/config/prod.exs", fn file ->

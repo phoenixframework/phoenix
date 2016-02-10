@@ -182,8 +182,11 @@ defmodule Mix.Tasks.Phoenix.New do
     in_umbrella? = in_umbrella?(path)
     brunch_deps_prefix = if in_umbrella?, do: "../../", else: ""
 
-    binary_id = Keyword.get(opts, :binary_id, false)
-    adapter_config = Keyword.put_new(adapter_config, :binary_id, binary_id)
+    adapter_config =
+      case Keyword.fetch(opts, :binary_id) do
+        {:ok, value} -> Keyword.put_new(adapter_config, :binary_id, value)
+        :error -> adapter_config
+      end
 
     binding = [application_name: app,
                application_module: mod,
@@ -261,11 +264,16 @@ defmodule Mix.Tasks.Phoenix.New do
         pool_size: 20
       """
 
-      append_to path, "config/config.exs", """
+      case generator_config(adapter_config) do
+        [] ->
+          :ok
+        generator_config ->
+          append_to path, "config/config.exs", """
 
-      # Configure phoenix generators
-      config :phoenix, :generators#{kw_to_config(generator_config(adapter_config))}
-      """
+          # Configure phoenix generators
+          config :phoenix, :generators#{kw_to_config(generator_config)}
+          """
+      end
     end
   end
 
@@ -411,8 +419,7 @@ defmodule Mix.Tasks.Phoenix.New do
       test: [database: "db/#{app}_test.sqlite", pool: Ecto.Adapters.SQL.Sandbox],
       prod: [database: "db/#{app}_prod.sqlite"],
       test_begin: "Ecto.Adapters.SQL.begin_test_transaction(#{module}.Repo)",
-      test_restart: "Ecto.Adapters.SQL.restart_test_transaction(#{module}.Repo, [])",
-      migration: true}
+      test_restart: "Ecto.Adapters.SQL.restart_test_transaction(#{module}.Repo, [])"}
   end
   defp get_ecto_adapter("mongodb", app, module) do
     {:mongodb_ecto, Mongo.Ecto,
@@ -435,8 +442,7 @@ defmodule Mix.Tasks.Phoenix.New do
             pool: Ecto.Adapters.SQL.Sandbox],
      prod: [username: user, password: pass, database: "#{app}_prod"],
      test_begin: "Ecto.Adapters.SQL.begin_test_transaction(#{module}.Repo)",
-     test_restart: "Ecto.Adapters.SQL.restart_test_transaction(#{module}.Repo, [])",
-     migration: true]
+     test_restart: "Ecto.Adapters.SQL.restart_test_transaction(#{module}.Repo, [])"]
   end
 
   defp kw_to_config(kw) do
