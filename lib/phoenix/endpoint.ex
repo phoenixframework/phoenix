@@ -39,7 +39,7 @@ defmodule Phoenix.Endpoint do
 
       supervisor(YourApp.Endpoint, [])
 
-  ## Endpoint configuration
+  ### Endpoint configuration
 
   All endpoints are configured in your application environment.
   For example:
@@ -174,13 +174,10 @@ defmodule Phoenix.Endpoint do
 
   #### Paths and URLs
 
-    * `url()` - generates the endpoint base URL without any path information
-    * `static_url()` - generates the static URL without any path information
-
     * `struct_url()` - generates the endpoint base URL but as a `URI` struct
-
-    * `path(path)` - generates the path information when routing to this
-      endpoint
+    * `url()` - generates the endpoint base URL without any path information
+    * `path(path)` - generates the path information when routing to this endpoint
+    * `static_url()` - generates the static URL without any path information
     * `static_path(path)` - generates a route to a static file in `priv/static`
 
   #### Channels
