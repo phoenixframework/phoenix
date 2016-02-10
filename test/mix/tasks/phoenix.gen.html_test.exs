@@ -115,6 +115,9 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
 
         assert file =~ ~S|test "deletes chosen resource"|
         assert file =~ ~S|conn = delete conn, user_path(conn, :delete, user)|
+
+        assert file =~ ~S|test "renders page not found when id is nonexistent"|
+        assert file =~ ~S|user_path(conn, :show, -1)|
       end
 
       assert_received {:mix_shell, :info, ["\nAdd the resource" <> _ = message]}
@@ -187,6 +190,26 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
 
       assert_file "web/templates/admin/user/form.html.eex", fn file ->
         refute file =~ ~s(--no-model)
+      end
+    end
+  end
+
+  test "with binary_id properly generates controller test" do
+    in_tmp "with binary_id properly generates controller test", fn ->
+      with_generator_env [binary_id: true, sample_binary_id: "abcd"], fn ->
+        Mix.Tasks.Phoenix.Gen.Json.run ["User", "users"]
+
+        assert_file "test/controllers/user_controller_test.exs", fn file ->
+          assert file =~ ~S|user_path(conn, :show, "abcd")|
+        end
+      end
+
+      with_generator_env [binary_id: true], fn ->
+        Mix.Tasks.Phoenix.Gen.Json.run ["Post", "posts"]
+
+        assert_file "test/controllers/post_controller_test.exs", fn file ->
+          assert file =~ ~S|post_path(conn, :show, "11111111-1111-1111-1111-111111111111")|
+        end
       end
     end
   end

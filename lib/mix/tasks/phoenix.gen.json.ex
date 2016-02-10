@@ -37,7 +37,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
     path    = binding[:path]
     route   = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
     binding = binding ++ [plural: plural, route: route,
-                          binary_id: opts[:binary_id],
+                          sample_id: sample_id(opts),
                           attrs: attrs, params: Mix.Phoenix.params(attrs)]
 
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Controller")
@@ -62,6 +62,14 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
       Mix.Task.run "phoenix.gen.model", ["--instructions", instructions|args]
     else
       Mix.shell.info instructions
+    end
+  end
+
+  defp sample_id(opts) do
+    if Keyword.get(opts, :binary_id, false) do
+      Keyword.get(opts, :sample_binary_id, "11111111-1111-1111-1111-111111111111")
+    else
+      -1
     end
   end
 
