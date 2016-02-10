@@ -102,12 +102,14 @@ defmodule Phoenix.Socket.Transport do
   """
 
   require Logger
+  alias Phoenix.Endpoint.Instrument
   alias Phoenix.Socket
   alias Phoenix.Socket.Message
   alias Phoenix.Socket.Reply
 
   @protocol_version "1.0.0"
   @client_vsn_requirements "~> 1.0"
+  @filter_parameters Application.get_env(:phoenix, :filter_parameters)
 
   @doc """
   Provides a keyword list of default configuration for socket transports.
@@ -184,6 +186,20 @@ defmodule Phoenix.Socket.Transport do
     * `{:error, reason, reply}` - An error happened and the reply
       must be sent as result
 
+  ## Parameters filtering on join
+
+  When logging parameters, Phoenix can filter out sensitive parameters
+  in the logs, such as passwords, tokens and what not. Parameters to
+  be filtered can be added via the `:filter_parameters` option:
+
+      config :phoenix, :filter_parameters, ["password", "secret"]
+
+  With the configuration above, Phoenix will filter any parameter
+  that contains the terms `password` or `secret`. The match is
+  case sensitive.
+
+  Phoenix's default is `["password"]`.
+
   """
   def dispatch(msg, channels, socket)
 
@@ -201,10 +217,11 @@ defmodule Phoenix.Socket.Transport do
     if channel = socket.handler.__channel__(topic, socket.transport_name) do
       socket = %Socket{socket | topic: topic, channel: channel}
 
+      filtered_payload = Instrument.filter_values(msg.payload, @filter_parameters)
       log_info topic, fn ->
         "JOIN #{topic} to #{inspect(channel)}\n" <>
         "  Transport:  #{inspect socket.transport}\n" <>
-        "  Parameters: #{inspect msg.payload}"
+        "  Parameters: #{inspect filtered_payload}"
       end
 
       case Phoenix.Channel.Server.join(socket, msg.payload) do

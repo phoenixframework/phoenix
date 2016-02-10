@@ -3,6 +3,8 @@ defmodule Phoenix.Endpoint.InstrumentTest do
   use ExUnit.Case
   import ExUnit.CaptureLog
 
+  alias Phoenix.Endpoint.Instrument
+
   @config [instrumenters: [__MODULE__.MyInstrumenter, __MODULE__.MyOtherInstrumenter]]
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
 
@@ -139,5 +141,33 @@ defmodule Phoenix.Endpoint.InstrumentTest do
     assert stop_data.res == :ok
     assert is_integer(stop_data.duration)
     assert stop_data.duration >= 0
+  end
+
+  test "filter_values" do
+    assert Instrument.filter_values(%{"foo" => "bar", "password" => "should_not_show"}, ["password"]) ==
+           %{"foo" => "bar", "password" => "[FILTERED]"}
+  end
+
+  test "filter_values when a map has secret key" do
+    assert Instrument.filter_values(%{"foo" => "bar", "map" => %{"password" => "should_not_show"}}, ["password"]) ==
+           %{"foo" => "bar", "map" => %{"password" => "[FILTERED]"}}
+  end
+
+  test "filter_values when a list has a map with secret" do
+    assert Instrument.filter_values(%{"foo" => "bar", "list" => [%{"password" => "should_not_show"}]}, ["password"]) ==
+           %{"foo" => "bar", "list" => [%{"password" => "[FILTERED]"}]}
+  end
+
+  test "filter_values does not filter structs" do
+    assert Instrument.filter_values(%{"foo" => "bar", "file" => %Plug.Upload{}}, ["password"]) ==
+           %{"foo" => "bar", "file" => %Plug.Upload{}}
+
+    assert Instrument.filter_values(%{"foo" => "bar", "file" => %{__struct__: "s"}}, ["password"]) ==
+           %{"foo" => "bar", "file" => %{:__struct__ => "s"}}
+  end
+
+  test "filter_values does not fail on atomic keys" do
+    assert Instrument.filter_values(%{:foo => "bar", "password" => "should_not_show"}, ["password"]) ==
+           %{:foo => "bar", "password" => "[FILTERED]"}
   end
 end

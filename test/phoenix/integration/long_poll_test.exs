@@ -82,11 +82,35 @@ defmodule Phoenix.Integration.LongPollTest do
     end
   end
 
+  defmodule LoggingSocket do
+    use Phoenix.Socket
+
+    channel "rooms:*", RoomChannel
+
+    transport :longpoll, Phoenix.Transports.LongPoll,
+      window_ms: 200,
+      pubsub_timeout_ms: 200,
+      check_origin: ["//example.com"]
+
+    def connect(%{"reject" => "true"}, _socket) do
+      :error
+    end
+
+    def connect(params, socket) do
+      {:ok, assign(socket, :user_id, params["user_id"])}
+    end
+
+    def id(socket) do
+      if id = socket.assigns.user_id, do: "user_sockets:#{id}"
+    end
+  end
+
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
 
     socket "/ws", UserSocket
     socket "/ws/admin", UserSocket
+    socket "/ws/logging", LoggingSocket
   end
 
   setup_all do
@@ -129,9 +153,9 @@ defmodule Phoenix.Integration.LongPollTest do
   process. If the mode is pubsub, the session will use the
   pubsub system.
   """
-  def join(path, topic, mode \\ :local)
+  def join(path, topic, mode \\ :local, payload \\ %{})
 
-  def join(path, topic, :local) do
+  def join(path, topic, :local, payload) do
     resp = poll :get, path, %{}, %{}
     assert resp.body["token"]
     assert resp.body["status"] == 410
@@ -143,15 +167,15 @@ defmodule Phoenix.Integration.LongPollTest do
       "topic" => topic,
       "event" => "phx_join",
       "ref" => "123",
-      "payload" => %{}
+      "payload" => payload
     }
     assert resp.body["status"] == 200
 
     session
   end
 
-  def join(path, topic, :pubsub) do
-    session = join(path, topic, :local)
+  def join(path, topic, :pubsub, payload) do
+    session = join(path, topic, :local, payload)
     {:ok, {:v1, _id, pid, topic}} =
       Phoenix.Token.verify(Endpoint, Atom.to_string(__MODULE__), session["token"])
     %{"token" =>
@@ -277,6 +301,13 @@ defmodule Phoenix.Integration.LongPollTest do
     }
     assert resp.body["status"] == 410
     assert_receive {:DOWN, _, :process, ^channel, _}
+  end
+
+  test "filter params on join" do
+    log = capture_log fn ->
+      join("/ws/logging", "rooms:lobby", :local, %{"foo" => "bar", "password" => "shouldnotshow"})
+    end
+    assert log =~ "Parameters: %{\"foo\" => \"bar\", \"password\" => \"[FILTERED]\"}"
   end
 
   test "sends phx_error if a channel server abnormally exits" do
