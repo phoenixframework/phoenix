@@ -71,10 +71,16 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
   ## Default options
 
   This generator uses default options provided in the `:generators`
-  configuration of the `:phoenix` application. You can override those options
-  providing corresponding switches, e.g. `--no-binary-id` to use normal ids
-  despite the default configuration or `--migration` to force generation of
-  the migration.
+  configuration of the `:phoenix` application. These are the defaults:
+  
+      config :phoenix, :generators,
+        migration: true,
+        binary_id: false,
+        sample_binary_id: "11111111-1111-1111-1111-111111111111"
+
+  You can override those options per invocation by providing corresponding
+  switches, e.g. `--no-binary-id` to use normal ids despite the default
+  configuration or `--migration` to force generation of the migration.
   """
   def run(args) do
     switches = [migration: :boolean, binary_id: :boolean, instructions: :string]
