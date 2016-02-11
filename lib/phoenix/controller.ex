@@ -589,7 +589,7 @@ defmodule Phoenix.Controller do
     format =
       get_format(conn) ||
       raise "cannot render template #{inspect template} because conn.params[\"_format\"] is not set. " <>
-            "Please set `plug :accepts, %w(html json ...)` in your pipeline."
+            "Please set `plug :accepts, ~w(html json ...)` in your pipeline."
     do_render(conn, template_name(template, format), format, assigns)
   end
 
