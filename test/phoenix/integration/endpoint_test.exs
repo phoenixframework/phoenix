@@ -5,8 +5,7 @@ defmodule Phoenix.Integration.EndpointTest do
   use ExUnit.Case
   import ExUnit.CaptureLog
 
-  alias Phoenix.Integration.AdapterTest.ProdEndpoint
-  alias Phoenix.Integration.AdapterTest.DevEndpoint
+  alias Phoenix.Integration.AdapterTest.{ProdEndpoint, DevEndpoint}
 
   Application.put_env(:endpoint_int, ProdEndpoint,
       http: [port: "4807"], url: [host: "example.com"], server: true)

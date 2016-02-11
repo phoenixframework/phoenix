@@ -52,9 +52,8 @@ defmodule Phoenix.Transports.LongPoll do
 
   import Plug.Conn
 
-  alias Phoenix.Socket.Message
+  alias Phoenix.Socket.{Message, Transport}
   alias Phoenix.Transports.LongPoll
-  alias Phoenix.Socket.Transport
 
   @doc false
   def init(opts) do

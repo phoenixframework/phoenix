@@ -2,11 +2,8 @@ defmodule Phoenix.Channel.Server do
   use GenServer
   require Logger
 
-  alias Phoenix.PubSub
-  alias Phoenix.Socket
-  alias Phoenix.Socket.Broadcast
-  alias Phoenix.Socket.Message
-  alias Phoenix.Socket.Reply
+  alias Phoenix.{PubSub, Socket}
+  alias Phoenix.Socket.{Broadcast, Message, Reply}
 
   @moduledoc false
 

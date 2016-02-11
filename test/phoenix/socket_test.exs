@@ -2,8 +2,7 @@ defmodule Phoenix.SocketTest do
   use ExUnit.Case, async: true
 
   import Phoenix.Socket
-  alias Phoenix.Socket.Message
-  alias Phoenix.Socket.InvalidMessageError
+  alias Phoenix.Socket.{Message, InvalidMessageError}
 
   defmodule UserSocket do
     use Phoenix.Socket

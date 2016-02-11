@@ -21,9 +21,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
   use GenServer
 
   alias Phoenix.PubSub
-  alias Phoenix.Socket.Transport
-  alias Phoenix.Socket.Broadcast
-  alias Phoenix.Socket.Message
+  alias Phoenix.Socket.{Transport, Broadcast, Message}
 
   @doc """
   Starts the Server.
