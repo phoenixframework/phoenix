@@ -161,7 +161,7 @@ defmodule Phoenix.Endpoint do
 
           [adapter: Phoenix.PubSub.PG2, name: MyApp.PubSub]
 
-      It also supports custom adpater configuration:
+      It also supports custom adapter configuration:
 
           [name: :my_pubsub, adapter: Phoenix.PubSub.Redis,
            host: "192.168.100.1"]
