@@ -937,7 +937,7 @@ defmodule Phoenix.Controller do
   defp find_format("*/*", accepted), do: Enum.fetch!(accepted, 0)
   defp find_format(exts, accepted),  do: Enum.find(exts, &(&1 in accepted))
 
-  defp refuse(conn, accepted) do
+  defp refuse(_conn, accepted) do
     raise Phoenix.NotAcceptableError,
       message: "no supported media type in accept header, expected one of #{inspect accepted}",
       accepts: accepted
