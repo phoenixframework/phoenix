@@ -119,8 +119,9 @@ defmodule Phoenix.Endpoint do
       task automatically sets this to `true`.
 
     * `:url` - configuration for generating URLs throughout the app.
-      Accepts the `:host`, `:scheme`, `:path` and `:port` options. All
-      keys except `:path` can be changed at runtime. Defaults to:
+      Accepts the `:host`, `:scheme`, `:path` and `:port` options as integers,
+      strings or `{:system, "ENV_VAR"}`. All keys except `:path` can be changed
+      at runtime. Defaults to:
 
           [host: "localhost", path: "/"]
 

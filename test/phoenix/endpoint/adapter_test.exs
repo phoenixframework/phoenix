@@ -4,7 +4,9 @@ defmodule Phoenix.Endpoint.AdapterTest do
 
   setup do
     Application.put_env(:phoenix, AdapterApp.Endpoint, custom: true)
-    System.put_env("PHOENIX_PORT", "8080")
+    for {env_var, value} <- [{"PHOENIX_PORT", "8080"}, {"URL_SCHEME", "https"}, {"URL_PORT", "80"}, {"URL_HOST", "example.com"}, {"STATIC_HOST", "static.example.com"}] do
+      System.put_env(env_var, value)
+    end
     :ok
   end
 
@@ -38,6 +40,15 @@ defmodule Phoenix.Endpoint.AdapterTest do
     def config(:otp_app), do: :phoenix
   end
 
+  defmodule URLEnvVarEndpoint do
+    def config(:https), do: false
+    def config(:http), do: false
+    def config(:url), do: [host: {:system, "URL_HOST"},
+                           port: {:system, "URL_PORT"},
+                           scheme: {:system, "URL_SCHEME"}]
+    def config(:static_url), do: nil
+  end
+
   defmodule URLEndpoint do
     def config(:https), do: false
     def config(:http), do: false
@@ -51,9 +62,20 @@ defmodule Phoenix.Endpoint.AdapterTest do
     def config(:static_url), do: [host: "static.example.com"]
   end
 
+  defmodule StaticURLEnvVarEndpoint do
+    def config(:https), do: false
+    def config(:http), do: false
+    def config(:static_url), do: [host: {:system, "STATIC_HOST"}]
+  end
+
   test "generates the static url based on the static host configuration" do
     static_host = {:cache, "http://static.example.com"}
     assert Adapter.static_url(StaticURLEndpoint) == static_host
+  end
+
+  test "generates the static url based on env variables" do
+    static_host = {:cache, "http://static.example.com"}
+    assert Adapter.static_url(StaticURLEnvVarEndpoint) == static_host
   end
 
   test "static url fallbacks to url when there is no configuration for static_url" do
@@ -65,6 +87,7 @@ defmodule Phoenix.Endpoint.AdapterTest do
     assert Adapter.url(HTTPEndpoint) == {:cache, "http://example.com"}
     assert Adapter.url(HTTPSEndpoint) == {:cache, "https://example.com"}
     assert Adapter.url(HTTPEnvVarEndpoint) == {:cache, "http://example.com:8080"}
+    assert Adapter.url(URLEnvVarEndpoint) == {:cache, "https://example.com:80"}
   end
 
   test "static_path/2 returns file's path with lookup cache" do
