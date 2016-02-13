@@ -151,12 +151,8 @@ defmodule Phoenix.ChannelTest do
       assert_receive {:DOWN, _, _, _, :normal}
   """
 
-  alias Phoenix.Socket
-  alias Phoenix.Socket.Message
-  alias Phoenix.Socket.Broadcast
-  alias Phoenix.Socket.Reply
-  alias Phoenix.Socket.Transport
-  alias Phoenix.Channel.Server
+  alias Phoenix.{Socket, Channel.Server}
+  alias Phoenix.Socket.{Message, Broadcast, Reply, Transport}
 
   defmodule NoopSerializer do
     @behaviour Phoenix.Transports.Serializer

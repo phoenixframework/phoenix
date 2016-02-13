@@ -56,8 +56,7 @@ defmodule Phoenix.Token do
   password resets, e-mail confirmation and more.
   """
 
-  alias Plug.Crypto.KeyGenerator
-  alias Plug.Crypto.MessageVerifier
+  alias Plug.Crypto.{KeyGenerator, MessageVerifier}
 
   @doc """
   Encodes data and signs it resulting in a token you can send down to clients.

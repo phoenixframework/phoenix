@@ -172,8 +172,7 @@ defmodule Phoenix.Channel do
   is invoked. This practice is not encouraged though.
   """
 
-  alias Phoenix.Socket
-  alias Phoenix.Channel.Server
+  alias Phoenix.{Socket, Channel.Server}
 
   @type reply :: status :: atom | {status :: atom, response :: map}
   @type socket_ref :: {transport_pid :: Pid, serializer :: Module.t,

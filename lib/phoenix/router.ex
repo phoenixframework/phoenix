@@ -161,10 +161,7 @@ defmodule Phoenix.Router do
 
   """
 
-  alias Phoenix.Router.Resource
-  alias Phoenix.Router.Scope
-  alias Phoenix.Router.Route
-  alias Phoenix.Router.Helpers
+  alias Phoenix.Router.{Resource, Scope, Route, Helpers}
 
   @http_methods [:get, :post, :put, :patch, :delete, :options, :connect, :trace, :head]
 

@@ -2,8 +2,7 @@ defmodule Phoenix.Transports.TransportTest do
   use ExUnit.Case, async: true
   use RouterHelper
 
-  alias Phoenix.Socket.Transport
-  alias Phoenix.Socket.Message
+  alias Phoenix.Socket.{Transport, Message}
 
   Application.put_env :phoenix, __MODULE__.Endpoint,
     force_ssl: [],

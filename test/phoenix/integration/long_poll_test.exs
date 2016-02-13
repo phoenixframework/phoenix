@@ -5,10 +5,7 @@ defmodule Phoenix.Integration.LongPollTest do
   use ExUnit.Case
   import ExUnit.CaptureLog
 
-  alias Phoenix.Integration.HTTPClient
-  alias Phoenix.Transports.LongPoll
-  alias Phoenix.Socket.Broadcast
-  alias Phoenix.PubSub.Local
+  alias Phoenix.{Integration.HTTPClient, Transports.LongPoll, Socket.Broadcast, PubSub.Local}
   alias __MODULE__.Endpoint
 
   @port 5808

@@ -50,8 +50,7 @@ defmodule Phoenix.Transports.WebSocket do
 
   import Plug.Conn, only: [fetch_query_params: 1, send_resp: 3]
 
-  alias Phoenix.Socket.Broadcast
-  alias Phoenix.Socket.Transport
+  alias Phoenix.Socket.{Broadcast, Transport}
 
   @doc false
   def init(%Plug.Conn{method: "GET"} = conn, {endpoint, handler, transport}) do

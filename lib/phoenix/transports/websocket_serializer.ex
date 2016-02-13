@@ -3,9 +3,7 @@ defmodule Phoenix.Transports.WebSocketSerializer do
 
   @behaviour Phoenix.Transports.Serializer
 
-  alias Phoenix.Socket.Reply
-  alias Phoenix.Socket.Message
-  alias Phoenix.Socket.Broadcast
+  alias Phoenix.Socket.{Reply, Message, Broadcast}
 
   @doc """
   Translates a `Phoenix.Socket.Broadcast` into a `Phoenix.Socket.Message`.
