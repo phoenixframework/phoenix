@@ -2,7 +2,8 @@
   "repository": {
   },
   "scripts": {
-    "deploy": "brunch build --production"
+    "deploy": "brunch build --production",
+    "watch": "brunch watch --stdin"
   },
   "dependencies": {
     "phoenix": "file:<%= brunch_deps_prefix %><%= phoenix_path %>"<%= if html do %>,
