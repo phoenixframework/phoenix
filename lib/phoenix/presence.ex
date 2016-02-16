@@ -22,7 +22,7 @@ defmodule Phoenix.Presence do
   Next, add configuration for your Presence tracker, in config/config.exs:
 
       config :my_app, MyApp.Presence,
-        pubsub_server: MyApp.PubSub,
+        pubsub_server: MyApp.PubSub
 
   The `:pubsub_server` must point to an existing pubsub server
   running in your application, which is included by default as

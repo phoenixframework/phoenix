@@ -18,7 +18,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // ## Socket Connection
 //
 // A single connection is established to the server and
-// channels are mulitplexed over the connection.
+// channels are multiplexed over the connection.
 // Connect to the server using the `Socket` class:
 //
 //     let socket = new Socket("/ws", {params: {userToken: "123"}})
