@@ -6,7 +6,7 @@ defmodule Phoenix.Digester do
 
   For each file under the given input path, Phoenix will generate a digest
   and also compress in `.gz` format. The filename and its digest will be
-  used to generate the manifest file. It also avoid duplications checking
+  used to generate the manifest file. It also avoids duplications checking
   for already digested files.
 
   For stylesheet files found under the given path, Phoenix will replace
