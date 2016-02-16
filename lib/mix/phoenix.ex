@@ -140,12 +140,19 @@ defmodule Mix.Phoenix do
 
   """
   def base do
-    app = Mix.Project.config |> Keyword.fetch!(:app)
+    app = otp_app()
 
     case Application.get_env(app, :app_namespace, app) do
       ^app -> app |> to_string |> Phoenix.Naming.camelize
       mod  -> mod |> inspect
     end
+  end
+
+  @doc """
+  Returns the otp app from the Mix project configuration.
+  """
+  def otp_app do
+    Mix.Project.config |> Keyword.fetch!(:app)
   end
 
   @doc """
