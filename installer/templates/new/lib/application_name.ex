@@ -6,12 +6,13 @@ defmodule <%= application_module %> do
   def start(_type, _args) do
     import Supervisor.Spec
 
+    # Define workers and child supervisors to be supervised
     children = [
       # Start the endpoint when the application starts
       supervisor(<%= application_module %>.Endpoint, []),<%= if ecto do %>
       # Start the Ecto repository
       supervisor(<%= application_module %>.Repo, []),<% end %>
-      # Here you could define other workers and supervisors as children
+      # Start your own worker by calling: <%= application_module %>.Worker.start_link(arg1, arg2, arg3)
       # worker(<%= application_module %>.Worker, [arg1, arg2, arg3]),
     ]
 
