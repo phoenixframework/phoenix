@@ -1,6 +1,9 @@
 {
   "repository": {
   },
+  "scripts": {
+    "deploy": "brunch build --production"
+  },
   "dependencies": {
     "phoenix": "file:<%= brunch_deps_prefix %><%= phoenix_path %>"<%= if html do %>,
     "phoenix_html": "file:<%= brunch_deps_prefix %>deps/phoenix_html"<% end %>
