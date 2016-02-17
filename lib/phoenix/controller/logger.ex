@@ -6,8 +6,6 @@ defmodule Phoenix.Controller.Logger do
 
   alias Phoenix.Endpoint.Instrument
 
-  @filter_parameters Application.get_env(:phoenix, :filter_parameters)
-
   @moduledoc """
   Plug to handle request logging at the controller level.
 
@@ -50,7 +48,7 @@ defmodule Phoenix.Controller.Logger do
   defp params(%Plug.Conn.Unfetched{}), do: "[UNFETCHED]"
   defp params(params) do
     params
-    |> Instrument.filter_values(@filter_parameters)
+    |> Instrument.filter_values(Application.get_env(:phoenix, :filter_parameters))
     |> inspect()
   end
 end

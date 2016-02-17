@@ -109,7 +109,6 @@ defmodule Phoenix.Socket.Transport do
 
   @protocol_version "1.0.0"
   @client_vsn_requirements "~> 1.0"
-  @filter_parameters Application.get_env(:phoenix, :filter_parameters)
 
   @doc """
   Provides a keyword list of default configuration for socket transports.
@@ -217,7 +216,7 @@ defmodule Phoenix.Socket.Transport do
     if channel = socket.handler.__channel__(topic, socket.transport_name) do
       socket = %Socket{socket | topic: topic, channel: channel}
 
-      filtered_payload = Instrument.filter_values(msg.payload, @filter_parameters)
+      filtered_payload = Instrument.filter_values(msg.payload, Application.get_env(:phoenix, :filter_parameters))
       log_info topic, fn ->
         "JOIN #{topic} to #{inspect(channel)}\n" <>
         "  Transport:  #{inspect socket.transport}\n" <>

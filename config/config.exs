@@ -4,6 +4,4 @@ use Mix.Config
 config :logger, :console, colors: [enabled: false]
 
 # Use higher stacktrace depth.
-config :phoenix,
-  stacktrace_depth: 20,
-  filter_parameters: ["password"]
+config :phoenix, :stacktrace_depth, 20
