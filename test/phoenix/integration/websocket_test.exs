@@ -79,11 +79,33 @@ defmodule Phoenix.Integration.WebSocketTest do
     end
   end
 
+  defmodule LoggingSocket do
+    use Phoenix.Socket
+
+    channel "rooms:*", RoomChannel
+
+    transport :websocket, Phoenix.Transports.WebSocket,
+      check_origin: ["//example.com"], timeout: 200
+
+    def connect(%{"reject" => "true"}, _socket) do
+      :error
+    end
+
+    def connect(params, socket) do
+      {:ok, assign(socket, :user_id, params["user_id"])}
+    end
+
+    def id(socket) do
+      if id = socket.assigns.user_id, do: "user_sockets:#{id}"
+    end
+  end
+
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
 
     socket "/ws", UserSocket
     socket "/ws/admin", UserSocket
+    socket "/ws/logging", LoggingSocket
   end
 
   setup_all do
@@ -132,6 +154,17 @@ defmodule Phoenix.Integration.WebSocketTest do
 
     WebsocketClient.send_event(sock, "rooms:lobby1", "new_msg", %{body: "Should ignore"})
     refute_receive %Message{event: "new_msg"}
+  end
+
+  test "filter params on join" do
+    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/logging/websocket")
+    log = capture_log fn ->
+      WebsocketClient.join(sock, "rooms:admin-lobby", %{"foo" => "bar", "password" => "shouldnotshow"})
+      assert_receive %Message{event: "phx_reply",
+                              payload: %{"response" => %{}, "status" => "ok"},
+                              ref: "1", topic: "rooms:admin-lobby"}
+    end
+    assert log =~ "Parameters: %{\"foo\" => \"bar\", \"password\" => \"[FILTERED]\"}"
   end
 
   test "sends phx_error if a channel server abnormally exits" do

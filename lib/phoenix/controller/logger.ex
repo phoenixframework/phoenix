@@ -4,6 +4,10 @@ defmodule Phoenix.Controller.Logger do
   @behaviour Plug
   import Phoenix.Controller
 
+  alias Phoenix.Endpoint.Instrument
+
+  @filter_parameters Application.get_env(:phoenix, :filter_parameters)
+
   @moduledoc """
   Plug to handle request logging at the controller level.
 
@@ -46,24 +50,7 @@ defmodule Phoenix.Controller.Logger do
   defp params(%Plug.Conn.Unfetched{}), do: "[UNFETCHED]"
   defp params(params) do
     params
-    |> filter_values(Application.get_env(:phoenix, :filter_parameters))
+    |> Instrument.filter_values(@filter_parameters)
     |> inspect()
   end
-
-  defp filter_values(%{__struct__: mod} = struct, _filter_params) when is_atom(mod) do
-    struct
-  end
-  defp filter_values(%{} = map, filter_params) do
-    Enum.into map, %{}, fn {k, v} ->
-      if is_binary(k) && String.contains?(k, filter_params) do
-        {k, "[FILTERED]"}
-      else
-        {k, filter_values(v, filter_params)}
-      end
-    end
-  end
-  defp filter_values([_|_] = list, filter_params) do
-    Enum.map(list, &filter_values(&1, filter_params))
-  end
-  defp filter_values(other, _filter_params), do: other
 end
