@@ -153,7 +153,11 @@ config :hello_phoenix, HelloPhoenix.Repo,
 
 ## Creating Environment Variables in Heroku
 
-The `DATABASE_URL` config var is automatically created by Heroku when we add the [Heroku Postgres add-on](https://elements.heroku.com/addons/heroku-postgresql).
+The `DATABASE_URL` config var is automatically created by Heroku when we add the [Heroku Postgres add-on](https://elements.heroku.com/addons/heroku-postgresql). We can create the database via the heroku toolbelt:
+
+```console
+heroku addons:create heroku-postgresql:hobby-dev
+```
 
 We still have to create the `SECRET_KEY_BASE` config based on a random string. First, use `mix phoenix.gen.secret` to get a new secret:
 
