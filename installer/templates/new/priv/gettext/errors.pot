@@ -6,7 +6,7 @@
 ##
 ## Run `mix gettext.extract` to bring this file up to
 ## date. Leave `msgstr`s empty as changing them here as no
-## effect. edit them in PO (`.po`) files instead.
+## effect: edit them in PO (`.po`) files instead.
 <%= if ecto do %>
 ## From Ecto.Changeset.cast/4
 msgid "can't be blank"
