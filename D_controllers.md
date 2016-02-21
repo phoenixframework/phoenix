@@ -138,10 +138,8 @@ end
 ```
 If we again visit `our_path/15` in the browser, we should see a block of JSON with the key `id` mapped to the number `15`.
 
-```elixir
-{
-  id: "15"
-}
+```json
+{"id": "15"}
 ```
 Phoenix controllers can also render HTML without a template. As you may have already guessed, the `html/2` function does just that. This time, we implement the `show` action like this.
 
