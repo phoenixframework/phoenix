@@ -1,0 +1,7 @@
+%h2
+  New <%= template_singular %>
+
+= render "form.html", changeset: @changeset,
+                      action: <%= singular %>_path(@conn, :create)
+
+= link "Back", to: <%= singular %>_path(@conn, :index)

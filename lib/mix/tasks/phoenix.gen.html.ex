@@ -25,7 +25,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
   information on attributes and namespaced resources.
   """
   def run(args) do
-    switches = [binary_id: :boolean, model: :boolean]
+    switches = [binary_id: :boolean, model: :boolean, template: :string]
 
     {opts, parsed, _} = OptionParser.parse(args, switches: switches)
     [singular, plural | attrs] = validate_args!(parsed)
@@ -42,19 +42,20 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
                           inputs: inputs(attrs), params: Mix.Phoenix.params(attrs),
                           template_singular: String.replace(binding[:singular], "_", " "),
                           template_plural: String.replace(plural, "_", " ")]
+    template = opts[:template] || "eex"
 
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Controller")
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "View")
 
     Mix.Phoenix.copy_from paths(), "priv/templates/phoenix.gen.html", "", binding, [
-      {:eex, "controller.ex",       "web/controllers/#{path}_controller.ex"},
-      {:eex, "edit.html.eex",       "web/templates/#{path}/edit.html.eex"},
-      {:eex, "form.html.eex",       "web/templates/#{path}/form.html.eex"},
-      {:eex, "index.html.eex",      "web/templates/#{path}/index.html.eex"},
-      {:eex, "new.html.eex",        "web/templates/#{path}/new.html.eex"},
-      {:eex, "show.html.eex",       "web/templates/#{path}/show.html.eex"},
-      {:eex, "view.ex",             "web/views/#{path}_view.ex"},
-      {:eex, "controller_test.exs", "test/controllers/#{path}_controller_test.exs"},
+      {:eex, "controller.ex",        "web/controllers/#{path}_controller.ex"},
+      {:eex, "controller_test.exs",  "test/controllers/#{path}_controller_test.exs"},
+      {:eex, "view.ex",              "web/views/#{path}_view.ex"},
+      {:eex, "#{template}/edit.html.#{template}",       "web/templates/#{path}/edit.html.#{template}"},
+      {:eex, "#{template}/form.html.#{template}",       "web/templates/#{path}/form.html.#{template}"},
+      {:eex, "#{template}/index.html.#{template}",      "web/templates/#{path}/index.html.#{template}"},
+      {:eex, "#{template}/new.html.#{template}",        "web/templates/#{path}/new.html.#{template}"},
+      {:eex, "#{template}/show.html.#{template}",       "web/templates/#{path}/show.html.#{template}"},
     ]
 
     instructions = """

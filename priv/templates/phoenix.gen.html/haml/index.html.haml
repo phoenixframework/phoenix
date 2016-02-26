@@ -1,0 +1,18 @@
+%h2
+  Listing <%= template_plural %>
+
+%table.table
+  %thead
+    %tr
+<%= for {k, _} <- attrs do %>      %th <%= Phoenix.Naming.humanize(Atom.to_string(k)) %><% end %>
+      %th
+  %tbody
+    = for <%= singular %> <- @<%= plural %> do
+      %tr
+<%= for {k, _} <- attrs do %>      %td= <%= singular %>.<%= k %><% end %>
+      %td.text-right
+        = link "Show", to: <%= singular %>_path(@conn, :show, <%= singular %>), class: "btn btn-default btn-xs"
+        = link "Edit", to: <%= singular %>_path(@conn, :edit, <%= singular %>), class: "btn btn-default btn-xs"
+        = link "Delete", to: <%= singular %>_path(@conn, :delete, <%= singular %>), method: :delete, data: [confirm: "Are you sure?"], class: "btn btn-danger btn-xs"
+
+= link "New <%= template_singular %>", to: <%= singular %>_path(@conn, :new)

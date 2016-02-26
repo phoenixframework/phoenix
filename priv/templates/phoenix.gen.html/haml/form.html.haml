@@ -1,0 +1,13 @@
+= form_for @changeset, @action, fn f ->
+  = if @changeset.action do
+    .alert.alert-danger
+      %p
+        Oops, something went wrong! Please check the errors below.
+<%= for {label, input, error} <- inputs, input do %>
+  .form-group
+    <%= label %>
+    <%= input %>
+    <%= error %>
+<% end %>
+  .form-group
+    = submit "Submit", class: "btn btn-primary"
