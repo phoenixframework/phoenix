@@ -418,8 +418,8 @@ defmodule Mix.Tasks.Phoenix.New do
       dev:  [database: "db/#{app}_dev.sqlite"],
       test: [database: "db/#{app}_test.sqlite", pool: Ecto.Adapters.SQL.Sandbox],
       prod: [database: "db/#{app}_prod.sqlite"],
-      test_begin: "Ecto.Adapters.SQL.begin_test_transaction(#{module}.Repo)",
-      test_restart: "Ecto.Adapters.SQL.restart_test_transaction(#{module}.Repo, [])"}
+      test_begin: "Ecto.Adapters.SQL.Sandbox.mode(Paywall.Repo, :manual)",
+      test_restart: ":ok = Ecto.Adapters.SQL.Sandbox.checkout(#{module}.Repo)"}
   end
   defp get_ecto_adapter("mongodb", app, module) do
     {:mongodb_ecto, Mongo.Ecto,
@@ -441,8 +441,8 @@ defmodule Mix.Tasks.Phoenix.New do
      test: [username: user, password: pass, database: "#{app}_test", hostname: "localhost",
             pool: Ecto.Adapters.SQL.Sandbox],
      prod: [username: user, password: pass, database: "#{app}_prod"],
-     test_begin: "Ecto.Adapters.SQL.begin_test_transaction(#{module}.Repo)",
-     test_restart: "Ecto.Adapters.SQL.restart_test_transaction(#{module}.Repo, [])"]
+     test_begin: "Ecto.Adapters.SQL.Sandbox.mode(Paywall.Repo, :manual)",
+     test_restart: ":ok = Ecto.Adapters.SQL.Sandbox.checkout(#{module}.Repo)"]
   end
 
   defp kw_to_config(kw) do
