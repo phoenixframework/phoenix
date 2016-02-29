@@ -441,8 +441,6 @@ defmodule Mix.Tasks.Phoenix.New do
      test: [username: user, password: pass, database: "#{app}_test", hostname: "localhost",
             pool: Ecto.Adapters.SQL.Sandbox],
      prod: [username: user, password: pass, database: "#{app}_prod"],
-     
-     # should this be specific to Postgres for now and default to the old behavior for other drivers?
      test_begin: "Ecto.Adapters.SQL.Sandbox.mode(Paywall.Repo, :manual)",
      test_restart: ":ok = Ecto.Adapters.SQL.Sandbox.checkout(#{module}.Repo)"]
   end
