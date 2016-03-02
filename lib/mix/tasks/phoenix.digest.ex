@@ -51,6 +51,7 @@ defmodule Mix.Tasks.Phoenix.Digest do
         Mix.shell.info [:green, "Check your digested files at #{inspect output_path}"]
       {:error, :invalid_path} ->
         Mix.shell.error "The input path #{inspect input_path} does not exist"
+        exit({:shutdown, 1})
     end
   end
 end

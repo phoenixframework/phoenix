@@ -2,8 +2,10 @@ defmodule Mix.Tasks.Phoenix.DigestTest do
   use ExUnit.Case, async: true
 
   test "fails when the given paths are invalid" do
-    Mix.Tasks.Phoenix.Digest.run(["invalid_path"])
-    assert_received {:mix_shell, :error, ["The input path \"invalid_path\" does not exist"]}
+    catch_exit do
+      Mix.Tasks.Phoenix.Digest.run(["invalid_path"])
+      assert_received {:mix_shell, :error, ["The input path \"invalid_path\" does not exist"]}
+    end
   end
 
   test "digests and compress files" do
