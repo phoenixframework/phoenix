@@ -249,23 +249,22 @@ socket = assign(socket, :user, msg["user"])
 
 Sockets store assigned values as a map in `socket.assigns`.
 
-#### Fault Tolerance and Reliability Guarantees 
+#### Fault Tolerance and Reliability Guarantees
 
-Servers will restart and clients will fail - understanding how Phoenix responds to these events and the guarantees it offers will help yus design robust systems. 
+Servers restart, networks split, and clients lose connectivity. In order to design robust systems, we need to understand how Phoenix responds to these events and what guarantees it offers.
 
-- Subscriptions
- 
-On the server, subscriptions are held in an ETS table (which resides in memory). If a server restarts or crashes, the subscriptions will need to be recreated for clients to receive updates. Fortunately, this functionality is built into the Phoenix JavaScript client. The clients will attempt to reconnect to the server using an exponential back off strategy. Once they reconnect, they'll rejoin the channels to which they were previously subscribed.
+- Handling Reconnection
 
-- Channel Crashes
+Clients subscribe to topics, and Phoenix stores those subscriptions in an in-memory ETS table. If a channel crashes, the clients will need to reconnect to the topics they had previously subscribed to. Fortunately, the Phoenix JavaScript client knows how to do this. The server will notify all the clients of the crash. This will trigger each client's `Channel.onError` callback. The clients will attempt to reconnect to the server using an exponential back off strategy. Once they reconnect, they'll attempt to rejoin the topics they had previously subscribed to. If they are successful, they'll start receiving messages from those topics as before.
 
-If a channel crashes on the server, the clients will be notified and the `channel.onError` callback is invoked. The clients will then rejoin using exponential back off.
+- Resending Client Messages
 
-- Messages
+Channel clients queue outgoing messages into a `PushBuffer`, and send them to server when there is a connection. If no connection is available, the client holds on to the messages until it can establish a new connection. With no connection, the client will hold the messages in memory until it establishes a connection, or until it receives a `timeout` event. The default timeout is set to 5000 milliseconds. The client won't persist the messages in the browser's local storage, so if the browser tab closes, the messages will be gone.
 
-On the client, messages are queued into a `PushBuffer` and sent to the server when there is a connection. If there isn't a connection available, they'll be held in memory until a connection is established. The messages are not persisted in LocalStorage or IndexedDb, so if the client's browser tab closes before the messages are sent, the messages are lost. The messages will be held in memory until a connection is established, or until they receive a "timeout" event, which defaults to 5s.
+- Resending Server Messages
 
-When sending messages from the server to the client, Phoenix uses at-most-once message semantics. If the client is offline and misses the message, the message won't be resent. In addition, messages are not persisted on the server. If the server restarts, messages that have not been sent will be lost. For applications that need guaranteed message delivery, the application developer will need to implement this functionality. Common approaches involve persisting messages on the server and having clients request missing messages. For an example, see Chris McCord's Phoenix training: [client code](https://github.com/chrismccord/elixirconf_training/blob/master/web/static/js/app.js#L38-L39) and [server code](https://github.com/chrismccord/elixirconf_training/blob/master/web/channels/document_channel.ex#L13-L19). 
+Phoenix uses an at-most-once strategy when sending messages to clients. If the client is offline and misses the message, Phoenix won't resend it. Phoenix doesn't persist messages on the server. If the server restarts, unsent messages will be gone. If our application needs stronger guarantees around message delivery, we'll need to write that code ourselves. Common approaches involve persisting messages on the server and having clients request missing messages. For an example, see Chris McCord's Phoenix training: [client code](https://github.com/chrismccord/elixirconf_training/blob/master/web/static/js/app.js#L38-L39) and [server code](https://github.com/chrismccord/elixirconf_training/blob/master/web/channels/document_channel.ex#L13-L19).
+
 
 #### Example Application
 To see an example of the application we just built, checkout this project (https://github.com/chrismccord/phoenix_chat_example).
