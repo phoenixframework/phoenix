@@ -382,7 +382,7 @@ defmodule Phoenix.Controller do
       iex> layout(conn)
       {AppView, "print.html"}
 
-      iex> conn = put_layout :print
+      iex> conn = put_layout conn, :print
       iex> layout(conn)
       {AppView, :print}
 
