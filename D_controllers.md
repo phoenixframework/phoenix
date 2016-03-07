@@ -400,7 +400,7 @@ Now if we go to `http://localhost:4000/?_format=text&message=CrazyTown`, we will
 
 ### Setting the Content Type
 
-Analogous to the `_format` query string param, we can render any sort of format we want by modifying the HTTP Accepts Header and providing the appropriate template.
+Analogous to the `_format` query string param, we can render any sort of format we want by modifying the HTTP Content-Type Header and providing the appropriate template.
 
 If we wanted to render an xml version of our `index` action, we might implement the action like this in `web/page_controller.ex`.
 
