@@ -53,11 +53,11 @@ and configure the remotes:
 
 ```bash
 # Clone your fork of the repo into the current directory
-git clone https://github.com/<your-username>/phoenix-guides
+git clone https://github.com/<your-username>/phoenix_guides
 # Navigate to the newly cloned directory
-cd phoenix-guides
+cd phoenix_guides
 # Assign the original repo to a remote called "upstream"
-git remote add upstream https://github.com/phoenixframework/phoenix-guides
+git remote add upstream https://github.com/phoenixframework/phoenix_guides
 ```
 
 2. If you cloned a while ago, get the latest changes from upstream:

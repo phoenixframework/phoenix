@@ -139,7 +139,7 @@ Let's turn this display snippet into its own template. Let's create a new templa
 <p><%= @key %></p>
 ```
 
-We need to change `key` to `@key` here because this is a new template, not part of a list comprehension. The way we pass data into a template is by the `assigns` map, and the way we get the values out of the `assigns` map is by referencing the keys with a preceding `@`.
+We need to change `key` to `@key` here because this is a new template, not part of a list comprehension. The way we pass data into a template is by the `assigns` map, and the way we get the values out of the `assigns` map is by referencing the keys with a preceding `@`. `@` is actually a macro that translates `@key` to `<%= {:ok, v} = Access.fetch(assigns, :key); v %>`.
 
 Now that we have a template, we simply render it within our list comprehension in the `test.html.eex` template.
 
