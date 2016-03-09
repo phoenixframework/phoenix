@@ -12,7 +12,7 @@ In order to act as a plug, a function simply needs to accept a connection struct
 ```elixir
 def put_headers(conn, key_values) do
   Enum.reduce key_values, conn, fn {k, v}, conn ->
-    Plug.Conn.put_resp_header(conn, k, v)
+    Plug.Conn.put_resp_header(conn, to_string(k), v)
   end
 end
 ```
