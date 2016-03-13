@@ -26,7 +26,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Secret do
   defp random_string(length) when length > 31 do
     :crypto.strong_rand_bytes(length) |> Base.encode64 |> binary_part(0, length)
   end
-  defp random_string(_), do: Mix.raise "the secret should be at least 32 characters long"
+  defp random_string(_), do: Mix.raise "The secret should be at least 32 characters long"
 
   defp invalid_args! do
     Mix.raise "mix phoenix.gen.secret expects a length as integer or no argument at all"
