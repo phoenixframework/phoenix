@@ -149,7 +149,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
     unless Version.match? System.version, "~> 1.2" do
       Mix.raise "Phoenix v#{@version} requires at least Elixir v1.2.\n " <>
-                "You have #{System.version}. Please update accordingly."
+                "You have #{System.version}. Please update accordingly"
     end
 
     case argv do
