@@ -12,13 +12,11 @@ This guide assumes that we have generated our new application with Ecto. If we'r
 
 This guide also assumes that we will be using PostgreSQL. For instructions on switching to MySQL, please see the [Using MySQL Guide](http://www.phoenixframework.org/docs/using-mysql).
 
-Let's take some time to set up the credentials this app will use to connect to Postgres. Take a look at the file ```config/dev.exs```. Here you'll find the configuration for your database. We'll talk more about this file later. For now, connect to your postgres instance by typing ```psql``` and enter the following commands:
+The default Postgres configuration has a superuser account with username 'postgres' and the password 'postgres'. If you take a look at the file ```config/dev.exs```, you'll see that Phoenix works off this assumption. If you don't have this account already setup on your machine, you can connect to your postgres instance by typing ```psql``` and enter the following commands:
 
 ```
 CREATE USER postgres;
 ALTER USER postgres PASSWORD 'postgres';
-CREATE DATABASE hello_phoenix_dev;
-GRANT ALL PRIVILEGES ON DATABASE hello_phoenix_dev TO postgres;
 ALTER USER postgres WITH SUPERUSER;
 ```  
 
