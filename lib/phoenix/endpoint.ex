@@ -97,12 +97,12 @@ defmodule Phoenix.Endpoint do
 
     * `:http` - the configuration for the HTTP server. Currently uses
       cowboy and accepts all options as defined by
-      [`Plug.Adapters.Cowboy`](http://hexdocs.pm/plug/Plug.Adapters.Cowboy.html).
+      [`Plug.Adapters.Cowboy`](https://hexdocs.pm/plug/Plug.Adapters.Cowboy.html).
       Defaults to `false`.
 
     * `:https` - the configuration for the HTTPS server. Currently uses
       cowboy and accepts all options as defined by
-      [`Plug.Adapters.Cowboy`](http://hexdocs.pm/plug/Plug.Adapters.Cowboy.html).
+      [`Plug.Adapters.Cowboy`](https://hexdocs.pm/plug/Plug.Adapters.Cowboy.html).
       Defaults to `false`.
 
     * `:force_ssl` - ensures no data is ever sent via http, always redirecting

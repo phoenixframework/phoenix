@@ -11,7 +11,7 @@ See the official site at http://www.phoenixframework.org/
 
 ## Documentation
 
-API documentation is available at [http://hexdocs.pm/phoenix](http://hexdocs.pm/phoenix)
+API documentation is available at [https://hexdocs.pm/phoenix](https://hexdocs.pm/phoenix)
 
 ## Contributing
 

@@ -2,7 +2,7 @@ defmodule <%= application_module %>.Gettext do
   @moduledoc """
   A module providing Internationalization with a gettext-based API.
 
-  By using [Gettext](http://hexdocs.pm/gettext),
+  By using [Gettext](https://hexdocs.pm/gettext),
   your module gains a set of macros for translations, for example:
 
       import <%= application_module %>.Gettext
@@ -18,7 +18,7 @@ defmodule <%= application_module %>.Gettext do
       # Domain-based translation
       dgettext "errors", "Here is the error message to translate"
 
-  See the [Gettext Docs](http://hexdocs.pm/gettext) for detailed usage.
+  See the [Gettext Docs](https://hexdocs.pm/gettext) for detailed usage.
   """
   use Gettext, otp_app: :<%= application_name %>
 end
