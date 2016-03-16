@@ -408,4 +408,13 @@ defmodule Phoenix.Test.ConnTest do
       end
     end
   end
+
+  for method <- [:get, :post, :put, :delete] do
+    @method method
+    test "#{method} helper raises ArgumentError for mismatched conn" do
+      assert_raise ArgumentError, ~r/expected first argument to #{@method} to be/, fn ->
+        unquote(@method)("/foo/bar", %{baz: "baz"})
+      end
+    end
+  end
 end

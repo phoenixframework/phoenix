@@ -18,7 +18,7 @@ defmodule Phoenix.Router.Scope do
   @doc """
   Builds a route based on the top of the stack.
   """
-  def route(module, kind, verb, path, plug, plug_opts, opts) do
+  def route(module, kind, verb, "/" <> _ = path, plug, plug_opts, opts) do
     private = Keyword.get(opts, :private, %{})
     assigns = Keyword.get(opts, :assigns, %{})
     as      = Keyword.get(opts, :as, Phoenix.Naming.resource_name(plug, "Controller"))
@@ -26,6 +26,14 @@ defmodule Phoenix.Router.Scope do
     {path, host, alias, as, pipes, private, assigns} =
       join(module, path, plug, as, private, assigns)
     Phoenix.Router.Route.build(kind, verb, path, host, alias, plug_opts, as, pipes, private, assigns)
+  end
+
+  def route(module, kind, verb, path, plug, plug_opts, opts) do
+    IO.write :stderr, """
+    warning: router paths should begin with a forward slash.
+    #{Exception.format_stacktrace}
+    """
+    route(module, kind, verb, "/" <> path, plug, plug_opts, opts)
   end
 
   @doc """
@@ -56,6 +64,14 @@ defmodule Phoenix.Router.Scope do
 
   def push(module, opts) when is_list(opts) do
     path = Keyword.get(opts, :path)
+
+    if path && String.at(path, 0) != "/" do
+      IO.write :stderr, """
+      warning: router paths should begin with a forward slash.
+      #{Exception.format_stacktrace}
+      """
+    end
+
     path = path && Plug.Router.Utils.split(path)
 
     alias = Keyword.get(opts, :alias)

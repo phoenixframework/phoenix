@@ -84,7 +84,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
       String.contains?(plural, ":") ->
         raise_with_help
       plural != Phoenix.Naming.underscore(plural) ->
-        Mix.raise "expected the second argument, #{inspect plural}, to be all lowercase using snake_case convention"
+        Mix.raise "Expected the second argument, #{inspect plural}, to be all lowercase using snake_case convention"
       true ->
         args
     end

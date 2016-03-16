@@ -21,4 +21,10 @@ defmodule Mix.Tasks.Phoenix.Gen.SecretTest do
     assert_raise Mix.Error, message, fn -> run ["32bad"] end
     assert_raise Mix.Error, message, fn -> run ["32", "bad"] end
   end
+
+  test "raises when length is too short" do
+    message = "The secret should be at least 32 characters long"
+    assert_raise Mix.Error, message, fn -> run ["0"] end
+    assert_raise Mix.Error, message, fn -> run ["31"] end
+  end
 end

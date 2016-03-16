@@ -43,7 +43,7 @@ defmodule <%= application_module %>.Mixfile do
      {:cowboy, "~> 1.0"}]
   end<%= if ecto do %>
 
-  # Aliases are shortcut or tasks specific to the current project.
+  # Aliases are shortcuts or tasks specific to the current project.
   # For example, to create, migrate and run the seeds file at once:
   #
   #     $ mix ecto.setup

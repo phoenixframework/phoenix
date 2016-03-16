@@ -382,7 +382,7 @@ defmodule Phoenix.Controller do
       iex> layout(conn)
       {AppView, "print.html"}
 
-      iex> conn = put_layout :print
+      iex> conn = put_layout conn, :print
       iex> layout(conn)
       {AppView, :print}
 
@@ -585,7 +585,7 @@ defmodule Phoenix.Controller do
   @spec render(Plug.Conn.t, binary | atom, Dict.t) :: Plug.Conn.t
   @spec render(Plug.Conn.t, module, binary | atom) :: Plug.Conn.t
   def render(conn, template, assigns)
-    when is_atom(template) and is_list(assigns) do
+    when is_atom(template) and (is_map(assigns) or is_list(assigns)) do
     format =
       get_format(conn) ||
       raise "cannot render template #{inspect template} because conn.params[\"_format\"] is not set. " <>
