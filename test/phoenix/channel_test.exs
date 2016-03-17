@@ -114,7 +114,8 @@ defmodule Phoenix.Channel.ChannelTest do
       use Phoenix.Channel
     end
     Phoenix.PubSub.subscribe(@pubsub, self, "sometopic")
-    socket = %Phoenix.Socket{pubsub_server: @pubsub, topic: "sometopic",
+    socket = %Phoenix.Socket{serializer: Phoenix.ChannelTest.NoopSerializer,
+                             transport_pid: self(), pubsub_server: @pubsub, topic: "sometopic",
                              channel_pid: self(), channel: Channel, joined: true}
 
     subscribe("othertopic", socket)
