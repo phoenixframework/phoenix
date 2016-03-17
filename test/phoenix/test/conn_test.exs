@@ -200,7 +200,7 @@ defmodule Phoenix.Test.ConnTest do
     end
 
     assert_raise RuntimeError,
-                 "expected response with status 200, got: 404", fn ->
+                 "expected response with status 200, got: 404, with body:\noops", fn ->
       build_conn(:get, "/") |> resp(404, "oops") |> response(200)
     end
   end
@@ -240,6 +240,13 @@ defmodule Phoenix.Test.ConnTest do
                  "could not decode JSON body, invalid token \"o\" in body:\n\nok", fn ->
       build_conn(:get, "/") |> put_resp_content_type("application/json")
                       |> resp(200, "ok") |> json_response(200)
+    end
+
+    assert_raise RuntimeError, ~s(expected response with status 200, got: 400, with body:\n{"error": "oh oh"}), fn ->
+      build_conn(:get, "/")
+      |> put_resp_content_type("application/json")
+      |> resp(400, ~s({"error": "oh oh"}))
+      |> json_response(200)
     end
   end
 
