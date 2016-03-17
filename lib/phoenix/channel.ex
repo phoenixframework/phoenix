@@ -282,6 +282,26 @@ defmodule Phoenix.Channel do
   end
 
   @doc """
+  Subscribe this channel to another topic, so it will receive broadcasts with
+  that particular topic
+  """
+  def subscribe(topic, socket) do
+    Phoenix.PubSub.subscribe(socket.pubsub_server, self(), topic,
+      link: true,
+      fastlane: {socket.transport_pid,
+                 socket.serializer,
+                 socket.channel.__intercepts__()})
+  end
+
+  @doc """
+  Unsubscribe from a topic
+  """
+  def unsubscribe(topic, socket) do
+    Phoenix.PubSub.unsubscribe(socket.pubsub_server, self(), topic)
+  end
+
+
+  @doc """
   Broadcast an event to all subscribers of the socket topic.
 
   The event's message must be a serializable map.
@@ -303,6 +323,25 @@ defmodule Phoenix.Channel do
   def broadcast!(socket, event, message) do
     %{pubsub_server: pubsub_server, topic: topic} = assert_joined!(socket)
     Server.broadcast! pubsub_server, topic, event, message
+  end
+
+  @doc """
+  Broadcast a message to another topic
+
+  ### Examples
+
+      iex> broadcast socket, "other_topic", "new_message", %{id: 1, content: "hello"}
+      :ok
+  """
+  def broadcast(socket, topic, event, message) do
+    Phoenix.Channel.Server.broadcast socket.pubsub_server, topic, event, message
+  end
+
+  @doc """
+  Same as `broadcast/4` but raises if broadcast fails.
+  """
+  def broadcast!(socket, topic, event, message) do
+    Phoenix.Channel.Server.broadcast! socket.pubsub_server, topic, event, message
   end
 
   @doc """
