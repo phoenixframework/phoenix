@@ -116,9 +116,11 @@ defmodule Phoenix.Channel.ChannelTest do
     Phoenix.PubSub.subscribe(@pubsub, self, "sometopic")
     socket = %Phoenix.Socket{pubsub_server: @pubsub, topic: "sometopic",
                              channel_pid: self(), channel: Channel, joined: true}
+
     subscribe("othertopic", socket)
     broadcast socket, "othertopic", "event", %{key: :val}
     assert_receive %Phoenix.Socket.Broadcast{topic: "othertopic", event: "event", payload: %{key: :val}}
+
     unsubscribe("othertopic", socket)
     refute_receive %Phoenix.Socket.Broadcast{topic: "othertopic", event: "event", payload: %{key: :val}}
   end

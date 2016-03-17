@@ -171,7 +171,9 @@ const CHANNEL_EVENTS = {
   error: "phx_error",
   join: "phx_join",
   reply: "phx_reply",
-  leave: "phx_leave"
+  leave: "phx_leave",
+  subscribe: "phx_subscribe",
+  unsubscribe: "phx_unsubscribe"
 }
 const TRANSPORTS = {
   longpoll: "longpoll",
@@ -274,6 +276,7 @@ export class Channel {
   constructor(topic, params, socket) {
     this.state       = CHANNEL_STATES.closed
     this.topic       = topic
+    this.subscribedTopics = []
     this.params      = params || {}
     this.socket      = socket
     this.bindings    = []
@@ -311,6 +314,13 @@ export class Channel {
     this.on(CHANNEL_EVENTS.reply, (payload, ref) => {
       this.trigger(this.replyEventName(ref), payload)
     })
+    this.on(CHANNEL_EVENTS.subscribe, payload => {
+      this.subscribedTopics.push(payload.topic)
+    })
+    this.on(CHANNEL_EVENTS.unsubscribe, payload => {
+      this.subscribedTopics.filter(topic => topic != payload.topic)
+    })
+
   }
 
   rejoinUntilConnected(){
@@ -390,7 +400,9 @@ export class Channel {
 
   // private
 
-  isMember(topic){ return this.topic === topic }
+  isMember(topic) {
+    return this.topic === topic || this.subscribedTopics.indexOf(topic) >= 0
+  }
 
   sendJoin(timeout){
     this.state = CHANNEL_STATES.joining

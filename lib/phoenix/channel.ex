@@ -291,6 +291,7 @@ defmodule Phoenix.Channel do
       fastlane: {socket.transport_pid,
                  socket.serializer,
                  socket.channel.__intercepts__()})
+    Phoenix.Channel.Server.push socket.transport_pid, socket.topic, "phx_subscribe", %{topic: topic}, socket.serializer
   end
 
   @doc """
@@ -298,6 +299,7 @@ defmodule Phoenix.Channel do
   """
   def unsubscribe(topic, socket) do
     Phoenix.PubSub.unsubscribe(socket.pubsub_server, self(), topic)
+    Phoenix.Channel.Server.push socket.transport_pid, socket.topic, "phx_unsubscribe", %{topic: topic}, socket.serializer
   end
 
 
