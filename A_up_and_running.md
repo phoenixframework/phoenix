@@ -35,19 +35,22 @@ Fetch and install dependencies? [Yn]
 Phoenix generates the directory structure and all the files we will need for our application. When it's done, it will ask us if we want it to install our dependencies for us. Let's say yes to that.
 
 ```console
-Fetch and install dependencies? [Yn] y
-* running npm install && node node_modules/brunch/bin/brunch build
+Fetch and install dependencies? [Yn] Y
 * running mix deps.get
+* running npm install && node node_modules/brunch/bin/brunch build
 
 We are all set! Run your Phoenix application:
 
     $ cd hello_phoenix
-    $ mix ecto.create
     $ mix phoenix.server
 
 You can also run your app inside IEx (Interactive Elixir) as:
 
     $ iex -S mix phoenix.server
+
+Before moving on, configure your database in config/dev.exs and run:
+
+    $ mix ecto.create
 ```
 
 Once our dependencies are installed, the task will prompt us to change into our project directory and start our application.
@@ -71,7 +74,7 @@ And finally, we'll start the Phoenix server:
 
 ```console
 $ mix phoenix.server
-[info] Running HelloPhoenix.Endpoint with Cowboy on http://localhost:4000
+[info] Running HelloPhoenix.Endpoint with Cowboy using http on port 4000
 23 Nov 05:25:14 - info: compiled 5 files into 2 files, copied 3 in 1724ms
 ```
 
@@ -79,6 +82,21 @@ If we choose not to have Phoenix install our dependencies when we generate a new
 
 ```console
 Fetch and install dependencies? [Yn] n
+
+We are all set! Run your Phoenix application:
+
+    $ cd hello_phoenix
+    $ mix deps.get
+    $ mix phoenix.server
+
+You can also run your app inside IEx (Interactive Elixir) as:
+
+    $ iex -S mix phoenix.server
+
+Before moving on, configure your database in config/dev.exs and run:
+
+    $ mix ecto.create
+
 
 Phoenix uses an optional assets build tool called brunch.io
 that requires node.js and npm. Installation instructions for
@@ -91,18 +109,6 @@ running inside your app:
 
 If you don't want brunch.io, you can re-run this generator
 with the --no-brunch option.
-
-
-We are all set! Run your Phoenix application:
-
-    $ cd hello_phoenix
-    $ mix deps.get
-    $ mix ecto.create
-    $ mix phoenix.server
-
-You can also run your app inside IEx (Interactive Elixir) as:
-
-    $ iex -S mix phoenix.server
 ```
 
 By default Phoenix accepts requests on port 4000. If we point our favorite web browser at [http://localhost:4000](http://localhost:4000), we should see the Phoenix Framework welcome page.
