@@ -25,7 +25,7 @@ defmodule HelloPhoenix.Mixfile do
   defp deps do
     [{:phoenix, "~> 1.1.0"},
      {:phoenix_ecto, "~> 2.0"},
-     {:mariaex, ">= 0.0.0"},
+     {:mariaex, "~> 0.6.1", override: true},
      {:phoenix_html, "~> 2.3"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},
      {:cowboy, "~> 1.0"}]
