@@ -14,6 +14,10 @@ Here is a selected list of resources to help with learning Elixir and Erlang.
 ##### Videos
 - [All Aboard The Elixir Express](http://www.confreaks.tv/videos/railsconf2014-workshop-all-aboard-the-elixir-express), Chris McCord
 
+#### Screencasts
+- [ElixirSips](http://elixirsips.com/), Josh Adams
+- [LearnElixir.tv](https://learnelixir.tv), Daniel Berkompas
+
 ##### The Erlangelist: Understanding Elixir Macros, by Saša Jurić
   - [Part 1](http://www.theerlangelist.com/2014/06/understanding-elixir-macros-part-1.html)
   - [Part 2](http://www.theerlangelist.com/2014/06/understanding-elixir-macros-part-2.html)
