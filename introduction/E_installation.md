@@ -8,7 +8,7 @@ Phoenix is written in Elixir, and our application code will also be written in E
 
 If we have just installed Elixir for the first time, we will need to install the Hex package manager as well. Hex is necessary to get a Phoenix app running (by installing dependencies) and to install any extra dependencies we might need along the way.
 
-Here's the command to install Hex:
+Here's the command to install Hex (If you have Hex already installed, it will upgrade Hex to the lastest version):
 
 ```console
 $ mix local.hex
