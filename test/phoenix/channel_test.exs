@@ -10,7 +10,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "broadcasts from self" do
-    Phoenix.PubSub.subscribe(@pubsub, self, "sometopic")
+    Phoenix.PubSub.subscribe(@pubsub, "sometopic")
 
     socket = %Phoenix.Socket{pubsub_server: @pubsub, topic: "sometopic",
                              channel_pid: self(), joined: true}
@@ -33,7 +33,7 @@ defmodule Phoenix.Channel.ChannelTest do
   end
 
   test "broadcasts from other" do
-    Phoenix.PubSub.subscribe(@pubsub, self, "sometopic")
+    Phoenix.PubSub.subscribe(@pubsub, "sometopic")
 
     socket = %Phoenix.Socket{pubsub_server: @pubsub, topic: "sometopic",
                              channel_pid: spawn_link(fn -> :ok end), joined: true}

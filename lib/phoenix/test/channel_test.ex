@@ -301,7 +301,7 @@ defmodule Phoenix.ChannelTest do
   """
   def subscribe_and_join(%Socket{} = socket, channel, topic, payload \\ %{})
       when is_atom(channel) and is_binary(topic) and is_map(payload) do
-    socket.endpoint.subscribe(self(), topic)
+    socket.endpoint.subscribe(topic)
     join(socket, channel, topic, payload)
   end
 
@@ -486,7 +486,7 @@ defmodule Phoenix.ChannelTest do
   Before asserting anything was broadcast, we must first
   subscribe to the topic of the channel in the test process:
 
-      @endpoint.subscribe(self(), "foo:ok")
+      @endpoint.subscribe("foo:ok")
 
   Now we can match on event and payload as patterns:
 

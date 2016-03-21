@@ -93,8 +93,7 @@ defmodule Phoenix.Transports.WebSocket do
     serializer = Keyword.fetch!(config, :serializer)
     timeout    = Keyword.fetch!(config, :timeout)
 
-    if socket.id, do: socket.endpoint.subscribe(self, socket.id, link: true)
-
+    if socket.id, do: socket.endpoint.subscribe(socket.id, link: true)
 
     {:ok, %{socket: socket,
             channels: %{},

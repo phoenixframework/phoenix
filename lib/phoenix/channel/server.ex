@@ -192,7 +192,7 @@ defmodule Phoenix.Channel.Server do
   end
 
   defp join(socket, reply, parent, ref) do
-    PubSub.subscribe(socket.pubsub_server, self(), socket.topic,
+    PubSub.subscribe(socket.pubsub_server, socket.topic,
       link: true,
       fastlane: {socket.transport_pid,
                  socket.serializer,

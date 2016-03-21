@@ -59,8 +59,8 @@ defmodule Phoenix.Transports.LongPoll.Server do
                   last_client_poll: now_ms(),
                   client_ref: nil}
 
-        if socket.id, do: PubSub.subscribe(state.pubsub_server, self, socket.id, link: true)
-        :ok = PubSub.subscribe(state.pubsub_server, self, priv_topic, link: true)
+        if socket.id, do: PubSub.subscribe(state.pubsub_server, socket.id, link: true)
+        :ok = PubSub.subscribe(state.pubsub_server, priv_topic, link: true)
 
         schedule_inactive_shutdown(state.window_ms)
 

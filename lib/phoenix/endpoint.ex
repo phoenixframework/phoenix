@@ -182,10 +182,10 @@ defmodule Phoenix.Endpoint do
 
   #### Channels
 
-    * `subscribe(pid, topic, opts)` - subscribes the pid to the given topic.
-      See `Phoenix.PubSub.subscribe/4` for options.
+    * `subscribe(topic, opts)` - subscribes the caller to the given topic.
+      See `Phoenix.PubSub.subscribe/3` for options.
 
-    * `unsubscribe(pid, topic)` - unsubscribes the pid from the given topic.
+    * `unsubscribe(topic)` - unsubscribes the caller from the given topic.
 
     * `broadcast(topic, event, msg)` - broadcasts a `msg` with as `event`
       in the given `topic`.
@@ -384,12 +384,26 @@ defmodule Phoenix.Endpoint do
 
       def __pubsub_server__, do: @pubsub_server
 
-      def subscribe(pid, topic, opts \\ []) do
+      # TODO remove pid version on next major release
+      def subscribe(pid, topic) when is_pid(pid) and is_binary(topic) do
+        Phoenix.PubSub.subscribe(@pubsub_server, pid, topic, [])
+      end
+      def subscribe(pid, topic, opts) when is_pid(pid) and is_binary(topic) and is_list(opts) do
         Phoenix.PubSub.subscribe(@pubsub_server, pid, topic, opts)
       end
+      def subscribe(topic) when is_binary(topic) do
+        Phoenix.PubSub.subscribe(@pubsub_server, topic, [])
+      end
+      def subscribe(topic, opts) when is_binary(topic) and is_list(opts) do
+        Phoenix.PubSub.subscribe(@pubsub_server, topic, opts)
+      end
 
+      # TODO remove pid version on next major release
+      def unsubscribe(topic) do
+        Phoenix.PubSub.unsubscribe(@pubsub_server, topic)
+      end
       def unsubscribe(pid, topic) do
-        Phoenix.PubSub.unsubscribe(@pubsub_server, pid, topic)
+        Phoenix.PubSub.unsubscribe(@pubsub_server, topic)
       end
 
       def broadcast_from(from, topic, event, msg) do
