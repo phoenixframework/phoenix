@@ -214,7 +214,7 @@ end
 
 Great, so we have a `render/2` function that takes a template and an `assigns` map, which we ignore. Where is this `render/2` function being called from?
 
-The answer is the `render/5` function defined in the `Phoenix.Endpoint.ErrorHandler` module. The whole purpose of this module is to catch errors and render them with a view, in our case, the `HelloPhoenix.ErrorView`.
+The answer is the `render/5` function defined in the `Phoenix.Endpoint.RenderErrors` module. The whole purpose of this module is to catch errors and render them with a view, in our case, the `HelloPhoenix.ErrorView`.
 
 Now that we understand how we got here, let's make a better error page.
 
