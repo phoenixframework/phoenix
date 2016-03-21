@@ -100,9 +100,16 @@ end
 
 For our chat app, we'll allow anyone to join the `"rooms:lobby"` topic, but any other room will be considered private and special authorization, say from a database, will be required. We won't worry about private chat rooms for this exercise, but feel free to explore after we finish. To authorize the socket to join a topic, we return `{:ok, socket}` or `{:ok, reply, socket}`. To deny access, we return `{:error, reply}`. More information about authorization with tokens can be found in the [`Phoenix.Token` documentation](http://hexdocs.pm/phoenix/Phoenix.Token.html).
 
-With our channel in place, let's get the client and server talking. There's some code in `web/static/js/socket.js` to connect to our socket and join our channel already, we just need to set our room name to "rooms:lobby".
+With our channel in place, let's get the client and server talking.
+
+Phoenix projects come with [Brunch](http://www.phoenixframework.org/docs/static-assets) built in, unless disabled with the `--no-brunch` option when you run `mix phoenix.new`.
+
+If you are using brunch, there's some code in `web/static/js/socket.js` that defines a simple client based on the socket implementation that ships with Phoenix.
+
+We can use that library to connect to our socket and join our channel, we just need to set our room name to "rooms:lobby" in that file.
 
 ```javascript
+// web/static/js/socket.js
 ...
 socket.connect()
 
@@ -138,7 +145,7 @@ We'll also add jQuery to our application layout in `web/templates/layout/app.htm
     <%= render @view_module, @view_template, assigns %>
 
   </div> <!-- /container -->
-  <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+  <script src="//code.jquery.com/jquery-1.11.9.min.js"></script>
   <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
 </body>
 ```
