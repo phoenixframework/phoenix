@@ -148,6 +148,10 @@ Reload the page. Open the JS console and type `meaning_of_life`. This will retur
 
 Important detail: according to the default configuration there is no ES6 support for files in `web/static/vendor`. Should we need to enable it, look for `plugins: { babel: { ignore:` in `brunch-config.js`.
 
+#### JavaScript Libraries
+
+We may need to use a JavaScript library like jQuery or underscore in our application. As we mentioned above, we could copy the libraries into `web/static/vendor`. It may be a little bit easier to use `npm` to install it: We can simply add `"jquery": ">= 2.1"` to the dependencies in the `package.json` file in our projects root and run `npm install --save`. Now we can `import $ from "jquery"` in our `app.js`.
+
 #### Brunch Plugin Pipeline
 
 All transformations Brunch performs are actually done by plugins. Brunch automatically uses installed plugins listed in  `package.json`. Here is what the pipeline looks like for a  newly generated Phoenix project:
