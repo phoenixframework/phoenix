@@ -35,7 +35,7 @@ defmodule Phoenix.Router.Route do
   def build(kind, verb, path, host, plug, opts, helper, pipe_through, private, assigns)
       when is_atom(verb) and (is_binary(host) or is_nil(host)) and
            is_atom(plug) and (is_binary(helper) or is_nil(helper)) and
-           is_list(pipe_through) and is_map(private and is_map(assigns))
+           is_list(pipe_through) and is_map(private) and is_map(assigns)
            and kind in [:match, :forward] do
 
     %Route{kind: kind, verb: verb, path: path, host: host, private: private,
