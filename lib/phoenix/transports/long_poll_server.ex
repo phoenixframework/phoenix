@@ -80,7 +80,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
       {:joined, channel_pid, reply_msg} ->
         broadcast_from!(state, client_ref, {:dispatch, ref})
         new_state = %{state | channels: Map.put(state.channels, msg.topic, channel_pid),
-                              channels_inverse: Map.put(state.channels_inverse, channel_pid, msg.topic)}
+                              channels_inverse: Map.put(state.channels_inverse, channel_pid, {msg.topic, msg.ref})}
         publish_reply(reply_msg, new_state)
 
       {:reply, reply_msg} ->
@@ -106,10 +106,9 @@ defmodule Phoenix.Transports.LongPoll.Server do
     case Map.get(state.channels_inverse, channel_pid) do
       nil ->
         {:stop, {:shutdown, :pubsub_server_terminated}, state}
-      topic ->
-        new_state = %{state | channels: Map.delete(state.channels, topic),
-                              channels_inverse: Map.delete(state.channels_inverse, channel_pid)}
-        publish_reply(Transport.on_exit_message(topic, reason), new_state)
+      {topic, join_ref} ->
+        new_state = delete(state, topic, channel_pid)
+        publish_reply(Transport.on_exit_message(topic, join_ref, reason), new_state)
     end
   end
 
@@ -169,5 +168,15 @@ defmodule Phoenix.Transports.LongPoll.Server do
 
   defp schedule_inactive_shutdown(window_ms) do
     Process.send_after(self, :shutdown_if_inactive, window_ms)
+  end
+
+  defp delete(state, topic, channel_pid) do
+    case Map.fetch(state.channels, topic) do
+      {:ok, ^channel_pid} ->
+        %{state | channels: Map.delete(state.channels, topic),
+                  channels_inverse: Map.delete(state.channels_inverse, channel_pid)}
+      {:ok, _newer_pid} ->
+        %{state | channels_inverse: Map.delete(state.channels_inverse, channel_pid)}
+    end
   end
 end

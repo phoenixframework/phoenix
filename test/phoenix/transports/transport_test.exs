@@ -25,15 +25,15 @@ defmodule Phoenix.Transports.TransportTest do
 
   ## on_exit_message
 
-  test "on_exit_message/2" do
-    assert Transport.on_exit_message("foo", :normal) ==
-           %Message{event: "phx_close", payload: %{}, topic: "foo"}
-    assert Transport.on_exit_message("foo", :shutdown) ==
-           %Message{event: "phx_close", payload: %{}, topic: "foo"}
-    assert Transport.on_exit_message("foo", {:shutdown, :whatever}) ==
-           %Message{event: "phx_close", payload: %{}, topic: "foo"}
-    assert Transport.on_exit_message("foo", :oops) ==
-           %Message{event: "phx_error", payload: %{}, topic: "foo"}
+  test "on_exit_message/3" do
+    assert Transport.on_exit_message("foo", "1", :normal) ==
+           %Message{ref: "1", event: "phx_close", payload: %{}, topic: "foo"}
+    assert Transport.on_exit_message("foo", "1", :shutdown) ==
+           %Message{ref: "1", event: "phx_close", payload: %{}, topic: "foo"}
+    assert Transport.on_exit_message("foo", "1", {:shutdown, :whatever}) ==
+           %Message{ref: "1", event: "phx_close", payload: %{}, topic: "foo"}
+    assert Transport.on_exit_message("foo", "1", :oops) ==
+           %Message{ref: "1", event: "phx_error", payload: %{}, topic: "foo"}
   end
 
   ## Check origin
