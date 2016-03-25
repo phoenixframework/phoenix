@@ -144,13 +144,21 @@ defmodule Phoenix.Endpoint do
           [node: ["node_modules/brunch/bin/brunch", "watch"]]
 
     * `:live_reload` - configuration for the live reload option.
-      Configuration requires a `:paths` option which should be a list of
-      files to watch. When these files change, it will trigger a reload.
+      Configuration requires a `:patterns` option which should be a list of
+      file patterns to watch. When these files change, it will trigger a reload.
       If you are using a tool like [pow](http://pow.cx) in development,
       you may need to set the `:url` option appropriately.
 
-          [url: "ws://localhost:4000",
-           paths: [Path.expand("priv/static/js/phoenix.js")]]
+          config :my_app, MyApp.Endpoint,
+            ...
+            live_reload: [
+              url: "ws://localhost:4000",
+              patterns: [
+                ~r{priv/static/.*(js|css|png|jpeg|jpg|gif)$},
+                ~r{web/views/.*(ex)$},
+                ~r{web/templates/.*(eex)$}
+              ]
+            ]
 
     * `:pubsub` - configuration for this endpoint's pubsub adapter.
       Configuration either requires a `:name` of the registered pubsub
