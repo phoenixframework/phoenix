@@ -39,6 +39,8 @@ defmodule <%= application_module %>.Mixfile do
      {<%= inspect adapter_app %>, ">= 0.0.0"},<% end %><%= if html do %>
      {:phoenix_html, "~> 2.3"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},<% end %>
+     # TODO move to hex release
+     {:phoenix_pubsub, github: "phoenixframework/phoenix_pubsub"},
      {:gettext, "~> 0.9"},
      {:cowboy, "~> 1.0"}]
   end<%= if ecto do %>

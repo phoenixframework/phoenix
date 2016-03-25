@@ -23,7 +23,11 @@ defmodule Mix.Tasks.Phoenix.Gen.Presence do
     run(["Presence"])
   end
   def run([alias_name]) do
-    binding = Mix.Phoenix.inflect(alias_name) ++ [otp_app: Mix.Phoenix.otp_app()]
+    inflections = Mix.Phoenix.inflect(alias_name)
+    binding = inflections ++ [
+      otp_app: Mix.Phoenix.otp_app(),
+      pubsub_server: Module.concat(inflections[:base], PubSub)
+    ]
     files = [
       {:eex, "presence.ex", "web/channels/#{binding[:path]}.ex"},
     ]
@@ -31,17 +35,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Presence do
 
     Mix.shell.info """
 
-    *Required* post-install setup:
-
-
-    First, add configuration for your #{binding[:module]} tracker,
-    in config/config.exs:
-
-        config :my_app, #{binding[:module]},
-          pubsub_server: #{inspect Module.concat(binding[:base], PubSub)}
-
-
-    Next, add your new module to your supervision tree,
+    Add your new module to your supervision tree,
     in lib/#{binding[:otp_app]}.ex:
 
         children = [
