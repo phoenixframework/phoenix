@@ -149,16 +149,14 @@ defmodule Phoenix.Endpoint do
       If you are using a tool like [pow](http://pow.cx) in development,
       you may need to set the `:url` option appropriately.
 
-          config :my_app, MyApp.Endpoint,
-            ...
-            live_reload: [
-              url: "ws://localhost:4000",
-              patterns: [
-                ~r{priv/static/.*(js|css|png|jpeg|jpg|gif)$},
-                ~r{web/views/.*(ex)$},
-                ~r{web/templates/.*(eex)$}
-              ]
+          live_reload: [
+            url: "ws://localhost:4000",
+            patterns: [
+              ~r{priv/static/.*(js|css|png|jpeg|jpg|gif)$},
+              ~r{web/views/.*(ex)$},
+              ~r{web/templates/.*(eex)$}
             ]
+          ]
 
     * `:pubsub` - configuration for this endpoint's pubsub adapter.
       Configuration either requires a `:name` of the registered pubsub
