@@ -19,11 +19,11 @@ defmodule <%= module %> do
         end
 
         def handle_info(:after_join, socket) do
-          :ok = Presence.track(socket, socket.assigns.user_id, %{
+          {:ok, _} = Presence.track(socket, socket.assigns.user_id, %{
             online_at: inspect(:os.timestamp())
           })
           push socket, "presence_state", Presence.list(socket)
-          {:noreply, state}
+          {:noreply, socket}
         end
       end
 
