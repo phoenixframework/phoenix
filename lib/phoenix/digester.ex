@@ -112,7 +112,7 @@ defmodule Phoenix.Digester do
     end
   end
 
-  @stylesheet_url_regex ~r{(url\(\s*)(\S+)(\s*\))}
+  @stylesheet_url_regex ~r{(url\(\s*)(\S+?)(\s*\))}
   @quoted_text_regex ~r{\A(['"])(.+)\1\z}
 
   defp digest_asset_references(file, manifest) do
