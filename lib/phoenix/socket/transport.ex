@@ -250,7 +250,7 @@ defmodule Phoenix.Socket.Transport do
   defp log_info(_topic, func), do: Logger.info(func)
 
   defp reply_ignore(msg, socket) do
-    Logger.debug fn -> "Ignoring unmatched topic \"#{msg.topic}\" in #{inspect(socket.handler)}" end
+    Logger.warn fn -> "Ignoring unmatched topic \"#{msg.topic}\" in #{inspect(socket.handler)}" end
     {:error, :unmatched_topic, %Reply{ref: msg.ref, topic: msg.topic, status: :error,
                                       payload: %{reason: "unmatched topic"}}}
   end
