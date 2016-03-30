@@ -163,9 +163,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
     {:noreply, %{state | buffer: [msg | state.buffer]}}
   end
 
-  defp time_to_ms({mega, sec, micro}),
-    do: div(((((mega * 1000000) + sec) * 1000000) + micro), 1000)
-  defp now_ms, do: :os.timestamp() |> time_to_ms()
+  defp now_ms, do: System.system_time(:milli_seconds)
 
   defp schedule_inactive_shutdown(window_ms) do
     Process.send_after(self, :shutdown_if_inactive, window_ms)

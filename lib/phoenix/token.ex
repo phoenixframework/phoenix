@@ -137,8 +137,5 @@ defmodule Phoenix.Token do
     KeyGenerator.generate(secret_key_base, salt, key_opts)
   end
 
-  defp now_ms, do: :os.timestamp() |> time_to_ms()
-  defp time_to_ms({mega, sec, micro}) do
-    trunc(((mega * 1000000 + sec) * 1000) + (micro / 1000))
-  end
+  defp now_ms, do: System.system_time(:milli_seconds)
 end

@@ -132,7 +132,7 @@ defmodule Phoenix.Transports.LongPoll do
     priv_topic =
       "phx:lp:"
       <> Base.encode64(:crypto.strong_rand_bytes(16))
-      <> (:os.timestamp() |> Tuple.to_list |> Enum.join(""))
+      <> (System.system_time(:milli_seconds) |> Integer.to_string)
 
     args = [endpoint, handler, transport, __MODULE__, serializer,
             conn.params, opts[:window_ms], priv_topic]
