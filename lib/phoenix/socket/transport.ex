@@ -65,10 +65,26 @@ defmodule Phoenix.Socket.Transport do
   ## Managing channels
 
   Because channels are spawned from the transport process, transports
-  must trap exists and correctly handle the `{:EXIT, _, _}` messages
+  must trap exits and correctly handle the `{:EXIT, _, _}` messages
   arriving from channels, relaying the proper response to the client.
 
-  The function `on_exit_message/3` should aid with that.
+  The following events are sent by the transport when a channel exits:
+
+    * `"phx_close"` - The channel has exited gracefully
+    * `"phx_error"` - The channel has crashed
+
+  The `on_exit_message/3` function aids in constructing these messages.
+
+  ## Duplicate Join Subscriptions
+
+  For a given topic, the client may only establish a single channel
+  subscription. When attempting to create a duplicate subscription,
+  `dispatch/3` will close the existing channel, log a warning, and
+  spawn a new channel for the topic. When sending the `"phx_close"`
+  event form the closed channel, the message will contain the `ref` the
+  client sent when joining. This allows the client to uniquely identify
+  `"phx_close"` and `"phx_error"` messages when force-closing a channel
+  on duplicate joins.
 
   ## Security
 

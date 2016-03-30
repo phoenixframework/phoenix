@@ -61,6 +61,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // Successful joins receive an "ok" status, while unsuccessful joins
 // receive "error".
 //
+// ## Duplicate Join Subscriptions
+//
+// While the client may join any number of topics on any number of channels,
+// the client may only hold a single subcription for each unique topic at any
+// given time. When attempting to create a duplicate subscription,
+// the server will close the existing channel, log a warning, and
+// spawn a new channel for the topic. The client will have their
+// `channel.onClose` callbacks fired for the existing channel, and the new
+// channel join will have its receive hooks processed as normal.
 //
 // ## Pushing Messages
 //
