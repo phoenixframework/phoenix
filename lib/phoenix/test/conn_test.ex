@@ -468,7 +468,7 @@ defmodule Phoenix.ConnTest do
 
   See `recycle/1` for more information.
   """
-  @spec recycle(Conn.t) :: Conn.t
+  @spec ensure_recycled(Conn.t) :: Conn.t
   def ensure_recycled(conn) do
     if conn.private[:phoenix_recycled] do
       conn
