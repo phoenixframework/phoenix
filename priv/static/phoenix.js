@@ -1,15 +1,15 @@
 (function(exports){
 "use strict";
 
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -61,6 +61,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // Successful joins receive an "ok" status, while unsuccessful joins
 // receive "error".
 //
+// ## Duplicate Join Subscriptions
+//
+// While the client may join any number of topics on any number of channels,
+// the client may only hold a single subcription for each unique topic at any
+// given time. When attempting to create a duplicate subscription,
+// the server will close the existing channel, log a warning, and
+// spawn a new channel for the topic. The client will have their
+// `channel.onClose` callbacks fired for the existing channel, and the new
+// channel join will have its receive hooks processed as normal.
 //
 // ## Pushing Messages
 //
@@ -179,7 +188,8 @@ var CHANNEL_STATES = {
   closed: "closed",
   errored: "errored",
   joined: "joined",
-  joining: "joining"
+  joining: "joining",
+  leaving: "leaving"
 };
 var CHANNEL_EVENTS = {
   close: "phx_close",
@@ -193,7 +203,7 @@ var TRANSPORTS = {
   websocket: "websocket"
 };
 
-var Push = (function () {
+var Push = function () {
 
   // Initializes the Push
   //
@@ -317,9 +327,9 @@ var Push = (function () {
   }]);
 
   return Push;
-})();
+}();
 
-var Channel = exports.Channel = (function () {
+var Channel = exports.Channel = function () {
   function Channel(topic, params, socket) {
     var _this2 = this;
 
@@ -346,7 +356,7 @@ var Channel = exports.Channel = (function () {
       _this2.pushBuffer = [];
     });
     this.onClose(function () {
-      _this2.socket.log("channel", "close " + _this2.topic);
+      _this2.socket.log("channel", "close " + _this2.topic + " " + _this2.joinRef());
       _this2.state = CHANNEL_STATES.closed;
       _this2.socket.remove(_this2);
     });
@@ -386,9 +396,9 @@ var Channel = exports.Channel = (function () {
         throw "tried to join multiple times. 'join' can only be called a single time per channel instance";
       } else {
         this.joinedOnce = true;
+        this.rejoin(timeout);
+        return this.joinPush;
       }
-      this.rejoin(timeout);
-      return this.joinPush;
     }
   }, {
     key: "onClose",
@@ -458,9 +468,10 @@ var Channel = exports.Channel = (function () {
 
       var timeout = arguments.length <= 0 || arguments[0] === undefined ? this.timeout : arguments[0];
 
+      this.state = CHANNEL_STATES.leaving;
       var onClose = function onClose() {
         _this3.socket.log("channel", "leave " + _this3.topic);
-        _this3.trigger(CHANNEL_EVENTS.close, "leave");
+        _this3.trigger(CHANNEL_EVENTS.close, "leave", _this3.joinRef());
       };
       var leavePush = new Push(this, CHANNEL_EVENTS.leave, {}, timeout);
       leavePush.receive("ok", function () {
@@ -492,6 +503,11 @@ var Channel = exports.Channel = (function () {
       return this.topic === topic;
     }
   }, {
+    key: "joinRef",
+    value: function joinRef() {
+      return this.joinPush.ref;
+    }
+  }, {
     key: "sendJoin",
     value: function sendJoin(timeout) {
       this.state = CHANNEL_STATES.joining;
@@ -501,14 +517,25 @@ var Channel = exports.Channel = (function () {
     key: "rejoin",
     value: function rejoin() {
       var timeout = arguments.length <= 0 || arguments[0] === undefined ? this.timeout : arguments[0];
+      if (this.state === CHANNEL_STATES.leaving) {
+        return;
+      }
       this.sendJoin(timeout);
     }
   }, {
     key: "trigger",
-    value: function trigger(triggerEvent, payload, ref) {
-      this.onMessage(triggerEvent, payload, ref);
+    value: function trigger(event, payload, ref) {
+      var close = CHANNEL_EVENTS.close;
+      var error = CHANNEL_EVENTS.error;
+      var leave = CHANNEL_EVENTS.leave;
+      var join = CHANNEL_EVENTS.join;
+
+      if (ref && [close, error, leave, join].indexOf(event) >= 0 && ref !== this.joinRef()) {
+        return;
+      }
+      this.onMessage(event, payload, ref);
       this.bindings.filter(function (bind) {
-        return bind.event === triggerEvent;
+        return bind.event === event;
       }).map(function (bind) {
         return bind.callback(payload, ref);
       });
@@ -521,9 +548,9 @@ var Channel = exports.Channel = (function () {
   }]);
 
   return Channel;
-})();
+}();
 
-var Socket = exports.Socket = (function () {
+var Socket = exports.Socket = function () {
 
   // Initializes the Socket
   //
@@ -749,7 +776,7 @@ var Socket = exports.Socket = (function () {
     key: "remove",
     value: function remove(channel) {
       this.channels = this.channels.filter(function (c) {
-        return !c.isMember(channel.topic);
+        return c.joinRef() !== channel.joinRef();
       });
     }
   }, {
@@ -836,9 +863,9 @@ var Socket = exports.Socket = (function () {
   }]);
 
   return Socket;
-})();
+}();
 
-var LongPoll = exports.LongPoll = (function () {
+var LongPoll = exports.LongPoll = function () {
   function LongPoll(endPoint) {
     _classCallCheck(this, LongPoll);
 
@@ -943,9 +970,9 @@ var LongPoll = exports.LongPoll = (function () {
   }]);
 
   return LongPoll;
-})();
+}();
 
-var Ajax = exports.Ajax = (function () {
+var Ajax = exports.Ajax = function () {
   function Ajax() {
     _classCallCheck(this, Ajax);
   }
@@ -1041,7 +1068,7 @@ var Ajax = exports.Ajax = (function () {
   }]);
 
   return Ajax;
-})();
+}();
 
 Ajax.states = { complete: 4 };
 
@@ -1093,10 +1120,10 @@ var Presence = exports.Presence = {
     var leaves = _ref2.leaves;
 
     if (!onJoin) {
-      onJoin = function () {};
+      onJoin = function onJoin() {};
     }
     if (!onLeave) {
-      onLeave = function () {};
+      onLeave = function onLeave() {};
     }
 
     this.map(joins, function (key, newPresence) {
@@ -1128,7 +1155,7 @@ var Presence = exports.Presence = {
   },
   list: function list(presences, chooser) {
     if (!chooser) {
-      chooser = function (key, pres) {
+      chooser = function chooser(key, pres) {
         return pres;
       };
     }
@@ -1164,7 +1191,7 @@ var Presence = exports.Presence = {
 //    reconnectTimer.scheduleTimeout() // fires after 1000
 //
 
-var Timer = (function () {
+var Timer = function () {
   function Timer(callback, timerCalc) {
     _classCallCheck(this, Timer);
 
@@ -1198,7 +1225,7 @@ var Timer = (function () {
   }]);
 
   return Timer;
-})();
+}();
 
 
 })(typeof(exports) === "undefined" ? window.Phoenix = window.Phoenix || {} : exports);

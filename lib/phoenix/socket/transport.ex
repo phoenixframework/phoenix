@@ -65,10 +65,26 @@ defmodule Phoenix.Socket.Transport do
   ## Managing channels
 
   Because channels are spawned from the transport process, transports
-  must trap exists and correctly handle the `{:EXIT, _, _}` messages
+  must trap exits and correctly handle the `{:EXIT, _, _}` messages
   arriving from channels, relaying the proper response to the client.
 
-  The function `on_exit_message/2` should aid with that.
+  The following events are sent by the transport when a channel exits:
+
+    * `"phx_close"` - The channel has exited gracefully
+    * `"phx_error"` - The channel has crashed
+
+  The `on_exit_message/3` function aids in constructing these messages.
+
+  ## Duplicate Join Subscriptions
+
+  For a given topic, the client may only establish a single channel
+  subscription. When attempting to create a duplicate subscription,
+  `dispatch/3` will close the existing channel, log a warning, and
+  spawn a new channel for the topic. When sending the `"phx_close"`
+  event form the closed channel, the message will contain the `ref` the
+  client sent when joining. This allows the client to uniquely identify
+  `"phx_close"` and `"phx_error"` messages when force-closing a channel
+  on duplicate joins.
 
   ## Security
 
@@ -237,6 +253,13 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
+  defp do_dispatch(pid, %{event: "phx_join"} = msg, socket) when is_pid(pid) do
+    Logger.debug "Duplicate channel join for topic \"#{msg.topic}\" in #{inspect(socket.handler)}. " <>
+                 "Closing existing channel for new join."
+    :ok = Phoenix.Channel.Server.close(pid)
+    do_dispatch(nil, msg, socket)
+  end
+
   defp do_dispatch(nil, msg, socket) do
     reply_ignore(msg, socket)
   end
@@ -258,12 +281,17 @@ defmodule Phoenix.Socket.Transport do
   @doc """
   Returns the message to be relayed when a channel exists.
   """
+  # TODO remove 2-arity on next major release
   def on_exit_message(topic, reason) do
+    IO.write :stderr, "Phoenix.Transport.on_exit_message/2 is deprecated. Use on_exit_message/3 instead."
+    on_exit_message(topic, nil, reason)
+  end
+  def on_exit_message(topic, join_ref, reason) do
     case reason do
-      :normal        -> %Message{topic: topic, event: "phx_close", payload: %{}}
-      :shutdown      -> %Message{topic: topic, event: "phx_close", payload: %{}}
-      {:shutdown, _} -> %Message{topic: topic, event: "phx_close", payload: %{}}
-      _              -> %Message{topic: topic, event: "phx_error", payload: %{}}
+      :normal        -> %Message{ref: join_ref, topic: topic, event: "phx_close", payload: %{}}
+      :shutdown      -> %Message{ref: join_ref, topic: topic, event: "phx_close", payload: %{}}
+      {:shutdown, _} -> %Message{ref: join_ref, topic: topic, event: "phx_close", payload: %{}}
+      _              -> %Message{ref: join_ref, topic: topic, event: "phx_error", payload: %{}}
     end
   end
 
