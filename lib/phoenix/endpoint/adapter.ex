@@ -258,7 +258,7 @@ defmodule Phoenix.Endpoint.Adapter do
       else
         Logger.error "Could not find static manifest at #{inspect outer}. " <>
                      "Run \"mix phoenix.digest\" after building your static files " <>
-                     "or remove the configuration from \"config/prod.exs.\""
+                     "or remove the configuration from \"config/prod.exs\"."
       end
     else
       %{}
