@@ -13,10 +13,10 @@ config :hello_phoenix, HelloPhoenix.Endpoint,
   secret_key_base: "some_crazy_long_string_phoenix_generated",
   debug_errors: false,
   pubsub: [name: HelloPhoenix.PubSub,
-  adapter: Phoenix.PubSub.PG2]
+           adapter: Phoenix.PubSub.PG2]
 ```
 
-Plug uses our `secret_key_base` value to encrypt and sign each cookie to make sure it can't be read or tampered with.
+Plug uses our `secret_key_base` value to sign each cookie to make sure it can't be tampered with.
 
 And here is the default `Plug.Session` configuration from `lib/hello_phoenix/endpoint.ex`.
 
