@@ -3,8 +3,8 @@
 ## 1.2.0-dev
 
 * Deprecations
-  * [Endpoint] Generated `subscribe/3` and `unsubscibe/2` clauses have been deprecated in favor of `subscribe/2` and `unsubscribe/1` which uses the caller's pid.
-  * [PubSub] `Phoenix.PubSub.subscribe/3` and `Phoenix.PubSub.unsubscibe/2` have been deprecated in favor of `subscribe/2` and `unsubscribe/1` which uses the caller's pid.
+  * [Endpoint] Generated `subscribe/3` and `unsubscribe/2` clauses have been deprecated in favor of `subscribe/2` and `unsubscribe/1` which uses the caller's pid.
+  * [PubSub] `Phoenix.PubSub.subscribe/3` and `Phoenix.PubSub.unsubscribe/2` have been deprecated in favor of `subscribe/2` and `unsubscribe/1` which uses the caller's pid.
 
 ## 1.1.4 (2016-1-25)
 
