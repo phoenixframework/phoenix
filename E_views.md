@@ -164,7 +164,7 @@ This is where the view module and its template from the controller are rendered 
 
 ### The ErrorView
 
-Phoenix recently added a new view to every generated application, the `ErrorView` which lives in `web/views/error_view.ex`. The purpose of the `ErrorView` is to handle two of the most common errors - `404 not found` and `500 internal error` - in a general way, from one centralized location. Let's see what it looks like.
+Phoenix has a view called the `ErrorView` which lives in `web/views/error_view.ex`. The purpose of the `ErrorView` is to handle two of the most common errors - `404 not found` and `500 internal error` - in a general way, from one centralized location. Let's see what it looks like.
 
 ```elixir
 defmodule HelloPhoenix.ErrorView do
