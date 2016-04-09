@@ -356,7 +356,7 @@ export class Channel {
     if(!this.joinedOnce){
       throw(`tried to push '${event}' to '${this.topic}' before joining. Use channel.join() before pushing events`)
     }
-    let pushEvent = new Push(this, event, payload, timeout)
+    const pushEvent = new Push(this, event, payload, timeout)
     if(this.canPush()){
       pushEvent.send()
     } else {
@@ -381,11 +381,11 @@ export class Channel {
   //
   leave(timeout = this.timeout){
     this.state = CHANNEL_STATES.leaving
-    let onClose = () => {
+    const onClose = () => {
       this.socket.log("channel", `leave ${this.topic}`)
       this.trigger(CHANNEL_EVENTS.close, "leave", this.joinRef())
     }
-    let leavePush = new Push(this, CHANNEL_EVENTS.leave, {}, timeout)
+    const leavePush = new Push(this, CHANNEL_EVENTS.leave, {}, timeout)
     leavePush.receive("ok", () => onClose() )
              .receive("timeout", () => onClose() )
     leavePush.send()
@@ -415,7 +415,7 @@ export class Channel {
   }
 
   trigger(event, payload, ref){
-    let {close, error, leave, join} = CHANNEL_EVENTS
+    const {close, error, leave, join} = CHANNEL_EVENTS
     if(ref && [close, error, leave, join].indexOf(event) >= 0 && ref !== this.joinRef()){
       return
     }
@@ -480,7 +480,7 @@ export class Socket {
   protocol(){ return location.protocol.match(/^https/) ? "wss" : "ws" }
 
   endPointURL(){
-    let uri = Ajax.appendParams(
+    const uri = Ajax.appendParams(
       Ajax.appendParams(this.endPoint, this.params), {vsn: VSN})
     if(uri.charAt(0) !== "/"){ return uri }
     if(uri.charAt(1) === "/"){ return `${this.protocol()}:${uri}` }
@@ -572,14 +572,14 @@ export class Socket {
   }
 
   channel(topic, chanParams = {}){
-    let chan = new Channel(topic, chanParams, this)
+    const chan = new Channel(topic, chanParams, this)
     this.channels.push(chan)
     return chan
   }
 
   push(data){
-    let {topic, event, payload, ref} = data
-    let callback = () => this.conn.send(JSON.stringify(data))
+    const {topic, event, payload, ref} = data
+    const callback = () => this.conn.send(JSON.stringify(data))
     this.log("push", `${topic} ${event} (${ref})`, payload)
     if(this.isConnected()){
       callback()
@@ -591,7 +591,7 @@ export class Socket {
 
   // Return the next message ref, accounting for overflows
   makeRef(){
-    let newRef = this.ref + 1
+    const newRef = this.ref + 1
     if(newRef === this.ref){ this.ref = 0 } else { this.ref = newRef }
 
     return this.ref.toString()
@@ -609,8 +609,8 @@ export class Socket {
   }
 
   onConnMessage(rawMessage){
-    let msg = JSON.parse(rawMessage.data)
-    let {topic, event, payload, ref} = msg
+    const msg = JSON.parse(rawMessage.data)
+    const {topic, event, payload, ref} = msg
     this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
     this.channels.filter( channel => channel.isMember(topic) )
                  .forEach( channel => channel.trigger(event, payload, ref) )
@@ -661,10 +661,10 @@ export class LongPoll {
 
     Ajax.request("GET", this.endpointURL(), "application/json", null, this.timeout, this.ontimeout.bind(this), (resp) => {
       if(resp){
-        var {status, token, messages} = resp
+        const {status, token, messages} = resp
         this.token = token
       } else{
-        var status = 0
+        const status = 0
       }
 
       switch(status){
@@ -710,10 +710,10 @@ export class Ajax {
 
   static request(method, endPoint, accept, body, timeout, ontimeout, callback){
     if(window.XDomainRequest){
-      let req = new XDomainRequest() // IE8, IE9
+      const req = new XDomainRequest() // IE8, IE9
       this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback)
     } else {
-      let req = window.XMLHttpRequest ?
+      const req = window.XMLHttpRequest ?
                   new XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
                   new ActiveXObject("Microsoft.XMLHTTP") // IE6, IE5
       this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback)
@@ -724,7 +724,7 @@ export class Ajax {
     req.timeout = timeout
     req.open(method, endPoint)
     req.onload = () => {
-      let response = this.parseJSON(req.responseText)
+      const response = this.parseJSON(req.responseText)
       callback && callback(response)
     }
     if(ontimeout){ req.ontimeout = ontimeout }
@@ -742,7 +742,7 @@ export class Ajax {
     req.onerror = () => { callback && callback(null) }
     req.onreadystatechange = () => {
       if(req.readyState === this.states.complete && callback){
-        let response = this.parseJSON(req.responseText)
+        const response = this.parseJSON(req.responseText)
         callback(response)
       }
     }
@@ -759,9 +759,9 @@ export class Ajax {
 
   static serialize(obj, parentKey){
     let queryStr = [];
-    for(var key in obj){ if(!obj.hasOwnProperty(key)){ continue }
-      let paramKey = parentKey ? `${parentKey}[${key}]` : key
-      let paramVal = obj[key]
+    for(let key in obj){ if(!obj.hasOwnProperty(key)){ continue }
+      const paramKey = parentKey ? `${parentKey}[${key}]` : key
+      const paramVal = obj[key]
       if(typeof paramVal === "object"){
         queryStr.push(this.serialize(paramVal, paramKey))
       } else {
@@ -774,7 +774,7 @@ export class Ajax {
   static appendParams(url, params){
     if(Object.keys(params).length === 0){ return url }
 
-    let prefix = url.match(/\?/) ? "&" : "?"
+    const prefix = url.match(/\?/) ? "&" : "?"
     return `${url}${prefix}${this.serialize(params)}`
   }
 }
@@ -795,12 +795,12 @@ export var Presence = {
       }
     })
     this.map(newState, (key, newPresence) => {
-      let currentPresence = state[key]
+      const currentPresence = state[key]
       if(currentPresence){
-        let newRefs = newPresence.metas.map(m => m.phx_ref)
-        let curRefs = currentPresence.metas.map(m => m.phx_ref)
-        let joinedMetas = newPresence.metas.filter(m => curRefs.indexOf(m.phx_ref) < 0)
-        let leftMetas = currentPresence.metas.filter(m => newRefs.indexOf(m.phx_ref) < 0)
+        const newRefs = newPresence.metas.map(m => m.phx_ref)
+        const curRefs = currentPresence.metas.map(m => m.phx_ref)
+        const joinedMetas = newPresence.metas.filter(m => curRefs.indexOf(m.phx_ref) < 0)
+        const leftMetas = currentPresence.metas.filter(m => newRefs.indexOf(m.phx_ref) < 0)
         if(joinedMetas.length > 0){
           joins[key] = newPresence
           joins[key].metas = joinedMetas
@@ -821,7 +821,7 @@ export var Presence = {
     if(!onLeave){ onLeave = function(){} }
 
     this.map(joins, (key, newPresence) => {
-      let currentPresence = state[key]
+      const currentPresence = state[key]
       state[key] = newPresence
       if(currentPresence){
         state[key].metas.unshift(...currentPresence.metas)
@@ -829,9 +829,9 @@ export var Presence = {
       onJoin(key, currentPresence, newPresence)
     })
     this.map(leaves, (key, leftPresence) => {
-      let currentPresence = state[key]
+      const currentPresence = state[key]
       if(!currentPresence){ return }
-      let refsToRemove = leftPresence.metas.map(m => m.phx_ref)
+      const refsToRemove = leftPresence.metas.map(m => m.phx_ref)
       currentPresence.metas = currentPresence.metas.filter(p => {
         return refsToRemove.indexOf(p.phx_ref) < 0
       })
@@ -843,7 +843,9 @@ export var Presence = {
   },
 
   list(presences, chooser){
-    if(!chooser){ chooser = function(key, pres){ return pres } }
+    if(!chooser){
+      chooser = (key, pres) => pres;
+    }
 
     return this.map(presences, (key, presence) => {
       return chooser(key, presence)
