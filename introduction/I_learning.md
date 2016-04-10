@@ -1,6 +1,11 @@
 Here's a list of other resources for learning about Phoenix and some of the projects it depends on.
 
 ## Phoenix
+
+#### Books
+- [Programming Phoenix](https://pragprog.com/book/phoenix/programming-phoenix) (print and ebook)
+
+#### Online Resources
 - [The Phoenix Project](https://github.com/phoenixframework/phoenix)
 - [Official Documentation](http://hexdocs.pm/phoenix/) (current stable release)
 
