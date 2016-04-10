@@ -151,6 +151,22 @@ config :hello_phoenix, HelloPhoenix.Repo,
   pool_size: 20
 ```
 
+Finally, we need to decrease the timeout for the websocket transport:
+
+```elixir
+defmodule HelloPhoenix.UserSocket do
+  use Phoenix.Socket
+
+  ...
+
+  ## Transports
+  transport :websocket, Phoenix.Transports.WebSocket,
+    timeout: 45_000
+end
+```
+
+This ensures that any idle connections are closed by Phoenix before they reach Heroku's 55 second timeout window.
+
 ## Creating Environment Variables in Heroku
 
 The `DATABASE_URL` config var is automatically created by Heroku when we add the [Heroku Postgres add-on](https://elements.heroku.com/addons/heroku-postgresql). We can create the database via the heroku toolbelt:
