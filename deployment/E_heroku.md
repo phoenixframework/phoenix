@@ -105,7 +105,8 @@ Then, we'll add the production database configuration to `config/prod.exs`:
 config :hello_phoenix, HelloPhoenix.Repo,
   adapter: Ecto.Adapters.Postgres,
   url: System.get_env("DATABASE_URL"),
-  pool_size: 20
+  pool_size: 20,
+  ssl: true
 ```
 
 Now, let's tell Phoenix to use our Heroku URL and enforce we only use the SSL version of the website. Find the url line:
@@ -148,7 +149,8 @@ config :logger, level: :info
 config :hello_phoenix, HelloPhoenix.Repo,
   adapter: Ecto.Adapters.Postgres,
   url: System.get_env("DATABASE_URL"),
-  pool_size: 20
+  pool_size: 20,
+  ssl: true
 ```
 
 Finally, we need to decrease the timeout for the websocket transport:
