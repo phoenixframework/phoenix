@@ -5,7 +5,7 @@
   "repository": {
   },
   "devDependencies": {
-    "brunch": "~2.2.3",
+    "brunch": "~2.6.5",
     "mocha": "~2.4.4",
     "babel-brunch": "~6.0.0",
     "uglify-js-brunch": "~2.0.1"

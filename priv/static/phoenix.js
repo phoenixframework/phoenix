@@ -1227,5 +1227,5 @@ var Timer = function () {
   return Timer;
 }();
 
-
 })(typeof(exports) === "undefined" ? window.Phoenix = window.Phoenix || {} : exports);
+
