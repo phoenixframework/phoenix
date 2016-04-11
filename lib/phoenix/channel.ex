@@ -346,6 +346,80 @@ defmodule Phoenix.Channel do
     Server.push(transport_pid, topic, event, message, socket.serializer)
   end
 
+  @doc ~S"""
+  Subscribes the socket to an external topic.
+
+  Useful for circumstances you need to programmatically subscribe a
+  socket to external topics in addition to the the internal `socket.topic`.
+  For example, imagine you have a bidding system where a remote client
+  dynamically sets preferences on products they want to receiving bidding
+  notifications on. Instead of requiring a unique channel process and topic per
+  preference, a more efficient and simple approach would be to subscribe a
+  single socket to relevant notifications.
+
+  ## Examples
+
+      def NotificationChannel do
+        use Phoenix.Channel
+
+        def join("notifications:" <> user_id, %{"ids" => ids}, socket) do
+          topics = for product_id <- ids, do: "products:#{product_id}"
+
+          {:ok, socket,
+                |> assign(:topics, [])
+                |> put_new_topics(topics)}
+        end
+
+        def handle_in("watch", %{"product_id" => id}, socket) do
+          {:reply, :ok, put_new_topics(socket, "products:#{id}")}
+        end
+
+        def handle_in("unwatch", %{"product_id" => id}, socket) do
+          {:reply, :ok, unsubscribe(socket, "products:#{id}")}
+        end
+
+        defp put_new_topics(socket, topics) do
+          Enum.reduce(topics, socket, fn topic, acc ->
+            if topic in acc.assigns.topics do
+              acc
+            else
+              :ok = subscribe(acc, topic)
+              assign(acc, :topics, [topic | topics])
+            end
+          end)
+        end
+      end
+
+  Note: Like `Phoenix.PubSub.subscribe`, the caller must be responsible
+  for preventing duplicate subscriptions. After calling
+  `Phoenix.Channel.subscribe/2`, the same flow applies to normal channel
+  messages. By default, the messages are relayed directly to the client,
+  but the events can be intercepted with `intercept/1` causing `handle_out/3`
+  callbacks to invoked.
+  """
+  def subscribe(%Socket{} = socket, topic) do
+    Phoenix.PubSub.subscribe(socket.pubsub_server, topic,
+      link: true,
+      fastlane: {socket.transport_pid,
+                 socket.serializer,
+                 socket.channel.__intercepts__()})
+  end
+
+  @doc """
+  Unsubscribes the socket from an external topic.
+
+  ## Examples
+
+      iex> unsubscribe(socket, "another:topic")
+      :ok
+  """
+  def unsubscribe(%Socket{topic: topic}, topic) do
+    raise ArgumentError, "cannot unsubscribe socket from its own topic"
+  end
+  def unsubscribe(%Socket{} = socket, topic) do
+    Phoenix.PubSub.unsubscribe(socket.pubsub_server, topic)
+  end
+
   @doc """
   Replies asynchronously to a socket push.
 
