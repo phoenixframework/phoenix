@@ -74,6 +74,16 @@ defmodule Phoenix.Test.ChannelTest do
       {:stop, :shutdown, :ok, socket}
     end
 
+    def handle_in("subscribe", %{"topic" => topic}, socket) do
+      subscribe(socket, topic)
+      {:reply, :ok, socket}
+    end
+
+    def handle_in("unsubscribe", %{"topic" => topic}, socket) do
+      unsubscribe(socket, topic)
+      {:reply, :ok, socket}
+    end
+
     def handle_out("stop", _payload, socket) do
       {:stop, :shutdown, socket}
     end
@@ -366,5 +376,20 @@ defmodule Phoenix.Test.ChannelTest do
     socket = %Socket{channel: CodeChangeChannel}
     assert Phoenix.Channel.Server.code_change(:old, socket, :extra) ==
       {:error, :cant}
+  end
+
+  test "subscribe and subscribe" do
+    socket = subscribe_and_join!(socket(), Channel, "foo:ok")
+    socket.endpoint.broadcast!("another:topic", "event", %{})
+    refute_receive %Phoenix.Socket.Message{}
+    ref = push socket, "subscribe", %{"topic" => "another:topic"}
+    assert_reply ref, :ok
+    socket.endpoint.broadcast!("another:topic", "event", %{})
+    assert_receive %Phoenix.Socket.Message{topic: "another:topic"}
+
+    ref = push socket, "unsubscribe", %{"topic" => "another:topic"}
+    assert_reply ref, :ok
+    socket.endpoint.broadcast!("another:topic", "event", %{})
+    refute_receive %Phoenix.Socket.Message{}
   end
 end
