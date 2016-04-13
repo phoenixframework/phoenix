@@ -22,7 +22,7 @@ defmodule Phoenix.ChannelTest do
 
   You usually want to set the same ID and assigns your
   `UserSocket.connect/2` callback would set. Alternatively,
-  you can use the `connect/3` helper to call your `UserSocket.connect/2`
+  you can use the `connect/2` helper to call your `UserSocket.connect/2`
   callback and initialize the socket with the socket id:
 
       {:ok, socket} = connect(UserSocket, %{"some" => "params"})
