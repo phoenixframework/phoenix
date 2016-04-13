@@ -58,10 +58,11 @@ defmodule Phoenix.CodeReloader.Server do
 
   defp mix_compile({:module, Mix.Task}, app, paths, compilers) do
     if Mix.Project.umbrella? do
-      dep = Enum.find Mix.Dep.Umbrella.loaded, &(&1.app == app)
-      Mix.Dep.in_dependency(dep, fn _ ->
-        mix_compile_unless_stale_config(paths, compilers)
-      end)
+      Enum.each Mix.Dep.Umbrella.loaded, fn dep ->
+        Mix.Dep.in_dependency(dep, fn _ ->
+          mix_compile_unless_stale_config(paths, compilers)
+        end)
+      end
     else
       mix_compile_unless_stale_config(paths, compilers)
     end
