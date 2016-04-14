@@ -112,6 +112,6 @@ defmodule Phoenix.Endpoint.CowboyHandler do
 
   defp info(scheme, endpoint, ref) do
     port = :ranch.get_port(ref)
-    "Running #{inspect endpoint} with Cowboy using #{scheme} on port #{port}"
+    "Running #{inspect endpoint} with Cowboy using #{scheme} on http://localhost:#{port}"
   end
 end
