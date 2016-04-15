@@ -35,8 +35,8 @@ defmodule Phoenix.View do
         use YourApp.Web, :view
       end
 
-  Because we have defined the template root to be "web/template", `Phoenix.View`
-  will automatically load all templates at "web/template/user" and include them
+  Because we have defined the template root to be "web/templates", `Phoenix.View`
+  will automatically load all templates at "web/templates/user" and include them
   in the `YourApp.UserView`. For example, imagine we have the template:
 
       # web/templates/user/index.html.eex
