@@ -145,12 +145,18 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   def run(argv) do
-    {opts, argv, _} = OptionParser.parse(argv, switches: @switches)
-
     unless Version.match? System.version, "~> 1.2" do
       Mix.raise "Phoenix v#{@version} requires at least Elixir v1.2.\n " <>
                 "You have #{System.version}. Please update accordingly"
     end
+
+    {opts, argv} =
+      case OptionParser.parse(argv, strict: @switches) do
+        {opts, argv, []} ->
+          {opts, argv}
+        {_opts, _argv, [switch | _]} ->
+          Mix.raise "Invalid option: " <> switch_to_string(switch)
+      end
 
     case argv do
       [] ->
@@ -234,6 +240,9 @@ defmodule Mix.Tasks.Phoenix.New do
       end
     end)
   end
+
+  defp switch_to_string({name, nil}), do: name
+  defp switch_to_string({name, val}), do: name <> "=" <> val
 
   defp copy_model(_app, path, binding) do
     if binding[:ecto] do
