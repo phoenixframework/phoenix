@@ -314,12 +314,13 @@ defmodule Phoenix.Endpoint do
 
           defmodule MyInstrumenter do
             def event_callback(:start, _compile, _runtime) do
-              :erlang.monotonic_time(:micro_seconds)
+              :erlang.monotonic_time
             end
 
             def event_callback(:stop, _time_diff, start_time) do
-              stop_time = :erlang.monotonic_time(:micro_seconds)
-              do_something_with_diff(stop_time - start_time)
+              stop_time = :erlang.monotonic_time
+              my_diff = :erlang.convert_time_unit(stop_time - start_time, :native, :micro_seconds)
+              do_something_with_diff(my_diff)
             end
           end
 

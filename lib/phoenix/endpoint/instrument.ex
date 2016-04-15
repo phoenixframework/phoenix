@@ -47,7 +47,7 @@ defmodule Phoenix.Endpoint.Instrument do
       #     res0 = Inst0.my_event(:start, compile, runtime)
       #     ...
       #
-      #     start = :erlang.monotonic_time(:micro_seconds)
+      #     start = :erlang.monotonic_time
       #     try do
       #       fun.()
       #     after
@@ -64,11 +64,11 @@ defmodule Phoenix.Endpoint.Instrument do
         def instrument(unquote(event), var!(compile), var!(runtime), fun)
             when is_map(var!(compile)) and is_map(var!(runtime)) and is_function(fun, 0) do
           unquote(Phoenix.Endpoint.Instrument.compile_start_callbacks(event, instrumenters))
-          start = :erlang.monotonic_time(:micro_seconds)
+          start = :erlang.monotonic_time
           try do
             fun.()
           after
-            var!(diff) = :erlang.monotonic_time(:micro_seconds) - start
+            var!(diff) = (:erlang.monotonic_time - start) |> :erlang.convert_time_unit(:native, :micro_seconds)
             unquote(Phoenix.Endpoint.Instrument.compile_stop_callbacks(event, instrumenters))
           end
         end
