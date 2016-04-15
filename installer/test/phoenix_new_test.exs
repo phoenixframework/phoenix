@@ -399,6 +399,12 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     end
   end
 
+  test "invalid options" do
+    assert_raise Mix.Error, "Invalid option: -database", fn ->
+      Mix.Tasks.Phoenix.New.run(["valid", "-database", "mysql"])
+    end
+  end
+
   test "new without args" do
     in_tmp "new without args", fn ->
 
