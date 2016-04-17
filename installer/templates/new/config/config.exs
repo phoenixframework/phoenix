@@ -6,8 +6,8 @@
 use Mix.Config
 
 # General application configuration
-config :<%= application_name %>,
-<%= if namespaced? do %>  app_namespace: <%= application_module %>,<% end %>
+config :<%= application_name %>,<%= if namespaced? do %>
+  app_namespace: <%= application_module %>,<% end %>
   ecto_repos: [<%= application_module %>.Repo]
 
 # Configures the endpoint
