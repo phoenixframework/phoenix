@@ -424,9 +424,12 @@ defmodule Mix.Tasks.Phoenix.New do
   end
   defp get_ecto_adapter("sqlite", app, module) do
     {:sqlite_ecto, Sqlite.Ecto,
-      dev:  [database: "db/#{app}_dev.sqlite"],
-      test: [database: "db/#{app}_test.sqlite", pool: Ecto.Adapters.SQL.Sandbox],
-      prod: [database: "db/#{app}_prod.sqlite"]}
+     dev:  [database: "db/#{app}_dev.sqlite"],
+     test: [database: "db/#{app}_test.sqlite", pool: Ecto.Adapters.SQL.Sandbox],
+     prod: [database: "db/#{app}_prod.sqlite"],
+     test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{module}.Repo, :manual)",
+     test_setup: ":ok = Ecto.Adapters.SQL.Sandbox.checkout(#{module}.Repo)",
+     test_async: "Ecto.Adapters.SQL.Sandbox.mode(#{module}.Repo, {:shared, self()})"}
   end
   defp get_ecto_adapter("mongodb", app, module) do
     {:mongodb_ecto, Mongo.Ecto,
