@@ -426,17 +426,16 @@ defmodule Mix.Tasks.Phoenix.New do
     {:sqlite_ecto, Sqlite.Ecto,
       dev:  [database: "db/#{app}_dev.sqlite"],
       test: [database: "db/#{app}_test.sqlite", pool: Ecto.Adapters.SQL.Sandbox],
-      prod: [database: "db/#{app}_prod.sqlite"],
-      test_begin: "Ecto.Adapters.SQL.begin_test_transaction(#{module}.Repo)",
-      test_restart: "Ecto.Adapters.SQL.restart_test_transaction(#{module}.Repo, [])"}
+      prod: [database: "db/#{app}_prod.sqlite"]}
   end
   defp get_ecto_adapter("mongodb", app, module) do
     {:mongodb_ecto, Mongo.Ecto,
      dev:  [database: "#{app}_dev"],
      test: [database: "#{app}_test", pool_size: 1],
      prod: [database: "#{app}_prod"],
-     test_begin: "",
-     test_restart: "Mongo.Ecto.truncate(#{module}.Repo, [])",
+     test_setup_all: "",
+     test_setup: "",
+     test_async: "Mongo.Ecto.truncate(#{module}.Repo, [])",
      binary_id: true,
      migration: false,
      sample_binary_id: "111111111111111111111111"}
@@ -450,8 +449,9 @@ defmodule Mix.Tasks.Phoenix.New do
      test: [username: user, password: pass, database: "#{app}_test", hostname: "localhost",
             pool: Ecto.Adapters.SQL.Sandbox],
      prod: [username: user, password: pass, database: "#{app}_prod"],
-     test_begin: "Ecto.Adapters.SQL.begin_test_transaction(#{module}.Repo)",
-     test_restart: "Ecto.Adapters.SQL.restart_test_transaction(#{module}.Repo, [])"]
+     test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{module}.Repo, :manual)",
+     test_setup: ":ok = Ecto.Adapters.SQL.Sandbox.checkout(#{module}.Repo)",
+     test_async: "Ecto.Adapters.SQL.Sandbox.mode(#{module}.Repo, {:shared, self()})"]
   end
 
   defp kw_to_config(kw) do

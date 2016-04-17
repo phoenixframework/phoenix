@@ -4,11 +4,12 @@
 # This configuration file is loaded before any dependency and
 # is restricted to this project.
 use Mix.Config
-<%= if namespaced? do %>
-# Configures the namespace used by Phoenix generators
+
+# General application configuration
 config :<%= application_name %>,
-  app_namespace: <%= application_module %>
-<% end %>
+<%= if namespaced? do %>  app_namespace: <%= application_module %>,<% end %>
+  ecto_repos: [<%= application_module %>.Repo]
+
 # Configures the endpoint
 config :<%= application_name %>, <%= application_module %>.Endpoint,
   url: [host: "localhost"],

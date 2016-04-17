@@ -26,8 +26,10 @@ defmodule <%= application_module %>.ModelCase do
   end
 
   setup tags do
+    <%= adapter_config[:test_setup] %>
+
     unless tags[:async] do
-      <%= adapter_config[:test_restart] %>
+      <%= adapter_config[:test_async] %>
     end
 
     :ok
