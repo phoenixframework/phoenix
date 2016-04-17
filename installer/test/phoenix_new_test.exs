@@ -254,12 +254,9 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "custom_path/config/test.exs", [~r/Ecto.Adapters.MySQL/, ~r/username: "root"/, ~r/password: ""/]
       assert_file "custom_path/config/prod.secret.exs", [~r/Ecto.Adapters.MySQL/, ~r/username: "root"/, ~r/password: ""/]
 
-      assert_file "custom_path/test/support/conn_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
-      assert_file "custom_path/test/support/channel_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
-      assert_file "custom_path/test/support/model_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
+      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
+      assert_file "custom_path/test/support/model_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
     end
   end
 
@@ -273,12 +270,9 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "custom_path/config/test.exs", ~r/Tds.Ecto/
       assert_file "custom_path/config/prod.secret.exs", ~r/Tds.Ecto/
 
-      assert_file "custom_path/test/support/conn_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
-      assert_file "custom_path/test/support/channel_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
-      assert_file "custom_path/test/support/model_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
+      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
+      assert_file "custom_path/test/support/model_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
     end
   end
 
@@ -304,12 +298,9 @@ defmodule Mix.Tasks.Phoenix.NewTest do
         assert file =~ ~r/database: "db\/custom_path_prod.sqlite"/
       end
 
-      assert_file "custom_path/test/support/conn_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
-      assert_file "custom_path/test/support/channel_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
-      assert_file "custom_path/test/support/model_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
+      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
+      assert_file "custom_path/test/support/model_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
     end
   end
 
@@ -333,9 +324,9 @@ defmodule Mix.Tasks.Phoenix.NewTest do
         refute file =~ ~r/Ecto.Adapters.SQL/
       end
 
-      assert_file "custom_path/test/support/conn_case.ex", ~r/Mongo.Ecto.truncate/
-      assert_file "custom_path/test/support/model_case.ex", ~r/Mongo.Ecto.truncate/
-      assert_file "custom_path/test/support/channel_case.ex", ~r/Mongo.Ecto.truncate/
+      assert_file "custom_path/test/support/conn_case.ex", "Mongo.Ecto.truncate"
+      assert_file "custom_path/test/support/model_case.ex", "Mongo.Ecto.truncate"
+      assert_file "custom_path/test/support/channel_case.ex", "Mongo.Ecto.truncate"
 
       assert_file "custom_path/config/config.exs", fn file ->
         assert file =~ ~r/binary_id: true/
@@ -355,12 +346,9 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "custom_path/config/test.exs", [~r/Ecto.Adapters.Postgres/, ~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
       assert_file "custom_path/config/prod.secret.exs", [~r/Ecto.Adapters.Postgres/, ~r/username: "postgres"/, ~r/password: "postgres"/]
 
-      assert_file "custom_path/test/support/conn_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
-      assert_file "custom_path/test/support/channel_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
-      assert_file "custom_path/test/support/model_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.checkout"
+      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.checkout"
+      assert_file "custom_path/test/support/model_case.ex", "Ecto.Adapters.SQL.Sandbox.checkout"
     end
   end
 
