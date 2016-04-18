@@ -20,7 +20,7 @@ defmodule <%= application_module %>.ModelCase do
 
       import Ecto
       import Ecto.Changeset
-      import Ecto.Query, only: [from: 1, from: 2]
+      import Ecto.Query
       import <%= application_module %>.ModelCase
     end
   end

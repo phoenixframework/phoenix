@@ -23,7 +23,7 @@ defmodule <%= application_module %>.ConnCase do
       alias <%= application_module %>.Repo
       import Ecto
       import Ecto.Changeset
-      import Ecto.Query, only: [from: 1, from: 2]
+      import Ecto.Query
 <% end %>
       import <%= application_module %>.Router.Helpers
 
