@@ -22,7 +22,7 @@ defmodule <%= application_module %>.Web do
 
       import Ecto
       import Ecto.Changeset
-      import Ecto.Query, only: [from: 1, from: 2]<%= if adapter_config[:binary_id] do %>
+      import Ecto.Query<%= if adapter_config[:binary_id] do %>
 
       @primary_key {:id, :binary_id, autogenerate: true}
       @foreign_key_type :binary_id<% end %>
@@ -41,7 +41,7 @@ defmodule <%= application_module %>.Web do
 <%= if ecto do %>
       alias <%= application_module %>.Repo
       import Ecto
-      import Ecto.Query, only: [from: 1, from: 2]
+      import Ecto.Query
 <% end %>
       import <%= application_module %>.Router.Helpers
       import <%= application_module %>.Gettext
@@ -76,7 +76,7 @@ defmodule <%= application_module %>.Web do
 
       alias <%= application_module %>.Repo
       import Ecto
-      import Ecto.Query, only: [from: 1, from: 2]<% end %>
+      import Ecto.Query<% end %>
       import <%= application_module %>.Gettext
     end
   end

@@ -75,27 +75,17 @@ msgstr[0] ""
 msgstr[1] ""
 
 ## From Ecto.Changeset.validate_number/3
-msgid "must be less than %{count}"
-msgid_plural "must be less than %{count}"
-msgstr[0] ""
-msgstr[1] ""
+msgid "must be less than %{number}"
+msgstr ""
 
-msgid "must be greater than %{count}"
-msgid_plural "must be greater than %{count}"
-msgstr[0] ""
-msgstr[1] ""
+msgid "must be greater than %{number}"
+msgstr ""
 
-msgid "must be less than or equal to %{count}"
-msgid_plural "must be less than or equal to %{count}"
-msgstr[0] ""
-msgstr[1] ""
+msgid "must be less than or equal to %{number}"
+msgstr ""
 
-msgid "must be greater than or equal to %{count}"
-msgid_plural "must be greater than or equal to %{count}"
-msgstr[0] ""
-msgstr[1] ""
+msgid "must be greater than or equal to %{number}"
+msgstr ""
 
-msgid "must be equal to %{count}"
-msgid_plural "must be equal to %{count}"
-msgstr[0] ""
-msgstr[1] ""<% end %>
+msgid "must be equal to %{number}"
+msgstr ""<% end %>
