@@ -6,6 +6,13 @@ defmodule Phoenix.TokenTest do
     def config(:secret_key_base), do: "abc123"
   end
 
+  test "signes and verifies token with string" do
+    id = 1
+    key = String.duplicate("abc123", 5)
+    token = Token.sign(key, "id", id)
+    assert Token.verify(key, "id", token) == {:ok, id}
+  end
+
   test "signes and verifies token with connection" do
     id = 1
     token = Token.sign(conn(), "id", id)

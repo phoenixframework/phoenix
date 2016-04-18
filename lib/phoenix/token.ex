@@ -3,22 +3,39 @@ defmodule Phoenix.Token do
   Tokens provide a way to generate and verify bearer
   tokens for use in Channels or API authentication.
 
-  The data can be read by clients, but the message is signed to prevent
-  tampering.
+  The data can be read by clients, but the message is
+  signed to prevent tampering.
 
-  ## Basic Usage
+  ## Example
 
   When generating a unique token for usage in an API or Channel
   it is advised to use a unique identifier for the user typically
   the id from a database. For example:
 
       iex> user_id = 1
-      iex> token = Phoenix.Token.sign(endpoint, "user", user_id)
-      iex> Phoenix.Token.verify(endpoint, "user", token)
+      iex> token = Phoenix.Token.sign(MyApp.Endpoint, "user", user_id)
+      iex> Phoenix.Token.verify(MyApp.Endpoint, "user", token)
       {:ok, 1}
 
-  In that example we have a user's id, we generate a token and send
-  it to the client. We could send it to the client in multiple ways.
+  In that example we have a user's id, we generate a token and
+  verify it using the secret key base configured in the given
+  `endpoint`.
+
+  The first argument to both `sign/4` and `verify/4` can be one of:
+
+      * the module name of a Phoenix endpoint (shown above) - where
+        the secret key base is extracted from the endpoint
+      * `Plug.Conn` - where the secret key base is extracted from the
+        endpoint stored in the connection
+      * `Phoenix.Socket` - where the secret key base is extracted from
+        the endpoint stored in the socket
+      * a string, representing the secret key base itself. We recommend
+        a key base with at least 20 characters to provide enough entropy
+
+  ## Usage
+
+  Once a token is signed, we can send it to the client in multiple ways.
+
   One is via the meta tag:
 
       <%= tag :meta, name: "channel_token",
@@ -32,7 +49,9 @@ defmodule Phoenix.Token do
                %{token: Phoenix.Token.sign(conn, "user", user.id), user: user}
       end
 
-  When using it with a socket a typical example might be:
+  Once the token is sent, the client may now send it back to the server
+  as an authentication mechanism. For example, we can use it to authenticate
+  a user on a Phoenix channel:
 
       defmodule MyApp.UserSocket do
         use Phoenix.Socket
@@ -49,8 +68,8 @@ defmodule Phoenix.Token do
         end
       end
 
-  In this example the phoenix.js client will be sending up the token
-  in the connect command.
+  In this example, the phoenix.js client will send the token in the
+  `connect` command which is then validated by the server.
 
   `Phoenix.Token` can also be used for validating APIs, handling
   password resets, e-mail confirmation and more.
@@ -71,7 +90,7 @@ defmodule Phoenix.Token do
       when generating the encryption and signing keys. Defaults to `:sha256';
   """
   def sign(context, salt, data, opts \\ []) when is_binary(salt) do
-    secret = get_endpoint(context) |> get_secret(salt, opts)
+    secret = get_key_base(context) |> get_secret(salt, opts)
 
     message = %{
       data: data,
@@ -99,7 +118,7 @@ defmodule Phoenix.Token do
   def verify(context, salt, token, opts \\ [])
 
   def verify(context, salt, token, opts) when is_binary(salt) and is_binary(token) do
-    secret = get_endpoint(context) |> get_secret(salt, opts)
+    secret = get_key_base(context) |> get_secret(salt, opts)
     max_age_ms = if max_age_secs = opts[:max_age], do: trunc(max_age_secs * 1000)
 
     case MessageVerifier.verify(token, secret) do
@@ -120,13 +139,17 @@ defmodule Phoenix.Token do
     {:error, :missing}
   end
 
-  defp get_endpoint(%Plug.Conn{} = conn), do: Phoenix.Controller.endpoint_module(conn)
-  defp get_endpoint(%Phoenix.Socket{} = socket), do: socket.endpoint
-  defp get_endpoint(endpoint) when is_atom(endpoint), do: endpoint
+  defp get_key_base(%Plug.Conn{} = conn),
+    do: Phoenix.Controller.endpoint_module(conn).config(:secret_key_base)
+  defp get_key_base(%Phoenix.Socket{} = socket),
+    do: socket.endpoint.config(:secret_key_base)
+  defp get_key_base(endpoint) when is_atom(endpoint),
+    do: endpoint.config(:secret_key_base)
+  defp get_key_base(string) when is_binary(string) and byte_size(string) >= 20,
+    do: string
 
   # Gathers configuration and generates the key secrets and signing secrets.
-  defp get_secret(endpoint, salt, opts) do
-    secret_key_base = endpoint.config(:secret_key_base)
+  defp get_secret(secret_key_base, salt, opts) do
     iterations = Keyword.get(opts, :key_iterations, 1000)
     length = Keyword.get(opts, :key_length, 32)
     digest = Keyword.get(opts, :key_digest, :sha256)
