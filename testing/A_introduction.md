@@ -64,7 +64,7 @@ There are a couple of interesting things happening here.
 
 The `get/2` function gives us a connection struct set up as if it had been used for a get request to "/". This saves us a considerable amount of tedious setup.
 
-The assertion actually tests three things - that we got an HTML response (by checking for a content-type of "text/html"), that our response code was 200, and that the body of our response matched the string "Welcome to Phoenix!"
+The assertion actually tests three things - that we got an HTML response (by checking for a content-type of "text/html"), that our response code was 200, and that the body of our response contains the string "Welcome to Phoenix!"
 
 The error view test case, `test/views/error_view_test.exs`, illustrates a few interesting things of its own.
 
