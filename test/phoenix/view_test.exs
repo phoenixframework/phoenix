@@ -164,4 +164,9 @@ defmodule Phoenix.ViewTest do
     assert render_existing(MyApp.UserView, "existing.html", []) ==
       "rendered existing"
   end
+
+  test "render_template can be called from overridden render/2" do
+    assert render_to_string(MyApp.UserView, "render_template.html", name: "eric") ==
+      "rendered template for ERIC\n"
+  end
 end
