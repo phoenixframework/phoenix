@@ -95,7 +95,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
       mix phoenix.new PATH [--module MODULE] [--app APP]
 
-  A project at the given PATH  will be created. The
+  A project at the given PATH will be created. The
   application name and module name will be retrieved
   from the path, unless `--module` or `--app` is given.
 
@@ -107,7 +107,7 @@ defmodule Mix.Tasks.Phoenix.New do
       the generated skeleton
 
     * `--database` - specify the database adapter for ecto.
-      Values can be `postgres` `mysql`, `mssql`, `sqlite` or
+      Values can be `postgres`, `mysql`, `mssql`, `sqlite` or
       `mongodb`. Defaults to `postgres`
 
     * `--no-brunch` - do not generate brunch files
