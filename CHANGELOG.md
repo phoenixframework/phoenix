@@ -4,6 +4,7 @@
 
 * Enhancements
   * [Channel] Add `subscribe/2` and `unsubscribe/2` to handle external topic subscriptions for a socket.
+  * [View] Generate private `render_template/2` clauses for views to allow overriding `render/2` clauses before rendering templates.
 
 * Deprecations
   * [Endpoint] Generated `subscribe/3` and `unsubscribe/2` clauses have been deprecated in favor of `subscribe/2` and `unsubscribe/1` which uses the caller's pid.
