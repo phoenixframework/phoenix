@@ -181,10 +181,17 @@ defmodule Phoenix.Template do
     quote line: -1 do
       unquote(codes)
 
-      def render(tpl, %{render_existing: {__MODULE__, tpl}}) do
+      # Catch-all clause for rendering.
+      def render(template, assigns) do
+        render_template(template, assigns)
+      end
+
+      # Catch-all clause for template rendering.
+      defp render_template(template, %{render_existing: {__MODULE__, template}}) do
         nil
       end
-      def render(template, assigns) do
+
+      defp render_template(template, assigns) do
         template_not_found(template, assigns)
       end
 
@@ -348,10 +355,6 @@ defmodule Phoenix.Template do
       end
 
       defp render_template(unquote(name), assigns) do
-        unquote(defp)(assigns)
-      end
-
-      def render(unquote(name), assigns) do
         unquote(defp)(assigns)
       end
     end}
