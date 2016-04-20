@@ -22,7 +22,24 @@ defmodule Phoenix.Template do
 
       Templates.render("foo.html", %{name: "John Doe"})
 
-  In practice though, developers rarely use `Phoenix.Template`
+  In some cases, you will want to overide the `render/2` clause
+  to compose the assigns for the template before rendering. In such
+  cases, you can render the template directly by calling the generated
+  private function `render_template/2`. For example:
+
+      # templates/foo.html.eex
+      Hello <%= @name %>
+
+      # templates.ex
+      defmodule Templates do
+        use Phoenix.Template, root: "templates"
+
+        def render("foo.html", %{name: name}) do
+          render_template("foo.html", %{name: String.upcase(name)})
+        end
+      end
+
+  In practice, developers rarely use `Phoenix.Template`
   directly. Instead they use `Phoenix.View` which wraps the template
   functionality and adds some extra conveniences.
 
@@ -328,6 +345,10 @@ defmodule Phoenix.Template do
       defp unquote(defp)(var!(assigns)) do
         _ = var!(assigns)
         unquote(quoted)
+      end
+
+      defp render_template(unquote(name), assigns) do
+        unquote(defp)(assigns)
       end
 
       def render(unquote(name), assigns) do

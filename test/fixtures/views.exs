@@ -48,6 +48,10 @@ defmodule MyApp.UserView do
     View module is #{assigns.view_module} and view template is #{assigns.view_template}
     """
   end
+
+  def render("render_template.html" = tpl, %{name: name}) do
+    render_template(tpl, %{name: String.upcase(name)})
+  end
 end
 
 defmodule MyApp.Templates.UserView do
