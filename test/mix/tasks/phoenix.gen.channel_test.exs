@@ -14,12 +14,12 @@ defmodule Mix.Tasks.Phoenix.Gen.ChannelTest do
 
   test "generates channel" do
     in_tmp "generates channel", fn ->
-      Mix.Tasks.Phoenix.Gen.Channel.run ["Room", "rooms"]
+      Mix.Tasks.Phoenix.Gen.Channel.run ["Room"]
 
       assert_file "web/channels/room_channel.ex", fn file ->
         assert file =~ ~S|defmodule Phoenix.RoomChannel do|
         assert file =~ ~S|use Phoenix.Web, :channel|
-        assert file =~ ~S|def join("rooms:lobby", payload, socket) do|
+        assert file =~ ~S|def join("room:lobby", payload, socket) do|
 
         assert file =~ ~S|def handle_in("ping", payload, socket) do|
         assert file =~ ~S|{:reply, {:ok, payload}, socket}|
@@ -40,7 +40,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ChannelTest do
         assert file =~ ~S|ref = push socket, "ping", %{"hello" => "there"}|
         assert file =~ ~S|assert_reply ref, :ok, %{"hello" => "there"}|
 
-        assert file =~ ~S|test "shout broadcasts to rooms:lobby"|
+        assert file =~ ~S|test "shout broadcasts to room:lobby"|
         assert file =~ ~S|push socket, "shout", %{"hello" => "all"}|
         assert file =~ ~S|assert_broadcast "shout", %{"hello" => "all"}|
 
@@ -53,7 +53,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ChannelTest do
 
   test "generates nested channel" do
     in_tmp "generates nested channel", fn ->
-      Mix.Tasks.Phoenix.Gen.Channel.run ["Admin.Room", "rooms"]
+      Mix.Tasks.Phoenix.Gen.Channel.run ["Admin.Room"]
 
       assert_file "web/channels/admin/room_channel.ex", fn file ->
         assert file =~ ~S|defmodule Phoenix.Admin.RoomChannel do|
@@ -76,13 +76,13 @@ defmodule Mix.Tasks.Phoenix.Gen.ChannelTest do
 
   test "passing extra args raises error" do
     assert_raise Mix.Error, fn ->
-      Mix.Tasks.Phoenix.Gen.Channel.run ["Admin.Room", "rooms", "new_message"]
+      Mix.Tasks.Phoenix.Gen.Channel.run ["Admin.Room", "new_message"]
     end
   end
 
   test "name is already defined" do
     assert_raise Mix.Error, fn ->
-      Mix.Tasks.Phoenix.Gen.Channel.run ["Dup", "dups"]
+      Mix.Tasks.Phoenix.Gen.Channel.run ["Dup"]
     end
   end
 end
