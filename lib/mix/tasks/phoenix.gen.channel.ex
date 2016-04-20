@@ -18,12 +18,10 @@ defmodule Mix.Tasks.Phoenix.Gen.Channel do
 
   """
   def run(args) do
-    [singular, plural] = validate_args!(args)
+    [module] = validate_args!(args)
 
-    binding = Mix.Phoenix.inflect(singular)
+    binding = Mix.Phoenix.inflect(module)
     path    = binding[:path]
-
-    binding = binding ++ [plural: plural]
 
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Channel")
 
@@ -36,20 +34,20 @@ defmodule Mix.Tasks.Phoenix.Gen.Channel do
 
     Add the channel to your `web/channels/user_socket.ex` handler, for example:
 
-        channel "#{plural}:lobby", #{binding[:module]}Channel
+        channel "#{binding[:singular]}:lobby", #{binding[:module]}Channel
     """
   end
 
   defp raise_with_help do
     Mix.raise """
-    mix phoenix.gen.channel expects just the module name and topic name:
+    mix phoenix.gen.channel expects just the module name:
 
-        mix phoenix.gen.channel Room rooms
+        mix phoenix.gen.channel Room
     """
   end
 
   defp validate_args!(args) do
-    unless length(args) == 2 do
+    unless length(args) == 1 do
       raise_with_help
     end
     args
