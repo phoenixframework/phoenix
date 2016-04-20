@@ -56,35 +56,15 @@ defmodule Phoenix.CodeReloader.Server do
     {:raise, RuntimeError.exception(message)}
   end
 
-  defp mix_compile({:module, Mix.Task}, app, paths, compilers) do
+  defp mix_compile({:module, Mix.Task}, _app, paths, compilers) do
     if Mix.Project.umbrella? do
       Enum.each Mix.Dep.Umbrella.loaded, fn dep ->
         Mix.Dep.in_dependency(dep, fn _ ->
-          mix_compile_unless_stale_config(paths, compilers)
+          mix_compile(paths, compilers)
         end)
       end
     else
-      mix_compile_unless_stale_config(paths, compilers)
-    end
-  end
-
-  defp mix_compile_unless_stale_config(paths, compilers) do
-    manifests = Mix.Tasks.Compile.Elixir.manifests
-    all_paths = Mix.Project.config[:elixirc_paths]
-
-    others  = Mix.Utils.extract_files(all_paths -- paths, [:ex])
-    configs = Mix.Project.config_files
-
-    case Mix.Utils.extract_stale(others ++ configs, manifests) do
-      [] ->
-        mix_compile(paths, compilers)
-      files ->
-        message = """
-        you must restart your server after changing the following config or lib files:
-
-          * #{Enum.map_join(files, "\n  * ", &Path.relative_to_cwd/1)}
-        """
-        {:raise, RuntimeError.exception(message)}
+      mix_compile(paths, compilers)
     end
   end
 
