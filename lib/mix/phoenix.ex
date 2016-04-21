@@ -192,9 +192,9 @@ defmodule Mix.Phoenix do
         :boolean    -> true
         :map        -> %{}
         :text       -> "some content"
-        :date       -> "2010-04-17"
-        :time       -> "14:00:00"
-        :datetime   -> "2010-04-17 14:00:00"
+        :date       -> %{year: 2010, month: 4, day: 17}
+        :time       -> %{hour: 14, min: 0, sec: 0}
+        :datetime   -> %{year: 2010, month: 4, day: 17, hour: 14, min: 0, sec: 0}
         :uuid       -> "7488a646-e31f-11e4-aace-600308960662"
         _           -> "some content"
     end
