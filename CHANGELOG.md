@@ -3,6 +3,7 @@
 ## 1.2.0-dev
 
 * Enhancements
+  * [CodeReloader] The `lib/` directory is now code reloaded by default along with `web/` in development. You can continue to customize this with the `reloadable_paths` configuration for your endpoint.
   * [Channel] Add `subscribe/2` and `unsubscribe/2` to handle external topic subscriptions for a socket.
   * [View] Generate private `render_template/2` clauses for views to allow overriding `render/2` clauses before rendering templates.
 
