@@ -119,7 +119,7 @@ defmodule Phoenix.Endpoint.Adapter do
      http: false,
      https: false,
      reloadable_compilers: [:gettext, :phoenix, :elixir],
-     reloadable_paths: ["web"],
+     reloadable_paths: ["lib", "web"],
      secret_key_base: nil,
      static_url: nil,
      url: [host: "localhost", path: "/"],
