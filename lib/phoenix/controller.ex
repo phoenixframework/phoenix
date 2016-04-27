@@ -122,9 +122,8 @@ defmodule Phoenix.Controller do
       import Plug.Conn
       import Phoenix.Controller
 
-      use Phoenix.Controller.Pipeline
+      use Phoenix.Controller.Pipeline, opts
 
-      plug Phoenix.Controller.Logger, opts
       plug :put_new_layout, {Phoenix.Controller.__layout__(__MODULE__, opts), :app}
       plug :put_new_view, Phoenix.Controller.__view__(__MODULE__)
     end

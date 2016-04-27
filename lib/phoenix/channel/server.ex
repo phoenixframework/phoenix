@@ -1,12 +1,10 @@
 defmodule Phoenix.Channel.Server do
   use GenServer
   require Logger
-
+  require Phoenix.Endpoint
   alias Phoenix.PubSub
   alias Phoenix.Socket
-  alias Phoenix.Socket.Broadcast
-  alias Phoenix.Socket.Message
-  alias Phoenix.Socket.Reply
+  alias Phoenix.Socket.{Broadcast, Message, Reply}
 
   @moduledoc false
 
@@ -17,16 +15,18 @@ defmodule Phoenix.Channel.Server do
   """
   @spec join(Socket.t, map) :: {:ok, map, pid} | {:error, map}
   def join(socket, auth_payload) do
-    ref = make_ref()
+    Phoenix.Endpoint.instrument socket, :phoenix_channel_join, %{socket: socket}, fn ->
+      ref = make_ref()
 
-    case GenServer.start_link(__MODULE__, {socket, auth_payload, self(), ref}) do
-      {:ok, pid} ->
-        receive do: ({^ref, reply} -> {:ok, reply, pid})
-      :ignore ->
-        receive do: ({^ref, reply} -> {:error, reply})
-      {:error, reason} ->
-        Logger.error fn -> Exception.format_exit(reason) end
-        {:error, %{reason: "join crashed"}}
+      case GenServer.start_link(__MODULE__, {socket, auth_payload, self(), ref}) do
+        {:ok, pid} ->
+          receive do: ({^ref, reply} -> {:ok, reply, pid})
+        :ignore ->
+          receive do: ({^ref, reply} -> {:error, reply})
+        {:error, reason} ->
+          Logger.error fn -> Exception.format_exit(reason) end
+          {:error, %{reason: "join crashed"}}
+      end
     end
   end
 
@@ -218,15 +218,24 @@ defmodule Phoenix.Channel.Server do
 
   def handle_info(%Message{topic: topic, event: event, payload: payload, ref: ref},
                   %{topic: topic} = socket) do
-    event
-    |> socket.channel.handle_in(payload, put_in(socket.ref, ref))
-    |> handle_result(:handle_in)
+
+    Phoenix.Endpoint.instrument socket, :phoenix_channel_incoming_event,
+      %{event: event, payload: payload, socket: socket}, fn ->
+
+      event
+      |> socket.channel.handle_in(payload, put_in(socket.ref, ref))
+      |> handle_result(:handle_in)
+    end
   end
 
   def handle_info(%Broadcast{event: event, payload: payload}, socket) do
-    event
-    |> socket.channel.handle_out(payload, socket)
-    |> handle_result(:handle_out)
+    Phoenix.Endpoint.instrument socket, :phoenix_channel_outgoing_event,
+      %{event: event, payload: payload, socket: socket}, fn ->
+
+      event
+      |> socket.channel.handle_out(payload, socket)
+      |> handle_result(:handle_out)
+    end
   end
 
   def handle_info(msg, socket) do

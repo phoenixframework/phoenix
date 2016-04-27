@@ -84,8 +84,8 @@ defmodule Phoenix.Controller.Pipeline do
   """
 
   @doc false
-  defmacro __using__(_) do
-    quote do
+  defmacro __using__(opts) do
+    quote bind_quoted: [opts: opts] do
       @behaviour Plug
 
       require Phoenix.Endpoint
@@ -93,6 +93,7 @@ defmodule Phoenix.Controller.Pipeline do
       import Phoenix.Controller.Pipeline
       Module.register_attribute(__MODULE__, :plugs, accumulate: true)
       @before_compile Phoenix.Controller.Pipeline
+      @phoenix_log_level Keyword.get(opts, :log, :debug)
 
       @doc false
       def init(action) when is_atom(action) do
@@ -105,7 +106,8 @@ defmodule Phoenix.Controller.Pipeline do
                  &(&1 |> Map.put(:phoenix_controller, __MODULE__)
                       |> Map.put(:phoenix_action, action))
 
-        Phoenix.Endpoint.instrument conn, :phoenix_controller_call, fn ->
+        Phoenix.Endpoint.instrument conn, :phoenix_controller_call,
+          %{conn: conn, log_level: @phoenix_log_level}, fn ->
           phoenix_controller_pipeline(conn, action)
         end
       end

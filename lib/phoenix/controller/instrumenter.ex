@@ -1,13 +1,6 @@
-defmodule Phoenix.Controller.Logger do
-  require Logger
-
-  @behaviour Plug
-  import Phoenix.Controller
-
-  alias Phoenix.Endpoint.Instrument
-
+defmodule Phoenix.Controller.Instrumenter do
   @moduledoc """
-  Plug to handle request logging at the controller level.
+  Instrumenter to handle request logging at the controller level.
 
   ## Parameter filtering
 
@@ -23,27 +16,24 @@ defmodule Phoenix.Controller.Logger do
 
   Phoenix's default is `["password"]`.
   """
+  require Logger
+  import Phoenix.Controller
 
-  def init(opts) do
-    Keyword.get(opts, :log, :debug)
-  end
+  alias Phoenix.Endpoint.Instrument
 
-  def call(conn, false) do
-    conn
-  end
 
-  def call(conn, level) do
+  def phoenix_controller_call(:start, _compile, %{log_level: false}), do: :ok
+  def phoenix_controller_call(:start, %{module: module}, %{log_level: level, conn: conn}) do
     Logger.log level, fn ->
-      module = conn |> controller_module |> inspect
-      action = conn |> action_name |> Atom.to_string
-
-      ["Processing by ", module, ?., action, ?/, ?2, ?\n,
+      controller = inspect(module)
+      action = conn |> action_name() |> Atom.to_string()
+      ["Processing by ", controller, ?., action, ?/, ?2, ?\n,
         "  Parameters: ", params(conn.params), ?\n,
         "  Pipelines: ", inspect(conn.private[:phoenix_pipelines])]
     end
-
-    conn
   end
+
+  def phoenix_controller_call(:stop, _time_diff, _context), do: :ok
 
   defp params(%Plug.Conn.Unfetched{}), do: "[UNFETCHED]"
   defp params(params) do

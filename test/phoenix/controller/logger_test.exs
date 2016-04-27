@@ -3,6 +3,20 @@ defmodule Phoenix.Controller.LoggerTest do
   use RouterHelper
   import ExUnit.CaptureLog
 
+  Application.put_env(:phoenix, __MODULE__.Endpoint, [
+    server: false,
+    secret_key_base: String.duplicate("abcdefgh", 8),
+  ])
+
+  defmodule Endpoint do
+    use Phoenix.Endpoint, otp_app: :phoenix
+  end
+
+  setup_all do
+    Endpoint.start_link()
+    :ok
+  end
+
   defmodule LoggerController do
     use Phoenix.Controller
     def index(conn, _params), do: text(conn, "index")
@@ -17,6 +31,7 @@ defmodule Phoenix.Controller.LoggerTest do
     output = capture_log fn ->
       conn(:get, "/", foo: "bar", format: "html")
       |> fetch_query_params
+      |> Endpoint.call([])
       |> put_private(:phoenix_pipelines, [:browser])
       |> action
     end
@@ -30,6 +45,7 @@ defmodule Phoenix.Controller.LoggerTest do
       conn(:get, "/", foo: "bar", format: "html")
       |> fetch_query_params
       |> put_private(:phoenix_pipelines, [:browser])
+      |> Endpoint.call([])
       |> NoLoggerController.call(NoLoggerController.init(:index))
     end
     assert output == ""
@@ -39,6 +55,7 @@ defmodule Phoenix.Controller.LoggerTest do
     output = capture_log fn ->
       conn(:get, "/", foo: "bar", password: "should_not_show")
       |> fetch_query_params
+      |> Endpoint.call([])
       |> action
     end
 
@@ -49,6 +66,7 @@ defmodule Phoenix.Controller.LoggerTest do
     output = capture_log fn ->
       conn(:get, "/", "{foo:bar}")
       |> put_req_header("content-type", "application/json")
+      |> Endpoint.call([])
       |> action
     end
     assert output =~ "Parameters: [UNFETCHED]"

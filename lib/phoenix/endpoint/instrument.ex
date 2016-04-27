@@ -95,7 +95,7 @@ defmodule Phoenix.Endpoint.Instrument do
       raise ":instrumenters must be a list of instrumenter modules"
     end
 
-    events_to_instrumenters(instrumenters)
+    events_to_instrumenters([Phoenix.Controller.Instrumenter | instrumenters])
   end
 
   # Strips a `Macro.Env` struct, leaving only interesting compile-time metadata.
