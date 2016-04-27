@@ -32,6 +32,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       end
 
       assert_file "photo_blog/config/config.exs", fn file ->
+        assert file =~ "ecto_repos: [PhotoBlog.Repo]"
         refute file =~ "app_namespace"
         refute file =~ "config :phoenix, :generators"
       end
@@ -146,7 +147,12 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       refute File.exists?("photo_blog/lib/photo_blog/repo.ex")
 
       assert_file "photo_blog/mix.exs", &refute(&1 =~ ~r":phoenix_ecto")
-      assert_file "photo_blog/config/config.exs", &refute(&1 =~ "config :phoenix, :generators")
+
+      assert_file "photo_blog/config/config.exs", fn file ->
+        refute file =~ "config :phoenix, :generators"
+        refute file =~ "ecto_repos:"
+      end
+
       assert_file "photo_blog/config/dev.exs", &refute(&1 =~ config)
       assert_file "photo_blog/config/test.exs", &refute(&1 =~ config)
       assert_file "photo_blog/config/prod.secret.exs", &refute(&1 =~ config)
