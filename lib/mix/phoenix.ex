@@ -142,7 +142,7 @@ defmodule Mix.Phoenix do
   def base do
     app = otp_app()
 
-    case Application.get_env(app, :app_namespace, app) do
+    case Application.get_env(app, :namespace, app) do
       ^app -> app |> to_string |> Phoenix.Naming.camelize
       mod  -> mod |> inspect
     end

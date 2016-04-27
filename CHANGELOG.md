@@ -416,7 +416,7 @@ See these [`0.7.x` to `0.8.0` upgrade instructions](https://gist.github.com/chri
   * [Channels] A channel can be left by returning `{:leave, socket}` from a channel callback to unsubscribe from the channel
   * [Channels] Channel Serializer can now use binary protocol over websockets instead of just text
   * [Endpoint] Allow the reloadable paths to be configured in the endpoint
-  * [Mix] Allow the code generation namespace to be configured with the `:app_namespace` option
+  * [Mix] Allow the code generation namespace to be configured with the `:namespace` option
   * [Mix] Allow `:reloadable_paths` in Endpoint configuration to reload directories other than `"web"` in development
 
 * Bug Fixes

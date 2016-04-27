@@ -11,7 +11,7 @@ defmodule Mix.Tasks.Phoenix.Routes do
       $ mix phoenix.routes MyApp.AnotherRouter
 
   The default router is inflected from the application
-  name unless a configuration named `:app_namespace`
+  name unless a configuration named `:namespace`
   is set inside your application configuration. For example,
   the configuration:
 
