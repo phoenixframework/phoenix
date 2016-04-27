@@ -77,7 +77,7 @@ defmodule Phoenix.Endpoint do
 
       The default format is used when none is set in the connection.
 
-    * `:instrumenters` - a list of instrumenters modules whose callbacks will
+    * `:instrumenters` - a list of instrumenter modules whose callbacks will
       be fired on instrumentation events. Read more on instrumentation in the
       "Instrumentation" section below.
 
@@ -348,12 +348,14 @@ defmodule Phoenix.Endpoint do
 
   By default, Phoenix instruments the following events:
 
-    * `:phoenix_controller_call` - it's the whole controller pipeline. No
-      runtime metadata is passed to the instrumentation here.
+    * `:phoenix_controller_call` - it's the whole controller pipeline.
+      The `%Plug.Conn{}` is passed as runtime metadata.
     * `:phoenix_controller_render` - the rendering of a view from a
       controller. The map of runtime metadata passed to instrumentation
       callbacks has the `:template` key - for the name of the template, e.g.,
       `"index.html"` - and the `:format` key - for the format of the template.
+    * `:phoenix_channel_join` - the joining of a channel. The `%Phoenix.Socket{}`
+      and join params are passed as runtime metadata via `:socket` and `:params`.
 
   ### Dynamic instrumentation
 

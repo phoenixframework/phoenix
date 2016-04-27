@@ -95,7 +95,7 @@ defmodule Phoenix.Endpoint.Instrument do
       raise ":instrumenters must be a list of instrumenter modules"
     end
 
-    events_to_instrumenters(instrumenters)
+    events_to_instrumenters([Phoenix.Logger | instrumenters])
   end
 
   # Strips a `Macro.Env` struct, leaving only interesting compile-time metadata.
@@ -195,21 +195,4 @@ defmodule Phoenix.Endpoint.Instrument do
   defp build_result_variable(index) when is_integer(index) do
     "res#{index}" |> String.to_atom() |> Macro.var(nil)
   end
-
-  def filter_values(%{__struct__: mod} = struct, _filter_params) when is_atom(mod) do
-    struct
-  end
-  def filter_values(%{} = map, filter_params) do
-    Enum.into map, %{}, fn {k, v} ->
-      if is_binary(k) && String.contains?(k, filter_params) do
-        {k, "[FILTERED]"}
-      else
-        {k, filter_values(v, filter_params)}
-      end
-    end
-  end
-  def filter_values([_|_] = list, filter_params) do
-    Enum.map(list, &filter_values(&1, filter_params))
-  end
-  def filter_values(other, _filter_params), do: other
 end
