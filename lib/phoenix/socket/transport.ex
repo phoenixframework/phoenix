@@ -232,13 +232,6 @@ defmodule Phoenix.Socket.Transport do
     if channel = socket.handler.__channel__(topic, socket.transport_name) do
       socket = %Socket{socket | topic: topic, channel: channel}
 
-      filtered_payload = Instrument.filter_values(msg.payload, Application.get_env(:phoenix, :filter_parameters))
-      log_info topic, fn ->
-        "JOIN #{topic} to #{inspect(channel)}\n" <>
-        "  Transport:  #{inspect socket.transport}\n" <>
-        "  Parameters: #{inspect filtered_payload}"
-      end
-
       case Phoenix.Channel.Server.join(socket, msg.payload) do
         {:ok, response, pid} ->
           log_info topic, fn -> "Replied #{topic} :ok" end

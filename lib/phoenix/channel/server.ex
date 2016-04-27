@@ -15,7 +15,8 @@ defmodule Phoenix.Channel.Server do
   """
   @spec join(Socket.t, map) :: {:ok, map, pid} | {:error, map}
   def join(socket, auth_payload) do
-    Phoenix.Endpoint.instrument socket, :phoenix_channel_join, %{socket: socket}, fn ->
+    Phoenix.Endpoint.instrument socket, :phoenix_channel_join,
+      %{params: auth_payload, socket: socket}, fn ->
       ref = make_ref()
 
       case GenServer.start_link(__MODULE__, {socket, auth_payload, self(), ref}) do
@@ -218,24 +219,15 @@ defmodule Phoenix.Channel.Server do
 
   def handle_info(%Message{topic: topic, event: event, payload: payload, ref: ref},
                   %{topic: topic} = socket) do
-
-    Phoenix.Endpoint.instrument socket, :phoenix_channel_incoming_event,
-      %{event: event, payload: payload, socket: socket}, fn ->
-
-      event
-      |> socket.channel.handle_in(payload, put_in(socket.ref, ref))
-      |> handle_result(:handle_in)
-    end
+    event
+    |> socket.channel.handle_in(payload, put_in(socket.ref, ref))
+    |> handle_result(:handle_in)
   end
 
   def handle_info(%Broadcast{event: event, payload: payload}, socket) do
-    Phoenix.Endpoint.instrument socket, :phoenix_channel_outgoing_event,
-      %{event: event, payload: payload, socket: socket}, fn ->
-
-      event
-      |> socket.channel.handle_out(payload, socket)
-      |> handle_result(:handle_out)
-    end
+    event
+    |> socket.channel.handle_out(payload, socket)
+    |> handle_result(:handle_out)
   end
 
   def handle_info(msg, socket) do

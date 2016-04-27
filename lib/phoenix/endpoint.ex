@@ -349,17 +349,13 @@ defmodule Phoenix.Endpoint do
   By default, Phoenix instruments the following events:
 
     * `:phoenix_controller_call` - it's the whole controller pipeline.
-      The `%Plug.Conn` is passed as runtime metadata.
+      The `%Plug.Conn{}` is passed as runtime metadata.
     * `:phoenix_controller_render` - the rendering of a view from a
       controller. The map of runtime metadata passed to instrumentation
       callbacks has the `:template` key - for the name of the template, e.g.,
       `"index.html"` - and the `:format` key - for the format of the template.
     * `:phoenix_channel_join` - the joining of a channel. The `%Phoenix.Socket{}`
-      is passed as runtime metadata.
-    * `:phoenix_channel_incoming_event` - The The `%Phoenix.Socket{}`
-      is passed as runtime metadata along with the event name and payload.
-    * `:phoenix_channel_outgoing_event` - The The `%Phoenix.Socket{}`
-      is passed as runtime metadata along with the event name and payload.
+      and join params are passed as runtime metadata via `:socket` and `:params`.
 
   ### Dynamic instrumentation
 
