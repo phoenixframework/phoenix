@@ -50,6 +50,7 @@ defmodule Mix.Tasks.Phoenix.New do
     {:eex,  "static/brunch/brunch-config.js", "brunch-config.js"},
     {:eex,  "static/brunch/package.json",     "package.json"},
     {:text, "static/app.css",                 "web/static/css/app.css"},
+    {:text, "static/phoenix.css",             "web/static/css/phoenix.css"},
     {:eex,  "static/brunch/app.js",           "web/static/js/app.js"},
     {:eex,  "static/brunch/socket.js",        "web/static/js/socket.js"},
     {:text, "static/robots.txt",              "web/static/assets/robots.txt"},
@@ -67,10 +68,11 @@ defmodule Mix.Tasks.Phoenix.New do
   ]
 
   @bare [
-    {:text, "static/bare/.gitignore", ".gitignore"},
-    {:text, "static/app.css",         "priv/static/css/app.css"},
-    {:text, "static/bare/app.js",     "priv/static/js/app.js"},
-    {:text, "static/robots.txt",      "priv/static/robots.txt"},
+    {:text,   "static/bare/.gitignore", ".gitignore"},
+    {:text,   "static/app.css",         "priv/static/css/app.css"},
+    {:append, "static/phoenix.css",     "priv/static/css/app.css"},
+    {:text,   "static/bare/app.js",     "priv/static/js/app.js"},
+    {:text,   "static/robots.txt",      "priv/static/robots.txt"},
   ]
 
   # Embed all defined templates
@@ -525,6 +527,8 @@ defmodule Mix.Tasks.Phoenix.New do
           File.mkdir_p!(target)
         :text ->
           create_file(target, render(source))
+        :append ->
+          append_to(Path.dirname(target), Path.basename(target), render(source))
         :eex  ->
           contents = EEx.eval_string(render(source), binding, file: source)
           create_file(target, contents)
