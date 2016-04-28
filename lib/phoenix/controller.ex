@@ -770,9 +770,18 @@ defmodule Phoenix.Controller do
       * x-xss-protection - set to "1; mode=block" to improve XSS
         protection on both Chrome and IE
 
-  Custom headers may also be given.
+  A custom headers map may also be given to be merged with defaults.
   """
-  def put_secure_browser_headers(conn, _opts \\ []) do
+  def put_secure_browser_headers(conn, headers \\ %{})
+  def put_secure_browser_headers(conn, []) do
+    put_secure_defaults(conn)
+  end
+  def put_secure_browser_headers(conn, headers) when is_map(headers) do
+    conn
+    |> put_secure_defaults()
+    |> merge_resp_headers(headers)
+  end
+  defp put_secure_defaults(conn) do
     merge_resp_headers(conn, [
       {"x-frame-options", "SAMEORIGIN"},
       {"x-xss-protection", "1; mode=block"},
