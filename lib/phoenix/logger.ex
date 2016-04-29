@@ -33,15 +33,20 @@ defmodule Phoenix.Logger do
   end
   def phoenix_controller_call(:stop, _time_diff, :ok), do: :ok
 
-  def phoenix_channel_join(:start, _compile, %{params: params, socket: socket}) do
+  def phoenix_channel_join(:start, _compile, %{socket: socket, params: params}) do
+    log_join(socket.topic, socket, params)
+  end
+  def phoenix_channel_join(:stop, _compile, :ok), do: :ok
+
+  defp log_join("phoenix" <> _, _socket, _params), do: :ok
+  defp log_join(topic, socket, params) do
     filtered_params = filter_values(params)
     Logger.info fn ->
-      "JOIN #{socket.topic} to #{inspect(socket.channel)}\n" <>
+      "JOIN #{topic} to #{inspect(socket.channel)}\n" <>
       "  Transport:  #{inspect socket.transport}\n" <>
       "  Parameters: #{inspect filtered_params}"
     end
   end
-  def phoenix_channel_join(:stop, _compile, :ok), do: :ok
 
   @doc false
   def filter_values(values, params \\ Application.get_env(:phoenix, :filter_parameters))

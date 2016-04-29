@@ -118,7 +118,6 @@ defmodule Phoenix.Socket.Transport do
   """
 
   require Logger
-  alias Phoenix.Endpoint.Instrument
   alias Phoenix.Socket
   alias Phoenix.Socket.Message
   alias Phoenix.Socket.Reply
