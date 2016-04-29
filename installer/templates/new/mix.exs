@@ -22,7 +22,7 @@ defmodule <%= application_module %>.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [mod: {<%= application_module %>, []},
-     applications: [:phoenix<%= if html do %>, :phoenix_html<% end %>, :cowboy, :logger, :gettext<%= if ecto do %>,
+     applications: [:phoenix, :phoenix_pubsub<%= if html do %>, :phoenix_html<% end %>, :cowboy, :logger, :gettext<%= if ecto do %>,
                     :phoenix_ecto, <%= inspect adapter_app %><% end %>]]
   end
 
@@ -34,13 +34,12 @@ defmodule <%= application_module %>.Mixfile do
   #
   # Type `mix help deps` for examples and options.
   defp deps do
-    [<%= phoenix_dep %>,<%= if ecto do %>
+    [<%= phoenix_dep %>,
+     {:phoenix_pubsub, "~> 1.0.0-rc"},<%= if ecto do %>
      {:phoenix_ecto, "~> 3.0-rc"},
      {<%= inspect adapter_app %>, ">= 0.0.0"},<% end %><%= if html do %>
      {:phoenix_html, "~> 2.5"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},<% end %>
-     # TODO move to hex release
-     {:phoenix_pubsub, github: "phoenixframework/phoenix_pubsub"},
      {:gettext, "~> 0.11"},
      {:cowboy, "~> 1.0"}]
   end<%= if ecto do %>

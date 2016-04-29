@@ -1,7 +1,7 @@
 defmodule Phoenix.Mixfile do
   use Mix.Project
 
-  @version "1.2.0-dev"
+  @version "1.2.0-rc.0"
 
   def project do
     [app: :phoenix,
@@ -40,7 +40,7 @@ defmodule Phoenix.Mixfile do
   defp deps do
     [{:cowboy, "~> 1.0", optional: true},
      {:plug, "~> 1.0"},
-     {:phoenix_pubsub, github: "phoenixframework/phoenix_pubsub"},
+     {:phoenix_pubsub, "~> 1.0.0-rc"},
      {:poison, "~> 1.5 or ~> 2.0"},
      {:gettext, "~> 0.8", only: :test},
 

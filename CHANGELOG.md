@@ -1,6 +1,8 @@
 # Changelog
 
-## 1.2.0-dev
+## 1.2.0-rc.0 (2016-4-28)
+
+See these [`1.1.x` to `1.2.0` upgrade instructions](https://gist.github.com/chrismccord/29100e16d3990469c47f851e3142f766) to bring your existing apps up to speed.
 
 * Enhancements
   * [CodeReloader] The `lib/` directory is now code reloaded by default along with `web/` in development
