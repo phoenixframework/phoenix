@@ -10,6 +10,9 @@ See these [`1.1.x` to `1.2.0` upgrade instructions](https://gist.github.com/chri
   * [View] Generate private `render_template/2` clauses for views to allow overriding `render/2` clauses before rendering templates
   * [Channel] Add `:phoenix_channel_join` instrumentation hook
 
+* JavaScript client enhancements
+  * Add Presence object for syncing presence state between client and server
+
 * Deprecations
   * [Endpoint] Generated `subscribe/3` and `unsubscribe/2` clauses have been deprecated in favor of `subscribe/2` and `unsubscribe/1` which uses the caller's pid
   * [PubSub] `Phoenix.PubSub.subscribe/3` and `Phoenix.PubSub.unsubscribe/2` have been deprecated in favor of `subscribe/2` and `unsubscribe/1` which uses the caller's pid
