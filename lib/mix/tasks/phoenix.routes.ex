@@ -16,7 +16,7 @@ defmodule Mix.Tasks.Phoenix.Routes do
   the configuration:
 
       config :my_app,
-        app_namespace: My.App
+        namespace: My.App
 
   will exhibit the routes for `My.App.Router` when this
   task is invoked without arguments.
