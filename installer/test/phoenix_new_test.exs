@@ -33,7 +33,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       assert_file "photo_blog/config/config.exs", fn file ->
         assert file =~ "ecto_repos: [PhotoBlog.Repo]"
-        refute file =~ "app_namespace"
+        refute file =~ "namespace"
         refute file =~ "config :phoenix, :generators"
       end
 
@@ -225,7 +225,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "custom_path/.gitignore"
       assert_file "custom_path/mix.exs", ~r/app: :photo_blog/
       assert_file "custom_path/lib/photo_blog/endpoint.ex", ~r/app: :photo_blog/
-      assert_file "custom_path/config/config.exs", ~r/app_namespace: PhoteuxBlog/
+      assert_file "custom_path/config/config.exs", ~r/namespace: PhoteuxBlog/
       assert_file "custom_path/web/web.ex", ~r/use Phoenix.Controller, namespace: PhoteuxBlog/
     end
   end

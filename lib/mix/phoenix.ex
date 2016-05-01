@@ -136,7 +136,7 @@ defmodule Mix.Phoenix do
   Returns the module base name based on the configuration value.
 
       config :my_app
-        app_namespace: My.App
+        namespace: My.App
 
   """
   def base do
