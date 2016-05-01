@@ -21,7 +21,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
   ## Attributes
 
   The resource fields are given using `name:type` syntax
-  where type are the types supported by Ecto. Ommitting
+  where type are the types supported by Ecto. Omitting
   the type makes it default to `:string`:
 
       mix phoenix.gen.model User users name age:integer
