@@ -1,6 +1,5 @@
 {
-  "repository": {
-  },
+  "repository": {},
   "scripts": {
     "deploy": "brunch build --production",
     "watch": "brunch watch --stdin"
