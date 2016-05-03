@@ -29,12 +29,18 @@ defmodule Phoenix.Router.ForwardTest do
     forward "/api-admin", ApiRouter
   end
 
+  defmodule InitPlug do
+    def init(_), do: %{non: :literal}
+    def call(conn, %{non: :literal} = opts), do: assign(conn, :opts, opts)
+  end
+
   defmodule Router do
     use Phoenix.Router
 
     scope "/" do
       get "/stats", Controller, :stats
       forward "/admin", AdminDashboard
+      forward "/init", InitPlug
       scope "/internal" do
         forward "/api/v1", ApiRouter
       end
@@ -93,7 +99,8 @@ defmodule Phoenix.Router.ForwardTest do
     conn = call(Router, :get, "admin")
     assert conn.private[Router] == {[], %{
       Phoenix.Router.ForwardTest.AdminDashboard => ["admin"],
-      Phoenix.Router.ForwardTest.ApiRouter => ["api", "v1"]
+      Phoenix.Router.ForwardTest.ApiRouter => ["api", "v1"],
+      Phoenix.Router.ForwardTest.InitPlug => ["init"],
     }}
     assert conn.private[AdminDashboard] ==
       {["admin"], %{Phoenix.Router.ForwardTest.ApiRouter => ["api-admin"]}}
@@ -115,5 +122,9 @@ defmodule Phoenix.Router.ForwardTest do
 
     conn = call(Router, :get, "admin/stats", _params = nil, ["phx"])
     assert page_path(conn, :stats) == "/phx/admin/stats"
+  end
+
+  test "forward can handle plugs with non-literal init returns" do
+    assert call(Router, :get, "init").assigns.opts == %{non: :literal}
   end
 end

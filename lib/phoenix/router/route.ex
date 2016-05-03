@@ -109,7 +109,7 @@ defmodule Phoenix.Router.Route do
 
   defp build_pipes(%Route{kind: :forward} = route) do
     {_params, fwd_segments} = Plug.Router.Utils.build_path_match(route.path)
-    opts = route.plug.init(route.opts)
+    opts = route.opts |> route.plug.init() |> Macro.escape()
 
     quote do
       var!(conn)
