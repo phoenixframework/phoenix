@@ -17,7 +17,7 @@ API documentation is available at [https://hexdocs.pm/phoenix](https://hexdocs.p
 
 We appreciate any contribution to Phoenix. Check our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) and [CONTRIBUTING.md](CONTRIBUTING.md) guides for more information. We usually keep a list of features and bugs [in the issue tracker][4].
 
-### Create a new Phoenix project from source
+### Generating a Phoenix project from unreleased versions
 
 In order to create a new project using the latest Phoenix source installer (the `phoenix.new` Mix task) you will need to ensure two things.
 
