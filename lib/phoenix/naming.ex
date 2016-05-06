@@ -97,10 +97,15 @@ defmodule Phoenix.Naming do
   @doc """
   Converts String to camel case.
 
+  Takes an optional `:lower` option to return lowerCamelCase.
+
   ## Examples
 
       iex> Phoenix.Naming.camelize("my_app")
       "MyApp"
+
+      iex> Phoenix.Naming.camelize("my_app", :lower)
+      "myApp"
 
   In general, `camelize` can be thought of as the reverse of
   `underscore`, however, in some cases formatting may be lost:
@@ -117,30 +122,45 @@ defmodule Phoenix.Naming do
   end
 
   def camelize(<<h, t :: binary>>) do
-    <<to_upper_char(h)>> <> do_camelize(t)
+    <<to_upper_char(h)>> <> do_camelize(t, :upper)
   end
 
-  defp do_camelize(<<?_, ?_, t :: binary>>) do
-    do_camelize(<< ?_, t :: binary >>)
+  @spec camelize(String.t, :lower) :: String.t
+  def camelize("", :lower), do: ""
+
+  def camelize(<<?_, t :: binary>>, :lower) do
+    camelize(t, :lower)
   end
 
-  defp do_camelize(<<?_, h, t :: binary>>) when h in ?a..?z do
-    <<to_upper_char(h)>> <> do_camelize(t)
+  def camelize(<<h, t :: binary>>, :lower) do
+    <<to_lower_char(h)>> <> do_camelize(t, :upper)
   end
 
-  defp do_camelize(<<?_>>) do
+  defp do_camelize(<<?_, ?_, t :: binary>>, atom) do
+    do_camelize(<< ?_, t :: binary >>, atom)
+  end
+
+  defp do_camelize(<<?_, h, t :: binary>>, :lower) when h in ?A..?Z do
+    <<to_lower_char(h)>> <> do_camelize(t, :upper)
+  end
+
+  defp do_camelize(<<?_, h, t :: binary>>, :upper) when h in ?a..?z do
+    <<to_upper_char(h)>> <> do_camelize(t, :upper)
+  end
+
+  defp do_camelize(<<?_>>, _atom) do
     <<>>
   end
 
-  defp do_camelize(<<?/, t :: binary>>) do
-    <<?.>> <> camelize(t)
+  defp do_camelize(<<?/, t :: binary>>, atom) do
+    <<?.>> <> camelize(t, atom)
   end
 
-  defp do_camelize(<<h, t :: binary>>) do
-    <<h>> <> do_camelize(t)
+  defp do_camelize(<<h, t :: binary>>, atom) do
+    <<h>> <> do_camelize(t, atom)
   end
 
-  defp do_camelize(<<>>) do
+  defp do_camelize(<<>>, _atom) do
     <<>>
   end
 
