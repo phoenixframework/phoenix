@@ -30,7 +30,7 @@ defmodule Phoenix.Endpoint.Watcher do
                      "You may fix this by installing \"node\" and then running \"npm install\"."
         exit(:shutdown)
 
-      !File.exists?(Path.expand(script, root)) ->
+      not File.exists?(Path.expand(script, root)) ->
         Logger.error "Could not start node watcher because script #{inspect script} does not " <>
                      "exist. Your Phoenix application is still running, however assets " <>
                      "won't be compiled. You may fix this by running \"npm install\"."
