@@ -286,6 +286,17 @@ defmodule Phoenix.Test.ChannelTest do
     assert_broadcast "broadcast", %{"foo" => "bar"}
   end
 
+  test "pushes atom parameter keys as strings" do
+    {:ok, _, socket} = join(socket(), Channel, "foo:ok")
+
+    ref = push socket, "reply", %{req: %{parameter: 1}}
+    assert_reply ref, :ok, %{"resp" => %{"parameter" => 1}}
+  end
+
+  test "connects with atom parameter keys as strings" do
+    :error = connect(UserSocket, %{reject: true})
+  end
+
   ## handle_out
 
   test "push broadcasts by default" do
