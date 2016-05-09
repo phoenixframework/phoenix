@@ -18,7 +18,7 @@ defmodule Phoenix.Socket do
   The command above means incoming socket connections can be done via
   the WebSocket transport. Events are routed by topic to channels:
 
-      channel "rooms:lobby", MyApp.LobbyChannel
+      channel "room:lobby", MyApp.LobbyChannel
 
   See `Phoenix.Channel` for more information on channels. Check each
   transport module to check the options specific to each transport.
@@ -40,7 +40,7 @@ defmodule Phoenix.Socket do
         use Phoenix.Socket
 
         transport :websocket, Phoenix.Transports.WebSocket
-        channel "rooms:*", MyApp.RoomChannel
+        channel "room:*", MyApp.RoomChannel
 
         def connect(params, socket) do
           {:ok, assign(socket, :user_id, params["user_id"])}
@@ -63,7 +63,7 @@ defmodule Phoenix.Socket do
     * `joined` - If the socket has effectively joined the channel
     * `pubsub_server` - The registered name of the socket's pubsub server
     * `ref` - The latest ref sent by the client
-    * `topic` - The string topic, for example `"rooms:123"`
+    * `topic` - The string topic, for example `"room:123"`
     * `transport` - The socket's transport, for example: `Phoenix.Transports.WebSocket`
     * `transport_pid` - The pid of the socket's transport process
     * `transport_name` - The socket's transport, for example: `:websocket`
@@ -228,7 +228,7 @@ defmodule Phoenix.Socket do
   @doc """
   Defines a channel matching the given topic and transports.
 
-    * `topic_pattern` - The string pattern, for example "rooms:*", "users:*", "system"
+    * `topic_pattern` - The string pattern, for example "room:*", "users:*", "system"
     * `module` - The channel module handler, for example `MyApp.RoomChannel`
     * `opts` - The optional list of options, see below
 

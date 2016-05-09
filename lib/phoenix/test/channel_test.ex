@@ -18,7 +18,7 @@ defmodule Phoenix.ChannelTest do
 
       {:ok, _, socket} =
         socket("user:id", %{some_assigns: 1})
-        |> subscribe_and_join(RoomChannel, "rooms:lobby", %{"id" => 3})
+        |> subscribe_and_join(RoomChannel, "room:lobby", %{"id" => 3})
 
   You usually want to set the same ID and assigns your
   `UserSocket.connect/2` callback would set. Alternatively,
@@ -26,10 +26,10 @@ defmodule Phoenix.ChannelTest do
   callback and initialize the socket with the socket id:
 
       {:ok, socket} = connect(UserSocket, %{"some" => "params"})
-      {:ok, _, socket} = subscribe_and_join(socket, "rooms:lobby", %{"id" => 3})
+      {:ok, _, socket} = subscribe_and_join(socket, "room:lobby", %{"id" => 3})
 
   Once called, `subscribe_and_join/4` will subscribe the
-  current test process to the "rooms:lobby" topic and start a
+  current test process to the "room:lobby" topic and start a
   channel in another process. It returns `{:ok, reply, socket}`
   or `{:error, reply}`.
 

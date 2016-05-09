@@ -6,10 +6,9 @@ defmodule Mix.Tasks.Phoenix.Gen.Channel do
   @moduledoc """
   Generates a Phoenix channel.
 
-      mix phoenix.gen.channel Room rooms
+      mix phoenix.gen.channel Room
 
-  The first argument is the module name for the channel.
-  The second argument is the plural used as the topic.
+  Accepts the module name for the channel
 
   The generated model will contain:
 
