@@ -23,7 +23,7 @@
 // events are listened for, messages are pushed to the server, and
 // the channel is joined with ok/error/timeout matches:
 //
-//     let channel = socket.channel("rooms:123", {token: roomToken})
+//     let channel = socket.channel("room:123", {token: roomToken})
 //     channel.on("new_msg", msg => console.log("Got message", msg) )
 //     $input.onEnter( e => {
 //       channel.push("new_msg", {body: e.target.val}, 10000)

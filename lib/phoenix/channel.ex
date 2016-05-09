@@ -13,19 +13,19 @@ defmodule Phoenix.Channel do
   approach pairs nicely with the `Phoenix.Socket.channel/2` allowing you to
   match on all topics starting with a given prefix:
 
-      channel "rooms:*", MyApp.RoomChannel
+      channel "room:*", MyApp.RoomChannel
 
-  Any topic coming into the router with the `"rooms:"` prefix would dispatch
+  Any topic coming into the router with the `"room:"` prefix would dispatch
   to `MyApp.RoomChannel` in the above example. Topics can also be pattern
   matched in your channels' `join/3` callback to pluck out the scoped pattern:
 
       # handles the special `"lobby"` subtopic
-      def join("rooms:lobby", _auth_message, socket) do
+      def join("room:lobby", _auth_message, socket) do
         {:ok, socket}
       end
 
-      # handles any other subtopic as the room ID, for example `"rooms:12"`, `"rooms:34"`
-      def join("rooms:" <> room_id, auth_message, socket) do
+      # handles any other subtopic as the room ID, for example `"room:12"`, `"room:34"`
+      def join("room:" <> room_id, auth_message, socket) do
         {:ok, socket}
       end
 
@@ -138,7 +138,7 @@ defmodule Phoenix.Channel do
       def handle_in("new_msg", %{"uid" => uid, "body" => body}, socket) do
         ...
         broadcast_from! socket, "new_msg", %{uid: uid, body: body}
-        MyApp.Endpoint.broadcast_from! self(), "rooms:superadmin",
+        MyApp.Endpoint.broadcast_from! self(), "room:superadmin",
           "new_msg", %{uid: uid, body: body}
         {:noreply, socket}
       end
@@ -146,8 +146,8 @@ defmodule Phoenix.Channel do
       # within controller
       def create(conn, params) do
         ...
-        MyApp.Endpoint.broadcast! "rooms:" <> rid, "new_msg", %{uid: uid, body: body}
-        MyApp.Endpoint.broadcast! "rooms:superadmin", "new_msg", %{uid: uid, body: body}
+        MyApp.Endpoint.broadcast! "room:" <> rid, "new_msg", %{uid: uid, body: body}
+        MyApp.Endpoint.broadcast! "room:superadmin", "new_msg", %{uid: uid, body: body}
         redirect conn, to: "/"
       end
 

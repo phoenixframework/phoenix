@@ -62,7 +62,7 @@ defmodule Phoenix.Integration.LongPollTest do
   defmodule UserSocket do
     use Phoenix.Socket
 
-    channel "rooms:*", RoomChannel
+    channel "room:*", RoomChannel
 
     transport :longpoll, Phoenix.Transports.LongPoll,
       window_ms: 200,
@@ -85,7 +85,7 @@ defmodule Phoenix.Integration.LongPollTest do
   defmodule LoggingSocket do
     use Phoenix.Socket
 
-    channel "rooms:*", RoomChannel
+    channel "room:*", RoomChannel
 
     transport :longpoll, Phoenix.Transports.LongPoll,
       window_ms: 200,
@@ -186,7 +186,7 @@ defmodule Phoenix.Integration.LongPollTest do
     @mode mode
 
     test "#{@mode}: joins and poll messages" do
-      session = join("/ws", "rooms:lobby", @mode)
+      session = join("/ws", "room:lobby", @mode)
 
       # pull messages
       resp = poll(:get, "/ws", session)
@@ -197,15 +197,15 @@ defmodule Phoenix.Integration.LongPollTest do
       assert phx_reply ==
         %{"event" => "phx_reply",
           "payload" => %{"response" => %{}, "status" => "ok"},
-          "ref" => "123", "topic" => "rooms:lobby"}
+          "ref" => "123", "topic" => "room:lobby"}
       assert status_msg ==
         %{"event" => "joined",
           "payload" => %{"status" => "connected", "user_id" => nil},
-          "ref" => nil, "topic" => "rooms:lobby"}
+          "ref" => nil, "topic" => "room:lobby"}
       assert user_entered ==
         %{"event" => "user_entered",
           "payload" => %{"user" => nil},
-          "ref" => nil, "topic" => "rooms:lobby"}
+          "ref" => nil, "topic" => "room:lobby"}
 
       # poll without messages sends 204 no_content
       resp = poll(:get, "/ws", session)
@@ -213,12 +213,12 @@ defmodule Phoenix.Integration.LongPollTest do
     end
 
     test "#{@mode}: publishing events" do
-      Phoenix.PubSub.subscribe(__MODULE__, "rooms:lobby")
-      session = join("/ws", "rooms:lobby", @mode)
+      Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
+      session = join("/ws", "room:lobby", @mode)
 
       # Publish successfuly
       resp = poll :post, "/ws", session, %{
-        "topic" => "rooms:lobby",
+        "topic" => "room:lobby",
         "event" => "new_msg",
         "ref" => "123",
         "payload" => %{"body" => "hi!"}
@@ -233,13 +233,13 @@ defmodule Phoenix.Integration.LongPollTest do
         %{"event" => "new_msg",
           "payload" => %{"transport" => "Phoenix.Transports.LongPoll", "body" => "hi!"},
           "ref" => nil,
-          "topic" => "rooms:lobby"}
+          "topic" => "room:lobby"}
 
       # Publish unauthorized event
       capture_log fn ->
-        Phoenix.PubSub.subscribe(__MODULE__, "rooms:private-room")
+        Phoenix.PubSub.subscribe(__MODULE__, "room:private-room")
         resp = poll :post, "/ws", session, %{
-          "topic" => "rooms:private-room",
+          "topic" => "room:private-room",
           "event" => "new_msg",
           "ref" => "12300",
           "payload" => %{"body" => "this method shouldn't send!'"}
@@ -250,9 +250,9 @@ defmodule Phoenix.Integration.LongPollTest do
     end
 
     test "#{@mode}: shuts down after timeout" do
-      session = join("/ws", "rooms:lobby", @mode)
+      session = join("/ws", "room:lobby", @mode)
 
-      channel = Process.whereis(:"rooms:lobby")
+      channel = Process.whereis(:"room:lobby")
       assert channel
       Process.monitor(channel)
 
@@ -278,9 +278,9 @@ defmodule Phoenix.Integration.LongPollTest do
   end
 
   test "shuts down on pubsub crash" do
-    session = join("/ws", "rooms:lobby")
+    session = join("/ws", "room:lobby")
 
-    channel = Process.whereis(:"rooms:lobby")
+    channel = Process.whereis(:"room:lobby")
     assert channel
     Process.monitor(channel)
 
@@ -294,7 +294,7 @@ defmodule Phoenix.Integration.LongPollTest do
     end
 
     resp = poll :post, "/ws", session, %{
-      "topic" => "rooms:lobby",
+      "topic" => "room:lobby",
       "event" => "new_msg",
       "ref" => "123",
       "payload" => %{"body" => "hi!"}
@@ -305,17 +305,17 @@ defmodule Phoenix.Integration.LongPollTest do
 
   test "filter params on join" do
     log = capture_log fn ->
-      join("/ws/logging", "rooms:lobby", :local, %{"foo" => "bar", "password" => "shouldnotshow"})
+      join("/ws/logging", "room:lobby", :local, %{"foo" => "bar", "password" => "shouldnotshow"})
     end
     assert log =~ "Parameters: %{\"foo\" => \"bar\", \"password\" => \"[FILTERED]\"}"
   end
 
   test "sends phx_error if a channel server abnormally exits" do
-    session = join("/ws", "rooms:lobby")
+    session = join("/ws", "room:lobby")
 
     capture_log fn ->
       resp = poll :post, "/ws", session, %{
-        "topic" => "rooms:lobby",
+        "topic" => "room:lobby",
         "event" => "boom",
         "ref" => "123",
         "payload" => %{}
@@ -328,14 +328,14 @@ defmodule Phoenix.Integration.LongPollTest do
     [_phx_reply, _joined, _user_entered, _you_left_msg, chan_error] = resp.body["messages"]
 
     assert chan_error ==
-      %{"event" => "phx_error", "payload" => %{}, "topic" => "rooms:lobby", "ref" => "123"}
+      %{"event" => "phx_error", "payload" => %{}, "topic" => "room:lobby", "ref" => "123"}
   end
 
   test "sends phx_close if a channel server normally exits" do
-    session = join("/ws", "rooms:lobby")
+    session = join("/ws", "room:lobby")
 
     resp = poll :post, "/ws", session, %{
-      "topic" => "rooms:lobby",
+      "topic" => "room:lobby",
       "event" => "phx_leave",
       "ref" => "2",
       "payload" => %{}
@@ -348,14 +348,14 @@ defmodule Phoenix.Integration.LongPollTest do
     [_phx_reply, _joined, _user_entered, _leave_reply, _you_left_msg, phx_close] = resp.body["messages"]
 
     assert phx_close ==
-      %{"event" => "phx_close", "payload" => %{}, "ref" => "123", "topic" => "rooms:lobby"}
+      %{"event" => "phx_close", "payload" => %{}, "ref" => "123", "topic" => "room:lobby"}
   end
 
   test "shuts down when receiving disconnect broadcasts on socket's id" do
     resp = poll :get, "/ws", %{"user_id" => "456"}, %{}
     session = Map.take(resp.body, ["token"])
 
-    for topic <- ["rooms:lpdisconnect1", "rooms:lpdisconnect2"] do
+    for topic <- ["room:lpdisconnect1", "room:lpdisconnect2"] do
       poll :post, "/ws", session, %{
         "topic" => topic,
         "event" => "phx_join",
@@ -364,9 +364,9 @@ defmodule Phoenix.Integration.LongPollTest do
       }
     end
 
-    chan1 = Process.whereis(:"rooms:lpdisconnect1")
+    chan1 = Process.whereis(:"room:lpdisconnect1")
     assert chan1
-    chan2 = Process.whereis(:"rooms:lpdisconnect2")
+    chan2 = Process.whereis(:"room:lpdisconnect2")
     assert chan2
     Process.monitor(chan1)
     Process.monitor(chan2)
@@ -389,10 +389,10 @@ defmodule Phoenix.Integration.LongPollTest do
   end
 
   test "forces application/json content-type" do
-    session = join("/ws", "rooms:lobby")
+    session = join("/ws", "room:lobby")
 
     resp = poll :post, "/ws", session, %{
-      "topic" => "rooms:lobby",
+      "topic" => "room:lobby",
       "event" => "phx_leave",
       "ref" => "2",
       "payload" => %{}
