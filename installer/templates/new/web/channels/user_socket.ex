@@ -2,7 +2,7 @@ defmodule <%= application_module %>.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "rooms:*", <%= application_module %>.RoomChannel
+  # channel "room:*", <%= application_module %>.RoomChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
