@@ -26,9 +26,6 @@ defmodule Mix.Tasks.Phoenix.Gen.ChannelTest do
         assert file =~ ~S|def handle_in("shout", payload, socket) do|
         assert file =~ ~S|broadcast socket, "shout", payload|
         assert file =~ ~S|{:noreply, socket}|
-
-        assert file =~ ~S|def handle_out(event, payload, socket) do|
-        assert file =~ ~S|push socket, event, payload|
       end
 
       assert_file "test/channels/room_channel_test.exs", fn file ->
