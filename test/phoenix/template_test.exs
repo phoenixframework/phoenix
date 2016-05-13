@@ -84,6 +84,18 @@ defmodule Phoenix.TemplateTest do
            {:safe, [[["" | "<div>Show! "] | "hello!"] | "</div>\n"]}
   end
 
+  test "compiles templates from pattern" do
+    defmodule PatternView do
+      use Phoenix.Template, pattern: Path.join(__DIR__, "../fixtures/templates/cards/**")
+    end
+
+    assert PatternView.render("user.html") ==
+           {:safe, ["" | "user"]}
+
+    assert PatternView.render("media/video.html") ==
+           {:safe, ["" | "video"]}
+  end
+
   test "compiler adds catch-all render/2 that raises UndefinedError" do
     assert_raise Phoenix.Template.UndefinedError, ~r/Could not render "not-exists.html".*/, fn ->
       View.render("not-exists.html")
