@@ -125,10 +125,17 @@ defmodule Phoenix.Template do
 
   @doc false
   defmacro __using__(options) do
-    root = Dict.fetch! options, :root
+    path = cond do
+      root = Keyword.get(options, :root) ->
+        root
+      pattern = Keyword.get(options, :pattern) ->
+        pattern
+      true ->
+        raise "expected :root or :pattern to be given as an option"
+    end
 
     quote do
-      @template_root Path.relative_to_cwd(unquote(root))
+      @template_root Path.relative_to_cwd(unquote(path))
       @before_compile unquote(__MODULE__)
 
       @doc """
