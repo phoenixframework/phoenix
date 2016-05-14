@@ -308,9 +308,9 @@ defmodule Phoenix.Controller do
     cond do
       to = opts[:to] ->
         case to do
-          "//" <> _ -> raise_invalid_url()
+          "//" <> _ -> raise_invalid_url(to)
           "/" <> _  -> to
-          _         -> raise_invalid_url()
+          _         -> raise_invalid_url(to)
         end
       external = opts[:external] ->
         external
@@ -318,8 +318,8 @@ defmodule Phoenix.Controller do
         raise ArgumentError, "expected :to or :external option in redirect/2"
     end
   end
-  defp raise_invalid_url do
-    raise ArgumentError, "the :to option in redirect expects a path"
+  defp raise_invalid_url(url) do
+    raise ArgumentError, "the :to option in redirect expects a path but was #{inspect url}"
   end
 
   @doc """
