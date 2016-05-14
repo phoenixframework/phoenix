@@ -241,7 +241,7 @@ defmodule Phoenix.ChannelTest do
     if endpoint = Module.get_attribute(__CALLER__.module, :endpoint) do
       quote do
         Transport.connect(unquote(endpoint), unquote(handler), :channel_test,
-                          unquote(__MODULE__), NoopSerializer, unquote(params))
+                          unquote(__MODULE__), NoopSerializer, Phoenix.ChannelTest.__stringify__(unquote(params)))
       end
     else
       raise "module attribute @endpoint not set for socket/2"
@@ -349,7 +349,7 @@ defmodule Phoenix.ChannelTest do
   def push(socket, event, payload \\ %{}) do
     ref = make_ref()
     send(socket.channel_pid,
-         %Message{event: event, topic: socket.topic, ref: ref, payload: payload})
+         %Message{event: event, topic: socket.topic, ref: ref, payload: __stringify__(payload)})
     ref
   end
 
@@ -537,4 +537,13 @@ defmodule Phoenix.ChannelTest do
       _ -> raise "no channel found for topic #{inspect topic} in #{inspect socket.handler}"
     end
   end
+
+  @doc false
+  def __stringify__(%{} = params),
+    do: Enum.into(params, %{}, &stringify_kv/1)
+  def __stringify__(other),
+    do: other
+
+  defp stringify_kv({k, v}),
+    do: {to_string(k), __stringify__(v)}
 end
