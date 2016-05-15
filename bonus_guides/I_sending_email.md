@@ -18,7 +18,11 @@ defp deps do
 end
 ```
 
-Next, we'll need to run `mix deps.get` to bring the `mailgun` package into our application.
+Next, we'll need to run `mix deps.get` to bring the `mailgun` package into our application. In the case of a dependency conflict error with Poison, add the following line as well:
+
+```
+{:poison, "~> 2.1", override: true}
+```
 
 ### Configuration
 
