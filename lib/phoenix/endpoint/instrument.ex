@@ -68,7 +68,7 @@ defmodule Phoenix.Endpoint.Instrument do
           try do
             fun.()
           after
-            var!(diff) = (:erlang.monotonic_time - start) |> :erlang.convert_time_unit(:native, :micro_seconds)
+            var!(diff) = :erlang.monotonic_time - start
             unquote(Phoenix.Endpoint.Instrument.compile_stop_callbacks(event, instrumenters))
           end
         end

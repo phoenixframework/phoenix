@@ -310,23 +310,11 @@ defmodule Phoenix.Endpoint do
   where:
 
     * `time_diff` is an integer representing the time it took to execute the
-      instrumented function **in microseconds**.
+      instrumented function **in native units**.
+
     * `result_of_before_callback` is the return value of the "before" clause of
       the same `event_callback`. This is a means of passing data from the
-      "before" clause to the "after" clause when instrumenting. For example, an
-      instrumenter can implement custom time measuring with this:
-
-          defmodule MyInstrumenter do
-            def event_callback(:start, _compile, _runtime) do
-              :erlang.monotonic_time
-            end
-
-            def event_callback(:stop, _time_diff, start_time) do
-              stop_time = :erlang.monotonic_time
-              my_diff = :erlang.convert_time_unit(stop_time - start_time, :native, :micro_seconds)
-              do_something_with_diff(my_diff)
-            end
-          end
+      "before" clause to the "after" clause when instrumenting.
 
   The return value of each "before" event callback will be stored and passed to
   the corresponding "after" callback.
