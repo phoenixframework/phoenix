@@ -136,12 +136,16 @@ defmodule Phoenix.Template do
       """
       def render(template, assigns \\ %{})
 
-      def render(template, assigns) when is_list(assigns) do
-        render(template, Enum.into(assigns, %{}))
-      end
-
       def render(module, template) when is_atom(module) do
         Phoenix.View.render(module, template, %{})
+      end
+
+      def render(template, _assigns) when not is_binary(template) do
+        raise ArgumentError, "render/2 expects template to be a string, got: #{inspect template}"
+      end
+
+      def render(template, assigns) when not is_map(assigns) do
+        render(template, Enum.into(assigns, %{}))
       end
 
       @doc """
