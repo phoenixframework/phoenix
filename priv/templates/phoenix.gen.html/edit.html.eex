@@ -1,6 +1,6 @@
-<h2>Edit <%= template_singular %></h2>
+<h2><%= "<%= gettext \"" %>Edit <%= template_singular %><%= "\" %\>" %></h2>
 
 <%= "<%=" %> render "form.html", changeset: @changeset,
                         action: <%= singular %>_path(@conn, :update, @<%= singular %>) <%= "%\>" %>
 
-<%= "<%=" %> link "Back", to: <%= singular %>_path(@conn, :index) <%= "%\>" %>
+<%= "<%=" %> link gettext("Back"), to: <%= singular %>_path(@conn, :index) <%= "%\>" %>
