@@ -195,7 +195,7 @@ Finished in 0.3 seconds (0.2s on load, 0.09s on tests)
 Randomized with seed 327779
 ```
 
-Hmmm. Yes, this test behaved as we expected, but the error message doesn't seems reflect our test. We're validating the length of the `:bio` attribute, and the message we get is "Expected false or nil, got true". There's no mention of our `:bio` attribute at all.
+Hmmm. Yes, this test behaved as we expected, but the error message doesn't seem to reflect our test. We're validating the length of the `:bio` attribute, and the message we get is "Expected false or nil, got true". There's no mention of our `:bio` attribute at all.
 
 We can do better.
 
