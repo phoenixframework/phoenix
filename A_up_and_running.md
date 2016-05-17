@@ -117,6 +117,6 @@ By default Phoenix accepts requests on port 4000. If we point our favorite web b
 
 If your screen looks like the image above, congratulations! You now have a working Phoenix application. In case you can't see the page above, try accessing it via [http://127.0.0.1:4000](http://127.0.0.1:4000) and later make sure your OS has defined "localhost" as "127.0.0.1".
 
-Locally, our application is running in an iex session. To stop it, we hit ctrl-c twice, just as we would to stop iex normally.
+Locally, our application is running in an `iex` session. To stop it, we hit `ctrl-c` twice, just as we would to stop `iex` normally.
 
-The next step is customizing our application just a bit to give us a sense of how a Phoenix app is put together.
+The [The next step step](http://www.phoenixframework.org/docs/adding-pages) is customizing our application just a bit to give us a sense of how a Phoenix app is put together.
