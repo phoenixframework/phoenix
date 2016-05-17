@@ -593,12 +593,12 @@ We can use our newly declared relationships in our `web/controllers/user_control
 defmodule HelloPhoenix.UserController do
 . . .
   def index(conn, _params) do
-    users = User |> Repo.all |> Repo.preload [:videos]
+    users = User |> Repo.all |> Repo.preload([:videos])
     render(conn, "index.html", users: users)
   end
 
   def show(conn, %{"id" => id}) do
-    user = User |> Repo.get!(id) |> Repo.preload [:videos]
+    user = User |> Repo.get!(id) |> Repo.preload([:videos])
     render(conn, "show.html", user: user)
   end
 . . .
