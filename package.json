@@ -3,14 +3,17 @@
   "version": "1.2.0-rc.0",
   "main": "./priv/static/phoenix.js",
   "repository": {
+    "type": "git",
+    "url": "git://github.com/phoenixframework/phoenix.git"
   },
+  "author": "Chris McCord <chris@chrismccord.com> (http://www.phoenixframework.org)",
   "devDependencies": {
     "brunch": "~2.6.5",
     "mocha": "~2.4.4",
     "babel-brunch": "~6.0.0",
     "uglify-js-brunch": "~2.0.1"
   },
-  "files": ["LICENSE.md", "package.json", "priv/static/phoenix.js"],
+  "files": ["README.md", "LICENSE.md", "package.json", "priv/static/phoenix.js"],
   "scripts": {
     "test": "./node_modules/.bin/mocha ./web/test/**/*.js --compilers js:babel-register"
   }
