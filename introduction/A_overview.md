@@ -69,3 +69,6 @@ Ecto is built around four main abstractions:
 * Changeset - Changesets declare transformations we need to perform on our model data before our application can use it. These include type casting, validations, and more.
 
 A new Phoenix application will use Ecto with PostgreSQL storage by default.
+
+## A Note about these guides
+If you find an issue with the guides or would like to help improve these guides please checkout the [Phoenix Guides](https://github.com/phoenixframework/phoenix_guides/) github. Issues and Pull Requests are happily accepted!
