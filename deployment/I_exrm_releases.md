@@ -246,7 +246,7 @@ drwxr-xr-x  8 lance  staff   272 May 13 18:47 0.0.1
 -rw-r--r--  1 lance  staff     9 May 13 18:47 start_erl.data
 ```
 
-The `hello_phoenix-0.0.1.tar.gz` tarball in `rel/hello_phoenix` is our release in archive form, ready to be shipped off to our hosting environment.
+The `hello_phoenix-0.0.1.tar.gz` tarball in `rel/hello_phoenix/releases/0.0.1` is our release in archive form, ready to be shipped off to our hosting environment.
 
 ### Testing Our Release
 
