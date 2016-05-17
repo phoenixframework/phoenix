@@ -169,6 +169,13 @@ end
 
 This ensures that any idle connections are closed by Phoenix before they reach Heroku's 55 second timeout window.
 
+Lastly, we'll need to create a [Procfile](https://devcenter.heroku.com/articles/procfile) with the following:
+
+```
+web: MIX_ENV=prod mix phoenix.server
+
+```
+
 ## Creating Environment Variables in Heroku
 
 The `DATABASE_URL` config var is automatically created by Heroku when we add the [Heroku Postgres add-on](https://elements.heroku.com/addons/heroku-postgresql). We can create the database via the heroku toolbelt:
@@ -284,7 +291,7 @@ remote: -----> Finalizing build
 remote:        Creating runtime environment
 remote:
 remote: -----> Discovering process types
-remote:        Procfile declares types     -> (none)
+remote:        Procfile declares types     -> (web)
 remote:        Default types for Multipack -> web
 remote:
 remote: -----> Compressing... done, 82.1MB
