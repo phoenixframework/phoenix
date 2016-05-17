@@ -412,7 +412,7 @@ end
 
 We would then need to provide an `index.xml.eex` template which created valid xml, and we would be done.
 
-For a list of valid content mime-types, please see the [mime.types](https://github.com/elixir-lang/plug/blob/master/lib/plug/mime.types) documentation from the Plug middleware framework.
+For a list of valid content mime-types, please see the [mime.types](https://github.com/elixir-lang/mime/blob/master/lib/mime.types) documentation from the mime type library.
 
 ### Setting the HTTP Status
 
