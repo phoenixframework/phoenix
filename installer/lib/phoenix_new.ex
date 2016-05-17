@@ -201,6 +201,7 @@ defmodule Mix.Tasks.Phoenix.New do
                phoenix_dep: phoenix_dep(phoenix_path),
                phoenix_path: phoenix_path,
                phoenix_static_path: phoenix_static_path(phoenix_path),
+               phoenix_version: @version,
                pubsub_server: pubsub_server,
                secret_key_base: random_string(64),
                prod_secret_key_base: random_string(64),
