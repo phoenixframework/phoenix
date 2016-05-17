@@ -24,7 +24,7 @@ Let's separate our release process into a few tasks so we can keep track of wher
 
 ## Add exrm as a Dependency
 
-To get started, we'll need to add `{:exrm, "~> 0.19.9"}` into the list of dependencies in our `mix.exs` file.
+To get started, we'll need to add `{:exrm, "~> 1.0"}` into the list of dependencies in our `mix.exs` file.
 
 ```elixir
   defp deps do
@@ -34,7 +34,7 @@ To get started, we'll need to add `{:exrm, "~> 0.19.9"}` into the list of depend
      {:phoenix_html, "~> 2.3"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},
      {:cowboy, "~> 1.0"},
-     {:exrm, "~> 0.19.9"}]
+     {:exrm, "~> 1.0"}]
   end
 ```
 
