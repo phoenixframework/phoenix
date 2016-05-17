@@ -153,7 +153,7 @@ config :hello_phoenix, HelloPhoenix.Repo,
   ssl: true
 ```
 
-Finally, we need to decrease the timeout for the websocket transport:
+Finally, we need to decrease the timeout for the websocket transport in `web/channels/user_socket.ex`:
 
 ```elixir
 defmodule HelloPhoenix.UserSocket do
