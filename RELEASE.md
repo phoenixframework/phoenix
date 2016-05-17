@@ -11,6 +11,7 @@
   7. Test installer by generating a new app, running `mix deps.get`, and compiling
   8. Start -dev version in related files below
   9. Update `phoenix_dep` in `installer/lib/phoenix_new.ex` back to git
+  10. Publish to `npm` with `npm publish`
 
 ## Files with version
 
