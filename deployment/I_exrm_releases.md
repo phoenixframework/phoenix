@@ -65,18 +65,21 @@ Doing this helps us overcome one of [exrm's common issues](https://hexdocs.pm/ex
 
 Even if we list all of our dependencies, our application may still fail. Typically, this happens because one of our dependencies does not properly list its own dependencies. A quick fix for this is to include the missing dependency or dependencies in our list of applications. If this happens to you, and you feel like helping the community, you can create an issue or a pull request to that project's repo.
 
-We also need to configure our Endpoint to act as a server in `config/prod.exs`.
+Within `config/prod.exs` we need to make two changes.   First we must configure our Endpoint to act as a server `server: true`.  Additionally we must set the root to be `.`.
 
 ```elixir
 # Configures the endpoint
 config :hello_phoenix, HelloPhoenix.Endpoint,
 http: [port: 8888],
 url: [host: "example.com"],
+root: ".",
 cache_static_manifest: "priv/static/manifest.json",
 server: true
 ```
 
 When we run `mix phoenix.server` to start our application, the `server` parameter is automatically set to true. When we're creating a release, however, we need to configure this manually. If we get through this release guide, and we aren't seeing any pages coming from our server, this is a likely culprit.
+
+When generating a release and performing a hot upgrade, the static assets being served will not be the newest version without setting the root to `.`.  If you do not set root to `.` you will be forced to perform a restart so that the correct static assets are served, effectively changing the hot upgrade to a rolling restart.
 
 If we take a quick look at our `config/prod.exs` again, we'll see that our port is set to `8888`.
 
