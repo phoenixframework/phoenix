@@ -35,7 +35,7 @@ defmodule Phoenix.Router.Route do
   def build(kind, verb, path, host, plug, opts, helper, pipe_through, private, assigns)
       when is_atom(verb) and (is_binary(host) or is_nil(host)) and
            is_atom(plug) and (is_binary(helper) or is_nil(helper)) and
-           is_list(pipe_through) and is_map(private and is_map(assigns))
+           is_list(pipe_through) and is_map(private) and is_map(assigns)
            and kind in [:match, :forward] do
 
     %Route{kind: kind, verb: verb, path: path, host: host, private: private,
@@ -109,7 +109,7 @@ defmodule Phoenix.Router.Route do
 
   defp build_pipes(%Route{kind: :forward} = route) do
     {_params, fwd_segments} = Plug.Router.Utils.build_path_match(route.path)
-    opts = route.plug.init(route.opts)
+    opts = route.opts |> route.plug.init() |> Macro.escape()
 
     quote do
       var!(conn)

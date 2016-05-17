@@ -77,7 +77,7 @@ defmodule Phoenix.Endpoint do
 
       The default format is used when none is set in the connection.
 
-    * `:instrumenters` - a list of instrumenters modules whose callbacks will
+    * `:instrumenters` - a list of instrumenter modules whose callbacks will
       be fired on instrumentation events. Read more on instrumentation in the
       "Instrumentation" section below.
 
@@ -93,16 +93,19 @@ defmodule Phoenix.Endpoint do
       by `mix phoenix.digest`.
 
     * `:check_origin` - configure transports to check origins or not. May
-      be false, true or a list of hosts that are allowed.
+      be false, true or a list of hosts that are allowed. Hosts also support
+      wildcards. For example:
+
+          check_origin: ["//phoenixframework.org", "//*.example.com"]
 
     * `:http` - the configuration for the HTTP server. Currently uses
       cowboy and accepts all options as defined by
-      [`Plug.Adapters.Cowboy`](http://hexdocs.pm/plug/Plug.Adapters.Cowboy.html).
+      [`Plug.Adapters.Cowboy`](https://hexdocs.pm/plug/Plug.Adapters.Cowboy.html).
       Defaults to `false`.
 
     * `:https` - the configuration for the HTTPS server. Currently uses
       cowboy and accepts all options as defined by
-      [`Plug.Adapters.Cowboy`](http://hexdocs.pm/plug/Plug.Adapters.Cowboy.html).
+      [`Plug.Adapters.Cowboy`](https://hexdocs.pm/plug/Plug.Adapters.Cowboy.html).
       Defaults to `false`.
 
     * `:force_ssl` - ensures no data is ever sent via http, always redirecting
@@ -130,6 +133,10 @@ defmodule Phoenix.Endpoint do
       as a workaround for releases where environment specific information
       is loaded only at compile-time.
 
+      The `:host` option requires a string or {:system, "ENV_VAR"}`. Similar
+      to `:port`, when given a tuple like `{:system, "HOST"}`, the host
+      will be referenced from `System.get_env("HOST")` at runtime.
+
     * `:static_url` - configuration for generating URLs for static files.
       It will fallback to `url` if no option is provided. Accepts the same
       options as `url`.
@@ -144,13 +151,19 @@ defmodule Phoenix.Endpoint do
           [node: ["node_modules/brunch/bin/brunch", "watch"]]
 
     * `:live_reload` - configuration for the live reload option.
-      Configuration requires a `:paths` option which should be a list of
-      files to watch. When these files change, it will trigger a reload.
+      Configuration requires a `:patterns` option which should be a list of
+      file patterns to watch. When these files change, it will trigger a reload.
       If you are using a tool like [pow](http://pow.cx) in development,
       you may need to set the `:url` option appropriately.
 
-          [url: "ws://localhost:4000",
-           paths: [Path.expand("priv/static/js/phoenix.js")]]
+          live_reload: [
+            url: "ws://localhost:4000",
+            patterns: [
+              ~r{priv/static/.*(js|css|png|jpeg|jpg|gif)$},
+              ~r{web/views/.*(ex)$},
+              ~r{web/templates/.*(eex)$}
+            ]
+          ]
 
     * `:pubsub` - configuration for this endpoint's pubsub adapter.
       Configuration either requires a `:name` of the registered pubsub
@@ -182,10 +195,10 @@ defmodule Phoenix.Endpoint do
 
   #### Channels
 
-    * `subscribe(pid, topic, opts)` - subscribes the pid to the given topic.
-      See `Phoenix.PubSub.subscribe/4` for options.
+    * `subscribe(topic, opts)` - subscribes the caller to the given topic.
+      See `Phoenix.PubSub.subscribe/3` for options.
 
-    * `unsubscribe(pid, topic)` - unsubscribes the pid from the given topic.
+    * `unsubscribe(topic)` - unsubscribes the caller from the given topic.
 
     * `broadcast(topic, event, msg)` - broadcasts a `msg` with as `event`
       in the given `topic`.
@@ -297,22 +310,11 @@ defmodule Phoenix.Endpoint do
   where:
 
     * `time_diff` is an integer representing the time it took to execute the
-      instrumented function **in microseconds**.
+      instrumented function **in native units**.
+
     * `result_of_before_callback` is the return value of the "before" clause of
       the same `event_callback`. This is a means of passing data from the
-      "before" clause to the "after" clause when instrumenting. For example, an
-      instrumenter can implement custom time measuring with this:
-
-          defmodule MyInstrumenter do
-            def event_callback(:start, _compile, _runtime) do
-              :erlang.monotonic_time(:micro_seconds)
-            end
-
-            def event_callback(:stop, _time_diff, start_time) do
-              stop_time = :erlang.monotonic_time(:micro_seconds)
-              do_something_with_diff(stop_time - start_time)
-            end
-          end
+      "before" clause to the "after" clause when instrumenting.
 
   The return value of each "before" event callback will be stored and passed to
   the corresponding "after" callback.
@@ -334,12 +336,14 @@ defmodule Phoenix.Endpoint do
 
   By default, Phoenix instruments the following events:
 
-    * `:phoenix_controller_call` - it's the whole controller pipeline. No
-      runtime metadata is passed to the instrumentation here.
+    * `:phoenix_controller_call` - it's the whole controller pipeline.
+      The `%Plug.Conn{}` is passed as runtime metadata.
     * `:phoenix_controller_render` - the rendering of a view from a
       controller. The map of runtime metadata passed to instrumentation
       callbacks has the `:template` key - for the name of the template, e.g.,
       `"index.html"` - and the `:format` key - for the format of the template.
+    * `:phoenix_channel_join` - the joining of a channel. The `%Phoenix.Socket{}`
+      and join params are passed as runtime metadata via `:socket` and `:params`.
 
   ### Dynamic instrumentation
 
@@ -384,12 +388,26 @@ defmodule Phoenix.Endpoint do
 
       def __pubsub_server__, do: @pubsub_server
 
-      def subscribe(pid, topic, opts \\ []) do
+      # TODO remove pid version on next major release
+      def subscribe(pid, topic) when is_pid(pid) and is_binary(topic) do
+        Phoenix.PubSub.subscribe(@pubsub_server, pid, topic, [])
+      end
+      def subscribe(pid, topic, opts) when is_pid(pid) and is_binary(topic) and is_list(opts) do
         Phoenix.PubSub.subscribe(@pubsub_server, pid, topic, opts)
       end
+      def subscribe(topic) when is_binary(topic) do
+        Phoenix.PubSub.subscribe(@pubsub_server, topic, [])
+      end
+      def subscribe(topic, opts) when is_binary(topic) and is_list(opts) do
+        Phoenix.PubSub.subscribe(@pubsub_server, topic, opts)
+      end
 
+      # TODO remove pid version on next major release
+      def unsubscribe(topic) do
+        Phoenix.PubSub.unsubscribe(@pubsub_server, topic)
+      end
       def unsubscribe(pid, topic) do
-        Phoenix.PubSub.unsubscribe(@pubsub_server, pid, topic)
+        Phoenix.PubSub.unsubscribe(@pubsub_server, topic)
       end
 
       def broadcast_from(from, topic, event, msg) do

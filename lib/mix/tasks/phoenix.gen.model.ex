@@ -21,7 +21,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
   ## Attributes
 
   The resource fields are given using `name:type` syntax
-  where type are the types supported by Ecto. Ommitting
+  where type are the types supported by Ecto. Omitting
   the type makes it default to `:string`:
 
       mix phoenix.gen.model User users name age:integer
@@ -72,7 +72,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
   This generator uses default options provided in the `:generators`
   configuration of the `:phoenix` application. These are the defaults:
-  
+
       config :phoenix, :generators,
         migration: true,
         binary_id: false,
@@ -130,7 +130,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
       String.contains?(plural, ":") ->
         raise_with_help
       plural != Phoenix.Naming.underscore(plural) ->
-        Mix.raise "expected the second argument, #{inspect plural}, to be all lowercase using snake_case convention"
+        Mix.raise "Expected the second argument, #{inspect plural}, to be all lowercase using snake_case convention"
       true ->
         args
     end

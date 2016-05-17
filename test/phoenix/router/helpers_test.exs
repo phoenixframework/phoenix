@@ -17,7 +17,7 @@ defmodule Phoenix.Router.HelpersTest do
 
     assert extract_defhelper(route, 1) == String.strip """
     def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
-      path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> URI.encode_www_form(to_param(bar)), params, ["bar"]))
+      path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> URI.encode(to_param(bar), &URI.char_unreserved?/1), params, ["bar"]))
     end
     """
   end
@@ -33,7 +33,7 @@ defmodule Phoenix.Router.HelpersTest do
 
     assert extract_defhelper(route, 1) == String.strip """
     def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
-      path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> Enum.map_join(bar, "/", &URI.encode_www_form/1), params, ["bar"]))
+      path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> Enum.map_join(bar, "/", fn s -> URI.encode(s, &URI.char_unreserved?/1) end), params, ["bar"]))
     end
     """
   end
@@ -141,9 +141,12 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.post_path(__MODULE__, :show, 5, []) == "/posts/5"
     assert Helpers.post_path(__MODULE__, :show, 5, id: 5) == "/posts/5"
     assert Helpers.post_path(__MODULE__, :show, 5, %{"id" => 5}) == "/posts/5"
+    assert Helpers.post_path(__MODULE__, :show, "foo") == "/posts/foo"
+    assert Helpers.post_path(__MODULE__, :show, "foo bar") == "/posts/foo%20bar"
 
     assert Helpers.post_path(__MODULE__, :file, ["foo", "bar/baz"]) == "/posts/file/foo/bar%2Fbaz"
     assert Helpers.post_path(__MODULE__, :file, ["foo", "bar"], []) == "/posts/file/foo/bar"
+    assert Helpers.post_path(__MODULE__, :file, ["foo", "bar baz"], []) == "/posts/file/foo/bar%20baz"
 
     assert Helpers.chat_path(__MODULE__, :show, ["chat"]) == "/chat"
     assert Helpers.chat_path(__MODULE__, :show, ["chat", "foo"]) == "/chat/foo"
@@ -153,6 +156,8 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.top_path(__MODULE__, :top) == "/posts/top"
     assert Helpers.top_path(__MODULE__, :top, id: 5) == "/posts/top?id=5"
     assert Helpers.top_path(__MODULE__, :top, %{"id" => 5}) == "/posts/top?id=5"
+    assert Helpers.top_path(__MODULE__, :top, %{"id" => "foo"}) == "/posts/top?id=foo"
+    assert Helpers.top_path(__MODULE__, :top, %{"id" => "foo bar"}) == "/posts/top?id=foo+bar"
 
     error_message = fn helper, arity ->
       """

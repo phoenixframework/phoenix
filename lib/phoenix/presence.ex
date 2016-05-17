@@ -13,22 +13,18 @@ defmodule Phoenix.Presence do
 
   Start by defining a presence module within your application
   which uses `Phoenix.Presence` and provide the `:otp_app` which
-  holds your configuration:
+  holds your configuration, as well as the `:pubsub_server`.
 
       defmodule MyApp.Presence do
-        use Phoenix.Presence, otp_app: :my_app
+        use Phoenix.Presence, otp_app: :my_app,
+                              pubsub_server: MyApp.PubSub
       end
-
-  Next, add configuration for your Presence tracker, in config/config.exs:
-
-      config :my_app, MyApp.Presence,
-        pubsub_server: MyApp.PubSub
 
   The `:pubsub_server` must point to an existing pubsub server
   running in your application, which is included by default as
   `MyApp.PubSub` for new applications.
 
-  Finally, add the new supervisor to your supervision tree in `lib/my_app.ex`:
+  Next, add the new supervisor to your supervision tree in `lib/my_app.ex`:
 
       children = [
         ...
@@ -38,26 +34,27 @@ defmodule Phoenix.Presence do
   Once added, presences can be tracked in your channel after joining:
 
       defmodule MyApp.MyChannel do
+        use MyApp.Web, :channel
         alias MyApp.Presence
-        ...
+
         def join("some:topic", _params, socket) do
           send(self, :after_join)
           {:ok, assign(socket, :user_id, ...)}
         end
 
         def handle_info(:after_join, socket) do
-          :ok = Presence.track(socket, socket.assigns.user_id, %{
-            online_at: inspect(:os.timestamp())
+          push socket, "presence_state", Presence.list(socket)
+          {:ok, _} = Presence.track(socket, socket.assigns.user_id, %{
+            online_at: inspect(System.system_time(:seconds))
           })
-          push socket, "presences", Presence.list(socket)
-          {:noreply, state}
+          {:noreply, socket}
         end
       end
 
   In the example above, `Presence.track` is used to register this
   channel's process as a presence for the socket's user ID, with
   a map of metadata. Next, the current presence information for
-  the socket's topic is pushed to the client as a `"presences"` event.
+  the socket's topic is pushed to the client as a `"presence_state"` event.
 
   Finally, a diff of presence join and leave events will be sent to the
   client as they happen in real-time with the "presence_diff" event.
@@ -69,7 +66,6 @@ defmodule Phoenix.Presence do
   See `Phoenix.Presence.list/2` for more information on the presence
   datastructure.
 
-
   ## Fetching Presence Information
 
   Presence metadata should be minimized and used to store small,
@@ -80,11 +76,10 @@ defmodule Phoenix.Presence do
   and serves as a mechanism to fetch presence information a single time,
   before broadcasting the information to all channel subscribers.
   This prevents N query problems and gives you a single place to group
-  solated data fetching to extend presence metadata. The function must
+  isolated data fetching to extend presence metadata. The function must
   return a map of data matching the outlined Presence datastructure,
   including the `:metas` key, but can extend the map of information
   to include any additional information. For example:
-
 
       def fetch(_topic, entries) do
         query =
@@ -125,11 +120,13 @@ defmodule Phoenix.Presence do
 
   defmacro __using__(opts) do
     quote do
-      @otp_app unquote(opts)[:otp_app] || raise "presence expects :otp_app to be given"
+      @opts unquote(opts)
+      @otp_app @opts[:otp_app] || raise "presence expects :otp_app to be given"
       @behaviour unquote(__MODULE__)
       @task_supervisor Module.concat(__MODULE__, TaskSupervisor)
 
       def start_link(opts \\ []) do
+        opts = Keyword.merge(@opts, opts)
         Phoenix.Presence.start_link(__MODULE__, @otp_app, @task_supervisor, opts)
       end
 

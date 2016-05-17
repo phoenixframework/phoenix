@@ -50,6 +50,7 @@ defmodule Mix.Tasks.Phoenix.New do
     {:eex,  "static/brunch/brunch-config.js", "brunch-config.js"},
     {:eex,  "static/brunch/package.json",     "package.json"},
     {:text, "static/app.css",                 "web/static/css/app.css"},
+    {:text, "static/phoenix.css",             "web/static/css/phoenix.css"},
     {:eex,  "static/brunch/app.js",           "web/static/js/app.js"},
     {:eex,  "static/brunch/socket.js",        "web/static/js/socket.js"},
     {:text, "static/robots.txt",              "web/static/assets/robots.txt"},
@@ -67,10 +68,11 @@ defmodule Mix.Tasks.Phoenix.New do
   ]
 
   @bare [
-    {:text, "static/bare/.gitignore", ".gitignore"},
-    {:text, "static/app.css",         "priv/static/css/app.css"},
-    {:text, "static/bare/app.js",     "priv/static/js/app.js"},
-    {:text, "static/robots.txt",      "priv/static/robots.txt"},
+    {:text,   "static/bare/.gitignore", ".gitignore"},
+    {:text,   "static/app.css",         "priv/static/css/app.css"},
+    {:append, "static/phoenix.css",     "priv/static/css/app.css"},
+    {:text,   "static/bare/app.js",     "priv/static/js/app.js"},
+    {:text,   "static/robots.txt",      "priv/static/robots.txt"},
   ]
 
   # Embed all defined templates
@@ -95,7 +97,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
       mix phoenix.new PATH [--module MODULE] [--app APP]
 
-  A project at the given PATH  will be created. The
+  A project at the given PATH will be created. The
   application name and module name will be retrieved
   from the path, unless `--module` or `--app` is given.
 
@@ -107,7 +109,7 @@ defmodule Mix.Tasks.Phoenix.New do
       the generated skeleton
 
     * `--database` - specify the database adapter for ecto.
-      Values can be `postgres` `mysql`, `mssql`, `sqlite` or
+      Values can be `postgres`, `mysql`, `mssql`, `sqlite` or
       `mongodb`. Defaults to `postgres`
 
     * `--no-brunch` - do not generate brunch files
@@ -145,12 +147,18 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   def run(argv) do
-    {opts, argv, _} = OptionParser.parse(argv, switches: @switches)
-
     unless Version.match? System.version, "~> 1.2" do
       Mix.raise "Phoenix v#{@version} requires at least Elixir v1.2.\n " <>
-                "You have #{System.version}. Please update accordingly."
+                "You have #{System.version}. Please update accordingly"
     end
+
+    {opts, argv} =
+      case OptionParser.parse(argv, strict: @switches) do
+        {opts, argv, []} ->
+          {opts, argv}
+        {_opts, _argv, [switch | _]} ->
+          Mix.raise "Invalid option: " <> switch_to_string(switch)
+      end
 
     case argv do
       [] ->
@@ -234,6 +242,9 @@ defmodule Mix.Tasks.Phoenix.New do
       end
     end)
   end
+
+  defp switch_to_string({name, nil}), do: name
+  defp switch_to_string({name, val}), do: name <> "=" <> val
 
   defp copy_model(_app, path, binding) do
     if binding[:ecto] do
@@ -415,19 +426,21 @@ defmodule Mix.Tasks.Phoenix.New do
   end
   defp get_ecto_adapter("sqlite", app, module) do
     {:sqlite_ecto, Sqlite.Ecto,
-      dev:  [database: "db/#{app}_dev.sqlite"],
-      test: [database: "db/#{app}_test.sqlite", pool: Ecto.Adapters.SQL.Sandbox],
-      prod: [database: "db/#{app}_prod.sqlite"],
-      test_begin: "Ecto.Adapters.SQL.begin_test_transaction(#{module}.Repo)",
-      test_restart: "Ecto.Adapters.SQL.restart_test_transaction(#{module}.Repo, [])"}
+     dev:  [database: "db/#{app}_dev.sqlite"],
+     test: [database: "db/#{app}_test.sqlite", pool: Ecto.Adapters.SQL.Sandbox],
+     prod: [database: "db/#{app}_prod.sqlite"],
+     test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{module}.Repo, :manual)",
+     test_setup: ":ok = Ecto.Adapters.SQL.Sandbox.checkout(#{module}.Repo)",
+     test_async: "Ecto.Adapters.SQL.Sandbox.mode(#{module}.Repo, {:shared, self()})"}
   end
   defp get_ecto_adapter("mongodb", app, module) do
     {:mongodb_ecto, Mongo.Ecto,
      dev:  [database: "#{app}_dev"],
      test: [database: "#{app}_test", pool_size: 1],
      prod: [database: "#{app}_prod"],
-     test_begin: "",
-     test_restart: "Mongo.Ecto.truncate(#{module}.Repo, [])",
+     test_setup_all: "",
+     test_setup: "",
+     test_async: "Mongo.Ecto.truncate(#{module}.Repo, [])",
      binary_id: true,
      migration: false,
      sample_binary_id: "111111111111111111111111"}
@@ -441,8 +454,9 @@ defmodule Mix.Tasks.Phoenix.New do
      test: [username: user, password: pass, database: "#{app}_test", hostname: "localhost",
             pool: Ecto.Adapters.SQL.Sandbox],
      prod: [username: user, password: pass, database: "#{app}_prod"],
-     test_begin: "Ecto.Adapters.SQL.begin_test_transaction(#{module}.Repo)",
-     test_restart: "Ecto.Adapters.SQL.restart_test_transaction(#{module}.Repo, [])"]
+     test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{module}.Repo, :manual)",
+     test_setup: ":ok = Ecto.Adapters.SQL.Sandbox.checkout(#{module}.Repo)",
+     test_async: "Ecto.Adapters.SQL.Sandbox.mode(#{module}.Repo, {:shared, self()})"]
   end
 
   defp kw_to_config(kw) do
@@ -475,8 +489,8 @@ defmodule Mix.Tasks.Phoenix.New do
     :crypto.strong_rand_bytes(length) |> Base.encode64 |> binary_part(0, length)
   end
 
-  # defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> 1.1.3"}]
-  defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
+  defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> 1.2.0-rc"}]
+  # defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
   defp phoenix_dep(path), do: ~s[{:phoenix, path: #{inspect path}, override: true}]
 
   defp phoenix_static_path("deps/phoenix"), do: "deps/phoenix"
@@ -513,6 +527,8 @@ defmodule Mix.Tasks.Phoenix.New do
           File.mkdir_p!(target)
         :text ->
           create_file(target, render(source))
+        :append ->
+          append_to(Path.dirname(target), Path.basename(target), render(source))
         :eex  ->
           contents = EEx.eval_string(render(source), binding, file: source)
           create_file(target, contents)

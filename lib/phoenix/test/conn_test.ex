@@ -202,8 +202,12 @@ defmodule Phoenix.ConnTest do
       set the content-type to multipart. The map or list may contain
       other lists or maps and all entries will be normalized to string
       keys
+
+    * a struct - unlike other maps, a struct will be passed through as-is
+      without normalizing its entries
   """
-  def dispatch(conn, endpoint, method, path_or_action, params_or_body \\ nil) do
+  def dispatch(conn, endpoint, method, path_or_action, params_or_body \\ nil)
+  def dispatch(%Plug.Conn{} = conn, endpoint, method, path_or_action, params_or_body) do
     if is_nil(endpoint) do
       raise "no @endpoint set in test case"
     end
@@ -218,6 +222,10 @@ defmodule Phoenix.ConnTest do
     |> dispatch_endpoint(endpoint, method, path_or_action, params_or_body)
     |> Conn.put_private(:phoenix_recycled, false)
     |> from_set_to_sent()
+  end
+  def dispatch(conn, _endpoint, method, _path_or_action, _params_or_body) do
+    raise ArgumentError, "expected first argument to #{method} to be a " <>
+                         "%Plug.Conn{}, got #{inspect conn}"
   end
 
   defp dispatch_endpoint(conn, endpoint, method, path, params_or_body) when is_binary(path) do
@@ -349,7 +357,7 @@ defmodule Phoenix.ConnTest do
     if given == status do
       body
     else
-      raise "expected response with status #{given}, got: #{status}"
+      raise "expected response with status #{given}, got: #{status}, with body:\n#{body}"
     end
   end
 
@@ -463,7 +471,7 @@ defmodule Phoenix.ConnTest do
 
   See `recycle/1` for more information.
   """
-  @spec recycle(Conn.t) :: Conn.t
+  @spec ensure_recycled(Conn.t) :: Conn.t
   def ensure_recycled(conn) do
     if conn.private[:phoenix_recycled] do
       conn
@@ -517,7 +525,7 @@ defmodule Phoenix.ConnTest do
 
   @doc """
   Calls the Endpoint and bypasses Router match.
-  
+
   See `bypass_through/1`.
   """
   @spec bypass_through(Conn.t, Module.t, :atom | List.t) :: Conn.t

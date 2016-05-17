@@ -9,3 +9,7 @@
 .absolute_url_logo {
   background-image: url(http://www.phoenixframework.org/absolute.png);
 }
+
+.absolute_path_logo{background-image:url(/phoenix.png)}
+.relative_path_logo{background-image:url(../images/relative.png)}
+.absolute_url_logo{background-image:url(http://www.phoenixframework.org/absolute.png)}

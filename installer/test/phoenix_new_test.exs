@@ -32,7 +32,8 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       end
 
       assert_file "photo_blog/config/config.exs", fn file ->
-        refute file =~ "app_namespace"
+        assert file =~ "ecto_repos: [PhotoBlog.Repo]"
+        refute file =~ "namespace"
         refute file =~ "config :phoenix, :generators"
       end
 
@@ -146,7 +147,12 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       refute File.exists?("photo_blog/lib/photo_blog/repo.ex")
 
       assert_file "photo_blog/mix.exs", &refute(&1 =~ ~r":phoenix_ecto")
-      assert_file "photo_blog/config/config.exs", &refute(&1 =~ "config :phoenix, :generators")
+
+      assert_file "photo_blog/config/config.exs", fn file ->
+        refute file =~ "config :phoenix, :generators"
+        refute file =~ "ecto_repos:"
+      end
+
       assert_file "photo_blog/config/dev.exs", &refute(&1 =~ config)
       assert_file "photo_blog/config/test.exs", &refute(&1 =~ config)
       assert_file "photo_blog/config/prod.secret.exs", &refute(&1 =~ config)
@@ -219,7 +225,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "custom_path/.gitignore"
       assert_file "custom_path/mix.exs", ~r/app: :photo_blog/
       assert_file "custom_path/lib/photo_blog/endpoint.ex", ~r/app: :photo_blog/
-      assert_file "custom_path/config/config.exs", ~r/app_namespace: PhoteuxBlog/
+      assert_file "custom_path/config/config.exs", ~r/namespace: PhoteuxBlog/
       assert_file "custom_path/web/web.ex", ~r/use Phoenix.Controller, namespace: PhoteuxBlog/
     end
   end
@@ -254,12 +260,9 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "custom_path/config/test.exs", [~r/Ecto.Adapters.MySQL/, ~r/username: "root"/, ~r/password: ""/]
       assert_file "custom_path/config/prod.secret.exs", [~r/Ecto.Adapters.MySQL/, ~r/username: "root"/, ~r/password: ""/]
 
-      assert_file "custom_path/test/support/conn_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
-      assert_file "custom_path/test/support/channel_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
-      assert_file "custom_path/test/support/model_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
+      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
+      assert_file "custom_path/test/support/model_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
     end
   end
 
@@ -273,12 +276,9 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "custom_path/config/test.exs", ~r/Tds.Ecto/
       assert_file "custom_path/config/prod.secret.exs", ~r/Tds.Ecto/
 
-      assert_file "custom_path/test/support/conn_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
-      assert_file "custom_path/test/support/channel_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
-      assert_file "custom_path/test/support/model_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
+      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
+      assert_file "custom_path/test/support/model_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
     end
   end
 
@@ -304,12 +304,9 @@ defmodule Mix.Tasks.Phoenix.NewTest do
         assert file =~ ~r/database: "db\/custom_path_prod.sqlite"/
       end
 
-      assert_file "custom_path/test/support/conn_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
-      assert_file "custom_path/test/support/channel_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
-      assert_file "custom_path/test/support/model_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
+      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
+      assert_file "custom_path/test/support/model_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
     end
   end
 
@@ -333,9 +330,9 @@ defmodule Mix.Tasks.Phoenix.NewTest do
         refute file =~ ~r/Ecto.Adapters.SQL/
       end
 
-      assert_file "custom_path/test/support/conn_case.ex", ~r/Mongo.Ecto.truncate/
-      assert_file "custom_path/test/support/model_case.ex", ~r/Mongo.Ecto.truncate/
-      assert_file "custom_path/test/support/channel_case.ex", ~r/Mongo.Ecto.truncate/
+      assert_file "custom_path/test/support/conn_case.ex", "Mongo.Ecto.truncate"
+      assert_file "custom_path/test/support/model_case.ex", "Mongo.Ecto.truncate"
+      assert_file "custom_path/test/support/channel_case.ex", "Mongo.Ecto.truncate"
 
       assert_file "custom_path/config/config.exs", fn file ->
         assert file =~ ~r/binary_id: true/
@@ -355,12 +352,9 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "custom_path/config/test.exs", [~r/Ecto.Adapters.Postgres/, ~r/username: "postgres"/, ~r/password: "postgres"/, ~r/hostname: "localhost"/]
       assert_file "custom_path/config/prod.secret.exs", [~r/Ecto.Adapters.Postgres/, ~r/username: "postgres"/, ~r/password: "postgres"/]
 
-      assert_file "custom_path/test/support/conn_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
-      assert_file "custom_path/test/support/channel_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
-      assert_file "custom_path/test/support/model_case.ex",
-        ~r/Ecto.Adapters.SQL.restart_test_transaction/
+      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.checkout"
+      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.checkout"
+      assert_file "custom_path/test/support/model_case.ex", "Ecto.Adapters.SQL.Sandbox.checkout"
     end
   end
 
@@ -396,6 +390,12 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
     assert_raise Mix.Error, ~r"Module name \w+ is already taken", fn ->
       Mix.Tasks.Phoenix.New.run ["valid", "--module", "String"]
+    end
+  end
+
+  test "invalid options" do
+    assert_raise Mix.Error, "Invalid option: -database", fn ->
+      Mix.Tasks.Phoenix.New.run(["valid", "-database", "mysql"])
     end
   end
 

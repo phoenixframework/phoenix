@@ -22,7 +22,24 @@ defmodule Phoenix.Template do
 
       Templates.render("foo.html", %{name: "John Doe"})
 
-  In practice though, developers rarely use `Phoenix.Template`
+  In some cases, you will want to overide the `render/2` clause
+  to compose the assigns for the template before rendering. In such
+  cases, you can render the template directly by calling the generated
+  private function `render_template/2`. For example:
+
+      # templates/foo.html.eex
+      Hello <%= @name %>
+
+      # templates.ex
+      defmodule Templates do
+        use Phoenix.Template, root: "templates"
+
+        def render("foo.html", %{name: name}) do
+          render_template("foo.html", %{name: String.upcase(name)})
+        end
+      end
+
+  In practice, developers rarely use `Phoenix.Template`
   directly. Instead they use `Phoenix.View` which wraps the template
   functionality and adds some extra conveniences.
 
@@ -119,12 +136,16 @@ defmodule Phoenix.Template do
       """
       def render(template, assigns \\ %{})
 
-      def render(template, assigns) when is_list(assigns) do
-        render(template, Enum.into(assigns, %{}))
-      end
-
       def render(module, template) when is_atom(module) do
         Phoenix.View.render(module, template, %{})
+      end
+
+      def render(template, _assigns) when not is_binary(template) do
+        raise ArgumentError, "render/2 expects template to be a string, got: #{inspect template}"
+      end
+
+      def render(template, assigns) when not is_map(assigns) do
+        render(template, Enum.into(assigns, %{}))
       end
 
       @doc """
@@ -132,6 +153,7 @@ defmodule Phoenix.Template do
       By default it raises but can be customized
       to render a particular template.
       """
+      @spec template_not_found(Phoenix.Template.name, map) :: no_return
       def template_not_found(template, assigns) do
         {root, names} = __templates__
         raise UndefinedError,
@@ -163,10 +185,17 @@ defmodule Phoenix.Template do
     quote line: -1 do
       unquote(codes)
 
-      def render(tpl, %{render_existing: {__MODULE__, tpl}}) do
+      # Catch-all clause for rendering.
+      def render(template, assigns) do
+        render_template(template, assigns)
+      end
+
+      # Catch-all clause for template rendering.
+      defp render_template(template, %{render_existing: {__MODULE__, template}}) do
         nil
       end
-      def render(template, assigns) do
+
+      defp render_template(template, assigns) do
         template_not_found(template, assigns)
       end
 
@@ -329,7 +358,7 @@ defmodule Phoenix.Template do
         unquote(quoted)
       end
 
-      def render(unquote(name), assigns) do
+      defp render_template(unquote(name), assigns) do
         unquote(defp)(assigns)
       end
     end}

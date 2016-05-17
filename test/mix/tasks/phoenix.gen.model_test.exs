@@ -52,7 +52,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
         assert file =~ "field :blob, :binary"
         assert file =~ "timestamps"
         assert file =~ "def changeset"
-        assert file =~ "~w(name age nicks famous born_at secret desc blob)"
+        assert file =~ "[:name, :age, :nicks, :famous, :born_at, :secret, :desc, :blob]"
       end
 
       assert_file "test/models/user_test.exs", fn file ->

@@ -6,7 +6,7 @@ defmodule <%= module %>ChannelTest do
   setup do
     {:ok, _, socket} =
       socket("user_id", %{some: :assign})
-      |> subscribe_and_join(<%= scoped %>Channel, "<%= plural %>:lobby")
+      |> subscribe_and_join(<%= scoped %>Channel, "<%= singular %>:lobby")
 
     {:ok, socket: socket}
   end
@@ -16,7 +16,7 @@ defmodule <%= module %>ChannelTest do
     assert_reply ref, :ok, %{"hello" => "there"}
   end
 
-  test "shout broadcasts to <%= plural %>:lobby", %{socket: socket} do
+  test "shout broadcasts to <%= singular %>:lobby", %{socket: socket} do
     push socket, "shout", %{"hello" => "all"}
     assert_broadcast "shout", %{"hello" => "all"}
   end

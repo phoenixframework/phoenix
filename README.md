@@ -11,26 +11,32 @@ See the official site at http://www.phoenixframework.org/
 
 ## Documentation
 
-API documentation is available at [http://hexdocs.pm/phoenix](http://hexdocs.pm/phoenix)
+API documentation is available at [https://hexdocs.pm/phoenix](https://hexdocs.pm/phoenix)
 
 ## Contributing
 
 We appreciate any contribution to Phoenix. Check our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) and [CONTRIBUTING.md](CONTRIBUTING.md) guides for more information. We usually keep a list of features and bugs [in the issue tracker][4].
 
-### Running a Phoenix master project
+### Generating a Phoenix project from unreleased versions
+
+In order to create a new project using the latest Phoenix source installer (the `phoenix.new` Mix task) you will need to ensure two things.
+
+1. Remove any previously installed `phoenix_new` archives so that Mix will pick up the local source code. This can be done with `mix archive.uninstall phoenix_new.ez` or by simply deleting the file, which is usually in `~/.mix/archives/`.
+2. Run the command from within the `installer` directory. The command below will create a new project using your current Phoenix checkout, thanks to the `--dev` flag.
 
 ```bash
 $ cd installer
 $ mix phoenix.new path/to/your/project --dev
 ```
 
-The command above will create a new project using your current Phoenix checkout, thanks to the `--dev` flag.
+This will produce a new project that has `:phoenix` configured as a relative dependency:
 
-Note that `path/to/your/project` must be within the directory containing the Phoenix source code. This is so that a relative path can be used for the `:phoenix` dependency.
+```
+defp deps do
+  [{:phoenix, path: "../path/to/phoenix/git", override: true},
+```
 
 The command must be run from the `installer` directory. See the discussion in [PR 1224](https://github.com/phoenixframework/phoenix/pull/1224) for more information.
-
-In order to test changes to the installer (the `phoenix.new` Mix task) itself, first remove any installed archive so that Mix will pick up the local source code.  This can be done with `mix archive.uninstall phoenix_new-#.#.#.ez` or by simply deleting the file, which is usually in `~/.mix/archives/`.
 
 ### Building phoenix.js
 

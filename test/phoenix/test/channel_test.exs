@@ -7,6 +7,8 @@ defmodule Phoenix.Test.ChannelTest do
 
   alias Phoenix.Socket
 
+  @moduletag :capture_log
+
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
   end
@@ -72,6 +74,16 @@ defmodule Phoenix.Test.ChannelTest do
 
     def handle_in("stop_and_reply", %{}, socket) do
       {:stop, :shutdown, :ok, socket}
+    end
+
+    def handle_in("subscribe", %{"topic" => topic}, socket) do
+      subscribe(socket, topic)
+      {:reply, :ok, socket}
+    end
+
+    def handle_in("unsubscribe", %{"topic" => topic}, socket) do
+      unsubscribe(socket, topic)
+      {:reply, :ok, socket}
     end
 
     def handle_out("stop", _payload, socket) do
@@ -274,6 +286,17 @@ defmodule Phoenix.Test.ChannelTest do
     assert_broadcast "broadcast", %{"foo" => "bar"}
   end
 
+  test "pushes atom parameter keys as strings" do
+    {:ok, _, socket} = join(socket(), Channel, "foo:ok")
+
+    ref = push socket, "reply", %{req: %{parameter: 1}}
+    assert_reply ref, :ok, %{"resp" => %{"parameter" => 1}}
+  end
+
+  test "connects with atom parameter keys as strings" do
+    :error = connect(UserSocket, %{reject: true})
+  end
+
   ## handle_out
 
   test "push broadcasts by default" do
@@ -366,5 +389,20 @@ defmodule Phoenix.Test.ChannelTest do
     socket = %Socket{channel: CodeChangeChannel}
     assert Phoenix.Channel.Server.code_change(:old, socket, :extra) ==
       {:error, :cant}
+  end
+
+  test "subscribe and subscribe" do
+    socket = subscribe_and_join!(socket(), Channel, "foo:ok")
+    socket.endpoint.broadcast!("another:topic", "event", %{})
+    refute_receive %Phoenix.Socket.Message{}
+    ref = push socket, "subscribe", %{"topic" => "another:topic"}
+    assert_reply ref, :ok
+    socket.endpoint.broadcast!("another:topic", "event", %{})
+    assert_receive %Phoenix.Socket.Message{topic: "another:topic"}
+
+    ref = push socket, "unsubscribe", %{"topic" => "another:topic"}
+    assert_reply ref, :ok
+    socket.endpoint.broadcast!("another:topic", "event", %{})
+    refute_receive %Phoenix.Socket.Message{}
   end
 end

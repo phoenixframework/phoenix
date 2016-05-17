@@ -122,9 +122,8 @@ defmodule Phoenix.Controller do
       import Plug.Conn
       import Phoenix.Controller
 
-      use Phoenix.Controller.Pipeline
+      use Phoenix.Controller.Pipeline, opts
 
-      plug Phoenix.Controller.Logger, opts
       plug :put_new_layout, {Phoenix.Controller.__layout__(__MODULE__, opts), :app}
       plug :put_new_view, Phoenix.Controller.__view__(__MODULE__)
     end
@@ -309,9 +308,9 @@ defmodule Phoenix.Controller do
     cond do
       to = opts[:to] ->
         case to do
-          "//" <> _ -> raise_invalid_url()
+          "//" <> _ -> raise_invalid_url(to)
           "/" <> _  -> to
-          _         -> raise_invalid_url()
+          _         -> raise_invalid_url(to)
         end
       external = opts[:external] ->
         external
@@ -319,8 +318,8 @@ defmodule Phoenix.Controller do
         raise ArgumentError, "expected :to or :external option in redirect/2"
     end
   end
-  defp raise_invalid_url do
-    raise ArgumentError, "the :to option in redirect expects a path"
+  defp raise_invalid_url(url) do
+    raise ArgumentError, "the :to option in redirect expects a path but was #{inspect url}"
   end
 
   @doc """
@@ -382,7 +381,7 @@ defmodule Phoenix.Controller do
       iex> layout(conn)
       {AppView, "print.html"}
 
-      iex> conn = put_layout :print
+      iex> conn = put_layout conn, :print
       iex> layout(conn)
       {AppView, :print}
 
@@ -585,7 +584,7 @@ defmodule Phoenix.Controller do
   @spec render(Plug.Conn.t, binary | atom, Dict.t) :: Plug.Conn.t
   @spec render(Plug.Conn.t, module, binary | atom) :: Plug.Conn.t
   def render(conn, template, assigns)
-    when is_atom(template) and is_list(assigns) do
+    when is_atom(template) and (is_map(assigns) or is_list(assigns)) do
     format =
       get_format(conn) ||
       raise "cannot render template #{inspect template} because conn.params[\"_format\"] is not set. " <>
@@ -771,9 +770,18 @@ defmodule Phoenix.Controller do
       * x-xss-protection - set to "1; mode=block" to improve XSS
         protection on both Chrome and IE
 
-  Custom headers may also be given.
+  A custom headers map may also be given to be merged with defaults.
   """
-  def put_secure_browser_headers(conn, _opts \\ []) do
+  def put_secure_browser_headers(conn, headers \\ %{})
+  def put_secure_browser_headers(conn, []) do
+    put_secure_defaults(conn)
+  end
+  def put_secure_browser_headers(conn, headers) when is_map(headers) do
+    conn
+    |> put_secure_defaults()
+    |> merge_resp_headers(headers)
+  end
+  defp put_secure_defaults(conn) do
     merge_resp_headers(conn, [
       {"x-frame-options", "SAMEORIGIN"},
       {"x-xss-protection", "1; mode=block"},

@@ -47,7 +47,7 @@ defmodule Phoenix.Router.ResourcesTest do
 
     resources "/admin", UserController, param: "slug", name: "admin", only: [:show], alias: Api do
       resources "/comments", CommentController, param: "key", name: "post", except: [:delete]
-      resources "files", FileController, only: [:show, :index, :new]
+      resources "/files", FileController, only: [:show, :index, :new]
     end
   end
 

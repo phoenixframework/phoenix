@@ -205,7 +205,18 @@ defmodule Phoenix.Router do
         ctrl = resource.controller
         opts = resource.route
 
-        if !resource.singleton do
+        if resource.singleton do
+          Enum.each resource.actions, fn
+            :show    -> get    path,            ctrl, :show, opts
+            :new     -> get    path <> "/new",  ctrl, :new, opts
+            :edit    -> get    path <> "/edit", ctrl, :edit, opts
+            :create  -> post   path,            ctrl, :create, opts
+            :delete  -> delete path,            ctrl, :delete, opts
+            :update  ->
+              patch path, ctrl, :update, opts
+              put   path, ctrl, :update, Keyword.put(opts, :as, nil)
+          end
+        else
           param = resource.param
 
           Enum.each resource.actions, fn
@@ -218,17 +229,6 @@ defmodule Phoenix.Router do
             :update  ->
               patch path <> "/:" <> param, ctrl, :update, opts
               put   path <> "/:" <> param, ctrl, :update, Keyword.put(opts, :as, nil)
-          end
-        else
-          Enum.each resource.actions, fn
-            :show    -> get    path,            ctrl, :show, opts
-            :new     -> get    path <> "/new",  ctrl, :new, opts
-            :edit    -> get    path <> "/edit", ctrl, :edit, opts
-            :create  -> post   path,            ctrl, :create, opts
-            :delete  -> delete path,            ctrl, :delete, opts
-            :update  ->
-              patch path, ctrl, :update, opts
-              put   path, ctrl, :update, Keyword.put(opts, :as, nil)
           end
         end
       end

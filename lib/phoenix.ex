@@ -6,27 +6,27 @@ defmodule Phoenix do
   Phoenix itself. Below we provide a short explanation with links to
   their documentation for each of those projects:
 
-    * [Ecto](http://hexdocs.pm/ecto) - a language integrated query and
+    * [Ecto](https://hexdocs.pm/ecto) - a language integrated query and
       database wrapper
 
-    * [Phoenix](http://hexdocs.pm/phoenix) - the Phoenix web framework
+    * [Phoenix](https://hexdocs.pm/phoenix) - the Phoenix web framework
       (these docs)
 
-    * [Phoenix](http://hexdocs.pm/phoenix_pubsub) - a distributed pubsub
+    * [Phoenix](https://hexdocs.pm/phoenix_pubsub) - a distributed pubsub
       system with presence support
 
-    * [Phoenix HTML](http://hexdocs.pm/phoenix_html) - conveniences for
+    * [Phoenix HTML](https://hexdocs.pm/phoenix_html) - conveniences for
       working with HTML in Phoenix
 
-    * [Plug](http://hexdocs.pm/plug) - a specification and conveniences
+    * [Plug](https://hexdocs.pm/plug) - a specification and conveniences
       for composable modules in between web applications
 
-    * [Gettext](http://hexdocs.pm/gettext) - Internationalization and
+    * [Gettext](https://hexdocs.pm/gettext) - Internationalization and
       localization through gettext
 
   There are also optional packages depending on your configuration:
 
-    * [Phoenix PubSub Redis](http://hexdocs.pm/phoenix_pubsub_redis) - use
+    * [Phoenix PubSub Redis](https://hexdocs.pm/phoenix_pubsub_redis) - use
       Redis to power Phoenix PubSub system
 
   """

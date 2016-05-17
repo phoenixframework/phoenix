@@ -17,6 +17,18 @@ defmodule Phoenix.NamingTest do
     assert Naming.camelize("foo__bar") == "FooBar"
     assert Naming.camelize("foobar") == "Foobar"
     assert Naming.camelize("_foobar") == "Foobar"
+    assert Naming.camelize("__foobar") == "Foobar"
+    assert Naming.camelize("_FooBar") == "FooBar"
     assert Naming.camelize("foobar_") == "Foobar"
+  end
+
+  test "camelize/2 converts Strings to lower camel case" do
+    assert Naming.camelize("foo_bar", :lower) == "fooBar"
+    assert Naming.camelize("foo__bar", :lower) == "fooBar"
+    assert Naming.camelize("foobar", :lower) == "foobar"
+    assert Naming.camelize("_foobar", :lower) == "foobar"
+    assert Naming.camelize("__foobar", :lower) == "foobar"
+    assert Naming.camelize("_FooBar", :lower) == "fooBar"
+    assert Naming.camelize("foobar_", :lower) == "foobar"
   end
 end

@@ -22,7 +22,7 @@ defmodule <%= application_module %>.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [mod: {<%= application_module %>, []},
-     applications: [:phoenix<%= if html do %>, :phoenix_html<% end %>, :cowboy, :logger, :gettext<%= if ecto do %>,
+     applications: [:phoenix, :phoenix_pubsub<%= if html do %>, :phoenix_html<% end %>, :cowboy, :logger, :gettext<%= if ecto do %>,
                     :phoenix_ecto, <%= inspect adapter_app %><% end %>]]
   end
 
@@ -34,12 +34,13 @@ defmodule <%= application_module %>.Mixfile do
   #
   # Type `mix help deps` for examples and options.
   defp deps do
-    [<%= phoenix_dep %>,<%= if ecto do %>
-     {:phoenix_ecto, "~> 2.0"},
+    [<%= phoenix_dep %>,
+     {:phoenix_pubsub, "~> 1.0.0-rc"},<%= if ecto do %>
+     {:phoenix_ecto, "~> 3.0-rc"},
      {<%= inspect adapter_app %>, ">= 0.0.0"},<% end %><%= if html do %>
-     {:phoenix_html, "~> 2.3"},
+     {:phoenix_html, "~> 2.5"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},<% end %>
-     {:gettext, "~> 0.9"},
+     {:gettext, "~> 0.11"},
      {:cowboy, "~> 1.0"}]
   end<%= if ecto do %>
 
@@ -51,6 +52,7 @@ defmodule <%= application_module %>.Mixfile do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     ["ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
-     "ecto.reset": ["ecto.drop", "ecto.setup"]]
+     "ecto.reset": ["ecto.drop", "ecto.setup"],
+     "test": ["ecto.create --quiet", "ecto.migrate", "test"]]
   end<% end %>
 end

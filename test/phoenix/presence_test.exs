@@ -25,7 +25,7 @@ defmodule Phoenix.PresenceTest do
   end
 
   setup config do
-    {:ok, topic: config.test}
+    {:ok, topic: to_string(config.test)}
   end
 
   test "default fetch/2 returns pass-through data", config do
@@ -36,7 +36,7 @@ defmodule Phoenix.PresenceTest do
   test "list/1 lists presences from tracker", config do
     assert MyPresence.list(config.topic) == %{}
     assert MyPresence.list(%Phoenix.Socket{topic: config.topic}) == %{}
-    assert MyPresence.track(self(), config.topic, "u1", %{name: "u1"}) == :ok
+    assert {:ok, _} = MyPresence.track(self(), config.topic, "u1", %{name: "u1"})
     assert %{"u1" => %{extra: "extra", metas: [%{name: "u1", phx_ref: _}]}} =
            MyPresence.list(config.topic)
     assert %{"u1" => %{extra: "extra", metas: [%{name: "u1", phx_ref: _}]}} =
@@ -47,7 +47,7 @@ defmodule Phoenix.PresenceTest do
     %{topic: topic} = config do
 
     pid = spawn(fn -> :timer.sleep(:infinity) end)
-    Phoenix.PubSub.subscribe(config.pubsub, self(), topic)
+    Phoenix.PubSub.subscribe(config.pubsub, topic)
     {:ok, _pid} = DefaultPresence.start_link(pubsub_server: config.pubsub)
     DefaultPresence.track(pid, topic, "u1", %{name: "u1"})
 
@@ -70,7 +70,7 @@ defmodule Phoenix.PresenceTest do
     %{topic: topic} = config do
 
     pid = spawn(fn -> :timer.sleep(:infinity) end)
-    Phoenix.PubSub.subscribe(config.pubsub, self(), topic)
+    Phoenix.PubSub.subscribe(config.pubsub, topic)
     MyPresence.track(pid, topic, "u1", %{name: "u1"})
 
     assert_receive %Broadcast{topic: ^topic, event: "presence_diff", payload: %{
@@ -88,19 +88,8 @@ defmodule Phoenix.PresenceTest do
     assert MyPresence.list(topic) == %{}
   end
 
-  test "list maintains join order when grouping", config do
-    pid = spawn(fn -> :timer.sleep(:infinity) end)
-    pid2 = spawn(fn -> :timer.sleep(:infinity) end)
-    Phoenix.PubSub.subscribe(config.pubsub, self(), config.topic)
-    MyPresence.track(pid, config.topic, "u1", %{name: "1st"})
-    MyPresence.track(pid2, config.topic, "u1", %{name: "2nd"})
-
-    assert %{"u1" => %{metas: [%{name: "1st"}, %{name: "2nd"}]}} =
-           MyPresence.list(config.topic)
-  end
-
   test "untrack with pid", %{topic: topic} = config do
-    Phoenix.PubSub.subscribe(config.pubsub, self(), config.topic)
+    Phoenix.PubSub.subscribe(config.pubsub, config.topic)
     MyPresence.track(self(), config.topic, "u1", %{})
     assert %{"u1" => %{metas: [%{}]}} = MyPresence.list(config.topic)
     assert MyPresence.untrack(self(), config.topic, "u1") == :ok
@@ -112,7 +101,7 @@ defmodule Phoenix.PresenceTest do
   end
 
   test "track and untrack with %Socket{}", %{topic: topic} = config do
-    Phoenix.PubSub.subscribe(config.pubsub, self(), topic)
+    Phoenix.PubSub.subscribe(config.pubsub, topic)
     socket = %Phoenix.Socket{topic: topic, channel_pid: self()}
     MyPresence.track(socket, "u1", %{})
     assert %{"u1" => %{metas: [%{}]}} = MyPresence.list(topic)
@@ -129,10 +118,10 @@ defmodule Phoenix.PresenceTest do
   end
 
   test "update sends join and leave diff", %{topic: topic} = config do
-    Phoenix.PubSub.subscribe(config.pubsub, self(), topic)
+    Phoenix.PubSub.subscribe(config.pubsub, topic)
     MyPresence.track(self(), topic, "u1", %{name: "u1"})
     assert %{"u1" => %{metas: [%{name: "u1"}]}} = MyPresence.list(topic)
-    assert MyPresence.update(self(), topic, "u1", %{name: "updated"}) == :ok
+    assert {:ok, _} = MyPresence.update(self(), topic, "u1", %{name: "updated"})
     assert_receive %Broadcast{topic: ^topic, event: "presence_diff", payload: %{
       joins: %{"u1" => %{metas: [%{name: "updated"}]}},
       leaves: %{"u1" => %{metas: [%{name: "u1"}]}}

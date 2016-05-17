@@ -59,8 +59,8 @@ defmodule Phoenix.Transports.LongPoll.Server do
                   last_client_poll: now_ms(),
                   client_ref: nil}
 
-        if socket.id, do: PubSub.subscribe(state.pubsub_server, self, socket.id, link: true)
-        :ok = PubSub.subscribe(state.pubsub_server, self, priv_topic, link: true)
+        if socket.id, do: PubSub.subscribe(state.pubsub_server, socket.id, link: true)
+        :ok = PubSub.subscribe(state.pubsub_server, priv_topic, link: true)
 
         schedule_inactive_shutdown(state.window_ms)
 
@@ -80,7 +80,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
       {:joined, channel_pid, reply_msg} ->
         broadcast_from!(state, client_ref, {:dispatch, ref})
         new_state = %{state | channels: Map.put(state.channels, msg.topic, channel_pid),
-                              channels_inverse: Map.put(state.channels_inverse, channel_pid, msg.topic)}
+                              channels_inverse: Map.put(state.channels_inverse, channel_pid, {msg.topic, msg.ref})}
         publish_reply(reply_msg, new_state)
 
       {:reply, reply_msg} ->
@@ -106,10 +106,9 @@ defmodule Phoenix.Transports.LongPoll.Server do
     case Map.get(state.channels_inverse, channel_pid) do
       nil ->
         {:stop, {:shutdown, :pubsub_server_terminated}, state}
-      topic ->
-        new_state = %{state | channels: Map.delete(state.channels, topic),
-                              channels_inverse: Map.delete(state.channels_inverse, channel_pid)}
-        publish_reply(Transport.on_exit_message(topic, reason), new_state)
+      {topic, join_ref} ->
+        new_state = delete(state, topic, channel_pid)
+        publish_reply(Transport.on_exit_message(topic, join_ref, reason), new_state)
     end
   end
 
@@ -163,11 +162,19 @@ defmodule Phoenix.Transports.LongPoll.Server do
     {:noreply, %{state | buffer: [msg | state.buffer]}}
   end
 
-  defp time_to_ms({mega, sec, micro}),
-    do: div(((((mega * 1000000) + sec) * 1000000) + micro), 1000)
-  defp now_ms, do: :os.timestamp() |> time_to_ms()
+  defp now_ms, do: System.system_time(:milli_seconds)
 
   defp schedule_inactive_shutdown(window_ms) do
     Process.send_after(self, :shutdown_if_inactive, window_ms)
+  end
+
+  defp delete(state, topic, channel_pid) do
+    case Map.fetch(state.channels, topic) do
+      {:ok, ^channel_pid} ->
+        %{state | channels: Map.delete(state.channels, topic),
+                  channels_inverse: Map.delete(state.channels_inverse, channel_pid)}
+      {:ok, _newer_pid} ->
+        %{state | channels_inverse: Map.delete(state.channels_inverse, channel_pid)}
+    end
   end
 end

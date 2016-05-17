@@ -72,9 +72,13 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert Endpoint.static_path("/foo.css") == "/foo-abcdef.css?vsn=d"
 
     # Trigger a config change and the cache should be warmed up again
-    assert Endpoint.config_change([{Endpoint, @config}], []) == :ok
+    config =
+      @config
+      |> put_in([:cache_static_manifest], "../../../../test/fixtures/manifest_upgrade.json")
 
-    assert Endpoint.static_path("/foo.css") == "/foo-abcdef.css?vsn=d"
+    assert Endpoint.config_change([{Endpoint, config}], []) == :ok
+
+    assert Endpoint.static_path("/foo.css") == "/foo-ghijkl.css?vsn=d"
   end
 
   test "uses url configuration for static path" do
@@ -96,7 +100,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
   end
 
   test "injects pubsub broadcast with configured server" do
-    Endpoint.subscribe(self, "sometopic")
+    Endpoint.subscribe("sometopic")
     some = spawn fn -> :ok end
 
     Endpoint.broadcast_from(some, "sometopic", "event1", %{key: :val})

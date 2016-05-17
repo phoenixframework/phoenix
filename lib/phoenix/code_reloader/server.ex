@@ -6,8 +6,8 @@ defmodule Phoenix.CodeReloader.Server do
   require Logger
   alias Phoenix.CodeReloader.Proxy
 
-  def start_link(app, paths, compilers, opts \\ []) do
-    GenServer.start_link(__MODULE__, {app, paths, compilers}, opts)
+  def start_link(app, compilers, opts \\ []) do
+    GenServer.start_link(__MODULE__, {app, compilers}, opts)
   end
 
   def reload!(endpoint) do
@@ -15,10 +15,7 @@ defmodule Phoenix.CodeReloader.Server do
 
     case List.keyfind(children, __MODULE__, 0) do
       {__MODULE__, pid, _, _} ->
-        case GenServer.call(pid, :reload!, :infinity) do
-          {:raise, error} -> raise error
-          other -> other
-        end
+        GenServer.call(pid, :reload!, :infinity)
       _ ->
         raise "Code reloader was invoked for #{inspect endpoint} but no code reloader " <>
               "server was started. Be sure to move `plug Phoenix.CodeReloader` inside " <>
@@ -28,15 +25,34 @@ defmodule Phoenix.CodeReloader.Server do
 
   ## Callbacks
 
-  def init({app, paths, compilers}) do
+  def init({app, compilers}) do
     all = Mix.Project.config[:compilers] || Mix.compilers
     compilers = all -- (all -- compilers)
-    {:ok, {app, paths, compilers}}
+    {:ok, {app, compilers}}
   end
 
-  def handle_call(:reload!, from, {app, paths, compilers} = state) do
+  def handle_call(:reload!, from, {app, compilers} = state) do
     froms = all_waiting([from])
-    reply = mix_compile(Code.ensure_loaded(Mix.Task), app, paths, compilers)
+
+    {res, out} =
+      proxy_io(fn ->
+        try do
+          mix_compile(Code.ensure_loaded(Mix.Task), app, compilers)
+        catch
+          :exit, {:shutdown, 1} ->
+            :error
+          kind, reason ->
+            IO.puts Exception.format(kind, reason, System.stacktrace)
+            :error
+        end
+      end)
+
+    reply =
+      case res do
+        :ok    -> :ok
+        :error -> {:error, out}
+      end
+
     Enum.each(froms, &GenServer.reply(&1, reply))
     {:noreply, state}
   end
@@ -49,78 +65,58 @@ defmodule Phoenix.CodeReloader.Server do
     end
   end
 
-  defp mix_compile({:error, _reason}, _, _, _) do
-    message = "If you want to use the code reload plug in production or " <>
-              "inside an escript, add :mix to your list of dependencies or " <>
-              "disable code reloading"
-    {:raise, RuntimeError.exception(message)}
+  defp mix_compile({:error, _reason}, _, _) do
+    raise "the Code Reloader is enabled but Mix is not available. If you want to " <>
+          "use the Code Reloader in production or inside an escript, you must add " <>
+          ":mix to your applications list. Otherwise, you must disable code reloading " <>
+          "in such environments"
   end
 
-  defp mix_compile({:module, Mix.Task}, app, paths, compilers) do
+  defp mix_compile({:module, Mix.Task}, _app, compilers) do
     if Mix.Project.umbrella? do
-      dep = Enum.find Mix.Dep.Umbrella.loaded, &(&1.app == app)
-      Mix.Dep.in_dependency(dep, fn _ ->
-        mix_compile_unless_stale_config(paths, compilers)
-      end)
+      Enum.each Mix.Dep.Umbrella.loaded, fn dep ->
+        Mix.Dep.in_dependency(dep, fn _ ->
+          mix_compile_unless_stale_config(compilers)
+        end)
+      end
     else
-      mix_compile_unless_stale_config(paths, compilers)
+      mix_compile_unless_stale_config(compilers)
+      :ok
     end
   end
 
-  defp mix_compile_unless_stale_config(paths, compilers) do
+  defp mix_compile_unless_stale_config(compilers) do
     manifests = Mix.Tasks.Compile.Elixir.manifests
-    all_paths = Mix.Project.config[:elixirc_paths]
+    configs   = Mix.Project.config_files
 
-    others  = Mix.Utils.extract_files(all_paths -- paths, [:ex])
-    configs = Mix.Project.config_files
-
-    case Mix.Utils.extract_stale(others ++ configs, manifests) do
+    case Mix.Utils.extract_stale(configs, manifests) do
       [] ->
-        mix_compile(paths, compilers)
+        mix_compile(compilers)
       files ->
-        message = """
-        you must restart your server after changing the following config or lib files:
+        raise """
+        could not compile application: #{Mix.Project.config[:app]}.
+
+        You must restart your server after changing the following config or lib files:
 
           * #{Enum.map_join(files, "\n  * ", &Path.relative_to_cwd/1)}
         """
-        {:raise, RuntimeError.exception(message)}
-    end
-  end
+     end
+   end
 
-  defp mix_compile(paths, compilers) do
-    opts = Enum.flat_map(paths, &["--elixirc-paths", &1])
+  defp mix_compile(compilers) do
     Enum.each compilers, &Mix.Task.reenable("compile.#{&1}")
 
-    {res, out} =
-      proxy_io(fn ->
-        try do
-          # We call build_structure mostly for Windows so any
-          # new assets in priv is copied to the build directory.
-          Mix.Project.build_structure
-          res = Enum.flat_map(compilers, &mix_compile_each(&1, opts))
+    # We call build_structure mostly for Windows so new
+    # assets in priv are copied to the build directory.
+    Mix.Project.build_structure
+    res = Enum.map(compilers, &Mix.Task.run("compile.#{&1}", []))
 
-          if :ok in res && consolidate_protocols? do
-            Mix.Task.reenable("compile.protocols")
-            mix_compile_each("protocols", [])
-          else
-            res
-          end
-        catch
-          _, _ -> :error
-        end
-      end)
-
-    cond do
-      :error in res -> {:error, out}
-      :ok in res    -> :ok
-      true          -> :noop
+    if :ok in res && consolidate_protocols? do
+      Mix.Task.reenable("compile.protocols")
+      Mix.Task.run("compile.protocols", [])
     end
-  end
 
-  defp mix_compile_each(compiler, opts) do
-    # We always wrap in a list because Mix.Task.run
-    # will return a list in case of umbrella applications.
-    List.wrap(Mix.Task.run("compile.#{compiler}", opts))
+    res
   end
 
   defp consolidate_protocols? do
@@ -133,8 +129,7 @@ defmodule Phoenix.CodeReloader.Server do
     Process.group_leader(self(), proxy_gl)
 
     try do
-      res = fun.()
-      {List.wrap(res), Proxy.stop(proxy_gl)}
+      {fun.(), Proxy.stop(proxy_gl)}
     after
       Process.group_leader(self(), original_gl)
       Process.exit(proxy_gl, :kill)

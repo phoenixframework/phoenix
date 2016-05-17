@@ -132,7 +132,7 @@ defmodule Phoenix.Transports.LongPoll do
     priv_topic =
       "phx:lp:"
       <> Base.encode64(:crypto.strong_rand_bytes(16))
-      <> (:os.timestamp() |> Tuple.to_list |> Enum.join(""))
+      <> (System.system_time(:milli_seconds) |> Integer.to_string)
 
     args = [endpoint, handler, transport, __MODULE__, serializer,
             conn.params, opts[:window_ms], priv_topic]
@@ -233,7 +233,7 @@ defmodule Phoenix.Transports.LongPoll do
   defp client_ref(pid) when is_pid(pid), do: self()
 
   defp subscribe(endpoint, topic) when is_binary(topic),
-    do: Phoenix.PubSub.subscribe(endpoint.__pubsub_server__, self(), topic, link: true)
+    do: Phoenix.PubSub.subscribe(endpoint.__pubsub_server__, topic, link: true)
   defp subscribe(_endpoint, pid) when is_pid(pid),
     do: :ok
 

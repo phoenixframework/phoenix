@@ -200,7 +200,7 @@ defmodule Phoenix.Test.ConnTest do
     end
 
     assert_raise RuntimeError,
-                 "expected response with status 200, got: 404", fn ->
+                 "expected response with status 200, got: 404, with body:\noops", fn ->
       build_conn(:get, "/") |> resp(404, "oops") |> response(200)
     end
   end
@@ -240,6 +240,13 @@ defmodule Phoenix.Test.ConnTest do
                  "could not decode JSON body, invalid token \"o\" in body:\n\nok", fn ->
       build_conn(:get, "/") |> put_resp_content_type("application/json")
                       |> resp(200, "ok") |> json_response(200)
+    end
+
+    assert_raise RuntimeError, ~s(expected response with status 200, got: 400, with body:\n{"error": "oh oh"}), fn ->
+      build_conn(:get, "/")
+      |> put_resp_content_type("application/json")
+      |> resp(400, ~s({"error": "oh oh"}))
+      |> json_response(200)
     end
   end
 
@@ -405,6 +412,15 @@ defmodule Phoenix.Test.ConnTest do
     assert_raise ExUnit.AssertionError, ~r/expected error to be sent as 404 status, but response sent 400 without error/, fn ->
       assert_error_sent :not_found, fn ->
         get(build_conn(), "/stat", action: fn conn -> Plug.Conn.send_resp(conn, 400, "") end)
+      end
+    end
+  end
+
+  for method <- [:get, :post, :put, :delete] do
+    @method method
+    test "#{method} helper raises ArgumentError for mismatched conn" do
+      assert_raise ArgumentError, ~r/expected first argument to #{@method} to be/, fn ->
+        unquote(@method)("/foo/bar", %{baz: "baz"})
       end
     end
   end

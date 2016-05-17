@@ -42,7 +42,7 @@ defmodule Phoenix.Digester do
     input_path
     |> Path.join("**")
     |> Path.wildcard
-    |> Enum.filter(&(!File.dir?(&1) && !compiled_file?(&1)))
+    |> Enum.filter(&not(File.dir?(&1) or compiled_file?(&1)))
     |> Enum.map(&(map_file(&1, input_path)))
   end
 
@@ -112,7 +112,7 @@ defmodule Phoenix.Digester do
     end
   end
 
-  @stylesheet_url_regex ~r{(url\(\s*)(\S+)(\s*\))}
+  @stylesheet_url_regex ~r{(url\(\s*)(\S+?)(\s*\))}
   @quoted_text_regex ~r{\A(['"])(.+)\1\z}
 
   defp digest_asset_references(file, manifest) do

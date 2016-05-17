@@ -47,7 +47,7 @@ defmodule Phoenix.Endpoint.Instrument do
       #     res0 = Inst0.my_event(:start, compile, runtime)
       #     ...
       #
-      #     start = :erlang.monotonic_time(:micro_seconds)
+      #     start = :erlang.monotonic_time
       #     try do
       #       fun.()
       #     after
@@ -64,11 +64,11 @@ defmodule Phoenix.Endpoint.Instrument do
         def instrument(unquote(event), var!(compile), var!(runtime), fun)
             when is_map(var!(compile)) and is_map(var!(runtime)) and is_function(fun, 0) do
           unquote(Phoenix.Endpoint.Instrument.compile_start_callbacks(event, instrumenters))
-          start = :erlang.monotonic_time(:micro_seconds)
+          start = :erlang.monotonic_time
           try do
             fun.()
           after
-            var!(diff) = :erlang.monotonic_time(:micro_seconds) - start
+            var!(diff) = :erlang.monotonic_time - start
             unquote(Phoenix.Endpoint.Instrument.compile_stop_callbacks(event, instrumenters))
           end
         end
@@ -95,7 +95,7 @@ defmodule Phoenix.Endpoint.Instrument do
       raise ":instrumenters must be a list of instrumenter modules"
     end
 
-    events_to_instrumenters(instrumenters)
+    events_to_instrumenters([Phoenix.Logger | instrumenters])
   end
 
   # Strips a `Macro.Env` struct, leaving only interesting compile-time metadata.
@@ -195,21 +195,4 @@ defmodule Phoenix.Endpoint.Instrument do
   defp build_result_variable(index) when is_integer(index) do
     "res#{index}" |> String.to_atom() |> Macro.var(nil)
   end
-
-  def filter_values(%{__struct__: mod} = struct, _filter_params) when is_atom(mod) do
-    struct
-  end
-  def filter_values(%{} = map, filter_params) do
-    Enum.into map, %{}, fn {k, v} ->
-      if is_binary(k) && String.contains?(k, filter_params) do
-        {k, "[FILTERED]"}
-      else
-        {k, filter_values(v, filter_params)}
-      end
-    end
-  end
-  def filter_values([_|_] = list, filter_params) do
-    Enum.map(list, &filter_values(&1, filter_params))
-  end
-  def filter_values(other, _filter_params), do: other
 end

@@ -23,7 +23,7 @@
 // events are listened for, messages are pushed to the server, and
 // the channel is joined with ok/error/timeout matches:
 //
-//     let channel = socket.channel("rooms:123", {token: roomToken})
+//     let channel = socket.channel("room:123", {token: roomToken})
 //     channel.on("new_msg", msg => console.log("Got message", msg) )
 //     $input.onEnter( e => {
 //       channel.push("new_msg", {body: e.target.val}, 10000)
@@ -46,6 +46,15 @@
 // Successful joins receive an "ok" status, while unsuccessful joins
 // receive "error".
 //
+// ## Duplicate Join Subscriptions
+//
+// While the client may join any number of topics on any number of channels,
+// the client may only hold a single subscription for each unique topic at any
+// given time. When attempting to create a duplicate subscription,
+// the server will close the existing channel, log a warning, and
+// spawn a new channel for the topic. The client will have their
+// `channel.onClose` callbacks fired for the existing channel, and the new
+// channel join will have its receive hooks processed as normal.
 //
 // ## Pushing Messages
 //
@@ -76,7 +85,7 @@
 // ### onError hooks
 //
 // `onError` hooks are invoked if the socket connection drops, or the channel
-// crashes on the server. In either case, a channel rejoin is attemtped
+// crashes on the server. In either case, a channel rejoin is attempted
 // automatically in an exponential backoff manner.
 //
 // ### onClose hooks
@@ -165,6 +174,7 @@ const CHANNEL_STATES = {
   errored: "errored",
   joined: "joined",
   joining: "joining",
+  leaving: "leaving",
 }
 const CHANNEL_EVENTS = {
   close: "phx_close",
@@ -292,7 +302,7 @@ export class Channel {
       this.pushBuffer = []
     })
     this.onClose( () => {
-      this.socket.log("channel", `close ${this.topic}`)
+      this.socket.log("channel", `close ${this.topic} ${this.joinRef()}`)
       this.state = CHANNEL_STATES.closed
       this.socket.remove(this)
     })
@@ -325,9 +335,9 @@ export class Channel {
       throw(`tried to join multiple times. 'join' can only be called a single time per channel instance`)
     } else {
       this.joinedOnce = true
+      this.rejoin(timeout)
+      return this.joinPush
     }
-    this.rejoin(timeout)
-    return this.joinPush
   }
 
   onClose(callback){ this.on(CHANNEL_EVENTS.close, callback) }
@@ -370,9 +380,10 @@ export class Channel {
   //     channel.leave().receive("ok", () => alert("left!") )
   //
   leave(timeout = this.timeout){
+    this.state = CHANNEL_STATES.leaving
     let onClose = () => {
       this.socket.log("channel", `leave ${this.topic}`)
-      this.trigger(CHANNEL_EVENTS.close, "leave")
+      this.trigger(CHANNEL_EVENTS.close, "leave", this.joinRef())
     }
     let leavePush = new Push(this, CHANNEL_EVENTS.leave, {}, timeout)
     leavePush.receive("ok", () => onClose() )
@@ -392,17 +403,25 @@ export class Channel {
 
   isMember(topic){ return this.topic === topic }
 
+  joinRef(){ return this.joinPush.ref }
+
   sendJoin(timeout){
     this.state = CHANNEL_STATES.joining
     this.joinPush.resend(timeout)
   }
 
-  rejoin(timeout = this.timeout){ this.sendJoin(timeout) }
+  rejoin(timeout = this.timeout){ if(this.state === CHANNEL_STATES.leaving){ return }
+    this.sendJoin(timeout)
+  }
 
-  trigger(triggerEvent, payload, ref){
-    this.onMessage(triggerEvent, payload, ref)
-    this.bindings.filter( bind => bind.event === triggerEvent )
-                 .map( bind => bind.callback(payload, ref) )
+  trigger(event, payload, ref){
+    let {close, error, leave, join} = CHANNEL_EVENTS
+    if(ref && [close, error, leave, join].indexOf(event) >= 0 && ref !== this.joinRef()){
+      return
+    }
+    this.onMessage(event, payload, ref)
+    this.bindings.filter( bind => bind.event === event)
+                 .map( bind => bind.callback(payload, ref))
   }
 
   replyEventName(ref){ return `chan_reply_${ref}` }
@@ -549,7 +568,7 @@ export class Socket {
   isConnected(){ return this.connectionState() === "open" }
 
   remove(channel){
-    this.channels = this.channels.filter( c => !c.isMember(channel.topic) )
+    this.channels = this.channels.filter(c => c.joinRef() !== channel.joinRef())
   }
 
   channel(topic, chanParams = {}){
