@@ -6,8 +6,8 @@
     "watch": "brunch watch --stdin"
   },
   "dependencies": {
-    "phoenix": "file:<%= brunch_deps_prefix %><%= phoenix_path %>"<%= if html do %>,
-    "phoenix_html": "file:<%= brunch_deps_prefix %>deps/phoenix_html"<% end %>
+    "phoenix": "~<%= phoenix_version %>"<%= if html do %>,
+    "phoenix_html": "~<%= phoenix_version %>"<% end %>
   },
   "devDependencies": {
     "babel-brunch": "~6.0.0",
