@@ -45,9 +45,8 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     in_project :photo_blog, Path.join(tmp_path, "bootstrap/photo_blog"), fn _ ->
       Mix.Task.clear
       Mix.Task.run "compile", ["--no-deps-check"]
-      assert_received {:mix_shell, :info, ["Compiled lib/photo_blog.ex"]}
-      assert_received {:mix_shell, :info, ["Compiled web/router.ex"]}
-      refute_received {:mix_shell, :info, ["Compiled lib/phoenix.ex"]}
+      assert_received {:mix_shell, :info, ["Generated photo_blog app"]}
+      refute_received {:mix_shell, :info, ["Generated phoenix app"]}
       Mix.shell.flush
 
       # Adding a new template touches file (through mix)

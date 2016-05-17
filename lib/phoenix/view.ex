@@ -95,6 +95,7 @@ defmodule Phoenix.View do
   can be further configured in the Phoenix application. You can read
   more about format encoders in `Phoenix.Template` documentation.
   """
+  alias Phoenix.{Template}
 
   @doc """
   When used, defines the current module as a main view module.
@@ -102,47 +103,38 @@ defmodule Phoenix.View do
   ## Options
 
     * `:root` - the template root to find templates
+    * `:path` - the optional path to search for templates within the `:root`.
+      Defaults to the underscored view module name. A blank string may
+      be provided to use the `:root` path direclty as the template lookup path.
     * `:namespace` - the namespace to consider when calculating view paths
+    * `:pattern` - the wildcard pattern to apply to the root
+      when finding templates. Default `"*"`
 
   The `:root` option is required while the `:namespace` defaults to the
   first nesting in the module name. For instance, both `MyApp.UserView`
   and `MyApp.Admin.UserView` have namespace `MyApp`.
 
-  The namespace is used to calculate paths. For example, if you are in
-  `MyApp.UserView` and the namespace is `MyApp`, templates are expected
-  at `Path.join(root, "user")`. On the other hand, if the view is
-  `MyApp.Admin.UserView`, the path will be `Path.join(root, "admin/user")`
-  and so on.
+  The `:namespace` and `:path` options are is used to calculate template
+  lookup paths. For example, if you are in `MyApp.UserView` and the
+  namespace is `MyApp`, templates are expected at `Path.join(root, "user")`.
+  On the other hand, if the view is `MyApp.Admin.UserView`,
+  the path will be `Path.join(root, "admin/user")` and so on. For
+  explicit root path locations, the `:path` option can instead be provided.
+  The `:root` and `:path` are joined to form the final lookup path.
+  A blank string may be provided to use the `:root` path direclty as the
+  template lookup path.
 
   Setting the namespace to `MyApp.Admin` in the second example will force
   the template to also be looked up at `Path.join(root, "user")`.
   """
-  defmacro __using__(options) do
-    if root = Keyword.get(options, :root) do
-      namespace =
-        if given = Keyword.get(options, :namespace) do
-          given
-        else
-          __CALLER__.module
-          |> Module.split()
-          |> Enum.take(1)
-          |> Module.concat()
-        end
+  defmacro __using__(opts) do
+    quote do
+      import Phoenix.View
+      use Phoenix.Template, Phoenix.View.__template_options__(__MODULE__, unquote(opts))
+      @view_resource String.to_atom(Phoenix.Naming.resource_name(__MODULE__, "View"))
 
-      quote do
-        import Phoenix.View
-
-        use Phoenix.Template, root:
-          Path.join(unquote(root),
-                    Phoenix.Template.module_to_template_root(__MODULE__, unquote(namespace), "View"))
-
-        @view_resource String.to_atom(Phoenix.Naming.resource_name(__MODULE__, "View"))
-
-        @doc "The resource name, as an atom, for this view"
-        def __resource__, do: @view_resource
-      end
-    else
-      raise "expected :root to be given as an option"
+      @doc "The resource name, as an atom, for this view"
+      def __resource__, do: @view_resource
     end
   end
 
@@ -352,10 +344,34 @@ defmodule Phoenix.View do
   end
 
   defp encode(content, template) do
-    if encoder = Phoenix.Template.format_encoder(template) do
+    if encoder = Template.format_encoder(template) do
       encoder.encode_to_iodata!(content)
     else
       content
+    end
+  end
+
+  @doc false
+  def __template_options__(module, opts) do
+    root = opts[:root] || raise(ArgumentError, "expected :root to be given as an option")
+    path = opts[:path]
+    pattern = opts[:pattern]
+    namespace =
+      if given = opts[:namespace] do
+        given
+      else
+        module
+        |> Module.split()
+        |> Enum.take(1)
+        |> Module.concat()
+      end
+
+    root_path = Path.join(root, path || Template.module_to_template_root(module, namespace, "View"))
+
+    if pattern do
+      [root: root_path, pattern: pattern]
+    else
+      [root: root_path]
     end
   end
 end
