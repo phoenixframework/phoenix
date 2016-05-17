@@ -14,6 +14,10 @@ defmodule MyApp.LayoutView do
   end
 end
 
+defmodule MyApp.PatternView do
+  use Phoenix.View, pattern: "test/fixtures/templates/cards/**"
+end
+
 defmodule MyApp.User do
   defstruct name: "name"
 end

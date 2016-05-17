@@ -118,32 +118,39 @@ defmodule Phoenix.View do
   the template to also be looked up at `Path.join(root, "user")`.
   """
   defmacro __using__(options) do
-    if root = Keyword.get(options, :root) do
-      namespace =
-        if given = Keyword.get(options, :namespace) do
-          given
-        else
-          __CALLER__.module
-          |> Module.split()
-          |> Enum.take(1)
-          |> Module.concat()
-        end
+    opts = cond do
+      root = Keyword.get(options, :root) ->
+        namespace =
+          if given = Keyword.get(options, :namespace) do
+            {namespace, _} = Code.eval_quoted(given)
+            namespace
+          else
+            __CALLER__.module
+            |> Module.split()
+            |> Enum.take(1)
+            |> Module.concat()
+          end
 
-      quote do
-        import Phoenix.View
+        [root: quote do: Path.join(unquote(root), Phoenix.Template.module_to_template_root(__MODULE__, unquote(namespace), "View"))]
 
-        use Phoenix.Template, root:
-          Path.join(unquote(root),
-                    Phoenix.Template.module_to_template_root(__MODULE__, unquote(namespace), "View"))
+      pattern = Keyword.get(options, :pattern) ->
+        [pattern: pattern]
 
-        @view_resource String.to_atom(Phoenix.Naming.resource_name(__MODULE__, "View"))
-
-        @doc "The resource name, as an atom, for this view"
-        def __resource__, do: @view_resource
-      end
-    else
-      raise "expected :root to be given as an option"
+      true ->
+        raise "expected :root or :pattern to be given as an option"
     end
+
+    quote do
+      import Phoenix.View
+
+      use Phoenix.Template, unquote(opts)
+
+      @view_resource String.to_atom(Phoenix.Naming.resource_name(__MODULE__, "View"))
+
+      @doc "The resource name, as an atom, for this view"
+      def __resource__, do: @view_resource
+    end
+
   end
 
   @doc """

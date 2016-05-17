@@ -19,6 +19,14 @@ defmodule Phoenix.ViewTest do
            {:safe, [[["" | "<div>Show! "] | "Hello world"] | "</div>\n"]}
   end
 
+  test "renders views defined on pattern" do
+    assert render(MyApp.PatternView, "user.html", []) ==
+           {:safe, ["" | "user"]}
+
+    assert render(MyApp.PatternView, "media/video.html", []) ==
+           {:safe, ["" | "video"]}
+  end
+
   test "renders views without assigns" do
     assert MyApp.View.render(MyApp.UserView, "show.json") == %{foo: "bar"}
   end
