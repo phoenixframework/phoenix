@@ -194,6 +194,8 @@ Setting config vars and restarting mysterious-meadow-6277... done, v3
 SECRET_KEY_BASE: xvafzY4y01jYuzLm3ecJqo008dVnU3CN4f+MamNd1Zue4pXvfvUjbiXT8akaIF53
 ```
 
+If you need to make any of your config variables available at compile time you will need to explicitly define which ones in a configuration file. Create a file `elixir_buildpack.config` in your applications root directory and add a line like: `config_vars_to_export=(DATABASE_URL MY_VAR)`. See [here](https://github.com/HashNuke/heroku-buildpack-elixir#specifying-config-vars-to-export-at-compile-time) for more information. 
+
 ## Deploy Time!
 
 Our project is now ready to be deployed on Heroku.
