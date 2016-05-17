@@ -153,7 +153,7 @@ config :hello_phoenix, HelloPhoenix.Repo,
   ssl: true
 ```
 
-Finally, we need to decrease the timeout for the websocket transport:
+Finally, we need to decrease the timeout for the websocket transport in `web/channels/user_socket.ex`:
 
 ```elixir
 defmodule HelloPhoenix.UserSocket do
@@ -168,6 +168,13 @@ end
 ```
 
 This ensures that any idle connections are closed by Phoenix before they reach Heroku's 55 second timeout window.
+
+Lastly, we'll need to create a [Procfile](https://devcenter.heroku.com/articles/procfile) with the following:
+
+```
+web: MIX_ENV=prod mix phoenix.server
+
+```
 
 ## Creating Environment Variables in Heroku
 
@@ -193,6 +200,8 @@ $ heroku config:set SECRET_KEY_BASE="xvafzY4y01jYuzLm3ecJqo008dVnU3CN4f+MamNd1Zu
 Setting config vars and restarting mysterious-meadow-6277... done, v3
 SECRET_KEY_BASE: xvafzY4y01jYuzLm3ecJqo008dVnU3CN4f+MamNd1Zue4pXvfvUjbiXT8akaIF53
 ```
+
+If you need to make any of your config variables available at compile time you will need to explicitly define which ones in a configuration file. Create a file `elixir_buildpack.config` in your applications root directory and add a line like: `config_vars_to_export=(DATABASE_URL MY_VAR)`. See [here](https://github.com/HashNuke/heroku-buildpack-elixir#specifying-config-vars-to-export-at-compile-time) for more information. 
 
 ## Deploy Time!
 
@@ -282,7 +291,7 @@ remote: -----> Finalizing build
 remote:        Creating runtime environment
 remote:
 remote: -----> Discovering process types
-remote:        Procfile declares types     -> (none)
+remote:        Procfile declares types     -> (web)
 remote:        Default types for Multipack -> web
 remote:
 remote: -----> Compressing... done, 82.1MB

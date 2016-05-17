@@ -26,3 +26,17 @@ Without the `otp_app:` key, we need to provide absolute paths to the files where
 ```elixir
 Path.expand("../../../some/path/to/ssl/key.pem", __DIR__)
 ```
+
+Releasing with Exrm:
+
+In order to build and run a release with exrm, make sure you also include the ssl app in `mix.exs`:
+
+```elixir
+def application do
+	[mod: {HelloPhoenix, []},
+	applications: [:phoenix, :phoenix_html, :cowboy, :logger, :gettext,
+                 :phoenix_ecto, :postgrex, :ssl]]
+end
+```
+
+Else you might run into errors: `** (MatchError) no match of right hand side value: {:error, {:ssl, {'no such file or directory', 'ssl.app'}}}`

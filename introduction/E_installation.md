@@ -84,3 +84,9 @@ Postgrex is a direct Phoenix dependency, and it will be automatically installed 
 This is a Linux-only filesystem watcher that Phoenix uses for live code reloading. (Mac OS X or Windows users can safely ignore it.)
 
 Linux users need to install this dependency. Please consult the [inotify-tools wiki](https://github.com/rvoicilas/inotify-tools/wiki) for distribution-specific installation instructions.
+
+### Skeleton Installation
+
+Sometimes you want an installation without anything except the bare minimum phoenix setup. The follow command will give you that.
+
+`mix phoenix.new web --no-brunch --no-ecto`

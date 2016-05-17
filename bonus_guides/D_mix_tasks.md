@@ -508,7 +508,7 @@ $ mix ecto.create
 ** (Mix) The database for HelloPhoenix.Repo couldn't be created, reason given: psql: FATAL:  role "postgres" does not exist
 ```
 
-We can fix this by creating the "postgres" role with the permissions needed to log in and create a database.
+We can fix this by creating the "postgres" role in the `psql` console  with the permissions needed to log in and create a database.
 
 ```console
 =# CREATE ROLE postgres LOGIN CREATEDB;
@@ -536,7 +536,7 @@ $ mix ecto.create
 ** (Mix) The database for HelloPhoenix.Repo couldn't be created, reason given: ERROR:  permission denied to create database
 ```
 
-To fix this, we need to change the permissions on our "postgres" user to allow database creation.
+To fix this, we need to change the permissions on our "postgres" user in the `psql` console  to allow database creation.
 
 ```console
 =# ALTER ROLE postgres CREATEDB;

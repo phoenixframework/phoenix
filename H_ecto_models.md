@@ -241,7 +241,7 @@ def changeset(model, params \\ :empty) do
 end
 ```
 
-At this point, we only have one transformation in our pipeline. This `cast/4` function's main job is to separate required fields from optional ones. We define the fields for each category in the module attributes `@required_fields` and `@optional_fields`. By default all of the fields are required.
+At this point, we only have one transformation in our pipeline. This `cast/3` function's main job is to separate required fields from optional ones. We define the fields for each category in the module attributes `@required_fields` and `@optional_fields`. By default all of the fields are required.
 
 Let's take a look at two ways to validate that this is the case. The first and easiest way is to simply start our application by running the `mix phoenix.server` task at the root of our project. Then we can go to the [new users page](http://localhost:4000/users/new) and click the "submit" button without filling in any fields. We should get an error telling us that something went wrong and enumerating all the fields which can't be blank. That should be all the fields in our schema at this point.
 
@@ -593,12 +593,12 @@ We can use our newly declared relationships in our `web/controllers/user_control
 defmodule HelloPhoenix.UserController do
 . . .
   def index(conn, _params) do
-    users = User |> Repo.all |> Repo.preload [:videos]
+    users = User |> Repo.all |> Repo.preload([:videos])
     render(conn, "index.html", users: users)
   end
 
   def show(conn, %{"id" => id}) do
-    user = User |> Repo.get!(id) |> Repo.preload [:videos]
+    user = User |> Repo.get!(id) |> Repo.preload([:videos])
     render(conn, "show.html", user: user)
   end
 . . .
