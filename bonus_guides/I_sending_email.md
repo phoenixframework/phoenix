@@ -323,7 +323,7 @@ We'll also need a new `email` directory in `web/templates` with a `welcome.html.
 > Note: If we need to use any path or url helpers in our template, we will need to pass the endpoint instead of a connection struct for the first argument. This is because we won't be in the context of a request, so `@conn` won't be available. For example, we will need to write this
 ```elixir
 alias HelloPhoenix
-Router.Helpers.page_path(Endpoint, :index)
+Router.Helpers.page_url(Endpoint, :index)
 ```
 instead of this.
 ```elixir
