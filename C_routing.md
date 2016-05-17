@@ -85,7 +85,7 @@ page_path  GET  /  HelloPhoenix.PageController :index
 ```
 The output tells us that any HTTP GET request for the root of the application will be handled by the `index` action of the `HelloPhoenix.PageController`.
 
-`page_path` is an example of a what Phoenix calls a path helper, and we'll talk about those very soon.
+`page_path` is an example of what Phoenix calls a path helper, and we'll talk about those very soon.
 
 ### Resources
 
