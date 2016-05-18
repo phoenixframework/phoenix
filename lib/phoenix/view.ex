@@ -105,7 +105,7 @@ defmodule Phoenix.View do
     * `:root` - the template root to find templates
     * `:path` - the optional path to search for templates within the `:root`.
       Defaults to the underscored view module name. A blank string may
-      be provided to use the `:root` path direclty as the template lookup path.
+      be provided to use the `:root` path directly as the template lookup path.
     * `:namespace` - the namespace to consider when calculating view paths
     * `:pattern` - the wildcard pattern to apply to the root
       when finding templates. Default `"*"`
@@ -114,7 +114,7 @@ defmodule Phoenix.View do
   first nesting in the module name. For instance, both `MyApp.UserView`
   and `MyApp.Admin.UserView` have namespace `MyApp`.
 
-  The `:namespace` and `:path` options are is used to calculate template
+  The `:namespace` and `:path` options are used to calculate template
   lookup paths. For example, if you are in `MyApp.UserView` and the
   namespace is `MyApp`, templates are expected at `Path.join(root, "user")`.
   On the other hand, if the view is `MyApp.Admin.UserView`,
