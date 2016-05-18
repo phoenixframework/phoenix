@@ -22,6 +22,14 @@ defmodule Phoenix.Template do
 
       Templates.render("foo.html", %{name: "John Doe"})
 
+  ## Options
+
+    * `:root` - the root template path to find templates
+    * `:pattern` - the wildcard pattern to apply to the root
+      when finding templates. Default `"*"`
+
+  ## Rendering
+
   In some cases, you will want to overide the `render/2` clause
   to compose the assigns for the template before rendering. In such
   cases, you can render the template directly by calling the generated
@@ -98,6 +106,7 @@ defmodule Phoenix.Template do
 
   @encoders [html: Phoenix.Template.HTML, json: Poison, js: Phoenix.Template.HTML]
   @engines  [eex: Phoenix.Template.EExEngine, exs: Phoenix.Template.ExsEngine]
+  @default_pattern "*"
 
   defmodule UndefinedError do
     @moduledoc """
@@ -125,10 +134,10 @@ defmodule Phoenix.Template do
 
   @doc false
   defmacro __using__(options) do
-    root = Dict.fetch! options, :root
-
-    quote do
-      @template_root Path.relative_to_cwd(unquote(root))
+    quote bind_quoted: [options: options], unquote: true do
+      root = Keyword.fetch!(options, :root)
+      @phoenix_root Path.relative_to_cwd(root)
+      @phoenix_pattern Keyword.get(options, :pattern, unquote(@default_pattern))
       @before_compile unquote(__MODULE__)
 
       @doc """
@@ -155,12 +164,13 @@ defmodule Phoenix.Template do
       """
       @spec template_not_found(Phoenix.Template.name, map) :: no_return
       def template_not_found(template, assigns) do
-        {root, names} = __templates__
+        {root, pattern, names} = __templates__()
         raise UndefinedError,
           assigns: assigns,
           available: names,
           template: template,
           root: root,
+          pattern: pattern,
           module: __MODULE__
       end
 
@@ -170,9 +180,10 @@ defmodule Phoenix.Template do
 
   @doc false
   defmacro __before_compile__(env) do
-    root = Module.get_attribute(env.module, :template_root)
+    root    = Module.get_attribute(env.module, :phoenix_root)
+    pattern = Module.get_attribute(env.module, :phoenix_pattern)
 
-    pairs = for path <- find_all(root) do
+    pairs = for path <- find_all(root, pattern) do
       compile(path, root)
     end
 
@@ -203,14 +214,14 @@ defmodule Phoenix.Template do
       Returns the template root alongside all templates.
       """
       def __templates__ do
-        {@template_root, unquote(names)}
+        {@phoenix_root, @phoenix_pattern, unquote(names)}
       end
 
       @doc """
       Returns true whenever the list of templates changes in the filesystem.
       """
       def __phoenix_recompile__? do
-        unquote(hash(root)) != Template.hash(@template_root)
+        unquote(hash(root, pattern)) != Template.hash(@phoenix_root, @phoenix_pattern)
       end
     end
   end
@@ -324,10 +335,13 @@ defmodule Phoenix.Template do
   @doc """
   Returns all template paths in a given template root.
   """
-  @spec find_all(root) :: [path]
-  def find_all(root) do
+  @spec find_all(root, pattern :: String.t) :: [path]
+  def find_all(root, pattern \\ @default_pattern) do
     extensions = engines |> Map.keys() |> Enum.join(",")
-    Path.wildcard("#{root}/*.{#{extensions}}")
+
+    root
+    |> Path.join(pattern <> ".{#{extensions}}")
+    |> Path.wildcard()
   end
 
   @doc """
@@ -335,11 +349,11 @@ defmodule Phoenix.Template do
 
   Used by Phoenix to check if a given root path requires recompilation.
   """
-  @spec hash(root) :: binary
-  def hash(root) do
-    find_all(root)
-    |> Enum.sort
-    |> :erlang.md5
+  @spec hash(root, pattern :: String.t) :: binary
+  def hash(root, pattern \\ @default_pattern) do
+    find_all(root, pattern)
+    |> Enum.sort()
+    |> :erlang.md5()
   end
 
   defp compile(path, root) do
