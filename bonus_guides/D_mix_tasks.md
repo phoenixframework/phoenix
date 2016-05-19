@@ -814,9 +814,10 @@ Indeed it does.
 If you want to make your new mix task to use your application's infrastructure, you need to make sure the application is started when mix task is being executed. This is particulary useful if you need to access your database from within the mix task. Thankfully, mix makes it really easy for us:
 
 ```elixir
+  . . .
   def run(_args) do
     Mix.Task.run "app.start"
     Mix.shell.info "Now I have access to Repo and other goodies!"
   end
-end
+  . . .
 ```
