@@ -11,7 +11,9 @@ config :<%= application_name %>, <%= application_module %>.Endpoint,
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
-  watchers: <%= if brunch do %>[node: ["node_modules/brunch/bin/brunch", "watch", "--stdin"]]<% else %>[]<% end %>
+  watchers: <%= if brunch do %>[node: ["node_modules/brunch/bin/brunch", "watch", "--stdin",
+                    cd: Path.dirname(__DIR__)]]<% else %>[]<% end %>
+
 
 <%= if html do %># Watch static and templates for browser reloading.
 config :<%= application_name %>, <%= application_module %>.Endpoint,

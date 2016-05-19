@@ -13,7 +13,6 @@ config :<%= application_name %><%= if namespaced? do %>,
 <% end %># Configures the endpoint
 config :<%= application_name %>, <%= application_module %>.Endpoint,
   url: [host: "localhost"],
-  root: Path.dirname(__DIR__),
   secret_key_base: "<%= secret_key_base %>",
   render_errors: [view: <%= application_module %>.ErrorView, accepts: ~w(<%= if html do %>html <% end %>json)],
   pubsub: [name: <%= application_module %>.PubSub,

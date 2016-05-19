@@ -61,12 +61,26 @@ defmodule Phoenix.Endpoint.Adapter do
   defp watcher_children(_mod, conf, server?) do
     if server? do
       Enum.map(conf[:watchers], fn {cmd, args} ->
-        worker(Phoenix.Endpoint.Watcher, [root!(conf), cmd, args],
+        worker(Phoenix.Endpoint.Watcher, watcher_args(cmd, args),
                id: {cmd, args}, restart: :transient)
       end)
     else
       []
     end
+  end
+  defp watcher_args(cmd, cmd_args) do
+    {args, opts} = Enum.split_while(cmd_args, &is_binary(&1))
+    unless opts[:cd] do
+      raise ArgumentError, """
+      missing :cd path in watcher configuration. Add :cd to the end of
+      your watcher argument list in config/dev.exs. For example:
+
+          watchers: [node: ["node_modules/brunch/bin/brunch", "watch", "--stdin",
+                    cd: Path.dirname(__DIR__)]]
+      """
+    end
+
+    [cmd, args, opts]
   end
 
   defp code_reloader_children(mod, conf) do
@@ -77,12 +91,6 @@ defmodule Phoenix.Endpoint.Adapter do
     else
       []
     end
-  end
-
-  defp root!(conf) do
-    conf[:root] ||
-      raise "please set root: Path.expand(\"..\", __DIR__) in your endpoint " <>
-            "inside config/config.exs in order to use code reloading or watchers"
   end
 
   @doc """
