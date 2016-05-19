@@ -6,6 +6,14 @@
 * Enhancements
   * [View] Add `:path` and `:pattern` options to allow wildcard template inclusion as well as customized template directory locations
 
+* Deprecations
+  * [Watcher] Using the `:root` endpoint configuration for watchers is deprecated. Pass the :cd option at the end of your watcher argument list in config/dev.exs. For example:
+
+      ```elixir
+      watchers: [node: ["node_modules/brunch/bin/brunch", "watch", "--stdin",
+                 cd: Path.expand("../", __DIR__)]]
+      ```
+
 ## 1.2.0-rc.0 (2016-4-28)
 
 See these [`1.1.x` to `1.2.0` upgrade instructions](https://gist.github.com/chrismccord/29100e16d3990469c47f851e3142f766) to bring your existing apps up to speed.

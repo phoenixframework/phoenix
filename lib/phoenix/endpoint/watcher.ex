@@ -7,25 +7,24 @@ defmodule Phoenix.Endpoint.Watcher do
   end
 
   def watch(cmd, args, opts) do
-    :ok = validate(cmd, args, opts)
-    opts_with_defaults = Keyword.merge(
-      [into: IO.stream(:stdio, :line), stderr_to_stdout: true], opts)
+    merged_opts = Keyword.merge(
+      [cd: File.cwd!(), into: IO.stream(:stdio, :line), stderr_to_stdout: true], opts)
+    :ok = validate(cmd, args, merged_opts)
 
     try do
-      System.cmd(cmd, args, opts_with_defaults)
+      System.cmd(cmd, args, merged_opts)
     catch
       :error, :enoent ->
         relative = Path.relative_to_cwd(cmd)
-        Logger.error "Could not start watcher #{inspect relative} from #{inspect opts[:cd]}, executable does not exist"
+        Logger.error "Could not start watcher #{inspect relative} from #{inspect merged_opts[:cd]}, executable does not exist"
         exit(:shutdown)
     end
   end
 
   # We specially handle node to make sure we
   # provide a good getting started experience.
-  defp validate("node", [script|_], opts) do
-    cd = Keyword.fetch!(opts, :cd)
-    script_path = Path.expand(script, cd)
+  defp validate("node", [script|_], merged_opts) do
+    script_path = Path.expand(script, merged_opts[:cd])
 
     cond do
       !System.find_executable("node") ->
