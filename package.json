@@ -1,6 +1,8 @@
 {
   "name": "phoenix",
   "version": "1.2.0-rc.0",
+  "description": "The official JavaScript client for the Phoenix web framework.",
+  "license": "MIT",
   "main": "./priv/static/phoenix.js",
   "repository": {
     "type": "git",
