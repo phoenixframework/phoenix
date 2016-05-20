@@ -59,6 +59,6 @@ defmodule <%= application_module %>.ModelCase do
   """
   def errors_on(struct, data) do
     struct.__struct__.changeset(struct, data).errors
-    |> Enum.map(fn {field, {message, _opts}} -> {field, message} end)
+    |> Ecto.Changeset.traverse_errors(&<%= application_module %>.ErrorHelpers.translate_error/1)
   end
 end
