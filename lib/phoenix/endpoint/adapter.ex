@@ -69,10 +69,8 @@ defmodule Phoenix.Endpoint.Adapter do
     end
   end
   defp watcher_args(cmd, cmd_args, conf) do
-    case Enum.split_while(cmd_args, &is_binary(&1)) do
-      {args, []}   -> [cmd, args, [cd: root!(conf)]]
-      {args, opts} -> [cmd, args, opts]
-    end
+    {args, opts} = Enum.split_while(cmd_args, &is_binary(&1))
+    [cmd, args, Keyword.put_new_lazy(opts, :cd, fn -> root!(conf) end)]
   end
 
   defp code_reloader_children(mod, conf) do
