@@ -119,4 +119,4 @@ If your screen looks like the image above, congratulations! You now have a worki
 
 Locally, our application is running in an `iex` session. To stop it, we hit `ctrl-c` twice, just as we would to stop `iex` normally.
 
-[The next step step](http://www.phoenixframework.org/docs/adding-pages) is customizing our application just a bit to give us a sense of how a Phoenix app is put together.
+[The next step](http://www.phoenixframework.org/docs/adding-pages) is customizing our application just a bit to give us a sense of how a Phoenix app is put together.
