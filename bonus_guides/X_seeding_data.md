@@ -20,12 +20,12 @@ For example, if we were creating an app called Linker and wanted to seed a Link 
     title: "Phoenix Framework",
     url: "http://www.phoenixframework.org/"
   }
-  
+
   Repo.insert! %Link{
     title: "Elixir",
     url: "http://elixir-lang.org/"
   }
-  
+
   Repo.insert! %Link{
     title: "Erlang",
     url: "https://www.erlang.org/"
@@ -37,7 +37,45 @@ With this script, we've set up some aliases and then progressed through a list o
 ```elixir
   mix run priv/repo/seeds.exs
 ```
-Note that if we wanted to delete/scrub all prior data that we seeded in the Link table, we could also include `Repo.delete_all Link` in your script immediate above `Repo.insert!` 
+Note that if we wanted to delete/scrub all prior data that we seeded in the Link table, we could also include `Repo.delete_all Link` in your script immediate above `Repo.insert!`
+
+We can also create a module to seed our data.
+The reason this is sometimes advantageous is it allows us to quickly seed from IEx, and also keeps things modular.
+For example:
+
+```elixir
+defmodule <%= application_name %>.DatabaseSeeder do
+  alias <%= application_name %>.Repo
+  alias <%= application_name %>.Link
+
+  @titles_list ["Erlang", "Elixir", "Phoenix Framework"]
+  @links_list ["http://www.erlang.org", "http://www.elixir-lang.org", "http://www.phoenix-framework.org"]
+
+  def insert_link do
+    Repo.insert! %Link{
+      title: (@titles_list |> Enum.take_random),
+      url: (@urls_list |> Enum.take_random)
+    }
+  end
+
+  def clear do
+    Repo.delete_all
+  end
+end
+
+(1..100) |> Enum.each(fn _ -> <%= application_name %>.DatabaseSeeder.insert_link end)
+```
+
+Now, we could add links trivially to our database in IEx like so:
+
+```elixir
+$ iex -S mix
+iex(1)> <%= application_name %>.DatabaseSeeder.add_link
+iex(2)> <%= application_name %>.Link |> <%= application_name %>.Repo.all
+#=> [%<%= application_name %>.Link{...}]
+```
+
+This is nice for experimenting in IEx during development in many cases.
 
 #### Models are Initialized
 
