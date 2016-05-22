@@ -211,6 +211,7 @@ Let's commit all our changes:
 
 ```
 $ git add config/prod.exs
+$ git add Procfile
 $ git add web/channels/user_socket.ex
 $ git commit -m "Use production config from Heroku ENV variables and decrease socket timeout"
 ```
