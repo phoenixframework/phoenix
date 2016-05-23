@@ -716,7 +716,7 @@ defmodule HelloPhoenix.Router do
     # Use the default browser stack.
     pipe_through [:browser, :review_checks, :other_great_stuff]
 
-    resources "/reviews", HelloPhoenix.ReviewController
+    resources "/", HelloPhoenix.ReviewController
   end
 end
 ```
@@ -745,7 +745,7 @@ defmodule HelloPhoenix.Router do
   scope "/reviews", HelloPhoenix do
     pipe_through [:browser, :review_checks]
 
-    resources "/reviews", ReviewController
+    resources "/", ReviewController
   end
 end
 ```
@@ -776,7 +776,7 @@ defmodule HelloPhoenix.Router do
   scope "/reviews", HelloPhoenix do
     pipe_through :review_checks
 
-    resources "/reviews", ReviewController
+    resources "/", ReviewController
   end
 end
 ```
