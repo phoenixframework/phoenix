@@ -114,9 +114,9 @@ defmodule Phoenix.ConnTest do
   end
 
   @doc """
-  Deprecated version of build_conn/0. Use build_conn/0 instead
+  Deprecated version of conn/0. Use build_conn/0 instead
   """
-  @spec build_conn() :: Conn.t
+  @spec conn() :: Conn.t
   def conn() do
     IO.write :stderr, """
     warning: using conn/0 to build a connection is deprecated. Use build_conn/0 instead.
@@ -132,7 +132,7 @@ defmodule Phoenix.ConnTest do
   This is useful when a specific connection is required
   for testing a plug or a particular function.
   """
-  @spec build_conn() :: Conn.t
+  @spec build_conn(atom | binary, binary, binary | list | map) :: Conn.t
   def build_conn(method, path, params_or_body \\ nil) do
     Plug.Adapters.Test.Conn.conn(%Conn{}, method, path, params_or_body)
     |> Conn.put_private(:plug_skip_csrf_protection, true)
@@ -140,9 +140,9 @@ defmodule Phoenix.ConnTest do
   end
 
   @doc """
-  Deprecated version of build_conn/3. Use build_conn/3 instead
+  Deprecated version of conn/3. Use build_conn/3 instead
   """
-  @spec build_conn() :: Conn.t
+  @spec conn(atom | binary, binary, binary | list | map) :: Conn.t
   def conn(method, path, params_or_body \\ nil) do
     IO.write :stderr, """
     warning: using conn/3 to build a connection is deprecated. Use build_conn/3 instead.
