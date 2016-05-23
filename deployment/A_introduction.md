@@ -49,6 +49,13 @@ import_config "/var/config.prod.exs"
 ```
 
 With your secret information properly secured, it is time to configure assets!
+Before taking this step, we need to do one bit of preparation.
+Since we will be readying everything for production, we need to do some setup in that environment by getting our dependencies and compiling.
+
+```console
+$ mix deps.get --only prod
+$ MIX_ENV=prod mix compile
+```
 
 ## Compiling your application assets
 
