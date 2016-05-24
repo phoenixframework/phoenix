@@ -28,7 +28,7 @@ defmodule Phoenix.Mixfile do
 
   def application do
     [mod: {Phoenix, []},
-     applications: [:plug, :poison, :logger, :eex],
+     applications: [:plug, :poison, :logger, :eex, :mime],
      env: [stacktrace_depth: nil,
            template_engines: [],
            format_encoders: [],
@@ -44,6 +44,7 @@ defmodule Phoenix.Mixfile do
      {:phoenix_pubsub, "~> 1.0.0-rc"},
      {:poison, "~> 1.5 or ~> 2.0"},
      {:gettext, "~> 0.8", only: :test},
+     {:mime, "~> 1.0"},
 
      # Docs dependencies
      {:earmark, "~> 0.1", only: :docs},

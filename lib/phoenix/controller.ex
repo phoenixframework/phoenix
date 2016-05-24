@@ -617,7 +617,7 @@ defmodule Phoenix.Controller do
 
   defp do_render(conn, template, format, assigns) do
     assigns = to_map(assigns)
-    content_type = Plug.MIME.type(format)
+    content_type = MIME.type(format)
     conn =
       conn
       |> put_private(:phoenix_template, template)
