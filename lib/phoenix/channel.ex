@@ -365,13 +365,13 @@ defmodule Phoenix.Channel do
         def join("notifications:" <> user_id, %{"ids" => ids}, socket) do
           topics = for product_id <- ids, do: "products:#{product_id}"
 
-          {:ok, socket,
+          {:ok, socket
                 |> assign(:topics, [])
                 |> put_new_topics(topics)}
         end
 
         def handle_in("watch", %{"product_id" => id}, socket) do
-          {:reply, :ok, put_new_topics(socket, "products:#{id}")}
+          {:reply, :ok, put_new_topics(socket, ["products:#{id}"])}
         end
 
         def handle_in("unwatch", %{"product_id" => id}, socket) do
