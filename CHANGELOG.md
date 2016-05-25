@@ -1,7 +1,9 @@
 # Changelog
 
 
-## 1.2.0-rc.1
+## 1.2.0-rc.1 (2016-05-25)
+
+See these [`1.1.x` to `1.2.x` upgrade instructions](https://gist.github.com/chrismccord/29100e16d3990469c47f851e3142f766) to bring your existing apps up to speed.
 
 * Enhancements
   * [View] Add `:path` and `:pattern` options to allow wildcard template inclusion as well as customized template directory locations
