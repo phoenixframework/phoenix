@@ -114,8 +114,9 @@ defmodule Phoenix.Endpoint do
       "strict-transport-security" header for https ones.
 
     * `:secret_key_base` - a secret key used as a base to generate secrets
-      to encode cookies, session and friends. Defaults to `nil` as it must
-      be set per application.
+      for encrypting and signing data. For example, cookies and tokens
+      are signed by default but they may also be encrypted if desired.
+      Defaults to `nil` as it must be set per application.
 
     * `:server` - when `true`, starts the web server when the endpoint
       supervision tree starts. Defaults to `false`. The `mix phoenix.server`
