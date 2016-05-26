@@ -455,6 +455,9 @@ export class Socket {
   //
   //   params - The optional params to pass when connecting
   //
+  //   transform - The optional function that transforms somewhow
+  //               payload before put it into the channel
+  //
   // For IE8 support use an ES5-shim (https://github.com/es-shims/es5-shim)
   //
   constructor(endPoint, opts = {}){
@@ -471,6 +474,9 @@ export class Socket {
     this.logger               = opts.logger || function(){} // noop
     this.longpollerTimeout    = opts.longpollerTimeout || 20000
     this.params               = opts.params || {}
+    this.transformPayload     = opts.transform || function(payload){
+      return payload
+    }
     this.endPoint             = `${endPoint}/${TRANSPORTS.websocket}`
     this.reconnectTimer       = new Timer(() => {
       this.disconnect(() => this.connect())
@@ -611,9 +617,10 @@ export class Socket {
   onConnMessage(rawMessage){
     let msg = JSON.parse(rawMessage.data)
     let {topic, event, payload, ref} = msg
-    this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
+    let transformedPayload = this.transformPayload(payload);
+    this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, transformedPayload)
     this.channels.filter( channel => channel.isMember(topic) )
-                 .forEach( channel => channel.trigger(event, payload, ref) )
+                 .forEach( channel => channel.trigger(event, transformedPayload, ref) )
     this.stateChangeCallbacks.message.forEach( callback => callback(msg) )
   }
 }
