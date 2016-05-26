@@ -105,9 +105,23 @@ Then, we'll add the production database configuration to `config/prod.exs`:
 config :hello_phoenix, HelloPhoenix.Repo,
   adapter: Ecto.Adapters.Postgres,
   url: System.get_env("DATABASE_URL"),
-  pool_size: 20,
+  pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
   ssl: true
 ```
+Take note of the `POOL_SIZE` option because it's not set by default on Heroku. You will want to set this to near the max available connections and leave a couple open. If you open multiple dynos you will need to cut this number in half. 
+
+For example the default hobby database allows 20 connection. So you might want to set this number to 18 to leave room for migrations and mix tasks. If you need a second dyno you would then want to set `POOL_SIZE` to 9 giving each dyno an equal share.
+
+If you do not know how many connections your Heroku Postgres instance provides, the following command should tell you: `heroku pg | grep Connections`
+
+When running a mix task you will also want to do:
+
+```sh
+POOL_SIZE=2 mix hello_phoenix.task
+```
+
+So that Ecto does not attempt to open more then the available connections.
+
 
 Now, let's tell Phoenix to use our Heroku URL and enforce we only use the SSL version of the website. Find the url line:
 
