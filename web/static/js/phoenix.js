@@ -397,9 +397,7 @@ export class Channel {
   // Overridable message hook
   //
   // Receives all events for specialized message handling
-  onMessage(event, payload, ref){
-    return payload;
-  }
+  onMessage(event, payload, ref){ return payload }
 
   // private
 
