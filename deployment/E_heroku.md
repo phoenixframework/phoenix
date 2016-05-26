@@ -116,8 +116,8 @@ If you do not know how many connections your Heroku Postgres instance provides, 
 
 When running a mix task you will also want to do:
 
-```sh
-POOL_SIZE=2 mix hello_phoenix.task
+```console
+$ heroku run "POOL_SIZE=2 mix hello_phoenix.task"
 ```
 
 So that Ecto does not attempt to open more than the available connections.
