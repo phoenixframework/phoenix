@@ -99,6 +99,19 @@ http: [port: {:system, "PORT"}],
 . . .
 ```
 
+We also need to uncomment the following line to instruct Phoenix to start the server for all endpoints:
+
+```elixir
+. . .
+# ## Using releases
+#
+# If you are doing OTP releases, you need to instruct Phoenix
+# to start the server for all endpoints:
+#
+    config :phoenix, :serve_endpoints, true
+. . .
+```
+
 If we don't currently have such an environment variable, we need to set it now, otherwise our release will not build properly.
 
 There's one last thing to do before we create our release. We need to pre-compile our static assets using the `phoenix.digest` task. We will be generating a production release, so we need to run this task with `MIX_ENV=prod`.
