@@ -257,7 +257,7 @@ defmodule Mix.Tasks.Phoenix.New do
       # Configure your database
       config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
         adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:dev]},
-        pool_size: 10
+        pool_size: 8
       """
 
       append_to path, "config/test.exs", """
@@ -272,7 +272,7 @@ defmodule Mix.Tasks.Phoenix.New do
       # Configure your database
       config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
         adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:prod]},
-        pool_size: 20
+        pool_size: 16
       """
 
       case generator_config(adapter_config) do
