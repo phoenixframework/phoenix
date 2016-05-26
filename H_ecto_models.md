@@ -18,7 +18,7 @@ The default Postgres configuration has a superuser account with username 'postgr
 CREATE USER postgres;
 ALTER USER postgres PASSWORD 'postgres';
 ALTER USER postgres WITH SUPERUSER;
-```  
+```
 
 Now that we all have Ecto and Postgres installed and configured, the easiest way to use Ecto models is to generate a resource through the `phoenix.gen.html` task. Let's generate a `User` resource with `name`, `email`, `bio`, and `number_of_pets` fields.
 
@@ -249,7 +249,7 @@ def changeset(model, params \\ :empty) do
 end
 ```
 
-At this point, we only have one transformation in our pipeline. This `cast/3` function's main job is to separate required fields from optional ones. We define the fields for each category in the module attributes `@required_fields` and `@optional_fields`. By default all of the fields are required.
+At this point, we only have one transformation in our pipeline. This `cast/4` function's main job is to separate required fields from optional ones. We define the fields for each category in the module attributes `@required_fields` and `@optional_fields`. By default all of the fields are required.
 
 Let's take a look at two ways to validate that this is the case. The first and easiest way is to simply start our application by running the `mix phoenix.server` task at the root of our project. Then we can go to the [new users page](http://localhost:4000/users/new) and click the "submit" button without filling in any fields. We should get an error telling us that something went wrong and enumerating all the fields which can't be blank. That should be all the fields in our schema at this point.
 
