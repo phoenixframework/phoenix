@@ -397,7 +397,9 @@ export class Channel {
   // Overridable message hook
   //
   // Receives all events for specialized message handling
-  onMessage(event, payload, ref){}
+  onMessage(event, payload, ref){
+    return payload;
+  }
 
   // private
 
@@ -419,9 +421,9 @@ export class Channel {
     if(ref && [close, error, leave, join].indexOf(event) >= 0 && ref !== this.joinRef()){
       return
     }
-    this.onMessage(event, payload, ref)
+    let handledPayload = this.onMessage(event, payload, ref)
     this.bindings.filter( bind => bind.event === event)
-                 .map( bind => bind.callback(payload, ref))
+                 .map( bind => bind.callback(handledPayload, ref))
   }
 
   replyEventName(ref){ return `chan_reply_${ref}` }
@@ -455,9 +457,6 @@ export class Socket {
   //
   //   params - The optional params to pass when connecting
   //
-  //   transform - The optional function that transforms somewhow
-  //               payload before put it into the channel
-  //
   // For IE8 support use an ES5-shim (https://github.com/es-shims/es5-shim)
   //
   constructor(endPoint, opts = {}){
@@ -474,9 +473,6 @@ export class Socket {
     this.logger               = opts.logger || function(){} // noop
     this.longpollerTimeout    = opts.longpollerTimeout || 20000
     this.params               = opts.params || {}
-    this.transformPayload     = opts.transform || function(payload){
-      return payload
-    }
     this.endPoint             = `${endPoint}/${TRANSPORTS.websocket}`
     this.reconnectTimer       = new Timer(() => {
       this.disconnect(() => this.connect())
@@ -617,10 +613,9 @@ export class Socket {
   onConnMessage(rawMessage){
     let msg = JSON.parse(rawMessage.data)
     let {topic, event, payload, ref} = msg
-    let transformedPayload = this.transformPayload(payload);
-    this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, transformedPayload)
+    this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
     this.channels.filter( channel => channel.isMember(topic) )
-                 .forEach( channel => channel.trigger(event, transformedPayload, ref) )
+                 .forEach( channel => channel.trigger(event, payload, ref) )
     this.stateChangeCallbacks.message.forEach( callback => callback(msg) )
   }
 }
