@@ -212,7 +212,7 @@ defmodule HelloPhoenix.UserTest do
 end
 ```
 
-> Note: `ModuleCase.errors_on/2` returns a keyword list, and an individual element of a keyword list is a tuple.
+> Note: `ModelCase.errors_on/2` returns a keyword list, and an individual element of a keyword list is a tuple.
 
 When we run the tests again, we get a different message entirely.
 
