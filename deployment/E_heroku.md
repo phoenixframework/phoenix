@@ -68,7 +68,7 @@ A [buildpack](https://devcenter.heroku.com/articles/buildpacks) is a convenient 
 
 The URL in the output is the URL to our application. If we open it in our browser now, we will get the default Heroku welcome page.
 
-> Note: if we hadn't initialized our Git repository before we ran the `heroku create` command, we won't have our Heroku remote repository properly set up at this point. We can set that up manually by running: `heroku git:remote -a [our-app-name].`
+> Note: if we hadn't initialized our Git repository before we ran the `heroku create` command, we wouldn't have our Heroku remote repository properly set up at this point. We can set that up manually by running: `heroku git:remote -a [our-app-name].`
 
 ## Adding the Phoenix Static Buildpack
 
@@ -108,20 +108,6 @@ config :hello_phoenix, HelloPhoenix.Repo,
   pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
   ssl: true
 ```
-Take note of the `POOL_SIZE` option because it's not set by default on Heroku. You will want to set this to near the max available connections and leave a couple open. If you open multiple dynos you will need to cut this number in half. 
-
-For example the default hobby database allows 20 connection. So you might want to set this number to 18 to leave room for migrations and mix tasks. If you need a second dyno you would then want to set `POOL_SIZE` to 9 giving each dyno an equal share.
-
-If you do not know how many connections your Heroku Postgres instance provides, the following command should tell you: `heroku pg | grep Connections`
-
-When running a mix task you will also want to do:
-
-```sh
-POOL_SIZE=2 mix hello_phoenix.task
-```
-
-So that Ecto does not attempt to open more then the available connections.
-
 
 Now, let's tell Phoenix to use our Heroku URL and enforce we only use the SSL version of the website. Find the url line:
 
@@ -163,7 +149,7 @@ config :logger, level: :info
 config :hello_phoenix, HelloPhoenix.Repo,
   adapter: Ecto.Adapters.Postgres,
   url: System.get_env("DATABASE_URL"),
-  pool_size: 20,
+  pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
   ssl: true
 ```
 
@@ -195,8 +181,24 @@ web: MIX_ENV=prod mix phoenix.server
 The `DATABASE_URL` config var is automatically created by Heroku when we add the [Heroku Postgres add-on](https://elements.heroku.com/addons/heroku-postgresql). We can create the database via the heroku toolbelt:
 
 ```console
-heroku addons:create heroku-postgresql:hobby-dev
+$ heroku addons:create heroku-postgresql:hobby-dev
 ```
+
+Now we set the `POOL_SIZE` config var:
+
+```console
+$ heroku config:set POOL_SIZE=18
+```
+
+This value should be just under the number of available connections, leaving a couple open for migrations and mix tasks. The hobby-dev database allows 20 connections, so we set this number to 18. If additional dynos will share the database, reduce the `POOL_SIZE` to give each dyno an equal share.
+
+When running a mix task you will also want to limit its pool size like so:
+
+```console
+$ heroku run "POOL_SIZE=2 mix hello_phoenix.task"
+```
+
+So that Ecto does not attempt to open more than the available connections.
 
 We still have to create the `SECRET_KEY_BASE` config based on a random string. First, use `mix phoenix.gen.secret` to get a new secret:
 
@@ -215,7 +217,7 @@ Setting config vars and restarting mysterious-meadow-6277... done, v3
 SECRET_KEY_BASE: xvafzY4y01jYuzLm3ecJqo008dVnU3CN4f+MamNd1Zue4pXvfvUjbiXT8akaIF53
 ```
 
-If you need to make any of your config variables available at compile time you will need to explicitly define which ones in a configuration file. Create a file `elixir_buildpack.config` in your applications root directory and add a line like: `config_vars_to_export=(DATABASE_URL MY_VAR)`. See [here](https://github.com/HashNuke/heroku-buildpack-elixir#specifying-config-vars-to-export-at-compile-time) for more information. 
+If you need to make any of your config variables available at compile time, you will need to explicitly define which ones in a configuration file. Create a file `elixir_buildpack.config` in your application's root directory and add a line like: `config_vars_to_export=(MY_VAR)`. See [here](https://github.com/HashNuke/heroku-buildpack-elixir#specifying-config-vars-to-export-at-compile-time) for more information.
 
 ## Deploy Time!
 
@@ -321,7 +323,7 @@ To https://git.heroku.com/mysterious-meadow-6277.git
 Typing `heroku open` in the terminal should launch a browser with the Phoenix welcome page opened. In case you are using Ecto to access a database, you will also need to run migrations after the first deploy:
 
 ```console
-$ heroku run mix ecto.migrate
+$ heroku run "POOL_SIZE=2 mix ecto.migrate"
 ```
 
 And that's it!
@@ -337,13 +339,13 @@ $ heroku logs # use --tail if you want to tail them
 We can also start an IEx session attached to our terminal for experimenting in our app's environment:
 
 ```console
-$ heroku run iex -S mix
+$ heroku run "POOL_SIZE=2 iex -S mix"
 ```
 
 In fact, we can run anything using the `heroku run` command, like the Ecto migration task from above:
 
 ```console
-$ heroku run mix ecto.migrate
+$ heroku run "POOL_SIZE=2 mix ecto.migrate"
 ```
 
 ## Troubleshooting
@@ -359,14 +361,14 @@ remote: ** (CompileError) lib/postgrex/connection.ex:207: Postgrex.Connection.__
 remote:     (elixir) src/elixir_map.erl:58: :elixir_map.translate_struct/4
 remote:     (stdlib) lists.erl:1353: :lists.mapfoldl/3
 remote:     (stdlib) lists.erl:1354: :lists.mapfoldl/3
-remote: 
-remote: 
+remote:
+remote:
 remote:  !     Push rejected, failed to compile elixir app
-remote: 
+remote:
 remote: Verifying deploy...
-remote: 
+remote:
 remote: !   Push rejected to mysterious-meadow-6277.
-remote: 
+remote:
 To https://git.heroku.com/mysterious-meadow-6277.git
 ```
 
