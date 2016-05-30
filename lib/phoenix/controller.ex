@@ -940,7 +940,7 @@ defmodule Phoenix.Controller do
   end
 
   defp parse_exts("*/*" = type), do: type
-  defp parse_exts(type),         do: Plug.MIME.extensions(type)
+  defp parse_exts(type),         do: MIME.extensions(type)
 
   defp find_format("*/*", accepted), do: Enum.fetch!(accepted, 0)
   defp find_format(exts, accepted),  do: Enum.find(exts, &(&1 in accepted))
