@@ -117,3 +117,49 @@ Indexes:
 ```
 
 Now we have a model with the primary key `name` that we can query for with `Repo.get!/2`. We can also use it in our routes instead of an integer id - `localhost:4000/players/iguberman`.
+
+
+### Composite primary keys
+
+In some cases, you will want two or more fields to make up the primary key. In
+this case, the syntax becomes:
+
+```elixir
+defmodule HelloPhoenix.Repo.Migrations.CreatePlayer do
+  use Ecto.Migration
+
+  def change do
+    create table(:players, primary_key: false) do
+      add :first_name, :string, primary_key: true
+      add :last_name, :string, primary_key: true
+      add :position, :string
+      add :number, :integer
+  . . .
+```
+
+and
+
+```elixir
+defmodule HelloPhoenix.Player do
+  use HelloPhoenix.Web, :model
+
+  @primary_key false
+  schema "players" do
+    field :first_name, primary_key: true
+    field :last_name, primary_key: true
+    field :position, :string
+    field :number, :integer
+  . . .
+```
+
+With composite primary keys, you can no longer use get/3 or get!/3,
+but you have to use the more generic get_by/3 or get_by!/3, like so:
+
+```elixir
+localhost:4000/players?first_name=John&last_name=Doe
+
+def index(conn, %{"first_name" => first_name, "last_name" => last_name}) do
+  player = Repo.get_by!(Player, first_name: first_name, last_name: last_name)
+  . . .
+```
+
