@@ -61,7 +61,7 @@ Now we need to update our `mix.exs` file to have all production dependencies lis
   end
 ```
 
-Doing this helps us overcome one of [exrm's common issues](https://hexdocs.pm/exrm/extra-common-issues.html) by helping exrm know about all our dependencies so that it can properly bundle them into our release. Without this, our application will probably alert us about missing modules or a failure to start a child application when we go to run our release.
+Doing this helps us overcome one of [exrm's common issues](https://hexdocs.pm/exrm/common-issues.html) by helping exrm know about all our dependencies so that it can properly bundle them into our release. Without this, our application will probably alert us about missing modules or a failure to start a child application when we go to run our release.
 
 Even if we list all of our dependencies, our application may still fail. Typically, this happens because one of our dependencies does not properly list its own dependencies. A quick fix for this is to include the missing dependency or dependencies in our list of applications. If this happens to you, and you feel like helping the community, you can create an issue or a pull request to that project's repo.
 
@@ -169,7 +169,7 @@ There are a couple of interesting things to note here.
 
 - Exrm has created a `rel` directory at the root of our application where it has written everything related to this release.
 
-Exrm uses a set of default configuration options when building our release that will work for most applications. If we need more advanced configuration options, we can checkout [exrm's configuration section](https://hexdocs.pm/exrm/extra-release-configuration.html#content) for more detailed information.
+Exrm uses a set of default configuration options when building our release that will work for most applications. If we need more advanced configuration options, we can checkout [exrm's configuration section](https://hexdocs.pm/exrm/release-configuration.html) for more detailed information.
 
 If we make a mistake, or if something doesn't go quite right, we can run `mix release.clean`, which will delete the release for the current application version number. If we add the `--implode` flag, exrm will remove _all_ releases for all versions of our application. These will be permanently removed unless they are under version control. Obviously, this is a destructive operation, and exrm will prompt us to make sure we want to continue.
 
