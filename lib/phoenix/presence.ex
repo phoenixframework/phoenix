@@ -210,7 +210,7 @@ defmodule Phoenix.Presence do
   ## Presence datastructure
 
   The presence information is returned as map with presences grouped
-  by key and accumulated metadata, with the following form:
+  by key, cast as a string, and accumulated metadata, with the following form:
 
       %{key => %{metas: [%{phx_ref: ..., ...}, ...]}}
 
@@ -243,7 +243,7 @@ defmodule Phoenix.Presence do
     presences
     |> Enum.reverse()
     |> Enum.reduce(%{}, fn {key, meta}, acc ->
-      Map.update(acc, key, %{metas: [meta]}, fn %{metas: metas} ->
+      Map.update(acc, to_string(key), %{metas: [meta]}, fn %{metas: metas} ->
         %{metas: [meta | metas]}
       end)
     end)
