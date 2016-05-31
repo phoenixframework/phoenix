@@ -171,6 +171,30 @@ defmodule Phoenix.Channel do
   it would also be possible `:trap_exit` to guarantee that `terminate/2`
   is invoked. This practice is not encouraged though.
 
+  ## Exit reasons when stopping a channel
+
+  When the channel callbacks return a `:stop` tuple, such as:
+
+      {:stop, :shutdown, socket}
+      {:stop, {:error, :enoent}, socket}
+
+  the second argument is the exit reason, which follows the same behaviour as
+  standard `GenServer` exits.
+
+  You have three options to choose from when shutting down a channel:
+
+    * `:normal` - in such cases, the exit won't be logged, there is no restart
+      in transient mode, and linked processes do not exit
+
+    * `:shutdown` or `{:shutdown, term}` - in such cases, the exit won't be
+      logged, there is no restart in transient mode, and linked processes exit
+      with the same reason unless they're trapping exits
+
+    * any other term - in such cases, the exit will be logged, there are
+      restarts in transient mode, and linked processes exit with the same reason
+      unless they're trapping exits
+
+
   ## Subscribing to external topics
 
   Sometimes you may need to programmatically subscribe a socket to external
