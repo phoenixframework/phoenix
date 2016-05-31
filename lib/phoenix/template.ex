@@ -112,7 +112,7 @@ defmodule Phoenix.Template do
     @moduledoc """
     Exception raised when a template cannot be found.
     """
-    defexception [:available, :template, :module, :root, :assigns]
+    defexception [:available, :template, :module, :root, :assigns, :pattern]
 
     def message(exception) do
       "Could not render #{inspect exception.template} for #{inspect exception.module}, "
