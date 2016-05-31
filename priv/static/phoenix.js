@@ -38,7 +38,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // events are listened for, messages are pushed to the server, and
 // the channel is joined with ok/error/timeout matches:
 //
-//     let channel = socket.channel("rooms:123", {token: roomToken})
+//     let channel = socket.channel("room:123", {token: roomToken})
 //     channel.on("new_msg", msg => console.log("Got message", msg) )
 //     $input.onEnter( e => {
 //       channel.push("new_msg", {body: e.target.val}, 10000)
@@ -490,10 +490,15 @@ var Channel = exports.Channel = function () {
     // Overridable message hook
     //
     // Receives all events for specialized message handling
+    // before dispatching to the channel callbacks.
+    //
+    // Must return the payload, modified or unmodified
 
   }, {
     key: "onMessage",
-    value: function onMessage(event, payload, ref) {}
+    value: function onMessage(event, payload, ref) {
+      return payload;
+    }
 
     // private
 
@@ -533,11 +538,15 @@ var Channel = exports.Channel = function () {
       if (ref && [close, error, leave, join].indexOf(event) >= 0 && ref !== this.joinRef()) {
         return;
       }
-      this.onMessage(event, payload, ref);
+      var handledPayload = this.onMessage(event, payload, ref);
+      if (!handledPayload) {
+        throw "channel onMessage callbacks must return the payload, modified or unmodified";
+      }
+
       this.bindings.filter(function (bind) {
         return bind.event === event;
       }).map(function (bind) {
-        return bind.callback(payload, ref);
+        return bind.callback(handledPayload, ref);
       });
     }
   }, {
