@@ -397,7 +397,7 @@ export class Channel {
   // Overridable message hook
   //
   // Receives all events for specialized message handling
-  onMessage(event, payload, ref){}
+  onMessage(event, payload, ref){ return payload }
 
   // private
 
@@ -419,9 +419,9 @@ export class Channel {
     if(ref && [close, error, leave, join].indexOf(event) >= 0 && ref !== this.joinRef()){
       return
     }
-    this.onMessage(event, payload, ref)
+    let handledPayload = this.onMessage(event, payload, ref)
     this.bindings.filter( bind => bind.event === event)
-                 .map( bind => bind.callback(payload, ref))
+                 .map( bind => bind.callback(handledPayload, ref))
   }
 
   replyEventName(ref){ return `chan_reply_${ref}` }
