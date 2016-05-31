@@ -397,6 +397,9 @@ export class Channel {
   // Overridable message hook
   //
   // Receives all events for specialized message handling
+  // before dispatching to the channel callbacks.
+  //
+  // Must return the payload, modified or unmodified
   onMessage(event, payload, ref){ return payload }
 
   // private
@@ -420,6 +423,8 @@ export class Channel {
       return
     }
     let handledPayload = this.onMessage(event, payload, ref)
+    if(!handledPayload){ throw("channel onMessage callbacks must return the payload, modified or unmodified") }
+
     this.bindings.filter( bind => bind.event === event)
                  .map( bind => bind.callback(handledPayload, ref))
   }
