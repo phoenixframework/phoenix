@@ -224,7 +224,8 @@ defmodule Phoenix.Channel.Server do
     |> handle_result(:handle_in)
   end
 
-  def handle_info(%Broadcast{event: event, payload: payload}, socket) do
+  def handle_info(%Broadcast{topic: topic, event: event, payload: payload},
+                  %Socket{topic: topic} = socket) do
     event
     |> socket.channel.handle_out(payload, socket)
     |> handle_result(:handle_out)

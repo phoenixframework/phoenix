@@ -108,23 +108,4 @@ defmodule Phoenix.Channel.ChannelTest do
       socket_ref(%Phoenix.Socket{joined: true})
     end
   end
-
-  def __intercepts__(), do: []
-  test "subscribe and unsubscribe" do
-    socket = %Phoenix.Socket{pubsub_server: @pubsub, topic: "sometopic",
-                             channel: __MODULE__, channel_pid: self(), joined: true}
-
-    Phoenix.PubSub.broadcast!(@pubsub, "anothertopic", :msg)
-    refute_receive :msg
-    subscribe(socket, "anothertopic")
-    Phoenix.PubSub.broadcast!(@pubsub, "anothertopic", :msg)
-    assert_receive :msg
-    unsubscribe(socket, "anothertopic")
-    Phoenix.PubSub.broadcast!(@pubsub, "anothertopic", :msg)
-    refute_receive :msg
-
-    assert_raise ArgumentError, ~r/cannot unsubscribe socket from its own topic/, fn ->
-      unsubscribe(socket, socket.topic)
-    end
-  end
 end

@@ -1,6 +1,13 @@
 # Changelog
 
 
+## 1.2.0-rc.2
+
+See these [`1.1.x` to `1.2.x` upgrade instructions](https://gist.github.com/chrismccord/29100e16d3990469c47f851e3142f766) to bring your existing apps up to speed.
+
+* Backward incompatible changes
+  * [Channel] `subscribe/1` and `unsubscribe/1` have been removed in favor of calling subscribe and unsubscribe off the endpoint directly
+
 ## 1.2.0-rc.1 (2016-05-25)
 
 See these [`1.1.x` to `1.2.x` upgrade instructions](https://gist.github.com/chrismccord/29100e16d3990469c47f851e3142f766) to bring your existing apps up to speed.
