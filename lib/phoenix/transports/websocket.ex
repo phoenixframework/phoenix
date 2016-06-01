@@ -60,7 +60,7 @@ defmodule Phoenix.Transports.WebSocket do
     conn =
       conn
       |> code_reload(opts, endpoint)
-      |> Plug.Conn.fetch_query_params
+      |> fetch_query_params()
       |> Transport.transport_log(opts[:transport_log])
       |> Transport.force_ssl(handler, endpoint, opts)
       |> Transport.check_origin(handler, endpoint, opts)

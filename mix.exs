@@ -1,7 +1,7 @@
 defmodule Phoenix.Mixfile do
   use Mix.Project
 
-  @version "1.1.4"
+  @version "1.1.5"
 
   def project do
     [app: :phoenix,
@@ -14,6 +14,7 @@ defmodule Phoenix.Mixfile do
      # Phoenix.Param, we need to disable consolidation
      # for the test environment for Elixir v1.2 onward.
      consolidate_protocols: Mix.env != :test,
+     xref: [exclude: [Ecto.Type]],
 
      name: "Phoenix",
      docs: [source_ref: "v#{@version}", main: "Phoenix", logo: "logo.png"],

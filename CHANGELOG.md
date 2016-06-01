@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.5 (2016-6-01)
+
+* Enhancements
+  * Fix warnings for Elixir 1.3
+
 ## 1.1.4 (2016-1-25)
 
 * Enhancements

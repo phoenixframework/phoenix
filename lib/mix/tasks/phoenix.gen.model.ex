@@ -90,7 +90,6 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     binding   = Mix.Phoenix.inflect(singular)
     params    = Mix.Phoenix.params(attrs)
     path      = binding[:path]
-    migration = String.replace(path, "/", "_")
 
     Mix.Phoenix.check_module_name_availability!(binding[:module])
     {assocs, attrs} = partition_attrs_and_assocs(attrs)
@@ -104,12 +103,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     files = [
       {:eex, "model.ex",       "web/models/#{path}.ex"},
       {:eex, "model_test.exs", "test/models/#{path}_test.exs"},
-    ]
-
-    if opts[:migration] != false do
-      files =
-        [{:eex, "migration.exs", "priv/repo/migrations/#{timestamp()}_create_#{migration}.exs"}|files]
-    end
+    ] ++ migration(opts[:migration], path)
 
     Mix.Phoenix.copy_from paths(), "priv/templates/phoenix.gen.model", "", binding, files
 
@@ -123,6 +117,12 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
           $ mix ecto.migrate
       """
     end
+  end
+
+  defp migration(false, _path), do: []
+  defp migration(_, path) do
+    [{:eex, "migration.exs",
+      "priv/repo/migrations/#{timestamp()}_create_#{String.replace(path, "/", "_")}.exs"}]
   end
 
   defp validate_args!([_, plural | _] = args) do

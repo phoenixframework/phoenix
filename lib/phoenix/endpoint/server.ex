@@ -10,18 +10,12 @@ defmodule Phoenix.Endpoint.Server do
   end
 
   def init({otp_app, endpoint}) do
-    children = []
     handler  = endpoint.config(:handler)
 
-    if config = endpoint.config(:http) do
-      config   = default(config, otp_app, 4000)
-      children = [handler.child_spec(:http, endpoint, config)|children]
-    end
-
-    if config = endpoint.config(:https) do
-      {:ok, _} = Application.ensure_all_started(:ssl)
-      config   = default(config, otp_app, 4040)
-      children = [handler.child_spec(:https, endpoint, config)|children]
+    children =
+      for {scheme, port} <- [http: 4000, https: 4040],
+        config = endpoint.config(scheme) do
+      handler.child_spec(scheme, endpoint, default(config, otp_app, port))
     end
 
     supervise(children, strategy: :one_for_one)

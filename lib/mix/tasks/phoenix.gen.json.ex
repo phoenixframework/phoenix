@@ -47,11 +47,8 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
       {:eex, "controller.ex",       "web/controllers/#{path}_controller.ex"},
       {:eex, "view.ex",             "web/views/#{path}_view.ex"},
       {:eex, "controller_test.exs", "test/controllers/#{path}_controller_test.exs"},
-    ]
+    ] ++ changeset_view()
 
-    unless File.exists?("web/views/changeset_view.ex") do
-      files = files ++ [{:eex, "changeset_view.ex", "web/views/changeset_view.ex"}]
-    end
 
     Mix.Phoenix.copy_from paths(), "priv/templates/phoenix.gen.json", "", binding, files
 
@@ -66,6 +63,14 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
       Mix.Task.run "phoenix.gen.model", ["--instructions", instructions|args]
     else
       Mix.shell.info instructions
+    end
+  end
+
+  defp changeset_view do
+    if File.exists?("web/views/changeset_view.ex") do
+      []
+    else
+      [{:eex, "changeset_view.ex", "web/views/changeset_view.ex"}]
     end
   end
 
