@@ -18,7 +18,7 @@ defmodule Phoenix.Router.Helpers do
   end
 
   def url(_router, %URI{} = uri) do
-    uri_to_string(uri)
+    URI.to_string(%URI{uri | path: nil})
   end
 
   def url(_router, endpoint) when is_atom(endpoint) do
@@ -48,34 +48,6 @@ defmodule Phoenix.Router.Helpers do
   end
 
   ## Helpers
-
-  defp uri_to_string(%{scheme: scheme} = uri) do
-    if scheme do
-      scheme <> ":" <> authority(uri)
-    else
-      authority(uri)
-    end
-  end
-
-  defp authority(%{host: nil, authority: nil}), do: ""
-  defp authority(%{host: nil, authority: authority}), do: "//" <> authority
-  defp authority(%{host: host, userinfo: userinfo, scheme: scheme, port: port}) do
-    host
-    |> if_value(userinfo, fn acc ->
-          userinfo <> "@" <> acc
-        end)
-    |> if_value(port, fn acc ->
-          case scheme && URI.default_port(scheme) do
-            ^port -> acc
-            _     -> acc <> ":" <> Integer.to_string(port)
-          end
-        end)
-    |> prepend("//")
-  end
-
-  defp prepend(acc, prefix), do: prefix <> acc
-  defp if_value(result, nil, _fun), do: result
-  defp if_value(result, _value, fun), do: fun.(result)
 
   defp build_own_forward_path(conn, router, path) do
     case Map.fetch(conn.private, router) do
