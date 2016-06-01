@@ -5,8 +5,8 @@ defmodule Phoenix.Socket do
   `Phoenix.Socket` is used as a module for establishing and maintaining
   the socket state via the `Phoenix.Socket` struct.
 
-  Once connected to a socket, incoming  and pubsub events are routed
-  to channels. The incoming client data is routed to channels via transports.
+  Once connected to a socket, incoming and outgoing events are routed to
+  channels. The incoming client data is routed to channels via transports.
   It is the responsibility of the socket to tie transports and channels
   together.
 
