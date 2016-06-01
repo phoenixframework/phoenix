@@ -356,11 +356,15 @@ var Channel = exports.Channel = function () {
       _this2.pushBuffer = [];
     });
     this.onClose(function () {
+      _this2.rejoinTimer.reset();
       _this2.socket.log("channel", "close " + _this2.topic + " " + _this2.joinRef());
       _this2.state = CHANNEL_STATES.closed;
       _this2.socket.remove(_this2);
     });
     this.onError(function (reason) {
+      if (_this2.state === CHANNEL_STATES.leaving) {
+        return;
+      }
       _this2.socket.log("channel", "error " + _this2.topic, reason);
       _this2.state = CHANNEL_STATES.errored;
       _this2.rejoinTimer.scheduleTimeout();
@@ -539,7 +543,7 @@ var Channel = exports.Channel = function () {
         return;
       }
       var handledPayload = this.onMessage(event, payload, ref);
-      if (!handledPayload) {
+      if (payload && !handledPayload) {
         throw "channel onMessage callbacks must return the payload, modified or unmodified";
       }
 

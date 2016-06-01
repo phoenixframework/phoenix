@@ -302,11 +302,12 @@ export class Channel {
       this.pushBuffer = []
     })
     this.onClose( () => {
+      this.rejoinTimer.reset()
       this.socket.log("channel", `close ${this.topic} ${this.joinRef()}`)
       this.state = CHANNEL_STATES.closed
       this.socket.remove(this)
     })
-    this.onError( reason => {
+    this.onError( reason => { if(this.state === CHANNEL_STATES.leaving){ return }
       this.socket.log("channel", `error ${this.topic}`, reason)
       this.state = CHANNEL_STATES.errored
       this.rejoinTimer.scheduleTimeout()
@@ -423,7 +424,7 @@ export class Channel {
       return
     }
     let handledPayload = this.onMessage(event, payload, ref)
-    if(!handledPayload){ throw("channel onMessage callbacks must return the payload, modified or unmodified") }
+    if(payload && !handledPayload){ throw("channel onMessage callbacks must return the payload, modified or unmodified") }
 
     this.bindings.filter( bind => bind.event === event)
                  .map( bind => bind.callback(handledPayload, ref))
