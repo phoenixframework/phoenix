@@ -103,7 +103,7 @@ defmodule Phoenix.Transports.WebSocket do
 
   @doc false
   def ws_handle(opcode, payload, state) do
-    msg   = state.serializer.decode!(payload, opcode: opcode)
+    msg = state.serializer.decode!(payload, opcode: opcode)
 
     case Transport.dispatch(msg, state.channels, state.socket) do
       :noreply ->
