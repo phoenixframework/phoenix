@@ -178,7 +178,7 @@ defmodule Phoenix.Template do
     end
   end
 
-  @anno (if Version.match? System.version, ">= 1.2.6-dev" do
+  @anno (if :erlang.system_info(:otp_release) >= '19' do
     [generated: true]
   else
     [line: -1]
