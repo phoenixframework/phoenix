@@ -307,14 +307,12 @@ export class Channel {
       this.state = CHANNEL_STATES.closed
       this.socket.remove(this)
     })
-    this.onError( reason => { if(this.state === CHANNEL_STATES.leaving){ return }
+    this.onError( reason => { if(this.isLeaving() || this.isClosed()){ return }
       this.socket.log("channel", `error ${this.topic}`, reason)
       this.state = CHANNEL_STATES.errored
       this.rejoinTimer.scheduleTimeout()
     })
-    this.joinPush.receive("timeout", () => {
-      if(this.state !== CHANNEL_STATES.joining){ return }
-
+    this.joinPush.receive("timeout", () => { if(!this.isJoining()){ return }
       this.socket.log("channel", `timeout ${this.topic}`, this.joinPush.timeout)
       this.state = CHANNEL_STATES.errored
       this.rejoinTimer.scheduleTimeout()
@@ -351,7 +349,7 @@ export class Channel {
 
   off(event){ this.bindings = this.bindings.filter( bind => bind.event !== event ) }
 
-  canPush(){ return this.socket.isConnected() && this.state === CHANNEL_STATES.joined }
+  canPush(){ return this.socket.isConnected() && this.isJoined() }
 
   push(event, payload, timeout = this.timeout){
     if(!this.joinedOnce){
@@ -414,7 +412,7 @@ export class Channel {
     this.joinPush.resend(timeout)
   }
 
-  rejoin(timeout = this.timeout){ if(this.state === CHANNEL_STATES.leaving){ return }
+  rejoin(timeout = this.timeout){ if(this.isLeaving()){ return }
     this.sendJoin(timeout)
   }
 
@@ -431,6 +429,12 @@ export class Channel {
   }
 
   replyEventName(ref){ return `chan_reply_${ref}` }
+
+  isClosed() { return this.state === CHANNEL_STATES.closed }
+  isErrored(){ return this.state === CHANNEL_STATES.errored }
+  isJoined() { return this.state === CHANNEL_STATES.joined }
+  isJoining(){ return this.state === CHANNEL_STATES.joining }
+  isLeaving(){ return this.state === CHANNEL_STATES.leaving }
 }
 
 export class Socket {

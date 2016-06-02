@@ -362,7 +362,7 @@ var Channel = exports.Channel = function () {
       _this2.socket.remove(_this2);
     });
     this.onError(function (reason) {
-      if (_this2.state === CHANNEL_STATES.leaving) {
+      if (_this2.isLeaving() || _this2.isClosed()) {
         return;
       }
       _this2.socket.log("channel", "error " + _this2.topic, reason);
@@ -370,10 +370,9 @@ var Channel = exports.Channel = function () {
       _this2.rejoinTimer.scheduleTimeout();
     });
     this.joinPush.receive("timeout", function () {
-      if (_this2.state !== CHANNEL_STATES.joining) {
+      if (!_this2.isJoining()) {
         return;
       }
-
       _this2.socket.log("channel", "timeout " + _this2.topic, _this2.joinPush.timeout);
       _this2.state = CHANNEL_STATES.errored;
       _this2.rejoinTimer.scheduleTimeout();
@@ -431,7 +430,7 @@ var Channel = exports.Channel = function () {
   }, {
     key: "canPush",
     value: function canPush() {
-      return this.socket.isConnected() && this.state === CHANNEL_STATES.joined;
+      return this.socket.isConnected() && this.isJoined();
     }
   }, {
     key: "push",
@@ -526,7 +525,7 @@ var Channel = exports.Channel = function () {
     key: "rejoin",
     value: function rejoin() {
       var timeout = arguments.length <= 0 || arguments[0] === undefined ? this.timeout : arguments[0];
-      if (this.state === CHANNEL_STATES.leaving) {
+      if (this.isLeaving()) {
         return;
       }
       this.sendJoin(timeout);
@@ -557,6 +556,31 @@ var Channel = exports.Channel = function () {
     key: "replyEventName",
     value: function replyEventName(ref) {
       return "chan_reply_" + ref;
+    }
+  }, {
+    key: "isClosed",
+    value: function isClosed() {
+      return this.state === CHANNEL_STATES.closed;
+    }
+  }, {
+    key: "isErrored",
+    value: function isErrored() {
+      return this.state === CHANNEL_STATES.errored;
+    }
+  }, {
+    key: "isJoined",
+    value: function isJoined() {
+      return this.state === CHANNEL_STATES.joined;
+    }
+  }, {
+    key: "isJoining",
+    value: function isJoining() {
+      return this.state === CHANNEL_STATES.joining;
+    }
+  }, {
+    key: "isLeaving",
+    value: function isLeaving() {
+      return this.state === CHANNEL_STATES.leaving;
     }
   }]);
 
