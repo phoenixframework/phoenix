@@ -145,7 +145,7 @@ We'll also add jQuery to our application layout in `web/templates/layout/app.htm
     <%= render @view_module, @view_template, assigns %>
 
   </div> <!-- /container -->
-  <script src="//code.jquery.com/jquery-1.11.9.min.js"></script>
+  <script src="//code.jquery.com/jquery-1.12.4.min.js"></script>
   <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
 </body>
 ```
