@@ -178,6 +178,12 @@ defmodule Phoenix.Template do
     end
   end
 
+  @anno (if Version.match? System.version, ">= 1.2.6-dev" do
+    [generated: true]
+  else
+    [line: -1]
+  end)
+
   @doc false
   defmacro __before_compile__(env) do
     root    = Module.get_attribute(env.module, :phoenix_root)
@@ -193,7 +199,7 @@ defmodule Phoenix.Template do
     # We are using line -1 because we don't want warnings coming from
     # render/2 to be reported in case the user has defined a catch all
     # render/2 clause.
-    quote line: -1 do
+    quote @anno do
       unquote(codes)
 
       # Catch-all clause for rendering.

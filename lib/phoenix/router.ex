@@ -269,6 +269,12 @@ defmodule Phoenix.Router do
     end
   end
 
+  @anno (if Version.match? System.version, ">= 1.2.6-dev" do
+    [generated: true]
+  else
+    [line: -1]
+  end)
+
   @doc false
   defmacro __before_compile__(env) do
     routes = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse
@@ -290,9 +296,9 @@ defmodule Phoenix.Router do
         unquote(pipeline)
       end
 
-    # line: -1 is used here to avoid warnings if forwarding to root path
+    # @anno is used here to avoid warnings if forwarding to root path
     match_404 =
-      quote line: -1 do
+      quote @anno do
         defp match_route(conn, _method, _path_info, _host) do
           raise NoRouteError, conn: conn, router: __MODULE__
         end
