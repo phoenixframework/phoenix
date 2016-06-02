@@ -219,9 +219,12 @@ defmodule Phoenix.Channel.Server do
 
   def handle_info(%Message{topic: topic, event: event, payload: payload, ref: ref},
                   %{topic: topic} = socket) do
-    event
-    |> socket.channel.handle_in(payload, put_in(socket.ref, ref))
-    |> handle_result(:handle_in)
+    Phoenix.Endpoint.instrument socket, :phoenix_channel_receive,
+      %{ref: ref, event: event, params: payload, socket: socket}, fn ->
+      event
+      |> socket.channel.handle_in(payload, put_in(socket.ref, ref))
+      |> handle_result(:handle_in)
+    end
   end
 
   def handle_info(%Broadcast{topic: topic, event: event, payload: payload},
