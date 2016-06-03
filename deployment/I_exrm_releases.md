@@ -125,7 +125,7 @@ Check your digested files at 'priv/static'.
 
 ### Generating the Release
 
-Now that we've configured our application, let's build our production release by running `MIX_ENV=prod mix release` at the root of our application.
+Now that we've configured our application, let's build our production release by running `MIX_ENV=prod mix compile` and then `MIX_ENV=prod mix release` at the root of our application.
 
 ```console
 $ MIX_ENV=prod mix release
