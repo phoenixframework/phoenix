@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.6 (2016-6-03)
+
+* Enhancements
+  * Add Erlang 19 compatibility
+
 ## 1.1.5 (2016-6-01)
 
 * Enhancements
