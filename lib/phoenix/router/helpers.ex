@@ -208,6 +208,12 @@ defmodule Phoenix.Router.Helpers do
                   line: env.line, file: env.file)
   end
 
+  @anno (if :erlang.system_info(:otp_release) >= '19' do
+    [generated: true]
+  else
+    [line: -1]
+  end)
+
   @doc """
   Receives a route and returns the quoted definition for its helper function.
 
@@ -222,8 +228,8 @@ defmodule Phoenix.Router.Helpers do
     {bins, vars} = :lists.unzip(exprs.binding)
     segs = expand_segments(exprs.path)
 
-    # We are using -1 to avoid warnings in case a path has already been defined.
-    quote line: -1 do
+    # We are using @anno to avoid warnings in case a path has already been defined.
+    quote @anno do
       def unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars)) do
         unquote(:"#{helper}_path")(conn_or_endpoint, unquote(opts), unquote_splicing(vars), [])
       end
@@ -252,8 +258,8 @@ defmodule Phoenix.Router.Helpers do
     for {_, binds} <- route_vars, vars = Enum.map(binds, fn (_) -> {:_, [], nil} end) do
       arity = Enum.count(vars) + 2
 
-      # We are using -1 to avoid warnings in case a path has already been defined.
-      quote line: -1 do
+      # We are using @anno to avoid warnings in case a path has already been defined.
+      quote @anno do
         def unquote(:"#{helper}_path")(_conn_or_endpoint, action, unquote_splicing(vars)) do
           Phoenix.Router.Helpers.raise_route_error(__MODULE__, "#{unquote(helper)}_path", unquote(arity), action, unquote(valid_routes))
         end

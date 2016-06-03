@@ -146,6 +146,12 @@ defmodule Phoenix.Template do
     end
   end
 
+  @anno (if :erlang.system_info(:otp_release) >= '19' do
+    [generated: true]
+  else
+    [line: -1]
+  end)
+
   @doc false
   defmacro __before_compile__(env) do
     root = Module.get_attribute(env.module, :template_root)
@@ -157,10 +163,10 @@ defmodule Phoenix.Template do
     names = Enum.map(pairs, &elem(&1, 0))
     codes = Enum.map(pairs, &elem(&1, 1))
 
-    # We are using line -1 because we don't want warnings coming from
+    # We are using @anno because we don't want warnings coming from
     # render/2 to be reported in case the user has defined a catch all
     # render/2 clause.
-    quote line: -1 do
+    quote @anno do
       unquote(codes)
 
       def render(tpl, %{render_existing: {__MODULE__, tpl}}) do
