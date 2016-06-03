@@ -196,7 +196,7 @@ defmodule Phoenix.Template do
     names = Enum.map(pairs, &elem(&1, 0))
     codes = Enum.map(pairs, &elem(&1, 1))
 
-    # We are using line -1 because we don't want warnings coming from
+    # We are using @anno because we don't want warnings coming from
     # render/2 to be reported in case the user has defined a catch all
     # render/2 clause.
     quote @anno do
