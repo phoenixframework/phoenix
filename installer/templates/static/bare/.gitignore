@@ -4,7 +4,7 @@
 /deps
 /*.ez
 
-# Generate on crash by the VM
+# Generated on crash by the VM
 erl_crash.dump
 
 # The config/prod.secret.exs file by default contains sensitive
