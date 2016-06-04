@@ -617,7 +617,7 @@ defmodule Phoenix.Controller do
 
   defp do_render(conn, template, format, assigns) do
     assigns = to_map(assigns)
-    content_type = MIME.type(format)
+    content_type = Plug.MIME.type(format)
     conn =
       conn
       |> put_private(:phoenix_template, template)
@@ -940,7 +940,7 @@ defmodule Phoenix.Controller do
   end
 
   defp parse_exts("*/*" = type), do: type
-  defp parse_exts(type),         do: MIME.extensions(type)
+  defp parse_exts(type),         do: Plug.MIME.extensions(type)
 
   defp find_format("*/*", accepted), do: Enum.fetch!(accepted, 0)
   defp find_format(exts, accepted),  do: Enum.find(exts, &(&1 in accepted))
