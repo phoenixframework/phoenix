@@ -11,6 +11,9 @@ See these [`1.1.x` to `1.2.x` upgrade instructions](https://gist.github.com/chri
 * JavaScript client enhancements
   * Use return value of channel onMessage callback for specialized message transformations before dispatching to the channel
 
+* JavaScript client backward incompatible changes
+  * `Presence.syncState` and `Presence.syncDiff` now return a copy of the state instead of mutating it
+
 ## 1.2.0-rc.1 (2016-05-25)
 
 See these [`1.1.x` to `1.2.x` upgrade instructions](https://gist.github.com/chrismccord/29100e16d3990469c47f851e3142f766) to bring your existing apps up to speed.

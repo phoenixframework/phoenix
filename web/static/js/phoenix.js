@@ -127,7 +127,7 @@
 // they came online from:
 //
 //     let state = {}
-//     Presence.syncState(state, stateFromServer)
+//     state = Presence.syncState(state, stateFromServer)
 //     let listBy = (id, {metas: [first, ...rest]}) => {
 //       first.count = rest.length + 1 // count of this user's presences
 //       first.id = id
@@ -157,12 +157,12 @@
 //     let presences = {} // client's initial empty presence state
 //     // receive initial presence data from server, sent after join
 //     myChannel.on("presences", state => {
-//       Presence.syncState(presences, state, onJoin, onLeave)
+//       presences = Presence.syncState(presences, state, onJoin, onLeave)
 //       displayUsers(Presence.list(presences))
 //     })
 //     // receive "presence_diff" from server, containing join/leave events
 //     myChannel.on("presence_diff", diff => {
-//       Presence.syncDiff(presences, diff, onJoin, onLeave)
+//       presences = Presence.syncDiff(presences, diff, onJoin, onLeave)
 //       this.setState({users: Presence.list(room.presences, listBy)})
 //     })
 //
@@ -795,13 +795,14 @@ Ajax.states = {complete: 4}
 
 export var Presence = {
 
-  syncState(state, newState, onJoin, onLeave){
+  syncState(currentState, newState, onJoin, onLeave){
+    let state = this.clone(currentState)
     let joins = {}
     let leaves = {}
 
     this.map(state, (key, presence) => {
       if(!newState[key]){
-        leaves[key] = this.clone(presence)
+        leaves[key] = presence
       }
     })
     this.map(newState, (key, newPresence) => {
@@ -823,10 +824,11 @@ export var Presence = {
         joins[key] = newPresence
       }
     })
-    this.syncDiff(state, {joins: joins, leaves: leaves}, onJoin, onLeave)
+    return this.syncDiff(state, {joins: joins, leaves: leaves}, onJoin, onLeave)
   },
 
-  syncDiff(state, {joins, leaves}, onJoin, onLeave){
+  syncDiff(currentState, {joins, leaves}, onJoin, onLeave){
+    let state = this.clone(currentState)
     if(!onJoin){ onJoin = function(){} }
     if(!onLeave){ onLeave = function(){} }
 
@@ -850,6 +852,7 @@ export var Presence = {
         delete state[key]
       }
     })
+    return state
   },
 
   list(presences, chooser){

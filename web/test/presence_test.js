@@ -2,6 +2,8 @@ import assert from "assert"
 
 import {Presence} from "../static/js/phoenix"
 
+let clone = (obj) => { return JSON.parse(JSON.stringify(obj)) }
+
 let fixtures = {
   joins(){
     return {u1: {metas: [{id: 1, phx_ref: "1.2"}]}}
@@ -22,7 +24,11 @@ describe("syncState", () => {
   it("syncs empty state", () => {
     let newState = {u1: {metas: [{id: 1, phx_ref: "1"}]}}
     let state = {}
+    let stateBefore = clone(state)
     Presence.syncState(state, newState)
+    assert.deepEqual(state, stateBefore)
+
+    state = Presence.syncState(state, newState)
     assert.deepEqual(state, newState)
   })
 
@@ -37,7 +43,11 @@ describe("syncState", () => {
     let onLeave = (key, current, leftPres) => {
       left[key] = {current: current, leftPres: leftPres}
     }
+    let stateBefore = clone(state)
     Presence.syncState(state, newState, onJoin, onLeave)
+    assert.deepEqual(state, stateBefore)
+
+    state = Presence.syncState(state, newState, onJoin, onLeave)
     assert.deepEqual(state, newState)
     assert.deepEqual(joined, {
       u1: {current: null, newPres: {metas: [{id: 1, phx_ref: "1"}]}},
@@ -60,7 +70,7 @@ describe("syncState", () => {
     let onLeave = (key, current, leftPres) => {
       left[key] = {current: current, leftPres: leftPres}
     }
-    Presence.syncState(state, newState, onJoin, onLeave)
+    state = Presence.syncState(state, newState, onJoin, onLeave)
     assert.deepEqual(state, newState)
     assert.deepEqual(joined, {
       u3: {current: {metas: [{id: 3, phx_ref: "3"}]},
@@ -74,7 +84,10 @@ describe("syncDiff", () => {
   it("syncs empty state", () => {
     let joins = {u1: {metas: [{id: 1, phx_ref: "1"}]}}
     let state = {}
-    Presence.syncDiff(state, {
+    Presence.syncDiff(state, {joins: joins, leaves: {}})
+    assert.deepEqual(state, {})
+
+    state = Presence.syncDiff(state, {
       joins: joins,
       leaves: {}
     })
@@ -83,7 +96,7 @@ describe("syncDiff", () => {
 
   it("removes presence when meta is empty and adds additional meta", () => {
     let state = fixtures.state()
-    Presence.syncDiff(state, {joins: fixtures.joins(), leaves: fixtures.leaves()})
+    state = Presence.syncDiff(state, {joins: fixtures.joins(), leaves: fixtures.leaves()})
 
     assert.deepEqual(state, {
       u1: {metas: [{id: 1, phx_ref: "1"}, {id: 1, phx_ref: "1.2"}]},
@@ -95,7 +108,7 @@ describe("syncDiff", () => {
     let state = {
       u1: {metas: [{id: 1, phx_ref: "1"}, {id: 1, phx_ref: "1.2"}]}
     }
-    Presence.syncDiff(state, {joins: {}, leaves: {u1: {metas: [{id: 1, phx_ref: "1"}]}}})
+    state = Presence.syncDiff(state, {joins: {}, leaves: {u1: {metas: [{id: 1, phx_ref: "1"}]}}})
 
     assert.deepEqual(state, {
       u1: {metas: [{id: 1, phx_ref: "1.2"}]},
