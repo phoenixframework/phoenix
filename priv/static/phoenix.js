@@ -142,7 +142,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // they came online from:
 //
 //     let state = {}
-//     Presence.syncState(state, stateFromServer)
+//     state = Presence.syncState(state, stateFromServer)
 //     let listBy = (id, {metas: [first, ...rest]}) => {
 //       first.count = rest.length + 1 // count of this user's presences
 //       first.id = id
@@ -172,12 +172,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 //     let presences = {} // client's initial empty presence state
 //     // receive initial presence data from server, sent after join
 //     myChannel.on("presences", state => {
-//       Presence.syncState(presences, state, onJoin, onLeave)
+//       presences = Presence.syncState(presences, state, onJoin, onLeave)
 //       displayUsers(Presence.list(presences))
 //     })
 //     // receive "presence_diff" from server, containing join/leave events
 //     myChannel.on("presence_diff", diff => {
-//       Presence.syncDiff(presences, diff, onJoin, onLeave)
+//       presences = Presence.syncDiff(presences, diff, onJoin, onLeave)
 //       this.setState({users: Presence.list(room.presences, listBy)})
 //     })
 //
@@ -1110,15 +1110,16 @@ var Ajax = exports.Ajax = function () {
 Ajax.states = { complete: 4 };
 
 var Presence = exports.Presence = {
-  syncState: function syncState(state, newState, onJoin, onLeave) {
+  syncState: function syncState(currentState, newState, onJoin, onLeave) {
     var _this12 = this;
 
+    var state = this.clone(currentState);
     var joins = {};
     var leaves = {};
 
     this.map(state, function (key, presence) {
       if (!newState[key]) {
-        leaves[key] = _this12.clone(presence);
+        leaves[key] = presence;
       }
     });
     this.map(newState, function (key, newPresence) {
@@ -1150,12 +1151,13 @@ var Presence = exports.Presence = {
         joins[key] = newPresence;
       }
     });
-    this.syncDiff(state, { joins: joins, leaves: leaves }, onJoin, onLeave);
+    return this.syncDiff(state, { joins: joins, leaves: leaves }, onJoin, onLeave);
   },
-  syncDiff: function syncDiff(state, _ref2, onJoin, onLeave) {
+  syncDiff: function syncDiff(currentState, _ref2, onJoin, onLeave) {
     var joins = _ref2.joins;
     var leaves = _ref2.leaves;
 
+    var state = this.clone(currentState);
     if (!onJoin) {
       onJoin = function onJoin() {};
     }
@@ -1189,6 +1191,7 @@ var Presence = exports.Presence = {
         delete state[key];
       }
     });
+    return state;
   },
   list: function list(presences, chooser) {
     if (!chooser) {
