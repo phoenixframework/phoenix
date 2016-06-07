@@ -509,4 +509,9 @@ defmodule Phoenix.Router.HelpersTest do
     assert Helpers.static_url(conn_with_script_name(~w(foo)), "/images/foo.png") ==
            "https://static.example.com/api/images/foo.png"
   end
+
+  test "helpers properly encode named and query string params" do
+    assert Router.Helpers.post_path(__MODULE__, :show, "my path", foo: "my param") ==
+      "/posts/my%20path?foo=my+param"
+  end
 end
