@@ -269,11 +269,14 @@ defmodule Phoenix.Router.Helpers do
     raise ArgumentError, message: String.strip(message)
   end
 
+  @doc false
+  def encode_param(str), do: URI.encode(str, &URI.char_unreserved?/1)
+
   defp expand_segments([]), do: "/"
   defp expand_segments(segments) when is_list(segments),
     do: expand_segments(segments, "")
   defp expand_segments(segments) do
-    quote(do: "/" <> Enum.map_join(unquote(segments), "/", &URI.encode_www_form/1))
+    quote(do: "/" <> Enum.map_join(unquote(segments), "/", &unquote(__MODULE__).encode_param/1))
   end
 
   defp expand_segments([{:|, _, [h, t]}], acc),

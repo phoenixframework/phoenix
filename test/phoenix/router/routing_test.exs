@@ -77,6 +77,12 @@ defmodule Phoenix.Router.RoutingTest do
 
     conn = call(Router, :get, "/spaced users/hello matey")
     assert conn.params == %{"id" => "hello matey"}
+
+    conn = call(Router, :get, "/users/a%20b")
+    assert conn.params == %{"id" => "a b"}
+
+    conn = call(Router, :get, "/backups/a%20b/c%20d")
+    assert conn.params == %{"path" => ["a b", "c d"]}
   end
 
   test "get to custom action" do
