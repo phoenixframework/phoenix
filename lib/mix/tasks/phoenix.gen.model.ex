@@ -175,12 +175,13 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
   defp indexes(plural, assocs, uniques) do
     Enum.concat(
-      Enum.map(assocs, fn {key, _} ->
-        "create index(:#{plural}, [:#{key}])"
-      end),
-      Enum.map(uniques, fn key ->
-        "create unique_index(:#{plural}, [:#{key}])"
-      end))
+      Enum.map(uniques, fn key -> {key, true} end),
+      Enum.map(assocs, fn {key, _} -> {key, false} end))
+    |> Enum.uniq_by(fn {key, _} -> key end)
+    |> Enum.map(fn
+      {key, false} -> "create index(:#{plural}, [:#{key}])"
+      {key, true}  -> "create unique_index(:#{plural}, [:#{key}])"
+    end)
   end
 
   defp migration(false, _path), do: []
