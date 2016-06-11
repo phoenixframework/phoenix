@@ -196,6 +196,18 @@ defmodule Mix.Tasks.Phoenix.New do
         :error -> adapter_config
       end
 
+
+    generator_config =
+      case get_generator_config(adapter_config) do
+        []               -> nil
+        generator_config ->
+          """
+
+          # Configure phoenix generators
+          config :phoenix, :generators#{kw_to_config(generator_config)}
+          """
+      end
+
     binding = [application_name: app,
                application_module: mod,
                phoenix_dep: phoenix_dep(phoenix_path),
@@ -214,6 +226,7 @@ defmodule Mix.Tasks.Phoenix.New do
                adapter_module: adapter_module,
                adapter_config: adapter_config,
                hex?: Code.ensure_loaded?(Hex),
+               generator_config: generator_config,
                namespaced?: Macro.camelize(app) != mod]
 
     copy_from path, binding, @new
@@ -274,21 +287,10 @@ defmodule Mix.Tasks.Phoenix.New do
         adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:prod]},
         pool_size: 20
       """
-
-      case generator_config(adapter_config) do
-        [] ->
-          :ok
-        generator_config ->
-          append_to path, "config/config.exs", """
-
-          # Configure phoenix generators
-          config :phoenix, :generators#{kw_to_config(generator_config)}
-          """
-      end
     end
   end
 
-  defp generator_config(adapter_config) do
+  defp get_generator_config(adapter_config) do
     adapter_config
     |> Keyword.take([:binary_id, :migration, :sample_binary_id])
     |> Enum.filter(fn {_, value} -> not is_nil(value) end)
