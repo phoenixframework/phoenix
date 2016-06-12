@@ -23,7 +23,9 @@ When we install Elixir using instructions from the Elixir [Installation Page](ht
 People using Debian-based systems may need to explicitly install Erlang to get all the needed packages.
 
 ```console
-$ sudo apt-get install erlang
+$ wget https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb && sudo dpkg -i erlang-solutions_1.0_all.deb
+$ sudo apt-get update
+$ sudo apt-get install esl-erlang
 ```
 
 ### Phoenix
