@@ -7,8 +7,8 @@ defmodule Phoenix.Mixfile do
     [app: :phoenix,
      version: @version,
      elixir: "~> 1.2",
-     deps: deps,
-     package: package,
+     deps: deps(),
+     package: package(),
 
      # Because we define protocols on the fly to test
      # Phoenix.Param, we need to disable consolidation

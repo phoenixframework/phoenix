@@ -13,8 +13,8 @@ defmodule <%= application_module %>.Mixfile do
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,<%= if ecto do %>
-     aliases: aliases,<% end %>
-     deps: deps]
+     aliases: aliases(),<% end %>
+     deps: deps()]
   end
 
   # Configuration for the OTP application.

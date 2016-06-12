@@ -93,7 +93,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       config = ~r/config :photo_blog, PhotoBlog.Repo,/
       assert_file "photo_blog/mix.exs", fn file ->
         assert file =~ "{:phoenix_ecto,"
-        assert file =~ "aliases: aliases"
+        assert file =~ "aliases: aliases()"
         assert file =~ "ecto.setup"
         assert file =~ "ecto.reset"
       end
@@ -419,7 +419,7 @@ defmodule Umbrella.Mixfile do
 
   def project do
     [apps_path: "apps",
-     deps: deps]
+     deps: deps()]
   end
 
   defp deps do
