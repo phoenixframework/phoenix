@@ -2,10 +2,10 @@ When creating an app, it's important that we're able to seed our datastore with 
 
 Fortunately, Phoenix already provides us with a convention for seeding data. By default Phoenix generates a script file for each app at `priv/repo/seeds.exs`, which we can use to populate our datastore.
 
-Also note that in order to seed data as in the example below you should have alrady generated and run the related migration (i.e., Link migration, controller, model, etc.) and updated your `router.ex`, as described in the [Ecto Models Guide](http://www.phoenixframework.org/docs/ecto-models) (if you haven't completed that Guide yet, should should do so before proceeding further).
+Also note that in order to seed data as in the example below you should have already generated and run the related migration (i.e., Link migration, controller, model, etc.) and updated your `router.ex`, as described in the [Ecto Models Guide](http://www.phoenixframework.org/docs/ecto-models) (if you haven't completed that Guide yet, should should do so before proceeding further).
 
 So in order to seed data, we simply need to add a script to `seeds.exs` that uses our datastore to directly add the data we want. As you can see from the comments that Phoenix generated for us in `seeds.exs` file, we should follow this pattern:
- 
+
 ```elixir
   <%= application_module %>.Repo.insert!(%<%= application_module %>.SomeModel{})
 ```
