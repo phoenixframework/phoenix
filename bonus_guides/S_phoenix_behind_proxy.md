@@ -29,3 +29,44 @@ config :hello_phoenix, HelloPhoenix.Endpoint,
 
 . . .
 ```
+
+### Nginx Considerations
+Nginx requires some additional configuration in order to utilize channels.  Websockets, which are based on HTTP requests, operate on the notion that you are _Upgrading_ the connection from standard stateless HTTP to a persistant websocket connection.
+
+Thankfully, this is relatively straightforward to accomplish with nginx.
+
+Below is a standard `sites-enabled` style nginx configuration, for a given domain `my-app.domain`.
+
+```
+// /etc/nginx/sites-enabled/my-app.domain
+upstream phoenix {
+  server 127.0.0.1:4000 max_fails=5 fail_timeout=60s;
+}
+
+server {
+  server_name my-app.domain;
+  listen 80;
+
+  location / {
+    allow all;
+
+    # Proxy Headers
+    proxy_http_version 1.1;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Cluster-Client-Ip $remote_addr;
+
+    # The Important Websocket Bits!
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+
+    proxy_pass http://phoenix;
+  }
+}
+
+```
+This configures two objects - The Proxy endpoint, defined as an `upstream`, as well as a `server`, which is configured to listen under a specific domain name and port.
+
+The `server` is the primary concern, here.  With this configuraiton, you have ensured that the correct headers are passed down to the Phoenix process for channels to work, through the `Upgrade` and `Connection` headers.
+
+These headers do not immediately turn on websockets, you're still responsible for that in your javascript code, the headers simply allow for the correct capabilities to be passed to Phoenix from the browser.
