@@ -7,7 +7,7 @@ defmodule <%= base %>.Repo.Migrations.Create<%= scoped %> do
 <% end %><%= for {k, v} <- attrs do %>      add <%= inspect k %>, <%= inspect v %><%= migration_defaults[k] %>
 <% end %><%= for {_, i, _, s} <- assocs do %>      add <%= inspect i %>, references(<%= inspect(s) %>, on_delete: :nothing<%= if binary_id do %>, type: :binary_id<% end %>)
 <% end %>
-      timestamps
+      timestamps()
     end
 <%= for index <- indexes do %>    <%= index %>
 <% end %>

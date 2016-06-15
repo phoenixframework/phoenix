@@ -35,7 +35,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
         assert file =~ "add :secret, :uuid"
         assert file =~ "add :desc, :text"
         assert file =~ "add :blob, :binary"
-        assert file =~ "timestamps"
+        assert file =~ "timestamps()"
       end
 
       assert_file "web/models/user.ex", fn file ->
@@ -50,7 +50,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
         assert file =~ "field :secret, Ecto.UUID"
         assert file =~ "field :desc, :string"
         assert file =~ "field :blob, :binary"
-        assert file =~ "timestamps"
+        assert file =~ "timestamps()"
         assert file =~ "def changeset"
         assert file =~ "[:name, :age, :nicks, :famous, :born_at, :secret, :desc, :blob]"
       end
