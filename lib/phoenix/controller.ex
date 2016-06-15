@@ -472,7 +472,7 @@ defmodule Phoenix.Controller do
 
   See `render/3` for more information.
   """
-  @spec render(Plug.Conn.t, Dict.t | binary | atom) :: Plug.Conn.t
+  @spec render(Plug.Conn.t, Keyword.t | map | binary | atom) :: Plug.Conn.t
   def render(conn, template_or_assigns \\ [])
 
   def render(conn, template) when is_binary(template) or is_atom(template) do
@@ -581,10 +581,10 @@ defmodule Phoenix.Controller do
   `layout_formats/2` and `put_layout_formats/2` can be used to configure
   which formats support/require layout rendering (defaults to "html" only).
   """
-  @spec render(Plug.Conn.t, binary | atom, Dict.t) :: Plug.Conn.t
+  @spec render(Plug.Conn.t, binary | atom, Keyword.t | map) :: Plug.Conn.t
   @spec render(Plug.Conn.t, module, binary | atom) :: Plug.Conn.t
   def render(conn, template, assigns)
-    when is_atom(template) and (is_map(assigns) or is_list(assigns)) do
+      when is_atom(template) and (is_map(assigns) or is_list(assigns)) do
     format =
       get_format(conn) ||
       raise "cannot render template #{inspect template} because conn.params[\"_format\"] is not set. " <>
@@ -592,7 +592,8 @@ defmodule Phoenix.Controller do
     do_render(conn, template_name(template, format), format, assigns)
   end
 
-  def render(conn, template, assigns) when is_binary(template) do
+  def render(conn, template, assigns)
+      when is_binary(template) and (is_map(assigns) or is_list(assigns)) do
     case Path.extname(template) do
       "." <> format ->
         do_render(conn, template, format, assigns)
@@ -603,13 +604,23 @@ defmodule Phoenix.Controller do
   end
 
   def render(conn, view, template)
-    when is_atom(view) and is_binary(template) or is_atom(template) do
+      when is_atom(view) and (is_binary(template) or is_atom(template)) do
     render(conn, view, template, [])
   end
 
-  @spec render(Plug.Conn.t, atom, atom | binary, Dict.t) :: Plug.Conn.t
+  @doc """
+  A shortcut that renders the given template in the given view.
+
+  Equivalent to:
+
+      conn
+      |> put_view(view)
+      |> render(template, assigns)
+
+  """
+  @spec render(Plug.Conn.t, atom, atom | binary, Keyword.t | map) :: Plug.Conn.t
   def render(conn, view, template, assigns)
-    when is_atom(view) and is_binary(template) or is_atom(template) do
+      when is_atom(view) and (is_binary(template) or is_atom(template)) do
     conn
     |> put_view(view)
     |> render(template, assigns)
