@@ -345,8 +345,9 @@ defmodule Phoenix.Endpoint do
       `"index.html"` - and the `:format` key - for the format of the template.
     * `:phoenix_channel_join` - the joining of a channel. The `%Phoenix.Socket{}`
       and join params are passed as runtime metadata via `:socket` and `:params`.
-    * `:phoenix_channel_receive` - the receiving of a message over a channel. The `%Phoenix.Socket{}`,
-      payload, event, and ref are passed as runtime metadata via `:socket`, `:params`, `:event`, and `:ref`.
+    * `:phoenix_channel_receive` - the receiving of an incoming message over a
+      channel. The `%Phoenix.Socket{}`, payload, event, and ref are passed as
+      runtime metadata via `:socket`, `:params`, `:event`, and `:ref`.
 
   ### Dynamic instrumentation
 
