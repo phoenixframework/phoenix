@@ -322,7 +322,6 @@ defmodule Phoenix.View do
 
   defp to_map(assigns) when is_map(assigns), do: assigns
   defp to_map(assigns) when is_list(assigns), do: :maps.from_list(assigns)
-  defp to_map(assigns), do: Dict.merge(%{}, assigns)
 
   defp assign_model(assigns, view, model) do
     as = Map.get(assigns, :as) || view.__resource__
