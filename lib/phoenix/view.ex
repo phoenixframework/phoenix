@@ -250,7 +250,7 @@ defmodule Phoenix.View do
 
   """
   def render_existing(module, template, assigns \\ []) do
-    render(module, template, Dict.put(assigns, :render_existing, {module, template}))
+    render(module, template, put_in(assigns[:render_existing], {module, template}))
   end
 
   @doc """
@@ -322,7 +322,6 @@ defmodule Phoenix.View do
 
   defp to_map(assigns) when is_map(assigns), do: assigns
   defp to_map(assigns) when is_list(assigns), do: :maps.from_list(assigns)
-  defp to_map(assigns), do: Dict.merge(%{}, assigns)
 
   defp assign_model(assigns, view, model) do
     as = Map.get(assigns, :as) || view.__resource__
