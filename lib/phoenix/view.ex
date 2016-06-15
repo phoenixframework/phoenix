@@ -250,7 +250,7 @@ defmodule Phoenix.View do
 
   """
   def render_existing(module, template, assigns \\ []) do
-    render(module, template, Dict.put(assigns, :render_existing, {module, template}))
+    render(module, template, Keyword.put(assigns, :render_existing, {module, template}))
   end
 
   @doc """

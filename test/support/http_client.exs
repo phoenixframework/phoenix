@@ -26,7 +26,7 @@ defmodule Phoenix.Integration.HTTPClient do
   end
   def request(method, url, headers, body) do
     url     = String.to_char_list(url)
-    headers = headers |> Dict.put_new("content-type", "text/html")
+    headers = headers |> Map.put_new("content-type", "text/html")
     ct_type = headers["content-type"] |> String.to_char_list
 
     header = Enum.map headers, fn {k, v} ->
