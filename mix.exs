@@ -40,7 +40,7 @@ defmodule Phoenix.Mixfile do
 
   defp deps do
     [{:cowboy, "~> 1.0", optional: true},
-     {:plug, "~> 1.0"},
+     {:plug, "~> 1.1"},
      {:phoenix_pubsub, "~> 1.0.0-rc"},
      {:poison, "~> 1.5 or ~> 2.0"},
      {:gettext, "~> 0.8", only: :test},
@@ -50,7 +50,7 @@ defmodule Phoenix.Mixfile do
      {:inch_ex, "~> 0.2", only: :docs},
 
      # Test dependencies
-     {:phoenix_html, "~> 2.4", only: :test},
+     {:phoenix_html, "~> 2.6", only: :test},
      {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test}]
   end
 
