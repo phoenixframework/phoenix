@@ -85,7 +85,10 @@ defmodule Phoenix.ConnTest do
       conn = post conn, "/login"
 
       # We can also recycle manually in case we want custom headers
-      conn |> recycle() |> put_req_header("x-special", "nice")
+      conn = 
+        conn
+        |> recycle()
+        |> put_req_header("x-special", "nice")
 
       # No recycling as we did it explicitly
       conn = delete conn, "/logout"
