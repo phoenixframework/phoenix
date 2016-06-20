@@ -166,6 +166,7 @@ defmodule Mix.Tasks.Phoenix.New do
       [path|_] ->
         app = opts[:app] || Path.basename(Path.expand(path))
         check_application_name!(app, !!opts[:app])
+        check_directory_existence!(app)
         mod = opts[:module] || Macro.camelize(app)
         check_module_name_validity!(mod)
         check_module_name_availability!(mod)
@@ -414,6 +415,12 @@ defmodule Mix.Tasks.Phoenix.New do
     name = Module.concat(Elixir, name)
     if Code.ensure_loaded?(name) do
       Mix.raise "Module name #{inspect name} is already taken, please choose another name"
+    end
+  end
+
+  def check_directory_existence!(name) do
+    if File.dir?(name) && !Mix.shell.yes?("The directory #{name} already exists. Are you sure you want to continue?") do
+      Mix.raise "Please select another directory for installation."
     end
   end
 
