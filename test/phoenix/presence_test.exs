@@ -49,6 +49,15 @@ defmodule Phoenix.PresenceTest do
            MyPresence.list(config.topic)
   end
 
+  test "includes?/2 returns true if key is present", config do
+    assert {:ok, _} = MyPresence.track(self(), config.topic, 1, %{name: "u1"})
+    assert MyPresence.includes?(config.topic, 1)
+  end
+
+  test "includes?/2 returns false if key isn't present", config do
+    refute MyPresence.includes?(config.topic, 7)
+  end
+
   test "handle_diff broadcasts events with default fetched data",
     %{topic: topic} = config do
 

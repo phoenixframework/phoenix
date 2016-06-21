@@ -160,6 +160,11 @@ defmodule Phoenix.Presence do
 
       def fetch(_topic, presences), do: presences
 
+      def includes?(%Phoenix.Socket{topic: topic}, key), do: includes?(topic, key)
+      def includes?(topic, key) do
+        Phoenix.Presence.includes?(__MODULE__, topic, key)
+      end
+
       def list(%Phoenix.Socket{topic: topic}), do: list(topic)
       def list(topic) do
         Phoenix.Presence.list(__MODULE__, topic)
@@ -202,6 +207,13 @@ defmodule Phoenix.Presence do
         Phoenix.PubSub.direct_broadcast!(node_name, pubsub_server, topic, msg)
       end
     end)
+  end
+
+  @doc """
+  Returns true if there's a certain presence for a topic.
+  """
+  def includes?(module, topic, key) do
+    Enum.find(Phoenix.Tracker.list(module, topic), fn {k, _} -> k == key end) != nil
   end
 
   @doc """
