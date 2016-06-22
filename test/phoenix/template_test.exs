@@ -108,6 +108,20 @@ defmodule Phoenix.TemplateTest do
     assert OtherViews.render("foo") == "Not found: foo"
   end
 
+  test "template_not_found detects and short circuits infinite call-stacks" do
+    defmodule InfiniteView do
+      use Phoenix.Template, root: Path.join(__DIR__, "not-exists")
+
+      def template_not_found(_template, assigns) do
+        render "this-does-not-exist.html", assigns
+      end
+    end
+
+    assert_raise Phoenix.Template.UndefinedError, ~r/Could not render "this-does-not-exist.html".*/, fn ->
+      InfiniteView.render("this-does-not-exist.html")
+    end
+  end
+
   test "generates __phoenix_recompile__? function" do
     refute View.__phoenix_recompile__?
   end

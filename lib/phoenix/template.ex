@@ -164,14 +164,7 @@ defmodule Phoenix.Template do
       """
       @spec template_not_found(Phoenix.Template.name, map) :: no_return
       def template_not_found(template, assigns) do
-        {root, pattern, names} = __templates__()
-        raise UndefinedError,
-          assigns: assigns,
-          available: names,
-          template: template,
-          root: root,
-          pattern: pattern,
-          module: __MODULE__
+        Template.raise_template_not_found(__MODULE__, template, assigns)
       end
 
       defoverridable [template_not_found: 2]
@@ -212,8 +205,11 @@ defmodule Phoenix.Template do
         nil
       end
 
+      defp render_template(template, %{template_not_found: module} = assigns) do
+        Template.raise_template_not_found(__MODULE__, template, assigns)
+      end
       defp render_template(template, assigns) do
-        template_not_found(template, assigns)
+        template_not_found(template, Map.put(assigns, :template_not_found, __MODULE__))
       end
 
       @doc """
@@ -360,6 +356,18 @@ defmodule Phoenix.Template do
     find_all(root, pattern)
     |> Enum.sort()
     |> :erlang.md5()
+  end
+
+  @doc false
+  def raise_template_not_found(view_module, template, assigns) do
+    {root, pattern, names} = view_module.__templates__()
+    raise UndefinedError,
+      assigns: assigns,
+      available: names,
+      template: template,
+      root: root,
+      pattern: pattern,
+      module: view_module
   end
 
   defp compile(path, root) do
