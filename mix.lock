@@ -6,7 +6,7 @@
   "inch_ex": {:hex, :inch_ex, "0.2.3", "4e5050e973fd83afd69424f43d88dc833829d8910f4a7a2db3b2ed6f5c394a24", [:mix], [{:poison, "~> 1.2", [hex: :poison, optional: false]}]},
   "mime": {:hex, :mime, "1.0.0", "b63027733bba00b1013bad14e25dc8b6629ecb817731544a88a0fd14f2a55685", [:mix], []},
   "phoenix_html": {:hex, :phoenix_html, "2.6.0", "b9f7e091eb3d908586d9634596478fb9e577ee033d76f4ff327a745569bdd2d8", [:mix], [{:plug, "~> 0.13 or ~> 1.0", [hex: :plug, optional: false]}]},
-  "phoenix_pubsub": {:hex, :phoenix_pubsub, "1.0.0-rc.0", "5c9453f9c7c8e4982ba48f408e4cec973ffb312bbe0da5fbe47899b9c91c48c0", [:mix], []},
+  "phoenix_pubsub": {:hex, :phoenix_pubsub, "1.0.0", "c31af4be22afeeebfaf246592778c8c840e5a1ddc7ca87610c41ccfb160c2c57", [:mix], []},
   "plug": {:hex, :plug, "1.1.6", "8927e4028433fcb859e000b9389ee9c37c80eb28378eeeea31b0273350bf668b", [:mix], [{:cowboy, "~> 1.0", [hex: :cowboy, optional: true]}]},
   "poison": {:hex, :poison, "1.5.0", "f2f4f460623a6f154683abae34352525e1d918380267cdbd949a07ba57503248", [:mix], []},
   "ranch": {:hex, :ranch, "1.2.1", "a6fb992c10f2187b46ffd17ce398ddf8a54f691b81768f9ef5f461ea7e28c762", [:make], []},
