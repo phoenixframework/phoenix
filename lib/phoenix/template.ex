@@ -205,7 +205,7 @@ defmodule Phoenix.Template do
         nil
       end
 
-      defp render_template(template, %{template_not_found: module} = assigns) do
+      defp render_template(template, %{template_not_found: __MODULE__} = assigns) do
         Template.raise_template_not_found(__MODULE__, template, assigns)
       end
       defp render_template(template, assigns) do
