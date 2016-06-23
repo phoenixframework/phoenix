@@ -71,7 +71,7 @@ defmodule Phoenix.Presence do
   Presence metadata should be minimized and used to store small,
   ephemeral state, such as a user's "online" or "away" status.
   More detailed information, such as user details that need to
-  be fetched from the database can be achieved overriding the `fetch/2`
+  be fetched from the database, can be achieved by overriding the `fetch/2`
   function. The `fetch/2` callback is triggered when using `list/1`
   and serves as a mechanism to fetch presence information a single time,
   before broadcasting the information to all channel subscribers.
