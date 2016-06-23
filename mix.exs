@@ -35,7 +35,7 @@ defmodule Phoenix.Mixfile do
            generators: [],
            filter_parameters: ["password"],
            serve_endpoints: false,
-           gzippable_exts: ~w(.js .css .txt .text .html .json)]]
+           gzippable_exts: ~w(.js .css .txt .text .html .json .svg)]]
   end
 
   defp deps do
