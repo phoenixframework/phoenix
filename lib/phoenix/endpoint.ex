@@ -134,7 +134,7 @@ defmodule Phoenix.Endpoint do
       as a workaround for releases where environment specific information
       is loaded only at compile-time.
 
-      The `:host` option requires a string or {:system, "ENV_VAR"}`. Similar
+      The `:host` option requires a string or `{:system, "ENV_VAR"}`. Similar
       to `:port`, when given a tuple like `{:system, "HOST"}`, the host
       will be referenced from `System.get_env("HOST")` at runtime.
 
