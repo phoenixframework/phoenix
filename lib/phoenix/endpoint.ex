@@ -83,10 +83,6 @@ defmodule Phoenix.Endpoint do
 
   ### Runtime configuration
 
-    * `:root` - the root of your application for running external commands.
-      This is only required if the watchers or code reloading functionality
-      are enabled.
-
     * `:cache_static_manifest` - a path to a json manifest file that contains
       static files and their digested version. This is typically set to
       "priv/static/manifest.json" which is the file automatically generated

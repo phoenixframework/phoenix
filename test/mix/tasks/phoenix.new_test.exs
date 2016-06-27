@@ -30,8 +30,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
     Application.put_env(:photo_blog, PhotoBlog.Endpoint,
       secret_key_base: String.duplicate("abcdefgh", 8),
-      code_reloader: true,
-      root: File.cwd!)
+      code_reloader: true)
 
     in_tmp "bootstrap", fn ->
       Mix.Tasks.Phoenix.New.run(["photo_blog", "--no-brunch", "--no-ecto"])
