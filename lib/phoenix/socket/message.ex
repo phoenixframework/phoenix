@@ -11,6 +11,7 @@ defmodule Phoenix.Socket.Message do
     * `ref` - The unique string ref
   """
 
+  @type t :: %Phoenix.Socket.Message{}
   defstruct topic: nil, event: nil, payload: nil, ref: nil
 
   @doc """
@@ -46,6 +47,7 @@ defmodule Phoenix.Socket.Reply do
 
   """
 
+  @type t :: %Phoenix.Socket.Reply{}
   defstruct topic: nil, status: nil, payload: nil, ref: nil
 end
 
@@ -61,5 +63,6 @@ defmodule Phoenix.Socket.Broadcast do
 
   """
 
+  @type t :: %Phoenix.Socket.Broadcast{}
   defstruct topic: nil, event: nil, payload: nil
 end
