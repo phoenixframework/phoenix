@@ -11,7 +11,7 @@ defmodule <%= module %> do
   @doc """
   Builds a changeset based on the `struct` and `params`.
   """
-  def changeset(struct, params \\ %{}) do
+  def changeset(struct, params \\ :empty) do
     struct
     |> cast(params, [<%= Enum.map_join(attrs, ", ", &inspect(elem(&1, 0))) %>])
     |> validate_required([<%= Enum.map_join(attrs, ", ", &inspect(elem(&1, 0))) %>])
