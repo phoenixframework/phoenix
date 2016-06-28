@@ -530,7 +530,7 @@ defmodule Phoenix.ConnTest do
 
   See `bypass_through/1`.
   """
-  @spec bypass_through(Conn.t, Module.t, :atom | List.t) :: Conn.t
+  @spec bypass_through(Conn.t, module, :atom | list) :: Conn.t
   def bypass_through(conn, router, pipelines \\ []) do
     Plug.Conn.put_private(conn, :phoenix_bypass, {router, List.wrap(pipelines)})
   end
@@ -560,7 +560,7 @@ defmodule Phoenix.ConnTest do
       end
       assert {404, [_h | _t], "Page not found"} = response
   """
-  @spec assert_error_sent(Integer.t | atom, function) :: {Integer.t, List.t, term}
+  @spec assert_error_sent(integer | atom, function) :: {integer, list, term}
   def assert_error_sent(status_int_or_atom, func) do
     expected_status = Plug.Conn.Status.code(status_int_or_atom)
     discard_previously_sent()

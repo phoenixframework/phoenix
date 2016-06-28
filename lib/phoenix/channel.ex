@@ -251,7 +251,7 @@ defmodule Phoenix.Channel do
   alias Phoenix.Channel.Server
 
   @type reply :: status :: atom | {status :: atom, response :: map}
-  @type socket_ref :: {transport_pid :: Pid, serializer :: Module.t,
+  @type socket_ref :: {transport_pid :: Pid, serializer :: module,
                        topic :: binary, ref :: binary}
 
 
