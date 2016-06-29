@@ -34,7 +34,7 @@ defmodule Phoenix.Integration.HTTPClient do
     end
 
     # Generate a random profile per request to avoid reuse
-    profile = :crypto.rand_bytes(4) |> Base.encode16 |> String.to_atom
+    profile = :crypto.strong_rand_bytes(4) |> Base.encode16 |> String.to_atom
     {:ok, pid} = :inets.start(:httpc, profile: profile)
 
     resp =
