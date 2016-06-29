@@ -382,12 +382,14 @@ defmodule Mix.Tasks.Phoenix.New do
 
   defp cmd(cmd) do
     Mix.shell.info [:green, "* running ", :reset, cmd]
-
-    # We use :os.cmd/1 because there is a bug in OTP
-    # where we cannot execute .cmd files on Windows.
-    # We could use Mix.shell.cmd/1 but that automatically
-    # outputs to the terminal and we don't want that.
-    :os.cmd(String.to_char_list(cmd))
+    case Mix.shell.cmd(cmd, [quiet: true]) do
+      0 ->
+        true
+      _ ->
+        Mix.shell.error [:red, "* error ", :reset, "command failed to execute, " <>
+          "please run the following command again after installation: \"#{cmd}\""]
+        false
+    end
   end
 
   defp check_application_name!(name, from_app_flag) do
