@@ -382,7 +382,14 @@ defmodule Mix.Tasks.Phoenix.New do
 
   defp cmd(cmd) do
     Mix.shell.info [:green, "* running ", :reset, cmd]
-    Mix.shell.cmd(cmd, [quiet: true])
+    case Mix.shell.cmd(cmd, [quiet: true]) do
+      0 ->
+        true
+      _ ->
+        Mix.shell.error [:red, "* error ", :reset, "command failed to execute, " <>
+          "please run the following command again after installation: \"#{cmd}\""]
+        false
+    end
   end
 
   defp check_application_name!(name, from_app_flag) do
