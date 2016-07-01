@@ -96,17 +96,19 @@ defmodule Phoenix.Integration.EndpointTest do
   alias Phoenix.Integration.HTTPClient
 
   test "adapters starts on configured port and serves requests and stops for prod" do
-    # Has server: true
-    capture_log fn -> {:ok, _} = ProdEndpoint.start_link end
+    capture_log fn ->
+      # Has server: true
+      {:ok, _} = ProdEndpoint.start_link()
 
-    # Requests
-    {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
-    assert resp.status == 200
-    assert resp.body == "ok"
+      # Requests
+      {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
+      assert resp.status == 200
+      assert resp.body == "ok"
 
-    {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/unknown", %{})
-    assert resp.status == 404
-    assert resp.body == "404.html from Phoenix.ErrorView"
+      {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/unknown", %{})
+      assert resp.status == 404
+      assert resp.body == "404.html from Phoenix.ErrorView"
+    end
 
     assert capture_log(fn ->
       {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/oops", %{})
