@@ -4,6 +4,7 @@ defmodule Mix.Tasks.Phoenix.Digest do
 
   @shortdoc "Digests and compress static files"
   @recursive true
+  @version_param true
 
   @moduledoc """
   Digests and compress static files.
@@ -32,16 +33,23 @@ defmodule Mix.Tasks.Phoenix.Digest do
     * app-eb0a5b9302e8d32828d8a73f137cc8f0.js
     * app-eb0a5b9302e8d32828d8a73f137cc8f0.js.gz
     * manifest.json
+
+  ## version_param
+
+  Generated links include `version_param` by default 
+  an option `--no-version-param` can be sent to exlcude 
+  the version parameter.
   """
 
   def run(args) do
-    {opts, args, _} = OptionParser.parse(args, aliases: [o: :output])
+    {opts, args, _} = OptionParser.parse(args, aliases: [o: :output], switches: [version_param: :boolean])
     input_path  = List.first(args) || @default_input_path
     output_path = opts[:output] || input_path
+    version_param = Keyword.get(opts, :version_param, @version_param)
 
     {:ok, _} = Application.ensure_all_started(:phoenix)
 
-    case Phoenix.Digester.compile(input_path, output_path) do
+    case Phoenix.Digester.compile(input_path, output_path, version_param) do
       :ok ->
         # We need to call build structure so everything we have
         # generated into priv is copied to _build in case we have

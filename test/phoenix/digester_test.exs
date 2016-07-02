@@ -2,15 +2,17 @@ defmodule Phoenix.DigesterTest do
   use ExUnit.Case, async: true
 
   test "fails when the given paths are invalid" do
-    assert {:error, :invalid_path} = Phoenix.Digester.compile("nonexistent path", "/ ?? /path")
+    version_param = true
+    assert {:error, :invalid_path} = Phoenix.Digester.compile("nonexistent path", "/ ?? /path", version_param)
   end
 
   test "digests and compress files" do
     output_path = Path.join("tmp", "phoenix_digest")
     input_path  = "test/fixtures/digest/priv/static/"
+    version_param = true
 
     File.rm_rf!(output_path)
-    assert :ok = Phoenix.Digester.compile(input_path, output_path)
+    assert :ok = Phoenix.Digester.compile(input_path, output_path, version_param)
 
     output_files = assets_files(output_path)
 
@@ -34,9 +36,10 @@ defmodule Phoenix.DigesterTest do
   test "digests and compress nested files" do
     output_path = Path.join("tmp", "phoenix_digest_nested")
     input_path  = "test/fixtures/digest/priv/"
+    version_param = true
 
     File.rm_rf!(output_path)
-    assert :ok = Phoenix.Digester.compile(input_path, output_path)
+    assert :ok = Phoenix.Digester.compile(input_path, output_path, version_param)
 
     output_files = assets_files(output_path)
 
@@ -56,13 +59,14 @@ defmodule Phoenix.DigesterTest do
   test "doesn't duplicate files when digesting and compressing twice" do
     input_path = Path.join("tmp", "phoenix_digest_twice")
     input_file = Path.join(input_path, "file.js")
+    version_param = true
 
     File.rm_rf!(input_path)
     File.mkdir_p!(input_path)
     File.write!(input_file, "console.log('test');")
 
-    assert :ok = Phoenix.Digester.compile(input_path, input_path)
-    assert :ok = Phoenix.Digester.compile(input_path, input_path)
+    assert :ok = Phoenix.Digester.compile(input_path, input_path, version_param)
+    assert :ok = Phoenix.Digester.compile(input_path, input_path, version_param)
 
     output_files = assets_files(input_path)
 
@@ -74,9 +78,10 @@ defmodule Phoenix.DigesterTest do
   test "digests only absolute and relative asset paths found within stylesheets" do
     output_path = Path.join("tmp", "phoenix_digest_stylesheets")
     input_path  = "test/fixtures/digest/priv/static/"
+    version_param = true
 
     File.rm_rf!(output_path)
-    assert :ok = Phoenix.Digester.compile(input_path, output_path)
+    assert :ok = Phoenix.Digester.compile(input_path, output_path, version_param)
 
     digested_css_filename =
       assets_files(output_path)
@@ -95,12 +100,35 @@ defmodule Phoenix.DigesterTest do
     assert digested_css =~ ~r"http://www.phoenixframework.org/absolute.png"
   end
 
+  test "does not include version params if --no-version-param is set" do
+    output_path = Path.join("tmp", "phoenix_digest_stylesheets")
+    input_path  = "test/fixtures/digest/priv/static/"
+    version_param = false
+
+    File.rm_rf!(output_path)
+    assert :ok = Phoenix.Digester.compile(input_path, output_path, version_param)
+
+    digested_css_filename =
+      assets_files(output_path)
+      |> Enum.find(&(&1 =~ ~r"app-[a-fA-F\d]{32}.css"))
+
+    digested_css =
+      Path.join(output_path, digested_css_filename)
+      |> File.read!()
+
+    refute digested_css =~ ~r"/phoenix-[a-fA-F\d]{32}\.png\?vsn=d"
+    refute digested_css =~ ~r"\.\./images/relative-[a-fA-F\d]{32}\.png\?vsn=d"
+    assert digested_css =~ ~r"/phoenix-[a-fA-F\d]{32}\.png"
+    assert digested_css =~ ~r"\.\./images/relative-[a-fA-F\d]{32}\.png"
+  end
+
   test "does not digest assets within undigested files" do
     output_path = Path.join("tmp", "phoenix_digest_stylesheets_undigested")
     input_path  = "test/fixtures/digest/priv/static/"
+    version_param = true
 
     File.rm_rf!(output_path)
-    assert :ok = Phoenix.Digester.compile(input_path, output_path)
+    assert :ok = Phoenix.Digester.compile(input_path, output_path, version_param)
 
     undigested_css =
       Path.join(output_path, "css/app.css")
