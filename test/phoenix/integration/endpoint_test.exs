@@ -108,57 +108,57 @@ defmodule Phoenix.Integration.EndpointTest do
       {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/unknown", %{})
       assert resp.status == 404
       assert resp.body == "404.html from Phoenix.ErrorView"
+
+      assert capture_log(fn ->
+        {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/oops", %{})
+        assert resp.status == 500
+        assert resp.body == "500.html from Phoenix.ErrorView"
+      end) =~ "** (RuntimeError) oops"
+
+      assert capture_log(fn ->
+        {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/router/oops", %{})
+        assert resp.status == 500
+        assert resp.body == "500.html from Phoenix.ErrorView"
+      end) =~ "** (RuntimeError) oops"
+
+      Supervisor.stop(ProdEndpoint)
+      {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
     end
-
-    assert capture_log(fn ->
-      {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/oops", %{})
-      assert resp.status == 500
-      assert resp.body == "500.html from Phoenix.ErrorView"
-    end) =~ "** (RuntimeError) oops"
-
-    assert capture_log(fn ->
-      {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/router/oops", %{})
-      assert resp.status == 500
-      assert resp.body == "500.html from Phoenix.ErrorView"
-    end) =~ "** (RuntimeError) oops"
-
-    Supervisor.stop(ProdEndpoint)
-    {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
   end
 
   test "adapters starts on configured port and serves requests and stops for dev" do
-    # Has server: false
-    {:ok, _} = DevEndpoint.start_link
-    {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
-    Supervisor.stop(DevEndpoint)
-
     # Toggle globally
     serve_endpoints(true)
     on_exit(fn -> serve_endpoints(false) end)
-    capture_log fn -> {:ok, _} = DevEndpoint.start_link end
 
-    # Requests
-    {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
-    assert resp.status == 200
-    assert resp.body == "ok"
+    capture_log fn ->
+      # Has server: false
+      {:ok, _} = DevEndpoint.start_link
 
-    capture_log(fn ->
+      # Requests
+      {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
+      assert resp.status == 200
+      assert resp.body == "ok"
+
       {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}/unknown", %{})
       assert resp.status == 404
       assert resp.body =~ "NoRouteError at GET /unknown"
-    end)
 
-    assert capture_log(fn ->
-      {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}/oops", %{})
-      assert resp.status == 500
-      assert resp.body =~ "RuntimeError at GET /oops"
-    end) =~ "** (RuntimeError) oops"
+      assert capture_log(fn ->
+        {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}/oops", %{})
+        assert resp.status == 500
+        assert resp.body =~ "RuntimeError at GET /oops"
+      end) =~ "** (RuntimeError) oops"
 
-    assert capture_log(fn ->
-      {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}/router/oops", %{})
-      assert resp.status == 500
-      assert resp.body =~ "RuntimeError at GET /router/oops"
-    end) =~ "** (RuntimeError) oops"
+      assert capture_log(fn ->
+        {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}/router/oops", %{})
+        assert resp.status == 500
+        assert resp.body =~ "RuntimeError at GET /router/oops"
+      end) =~ "** (RuntimeError) oops"
+
+      Supervisor.stop(DevEndpoint)
+      {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
+    end
   end
 
   defp serve_endpoints(bool) do
