@@ -10,7 +10,7 @@ defmodule MixHelper do
   end
 
   def in_tmp(which, function) do
-    path = Path.join(tmp_path, which)
+    path = Path.join(tmp_path(), which)
     File.rm_rf! path
     File.mkdir_p! path
     File.cd! path, function

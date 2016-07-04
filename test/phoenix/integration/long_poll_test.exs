@@ -28,8 +28,8 @@ defmodule Phoenix.Integration.LongPollTest do
     intercept ["new_msg"]
 
     def join(topic, message, socket) do
-      Process.register(self, String.to_atom(topic))
-      send(self, {:after_join, message})
+      Process.register(self(), String.to_atom(topic))
+      send(self(), {:after_join, message})
       {:ok, socket}
     end
 

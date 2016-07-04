@@ -26,8 +26,8 @@ defmodule Phoenix.Integration.WebSocketTest do
     intercept ["new_msg"]
 
     def join(topic, message, socket) do
-      Process.register(self, String.to_atom(topic))
-      send(self, {:after_join, message})
+      Process.register(self(), String.to_atom(topic))
+      send(self(), {:after_join, message})
       {:ok, socket}
     end
 
@@ -114,7 +114,7 @@ defmodule Phoenix.Integration.WebSocketTest do
   end
 
   test "endpoint handles mulitple mount segments" do
-    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/admin/websocket")
+    {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/admin/websocket")
     WebsocketClient.join(sock, "room:admin-lobby", %{})
     assert_receive %Message{event: "phx_reply",
                             payload: %{"response" => %{}, "status" => "ok"},
@@ -122,7 +122,7 @@ defmodule Phoenix.Integration.WebSocketTest do
   end
 
   test "join, leave, and event messages" do
-    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket")
+    {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket")
     WebsocketClient.join(sock, "room:lobby1", %{})
 
     assert_receive %Message{event: "phx_reply",
@@ -157,7 +157,7 @@ defmodule Phoenix.Integration.WebSocketTest do
   end
 
   test "filter params on join" do
-    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/logging/websocket")
+    {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/logging/websocket")
     log = capture_log fn ->
       WebsocketClient.join(sock, "room:admin-lobby", %{"foo" => "bar", "password" => "shouldnotshow"})
       assert_receive %Message{event: "phx_reply",
@@ -168,7 +168,7 @@ defmodule Phoenix.Integration.WebSocketTest do
   end
 
   test "sends phx_error if a channel server abnormally exits" do
-    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket")
+    {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket")
 
     WebsocketClient.join(sock, "room:lobby", %{})
     assert_receive %Message{event: "phx_reply", ref: "1", payload: %{"response" => %{}, "status" => "ok"}}
@@ -182,7 +182,7 @@ defmodule Phoenix.Integration.WebSocketTest do
   end
 
   test "channels are terminated if transport normally exits" do
-    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket")
+    {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket")
 
     WebsocketClient.join(sock, "room:lobby2", %{})
     assert_receive %Message{event: "phx_reply", ref: "1", payload: %{"response" => %{}, "status" => "ok"}}
@@ -196,7 +196,7 @@ defmodule Phoenix.Integration.WebSocketTest do
   end
 
   test "refuses websocket events that haven't joined" do
-    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket")
+    {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket")
 
     WebsocketClient.send_event(sock, "room:lobby", "new_msg", %{body: "hi!"})
     refute_receive %Message{event: "new_msg"}
@@ -209,21 +209,21 @@ defmodule Phoenix.Integration.WebSocketTest do
   test "refuses unallowed origins" do
     capture_log fn ->
       assert {:ok, _} =
-        WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket",
+        WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket",
                                           [{"origin", "https://example.com"}])
       assert {:error, {403, _}} =
-        WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket",
+        WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket",
                                          [{"origin", "http://notallowed.com"}])
     end
   end
 
   test "refuses connects that error with 403 response" do
-    assert WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket?reject=true") ==
+    assert WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket?reject=true") ==
            {:error, {403, "Forbidden"}}
   end
 
   test "shuts down when receiving disconnect broadcasts on socket's id" do
-    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket?user_id=1001")
+    {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket?user_id=1001")
 
     WebsocketClient.join(sock, "room:wsdisconnect1", %{})
     assert_receive %Message{topic: "room:wsdisconnect1", event: "phx_reply",
@@ -248,7 +248,7 @@ defmodule Phoenix.Integration.WebSocketTest do
   end
 
   test "duplicate join event closes existing channel" do
-    {:ok, sock} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket?user_id=1001")
+    {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket?user_id=1001")
     WebsocketClient.join(sock, "room:joiner", %{})
     assert_receive %Message{topic: "room:joiner", event: "phx_reply",
                             ref: "1", payload: %{"response" => %{}, "status" => "ok"}}
@@ -264,14 +264,14 @@ defmodule Phoenix.Integration.WebSocketTest do
   test "returns 403 when versions to not match" do
     log = capture_log fn ->
       url = "ws://127.0.0.1:#{@port}/ws/websocket?vsn=123.1.1"
-      assert WebsocketClient.start_link(self, url) ==
+      assert WebsocketClient.start_link(self(), url) ==
              {:error, {403, "Forbidden"}}
     end
     assert log =~ "The client's requested channel transport version \"123.1.1\" does not match server's version"
   end
 
   test "shuts down if client goes quiet" do
-    {:ok, socket} = WebsocketClient.start_link(self, "ws://127.0.0.1:#{@port}/ws/websocket")
+    {:ok, socket} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/websocket")
     Process.monitor(socket)
     WebsocketClient.send_heartbeat(socket)
     assert_receive %Message{event: "phx_reply",

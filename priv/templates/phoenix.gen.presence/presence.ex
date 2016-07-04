@@ -73,5 +73,5 @@ defmodule <%= module %> do
   original presence data.
   """
   use Phoenix.Presence, otp_app: <%= inspect otp_app %>,
-                        pubsub_server: <%= inspect binding[:pubsub_server] %>
+                        pubsub_server: <%= inspect binding()[:pubsub_server] %>
 end
