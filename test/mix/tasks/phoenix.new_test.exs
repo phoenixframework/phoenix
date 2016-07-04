@@ -41,7 +41,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     File.cp_r "deps",     "bootstrap/photo_blog/deps"
     File.cp_r "mix.lock", "bootstrap/photo_blog/mix.lock"
 
-    in_project :photo_blog, Path.join(tmp_path, "bootstrap/photo_blog"), fn _ ->
+    in_project :photo_blog, Path.join(tmp_path(), "bootstrap/photo_blog"), fn _ ->
       Mix.Task.clear
       Mix.Task.run "compile", ["--no-deps-check"]
       assert_received {:mix_shell, :info, ["Generated photo_blog app"]}
