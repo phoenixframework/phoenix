@@ -61,14 +61,14 @@ defmodule Phoenix.Endpoint.Adapter do
   defp watcher_children(_mod, conf, server?) do
     if server? do
       Enum.map(conf[:watchers], fn {cmd, args} ->
-        worker(Phoenix.Endpoint.Watcher, watcher_args(cmd, args, conf),
+        worker(Phoenix.Endpoint.Watcher, watcher_args(cmd, args),
                id: {cmd, args}, restart: :transient)
       end)
     else
       []
     end
   end
-  defp watcher_args(cmd, cmd_args, conf) do
+  defp watcher_args(cmd, cmd_args) do
     {args, opts} = Enum.split_while(cmd_args, &is_binary(&1))
     [cmd, args, opts]
   end
