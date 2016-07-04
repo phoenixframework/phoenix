@@ -23,14 +23,14 @@ defmodule Phoenix.Token do
 
   The first argument to both `sign/4` and `verify/4` can be one of:
 
-      * the module name of a Phoenix endpoint (shown above) - where
-        the secret key base is extracted from the endpoint
-      * `Plug.Conn` - where the secret key base is extracted from the
-        endpoint stored in the connection
-      * `Phoenix.Socket` - where the secret key base is extracted from
-        the endpoint stored in the socket
-      * a string, representing the secret key base itself. We recommend
-        a key base with at least 20 characters to provide enough entropy
+    * the module name of a Phoenix endpoint (shown above) - where
+      the secret key base is extracted from the endpoint
+    * `Plug.Conn` - where the secret key base is extracted from the
+      endpoint stored in the connection
+    * `Phoenix.Socket` - where the secret key base is extracted from
+      the endpoint stored in the socket
+    * a string, representing the secret key base itself. We recommend
+      a key base with at least 20 characters to provide enough entropy
 
   ## Usage
 
