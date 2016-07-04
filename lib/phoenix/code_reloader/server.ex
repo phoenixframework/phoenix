@@ -111,7 +111,7 @@ defmodule Phoenix.CodeReloader.Server do
     Mix.Project.build_structure
     res = Enum.map(compilers, &Mix.Task.run("compile.#{&1}", []))
 
-    if :ok in res && consolidate_protocols? do
+    if :ok in res && consolidate_protocols?() do
       Mix.Task.reenable("compile.protocols")
       Mix.Task.run("compile.protocols", [])
     end

@@ -14,12 +14,12 @@ defmodule Mix.Tasks.Phoenix.Gen.Secret do
   """
   def run([]),    do: run(["64"])
   def run([int]), do: int |> parse! |> random_string |> Mix.shell.info
-  def run([_|_]), do: invalid_args!
+  def run([_|_]), do: invalid_args!()
 
   defp parse!(int) do
     case Integer.parse(int) do
       {int, ""} -> int
-      _ -> invalid_args!
+      _ -> invalid_args!()
     end
   end
 

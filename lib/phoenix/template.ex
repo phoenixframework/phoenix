@@ -233,7 +233,7 @@ defmodule Phoenix.Template do
   """
   @spec format_encoder(name) :: module | nil
   def format_encoder(template_name) when is_binary(template_name) do
-    Map.get(compiled_format_encoders, Path.extname(template_name))
+    Map.get(compiled_format_encoders(), Path.extname(template_name))
   end
 
   defp compiled_format_encoders do
@@ -339,7 +339,7 @@ defmodule Phoenix.Template do
   """
   @spec find_all(root, pattern :: String.t) :: [path]
   def find_all(root, pattern \\ @default_pattern) do
-    extensions = engines |> Map.keys() |> Enum.join(",")
+    extensions = engines() |> Map.keys() |> Enum.join(",")
 
     root
     |> Path.join(pattern <> ".{#{extensions}}")

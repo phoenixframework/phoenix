@@ -357,7 +357,7 @@ defmodule Phoenix.Router do
     """
     defmacro unquote(verb)(path, plug, plug_opts, options \\ []) do
       verb = unquote(verb)
-      quote bind_quoted: binding do
+      quote bind_quoted: binding() do
         match(verb, path, plug, plug_opts, options)
       end
     end

@@ -238,7 +238,7 @@ defmodule Phoenix.Transports.LongPoll do
     do: :ok
 
   defp broadcast_from!(endpoint, topic, msg) when is_binary(topic),
-    do: Phoenix.PubSub.broadcast_from!(endpoint.__pubsub_server__, self, topic, msg)
+    do: Phoenix.PubSub.broadcast_from!(endpoint.__pubsub_server__, self(), topic, msg)
   defp broadcast_from!(_endpoint, pid, msg) when is_pid(pid),
     do: send(pid, msg)
 
