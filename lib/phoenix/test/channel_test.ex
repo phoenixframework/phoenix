@@ -343,9 +343,10 @@ defmodule Phoenix.ChannelTest do
   ## Examples
 
       iex> push socket, "new_message", %{id: 1, content: "hello"}
-      :ok
+      reference
 
   """
+  @spec push(Socket.t, String.t, map) :: reference
   def push(socket, event, payload \\ %{}) do
     ref = make_ref()
     send(socket.channel_pid,
@@ -356,6 +357,7 @@ defmodule Phoenix.ChannelTest do
   @doc """
   Emulates the client leaving the channel.
   """
+  @spec leave(Socket.t) :: reference
   def leave(socket) do
     push(socket, "phx_leave", %{})
   end
