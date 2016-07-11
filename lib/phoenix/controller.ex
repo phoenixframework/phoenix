@@ -318,6 +318,7 @@ defmodule Phoenix.Controller do
         raise ArgumentError, "expected :to or :external option in redirect/2"
     end
   end
+  @spec raise_invalid_url(term()) :: no_return()
   defp raise_invalid_url(url) do
     raise ArgumentError, "the :to option in redirect expects a path but was #{inspect url}"
   end
@@ -871,7 +872,7 @@ defmodule Phoenix.Controller do
 
       plug :accepts, ["html", "json-api"]
   """
-  @spec accepts(Plug.Conn.t, [binary]) :: Plug.Conn.t | no_return
+  @spec accepts(Plug.Conn.t, [binary]) :: Plug.Conn.t | no_return()
   def accepts(conn, [_|_] = accepted) do
     case Map.fetch(conn.params, "_format") do
       {:ok, format} ->
@@ -955,6 +956,7 @@ defmodule Phoenix.Controller do
   defp find_format("*/*", accepted), do: Enum.fetch!(accepted, 0)
   defp find_format(exts, accepted),  do: Enum.find(exts, &(&1 in accepted))
 
+  @spec refuse(term(), term()) :: no_return()
   defp refuse(_conn, accepted) do
     raise Phoenix.NotAcceptableError,
       message: "no supported media type in accept header, expected one of #{inspect accepted}",

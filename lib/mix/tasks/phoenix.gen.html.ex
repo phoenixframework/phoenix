@@ -94,6 +94,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
     raise_with_help()
   end
 
+  @spec raise_with_help() :: no_return()
   defp raise_with_help do
     Mix.raise """
     mix phoenix.gen.html expects both singular and plural names

@@ -37,6 +37,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Channel do
     """
   end
 
+  @spec raise_with_help() :: no_return()
   defp raise_with_help do
     Mix.raise """
     mix phoenix.gen.channel expects just the module name:

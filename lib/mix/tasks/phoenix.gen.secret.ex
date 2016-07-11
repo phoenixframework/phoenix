@@ -28,6 +28,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Secret do
   end
   defp random_string(_), do: Mix.raise "The secret should be at least 32 characters long"
 
+  @spec invalid_args!() :: no_return()
   defp invalid_args! do
     Mix.raise "mix phoenix.gen.secret expects a length as integer or no argument at all"
   end
