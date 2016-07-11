@@ -346,7 +346,7 @@ defmodule Phoenix.ChannelTest do
       reference
 
   """
-  @spec push(Socket.t, String.t, map) :: reference
+  @spec push(Socket.t, String.t, map()) :: reference()
   def push(socket, event, payload \\ %{}) do
     ref = make_ref()
     send(socket.channel_pid,
@@ -357,7 +357,7 @@ defmodule Phoenix.ChannelTest do
   @doc """
   Emulates the client leaving the channel.
   """
-  @spec leave(Socket.t) :: reference
+  @spec leave(Socket.t) :: reference()
   def leave(socket) do
     push(socket, "phx_leave", %{})
   end
