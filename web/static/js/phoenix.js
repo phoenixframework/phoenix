@@ -156,7 +156,7 @@
 //     }
 //     let presences = {} // client's initial empty presence state
 //     // receive initial presence data from server, sent after join
-//     myChannel.on("presences", state => {
+//     myChannel.on("presence_state", state => {
 //       presences = Presence.syncState(presences, state, onJoin, onLeave)
 //       displayUsers(Presence.list(presences))
 //     })

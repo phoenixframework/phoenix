@@ -171,7 +171,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 //     }
 //     let presences = {} // client's initial empty presence state
 //     // receive initial presence data from server, sent after join
-//     myChannel.on("presences", state => {
+//     myChannel.on("presence_state", state => {
 //       presences = Presence.syncState(presences, state, onJoin, onLeave)
 //       displayUsers(Presence.list(presences))
 //     })
@@ -1268,4 +1268,3 @@ var Timer = function () {
 }();
 
 })(typeof(exports) === "undefined" ? window.Phoenix = window.Phoenix || {} : exports);
-
