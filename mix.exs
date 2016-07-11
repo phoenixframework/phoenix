@@ -44,7 +44,6 @@ defmodule Phoenix.Mixfile do
      {:phoenix_pubsub, "~> 1.0"},
      {:poison, "~> 1.5 or ~> 2.0"},
      {:gettext, "~> 0.8", only: :test},
-     {:dialyxir, "~> 0.3.5", only: [:dev, :test]},
 
      # Docs dependencies
      {:ex_doc, "~> 0.12", only: :docs},
