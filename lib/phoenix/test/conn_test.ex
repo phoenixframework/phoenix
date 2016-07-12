@@ -446,7 +446,7 @@ defmodule Phoenix.ConnTest do
   @doc """
   Recycles the connection.
 
-  Recycling receives an connection and returns a new connection,
+  Recycling receives a connection and returns a new connection,
   containing cookies and relevant information from the given one.
 
   This emulates behaviour performed by browsers where cookies
