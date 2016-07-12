@@ -226,7 +226,8 @@ defmodule Phoenix.Channel do
 
         defp put_new_topics(socket, topics) do
           Enum.reduce(topics, socket, fn topic, acc ->
-            if topic in acc.assigns.topics do
+            topics = acc.assigns.topics
+            if topic in topics do
               acc
             else
               :ok = MyApp.Endpoint.subscribe(topic)
