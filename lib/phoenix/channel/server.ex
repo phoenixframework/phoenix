@@ -140,7 +140,7 @@ defmodule Phoenix.Channel.Server do
     send pid, encoded_msg
     :ok
   end
-  def push(_, _, _, _), do: raise_invalid_message()
+  def push(_, _, _, _, _), do: raise_invalid_message()
 
   @doc """
   Replies to a given ref to the transport process.
@@ -156,6 +156,7 @@ defmodule Phoenix.Channel.Server do
   def reply(_, _, _, _, _), do: raise_invalid_message()
 
 
+  @spec raise_invalid_message() :: no_return()
   defp raise_invalid_message do
     raise ArgumentError, "topic and event must be strings, message must be a map"
   end

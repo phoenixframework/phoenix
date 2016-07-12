@@ -102,18 +102,18 @@ defmodule Phoenix.Presence do
   """
   alias Phoenix.Socket.Broadcast
 
-  @type presences :: %{ String.t => %{metas: [map]}}
-  @type presence :: %{key: String.t, meta: map}
+  @type presences :: %{ String.t => %{metas: [map()]}}
+  @type presence :: %{key: String.t, meta: map()}
   @type topic :: String.t
 
-  @callback start_link(Keyword.t) :: {:ok, pid} | {:error, reason :: term} :: :ignore
-  @callback init(Keyword.t) :: {:ok, pid} | {:error, reason :: term}
-  @callback track(Phoenix.Socket.t, key :: String.t, meta :: map) :: :ok
-  @callback track(pid, topic, key :: String.t, meta ::map) :: :ok
+  @callback start_link(Keyword.t) :: {:ok, pid()} | {:error, reason :: term()} :: :ignore
+  @callback init(Keyword.t) :: {:ok, pid()} | {:error, reason :: term}
+  @callback track(Phoenix.Socket.t, key :: String.t, meta :: map()) :: {:ok, binary()} | {:error, reason :: term()}
+  @callback track(pid, topic, key :: String.t, meta :: map()) :: {:ok, binary()} | {:error, reason :: term()}
   @callback untrack(Phoenix.Socket.t, key :: String.t) :: :ok
   @callback untrack(pid, topic, key :: String.t) :: :ok
-  @callback update(Phoenix.Socket.t, key :: String.t, meta :: map) :: :ok
-  @callback update(pid, topic, key :: String.t, meta ::map) :: :ok
+  @callback update(Phoenix.Socket.t, key :: String.t, meta :: map()) :: {:ok, binary()} | {:error, reason :: term()}
+  @callback update(pid, topic, key :: String.t, meta ::map()) :: {:ok, binary()} | {:error, reason :: term()}
   @callback fetch(topic, presences) :: presences
   @callback list(topic) :: presences
   @callback handle_diff(%{topic => {joins :: presences, leaves :: presences}}, state :: term) :: {:ok, state :: term}

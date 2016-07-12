@@ -140,6 +140,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     raise_with_help()
   end
 
+  @spec raise_with_help() :: no_return()
   defp raise_with_help do
     Mix.raise """
     mix phoenix.gen.model expects both singular and plural names
