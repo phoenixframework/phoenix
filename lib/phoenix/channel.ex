@@ -231,6 +231,7 @@ defmodule Phoenix.Channel do
             else
               :ok = MyApp.Endpoint.subscribe(topic)
               assign(acc, :topics, [topic | topics])
+              acc
             end
           end)
         end
