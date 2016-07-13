@@ -71,7 +71,13 @@ defmodule Phoenix.Router do
       "/dynamic/something"
 
   The url generated in the named url helpers is based on the configuration for
-  `:url`, `:http` and `:https`.
+  `:url`, `:http` and `:https`. However, if for some reason you need to manually
+  control the URL generation, the url helpers also allow you to pass in a [`URI`](http://elixir-lang.org/docs/stable/elixir/URI.html)
+  struct:
+
+      uri = %URI{scheme: "https", host: "other.example.com"}
+      MyApp.Router.Helpers.page_url(uri, :show, "hello")
+      "https://other.example.com/pages/hello"
 
   The named helper can also be customized with the `:as` option. Given
   the route:
