@@ -316,7 +316,7 @@ defmodule Phoenix.ConnTest do
     case parse_content_type(header) do
       {part, subpart} ->
         format = Atom.to_string(format)
-        format in Plug.MIME.extensions(part <> "/" <> subpart) or
+        format in MIME.extensions(part <> "/" <> subpart) or
           format == subpart or String.ends_with?(subpart, "+" <> format)
       _  ->
         false
