@@ -8,7 +8,7 @@ exports.config = {
       // http://brunch.io/docs/config#-files-
       // joinTo: {
       //  "js/app.js": /^(web\/static\/js)/,
-      //  "js/vendor.js": /^(web\/static\/vendor)|(deps)/
+      //  "js/vendor.js": /^(web\/static\/vendor)|(node_modules)/
       // }
       //
       // To change the order of concatenation of files, explicitly mention here
