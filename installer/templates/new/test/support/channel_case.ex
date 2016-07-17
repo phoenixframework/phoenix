@@ -37,6 +37,8 @@ defmodule <%= application_module %>.ChannelCase do
     unless tags[:async] do
       <%= adapter_config[:test_async] %>
     end
+<% else %>
+    _ = tags
 <% end %>
     :ok
   end
