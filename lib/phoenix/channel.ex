@@ -427,7 +427,7 @@ defmodule Phoenix.Channel do
 
   Useful when you need to reply to a push that can't otherwise be handled using
   the `{:reply, {status, payload}, socket}` return from your `handle_in`
-  callbacks. `reply/3` will be used in the rare cases you need to perform work in
+  callbacks. `reply/2` will be used in the rare cases you need to perform work in
   another process and reply when finished by generating a reference to the push
   with `socket_ref/1`.
 
