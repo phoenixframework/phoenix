@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Secret do
   @shortdoc "Generates a secret"
 
   @moduledoc """
-  Generates a secret and print it to the terminal.
+  Generates a secret and prints it to the terminal.
 
       mix phoenix.gen.secret [length]
 
