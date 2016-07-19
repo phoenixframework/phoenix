@@ -579,7 +579,7 @@ defmodule Phoenix.Controller do
   to change the layout, similar to how `put_view/2` can be used to change
   the view.
 
-  `layout_formats/2` and `put_layout_formats/2` can be used to configure
+  `layout_formats/1` and `put_layout_formats/2` can be used to configure
   which formats support/require layout rendering (defaults to "html" only).
   """
   @spec render(Plug.Conn.t, binary | atom, Keyword.t | map) :: Plug.Conn.t
