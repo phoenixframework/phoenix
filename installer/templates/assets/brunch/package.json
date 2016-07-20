@@ -1,0 +1,20 @@
+{
+  "repository": {},
+  "license": "MIT",
+  "scripts": {
+    "deploy": "brunch build --production",
+    "watch": "brunch watch --stdin"
+  },
+  "dependencies": {
+    "phoenix": "file:<%= brunch_deps_prefix %><%= phoenix_path %>"<%= if html do %>,
+    "phoenix_html": "file:<%= brunch_deps_prefix %>deps/phoenix_html"<% end %>
+  },
+  "devDependencies": {
+    "babel-brunch": "~6.0.0",
+    "brunch": "2.7.4",
+    "clean-css-brunch": "~2.0.0",
+    "css-brunch": "~2.0.0",
+    "javascript-brunch": "~2.0.0",
+    "uglify-js-brunch": "~2.0.1"
+  }
+}
