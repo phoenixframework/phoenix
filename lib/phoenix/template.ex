@@ -62,7 +62,7 @@ defmodule Phoenix.Template do
     * template path - is the complete path of the template
       in the filesystem, for example, "path/to/users.html.eex"
 
-    * template root - the directory were templates are defined
+    * template root - the directory where templates are defined
 
     * template engine - a module that receives a template path
       and transforms its source code into Elixir quoted expressions.
