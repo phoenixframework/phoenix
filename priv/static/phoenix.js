@@ -750,7 +750,7 @@ var Socket = exports.Socket = function () {
     value: function onConnOpen() {
       var _this6 = this;
 
-      this.log("transport", "connected to " + this.endPointURL(), this.transport.prototype);
+      this.log("transport", "connected to " + this.endPointURL());
       this.flushSendBuffer();
       this.reconnectTimer.reset();
       if (!this.conn.skipHeartbeat) {
@@ -1268,3 +1268,4 @@ var Timer = function () {
 }();
 
 })(typeof(exports) === "undefined" ? window.Phoenix = window.Phoenix || {} : exports);
+
