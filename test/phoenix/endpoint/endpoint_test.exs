@@ -99,6 +99,16 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert StaticEndpoint.static_path("/phoenix.png") =~ "/static/phoenix.png"
   end
 
+  test "raises exception if otp_app is not configured" do
+    Application.put_env(:phoenix, __MODULE__.BuggyEndpoint, [])
+    err_message = "application :not_existing is not loaded, or the configuration parameter #{inspect(__MODULE__.BuggyEndpoint)} is not set"
+    assert_raise ArgumentError, err_message, fn ->
+      defmodule BuggyEndpoint do
+        use Phoenix.Endpoint, otp_app: :not_existing
+      end
+    end
+  end
+
   test "injects pubsub broadcast with configured server" do
     Endpoint.subscribe("sometopic")
     some = spawn fn -> :ok end
