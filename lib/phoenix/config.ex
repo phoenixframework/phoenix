@@ -76,7 +76,7 @@ defmodule Phoenix.Config do
     case Application.fetch_env(otp_app, module) do
       {:ok, conf} -> conf
       :error ->
-        IO.puts :stderr, "warning: No endpoint configuration found for otp_app " <>
+        IO.puts :stderr, "warning: no endpoint configuration found for otp_app " <>
                          "#{inspect otp_app} and module #{inspect module}"
         []
     end

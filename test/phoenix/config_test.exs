@@ -19,7 +19,7 @@ defmodule Phoenix.ConfigTest do
     assert ExUnit.CaptureIO.capture_io(:stderr, fn ->
       assert from_env(:unknown_app, meta.test, [static: true]) ==
             [static: true]
-    end) =~ "No endpoint configuration"
+    end) =~ "no endpoint configuration"
   end
 
   test "starts an ets table as part of the module", meta do
