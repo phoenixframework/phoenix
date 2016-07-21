@@ -156,7 +156,7 @@ We may need to use a JavaScript library like jQuery or underscore in our applica
 
 To do so, you would add a `globals` definition into the config. For example, if we wanted to expose jQuery globally as `$`, we would modify the config to look like this:
 
-```json
+```javascript
   npm: {globals: {
     $: 'jquery',
     jQuery: 'jquery'
@@ -165,7 +165,7 @@ To do so, you would add a `globals` definition into the config. For example, if 
 
 Additionally, some packages ship with stylesheets. To instruct Brunch to add these into the build, use the styles property in the npm config. For example, if we installed the Pikaday package and wanted to include its styles, we'd adjust the config like this:
 
-```json
+```javascript
 npm: {styles: {
     bootstrap: ['dist/css/bootstrap.min.css']
   }},
@@ -291,7 +291,7 @@ npm install
 
 Create webpack configuration file `webpack.config.js`:
 
-```json
+```javascript
 module.exports = {
   entry: "./web/static/js/app.js",
   output: {
