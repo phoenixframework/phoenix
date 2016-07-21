@@ -34,6 +34,7 @@ defmodule Phoenix.Test.ConnTest do
     defexception [message: nil, plug_status: 500]
   end
 
+  Application.put_env(:phoenix, __MODULE__.Endpoint, [])
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
     def init(opts), do: opts

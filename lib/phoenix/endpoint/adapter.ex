@@ -87,7 +87,7 @@ defmodule Phoenix.Endpoint.Adapter do
   The endpoint configuration used at compile time.
   """
   def config(otp_app, endpoint) do
-    Phoenix.Config.from_env(otp_app, endpoint, defaults(otp_app, endpoint))
+    Phoenix.Config.from_env!(otp_app, endpoint, defaults(otp_app, endpoint))
   end
 
   @doc """

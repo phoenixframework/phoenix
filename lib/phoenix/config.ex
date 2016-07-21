@@ -75,6 +75,17 @@ defmodule Phoenix.Config do
   end
 
   @doc """
+  Reads the configuration for module from the given otp app.
+  Raises an exception if configuration is not found.
+
+  Useful to read a particular value at compilation time.
+  """
+  def from_env!(otp_app, module, defaults) do
+    config = Application.fetch_env!(otp_app, module)
+    merge(defaults, config)
+  end
+
+  @doc """
   Changes the configuration for the given module.
 
   It receives a keyword list with changed config and another
