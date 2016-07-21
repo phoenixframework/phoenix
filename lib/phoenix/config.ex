@@ -70,8 +70,16 @@ defmodule Phoenix.Config do
   Useful to read a particular value at compilation time.
   """
   def from_env(otp_app, module, defaults) do
-    config = Application.get_env(otp_app, module, [])
-    merge(defaults, config)
+    merge(defaults, fetch_config(otp_app, module))
+  end
+  defp fetch_config(otp_app, module) do
+    case Application.fetch_env(otp_app, module) do
+      {:ok, conf} -> conf
+      :error ->
+        IO.puts :stderr, "warning: No endpoint configuration found for otp_app " <>
+                         "#{inspect otp_app} and module #{inspect module}"
+        []
+    end
   end
 
   @doc """
