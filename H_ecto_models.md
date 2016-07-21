@@ -257,7 +257,7 @@ We can also verify this in iex. Let's stop our server and start it again with `i
 
 ```console
 iex(1)> alias HelloPhoenix.User
-nil
+HelloPhoenix.User
 ```
 
 Then let's create a changeset from our model with an empty `User` struct, and an empty map of parameters.
@@ -308,7 +308,7 @@ In a new `iex -S mix phoenix.server` session, we should alias our module again.
 
 ```console
 iex(1)> alias HelloPhoenix.User
-nil
+HelloPhoenix.User
 ```
 
 Lets create a `params` map with valid values plus an extra `random_key: "random value"`.
