@@ -68,18 +68,18 @@ defmodule HelloPhoenix.Endpoint do
 end
 ```
 
-In `web/channels/user_socket.ex`, the `HelloPhoenix.UserSocket` we pointed to in our endpoint has already been created when we generated our application. We need to make sure messages get routed to the correct channel. To do that, we'll uncomment the "rooms:*" channel definition:
+In `web/channels/user_socket.ex`, the `HelloPhoenix.UserSocket` we pointed to in our endpoint has already been created when we generated our application. We need to make sure messages get routed to the correct channel. To do that, we'll uncomment the "room:*" channel definition:
 
 ```elixir
 defmodule HelloPhoenix.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  channel "rooms:*", HelloPhoenix.RoomChannel
+  channel "room:*", HelloPhoenix.RoomChannel
   ...
 ```
 
-Now, whenever a client sends a message whose topic starts with `"rooms:"`, it will be routed to our RoomChannel. Next, we'll define a `HelloPhoenix.RoomChannel` module to manage our chat room messages.
+Now, whenever a client sends a message whose topic starts with `"room:"`, it will be routed to our RoomChannel. Next, we'll define a `HelloPhoenix.RoomChannel` module to manage our chat room messages.
 
 ### Joining Channels
 
@@ -89,16 +89,16 @@ The first priority of your channels is to authorize clients to join a given topi
 defmodule HelloPhoenix.RoomChannel do
   use Phoenix.Channel
 
-  def join("rooms:lobby", _message, socket) do
+  def join("room:lobby", _message, socket) do
     {:ok, socket}
   end
-  def join("rooms:" <> _private_room_id, _params, _socket) do
+  def join("room:" <> _private_room_id, _params, _socket) do
     {:error, %{reason: "unauthorized"}}
   end
 end
 ```
 
-For our chat app, we'll allow anyone to join the `"rooms:lobby"` topic, but any other room will be considered private and special authorization, say from a database, will be required. We won't worry about private chat rooms for this exercise, but feel free to explore after we finish. To authorize the socket to join a topic, we return `{:ok, socket}` or `{:ok, reply, socket}`. To deny access, we return `{:error, reply}`. More information about authorization with tokens can be found in the [`Phoenix.Token` documentation](http://hexdocs.pm/phoenix/Phoenix.Token.html).
+For our chat app, we'll allow anyone to join the `"room:lobby"` topic, but any other room will be considered private and special authorization, say from a database, will be required. We won't worry about private chat room for this exercise, but feel free to explore after we finish. To authorize the socket to join a topic, we return `{:ok, socket}` or `{:ok, reply, socket}`. To deny access, we return `{:error, reply}`. More information about authorization with tokens can be found in the [`Phoenix.Token` documentation](http://hexdocs.pm/phoenix/Phoenix.Token.html).
 
 With our channel in place, let's get the client and server talking.
 
@@ -106,7 +106,7 @@ Phoenix projects come with [Brunch](http://www.phoenixframework.org/docs/static-
 
 If you are using brunch, there's some code in `web/static/js/socket.js` that defines a simple client based on the socket implementation that ships with Phoenix.
 
-We can use that library to connect to our socket and join our channel, we just need to set our room name to "rooms:lobby" in that file.
+We can use that library to connect to our socket and join our channel, we just need to set our room name to "room:lobby" in that file.
 
 ```javascript
 // web/static/js/socket.js
@@ -114,7 +114,7 @@ We can use that library to connect to our socket and join our channel, we just n
 socket.connect()
 
 // Now that you are connected, you can join channels with a topic:
-let channel = socket.channel("rooms:lobby", {})
+let channel = socket.channel("room:lobby", {})
 channel.join()
   .receive("ok", resp => { console.log("Joined successfully", resp) })
   .receive("error", resp => { console.log("Unable to join", resp) })
@@ -154,7 +154,7 @@ Now let's add a couple of event listeners to `web/static/js/socket.js`:
 
 ```javascript
 ...
-let channel           = socket.channel("rooms:lobby", {})
+let channel           = socket.channel("room:lobby", {})
 let chatInput         = $("#chat-input")
 let messagesContainer = $("#messages")
 
@@ -176,7 +176,7 @@ All we had to do is detect that enter was pressed and then `push` an event over 
 
 ```javascript
 ...
-let channel           = socket.channel("rooms:lobby", {})
+let channel           = socket.channel("room:lobby", {})
 let chatInput         = $("#chat-input")
 let messagesContainer = $("#messages")
 
@@ -201,16 +201,16 @@ export default socket
 We listen for the `"new_msg"` event using `channel.on`, and then append the message body to the DOM. Now let's handle the incoming and outgoing events on the server to complete the picture.
 
 ### Incoming Events
-We handle incoming events with `handle_in/3`. We can pattern match on the event names, like `"new_msg"`, and then grab the payload that the client passed over the channel. For our chat application, we simply need to notify all other `rooms:lobby` subscribers of the new message with `broadcast!/3`.
+We handle incoming events with `handle_in/3`. We can pattern match on the event names, like `"new_msg"`, and then grab the payload that the client passed over the channel. For our chat application, we simply need to notify all other `room:lobby` subscribers of the new message with `broadcast!/3`.
 
 ```elixir
 defmodule HelloPhoenix.RoomChannel do
   use Phoenix.Channel
 
-  def join("rooms:lobby", _message, socket) do
+  def join("room:lobby", _message, socket) do
     {:ok, socket}
   end
-  def join("rooms:" <> _private_room_id, _params, _socket) do
+  def join("room:" <> _private_room_id, _params, _socket) do
     {:error, %{reason: "unauthorized"}}
   end
 
