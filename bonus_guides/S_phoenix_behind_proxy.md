@@ -1,4 +1,4 @@
-In order to serve an application behind a proxy webserver such as `nginx` or `apache`, we will need to configure a specific port for our application to listen on. This will ensure the url helper functions will use the correct proxy port number.
+In order to serve an application behind a proxy webserver such as `nginx` or `apache`, we will need to configure a specific port for our application to listen on.
 
 There are two ways we can approach this. If we are sure that we can pick a port number which will not need to change, we can hard-code it as `http: [port: 8080]` line of our `config/prod.exs` file.
 
@@ -9,7 +9,6 @@ use Mix.Config
 
 config :hello_phoenix, HelloPhoenix.Endpoint,
   http: [port: 8080],
-  url: [host: "example.com"],
   cache_static_manifest: "priv/static/manifest.json"
 
 . . .
@@ -24,11 +23,27 @@ use Mix.Config
 
 config :hello_phoenix, HelloPhoenix.Endpoint,
   http: [port: {:system, "PORT"}],
-  url: [host: "example.com"],
   cache_static_manifest: "priv/static/manifest.json"
 
 . . .
 ```
+
+Urls generated using a `_url` function from the `HelloPhoenix.Router.Helpers` module will include a url such as http://localhost:8080/users for `user_url(conn, :index)`. To fix this we can use the `url` option:
+
+```elixir
+use Mix.Config
+
+. . .
+
+config :hello_phoenix, HelloPhoenix.Endpoint,
+  http: [port: 8080],
+  url: [host: "example.com", port: 80],
+  cache_static_manifest: "priv/static/manifest.json"
+
+. . .
+```
+
+Our url will now be http://example.com/users for the `user_url(conn, :index)` function. Note that the port is not present in the url. If the scheme is `http` and the port is `80`, or the scheme is `https` and the port is `443`, then the port will not be present in the url. In all other circumstances it will be present.
 
 ### Nginx Considerations
 Nginx requires some additional configuration in order to use channels. Websockets, which are based on HTTP requests, operate on the notion that you are _Upgrading_ the connection from standard stateless HTTP to a persistent websocket connection.
