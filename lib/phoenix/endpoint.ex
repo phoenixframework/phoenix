@@ -699,7 +699,7 @@ defmodule Phoenix.Endpoint do
     * `otp_app` - The otp app running the endpoint, for example `:my_app`
     * `endpoint` - The endpoint module, for example `MyApp.Endpoint`
 
-  ## Exampes
+  ## Examples
 
       iex> Phoenix.Endpoint.server?(:my_app, MyApp.Endpoint)
       true
