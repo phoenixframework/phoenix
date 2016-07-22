@@ -214,24 +214,18 @@ defmodule HelloPhoenix.User do
     field :bio, :string
     field :number_of_pets, :integer
 
-    timestamps
+    timestamps()
   end
-
-  @required_fields ~w(name email bio number_of_pets)
-  @optional_fields ~w()
 
   @doc """
-  Creates a changeset based on the `model` and `params`.
-
-  If no params are provided, an invalid changeset is returned
-  with no validation performed.
+  Builds a changeset based on the `struct` and `params`.
   """
-  def changeset(model, params \\ :empty) do
-    model
-    |> cast(params, @required_fields, @optional_fields)
+  def changeset(struct, params \\ %{}) do
+    struct
+    |> cast(params, [:name, :email, :bio, :number_of_pets])
+    |> validate_required([:name, :email, :bio, :number_of_pets])
   end
 end
-
 ```
 
 The schema block at the top of the model should be pretty self-explanatory. We'll take a look at changesets next.
@@ -243,13 +237,18 @@ Changesets define a pipeline of transformations our data needs to undergo before
 Let's take a closer look at our default changeset.
 
 ```elixir
-def changeset(model, params \\ :empty) do
-  model
-  |> cast(params, @required_fields, @optional_fields)
-end
+  def changeset(struct, params \\ %{}) do
+    struct
+    |> cast(params, [:name, :email, :bio, :number_of_pets])
+    |> validate_required([:name, :email, :bio, :number_of_pets])
+  end
 ```
-
-At this point, we only have one transformation in our pipeline. This `cast/4` function's main job is to separate required fields from optional ones. We define the fields for each category in the module attributes `@required_fields` and `@optional_fields`. By default all of the fields are required.
+Right now, we have two transformations in our pipeline to this model.
+In the first call, we invoke `cast/3` to send in our parameters and which fields are required for validation.
+`cast/3` first takes a struct, then the parameters are the proposed considered updates, and the final field is the list of columns to be updated.
+`cast/3` also will only take fields that exist in the schema.
+Next, `validate_required/3` checks that this list of fields is present in the changeset that `cast/3` returns.
+By default with the generator, all fields are required.
 
 Let's take a look at two ways to validate that this is the case. The first and easiest way is to simply start our application by running the `mix phoenix.server` task at the root of our project. Then we can go to the [new users page](http://localhost:4000/users/new) and click the "submit" button without filling in any fields. We should get an error telling us that something went wrong and enumerating all the fields which can't be blank. That should be all the fields in our schema at this point.
 
@@ -264,16 +263,10 @@ Then let's create a changeset from our model with an empty `User` struct, and an
 
 ```console
 iex(2)> changeset = User.changeset(%User{}, %{})
-%Ecto.Changeset{action: nil, changes: %{}, constraints: [],
- errors: [name: "can't be blank", email: "can't be blank",
-  bio: "can't be blank", number_of_pets: "can't be blank"], filters: %{},
- model: %HelloPhoenix.User{__meta__: #Ecto.Schema.Metadata<:built>, bio: nil,
-  email: nil, id: nil, inserted_at: nil, name: nil, number_of_pets: nil,
-  updated_at: nil}, optional: [], params: %{}, repo: nil,
- required: [:name, :email, :bio, :number_of_pets],
- types: %{bio: :string, email: :string, id: :id, inserted_at: Ecto.DateTime,
-   name: :string, number_of_pets: :integer, updated_at: Ecto.DateTime},
- valid?: false, validations: []}
+#Ecto.Changeset<action: nil, changes: %{},
+  errors: [name: {"can't be blank", []}, email: {"can't be blank", []},
+    bio: {"can't be blank", []}, number_of_pets: {"can't be blank", []}],
+  data: #HelloPhoenix.User<>, valid?: false>
 ```
 
 Once we have a changeset, we can ask it if it is valid.
@@ -287,22 +280,22 @@ Since this one is not valid, we can ask it what the errors are.
 
 ```console
 iex(4)> changeset.errors
-[name: "can't be blank", email: "can't be blank",
-bio: "can't be blank", number_of_pets: "can't be blank"]
+[name: {"can't be blank", []}, email: {"can't be blank", []},
+ bio: {"can't be blank", []}, number_of_pets: {"can't be blank", []}]
 ```
 
 It gives us the same list of fields that can't be blank that we got from the front end of our application.
 
-Now let's test this by moving the `number_of_pets` field from `@required_fields` to `@optional_fields`.
+Let's make `number_of_pets` optional.
+In order to do this, we simply remove it from the list.
 
 ```elixir
-@required_fields ~w(name email bio)
-@optional_fields ~w(number_of_pets)
+    |> validate_required([:name, :email, :bio])
 ```
 
 Now either method of verification should tell us that only `name`, `email`, and `bio` can't be blank.
 
-What happens if we pass a key/value pair that is in neither `@required_fields` nor `@optional_fields`? Let's find out.
+What happens if we pass a key/value pair that is in neither defined in the schema nor required?
 
 In a new `iex -S mix phoenix.server` session, we should alias our module again.
 
@@ -323,19 +316,10 @@ Then let's use our new `params` map to create a changeset.
 
 ```console
 iex(3)> changeset = User.changeset(%User{}, params)
-%Ecto.Changeset{action: nil,
- changes: %{bio: "An example to all", email: "joe@example.com",
-   name: "Joe Example", number_of_pets: 5}, constraints: [], errors: [],
- filters: %{},
- model: %HelloPhoenix.User{__meta__: #Ecto.Schema.Metadata<:built>, bio: nil,
-  email: nil, id: nil, inserted_at: nil, name: nil, number_of_pets: nil,
-  updated_at: nil}, optional: [:number_of_pets],
- params: %{"bio" => "An example to all", "email" => "joe@example.com",
-   "name" => "Joe Example", "number_of_pets" => 5,
-   "random_key" => "random value"}, repo: nil, required: [:name, :email, :bio],
- types: %{bio: :string, email: :string, id: :id, inserted_at: Ecto.DateTime,
-   name: :string, number_of_pets: :integer, updated_at: Ecto.DateTime},
- valid?: true, validations: []}
+#Ecto.Changeset<action: nil,
+  changes: %{bio: "An example to all", email: "joe@example.com",
+    name: "Joe Example", number_of_pets: 5}, errors: [], data: #HelloPhoenix.User<>,
+    valid?: true>
 ```
 
 Our new changeset is valid.
@@ -360,11 +344,12 @@ We can validate more than just whether a field is required or not. Let's take a 
 What if we had a requirement that all biographies in our system must be at least two characters long? We can do this easily by adding another transformation to the pipeline in our changeset which validates the length of the `bio` field.
 
 ```elixir
-def changeset(model, params \\ :empty) do
-  model
-  |> cast(params, @required_fields, @optional_fields)
-  |> validate_length(:bio, min: 2)
-end
+  def changeset(struct, params \\ %{}) do
+    struct
+    |> cast(params, [:name, :email, :bio, :number_of_pets])
+    |> validate_required([:name, :email, :bio, :number_of_pets])
+    |> validate_length(:bio, min: 2)
+  end
 ```
 
 Now if we try to add a new user through the front end of the application with a bio of "A", we should see this error message at the top of the page.
@@ -377,12 +362,13 @@ Bio should be at least 2 characters
 If we also have a requirement for the maximum length that a bio can have, we can simply add another validation.
 
 ```elixir
-def changeset(model, params \\ :empty) do
-  model
-  |> cast(params, @required_fields, @optional_fields)
-  |> validate_length(:bio, min: 2)
-  |> validate_length(:bio, max: 140)
-end
+  def changeset(struct, params \\ %{}) do
+    struct
+    |> cast(params, [:name, :email, :bio, :number_of_pets])
+    |> validate_required([:name, :email, :bio, :number_of_pets])
+    |> validate_length(:bio, min: 2)
+    |> validate_length(:bio, max: 140)
+  end
 ```
 
 Now if we try to add a new user with a 141 character bio, we would see this error.
@@ -395,13 +381,14 @@ Bio should be at most 140 characters
 Let's say we want to perform at least some rudimentary format validation on the `email` field. All we want to check for is the presence of the "@". The `validate_format/3` function is just what we need.
 
 ```elixir
-def changeset(model, params \\ :empty) do
-  model
-  |> cast(params, @required_fields, @optional_fields)
-  |> validate_length(:bio, min: 2)
-  |> validate_length(:bio, max: 140)
-  |> validate_format(:email, ~r/@/)
-end
+  def changeset(struct, params \\ %{}) do
+    struct
+    |> cast(params, [:name, :email, :bio, :number_of_pets])
+    |> validate_required([:name, :email, :bio, :number_of_pets])
+    |> validate_length(:bio, min: 2)
+    |> validate_length(:bio, max: 140)
+    |> validate_format(:email, ~r/@/)
+  end
 ```
 
 If we try to create a user with an email of "personexample.com", we should see an error message like the following.
@@ -418,22 +405,17 @@ There are many more validations and transformations we can perform in a changese
 At this point, let's see how we can actually use Ecto in our application. Luckily, Phoenix gave us an example of this when we ran `mix phoenix.gen.html`, the `HelloPhoenix.UserController`.
 
 Let's work through the generated controller action by action to see how Ecto is used.
-
-Before we get to the first action, let's look at two important lines at the top of the file.
+We can alias HelloPhoenix.User so that we can name our structs `%User{}` instead of `%HelloPhoenix.User{}`.
 
 ```elixir
 defmodule HelloPhoenix.UserController do
 . . .
   alias HelloPhoenix.User
-
-  plug :scrub_params, "user" when action in [:create, :update]
 . . .
 end
 ```
 
 We alias `HelloPhoenix.User` so that we can name our structs `%User{}` instead of `%HelloPhoenix.User{}`.
-
-We also plug the `Phoenix.Controller.scrub_params/2` to pre-process our params a bit before they come to an action. `scrub_params/2` does a couple of useful things for us. It makes sure that all of the required fields are present, and raises an error for each that is missing. It will also recursively change any empty strings to nils.
 
 On to our first action, `index`.
 
@@ -569,7 +551,7 @@ defmodule HelloPhoenix.User do
     field :number_of_pets, :integer
 
     has_many :videos, HelloPhoenix.Video
-    timestamps
+    timestamps()
   end
 . . .
 end
@@ -587,9 +569,8 @@ defmodule HelloPhoenix.Video do
     field :views, :integer
     belongs_to :user, HelloPhoenix.User
 
-    timestamps
+    timestamps()
   end
-  @required_fields ~w(name approved_at description user_id)
 . . .
 end
 ```
@@ -635,9 +616,10 @@ defmodule HelloPhoenix.Mixfile do
     [{:phoenix, "~> 1.2.0"},
      {:phoenix_ecto, "~> 3.0"},
      {:postgrex, ">= 0.0.0"},
-     {:phoenix_html, "~> 2.3"},
+     {:phoenix_html, "~> 2.6"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},
-     {:cowboy, "~> 1.0"}]
+     {:gettext, "~> 0.11",
+     {:cowboy, "~> 1.0"},]
   end
 end
 ```
