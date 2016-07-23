@@ -70,6 +70,11 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/brunch-config.js", ~s("js/app.js": ["web/static/js/app"])
       assert_file "photo_blog/config/dev.exs", "watchers: [node:"
       assert_file "photo_blog/web/static/assets/favicon.ico"
+      assert_file "photo_blog/web/static/assets/fonts/glyphicons-halflings-regular.eot"
+      assert_file "photo_blog/web/static/assets/fonts/glyphicons-halflings-regular.svg"
+      assert_file "photo_blog/web/static/assets/fonts/glyphicons-halflings-regular.ttf"
+      assert_file "photo_blog/web/static/assets/fonts/glyphicons-halflings-regular.woff"
+      assert_file "photo_blog/web/static/assets/fonts/glyphicons-halflings-regular.woff2"
       assert_file "photo_blog/web/static/assets/images/phoenix.png"
       assert_file "photo_blog/web/static/css/app.css"
       assert_file "photo_blog/web/static/js/app.js",
