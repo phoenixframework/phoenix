@@ -64,6 +64,9 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       PhotoBlog.Endpoint.call(conn(:get, "/"), [])
       assert File.stat!("web/views/page_view.ex").mtime > @epoch
 
+      # Ensure /priv static files are copied
+      assert File.exists?("priv/static/js/phoenix.js")
+
       # We can run tests too, starting the app.
       assert capture_io(fn ->
         capture_io(:user, fn ->

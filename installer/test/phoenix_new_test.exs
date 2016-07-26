@@ -136,11 +136,13 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       # No Brunch
       refute File.read!("photo_blog/.gitignore") |> String.contains?("/node_modules")
       assert_file "photo_blog/config/dev.exs", ~r/watchers: \[\]/
-      assert_file "photo_blog/priv/static/css/app.css"
-      assert_file "photo_blog/priv/static/favicon.ico"
-      assert_file "photo_blog/priv/static/images/phoenix.png"
-      assert_file "photo_blog/priv/static/js/phoenix.js"
-      assert_file "photo_blog/priv/static/js/app.js"
+
+      # No Brunch & No Html
+      refute_file "photo_blog/priv/static/css/app.css"
+      refute_file "photo_blog/priv/static/favicon.ico"
+      refute_file "photo_blog/priv/static/images/phoenix.png"
+      refute_file "photo_blog/priv/static/js/phoenix.js"
+      refute_file "photo_blog/priv/static/js/app.js"
 
       # No Ecto
       config = ~r/config :photo_blog, PhotoBlog.Repo,/
@@ -184,6 +186,19 @@ defmodule Mix.Tasks.Phoenix.NewTest do
                   &refute(&1 =~ ~r"Phoenix.LiveReloader.Socket")
       assert_file "photo_blog/web/views/error_view.ex", ~r".json"
       assert_file "photo_blog/web/router.ex", &refute(&1 =~ ~r"pipeline :browser")
+    end
+  end
+
+  test "new with no_brunch" do
+    in_tmp "new with no_brunch", fn ->
+      Mix.Tasks.Phoenix.New.run([@app_name, "--no-brunch"])
+
+      assert_file "photo_blog/.gitignore"
+      assert_file "photo_blog/priv/static/css/app.css"
+      assert_file "photo_blog/priv/static/favicon.ico"
+      assert_file "photo_blog/priv/static/images/phoenix.png"
+      assert_file "photo_blog/priv/static/js/phoenix.js"
+      assert_file "photo_blog/priv/static/js/app.js"
     end
   end
 
