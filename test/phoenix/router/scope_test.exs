@@ -172,4 +172,14 @@ defmodule Phoenix.Router.ScopedRoutingTest do
     assert conn.status == 200
     assert conn.assigns[:assigns_token] == "baz"
   end
+
+  test "string paths are enforced" do
+    assert_raise ArgumentError, ~r{router paths must be strings, got: '/bar'}, fn ->
+      defmodule SomeRouter do
+        use Phoenix.Router, otp_app: :phoenix
+        get "/foo", Router, []
+        get '/bar', Router, []
+      end
+    end
+  end
 end

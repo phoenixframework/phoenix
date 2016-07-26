@@ -28,12 +28,15 @@ defmodule Phoenix.Router.Scope do
     Phoenix.Router.Route.build(kind, verb, path, host, alias, plug_opts, as, pipes, private, assigns)
   end
 
-  def route(module, kind, verb, path, plug, plug_opts, opts) do
+  def route(module, kind, verb, path, plug, plug_opts, opts) when is_binary(path) do
     IO.write :stderr, """
     warning: router paths should begin with a forward slash.
     #{Exception.format_stacktrace}
     """
     route(module, kind, verb, "/" <> path, plug, plug_opts, opts)
+  end
+  def route(_module, _kind, _verb, path, _plug, _plug_opts, _opts) do
+    raise ArgumentError, "router paths must be strings, got: #{inspect path}"
   end
 
   @doc """
