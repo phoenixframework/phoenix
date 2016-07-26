@@ -181,5 +181,15 @@ defmodule Phoenix.Router.ScopedRoutingTest do
         get '/bar', Router, []
       end
     end
+
+    assert_raise ArgumentError, ~r{router paths must be strings, got: '/bar'}, fn ->
+      defmodule SomeRouter do
+        use Phoenix.Router, otp_app: :phoenix
+        get "/foo", Router, []
+        scope "/another" do
+          resources '/bar', Router, []
+        end
+      end
+    end
   end
 end

@@ -18,7 +18,8 @@ defmodule Phoenix.Router.Scope do
   @doc """
   Builds a route based on the top of the stack.
   """
-  def route(module, kind, verb, "/" <> _ = path, plug, plug_opts, opts) do
+  def route(module, kind, verb, path, plug, plug_opts, opts) do
+    path    = validate_path(path)
     private = Keyword.get(opts, :private, %{})
     assigns = Keyword.get(opts, :assigns, %{})
     as      = Keyword.get(opts, :as, Phoenix.Naming.resource_name(plug, "Controller"))
@@ -28,14 +29,20 @@ defmodule Phoenix.Router.Scope do
     Phoenix.Router.Route.build(kind, verb, path, host, alias, plug_opts, as, pipes, private, assigns)
   end
 
-  def route(module, kind, verb, path, plug, plug_opts, opts) when is_binary(path) do
+  @doc """
+  Validates a path is a string and contains a leading prefix.
+  """
+
+  def validate_path("/" <> _ = path), do: path
+  def validate_path(path) when is_binary(path) do
     IO.write :stderr, """
-    warning: router paths should begin with a forward slash.
+    warning: router paths should begin with a forward slash, got: #{inspect path}
     #{Exception.format_stacktrace}
     """
-    route(module, kind, verb, "/" <> path, plug, plug_opts, opts)
+
+    "/" <> path
   end
-  def route(_module, _kind, _verb, path, _plug, _plug_opts, _opts) do
+  def validate_path(path) do
     raise ArgumentError, "router paths must be strings, got: #{inspect path}"
   end
 
@@ -66,16 +73,9 @@ defmodule Phoenix.Router.Scope do
   end
 
   def push(module, opts) when is_list(opts) do
-    path = Keyword.get(opts, :path)
-
-    if path && String.at(path, 0) != "/" do
-      IO.write :stderr, """
-      warning: router paths should begin with a forward slash.
-      #{Exception.format_stacktrace}
-      """
-    end
-
-    path = path && Plug.Router.Utils.split(path)
+    path = with path when not is_nil(path) <- Keyword.get(opts, :path),
+                path <- validate_path(path),
+                do: Plug.Router.Utils.split(path)
 
     alias = Keyword.get(opts, :alias)
     alias = alias && Atom.to_string(alias)
