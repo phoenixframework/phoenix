@@ -445,16 +445,12 @@ class JSONSerializer {
 
   binaryType() { return undefined }  
 
-  encode(payload) {
-    return new Promise((resolve) => {
-      resolve(JSON.stringify(payload))
-    })
+  encode(payload, callback) {
+    callback(JSON.stringify(payload))
   }
 
-  decode(payload) {
-    return new Promise((resolve) => {
-      resolve(JSON.parse(payload))
-    })
+  decode(payload, callback) {
+    callback(JSON.parse(payload))
   }
 }
 
@@ -616,7 +612,7 @@ export class Socket {
   push(data){
     let {topic, event, payload, ref} = data
     let callback = () => {
-      this.serializer.encode(data).then((result) => {
+      this.serializer.encode(data, (result) => {
         this.conn.send(result)
       })
     }
@@ -649,7 +645,7 @@ export class Socket {
   }
 
   onConnMessage(rawMessage){
-    this.serializer.decode(rawMessage.data).then((msg) => {
+    this.serializer.decode(rawMessage.data, (msg) => {
       let {topic, event, payload, ref} = msg
       this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
       this.channels.filter( channel => channel.isMember(topic) )
@@ -712,7 +708,7 @@ export class LongPoll {
       switch(status){
         case 200:
           messages.forEach( msg => {
-            this.serializer.encode(msg).then((encoded) => {
+            this.serializer.encode(msg, (encoded) => {
               this.onmessage({data: encoded}) 
             })
           }) 
