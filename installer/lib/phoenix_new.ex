@@ -109,8 +109,8 @@ defmodule Mix.Tasks.Phoenix.New do
       the generated skeleton
 
     * `--database` - specify the database adapter for ecto.
-      Values can be `postgres`, `mysql`, `mssql`, `sqlite` or
-      `mongodb`. Defaults to `postgres`
+      Values can be `postgres`, `mysql`, `mssql`, or `mongodb`.
+      Defaults to `postgres`.
 
     * `--no-brunch` - do not generate brunch files
       for static asset building. When choosing this
@@ -434,15 +434,6 @@ defmodule Mix.Tasks.Phoenix.New do
   end
   defp get_ecto_adapter("postgres", app, module) do
     {:postgrex, Ecto.Adapters.Postgres, db_config(app, module, "postgres", "postgres")}
-  end
-  defp get_ecto_adapter("sqlite", app, module) do
-    {:sqlite_ecto, Sqlite.Ecto,
-     dev:  [database: "db/#{app}_dev.sqlite"],
-     test: [database: "db/#{app}_test.sqlite", pool: Ecto.Adapters.SQL.Sandbox],
-     prod: [database: "db/#{app}_prod.sqlite"],
-     test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{module}.Repo, :manual)",
-     test_setup: ":ok = Ecto.Adapters.SQL.Sandbox.checkout(#{module}.Repo)",
-     test_async: "Ecto.Adapters.SQL.Sandbox.mode(#{module}.Repo, {:shared, self()})"}
   end
   defp get_ecto_adapter("mongodb", app, module) do
     {:mongodb_ecto, Mongo.Ecto,
