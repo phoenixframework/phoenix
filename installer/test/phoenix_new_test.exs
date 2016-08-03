@@ -282,34 +282,6 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     end
   end
 
-  test "new with sqlite adapter" do
-    in_tmp "new with sqlite adapter", fn ->
-      project_path = Path.join(File.cwd!, "custom_path")
-      Mix.Tasks.Phoenix.New.run([project_path, "--database", "sqlite"])
-
-      assert_file "custom_path/mix.exs", ~r/:sqlite_ecto/
-
-      assert_file "custom_path/config/dev.exs", fn file ->
-        assert file =~ ~r/Sqlite.Ecto/
-        assert file =~ ~r/database: "db\/custom_path_dev.sqlite"/
-      end
-
-      assert_file "custom_path/config/test.exs", fn file ->
-        assert file =~ ~r/Sqlite.Ecto/
-        assert file =~ ~r/database: "db\/custom_path_test.sqlite"/
-      end
-
-      assert_file "custom_path/config/prod.secret.exs", fn file ->
-        assert file =~ ~r/Sqlite.Ecto/
-        assert file =~ ~r/database: "db\/custom_path_prod.sqlite"/
-      end
-
-      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
-      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
-      assert_file "custom_path/test/support/model_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
-    end
-  end
-
   test "new with mongodb adapter" do
     in_tmp "new with mongodb adapter", fn ->
       project_path = Path.join(File.cwd!, "custom_path")
