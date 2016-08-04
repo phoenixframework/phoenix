@@ -3,6 +3,7 @@
 /db
 /deps
 /*.ez
+mix.lock
 
 # Generated on crash by the VM
 erl_crash.dump
