@@ -125,6 +125,8 @@ defmodule Mix.Tasks.Phoenix.New do
     * `--binary-id` - use `binary_id` as primary key type
       in ecto models
 
+    * `--install-dependencies` - Fetch and install dependencies without a user prompt
+
   ## Examples
 
       mix phoenix.new hello_world
@@ -140,7 +142,7 @@ defmodule Mix.Tasks.Phoenix.New do
   """
   @switches [dev: :boolean, brunch: :boolean, ecto: :boolean,
              app: :string, module: :string, database: :string,
-             binary_id: :boolean, html: :boolean]
+             binary_id: :boolean, html: :boolean, install_dependencies: :boolean]
 
   def run([version]) when version in ~w(-v --version) do
     Mix.shell.info "Phoenix v#{@version}"
@@ -209,6 +211,8 @@ defmodule Mix.Tasks.Phoenix.New do
           """
       end
 
+    install_dependencies = Keyword.get(opts, :install_dependencies, false)
+
     binding = [application_name: app,
                application_module: mod,
                phoenix_dep: phoenix_dep(phoenix_path),
@@ -238,7 +242,7 @@ defmodule Mix.Tasks.Phoenix.New do
     copy_html   app, path, binding
 
     # Parallel installs
-    install? = Mix.shell.yes?("\nFetch and install dependencies?")
+    install? = install_dependencies || Mix.shell.yes?("\nFetch and install dependencies?")
 
     File.cd!(path, fn ->
       mix?    = install_mix(install?)
