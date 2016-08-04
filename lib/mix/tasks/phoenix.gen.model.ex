@@ -225,6 +225,13 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
   defp value_to_type(:date), do: Ecto.Date
   defp value_to_type(:time), do: Ecto.Time
   defp value_to_type(:datetime), do: Ecto.DateTime
+  defp value_to_type(:point), do: Geo.Point
+  defp value_to_type(:polygon), do: Geo.Polygon
+  defp value_to_type(:linestring), do: Geo.LineString
+  defp value_to_type(:multipoint), do: Geo.MultiPoint
+  defp value_to_type(:multipolygon), do: Geo.MultiPolygon 
+  defp value_to_type(:multilinestring), do: Geo.MultiLineString
+  defp value_to_type(:geometrycollection), do: Geo.GeomtryCollection
   defp value_to_type(v) do
     if Code.ensure_loaded?(Ecto.Type) and not Ecto.Type.primitive?(v) do
       Mix.raise "Unknown type `#{v}` given to generator"
