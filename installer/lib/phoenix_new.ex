@@ -46,14 +46,19 @@ defmodule Mix.Tasks.Phoenix.New do
   ]
 
   @brunch [
-    {:text, "static/brunch/.gitignore",       ".gitignore"},
-    {:eex,  "static/brunch/brunch-config.js", "brunch-config.js"},
-    {:eex,  "static/brunch/package.json",     "package.json"},
-    {:text, "static/app.css",                 "web/static/css/app.css"},
-    {:text, "static/phoenix.css",             "web/static/css/phoenix.css"},
-    {:eex,  "static/brunch/app.js",           "web/static/js/app.js"},
-    {:eex,  "static/brunch/socket.js",        "web/static/js/socket.js"},
-    {:text, "static/robots.txt",              "web/static/assets/robots.txt"},
+    {:text, "static/brunch/.gitignore",                        ".gitignore"},
+    {:eex,  "static/brunch/brunch-config.js",                  "brunch-config.js"},
+    {:eex,  "static/brunch/package.json",                      "package.json"},
+    {:text, "static/app.css",                                  "web/static/css/app.css"},
+    {:text, "static/phoenix.css",                              "web/static/css/phoenix.css"},
+    {:eex,  "static/brunch/app.js",                            "web/static/js/app.js"},
+    {:eex,  "static/brunch/socket.js",                         "web/static/js/socket.js"},
+    {:text, "static/robots.txt",                               "web/static/assets/robots.txt"},
+    {:text, "static/fonts/glyphicons-halflings-regular.eot",   "web/static/assets/fonts/glyphicons-halflings-regular.eot"},
+    {:text, "static/fonts/glyphicons-halflings-regular.svg",   "web/static/assets/fonts/glyphicons-halflings-regular.svg"},
+    {:text, "static/fonts/glyphicons-halflings-regular.ttf",   "web/static/assets/fonts/glyphicons-halflings-regular.ttf"},
+    {:text, "static/fonts/glyphicons-halflings-regular.woff",  "web/static/assets/fonts/glyphicons-halflings-regular.woff"},
+    {:text, "static/fonts/glyphicons-halflings-regular.woff2", "web/static/assets/fonts/glyphicons-halflings-regular.woff2"},
   ]
 
   @html [
@@ -68,11 +73,16 @@ defmodule Mix.Tasks.Phoenix.New do
   ]
 
   @bare [
-    {:text,   "static/bare/.gitignore", ".gitignore"},
-    {:text,   "static/app.css",         "priv/static/css/app.css"},
-    {:append, "static/phoenix.css",     "priv/static/css/app.css"},
-    {:text,   "static/bare/app.js",     "priv/static/js/app.js"},
-    {:text,   "static/robots.txt",      "priv/static/robots.txt"},
+    {:text,   "static/bare/.gitignore",                          ".gitignore"},
+    {:text,   "static/app.css",                                  "priv/static/css/app.css"},
+    {:append, "static/phoenix.css",                              "priv/static/css/app.css"},
+    {:text,   "static/bare/app.js",                              "priv/static/js/app.js"},
+    {:text,   "static/robots.txt",                               "priv/static/robots.txt"},
+    {:text,   "static/fonts/glyphicons-halflings-regular.eot",   "priv/static/fonts/glyphicons-halflings-regular.eot"},
+    {:text,   "static/fonts/glyphicons-halflings-regular.svg",   "priv/static/fonts/glyphicons-halflings-regular.svg"},
+    {:text,   "static/fonts/glyphicons-halflings-regular.ttf",   "priv/static/fonts/glyphicons-halflings-regular.ttf"},
+    {:text,   "static/fonts/glyphicons-halflings-regular.woff",  "priv/static/fonts/glyphicons-halflings-regular.woff"},
+    {:text,   "static/fonts/glyphicons-halflings-regular.woff2", "priv/static/fonts/glyphicons-halflings-regular.woff2"},
   ]
 
   # Embed all defined templates
