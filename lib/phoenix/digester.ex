@@ -20,8 +20,8 @@ defmodule Phoenix.Digester do
     * `input_path` - The path where the assets are located
     * `output_path` - The path where the compiled/compressed files will be saved
   """
-  @spec compile(String.t, String.t) :: :ok | {:error, :invalid_path}
-  def compile(input_path, output_path) do
+  @spec compile(String.t, String.t, Bool.t) :: :ok | {:error, :invalid_path}
+  def compile(input_path, output_path, version_param) do
     if File.exists?(input_path) do
       unless File.exists?(output_path), do: File.mkdir_p!(output_path)
 
@@ -32,7 +32,7 @@ defmodule Phoenix.Digester do
 
       manifest = generate_manifest(digested_files, output_path)
 
-      Enum.each(digested_files, &(write_to_disk(&1, manifest, output_path)))
+      Enum.each(digested_files, &(write_to_disk(&1, manifest, output_path, version_param)))
     else
       {:error, :invalid_path}
     end
@@ -81,11 +81,11 @@ defmodule Phoenix.Digester do
     Map.put(file, :digested_filename, "#{name}-#{digest}#{extension}")
   end
 
-  defp write_to_disk(file, manifest, output_path) do
+  defp write_to_disk(file, manifest, output_path, version_param) do
     path = Path.join(output_path, file.relative_path)
     File.mkdir_p!(path)
 
-    digested_file_contents = digested_contents(file, manifest)
+    digested_file_contents = digested_contents(file, manifest, version_param)
 
     # compressed files
     if compress_file?(file) do
@@ -104,9 +104,9 @@ defmodule Phoenix.Digester do
     Path.extname(file.filename) in Application.get_env(:phoenix, :gzippable_exts)
   end
 
-  defp digested_contents(file, manifest) do
+  defp digested_contents(file, manifest, version_param) do
     if Path.extname(file.filename) == ".css" do
-      digest_asset_references(file, manifest)
+      digest_asset_references(file, manifest, version_param)
     else
       file.content
     end
@@ -115,25 +115,31 @@ defmodule Phoenix.Digester do
   @stylesheet_url_regex ~r{(url\(\s*)(\S+?)(\s*\))}
   @quoted_text_regex ~r{\A(['"])(.+)\1\z}
 
-  defp digest_asset_references(file, manifest) do
+  defp digest_asset_references(file, manifest, version_param) do
     Regex.replace(@stylesheet_url_regex, file.content, fn _, open, url, close ->
       case Regex.run(@quoted_text_regex, url) do
         [_, quote_symbol, url] ->
-          open <> quote_symbol <> digested_url(url, file, manifest) <> quote_symbol <> close
+          open <> quote_symbol <> digested_url(url, file, manifest, version_param) <> quote_symbol <> close
         nil ->
-          open <> digested_url(url, file, manifest) <> close
+          open <> digested_url(url, file, manifest, version_param) <> close
       end
     end)
   end
 
-  defp digested_url("/" <> relative_path, _file, manifest) do
+  defp digested_url("/" <> relative_path, _file, manifest, version_param) do
     case Map.fetch(manifest, relative_path) do
-      {:ok, digested_path} -> "/" <> digested_path <> "?vsn=d"
+      {:ok, digested_path} -> 
+        path = "/" <> digested_path 
+        if version_param do
+          path <> "?vsn=d"
+        else
+          path
+        end
       :error -> "/" <> relative_path
     end
   end
 
-  defp digested_url(url, file, manifest) do
+  defp digested_url(url, file, manifest, version_param) do
     case URI.parse(url) do
       %URI{scheme: nil, host: nil} ->
         manifest_path =
@@ -144,10 +150,14 @@ defmodule Phoenix.Digester do
 
         case Map.fetch(manifest, manifest_path) do
           {:ok, digested_path} ->
-            url
+            url = url
             |> Path.dirname()
             |> Path.join(Path.basename(digested_path))
-            |> Kernel.<>("?vsn=d")
+            if version_param do
+              url <> "?vsn=d"
+            else
+              url
+            end
           :error -> url
         end
       _ -> url
