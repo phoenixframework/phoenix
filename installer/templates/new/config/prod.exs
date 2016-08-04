@@ -6,6 +6,8 @@ use Mix.Config
 #
 # You should also configure the url host to something
 # meaningful, we use this information when generating URLs.
+# You can either replace the `host` value below, or
+# set the APP_HOSTNAME environment variable.
 #
 # Finally, we also include the path to a manifest
 # containing the digested version of static files. This
@@ -13,7 +15,8 @@ use Mix.Config
 # which you typically run after static files are built.
 config :<%= application_name %>, <%= application_module %>.Endpoint,
   http: [port: {:system, "PORT"}],
-  url: [host: "example.com", port: 80],
+  url: [host: (System.get_env("APP_HOSTNAME") || "example.com"),
+        port: 80],
   cache_static_manifest: "priv/static/manifest.json"
 
 # Do not print debug messages in production
