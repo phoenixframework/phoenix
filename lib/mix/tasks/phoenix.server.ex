@@ -20,6 +20,7 @@ defmodule Mix.Tasks.Phoenix.Server do
   """
   def run(args) do
     Application.put_env(:phoenix, :serve_endpoints, true, persistent: true)
+    print_ecto_info
     Mix.Task.run "run", run_args() ++ args
   end
 
@@ -29,5 +30,15 @@ defmodule Mix.Tasks.Phoenix.Server do
 
   defp iex_running? do
     Code.ensure_loaded?(IEx) and IEx.started?
+  end
+
+  defp print_ecto_info do
+    if Code.ensure_loaded?(Ecto) do
+      Mix.shell.info """
+      Before moving on, configure your database in config/dev.exs and run:
+
+      mix ecto.create
+      """
+    end
   end
 end
