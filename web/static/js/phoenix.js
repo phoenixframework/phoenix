@@ -437,23 +437,6 @@ export class Channel {
   isLeaving(){ return this.state === CHANNEL_STATES.leaving }
 }
 
-class JSONSerializer {
-
-  contentType() { return "application/javascript" }
-
-  isBinary() { return false }
-
-  binaryType() { return undefined }  
-
-  encode(payload, callback) {
-    callback(JSON.stringify(payload))
-  }
-
-  decode(payload, callback) {
-    callback(JSON.parse(payload))
-  }
-}
-
 export class Socket {
 
   // Initializes the Socket
@@ -464,7 +447,8 @@ export class Socket {
   // opts - Optional configuration
   //   transport - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
   //               Defaults to WebSocket with automatic LongPoll fallback.
-  //   serializer - The way in which we encode and decode data. Defaults to JSONSerializer 
+  //   encode - The way in which we encode data. Defaults to (payload, callback) => callback(JSON.stringify(payload))
+  //   decode - The way in which we decode data. Defaults to (payload, callback) => callback(JSON.parse(payload))
   //   timeout - The default timeout in milliseconds to trigger push timeouts.
   //             Defaults `DEFAULT_TIMEOUT`
   //   heartbeatIntervalMs - The millisec interval to send a heartbeat message
@@ -492,7 +476,10 @@ export class Socket {
     this.ref                  = 0
     this.timeout              = opts.timeout || DEFAULT_TIMEOUT
     this.transport            = opts.transport || window.WebSocket || LongPoll
-    this.serializer           = this.transport === LongPoll ? new JSONSerializer() : opts.serializer || new JSONSerializer()
+    this.defaultEncoder       = (payload, callback) => callback(JSON.stringify(payload))
+    this.defaultDecoder       = (payload, callback) => callback(JSON.parse(payload))
+    this.encode               = this.transport === LongPoll ? this.defaultEncoder : opts.encode || this.defaultEncoder
+    this.decode               = this.transport === LongPoll ? this.defaultDecoder : opts.decode || this.defaultDecoder
     this.heartbeatIntervalMs  = opts.heartbeatIntervalMs || 30000
     this.reconnectAfterMs     = opts.reconnectAfterMs || function(tries){
       return [1000, 2000, 5000, 10000][tries - 1] || 10000
@@ -535,9 +522,6 @@ export class Socket {
     if(this.conn){ return }
 
     this.conn = new this.transport(this.endPointURL())
-    if(this.transport === window.WebSocket && this.serializer.isBinary && this.serializer.binaryType) {
-      this.transport.binaryType = this.serializer.binaryType
-    }
     this.conn.timeout   = this.longpollerTimeout
     this.conn.onopen    = () => this.onConnOpen()
     this.conn.onerror   = error => this.onConnError(error)
@@ -612,7 +596,7 @@ export class Socket {
   push(data){
     let {topic, event, payload, ref} = data
     let callback = () => {
-      this.serializer.encode(data, (result) => {
+      this.encode(data, (result) => {
         this.conn.send(result)
       })
     }
@@ -645,7 +629,7 @@ export class Socket {
   }
 
   onConnMessage(rawMessage){
-    this.serializer.decode(rawMessage.data, (msg) => {
+    this.decode(rawMessage.data, (msg) => {
       let {topic, event, payload, ref} = msg
       this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
       this.channels.filter( channel => channel.isMember(topic) )
@@ -660,7 +644,6 @@ export class LongPoll {
 
   constructor(endPoint){
     this.endPoint        = null
-    this.serializer      = new JSONSerializer()
     this.token           = null
     this.skipHeartbeat   = true
     this.onopen          = function(){} // noop
@@ -697,7 +680,7 @@ export class LongPoll {
   poll(){
     if(!(this.readyState === SOCKET_STATES.open || this.readyState === SOCKET_STATES.connecting)){ return }
 
-    Ajax.request("GET", this.endpointURL(), this.serializer.contentType(), null, this.timeout, this.serializer, this.ontimeout.bind(this), (resp) => {
+    Ajax.request("GET", this.endpointURL(), "application/json", null, this.timeout, this.ontimeout.bind(this), (resp) => {
       if(resp){
         var {status, token, messages} = resp
         this.token = token
@@ -707,11 +690,7 @@ export class LongPoll {
 
       switch(status){
         case 200:
-          messages.forEach( msg => {
-            this.serializer.encode(msg, (encoded) => {
-              this.onmessage({data: encoded}) 
-            })
-          }) 
+          messages.forEach( msg => this.onmessage({data: JSON.stringify(msg)}) )
           this.poll()
           break
         case 204:
@@ -733,7 +712,7 @@ export class LongPoll {
   }
 
   send(body){
-    Ajax.request("POST", this.endpointURL(), this.serializer.contentType(), body, this.timeout, this.serializer, this.onerror.bind(this, "timeout"), (resp) => {
+    Ajax.request("POST", this.endpointURL(), "application/json", body, this.timeout, this.onerror.bind(this, "timeout"), (resp) => {
       if(!resp || resp.status !== 200){
         this.onerror(status)
         this.closeAndRetry()
@@ -750,25 +729,24 @@ export class LongPoll {
 
 export class Ajax {
 
-  static request(method, endPoint, accept, body, timeout, serializer, ontimeout, callback){
+  static request(method, endPoint, accept, body, timeout, ontimeout, callback){
     if(window.XDomainRequest){
       let req = new XDomainRequest() // IE8, IE9
-      this.xdomainRequest(req, method, endPoint, body, timeout, serializer, ontimeout, callback)
+      this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback)
     } else {
       let req = window.XMLHttpRequest ?
                   new XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
                   new ActiveXObject("Microsoft.XMLHTTP") // IE6, IE5
-      this.xhrRequest(req, method, endPoint, accept, body, timeout, serializer, ontimeout, callback)
+      this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback)
     }
   }
 
-  static xdomainRequest(req, method, endPoint, body, timeout, serializer, ontimeout, callback){
+  static xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback){
     req.timeout = timeout
     req.open(method, endPoint)
     req.onload = () => {
-      this.parseJSON(serializer, req.responseText).then((response) => {
-        callback && callback(response)
-      })
+      let response = this.parseJSON(req.responseText)
+      callback && callback(response)
     }
     if(ontimeout){ req.ontimeout = ontimeout }
 
@@ -778,16 +756,15 @@ export class Ajax {
     req.send(body)
   }
 
-  static xhrRequest(req, method, endPoint, accept, body, timeout, serializer, ontimeout, callback){
+  static xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback){
     req.timeout = timeout
     req.open(method, endPoint, true)
     req.setRequestHeader("Content-Type", accept)
     req.onerror = () => { callback && callback(null) }
     req.onreadystatechange = () => {
       if(req.readyState === this.states.complete && callback){
-        this.parseJSON(serializer, req.responseText).then((response) => {
-          callback(response)
-        })
+        let response = this.parseJSON(req.responseText)
+        callback(response)
       }
     }
     if(ontimeout){ req.ontimeout = ontimeout }
@@ -795,17 +772,14 @@ export class Ajax {
     req.send(body)
   }
 
-  static parseJSON(serializer, resp){
-    return new Promise((resolve) => {
-      (resp && resp !== "") ? 
-        serializer.decode(resp).then((msg) => {
-          resolve(msg)
-        }) : resolve(null)
-    })
+  static parseJSON(resp){
+    return (resp && resp !== "") ?
+             JSON.parse(resp) :
+             null
   }
 
   static serialize(obj, parentKey){
-    let queryStr = []
+    let queryStr = [];
     for(var key in obj){ if(!obj.hasOwnProperty(key)){ continue }
       let paramKey = parentKey ? `${parentKey}[${key}]` : key
       let paramVal = obj[key]
@@ -827,6 +801,8 @@ export class Ajax {
 }
 
 Ajax.states = {complete: 4}
+
+
 
 export var Presence = {
 
