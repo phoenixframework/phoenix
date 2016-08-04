@@ -23,7 +23,7 @@ defmodule <%= application_module %>.UserSocket do
     {:ok, socket}
   end
 
-  # Socket id's are topics that allow you to identify all sockets for a given user:
+  # Socket ids are topics that allow you to identify all sockets for a given user:
   #
   #     def id(socket), do: "users_socket:#{socket.assigns.user_id}"
   #
