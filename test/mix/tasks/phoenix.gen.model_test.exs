@@ -237,6 +237,24 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
     end
   end
 
+  test "table name missing from references" do
+    assert_raise Mix.Error, fn ->
+      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "user_id:references"]
+    end
+  end
+
+  test "table name is not snake_case and lowercase" do
+    assert_raise Mix.Error, fn ->
+      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "POSTS", "body:text"]
+    end
+  end
+
+  test "table name omitted" do
+    assert_raise Mix.Error, fn ->
+      Mix.Tasks.Phoenix.Gen.Model.run ["Post"]
+    end
+  end
+
   defp with_generators_config(config, fun) do
     old_value = Application.get_env(:phoenix, :generators, [])
     try do
