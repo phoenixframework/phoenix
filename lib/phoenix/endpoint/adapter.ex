@@ -75,7 +75,7 @@ defmodule Phoenix.Endpoint.Adapter do
 
   defp code_reloader_children(mod, conf) do
     if conf[:code_reloader] do
-      args = [conf[:otp_app], conf[:reloadable_compilers],
+      args = [conf[:otp_app], mod, conf[:reloadable_compilers],
               [name: Module.concat(mod, CodeReloader)]]
       [worker(Phoenix.CodeReloader.Server, args)]
     else
