@@ -6,8 +6,8 @@ defmodule Phoenix.CodeReloader.Server do
   require Logger
   alias Phoenix.CodeReloader.Proxy
 
-  def start_link(app, compilers, opts \\ []) do
-    GenServer.start_link(__MODULE__, {app, compilers}, opts)
+  def start_link(app, mod, compilers, opts \\ []) do
+    GenServer.start_link(__MODULE__, {app, mod, compilers}, opts)
   end
 
   def reload!(endpoint) do
@@ -25,14 +25,15 @@ defmodule Phoenix.CodeReloader.Server do
 
   ## Callbacks
 
-  def init({app, compilers}) do
+  def init({app, mod, compilers}) do
     all = Mix.Project.config[:compilers] || Mix.compilers
     compilers = all -- (all -- compilers)
-    {:ok, {app, compilers}}
+    {:ok, {app, mod, compilers}}
   end
 
-  def handle_call(:reload!, from, {app, compilers} = state) do
-    froms = all_waiting([from])
+  def handle_call(:reload!, from, {app, mod, compilers} = state) do
+    backup = load_backup(mod)
+    froms  = all_waiting([from])
 
     {res, out} =
       proxy_io(fn ->
@@ -49,13 +50,28 @@ defmodule Phoenix.CodeReloader.Server do
 
     reply =
       case res do
-        :ok    -> :ok
-        :error -> {:error, out}
+        :ok ->
+          :ok
+        :error ->
+          write_backup(backup)
+          {:error, out}
       end
 
     Enum.each(froms, &GenServer.reply(&1, reply))
     {:noreply, state}
   end
+
+  defp load_backup(mod) do
+    with path when is_list(path) <- :code.which(mod),
+         {:ok, binary} <- File.read(path) do
+      {:ok, path, binary}
+    else
+      _ -> :error
+    end
+  end
+
+  defp write_backup({:ok, path, file}), do: File.write!(path, file)
+  defp write_backup(:error), do: :ok
 
   defp all_waiting(acc) do
     receive do
