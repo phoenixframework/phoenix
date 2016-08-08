@@ -1,6 +1,6 @@
 defmodule <%= application_module %>.Web do
   @moduledoc """
-  A module that keeps using definitions for controllers,
+  A module defining __using__ hooks for controllers,
   views and so on.
 
   This can be used in your application as:
