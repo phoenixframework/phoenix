@@ -147,8 +147,8 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   def run(argv) do
-    unless Version.match? System.version, "~> 1.2" do
-      Mix.raise "Phoenix v#{@version} requires at least Elixir v1.2.\n " <>
+    unless Version.match? System.version, "~> 1.3" do
+      Mix.raise "Phoenix v#{@version} requires at least Elixir v1.3.\n " <>
                 "You have #{System.version}. Please update accordingly"
     end
 
@@ -468,7 +468,7 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   defp get_pubsub_server(module) do
-    module
+    module1.2
     |> String.split(".")
     |> hd
     |> Module.concat(PubSub)
