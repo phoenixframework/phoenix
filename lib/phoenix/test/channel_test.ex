@@ -409,6 +409,23 @@ defmodule Phoenix.ChannelTest do
   the data being sent, as long as something was sent.
 
   The timeout is in milliseconds and defaults to 100ms.
+
+  **NOTE:** Because event and payload are patterns, they will be matched.  This
+  means that if you wish to assert that the received payload is equivalent to
+  an existing variable, you need to pin the variable in the assertion
+  expression.
+
+  Good:
+
+      expected_payload = %{foo: "bar"}
+      assert_push "some_event", ^expected_payload
+
+  Bad:
+
+      expected_payload = %{foo: "bar"}
+      assert_push "some_event", expected_payload
+      # The code above does not assert the payload matches the described map.
+
   """
   defmacro assert_push(event, payload, timeout \\ 100) do
     quote do
