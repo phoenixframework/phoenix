@@ -93,6 +93,7 @@ defmodule Phoenix.Naming do
   @spec camelize(String.t) :: String.t
   def camelize(value), do: Macro.camelize(value)
 
+  @spec camelize(String.t, :lower) :: String.t
   def camelize("", :lower), do: ""
   def camelize(<<?_, t :: binary>>, :lower) do
     camelize(t, :lower)
