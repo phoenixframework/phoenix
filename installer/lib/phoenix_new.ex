@@ -468,7 +468,7 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   defp get_pubsub_server(module) do
-    module1.2
+    module
     |> String.split(".")
     |> hd
     |> Module.concat(PubSub)
