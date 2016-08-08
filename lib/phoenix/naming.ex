@@ -148,6 +148,10 @@ defmodule Phoenix.Naming do
     <<to_upper_char(h)>> <> do_camelize(t, :upper)
   end
 
+  defp do_camelize(<<?_, h, t :: binary>>, case) when h in ?0..?9 do
+    <<h>> <> do_camelize(t, case)
+  end
+
   defp do_camelize(<<?_>>, _atom) do
     <<>>
   end
