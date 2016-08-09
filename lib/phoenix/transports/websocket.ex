@@ -136,6 +136,12 @@ defmodule Phoenix.Transports.WebSocket do
     format_reply(msg, state)
   end
 
+  @doc false
+  def ws_info(:garbage_collect, state) do
+    :erlang.garbage_collect(self())
+    {:ok, state}
+  end
+
   def ws_info(_, state) do
     {:ok, state}
   end
