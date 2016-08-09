@@ -39,7 +39,7 @@ defmodule Phoenix.Router do
   Phoenix's router is extremely efficient, as it relies on Elixir
   pattern matching for matching routes and serving requests.
 
-  ### Helpers
+  ## Helpers
 
   Phoenix automatically generates a module `Helpers` inside your router
   which contains named helpers to help developers generate and keep
@@ -89,11 +89,31 @@ defmodule Phoenix.Router do
       MyApp.Router.Helpers.special_page_path(conn, :show, "hello")
       "/pages/hello"
 
-  ### Scopes and Resources
+  ## Scopes and Resources
 
-  The router also supports scoping of routes:
+  It is very common in Phoenix applications to namespace all of your
+  routes under the application scope:
 
-      scope "/api/v1", as: :api_v1 do
+      scope "/", MyApp do
+        get "/pages/:id", PageController, :show
+      end
+
+  The route above will dispatch to `MyApp.PageController`. This syntax
+  is not only convenient for developers, since we don't have to repeat
+  the `MyApp.` prefix on all routes, but it also allows Phoenix to put
+  less pressure in the Elixir compiler. If instead we had written:
+
+    get "/pages/:id", MyApp.PageController, :show
+
+  The Elixir compiler would infer that the router depends directly on
+  `MyApp.PageController`, which is not true. By using scopes, Phoenix
+  can properly hint to the Elixir compiler the controller is not an
+  actual dependency of the router. This provides more efficient
+  compilation times.
+
+  Scopes allow us to scope on any path or even on the helper name:
+
+      scope "/api/v1", MyApp, as: :api_v1 do
         get "/pages/:id", PageController, :show
       end
 
@@ -164,7 +184,6 @@ defmodule Phoenix.Router do
 
   Note that router pipelines are only invoked after a route is found.
   No plug is invoked in case no matches were found.
-
   """
 
   alias Phoenix.Router.Resource
