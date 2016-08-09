@@ -36,6 +36,15 @@ defmodule Phoenix.Transports.WebSocket do
 
   The `encode!/1` function must return a tuple in the format
   `{:socket_push, :text | :binary, String.t | binary}`.
+
+  ## Garbage collection
+
+  It's possible to force garbage collection in the transport process after
+  processing large messages.
+
+  Send `:garbage_collect` clause to the transport process:
+
+      send socket.transport_pid, :garbage_collect
   """
 
   @behaviour Phoenix.Socket.Transport
@@ -134,6 +143,12 @@ defmodule Phoenix.Transports.WebSocket do
 
   def ws_info({:socket_push, _, _encoded_payload} = msg, state) do
     format_reply(msg, state)
+  end
+
+  @doc false
+  def ws_info(:garbage_collect, state) do
+    :erlang.garbage_collect(self())
+    {:ok, state}
   end
 
   def ws_info(_, state) do
