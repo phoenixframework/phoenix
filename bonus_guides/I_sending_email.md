@@ -1,4 +1,12 @@
-Sending email from a Phoenix application is really easy. Before we begin, we'll need an account with Mailgun - we won't actually be able to send mail without it. Once we have an account, though, the rest will be straightforward.
+Sending email from a Phoenix application is really easy. Phoenix does not ship with a library to send emails, but there are various packages available that can help with that.
+
+The options include [Phoenix Swoosh](https://github.com/swoosh/phoenix_swoosh) and [Bamboo](https://github.com/thoughtbot/bamboo).
+
+If you are only going to use Mailgun, you can use the mailgun package instead:
+
+## Using the Mailgun package
+
+Before we begin, we'll need an account with Mailgun - we won't actually be able to send mail without it. Once we have an account, though, the rest will be straightforward.
 
 First, [sign up at Mailgun](https://mailgun.com/signup). They have a generous number of free emails per month, so we can get going with a free account.
 
