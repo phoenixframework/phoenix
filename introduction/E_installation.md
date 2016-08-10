@@ -89,6 +89,6 @@ Linux users need to install this dependency. Please consult the [inotify-tools w
 
 ### Skeleton Installation
 
-Sometimes you want an installation without anything except the bare minimum phoenix setup. The follow command will give you that.
+Sometimes you want an installation without anything except the bare minimum phoenix setup. The following command will give you that.
 
 `mix phoenix.new web --no-brunch --no-ecto`
