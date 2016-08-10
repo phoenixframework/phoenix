@@ -8,6 +8,8 @@ Most web applications today need some form of data storage. In the Elixir ecosys
 
 Newly generated Phoenix applications integrate both Ecto and the PostgreSQL adapter by default.
 
+For a thorough, general guide for Ecto, check out the [Ecto getting started guide](https://hexdocs.pm/ecto/getting-started.html).
+
 This guide assumes that we have generated our new application with Ecto. If we're using an older Phoenix app, or we used the `--no-ecto` option to generate our application, all is not lost. Please follow the instructions in the "Integrating Ecto into an Existing Application" section below.
 
 This guide also assumes that we will be using PostgreSQL. For instructions on switching to MySQL, please see the [Using MySQL Guide](http://www.phoenixframework.org/docs/using-mysql).
