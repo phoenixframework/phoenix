@@ -119,7 +119,7 @@ Let's add those to our client module at `lib/hello_phoenix/mailer.ex`.
 defmodule HelloPhoenix.Mailer do
   use Mailgun.Client, domain: Application.get_env(:my_app, :mailgun_domain),
                       key: Application.get_env(:my_app, :mailgun_key),
-                      mode: :test,
+                      mode: :test, # Alternatively use Mix.env while in the test environment.
                       test_file_path: "/tmp/mailgun.json"
   . . .
 end
