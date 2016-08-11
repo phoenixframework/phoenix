@@ -259,7 +259,7 @@ defmodule Phoenix.ChannelTest do
     subscribe_and_join!(socket, channel, topic, payload)
   end
   @doc """
-  Same as `subscribe_and_join/4` but returns either the socket
+  Same as `subscribe_and_join/4`, but returns either the socket
   or throws an error.
 
   This is helpful when you are not testing joining the channel
@@ -390,7 +390,7 @@ defmodule Phoenix.ChannelTest do
   end
 
   @doc """
-  Same as `broadcast_from/3` but raises if broadcast fails.
+  Same as `broadcast_from/3`, but raises if broadcast fails.
   """
   def broadcast_from!(socket, event, message) do
     %{pubsub_server: pubsub_server, topic: topic, transport_pid: transport_pid} = socket

@@ -74,7 +74,7 @@ defmodule Phoenix.ConnTest do
   work.
 
   Keep in mind Phoenix will automatically recycle the connection
-  between dispatches. This usually works out well most times but
+  between dispatches. This usually works out well most times, but
   it may discard information if you are modifying the connection
   before the next dispatch:
 
@@ -85,7 +85,7 @@ defmodule Phoenix.ConnTest do
       conn = post conn, "/login"
 
       # We can also recycle manually in case we want custom headers
-      conn = 
+      conn =
         conn
         |> recycle()
         |> put_req_header("x-special", "nice")

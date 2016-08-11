@@ -7,7 +7,7 @@ defmodule Phoenix.Channel do
 
   ## Topics & Callbacks
 
-  Everytime you join a channel, you need to choose which particular topic you
+  Every time you join a channel, you need to choose which particular topic you
   want to listen to. The topic is just an identifier, but by convention it is
   often made of two parts: `"topic:subtopic"`. Using the `"topic:subtopic"`
   approach pairs nicely with the `Phoenix.Socket.channel/2` allowing you to
@@ -374,7 +374,7 @@ defmodule Phoenix.Channel do
   end
 
   @doc """
-  Same as `broadcast/3` but raises if broadcast fails.
+  Same as `broadcast/3`, but raises if broadcast fails.
   """
   def broadcast!(socket, event, message) do
     %{pubsub_server: pubsub_server, topic: topic} = assert_joined!(socket)
@@ -399,7 +399,7 @@ defmodule Phoenix.Channel do
   end
 
   @doc """
-  Same as `broadcast_from/3` but raises if broadcast fails.
+  Same as `broadcast_from/3`, but raises if broadcast fails.
   """
   def broadcast_from!(socket, event, message) do
     %{pubsub_server: pubsub_server, topic: topic, channel_pid: channel_pid} = assert_joined!(socket)
