@@ -67,7 +67,7 @@ defmodule Mix.Tasks.Phoenix.New do
     {:eex,  "new/web/views/page_view.ex",                    "web/views/page_view.ex"},
   ]
 
-  @bare [
+  @static [
     {:text,   "static/bare/.gitignore", ".gitignore"},
     {:text,   "static/app.css",         "priv/static/css/app.css"},
     {:append, "static/phoenix.css",     "priv/static/css/app.css"},
@@ -75,10 +75,14 @@ defmodule Mix.Tasks.Phoenix.New do
     {:text,   "static/robots.txt",      "priv/static/robots.txt"},
   ]
 
+  @bare [
+    {:text,   "static/bare/.gitignore", ".gitignore"},
+  ]
+
   # Embed all defined templates
   root = Path.expand("../templates", __DIR__)
 
-  for {format, source, _} <- @new ++ @ecto ++ @brunch ++ @html ++ @bare do
+  for {format, source, _} <- @new ++ @ecto ++ @brunch ++ @html ++ @static ++ @bare do
     unless format == :keep do
       @external_resource Path.join(root, source)
       def render(unquote(source)), do: unquote(File.read!(Path.join(root, source)))
@@ -298,15 +302,18 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   defp copy_static(_app, path, binding) do
-    if binding[:brunch] == false do
-      copy_from path, binding, @bare
-      create_file Path.join(path, "priv/static/js/phoenix.js"), phoenix_js_text()
-      create_file Path.join(path, "priv/static/images/phoenix.png"), phoenix_png_text()
-      create_file Path.join(path, "priv/static/favicon.ico"), phoenix_favicon_text()
-    else
+    case {binding[:brunch], binding[:html]} do
+    {true, _} ->
       copy_from path, binding, @brunch
       create_file Path.join(path, "web/static/assets/images/phoenix.png"), phoenix_png_text()
       create_file Path.join(path, "web/static/assets/favicon.ico"), phoenix_favicon_text()
+    {false, true} ->
+      copy_from path, binding, @static
+      create_file Path.join(path, "priv/static/js/phoenix.js"), phoenix_js_text()
+      create_file Path.join(path, "priv/static/images/phoenix.png"), phoenix_png_text()
+      create_file Path.join(path, "priv/static/favicon.ico"), phoenix_favicon_text()
+    {false, false} ->
+      copy_from path, binding, @bare
     end
   end
 
