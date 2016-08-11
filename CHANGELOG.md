@@ -1,6 +1,16 @@
 # Changelog
 
 
+## 1.2.1 (2016-8-11)
+
+* Enhancements
+  * [Router] Improve errors for invalid route paths
+  * [Plug] Include new development error pages
+
+* Bug Fixes
+  * [Endpoint] Fixed issue where endpoint would fail to code reload on next request after an endpoint compilation error
+
+
 ## 1.2.0 (2016-6-23)
 
 See these [`1.1.x` to `1.2.x` upgrade instructions](https://gist.github.com/chrismccord/29100e16d3990469c47f851e3142f766) to bring your existing apps up to speed.

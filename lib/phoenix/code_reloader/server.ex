@@ -62,13 +62,17 @@ defmodule Phoenix.CodeReloader.Server do
   end
 
   defp load_backup(mod) do
-    with path when is_list(path) <- :code.which(mod),
-         {:ok, binary} <- File.read(path) do
-      {:ok, path, binary}
-    else
+    mod
+    |> :code.which()
+    |> read_backup()
+  end
+  defp read_backup(path) when is_list(path) do
+    case File.read(path) do
+      {:ok, binary} -> {:ok, path, binary}
       _ -> :error
     end
   end
+  defp read_backup(_path), do: :error
 
   defp write_backup({:ok, path, file}), do: File.write!(path, file)
   defp write_backup(:error), do: :ok
