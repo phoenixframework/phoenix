@@ -2,9 +2,7 @@ defmodule Phoenix do
   @moduledoc """
   This is the documentation for the Phoenix project.
 
-  By default, Phoenix applications depend on other packages besides
-  Phoenix itself. Below we provide a short explanation with links to
-  their documentation for each of those projects:
+  By default, Phoenix applications depend on the following packages:
 
     * [Ecto](https://hexdocs.pm/ecto) - a language integrated query and
       database wrapper

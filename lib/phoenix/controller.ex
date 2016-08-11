@@ -37,7 +37,7 @@ defmodule Phoenix.Controller do
 
   Those functions are imported from two modules:
 
-    * `Plug.Conn` - a bunch of low-level functions to work with
+    * `Plug.Conn` - a collection of low-level functions to work with
       the connection
 
     * `Phoenix.Controller` - functions provided by Phoenix
@@ -46,11 +46,11 @@ defmodule Phoenix.Controller do
   ## Rendering and layouts
 
   One of the main features provided by controllers is the ability
-  to do content negotiation and render templates based on
+  to perform content negotiation and render templates based on
   information sent by the client. Read `render/3` to learn more.
 
-  It is also important to not confuse `Phoenix.Controller.render/3`
-  with `Phoenix.View.render/3` in the long term. The former expects
+  It is also important not to confuse `Phoenix.Controller.render/3`
+  with `Phoenix.View.render/3`. The former expects
   a connection and relies on content negotiation while the latter is
   connection-agnostic and typically invoked from your views.
 
@@ -96,7 +96,7 @@ defmodule Phoenix.Controller do
   Phoenix injects an `action/2` plug in your controller which calls the
   function matched from the router. By default, it passes the conn and params.
   In some cases, overriding the `action/2` plug in your controller is a
-  useful way to inject certain argument to your actions that you
+  useful way to inject arguments into your actions that you
   would otherwise need to fetch off the connection repeatedly. For example,
   imagine if you stored a `conn.assigns.current_user` in the connection
   and wanted quick access to the user for every action in your controller:
@@ -191,7 +191,7 @@ defmodule Phoenix.Controller do
   In case a JSON response is returned, it will be converted
   to a JSONP as long as the callback field is present in
   the query string. The callback field itself defaults to
-  "callback" but may be configured with the callback option.
+  "callback", but may be configured with the callback option.
 
   In case there is no callback or the response is not encoded
   in JSON format, it is a no-op.
@@ -667,7 +667,7 @@ defmodule Phoenix.Controller do
     * Checks to see if the `required_key` is present
     * Changes empty parameters of `required_key` (recursively) to nils
 
-  This function is useful to remove empty strings sent
+  This function is useful for removing empty strings sent
   via HTML forms. If you are providing an API, there
   is likely no need to invoke `scrub_params/2`.
 
