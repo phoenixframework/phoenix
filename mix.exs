@@ -1,12 +1,12 @@
 defmodule Phoenix.Mixfile do
   use Mix.Project
 
-  @version "1.2.0"
+  @version "1.3.0-dev"
 
   def project do
     [app: :phoenix,
      version: @version,
-     elixir: "~> 1.2.3 or ~> 1.3",
+     elixir: "~> 1.3",
      deps: deps(),
      package: package(),
 
@@ -56,7 +56,7 @@ defmodule Phoenix.Mixfile do
 
   defp package do
     [maintainers: ["Chris McCord", "José Valim", "Lance Halvorsen",
-                    "Jason Stiebs", "Eric Meadows-Jönsson", "Sonny Scroggin"],
+                   "Jason Stiebs", "Eric Meadows-Jönsson", "Sonny Scroggin"],
      licenses: ["MIT"],
      links: %{github: "https://github.com/phoenixframework/phoenix"},
      files: ~w(lib priv web) ++
