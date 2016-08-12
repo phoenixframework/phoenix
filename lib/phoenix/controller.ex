@@ -852,7 +852,7 @@ defmodule Phoenix.Controller do
   The first step is to teach Plug about those new media types in
   your `config/config.exs` file:
 
-      config :plug, :mimes, %{
+      config :mime, :types, %{
         "application/vnd.api+json" => ["json-api"]
       }
 
@@ -864,8 +864,8 @@ defmodule Phoenix.Controller do
 
   After this change, you must recompile plug:
 
-      $ touch deps/plug/mix.exs
-      $ mix deps.compile plug
+      $ mix deps.clean mime --build
+      $ mix deps.get
 
   And now you can use it in accepts too:
 
