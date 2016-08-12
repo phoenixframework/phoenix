@@ -260,12 +260,11 @@ defmodule Phoenix.CodeReloader do
     output
     |> String.strip
     |> Plug.HTML.html_escape
-    # |> String.replace(~r/(\n|^)(\*\* .*?)(\n|$)/, "\\1<strong>\\2</strong>\\3")
   end
 
   defp get_error_details(output) do
     case Regex.run(~r/(?:\n|^)\*\* \(([^ ]+)\) (.*)(?:\n|$)/, output) do
-      [_, error, headline] -> {error, headline}
+      [_, error, headline] -> {error, format_output(headline)}
       _ -> {"CompileError", "Compilation error"}
     end
   end
