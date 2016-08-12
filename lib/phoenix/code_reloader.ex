@@ -232,11 +232,6 @@ defmodule Phoenix.CodeReloader do
             font-size: .85em;
             line-height: 1.6;
         }
-
-        .code-block > strong {
-            color: #111;
-            font-weight: bold;
-        }
         </style>
     </head>
     <body>
@@ -268,6 +263,4 @@ defmodule Phoenix.CodeReloader do
       _ -> {"CompileError", "Compilation error"}
     end
   end
-
-  defp method(%Plug.Conn{method: method}), do: method
 end
