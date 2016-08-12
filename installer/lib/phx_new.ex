@@ -66,6 +66,10 @@ defmodule Mix.Tasks.Phx.New do
   ]
 
   @bare [
+    {:text,   "static/bare/.gitignore", ".gitignore"},
+  ]
+
+  @static [
     {:text,   "assets/bare/.gitignore", ".gitignore"},
     {:text,   "assets/app.css",         "priv/static/css/app.css"},
     {:append, "assets/phoenix.css",     "priv/static/css/app.css"},
@@ -76,7 +80,7 @@ defmodule Mix.Tasks.Phx.New do
   # Embed all defined templates
   root = Path.expand("../templates", __DIR__)
 
-  for {format, source, _} <- @new ++ @ecto ++ @brunch ++ @html ++ @bare do
+  for {format, source, _} <- @new ++ @ecto ++ @brunch ++ @html ++ @static ++ @bare do
     unless format == :keep do
       @external_resource Path.join(root, source)
       def render(unquote(source)), do: unquote(File.read!(Path.join(root, source)))
@@ -93,7 +97,7 @@ defmodule Mix.Tasks.Phx.New do
 
   It expects the path of the project as argument.
 
-      mix phoenix.new PATH [--module MODULE] [--app APP]
+      mix phx.new PATH [--module MODULE] [--app APP]
 
   A project at the given PATH will be created. The
   application name and module name will be retrieved
@@ -125,15 +129,15 @@ defmodule Mix.Tasks.Phx.New do
 
   ## Examples
 
-      mix phoenix.new hello_world
+      mix phx.new hello_world
 
   Is equivalent to:
 
-      mix phoenix.new hello_world --module HelloWorld
+      mix phx.new hello_world --module HelloWorld
 
   Without brunch:
 
-      mix phoenix.new ~/Workspace/hello_world --no-brunch
+      mix phx.new ~/Workspace/hello_world --no-brunch
 
   """
   @switches [dev: :boolean, brunch: :boolean, ecto: :boolean,
@@ -160,7 +164,7 @@ defmodule Mix.Tasks.Phx.New do
 
     case argv do
       [] ->
-        Mix.Task.run "help", ["phoenix.new"]
+        Mix.Task.run "help", ["phx.new"]
       [path|_] ->
         app = opts[:app] || Path.basename(Path.expand(path))
         check_app_name!(app, !!opts[:app])
@@ -300,15 +304,18 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp copy_static(_app, path, binding) do
-    if binding[:brunch] == false do
-      copy_from path, binding, @bare
-      create_file Path.join(path, "priv/static/js/phoenix.js"), phoenix_js_text()
-      create_file Path.join(path, "priv/static/images/phoenix.png"), phoenix_png_text()
-      create_file Path.join(path, "priv/static/favicon.ico"), phoenix_favicon_text()
-    else
+    case {binding[:brunch], binding[:html]} do
+    {true, _} ->
       copy_from path, binding, @brunch
       create_file Path.join(path, "assets/static/images/phoenix.png"), phoenix_png_text()
       create_file Path.join(path, "assets/static/favicon.ico"), phoenix_favicon_text()
+    {false, true} ->
+      copy_from path, binding, @static
+      create_file Path.join(path, "priv/static/js/phoenix.js"), phoenix_js_text()
+      create_file Path.join(path, "priv/static/images/phoenix.png"), phoenix_png_text()
+      create_file Path.join(path, "priv/static/favicon.ico"), phoenix_favicon_text()
+    {false, false} ->
+      copy_from path, binding, @bare
     end
   end
 
