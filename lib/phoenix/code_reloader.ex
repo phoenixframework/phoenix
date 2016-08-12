@@ -269,6 +269,5 @@ defmodule Phoenix.CodeReloader do
     end
   end
 
-
   defp method(%Plug.Conn{method: method}), do: method
 end
