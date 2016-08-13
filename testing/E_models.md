@@ -122,25 +122,17 @@ Finished in 0.4 seconds (0.2s on load, 0.1s on tests)
 Randomized with seed 780208
 ```
 
-It fails - which is exactly what it should do! We haven't written the code to make it pass yet. To  do that, we need to move the `number_of_pets` attribute from `@required_fields` to `@optional_fields` in `web/models/user.ex`.
+It fails - which is exactly what it should do! We haven't written the code to make it pass yet. To do that, we need to remove the `:number_of_pets` attribute from our `validate_required/3` function in `web/models/user.ex`.
 
 ```elixir
 defmodule HelloPhoenix.User do
-  use HelloPhoenix.Web, :model
-
-  schema "users" do
-    field :name, :string
-    field :email, :string
-    field :bio, :string
-    field :number_of_pets, :integer
-
-    timestamps
-  end
-
-  @required_fields ~w(name email bio)
-  @optional_fields ~w(number_of_pets)
-
   ...
+
+  def changeset(struct, params \\ %{}) do
+    struct
+    |> cast(params, [:name, :email, :bio, :number_of_pets])
+    |> validate_required([:name, :email, :bio])
+  end
 end
 ```
 
@@ -262,9 +254,10 @@ Our test has pointed the way. Now let's make it pass by adding that validation.
 defmodule HelloPhoenix.User do
   ...
 
-  def changeset(model, params \\ :empty) do
-    model
-    |> cast(params, @required_fields, @optional_fields)
+  def changeset(struct, params \\ %{}) do
+    struct
+    |> cast(params, [:name, :email, :bio, :number_of_pets])
+    |> validate_required([:name, :email, :bio])
     |> validate_length(:bio, min: 2)
   end
 end
@@ -336,9 +329,10 @@ To make this test pass, we need to add a new validation for the maximum length o
 defmodule HelloPhoenix.User do
   ...
 
-  def changeset(model, params \\ :empty) do
-    model
-    |> cast(params, @required_fields, @optional_fields)
+  def changeset(struct, params \\ %{}) do
+    struct
+    |> cast(params, [:name, :email, :bio, :number_of_pets])
+    |> validate_required([:name, :email, :bio])
     |> validate_length(:bio, min: 2)
     |> validate_length(:bio, max: 140)
   end
@@ -403,9 +397,10 @@ Then we add the new validation to generate the error our test is looking for.
 defmodule HelloPhoenix.User do
   ...
 
-  def changeset(model, params \\ :empty) do
-    model
-    |> cast(params, @required_fields, @optional_fields)
+  def changeset(struct, params \\ %{}) do
+    struct
+    |> cast(params, [:name, :email, :bio, :number_of_pets])
+    |> validate_required([:name, :email, :bio])
     |> validate_length(:bio, min: 2)
     |> validate_length(:bio, max: 140)
     |> validate_format(:email, ~r/@/)
