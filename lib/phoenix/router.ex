@@ -70,7 +70,7 @@ defmodule Phoenix.Router do
       MyApp.Router.Helpers.dynamic_path(conn_or_endpoint, :show, ["dynamic", "something"])
       "/dynamic/something"
 
-  The url generated in the named url helpers is based on the configuration for
+  The URL generated in the named URL helpers is based on the configuration for
   `:url`, `:http` and `:https`. However, if for some reason you need to manually
   control the URL generation, the url helpers also allow you to pass in a [`URI`](http://elixir-lang.org/docs/stable/elixir/URI.html)
   struct:
@@ -657,9 +657,9 @@ defmodule Phoenix.Router do
   @doc """
   Forwards a request at the given path to a plug.
 
-  All paths that matches the forwarded prefix will be sent to
-  the forwarded plug. This is useful to share router between
-  applications or even break a big router into smaller ones.
+  All paths that match the forwarded prefix will be sent to
+  the forwarded plug. This is useful for sharing a router between
+  applications or even breaking a big router into smaller ones.
   The router pipelines will be invoked prior to forwarding the
   connection.
 

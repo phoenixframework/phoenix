@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Phoenix.Digest do
   use Mix.Task
   @default_input_path "priv/static"
 
-  @shortdoc "Digests and compress static files"
+  @shortdoc "Digests and compresses static files"
   @recursive true
 
   @moduledoc """
@@ -20,7 +20,7 @@ defmodule Mix.Tasks.Phoenix.Digest do
   The output folder will contain:
 
     * the original file
-    * a compressed file with gzip
+    * the file compressed with gzip
     * a file containing the original file name and its digest
     * a compressed file containing the file name and its digest
     * a manifest file

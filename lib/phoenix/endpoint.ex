@@ -11,8 +11,8 @@ defmodule Phoenix.Endpoint do
     * to provide a wrapper for starting and stopping the
       endpoint as part of a supervision tree;
 
-    * to define an initial plug pipeline where requests
-      are sent through;
+    * to define an initial plug pipeline for requests
+      to pass through;
 
     * to host web specific configuration for your
       application.
@@ -33,9 +33,10 @@ defmodule Phoenix.Endpoint do
         plug YourApp.Router
       end
 
-  Before being used, an endpoint must be explicitly started as part
-  of your application supervision tree too (which is again done by
-  default in generated applications):
+  Endpoints must be explicitly started as part of your application
+  supervision tree. Endpoints are added by default
+  to the supervision tree in generated applications. Endpoints can be
+  added to the supervision tree as follows:
 
       supervisor(YourApp.Endpoint, [])
 
@@ -95,12 +96,12 @@ defmodule Phoenix.Endpoint do
           check_origin: ["//phoenixframework.org", "//*.example.com"]
 
     * `:http` - the configuration for the HTTP server. Currently uses
-      cowboy and accepts all options as defined by
+      Cowboy and accepts all options as defined by
       [`Plug.Adapters.Cowboy`](https://hexdocs.pm/plug/Plug.Adapters.Cowboy.html).
       Defaults to `false`.
 
     * `:https` - the configuration for the HTTPS server. Currently uses
-      cowboy and accepts all options as defined by
+      Cowboy and accepts all options as defined by
       [`Plug.Adapters.Cowboy`](https://hexdocs.pm/plug/Plug.Adapters.Cowboy.html).
       Defaults to `false`.
 
@@ -111,7 +112,7 @@ defmodule Phoenix.Endpoint do
 
     * `:secret_key_base` - a secret key used as a base to generate secrets
       for encrypting and signing data. For example, cookies and tokens
-      are signed by default but they may also be encrypted if desired.
+      are signed by default, but they may also be encrypted if desired.
       Defaults to `nil` as it must be set per application.
 
     * `:server` - when `true`, starts the web server when the endpoint
@@ -140,7 +141,7 @@ defmodule Phoenix.Endpoint do
 
     * `:watchers` - a set of watchers to run alongside your server. It
       expects a list of tuples containing the executable and its arguments.
-      Watchers are guaranteed to run in the application directory but only
+      Watchers are guaranteed to run in the application directory, but only
       when the server is enabled. For example, the watcher below will run
       the "watch" mode of the brunch build tool when the server starts.
       You can configure it to whatever build tool or command you want:
@@ -178,13 +179,13 @@ defmodule Phoenix.Endpoint do
 
   ## Endpoint API
 
-  In the previous section, we have used the `config/2` function which is
+  In the previous section, we have used the `config/2` function that is
   automatically generated in your endpoint. Here is a summary of all the
   functions that are automatically defined in your endpoint.
 
   #### Paths and URLs
 
-    * `struct_url()` - generates the endpoint base URL but as a `URI` struct
+    * `struct_url()` - generates the endpoint base URL, but as a `URI` struct
     * `url()` - generates the endpoint base URL without any path information
     * `path(path)` - generates the path information when routing to this endpoint
     * `static_url()` - generates the static URL without any path information
@@ -197,10 +198,10 @@ defmodule Phoenix.Endpoint do
 
     * `unsubscribe(topic)` - unsubscribes the caller from the given topic.
 
-    * `broadcast(topic, event, msg)` - broadcasts a `msg` with as `event`
+    * `broadcast(topic, event, msg)` - broadcasts a `msg` as `event`
       in the given `topic`.
 
-    * `broadcast!(topic, event, msg)` - broadcasts a `msg` with as `event`
+    * `broadcast!(topic, event, msg)` - broadcasts a `msg` as `event`
       in the given `topic`. Raises in case of failures.
 
     * `broadcast_from(from, topic, event, msg)` - broadcasts a `msg` from
@@ -233,7 +234,7 @@ defmodule Phoenix.Endpoint do
   Phoenix supports instrumentation through an extensible API. Each endpoint
   defines an `instrument/3` macro that both users and Phoenix internals can call
   to instrument generic events. This macro is responsible for measuring the time
-  it takes for the event to happen and for notifying a list of interested
+  it takes for the event to be processed and for notifying a list of interested
   instrumenter modules of this measurement.
 
   You can configure this list of instrumenter modules in the compile-time
@@ -245,7 +246,7 @@ defmodule Phoenix.Endpoint do
   `render_view/3`.
 
   **Note**: since the configuration for the list of instrumenters is specified
-  at compile time but it's used inside Phoenix itself, if you change this
+  at compile time, but it's used inside Phoenix itself, if you change this
   configuration you'll have to recompile Phoenix manually:
 
       $ mix deps.compile phoenix
@@ -253,25 +254,25 @@ defmodule Phoenix.Endpoint do
 
   ### Callbacks cycle
 
-  The way event callbacks are called is the following.
+  The event callback sequence is:
 
     1. The event callback is called *before* the event happens (in this case,
        before the view is rendered) with the atom `:start` as the first
        argument; see the "Before clause" section below.
-    2. The event happens (in this case, the view is rendered).
+    2. The event occurs (in this case, the view is rendered).
     3. The same event callback is called again, this time with the atom `:stop`
        as the first argument; see the "After clause" section below.
 
-  The second and third argument that each event callback takes depend on the
-  callback being an "after" or a "before" callback (i.e., they depend on the
-  value of the first argument, `:start` or `:stop`). For this reason, most of
+  The second and third argument that each event callback takes depends on the
+  callback being an "after" or a "before" callback i.e. it depends on the
+  value of the first argument, `:start` or `:stop`. For this reason, most of
   the time you will want to define (at least) two separate clauses for each
   event callback, one for the "before" and one for the "after" callbacks.
 
   All event callbacks are run in the same process that calls the `instrument/3`
-  macro; hence, instrumenters should be careful in performing blocking actions.
+  macro; hence, instrumenters should be careful to avoid performing blocking actions.
   If an event callback fails in any way (exits, throws, or raises), it won't
-  affect anything (the error is caught) but the failure will be logged. Note
+  affect anything as the error is caught, but the failure will be logged. Note
   that "after" callbacks are not guaranteed to be called as, for example, a link
   may break before they've been called.
 
@@ -288,7 +289,7 @@ defmodule Phoenix.Endpoint do
       where `instrument/3` has been called. It contains the module where the
       instrumentation is happening (under the `:module` key), the file and line
       (`:file` and `:line`), and the function inside which the instrumentation
-      is happening (under `:function`). This information can be used arbitrarely
+      is happening (under `:function`). This information can be used arbitrarily
       by the callback.
     * `runtime_metadata` is a map of runtime data that the instrumentation
       passes to the callbacks. This can be used for any purposes: for example,
@@ -341,15 +342,15 @@ defmodule Phoenix.Endpoint do
       `"index.html"` - and the `:format` key - for the format of the template.
     * `:phoenix_channel_join` - the joining of a channel. The `%Phoenix.Socket{}`
       and join params are passed as runtime metadata via `:socket` and `:params`.
-    * `:phoenix_channel_receive` - the receiving of an incoming message over a
+    * `:phoenix_channel_receive` - the receipt of an incoming message over a
       channel. The `%Phoenix.Socket{}`, payload, event, and ref are passed as
       runtime metadata via `:socket`, `:params`, `:event`, and `:ref`.
 
   ### Dynamic instrumentation
 
-  If you want to instrument a piece of code but the endpoint that should
+  If you want to instrument a piece of code, but the endpoint that should
   instrument it (the one that contains the `instrument/3` macro you want to use)
-  is not known at compile time, but only at runtime, then you can use the
+  is not known at compile time, only at runtime, you can use the
   `Phoenix.Endpoint.instrument/4` macro. Refer to its documentation for more
   information.
 
@@ -506,7 +507,7 @@ defmodule Phoenix.Endpoint do
       Generates the static URL without any path information.
 
       It uses the configuration under `:static_url` to generate
-      such. It fallsback to `:url` if `:static_url` is not set.
+      such. It falls back to `:url` if `:static_url` is not set.
       """
       def static_url do
         Phoenix.Config.cache(__MODULE__,
@@ -518,7 +519,7 @@ defmodule Phoenix.Endpoint do
       Generates the endpoint base URL but as a `URI` struct.
 
       It uses the configuration under `:url` to generate such.
-      Useful for manipulating the url data and passing to
+      Useful for manipulating the URL data and passing it to
       URL helpers.
       """
       def struct_url do
@@ -548,7 +549,7 @@ defmodule Phoenix.Endpoint do
 
       # The static path should be properly scoped according to
       # the static_url configuration. If one is not available,
-      # we fallback to the url configuration as in the adapter.
+      # we fallback to the URL configuration as in the adapter.
       static_script_name = (var!(config)[:static_url] || var!(config)[:url])[:path] || "/"
       static_script_name = if static_script_name == "/", do: "", else: static_script_name
 
@@ -664,7 +665,7 @@ defmodule Phoenix.Endpoint do
   To specify the endpoint that will provide instrumentation, the first argument
   can be:
 
-    * a module name -  the endpoint itself
+    * a module name - the endpoint itself
     * a `Plug.Conn` struct - this macro will look for the endpoint module in the
       `:private` field of the connection; if it's not there, `fun` will be
       executed with no instrumentation
@@ -674,7 +675,7 @@ defmodule Phoenix.Endpoint do
 
   Usually, users should prefer to instrument events using the `instrument/3`
   macro defined in every Phoenix endpoint. This macro should only be used for
-  cases when the endpoint is dynamic and not known at compile time instead.
+  cases when the endpoint is dynamic and not known at compile time.
 
   ## Examples
 

@@ -2,11 +2,11 @@ defmodule Phoenix.Digester do
   @digested_file_regex ~r/(-[a-fA-F\d]{32})/
 
   @moduledoc """
-  Digests and compress static files.
+  Digests and compresses static files.
 
   For each file under the given input path, Phoenix will generate a digest
   and also compress in `.gz` format. The filename and its digest will be
-  used to generate the manifest file. It also avoids duplications checking
+  used to generate the manifest file. It also avoids duplication, checking
   for already digested files.
 
   For stylesheet files found under the given path, Phoenix will replace

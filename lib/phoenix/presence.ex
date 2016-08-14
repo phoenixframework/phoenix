@@ -209,7 +209,7 @@ defmodule Phoenix.Presence do
 
   ## Presence datastructure
 
-  The presence information is returned as map with presences grouped
+  The presence information is returned as a map with presences grouped
   by key, cast as a string, and accumulated metadata, with the following form:
 
       %{key => %{metas: [%{phx_ref: ..., ...}, ...]}}
