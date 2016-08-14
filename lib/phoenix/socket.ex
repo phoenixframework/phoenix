@@ -15,13 +15,13 @@ defmodule Phoenix.Socket do
 
       transport :websocket, Phoenix.Transports.WebSocket
 
-  The command above means incoming socket connections can be done via
+  The command above means incoming socket connections can be made via
   the WebSocket transport. Events are routed by topic to channels:
 
       channel "room:lobby", MyApp.LobbyChannel
 
   See `Phoenix.Channel` for more information on channels. Check each
-  transport module to check the options specific to each transport.
+  transport module to find the options specific to each transport.
 
   ## Socket Behaviour
 
@@ -100,7 +100,7 @@ defmodule Phoenix.Socket do
   @doc ~S"""
   Identifies the socket connection.
 
-  Socket id's are topics that allow you to identify all sockets for a given user:
+  Socket IDs are topics that allow you to identify all sockets for a given user:
 
       def id(socket), do: "users_socket:#{socket.assigns.user_id}"
 

@@ -5,8 +5,8 @@ defmodule Phoenix.Logger do
   ## Parameter filtering
 
   When logging parameters, Phoenix can filter out sensitive parameters
-  in the logs, such as passwords, tokens and what not. Parameters to
-  be filtered can be added via the `:filter_parameters` option:
+  such as passwords and tokens. Parameters to be filtered can be
+  added via the `:filter_parameters` option:
 
       config :phoenix, :filter_parameters, ["password", "secret"]
 

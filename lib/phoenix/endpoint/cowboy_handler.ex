@@ -8,9 +8,8 @@ defmodule Phoenix.Endpoint.CowboyHandler do
   ## Custom dispatch options
 
   *NOTE*: This feature depends on the internals of Cowboy 1.0 API
-  and how it integrates with Phoenix. Those may change *any time*,
-  without backwards compatibility, specially when Cowboy 2.0 is out.
-  We document this for clarity and for those with very special needs.
+  and how it integrates with Phoenix. Those may change at *any time*,
+  without backwards compatibility, specifically when Cowboy 2.0 is released.
 
   You can provide custom dispatch options in order to use Phoenix's
   builtin Cowboy server with custom handlers. For example, to handle
