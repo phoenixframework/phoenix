@@ -30,7 +30,7 @@ defmodule Phoenix.Transports.WebSocket do
   ## Serializer
 
   By default, JSON encoding is used to broker messages to and from clients.
-  A custom serializer may be given as module which implements the `encode!/1`
+  A custom serializer may be given as a module which implements the `encode!/1`
   and `decode!/2` functions defined by the `Phoenix.Transports.Serializer`
   behaviour.
 

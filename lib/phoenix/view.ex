@@ -2,9 +2,8 @@ defmodule Phoenix.View do
   @moduledoc """
   Defines the view layer of a Phoenix application.
 
-  This module is used to define the application main view, which
-  serves as the base for all other views and templates in the
-  application.
+  This module is used to define the application's main view, which
+  serves as the base for all other views and templates.
 
   The view layer also contains conveniences for rendering templates,
   including support for layouts and encoders per format.
@@ -42,14 +41,12 @@ defmodule Phoenix.View do
       # web/templates/user/index.html.eex
       Hello <%= @name %>
 
-  The `.eex` extension is called a template engine which tells Phoenix how
-  to compile the code in the file into actual Elixir source code. After it is
+  The `.eex` extension maps to a template engine which tells Phoenix how
+  to compile the code in the file into Elixir source code. After it is
   compiled, the template can be rendered as:
 
       Phoenix.View.render(YourApp.UserView, "index.html", name: "John Doe")
       #=> {:safe, "Hello John Doe"}
-
-  We will discuss rendering in detail next.
 
   ## Rendering
 
@@ -65,7 +62,7 @@ defmodule Phoenix.View do
   representation specific to the template format. In the example above,
   we got: `{:safe, "Hello John Doe"}`. The safe tuple annotates that our
   template is safe and that we don't need to escape its contents because
-  all data was already encoded so far. Let's try to inject custom code:
+  all data has already been encoded. Let's try to inject custom code:
 
       Phoenix.View.render(YourApp.UserView, "index.html", name: "John<br />Doe")
       #=> {:safe, "Hello John&lt;br /&gt;Doe"}
@@ -88,7 +85,7 @@ defmodule Phoenix.View do
 
   Both JSON and HTML formats will be encoded only when passing the data
   to the controller via the `render_to_iodata/3` function. The
-  `render_to_iodata/3` uses the notion of format encoders to convert a
+  `render_to_iodata/3` function uses the notion of format encoders to convert a
   particular format to its string/iodata representation.
 
   Phoenix ships with some template engines and format encoders, which
@@ -156,7 +153,7 @@ defmodule Phoenix.View do
   ## Assigns
 
   Assigns are meant to be user data that will be available in templates.
-  However there are keys under assigns that are specially handled by
+  However, there are keys under assigns that are specially handled by
   Phoenix, they are:
 
     * `:layout` - tells Phoenix to wrap the rendered result in the

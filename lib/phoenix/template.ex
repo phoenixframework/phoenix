@@ -1,10 +1,10 @@
 defmodule Phoenix.Template do
   @moduledoc """
-  Templates are used by Phoenix on rendering.
+  Templates are used by Phoenix when rendering responses.
 
-  Since many views require rendering large contents, for example
-  a whole HTML file, it is common to put those files in the file
-  system into a particular directory, typically "web/templates".
+  Since many views render significant content, for example
+  a whole HTML file, it is common to put these files into a particular
+  directory, typically "web/templates".
 
   This module provides conveniences for reading all files from a
   particular directory and embedding them into a single module.
@@ -71,7 +71,7 @@ defmodule Phoenix.Template do
 
   Phoenix supports custom template engines. Engines tell
   Phoenix how to convert a template path into quoted expressions.
-  Please check `Phoenix.Template.Engine` for more information on
+  See `Phoenix.Template.Engine` for more information on
   the API required to be implemented by custom engines.
 
   Once a template engine is defined, you can tell Phoenix

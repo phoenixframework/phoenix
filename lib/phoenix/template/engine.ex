@@ -2,7 +2,7 @@ defmodule Phoenix.Template.Engine do
   @moduledoc """
   Specifies the API for adding custom template engines into Phoenix.
 
-  Engines need only to implement the `compile/2` function, that receives
+  Engines must implement the `compile/2` function, that receives
   the template file and the template name and outputs the template quoted
   expression:
 
