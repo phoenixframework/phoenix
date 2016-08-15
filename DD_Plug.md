@@ -73,6 +73,7 @@ defmodule HelloPhoenix.MessageController do
     render conn, :show, page: find_message(params["id"])
   end
 
+  defp authenticate(conn), do: ...
   defp authenticate(conn, _) do
     case Authenticator.find_user(conn) do
       {:ok, user} ->
@@ -82,6 +83,7 @@ defmodule HelloPhoenix.MessageController do
     end
   end
 
+  defp find_message(id), do: ...
   defp find_message(conn, _) do
     case find_message(conn.params["id"]) do
       nil ->
