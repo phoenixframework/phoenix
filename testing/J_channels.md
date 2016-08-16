@@ -20,17 +20,18 @@ These generated files serve as a good reference for writing channels and their
 corresponding tests. Let's go ahead and generate our Channel:
 
 ```console
-$ mix phoenix.gen.channel Room rooms
+$ mix phoenix.gen.channel Room
 * creating web/channels/room_channel.ex
 * creating test/channels/room_channel_test.exs
 
 Add the channel to your `web/channels/user_socket.ex` handler, for example:
 
-    channel "rooms:lobby", HelloPhoenix.RoomChannel
+    channel "room:lobby", HelloPhoenix.RoomChannel
 ```
 
-This creates a channel, its test and instructs us to add a channel route in `web/channels/user_socket.ex`.
-It is important to add the channel route or our channel won't function at all!
+This creates a channel, its test and instructs us to add a channel route in
+`web/channels/user_socket.ex`. It is important to add the channel route or our
+channel won't function at all!
 
 #### The Channel Test Helpers Module
 
@@ -77,7 +78,10 @@ First off, is the setup block:
 
 ```elixir
 setup do
-  {:ok, _, socket} = subscribe_and_join(RoomChannel, "rooms:lobby")
+  {:ok, _, socket} =
+    socket("user_id", %{some: :assign})
+    |> subscribe_and_join(RoomChannel, "room:lobby")
+
   {:ok, socket: socket}
 end
 ```
@@ -148,7 +152,7 @@ end
 Its corresponding test looks like:
 
 ```elixir
-test "shout broadcasts to rooms:lobby", %{socket: socket} do
+test "shout broadcasts to room:lobby", %{socket: socket} do
   push socket, "shout", %{"hello" => "all"}
   assert_broadcast "shout", %{"hello" => "all"}
 end
@@ -159,7 +163,7 @@ same `push/3` as we did in the synchronous reply test. So we `push` the `"shout"
 payload `%{"hello" => "all"}`.
 
 Since the `handle_in/3` callback for the `"shout"` event just broadcasts the same event and payload,
-all subscribers in the `"rooms:lobby"` should receive the message. To check that, we do
+all subscribers in the `"room:lobby"` should receive the message. To check that, we do
 `assert_broadcast "shout", %{"hello" => "all"}`.
 
 
