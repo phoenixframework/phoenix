@@ -150,7 +150,26 @@ Important detail: according to the default configuration there is no ES6 support
 
 #### JavaScript Libraries
 
-We may need to use a JavaScript library like jQuery or underscore in our application. As we mentioned above, we could copy the libraries into `web/static/vendor`. It may be a little bit easier to use `npm` to install it: We can simply add `"jquery": ">= 2.1"` to the dependencies in the `package.json` file in our projects root and run `npm install --save`. If the `npm` section in our `brunch-config.js` has a `whitelist` property, we will also need to add "jquery" to that. Now we can `import $ from "jquery"` in our `app.js`.
+We may need to use a JavaScript library like jQuery or underscore in our application. As we mentioned above, we could copy the libraries into `web/static/vendor`. It may be a little bit easier to use `npm` to install it: We can simply add `"jquery": ">= 2.1"` to the dependencies in the `package.json` file in our projects root and run `npm install --save`. If the `npm` section in our `brunch-config.js` has a `whitelist` property, we will also need to add "jquery" to that. Now we can `import $ from "jquery"` in our module inside`app.js`.
+
+ If we already have code that assumes jQuery is available as a global variable, we’ll either need to migrate our code (which is a must-do in the long run), or leave jQuery as a non-wrapped codebase (which is acceptable as a transition hack).
+
+To do so, you would add a `globals` definition into the config. For example, if we wanted to expose jQuery globally as `$`, we would modify the config to look like this:
+
+```javascript
+  npm: {globals: {
+    $: 'jquery',
+    jQuery: 'jquery'
+  }},
+```
+
+Additionally, some packages ship with stylesheets. To instruct Brunch to add these into the build, use the styles property in the npm config. For example, if we installed the Pikaday package and wanted to include its styles, we'd adjust the config like this:
+
+```javascript
+npm: {styles: {
+    bootstrap: ['dist/css/bootstrap.min.css']
+  }},
+```
 
 #### Brunch Plugin Pipeline
 
@@ -272,7 +291,7 @@ npm install
 
 Create webpack configuration file `webpack.config.js`:
 
-```json
+```javascript
 module.exports = {
   entry: "./web/static/js/app.js",
   output: {
