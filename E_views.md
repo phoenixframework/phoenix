@@ -1,5 +1,7 @@
 Phoenix views have two main jobs. First and foremost, they render templates (this includes layouts). The core function involved in rendering, `render/3`, is defined in Phoenix itself in the `Phoenix.View` module. Views also provide functions which take raw data and make it easier for templates to consume. If you are familiar with decorators or the facade pattern, this is similar.
 
+## Rendering Templates
+
 Phoenix assumes a strong naming convention from controllers to views to the templates they render. The `PageController` requires a `PageView` to render templates in the `web/templates/page` directory.
 
 If we want to, we can change the directory Phoenix considers to be the template root. Phoenix provides a `view/0` function in the `HelloPhoenix.Web` module defined in `web/web.ex`. The first line of `view/0` allows us to change our root directory by changing the value assigned to the `:root` key.
@@ -277,3 +279,100 @@ If we want to minimize duplication between our application layout and our `not_f
 Of course, we can do these same steps with the `def render("500.html", _assigns) do` clause in our `ErrorView` as well.
 
 We can also use the `assigns` map passed into any `render/2` clause in the `ErrorView`, instead of discarding it, in order to display more information in our templates.
+
+## Rendering JSON
+
+The view's other job besides rendering templates is to render JSON. Phoenix uses [Poison](https://github.com/devinus/poison) to encode Maps to JSON, so all we need to do in our views is format the data we'd like to respond with as a Map, and Phoenix will do the rest.
+
+It is possible to respond with JSON back directly from the controller and skip the View. However, if we think about a controller as having the responsibilities of receiving a request and fetching data to be sent back, data manipulation and formatting don't fall under those responsibilities. A view gives us a module responsible for formatting and manipulating the data.
+
+Let's take our `PageController`, and see what it might look like when we respond with some static page maps as JSON, instead of HTML.
+
+```elixir
+defmodule HelloPhoenix.PageController do
+  use HelloPhoenix.Web, :controller
+
+  def show(conn, _params) do
+    page = %{title: "foo"}
+
+    render conn, "show.json", page: page
+  end
+
+  def index(conn, _params) do
+    pages = [%{title: "foo"}, %{title: "bar"}]
+
+    render conn, "index.json", pages: pages
+  end
+end
+```
+
+Here, we have our `show/2` and `index/2` actions returning static page data. Instead of passing in `"show.html"` to `render/2` as the template name, we pass `"show.json"`.  This way, we can have views that are responsible for rendering HTML as well as JSON by pattern matching on different file types.
+
+```elixir
+defmodule HelloPhoenix.PageView do
+  use HelloPhoenix.Web, :view
+
+  def render("index.json", %{pages: pages}) do
+    %{data: render_many(pages, HelloPhoenix.PageView, "show.json")}
+  end
+
+  def render("show.json", %{page: page}) do
+    %{data: render_one(page, HelloPhoenix.PageView, "page.json")}
+  end
+
+  def render("page.json", %{page: page}) do
+    %{title: page.title}
+  end
+end
+```
+
+In the view we see our `render/2` function pattern matching on `"index.json"`, `"show.json"`, and `"page.json"`. In our controller `show/2` function, `render conn, "show.json", page: page` will pattern match on the matching name and extension in the view `render/3` functions.
+
+In other words, `render conn, "index.json", pages: pages` will call `render("index.json", %{pages: pages})`
+
+The `render_many/3` function takes the data we want to respond with (`pages`), a `View`, and a string to pattern match on the `render/3` function defined on `View`. It will map over each item in `pages`, and pass the item to the `render/3` function in `View` matching the file string.
+
+`render_one/3` follows, the same signature, ultimately using the `render/3` matching `page.json` to specifiy what each `page` looks like.
+
+The `render/3` matching `"index.json"` will respond with JSON as you would expect:
+
+```javascript
+  {
+    "data": [
+      {
+       "title": "foo"
+      },
+      {
+       "title": "bar"
+      },
+   ]
+  }
+```
+
+And the `render/3` matching `"show.json"`:
+
+```javascript
+  {
+    "data": {
+      "title": "foo"
+    }
+  }
+```
+
+It's useful to build our views like this so they can be composable.  Imagine a situation where our `Page` has a `has_many` relationship with `Author`, and depending on the request, we may want to send back `author` data with the `page`. We can easily accomplish this with a new `render/3`:
+
+
+```elixir
+defmodule HelloPhoenix.PageView do
+  use HelloPhoenix.Web, :view
+
+  def render("page_with_authors.json", %{page: page}) do
+    %{title: page.title,
+      authors: render_many(page.authors, HelloPhoenix.AuthorView, "show.json")}
+  end
+
+  def render("page.json", %{page: page}) do
+    %{title: page.title}
+  end
+end
+```
