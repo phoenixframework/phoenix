@@ -121,7 +121,7 @@ defmodule Phoenix.Template do
         <> available_templates(exception.available)
         <> "\nAssigns:\n\n"
         <> inspect(exception.assigns)
-        <> "\n"
+        <> "\n\nAssigned keys: #{inspect Map.keys(exception.assigns)}\n"
     end
 
     defp available_templates([]), do: "No templates were compiled for this module."
