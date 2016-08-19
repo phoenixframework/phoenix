@@ -637,7 +637,7 @@ defmodule Phoenix.Controller do
     view = Map.get(conn.private, :phoenix_view) ||
             raise "a view module was not specified, set one with put_view/2"
 
-    runtime_data = %{template: template, format: format}
+    runtime_data = %{view: view, template: template, format: format}
     data = Phoenix.Endpoint.instrument conn, :phoenix_controller_render, runtime_data, fn ->
       Phoenix.View.render_to_iodata(view, template, Map.put(conn.assigns, :conn, conn))
     end
