@@ -46,12 +46,29 @@ defmodule <%= application_module %>.ModelCase do
       iex> errors_on(%User{}, %{password: "password"})
       [password: "is unsafe", name: "is blank"]
 
+  Sometimes we need some different changeset functions e.g. registration_changeset/2 when create a User
+
+     iex> errors_on(%User{}, %{email: "non-email"}, :registration_changeset)
+     [password: "can't be blank", email: "has invalid format"]
+
   You could then write your assertion like:
 
       assert {:password, "is unsafe"} in errors_on(%User{}, %{password: "password"})
+
+  You can also create the changeset manually and retrieve the errors
+  field directly:
+
+      iex> changeset = User.changeset(%User{}, password: "password")
+      iex> {:password, "is unsafe"} in errors_on(changeset)
+      true
+
   """
-  def errors_on(struct, data) do
-    struct.__struct__.changeset(struct, data)
+  def errors_on(struct, data, change_name \\ :changeset) do
+    struct.__struct__.changeset(struct, data) |> errors_on
+  end
+
+  def errors_on(changeset) do
+    changeset
     |> Ecto.Changeset.traverse_errors(&<%= application_module %>.ErrorHelpers.translate_error/1)
     |> Enum.flat_map(fn {key, errors} -> for msg <- errors, do: {key, msg} end)
   end
