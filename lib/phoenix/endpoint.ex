@@ -569,7 +569,7 @@ defmodule Phoenix.Endpoint do
   @doc false
   def __force_ssl__(module, config) do
     if force_ssl = config[:force_ssl] do
-      force_ssl = Keyword.put_new(force_ssl, :host, var!(config)[:url][:host] || "localhost")
+      force_ssl = Keyword.put_new(force_ssl, :host, host_to_binary(var!(config)[:url][:host] || "localhost"))
 
       if force_ssl[:host] == "localhost" do
         IO.puts :stderr, """
@@ -583,6 +583,9 @@ defmodule Phoenix.Endpoint do
       force_ssl
     end
   end
+
+  defp host_to_binary({:system, env_var}), do: host_to_binary(System.get_env(env_var))
+  defp host_to_binary(host), do: host
 
   @doc false
   defmacro __before_compile__(env) do
