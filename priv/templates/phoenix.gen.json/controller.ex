@@ -45,9 +45,6 @@ defmodule <%= module %>Controller do
 
   def delete(conn, %{"id" => id}) do
     <%= singular %> = Repo.get!(<%= alias %>, id)
-
-    # Here we use delete! (with a bang) because we expect
-    # it to always work (and if it does not, it will raise).
     Repo.delete!(<%= singular %>)
 
     send_resp(conn, :no_content, "")
