@@ -110,6 +110,9 @@ defmodule Phoenix.Endpoint do
       By default, it redirects http requests and sets the
       "strict-transport-security" header for https ones.
 
+      The `:host` option is taken directly from the `:url` config; to
+      dynamically redirect to `%Conn.host`, set ':host' to `nil`.
+
     * `:secret_key_base` - a secret key used as a base to generate secrets
       for encrypting and signing data. For example, cookies and tokens
       are signed by default, but they may also be encrypted if desired.
