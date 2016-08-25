@@ -107,11 +107,11 @@ defmodule Phoenix.Endpoint do
 
     * `:force_ssl` - ensures no data is ever sent via http, always redirecting
       to https. It expects a list of options which are forwarded to `Plug.SSL`.
-      By default, it redirects http requests and sets the
-      "strict-transport-security" header for https ones.
-
-      The `:host` option is taken directly from the `:url` config; to
-      dynamically redirect to `%Conn.host`, set ':host' to `nil`.
+      By defalts it sets the "strict-transport-security" header in https requests,
+      forcing browsers to always use https. If an unsafe request (http) is sent,
+      it redirects to the https version using the `:host` specified in the `:url`
+      configuration. To dynamically redirect to the `host` of the current request,
+      `:host` must be set `nil`.
 
     * `:secret_key_base` - a secret key used as a base to generate secrets
       for encrypting and signing data. For example, cookies and tokens
