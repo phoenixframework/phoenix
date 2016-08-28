@@ -81,7 +81,7 @@ defmodule Phoenix.Socket.Transport do
   subscription. When attempting to create a duplicate subscription,
   `dispatch/3` will close the existing channel, log a warning, and
   spawn a new channel for the topic. When sending the `"phx_close"`
-  event form the closed channel, the message will contain the `ref` the
+  event from the closed channel, the message will contain the `ref` the
   client sent when joining. This allows the client to uniquely identify
   `"phx_close"` and `"phx_error"` messages when force-closing a channel
   on duplicate joins.
