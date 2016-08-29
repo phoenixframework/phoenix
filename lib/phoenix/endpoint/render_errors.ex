@@ -91,10 +91,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
 
   defp fetch_format(conn, opts) do
     try do
-      case get_format(conn) do
-        format when is_binary(format) -> conn
-        _ -> conn |> accepts(Keyword.fetch!(opts, :accepts))
-      end
+      accepts(conn, Keyword.fetch!(opts, :accepts))
     rescue
       Phoenix.NotAcceptableError ->
         put_format(conn, Keyword.fetch!(opts, :accepts) |> List.first())

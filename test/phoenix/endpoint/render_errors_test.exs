@@ -156,7 +156,7 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
   end
 
   test "exception page with params _format" do
-    conn = render(conn(:get, "/", [_format: "text"]), [], fn ->
+    conn = render(conn(:get, "/", [_format: "text"]), [accepts: ["text", "html"]], fn ->
       throw :hello
     end)
 
