@@ -12,14 +12,16 @@ defmodule Phoenix.Endpoint.Watcher do
     :ok = validate(cmd, args, merged_opts)
 
     try do
-      {_, 0} = System.cmd(cmd, args, merged_opts)
+      System.cmd(cmd, args, merged_opts)
     catch
       :error, :enoent ->
         relative = Path.relative_to_cwd(cmd)
         Logger.error "Could not start watcher #{inspect relative} from #{inspect cd(merged_opts)}, executable does not exist"
         exit(:shutdown)
-    rescue
-      MatchError ->
+    else
+      {_, 0} ->
+        :ok
+      {_, _} ->
         # System.cmd returned a non-zero exit code
         # sleep for a couple seconds before exiting to ensure this doesn't
         # hit the supervisor's max_restarts / max_seconds limit
