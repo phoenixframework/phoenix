@@ -35,7 +35,7 @@ defmodule Phoenix.LoggerTest do
       |> put_private(:phoenix_pipelines, [:browser])
       |> action
     end
-    assert output =~ "[debug] Processing by Phoenix.LoggerTest.LoggerController.index/2"
+    assert output =~ "[debug] Processing with Phoenix.LoggerTest.LoggerController.index/2"
     assert output =~ "Parameters: %{\"foo\" => \"bar\", \"format\" => \"html\"}"
     assert output =~ "Pipelines: [:browser]"
   end
