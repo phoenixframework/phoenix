@@ -18,6 +18,15 @@ defmodule Phoenix.Endpoint.Watcher do
         relative = Path.relative_to_cwd(cmd)
         Logger.error "Could not start watcher #{inspect relative} from #{inspect cd(merged_opts)}, executable does not exist"
         exit(:shutdown)
+    else
+      {_, 0} ->
+        :ok
+      {_, _} ->
+        # System.cmd returned a non-zero exit code
+        # sleep for a couple seconds before exiting to ensure this doesn't
+        # hit the supervisor's max_restarts / max_seconds limit
+        Process.sleep(2000)
+        exit(:watcher_command_error)
     end
   end
 
