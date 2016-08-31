@@ -25,7 +25,7 @@ defmodule Phoenix.Logger do
     Logger.log level, fn ->
       controller = inspect(module)
       action = conn |> action_name() |> Atom.to_string()
-      ["Processing by ", controller, ?., action, ?/, ?2, ?\n,
+      ["Processing with ", controller, ?., action, ?/, ?2, ?\n,
         "  Parameters: ", params(conn.params), ?\n,
         "  Pipelines: ", inspect(conn.private[:phoenix_pipelines])]
     end
