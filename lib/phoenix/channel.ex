@@ -205,7 +205,7 @@ defmodule Phoenix.Channel do
   preference, a more efficient and simple approach would be to subscribe a
   single channel to relevant notifications via your endpoint. For example:
 
-      def MyApp.Endpoint.NotificationChannel do
+      defmodule MyApp.Endpoint.NotificationChannel do
         use Phoenix.Channel
 
         def join("notification:" <> user_id, %{"ids" => ids}, socket) do
