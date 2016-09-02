@@ -310,6 +310,7 @@ defmodule Phoenix.Channel.Server do
     Expected `handle_in/3` to return one of:
 
         {:noreply, Socket.t} |
+        {:noreply, Socket.t, timeout | :hibernate} |
         {:reply, {status :: atom, response :: map}, Socket.t} |
         {:reply, status :: atom, Socket.t} |
         {:stop, reason :: term, Socket.t} |
