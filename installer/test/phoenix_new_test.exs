@@ -160,6 +160,8 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/config/prod.secret.exs", &refute(&1 =~ config)
       assert_file "photo_blog/web/web.ex", &refute(&1 =~ ~r"alias PhotoBlog.Repo")
 
+      assert_file "photo_blog/web/views/error_helpers.ex", &assert(&1 =~ "def error_tag")
+
       # No HTML
       assert File.exists?("photo_blog/test/controllers")
       refute File.exists?("photo_blog/test/controllers/.keep")
