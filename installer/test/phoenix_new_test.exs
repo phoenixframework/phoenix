@@ -161,6 +161,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/web/web.ex", &refute(&1 =~ ~r"alias PhotoBlog.Repo")
 
       assert_file "photo_blog/web/views/error_helpers.ex", &assert(&1 =~ "def error_tag")
+      assert_file "photo_blog/test/views/error_helpers_test.exs", &assert(&1 =~ "PhotoBlog.ErrorHelpersTest")
 
       # No HTML
       assert File.exists?("photo_blog/test/controllers")
@@ -179,6 +180,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       refute File.exists? "photo_blog/web/templates/page/index.html.eex"
       refute File.exists? "photo_blog/web/views/layout_view.ex"
       refute File.exists? "photo_blog/web/views/page_view.ex"
+      refute File.exists? "photo_blog/test/views/error_helpers_test.exs"
 
       assert_file "photo_blog/mix.exs", &refute(&1 =~ ~r":phoenix_html")
       assert_file "photo_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_reload")
