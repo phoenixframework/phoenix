@@ -162,6 +162,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       assert_file "photo_blog/web/views/error_helpers.ex", &assert(&1 =~ "def error_tag")
       assert_file "photo_blog/test/views/error_helpers_test.exs", &assert(&1 =~ "PhotoBlog.ErrorHelpersTest")
+      assert_file "photo_blog/test/views/error_helpers_test.exs", &assert(&1 =~ "alias PhotoBlog.ErrorHelpers")
 
       # No HTML
       assert File.exists?("photo_blog/test/controllers")
