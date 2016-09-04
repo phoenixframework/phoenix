@@ -72,7 +72,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
         capture_io(:user, fn ->
           Mix.Task.run("test", ["--no-start", "--no-compile"])
         end)
-      end) =~ ~r"4 tests, 0 failures"
+      end) =~ ~r"6 tests, 0 failures"
     end
   end
 
