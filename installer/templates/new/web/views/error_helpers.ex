@@ -9,10 +9,10 @@ defmodule <%= application_module %>.ErrorHelpers do
   Generates tag for inlined form input errors.
   """
   def error_tag(form, field, opts \\ []) do
-    opts = Keyword.put_new(opts, :class, "help-block")
+    {class_name, _opts} = Keyword.pop(opts, :class, "help-block")
 
     if error = form.errors[field] do
-      content_tag :span, translate_error(error), class: opts[:class]
+      content_tag :span, translate_error(error), class: class_name
     end
   end
 <% end %>
