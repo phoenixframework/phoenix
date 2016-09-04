@@ -182,7 +182,6 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       refute File.exists? "photo_blog/web/templates/page/index.html.eex"
       refute File.exists? "photo_blog/web/views/layout_view.ex"
       refute File.exists? "photo_blog/web/views/page_view.ex"
-      refute File.exists? "photo_blog/test/views/error_helpers_test.exs"
 
       assert_file "photo_blog/mix.exs", &refute(&1 =~ ~r":phoenix_html")
       assert_file "photo_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_reload")
