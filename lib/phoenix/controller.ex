@@ -291,9 +291,7 @@ defmodule Phoenix.Controller do
   """
   @spec js(Plug.Conn.t, iodata) :: Plug.Conn.t
   def js(conn, data) do
-    conn
-    |> put_resp_content_type(Plug.MIME.type("js"))
-    |> send_resp(conn.status || 200, data)
+    send_resp(conn, conn.status || 200, "application/javascript", data)
   end
 
   @doc """
