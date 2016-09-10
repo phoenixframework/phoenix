@@ -357,7 +357,7 @@ $ mix phoenix.gen.model Admin.User users name:string age:integer
 
 #### `mix phoenix.gen.channel`
 
-This task will generate a basic Phoenix channel as well a test case for it. It takes only two arguments, the module name for the channel and plural used as the topic.
+This task will generate a basic Phoenix channel as well a test case for it. It takes the module name for the channel as argument:
 
 ```console
 $ mix phoenix.gen.channel Room
