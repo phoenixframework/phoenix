@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="chirp/config/environment" content="%7B%22modulePrefix%22%3A%22chirp%22%2C%22environment%22%3A%22development%22%2C%22rootURL%22%3A%22/%22%2C%22rootElement%22%3A%22%23container%22%2C%22locationType%22%3A%22auto%22%2C%22EmberENV%22%3A%7B%22FEATURES%22%3A%7B%7D%7D%2C%22APP%22%3A%7B%22name%22%3A%22chirp%22%2C%22version%22%3A%220.0.0+2b532e79%22%7D%2C%22exportApplicationGlobal%22%3Atrue%7D" />
+
+    <title>Hello Chirp.Web!</title>
+    <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
+    <script type="text/javascript" src="<%= static_path(@conn, "/js/app.js") %>">
+    </script>
+    <script>
+      window.userToken = "<%= assigns[:user_token] %>"
+      window.currentUserId = <%= assigns[:current_user] && assigns[:current_user].id %>
+    </script>
+  </head>
+
+  <body>
+    <div class="container">
+      <%= render Chirp.Web.LayoutView, "header.html", assigns %>
+      <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
+      <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
+
+      <main role="main">
+        <%= render @view_module, @view_template, assigns %>
+      </main>
+
+    </div> <!-- /container -->
+  </body>
+</html>

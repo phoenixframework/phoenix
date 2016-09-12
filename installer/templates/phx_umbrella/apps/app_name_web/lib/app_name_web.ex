@@ -1,9 +1,9 @@
 defmodule <%= web_namespace %> do
   @moduledoc """
-  A module that keeps using definitions for controllers,
-  views and so on.
+  The Web application for `<%= application_module %>`
 
-  This can be used in your application as:
+  This module can be used in your application to import common
+  controller, view, and channel functionality, for example:
 
       use <%= web_namespace %>, :controller
       use <%= web_namespace %>, :view
@@ -15,6 +15,33 @@ defmodule <%= web_namespace %> do
   Do NOT define functions inside the quoted expressions
   below.
   """
+  use Application
+
+  def start(_type, _args) do
+    import Supervisor.Spec
+
+    # Define workers and child supervisors to be supervised
+    children = [
+      # Start the endpoint when the application starts
+      supervisor(<%= endpoint_module %>, []),
+      # Start your own worker by calling: Chirp.Web.Worker.start_link(arg1, arg2, arg3)
+      # worker(Chirp.Web.Worker, [arg1, arg2, arg3]),
+    ]
+
+    # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
+    # for other strategies and supported options
+    opts = [strategy: :one_for_one, name: <%= web_namespace %>.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+
+  # Tell Phoenix to update the endpoint configuration
+  # whenever the application is updated.
+  def config_change(changed, _new, removed) do
+    <%= endpoint_module %>.config_change(changed, removed)
+    :ok
+  end
+
+
 <%= if ecto do %>
   def schema do
     quote do
@@ -39,7 +66,7 @@ defmodule <%= web_namespace %> do
 
   def view do
     quote do
-      use Phoenix.View, root: "lib/<%= application_name %>/web/templates",
+      use Phoenix.View, root: "lib/templates",
                         namespace: <%= web_namespace %>
 
       # Import convenience functions from controllers

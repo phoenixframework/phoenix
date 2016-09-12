@@ -8,82 +8,168 @@ defmodule Mix.Tasks.Phx.New do
 
   # File mappings
 
-  @new [
-    {:eex,  "phx_new/config/config.exs",                        "config/config.exs"},
-    {:eex,  "phx_new/config/dev.exs",                           "config/dev.exs"},
-    {:eex,  "phx_new/config/prod.exs",                          "config/prod.exs"},
-    {:eex,  "phx_new/config/prod.secret.exs",                   "config/prod.secret.exs"},
-    {:eex,  "phx_new/config/test.exs",                          "config/test.exs"},
-    {:eex,  "phx_new/lib/app_name.ex",                          "lib/app_name.ex"},
-    {:eex,  "phx_new/lib/app_name/web/endpoint.ex",             "lib/app_name/web/endpoint.ex"},
-    {:keep, "phx_new/test/channels",                            "test/channels"},
-    {:keep, "phx_new/test/controllers",                         "test/controllers"},
-    {:eex,  "phx_new/test/views/error_view_test.exs",           "test/views/error_view_test.exs"},
-    {:eex,  "phx_new/test/support/conn_case.ex",                "test/support/conn_case.ex"},
-    {:eex,  "phx_new/test/support/channel_case.ex",             "test/support/channel_case.ex"},
-    {:eex,  "phx_new/test/test_helper.exs",                     "test/test_helper.exs"},
-    {:eex,  "phx_new/lib/app_name/web/channels/user_socket.ex", "lib/app_name/web/channels/user_socket.ex"},
-    {:keep, "phx_new/lib/app_name/web/controllers",             "lib/app_name/web/controllers"},
-    {:eex,  "phx_new/lib/app_name/web/router.ex",               "lib/app_name/web/router.ex"},
-    {:eex,  "phx_new/lib/app_name/web/views/error_view.ex",     "lib/app_name/web/views/error_view.ex"},
-    {:eex,  "phx_new/lib/app_name/web.ex",                      "lib/app_name/web.ex"},
-    {:eex,  "phx_new/mix.exs",                                  "mix.exs"},
-    {:eex,  "phx_new/README.md",                                "README.md"},
-    {:eex,  "phx_new/lib/app_name/gettext.ex",                  "lib/app_name/web/gettext.ex"},
-    {:eex,  "phx_new/priv/gettext/errors.pot",                  "priv/gettext/errors.pot"},
-    {:eex,  "phx_new/priv/gettext/en/LC_MESSAGES/errors.po",    "priv/gettext/en/LC_MESSAGES/errors.po"},
-    {:eex,  "phx_new/lib/app_name/web/views/error_helpers.ex",  "lib/app_name/web/views/error_helpers.ex"},
-  ]
+  @new %{
+    regular: [
+      {:eex,  "phx_new/config/config.exs",                        "config/config.exs"},
+      {:eex,  "phx_new/config/dev.exs",                           "config/dev.exs"},
+      {:eex,  "phx_new/config/prod.exs",                          "config/prod.exs"},
+      {:eex,  "phx_new/config/prod.secret.exs",                   "config/prod.secret.exs"},
+      {:eex,  "phx_new/config/test.exs",                          "config/test.exs"},
+      {:eex,  "phx_new/lib/app_name.ex",                          "lib/app_name.ex"},
+      {:eex,  "phx_new/lib/app_name/web/endpoint.ex",             "lib/app_name/web/endpoint.ex"},
+      {:keep, "phx_new/test/channels",                            "test/channels"},
+      {:keep, "phx_new/test/controllers",                         "test/controllers"},
+      {:eex,  "phx_new/test/views/error_view_test.exs",           "test/views/error_view_test.exs"},
+      {:eex,  "phx_new/test/support/conn_case.ex",                "test/support/conn_case.ex"},
+      {:eex,  "phx_new/test/support/channel_case.ex",             "test/support/channel_case.ex"},
+      {:eex,  "phx_new/test/test_helper.exs",                     "test/test_helper.exs"},
+      {:eex,  "phx_new/lib/app_name/web/channels/user_socket.ex", "lib/app_name/web/channels/user_socket.ex"},
+      {:keep, "phx_new/lib/app_name/web/controllers",             "lib/app_name/web/controllers"},
+      {:eex,  "phx_new/lib/app_name/web/router.ex",               "lib/app_name/web/router.ex"},
+      {:eex,  "phx_new/lib/app_name/web/views/error_view.ex",     "lib/app_name/web/views/error_view.ex"},
+      {:eex,  "phx_new/lib/app_name/web.ex",                      "lib/app_name/web.ex"},
+      {:eex,  "phx_new/mix.exs",                                  "mix.exs"},
+      {:eex,  "phx_new/README.md",                                "README.md"},
+      {:eex,  "phx_new/lib/app_name/gettext.ex",                  "lib/app_name/web/gettext.ex"},
+      {:eex,  "phx_new/priv/gettext/errors.pot",                  "priv/gettext/errors.pot"},
+      {:eex,  "phx_new/priv/gettext/en/LC_MESSAGES/errors.po",    "priv/gettext/en/LC_MESSAGES/errors.po"},
+      {:eex,  "phx_new/lib/app_name/web/views/error_helpers.ex",  "lib/app_name/web/views/error_helpers.ex"},
+    ],
+    umbrella: [
+      {:eex,  "phx_umbrella/config/config.exs",                     "config/config.exs"},
+      {:eex,  "phx_umbrella/mix.exs",                               "mix.exs"},
+      {:eex,  "phx_umbrella/README.md",                             "README.md"},
+      {:eex,  "phx_umbrella/apps/app_name/config/config.exs",       "apps/app_name/config/config.exs"},
+      {:eex,  "phx_umbrella/apps/app_name/config/dev.exs",          "apps/app_name/config/dev.exs"},
+      {:eex,  "phx_umbrella/apps/app_name/config/prod.exs",         "apps/app_name/config/prod.exs"},
+      {:eex,  "phx_umbrella/apps/app_name/config/prod.secret.exs",  "apps/app_name/config/prod.secret.exs"},
+      {:eex,  "phx_umbrella/apps/app_name/config/test.exs",         "apps/app_name/config/test.exs"},
+      {:eex,  "phx_umbrella/apps/app_name/lib/app_name.ex",         "apps/app_name/lib/app_name.ex"},
+      {:eex,  "phx_umbrella/apps/app_name/test/test_helper.exs",    "apps/app_name/test/test_helper.exs"},
+      {:eex,  "phx_umbrella/apps/app_name/README.md",               "apps/app_name/README.md"},
+      {:eex,  "phx_umbrella/apps/app_name/mix.exs",                 "apps/app_name/mix.exs"},
+      {:eex,  "phx_umbrella/apps/app_name_web/config/config.exs",       "apps/app_name_web/config/config.exs"},
+      {:eex,  "phx_umbrella/apps/app_name_web/config/dev.exs",          "apps/app_name_web/config/dev.exs"},
+      {:eex,  "phx_umbrella/apps/app_name_web/config/prod.exs",         "apps/app_name_web/config/prod.exs"},
+      {:eex,  "phx_umbrella/apps/app_name_web/config/prod.secret.exs",  "apps/app_name_web/config/prod.secret.exs"},
+      {:eex,  "phx_umbrella/apps/app_name_web/config/test.exs",         "apps/app_name_web/config/test.exs"},
+      {:eex,  "phx_umbrella/apps/app_name_web/test/test_helper.exs",    "apps/app_name_web/test/test_helper.exs"},
+      {:eex,  "phx_umbrella/apps/app_name_web/lib/app_name_web.ex",     "apps/app_name_web/lib/app_name_web.ex"},
+      {:eex,  "phx_umbrella/apps/app_name_web/lib/endpoint.ex",         "apps/app_name_web/lib/endpoint.ex"},
+      {:eex,  "phx_umbrella/apps/app_name_web/lib/gettext.ex",          "apps/app_name_web/lib/gettext.ex"},
+      {:eex,  "phx_umbrella/apps/app_name_web/lib/router.ex",           "apps/app_name_web/lib/router.ex"},
+      {:eex,  "phx_umbrella/apps/app_name_web/README.md",               "apps/app_name_web/README.md"},
+      {:eex,  "phx_umbrella/apps/app_name_web/mix.exs",                 "apps/app_name_web/mix.exs"},
+      {:keep, "phx_umbrella/apps/app_name_web/test/channels",                  "apps/app_name_web/test/channels"},
+      {:keep, "phx_umbrella/apps/app_name_web/test/controllers",               "apps/app_name_web/test/controllers"},
+      {:eex,  "phx_umbrella/apps/app_name_web/test/views/error_view_test.exs", "apps/app_name_web/test/views/error_view_test.exs"},
+      {:eex,  "phx_umbrella/apps/app_name_web/test/support/conn_case.ex",      "apps/app_name_web/test/support/conn_case.ex"},
+      {:eex,  "phx_umbrella/apps/app_name_web/test/support/channel_case.ex",   "apps/app_name_web/test/support/channel_case.ex"},
+      {:eex,  "phx_umbrella/apps/app_name_web/lib/channels/user_socket.ex",    "apps/app_name_web/lib/channels/user_socket.ex"},
+      {:keep, "phx_umbrella/apps/app_name_web/lib/controllers",                "apps/app_name_web/lib/controllers"},
+      {:eex,  "phx_umbrella/apps/app_name_web/lib/views/error_view.ex",        "apps/app_name_web/lib/views/error_view.ex"},
+      {:eex,  "phx_umbrella/apps/app_name_web/lib/views/error_helpers.ex",     "apps/app_name_web/lib/views/error_helpers.ex"},
+      {:eex,  "phx_umbrella/apps/app_name_web/priv/gettext/errors.pot",        "apps/app_name_web/priv/gettext/errors.pot"},
+      {:eex,  "phx_umbrella/apps/app_name_web/priv/gettext/en/LC_MESSAGES/errors.po", "apps/app_name_web/priv/gettext/en/LC_MESSAGES/errors.po"},
+    ]
+  }
 
-  @ecto [
-    {:eex,  "phx_ecto/repo.ex",              "lib/app_name/repo.ex"},
-    {:eex,  "phx_ecto/data_case.ex",        "test/support/data_case.ex"},
-    {:keep, "phx_ecto/priv/repo/migrations", "priv/repo/migrations"},
-    {:eex,  "phx_ecto/seeds.exs",            "priv/repo/seeds.exs"}
-  ]
+  @ecto %{
+    regular: [
+      {:eex,  "phx_ecto/repo.ex",              "lib/app_name/repo.ex"},
+      {:eex,  "phx_ecto/data_case.ex",         "test/support/data_case.ex"},
+      {:keep, "phx_ecto/priv/repo/migrations", "priv/repo/migrations"},
+      {:eex,  "phx_ecto/seeds.exs",            "priv/repo/seeds.exs"}
+    ],
+    umbrella: [
+      {:eex,  "phx_umbrella/apps/app_name/lib/repo.ex", "lib/repo.ex"},
+      {:eex,  "phx_ecto/data_case.ex",                  "test/support/data_case.ex"},
+      {:eex,  "phx_ecto/seeds.exs",                     "priv/repo/seeds.exs"},
+      {:keep, "phx_umbrella/apps/app_name/priv/repo/migrations", "priv/repo/migrations"},
+     ]
+  }
 
-  @brunch [
-    {:text, "assets/brunch/.gitignore",       ".gitignore"},
-    {:eex,  "assets/brunch/brunch-config.js", "assets/brunch-config.js"},
-    {:eex,  "assets/brunch/package.json",     "assets/package.json"},
-    {:text, "assets/app.css",                 "assets/css/app.css"},
-    {:text, "assets/phoenix.css",             "assets/css/phoenix.css"},
-    {:eex,  "assets/brunch/app.js",           "assets/js/app.js"},
-    {:eex,  "assets/brunch/socket.js",        "assets/js/socket.js"},
-    {:keep, "assets/vendor",                  "assets/vendor"},
-    {:text, "assets/robots.txt",              "assets/static/robots.txt"},
-  ]
+  @brunch %{
+    regular: [
+      {:text, "assets/brunch/.gitignore",       ".gitignore"},
+      {:eex,  "assets/brunch/brunch-config.js", "assets/brunch-config.js"},
+      {:eex,  "assets/brunch/package.json",     "assets/package.json"},
+      {:text, "assets/app.css",                 "assets/css/app.css"},
+      {:text, "assets/phoenix.css",             "assets/css/phoenix.css"},
+      {:eex,  "assets/brunch/app.js",           "assets/js/app.js"},
+      {:eex,  "assets/brunch/socket.js",        "assets/js/socket.js"},
+      {:keep, "assets/vendor",                  "assets/vendor"},
+      {:text, "assets/robots.txt",              "assets/static/robots.txt"},
+    ],
+    umbrella: [
+      {:text, "assets/brunch/.gitignore",       ".gitignore"},
+      {:eex,  "assets/brunch/brunch-config.js", "assets/brunch-config.js"},
+      {:eex,  "assets/brunch/package.json",     "assets/package.json"},
+      {:text, "assets/app.css",                 "assets/css/app.css"},
+      {:text, "assets/phoenix.css",             "assets/css/phoenix.css"},
+      {:eex,  "assets/brunch/app.js",           "assets/js/app.js"},
+      {:eex,  "assets/brunch/socket.js",        "assets/js/socket.js"},
+      {:keep, "assets/vendor",                  "assets/vendor"},
+      {:text, "assets/robots.txt",              "assets/static/robots.txt"},
+    ]
+  }
 
-  @html [
-    {:eex,  "phx_new/test/controllers/page_controller_test.exs",               "test/controllers/page_controller_test.exs"},
-    {:eex,  "phx_new/test/views/layout_view_test.exs",                         "test/views/layout_view_test.exs"},
-    {:eex,  "phx_new/test/views/page_view_test.exs",                           "test/views/page_view_test.exs"},
-    {:eex,  "phx_new/lib/app_name/web/controllers/page_controller.ex", "lib/app_name/web/controllers/page_controller.ex"},
-    {:eex,  "phx_new/lib/app_name/web/templates/layout/app.html.eex",  "lib/app_name/web/templates/layout/app.html.eex"},
-    {:eex,  "phx_new/lib/app_name/web/templates/page/index.html.eex",  "lib/app_name/web/templates/page/index.html.eex"},
-    {:eex,  "phx_new/lib/app_name/web/views/layout_view.ex",           "lib/app_name/web/views/layout_view.ex"},
-    {:eex,  "phx_new/lib/app_name/web/views/page_view.ex",             "lib/app_name/web/views/page_view.ex"},
-  ]
+  @html %{
+    regular: [
+      {:eex,  "phx_new/test/controllers/page_controller_test.exs",       "test/controllers/page_controller_test.exs"},
+      {:eex,  "phx_new/test/views/layout_view_test.exs",                 "test/views/layout_view_test.exs"},
+      {:eex,  "phx_new/test/views/page_view_test.exs",                   "test/views/page_view_test.exs"},
+      {:eex,  "phx_new/lib/app_name/web/controllers/page_controller.ex", "lib/app_name/web/controllers/page_controller.ex"},
+      {:eex,  "phx_new/lib/app_name/web/templates/layout/app.html.eex",  "lib/app_name/web/templates/layout/app.html.eex"},
+      {:eex,  "phx_new/lib/app_name/web/templates/page/index.html.eex",  "lib/app_name/web/templates/page/index.html.eex"},
+      {:eex,  "phx_new/lib/app_name/web/views/layout_view.ex",           "lib/app_name/web/views/layout_view.ex"},
+      {:eex,  "phx_new/lib/app_name/web/views/page_view.ex",             "lib/app_name/web/views/page_view.ex"},
+    ],
+    umbrella: [
+      {:eex,  "phx_new/test/controllers/page_controller_test.exs",       "test/controllers/page_controller_test.exs"},
+      {:eex,  "phx_new/test/views/layout_view_test.exs",                 "test/views/layout_view_test.exs"},
+      {:eex,  "phx_new/test/views/page_view_test.exs",                   "test/views/page_view_test.exs"},
+      {:eex,  "phx_new/lib/app_name/web/controllers/page_controller.ex", "lib/controllers/page_controller.ex"},
+      {:eex,  "phx_new/lib/app_name/web/templates/layout/app.html.eex",  "lib/templates/layout/app.html.eex"},
+      {:eex,  "phx_new/lib/app_name/web/templates/page/index.html.eex",  "lib/templates/page/index.html.eex"},
+      {:eex,  "phx_new/lib/app_name/web/views/layout_view.ex",           "lib/views/layout_view.ex"},
+      {:eex,  "phx_new/lib/app_name/web/views/page_view.ex",             "lib/views/page_view.ex"},
+    ]
+  }
 
-  @bare [
-    {:text,   "static/bare/.gitignore", ".gitignore"},
-  ]
+  @bare %{
+    regular:  [{:text,   "static/bare/.gitignore", ".gitignore"}],
+    umbrella: [{:text,   "static/bare/.gitignore", ".gitignore"}]
+  }
 
-  @static [
-    {:text,   "assets/bare/.gitignore", ".gitignore"},
-    {:text,   "assets/app.css",         "priv/static/css/app.css"},
-    {:append, "assets/phoenix.css",     "priv/static/css/app.css"},
-    {:text,   "assets/bare/app.js",     "priv/static/js/app.js"},
-    {:text,   "assets/robots.txt",      "priv/static/robots.txt"},
-  ]
+  @static %{
+    regular: [
+      {:text,   "assets/bare/.gitignore", ".gitignore"},
+      {:text,   "assets/app.css",         "priv/static/css/app.css"},
+      {:append, "assets/phoenix.css",     "priv/static/css/app.css"},
+      {:text,   "assets/bare/app.js",     "priv/static/js/app.js"},
+      {:text,   "assets/robots.txt",      "priv/static/robots.txt"},
+    ],
+    umbrella: [
+      {:text,   "assets/bare/.gitignore", ".gitignore"},
+      {:text,   "assets/app.css",         "apps/app_name_web/priv/static/css/app.css"},
+      {:append, "assets/phoenix.css",     "apps/app_name_web/priv/static/css/app.css"},
+      {:text,   "assets/bare/app.js",     "apps/app_name_web/priv/static/js/app.js"},
+      {:text,   "assets/robots.txt",      "apps/app_name_web/priv/static/robots.txt"},
+    ]
+  }
 
   # Embed all defined templates
   root = Path.expand("../templates", __DIR__)
+  templates =
+    [@new, @ecto, @brunch, @html, @static, @bare]
+    |> Enum.flat_map(fn template -> template.regular ++ template.umbrella end)
 
-  for {format, source, _} <- @new ++ @ecto ++ @brunch ++ @html ++ @static ++ @bare do
-    unless format == :keep do
-      @external_resource Path.join(root, source)
-      def render(unquote(source)), do: unquote(File.read!(Path.join(root, source)))
+  for {format, source, _} <- templates, format != :keep do
+    path = Path.join(root, source)
+    unless path in @external_resource do
+      @external_resource path
+      def render(unquote(source)), do: unquote(File.read!(path))
     end
   end
 
@@ -142,7 +228,7 @@ defmodule Mix.Tasks.Phx.New do
   """
   @switches [dev: :boolean, brunch: :boolean, ecto: :boolean,
              app: :string, module: :string, database: :string,
-             binary_id: :boolean, html: :boolean]
+             binary_id: :boolean, html: :boolean, umbrella: :boolean]
 
   def run([version]) when version in ~w(-v --version) do
     Mix.shell.info "Phoenix v#{@version}"
@@ -165,19 +251,23 @@ defmodule Mix.Tasks.Phx.New do
     case argv do
       [] ->
         Mix.Task.run "help", ["phx.new"]
-      [path|_] ->
+      [path | _] ->
+        project_type = if opts[:umbrella], do: :umbrella, else: :regular
         app = opts[:app] || Path.basename(Path.expand(path))
+        project_path = project_path(path, project_type)
         check_app_name!(app, !!opts[:app])
-        check_directory_existence!(app)
+        check_directory_existence!(path)
         mod = opts[:module] || Macro.camelize(app)
         check_module_name_validity!(mod)
         check_module_name_availability!(mod)
 
-        run(app, mod, path, opts)
+        run(project_type, app, mod, project_path, opts)
     end
   end
+  defp project_path(path, :regular), do: path
+  defp project_path(path, :umbrella), do: path <> "_umbrella"
 
-  def run(app, mod, path, opts) do
+  def run(project_type, app, mod, path, opts) do
     db = Keyword.get(opts, :database, "postgres")
     ecto = Keyword.get(opts, :ecto, true)
     html = Keyword.get(opts, :html, true)
@@ -190,8 +280,9 @@ defmodule Mix.Tasks.Phx.New do
     # some storages.
     {adapter_app, adapter_module, adapter_config} = get_ecto_adapter(db, String.downcase(app), mod)
     pubsub_server = get_pubsub_server(mod)
-    in_umbrella? = in_umbrella?(path)
+    in_umbrella? = in_umbrella?(path, project_type)
     brunch_deps_prefix = if in_umbrella?, do: "../../../", else: "../"
+    web_namespace = web_namespace(project_type, mod)
 
     adapter_config =
       case Keyword.fetch(opts, :binary_id) do
@@ -211,12 +302,12 @@ defmodule Mix.Tasks.Phx.New do
           """
       end
 
-    web_namespace = Module.concat(mod, Web)
-
     binding = [application_name: app,
+               umbrella_module: inspect(Module.concat(mod, Umbrella)),
+               web_application_name: web_application_name(project_type, app),
                application_module: mod,
                endpoint_module: inspect(Module.concat(web_namespace, Endpoint)),
-               web_namespace: web_namespace,
+               web_namespace: inspect(web_namespace),
                phoenix_dep: phoenix_dep(phoenix_path),
                phoenix_path: phoenix_path,
                phoenix_static_path: phoenix_static_path(phoenix_path),
@@ -236,39 +327,53 @@ defmodule Mix.Tasks.Phx.New do
                generator_config: generator_config,
                namespaced?: Macro.camelize(app) != mod]
 
-    copy_from path, binding, @new
+    copy_from path, binding, @new[project_type]
 
     # Optional contents
-    copy_model  app, path, binding
-    copy_static app, path, binding
-    copy_html   app, path, binding
+    web_path = web_path(project_type, app, path)
+    ecto_path = ecto_path(project_type, app, path)
+
+    copy_ecto(project_type, app, ecto_path, binding)
+    copy_static(project_type, app, web_path, binding)
+    copy_html(project_type, app, web_path, binding)
 
     # Parallel installs
     install? = Mix.shell.yes?("\nFetch and install dependencies?")
 
     File.cd!(path, fn ->
-      mix?    = install_mix(install?)
-      brunch? = install_brunch(install?)
-      extra   = if mix?, do: [], else: ["$ mix deps.get"]
+      mix? = install_mix(install?)
+      File.cd!(Path.join("..", web_path), fn ->
+        brunch? = install_brunch(install?)
+        extra   = if mix?, do: [], else: ["$ mix deps.get"]
 
-      print_mix_info(path, extra)
+        print_mix_info(path, extra)
 
-      if binding[:ecto] do
-        print_ecto_info()
-      end
+        if binding[:ecto], do: print_ecto_info()
 
-      if not brunch? do
-        print_brunch_info()
-      end
+        if not brunch?, do: print_brunch_info()
+      end)
     end)
   end
+
+  defp web_path(:regular, app, path), do: String.replace(path, "app_name", app)
+  defp web_path(:umbrella, app, path),
+    do: Path.join(path, "apps/#{web_application_name(:umbrella, app)}/")
+
+  defp ecto_path(:regular, _app, path), do: path
+  defp ecto_path(:umbrella, app, path), do: Path.join(path, "apps/#{app}/")
+
+  defp web_namespace(:regular, app_mod), do: Module.concat(app_mod, Web)
+  defp web_namespace(:umbrella, app_mod), do: Module.concat(app_mod, Web)
+
+  defp web_application_name(:regular, app_name), do: app_name
+  defp web_application_name(:umbrella, app_name), do: :"#{app_name}_web"
 
   defp switch_to_string({name, nil}), do: name
   defp switch_to_string({name, val}), do: name <> "=" <> val
 
-  defp copy_model(_app, path, binding) do
+  defp copy_ecto(project_type, _app_name, path, binding) do
     if binding[:ecto] do
-      copy_from path, binding, @ecto
+      copy_from path, binding, @ecto[project_type]
 
       adapter_config = binding[:adapter_config]
 
@@ -303,25 +408,25 @@ defmodule Mix.Tasks.Phx.New do
     |> Enum.filter(fn {_, value} -> not is_nil(value) end)
   end
 
-  defp copy_static(_app, path, binding) do
+  defp copy_static(project_type, _app, path, binding) do
     case {binding[:brunch], binding[:html]} do
-    {true, _} ->
-      copy_from path, binding, @brunch
-      create_file Path.join(path, "assets/static/images/phoenix.png"), phoenix_png_text()
-      create_file Path.join(path, "assets/static/favicon.ico"), phoenix_favicon_text()
-    {false, true} ->
-      copy_from path, binding, @static
-      create_file Path.join(path, "priv/static/js/phoenix.js"), phoenix_js_text()
-      create_file Path.join(path, "priv/static/images/phoenix.png"), phoenix_png_text()
-      create_file Path.join(path, "priv/static/favicon.ico"), phoenix_favicon_text()
-    {false, false} ->
-      copy_from path, binding, @bare
+      {true, _} ->
+        copy_from path, binding, @brunch[project_type]
+        create_file Path.join(path, "assets/static/images/phoenix.png"), phoenix_png_text()
+        create_file Path.join(path, "assets/static/favicon.ico"), phoenix_favicon_text()
+      {false, true} ->
+        copy_from path, binding, @static[project_type]
+        create_file Path.join(path, "priv/static/js/phoenix.js"), phoenix_js_text()
+        create_file Path.join(path, "priv/static/images/phoenix.png"), phoenix_png_text()
+        create_file Path.join(path, "priv/static/favicon.ico"), phoenix_favicon_text()
+      {false, false} ->
+        copy_from path, binding, @bare[project_type]
     end
   end
 
-  defp copy_html(_app, path, binding) do
+  defp copy_html(project_type, _app, path, binding) do
     if binding[:html] do
-      copy_from path, binding, @html
+      copy_from path, binding, @html[project_type]
     end
   end
 
@@ -430,8 +535,8 @@ defmodule Mix.Tasks.Phx.New do
     end
   end
 
-  def check_directory_existence!(name) do
-    if File.dir?(name) && !Mix.shell.yes?("The directory #{name} already exists. Are you sure you want to continue?") do
+  def check_directory_existence!(path) do
+    if File.dir?(path) && !Mix.shell.yes?("The directory #{path} already exists. Are you sure you want to continue?") do
       Mix.raise "Please select another directory for installation."
     end
   end
@@ -493,7 +598,8 @@ defmodule Mix.Tasks.Phx.New do
     |> Module.concat(PubSub)
   end
 
-  defp in_umbrella?(app_path) do
+  defp in_umbrella?(_app_path, :umbrella), do: true
+  defp in_umbrella?(app_path, :regular) do
     try do
       umbrella = Path.expand(Path.join [app_path, "..", ".."])
       File.exists?(Path.join(umbrella, "mix.exs")) &&

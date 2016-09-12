@@ -20,5 +20,5 @@ defmodule <%= web_namespace %>.Gettext do
 
   See the [Gettext Docs](https://hexdocs.pm/gettext) for detailed usage.
   """
-  use Gettext, otp_app: :<%= application_name %>
+  use Gettext, otp_app: :<%= web_application_name %>
 end

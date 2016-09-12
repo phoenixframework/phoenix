@@ -1,0 +1,37 @@
+<h2>Listing messages</h2>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>User</th>
+      <th>Room</th>
+      <th>Likes</th>
+      <th>Body</th>
+
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+<%= for message <- @messages do %>
+    <tr>
+      <td><%= message.user.email %></td>
+      <td><%= message.room_id %></td>
+      <td><%= message.like_count %></td>
+      <td><%= message.body %></td>
+
+      <td class="text-right">
+        <%= if liked_by_user?(message, @current_user) do %>
+          <%= link "Unlike", to: message_reaction_path(@conn, :delete, message, type: "like"), method: :delete, class: "btn btn-default btn-xs" %>
+        <% else %>
+          <%= link "Like", to: message_reaction_path(@conn, :create, message, type: "like"), method: :post, class: "btn btn-default btn-xs" %>
+        <% end %>
+        <%= link "Show", to: message_path(@conn, :show, message), class: "btn btn-default btn-xs" %>
+        <%= link "Edit", to: message_path(@conn, :edit, message), class: "btn btn-default btn-xs" %>
+        <%= link "Delete", to: message_path(@conn, :delete, message), method: :delete, data: [confirm: "Are you sure?"], class: "btn btn-danger btn-xs" %>
+      </td>
+    </tr>
+<% end %>
+  </tbody>
+</table>
+
+<%= link "New message", to: message_path(@conn, :new) %>
