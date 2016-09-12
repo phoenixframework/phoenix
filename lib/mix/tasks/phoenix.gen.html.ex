@@ -128,6 +128,8 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
         {label(key), ~s(<%= datetime_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
       {key, :naive_datetime} ->
         {label(key), ~s(<%= datetime_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
+      {key, :map} ->
+        {label(key), ~s(<%= text_input f, #{inspect(key)}, name: "\#{f.name}[#{key}][data]", value: f.data.#{key}["data"], class: "form-control" %>), error(key)}
       {key, _}  ->
         {label(key), ~s(<%= text_input f, #{inspect(key)}, class: "form-control" %>), error(key)}
     end

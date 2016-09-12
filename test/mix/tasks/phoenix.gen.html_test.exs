@@ -20,7 +20,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
       Mix.Tasks.Phoenix.Gen.Html.run ["user", "users", "name", "age:integer", "height:decimal",
                                       "nicks:array:text", "famous:boolean", "born_at:naive_datetime",
                                       "secret:uuid", "first_login:date", "alarm:time",
-                                      "address_id:references:addresses"]
+                                      "address_id:references:addresses", "tags:map"]
 
       assert_file "web/models/user.ex"
       assert_file "test/models/user_test.exs"
@@ -54,6 +54,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
         assert file =~ ~s(<%= label f, :famous, class: "control-label" %>)
         assert file =~ ~s(<%= label f, :born_at, class: "control-label" %>)
         assert file =~ ~s(<%= label f, :secret, class: "control-label" %>)
+        assert file =~ ~s(<%= text_input f, :tags, name: "\#{f.name}[tags][data]", value: f.data.tags["data"], class: "form-control" %>)
 
         refute file =~ ~s(<%= label f, :address_id)
         refute file =~ ~s(<%= number_input f, :address_id)
@@ -64,6 +65,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
         assert file =~ "<th>Name</th>"
         assert file =~ "<%= for user <- @users do %>"
         assert file =~ "<td><%= user.name %></td>"
+        assert file =~ ~s(<td><%= user.tags["data"] %></td>)
       end
 
       assert_file "web/templates/user/new.html.eex", fn file ->
@@ -73,6 +75,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
       assert_file "web/templates/user/show.html.eex", fn file ->
         assert file =~ "<strong>Name:</strong>"
         assert file =~ "<%= @user.name %>"
+        assert file =~ ~s(<%= @user.tags["data"] %>)
       end
 
       assert_file "test/controllers/user_controller_test.exs", fn file ->
