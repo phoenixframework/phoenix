@@ -1,1 +1,1 @@
-# <%= umbrella_module %>
+# <%= root_app_module %>

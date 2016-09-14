@@ -1,10 +1,10 @@
-defmodule <%= application_module %> do
+defmodule <%= app_module %> do
   @moduledoc """
-  The <%= application_module %> Application Service.
+  The <%= app_module %> Application Service.
 
-  The <%= application_name %> system business domain lives in this application.
+  The <%= app_name %> system business domain lives in this application.
 
-  Exposes API to clients such as the `<%= application_module%>.Web` application
+  Exposes API to clients such as the `<%= app_module%>.Web` application
   for use in channels, controllers, and elsewhere.
   """
   use Application
@@ -13,7 +13,7 @@ defmodule <%= application_module %> do
     import Supervisor.Spec, warn: false
 
     Supervisor.start_link([
-      <%= if ecto do %>worker(<%= application_module %>.Repo, []),<% end %>
-    ], strategy: :one_for_one, name: <%= application_module %>.Supervisor)
+      <%= if ecto do %>worker(<%= app_module %>.Repo, []),<% end %>
+    ], strategy: :one_for_one, name: <%= app_module %>.Supervisor)
   end
 end

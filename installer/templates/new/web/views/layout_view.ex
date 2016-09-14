@@ -1,3 +1,3 @@
-defmodule <%= application_module %>.LayoutView do
-  use <%= application_module %>.Web, :view
+defmodule <%= app_module %>.LayoutView do
+  use <%= app_module %>.Web, :view
 end

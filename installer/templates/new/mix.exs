@@ -1,8 +1,8 @@
-defmodule <%= application_module %>.Mixfile do
+defmodule <%= app_module %>.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :<%= application_name %>,
+    [app: :<%= app_name %>,
      version: "0.0.1",<%= if in_umbrella do %>
      build_path: "../../_build",
      config_path: "../../config/config.exs",
@@ -21,7 +21,7 @@ defmodule <%= application_module %>.Mixfile do
   #
   # Type `mix help compile.app` for more information.
   def application do
-    [mod: {<%= application_module %>, []},
+    [mod: {<%= app_module %>, []},
      applications: [:phoenix, :phoenix_pubsub<%= if html do %>, :phoenix_html<% end %>, :cowboy, :logger, :gettext<%= if ecto do %>,
                     :phoenix_ecto, <%= inspect adapter_app %><% end %>]]
   end

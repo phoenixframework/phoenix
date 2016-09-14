@@ -1,4 +1,4 @@
-defmodule <%= application_module %>.ConnCase do
+defmodule <%= app_module %>.ConnCase do
   @moduledoc """
   This module defines the test case to be used by
   tests that require setting up a connection.
@@ -20,15 +20,15 @@ defmodule <%= application_module %>.ConnCase do
       # Import conveniences for testing with connections
       use Phoenix.ConnTest
 <%= if ecto do %>
-      alias <%= application_module %>.Repo
+      alias <%= app_module %>.Repo
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
 <% end %>
-      import <%= application_module %>.Router.Helpers
+      import <%= app_module %>.Router.Helpers
 
       # The default endpoint for testing
-      @endpoint <%= application_module %>.Endpoint
+      @endpoint <%= app_module %>.Endpoint
     end
   end
 

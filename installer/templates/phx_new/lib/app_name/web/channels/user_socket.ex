@@ -1,8 +1,8 @@
-defmodule <%= application_module %>.Web.UserSocket do
+defmodule <%= app_module %>.Web.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "room:*", <%= application_module %>.Web.RoomChannel
+  # channel "room:*", <%= app_module %>.Web.RoomChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket

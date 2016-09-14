@@ -1,4 +1,4 @@
-defmodule <%= application_module %>.ErrorHelpers do
+defmodule <%= app_module %>.ErrorHelpers do
   @moduledoc """
   Conveniences for translating and building error messages.
   """
@@ -32,9 +32,9 @@ defmodule <%= application_module %>.ErrorHelpers do
     #     dgettext "errors", "is invalid"
     #
     if count = opts[:count] do
-      Gettext.dngettext(<%= application_module %>.Gettext, "errors", msg, msg, count, opts)
+      Gettext.dngettext(<%= app_module %>.Gettext, "errors", msg, msg, count, opts)
     else
-      Gettext.dgettext(<%= application_module %>.Gettext, "errors", msg, opts)
+      Gettext.dgettext(<%= app_module %>.Gettext, "errors", msg, opts)
     end
   end
 end

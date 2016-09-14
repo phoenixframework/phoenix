@@ -1,4 +1,4 @@
-defmodule <%= umbrella_module %>.Mixfile do
+defmodule <%= root_app_module %>.Mixfile do
   use Mix.Project
 
   def project do

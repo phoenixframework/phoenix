@@ -4,5 +4,3 @@
 erl_crash.dump
 *.ez
 node_modules
-reaction_counts
-reaction_users

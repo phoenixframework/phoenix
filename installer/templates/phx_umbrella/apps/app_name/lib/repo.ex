@@ -1,3 +1,3 @@
-defmodule <%= application_module %>.Repo do
-  use Ecto.Repo, otp_app: :<%= application_name %>
+defmodule <%= app_module %>.Repo do
+  use Ecto.Repo, otp_app: :<%= app_name %>
 end

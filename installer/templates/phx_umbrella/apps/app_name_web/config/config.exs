@@ -6,12 +6,12 @@
 use Mix.Config
 
 <%= if namespaced? or ecto do %># General application configuration
-config :<%= web_application_name %><%= if namespaced? do %>,
+config :<%= web_app_name %><%= if namespaced? do %>,
   namespace: <%= web_namespace %><% end %><%= if ecto do %>,
   ecto_repos: []<% end %>
 
 <% end %># Configures the endpoint
-config :<%= web_application_name %>, <%= endpoint_module %>,
+config :<%= web_app_name %>, <%= endpoint_module %>,
   url: [host: "localhost"],
   secret_key_base: "<%= secret_key_base %>",
   render_errors: [view: <%= web_namespace %>.ErrorView, accepts: ~w(<%= if html do %>html <% end %>json)],

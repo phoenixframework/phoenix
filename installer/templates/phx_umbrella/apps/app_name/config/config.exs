@@ -1,6 +1,6 @@
 use Mix.Config
 
-<%= if ecto do %>config :<%= application_name %>, ecto_repos: [<%= application_module %>.Repo]<% end %>
+<%= if ecto do %>config :<%= app_name %>, ecto_repos: [<%= app_module %>.Repo]<% end %>
 
 <%= generator_config %>
 

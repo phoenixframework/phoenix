@@ -2,7 +2,7 @@ defmodule <%= web_namespace %>.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :<%= web_application_name %>,
+    [app: :<%= web_app_name %>,
      version: "0.0.1",
      build_path: "../../_build",
      config_path: "../../config/config.exs",
@@ -22,7 +22,7 @@ defmodule <%= web_namespace %>.Mixfile do
   def application do
     [mod: {<%= web_namespace %>, []},
      applications: [:phoenix<%= if html do %>, :phoenix_html<% end %>, :cowboy, :logger, :gettext,
-                    <%= if ecto do %>:phoenix_ecto,<% end %> :<%= application_name %>]]
+                    <%= if ecto do %>:phoenix_ecto,<% end %> :<%= app_name %>]]
   end
 
   # Specifies which paths to compile per environment.
@@ -39,7 +39,7 @@ defmodule <%= web_namespace %>.Mixfile do
      {:phoenix_html, "~> 2.6"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},<% end %>
      {:gettext, "~> 0.11"},
-     {:<%= application_name %>, in_umbrella: true},
+     {:<%= app_name %>, in_umbrella: true},
      {:cowboy, "~> 1.0"}]
   end
 end

@@ -1,4 +1,4 @@
-defmodule <%= application_module %>.ChannelCase do
+defmodule <%= app_module %>.ChannelCase do
   @moduledoc """
   This module defines the test case to be used by
   channel tests.
@@ -20,7 +20,7 @@ defmodule <%= application_module %>.ChannelCase do
       # Import conveniences for testing with channels
       use Phoenix.ChannelTest
 <%= if ecto do %>
-      alias <%= application_module %>.Repo
+      alias <%= app_module %>.Repo
       import Ecto
       import Ecto.Changeset
       import Ecto.Query

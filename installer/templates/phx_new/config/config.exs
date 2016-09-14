@@ -6,16 +6,16 @@
 use Mix.Config
 
 <%= if namespaced? or ecto do %># General application configuration
-config :<%= application_name %><%= if namespaced? do %>,
-  namespace: <%= application_module %><% end %><%= if ecto do %>,
-  ecto_repos: [<%= application_module %>.Repo]<% end %>
+config :<%= app_name %><%= if namespaced? do %>,
+  namespace: <%= app_module %><% end %><%= if ecto do %>,
+  ecto_repos: [<%= app_module %>.Repo]<% end %>
 
 <% end %># Configures the endpoint
-config :<%= application_name %>, <%= endpoint_module %>,
+config :<%= app_name %>, <%= endpoint_module %>,
   url: [host: "localhost"],
   secret_key_base: "<%= secret_key_base %>",
   render_errors: [view: <%= web_namespace %>.ErrorView, accepts: ~w(<%= if html do %>html <% end %>json)],
-  pubsub: [name: <%= application_module %>.PubSub,
+  pubsub: [name: <%= app_module %>.PubSub,
            adapter: Phoenix.PubSub.PG2]
 
 # Configures Elixir's Logger

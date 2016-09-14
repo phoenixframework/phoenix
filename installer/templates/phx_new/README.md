@@ -1,4 +1,4 @@
-# <%= application_module %>
+# <%= app_module %>
 
 To start your Phoenix app:
 

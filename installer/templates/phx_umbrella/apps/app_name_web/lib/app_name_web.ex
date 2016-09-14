@@ -1,6 +1,6 @@
 defmodule <%= web_namespace %> do
   @moduledoc """
-  The Web application for `<%= application_module %>`
+  The Web application for `<%= app_module %>`
 
   This module can be used in your application to import common
   controller, view, and channel functionality, for example:
