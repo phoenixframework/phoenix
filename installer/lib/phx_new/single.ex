@@ -2,34 +2,34 @@ defmodule Mix.Tasks.Phx.New.Single do
   use Mix.Tasks.Phx.New.Generator
 
   template :new, [
-    {:eex,  "phx_new/config/config.exs",                        "config/config.exs"},
-    {:eex,  "phx_new/config/dev.exs",                           "config/dev.exs"},
-    {:eex,  "phx_new/config/prod.exs",                          "config/prod.exs"},
-    {:eex,  "phx_new/config/prod.secret.exs",                   "config/prod.secret.exs"},
-    {:eex,  "phx_new/config/test.exs",                          "config/test.exs"},
-    {:eex,  "phx_new/lib/app_name.ex",                          "lib/app_name.ex"},
-    {:eex,  "phx_new/lib/app_name/web/endpoint.ex",             "lib/app_name/web/endpoint.ex"},
-    {:keep, "phx_new/test/channels",                            "test/channels"},
-    {:keep, "phx_new/test/controllers",                         "test/controllers"},
-    {:eex,  "phx_new/test/views/error_view_test.exs",           "test/views/error_view_test.exs"},
-    {:eex,  "phx_new/test/support/conn_case.ex",                "test/support/conn_case.ex"},
-    {:eex,  "phx_new/test/support/channel_case.ex",             "test/support/channel_case.ex"},
-    {:eex,  "phx_new/test/test_helper.exs",                     "test/test_helper.exs"},
-    {:eex,  "phx_new/lib/app_name/web/channels/user_socket.ex", "lib/app_name/web/channels/user_socket.ex"},
-    {:keep, "phx_new/lib/app_name/web/controllers",             "lib/app_name/web/controllers"},
-    {:eex,  "phx_new/lib/app_name/web/router.ex",               "lib/app_name/web/router.ex"},
-    {:eex,  "phx_new/lib/app_name/web/views/error_view.ex",     "lib/app_name/web/views/error_view.ex"},
-    {:eex,  "phx_new/lib/app_name/web.ex",                      "lib/app_name/web.ex"},
-    {:eex,  "phx_new/mix.exs",                                  "mix.exs"},
-    {:eex,  "phx_new/README.md",                                "README.md"},
-    {:eex,  "phx_new/lib/app_name/gettext.ex",                  "lib/app_name/web/gettext.ex"},
-    {:eex,  "phx_new/priv/gettext/errors.pot",                  "priv/gettext/errors.pot"},
+    {:eex,  "phx_new/config/config.exs",               "config/config.exs"},
+    {:eex,  "phx_new/config/dev.exs",                  "config/dev.exs"},
+    {:eex,  "phx_new/config/prod.exs",                 "config/prod.exs"},
+    {:eex,  "phx_new/config/prod.secret.exs",          "config/prod.secret.exs"},
+    {:eex,  "phx_new/config/test.exs",                 "config/test.exs"},
+    {:eex,  "phx_new/lib/app_name.ex",                 "lib/app_name.ex"},
+    {:eex,  "phx_new/lib/web/endpoint.ex",             "lib/web/endpoint.ex"},
+    {:keep, "phx_new/test/channels",                   "test/channels"},
+    {:keep, "phx_new/test/controllers",                "test/controllers"},
+    {:eex,  "phx_new/test/views/error_view_test.exs",  "test/views/error_view_test.exs"},
+    {:eex,  "phx_new/test/support/conn_case.ex",       "test/support/conn_case.ex"},
+    {:eex,  "phx_new/test/support/channel_case.ex",    "test/support/channel_case.ex"},
+    {:eex,  "phx_new/test/test_helper.exs",            "test/test_helper.exs"},
+    {:eex,  "phx_new/lib/web/channels/user_socket.ex", "lib/web/channels/user_socket.ex"},
+    {:keep, "phx_new/lib/web/controllers",             "lib/web/controllers"},
+    {:eex,  "phx_new/lib/web/router.ex",               "lib/web/router.ex"},
+    {:eex,  "phx_new/lib/web/views/error_view.ex",     "lib/web/views/error_view.ex"},
+    {:eex,  "phx_new/lib/web.ex",                      "lib/web.ex"},
+    {:eex,  "phx_new/mix.exs",                         "mix.exs"},
+    {:eex,  "phx_new/README.md",                       "README.md"},
+    {:eex,  "phx_new/lib/gettext.ex",                  "lib/web/gettext.ex"},
+    {:eex,  "phx_new/priv/gettext/errors.pot",         "priv/gettext/errors.pot"},
     {:eex,  "phx_new/priv/gettext/en/LC_MESSAGES/errors.po",    "priv/gettext/en/LC_MESSAGES/errors.po"},
-    {:eex,  "phx_new/lib/app_name/web/views/error_helpers.ex",  "lib/app_name/web/views/error_helpers.ex"},
+    {:eex,  "phx_new/lib/web/views/error_helpers.ex",  "lib/web/views/error_helpers.ex"},
   ]
 
   template :ecto, [
-    {:eex,  "phx_ecto/repo.ex",              "lib/app_name/repo.ex"},
+    {:eex,  "phx_ecto/repo.ex",              "lib/repo.ex"},
     {:eex,  "phx_ecto/data_case.ex",         "test/support/data_case.ex"},
     {:keep, "phx_ecto/priv/repo/migrations", "priv/repo/migrations"},
     {:eex,  "phx_ecto/seeds.exs",            "priv/repo/seeds.exs"}
@@ -48,18 +48,18 @@ defmodule Mix.Tasks.Phx.New.Single do
   ]
 
   template :html, [
-    {:eex,  "phx_new/test/controllers/page_controller_test.exs",       "test/controllers/page_controller_test.exs"},
-    {:eex,  "phx_new/test/views/layout_view_test.exs",                 "test/views/layout_view_test.exs"},
-    {:eex,  "phx_new/test/views/page_view_test.exs",                   "test/views/page_view_test.exs"},
-    {:eex,  "phx_new/lib/app_name/web/controllers/page_controller.ex", "lib/app_name/web/controllers/page_controller.ex"},
-    {:eex,  "phx_new/lib/app_name/web/templates/layout/app.html.eex",  "lib/app_name/web/templates/layout/app.html.eex"},
-    {:eex,  "phx_new/lib/app_name/web/templates/page/index.html.eex",  "lib/app_name/web/templates/page/index.html.eex"},
-    {:eex,  "phx_new/lib/app_name/web/views/layout_view.ex",           "lib/app_name/web/views/layout_view.ex"},
-    {:eex,  "phx_new/lib/app_name/web/views/page_view.ex",             "lib/app_name/web/views/page_view.ex"},
+    {:eex, "phx_new/test/controllers/page_controller_test.exs", "test/controllers/page_controller_test.exs"},
+    {:eex, "phx_new/test/views/layout_view_test.exs",           "test/views/layout_view_test.exs"},
+    {:eex, "phx_new/test/views/page_view_test.exs",             "test/views/page_view_test.exs"},
+    {:eex, "phx_new/lib/web/controllers/page_controller.ex",    "lib/web/controllers/page_controller.ex"},
+    {:eex, "phx_new/lib/web/templates/layout/app.html.eex",     "lib/web/templates/layout/app.html.eex"},
+    {:eex, "phx_new/lib/web/templates/page/index.html.eex",     "lib/web/templates/page/index.html.eex"},
+    {:eex, "phx_new/lib/web/views/layout_view.ex",              "lib/web/views/layout_view.ex"},
+    {:eex, "phx_new/lib/web/views/page_view.ex",                "lib/web/views/page_view.ex"},
   ]
 
   template :bare, [
-    {:text,   "static/bare/.gitignore", ".gitignore"},
+    {:text, "static/bare/.gitignore", ".gitignore"},
   ]
 
   template :static, [

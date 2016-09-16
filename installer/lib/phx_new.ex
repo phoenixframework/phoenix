@@ -137,12 +137,12 @@ defmodule Mix.Tasks.Phx.New do
                adapter_config: adapter_config,
                hex?: Code.ensure_loaded?(Hex),
                generator_config: generator_config,
-               namespaced?: Macro.camelize(app) != app_mod]
+               namespaced?: namespaced?(app, app_mod)]
 
-    generator.gen_new(proj_path, app, binding)
-    copy_ecto(generator, app_path, app, binding)
-    copy_static(generator, web_path, app, binding)
-    copy_html(generator, web_path, app, binding)
+    generator.gen_new(proj_path, binding)
+    copy_ecto(generator, app_path, binding)
+    copy_static(generator, web_path, binding)
+    copy_html(generator, web_path, binding)
 
     install? = Mix.shell.yes?("\nFetch and install dependencies?")
 
@@ -161,6 +161,10 @@ defmodule Mix.Tasks.Phx.New do
     end)
   end
 
+  defp namespaced?(app, app_mod) when is_binary(app) and is_atom(app_mod) do
+    Macro.camelize(app) != inspect(app_mod)
+  end
+
   defp parse_opts(argv) do
     case OptionParser.parse(argv, strict: @switches) do
       {opts, argv, []} ->
@@ -172,9 +176,9 @@ defmodule Mix.Tasks.Phx.New do
   defp switch_to_string({name, nil}), do: name
   defp switch_to_string({name, val}), do: name <> "=" <> val
 
-  defp copy_ecto(generator, app_path, app_name, binding) do
+  defp copy_ecto(generator, app_path, binding) do
     if binding[:ecto] do
-      generator.gen_ecto(app_path, app_name, binding)
+      generator.gen_ecto(app_path, binding)
 
       adapter_config = binding[:adapter_config]
 
@@ -208,7 +212,7 @@ defmodule Mix.Tasks.Phx.New do
     |> Keyword.take([:binary_id, :migration, :sample_binary_id])
     |> Enum.filter(fn {_, value} -> not is_nil(value) end)
     |> case do
-      []               -> nil
+      [] -> nil
       conf ->
         """
 
@@ -218,20 +222,20 @@ defmodule Mix.Tasks.Phx.New do
     end
   end
 
-  defp copy_static(generator, web_path, app, binding) do
+  defp copy_static(generator, web_path, binding) do
     case {binding[:brunch], binding[:html]} do
       {true, _} ->
-        generator.gen_brunch(web_path, app, binding)
+        generator.gen_brunch(web_path, binding)
       {false, true} ->
-        generator.gen_static(web_path, app, binding)
+        generator.gen_static(web_path, binding)
       {false, false} ->
-        generator.gen_bare(web_path, app, binding)
+        generator.gen_bare(web_path, binding)
     end
   end
 
-  defp copy_html(generator, path, app, binding) do
+  defp copy_html(generator, path, binding) do
     if binding[:html] do
-      generator.gen_html(path, app, binding)
+      generator.gen_html(path, binding)
     end
   end
 
