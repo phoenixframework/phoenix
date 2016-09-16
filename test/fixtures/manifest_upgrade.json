@@ -1,1 +1,5 @@
-{"foo.css":"foo-ghijkl.css"}
+{
+  "latest": {
+    "foo.css":"foo-ghijkl.css"
+  }
+}

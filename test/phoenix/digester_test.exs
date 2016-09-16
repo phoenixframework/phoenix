@@ -28,7 +28,7 @@ defmodule Phoenix.DigesterTest do
       Path.join(output_path, "manifest.json")
       |> File.read!()
       |> Poison.decode!()
-    assert json["phoenix.png"] =~ ~r"phoenix-[a-fA-F\d]{32}.png"
+    assert json["latest"]["phoenix.png"] =~ ~r"phoenix-[a-fA-F\d]{32}.png"
   end
 
   test "digests and compress nested files" do
@@ -50,7 +50,7 @@ defmodule Phoenix.DigesterTest do
       Path.join(output_path, "manifest.json")
       |> File.read!()
       |> Poison.decode!()
-    assert json["static/phoenix.png"] =~ ~r"static/phoenix-[a-fA-F\d]{32}\.png"
+    assert json["latest"]["static/phoenix.png"] =~ ~r"static/phoenix-[a-fA-F\d]{32}\.png"
   end
 
   test "doesn't duplicate files when digesting and compressing twice" do
