@@ -313,7 +313,7 @@ defmodule HelloPhoenix.PageView do
   use HelloPhoenix.Web, :view
 
   def render("index.json", %{pages: pages}) do
-    %{data: render_many(pages, HelloPhoenix.PageView, "show.json")}
+    %{data: render_many(pages, HelloPhoenix.PageView, "page.json")}
   end
 
   def render("show.json", %{page: page}) do
@@ -368,7 +368,7 @@ defmodule HelloPhoenix.PageView do
 
   def render("page_with_authors.json", %{page: page}) do
     %{title: page.title,
-      authors: render_many(page.authors, HelloPhoenix.AuthorView, "show.json")}
+      authors: render_many(page.authors, HelloPhoenix.AuthorView, "author.json")}
   end
 
   def render("page.json", %{page: page}) do
