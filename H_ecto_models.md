@@ -407,7 +407,6 @@ There are many more validations and transformations we can perform in a changese
 At this point, let's see how we can actually use Ecto in our application. Luckily, Phoenix gave us an example of this when we ran `mix phoenix.gen.html`, the `HelloPhoenix.UserController`.
 
 Let's work through the generated controller action by action to see how Ecto is used.
-We can alias HelloPhoenix.User so that we can name our structs `%User{}` instead of `%HelloPhoenix.User{}`.
 
 ```elixir
 defmodule HelloPhoenix.UserController do
