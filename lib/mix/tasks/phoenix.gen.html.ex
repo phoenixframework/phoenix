@@ -110,23 +110,25 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
         {nil, nil, nil}
       {_, {:references, _}} ->
         {nil, nil, nil}
-      {key, :integer}    ->
+      {key, :integer} ->
         {label(key), ~s(<%= number_input f, #{inspect(key)}, class: "form-control" %>), error(key)}
-      {key, :float}      ->
+      {key, :float} ->
         {label(key), ~s(<%= number_input f, #{inspect(key)}, step: "any", class: "form-control" %>), error(key)}
-      {key, :decimal}    ->
+      {key, :decimal} ->
         {label(key), ~s(<%= number_input f, #{inspect(key)}, step: "any", class: "form-control" %>), error(key)}
-      {key, :boolean}    ->
+      {key, :boolean} ->
         {label(key), ~s(<%= checkbox f, #{inspect(key)}, class: "form-control" %>), error(key)}
-      {key, :text}       ->
+      {key, :text} ->
         {label(key), ~s(<%= textarea f, #{inspect(key)}, class: "form-control" %>), error(key)}
-      {key, :date}       ->
+      {key, :date} ->
         {label(key), ~s(<%= date_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
-      {key, :time}       ->
+      {key, :time} ->
         {label(key), ~s(<%= time_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
-      {key, :datetime}   ->
+      {key, :utc_datetime} ->
         {label(key), ~s(<%= datetime_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
-      {key, _}           ->
+      {key, :naive_datetime} ->
+        {label(key), ~s(<%= datetime_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
+      {key, _}  ->
         {label(key), ~s(<%= text_input f, #{inspect(key)}, class: "form-control" %>), error(key)}
     end
   end

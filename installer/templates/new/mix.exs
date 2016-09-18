@@ -36,7 +36,7 @@ defmodule <%= application_module %>.Mixfile do
   defp deps do
     [<%= phoenix_dep %>,
      {:phoenix_pubsub, "~> 1.0"},<%= if ecto do %>
-     {:phoenix_ecto, "~> 3.0"},
+     {:phoenix_ecto, "~> 3.1-rc.0"},
      {<%= inspect adapter_app %>, ">= 0.0.0"},<% end %><%= if html do %>
      {:phoenix_html, "~> 2.6"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},<% end %>
