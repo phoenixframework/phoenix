@@ -8,7 +8,7 @@ defmodule <%= web_namespace %>.Mixfile do
      config_path: "../../config/config.exs",
      deps_path: "../../deps",
      lockfile: "../../mix.lock",
-     elixir: "~> 1.2",
+     elixir: "~> 1.3",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,
@@ -35,7 +35,7 @@ defmodule <%= web_namespace %>.Mixfile do
   defp deps do
     [<%= phoenix_dep %>,
      {:phoenix_pubsub, "~> 1.0"},<%= if ecto do %>
-     {:phoenix_ecto, "~> 3.0"},<% end %><%= if html do %>
+     {:phoenix_ecto, "~> 3.1-rc.0"},<% end %><%= if html do %>
      {:phoenix_html, "~> 2.6"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},<% end %>
      {:gettext, "~> 0.11"},
