@@ -65,7 +65,7 @@ Doing this helps us overcome one of [exrm's common issues](https://hexdocs.pm/ex
 
 Even if we list all of our dependencies, our application may still fail. Typically, this happens because one of our dependencies does not properly list its own dependencies. A quick fix for this is to include the missing dependency or dependencies in our list of applications. If this happens to you, and you feel like helping the community, you can create an issue or a pull request to that project's repo.
 
-Within `config/prod.exs` we need to make the following changes.   We must configure our Endpoint to act as a server `server: true`.  We must set the root to be `.` and we must set the `version: Mix.Project.config[:version]` to ensure that new versions cause the Endpoint assets cache to be reloaded.
+Within `config/prod.exs` we need to make the following changes.   We must configure our Endpoint to act as a server `server: true`.  We must set the `version: Mix.Project.config[:version]` to ensure that new versions cause the Endpoint assets cache to be reloaded.
 
 ```elixir
 # Configures the endpoint
