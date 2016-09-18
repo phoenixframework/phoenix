@@ -89,7 +89,7 @@ end
 Then a Plug.Static plug could be set in your `lib/my_app/endpoint.ex` to serve the files at "/media":
 
 ```elixir
-plug Plug.Static at: "/uploads", from: "/media"
+plug Plug.Static, at: "/uploads", from: "/media"
 ```
 
 The uploaded file can now be accessed from your browsers using a path such as "/uploads/1-profile.jpg". In practice, there are other concerns you want to handle when uploading files, such validating extensions, encoding names and so on. Many times, using a library that already handles such cases, is prefered.
