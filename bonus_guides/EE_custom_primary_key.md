@@ -145,8 +145,8 @@ defmodule HelloPhoenix.Player do
 
   @primary_key false
   schema "players" do
-    field :first_name, primary_key: true
-    field :last_name, primary_key: true
+    field :first_name, :string, primary_key: true
+    field :last_name, :string, primary_key: true
     field :position, :string
     field :number, :integer
   . . .
