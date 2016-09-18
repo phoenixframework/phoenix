@@ -52,7 +52,7 @@ defmodule <%= application_name %>.DatabaseSeeder do
   alias <%= application_name %>.Link
 
   @titles_list ["Erlang", "Elixir", "Phoenix Framework"] // list of titles
-  @links_list ["http://www.erlang.org", "http://www.elixir-lang.org", "http://www.phoenix-framework.org"] // list of links
+  @urls_list ["http://www.erlang.org", "http://www.elixir-lang.org", "http://www.phoenixframework.org"] // list of urls
 
   def insert_link do
     Repo.insert! %Link{
