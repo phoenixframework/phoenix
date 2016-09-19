@@ -1,12 +1,6 @@
 Code.require_file "../../../installer/lib/phoenix_new.ex", __DIR__
 Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 
-# Mock live reloading for testing the generated application.
-defmodule Phoenix.LiveReloader do
-  def init(opts), do: opts
-  def call(conn, _), do: conn
-end
-
 # Here we test the installer is up to date.
 defmodule Mix.Tasks.Phoenix.NewTest do
   use ExUnit.Case

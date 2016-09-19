@@ -2,6 +2,12 @@
 # process to avoid polluting tests.
 Mix.shell(Mix.Shell.Process)
 
+# Mock live reloading for testing the generated application.
+defmodule Phoenix.LiveReloader do
+  def init(opts), do: opts
+  def call(conn, _), do: conn
+end
+
 defmodule MixHelper do
   import ExUnit.Assertions
 
