@@ -46,7 +46,7 @@ defmodule Mix.Tasks.Phoenix.New do
   ]
 
   @brunch [
-    {:text, "static/brunch/.gitignore",       ".gitignore"},
+    {:text, "static/brunch/gitignore",       ".gitignore"},
     {:eex,  "static/brunch/brunch-config.js", "brunch-config.js"},
     {:eex,  "static/brunch/package.json",     "package.json"},
     {:text, "static/app.css",                 "web/static/css/app.css"},
@@ -68,7 +68,7 @@ defmodule Mix.Tasks.Phoenix.New do
   ]
 
   @static [
-    {:text,   "static/bare/.gitignore", ".gitignore"},
+    {:text,   "static/bare/gitignore", ".gitignore"},
     {:text,   "static/app.css",         "priv/static/css/app.css"},
     {:append, "static/phoenix.css",     "priv/static/css/app.css"},
     {:text,   "static/bare/app.js",     "priv/static/js/app.js"},
@@ -76,7 +76,7 @@ defmodule Mix.Tasks.Phoenix.New do
   ]
 
   @bare [
-    {:text,   "static/bare/.gitignore", ".gitignore"},
+    {:text,   "static/bare/gitignore", ".gitignore"},
   ]
 
   # Embed all defined templates

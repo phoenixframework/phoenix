@@ -36,7 +36,7 @@ defmodule Mix.Tasks.Phx.New.Single do
   ]
 
   template :brunch, [
-    {:text, "assets/brunch/.gitignore",       ".gitignore"},
+    {:text, "assets/brunch/gitignore",       ".gitignore"},
     {:eex,  "assets/brunch/brunch-config.js", "assets/brunch-config.js"},
     {:eex,  "assets/brunch/package.json",     "assets/package.json"},
     {:text, "assets/app.css",                 "assets/css/app.css"},
@@ -59,11 +59,11 @@ defmodule Mix.Tasks.Phx.New.Single do
   ]
 
   template :bare, [
-    {:text, "static/bare/.gitignore", ".gitignore"},
+    {:text, "static/bare/gitignore", ".gitignore"},
   ]
 
   template :static, [
-    {:text,   "assets/bare/.gitignore", ".gitignore"},
+    {:text,   "assets/bare/gitignore", ".gitignore"},
     {:text,   "assets/app.css",         "priv/static/css/app.css"},
     {:append, "assets/phoenix.css",     "priv/static/css/app.css"},
     {:text,   "assets/bare/app.js",     "priv/static/js/app.js"},
