@@ -138,30 +138,18 @@ In `web/templates/page/index.html.eex`, we'll replace the existing code with a c
 <input id="chat-input" type="text"></input>
 ```
 
-We'll also add jQuery to our application layout in `web/templates/layout/app.html.eex`:
-
-```html
-  ...
-    <%= render @view_module, @view_template, assigns %>
-
-  </div> <!-- /container -->
-  <script src="//code.jquery.com/jquery-1.12.4.min.js"></script>
-  <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
-</body>
-```
-
 Now let's add a couple of event listeners to `web/static/js/socket.js`:
 
 ```javascript
 ...
 let channel           = socket.channel("room:lobby", {})
-let chatInput         = $("#chat-input")
-let messagesContainer = $("#messages")
+let chatInput         = document.querySelector("#chat-input")
+let messagesContainer = document.querySelector("#messages")
 
-chatInput.on("keypress", event => {
+chatInput.addEventListener("keypress", event => {
   if(event.keyCode === 13){
-    channel.push("new_msg", {body: chatInput.val()})
-    chatInput.val("")
+    channel.push("new_msg", {body: chatInput.value})
+    chatInput.value = ""
   }
 })
 
@@ -177,18 +165,20 @@ All we had to do is detect that enter was pressed and then `push` an event over 
 ```javascript
 ...
 let channel           = socket.channel("room:lobby", {})
-let chatInput         = $("#chat-input")
-let messagesContainer = $("#messages")
+let chatInput         = document.querySelector("#chat-input")
+let messagesContainer = document.querySelector("#messages")
 
-chatInput.on("keypress", event => {
+chatInput.addEventListener("keypress", event => {
   if(event.keyCode === 13){
-    channel.push("new_msg", {body: chatInput.val()})
+    channel.push("new_msg", {body: chatInput.value})
     chatInput.val("")
   }
 })
 
 channel.on("new_msg", payload => {
-  messagesContainer.append(`<br/>[${Date()}] ${payload.body}`)
+  let messageItem = document.createElement("li");
+  messageItem.innerText = `[${Date()}] ${payload.body}`
+  messagesContainer.appendChild(messageItem)
 })
 
 channel.join()
