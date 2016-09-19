@@ -30,7 +30,8 @@ defmodule Phoenix.Digester do
         |> filter_files
         |> Enum.map(&digest/1)
 
-      manifest = generate_manifest(digested_files, output_path)
+      digests = load_digests(input_path) || %{}
+      manifest = generate_manifest(digested_files, digests, output_path)
 
       Enum.each(digested_files, &(write_to_disk(&1, manifest, output_path)))
     else
@@ -46,16 +47,46 @@ defmodule Phoenix.Digester do
     |> Enum.map(&(map_file(&1, input_path)))
   end
 
-  defp generate_manifest(files, output_path) do
+  defp load_digests(input_path) do
+    manifest_path = Path.join(input_path, "manifest.json")
+    if File.exists?(manifest_path) do
+      manifest_path
+      |> File.read!
+      |> Poison.decode!
+      |> Access.get("digests")
+    end
+  end
+
+  defp generate_manifest(files, digests, output_path) do
     entries = Enum.reduce(files, %{}, fn (file, acc) ->
       Map.put(acc, manifest_join(file.relative_path, file.filename),
                    manifest_join(file.relative_path, file.digested_filename))
     end)
 
-    manifest_content = Poison.encode!(%{latest: entries}, [])
+    digests =
+      files
+      |> generate_new_digests
+      |> Map.merge(digests)
+    manifest_content = Poison.encode!(%{latest: entries, version: 1, digests: digests}, [])
     File.write!(Path.join(output_path, "manifest.json"), manifest_content)
 
     entries
+  end
+
+  defp generate_new_digests(files) do
+    Enum.reduce(files, %{}, fn (file, acc) ->
+      Map.put(acc, manifest_join(file.relative_path, file.digested_filename),
+                   build_digest(file))
+    end)
+  end
+
+  defp build_digest(file) do
+    %{
+      logical_path: manifest_join(file.relative_path, file.filename),
+      mtime: :calendar.datetime_to_gregorian_seconds(file.mtime),
+      size: file.size,
+      digest: file.digest,
+    }
   end
 
   defp manifest_join(".", filename),  do: filename
@@ -68,9 +99,12 @@ defmodule Phoenix.Digester do
   end
 
   defp map_file(file_path, input_path) do
+    {:ok, stats} = File.stat(file_path)
     %{absolute_path: file_path,
       relative_path: Path.relative_to(file_path, input_path) |> Path.dirname(),
       filename: Path.basename(file_path),
+      mtime: stats.mtime,
+      size: stats.size,
       content: File.read!(file_path)}
   end
 
@@ -78,7 +112,10 @@ defmodule Phoenix.Digester do
     name = Path.rootname(file.filename)
     extension = Path.extname(file.filename)
     digest = Base.encode16(:erlang.md5(file.content), case: :lower)
-    Map.put(file, :digested_filename, "#{name}-#{digest}#{extension}")
+    Map.merge(file, %{
+      digested_filename: "#{name}-#{digest}#{extension}",
+      digest: digest,
+    })
   end
 
   defp write_to_disk(file, manifest, output_path) do
