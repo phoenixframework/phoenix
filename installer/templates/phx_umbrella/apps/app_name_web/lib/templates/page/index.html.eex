@@ -1,0 +1,5 @@
+<div id="container" class="row marketing">
+</div>
+
+<script src="<%= static_path(@conn, "/js/vendor.js") %>"></script>
+<script src="<%= static_path(@conn, "/js/chirp.js") %>"></script>

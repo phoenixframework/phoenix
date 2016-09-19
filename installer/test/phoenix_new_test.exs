@@ -398,21 +398,4 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert output =~ "Creates a new Phoenix project."
     end
   end
-
-  defp umbrella_mixfile_contents do
-    """
-defmodule Umbrella.Mixfile do
-  use Mix.Project
-
-  def project do
-    [apps_path: "apps",
-     deps: deps()]
-  end
-
-  defp deps do
-    []
-  end
-end
-    """
-  end
 end

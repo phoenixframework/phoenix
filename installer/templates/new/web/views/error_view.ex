@@ -1,5 +1,5 @@
-defmodule <%= application_module %>.ErrorView do
-  use <%= application_module %>.Web, :view
+defmodule <%= app_module %>.ErrorView do
+  use <%= app_module %>.Web, :view
 
   <%= if html do %>def render("404.html", _assigns) do
     "Page not found"

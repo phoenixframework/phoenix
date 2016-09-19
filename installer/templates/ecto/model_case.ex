@@ -1,4 +1,4 @@
-defmodule <%= application_module %>.ModelCase do
+defmodule <%= app_module %>.ModelCase do
   @moduledoc """
   This module defines the test case to be used by
   model tests.
@@ -16,12 +16,12 @@ defmodule <%= application_module %>.ModelCase do
 
   using do
     quote do
-      alias <%= application_module %>.Repo
+      alias <%= app_module %>.Repo
 
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
-      import <%= application_module %>.ModelCase
+      import <%= app_module %>.ModelCase
     end
   end
 
@@ -52,7 +52,7 @@ defmodule <%= application_module %>.ModelCase do
   """
   def errors_on(struct, data) do
     struct.__struct__.changeset(struct, data)
-    |> Ecto.Changeset.traverse_errors(&<%= application_module %>.ErrorHelpers.translate_error/1)
+    |> Ecto.Changeset.traverse_errors(&<%= app_module %>.ErrorHelpers.translate_error/1)
     |> Enum.flat_map(fn {key, errors} -> for msg <- errors, do: {key, msg} end)
   end
 end
