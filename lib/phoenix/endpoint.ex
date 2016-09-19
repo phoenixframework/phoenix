@@ -343,7 +343,8 @@ defmodule Phoenix.Endpoint do
       controller. The map of runtime metadata passed to instrumentation
       callbacks has the `:view` key - for the name of the view, e.g. `HexWeb.ErrorView`,
       the `:template` key - for the name of the template, e.g.,
-      `"index.html"` and the `:format` key - for the format of the template.
+      `"index.html"`, the `:format` key - for the format of the template, and
+      the `:conn` key - containing the `%Plug.Conn{}`.
     * `:phoenix_channel_join` - the joining of a channel. The `%Phoenix.Socket{}`
       and join params are passed as runtime metadata via `:socket` and `:params`.
     * `:phoenix_channel_receive` - the receipt of an incoming message over a
