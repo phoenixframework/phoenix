@@ -345,10 +345,17 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp check_module_name_availability!(name) do
-    name = Module.concat(Elixir, name)
-    if Code.ensure_loaded?(name) do
-      Mix.raise "Module name #{inspect name} is already taken, please choose another name"
-    end
+    [name]
+    |> Module.concat()
+    |> Module.split()
+    |> Enum.reduce([], fn name, acc ->
+        mod = Module.concat([Elixir, name | acc])
+        if Code.ensure_loaded?(mod) do
+          Mix.raise "Module name #{inspect mod} is already taken, please choose another name"
+        else
+          [name | acc]
+        end
+    end)
   end
 
   def check_directory_existence!(path) do
@@ -414,19 +421,8 @@ defmodule Mix.Tasks.Phx.New do
     |> Module.concat(PubSub)
   end
 
-  defp in_umbrella?(_app_path, Umbrella), do: true
-  defp in_umbrella?(app_path, Single) do
-    try do
-      umbrella = Path.expand(Path.join [app_path, "..", ".."])
-      File.exists?(Path.join(umbrella, "mix.exs")) &&
-        Mix.Project.in_project(:umbrella_check, umbrella, fn _ ->
-          path = Mix.Project.config[:apps_path]
-          path && Path.expand(path) == Path.join(umbrella, "apps")
-        end)
-    catch
-      _, _ -> false
-    end
-  end
+  def in_umbrella?(_app_path, Umbrella), do: true
+  def in_umbrella?(app_path, Single), do: in_umbrella?(app_path)
 
   defp random_string(length) do
     :crypto.strong_rand_bytes(length) |> Base.encode64 |> binary_part(0, length)

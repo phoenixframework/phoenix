@@ -82,4 +82,17 @@ defmodule Mix.Tasks.Phx.New.Generator do
     file = Path.join(path, file)
     File.write!(file, File.read!(file) <> contents)
   end
+
+  def in_umbrella?(app_path) do
+    try do
+      umbrella = Path.expand(Path.join [app_path, "..", ".."])
+      File.exists?(Path.join(umbrella, "mix.exs")) &&
+        Mix.Project.in_project(:umbrella_check, umbrella, fn _ ->
+          path = Mix.Project.config[:apps_path]
+          path && Path.expand(path) == Path.join(umbrella, "apps")
+        end)
+    catch
+      _, _ -> false
+    end
+  end
 end

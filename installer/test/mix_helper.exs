@@ -45,4 +45,21 @@ defmodule MixHelper do
       Application.put_env(:phoenix, :generators, old)
     end
   end
+
+  def umbrella_mixfile_contents do
+    """
+defmodule Umbrella.Mixfile do
+  use Mix.Project
+
+  def project do
+    [apps_path: "apps",
+     deps: deps()]
+  end
+
+  defp deps do
+    []
+  end
+end
+    """
+  end
 end

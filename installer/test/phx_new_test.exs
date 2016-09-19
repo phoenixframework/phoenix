@@ -244,7 +244,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
   test "new inside umbrella" do
     in_tmp "new inside umbrella", fn ->
-      File.write! "mix.exs", umbrella_mixfile_contents()
+      File.write! "mix.exs", MixHelper.umbrella_mixfile_contents()
       File.mkdir! "apps"
       File.cd! "apps", fn ->
         Mix.Tasks.Phx.New.run([@app_name])
@@ -388,22 +388,5 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert capture_io(fn -> Mix.Tasks.Phx.New.run([]) end)
              "Creates a new Phoenix project."
     end
-  end
-
-  defp umbrella_mixfile_contents do
-    """
-defmodule Umbrella.Mixfile do
-  use Mix.Project
-
-  def project do
-    [apps_path: "apps",
-     deps: deps()]
-  end
-
-  defp deps do
-    []
-  end
-end
-    """
   end
 end

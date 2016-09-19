@@ -59,14 +59,14 @@ defmodule Mix.Tasks.Phx.New.Umbrella do
   ]
 
   template :html, [
-    {:eex,  "phx_new/test/controllers/page_controller_test.exs",       "test/controllers/page_controller_test.exs"},
-    {:eex,  "phx_new/test/views/layout_view_test.exs",                 "test/views/layout_view_test.exs"},
-    {:eex,  "phx_new/test/views/page_view_test.exs",                   "test/views/page_view_test.exs"},
-    {:eex,  "phx_new/lib/app_name/web/controllers/page_controller.ex", "lib/controllers/page_controller.ex"},
-    {:eex,  "phx_new/lib/app_name/web/templates/layout/app.html.eex",  "lib/templates/layout/app.html.eex"},
-    {:eex,  "phx_new/lib/app_name/web/templates/page/index.html.eex",  "lib/templates/page/index.html.eex"},
-    {:eex,  "phx_new/lib/app_name/web/views/layout_view.ex",           "lib/views/layout_view.ex"},
-    {:eex,  "phx_new/lib/app_name/web/views/page_view.ex",             "lib/views/page_view.ex"},
+    {:eex,  "phx_new/test/controllers/page_controller_test.exs", "test/controllers/page_controller_test.exs"},
+    {:eex,  "phx_new/test/views/layout_view_test.exs",           "test/views/layout_view_test.exs"},
+    {:eex,  "phx_new/test/views/page_view_test.exs",             "test/views/page_view_test.exs"},
+    {:eex,  "phx_new/lib/web/controllers/page_controller.ex",    "lib/controllers/page_controller.ex"},
+    {:eex,  "phx_new/lib/web/templates/layout/app.html.eex",     "lib/templates/layout/app.html.eex"},
+    {:eex,  "phx_new/lib/web/templates/page/index.html.eex",     "lib/templates/page/index.html.eex"},
+    {:eex,  "phx_new/lib/web/views/layout_view.ex",              "lib/views/layout_view.ex"},
+    {:eex,  "phx_new/lib/web/views/page_view.ex",                "lib/views/page_view.ex"},
   ]
 
   template :bare, [
@@ -75,10 +75,10 @@ defmodule Mix.Tasks.Phx.New.Umbrella do
 
   template :static, [
     {:text,   "assets/bare/.gitignore", ".gitignore"},
-    {:text,   "assets/app.css",         "apps/app_name_web/priv/static/css/app.css"},
-    {:append, "assets/phoenix.css",     "apps/app_name_web/priv/static/css/app.css"},
-    {:text,   "assets/bare/app.js",     "apps/app_name_web/priv/static/js/app.js"},
-    {:text,   "assets/robots.txt",      "apps/app_name_web/priv/static/robots.txt"},
+    {:text,   "assets/app.css",         "priv/static/css/app.css"},
+    {:append, "assets/phoenix.css",     "priv/static/css/app.css"},
+    {:text,   "assets/bare/app.js",     "priv/static/js/app.js"},
+    {:text,   "assets/robots.txt",      "priv/static/robots.txt"},
   ]
 
 
@@ -105,6 +105,9 @@ defmodule Mix.Tasks.Phx.New.Umbrella do
   end
 
   def gen_new(path, binding) do
+    if in_umbrella?(path) do
+      Mix.raise "unable to nest umbrella project within apps"
+    end
     copy_from path, __MODULE__, binding, template_files(:new)
   end
 
