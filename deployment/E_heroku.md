@@ -84,7 +84,7 @@ Run `git push heroku master` to create a new release using these buildpacks.
 
 ## Making our Project Heroku-ready
 
-Every new Phoenix project ships with a config file `config/prod.secret.exs` which stores configuration that should not be commited along with our source code. By default Phoenix adds it to our `.gitignore` file.
+Every new Phoenix project ships with a config file `config/prod.secret.exs` which stores configuration that should not be committed along with our source code. By default Phoenix adds it to our `.gitignore` file.
 
 This works great except Heroku uses [environment variables](https://devcenter.heroku.com/articles/config-vars) to pass sensitive informations to our application. It means we need to make some changes to our config before we can deploy.
 
