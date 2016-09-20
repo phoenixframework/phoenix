@@ -1,9 +1,9 @@
 defmodule <%= web_namespace %> do
   @moduledoc """
-  The Web application for `<%= app_module %>`
+  A module that keeps using definitions for controllers,
+  views and so on.
 
-  This module can be used in your application to import common
-  controller, view, and channel functionality, for example:
+  This can be used in your application as:
 
       use <%= web_namespace %>, :controller
       use <%= web_namespace %>, :view

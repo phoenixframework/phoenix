@@ -7,7 +7,7 @@ defmodule Mix.Tasks.Phx.New.Single do
     {:eex,  "phx_new/config/prod.exs",                 "config/prod.exs"},
     {:eex,  "phx_new/config/prod.secret.exs",          "config/prod.secret.exs"},
     {:eex,  "phx_new/config/test.exs",                 "config/test.exs"},
-    {:eex,  "phx_new/lib/app_name.ex",                 "lib/app_name.ex"},
+    {:eex,  "phx_new/lib/application.ex",              "lib/application.ex"},
     {:eex,  "phx_new/lib/web/endpoint.ex",             "lib/web/endpoint.ex"},
     {:keep, "phx_new/test/channels",                   "test/channels"},
     {:keep, "phx_new/test/controllers",                "test/controllers"},
@@ -24,8 +24,8 @@ defmodule Mix.Tasks.Phx.New.Single do
     {:eex,  "phx_new/README.md",                       "README.md"},
     {:eex,  "phx_new/lib/gettext.ex",                  "lib/web/gettext.ex"},
     {:eex,  "phx_new/priv/gettext/errors.pot",         "priv/gettext/errors.pot"},
-    {:eex,  "phx_new/priv/gettext/en/LC_MESSAGES/errors.po",    "priv/gettext/en/LC_MESSAGES/errors.po"},
     {:eex,  "phx_new/lib/web/views/error_helpers.ex",  "lib/web/views/error_helpers.ex"},
+    {:eex,  "phx_new/priv/gettext/en/LC_MESSAGES/errors.po",    "priv/gettext/en/LC_MESSAGES/errors.po"},
   ]
 
   template :ecto, [

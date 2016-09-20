@@ -20,7 +20,7 @@ defmodule <%= web_namespace %>.Mixfile do
   #
   # Type `mix help compile.app` for more information.
   def application do
-    [mod: {<%= web_namespace %>, []},
+    [mod: {<%= web_namespace %>.Application, []},
      applications: [:phoenix<%= if html do %>, :phoenix_html<% end %>, :cowboy, :logger, :gettext,
                     <%= if ecto do %>:phoenix_ecto,<% end %> :<%= app_name %>]]
   end

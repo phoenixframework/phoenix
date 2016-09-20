@@ -41,7 +41,8 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ ":inet6"
       end
 
-      assert_file "phx_blog/lib/phx_blog.ex", ~r/defmodule PhxBlog do/
+      assert_file "phx_blog/lib/application.ex", ~r/defmodule PhxBlog.Application do/
+      assert_file "phx_blog/mix.exs", ~r/mod: {PhxBlog.Application, \[\]}/
       assert_file "phx_blog/lib/web.ex", ~r/defmodule PhxBlog.Web do/
       assert_file "phx_blog/lib/web/endpoint.ex", ~r/defmodule PhxBlog.Web.Endpoint do/
 

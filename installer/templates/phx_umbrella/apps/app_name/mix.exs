@@ -20,7 +20,7 @@ defmodule <%= app_module %>.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     [applications: [:logger<%= if ecto do %>, :<%= adapter_app %>, :ecto<% end %>],
-     mod: {<%= app_module %>, []}]
+     mod: {<%= app_module %>.Application, []}]
   end
 
   # Dependencies can be Hex packages:

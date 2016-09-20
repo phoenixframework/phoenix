@@ -1,4 +1,4 @@
-defmodule <%= app_module %> do
+defmodule <%= app_module %>.Application do
   @moduledoc """
   The <%= app_module %> Application Service.
 
