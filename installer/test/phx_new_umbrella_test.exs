@@ -63,11 +63,13 @@ defmodule Mix.Tasks.Phx.NewUmbrellaTest do
         assert file =~ ":inet6"
       end
 
-      assert_file app_path(@app, "lib/phx_umb.ex"), ~r/defmodule PhxUmb do/
+      assert_file app_path(@app, "lib/application.ex"), ~r/defmodule PhxUmb.Application do/
+      assert_file app_path(@app, "mix.exs"), ~r/mod: {PhxUmb.Application, \[\]}/
       assert_file app_path(@app, "test/test_helper.exs")
-      assert_file app_path(@app, "lib/phx_umb.ex"), ~r/defmodule PhxUmb do/
 
-      assert_file web_path(@app, "lib/phx_umb_web.ex"), ~r/defmodule PhxUmb.Web do/
+      assert_file web_path(@app, "lib/application.ex"), ~r/defmodule PhxUmb.Web.Application do/
+      assert_file web_path(@app, "mix.exs"), ~r/mod: {PhxUmb.Web.Application, \[\]}/
+      assert_file web_path(@app, "lib/web.ex"), ~r/defmodule PhxUmb.Web do/
       assert_file web_path(@app, "lib/endpoint.ex"), ~r/defmodule PhxUmb.Web.Endpoint do/
       assert_file web_path(@app, "test/controllers/page_controller_test.exs")
       assert_file web_path(@app, "test/views/page_view_test.exs")
@@ -275,7 +277,11 @@ defmodule Mix.Tasks.Phx.NewUmbrellaTest do
       assert_file "custom_path_umbrella/apps/phx_umb/mix.exs", ~r/app: :phx_umb/
       assert_file "custom_path_umbrella/apps/phx_umb_web/lib/endpoint.ex", ~r/app: :#{@app}_web/
       assert_file "custom_path_umbrella/apps/phx_umb_web/config/config.exs", ~r/namespace: PhoteuxBlog.Web/
-      assert_file "custom_path_umbrella/apps/phx_umb_web/lib/phx_umb_web.ex", ~r/use Phoenix.Controller, namespace: PhoteuxBlog.Web/
+      assert_file "custom_path_umbrella/apps/phx_umb_web/lib/web.ex", ~r/use Phoenix.Controller, namespace: PhoteuxBlog.Web/
+      assert_file "custom_path_umbrella/apps/phx_umb/lib/application.ex", ~r/defmodule PhoteuxBlog.Application/
+      assert_file "custom_path_umbrella/apps/phx_umb/mix.exs", ~r/mod: {PhoteuxBlog.Application, \[\]}/
+      assert_file "custom_path_umbrella/apps/phx_umb_web/lib/application.ex", ~r/defmodule PhoteuxBlog.Web.Application/
+      assert_file "custom_path_umbrella/apps/phx_umb_web/mix.exs", ~r/mod: {PhoteuxBlog.Web.Application, \[\]}/
     end
   end
 

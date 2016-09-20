@@ -1,4 +1,4 @@
-defmodule <%= app_module %> do
+defmodule <%= app_module %>.Application do
   use Application
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html

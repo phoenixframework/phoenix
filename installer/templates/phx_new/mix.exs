@@ -21,7 +21,7 @@ defmodule <%= app_module %>.Mixfile do
   #
   # Type `mix help compile.app` for more information.
   def application do
-    [mod: {<%= app_module %>, []},
+    [mod: {<%= app_module %>.Application, []},
      applications: [:phoenix, :phoenix_pubsub<%= if html do %>, :phoenix_html<% end %>, :cowboy, :logger, :gettext<%= if ecto do %>,
                     :phoenix_ecto, <%= inspect adapter_app %><% end %>]]
   end
