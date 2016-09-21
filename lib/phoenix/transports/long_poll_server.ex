@@ -28,7 +28,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
   @doc """
   Starts the Server.
 
-    * `socket` - The `Phoenix.Socket` struct returend from `connect/2`
+    * `socket` - The `Phoenix.Socket` struct returned from `connect/2`
       of the socket handler.
     * `window_ms` - The longpoll session timeout, in milliseconds
 
