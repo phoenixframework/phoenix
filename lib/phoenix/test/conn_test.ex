@@ -570,7 +570,6 @@ defmodule Phoenix.ConnTest do
       |> receive_response(expected_status)
 
     discard_previously_sent()
-
     result
   end
 
@@ -578,7 +577,7 @@ defmodule Phoenix.ConnTest do
     if conn.state == :sent do
       flunk "expected error to be sent as #{expected_status} status, but response sent #{conn.status} without error"
     else
-      flunk_not_sent(expected_status)
+      flunk "expected error to be sent as #{expected_status} status, but no error happened"
     end
   end
   defp receive_response({:error, {exception, stack}}, expected_status) do
@@ -587,14 +586,19 @@ defmodule Phoenix.ConnTest do
         {expected_status, headers, body}
 
       {ref, {sent_status, _headers, _body}} when is_reference(ref) ->
-        reraise_error(expected_status, sent_status, exception, stack)
+        reraise ExUnit.AssertionError.exception("""
+        expected error to be sent as #{expected_status} status, but got #{sent_status} from:
 
-    after 0 -> flunk_not_sent(expected_status)
+        #{Exception.format_banner(:error, exception)}
+        """), stack
+
+    after 0 ->
+      reraise ExUnit.AssertionError.exception("""
+      expected error to be sent as #{expected_status} status, but got an error with no response from:
+
+      #{Exception.format_banner(:error, exception)}
+      """), stack
     end
-  end
-
-  defp flunk_not_sent(expected_status) do
-    flunk "expected #{expected_status} response but no response sent"
   end
 
   defp discard_previously_sent() do
@@ -612,14 +616,5 @@ defmodule Phoenix.ConnTest do
     rescue
       exception -> {:error, {exception, System.stacktrace()}}
     end
-  end
-
-  defp reraise_error(expected_stat, sent_stat, exception, stack) do
-    wrapper = %ExUnit.AssertionError{message: """
-    expected response status to be #{expected_stat}, but got #{sent_stat} from:
-
-    #{Exception.format_banner(:error, exception)}
-    """}
-    reraise(wrapper, stack)
   end
 end
