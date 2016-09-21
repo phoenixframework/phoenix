@@ -39,6 +39,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       assert_file "photo_blog/config/prod.exs", fn file ->
         assert file =~ "port: 80"
+        assert file =~ ":inet6"
       end
 
       assert_file "photo_blog/lib/photo_blog.ex", ~r/defmodule PhotoBlog do/

@@ -60,6 +60,7 @@ defmodule Mix.Tasks.Phx.NewUmbrellaTest do
 
       assert_file web_path(@app, "config/prod.exs"), fn file ->
         assert file =~ "port: 80"
+        assert file =~ ":inet6"
       end
 
       assert_file app_path(@app, "lib/phx_umb.ex"), ~r/defmodule PhxUmb do/
