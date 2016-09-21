@@ -828,7 +828,7 @@ defmodule Phoenix.Controller do
 
     * the accepted list of arguments contains the "html" format
 
-    * the accept header specified more than one media type preceeded
+    * the accept header specified more than one media type proceeded
       or followed by the wildcard media type "`*/*`"
 
   This function raises `Phoenix.NotAcceptableError`, which is rendered
