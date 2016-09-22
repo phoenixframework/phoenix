@@ -105,7 +105,7 @@ defmodule Phoenix.Digester do
   defp build_digest(file) do
     %{
       logical_path: manifest_join(file.relative_path, file.filename),
-      mtime: :calendar.datetime_to_gregorian_seconds(file.mtime),
+      mtime: :calendar.datetime_to_gregorian_seconds(:calendar.universal_time),
       size: file.size,
       digest: file.digest,
     }
@@ -130,7 +130,6 @@ defmodule Phoenix.Digester do
     %{absolute_path: file_path,
       relative_path: Path.relative_to(file_path, input_path) |> Path.dirname(),
       filename: Path.basename(file_path),
-      mtime: :calendar.universal_time(),
       size: stats.size,
       content: File.read!(file_path)}
   end
@@ -146,7 +145,6 @@ defmodule Phoenix.Digester do
       digested_filename: digested_filename,
       filename: String.replace(digested_filename, @digested_file_regex, ""),
       digest: digest,
-      mtime: stats.mtime,
       size: stats.size,
       content: File.read!(file_path)}
   end
