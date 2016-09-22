@@ -38,6 +38,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/config/prod.exs", fn file ->
         assert file =~ "port: 80"
+        assert file =~ ":inet6"
       end
 
       assert_file "phx_blog/lib/phx_blog.ex", ~r/defmodule PhxBlog do/

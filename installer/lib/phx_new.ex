@@ -48,7 +48,6 @@ defmodule Mix.Tasks.Phx.New do
 
   """
   use Mix.Task
-  import Mix.Generator
   import Mix.Tasks.Phx.New.Generator
   alias Mix.Tasks.Phx.New.{Single, Umbrella}
 
