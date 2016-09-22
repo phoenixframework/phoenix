@@ -31,7 +31,7 @@ defmodule Phoenix.Digester do
         |> filter_files
         |> Enum.map(&digest/1)
 
-      digests = load_digests(input_path, output_path)
+      digests = load_digests(output_path)
       manifest = generate_manifest(digested_files, digests, output_path)
 
       Enum.each(digested_files, &(write_to_disk(&1, manifest, output_path)))
@@ -56,8 +56,8 @@ defmodule Phoenix.Digester do
     |> Enum.map(&(map_digested_file(&1, output_path)))
   end
 
-  defp load_digests(input_path, output_path) do
-    manifest_path = Path.join(input_path, "manifest.json")
+  defp load_digests(output_path) do
+    manifest_path = Path.join(output_path, "manifest.json")
     if File.exists?(manifest_path) do
       manifest_path
       |> File.read!
