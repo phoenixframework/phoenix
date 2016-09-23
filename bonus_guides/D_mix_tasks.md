@@ -461,8 +461,8 @@ We can now do as the task suggests and inspect the contents of `priv/static` dir
 * a compressed file with gzip
 * a file containing the original file name and its digest
 * a compressed file containing the file name and its digest
- 
-If you want to determine which files should be gzipped, you can use the application environment `:gzippable_exts` in config file:
+
+We can optionally determine which files should be gzipped, by using the `:gzippable_exts` option in the config file:
 
 ```elixir
 config :phoenix, :gzippable_exts, ~w(.js .css)
