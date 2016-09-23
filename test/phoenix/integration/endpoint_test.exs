@@ -10,7 +10,7 @@ defmodule Phoenix.Integration.EndpointTest do
   alias Phoenix.Integration.AdapterTest.ProdInet6Endpoint
 
   Application.put_env(:endpoint_int, ProdEndpoint,
-      http: [port: "4807"], url: [host: "example.com"], server: true)
+      http: [port: "4807"], url: [host: "example.com"], server: true, render_errors: [accepts: ~w(html json)])
   Application.put_env(:endpoint_int, DevEndpoint,
       http: [port: "4808"], debug_errors: true)
   Application.put_env(:endpoint_int, ProdInet6Endpoint,
@@ -112,6 +112,10 @@ defmodule Phoenix.Integration.EndpointTest do
       {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/unknown", %{})
       assert resp.status == 404
       assert resp.body == "404.html from Phoenix.ErrorView"
+
+      {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/unknown?_format=json", %{})
+      assert resp.status == 404
+      assert resp.body |> Poison.decode!() == %{"error" => "Got 404 from error with GET"}
 
       assert capture_log(fn ->
         {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/oops", %{})

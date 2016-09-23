@@ -52,6 +52,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
 
   defp __catch__(_conn, :error, %Phoenix.Router.NoRouteError{} = reason, stack, opts) do
     maybe_render(reason.conn, :error, reason, stack, opts)
+    :erlang.raise(:error, reason, stack)
   end
 
   defp __catch__(conn, kind, reason, stack, opts) do

@@ -73,25 +73,29 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
   end
 
   test "call/2 is overridden with no route match as HTML" do
-    conn = call(Router, :get, "/unknown")
-    assert conn.state == :sent
-    assert conn.status == 404
-    assert conn.resp_body == "Got 404 from error with GET"
+    assert_raise Phoenix.Router.NoRouteError,
+      "no route found for GET /unknown (Phoenix.Endpoint.RenderErrorsTest.Router)", fn ->
+      call(Router, :get, "/unknown")
+    end
+
     assert_received {:plug_conn, :sent}
   end
 
   test "call/2 is overridden with no route match as JSON" do
-    conn = call(Router, :get, "/unknown?_format=json")
-    assert conn.state == :sent
-    assert conn.status == 404
-    assert conn.resp_body |> Poison.decode!() == %{"error" => "Got 404 from error with GET"}
+    assert_raise Phoenix.Router.NoRouteError,
+      "no route found for GET /unknown (Phoenix.Endpoint.RenderErrorsTest.Router)", fn ->
+      call(Router, :get, "/unknown?_format=json")
+    end
+
     assert_received {:plug_conn, :sent}
   end
 
   test "call/2 is overridden with no route match while malformed format" do
-    conn = call(Router, :get, "/unknown?_format=unknown")
-    assert conn.state == :sent
-    assert conn.status == 404
+    assert_raise Phoenix.Router.NoRouteError,
+      "no route found for GET /unknown (Phoenix.Endpoint.RenderErrorsTest.Router)", fn ->
+      call(Router, :get, "/unknown?_format=unknown")
+    end
+
     assert_received {:plug_conn, :sent}
   end
 
@@ -191,5 +195,14 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
 
     assert conn.status == 500
     assert conn.resp_body == "Got 500 from throw with GET"
+  end
+
+  test "exception page for NoRouteError with plug_status 404" do
+    conn = render(conn(:get, "/"), [], fn ->
+      raise Phoenix.Router.NoRouteError, conn: conn(:get, "/"), router: nil, plug_status: 404
+    end)
+
+    assert conn.status == 404
+    assert conn.resp_body == "Got 404 from error with GET"
   end
 end
