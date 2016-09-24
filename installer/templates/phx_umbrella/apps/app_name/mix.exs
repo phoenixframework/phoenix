@@ -38,7 +38,7 @@ defmodule <%= app_module %>.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [<%= if ecto do %>{:<%= adapter_app %>, ">= 0.0.0"},
-     {:ecto, "~> 2.0.0-rc"}<% end %>]
+     {:ecto, "~> 2.1-rc"}<% end %>]
   end
 
   # Aliases are shortcuts or tasks specific to the current project.<%= if ecto do %>

@@ -1,3 +1,3 @@
-defmodule Chat.Web.LayoutViewTest do
-  use Chat.Web.ConnCase, async: true
+defmodule <%= web_namespace %>.LayoutViewTest do
+  use <%= web_namespace %>.ConnCase, async: true
 end

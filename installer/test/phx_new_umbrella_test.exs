@@ -86,6 +86,9 @@ defmodule Mix.Tasks.Phx.NewUmbrellaTest do
       assert_file web_path(@app, "lib/templates/layout/app.html.eex"),
                   "<title>Hello PhxUmb!</title>"
 
+      assert_file web_path(@app, "test/views/page_view_test.exs"),
+                  "defmodule PhxUmb.Web.PageViewTest"
+
       # Brunch
       assert_file web_path(@app, ".gitignore"), "/node_modules"
       assert_file web_path(@app, "assets/brunch-config.js"), ~s("js/app.js": ["app"])
