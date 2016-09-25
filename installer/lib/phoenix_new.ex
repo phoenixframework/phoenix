@@ -166,7 +166,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
     case argv do
       [] ->
-        Mix.Task.run "help", ["phoenix.new"]
+        Mix.Tasks.Help.run ["phoenix.new"]
       [path|_] ->
         app = opts[:app] || Path.basename(Path.expand(path))
         check_application_name!(app, !!opts[:app])

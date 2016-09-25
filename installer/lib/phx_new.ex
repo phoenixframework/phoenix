@@ -73,7 +73,7 @@ defmodule Mix.Tasks.Phx.New do
 
     case argv do
       [] ->
-        Mix.Task.run "help", ["phx.new"]
+        Mix.Tasks.Help.run ["phx.new"]
       [base_path | _] ->
         generator = if opts[:umbrella], do: Umbrella, else: Single
         {app, app_mod, app_path} = generator.app(base_path, opts)
