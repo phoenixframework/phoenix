@@ -196,13 +196,4 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
     assert conn.status == 500
     assert conn.resp_body == "Got 500 from throw with GET"
   end
-
-  test "exception page for NoRouteError with plug_status 404" do
-    conn = render(conn(:get, "/"), [], fn ->
-      raise Phoenix.Router.NoRouteError, conn: conn(:get, "/"), router: nil, plug_status: 404
-    end)
-
-    assert conn.status == 404
-    assert conn.resp_body == "Got 404 from error with GET"
-  end
 end
