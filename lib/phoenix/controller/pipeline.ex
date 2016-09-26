@@ -155,8 +155,8 @@ defmodule Phoenix.Controller.Pipeline do
 
   @doc false
   def __catch__(:error, :function_clause, controller, action,
-                [{controller, action, [%Plug.Conn{} | _], _loc} | _] = stack) do
-    args = [controller: controller, action: action]
+                [{controller, action, [%Plug.Conn{} = conn | _], _loc} | _] = stack) do
+    args = [controller: controller, action: action, params: conn.params]
     reraise Phoenix.ActionClauseError, args, stack
   end
   def __catch__(kind, reason, _controller, _action, stack) do
