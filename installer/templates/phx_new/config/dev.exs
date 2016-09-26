@@ -21,8 +21,8 @@ config :<%= app_name %>, <%= endpoint_module %>,
     patterns: [
       ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
       ~r{priv/gettext/.*(po)$},
-      ~r{web/views/.*(ex)$},
-      ~r{web/templates/.*(eex)$}
+      ~r{lib/web/views/.*(ex)$},
+      ~r{lib/web/templates/.*(eex)$}
     ]
   ]
 

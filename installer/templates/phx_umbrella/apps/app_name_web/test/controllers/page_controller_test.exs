@@ -1,5 +1,5 @@
-defmodule Chat.Web.PageControllerTest do
-  use Chat.Web.ConnCase
+defmodule <%= web_namespace %>.PageControllerTest do
+  use <%= web_namespace %>.ConnCase
 
   test "GET /", %{conn: conn} do
     conn = get conn, "/"

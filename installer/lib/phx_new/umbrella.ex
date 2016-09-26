@@ -59,14 +59,14 @@ defmodule Mix.Tasks.Phx.New.Umbrella do
   ]
 
   template :html, [
-    {:eex,  "phx_new/test/controllers/page_controller_test.exs", "test/controllers/page_controller_test.exs"},
-    {:eex,  "phx_new/test/views/layout_view_test.exs",           "test/views/layout_view_test.exs"},
-    {:eex,  "phx_new/test/views/page_view_test.exs",             "test/views/page_view_test.exs"},
-    {:eex,  "phx_new/lib/web/controllers/page_controller.ex",    "lib/controllers/page_controller.ex"},
-    {:eex,  "phx_new/lib/web/templates/layout/app.html.eex",     "lib/templates/layout/app.html.eex"},
-    {:eex,  "phx_new/lib/web/templates/page/index.html.eex",     "lib/templates/page/index.html.eex"},
-    {:eex,  "phx_new/lib/web/views/layout_view.ex",              "lib/views/layout_view.ex"},
-    {:eex,  "phx_new/lib/web/views/page_view.ex",                "lib/views/page_view.ex"},
+    {:eex,  "phx_umbrella/apps/app_name_web/test/controllers/page_controller_test.exs", "test/controllers/page_controller_test.exs"},
+    {:eex,  "phx_umbrella/apps/app_name_web/test/views/layout_view_test.exs",           "test/views/layout_view_test.exs"},
+    {:eex,  "phx_umbrella/apps/app_name_web/test/views/page_view_test.exs",             "test/views/page_view_test.exs"},
+    {:eex,  "phx_umbrella/apps/app_name_web/lib/controllers/page_controller.ex",        "lib/controllers/page_controller.ex"},
+    {:eex,  "phx_umbrella/apps/app_name_web/lib/templates/layout/app.html.eex",         "lib/templates/layout/app.html.eex"},
+    {:eex,  "phx_umbrella/apps/app_name_web/lib/templates/page/index.html.eex",         "lib/templates/page/index.html.eex"},
+    {:eex,  "phx_umbrella/apps/app_name_web/lib/views/layout_view.ex",                  "lib/views/layout_view.ex"},
+    {:eex,  "phx_umbrella/apps/app_name_web/lib/views/page_view.ex",                    "lib/views/page_view.ex"},
   ]
 
   template :bare, [
