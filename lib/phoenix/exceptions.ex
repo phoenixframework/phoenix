@@ -45,11 +45,14 @@ defmodule Phoenix.ActionClauseError do
     controller = Keyword.fetch!(opts, :controller)
     action = Keyword.fetch!(opts, :action)
     params = Keyword.fetch!(opts, :params)
-    msg = "Could not find a matching #{inspect controller}.#{action} clause " <>
-          "to process request. This typically happens when there is a " <>
-          "parameter mismatch but may also happen when any of the other " <>
-          "action arguments do not match. The request parameters are:\n\n" <>
-          "#{inspect params}"
+    msg = """
+    could not find a matching #{inspect controller}.#{action} clause
+    to process request. This typically happens when there is a
+    parameter mismatch but may also happen when any of the other
+    action arguments do not match. The request parameters are:
+
+      #{inspect params}
+    """
     %Phoenix.ActionClauseError{message: msg}
   end
 end
