@@ -28,7 +28,65 @@ defmodule Phoenix.DigesterTest do
       Path.join(output_path, "manifest.json")
       |> File.read!()
       |> Poison.decode!()
-    assert json["phoenix.png"] =~ ~r"phoenix-[a-fA-F\d]{32}.png"
+
+    assert json["latest"]["phoenix.png"] =~ ~r"phoenix-[a-fA-F\d]{32}.png"
+    assert json["version"] == 1
+  end
+
+  test "includes existing digests in new manifest" do
+    output_path = Path.join("tmp", "phoenix_digest")
+    source_path  = "test/fixtures/digest/priv/static/"
+    input_path = Path.join(["tmp", "digest", "static"])
+    :ok = File.mkdir_p!(output_path)
+    :ok = File.mkdir_p!(input_path)
+    {:ok, _} = File.cp_r(source_path, input_path)
+    :ok = File.cp("test/fixtures/manifest.json", output_path <> "/manifest.json")
+
+    assert :ok = Phoenix.Digester.compile(input_path, output_path)
+
+    json =
+      Path.join(output_path, "manifest.json")
+      |> File.read!()
+      |> Poison.decode!()
+
+    File.rm_rf!(output_path)
+
+    assert json["digests"]["foo-d978852bea6530fcd197b5445ed008fd.css"]["logical_path"] == "foo.css"
+    key = Enum.find(Map.keys(json["digests"]), &(&1 =~ ~r"phoenix-[a-fA-F\d]{32}.png")) # gross
+    assert json["digests"][key]["logical_path"] == "phoenix.png"
+    assert is_integer(json["digests"][key]["mtime"])
+    assert json["digests"][key]["size"] == 13900
+    assert json["digests"][key]["digest"] =~ ~r"[a-fA-F\d]{32}"
+    assert json["version"] == 1
+
+  end
+
+  test "upgrades existing digests in new manifest" do
+    output_path = Path.join("tmp", "phoenix_digest")
+    source_path  = "test/fixtures/digest/priv/static/"
+    input_path = Path.join(["tmp", "digest", "static"])
+    :ok = File.mkdir_p!(output_path)
+    :ok = File.mkdir_p!(input_path)
+    {:ok, _} = File.cp_r(source_path, input_path)
+    {:ok, _} = File.cp_r("test/fixtures/digest/priv/output", output_path)
+    :ok = File.cp("test/fixtures/old_manifest.json", output_path <> "/manifest.json")
+
+    assert :ok = Phoenix.Digester.compile(input_path, output_path)
+
+    json =
+      Path.join(output_path, "manifest.json")
+      |> File.read!()
+      |> Poison.decode!()
+
+    File.rm_rf!(output_path)
+
+    assert json["digests"]["foo-d978852bea6530fcd197b5445ed008fd.css"]["logical_path"] == "foo.css"
+    key = Enum.find(Map.keys(json["digests"]), &(&1 =~ ~r"phoenix-[a-fA-F\d]{32}.png")) # gross
+    assert json["digests"][key]["logical_path"] == "phoenix.png"
+    assert is_integer(json["digests"][key]["mtime"])
+    assert json["digests"][key]["size"] == 13900
+    assert json["digests"][key]["digest"] =~ ~r"[a-fA-F\d]{32}"
+    assert json["version"] == 1
   end
 
   test "digests and compress nested files" do
@@ -50,7 +108,7 @@ defmodule Phoenix.DigesterTest do
       Path.join(output_path, "manifest.json")
       |> File.read!()
       |> Poison.decode!()
-    assert json["static/phoenix.png"] =~ ~r"static/phoenix-[a-fA-F\d]{32}\.png"
+    assert json["latest"]["static/phoenix.png"] =~ ~r"static/phoenix-[a-fA-F\d]{32}\.png"
   end
 
   test "doesn't duplicate files when digesting and compressing twice" do

@@ -254,7 +254,14 @@ defmodule Phoenix.Endpoint.Adapter do
       outer = Application.app_dir(endpoint.config(:otp_app), inner)
 
       if File.exists?(outer) do
-        Poison.decode!(File.read!(outer))
+        manifest =
+          outer
+          |> File.read!
+          |> Poison.decode!
+
+        latest = Access.get(manifest, "latest")
+
+        if latest, do: latest, else: manifest
       else
         Logger.error "Could not find static manifest at #{inspect outer}. " <>
                      "Run \"mix phoenix.digest\" after building your static files " <>

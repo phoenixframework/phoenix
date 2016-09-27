@@ -71,7 +71,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
   end
 
   test "warms up caches on load and config change" do
-    assert Endpoint.static_path("/foo.css") == "/foo-abcdef.css?vsn=d"
+    assert Endpoint.static_path("/foo.css") == "/foo-d978852bea6530fcd197b5445ed008fd.css?vsn=d"
 
     # Trigger a config change and the cache should be warmed up again
     config =
@@ -81,6 +81,15 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert Endpoint.config_change([{Endpoint, config}], []) == :ok
 
     assert Endpoint.static_path("/foo.css") == "/foo-ghijkl.css?vsn=d"
+  end
+
+  test "warms up cache from previous manifest format" do
+    config =
+      @config
+      |> put_in([:cache_static_manifest], "../../../../test/fixtures/old_manifest.json")
+
+    assert Endpoint.config_change([{Endpoint, config}], []) == :ok
+    assert Endpoint.static_path("/foo.css") == "/foo-d978852bea6530fcd197b5445ed008fd.css?vsn=d"
   end
 
   test "uses url configuration for static path" do

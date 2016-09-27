@@ -1,5 +1,6 @@
 defmodule Phoenix.Digester do
   @digested_file_regex ~r/(-[a-fA-F\d]{32})/
+  @manifest_version 1
 
   @moduledoc """
   Digests and compresses static files.
@@ -30,7 +31,8 @@ defmodule Phoenix.Digester do
         |> filter_files
         |> Enum.map(&digest/1)
 
-      manifest = generate_manifest(digested_files, output_path)
+      digests = load_digests(output_path)
+      manifest = generate_manifest(digested_files, digests, output_path)
 
       Enum.each(digested_files, &(write_to_disk(&1, manifest, output_path)))
     else
@@ -46,16 +48,67 @@ defmodule Phoenix.Digester do
     |> Enum.map(&(map_file(&1, input_path)))
   end
 
-  defp generate_manifest(files, output_path) do
-    entries = Enum.reduce(files, %{}, fn (file, acc) ->
-      Map.put(acc, manifest_join(file.relative_path, file.filename),
-                   manifest_join(file.relative_path, file.digested_filename))
-    end)
+  defp filter_digested_files(output_path) do
+    output_path
+    |> Path.join("**")
+    |> Path.wildcard
+    |> Enum.filter(&uncompressed_digested_file?/1)
+    |> Enum.map(&(map_digested_file(&1, output_path)))
+  end
 
-    manifest_content = Poison.encode!(entries, [])
+  defp load_digests(output_path) do
+    manifest_path = Path.join(output_path, "manifest.json")
+    if File.exists?(manifest_path) do
+      manifest_path
+      |> File.read!
+      |> Poison.decode!
+      |> get_digest(output_path)
+    else
+      %{}
+    end
+  end
+
+  defp get_digest(manifest = %{version: 1}, _output_path) do
+    Access.get(manifest, "digests")
+  end
+
+  defp get_digest(_manifest, output_path) do
+    output_path
+    |> filter_digested_files
+    |> generate_new_digests
+  end
+
+  defp generate_manifest(files, old_digests, output_path) do
+    latest = Map.new(files, &({
+       manifest_join(&1.relative_path, &1.filename),
+       manifest_join(&1.relative_path, &1.digested_filename)
+    }))
+
+    digests =
+      files
+      |> generate_new_digests
+      |> Map.merge(old_digests)
+
+    manifest_content = Poison.encode!(%{latest: latest, version: @manifest_version, digests: digests}, [])
     File.write!(Path.join(output_path, "manifest.json"), manifest_content)
 
-    entries
+    latest
+  end
+
+  defp generate_new_digests(files) do
+    Map.new(files, &({
+       manifest_join(&1.relative_path, &1.digested_filename),
+       build_digest(&1)
+     }))
+  end
+
+  defp build_digest(file) do
+    %{
+      logical_path: manifest_join(file.relative_path, file.filename),
+      mtime: :calendar.datetime_to_gregorian_seconds(:calendar.universal_time),
+      size: file.size,
+      digest: file.digest,
+    }
   end
 
   defp manifest_join(".", filename),  do: filename
@@ -67,10 +120,32 @@ defmodule Phoenix.Digester do
       Path.basename(file_path) == "manifest.json"
   end
 
+  defp uncompressed_digested_file?(file_path) do
+    Regex.match?(@digested_file_regex, Path.basename(file_path)) ||
+      !Path.extname(file_path) == ".gz"
+  end
+
   defp map_file(file_path, input_path) do
+    {:ok, stats} = File.stat(file_path)
     %{absolute_path: file_path,
       relative_path: Path.relative_to(file_path, input_path) |> Path.dirname(),
       filename: Path.basename(file_path),
+      size: stats.size,
+      content: File.read!(file_path)}
+  end
+
+  defp map_digested_file(file_path, output_path) do
+    {:ok, stats} = File.stat(file_path)
+    digested_filename = Path.basename(file_path)
+    [digest,_] = Regex.run(@digested_file_regex, digested_filename)
+    digest = String.trim_leading(digest, "-")
+
+    %{absolute_path: file_path,
+      relative_path: Path.relative_to(file_path, output_path) |> Path.dirname(),
+      digested_filename: digested_filename,
+      filename: String.replace(digested_filename, @digested_file_regex, ""),
+      digest: digest,
+      size: stats.size,
       content: File.read!(file_path)}
   end
 
@@ -78,7 +153,10 @@ defmodule Phoenix.Digester do
     name = Path.rootname(file.filename)
     extension = Path.extname(file.filename)
     digest = Base.encode16(:erlang.md5(file.content), case: :lower)
-    Map.put(file, :digested_filename, "#{name}-#{digest}#{extension}")
+    Map.merge(file, %{
+      digested_filename: "#{name}-#{digest}#{extension}",
+      digest: digest,
+    })
   end
 
   defp write_to_disk(file, manifest, output_path) do
