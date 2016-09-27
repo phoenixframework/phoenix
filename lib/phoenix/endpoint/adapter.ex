@@ -259,9 +259,8 @@ defmodule Phoenix.Endpoint.Adapter do
           |> File.read!
           |> Poison.decode!
 
-        latest = Access.get(manifest, "latest")
-
-        if latest, do: latest, else: manifest
+        # TODO: No longer support old manifests on Phoenix 1.4
+        manifest["latest"] || manifest
       else
         Logger.error "Could not find static manifest at #{inspect outer}. " <>
                      "Run \"mix phoenix.digest\" after building your static files " <>
