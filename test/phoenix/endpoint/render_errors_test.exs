@@ -91,6 +91,7 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
     assert_received {:plug_conn, :sent}
   end
 
+  @tag :capture_log
   test "call/2 is overridden with no route match while malformed format" do
     assert_raise Phoenix.Router.NoRouteError,
       "no route found for GET /unknown (Phoenix.Endpoint.RenderErrorsTest.Router)", fn ->
@@ -198,12 +199,19 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
     assert conn.resp_body == "Got 500 from throw with GET"
   end
 
-  test "captures warning when format does not match ErrorView" do
+  test "captures warning when format is not supported" do
     assert capture_log(fn ->
       conn(:get, "/")
       |> put_req_header("accept", "unknown/unknown")
       |> render([], fn -> throw :hello end)
-    end) =~ "Using fallback format html to render error. Please customize your Endpoint's :render_errors and :accepts configuration if desired."
+    end) =~ "Could not render errors due to no supported media type in accept header"
+  end
+
+  test "captures warning when format does not match error view" do
+    assert capture_log(fn ->
+      conn(:get, "/?_format=unknown")
+      |> render([], fn -> throw :hello end)
+    end) =~ "Could not render errors due to unknown format \"unknown\""
   end
 
   test "does not capture warning when format does match ErrorView" do
