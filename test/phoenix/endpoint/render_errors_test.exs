@@ -1,6 +1,7 @@
 defmodule Phoenix.Endpoint.RenderErrorsTest do
   use ExUnit.Case, async: true
   use RouterHelper
+  import ExUnit.CaptureLog
 
   view = __MODULE__
 
@@ -195,5 +196,21 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
 
     assert conn.status == 500
     assert conn.resp_body == "Got 500 from throw with GET"
+  end
+
+  test "captures warning when format does not match ErrorView" do
+    assert capture_log(fn ->
+      conn(:get, "/")
+      |> put_req_header("accept", "unknown/unknown")
+      |> render([], fn -> throw :hello end)
+    end) =~ "Using fallback format html to render error. Please customize your Endpoint's :render_errors and :accepts configuration if desired."
+  end
+
+  test "does not capture warning when format does match ErrorView" do
+    assert capture_log(fn ->
+      conn(:get, "/")
+      |> put_req_header("accept", "text/html")
+      |> render([], fn -> throw :hello end)
+    end) == ""
   end
 end

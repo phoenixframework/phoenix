@@ -15,6 +15,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
   @already_sent {:plug_conn, :sent}
   import Plug.Conn
   import Phoenix.Controller
+  require Logger
 
   @doc false
   defmacro __using__(opts) do
@@ -90,7 +91,9 @@ defmodule Phoenix.Endpoint.RenderErrors do
       accepts(conn, Keyword.fetch!(opts, :accepts))
     rescue
       Phoenix.NotAcceptableError ->
-        put_format(conn, Keyword.fetch!(opts, :accepts) |> List.first())
+        fallback_format = Keyword.fetch!(opts, :accepts) |> List.first()
+        Logger.warn("Using fallback format #{fallback_format} to render error. Please customize your Endpoint's :render_errors and :accepts configuration if desired.")
+        put_format(conn, fallback_format)
     end
   end
 
