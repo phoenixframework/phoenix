@@ -408,7 +408,7 @@ defmodule Phoenix.Socket.Transport do
   defp origin_allowed?(_check_origin, %URI{host: nil}, _endpoint),
     do: true
   defp origin_allowed?(true, uri, endpoint),
-    do: compare?(uri.host, endpoint.config(:url)[:host])
+    do: compare?(uri.host, host_to_binary(endpoint.config(:url)[:host]))
   defp origin_allowed?(check_origin, uri, _endpoint) when is_list(check_origin),
     do: origin_allowed?(uri, check_origin)
 
@@ -432,4 +432,7 @@ defmodule Phoenix.Socket.Transport do
     do: String.ends_with?(request_host, allowed_host)
   defp compare_host?(request_host, allowed_host),
     do: request_host == allowed_host
+
+  defp host_to_binary({:system, env_var}), do: host_to_binary(System.get_env(env_var))
+  defp host_to_binary(host), do: host
 end
