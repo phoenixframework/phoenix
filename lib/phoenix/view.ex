@@ -279,8 +279,8 @@ defmodule Phoenix.View do
   """
   def render_many(collection, view, template, assigns \\ %{}) do
     assigns = to_map(assigns)
-    Enum.map(collection, fn model ->
-      render view, template, assign_model(assigns, view, model)
+    Enum.map(collection, fn resource ->
+      render view, template, assign_resource(assigns, view, resource)
     end)
   end
 
@@ -310,19 +310,19 @@ defmodule Phoenix.View do
       end
 
   """
-  def render_one(model, view, template, assigns \\ %{}) do
-    if model != nil do
-      assigns = to_map(assigns)
-      render view, template, assign_model(assigns, view, model)
-    end
+  def render_one(resource, view, template, assigns \\ %{})
+  def render_one(nil, _view, _template, _assigns), do: nil
+  def render_one(resource, view, template, assigns) do
+    assigns = to_map(assigns)
+    render view, template, assign_resource(assigns, view, resource)
   end
 
   defp to_map(assigns) when is_map(assigns), do: assigns
   defp to_map(assigns) when is_list(assigns), do: :maps.from_list(assigns)
 
-  defp assign_model(assigns, view, model) do
+  defp assign_resource(assigns, view, resource) do
     as = Map.get(assigns, :as) || view.__resource__
-    Map.put(assigns, as, model)
+    Map.put(assigns, as, resource)
   end
 
   @doc """

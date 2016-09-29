@@ -26,8 +26,7 @@ defmodule Mix.Tasks.Phx.New do
       option, you will need to manually handle
       JavaScript dependencies if building HTML apps
 
-    * `--no-ecto` - do not generate ecto files for
-      the model layer
+    * `--no-ecto` - do not generate ecto files.
 
     * `--no-html` - do not generate HTML views.
 
