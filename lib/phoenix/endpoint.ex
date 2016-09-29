@@ -455,10 +455,6 @@ defmodule Phoenix.Endpoint do
       # Compile after the debugger so we properly wrap it.
       @before_compile Phoenix.Endpoint
       @phoenix_render_errors var!(config)[:render_errors]
-
-      # TODO remove when https://github.com/elixir-lang/plug/pull/450 is released
-      plug :satisfy_plug_builder
-      defp satisfy_plug_builder(conn, _opts), do: conn
     end
   end
 
