@@ -436,22 +436,13 @@ defmodule Phoenix.Endpoint do
 
   defp plug() do
     quote location: :keep do
-      @behaviour Plug
+      use Plug.Builder
       import Phoenix.Endpoint
 
-      Module.register_attribute(__MODULE__, :plugs, accumulate: true)
       Module.register_attribute(__MODULE__, :phoenix_sockets, accumulate: true)
 
       if force_ssl = Phoenix.Endpoint.__force_ssl__(__MODULE__, var!(config)) do
         plug Plug.SSL, force_ssl
-      end
-
-      def init(opts) do
-        opts
-      end
-
-      def call(conn, _opts) do
-        phoenix_pipeline(conn)
       end
 
       if var!(config)[:debug_errors] do
@@ -465,7 +456,9 @@ defmodule Phoenix.Endpoint do
       @before_compile Phoenix.Endpoint
       @phoenix_render_errors var!(config)[:render_errors]
 
-      defoverridable [init: 1, call: 2]
+      # TODO remove when https://github.com/elixir-lang/plug/pull/450 is released
+      plug :satisfy_plug_builder
+      defp satisfy_plug_builder(conn, _opts), do: conn
     end
   end
 
@@ -591,8 +584,6 @@ defmodule Phoenix.Endpoint do
   @doc false
   defmacro __before_compile__(env) do
     sockets = Module.get_attribute(env.module, :phoenix_sockets)
-    plugs = Module.get_attribute(env.module, :plugs)
-    {conn, body} = Plug.Builder.compile(env, plugs, [])
     otp_app = Module.get_attribute(env.module, :otp_app)
     instrumentation = Phoenix.Endpoint.Instrument.definstrument(otp_app, env.module)
 
@@ -615,8 +606,6 @@ defmodule Phoenix.Endpoint do
         end
       end
 
-      defp phoenix_pipeline(unquote(conn)), do: unquote(body)
-
       @doc """
       Returns all sockets configured in this endpoint.
       """
@@ -627,15 +616,6 @@ defmodule Phoenix.Endpoint do
   end
 
   ## API
-
-  @doc """
-  Stores a plug to be executed as part of the pipeline.
-  """
-  defmacro plug(plug, opts \\ []) do
-    quote do
-      @plugs {unquote(plug), unquote(opts), true}
-    end
-  end
 
   @doc """
   Defines a mount-point for a Socket module to handle channel definitions.
