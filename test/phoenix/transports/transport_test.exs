@@ -1,4 +1,4 @@
-System.put_env("ENDPOINT_TEST_HOST", "example.com")
+System.put_env("ENDPOINT_TEST_HOST", "host.com")
 
 defmodule Phoenix.Transports.TransportTest do
   use ExUnit.Case, async: true
@@ -7,12 +7,10 @@ defmodule Phoenix.Transports.TransportTest do
   alias Phoenix.Socket.Transport
   alias Phoenix.Socket.Message
 
-  @config [
+  Application.put_env :phoenix, __MODULE__.Endpoint, 
     force_ssl: [],
-    url: [host: "host.com"],
+    url: [host: {:system, "ENDPOINT_TEST_HOST"}],
     check_origin: ["//endpoint.com"]
-  ]
-  Application.put_env :phoenix, __MODULE__.Endpoint, @config
 
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
@@ -25,7 +23,6 @@ defmodule Phoenix.Transports.TransportTest do
 
   setup do
     Logger.disable(self())
-    on_exit fn -> Endpoint.config_change([{Endpoint, @config}], []) end
   end
 
   ## on_exit_message
@@ -67,12 +64,7 @@ defmodule Phoenix.Transports.TransportTest do
   end
 
   test "can get the host from system variables" do
-    config = @config
-    |> put_in([:url, :host], {:system, "ENDPOINT_TEST_HOST"})
-
-    Endpoint.config_change([{Endpoint, config}], [])
-    conn = check_origin("https://example.com", check_origin: true)
-    refute conn.halted
+    refute check_origin("https://host.com", check_origin: true).halted
   end
 
   test "wildcard subdomains" do
