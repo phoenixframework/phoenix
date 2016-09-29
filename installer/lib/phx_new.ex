@@ -257,7 +257,7 @@ defmodule Mix.Tasks.Phx.New do
     After npm is installed, install your brunch dependencies by
     running inside your app:
 
-        $ npm install
+        $ cd assets && npm install
 
     If you don't want brunch.io, you can re-run this generator
     with the --no-brunch option.
