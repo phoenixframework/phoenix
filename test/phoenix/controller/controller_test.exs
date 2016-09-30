@@ -282,6 +282,12 @@ defmodule Phoenix.Controller.ControllerTest do
     assert conn.params["_format"] == nil
   end
 
+  test "accepts/2 uses first matching accepts on empty subtype" do
+    conn = accepts with_accept("text/*"), ~w(json text css)
+    assert get_format(conn) == "text"
+    assert conn.params["_format"] == nil
+  end
+
   test "accepts/2 on non-empty */*" do
     # Fallbacks to HTML due to browsers behavior
     conn = accepts with_accept("application/json, */*"), ~w(html json)
