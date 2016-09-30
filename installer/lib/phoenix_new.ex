@@ -427,8 +427,8 @@ defmodule Mix.Tasks.Phoenix.New do
     end
   end
 
-  def check_directory_existence!(name) do
-    if File.dir?(name) && !Mix.shell.yes?("The directory #{name} already exists. Are you sure you want to continue?") do
+  defp check_directory_existence!(name) do
+    if File.dir?(name) and not Mix.shell.yes?("The directory #{name} already exists. Are you sure you want to continue?") do
       Mix.raise "Please select another directory for installation."
     end
   end
