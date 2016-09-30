@@ -25,19 +25,34 @@ defmodule Mix.Tasks.Phoenix.Routes do
   therefore always expect a router to be given.
   """
 
-  def run(args) do
+  def run(args, base \\ Mix.Phoenix.base()) do
     Mix.Task.run "compile", args
-    Mix.shell.info ConsoleFormatter.format(router(args))
+
+    args
+    |> Enum.at(0)
+    |> router(base)
+    |> ConsoleFormatter.format()
+    |> Mix.shell.info()
   end
 
-  defp router(args) do
-    cond do
-      router = Enum.at(args, 0) ->
-        Module.concat("Elixir", router)
-      Mix.Project.umbrella? ->
-        Mix.raise "Umbrella applications require an explicit router to be given to phoenix.routes"
-      true ->
-        Module.concat(Mix.Phoenix.base(), "Router")
+  defp router(nil, base) do
+    if Mix.Project.umbrella?() do
+      Mix.raise "umbrella applications require an explicit router to be given to phoenix.routes"
     end
+    web_router = app_mod(base, "Web.Router")
+    old_router = app_mod(base, "Router")
+
+    loaded(web_router) || loaded(old_router) || Mix.raise """
+    no router found at #{inspect web_router} or #{inspect old_router}.
+    An explicit router module may be given to phoenix.routes.
+    """
   end
+  defp router(router_name, _base) do
+    arg_router = Module.concat("Elixir", router_name)
+    loaded(arg_router) || Mix.raise "the provided router, #{inspect arg_router}, does not exist"
+  end
+
+  defp loaded(module), do: Code.ensure_loaded?(module) && module
+
+  defp app_mod(base, name), do: Module.concat([base, name])
 end
