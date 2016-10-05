@@ -993,7 +993,7 @@ var LongPoll = exports.LongPoll = function () {
 
       Ajax.request("POST", this.endpointURL(), "application/json", body, this.timeout, this.onerror.bind(this, "timeout"), function (resp) {
         if (!resp || resp.status !== 200) {
-          _this9.onerror(status);
+          _this9.onerror(resp && resp.status);
           _this9.closeAndRetry();
         }
       });
