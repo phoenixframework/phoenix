@@ -282,6 +282,12 @@ defmodule Phoenix.Controller.ControllerTest do
     assert conn.params["_format"] == nil
   end
 
+  test "accepts/2 uses first matching accepts on empty subtype" do
+    conn = accepts with_accept("text/*"), ~w(json text css)
+    assert get_format(conn) == "text"
+    assert conn.params["_format"] == nil
+  end
+
   test "accepts/2 on non-empty */*" do
     # Fallbacks to HTML due to browsers behavior
     conn = accepts with_accept("application/json, */*"), ~w(html json)
@@ -300,11 +306,19 @@ defmodule Phoenix.Controller.ControllerTest do
     conn = accepts with_accept("text/plain, application/json, */*"), ~w(json text)
     assert get_format(conn) == "text"
     assert conn.params["_format"] == nil
+
+    conn = accepts with_accept("text/*, application/*, */*"), ~w(json text)
+    assert get_format(conn) == "text"
+    assert conn.params["_format"] == nil
   end
 
   test "accepts/2 ignores invalid media types" do
     conn = accepts with_accept("foo/bar, bar baz, application/json"), ~w(html json)
     assert get_format(conn) == "json"
+    assert conn.params["_format"] == nil
+
+    conn = accepts with_accept("foo/*, */bar, text/*"), ~w(json html)
+    assert get_format(conn) == "html"
     assert conn.params["_format"] == nil
   end
 
@@ -327,6 +341,14 @@ defmodule Phoenix.Controller.ControllerTest do
 
     conn = accepts with_accept("text/html; q=0.7, application/json; q=0.8"), ~w(html json)
     assert get_format(conn) == "json"
+    assert conn.params["_format"] == nil
+
+    conn = accepts with_accept("text/*; q=0.7, application/json"), ~w(html json)
+    assert get_format(conn) == "json"
+    assert conn.params["_format"] == nil
+
+    conn = accepts with_accept("application/json; q=0.7, text/*; q=0.8"), ~w(json html)
+    assert get_format(conn) == "html"
     assert conn.params["_format"] == nil
 
     exception = assert_raise Phoenix.NotAcceptableError, ~r/no supported media type in accept/, fn ->

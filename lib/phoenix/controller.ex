@@ -911,7 +911,7 @@ defmodule Phoenix.Controller do
   defp parse_header_accept(conn, [h|t], acc, accepted) do
     case Plug.Conn.Utils.media_type(h) do
       {:ok, type, subtype, args} ->
-        exts = parse_exts(type <> "/" <> subtype)
+        exts = parse_exts(type, subtype)
         q    = parse_q(args)
 
         if format = (q === 1.0 && find_format(exts, accepted)) do
@@ -949,11 +949,20 @@ defmodule Phoenix.Controller do
     end
   end
 
-  defp parse_exts("*/*" = type), do: type
-  defp parse_exts(type),         do: MIME.extensions(type)
+  defp parse_exts("*", "*"),      do: "*/*"
+  defp parse_exts(type, "*"),     do: type
+  defp parse_exts(type, subtype), do: MIME.extensions(type <> "/" <> subtype)
 
-  defp find_format("*/*", accepted), do: Enum.fetch!(accepted, 0)
-  defp find_format(exts, accepted),  do: Enum.find(exts, &(&1 in accepted))
+  defp find_format("*/*", accepted),                   do: Enum.fetch!(accepted, 0)
+  defp find_format(exts, accepted) when is_list(exts), do: Enum.find(exts, &(&1 in accepted))
+  defp find_format(_type_range, []),                   do: nil
+  defp find_format(type_range, [h|t]) do
+    mime_type = MIME.type(h)
+    case Plug.Conn.Utils.media_type(mime_type) do
+      {:ok, accepted_type, _subtype, _args} when type_range === accepted_type -> h
+      _ -> find_format(type_range, t)
+    end
+  end
 
   @spec refuse(term(), term()) :: no_return()
   defp refuse(_conn, accepted) do
