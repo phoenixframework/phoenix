@@ -189,10 +189,19 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
   end
 
   @tag :capture_log
-  test "exception page with invalid format" do
+  test "exception page is shown even with invalid format" do
     conn =
       conn(:get, "/")
       |> put_req_header("accept", "unknown/unknown")
+      |> render([], fn -> throw :hello end)
+
+    assert conn.status == 500
+    assert conn.resp_body == "Got 500 from throw with GET"
+  end
+
+  test "exception page is shown even with invalid query parameters" do
+    conn =
+      conn(:get, "/?q=%{")
       |> render([], fn -> throw :hello end)
 
     assert conn.status == 500
