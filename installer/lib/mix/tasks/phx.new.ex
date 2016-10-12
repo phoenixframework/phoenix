@@ -145,7 +145,7 @@ defmodule Mix.Tasks.Phx.New do
       webpack_pending = install_webpack(install?, project)
       Task.await(compile, :infinity)
 
-      if Project.webpack?(project) and !System.find_executable("npm") do
+      if Project.webpack?(project) and !elem(node_package_manager(), 0) do
         print_webpack_info(project, generator)
       end
 
@@ -175,9 +175,12 @@ defmodule Mix.Tasks.Phx.New do
   defp install_webpack(install?, project) do
     assets_path = Path.join(project.web_path || project.project_path, "assets")
     webpack_config = Path.join(assets_path, "webpack.config.js")
+    {pkm_available?, pkm_install} = node_package_manager()
+    cd_into_assets_directory = "cd #{relative_app_path(assets_path)}"
+    initial_assets_compilation = "node node_modules/webpack/bin/webpack.js --mode development"
 
-    maybe_cmd "cd #{relative_app_path(assets_path)} && npm install && node node_modules/webpack/bin/webpack.js --mode development",
-              File.exists?(webpack_config), install? && System.find_executable("npm")
+    maybe_cmd Enum.join([cd_into_assets_directory, pkm_install, initial_assets_compilation], " && "),
+              File.exists?(webpack_config), install? && pkm_available?
   end
 
   defp install_mix(install?) do
@@ -192,11 +195,23 @@ defmodule Mix.Tasks.Phx.New do
     Mix.Rebar.rebar_cmd(:rebar) && Mix.Rebar.rebar_cmd(:rebar3)
   end
 
+  defp node_package_manager() do
+    cond do
+      System.find_executable("yarn") -> 
+        {true, "yarn"}
+      System.find_executable("npm") ->
+        {true, "npm install"}
+      true ->
+        {false, "npm install"}
+    end
+  end
+
   defp print_webpack_info(_project, _gen) do
     Mix.shell.info """
     Phoenix uses an optional assets build tool called webpack
-    that requires node.js and npm. Installation instructions for
-    node.js, which includes npm, can be found at http://nodejs.org.
+    that requires node.js and a node package manager. Installation 
+    instructions for node.js, which includes the package manager npm, 
+    can be found at http://nodejs.org.
 
     The command listed next expect that you have npm available.
     If you don't want webpack, you can re-run this generator
