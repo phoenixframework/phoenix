@@ -6,14 +6,17 @@ There are currently a number of built-in Phoenix-specific and ecto-specific mix 
 
 ```console
 $ mix help | grep -i phoenix
-mix phoenix.digest      # Digests and compress static files
-mix phoenix.gen.channel # Generates a Phoenix channel
-mix phoenix.gen.html    # Generates controller, model and views for an HTML based resource
-mix phoenix.gen.json    # Generates a controller and model for a JSON based resource
-mix phoenix.gen.model   # Generates an Ecto model
-mix phoenix.new         # Create a new Phoenix v1.1.2 application
-mix phoenix.routes      # Prints all routes
-mix phoenix.server      # Starts applications and their servers
+mix local.phoenix        # Updates Phoenix locally
+mix phoenix.digest       # Digests and compress static files
+mix phoenix.gen.channel  # Generates a Phoenix channel
+mix phoenix.gen.html     # Generates controller, model and views for an HTML based resource
+mix phoenix.gen.json     # Generates a controller and model for a JSON based resource
+mix phoenix.gen.model    # Generates an Ecto model
+mix phoenix.gen.presence # Generates a Presence tracker
+mix phoenix.gen.secret   # Generates a secret
+mix phoenix.new          # Creates a new Phoenix v1.2.1 application
+mix phoenix.routes       # Prints all routes
+mix phoenix.server       # Starts applications and their servers
 ```
 We have seen all of these at one point or another in the guides, but having all the information about them in one place seems like a good idea. And here we are.
 
@@ -373,6 +376,16 @@ When `phoenix.gen.channel` is done, it helpfully tells us that we need to add a 
 Add the channel to your `web/channels/user_socket.ex` handler, for example:
 
     channel "rooms:lobby", HelloPhoenix.RoomChannel
+```
+
+#### `mix phoenix.gen.presence`
+
+This task will generate a Presence tracker. The module name can be passed as an argument, 
+`Presence` is used if no module name is passed.
+
+```console
+$ mix phoenix.gen.presence Presence
+$ web/channels/presence.ex
 ```
 
 #### `mix phoenix.routes`
