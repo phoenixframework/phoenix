@@ -1,3 +1,5 @@
+# Seeding Data
+
 When creating an app, it's important that we're able to seed our datastore with some initial data (e.g., for early development work or pre-launch testing purposes).
 
 Fortunately, Phoenix already provides us with a convention for seeding data. By default Phoenix generates a script file for each app at `priv/repo/seeds.exs`, which we can use to populate our datastore.

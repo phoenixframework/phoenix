@@ -1,3 +1,5 @@
+# Adding Pages
+
 Our task for this guide is to add two new pages to our Phoenix application. One will be a purely static page, and the other will take part of the path from the URL as input and pass it through to a template for display. Along the way, we will gain familiarity with the basic components of a Phoenix application: the router, controllers, views, and templates.
 
 When Phoenix generates a new application for us, it builds a top-level directory structure like this:

@@ -1,3 +1,5 @@
+# Ecto Models
+
 Most web applications today need some form of data storage. In the Elixir ecosystem, we have Ecto to enable this. Ecto currently has adapters for the following databases:
 
 * PostgreSQL

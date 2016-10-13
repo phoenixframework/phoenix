@@ -1,3 +1,5 @@
+# Sending Email with SMTP
+
 Sending email from a Phoenix application is easy with SMTP and community
 libraries.
 

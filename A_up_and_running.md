@@ -1,3 +1,5 @@
+# Up and Running
+
 The aim of this first guide is to get a Phoenix application up and running as quickly as possible.
 
 Before we begin, please take a minute to read the [Installation Guide](http://www.phoenixframework.org/docs/installation). By installing any necessary dependencies beforehand, we'll be able to get our application up and running smoothly.

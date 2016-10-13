@@ -1,3 +1,5 @@
+# Community
+
 The Elixir and Phoenix communities are friendly and welcoming. All questions and comments are valuable, so please come join the discussion!
 
 There are a number of places to connect with community members at all experience levels.

@@ -1,3 +1,5 @@
+# Routing
+
 Routers are the main hubs of Phoenix applications. They match HTTP requests to controller actions, wire up real-time channel handlers, and define a series of pipeline transformations for scoping middleware to sets of routes.
 
 The router file that Phoenix generates, `web/router.ex`, will look something like this one:

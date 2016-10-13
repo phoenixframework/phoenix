@@ -1,3 +1,5 @@
+# Sessions
+
 Phoenix gets its session functionality from Plug. Plug ships with two forms of session storage out of the box - cookies, and Erlang Term Storage (ETS).
 
 ## Cookies

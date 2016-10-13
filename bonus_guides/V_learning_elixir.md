@@ -1,3 +1,5 @@
+# Learning Elixir and Erlang
+
 Here is a selected list of resources to help with learning Elixir and Erlang.
 
 ## Elixir

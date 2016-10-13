@@ -1,3 +1,5 @@
+# Custom Errors
+
 Phoenix provides an `ErrorView`, `web/views/error_view.ex`, to render errors in our applications. The full module name will include the name of our application, as in `HelloPhoenix.ErrorView`.
 
 Phoenix will detect any 400 or 500 status level errors in our application and use the `render/2` function in our `ErrorView` to render an appropriate error template. We get default implementations for 404 and 500 HTML errors, but we can add any clauses to `render/2` that we might need. Any errors which don't match an existing clause of `render/2` will be caught by `template_not_found/2`.

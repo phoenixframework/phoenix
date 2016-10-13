@@ -1,3 +1,5 @@
+# Testing Models
+
 In the [Ecto Models Guide](http://www.phoenixframework.org/docs/ecto-models) we generated an HTML resource for users. This gave us a number of modules for free, including a user model and a user model test case. In this guide, we'll use the model and test case to work through the changes we made in the Ecto Models Guide in a test-driven way.
 
 For those of us who haven't worked through the Ecto Models Guide, it's easy to catch up. Please see the "Generating an HTML Resource" section below.

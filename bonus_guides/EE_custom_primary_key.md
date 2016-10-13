@@ -1,3 +1,5 @@
+# Custom Primary Keys
+
 Sometimes we inherit a legacy database on top of which we need to build a new application. We can't control how these databases were created, and changing them to meet our current needs can be both difficult and expensive.
 
 Ecto expects each table to have an auto-incremented integer for a primary key. What if our legacy database requires a string as the primary key instead? No problem. We can create our models with a custom primary key, and Ecto will work just the same as if we had an integer.

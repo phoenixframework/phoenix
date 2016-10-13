@@ -1,3 +1,5 @@
+# Configuration
+
 Since our Phoenix apps are simply Elixir applications, they  have the same configuration and structure as other Mix projects. Recall that Mix is the build tool used by most Elixir apps.
 
 #### .ex and .exs Files Types
@@ -6,7 +8,7 @@ The config for our Phoenix app is stored in a combination of `.ex` and `.exs` fi
 
 Our `.exs` files are compiled in memory each time they are run (such as on reload), which makes them ideal for storing configuration details and scripts that change often (such as standalone tasks during development).
 
-Whereas `.ex` files are compiled to `.beam` files that run on the Erlang Virtual Machine (BEAM), which makes them useful for storing higher level configuration that changes less frequently (such as endpoint and OTP supervisor/worker config). 
+Whereas `.ex` files are compiled to `.beam` files that run on the Erlang Virtual Machine (BEAM), which makes them useful for storing higher level configuration that changes less frequently (such as endpoint and OTP supervisor/worker config).
 
 
 #### Config Files and Environments
@@ -33,7 +35,7 @@ import_config "#{Mix.env}.exs"
 
 `test.exs`, which is used to store any config details specific to our testing environment.
 
-We should open each of these files and familiarize ourselves with the contents. 
+We should open each of these files and familiarize ourselves with the contents.
 
 In addition to these default development (`dev.exs`), test (`test.exs`) and production (`prod.exs`) environment configurations, Phoenix supports the use of custom environment configurations that we can manually add as we get more advanced.
 

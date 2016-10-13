@@ -1,3 +1,5 @@
+# Controllers
+
 Phoenix controllers act as intermediary modules. Their functions - called actions - are invoked from the router in response to HTTP requests. The actions, in turn, gather all the necessary data and perform all the necessary steps before invoking the view layer to render a template or returning a JSON response.
 
 Phoenix controllers also build on the Plug package, and are themselves plugs. Controllers provide the functions to do almost anything we need to in an action. If we do find ourselves looking for something that Phoenix controllers don't provide; however, we might find what we're looking for in Plug itself. Please see the [Plug Guide](http://www.phoenixframework.org/docs/understanding-plug) or [Plug Documentation](http://hexdocs.pm/plug/) for more information.

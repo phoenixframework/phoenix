@@ -1,3 +1,5 @@
+# Mix Tasks
+
 There are currently a number of built-in Phoenix-specific and ecto-specific mix tasks available to us within a newly-generated application. We can also create our own application specific tasks.
 
 ## Phoenix Specific Mix Tasks

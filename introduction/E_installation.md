@@ -1,3 +1,5 @@
+# Installation
+
 In the [Overview Guide](http://www.phoenixframework.org/docs/overview) we got a look at the Phoenix ecosystem and how the pieces interrelate. Now it's time to install any software we might need before we jump into the [Up and Running Guide](http://www.phoenixframework.org/docs/up-and-running).
 
 Please take a look at this list and make sure to install anything necessary for your system. Having dependencies installed in advance can prevent frustrating problems later on.

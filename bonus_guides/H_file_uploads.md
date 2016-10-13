@@ -1,3 +1,5 @@
+# File Uploads
+
 One common task for web applications is uploading files. These files might be images, videos, PDFs, or files of any other type. In order to upload files through an HTML interface, we need a `file` input tag in a multipart form.
 
 Plug provides a `Plug.Upload` struct to hold the data from the `file` input. A `Plug.Upload` struct will automatically appear in our request parameters if a user has selected a file when they submit the form.

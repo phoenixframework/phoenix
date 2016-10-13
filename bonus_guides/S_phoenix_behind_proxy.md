@@ -1,3 +1,5 @@
+# Using a Proxy Server
+
 In order to serve an application behind a proxy webserver such as `nginx` or `apache`, we will need to configure a specific port for our application to listen on.
 
 There are two ways we can approach this. If we are sure that we can pick a port number which will not need to change, we can hard-code it as `http: [port: 8080]` line of our `config/prod.exs` file.

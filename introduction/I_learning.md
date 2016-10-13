@@ -1,3 +1,5 @@
+# Learning
+
 Here's a list of other resources for learning about Phoenix and some of the projects it depends on.
 
 ## Phoenix

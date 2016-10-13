@@ -1,3 +1,5 @@
+# Testing Channels
+
 As developers we typically value tests since they help to 'future-proof' our applications by
 minimizing regression and provide updated documentation. Phoenix recognizes this and helps
 make it easier to write tests by providing conveniences for testing its different parts,
