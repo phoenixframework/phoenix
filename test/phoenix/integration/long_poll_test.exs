@@ -216,7 +216,7 @@ defmodule Phoenix.Integration.LongPollTest do
       Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
       session = join("/ws", "room:lobby", @mode)
 
-      # Publish successfuly
+      # Publish successfully
       resp = poll :post, "/ws", session, %{
         "topic" => "room:lobby",
         "event" => "new_msg",

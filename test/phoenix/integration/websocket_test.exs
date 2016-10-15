@@ -113,7 +113,7 @@ defmodule Phoenix.Integration.WebSocketTest do
     :ok
   end
 
-  test "endpoint handles mulitple mount segments" do
+  test "endpoint handles multiple mount segments" do
     {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/admin/websocket")
     WebsocketClient.join(sock, "room:admin-lobby", %{})
     assert_receive %Message{event: "phx_reply",

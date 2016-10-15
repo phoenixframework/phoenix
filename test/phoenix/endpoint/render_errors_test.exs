@@ -101,7 +101,7 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
     assert_received {:plug_conn, :sent}
   end
 
-  test "call/2 is overridden and unwrapps wrapped errors" do
+  test "call/2 is overridden and unwraps wrapped errors" do
     assert_raise ArgumentError, "oops", fn ->
       conn(:get, "/send_and_wrapped") |> Router.call([])
     end
