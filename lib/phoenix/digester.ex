@@ -186,8 +186,8 @@ defmodule Phoenix.Digester do
 
   defp digested_contents(file, manifest) do
     case Path.extname(file.filename) do
-      ".css" -> digest_asset_references(:css, file, manifest)
-      ".js" -> digest_asset_references(:js, file, manifest)
+      ".css" -> digest_stylesheet_asset_references(file, manifest)
+      ".js" -> digest_javascript_asset_references(file, manifest)
       _ -> file.content
     end
   end
@@ -195,7 +195,7 @@ defmodule Phoenix.Digester do
   @stylesheet_url_regex ~r{(url\(\s*)(\S+?)(\s*\))}
   @quoted_text_regex ~r{\A(['"])(.+)\1\z}
 
-  defp digest_asset_references(:css, file, manifest) do
+  defp digest_stylesheet_asset_references(file, manifest) do
     Regex.replace(@stylesheet_url_regex, file.content, fn _, open, url, close ->
       case Regex.run(@quoted_text_regex, url) do
         [_, quote_symbol, url] ->
@@ -206,11 +206,11 @@ defmodule Phoenix.Digester do
     end)
   end
 
-  @javascript_sourceMap_regex ~r{(//#\s*sourceMappingURL=)(\S+)}
+  @javascript_source_map_regex ~r{(//#\s*sourceMappingURL=)(\S+)}
 
-  defp digest_asset_references(:js, file, manifest) do
-    Regex.replace(@javascript_sourceMap_regex, file.content, fn _, sourceMapText, url ->
-      sourceMapText <> digested_url(url, file, manifest, false)
+  defp digest_javascript_asset_references(file, manifest) do
+    Regex.replace(@javascript_source_map_regex, file.content, fn _, source_map_text, url ->
+      source_map_text <> digested_url(url, file, manifest, false)
     end)
   end
 
