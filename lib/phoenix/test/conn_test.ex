@@ -292,7 +292,7 @@ defmodule Phoenix.ConnTest do
 
   ## Examples
 
-      # Assert we have an html repsonse with utf-8 charset
+      # Assert we have an html response with utf-8 charset
       assert response_content_type(conn, :html) =~ "charset=utf-8"
 
   """

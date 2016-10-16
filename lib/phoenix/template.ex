@@ -30,7 +30,7 @@ defmodule Phoenix.Template do
 
   ## Rendering
 
-  In some cases, you will want to overide the `render/2` clause
+  In some cases, you will want to override the `render/2` clause
   to compose the assigns for the template before rendering. In such
   cases, you can render the template directly by calling the generated
   private function `render_template/2`. For example:
