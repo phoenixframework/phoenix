@@ -185,35 +185,43 @@ defmodule Phoenix.Digester do
   end
 
   defp digested_contents(file, manifest) do
-    if Path.extname(file.filename) == ".css" do
-      digest_asset_references(file, manifest)
-    else
-      file.content
+    case Path.extname(file.filename) do
+      ".css" -> digest_stylesheet_asset_references(file, manifest)
+      ".js" -> digest_javascript_asset_references(file, manifest)
+      _ -> file.content
     end
   end
 
   @stylesheet_url_regex ~r{(url\(\s*)(\S+?)(\s*\))}
   @quoted_text_regex ~r{\A(['"])(.+)\1\z}
 
-  defp digest_asset_references(file, manifest) do
+  defp digest_stylesheet_asset_references(file, manifest) do
     Regex.replace(@stylesheet_url_regex, file.content, fn _, open, url, close ->
       case Regex.run(@quoted_text_regex, url) do
         [_, quote_symbol, url] ->
-          open <> quote_symbol <> digested_url(url, file, manifest) <> quote_symbol <> close
+          open <> quote_symbol <> digested_url(url, file, manifest, true) <> quote_symbol <> close
         nil ->
-          open <> digested_url(url, file, manifest) <> close
+          open <> digested_url(url, file, manifest, true) <> close
       end
     end)
   end
 
-  defp digested_url("/" <> relative_path, _file, manifest) do
+  @javascript_source_map_regex ~r{(//#\s*sourceMappingURL=)(\S+)}
+
+  defp digest_javascript_asset_references(file, manifest) do
+    Regex.replace(@javascript_source_map_regex, file.content, fn _, source_map_text, url ->
+      source_map_text <> digested_url(url, file, manifest, false)
+    end)
+  end
+
+  defp digested_url("/" <> relative_path, _file, manifest, with_vsn?) do
     case Map.fetch(manifest, relative_path) do
-      {:ok, digested_path} -> "/" <> digested_path <> "?vsn=d"
+      {:ok, digested_path} -> relative_digested_path(digested_path, with_vsn?)
       :error -> "/" <> relative_path
     end
   end
 
-  defp digested_url(url, file, manifest) do
+  defp digested_url(url, file, manifest, with_vsn?) do
     case URI.parse(url) do
       %URI{scheme: nil, host: nil} ->
         manifest_path =
@@ -224,14 +232,28 @@ defmodule Phoenix.Digester do
 
         case Map.fetch(manifest, manifest_path) do
           {:ok, digested_path} ->
-            url
-            |> Path.dirname()
-            |> Path.join(Path.basename(digested_path))
-            |> Kernel.<>("?vsn=d")
+            absolute_digested_url(url, digested_path, with_vsn?)
           :error -> url
         end
       _ -> url
     end
+  end
+
+  defp relative_digested_path(digested_path, true), do: relative_digested_path(digested_path) <> "?vsn=d"
+  defp relative_digested_path(digested_path, false), do: relative_digested_path(digested_path)
+  defp relative_digested_path(digested_path), do: "/" <> digested_path
+
+  defp absolute_digested_url(url, digested_path, true) do
+    absolute_digested_url(url, digested_path) <> "?vsn=d"
+  end
+
+  defp absolute_digested_url(url, digested_path, false) do
+    absolute_digested_url(url, digested_path)
+  end
+  defp absolute_digested_url(url, digested_path) do
+    url
+    |> Path.dirname()
+    |> Path.join(Path.basename(digested_path))
   end
 
   @doc """
