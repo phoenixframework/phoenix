@@ -144,6 +144,26 @@ defmodule Phoenix.DigesterTest do
       assert digested_js =~ ~r"#{digested_js_map_filename}$"
     end
 
+    test "digests file url paths found within javascript mapping files" do
+      input_path = "test/fixtures/digest/priv/static/"
+      assert :ok = Phoenix.Digester.compile(input_path, @output_path)
+
+      digested_js_map_filename =
+        assets_files(@output_path)
+        |> Enum.find(&(&1 =~ ~r"app.js-#{@hash_regex}.map"))
+
+      digested_js_filename =
+        assets_files(@output_path)
+        |> Enum.find(&(&1 =~ ~r"app-#{@hash_regex}.js"))
+
+      digested_js_map =
+        Path.join(@output_path, digested_js_map_filename)
+        |> File.read!()
+
+      refute digested_js_map =~ ~r"\"file\":\"app.js\""
+      assert digested_js_map =~ ~r"#{digested_js_filename}"
+    end
+
     test "does not digest assets within undigested files" do
       input_path = "test/fixtures/digest/priv/static/"
       assert :ok = Phoenix.Digester.compile(input_path, @output_path)

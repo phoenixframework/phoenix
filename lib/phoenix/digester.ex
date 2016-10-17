@@ -187,7 +187,8 @@ defmodule Phoenix.Digester do
   defp digested_contents(file, manifest) do
     case Path.extname(file.filename) do
       ".css" -> digest_stylesheet_asset_references(file, manifest)
-      ".js" -> digest_javascript_asset_references(file, manifest)
+      ".js"  -> digest_javascript_asset_references(file, manifest)
+      ".map" -> digest_javascript_map_asset_references(file, manifest)
       _ -> file.content
     end
   end
@@ -206,11 +207,19 @@ defmodule Phoenix.Digester do
     end)
   end
 
-  @javascript_source_map_regex ~r{(//#\s*sourceMappingURL=)(\S+)}
+  @javascript_source_map_regex ~r{(//#\s*sourceMappingURL=\s*)(\S+)}
 
   defp digest_javascript_asset_references(file, manifest) do
     Regex.replace(@javascript_source_map_regex, file.content, fn _, source_map_text, url ->
       source_map_text <> digested_url(url, file, manifest, false)
+    end)
+  end
+
+  @javascript_map_file_regex ~r{(['"]file['"]:['"])([^,"']+)(['"])}
+
+  defp digest_javascript_map_asset_references(file, manifest) do
+    Regex.replace(@javascript_map_file_regex, file.content, fn _, open_text, url, close_text ->
+      open_text <> digested_url(url, file, manifest, false) <> close_text
     end)
   end
 
