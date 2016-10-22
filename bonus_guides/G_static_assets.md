@@ -230,7 +230,7 @@ There are many more nice tricks we can do with Brunch which are not covered in t
 - Instead of manually copying third-party libraries into `web/static/vendor` we can [use Bower to download and install them](https://github.com/brunch/brunch-guide/blob/master/content/en/chapter05-using-third-party-registries.md).
 
 
-Should we want one of these, please read [the Brunch documentation](https://github.com/brunch/brunch/tree/master/docs).
+Should we want one of these, please read [the Brunch documentation](http://brunch.io/docs/getting-started).
 
 #### Phoenix Without Brunch
 
