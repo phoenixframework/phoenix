@@ -74,7 +74,7 @@ lib
 └── hello_phoenix.ex
 ```
 
-Unlike the `web` directory, Phoenix won't recompile files inside of `lib` when there is a new web request. This is intentional! The distinction between `web` and `lib` provides a convention for the different ways that we handle state inside of our application. The 'web' directory contains anything whose state lasts for the duration of a web request. The `lib` directory contains both shared modules and anything that needs to manage state outside of the duration of a web request.
+Unlike the `web` directory, Phoenix won't recompile files inside of `lib` when there is a new web request. This is intentional! The distinction between `web` and `lib` provides a convention for the different ways that we handle state inside of our application. The `web` directory contains anything whose state lasts for the duration of a web request. The `lib` directory contains both shared modules and anything that needs to manage state outside of the duration of a web request.
 
 Enough prep, let's get on with our first new Phoenix page!
 
