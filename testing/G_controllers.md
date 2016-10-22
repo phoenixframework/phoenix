@@ -92,8 +92,8 @@ defmodule HelloPhoenix.UserControllerTest do
 
     Enum.each(users, &Repo.insert!(&1))
 
-    response = conn
-    |> get(user_path(conn, :index))
+    response = build_conn
+    |> get(user_path(build_conn, :index))
     |> json_response(200)
 
     expected = %{
@@ -194,8 +194,8 @@ test "Reponds with a newly created user if the user is found", %{conn: conn} do
   user = User.changeset(%User{}, %{name: "John", email: "john@example.com"})
   |> Repo.insert!
 
-  response = conn
-  |> get(user_path(conn, :show, user.id))
+  response = build_conn
+  |> get(user_path(build_conn, :show, user.id))
   |> json_response(200)
 
   expected = %{ "data" => %{ "name" => "John", "email" => "john@example.com" } }
@@ -260,8 +260,8 @@ Walking through our TDD steps, we add a test that supplies a non existent user i
 
 ```elixir
 test "Responds with a message indicating user not found", %{conn: conn} do
-  response = conn
-  |> get(user_path(conn, :show, 300))
+  response = build_conn
+  |> get(user_path(build_conn, :show, 300))
   |> json_response(404)
 
   expected = %{ "error" => "User not found." }
