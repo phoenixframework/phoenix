@@ -16,21 +16,30 @@ Most of our work in this guide will be in the `web` directory, which looks like 
 
 ```text
 ├── channels
+    └── user_socket.ex
 ├── controllers
 │   └── page_controller.ex
 ├── models
 ├── static
-├── router.ex
+│   ├── assets
+│   |   ├── images
+|   |   |   └── phoenix.png
+|   |   └── favicon.ico
+|   |   └── robots.txt
+│   |   ├── vendor
 ├── templates
 │   ├── layout
 │   │   └── app.html.eex
 │   └── page
 │       └── index.html.eex
 └── views
+|   ├── error_helpers.ex
 |   ├── error_view.ex
 |   ├── layout_view.ex
 |   └── page_view.ex
-└── web.ex
+├── router.ex
+├── gettext.ex
+├── web.ex
 ```
 
 All of the files which are currently in the `controllers`, `templates`, and `views` directories are there to create the "Welcome to Phoenix!" page we saw in the last guide. We will see how we can re-use some of that code shortly. By convention, in the development environment, anything in the `web` directory will be automatically recompiled when there is a new web request.
@@ -47,12 +56,12 @@ priv
 ```text
 web
 └── static
-    ├── css
-    |   └── app.css
-    ├── js
-    │   └── app.js
-    └── vendor
-        └── phoenix.js
+    ├── assets
+    |   ├── css
+    |   |   └── app.css
+    |   ├── js
+    |   │   └── app.js
+    |   └── vendor
 ```
 
 The `lib` directory also contains files we should know about. Our application's endpoint is at `lib/hello_phoenix/endpoint.ex`, and our application file (which starts our application and its supervision tree) is at `lib/hello_phoenix.ex`.
@@ -74,9 +83,11 @@ Enough prep, let's get on with our first new Phoenix page!
 Routes map unique HTTP verb/path pairs to controller/action pairs which will handle them. Phoenix generates a router file for us in new applications at `web/router.ex`. This is where we will be working for this section.
 
 The route for our "Welcome to Phoenix!" page from the previous Up And Running Guide looks like this.
+
 ```elixir
 get "/", PageController, :index
 ```
+
 Let's digest what this route is telling us. Visiting [http://localhost:4000/](http://localhost:4000/) issues an HTTP `GET` request to the root path. All requests like this will be handled by the `index` function in the `HelloPhoenix.PageController` module defined in `web/controllers/page_controller.ex`.
 
 The page we are going to build will simply say "Hello World, from Phoenix!" when we point our browser to [http://localhost:4000/hello](http://localhost:4000/hello).
@@ -112,6 +123,7 @@ defmodule HelloPhoenix.Router do
 end
 
 ```
+
 For now, we'll ignore the pipelines and the use of `scope` here and just focus on adding a route. (We cover these topics in the [Routing Guide](http://www.phoenixframework.org/docs/routing), if you're curious.)
 
 Let's add a new route to the router that maps a `GET` request for `/hello` to the `index` action of a soon-to-be-created `HelloPhoenix.HelloController`:
@@ -174,7 +186,7 @@ end
 
 Phoenix templates are just that, templates into which data can be rendered. The standard templating engine Phoenix uses is EEx, which stands for [Embedded Elixir](http://elixir-lang.org/docs/stable/eex/). All of our template files will have the `.eex` file extension.
 
-Templates are scoped to a view, which are scoped to controller. In practice, this simply means that we create a directory named after the controller in the `web/templates` directory. For our hello page, that means we need to create a `hello` directory under `web/templates` and then create an `index.html.eex` file within it.
+Templates are scoped to a view, which are scoped to controller. Phoenix creates a `web/templates` directory where we can put all these. It is best to namespace these for organization, so for our hello page, that means we need to create a `hello` directory under `web/templates` and then create an `index.html.eex` file within it.
 
 Let's do that now. Create `web/templates/hello/index.html.eex` and make it look like this:
 
@@ -226,6 +238,7 @@ def show(conn, %{"messenger" => messenger}) do
   render conn, "show.html", messenger: messenger
 end
 ```
+
 There are a couple of things to notice here. We pattern match against the params passed into the show function so that the `messenger` variable will be bound to the value we put in the `:messenger` position in the URL. For example, if our URL is [http://localhost:4000/hello/Frank](http://localhost:4000/hello/Frank), the messenger variable would be bound to `Frank`.
 
 Within the body of the `show` action, we also pass a third argument into the render function, a key/value pair where `:messenger` is the key, and the `messenger` variable is passed as the value.
