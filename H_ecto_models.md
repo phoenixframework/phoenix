@@ -247,7 +247,7 @@ Let's take a closer look at our default changeset.
 ```
 Right now, we have two transformations in our pipeline to this model.
 In the first call, we invoke `cast/3` to send in our parameters and which fields are required for validation.
-`cast/3` first takes a struct, then the parameters are the proposed considered updates, and the final field is the list of columns to be updated.
+`cast/3` first takes a struct, then the parameters (the proposed updates), and then the final field is the list of columns to be updated.
 `cast/3` also will only take fields that exist in the schema.
 Next, `validate_required/3` checks that this list of fields is present in the changeset that `cast/3` returns.
 By default with the generator, all fields are required.
