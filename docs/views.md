@@ -308,7 +308,7 @@ defmodule HelloPhoenix.PageController do
 end
 ```
 
-Here, we have our `show/2` and `index/2` actions returning static page data. Instead of passing in `"show.html"` to `render/2` as the template name, we pass `"show.json"`.  This way, we can have views that are responsible for rendering HTML as well as JSON by pattern matching on different file types.
+Here, we have our `show/2` and `index/2` actions returning static page data. Instead of passing in `"show.html"` to `render/3` as the template name, we pass `"show.json"`.  This way, we can have views that are responsible for rendering HTML as well as JSON by pattern matching on different file types.
 
 ```elixir
 defmodule HelloPhoenix.PageView do
