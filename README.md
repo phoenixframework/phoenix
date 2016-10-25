@@ -4,6 +4,7 @@
 
 [![Build Status](https://api.travis-ci.org/phoenixframework/phoenix.svg)](https://travis-ci.org/phoenixframework/phoenix)
 [![Inline docs](http://inch-ci.org/github/phoenixframework/phoenix.svg)](http://inch-ci.org/github/phoenixframework/phoenix)
+[![Slack Chat](https://img.shields.io/badge/Chat-Slack-ff69b4.svg "Join us. Anyone is welcome!")](https://elixir-slackin.herokuapp.com/)
 
 ## Getting started
 
@@ -55,7 +56,6 @@ $ MIX_ENV=docs mix docs
 ## Important links
 
 * [#elixir-lang][1] on [Freenode][2] IRC
-* [elixir-lang slack channel][3]
 * [Issue tracker][4]
 * [phoenix-talk Mailing list (questions)][5]
 * [phoenix-core Mailing list (development)][6]
@@ -63,7 +63,6 @@ $ MIX_ENV=docs mix docs
 
   [1]: https://webchat.freenode.net/?channels=#elixir-lang
   [2]: http://www.freenode.net/
-  [3]: https://elixir-slackin.herokuapp.com/
   [4]: https://github.com/phoenixframework/phoenix/issues
   [5]: http://groups.google.com/group/phoenix-talk
   [6]: http://groups.google.com/group/phoenix-core
