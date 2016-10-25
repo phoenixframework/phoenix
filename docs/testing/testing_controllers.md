@@ -86,7 +86,7 @@ defmodule HelloPhoenix.UserControllerTest do
 
   alias HelloPhoenix.{Repo, User}
 
-  test "index/2 responds with all Users", %{conn: conn} do
+  test "index/2 responds with all Users" do
     users = [ User.changeset(%User{}, %{name: "John", email: "john@example.com"}),
               User.changeset(%User{}, %{name: "Jane", email: "jane@example.com"}) ]
 
@@ -106,7 +106,7 @@ defmodule HelloPhoenix.UserControllerTest do
     assert response == expected
   end
 ```
-Let's take a look at what's going on here. Each test gets a map with a test conn passed into it, so we pattern match on that to get our conn.  We build our users, and use the `get` function to make a `GET` request to our `UserController` index action, which is piped into `json_response/2` along with the expected HTTP status code.  This will return the JSON from the response body, when everything is wired up properly. We represent the JSON we want the controller action to return with the variable `expected`, and assert that the `response` and `expected` are the same.
+Let's take a look at what's going on here. We build our users, and use the `get` function to make a `GET` request to our `UserController` index action, which is piped into `json_response/2` along with the expected HTTP status code.  This will return the JSON from the response body, when everything is wired up properly. We represent the JSON we want the controller action to return with the variable `expected`, and assert that the `response` and `expected` are the same.
 
 Our expected data is a JSON response with a top level key of `"data"` containing an array of users that have `"name"` and `"email"` properties.
 
@@ -190,7 +190,7 @@ Our first `show/2` test result is, as expected, not yet implemented.
 Let's build a test around what we think a successful `show/2` should look like.
 
 ```elixir
-test "Reponds with a newly created user if the user is found", %{conn: conn} do
+test "Reponds with a newly created user if the user is found" do
   user = User.changeset(%User{}, %{name: "John", email: "john@example.com"})
   |> Repo.insert!
 
@@ -259,7 +259,7 @@ Try this one on your own and see what you come up with.  One possible solution w
 Walking through our TDD steps, we add a test that supplies a non existent user id to `user_path` which returns a 404 status and an error message:
 
 ```elixir
-test "Responds with a message indicating user not found", %{conn: conn} do
+test "Responds with a message indicating user not found" do
   response = build_conn
   |> get(user_path(build_conn, :show, 300))
   |> json_response(404)
