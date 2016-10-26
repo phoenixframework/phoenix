@@ -161,5 +161,5 @@ defmodule Phoenix.Token do
     KeyGenerator.generate(secret_key_base, salt, key_opts)
   end
 
-  defp now_ms, do: System.system_time(:milli_seconds)
+  defp now_ms, do: System.system_time(:milliseconds)
 end
