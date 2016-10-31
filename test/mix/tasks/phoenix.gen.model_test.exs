@@ -107,7 +107,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
         assert file =~ "use Phoenix.Web, :model"
         assert file =~ "schema \"posts\" do"
         assert file =~ "field :title, :string"
-        assert file =~ "belongs_to :user, Phoenix.User"
+        assert file =~ "belongs_to :user, Phoenix.User, foreign_key: :user_id"
       end
     end
   end
