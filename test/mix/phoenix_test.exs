@@ -26,7 +26,7 @@ defmodule Mix.PhoenixTest do
       "name:text",
       "date_of_birth:date",
       "happy_hour:time",
-      "joined:datetime",
+      "joined:naive_datetime",
       "token:uuid"
     ]
     assert Mix.Phoenix.attrs(attrs) == [
@@ -39,13 +39,13 @@ defmodule Mix.PhoenixTest do
       name: :text,
       date_of_birth: :date,
       happy_hour: :time,
-      joined: :datetime,
+      joined: :naive_datetime,
       token: :uuid
     ]
   end
 
   test "attrs/1 raises with an unknown type" do
-    assert_raise(Mix.Error, "Unknown type `other` given to generator", fn ->
+    assert_raise(Mix.Error, ~r"Unknown type `other` given to generator", fn ->
       Mix.Phoenix.attrs(["other:other"])
     end)
   end
@@ -61,7 +61,7 @@ defmodule Mix.PhoenixTest do
       name: :text,
       date_of_birth: :date,
       happy_hour: :time,
-      joined: :datetime,
+      joined: :naive_datetime,
       token: :uuid,
       other: :other
     ]
@@ -74,8 +74,8 @@ defmodule Mix.PhoenixTest do
       meta: %{},
       name: "some content",
       date_of_birth: %{year: 2010, month: 4, day: 17},
-      happy_hour: %{hour: 14, min: 0, sec: 0},
-      joined: %{year: 2010, month: 4, day: 17, hour: 14, min: 0, sec: 0},
+      happy_hour: %{hour: 14, minute: 0, second: 0},
+      joined: %{year: 2010, month: 4, day: 17, hour: 14, minute: 0, second: 0},
       token: "7488a646-e31f-11e4-aace-600308960662",
       other: "some content"
     }

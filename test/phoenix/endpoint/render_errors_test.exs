@@ -1,6 +1,7 @@
 defmodule Phoenix.Endpoint.RenderErrorsTest do
   use ExUnit.Case, async: true
   use RouterHelper
+  import ExUnit.CaptureLog
 
   view = __MODULE__
 
@@ -10,6 +11,10 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
 
   def render("404.html", %{kind: kind, reason: _reason, stack: _stack, conn: conn}) do
     "Got 404 from #{kind} with #{conn.method}"
+  end
+
+  def render("404.json", %{kind: kind, reason: _reason, stack: _stack, conn: conn}) do
+    %{error: "Got 404 from #{kind} with #{conn.method}"}
   end
 
   def render("415.html", %{kind: kind, reason: _reason, stack: _stack, conn: conn}) do
@@ -26,7 +31,7 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
 
   defmodule Router do
     use Plug.Router
-    use Phoenix.Endpoint.RenderErrors, view: view, accepts: ~w(html)
+    use Phoenix.Endpoint.RenderErrors, view: view, accepts: ~w(html json)
 
     plug :match
     plug :dispatch
@@ -68,15 +73,35 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
     assert_received {:plug_conn, :sent}
   end
 
-  test "call/2 is overridden with no route match" do
-    conn = call(Router, :get, "/unknown")
-    assert conn.state == :sent
-    assert conn.status == 404
-    assert conn.resp_body == "Got 404 from error with GET"
+  test "call/2 is overridden with no route match as HTML" do
+    assert_raise Phoenix.Router.NoRouteError,
+      "no route found for GET /unknown (Phoenix.Endpoint.RenderErrorsTest.Router)", fn ->
+      call(Router, :get, "/unknown")
+    end
+
     assert_received {:plug_conn, :sent}
   end
 
-  test "call/2 is overridden and unwrapps wrapped errors" do
+  test "call/2 is overridden with no route match as JSON" do
+    assert_raise Phoenix.Router.NoRouteError,
+      "no route found for GET /unknown (Phoenix.Endpoint.RenderErrorsTest.Router)", fn ->
+      call(Router, :get, "/unknown?_format=json")
+    end
+
+    assert_received {:plug_conn, :sent}
+  end
+
+  @tag :capture_log
+  test "call/2 is overridden with no route match while malformed format" do
+    assert_raise Phoenix.Router.NoRouteError,
+      "no route found for GET /unknown (Phoenix.Endpoint.RenderErrorsTest.Router)", fn ->
+      call(Router, :get, "/unknown?_format=unknown")
+    end
+
+    assert_received {:plug_conn, :sent}
+  end
+
+  test "call/2 is overridden and unwraps wrapped errors" do
     assert_raise ArgumentError, "oops", fn ->
       conn(:get, "/send_and_wrapped") |> Router.call([])
     end
@@ -137,7 +162,7 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
   end
 
   test "exception page with params _format" do
-    conn = render(conn(:get, "/", [_format: "text"]), [], fn ->
+    conn = render(conn(:get, "/", [_format: "text"]), [accepts: ["text", "html"]], fn ->
       throw :hello
     end)
 
@@ -164,7 +189,7 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
   end
 
   @tag :capture_log
-  test "exception page with invalid format" do
+  test "exception page is shown even with invalid format" do
     conn =
       conn(:get, "/")
       |> put_req_header("accept", "unknown/unknown")
@@ -172,5 +197,37 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
 
     assert conn.status == 500
     assert conn.resp_body == "Got 500 from throw with GET"
+  end
+
+  test "exception page is shown even with invalid query parameters" do
+    conn =
+      conn(:get, "/?q=%{")
+      |> render([], fn -> throw :hello end)
+
+    assert conn.status == 500
+    assert conn.resp_body == "Got 500 from throw with GET"
+  end
+
+  test "captures warning when format is not supported" do
+    assert capture_log(fn ->
+      conn(:get, "/")
+      |> put_req_header("accept", "unknown/unknown")
+      |> render([], fn -> throw :hello end)
+    end) =~ "Could not render errors due to no supported media type in accept header"
+  end
+
+  test "captures warning when format does not match error view" do
+    assert capture_log(fn ->
+      conn(:get, "/?_format=unknown")
+      |> render([], fn -> throw :hello end)
+    end) =~ "Could not render errors due to unknown format \"unknown\""
+  end
+
+  test "does not capture warning when format does match ErrorView" do
+    assert capture_log(fn ->
+      conn(:get, "/")
+      |> put_req_header("accept", "text/html")
+      |> render([], fn -> throw :hello end)
+    end) == ""
   end
 end

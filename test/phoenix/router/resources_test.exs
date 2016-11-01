@@ -239,7 +239,7 @@ defmodule Phoenix.Router.ResourcesTest do
     end
   end
 
-  test "param option allows default singularlized _id param to be overidden" do
+  test "param option allows default singularlized _id param to be overridden" do
     conn = call(Router, :get, "admin/foo")
     assert conn.status == 200
     assert conn.params["slug"] == "foo"

@@ -259,7 +259,7 @@ defmodule Phoenix.ChannelTest do
     subscribe_and_join!(socket, channel, topic, payload)
   end
   @doc """
-  Same as `subscribe_and_join/4` but returns either the socket
+  Same as `subscribe_and_join/4`, but returns either the socket
   or throws an error.
 
   This is helpful when you are not testing joining the channel
@@ -343,9 +343,10 @@ defmodule Phoenix.ChannelTest do
   ## Examples
 
       iex> push socket, "new_message", %{id: 1, content: "hello"}
-      :ok
+      reference
 
   """
+  @spec push(Socket.t, String.t, map()) :: reference()
   def push(socket, event, payload \\ %{}) do
     ref = make_ref()
     send(socket.channel_pid,
@@ -356,6 +357,7 @@ defmodule Phoenix.ChannelTest do
   @doc """
   Emulates the client leaving the channel.
   """
+  @spec leave(Socket.t) :: reference()
   def leave(socket) do
     push(socket, "phx_leave", %{})
   end
@@ -388,7 +390,7 @@ defmodule Phoenix.ChannelTest do
   end
 
   @doc """
-  Same as `broadcast_from/3` but raises if broadcast fails.
+  Same as `broadcast_from/3`, but raises if broadcast fails.
   """
   def broadcast_from!(socket, event, message) do
     %{pubsub_server: pubsub_server, topic: topic, transport_pid: transport_pid} = socket
@@ -407,6 +409,23 @@ defmodule Phoenix.ChannelTest do
   the data being sent, as long as something was sent.
 
   The timeout is in milliseconds and defaults to 100ms.
+
+  **NOTE:** Because event and payload are patterns, they will be matched.  This
+  means that if you wish to assert that the received payload is equivalent to
+  an existing variable, you need to pin the variable in the assertion
+  expression.
+
+  Good:
+
+      expected_payload = %{foo: "bar"}
+      assert_push "some_event", ^expected_payload
+
+  Bad:
+
+      expected_payload = %{foo: "bar"}
+      assert_push "some_event", expected_payload
+      # The code above does not assert the payload matches the described map.
+
   """
   defmacro assert_push(event, payload, timeout \\ 100) do
     quote do

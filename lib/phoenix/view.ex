@@ -2,9 +2,8 @@ defmodule Phoenix.View do
   @moduledoc """
   Defines the view layer of a Phoenix application.
 
-  This module is used to define the application main view, which
-  serves as the base for all other views and templates in the
-  application.
+  This module is used to define the application's main view, which
+  serves as the base for all other views and templates.
 
   The view layer also contains conveniences for rendering templates,
   including support for layouts and encoders per format.
@@ -42,14 +41,12 @@ defmodule Phoenix.View do
       # web/templates/user/index.html.eex
       Hello <%= @name %>
 
-  The `.eex` extension is called a template engine which tells Phoenix how
-  to compile the code in the file into actual Elixir source code. After it is
+  The `.eex` extension maps to a template engine which tells Phoenix how
+  to compile the code in the file into Elixir source code. After it is
   compiled, the template can be rendered as:
 
       Phoenix.View.render(YourApp.UserView, "index.html", name: "John Doe")
       #=> {:safe, "Hello John Doe"}
-
-  We will discuss rendering in detail next.
 
   ## Rendering
 
@@ -65,7 +62,7 @@ defmodule Phoenix.View do
   representation specific to the template format. In the example above,
   we got: `{:safe, "Hello John Doe"}`. The safe tuple annotates that our
   template is safe and that we don't need to escape its contents because
-  all data was already encoded so far. Let's try to inject custom code:
+  all data has already been encoded. Let's try to inject custom code:
 
       Phoenix.View.render(YourApp.UserView, "index.html", name: "John<br />Doe")
       #=> {:safe, "Hello John&lt;br /&gt;Doe"}
@@ -88,13 +85,14 @@ defmodule Phoenix.View do
 
   Both JSON and HTML formats will be encoded only when passing the data
   to the controller via the `render_to_iodata/3` function. The
-  `render_to_iodata/3` uses the notion of format encoders to convert a
+  `render_to_iodata/3` function uses the notion of format encoders to convert a
   particular format to its string/iodata representation.
 
   Phoenix ships with some template engines and format encoders, which
   can be further configured in the Phoenix application. You can read
   more about format encoders in `Phoenix.Template` documentation.
   """
+  alias Phoenix.{Template}
 
   @doc """
   When used, defines the current module as a main view module.
@@ -102,47 +100,38 @@ defmodule Phoenix.View do
   ## Options
 
     * `:root` - the template root to find templates
+    * `:path` - the optional path to search for templates within the `:root`.
+      Defaults to the underscored view module name. A blank string may
+      be provided to use the `:root` path directly as the template lookup path.
     * `:namespace` - the namespace to consider when calculating view paths
+    * `:pattern` - the wildcard pattern to apply to the root
+      when finding templates. Default `"*"`
 
   The `:root` option is required while the `:namespace` defaults to the
   first nesting in the module name. For instance, both `MyApp.UserView`
   and `MyApp.Admin.UserView` have namespace `MyApp`.
 
-  The namespace is used to calculate paths. For example, if you are in
-  `MyApp.UserView` and the namespace is `MyApp`, templates are expected
-  at `Path.join(root, "user")`. On the other hand, if the view is
-  `MyApp.Admin.UserView`, the path will be `Path.join(root, "admin/user")`
-  and so on.
+  The `:namespace` and `:path` options are used to calculate template
+  lookup paths. For example, if you are in `MyApp.UserView` and the
+  namespace is `MyApp`, templates are expected at `Path.join(root, "user")`.
+  On the other hand, if the view is `MyApp.Admin.UserView`,
+  the path will be `Path.join(root, "admin/user")` and so on. For
+  explicit root path locations, the `:path` option can instead be provided.
+  The `:root` and `:path` are joined to form the final lookup path.
+  A blank string may be provided to use the `:root` path directly as the
+  template lookup path.
 
   Setting the namespace to `MyApp.Admin` in the second example will force
   the template to also be looked up at `Path.join(root, "user")`.
   """
-  defmacro __using__(options) do
-    if root = Keyword.get(options, :root) do
-      namespace =
-        if given = Keyword.get(options, :namespace) do
-          given
-        else
-          __CALLER__.module
-          |> Module.split()
-          |> Enum.take(1)
-          |> Module.concat()
-        end
+  defmacro __using__(opts) do
+    quote do
+      import Phoenix.View
+      use Phoenix.Template, Phoenix.View.__template_options__(__MODULE__, unquote(opts))
+      @view_resource String.to_atom(Phoenix.Naming.resource_name(__MODULE__, "View"))
 
-      quote do
-        import Phoenix.View
-
-        use Phoenix.Template, root:
-          Path.join(unquote(root),
-                    Phoenix.Template.module_to_template_root(__MODULE__, unquote(namespace), "View"))
-
-        @view_resource String.to_atom(Phoenix.Naming.resource_name(__MODULE__, "View"))
-
-        @doc "The resource name, as an atom, for this view"
-        def __resource__, do: @view_resource
-      end
-    else
-      raise "expected :root to be given as an option"
+      @doc "The resource name, as an atom, for this view"
+      def __resource__, do: @view_resource
     end
   end
 
@@ -164,7 +153,7 @@ defmodule Phoenix.View do
   ## Assigns
 
   Assigns are meant to be user data that will be available in templates.
-  However there are keys under assigns that are specially handled by
+  However, there are keys under assigns that are specially handled by
   Phoenix, they are:
 
     * `:layout` - tells Phoenix to wrap the rendered result in the
@@ -258,7 +247,7 @@ defmodule Phoenix.View do
 
   """
   def render_existing(module, template, assigns \\ []) do
-    render(module, template, Dict.put(assigns, :render_existing, {module, template}))
+    render(module, template, put_in(assigns[:render_existing], {module, template}))
   end
 
   @doc """
@@ -330,7 +319,6 @@ defmodule Phoenix.View do
 
   defp to_map(assigns) when is_map(assigns), do: assigns
   defp to_map(assigns) when is_list(assigns), do: :maps.from_list(assigns)
-  defp to_map(assigns), do: Dict.merge(%{}, assigns)
 
   defp assign_model(assigns, view, model) do
     as = Map.get(assigns, :as) || view.__resource__
@@ -352,10 +340,34 @@ defmodule Phoenix.View do
   end
 
   defp encode(content, template) do
-    if encoder = Phoenix.Template.format_encoder(template) do
+    if encoder = Template.format_encoder(template) do
       encoder.encode_to_iodata!(content)
     else
       content
+    end
+  end
+
+  @doc false
+  def __template_options__(module, opts) do
+    root = opts[:root] || raise(ArgumentError, "expected :root to be given as an option")
+    path = opts[:path]
+    pattern = opts[:pattern]
+    namespace =
+      if given = opts[:namespace] do
+        given
+      else
+        module
+        |> Module.split()
+        |> Enum.take(1)
+        |> Module.concat()
+      end
+
+    root_path = Path.join(root, path || Template.module_to_template_root(module, namespace, "View"))
+
+    if pattern do
+      [root: root_path, pattern: pattern]
+    else
+      [root: root_path]
     end
   end
 end

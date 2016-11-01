@@ -1,12 +1,6 @@
 Code.require_file "../../../installer/lib/phoenix_new.ex", __DIR__
 Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 
-# Mock live reloading for testing the generated application.
-defmodule Phoenix.LiveReloader do
-  def init(opts), do: opts
-  def call(conn, _), do: conn
-end
-
 # Here we test the installer is up to date.
 defmodule Mix.Tasks.Phoenix.NewTest do
   use ExUnit.Case
@@ -30,8 +24,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
     Application.put_env(:photo_blog, PhotoBlog.Endpoint,
       secret_key_base: String.duplicate("abcdefgh", 8),
-      code_reloader: true,
-      root: File.cwd!)
+      code_reloader: true)
 
     in_tmp "bootstrap", fn ->
       Mix.Tasks.Phoenix.New.run(["photo_blog", "--no-brunch", "--no-ecto"])
@@ -42,12 +35,11 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     File.cp_r "deps",     "bootstrap/photo_blog/deps"
     File.cp_r "mix.lock", "bootstrap/photo_blog/mix.lock"
 
-    in_project :photo_blog, Path.join(tmp_path, "bootstrap/photo_blog"), fn _ ->
+    in_project :photo_blog, Path.join(tmp_path(), "bootstrap/photo_blog"), fn _ ->
       Mix.Task.clear
       Mix.Task.run "compile", ["--no-deps-check"]
-      assert_received {:mix_shell, :info, ["Compiled lib/photo_blog.ex"]}
-      assert_received {:mix_shell, :info, ["Compiled web/router.ex"]}
-      refute_received {:mix_shell, :info, ["Compiled lib/phoenix.ex"]}
+      assert_received {:mix_shell, :info, ["Generated photo_blog app"]}
+      refute_received {:mix_shell, :info, ["Generated phoenix app"]}
       Mix.shell.flush
 
       # Adding a new template touches file (through mix)
@@ -65,6 +57,9 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       {:ok, _} = Application.ensure_all_started(:photo_blog)
       PhotoBlog.Endpoint.call(conn(:get, "/"), [])
       assert File.stat!("web/views/page_view.ex").mtime > @epoch
+
+      # Ensure /priv static files are copied
+      assert File.exists?("priv/static/js/phoenix.js")
 
       # We can run tests too, starting the app.
       assert capture_io(fn ->

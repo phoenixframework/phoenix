@@ -71,7 +71,7 @@ defmodule Phoenix.Presence do
   Presence metadata should be minimized and used to store small,
   ephemeral state, such as a user's "online" or "away" status.
   More detailed information, such as user details that need to
-  be fetched from the database can be achieved overriding the `fetch/2`
+  be fetched from the database, can be achieved by overriding the `fetch/2`
   function. The `fetch/2` callback is triggered when using `list/1`
   and serves as a mechanism to fetch presence information a single time,
   before broadcasting the information to all channel subscribers.
@@ -102,18 +102,18 @@ defmodule Phoenix.Presence do
   """
   alias Phoenix.Socket.Broadcast
 
-  @type presences :: %{ String.t => %{metas: [map]}}
-  @type presence :: %{key: String.t, meta: map}
+  @type presences :: %{ String.t => %{metas: [map()]}}
+  @type presence :: %{key: String.t, meta: map()}
   @type topic :: String.t
 
-  @callback start_link(Keyword.t) :: {:ok, pid} | {:error, reason :: term} :: :ignore
-  @callback init(Keyword.t) :: {:ok, pid} | {:error, reason :: term}
-  @callback track(Phoenix.Socket.t, key :: String.t, meta :: map) :: :ok
-  @callback track(pid, topic, key :: String.t, meta ::map) :: :ok
+  @callback start_link(Keyword.t) :: {:ok, pid()} | {:error, reason :: term()} :: :ignore
+  @callback init(Keyword.t) :: {:ok, pid()} | {:error, reason :: term}
+  @callback track(Phoenix.Socket.t, key :: String.t, meta :: map()) :: {:ok, binary()} | {:error, reason :: term()}
+  @callback track(pid, topic, key :: String.t, meta :: map()) :: {:ok, binary()} | {:error, reason :: term()}
   @callback untrack(Phoenix.Socket.t, key :: String.t) :: :ok
   @callback untrack(pid, topic, key :: String.t) :: :ok
-  @callback update(Phoenix.Socket.t, key :: String.t, meta :: map) :: :ok
-  @callback update(pid, topic, key :: String.t, meta ::map) :: :ok
+  @callback update(Phoenix.Socket.t, key :: String.t, meta :: map()) :: {:ok, binary()} | {:error, reason :: term()}
+  @callback update(pid, topic, key :: String.t, meta ::map()) :: {:ok, binary()} | {:error, reason :: term()}
   @callback fetch(topic, presences) :: presences
   @callback list(topic) :: presences
   @callback handle_diff(%{topic => {joins :: presences, leaves :: presences}}, state :: term) :: {:ok, state :: term}
@@ -209,8 +209,8 @@ defmodule Phoenix.Presence do
 
   ## Presence datastructure
 
-  The presence information is returned as map with presences grouped
-  by key and accumulated metadata, with the following form:
+  The presence information is returned as a map with presences grouped
+  by key, cast as a string, and accumulated metadata, with the following form:
 
       %{key => %{metas: [%{phx_ref: ..., ...}, ...]}}
 
@@ -243,7 +243,7 @@ defmodule Phoenix.Presence do
     presences
     |> Enum.reverse()
     |> Enum.reduce(%{}, fn {key, meta}, acc ->
-      Map.update(acc, key, %{metas: [meta]}, fn %{metas: metas} ->
+      Map.update(acc, to_string(key), %{metas: [meta]}, fn %{metas: metas} ->
         %{metas: [meta | metas]}
       end)
     end)

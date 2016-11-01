@@ -38,7 +38,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // events are listened for, messages are pushed to the server, and
 // the channel is joined with ok/error/timeout matches:
 //
-//     let channel = socket.channel("rooms:123", {token: roomToken})
+//     let channel = socket.channel("room:123", {token: roomToken})
 //     channel.on("new_msg", msg => console.log("Got message", msg) )
 //     $input.onEnter( e => {
 //       channel.push("new_msg", {body: e.target.val}, 10000)
@@ -142,7 +142,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // they came online from:
 //
 //     let state = {}
-//     Presence.syncState(state, stateFromServer)
+//     state = Presence.syncState(state, stateFromServer)
 //     let listBy = (id, {metas: [first, ...rest]}) => {
 //       first.count = rest.length + 1 // count of this user's presences
 //       first.id = id
@@ -171,13 +171,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 //     }
 //     let presences = {} // client's initial empty presence state
 //     // receive initial presence data from server, sent after join
-//     myChannel.on("presences", state => {
-//       Presence.syncState(presences, state, onJoin, onLeave)
+//     myChannel.on("presence_state", state => {
+//       presences = Presence.syncState(presences, state, onJoin, onLeave)
 //       displayUsers(Presence.list(presences))
 //     })
 //     // receive "presence_diff" from server, containing join/leave events
 //     myChannel.on("presence_diff", diff => {
-//       Presence.syncDiff(presences, diff, onJoin, onLeave)
+//       presences = Presence.syncDiff(presences, diff, onJoin, onLeave)
 //       this.setState({users: Presence.list(room.presences, listBy)})
 //     })
 //
@@ -356,20 +356,23 @@ var Channel = exports.Channel = function () {
       _this2.pushBuffer = [];
     });
     this.onClose(function () {
+      _this2.rejoinTimer.reset();
       _this2.socket.log("channel", "close " + _this2.topic + " " + _this2.joinRef());
       _this2.state = CHANNEL_STATES.closed;
       _this2.socket.remove(_this2);
     });
     this.onError(function (reason) {
+      if (_this2.isLeaving() || _this2.isClosed()) {
+        return;
+      }
       _this2.socket.log("channel", "error " + _this2.topic, reason);
       _this2.state = CHANNEL_STATES.errored;
       _this2.rejoinTimer.scheduleTimeout();
     });
     this.joinPush.receive("timeout", function () {
-      if (_this2.state !== CHANNEL_STATES.joining) {
+      if (!_this2.isJoining()) {
         return;
       }
-
       _this2.socket.log("channel", "timeout " + _this2.topic, _this2.joinPush.timeout);
       _this2.state = CHANNEL_STATES.errored;
       _this2.rejoinTimer.scheduleTimeout();
@@ -427,7 +430,7 @@ var Channel = exports.Channel = function () {
   }, {
     key: "canPush",
     value: function canPush() {
-      return this.socket.isConnected() && this.state === CHANNEL_STATES.joined;
+      return this.socket.isConnected() && this.isJoined();
     }
   }, {
     key: "push",
@@ -490,10 +493,15 @@ var Channel = exports.Channel = function () {
     // Overridable message hook
     //
     // Receives all events for specialized message handling
+    // before dispatching to the channel callbacks.
+    //
+    // Must return the payload, modified or unmodified
 
   }, {
     key: "onMessage",
-    value: function onMessage(event, payload, ref) {}
+    value: function onMessage(event, payload, ref) {
+      return payload;
+    }
 
     // private
 
@@ -517,7 +525,7 @@ var Channel = exports.Channel = function () {
     key: "rejoin",
     value: function rejoin() {
       var timeout = arguments.length <= 0 || arguments[0] === undefined ? this.timeout : arguments[0];
-      if (this.state === CHANNEL_STATES.leaving) {
+      if (this.isLeaving()) {
         return;
       }
       this.sendJoin(timeout);
@@ -533,17 +541,46 @@ var Channel = exports.Channel = function () {
       if (ref && [close, error, leave, join].indexOf(event) >= 0 && ref !== this.joinRef()) {
         return;
       }
-      this.onMessage(event, payload, ref);
+      var handledPayload = this.onMessage(event, payload, ref);
+      if (payload && !handledPayload) {
+        throw "channel onMessage callbacks must return the payload, modified or unmodified";
+      }
+
       this.bindings.filter(function (bind) {
         return bind.event === event;
       }).map(function (bind) {
-        return bind.callback(payload, ref);
+        return bind.callback(handledPayload, ref);
       });
     }
   }, {
     key: "replyEventName",
     value: function replyEventName(ref) {
       return "chan_reply_" + ref;
+    }
+  }, {
+    key: "isClosed",
+    value: function isClosed() {
+      return this.state === CHANNEL_STATES.closed;
+    }
+  }, {
+    key: "isErrored",
+    value: function isErrored() {
+      return this.state === CHANNEL_STATES.errored;
+    }
+  }, {
+    key: "isJoined",
+    value: function isJoined() {
+      return this.state === CHANNEL_STATES.joined;
+    }
+  }, {
+    key: "isJoining",
+    value: function isJoining() {
+      return this.state === CHANNEL_STATES.joining;
+    }
+  }, {
+    key: "isLeaving",
+    value: function isLeaving() {
+      return this.state === CHANNEL_STATES.leaving;
     }
   }]);
 
@@ -713,7 +750,7 @@ var Socket = exports.Socket = function () {
     value: function onConnOpen() {
       var _this6 = this;
 
-      this.log("transport", "connected to " + this.endPointURL(), this.transport.prototype);
+      this.log("transport", "connected to " + this.endPointURL());
       this.flushSendBuffer();
       this.reconnectTimer.reset();
       if (!this.conn.skipHeartbeat) {
@@ -956,7 +993,7 @@ var LongPoll = exports.LongPoll = function () {
 
       Ajax.request("POST", this.endpointURL(), "application/json", body, this.timeout, this.onerror.bind(this, "timeout"), function (resp) {
         if (!resp || resp.status !== 200) {
-          _this9.onerror(status);
+          _this9.onerror(resp && resp.status);
           _this9.closeAndRetry();
         }
       });
@@ -1073,15 +1110,16 @@ var Ajax = exports.Ajax = function () {
 Ajax.states = { complete: 4 };
 
 var Presence = exports.Presence = {
-  syncState: function syncState(state, newState, onJoin, onLeave) {
+  syncState: function syncState(currentState, newState, onJoin, onLeave) {
     var _this12 = this;
 
+    var state = this.clone(currentState);
     var joins = {};
     var leaves = {};
 
     this.map(state, function (key, presence) {
       if (!newState[key]) {
-        leaves[key] = _this12.clone(presence);
+        leaves[key] = presence;
       }
     });
     this.map(newState, function (key, newPresence) {
@@ -1113,12 +1151,13 @@ var Presence = exports.Presence = {
         joins[key] = newPresence;
       }
     });
-    this.syncDiff(state, { joins: joins, leaves: leaves }, onJoin, onLeave);
+    return this.syncDiff(state, { joins: joins, leaves: leaves }, onJoin, onLeave);
   },
-  syncDiff: function syncDiff(state, _ref2, onJoin, onLeave) {
+  syncDiff: function syncDiff(currentState, _ref2, onJoin, onLeave) {
     var joins = _ref2.joins;
     var leaves = _ref2.leaves;
 
+    var state = this.clone(currentState);
     if (!onJoin) {
       onJoin = function onJoin() {};
     }
@@ -1152,6 +1191,7 @@ var Presence = exports.Presence = {
         delete state[key];
       }
     });
+    return state;
   },
   list: function list(presences, chooser) {
     if (!chooser) {

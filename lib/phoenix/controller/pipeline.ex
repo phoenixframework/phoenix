@@ -1,87 +1,5 @@
 defmodule Phoenix.Controller.Pipeline do
-  @moduledoc """
-  This module implements the controller pipeline responsible for handling requests.
-
-  ## The pipeline
-
-  The goal of a controller is to receive a request and invoke the desired
-  action. The whole flow of the controller is managed by a single pipeline:
-
-      defmodule UserController do
-        use Phoenix.Controller
-        require Logger
-
-        plug :log_message, "before action"
-
-        def show(conn, _params) do
-          Logger.debug "show/2"
-          send_resp(conn, 200, "OK")
-        end
-
-        defp log_message(conn, msg) do
-          Logger.debug msg
-          conn
-        end
-      end
-
-  When invoked, this pipeline will print:
-
-      before action
-      show/2
-
-  As any other Plug pipeline, we can halt at any step by calling
-  `Plug.Conn.halt/1` (which is by default imported into controllers).
-  If we change `log_message/2` to:
-
-      def log_message(conn, msg) do
-        Logger.debug msg
-        halt(conn)
-      end
-
-  it will print only:
-
-      before action
-
-  As the rest of the pipeline (the action and the after action plug)
-  will never be invoked.
-
-  ## Guards
-
-  `plug/2` supports guards, allowing a developer to configure a plug to only
-  run in some particular action:
-
-      plug :log_message, "before show and edit" when action in [:show, :edit]
-      plug :log_message, "before all but index" when not action in [:index]
-
-  The first plug will run only when action is show or edit.
-  The second plug will always run, except for the index action.
-
-  Those guards work like regular Elixir guards and the only variables accessible
-  in the guard are `conn`, the `action` as an atom and the `controller` as an
-  alias.
-
-  ## Controllers are plugs
-
-  Like routers, controllers are plugs, but they are wired to dispatch
-  to a particular function which is called an action.
-
-  For example, the route:
-
-      get "/users/:id", UserController, :show
-
-  will invoke `UserController` as a plug:
-
-      UserController.call(conn, :show)
-
-  which will trigger the plug pipeline and which will eventually
-  invoke the inner action plug that dispatches to the `show/2`
-  function in the `UserController`.
-
-  As controllers are plugs, they implement both `init/1` and
-  `call/2`, and it also provides a function named `action/2`
-  which is responsible for dispatching the appropriate action
-  after the plug stack (and is also overridable).
-  """
+  @moduledoc false
 
   @doc false
   defmacro __using__(opts) do
@@ -155,8 +73,8 @@ defmodule Phoenix.Controller.Pipeline do
 
   @doc false
   def __catch__(:error, :function_clause, controller, action,
-                [{controller, action, [%Plug.Conn{} | _], _loc} | _] = stack) do
-    args = [controller: controller, action: action]
+                [{controller, action, [%Plug.Conn{} = conn | _], _loc} | _] = stack) do
+    args = [controller: controller, action: action, params: conn.params]
     reraise Phoenix.ActionClauseError, args, stack
   end
   def __catch__(kind, reason, _controller, _action, stack) do

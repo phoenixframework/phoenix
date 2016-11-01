@@ -47,6 +47,7 @@ defmodule Phoenix.CodeReloaderTest do
     assert conn.state  == :sent
     assert conn.status == 500
     assert conn.resp_body =~ "oops"
-    assert conn.resp_body =~ "CompilationError at GET /"
+    assert conn.resp_body =~ "CompileError"
+    assert conn.resp_body =~ "Compilation error"
   end
 end

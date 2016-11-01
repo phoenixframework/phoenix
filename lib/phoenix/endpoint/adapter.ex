@@ -61,28 +61,26 @@ defmodule Phoenix.Endpoint.Adapter do
   defp watcher_children(_mod, conf, server?) do
     if server? do
       Enum.map(conf[:watchers], fn {cmd, args} ->
-        worker(Phoenix.Endpoint.Watcher, [root!(conf), cmd, args],
+        worker(Phoenix.Endpoint.Watcher, watcher_args(cmd, args),
                id: {cmd, args}, restart: :transient)
       end)
     else
       []
     end
   end
+  defp watcher_args(cmd, cmd_args) do
+    {args, opts} = Enum.split_while(cmd_args, &is_binary(&1))
+    [cmd, args, opts]
+  end
 
   defp code_reloader_children(mod, conf) do
     if conf[:code_reloader] do
-      args = [conf[:otp_app], conf[:reloadable_compilers],
+      args = [conf[:otp_app], mod, conf[:reloadable_compilers],
               [name: Module.concat(mod, CodeReloader)]]
       [worker(Phoenix.CodeReloader.Server, args)]
     else
       []
     end
-  end
-
-  defp root!(conf) do
-    conf[:root] ||
-      raise "please set root: Path.expand(\"..\", __DIR__) in your endpoint " <>
-            "inside config/config.exs in order to use code reloading or watchers"
   end
 
   @doc """
@@ -256,7 +254,13 @@ defmodule Phoenix.Endpoint.Adapter do
       outer = Application.app_dir(endpoint.config(:otp_app), inner)
 
       if File.exists?(outer) do
-        Poison.decode!(File.read!(outer))
+        manifest =
+          outer
+          |> File.read!
+          |> Poison.decode!
+
+        # TODO: No longer support old manifests on Phoenix 1.4
+        manifest["latest"] || manifest
       else
         Logger.error "Could not find static manifest at #{inspect outer}. " <>
                      "Run \"mix phoenix.digest\" after building your static files " <>

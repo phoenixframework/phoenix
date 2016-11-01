@@ -74,7 +74,7 @@ defmodule Phoenix.ConnTest do
   work.
 
   Keep in mind Phoenix will automatically recycle the connection
-  between dispatches. This usually works out well most times but
+  between dispatches. This usually works out well most times, but
   it may discard information if you are modifying the connection
   before the next dispatch:
 
@@ -85,8 +85,10 @@ defmodule Phoenix.ConnTest do
       conn = post conn, "/login"
 
       # We can also recycle manually in case we want custom headers
-      conn = recycle(conn)
-      conn = put_req_header("x-special", "nice")
+      conn =
+        conn
+        |> recycle()
+        |> put_req_header("x-special", "nice")
 
       # No recycling as we did it explicitly
       conn = delete conn, "/logout"
@@ -114,9 +116,9 @@ defmodule Phoenix.ConnTest do
   end
 
   @doc """
-  Deprecated version of build_conn/0. Use build_conn/0 instead
+  Deprecated version of conn/0. Use build_conn/0 instead
   """
-  @spec build_conn() :: Conn.t
+  @spec conn() :: Conn.t
   def conn() do
     IO.write :stderr, """
     warning: using conn/0 to build a connection is deprecated. Use build_conn/0 instead.
@@ -132,7 +134,7 @@ defmodule Phoenix.ConnTest do
   This is useful when a specific connection is required
   for testing a plug or a particular function.
   """
-  @spec build_conn() :: Conn.t
+  @spec build_conn(atom | binary, binary, binary | list | map) :: Conn.t
   def build_conn(method, path, params_or_body \\ nil) do
     Plug.Adapters.Test.Conn.conn(%Conn{}, method, path, params_or_body)
     |> Conn.put_private(:plug_skip_csrf_protection, true)
@@ -140,9 +142,9 @@ defmodule Phoenix.ConnTest do
   end
 
   @doc """
-  Deprecated version of build_conn/3. Use build_conn/3 instead
+  Deprecated version of conn/3. Use build_conn/3 instead
   """
-  @spec build_conn() :: Conn.t
+  @spec conn(atom | binary, binary, binary | list | map) :: Conn.t
   def conn(method, path, params_or_body \\ nil) do
     IO.write :stderr, """
     warning: using conn/3 to build a connection is deprecated. Use build_conn/3 instead.
@@ -290,7 +292,7 @@ defmodule Phoenix.ConnTest do
 
   ## Examples
 
-      # Assert we have an html repsonse with utf-8 charset
+      # Assert we have an html response with utf-8 charset
       assert response_content_type(conn, :html) =~ "charset=utf-8"
 
   """
@@ -314,7 +316,7 @@ defmodule Phoenix.ConnTest do
     case parse_content_type(header) do
       {part, subpart} ->
         format = Atom.to_string(format)
-        format in Plug.MIME.extensions(part <> "/" <> subpart) or
+        format in MIME.extensions(part <> "/" <> subpart) or
           format == subpart or String.ends_with?(subpart, "+" <> format)
       _  ->
         false
@@ -444,7 +446,7 @@ defmodule Phoenix.ConnTest do
   @doc """
   Recycles the connection.
 
-  Recycling receives an connection and returns a new connection,
+  Recycling receives a connection and returns a new connection,
   containing cookies and relevant information from the given one.
 
   This emulates behaviour performed by browsers where cookies
@@ -528,7 +530,7 @@ defmodule Phoenix.ConnTest do
 
   See `bypass_through/1`.
   """
-  @spec bypass_through(Conn.t, Module.t, :atom | List.t) :: Conn.t
+  @spec bypass_through(Conn.t, module, :atom | list) :: Conn.t
   def bypass_through(conn, router, pipelines \\ []) do
     Plug.Conn.put_private(conn, :phoenix_bypass, {router, List.wrap(pipelines)})
   end
@@ -558,7 +560,7 @@ defmodule Phoenix.ConnTest do
       end
       assert {404, [_h | _t], "Page not found"} = response
   """
-  @spec assert_error_sent(Integer.t | atom, function) :: {Integer.t, List.t, term}
+  @spec assert_error_sent(integer | atom, function) :: {integer, list, term}
   def assert_error_sent(status_int_or_atom, func) do
     expected_status = Plug.Conn.Status.code(status_int_or_atom)
     discard_previously_sent()
@@ -568,7 +570,6 @@ defmodule Phoenix.ConnTest do
       |> receive_response(expected_status)
 
     discard_previously_sent()
-
     result
   end
 
@@ -576,7 +577,7 @@ defmodule Phoenix.ConnTest do
     if conn.state == :sent do
       flunk "expected error to be sent as #{expected_status} status, but response sent #{conn.status} without error"
     else
-      flunk_not_sent(expected_status)
+      flunk "expected error to be sent as #{expected_status} status, but no error happened"
     end
   end
   defp receive_response({:error, {exception, stack}}, expected_status) do
@@ -585,14 +586,19 @@ defmodule Phoenix.ConnTest do
         {expected_status, headers, body}
 
       {ref, {sent_status, _headers, _body}} when is_reference(ref) ->
-        reraise_error(expected_status, sent_status, exception, stack)
+        reraise ExUnit.AssertionError.exception("""
+        expected error to be sent as #{expected_status} status, but got #{sent_status} from:
 
-    after 0 -> flunk_not_sent(expected_status)
+        #{Exception.format_banner(:error, exception)}
+        """), stack
+
+    after 0 ->
+      reraise ExUnit.AssertionError.exception("""
+      expected error to be sent as #{expected_status} status, but got an error with no response from:
+
+      #{Exception.format_banner(:error, exception)}
+      """), stack
     end
-  end
-
-  defp flunk_not_sent(expected_status) do
-    flunk "expected #{expected_status} response but no response sent"
   end
 
   defp discard_previously_sent() do
@@ -610,14 +616,5 @@ defmodule Phoenix.ConnTest do
     rescue
       exception -> {:error, {exception, System.stacktrace()}}
     end
-  end
-
-  defp reraise_error(expected_stat, sent_stat, exception, stack) do
-    wrapper = %ExUnit.AssertionError{message: """
-    expected response status to be #{expected_stat}, but got #{sent_stat} from:
-
-    #{Exception.format_banner(:error, exception)}
-    """}
-    reraise(wrapper, stack)
   end
 end

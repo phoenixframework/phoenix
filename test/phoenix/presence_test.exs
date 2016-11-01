@@ -43,6 +43,12 @@ defmodule Phoenix.PresenceTest do
            MyPresence.list(%Phoenix.Socket{topic: config.topic})
   end
 
+  test "list/1 returns keys as strings", config do
+    assert {:ok, _} = MyPresence.track(self(), config.topic, 1, %{name: "u1"})
+    assert %{"1" => %{extra: "extra", metas: [%{name: "u1", phx_ref: _}]}} =
+           MyPresence.list(config.topic)
+  end
+
   test "handle_diff broadcasts events with default fetched data",
     %{topic: topic} = config do
 

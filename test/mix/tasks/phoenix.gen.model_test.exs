@@ -19,7 +19,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
   test "generates model" do
     in_tmp "generates model", fn ->
       Mix.Tasks.Phoenix.Gen.Model.run ["user", "users", "name", "age:integer", "nicks:array:text",
-                                       "famous:boolean", "born_at:datetime", "secret:uuid", "desc:text",
+                                       "famous:boolean", "born_at:naive_datetime", "secret:uuid", "desc:text",
                                        "blob:binary"]
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_user.exs")
@@ -31,11 +31,11 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
         assert file =~ "add :age, :integer"
         assert file =~ "add :nicks, {:array, :text}"
         assert file =~ "add :famous, :boolean, default: false, null: false"
-        assert file =~ "add :born_at, :datetime"
+        assert file =~ "add :born_at, :naive_datetime"
         assert file =~ "add :secret, :uuid"
         assert file =~ "add :desc, :text"
         assert file =~ "add :blob, :binary"
-        assert file =~ "timestamps"
+        assert file =~ "timestamps()"
       end
 
       assert_file "web/models/user.ex", fn file ->
@@ -46,11 +46,11 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
         assert file =~ "field :age, :integer"
         assert file =~ "field :nicks, {:array, :string}"
         assert file =~ "field :famous, :boolean, default: false"
-        assert file =~ "field :born_at, Ecto.DateTime"
+        assert file =~ "field :born_at, :naive_datetime"
         assert file =~ "field :secret, Ecto.UUID"
         assert file =~ "field :desc, :string"
         assert file =~ "field :blob, :binary"
-        assert file =~ "timestamps"
+        assert file =~ "timestamps()"
         assert file =~ "def changeset"
         assert file =~ "[:name, :age, :nicks, :famous, :born_at, :secret, :desc, :blob]"
       end
@@ -141,6 +141,35 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
     end
   end
 
+  test "generates indices on belongs_to associations" do
+    in_tmp "generates indices on belongs_to associations", fn ->
+      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title", "user_id:references:users", "unique_post_id:references:posts:unique"]
+
+      assert [migration] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
+
+      assert_file migration, fn file ->
+        assert file =~ "defmodule Phoenix.Repo.Migrations.CreatePost do"
+        assert file =~ "create table(:posts) do"
+        assert file =~ "add :title, :string"
+        assert file =~ "add :user_id, references(:users, on_delete: :nothing)"
+        assert file =~ "add :unique_post_id, references(:posts, on_delete: :nothing)"
+        assert file =~ "create index(:posts, [:user_id])"
+        refute file =~ "create index(:posts, [:unique_post_id])"
+        assert file =~ "create unique_index(:posts, [:unique_post_id])"
+      end
+
+      assert_file "web/models/post.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Post do"
+        assert file =~ "use Phoenix.Web, :model"
+        assert file =~ "schema \"posts\" do"
+        assert file =~ "field :title, :string"
+        assert file =~ "belongs_to :user, Phoenix.User"
+        # assert file =~ "belongs_to :unique_post, Phoenix.UniquePost" # current behaviour, but perhaps not desired?
+        assert file =~ "|> unique_constraint(:unique_post_id)"
+      end
+    end
+  end
+
   test "generates migration with binary_id" do
     in_tmp "generates migration with binary_id", fn ->
       Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title", "user_id:references:users", "--binary-id"]
@@ -205,6 +234,24 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
   test "name is already defined" do
     assert_raise Mix.Error, fn ->
       Mix.Tasks.Phoenix.Gen.Model.run ["Dup", "dups"]
+    end
+  end
+
+  test "table name missing from references" do
+    assert_raise Mix.Error, fn ->
+      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "user_id:references"]
+    end
+  end
+
+  test "table name is not snake_case and lowercase" do
+    assert_raise Mix.Error, fn ->
+      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "POSTS", "body:text"]
+    end
+  end
+
+  test "table name omitted" do
+    assert_raise Mix.Error, fn ->
+      Mix.Tasks.Phoenix.Gen.Model.run ["Post"]
     end
   end
 

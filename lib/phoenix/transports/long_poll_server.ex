@@ -28,7 +28,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
   @doc """
   Starts the Server.
 
-    * `socket` - The `Phoenix.Socket` struct returend from `connect/2`
+    * `socket` - The `Phoenix.Socket` struct returned from `connect/2`
       of the socket handler.
     * `window_ms` - The longpoll session timeout, in milliseconds
 
@@ -145,7 +145,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
   end
 
   defp broadcast_from!(state, client_ref, msg) when is_binary(client_ref),
-    do: PubSub.broadcast_from!(state.pubsub_server, self, client_ref, msg)
+    do: PubSub.broadcast_from!(state.pubsub_server, self(), client_ref, msg)
   defp broadcast_from!(_state, client_ref, msg) when is_pid(client_ref),
     do: send(client_ref, msg)
 
@@ -162,10 +162,10 @@ defmodule Phoenix.Transports.LongPoll.Server do
     {:noreply, %{state | buffer: [msg | state.buffer]}}
   end
 
-  defp now_ms, do: System.system_time(:milli_seconds)
+  defp now_ms, do: System.system_time(:milliseconds)
 
   defp schedule_inactive_shutdown(window_ms) do
-    Process.send_after(self, :shutdown_if_inactive, window_ms)
+    Process.send_after(self(), :shutdown_if_inactive, window_ms)
   end
 
   defp delete(state, topic, channel_pid) do

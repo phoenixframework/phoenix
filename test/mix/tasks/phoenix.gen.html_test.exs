@@ -18,7 +18,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
   test "generates html resource" do
     in_tmp "generates html resource", fn ->
       Mix.Tasks.Phoenix.Gen.Html.run ["user", "users", "name", "age:integer", "height:decimal",
-                                      "nicks:array:text", "famous:boolean", "born_at:datetime",
+                                      "nicks:array:text", "famous:boolean", "born_at:naive_datetime",
                                       "secret:uuid", "first_login:date", "alarm:time",
                                       "address_id:references:addresses"]
 

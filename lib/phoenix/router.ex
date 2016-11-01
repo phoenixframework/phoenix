@@ -39,7 +39,7 @@ defmodule Phoenix.Router do
   Phoenix's router is extremely efficient, as it relies on Elixir
   pattern matching for matching routes and serving requests.
 
-  ### Helpers
+  ## Helpers
 
   Phoenix automatically generates a module `Helpers` inside your router
   which contains named helpers to help developers generate and keep
@@ -70,8 +70,14 @@ defmodule Phoenix.Router do
       MyApp.Router.Helpers.dynamic_path(conn_or_endpoint, :show, ["dynamic", "something"])
       "/dynamic/something"
 
-  The url generated in the named url helpers is based on the configuration for
-  `:url`, `:http` and `:https`.
+  The URL generated in the named URL helpers is based on the configuration for
+  `:url`, `:http` and `:https`. However, if for some reason you need to manually
+  control the URL generation, the url helpers also allow you to pass in a [`URI`](http://elixir-lang.org/docs/stable/elixir/URI.html)
+  struct:
+
+      uri = %URI{scheme: "https", host: "other.example.com"}
+      MyApp.Router.Helpers.page_url(uri, :show, "hello")
+      "https://other.example.com/pages/hello"
 
   The named helper can also be customized with the `:as` option. Given
   the route:
@@ -83,11 +89,31 @@ defmodule Phoenix.Router do
       MyApp.Router.Helpers.special_page_path(conn, :show, "hello")
       "/pages/hello"
 
-  ### Scopes and Resources
+  ## Scopes and Resources
 
-  The router also supports scoping of routes:
+  It is very common in Phoenix applications to namespace all of your
+  routes under the application scope:
 
-      scope "/api/v1", as: :api_v1 do
+      scope "/", MyApp do
+        get "/pages/:id", PageController, :show
+      end
+
+  The route above will dispatch to `MyApp.PageController`. This syntax
+  is not only convenient for developers, since we don't have to repeat
+  the `MyApp.` prefix on all routes, but it also allows Phoenix to put
+  less pressure in the Elixir compiler. If instead we had written:
+
+    get "/pages/:id", MyApp.PageController, :show
+
+  The Elixir compiler would infer that the router depends directly on
+  `MyApp.PageController`, which is not true. By using scopes, Phoenix
+  can properly hint to the Elixir compiler the controller is not an
+  actual dependency of the router. This provides more efficient
+  compilation times.
+
+  Scopes allow us to scope on any path or even on the helper name:
+
+      scope "/api/v1", MyApp, as: :api_v1 do
         get "/pages/:id", PageController, :show
       end
 
@@ -158,7 +184,6 @@ defmodule Phoenix.Router do
 
   Note that router pipelines are only invoked after a route is found.
   No plug is invoked in case no matches were found.
-
   """
 
   alias Phoenix.Router.Resource
@@ -269,6 +294,12 @@ defmodule Phoenix.Router do
     end
   end
 
+  @anno (if :erlang.system_info(:otp_release) >= '19' do
+    [generated: true]
+  else
+    [line: -1]
+  end)
+
   @doc false
   defmacro __before_compile__(env) do
     routes = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse
@@ -290,9 +321,9 @@ defmodule Phoenix.Router do
         unquote(pipeline)
       end
 
-    # line: -1 is used here to avoid warnings if forwarding to root path
+    # @anno is used here to avoid warnings if forwarding to root path
     match_404 =
-      quote line: -1 do
+      quote @anno do
         defp match_route(conn, _method, _path_info, _host) do
           raise NoRouteError, conn: conn, router: __MODULE__
         end
@@ -351,7 +382,7 @@ defmodule Phoenix.Router do
     """
     defmacro unquote(verb)(path, plug, plug_opts, options \\ []) do
       verb = unquote(verb)
-      quote bind_quoted: binding do
+      quote bind_quoted: binding() do
         match(verb, path, plug, plug_opts, options)
       end
     end
@@ -626,9 +657,9 @@ defmodule Phoenix.Router do
   @doc """
   Forwards a request at the given path to a plug.
 
-  All paths that matches the forwarded prefix will be sent to
-  the forwarded plug. This is useful to share router between
-  applications or even break a big router into smaller ones.
+  All paths that match the forwarded prefix will be sent to
+  the forwarded plug. This is useful for sharing a router between
+  applications or even breaking a big router into smaller ones.
   The router pipelines will be invoked prior to forwarding the
   connection.
 

@@ -128,7 +128,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
   defp validate_args!([_, plural | _] = args) do
     cond do
       String.contains?(plural, ":") ->
-        raise_with_help
+        raise_with_help()
       plural != Phoenix.Naming.underscore(plural) ->
         Mix.raise "Expected the second argument, #{inspect plural}, to be all lowercase using snake_case convention"
       true ->
@@ -137,9 +137,10 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
   end
 
   defp validate_args!(_) do
-    raise_with_help
+    raise_with_help()
   end
 
+  @spec raise_with_help() :: no_return()
   defp raise_with_help do
     Mix.raise """
     mix phoenix.gen.model expects both singular and plural names
@@ -175,12 +176,13 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
   defp indexes(plural, assocs, uniques) do
     Enum.concat(
-      Enum.map(assocs, fn {key, _} ->
-        "create index(:#{plural}, [:#{key}])"
-      end),
-      Enum.map(uniques, fn key ->
-        "create unique_index(:#{plural}, [:#{key}])"
-      end))
+      Enum.map(uniques, fn key -> {key, true} end),
+      Enum.map(assocs, fn {key, _} -> {key, false} end))
+    |> Enum.uniq_by(fn {key, _} -> key end)
+    |> Enum.map(fn
+      {key, false} -> "create index(:#{plural}, [:#{key}])"
+      {key, true}  -> "create unique_index(:#{plural}, [:#{key}])"
+    end)
   end
 
   defp migration(false, _path), do: []
@@ -220,9 +222,6 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
 
   defp value_to_type(:text), do: :string
   defp value_to_type(:uuid), do: Ecto.UUID
-  defp value_to_type(:date), do: Ecto.Date
-  defp value_to_type(:time), do: Ecto.Time
-  defp value_to_type(:datetime), do: Ecto.DateTime
   defp value_to_type(v) do
     if Code.ensure_loaded?(Ecto.Type) and not Ecto.Type.primitive?(v) do
       Mix.raise "Unknown type `#{v}` given to generator"

@@ -77,7 +77,7 @@ defmodule Phoenix.Channel.Server do
       payload: payload
     }
   end
-  def broadcast(_, _, _, _), do: raise_invalid_message
+  def broadcast(_, _, _, _), do: raise_invalid_message()
 
   @doc """
   Broadcasts on the given pubsub server with the given
@@ -93,7 +93,7 @@ defmodule Phoenix.Channel.Server do
       payload: payload
     }
   end
-  def broadcast!(_, _, _, _), do: raise_invalid_message
+  def broadcast!(_, _, _, _), do: raise_invalid_message()
 
   @doc """
   Broadcasts on the given pubsub server with the given
@@ -109,7 +109,7 @@ defmodule Phoenix.Channel.Server do
       payload: payload
     }
   end
-  def broadcast_from(_, _, _, _, _), do: raise_invalid_message
+  def broadcast_from(_, _, _, _, _), do: raise_invalid_message()
 
   @doc """
   Broadcasts on the given pubsub server with the given
@@ -125,7 +125,7 @@ defmodule Phoenix.Channel.Server do
       payload: payload
     }
   end
-  def broadcast_from!(_, _, _, _, _), do: raise_invalid_message
+  def broadcast_from!(_, _, _, _, _), do: raise_invalid_message()
 
   @doc """
   Pushes a message with the given topic, event and payload
@@ -140,7 +140,7 @@ defmodule Phoenix.Channel.Server do
     send pid, encoded_msg
     :ok
   end
-  def push(_, _, _, _), do: raise_invalid_message
+  def push(_, _, _, _, _), do: raise_invalid_message()
 
   @doc """
   Replies to a given ref to the transport process.
@@ -153,9 +153,10 @@ defmodule Phoenix.Channel.Server do
     )
     :ok
   end
-  def reply(_, _, _, _, _), do: raise_invalid_message
+  def reply(_, _, _, _, _), do: raise_invalid_message()
 
 
+  @spec raise_invalid_message() :: no_return()
   defp raise_invalid_message do
     raise ArgumentError, "topic and event must be strings, message must be a map"
   end
@@ -219,12 +220,16 @@ defmodule Phoenix.Channel.Server do
 
   def handle_info(%Message{topic: topic, event: event, payload: payload, ref: ref},
                   %{topic: topic} = socket) do
-    event
-    |> socket.channel.handle_in(payload, put_in(socket.ref, ref))
-    |> handle_result(:handle_in)
+    Phoenix.Endpoint.instrument socket, :phoenix_channel_receive,
+      %{ref: ref, event: event, params: payload, socket: socket}, fn ->
+      event
+      |> socket.channel.handle_in(payload, put_in(socket.ref, ref))
+      |> handle_result(:handle_in)
+    end
   end
 
-  def handle_info(%Broadcast{event: event, payload: payload}, socket) do
+  def handle_info(%Broadcast{topic: topic, event: event, payload: payload},
+                  %Socket{topic: topic} = socket) do
     event
     |> socket.channel.handle_out(payload, socket)
     |> handle_result(:handle_out)
@@ -296,11 +301,16 @@ defmodule Phoenix.Channel.Server do
     {:noreply, put_in(socket.ref, nil)}
   end
 
+  defp handle_result({:noreply, socket, timeout_or_hibernate}, _callback) do
+    {:noreply, put_in(socket.ref, nil), timeout_or_hibernate}
+  end
+
   defp handle_result(result, :handle_in) do
     raise """
     Expected `handle_in/3` to return one of:
 
         {:noreply, Socket.t} |
+        {:noreply, Socket.t, timeout | :hibernate} |
         {:reply, {status :: atom, response :: map}, Socket.t} |
         {:reply, status :: atom, Socket.t} |
         {:stop, reason :: term, Socket.t} |
@@ -316,6 +326,7 @@ defmodule Phoenix.Channel.Server do
     Expected `#{callback}` to return one of:
 
         {:noreply, Socket.t} |
+        {:noreply, Socket.t, timeout | :hibernate} |
         {:stop, reason :: term, Socket.t} |
 
     got #{inspect result}

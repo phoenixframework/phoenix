@@ -1,21 +1,58 @@
 # Changelog
 
-## 1.2.0-rc.0 (2016-4-28)
+## 1.2.1 (2016-8-11)
 
-See these [`1.1.x` to `1.2.0` upgrade instructions](https://gist.github.com/chrismccord/29100e16d3990469c47f851e3142f766) to bring your existing apps up to speed.
+* Enhancements
+  * [Router] Improve errors for invalid route paths
+  * [Plug] Include new development error pages
+
+* Bug Fixes
+  * [Endpoint] Fixed issue where endpoint would fail to code reload on next request after an endpoint compilation error
+
+## 1.2.0 (2016-6-23)
+
+See these [`1.1.x` to `1.2.x` upgrade instructions](https://gist.github.com/chrismccord/29100e16d3990469c47f851e3142f766) to bring your existing apps up to speed.
 
 * Enhancements
   * [CodeReloader] The `lib/` directory is now code reloaded by default along with `web/` in development
   * [Channel] Add `subscribe/2` and `unsubscribe/2` to handle external topic subscriptions for a socket
-  * [View] Generate private `render_template/2` clauses for views to allow overriding `render/2` clauses before rendering templates
   * [Channel] Add `:phoenix_channel_join` instrumentation hook
-
-* JavaScript client enhancements
-  * Add Presence object for syncing presence state between client and server
+  * [View] Generate private `render_template/2` clauses for views to allow overriding `render/2` clauses before rendering templates
+  * [View] Add `:path` and `:pattern` options to allow wildcard template inclusion as well as customized template directory locations
 
 * Deprecations
   * [Endpoint] Generated `subscribe/3` and `unsubscribe/2` clauses have been deprecated in favor of `subscribe/2` and `unsubscribe/1` which uses the caller's pid
   * [PubSub] `Phoenix.PubSub.subscribe/3` and `Phoenix.PubSub.unsubscribe/2` have been deprecated in favor of `subscribe/2` and `unsubscribe/1` which uses the caller's pid
+  * [Watcher] Using the `:root` endpoint configuration for watchers is deprecated. Pass the :cd option at the end of your watcher argument list in config/dev.exs. For example:
+
+      ```elixir
+      watchers: [node: ["node_modules/brunch/bin/brunch", "watch", "--stdin",
+                 cd: Path.expand("../", __DIR__)]]
+      ```
+
+* Bug Fixes
+  * [Template] Prevent infinite call stack when rendering a non-existent template from `template_not_found`
+
+* Backward incompatible changes
+  * [Channel] `subscribe/1` and `unsubscribe/1` have been removed in favor of calling subscribe and unsubscribe off the endpoint directly
+
+* JavaScript client enhancements
+  * Add Presence object for syncing presence state between client and server
+  * Use return value of channel onMessage callback for specialized message transformations before dispatching to the channel
+
+* JavaScript client backward incompatible changes
+  * `Presence.syncState` and `Presence.syncDiff` now return a copy of the state instead of mutating it
+
+
+## 1.1.6 (2016-6-03)
+
+* Enhancements
+  * Add Erlang 19 compatibility
+
+## 1.1.5 (2016-6-01)
+
+* Enhancements
+  * Fix warnings for Elixir 1.3
 
 ## 1.1.4 (2016-1-25)
 

@@ -26,9 +26,20 @@ defmodule Phoenix.Controller do
         end
       end
 
-  An action is just a regular function that receives the connection
+  An action is a regular function that receives the connection
   and the request parameters as arguments. The connection is a
   `Plug.Conn` struct, as specified by the Plug library.
+
+  ## Options
+
+  When used, the controller supports the following options:
+
+    * `:namespace` - sets the namespace to properly inflect
+      the layout view. By default it uses the base alias
+      in your controller name
+
+    * `:log` - the level to log. When false, disables controller
+      logging
 
   ## Connection
 
@@ -37,22 +48,15 @@ defmodule Phoenix.Controller do
 
   Those functions are imported from two modules:
 
-    * `Plug.Conn` - a bunch of low-level functions to work with
+    * `Plug.Conn` - a collection of low-level functions to work with
       the connection
 
     * `Phoenix.Controller` - functions provided by Phoenix
       to support rendering, and other Phoenix specific behaviour
 
-  ## Rendering and layouts
-
-  One of the main features provided by controllers is the ability
-  to do content negotiation and render templates based on
-  information sent by the client. Read `render/3` to learn more.
-
-  It is also important to not confuse `Phoenix.Controller.render/3`
-  with `Phoenix.View.render/3` in the long term. The former expects
-  a connection and relies on content negotiation while the latter is
-  connection-agnostic and typically invoked from your views.
+  IF you want to have functions that manipulate the connection
+  without fully implementing the controller, you can import both
+  modules directly instead of `use Phoenix.Controller`.
 
   ## Plug pipeline
 
@@ -77,34 +81,60 @@ defmodule Phoenix.Controller do
         end
       end
 
-  Check `Phoenix.Controller.Pipeline` for more information on `plug/2`
-  and how to customize the plug pipeline.
+  The `:authenticate` plug will be invoked before the action. If the
+  plug calls `Plug.Conn.halt/1` (which is by default imported into
+  controllers), it will halt the pipeline and won't inoke the action.
 
-  ## Options
+  ### Guards
 
-  When used, the controller supports the following options:
+  `plug/2` in controllers supports guards, allowing a developer to configure
+  a plug to only run in some particular action:
 
-    * `:namespace` - sets the namespace to properly inflect
-      the layout view. By default it uses the base alias
-      in your controller name
+      plug :authenticate, usernames: ["jose", "eric", "sonny"] when action in [:show, :edit]
+      plug :authenticate, usernames: ["admin"] when action in [:show, :edit] when not action in [:index]
 
-    * `:log` - the level to log. When false, disables controller
-      logging
+  The first plug will run only when action is show or edit. The second plug will
+  always run, except for the index action.
 
-  ## Overriding `action/2` for custom arguments
+  Those guards work like regular Elixir guards and the only variables accessible
+  in the guard are `conn`, the `action` as an atom and the `controller` as an
+  alias.
+
+  ## Controllers are plugs
+
+  Like routers, controllers are plugs, but they are wired to dispatch
+  to a particular function which is called an action.
+
+  For example, the route:
+
+      get "/users/:id", UserController, :show
+
+  will invoke `UserController` as a plug:
+
+      UserController.call(conn, :show)
+
+  which will trigger the plug pipeline and which will eventually
+  invoke the inner action plug that dispatches to the `show/2`
+  function in the `UserController`.
+
+  As controllers are plugs, they implement both `init/1` and
+  `call/2`, and it also provides a function named `action/2`
+  which is responsible for dispatching the appropriate action
+  after the plug stack (and is also overridable).
+
+  ### Overriding `action/2` for custom arguments
 
   Phoenix injects an `action/2` plug in your controller which calls the
   function matched from the router. By default, it passes the conn and params.
   In some cases, overriding the `action/2` plug in your controller is a
-  useful way to inject certain argument to your actions that you
-  would otherwise need to fetch off the connection repeatedly. For example,
-  imagine if you stored a `conn.assigns.current_user` in the connection
-  and wanted quick access to the user for every action in your controller:
+  useful way to inject arguments into your actions that you would otherwise
+  need to fetch of the connection repeatedly. For example, imagine if you
+  stored a `conn.assigns.current_user` in the connection and wanted quick
+  access to the user for every action in your controller:
 
       def action(conn, _) do
-        apply(__MODULE__, action_name(conn), [conn,
-                                              conn.params,
-                                              conn.assigns.current_user])
+        args = [conn, conn.params, conn.assigns.current_user]
+        apply(__MODULE__, action_name(conn), args)
       end
 
       def index(conn, _params, user) do
@@ -116,6 +146,17 @@ defmodule Phoenix.Controller do
         video = Repo.get!(user_videos(user), id)
         # ...
       end
+
+  ## Rendering and layouts
+
+  One of the main features provided by controllers is the ability
+  to perform content negotiation and render templates based on
+  information sent by the client. Read `render/3` to learn more.
+
+  It is also important not to confuse `Phoenix.Controller.render/3`
+  with `Phoenix.View.render/3`. The former expects
+  a connection and relies on content negotiation while the latter is
+  connection-agnostic and typically invoked from your views.
   """
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
@@ -191,7 +232,7 @@ defmodule Phoenix.Controller do
   In case a JSON response is returned, it will be converted
   to a JSONP as long as the callback field is present in
   the query string. The callback field itself defaults to
-  "callback" but may be configured with the callback option.
+  "callback", but may be configured with the callback option.
 
   In case there is no callback or the response is not encoded
   in JSON format, it is a no-op.
@@ -318,6 +359,7 @@ defmodule Phoenix.Controller do
         raise ArgumentError, "expected :to or :external option in redirect/2"
     end
   end
+  @spec raise_invalid_url(term()) :: no_return()
   defp raise_invalid_url(url) do
     raise ArgumentError, "the :to option in redirect expects a path but was #{inspect url}"
   end
@@ -472,7 +514,7 @@ defmodule Phoenix.Controller do
 
   See `render/3` for more information.
   """
-  @spec render(Plug.Conn.t, Dict.t | binary | atom) :: Plug.Conn.t
+  @spec render(Plug.Conn.t, Keyword.t | map | binary | atom) :: Plug.Conn.t
   def render(conn, template_or_assigns \\ [])
 
   def render(conn, template) when is_binary(template) or is_atom(template) do
@@ -578,13 +620,12 @@ defmodule Phoenix.Controller do
   to change the layout, similar to how `put_view/2` can be used to change
   the view.
 
-  `layout_formats/2` and `put_layout_formats/2` can be used to configure
+  `layout_formats/1` and `put_layout_formats/2` can be used to configure
   which formats support/require layout rendering (defaults to "html" only).
   """
-  @spec render(Plug.Conn.t, binary | atom, Dict.t) :: Plug.Conn.t
-  @spec render(Plug.Conn.t, module, binary | atom) :: Plug.Conn.t
+  @spec render(Plug.Conn.t, binary | atom, Keyword.t | map) :: Plug.Conn.t
   def render(conn, template, assigns)
-    when is_atom(template) and (is_map(assigns) or is_list(assigns)) do
+      when is_atom(template) and (is_map(assigns) or is_list(assigns)) do
     format =
       get_format(conn) ||
       raise "cannot render template #{inspect template} because conn.params[\"_format\"] is not set. " <>
@@ -592,7 +633,8 @@ defmodule Phoenix.Controller do
     do_render(conn, template_name(template, format), format, assigns)
   end
 
-  def render(conn, template, assigns) when is_binary(template) do
+  def render(conn, template, assigns)
+      when is_binary(template) and (is_map(assigns) or is_list(assigns)) do
     case Path.extname(template) do
       "." <> format ->
         do_render(conn, template, format, assigns)
@@ -603,13 +645,23 @@ defmodule Phoenix.Controller do
   end
 
   def render(conn, view, template)
-    when is_atom(view) and is_binary(template) or is_atom(template) do
+      when is_atom(view) and (is_binary(template) or is_atom(template)) do
     render(conn, view, template, [])
   end
 
-  @spec render(Plug.Conn.t, atom, atom | binary, Dict.t) :: Plug.Conn.t
+  @doc """
+  A shortcut that renders the given template in the given view.
+
+  Equivalent to:
+
+      conn
+      |> put_view(view)
+      |> render(template, assigns)
+
+  """
+  @spec render(Plug.Conn.t, atom, atom | binary, Keyword.t | map) :: Plug.Conn.t
   def render(conn, view, template, assigns)
-    when is_atom(view) and is_binary(template) or is_atom(template) do
+      when is_atom(view) and (is_binary(template) or is_atom(template)) do
     conn
     |> put_view(view)
     |> render(template, assigns)
@@ -617,7 +669,7 @@ defmodule Phoenix.Controller do
 
   defp do_render(conn, template, format, assigns) do
     assigns = to_map(assigns)
-    content_type = Plug.MIME.type(format)
+    content_type = MIME.type(format)
     conn =
       conn
       |> put_private(:phoenix_template, template)
@@ -626,7 +678,7 @@ defmodule Phoenix.Controller do
     view = Map.get(conn.private, :phoenix_view) ||
             raise "a view module was not specified, set one with put_view/2"
 
-    runtime_data = %{template: template, format: format}
+    runtime_data = %{view: view, template: template, format: format, conn: conn}
     data = Phoenix.Endpoint.instrument conn, :phoenix_controller_render, runtime_data, fn ->
       Phoenix.View.render_to_iodata(view, template, Map.put(conn.assigns, :conn, conn))
     end
@@ -656,7 +708,7 @@ defmodule Phoenix.Controller do
     * Checks to see if the `required_key` is present
     * Changes empty parameters of `required_key` (recursively) to nils
 
-  This function is useful to remove empty strings sent
+  This function is useful for removing empty strings sent
   via HTML forms. If you are providing an API, there
   is likely no need to invoke `scrub_params/2`.
 
@@ -723,7 +775,6 @@ defmodule Phoenix.Controller do
 
   defp to_map(assigns) when is_map(assigns), do: assigns
   defp to_map(assigns) when is_list(assigns), do: :maps.from_list(assigns)
-  defp to_map(assigns), do: Dict.merge(%{}, assigns)
 
   defp template_name(name, format) when is_atom(name), do:
     Atom.to_string(name) <> "." <> format
@@ -818,7 +869,7 @@ defmodule Phoenix.Controller do
 
     * the accepted list of arguments contains the "html" format
 
-    * the accept header specified more than one media type preceeded
+    * the accept header specified more than one media type preceded
       or followed by the wildcard media type "`*/*`"
 
   This function raises `Phoenix.NotAcceptableError`, which is rendered
@@ -842,7 +893,7 @@ defmodule Phoenix.Controller do
   The first step is to teach Plug about those new media types in
   your `config/config.exs` file:
 
-      config :plug, :mimes, %{
+      config :mime, :types, %{
         "application/vnd.api+json" => ["json-api"]
       }
 
@@ -854,14 +905,14 @@ defmodule Phoenix.Controller do
 
   After this change, you must recompile plug:
 
-      $ touch deps/plug/mix.exs
-      $ mix deps.compile plug
+      $ mix deps.clean mime --build
+      $ mix deps.get
 
   And now you can use it in accepts too:
 
       plug :accepts, ["html", "json-api"]
   """
-  @spec accepts(Plug.Conn.t, [binary]) :: Plug.Conn.t | no_return
+  @spec accepts(Plug.Conn.t, [binary]) :: Plug.Conn.t | no_return()
   def accepts(conn, [_|_] = accepted) do
     case Map.fetch(conn.params, "_format") do
       {:ok, format} ->
@@ -901,7 +952,7 @@ defmodule Phoenix.Controller do
   defp parse_header_accept(conn, [h|t], acc, accepted) do
     case Plug.Conn.Utils.media_type(h) do
       {:ok, type, subtype, args} ->
-        exts = parse_exts(type <> "/" <> subtype)
+        exts = parse_exts(type, subtype)
         q    = parse_q(args)
 
         if format = (q === 1.0 && find_format(exts, accepted)) do
@@ -939,12 +990,22 @@ defmodule Phoenix.Controller do
     end
   end
 
-  defp parse_exts("*/*" = type), do: type
-  defp parse_exts(type),         do: Plug.MIME.extensions(type)
+  defp parse_exts("*", "*"),      do: "*/*"
+  defp parse_exts(type, "*"),     do: type
+  defp parse_exts(type, subtype), do: MIME.extensions(type <> "/" <> subtype)
 
-  defp find_format("*/*", accepted), do: Enum.fetch!(accepted, 0)
-  defp find_format(exts, accepted),  do: Enum.find(exts, &(&1 in accepted))
+  defp find_format("*/*", accepted),                   do: Enum.fetch!(accepted, 0)
+  defp find_format(exts, accepted) when is_list(exts), do: Enum.find(exts, &(&1 in accepted))
+  defp find_format(_type_range, []),                   do: nil
+  defp find_format(type_range, [h|t]) do
+    mime_type = MIME.type(h)
+    case Plug.Conn.Utils.media_type(mime_type) do
+      {:ok, accepted_type, _subtype, _args} when type_range === accepted_type -> h
+      _ -> find_format(type_range, t)
+    end
+  end
 
+  @spec refuse(term(), term()) :: no_return()
   defp refuse(_conn, accepted) do
     raise Phoenix.NotAcceptableError,
       message: "no supported media type in accept header, expected one of #{inspect accepted}",

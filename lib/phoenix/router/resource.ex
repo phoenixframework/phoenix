@@ -27,8 +27,8 @@ defmodule Phoenix.Router.Resource do
   @doc """
   Builds a resource struct.
   """
-  def build(path, controller, options) when
-      is_binary(path) and is_atom(controller) and is_list(options) do
+  def build(path, controller, options) when is_atom(controller) and is_list(options) do
+    path    = Phoenix.Router.Scope.validate_path(path)
     alias   = Keyword.get(options, :alias)
     param   = Keyword.get(options, :param, @default_param_key)
     name    = Keyword.get(options, :name, Phoenix.Naming.resource_name(controller, "Controller"))

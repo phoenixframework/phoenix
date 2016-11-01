@@ -65,31 +65,7 @@ defmodule Phoenix.Naming do
   """
   @spec underscore(String.t) :: String.t
 
-  def underscore(""), do: ""
-
-  def underscore(<<h, t :: binary>>) do
-    <<to_lower_char(h)>> <> do_underscore(t, h)
-  end
-
-  defp do_underscore(<<h, t, rest :: binary>>, _) when h in ?A..?Z and not (t in ?A..?Z or t == ?.) do
-    <<?_, to_lower_char(h), t>> <> do_underscore(rest, t)
-  end
-
-  defp do_underscore(<<h, t :: binary>>, prev) when h in ?A..?Z and not prev in ?A..?Z do
-    <<?_, to_lower_char(h)>> <> do_underscore(t, h)
-  end
-
-  defp do_underscore(<<?., t :: binary>>, _) do
-    <<?/>> <> underscore(t)
-  end
-
-  defp do_underscore(<<h, t :: binary>>, _) do
-    <<to_lower_char(h)>> <> do_underscore(t, h)
-  end
-
-  defp do_underscore(<<>>, _) do
-    <<>>
-  end
+  def underscore(value), do: Macro.underscore(value)
 
   defp to_lower_char(char) when char in ?A..?Z, do: char + 32
   defp to_lower_char(char), do: char
@@ -115,57 +91,17 @@ defmodule Phoenix.Naming do
 
   """
   @spec camelize(String.t) :: String.t
-  def camelize(""), do: ""
-
-  def camelize(<<?_, t :: binary>>) do
-    camelize(t)
-  end
-
-  def camelize(<<h, t :: binary>>) do
-    <<to_upper_char(h)>> <> do_camelize(t, :upper)
-  end
+  def camelize(value), do: Macro.camelize(value)
 
   @spec camelize(String.t, :lower) :: String.t
   def camelize("", :lower), do: ""
-
   def camelize(<<?_, t :: binary>>, :lower) do
     camelize(t, :lower)
   end
-
-  def camelize(<<h, t :: binary>>, :lower) do
-    <<to_lower_char(h)>> <> do_camelize(t, :upper)
+  def camelize(<<h, _t :: binary>> = value, :lower) do
+    <<_first, rest :: binary>> = camelize(value)
+    <<to_lower_char(h)>> <> rest
   end
-
-  defp do_camelize(<<?_, ?_, t :: binary>>, atom) do
-    do_camelize(<< ?_, t :: binary >>, atom)
-  end
-
-  defp do_camelize(<<?_, h, t :: binary>>, :lower) when h in ?A..?Z do
-    <<to_lower_char(h)>> <> do_camelize(t, :upper)
-  end
-
-  defp do_camelize(<<?_, h, t :: binary>>, :upper) when h in ?a..?z do
-    <<to_upper_char(h)>> <> do_camelize(t, :upper)
-  end
-
-  defp do_camelize(<<?_>>, _atom) do
-    <<>>
-  end
-
-  defp do_camelize(<<?/, t :: binary>>, atom) do
-    <<?.>> <> camelize(t, atom)
-  end
-
-  defp do_camelize(<<h, t :: binary>>, atom) do
-    <<h>> <> do_camelize(t, atom)
-  end
-
-  defp do_camelize(<<>>, _atom) do
-    <<>>
-  end
-
-  defp to_upper_char(char) when char in ?a..?z, do: char - 32
-  defp to_upper_char(char), do: char
 
   @doc """
   Converts an attribute/form field into its humanize version.

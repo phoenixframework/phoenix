@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Secret do
   @shortdoc "Generates a secret"
 
   @moduledoc """
-  Generates a secret and print it to the terminal.
+  Generates a secret and prints it to the terminal.
 
       mix phoenix.gen.secret [length]
 
@@ -14,12 +14,12 @@ defmodule Mix.Tasks.Phoenix.Gen.Secret do
   """
   def run([]),    do: run(["64"])
   def run([int]), do: int |> parse! |> random_string |> Mix.shell.info
-  def run([_|_]), do: invalid_args!
+  def run([_|_]), do: invalid_args!()
 
   defp parse!(int) do
     case Integer.parse(int) do
       {int, ""} -> int
-      _ -> invalid_args!
+      _ -> invalid_args!()
     end
   end
 
@@ -28,6 +28,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Secret do
   end
   defp random_string(_), do: Mix.raise "The secret should be at least 32 characters long"
 
+  @spec invalid_args!() :: no_return()
   defp invalid_args! do
     Mix.raise "mix phoenix.gen.secret expects a length as integer or no argument at all"
   end

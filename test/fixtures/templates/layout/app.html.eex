@@ -1,4 +1,4 @@
 <html>
-  <title><%= @title || default_title %></title>
+  <title><%= @title || default_title() %></title>
   <%= render @view_module, @view_template, assigns %>
 </html>

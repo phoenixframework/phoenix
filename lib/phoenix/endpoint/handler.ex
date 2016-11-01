@@ -13,7 +13,7 @@ defmodule Phoenix.Endpoint.Handler do
   """
 
   @doc """
-  Provides the children specification to be passed
+  Provides the child specification to be passed
   to `Phoenix.Endpoint.Server` supervisor.
   """
   @callback child_spec(scheme :: atom, endpoint :: module, config :: Keyword.t) :: Supervisor.Spec.spec

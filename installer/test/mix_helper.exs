@@ -2,6 +2,12 @@
 # process to avoid polluting tests.
 Mix.shell(Mix.Shell.Process)
 
+# Mock live reloading for testing the generated application.
+defmodule Phoenix.LiveReloader do
+  def init(opts), do: opts
+  def call(conn, _), do: conn
+end
+
 defmodule MixHelper do
   import ExUnit.Assertions
 
@@ -10,7 +16,7 @@ defmodule MixHelper do
   end
 
   def in_tmp(which, function) do
-    path = Path.join(tmp_path, which)
+    path = Path.join(tmp_path(), which)
     File.rm_rf! path
     File.mkdir_p! path
     File.cd! path, function
@@ -44,5 +50,22 @@ defmodule MixHelper do
     after
       Application.put_env(:phoenix, :generators, old)
     end
+  end
+
+  def umbrella_mixfile_contents do
+    """
+defmodule Umbrella.Mixfile do
+  use Mix.Project
+
+  def project do
+    [apps_path: "apps",
+     deps: deps()]
+  end
+
+  defp deps do
+    []
+  end
+end
+    """
   end
 end

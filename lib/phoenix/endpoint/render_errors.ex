@@ -15,6 +15,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
   @already_sent {:plug_conn, :sent}
   import Plug.Conn
   import Phoenix.Controller
+  require Logger
 
   @doc false
   defmacro __using__(opts) do
@@ -50,10 +51,6 @@ defmodule Phoenix.Endpoint.RenderErrors do
     __catch__(conn, kind, reason, System.stacktrace, opts)
   end
 
-  defp __catch__(_conn, :error, %Phoenix.Router.NoRouteError{} = reason, stack, opts) do
-    maybe_render(reason.conn, :error, reason, stack, opts)
-  end
-
   defp __catch__(conn, kind, reason, stack, opts) do
     maybe_render(conn, kind, reason, stack, opts)
     :erlang.raise(kind, reason, stack)
@@ -64,7 +61,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
   # Made public with @doc false for testing.
   @doc false
   def render(conn, kind, reason, stack, opts) do
-    conn = conn |> fetch_query_params() |> fetch_format(opts)
+    conn = conn |> maybe_fetch_query_params() |> maybe_fetch_format(opts)
 
     reason = Exception.normalize(kind, reason, stack)
     format = get_format(conn)
@@ -89,16 +86,26 @@ defmodule Phoenix.Endpoint.RenderErrors do
     end
   end
 
-  defp fetch_format(conn, opts) do
-    try do
-      case get_format(conn) do
-        format when is_binary(format) -> conn
-        _ -> conn |> accepts(Keyword.fetch!(opts, :accepts))
+  defp maybe_fetch_query_params(conn) do
+    fetch_query_params(conn)
+  rescue
+    Plug.Conn.InvalidQueryError ->
+      case conn.params do
+        %Plug.Conn.Unfetched{} -> %{conn | query_params: %{}, params: %{}}
+        params -> %{conn | query_params: %{}, params: params}
       end
-    rescue
-      Phoenix.NotAcceptableError ->
-        put_format(conn, Keyword.fetch!(opts, :accepts) |> List.first())
-    end
+  end
+
+  defp maybe_fetch_format(conn, opts) do
+    accepts(conn, Keyword.fetch!(opts, :accepts))
+  rescue
+    e in Phoenix.NotAcceptableError ->
+      fallback_format = Keyword.fetch!(opts, :accepts) |> List.first()
+      Logger.warn("Could not render errors due to #{Exception.message(e)}. " <>
+                  "Errors will be rendered using the first accepted format #{inspect fallback_format} as fallback. " <>
+                  "Please customize the :accepts option under the :render_errors configuration " <>
+                  "in your endpoint if you want to support other formats or choose another fallback")
+      put_format(conn, fallback_format)
   end
 
   defp status(:error, error), do: Plug.Exception.status(error)

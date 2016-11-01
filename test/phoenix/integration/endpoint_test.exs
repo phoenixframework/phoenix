@@ -7,11 +7,14 @@ defmodule Phoenix.Integration.EndpointTest do
 
   alias Phoenix.Integration.AdapterTest.ProdEndpoint
   alias Phoenix.Integration.AdapterTest.DevEndpoint
+  alias Phoenix.Integration.AdapterTest.ProdInet6Endpoint
 
   Application.put_env(:endpoint_int, ProdEndpoint,
-      http: [port: "4807"], url: [host: "example.com"], server: true)
+      http: [port: "4807"], url: [host: "example.com"], server: true, render_errors: [accepts: ~w(html json)])
   Application.put_env(:endpoint_int, DevEndpoint,
       http: [port: "4808"], debug_errors: true)
+  Application.put_env(:endpoint_int, ProdInet6Endpoint,
+      http: [{:port, "4809"}, :inet6], url: [host: "example.com"], server: true)
 
   defmodule Router do
     @moduledoc """
@@ -69,7 +72,7 @@ defmodule Phoenix.Integration.EndpointTest do
     end
   end
 
-  for mod <- [ProdEndpoint, DevEndpoint] do
+  for mod <- [ProdEndpoint, DevEndpoint, ProdInet6Endpoint] do
     defmodule mod do
       use Phoenix.Endpoint, otp_app: :endpoint_int
       @before_compile Wrapper
@@ -90,73 +93,89 @@ defmodule Phoenix.Integration.EndpointTest do
     end
   end
 
-  @prod 4807
-  @dev  4808
+  @prod       4807
+  @dev        4808
+  @prod_inet6 4809
 
   alias Phoenix.Integration.HTTPClient
 
   test "adapters starts on configured port and serves requests and stops for prod" do
-    # Has server: true
-    capture_log fn -> {:ok, _} = ProdEndpoint.start_link end
+    capture_log fn ->
+      # Has server: true
+      {:ok, _} = ProdEndpoint.start_link()
 
-    # Requests
-    {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
-    assert resp.status == 200
-    assert resp.body == "ok"
+      # Requests
+      {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
+      assert resp.status == 200
+      assert resp.body == "ok"
 
-    {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/unknown", %{})
-    assert resp.status == 404
-    assert resp.body == "404.html from Phoenix.ErrorView"
+      {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/unknown", %{})
+      assert resp.status == 404
+      assert resp.body == "404.html from Phoenix.ErrorView"
 
-    assert capture_log(fn ->
-      {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/oops", %{})
-      assert resp.status == 500
-      assert resp.body == "500.html from Phoenix.ErrorView"
-    end) =~ "** (RuntimeError) oops"
+      {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/unknown?_format=json", %{})
+      assert resp.status == 404
+      assert resp.body |> Poison.decode!() == %{"error" => "Got 404 from error with GET"}
 
-    assert capture_log(fn ->
-      {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/router/oops", %{})
-      assert resp.status == 500
-      assert resp.body == "500.html from Phoenix.ErrorView"
-    end) =~ "** (RuntimeError) oops"
+      assert capture_log(fn ->
+        {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/oops", %{})
+        assert resp.status == 500
+        assert resp.body == "500.html from Phoenix.ErrorView"
+      end) =~ "** (RuntimeError) oops"
 
-    Supervisor.stop(ProdEndpoint)
-    {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
+      assert capture_log(fn ->
+        {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/router/oops", %{})
+        assert resp.status == 500
+        assert resp.body == "500.html from Phoenix.ErrorView"
+      end) =~ "** (RuntimeError) oops"
+
+      Supervisor.stop(ProdEndpoint)
+      {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
+    end
   end
 
   test "adapters starts on configured port and serves requests and stops for dev" do
-    # Has server: false
-    {:ok, _} = DevEndpoint.start_link
-    {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
-    Supervisor.stop(DevEndpoint)
-
     # Toggle globally
     serve_endpoints(true)
     on_exit(fn -> serve_endpoints(false) end)
-    capture_log fn -> {:ok, _} = DevEndpoint.start_link end
 
-    # Requests
-    {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
-    assert resp.status == 200
-    assert resp.body == "ok"
+    capture_log fn ->
+      # Has server: false
+      {:ok, _} = DevEndpoint.start_link
 
-    capture_log(fn ->
+      # Requests
+      {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
+      assert resp.status == 200
+      assert resp.body == "ok"
+
       {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}/unknown", %{})
       assert resp.status == 404
       assert resp.body =~ "NoRouteError at GET /unknown"
-    end)
 
-    assert capture_log(fn ->
-      {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}/oops", %{})
-      assert resp.status == 500
-      assert resp.body =~ "RuntimeError at GET /oops"
-    end) =~ "** (RuntimeError) oops"
+      assert capture_log(fn ->
+        {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}/oops", %{})
+        assert resp.status == 500
+        assert resp.body =~ "RuntimeError at GET /oops"
+      end) =~ "** (RuntimeError) oops"
 
-    assert capture_log(fn ->
-      {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}/router/oops", %{})
-      assert resp.status == 500
-      assert resp.body =~ "RuntimeError at GET /router/oops"
-    end) =~ "** (RuntimeError) oops"
+      assert capture_log(fn ->
+        {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}/router/oops", %{})
+        assert resp.status == 500
+        assert resp.body =~ "RuntimeError at GET /router/oops"
+      end) =~ "** (RuntimeError) oops"
+
+      Supervisor.stop(DevEndpoint)
+      {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@dev}", %{})
+    end
+  end
+
+  test "adapters starts on configured port and inet6 for prod" do
+    capture_log fn ->
+      # Has server: true
+      {:ok, _} = ProdInet6Endpoint.start_link()
+
+      Supervisor.stop(ProdInet6Endpoint)
+    end
   end
 
   defp serve_endpoints(bool) do

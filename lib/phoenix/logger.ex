@@ -5,8 +5,8 @@ defmodule Phoenix.Logger do
   ## Parameter filtering
 
   When logging parameters, Phoenix can filter out sensitive parameters
-  in the logs, such as passwords, tokens and what not. Parameters to
-  be filtered can be added via the `:filter_parameters` option:
+  such as passwords and tokens. Parameters to be filtered can be
+  added via the `:filter_parameters` option:
 
       config :phoenix, :filter_parameters, ["password", "secret"]
 
@@ -25,7 +25,7 @@ defmodule Phoenix.Logger do
     Logger.log level, fn ->
       controller = inspect(module)
       action = conn |> action_name() |> Atom.to_string()
-      ["Processing by ", controller, ?., action, ?/, ?2, ?\n,
+      ["Processing with ", controller, ?., action, ?/, ?2, ?\n,
         "  Parameters: ", params(conn.params), ?\n,
         "  Pipelines: ", inspect(conn.private[:phoenix_pipelines])]
     end

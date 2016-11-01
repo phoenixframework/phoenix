@@ -8,8 +8,8 @@ defmodule Phoenix.Token do
 
   ## Example
 
-  When generating a unique token for usage in an API or Channel
-  it is advised to use a unique identifier for the user typically
+  When generating a unique token for use in an API or Channel
+  it is advised to use a unique identifier for the user, typically
   the id from a database. For example:
 
       iex> user_id = 1
@@ -23,14 +23,15 @@ defmodule Phoenix.Token do
 
   The first argument to both `sign/4` and `verify/4` can be one of:
 
-      * the module name of a Phoenix endpoint (shown above) - where
-        the secret key base is extracted from the endpoint
-      * `Plug.Conn` - where the secret key base is extracted from the
-        endpoint stored in the connection
-      * `Phoenix.Socket` - where the secret key base is extracted from
-        the endpoint stored in the socket
-      * a string, representing the secret key base itself. We recommend
-        a key base with at least 20 characters to provide enough entropy
+    * the module name of a Phoenix endpoint (shown above) - where
+      the secret key base is extracted from the endpoint
+    * `Plug.Conn` - where the secret key base is extracted from the
+      endpoint stored in the connection
+    * `Phoenix.Socket` - where the secret key base is extracted from
+      the endpoint stored in the socket
+    * a string, representing the secret key base itself. A key base
+      with at least 20 randomly generated characters should be used
+      to provide adequate entropy.
 
   ## Usage
 
@@ -79,7 +80,7 @@ defmodule Phoenix.Token do
   alias Plug.Crypto.MessageVerifier
 
   @doc """
-  Encodes data and signs it resulting in a token you can send down to clients.
+  Encodes data and signs it resulting in a token you can send to clients.
 
   ## Options
     * `:key_iterations` - option passed to `Plug.Crypto.KeyGenerator`
@@ -87,7 +88,7 @@ defmodule Phoenix.Token do
     * `:key_length` - option passed to `Plug.Crypto.KeyGenerator`
       when generating the encryption and signing keys. Defaults to 32;
     * `:key_digest` - option passed to `Plug.Crypto.KeyGenerator`
-      when generating the encryption and signing keys. Defaults to `:sha256';
+      when generating the encryption and signing keys. Defaults to `:sha256`;
   """
   def sign(context, salt, data, opts \\ []) when is_binary(salt) do
     secret = get_key_base(context) |> get_secret(salt, opts)
@@ -112,7 +113,7 @@ defmodule Phoenix.Token do
     * `:key_length` - option passed to `Plug.Crypto.KeyGenerator`
       when generating the encryption and signing keys. Defaults to 32;
     * `:key_digest` - option passed to `Plug.Crypto.KeyGenerator`
-      when generating the encryption and signing keys. Defaults to `:sha256';
+      when generating the encryption and signing keys. Defaults to `:sha256`;
 
   """
   def verify(context, salt, token, opts \\ [])
@@ -160,5 +161,5 @@ defmodule Phoenix.Token do
     KeyGenerator.generate(secret_key_base, salt, key_opts)
   end
 
-  defp now_ms, do: System.system_time(:milli_seconds)
+  defp now_ms, do: System.system_time(:milliseconds)
 end

@@ -5,8 +5,8 @@ defmodule Phoenix.Socket do
   `Phoenix.Socket` is used as a module for establishing and maintaining
   the socket state via the `Phoenix.Socket` struct.
 
-  Once connected to a socket, incoming  and pubsub events are routed
-  to channels. The incoming client data is routed to channels via transports.
+  Once connected to a socket, incoming and outgoing events are routed to
+  channels. The incoming client data is routed to channels via transports.
   It is the responsibility of the socket to tie transports and channels
   together.
 
@@ -15,13 +15,13 @@ defmodule Phoenix.Socket do
 
       transport :websocket, Phoenix.Transports.WebSocket
 
-  The command above means incoming socket connections can be done via
+  The command above means incoming socket connections can be made via
   the WebSocket transport. Events are routed by topic to channels:
 
       channel "room:lobby", MyApp.LobbyChannel
 
   See `Phoenix.Channel` for more information on channels. Check each
-  transport module to check the options specific to each transport.
+  transport module to find the options specific to each transport.
 
   ## Socket Behaviour
 
@@ -100,7 +100,7 @@ defmodule Phoenix.Socket do
   @doc ~S"""
   Identifies the socket connection.
 
-  Socket id's are topics that allow you to identify all sockets for a given user:
+  Socket IDs are topics that allow you to identify all sockets for a given user:
 
       def id(socket), do: "users_socket:#{socket.assigns.user_id}"
 
@@ -247,7 +247,7 @@ defmodule Phoenix.Socket do
 
   The `channel` macro accepts topic patterns in two flavors. A splat argument
   can be provided as the last character to indicate a "topic:subtopic" match. If
-  a plain string is provied, only that topic will match the channel handler.
+  a plain string is provided, only that topic will match the channel handler.
   Most use-cases will use the "topic:*" pattern to allow more versatile topic
   scoping.
 

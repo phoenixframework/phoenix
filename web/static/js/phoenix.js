@@ -127,7 +127,7 @@
 // they came online from:
 //
 //     let state = {}
-//     Presence.syncState(state, stateFromServer)
+//     state = Presence.syncState(state, stateFromServer)
 //     let listBy = (id, {metas: [first, ...rest]}) => {
 //       first.count = rest.length + 1 // count of this user's presences
 //       first.id = id
@@ -156,13 +156,13 @@
 //     }
 //     let presences = {} // client's initial empty presence state
 //     // receive initial presence data from server, sent after join
-//     myChannel.on("presences", state => {
-//       Presence.syncState(presences, state, onJoin, onLeave)
+//     myChannel.on("presence_state", state => {
+//       presences = Presence.syncState(presences, state, onJoin, onLeave)
 //       displayUsers(Presence.list(presences))
 //     })
 //     // receive "presence_diff" from server, containing join/leave events
 //     myChannel.on("presence_diff", diff => {
-//       Presence.syncDiff(presences, diff, onJoin, onLeave)
+//       presences = Presence.syncDiff(presences, diff, onJoin, onLeave)
 //       this.setState({users: Presence.list(room.presences, listBy)})
 //     })
 //
@@ -302,18 +302,17 @@ export class Channel {
       this.pushBuffer = []
     })
     this.onClose( () => {
+      this.rejoinTimer.reset()
       this.socket.log("channel", `close ${this.topic} ${this.joinRef()}`)
       this.state = CHANNEL_STATES.closed
       this.socket.remove(this)
     })
-    this.onError( reason => {
+    this.onError( reason => { if(this.isLeaving() || this.isClosed()){ return }
       this.socket.log("channel", `error ${this.topic}`, reason)
       this.state = CHANNEL_STATES.errored
       this.rejoinTimer.scheduleTimeout()
     })
-    this.joinPush.receive("timeout", () => {
-      if(this.state !== CHANNEL_STATES.joining){ return }
-
+    this.joinPush.receive("timeout", () => { if(!this.isJoining()){ return }
       this.socket.log("channel", `timeout ${this.topic}`, this.joinPush.timeout)
       this.state = CHANNEL_STATES.errored
       this.rejoinTimer.scheduleTimeout()
@@ -350,7 +349,7 @@ export class Channel {
 
   off(event){ this.bindings = this.bindings.filter( bind => bind.event !== event ) }
 
-  canPush(){ return this.socket.isConnected() && this.state === CHANNEL_STATES.joined }
+  canPush(){ return this.socket.isConnected() && this.isJoined() }
 
   push(event, payload, timeout = this.timeout){
     if(!this.joinedOnce){
@@ -397,7 +396,10 @@ export class Channel {
   // Overridable message hook
   //
   // Receives all events for specialized message handling
-  onMessage(event, payload, ref){}
+  // before dispatching to the channel callbacks.
+  //
+  // Must return the payload, modified or unmodified
+  onMessage(event, payload, ref){ return payload }
 
   // private
 
@@ -410,7 +412,7 @@ export class Channel {
     this.joinPush.resend(timeout)
   }
 
-  rejoin(timeout = this.timeout){ if(this.state === CHANNEL_STATES.leaving){ return }
+  rejoin(timeout = this.timeout){ if(this.isLeaving()){ return }
     this.sendJoin(timeout)
   }
 
@@ -419,12 +421,20 @@ export class Channel {
     if(ref && [close, error, leave, join].indexOf(event) >= 0 && ref !== this.joinRef()){
       return
     }
-    this.onMessage(event, payload, ref)
+    let handledPayload = this.onMessage(event, payload, ref)
+    if(payload && !handledPayload){ throw("channel onMessage callbacks must return the payload, modified or unmodified") }
+
     this.bindings.filter( bind => bind.event === event)
-                 .map( bind => bind.callback(payload, ref))
+                 .map( bind => bind.callback(handledPayload, ref))
   }
 
   replyEventName(ref){ return `chan_reply_${ref}` }
+
+  isClosed() { return this.state === CHANNEL_STATES.closed }
+  isErrored(){ return this.state === CHANNEL_STATES.errored }
+  isJoined() { return this.state === CHANNEL_STATES.joined }
+  isJoining(){ return this.state === CHANNEL_STATES.joining }
+  isLeaving(){ return this.state === CHANNEL_STATES.leaving }
 }
 
 export class Socket {
@@ -528,7 +538,7 @@ export class Socket {
   onMessage  (callback){ this.stateChangeCallbacks.message.push(callback) }
 
   onConnOpen(){
-    this.log("transport", `connected to ${this.endPointURL()}`, this.transport.prototype)
+    this.log("transport", `connected to ${this.endPointURL()}`)
     this.flushSendBuffer()
     this.reconnectTimer.reset()
     if(!this.conn.skipHeartbeat){
@@ -693,7 +703,7 @@ export class LongPoll {
   send(body){
     Ajax.request("POST", this.endpointURL(), "application/json", body, this.timeout, this.onerror.bind(this, "timeout"), (resp) => {
       if(!resp || resp.status !== 200){
-        this.onerror(status)
+        this.onerror(resp && resp.status)
         this.closeAndRetry()
       }
     })
@@ -785,13 +795,14 @@ Ajax.states = {complete: 4}
 
 export var Presence = {
 
-  syncState(state, newState, onJoin, onLeave){
+  syncState(currentState, newState, onJoin, onLeave){
+    let state = this.clone(currentState)
     let joins = {}
     let leaves = {}
 
     this.map(state, (key, presence) => {
       if(!newState[key]){
-        leaves[key] = this.clone(presence)
+        leaves[key] = presence
       }
     })
     this.map(newState, (key, newPresence) => {
@@ -813,10 +824,11 @@ export var Presence = {
         joins[key] = newPresence
       }
     })
-    this.syncDiff(state, {joins: joins, leaves: leaves}, onJoin, onLeave)
+    return this.syncDiff(state, {joins: joins, leaves: leaves}, onJoin, onLeave)
   },
 
-  syncDiff(state, {joins, leaves}, onJoin, onLeave){
+  syncDiff(currentState, {joins, leaves}, onJoin, onLeave){
+    let state = this.clone(currentState)
     if(!onJoin){ onJoin = function(){} }
     if(!onLeave){ onLeave = function(){} }
 
@@ -840,6 +852,7 @@ export var Presence = {
         delete state[key]
       }
     })
+    return state
   },
 
   list(presences, chooser){

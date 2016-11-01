@@ -1,19 +1,20 @@
 defmodule Phoenix.Mixfile do
   use Mix.Project
 
-  @version "1.2.0-rc.0"
+  @version "1.3.0-dev"
 
   def project do
     [app: :phoenix,
      version: @version,
-     elixir: "~> 1.2",
-     deps: deps,
-     package: package,
+     elixir: "~> 1.3",
+     deps: deps(),
+     package: package(),
 
      # Because we define protocols on the fly to test
      # Phoenix.Param, we need to disable consolidation
      # for the test environment for Elixir v1.2 onward.
      consolidate_protocols: Mix.env != :test,
+     xref: [exclude: [Ecto.Type]],
 
      name: "Phoenix",
      docs: [source_ref: "v#{@version}", main: "Phoenix", logo: "logo.png"],
@@ -34,29 +35,28 @@ defmodule Phoenix.Mixfile do
            generators: [],
            filter_parameters: ["password"],
            serve_endpoints: false,
-           gzippable_exts: ~w(.js .css .txt .text .html .json)]]
+           gzippable_exts: ~w(.js .css .txt .text .html .json .svg)]]
   end
 
   defp deps do
     [{:cowboy, "~> 1.0", optional: true},
-     {:plug, "~> 1.0"},
-     {:phoenix_pubsub, "~> 1.0.0-rc"},
-     {:poison, "~> 1.5 or ~> 2.0"},
+     {:plug, "~> 1.2.1 or ~> 1.3"},
+     {:phoenix_pubsub, "~> 1.0"},
+     {:poison, "~> 2.2 or ~> 3.0"},
      {:gettext, "~> 0.8", only: :test},
 
      # Docs dependencies
-     {:earmark, "~> 0.1", only: :docs},
-     {:ex_doc, "~> 0.11", only: :docs},
+     {:ex_doc, "~> 0.12", only: :docs},
      {:inch_ex, "~> 0.2", only: :docs},
 
      # Test dependencies
-     {:phoenix_html, "~> 2.4", only: :test},
+     {:phoenix_html, "~> 2.6", only: :test},
      {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test}]
   end
 
   defp package do
     [maintainers: ["Chris McCord", "José Valim", "Lance Halvorsen",
-                    "Jason Stiebs", "Eric Meadows-Jönsson", "Sonny Scroggin"],
+                   "Jason Stiebs", "Eric Meadows-Jönsson", "Sonny Scroggin"],
      licenses: ["MIT"],
      links: %{github: "https://github.com/phoenixframework/phoenix"},
      files: ~w(lib priv web) ++

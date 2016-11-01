@@ -6,7 +6,7 @@ defmodule Phoenix.Controller.ControllerTest do
   alias Plug.Conn
 
   setup do
-    Logger.disable(self)
+    Logger.disable(self())
     :ok
   end
 
@@ -49,7 +49,7 @@ defmodule Phoenix.Controller.ControllerTest do
     assert layout_formats(conn) == ~w(json xml)
 
     assert_raise Plug.Conn.AlreadySentError, fn ->
-      put_layout_formats sent_conn, ~w(json)
+      put_layout_formats sent_conn(), ~w(json)
     end
   end
 
@@ -74,7 +74,7 @@ defmodule Phoenix.Controller.ControllerTest do
     end
 
     assert_raise Plug.Conn.AlreadySentError, fn ->
-      put_layout sent_conn, {AppView, :print}
+      put_layout sent_conn(), {AppView, :print}
     end
   end
 
@@ -90,7 +90,7 @@ defmodule Phoenix.Controller.ControllerTest do
     assert layout(conn) == {AppView, "app.html"}
 
     assert_raise Plug.Conn.AlreadySentError, fn ->
-      put_new_layout sent_conn, {AppView, "app.html"}
+      put_new_layout sent_conn(), {AppView, "app.html"}
     end
   end
 
@@ -103,10 +103,10 @@ defmodule Phoenix.Controller.ControllerTest do
     assert view_module(conn) == World
 
     assert_raise Plug.Conn.AlreadySentError, fn ->
-      put_new_view sent_conn, Hello
+      put_new_view sent_conn(), Hello
     end
     assert_raise Plug.Conn.AlreadySentError, fn ->
-      put_view sent_conn, Hello
+      put_view sent_conn(), Hello
     end
   end
 
@@ -282,6 +282,12 @@ defmodule Phoenix.Controller.ControllerTest do
     assert conn.params["_format"] == nil
   end
 
+  test "accepts/2 uses first matching accepts on empty subtype" do
+    conn = accepts with_accept("text/*"), ~w(json text css)
+    assert get_format(conn) == "text"
+    assert conn.params["_format"] == nil
+  end
+
   test "accepts/2 on non-empty */*" do
     # Fallbacks to HTML due to browsers behavior
     conn = accepts with_accept("application/json, */*"), ~w(html json)
@@ -300,11 +306,19 @@ defmodule Phoenix.Controller.ControllerTest do
     conn = accepts with_accept("text/plain, application/json, */*"), ~w(json text)
     assert get_format(conn) == "text"
     assert conn.params["_format"] == nil
+
+    conn = accepts with_accept("text/*, application/*, */*"), ~w(json text)
+    assert get_format(conn) == "text"
+    assert conn.params["_format"] == nil
   end
 
   test "accepts/2 ignores invalid media types" do
     conn = accepts with_accept("foo/bar, bar baz, application/json"), ~w(html json)
     assert get_format(conn) == "json"
+    assert conn.params["_format"] == nil
+
+    conn = accepts with_accept("foo/*, */bar, text/*"), ~w(json html)
+    assert get_format(conn) == "html"
     assert conn.params["_format"] == nil
   end
 
@@ -327,6 +341,14 @@ defmodule Phoenix.Controller.ControllerTest do
 
     conn = accepts with_accept("text/html; q=0.7, application/json; q=0.8"), ~w(html json)
     assert get_format(conn) == "json"
+    assert conn.params["_format"] == nil
+
+    conn = accepts with_accept("text/*; q=0.7, application/json"), ~w(html json)
+    assert get_format(conn) == "json"
+    assert conn.params["_format"] == nil
+
+    conn = accepts with_accept("application/json; q=0.7, text/*; q=0.8"), ~w(json html)
+    assert get_format(conn) == "html"
     assert conn.params["_format"] == nil
 
     exception = assert_raise Phoenix.NotAcceptableError, ~r/no supported media type in accept/, fn ->
@@ -399,8 +421,8 @@ defmodule Phoenix.Controller.ControllerTest do
     |> with_session
     |> protect_from_forgery([])
 
-    assert is_binary get_csrf_token
-    assert is_binary delete_csrf_token
+    assert is_binary get_csrf_token()
+    assert is_binary delete_csrf_token()
   end
 
   test "put_secure_browser_headers/2" do

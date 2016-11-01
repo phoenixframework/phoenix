@@ -6,24 +6,23 @@
 use Mix.Config
 
 <%= if namespaced? or ecto do %># General application configuration
-config :<%= application_name %><%= if namespaced? do %>,
-  namespace: <%= application_module %><% end %><%= if ecto do %>,
-  ecto_repos: [<%= application_module %>.Repo]<% end %>
+config :<%= app_name %><%= if namespaced? do %>,
+  namespace: <%= app_module %><% end %><%= if ecto do %>,
+  ecto_repos: [<%= app_module %>.Repo]<% end %>
 
 <% end %># Configures the endpoint
-config :<%= application_name %>, <%= application_module %>.Endpoint,
+config :<%= app_name %>, <%= app_module %>.Endpoint,
   url: [host: "localhost"],
-  root: Path.dirname(__DIR__),
   secret_key_base: "<%= secret_key_base %>",
-  render_errors: [view: <%= application_module %>.ErrorView, accepts: ~w(<%= if html do %>html <% end %>json)],
-  pubsub: [name: <%= application_module %>.PubSub,
+  render_errors: [view: <%= app_module %>.ErrorView, accepts: ~w(<%= if html do %>html <% end %>json)],
+  pubsub: [name: <%= app_module %>.PubSub,
            adapter: Phoenix.PubSub.PG2]
 
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
-
+<%= generator_config %>
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env}.exs"

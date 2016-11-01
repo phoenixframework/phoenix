@@ -1,0 +1,19 @@
+<h2>Show message</h2>
+
+<ul>
+
+  <li>
+    <strong>Body:</strong>
+    <%= @message.body %>
+  </li>
+
+  <li>
+    <strong>Likes:</strong>
+    <%= @message.like_count %>
+  </li>
+
+
+</ul>
+
+<%= link "Edit", to: message_path(@conn, :edit, @message) %>
+<%= link "Back", to: message_path(@conn, :index) %>

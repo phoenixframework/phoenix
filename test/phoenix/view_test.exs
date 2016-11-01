@@ -169,4 +169,12 @@ defmodule Phoenix.ViewTest do
     assert render_to_string(MyApp.UserView, "render_template.html", name: "eric") ==
       "rendered template for ERIC\n"
   end
+
+  test ":pattern can be used to customized precompiled patterns" do
+    assert render_to_string(MyApp.UserView, "profiles/admin.html", []) == "admin profile\n"
+  end
+
+  test ":path can be provided custom root path" do
+    assert render_to_string(MyApp.PathView, "path.html", []) == "path\n"
+  end
 end

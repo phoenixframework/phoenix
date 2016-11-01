@@ -18,8 +18,12 @@ defmodule MyApp.User do
   defstruct name: "name"
 end
 
+defmodule MyApp.PathView do
+  use Phoenix.View, root: "test/fixtures/templates", path: ""
+end
+
 defmodule MyApp.UserView do
-  use Phoenix.View, root: "test/fixtures/templates"
+  use Phoenix.View, root: "test/fixtures/templates", pattern: "**/*"
 
   def escaped_title(title) do
     {:safe, Plug.HTML.html_escape(title)}
