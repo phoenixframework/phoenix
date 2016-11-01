@@ -112,8 +112,8 @@ defmodule Phoenix.Presence do
   @callback track(pid, topic, key :: String.t, meta :: map()) :: {:ok, binary()} | {:error, reason :: term()}
   @callback untrack(Phoenix.Socket.t, key :: String.t) :: :ok
   @callback untrack(pid, topic, key :: String.t) :: :ok
-  @callback update(Phoenix.Socket.t, key :: String.t, meta :: map()) :: {:ok, binary()} | {:error, reason :: term()}
-  @callback update(pid, topic, key :: String.t, meta ::map()) :: {:ok, binary()} | {:error, reason :: term()}
+  @callback update(Phoenix.Socket.t, key :: String.t, meta :: map() | (current_meta -> new_meta)) :: {:ok, binary()} | {:error, reason :: term()}
+  @callback update(pid, topic, key :: String.t, meta :: map() | (current_meta -> new_meta)) :: {:ok, binary()} | {:error, reason :: term()}
   @callback fetch(topic, presences) :: presences
   @callback list(topic) :: presences
   @callback handle_diff(%{topic => {joins :: presences, leaves :: presences}}, state :: term) :: {:ok, state :: term}
