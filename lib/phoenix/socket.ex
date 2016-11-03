@@ -121,7 +121,7 @@ defmodule Phoenix.Socket do
   end
 
   @type t :: %Socket{id: nil,
-                     assigns: %{},
+                     assigns: map,
                      channel: atom,
                      channel_pid: pid,
                      endpoint: atom,
