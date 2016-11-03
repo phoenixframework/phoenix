@@ -26,8 +26,6 @@ defmodule Phoenix.CodeReloader.Server do
   ## Callbacks
 
   def init({app, mod, compilers}) do
-    all = Mix.Project.config[:compilers] || Mix.compilers
-    compilers = all -- (all -- compilers)
     {:ok, {app, mod, compilers}}
   end
 
@@ -124,7 +122,11 @@ defmodule Phoenix.CodeReloader.Server do
    end
 
   defp mix_compile(compilers) do
-    Enum.each compilers, &Mix.Task.reenable("compile.#{&1}")
+    all = Mix.Project.config[:compilers] || Mix.compilers
+
+    for compiler <- compilers, compiler in all do
+      Mix.Task.reenable("compile.#{compiler}")
+    end
 
     # We call build_structure mostly for Windows so new
     # assets in priv are copied to the build directory.
