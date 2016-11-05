@@ -247,6 +247,17 @@ defmodule Phoenix.Channel do
         push socket, ev, payload
         {:noreply, socket}
       end
+
+  ## Logging
+
+  By default, channel `"join"` and `"handle_in"` events are logged, using
+  the level `:info` and `:debug`, respectively. Logs can be customized per
+  event type or disabled by setting the `:log_join` and `:log_handle_in`
+  options when using `Phoenix.Channel`. For example, the following
+  configuration logs join events as `:info`, but disables logging for
+  incoming events:
+
+      use Phoenix.Channel, log_join: :info, log_handle_in: false
   """
   alias Phoenix.Socket
   alias Phoenix.Channel.Server
@@ -279,15 +290,21 @@ defmodule Phoenix.Channel do
               {:shutdown, :left | :closed} |
               term
 
-  defmacro __using__(_) do
+  defmacro __using__(opts \\ []) do
     quote do
+      opts = unquote(opts)
       @behaviour unquote(__MODULE__)
       @on_definition unquote(__MODULE__)
       @before_compile unquote(__MODULE__)
       @phoenix_intercepts []
+      @phoenix_log_join Keyword.get(opts, :log_join, :info)
+      @phoenix_log_handle_in Keyword.get(opts, :log_handle_in, :debug)
 
       import unquote(__MODULE__)
       import Phoenix.Socket, only: [assign: 3]
+
+      def __channel__(:log_join), do: @phoenix_log_join
+      def __channel__(:log_handle_in), do: @phoenix_log_handle_in
 
       def code_change(_old, socket, _extra), do: {:ok, socket}
 

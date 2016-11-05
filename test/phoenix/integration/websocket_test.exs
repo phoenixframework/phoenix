@@ -9,6 +9,7 @@ defmodule Phoenix.Integration.WebSocketTest do
   alias Phoenix.Socket.Message
   alias __MODULE__.Endpoint
 
+  @moduletag :capture_log
   @port 5807
 
   Application.put_env(:phoenix, Endpoint, [
@@ -39,7 +40,7 @@ defmodule Phoenix.Integration.WebSocketTest do
 
     def handle_in("new_msg", message, socket) do
       broadcast! socket, "new_msg", message
-      {:noreply, socket}
+      {:reply, :ok, socket}
     end
 
     def handle_in("boom", _message, _socket) do
@@ -156,15 +157,23 @@ defmodule Phoenix.Integration.WebSocketTest do
     refute_receive %Message{event: "new_msg"}
   end
 
-  test "filter params on join" do
+  test "logs and filter params on join and handle_in" do
+    topic = "room:admin-lobby"
+
     {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/logging/websocket")
     log = capture_log fn ->
-      WebsocketClient.join(sock, "room:admin-lobby", %{"foo" => "bar", "password" => "shouldnotshow"})
+      WebsocketClient.join(sock, topic, %{"join" => "yes", "password" => "no"})
       assert_receive %Message{event: "phx_reply",
                               payload: %{"response" => %{}, "status" => "ok"},
                               ref: "1", topic: "room:admin-lobby"}
     end
-    assert log =~ "Parameters: %{\"foo\" => \"bar\", \"password\" => \"[FILTERED]\"}"
+    assert log =~ "Parameters: %{\"join\" => \"yes\", \"password\" => \"[FILTERED]\"}"
+
+    log = capture_log fn ->
+      WebsocketClient.send_event(sock, topic, "new_msg", %{"in" => "yes", "password" => "no"})
+      assert_receive %Message{event: "phx_reply", ref: "2"}
+    end
+    assert log =~ "Parameters: %{\"in\" => \"yes\", \"password\" => \"[FILTERED]\"}"
   end
 
   test "sends phx_error if a channel server abnormally exits" do
