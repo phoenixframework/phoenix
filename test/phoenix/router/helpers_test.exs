@@ -161,11 +161,10 @@ defmodule Phoenix.Router.HelpersTest do
 
     error_message = fn helper, arity ->
       """
-      No helper clause for #{inspect Helpers}.#{helper}/#{arity} defined for action :skip.
-      The following #{helper} actions are defined under your router:
+      No function clause for #{inspect Helpers}.#{helper}/#{arity} and action :skip. The following actions/clauses are supported:
 
-        * :file
-        * :show
+          #{helper}(conn_or_endpoint, :file, file, opts \\\\ [])
+          #{helper}(conn_or_endpoint, :show, id, opts \\\\ [])
 
       """ |> String.strip
     end
@@ -192,6 +191,14 @@ defmodule Phoenix.Router.HelpersTest do
 
     assert_raise ArgumentError, error_message.("post_url", 4), fn ->
       Helpers.post_url(__MODULE__, :skip, 5, foo: "bar", other: "param")
+    end
+
+    assert_raise ArgumentError, ~r/when building url for Phoenix.Router.HelpersTest.Router/, fn ->
+      Helpers.post_url("oops", :skip, 5, foo: "bar", other: "param")
+    end
+
+    assert_raise ArgumentError, ~r/when building path for Phoenix.Router.HelpersTest.Router/, fn ->
+      Helpers.post_path("oops", :skip, 5, foo: "bar", other: "param")
     end
   end
 
@@ -260,21 +267,16 @@ defmodule Phoenix.Router.HelpersTest do
 
     error_message = fn helper, arity ->
       """
-      No helper clause for #{inspect Helpers}.#{helper}/#{arity} defined for action :skip.
-      The following #{helper} actions are defined under your router:
+      No function clause for #{inspect Helpers}.#{helper}/#{arity} and action :skip. The following actions/clauses are supported:
 
-        * :create
-        * :delete
-        * :edit
-        * :index
-        * :new
-        * :show
-        * :update
+          user_comment_file_path(conn_or_endpoint, :create, user_id, comment_id, opts \\\\ [])
+          user_comment_file_path(conn_or_endpoint, :delete, user_id, comment_id, id, opts \\\\ [])
+          user_comment_file_path(conn_or_endpoint, :edit, user_id, comment_id, id, opts \\\\ [])
+          user_comment_file_path(conn_or_endpoint, :index, user_id, comment_id, opts \\\\ [])
+          user_comment_file_path(conn_or_endpoint, :new, user_id, comment_id, opts \\\\ [])
+          user_comment_file_path(conn_or_endpoint, :show, user_id, comment_id, id, opts \\\\ [])
+          user_comment_file_path(conn_or_endpoint, :update, user_id, comment_id, id, opts \\\\ [])
       """ |> String.strip
-    end
-
-    assert_raise ArgumentError, error_message.("user_comment_path", 3), fn ->
-      Helpers.user_comment_path(__MODULE__, :skip, 123)
     end
 
     assert_raise ArgumentError, error_message.("user_comment_file_path", 4), fn ->
@@ -287,17 +289,16 @@ defmodule Phoenix.Router.HelpersTest do
 
     arity_error_message =
       """
-      No helper clause for #{inspect Helpers}.user_comment_path defined for action :show with arity 3.
-      Please check that the function, arity and action are correct.
-      The following user_comment_path actions are defined under your router:
+      No action :show for helper #{inspect Helpers}.user_comment_path/3. The following actions/clauses are supported:
 
-        * :create
-        * :delete
-        * :edit
-        * :index
-        * :new
-        * :show
-        * :update
+          user_comment_path(conn_or_endpoint, :create, user_id, opts \\\\ [])
+          user_comment_path(conn_or_endpoint, :delete, user_id, id, opts \\\\ [])
+          user_comment_path(conn_or_endpoint, :edit, user_id, id, opts \\\\ [])
+          user_comment_path(conn_or_endpoint, :index, user_id, opts \\\\ [])
+          user_comment_path(conn_or_endpoint, :new, user_id, opts \\\\ [])
+          user_comment_path(conn_or_endpoint, :show, user_id, id, opts \\\\ [])
+          user_comment_path(conn_or_endpoint, :update, user_id, id, opts \\\\ [])
+
       """ |> String.strip
 
     assert_raise ArgumentError, arity_error_message, fn ->
