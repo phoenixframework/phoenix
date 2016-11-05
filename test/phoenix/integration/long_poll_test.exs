@@ -6,7 +6,6 @@ defmodule Phoenix.Integration.LongPollTest do
   import ExUnit.CaptureLog
 
   alias Phoenix.Integration.HTTPClient
-  alias Phoenix.Transports.LongPoll
   alias Phoenix.Socket.Broadcast
   alias Phoenix.PubSub.Local
   alias __MODULE__.Endpoint
@@ -119,8 +118,9 @@ defmodule Phoenix.Integration.LongPollTest do
   end
 
   setup do
-    for {_, pid, _, _} <- Supervisor.which_children(LongPoll.Supervisor) do
-      Supervisor.terminate_child(LongPoll.Supervisor, pid)
+    supervisor = Module.concat(Endpoint, "LongPoll.Supervisor")
+    for {_, pid, _, _} <- Supervisor.which_children(supervisor) do
+      Supervisor.terminate_child(supervisor, pid)
     end
     :ok
   end

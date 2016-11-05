@@ -33,7 +33,7 @@ defmodule Phoenix.Endpoint.Adapter do
     id   = :crypto.strong_rand_bytes(16) |> Base.encode64
     app  = conf[:otp_app]
     conf = [endpoint_id: id] ++ defaults(app, mod)
-    args = [app, mod, conf, [name: Module.concat(mod, Config)]]
+    args = [app, mod, conf, [name: Module.concat(mod, "Config")]]
     [worker(Phoenix.Config, args)]
   end
 
@@ -50,8 +50,10 @@ defmodule Phoenix.Endpoint.Adapter do
 
   defp server_children(mod, conf, server?) do
     if server? do
-      args = [conf[:otp_app], mod, [name: Module.concat(mod, Server)]]
-      [supervisor(Phoenix.Endpoint.Server, args)]
+      server = Module.concat(mod, "Server")
+      long_poll = Module.concat(mod, "LongPoll.Supervisor")
+      [supervisor(Phoenix.Endpoint.Handler, [conf[:otp_app], mod, [name: server]]),
+       supervisor(Phoenix.Transports.LongPoll.Supervisor, [[name: long_poll]])]
     else
       []
     end

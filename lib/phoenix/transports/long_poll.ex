@@ -53,7 +53,6 @@ defmodule Phoenix.Transports.LongPoll do
   import Plug.Conn
 
   alias Phoenix.Socket.Message
-  alias Phoenix.Transports.LongPoll
   alias Phoenix.Socket.Transport
 
   @doc false
@@ -137,7 +136,9 @@ defmodule Phoenix.Transports.LongPoll do
     args = [endpoint, handler, transport, __MODULE__, serializer,
             conn.params, opts[:window_ms], priv_topic]
 
-    case Supervisor.start_child(LongPoll.Supervisor, args) do
+    supervisor = Module.concat(endpoint, "LongPoll.Supervisor")
+
+    case Supervisor.start_child(supervisor, args) do
       {:ok, :undefined} ->
         conn |> put_status(:forbidden) |> status_json(%{})
       {:ok, server_pid} ->

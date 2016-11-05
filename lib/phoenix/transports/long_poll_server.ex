@@ -3,8 +3,8 @@ defmodule Phoenix.Transports.LongPoll.Supervisor do
 
   use Supervisor
 
-  def start_link do
-    Supervisor.start_link(__MODULE__, [], name: __MODULE__)
+  def start_link(options) do
+    Supervisor.start_link(__MODULE__, [], options)
   end
 
   def init([]) do
