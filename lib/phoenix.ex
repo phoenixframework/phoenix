@@ -42,6 +42,14 @@ defmodule Phoenix do
     end
 
     # Start the supervision tree
-    Phoenix.Supervisor.start_link
+    import Supervisor.Spec
+
+    children = [
+      # Code reloading must be serial across all Phoenix apps
+      worker(Phoenix.CodeReloader.Server, []),
+      supervisor(Phoenix.Transports.LongPoll.Supervisor, []),
+    ]
+
+    Supervisor.start_link(children, strategy: :one_for_one, name: Phoenix.Supervisor)
   end
 end
