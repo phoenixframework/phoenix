@@ -54,7 +54,7 @@ Phoenix takes great advantage of Plug in general - the router and controllers es
 
 One of the most important things about Plug is that it provides adapters to HTTP servers which will ultimately deliver application content to our users. Currently Plug only provides an adapter for [Cowboy](https://github.com/ninenines/cowboy), a web server written in Erlang by Loïc Hoguin of [99s](http://ninenines.eu/).
 
-Have a look at the [Plug Guide](http://www.phoenixframework.org/docs/understanding-plug) for more details.
+Have a look at the [Plug Guide](plug.html) for more details.
 
 ### Ecto
 

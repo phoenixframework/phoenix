@@ -8,7 +8,7 @@ Plug lives at the heart of Phoenix's HTTP layer, and Phoenix puts Plug front and
 
 At the simplest level, the Plug specification comes in two flavors, *function plugs* and *module plugs*
 
-### Function Plugs
+## Function Plugs
 In order to act as a plug, a function simply needs to accept a connection struct (`%Plug.Conn{}`) and options. It also needs to return the connection struct. Any function that meets those criteria will do. Here's an example.
 
 ```elixir
@@ -109,7 +109,7 @@ By replacing the nested blocks of code with a flattened series of plug transform
 
 Now let's look at the other flavor plugs come in, module plugs.
 
-### Module Plugs
+## Module Plugs
 
 Module plugs are another type of Plug that let us define a connection transformation in a module. The module only needs to implement two functions:
 
