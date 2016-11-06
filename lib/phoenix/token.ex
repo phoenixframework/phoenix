@@ -89,6 +89,8 @@ defmodule Phoenix.Token do
       when generating the encryption and signing keys. Defaults to 32;
     * `:key_digest` - option passed to `Plug.Crypto.KeyGenerator`
       when generating the encryption and signing keys. Defaults to `:sha256`;
+    * `:json` - boolean option passed to encode_payload, to JSON payload with Poison,
+      default format is erlang term binary.
   """
   def sign(context, salt, data, opts \\ []) when is_binary(salt) do
     secret = get_key_base(context) |> get_secret(salt, opts)
@@ -114,7 +116,8 @@ defmodule Phoenix.Token do
       when generating the encryption and signing keys. Defaults to 32;
     * `:key_digest` - option passed to `Plug.Crypto.KeyGenerator`
       when generating the encryption and signing keys. Defaults to `:sha256`;
-
+    * `:json` - Must be set to `true` if the payload was encoded with `[json: true]`.
+      Otherwise it will throw an ArgumentError.
   """
   def verify(context, salt, token, opts \\ [])
 
