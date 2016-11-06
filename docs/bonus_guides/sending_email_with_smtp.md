@@ -15,14 +15,16 @@ our project. We'll do that in the `deps/0` function in `mix.exs`.
 
 ```elixir
 defp deps do
-  [{:phoenix, "~> 1.1.0"},
-   {:phoenix_ecto, "~> 2.0"},
+  [{:phoenix, "~> 1.2.1"},
+   {:phoenix_pubsub, "~> 1.0"},
+   {:phoenix_ecto, "~> 3.0"},
    {:postgrex, ">= 0.0.0"},
-   {:phoenix_html, "~> 2.3"},
+   {:phoenix_html, "~> 2.6"},
    {:phoenix_live_reload, "~> 1.0", only: :dev},
+   {:gettext, "~> 0.11"},
    {:cowboy, "~> 1.0"},
-   {:bamboo, "~> 0.5"},
-   {:bamboo_smtp, "~> 0.1"}]
+   {:bamboo, "~> 0.7"},
+   {:bamboo_smtp, "~> 1.2.1"}]
 end
 ```
 
