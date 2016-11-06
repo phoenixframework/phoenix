@@ -26,9 +26,20 @@ defmodule Phoenix.Controller do
         end
       end
 
-  An action is just a regular function that receives the connection
+  An action is a regular function that receives the connection
   and the request parameters as arguments. The connection is a
   `Plug.Conn` struct, as specified by the Plug library.
+
+  ## Options
+
+  When used, the controller supports the following options:
+
+    * `:namespace` - sets the namespace to properly inflect
+      the layout view. By default it uses the base alias
+      in your controller name
+
+    * `:log` - the level to log. When false, disables controller
+      logging
 
   ## Connection
 
@@ -43,16 +54,9 @@ defmodule Phoenix.Controller do
     * `Phoenix.Controller` - functions provided by Phoenix
       to support rendering, and other Phoenix specific behaviour
 
-  ## Rendering and layouts
-
-  One of the main features provided by controllers is the ability
-  to perform content negotiation and render templates based on
-  information sent by the client. Read `render/3` to learn more.
-
-  It is also important not to confuse `Phoenix.Controller.render/3`
-  with `Phoenix.View.render/3`. The former expects
-  a connection and relies on content negotiation while the latter is
-  connection-agnostic and typically invoked from your views.
+  IF you want to have functions that manipulate the connection
+  without fully implementing the controller, you can import both
+  modules directly instead of `use Phoenix.Controller`.
 
   ## Plug pipeline
 
@@ -77,34 +81,60 @@ defmodule Phoenix.Controller do
         end
       end
 
-  Check `Phoenix.Controller.Pipeline` for more information on `plug/2`
-  and how to customize the plug pipeline.
+  The `:authenticate` plug will be invoked before the action. If the
+  plug calls `Plug.Conn.halt/1` (which is by default imported into
+  controllers), it will halt the pipeline and won't inoke the action.
 
-  ## Options
+  ### Guards
 
-  When used, the controller supports the following options:
+  `plug/2` in controllers supports guards, allowing a developer to configure
+  a plug to only run in some particular action:
 
-    * `:namespace` - sets the namespace to properly inflect
-      the layout view. By default it uses the base alias
-      in your controller name
+      plug :authenticate, usernames: ["jose", "eric", "sonny"] when action in [:show, :edit]
+      plug :authenticate, usernames: ["admin"] when action in [:show, :edit] when not action in [:index]
 
-    * `:log` - the level to log. When false, disables controller
-      logging
+  The first plug will run only when action is show or edit. The second plug will
+  always run, except for the index action.
 
-  ## Overriding `action/2` for custom arguments
+  Those guards work like regular Elixir guards and the only variables accessible
+  in the guard are `conn`, the `action` as an atom and the `controller` as an
+  alias.
+
+  ## Controllers are plugs
+
+  Like routers, controllers are plugs, but they are wired to dispatch
+  to a particular function which is called an action.
+
+  For example, the route:
+
+      get "/users/:id", UserController, :show
+
+  will invoke `UserController` as a plug:
+
+      UserController.call(conn, :show)
+
+  which will trigger the plug pipeline and which will eventually
+  invoke the inner action plug that dispatches to the `show/2`
+  function in the `UserController`.
+
+  As controllers are plugs, they implement both `init/1` and
+  `call/2`, and it also provides a function named `action/2`
+  which is responsible for dispatching the appropriate action
+  after the plug stack (and is also overridable).
+
+  ### Overriding `action/2` for custom arguments
 
   Phoenix injects an `action/2` plug in your controller which calls the
   function matched from the router. By default, it passes the conn and params.
   In some cases, overriding the `action/2` plug in your controller is a
-  useful way to inject arguments into your actions that you
-  would otherwise need to fetch off the connection repeatedly. For example,
-  imagine if you stored a `conn.assigns.current_user` in the connection
-  and wanted quick access to the user for every action in your controller:
+  useful way to inject arguments into your actions that you would otherwise
+  need to fetch of the connection repeatedly. For example, imagine if you
+  stored a `conn.assigns.current_user` in the connection and wanted quick
+  access to the user for every action in your controller:
 
       def action(conn, _) do
-        apply(__MODULE__, action_name(conn), [conn,
-                                              conn.params,
-                                              conn.assigns.current_user])
+        args = [conn, conn.params, conn.assigns.current_user]
+        apply(__MODULE__, action_name(conn), args)
       end
 
       def index(conn, _params, user) do
@@ -116,6 +146,17 @@ defmodule Phoenix.Controller do
         video = Repo.get!(user_videos(user), id)
         # ...
       end
+
+  ## Rendering and layouts
+
+  One of the main features provided by controllers is the ability
+  to perform content negotiation and render templates based on
+  information sent by the client. Read `render/3` to learn more.
+
+  It is also important not to confuse `Phoenix.Controller.render/3`
+  with `Phoenix.View.render/3`. The former expects
+  a connection and relies on content negotiation while the latter is
+  connection-agnostic and typically invoked from your views.
   """
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
@@ -637,7 +678,7 @@ defmodule Phoenix.Controller do
     view = Map.get(conn.private, :phoenix_view) ||
             raise "a view module was not specified, set one with put_view/2"
 
-    runtime_data = %{view: view, template: template, format: format}
+    runtime_data = %{view: view, template: template, format: format, conn: conn}
     data = Phoenix.Endpoint.instrument conn, :phoenix_controller_render, runtime_data, fn ->
       Phoenix.View.render_to_iodata(view, template, Map.put(conn.assigns, :conn, conn))
     end
@@ -828,7 +869,7 @@ defmodule Phoenix.Controller do
 
     * the accepted list of arguments contains the "html" format
 
-    * the accept header specified more than one media type preceeded
+    * the accept header specified more than one media type preceded
       or followed by the wildcard media type "`*/*`"
 
   This function raises `Phoenix.NotAcceptableError`, which is rendered
@@ -911,7 +952,7 @@ defmodule Phoenix.Controller do
   defp parse_header_accept(conn, [h|t], acc, accepted) do
     case Plug.Conn.Utils.media_type(h) do
       {:ok, type, subtype, args} ->
-        exts = parse_exts(type <> "/" <> subtype)
+        exts = parse_exts(type, subtype)
         q    = parse_q(args)
 
         if format = (q === 1.0 && find_format(exts, accepted)) do
@@ -949,11 +990,20 @@ defmodule Phoenix.Controller do
     end
   end
 
-  defp parse_exts("*/*" = type), do: type
-  defp parse_exts(type),         do: MIME.extensions(type)
+  defp parse_exts("*", "*"),      do: "*/*"
+  defp parse_exts(type, "*"),     do: type
+  defp parse_exts(type, subtype), do: MIME.extensions(type <> "/" <> subtype)
 
-  defp find_format("*/*", accepted), do: Enum.fetch!(accepted, 0)
-  defp find_format(exts, accepted),  do: Enum.find(exts, &(&1 in accepted))
+  defp find_format("*/*", accepted),                   do: Enum.fetch!(accepted, 0)
+  defp find_format(exts, accepted) when is_list(exts), do: Enum.find(exts, &(&1 in accepted))
+  defp find_format(_type_range, []),                   do: nil
+  defp find_format(type_range, [h|t]) do
+    mime_type = MIME.type(h)
+    case Plug.Conn.Utils.media_type(mime_type) do
+      {:ok, accepted_type, _subtype, _args} when type_range === accepted_type -> h
+      _ -> find_format(type_range, t)
+    end
+  end
 
   @spec refuse(term(), term()) :: no_return()
   defp refuse(_conn, accepted) do

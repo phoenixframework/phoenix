@@ -3,8 +3,8 @@ defmodule Mix.Phoenix do
   @moduledoc false
 
   @valid_attributes [:integer, :float, :decimal, :boolean, :map, :string,
-                     :array, :references, :text, :date, :time, :datetime,
-                     :uuid, :binary]
+                     :array, :references, :text, :date, :time,
+                     :naive_datetime, :utc_datetime, :uuid, :binary]
 
   @doc """
   Copies files from source dir to target dir
@@ -185,22 +185,26 @@ defmodule Mix.Phoenix do
 
   defp type_to_default(t) do
     case t do
-        {:array, _} -> []
-        :integer    -> 42
-        :float      -> "120.5"
-        :decimal    -> "120.5"
-        :boolean    -> true
-        :map        -> %{}
-        :text       -> "some content"
-        :date       -> %{year: 2010, month: 4, day: 17}
-        :time       -> %{hour: 14, min: 0, sec: 0}
-        :datetime   -> %{year: 2010, month: 4, day: 17, hour: 14, min: 0, sec: 0}
-        :uuid       -> "7488a646-e31f-11e4-aace-600308960662"
-        _           -> "some content"
+        {:array, _}     -> []
+        :integer        -> 42
+        :float          -> "120.5"
+        :decimal        -> "120.5"
+        :boolean        -> true
+        :map            -> %{}
+        :text           -> "some content"
+        :date           -> %{year: 2010, month: 4, day: 17}
+        :time           -> %{hour: 14, minute: 0, second: 0}
+        :uuid           -> "7488a646-e31f-11e4-aace-600308960662"
+        :utc_datetime   -> %{year: 2010, month: 4, day: 17, hour: 14, minute: 0, second: 0}
+        :naive_datetime -> %{year: 2010, month: 4, day: 17, hour: 14, minute: 0, second: 0}
+        _               -> "some content"
     end
   end
 
   defp validate_attr!({_name, type} = attr) when type in @valid_attributes, do: attr
   defp validate_attr!({_name, {type, _}} = attr) when type in @valid_attributes, do: attr
-  defp validate_attr!({_, type}), do: Mix.raise "Unknown type `#{type}` given to generator"
+  defp validate_attr!({_, type}) do
+    Mix.raise "Unknown type `#{type}` given to generator. " <>
+              "The supported types are: #{@valid_attributes |> Enum.sort() |> Enum.join(", ")}"
+  end
 end

@@ -1,4 +1,3 @@
-# The GenServer used by the CodeReloader.
 defmodule Phoenix.CodeReloader.Server do
   @moduledoc false
   use GenServer
@@ -6,39 +5,29 @@ defmodule Phoenix.CodeReloader.Server do
   require Logger
   alias Phoenix.CodeReloader.Proxy
 
-  def start_link(app, mod, compilers, opts \\ []) do
-    GenServer.start_link(__MODULE__, {app, mod, compilers}, opts)
+  def start_link() do
+    GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
   def reload!(endpoint) do
-    children = Supervisor.which_children(endpoint)
-
-    case List.keyfind(children, __MODULE__, 0) do
-      {__MODULE__, pid, _, _} ->
-        GenServer.call(pid, :reload!, :infinity)
-      _ ->
-        raise "Code reloader was invoked for #{inspect endpoint} but no code reloader " <>
-              "server was started. Be sure to move `plug Phoenix.CodeReloader` inside " <>
-              "a `if code_reloading? do` block in your endpoint"
-    end
+    GenServer.call(__MODULE__, {:reload!, endpoint}, :infinity)
   end
 
   ## Callbacks
 
-  def init({app, mod, compilers}) do
-    all = Mix.Project.config[:compilers] || Mix.compilers
-    compilers = all -- (all -- compilers)
-    {:ok, {app, mod, compilers}}
+  def init(state) do
+    {:ok, state}
   end
 
-  def handle_call(:reload!, from, {app, mod, compilers} = state) do
-    backup = load_backup(mod)
-    froms  = all_waiting([from])
+  def handle_call({:reload!, endpoint}, from, state) do
+    compilers = endpoint.config(:reloadable_compilers)
+    backup = load_backup(endpoint)
+    froms  = all_waiting([from], endpoint)
 
     {res, out} =
       proxy_io(fn ->
         try do
-          mix_compile(Code.ensure_loaded(Mix.Task), app, compilers)
+          mix_compile(Code.ensure_loaded(Mix.Task), compilers)
         catch
           :exit, {:shutdown, 1} ->
             :error
@@ -77,22 +66,15 @@ defmodule Phoenix.CodeReloader.Server do
   defp write_backup({:ok, path, file}), do: File.write!(path, file)
   defp write_backup(:error), do: :ok
 
-  defp all_waiting(acc) do
+  defp all_waiting(acc, endpoint) do
     receive do
-      {:"$gen_call", from, :reload!} -> all_waiting([from | acc])
+      {:"$gen_call", from, {:reload!, ^endpoint}} -> all_waiting([from | acc], endpoint)
     after
       0 -> acc
     end
   end
 
-  defp mix_compile({:error, _reason}, _, _) do
-    raise "the Code Reloader is enabled but Mix is not available. If you want to " <>
-          "use the Code Reloader in production or inside an escript, you must add " <>
-          ":mix to your applications list. Otherwise, you must disable code reloading " <>
-          "in such environments"
-  end
-
-  defp mix_compile({:module, Mix.Task}, _app, compilers) do
+  defp mix_compile({:module, Mix.Task}, compilers) do
     if Mix.Project.umbrella? do
       Enum.each Mix.Dep.Umbrella.loaded, fn dep ->
         Mix.Dep.in_dependency(dep, fn _ ->
@@ -103,6 +85,12 @@ defmodule Phoenix.CodeReloader.Server do
       mix_compile_unless_stale_config(compilers)
       :ok
     end
+  end
+  defp mix_compile({:error, _reason}, _) do
+    raise "the Code Reloader is enabled but Mix is not available. If you want to " <>
+          "use the Code Reloader in production or inside an escript, you must add " <>
+          ":mix to your applications list. Otherwise, you must disable code reloading " <>
+          "in such environments"
   end
 
   defp mix_compile_unless_stale_config(compilers) do
@@ -124,7 +112,11 @@ defmodule Phoenix.CodeReloader.Server do
    end
 
   defp mix_compile(compilers) do
-    Enum.each compilers, &Mix.Task.reenable("compile.#{&1}")
+    all = Mix.Project.config[:compilers] || Mix.compilers
+
+    for compiler <- compilers, compiler in all do
+      Mix.Task.reenable("compile.#{compiler}")
+    end
 
     # We call build_structure mostly for Windows so new
     # assets in priv are copied to the build directory.

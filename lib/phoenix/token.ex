@@ -88,7 +88,7 @@ defmodule Phoenix.Token do
     * `:key_length` - option passed to `Plug.Crypto.KeyGenerator`
       when generating the encryption and signing keys. Defaults to 32;
     * `:key_digest` - option passed to `Plug.Crypto.KeyGenerator`
-      when generating the encryption and signing keys. Defaults to `:sha256';
+      when generating the encryption and signing keys. Defaults to `:sha256`;
   """
   def sign(context, salt, data, opts \\ []) when is_binary(salt) do
     secret = get_key_base(context) |> get_secret(salt, opts)
@@ -113,7 +113,7 @@ defmodule Phoenix.Token do
     * `:key_length` - option passed to `Plug.Crypto.KeyGenerator`
       when generating the encryption and signing keys. Defaults to 32;
     * `:key_digest` - option passed to `Plug.Crypto.KeyGenerator`
-      when generating the encryption and signing keys. Defaults to `:sha256';
+      when generating the encryption and signing keys. Defaults to `:sha256`;
 
   """
   def verify(context, salt, token, opts \\ [])
@@ -161,5 +161,5 @@ defmodule Phoenix.Token do
     KeyGenerator.generate(secret_key_base, salt, key_opts)
   end
 
-  defp now_ms, do: System.system_time(:milli_seconds)
+  defp now_ms, do: System.system_time(:milliseconds)
 end

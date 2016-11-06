@@ -388,31 +388,29 @@ defmodule Phoenix.Test.ConnTest do
     assert {400, [_h | _t], "400.html from Phoenix.ErrorView"} = response
   end
 
-  test "assert_error_sent/2 with failed assertion" do
-    assert_raise ExUnit.AssertionError, ~r/expected response status to be 400, but got 500.*RuntimeError/s, fn ->
+  test "assert_error_sent/2 with status mismatch assertion" do
+    assert_raise ExUnit.AssertionError, ~r/expected error to be sent as 400 status, but got 500 from.*RuntimeError/s, fn ->
       assert_error_sent 400, fn ->
         get(build_conn(), "/stat", action: fn _conn -> raise RuntimeError end)
       end
     end
   end
 
-  test "assert_error_sent/2 with no response sent" do
-    assert_raise ExUnit.AssertionError, ~r/expected 404 response but no response sent/, fn ->
+  test "assert_error_sent/2 with no error" do
+    assert_raise ExUnit.AssertionError, ~r/expected error to be sent as 404 status, but no error happened/, fn ->
       assert_error_sent 404, fn -> get(build_conn(), "/") end
     end
   end
 
-  test "assert_error_sent/2 with successful response and status match" do
-    assert_raise ExUnit.AssertionError, ~r/expected error to be sent as 400 status, but response sent 400 without error/, fn ->
-      assert_error_sent :bad_request, fn ->
-        get(build_conn(), "/stat", action: fn conn -> Plug.Conn.send_resp(conn, 400, "") end)
-      end
+  test "assert_error_sent/2 with error but no response" do
+    assert_raise ExUnit.AssertionError, ~r/expected error to be sent as 404 status, but got an error with no response from.*RuntimeError/s, fn ->
+      assert_error_sent 404, fn -> raise "oops" end
     end
   end
 
-  test "assert_error_sent/2 with successful response and status mismatch" do
-    assert_raise ExUnit.AssertionError, ~r/expected error to be sent as 404 status, but response sent 400 without error/, fn ->
-      assert_error_sent :not_found, fn ->
+  test "assert_error_sent/2 with response but no error" do
+    assert_raise ExUnit.AssertionError, ~r/expected error to be sent as 400 status, but response sent 400 without error/, fn ->
+      assert_error_sent :bad_request, fn ->
         get(build_conn(), "/stat", action: fn conn -> Plug.Conn.send_resp(conn, 400, "") end)
       end
     end

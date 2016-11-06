@@ -19,7 +19,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
   test "generates model" do
     in_tmp "generates model", fn ->
       Mix.Tasks.Phoenix.Gen.Model.run ["user", "users", "name", "age:integer", "nicks:array:text",
-                                       "famous:boolean", "born_at:datetime", "secret:uuid", "desc:text",
+                                       "famous:boolean", "born_at:naive_datetime", "secret:uuid", "desc:text",
                                        "blob:binary"]
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_user.exs")
@@ -31,7 +31,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
         assert file =~ "add :age, :integer"
         assert file =~ "add :nicks, {:array, :text}"
         assert file =~ "add :famous, :boolean, default: false, null: false"
-        assert file =~ "add :born_at, :datetime"
+        assert file =~ "add :born_at, :naive_datetime"
         assert file =~ "add :secret, :uuid"
         assert file =~ "add :desc, :text"
         assert file =~ "add :blob, :binary"
@@ -46,7 +46,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
         assert file =~ "field :age, :integer"
         assert file =~ "field :nicks, {:array, :string}"
         assert file =~ "field :famous, :boolean, default: false"
-        assert file =~ "field :born_at, Ecto.DateTime"
+        assert file =~ "field :born_at, :naive_datetime"
         assert file =~ "field :secret, Ecto.UUID"
         assert file =~ "field :desc, :string"
         assert file =~ "field :blob, :binary"

@@ -343,7 +343,8 @@ defmodule Phoenix.Endpoint do
       controller. The map of runtime metadata passed to instrumentation
       callbacks has the `:view` key - for the name of the view, e.g. `HexWeb.ErrorView`,
       the `:template` key - for the name of the template, e.g.,
-      `"index.html"` and the `:format` key - for the format of the template.
+      `"index.html"`, the `:format` key - for the format of the template, and
+      the `:conn` key - containing the `%Plug.Conn{}`.
     * `:phoenix_channel_join` - the joining of a channel. The `%Phoenix.Socket{}`
       and join params are passed as runtime metadata via `:socket` and `:params`.
     * `:phoenix_channel_receive` - the receipt of an incoming message over a
@@ -435,22 +436,13 @@ defmodule Phoenix.Endpoint do
 
   defp plug() do
     quote location: :keep do
-      @behaviour Plug
+      use Plug.Builder
       import Phoenix.Endpoint
 
-      Module.register_attribute(__MODULE__, :plugs, accumulate: true)
       Module.register_attribute(__MODULE__, :phoenix_sockets, accumulate: true)
 
       if force_ssl = Phoenix.Endpoint.__force_ssl__(__MODULE__, var!(config)) do
         plug Plug.SSL, force_ssl
-      end
-
-      def init(opts) do
-        opts
-      end
-
-      def call(conn, _opts) do
-        phoenix_pipeline(conn)
       end
 
       if var!(config)[:debug_errors] do
@@ -463,8 +455,6 @@ defmodule Phoenix.Endpoint do
       # Compile after the debugger so we properly wrap it.
       @before_compile Phoenix.Endpoint
       @phoenix_render_errors var!(config)[:render_errors]
-
-      defoverridable [init: 1, call: 2]
     end
   end
 
@@ -572,7 +562,7 @@ defmodule Phoenix.Endpoint do
   @doc false
   def __force_ssl__(module, config) do
     if force_ssl = config[:force_ssl] do
-      force_ssl = Keyword.put_new(force_ssl, :host, host_to_binary(var!(config)[:url][:host] || "localhost"))
+      force_ssl = Keyword.put_new(force_ssl, :host, var!(config)[:url][:host] || "localhost")
 
       if force_ssl[:host] == "localhost" do
         IO.puts :stderr, """
@@ -587,14 +577,9 @@ defmodule Phoenix.Endpoint do
     end
   end
 
-  defp host_to_binary({:system, env_var}), do: host_to_binary(System.get_env(env_var))
-  defp host_to_binary(host), do: host
-
   @doc false
   defmacro __before_compile__(env) do
     sockets = Module.get_attribute(env.module, :phoenix_sockets)
-    plugs = Module.get_attribute(env.module, :plugs)
-    {conn, body} = Plug.Builder.compile(env, plugs, [])
     otp_app = Module.get_attribute(env.module, :otp_app)
     instrumentation = Phoenix.Endpoint.Instrument.definstrument(otp_app, env.module)
 
@@ -617,8 +602,6 @@ defmodule Phoenix.Endpoint do
         end
       end
 
-      defp phoenix_pipeline(unquote(conn)), do: unquote(body)
-
       @doc """
       Returns all sockets configured in this endpoint.
       """
@@ -629,15 +612,6 @@ defmodule Phoenix.Endpoint do
   end
 
   ## API
-
-  @doc """
-  Stores a plug to be executed as part of the pipeline.
-  """
-  defmacro plug(plug, opts \\ []) do
-    quote do
-      @plugs {unquote(plug), unquote(opts), true}
-    end
-  end
 
   @doc """
   Defines a mount-point for a Socket module to handle channel definitions.

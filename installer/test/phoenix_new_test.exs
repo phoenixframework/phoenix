@@ -39,6 +39,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       assert_file "photo_blog/config/prod.exs", fn file ->
         assert file =~ "port: 80"
+        assert file =~ ":inet6"
       end
 
       assert_file "photo_blog/lib/photo_blog.ex", ~r/defmodule PhotoBlog do/
@@ -397,22 +398,5 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert output =~ "mix phoenix.new"
       assert output =~ "Creates a new Phoenix project."
     end
-  end
-
-  defp umbrella_mixfile_contents do
-    """
-defmodule Umbrella.Mixfile do
-  use Mix.Project
-
-  def project do
-    [apps_path: "apps",
-     deps: deps()]
-  end
-
-  defp deps do
-    []
-  end
-end
-    """
   end
 end

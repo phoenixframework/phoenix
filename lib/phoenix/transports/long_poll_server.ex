@@ -3,8 +3,8 @@ defmodule Phoenix.Transports.LongPoll.Supervisor do
 
   use Supervisor
 
-  def start_link do
-    Supervisor.start_link(__MODULE__, [], name: __MODULE__)
+  def start_link(options) do
+    Supervisor.start_link(__MODULE__, [], options)
   end
 
   def init([]) do
@@ -28,7 +28,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
   @doc """
   Starts the Server.
 
-    * `socket` - The `Phoenix.Socket` struct returend from `connect/2`
+    * `socket` - The `Phoenix.Socket` struct returned from `connect/2`
       of the socket handler.
     * `window_ms` - The longpoll session timeout, in milliseconds
 
@@ -162,7 +162,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
     {:noreply, %{state | buffer: [msg | state.buffer]}}
   end
 
-  defp now_ms, do: System.system_time(:milli_seconds)
+  defp now_ms, do: System.system_time(:milliseconds)
 
   defp schedule_inactive_shutdown(window_ms) do
     Process.send_after(self(), :shutdown_if_inactive, window_ms)

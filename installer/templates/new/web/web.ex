@@ -1,12 +1,12 @@
-defmodule <%= application_module %>.Web do
+defmodule <%= app_module %>.Web do
   @moduledoc """
   A module defining __using__ hooks for controllers,
   views and so on.
 
   This can be used in your application as:
 
-      use <%= application_module %>.Web, :controller
-      use <%= application_module %>.Web, :view
+      use <%= app_module %>.Web, :controller
+      use <%= app_module %>.Web, :view
 
   The definitions below will be executed for every view,
   controller, etc, so keep them short and clean, focused
@@ -37,20 +37,20 @@ defmodule <%= application_module %>.Web do
 <% end %>
   def controller do
     quote do
-      use Phoenix.Controller<%= if namespaced? do %>, namespace: <%= application_module %><% end %>
+      use Phoenix.Controller<%= if namespaced? do %>, namespace: <%= app_module %><% end %>
 <%= if ecto do %>
-      alias <%= application_module %>.Repo
+      alias <%= app_module %>.Repo
       import Ecto
       import Ecto.Query
 <% end %>
-      import <%= application_module %>.Router.Helpers
-      import <%= application_module %>.Gettext
+      import <%= app_module %>.Router.Helpers
+      import <%= app_module %>.Gettext
     end
   end
 
   def view do
     quote do
-      use Phoenix.View, root: "web/templates"<%= if namespaced? do %>, namespace: <%= application_module %><% end %>
+      use Phoenix.View, root: "web/templates"<%= if namespaced? do %>, namespace: <%= app_module %><% end %>
 
       # Import convenience functions from controllers
       import Phoenix.Controller, only: [get_csrf_token: 0, get_flash: 2, view_module: 1]<%= if html do %>
@@ -58,9 +58,9 @@ defmodule <%= application_module %>.Web do
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML<% end %>
 
-      import <%= application_module %>.Router.Helpers
-      import <%= application_module %>.ErrorHelpers
-      import <%= application_module %>.Gettext
+      import <%= app_module %>.Router.Helpers
+      import <%= app_module %>.ErrorHelpers
+      import <%= app_module %>.Gettext
     end
   end
 
@@ -74,10 +74,10 @@ defmodule <%= application_module %>.Web do
     quote do
       use Phoenix.Channel<%= if ecto do %>
 
-      alias <%= application_module %>.Repo
+      alias <%= app_module %>.Repo
       import Ecto
       import Ecto.Query<% end %>
-      import <%= application_module %>.Gettext
+      import <%= app_module %>.Gettext
     end
   end
 

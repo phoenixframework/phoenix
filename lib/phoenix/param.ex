@@ -10,9 +10,9 @@ defprotocol Phoenix.Param do
   Phoenix knows how to extract the `:id` from `@user` thanks
   to this protocol.
 
-  By default, Phoenix implements this protocol for integers,
-  binaries, atoms, maps and structs. For maps and structs, a
-  key `:id` is looked up.
+  By default, Phoenix implements this protocol for integers, binaries, atoms,
+  and structs. For structs, a key `:id` is assumed, but you may provide a
+  specific implementation.
 
   Nil values cannot be converted to param.
 

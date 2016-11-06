@@ -1,5 +1,10 @@
 defmodule Phoenix.Digester do
   @digested_file_regex ~r/(-[a-fA-F\d]{32})/
+  @manifest_version 1
+
+  defp now() do
+    :calendar.datetime_to_gregorian_seconds(:calendar.universal_time)
+  end
 
   @moduledoc """
   Digests and compresses static files.
@@ -30,7 +35,8 @@ defmodule Phoenix.Digester do
         |> filter_files
         |> Enum.map(&digest/1)
 
-      manifest = generate_manifest(digested_files, output_path)
+      digests = load_compile_digests(output_path)
+      manifest = generate_manifest(digested_files, digests, output_path)
 
       Enum.each(digested_files, &(write_to_disk(&1, manifest, output_path)))
     else
@@ -46,16 +52,65 @@ defmodule Phoenix.Digester do
     |> Enum.map(&(map_file(&1, input_path)))
   end
 
-  defp generate_manifest(files, output_path) do
-    entries = Enum.reduce(files, %{}, fn (file, acc) ->
-      Map.put(acc, manifest_join(file.relative_path, file.filename),
-                   manifest_join(file.relative_path, file.digested_filename))
-    end)
+  defp filter_digested_files(output_path) do
+    output_path
+    |> Path.join("**")
+    |> Path.wildcard
+    |> Enum.filter(&uncompressed_digested_file?/1)
+    |> Enum.map(&(map_digested_file(&1, output_path)))
+  end
 
-    manifest_content = Poison.encode!(entries, [])
+  defp load_compile_digests(output_path) do
+    manifest_path = Path.join(output_path, "manifest.json")
+    if File.exists?(manifest_path) do
+      manifest_path
+      |> File.read!
+      |> Poison.decode!
+      |> get_digest(output_path)
+    else
+      %{}
+    end
+  end
+
+  defp get_digest(manifest = %{version: 1}, _output_path) do
+    Access.get(manifest, "digests")
+  end
+
+  defp get_digest(_manifest, output_path) do
+    output_path
+    |> filter_digested_files
+    |> generate_new_digests
+  end
+
+  defp generate_manifest(files, old_digests, output_path) do
+    latest = Map.new(files, &({
+       manifest_join(&1.relative_path, &1.filename),
+       manifest_join(&1.relative_path, &1.digested_filename)
+    }))
+
+    digests =
+      files
+      |> generate_new_digests
+      |> Map.merge(old_digests)
+
+    manifest_content = Poison.encode!(%{latest: latest, version: @manifest_version, digests: digests}, [])
     File.write!(Path.join(output_path, "manifest.json"), manifest_content)
 
-    entries
+    latest
+  end
+
+  defp generate_new_digests(files) do
+    Map.new(files, &({
+       manifest_join(&1.relative_path, &1.digested_filename),
+       build_digest(&1)
+     }))
+  end
+
+  defp build_digest(file) do
+    %{logical_path: manifest_join(file.relative_path, file.filename),
+      mtime: now(),
+      size: file.size,
+      digest: file.digest}
   end
 
   defp manifest_join(".", filename),  do: filename
@@ -67,10 +122,32 @@ defmodule Phoenix.Digester do
       Path.basename(file_path) == "manifest.json"
   end
 
+  defp uncompressed_digested_file?(file_path) do
+    Regex.match?(@digested_file_regex, Path.basename(file_path)) ||
+      !Path.extname(file_path) == ".gz"
+  end
+
   defp map_file(file_path, input_path) do
+    {:ok, stats} = File.stat(file_path)
     %{absolute_path: file_path,
       relative_path: Path.relative_to(file_path, input_path) |> Path.dirname(),
       filename: Path.basename(file_path),
+      size: stats.size,
+      content: File.read!(file_path)}
+  end
+
+  defp map_digested_file(file_path, output_path) do
+    {:ok, stats} = File.stat(file_path)
+    digested_filename = Path.basename(file_path)
+    [digest,_] = Regex.run(@digested_file_regex, digested_filename)
+    digest = String.trim_leading(digest, "-")
+
+    %{absolute_path: file_path,
+      relative_path: Path.relative_to(file_path, output_path) |> Path.dirname(),
+      digested_filename: digested_filename,
+      filename: String.replace(digested_filename, @digested_file_regex, ""),
+      digest: digest,
+      size: stats.size,
       content: File.read!(file_path)}
   end
 
@@ -78,7 +155,10 @@ defmodule Phoenix.Digester do
     name = Path.rootname(file.filename)
     extension = Path.extname(file.filename)
     digest = Base.encode16(:erlang.md5(file.content), case: :lower)
-    Map.put(file, :digested_filename, "#{name}-#{digest}#{extension}")
+    Map.merge(file, %{
+      digested_filename: "#{name}-#{digest}#{extension}",
+      digest: digest,
+    })
   end
 
   defp write_to_disk(file, manifest, output_path) do
@@ -105,35 +185,52 @@ defmodule Phoenix.Digester do
   end
 
   defp digested_contents(file, manifest) do
-    if Path.extname(file.filename) == ".css" do
-      digest_asset_references(file, manifest)
-    else
-      file.content
+    case Path.extname(file.filename) do
+      ".css" -> digest_stylesheet_asset_references(file, manifest)
+      ".js"  -> digest_javascript_asset_references(file, manifest)
+      ".map" -> digest_javascript_map_asset_references(file, manifest)
+      _ -> file.content
     end
   end
 
   @stylesheet_url_regex ~r{(url\(\s*)(\S+?)(\s*\))}
   @quoted_text_regex ~r{\A(['"])(.+)\1\z}
 
-  defp digest_asset_references(file, manifest) do
+  defp digest_stylesheet_asset_references(file, manifest) do
     Regex.replace(@stylesheet_url_regex, file.content, fn _, open, url, close ->
       case Regex.run(@quoted_text_regex, url) do
         [_, quote_symbol, url] ->
-          open <> quote_symbol <> digested_url(url, file, manifest) <> quote_symbol <> close
+          open <> quote_symbol <> digested_url(url, file, manifest, true) <> quote_symbol <> close
         nil ->
-          open <> digested_url(url, file, manifest) <> close
+          open <> digested_url(url, file, manifest, true) <> close
       end
     end)
   end
 
-  defp digested_url("/" <> relative_path, _file, manifest) do
+  @javascript_source_map_regex ~r{(//#\s*sourceMappingURL=\s*)(\S+)}
+
+  defp digest_javascript_asset_references(file, manifest) do
+    Regex.replace(@javascript_source_map_regex, file.content, fn _, source_map_text, url ->
+      source_map_text <> digested_url(url, file, manifest, false)
+    end)
+  end
+
+  @javascript_map_file_regex ~r{(['"]file['"]:['"])([^,"']+)(['"])}
+
+  defp digest_javascript_map_asset_references(file, manifest) do
+    Regex.replace(@javascript_map_file_regex, file.content, fn _, open_text, url, close_text ->
+      open_text <> digested_url(url, file, manifest, false) <> close_text
+    end)
+  end
+
+  defp digested_url("/" <> relative_path, _file, manifest, with_vsn?) do
     case Map.fetch(manifest, relative_path) do
-      {:ok, digested_path} -> "/" <> digested_path <> "?vsn=d"
+      {:ok, digested_path} -> relative_digested_path(digested_path, with_vsn?)
       :error -> "/" <> relative_path
     end
   end
 
-  defp digested_url(url, file, manifest) do
+  defp digested_url(url, file, manifest, with_vsn?) do
     case URI.parse(url) do
       %URI{scheme: nil, host: nil} ->
         manifest_path =
@@ -144,13 +241,84 @@ defmodule Phoenix.Digester do
 
         case Map.fetch(manifest, manifest_path) do
           {:ok, digested_path} ->
-            url
-            |> Path.dirname()
-            |> Path.join(Path.basename(digested_path))
-            |> Kernel.<>("?vsn=d")
+            absolute_digested_url(url, digested_path, with_vsn?)
           :error -> url
         end
       _ -> url
+    end
+  end
+
+  defp relative_digested_path(digested_path, true), do: relative_digested_path(digested_path) <> "?vsn=d"
+  defp relative_digested_path(digested_path, false), do: relative_digested_path(digested_path)
+  defp relative_digested_path(digested_path), do: "/" <> digested_path
+
+  defp absolute_digested_url(url, digested_path, true) do
+    absolute_digested_url(url, digested_path) <> "?vsn=d"
+  end
+
+  defp absolute_digested_url(url, digested_path, false) do
+    absolute_digested_url(url, digested_path)
+  end
+  defp absolute_digested_url(url, digested_path) do
+    url
+    |> Path.dirname()
+    |> Path.join(Path.basename(digested_path))
+  end
+
+  @doc """
+  Digests and compresses the static files and saves them in the given output path.
+
+    * `output_path` - The path where the compiled/compressed files will be saved
+    * `age` - The max age of assets to keep
+    * `keep` - The number of old versions to keep
+  """
+  @spec clean(String.t, integer, integer, integer) :: :ok | {:error, :invalid_path}
+  def clean(output_path, age, keep, now \\ now()) do
+    if File.exists?(output_path) do
+      digests = load_clean_digests(output_path) || %{}
+      clean_files(output_path, digests, now - age, keep)
+      :ok
+    else
+      {:error, :invalid_path}
+    end
+  end
+
+  defp load_clean_digests(path) do
+    manifest_path = Path.join(path, "manifest.json")
+    if File.exists?(manifest_path) do
+      manifest_path
+      |> File.read!
+      |> Poison.decode!
+      |> Access.get("digests")
+    end
+  end
+
+  defp clean_files(output_path, digests, max_age, keep) do
+    for {_, versions} <- group_by_logical_path(digests) do
+      versions
+      |> Enum.map(fn {path, attrs} -> Map.put(attrs, "path", path) end)
+      |> Enum.sort(&(&1["mtime"] > &2["mtime"]))
+      |> Enum.with_index
+      |> Enum.filter(fn {version, index} ->
+        max_age > version["mtime"] || index > keep
+      end)
+      |> remove_versions(output_path)
+    end
+  end
+
+  defp group_by_logical_path(digests) do
+    Enum.group_by(digests, fn {_, attrs} -> attrs["logical_path"] end)
+  end
+
+  defp remove_versions(versions, output_path) do
+    for {version, _index} <- versions do
+      output_path
+      |> Path.join(version["path"])
+      |> File.rm
+
+      output_path
+      |> Path.join("#{version["path"]}.gz")
+      |> File.rm
     end
   end
 end

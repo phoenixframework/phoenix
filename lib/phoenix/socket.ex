@@ -121,7 +121,7 @@ defmodule Phoenix.Socket do
   end
 
   @type t :: %Socket{id: nil,
-                     assigns: %{},
+                     assigns: map,
                      channel: atom,
                      channel_pid: pid,
                      endpoint: atom,
@@ -247,7 +247,7 @@ defmodule Phoenix.Socket do
 
   The `channel` macro accepts topic patterns in two flavors. A splat argument
   can be provided as the last character to indicate a "topic:subtopic" match. If
-  a plain string is provied, only that topic will match the channel handler.
+  a plain string is provided, only that topic will match the channel handler.
   Most use-cases will use the "topic:*" pattern to allow more versatile topic
   scoping.
 

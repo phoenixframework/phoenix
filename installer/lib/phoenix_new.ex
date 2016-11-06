@@ -14,8 +14,8 @@ defmodule Mix.Tasks.Phoenix.New do
     {:eex,  "new/config/prod.exs",                           "config/prod.exs"},
     {:eex,  "new/config/prod.secret.exs",                    "config/prod.secret.exs"},
     {:eex,  "new/config/test.exs",                           "config/test.exs"},
-    {:eex,  "new/lib/application_name.ex",                   "lib/application_name.ex"},
-    {:eex,  "new/lib/application_name/endpoint.ex",          "lib/application_name/endpoint.ex"},
+    {:eex,  "new/lib/app_name.ex",                           "lib/app_name.ex"},
+    {:eex,  "new/lib/app_name/endpoint.ex",                  "lib/app_name/endpoint.ex"},
     {:keep, "new/test/channels",                             "test/channels"},
     {:keep, "new/test/controllers",                          "test/controllers"},
     {:eex,  "new/test/views/error_view_test.exs",            "test/views/error_view_test.exs"},
@@ -38,7 +38,7 @@ defmodule Mix.Tasks.Phoenix.New do
   ]
 
   @ecto [
-    {:eex,  "ecto/repo.ex",              "lib/application_name/repo.ex"},
+    {:eex,  "ecto/repo.ex",              "lib/app_name/repo.ex"},
     {:keep, "ecto/test/models",          "test/models"},
     {:eex,  "ecto/model_case.ex",        "test/support/model_case.ex"},
     {:keep, "ecto/priv/repo/migrations", "priv/repo/migrations"},
@@ -46,7 +46,7 @@ defmodule Mix.Tasks.Phoenix.New do
   ]
 
   @brunch [
-    {:text, "static/brunch/.gitignore",       ".gitignore"},
+    {:text, "static/brunch/gitignore",       ".gitignore"},
     {:eex,  "static/brunch/brunch-config.js", "brunch-config.js"},
     {:eex,  "static/brunch/package.json",     "package.json"},
     {:text, "static/app.css",                 "web/static/css/app.css"},
@@ -68,7 +68,7 @@ defmodule Mix.Tasks.Phoenix.New do
   ]
 
   @static [
-    {:text,   "static/bare/.gitignore", ".gitignore"},
+    {:text,   "static/bare/gitignore", ".gitignore"},
     {:text,   "static/app.css",         "priv/static/css/app.css"},
     {:append, "static/phoenix.css",     "priv/static/css/app.css"},
     {:text,   "static/bare/app.js",     "priv/static/js/app.js"},
@@ -76,7 +76,7 @@ defmodule Mix.Tasks.Phoenix.New do
   ]
 
   @bare [
-    {:text,   "static/bare/.gitignore", ".gitignore"},
+    {:text,   "static/bare/gitignore", ".gitignore"},
   ]
 
   # Embed all defined templates
@@ -166,7 +166,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
     case argv do
       [] ->
-        Mix.Task.run "help", ["phoenix.new"]
+        Mix.Tasks.Help.run ["phoenix.new"]
       [path|_] ->
         app = opts[:app] || Path.basename(Path.expand(path))
         check_application_name!(app, !!opts[:app])
@@ -213,8 +213,8 @@ defmodule Mix.Tasks.Phoenix.New do
           """
       end
 
-    binding = [application_name: app,
-               application_module: mod,
+    binding = [app_name: app,
+               app_module: mod,
                phoenix_dep: phoenix_dep(phoenix_path),
                phoenix_path: phoenix_path,
                phoenix_static_path: phoenix_static_path(phoenix_path),
@@ -273,7 +273,7 @@ defmodule Mix.Tasks.Phoenix.New do
       append_to path, "config/dev.exs", """
 
       # Configure your database
-      config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
+      config :#{binding[:app_name]}, #{binding[:app_module]}.Repo,
         adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:dev]},
         pool_size: 10
       """
@@ -281,14 +281,14 @@ defmodule Mix.Tasks.Phoenix.New do
       append_to path, "config/test.exs", """
 
       # Configure your database
-      config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
+      config :#{binding[:app_name]}, #{binding[:app_module]}.Repo,
         adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:test]}
       """
 
       append_to path, "config/prod.secret.exs", """
 
       # Configure your database
-      config :#{binding[:application_name]}, #{binding[:application_module]}.Repo,
+      config :#{binding[:app_name]}, #{binding[:app_module]}.Repo,
         adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:prod]},
         pool_size: 20
       """
@@ -427,8 +427,8 @@ defmodule Mix.Tasks.Phoenix.New do
     end
   end
 
-  def check_directory_existence!(name) do
-    if File.dir?(name) && !Mix.shell.yes?("The directory #{name} already exists. Are you sure you want to continue?") do
+  defp check_directory_existence!(name) do
+    if File.dir?(name) and not Mix.shell.yes?("The directory #{name} already exists. Are you sure you want to continue?") do
       Mix.raise "Please select another directory for installation."
     end
   end
@@ -526,10 +526,9 @@ defmodule Mix.Tasks.Phoenix.New do
   ## Template helpers
 
   defp copy_from(target_dir, binding, mapping) when is_list(mapping) do
-    application_name = Keyword.fetch!(binding, :application_name)
+    app = Keyword.fetch!(binding, :app_name)
     for {format, source, target_path} <- mapping do
-      target = Path.join(target_dir,
-                         String.replace(target_path, "application_name", application_name))
+      target = Path.join(target_dir, String.replace(target_path, "app_name", app))
 
       case format do
         :keep ->

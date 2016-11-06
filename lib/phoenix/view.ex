@@ -118,7 +118,7 @@ defmodule Phoenix.View do
   the path will be `Path.join(root, "admin/user")` and so on. For
   explicit root path locations, the `:path` option can instead be provided.
   The `:root` and `:path` are joined to form the final lookup path.
-  A blank string may be provided to use the `:root` path direclty as the
+  A blank string may be provided to use the `:root` path directly as the
   template lookup path.
 
   Setting the namespace to `MyApp.Admin` in the second example will force

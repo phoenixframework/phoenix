@@ -18,7 +18,7 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
   test "generates json resource" do
     in_tmp "generates json resource", fn ->
       Mix.Tasks.Phoenix.Gen.Json.run ["user", "users", "name", "age:integer", "height:decimal",
-                                      "nicks:array:text", "famous:boolean", "born_at:datetime",
+                                      "nicks:array:text", "famous:boolean", "born_at:utc_datetime",
                                       "secret:uuid", "first_login:date", "alarm:time"]
 
       assert_file "web/models/user.ex"

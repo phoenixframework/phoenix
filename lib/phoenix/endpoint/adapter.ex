@@ -18,8 +18,7 @@ defmodule Phoenix.Endpoint.Adapter do
       config_children(mod, conf) ++
       pubsub_children(mod, conf) ++
       server_children(mod, conf, server?) ++
-      watcher_children(mod, conf, server?) ++
-      code_reloader_children(mod, conf)
+      watcher_children(mod, conf, server?)
 
     case Supervisor.start_link(children, strategy: :one_for_one, name: mod) do
       {:ok, pid} ->
@@ -34,7 +33,7 @@ defmodule Phoenix.Endpoint.Adapter do
     id   = :crypto.strong_rand_bytes(16) |> Base.encode64
     app  = conf[:otp_app]
     conf = [endpoint_id: id] ++ defaults(app, mod)
-    args = [app, mod, conf, [name: Module.concat(mod, Config)]]
+    args = [app, mod, conf, [name: Module.concat(mod, "Config")]]
     [worker(Phoenix.Config, args)]
   end
 
@@ -51,8 +50,10 @@ defmodule Phoenix.Endpoint.Adapter do
 
   defp server_children(mod, conf, server?) do
     if server? do
-      args = [conf[:otp_app], mod, [name: Module.concat(mod, Server)]]
-      [supervisor(Phoenix.Endpoint.Server, args)]
+      server = Module.concat(mod, "Server")
+      long_poll = Module.concat(mod, "LongPoll.Supervisor")
+      [supervisor(Phoenix.Endpoint.Handler, [conf[:otp_app], mod, [name: server]]),
+       supervisor(Phoenix.Transports.LongPoll.Supervisor, [[name: long_poll]])]
     else
       []
     end
@@ -71,16 +72,6 @@ defmodule Phoenix.Endpoint.Adapter do
   defp watcher_args(cmd, cmd_args) do
     {args, opts} = Enum.split_while(cmd_args, &is_binary(&1))
     [cmd, args, opts]
-  end
-
-  defp code_reloader_children(mod, conf) do
-    if conf[:code_reloader] do
-      args = [conf[:otp_app], mod, conf[:reloadable_compilers],
-              [name: Module.concat(mod, CodeReloader)]]
-      [worker(Phoenix.CodeReloader.Server, args)]
-    else
-      []
-    end
   end
 
   @doc """
@@ -254,7 +245,13 @@ defmodule Phoenix.Endpoint.Adapter do
       outer = Application.app_dir(endpoint.config(:otp_app), inner)
 
       if File.exists?(outer) do
-        Poison.decode!(File.read!(outer))
+        manifest =
+          outer
+          |> File.read!
+          |> Poison.decode!
+
+        # TODO: No longer support old manifests on Phoenix 1.4
+        manifest["latest"] || manifest
       else
         Logger.error "Could not find static manifest at #{inspect outer}. " <>
                      "Run \"mix phoenix.digest\" after building your static files " <>

@@ -1,14 +1,14 @@
-defmodule <%= application_module %>.Endpoint do
-  use Phoenix.Endpoint, otp_app: :<%= application_name %>
+defmodule <%= app_module %>.Endpoint do
+  use Phoenix.Endpoint, otp_app: :<%= app_name %>
 
-  socket "/socket", <%= application_module %>.UserSocket
+  socket "/socket", <%= app_module %>.UserSocket
 
   # Serve at "/" the static files from "priv/static" directory.
   #
   # You should set gzip to true if you are running phoenix.digest
   # when deploying your static files in production.
   plug Plug.Static,
-    at: "/", from: :<%= application_name %>, gzip: false,
+    at: "/", from: :<%= app_name %>, gzip: false,
     only: ~w(css fonts images js favicon.ico robots.txt)
 
   # Code reloading can be explicitly enabled under the
@@ -35,8 +35,8 @@ defmodule <%= application_module %>.Endpoint do
   # Set :encryption_salt if you would also like to encrypt it.
   plug Plug.Session,
     store: :cookie,
-    key: "_<%= application_name %>_key",
+    key: "_<%= app_name %>_key",
     signing_salt: "<%= signing_salt %>"
 
-  plug <%= application_module %>.Router
+  plug <%= app_module %>.Router
 end
