@@ -51,6 +51,21 @@ defmodule Phoenix.TokenTest do
     assert Token.verify(conn(), "id", token, max_age: 0.1) == {:error, :expired}
   end
 
+  test "json payload" do
+    token = Token.sign(conn(), "id", 1, json: true)
+    assert Token.verify(conn(), "id", token, json: true) == {:ok, 1}
+  end
+
+  test "json fails verify without json flag" do
+    token = Token.sign(conn(), "id", 1, json: true)
+    catch_error(Token.verify(conn(), "id", token))
+  end
+
+  test "non-json fails verification with json flag" do
+    token = Token.sign(conn(), "id", 1)
+    catch_error(Token.verify(conn(), "id", token, json: true))
+  end
+
   defp socket() do
     %Phoenix.Socket{endpoint: TokenEndpoint}
   end

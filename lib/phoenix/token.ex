@@ -96,7 +96,7 @@ defmodule Phoenix.Token do
     message = %{
       data: data,
       signed: now_ms(),
-    } |> :erlang.term_to_binary()
+    } |> encode_payload(opts)
     MessageVerifier.sign(message, secret)
   end
 
@@ -124,7 +124,7 @@ defmodule Phoenix.Token do
 
     case MessageVerifier.verify(token, secret) do
       {:ok, message} ->
-        %{data: data, signed: signed} = :erlang.binary_to_term(message)
+        {data, signed} = decode_payload(message, opts)
 
         if max_age_ms && (signed + max_age_ms) < now_ms() do
           {:error, :expired}
@@ -138,6 +138,18 @@ defmodule Phoenix.Token do
 
   def verify(_context, salt, nil, _opts) when is_binary(salt) do
     {:error, :missing}
+  end
+
+  defp encode_payload(message, json: true), do: Poison.encode!(message)
+  defp encode_payload(message, _), do: :erlang.term_to_binary(message)
+
+  defp decode_payload(message, json: true) do
+    %{"data" => data, "signed" => signed} = Poison.decode!(message)
+    {data, signed}
+  end
+  defp decode_payload(message, _) do
+    %{data: data, signed: signed} = :erlang.binary_to_term(message)
+    {data, signed}
   end
 
   defp get_key_base(%Plug.Conn{} = conn),
