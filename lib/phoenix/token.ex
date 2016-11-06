@@ -3,8 +3,10 @@ defmodule Phoenix.Token do
   Tokens provide a way to generate and verify bearer
   tokens for use in Channels or API authentication.
 
-  The data can be read by clients, but the message is
-  signed to prevent tampering.
+  The data stored in the token is signed to prevent tampering
+  but not encrypted. This means it is safe to store identification
+  information (such as user IDs) but should not be used to store
+  confidential information (such as credit card numbers).
 
   ## Example
 
