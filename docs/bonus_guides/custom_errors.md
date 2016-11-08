@@ -39,7 +39,7 @@ config :hello_phoenix, HelloPhoenix.Endpoint,
   watchers: [node: ["node_modules/brunch/bin/brunch", "watch"]]
 ```
 
-To learn more about custom error pages, please see [The Error View](http://www.phoenixframework.org/docs/views#section-the-errorview) section of the View Guide.
+To learn more about custom error pages, please see [The Error View](views.html#the-errorview) section of the View Guide.
 
 #### Custom Errors
 

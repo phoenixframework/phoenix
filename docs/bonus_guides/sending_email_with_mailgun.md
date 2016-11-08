@@ -86,7 +86,7 @@ import_config "#{Mix.env}.exs"
 import_config "config.secret.exs"
 ```
 
-Since our `config/config.secret.exs` file won't be in our repository, we'll need to take some extra steps when we deploy our application. Please see the [Deployment Introduction Guide](http://www.phoenixframework.org/docs/deployment) for more information.
+Since our `config/config.secret.exs` file won't be in our repository, we'll need to take some extra steps when we deploy our application. Please see the [Deployment Introduction Guide](deployment.html) for more information.
 
 ### The Client Module
 

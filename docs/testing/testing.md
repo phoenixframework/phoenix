@@ -8,9 +8,9 @@ ExUnit refers to a test module as a "test case", and we will do the same.
 
 Let's see this in action.
 
-> Note: Before we proceed, we'll need to have PostgreSQL installed and running on our system. We'll also need to configure our repo with the correct login credentials. [The section on ecto.create in the Mix Tasks guide](http://www.phoenixframework.org/docs/mix-tasks#section--ecto-create-) has more information on this, and the [Ecto Models Guide](http://www.phoenixframework.org/docs/ecto-models) dives into the details on how it all works.
+> Note: Before we proceed, we'll need to have PostgreSQL installed and running on our system. We'll also need to configure our repo with the correct login credentials. [The section on ecto.create in the Mix Tasks guide](mix_tasks.html#ecto-specific-mix-tasks) has more information on this, and the [Ecto Models Guide](ecto_models.html) dives into the details on how it all works.
 
-In a freshly generated application, let's run `mix test` at the root of the project. (Please see the [Up and Running Guide](http://www.phoenixframework.org/docs/up-and-running) for instructions on generating a new application.)
+In a freshly generated application, let's run `mix test` at the root of the project. (Please see the [Up and Running Guide](up_and_running.html) for instructions on generating a new application.)
 
 ```console
 $ mix test
@@ -450,7 +450,7 @@ Randomized with seed 401472
 
 We've seen what Phoenix gives us with a newly generated app. Now let's see what happens when we generate a new HTML resource.
 
-Let's borrow the `users` resource we created in the [Ecto Models Guide](http://www.phoenixframework.org/docs/ecto-models).
+Let's borrow the `users` resource we created in the [Ecto Models Guide](ecto_models.html).
 
 At the root of our new application, let's run the `mix phoenix.gen.html` task with the following options.
 

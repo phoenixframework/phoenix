@@ -1,6 +1,6 @@
 # Testing Models
 
-In the [Ecto Models Guide](http://www.phoenixframework.org/docs/ecto-models) we generated an HTML resource for users. This gave us a number of modules for free, including a user model and a user model test case. In this guide, we'll use the model and test case to work through the changes we made in the Ecto Models Guide in a test-driven way.
+In the [Ecto Models Guide](ecto_models.html) we generated an HTML resource for users. This gave us a number of modules for free, including a user model and a user model test case. In this guide, we'll use the model and test case to work through the changes we made in the Ecto Models Guide in a test-driven way.
 
 For those of us who haven't worked through the Ecto Models Guide, it's easy to catch up. Please see the "Generating an HTML Resource" section below.
 
@@ -426,7 +426,7 @@ Randomized with seed 330955
 
 For this section, we're going to assume that we all have a PostgreSQL database installed on our system, and that we generated a default application - one in which Ecto and Postgrex are installed and configured automatically.
 
-If this is not the case, please see the section on adding Ecto and Postgrex of the [Ecto Models Guide](http://www.phoenixframework.org/docs/ecto-models#section-adding-ecto-and-postgrex-as-dependencies) and join us when that's done.
+If this is not the case, please see the section on adding Ecto and Postgrex of the [Ecto Models Guide](ecto_models.html) and join us when that's done.
 
 Ok, once we're all configured properly, we need to run the `phoenix.gen.html` task with the list of attributes we have here.
 

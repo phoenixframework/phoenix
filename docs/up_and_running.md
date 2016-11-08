@@ -2,7 +2,7 @@
 
 The aim of this first guide is to get a Phoenix application up and running as quickly as possible.
 
-Before we begin, please take a minute to read the [Installation Guide](http://www.phoenixframework.org/docs/installation). By installing any necessary dependencies beforehand, we'll be able to get our application up and running smoothly.
+Before we begin, please take a minute to read the [Installation Guide](installation.html). By installing any necessary dependencies beforehand, we'll be able to get our application up and running smoothly.
 
 At this point, we should have Elixir, Erlang, Hex, and the Phoenix archive installed. We should also have PostgreSQL and node.js installed to build a default application.
 
@@ -57,7 +57,7 @@ Before moving on, configure your database in config/dev.exs and run:
 
 Once our dependencies are installed, the task will prompt us to change into our project directory and start our application.
 
-Phoenix assumes that our PostgreSQL database will have a `postgres` user account with the correct permissions and a password of "postgres". If that isn't the case, please see the instructions for the [ecto.create](http://www.phoenixframework.org/docs/mix-tasks#section--ecto-create-) mix task.
+Phoenix assumes that our PostgreSQL database will have a `postgres` user account with the correct permissions and a password of "postgres". If that isn't the case, please see the instructions for the [ecto.create](mix_tasks.html#ecto-specific-mix-tasks) mix task.
 
 Ok, let's give it a try. First, we'll `cd` into the `hello_phoenix/` directory we've just created:
 

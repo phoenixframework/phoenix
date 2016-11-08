@@ -126,7 +126,7 @@ end
 
 ```
 
-For now, we'll ignore the pipelines and the use of `scope` here and just focus on adding a route. (We cover these topics in the [Routing Guide](http://www.phoenixframework.org/docs/routing), if you're curious.)
+For now, we'll ignore the pipelines and the use of `scope` here and just focus on adding a route. (We cover these topics in the [Routing Guide](routing.html), if you're curious.)
 
 Let's add a new route to the router that maps a `GET` request for `/hello` to the `index` action of a soon-to-be-created `HelloPhoenix.HelloController`:
 
@@ -160,7 +160,7 @@ defmodule HelloPhoenix.HelloController do
   end
 end
 ```
-We'll save a discussion of `use HelloPhoenix.Web, :controller` for the [Controllers Guide](http://www.phoenixframework.org/docs/controllers). For now, let's focus on the `index/2` action.
+We'll save a discussion of `use HelloPhoenix.Web, :controller` for the [Controllers Guide](controllers.html). For now, let's focus on the `index/2` action.
 
 All controller actions take two arguments. The first is `conn`, a struct which holds a ton of data about the request. The second is `params`, which are the request parameters. Here, we are not using `params`, and we avoid compiler warnings by adding the leading `_`.
 

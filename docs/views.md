@@ -166,7 +166,7 @@ If we look at `web/templates/layout/app.html.eex`, just about in the middle of t
 
 This is where the view module and its template from the controller are rendered to a string and placed in the layout.
 
-### The ErrorView
+## The ErrorView
 
 Phoenix has a view called the `ErrorView` which lives in `web/views/error_view.ex`. The purpose of the `ErrorView` is to handle two of the most common errors - `404 not found` and `500 internal error` - in a general way, from one centralized location. Let's see what it looks like.
 

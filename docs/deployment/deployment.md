@@ -1,6 +1,6 @@
 # Introduction to Deployment
 
-Once we have a working application, we're ready to deploy it. If you're not quite finished with your own application, don't worry. Just follow the [Up and Running Guide](http://www.phoenixframework.org/docs/up-and-running) to create a basic application to work with.
+Once we have a working application, we're ready to deploy it. If you're not quite finished with your own application, don't worry. Just follow the [Up and Running Guide](up_and_running.html) to create a basic application to work with.
 
 When preparing an application for deployment, there are three main steps:
 
@@ -8,7 +8,7 @@ When preparing an application for deployment, there are three main steps:
   * Compiling your application assets
   * Starting your server in production
 
-How those are exactly handled depends on your deployment infrastructure. In particular, we have guides specific to [Heroku](http://www.phoenixframework.org/docs/heroku) and [an Advanced Deployment Guide](http://www.phoenixframework.org/docs/advanced-deployment) that uses Erlang style releases. In any case, this chapter provides a general overview of the deployment steps, which will be useful regardless of your infrastructure or if you want to run in production locally.
+How those are exactly handled depends on your deployment infrastructure. In particular, we have guides specific to [Heroku](heroku.html) and [an Advanced Deployment Guide](exrm_releases.html) that uses Erlang style releases. In any case, this chapter provides a general overview of the deployment steps, which will be useful regardless of your infrastructure or if you want to run in production locally.
 
 Let's explore those steps above one by one.
 
@@ -42,7 +42,7 @@ config :foo, Foo.Repo,
   size: 20 # The amount of database connections in the pool
 ```
 
-There are different ways to get this data into production. One option is to replace the data above by environment variables and set those environment variables in your production machine. This is the step that we follow [in the Heroku guides](http://www.phoenixframework.org/docs/heroku).
+There are different ways to get this data into production. One option is to replace the data above by environment variables and set those environment variables in your production machine. This is the step that we follow [in the Heroku guides](heroku.html).
 
 Another approach is to configure the file above and place it in your production machines apart from your code checkout, for example, at "/var/config.prod.exs". After doing so, you will have to import it from `config/prod.exs`. Search for the `import_config` line and replace it by the proper path:
 

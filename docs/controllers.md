@@ -47,7 +47,7 @@ defmodule HelloPhoenix.PageController do
 end
 ```
 
-While we can name our actions whatever we like, there are conventions for action names which we should follow whenever possible. We went over these in the [Routing Guide](http://www.phoenixframework.org/docs/routing), but we'll take another quick look here.
+While we can name our actions whatever we like, there are conventions for action names which we should follow whenever possible. We went over these in the [Routing Guide](routing.html), but we'll take another quick look here.
 
 - index   - renders a list of all items of the given resource type
 - show    - renders an individual item by id
@@ -61,7 +61,7 @@ Each of these actions takes two parameters, which will be provided by Phoenix be
 
 The first parameter is always `conn`, a struct which holds information about the request such as the host, path elements, port, query string, and much more. `conn`, comes to Phoenix via Elixir's Plug middleware framework. More detailed info about `conn` can be found in [plug's documentation](http://hexdocs.pm/plug/Plug.Conn.html).
 
-The second parameter is `params`. Not surprisingly, this is a map which holds any parameters passed along in the HTTP request. It is a good practice to pattern match against params in the function signature to provide data in a simple package we can pass on to rendering. We saw this in the [Adding Pages guide](http://www.phoenixframework.org/docs/adding-pages) when we added a messenger parameter to our `show` route in `web/controllers/hello_controller.ex`.
+The second parameter is `params`. Not surprisingly, this is a map which holds any parameters passed along in the HTTP request. It is a good practice to pattern match against params in the function signature to provide data in a simple package we can pass on to rendering. We saw this in the [Adding Pages guide](adding_pages.html) when we added a messenger parameter to our `show` route in `web/controllers/hello_controller.ex`.
 
 ```elixir
 defmodule HelloPhoenix.HelloController do
@@ -77,7 +77,7 @@ In some cases - often in `index` actions, for instance - we don't care about par
 
 ### Gathering Data
 
-While Phoenix does not ship with its own data access layer, the Elixir project [Ecto](http://hexdocs.pm/ecto) provides a very nice solution for those using the [Postgres](http://www.postgresql.org/) relational database. We cover how to use Ecto in a Phoenix project in the [Ecto Models Guide](http://www.phoenixframework.org/docs/ecto-models). Databases supported by Ecto are covered in the [Usage section of the Ecto README](https://github.com/elixir-lang/ecto#usage).
+While Phoenix does not ship with its own data access layer, the Elixir project [Ecto](http://hexdocs.pm/ecto) provides a very nice solution for those using the [Postgres](http://www.postgresql.org/) relational database. We cover how to use Ecto in a Phoenix project in the [Ecto Models Guide](ecto_models.html). Databases supported by Ecto are covered in the [Usage section of the Ecto README](https://github.com/elixir-lang/ecto#usage).
 
 Of course, there are many other data access options. [Ets](http://www.erlang.org/doc/man/ets.html) and [Dets](http://www.erlang.org/doc/man/dets.html) are key value data stores built into [OTP](http://www.erlang.org/doc/). OTP also provides a relational database called [mnesia](http://www.erlang.org/doc/man/mnesia.html) with its own query language called QLC. Both Elixir and Erlang also have a number of libraries for working with a wide range of popular data stores.
 
@@ -170,7 +170,7 @@ For this, Phoenix provides the `render/3` function.
 
 Interestingly, `render/3` is defined in the `Phoenix.View` module instead of `Phoenix.Controller`, but it is aliased in `Phoenix.Controller` for convenience.
 
-We have already seen the render function in the [Adding Pages Guide](http://www.phoenixframework.org/docs/adding-pages). Our `show` action in `web/controllers/hello_controller.ex` looked like this.
+We have already seen the render function in the [Adding Pages Guide](adding_pages.html). Our `show` action in `web/controllers/hello_controller.ex` looked like this.
 
 ```elixir
 defmodule HelloPhoenix.HelloController do
@@ -264,7 +264,7 @@ Using Plug functions in this way, we can craft just the response we need.
 
 Rendering does not end with the template, though. By default, the results of the template render will be inserted into a layout, which will also be rendered.
 
-[Templates and layouts](http://www.phoenixframework.org/docs/templates) have their own guide, so we won't spend much time on them here. What we will look at is how to assign a different layout, or none at all, from inside a controller action.
+[Templates and layouts](templates.html) have their own guide, so we won't spend much time on them here. What we will look at is how to assign a different layout, or none at all, from inside a controller action.
 
 ### Assigning Layouts
 
@@ -510,7 +510,7 @@ def index(conn, _params) do
 end
 ```
 
-We can also make use of the path helpers we learned about in the [Routing Guide](http://www.phoenixframework.org/docs/routing). It's useful to `alias` the helpers in `web/router.ex` in order to shorten the expression.
+We can also make use of the path helpers we learned about in the [Routing Guide](routing.html). It's useful to `alias` the helpers in `web/router.ex` in order to shorten the expression.
 
 ```elixir
 defmodule HelloPhoenix.PageController do

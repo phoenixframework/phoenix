@@ -6,7 +6,7 @@ Plug provides a `Plug.Upload` struct to hold the data from the `file` input. A `
 
 Let's take this one piece at a time.
 
-In the [`Ecto Models Guide`](http://www.phoenixframework.org/docs/ecto-models), we generated an HTML resource for users. We can reuse the form we generated there in order to demonstrate how file uploads work in Phoenix. Please see that guide for instructions on generating the users resource we'll be using here.
+In the [`Ecto Models Guide`](ecto_models.html), we generated an HTML resource for users. We can reuse the form we generated there in order to demonstrate how file uploads work in Phoenix. Please see that guide for instructions on generating the users resource we'll be using here.
 
 The first thing we need to do is change our form into a multipart form. The `form_for/4` function accepts a keyword list of options where we can specify this.
 

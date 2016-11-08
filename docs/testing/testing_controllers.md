@@ -11,7 +11,7 @@ mix phoenix.gen.json Thing things some_attr:string another_attr:string
 
 Thing is the Model, things is the table name, and some_attr and another_attr are database columns on table things of type string. Don't run this command, we're going to explore test driving out a similar result to what a generator would give us.
 
-Let's create a `User` model. Since model creation is not in scope of this guide, we will use the generator.  If you aren't familiar, read [this section of the Mix guide](http://www.phoenixframework.org/docs/mix-tasks#section--mix-phoenix-gen-model-).
+Let's create a `User` model. Since model creation is not in scope of this guide, we will use the generator.  If you aren't familiar, read [this section of the Mix guide](mix_tasks.html#phoenix-specific-mix-tasks).
 
 ```bash
 $ mix phoenix.gen.model User users name:string email:string

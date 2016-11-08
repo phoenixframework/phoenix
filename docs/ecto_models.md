@@ -10,11 +10,11 @@ Most web applications today need some form of data storage. In the Elixir ecosys
 
 Newly generated Phoenix applications integrate both Ecto and the PostgreSQL adapter by default.
 
-For a thorough, general guide for Ecto, check out the [Ecto getting started guide](https://hexdocs.pm/ecto/getting-started.html). For an overview of all Ecto specific mix tasks for Phoenix, see the [mix tasks guide](http://www.phoenixframework.org/docs/mix-tasks#section-ecto-specific-mix-tasks).
+For a thorough, general guide for Ecto, check out the [Ecto getting started guide](https://hexdocs.pm/ecto/getting-started.html). For an overview of all Ecto specific mix tasks for Phoenix, see the [mix tasks guide](mix_tasks.html#ecto-specific-mix-tasks).
 
 This guide assumes that we have generated our new application with Ecto. If we're using an older Phoenix app, or we used the `--no-ecto` option to generate our application, all is not lost. Please follow the instructions in the "Integrating Ecto into an Existing Application" section below.
 
-This guide also assumes that we will be using PostgreSQL. For instructions on switching to MySQL, please see the [Using MySQL Guide](http://www.phoenixframework.org/docs/using-mysql).
+This guide also assumes that we will be using PostgreSQL. For instructions on switching to MySQL, please see the [Using MySQL Guide](using_mysql.html).
 
 The default Postgres configuration has a superuser account with username 'postgres' and the password 'postgres'. If you take a look at the file ```config/dev.exs```, you'll see that Phoenix works off this assumption. If you don't have this account already setup on your machine, you can connect to your postgres instance by typing ```psql``` and enter the following commands:
 
@@ -707,7 +707,7 @@ defmodule HelloPhoenix do
 end
 ```
 
-Now that Ecto is configured, we can use the [mix tasks](http://www.phoenixframework.org/docs/mix-tasks#section--mix-phoenix-gen-model-) to generate models. By default all model files should have the line `use HelloPhoenix.Web, :model` which handles the imports, but does not yet contain the `Ecto` dependencies. We can define or append the `model` function in the `web/web.ex` file:
+Now that Ecto is configured, we can use the [mix tasks](mix_tasks.html#phoenix-specific-mix-tasks) to generate models. By default all model files should have the line `use HelloPhoenix.Web, :model` which handles the imports, but does not yet contain the `Ecto` dependencies. We can define or append the `model` function in the `web/web.ex` file:
 
 ```elixir
   def model do
