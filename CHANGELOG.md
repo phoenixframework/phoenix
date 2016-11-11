@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3-dev
+
+* Enhancements
+  * [Channel] Add ability to configure channele event logging with `:log_join` and `:log_handle_in` options
+
 ## 1.2.1 (2016-8-11)
 
 * Enhancements
