@@ -100,6 +100,36 @@ defmodule Phoenix.LoggerTest do
            %{:foo => "bar", "password" => "[FILTERED]"}
   end
 
+  test "logs phoenix_channel_join as configured by the channel" do
+
+    log = capture_log(fn ->
+      socket = %Phoenix.Socket{log_join: :info}
+      Phoenix.Logger.phoenix_channel_join(:start, %{}, %{socket: socket, params: %{}})
+    end)
+    assert log =~ "JOIN"
+
+    log = capture_log(fn ->
+      socket = %Phoenix.Socket{log_join: false}
+      Phoenix.Logger.phoenix_channel_join(:start, %{}, %{socket: socket, params: %{}})
+    end)
+    assert log == ""
+  end
+
+  test "logs phoenix_channel_receive as configured by the channel" do
+    log = capture_log(fn ->
+      socket = %Phoenix.Socket{log_handle_in: :debug}
+      Phoenix.Logger.phoenix_channel_receive(:start, %{}, %{socket: socket, event: "e", params: %{}})
+    end)
+    assert log =~ "INCOMING"
+
+    log = capture_log(fn ->
+      socket = %Phoenix.Socket{log_handle_in: false}
+      Phoenix.Logger.phoenix_channel_receive(:start, %{}, %{socket: socket, event: "e", params: %{}})
+    end)
+    assert log == ""
+  end
+
+
   defp action(conn) do
     LoggerController.call(conn, LoggerController.init(:index))
   end

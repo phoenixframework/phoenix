@@ -227,9 +227,17 @@ defmodule Phoenix.Socket.Transport do
     |> do_dispatch(msg, socket)
   end
 
-  defp do_dispatch(nil, %{event: "phx_join", topic: topic} = msg, socket) do
-    if channel = socket.handler.__channel__(topic, socket.transport_name) do
-      socket = %Socket{socket | topic: topic, channel: channel}
+  defp build_channel_socket(%Socket{} = socket, channel, topic) do
+    %Socket{socket |
+            topic: topic,
+            channel: channel,
+            log_join: channel.__channel__(:log_join),
+            log_handle_in: channel.__channel__(:log_handle_in)}
+  end
+
+  defp do_dispatch(nil, %{event: "phx_join", topic: topic} = msg, base_socket) do
+    if channel = base_socket.handler.__channel__(topic, base_socket.transport_name) do
+      socket = build_channel_socket(base_socket, channel, topic)
 
       case Phoenix.Channel.Server.join(socket, msg.payload) do
         {:ok, response, pid} ->
@@ -241,7 +249,7 @@ defmodule Phoenix.Socket.Transport do
           {:error, reason, %Reply{ref: msg.ref, topic: topic, status: :error, payload: reason}}
       end
     else
-      reply_ignore(msg, socket)
+      reply_ignore(msg, base_socket)
     end
   end
 

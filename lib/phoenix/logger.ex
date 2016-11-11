@@ -38,15 +38,11 @@ defmodule Phoenix.Logger do
   end
   def phoenix_channel_join(:stop, _compile, :ok), do: :ok
 
-  defp log_join("phoenix" <> _, _socket, _params), do: :ok
-  defp log_join(topic, socket, params) do
-    filtered_params = filter_values(params)
-    Logger.info fn ->
-      "JOIN #{topic} to #{inspect(socket.channel)}\n" <>
-      "  Transport:  #{inspect socket.transport}\n" <>
-      "  Parameters: #{inspect filtered_params}"
-    end
+  def phoenix_channel_receive(:start, _compile, meta) do
+    %{socket: socket, params: params, event: event} = meta
+    log_receive(socket.topic, event, socket, params)
   end
+  def phoenix_channel_receive(:stop, _compile, :ok), do: :ok
 
   @doc false
   def filter_values(values, params \\ Application.get_env(:phoenix, :filter_parameters))
@@ -72,5 +68,31 @@ defmodule Phoenix.Logger do
     params
     |> filter_values()
     |> inspect()
+  end
+
+  defp log_receive("phoenix" <> _, _event, _socket, _params), do: :ok
+  defp log_receive(topic, event, socket, params) do
+    channel_log(:log_handle_in, socket, fn ->
+      "INCOMING #{inspect event} on #{inspect topic} to #{inspect(socket.channel)}\n" <>
+      "  Transport:  #{inspect socket.transport}\n" <>
+      "  Parameters: #{inspect filter_values(params)}"
+    end)
+  end
+
+  defp log_join("phoenix" <> _, _socket, _params), do: :ok
+  defp log_join(topic, socket, params) do
+    channel_log(:log_join, socket, fn ->
+      "JOIN #{inspect topic} to #{inspect(socket.channel)}\n" <>
+      "  Transport:  #{inspect socket.transport}\n" <>
+      "  Parameters: #{inspect filter_values(params)}"
+    end)
+  end
+
+  defp channel_log(log_option, socket, message_or_func) do
+    case Map.fetch(socket, log_option) do
+      {:ok, false} -> :ok
+      {:ok, level} -> Logger.log(level, message_or_func)
+    end
+    :ok
   end
 end
