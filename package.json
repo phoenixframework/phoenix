@@ -10,13 +10,21 @@
   },
   "author": "Chris McCord <chris@chrismccord.com> (http://www.phoenixframework.org)",
   "devDependencies": {
-    "brunch": "~2.6.5",
-    "mocha": "~2.4.4",
     "babel-brunch": "~6.0.0",
+    "brunch": "~2.6.5",
+    "jsdom": "9.8.3",
+    "jsdom-global": "2.1.0",
+    "mocha": "~2.4.4",
     "uglify-js-brunch": "~2.0.1"
   },
-  "files": ["README.md", "LICENSE.md", "package.json", "priv/static/phoenix.js", "web/static/js/phoenix.js"],
+  "files": [
+    "README.md",
+    "LICENSE.md",
+    "package.json",
+    "priv/static/phoenix.js",
+    "web/static/js/phoenix.js"
+  ],
   "scripts": {
-    "test": "./node_modules/.bin/mocha ./web/test/**/*.js --compilers js:babel-register"
+    "test": "./node_modules/.bin/mocha ./web/test/**/*.js --compilers js:babel-register -r jsdom-global/register"
   }
 }
