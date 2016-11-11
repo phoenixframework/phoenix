@@ -32,7 +32,6 @@ defmodule Phoenix.CodeReloader do
   @behaviour Plug
   import Plug.Conn
 
-
   @style %{
     primary: "#EB532D",
     accent: "#a0b0c0",

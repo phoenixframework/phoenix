@@ -22,6 +22,9 @@ defmodule Phoenix.Endpoint.Adapter do
 
     case Supervisor.start_link(children, strategy: :one_for_one, name: mod) do
       {:ok, pid} ->
+        if server? and conf[:code_reloader] do
+          Phoenix.CodeReloader.Server.check_symlinks()
+        end
         warmup(mod)
         {:ok, pid}
       {:error, reason} ->

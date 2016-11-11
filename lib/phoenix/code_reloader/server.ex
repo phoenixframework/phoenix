@@ -6,7 +6,11 @@ defmodule Phoenix.CodeReloader.Server do
   alias Phoenix.CodeReloader.Proxy
 
   def start_link() do
-    GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
+    GenServer.start_link(__MODULE__, false, name: __MODULE__)
+  end
+
+  def check_symlinks do
+    GenServer.call(__MODULE__, :check_symlinks, :infinity)
   end
 
   def reload!(endpoint) do
@@ -15,8 +19,27 @@ defmodule Phoenix.CodeReloader.Server do
 
   ## Callbacks
 
-  def init(state) do
-    {:ok, state}
+  def init(false) do
+    {:ok, false}
+  end
+
+  def handle_call(:check_symlinks, _from, checked?) do
+    if not checked? and Code.ensure_loaded?(Mix.Project) do
+      build_path = Mix.Project.build_path()
+      symlink = Path.join(Path.dirname(build_path), "__phoenix__")
+
+      case File.ln_s(build_path, symlink) do
+        :ok ->
+          File.rm(symlink)
+        {:error, :eexist} ->
+          File.rm(symlink)
+        {:error, _} = error ->
+          Logger.warn "Phoenix is unable to create symlinks. Phoenix' code reloader will run " <>
+                      "considerably faster if symlinks are allowed." <> os_symlink(:os.type)
+      end
+    end
+
+    {:reply, :ok, true}
   end
 
   def handle_call({:reload!, endpoint}, from, state) do
@@ -49,6 +72,11 @@ defmodule Phoenix.CodeReloader.Server do
     Enum.each(froms, &GenServer.reply(&1, reply))
     {:noreply, state}
   end
+
+  defp os_symlink({:win32, _}),
+    do: " On Windows, such can be done by starting the shell with \"Run as Administrator\"."
+  defp os_symlink(_),
+    do: ""
 
   defp load_backup(mod) do
     mod
