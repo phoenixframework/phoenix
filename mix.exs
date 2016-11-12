@@ -9,6 +9,7 @@ defmodule PhoenixGuides.Mixfile do
      version: @version,
      elixir: "~> 1.3",
      deps: deps(),
+     preferred_cli_env: ["docs.watch": :docs, docs: :docs],
      docs: [source_ref: "v#{@version}",
             main: "overview",
             logo: "styling/Phoenix_files/phoenix-logo-white.png",
@@ -26,7 +27,8 @@ defmodule PhoenixGuides.Mixfile do
   end
 
   defp deps do
-    [{:ex_doc, "~> 0.14", only: :docs}]
+    [{:ex_doc, "~> 0.14", only: :docs},
+     {:fs, "~> 0.9.1", only: :docs}]
   end
 
   defp extras do
