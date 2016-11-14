@@ -19,6 +19,8 @@ defmodule Phoenix.Logger do
   require Logger
   import Phoenix.Controller
 
+  alias Phoenix.Socket
+
 
   def phoenix_controller_call(:start, _compile, %{log_level: false}), do: :ok
   def phoenix_controller_call(:start, %{module: module}, %{log_level: level, conn: conn}) do
@@ -88,8 +90,8 @@ defmodule Phoenix.Logger do
     end)
   end
 
-  defp channel_log(log_option, socket, message_or_func) do
-    case Map.fetch(socket, log_option) do
+  defp channel_log(log_option, %Socket{private: private}, message_or_func) do
+    case Map.fetch(private, log_option) do
       {:ok, false} -> :ok
       {:ok, level} -> Logger.log(level, message_or_func)
     end
