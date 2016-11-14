@@ -1,4 +1,4 @@
-System.put_env("ENDPOINT_TEST_HOST", "host.com")
+System.put_env("TRANSPORT_TEST_HOST", "host.com")
 
 defmodule Phoenix.Transports.TransportTest do
   use ExUnit.Case, async: true
@@ -7,9 +7,9 @@ defmodule Phoenix.Transports.TransportTest do
   alias Phoenix.Socket.Transport
   alias Phoenix.Socket.Message
 
-  Application.put_env :phoenix, __MODULE__.Endpoint, 
+  Application.put_env :phoenix, __MODULE__.Endpoint,
     force_ssl: [],
-    url: [host: {:system, "ENDPOINT_TEST_HOST"}],
+    url: [host: {:system, "TRANSPORT_TEST_HOST"}],
     check_origin: ["//endpoint.com"]
 
   defmodule Endpoint do
