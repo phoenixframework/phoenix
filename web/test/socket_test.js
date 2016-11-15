@@ -251,19 +251,35 @@ describe("connectionState", () => {
     assert.equal(socket.connectionState(), "closed")
   })
 
-  it("returns the valid connection readyState", () => {
+  it("returns connecting", () => {
     socket.connect()
 
     socket.conn.readyState = 0
     assert.equal(socket.connectionState(), "connecting")
+    assert.ok(!socket.isConnected(), "is not connected")
+  })
+
+  it("returns open", () => {
+    socket.connect()
 
     socket.conn.readyState = 1
     assert.equal(socket.connectionState(), "open")
+    assert.ok(socket.isConnected(), "is connected")
+ })
+
+  it("returns closing", () => {
+    socket.connect()
 
     socket.conn.readyState = 2
     assert.equal(socket.connectionState(), "closing")
+    assert.ok(!socket.isConnected(), "is not connected")
+  })
+
+  it("returns closed", () => {
+    socket.connect()
 
     socket.conn.readyState = 3
     assert.equal(socket.connectionState(), "closed")
+    assert.ok(!socket.isConnected(), "is not connected")
   })
 })
