@@ -213,3 +213,37 @@ describe("disconnect", () => {
     })
   })
 })
+
+describe("connectionState", () => {
+  beforeEach(() => {
+    socket = new Socket("/socket")
+    window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
+  })
+
+  it("defaults to closed", () => {
+    assert.equal(socket.connectionState(), "closed")
+  })
+
+  it("returns closed if readyState unrecognized", () => {
+    socket.connect()
+
+    socket.conn.readyState = 5678
+    assert.equal(socket.connectionState(), "closed")
+  })
+
+  it("returns the valid connection readyState", () => {
+    socket.connect()
+
+    socket.conn.readyState = 0
+    assert.equal(socket.connectionState(), "connecting")
+
+    socket.conn.readyState = 1
+    assert.equal(socket.connectionState(), "open")
+
+    socket.conn.readyState = 2
+    assert.equal(socket.connectionState(), "closing")
+
+    socket.conn.readyState = 3
+    assert.equal(socket.connectionState(), "closed")
+  })
+})
