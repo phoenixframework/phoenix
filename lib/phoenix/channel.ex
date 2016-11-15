@@ -303,8 +303,10 @@ defmodule Phoenix.Channel do
       import unquote(__MODULE__)
       import Phoenix.Socket, only: [assign: 3]
 
-      def __channel__(:log_join), do: @phoenix_log_join
-      def __channel__(:log_handle_in), do: @phoenix_log_handle_in
+      def __socket__(:private) do
+        %{log_join: @phoenix_log_join,
+          log_handle_in: @phoenix_log_handle_in}
+      end
 
       def code_change(_old, socket, _extra), do: {:ok, socket}
 

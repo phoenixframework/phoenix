@@ -231,8 +231,7 @@ defmodule Phoenix.Socket.Transport do
     %Socket{socket |
             topic: topic,
             channel: channel,
-            log_join: channel.__channel__(:log_join),
-            log_handle_in: channel.__channel__(:log_handle_in)}
+            private: channel.__socket__(:private)}
   end
 
   defp do_dispatch(nil, %{event: "phx_join", topic: topic} = msg, base_socket) do

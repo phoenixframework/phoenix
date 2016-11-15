@@ -134,8 +134,7 @@ defmodule Phoenix.Socket do
                      transport_name: atom,
                      serializer: atom,
                      transport_pid: pid,
-                     log_join: atom | false,
-                     log_handle_in: atom | false}
+                     private: %{}}
 
   defstruct id: nil,
             assigns: %{},
@@ -151,8 +150,7 @@ defmodule Phoenix.Socket do
             transport_pid: nil,
             transport_name: nil,
             serializer: nil,
-            log_join: false,
-            log_handle_in: false
+            private: %{}
 
   defmacro __using__(_) do
     quote do

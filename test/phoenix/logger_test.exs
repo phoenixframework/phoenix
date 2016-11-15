@@ -103,13 +103,13 @@ defmodule Phoenix.LoggerTest do
   test "logs phoenix_channel_join as configured by the channel" do
 
     log = capture_log(fn ->
-      socket = %Phoenix.Socket{log_join: :info}
+      socket = %Phoenix.Socket{private: %{log_join: :info}}
       Phoenix.Logger.phoenix_channel_join(:start, %{}, %{socket: socket, params: %{}})
     end)
     assert log =~ "JOIN"
 
     log = capture_log(fn ->
-      socket = %Phoenix.Socket{log_join: false}
+      socket = %Phoenix.Socket{private: %{log_join: false}}
       Phoenix.Logger.phoenix_channel_join(:start, %{}, %{socket: socket, params: %{}})
     end)
     assert log == ""
@@ -117,13 +117,13 @@ defmodule Phoenix.LoggerTest do
 
   test "logs phoenix_channel_receive as configured by the channel" do
     log = capture_log(fn ->
-      socket = %Phoenix.Socket{log_handle_in: :debug}
+      socket = %Phoenix.Socket{private: %{log_handle_in: :debug}}
       Phoenix.Logger.phoenix_channel_receive(:start, %{}, %{socket: socket, event: "e", params: %{}})
     end)
     assert log =~ "INCOMING"
 
     log = capture_log(fn ->
-      socket = %Phoenix.Socket{log_handle_in: false}
+      socket = %Phoenix.Socket{private: %{log_handle_in: false}}
       Phoenix.Logger.phoenix_channel_receive(:start, %{}, %{socket: socket, event: "e", params: %{}})
     end)
     assert log == ""
