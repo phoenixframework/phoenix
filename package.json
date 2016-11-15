@@ -16,8 +16,8 @@
     "jsdom-global": "2.1.0",
     "mocha": "~2.4.4",
     "mock-socket": "^6.0.1",
-    "uglify-js-brunch": "~2.0.1",
-    "xmlhttprequest": "^1.8.0"
+    "sinon": "^1.17.6",
+    "uglify-js-brunch": "~2.0.1"
   },
   "files": ["README.md", "LICENSE.md", "package.json", "priv/static/phoenix.js", "web/static/js/phoenix.js"],
   "scripts": {

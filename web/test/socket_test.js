@@ -1,8 +1,8 @@
 import assert from "assert"
 
 import jsdom from "jsdom"
+import sinon from "sinon"
 import { WebSocket, Server as WebSocketServer } from "mock-socket"
-import { XMLHttpRequest } from "xmlhttprequest"
 
 import { Socket, LongPoll } from "../static/js/phoenix"
 
@@ -118,7 +118,8 @@ describe("connect with WebSocket", () => {
 
 describe("connect with long poll", () => {
   before(() => {
-    window.XMLHttpRequest = XMLHttpRequest
+    window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
+    socket = new Socket("/socket")
   })
 
   after(() => {
