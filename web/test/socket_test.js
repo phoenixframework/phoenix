@@ -168,3 +168,48 @@ describe("connect with long poll", () => {
     assert.deepStrictEqual(conn, socket.conn)
   })
 })
+
+describe("disconnect", () => {
+  let mockServer
+
+  before(() => {
+    mockServer = new WebSocketServer('wss://example.com/')
+    jsdom.changeURL(window, "http://example.com/");
+    socket = new Socket("/socket")
+  })
+
+  after(() => {
+    mockServer.stop()
+    window.WebSocket = null
+  })
+
+  it("removes existing connection", () => {
+    socket.connect()
+    socket.disconnect()
+
+    assert.equal(socket.conn, null)
+  })
+
+  it("calls callback", () => {
+    let count = 0
+    socket.connect()
+    socket.disconnect(() => count++)
+
+    assert.equal(count, 1)
+  })
+
+  it("calls connection close callback", () => {
+    socket.connect()
+    const spy = sinon.spy(socket.conn, "close")
+
+    socket.disconnect(null, "code", "reason")
+
+    assert(spy.calledWith("code", "reason"))
+  })
+
+  it("does not throw when no connection", () => {
+    assert.doesNotThrow(() => {
+      socket.disconnect()
+    })
+  })
+})
