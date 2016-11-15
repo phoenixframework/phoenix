@@ -59,17 +59,15 @@ describe("connect with WebSocket", () => {
   let mockServer
 
   before(() => {
-    jsdom.changeURL(window, "http://example.com/");
     mockServer = new WebSocketServer('wss://example.com/')
+    jsdom.changeURL(window, "http://example.com/");
   })
 
   after(() => {
     mockServer.stop()
   })
 
-  describe("establishes websocket connection with endpoint", () => {
-    const mockServer = new WebSocketServer('wss://example.com/')
-
+  it("establishes websocket connection with endpoint", () => {
     socket = new Socket("/socket")
     socket.connect()
 
@@ -78,7 +76,7 @@ describe("connect with WebSocket", () => {
     assert.equal(conn.url, socket.endPointURL())
   })
 
-  describe("sets callbacks for connection", () => {
+  it("sets callbacks for connection", () => {
     socket = new Socket("/socket")
     let opens = 0
     socket.onOpen(() => ++opens)
@@ -102,5 +100,16 @@ describe("connect with WebSocket", () => {
 
     socket.conn.onmessage[0]({data: '{"topic":"topic","event":"event","payload":"message","status":"ok"}'})
     assert.equal(lastMessage, "message")
+  })
+
+  it("is idempotent", () => {
+    socket = new Socket("/socket")
+    socket.connect()
+
+    let conn = socket.conn
+
+    socket.connect()
+
+    assert.deepStrictEqual(conn, socket.conn)
   })
 })
