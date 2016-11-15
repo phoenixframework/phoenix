@@ -62,6 +62,7 @@ describe("connect with WebSocket", () => {
   before(() => {
     mockServer = new WebSocketServer('wss://example.com/')
     jsdom.changeURL(window, "http://example.com/");
+    socket = new Socket("/socket")
   })
 
   after(() => {
@@ -70,7 +71,6 @@ describe("connect with WebSocket", () => {
   })
 
   it("establishes websocket connection with endpoint", () => {
-    socket = new Socket("/socket")
     socket.connect()
 
     let conn = socket.conn
@@ -79,7 +79,6 @@ describe("connect with WebSocket", () => {
   })
 
   it("sets callbacks for connection", () => {
-    socket = new Socket("/socket")
     let opens = 0
     socket.onOpen(() => ++opens)
     let closes = 0
@@ -105,7 +104,6 @@ describe("connect with WebSocket", () => {
   })
 
   it("is idempotent", () => {
-    socket = new Socket("/socket")
     socket.connect()
 
     let conn = socket.conn
@@ -127,7 +125,6 @@ describe("connect with long poll", () => {
   })
 
   it("establishes long poll connection with endpoint", () => {
-    socket = new Socket("/socket")
     socket.connect()
 
     let conn = socket.conn
@@ -137,7 +134,6 @@ describe("connect with long poll", () => {
   })
 
   it("sets callbacks for connection", () => {
-    socket = new Socket("/socket")
     let opens = 0
     socket.onOpen(() => ++opens)
     let closes = 0
@@ -163,7 +159,6 @@ describe("connect with long poll", () => {
   })
 
   it("is idempotent", () => {
-    socket = new Socket("/socket")
     socket.connect()
 
     let conn = socket.conn
