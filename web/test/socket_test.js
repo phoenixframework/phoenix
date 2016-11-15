@@ -9,7 +9,7 @@ import { Socket, LongPoll } from "../static/js/phoenix"
 let socket
 
 describe("protocol", () => {
-  before(() => {
+  beforeEach(() => {
     socket = new Socket("/socket")
   })
 
@@ -62,12 +62,17 @@ describe("connect with WebSocket", () => {
   before(() => {
     mockServer = new WebSocketServer('wss://example.com/')
     jsdom.changeURL(window, "http://example.com/");
-    socket = new Socket("/socket")
   })
 
-  after(() => {
-    mockServer.stop()
-    window.WebSocket = null
+  after((done) => {
+    mockServer.stop(() => {
+      done()
+      window.WebSocket = null
+    })
+  })
+
+  beforeEach(() => {
+    socket = new Socket("/socket")
   })
 
   it("establishes websocket connection with endpoint", () => {
@@ -117,11 +122,14 @@ describe("connect with WebSocket", () => {
 describe("connect with long poll", () => {
   before(() => {
     window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
-    socket = new Socket("/socket")
   })
 
   after(() => {
     window.XMLHttpRequest = null
+  })
+
+  beforeEach(() => {
+    socket = new Socket("/socket")
   })
 
   it("establishes long poll connection with endpoint", () => {
@@ -175,12 +183,17 @@ describe("disconnect", () => {
   before(() => {
     mockServer = new WebSocketServer('wss://example.com/')
     jsdom.changeURL(window, "http://example.com/");
-    socket = new Socket("/socket")
   })
 
-  after(() => {
-    mockServer.stop()
-    window.WebSocket = null
+  after((done) => {
+    mockServer.stop(() => {
+      done()
+      window.WebSocket = null
+    })
+  })
+
+  beforeEach(() => {
+    socket = new Socket("/socket")
   })
 
   it("removes existing connection", () => {
@@ -215,9 +228,16 @@ describe("disconnect", () => {
 })
 
 describe("connectionState", () => {
+  before(() => {
+    window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
+  })
+
+  after(() => {
+    window.XMLHttpRequest = null
+  })
+
   beforeEach(() => {
     socket = new Socket("/socket")
-    window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
   })
 
   it("defaults to closed", () => {
