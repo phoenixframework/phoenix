@@ -283,3 +283,28 @@ describe("connectionState", () => {
     assert.ok(!socket.isConnected(), "is not connected")
   })
 })
+
+describe("channel", () => {
+  let channel
+
+  beforeEach(() => {
+    socket = new Socket("/socket")
+  })
+
+  it("returns channel with given topic and params", () => {
+    channel = socket.channel("topic", { one: "two" })
+
+    assert.deepStrictEqual(channel.socket, socket)
+    assert.equal(channel.topic, "topic")
+    assert.deepEqual(channel.params, { one: "two" })
+  })
+
+  it("adds channel to sockets channels list", () => {
+    assert.equal(socket.channels.length, 0)
+
+    channel = socket.channel("topic", { one: "two" })
+
+    assert.equal(socket.channels.length, 1)
+    assert.deepStrictEqual(socket.channels[0], channel)
+  })
+})
