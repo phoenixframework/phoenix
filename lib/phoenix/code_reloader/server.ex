@@ -33,7 +33,7 @@ defmodule Phoenix.CodeReloader.Server do
           File.rm(symlink)
         {:error, :eexist} ->
           File.rm(symlink)
-        {:error, _} = error ->
+        {:error, _} ->
           Logger.warn "Phoenix is unable to create symlinks. Phoenix' code reloader will run " <>
                       "considerably faster if symlinks are allowed." <> os_symlink(:os.type)
       end
