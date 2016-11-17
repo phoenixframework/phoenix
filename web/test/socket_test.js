@@ -411,10 +411,10 @@ describe("sendHeartbeat", () => {
 
   beforeEach(() => {
     socket = new Socket("/socket")
+    socket.connect()
   })
 
   it("pushes heartbeat data when connected", () => {
-    socket.connect()
     socket.conn.readyState = 1 // open
 
     const spy = sinon.spy(socket.conn, "send")
@@ -425,7 +425,6 @@ describe("sendHeartbeat", () => {
   })
 
   it("no ops when not connected", () => {
-    socket.connect()
     socket.conn.readyState = 0 // connecting
 
     const spy = sinon.spy(socket.conn, "send")
@@ -433,5 +432,44 @@ describe("sendHeartbeat", () => {
 
     socket.sendHeartbeat()
     assert.ok(spy.neverCalledWith(data))
+  })
+})
+
+describe("flushSendBuffer", () => {
+  before(() => {
+    window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
+  })
+
+  after(() => {
+    window.XMLHttpRequest = null
+  })
+
+  beforeEach(() => {
+    socket = new Socket("/socket")
+    socket.connect()
+  })
+
+  it("calls callbacks in buffer when connected", () => {
+    socket.conn.readyState = 1 // open
+    const spy1 = sinon.spy()
+    const spy2 = sinon.spy()
+    const spy3 = sinon.spy()
+    socket.sendBuffer.push(spy1)
+    socket.sendBuffer.push(spy2)
+
+    socket.flushSendBuffer()
+
+    assert.ok(spy1.calledOnce)
+    assert.ok(spy2.calledOnce)
+    assert.equal(spy3.callCount, 0)
+  })
+
+  it("empties sendBuffer", () => {
+    socket.conn.readyState = 1 // open
+    socket.sendBuffer.push(() => {})
+
+    socket.flushSendBuffer()
+
+    assert.deepEqual(socket.sendBuffer.length, 0)
   })
 })
