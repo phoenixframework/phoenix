@@ -104,8 +104,9 @@ describe("connect with WebSocket", () => {
     socket.conn.onerror[0]("error")
     assert.equal(lastError, "error")
 
-    socket.conn.onmessage[0]({data: '{"topic":"topic","event":"event","payload":"message","status":"ok"}'})
-    assert.equal(lastMessage, "message")
+    const data = {"topic":"topic","event":"event","payload":"payload","status":"ok"}
+    socket.conn.onmessage[0]({data: JSON.stringify(data)})
+    assert.equal(lastMessage, "payload")
   })
 
   it("is idempotent", () => {
@@ -305,6 +306,75 @@ describe("channel", () => {
     channel = socket.channel("topic", { one: "two" })
 
     assert.equal(socket.channels.length, 1)
-    assert.deepStrictEqual(socket.channels[0], channel)
+
+    const [foundChannel] = socket.channels
+    assert.deepStrictEqual(foundChannel, channel)
+  })
+})
+
+describe("remove", () => {
+  beforeEach(() => {
+    socket = new Socket("/socket")
+  })
+
+  it("removes given channel from channels", () => {
+    const channel1 = socket.channel("topic-1")
+    const channel2 = socket.channel("topic-2")
+
+    sinon.stub(channel1, "joinRef").returns(1)
+    sinon.stub(channel2, "joinRef").returns(2)
+
+    socket.remove(channel1)
+
+    assert.equal(socket.channels.length, 1)
+
+    const [foundChannel] = socket.channels
+    assert.deepStrictEqual(foundChannel, channel2)
+  })
+})
+
+describe("push", () => {
+  const [topic, event, payload, ref] = ["topic", "event", "payload", "ref"]
+  const data = {topic, event, payload, ref}
+
+  before(() => {
+    window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
+  })
+
+  after(() => {
+    window.XMLHttpRequest = null
+  })
+
+  beforeEach(() => {
+    socket = new Socket("/socket")
+  })
+
+  it("sends data to connection when connected", () => {
+    socket.connect()
+    sinon.stub(socket, "isConnected").returns(true)
+
+    const spy = sinon.spy(socket.conn, "send")
+
+    socket.push(data)
+
+    assert.ok(spy.calledWith(JSON.stringify(data)))
+  })
+
+  it("buffers data when not connected", () => {
+    socket.connect()
+    sinon.stub(socket, "isConnected").returns(false)
+
+    const spy = sinon.spy(socket.conn, "send")
+
+    assert.equal(socket.sendBuffer.length, 0)
+
+    socket.push(data)
+
+    assert.ok(spy.neverCalledWith(JSON.stringify(data)))
+    assert.equal(socket.sendBuffer.length, 1)
+
+    const [callback] = socket.sendBuffer
+    callback()
+    assert.ok(spy.calledWith(JSON.stringify(data)))
   })
 })
