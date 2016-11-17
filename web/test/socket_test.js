@@ -334,8 +334,8 @@ describe("remove", () => {
 })
 
 describe("push", () => {
-  const [topic, event, payload, ref] = ["topic", "event", "payload", "ref"]
-  const data = {topic, event, payload, ref}
+  const data = {topic: "topic", event: "event", payload: "payload", ref: "ref"}
+  const json = '{"topic":"topic","event":"event","payload":"payload","ref":"ref"}'
 
   before(() => {
     window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
@@ -351,18 +351,18 @@ describe("push", () => {
 
   it("sends data to connection when connected", () => {
     socket.connect()
-    sinon.stub(socket, "isConnected").returns(true)
+    socket.conn.readyState = 1 // open
 
     const spy = sinon.spy(socket.conn, "send")
 
     socket.push(data)
 
-    assert.ok(spy.calledWith(JSON.stringify(data)))
+    assert.ok(spy.calledWith(json))
   })
 
   it("buffers data when not connected", () => {
     socket.connect()
-    sinon.stub(socket, "isConnected").returns(false)
+    socket.conn.readyState = 0 // connecting
 
     const spy = sinon.spy(socket.conn, "send")
 
@@ -370,11 +370,68 @@ describe("push", () => {
 
     socket.push(data)
 
-    assert.ok(spy.neverCalledWith(JSON.stringify(data)))
+    assert.ok(spy.neverCalledWith(json))
     assert.equal(socket.sendBuffer.length, 1)
 
     const [callback] = socket.sendBuffer
     callback()
-    assert.ok(spy.calledWith(JSON.stringify(data)))
+    assert.ok(spy.calledWith(json))
+  })
+})
+
+describe("makeRef", () => {
+  beforeEach(() => {
+    socket = new Socket("/socket")
+  })
+
+  it("returns next message ref", () => {
+    assert.strictEqual(socket.ref, 0)
+    assert.strictEqual(socket.makeRef(), "1")
+    assert.strictEqual(socket.ref, 1)
+    assert.strictEqual(socket.makeRef(), "2")
+    assert.strictEqual(socket.ref, 2)
+  })
+
+  it("restarts for overflow", () => {
+    socket.ref = Number.MAX_SAFE_INTEGER + 1
+
+    assert.strictEqual(socket.makeRef(), "0")
+    assert.strictEqual(socket.ref, 0)
+  })
+})
+
+describe("sendHeartbeat", () => {
+  before(() => {
+    window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
+  })
+
+  after(() => {
+    window.XMLHttpRequest = null
+  })
+
+  beforeEach(() => {
+    socket = new Socket("/socket")
+  })
+
+  it("pushes heartbeat data when connected", () => {
+    socket.connect()
+    socket.conn.readyState = 1 // open
+
+    const spy = sinon.spy(socket.conn, "send")
+    const data = '{"topic":"phoenix","event":"heartbeat","payload":{},"ref":"1"}'
+
+    socket.sendHeartbeat()
+    assert.ok(spy.calledWith(data))
+  })
+
+  it("no ops when not connected", () => {
+    socket.connect()
+    socket.conn.readyState = 0 // connecting
+
+    const spy = sinon.spy(socket.conn, "send")
+    const data = '{"topic":"phoenix","event":"heartbeat","payload":{},"ref":"1"}'
+
+    socket.sendHeartbeat()
+    assert.ok(spy.neverCalledWith(data))
   })
 })
