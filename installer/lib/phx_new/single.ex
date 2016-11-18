@@ -1,5 +1,6 @@
 defmodule Mix.Tasks.Phx.New.Single do
   use Mix.Tasks.Phx.New.Generator
+  alias Mix.Tasks.Phx.New.{Project, Generator}
 
   template :new, [
     {:eex,  "phx_new/config/config.exs",               "config/config.exs"},
@@ -70,48 +71,67 @@ defmodule Mix.Tasks.Phx.New.Single do
     {:text,   "assets/robots.txt",      "priv/static/robots.txt"},
   ]
 
-  def app(base_path, opts) do
+  def put_app(%Project{base_path: base_path} = project, opts) do
     app = opts[:app] || Path.basename(Path.expand(base_path))
-    {app, Module.concat([opts[:module] || Macro.camelize(app)]), base_path}
+
+    %Project{project |
+             app: app,
+             app_mod: Module.concat([opts[:module] || Macro.camelize(app)]),
+             app_path: base_path,
+             project_path: Path.expand(base_path)}
   end
 
-  def root_app(app_name, base_path, opts) do
-    mod = Module.concat([opts[:module] || Macro.camelize(app_name)])
-    {app_name, mod, Path.expand(base_path)}
+  def put_root_app(%Project{app: app} = project, opts) when not is_nil(app) do
+    %Project{project |
+             root_app: app,
+             root_mod: Module.concat([opts[:module] || Macro.camelize(app)])}
   end
 
-  def web_app(app_name, project_path, opts) do
-    {_, mod, _} = root_app(app_name, project_path, opts)
-    {app_name, Module.concat(mod, Web), project_path}
+  def put_web_app(%Project{app: app} = project, _opts) when not is_nil(app) do
+    %Project{project |
+             web_app: app,
+             web_namespace: Module.concat(project.root_mod, Web)
+             web_path: project.project_path}
   end
 
+  def gen_new(%Project{} = project) do
+    copy_from project.project_path, __MODULE__, project.binding, template_files(:new)
 
-  def gen_new(path, binding) do
-    copy_from path, __MODULE__, binding, template_files(:new)
+    if Project.ecto?(project), do: gen_ecto(project)
+    if Project.html?(project), do: gen_html(project)
+
+    case {Project.brunch?(project), Project.html?(project)} do
+      {true, _}      -> gen_brunch(project)
+      {false, true}  -> gen_static(project)
+      {false, false} -> gen_bare(project)
+    end
+
+    project
   end
 
-  def gen_html(path, binding) do
-    copy_from path, __MODULE__, binding, template_files(:html)
+  defp gen_html(project) do
+    copy_from project.web_path, __MODULE__, project.binding, template_files(:html)
   end
 
-  def gen_ecto(app_path, binding) do
-    copy_from app_path, __MODULE__, binding, template_files(:ecto)
+  defp gen_ecto(project) do
+    copy_from project.app_path, __MODULE__, project.binding, template_files(:ecto)
+    gen_ecto_config(project)
   end
 
-  def gen_static(path, binding) do
+  defp gen_static(%Project{web_path: path, binding: binding}) do
     copy_from path, __MODULE__, binding, template_files(:static)
     create_file Path.join(path, "priv/static/js/phoenix.js"), phoenix_js_text()
     create_file Path.join(path, "priv/static/images/phoenix.png"), phoenix_png_text()
     create_file Path.join(path, "priv/static/favicon.ico"), phoenix_favicon_text()
   end
 
-  def gen_brunch(path, binding) do
+  defp gen_brunch(%Project{web_path: path, binding: binding}) do
     copy_from path, __MODULE__, binding, template_files(:brunch)
     create_file Path.join(path, "assets/static/images/phoenix.png"), phoenix_png_text()
     create_file Path.join(path, "assets/static/favicon.ico"), phoenix_favicon_text()
   end
 
-  def gen_bare(path, binding) do
+  defp gen_bare(%Project{web_path: path, binding: binding}) do
     copy_from path, __MODULE__, binding, template_files(:bare)
   end
 end
