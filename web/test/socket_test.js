@@ -8,6 +8,76 @@ import { Socket, LongPoll } from "../static/js/phoenix"
 
 let socket
 
+describe("constructor", () => {
+  before(() => {
+    window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
+  })
+
+  after(() => {
+    window.XMLHttpRequest = null
+  })
+
+  it("sets defaults", () => {
+    socket = new Socket("/socket")
+
+    assert.equal(socket.channels.length, 0)
+    assert.equal(socket.sendBuffer.length, 0)
+    assert.equal(socket.ref, 0)
+    assert.equal(socket.endPoint, "/socket/websocket")
+    assert.deepEqual(socket.stateChangeCallbacks, {open: [], close: [], error: [], message: []})
+    assert.equal(socket.transport, LongPoll)
+    assert.equal(socket.timeout, 10000)
+    assert.equal(socket.longpollerTimeout, 20000)
+    assert.equal(socket.heartbeatIntervalMs, 30000)
+    assert.equal(typeof socket.logger, "function")
+    assert.equal(typeof socket.reconnectAfterMs, "function")
+  })
+
+  it("overrides some defaults with options", () => {
+    const customTransport = function transport() {}
+    const customLogger = function logger() {}
+    const customReconnect = function reconnect() {}
+
+    socket = new Socket("/socket", {
+      timeout: 40000,
+      longpollerTimeout: 50000,
+      heartbeatIntervalMs: 60000,
+      transport: customTransport,
+      logger: customLogger,
+      reconnectAfterMs: customReconnect,
+      params: { one: "two" },
+    })
+
+    assert.equal(socket.timeout, 40000)
+    assert.equal(socket.longpollerTimeout, 50000)
+    assert.equal(socket.heartbeatIntervalMs, 60000)
+    assert.equal(socket.transport, customTransport)
+    assert.equal(socket.logger, customLogger)
+    assert.equal(socket.reconnectAfterMs, customReconnect)
+    assert.deepEqual(socket.params, { one: "two" })
+  })
+
+  describe("with Websocket", () => {
+    let mockServer
+
+    before(() => {
+      mockServer = new WebSocketServer('wss://example.com/')
+    })
+
+    after((done) => {
+      mockServer.stop(() => {
+        done()
+        window.WebSocket = null
+      })
+    })
+
+    it("defaults to Websocket transport if available", () => {
+      socket = new Socket("/socket")
+      assert.equal(socket.transport, WebSocket)
+    })
+  })
+})
+
 describe("protocol", () => {
   beforeEach(() => {
     socket = new Socket("/socket")
