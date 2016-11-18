@@ -746,8 +746,8 @@ export class Ajax {
   }
 
   static xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback){
-    req.timeout = timeout
     req.open(method, endPoint, true)
+    req.timeout = timeout
     req.setRequestHeader("Content-Type", accept)
     req.onerror = () => { callback && callback(null) }
     req.onreadystatechange = () => {
