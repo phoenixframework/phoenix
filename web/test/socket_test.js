@@ -543,3 +543,64 @@ describe("flushSendBuffer", () => {
     assert.deepEqual(socket.sendBuffer.length, 0)
   })
 })
+
+describe("onConnOpen", () => {
+  let mockServer
+
+  before(() => {
+    mockServer = new WebSocketServer('wss://example.com/')
+    jsdom.changeURL(window, "http://example.com/");
+  })
+
+  after((done) => {
+    mockServer.stop(() => {
+      done()
+      window.WebSocket = null
+    })
+  })
+
+  beforeEach(() => {
+    socket = new Socket("/socket", {
+      heartbeatIntervalMs: 0,
+    })
+    socket.connect()
+  })
+
+  it("flushes the send buffer", () => {
+    socket.conn.readyState = 1 // open
+    const spy = sinon.spy()
+    socket.sendBuffer.push(spy)
+
+    socket.onConnOpen()
+
+    assert.ok(spy.calledOnce)
+  })
+
+  it("resets reconnectTimer", () => {
+    const spy = sinon.spy(socket.reconnectTimer, "reset")
+
+    socket.onConnOpen()
+
+    assert.ok(spy.calledOnce)
+  })
+
+  it("starts heartbeat timer", () => {
+    const spy = sinon.spy(socket, "sendHeartbeat")
+
+    socket.onConnOpen()
+
+    setTimeout(() => {
+      assert.ok(spy.calledOnce)
+    }, 0)
+  })
+
+  it("triggers onOpen callback", () => {
+    const spy = sinon.spy()
+
+    socket.onOpen(spy)
+
+    socket.onConnOpen()
+
+    assert.ok(spy.calledOnce)
+  })
+})
