@@ -68,100 +68,54 @@ defmodule Mix.Tasks.Phx.New do
       Mix.raise "Phoenix v#{@version} requires at least Elixir v1.2.\n " <>
                 "You have #{System.version}. Please update accordingly"
     end
-    {opts, argv} = parse_opts(argv)
 
-    case argv do
-      [] ->
-        Mix.Tasks.Help.run ["phx.new"]
-      [base_path | _] ->
-        generator = if opts[:umbrella], do: Umbrella, else: Single
-        {app, app_mod, app_path} = generator.app(base_path, opts)
-        {root_app, root_mod, project_path} = generator.root_app(app, base_path, opts)
-
-        check_app_name!(app, !!opts[:app])
-        check_directory_existence!(project_path)
-        check_module_name_validity!(root_mod)
-        check_module_name_availability!(root_mod)
-
-        run(generator, root_app, root_mod, app, app_mod, app_path, project_path, opts)
+    case parse_opts(argv) do
+      {_opts, []}             -> Mix.Tasks.Help.run ["phx.new"]
+      {opts, [base_path | _]} -> generate(base_path, opts)
     end
   end
 
-  def run(generator, root_app, root_mod, app, app_mod, app_path, proj_path, opts) do
-    {web_app_name, web_namespace, web_path} = generator.web_app(app, proj_path, opts)
-    db = Keyword.get(opts, :database, "postgres")
-    ecto = Keyword.get(opts, :ecto, true)
-    html = Keyword.get(opts, :html, true)
-    brunch = Keyword.get(opts, :brunch, true)
-    phoenix_path = phoenix_path(proj_path, Keyword.get(opts, :dev, false))
+  defp generate(base_path, opts) do
+    generator = if opts[:umbrella], do: Umbrella, else: Single
 
-    # We lowercase the database name because according to the
-    # SQL spec, they are case insensitive unless quoted, which
-    # means creating a database like FoO is the same as foo in
-    # some storages.
-    {adapter_app, adapter_module, adapter_config} = get_ecto_adapter(db, String.downcase(app), app_mod)
-    pubsub_server = get_pubsub_server(app_mod)
-    in_umbrella? = in_umbrella?(proj_path, generator)
-    brunch_deps_prefix = if in_umbrella?, do: "../../../", else: "../"
+    base_path
+    |> Project.new()
+    |> generator.put_app(opts)
+    |> generator.put_root_app()
+    |> generator.put_web_app()
+    |> Generator.put_binding(generator, opts)
+    |> validate_project(opts)
+    |> generator.gen_new()
+    |> prompt_to_install_deps()
+  end
 
-    adapter_config =
-      case Keyword.fetch(opts, :binary_id) do
-        {:ok, value} -> Keyword.put_new(adapter_config, :binary_id, value)
-        :error -> adapter_config
-      end
-    generator_config = generator_config(adapter_config)
+  defp validate_project(%Project{} = project, opts) do
+    check_app_name!(project.app, !!opts[:app])
+    check_directory_existence!(project.project_path)
+    check_module_name_validity!(project.root_mod)
+    check_module_name_availability!(project.root_mod)
 
-    binding = [app_name: app,
-               app_module: inspect(app_mod),
-               root_app_name: root_app,
-               root_app_module: inspect(root_mod),
-               web_app_name: web_app_name,
-               endpoint_module: inspect(Module.concat(web_namespace, Endpoint)),
-               web_namespace: inspect(web_namespace),
-               phoenix_dep: phoenix_dep(phoenix_path),
-               phoenix_path: phoenix_path,
-               phoenix_static_path: phoenix_static_path(phoenix_path),
-               pubsub_server: pubsub_server,
-               secret_key_base: random_string(64),
-               prod_secret_key_base: random_string(64),
-               signing_salt: random_string(8),
-               in_umbrella: in_umbrella?,
-               brunch_deps_prefix: brunch_deps_prefix,
-               brunch: brunch,
-               ecto: ecto,
-               html: html,
-               adapter_app: adapter_app,
-               adapter_module: adapter_module,
-               adapter_config: adapter_config,
-               hex?: Code.ensure_loaded?(Hex),
-               generator_config: generator_config,
-               namespaced?: namespaced?(app, app_mod)]
+    project
+  end
 
-    generator.gen_new(proj_path, binding)
-    copy_ecto(generator, app_path, binding)
-    copy_static(generator, web_path, binding)
-    copy_html(generator, web_path, binding)
-
+  defp prompt_to_install_deps(%Project{} = project) do
     install? = Mix.shell.yes?("\nFetch and install dependencies?")
 
-    File.cd!(proj_path, fn ->
+    File.cd!(project.project_path, fn ->
       mix? = install_mix(install?)
-      File.cd!(web_path, fn ->
+      File.cd!(project.web_path, fn ->
         brunch? = install_brunch(install?)
         extra   = if mix?, do: [], else: ["$ mix deps.get"]
 
-        print_mix_info(proj_path, extra)
+        print_mix_info(project.project_path, extra)
 
-        if binding[:ecto], do: print_ecto_info()
+        if Project.ecto?(project), do: print_ecto_info()
 
         if not brunch?, do: print_brunch_info()
       end)
     end)
   end
 
-  defp namespaced?(app, app_mod) when is_binary(app) and is_atom(app_mod) do
-    Macro.camelize(app) != inspect(app_mod)
-  end
 
   defp parse_opts(argv) do
     case OptionParser.parse(argv, strict: @switches) do
@@ -173,69 +127,6 @@ defmodule Mix.Tasks.Phx.New do
   end
   defp switch_to_string({name, nil}), do: name
   defp switch_to_string({name, val}), do: name <> "=" <> val
-
-  defp copy_ecto(generator, app_path, binding) do
-    if binding[:ecto] do
-      generator.gen_ecto(app_path, binding)
-
-      adapter_config = binding[:adapter_config]
-
-      append_to app_path, "config/dev.exs", """
-
-      # Configure your database
-      config :#{binding[:app_name]}, #{binding[:app_module]}.Repo,
-        adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:dev]},
-        pool_size: 10
-      """
-
-      append_to app_path, "config/test.exs", """
-
-      # Configure your database
-      config :#{binding[:app_name]}, #{binding[:app_module]}.Repo,
-        adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:test]}
-      """
-
-      append_to app_path, "config/prod.secret.exs", """
-
-      # Configure your database
-      config :#{binding[:app_name]}, #{binding[:app_module]}.Repo,
-        adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:prod]},
-        pool_size: 20
-      """
-    end
-  end
-
-  defp generator_config(adapter_config) do
-    adapter_config
-    |> Keyword.take([:binary_id, :migration, :sample_binary_id])
-    |> Enum.filter(fn {_, value} -> not is_nil(value) end)
-    |> case do
-      [] -> nil
-      conf ->
-        """
-
-        # Configure phoenix generators
-        config :phoenix, :generators#{kw_to_config(conf)}
-        """
-    end
-  end
-
-  defp copy_static(generator, web_path, binding) do
-    case {binding[:brunch], binding[:html]} do
-      {true, _} ->
-        generator.gen_brunch(web_path, binding)
-      {false, true} ->
-        generator.gen_static(web_path, binding)
-      {false, false} ->
-        generator.gen_bare(web_path, binding)
-    end
-  end
-
-  defp copy_html(generator, path, binding) do
-    if binding[:html] do
-      generator.gen_html(path, binding)
-    end
-  end
 
   defp install_brunch(install?) do
     maybe_cmd "cd assets && npm install && node node_modules/brunch/bin/brunch build",
@@ -360,94 +251,5 @@ defmodule Mix.Tasks.Phx.New do
     if File.dir?(path) and not Mix.shell.yes?("The directory #{path} already exists. Are you sure you want to continue?") do
       Mix.raise "Please select another directory for installation."
     end
-  end
-
-  defp get_ecto_adapter("mssql", app, module) do
-    {:tds_ecto, Tds.Ecto, db_config(app, module, "db_user", "db_password")}
-  end
-  defp get_ecto_adapter("mysql", app, module) do
-    {:mariaex, Ecto.Adapters.MySQL, db_config(app, module, "root", "")}
-  end
-  defp get_ecto_adapter("postgres", app, module) do
-    {:postgrex, Ecto.Adapters.Postgres, db_config(app, module, "postgres", "postgres")}
-  end
-  defp get_ecto_adapter("sqlite", app, module) do
-    {:sqlite_ecto, Sqlite.Ecto,
-     dev:  [database: "db/#{app}_dev.sqlite"],
-     test: [database: "db/#{app}_test.sqlite", pool: Ecto.Adapters.SQL.Sandbox],
-     prod: [database: "db/#{app}_prod.sqlite"],
-     test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{module}.Repo, :manual)",
-     test_setup: ":ok = Ecto.Adapters.SQL.Sandbox.checkout(#{module}.Repo)",
-     test_async: "Ecto.Adapters.SQL.Sandbox.mode(#{module}.Repo, {:shared, self()})"}
-  end
-  defp get_ecto_adapter("mongodb", app, module) do
-    {:mongodb_ecto, Mongo.Ecto,
-     dev:  [database: "#{app}_dev"],
-     test: [database: "#{app}_test", pool_size: 1],
-     prod: [database: "#{app}_prod"],
-     test_setup_all: "",
-     test_setup: "",
-     test_async: "Mongo.Ecto.truncate(#{module}.Repo, [])",
-     binary_id: true,
-     migration: false,
-     sample_binary_id: "111111111111111111111111"}
-  end
-  defp get_ecto_adapter(db, _app, _mod) do
-    Mix.raise "Unknown database #{inspect db}"
-  end
-
-  defp db_config(app, module, user, pass) do
-    [dev:  [username: user, password: pass, database: "#{app}_dev", hostname: "localhost"],
-     test: [username: user, password: pass, database: "#{app}_test", hostname: "localhost",
-            pool: Ecto.Adapters.SQL.Sandbox],
-     prod: [username: user, password: pass, database: "#{app}_prod"],
-     test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{module}.Repo, :manual)",
-     test_setup: ":ok = Ecto.Adapters.SQL.Sandbox.checkout(#{module}.Repo)",
-     test_async: "Ecto.Adapters.SQL.Sandbox.mode(#{module}.Repo, {:shared, self()})"]
-  end
-
-  defp kw_to_config(kw) do
-    Enum.map(kw, fn {k, v} ->
-      ",\n  #{k}: #{inspect v}"
-    end)
-  end
-
-  defp get_pubsub_server(module) do
-    module
-    |> Module.split()
-    |> hd()
-    |> Module.concat(PubSub)
-  end
-
-  def in_umbrella?(_app_path, Umbrella), do: true
-  def in_umbrella?(app_path, Single), do: in_umbrella?(app_path)
-
-  defp random_string(length) do
-    :crypto.strong_rand_bytes(length) |> Base.encode64 |> binary_part(0, length)
-  end
-
-  defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> 1.2.0"}]
-  # defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
-  defp phoenix_dep(path), do: ~s[{:phoenix, path: #{inspect path}, override: true}]
-
-  defp phoenix_static_path("deps/phoenix"), do: "deps/phoenix"
-  defp phoenix_static_path(path), do: Path.join("..", path)
-
-  defp phoenix_path(path, true) do
-    absolute = Path.expand(path)
-    relative = Path.relative_to(absolute, @phoenix)
-
-    if absolute == relative do
-      Mix.raise "--dev projects must be generated inside Phoenix directory"
-    end
-
-    relative
-    |> Path.split()
-    |> Enum.map(fn _ -> ".." end)
-    |> Path.join()
-  end
-
-  defp phoenix_path(_path, false) do
-    "deps/phoenix"
   end
 end
