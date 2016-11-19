@@ -684,3 +684,59 @@ describe("onConnError", () => {
     assert.ok(spy.calledWith("phx_error"))
   })
 })
+
+describe("onConnMessage", () => {
+  let mockServer
+
+  before(() => {
+    mockServer = new WebSocketServer('wss://example.com/')
+  })
+
+  after((done) => {
+    mockServer.stop(() => {
+      window.WebSocket = null
+      done()
+    })
+  })
+
+  beforeEach(() => {
+    socket = new Socket("/socket", {
+      reconnectAfterMs: () => 100000
+    })
+    socket.connect()
+  })
+
+  it("parses raw message and triggers channel event", () => {
+    const message = '{"topic":"topic","event":"event","payload":"payload","ref":"ref"}'
+    const data = { data: message }
+
+    const targetChannel = socket.channel("topic")
+    const otherChannel = socket.channel("off-topic")
+
+    const targetSpy = sinon.spy(targetChannel, "trigger")
+    const otherSpy = sinon.spy(otherChannel, "trigger")
+
+    socket.onConnMessage(data)
+
+    assert.ok(targetSpy.calledWith("event", "payload", "ref"))
+    assert.equal(targetSpy.callCount, 1)
+    assert.equal(otherSpy.callCount, 0)
+  })
+
+  it("triggers onMessage callback", () => {
+    const message = '{"topic":"topic","event":"event","payload":"payload","ref":"ref"}'
+    const data = { data: message }
+    const spy = sinon.spy()
+
+    socket.onMessage(spy)
+
+    socket.onConnMessage(data)
+
+    assert.ok(spy.calledWith({
+      "topic": "topic",
+      "event": "event",
+      "payload": "payload",
+      "ref": "ref",
+    }))
+  })
+})
