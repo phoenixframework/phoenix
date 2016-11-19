@@ -93,9 +93,8 @@ defmodule Phoenix.Integration.EndpointTest do
     end
   end
 
-  @prod       4807
-  @dev        4808
-  @prod_inet6 4809
+  @prod 4807
+  @dev  4808
 
   alias Phoenix.Integration.HTTPClient
 
