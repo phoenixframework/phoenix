@@ -66,8 +66,8 @@ describe("constructor", () => {
 
     after((done) => {
       mockServer.stop(() => {
-        done()
         window.WebSocket = null
+        done()
       })
     })
 
@@ -136,8 +136,8 @@ describe("connect with WebSocket", () => {
 
   after((done) => {
     mockServer.stop(() => {
-      done()
       window.WebSocket = null
+      done()
     })
   })
 
@@ -258,8 +258,8 @@ describe("disconnect", () => {
 
   after((done) => {
     mockServer.stop(() => {
-      done()
       window.WebSocket = null
+      done()
     })
   })
 
