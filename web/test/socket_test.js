@@ -554,14 +554,14 @@ describe("onConnOpen", () => {
 
   after((done) => {
     mockServer.stop(() => {
-      done()
       window.WebSocket = null
+      done()
     })
   })
 
   beforeEach(() => {
     socket = new Socket("/socket", {
-      heartbeatIntervalMs: 0,
+      reconnectAfterMs: () => 100000
     })
     socket.connect()
   })
@@ -584,16 +584,6 @@ describe("onConnOpen", () => {
     assert.ok(spy.calledOnce)
   })
 
-  it("starts heartbeat timer", () => {
-    const spy = sinon.spy(socket, "sendHeartbeat")
-
-    socket.onConnOpen()
-
-    setTimeout(() => {
-      assert.ok(spy.calledOnce)
-    }, 0)
-  })
-
   it("triggers onOpen callback", () => {
     const spy = sinon.spy()
 
@@ -602,5 +592,54 @@ describe("onConnOpen", () => {
     socket.onConnOpen()
 
     assert.ok(spy.calledOnce)
+  })
+})
+
+describe("onConnClose", () => {
+  let mockServer
+
+  before(() => {
+    mockServer = new WebSocketServer('wss://example.com/')
+  })
+
+  after((done) => {
+    mockServer.stop(() => {
+      window.WebSocket = null
+      done()
+    })
+  })
+
+  beforeEach(() => {
+    socket = new Socket("/socket", {
+      reconnectAfterMs: () => 100000
+    })
+    socket.connect()
+  })
+
+  it("schedules reconnectTimer timeout", () => {
+    const spy = sinon.spy(socket.reconnectTimer, "scheduleTimeout")
+
+    socket.onConnClose()
+
+    assert.ok(spy.calledOnce)
+  })
+
+  it("triggers onClose callback", () => {
+    const spy = sinon.spy()
+
+    socket.onClose(spy)
+
+    socket.onConnClose("event")
+
+    assert.ok(spy.calledWith("event"))
+  })
+
+  it("triggers channel error", () => {
+    const channel = socket.channel("topic")
+    const spy = sinon.spy(channel, "trigger")
+
+    socket.onConnClose()
+
+    assert.ok(spy.calledWith("phx_error"))
   })
 })
