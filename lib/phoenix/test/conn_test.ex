@@ -412,6 +412,8 @@ defmodule Phoenix.ConnTest do
         body
       {:error, {:invalid, token}} ->
         raise "could not decode JSON body, invalid token #{inspect token} in body:\n\n#{body}"
+      {:error, :invalid} ->
+        raise "could not decode JSON body, body is empty"
     end
   end
 
