@@ -643,3 +643,44 @@ describe("onConnClose", () => {
     assert.ok(spy.calledWith("phx_error"))
   })
 })
+
+describe("onConnError", () => {
+  let mockServer
+
+  before(() => {
+    mockServer = new WebSocketServer('wss://example.com/')
+  })
+
+  after((done) => {
+    mockServer.stop(() => {
+      window.WebSocket = null
+      done()
+    })
+  })
+
+  beforeEach(() => {
+    socket = new Socket("/socket", {
+      reconnectAfterMs: () => 100000
+    })
+    socket.connect()
+  })
+
+  it("triggers onClose callback", () => {
+    const spy = sinon.spy()
+
+    socket.onError(spy)
+
+    socket.onConnError("error")
+
+    assert.ok(spy.calledWith("error"))
+  })
+
+  it("triggers channel error", () => {
+    const channel = socket.channel("topic")
+    const spy = sinon.spy(channel, "trigger")
+
+    socket.onConnError("error")
+
+    assert.ok(spy.calledWith("phx_error"))
+  })
+})
