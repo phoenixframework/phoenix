@@ -131,7 +131,6 @@ describe("connect with WebSocket", () => {
 
   before(() => {
     mockServer = new WebSocketServer('wss://example.com/')
-    jsdom.changeURL(window, "http://example.com/");
   })
 
   after((done) => {
@@ -253,7 +252,6 @@ describe("disconnect", () => {
 
   before(() => {
     mockServer = new WebSocketServer('wss://example.com/')
-    jsdom.changeURL(window, "http://example.com/");
   })
 
   after((done) => {
@@ -549,7 +547,6 @@ describe("onConnOpen", () => {
 
   before(() => {
     mockServer = new WebSocketServer('wss://example.com/')
-    jsdom.changeURL(window, "http://example.com/");
   })
 
   after((done) => {
