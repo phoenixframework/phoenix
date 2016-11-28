@@ -36,10 +36,11 @@ defmodule <%= application_module %>.Mixfile do
   defp deps do
     [<%= phoenix_dep %>,<%= if ecto do %>
      {<%= inspect adapter_app %>, ">= 0.0.0"},
+     {:plug, "~> 1.1.0"},
      {:phoenix_ecto, "~> 2.0.1"},<% end %><%= if html do %>
      {:phoenix_html, "~> 2.6.0"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},<% end %>
-     {:gettext, "~> 0.9"},
+     {:gettext, "~> 0.9.0"},
      {:cowboy, "~> 1.0"}]
   end<%= if ecto do %>
 
