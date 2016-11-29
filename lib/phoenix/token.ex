@@ -16,7 +16,7 @@ defmodule Phoenix.Token do
 
       iex> user_id = 1
       iex> token = Phoenix.Token.sign(MyApp.Endpoint, "tokensalt123", user_id)
-      iex> Phoenix.Token.verify(MyApp.Endpoint, "user", token)
+      iex> Phoenix.Token.verify(MyApp.Endpoint, "tokensalt123", token)
       {:ok, 1}
 
   In that example we have a user's id, we generate a token and
@@ -46,14 +46,14 @@ defmodule Phoenix.Token do
   One is via the meta tag:
 
       <%= tag :meta, name: "channel_token",
-                     content: Phoenix.Token.sign(@conn, "user", @current_user.id) %>
+                     content: Phoenix.Token.sign(@conn, "tokensalt123", @current_user.id) %>
 
   Or an endpoint that returns it:
 
       def create(conn, params) do
         user = User.create(params)
         render conn, "user.json",
-               %{token: Phoenix.Token.sign(conn, "user", user.id), user: user}
+               %{token: Phoenix.Token.sign(conn, "tokensalt123", user.id), user: user}
       end
 
   Once the token is sent, the client may now send it back to the server
