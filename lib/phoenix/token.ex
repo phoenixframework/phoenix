@@ -15,7 +15,7 @@ defmodule Phoenix.Token do
   the id from a database. For example:
 
       iex> user_id = 1
-      iex> token = Phoenix.Token.sign(MyApp.Endpoint, "user", user_id)
+      iex> token = Phoenix.Token.sign(MyApp.Endpoint, "tokensalt123", user_id)
       iex> Phoenix.Token.verify(MyApp.Endpoint, "user", token)
       {:ok, 1}
 
@@ -34,6 +34,10 @@ defmodule Phoenix.Token do
     * a string, representing the secret key base itself. A key base
       with at least 20 randomly generated characters should be used
       to provide adequate entropy.
+
+  The second argument is a [cryptographic salt](https://en.wikipedia.org/wiki/Salt_(cryptography)) which must be the same in both calls to `sign/4` and `verify/4`.
+
+  The third argument can be any Elixir term (string, int, list, etc.) that you wish to codify into the token. Upon valid verification, this same term will be extracted from the token.
 
   ## Usage
 
@@ -61,7 +65,7 @@ defmodule Phoenix.Token do
 
         def connect(%{"token" => token}, socket) do
           # Max age of 2 weeks (1209600 seconds)
-          case Phoenix.Token.verify(socket, "user", token, max_age: 1209600) do
+          case Phoenix.Token.verify(socket, "tokensalt123", token, max_age: 1209600) do
             {:ok, user_id} ->
               socket = assign(socket, :user, Repo.get!(User, user_id))
               {:ok, socket}
