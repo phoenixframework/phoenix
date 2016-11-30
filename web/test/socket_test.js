@@ -83,13 +83,13 @@ describe("protocol", () => {
     socket = new Socket("/socket")
   })
 
-  it("returns wss when location.protocal is https", () => {
+  it("returns wss when location.protocol is https", () => {
     jsdom.changeURL(window, "https://example.com/");
 
     assert.equal(socket.protocol(), "wss")
   })
 
-  it("returns ws when location.protocal is http", () => {
+  it("returns ws when location.protocol is http", () => {
     jsdom.changeURL(window, "http://example.com/");
 
     assert.equal(socket.protocol(), "ws")
