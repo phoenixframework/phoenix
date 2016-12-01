@@ -15,8 +15,8 @@ defmodule Phoenix.Token do
   the id from a database. For example:
 
       iex> user_id = 1
-      iex> token = Phoenix.Token.sign(MyApp.Endpoint, "tokensalt123", user_id)
-      iex> Phoenix.Token.verify(MyApp.Endpoint, "tokensalt123", token)
+      iex> token = Phoenix.Token.sign(MyApp.Endpoint, "user salt", user_id)
+      iex> Phoenix.Token.verify(MyApp.Endpoint, "user salt", token)
       {:ok, 1}
 
   In that example we have a user's id, we generate a token and
@@ -46,14 +46,14 @@ defmodule Phoenix.Token do
   One is via the meta tag:
 
       <%= tag :meta, name: "channel_token",
-                     content: Phoenix.Token.sign(@conn, "tokensalt123", @current_user.id) %>
+                     content: Phoenix.Token.sign(@conn, "user salt", @current_user.id) %>
 
   Or an endpoint that returns it:
 
       def create(conn, params) do
         user = User.create(params)
         render conn, "user.json",
-               %{token: Phoenix.Token.sign(conn, "tokensalt123", user.id), user: user}
+               %{token: Phoenix.Token.sign(conn, "user salt", user.id), user: user}
       end
 
   Once the token is sent, the client may now send it back to the server
@@ -65,7 +65,7 @@ defmodule Phoenix.Token do
 
         def connect(%{"token" => token}, socket) do
           # Max age of 2 weeks (1209600 seconds)
-          case Phoenix.Token.verify(socket, "tokensalt123", token, max_age: 1209600) do
+          case Phoenix.Token.verify(socket, "user salt", token, max_age: 1209600) do
             {:ok, user_id} ->
               socket = assign(socket, :user, Repo.get!(User, user_id))
               {:ok, socket}
