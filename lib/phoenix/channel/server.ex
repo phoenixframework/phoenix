@@ -281,6 +281,19 @@ defmodule Phoenix.Channel.Server do
     end)
   end
 
+  @doc false
+  # TODO revisit in future GenServer releases
+  def unhandled_handle_info(msg, state) do
+    proc =
+      case Process.info(self(), :registered_name) do
+        {_, []}   -> self()
+        {_, name} -> name
+      end
+    :error_logger.error_msg('~p ~p received unexpected message in handle_info/2: ~p~n',
+      [__MODULE__, proc, msg])
+    {:noreply, state}
+  end
+
   ## Handle results
 
   defp handle_result({:reply, reply, %Socket{} = socket}, callback) do

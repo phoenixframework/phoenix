@@ -314,7 +314,9 @@ defmodule Phoenix.Channel do
         {:noreply, socket}
       end
 
-      def handle_info(_message, socket), do: {:noreply, socket}
+      def handle_info(message, state) do
+        Phoenix.Channel.Server.unhandled_handle_info(message, state)
+      end
 
       def terminate(_reason, _socket), do: :ok
 

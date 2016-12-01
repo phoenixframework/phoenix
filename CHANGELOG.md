@@ -4,6 +4,7 @@
 
 * Enhancements
   * [Channel] Add ability to configure channel event logging with `:log_join` and `:log_handle_in` options
+  * [Channel] Warn on unhandled `handle_info/2` messages
 
 ## 1.2.1 (2016-8-11)
 

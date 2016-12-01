@@ -14,6 +14,16 @@ defmodule Phoenix.Test.ChannelTest do
     use Phoenix.Endpoint, otp_app: :phoenix
   end
 
+  defmodule EmptyChannel do
+    use Phoenix.Channel
+
+    def join(_, _, socket), do: {:ok, socket}
+
+    def handle_in(_event, _params, socket) do
+      {:reply, :ok, socket}
+    end
+  end
+
   defmodule Channel do
     use Phoenix.Channel
 
@@ -399,5 +409,14 @@ defmodule Phoenix.Test.ChannelTest do
                             event: "external_event",
                             payload: %{one: 1}}
 
+  end
+
+  test "warns on unhandled handle_info/2 messages" do
+    socket = subscribe_and_join!(socket(), EmptyChannel, "topic")
+    assert ExUnit.CaptureLog.capture_log(fn ->
+      send socket.channel_pid, :unhandled
+      ref = push socket, "hello", %{}
+      assert_reply ref, :ok
+    end) =~ "received unexpected message in handle_info/2: :unhandled"
   end
 end
