@@ -37,6 +37,8 @@ defmodule Phoenix.Token do
 
   The second argument is a [cryptographic salt](https://en.wikipedia.org/wiki/Salt_(cryptography))
   which must be the same in both calls to `sign/4` and `verify/4`.
+  For instance, it may be called "user auth" when generating a token
+  that will be used to authenticate users on channels or on your APIs.
 
   The third argument can be any term (string, int, list, etc.)
   that you wish to codify into the token. Upon valid verification,
@@ -92,6 +94,7 @@ defmodule Phoenix.Token do
   Encodes data and signs it resulting in a token you can send to clients.
 
   ## Options
+
     * `:key_iterations` - option passed to `Plug.Crypto.KeyGenerator`
       when generating the encryption and signing keys. Defaults to 1000;
     * `:key_length` - option passed to `Plug.Crypto.KeyGenerator`
