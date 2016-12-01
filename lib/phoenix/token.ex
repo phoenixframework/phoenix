@@ -35,9 +35,12 @@ defmodule Phoenix.Token do
       with at least 20 randomly generated characters should be used
       to provide adequate entropy.
 
-  The second argument is a [cryptographic salt](https://en.wikipedia.org/wiki/Salt_(cryptography)) which must be the same in both calls to `sign/4` and `verify/4`.
+  The second argument is a [cryptographic salt](https://en.wikipedia.org/wiki/Salt_(cryptography))
+  which must be the same in both calls to `sign/4` and `verify/4`.
 
-  The third argument can be any Elixir term (string, int, list, etc.) that you wish to codify into the token. Upon valid verification, this same term will be extracted from the token.
+  The third argument can be any term (string, int, list, etc.)
+  that you wish to codify into the token. Upon valid verification,
+  this same term will be extracted from the token.
 
   ## Usage
 
