@@ -15,8 +15,8 @@ defmodule Phoenix.Token do
   the id from a database. For example:
 
       iex> user_id = 1
-      iex> token = Phoenix.Token.sign(MyApp.Endpoint, "user", user_id)
-      iex> Phoenix.Token.verify(MyApp.Endpoint, "user", token)
+      iex> token = Phoenix.Token.sign(MyApp.Endpoint, "user salt", user_id)
+      iex> Phoenix.Token.verify(MyApp.Endpoint, "user salt", token)
       {:ok, 1}
 
   In that example we have a user's id, we generate a token and
@@ -35,6 +35,13 @@ defmodule Phoenix.Token do
       with at least 20 randomly generated characters should be used
       to provide adequate entropy.
 
+  The second argument is a [cryptographic salt](https://en.wikipedia.org/wiki/Salt_(cryptography))
+  which must be the same in both calls to `sign/4` and `verify/4`.
+
+  The third argument can be any term (string, int, list, etc.)
+  that you wish to codify into the token. Upon valid verification,
+  this same term will be extracted from the token.
+
   ## Usage
 
   Once a token is signed, we can send it to the client in multiple ways.
@@ -42,14 +49,14 @@ defmodule Phoenix.Token do
   One is via the meta tag:
 
       <%= tag :meta, name: "channel_token",
-                     content: Phoenix.Token.sign(@conn, "user", @current_user.id) %>
+                     content: Phoenix.Token.sign(@conn, "user salt", @current_user.id) %>
 
   Or an endpoint that returns it:
 
       def create(conn, params) do
         user = User.create(params)
         render conn, "user.json",
-               %{token: Phoenix.Token.sign(conn, "user", user.id), user: user}
+               %{token: Phoenix.Token.sign(conn, "user salt", user.id), user: user}
       end
 
   Once the token is sent, the client may now send it back to the server
@@ -61,7 +68,7 @@ defmodule Phoenix.Token do
 
         def connect(%{"token" => token}, socket) do
           # Max age of 2 weeks (1209600 seconds)
-          case Phoenix.Token.verify(socket, "user", token, max_age: 1209600) do
+          case Phoenix.Token.verify(socket, "user salt", token, max_age: 1209600) do
             {:ok, user_id} ->
               socket = assign(socket, :user, Repo.get!(User, user_id))
               {:ok, socket}
