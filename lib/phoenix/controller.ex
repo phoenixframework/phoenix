@@ -1092,6 +1092,73 @@ defmodule Phoenix.Controller do
     put_private(conn, :phoenix_flash, value)
   end
 
+  @doc """
+  Returns the current request path, with and without query params.
+
+  By default, the connection's query params are included in
+  the generated path. Custom query params may be used instead
+  by providing a map of your own params. You may also retrieve
+  only the request path by passing an empty map of params.
+
+  ## Examples
+
+      iex> current_path(conn)
+      "/users/123?existing=param"
+
+      iex> current_path(conn, %{new: "param"})
+      "/users/123?new=param"
+
+      iex> current_path(conn, %{})
+      "/users/123"
+  """
+  def current_path(%Plug.Conn{query_params: params} = conn) do
+    current_path(conn, params)
+  end
+  def current_path(%Plug.Conn{} = conn, params) when params == %{} do
+    conn.request_path
+  end
+  def current_path(%Plug.Conn{} = conn, params) do
+    conn.request_path <> "?" <> URI.encode_query(params)
+  end
+
+  @doc """
+  Returns the current request URL, with and without query params.
+
+  See `current_path/1` for details on how the request path
+  is generated. By default, the connection's endpoint will be
+  used for URL generation, but the endpoint may also be
+  explicitly provided to geneerate a URL with the connection's
+  request path, but for an endpoint that the connection did
+  not originate from.
+
+  ## Examples
+
+      iex> current_url(conn)
+      "www.endpoint1.example.com/users/123?existing=param"
+
+      iex> current_url(conn, %{new: "param"})
+      "www.endpoint1.example.com/users/123?new=param"
+
+      iex> current_path(conn, %{})
+      "www.endpoint1.example.com/users/123"
+
+      iex> current_path(conn, Endpoint2, %{})
+      "www.endpoint2.example.com/users/123"
+  """
+  def current_url(%Plug.Conn{} = conn) do
+    current_url(conn, endpoint_module(conn))
+  end
+  def current_url(%Plug.Conn{} = conn, %{} = params) do
+    current_url(conn, endpoint_module(conn), params)
+  end
+  def current_url(%Plug.Conn{} = conn, endpoint) when is_atom(endpoint) do
+    Path.join(endpoint.url(), current_path(conn))
+  end
+  def current_url(%Plug.Conn{} = conn, endpoint, %{} = params) when is_atom(endpoint) do
+    Path.join(endpoint.url(), current_path(conn, params))
+  end
+
+
   @doc false
   def __view__(controller_module) do
     controller_module
