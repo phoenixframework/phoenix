@@ -65,7 +65,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # Brunch
       assert_file "phx_blog/.gitignore", "/node_modules"
-      assert_file "phx_blog/assets/brunch-config.js", ~s("js/app.js": ["app"])
+      assert_file "phx_blog/assets/brunch-config.js", ~s("js/app.js": ["js/app"])
       assert_file "phx_blog/config/dev.exs", "watchers: [node:"
       assert_file "phx_blog/assets/static/favicon.ico"
       assert_file "phx_blog/assets/static/images/phoenix.png"
