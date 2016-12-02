@@ -165,6 +165,9 @@ comment_path  POST    /comments           HelloPhoenix.CommentController :create
 comment_path  PATCH   /comments/:id       HelloPhoenix.CommentController :update
               PUT     /comments/:id       HelloPhoenix.CommentController :update
 ```
+
+The [`resources/4` docs](https://hexdocs.pm/phoenix/Phoenix.Router.html#resources/4) describe additional options for customizing resource routes.
+
 ### Path Helpers
 
 Path helpers are functions which are dynamically defined on the `Router.Helpers` module for an individual application. For us, that is `HelloPhoenix.Router.Helpers`.  Their names are derived from the name of the controller used in the route definition. Our controller is `HelloPhoenix.PageController`, and `page_path` is the function which will return the path to the root of our application.
@@ -830,7 +833,6 @@ We can mount multiple socket handlers in our endpoint:
 socket "/socket", HelloPhoenix.UserSocket
 socket "/admin-socket", HelloPhoenix.AdminSocket
 ```
-
 
 ### Summary
 
