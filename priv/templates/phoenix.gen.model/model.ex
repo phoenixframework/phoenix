@@ -3,7 +3,7 @@ defmodule <%= module %> do
 
   schema <%= inspect plural %> do
 <%= for {k, _} <- attrs do %>    field <%= inspect k %>, <%= inspect types[k] %><%= schema_defaults[k] %>
-<% end %><%= for {k, _, m, _} <- assocs do %>    belongs_to <%= inspect k %>, <%= m %>, foreign_key: <%= inspect(k) <> "_id" %>
+<% end %><%= for {k, _, m, _} <- assocs do %>    belongs_to <%= inspect k %>, <%= m %><%= if(String.ends_with?(inspect(k), "_id"), do: "", else: ", foreign_key: " <> inspect(k) <> "_id") %>
 <% end %>
     timestamps()
   end
