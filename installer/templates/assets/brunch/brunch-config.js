@@ -53,7 +53,7 @@ exports.config = {
 
   modules: {
     autoRequire: {
-      "js/app.js": ["app"]
+      "js/app.js": ["js/app"]
     }
   },
 

@@ -91,7 +91,7 @@ defmodule Mix.Tasks.Phx.NewUmbrellaTest do
 
       # Brunch
       assert_file web_path(@app, ".gitignore"), "/node_modules"
-      assert_file web_path(@app, "assets/brunch-config.js"), ~s("js/app.js": ["app"])
+      assert_file web_path(@app, "assets/brunch-config.js"), ~s("js/app.js": ["js/app"])
       assert_file web_path(@app, "config/dev.exs"), "watchers: [node:"
       assert_file web_path(@app, "assets/static/favicon.ico")
       assert_file web_path(@app, "assets/static/images/phoenix.png")
