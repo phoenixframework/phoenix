@@ -447,6 +447,9 @@ export class Socket {
   // opts - Optional configuration
   //   transport - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
   //               Defaults to WebSocket with automatic LongPoll fallback.
+  //   serializer - The methods for encoding and decoding your messages for the socket.
+  //                This is usful when implementing an alternative serializer on your
+  //                backend transport.
   //   timeout - The default timeout in milliseconds to trigger push timeouts.
   //             Defaults `DEFAULT_TIMEOUT`
   //   heartbeatIntervalMs - The millisec interval to send a heartbeat message
@@ -474,6 +477,10 @@ export class Socket {
     this.ref                  = 0
     this.timeout              = opts.timeout || DEFAULT_TIMEOUT
     this.transport            = opts.transport || window.WebSocket || LongPoll
+    this.serializer           = opts.serializer || {
+      encode: (data) => JSON.stringify(data),
+      decode: (data) => JSON.parse(data)
+    }
     this.heartbeatIntervalMs  = opts.heartbeatIntervalMs || 30000
     this.reconnectAfterMs     = opts.reconnectAfterMs || function(tries){
       return [1000, 2000, 5000, 10000][tries - 1] || 10000
@@ -589,7 +596,7 @@ export class Socket {
 
   push(data){
     let {topic, event, payload, ref} = data
-    let callback = () => this.conn.send(JSON.stringify(data))
+    let callback = () => this.conn.send(this.serializer.encode(data))
     this.log("push", `${topic} ${event} (${ref})`, payload)
     if(this.isConnected()){
       callback()
@@ -619,7 +626,7 @@ export class Socket {
   }
 
   onConnMessage(rawMessage){
-    let msg = JSON.parse(rawMessage.data)
+    let msg = this.serializer.decode(rawMessage.data)
     let {topic, event, payload, ref} = msg
     this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
     this.channels.filter( channel => channel.isMember(topic) )
