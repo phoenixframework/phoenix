@@ -447,6 +447,8 @@ export class Socket {
   // opts - Optional configuration
   //   transport - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
   //               Defaults to WebSocket with automatic LongPoll fallback.
+  //   encode - The way in which we encode data. Defaults to (payload, callback) => callback(JSON.stringify(payload))
+  //   decode - The way in which we decode data. Defaults to (payload, callback) => callback(JSON.parse(payload))
   //   timeout - The default timeout in milliseconds to trigger push timeouts.
   //             Defaults `DEFAULT_TIMEOUT`
   //   heartbeatIntervalMs - The millisec interval to send a heartbeat message
@@ -474,6 +476,10 @@ export class Socket {
     this.ref                  = 0
     this.timeout              = opts.timeout || DEFAULT_TIMEOUT
     this.transport            = opts.transport || window.WebSocket || LongPoll
+    this.defaultEncoder       = (payload, callback) => callback(JSON.stringify(payload))
+    this.defaultDecoder       = (payload, callback) => callback(JSON.parse(payload))
+    this.encode               = this.transport === LongPoll ? this.defaultEncoder : opts.encode || this.defaultEncoder
+    this.decode               = this.transport === LongPoll ? this.defaultDecoder : opts.decode || this.defaultDecoder
     this.heartbeatIntervalMs  = opts.heartbeatIntervalMs || 30000
     this.reconnectAfterMs     = opts.reconnectAfterMs || function(tries){
       return [1000, 2000, 5000, 10000][tries - 1] || 10000
@@ -589,7 +595,11 @@ export class Socket {
 
   push(data){
     let {topic, event, payload, ref} = data
-    let callback = () => this.conn.send(JSON.stringify(data))
+    let callback = () => {
+      this.encode(data, (result) => {
+        this.conn.send(result)
+      })
+    }
     this.log("push", `${topic} ${event} (${ref})`, payload)
     if(this.isConnected()){
       callback()
@@ -619,12 +629,13 @@ export class Socket {
   }
 
   onConnMessage(rawMessage){
-    let msg = JSON.parse(rawMessage.data)
-    let {topic, event, payload, ref} = msg
-    this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
-    this.channels.filter( channel => channel.isMember(topic) )
-                 .forEach( channel => channel.trigger(event, payload, ref) )
-    this.stateChangeCallbacks.message.forEach( callback => callback(msg) )
+    this.decode(rawMessage.data, (msg) => {
+      let {topic, event, payload, ref} = msg
+      this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
+      this.channels.filter( channel => channel.isMember(topic) )
+                  .forEach( channel => channel.trigger(event, payload, ref) )
+      this.stateChangeCallbacks.message.forEach( callback => callback(msg) )
+    })
   }
 }
 
