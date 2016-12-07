@@ -8,7 +8,7 @@
   * [Channel] Warn on unhandled `handle_info/2` messages
 
 * JavaScript client enhancements
-  * Add ability to pass `encode` and `decode` functions to socket constructor for custom encoding and decoing of outgoing and incoming messages.
+  * Add ability to pass `encode` and `decode` functions to socket constructor for custom encoding and decking of outgoing and incoming messages.
 
 ## 1.2.1 (2016-8-11)
 
