@@ -117,7 +117,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
       {key, :decimal} ->
         {label(key), ~s(<%= number_input f, #{inspect(key)}, step: "any", class: "form-control" %>), error(key)}
       {key, :boolean} ->
-        {label(key), ~s(<%= checkbox f, #{inspect(key)}, class: "form-control" %>), error(key)}
+        {label(key), ~s(<%= checkbox f, #{inspect(key)}, class: "checkbox" %>), error(key)}
       {key, :text} ->
         {label(key), ~s(<%= textarea f, #{inspect(key)}, class: "form-control" %>), error(key)}
       {key, :date} ->
