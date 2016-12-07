@@ -459,7 +459,7 @@ defmodule Phoenix.Controller.ControllerTest do
   end
 
   describe "path and url generation" do
-    def url(), do: "www.example.com"
+    def url(), do: "https://www.example.com"
 
     def build_conn_for_path(path) do
       conn(:get, path)
@@ -488,37 +488,26 @@ defmodule Phoenix.Controller.ControllerTest do
 
     test "current_url/1 with root path does not add extra slash" do
       conn = build_conn_for_path("/")
-      assert current_url(conn) == "www.example.com"
+      assert current_url(conn) == "https://www.example.com"
     end
 
     test "current_url/1 users conn's endpoint and query params" do
       conn = build_conn_for_path("/?foo=bar")
-      assert current_url(conn) == "www.example.com/?foo=bar"
+      assert current_url(conn) == "https://www.example.com/?foo=bar"
 
       conn = build_conn_for_path("/foo?one=1&two=2")
-      assert current_url(conn) == "www.example.com/foo?one=1&two=2"
+      assert current_url(conn) == "https://www.example.com/foo?one=1&two=2"
     end
 
     test "current_url/2 allows custom query params" do
       conn = build_conn_for_path("/")
-      assert current_url(conn, %{}) == "www.example.com"
+      assert current_url(conn, %{}) == "https://www.example.com"
 
       conn = build_conn_for_path("/foo?one=1&two=2")
-      assert current_url(conn, %{}) == "www.example.com/foo"
+      assert current_url(conn, %{}) == "https://www.example.com/foo"
 
       conn = build_conn_for_path("/foo?one=1&two=2")
-      assert current_url(conn, %{three: 3}) == "www.example.com/foo?three=3"
-    end
-
-    test "current_url/2 and current_url/3 allow explicit endpoint" do
-      conn = build_conn_for_path("/")
-      assert current_url(conn, __MODULE__, %{}) == "www.example.com"
-
-      conn = build_conn_for_path("/foo?one=1&two=2")
-      assert current_url(conn, __MODULE__,  %{}) == "www.example.com/foo"
-
-      conn = build_conn_for_path("/foo?one=1&two=2")
-      assert current_url(conn, __MODULE__, %{three: 3}) == "www.example.com/foo?three=3"
+      assert current_url(conn, %{three: 3}) == "https://www.example.com/foo?three=3"
     end
   end
 end

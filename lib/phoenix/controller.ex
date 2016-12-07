@@ -1121,43 +1121,57 @@ defmodule Phoenix.Controller do
     conn.request_path <> "?" <> URI.encode_query(params)
   end
 
-  @doc """
+  @doc ~S"""
   Returns the current request URL, with and without query params.
 
-  See `current_path/1` for details on how the request path
-  is generated. By default, the connection's endpoint will be
-  used for URL generation, but the endpoint may also be
-  explicitly provided to geneerate a URL with the connection's
-  request path, but for an endpoint that the connection did
-  not originate from.
+  The connection's endpoint will be used for URL generation.
+  See `current_path/1` for details on how the request path is generated.
 
   ## Examples
 
       iex> current_url(conn)
-      "www.endpoint1.example.com/users/123?existing=param"
+      "https://www.example.com/users/123?existing=param"
 
       iex> current_url(conn, %{new: "param"})
-      "www.endpoint1.example.com/users/123?new=param"
+      "https://www.example.com/users/123?new=param"
 
       iex> current_path(conn, %{})
-      "www.endpoint1.example.com/users/123"
+      "https://www.example.com/users/123"
 
-      iex> current_path(conn, Endpoint2, %{})
-      "www.endpoint2.example.com/users/123"
+  ## Custom URL Generation
+
+  In some cases, you'll need to generate a request's URL, but
+  using a different scheme, different host, etc. This can be
+  accomplished by concatentating the request path with a
+  custom built URL from your Router helpers, another Endpoint, mix
+  config, or a hand-built string.
+
+  For example, you may way to generate an https URL from an http request.
+  You could define a function like the following:
+
+      def current_secure_url(conn, params \\ %{}) do
+        cur_uri  = Phoenix.Controller.endpoint_module(conn).struct_url()
+        cur_path = Phoenix.Controller.current_path(conn, params)
+
+        MyApp.Router.Helpers.url(%URI{cur_uri | scheme: "https}) <> cur_path
+      end
+
+  Or maybe you have a subdomain based URL for different organizations:
+
+      def organization_url(conn, org, params \\ %{}) do
+        cur_uri  = Phoenix.Controller.endpoint_module(conn).struct_url()
+        cur_path = Phoenix.Controller.current_path(conn, params)
+        org_host = "#{org.slug}.#{cur_uri.host}"
+
+        MyApp.Router.Helpers.url(%URI{cur_uri | host: org_host}) <> cur_path
+      end
   """
   def current_url(%Plug.Conn{} = conn) do
-    current_url(conn, endpoint_module(conn))
+    Path.join(endpoint_module(conn).url(), current_path(conn))
   end
   def current_url(%Plug.Conn{} = conn, %{} = params) do
-    current_url(conn, endpoint_module(conn), params)
+    Path.join(endpoint_module(conn).url(), current_path(conn, params))
   end
-  def current_url(%Plug.Conn{} = conn, endpoint) when is_atom(endpoint) do
-    Path.join(endpoint.url(), current_path(conn))
-  end
-  def current_url(%Plug.Conn{} = conn, endpoint, %{} = params) when is_atom(endpoint) do
-    Path.join(endpoint.url(), current_path(conn, params))
-  end
-
 
   @doc false
   def __view__(controller_module) do

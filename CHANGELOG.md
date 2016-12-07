@@ -3,6 +3,7 @@
 ## 1.3-dev
 
 * Enhancements
+  * [Controller] Add `current_path` and `current_url` to generate a connection's path and url
   * [Channel] Add ability to configure channel event logging with `:log_join` and `:log_handle_in` options
   * [Channel] Warn on unhandled `handle_info/2` messages
 
