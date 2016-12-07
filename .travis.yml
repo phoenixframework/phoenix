@@ -10,9 +10,11 @@ services:
 sudo: false
 before_script:
   - mix deps.get --only test
+  - nvm install 6.2 && nvm use 6.2
 script:
   - mix test
   - cd installer && mix test
+  - cd ../ && npm install && npm test
 after_script:
   - cd $TRAVIS_BUILD_DIR
   - mix deps.get --only docs
