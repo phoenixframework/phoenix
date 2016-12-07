@@ -2,9 +2,9 @@ import assert from "assert"
 
 import jsdom from "jsdom"
 import sinon from "sinon"
-import { WebSocket, Server as WebSocketServer } from "mock-socket"
+import {WebSocket, Server as WebSocketServer} from "mock-socket"
 
-import { Socket, LongPoll } from "../static/js/phoenix"
+import {Socket, LongPoll} from "../static/js/phoenix"
 
 let socket
 
@@ -45,7 +45,7 @@ describe("constructor", () => {
       transport: customTransport,
       logger: customLogger,
       reconnectAfterMs: customReconnect,
-      params: { one: "two" },
+      params: {one: "two"},
     })
 
     assert.equal(socket.timeout, 40000)
@@ -54,14 +54,14 @@ describe("constructor", () => {
     assert.equal(socket.transport, customTransport)
     assert.equal(socket.logger, customLogger)
     assert.equal(socket.reconnectAfterMs, customReconnect)
-    assert.deepEqual(socket.params, { one: "two" })
+    assert.deepEqual(socket.params, {one: "two"})
   })
 
   describe("with Websocket", () => {
     let mockServer
 
     before(() => {
-      mockServer = new WebSocketServer('wss://example.com/')
+      mockServer = new WebSocketServer("wss://example.com/")
     })
 
     after((done) => {
@@ -130,7 +130,7 @@ describe("connect with WebSocket", () => {
   let mockServer
 
   before(() => {
-    mockServer = new WebSocketServer('wss://example.com/')
+    mockServer = new WebSocketServer("wss://example.com/")
   })
 
   after((done) => {
@@ -361,17 +361,17 @@ describe("channel", () => {
   })
 
   it("returns channel with given topic and params", () => {
-    channel = socket.channel("topic", { one: "two" })
+    channel = socket.channel("topic", {one: "two"})
 
     assert.deepStrictEqual(channel.socket, socket)
     assert.equal(channel.topic, "topic")
-    assert.deepEqual(channel.params, { one: "two" })
+    assert.deepEqual(channel.params, {one: "two"})
   })
 
   it("adds channel to sockets channels list", () => {
     assert.equal(socket.channels.length, 0)
 
-    channel = socket.channel("topic", { one: "two" })
+    channel = socket.channel("topic", {one: "two"})
 
     assert.equal(socket.channels.length, 1)
 
@@ -705,7 +705,7 @@ describe("onConnMessage", () => {
 
   it("parses raw message and triggers channel event", () => {
     const message = '{"topic":"topic","event":"event","payload":"payload","ref":"ref"}'
-    const data = { data: message }
+    const data = {data: message}
 
     const targetChannel = socket.channel("topic")
     const otherChannel = socket.channel("off-topic")
@@ -722,7 +722,7 @@ describe("onConnMessage", () => {
 
   it("triggers onMessage callback", () => {
     const message = '{"topic":"topic","event":"event","payload":"payload","ref":"ref"}'
-    const data = { data: message }
+    const data =  {data: message}
     const spy = sinon.spy()
 
     socket.onMessage(spy)
