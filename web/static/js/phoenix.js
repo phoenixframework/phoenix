@@ -447,8 +447,14 @@ export class Socket {
   // opts - Optional configuration
   //   transport - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
   //               Defaults to WebSocket with automatic LongPoll fallback.
-  //   encode - The way in which we encode data. Defaults to (payload, callback) => callback(JSON.stringify(payload))
-  //   decode - The way in which we decode data. Defaults to (payload, callback) => callback(JSON.parse(payload))
+  //   encode - The function to decode outgoing messages. Defaults to JSON:
+  //
+  //     (payload, callback) => callback(JSON.stringify(payload))
+  //
+  //   decode - The function to decode incoming messages. Defaults to JSON:
+  //
+  //     (payload, callback) => callback(JSON.parse(payload))
+  //
   //   timeout - The default timeout in milliseconds to trigger push timeouts.
   //             Defaults `DEFAULT_TIMEOUT`
   //   heartbeatIntervalMs - The millisec interval to send a heartbeat message
@@ -478,8 +484,13 @@ export class Socket {
     this.transport            = opts.transport || window.WebSocket || LongPoll
     this.defaultEncoder       = (payload, callback) => callback(JSON.stringify(payload))
     this.defaultDecoder       = (payload, callback) => callback(JSON.parse(payload))
-    this.encode               = this.transport === LongPoll ? this.defaultEncoder : opts.encode || this.defaultEncoder
-    this.decode               = this.transport === LongPoll ? this.defaultDecoder : opts.decode || this.defaultDecoder
+    if(this.transport !== LongPoll){
+      this.encode = opts.encode || this.defaultEncoder
+      this.decode = opts.decode || this.defaultDecoder
+    } else {
+      this.encode = this.defaultEncoder
+      this.decode = this.defaultDecoder
+    }
     this.heartbeatIntervalMs  = opts.heartbeatIntervalMs || 30000
     this.reconnectAfterMs     = opts.reconnectAfterMs || function(tries){
       return [1000, 2000, 5000, 10000][tries - 1] || 10000
@@ -596,7 +607,7 @@ export class Socket {
   push(data){
     let {topic, event, payload, ref} = data
     let callback = () => {
-      this.encode(data, (result) => {
+      this.encode(data, result => {
         this.conn.send(result)
       })
     }
@@ -629,7 +640,7 @@ export class Socket {
   }
 
   onConnMessage(rawMessage){
-    this.decode(rawMessage.data, (msg) => {
+    this.decode(rawMessage.data, msg => {
       let {topic, event, payload, ref} = msg
       this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
       this.channels.filter( channel => channel.isMember(topic) )

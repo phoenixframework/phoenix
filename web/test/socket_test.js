@@ -737,3 +737,60 @@ describe("onConnMessage", () => {
     }))
   })
 })
+
+describe("custom encoder and decoder", () => {
+
+  it("encodes to JSON by default", () => {
+    socket = new Socket("/socket")
+    let payload = {foo: "bar"}
+
+    socket.encode(payload, encoded => {
+      assert.deepStrictEqual(encoded, JSON.stringify(payload))
+    })
+  })
+
+  it("allows custom encoding when using WebSocket transport", () => {
+    let encoder = (payload, callback) => callback("encode works")
+    socket = new Socket("/socket", {transport: WebSocket, encode: encoder})
+
+    socket.encode({foo: "bar"}, encoded => {
+      assert.deepStrictEqual(encoded, "encode works")
+    })
+  })
+
+  it("forces JSON encoding when using LongPoll transport", () => {
+    let encoder = (payload, callback) => callback("encode works")
+    socket = new Socket("/socket", {transport: LongPoll, encode: encoder})
+
+    socket.encode({foo: "bar"}, encoded => {
+      assert.deepStrictEqual(encoded, JSON.stringify({foo: "bar"}))
+    })
+  })
+
+  it("decodes JSON by default", () => {
+    socket = new Socket("/socket")
+    let payload = JSON.stringify({foo: "bar"})
+
+    socket.decode(payload, decoded => {
+      assert.deepStrictEqual(decoded, {foo: "bar"})
+    })
+  })
+
+  it("allows custom decoding when using WebSocket transport", () => {
+    let decoder = (payload, callback) => callback("decode works")
+    socket = new Socket("/socket", {transport: WebSocket, decode: decoder})
+
+    socket.decode("...esoteric format...", decoded => {
+      assert.deepStrictEqual(decoded, "decode works")
+    })
+  })
+
+  it("forces JSON decoding when using LongPoll transport", () => {
+    let decoder = (payload, callback) => callback("decode works")
+    socket = new Socket("/socket", {transport: LongPoll, decode: decoder})
+
+    socket.decode(JSON.stringify({foo: "bar"}), decoded => {
+      assert.deepStrictEqual(decoded, {foo: "bar"})
+    })
+  })
+})
