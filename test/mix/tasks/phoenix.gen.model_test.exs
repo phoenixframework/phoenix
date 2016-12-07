@@ -112,6 +112,22 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
     end
   end
 
+  test "generates belongs_to associations with foreign key provided by user" do
+    in_tmp "generates belongs_to associations", fn ->
+      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title", "user:references:users"]
+
+      assert [migration] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
+
+      assert_file migration, fn file ->
+        assert file =~ "add :user_id, references(:users, on_delete: :nothing)"
+      end
+
+      assert_file "web/models/post.ex", fn file ->
+        assert file =~ "belongs_to :user, Phoenix.User, foreign_key: :user_id"
+      end
+    end
+  end
+
   test "generates unique_index" do
     in_tmp "generates unique_index", fn ->
       Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title:unique", "unique_int:integer:unique", "unique_float:float:unique"]
