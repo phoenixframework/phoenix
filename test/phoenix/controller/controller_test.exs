@@ -486,9 +486,9 @@ defmodule Phoenix.Controller.ControllerTest do
       assert current_path(conn, %{three: 3}) == "/foo?three=3"
     end
 
-    test "current_url/1 with root path does not add extra slash" do
+    test "current_url/1 with root path includes trailing slash" do
       conn = build_conn_for_path("/")
-      assert current_url(conn) == "https://www.example.com"
+      assert current_url(conn) == "https://www.example.com/"
     end
 
     test "current_url/1 users conn's endpoint and query params" do
@@ -501,7 +501,7 @@ defmodule Phoenix.Controller.ControllerTest do
 
     test "current_url/2 allows custom query params" do
       conn = build_conn_for_path("/")
-      assert current_url(conn, %{}) == "https://www.example.com"
+      assert current_url(conn, %{}) == "https://www.example.com/"
 
       conn = build_conn_for_path("/foo?one=1&two=2")
       assert current_url(conn, %{}) == "https://www.example.com/foo"

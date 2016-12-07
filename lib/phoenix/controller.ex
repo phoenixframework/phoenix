@@ -1167,10 +1167,10 @@ defmodule Phoenix.Controller do
       end
   """
   def current_url(%Plug.Conn{} = conn) do
-    Path.join(endpoint_module(conn).url(), current_path(conn))
+    endpoint_module(conn).url() <> current_path(conn)
   end
   def current_url(%Plug.Conn{} = conn, %{} = params) do
-    Path.join(endpoint_module(conn).url(), current_path(conn, params))
+    endpoint_module(conn).url() <> current_path(conn, params)
   end
 
   @doc false
