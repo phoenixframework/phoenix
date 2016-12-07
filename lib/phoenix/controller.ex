@@ -1092,6 +1092,87 @@ defmodule Phoenix.Controller do
     put_private(conn, :phoenix_flash, value)
   end
 
+  @doc """
+  Returns the current request path, with and without query params.
+
+  By default, the connection's query params are included in
+  the generated path. Custom query params may be used instead
+  by providing a map of your own params. You may also retrieve
+  only the request path by passing an empty map of params.
+
+  ## Examples
+
+      iex> current_path(conn)
+      "/users/123?existing=param"
+
+      iex> current_path(conn, %{new: "param"})
+      "/users/123?new=param"
+
+      iex> current_path(conn, %{})
+      "/users/123"
+  """
+  def current_path(%Plug.Conn{query_params: params} = conn) do
+    current_path(conn, params)
+  end
+  def current_path(%Plug.Conn{} = conn, params) when params == %{} do
+    conn.request_path
+  end
+  def current_path(%Plug.Conn{} = conn, params) do
+    conn.request_path <> "?" <> URI.encode_query(params)
+  end
+
+  @doc ~S"""
+  Returns the current request URL, with and without query params.
+
+  The connection's endpoint will be used for URL generation.
+  See `current_path/1` for details on how the request path is generated.
+
+  ## Examples
+
+      iex> current_url(conn)
+      "https://www.example.com/users/123?existing=param"
+
+      iex> current_url(conn, %{new: "param"})
+      "https://www.example.com/users/123?new=param"
+
+      iex> current_path(conn, %{})
+      "https://www.example.com/users/123"
+
+  ## Custom URL Generation
+
+  In some cases, you'll need to generate a request's URL, but
+  using a different scheme, different host, etc. This can be
+  accomplished by concatentating the request path with a
+  custom built URL from your Router helpers, another Endpoint, mix
+  config, or a hand-built string.
+
+  For example, you may way to generate an https URL from an http request.
+  You could define a function like the following:
+
+      def current_secure_url(conn, params \\ %{}) do
+        cur_uri  = Phoenix.Controller.endpoint_module(conn).struct_url()
+        cur_path = Phoenix.Controller.current_path(conn, params)
+
+        MyApp.Router.Helpers.url(%URI{cur_uri | scheme: "https}) <> cur_path
+      end
+
+  Or maybe you have a subdomain based URL for different organizations:
+
+      def organization_url(conn, org, params \\ %{}) do
+        cur_uri  = Phoenix.Controller.endpoint_module(conn).struct_url()
+        cur_path = Phoenix.Controller.current_path(conn, params)
+        org_host = "#{org.slug}.#{cur_uri.host}"
+
+        MyApp.Router.Helpers.url(%URI{cur_uri | host: org_host}) <> cur_path
+      end
+  """
+  def current_url(%Plug.Conn{} = conn) do
+    Path.join(endpoint_module(conn).url(), current_path(conn))
+  end
+  def current_url(%Plug.Conn{} = conn, %{} = params) do
+    Path.join(endpoint_module(conn).url(), current_path(conn, params))
+  end
+
   @doc false
   def __view__(controller_module) do
     controller_module
