@@ -447,7 +447,7 @@ export class Socket {
   // opts - Optional configuration
   //   transport - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
   //               Defaults to WebSocket with automatic LongPoll fallback.
-  //   encode - The function to decode outgoing messages. Defaults to JSON:
+  //   encode - The function to encode outgoing messages. Defaults to JSON:
   //
   //     (payload, callback) => callback(JSON.stringify(payload))
   //
