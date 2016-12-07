@@ -1,13 +1,13 @@
 (function(exports){
 "use strict";
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
@@ -212,7 +212,6 @@ var Push = function () {
   // payload - The payload, for example `{user_id: 123}`
   // timeout - The push timeout in milliseconds
   //
-
   function Push(channel, event, payload, timeout) {
     _classCallCheck(this, Push);
 
@@ -268,9 +267,9 @@ var Push = function () {
   }, {
     key: "matchReceive",
     value: function matchReceive(_ref) {
-      var status = _ref.status;
-      var response = _ref.response;
-      var ref = _ref.ref;
+      var status = _ref.status,
+          response = _ref.response,
+          ref = _ref.ref;
 
       this.recHooks.filter(function (h) {
         return h.status === status;
@@ -393,7 +392,7 @@ var Channel = exports.Channel = function () {
   }, {
     key: "join",
     value: function join() {
-      var timeout = arguments.length <= 0 || arguments[0] === undefined ? this.timeout : arguments[0];
+      var timeout = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.timeout;
 
       if (this.joinedOnce) {
         throw "tried to join multiple times. 'join' can only be called a single time per channel instance";
@@ -435,7 +434,7 @@ var Channel = exports.Channel = function () {
   }, {
     key: "push",
     value: function push(event, payload) {
-      var timeout = arguments.length <= 2 || arguments[2] === undefined ? this.timeout : arguments[2];
+      var timeout = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : this.timeout;
 
       if (!this.joinedOnce) {
         throw "tried to push '" + event + "' to '" + this.topic + "' before joining. Use channel.join() before pushing events";
@@ -469,7 +468,7 @@ var Channel = exports.Channel = function () {
     value: function leave() {
       var _this3 = this;
 
-      var timeout = arguments.length <= 0 || arguments[0] === undefined ? this.timeout : arguments[0];
+      var timeout = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.timeout;
 
       this.state = CHANNEL_STATES.leaving;
       var onClose = function onClose() {
@@ -524,7 +523,7 @@ var Channel = exports.Channel = function () {
   }, {
     key: "rejoin",
     value: function rejoin() {
-      var timeout = arguments.length <= 0 || arguments[0] === undefined ? this.timeout : arguments[0];
+      var timeout = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.timeout;
       if (this.isLeaving()) {
         return;
       }
@@ -533,10 +532,10 @@ var Channel = exports.Channel = function () {
   }, {
     key: "trigger",
     value: function trigger(event, payload, ref) {
-      var close = CHANNEL_EVENTS.close;
-      var error = CHANNEL_EVENTS.error;
-      var leave = CHANNEL_EVENTS.leave;
-      var join = CHANNEL_EVENTS.join;
+      var close = CHANNEL_EVENTS.close,
+          error = CHANNEL_EVENTS.error,
+          leave = CHANNEL_EVENTS.leave,
+          join = CHANNEL_EVENTS.join;
 
       if (ref && [close, error, leave, join].indexOf(event) >= 0 && ref !== this.joinRef()) {
         return;
@@ -597,6 +596,14 @@ var Socket = exports.Socket = function () {
   // opts - Optional configuration
   //   transport - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
   //               Defaults to WebSocket with automatic LongPoll fallback.
+  //   encode - The function to decode outgoing messages. Defaults to JSON:
+  //
+  //     (payload, callback) => callback(JSON.stringify(payload))
+  //
+  //   decode - The function to decode incoming messages. Defaults to JSON:
+  //
+  //     (payload, callback) => callback(JSON.parse(payload))
+  //
   //   timeout - The default timeout in milliseconds to trigger push timeouts.
   //             Defaults `DEFAULT_TIMEOUT`
   //   heartbeatIntervalMs - The millisec interval to send a heartbeat message
@@ -617,11 +624,10 @@ var Socket = exports.Socket = function () {
   //
   // For IE8 support use an ES5-shim (https://github.com/es-shims/es5-shim)
   //
-
   function Socket(endPoint) {
     var _this4 = this;
 
-    var opts = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+    var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
     _classCallCheck(this, Socket);
 
@@ -631,6 +637,19 @@ var Socket = exports.Socket = function () {
     this.ref = 0;
     this.timeout = opts.timeout || DEFAULT_TIMEOUT;
     this.transport = opts.transport || window.WebSocket || LongPoll;
+    this.defaultEncoder = function (payload, callback) {
+      return callback(JSON.stringify(payload));
+    };
+    this.defaultDecoder = function (payload, callback) {
+      return callback(JSON.parse(payload));
+    };
+    if (this.transport !== LongPoll) {
+      this.encode = opts.encode || this.defaultEncoder;
+      this.decode = opts.decode || this.defaultDecoder;
+    } else {
+      this.encode = this.defaultEncoder;
+      this.decode = this.defaultDecoder;
+    }
     this.heartbeatIntervalMs = opts.heartbeatIntervalMs || 30000;
     this.reconnectAfterMs = opts.reconnectAfterMs || function (tries) {
       return [1000, 2000, 5000, 10000][tries - 1] || 10000;
@@ -819,7 +838,7 @@ var Socket = exports.Socket = function () {
   }, {
     key: "channel",
     value: function channel(topic) {
-      var chanParams = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+      var chanParams = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
       var chan = new Channel(topic, chanParams, this);
       this.channels.push(chan);
@@ -830,13 +849,15 @@ var Socket = exports.Socket = function () {
     value: function push(data) {
       var _this7 = this;
 
-      var topic = data.topic;
-      var event = data.event;
-      var payload = data.payload;
-      var ref = data.ref;
+      var topic = data.topic,
+          event = data.event,
+          payload = data.payload,
+          ref = data.ref;
 
       var callback = function callback() {
-        return _this7.conn.send(JSON.stringify(data));
+        _this7.encode(data, function (result) {
+          _this7.conn.send(result);
+        });
       };
       this.log("push", topic + " " + event + " (" + ref + ")", payload);
       if (this.isConnected()) {
@@ -881,20 +902,23 @@ var Socket = exports.Socket = function () {
   }, {
     key: "onConnMessage",
     value: function onConnMessage(rawMessage) {
-      var msg = JSON.parse(rawMessage.data);
-      var topic = msg.topic;
-      var event = msg.event;
-      var payload = msg.payload;
-      var ref = msg.ref;
+      var _this8 = this;
 
-      this.log("receive", (payload.status || "") + " " + topic + " " + event + " " + (ref && "(" + ref + ")" || ""), payload);
-      this.channels.filter(function (channel) {
-        return channel.isMember(topic);
-      }).forEach(function (channel) {
-        return channel.trigger(event, payload, ref);
-      });
-      this.stateChangeCallbacks.message.forEach(function (callback) {
-        return callback(msg);
+      this.decode(rawMessage.data, function (msg) {
+        var topic = msg.topic,
+            event = msg.event,
+            payload = msg.payload,
+            ref = msg.ref;
+
+        _this8.log("receive", (payload.status || "") + " " + topic + " " + event + " " + (ref && "(" + ref + ")" || ""), payload);
+        _this8.channels.filter(function (channel) {
+          return channel.isMember(topic);
+        }).forEach(function (channel) {
+          return channel.trigger(event, payload, ref);
+        });
+        _this8.stateChangeCallbacks.message.forEach(function (callback) {
+          return callback(msg);
+        });
       });
     }
   }]);
@@ -944,7 +968,7 @@ var LongPoll = exports.LongPoll = function () {
   }, {
     key: "poll",
     value: function poll() {
-      var _this8 = this;
+      var _this9 = this;
 
       if (!(this.readyState === SOCKET_STATES.open || this.readyState === SOCKET_STATES.connecting)) {
         return;
@@ -952,11 +976,11 @@ var LongPoll = exports.LongPoll = function () {
 
       Ajax.request("GET", this.endpointURL(), "application/json", null, this.timeout, this.ontimeout.bind(this), function (resp) {
         if (resp) {
-          var status = resp.status;
-          var token = resp.token;
-          var messages = resp.messages;
+          var status = resp.status,
+              token = resp.token,
+              messages = resp.messages;
 
-          _this8.token = token;
+          _this9.token = token;
         } else {
           var status = 0;
         }
@@ -964,22 +988,22 @@ var LongPoll = exports.LongPoll = function () {
         switch (status) {
           case 200:
             messages.forEach(function (msg) {
-              return _this8.onmessage({ data: JSON.stringify(msg) });
+              return _this9.onmessage({ data: JSON.stringify(msg) });
             });
-            _this8.poll();
+            _this9.poll();
             break;
           case 204:
-            _this8.poll();
+            _this9.poll();
             break;
           case 410:
-            _this8.readyState = SOCKET_STATES.open;
-            _this8.onopen();
-            _this8.poll();
+            _this9.readyState = SOCKET_STATES.open;
+            _this9.onopen();
+            _this9.poll();
             break;
           case 0:
           case 500:
-            _this8.onerror();
-            _this8.closeAndRetry();
+            _this9.onerror();
+            _this9.closeAndRetry();
             break;
           default:
             throw "unhandled poll status " + status;
@@ -989,12 +1013,12 @@ var LongPoll = exports.LongPoll = function () {
   }, {
     key: "send",
     value: function send(body) {
-      var _this9 = this;
+      var _this10 = this;
 
       Ajax.request("POST", this.endpointURL(), "application/json", body, this.timeout, this.onerror.bind(this, "timeout"), function (resp) {
         if (!resp || resp.status !== 200) {
-          _this9.onerror(resp && resp.status);
-          _this9.closeAndRetry();
+          _this10.onerror(resp && resp.status);
+          _this10.closeAndRetry();
         }
       });
     }
@@ -1021,20 +1045,20 @@ var Ajax = exports.Ajax = function () {
         var req = new XDomainRequest(); // IE8, IE9
         this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback);
       } else {
-        var req = window.XMLHttpRequest ? new XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
+        var _req = window.XMLHttpRequest ? new window.XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
         new ActiveXObject("Microsoft.XMLHTTP"); // IE6, IE5
-        this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback);
+        this.xhrRequest(_req, method, endPoint, accept, body, timeout, ontimeout, callback);
       }
     }
   }, {
     key: "xdomainRequest",
     value: function xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback) {
-      var _this10 = this;
+      var _this11 = this;
 
       req.timeout = timeout;
       req.open(method, endPoint);
       req.onload = function () {
-        var response = _this10.parseJSON(req.responseText);
+        var response = _this11.parseJSON(req.responseText);
         callback && callback(response);
       };
       if (ontimeout) {
@@ -1049,17 +1073,17 @@ var Ajax = exports.Ajax = function () {
   }, {
     key: "xhrRequest",
     value: function xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback) {
-      var _this11 = this;
+      var _this12 = this;
 
-      req.timeout = timeout;
       req.open(method, endPoint, true);
+      req.timeout = timeout;
       req.setRequestHeader("Content-Type", accept);
       req.onerror = function () {
         callback && callback(null);
       };
       req.onreadystatechange = function () {
-        if (req.readyState === _this11.states.complete && callback) {
-          var response = _this11.parseJSON(req.responseText);
+        if (req.readyState === _this12.states.complete && callback) {
+          var response = _this12.parseJSON(req.responseText);
           callback(response);
         }
       };
@@ -1111,7 +1135,7 @@ Ajax.states = { complete: 4 };
 
 var Presence = exports.Presence = {
   syncState: function syncState(currentState, newState, onJoin, onLeave) {
-    var _this12 = this;
+    var _this13 = this;
 
     var state = this.clone(currentState);
     var joins = {};
@@ -1143,7 +1167,7 @@ var Presence = exports.Presence = {
             joins[key].metas = joinedMetas;
           }
           if (leftMetas.length > 0) {
-            leaves[key] = _this12.clone(currentPresence);
+            leaves[key] = _this13.clone(currentPresence);
             leaves[key].metas = leftMetas;
           }
         })();
@@ -1154,8 +1178,8 @@ var Presence = exports.Presence = {
     return this.syncDiff(state, { joins: joins, leaves: leaves }, onJoin, onLeave);
   },
   syncDiff: function syncDiff(currentState, _ref2, onJoin, onLeave) {
-    var joins = _ref2.joins;
-    var leaves = _ref2.leaves;
+    var joins = _ref2.joins,
+        leaves = _ref2.leaves;
 
     var state = this.clone(currentState);
     if (!onJoin) {
@@ -1205,6 +1229,7 @@ var Presence = exports.Presence = {
     });
   },
 
+
   // private
 
   map: function map(obj, func) {
@@ -1253,13 +1278,13 @@ var Timer = function () {
   }, {
     key: "scheduleTimeout",
     value: function scheduleTimeout() {
-      var _this13 = this;
+      var _this14 = this;
 
       clearTimeout(this.timer);
 
       this.timer = setTimeout(function () {
-        _this13.tries = _this13.tries + 1;
-        _this13.callback();
+        _this14.tries = _this14.tries + 1;
+        _this14.callback();
       }, this.timerCalc(this.tries + 1));
     }
   }]);
