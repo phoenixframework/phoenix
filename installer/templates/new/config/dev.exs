@@ -13,7 +13,7 @@ use Mix.Config
 #
 # openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout priv/server.key -out priv/server.pem
 #
-# The `http:` config belog can be replaced with:
+# The `http:` config below can be replaced with:
 # https: [port: 4000, keyfile: "priv/server.key", certfile: "priv/server.pem"],
 #
 # If desired, both `http:` and `https:` keys can be
