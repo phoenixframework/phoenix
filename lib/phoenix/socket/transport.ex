@@ -17,14 +17,10 @@ defmodule Phoenix.Socket.Transport do
 
   ## The transport behaviour
 
-  The transport requires two functions:
+  The transport requires one function:
 
     * `default_config/0` - returns the default transport configuration
       to be merged when the transport is declared in the socket module
-
-    * `handlers/0` - returns a map of handlers. For example, if the
-      transport is implemented via Cowboy, it just need to specify the
-      appropriate Cowboy handler
 
   ## Socket connections
 
