@@ -1,6 +1,8 @@
-defmodule Mix.Tasks.Phx.New.Generator do
+defmodule Phx.New.Generator do
   import Mix.Generator
-  alias Mix.Tasks.Phx.New.{Project, Single, Umbrella}
+  alias Phx.New.{Project, Single, Umbrella}
+
+  @phoenix Path.expand("../..", __DIR__)
 
   @type base_path :: String.t
   @type app_path :: String.t
@@ -11,15 +13,12 @@ defmodule Mix.Tasks.Phx.New.Generator do
   @type app_module :: Module.t
   @type binding ::Keyword.t
 
-  @callback app(base_path, opts) :: {app_name, Module.t, path}
-  @callback web_app(app_name, path, opts) :: {app_name, Module.t, path}
-  @callback root_app(app_name, path, opts) :: {app_name, app_module, path}
-  @callback gen_new(path, binding) :: :ok
-  @callback gen_html(web_path, binding) :: :ok
-  @callback gen_static(web_path, binding) :: :ok
-  @callback gen_brunch(web_path, binding) :: :ok
-  @callback gen_bare(path, binding) :: :ok
+  @callback put_app(Project.t) :: Project.t
+  @callback put_root_app(Project.t) :: Project.t
+  @callback put_web_app(Project.t) :: Project.t
+  @callback generate(Project.t) :: Project.t
 
+  @optional_callbacks put_app: 1, put_root_app: 1, put_web_app: 1
 
   defmacro __using__(_env) do
     quote do
@@ -96,12 +95,12 @@ defmodule Mix.Tasks.Phx.New.Generator do
     end
   end
 
-  def put_binding(%Project{} = project, generator, opts) do
+  def put_binding(%Project{opts: opts} = project, generator) do
     db           = Keyword.get(opts, :database, "postgres")
     ecto         = Keyword.get(opts, :ecto, true)
     html         = Keyword.get(opts, :html, true)
     brunch       = Keyword.get(opts, :brunch, true)
-    phoenix_path = phoenix_path(proj_path, Keyword.get(opts, :dev, false))
+    phoenix_path = phoenix_path(project.base_path, Keyword.get(opts, :dev, false))
 
     # We lowercase the database name because according to the
     # SQL spec, they are case insensitive unless quoted, which
@@ -147,7 +146,7 @@ defmodule Mix.Tasks.Phx.New.Generator do
       generator_config: generator_config(adapter_config),
       namespaced?: namespaced?(project.app, project.app_mod)]
 
-    %Project{project | ecto: ecto, html: html, brunch: brunch, binding: binding}
+    %Project{project | binding: binding}
   end
 
   def gen_ecto_config(%Project{app_path: app_path, binding: binding}) do

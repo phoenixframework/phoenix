@@ -1,5 +1,5 @@
-defmodule Mix.Tasks.Phx.New.Project do
-  alias Mix.Tasks.Phx.New.Project
+defmodule Phx.New.Project do
+  alias Phx.New.Project
 
   defstruct base_path: nil,
             app: nil,
@@ -11,21 +11,22 @@ defmodule Mix.Tasks.Phx.New.Project do
             web_app: nil,
             web_namespace: nil,
             web_path: nil,
+            opts: :unset,
             binding: []
 
-  def new(base_path) do
-    %Project{base_path: base_path}
+  def new(base_path, opts) do
+    %Project{base_path: base_path, opts: opts}
   end
 
-  def ecto?(%Project{binding: binding} = project) do
-    binding[:ecto]
+  def ecto?(%Project{binding: binding}) do
+    Keyword.fetch!(binding, :ecto)
   end
 
-  def html?(%Project{binding: binding} = project) do
-    binding[:html]
+  def html?(%Project{binding: binding}) do
+    Keyword.fetch!(binding, :html)
   end
 
-  def brunch?(%Project{binding: binding} = project) do
-    binding[:brunch]
+  def brunch?(%Project{binding: binding}) do
+    Keyword.fetch!(binding, :brunch)
   end
 end

@@ -72,16 +72,4 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     Code.delete_path Path.join(tmp_path(), "bootstrap/photo_blog/_build/test/consolidated")
     Code.delete_path Path.join(tmp_path(), "bootstrap/photo_blog/_build/test/lib/photo_blog/ebin")
   end
-
-  defp in_project(app, path, fun) do
-    %{name: name, file: file} = Mix.Project.pop
-
-    try do
-      capture_io :stderr, fn ->
-        Mix.Project.in_project app, path, [], fun
-      end
-    after
-      Mix.Project.push name, file
-    end
-  end
 end

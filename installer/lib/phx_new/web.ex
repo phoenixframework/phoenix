@@ -1,6 +1,7 @@
 defmodule Mix.Tasks.Phx.New.Web do
   use Mix.Task
-  use Mix.Tasks.Phx.New.{Project, Generator}
+  use Phx.New.{Generator}
+  alias Phx.New.{Project}
 
   @app "phx_umbrella/apps/app_name"
   @web "phx_umbrella/apps/app_name_web"
@@ -90,14 +91,14 @@ defmodule Mix.Tasks.Phx.New.Web do
   ]
 
 
-  def run([path | args]) do
+  def run([path | _args]) do
     Mix.raise "TODO"
     unless in_umbrella?(path) do
       Mix.raise "the web task can only be run within an umbrella's apps directory"
     end
   end
 
-  def gen_new(%Project{web_path: web_path, binding: binding} = project) do
+  def generate(%Project{web_path: web_path, binding: binding} = project) do
     copy_from web_path, __MODULE__, binding, template_files(:new)
     if Project.html?(project), do: gen_html(project)
 

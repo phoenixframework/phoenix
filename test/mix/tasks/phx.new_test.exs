@@ -1,8 +1,12 @@
-Code.require_file "../../../installer/lib/phx_new/generator.ex", __DIR__
-Code.require_file "../../../installer/lib/phx_new/single.ex", __DIR__
-Code.require_file "../../../installer/lib/phx_new/umbrella.ex", __DIR__
-Code.require_file "../../../installer/lib/phx_new.ex", __DIR__
-Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
+for pattern <- ["../../../installer/lib/phx_new/project.ex",
+                "../../../installer/lib/phx_new/generator.ex",
+                "../../../installer/lib/phx_new/*.ex",
+                "../../../installer/lib/phx_new.ex",
+                "../../../installer/test/mix_helper.exs"],
+    file <- [_|_] = Path.wildcard(Path.expand(pattern, __DIR__)),
+    do: Code.require_file(file, __DIR__)
+
+
 
 # Here we test the installer is up to date.
 defmodule Mix.Tasks.Phx.NewTest do
@@ -74,17 +78,5 @@ defmodule Mix.Tasks.Phx.NewTest do
   after
     Code.delete_path Path.join(tmp_path(), "bootstrap/phx_blog/_build/test/consolidated")
     Code.delete_path Path.join(tmp_path(), "bootstrap/phx_blog/_build/test/lib/phx_blog/ebin")
-  end
-
-  defp in_project(app, path, fun) do
-    %{name: name, file: file} = Mix.Project.pop
-
-    try do
-      capture_io :stderr, fn ->
-        Mix.Project.in_project app, path, [], fun
-      end
-    after
-      Mix.Project.push name, file
-    end
   end
 end
