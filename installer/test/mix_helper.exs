@@ -10,6 +10,7 @@ end
 
 defmodule MixHelper do
   import ExUnit.Assertions
+  import ExUnit.CaptureIO
 
   def tmp_path do
     Path.expand("../../tmp", __DIR__)
@@ -20,6 +21,18 @@ defmodule MixHelper do
     File.rm_rf! path
     File.mkdir_p! path
     File.cd! path, function
+  end
+
+  def in_project(app, path, fun) do
+    %{name: name, file: file} = Mix.Project.pop()
+
+    try do
+      capture_io(:stderr, fn ->
+        Mix.Project.in_project(app, path, [], fun)
+      end)
+    after
+      Mix.Project.push(name, file)
+    end
   end
 
   def assert_file(file) do

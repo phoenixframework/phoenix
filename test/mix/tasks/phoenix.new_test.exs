@@ -69,16 +69,4 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       end) =~ ~r"4 tests, 0 failures"
     end
   end
-
-  defp in_project(app, path, fun) do
-    %{name: name, file: file} = Mix.Project.pop
-
-    try do
-      capture_io :stderr, fn ->
-        Mix.Project.in_project app, path, [], fun
-      end
-    after
-      Mix.Project.push name, file
-    end
-  end
 end

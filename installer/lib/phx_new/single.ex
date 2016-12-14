@@ -1,6 +1,6 @@
-defmodule Mix.Tasks.Phx.New.Single do
-  use Mix.Tasks.Phx.New.Generator
-  alias Mix.Tasks.Phx.New.{Project, Generator}
+defmodule Phx.New.Single do
+  use Phx.New.Generator
+  alias Phx.New.{Project}
 
   template :new, [
     {:eex,  "phx_new/config/config.exs",               "config/config.exs"},
@@ -71,7 +71,7 @@ defmodule Mix.Tasks.Phx.New.Single do
     {:text,   "assets/robots.txt",      "priv/static/robots.txt"},
   ]
 
-  def put_app(%Project{base_path: base_path} = project, opts) do
+  def put_app(%Project{base_path: base_path, opts: opts} = project) do
     app = opts[:app] || Path.basename(Path.expand(base_path))
 
     %Project{project |
@@ -81,20 +81,20 @@ defmodule Mix.Tasks.Phx.New.Single do
              project_path: Path.expand(base_path)}
   end
 
-  def put_root_app(%Project{app: app} = project, opts) when not is_nil(app) do
+  def put_root_app(%Project{app: app, opts: opts} = project) when not is_nil(app) do
     %Project{project |
              root_app: app,
              root_mod: Module.concat([opts[:module] || Macro.camelize(app)])}
   end
 
-  def put_web_app(%Project{app: app} = project, _opts) when not is_nil(app) do
+  def put_web_app(%Project{app: app} = project) when not is_nil(app) do
     %Project{project |
              web_app: app,
-             web_namespace: Module.concat(project.root_mod, Web)
+             web_namespace: Module.concat(project.root_mod, Web),
              web_path: project.project_path}
   end
 
-  def gen_new(%Project{} = project) do
+  def generate(%Project{} = project) do
     copy_from project.project_path, __MODULE__, project.binding, template_files(:new)
 
     if Project.ecto?(project), do: gen_ecto(project)

@@ -47,10 +47,8 @@ defmodule Mix.Tasks.Phx.New do
 
   """
   use Mix.Task
-  import Mix.Tasks.Phx.New.Generator
-  alias Mix.Tasks.Phx.New.{Single, Umbrella}
+  alias Phx.New.{Generator, Project, Single, Umbrella}
 
-  @phoenix Path.expand("../..", __DIR__)
   @version Mix.Project.config[:version]
   @shortdoc "Creates a new Phoenix v#{@version} application using the experimental generators"
 
@@ -79,17 +77,17 @@ defmodule Mix.Tasks.Phx.New do
     generator = if opts[:umbrella], do: Umbrella, else: Single
 
     base_path
-    |> Project.new()
-    |> generator.put_app(opts)
+    |> Project.new(opts)
+    |> generator.put_app()
     |> generator.put_root_app()
     |> generator.put_web_app()
-    |> Generator.put_binding(generator, opts)
-    |> validate_project(opts)
-    |> generator.gen_new()
+    |> Generator.put_binding(generator)
+    |> validate_project()
+    |> generator.generate()
     |> prompt_to_install_deps()
   end
 
-  defp validate_project(%Project{} = project, opts) do
+  defp validate_project(%Project{opts: opts} = project) do
     check_app_name!(project.app, !!opts[:app])
     check_directory_existence!(project.project_path)
     check_module_name_validity!(project.root_mod)
