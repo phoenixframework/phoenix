@@ -223,7 +223,8 @@ defmodule Phoenix.Socket.Transport do
     |> do_dispatch(msg, socket)
   end
 
-  defp build_channel_socket(%Socket{} = socket, channel, topic) do
+  @doc false
+  def build_channel_socket(%Socket{} = socket, channel, topic) do
     %Socket{socket |
             topic: topic,
             channel: channel,
