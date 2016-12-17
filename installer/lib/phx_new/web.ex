@@ -87,24 +87,27 @@ defmodule Mix.Tasks.Phx.New.Web do
     Mix.Tasks.Phx.New.run(args, __MODULE__)
   end
 
-  def prepare_project(%Project{project_path: project_path} = project) do
-    web_app = :"#{project.app}_web"
-    {proj_path, web_path} =
-      if project_path do
-        {project_path, Path.join(project_path, "apps/#{web_app}/")}
-      else
-        {Path.expand(project.base_path, "../../"), project.base_path}
-      end
+  def prepare_project(%Project{app: app} = project) when not is_nil(app) do
+    project_path = Path.expand(project.base_path)
 
     %Project{project |
-             web_app: web_app,
-             web_namespace: Module.concat(project.app_mod, Web),
-             project_path: proj_path,
-             web_path: web_path}
+             in_umbrella?: true,
+             project_path: project_path,
+             web_path: project_path,
+             web_app: app,
+             web_namespace: project.app_mod}
   end
 
+  # def prepare_project(%Project{} = project) do
+  #   web_app = :"#{project.app}_web"
+
+  #   %Project{project |
+  #            web_app: web_app,
+  #            web_namespace: Module.concat(project.app_mod, Web),
+  #            web_path: Path.join(project_path, "apps/#{web_app}/")}
+  # end
+
   def generate(%Project{} = project) do
-    raise inspect project
     copy_from project, __MODULE__, template_files(:new)
     if Project.html?(project), do: gen_html(project)
 

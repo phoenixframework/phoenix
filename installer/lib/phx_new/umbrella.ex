@@ -11,9 +11,26 @@ defmodule Phx.New.Umbrella do
 
   def prepare_project(%Project{app: app} = project) when not is_nil(app) do
     project
-    |> App.prepare_project()
-    |> Web.prepare_project()
+    |> put_app()
+    |> put_web()
     |> put_root_app()
+  end
+  defp put_app(project) do
+    project_path = Path.expand(project.base_path <> "_umbrella")
+    app_path = Path.join(project_path, "apps/#{project.app}")
+
+    %Project{project |
+             in_umbrella?: true,
+             app_path: app_path,
+             project_path: project_path}
+  end
+  def put_web(%Project{} = project) do
+    web_app = :"#{project.app}_web"
+
+    %Project{project |
+             web_app: web_app,
+             web_namespace: Module.concat(project.app_mod, Web),
+             web_path: Path.join(project.project_path, "apps/#{web_app}/")}
   end
 
   defp put_root_app(%Project{app: app} = project) do

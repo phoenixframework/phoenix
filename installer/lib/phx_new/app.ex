@@ -24,13 +24,12 @@ defmodule Mix.Tasks.Phx.New.App do
   ]
 
 
-  def prepare_project(%Project{app: app} = project) do
-    project_path = Path.expand(project.base_path <> "_umbrella")
-    app_path = Path.join(project_path, "apps/#{app}")
+  def prepare_project(%Project{} = project) do
+    project_path = Path.expand(project.base_path)
 
     %Project{project |
              in_umbrella?: true,
-             app_path: app_path,
+             app_path: project_path,
              project_path: project_path}
   end
 

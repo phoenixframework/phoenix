@@ -80,7 +80,7 @@ defmodule Phx.New.Single do
 
   defp put_app(%Project{base_path: base_path} = project) do
     %Project{project |
-             in_umbrella?: false,
+             in_umbrella?: in_umbrella?(base_path),
              app_path: base_path}
   end
 
