@@ -1,4 +1,5 @@
 defmodule Phx.New.Single do
+  @moduledoc false
   use Phx.New.Generator
   alias Phx.New.{Project}
 

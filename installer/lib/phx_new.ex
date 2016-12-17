@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Phx.New do
   @moduledoc """
   Creates a new Phoenix project.
 
-  It expects the path of the project as argument.
+  It expects the path of the project as an argument.
 
       mix phx.new PATH [--module MODULE] [--app APP]
 
@@ -11,6 +11,10 @@ defmodule Mix.Tasks.Phx.New do
   from the path, unless `--module` or `--app` is given.
 
   ## Options
+
+    * `--umbrella` - generate an umbrella application,
+      with one application for your core domain, and
+      a second application for the web interface.
 
     * `--app` - the name of the OTP application
 
@@ -45,6 +49,19 @@ defmodule Mix.Tasks.Phx.New do
 
       mix phx.new ~/Workspace/hello_world --no-brunch
 
+  As an umbrella:
+
+      mix phx.new hello --umbrella
+
+  Would generate the following directory structure and modules:
+
+      hello_umbrella/   Hello.Umbrella
+        apps/
+          hello/        Hello
+          hello_web/    Hello.Web
+
+  You can read more about umbrella projects using the
+  official [Elixir guide](http://elixir-lang.org/getting-started/mix-otp/dependencies-and-umbrella-apps.html#umbrella-projects)
   """
   use Mix.Task
   alias Phx.New.{Generator, Project, Single, Umbrella}

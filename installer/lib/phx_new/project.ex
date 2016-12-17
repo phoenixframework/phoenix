@@ -1,4 +1,5 @@
 defmodule Phx.New.Project do
+  @moduledoc false
   alias Phx.New.Project
 
   defstruct base_path: nil,

@@ -1,4 +1,5 @@
 defmodule Phx.New.Generator do
+  @moduledoc false
   import Mix.Generator
   alias Phx.New.{Project}
 
