@@ -13,6 +13,7 @@ defmodule Phx.New.Project do
             web_path: nil,
             opts: :unset,
             in_umbrella?: false,
+            web_applications: [],
             binding: []
 
   def new(project_path, opts) do

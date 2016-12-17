@@ -1,6 +1,0 @@
-<h2>New message</h2>
-
-<%= render "form.html", changeset: @changeset,
-                        action: message_path(@conn, :create) %>
-
-<%= link "Back", to: message_path(@conn, :index) %>
