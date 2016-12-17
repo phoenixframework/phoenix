@@ -13,7 +13,7 @@ defmodule <%= web_namespace %>.Mixfile do
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps]
+     deps: deps()]
   end
 
   # Configuration for the OTP application.
@@ -39,7 +39,7 @@ defmodule <%= web_namespace %>.Mixfile do
      {:phoenix_html, "~> 2.6"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},<% end %>
      {:gettext, "~> 0.11"},
-     {:<%= app_name %>, in_umbrella: true},
+     <%= if app_name != web_app_name do %>{:<%= app_name %>, in_umbrella: true},<% end %>
      {:cowboy, "~> 1.0"}]
   end
 end
