@@ -1,10 +1,10 @@
 defmodule Mix.Tasks.Phx.New.Web do
   use Mix.Task
-  use Phx.New.{Generator}
+  use Phx.New.Generator
+  alias Mix.Tasks.Phx.New.{App}
   alias Phx.New.{Project}
 
-  @app "phx_umbrella/apps/app_name"
-  @web "phx_umbrella/apps/app_name_web"
+  @pre "phx_umbrella/apps/app_name_web"
 
   # TODO
   #
@@ -17,89 +17,95 @@ defmodule Mix.Tasks.Phx.New.Web do
   #
 
   template :new, [
-    {:eex,  "phx_umbrella/config/config.exs",  "config/config.exs"},
-    {:eex,  "phx_umbrella/mix.exs",            "mix.exs"},
-    {:eex,  "phx_umbrella/README.md",          "README.md"},
-    {:eex,  "#{@app}/config/config.exs",       "apps/app_name/config/config.exs"},
-    {:eex,  "#{@app}/config/dev.exs",          "apps/app_name/config/dev.exs"},
-    {:eex,  "#{@app}/config/prod.exs",         "apps/app_name/config/prod.exs"},
-    {:eex,  "#{@app}/config/prod.secret.exs",  "apps/app_name/config/prod.secret.exs"},
-    {:eex,  "#{@app}/config/test.exs",         "apps/app_name/config/test.exs"},
-    {:eex,  "#{@app}/lib/application.ex",      "apps/app_name/lib/application.ex"},
-    {:eex,  "#{@app}/test/test_helper.exs",    "apps/app_name/test/test_helper.exs"},
-    {:eex,  "#{@app}/README.md",               "apps/app_name/README.md"},
-    {:eex,  "#{@app}/mix.exs",                 "apps/app_name/mix.exs"},
-    {:eex,  "#{@web}/config/config.exs",       "apps/app_name_web/config/config.exs"},
-    {:eex,  "#{@web}/config/dev.exs",          "apps/app_name_web/config/dev.exs"},
-    {:eex,  "#{@web}/config/prod.exs",         "apps/app_name_web/config/prod.exs"},
-    {:eex,  "#{@web}/config/prod.secret.exs",  "apps/app_name_web/config/prod.secret.exs"},
-    {:eex,  "#{@web}/config/test.exs",         "apps/app_name_web/config/test.exs"},
-    {:eex,  "#{@web}/test/test_helper.exs",    "apps/app_name_web/test/test_helper.exs"},
-    {:eex,  "#{@web}/lib/application.ex",      "apps/app_name_web/lib/application.ex"},
-    {:eex,  "#{@web}/lib/web.ex",              "apps/app_name_web/lib/web.ex"},
-    {:eex,  "#{@web}/lib/endpoint.ex",         "apps/app_name_web/lib/endpoint.ex"},
-    {:eex,  "#{@web}/lib/gettext.ex",          "apps/app_name_web/lib/gettext.ex"},
-    {:eex,  "#{@web}/lib/router.ex",           "apps/app_name_web/lib/router.ex"},
-    {:eex,  "#{@web}/README.md",               "apps/app_name_web/README.md"},
-    {:eex,  "#{@web}/mix.exs",                 "apps/app_name_web/mix.exs"},
-    {:keep, "#{@web}/test/channels",                  "apps/app_name_web/test/channels"},
-    {:keep, "#{@web}/test/controllers",               "apps/app_name_web/test/controllers"},
-    {:eex,  "#{@web}/test/views/error_view_test.exs", "apps/app_name_web/test/views/error_view_test.exs"},
-    {:eex,  "#{@web}/test/support/conn_case.ex",      "apps/app_name_web/test/support/conn_case.ex"},
-    {:eex,  "#{@web}/test/support/channel_case.ex",   "apps/app_name_web/test/support/channel_case.ex"},
-    {:eex,  "#{@web}/lib/channels/user_socket.ex",    "apps/app_name_web/lib/channels/user_socket.ex"},
-    {:keep, "#{@web}/lib/controllers",                "apps/app_name_web/lib/controllers"},
-    {:eex,  "#{@web}/lib/views/error_view.ex",        "apps/app_name_web/lib/views/error_view.ex"},
-    {:eex,  "#{@web}/lib/views/error_helpers.ex",     "apps/app_name_web/lib/views/error_helpers.ex"},
-    {:eex,  "#{@web}/priv/gettext/errors.pot",        "apps/app_name_web/priv/gettext/errors.pot"},
-    {:eex,  "#{@web}/priv/gettext/en/LC_MESSAGES/errors.po", "apps/app_name_web/priv/gettext/en/LC_MESSAGES/errors.po"},
+    {:eex,  "#{@pre}/config/config.exs",      :web, "config/config.exs"},
+    {:eex,  "#{@pre}/config/dev.exs",         :web, "config/dev.exs"},
+    {:eex,  "#{@pre}/config/prod.exs",        :web, "config/prod.exs"},
+    {:eex,  "#{@pre}/config/prod.secret.exs", :web, "config/prod.secret.exs"},
+    {:eex,  "#{@pre}/config/test.exs",        :web, "config/test.exs"},
+    {:eex,  "#{@pre}/test/test_helper.exs",   :web, "test/test_helper.exs"},
+    {:eex,  "#{@pre}/lib/application.ex",     :web, "lib/application.ex"},
+    {:eex,  "#{@pre}/lib/web.ex",             :web, "lib/web.ex"},
+    {:eex,  "#{@pre}/lib/endpoint.ex",        :web, "lib/endpoint.ex"},
+    {:eex,  "#{@pre}/lib/gettext.ex",         :web, "lib/gettext.ex"},
+    {:eex,  "#{@pre}/lib/router.ex",          :web, "lib/router.ex"},
+    {:eex,  "#{@pre}/README.md",              :web, "README.md"},
+    {:eex,  "#{@pre}/mix.exs",                :web, "mix.exs"},
+    {:keep, "#{@pre}/test/channels",                  :web, "test/channels"},
+    {:keep, "#{@pre}/test/controllers",               :web, "test/controllers"},
+    {:eex,  "#{@pre}/test/views/error_view_test.exs", :web, "test/views/error_view_test.exs"},
+    {:eex,  "#{@pre}/test/support/conn_case.ex",      :web, "test/support/conn_case.ex"},
+    {:eex,  "#{@pre}/test/support/channel_case.ex",   :web, "test/support/channel_case.ex"},
+    {:eex,  "#{@pre}/lib/channels/user_socket.ex",    :web, "lib/channels/user_socket.ex"},
+    {:keep, "#{@pre}/lib/controllers",                :web, "lib/controllers"},
+    {:eex,  "#{@pre}/lib/views/error_view.ex",        :web, "lib/views/error_view.ex"},
+    {:eex,  "#{@pre}/lib/views/error_helpers.ex",     :web, "lib/views/error_helpers.ex"},
+    {:eex,  "#{@pre}/priv/gettext/errors.pot",        :web, "priv/gettext/errors.pot"},
+    {:eex,  "#{@pre}/priv/gettext/en/LC_MESSAGES/errors.po", :web, "priv/gettext/en/LC_MESSAGES/errors.po"},
   ]
 
   template :brunch, [
-    {:text, "assets/brunch/gitignore",       ".gitignore"},
-    {:eex,  "assets/brunch/brunch-config.js", "assets/brunch-config.js"},
-    {:eex,  "assets/brunch/package.json",     "assets/package.json"},
-    {:text, "assets/app.css",                 "assets/css/app.css"},
-    {:text, "assets/phoenix.css",             "assets/css/phoenix.css"},
-    {:eex,  "assets/brunch/app.js",           "assets/js/app.js"},
-    {:eex,  "assets/brunch/socket.js",        "assets/js/socket.js"},
-    {:keep, "assets/vendor",                  "assets/vendor"},
-    {:text, "assets/robots.txt",              "assets/static/robots.txt"},
+    {:text, "assets/brunch/gitignore",        :web, ".gitignore"},
+    {:eex,  "assets/brunch/brunch-config.js", :web, "assets/brunch-config.js"},
+    {:eex,  "assets/brunch/package.json",     :web, "assets/package.json"},
+    {:text, "assets/app.css",                 :web, "assets/css/app.css"},
+    {:text, "assets/phoenix.css",             :web, "assets/css/phoenix.css"},
+    {:eex,  "assets/brunch/app.js",           :web, "assets/js/app.js"},
+    {:eex,  "assets/brunch/socket.js",        :web, "assets/js/socket.js"},
+    {:keep, "assets/vendor",                  :web, "assets/vendor"},
+    {:text, "assets/robots.txt",              :web, "assets/static/robots.txt"},
   ]
 
   template :html, [
-    {:eex,  "#{@web}/test/controllers/page_controller_test.exs", "test/controllers/page_controller_test.exs"},
-    {:eex,  "#{@web}/test/views/layout_view_test.exs",           "test/views/layout_view_test.exs"},
-    {:eex,  "#{@web}/test/views/page_view_test.exs",             "test/views/page_view_test.exs"},
-    {:eex,  "#{@web}/lib/controllers/page_controller.ex",        "lib/controllers/page_controller.ex"},
-    {:eex,  "#{@web}/lib/templates/layout/app.html.eex",         "lib/templates/layout/app.html.eex"},
-    {:eex,  "#{@web}/lib/templates/page/index.html.eex",         "lib/templates/page/index.html.eex"},
-    {:eex,  "#{@web}/lib/views/layout_view.ex",                  "lib/views/layout_view.ex"},
-    {:eex,  "#{@web}/lib/views/page_view.ex",                    "lib/views/page_view.ex"},
+    {:eex,  "#{@pre}/test/controllers/page_controller_test.exs", :web, "test/controllers/page_controller_test.exs"},
+    {:eex,  "#{@pre}/test/views/layout_view_test.exs",           :web, "test/views/layout_view_test.exs"},
+    {:eex,  "#{@pre}/test/views/page_view_test.exs",             :web, "test/views/page_view_test.exs"},
+    {:eex,  "#{@pre}/lib/controllers/page_controller.ex",        :web, "lib/controllers/page_controller.ex"},
+    {:eex,  "#{@pre}/lib/templates/layout/app.html.eex",         :web, "lib/templates/layout/app.html.eex"},
+    {:eex,  "#{@pre}/lib/templates/page/index.html.eex",         :web, "lib/templates/page/index.html.eex"},
+    {:eex,  "#{@pre}/lib/views/layout_view.ex",                  :web, "lib/views/layout_view.ex"},
+    {:eex,  "#{@pre}/lib/views/page_view.ex",                    :web, "lib/views/page_view.ex"},
   ]
 
   template :bare, [
-    {:text,   "static/bare/gitignore", ".gitignore"},
+    {:text, "static/bare/gitignore", :web, ".gitignore"},
   ]
 
   template :static, [
-    {:text,   "assets/bare/gitignore", ".gitignore"},
-    {:text,   "assets/app.css",         "priv/static/css/app.css"},
-    {:append, "assets/phoenix.css",     "priv/static/css/app.css"},
-    {:text,   "assets/bare/app.js",     "priv/static/js/app.js"},
-    {:text,   "assets/robots.txt",      "priv/static/robots.txt"},
+    {:text,   "assets/bare/gitignore", :web, ".gitignore"},
+    {:text,   "assets/app.css",        :web, "priv/static/css/app.css"},
+    {:append, "assets/phoenix.css",    :web, "priv/static/css/app.css"},
+    {:text,   "assets/bare/app.js",    :web, "priv/static/js/app.js"},
+    {:text,   "assets/robots.txt",     :web, "priv/static/robots.txt"},
   ]
 
 
-  def run([path | _args]) do
-    Mix.raise "TODO"
+  def run([path | _] = args) do
     unless in_umbrella?(path) do
       Mix.raise "the web task can only be run within an umbrella's apps directory"
     end
+
+    Mix.Tasks.Phx.New.run(args, __MODULE__)
   end
 
-  def generate(%Project{web_path: web_path, binding: binding} = project) do
-    copy_from web_path, __MODULE__, binding, template_files(:new)
+  def prepare_project(%Project{project_path: project_path} = project) do
+    web_app = :"#{project.app}_web"
+    {proj_path, web_path} =
+      if project_path do
+        {project_path, Path.join(project_path, "apps/#{web_app}/")}
+      else
+        {Path.expand(project.base_path, "../../"), project.base_path}
+      end
+
+    %Project{project |
+             web_app: web_app,
+             web_namespace: Module.concat(project.app_mod, Web),
+             project_path: proj_path,
+             web_path: web_path}
+  end
+
+  def generate(%Project{} = project) do
+    raise inspect project
+    copy_from project, __MODULE__, template_files(:new)
     if Project.html?(project), do: gen_html(project)
 
     case {Project.brunch?(project), Project.html?(project)} do
@@ -107,27 +113,28 @@ defmodule Mix.Tasks.Phx.New.Web do
       {false, true}  -> gen_static(project)
       {false, false} -> gen_bare(project)
     end
-    :ok
+
+    project
   end
 
-  defp gen_html(%Project{web_path: web_path, binding: binding}) do
-    copy_from web_path, __MODULE__, binding, template_files(:html)
+  defp gen_html(%Project{} = project) do
+    copy_from project, __MODULE__, template_files(:html)
   end
 
-  defp gen_static(%Project{web_path: web_path, binding: binding}) do
-    copy_from web_path, __MODULE__, binding, template_files(:static)
+  defp gen_static(%Project{web_path: web_path} = project) do
+    copy_from project, __MODULE__, template_files(:static)
     create_file Path.join(web_path, "priv/static/js/phoenix.js"), phoenix_js_text()
     create_file Path.join(web_path, "priv/static/images/phoenix.png"), phoenix_png_text()
     create_file Path.join(web_path, "priv/static/favicon.ico"), phoenix_favicon_text()
   end
 
-  defp gen_brunch(%Project{web_path: web_path, binding: binding}) do
-    copy_from web_path, __MODULE__, binding, template_files(:brunch)
+  defp gen_brunch(%Project{web_path: web_path} = project) do
+    copy_from project, __MODULE__, template_files(:brunch)
     create_file Path.join(web_path, "assets/static/images/phoenix.png"), phoenix_png_text()
     create_file Path.join(web_path, "assets/static/favicon.ico"), phoenix_favicon_text()
   end
 
-  defp gen_bare(%Project{web_path: web_path, binding: binding}) do
-    copy_from web_path, __MODULE__, binding, template_files(:bare)
+  defp gen_bare(%Project{} = project) do
+    copy_from project, __MODULE__, template_files(:bare)
   end
 end

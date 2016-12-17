@@ -1,24 +1,11 @@
 defmodule Phx.New.Generator do
   import Mix.Generator
-  alias Phx.New.{Project, Single, Umbrella}
+  alias Phx.New.{Project}
 
   @phoenix Path.expand("../..", __DIR__)
 
-  @type base_path :: String.t
-  @type app_path :: String.t
-  @type web_path :: String.t
-  @type path :: String.t
-  @type opts :: Keyword.t
-  @type app_name :: atom
-  @type app_module :: Module.t
-  @type binding ::Keyword.t
-
-  @callback put_app(Project.t) :: Project.t
-  @callback put_root_app(Project.t) :: Project.t
-  @callback put_web_app(Project.t) :: Project.t
+  @callback prepare_project(Project.t) :: Project.t
   @callback generate(Project.t) :: Project.t
-
-  @optional_callbacks put_app: 1, put_root_app: 1, put_web_app: 1
 
   defmacro __using__(_env) do
     quote do
@@ -33,7 +20,7 @@ defmodule Phx.New.Generator do
   defmacro __before_compile__(env) do
     root = Path.expand("../../templates", __DIR__)
     templates_ast = for {_name, mappings} <- Module.get_attribute(env.module, :templates) do
-      for {format, source, _} <- mappings, format != :keep do
+      for {format, source, _, _} <- mappings, format != :keep do
         path = Path.join(root, source)
         quote do
           @external_resource unquote(path)
@@ -58,10 +45,9 @@ defmodule Phx.New.Generator do
     end
   end
 
-  def copy_from(target_dir, mod, binding, mapping) when is_list(mapping) do
-    app = Keyword.fetch!(binding, :app_name)
-    for {format, source, target_path} <- mapping do
-      target = Path.join(target_dir, String.replace(target_path, "app_name", app))
+  def copy_from(%Project{} = project, mod, mapping) when is_list(mapping) do
+    for {format, source, project_location, target_path} <- mapping do
+      target = Project.join_path(project, project_location, target_path)
 
       case format do
         :keep ->
@@ -71,7 +57,7 @@ defmodule Phx.New.Generator do
         :append ->
           append_to(Path.dirname(target), Path.basename(target), mod.render(source))
         :eex  ->
-          contents = EEx.eval_string(mod.render(source), binding, file: source)
+          contents = EEx.eval_string(mod.render(source), project.binding, file: source)
           create_file(target, contents)
       end
     end
@@ -95,12 +81,12 @@ defmodule Phx.New.Generator do
     end
   end
 
-  def put_binding(%Project{opts: opts} = project, generator) do
+  def put_binding(%Project{opts: opts} = project) do
     db           = Keyword.get(opts, :database, "postgres")
     ecto         = Keyword.get(opts, :ecto, true)
     html         = Keyword.get(opts, :html, true)
     brunch       = Keyword.get(opts, :brunch, true)
-    phoenix_path = phoenix_path(project.base_path, Keyword.get(opts, :dev, false))
+    phoenix_path = phoenix_path(project.project_path, Keyword.get(opts, :dev, false))
 
     # We lowercase the database name because according to the
     # SQL spec, they are case insensitive unless quoted, which
@@ -110,8 +96,7 @@ defmodule Phx.New.Generator do
       get_ecto_adapter(db, String.downcase(project.app), project.app_mod)
 
     pubsub_server = get_pubsub_server(project.app_mod)
-    in_umbrella? = in_umbrella?(project.project_path, generator)
-    brunch_deps_prefix = if in_umbrella?, do: "../../../", else: "../"
+    brunch_deps_prefix = if project.in_umbrella?, do: "../../../", else: "../"
 
     adapter_config =
       case Keyword.fetch(opts, :binary_id) do
@@ -124,7 +109,7 @@ defmodule Phx.New.Generator do
       app_module: inspect(project.app_mod),
       root_app_name: project.root_app,
       root_app_module: inspect(project.root_mod),
-      web_app: project.web_app,
+      web_app_name: project.web_app,
       endpoint_module: inspect(Module.concat(project.web_namespace, Endpoint)),
       web_namespace: inspect(project.web_namespace),
       phoenix_dep: phoenix_dep(phoenix_path),
@@ -134,7 +119,7 @@ defmodule Phx.New.Generator do
       secret_key_base: random_string(64),
       prod_secret_key_base: random_string(64),
       signing_salt: random_string(8),
-      in_umbrella: in_umbrella?,
+      in_umbrella: project.in_umbrella?,
       brunch_deps_prefix: brunch_deps_prefix,
       brunch: brunch,
       ecto: ecto,
@@ -279,7 +264,4 @@ defmodule Phx.New.Generator do
   defp random_string(length) do
     :crypto.strong_rand_bytes(length) |> Base.encode64 |> binary_part(0, length)
   end
-
-  defp in_umbrella?(_app_path, Umbrella), do: true
-  defp in_umbrella?(app_path, Single), do: in_umbrella?(app_path)
 end

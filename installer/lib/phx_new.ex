@@ -60,28 +60,28 @@ defmodule Mix.Tasks.Phx.New do
   def run([version]) when version in ~w(-v --version) do
     Mix.shell.info "Phoenix v#{@version}"
   end
-
   def run(argv) do
-    unless Version.match? System.version, "~> 1.2" do
-      Mix.raise "Phoenix v#{@version} requires at least Elixir v1.2.\n " <>
-                "You have #{System.version}. Please update accordingly"
-    end
-
+    elixir_version_check!()
     case parse_opts(argv) do
-      {_opts, []}             -> Mix.Tasks.Help.run ["phx.new"]
-      {opts, [base_path | _]} -> generate(base_path, opts)
+      {_opts, []}             -> Mix.Tasks.Help.run(["phx.new"])
+      {opts, [base_path | _]} ->
+        generator = if opts[:umbrella], do: Umbrella, else: Single
+        generate(base_path, generator, opts)
+    end
+  end
+  def run(argv, generator) do
+    elixir_version_check!()
+    case parse_opts(argv) do
+      {_opts, []}             -> Mix.Tasks.Help.run(["phx.new"])
+      {opts, [base_path | _]} -> generate(base_path, generator, opts)
     end
   end
 
-  defp generate(base_path, opts) do
-    generator = if opts[:umbrella], do: Umbrella, else: Single
-
+  def generate(base_path, generator, opts) do
     base_path
     |> Project.new(opts)
-    |> generator.put_app()
-    |> generator.put_root_app()
-    |> generator.put_web_app()
-    |> Generator.put_binding(generator)
+    |> generator.prepare_project()
+    |> Generator.put_binding()
     |> validate_project()
     |> generator.generate()
     |> prompt_to_install_deps()
@@ -98,6 +98,7 @@ defmodule Mix.Tasks.Phx.New do
 
   defp prompt_to_install_deps(%Project{} = project) do
     install? = Mix.shell.yes?("\nFetch and install dependencies?")
+    starting_dir = File.cwd!()
 
     File.cd!(project.project_path, fn ->
       mix? = install_mix(install?)
@@ -109,7 +110,7 @@ defmodule Mix.Tasks.Phx.New do
 
         if Project.ecto?(project), do: print_ecto_info()
 
-        if not brunch?, do: print_brunch_info()
+        if not brunch?, do: print_brunch_info(project, starting_dir)
       end)
     end)
   end
@@ -136,7 +137,12 @@ defmodule Mix.Tasks.Phx.New do
     maybe_cmd "mix deps.get", true, install? && Code.ensure_loaded?(Hex)
   end
 
-  defp print_brunch_info do
+  defp print_brunch_info(%Project{} = project, starting_dir) do
+    rel_path =
+      project.web_path
+      |> Path.relative_to(starting_dir)
+      |> Path.relative_to(project.project_path)
+
     Mix.shell.info """
 
     Phoenix uses an optional assets build tool called brunch.io
@@ -144,7 +150,7 @@ defmodule Mix.Tasks.Phx.New do
     node.js, which includes npm, can be found at http://nodejs.org.
 
     After npm is installed, install your brunch dependencies by
-    running inside your app:
+    running the following command inside ./#{rel_path}:
 
         $ cd assets && npm install
 
@@ -248,6 +254,13 @@ defmodule Mix.Tasks.Phx.New do
   defp check_directory_existence!(path) do
     if File.dir?(path) and not Mix.shell.yes?("The directory #{path} already exists. Are you sure you want to continue?") do
       Mix.raise "Please select another directory for installation."
+    end
+  end
+
+  defp elixir_version_check! do
+    unless Version.match?(System.version, "~> 1.2") do
+      Mix.raise "Phoenix v#{@version} requires at least Elixir v1.2.\n " <>
+                "You have #{System.version()}. Please update accordingly"
     end
   end
 end

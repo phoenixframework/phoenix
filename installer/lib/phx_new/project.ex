@@ -12,10 +12,20 @@ defmodule Phx.New.Project do
             web_namespace: nil,
             web_path: nil,
             opts: :unset,
+            in_umbrella?: false,
             binding: []
 
-  def new(base_path, opts) do
-    %Project{base_path: base_path, opts: opts}
+  def new(project_path, opts) do
+    project_path = Path.expand(project_path)
+    app = opts[:app] || Path.basename(project_path)
+    app_mod = Module.concat([opts[:module] || Macro.camelize(app)])
+
+    %Project{base_path: project_path,
+             app: app,
+             app_mod: app_mod,
+             root_app: app,
+             root_mod: app_mod,
+             opts: opts}
   end
 
   def ecto?(%Project{binding: binding}) do
@@ -28,5 +38,11 @@ defmodule Phx.New.Project do
 
   def brunch?(%Project{binding: binding}) do
     Keyword.fetch!(binding, :brunch)
+  end
+
+  def join_path(%Project{} = project, location, path)
+      when location in [:project, :app, :web] do
+
+    project |> Map.fetch!(:"#{location}_path") |> Path.join(path)
   end
 end
