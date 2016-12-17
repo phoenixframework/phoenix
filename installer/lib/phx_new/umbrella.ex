@@ -29,14 +29,14 @@ defmodule Phx.New.Umbrella do
 
     %Project{project |
              web_app: web_app,
-             web_namespace: Module.concat(project.app_mod, Web),
+             web_namespace: Module.concat(project.app_mod, "Web"),
              web_path: Path.join(project.project_path, "apps/#{web_app}/")}
   end
 
   defp put_root_app(%Project{app: app} = project) do
     %Project{project |
              root_app: :"#{app}_umbrella",
-             root_mod: Module.concat(project.app_mod, Umbrella)}
+             root_mod: Module.concat(project.app_mod, "Umbrella")}
   end
 
   def generate(%Project{} = project) do
