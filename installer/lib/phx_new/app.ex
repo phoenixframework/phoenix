@@ -1,4 +1,5 @@
 defmodule Mix.Tasks.Phx.New.App do
+  @moduledoc false
   use Phx.New.Generator
   alias Phx.New.{Project}
 

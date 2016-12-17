@@ -1,4 +1,5 @@
 defmodule Phx.New.Umbrella do
+  @moduledoc false
   use Phx.New.Generator
   alias Mix.Tasks.Phx.New.{App, Web}
   alias Phx.New.{Project}

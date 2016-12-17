@@ -1,20 +1,19 @@
 defmodule Mix.Tasks.Phx.New.Web do
+  @moduledoc """
+  Creates a new Phoenix web project within an umbrella application.
+
+  This task is inteded to create a bare Phoenix project without
+  database integration, which interfaces with your greater
+  umbrella application(s).
+
+  Supports the same options as the `phx.new` task.
+  See `Mix.Tasks.Phx.New.Web` for details.
+  """
   use Mix.Task
   use Phx.New.Generator
-  alias Mix.Tasks.Phx.New.{App}
   alias Phx.New.{Project}
 
   @pre "phx_umbrella/apps/app_name_web"
-
-  # TODO
-  #
-  # Umbrella => only base proj mix.exs and apps/, then delegates
-  # gen_ecto and gen_web to phx.web and phx.ecto
-  #
-  # extract Umbrella web generation to Web task
-  # extract Umbrella ecto generation to Ecto task
-  #
-  #
 
   template :new, [
     {:eex,  "#{@pre}/config/config.exs",      :web, "config/config.exs"},
@@ -97,15 +96,6 @@ defmodule Mix.Tasks.Phx.New.Web do
              web_app: app,
              web_namespace: project.app_mod}
   end
-
-  # def prepare_project(%Project{} = project) do
-  #   web_app = :"#{project.app}_web"
-
-  #   %Project{project |
-  #            web_app: web_app,
-  #            web_namespace: Module.concat(project.app_mod, Web),
-  #            web_path: Path.join(project_path, "apps/#{web_app}/")}
-  # end
 
   def generate(%Project{} = project) do
     copy_from project, __MODULE__, template_files(:new)
