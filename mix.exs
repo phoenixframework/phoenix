@@ -12,7 +12,7 @@ defmodule PhoenixGuides.Mixfile do
      preferred_cli_env: ["docs.watch": :docs, docs: :docs],
      docs: [source_ref: "v#{@version}",
             main: "overview",
-            logo: "styling/Phoenix_files/phoenix-logo-white.png",
+            logo: "logo.png",
             assets: "images",
             extra_section: "GUIDES",
             extras: extras(),
