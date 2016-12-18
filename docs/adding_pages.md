@@ -4,7 +4,7 @@ Our task for this guide is to add two new pages to our Phoenix application. One 
 
 When Phoenix generates a new application for us, it builds a top-level directory structure like this:
 
-```text
+```console
 ├── _build
 ├── config
 ├── deps
@@ -16,29 +16,29 @@ When Phoenix generates a new application for us, it builds a top-level directory
 
 Most of our work in this guide will be in the `web` directory, which looks like this when expanded:
 
-```text
+```console
 ├── channels
-    └── user_socket.ex
+│   └── user_socket.ex
 ├── controllers
-│   └── page_controller.ex
+│   └── page_controller.ex
 ├── models
 ├── static
-│   ├── assets
-│   |   ├── images
-|   |   |   └── phoenix.png
-|   |   └── favicon.ico
-|   |   └── robots.txt
-│   |   ├── vendor
+│   ├── assets
+│   │   ├── images
+│   │   │   └── phoenix.png
+│   │   └── favicon.ico
+│   │   └── robots.txt
+│   │   ├── vendor
 ├── templates
-│   ├── layout
-│   │   └── app.html.eex
-│   └── page
-│       └── index.html.eex
+│   ├── layout
+│   │   └── app.html.eex
+│   └── page
+│       └── index.html.eex
 └── views
-|   ├── error_helpers.ex
-|   ├── error_view.ex
-|   ├── layout_view.ex
-|   └── page_view.ex
+│   ├── error_helpers.ex
+│   ├── error_view.ex
+│   ├── layout_view.ex
+│   └── page_view.ex
 ├── router.ex
 ├── gettext.ex
 ├── web.ex
@@ -48,31 +48,31 @@ All of the files which are currently in the `controllers`, `templates`, and `vie
 
 All of our application's static assets live in `priv/static` in the directory appropriate for each type of file - css, images or js. We place assets that require a build phase into `web/static`, and the source files are built into their respective `app.js` / `app.css` bundles within `priv/static`. We won't be making any changes here for now, but it is good to know where to look for future reference.
 
-```text
+```console
 priv
-└── static
+└── static 
     └── images
         └── phoenix.png
 ```
 
-```text
+```console
 web
 └── static
     ├── assets
-    |   ├── css
-    |   |   └── app.css
-    |   ├── js
-    |   │   └── app.js
-    |   └── vendor
+    │   ├── css
+    │   │   └── app.css
+    │   ├── js
+    │   │   └── app.js
+    │   └── vendor
 ```
 
 The `lib` directory also contains files we should know about. Our application's endpoint is at `lib/hello_phoenix/endpoint.ex`, and our application file (which starts our application and its supervision tree) is at `lib/hello_phoenix.ex`.
 
-```text
+```console
 lib
 ├── hello_phoenix
-|   ├── endpoint.ex
-│   └── repo.ex
+│   ├── endpoint.ex
+│   └── repo.ex
 └── hello_phoenix.ex
 ```
 

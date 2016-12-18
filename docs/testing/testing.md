@@ -32,12 +32,12 @@ In fact, we already have a directory structure completely set up for testing, in
 test
 ├── channels
 ├── controllers
-│   └── page_controller_test.exs
+│   └── page_controller_test.exs
 ├── models
 ├── support
-│   ├── channel_case.ex
-│   ├── conn_case.ex
-│   └── model_case.ex
+│   ├── channel_case.ex
+│   ├── conn_case.ex
+│   └── model_case.ex
 ├── test_helper.exs
 └── views
     ├── error_view_test.exs

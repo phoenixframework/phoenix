@@ -291,7 +291,7 @@ Very Important! For function calls in the middle of a pipeline, like `put_layout
 
 If you ever get a stack trace that looks like this,
 
-```text
+```console
 **(FunctionClauseError) no function clause matching in Plug.Conn.get_resp_header/2
 
 Stacktrace

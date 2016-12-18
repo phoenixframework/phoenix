@@ -358,7 +358,7 @@ What if we had a requirement that all biographies in our system must be at least
 
 Now if we try to add a new user through the front end of the application with a bio of "A", we should see this error message at the top of the page.
 
-```text
+```console
 Oops, something went wrong! Please check the errors below:
 Bio should be at least 2 characters
 ```
@@ -377,7 +377,7 @@ If we also have a requirement for the maximum length that a bio can have, we can
 
 Now if we try to add a new user with a 141 character bio, we would see this error.
 
-```text
+```console
 Oops, something went wrong! Please check the errors below:
 Bio should be at most 140 characters
 ```
@@ -397,7 +397,7 @@ Let's say we want to perform at least some rudimentary format validation on the 
 
 If we try to create a user with an email of "personexample.com", we should see an error message like the following.
 
-```text
+```console
 Oops, something went wrong! Please check the errors below:
 Email has invalid format
 ```

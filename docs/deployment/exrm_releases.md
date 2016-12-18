@@ -408,7 +408,7 @@ First step in exposing our application to the world is ensuring that our applica
 
 Let's use `upstart` as an example. We'll edit our init script with `sudo vi /etc/init/hello_phoenix.conf` (this is on Ubuntu Linux).
 
-```text
+```console
 description "hello_phoenix"
 
 ## Uncomment the following two lines to run the

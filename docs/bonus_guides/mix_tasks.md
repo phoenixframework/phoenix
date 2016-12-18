@@ -446,7 +446,7 @@ Before we run this task let's inspect the contents of two directories in our hel
 
 First `priv/static` which should look similar to this:
 
-```text
+```console
 ├── images
 │   └── phoenix.png
 ├── robots.txt
@@ -454,7 +454,7 @@ First `priv/static` which should look similar to this:
 
 And then `web/static/` which should look similar to this:
 
-```text
+```console
 ├── css
 │   └── app.css
 ├── js

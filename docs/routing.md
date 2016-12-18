@@ -70,7 +70,7 @@ get "/", RootController, :index
 
 Then run `$ mix compile` at the root of your project. You will see the following warning from the compiler:
 
-```text
+```console
 web/router.ex:1: warning: this clause cannot match because a previous clause at line 1 always matches
 Compiled web/router.ex
 ```
@@ -277,7 +277,7 @@ Scopes are a way to group routes under a common path prefix and scoped set of pl
 
 The paths to the user facing reviews would look like a standard resource.
 
-```text
+```console
 /reviews
 /reviews/1234
 /reviews/1234/edit
@@ -286,7 +286,7 @@ The paths to the user facing reviews would look like a standard resource.
 
 The admin review paths could be prefixed with `/admin`.
 
-```text
+```console
 /admin/reviews
 /admin/reviews/1234
 /admin/reviews/1234/edit
