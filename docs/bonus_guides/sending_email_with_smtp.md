@@ -190,7 +190,7 @@ email formatting and content elsewhere.
 In our app's layout template directory we can create two new layouts, one for
 HTML emails, one for text emails.
 
-`web/templates/layout/email.html` could look like this:
+`web/templates/layout/email.html.eex` could look like this:
 
 ```html
 <!DOCTYPE html>
@@ -207,7 +207,7 @@ HTML emails, one for text emails.
 </html>
 ```
 
-`web/templates/layout/email.text` could look like this:
+`web/templates/layout/email.text.eex` could look like this:
 
 ```
 Hello!
@@ -246,7 +246,7 @@ end
 The process for moving the email content to a template is similar. Again we
 create two new templates, one for text, one for HTML.
 
-`web/templates/email/welcome.html` could look like this:
+`web/templates/email/welcome.html.eex` could look like this:
 
 ```html
 <p>
@@ -254,7 +254,7 @@ create two new templates, one for text, one for HTML.
 </p>
 ```
 
-`web/templates/email/welcome.text` could look like this:
+`web/templates/email/welcome.text.eex` could look like this:
 
 ```
 Welcome to MyApp!
@@ -291,7 +291,7 @@ functions are nice and simple!
 Lastly, if we wanted variable data in our templates we would just use
 assignment as usual with the view render function.
 
-`web/templates/email/welcome.html` could look like this:
+`web/templates/email/welcome.html.eex` could look like this:
 
 ```html
 <p>
