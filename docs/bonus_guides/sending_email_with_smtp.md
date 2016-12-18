@@ -96,10 +96,10 @@ end
 ```
 
 Lastly we need another module that will contain our emails, which we can
-define in `lib/email.ex`.
+define in `lib/my_app/email.ex`.
 
 ```elixir
-defmodule Email do
+defmodule MyApp.Email do
   use Bamboo.Phoenix, view: MyApp.EmailView
 end
 ```
