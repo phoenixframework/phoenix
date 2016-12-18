@@ -21,11 +21,11 @@ Here is a selected list of resources to help with learning Elixir and Erlang.
 - [LearnElixir.tv](https://learnelixir.tv), Daniel Berkompas
 
 ##### The Erlangelist: Understanding Elixir Macros, by Saša Jurić
-  - [Part 1](http://www.theerlangelist.com/2014/06/understanding-elixir-macros-part-1.html)
-  - [Part 2](http://www.theerlangelist.com/2014/06/understanding-elixir-macros-part-2.html)
-  - [Part 3](http://www.theerlangelist.com/2014/06/understanding-elixir-macros-part-3.html)
-  - [Part 4](http://www.theerlangelist.com/2014/06/understanding-elixir-macros-part-4.html)
-  - [Part 5](http://www.theerlangelist.com/2014/06/understanding-elixir-macros-part-5.html)
+- [Part 1](http://www.theerlangelist.com/2014/06/understanding-elixir-macros-part-1.html)
+- [Part 2](http://www.theerlangelist.com/2014/06/understanding-elixir-macros-part-2.html)
+- [Part 3](http://www.theerlangelist.com/2014/06/understanding-elixir-macros-part-3.html)
+- [Part 4](http://www.theerlangelist.com/2014/06/understanding-elixir-macros-part-4.html)
+- [Part 5](http://www.theerlangelist.com/2014/06/understanding-elixir-macros-part-5.html)
 
 ## Erlang
 - [Erlang User Guide](http://www.erlang.org/doc/getting_started/users_guide.html)

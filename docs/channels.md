@@ -6,13 +6,13 @@ Since Elixir is based on message passing, you may wonder why we need this extra 
 
 The word "Channel" is really shorthand for a layered system with a number of components. Let's take a quick look at them now so we can see the big picture a little better.
 
-#### The Moving Parts
+## The Moving Parts
 
-- Socket Handlers
+### Socket Handlers
 
 Phoenix holds a single connection to the server and multiplexes your channel sockets over that one connection. Socket handlers, such as `web/channels/user_socket.ex`, are modules that authenticate and identify a socket connection and allow you to set default socket assigns for use in all channels.
 
-- Channel Routes
+### Channel Routes
 
 These are defined in Socket handlers, such as `web/channels/user_socket.ex`, which makes them distinct from other routes. They match on the topic string and dispatch matching requests to the given Channel module. The star character `*` acts as a wildcard matcher, so in the following example route, requests for `sample_topic:pizza` and `sample_topic:oranges` would both be dispatched to the `SampleTopicChannel`.
 
@@ -20,13 +20,13 @@ These are defined in Socket handlers, such as `web/channels/user_socket.ex`, whi
 channel "sample_topic:*", HelloPhoenix.SampleTopicChannel
 ```
 
-- Channels
+### Channels
 
 Channels handle events from clients, so they are similar to Controllers, but there are two key differences. Channel events can go both directions - incoming and outgoing. Channel connections also persist beyond a single request/response cycle. Channels are the highest level abstraction for realtime communication components in Phoenix.
 
 Each Channel will implement one or more clauses of each of these four callback functions - `join/3`, `terminate/2`, `handle_in/3`, and `handle_out/3`.
 
-- PubSub
+### PubSub
 
 The Phoenix PubSub layer consists of the `Phoenix.PubSub` module and a variety of modules for different adapters and their `GenServer`s. These modules contain functions which are the nuts and bolts of organizing Channel communication - subscribing to topics, unsubscribing from topics, and broadcasting messages on a topic.
 
@@ -34,27 +34,27 @@ We can also define our own PubSub adapters if we need to. Please see the [Phoeni
 
 It is worth noting that these modules are intended for Phoenix's internal use. Channels use them under the hood to do much of their work. As end users, we shouldn't have any need to use them directly in our applications.
 
-- Messages
+### Messages
 
 The `Phoenix.Socket.Message` module defines a struct with the following keys which denotes a valid message. From the [Phoenix.Socket.Message docs](http://hexdocs.pm/phoenix/Phoenix.Socket.Message.html).
-  - `topic` - The string topic or topic:subtopic pair namespace, for example “messages”, “messages:123”
-  - `event` - The string event name, for example “phx_join”
-  - `payload` - The message payload
-  - `ref` - The unique string ref
+- `topic` - The string topic or topic:subtopic pair namespace, for example “messages”, “messages:123”
+- `event` - The string event name, for example “phx_join”
+- `payload` - The message payload
+- `ref` - The unique string ref
 
-- Topics
+### Topics
 
 Topics are string identifiers - names that the various layers use in order to make sure messages end up in the right place. As we saw above, topics can use wildcards. This allows for a useful "topic:subtopic" convention. Often, you'll compose topics using record IDs from your model layer, such as `"users:123"`.
 
-- Transports
+### Transports
 
 The transport layer is where the rubber meets the road. The `Phoenix.Channel.Transport` module handles all the message dispatching into and out of a Channel.
 
-- Transport Adapters
+### Transport Adapters
 
 The default transport mechanism is via WebSockets which will fall back to LongPolling if WebSockets are not available. Other transport adapters are possible, and we can write our own if we follow the adapter contract. Please see `Phoenix.Transports.WebSocket` for an example.
 
-- Client Libraries
+### Client Libraries
 
 Phoenix currently ships with its own JavaScript client. [iOS](https://github.com/davidstump/SwiftPhoenixClient), [Android](https://github.com/eoinsha/JavaPhoenixChannels), and [C#](https://github.com/jfis/dn-phoenix) clients have been released with Phoenix 1.0.
 
@@ -252,15 +252,15 @@ Sockets store assigned values as a map in `socket.assigns`.
 
 Servers restart, networks split, and clients lose connectivity. In order to design robust systems, we need to understand how Phoenix responds to these events and what guarantees it offers.
 
-- Handling Reconnection
+### Handling Reconnection
 
 Clients subscribe to topics, and Phoenix stores those subscriptions in an in-memory ETS table. If a channel crashes, the clients will need to reconnect to the topics they had previously subscribed to. Fortunately, the Phoenix JavaScript client knows how to do this. The server will notify all the clients of the crash. This will trigger each client's `Channel.onError` callback. The clients will attempt to reconnect to the server using an exponential back off strategy. Once they reconnect, they'll attempt to rejoin the topics they had previously subscribed to. If they are successful, they'll start receiving messages from those topics as before.
 
-- Resending Client Messages
+### Resending Client Messages
 
 Channel clients queue outgoing messages into a `PushBuffer`, and send them to the server when there is a connection. If no connection is available, the client holds on to the messages until it can establish a new connection. With no connection, the client will hold the messages in memory until it establishes a connection, or until it receives a `timeout` event. The default timeout is set to 5000 milliseconds. The client won't persist the messages in the browser's local storage, so if the browser tab closes, the messages will be gone.
 
-- Resending Server Messages
+### Resending Server Messages
 
 Phoenix uses an at-most-once strategy when sending messages to clients. If the client is offline and misses the message, Phoenix won't resend it. Phoenix doesn't persist messages on the server. If the server restarts, unsent messages will be gone. If our application needs stronger guarantees around message delivery, we'll need to write that code ourselves. Common approaches involve persisting messages on the server and having clients request missing messages. For an example, see Chris McCord's Phoenix training: [client code](https://github.com/chrismccord/elixirconf_training/blob/master/web/static/js/app.js#L38-L39) and [server code](https://github.com/chrismccord/elixirconf_training/blob/master/web/channels/document_channel.ex#L13-L19).
 
