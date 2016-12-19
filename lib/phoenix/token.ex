@@ -113,9 +113,7 @@ defmodule Phoenix.Token do
   end
 
   @doc """
-  Given a secret key base, a salt, a token, and optional arguments `verify/4`
-  will establish the authenticity and integrity of the token and then decode
-  and return the original data.
+  Decodes the original data from the token and verifies its integrity.
 
   ## Examples
 
@@ -134,7 +132,7 @@ defmodule Phoenix.Token do
   received a token it can use to validate requests for protected resources.
 
   When the server receives a request, it can use `verify/4` to determine if it
-  should provided the requested resources to the client:
+  should provide the requested resources to the client:
 
       iex> Phoenix.Token.verify(secret, user_salt, token)
       {:ok, 99}
