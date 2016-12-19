@@ -115,6 +115,41 @@ defmodule Phoenix.Token do
   @doc """
   Decodes the original data from the token and verifies its integrity.
 
+  ## Examples
+
+  In this scenario we will create a token, sign it, then provide it to a client
+  application. The client will then use this token to authenticate requests for
+  resources from the server. (See `Phoenix.Token` summary for more info about
+  creating tokens.)
+
+      iex> user_id    = 99
+      iex> secret     = "kjoy3o1zeidquwy1398juxzldjlksahdk3"
+      iex> user_salt  = "user salt"
+      iex> token      = Phoenix.Token.sign(secret, user_salt, user_id)
+
+  The mechanism for passing the token to the client is typically through a
+  cookie, a JSON response body, or HTTP header. For now, assume the client has
+  received a token it can use to validate requests for protected resources.
+
+  When the server receives a request, it can use `verify/4` to determine if it
+  should provide the requested resources to the client:
+
+      iex> Phoenix.Token.verify(secret, user_salt, token)
+      {:ok, 99}
+
+  In this example, we know the client sent a valid token because `verify/4`
+  returned a tuple of type `{:ok, user_id}`. The server can now proceed with
+  the request.
+
+  However, if the client had sent an expired or otherwise invalid token
+  `verify/4` would have returned an error instead:
+
+      iex> Phoenix.Token.verify(secret, user_salt, expired, max_age: 1209600)
+      {:error, :expired}
+
+      iex> Phoenix.Token.verify(secret, user_salt, invalid)
+      {:error, :invalid}
+
   ## Options
 
     * `:max_age` - verifies the token only if it has been generated
