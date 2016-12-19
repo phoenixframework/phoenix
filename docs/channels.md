@@ -56,7 +56,20 @@ The default transport mechanism is via WebSockets which will fall back to LongPo
 
 ### Client Libraries
 
-Phoenix currently ships with its own JavaScript client. [iOS](https://github.com/davidstump/SwiftPhoenixClient), [Android](https://github.com/eoinsha/JavaPhoenixChannels), and [C#](https://github.com/jfis/dn-phoenix) clients have been released with Phoenix 1.0.
+#### Official
+
++ JavaScript
+  - [phoenix.js](https://github.com/phoenixframework/phoenix/blob/v1.2/web/static/js/phoenix.js)
+  
+#### 3rd Party
+
++ Swift (iOS)
+  - [SwiftPhoenix](https://github.com/davidstump/SwiftPhoenixClient)
++ Java (Android)
+  - [JavaPhoenixChannels](https://github.com/eoinsha/JavaPhoenixChannels)
++ C#
+  - [PhoenixSharp](https://github.com/Mazyod/PhoenixSharp)
+  - [dn-phoenix](https://github.com/jfis/dn-phoenix)
 
 ## Tying it all together
 Let's tie all these ideas together by building a simple chat application. After [generating a new Phoenix application](http://www.phoenixframework.org/docs/up-and-running) we'll see that the endpoint is already set up for us in `lib/hello_phoenix/endpoint.ex`:
