@@ -55,8 +55,8 @@ The first test case we'll look at is `test/controllers/page_controller_test.exs`
 defmodule HelloPhoenix.PageControllerTest do
   use HelloPhoenix.ConnCase
 
-  test "GET /" do
-    conn = get conn(), "/"
+  test "GET /", %{conn: conn} do
+    conn = get conn, "/"
     assert html_response(conn, 200) =~ "Welcome to Phoenix!"
   end
 end
@@ -84,12 +84,12 @@ defmodule HelloPhoenix.ErrorViewTest do
 
   test "render 500.html" do
     assert render_to_string(HelloPhoenix.ErrorView, "500.html", []) ==
-           "Server internal error"
+           "Internal server error"
   end
 
   test "render any other" do
     assert render_to_string(HelloPhoenix.ErrorView, "505.html", []) ==
-           "Server internal error"
+           "Internal server error"
   end
 end
 ```
@@ -115,9 +115,7 @@ The test helper can also hold any testing-specific configuration our application
 ```elixir
 ExUnit.start
 
-Mix.Task.run "ecto.create", ["--quiet"]
-Mix.Task.run "ecto.migrate", ["--quiet"]
-Ecto.Adapters.SQL.begin_test_transaction(HelloPhoenix.Repo)
+Ecto.Adapters.SQL.Sandbox.mode(HelloPhoenix.Repo, :manual)
 ```
 
 The files in `test/support` are there to help us get our modules into a testable state. They provide convenience functions for tasks like setting up a connection struct and finding errors on an Ecto changeset. We'll take a closer look at them in action throughout the rest of the testing guides.
@@ -132,7 +130,7 @@ As we saw near the beginning of this guide, we can run our entire suite of tests
 $ mix test
 ....
 
-Finished in 0.2 seconds (0.1s on load, 0.03s on tests)
+Finished in 0.2 seconds
 4 tests, 0 failures
 
 Randomized with seed 540755
@@ -144,7 +142,7 @@ If we would like to run all the tests in a given directory, `test/controllers` f
 $ mix test test/controllers/
 .
 
-Finished in 0.2 seconds (0.1s on load, 0.04s on tests)
+Finished in 0.2 seconds
 1 tests, 0 failures
 
 Randomized with seed 652376
@@ -156,7 +154,7 @@ In order to run all the tests in a specific file, we can pass the path to that f
 $ mix test test/views/error_view_test.exs
 ...
 
-Finished in 0.2 seconds (0.2s on load, 0.00s on tests)
+Finished in 0.2 seconds
 3 tests, 0 failures
 
 Randomized with seed 220535
@@ -173,8 +171,8 @@ Excluding tags: [:test]
 
 .
 
-Finished in 0.1 seconds (0.1s on load, 0.00s on tests)
-1 tests, 0 failures
+Finished in 0.1 seconds
+3 tests, 0 failures, 2 skipped
 
 Randomized with seed 288117
 ```
@@ -220,8 +218,8 @@ Excluding tags: [:test]
 
 ...
 
-Finished in 0.1 seconds (0.1s on load, 0.00s on tests)
-3 tests, 0 failures
+Finished in 0.1 seconds
+4 tests, 0 failures, 1 skipped
 
 Randomized with seed 125659
 ```
@@ -235,8 +233,8 @@ Excluding tags: [:test]
 
 .
 
-Finished in 0.2 seconds (0.2s on load, 0.00s on tests)
-1 tests, 0 failures
+Finished in 0.2 seconds
+3 tests, 0 failures, 2 skipped
 
 Randomized with seed 364723
 ```
@@ -250,8 +248,8 @@ Excluding tags: [:test]
 
 ...
 
-Finished in 0.1 seconds (0.1s on load, 0.00s on tests)
-3 tests, 0 failures
+Finished in 0.1 seconds
+4 tests, 0 failures, 1 skipped
 
 Randomized with seed 833356
 ```
@@ -265,8 +263,8 @@ Excluding tags: [:test]
 
 
 
-Finished in 0.1 seconds (0.1s on load, 0.00s on tests)
-0 tests, 0 failures
+Finished in 0.1 seconds
+4 tests, 0 failures, 4 skipped
 
 Randomized with seed 622422
 ```
@@ -279,8 +277,8 @@ Excluding tags: [:error_view_case]
 
 .
 
-Finished in 0.2 seconds (0.1s on load, 0.03s on tests)
-1 tests, 0 failures
+Finished in 0.2 seconds
+4 tests, 0 failures, 3 skipped
 
 Randomized with seed 682868
 ```
@@ -322,8 +320,8 @@ Excluding tags: [:test]
 
 ..
 
-Finished in 0.1 seconds (0.1s on load, 0.00s on tests)
-2 tests, 0 failures
+Finished in 0.1 seconds
+4 tests, 0 failures, 2 skipped
 
 Randomized with seed 813729
 ```
@@ -337,8 +335,8 @@ Excluding tags: [:test]
 
 .
 
-Finished in 0.1 seconds (0.1s on load, 0.00s on tests)
-1 tests, 0 failures
+Finished in 0.1 seconds
+4 tests, 0 failures, 3 skipped
 
 Randomized with seed 770938
 ```
@@ -351,8 +349,8 @@ Excluding tags: [individual_test: "nope"]
 
 ...
 
-Finished in 0.2 seconds (0.1s on load, 0.03s on tests)
-3 tests, 0 failures
+Finished in 0.2 seconds
+4 tests, 0 failures, 1 skipped
 
 Randomized with seed 539324
 ```
@@ -366,8 +364,8 @@ Excluding tags: [:error_view_case]
 
 ...
 
-Finished in 0.2 seconds (0.1s on load, 0.03s on tests)
-3 tests, 0 failures
+Finished in 0.2 seconds
+4 tests, 0 failures, 1 skipped
 
 Randomized with seed 41241
 ```
@@ -383,8 +381,8 @@ Excluding tags: [:error_view_case]
 
 ..
 
-Finished in 0.2 seconds (0.1s on load, 0.03s on tests)
-2 tests, 0 failures
+Finished in 0.2 seconds
+4 tests, 0 failures, 2 skipped
 
 Randomized with seed 61472
 ```
@@ -394,9 +392,7 @@ Finally, we can configure ExUnit to exclude tags by default. Let's configure it 
 ```elixir
 ExUnit.start
 
-Mix.Task.run "ecto.create", ["--quiet"]
-Mix.Task.run "ecto.migrate", ["--quiet"]
-Ecto.Adapters.SQL.begin_test_transaction(HelloPhoenix.Repo)
+Ecto.Adapters.SQL.Sandbox.mode(HelloPhoenix.Repo, :manual)
 
 ExUnit.configure(exclude: [error_view_case: true])
 ```
@@ -409,8 +405,8 @@ Excluding tags: [error_view_case: true]
 
 .
 
-Finished in 0.2 seconds (0.1s on load, 0.03s on tests)
-1 tests, 0 failures
+Finished in 0.2 seconds
+4 tests, 0 failures, 3 skipped
 
 Randomized with seed 186055
 ```
@@ -424,7 +420,7 @@ Excluding tags: [error_view_case: true]
 
 ....
 
-Finished in 0.2 seconds (0.1s on load, 0.03s on tests)
+Finished in 0.2 seconds
 4 tests, 0 failures
 
 Randomized with seed 748424
@@ -440,7 +436,7 @@ ExUnit, will randomize the order tests run in by default, using an integer to se
 $ mix test --seed 401472
 ....
 
-Finished in 0.2 seconds (0.1s on load, 0.03s on tests)
+Finished in 0.2 seconds
 4 tests, 0 failures
 
 Randomized with seed 401472
@@ -520,7 +516,7 @@ Compiled web/views/user_view.ex
 Generated hello_phoenix app
 ................
 
-Finished in 0.5 seconds (0.4s on load, 0.1s on tests)
+Finished in 0.5 seconds
 16 tests, 0 failures
 
 Randomized with seed 537537
