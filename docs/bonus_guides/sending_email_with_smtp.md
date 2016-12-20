@@ -108,7 +108,8 @@ With this in place, we can start creating our custom email functions. Web
 applications may send any number of different types of emails - welcome emails
 after signup, password confirmations, activity notifications - the list goes
 on. For each type of email, we'll define a new function which will call
-`new_email/1` in order to build the email.
+[`new_email/1`](https://hexdocs.pm/bamboo/0.7.0/Bamboo.Email.html#new_email/1)
+in order to build the email.
 
 Let's say we want to send a welcome email to new users formatted as plain
 text. We'll need to know who to send the email to, as well as the "from"
