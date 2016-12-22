@@ -248,7 +248,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
   test "new inside umbrella" do
     in_tmp "new inside umbrella", fn ->
-      File.write! "mix.exs", umbrella_mixfile_contents
+      File.write! "mix.exs", umbrella_mixfile_contents()
       File.mkdir! "apps"
       File.cd! "apps", fn ->
         Mix.Tasks.Phoenix.New.run([@app_name])
