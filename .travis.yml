@@ -9,11 +9,6 @@ matrix:
       elixir: 1.4.0-rc.1
     - otp_release: 19.0
       elixir: 1.4.0-rc.1
-  allow_failures:
-    - otp_release: 18.3
-      elixir: 1.4.0-rc.1
-    - otp_release: 19.0
-      elixir: 1.4.0-rc.1
 services:
   - redis-server
 sudo: false
