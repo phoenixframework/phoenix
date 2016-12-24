@@ -50,8 +50,8 @@ defmodule <%= app_module %>.ModelCase do
 
       assert {:password, "is unsafe"} in errors_on(%User{}, %{password: "password"})
   """
-  def errors_on(struct, data) do
-    struct.__struct__.changeset(struct, data)
+  def errors_on(struct, data, changeset_func \\ :changeset) do
+    apply(struct.__struct__, changeset_func, [struct, data])
     |> Ecto.Changeset.traverse_errors(&<%= app_module %>.ErrorHelpers.translate_error/1)
     |> Enum.flat_map(fn {key, errors} -> for msg <- errors, do: {key, msg} end)
   end
