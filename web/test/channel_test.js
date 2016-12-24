@@ -108,21 +108,21 @@ describe("joinPush", () => {
   let joinPush, clock, response
 
   const helpers = {
-    receiveOk: () => {
+    receiveOk() {
       clock.tick(channel.timeout / 2) // before timeout
       return channel.trigger("chan_reply_1", { status: "ok", response }, 1)
     },
 
-    receiveTimeout: () => {
+    receiveTimeout() {
       clock.tick(channel.timeout * 2) // after timeout
     },
 
-    receiveError: () => {
+    receiveError() {
       clock.tick(channel.timeout / 2) // before timeout
       return channel.trigger("chan_reply_1", { status: "error", response }, 1)
     },
 
-    getBindings: (event) => {
+    getBindings(event) {
       return channel.bindings.filter(bind => bind.event === event )
     }
   }
@@ -265,7 +265,7 @@ describe("joinPush", () => {
       assert.ok(spyTimeout.calledOnce)
     })
 
-    it.skip("does not trigger other receive callbacks after ok response", () => {
+    it("does not trigger other receive callbacks after timeout response", () => {
       const spyOk = sinon.spy()
       const spyError = sinon.spy()
 
@@ -276,7 +276,6 @@ describe("joinPush", () => {
       helpers.receiveTimeout()
       helpers.receiveOk()
 
-      // TODO should this fail?
       assert.ok(!spyOk.called)
       assert.ok(!spyError.called)
     })
@@ -335,7 +334,7 @@ describe("joinPush", () => {
       assert.ok(spyError.calledOnce)
     })
 
-    it.skip("does not trigger other receive callbacks after ok response", () => {
+    it("does not trigger other receive callbacks after ok response", () => {
       const spyOk = sinon.spy()
       const spyTimeout = sinon.spy()
 
@@ -343,10 +342,9 @@ describe("joinPush", () => {
         .receive("ok", spyOk)
         .receive("timeout", spyTimeout)
 
-      helpers.receiveOk()
+      helpers.receiveError()
       clock.tick(channel.timeout * 2) // attempt timeout
 
-      // TODO should this fail?
       assert.ok(!spyOk.called)
       assert.ok(!spyTimeout.called)
     })
@@ -383,17 +381,6 @@ describe("joinPush", () => {
       assert.equal(channel.state, "joining")
     })
 
-    it.skip("does not reset channel rejoinTimer", () => {
-      assert.ok(channel.rejoinTimer)
-
-      const spy = sinon.spy(channel.rejoinTimer, "reset")
-
-      helpers.receiveError()
-
-      assert.ok(!spy.called)
-      assert.ok(channel.rejoinTimer)
-    })
-
     it("does not trigger channel's buffered pushEvents", () => {
       const pushEvent = { send: () => {} }
       const spy = sinon.spy(pushEvent, "send")
@@ -405,5 +392,98 @@ describe("joinPush", () => {
       assert.ok(!spy.called)
       assert.equal(channel.pushBuffer.length, 1)
     })
+  })
+})
+
+describe("onError", () => {
+  let clock, joinPush
+
+  beforeEach(() => {
+    clock = sinon.useFakeTimers()
+
+    socket = new Socket("/socket", { timeout: 1000 })
+    sinon.stub(socket, "makeRef", () => { return 1 })
+    sinon.stub(socket, "isConnected", () => { return true })
+    sinon.stub(socket, "push", () => { return true })
+    channel = new Channel("topic", { one: "two" }, socket)
+
+    joinPush = channel.joinPush
+
+    channel.join()
+  })
+
+  afterEach(() => {
+    clock.restore()
+  })
+
+  it("sets state to 'errored'", () => {
+    assert.notEqual(channel.state, "errored")
+
+    channel.trigger("phx_error")
+
+    assert.equal(channel.state, "errored")
+  })
+
+  it("tries to rejoin with backoff", () => {
+    const spy = sinon.stub(joinPush, "send")
+
+    assert.equal(spy.callCount, 0)
+
+    channel.trigger("phx_error")
+
+    clock.tick(1000)
+    assert.equal(spy.callCount, 1)
+
+    clock.tick(2000)
+    assert.equal(spy.callCount, 2)
+
+    clock.tick(5000)
+    assert.equal(spy.callCount, 3)
+
+    clock.tick(10000)
+    assert.equal(spy.callCount, 4)
+  })
+
+  it("does not rejoin if channel leaving", () => {
+    channel.state = "leaving"
+
+    const spy = sinon.stub(joinPush, "send")
+
+    channel.trigger("phx_error")
+
+    clock.tick(1000)
+    assert.equal(spy.callCount, 0)
+
+    clock.tick(2000)
+    assert.equal(spy.callCount, 0)
+
+    assert.equal(channel.state, "leaving")
+  })
+
+  it("does not rejoin if channel closed", () => {
+    channel.state = "closed"
+
+    const spy = sinon.stub(joinPush, "send")
+
+    channel.trigger("phx_error")
+
+    clock.tick(1000)
+    assert.equal(spy.callCount, 0)
+
+    clock.tick(2000)
+    assert.equal(spy.callCount, 0)
+
+    assert.equal(channel.state, "closed")
+  })
+
+  it("triggers additional callbacks", () => {
+    const spy = sinon.spy()
+    channel.onError(spy)
+
+    assert.equal(spy.callCount, 0)
+
+    channel.trigger("phx_error")
+
+    assert.equal(spy.callCount, 1)
   })
 })
