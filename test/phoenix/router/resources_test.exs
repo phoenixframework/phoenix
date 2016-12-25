@@ -256,7 +256,7 @@ defmodule Phoenix.Router.ResourcesTest do
            "/admin/bar/comments/the_key"
   end
 
-  test "resources with :only sets propper match order for :show and :new" do
+  test "resources with :only sets proper match order for :show and :new" do
     conn = call(Router, :get, "members/new")
     assert conn.status == 200
     assert conn.resp_body == "new users"
