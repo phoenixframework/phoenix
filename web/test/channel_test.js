@@ -149,6 +149,14 @@ describe("joinPush", () => {
       response = { chan: "reply" }
     })
 
+    it("sets channel state to joined", () => {
+      assert.notEqual(channel.state, "joined")
+
+      helpers.receiveOk()
+
+      assert.equal(channel.state, "joined")
+    })
+
     it("triggers receive('ok') callback after ok response", () => {
       const spyOk = sinon.spy()
 
@@ -240,7 +248,7 @@ describe("joinPush", () => {
   })
 
   describe("receives 'timeout'", () => {
-    it("sets channed state to errored", () => {
+    it("sets channel state to errored", () => {
       helpers.receiveTimeout()
 
       assert.equal(channel.state, "errored")
