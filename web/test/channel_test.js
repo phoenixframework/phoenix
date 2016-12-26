@@ -560,3 +560,52 @@ describe("onClose", () => {
     assert.equal(socket.channels.length, 0)
   })
 })
+
+describe("onMessage", () => {
+  beforeEach(() => {
+    socket = new Socket("/socket", { timeout: 1000 })
+
+    channel = socket.channel("topic", { one: "two" })
+  })
+
+  it("returns payload by default", () => {
+    const ref = 1
+    const payload = channel.onMessage("event", { one: "two" }, ref)
+
+    assert.deepEqual(payload, { one: "two" })
+  })
+})
+
+describe("canPush", () => {
+  beforeEach(() => {
+    socket = new Socket("/socket", { timeout: 1000 })
+
+    channel = socket.channel("topic", { one: "two" })
+  })
+
+  it("returns true when socket connected and channel joined", () => {
+    sinon.stub(socket, "isConnected").returns(true)
+    channel.state = "joined"
+
+    assert.ok(channel.canPush())
+  })
+
+  it("otherwise returns false", () => {
+    const isConnectedStub = sinon.stub(socket, "isConnected")
+
+    isConnectedStub.returns(false)
+    channel.state = "joined"
+
+    assert.ok(!channel.canPush())
+
+    isConnectedStub.returns(true)
+    channel.state = "joining"
+
+    assert.ok(!channel.canPush())
+
+    isConnectedStub.returns(false)
+    channel.state = "joining"
+
+    assert.ok(!channel.canPush())
+  })
+})
