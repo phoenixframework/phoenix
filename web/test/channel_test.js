@@ -487,3 +487,66 @@ describe("onError", () => {
     assert.equal(spy.callCount, 1)
   })
 })
+
+describe("onClose", () => {
+  let clock, joinPush
+
+  beforeEach(() => {
+    clock = sinon.useFakeTimers()
+
+    socket = new Socket("/socket", { timeout: 1000 })
+    sinon.stub(socket, "makeRef", () => { return 1 })
+    sinon.stub(socket, "isConnected", () => { return true })
+    sinon.stub(socket, "push", () => { return true })
+
+    channel = socket.channel("topic", { one: "two" })
+
+    joinPush = channel.joinPush
+
+    channel.join()
+  })
+
+  afterEach(() => {
+    clock.restore()
+  })
+
+  it("sets state to 'closed'", () => {
+    assert.notEqual(channel.state, "closed")
+
+    channel.trigger("phx_close")
+
+    assert.equal(channel.state, "closed")
+  })
+
+  it("does not rejoin", () => {
+    const spy = sinon.stub(joinPush, "send")
+
+    channel.trigger("phx_close")
+
+    clock.tick(1000)
+    assert.equal(spy.callCount, 0)
+
+    clock.tick(2000)
+    assert.equal(spy.callCount, 0)
+  })
+
+  it("triggers additional callbacks", () => {
+    const spy = sinon.spy()
+    channel.onClose(spy)
+
+    assert.equal(spy.callCount, 0)
+
+    channel.trigger("phx_close")
+
+    assert.equal(spy.callCount, 1)
+  })
+
+  it("removes channel from socket", () => {
+    assert.equal(socket.channels.length, 1)
+    assert.equal(channel, socket.channels[0])
+
+    channel.trigger("phx_close")
+
+    assert.equal(socket.channels.length, 0)
+  })
+})
