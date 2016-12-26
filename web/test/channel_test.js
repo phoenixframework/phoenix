@@ -664,11 +664,101 @@ describe("off", () => {
 
     channel.off("event")
 
-    channel.trigger("event", {}, ref)
-    channel.trigger("other", {}, ref)
+    channel.trigger("event", {}, defaultRef)
+    channel.trigger("other", {}, defaultRef)
 
     assert.ok(!spy1.called)
     assert.ok(!spy2.called)
     assert.ok(spy3.called)
   })
+})
+
+describe("push", () => {
+  let clock, joinPush
+  let socketSpy
+
+  const pushParams = {
+    topic: "topic",
+    event: "event",
+    payload: { foo: "bar" },
+    ref: defaultRef,
+  }
+
+  beforeEach(() => {
+    clock = sinon.useFakeTimers()
+
+    socket = new Socket("/socket", { timeout: defaultTimeout })
+    sinon.stub(socket, "makeRef", () => defaultRef)
+    sinon.stub(socket, "isConnected", () => true)
+    socketSpy = sinon.stub(socket, "push")
+
+    channel = socket.channel("topic", { one: "two" })
+  })
+
+  it("sends push event when successfully joined", () => {
+    channel.join().trigger("ok", {})
+    channel.push("event", { foo: "bar" })
+
+    assert.ok(socketSpy.calledWith(pushParams))
+  })
+
+  it("enqueues push event to be sent once join has succeeded", () => {
+    joinPush = channel.join()
+    channel.push("event", { foo: "bar" })
+
+    assert.ok(!socketSpy.calledWith(pushParams))
+
+    clock.tick(channel.timeout / 2)
+    joinPush.trigger("ok", {})
+
+    assert.ok(socketSpy.calledWith(pushParams))
+  })
+
+  it("does not push if channel join times out", () => {
+    joinPush = channel.join()
+    channel.push("event", { foo: "bar" })
+
+    assert.ok(!socketSpy.calledWith(pushParams))
+
+    clock.tick(channel.timeout * 2)
+    joinPush.trigger("ok", {})
+
+    assert.ok(!socketSpy.calledWith(pushParams))
+  })
+
+  it("uses channel timeout by default", () => {
+    const timeoutSpy = sinon.spy()
+    channel.join().trigger("ok", {})
+
+    channel.push("event", { foo: "bar" })
+      .receive("timeout", timeoutSpy)
+
+    clock.tick(channel.timeout / 2)
+    assert.ok(!timeoutSpy.called)
+
+    clock.tick(channel.timeout)
+    assert.ok(timeoutSpy.called)
+  })
+
+  it("accepts timeout arg", () => {
+    const timeoutSpy = sinon.spy()
+    channel.join().trigger("ok", {})
+
+    channel.push("event", { foo: "bar" }, channel.timeout * 2)
+      .receive("timeout", timeoutSpy)
+
+    clock.tick(channel.timeout)
+    assert.ok(!timeoutSpy.called)
+
+    clock.tick(channel.timeout * 2)
+    assert.ok(timeoutSpy.called)
+  })
+
+  it("throws if channel has not been joined", () => {
+    assert.throws(() => channel.push("event", {}), /tried to push.*before joining/)
+  })
+})
+
+describe("leave", () => {
+
 })
