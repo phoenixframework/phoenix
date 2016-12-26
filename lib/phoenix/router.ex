@@ -367,6 +367,8 @@ defmodule Phoenix.Router do
 
   #{Enum.map_join(@http_methods, ", ", &"`#{&1}`")}
 
+  The catch-all verb `:*` will match all HTTP methods for the route.
+
   ## Examples
 
       match(:move, "/events/:id", EventController, :move)

@@ -38,6 +38,13 @@ defmodule Phoenix.Router.RouteTest do
     assert Macro.to_string(exprs.host) == "\"foo.com\""
   end
 
+  test "builds a catch-all verb_match for match routes" do
+    route = build(:match, :*, "/foo/:bar", nil, __MODULE__, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"})
+    assert route.verb == :*
+    assert route.kind == :match
+    assert exprs(route).verb_match == {:_verb, [], nil}
+  end
+
   test "builds a catch-all verb_match for forwarded routes" do
     route = build(:forward, :*, "/foo/:bar", nil, __MODULE__, :world, "hello_world", [:foo, :bar], %{foo: "bar"}, %{bar: "baz"})
     assert route.verb == :*

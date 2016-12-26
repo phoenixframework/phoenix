@@ -13,6 +13,7 @@ defmodule Phoenix.Router.RoutingTest do
     def not_found(conn, _params), do: text(put_status(conn, :not_found), "not found")
     def image(conn, _params), do: text(conn, conn.params["path"] || "show files")
     def move(conn, _params), do: text(conn, "users move")
+    def catch_all(conn, _params), do: text(conn, "users catch-all")
   end
 
   defmodule Router do
@@ -32,6 +33,7 @@ defmodule Phoenix.Router.RoutingTest do
     options "/options", UserController, :options
     connect "/connect", UserController, :connect
     match :move, "/move", UserController, :move
+    match :*, "/catch_all", UserController, :catch_all
 
     get "/users/:user_id/files/:id", UserController, :image
     get "/*path", UserController, :not_found
@@ -146,5 +148,12 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.method == "MOVE"
     assert conn.status == 200
     assert conn.resp_body == "users move"
+  end
+
+  test "catch-all verb matches" do
+    conn = call(Router, :put, "/catch_all")
+    assert conn.method == "PUT"
+    assert conn.status == 200
+    assert conn.resp_body == "users catch-all"
   end
 end
