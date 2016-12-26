@@ -10,10 +10,12 @@ let channel, socket, push
 // let chan = new Channel(topic, chanParams, this)
 
 describe("constructor", () => {
-  it("sets defaults", () => {
+  beforeEach(() => {
     socket = { timeout: 1234 }
+  })
+
+  it("sets defaults", () => {
     channel = new Channel("topic", { one: "two" }, socket)
-    push = channel.joinPush
 
     assert.equal(channel.state, "closed")
     assert.equal(channel.topic, "topic")
@@ -26,7 +28,6 @@ describe("constructor", () => {
   })
 
   it("sets up joinPush object", () => {
-    socket = { timeout: 1234 }
     channel = new Channel("topic", { one: "two" }, socket)
     push = channel.joinPush
 
@@ -45,7 +46,7 @@ describe("join", () => {
     socket = new Socket("/socket", { timeout: defaultTimeout })
     sinon.stub(socket, "makeRef", () => { return defaultRef })
 
-    channel = new Channel("topic", { one: "two" }, socket)
+    channel = socket.channel("topic", { one: "two" })
   })
 
   it("sets state to joining", () => {
@@ -133,7 +134,7 @@ describe("joinPush", () => {
     socket = new Socket("/socket", { timeout: 1000 })
     sinon.stub(socket, "makeRef", () => { return 1 })
 
-    channel = new Channel("topic", { one: "two" }, socket)
+    channel = socket.channel("topic", { one: "two" })
     joinPush = channel.joinPush
 
     channel.join()
@@ -405,7 +406,8 @@ describe("onError", () => {
     sinon.stub(socket, "makeRef", () => { return 1 })
     sinon.stub(socket, "isConnected", () => { return true })
     sinon.stub(socket, "push", () => { return true })
-    channel = new Channel("topic", { one: "two" }, socket)
+
+    channel = socket.channel("topic", { one: "two" })
 
     joinPush = channel.joinPush
 
