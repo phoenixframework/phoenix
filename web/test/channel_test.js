@@ -6,10 +6,10 @@ import {WebSocket, Server as WebSocketServer} from "mock-socket"
 
 import {Channel, Socket} from "../static/js/phoenix"
 
-let channel, socket, push
-// let chan = new Channel(topic, chanParams, this)
+let channel, socket
 
-const ref = 1
+const defaultRef = 1
+const defaultTimeout = 1000
 
 describe("constructor", () => {
   beforeEach(() => {
@@ -31,22 +31,19 @@ describe("constructor", () => {
 
   it("sets up joinPush object", () => {
     channel = new Channel("topic", { one: "two" }, socket)
-    push = channel.joinPush
+    const joinPush = channel.joinPush
 
-    assert.deepEqual(push.channel, channel)
-    assert.deepEqual(push.payload, { one: "two" })
-    assert.equal(push.event, "phx_join")
-    assert.equal(push.timeout, 1234)
+    assert.deepEqual(joinPush.channel, channel)
+    assert.deepEqual(joinPush.payload, { one: "two" })
+    assert.equal(joinPush.event, "phx_join")
+    assert.equal(joinPush.timeout, 1234)
   })
 })
 
 describe("join", () => {
-  const defaultTimeout = 1000
-  const defaultRef = 1
-
   beforeEach(() => {
     socket = new Socket("/socket", { timeout: defaultTimeout })
-    sinon.stub(socket, "makeRef", () => { return defaultRef })
+    sinon.stub(socket, "makeRef", () => defaultRef)
 
     channel = socket.channel("topic", { one: "two" })
   })
@@ -112,17 +109,17 @@ describe("joinPush", () => {
 
   const helpers = {
     receiveOk() {
-      clock.tick(channel.timeout / 2) // before timeout
-      return channel.trigger("chan_reply_1", { status: "ok", response }, ref)
+      clock.tick(joinPush.timeout / 2) // before timeout
+      return joinPush.trigger("ok", response)
     },
 
     receiveTimeout() {
-      clock.tick(channel.timeout * 2) // after timeout
+      clock.tick(joinPush.timeout * 2) // after timeout
     },
 
     receiveError() {
-      clock.tick(channel.timeout / 2) // before timeout
-      return channel.trigger("chan_reply_1", { status: "error", response }, 1)
+      clock.tick(joinPush.timeout / 2) // before timeout
+      return joinPush.trigger("error", response)
     },
 
     getBindings(event) {
@@ -133,8 +130,8 @@ describe("joinPush", () => {
   beforeEach(() => {
     clock = sinon.useFakeTimers()
 
-    socket = new Socket("/socket", { timeout: 1000 })
-    sinon.stub(socket, "makeRef", () => { return ref })
+    socket = new Socket("/socket", { timeout: defaultTimeout })
+    sinon.stub(socket, "makeRef", () => defaultRef)
 
     channel = socket.channel("topic", { one: "two" })
     joinPush = channel.joinPush
@@ -237,7 +234,7 @@ describe("joinPush", () => {
     })
 
     it("sends and empties channel's buffered pushEvents", () => {
-      const pushEvent = { send: () => {} }
+      const pushEvent = { send() {} }
       const spy = sinon.spy(pushEvent, "send")
 
       channel.pushBuffer.push(pushEvent)
@@ -412,10 +409,10 @@ describe("onError", () => {
   beforeEach(() => {
     clock = sinon.useFakeTimers()
 
-    socket = new Socket("/socket", { timeout: 1000 })
-    sinon.stub(socket, "makeRef", () => { return ref })
-    sinon.stub(socket, "isConnected", () => { return true })
-    sinon.stub(socket, "push", () => { return true })
+    socket = new Socket("/socket", { timeout: defaultTimeout })
+    sinon.stub(socket, "makeRef", () => defaultRef)
+    sinon.stub(socket, "isConnected", () => true)
+    sinon.stub(socket, "push", () => true)
 
     channel = socket.channel("topic", { one: "two" })
 
@@ -506,10 +503,10 @@ describe("onClose", () => {
   beforeEach(() => {
     clock = sinon.useFakeTimers()
 
-    socket = new Socket("/socket", { timeout: 1000 })
-    sinon.stub(socket, "makeRef", () => { return ref })
+    socket = new Socket("/socket", { timeout: defaultTimeout })
+    sinon.stub(socket, "makeRef", () => defaultRef)
     sinon.stub(socket, "isConnected", () => { return true })
-    sinon.stub(socket, "push", () => { return true })
+    sinon.stub(socket, "push", () => true)
 
     channel = socket.channel("topic", { one: "two" })
 
@@ -571,8 +568,7 @@ describe("onMessage", () => {
   })
 
   it("returns payload by default", () => {
-    const ref = 1
-    const payload = channel.onMessage("event", { one: "two" }, ref)
+    const payload = channel.onMessage("event", { one: "two" }, defaultRef)
 
     assert.deepEqual(payload, { one: "two" })
   })
@@ -615,7 +611,7 @@ describe("canPush", () => {
 describe("on", () => {
   beforeEach(() => {
     socket = new Socket("/socket")
-    sinon.stub(socket, "makeRef", () => { return ref })
+    sinon.stub(socket, "makeRef", () => defaultRef)
 
     channel = socket.channel("topic", { one: "two" })
   })
@@ -623,13 +619,12 @@ describe("on", () => {
   it("sets up callback for event", () => {
     const spy = sinon.spy()
 
-    channel.trigger("event", {}, ref)
-
+    channel.trigger("event", {}, defaultRef)
     assert.ok(!spy.called)
 
     channel.on("event", spy)
 
-    channel.trigger("event", {}, ref)
+    channel.trigger("event", {}, defaultRef)
 
     assert.ok(spy.called)
   })
@@ -638,13 +633,13 @@ describe("on", () => {
     const spy = sinon.spy()
     const ignoredSpy = sinon.spy()
 
-    channel.trigger("event", {}, ref)
+    channel.trigger("event", {}, defaultRef)
 
     assert.ok(!ignoredSpy.called)
 
     channel.on("event", spy)
 
-    channel.trigger("event", {}, ref)
+    channel.trigger("event", {}, defaultRef)
 
     assert.ok(!ignoredSpy.called)
   })
@@ -653,7 +648,7 @@ describe("on", () => {
 describe("off", () => {
   beforeEach(() => {
     socket = new Socket("/socket")
-    sinon.stub(socket, "makeRef", () => { return ref })
+    sinon.stub(socket, "makeRef", () => defaultRef)
 
     channel = socket.channel("topic", { one: "two" })
   })
