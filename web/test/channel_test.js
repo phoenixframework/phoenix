@@ -754,16 +754,27 @@ describe("push", () => {
     assert.ok(timeoutSpy.called)
   })
 
+  it("does not time out after receiving 'ok'", () => {
+    channel.join().trigger("ok", {})
+    const timeoutSpy = sinon.spy()
+    const push = channel.push("event", { foo: "bar" })
+    push.receive("timeout", timeoutSpy)
+
+    clock.tick(push.timeout / 2)
+    assert.ok(!timeoutSpy.called)
+
+    push.trigger("ok", {})
+
+    clock.tick(push.timeout)
+    assert.ok(!timeoutSpy.called)
+  })
+
   it("throws if channel has not been joined", () => {
     assert.throws(() => channel.push("event", {}), /tried to push.*before joining/)
   })
 })
 
-// TODO - currently, 'ok' is always triggered immediately
-// within Channel.leave so functionality relying on
-// timeout is never triggered
-//
-describe.only("leave", () => {
+describe("leave", () => {
   let clock, joinPush
   let socketSpy
 
@@ -809,8 +820,9 @@ describe.only("leave", () => {
   })
 
   // TODO - the following tests are skipped until Channel.leave
-  // behavior can be fixed to avoid triggering 'close' callbacks
-  // prematurely
+  // behavior can be fixed; currently, 'ok' is triggered immediately
+  // within Channel.leave so timeout callbacks are never reached
+  //
   it.skip("sets state to leaving initially", () => {
     assert.notEqual(channel.state, "leaving")
 
