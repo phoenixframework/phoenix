@@ -151,6 +151,11 @@ defmodule Phoenix.Router.RoutingTest do
   end
 
   test "catch-all verb matches" do
+    conn = call(Router, :get, "/catch_all")
+    assert conn.method == "GET"
+    assert conn.status == 200
+    assert conn.resp_body == "users catch-all"
+
     conn = call(Router, :put, "/catch_all")
     assert conn.method == "PUT"
     assert conn.status == 200

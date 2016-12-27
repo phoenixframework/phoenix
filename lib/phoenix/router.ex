@@ -361,18 +361,19 @@ defmodule Phoenix.Router do
   end
 
   @doc """
-  Generates a route match based on an arbitrary HTTP method
+  Generates a route match based on an arbitrary HTTP method.
 
   Useful for defining routes not included in the builtin macros:
 
   #{Enum.map_join(@http_methods, ", ", &"`#{&1}`")}
 
-  The catch-all verb `:*` will match all HTTP methods for the route.
+  The catch-all verb, `:*`, may also be used to match all HTTP methods.
 
   ## Examples
 
       match(:move, "/events/:id", EventController, :move)
 
+      match(:*, "/any", SomeController, :any)
   """
   defmacro match(verb, path, plug, plug_opts, options \\ []) do
     add_route(:match, verb, path, plug, plug_opts, options)
