@@ -552,7 +552,7 @@ describe("onClose", () => {
 
   it("removes channel from socket", () => {
     assert.equal(socket.channels.length, 1)
-    assert.equal(channel, socket.channels[0])
+    assert.deepEqual(socket.channels[0], channel)
 
     channel.trigger("phx_close")
 
@@ -759,6 +759,83 @@ describe("push", () => {
   })
 })
 
-describe("leave", () => {
+// TODO - currently, 'ok' is always triggered immediately
+// within Channel.leave so functionality relying on
+// timeout is never triggered
+//
+describe.only("leave", () => {
+  let clock, joinPush
+  let socketSpy
 
+  beforeEach(() => {
+    clock = sinon.useFakeTimers()
+
+    socket = new Socket("/socket", { timeout: defaultTimeout })
+    sinon.stub(socket, "makeRef", () => defaultRef)
+    sinon.stub(socket, "isConnected", () => true)
+    socketSpy = sinon.stub(socket, "push")
+
+    channel = socket.channel("topic", { one: "two" })
+    channel.join().trigger("ok", {})
+  })
+
+  it("unsubscribes from server events", () => {
+    channel.leave()
+
+    assert.ok(socketSpy.calledWith({
+      topic: "topic",
+      event: "phx_leave",
+      payload: {},
+      ref: defaultRef
+    }))
+  })
+
+  it("closes channel on 'ok' from server", () => {
+    const anotherChannel = socket.channel("another", { three: "four" })
+    assert.equal(socket.channels.length, 2)
+
+    channel.leave().trigger("ok", {})
+
+    assert.equal(socket.channels.length, 1)
+    assert.deepEqual(socket.channels[0], anotherChannel)
+  })
+
+  it("sets state to closed on 'ok' event", () => {
+    assert.notEqual(channel.state, "closed")
+
+    channel.leave().trigger("ok", {})
+
+    assert.equal(channel.state, "closed")
+  })
+
+  // TODO - the following tests are skipped until Channel.leave
+  // behavior can be fixed to avoid triggering 'close' callbacks
+  // prematurely
+  it.skip("sets state to leaving initially", () => {
+    assert.notEqual(channel.state, "leaving")
+
+    channel.leave()
+
+    assert.equal(channel.state, "leaving")
+  })
+
+  it.skip("closes channel on 'timeout'", () => {
+    channel.leave()
+
+    clock.tick(channel.timeout)
+
+    assert.equal(channel.state, "closed")
+  })
+
+  it.skip("accepts timeout arg", () => {
+    channel.leave(channel.timeout * 2)
+
+    clock.tick(channel.timeout)
+
+    assert.equal(channel.state, "leaving")
+
+    clock.tick(channel.timeout * 2)
+
+    assert.equal(channel.state, "closed")
+  })
 })
