@@ -132,6 +132,43 @@ describe("join", () => {
       assert.equal(spy.callCount, 1)
     })
 
+    it("retries with backoff after timeout", () => {
+      const spy = sinon.spy(socket, "push")
+      const timeout = joinPush.timeout
+      let callCount = 1
+
+      socket.connect()
+      helpers.receiveSocketOpen()
+
+      channel.join()
+      assert.equal(spy.callCount, callCount)
+
+      clock.tick(timeout-100)
+      assert.equal(spy.callCount, callCount)
+
+      clock.tick(100)
+      assert.equal(spy.callCount, callCount)
+
+      clock.tick(1000)
+      assert.equal(spy.callCount, ++callCount)
+
+      clock.tick(2000)
+      assert.equal(spy.callCount, ++callCount)
+
+      clock.tick(5000)
+      assert.equal(spy.callCount, ++callCount)
+
+      clock.tick(10000)
+      assert.equal(spy.callCount, ++callCount)
+
+      joinPush.trigger("ok", {})
+      assert.equal(channel.state, "joined")
+
+      clock.tick(10000)
+      assert.equal(channel.state, "joined")
+      assert.equal(spy.callCount, callCount)
+    })
+
     it("with socket and join delay", () => {
       const spy = sinon.spy(socket, "push")
       const clock = sinon.useFakeTimers()
