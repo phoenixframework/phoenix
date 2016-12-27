@@ -9,7 +9,7 @@ import {Channel, Socket} from "../static/js/phoenix"
 let channel, socket
 
 const defaultRef = 1
-const defaultTimeout = 1000
+const defaultTimeout = 10000
 
 describe("constructor", () => {
   beforeEach(() => {
