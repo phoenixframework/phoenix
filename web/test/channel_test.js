@@ -102,6 +102,46 @@ describe("join", () => {
 
     assert.equal(joinPush.refEvent, "chan_reply_1")
   })
+
+  describe("timeout behavior", () => {
+    let clock, joinPush
+
+    const helpers = {
+      receiveSocketOpen() {
+        sinon.stub(socket, "isConnected", () => true)
+        socket.onConnOpen()
+      }
+    }
+
+    beforeEach(() => {
+      clock = sinon.useFakeTimers()
+      joinPush = channel.joinPush
+    })
+
+    afterEach(() => {
+      clock.restore()
+    })
+
+    it("succeeds before timeout", () => {
+      const spy = sinon.spy(socket, "push")
+      const timeout = joinPush.timeout
+
+      socket.connect()
+      helpers.receiveSocketOpen()
+
+      channel.join()
+      assert.equal(spy.callCount, 1)
+
+      clock.tick(timeout / 2)
+
+      joinPush.trigger("ok", {})
+
+      assert.equal(channel.state, "joined")
+
+      clock.tick(timeout)
+      assert.equal(spy.callCount, 1)
+    })
+  })
 })
 
 describe("joinPush", () => {
@@ -693,6 +733,10 @@ describe("push", () => {
     channel = socket.channel("topic", { one: "two" })
   })
 
+  afterEach(() => {
+    clock.restore()
+  })
+
   it("sends push event when successfully joined", () => {
     channel.join().trigger("ok", {})
     channel.push("event", { foo: "bar" })
@@ -785,6 +829,10 @@ describe("leave", () => {
 
     channel = socket.channel("topic", { one: "two" })
     channel.join().trigger("ok", {})
+  })
+
+  afterEach(() => {
+    clock.restore()
   })
 
   it("unsubscribes from server events", () => {
