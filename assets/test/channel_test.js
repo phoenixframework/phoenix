@@ -131,6 +131,50 @@ describe("join", () => {
       clock.tick(timeout)
       assert.equal(spy.callCount, 1)
     })
+
+    it("with socket and join delay", () => {
+      const spy = sinon.spy(socket, "push")
+      const clock = sinon.useFakeTimers()
+      const joinPush = channel.joinPush
+
+      socket.connect()
+
+      channel.join()
+      assert.equal(spy.callCount, 1)
+
+      // open socket after delay
+      clock.tick(6000)
+      sinon.stub(socket, "isConnected", () => true)
+      socket.onConnOpen()
+
+      assert.equal(spy.callCount, 1)
+
+      // join request succeeds after delay
+      clock.tick(11000)
+      joinPush.trigger("ok", {})
+
+      assert.equal(channel.state, "joined")
+      assert.equal(spy.callCount, 1)
+    })
+
+    it("with socket delay only", () => {
+      const spy = sinon.spy(socket, "push")
+      const clock = sinon.useFakeTimers()
+      const joinPush = channel.joinPush
+
+      socket.connect()
+      // open socket after delay
+      clock.tick(12000)
+      sinon.stub(socket, "isConnected", () => true)
+      socket.onConnOpen()
+
+      assert.equal(spy.callCount, 1)
+
+      // join request succeeds
+      joinPush.trigger("ok", {})
+
+      assert.equal(channel.state, "joined")
+    })
   })
 })
 
