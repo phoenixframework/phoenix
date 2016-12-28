@@ -1,3 +1,3 @@
-defmodule <%= app_module %>.LayoutViewTest do
-  use <%= app_module %>.ConnCase, async: true
+defmodule <%= web_namespace %>.LayoutViewTest do
+  use <%= web_namespace %>.ConnCase, async: true
 end

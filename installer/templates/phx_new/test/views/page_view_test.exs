@@ -1,3 +1,3 @@
-defmodule <%= app_module %>.PageViewTest do
-  use <%= app_module %>.ConnCase, async: true
+defmodule <%= web_namespace %>.PageViewTest do
+  use <%= web_namespace %>.ConnCase, async: true
 end

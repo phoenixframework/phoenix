@@ -1,4 +1,4 @@
-defmodule <%= app_module %>.ChannelCase do
+defmodule <%= web_namespace %>.ChannelCase do
   @moduledoc """
   This module defines the test case to be used by
   channel tests.
@@ -31,13 +31,17 @@ defmodule <%= app_module %>.ChannelCase do
     end
   end
 
+<%= if ecto do %>
   setup tags do
-<%= if ecto do %>    <%= adapter_config[:test_setup] %>
-
+    <%= adapter_config[:test_setup] %>
     unless tags[:async] do
       <%= adapter_config[:test_async] %>
     end
-<% end %>
     :ok
   end
+<% else %>
+  setup _tags do
+    :ok
+  end
+<% end %>
 end

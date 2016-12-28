@@ -1,5 +1,5 @@
-defmodule <%= app_module %>.PageControllerTest do
-  use <%= app_module %>.ConnCase
+defmodule <%= web_namespace %>.PageControllerTest do
+  use <%= web_namespace %>.ConnCase
 
   test "GET /", %{conn: conn} do
     conn = get conn, "/"
