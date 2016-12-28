@@ -1,4 +1,4 @@
-defmodule <%= app_module %>.ConnCase do
+defmodule <%= web_namespace %>.ConnCase do
   @moduledoc """
   This module defines the test case to be used by
   tests that require setting up a connection.
@@ -25,20 +25,24 @@ defmodule <%= app_module %>.ConnCase do
       import Ecto.Changeset
       import Ecto.Query
 <% end %>
-      import <%= app_module %>.Web.Router.Helpers
+      import <%= web_namespace %>.Router.Helpers
 
       # The default endpoint for testing
       @endpoint <%= endpoint_module %>
     end
   end
 
+<%= if ecto do %>
   setup tags do
-<%= if ecto do %>    <%= adapter_config[:test_setup] %>
-
+    <%= adapter_config[:test_setup] %>
     unless tags[:async] do
       <%= adapter_config[:test_async] %>
     end
-<% end %>
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
+<% else %>
+  setup _tags do
+    {:ok, conn: Phoenix.ConnTest.build_conn()}
+  end
+<% end %>
 end
