@@ -23,7 +23,7 @@ defmodule Mix.Tasks.Phoenix.Digest.Clean do
     * `-o, --output` - indicates the path to your compiled
       assets directory. Defaults to `priv/static`.
 
-    * `--age` - specifies a maximum age (in minutes) for assets.
+    * `--age` - specifies a maximum age (in seconds) for assets.
       Files older than age that are not in the last `--keep` versions
       will be removed. Defaults to 3600 (1 hour).
 
