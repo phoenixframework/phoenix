@@ -166,7 +166,7 @@ comment_path  PATCH   /comments/:id       HelloPhoenix.CommentController :update
               PUT     /comments/:id       HelloPhoenix.CommentController :update
 ```
 
-The [`resources/4` docs](https://hexdocs.pm/phoenix/Phoenix.Router.html#resources/4) describe additional options for customizing resource routes.
+The `Phoenix.Router.resources/4` function describes additional options for customizing resource routes.
 
 ### Path Helpers
 
