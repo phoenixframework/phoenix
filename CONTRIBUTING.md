@@ -126,7 +126,7 @@ accurate comments, etc.) and don't forget to add your own tests and
 documentation. When working with git, we recommend the following process
 in order to craft an excellent pull request:
 
-1. [Fork](http://help.github.com/fork-a-repo/) the project, clone your fork,
+1. [Fork](https://help.github.com/articles/fork-a-repo/) the project, clone your fork,
    and configure the remotes:
 
    ```bash
@@ -160,7 +160,7 @@ in order to craft an excellent pull request:
 4. Commit your changes in logical chunks. Keep your commit messages organized,
    with a short description in the first line and more detailed information on
    the following lines. Feel free to use Git's
-   [interactive rebase](https://help.github.com/articles/interactive-rebase)
+   [interactive rebase](https://help.github.com/articles/about-git-rebase/)
    feature to tidy up your commits before making them public.
 
 5. Make sure all the tests are still passing.
@@ -175,7 +175,7 @@ in order to craft an excellent pull request:
    git push origin <topic-branch-name>
    ```
 
-7. [Open a Pull Request](https://help.github.com/articles/using-pull-requests/)
+7. [Open a Pull Request](https://help.github.com/articles/about-git-rebase/)
     with a clear title and description.
 
 8. If you haven't updated your pull request for a while, you should consider
