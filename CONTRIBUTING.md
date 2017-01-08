@@ -175,7 +175,7 @@ in order to craft an excellent pull request:
    git push origin <topic-branch-name>
    ```
 
-7. [Open a Pull Request](https://help.github.com/articles/about-git-rebase/)
+7. [Open a Pull Request](https://help.github.com/articles/about-pull-requests/)
     with a clear title and description.
 
 8. If you haven't updated your pull request for a while, you should consider
