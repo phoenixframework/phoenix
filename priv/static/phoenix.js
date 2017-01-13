@@ -272,7 +272,7 @@ var Push = function () {
           ref = _ref.ref;
 
       this.recHooks.filter(function (h) {
-        return h.status === status;
+        return h.status === status || h.status === "*";
       }).forEach(function (h) {
         return h.callback(response);
       });
