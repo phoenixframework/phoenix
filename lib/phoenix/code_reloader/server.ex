@@ -142,9 +142,11 @@ defmodule Phoenix.CodeReloader.Server do
   defp mix_compile(compilers) do
     all = Mix.Project.config[:compilers] || Mix.compilers
 
-    for compiler <- compilers, compiler in all do
-      Mix.Task.reenable("compile.#{compiler}")
-    end
+    compilers =
+      for compiler <- compilers, compiler in all do
+        Mix.Task.reenable("compile.#{compiler}")
+        compiler
+      end
 
     # We call build_structure mostly for Windows so new
     # assets in priv are copied to the build directory.
