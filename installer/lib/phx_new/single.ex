@@ -32,6 +32,7 @@ defmodule Mix.Tasks.Phx.New.Single do
     {:eex,  "phx_ecto/repo.ex",              "lib/repo.ex"},
     {:eex,  "phx_ecto/data_case.ex",         "test/support/data_case.ex"},
     {:keep, "phx_ecto/priv/repo/migrations", "priv/repo/migrations"},
+    {:text, "assets/bare/gitkeep",           "priv/repo/migrations/.gitkeep"},
     {:eex,  "phx_ecto/seeds.exs",            "priv/repo/seeds.exs"}
   ]
 
