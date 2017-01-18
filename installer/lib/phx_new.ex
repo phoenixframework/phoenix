@@ -71,8 +71,9 @@ defmodule Mix.Tasks.Phx.New do
 
 
   @switches [dev: :boolean, brunch: :boolean, ecto: :boolean,
-             app: :string, module: :string, database: :string,
-             binary_id: :boolean, html: :boolean, umbrella: :boolean]
+             app: :string, module: :string, web_module: :string,
+             database: :string, binary_id: :boolean, html: :boolean,
+             umbrella: :boolean]
 
   def run([version]) when version in ~w(-v --version) do
     Mix.shell.info "Phoenix v#{@version}"
@@ -117,21 +118,18 @@ defmodule Mix.Tasks.Phx.New do
     install? = Mix.shell.yes?("\nFetch and install dependencies?")
     starting_dir = File.cwd!()
 
-    File.cd!(project.project_path, fn ->
+    maybe_cd(project.project_path, fn ->
       mix? = install_mix(install?)
-      File.cd!(project.web_path, fn ->
-        brunch? = install_brunch(install?)
-        extra   = if mix?, do: [], else: ["$ mix deps.get"]
+      extra = if mix?, do: [], else: ["$ mix deps.get"]
 
-        print_mix_info(project.project_path, extra)
+      brunch? = maybe_cd(project.web_path, fn -> install_brunch(install?) end)
 
-        if Project.ecto?(project), do: print_ecto_info()
-
-        if not brunch?, do: print_brunch_info(project, starting_dir)
-      end)
+      print_mix_info(project.project_path, extra)
+      if Project.ecto?(project), do: print_ecto_info()
+      if not brunch?, do: print_brunch_info(project, starting_dir)
     end)
   end
-
+  defp maybe_cd(path, func), do: path && File.cd!(path, func)
 
   defp parse_opts(argv) do
     case OptionParser.parse(argv, strict: @switches) do

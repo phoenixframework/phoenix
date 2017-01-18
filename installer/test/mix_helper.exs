@@ -52,6 +52,7 @@ defmodule MixHelper do
       is_function(match, 1) ->
         assert_file(file)
         match.(File.read!(file))
+      true -> raise inspect({file, match})
     end
   end
 
@@ -80,5 +81,12 @@ defmodule Umbrella.Mixfile do
   end
 end
     """
+  end
+
+  def flush do
+    receive do
+      _ -> flush()
+    after 0 -> :ok
+    end
   end
 end
