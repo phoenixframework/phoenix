@@ -45,6 +45,14 @@ defmodule Phx.New.Project do
   def join_path(%Project{} = project, location, path)
       when location in [:project, :app, :web] do
 
-    project |> Map.fetch!(:"#{location}_path") |> Path.join(path)
+    project
+    |> Map.fetch!(:"#{location}_path")
+    |> Path.join(path)
+    |> expand_path_with_bindings(project)
+  end
+  defp expand_path_with_bindings(path, %Project{} = project) do
+    Regex.replace(~r/:[a-zA-Z0-9_]+/, path, fn ":" <> key, _ ->
+        project |> Map.fetch!(:"#{key}") |> to_string()
+    end)
   end
 end

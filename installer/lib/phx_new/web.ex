@@ -23,7 +23,7 @@ defmodule Mix.Tasks.Phx.New.Web do
     {:eex,  "#{@pre}/config/test.exs",        :web, "config/test.exs"},
     {:eex,  "#{@pre}/test/test_helper.exs",   :web, "test/test_helper.exs"},
     {:eex,  "#{@pre}/lib/application.ex",     :web, "lib/application.ex"},
-    {:eex,  "#{@pre}/lib/web.ex",             :web, "lib/web.ex"},
+    {:eex,  "#{@pre}/lib/app_name.ex",        :web, "lib/:web_app.ex"},
     {:eex,  "#{@pre}/lib/endpoint.ex",        :web, "lib/endpoint.ex"},
     {:eex,  "#{@pre}/lib/gettext.ex",         :web, "lib/gettext.ex"},
     {:eex,  "#{@pre}/lib/router.ex",          :web, "lib/router.ex"},
