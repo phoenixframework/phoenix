@@ -81,10 +81,6 @@ end
 
 defimpl Phoenix.Param, for: Any do
   defmacro __deriving__(module, struct, options) do
-    deriving(module, struct, options)
-  end
-
-  def deriving(module, struct, options) do
     key = Keyword.get(options, :key, :id)
 
     unless Map.has_key?(struct, key) do
