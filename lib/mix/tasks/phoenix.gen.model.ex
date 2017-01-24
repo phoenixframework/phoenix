@@ -151,7 +151,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
   end
 
   defp partition_attrs_and_assocs(attrs) do
-    Enum.partition attrs, fn
+    {assocs, attrs} = Enum.partition(attrs, fn
       {_, {:references, _}} ->
         true
       {key, :references} ->
@@ -163,7 +163,15 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
         """
       _ ->
         false
-    end
+    end)
+
+    assocs = Enum.map(assocs, fn {key_id, {:references, source}} ->
+      key   = String.replace(Atom.to_string(key_id), "_id", "")
+      assoc = Mix.Phoenix.inflect key
+      {String.to_atom(key), key_id, assoc[:module], source}
+    end)
+
+    {assocs, attrs}
   end
 
   defp assocs(assocs) do
