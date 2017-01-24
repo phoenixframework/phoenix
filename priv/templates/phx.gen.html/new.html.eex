@@ -1,0 +1,6 @@
+<h2>New <%= human_singular %></h2>
+
+<%= "<%=" %> render "form.html", changeset: @changeset,
+                        action: <%= schema_singular %>_path(@conn, :create) <%= "%\>" %>
+
+<span><%= "<%=" %> link "Back", to: <%= schema_singular %>_path(@conn, :index) <%= "%\>" %></span>
