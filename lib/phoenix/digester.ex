@@ -273,7 +273,7 @@ defmodule Phoenix.Digester do
   Digests and compresses the static files and saves them in the given output path.
 
     * `output_path` - The path where the compiled/compressed files will be saved
-    * `age` - The max age of assets to keep
+    * `age` - The max age of assets to keep in seconds
     * `keep` - The number of old versions to keep
   """
   @spec clean(String.t, integer, integer, integer) :: :ok | {:error, :invalid_path}
