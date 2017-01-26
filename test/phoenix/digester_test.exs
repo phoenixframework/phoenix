@@ -297,6 +297,31 @@ defmodule Phoenix.DigesterTest do
       refute "app-1.css" in output_files
       refute "app-1.css.gz" in output_files
     end
+
+    test "cleaning doesn't delete the latest even if the mtime is wrong" do
+      manifest_path = "test/fixtures/digest/cleaner/latest_not_most_recent_manifest.json"
+      File.mkdir_p!(@output_path)
+      File.cp(manifest_path, "#{@output_path}/manifest.json")
+      File.touch("#{@output_path}/app.css")
+      File.touch("#{@output_path}/app-1.css")
+      File.touch("#{@output_path}/app-1.css.gz")
+      File.touch("#{@output_path}/app-2.css")
+      File.touch("#{@output_path}/app-2.css.gz")
+      File.touch("#{@output_path}/app-3.css")
+      File.touch("#{@output_path}/app-3.css.gz")
+      File.touch("#{@output_path}/app.css")
+
+      assert :ok = Phoenix.Digester.clean(@output_path, 3600, 1, @fake_now)
+      output_files = assets_files(@output_path)
+
+      assert "app.css" in output_files
+      assert "app-3.css" in output_files
+      assert "app-3.css.gz" in output_files
+      assert "app-2.css" in output_files
+      assert "app-2.css.gz" in output_files
+      refute "app-1.css" in output_files
+      refute "app-1.css.gz" in output_files
+    end
   end
 
   defp assets_files(path) do

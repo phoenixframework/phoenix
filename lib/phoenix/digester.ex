@@ -290,10 +290,13 @@ defmodule Phoenix.Digester do
   defp load_clean_digests(path) do
     manifest_path = Path.join(path, "manifest.json")
     if File.exists?(manifest_path) do
-      manifest_path
-      |> File.read!
-      |> Poison.decode!
-      |> Access.get("digests")
+      manifest =
+        manifest_path
+        |> File.read!
+        |> Poison.decode!
+
+      latest = Map.values(manifest["latest"])
+      Map.drop(manifest["digests"], latest)
     end
   end
 
@@ -301,8 +304,8 @@ defmodule Phoenix.Digester do
     for {_, versions} <- group_by_logical_path(digests) do
       versions
       |> Enum.map(fn {path, attrs} -> Map.put(attrs, "path", path) end)
-      |> Enum.sort(&(&1["mtime"] > &2["mtime"]))
-      |> Enum.with_index
+      |> Enum.sort_by(&(&1["mtime"]), &>/2)
+      |> Enum.with_index(1)
       |> Enum.filter(fn {version, index} ->
         max_age > version["mtime"] || index > keep
       end)
