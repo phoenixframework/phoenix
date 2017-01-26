@@ -72,7 +72,7 @@ defmodule Phoenix.Digester do
     end
   end
 
-  defp get_digest(manifest = %{version: 1}, _output_path) do
+  defp get_digest(manifest = %{"version" => 1}, _output_path) do
     Access.get(manifest, "digests")
   end
 
@@ -88,10 +88,14 @@ defmodule Phoenix.Digester do
        manifest_join(&1.relative_path, &1.digested_filename)
     }))
 
-    digests =
-      files
-      |> generate_new_digests
-      |> Map.merge(old_digests)
+    old_digests_that_still_exist =
+      old_digests
+      |> Enum.filter(fn {file, _} -> File.exists?(Path.join(output_path, file)) end)
+      |> Map.new
+
+    new_digests = generate_new_digests(files)
+
+    digests = Map.merge(old_digests_that_still_exist, new_digests)
 
     manifest_content = Poison.encode!(%{latest: latest, version: @manifest_version, digests: digests}, [])
     File.write!(Path.join(output_path, "manifest.json"), manifest_content)
