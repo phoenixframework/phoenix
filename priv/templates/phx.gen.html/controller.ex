@@ -37,14 +37,14 @@ defmodule <%= inspect web_module %>.<%= inspect schema_alias %>Controller do
 
   def update(conn, %{"id" => id, <%= inspect schema_singular %> => <%= schema_singular %>_params}) do
     with {:ok, <%= schema_singular %>} <- <%= inspect module %>.fetch_<%= schema_singular %>(id),
-         {:ok, <%= schema_singular %>} <- <%= inspect module %>.update_<%= schema_singular %>(<%= schema_singular %>) do
+         {:ok, <%= schema_singular %>} <- <%= inspect module %>.update_<%= schema_singular %>(<%= schema_singular %>, <%= schema_singular %>_params) do
 
       conn
       |> put_flash(:info, "<%= human_singular %> updated successfully.")
       |> redirect(to: <%= schema_singular %>_path(conn, :show, <%= schema_singular %>))
     else
       {:error, %Ecto.Changeset{} = changeset} ->
-        render(conn, "edit.html", <%= schema_singular %>: <%= schema_singular %>, changeset: changeset)
+        render(conn, "edit.html", <%= schema_singular %>: changeset.data, changeset: changeset)
     end
   end
 

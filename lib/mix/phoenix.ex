@@ -6,6 +6,25 @@ defmodule Mix.Phoenix do
                      :array, :references, :text, :date, :time,
                      :naive_datetime, :utc_datetime, :uuid, :binary]
 
+
+  @doc """
+  Evals EEx files from source dir.
+
+  Files are evaluated against EEx according to
+  the given binding.
+  """
+  def eval_from(apps, source_file_path, binding) do
+    sources = Enum.map(apps, &to_app_source(&1, source_file_path))
+
+    content =
+      Enum.find_value(sources, fn source ->
+        File.exists?(source) && File.read!(source)
+      end) || raise "could not find #{source_file_path} in any of the sources"
+
+    EEx.eval_string(content, binding)
+  end
+
+
   @doc """
   Copies files from source dir to target dir
   according to the given map.

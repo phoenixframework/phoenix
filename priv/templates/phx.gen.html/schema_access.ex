@@ -1,7 +1,7 @@
 
   @<%= schema_singular %>_fields <%= inspect Keyword.keys(schema_attrs) %>
 
-  defmodule <%= inspect schema_module %>Input do
+  defmodule <%= inspect schema_alias %>Input do
     use Ecto.Schema
 
     embedded_schema do
@@ -62,7 +62,8 @@
       |> Repo.insert()
     end)
     |> Repo.transaction()
-      {:ok, %{<%= schema_singular %>: <%= schema_singular %>} -> {:ok, <%= schema_singular %>}
+    |> case do
+      {:ok, %{<%= schema_singular %>: <%= schema_singular %>}} -> {:ok, <%= schema_singular %>}
       # TODO map core struct to input struct errors?
       {:error, _op, _field, %{<%= schema_singular %>: changeset}} -> {:error, changeset}
     end
@@ -90,7 +91,8 @@
       |> Repo.update()
     end)
     |> Repo.transaction()
-      {:ok, %{<%= schema_singular %>: <%= schema_singular %>} -> {:ok, <%= schema_singular %>}
+    |> case do
+      {:ok, %{<%= schema_singular %>: <%= schema_singular %>}} -> {:ok, <%= schema_singular %>}
       # TODO map core struct to input struct errors?
       {:error, _op, _field, %{<%= schema_singular %>: changeset}} -> {:error, changeset}
     end
@@ -111,7 +113,8 @@
     Ecto.Multi.new()
     |> Ecto.Multi.delete(:<%= schema_singular %>, <%= schema_singular %>)
     |> Repo.transaction()
-      {:ok, %{<%= schema_singular %>: <%= schema_singular %>} -> {:ok, <%= schema_singular %>}
+    |> case do
+      {:ok, %{<%= schema_singular %>: <%= schema_singular %>}} -> {:ok, <%= schema_singular %>}
       {:error, _op, _field, %{<%= schema_singular %>: changeset}} -> {:error, changeset}
     end
   end
@@ -139,7 +142,7 @@
 <% end %>  end
 
   defp to_<%= schema_singular %>_changeset(%<%= inspect schema_module %>{} = <%= schema_singular %>, %<%= inspect schema_module %>Input{} = <%= schema_singular %>_input) do
-    cast(user, Map.take(<%= schema_singular %>_input, @<%= schema_singular %>_fields), @<%= schema_singular %>_fields)
+    cast(<%= schema_singular %>, Map.take(<%= schema_singular %>_input, @<%= schema_singular %>_fields), @<%= schema_singular %>_fields)
   end
 
   defp to_<%= schema_singular %>_input(%<%= inspect schema_module %>{} = <%= schema_singular %>) do
