@@ -1,8 +1,8 @@
 defmodule <%= inspect module %> do
   @moduledoc """
-  The boundary for the <%= human_singular %> system.
+  The boundary for the <%= module |> Module.split() |> List.last() %> system.
   """
-  import Ecto.Query
+  import Ecto.{Query, Changeset}
   alias <%= inspect base_module %>.Repo
 
   defp apply_input_changes(_changes, changeset) do

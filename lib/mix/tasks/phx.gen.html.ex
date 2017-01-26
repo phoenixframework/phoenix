@@ -90,6 +90,23 @@ defmodule Mix.Tasks.Phx.Gen.Html do
       ])
     end
 
+    def inject_schema_access(%__MODULE__{} = context, paths, binding) do
+      unless context.pre_existing? do
+        File.write!(context.file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.html/context.ex", binding))
+      end
+      schema_content = Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.html/schema_access.ex", binding)
+
+      context.file
+      |> File.read!()
+      |> String.trim_trailing()
+      |> String.trim_trailing("end")
+      |> EEx.eval_string(binding)
+      |> Kernel.<>(schema_content)
+      |> Kernel.<>("end\n")
+      |> write_context(context)
+    end
+    defp write_context(content, context), do: File.write!(context.file, content)
+
     defp partition_attrs_and_assocs(attrs) do
       {assocs, attrs} = Enum.partition(attrs, fn
         {_, {:references, _}} ->
@@ -201,30 +218,49 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     context = Context.new(context, schema, plural, attrs, opts)
     binding = Context.binding(context)
 
-    # Mix.Phoenix.copy_from paths(), "priv/templates/phx.gen.html", "", binding, [
-    #   {:eex, "controller.ex",       "web/controllers/#{path}_controller.ex"},
-    #   {:eex, "edit.html.eex",       "web/templates/#{path}/edit.html.eex"},
-    #   {:eex, "form.html.eex",       "web/templates/#{path}/form.html.eex"},
-    #   {:eex, "index.html.eex",      "web/templates/#{path}/index.html.eex"},
-    #   {:eex, "new.html.eex",        "web/templates/#{path}/new.html.eex"},
-    #   {:eex, "show.html.eex",       "web/templates/#{path}/show.html.eex"},
-    #   {:eex, "view.ex",             "web/views/#{path}_view.ex"},
-    #   {:eex, "controller_test.exs", "test/controllers/#{path}_controller_test.exs"},
-    # ]
+    # TODO when I wake up:
+    # - inject schema_access into context if pre-existing
+    # - continue tests
+    Context.inject_schema_access(context, paths(), binding)
 
-    IO.puts EEx.eval_file("priv/templates/phx.gen.html/schema_access.ex", binding)
-    IO.puts EEx.eval_file("priv/templates/phx.gen.html/controller.ex", binding)
-    IO.puts EEx.eval_file("priv/templates/phx.gen.html/migration.ex", binding)
-    IO.puts EEx.eval_file("priv/templates/phx.gen.html/view.ex", binding)
-    IO.puts EEx.eval_file("priv/templates/phx.gen.html/schema.ex", binding)
-    for view <- ~w(edit form index new show) do
-      IO.puts EEx.eval_file("priv/templates/phx.gen.html/#{view}.html.eex", binding)
-    end
+    Mix.Phoenix.copy_from paths(), "priv/templates/phx.gen.html", "", binding, [
+      {:eex, "schema.ex",          context.schema_file},
+      {:eex, "controller.ex",      "lib/web/controllers/#{context.schema_singular}_controller.ex"},
+      {:eex, "edit.html.eex",      "lib/web/templates/#{context.schema_singular}/edit.html.eex"},
+      {:eex, "form.html.eex",      "lib/web/templates/#{context.schema_singular}/form.html.eex"},
+      {:eex, "index.html.eex",     "lib/web/templates/#{context.schema_singular}/index.html.eex"},
+      {:eex, "new.html.eex",       "lib/web/templates/#{context.schema_singular}/new.html.eex"},
+      {:eex, "show.html.eex",      "lib/web/templates/#{context.schema_singular}/show.html.eex"},
+      {:eex, "view.ex",            "lib/web/views/#{context.schema_singular}_view.ex"},
+      {:eex, "migration.exs",      "priv/repo/migrations/#{timestamp()}_create_#{String.replace(context.schema_singular, "/", "_")}.exs"},
+
+      # {:eex, "controller_test.exs", "test/web/controllers/#{context.schema_singular}_controller_test.exs"},
+    ]
+
+    # IO.puts EEx.eval_file("priv/templates/phx.gen.html/context.ex", binding)
+    # IO.puts EEx.eval_file("priv/templates/phx.gen.html/schema_access.ex", binding)
+    # IO.puts EEx.eval_file("priv/templates/phx.gen.html/controller.ex", binding)
+    # IO.puts EEx.eval_file("priv/templates/phx.gen.html/migration.ex", binding)
+    # IO.puts EEx.eval_file("priv/templates/phx.gen.html/view.ex", binding)
+    # IO.puts EEx.eval_file("priv/templates/phx.gen.html/schema.ex", binding)
+    # for view <- ~w(edit form index new show) do
+    #   IO.puts EEx.eval_file("priv/templates/phx.gen.html/#{view}.html.eex", binding)
+    # end
+    # Context.inject_schema_access(context, binding)
   end
+
+  defp timestamp do
+    {{y, m, d}, {hh, mm, ss}} = :calendar.universal_time()
+    "#{y}#{pad(m)}#{pad(d)}#{pad(hh)}#{pad(mm)}#{pad(ss)}"
+  end
+
+  defp pad(i) when i < 10, do: << ?0, ?0 + i >>
+  defp pad(i), do: to_string(i)
 
   defp paths do
     [".", :phoenix]
   end
+
   defp validate_args!([_, _, plural | _] = args) do
     cond do
       String.contains?(plural, ":") ->
