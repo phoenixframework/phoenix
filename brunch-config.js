@@ -13,7 +13,7 @@ exports.config = {
       return "(function (global, factory) {\n"
         + "typeof exports === 'object' ? factory(exports) :\n"
         + "typeof define === 'function' && define.amd ? define(['exports'], factory) :\n"
-        + "(global.Phoenix = factory(global.Phoenix || {}));\n"
+        + "factory(global.Phoenix = global.Phoenix || {});\n"
         + "}(this, (function (exports) {\n"
         + code
         + "\n})));";

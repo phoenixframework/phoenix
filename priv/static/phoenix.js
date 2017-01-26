@@ -1,7 +1,7 @@
 (function (global, factory) {
 typeof exports === 'object' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
-(global.Phoenix = factory(global.Phoenix || {}));
+factory(global.Phoenix = global.Phoenix || {});
 }(this, (function (exports) {
 "use strict";
 
