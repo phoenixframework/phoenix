@@ -344,6 +344,29 @@ defmodule Phoenix.DigesterTest do
       refute "app-1.css" in output_files
       refute "app-1.css.gz" in output_files
     end
+
+    test "cleaning updates manifest to remove cleaned files" do
+      manifest_path = "test/fixtures/digest/cleaner/manifest.json"
+      File.mkdir_p!(@output_path)
+      File.cp(manifest_path, "#{@output_path}/manifest.json")
+      File.touch("#{@output_path}/app.css")
+      File.touch("#{@output_path}/app-1.css")
+      File.touch("#{@output_path}/app-1.css.gz")
+      File.touch("#{@output_path}/app-2.css")
+      File.touch("#{@output_path}/app-2.css.gz")
+      File.touch("#{@output_path}/app-3.css")
+      File.touch("#{@output_path}/app-3.css.gz")
+      File.touch("#{@output_path}/app.css")
+
+      assert :ok = Phoenix.Digester.clean(@output_path, 3600, 1, @fake_now)
+
+      json =
+        Path.join(@output_path, "manifest.json")
+        |> File.read!()
+        |> Poison.decode!()
+
+      refute json["digests"]["app-1.css"]
+    end
   end
 
   defp assets_files(path) do
