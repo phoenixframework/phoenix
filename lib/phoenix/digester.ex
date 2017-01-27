@@ -1,6 +1,11 @@
 defmodule Phoenix.Digester do
   @digested_file_regex ~r/(-[a-fA-F\d]{32})/
   @manifest_version 1
+  @empty_manifest %{
+    "version" => 1,
+    "digests" => %{},
+    "latest" => %{}
+  }
 
   defp now() do
     :calendar.datetime_to_gregorian_seconds(:calendar.universal_time)
@@ -61,25 +66,33 @@ defmodule Phoenix.Digester do
   end
 
   defp load_compile_digests(output_path) do
+    manifest = load_manifest(output_path)
+    manifest["digests"]
+  end
+
+  defp load_manifest(output_path) do
     manifest_path = Path.join(output_path, "manifest.json")
+
     if File.exists?(manifest_path) do
       manifest_path
       |> File.read!
       |> Poison.decode!
-      |> get_digest(output_path)
+      |> migrate_manifest(output_path)
     else
-      %{}
+      @empty_manifest
     end
   end
 
-  defp get_digest(manifest = %{"version" => 1}, _output_path) do
-    Access.get(manifest, "digests")
-  end
+  defp migrate_manifest(%{"version" => 1} = manifest, _output_path), do: manifest
+  defp migrate_manifest(latest, output_path) do
+    digests =
+      output_path
+      |> filter_digested_files
+      |> generate_new_digests
 
-  defp get_digest(_manifest, output_path) do
-    output_path
-    |> filter_digested_files
-    |> generate_new_digests
+    @empty_manifest
+    |> Map.put("digests", digests)
+    |> Map.put("latest", latest)
   end
 
   defp generate_manifest(files, old_digests, output_path) do
