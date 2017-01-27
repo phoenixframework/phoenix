@@ -1043,6 +1043,10 @@ defmodule Phoenix.Controller do
       iex> conn = put_flash(conn, :info, "Welcome Back!")
       iex> get_flash(conn, :info)
       "Welcome Back!"
+      
+      iex> conn = put_flash(conn, :info, ["Check out our new features!", "Welcome Back!"])
+      iex> get_flash(conn, :info)
+      ["Check out our new features!", "Welcome Back!"]
 
   """
   def put_flash(conn, key, message) do
@@ -1072,6 +1076,10 @@ defmodule Phoenix.Controller do
       iex> conn = put_flash(conn, :info, "Welcome Back!")
       iex> get_flash(conn, :info)
       "Welcome Back!"
+      
+      iex> conn = put_flash(conn, :info, ["Check out our new features!", "Welcome Back!"])
+      iex> get_flash(conn, :info)
+      ["Check out our new features!", "Welcome Back!"]
 
   """
   def get_flash(conn, key) do
