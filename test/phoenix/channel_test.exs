@@ -108,4 +108,21 @@ defmodule Phoenix.Channel.ChannelTest do
       socket_ref(%Phoenix.Socket{joined: true})
     end
   end
+
+  test "subscribe to other topic" do
+    defmodule Channel do
+      use Phoenix.Channel
+    end
+    Phoenix.PubSub.subscribe(@pubsub, self, "sometopic")
+    socket = %Phoenix.Socket{serializer: Phoenix.ChannelTest.NoopSerializer,
+                             transport_pid: self(), pubsub_server: @pubsub, topic: "sometopic",
+                             channel_pid: self(), channel: Channel, joined: true}
+
+    subscribe("othertopic", socket)
+    broadcast socket, "othertopic", "event", %{key: :val}
+    assert_receive %Phoenix.Socket.Broadcast{topic: "othertopic", event: "event", payload: %{key: :val}}
+
+    unsubscribe("othertopic", socket)
+    refute_receive %Phoenix.Socket.Broadcast{topic: "othertopic", event: "event", payload: %{key: :val}}
+  end
 end
