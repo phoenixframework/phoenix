@@ -49,8 +49,13 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert_file "photo_blog/test/views/page_view_test.exs"
       assert_file "photo_blog/test/views/error_view_test.exs"
       assert_file "photo_blog/test/views/layout_view_test.exs"
+      assert_file "photo_blog/test/views/error_helpers_test.exs", &assert(&1 =~ "PhotoBlog.ErrorHelpersTest")
+      assert_file "photo_blog/test/views/error_helpers_test.exs", &assert(&1 =~ "alias PhotoBlog.ErrorHelpers")
+      assert_file "photo_blog/test/views/error_helpers_test.exs", &assert(&1 =~ ".error_tag/3")
       assert_file "photo_blog/test/support/conn_case.ex"
       assert_file "photo_blog/test/test_helper.exs"
+
+      assert_file "photo_blog/web/views/error_helpers.ex", &assert(&1 =~ "def error_tag")
 
       assert_file "photo_blog/web/controllers/page_controller.ex",
                   ~r/defmodule PhotoBlog.PageController/

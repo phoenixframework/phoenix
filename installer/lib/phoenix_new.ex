@@ -35,6 +35,7 @@ defmodule Mix.Tasks.Phoenix.New do
     {:eex,  "new/priv/gettext/errors.pot",                   "priv/gettext/errors.pot"},
     {:eex,  "new/priv/gettext/en/LC_MESSAGES/errors.po",     "priv/gettext/en/LC_MESSAGES/errors.po"},
     {:eex,  "new/web/views/error_helpers.ex",                "web/views/error_helpers.ex"},
+    {:eex,  "new/test/views/error_helpers_test.exs",         "test/views/error_helpers_test.exs"}
   ]
 
   @ecto [
