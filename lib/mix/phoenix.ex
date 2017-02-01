@@ -121,15 +121,6 @@ defmodule Mix.Phoenix do
   end
 
   @doc """
-  Fetches the unique attributes from attrs.
-  """
-  def uniques(attrs) do
-    attrs
-    |> Enum.filter(&String.ends_with?(&1, ":unique"))
-    |> Enum.map(& &1 |> String.split(":", parts: 2) |> hd |> String.to_atom)
-  end
-
-  @doc """
   Generates some sample params based on the parsed attributes.
   """
   def params(attrs) do
@@ -225,5 +216,15 @@ defmodule Mix.Phoenix do
   defp validate_attr!({_, type}) do
     Mix.raise "Unknown type `#{type}` given to generator. " <>
               "The supported types are: #{@valid_attributes |> Enum.sort() |> Enum.join(", ")}"
+  end
+
+  @doc """
+  The paths to look for template files for generators.
+
+  Defaults to checking the current app's priv directory,
+  and falls back to phoenix's priv directory.
+  """
+  def generator_paths do
+    [".", :phoenix]
   end
 end

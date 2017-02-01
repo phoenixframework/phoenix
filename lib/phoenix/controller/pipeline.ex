@@ -63,9 +63,9 @@ defmodule Phoenix.Controller.Pipeline do
         end
       end
 
-  In the above exmaple, `with` is used to match only a successful
+  In the above example, `with` is used to match only a successful
   post fetch, followed by valid authorization for the current user.
-  If in the event either of those fail to match, `with` will not invoke
+  In the event either of those fail to match, `with` will not invoke
   the render block and instead returned the unmatched value. In this case,
   imagine `Blog.fetch_post/2` returned `{:error, :not_found}` or
   `Authorizer.authorize/3` returned `{:error, :unauthorized}`. For cases

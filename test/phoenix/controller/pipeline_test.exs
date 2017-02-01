@@ -149,8 +149,6 @@ defmodule Phoenix.Controller.PipelineTest do
     end
   end
 
-
-
   defp stack_conn() do
     conn(:get, "/")
     |> fetch_query_params()

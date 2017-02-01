@@ -91,7 +91,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     default_opts = Application.get_env(:phoenix, :generators, [])
     opts = Keyword.merge(default_opts, opts)
 
-    uniques   = Mix.Phoenix.uniques(attrs)
+    uniques   = Mix.Phoenix.Schema.uniques(attrs) #
     attrs     = Mix.Phoenix.attrs(attrs)
     binding   = Mix.Phoenix.inflect(singular)
     params    = Mix.Phoenix.params(attrs)
@@ -150,28 +150,20 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     """
   end
 
+
   defp partition_attrs_and_assocs(attrs) do
-    {assocs, attrs} = Enum.partition(attrs, fn
+    Enum.partition attrs, fn
       {_, {:references, _}} ->
         true
       {key, :references} ->
         Mix.raise """
         Phoenix generators expect the table to be given to #{key}:references.
         For example:
-
             mix phoenix.gen.model Comment comments body:text post_id:references:posts
         """
       _ ->
         false
-    end)
-
-    assocs = Enum.map(assocs, fn {key_id, {:references, source}} ->
-      key   = String.replace(Atom.to_string(key_id), "_id", "")
-      assoc = Mix.Phoenix.inflect key
-      {String.to_atom(key), key_id, assoc[:module], source}
-    end)
-
-    {assocs, attrs}
+    end
   end
 
   defp assocs(assocs) do
