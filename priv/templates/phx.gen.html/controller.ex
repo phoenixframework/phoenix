@@ -1,60 +1,59 @@
-defmodule <%= inspect web_module %>.<%= inspect schema_alias %>Controller do
-  use <%= inspect web_module %>, :controller
+defmodule <%= inspect context.web_module %>.<%= inspect schema.alias %>Controller do
+  use <%= inspect context.web_module %>, :controller
+
+  alias <%= inspect context.module %>
 
   def index(conn, _params) do
-    <%= schema_plural %> = <%= inspect module %>.list_<%= schema_plural %>(limit: 100)
-    render(conn, "index.html", <%= schema_plural %>: <%= schema_plural %>)
+    <%= schema.plural %> = <%= inspect context.alias %>.list_<%= schema.plural %>()
+    render(conn, "index.html", <%= schema.plural %>: <%= schema.plural %>)
   end
 
   def new(conn, _params) do
-    changeset = <%= inspect module %>.change_<%= schema_singular %>(%<%= inspect schema_module %>{})
+    changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(%<%= inspect schema.module %>{})
     render(conn, "new.html", changeset: changeset)
   end
 
-  def create(conn, %{<%= inspect schema_singular %> => <%= schema_singular %>_params}) do
-    with {:ok, <%= schema_singular %>} <- <%= inspect module %>.create_<%= schema_singular %>(<%= schema_singular %>_params) do
-      conn
-      |> put_flash(:info, "<%= human_singular %> created successfully.")
-      |> redirect(to: <%= schema_singular %>_path(conn, :index))
-    else
+  def create(conn, %{<%= inspect schema.singular %> => <%= schema.singular %>_params}) do
+    case <%= inspect context.alias %>.create_<%= schema.singular %>(<%= schema.singular %>_params) do
+      {:ok, _<%= schema.singular %>} ->
+        conn
+        |> put_flash(:info, "<%= schema.human_singular %> created successfully.")
+        |> redirect(to: <%= schema.singular %>_path(conn, :index))
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, "new.html", changeset: changeset)
     end
   end
 
   def show(conn, %{"id" => id}) do
-    with {:ok, <%= schema_singular %>} = <%= inspect module %>.fetch_<%= schema_singular %>(id) do
-      render(conn, "show.html", <%= schema_singular %>: <%= schema_singular %>)
-    end
+    <%= schema.singular %> = <%= inspect context.alias %>.fetch_<%= schema.singular %>!(id)
+    render(conn, "show.html", <%= schema.singular %>: <%= schema.singular %>)
   end
 
   def edit(conn, %{"id" => id}) do
-    with {:ok, <%= schema_singular %>} = <%= inspect module %>.fetch_<%= schema_singular %>(id) do
-      changeset = <%= inspect module %>.change_<%= schema_singular %>(<%= schema_singular %>)
-      render(conn, "edit.html", <%= schema_singular %>: <%= schema_singular %>, changeset: changeset)
-    end
+    <%= schema.singular %> = <%= inspect context.alias %>.fetch_<%= schema.singular %>!(id)
+    changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>)
+    render(conn, "edit.html", <%= schema.singular %>: <%= schema.singular %>, changeset: changeset)
   end
 
-  def update(conn, %{"id" => id, <%= inspect schema_singular %> => <%= schema_singular %>_params}) do
-    with {:ok, <%= schema_singular %>} <- <%= inspect module %>.fetch_<%= schema_singular %>(id),
-         {:ok, <%= schema_singular %>} <- <%= inspect module %>.update_<%= schema_singular %>(<%= schema_singular %>, <%= schema_singular %>_params) do
+  def update(conn, %{"id" => id, <%= inspect schema.singular %> => <%= schema.singular %>_params}) do
+    <%= schema.singular %> = <%= inspect context.alias %>.fetch_<%= schema.singular %>!(id)
 
-      conn
-      |> put_flash(:info, "<%= human_singular %> updated successfully.")
-      |> redirect(to: <%= schema_singular %>_path(conn, :show, <%= schema_singular %>))
-    else
+    case <%= inspect context.alias %>.update_<%= schema.singular %>(<%= schema.singular %>, <%= schema.singular %>_params) do
+      {:ok, <%= schema.singular %>} ->
+        conn
+        |> put_flash(:info, "<%= schema.human_singular %> updated successfully.")
+        |> redirect(to: <%= schema.singular %>_path(conn, :show, <%= schema.singular %>))
       {:error, %Ecto.Changeset{} = changeset} ->
-        render(conn, "edit.html", <%= schema_singular %>: changeset.data, changeset: changeset)
+        render(conn, "edit.html", <%= schema.singular %>: <%= schema.singular %>, changeset: changeset)
     end
   end
 
   def delete(conn, %{"id" => id}) do
-    with {:ok, <%= schema_singular %>} <- <%= inspect module %>.fetch_<%= schema_singular %>(id),
-         {:ok, <%= schema_singular %>} <- <%= inspect module %>.delete_<%= schema_singular %>(<%= schema_singular %>) do
+    <%= schema.singular %> = <%= inspect context.alias %>.fetch_<%= schema.singular %>!(id)
+    {:ok, _<%= schema.singular %>} = <%= inspect context.alias %>.delete_<%= schema.singular %>(<%= schema.singular %>)
 
-      conn
-      |> put_flash(:info, "<%= human_singular %> deleted successfully.")
-      |> redirect(to: <%= schema_singular %>_path(conn, :index))
-    end
+    conn
+    |> put_flash(:info, "<%= schema.human_singular %> deleted successfully.")
+    |> redirect(to: <%= schema.singular %>_path(conn, :index))
   end
 end
