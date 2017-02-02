@@ -90,7 +90,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       assert_file "lib/web/controllers/post_controller.ex", fn file ->
         assert file =~ "defmodule Phoenix.Web.PostController"
         assert file =~ "use Phoenix.Web, :controller"
-        assert file =~ "Blog.fetch_post!"
+        assert file =~ "Blog.get_post!"
       end
     end
   end
