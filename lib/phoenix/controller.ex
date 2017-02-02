@@ -1050,9 +1050,12 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Returns a previously set flash message or nil.
+  Returns a map of previously set flash messages or an empty map.
 
   ## Examples
+
+      iex> get_flash(conn)
+      %{}
 
       iex> conn = put_flash(conn, :info, "Welcome Back!")
       iex> get_flash(conn)
