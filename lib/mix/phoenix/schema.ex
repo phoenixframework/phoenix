@@ -7,6 +7,7 @@ defmodule Mix.Phoenix.Schema do
             alias: nil,
             file: nil,
             attrs: [],
+            string_attr: nil,
             plural: nil,
             singular: nil,
             uniques: [],
@@ -18,7 +19,9 @@ defmodule Mix.Phoenix.Schema do
             human_plural: nil,
             binary_id: nil,
             migration_defaults: nil,
-            migration?: false
+            migration?: false,
+            params: %{},
+            sample_id: nil
 
   def new(schema_name, schema_plural, cli_attrs, opts) do
     basename = Phoenix.Naming.underscore(schema_name)
@@ -46,13 +49,16 @@ defmodule Mix.Phoenix.Schema do
       singular: singular,
       assocs: assocs,
       types: types(attrs),
+      string_attr: attrs |> types() |> string_attr(),
       defaults: schema_defaults(attrs),
       uniques: uniques,
       indexes: indexes(schema_plural, assocs, uniques),
       human_singular: Phoenix.Naming.humanize(singular),
       human_plural: Phoenix.Naming.humanize(schema_plural),
       binary_id: opts[:binary_id],
-      migration_defaults: migration_defaults(attrs)}
+      migration_defaults: migration_defaults(attrs),
+      params: Mix.Phoenix.params(attrs),
+      sample_id: sample_id(opts)}
   end
 
   @doc """
@@ -93,6 +99,14 @@ defmodule Mix.Phoenix.Schema do
     end)
   end
 
+  defp string_attr(types) do
+    Enum.find_value(types, fn
+      {key, {_col, :string}} -> key
+      {key, :string} -> key
+      _ -> false
+    end)
+  end
+
   defp types(attrs) do
     Enum.into(attrs, %{}, fn
       {key, {column, val}} -> {key, {column, value_to_type(val)}}
@@ -125,5 +139,13 @@ defmodule Mix.Phoenix.Schema do
       {key, :boolean}  -> {key, ", default: false, null: false"}
       {key, _}         -> {key, ""}
     end)
+  end
+
+  defp sample_id(opts) do
+    if Keyword.get(opts, :binary_id, false) do
+      Keyword.get(opts, :sample_binary_id, "11111111-1111-1111-1111-111111111111")
+    else
+      -1
+    end
   end
 end

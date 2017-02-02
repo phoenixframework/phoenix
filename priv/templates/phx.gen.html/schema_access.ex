@@ -1,39 +1,32 @@
 
+  alias <%= inspect schema.module %>
+
   @doc """
   Returns the list of <%= schema.plural %>.
 
   ## Examples
 
       iex> list_<%= schema.plural %>()
-      [%<%= inspect schema.module %>{}, ...]
+      [%<%= inspect schema.alias %>{}, ...]
   """
   def list_<%= schema.plural %> do
-    Repo.all(<%= inspect schema.module %>)
+    Repo.all(<%= inspect schema.alias %>)
   end
 
   @doc """
-  Fetches a single <%= schema.singular %>.
+  Gets a single <%= schema.singular %>.
 
-  Raises `Ecto.NoResultsError` when called with `fetch_<%= schema.singular %>!/1`.
+  Raises `Ecto.NoResultsError` if the <%= schema.human_singular %> does not exist.
 
   ## Examples
 
-      iex> fetch_<%= schema.singular %>(123)
-      {:ok, %<%= inspect schema.module %>{}}
+      iex> get_<%= schema.singular %>!(123)
+      %<%= inspect schema.alias %>{}
 
-      iex> fetch_<%= schema.singular %>(456)
-      {:error, :not_found}
-
-      iex> fetch_<%= schema.singular %>!(456)
+      iex> get_<%= schema.singular %>!(456)
       ** (Ecto.NoResultsError)
   """
-  def fetch_<%= schema.singular %>(id) do
-    case Repo.get(<%= inspect schema.module %>, id) do
-      %<%= inspect schema.module %>{} = <%= schema.singular %> -> {:ok, <%= schema.singular %>}
-      nil -> {:error, :not_found}
-    end
-  end
-  def fetch_<%= schema.singular %>!(id), do: Repo.get!(<%= inspect schema.module %>, id)
+  def get_<%= schema.singular %>!(id), do: Repo.get!(<%= inspect schema.alias %>, id)
 
   @doc """
   Creates a <%= schema.singular %>.
@@ -41,13 +34,13 @@
   ## Examples
 
       iex> create_<%= schema.singular %>(<%= schema.singular %>, %{field: value})
-      {:ok, %<%= inspect schema.module %>{}}
+      {:ok, %<%= inspect schema.alias %>{}}
 
       iex> create_<%= schema.singular %>(<%= schema.singular %>, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
   """
   def create_<%= schema.singular %>(attrs \\ %{}) do
-    %<%= inspect schema.module %>{}
+    %<%= inspect schema.alias %>{}
     |> <%= schema.singular %>_changeset(attrs)
     |> Repo.insert()
   end
@@ -58,29 +51,29 @@
   ## Examples
 
       iex> update_<%= schema.singular %>(<%= schema.singular %>, %{field: new_value})
-      {:ok, %<%= inspect schema.module %>{}}
+      {:ok, %<%= inspect schema.alias %>{}}
 
       iex> update_<%= schema.singular %>(<%= schema.singular %>, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
   """
-  def update_<%= schema.singular %>(%<%= inspect schema.module %>{} = <%= schema.singular %>, attrs) do
+  def update_<%= schema.singular %>(%<%= inspect schema.alias %>{} = <%= schema.singular %>, attrs) do
     <%= schema.singular %>
     |> <%= schema.singular %>_changeset(attrs)
     |> Repo.update()
   end
 
   @doc """
-  Deletes a <%= inspect schema.module %>.
+  Deletes a <%= inspect schema.alias %>.
 
   ## Examples
 
       iex> delete_<%= schema.singular %>(<%= schema.singular %>)
-      {:ok, %<%= inspect schema.module %>{}}
+      {:ok, %<%= inspect schema.alias %>{}}
 
       iex> delete_<%= schema.singular %>(<%= schema.singular %>)
       {:error, %Ecto.Changeset{}}
   """
-  def delete_<%= schema.singular %>(%<%= inspect schema.module %>{} = <%= schema.singular %>) do
+  def delete_<%= schema.singular %>(%<%= inspect schema.alias %>{} = <%= schema.singular %>) do
     Repo.delete(<%= schema.singular %>)
   end
 
@@ -90,13 +83,13 @@
   ## Examples
 
       iex> change_<%= schema.singular %>(<%= schema.singular %>)
-      %Ecto.Changeset{source: %<%= inspect schema.module %>{}}
+      %Ecto.Changeset{source: %<%= inspect schema.alias %>{}}
   """
-  def change_<%= schema.singular %>(%<%= inspect schema.module %>{} = <%= schema.singular %>) do
+  def change_<%= schema.singular %>(%<%= inspect schema.alias %>{} = <%= schema.singular %>) do
     <%= schema.singular %>_changeset(<%= schema.singular %>, %{})
   end
 
-  defp <%= schema.singular %>_changeset(%<%= inspect schema.module %>{} = <%= schema.singular %>, attrs) do
+  defp <%= schema.singular %>_changeset(%<%= inspect schema.alias %>{} = <%= schema.singular %>, attrs) do
     <%= schema.singular %>
     |> cast(attrs, [<%= Enum.map_join(schema.attrs, ", ", &inspect(elem(&1, 0))) %>])
     |> validate_required([<%= Enum.map_join(schema.attrs, ", ", &inspect(elem(&1, 0))) %>])
