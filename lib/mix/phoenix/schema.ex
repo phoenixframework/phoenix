@@ -36,6 +36,13 @@ defmodule Mix.Phoenix.Schema do
       |> Module.split()
       |> List.last()
       |> Phoenix.Naming.underscore()
+    string_attr =  attrs |> types() |> string_attr()
+    default_params = Mix.Phoenix.params(attrs)
+    default_params_key =
+      case Enum.at(default_params, 0) do
+        {key, _} -> key
+        nil -> :some_field
+      end
 
     %Schema{
       opts: opts,
@@ -49,7 +56,6 @@ defmodule Mix.Phoenix.Schema do
       singular: singular,
       assocs: assocs,
       types: types(attrs),
-      string_attr: attrs |> types() |> string_attr(),
       defaults: schema_defaults(attrs),
       uniques: uniques,
       indexes: indexes(schema_plural, assocs, uniques),
@@ -57,9 +63,27 @@ defmodule Mix.Phoenix.Schema do
       human_plural: Phoenix.Naming.humanize(schema_plural),
       binary_id: opts[:binary_id],
       migration_defaults: migration_defaults(attrs),
-      params: Mix.Phoenix.params(attrs),
+      params: %{
+        default: default_params,
+        create: Mix.Phoenix.params(attrs, "created"),
+        update: Mix.Phoenix.params(attrs, "updated"),
+        default_key: string_attr || default_params_key
+      },
       sample_id: sample_id(opts)}
   end
+
+  @doc """
+  Returns the string value of the default schema param.
+  """
+  def default_param(%Schema{} = schema, action) do
+    schema.params
+    |> Map.fetch!(action)
+    |> Map.fetch!(schema.params.default_key)
+    |> inspect_val()
+    |> to_string()
+  end
+  defp inspect_val(val) when is_binary(val), do: val
+  defp inspect_val(val), do: inspect(val)
 
   @doc """
   Fetches the unique attributes from attrs.
