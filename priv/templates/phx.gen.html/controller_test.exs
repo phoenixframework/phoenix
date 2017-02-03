@@ -3,8 +3,8 @@ defmodule <%= inspect context.module %>ControllerTest do
 
   alias <%= inspect context.module %>
 
-  @valid_attrs <%= inspect schema.params %>
-  @invalid_attrs <%= inspect for {key, _} <- schema.params, into: %{}, do: {key, nil} %>
+  @valid_attrs <%= inspect schema.params.default %>
+  @invalid_attrs <%= inspect for {key, _} <- schema.params.default, into: %{}, do: {key, nil} %>
 
   def fixture(:<%= schema.singular %>, attrs \\ @valid_attrs) do
     {:ok, <%= schema.singular %>} = <%= inspect context.alias %>.create_<%= schema.singular %>(attrs)
@@ -22,12 +22,12 @@ defmodule <%= inspect context.module %>ControllerTest do
   end
 
   test "creates <%= schema.singular %> and redirects when data is valid", %{conn: conn} do
-    <%= schema.singular %>_params = <%= if schema.string_attr do %>%{@valid_attrs | <%= schema.string_attr %>: "created content"}<% else %>@valid_attrs<% end %>
+    <%= schema.singular %>_params = %{@valid_attrs | <%= schema.params.default_key %>: <%= inspect Mix.Phoenix.Schema.default_param(schema, :create) %>}
     conn = post conn, <%= schema.singular %>_path(conn, :create), <%= schema.singular %>: <%= schema.singular %>_params
     assert redirected_to(conn) == <%= schema.singular %>_path(conn, :index)
-    <%= if schema.string_attr do %>
+
     conn = get conn, <%= schema.singular %>_path(conn, :index)
-    assert html_response(conn, 200) =~ "created content"<% end %>
+    assert html_response(conn, 200) =~ <%= inspect Mix.Phoenix.Schema.default_param(schema, :create) %>
   end
 
   test "does not create <%= schema.singular %> and renders errors when data is invalid", %{conn: conn} do
@@ -55,12 +55,12 @@ defmodule <%= inspect context.module %>ControllerTest do
 
   test "updates chosen <%= schema.singular %> and redirects when data is valid", %{conn: conn} do
     <%= schema.singular %> = fixture(:<%= schema.singular %>)
-    <%= schema.singular %>_params = <%= if schema.string_attr do %>%{@valid_attrs | <%= schema.string_attr %>: "updated content"}<% else %>@valid_attrs<% end %>
+    <%= schema.singular %>_params = %{@valid_attrs | <%= schema.params.default_key %>: <%= inspect Mix.Phoenix.Schema.default_param(schema, :update) %>}
     conn = put conn, <%= schema.singular %>_path(conn, :update, <%= schema.singular %>), <%= schema.singular %>: <%= schema.singular %>_params
     assert redirected_to(conn) == <%= schema.singular %>_path(conn, :show, <%= schema.singular %>)
-    <%= if schema.string_attr do %>
+
     conn = get conn, <%= schema.singular %>_path(conn, :show, <%= schema.singular %>)
-    assert html_response(conn, 200) =~ "updated content"<% end %>
+    assert html_response(conn, 200) =~ <%= inspect Mix.Phoenix.Schema.default_param(schema, :update) %>
   end
 
   test "does not update chosen <%= schema.singular %> and renders errors when data is invalid", %{conn: conn} do

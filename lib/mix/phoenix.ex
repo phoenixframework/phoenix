@@ -123,13 +123,13 @@ defmodule Mix.Phoenix do
   @doc """
   Generates some sample params based on the parsed attributes.
   """
-  def params(attrs) do
+  def params(attrs, action \\ nil) do
     attrs
     |> Enum.reject(fn
         {_, {:references, _}} -> true
         {_, _} -> false
        end)
-    |> Enum.into(%{}, fn {k, t} -> {k, type_to_default(t)} end)
+    |> Enum.into(%{}, fn {k, t} -> {k, type_to_default(t, action)} end)
   end
 
   @doc """
@@ -193,7 +193,7 @@ defmodule Mix.Phoenix do
     {String.to_atom(key), {String.to_atom(comp), String.to_atom(value)}}
   end
 
-  defp type_to_default(t) do
+  defp type_to_default(t, nil = _action ) do
     case t do
         {:array, _}     -> []
         :integer        -> 42
@@ -210,6 +210,25 @@ defmodule Mix.Phoenix do
         _               -> "some content"
     end
   end
+  defp type_to_default(t, action) do
+    case t do
+        {:array, _}     -> []
+        :integer        -> 43
+        :float          -> "456.7"
+        :decimal        -> "456.7"
+        :boolean        -> false
+        :map            -> %{}
+        :text           -> "some #{action} content"
+        :date           -> %{year: 2011, month: 5, day: 18}
+        :time           -> %{hour: 15, minute: 1, second: 1}
+        :uuid           -> "7488a646-e31f-11e4-aace-600308960668"
+        :utc_datetime   -> %{year: 2011, month: 5, day: 18, hour: 15, minute: 1, second: 1}
+        :naive_datetime -> %{year: 2011, month: 5, day: 18, hour: 15, minute: 1, second: 1}
+        _               -> "some #{action} content"
+    end
+  end
+
+
 
   defp validate_attr!({_name, type} = attr) when type in @valid_attributes, do: attr
   defp validate_attr!({_name, {type, _}} = attr) when type in @valid_attributes, do: attr
