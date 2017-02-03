@@ -12,7 +12,7 @@ defmodule Phx.New.Single do
     {:eex,  "phx_new/lib/application.ex",             :project, "lib/application.ex"},
     {:eex,  "phx_new/lib/web/endpoint.ex",            :project, "lib/web/endpoint.ex"},
     {:keep, "phx_new/test/channels",                  :project, "test/channels"},
-    {:keep, "phx_new/test/controllers",               :project, "test/controllers"},
+    {:keep, "phx_new/test/web/controllers",           :project, "test/web/controllers"},
     {:eex,  "phx_new/test/views/error_view_test.exs", :project, "test/views/error_view_test.exs"},
     {:eex,  "phx_new/test/support/conn_case.ex",      :project, "test/support/conn_case.ex"},
     {:eex,  "phx_new/test/support/channel_case.ex",   :project, "test/support/channel_case.ex"},
@@ -50,7 +50,7 @@ defmodule Phx.New.Single do
   ]
 
   template :html, [
-    {:eex, "phx_new/test/controllers/page_controller_test.exs", :project, "test/controllers/page_controller_test.exs"},
+    {:eex, "phx_new/test/web/controllers/page_controller_test.exs", :project, "test/web/controllers/page_controller_test.exs"},
     {:eex, "phx_new/test/views/layout_view_test.exs",           :project, "test/views/layout_view_test.exs"},
     {:eex, "phx_new/test/views/page_view_test.exs",             :project, "test/views/page_view_test.exs"},
     {:eex, "phx_new/lib/web/controllers/page_controller.ex",    :project, "lib/web/controllers/page_controller.ex"},

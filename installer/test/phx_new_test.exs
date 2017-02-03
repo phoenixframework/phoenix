@@ -46,7 +46,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/web.ex", ~r/defmodule PhxBlog.Web do/
       assert_file "phx_blog/lib/web/endpoint.ex", ~r/defmodule PhxBlog.Web.Endpoint do/
 
-      assert_file "phx_blog/test/controllers/page_controller_test.exs"
+      assert_file "phx_blog/test/web/controllers/page_controller_test.exs"
       assert_file "phx_blog/test/views/page_view_test.exs"
       assert_file "phx_blog/test/views/error_view_test.exs"
       assert_file "phx_blog/test/views/layout_view_test.exs"
@@ -160,15 +160,15 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/web.ex", &refute(&1 =~ ~r"alias PhxBlog.Repo")
 
       # No HTML
-      assert File.exists?("phx_blog/test/controllers")
-      refute File.exists?("phx_blog/test/controllers/.keep")
+      assert File.exists?("phx_blog/test/web/controllers")
+      refute File.exists?("phx_blog/test/web/controllers/.keep")
 
       assert File.exists?("phx_blog/lib/web/controllers")
       refute File.exists?("phx_blog/lib/web/controllers/.keep")
       assert File.exists?("phx_blog/lib/web/views")
       refute File.exists?("phx_blog/lib/web/views/.keep")
 
-      refute File.exists? "phx_blog/test/controllers/pager_controller_test.exs"
+      refute File.exists? "phx_blog/test/web/controllers/pager_controller_test.exs"
       refute File.exists? "phx_blog/test/views/layout_view_test.exs"
       refute File.exists? "phx_blog/test/views/page_view_test.exs"
       refute File.exists? "phx_blog/lib/web/controllers/page_controller.ex"
