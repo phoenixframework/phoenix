@@ -1,5 +1,5 @@
 defmodule <%= inspect context.module %>Test do
-  use MyApp.DataCase
+  use <%= inspect context.base_module %>.DataCase
 
   alias <%= inspect context.module %>
   alias <%= inspect schema.module %>
