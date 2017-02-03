@@ -82,7 +82,10 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       assert_file "lib/blog/post.ex"
       assert_file "lib/blog.ex"
 
-      assert_file "test/blog_test.exs"
+      assert_file "test/blog_test.exs", fn file ->
+        assert file =~ "use Phoenix.DataCase"
+      end
+
       assert_file "test/web/controllers/post_controller_test.exs"
 
       assert [_] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
