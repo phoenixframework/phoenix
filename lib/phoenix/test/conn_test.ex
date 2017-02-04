@@ -488,7 +488,7 @@ defmodule Phoenix.ConnTest do
   Calls the Endpoint and bypasses Router match.
 
   Useful for unit testing Plugs where Endpoint and/or
-  router pipline plugs are required for proper setup.
+  router pipeline plugs are required for proper setup.
 
   ## Examples
 
