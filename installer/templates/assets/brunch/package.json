@@ -11,10 +11,9 @@
   },
   "devDependencies": {
     "babel-brunch": "6.0.6",
-    "brunch": "2.9.1",
+    "brunch": "2.10.5",
     "clean-css-brunch": "2.0.0",
     "css-brunch": "2.6.1",
-    "javascript-brunch": "2.0.0",
     "uglify-js-brunch": "2.0.1"
   }
 }
