@@ -29,6 +29,11 @@ defmodule Phoenix.Integration.EndpointTest do
       send_resp conn, 200, "ok"
     end
 
+    get "/sleep" do
+      :timer.sleep(2000)
+      send_resp conn, 200, "ok"
+    end
+
     get "/router/oops" do
       _ = conn
       raise "oops"
@@ -128,8 +133,31 @@ defmodule Phoenix.Integration.EndpointTest do
         assert resp.body == "500.html from Phoenix.ErrorView"
       end) =~ "** (RuntimeError) oops"
 
-      Supervisor.stop(ProdEndpoint)
-      {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
+      {:ok, pid} = :inets.start(:httpc, profile: HTTPClient.profile())
+
+      try do
+
+        :ok = :httpc.set_options([max_sessions: 1], pid)
+
+        task = Task.async(fn() ->
+          :timer.sleep(1000)
+          Supervisor.stop(ProdEndpoint)
+        end)
+
+        {:ok, _} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/sleep", %{}, "", pid)
+
+        {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
+
+        {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{}, "", pid)
+        assert {_, 'close'} = List.keyfind(resp.headers, 'connection', 0)
+
+        {:error, _reason} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{}, "", pid)
+
+        Task.await(task)
+
+      after
+        :inets.stop(:httpc, pid)
+      end
     end
   end
 
