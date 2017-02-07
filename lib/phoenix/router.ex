@@ -327,6 +327,7 @@ defmodule Phoenix.Router do
         defp match_route(conn, _method, _path_info, _host) do
           raise NoRouteError, conn: conn, router: __MODULE__
         end
+        def __match_params__(conn, _verb, _path, _host), do: []
       end
 
     quote do
@@ -356,6 +357,10 @@ defmodule Phoenix.Router do
       defp match_route(var!(conn), unquote(exprs.verb_match), unquote(exprs.path),
                  unquote(exprs.host)) do
         unquote(exprs.dispatch)
+      end
+      def __match_params__(_conn, unquote(exprs.verb_match), unquote(exprs.path),
+                 unquote(exprs.host)) do
+        unquote(exprs.binding)
       end
     end
   end
