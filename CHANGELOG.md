@@ -9,6 +9,7 @@
   * [Channel] Add ability to configure channel event logging with `:log_join` and `:log_handle_in` options
   * [Channel] Warn on unhandled `handle_info/2` messages
   * [Router] document `match` support for matching on any http method with the special `:*` argument
+  * [ConnTest] Add `redirected_params/1` to return the named params matched in the router for the redirected URL
 
 * JavaScript client enhancements
   * Add ability to pass `encode` and `decode` functions to socket constructor for custom encoding and decoding of outgoing and incoming messages.

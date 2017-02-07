@@ -16,6 +16,7 @@ defmodule Phoenix.Test.ConnTest.Router do
     plug :put_bypass, :api
   end
 
+  get "/posts/:id", SomeController, :some_action
   get "/stat", CatchAll, :stat
   forward "/", CatchAll
 
@@ -334,6 +335,39 @@ defmodule Phoenix.Test.ConnTest do
                  ~r"expected connection to have redirected but no response was set/sent", fn ->
       build_conn(:get, "/")
       |> redirected_to()
+    end
+  end
+
+  describe "redirected_params/1" do
+    test "with matching route" do
+      conn =
+        build_conn(:get, "/")
+        |> Router.call(Router.init([]))
+        |> put_resp_header("location", "/posts/123")
+        |> send_resp(302, "foo")
+
+      assert redirected_params(conn) == %{id: "123"}
+    end
+
+    test "returns empty map for unmatched route path" do
+      conn =
+        build_conn(:get, "/")
+        |> Router.call(Router.init([]))
+        |> put_resp_header("location", "/unmatched")
+        |> send_resp(302, "foo")
+
+      assert redirected_params(conn) == %{}
+    end
+
+    test "without redirection" do
+      assert_raise RuntimeError,
+                  "expected redirection with status 302, got: 200", fn ->
+        build_conn(:get, "/")
+        |> Router.call(Router.init([]))
+        |> put_resp_header("location", "new location")
+        |> send_resp(200, "ok")
+        |> redirected_params()
+      end
     end
   end
 
