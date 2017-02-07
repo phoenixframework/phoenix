@@ -5,6 +5,7 @@
 * Enhancements
   * [Controller] Add `current_path` and `current_url` to generate a connection's path and url
   * [Controller] Introduce `action_fallback` to registers a plug to call as a fallback to the controller action
+  * [Controller] Wrap exceptions at controller to maintain connection state
   * [Channel] Add ability to configure channel event logging with `:log_join` and `:log_handle_in` options
   * [Channel] Warn on unhandled `handle_info/2` messages
   * [Router] document `match` support for matching on any http method with the special `:*` argument

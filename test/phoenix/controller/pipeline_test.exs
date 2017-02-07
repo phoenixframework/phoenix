@@ -114,8 +114,8 @@ defmodule Phoenix.Controller.PipelineTest do
     end
   end
 
-  test "does not transform function clause errors lower in action stack" do
-    assert_raise FunctionClauseError, fn ->
+  test "wraps function clause errors lower in action stack in Plug.Conn.WrapperError" do
+    assert_raise Plug.Conn.WrapperError, fn ->
       MyController.call(stack_conn(), :non_top_level_function_clause_error)
     end
   end

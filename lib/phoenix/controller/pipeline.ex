@@ -117,7 +117,7 @@ defmodule Phoenix.Controller.Pipeline do
         catch
           kind, reason ->
             Phoenix.Controller.Pipeline.__catch__(
-              kind, reason, __MODULE__, conn.private.phoenix_action, System.stacktrace
+              conn, kind, reason, __MODULE__, conn.private.phoenix_action, System.stacktrace
             )
         end
       end
@@ -146,13 +146,13 @@ defmodule Phoenix.Controller.Pipeline do
   end
 
   @doc false
-  def __catch__(:error, :function_clause, controller, action,
+  def __catch__(%Plug.Conn{}, :error, :function_clause, controller, action,
                 [{controller, action, [%Plug.Conn{} = conn | _], _loc} | _] = stack) do
     args = [controller: controller, action: action, params: conn.params]
     reraise Phoenix.ActionClauseError, args, stack
   end
-  def __catch__(kind, reason, _controller, _action, stack) do
-    :erlang.raise(kind, reason, stack)
+  def __catch__(%Plug.Conn{} = conn, kind, reason, _controller, _action, _stack) do
+    Plug.Conn.WrapperError.reraise(conn, kind, reason)
   end
 
   @doc """
