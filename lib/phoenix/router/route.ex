@@ -53,7 +53,7 @@ defmodule Phoenix.Router.Route do
       host: build_host(route.host),
       verb_match: verb_match(route.verb),
       binding: binding,
-      dispatch: build_dispatch(route, binding)}
+      route_match: build_route_match(route, binding)}
   end
 
   defp verb_match(:*), do: Macro.var(:_verb, nil)
@@ -80,14 +80,40 @@ defmodule Phoenix.Router.Route do
     end
   end
 
-  defp build_dispatch(route, binding) do
+  defp build_route_match(route, binding) do
+    dispatch_block = build_dispatch(route)
+    pipes_block = build_pipes(route)
     exprs =
-      [maybe_binding(binding),
+      [build_params(binding),
        maybe_merge(:private, route.private),
-       maybe_merge(:assigns, route.assigns),
-       build_pipes(route)]
+       maybe_merge(:assigns, route.assigns)]
 
-    {:__block__, [], Enum.filter(exprs, & &1 != nil)}
+    conn_block = {:__block__, [], Enum.filter(exprs, & &1 != nil)}
+
+    {conn_block, pipes_block, dispatch_block}
+  end
+
+  defp build_dispatch(%Route{kind: :forward} = route) do
+    {_params, fwd_segments} = Plug.Router.Utils.build_path_match(route.path)
+    opts = route.opts |> route.plug.init() |> Macro.escape()
+
+    quote do
+      fn conn ->
+        Phoenix.Router.Route.forward(conn, unquote(fwd_segments), unquote(route.plug), unquote(opts))
+      end
+    end
+  end
+  defp build_dispatch(%Route{} = route) do
+    quote do
+      fn conn ->
+        # We need to store this in a variable so the compiler
+        # does not see a call and then suddenly start tracking
+        # changes in the controller.
+        plug = unquote(route.plug)
+        opts = plug.init(unquote(route.opts))
+        plug.call(conn, opts)
+      end
+    end
   end
 
   defp maybe_merge(key, data) do
@@ -99,51 +125,32 @@ defmodule Phoenix.Router.Route do
     end
   end
 
-  defp maybe_binding([]), do: nil
-  defp maybe_binding(binding) do
+  defp build_params([]), do: nil
+  defp build_params(binding) do
     quote do
+      path_binding = unquote({:%{}, [], binding})
       var!(conn) =
-        update_in var!(conn).params, &Map.merge(&1, unquote({:%{}, [], binding}))
+        %Plug.Conn{var!(conn) |
+                   params: Map.merge(var!(conn).params, path_binding),
+                   path_params: path_binding}
     end
   end
 
-  defp build_pipes(%Route{kind: :forward} = route) do
-    {_params, fwd_segments} = Plug.Router.Utils.build_path_match(route.path)
-    opts = route.opts |> route.plug.init() |> Macro.escape()
-
-    quote do
-      var!(conn)
-      |> Plug.Conn.put_private(:phoenix_pipelines, unquote(route.pipe_through))
-      |> Plug.Conn.put_private(:phoenix_route, fn conn ->
-        Phoenix.Router.Route.forward(conn, unquote(fwd_segments),
-                                     unquote(route.plug), unquote(opts))
-      end)
-    end |> pipe_through(route)
+  defp build_pipes(%Route{pipe_through: []}) do
+    quote do: fn conn -> conn end
   end
-
-  defp build_pipes(route) do
-    quote do
-      var!(conn)
-      |> Plug.Conn.put_private(:phoenix_pipelines, unquote(route.pipe_through))
-      |> Plug.Conn.put_private(:phoenix_route, fn conn ->
-        # We need to store this in a variable so the compiler
-        # does not see a call and then suddenly start tracking
-        # changes in the controller.
-        plug = unquote(route.plug)
-        opts = plug.init(unquote(route.opts))
-        plug.call(conn, opts)
-      end)
-    end |> pipe_through(route)
-  end
-
-  defp pipe_through(initial, route) do
-    plugs = route.pipe_through |> Enum.reverse |> Enum.map(&{&1, [], true})
+  defp build_pipes(%Route{pipe_through: pipe_through}) do
+    plugs = pipe_through |> Enum.reverse |> Enum.map(&{&1, [], true})
     {conn, body} = Plug.Builder.compile(__ENV__, plugs, [])
+
     quote do
-      unquote(conn) = unquote(initial)
-      unquote(body)
+      fn unquote(conn) ->
+        unquote(conn) = Plug.Conn.put_private(unquote(conn), :phoenix_pipelines, unquote(pipe_through))
+        unquote(body)
+      end
     end
   end
+
 
   @doc """
   Forwards requests to another Plug at a new path.

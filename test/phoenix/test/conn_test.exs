@@ -4,6 +4,14 @@ defmodule Phoenix.Test.ConnTest.CatchAll do
   def call(conn, _opts), do: Plug.Conn.assign(conn, :catch_all, true)
 end
 
+defmodule Phoenix.Test.ConnTest.RedirRouter do
+  use Phoenix.Router
+  alias Phoenix.Test.ConnTest.CatchAll
+
+  get "/", CatchAll, :foo
+  get "/posts/:id", SomeController, :some_action
+end
+
 defmodule Phoenix.Test.ConnTest.Router do
   use Phoenix.Router
   alias Phoenix.Test.ConnTest.CatchAll
@@ -16,9 +24,11 @@ defmodule Phoenix.Test.ConnTest.Router do
     plug :put_bypass, :api
   end
 
-  get "/posts/:id", SomeController, :some_action
-  get "/stat", CatchAll, :stat
-  forward "/", CatchAll
+  scope "/" do
+    pipe_through :browser
+    get "/stat", CatchAll, :stat
+    forward "/", CatchAll
+  end
 
   def put_bypass(conn, pipeline) do
     bypassed = (conn.assigns[:bypassed] || []) ++ [pipeline]
@@ -29,7 +39,7 @@ end
 defmodule Phoenix.Test.ConnTest do
   use ExUnit.Case, async: true
   use Phoenix.ConnTest
-  alias Phoenix.Test.ConnTest.Router
+  alias Phoenix.Test.ConnTest.{Router, RedirRouter}
 
   defmodule ConnError do
     defexception [message: nil, plug_status: 500]
@@ -351,28 +361,30 @@ defmodule Phoenix.Test.ConnTest do
     test "with matching route" do
       conn =
         build_conn(:get, "/")
-        |> Router.call(Router.init([]))
+        |> RedirRouter.call(RedirRouter.init([]))
         |> put_resp_header("location", "/posts/123")
         |> send_resp(302, "foo")
 
       assert redirected_params(conn) == %{id: "123"}
     end
 
-    test "returns empty map for unmatched route path" do
+    test "raises Phoenix.Router.NoRouteError for unmatched location" do
       conn =
         build_conn(:get, "/")
-        |> Router.call(Router.init([]))
+        |> RedirRouter.call(RedirRouter.init([]))
         |> put_resp_header("location", "/unmatched")
         |> send_resp(302, "foo")
 
-      assert redirected_params(conn) == %{}
+      assert_raise Phoenix.Router.NoRouteError, fn ->
+        redirected_params(conn)
+      end
     end
 
     test "without redirection" do
       assert_raise RuntimeError,
                   "expected redirection with status 302, got: 200", fn ->
         build_conn(:get, "/")
-        |> Router.call(Router.init([]))
+        |> RedirRouter.call(RedirRouter.init([]))
         |> put_resp_header("location", "new location")
         |> send_resp(200, "ok")
         |> redirected_params()
