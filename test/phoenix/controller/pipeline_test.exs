@@ -44,6 +44,25 @@ defmodule Phoenix.Controller.PipelineTest do
     end
   end
 
+  defmodule FallbackFunctionController do
+    use Phoenix.Controller
+
+    action_fallback :function_plug
+
+    plug :put_assign
+
+    def fallback(_conn, _), do: :not_a_conn
+
+    def bad_fallback(_conn, _), do: :bad_fallback
+
+    defp function_plug(%Plug.Conn{} = conn, :not_a_conn) do
+      Plug.Conn.send_resp(conn, 200, "function fallback")
+    end
+    defp function_plug(%Plug.Conn{}, :bad_fallback), do: :bad_function_fallback
+
+    defp put_assign(conn, _), do: assign(conn, :value_before_action, :a_value)
+  end
+
   defmodule ActionController do
     use Phoenix.Controller
 
@@ -130,22 +149,37 @@ defmodule Phoenix.Controller.PipelineTest do
     end
   end
 
-  test "action_fallback delegates to plug for bad return values when not configured" do
-    assert_raise RuntimeError, ~r/expected action\/2 to return a Plug.Conn/, fn ->
-      MyController.call(stack_conn(), :no_fallback)
+  describe "action_fallback" do
+    test "module fallback delegates to plug for bad return values when not configured" do
+      assert_raise RuntimeError, ~r/expected action\/2 to return a Plug.Conn/, fn ->
+        MyController.call(stack_conn(), :no_fallback)
+      end
     end
-  end
 
-  test "action_fallback invokes fallback plug when configured" do
-    conn = ActionController.call(stack_conn(), :fallback)
-    assert conn.status == 200
-    assert conn.assigns.value_before_action == :a_value
-    assert conn.resp_body == "fallback"
-  end
+    test "module fallback invokes module plug when configured" do
+      conn = ActionController.call(stack_conn(), :fallback)
+      assert conn.status == 200
+      assert conn.assigns.value_before_action == :a_value
+      assert conn.resp_body == "fallback"
+    end
 
-  test "action_fallback with bad return delegates to plug" do
-    assert_raise RuntimeError, ~r/expected action\/2 to return a Plug.Conn/, fn ->
-      ActionController.call(stack_conn(), :bad_fallback)
+    test "module fallback with bad return delegates to plug" do
+      assert_raise RuntimeError, ~r/expected action\/2 to return a Plug.Conn/, fn ->
+        ActionController.call(stack_conn(), :bad_fallback)
+      end
+    end
+
+    test "function fallback invokes module plug when configured" do
+      conn = FallbackFunctionController.call(stack_conn(), :fallback)
+      assert conn.status == 200
+      assert conn.assigns.value_before_action == :a_value
+      assert conn.resp_body == "function fallback"
+    end
+
+    test "function fallback with bad return delegates to plug" do
+      assert_raise RuntimeError, ~r/expected action\/2 to return a Plug.Conn/, fn ->
+        FallbackFunctionController.call(stack_conn(), :bad_fallback)
+      end
     end
   end
 
