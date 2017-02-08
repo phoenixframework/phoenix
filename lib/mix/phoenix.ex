@@ -123,13 +123,13 @@ defmodule Mix.Phoenix do
   @doc """
   Generates some sample params based on the parsed attributes.
   """
-  def params(attrs, action \\ nil) do
+  def params(attrs, action \\ :create) when action in [:create, :update] do
     attrs
     |> Enum.reject(fn
         {_, {:references, _}} -> true
         {_, _} -> false
        end)
-    |> Enum.into(%{}, fn {k, t} -> {k, type_to_default(t, action)} end)
+    |> Enum.into(%{}, fn {k, t} -> {k, type_to_default(k, t, action)} end)
   end
 
   @doc """
@@ -193,7 +193,7 @@ defmodule Mix.Phoenix do
     {String.to_atom(key), {String.to_atom(comp), String.to_atom(value)}}
   end
 
-  defp type_to_default(t, nil = _action ) do
+  defp type_to_default(key, t, :create) do
     case t do
         {:array, _}     -> []
         :integer        -> 42
@@ -201,16 +201,16 @@ defmodule Mix.Phoenix do
         :decimal        -> "120.5"
         :boolean        -> true
         :map            -> %{}
-        :text           -> "some content"
+        :text           -> "some #{key}"
         :date           -> %{year: 2010, month: 4, day: 17}
         :time           -> %{hour: 14, minute: 0, second: 0}
         :uuid           -> "7488a646-e31f-11e4-aace-600308960662"
         :utc_datetime   -> %{year: 2010, month: 4, day: 17, hour: 14, minute: 0, second: 0}
         :naive_datetime -> %{year: 2010, month: 4, day: 17, hour: 14, minute: 0, second: 0}
-        _               -> "some content"
+        _               -> "some #{key}"
     end
   end
-  defp type_to_default(t, action) do
+  defp type_to_default(key, t, :update) do
     case t do
         {:array, _}     -> []
         :integer        -> 43
@@ -218,17 +218,15 @@ defmodule Mix.Phoenix do
         :decimal        -> "456.7"
         :boolean        -> false
         :map            -> %{}
-        :text           -> "some #{action} content"
+        :text           -> "some updated #{key}"
         :date           -> %{year: 2011, month: 5, day: 18}
         :time           -> %{hour: 15, minute: 1, second: 1}
         :uuid           -> "7488a646-e31f-11e4-aace-600308960668"
         :utc_datetime   -> %{year: 2011, month: 5, day: 18, hour: 15, minute: 1, second: 1}
         :naive_datetime -> %{year: 2011, month: 5, day: 18, hour: 15, minute: 1, second: 1}
-        _               -> "some #{action} content"
+        _               -> "some updated #{key}"
     end
   end
-
-
 
   defp validate_attr!({_name, type} = attr) when type in @valid_attributes, do: attr
   defp validate_attr!({_name, {type, _}} = attr) when type in @valid_attributes, do: attr
