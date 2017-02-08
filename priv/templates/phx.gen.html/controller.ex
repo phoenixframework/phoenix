@@ -15,10 +15,10 @@ defmodule <%= inspect context.web_module %>.<%= inspect schema.alias %>Controlle
 
   def create(conn, %{<%= inspect schema.singular %> => <%= schema.singular %>_params}) do
     case <%= inspect context.alias %>.create_<%= schema.singular %>(<%= schema.singular %>_params) do
-      {:ok, _<%= schema.singular %>} ->
+      {:ok, <%= schema.singular %>} ->
         conn
         |> put_flash(:info, "<%= schema.human_singular %> created successfully.")
-        |> redirect(to: <%= schema.singular %>_path(conn, :index))
+        |> redirect(to: <%= schema.singular %>_path(conn, :show, <%= schema.singular %>))
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, "new.html", changeset: changeset)
     end
