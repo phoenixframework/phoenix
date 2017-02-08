@@ -92,10 +92,13 @@ defmodule Phoenix.Controller.Pipeline do
   """
   defmacro action_fallback(plug) do
     quote bind_quoted: [plug: plug] do
-      if is_atom(plug) do
-        @phoenix_fallback plug
-      else
-        raise ArgumentError, "expected action_fallback to be a module, got #{inspect plug}"
+      unless is_atom(plug) do
+        raise ArgumentError, "expected action_fallback to be a module or function plug, got #{inspect plug}"
+      end
+
+      case Atom.to_char_list(plug) do
+        ~c"Elixir." ++ _ -> @phoenix_fallback {:module, plug}
+         _               -> @phoenix_fallback {:function, plug}
       end
     end
   end
@@ -105,19 +108,23 @@ defmodule Phoenix.Controller.Pipeline do
     action = {:action, [], true}
     plugs  = [action|Module.get_attribute(env.module, :plugs)]
     {conn, body} = Plug.Builder.compile(env, plugs, log_on_halt: :debug)
+    fallback_ast =
+      env.module
+      |> Module.get_attribute(:phoenix_fallback)
+      |> build_fallback()
 
     quote do
       defoverridable [action: 2]
-
-      def action(conn, opts) do
+      def action(var!(conn_before), opts) do
         try do
-          conn
-          |> super(opts)
-          |> Phoenix.Controller.Pipeline.__fallback__(conn, @phoenix_fallback)
+          var!(conn_after) = super(var!(conn_before), opts)
+          unquote(fallback_ast)
         catch
           kind, reason ->
             Phoenix.Controller.Pipeline.__catch__(
-              conn, kind, reason, __MODULE__, conn.private.phoenix_action, System.stacktrace
+              var!(conn_before), kind, reason, __MODULE__,
+              var!(conn_before).private.phoenix_action,
+              System.stacktrace()
             )
         end
       end
@@ -134,15 +141,24 @@ defmodule Phoenix.Controller.Pipeline do
     end
   end
 
-  @doc false
-  def __fallback__(%Plug.Conn{} = conn_after, %Plug.Conn{} = _conn_before, _plug) do
-    conn_after
+  defp build_fallback(nil) do
+    quote do: var!(conn_after)
   end
-  def __fallback__(value_after, %Plug.Conn{} = _conn_before, nil) do
-    value_after
+  defp build_fallback({:module, plug}) do
+    quote bind_quoted: binding() do
+      case var!(conn_after) do
+        %Plug.Conn{} = conn_after -> conn_after
+        val -> plug.call(var!(conn_before), plug.init(val))
+      end
+    end
   end
-  def __fallback__(value_after, %Plug.Conn{} = conn_before, plug) do
-    plug.call(conn_before, plug.init(value_after))
+  defp build_fallback({:function, plug}) do
+    quote do
+      case var!(conn_after) do
+        %Plug.Conn{} = conn_after -> conn_after
+        val -> unquote(plug)(var!(conn_before), val)
+      end
+    end
   end
 
   @doc false
