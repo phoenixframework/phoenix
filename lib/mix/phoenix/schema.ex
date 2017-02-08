@@ -3,6 +3,7 @@ defmodule Mix.Phoenix.Schema do
 
   defstruct module: nil,
             repo: nil,
+            table: nil,
             opts: [],
             alias: nil,
             file: nil,
@@ -31,6 +32,7 @@ defmodule Mix.Phoenix.Schema do
     {assocs, cli_attrs} = partition_attrs_and_assocs(cli_attrs)
     attrs    = Mix.Phoenix.attrs(cli_attrs)
     uniques  = uniques(cli_attrs)
+    table    = opts[:table] || schema_plural
     singular =
       module
       |> Module.split()
@@ -49,6 +51,7 @@ defmodule Mix.Phoenix.Schema do
       migration?: opts[:migration] != false,
       module: module,
       repo: repo,
+      table: table,
       alias: module |> Module.split() |> List.last() |> Module.concat(nil),
       file: file,
       attrs: attrs,
