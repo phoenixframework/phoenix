@@ -260,6 +260,7 @@ defmodule Phoenix.Router do
     end
   end
 
+  @doc false
   def __call__({%Plug.Conn{private: %{phoenix_router: router, phoenix_bypass: {router, pipes}}} = conn, _pipeline, _dispatch}) do
     Enum.reduce(pipes, conn, fn pipe, acc -> apply(router, pipe, [acc, []]) end)
   end
@@ -296,7 +297,7 @@ defmodule Phoenix.Router do
       def call(conn, _opts) do
         conn
         |> prepare()
-        |> match_route(conn.method, Enum.map(conn.path_info, &URI.decode/1), conn.host)
+        |> __match_route__(conn.method, Enum.map(conn.path_info, &URI.decode/1), conn.host)
         |> Phoenix.Router.__call__()
       end
 
@@ -321,7 +322,7 @@ defmodule Phoenix.Router do
     # @anno is used here to avoid warnings if forwarding to root path
     match_404 =
       quote @anno do
-        def match_route(conn, _method, _path_info, _host) do
+        def __match_route__(conn, _method, _path_info, _host) do
           raise NoRouteError, conn: conn, router: __MODULE__
         end
       end
@@ -350,7 +351,7 @@ defmodule Phoenix.Router do
 
     quote do
       @doc false
-      def match_route(var!(conn), unquote(exprs.verb_match), unquote(exprs.path),
+      def __match_route__(var!(conn), unquote(exprs.verb_match), unquote(exprs.path),
                  unquote(exprs.host)) do
 
         unquote(conn_block)
