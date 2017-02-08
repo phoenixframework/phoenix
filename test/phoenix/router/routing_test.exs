@@ -55,12 +55,15 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.status == 200
     assert conn.resp_body == "users show"
     assert conn.params["id"] == "75f6306d-a090-46f9-8b80-80fd57ec9a41"
+    assert conn.path_params["id"] == "75f6306d-a090-46f9-8b80-80fd57ec9a41"
 
     conn = call(Router, :get, "users/75f6306d-a0/files/34-95")
     assert conn.status == 200
     assert conn.resp_body == "show files"
     assert conn.params["user_id"] == "75f6306d-a0"
+    assert conn.path_params["user_id"] == "75f6306d-a0"
     assert conn.params["id"] == "34-95"
+    assert conn.path_params["id"] == "34-95"
   end
 
   test "get with named param" do
@@ -68,6 +71,7 @@ defmodule Phoenix.Router.RoutingTest do
     assert conn.status == 200
     assert conn.resp_body == "users show"
     assert conn.params["id"] == "1"
+    assert conn.path_params["id"] == "1"
   end
 
   test "parameters are url decoded" do

@@ -554,9 +554,8 @@ defmodule Phoenix.ConnTest do
     %URI{path: path, host: host} = conn |> redirected_to() |> URI.parse()
     path_info = split_path(path)
 
-    conn
-    |> router.__match_params__("GET", path_info, host)
-    |> Enum.into(%{}, fn {key, val} -> {String.to_atom(key), val} end)
+    {conn, _pipes, _dispatch} = router.match_route(conn, "GET", path_info, host || conn.host)
+    Enum.into(conn.path_params, %{}, fn {key, val} -> {String.to_atom(key), val} end)
   end
   defp split_path(path) do
     for segment <- String.split(path, "/"), segment != "", do: segment
