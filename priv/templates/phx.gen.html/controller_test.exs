@@ -1,4 +1,4 @@
-defmodule <%= inspect context.module %>ControllerTest do
+defmodule <%= inspect context.web_module %>.<%= inspect schema.alias %>ControllerTest do
   use <%= inspect context.web_module %>.ConnCase
 
   alias <%= inspect context.module %>

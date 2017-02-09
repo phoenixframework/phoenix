@@ -36,6 +36,17 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   alias Mix.Tasks.Phx.Gen
 
   def run(args) do
+    {context, schema} = build(args)
+    binding = [context: context, schema: schema]
+    paths = Mix.Phoenix.generator_paths()
+
+    context
+    |> Context.inject_schema_access(binding, paths)
+    |> copy_new_files(paths, binding)
+    |> print_shell_instructions()
+  end
+
+  def build(args) do
     switches = [binary_id: :boolean, model: :boolean, table: :string]
     {opts, parsed, _} = OptionParser.parse(args, switches: switches)
     [context_name, schema_name, plural | schema_args] = validate_args!(parsed)
@@ -46,13 +57,8 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     schema = Gen.Schema.build([schema_module, plural | schema_args] ++ ["--table", table])
     context = Context.new(context_name, schema, opts)
     Mix.Phoenix.check_module_name_availability!(context.module)
-    binding = [context: context, schema: schema]
-    paths = Mix.Phoenix.generator_paths()
 
-    context
-    |> Context.inject_schema_access(binding, paths)
-    |> copy_new_files(paths, binding)
-    |> print_shell_instructions()
+    {context, schema}
   end
 
   def copy_new_files(%Context{schema: schema} = context, paths, binding) do
@@ -64,8 +70,8 @@ defmodule Mix.Tasks.Phx.Gen.Html do
       {:eex, "new.html.eex",        "lib/web/templates/#{schema.singular}/new.html.eex"},
       {:eex, "show.html.eex",       "lib/web/templates/#{schema.singular}/show.html.eex"},
       {:eex, "view.ex",             "lib/web/views/#{schema.singular}_view.ex"},
-      {:eex, "context_test.exs",    "test/#{context.basename}_test.exs"},
       {:eex, "controller_test.exs", "test/web/controllers/#{schema.singular}_controller_test.exs"},
+      {:new_eex, "context_test.exs", "test/#{context.basename}_test.exs"},
     ]
     Gen.Schema.copy_new_files(schema, paths, binding)
 
@@ -82,16 +88,15 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     Gen.Schema.print_shell_instructions(schema)
   end
 
-  defp validate_args!([_, _, plural | _] = args) do
-    cond do
-      String.contains?(plural, ":") ->
-        raise_with_help()
-      plural != Phoenix.Naming.underscore(plural) ->
-        Mix.raise "Expected the third argument, #{inspect plural}, to be all lowercase using snake_case convention"
-      true ->
-        args
+  defp validate_args!([context, schema, plural | rest] = args) do
+    unless context =~ ~r/^[A-Z].*$/ do
+      Mix.raise "expected the first argument, #{inspect context}, to be a valid context module name"
     end
+    Gen.Schema.validate_args!([schema, plural | rest])
+
+    args
   end
+
   defp validate_args!(_) do
     raise_with_help()
   end
@@ -99,11 +104,12 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   @spec raise_with_help() :: no_return()
   defp raise_with_help do
     Mix.raise """
-    mix phoenix.gen.html expects a context module name, followed by
-    singular and plural names of the generated resource, ending with
+    mix phoenix.gen.html and mix phoenix.gen.json expect a context module name,
+    followed by singular and plural names of the generated resource, ending with
     any number of attributes:
 
         mix phx.gen.html Accounts User users name:string
+        mix phx.gen.json Accounts User users name:string
     """
   end
 end
