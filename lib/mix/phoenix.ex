@@ -24,7 +24,6 @@ defmodule Mix.Phoenix do
     EEx.eval_string(content, binding)
   end
 
-
   @doc """
   Copies files from source dir to target dir
   according to the given map.
@@ -44,13 +43,16 @@ defmodule Mix.Phoenix do
 
       target = Path.join(target_dir, target_file_path)
 
-      contents =
-        case format do
-          :text -> File.read!(source)
-          :eex  -> EEx.eval_file(source, binding)
-        end
-
-      Mix.Generator.create_file(target, contents)
+      case format do
+        :text -> Mix.Generator.create_file(target, File.read!(source))
+        :eex  -> Mix.Generator.create_file(target, EEx.eval_file(source, binding))
+        :new_eex ->
+          if File.exists?(target) do
+            :ok
+          else
+            Mix.Generator.create_file(target, EEx.eval_file(source, binding))
+          end
+      end
     end
   end
 

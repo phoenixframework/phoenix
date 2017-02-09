@@ -125,17 +125,20 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
     end
   end
 
-  defp validate_args!([_, plural | _] = args) do
+  def validate_args!([schema, plural | _] = args) do
+    unless schema =~ ~r/^[A-Z].*$/ do
+      Mix.raise "expected the schema argument, #{inspect schema}, to be a valid module name"
+    end
     cond do
       String.contains?(plural, ":") ->
         raise_with_help()
       plural != Phoenix.Naming.underscore(plural) ->
-        Mix.raise "Expected the third argument, #{inspect plural}, to be all lowercase using snake_case convention"
+        Mix.raise "expected the third argument, #{inspect plural}, to be all lowercase using snake_case convention"
       true ->
         args
     end
   end
-  defp validate_args!(_) do
+  def validate_args!(_) do
     raise_with_help()
   end
 
