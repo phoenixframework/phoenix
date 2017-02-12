@@ -54,7 +54,7 @@ defmodule Phoenix.Endpoint do
   configuration is mostly related to error handling and instrumentation.
 
   Runtime configuration, instead, is accessed during or
-  after your application is started and can be read and written through the
+  after your application is started and can be read through the
   `config/2` function:
 
       YourApp.Endpoint.config(:port)
