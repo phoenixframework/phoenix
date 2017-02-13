@@ -222,6 +222,20 @@ defmodule Phoenix.Controller.ControllerTest do
     assert conn.status == 400
   end
 
+  test "js/2" do
+    conn = js(conn(:get, "/"), "foobar")
+    assert conn.resp_body == "foobar"
+    assert get_resp_content_type(conn) == "application/javascript"
+    refute conn.halted
+  end
+
+  test "js/2 allows status injection on connection" do
+    conn = conn(:get, "/") |> put_status(400)
+    conn = js(conn, "foobar")
+    assert conn.resp_body == "foobar"
+    assert conn.status == 400
+  end
+
   test "redirect/2 with :to" do
     conn = redirect(conn(:get, "/"), to: "/foobar")
     assert conn.resp_body =~ "/foobar"

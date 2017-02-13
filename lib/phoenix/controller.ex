@@ -323,6 +323,19 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
+  Sends js response.
+
+  ## Examples
+
+      iex> js conn, "console.log('Ground Control to Major Tom')"
+
+  """
+  @spec js(Plug.Conn.t, iodata) :: Plug.Conn.t
+  def js(conn, data) do
+    send_resp(conn, conn.status || 200, "application/javascript", data)
+  end
+
+  @doc """
   Sends redirect response to the given url.
 
   For security, `:to` only accepts paths. Use the `:external`
