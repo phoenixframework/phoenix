@@ -91,7 +91,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     default_opts = Application.get_env(:phoenix, :generators, [])
     opts = Keyword.merge(default_opts, opts)
 
-    uniques   = Mix.Phoenix.Schema.uniques(attrs) #
+    uniques   = Mix.Phoenix.Schema.uniques(attrs)
     attrs     = Mix.Phoenix.attrs(attrs)
     binding   = Mix.Phoenix.inflect(singular)
     params    = Mix.Phoenix.params(attrs)
