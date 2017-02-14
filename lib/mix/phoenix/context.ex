@@ -1,7 +1,8 @@
 defmodule Mix.Phoenix.Context do
   alias Mix.Phoenix.{Context, Schema}
 
-  defstruct module: nil,
+  defstruct name: nil,
+            module: nil,
             schema: nil,
             alias: nil,
             base_module: nil,
@@ -23,6 +24,7 @@ defmodule Mix.Phoenix.Context do
     file     = Path.join(["lib", basename <> ".ex"])
 
     %Context{
+      name: context_name,
       module: module,
       schema: schema,
       alias: alias,

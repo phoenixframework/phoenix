@@ -47,9 +47,9 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/web/endpoint.ex", ~r/defmodule PhxBlog.Web.Endpoint do/
 
       assert_file "phx_blog/test/web/controllers/page_controller_test.exs"
-      assert_file "phx_blog/test/views/page_view_test.exs"
-      assert_file "phx_blog/test/views/error_view_test.exs"
-      assert_file "phx_blog/test/views/layout_view_test.exs"
+      assert_file "phx_blog/test/web/views/page_view_test.exs"
+      assert_file "phx_blog/test/web/views/error_view_test.exs"
+      assert_file "phx_blog/test/web/views/layout_view_test.exs"
       assert_file "phx_blog/test/support/conn_case.ex"
       assert_file "phx_blog/test/test_helper.exs"
 
@@ -120,6 +120,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       refute File.exists?("phx_blog/lib/web/channels/.keep")
       assert_file "phx_blog/lib/web/channels/user_socket.ex", ~r"defmodule PhxBlog.Web.UserSocket"
       assert_file "phx_blog/lib/web/endpoint.ex", ~r"socket \"/socket\", PhxBlog.Web.UserSocket"
+      assert File.exists?("phx_blog/test/web/channels")
 
       # Gettext
       assert_file "phx_blog/lib/web/gettext.ex", ~r"defmodule PhxBlog.Web.Gettext"

@@ -137,9 +137,13 @@ defmodule Phx.New.Generator do
       adapter_config: adapter_config,
       hex?: Code.ensure_loaded?(Hex),
       generator_config: generator_config(adapter_config),
-      namespaced?: project.in_umbrella?]
+      namespaced?: namespaced?(project)]
 
     %Project{project | binding: binding}
+  end
+
+  defp namespaced?(project) do
+    project.in_umbrella? || Macro.camelize(project.app) != inspect(project.app_mod)
   end
 
   def gen_ecto_config(%Project{app_path: app_path, binding: binding}) do
@@ -189,9 +193,9 @@ defmodule Phx.New.Generator do
      dev:  [database: "db/#{app}_dev.sqlite"],
      test: [database: "db/#{app}_test.sqlite", pool: Ecto.Adapters.SQL.Sandbox],
      prod: [database: "db/#{app}_prod.sqlite"],
-     test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{module}.Repo, :manual)",
-     test_setup: ":ok = Ecto.Adapters.SQL.Sandbox.checkout(#{module}.Repo)",
-     test_async: "Ecto.Adapters.SQL.Sandbox.mode(#{module}.Repo, {:shared, self()})"}
+     test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect module}.Repo, :manual)",
+     test_setup: ":ok = Ecto.Adapters.SQL.Sandbox.checkout(#{inspect module}.Repo)",
+     test_async: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect module}.Repo, {:shared, self()})"}
   end
   defp get_ecto_adapter("mongodb", app, module) do
     {:mongodb_ecto, Mongo.Ecto,
@@ -200,7 +204,7 @@ defmodule Phx.New.Generator do
      prod: [database: "#{app}_prod"],
      test_setup_all: "",
      test_setup: "",
-     test_async: "Mongo.Ecto.truncate(#{module}.Repo, [])",
+     test_async: "Mongo.Ecto.truncate(#{inspect module}.Repo, [])",
      binary_id: true,
      migration: false,
      sample_binary_id: "111111111111111111111111"}
@@ -214,9 +218,9 @@ defmodule Phx.New.Generator do
      test: [username: user, password: pass, database: "#{app}_test", hostname: "localhost",
             pool: Ecto.Adapters.SQL.Sandbox],
      prod: [username: user, password: pass, database: "#{app}_prod"],
-     test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{module}.Repo, :manual)",
-     test_setup: ":ok = Ecto.Adapters.SQL.Sandbox.checkout(#{module}.Repo)",
-     test_async: "Ecto.Adapters.SQL.Sandbox.mode(#{module}.Repo, {:shared, self()})"]
+     test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect module}.Repo, :manual)",
+     test_setup: ":ok = Ecto.Adapters.SQL.Sandbox.checkout(#{inspect module}.Repo)",
+     test_async: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect module}.Repo, {:shared, self()})"]
   end
 
   defp kw_to_config(kw) do

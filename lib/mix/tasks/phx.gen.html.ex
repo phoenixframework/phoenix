@@ -96,7 +96,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     Gen.Schema.print_shell_instructions(schema)
   end
 
-  defp validate_args!([context, schema, plural | rest] = args) do
+  defp validate_args!([context, _schema, _plural | _rest] = args) do
     unless context =~ ~r/^[A-Z].*$/ do
       Mix.raise "expected the first argument, #{inspect context}, to be a valid context module name"
     end
