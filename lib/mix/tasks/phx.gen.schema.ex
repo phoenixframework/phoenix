@@ -112,9 +112,18 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   end
 
   def copy_new_files(%Schema{} = schema, paths, binding) do
+    migration =
+      schema.module
+      |> Module.split()
+      |> tl()
+      |> Module.concat()
+      |> inspect()
+      |> Phoenix.Naming.underscore()
+      |> String.replace("/", "_")
+
     Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.html", "", binding, [
       {:eex, "schema.ex",          schema.file},
-      {:eex, "migration.exs",      "priv/repo/migrations/#{timestamp()}_create_#{String.replace(schema.singular, "/", "_")}.exs"},
+      {:eex, "migration.exs",      "priv/repo/migrations/#{timestamp()}_create_#{migration}.exs"},
     ]
     schema
   end

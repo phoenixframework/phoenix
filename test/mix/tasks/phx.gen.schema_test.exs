@@ -77,7 +77,8 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
       Gen.Schema.run(~w(Blog.Post posts title:string))
 
       assert_file "lib/blog/post.ex"
-      assert [_] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
+
+      assert [_] = Path.wildcard("priv/repo/migrations/*_create_blog_post.exs")
     end
   end
 end
