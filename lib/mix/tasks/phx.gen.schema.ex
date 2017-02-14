@@ -122,8 +122,8 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
       |> String.replace("/", "_")
 
     Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.html", "", binding, [
-      {:eex, "schema.ex",          schema.file},
-      {:eex, "migration.exs",      "priv/repo/migrations/#{timestamp()}_create_#{migration}.exs"},
+      {:eex, "schema.ex",     schema.file},
+      {:eex, "migration.exs", "priv/repo/migrations/#{timestamp()}_create_#{migration}.exs"},
     ]
     schema
   end
