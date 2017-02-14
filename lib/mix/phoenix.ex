@@ -155,8 +155,8 @@ defmodule Mix.Phoenix do
     app = otp_app()
 
     case Application.get_env(app, :namespace, app) do
-      ^app -> app |> to_string |> Phoenix.Naming.camelize
-      mod  -> mod |> inspect
+      ^app -> app |> to_string |> Phoenix.Naming.camelize()
+      mod  -> mod |> inspect()
     end
   end
 

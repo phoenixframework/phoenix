@@ -17,10 +17,20 @@ defmodule MixHelper do
   end
 
   def in_tmp(which, function) do
-    path = Path.join(tmp_path(), which)
+    path = Path.join(tmp_path(), to_string(which))
     File.rm_rf! path
     File.mkdir_p! path
     File.cd! path, function
+  end
+
+  def in_tmp_project(which, function) do
+    path = Path.join(tmp_path(), to_string(which))
+    File.rm_rf! path
+    File.mkdir_p! path
+    File.cd! path
+    File.touch!("mix.exs")
+    assert Phx.New.Generator.in_single?(File.cwd!())
+    function.()
   end
 
   def in_project(app, path, fun) do

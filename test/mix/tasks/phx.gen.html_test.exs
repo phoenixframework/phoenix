@@ -14,8 +14,8 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     :ok
   end
 
-  test "new context" do
-    in_tmp "new context", fn ->
+  test "new context", config do
+    in_tmp_project config.test, fn ->
       schema = Schema.new("Blog.Post", "posts", [], [])
       context = Context.new("Blog", schema, [])
 
@@ -40,8 +40,8 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     end
   end
 
-  test "new existing context" do
-    in_tmp "new existing context", fn ->
+  test "new existing context", config do
+    in_tmp_project config.test, fn ->
       File.mkdir_p!("lib/blog")
       File.write!("lib/blog.ex", """
       defmodule Phoenix.Blog do
@@ -53,8 +53,8 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     end
   end
 
-  test "invalid mix arguments" do
-    in_tmp "invalid mix arguments", fn ->
+  test "invalid mix arguments", config do
+    in_tmp_project config.test, fn ->
       assert_raise Mix.Error, ~r/expected the schema argument/, fn ->
         Gen.Html.run(~w(Post posts title:string))
       end
@@ -69,14 +69,24 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     end
   end
 
-  test "name is already defined" do
-    assert_raise Mix.Error, ~r/already taken/, fn ->
-      Gen.Html.run ~w(DupContext Post dups)
+  test "name is already defined", config do
+    in_tmp_project config.test, fn ->
+      assert_raise Mix.Error, ~r/already taken/, fn ->
+        Gen.Html.run ~w(DupContext Post dups)
+      end
     end
   end
 
-  test "generates html context" do
-    in_tmp "generates html context", fn ->
+  test "not inside single project" do
+    in_tmp "not inside single project", fn ->
+      assert_raise Mix.Error, ~r/can only be run inside an application directory/, fn ->
+        Gen.Html.run ~w(Some Thing things)
+      end
+    end
+  end
+
+  test "generates html context", config do
+    in_tmp_project config.test, fn ->
       Gen.Html.run(["Blog", "Post", "posts", "title:string"])
 
       assert_file "lib/blog/post.ex"

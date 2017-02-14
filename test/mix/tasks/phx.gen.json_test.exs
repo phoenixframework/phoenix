@@ -14,7 +14,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
   end
 
   test "invalid mix arguments" do
-    in_tmp "invalid mix arguments", fn ->
+    in_tmp_project "invalid mix arguments", fn ->
       assert_raise Mix.Error, ~r/expected the schema argument/, fn ->
         Gen.Json.run(~w(Post posts title:string))
       end
@@ -30,13 +30,23 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
   end
 
   test "name is already defined" do
-    assert_raise Mix.Error, ~r/already taken/, fn ->
-      Gen.Json.run ~w(DupJsonContext Post dups)
+    in_tmp_project "name is already defined", fn ->
+      assert_raise Mix.Error, ~r/already taken/, fn ->
+        Gen.Json.run ~w(DupJsonContext Post dups)
+      end
+    end
+  end
+
+  test "not inside single project" do
+    in_tmp "not inside single project", fn ->
+      assert_raise Mix.Error, ~r/can only be run inside an application directory/, fn ->
+        Gen.Json.run ~w(Some Thing things)
+      end
     end
   end
 
   test "generates json context" do
-    in_tmp "generates json context", fn ->
+    in_tmp_project "generates json context", fn ->
       Gen.Json.run(["Blog", "Post", "posts", "title:string"])
 
       assert_file "lib/blog/post.ex"
