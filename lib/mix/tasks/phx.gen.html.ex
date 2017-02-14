@@ -1,3 +1,5 @@
+Code.require_file("../../../installer/lib/phx_new/generator.ex", __DIR__)
+
 defmodule Mix.Tasks.Phx.Gen.Html do
   @shortdoc "Generates controller, views, and bounded context for an HTML resource"
 
@@ -47,6 +49,9 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   end
 
   def build(args) do
+    unless Phx.New.Generator.in_single?(File.cwd!()) do
+      Mix.raise "mix phx.gen.html and phx.gen.json can only be run inside an application directory"
+    end
     switches = [binary_id: :boolean, model: :boolean, table: :string]
     {opts, parsed, _} = OptionParser.parse(args, switches: switches)
     [context_name, schema_name, plural | schema_args] = validate_args!(parsed)
@@ -54,7 +59,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     table = Keyword.get(opts, :table, Phoenix.Naming.underscore(context_name) <> "_#{plural}")
     schema_module = inspect(Module.concat(context_name, schema_name))
 
-    schema = Gen.Schema.build([schema_module, plural | schema_args] ++ ["--table", table])
+    schema = Gen.Schema.build([schema_module, plural | schema_args] ++ ["--table", table], __MODULE__)
     context = Context.new(context_name, schema, opts)
     Mix.Phoenix.check_module_name_availability!(context.module)
 
@@ -62,15 +67,18 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   end
 
   def copy_new_files(%Context{schema: schema} = context, paths, binding) do
+    web_prefix = web_prefix()
+    test_prefix = test_prefix()
+
     Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.html", "", binding, [
-      {:eex, "controller.ex",       "lib/web/controllers/#{schema.singular}_controller.ex"},
-      {:eex, "edit.html.eex",       "lib/web/templates/#{schema.singular}/edit.html.eex"},
-      {:eex, "form.html.eex",       "lib/web/templates/#{schema.singular}/form.html.eex"},
-      {:eex, "index.html.eex",      "lib/web/templates/#{schema.singular}/index.html.eex"},
-      {:eex, "new.html.eex",        "lib/web/templates/#{schema.singular}/new.html.eex"},
-      {:eex, "show.html.eex",       "lib/web/templates/#{schema.singular}/show.html.eex"},
-      {:eex, "view.ex",             "lib/web/views/#{schema.singular}_view.ex"},
-      {:eex, "controller_test.exs", "test/web/controllers/#{schema.singular}_controller_test.exs"},
+      {:eex, "controller.ex",       Path.join(web_prefix, "controllers/#{schema.singular}_controller.ex")},
+      {:eex, "edit.html.eex",       Path.join(web_prefix, "templates/#{schema.singular}/edit.html.eex")},
+      {:eex, "form.html.eex",       Path.join(web_prefix, "templates/#{schema.singular}/form.html.eex")},
+      {:eex, "index.html.eex",      Path.join(web_prefix, "templates/#{schema.singular}/index.html.eex")},
+      {:eex, "new.html.eex",        Path.join(web_prefix, "templates/#{schema.singular}/new.html.eex")},
+      {:eex, "show.html.eex",       Path.join(web_prefix, "templates/#{schema.singular}/show.html.eex")},
+      {:eex, "view.ex",             Path.join(web_prefix, "views/#{schema.singular}_view.ex")},
+      {:eex, "controller_test.exs", Path.join(test_prefix, "controllers/#{schema.singular}_controller_test.exs")},
       {:new_eex, "context_test.exs", "test/#{context.basename}_test.exs"},
     ]
     Gen.Schema.copy_new_files(schema, paths, binding)
@@ -92,7 +100,6 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     unless context =~ ~r/^[A-Z].*$/ do
       Mix.raise "expected the first argument, #{inspect context}, to be a valid context module name"
     end
-    Gen.Schema.validate_args!([schema, plural | rest])
 
     args
   end
@@ -102,7 +109,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   end
 
   @spec raise_with_help() :: no_return()
-  defp raise_with_help do
+  def raise_with_help do
     Mix.raise """
     mix phoenix.gen.html and mix phoenix.gen.json expect a context module name,
     followed by singular and plural names of the generated resource, ending with
@@ -111,5 +118,21 @@ defmodule Mix.Tasks.Phx.Gen.Html do
         mix phx.gen.html Accounts User users name:string
         mix phx.gen.json Accounts User users name:string
     """
+  end
+
+  def web_prefix do
+    if Phx.New.Generator.in_umbrella?(File.cwd!()) do
+      "lib"
+    else
+      "lib/web"
+    end
+  end
+
+  def test_prefix do
+    if Phx.New.Generator.in_umbrella?(File.cwd!()) do
+      "test"
+    else
+      "test/web"
+    end
   end
 end

@@ -27,13 +27,19 @@ defmodule Mix.Phoenix.Context do
       schema: schema,
       alias: alias,
       base_module: base,
-      web_module: Module.concat(base, "Web"),
+      web_module: web_module(base),
       basename: basename,
       file: file,
       dir: dir,
       opts: opts,
       inputs: inputs(schema),
       pre_existing?: File.exists?(file)}
+  end
+  defp web_module(base) do
+    case base |> Module.split() |> Enum.reverse() do
+      [Web | _] -> base
+      _ -> Module.concat(base, "Web")
+    end
   end
 
   def inject_schema_access(%Context{} = context, binding, paths) do

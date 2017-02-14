@@ -1,3 +1,5 @@
+Code.require_file("../../../installer/lib/phx_new/generator.ex", __DIR__)
+
 defmodule Mix.Tasks.Phx.Gen.Json do
   @shortdoc "Generates controller, views, and bounded context for a JSON resource"
 
@@ -48,12 +50,15 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   end
 
   def copy_new_files(%Context{schema: schema} = context, paths, binding) do
+    web_prefix = Gen.Html.web_prefix()
+    test_prefix = Gen.Html.test_prefix()
+
     Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.json", "", binding, [
-      {:eex, "controller.ex",       "lib/web/controllers/#{schema.singular}_controller.ex"},
-      {:eex, "view.ex",             "lib/web/views/#{schema.singular}_view.ex"},
-      {:eex, "controller_test.exs", "test/web/controllers/#{schema.singular}_controller_test.exs"},
-      {:new_eex, "changeset_view.ex", "lib/web/views/changeset_view.ex"},
-      {:new_eex, "fallback_controller.ex", "lib/web/controllers/fallback_controller.ex"},
+      {:eex, "controller.ex",       Path.join(web_prefix, "controllers/#{schema.singular}_controller.ex")},
+      {:eex, "view.ex",             Path.join(web_prefix, "views/#{schema.singular}_view.ex")},
+      {:eex, "controller_test.exs", Path.join(test_prefix, "controllers/#{schema.singular}_controller_test.exs")},
+      {:new_eex, "changeset_view.ex", Path.join(web_prefix, "views/changeset_view.ex")},
+      {:new_eex, "fallback_controller.ex", Path.join(web_prefix, "controllers/fallback_controller.ex")},
     ]
 
     Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.html", "", binding, [

@@ -1,3 +1,5 @@
+Code.require_file("../../../installer/lib/phx_new/generator.ex", __DIR__)
+
 defmodule Mix.Tasks.Phx.Gen.Schema do
   @shortdoc "Generates an Ecto Schema"
 
@@ -96,9 +98,12 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
     |> print_shell_instructions()
   end
 
-  def build(args) do
+  def build(args, help \\ __MODULE__) do
+    unless Phx.New.Generator.in_single?(File.cwd!()) do
+      Mix.raise "mix phx.gen.schema can only be run inside an application directory"
+    end
     {opts, parsed, _} = OptionParser.parse(args, switches: @switches)
-    [schema_name, plural | attrs] = validate_args!(parsed)
+    [schema_name, plural | attrs] = validate_args!(parsed, help)
 
     schema = Schema.new(schema_name, plural, attrs, opts)
     Mix.Phoenix.check_module_name_availability!(schema.module)
@@ -125,25 +130,25 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
     end
   end
 
-  def validate_args!([schema, plural | _] = args) do
+  def validate_args!([schema, plural | _] = args, help) do
     unless schema =~ ~r/^[A-Z].*$/ do
       Mix.raise "expected the schema argument, #{inspect schema}, to be a valid module name"
     end
     cond do
       String.contains?(plural, ":") ->
-        raise_with_help()
+        help.raise_with_help()
       plural != Phoenix.Naming.underscore(plural) ->
-        Mix.raise "expected the third argument, #{inspect plural}, to be all lowercase using snake_case convention"
+        Mix.raise "expected the plural argument, #{inspect plural}, to be all lowercase using snake_case convention"
       true ->
         args
     end
   end
-  def validate_args!(_) do
-    raise_with_help()
+  def validate_args!(_, help) do
+    help.raise_with_help()
   end
 
   @spec raise_with_help() :: no_return()
-  defp raise_with_help do
+  def raise_with_help do
     Mix.raise """
     mix phx.gen.schema expects both singular and plural names
     of the generated resource followed by any number of attributes:

@@ -69,6 +69,13 @@ defmodule Phx.New.Generator do
     File.write!(file, File.read!(file) <> contents)
   end
 
+  def in_single?(path) do
+    mixfile = Path.join(path, "mix.exs")
+    apps_path = Path.join(path, "apps")
+
+    File.exists?(mixfile) and not File.exists?(apps_path)
+  end
+
   def in_umbrella?(app_path) do
     try do
       umbrella = Path.expand(Path.join [app_path, "..", ".."])
@@ -130,7 +137,7 @@ defmodule Phx.New.Generator do
       adapter_config: adapter_config,
       hex?: Code.ensure_loaded?(Hex),
       generator_config: generator_config(adapter_config),
-      namespaced?: namespaced?(project.app, project.app_mod)]
+      namespaced?: project.in_umbrella?]
 
     %Project{project | binding: binding}
   end
@@ -160,11 +167,6 @@ defmodule Phx.New.Generator do
     adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:prod]},
     pool_size: 20
     """
-  end
-
-
-  defp namespaced?(app, app_mod) when is_binary(app) and is_atom(app_mod) do
-    Macro.camelize(app) != inspect(app_mod)
   end
 
   defp get_pubsub_server(module) do

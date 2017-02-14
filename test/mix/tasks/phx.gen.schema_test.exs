@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
   end
 
   test "build" do
-    in_tmp "build", fn ->
+    in_tmp_project "build", fn ->
       schema = Gen.Schema.build(~w(Blog.Post posts title:string))
 
       assert %Schema{
@@ -36,30 +36,44 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
     end
   end
 
-  test "plural can't contain a colon" do
-    assert_raise Mix.Error, fn ->
-      Gen.Schema.run ~w(Admin.User name:string foo:string)
+  test "plural can't contain a colon", config do
+    in_tmp_project config.test, fn ->
+      assert_raise Mix.Error, ~r/plural/, fn ->
+        Gen.Schema.run ~w(Admin.User name:string foo:string)
+      end
     end
   end
 
-  test "plural can't have uppercased characters or camelized format" do
-    assert_raise Mix.Error, fn ->
-      Gen.Schema.run ~w(Admin.User Users foo:string)
-    end
+  test "plural can't have uppercased characters or camelized format", config do
+    in_tmp_project config.test, fn ->
+      assert_raise Mix.Error, ~r/all lowercase/, fn ->
+        Gen.Schema.run ~w(Admin.User Users foo:string)
+      end
 
-    assert_raise Mix.Error, fn ->
-      Gen.Schema.run ~w(Admin.User AdminUsers foo:string)
-    end
-  end
-
-  test "name is already defined" do
-    assert_raise Mix.Error, fn ->
-      Gen.Schema.run ~w(DupSchema schemas)
+      assert_raise Mix.Error, ~r/all lowercase/, fn ->
+        Gen.Schema.run ~w(Admin.User AdminUsers foo:string)
+      end
     end
   end
 
-  test "generates schema" do
-    in_tmp "generates schema", fn ->
+  test "not inside single project" do
+    in_tmp "not inside single project", fn ->
+      assert_raise Mix.Error, ~r/can only be run inside an application directory/, fn ->
+        Gen.Schema.run ~w(Thing things)
+      end
+    end
+  end
+
+  test "name is already defined", config do
+    in_tmp_project config.test, fn ->
+      assert_raise Mix.Error, ~r/already taken/, fn ->
+        Gen.Schema.run ~w(DupSchema schemas)
+      end
+    end
+  end
+
+  test "generates schema", config do
+    in_tmp_project config.test, fn ->
       Gen.Schema.run(~w(Blog.Post posts title:string))
 
       assert_file "lib/blog/post.ex"
