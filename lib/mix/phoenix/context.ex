@@ -39,7 +39,7 @@ defmodule Mix.Phoenix.Context do
   end
   defp web_module(base) do
     case base |> Module.split() |> Enum.reverse() do
-      [Web | _] -> base
+      ["Web" | _] -> base
       _ -> Module.concat(base, "Web")
     end
   end
