@@ -1,4 +1,4 @@
-defmodule <%= inspect schema.repo %>.Migrations.Create<%= schema.alias |> Module.split() |> Enum.join("") %> do
+defmodule <%= inspect schema.repo %>.Migrations.Create<%= inspect schema.module %> do
   use Ecto.Migration
 
   def change do

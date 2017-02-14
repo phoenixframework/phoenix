@@ -85,7 +85,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     end
   end
 
-  test "generates html context", config do
+  test "generates html context and handles existing contexts", config do
     in_tmp_project config.test, fn ->
       Gen.Html.run(["Blog", "Post", "posts", "title:string"])
 
@@ -100,7 +100,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "defmodule Phoenix.Web.PostControllerTest"
       end
 
-      assert [_] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
+      assert [_] = Path.wildcard("priv/repo/migrations/*_create_blog_post.exs")
 
       assert_file "lib/web/controllers/post_controller.ex", fn file ->
         assert file =~ "defmodule Phoenix.Web.PostController"
@@ -111,6 +111,27 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "Blog.update_post"
         assert file =~ "Blog.delete_post"
         assert file =~ "Blog.change_post"
+      end
+
+
+      Gen.Html.run(["Blog", "Comment", "comments", "title:string"])
+      assert_file "lib/blog/comment.ex"
+
+      assert_file "test/web/controllers/comment_controller_test.exs", fn file ->
+        assert file =~ "defmodule Phoenix.Web.CommentControllerTest"
+      end
+
+      assert [_] = Path.wildcard("priv/repo/migrations/*_create_blog_comment.exs")
+
+      assert_file "lib/web/controllers/comment_controller.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.CommentController"
+        assert file =~ "use Phoenix.Web, :controller"
+        assert file =~ "Blog.get_comment!"
+        assert file =~ "Blog.list_comments"
+        assert file =~ "Blog.create_comment"
+        assert file =~ "Blog.update_comment"
+        assert file =~ "Blog.delete_comment"
+        assert file =~ "Blog.change_comment"
       end
     end
   end
