@@ -103,6 +103,10 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
       Mix.raise "mix phx.gen.schema can only be run inside an application directory"
     end
     {opts, parsed, _} = OptionParser.parse(args, switches: @switches)
+
+    # Schema.new will use App.Web.Repo as the Repo, which in this case is wrong.
+    opts = Keyword.put_new(opts, :repo, default_repo())
+
     [schema_name, plural | attrs] = validate_args!(parsed, help)
 
     schema = Schema.new(schema_name, plural, attrs, opts)
@@ -172,4 +176,13 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   end
   defp pad(i) when i < 10, do: << ?0, ?0 + i >>
   defp pad(i), do: to_string(i)
+
+  # Grab the toplevel repo which is not App.Web.Repo but App.Repo
+  defp default_repo() do
+    Module.concat([Mix.Phoenix.base()])
+    |> Module.split()
+    |> Enum.drop(-1)
+    |> Enum.concat(["Repo"])
+    |> Module.concat()
+  end
 end
