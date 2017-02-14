@@ -23,7 +23,7 @@ defmodule Mix.Tasks.Phoenix.Digest do
     * the file compressed with gzip
     * a file containing the original file name and its digest
     * a compressed file containing the file name and its digest
-    * a manifest file
+    * a cache manifest file
 
   Example of generated files:
 
@@ -31,7 +31,7 @@ defmodule Mix.Tasks.Phoenix.Digest do
     * app.js.gz
     * app-eb0a5b9302e8d32828d8a73f137cc8f0.js
     * app-eb0a5b9302e8d32828d8a73f137cc8f0.js.gz
-    * manifest.json
+    * cache_manifest.json
   """
 
   def run(args) do

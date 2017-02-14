@@ -16,12 +16,12 @@ defmodule Phoenix.Digester do
 
   For each file under the given input path, Phoenix will generate a digest
   and also compress in `.gz` format. The filename and its digest will be
-  used to generate the manifest file. It also avoids duplication, checking
+  used to generate the cache manifest file. It also avoids duplication, checking
   for already digested files.
 
   For stylesheet files found under the given path, Phoenix will replace
   asset references with the digested paths, as long as the asset exists
-  in the generated manifest.
+  in the generated cache manifest.
   """
 
   @doc """
@@ -71,7 +71,7 @@ defmodule Phoenix.Digester do
   end
 
   defp load_manifest(output_path) do
-    manifest_path = Path.join(output_path, "manifest.json")
+    manifest_path = Path.join(output_path, "cache_manifest.json")
 
     if File.exists?(manifest_path) do
       manifest_path
@@ -117,7 +117,7 @@ defmodule Phoenix.Digester do
 
   defp save_manifest(%{"latest" => _, "version" => _, "digests" => _} = manifest, output_path) do
     manifest_content = Poison.encode!(manifest)
-    File.write!(Path.join(output_path, "manifest.json"), manifest_content)
+    File.write!(Path.join(output_path, "cache_manifest.json"), manifest_content)
   end
 
   defp generate_new_digests(files) do
@@ -140,7 +140,7 @@ defmodule Phoenix.Digester do
   defp compiled_file?(file_path) do
     Regex.match?(@digested_file_regex, Path.basename(file_path)) ||
       Path.extname(file_path) == ".gz" ||
-      Path.basename(file_path) == "manifest.json"
+      Path.basename(file_path) == "cache_manifest.json"
   end
 
   defp uncompressed_digested_file?(file_path) do
