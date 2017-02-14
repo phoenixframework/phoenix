@@ -114,6 +114,7 @@ defmodule Mix.Tasks.Phx.New.Web do
 
   def generate(%Project{} = project) do
     copy_from project, __MODULE__, template_files(:new)
+
     if Project.html?(project), do: gen_html(project)
 
     case {Project.brunch?(project), Project.html?(project)} do
