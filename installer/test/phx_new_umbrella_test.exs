@@ -59,7 +59,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "config/config.exs"), fn file ->
         assert file =~ "ecto_repos: []"
         assert file =~ ":phx_umb_web, PhxUmb.Web.Endpoint"
-        refute file =~ "namespace"
+        assert file =~ "namespace"
       end
 
       assert_file web_path(@app, "config/prod.exs"), fn file ->
