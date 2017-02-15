@@ -310,6 +310,15 @@ defmodule Phoenix.Test.ConnTest do
     end
   end
 
+  test "redirected_to/2 with status atom" do
+    conn =
+      build_conn(:get, "/")
+      |> put_resp_header("location", "new location")
+      |> send_resp(301, "foo")
+
+    assert redirected_to(conn, :moved_permanently) == "new location"
+  end
+
   test "redirected_to/2 without header" do
     assert_raise RuntimeError,
                  "no location header was set on redirected_to", fn ->

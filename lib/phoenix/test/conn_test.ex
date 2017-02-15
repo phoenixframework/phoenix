@@ -436,6 +436,10 @@ defmodule Phoenix.ConnTest do
     raise "expected connection to have redirected but no response was set/sent"
   end
 
+  def redirected_to(conn, status) when is_atom(status) do
+    redirected_to(conn, Plug.Conn.Status.code(status))
+  end
+
   def redirected_to(%Conn{status: status} = conn, status) do
     location = Conn.get_resp_header(conn, "location") |> List.first
     location || raise "no location header was set on redirected_to"
