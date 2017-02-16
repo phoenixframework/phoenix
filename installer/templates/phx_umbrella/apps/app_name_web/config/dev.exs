@@ -14,7 +14,6 @@ config :<%= web_app_name %>, <%= endpoint_module %>,
   watchers: <%= if brunch do %>[node: ["node_modules/brunch/bin/brunch", "watch", "--stdin",
                     cd: Path.expand("../assets", __DIR__)]]<% else %>[]<% end %>
 
-
 <%= if html do %># Watch static and templates for browser reloading.
 config :<%= web_app_name %>, <%= endpoint_module %>,
   live_reload: [
