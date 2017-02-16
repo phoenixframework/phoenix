@@ -36,6 +36,7 @@ defmodule Mix.Tasks.Phx.New.App do
 
   def generate(%Project{} = project) do
     copy_from project, __MODULE__, template_files(:new)
+
     if Project.ecto?(project), do: gen_ecto(project)
 
     project

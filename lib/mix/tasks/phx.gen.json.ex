@@ -39,7 +39,6 @@ defmodule Mix.Tasks.Phx.Gen.Json do
 
   def run(args) do
     {context, schema} = Gen.Html.build(args)
-
     binding = [context: context, schema: schema]
     paths = Mix.Phoenix.generator_paths()
 
