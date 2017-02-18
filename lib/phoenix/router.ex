@@ -531,9 +531,9 @@ defmodule Phoenix.Router do
     * `PUT /user` => `:update`
     * `DELETE /user` => `:delete`
 
-    Usage example:
+  Usage example:
 
-      `resources "/account", AccountController, only: [:show], singleton: true`
+      resources "/account", AccountController, only: [:show], singleton: true
 
   """
   defmacro resources(path, controller, opts, do: nested_context) do
