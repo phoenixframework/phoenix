@@ -1,5 +1,3 @@
-Code.require_file("../../../installer/lib/phx_new/generator.ex", __DIR__)
-
 defmodule Mix.Tasks.Phx.Gen.Schema do
   @shortdoc "Generates an Ecto Schema"
 
@@ -99,7 +97,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   end
 
   def build(args, help \\ __MODULE__) do
-    unless Phx.New.Generator.in_single?(File.cwd!()) do
+    unless Mix.Phx.in_single?(File.cwd!()) do
       Mix.raise "mix phx.gen.schema can only be run inside an application directory"
     end
     {opts, parsed, _} = OptionParser.parse(args, switches: @switches)

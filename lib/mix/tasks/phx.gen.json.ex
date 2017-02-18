@@ -1,5 +1,3 @@
-Code.require_file("../../../installer/lib/phx_new/generator.ex", __DIR__)
-
 defmodule Mix.Tasks.Phx.Gen.Json do
   @shortdoc "Generates controller, views, and bounded context for a JSON resource"
 
