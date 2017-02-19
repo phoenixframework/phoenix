@@ -34,6 +34,7 @@ form.link, form.button {
   height: 27px;
   background-size: 100%;
   display: inline-block;
+  margin-top: 0.5em;
   margin-bottom: 1em;
   background-image: url("/images/phoenix.png");
 }
@@ -77,6 +78,7 @@ form.link, form.button {
   .logo {
     width: 519px;
     height: 71px;
+    margin-top: 0;
     background-size: 519px 71px;
   }
   /* Space out the masthead */
