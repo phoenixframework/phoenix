@@ -11,11 +11,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect schema.alias %>Controlle
     render(conn, "index.json", <%= schema.plural %>: <%= schema.plural %>)
   end
 
-  def new(conn, _params) do
-    changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(%<%= inspect schema.module %>{})
-    render(conn, "new.html", changeset: changeset)
-  end
-
   def create(conn, %{<%= inspect schema.singular %> => <%= schema.singular %>_params}) do
     with {:ok, %<%= inspect schema.alias %>{} = <%= schema.singular %>} <- <%= inspect context.alias %>.create_<%= schema.singular %>(<%= schema.singular %>_params) do
       conn
