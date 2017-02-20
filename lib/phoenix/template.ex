@@ -373,7 +373,7 @@ defmodule Phoenix.Template do
   defp compile(path, root) do
     name   = template_path_to_name(path, root)
     defp   = String.to_atom(name)
-    ext    = Path.extname(path) |> String.lstrip(?.) |> String.to_atom
+    ext    = Path.extname(path) |> String.trim_leading(".") |> String.to_atom
     engine = Map.fetch!(engines(), ext)
     quoted = engine.compile(path, name)
 

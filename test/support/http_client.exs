@@ -25,12 +25,12 @@ defmodule Phoenix.Integration.HTTPClient do
     request(method, url, headers, URI.encode_query(body))
   end
   def request(method, url, headers, body) do
-    url     = String.to_char_list(url)
+    url     = String.to_charlist(url)
     headers = headers |> Map.put_new("content-type", "text/html")
-    ct_type = headers["content-type"] |> String.to_char_list
+    ct_type = headers["content-type"] |> String.to_charlist
 
     header = Enum.map headers, fn {k, v} ->
-      {String.to_char_list(k), String.to_char_list(v)}
+      {String.to_charlist(k), String.to_charlist(v)}
     end
 
     # Generate a random profile per request to avoid reuse

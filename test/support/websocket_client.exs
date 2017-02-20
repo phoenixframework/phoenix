@@ -8,7 +8,7 @@ defmodule Phoenix.Integration.WebsocketClient do
   def start_link(sender, url, headers \\ []) do
     :crypto.start
     :ssl.start
-    :websocket_client.start_link(String.to_char_list(url), __MODULE__, [sender],
+    :websocket_client.start_link(String.to_charlist(url), __MODULE__, [sender],
                                  extra_headers: headers)
   end
 

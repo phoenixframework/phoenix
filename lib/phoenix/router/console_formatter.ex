@@ -31,9 +31,9 @@ defmodule Phoenix.Router.ConsoleFormatter do
     route_name = route_name(helper)
     {verb_len, path_len, route_name_len} = column_widths
 
-    String.rjust(route_name, route_name_len) <> "  " <>
-    String.ljust(verb, verb_len) <> "  " <>
-    String.ljust(path, path_len) <> "  " <>
+    String.pad_leading(route_name, route_name_len) <> "  " <>
+    String.pad_trailing(verb, verb_len) <> "  " <>
+    String.pad_trailing(path, path_len) <> "  " <>
     "#{inspect(plug)} #{inspect(opts)}\n"
   end
 

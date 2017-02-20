@@ -9,13 +9,13 @@ defmodule Phoenix.Router.HelpersTest do
   test "defhelper with :identifiers" do
     route = build(:match, :get, "/foo/:bar", nil, Hello, :world, "hello_world")
 
-    assert extract_defhelper(route, 0) == String.strip """
+    assert extract_defhelper(route, 0) == String.trim """
     def(hello_world_path(conn_or_endpoint, :world, bar)) do
       hello_world_path(conn_or_endpoint, :world, bar, [])
     end
     """
 
-    assert extract_defhelper(route, 1) == String.strip """
+    assert extract_defhelper(route, 1) == String.trim """
     def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
       path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> URI.encode(to_param(bar), &URI.char_unreserved?/1), params, ["bar"]))
     end
@@ -25,13 +25,13 @@ defmodule Phoenix.Router.HelpersTest do
   test "defhelper with *identifiers" do
     route = build(:match, :get, "/foo/*bar", nil, Hello, :world, "hello_world")
 
-    assert extract_defhelper(route, 0) == String.strip """
+    assert extract_defhelper(route, 0) == String.trim """
     def(hello_world_path(conn_or_endpoint, :world, bar)) do
       hello_world_path(conn_or_endpoint, :world, bar, [])
     end
     """
 
-    assert extract_defhelper(route, 1) == String.strip """
+    assert extract_defhelper(route, 1) == String.trim """
     def(hello_world_path(conn_or_endpoint, :world, bar, params)) do
       path(conn_or_endpoint, segments(("" <> "/foo") <> "/" <> Enum.map_join(bar, "/", fn s -> URI.encode(s, &URI.char_unreserved?/1) end), params, ["bar"]))
     end
@@ -166,7 +166,7 @@ defmodule Phoenix.Router.HelpersTest do
           #{helper}(conn_or_endpoint, :file, file, opts \\\\ [])
           #{helper}(conn_or_endpoint, :show, id, opts \\\\ [])
 
-      """ |> String.strip
+      """ |> String.trim
     end
 
     assert_raise UndefinedFunctionError, fn ->
@@ -276,7 +276,7 @@ defmodule Phoenix.Router.HelpersTest do
           user_comment_file_path(conn_or_endpoint, :new, user_id, comment_id, opts \\\\ [])
           user_comment_file_path(conn_or_endpoint, :show, user_id, comment_id, id, opts \\\\ [])
           user_comment_file_path(conn_or_endpoint, :update, user_id, comment_id, id, opts \\\\ [])
-      """ |> String.strip
+      """ |> String.trim
     end
 
     assert_raise ArgumentError, error_message.("user_comment_file_path", 4), fn ->
@@ -299,7 +299,7 @@ defmodule Phoenix.Router.HelpersTest do
           user_comment_path(conn_or_endpoint, :show, user_id, id, opts \\\\ [])
           user_comment_path(conn_or_endpoint, :update, user_id, id, opts \\\\ [])
 
-      """ |> String.strip
+      """ |> String.trim
 
     assert_raise ArgumentError, arity_error_message, fn ->
       Helpers.user_comment_path(__MODULE__, :show, 123)

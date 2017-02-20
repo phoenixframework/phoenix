@@ -252,7 +252,7 @@ defmodule Phoenix.CodeReloader do
 
   defp format_output(output) do
     output
-    |> String.strip
+    |> String.trim
     |> Plug.HTML.html_escape
   end
 
