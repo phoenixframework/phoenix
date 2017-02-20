@@ -22,7 +22,6 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
     web_prefix = Mix.Phoenix.web_prefix()
     test_prefix = Mix.Phoenix.test_prefix()
     binding = Mix.Phoenix.inflect(channel_name)
-    binding = Keyword.put(binding, :web_module, "#{binding[:base]}.Web")
     binding = Keyword.put(binding, :module, "#{binding[:web_module]}.#{binding[:scoped]}")
 
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Channel")

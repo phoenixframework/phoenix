@@ -25,7 +25,6 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
   def run([alias_name]) do
     web_prefix = Mix.Phoenix.web_prefix()
     inflections = Mix.Phoenix.inflect(alias_name)
-    inflections = Keyword.put(inflections, :web_module, "#{inflections[:base]}.Web")
     inflections = Keyword.put(inflections, :module, "#{inflections[:web_module]}.#{inflections[:scoped]}")
 
     binding = inflections ++ [
