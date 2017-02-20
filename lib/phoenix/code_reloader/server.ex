@@ -73,6 +73,10 @@ defmodule Phoenix.CodeReloader.Server do
     {:noreply, state}
   end
 
+  def handle_info(_, state) do
+    {:noreply, state}
+  end
+
   defp os_symlink({:win32, _}),
     do: " On Windows, such can be done by starting the shell with \"Run as Administrator\"."
   defp os_symlink(_),
