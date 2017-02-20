@@ -26,13 +26,17 @@ form.link, form.button {
 .header {
   border-bottom: 1px solid #e5e5e5;
 }
+.header ul {
+  margin-top: 0;
+}
 .logo {
-  width: 519px;
-  height: 71px;
+  width: 200px;
+  height: 27px;
+  background-size: 100%;
   display: inline-block;
+  margin-top: 0.5em;
   margin-bottom: 1em;
   background-image: url("/images/phoenix.png");
-  background-size: 519px 71px;
 }
 
 /* Everything but the jumbotron gets side spacing for mobile first views */
@@ -71,9 +75,18 @@ form.link, form.button {
     padding-right: 0;
     padding-left: 0;
   }
+  .logo {
+    width: 519px;
+    height: 71px;
+    margin-top: 0;
+    background-size: 519px 71px;
+  }
   /* Space out the masthead */
   .header {
     margin-bottom: 30px;
+  }
+  .header ul {
+    margin-top: 1em;
   }
   /* Remove the bottom border on the jumbotron for visual effect */
   .jumbotron {
