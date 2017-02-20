@@ -1,5 +1,5 @@
 defmodule <%= module %>Channel do
-  use <%= base %>.Web, :channel
+  use <%= web_module %>, :channel
 
   def join("<%= singular %>:lobby", payload, socket) do
     if authorized?(payload) do

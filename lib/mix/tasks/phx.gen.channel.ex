@@ -17,16 +17,19 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
   use Mix.Task
 
   def run(args) do
-    [module] = validate_args!(args)
+    [channel_name] = validate_args!(args)
 
-    binding = Mix.Phoenix.inflect(module)
-    path    = binding[:path]
+    web_prefix = Mix.Phoenix.web_prefix()
+    test_prefix = Mix.Phoenix.test_prefix()
+    binding = Mix.Phoenix.inflect(channel_name)
+    binding = Keyword.put(binding, :web_module, "#{binding[:base]}.Web")
+    binding = Keyword.put(binding, :module, "#{binding[:web_module]}.#{binding[:scoped]}")
 
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Channel")
 
     Mix.Phoenix.copy_from paths(), "priv/templates/phx.gen.channel", "", binding, [
-      {:eex, "channel.ex",       "lib/web/channels/#{path}_channel.ex"},
-      {:eex, "channel_test.exs", "test/web/channels/#{path}_channel_test.exs"},
+      {:eex, "channel.ex",       Path.join(web_prefix, "channels/#{binding[:path]}_channel.ex")},
+      {:eex, "channel_test.exs", Path.join(test_prefix, "channels/#{binding[:path]}_channel_test.exs")},
     ]
 
     Mix.shell.info """

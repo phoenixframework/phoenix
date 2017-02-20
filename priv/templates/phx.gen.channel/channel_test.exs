@@ -1,12 +1,12 @@
 defmodule <%= module %>ChannelTest do
-  use <%= base %>.ChannelCase
+  use <%= web_module %>.ChannelCase
 
   alias <%= module %>Channel
 
   setup do
     {:ok, _, socket} =
       socket("user_id", %{some: :assign})
-      |> subscribe_and_join(<%= scoped %>Channel, "<%= singular %>:lobby")
+      |> subscribe_and_join(<%= alias %>Channel, "<%= singular %>:lobby")
 
     {:ok, socket: socket}
   end
