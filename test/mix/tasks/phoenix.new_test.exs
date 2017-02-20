@@ -68,6 +68,9 @@ defmodule Mix.Tasks.Phoenix.NewTest do
         end)
       end) =~ ~r"4 tests, 0 failures"
     end
+  after
+    Code.delete_path Path.join(tmp_path(), "bootstrap/photo_blog/_build/test/consolidated")
+    Code.delete_path Path.join(tmp_path(), "bootstrap/photo_blog/_build/test/lib/photo_blog/ebin")
   end
 
   defp in_project(app, path, fun) do

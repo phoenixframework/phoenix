@@ -71,6 +71,9 @@ defmodule Mix.Tasks.Phx.NewTest do
         end)
       end) =~ ~r"4 tests, 0 failures"
     end
+  after
+    Code.delete_path Path.join(tmp_path(), "bootstrap/phx_blog/_build/test/consolidated")
+    Code.delete_path Path.join(tmp_path(), "bootstrap/phx_blog/_build/test/lib/phx_blog/ebin")
   end
 
   defp in_project(app, path, fun) do
