@@ -74,7 +74,6 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
         assert file =~ "Blog.create_post"
         assert file =~ "Blog.update_post"
         assert file =~ "Blog.delete_post"
-        assert file =~ "Blog.change_post"
       end
     end
   end
