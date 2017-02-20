@@ -18,5 +18,4 @@ defmodule Mix.Tasks.Phoenix do
     Mix.shell.info "\nAvailable tasks:\n"
     Mix.Tasks.Help.run(["--search", "phoenix."])
   end
-
 end

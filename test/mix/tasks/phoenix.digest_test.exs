@@ -1,5 +1,5 @@
 defmodule Mix.Tasks.Phoenix.DigestTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
   test "fails when the given paths are invalid" do
     Mix.Tasks.Phoenix.Digest.run(["invalid_path"])

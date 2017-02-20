@@ -1,5 +1,5 @@
 defmodule Mix.Tasks.PhoenixTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
   test "prints version" do
     Mix.Tasks.Phoenix.run []
