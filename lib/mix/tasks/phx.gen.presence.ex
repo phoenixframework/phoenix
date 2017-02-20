@@ -39,7 +39,7 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
     Mix.shell.info """
 
     Add your new module to your supervision tree,
-    in lib/#{binding[:otp_app]}/application.ex:
+    in lib/application.ex:
 
         children = [
           ...
