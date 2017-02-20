@@ -1,5 +1,3 @@
-Code.require_file("../../../installer/lib/phx_new/generator.ex", __DIR__)
-
 defmodule Mix.Tasks.Phx.Gen.Html do
   @shortdoc "Generates controller, views, and bounded context for an HTML resource"
 
@@ -49,7 +47,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   end
 
   def build(args) do
-    unless Phx.New.Generator.in_single?(File.cwd!()) do
+    unless Mix.Phx.in_single?(File.cwd!()) do
       Mix.raise "mix phx.gen.html and phx.gen.json can only be run inside an application directory"
     end
     switches = [binary_id: :boolean, model: :boolean, table: :string]
@@ -121,7 +119,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   end
 
   def web_prefix do
-    if Phx.New.Generator.in_umbrella?(File.cwd!()) do
+    if Mix.Phx.in_umbrella?(File.cwd!()) do
       "lib"
     else
       "lib/web"
@@ -129,7 +127,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   end
 
   def test_prefix do
-    if Phx.New.Generator.in_umbrella?(File.cwd!()) do
+    if Mix.Phx.in_umbrella?(File.cwd!()) do
       "test"
     else
       "test/web"

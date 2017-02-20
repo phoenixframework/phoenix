@@ -243,6 +243,7 @@ defmodule Phx.New.Generator do
         """
     end
   end
+
   defp phoenix_path(path, true) do
     absolute = Path.expand(path)
     relative = Path.relative_to(absolute, @phoenix)
@@ -256,7 +257,6 @@ defmodule Phx.New.Generator do
     |> Enum.map(fn _ -> ".." end)
     |> Path.join()
   end
-
   defp phoenix_path(_path, false) do
     "deps/phoenix"
   end
