@@ -73,7 +73,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
 
     Add the resource to your api scope in lib/web/router.ex:
 
-        resources "/#{schema.plural}", #{inspect schema.alias}Controller
+        resources "/#{schema.plural}", #{inspect schema.alias}Controller, except: [:new, :edit]
     """
     Gen.Schema.print_shell_instructions(schema)
   end
