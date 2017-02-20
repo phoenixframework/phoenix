@@ -29,7 +29,7 @@ defmodule MixHelper do
     File.mkdir_p! path
     File.cd! path
     File.touch!("mix.exs")
-    assert Phx.New.Generator.in_single?(File.cwd!())
+    assert Mix.Phoenix.in_single?(File.cwd!())
     function.()
   end
 

@@ -7,8 +7,10 @@ defmodule Mix.Tasks.Phoenix.Gen.ChannelTest do
   use ExUnit.Case
   import MixHelper
 
+  @moduletag :capture_io
+
   setup do
-    Mix.Task.clear
+    Mix.Task.clear()
     :ok
   end
 

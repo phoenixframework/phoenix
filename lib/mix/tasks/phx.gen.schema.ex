@@ -1,5 +1,5 @@
 defmodule Mix.Tasks.Phx.Gen.Schema do
-  @shortdoc "Generates an Ecto Schema"
+  @shortdoc "Generates an Ecto schema and migration file"
 
   @moduledoc """
   Generates an Ecto schema and migration.
@@ -97,7 +97,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   end
 
   def build(args, help \\ __MODULE__) do
-    unless Mix.Phx.in_single?(File.cwd!()) do
+    unless Mix.Phoenix.in_single?(File.cwd!()) do
       Mix.raise "mix phx.gen.schema can only be run inside an application directory"
     end
     {opts, parsed, _} = OptionParser.parse(args, switches: @switches)

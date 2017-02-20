@@ -1,17 +1,19 @@
-defmodule Mix.Tasks.Phoenix.Gen.Presence do
+defmodule Mix.Tasks.Phx.Gen.Presence do
+  @shortdoc "Generates a Presence tracker"
+
   @moduledoc """
   Generates a Presence tracker for your application.
 
-      mix phoenix.gen.presence
+      mix phx.gen.presence
 
-      mix phoenix.gen.presence MyPresence
+      mix phx.gen.presence MyPresence
 
   The only argument is the module name of the Presence tracker,
   which defaults to Presence.
 
   A new file will be generated in:
 
-    * web/channels/presence.ex
+    * lib/web/channels/presence.ex
 
   Where `presence.ex` is the snake cased version of the module name provided.
   """
@@ -21,21 +23,22 @@ defmodule Mix.Tasks.Phoenix.Gen.Presence do
     run(["Presence"])
   end
   def run([alias_name]) do
-    IO.puts :stderr, "mix phoenix.gen.presence is deprecated. Use phx.gen.presence instead."
     inflections = Mix.Phoenix.inflect(alias_name)
+    web_prefix = Mix.Phoenix.web_prefix()
+
     binding = inflections ++ [
       otp_app: Mix.Phoenix.otp_app(),
       pubsub_server: Module.concat(inflections[:base], PubSub)
     ]
     files = [
-      {:eex, "presence.ex", "web/channels/#{binding[:path]}.ex"},
+      {:eex, "presence.ex", Path.join(web_prefix, "channels/#{binding[:path]}.ex")},
     ]
     Mix.Phoenix.copy_from paths(), "priv/templates/phx.gen.presence", "", binding, files
 
     Mix.shell.info """
 
     Add your new module to your supervision tree,
-    in lib/#{binding[:otp_app]}.ex:
+    in lib/#{binding[:otp_app]}/application.ex:
 
         children = [
           ...
