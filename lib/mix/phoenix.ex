@@ -246,4 +246,40 @@ defmodule Mix.Phoenix do
   def generator_paths do
     [".", :phoenix]
   end
+
+  def in_single?(path) do
+    mixfile = Path.join(path, "mix.exs")
+    apps_path = Path.join(path, "apps")
+
+    File.exists?(mixfile) and not File.exists?(apps_path)
+  end
+
+  def in_umbrella?(app_path) do
+    try do
+      umbrella = Path.expand(Path.join [app_path, "..", ".."])
+      File.exists?(Path.join(umbrella, "mix.exs")) &&
+        Mix.Project.in_project(:umbrella_check, umbrella, fn _ ->
+          path = Mix.Project.config[:apps_path]
+          path && Path.expand(path) == Path.join(umbrella, "apps")
+        end)
+    catch
+      _, _ -> false
+    end
+  end
+
+  def web_prefix do
+    if in_single?(File.cwd!()) do
+      "lib/web"
+    else
+      "lib"
+    end
+  end
+
+  def test_prefix do
+    if in_single?(File.cwd!()) do
+      "test/web"
+    else
+      "test"
+    end
+  end
 end

@@ -1,4 +1,6 @@
 defmodule Mix.Tasks.Phoenix.Gen.Channel do
+  @shortdoc "Generates a Phoenix channel"
+
   @moduledoc """
   Generates a Phoenix channel.
 
@@ -15,8 +17,6 @@ defmodule Mix.Tasks.Phoenix.Gen.Channel do
   use Mix.Task
 
   def run(args) do
-    IO.puts :stderr, "mix phoenix.gen.channel is deprecated. Use phx.gen.channel instead."
-
     [module] = validate_args!(args)
 
     binding = Mix.Phoenix.inflect(module)

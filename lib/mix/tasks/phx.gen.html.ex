@@ -47,7 +47,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   end
 
   def build(args) do
-    unless Mix.Phx.in_single?(File.cwd!()) do
+    unless Mix.Phoenix.in_single?(File.cwd!()) do
       Mix.raise "mix phx.gen.html and phx.gen.json can only be run inside an application directory"
     end
     switches = [binary_id: :boolean, model: :boolean, table: :string]
@@ -65,8 +65,8 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   end
 
   def copy_new_files(%Context{schema: schema} = context, paths, binding) do
-    web_prefix = web_prefix()
-    test_prefix = test_prefix()
+    web_prefix = Mix.Phoenix.web_prefix()
+    test_prefix = Mix.Phoenix.test_prefix()
 
     Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.html", "", binding, [
       {:eex, "controller.ex",       Path.join(web_prefix, "controllers/#{schema.singular}_controller.ex")},
@@ -116,21 +116,5 @@ defmodule Mix.Tasks.Phx.Gen.Html do
         mix phx.gen.html Accounts User users name:string
         mix phx.gen.json Accounts User users name:string
     """
-  end
-
-  def web_prefix do
-    if Mix.Phx.in_umbrella?(File.cwd!()) do
-      "lib"
-    else
-      "lib/web"
-    end
-  end
-
-  def test_prefix do
-    if Mix.Phx.in_umbrella?(File.cwd!()) do
-      "test"
-    else
-      "test/web"
-    end
   end
 end

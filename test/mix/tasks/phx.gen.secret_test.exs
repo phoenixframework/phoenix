@@ -1,9 +1,9 @@
 Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 
-defmodule Mix.Tasks.Phoenix.Gen.SecretTest do
+defmodule Mix.Tasks.Phx.Gen.SecretTest do
   use ExUnit.Case, async: true
 
-  import Mix.Tasks.Phoenix.Gen.Secret
+  import Mix.Tasks.Phx.Gen.Secret
 
   test "generates a secret" do
     run []
@@ -16,7 +16,7 @@ defmodule Mix.Tasks.Phoenix.Gen.SecretTest do
   end
 
   test "raises on invalid args" do
-    message = "mix phoenix.gen.secret expects a length as integer or no argument at all"
+    message = "mix phx.gen.secret expects a length as integer or no argument at all"
     assert_raise Mix.Error, message, fn -> run ["bad"] end
     assert_raise Mix.Error, message, fn -> run ["32bad"] end
     assert_raise Mix.Error, message, fn -> run ["32", "bad"] end

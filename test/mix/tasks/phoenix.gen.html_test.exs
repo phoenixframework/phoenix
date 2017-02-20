@@ -8,20 +8,22 @@ end
 
 defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
   use ExUnit.Case
+  import ExUnit.CaptureIO
   import MixHelper
 
   setup do
-    Mix.Task.clear
+    Mix.Task.clear()
     :ok
   end
 
   test "generates html resource" do
     in_tmp "generates html resource", fn ->
-      Mix.Tasks.Phoenix.Gen.Html.run ["user", "users", "name", "age:integer", "height:decimal",
-                                      "nicks:array:text", "famous:boolean", "born_at:naive_datetime",
-                                      "secret:uuid", "first_login:date", "alarm:time",
-                                      "address_id:references:addresses"]
-
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Phoenix.Gen.Html.run ["user", "users", "name", "age:integer", "height:decimal",
+                                        "nicks:array:text", "famous:boolean", "born_at:naive_datetime",
+                                        "secret:uuid", "first_login:date", "alarm:time",
+                                        "address_id:references:addresses"]
+      end)
       assert_file "web/models/user.ex"
       assert_file "test/models/user_test.exs"
       assert [_] = Path.wildcard("priv/repo/migrations/*_create_user.exs")
@@ -127,7 +129,9 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
 
   test "generates nested resource" do
     in_tmp "generates nested resource", fn ->
-      Mix.Tasks.Phoenix.Gen.Html.run ["Admin.SuperUser", "super_users", "name:string"]
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Phoenix.Gen.Html.run ["Admin.SuperUser", "super_users", "name:string"]
+      end)
 
       assert_file "web/models/admin/super_user.ex"
       assert [_] = Path.wildcard("priv/repo/migrations/*_create_admin_super_user.exs")
@@ -183,7 +187,9 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
 
   test "generates html resource without model" do
     in_tmp "generates html resource without model", fn ->
-      Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "users", "--no-model", "name:string"]
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "users", "--no-model", "name:string"]
+      end)
 
       refute File.exists? "web/models/admin/user.ex"
       assert [] = Path.wildcard("priv/repo/migrations/*_create_admin_user.exs")
@@ -197,7 +203,9 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
   test "with binary_id properly generates controller test" do
     in_tmp "with binary_id properly generates controller test", fn ->
       with_generator_env [binary_id: true, sample_binary_id: "abcd"], fn ->
-        Mix.Tasks.Phoenix.Gen.Json.run ["User", "users"]
+        capture_io(:stderr, fn ->
+          Mix.Tasks.Phoenix.Gen.Html.run ["User", "users"]
+        end)
 
         assert_file "test/controllers/user_controller_test.exs", fn file ->
           assert file =~ ~S|user_path(conn, :show, "abcd")|
@@ -205,7 +213,9 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
       end
 
       with_generator_env [binary_id: true], fn ->
-        Mix.Tasks.Phoenix.Gen.Json.run ["Post", "posts"]
+        capture_io(:stderr, fn ->
+          Mix.Tasks.Phoenix.Gen.Html.run ["Post", "posts"]
+        end)
 
         assert_file "test/controllers/post_controller_test.exs", fn file ->
           assert file =~ ~S|post_path(conn, :show, "11111111-1111-1111-1111-111111111111")|
@@ -216,23 +226,31 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
 
   test "plural can't contain a colon" do
     assert_raise Mix.Error, fn ->
-      Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "name:string", "foo:string"]
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "name:string", "foo:string"]
+      end)
     end
   end
 
   test "plural can't have uppercased characters or camelized format" do
     assert_raise Mix.Error, fn ->
-      Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "Users", "foo:string"]
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "Users", "foo:string"]
+      end)
     end
 
     assert_raise Mix.Error, fn ->
-      Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "AdminUsers", "foo:string"]
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "AdminUsers", "foo:string"]
+      end)
     end
   end
 
   test "name is already defined" do
     assert_raise Mix.Error, fn ->
-      Mix.Tasks.Phoenix.Gen.Html.run ["DupHTML", "duphtmls"]
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Phoenix.Gen.Html.run ["DupHTML", "duphtmls"]
+      end)
     end
   end
 end

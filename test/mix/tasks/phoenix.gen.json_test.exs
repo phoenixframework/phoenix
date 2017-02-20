@@ -8,18 +8,21 @@ end
 
 defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
   use ExUnit.Case
+  import ExUnit.CaptureIO
   import MixHelper
 
   setup do
-    Mix.Task.clear
+    Mix.Task.clear()
     :ok
   end
 
   test "generates json resource" do
     in_tmp "generates json resource", fn ->
-      Mix.Tasks.Phoenix.Gen.Json.run ["user", "users", "name", "age:integer", "height:decimal",
-                                      "nicks:array:text", "famous:boolean", "born_at:utc_datetime",
-                                      "secret:uuid", "first_login:date", "alarm:time"]
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Phoenix.Gen.Json.run ["user", "users", "name", "age:integer", "height:decimal",
+                                        "nicks:array:text", "famous:boolean", "born_at:utc_datetime",
+                                        "secret:uuid", "first_login:date", "alarm:time"]
+      end)
 
       assert_file "web/models/user.ex"
       assert_file "test/models/user_test.exs"
@@ -81,7 +84,9 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
   test "doesn't generate a resource when there is an error" do
     in_tmp "doesnt generate resource on error", fn ->
       assert_raise(Mix.Error, fn ->
-        Mix.Tasks.Phoenix.Gen.Json.run ["user", "users", "name", "age:integer", "info:notvalid"]
+        capture_io(:stderr, fn ->
+          Mix.Tasks.Phoenix.Gen.Json.run ["user", "users", "name", "age:integer", "info:notvalid"]
+        end)
       end)
 
       refute_file "web/models/user.ex"
@@ -94,7 +99,9 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
 
   test "generates nested resource" do
     in_tmp "generates nested resource", fn ->
-      Mix.Tasks.Phoenix.Gen.Json.run ["Admin.User", "users", "name:string"]
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Phoenix.Gen.Json.run ["Admin.User", "users", "name:string"]
+      end)
 
       assert_file "web/models/admin/user.ex"
       assert [_] = Path.wildcard("priv/repo/migrations/*_create_admin_user.exs")
@@ -119,7 +126,9 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
 
   test "generates json resource without model" do
     in_tmp "generates json resource without model", fn ->
-      Mix.Tasks.Phoenix.Gen.Json.run ["API.V1.User", "users", "--no-model", "name:string"]
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Phoenix.Gen.Json.run ["API.V1.User", "users", "--no-model", "name:string"]
+      end)
 
       refute File.exists? "web/models/api/v1/user.ex"
       assert [] = Path.wildcard("priv/repo/migrations/*_create_api_v1_user.exs")
@@ -137,7 +146,9 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
 
   test "generates json resource with only id field" do
     in_tmp "generates json resource with only id field", fn ->
-      Mix.Tasks.Phoenix.Gen.Json.run ["User", "users"]
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Phoenix.Gen.Json.run ["User", "users"]
+      end)
 
       assert File.exists? "web/models/user.ex"
       assert [_] = Path.wildcard("priv/repo/migrations/*_create_user.exs")
@@ -153,44 +164,52 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
   end
 
   test "with binary_id properly generates controller test" do
-    in_tmp "with binary_id properly generates controller test", fn ->
-      with_generator_env [binary_id: true, sample_binary_id: "abcd"], fn ->
-        Mix.Tasks.Phoenix.Gen.Json.run ["User", "users"]
+    capture_io(:stderr, fn ->
+      in_tmp "with binary_id properly generates controller test", fn ->
+        with_generator_env [binary_id: true, sample_binary_id: "abcd"], fn ->
+          Mix.Tasks.Phoenix.Gen.Json.run ["User", "users"]
 
-        assert_file "test/controllers/user_controller_test.exs", fn file ->
-          assert file =~ ~S|user_path(conn, :show, "abcd")|
+          assert_file "test/controllers/user_controller_test.exs", fn file ->
+            assert file =~ ~S|user_path(conn, :show, "abcd")|
+          end
+        end
+
+        with_generator_env [binary_id: true], fn ->
+          Mix.Tasks.Phoenix.Gen.Json.run ["Post", "posts"]
+
+          assert_file "test/controllers/post_controller_test.exs", fn file ->
+            assert file =~ ~S|post_path(conn, :show, "11111111-1111-1111-1111-111111111111")|
+          end
         end
       end
-
-      with_generator_env [binary_id: true], fn ->
-        Mix.Tasks.Phoenix.Gen.Json.run ["Post", "posts"]
-
-        assert_file "test/controllers/post_controller_test.exs", fn file ->
-          assert file =~ ~S|post_path(conn, :show, "11111111-1111-1111-1111-111111111111")|
-        end
-      end
-    end
+    end)
   end
 
   test "plural can't contain a colon" do
-    assert_raise Mix.Error, fn ->
-      Mix.Tasks.Phoenix.Gen.Json.run ["Admin.User", "name:string", "foo:string"]
-    end
+    capture_io(:stderr, fn ->
+      assert_raise Mix.Error, fn ->
+        Mix.Tasks.Phoenix.Gen.Json.run ["Admin.User", "name:string", "foo:string"]
+      end
+    end)
   end
 
   test "plural can't have uppercased characters or camelized format" do
-    assert_raise Mix.Error, fn ->
-      Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "Users", "foo:string"]
-    end
+    capture_io(:stderr, fn ->
+      assert_raise Mix.Error, fn ->
+        Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "Users", "foo:string"]
+      end
 
-    assert_raise Mix.Error, fn ->
-      Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "AdminUsers", "foo:string"]
-    end
+      assert_raise Mix.Error, fn ->
+        Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "AdminUsers", "foo:string"]
+      end
+    end)
   end
 
   test "name is already defined" do
-    assert_raise Mix.Error, fn ->
-      Mix.Tasks.Phoenix.Gen.Json.run ["DupJSON", "dupjsons"]
-    end
+    capture_io(:stderr, fn ->
+      assert_raise Mix.Error, fn ->
+        Mix.Tasks.Phoenix.Gen.Json.run ["DupJSON", "dupjsons"]
+      end
+    end)
   end
 end

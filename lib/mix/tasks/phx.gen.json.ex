@@ -47,8 +47,8 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   end
 
   def copy_new_files(%Context{schema: schema} = context, paths, binding) do
-    web_prefix = Gen.Html.web_prefix()
-    test_prefix = Gen.Html.test_prefix()
+    web_prefix = Mix.Phoenix.web_prefix()
+    test_prefix = Mix.Phoenix.test_prefix()
 
     Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.json", "", binding, [
       {:eex, "controller.ex",       Path.join(web_prefix, "controllers/#{schema.singular}_controller.ex")},

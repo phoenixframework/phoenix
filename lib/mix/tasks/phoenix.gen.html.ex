@@ -25,6 +25,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
   information on attributes and namespaced resources.
   """
   def run(args) do
+    IO.puts :stderr, "mix phoenix.gen.html is deprecated. Use phx.gen.html instead."
     switches = [binary_id: :boolean, model: :boolean]
 
     {opts, parsed, _} = OptionParser.parse(args, switches: switches)
