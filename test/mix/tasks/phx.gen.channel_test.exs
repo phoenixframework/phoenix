@@ -1,12 +1,14 @@
 Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 
-defmodule Phoenix.DupChannel do
+defmodule Phoenix.Dup2Channel do
 end
 
-defmodule Mix.Tasks.Phoenix.Gen.ChannelTest do
+defmodule Mix.Tasks.Phx.Gen.ChannelTest do
   use ExUnit.Case
   import MixHelper
-  import ExUnit.CaptureIO
+  alias Mix.Tasks.Phx.Gen
+
+  @moduletag :capture_io
 
   setup do
     Mix.Task.clear()
@@ -15,11 +17,9 @@ defmodule Mix.Tasks.Phoenix.Gen.ChannelTest do
 
   test "generates channel" do
     in_tmp "generates channel", fn ->
-      capture_io(:stderr, fn ->
-        Mix.Tasks.Phoenix.Gen.Channel.run ["Room"]
-      end)
+      Gen.Channel.run ["Room"]
 
-      assert_file "web/channels/room_channel.ex", fn file ->
+      assert_file "lib/web/channels/room_channel.ex", fn file ->
         assert file =~ ~S|defmodule Phoenix.RoomChannel do|
         assert file =~ ~S|use Phoenix.Web, :channel|
         assert file =~ ~S|def join("room:lobby", payload, socket) do|
@@ -31,7 +31,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ChannelTest do
         assert file =~ ~S|{:noreply, socket}|
       end
 
-      assert_file "test/channels/room_channel_test.exs", fn file ->
+      assert_file "test/web/channels/room_channel_test.exs", fn file ->
         assert file =~ ~S|defmodule Phoenix.RoomChannelTest|
         assert file =~ ~S|use Phoenix.ChannelCase|
         assert file =~ ~S|alias Phoenix.RoomChannel|
@@ -53,16 +53,14 @@ defmodule Mix.Tasks.Phoenix.Gen.ChannelTest do
 
   test "generates nested channel" do
     in_tmp "generates nested channel", fn ->
-      capture_io(:stderr, fn ->
-        Mix.Tasks.Phoenix.Gen.Channel.run ["Admin.Room"]
-      end)
+      Gen.Channel.run ["Admin.Room"]
 
-      assert_file "web/channels/admin/room_channel.ex", fn file ->
+      assert_file "lib/web/channels/admin/room_channel.ex", fn file ->
         assert file =~ ~S|defmodule Phoenix.Admin.RoomChannel do|
         assert file =~ ~S|use Phoenix.Web, :channel|
       end
 
-      assert_file "test/channels/admin/room_channel_test.exs", fn file ->
+      assert_file "test/web/channels/admin/room_channel_test.exs", fn file ->
         assert file =~ ~S|defmodule Phoenix.Admin.RoomChannelTest|
         assert file =~ ~S|use Phoenix.ChannelCase|
         assert file =~ ~S|alias Phoenix.Admin.RoomChannel|
@@ -71,26 +69,20 @@ defmodule Mix.Tasks.Phoenix.Gen.ChannelTest do
   end
 
   test "passing no args raises error" do
-    capture_io(:stderr, fn ->
-      assert_raise Mix.Error, fn ->
-        Mix.Tasks.Phoenix.Gen.Channel.run []
-      end
-    end)
+    assert_raise Mix.Error, fn ->
+      Gen.Channel.run []
+    end
   end
 
   test "passing extra args raises error" do
-    capture_io(:stderr, fn ->
-      assert_raise Mix.Error, fn ->
-        Mix.Tasks.Phoenix.Gen.Channel.run ["Admin.Room", "new_message"]
-      end
-    end)
+    assert_raise Mix.Error, fn ->
+      Gen.Channel.run ["Admin.Room", "new_message"]
+    end
   end
 
   test "name is already defined" do
-    capture_io(:stderr, fn ->
-      assert_raise Mix.Error, fn ->
-        Mix.Tasks.Phoenix.Gen.Channel.run ["Dup"]
-      end
-    end)
+    assert_raise Mix.Error, ~r/Dup2Channel is already taken/, fn ->
+      Gen.Channel.run ["Dup2"]
+    end
   end
 end
