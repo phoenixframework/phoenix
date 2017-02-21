@@ -23,8 +23,9 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
     run(["Presence"])
   end
   def run([alias_name]) do
-    inflections = Mix.Phoenix.inflect(alias_name)
     web_prefix = Mix.Phoenix.web_prefix()
+    inflections = Mix.Phoenix.inflect(alias_name)
+    inflections = Keyword.put(inflections, :module, "#{inflections[:web_module]}.#{inflections[:scoped]}")
 
     binding = inflections ++ [
       otp_app: Mix.Phoenix.otp_app(),
@@ -38,7 +39,7 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
     Mix.shell.info """
 
     Add your new module to your supervision tree,
-    in lib/#{binding[:otp_app]}/application.ex:
+    in lib/application.ex:
 
         children = [
           ...

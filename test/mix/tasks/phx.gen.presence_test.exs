@@ -14,7 +14,7 @@ defmodule Mix.Tasks.Phx.Gen.PresenceTest do
       Mix.Tasks.Phx.Gen.Presence.run(["MyPresence"])
 
       assert_file "lib/web/channels/my_presence.ex", fn file ->
-        assert file =~ ~S|defmodule Phoenix.MyPresence do|
+        assert file =~ ~S|defmodule Phoenix.Web.MyPresence do|
         assert file =~ ~S|use Phoenix.Presence, otp_app: :phoenix|
       end
     end
@@ -25,7 +25,7 @@ defmodule Mix.Tasks.Phx.Gen.PresenceTest do
       Mix.Tasks.Phx.Gen.Presence.run([])
 
       assert_file "lib/web/channels/presence.ex", fn file ->
-        assert file =~ ~S|defmodule Phoenix.Presence do|
+        assert file =~ ~S|defmodule Phoenix.Web.Presence do|
         assert file =~ ~S|use Phoenix.Presence, otp_app: :phoenix|
       end
     end

@@ -1,37 +1,39 @@
-defmodule Mix.Tasks.Phoenix.Gen.Channel do
+defmodule Mix.Tasks.Phx.Gen.Channel do
   @shortdoc "Generates a Phoenix channel"
 
   @moduledoc """
   Generates a Phoenix channel.
 
-      mix phoenix.gen.channel Room
+      mix phx.gen.channel Room
 
   Accepts the module name for the channel
 
   The generated model will contain:
 
-    * a channel in web/channels
-    * a channel_test in test/channels
+    * a channel in lib/web/channels
+    * a channel_test in test/web/channels
 
   """
   use Mix.Task
 
   def run(args) do
-    [module] = validate_args!(args)
+    [channel_name] = validate_args!(args)
 
-    binding = Mix.Phoenix.inflect(module)
-    path    = binding[:path]
+    web_prefix = Mix.Phoenix.web_prefix()
+    test_prefix = Mix.Phoenix.test_prefix()
+    binding = Mix.Phoenix.inflect(channel_name)
+    binding = Keyword.put(binding, :module, "#{binding[:web_module]}.#{binding[:scoped]}")
 
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Channel")
 
-    Mix.Phoenix.copy_from paths(), "priv/templates/phoenix.gen.channel", "", binding, [
-      {:eex, "channel.ex",       "web/channels/#{path}_channel.ex"},
-      {:eex, "channel_test.exs", "test/channels/#{path}_channel_test.exs"},
+    Mix.Phoenix.copy_from paths(), "priv/templates/phx.gen.channel", "", binding, [
+      {:eex, "channel.ex",       Path.join(web_prefix, "channels/#{binding[:path]}_channel.ex")},
+      {:eex, "channel_test.exs", Path.join(test_prefix, "channels/#{binding[:path]}_channel_test.exs")},
     ]
 
     Mix.shell.info """
 
-    Add the channel to your `web/channels/user_socket.ex` handler, for example:
+    Add the channel to your `lib/web/channels/user_socket.ex` handler, for example:
 
         channel "#{binding[:singular]}:lobby", #{binding[:module]}Channel
     """
@@ -40,9 +42,9 @@ defmodule Mix.Tasks.Phoenix.Gen.Channel do
   @spec raise_with_help() :: no_return()
   defp raise_with_help do
     Mix.raise """
-    mix phoenix.gen.channel expects just the module name:
+    mix phx.gen.channel expects just the module name:
 
-        mix phoenix.gen.channel Room
+        mix phx.gen.channel Room
     """
   end
 
