@@ -14,7 +14,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ChannelTest do
   end
 
   test "generates channel" do
-    in_tmp "generates channel", fn ->
+    in_tmp "generates deprecated channel", fn ->
       capture_io(:stderr, fn ->
         Mix.Tasks.Phoenix.Gen.Channel.run ["Room"]
       end)
@@ -52,7 +52,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ChannelTest do
   end
 
   test "generates nested channel" do
-    in_tmp "generates nested channel", fn ->
+    in_tmp "generates deprecated nested channel", fn ->
       capture_io(:stderr, fn ->
         Mix.Tasks.Phoenix.Gen.Channel.run ["Admin.Room"]
       end)
