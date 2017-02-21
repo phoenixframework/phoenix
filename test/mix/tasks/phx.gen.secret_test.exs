@@ -1,6 +1,6 @@
 Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 
-defmodule Mix.Tasks.Phoenix.Gen.SecretTest do
+defmodule Mix.Tasks.Phx.Gen.SecretTest do
   use ExUnit.Case
   import Mix.Tasks.Phx.Gen.Secret
 
