@@ -41,6 +41,9 @@ defmodule <%= app_module %>.ConnCase do
 <% else %>
     _ = tags
 <% end %>
-    {:ok, conn: Phoenix.ConnTest.build_conn()}
+    conn = Phoenix.ConnTest.build_conn()
+      |> Plug.Conn.put_private(:phoenix_endpoint, @endpoint)
+
+    {:ok, conn: conn}
   end
 end
