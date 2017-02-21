@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Phoenix.Server do
+defmodule Mix.Tasks.Phx.Server do
   use Mix.Task
 
   @shortdoc "Starts applications and their servers"
@@ -12,14 +12,22 @@ defmodule Mix.Tasks.Phoenix.Server do
   For additional information, refer to the documentation for
   `Mix.Tasks.Run`.
 
-  For example, to run `phoenix.server` without checking dependencies:
+  For example, to run `phx.server` without checking dependencies:
 
-      mix phoenix.server --no-deps-check
+      mix phx.server --no-deps-check
 
   The `--no-halt` flag is automatically added.
   """
   def run(args) do
-    IO.puts :stderr, "mix phoenix.server is deprecated. Use phx.server instead."
-    Mix.Tasks.Phx.Server.run(args)
+    Application.put_env(:phoenix, :serve_endpoints, true, persistent: true)
+    Mix.Tasks.Run.run run_args() ++ args
+  end
+
+  defp run_args do
+    if iex_running?(), do: [], else: ["--no-halt"]
+  end
+
+  defp iex_running? do
+    Code.ensure_loaded?(IEx) and IEx.started?
   end
 end

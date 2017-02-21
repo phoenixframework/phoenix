@@ -1,8 +1,5 @@
 defmodule Mix.Tasks.Phoenix.Routes do
   use Mix.Task
-  alias Phoenix.Router.ConsoleFormatter
-
-  @shortdoc "Prints all routes"
 
   @moduledoc """
   Prints all routes for the default or a given router.
@@ -26,33 +23,7 @@ defmodule Mix.Tasks.Phoenix.Routes do
   """
 
   def run(args, base \\ Mix.Phoenix.base()) do
-    Mix.Task.run "compile", args
-
-    args
-    |> Enum.at(0)
-    |> router(base)
-    |> ConsoleFormatter.format()
-    |> Mix.shell.info()
+    IO.puts :stderr, "mix phoenix.router is deprecated. Use phx.router instead."
+    Mix.Tasks.Phx.Routes.run(args, base)
   end
-
-  defp router(nil, base) do
-    if Mix.Project.umbrella?() do
-      Mix.raise "umbrella applications require an explicit router to be given to phoenix.routes"
-    end
-    web_router = app_mod(base, "Web.Router")
-    old_router = app_mod(base, "Router")
-
-    loaded(web_router) || loaded(old_router) || Mix.raise """
-    no router found at #{inspect web_router} or #{inspect old_router}.
-    An explicit router module may be given to phoenix.routes.
-    """
-  end
-  defp router(router_name, _base) do
-    arg_router = Module.concat("Elixir", router_name)
-    loaded(arg_router) || Mix.raise "the provided router, #{inspect arg_router}, does not exist"
-  end
-
-  defp loaded(module), do: Code.ensure_loaded?(module) && module
-
-  defp app_mod(base, name), do: Module.concat([base, name])
 end
