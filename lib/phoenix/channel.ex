@@ -77,8 +77,9 @@ defmodule Phoenix.Channel do
         changeset = Post.changeset(%Post{}, attrs)
 
         if changeset.valid? do
-          Repo.insert!(changeset)
-          {:reply, {:ok, changeset}, socket}
+          post = Repo.insert!(changeset)
+          {:reply, {:ok, MyApp.PostView.render("show.json", 
+            %{post: post}), socket}
         else
           {:reply,{:error, MyApp.ChangesetView.render("errors.json",
             %{changeset: changeset}), socket}
