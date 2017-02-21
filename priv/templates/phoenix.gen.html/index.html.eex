@@ -11,7 +11,7 @@
   <tbody>
 <%= "<%=" %> for <%= singular %> <- @<%= plural %> do <%= "%\>" %>
     <tr>
-<%= for {k, _} <- attrs do %>      <td><%= "<%=" %> <%= singular %>.<%= k %> <%= "%\>" %></td>
+<%= for {k, t} <- attrs do %>      <td><%= "<%=" %> <%= singular %>.<%= k %><%= if t == :map, do: ~s(["data"]) %> <%= "%\>" %></td>
 <% end %>
       <td class="text-right">
         <span><%= "<%=" %> link "Show", to: <%= singular %>_path(@conn, :show, <%= singular %>), class: "btn btn-default btn-xs" <%= "%\>" %></span>
