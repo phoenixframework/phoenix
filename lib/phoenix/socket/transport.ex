@@ -58,18 +58,23 @@ defmodule Phoenix.Socket.Transport do
   serializer that abides to the behaviour described in
   `Phoenix.Transports.Serializer`.
 
-  ## Managing channels
+  ## Managing channel exits
 
   Because channels are spawned from the transport process, transports
   must trap exits and correctly handle the `{:EXIT, _, _}` messages
   arriving from channels, relaying the proper response to the client.
 
-  The following events are sent by the transport when a channel exits:
+  The `"phx_error"` event is sent by the transport when a channel exits,
+  and represents the channel terminating against its will. The
+  `on_exit_message/3` function aids in constructing the `"phx_error"` message.
 
-    * `"phx_close"` - The channel has exited gracefully
-    * `"phx_error"` - The channel has crashed
+  For graceful exits, the channel will notify the transort it is
+  gracefully terminating via the following message:
 
-  The `on_exit_message/3` function aids in constructing these messages.
+      {:graceful_exit, channel_pid, %Phoenix.Socket.Message{}}
+
+  The `%Phoenix.Socket.Message{}` is the leave message for the transport
+  to relay to the client.
 
   ## Duplicate Join Subscriptions
 
@@ -224,16 +229,17 @@ defmodule Phoenix.Socket.Transport do
   end
 
   @doc false
-  def build_channel_socket(%Socket{} = socket, channel, topic) do
+  def build_channel_socket(%Socket{} = socket, channel, topic, join_ref) do
     %Socket{socket |
             topic: topic,
             channel: channel,
+            join_ref: join_ref,
             private: channel.__socket__(:private)}
   end
 
   defp do_dispatch(nil, %{event: "phx_join", topic: topic} = msg, base_socket) do
     if channel = base_socket.handler.__channel__(topic, base_socket.transport_name) do
-      socket = build_channel_socket(base_socket, channel, topic)
+      socket = build_channel_socket(base_socket, channel, topic, msg.ref)
 
       case Phoenix.Channel.Server.join(socket, msg.payload) do
         {:ok, response, pid} ->
@@ -282,13 +288,14 @@ defmodule Phoenix.Socket.Transport do
     IO.write :stderr, "Phoenix.Transport.on_exit_message/2 is deprecated. Use on_exit_message/3 instead."
     on_exit_message(topic, nil, reason)
   end
-  def on_exit_message(topic, join_ref, reason) do
-    case reason do
-      :normal        -> %Message{ref: join_ref, topic: topic, event: "phx_close", payload: %{}}
-      :shutdown      -> %Message{ref: join_ref, topic: topic, event: "phx_close", payload: %{}}
-      {:shutdown, _} -> %Message{ref: join_ref, topic: topic, event: "phx_close", payload: %{}}
-      _              -> %Message{ref: join_ref, topic: topic, event: "phx_error", payload: %{}}
-    end
+  def on_exit_message(topic, join_ref, _reason) do
+    %Message{ref: join_ref, topic: topic, event: "phx_error", payload: %{}}
+  end
+
+  @doc false
+  def notify_graceful_exit(%Socket{topic: topic, join_ref: ref} = socket) do
+    close_msg = %Message{ref: ref, topic: topic, event: "phx_close", payload: %{}}
+    send(socket.transport_pid, {:graceful_exit, self(), close_msg})
   end
 
   @doc """

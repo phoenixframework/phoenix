@@ -325,7 +325,9 @@ defmodule Phoenix.ChannelTest do
   """
   def join(%Socket{} = socket, channel, topic, payload \\ %{})
       when is_atom(channel) and is_binary(topic) and is_map(payload) do
-    socket = Transport.build_channel_socket(socket, channel, topic)
+
+    ref = System.unique_integer([:positive])
+    socket = Transport.build_channel_socket(socket, channel, topic, ref)
 
     case Server.join(socket, payload) do
       {:ok, reply, pid} ->

@@ -10,6 +10,10 @@ defmodule Phoenix.Test.ChannelTest do
 
   @moduletag :capture_log
 
+  defp assert_graceful_exit(pid) do
+    assert_receive {:graceful_exit, ^pid, %Message{event: "phx_close"}}
+  end
+
   defmodule Endpoint do
     use Phoenix.Endpoint, otp_app: :phoenix
   end
@@ -72,6 +76,10 @@ defmodule Phoenix.Test.ChannelTest do
 
     def handle_in("reply", %{}, socket) do
       {:reply, :ok, socket}
+    end
+
+    def handle_in("crash", %{}, _socket) do
+      raise "boom!"
     end
 
     def handle_in("async_reply", %{"req" => arg}, socket) do
@@ -245,13 +253,23 @@ defmodule Phoenix.Test.ChannelTest do
     assert_reply ref, :ok, %{"async_resp" => "foo"}
   end
 
+  test "crashed channel propagates exit" do
+    Process.flag(:trap_exit, true)
+    {:ok, _, socket} = join(socket(), Channel, "foo:ok")
+    push socket, "crash", %{}
+    pid = socket.channel_pid
+    assert_receive {:terminate, _}
+    assert_receive {:EXIT, ^pid, _}
+    refute_receive {:graceful_exit, _, _}
+  end
+
   test "pushes on stop" do
     Process.flag(:trap_exit, true)
     {:ok, _, socket} = join(socket(), Channel, "foo:ok")
     push socket, "stop", %{"reason" => :normal}
     pid = socket.channel_pid
     assert_receive {:terminate, :normal}
-    assert_receive {:EXIT, ^pid, :normal}
+    assert_graceful_exit(pid)
 
     # Pushing after stop doesn't crash the client/transport
     Process.flag(:trap_exit, false)
@@ -266,14 +284,14 @@ defmodule Phoenix.Test.ChannelTest do
     assert_reply ref, :ok
     pid = socket.channel_pid
     assert_receive {:terminate, :shutdown}
-    assert_receive {:EXIT, ^pid, :shutdown}
+    assert_graceful_exit(pid)
 
     {:ok, _, socket} = join(socket(), Channel, "foo:ok")
     ref = push socket, "stop_and_reply", %{"req" => "foo"}
     assert_reply ref, :ok, %{"resp" => "foo"}
     pid = socket.channel_pid
     assert_receive {:terminate, :shutdown}
-    assert_receive {:EXIT, ^pid, :shutdown}
+    assert_graceful_exit(pid)
   end
 
   test "pushes and broadcast messages" do
@@ -322,7 +340,7 @@ defmodule Phoenix.Test.ChannelTest do
     broadcast_from! socket, "stop", %{"foo" => "bar"}
     pid = socket.channel_pid
     assert_receive {:terminate, :shutdown}
-    assert_receive {:EXIT, ^pid, :shutdown}
+    assert_graceful_exit(pid)
   end
 
   ## handle_info
@@ -333,7 +351,7 @@ defmodule Phoenix.Test.ChannelTest do
     pid = socket.channel_pid
     send pid, :stop
     assert_receive {:terminate, :shutdown}
-    assert_receive {:EXIT, ^pid, :shutdown}
+    assert_graceful_exit(pid)
   end
 
   test "handles messages and pushes" do
@@ -358,7 +376,7 @@ defmodule Phoenix.Test.ChannelTest do
 
     pid = socket.channel_pid
     assert_receive {:terminate, {:shutdown, :left}}
-    assert_receive {:EXIT, ^pid, {:shutdown, :left}}
+    assert_graceful_exit(pid)
 
     # Leaving again doesn't crash
     _ = leave(socket)
@@ -371,7 +389,7 @@ defmodule Phoenix.Test.ChannelTest do
 
     pid = socket.channel_pid
     assert_receive {:terminate, {:shutdown, :closed}}
-    assert_receive {:EXIT, ^pid, {:shutdown, :closed}}
+    assert_graceful_exit(pid)
 
     # Closing again doesn't crash
     _ = close(socket)
