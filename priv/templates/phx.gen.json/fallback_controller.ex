@@ -2,7 +2,7 @@ defmodule <%= inspect context.web_module %>.FallbackController do
   @moduledoc """
   Translates controller action results into valid `Plug.Conn` responses.
 
-  See `Phoenix.Controller.Pipeline.action_fallback/1` for more details.
+  See `Phoenix.Controller.action_fallback/1` for more details.
   """
   use <%= inspect context.web_module %>, :controller
 
