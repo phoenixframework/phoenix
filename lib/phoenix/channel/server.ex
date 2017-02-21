@@ -303,10 +303,16 @@ defmodule Phoenix.Channel.Server do
 
   defp handle_result({:stop, reason, reply, socket}, callback) do
     handle_reply(socket, reply, callback)
-    {:stop, reason, socket}
+    handle_result({:stop, reason, socket}, callback)
   end
 
   defp handle_result({:stop, reason, socket}, _callback) do
+    case reason do
+      :normal -> notify_transport_of_graceful_exit(socket)
+      :shutdown -> notify_transport_of_graceful_exit(socket)
+      {:shutdown, _} -> notify_transport_of_graceful_exit(socket)
+      _ -> :noop
+    end
     {:stop, reason, socket}
   end
 
@@ -381,5 +387,11 @@ defmodule Phoenix.Channel.Server do
     Channel replies can only be sent from a `handle_in/3` callback.
     Use `push/3` to send an out-of-band message down the socket
     """
+  end
+
+  defp notify_transport_of_graceful_exit(socket) do
+    Phoenix.Socket.Transport.notify_graceful_exit(socket)
+    Process.unlink(socket.transport_pid)
+    :ok
   end
 end

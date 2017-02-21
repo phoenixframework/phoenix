@@ -346,7 +346,7 @@ defmodule Phoenix.Integration.LongPollTest do
 
     resp = poll(:get, "/ws", session)
 
-    [_phx_reply, _joined, _user_entered, _leave_reply, _you_left_msg, phx_close] = resp.body["messages"]
+    [_phx_reply, _joined, _user_entered, _leave_reply, phx_close, _you_left_msg] = resp.body["messages"]
 
     assert phx_close ==
       %{"event" => "phx_close", "payload" => %{}, "ref" => "123", "topic" => "room:lobby"}

@@ -62,6 +62,7 @@ defmodule Phoenix.Socket do
     * `handler` - The socket module where this socket originated, for example: `MyApp.UserSocket`
     * `joined` - If the socket has effectively joined the channel
     * `pubsub_server` - The registered name of the socket's pubsub server
+    * `join_ref` - The ref sent by the client when joining
     * `ref` - The latest ref sent by the client
     * `topic` - The string topic, for example `"room:123"`
     * `transport` - The socket's transport, for example: `Phoenix.Transports.WebSocket`
@@ -145,6 +146,7 @@ defmodule Phoenix.Socket do
             joined: false,
             pubsub_server: nil,
             ref: nil,
+            join_ref: nil,
             topic: nil,
             transport: nil,
             transport_pid: nil,

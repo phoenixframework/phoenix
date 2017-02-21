@@ -112,6 +112,11 @@ defmodule Phoenix.Transports.LongPoll.Server do
     end
   end
 
+  def handle_info({:graceful_exit, channel_pid, %Phoenix.Socket.Message{} = msg}, state) do
+    new_state = delete(state, msg.topic, channel_pid)
+    publish_reply(msg, new_state)
+  end
+
   def handle_info({:subscribe, client_ref, ref}, state) do
     broadcast_from!(state, client_ref, {:subscribe, ref})
     {:noreply, state}

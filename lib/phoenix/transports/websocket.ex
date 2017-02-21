@@ -132,8 +132,13 @@ defmodule Phoenix.Transports.WebSocket do
       nil   -> {:ok, state}
       {topic, join_ref} ->
         new_state = delete(state, topic, channel_pid)
-        encode_reply Transport.on_exit_message(topic, join_ref, reason), new_state
+        encode_reply(Transport.on_exit_message(topic, join_ref, reason), new_state)
     end
+  end
+
+  def ws_info({:graceful_exit, channel_pid, %Phoenix.Socket.Message{} = msg}, state) do
+    new_state = delete(state, msg.topic, channel_pid)
+    encode_reply(msg, new_state)
   end
 
   @doc false
