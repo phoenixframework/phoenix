@@ -42,6 +42,7 @@ defmodule Mix.Tasks.Phoenix.New do
     {:keep, "ecto/test/models",          "test/models"},
     {:eex,  "ecto/model_case.ex",        "test/support/model_case.ex"},
     {:keep, "ecto/priv/repo/migrations", "priv/repo/migrations"},
+    {:text, "static/bare/gitkeep",       "priv/repo/migrations/.gitkeep"},
     {:eex,  "ecto/seeds.exs",            "priv/repo/seeds.exs"}
   ]
 
