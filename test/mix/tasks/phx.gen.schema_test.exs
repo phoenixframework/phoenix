@@ -22,7 +22,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
         alias: Post,
         module: Phoenix.Blog.Post,
         repo: Phoenix.Repo,
-        file: "lib/blog/post.ex",
+        file: "lib/phoenix/blog/post.ex",
         migration?: true,
         migration_defaults: %{title: ""},
         plural: "posts",
@@ -76,7 +76,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
     in_tmp_project config.test, fn ->
       Gen.Schema.run(~w(Blog.Post posts title:string))
 
-      assert_file "lib/blog/post.ex"
+      assert_file "lib/phoenix/blog/post.ex"
 
       assert [_] = Path.wildcard("priv/repo/migrations/*_create_blog_post.exs")
     end

@@ -11,7 +11,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
 
   The generated schema above will contain:
 
-    * a schema file in lib/blog/post.ex, with a `blog_posts` table.
+    * a schema file in lib/my_app/blog/post.ex, with a `blog_posts` table.
     * a migration file for the repository
 
   The generated migration can be skipped with `--no-migration`.
@@ -62,7 +62,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   option, that sets up schemas to use `binary_id` by default. If that's
   not the case you can still set all your schemas to use `binary_id`
   by default, by adding the following to your `schema` function in
-  `lib/web.ex` or before the `schema` declaration:
+  `lib/my_app/web.ex` or before the `schema` declaration:
 
       @primary_key {:id, :binary_id, autogenerate: true}
       @foreign_key_type :binary_id

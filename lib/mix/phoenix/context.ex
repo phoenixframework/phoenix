@@ -16,12 +16,13 @@ defmodule Mix.Phoenix.Context do
 
 
   def new(context_name, %Schema{} = schema, opts) do
+    otp_app  = to_string(Mix.Phoenix.otp_app())
     base     = Module.concat([Mix.Phoenix.base()])
     module   = Module.concat(base, context_name)
     alias    = module |> Module.split() |> tl() |> Module.concat()
     basename = Phoenix.Naming.underscore(context_name)
-    dir      = Path.join(["lib", basename])
-    file     = Path.join(["lib", basename <> ".ex"])
+    dir      = Path.join(["lib", otp_app, basename])
+    file     = Path.join(["lib", otp_app, basename <> ".ex"])
 
     %Context{
       name: context_name,

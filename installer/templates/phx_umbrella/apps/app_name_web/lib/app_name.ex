@@ -26,7 +26,7 @@ defmodule <%= web_namespace %> do
 
   def view do
     quote do
-      use Phoenix.View, root: "lib/templates",
+      use Phoenix.View, root: "lib/<%= web_app_name %>/templates",
                         namespace: <%= web_namespace %>
 
       # Import convenience functions from controllers

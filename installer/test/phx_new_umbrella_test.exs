@@ -68,14 +68,17 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ ":inet6"
       end
 
-      assert_file app_path(@app, "lib/application.ex"), ~r/defmodule PhxUmb.Application do/
+      assert_file app_path(@app, "lib/#{@app}/application.ex"), ~r/defmodule PhxUmb.Application do/
       assert_file app_path(@app, "mix.exs"), ~r/mod: {PhxUmb.Application, \[\]}/
       assert_file app_path(@app, "test/test_helper.exs")
 
-      assert_file web_path(@app, "lib/application.ex"), ~r/defmodule PhxUmb.Web.Application do/
+      assert_file web_path(@app, "lib/#{@app}_web/application.ex"), ~r/defmodule PhxUmb.Web.Application do/
       assert_file web_path(@app, "mix.exs"), ~r/mod: {PhxUmb.Web.Application, \[\]}/
-      assert_file web_path(@app, "lib/#{@app}_web.ex"), ~r/defmodule PhxUmb.Web do/
-      assert_file web_path(@app, "lib/endpoint.ex"), ~r/defmodule PhxUmb.Web.Endpoint do/
+      assert_file web_path(@app, "lib/#{@app}_web.ex"), fn file ->
+        assert file =~ "defmodule PhxUmb.Web do"
+        assert file =~ "use Phoenix.View, root: \"lib/phx_umb_web/templates\""
+      end
+      assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"), ~r/defmodule PhxUmb.Web.Endpoint do/
       assert_file web_path(@app, "test/controllers/page_controller_test.exs")
       assert_file web_path(@app, "test/views/page_view_test.exs")
       assert_file web_path(@app, "test/views/error_view_test.exs")
@@ -83,14 +86,14 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "test/support/conn_case.ex")
       assert_file web_path(@app, "test/test_helper.exs")
 
-      assert_file web_path(@app, "lib/controllers/page_controller.ex"),
+      assert_file web_path(@app, "lib/#{@app}_web/controllers/page_controller.ex"),
                   ~r/defmodule PhxUmb.Web.PageController/
 
-      assert_file web_path(@app, "lib/views/page_view.ex"),
+      assert_file web_path(@app, "lib/#{@app}_web/views/page_view.ex"),
                   ~r/defmodule PhxUmb.Web.PageView/
 
-      assert_file web_path(@app, "lib/router.ex"), "defmodule PhxUmb.Web.Router"
-      assert_file web_path(@app, "lib/templates/layout/app.html.eex"),
+      assert_file web_path(@app, "lib/#{@app}_web/router.ex"), "defmodule PhxUmb.Web.Router"
+      assert_file web_path(@app, "lib/#{@app}_web/templates/layout/app.html.eex"),
                   "<title>Hello PhxUmb!</title>"
 
       assert_file web_path(@app, "test/views/page_view_test.exs"),
@@ -145,7 +148,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file app_path(@app, "config/dev.exs"), config
       assert_file app_path(@app, "config/test.exs"), config
       assert_file app_path(@app, "config/prod.secret.exs"), config
-      assert_file app_path(@app, "lib/repo.ex"), ~r"defmodule PhxUmb.Repo"
+      assert_file app_path(@app, "lib/#{@app}/repo.ex"), ~r"defmodule PhxUmb.Repo"
       assert_file app_path(@app, "priv/repo/seeds.exs"), ~r"PhxUmb.Repo.insert!"
       assert_file app_path(@app, "test/support/data_case.ex"), ~r"defmodule PhxUmb.DataCase"
 
@@ -161,13 +164,13 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert msg =~ "$ mix ecto.create"
 
       # Channels
-      assert File.exists?(web_path(@app, "/lib/channels"))
-      refute File.exists?(web_path(@app, "phx_umb_umbrella/apps/phx_umb_web/lib/channels/.keep"))
-      assert_file web_path(@app, "lib/channels/user_socket.ex"), ~r"defmodule PhxUmb.Web.UserSocket"
-      assert_file web_path(@app, "lib/endpoint.ex"), ~r"socket \"/socket\", PhxUmb.Web.UserSocket"
+      assert File.exists?(web_path(@app, "/lib/#{@app}_web/channels"))
+      refute File.exists?(web_path(@app, "/lib/#{@app}_web/channels/.keep"))
+      assert_file web_path(@app, "lib/#{@app}_web/channels/user_socket.ex"), ~r"defmodule PhxUmb.Web.UserSocket"
+      assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"), ~r"socket \"/socket\", PhxUmb.Web.UserSocket"
 
       # Gettext
-      assert_file web_path(@app, "lib/gettext.ex"), ~r"defmodule PhxUmb.Web.Gettext"
+      assert_file web_path(@app, "lib/#{@app}_web/gettext.ex"), ~r"defmodule PhxUmb.Web.Gettext"
       assert File.exists?(web_path(@app, "priv/gettext/errors.pot"))
       assert File.exists?(web_path(@app, "priv/gettext/en/LC_MESSAGES/errors.po"))
     end
@@ -190,7 +193,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       # No Ecto
       config = ~r/config :phx_umb, PhxUmb.Repo,/
-      refute File.exists?(app_path(@app, "lib/repo.ex"))
+      refute File.exists?(app_path(@app, "lib/#{@app}_web/repo.ex"))
 
       assert_file app_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_ecto")
 
@@ -209,27 +212,27 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       # No HTML
       assert File.exists?(web_path(@app, "test/controllers"))
       refute File.exists?(web_path(@app, "test/controllers/.keep"))
-      assert File.exists?(web_path(@app, "lib/controllers"))
-      refute File.exists?(web_path(@app, "lib/controllers/.keep"))
-      assert File.exists?(web_path(@app, "lib/views"))
-      refute File.exists?(web_path(@app, "lib/views/.keep"))
+      assert File.exists?(web_path(@app, "lib/#{@app}_web/controllers"))
+      refute File.exists?(web_path(@app, "lib/#{@app}_web/controllers/.keep"))
+      assert File.exists?(web_path(@app, "lib/#{@app}_web/views"))
+      refute File.exists?(web_path(@app, "lib/#{@app}_web/views/.keep"))
       refute File.exists?(web_path(@app, "test/controllers/pager_controller_test.exs"))
       refute File.exists?(web_path(@app, "test/views/layout_view_test.exs"))
       refute File.exists?(web_path(@app, "test/views/page_view_test.exs"))
-      refute File.exists?(web_path(@app, "lib/controllers/page_controller.ex"))
-      refute File.exists?(web_path(@app, "lib/templates/layout/app.html.eex"))
-      refute File.exists?(web_path(@app, "lib/templates/page/index.html.eex"))
-      refute File.exists?(web_path(@app, "lib/views/layout_view.ex"))
-      refute File.exists?(web_path(@app, "lib/views/page_view.ex"))
+      refute File.exists?(web_path(@app, "lib/#{@app}_web/controllers/page_controller.ex"))
+      refute File.exists?(web_path(@app, "lib/#{@app}_web/templates/layout/app.html.eex"))
+      refute File.exists?(web_path(@app, "lib/#{@app}_web/templates/page/index.html.eex"))
+      refute File.exists?(web_path(@app, "lib/#{@app}_web/views/layout_view.ex"))
+      refute File.exists?(web_path(@app, "lib/#{@app}_web/views/page_view.ex"))
 
       assert_file web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_html")
       assert_file web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_live_reload")
-      assert_file web_path(@app, "lib/endpoint.ex"),
+      assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"),
                   &refute(&1 =~ ~r"Phoenix.LiveReloader")
-      assert_file web_path(@app, "lib/endpoint.ex"),
+      assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"),
                   &refute(&1 =~ ~r"Phoenix.LiveReloader.Socket")
-      assert_file web_path(@app, "lib/views/error_view.ex"), ~r".json"
-      assert_file web_path(@app, "lib/router.ex"), &refute(&1 =~ ~r"pipeline :browser")
+      assert_file web_path(@app, "lib/#{@app}_web/views/error_view.ex"), ~r".json"
+      assert_file web_path(@app, "lib/#{@app}_web/router.ex"), &refute(&1 =~ ~r"pipeline :browser")
     end
   end
 
@@ -280,12 +283,12 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--app", @app, "--module", "PhoteuxBlog"])
 
       assert_file "custom_path_umbrella/apps/phx_umb/mix.exs", ~r/app: :phx_umb/
-      assert_file "custom_path_umbrella/apps/phx_umb_web/lib/endpoint.ex", ~r/app: :#{@app}_web/
+      assert_file "custom_path_umbrella/apps/phx_umb_web/lib/phx_umb_web/endpoint.ex", ~r/app: :#{@app}_web/
       assert_file "custom_path_umbrella/apps/phx_umb_web/config/config.exs", ~r/namespace: PhoteuxBlog.Web/
       assert_file "custom_path_umbrella/apps/phx_umb_web/lib/#{@app}_web.ex", ~r/use Phoenix.Controller, namespace: PhoteuxBlog.Web/
-      assert_file "custom_path_umbrella/apps/phx_umb/lib/application.ex", ~r/defmodule PhoteuxBlog.Application/
+      assert_file "custom_path_umbrella/apps/phx_umb/lib/phx_umb/application.ex", ~r/defmodule PhoteuxBlog.Application/
       assert_file "custom_path_umbrella/apps/phx_umb/mix.exs", ~r/mod: {PhoteuxBlog.Application, \[\]}/
-      assert_file "custom_path_umbrella/apps/phx_umb_web/lib/application.ex", ~r/defmodule PhoteuxBlog.Web.Application/
+      assert_file "custom_path_umbrella/apps/phx_umb_web/lib/phx_umb_web/application.ex", ~r/defmodule PhoteuxBlog.Web.Application/
       assert_file "custom_path_umbrella/apps/phx_umb_web/mix.exs", ~r/mod: {PhoteuxBlog.Web.Application, \[\]}/
     end
   end
@@ -466,10 +469,10 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
           assert file =~ ":inet6"
         end
 
-        assert_file "another/lib/application.ex", ~r/defmodule Another.Application do/
+        assert_file "another/lib/another/application.ex", ~r/defmodule Another.Application do/
         assert_file "another/mix.exs", ~r/mod: {Another.Application, \[\]}/
         assert_file "another/lib/another.ex", ~r/defmodule Another do/
-        assert_file "another/lib/endpoint.ex", ~r/defmodule Another.Endpoint do/
+        assert_file "another/lib/another/endpoint.ex", ~r/defmodule Another.Endpoint do/
 
         assert_file "another/test/controllers/page_controller_test.exs"
         assert_file "another/test/views/page_view_test.exs"
@@ -478,15 +481,15 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert_file "another/test/support/conn_case.ex"
         assert_file "another/test/test_helper.exs"
 
-        assert_file "another/lib/controllers/page_controller.ex",
+        assert_file "another/lib/another/controllers/page_controller.ex",
                     ~r/defmodule Another.PageController/
 
-        assert_file "another/lib/views/page_view.ex",
+        assert_file "another/lib/another/views/page_view.ex",
                     ~r/defmodule Another.PageView/
 
-        assert_file "another/lib/router.ex", "defmodule Another.Router"
+        assert_file "another/lib/another/router.ex", "defmodule Another.Router"
         assert_file "another/lib/another.ex", "defmodule Another"
-        assert_file "another/lib/templates/layout/app.html.eex",
+        assert_file "another/lib/another/templates/layout/app.html.eex",
                     "<title>Hello Another!</title>"
 
         # Brunch
@@ -518,7 +521,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
           assert file =~ "{:phoenix_ecto,"
         end
         assert_file "another/lib/another.ex", ~r"defmodule Another"
-        refute_file "another/lib/repo.ex"
+        refute_file "another/lib/another/repo.ex"
         refute_file "another/priv/repo/seeds.exs"
         refute_file "another/test/support/data_case.ex"
 
@@ -531,13 +534,13 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert msg =~ "$ mix phoenix.server"
 
         # Channels
-        assert File.exists?("another/lib/channels")
-        refute File.exists?("another/lib/channels/.keep")
-        assert_file "another/lib/channels/user_socket.ex", ~r"defmodule Another.UserSocket"
-        assert_file "another/lib/endpoint.ex", ~r"socket \"/socket\", Another.UserSocket"
+        assert File.exists?("another/lib/another/channels")
+        refute File.exists?("another/lib/another/channels/.keep")
+        assert_file "another/lib/another/channels/user_socket.ex", ~r"defmodule Another.UserSocket"
+        assert_file "another/lib/another/endpoint.ex", ~r"socket \"/socket\", Another.UserSocket"
 
         # Gettext
-        assert_file "another/lib/gettext.ex", ~r"defmodule Another.Gettext"
+        assert_file "another/lib/another/gettext.ex", ~r"defmodule Another.Gettext"
         assert File.exists?("another/priv/gettext/errors.pot")
         assert File.exists?("another/priv/gettext/en/LC_MESSAGES/errors.po")
       end

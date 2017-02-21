@@ -272,14 +272,21 @@ defmodule Mix.Phoenix do
     end
   end
 
+  @doc """
+  Returns the web prefix to be used in generated file specs.
+  """
   def web_prefix do
+    app = to_string(otp_app())
     if in_single?(File.cwd!()) do
-      "lib/web"
+      Path.join(["lib", app, "web"])
     else
-      "lib"
+      Path.join("lib", app)
     end
   end
 
+  @doc """
+  Returns the test prefix to be used in generated file specs.
+  """
   def test_prefix do
     if in_single?(File.cwd!()) do
       "test/web"

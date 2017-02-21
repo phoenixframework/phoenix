@@ -87,7 +87,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   def print_shell_instructions(%Context{schema: schema}) do
     Mix.shell.info """
 
-    Add the resource to your browser scope in lib/web/router.ex:
+    Add the resource to your browser scope in lib/#{Mix.Phoenix.otp_app()}/web/router.ex:
 
         resources "/#{schema.plural}", #{inspect schema.alias}Controller
     """

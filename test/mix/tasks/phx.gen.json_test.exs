@@ -49,8 +49,8 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
     in_tmp_project "generates json context", fn ->
       Gen.Json.run(["Blog", "Post", "posts", "title:string"])
 
-      assert_file "lib/blog/post.ex"
-      assert_file "lib/blog.ex"
+      assert_file "lib/phoenix/blog/post.ex"
+      assert_file "lib/phoenix/blog.ex"
 
       assert_file "test/blog_test.exs", fn file ->
         assert file =~ "use Phoenix.DataCase"
@@ -62,11 +62,11 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
 
       assert [_] = Path.wildcard("priv/repo/migrations/*_create_blog_post.exs")
 
-      assert_file "lib/web/controllers/fallback_controller.ex", fn file ->
+      assert_file "lib/phoenix/web/controllers/fallback_controller.ex", fn file ->
         assert file =~ "defmodule Phoenix.Web.FallbackController"
       end
 
-      assert_file "lib/web/controllers/post_controller.ex", fn file ->
+      assert_file "lib/phoenix/web/controllers/post_controller.ex", fn file ->
         assert file =~ "defmodule Phoenix.Web.PostController"
         assert file =~ "use Phoenix.Web, :controller"
         assert file =~ "Blog.get_post!"

@@ -17,7 +17,7 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
     in_tmp_project "generates channel", fn ->
       Gen.Channel.run ["room"]
 
-      assert_file "lib/web/channels/room_channel.ex", fn file ->
+      assert_file "lib/phoenix/web/channels/room_channel.ex", fn file ->
         assert file =~ ~S|defmodule Phoenix.Web.RoomChannel do|
         assert file =~ ~S|use Phoenix.Web, :channel|
         assert file =~ ~S|def join("room:lobby", payload, socket) do|
@@ -55,7 +55,7 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
     in_tmp_project "generates nested channel", fn ->
       Gen.Channel.run ["Admin.Room"]
 
-      assert_file "lib/web/channels/admin/room_channel.ex", fn file ->
+      assert_file "lib/phoenix/web/channels/admin/room_channel.ex", fn file ->
         assert file =~ ~S|defmodule Phoenix.Web.Admin.RoomChannel do|
         assert file =~ ~S|use Phoenix.Web, :channel|
       end

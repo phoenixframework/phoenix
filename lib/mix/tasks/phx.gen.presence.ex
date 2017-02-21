@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
 
   A new file will be generated in:
 
-    * lib/web/channels/presence.ex
+    * lib/my_app/web/channels/presence.ex
 
   Where `presence.ex` is the snake cased version of the module name provided.
   """
@@ -39,7 +39,7 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
     Mix.shell.info """
 
     Add your new module to your supervision tree,
-    in lib/application.ex:
+    in lib/#{Mix.Phoenix.otp_app()}/application.ex:
 
         children = [
           ...

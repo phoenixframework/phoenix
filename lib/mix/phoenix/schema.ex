@@ -25,10 +25,11 @@ defmodule Mix.Phoenix.Schema do
             sample_id: nil
 
   def new(schema_name, schema_plural, cli_attrs, opts) do
+    otp_app  = to_string(Mix.Phoenix.otp_app())
     basename = Phoenix.Naming.underscore(schema_name)
     module   = Module.concat([Mix.Phoenix.base(), schema_name])
     repo     = opts[:repo] || Module.concat([Mix.Phoenix.base(), "Repo"])
-    file     = Path.join(["lib", basename <> ".ex"])
+    file     = Path.join(["lib", otp_app, basename <> ".ex"])
     {assocs, cli_attrs} = partition_attrs_and_assocs(cli_attrs)
     attrs    = Mix.Phoenix.attrs(cli_attrs)
     uniques  = uniques(cli_attrs)

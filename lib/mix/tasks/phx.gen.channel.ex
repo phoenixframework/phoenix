@@ -10,7 +10,7 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
 
   The generated model will contain:
 
-    * a channel in lib/web/channels
+    * a channel in lib/my_app/web/channels
     * a channel_test in test/web/channels
 
   """
@@ -33,7 +33,7 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
 
     Mix.shell.info """
 
-    Add the channel to your `lib/web/channels/user_socket.ex` handler, for example:
+    Add the channel to your `lib/#{Mix.Phoenix.otp_app()}/web/channels/user_socket.ex` handler, for example:
 
         channel "#{binding[:singular]}:lobby", #{binding[:module]}Channel
     """

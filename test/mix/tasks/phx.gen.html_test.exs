@@ -24,13 +24,13 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         alias: Blog,
         base_module: Phoenix,
         basename: "blog",
-        dir: "lib/blog",
-        file: "lib/blog.ex",
+        dir: "lib/phoenix/blog",
+        file: "lib/phoenix/blog.ex",
         module: Phoenix.Blog,
         web_module: Phoenix.Web,
         schema: %Mix.Phoenix.Schema{
           alias: Post,
-          file: "lib/blog/post.ex",
+          file: "lib/phoenix/blog/post.ex",
           human_plural: "Posts",
           human_singular: "Post",
           module: Phoenix.Blog.Post,
@@ -42,8 +42,8 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
   test "new existing context", config do
     in_tmp_project config.test, fn ->
-      File.mkdir_p!("lib/blog")
-      File.write!("lib/blog.ex", """
+      File.mkdir_p!("lib/phoenix/blog")
+      File.write!("lib/phoenix/blog.ex", """
       defmodule Phoenix.Blog do
       end
       """)
@@ -89,8 +89,8 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     in_tmp_project config.test, fn ->
       Gen.Html.run(["Blog", "Post", "posts", "title:string"])
 
-      assert_file "lib/blog/post.ex"
-      assert_file "lib/blog.ex"
+      assert_file "lib/phoenix/blog/post.ex"
+      assert_file "lib/phoenix/blog.ex"
 
       assert_file "test/blog_test.exs", fn file ->
         assert file =~ "use Phoenix.DataCase"
@@ -102,7 +102,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
       assert [_] = Path.wildcard("priv/repo/migrations/*_create_blog_post.exs")
 
-      assert_file "lib/web/controllers/post_controller.ex", fn file ->
+      assert_file "lib/phoenix/web/controllers/post_controller.ex", fn file ->
         assert file =~ "defmodule Phoenix.Web.PostController"
         assert file =~ "use Phoenix.Web, :controller"
         assert file =~ "Blog.get_post!"
@@ -115,7 +115,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
 
       Gen.Html.run(["Blog", "Comment", "comments", "title:string"])
-      assert_file "lib/blog/comment.ex"
+      assert_file "lib/phoenix/blog/comment.ex"
 
       assert_file "test/web/controllers/comment_controller_test.exs", fn file ->
         assert file =~ "defmodule Phoenix.Web.CommentControllerTest"
@@ -123,7 +123,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
       assert [_] = Path.wildcard("priv/repo/migrations/*_create_blog_comment.exs")
 
-      assert_file "lib/web/controllers/comment_controller.ex", fn file ->
+      assert_file "lib/phoenix/web/controllers/comment_controller.ex", fn file ->
         assert file =~ "defmodule Phoenix.Web.CommentController"
         assert file =~ "use Phoenix.Web, :controller"
         assert file =~ "Blog.get_comment!"
