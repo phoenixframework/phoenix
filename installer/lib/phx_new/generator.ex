@@ -79,11 +79,10 @@ defmodule Phx.New.Generator do
   def in_umbrella?(app_path) do
     try do
       umbrella = Path.expand(Path.join [app_path, "..", ".."])
-      File.exists?(Path.join(umbrella, "mix.exs")) &&
-        Mix.Project.in_project(:umbrella_check, umbrella, fn _ ->
-          path = Mix.Project.config[:apps_path]
-          path && Path.expand(path) == Path.join(umbrella, "apps")
-        end)
+      mix_path = Path.join(umbrella, "mix.exs")
+      apps_path = Path.join(umbrella, "apps")
+
+      File.exists?(mix_path) && File.exists?(apps_path)
     catch
       _, _ -> false
     end
@@ -94,7 +93,8 @@ defmodule Phx.New.Generator do
     ecto         = Keyword.get(opts, :ecto, true)
     html         = Keyword.get(opts, :html, true)
     brunch       = Keyword.get(opts, :brunch, true)
-    phoenix_path = phoenix_path(project.project_path, Keyword.get(opts, :dev, false))
+    dev          = Keyword.get(opts, :dev, false)
+    phoenix_path = phoenix_path(project, dev)
 
     # We lowercase the database name because according to the
     # SQL spec, they are case insensitive unless quoted, which
@@ -104,7 +104,6 @@ defmodule Phx.New.Generator do
       get_ecto_adapter(db, String.downcase(project.app), project.app_mod)
 
     pubsub_server = get_pubsub_server(project.app_mod)
-    brunch_deps_prefix = if project.in_umbrella?, do: "../../../", else: "../"
 
     adapter_config =
       case Keyword.fetch(opts, :binary_id) do
@@ -122,13 +121,14 @@ defmodule Phx.New.Generator do
       web_namespace: inspect(project.web_namespace),
       phoenix_dep: phoenix_dep(phoenix_path),
       phoenix_path: phoenix_path,
+      phoenix_brunch_path: phoenix_brunch_path(project, dev),
+      phoenix_html_brunch_path: phoenix_html_brunch_path(project),
       phoenix_static_path: phoenix_static_path(phoenix_path),
       pubsub_server: pubsub_server,
       secret_key_base: random_string(64),
       prod_secret_key_base: random_string(64),
       signing_salt: random_string(8),
       in_umbrella: project.in_umbrella?,
-      brunch_deps_prefix: brunch_deps_prefix,
       brunch: brunch,
       ecto: ecto,
       html: html,
@@ -244,25 +244,44 @@ defmodule Phx.New.Generator do
     end
   end
 
-  defp phoenix_path(path, true) do
-    absolute = Path.expand(path)
+  defp phoenix_path(%Project{} = project, true) do
+    absolute = Path.expand(project.project_path)
     relative = Path.relative_to(absolute, @phoenix)
 
     if absolute == relative do
       Mix.raise "--dev projects must be generated inside Phoenix directory"
     end
 
-    relative
+    project
+    |> phoenix_path_prefix()
+    |> Path.join(relative)
     |> Path.split()
     |> Enum.map(fn _ -> ".." end)
     |> Path.join()
   end
-  defp phoenix_path(_path, false) do
+  defp phoenix_path(%Project{}, false) do
     "deps/phoenix"
   end
+  defp phoenix_path_prefix(%Project{in_umbrella?: true}), do: "../../../"
+  defp phoenix_path_prefix(%Project{in_umbrella?: false}), do: ".."
 
-  defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> 1.2.0"}]
-  # defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
+  defp phoenix_brunch_path(%Project{in_umbrella?: true}, true = _dev),
+    do: "../../../../../"
+  defp phoenix_brunch_path(%Project{in_umbrella?: true}, false = _dev),
+    do: "../../../deps/phoenix"
+  defp phoenix_brunch_path(%Project{in_umbrella?: false}, true = _dev),
+    do: "../../../"
+  defp phoenix_brunch_path(%Project{in_umbrella?: false}, false = _dev),
+    do: "../deps/phoenix"
+
+  defp phoenix_html_brunch_path(%Project{in_umbrella?: true}),
+    do: "../../../deps/phoenix_html"
+  defp phoenix_html_brunch_path(%Project{in_umbrella?: false}),
+    do: "../deps/phoenix_html"
+
+
+  # defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> 1.2.0"}]
+  defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
   defp phoenix_dep(path), do: ~s[{:phoenix, path: #{inspect path}, override: true}]
 
   defp phoenix_static_path("deps/phoenix"), do: "deps/phoenix"
