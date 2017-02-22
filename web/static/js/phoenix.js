@@ -241,7 +241,7 @@ class Push {
 
   // private
 
-  matchReceive({status, response, ref}){
+  matchReceive({status, response}){
     this.recHooks.filter( h => h.status === status )
                  .forEach( h => h.callback(response) )
   }
