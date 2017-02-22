@@ -9,18 +9,22 @@ end
 
 defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
   use ExUnit.Case
+  import ExUnit.CaptureIO
   import MixHelper
 
   setup do
-    Mix.Task.clear
+    Mix.Task.clear()
     :ok
   end
 
   test "generates model" do
     in_tmp "generates model", fn ->
-      Mix.Tasks.Phoenix.Gen.Model.run ["user", "users", "name", "age:integer", "nicks:array:text",
-                                       "famous:boolean", "born_at:naive_datetime", "secret:uuid", "desc:text",
-                                       "blob:binary"]
+
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Phoenix.Gen.Model.run ["user", "users", "name", "age:integer", "nicks:array:text",
+                                        "famous:boolean", "born_at:naive_datetime", "secret:uuid", "desc:text",
+                                        "blob:binary"]
+      end)
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_user.exs")
 
@@ -72,7 +76,9 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
 
   test "generates nested model" do
     in_tmp "generates nested model", fn ->
-      Mix.Tasks.Phoenix.Gen.Model.run ["Admin.User", "users", "name:string"]
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Phoenix.Gen.Model.run ["Admin.User", "users", "name:string"]
+      end)
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_admin_user.exs")
 
@@ -91,7 +97,9 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
 
   test "generates belongs_to associations with association table provided by user" do
     in_tmp "generates belongs_to associations", fn ->
-      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title", "user_id:references:users"]
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title", "user_id:references:users"]
+      end)
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
 
@@ -114,7 +122,9 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
 
   test "generates belongs_to associations with foreign key provided by user" do
     in_tmp "generates belongs_to associations", fn ->
-      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title", "user:references:users"]
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title", "user:references:users"]
+      end)
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
 
@@ -130,7 +140,9 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
 
   test "generates unique_index" do
     in_tmp "generates unique_index", fn ->
-      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title:unique", "unique_int:integer:unique", "unique_float:float:unique"]
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title:unique", "unique_int:integer:unique", "unique_float:float:unique"]
+      end)
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
 
@@ -159,7 +171,9 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
 
   test "generates indices on belongs_to associations" do
     in_tmp "generates indices on belongs_to associations", fn ->
-      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title", "user_id:references:users", "unique_post_id:references:posts:unique"]
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title", "user_id:references:users", "unique_post_id:references:posts:unique"]
+      end)
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
 
@@ -188,7 +202,9 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
 
   test "generates migration with binary_id" do
     in_tmp "generates migration with binary_id", fn ->
-      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title", "user_id:references:users", "--binary-id"]
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "title", "user_id:references:users", "--binary-id"]
+      end)
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
 
@@ -202,7 +218,9 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
 
   test "skips migration with --no-migration option" do
     in_tmp "skips migration with -no-migration option", fn ->
-      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "--no-migration"]
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "--no-migration"]
+      end)
 
       assert [] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
     end
@@ -211,7 +229,9 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
   test "uses defaults from :generators configuration" do
     in_tmp "uses defaults from generators configuration (migration)", fn ->
       with_generators_config [migration: false], fn ->
-        Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts"]
+        capture_io(:stderr, fn ->
+          Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts"]
+        end)
 
         assert [] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
       end
@@ -219,7 +239,9 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
 
     in_tmp "uses defaults from generators configuration (binary_id)", fn ->
       with_generators_config [binary_id: true], fn ->
-        Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts"]
+        capture_io(:stderr, fn ->
+          Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts"]
+        end)
 
         assert [migration] = Path.wildcard("priv/repo/migrations/*_create_post.exs")
 
@@ -233,42 +255,54 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
 
   test "plural can't contain a colon" do
     assert_raise Mix.Error, fn ->
-      Mix.Tasks.Phoenix.Gen.Model.run ["Admin.User", "name:string", "foo:string"]
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Phoenix.Gen.Model.run ["Admin.User", "name:string", "foo:string"]
+      end)
     end
   end
 
   test "plural can't have uppercased characters or camelized format" do
-    assert_raise Mix.Error, fn ->
-      Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "Users", "foo:string"]
-    end
+    capture_io(:stderr, fn ->
+      assert_raise Mix.Error, fn ->
+        Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "Users", "foo:string"]
+      end
 
-    assert_raise Mix.Error, fn ->
-      Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "AdminUsers", "foo:string"]
-    end
+      assert_raise Mix.Error, fn ->
+        Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "AdminUsers", "foo:string"]
+      end
+    end)
   end
 
   test "name is already defined" do
-    assert_raise Mix.Error, fn ->
-      Mix.Tasks.Phoenix.Gen.Model.run ["Dup", "dups"]
-    end
+    capture_io(:stderr, fn ->
+      assert_raise Mix.Error, fn ->
+        Mix.Tasks.Phoenix.Gen.Model.run ["Dup", "dups"]
+      end
+    end)
   end
 
   test "table name missing from references" do
-    assert_raise Mix.Error, fn ->
-      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "user_id:references"]
-    end
+    capture_io(:stderr, fn ->
+      assert_raise Mix.Error, fn ->
+        Mix.Tasks.Phoenix.Gen.Model.run ["Post", "posts", "user_id:references"]
+      end
+    end)
   end
 
   test "table name is not snake_case and lowercase" do
-    assert_raise Mix.Error, fn ->
-      Mix.Tasks.Phoenix.Gen.Model.run ["Post", "POSTS", "body:text"]
-    end
+    capture_io(:stderr, fn ->
+      assert_raise Mix.Error, fn ->
+        Mix.Tasks.Phoenix.Gen.Model.run ["Post", "POSTS", "body:text"]
+      end
+    end)
   end
 
   test "table name omitted" do
-    assert_raise Mix.Error, fn ->
-      Mix.Tasks.Phoenix.Gen.Model.run ["Post"]
-    end
+    capture_io(:stderr, fn ->
+      assert_raise Mix.Error, fn ->
+        Mix.Tasks.Phoenix.Gen.Model.run ["Post"]
+      end
+    end)
   end
 
   defp with_generators_config(config, fun) do

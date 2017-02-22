@@ -1,8 +1,5 @@
 defmodule Mix.Tasks.Phoenix.Routes do
   use Mix.Task
-  alias Phoenix.Router.ConsoleFormatter
-
-  @shortdoc "Prints all routes"
 
   @moduledoc """
   Prints all routes for the default or a given router.
@@ -25,19 +22,8 @@ defmodule Mix.Tasks.Phoenix.Routes do
   therefore always expect a router to be given.
   """
 
-  def run(args) do
-    Mix.Task.run "compile", args
-    Mix.shell.info ConsoleFormatter.format(router(args))
-  end
-
-  defp router(args) do
-    cond do
-      router = Enum.at(args, 0) ->
-        Module.concat("Elixir", router)
-      Mix.Project.umbrella? ->
-        Mix.raise "Umbrella applications require an explicit router to be given to phoenix.routes"
-      true ->
-        Module.concat(Mix.Phoenix.base(), "Router")
-    end
+  def run(args, base \\ Mix.Phoenix.base()) do
+    IO.puts :stderr, "mix phoenix.router is deprecated. Use phx.router instead."
+    Mix.Tasks.Phx.Routes.run(args, base)
   end
 end

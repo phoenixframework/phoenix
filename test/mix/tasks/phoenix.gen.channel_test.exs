@@ -6,15 +6,18 @@ end
 defmodule Mix.Tasks.Phoenix.Gen.ChannelTest do
   use ExUnit.Case
   import MixHelper
+  import ExUnit.CaptureIO
 
   setup do
-    Mix.Task.clear
+    Mix.Task.clear()
     :ok
   end
 
   test "generates channel" do
-    in_tmp "generates channel", fn ->
-      Mix.Tasks.Phoenix.Gen.Channel.run ["Room"]
+    in_tmp "generates deprecated channel", fn ->
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Phoenix.Gen.Channel.run ["Room"]
+      end)
 
       assert_file "web/channels/room_channel.ex", fn file ->
         assert file =~ ~S|defmodule Phoenix.RoomChannel do|
@@ -49,8 +52,10 @@ defmodule Mix.Tasks.Phoenix.Gen.ChannelTest do
   end
 
   test "generates nested channel" do
-    in_tmp "generates nested channel", fn ->
-      Mix.Tasks.Phoenix.Gen.Channel.run ["Admin.Room"]
+    in_tmp "generates deprecated nested channel", fn ->
+      capture_io(:stderr, fn ->
+        Mix.Tasks.Phoenix.Gen.Channel.run ["Admin.Room"]
+      end)
 
       assert_file "web/channels/admin/room_channel.ex", fn file ->
         assert file =~ ~S|defmodule Phoenix.Admin.RoomChannel do|
@@ -66,20 +71,26 @@ defmodule Mix.Tasks.Phoenix.Gen.ChannelTest do
   end
 
   test "passing no args raises error" do
-    assert_raise Mix.Error, fn ->
-      Mix.Tasks.Phoenix.Gen.Channel.run []
-    end
+    capture_io(:stderr, fn ->
+      assert_raise Mix.Error, fn ->
+        Mix.Tasks.Phoenix.Gen.Channel.run []
+      end
+    end)
   end
 
   test "passing extra args raises error" do
-    assert_raise Mix.Error, fn ->
-      Mix.Tasks.Phoenix.Gen.Channel.run ["Admin.Room", "new_message"]
-    end
+    capture_io(:stderr, fn ->
+      assert_raise Mix.Error, fn ->
+        Mix.Tasks.Phoenix.Gen.Channel.run ["Admin.Room", "new_message"]
+      end
+    end)
   end
 
   test "name is already defined" do
-    assert_raise Mix.Error, fn ->
-      Mix.Tasks.Phoenix.Gen.Channel.run ["Dup"]
-    end
+    capture_io(:stderr, fn ->
+      assert_raise Mix.Error, fn ->
+        Mix.Tasks.Phoenix.Gen.Channel.run ["Dup"]
+      end
+    end)
   end
 end

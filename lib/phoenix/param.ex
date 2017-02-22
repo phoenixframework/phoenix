@@ -18,8 +18,8 @@ defprotocol Phoenix.Param do
 
   ## Custom parameters
 
-  In order to customize the parameter for any model or
-  struct, one can simply implement this protocol.
+  In order to customize the parameter for any struct,
+  one can simply implement this protocol.
 
   However, for convenience, this protocol can also be
   derivable. For example:

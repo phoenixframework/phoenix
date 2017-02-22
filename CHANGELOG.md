@@ -3,10 +3,15 @@
 ## 1.3-dev
 
 * Enhancements
+  * Add new `phx.new`, `phx.new.web`, `phx.new.ecto` project generators with improved application structure and support for umbrella applications
+  * Add new `phx.gen.html` and `phx.gen.json` resource generators with improved isolation of API boundaries
   * [Controller] Add `current_path` and `current_url` to generate a connection's path and url
+  * [Controller] Introduce `action_fallback` to registers a plug to call as a fallback to the controller action
+  * [Controller] Wrap exceptions at controller to maintain connection state
   * [Channel] Add ability to configure channel event logging with `:log_join` and `:log_handle_in` options
   * [Channel] Warn on unhandled `handle_info/2` messages
   * [Router] document `match` support for matching on any http method with the special `:*` argument
+  * [ConnTest] Add `redirected_params/1` to return the named params matched in the router for the redirected URL
 
 * JavaScript client enhancements
   * Add ability to pass `encode` and `decode` functions to socket constructor for custom encoding and decoding of outgoing and incoming messages.

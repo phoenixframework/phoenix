@@ -72,12 +72,12 @@ defmodule Mix.PhoenixTest do
       temp_2: "120.5",
       admin: true,
       meta: %{},
-      name: "some content",
+      name: "some name",
       date_of_birth: %{year: 2010, month: 4, day: 17},
       happy_hour: %{hour: 14, minute: 0, second: 0},
       joined: %{year: 2010, month: 4, day: 17, hour: 14, minute: 0, second: 0},
       token: "7488a646-e31f-11e4-aace-600308960662",
-      other: "some content"
+      other: "some other"
     }
   end
 end

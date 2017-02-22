@@ -17,10 +17,10 @@ defmodule <%= module %>Controller do
     changeset = <%= alias %>.changeset(%<%= alias %>{}, <%= singular %>_params)
 
     case Repo.insert(changeset) do
-      {:ok, _<%= singular %>} ->
+      {:ok, <%= singular %>} ->
         conn
         |> put_flash(:info, "<%= human %> created successfully.")
-        |> redirect(to: <%= singular %>_path(conn, :index))
+        |> redirect(to: <%= singular %>_path(conn, :show, <%= singular %>))
       {:error, changeset} ->
         render(conn, "new.html", changeset: changeset)
     end

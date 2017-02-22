@@ -1,8 +1,4 @@
 defmodule Mix.Tasks.Phoenix.Gen.Presence do
-  use Mix.Task
-
-  @shortdoc "Generates a Presence tracker"
-
   @moduledoc """
   Generates a Presence tracker for your application.
 
@@ -19,10 +15,13 @@ defmodule Mix.Tasks.Phoenix.Gen.Presence do
 
   Where `presence.ex` is the snake cased version of the module name provided.
   """
+  use Mix.Task
+
   def run([]) do
     run(["Presence"])
   end
   def run([alias_name]) do
+    IO.puts :stderr, "mix phoenix.gen.presence is deprecated. Use phx.gen.presence instead."
     inflections = Mix.Phoenix.inflect(alias_name)
     binding = inflections ++ [
       otp_app: Mix.Phoenix.otp_app(),
@@ -31,7 +30,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Presence do
     files = [
       {:eex, "presence.ex", "web/channels/#{binding[:path]}.ex"},
     ]
-    Mix.Phoenix.copy_from paths(), "priv/templates/phoenix.gen.presence", "", binding, files
+    Mix.Phoenix.copy_from paths(), "priv/templates/phx.gen.presence", "", binding, files
 
     Mix.shell.info """
 

@@ -260,6 +260,25 @@ defmodule Phoenix.Router do
     end
   end
 
+  @doc false
+  def __call__({%Plug.Conn{private: %{phoenix_router: router, phoenix_bypass: {router, pipes}}} = conn, _pipeline, _dispatch}) do
+    Enum.reduce(pipes, conn, fn pipe, acc -> apply(router, pipe, [acc, []]) end)
+  end
+  def __call__({%Plug.Conn{private: %{phoenix_bypass: :all}} = conn, _pipeline, _dispatch}) do
+    conn
+  end
+  def __call__({conn, pipeline, dispatch}) do
+    case pipeline.(conn) do
+      %Plug.Conn{halted: true} = halted_conn -> halted_conn
+      %Plug.Conn{} = piped_conn ->
+        try do
+          dispatch.(piped_conn)
+        catch
+          kind, reason -> Plug.Conn.WrapperError.reraise(piped_conn, kind, reason)
+        end
+    end
+  end
+
   defp match_dispatch() do
     quote location: :keep do
       @behaviour Plug
@@ -275,19 +294,11 @@ defmodule Phoenix.Router do
       @doc """
       Callback invoked by Plug on every request.
       """
-      def call(conn, opts), do: do_call(conn, opts)
-
-      defp match_route(conn, []) do
-        match_route(conn, conn.method, Enum.map(conn.path_info, &URI.decode/1), conn.host)
-      end
-
-      defp dispatch(conn, []) do
-        try do
-          conn.private.phoenix_route.(conn)
-        catch
-          kind, reason ->
-            Plug.Conn.WrapperError.reraise(conn, kind, reason)
-        end
+      def call(conn, _opts) do
+        conn
+        |> prepare()
+        |> __match_route__(conn.method, Enum.map(conn.path_info, &URI.decode/1), conn.host)
+        |> Phoenix.Router.__call__()
       end
 
       defoverridable [init: 1, call: 2]
@@ -308,43 +319,27 @@ defmodule Phoenix.Router do
     Helpers.define(env, routes_with_exprs)
     matches = Enum.map(routes_with_exprs, &build_match/1)
 
-    plugs = [{:dispatch, [], true}, {:match_route, [], true}]
-    {conn, pipeline} = Plug.Builder.compile(env, plugs, [])
-
-    call =
-      quote do
-        unquote(conn) =
-          update_in unquote(conn).private,
-            &(&1 |> Map.put(:phoenix_pipelines, [])
-                 |> Map.put(:phoenix_router, __MODULE__)
-                 |> Map.put(__MODULE__, {unquote(conn).script_name, @phoenix_forwards}))
-        unquote(pipeline)
-      end
-
     # @anno is used here to avoid warnings if forwarding to root path
     match_404 =
       quote @anno do
-        defp match_route(conn, _method, _path_info, _host) do
+        def __match_route__(conn, _method, _path_info, _host) do
           raise NoRouteError, conn: conn, router: __MODULE__
         end
       end
 
     quote do
-      defp do_call(%Plug.Conn{private: %{phoenix_bypass: {__MODULE__, pipes}}} = conn, _opts) do
-        Phoenix.Router.__bypass__(conn, __MODULE__, pipes)
-      end
-      defp do_call(%Plug.Conn{private: %{phoenix_bypass: :all}} = conn, _opts) do
-        conn
-      end
-      defp do_call(unquote(conn), opts) do
-        unquote(call)
-      end
-
       @doc false
       def __routes__,  do: unquote(Macro.escape(routes))
 
       @doc false
       def __helpers__, do: __MODULE__.Helpers
+
+      defp prepare(conn) do
+        update_in conn.private,
+          &(&1 |> Map.put(:phoenix_pipelines, [])
+          |> Map.put(:phoenix_router, __MODULE__)
+          |> Map.put(__MODULE__, {conn.script_name, @phoenix_forwards}))
+      end
 
       unquote(matches)
       unquote(match_404)
@@ -352,10 +347,15 @@ defmodule Phoenix.Router do
   end
 
   defp build_match({_route, exprs}) do
+    {conn_block, pipelines, dispatch} = exprs.route_match
+
     quote do
-      defp match_route(var!(conn), unquote(exprs.verb_match), unquote(exprs.path),
+      @doc false
+      def __match_route__(var!(conn), unquote(exprs.verb_match), unquote(exprs.path),
                  unquote(exprs.host)) do
-        unquote(exprs.dispatch)
+
+        unquote(conn_block)
+        {var!(conn), unquote(pipelines), unquote(dispatch)}
       end
     end
   end
@@ -531,9 +531,9 @@ defmodule Phoenix.Router do
     * `PUT /user` => `:update`
     * `DELETE /user` => `:delete`
 
-    Usage example:
+  Usage example:
 
-      `resources "/account", AccountController, only: [:show], singleton: true`
+      resources "/account", AccountController, only: [:show], singleton: true
 
   """
   defmacro resources(path, controller, opts, do: nested_context) do
@@ -691,10 +691,5 @@ defmodule Phoenix.Router do
       @phoenix_forwards Map.put(@phoenix_forwards, plug, path_segments)
       unquote(add_route(:forward, :*, path, plug, plug_opts, router_opts))
     end
-  end
-
-  @doc false
-  def __bypass__(conn, router, pipes) do
-    Enum.reduce(pipes, conn, fn pipe, acc -> apply(router, pipe, [acc, []]) end)
   end
 end

@@ -542,6 +542,30 @@ defmodule Phoenix.ConnTest do
   end
 
   @doc """
+  Returns the matched params from the URL the connection was redirected to.
+
+  Uses the provided `%Plug.Conn{}`s router matched in the previous request.
+  Raises if the response's location header is not set.
+
+  ## Examples
+
+      assert redirected_to(conn) =~ "/posts/123"
+      assert %{id: "123"} = redirected_params(conn)
+  """
+  @spec redirected_params(Conn.t) :: map
+  def redirected_params(%Plug.Conn{} = conn) do
+    router = Phoenix.Controller.router_module(conn)
+    %URI{path: path, host: host} = conn |> redirected_to() |> URI.parse()
+    path_info = split_path(path)
+
+    {conn, _pipes, _dispatch} = router.__match_route__(conn, "GET", path_info, host || conn.host)
+    Enum.into(conn.path_params, %{}, fn {key, val} -> {String.to_atom(key), val} end)
+  end
+  defp split_path(path) do
+    for segment <- String.split(path, "/"), segment != "", do: segment
+  end
+
+  @doc """
   Asserts an error was wrapped and sent with the given status.
 
   Useful for testing actions that you expect raise an error and have

@@ -8,10 +8,10 @@ defmodule Mix.Tasks.Local.Phoenix do
   Updates Phoenix locally.
 
       mix local.phoenix
-  
+
   Accepts the same command line options as `archive.install`.
   """
   def run(args) do
-    Mix.Task.run "archive.install", [@url|args]
+    Mix.Task.run "archive.install", [@url | args]
   end
 end

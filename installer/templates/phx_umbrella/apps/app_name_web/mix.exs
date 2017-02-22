@@ -13,16 +13,16 @@ defmodule <%= web_namespace %>.Mixfile do
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps]
+     deps: deps()]
   end
 
   # Configuration for the OTP application.
   #
   # Type `mix help compile.app` for more information.
   def application do
-    [mod: {<%= web_namespace %>, []},
+    [mod: {<%= web_namespace %>.Application, []},
      applications: [:phoenix<%= if html do %>, :phoenix_html<% end %>, :cowboy, :logger, :gettext,
-                    <%= if ecto do %>:phoenix_ecto,<% end %> :<%= app_name %>]]
+                    <%= if ecto do %>:phoenix_ecto,<% end %><%= if app_name != web_app_name do %> :<%= app_name %><% end %>]]
   end
 
   # Specifies which paths to compile per environment.
@@ -35,11 +35,11 @@ defmodule <%= web_namespace %>.Mixfile do
   defp deps do
     [<%= phoenix_dep %>,
      {:phoenix_pubsub, "~> 1.0"},<%= if ecto do %>
-     {:phoenix_ecto, "~> 3.1-rc"},<% end %><%= if html do %>
+     {:phoenix_ecto, "~> 3.2"},<% end %><%= if html do %>
      {:phoenix_html, "~> 2.6"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},<% end %>
-     {:gettext, "~> 0.11"},
-     {:<%= app_name %>, in_umbrella: true},
+     {:gettext, "~> 0.11"},<%= if app_name != web_app_name do %>
+     {:<%= app_name %>, in_umbrella: true},<% end %>
      {:cowboy, "~> 1.0"}]
   end
 end

@@ -6,6 +6,24 @@ defmodule Mix.Phoenix do
                      :array, :references, :text, :date, :time,
                      :naive_datetime, :utc_datetime, :uuid, :binary]
 
+
+  @doc """
+  Evals EEx files from source dir.
+
+  Files are evaluated against EEx according to
+  the given binding.
+  """
+  def eval_from(apps, source_file_path, binding) do
+    sources = Enum.map(apps, &to_app_source(&1, source_file_path))
+
+    content =
+      Enum.find_value(sources, fn source ->
+        File.exists?(source) && File.read!(source)
+      end) || raise "could not find #{source_file_path} in any of the sources"
+
+    EEx.eval_string(content, binding)
+  end
+
   @doc """
   Copies files from source dir to target dir
   according to the given map.
@@ -25,13 +43,16 @@ defmodule Mix.Phoenix do
 
       target = Path.join(target_dir, target_file_path)
 
-      contents =
-        case format do
-          :text -> File.read!(source)
-          :eex  -> EEx.eval_file(source, binding)
-        end
-
-      Mix.Generator.create_file(target, contents)
+      case format do
+        :text -> Mix.Generator.create_file(target, File.read!(source))
+        :eex  -> Mix.Generator.create_file(target, EEx.eval_file(source, binding))
+        :new_eex ->
+          if File.exists?(target) do
+            :ok
+          else
+            Mix.Generator.create_file(target, EEx.eval_file(source, binding))
+          end
+      end
     end
   end
 
@@ -47,6 +68,7 @@ defmodule Mix.Phoenix do
       [alias: "User",
        human: "User",
        base: "Phoenix",
+       web_module: "Phoenix.Web",
        module: "Phoenix.User",
        scoped: "User",
        singular: "user",
@@ -56,6 +78,7 @@ defmodule Mix.Phoenix do
       [alias: "User",
        human: "User",
        base: "Phoenix",
+       web_module: "Phoenix.Web",
        module: "Phoenix.Admin.User",
        scoped: "Admin.User",
        singular: "user",
@@ -65,23 +88,26 @@ defmodule Mix.Phoenix do
       [alias: "SuperUser",
        human: "Super user",
        base: "Phoenix",
+       web_module: "Phoenix.Web",
        module: "Phoenix.Admin.SuperUser",
        scoped: "Admin.SuperUser",
        singular: "super_user",
        path: "admin/super_user"]
   """
   def inflect(singular) do
-    base     = Mix.Phoenix.base
-    scoped   = Phoenix.Naming.camelize(singular)
-    path     = Phoenix.Naming.underscore(scoped)
-    singular = String.split(path, "/") |> List.last
-    module   = Module.concat(base, scoped) |> inspect
-    alias    = String.split(module, ".") |> List.last
-    human    = Phoenix.Naming.humanize(singular)
+    base       = Mix.Phoenix.base
+    web_module = base |> web_module() |> inspect()
+    scoped     = Phoenix.Naming.camelize(singular)
+    path       = Phoenix.Naming.underscore(scoped)
+    singular   = String.split(path, "/") |> List.last
+    module     = Module.concat(base, scoped) |> inspect
+    alias      = String.split(module, ".") |> List.last
+    human      = Phoenix.Naming.humanize(singular)
 
     [alias: alias,
      human: human,
      base: base,
+     web_module: web_module,
      module: module,
      scoped: scoped,
      singular: singular,
@@ -102,24 +128,15 @@ defmodule Mix.Phoenix do
   end
 
   @doc """
-  Fetches the unique attributes from attrs.
-  """
-  def uniques(attrs) do
-    attrs
-    |> Enum.filter(&String.ends_with?(&1, ":unique"))
-    |> Enum.map(& &1 |> String.split(":", parts: 2) |> hd |> String.to_atom)
-  end
-
-  @doc """
   Generates some sample params based on the parsed attributes.
   """
-  def params(attrs) do
+  def params(attrs, action \\ :create) when action in [:create, :update] do
     attrs
     |> Enum.reject(fn
         {_, {:references, _}} -> true
         {_, _} -> false
        end)
-    |> Enum.into(%{}, fn {k, t} -> {k, type_to_default(t)} end)
+    |> Enum.into(%{}, fn {k, t} -> {k, type_to_default(k, t, action)} end)
   end
 
   @doc """
@@ -143,8 +160,8 @@ defmodule Mix.Phoenix do
     app = otp_app()
 
     case Application.get_env(app, :namespace, app) do
-      ^app -> app |> to_string |> Phoenix.Naming.camelize
-      mod  -> mod |> inspect
+      ^app -> app |> to_string |> Phoenix.Naming.camelize()
+      mod  -> mod |> inspect()
     end
   end
 
@@ -183,7 +200,7 @@ defmodule Mix.Phoenix do
     {String.to_atom(key), {String.to_atom(comp), String.to_atom(value)}}
   end
 
-  defp type_to_default(t) do
+  defp type_to_default(key, t, :create) do
     case t do
         {:array, _}     -> []
         :integer        -> 42
@@ -191,13 +208,30 @@ defmodule Mix.Phoenix do
         :decimal        -> "120.5"
         :boolean        -> true
         :map            -> %{}
-        :text           -> "some content"
+        :text           -> "some #{key}"
         :date           -> %{year: 2010, month: 4, day: 17}
         :time           -> %{hour: 14, minute: 0, second: 0}
         :uuid           -> "7488a646-e31f-11e4-aace-600308960662"
         :utc_datetime   -> %{year: 2010, month: 4, day: 17, hour: 14, minute: 0, second: 0}
         :naive_datetime -> %{year: 2010, month: 4, day: 17, hour: 14, minute: 0, second: 0}
-        _               -> "some content"
+        _               -> "some #{key}"
+    end
+  end
+  defp type_to_default(key, t, :update) do
+    case t do
+        {:array, _}     -> []
+        :integer        -> 43
+        :float          -> "456.7"
+        :decimal        -> "456.7"
+        :boolean        -> false
+        :map            -> %{}
+        :text           -> "some updated #{key}"
+        :date           -> %{year: 2011, month: 5, day: 18}
+        :time           -> %{hour: 15, minute: 1, second: 1}
+        :uuid           -> "7488a646-e31f-11e4-aace-600308960668"
+        :utc_datetime   -> %{year: 2011, month: 5, day: 18, hour: 15, minute: 1, second: 1}
+        :naive_datetime -> %{year: 2011, month: 5, day: 18, hour: 15, minute: 1, second: 1}
+        _               -> "some updated #{key}"
     end
   end
 
@@ -206,5 +240,72 @@ defmodule Mix.Phoenix do
   defp validate_attr!({_, type}) do
     Mix.raise "Unknown type `#{type}` given to generator. " <>
               "The supported types are: #{@valid_attributes |> Enum.sort() |> Enum.join(", ")}"
+  end
+
+  @doc """
+  The paths to look for template files for generators.
+
+  Defaults to checking the current app's priv directory,
+  and falls back to phoenix's priv directory.
+  """
+  def generator_paths do
+    [".", :phoenix]
+  end
+
+  def in_single?(path) do
+    mixfile = Path.join(path, "mix.exs")
+    apps_path = Path.join(path, "apps")
+
+    File.exists?(mixfile) and not File.exists?(apps_path)
+  end
+
+  def in_umbrella?(app_path) do
+    try do
+      umbrella = Path.expand(Path.join [app_path, "..", ".."])
+      mix_path = Path.join(umbrella, "mix.exs")
+      apps_path = Path.join(umbrella, "apps")
+
+      File.exists?(mix_path) && File.exists?(apps_path)
+    catch
+      _, _ -> false
+    end
+  end
+
+  @doc """
+  Returns the web prefix to be used in generated file specs.
+  """
+  def web_prefix do
+    app = to_string(otp_app())
+    if in_umbrella?(File.cwd!()) do
+      Path.join("lib", app)
+    else
+      Path.join(["lib", app, "web"])
+    end
+  end
+
+  @doc """
+  Returns the test prefix to be used in generated file specs.
+  """
+  def test_prefix do
+    if in_umbrella?(File.cwd!()) do
+      "test"
+    else
+      "test/web"
+    end
+  end
+
+  @doc """
+  Returns the web path of the file in the application.
+  """
+  def web_path(rel_path) do
+    Path.join(web_prefix(), rel_path)
+  end
+
+  defp web_module(base) do
+    if base |> to_string() |> String.ends_with?(".Web") do
+      Module.concat(base, nil)
+    else
+      Module.concat(base, "Web")
+    end
   end
 end

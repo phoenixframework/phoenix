@@ -10,16 +10,39 @@ end
 
 defmodule MixHelper do
   import ExUnit.Assertions
+  import ExUnit.CaptureIO
 
   def tmp_path do
     Path.expand("../../tmp", __DIR__)
   end
 
   def in_tmp(which, function) do
-    path = Path.join(tmp_path(), which)
+    path = Path.join(tmp_path(), to_string(which))
     File.rm_rf! path
     File.mkdir_p! path
     File.cd! path, function
+  end
+
+  def in_tmp_project(which, function) do
+    path = Path.join(tmp_path(), to_string(which))
+    File.rm_rf! path
+    File.mkdir_p! path
+    File.cd! path
+    File.touch!("mix.exs")
+    assert Mix.Phoenix.in_single?(File.cwd!())
+    function.()
+  end
+
+  def in_project(app, path, fun) do
+    %{name: name, file: file} = Mix.Project.pop()
+
+    try do
+      capture_io(:stderr, fn ->
+        Mix.Project.in_project(app, path, [], fun)
+      end)
+    after
+      Mix.Project.push(name, file)
+    end
   end
 
   def assert_file(file) do
@@ -39,6 +62,7 @@ defmodule MixHelper do
       is_function(match, 1) ->
         assert_file(file)
         match.(File.read!(file))
+      true -> raise inspect({file, match})
     end
   end
 
@@ -67,5 +91,12 @@ defmodule Umbrella.Mixfile do
   end
 end
     """
+  end
+
+  def flush do
+    receive do
+      _ -> flush()
+    after 0 -> :ok
+    end
   end
 end

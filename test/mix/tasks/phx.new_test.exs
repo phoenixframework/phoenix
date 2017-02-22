@@ -1,8 +1,12 @@
-Code.require_file "../../../installer/lib/phx_new/generator.ex", __DIR__
-Code.require_file "../../../installer/lib/phx_new/single.ex", __DIR__
-Code.require_file "../../../installer/lib/phx_new/umbrella.ex", __DIR__
-Code.require_file "../../../installer/lib/phx_new.ex", __DIR__
-Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
+for pattern <- ["../../../installer/lib/phx_new/project.ex",
+                "../../../installer/lib/phx_new/generator.ex",
+                "../../../installer/lib/phx_new/*.ex",
+                "../../../installer/lib/phx_new.ex",
+                "../../../installer/test/mix_helper.exs"],
+    file <- [_|_] = Path.wildcard(Path.expand(pattern, __DIR__)),
+    do: Code.require_file(file, __DIR__)
+
+
 
 # Here we test the installer is up to date.
 defmodule Mix.Tasks.Phx.NewTest do
@@ -46,20 +50,20 @@ defmodule Mix.Tasks.Phx.NewTest do
       Mix.shell.flush()
 
       # Adding a new template touches file (through mix)
-      File.touch! "lib/web/views/layout_view.ex", @epoch
-      File.write! "lib/web/templates/layout/another.html.eex", "oops"
+      File.touch! "lib/phx_blog/web/views/layout_view.ex", @epoch
+      File.write! "lib/phx_blog/web/templates/layout/another.html.eex", "oops"
 
       Mix.Task.clear()
       Mix.Task.run "compile", ["--no-deps-check"]
-      assert File.stat!("lib/web/views/layout_view.ex").mtime > @epoch
+      assert File.stat!("lib/phx_blog/web/views/layout_view.ex").mtime > @epoch
 
       # Adding a new template triggers recompilation (through request)
-      File.touch! "lib/web/views/page_view.ex", @epoch
-      File.write! "lib/web/templates/page/another.html.eex", "oops"
+      File.touch! "lib/phx_blog/web/views/page_view.ex", @epoch
+      File.write! "lib/phx_blog/web/templates/page/another.html.eex", "oops"
 
       {:ok, _} = Application.ensure_all_started(:phx_blog)
       PhxBlog.Web.Endpoint.call(conn(:get, "/"), [])
-      assert File.stat!("lib/web/views/page_view.ex").mtime > @epoch
+      assert File.stat!("lib/phx_blog/web/views/page_view.ex").mtime > @epoch
 
       # Ensure /priv static files are copied
       assert File.exists?("priv/static/js/phoenix.js")
@@ -74,17 +78,5 @@ defmodule Mix.Tasks.Phx.NewTest do
   after
     Code.delete_path Path.join(tmp_path(), "bootstrap/phx_blog/_build/test/consolidated")
     Code.delete_path Path.join(tmp_path(), "bootstrap/phx_blog/_build/test/lib/phx_blog/ebin")
-  end
-
-  defp in_project(app, path, fun) do
-    %{name: name, file: file} = Mix.Project.pop
-
-    try do
-      capture_io :stderr, fn ->
-        Mix.Project.in_project app, path, [], fun
-      end
-    after
-      Mix.Project.push name, file
-    end
   end
 end
