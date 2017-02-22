@@ -184,7 +184,7 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp print_mix_info(path, extra) do
-    steps = ["$ cd #{relative_app_path(path)}"] ++ extra ++ ["$ mix phoenix.server"]
+    steps = ["$ cd #{relative_app_path(path)}"] ++ extra ++ ["$ mix phx.server"]
 
     Mix.shell.info """
 
@@ -194,7 +194,7 @@ defmodule Mix.Tasks.Phx.New do
 
     You can also run your app inside IEx (Interactive Elixir) as:
 
-        $ iex -S mix phoenix.server
+        $ iex -S mix phx.server
     """
   end
   defp relative_app_path(path) do

@@ -8,11 +8,17 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
 
   Accepts the module name for the channel
 
-  The generated model will contain:
+  The generated files will contain:
+
+  For a regular application:
 
     * a channel in lib/my_app/web/channels
     * a channel_test in test/web/channels
 
+  For an umbrella application:
+
+    * a channel in lib/my_app/channels
+    * a channel_test in test/channels
   """
   use Mix.Task
 
@@ -33,7 +39,7 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
 
     Mix.shell.info """
 
-    Add the channel to your `lib/#{Mix.Phoenix.otp_app()}/web/channels/user_socket.ex` handler, for example:
+    Add the channel to your `#{Mix.Phoenix.web_path("channels/user_socket.ex")}` handler, for example:
 
         channel "#{binding[:singular]}:lobby", #{binding[:module]}Channel
     """

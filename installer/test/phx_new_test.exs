@@ -113,7 +113,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       # Instructions
       assert_received {:mix_shell, :info, ["\nWe are all set!" <> _ = msg]}
       assert msg =~ "$ cd phx_blog"
-      assert msg =~ "$ mix phoenix.server"
+      assert msg =~ "$ mix phx.server"
 
       assert_received {:mix_shell, :info, ["Before moving on," <> _ = msg]}
       assert msg =~ "$ mix ecto.create"

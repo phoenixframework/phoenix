@@ -96,7 +96,7 @@ defmodule Mix.Phoenix do
   """
   def inflect(singular) do
     base       = Mix.Phoenix.base
-    web_module = Module.concat(base, "Web") |> inspect
+    web_module = base |> web_module() |> inspect()
     scoped     = Phoenix.Naming.camelize(singular)
     path       = Phoenix.Naming.underscore(scoped)
     singular   = String.split(path, "/") |> List.last
@@ -262,11 +262,10 @@ defmodule Mix.Phoenix do
   def in_umbrella?(app_path) do
     try do
       umbrella = Path.expand(Path.join [app_path, "..", ".."])
-      File.exists?(Path.join(umbrella, "mix.exs")) &&
-        Mix.Project.in_project(:umbrella_check, umbrella, fn _ ->
-          path = Mix.Project.config[:apps_path]
-          path && Path.expand(path) == Path.join(umbrella, "apps")
-        end)
+      mix_path = Path.join(umbrella, "mix.exs")
+      apps_path = Path.join(umbrella, "apps")
+
+      File.exists?(mix_path) && File.exists?(apps_path)
     catch
       _, _ -> false
     end
@@ -277,10 +276,10 @@ defmodule Mix.Phoenix do
   """
   def web_prefix do
     app = to_string(otp_app())
-    if in_single?(File.cwd!()) do
-      Path.join(["lib", app, "web"])
-    else
+    if in_umbrella?(File.cwd!()) do
       Path.join("lib", app)
+    else
+      Path.join(["lib", app, "web"])
     end
   end
 
@@ -288,10 +287,25 @@ defmodule Mix.Phoenix do
   Returns the test prefix to be used in generated file specs.
   """
   def test_prefix do
-    if in_single?(File.cwd!()) do
-      "test/web"
-    else
+    if in_umbrella?(File.cwd!()) do
       "test"
+    else
+      "test/web"
+    end
+  end
+
+  @doc """
+  Returns the web path of the file in the application.
+  """
+  def web_path(rel_path) do
+    Path.join(web_prefix(), rel_path)
+  end
+
+  defp web_module(base) do
+    if base |> to_string() |> String.ends_with?(".Web") do
+      Module.concat(base, nil)
+    else
+      Module.concat(base, "Web")
     end
   end
 end
