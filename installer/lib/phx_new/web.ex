@@ -28,6 +28,10 @@ defmodule Mix.Tasks.Phx.New.Web do
   use Phx.New.Generator
   alias Phx.New.{Project}
 
+  @version Mix.Project.config[:version]
+  @shortdoc "Creates a new Phoenix v#{@version} application inside an umbrella application"
+
+
   @pre "phx_umbrella/apps/app_name_web"
 
   template :new, [
