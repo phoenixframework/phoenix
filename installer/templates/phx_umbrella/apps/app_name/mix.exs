@@ -8,7 +8,7 @@ defmodule <%= app_module %>.Mixfile do
      config_path: "../../config/config.exs",
      deps_path: "../../deps",
      lockfile: "../../mix.lock",
-     elixir: "~> 1.3",
+     elixir: "~> 1.4",
      elixirc_paths: elixirc_paths(Mix.env),
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -20,8 +20,8 @@ defmodule <%= app_module %>.Mixfile do
   #
   # Type `mix help compile.app` for more information.
   def application do
-    [applications: [:logger<%= if ecto do %>, :<%= adapter_app %>, :ecto<% end %>],
-     mod: {<%= app_module %>.Application, []}]
+    [mod: {<%= app_module %>.Application, []},
+     extra_applications: [:logger]]
   end
 
   # Specifies which paths to compile per environment.

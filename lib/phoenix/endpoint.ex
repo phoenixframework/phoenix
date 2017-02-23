@@ -20,7 +20,7 @@ defmodule Phoenix.Endpoint do
   ## Endpoints
 
   An endpoint is simply a module defined with the help
-  of `Phoenix.Endpoint`. If you have used the `mix phoenix.new`
+  of `Phoenix.Endpoint`. If you have used the `mix phx.new`
   generator, an endpoint was automatically generated as
   part of your application:
 
