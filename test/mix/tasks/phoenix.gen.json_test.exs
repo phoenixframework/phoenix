@@ -17,7 +17,7 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
   end
 
   test "generates json resource" do
-    in_tmp "generates json resource", fn ->
+    in_tmp "deprecated: generates json resource", fn ->
       capture_io(:stderr, fn ->
         Mix.Tasks.Phoenix.Gen.Json.run ["user", "users", "name", "age:integer", "height:decimal",
                                         "nicks:array:text", "famous:boolean", "born_at:utc_datetime",
@@ -82,7 +82,7 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
   end
 
   test "doesn't generate a resource when there is an error" do
-    in_tmp "doesnt generate resource on error", fn ->
+    in_tmp "deprecated: doesnt generate resource on error", fn ->
       assert_raise(Mix.Error, fn ->
         capture_io(:stderr, fn ->
           Mix.Tasks.Phoenix.Gen.Json.run ["user", "users", "name", "age:integer", "info:notvalid"]
@@ -98,7 +98,7 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
   end
 
   test "generates nested resource" do
-    in_tmp "generates nested resource", fn ->
+    in_tmp "deprecated: generates nested resource", fn ->
       capture_io(:stderr, fn ->
         Mix.Tasks.Phoenix.Gen.Json.run ["Admin.User", "users", "name:string"]
       end)
@@ -125,7 +125,7 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
   end
 
   test "generates json resource without model" do
-    in_tmp "generates json resource without model", fn ->
+    in_tmp "deprecated: generates json resource without model", fn ->
       capture_io(:stderr, fn ->
         Mix.Tasks.Phoenix.Gen.Json.run ["API.V1.User", "users", "--no-model", "name:string"]
       end)
@@ -145,7 +145,7 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
   end
 
   test "generates json resource with only id field" do
-    in_tmp "generates json resource with only id field", fn ->
+    in_tmp "deprecated: generates json resource with only id field", fn ->
       capture_io(:stderr, fn ->
         Mix.Tasks.Phoenix.Gen.Json.run ["User", "users"]
       end)
@@ -165,7 +165,7 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
 
   test "with binary_id properly generates controller test" do
     capture_io(:stderr, fn ->
-      in_tmp "with binary_id properly generates controller test", fn ->
+      in_tmp "deprecated: with binary_id properly generates controller test", fn ->
         with_generator_env [binary_id: true, sample_binary_id: "abcd"], fn ->
           Mix.Tasks.Phoenix.Gen.Json.run ["User", "users"]
 

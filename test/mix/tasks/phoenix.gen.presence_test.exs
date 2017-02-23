@@ -11,7 +11,7 @@ defmodule Mix.Tasks.Phoenix.Gen.PresenceTest do
   end
 
   test "generates presence" do
-    in_tmp "generates presence", fn ->
+    in_tmp "deprecated: generates presence", fn ->
       capture_io(:stderr, fn ->
         Mix.Tasks.Phoenix.Gen.Presence.run(["MyPresence"])
       end)
@@ -24,7 +24,7 @@ defmodule Mix.Tasks.Phoenix.Gen.PresenceTest do
   end
 
   test "passing no args defaults to Presence" do
-    in_tmp "generates presence", fn ->
+    in_tmp "deprecated: generates presence", fn ->
       capture_io(:stderr, fn ->
         Mix.Tasks.Phoenix.Gen.Presence.run([])
       end)

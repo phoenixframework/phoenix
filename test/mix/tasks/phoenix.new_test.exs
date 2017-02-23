@@ -26,16 +26,16 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       secret_key_base: String.duplicate("abcdefgh", 8),
       code_reloader: true)
 
-    in_tmp "bootstrap", fn ->
+    in_tmp "deprecated_bootstrap", fn ->
       Mix.Tasks.Phoenix.New.run(["photo_blog", "--no-brunch", "--no-ecto"])
     end
 
     # Copy artifacts from Phoenix so we can compile and run tests
-    File.cp_r "_build",   "bootstrap/photo_blog/_build"
-    File.cp_r "deps",     "bootstrap/photo_blog/deps"
-    File.cp_r "mix.lock", "bootstrap/photo_blog/mix.lock"
+    File.cp_r "_build",   "deprecated_bootstrap/photo_blog/_build"
+    File.cp_r "deps",     "deprecated_bootstrap/photo_blog/deps"
+    File.cp_r "mix.lock", "deprecated_bootstrap/photo_blog/mix.lock"
 
-    in_project :photo_blog, Path.join(tmp_path(), "bootstrap/photo_blog"), fn _ ->
+    in_project :photo_blog, Path.join(tmp_path(), "deprecated_bootstrap/photo_blog"), fn _ ->
       Mix.Task.clear
       Mix.Task.run "compile", ["--no-deps-check"]
       assert_received {:mix_shell, :info, ["Generated photo_blog app"]}
@@ -69,7 +69,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       end) =~ ~r"4 tests, 0 failures"
     end
   after
-    Code.delete_path Path.join(tmp_path(), "bootstrap/photo_blog/_build/test/consolidated")
-    Code.delete_path Path.join(tmp_path(), "bootstrap/photo_blog/_build/test/lib/photo_blog/ebin")
+    Code.delete_path Path.join(tmp_path(), "deprecated_bootstrap/photo_blog/_build/test/consolidated")
+    Code.delete_path Path.join(tmp_path(), "deprecated_bootstrap/photo_blog/_build/test/lib/photo_blog/ebin")
   end
 end

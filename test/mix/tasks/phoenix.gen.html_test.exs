@@ -17,7 +17,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
   end
 
   test "generates html resource" do
-    in_tmp "generates html resource", fn ->
+    in_tmp "deprecated: generates html resource", fn ->
       capture_io(:stderr, fn ->
         Mix.Tasks.Phoenix.Gen.Html.run ["user", "users", "name", "age:integer", "height:decimal",
                                         "nicks:array:text", "famous:boolean", "born_at:naive_datetime",
@@ -128,7 +128,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
   end
 
   test "generates nested resource" do
-    in_tmp "generates nested resource", fn ->
+    in_tmp "deprecated: generates nested resource", fn ->
       capture_io(:stderr, fn ->
         Mix.Tasks.Phoenix.Gen.Html.run ["Admin.SuperUser", "super_users", "name:string"]
       end)
@@ -186,7 +186,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
   end
 
   test "generates html resource without model" do
-    in_tmp "generates html resource without model", fn ->
+    in_tmp "deprecated: generates html resource without model", fn ->
       capture_io(:stderr, fn ->
         Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "users", "--no-model", "name:string"]
       end)
@@ -201,7 +201,7 @@ defmodule Mix.Tasks.Phoenix.Gen.HtmlTest do
   end
 
   test "with binary_id properly generates controller test" do
-    in_tmp "with binary_id properly generates controller test", fn ->
+    in_tmp "deprecated: with binary_id properly generates controller test", fn ->
       with_generator_env [binary_id: true, sample_binary_id: "abcd"], fn ->
         capture_io(:stderr, fn ->
           Mix.Tasks.Phoenix.Gen.Html.run ["User", "users"]
