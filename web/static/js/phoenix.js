@@ -232,6 +232,7 @@ class Push {
   receive(status, callback){
     if(this.hasReceived(status)){
       callback(this.receivedResp.response)
+      return this
     }
 
     this.recHooks.push({status, callback})
@@ -244,6 +245,7 @@ class Push {
   matchReceive({status, response, ref}){
     this.recHooks.filter( h => h.status === status )
                  .forEach( h => h.callback(response) )
+    this.recHooks = null
   }
 
   cancelRefEvent(){ if(!this.refEvent){ return }
