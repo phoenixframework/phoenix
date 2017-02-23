@@ -17,26 +17,40 @@ API documentation is available at [https://hexdocs.pm/phoenix](https://hexdocs.p
 
 We appreciate any contribution to Phoenix. Check our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) and [CONTRIBUTING.md](CONTRIBUTING.md) guides for more information. We usually keep a list of features and bugs [in the issue tracker][4].
 
-### Generating a Phoenix project from unreleased versions
+### Generating a Phoenix project from master
 
-In order to create a new project using the latest Phoenix source installer (the `phoenix.new` Mix task) you will need to ensure two things.
+1. Remove any `phoenix_new` archives currently installed on your machine. There are two ways to do this:
+  * Running `mix archive.uninstall <archive_name>`, usually `mix archive.uninstall phoenix_new.ez`
+  * Deleting the archives directly, which can be found in `~/.mix/archives/`
 
-1. Remove any previously installed `phoenix_new` archives so that Mix will pick up the local source code. This can be done with `mix archive.uninstall phoenix_new.ez` or by simply deleting the file, which is usually in `~/.mix/archives/`.
-2. Run the command from within the `installer` directory and provide a subdirectory within the installer to generate your dev project. The command below will create a new project using your current Phoenix checkout, thanks to the `--dev` flag.
+2. Copy this directory via `git clone https://github.com/phoenixframework/phoenix` or by downloading it
 
+3. Inside the `/installer` directory, the Mix command below will create a new project:
 ```bash
 $ cd installer
-$ mix phoenix.new dev_app --dev
+$ mix phx.new dev_app --dev
 ```
+The above command must be run from the `installer` directory. For more, see the discussion in [PR 1224](https://github.com/phoenixframework/phoenix/pull/1224) 
 
-This will produce a new project that has `:phoenix` configured as a relative dependency:
+### Installing Latest Archive
+To create projects outside of the `/installer` directory, add the latest archive to your machine via: 
+```bash
+$ cd installer
+$ mix archive.build && mix archive.install
+```
+You can then use `$ mix phx.new dev_app --dev` in any directory you'd like.
 
+### Phoenix Path
+Depending on where it was created, your new project will have `:phoenix` configured as a relative path:
 ```
 defp deps do
   [{:phoenix, path: "../..", override: true},
 ```
-
-The command must be run from the `installer` directory. See the discussion in [PR 1224](https://github.com/phoenixframework/phoenix/pull/1224) for more information.
+or as a Github URL:
+```
+defp deps do
+  [{:phoenix, github: "phoenixframework/phoenix", override: true},
+```
 
 ### Building phoenix.js
 
