@@ -169,7 +169,7 @@ defmodule Phx.New.Generator do
     # Configure your database
     config :#{binding[:app_name]}, #{binding[:app_module]}.Repo,
     adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:prod]},
-    pool_size: 20
+    pool_size: 15
     """
   end
 
