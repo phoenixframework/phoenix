@@ -410,9 +410,9 @@ defmodule Phoenix.ConnTest do
     case Poison.decode(body) do
       {:ok, body} ->
         body
-      {:error, {:invalid, token}} ->
+      {:error, {:invalid, token, _}} ->
         raise "could not decode JSON body, invalid token #{inspect token} in body:\n\n#{body}"
-      {:error, :invalid} ->
+      {:error, :invalid, _} ->
         raise "could not decode JSON body, body is empty"
     end
   end
