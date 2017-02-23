@@ -23,23 +23,23 @@ We appreciate any contribution to Phoenix. Check our [CODE_OF_CONDUCT.md](CODE_O
   * Running `mix archive.uninstall <archive_name>`, usually `mix archive.uninstall phoenix_new.ez`
   * Deleting the archives directly, which can be found in `~/.mix/archives/`
 
-2. Copy this directory via `git clone https://github.com/phoenixframework/phoenix` or by downloading it
+2. Copy this repo via `git clone https://github.com/phoenixframework/phoenix` or by downloading it
 
-3. While in the `/installer` directory, the Mix command below will create a new project:
+3. While in the `installer/` directory, the Mix command below will create a new project:
 
 ```bash
 $ cd installer
 $ mix phx.new dev_app --dev
 ```
 
-Your new project will have `:phoenix` configured as a relative path:
+Your new project will have `:phoenix` configured as a relative path dependency:
 
 ```
 defp deps do
   [{:phoenix, path: "../..", override: true},
 ```
 
-To create projects outside of the `/installer` directory, add the latest archive to your machine by following the instructions in [installer/README.md](https://github.com/phoenixframework/phoenix/blob/master/installer/README.md)
+To create projects outside of the `installer/` directory, add the latest archive to your machine by following the instructions in [installer/README.md](https://github.com/phoenixframework/phoenix/blob/master/installer/README.md)
 
 ### Building phoenix.js
 
