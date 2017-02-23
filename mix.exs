@@ -3,6 +3,8 @@ defmodule Phoenix.Mixfile do
 
   @version "1.3.0-dev"
 
+  # TODO update to elixir 1.4 + new application inference once 1.3 is out
+  
   def project do
     [app: :phoenix,
      version: @version,
@@ -32,9 +34,10 @@ defmodule Phoenix.Mixfile do
      """]
   end
 
+  
   def application do
     [mod: {Phoenix, []},
-     extra_applications: [:logger, :eex],
+     applications: [:plug, :poison, :logger, :eex],
      env: [stacktrace_depth: nil,
            template_engines: [],
            format_encoders: [],
