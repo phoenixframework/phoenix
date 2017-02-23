@@ -1096,7 +1096,16 @@ var Ajax = exports.Ajax = function () {
   }, {
     key: "parseJSON",
     value: function parseJSON(resp) {
-      return resp && resp !== "" ? JSON.parse(resp) : null;
+      if (!resp || resp == "") {
+        return null;
+      }
+
+      try {
+        return JSON.parse(resp);
+      } catch (e) {
+        console && console.log("failed to parse JSON response", resp);
+        return null;
+      }
     }
   }, {
     key: "serialize",
