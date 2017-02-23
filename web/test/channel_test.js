@@ -93,16 +93,6 @@ describe("join", () => {
     assert.equal(joinPush.timeout, newTimeout)
   })
 
-  it("sets joinPush refEventName", () => {
-    const joinPush = channel.joinPush
-
-    assert.equal(joinPush.refEvent, null)
-
-    channel.join()
-
-    assert.equal(joinPush.refEvent, "chan_reply_1")
-  })
-
   describe("timeout behavior", () => {
     let clock, joinPush
 
