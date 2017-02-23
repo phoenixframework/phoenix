@@ -8,7 +8,7 @@ defmodule <%= web_namespace %>.Mixfile do
      config_path: "../../config/config.exs",
      deps_path: "../../deps",
      lockfile: "../../mix.lock",
-     elixir: "~> 1.4",
+     elixir: "~> 1.3",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,
@@ -21,7 +21,8 @@ defmodule <%= web_namespace %>.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [mod: {<%= web_namespace %>.Application, []},
-     extra_applications: [:logger]]
+     applications: [:phoenix<%= if html do %>, :phoenix_html<% end %>, :cowboy, :logger, :gettext,
+                    <%= if ecto do %>:phoenix_ecto,<% end %><%= if app_name != web_app_name do %> :<%= app_name %><% end %>]]
   end
 
   # Specifies which paths to compile per environment.

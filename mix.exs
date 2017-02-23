@@ -6,7 +6,7 @@ defmodule Phoenix.Mixfile do
   def project do
     [app: :phoenix,
      version: @version,
-     elixir: "~> 1.4",
+     elixir: "~> 1.3",
      deps: deps(),
      package: package(),
      preferred_cli_env: [docs: :docs],
@@ -34,7 +34,7 @@ defmodule Phoenix.Mixfile do
 
   def application do
     [mod: {Phoenix, []},
-     extra_applications: [:logger, :eex],
+     applications: [:plug, :poison, :logger, :eex],
      env: [stacktrace_depth: nil,
            template_engines: [],
            format_encoders: [],
