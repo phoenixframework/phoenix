@@ -34,7 +34,6 @@ defmodule Phoenix.Mixfile do
      """]
   end
 
-  
   def application do
     [mod: {Phoenix, []},
      applications: [:plug, :poison, :logger, :eex],
