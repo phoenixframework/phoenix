@@ -30,7 +30,7 @@ We appreciate any contribution to Phoenix. Check our [CODE_OF_CONDUCT.md](CODE_O
 $ cd installer
 $ mix phx.new dev_app --dev
 ```
-The above command must be run from the `installer` directory. For more, see the discussion in [PR 1224](https://github.com/phoenixframework/phoenix/pull/1224) 
+The above command must be run from the `/installer` directory. For more, see the discussion in [PR 1224](https://github.com/phoenixframework/phoenix/pull/1224) 
 
 ### Installing Latest Archive
 To create projects outside of the `/installer` directory, add the latest archive to your machine via: 
@@ -38,7 +38,7 @@ To create projects outside of the `/installer` directory, add the latest archive
 $ cd installer
 $ mix archive.build && mix archive.install
 ```
-You can then use `$ mix phx.new dev_app --dev` in any directory you'd like.
+You can then use `$ mix phx.new dev_app` in any directory you'd like.
 
 ### Phoenix Path
 Depending on where it was created, your new project will have `:phoenix` configured as a relative path:
