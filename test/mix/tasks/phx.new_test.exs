@@ -6,8 +6,6 @@ for pattern <- ["../../../installer/lib/phx_new/project.ex",
     file <- [_|_] = Path.wildcard(Path.expand(pattern, __DIR__)),
     do: Code.require_file(file, __DIR__)
 
-
-
 # Here we test the installer is up to date.
 defmodule Mix.Tasks.Phx.NewTest do
   use ExUnit.Case
@@ -16,6 +14,7 @@ defmodule Mix.Tasks.Phx.NewTest do
   import MixHelper
   import ExUnit.CaptureIO
 
+  @moduletag :phx_new
   @epoch {{1970, 1, 1}, {0, 0, 0}}
 
   setup do

@@ -45,7 +45,7 @@ defmodule Phoenix.Controller.Pipeline do
         raise ArgumentError, "expected action_fallback to be a module or function plug, got #{inspect plug}"
       end
 
-      case Atom.to_char_list(plug) do
+      case Atom.to_charlist(plug) do
         ~c"Elixir." ++ _ -> @phoenix_fallback {:module, plug}
          _               -> @phoenix_fallback {:function, plug}
       end

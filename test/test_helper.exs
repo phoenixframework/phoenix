@@ -3,6 +3,11 @@ Code.require_file("support/router_helper.exs", __DIR__)
 # Starts web server applications
 Application.ensure_all_started(:cowboy)
 
+# TODO: Remove this when Elixir v1.3 is no longer supported
+if Version.match?(System.version, "~> 1.3.0") do
+  ExUnit.configure exclude: [:phoenix_new, :phx_new]
+end
+
 # Used whenever a router fails. We default to simply
 # rendering a short string.
 defmodule Phoenix.ErrorView do

@@ -9,6 +9,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
   import MixHelper
   import ExUnit.CaptureIO
 
+  @moduletag :phoenix_new
   @epoch {{1970, 1, 1}, {0, 0, 0}}
 
   setup do
