@@ -19,8 +19,8 @@
     "sinon": "^1.17.6",
     "uglify-js-brunch": "~2.0.1"
   },
-  "files": ["README.md", "LICENSE.md", "package.json", "priv/static/phoenix.js", "web/static/js/phoenix.js"],
+  "files": ["README.md", "LICENSE.md", "package.json", "priv/static/phoenix.js", "assets/js/phoenix.js"],
   "scripts": {
-    "test": "./node_modules/.bin/mocha ./web/test/**/*.js --compilers js:babel-register -r jsdom-global/register"
+    "test": "./node_modules/.bin/mocha ./assets/test/**/*.js --compilers js:babel-register -r jsdom-global/register"
   }
 }

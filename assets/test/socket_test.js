@@ -4,7 +4,7 @@ import jsdom from "jsdom"
 import sinon from "sinon"
 import {WebSocket, Server as WebSocketServer} from "mock-socket"
 
-import {Socket, LongPoll} from "../static/js/phoenix"
+import {Socket, LongPoll} from "../js/phoenix"
 
 let socket
 

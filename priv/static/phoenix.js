@@ -1096,7 +1096,7 @@ var Ajax = exports.Ajax = function () {
   }, {
     key: "parseJSON",
     value: function parseJSON(resp) {
-      if (!resp || resp == "") {
+      if (!resp || resp === "") {
         return null;
       }
 
@@ -1158,28 +1158,26 @@ var Presence = exports.Presence = {
     this.map(newState, function (key, newPresence) {
       var currentPresence = state[key];
       if (currentPresence) {
-        (function () {
-          var newRefs = newPresence.metas.map(function (m) {
-            return m.phx_ref;
-          });
-          var curRefs = currentPresence.metas.map(function (m) {
-            return m.phx_ref;
-          });
-          var joinedMetas = newPresence.metas.filter(function (m) {
-            return curRefs.indexOf(m.phx_ref) < 0;
-          });
-          var leftMetas = currentPresence.metas.filter(function (m) {
-            return newRefs.indexOf(m.phx_ref) < 0;
-          });
-          if (joinedMetas.length > 0) {
-            joins[key] = newPresence;
-            joins[key].metas = joinedMetas;
-          }
-          if (leftMetas.length > 0) {
-            leaves[key] = _this13.clone(currentPresence);
-            leaves[key].metas = leftMetas;
-          }
-        })();
+        var newRefs = newPresence.metas.map(function (m) {
+          return m.phx_ref;
+        });
+        var curRefs = currentPresence.metas.map(function (m) {
+          return m.phx_ref;
+        });
+        var joinedMetas = newPresence.metas.filter(function (m) {
+          return curRefs.indexOf(m.phx_ref) < 0;
+        });
+        var leftMetas = currentPresence.metas.filter(function (m) {
+          return newRefs.indexOf(m.phx_ref) < 0;
+        });
+        if (joinedMetas.length > 0) {
+          joins[key] = newPresence;
+          joins[key].metas = joinedMetas;
+        }
+        if (leftMetas.length > 0) {
+          leaves[key] = _this13.clone(currentPresence);
+          leaves[key].metas = leftMetas;
+        }
       } else {
         joins[key] = newPresence;
       }

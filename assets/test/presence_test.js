@@ -1,6 +1,6 @@
 import assert from "assert"
 
-import {Presence} from "../static/js/phoenix"
+import {Presence} from "../js/phoenix"
 
 let clone = (obj) => { return JSON.parse(JSON.stringify(obj)) }
 
