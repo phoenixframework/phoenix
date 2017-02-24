@@ -44,7 +44,7 @@ defmodule Phx.New.Umbrella do
 
   def generate(%Project{} = project) do
     if in_umbrella?(project.project_path) do
-      Mix.raise "unable to nest umbrella project within apps"
+      Mix.raise "Unable to nest umbrella project within apps"
     end
     copy_from project, __MODULE__, template_files(:new)
 

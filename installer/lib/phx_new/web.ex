@@ -81,7 +81,7 @@ defmodule Mix.Tasks.Phx.New.Web do
   ]
 
   template :bare, [
-    {:text, "static/bare/gitignore", :web, ".gitignore"},
+    {:text, "assets/bare/gitignore", :web, ".gitignore"},
   ]
 
   template :static, [

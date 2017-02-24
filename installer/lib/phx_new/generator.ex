@@ -69,23 +69,12 @@ defmodule Phx.New.Generator do
     File.write!(file, File.read!(file) <> contents)
   end
 
-  def in_single?(path) do
-    mixfile = Path.join(path, "mix.exs")
-    apps_path = Path.join(path, "apps")
-
-    File.exists?(mixfile) and not File.exists?(apps_path)
-  end
-
   def in_umbrella?(app_path) do
-    try do
-      umbrella = Path.expand(Path.join [app_path, "..", ".."])
-      mix_path = Path.join(umbrella, "mix.exs")
-      apps_path = Path.join(umbrella, "apps")
+    umbrella = Path.expand(Path.join [app_path, "..", ".."])
+    mix_path = Path.join(umbrella, "mix.exs")
+    apps_path = Path.join(umbrella, "apps")
 
-      File.exists?(mix_path) && File.exists?(apps_path)
-    catch
-      _, _ -> false
-    end
+    File.exists?(mix_path) && File.exists?(apps_path)
   end
 
   def put_binding(%Project{opts: opts} = project) do
@@ -179,35 +168,11 @@ defmodule Phx.New.Generator do
     |> hd()
     |> Module.concat(PubSub)
   end
-  defp get_ecto_adapter("mssql", app, module) do
-    {:tds_ecto, Tds.Ecto, db_config(app, module, "db_user", "db_password")}
-  end
   defp get_ecto_adapter("mysql", app, module) do
     {:mariaex, Ecto.Adapters.MySQL, db_config(app, module, "root", "")}
   end
   defp get_ecto_adapter("postgres", app, module) do
     {:postgrex, Ecto.Adapters.Postgres, db_config(app, module, "postgres", "postgres")}
-  end
-  defp get_ecto_adapter("sqlite", app, module) do
-    {:sqlite_ecto, Sqlite.Ecto,
-     dev:  [database: "db/#{app}_dev.sqlite"],
-     test: [database: "db/#{app}_test.sqlite", pool: Ecto.Adapters.SQL.Sandbox],
-     prod: [database: "db/#{app}_prod.sqlite"],
-     test_setup_all: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect module}.Repo, :manual)",
-     test_setup: ":ok = Ecto.Adapters.SQL.Sandbox.checkout(#{inspect module}.Repo)",
-     test_async: "Ecto.Adapters.SQL.Sandbox.mode(#{inspect module}.Repo, {:shared, self()})"}
-  end
-  defp get_ecto_adapter("mongodb", app, module) do
-    {:mongodb_ecto, Mongo.Ecto,
-     dev:  [database: "#{app}_dev"],
-     test: [database: "#{app}_test", pool_size: 1],
-     prod: [database: "#{app}_prod"],
-     test_setup_all: "",
-     test_setup: "",
-     test_async: "Mongo.Ecto.truncate(#{inspect module}.Repo, [])",
-     binary_id: true,
-     migration: false,
-     sample_binary_id: "111111111111111111111111"}
   end
   defp get_ecto_adapter(db, _app, _mod) do
     Mix.raise "Unknown database #{inspect db}"
@@ -279,8 +244,7 @@ defmodule Phx.New.Generator do
   defp phoenix_html_brunch_path(%Project{in_umbrella?: false}),
     do: "../deps/phoenix_html"
 
-
-  # defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> 1.2.0"}]
+  # defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> 1.3.0"}]
   defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
   defp phoenix_dep(path), do: ~s[{:phoenix, path: #{inspect path}, override: true}]
 

@@ -11,15 +11,13 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
   The above generated resource will contain:
 
-    * a context module in lib/accounts.ex, serving as the API boundary
-      to the resource
+    * a context module in lib/accounts.ex, serving as the API boundary to the resource
     * a schema in lib/accounts/user.ex, with an `accounts_users` table
     * a view in lib/web/views/user_view.ex
     * a controller in lib/web/controllers/user_controller.ex
     * a migration file for the repository
     * default CRUD templates in lib/web/templates/user
     * test files for generated context and controller features
-
 
   ## Schema table name
 
@@ -47,7 +45,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   end
 
   def build(args) do
-    unless Mix.Phoenix.in_single?(File.cwd!()) do
+    if Mix.Project.umbrella? do
       Mix.raise "mix phx.gen.html and phx.gen.json can only be run inside an application directory"
     end
     switches = [binary_id: :boolean, model: :boolean, table: :string]

@@ -37,14 +37,6 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
     end
   end
 
-  test "not inside single project" do
-    in_tmp "not inside single project", fn ->
-      assert_raise Mix.Error, ~r/can only be run inside an application directory/, fn ->
-        Gen.Json.run ~w(Some Thing things)
-      end
-    end
-  end
-
   test "generates json context" do
     in_tmp_project "generates json context", fn ->
       Gen.Json.run(["Blog", "Post", "posts", "title:string"])

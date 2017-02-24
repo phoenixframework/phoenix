@@ -282,54 +282,6 @@ defmodule Mix.Tasks.Phoenix.NewTest do
     end
   end
 
-  test "new with tds adapter" do
-    in_tmp "new with tds adapter", fn ->
-      project_path = Path.join(File.cwd!, "custom_path")
-      Mix.Tasks.Phoenix.New.run([project_path, "--database", "mssql"])
-
-      assert_file "custom_path/mix.exs", ~r/:tds_ecto/
-      assert_file "custom_path/config/dev.exs", ~r/Tds.Ecto/
-      assert_file "custom_path/config/test.exs", ~r/Tds.Ecto/
-      assert_file "custom_path/config/prod.secret.exs", ~r/Tds.Ecto/
-
-      assert_file "custom_path/test/support/conn_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
-      assert_file "custom_path/test/support/channel_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
-      assert_file "custom_path/test/support/model_case.ex", "Ecto.Adapters.SQL.Sandbox.mode"
-    end
-  end
-
-  test "new with mongodb adapter" do
-    in_tmp "new with mongodb adapter", fn ->
-      project_path = Path.join(File.cwd!, "custom_path")
-      Mix.Tasks.Phoenix.New.run([project_path, "--database", "mongodb"])
-
-      assert_file "custom_path/mix.exs", ~r/:mongodb_ecto/
-
-      assert_file "custom_path/config/dev.exs", ~r/Mongo.Ecto/
-      assert_file "custom_path/config/test.exs", [~r/Mongo.Ecto/, ~r/pool_size: 1/]
-      assert_file "custom_path/config/prod.secret.exs", ~r/Mongo.Ecto/
-
-      assert_file "custom_path/web/web.ex", fn file ->
-        assert file =~ ~r/@primary_key {:id, :binary_id, autogenerate: true}/
-        assert file =~ ~r/@foreign_key_type :binary_id/
-      end
-
-      assert_file "custom_path/test/test_helper.exs", fn file ->
-        refute file =~ ~r/Ecto.Adapters.SQL/
-      end
-
-      assert_file "custom_path/test/support/conn_case.ex", "Mongo.Ecto.truncate"
-      assert_file "custom_path/test/support/model_case.ex", "Mongo.Ecto.truncate"
-      assert_file "custom_path/test/support/channel_case.ex", "Mongo.Ecto.truncate"
-
-      assert_file "custom_path/config/config.exs", fn file ->
-        assert file =~ ~r/binary_id: true/
-        assert file =~ ~r/migration: false/
-        assert file =~ ~r/sample_binary_id: "111111111111111111111111"/
-      end
-    end
-  end
-
   test "new defaults to pg adapter" do
     in_tmp "new defaults to pg adapter", fn ->
       project_path = Path.join(File.cwd!, "custom_path")

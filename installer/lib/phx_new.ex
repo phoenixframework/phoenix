@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Phx.New do
   ## Options
 
     * `--umbrella` - generate an umbrella application,
-      with one application for your core domain, and
+      with one application for your domain, and
       a second application for the web interface.
 
     * `--app` - the name of the OTP application
@@ -22,8 +22,7 @@ defmodule Mix.Tasks.Phx.New do
       the generated skeleton
 
     * `--database` - specify the database adapter for ecto.
-      Values can be `postgres`, `mysql`, `mssql`, `sqlite` or
-      `mongodb`. Defaults to `postgres`
+      Values can be `postgres` or `mysql`. Defaults to `postgres`
 
     * `--no-brunch` - do not generate brunch files
       for static asset building. When choosing this
@@ -68,7 +67,6 @@ defmodule Mix.Tasks.Phx.New do
 
   @version Mix.Project.config[:version]
   @shortdoc "Creates a new Phoenix v#{@version} application using the experimental generators"
-
 
   @switches [dev: :boolean, brunch: :boolean, ecto: :boolean,
              app: :string, module: :string, web_module: :string,
@@ -145,7 +143,6 @@ defmodule Mix.Tasks.Phx.New do
   defp install_brunch(install?) do
     maybe_cmd "cd assets && npm install && node node_modules/brunch/bin/brunch build",
               File.exists?("assets/brunch-config.js"), install? && System.find_executable("npm")
-
   end
 
   defp install_mix(install?) do
@@ -203,7 +200,6 @@ defmodule Mix.Tasks.Phx.New do
       rel   -> rel
     end
   end
-
 
   ## Helpers
 
@@ -273,8 +269,8 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp elixir_version_check! do
-    unless Version.match?(System.version, "~> 1.2") do
-      Mix.raise "Phoenix v#{@version} requires at least Elixir v1.2.\n " <>
+    unless Version.match?(System.version, "~> 1.4") do
+      Mix.raise "Phoenix v#{@version} requires at least Elixir v1.4.\n " <>
                 "You have #{System.version()}. Please update accordingly"
     end
   end

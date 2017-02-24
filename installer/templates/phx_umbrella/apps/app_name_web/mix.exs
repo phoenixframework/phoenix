@@ -13,6 +13,7 @@ defmodule <%= web_namespace %>.Mixfile do
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     aliases: aliases(),
      deps: deps()]
   end
 
@@ -37,8 +38,16 @@ defmodule <%= web_namespace %>.Mixfile do
      {:phoenix_ecto, "~> 3.2"},<% end %><%= if html do %>
      {:phoenix_html, "~> 2.6"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},<% end %>
-     {:gettext, "~> 0.11"},<%= if app_name != web_app_name do %>
-     {:<%= app_name %>, in_umbrella: true},<% end %>
+     {:gettext, "~> 0.11"},
+     {:<%= app_name %>, in_umbrella: true},
      {:cowboy, "~> 1.0"}]
+  end
+
+  # Aliases are shortcuts or tasks specific to the current project.<%= if ecto do %>
+  # For example, we extend the test task to create and migrate the database.<% end %>
+  #
+  # See the documentation for `Mix` for more info on aliases.
+  defp aliases do
+    [<%= if ecto do %>"test": ["ecto.create --quiet", "ecto.migrate", "test"]<% end %>]
   end
 end

@@ -29,7 +29,6 @@ defmodule MixHelper do
     File.mkdir_p! path
     File.cd! path
     File.touch!("mix.exs")
-    assert Mix.Phoenix.in_single?(File.cwd!())
     function.()
   end
 

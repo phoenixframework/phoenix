@@ -24,7 +24,6 @@ defmodule Mix.Tasks.Phx.New.App do
     {:eex,  "phx_ecto/seeds.exs",           :app, "priv/repo/seeds.exs"},
   ]
 
-
   def prepare_project(%Project{} = project) do
     project_path = Path.expand(project.base_path)
 

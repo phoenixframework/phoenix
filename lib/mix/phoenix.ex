@@ -252,23 +252,14 @@ defmodule Mix.Phoenix do
     [".", :phoenix]
   end
 
-  def in_single?(path) do
-    mixfile = Path.join(path, "mix.exs")
-    apps_path = Path.join(path, "apps")
-
-    File.exists?(mixfile) and not File.exists?(apps_path)
-  end
-
+  @doc """
+  Checks if the given `app_path` is inside an umbrella.
+  """
   def in_umbrella?(app_path) do
-    try do
-      umbrella = Path.expand(Path.join [app_path, "..", ".."])
-      mix_path = Path.join(umbrella, "mix.exs")
-      apps_path = Path.join(umbrella, "apps")
-
-      File.exists?(mix_path) && File.exists?(apps_path)
-    catch
-      _, _ -> false
-    end
+    umbrella = Path.expand(Path.join [app_path, "..", ".."])
+    mix_path = Path.join(umbrella, "mix.exs")
+    apps_path = Path.join(umbrella, "apps")
+    File.exists?(mix_path) && File.exists?(apps_path)
   end
 
   @doc """

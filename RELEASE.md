@@ -4,7 +4,7 @@
 
   1. Check related deps for required version bumps and compatibility (`phoenix_ecto`, `phoenix_pubsub_redis`, `phoenix_html`)
   2. Bump version in related files below
-  3. Update `phoenix_dep` in `installer/lib/phoenix_new.ex` to "~> version to be released"
+  3. Update `phoenix_dep` in `installer/lib/phoenix_new.ex` and `installer/lib/phx_new/generator.ex` to "~> version to be released"
   4. Run tests, commit, push code
   5. Publish packages and docs after pruning any extraneous uncommitted files
   6. Run `mix archive.build` and `mix archive.build -o phoenix_new.ez` inside "installer" directory to build new installers

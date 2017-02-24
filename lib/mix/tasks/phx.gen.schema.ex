@@ -97,7 +97,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   end
 
   def build(args, help \\ __MODULE__) do
-    unless Mix.Phoenix.in_single?(File.cwd!()) do
+    if Mix.Project.umbrella? do
       Mix.raise "mix phx.gen.schema can only be run inside an application directory"
     end
     {opts, parsed, _} = OptionParser.parse(args, switches: @switches)

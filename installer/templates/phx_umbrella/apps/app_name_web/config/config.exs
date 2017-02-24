@@ -8,7 +8,7 @@ use Mix.Config
 <%= if namespaced? or ecto do %># General application configuration
 config :<%= web_app_name %><%= if namespaced? do %>,
   namespace: <%= web_namespace %><% end %><%= if ecto do %>,
-  ecto_repos: []<% end %>
+  ecto_repos: [<%= app_module %>.Repo]<% end %>
 
 <% end %># Configures the endpoint
 config :<%= web_app_name %>, <%= endpoint_module %>,
@@ -22,7 +22,7 @@ config :<%= web_app_name %>, <%= endpoint_module %>,
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
-
+<%= generator_config %>
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env}.exs"

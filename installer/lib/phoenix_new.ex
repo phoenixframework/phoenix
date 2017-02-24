@@ -113,8 +113,7 @@ defmodule Mix.Tasks.Phoenix.New do
       the generated skeleton
 
     * `--database` - specify the database adapter for ecto.
-      Values can be `postgres`, `mysql`, `mssql`, or `mongodb`.
-      Defaults to `postgres`.
+      Values can be `postgres` or `mysql`. Defaults to `postgres`.
 
     * `--no-brunch` - do not generate brunch files
       for static asset building. When choosing this
@@ -433,26 +432,11 @@ defmodule Mix.Tasks.Phoenix.New do
     end
   end
 
-  defp get_ecto_adapter("mssql", app, module) do
-    {:tds_ecto, Tds.Ecto, db_config(app, module, "db_user", "db_password")}
-  end
   defp get_ecto_adapter("mysql", app, module) do
     {:mariaex, Ecto.Adapters.MySQL, db_config(app, module, "root", "")}
   end
   defp get_ecto_adapter("postgres", app, module) do
     {:postgrex, Ecto.Adapters.Postgres, db_config(app, module, "postgres", "postgres")}
-  end
-  defp get_ecto_adapter("mongodb", app, module) do
-    {:mongodb_ecto, Mongo.Ecto,
-     dev:  [database: "#{app}_dev"],
-     test: [database: "#{app}_test", pool_size: 1],
-     prod: [database: "#{app}_prod"],
-     test_setup_all: "",
-     test_setup: "",
-     test_async: "Mongo.Ecto.truncate(#{module}.Repo, [])",
-     binary_id: true,
-     migration: false,
-     sample_binary_id: "111111111111111111111111"}
   end
   defp get_ecto_adapter(db, _app, _mod) do
     Mix.raise "Unknown database #{inspect db}"
@@ -498,7 +482,7 @@ defmodule Mix.Tasks.Phoenix.New do
     :crypto.strong_rand_bytes(length) |> Base.encode64 |> binary_part(0, length)
   end
 
-  defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> 1.2.0"}]
+  defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> 1.3.0"}]
   # defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
   defp phoenix_dep(path), do: ~s[{:phoenix, path: #{inspect path}, override: true}]
 

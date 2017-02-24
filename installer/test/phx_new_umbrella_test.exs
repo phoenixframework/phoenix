@@ -29,7 +29,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     Path.join(["#{app}_umbrella/apps/#{app}_web", path])
   end
 
-
   test "new with umbrella and defaults" do
     in_tmp "new with umbrella and defaults", fn ->
       Mix.Tasks.Phx.New.run([@app, "--umbrella"])
@@ -58,7 +57,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         refute file =~ "config :phoenix, :generators"
       end
       assert_file web_path(@app, "config/config.exs"), fn file ->
-        assert file =~ "ecto_repos: []"
+        assert file =~ "ecto_repos: [PhxUmb.Repo]"
         assert file =~ ":phx_umb_web, PhxUmb.Web.Endpoint"
         assert file =~ "namespace"
       end
@@ -253,7 +252,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     in_tmp "new with binary_id", fn ->
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--binary-id"])
 
-      assert_file app_path(@app, "config/config.exs"), ~r/binary_id: true/
+      assert_file web_path(@app, "config/config.exs"), ~r/binary_id: true/
     end
   end
 
@@ -298,7 +297,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       File.write! "mix.exs", MixHelper.umbrella_mixfile_contents()
       File.mkdir! "apps"
       File.cd! "apps", fn ->
-        assert_raise Mix.Error, "unable to nest umbrella project within apps", fn ->
+        assert_raise Mix.Error, "Unable to nest umbrella project within apps", fn ->
           Mix.Tasks.Phx.New.run([@app, "--umbrella"])
         end
       end
@@ -324,56 +323,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         "Ecto.Adapters.SQL.Sandbox.mode"
       assert_file "custom_path_umbrella/apps/custom_path_web/test/support/conn_case.ex",
         "Ecto.Adapters.SQL.Sandbox.mode"
-    end
-  end
-
-  test "new with tds adapter" do
-    in_tmp "new with tds adapter", fn ->
-      project_path = Path.join(File.cwd!, "custom_path")
-      Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--database", "mssql"])
-
-      assert_file "custom_path_umbrella/apps/custom_path/mix.exs", ~r/:tds_ecto/
-      assert_file "custom_path_umbrella/apps/custom_path/config/dev.exs", ~r/Tds.Ecto/
-      assert_file "custom_path_umbrella/apps/custom_path/config/test.exs", ~r/Tds.Ecto/
-      assert_file "custom_path_umbrella/apps/custom_path/config/prod.secret.exs", ~r/Tds.Ecto/
-
-      assert_file "custom_path_umbrella/apps/custom_path/test/support/data_case.ex",
-        "Ecto.Adapters.SQL.Sandbox.mode"
-      assert_file "custom_path_umbrella/apps/custom_path_web/test/support/conn_case.ex",
-        "Ecto.Adapters.SQL.Sandbox.mode"
-      assert_file "custom_path_umbrella/apps/custom_path_web/test/support/channel_case.ex",
-        "Ecto.Adapters.SQL.Sandbox.mode"
-    end
-  end
-
-  test "new with mongodb adapter" do
-    in_tmp "new with mongodb adapter", fn ->
-      project_path = Path.join(File.cwd!, "custom_path")
-      Mix.Tasks.Phx.New.run([project_path, "--umbrella", "--database", "mongodb"])
-
-      assert_file "custom_path_umbrella/apps/custom_path/mix.exs", ~r/:mongodb_ecto/
-
-      assert_file "custom_path_umbrella/apps/custom_path/config/dev.exs", ~r/Mongo.Ecto/
-      assert_file "custom_path_umbrella/apps/custom_path/config/test.exs",
-        [~r/Mongo.Ecto/, ~r/pool_size: 1/]
-      assert_file "custom_path_umbrella/apps/custom_path/config/prod.secret.exs", ~r/Mongo.Ecto/
-
-      assert_file "custom_path_umbrella/apps/custom_path/test/test_helper.exs", fn file ->
-        refute file =~ ~r/Ecto.Adapters.SQL/
-      end
-
-      assert_file "custom_path_umbrella/apps/custom_path/test/support/data_case.ex",
-        "Mongo.Ecto.truncate"
-      assert_file "custom_path_umbrella/apps/custom_path_web/test/support/conn_case.ex",
-        "Mongo.Ecto.truncate"
-      assert_file "custom_path_umbrella/apps/custom_path_web/test/support/channel_case.ex",
-        "Mongo.Ecto.truncate"
-
-      assert_file "custom_path_umbrella/apps/custom_path/config/config.exs", fn file ->
-        assert file =~ ~r/binary_id: true/
-        assert file =~ ~r/migration: false/
-        assert file =~ ~r/sample_binary_id: "111111111111111111111111"/
-      end
     end
   end
 
@@ -435,7 +384,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
   end
 
   describe "web task" do
-    test "web can only be run within an umbrella app dir", %{tmp_dir: tmp_dir} do
+    test "can only be run within an umbrella app dir", %{tmp_dir: tmp_dir} do
       in_tmp tmp_dir, fn ->
         cwd = File.cwd!()
         umbrella_path = root_path(@app)
@@ -461,7 +410,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         end
 
         assert_file "another/config/config.exs", fn file ->
-          assert file =~ "ecto_repos: []"
+          assert file =~ "ecto_repos: [Another.Repo]"
         end
 
         assert_file "another/config/prod.exs", fn file ->

@@ -77,14 +77,6 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     end
   end
 
-  test "not inside single project" do
-    in_tmp "not inside single project", fn ->
-      assert_raise Mix.Error, ~r/can only be run inside an application directory/, fn ->
-        Gen.Html.run ~w(Some Thing things)
-      end
-    end
-  end
-
   test "generates html context and handles existing contexts", config do
     in_tmp_project config.test, fn ->
       Gen.Html.run(["Blog", "Post", "posts", "title:string"])

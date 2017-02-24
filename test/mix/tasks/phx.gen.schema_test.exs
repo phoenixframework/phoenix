@@ -56,14 +56,6 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
     end
   end
 
-  test "not inside single project" do
-    in_tmp "not inside single project", fn ->
-      assert_raise Mix.Error, ~r/can only be run inside an application directory/, fn ->
-        Gen.Schema.run ~w(Thing things)
-      end
-    end
-  end
-
   test "name is already defined", config do
     in_tmp_project config.test, fn ->
       assert_raise Mix.Error, ~r/already taken/, fn ->
