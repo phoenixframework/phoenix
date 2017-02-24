@@ -33,8 +33,8 @@ config :<%= app_name %>, <%= endpoint_module %>,
     patterns: [
       ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
       ~r{priv/gettext/.*(po)$},
-      ~r{lib/web/views/.*(ex)$},
-      ~r{lib/web/templates/.*(eex)$}
+      ~r{lib/<%= app_name %>/web/views/.*(ex)$},
+      ~r{lib/<%= app_name %>/web/templates/.*(eex)$}
     ]
   ]
 
