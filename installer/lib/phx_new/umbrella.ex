@@ -1,8 +1,7 @@
 defmodule Phx.New.Umbrella do
   @moduledoc false
   use Phx.New.Generator
-  alias Mix.Tasks.Phx.New.{App, Web}
-  alias Phx.New.{Project}
+  alias Phx.New.{App, Web, Project}
 
   template :new, [
     {:eex,  "phx_umbrella/config/config.exs", :project, "config/config.exs"},

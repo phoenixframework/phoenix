@@ -1,4 +1,4 @@
-Code.require_file "../../../installer/lib/phoenix_new.ex", __DIR__
+Code.require_file "../../../installer/lib/mix/tasks/phoenix_new.ex", __DIR__
 Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 
 # Here we test the installer is up to date.
