@@ -9,18 +9,18 @@
     </tr>
   </thead>
   <tbody>
-<%= "<%=" %> for <%= singular %> <- @<%= plural %> do <%= "%\>" %>
+<%%= for <%= singular %> <- @<%= plural %> do %>
     <tr>
-<%= for {k, _} <- attrs do %>      <td><%= "<%=" %> <%= singular %>.<%= k %> <%= "%\>" %></td>
+<%= for {k, _} <- attrs do %>      <td><%%= <%= singular %>.<%= k %> %></td>
 <% end %>
       <td class="text-right">
-        <span><%= "<%=" %> link "Show", to: <%= singular %>_path(@conn, :show, <%= singular %>), class: "btn btn-default btn-xs" <%= "%\>" %></span>
-        <span><%= "<%=" %> link "Edit", to: <%= singular %>_path(@conn, :edit, <%= singular %>), class: "btn btn-default btn-xs" <%= "%\>" %></span>
-        <span><%= "<%=" %> link "Delete", to: <%= singular %>_path(@conn, :delete, <%= singular %>), method: :delete, data: [confirm: "Are you sure?"], class: "btn btn-danger btn-xs" <%= "%\>" %></span>
+        <span><%%= link "Show", to: <%= singular %>_path(@conn, :show, <%= singular %>), class: "btn btn-default btn-xs" %></span>
+        <span><%%= link "Edit", to: <%= singular %>_path(@conn, :edit, <%= singular %>), class: "btn btn-default btn-xs" %></span>
+        <span><%%= link "Delete", to: <%= singular %>_path(@conn, :delete, <%= singular %>), method: :delete, data: [confirm: "Are you sure?"], class: "btn btn-danger btn-xs" %></span>
       </td>
     </tr>
 <%% end %>
   </tbody>
 </table>
 
-<span><%= "<%=" %> link "New <%= template_singular %>", to: <%= singular %>_path(@conn, :new) %></span>
+<span><%%= link "New <%= template_singular %>", to: <%= singular %>_path(@conn, :new) %></span>
