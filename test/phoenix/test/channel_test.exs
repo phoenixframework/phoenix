@@ -322,6 +322,14 @@ defmodule Phoenix.Test.ChannelTest do
     assert_reply ref, :ok, %{"resp" => %{"parameter" => 1}}
   end
 
+  test "pushes structs without modifying them" do
+    {:ok, _, socket} = join(socket(), Channel, "foo:ok")
+    date = ~D[2010-04-17]
+
+    ref = push socket, "reply", %{req: date}
+    assert_reply ref, :ok, %{"resp" => ^date}
+  end
+
   test "connects with atom parameter keys as strings" do
     :error = connect(UserSocket, %{reject: true})
   end

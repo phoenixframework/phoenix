@@ -560,6 +560,8 @@ defmodule Phoenix.ChannelTest do
   end
 
   @doc false
+  def __stringify__(%{__struct__: _} = struct),
+    do: struct
   def __stringify__(%{} = params),
     do: Enum.into(params, %{}, &stringify_kv/1)
   def __stringify__(other),
