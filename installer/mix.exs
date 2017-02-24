@@ -1,8 +1,10 @@
-defmodule Phoenix.New.Mixfile do
+defmodule Phx.New.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :phoenix_new,
+    [app: :phx_new,
+     build_embedded: Mix.env == :prod,
+     start_permanent: Mix.env == :prod,
      version: "1.3.0-dev",
      elixir: "~> 1.4"]
   end
@@ -11,6 +13,6 @@ defmodule Phoenix.New.Mixfile do
   #
   # Type `mix help compile.app` for more information
   def application do
-    [applications: []]
+    [extra_applications: []]
   end
 end
