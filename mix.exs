@@ -68,7 +68,7 @@ defmodule Phoenix.Mixfile do
                    "Jason Stiebs", "Eric Meadows-Jönsson", "Sonny Scroggin"],
      licenses: ["MIT"],
      links: %{github: "https://github.com/phoenixframework/phoenix"},
-     files: ~w(lib priv web) ++
+     files: ~w(assets lib priv) ++
             ~w(brunch-config.js CHANGELOG.md LICENSE.md mix.exs package.json README.md)]
   end
 

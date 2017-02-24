@@ -1,7 +1,7 @@
 defmodule Mix.Tasks.Local.Phx do
   use Mix.Task
 
-  @url "https://github.com/phoenixframework/archives/raw/master/phoenix_new.ez"
+  @url "https://github.com/phoenixframework/archives/raw/master/phx_new.ez"
   @shortdoc "Updates the Phoenix project generator locally"
 
   @moduledoc """
