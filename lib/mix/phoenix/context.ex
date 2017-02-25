@@ -14,6 +14,9 @@ defmodule Mix.Phoenix.Context do
             pre_existing?: false,
             inputs: []
 
+  def valid?(context) do
+    context =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/
+  end
 
   def new(context_name, %Schema{} = schema, opts) do
     otp_app  = to_string(Mix.Phoenix.otp_app())
@@ -38,6 +41,7 @@ defmodule Mix.Phoenix.Context do
       inputs: inputs(schema),
       pre_existing?: File.exists?(file)}
   end
+
   defp web_module(base) do
     case base |> Module.split() |> Enum.reverse() do
       ["Web" | _] -> base
@@ -63,8 +67,10 @@ defmodule Mix.Phoenix.Context do
 
     context
   end
-  defp write_context(content, context), do: File.write!(context.file, content)
 
+  defp write_context(content, context) do
+    File.write!(context.file, content)
+  end
 
   defp inputs(%Schema{} = schema) do
     Enum.map(schema.attrs, fn

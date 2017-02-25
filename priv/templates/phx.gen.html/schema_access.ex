@@ -8,6 +8,7 @@
 
       iex> list_<%= schema.plural %>()
       [%<%= inspect schema.alias %>{}, ...]
+
   """
   def list_<%= schema.plural %> do
     Repo.all(<%= inspect schema.alias %>)
@@ -25,6 +26,7 @@
 
       iex> get_<%= schema.singular %>!(456)
       ** (Ecto.NoResultsError)
+
   """
   def get_<%= schema.singular %>!(id), do: Repo.get!(<%= inspect schema.alias %>, id)
 
@@ -38,6 +40,7 @@
 
       iex> create_<%= schema.singular %>(<%= schema.singular %>, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
+
   """
   def create_<%= schema.singular %>(attrs \\ %{}) do
     %<%= inspect schema.alias %>{}
@@ -55,6 +58,7 @@
 
       iex> update_<%= schema.singular %>(<%= schema.singular %>, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
+
   """
   def update_<%= schema.singular %>(%<%= inspect schema.alias %>{} = <%= schema.singular %>, attrs) do
     <%= schema.singular %>
@@ -72,6 +76,7 @@
 
       iex> delete_<%= schema.singular %>(<%= schema.singular %>)
       {:error, %Ecto.Changeset{}}
+
   """
   def delete_<%= schema.singular %>(%<%= inspect schema.alias %>{} = <%= schema.singular %>) do
     Repo.delete(<%= schema.singular %>)
@@ -84,6 +89,7 @@
 
       iex> change_<%= schema.singular %>(<%= schema.singular %>)
       %Ecto.Changeset{source: %<%= inspect schema.alias %>{}}
+
   """
   def change_<%= schema.singular %>(%<%= inspect schema.alias %>{} = <%= schema.singular %>) do
     <%= schema.singular %>_changeset(<%= schema.singular %>, %{})

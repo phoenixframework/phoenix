@@ -6,7 +6,6 @@ defmodule Mix.Phoenix do
                      :array, :references, :text, :date, :time,
                      :naive_datetime, :utc_datetime, :uuid, :binary]
 
-
   @doc """
   Evals EEx files from source dir.
 

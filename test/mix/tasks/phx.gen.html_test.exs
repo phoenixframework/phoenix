@@ -55,7 +55,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
   test "invalid mix arguments", config do
     in_tmp_project config.test, fn ->
-      assert_raise Mix.Error, ~r/expected the schema argument/, fn ->
+      assert_raise Mix.Error, ~r/expect a context module/, fn ->
         Gen.Html.run(~w(Post posts title:string))
       end
 

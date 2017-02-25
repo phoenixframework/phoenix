@@ -138,26 +138,25 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   end
 
   def validate_args!([schema, plural | _] = args, help) do
-    unless schema =~ ~r/^[A-Z].*$/ do
-      Mix.raise "expected the schema argument, #{inspect schema}, to be a valid module name"
-    end
     cond do
-      String.contains?(plural, ":") ->
-        help.raise_with_help()
-      plural != Phoenix.Naming.underscore(plural) ->
-        Mix.raise "expected the plural argument, #{inspect plural}, to be all lowercase using snake_case convention"
+      not Schema.valid?(schema) ->
+        help.raise_with_help "Expected the schema argument, #{inspect schema}, to be a valid module name"
+      String.contains?(plural, ":") or plural != Phoenix.Naming.underscore(plural) ->
+        help.raise_with_help "Expected the plural argument, #{inspect plural}, to be all lowercase using snake_case convention"
       true ->
         args
     end
   end
   def validate_args!(_, help) do
-    help.raise_with_help()
+    help.raise_with_help "Invalid arguments"
   end
 
-  @spec raise_with_help() :: no_return()
-  def raise_with_help do
+  @spec raise_with_help(String.t) :: no_return()
+  def raise_with_help(msg) do
     Mix.raise """
-    mix phx.gen.schema expects both singular and plural names
+    #{msg}
+
+    mix phx.gen.schema expects both a module name and the plural
     of the generated resource followed by any number of attributes:
 
         mix phx.gen.schema Blog.Post blog_posts title:string

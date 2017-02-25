@@ -1,30 +1,29 @@
 defmodule Mix.Tasks.Phx.Gen.Json do
-  @shortdoc "Generates controller, views, and bounded context for a JSON resource"
+  @shortdoc "Generates controller, views, and context for a JSON resource"
 
   @moduledoc """
-  Generates controller, views, and bounded context for an JSON resource.
+  Generates controller, views, and context for an JSON resource.
 
       mix phx.gen.json Accounts User users name:string age:integer
 
-  The first argument is the context name followed by
-  the schema module and its plural name (used for resources and schema).
+  The first argument is the context name followed by the schema module
+  and its plural name (used for resources and schema).
 
-  The above generated resource will contain:
+  The above generated resource will add the following files to lib/your_app:
 
-    * a context module in lib/accounts.ex, serving as the API boundary
-      to the resource
-    * a schema in lib/accounts/user.ex, with an `accounts_users` table
-    * a view in lib/web/views/user_view.ex
-    * a controller in lib/web/controllers/user_controller.ex
-    * a migration file for the repository
-    * default CRUD templates in lib/web/templates/user
-    * test files for generated context and controller features
+    * a context module in accounts.ex, serving as the API boundary to the resource
+    * a schema in accounts/user.ex, with an `accounts_users` table
+    * a view in web/views/user_view.ex
+    * a controller in web/controllers/user_controller.ex
+    * default CRUD templates in web/templates/user
 
+  As well as a migration file for the repository and test files for
+  generated context and controller features.
 
   ## Schema table name
 
   By deault, the schema table name will be the plural name, namespaced by the
-  context module name. You can customize this value by providing the `--table`
+  context name. You can customize this value by providing the `--table`
   option to the generator.
 
   Read the documentation for `phx.gen.schema` for more information on attributes
@@ -59,7 +58,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
     ]
 
     Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.html", "", binding, [
-     {:new_eex, "context_test.exs", "test/#{context.basename}_test.exs"}
+      {:new_eex, "context_test.exs", "test/#{context.basename}_test.exs"}
     ]
     Gen.Schema.copy_new_files(schema, paths, binding)
 

@@ -19,6 +19,7 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
 
     * a channel in lib/my_app/channels
     * a channel_test in test/channels
+
   """
   use Mix.Task
 

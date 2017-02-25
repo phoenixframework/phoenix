@@ -203,10 +203,10 @@ defmodule Mix.Tasks.Phx.New do
 
   ## Helpers
 
-  defp maybe_cmd(cmd, should_run?, can_run?, cmd_opts \\ []) do
+  defp maybe_cmd(cmd, should_run?, can_run?) do
     cond do
       should_run? && can_run? ->
-        cmd(cmd, cmd_opts)
+        cmd(cmd)
         true
       should_run? ->
         false
@@ -215,14 +215,14 @@ defmodule Mix.Tasks.Phx.New do
     end
   end
 
-  defp cmd(cmd, cmd_opts) do
+  defp cmd(cmd) do
     Mix.shell.info [:green, "* running ", :reset, cmd]
-    case Mix.shell.cmd(cmd, Keyword.merge([quiet: false], cmd_opts)) do
+    case Mix.shell.cmd(cmd, quiet: true) do
       0 ->
         true
       _ ->
         Mix.shell.error [:red, "* error ", :reset, "command failed to execute, " <>
-          "please run the following command again after installation: \"#{cmd}\""]
+          "please run the following command again after installation:\n\n    #{cmd}"]
         false
     end
   end

@@ -24,6 +24,10 @@ defmodule Mix.Phoenix.Schema do
             params: %{},
             sample_id: nil
 
+  def valid?(schema) do
+    schema =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/
+  end
+
   def new(schema_name, schema_plural, cli_attrs, opts) do
     otp_app  = to_string(Mix.Phoenix.otp_app())
     basename = Phoenix.Naming.underscore(schema_name)
@@ -97,13 +101,14 @@ defmodule Mix.Phoenix.Schema do
 
   defp partition_attrs_and_assocs(attrs) do
     {assocs, attrs} = Enum.partition(attrs, fn
-      {_, {:references, _}} -> true
+      {_, {:references, _}} ->
+        true
       {key, :references} ->
         Mix.raise """
         Phoenix generators expect the table to be given to #{key}:references.
         For example:
 
-            mix phoenix.gen.model Comment comments body:text post_id:references:posts
+            mix phx.gen.schema Comment comments body:text post_id:references:posts
         """
       _ -> false
     end)

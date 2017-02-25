@@ -1,28 +1,29 @@
 defmodule Mix.Tasks.Phx.Gen.Html do
-  @shortdoc "Generates controller, views, and bounded context for an HTML resource"
+  @shortdoc "Generates controller, views, and context for an HTML resource"
 
   @moduledoc """
-  Generates controller, views, and bounded context for an HTML resource.
+  Generates controller, views, and context for an HTML resource.
 
       mix phx.gen.html Accounts User users name:string age:integer
 
-  The first argument is the context name followed by
-  the schema module and its plural name (used for resources and schema).
+  The first argument is the context name followed by the schema module
+  and its plural name (used for resources and schema).
 
-  The above generated resource will contain:
+  The above generated resource will add the following files to lib/your_app:
 
-    * a context module in lib/accounts.ex, serving as the API boundary to the resource
-    * a schema in lib/accounts/user.ex, with an `accounts_users` table
-    * a view in lib/web/views/user_view.ex
-    * a controller in lib/web/controllers/user_controller.ex
-    * a migration file for the repository
-    * default CRUD templates in lib/web/templates/user
-    * test files for generated context and controller features
+    * a context module in accounts.ex, serving as the API boundary to the resource
+    * a schema in accounts/user.ex, with an `accounts_users` table
+    * a view in web/views/user_view.ex
+    * a controller in web/controllers/user_controller.ex
+    * default CRUD templates in web/templates/user
+
+  As well as a migration file for the repository and test files for
+  generated context and controller features.
 
   ## Schema table name
 
   By deault, the schema table name will be the plural name, namespaced by the
-  context module name. You can customize this value by providing the `--table`
+  context name. You can customize this value by providing the `--table`
   option to the generator.
 
   Read the documentation for `phx.gen.schema` for more information on attributes
@@ -92,27 +93,33 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     Gen.Schema.print_shell_instructions(schema)
   end
 
-  defp validate_args!([context, _schema, _plural | _rest] = args) do
-    unless context =~ ~r/^[A-Z].*$/ do
-      Mix.raise "expected the first argument, #{inspect context}, to be a valid context module name"
+  defp validate_args!([context, schema, _plural | _] = args) do
+    if Context.valid?(context) do
+      args
+    else
+      raise_with_help "Expected the context, #{inspect schema}, to be a valid module name"
     end
-
-    args
   end
 
   defp validate_args!(_) do
-    raise_with_help()
+    raise_with_help "Invalid arguments"
   end
 
-  @spec raise_with_help() :: no_return()
-  def raise_with_help do
+  @spec raise_with_help(String.t) :: no_return()
+  def raise_with_help(msg) do
     Mix.raise """
-    mix phoenix.gen.html and mix phoenix.gen.json expect a context module name,
-    followed by singular and plural names of the generated resource, ending with
-    any number of attributes:
+    #{msg}
+
+    mix phx.gen.html and mix phx.gen.json expect a context module name,
+    followed by singular and plural names of the generated resource, ending
+    with any number of attributes:
 
         mix phx.gen.html Accounts User users name:string
         mix phx.gen.json Accounts User users name:string
+
+    The Accounts context serves as the API boundary for the given resource.
+    Multiple resources may belong to a context and a resource may be
+    split over distinct contexts (such as Accounts.User and Blog.User).
     """
   end
 end
