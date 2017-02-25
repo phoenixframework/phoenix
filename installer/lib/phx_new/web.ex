@@ -6,27 +6,27 @@ defmodule Phx.New.Web do
   @pre "phx_umbrella/apps/app_name_web"
 
   template :new, [
-    {:eex,  "#{@pre}/config/config.exs",                     :web, "config/config.exs"},
-    {:eex,  "#{@pre}/config/dev.exs",                        :web, "config/dev.exs"},
-    {:eex,  "#{@pre}/config/prod.exs",                       :web, "config/prod.exs"},
-    {:eex,  "#{@pre}/config/prod.secret.exs",                :web, "config/prod.secret.exs"},
-    {:eex,  "#{@pre}/config/test.exs",                       :web, "config/test.exs"},
-    {:eex,  "#{@pre}/test/test_helper.exs",                  :web, "test/test_helper.exs"},
-    {:eex,  "#{@pre}/lib/app_name.ex",                       :web, "lib/:web_app.ex"},
-    {:eex,  "#{@pre}/lib/app_name/application.ex",           :web, "lib/:web_app/application.ex"},
-    {:eex,  "phx_web/channels/user_socket.ex",               :web, "lib/:web_app/channels/user_socket.ex"},
-    {:keep, "phx_web/controllers",                           :web, "lib/:web_app/controllers"},
-    {:eex,  "phx_web/endpoint.ex",                           :web, "lib/:web_app/endpoint.ex"},
-    {:eex,  "phx_web/router.ex",                             :web, "lib/:web_app/router.ex"},
-    {:eex,  "phx_web/views/error_helpers.ex",                :web, "lib/:web_app/views/error_helpers.ex"},
-    {:eex,  "phx_web/views/error_view.ex",                   :web, "lib/:web_app/views/error_view.ex"},
-    {:eex,  "#{@pre}/mix.exs",                               :web, "mix.exs"},
-    {:eex,  "#{@pre}/README.md",                             :web, "README.md"},
-    {:keep, "#{@pre}/test/channels",                         :web, "test/channels"},
-    {:keep, "#{@pre}/test/controllers",                      :web, "test/controllers"},
-    {:eex,  "#{@pre}/test/support/channel_case.ex",          :web, "test/support/channel_case.ex"},
-    {:eex,  "#{@pre}/test/support/conn_case.ex",             :web, "test/support/conn_case.ex"},
-    {:eex,  "#{@pre}/test/views/error_view_test.exs",        :web, "test/views/error_view_test.exs"},
+    {:eex,  "#{@pre}/config/config.exs",              :web, "config/config.exs"},
+    {:eex,  "#{@pre}/config/dev.exs",                 :web, "config/dev.exs"},
+    {:eex,  "#{@pre}/config/prod.exs",                :web, "config/prod.exs"},
+    {:eex,  "#{@pre}/config/prod.secret.exs",         :web, "config/prod.secret.exs"},
+    {:eex,  "#{@pre}/config/test.exs",                :web, "config/test.exs"},
+    {:eex,  "#{@pre}/lib/app_name.ex",                :web, "lib/:web_app.ex"},
+    {:eex,  "#{@pre}/lib/app_name/application.ex",    :web, "lib/:web_app/application.ex"},
+    {:eex,  "phx_web/channels/user_socket.ex",        :web, "lib/:web_app/channels/user_socket.ex"},
+    {:keep, "phx_web/controllers",                    :web, "lib/:web_app/controllers"},
+    {:eex,  "phx_web/endpoint.ex",                    :web, "lib/:web_app/endpoint.ex"},
+    {:eex,  "phx_web/router.ex",                      :web, "lib/:web_app/router.ex"},
+    {:eex,  "phx_web/views/error_helpers.ex",         :web, "lib/:web_app/views/error_helpers.ex"},
+    {:eex,  "phx_web/views/error_view.ex",            :web, "lib/:web_app/views/error_view.ex"},
+    {:eex,  "#{@pre}/mix.exs",                        :web, "mix.exs"},
+    {:eex,  "#{@pre}/README.md",                      :web, "README.md"},
+    {:keep, "phx_test/channels",                      :web, "test/channels"},
+    {:keep, "phx_test/controllers",                   :web, "test/controllers"},
+    {:eex,  "#{@pre}/test/test_helper.exs",           :web, "test/test_helper.exs"},
+    {:eex,  "phx_test/support/channel_case.ex",       :web, "test/support/channel_case.ex"},
+    {:eex,  "phx_test/support/conn_case.ex",          :web, "test/support/conn_case.ex"},
+    {:eex,  "phx_test/views/error_view_test.exs",     :web, "test/views/error_view_test.exs"},
   ]
 
   template :gettext, [
@@ -48,14 +48,14 @@ defmodule Phx.New.Web do
   ]
 
   template :html, [
-    {:eex,  "phx_web/controllers/page_controller.ex",            :web, "lib/:web_app/controllers/page_controller.ex"},
-    {:eex,  "phx_web/templates/layout/app.html.eex",             :web, "lib/:web_app/templates/layout/app.html.eex"},
-    {:eex,  "phx_web/templates/page/index.html.eex",             :web, "lib/:web_app/templates/page/index.html.eex"},
-    {:eex,  "phx_web/views/layout_view.ex",                      :web, "lib/:web_app/views/layout_view.ex"},
-    {:eex,  "phx_web/views/page_view.ex",                        :web, "lib/:web_app/views/page_view.ex"},
-    {:eex,  "#{@pre}/test/controllers/page_controller_test.exs", :web, "test/controllers/page_controller_test.exs"},
-    {:eex,  "#{@pre}/test/views/layout_view_test.exs",           :web, "test/views/layout_view_test.exs"},
-    {:eex,  "#{@pre}/test/views/page_view_test.exs",             :web, "test/views/page_view_test.exs"},
+    {:eex,  "phx_web/controllers/page_controller.ex",         :web, "lib/:web_app/controllers/page_controller.ex"},
+    {:eex,  "phx_web/templates/layout/app.html.eex",          :web, "lib/:web_app/templates/layout/app.html.eex"},
+    {:eex,  "phx_web/templates/page/index.html.eex",          :web, "lib/:web_app/templates/page/index.html.eex"},
+    {:eex,  "phx_web/views/layout_view.ex",                   :web, "lib/:web_app/views/layout_view.ex"},
+    {:eex,  "phx_web/views/page_view.ex",                     :web, "lib/:web_app/views/page_view.ex"},
+    {:eex,  "phx_test/controllers/page_controller_test.exs",  :web, "test/controllers/page_controller_test.exs"},
+    {:eex,  "phx_test/views/layout_view_test.exs",            :web, "test/views/layout_view_test.exs"},
+    {:eex,  "phx_test/views/page_view_test.exs",              :web, "test/views/page_view_test.exs"},
   ]
 
   template :bare, [
