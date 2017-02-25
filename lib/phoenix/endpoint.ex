@@ -1,5 +1,5 @@
 defmodule Phoenix.Endpoint do
-  @moduledoc """
+  @moduledoc ~S"""
   Defines a Phoenix endpoint.
 
   The endpoint is the boundary where all requests to your
@@ -168,9 +168,10 @@ defmodule Phoenix.Endpoint do
 
     * `:pubsub` - configuration for this endpoint's pubsub adapter.
       Configuration either requires a `:name` of the registered pubsub
-      server or a `:name` and `:adapter` pair. The given adapter and
-      name pair will be started as part of the supervision tree. if
-      no adapter is specified, the pubsub system will work by sending
+      server or a `:name` and `:adapter` pair. The pubsub name and adapter
+      are compile time configuration, while the remaining options are runtime.
+      The given adapter and name pair will be started as part of the supervision
+      tree. If no adapter is specified, the pubsub system will work by sending
       events and subscribing to the given name. Defaults to:
 
           [adapter: Phoenix.PubSub.PG2, name: MyApp.PubSub]
@@ -252,7 +253,7 @@ defmodule Phoenix.Endpoint do
   at compile time, but it's used inside Phoenix itself, if you change this
   configuration you'll have to recompile Phoenix manually:
 
-      $ mix deps.compile phoenix
+      $ mix deps.clean phoenix
       $ mix compile
 
   ### Callbacks cycle
@@ -361,8 +362,6 @@ defmodule Phoenix.Endpoint do
 
   """
 
-  alias Phoenix.Endpoint.Adapter
-
   @doc false
   defmacro __using__(opts) do
     quote do
@@ -376,7 +375,7 @@ defmodule Phoenix.Endpoint do
   defp config(opts) do
     quote do
       @otp_app unquote(opts)[:otp_app] || raise "endpoint expects :otp_app to be given"
-      var!(config) = Adapter.config(@otp_app, __MODULE__)
+      var!(config) = Phoenix.Endpoint.Supervisor.config(@otp_app, __MODULE__)
       var!(code_reloading?) = var!(config)[:code_reloader]
 
       # Avoid unused variable warnings
@@ -394,7 +393,8 @@ defmodule Phoenix.Endpoint do
 
       def __pubsub_server__, do: @pubsub_server
 
-      # TODO remove pid version on next major release
+      # TODO: remove pid version on next major release
+      @doc false
       def subscribe(pid, topic) when is_pid(pid) and is_binary(topic) do
         Phoenix.PubSub.subscribe(@pubsub_server, pid, topic, [])
       end
@@ -408,7 +408,8 @@ defmodule Phoenix.Endpoint do
         Phoenix.PubSub.subscribe(@pubsub_server, topic, opts)
       end
 
-      # TODO remove pid version on next major release
+      # TODO: remove pid version on next major release
+      @doc false
       def unsubscribe(topic) do
         Phoenix.PubSub.unsubscribe(@pubsub_server, topic)
       end
@@ -464,7 +465,7 @@ defmodule Phoenix.Endpoint do
       Starts the endpoint supervision tree.
       """
       def start_link do
-        Adapter.start_link(@otp_app, __MODULE__)
+        Phoenix.Endpoint.Supervisor.start_link(@otp_app, __MODULE__)
       end
 
       @doc """
@@ -483,7 +484,7 @@ defmodule Phoenix.Endpoint do
       Reloads the configuration given the application environment changes.
       """
       def config_change(changed, removed) do
-        Phoenix.Endpoint.Adapter.config_change(__MODULE__, changed, removed)
+        Phoenix.Endpoint.Supervisor.config_change(__MODULE__, changed, removed)
       end
 
       @doc """
@@ -494,7 +495,7 @@ defmodule Phoenix.Endpoint do
       def url do
         Phoenix.Config.cache(__MODULE__,
           :__phoenix_url__,
-          &Phoenix.Endpoint.Adapter.url/1)
+          &Phoenix.Endpoint.Supervisor.url/1)
       end
 
       @doc """
@@ -506,7 +507,7 @@ defmodule Phoenix.Endpoint do
       def static_url do
         Phoenix.Config.cache(__MODULE__,
           :__phoenix_static_url__,
-          &Phoenix.Endpoint.Adapter.static_url/1)
+          &Phoenix.Endpoint.Supervisor.static_url/1)
       end
 
       @doc """
@@ -519,42 +520,44 @@ defmodule Phoenix.Endpoint do
       def struct_url do
         Phoenix.Config.cache(__MODULE__,
           :__phoenix_struct_url__,
-          &Phoenix.Endpoint.Adapter.struct_url/1)
+          &Phoenix.Endpoint.Supervisor.struct_url/1)
+      end
+
+      @doc """
+      Returns the host for the given endpoint.
+      """
+      def host do
+        Phoenix.Config.cache(__MODULE__,
+          :__phoenix_host__,
+          &Phoenix.Endpoint.Supervisor.host/1)
       end
 
       @doc """
       Generates the path information when routing to this endpoint.
       """
-      script_name = var!(config)[:url][:path]
-
-      if script_name == "/" do
-        def path(path), do: path
-
-        defp put_script_name(conn) do
-          conn
-        end
-      else
-        def path(path), do: unquote(script_name) <> path
-
-        defp put_script_name(conn) do
-          put_in conn.script_name, unquote(Plug.Router.Utils.split(script_name))
-        end
+      def path(path) do
+        Phoenix.Config.cache(__MODULE__,
+          :__phoenix_path__,
+          &Phoenix.Endpoint.Supervisor.path/1) <> path
       end
 
-      # The static path should be properly scoped according to
-      # the static_url configuration. If one is not available,
-      # we fallback to the URL configuration as in the adapter.
-      static_script_name = (var!(config)[:static_url] || var!(config)[:url])[:path] || "/"
-      static_script_name = if static_script_name == "/", do: "", else: static_script_name
+      @doc """
+      Generates the script name.
+      """
+      def script_name do
+        Phoenix.Config.cache(__MODULE__,
+          :__phoenix_script_name__,
+          &Phoenix.Endpoint.Supervisor.script_name/1)
+      end
 
       @doc """
       Generates a route to a static file in `priv/static`.
       """
       def static_path(path) do
-        # This should be in sync with the endpoint warmup.
-        unquote(static_script_name) <>
-          Phoenix.Config.cache(__MODULE__, {:__phoenix_static__, path},
-                               &Phoenix.Endpoint.Adapter.static_path(&1, path))
+        Phoenix.Config.cache(__MODULE__, :__phoenix_static__,
+                             &Phoenix.Endpoint.Supervisor.static_path/1) <>
+        Phoenix.Config.cache(__MODULE__, {:__phoenix_static__, path},
+                             &Phoenix.Endpoint.Supervisor.static_path(&1, path))
       end
     end
   end
@@ -589,10 +592,8 @@ defmodule Phoenix.Endpoint do
       # Inline render errors so we set the endpoint before calling it.
       def call(conn, opts) do
         conn = put_in conn.secret_key_base, config(:secret_key_base)
-        conn =
-          conn
-          |> Plug.Conn.put_private(:phoenix_endpoint, __MODULE__)
-          |> put_script_name()
+        conn = put_in conn.script_name, script_name()
+        conn = Plug.Conn.put_private(conn, :phoenix_endpoint, __MODULE__)
 
         try do
           super(conn, opts)
@@ -687,7 +688,7 @@ defmodule Phoenix.Endpoint do
       true
   """
   def server?(otp_app, endpoint) when is_atom(otp_app) and is_atom(endpoint) do
-    Adapter.server?(otp_app, endpoint)
+    Phoenix.Endpoint.Supervisor.server?(otp_app, endpoint)
   end
 
   defp tear_alias({:__aliases__, meta, [h|t]}) do

@@ -1,19 +1,19 @@
-defmodule Phoenix.Endpoint.AdapterTest do
+defmodule Phoenix.Endpoint.SupervisorTest do
   use ExUnit.Case, async: true
-  alias Phoenix.Endpoint.Adapter
+  alias Phoenix.Endpoint.Supervisor
 
   setup do
-    Application.put_env(:phoenix, AdapterApp.Endpoint, custom: true)
+    Application.put_env(:phoenix, SupervisorApp.Endpoint, custom: true)
     System.put_env("PHOENIX_PORT", "8080")
     System.put_env("PHOENIX_HOST", "example.org")
     :ok
   end
 
   test "loads router configuration" do
-    config = Adapter.config(:phoenix, AdapterApp.Endpoint)
+    config = Supervisor.config(:phoenix, SupervisorApp.Endpoint)
     assert config[:otp_app] == :phoenix
     assert config[:custom] == true
-    assert config[:render_errors] == [view: AdapterApp.ErrorView, accepts: ~w(html), layout: false]
+    assert config[:render_errors] == [view: SupervisorApp.ErrorView, accepts: ~w(html), layout: false]
   end
 
   defmodule HTTPSEndpoint do
@@ -54,24 +54,24 @@ defmodule Phoenix.Endpoint.AdapterTest do
 
   test "generates the static url based on the static host configuration" do
     static_host = {:cache, "http://static.example.com"}
-    assert Adapter.static_url(StaticURLEndpoint) == static_host
+    assert Supervisor.static_url(StaticURLEndpoint) == static_host
   end
 
   test "static url fallbacks to url when there is no configuration for static_url" do
-    assert Adapter.static_url(URLEndpoint) == {:cache, "random://example.com:678"}
+    assert Supervisor.static_url(URLEndpoint) == {:cache, "random://example.com:678"}
   end
 
   test "generates url" do
-    assert Adapter.url(URLEndpoint) == {:cache, "random://example.com:678"}
-    assert Adapter.url(HTTPEndpoint) == {:cache, "http://example.com"}
-    assert Adapter.url(HTTPSEndpoint) == {:cache, "https://example.com"}
-    assert Adapter.url(HTTPEnvVarEndpoint) == {:cache, "http://example.org:8080"}
+    assert Supervisor.url(URLEndpoint) == {:cache, "random://example.com:678"}
+    assert Supervisor.url(HTTPEndpoint) == {:cache, "http://example.com"}
+    assert Supervisor.url(HTTPSEndpoint) == {:cache, "https://example.com"}
+    assert Supervisor.url(HTTPEnvVarEndpoint) == {:cache, "http://example.org:8080"}
   end
 
   test "static_path/2 returns file's path with lookup cache" do
     assert {:nocache, "/phoenix.png"} =
-             Adapter.static_path(HTTPEndpoint, "/phoenix.png")
+             Supervisor.static_path(HTTPEndpoint, "/phoenix.png")
     assert {:nocache, "/images/unknown.png"} =
-             Adapter.static_path(HTTPEndpoint, "/images/unknown.png")
+             Supervisor.static_path(HTTPEndpoint, "/images/unknown.png")
   end
 end

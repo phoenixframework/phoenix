@@ -1,45 +1,50 @@
-defmodule Phoenix.Endpoint.Adapter do
+defmodule Phoenix.Endpoint.Supervisor do
   # This module contains the logic used by most functions
   # in Phoenix.Endpoint as well the supervisor for starting
   # the adapters/handlers.
   @moduledoc false
 
   require Logger
-  import Supervisor.Spec
+  use Supervisor
 
   @doc """
   Starts the endpoint supervision tree.
   """
   def start_link(otp_app, mod) do
-    conf = config(otp_app, mod)
-    server? = server?(conf)
-
-    children =
-      config_children(mod, conf) ++
-      pubsub_children(mod, conf) ++
-      server_children(mod, conf, server?) ++
-      watcher_children(mod, conf, server?)
-
-    case Supervisor.start_link(children, strategy: :one_for_one, name: mod) do
-      {:ok, pid} ->
-        if server? and conf[:code_reloader] do
-          Phoenix.CodeReloader.Server.check_symlinks()
-        end
+    case Supervisor.start_link(__MODULE__, {otp_app, mod}, name: mod) do
+      {:ok, _} = ok ->
         warmup(mod)
-        {:ok, pid}
-      {:error, reason} ->
-        {:error, reason}
+        ok
+      {:error, _} = error ->
+        error
     end
   end
 
-  defp config_children(mod, conf) do
-    id   = :crypto.strong_rand_bytes(16) |> Base.encode64
-    app  = conf[:otp_app]
-    conf = [endpoint_id: id] ++ defaults(app, mod)
-    args = [app, mod, conf, [name: Module.concat(mod, "Config")]]
+  @doc false
+  def init({otp_app, mod}) do
+    id = :crypto.strong_rand_bytes(16) |> Base.encode64
+    conf = [endpoint_id: id] ++ config(otp_app, mod)
+    server? = server?(conf)
+
+    if server? and conf[:code_reloader] do
+      Phoenix.CodeReloader.Server.check_symlinks()
+    end
+
+    children =
+      pubsub_children(mod, conf) ++
+      config_children(mod, conf, otp_app) ++
+      server_children(mod, conf, server?) ++
+      watcher_children(mod, conf, server?)
+
+    supervise(children, strategy: :one_for_one)
+  end
+
+  defp config_children(mod, conf, otp_app) do
+    args = [mod, conf, defaults(otp_app, mod), [name: Module.concat(mod, "Config")]]
     [worker(Phoenix.Config, args)]
   end
 
+  # TODO: Consider moving this out of the endpoint once we introduce firenest
   defp pubsub_children(mod, conf) do
     pub_conf = conf[:pubsub]
 
@@ -51,6 +56,8 @@ defmodule Phoenix.Endpoint.Adapter do
     end
   end
 
+  # TODO: Handlers -> Phoenix.Server
+  # TODO: Each transport should have its own tree
   defp server_children(mod, conf, server?) do
     if server? do
       server = Module.concat(mod, "Server")
@@ -147,6 +154,27 @@ defmodule Phoenix.Endpoint.Adapter do
   end
 
   @doc """
+  Builds the host for caching.
+  """
+  def host(endpoint) do
+    {:cache, host_to_binary(endpoint.config(:url)[:host])}
+  end
+
+  @doc """
+  Builds the path for caching.
+  """
+  def path(endpoint) do
+    {:cache, endpoint.config(:url)[:path]}
+  end
+
+  @doc """
+  Builds the script_name for caching.
+  """
+  def script_name(endpoint) do
+    {:cache, Plug.Router.Utils.split(endpoint.config(:url)[:path])}
+  end
+
+  @doc """
   Builds the static url from its configuration.
 
   The result is wrapped in a `{:cache, value}` tuple so
@@ -196,6 +224,14 @@ defmodule Phoenix.Endpoint.Adapter do
   end
 
   @doc """
+  Returns the script path root.
+  """
+  def static_path(endpoint) do
+    script_path = (endpoint.config(:static_url) || endpoint.config(:url))[:path] || "/"
+    {:cache, if(script_path == "/", do: "", else: script_path)}
+  end
+
+  @doc """
   Returns the static path of a file in the static root directory.
 
   When the file exists, it includes a timestamp. When it doesn't exist,
@@ -212,9 +248,11 @@ defmodule Phoenix.Endpoint.Adapter do
     raise ArgumentError, "static_path/2 expects a path starting with / as argument"
   end
 
+  # TODO: Deprecate {:system, env_var}
   defp host_to_binary({:system, env_var}), do: host_to_binary(System.get_env(env_var))
   defp host_to_binary(host), do: host
 
+  # TODO: Deprecate {:system, env_var}
   defp port_to_integer({:system, env_var}), do: port_to_integer(System.get_env(env_var))
   defp port_to_integer(port) when is_binary(port), do: String.to_integer(port)
   defp port_to_integer(port) when is_integer(port), do: port
@@ -223,24 +261,31 @@ defmodule Phoenix.Endpoint.Adapter do
   Invoked to warm up caches on start and config change.
   """
   def warmup(endpoint) do
+    endpoint.host
+    endpoint.path("/")
+    endpoint.script_name
     warmup_url(endpoint)
     warmup_static(endpoint)
     :ok
   rescue
-    _ -> :ok
+    _ ->
+      IO.puts "I messed up"
+      :ok
   end
 
   defp warmup_url(endpoint) do
     endpoint.url
+    endpoint.static_url
+    endpoint.struct_url
   end
 
   defp warmup_static(endpoint) do
     for {key, value} <- cache_static_manifest(endpoint) do
-      # This should be in sync with the endpoint lookup.
       Phoenix.Config.cache(endpoint, {:__phoenix_static__, "/" <> key}, fn _ ->
         {:cache, "/" <> value <> "?vsn=d"}
       end)
     end
+    endpoint.static_path("/")
   end
 
   defp cache_static_manifest(endpoint) do
