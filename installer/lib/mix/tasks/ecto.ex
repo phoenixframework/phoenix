@@ -47,6 +47,6 @@ defmodule Mix.Tasks.Phx.New.Ecto do
       Mix.raise "The ecto task can only be run within an umbrella's apps directory"
     end
 
-    Mix.Tasks.Phx.New.run(args, Phx.New.App)
+    Mix.Tasks.Phx.New.run(args, Phx.New.Ecto)
   end
 end

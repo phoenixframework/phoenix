@@ -1,4 +1,4 @@
-defmodule Phx.New.App do
+defmodule Phx.New.Ecto do
   @moduledoc false
   use Phx.New.Generator
   alias Phx.New.{Project}

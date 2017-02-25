@@ -1,10 +1,13 @@
 defmodule Phx.New.Umbrella do
   @moduledoc false
   use Phx.New.Generator
-  alias Phx.New.{App, Web, Project}
+  alias Phx.New.{Ecto, Web, Project}
 
   template :new, [
     {:eex,  "phx_umbrella/config/config.exs", :project, "config/config.exs"},
+    {:eex,  "phx_umbrella/config/dev.exs",    :project, "config/dev.exs"},
+    {:eex,  "phx_umbrella/config/test.exs",   :project, "config/test.exs"},
+    {:eex,  "phx_umbrella/config/prod.exs",   :project, "config/prod.exs"},
     {:eex,  "phx_umbrella/mix.exs",           :project, "mix.exs"},
     {:eex,  "phx_umbrella/gitignore",         :project, ".gitignore"},
     {:eex,  "phx_umbrella/README.md",         :project, "README.md"},
@@ -49,6 +52,6 @@ defmodule Phx.New.Umbrella do
 
     project
     |> Web.generate()
-    |> App.generate()
+    |> Ecto.generate()
   end
 end

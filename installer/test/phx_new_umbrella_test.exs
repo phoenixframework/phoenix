@@ -49,7 +49,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end
 
       assert_file root_path(@app, "config/config.exs"), fn file ->
-        assert file =~ ~S{import_config "../apps/*/config/config.exs"}
+        assert file =~ ~S[import_config "../apps/*/config/config.exs"]
+        assert file =~ ~S[import_config "#{Mix.env}.exs"]
       end
       assert_file app_path(@app, "config/config.exs"), fn file ->
         assert file =~ "ecto_repos: [PhxUmb.Repo]"
