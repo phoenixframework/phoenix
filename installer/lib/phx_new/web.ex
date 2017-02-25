@@ -17,19 +17,22 @@ defmodule Phx.New.Web do
     {:eex,  "phx_web/channels/user_socket.ex",               :web, "lib/:web_app/channels/user_socket.ex"},
     {:keep, "phx_web/controllers",                           :web, "lib/:web_app/controllers"},
     {:eex,  "phx_web/endpoint.ex",                           :web, "lib/:web_app/endpoint.ex"},
-    {:eex,  "phx_web/gettext.ex",                            :web, "lib/:web_app/gettext.ex"},
     {:eex,  "phx_web/router.ex",                             :web, "lib/:web_app/router.ex"},
     {:eex,  "phx_web/views/error_helpers.ex",                :web, "lib/:web_app/views/error_helpers.ex"},
     {:eex,  "phx_web/views/error_view.ex",                   :web, "lib/:web_app/views/error_view.ex"},
     {:eex,  "#{@pre}/mix.exs",                               :web, "mix.exs"},
-    {:eex,  "#{@pre}/priv/gettext/en/LC_MESSAGES/errors.po", :web, "priv/gettext/en/LC_MESSAGES/errors.po"},
-    {:eex,  "#{@pre}/priv/gettext/errors.pot",               :web, "priv/gettext/errors.pot"},
     {:eex,  "#{@pre}/README.md",                             :web, "README.md"},
     {:keep, "#{@pre}/test/channels",                         :web, "test/channels"},
     {:keep, "#{@pre}/test/controllers",                      :web, "test/controllers"},
     {:eex,  "#{@pre}/test/support/channel_case.ex",          :web, "test/support/channel_case.ex"},
     {:eex,  "#{@pre}/test/support/conn_case.ex",             :web, "test/support/conn_case.ex"},
     {:eex,  "#{@pre}/test/views/error_view_test.exs",        :web, "test/views/error_view_test.exs"},
+  ]
+
+  template :gettext, [
+    {:eex,  "phx_gettext/gettext.ex",               :web, "lib/:web_app/gettext.ex"},
+    {:eex,  "phx_gettext/en/LC_MESSAGES/errors.po", :web, "priv/gettext/en/LC_MESSAGES/errors.po"},
+    {:eex,  "phx_gettext/errors.pot",               :web, "priv/gettext/errors.pot"}
   ]
 
   template :brunch, [
@@ -80,6 +83,7 @@ defmodule Phx.New.Web do
 
   def generate(%Project{} = project) do
     copy_from project, __MODULE__, template_files(:new)
+    copy_from project, __MODULE__, template_files(:gettext)
 
     if Project.html?(project), do: gen_html(project)
 

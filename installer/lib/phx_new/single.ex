@@ -15,12 +15,9 @@ defmodule Phx.New.Single do
     {:eex,  "phx_web/views/error_helpers.ex",                  :project, "lib/:app/web/views/error_helpers.ex"},
     {:eex,  "phx_web/views/error_view.ex",                     :project, "lib/:app/web/views/error_view.ex"},
     {:eex,  "phx_web/endpoint.ex",                             :project, "lib/:app/web/endpoint.ex"},
-    {:eex,  "phx_web/gettext.ex",                              :project, "lib/:app/web/gettext.ex"},
     {:eex,  "phx_web/router.ex",                               :project, "lib/:app/web/router.ex"},
     {:eex,  "phx_new/lib/app_name/web.ex",                     :project, "lib/:app/web.ex"},
     {:eex,  "phx_new/mix.exs",                                 :project, "mix.exs"},
-    {:eex,  "phx_new/priv/gettext/en/LC_MESSAGES/errors.po",   :project, "priv/gettext/en/LC_MESSAGES/errors.po"},
-    {:eex,  "phx_new/priv/gettext/errors.pot",                 :project, "priv/gettext/errors.pot"},
     {:eex,  "phx_new/README.md",                               :project, "README.md"},
     {:eex,  "phx_new/test/support/channel_case.ex",            :project, "test/support/channel_case.ex"},
     {:eex,  "phx_new/test/support/conn_case.ex",               :project, "test/support/conn_case.ex"},
@@ -28,6 +25,12 @@ defmodule Phx.New.Single do
     {:keep, "phx_new/test/web/channels",                       :project, "test/web/channels"},
     {:keep, "phx_new/test/web/controllers",                    :project, "test/web/controllers"},
     {:eex,  "phx_new/test/web/views/error_view_test.exs",      :project, "test/web/views/error_view_test.exs"},
+  ]
+
+  template :gettext, [
+    {:eex,  "phx_gettext/gettext.ex",               :project, "lib/:app/web/gettext.ex"},
+    {:eex,  "phx_gettext/en/LC_MESSAGES/errors.po", :project, "priv/gettext/en/LC_MESSAGES/errors.po"},
+    {:eex,  "phx_gettext/errors.pot",               :project, "priv/gettext/errors.pot"}
   ]
 
   template :ecto, [
@@ -100,6 +103,7 @@ defmodule Phx.New.Single do
 
   def generate(%Project{} = project) do
     copy_from project, __MODULE__, template_files(:new)
+    copy_from project, __MODULE__, template_files(:gettext)
 
     if Project.ecto?(project), do: gen_ecto(project)
     if Project.html?(project), do: gen_html(project)
