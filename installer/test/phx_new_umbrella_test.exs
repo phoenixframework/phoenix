@@ -398,7 +398,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
         for dir <- [cwd, umbrella_path] do
           File.cd!(dir, fn ->
-            assert_raise Mix.Error, ~r"the web task can only be run within an umbrella's apps directory", fn ->
+            assert_raise Mix.Error, ~r"The web task can only be run within an umbrella's apps directory", fn ->
               Mix.Tasks.Phx.New.Web.run(["valid"])
             end
           end)

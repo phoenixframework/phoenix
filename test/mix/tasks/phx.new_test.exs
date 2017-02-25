@@ -1,7 +1,7 @@
 for pattern <- ["../../../installer/lib/phx_new/project.ex",
                 "../../../installer/lib/phx_new/generator.ex",
                 "../../../installer/lib/phx_new/*.ex",
-                "../../../installer/lib/mix/tasks/phx_new.ex",
+                "../../../installer/lib/mix/tasks/phx.new.ex",
                 "../../../installer/test/mix_helper.exs"],
     file <- [_|_] = Path.wildcard(Path.expand(pattern, __DIR__)),
     do: Code.require_file(file, __DIR__)
