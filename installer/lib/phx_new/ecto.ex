@@ -18,10 +18,10 @@ defmodule Phx.New.Ecto do
   ]
 
   template :ecto, [
-    {:eex,  "#{@pre}/lib/app_name/repo.ex", :app, "lib/:app/repo.ex"},
-    {:keep, "#{@pre}/priv/repo/migrations", :app, "priv/repo/migrations"},
-    {:eex,  "phx_ecto/seeds.exs",           :app, "priv/repo/seeds.exs"},
-    {:eex,  "phx_ecto/data_case.ex",        :app, "test/support/data_case.ex"},
+    {:eex,  "phx_ecto/repo.ex",              :app, "lib/:app/repo.ex"},
+    {:keep, "phx_ecto/priv/repo/migrations", :app, "priv/repo/migrations"},
+    {:eex,  "phx_ecto/seeds.exs",            :app, "priv/repo/seeds.exs"},
+    {:eex,  "phx_ecto/data_case.ex",         :app, "test/support/data_case.ex"},
   ]
 
   def prepare_project(%Project{} = project) do
