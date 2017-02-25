@@ -56,7 +56,6 @@ defmodule Mix.Tasks.Phoenix.NewTest do
                   ~r/defmodule PhotoBlog.PageController/
 
       assert File.exists?("photo_blog/web/models")
-      refute File.exists?("photo_blog/web/models/.keep")
 
       assert_file "photo_blog/web/views/page_view.ex",
                   ~r/defmodule PhotoBlog.PageView/
@@ -88,7 +87,6 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       refute File.exists? "photo_blog/priv/static/js/app.js"
 
       assert File.exists?("photo_blog/web/static/vendor")
-      refute File.exists?("photo_blog/web/static/vendor/.keep")
 
       # Ecto
       config = ~r/config :photo_blog, PhotoBlog.Repo,/
@@ -119,7 +117,6 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       # Channels
       assert File.exists?("photo_blog/web/channels")
-      refute File.exists?("photo_blog/web/channels/.keep")
       assert_file "photo_blog/web/channels/user_socket.ex", ~r"defmodule PhotoBlog.UserSocket"
       assert_file "photo_blog/lib/photo_blog/endpoint.ex", ~r"socket \"/socket\", PhotoBlog.UserSocket"
 
@@ -163,12 +160,9 @@ defmodule Mix.Tasks.Phoenix.NewTest do
 
       # No HTML
       assert File.exists?("photo_blog/test/controllers")
-      refute File.exists?("photo_blog/test/controllers/.keep")
 
       assert File.exists?("photo_blog/web/controllers")
-      refute File.exists?("photo_blog/web/controllers/.keep")
       assert File.exists?("photo_blog/web/views")
-      refute File.exists?("photo_blog/web/views/.keep")
 
       refute File.exists? "photo_blog/test/controllers/pager_controller_test.exs"
       refute File.exists? "photo_blog/test/views/layout_view_test.exs"

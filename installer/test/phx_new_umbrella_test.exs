@@ -125,7 +125,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       refute File.exists?(web_path(@app, "priv/static/js/app.js"))
 
       assert File.exists?(web_path(@app, "assets/vendor"))
-      refute File.exists?(web_path(@app, "assets/vendor/.keep"))
 
       # web deps
       assert_file web_path(@app, "mix.exs"), fn file ->
@@ -169,7 +168,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       # Channels
       assert File.exists?(web_path(@app, "/lib/#{@app}_web/channels"))
-      refute File.exists?(web_path(@app, "/lib/#{@app}_web/channels/.keep"))
       assert_file web_path(@app, "lib/#{@app}_web/channels/user_socket.ex"), ~r"defmodule PhxUmb.Web.UserSocket"
       assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"), ~r"socket \"/socket\", PhxUmb.Web.UserSocket"
 
@@ -215,11 +213,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       # No HTML
       assert File.exists?(web_path(@app, "test/controllers"))
-      refute File.exists?(web_path(@app, "test/controllers/.keep"))
       assert File.exists?(web_path(@app, "lib/#{@app}_web/controllers"))
-      refute File.exists?(web_path(@app, "lib/#{@app}_web/controllers/.keep"))
       assert File.exists?(web_path(@app, "lib/#{@app}_web/views"))
-      refute File.exists?(web_path(@app, "lib/#{@app}_web/views/.keep"))
       refute File.exists?(web_path(@app, "test/controllers/pager_controller_test.exs"))
       refute File.exists?(web_path(@app, "test/views/layout_view_test.exs"))
       refute File.exists?(web_path(@app, "test/views/page_view_test.exs"))
@@ -496,7 +491,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         refute File.exists? "another/priv/static/js/app.js"
 
         assert File.exists?("another/assets/vendor")
-        refute File.exists?("another/assets/vendor/.keep")
 
         # Ecto
         assert_file "another/mix.exs", fn file ->
@@ -517,7 +511,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
         # Channels
         assert File.exists?("another/lib/another/channels")
-        refute File.exists?("another/lib/another/channels/.keep")
         assert_file "another/lib/another/channels/user_socket.ex", ~r"defmodule Another.UserSocket"
         assert_file "another/lib/another/endpoint.ex", ~r"socket \"/socket\", Another.UserSocket"
 

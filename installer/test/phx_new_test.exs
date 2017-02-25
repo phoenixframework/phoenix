@@ -93,7 +93,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       refute File.exists? "phx_blog/priv/static/js/app.js"
 
       assert File.exists?("phx_blog/assets/vendor")
-      refute File.exists?("phx_blog/assets/vendor/.keep")
 
       # Ecto
       config = ~r/config :phx_blog, PhxBlog.Repo,/
@@ -124,7 +123,6 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # Channels
       assert File.exists?("phx_blog/lib/phx_blog/web/channels")
-      refute File.exists?("phx_blog/lib/phx_blog/web/channels/.keep")
       assert_file "phx_blog/lib/phx_blog/web/channels/user_socket.ex", ~r"defmodule PhxBlog.Web.UserSocket"
       assert_file "phx_blog/lib/phx_blog/web/endpoint.ex", ~r"socket \"/socket\", PhxBlog.Web.UserSocket"
       assert File.exists?("phx_blog/test/web/channels")
@@ -169,12 +167,9 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # No HTML
       assert File.exists?("phx_blog/test/web/controllers")
-      refute File.exists?("phx_blog/test/web/controllers/.keep")
 
       assert File.exists?("phx_blog/lib/phx_blog/web/controllers")
-      refute File.exists?("phx_blog/lib/phx_blog/web/controllers/.keep")
       assert File.exists?("phx_blog/lib/phx_blog/web/views")
-      refute File.exists?("phx_blog/lib/phx_blog/web/views/.keep")
 
       refute File.exists? "phx_blog/test/web/controllers/pager_controller_test.exs"
       refute File.exists? "phx_blog/test/views/layout_view_test.exs"
