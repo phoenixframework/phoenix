@@ -388,6 +388,25 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     end
   end
 
+  describe "ecto task" do
+    test "can only be run within an umbrella app dir", %{tmp_dir: tmp_dir} do
+      in_tmp tmp_dir, fn ->
+        cwd = File.cwd!()
+        umbrella_path = root_path(@app)
+        Mix.Tasks.Phx.New.run([@app, "--umbrella"])
+        flush()
+
+        for dir <- [cwd, umbrella_path] do
+          File.cd!(dir, fn ->
+            assert_raise Mix.Error, ~r"The ecto task can only be run within an umbrella's apps directory", fn ->
+              Mix.Tasks.Phx.New.Ecto.run(["valid"])
+            end
+          end)
+        end
+      end
+    end
+  end
+
   describe "web task" do
     test "can only be run within an umbrella app dir", %{tmp_dir: tmp_dir} do
       in_tmp tmp_dir, fn ->
@@ -403,6 +422,15 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
             end
           end)
         end
+      end
+    end
+
+    test "generates web-only files", %{tmp_dir: tmp_dir} do
+      in_tmp tmp_dir, fn ->
+        umbrella_path = root_path(@app)
+        Mix.Tasks.Phx.New.run([@app, "--umbrella"])
+        flush()
+
         File.cd!(Path.join(umbrella_path, "apps"))
         decline_prompt()
         Mix.Tasks.Phx.New.Web.run(["another"])
