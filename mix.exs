@@ -4,7 +4,7 @@ defmodule Phoenix.Mixfile do
   @version "1.3.0-dev"
 
   # TODO: update to elixir 1.4 + new application inference once 1.3 is out
-  
+
   def project do
     [app: :phoenix,
      version: @version,
@@ -48,7 +48,7 @@ defmodule Phoenix.Mixfile do
 
   defp deps do
     [{:cowboy, "~> 1.0", optional: true},
-     {:plug, "~> 1.2.1 or ~> 1.3"},
+     {:plug, "~> 1.3.1 or ~> 1.4"},
      {:phoenix_pubsub, "~> 1.0"},
      {:poison, "~> 2.2 or ~> 3.0"},
      {:gettext, "~> 0.8", only: :test},

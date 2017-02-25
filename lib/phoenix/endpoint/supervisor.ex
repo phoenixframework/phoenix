@@ -269,7 +269,6 @@ defmodule Phoenix.Endpoint.Supervisor do
     :ok
   rescue
     _ ->
-      IO.puts "I messed up"
       :ok
   end
 

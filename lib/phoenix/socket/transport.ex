@@ -321,7 +321,7 @@ defmodule Phoenix.Socket.Transport do
       opts =
         if force_ssl = Keyword.get(opts, :force_ssl, endpoint.config(:force_ssl)) do
           force_ssl
-          |> Keyword.put_new(:host, host_to_binary(endpoint.config(:url)[:host]) || "localhost")
+          |> Keyword.put_new(:host, {endpoint, :host, []})
           |> Plug.SSL.init()
         end
       {:cache, opts}

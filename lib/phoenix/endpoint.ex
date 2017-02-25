@@ -565,9 +565,9 @@ defmodule Phoenix.Endpoint do
   @doc false
   def __force_ssl__(module, config) do
     if force_ssl = config[:force_ssl] do
-      force_ssl = Keyword.put_new(force_ssl, :host, var!(config)[:url][:host] || "localhost")
+      host = force_ssl[:host] || config[:url][:host] || "localhost"
 
-      if force_ssl[:host] == "localhost" do
+      if host == "localhost" do
         IO.puts :stderr, """
         warning: you have enabled :force_ssl but your host is currently set to localhost.
         Please configure your endpoint url host properly:
@@ -576,7 +576,7 @@ defmodule Phoenix.Endpoint do
         """
       end
 
-      force_ssl
+      Keyword.put_new(force_ssl, :host, {module, :host, []})
     end
   end
 
