@@ -118,13 +118,22 @@ defmodule Mix.Tasks.Phx.New do
 
     maybe_cd(project.project_path, fn ->
       mix? = install_mix(install?)
-      extra = if mix?, do: [], else: ["$ mix deps.get"]
 
-      brunch? = maybe_cd(project.web_path, fn -> install_brunch(install?) end)
+      maybe_cd(project.web_path, fn ->
+        {extra, compile} =
+          if mix? do
+            {[], Task.async(fn -> cmd("mix deps.compile") end)}
+          else
+            {["$ mix deps.get"], Task.async(fn -> :ok end)}
+          end
 
-      print_mix_info(project.project_path, extra)
-      if Project.ecto?(project), do: print_ecto_info()
-      if not brunch?, do: print_brunch_info(project, starting_dir)
+        brunch? = install_brunch(install?)
+        Task.await(compile, :infinity)
+
+        print_mix_info(project.project_path, extra)
+        if Project.ecto?(project), do: print_ecto_info()
+        if not brunch?, do: print_brunch_info(project, starting_dir)
+      end)
     end)
   end
   defp maybe_cd(path, func), do: path && File.cd!(path, func)
