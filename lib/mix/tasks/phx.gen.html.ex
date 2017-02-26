@@ -99,6 +99,8 @@ defmodule Mix.Tasks.Phx.Gen.Html do
         raise_with_help "Expected the context, #{inspect context}, to be a valid module name"
       not Schema.valid?(schema) ->
         raise_with_help "Expected the schema, #{inspect schema}, to be a valid module name"
+      context == schema ->
+        raise_with_help "The context and schema should have different names"
       true ->
         args
     end

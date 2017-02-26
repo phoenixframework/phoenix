@@ -63,6 +63,10 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         Gen.Html.run(~w(Post posts title:string))
       end
 
+      assert_raise Mix.Error, ~r/The context and schema should have different names/, fn ->
+        Gen.Html.run(~w(Blog Blog blogs))
+      end
+
       assert_raise Mix.Error, ~r/Invalid arguments/, fn ->
         Gen.Html.run(~w(Blog.Post posts))
       end
