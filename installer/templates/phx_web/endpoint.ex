@@ -39,4 +39,13 @@ defmodule <%= endpoint_module %> do
     signing_salt: "<%= signing_salt %>"
 
   plug <%= web_namespace %>.Router
+
+  @doc """
+  Dynamically loads configuration from the system environment
+  on startup.
+  """
+  def load_from_system_env(opts) do
+    port = System.get_env("PORT") || raise "expected the PORT environment variable to be set"
+    {:ok, Keyword.put(opts, :http, [:inet6, port: port])}
+  end
 end

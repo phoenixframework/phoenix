@@ -24,6 +24,19 @@ defmodule Phoenix.Endpoint.Supervisor do
   def init({otp_app, mod}) do
     id = :crypto.strong_rand_bytes(16) |> Base.encode64
     conf = [endpoint_id: id] ++ config(otp_app, mod)
+
+    conf =
+      case Keyword.fetch(conf, :on_init) do
+        {:ok, {mod, fun, args}} ->
+          {:ok, conf} = apply(mod, fun, [conf | args])
+          conf
+        {:ok, other} ->
+          raise ArgumentError, "invalid :on_init option for #{inspect mod}. " <>
+                               "Expected a tuple with module, function and args, got: #{inspect other}"
+        :error ->
+          conf
+      end
+
     server? = server?(conf)
 
     if server? and conf[:code_reloader] do

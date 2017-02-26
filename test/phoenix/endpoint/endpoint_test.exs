@@ -73,22 +73,32 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert Endpoint.static_path("/foo.css") == "/foo-d978852bea6530fcd197b5445ed008fd.css?vsn=d"
 
     # Trigger a config change and the cache should be warmed up again
-    config =
-      @config
-      |> put_in([:cache_static_manifest], "../../../../test/fixtures/cache_manifest_upgrade.json")
+    config = put_in(@config[:cache_static_manifest], "../../../../test/fixtures/cache_manifest_upgrade.json")
 
     assert Endpoint.config_change([{Endpoint, config}], []) == :ok
-
     assert Endpoint.static_path("/foo.css") == "/foo-ghijkl.css?vsn=d"
   end
 
   test "warms up cache from previous manifest format" do
-    config =
-      @config
-      |> put_in([:cache_static_manifest], "../../../../test/fixtures/old_cache_manifest.json")
-
+    config = put_in(@config, [:cache_static_manifest], "../../../../test/fixtures/old_cache_manifest.json")
     assert Endpoint.config_change([{Endpoint, config}], []) == :ok
     assert Endpoint.static_path("/foo.css") == "/foo-d978852bea6530fcd197b5445ed008fd.css?vsn=d"
+  end
+
+  test "invokes on_init callback" do
+    Application.put_env(:phoenix, __MODULE__.OnInitEndpoint,
+                        on_init: {__MODULE__.OnInitEndpoint, :sample, [:sample]},
+                        parent: self())
+    defmodule OnInitEndpoint do
+      use Phoenix.Endpoint, otp_app: :phoenix
+
+      def sample(opts, :sample) do
+        send opts[:parent], {self(), :sample}
+        {:ok, opts}
+      end
+    end
+    {:ok, pid} = OnInitEndpoint.start_link
+    assert_receive {^pid, :sample}
   end
 
   test "uses url configuration for static path" do

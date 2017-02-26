@@ -58,15 +58,6 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   Generated migration can use `binary_id` for schema's primary key
   and its references with option `--binary-id`.
 
-  This option assumes the project was generated with the `--binary-id`
-  option, that sets up schemas to use `binary_id` by default. If that's
-  not the case you can still set all your schemas to use `binary_id`
-  by default, by adding the following to your `schema` function in
-  `lib/my_app/web.ex` or before the `schema` declaration:
-
-      @primary_key {:id, :binary_id, autogenerate: true}
-      @foreign_key_type :binary_id
-
   ## Default options
 
   This generator uses default options provided in the `:generators`

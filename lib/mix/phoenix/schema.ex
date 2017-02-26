@@ -18,7 +18,7 @@ defmodule Mix.Phoenix.Schema do
             defaults: [],
             human_singular: nil,
             human_plural: nil,
-            binary_id: nil,
+            binary_id: false,
             migration_defaults: nil,
             migration?: false,
             params: %{},

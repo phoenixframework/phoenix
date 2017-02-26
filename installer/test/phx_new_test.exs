@@ -207,12 +207,6 @@ defmodule Mix.Tasks.Phx.NewTest do
   test "new with binary_id" do
     in_tmp "new with binary_id", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--binary-id"])
-
-      assert_file "phx_blog/lib/phx_blog/web.ex", fn file ->
-        assert file =~ ~r/@primary_key {:id, :binary_id, autogenerate: true}/
-        assert file =~ ~r/@foreign_key_type :binary_id/
-      end
-
       assert_file "phx_blog/config/config.exs", ~r/binary_id: true/
     end
   end
