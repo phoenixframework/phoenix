@@ -26,4 +26,4 @@ end
 # For mix tests
 Mix.shell(Mix.Shell.Process)
 
-ExUnit.start()
+ExUnit.start(assert_receive_timeout: 200)
