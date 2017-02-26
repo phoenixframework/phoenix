@@ -15,20 +15,7 @@ defmodule <%= web_namespace %> do
   Do NOT define functions inside the quoted expressions
   below.
   """
-<%= if ecto do %>
-  def schema do
-    quote do
-      use Ecto.Schema
 
-      import Ecto
-      import Ecto.Changeset
-      import Ecto.Query<%= if adapter_config[:binary_id] do %>
-
-      @primary_key {:id, :binary_id, autogenerate: true}
-      @foreign_key_type :binary_id<% end %>
-    end
-  end
-<% end %>
   def controller do
     quote do
       use Phoenix.Controller, namespace: <%= web_namespace %>
