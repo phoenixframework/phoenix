@@ -37,17 +37,16 @@ defmodule Phoenix.Endpoint.EndpointTest do
     config =
       @config
       |> put_in([:url, :port], 1234)
-      |> put_in([:url, :path], "/")
       |> put_in([:static_url, :port], 456)
 
     assert Endpoint.config_change([{Endpoint, config}], []) == :ok
     assert Enum.sort(Endpoint.config(:url)) ==
-           [host: {:system, "ENDPOINT_TEST_HOST"}, path: "/", port: 1234]
+           [host: {:system, "ENDPOINT_TEST_HOST"}, path: "/api", port: 1234]
     assert Enum.sort(Endpoint.config(:static_url)) ==
            [host: "static.example.com", port: 456]
     assert Endpoint.url == "https://example.com:1234"
     assert Endpoint.static_url == "https://static.example.com:456"
-    assert Endpoint.struct_url == %URI{scheme: "https", host: "example.com", port: 1234, path: nil}
+    assert Endpoint.struct_url == %URI{scheme: "https", host: "example.com", port: 1234, path: "/api"}
   end
 
   test "sets script name when using path" do
