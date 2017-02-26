@@ -142,23 +142,23 @@ defmodule Phx.New.Generator do
 
     # Configure your database
     config :#{binding[:app_name]}, #{binding[:app_module]}.Repo,
-    adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:dev]},
-    pool_size: 10
+      adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:dev]},
+      pool_size: 10
     """
 
     append_to app_path, "config/test.exs", """
 
     # Configure your database
     config :#{binding[:app_name]}, #{binding[:app_module]}.Repo,
-    adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:test]}
+      adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:test]}
     """
 
     append_to app_path, "config/prod.secret.exs", """
 
     # Configure your database
     config :#{binding[:app_name]}, #{binding[:app_module]}.Repo,
-    adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:prod]},
-    pool_size: 15
+      adapter: #{inspect binding[:adapter_module]}#{kw_to_config adapter_config[:prod]},
+      pool_size: 15
     """
   end
 
