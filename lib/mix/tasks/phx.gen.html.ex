@@ -31,7 +31,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   """
   use Mix.Task
 
-  alias Mix.Phoenix.Context
+  alias Mix.Phoenix.{Context, Schema}
   alias Mix.Tasks.Phx.Gen
 
   def run(args) do
@@ -94,10 +94,13 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   end
 
   defp validate_args!([context, schema, _plural | _] = args) do
-    if Context.valid?(context) do
-      args
-    else
-      raise_with_help "Expected the context, #{inspect schema}, to be a valid module name"
+    cond do
+      not Context.valid?(context) ->
+        raise_with_help "Expected the context, #{inspect context}, to be a valid module name"
+      not Schema.valid?(schema) ->
+        raise_with_help "Expected the schema, #{inspect schema}, to be a valid module name"
+      true ->
+        args
     end
   end
 
@@ -112,12 +115,12 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
     mix phx.gen.html and mix phx.gen.json expect a context module name,
     followed by singular and plural names of the generated resource, ending
-    with any number of attributes:
+    with any number of attributes. For example:
 
         mix phx.gen.html Accounts User users name:string
         mix phx.gen.json Accounts User users name:string
 
-    The Accounts context serves as the API boundary for the given resource.
+    The context serves as the API boundary for the given resource.
     Multiple resources may belong to a context and a resource may be
     split over distinct contexts (such as Accounts.User and Blog.User).
     """

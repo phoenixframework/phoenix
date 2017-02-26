@@ -13,32 +13,36 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
     :ok
   end
 
-  test "invalid mix arguments" do
-    in_tmp_project "invalid mix arguments", fn ->
-      assert_raise Mix.Error, ~r/expect a context module/, fn ->
+  test "invalid mix arguments", config do
+    in_tmp_project config.test, fn ->
+      assert_raise Mix.Error, ~r/Expected the context, "blog", to be a valid module name/, fn ->
+        Gen.Json.run(~w(blog Post posts title:string))
+      end
+
+      assert_raise Mix.Error, ~r/Expected the schema, "posts", to be a valid module name/, fn ->
         Gen.Json.run(~w(Post posts title:string))
       end
 
-      assert_raise Mix.Error, ~r/expect a context module/, fn ->
+      assert_raise Mix.Error, ~r/Invalid arguments/, fn ->
         Gen.Json.run(~w(Blog.Post posts))
       end
 
-      assert_raise Mix.Error, ~r/expect a context module/, fn ->
+      assert_raise Mix.Error, ~r/Invalid arguments/, fn ->
         Gen.Json.run(~w(Blog Post))
       end
     end
   end
 
-  test "name is already defined" do
-    in_tmp_project "name is already defined", fn ->
+  test "name is already defined", config do
+    in_tmp_project config.test, fn ->
       assert_raise Mix.Error, ~r/already taken/, fn ->
         Gen.Json.run ~w(DupJsonContext Post dups)
       end
     end
   end
 
-  test "generates json context" do
-    in_tmp_project "generates json context", fn ->
+  test "generates json context", config do
+    in_tmp_project config.test, fn ->
       Gen.Json.run(["Blog", "Post", "posts", "title:string"])
 
       assert_file "lib/phoenix/blog/post.ex"
