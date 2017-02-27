@@ -34,7 +34,7 @@ defmodule Mix.Tasks.Phx.New do
     * `--no-html` - do not generate HTML views.
 
     * `--binary-id` - use `binary_id` as primary key type
-      in ecto models
+      in Ecto schemas
 
   ## Examples
 
