@@ -19,6 +19,7 @@ defmodule <%= web_namespace %> do
   def controller do
     quote do
       use Phoenix.Controller, namespace: <%= web_namespace %>
+      import Plug.Conn
       import <%= web_namespace %>.Router.Helpers
       import <%= web_namespace %>.Gettext
     end
@@ -44,6 +45,8 @@ defmodule <%= web_namespace %> do
   def router do
     quote do
       use Phoenix.Router
+      import Plug.Conn
+      import Phoenix.Controller
     end
   end
 

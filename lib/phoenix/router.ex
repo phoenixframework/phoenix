@@ -208,6 +208,8 @@ defmodule Phoenix.Router do
       @phoenix_forwards %{}
 
       import Phoenix.Router
+
+      # TODO: No longer automatically import dependencies
       import Plug.Conn
       import Phoenix.Controller
 

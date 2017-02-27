@@ -7,8 +7,8 @@ defmodule Phoenix.Controller.Pipeline do
       @behaviour Plug
 
       require Phoenix.Endpoint
-
       import Phoenix.Controller.Pipeline
+
       Module.register_attribute(__MODULE__, :plugs, accumulate: true)
       @before_compile Phoenix.Controller.Pipeline
       @phoenix_log_level Keyword.get(opts, :log, :debug)

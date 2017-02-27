@@ -160,8 +160,10 @@ defmodule Phoenix.Controller do
   """
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
-      import Plug.Conn
       import Phoenix.Controller
+
+      # TODO: No longer automatically import dependencies
+      import Plug.Conn
 
       use Phoenix.Controller.Pipeline, opts
 
