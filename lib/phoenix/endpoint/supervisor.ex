@@ -261,11 +261,11 @@ defmodule Phoenix.Endpoint.Supervisor do
     raise ArgumentError, "static_path/2 expects a path starting with / as argument"
   end
 
-  # TODO: Deprecate {:system, env_var}
+  # TODO v1.4: Deprecate {:system, env_var}
   defp host_to_binary({:system, env_var}), do: host_to_binary(System.get_env(env_var))
   defp host_to_binary(host), do: host
 
-  # TODO: Deprecate {:system, env_var}
+  # TODO v1.4: Deprecate {:system, env_var}
   defp port_to_integer({:system, env_var}), do: port_to_integer(System.get_env(env_var))
   defp port_to_integer(port) when is_binary(port), do: String.to_integer(port)
   defp port_to_integer(port) when is_integer(port), do: port
@@ -310,7 +310,7 @@ defmodule Phoenix.Endpoint.Supervisor do
           |> File.read!
           |> Poison.decode!
 
-        # TODO: No longer support old manifests on Phoenix 1.4
+        # TODO v1.4: No longer support old manifests
         manifest["latest"] || manifest
       else
         Logger.error "Could not find static manifest at #{inspect outer}. " <>

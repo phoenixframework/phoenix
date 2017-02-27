@@ -283,13 +283,15 @@ defmodule Phoenix.Socket.Transport do
   @doc """
   Returns the message to be relayed when a channel exits.
   """
-  # TODO remove 2-arity on next major release
-  def on_exit_message(topic, reason) do
-    IO.write :stderr, "Phoenix.Transport.on_exit_message/2 is deprecated. Use on_exit_message/3 instead."
-    on_exit_message(topic, nil, reason)
-  end
   def on_exit_message(topic, join_ref, _reason) do
     %Message{ref: join_ref, topic: topic, event: "phx_error", payload: %{}}
+  end
+
+  # TODO v2: Remove 2-arity
+  @doc false
+  def on_exit_message(topic, reason) do
+    IO.warn "Phoenix.Transport.on_exit_message/2 is deprecated. Use on_exit_message/3 instead."
+    on_exit_message(topic, nil, reason)
   end
 
   @doc false
@@ -444,7 +446,7 @@ defmodule Phoenix.Socket.Transport do
   defp compare_host?(request_host, allowed_host),
     do: request_host == allowed_host
 
-  # TODO: Deprecate {:system, env_var}
+  # TODO v1.4: Deprecate {:system, env_var}
   defp host_to_binary({:system, env_var}), do: host_to_binary(System.get_env(env_var))
   defp host_to_binary(host), do: host
 end

@@ -51,7 +51,7 @@ defmodule Phoenix.Endpoint.Handler do
   defp keyword_item?({key, _}) when is_atom(key), do: true
   defp keyword_item?(_), do: false
 
-  # TODO: Deprecate {:system, env_var}
+  # TODO v1.4: Deprecate {:system, env_var}
   defp to_port(nil), do: raise "server can't start because :port in config is nil, please use a valid port number"
   defp to_port(binary)  when is_binary(binary), do: String.to_integer(binary)
   defp to_port(integer) when is_integer(integer), do: integer

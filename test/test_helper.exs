@@ -3,7 +3,7 @@ Code.require_file("support/router_helper.exs", __DIR__)
 # Starts web server applications
 Application.ensure_all_started(:cowboy)
 
-# TODO: Remove this when Elixir v1.3 is no longer supported
+# TODO v1.4: Remove this since Elixir v1.3 will no longer be supported
 if Version.match?(System.version, "~> 1.3.0") do
   ExUnit.configure exclude: [:phoenix_new, :phx_new]
 end

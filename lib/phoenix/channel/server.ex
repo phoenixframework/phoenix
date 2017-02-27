@@ -282,7 +282,7 @@ defmodule Phoenix.Channel.Server do
   end
 
   @doc false
-  # TODO revisit in future GenServer releases
+  # TODO: Revisit in future GenServer releases
   def unhandled_handle_info(msg, state) do
     proc =
       case Process.info(self(), :registered_name) do

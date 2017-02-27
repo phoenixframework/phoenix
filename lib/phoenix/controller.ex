@@ -162,7 +162,7 @@ defmodule Phoenix.Controller do
     quote bind_quoted: [opts: opts] do
       import Phoenix.Controller
 
-      # TODO: No longer automatically import dependencies
+      # TODO v2: No longer automatically import dependencies
       import Plug.Conn
 
       use Phoenix.Controller.Pipeline, opts

@@ -209,7 +209,7 @@ defmodule Phoenix.Router do
 
       import Phoenix.Router
 
-      # TODO: No longer automatically import dependencies
+      # TODO v2: No longer automatically import dependencies
       import Plug.Conn
       import Phoenix.Controller
 

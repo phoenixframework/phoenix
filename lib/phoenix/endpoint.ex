@@ -419,9 +419,10 @@ defmodule Phoenix.Endpoint do
 
       def __pubsub_server__, do: @pubsub_server
 
-      # TODO: remove pid version on next major release
+      # TODO v2: Remove pid version
       @doc false
       def subscribe(pid, topic) when is_pid(pid) and is_binary(topic) do
+        IO.warn "#{__MODULE__}.subscribe/2 is deprecated, please use subscribe/1"
         Phoenix.PubSub.subscribe(@pubsub_server, pid, topic, [])
       end
       def subscribe(pid, topic, opts) when is_pid(pid) and is_binary(topic) and is_list(opts) do
@@ -434,12 +435,13 @@ defmodule Phoenix.Endpoint do
         Phoenix.PubSub.subscribe(@pubsub_server, topic, opts)
       end
 
-      # TODO: remove pid version on next major release
+      # TODO v2: Remove pid version
       @doc false
-      def unsubscribe(topic) do
+      def unsubscribe(pid, topic) do
+        IO.warn "#{__MODULE__}.unsubscribe/2 is deprecated, please use unsubscribe/1"
         Phoenix.PubSub.unsubscribe(@pubsub_server, topic)
       end
-      def unsubscribe(pid, topic) do
+      def unsubscribe(topic) do
         Phoenix.PubSub.unsubscribe(@pubsub_server, topic)
       end
 

@@ -3,7 +3,7 @@ defmodule Phoenix.Mixfile do
 
   @version "1.3.0-dev"
 
-  # TODO: update to elixir 1.4 + new application inference once 1.3 is out
+  # TODO v1.4: Update to elixir 1.4 + new application inference
 
   def project do
     [app: :phoenix,
