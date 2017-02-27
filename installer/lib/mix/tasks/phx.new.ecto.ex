@@ -28,7 +28,7 @@ defmodule Mix.Tasks.Phx.New.Ecto do
       `mongodb`. Defaults to `postgres`
 
     * `--binary-id` - use `binary_id` as primary key type
-      in ecto models
+      in Ecto schemas
 
   ## Examples
 
