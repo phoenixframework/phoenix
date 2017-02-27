@@ -415,8 +415,8 @@ defmodule Phoenix.Controller.ControllerTest do
              "world"
     end
 
-    test "sends file as download with custom :content_type and :charset" do
-      conn = send_download(conn(:get, "/"), {:file, @hello_txt},
+    test "sends binary as download with custom :content_type and :charset" do
+      conn = send_download(conn(:get, "/"), {:binary, "world"},
                            filename: "hello.txt", content_type: "application/json", charset: "utf8")
       assert conn.status == 200
       assert get_resp_header(conn, "content-disposition") ==
