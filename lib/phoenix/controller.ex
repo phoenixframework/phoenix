@@ -742,6 +742,51 @@ defmodule Phoenix.Controller do
     send_resp(conn, conn.status || 200, content_type, data)
   end
 
+  defp prepare_assigns(conn, assigns, format) do
+    layout =
+      case layout(conn, assigns, format) do
+        {mod, layout} -> {mod, template_name(layout, format)}
+        false -> false
+      end
+
+    update_in conn.assigns,
+              & &1 |> Map.merge(assigns) |> Map.put(:layout, layout)
+  end
+
+  defp layout(conn, assigns, format) do
+    if format in layout_formats(conn) do
+      case Map.fetch(assigns, :layout) do
+        {:ok, layout} -> layout
+        :error -> layout(conn)
+      end
+    else
+      false
+    end
+  end
+
+  defp to_map(assigns) when is_map(assigns), do: assigns
+  defp to_map(assigns) when is_list(assigns), do: :maps.from_list(assigns)
+
+  defp template_name(name, format) when is_atom(name), do:
+    Atom.to_string(name) <> "." <> format
+  defp template_name(name, _format) when is_binary(name), do:
+    name
+
+  defp send_resp(conn, default_status, default_content_type, body) do
+    conn
+    |> ensure_resp_content_type(default_content_type)
+    |> send_resp(conn.status || default_status, body)
+  end
+
+  defp ensure_resp_content_type(%{resp_headers: resp_headers} = conn, content_type) do
+    if List.keyfind(resp_headers, "content-type", 0) do
+      conn
+    else
+      content_type = content_type <> "; charset=utf-8"
+      %{conn | resp_headers: [{"content-type", content_type}|resp_headers]}
+    end
+  end
+
   @doc """
   Puts the format in the connection.
 
@@ -754,6 +799,90 @@ defmodule Phoenix.Controller do
   """
   def get_format(conn) do
     conn.private[:phoenix_format] || conn.params["_format"]
+  end
+
+  @doc """
+  Sends the given file or binary as a download.
+
+  The second argument must be `{:binary, contents}`, where
+  `contents` will be sent as download, or`{:file, path}`,
+  where `path` is the filesystem location of the file to
+  be sent. Be careful to not interpolate the path from
+  external parameters, as it could allow traversal of the
+  filesystem.
+
+  The download is achieved by setting "content-disposition"
+  to attachment. The "content-type" will also be set based
+  on the extension of the given filename but can be customized
+  via the `:content_type` and `:charset` options.
+
+  ## Options
+
+    * `:filename` - the filename to be presented to the user
+      as download
+    * `:content_type` - the content type of the file or binary
+      sent as download. It is automatically inferred from the
+      filename extension
+    * `:charset` - the charset of the file, such as "utf-8".
+      Defaults to none.
+
+  ## Examples
+
+  To send a file that is stored inside your application priv
+  directory:
+
+      path = Application.app_dir(:my_app, "priv/propectus.pdf")
+      send_download(conn, {:file, path})
+
+  When using `{:file, path}`, the filename is inferred from the
+  given path must may also be set explicitly.
+
+  To allow the user to download contents that are in memory as
+  a binary or string:
+
+      send_download(conn, {:binary, "world"}, filename: "hello.txt")
+
+  See `Plug.Conn.send_file/3` and `Plug.Conn.send_resp/3` if you
+  would like to access the low-level functions used to send files
+  and responses via Plug.
+  """
+  def send_download(conn, kind, opts \\ [])
+
+  def send_download(conn, {:file, path}, opts) do
+    filename = opts[:filename] || Path.basename(path)
+    conn
+    |> prepare_send_download(filename, opts)
+    |> send_file(conn.status || 200, path)
+  end
+
+  def send_download(conn, {:binary, contents}, opts) do
+    filename = opts[:filename] || raise ":filename option is required when sending binary download"
+    conn
+    |> prepare_send_download(filename, opts)
+    |> send_resp(conn.status || 200, contents)
+  end
+
+  defp prepare_send_download(conn, filename, opts) do
+    content_type = opts[:content_type] || MIME.from_path(filename)
+    encoded_filename = URI.encode_www_form(filename)
+    warn_if_ajax(conn)
+    conn
+    |> put_resp_content_type(content_type, opts[:charset])
+    |> put_resp_header("content-disposition", ~s[attachment; filename="#{encoded_filename}"])
+  end
+
+  defp ajax?(conn) do
+    case get_req_header(conn, "x-requested-with") do
+      [value] -> value in ["XMLHttpRequest", "xmlhttprequest"]
+      [] -> false
+    end
+  end
+
+  defp warn_if_ajax(conn) do
+    if ajax?(conn) do
+      Logger.warn "send_download/3 has been invoked during an AJAX request. " <>
+                  "The download may not work as expected under XMLHttpRequest"
+    end
   end
 
   @doc """
@@ -807,50 +936,6 @@ defmodule Phoenix.Controller do
   defp scrub?(""), do: true
   defp scrub?(_), do: false
 
-  defp prepare_assigns(conn, assigns, format) do
-    layout =
-      case layout(conn, assigns, format) do
-        {mod, layout} -> {mod, template_name(layout, format)}
-        false -> false
-      end
-
-    update_in conn.assigns,
-              & &1 |> Map.merge(assigns) |> Map.put(:layout, layout)
-  end
-
-  defp layout(conn, assigns, format) do
-    if format in layout_formats(conn) do
-      case Map.fetch(assigns, :layout) do
-        {:ok, layout} -> layout
-        :error -> layout(conn)
-      end
-    else
-      false
-    end
-  end
-
-  defp to_map(assigns) when is_map(assigns), do: assigns
-  defp to_map(assigns) when is_list(assigns), do: :maps.from_list(assigns)
-
-  defp template_name(name, format) when is_atom(name), do:
-    Atom.to_string(name) <> "." <> format
-  defp template_name(name, _format) when is_binary(name), do:
-    name
-
-  defp send_resp(conn, default_status, default_content_type, body) do
-    conn
-    |> ensure_resp_content_type(default_content_type)
-    |> send_resp(conn.status || default_status, body)
-  end
-
-  defp ensure_resp_content_type(%{resp_headers: resp_headers} = conn, content_type) do
-    if List.keyfind(resp_headers, "content-type", 0) do
-      conn
-    else
-      content_type = content_type <> "; charset=utf-8"
-      %{conn | resp_headers: [{"content-type", content_type}|resp_headers]}
-    end
-  end
 
   @doc """
   Enables CSRF protection.

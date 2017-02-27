@@ -368,6 +368,66 @@ defmodule Phoenix.Controller.ControllerTest do
     end
   end
 
+  describe "send_download/3" do
+    @hello_txt Path.expand("../../fixtures/hello.txt", __DIR__)
+
+    test "sends file for download" do
+      conn = send_download(conn(:get, "/"), {:file, @hello_txt})
+      assert conn.status == 200
+      assert get_resp_header(conn, "content-disposition") ==
+             ["attachment; filename=\"hello.txt\""]
+      assert get_resp_header(conn, "content-type") ==
+             ["text/plain"]
+      assert conn.resp_body ==
+             "world"
+    end
+
+    test "sends file for download with custom :filename" do
+      conn = send_download(conn(:get, "/"), {:file, @hello_txt}, filename: "hello world.json")
+      assert conn.status == 200
+      assert get_resp_header(conn, "content-disposition") ==
+             ["attachment; filename=\"hello+world.json\""]
+      assert get_resp_header(conn, "content-type") ==
+             ["application/json"]
+      assert conn.resp_body ==
+             "world"
+    end
+
+    test "sends file for download with custom :content_type and :charset" do
+      conn = send_download(conn(:get, "/"), {:file, @hello_txt}, content_type: "application/json", charset: "utf8")
+      assert conn.status == 200
+      assert get_resp_header(conn, "content-disposition") ==
+             ["attachment; filename=\"hello.txt\""]
+      assert get_resp_header(conn, "content-type") ==
+             ["application/json; charset=utf8"]
+      assert conn.resp_body ==
+             "world"
+    end
+
+    test "sends binary for download with :filename" do
+      conn = send_download(conn(:get, "/"), {:binary, "world"}, filename: "hello world.json")
+      assert conn.status == 200
+      assert get_resp_header(conn, "content-disposition") ==
+             ["attachment; filename=\"hello+world.json\""]
+      assert get_resp_header(conn, "content-type") ==
+             ["application/json"]
+      assert conn.resp_body ==
+             "world"
+    end
+
+    test "sends file as download with custom :content_type and :charset" do
+      conn = send_download(conn(:get, "/"), {:file, @hello_txt},
+                           filename: "hello.txt", content_type: "application/json", charset: "utf8")
+      assert conn.status == 200
+      assert get_resp_header(conn, "content-disposition") ==
+             ["attachment; filename=\"hello.txt\""]
+      assert get_resp_header(conn, "content-type") ==
+             ["application/json; charset=utf8"]
+      assert conn.resp_body ==
+             "world"
+    end
+  end
+
   describe "scrub_params/2" do
     test "raises Phoenix.MissingParamError for missing key" do
       assert_raise(Phoenix.MissingParamError, ~r"expected key \"foo\" to be present in params", fn ->
