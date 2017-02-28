@@ -101,6 +101,8 @@ defmodule Phoenix.Token do
       when generating the encryption and signing keys. Defaults to 32;
     * `:key_digest` - option passed to `Plug.Crypto.KeyGenerator`
       when generating the encryption and signing keys. Defaults to `:sha256`;
+    * `:json` - boolean option passed to encode_payload, to JSON payload with Poison,
+      default format is erlang term binary.
   """
   def sign(context, salt, data, opts \\ []) when is_binary(salt) do
     secret = get_key_base(context) |> get_secret(salt, opts)
@@ -108,7 +110,7 @@ defmodule Phoenix.Token do
     message = %{
       data: data,
       signed: now_ms(),
-    } |> :erlang.term_to_binary()
+    } |> encode_payload(opts)
     MessageVerifier.sign(message, secret)
   end
 
@@ -161,7 +163,8 @@ defmodule Phoenix.Token do
       when generating the encryption and signing keys. Defaults to 32;
     * `:key_digest` - option passed to `Plug.Crypto.KeyGenerator`
       when generating the encryption and signing keys. Defaults to `:sha256`;
-
+    * `:json` - Must be set to `true` if the payload was encoded with `[json: true]`.
+      Otherwise it will throw an ArgumentError.
   """
   def verify(context, salt, token, opts \\ [])
 
@@ -171,7 +174,7 @@ defmodule Phoenix.Token do
 
     case MessageVerifier.verify(token, secret) do
       {:ok, message} ->
-        %{data: data, signed: signed} = :erlang.binary_to_term(message)
+        {data, signed} = decode_payload(message, opts)
 
         if max_age_ms && (signed + max_age_ms) < now_ms() do
           {:error, :expired}
@@ -185,6 +188,18 @@ defmodule Phoenix.Token do
 
   def verify(_context, salt, nil, _opts) when is_binary(salt) do
     {:error, :missing}
+  end
+
+  defp encode_payload(message, json: true), do: Poison.encode!(message)
+  defp encode_payload(message, _), do: :erlang.term_to_binary(message)
+
+  defp decode_payload(message, json: true) do
+    %{"data" => data, "signed" => signed} = Poison.decode!(message)
+    {data, signed}
+  end
+  defp decode_payload(message, _) do
+    %{data: data, signed: signed} = :erlang.binary_to_term(message)
+    {data, signed}
   end
 
   defp get_key_base(%Plug.Conn{} = conn),
