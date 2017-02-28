@@ -181,6 +181,25 @@ defmodule Phoenix.Controller.PipelineTest do
         FallbackFunctionController.call(stack_conn(), :bad_fallback)
       end
     end
+
+    test "raises when calling from import instead of use", config do
+      assert_raise RuntimeError, ~r/can only be called when using Phoenix.Controller/, fn ->
+        defmodule config.test do
+          import Phoenix.Controller
+          action_fallback Boom
+        end
+      end
+    end
+
+    test "raises when calling more than once", config do
+      assert_raise RuntimeError, ~r/can only be called a single time/, fn ->
+        defmodule config.test do
+          use Phoenix.Controller
+          action_fallback Ok
+          action_fallback Boom
+        end
+      end
+    end
   end
 
   defp stack_conn() do

@@ -12,7 +12,7 @@ defmodule Phoenix.Controller.Pipeline do
       Module.register_attribute(__MODULE__, :plugs, accumulate: true)
       @before_compile Phoenix.Controller.Pipeline
       @phoenix_log_level Keyword.get(opts, :log, :debug)
-      @phoenix_fallback nil
+      @phoenix_fallback :unregistered
 
       @doc false
       def init(opts), do: opts
@@ -41,14 +41,33 @@ defmodule Phoenix.Controller.Pipeline do
   @doc false
   def __action_fallback__(plug) do
     quote bind_quoted: [plug: plug] do
-      unless is_atom(plug) do
-        raise ArgumentError, "expected action_fallback to be a module or function plug, got #{inspect plug}"
-      end
+      @phoenix_fallback Phoenix.Controller.Pipeline.validate_fallback(
+        plug,
+        __MODULE__,
+        Module.get_attribute(__MODULE__, :phoenix_fallback))
+    end
+  end
 
-      case Atom.to_charlist(plug) do
-        ~c"Elixir." ++ _ -> @phoenix_fallback {:module, plug}
-         _               -> @phoenix_fallback {:function, plug}
-      end
+  @doc false
+  def validate_fallback(plug, module, fallback) do
+    cond do
+      fallback == nil ->
+        raise """
+        action_fallback can only be called when using Phoenix.Controller.
+        Add `use Phoenix.Controller` to #{inspect module}
+        """
+
+      fallback != :unregistered ->
+        raise "action_fallback can only be called a single time per controller."
+
+      not is_atom(plug) ->
+        raise ArgumentError, "expected action_fallback to be a module or function plug, got #{inspect plug}"
+
+      fallback == :unregistered ->
+        case Atom.to_charlist(plug) do
+          ~c"Elixir." ++ _ -> {:module, plug}
+          _                -> {:function, plug}
+        end
     end
   end
 
@@ -90,7 +109,7 @@ defmodule Phoenix.Controller.Pipeline do
     end
   end
 
-  defp build_fallback(nil) do
+  defp build_fallback(:unregistered) do
     quote do: var!(conn_after)
   end
   defp build_fallback({:module, plug}) do
