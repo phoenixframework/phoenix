@@ -177,7 +177,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   Builds the path for caching.
   """
   def path(endpoint) do
-    {:cache, endpoint.config(:url)[:path]}
+    {:cache, empty_string_if_root(endpoint.config(:url)[:path])}
   end
 
   @doc """
@@ -241,8 +241,11 @@ defmodule Phoenix.Endpoint.Supervisor do
   """
   def static_path(endpoint) do
     script_path = (endpoint.config(:static_url) || endpoint.config(:url))[:path] || "/"
-    {:cache, if(script_path == "/", do: "", else: script_path)}
+    {:cache, empty_string_if_root(script_path)}
   end
+
+  defp empty_string_if_root("/"), do: ""
+  defp empty_string_if_root(other), do: other
 
   @doc """
   Returns the static path of a file in the static root directory.

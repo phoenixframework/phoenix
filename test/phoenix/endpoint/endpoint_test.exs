@@ -107,6 +107,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
       use Phoenix.Endpoint, otp_app: :phoenix
     end
     UrlEndpoint.start_link
+    assert UrlEndpoint.path("/phoenix.png") =~ "/api/phoenix.png"
     assert UrlEndpoint.static_path("/phoenix.png") =~ "/api/phoenix.png"
   end
 
@@ -116,6 +117,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
       use Phoenix.Endpoint, otp_app: :phoenix
     end
     StaticEndpoint.start_link
+    assert StaticEndpoint.path("/phoenix.png") =~ "/phoenix.png"
     assert StaticEndpoint.static_path("/phoenix.png") =~ "/static/phoenix.png"
   end
 
