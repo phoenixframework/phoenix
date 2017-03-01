@@ -11,7 +11,8 @@ defmodule Mix.Tasks.Phx.Gen.Json do
 
   The above generated resource will add the following files to lib/your_app:
 
-    * a context module in accounts.ex, serving as the API boundary to the resource
+    * a context module in accounts/accounts.ex,
+      serving as the API boundary to the resource
     * a schema in accounts/user.ex, with an `accounts_users` table
     * a view in web/views/user_view.ex
     * a controller in web/controllers/user_controller.ex
