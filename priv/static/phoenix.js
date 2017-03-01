@@ -1,4 +1,8 @@
-(function(exports){
+(function (global, factory) {
+typeof exports === 'object' ? factory(exports) :
+typeof define === 'function' && define.amd ? define(['exports'], factory) :
+factory(global.Phoenix = global.Phoenix || {});
+}(this, (function (exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1313,5 +1317,4 @@ var Timer = function () {
   return Timer;
 }();
 
-})(typeof(exports) === "undefined" ? window.Phoenix = window.Phoenix || {} : exports);
-
+})));
