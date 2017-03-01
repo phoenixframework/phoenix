@@ -34,13 +34,13 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
     default_opts = Application.get_env(:phoenix, :generators, [])
     opts = Keyword.merge(default_opts, opts)
 
-    attrs   = Mix.Phoenix.attrs(attrs)
+    attrs   = Mix.Phoenix.Schema.attrs(attrs)
     binding = Mix.Phoenix.inflect(singular)
     path    = binding[:path]
     route   = String.split(path, "/") |> Enum.drop(-1) |> Kernel.++([plural]) |> Enum.join("/")
     binding = binding ++ [plural: plural, route: route, attrs: attrs,
                           sample_id: sample_id(opts),
-                          inputs: inputs(attrs), params: Mix.Phoenix.params(attrs),
+                          inputs: inputs(attrs), params: Mix.Phoenix.Schema.params(attrs),
                           template_singular: String.replace(binding[:singular], "_", " "),
                           template_plural: String.replace(plural, "_", " ")]
 

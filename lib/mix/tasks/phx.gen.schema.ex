@@ -26,7 +26,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
 
   The following types are supported:
 
-  #{for attr <- Mix.Phoenix.valid_attributes(), do: "  * `#{inspect attr}`\n"}
+  #{for attr <- Mix.Phoenix.Schema.valid_types(), do: "  * `#{inspect attr}`\n"}
     * `:datetime` - An alias for `:naive_datetime`
 
   The generator also supports `belongs_to` associations

@@ -91,9 +91,9 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
     opts = Keyword.merge(default_opts, opts)
 
     uniques   = Mix.Phoenix.Schema.uniques(attrs)
-    attrs     = Mix.Phoenix.attrs(attrs)
+    attrs     = Mix.Phoenix.Schema.attrs(attrs)
+    params    = Mix.Phoenix.Schema.params(attrs)
     binding   = Mix.Phoenix.inflect(singular)
-    params    = Mix.Phoenix.params(attrs)
     path      = binding[:path]
 
     Mix.Phoenix.check_module_name_availability!(binding[:module])

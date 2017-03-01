@@ -29,7 +29,7 @@ defmodule Mix.PhoenixTest do
       "joined:naive_datetime",
       "token:uuid"
     ]
-    assert Mix.Phoenix.attrs(attrs) == [
+    assert Mix.Phoenix.Schema.attrs(attrs) == [
       logins: {:array, :string},
       age: :integer,
       temp: :float,
@@ -46,7 +46,7 @@ defmodule Mix.PhoenixTest do
 
   test "attrs/1 raises with an unknown type" do
     assert_raise(Mix.Error, ~r"Unknown type `:other` given to generator", fn ->
-      Mix.Phoenix.attrs(["other:other"])
+      Mix.Phoenix.Schema.attrs(["other:other"])
     end)
   end
 
@@ -65,7 +65,7 @@ defmodule Mix.PhoenixTest do
       token: :uuid,
       other: :other
     ]
-    assert Mix.Phoenix.params(params) == %{
+    assert Mix.Phoenix.Schema.params(params) == %{
       logins: [],
       age: 42,
       temp: "120.5",

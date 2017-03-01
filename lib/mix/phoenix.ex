@@ -2,12 +2,6 @@ defmodule Mix.Phoenix do
   # Conveniences for Phoenix tasks.
   @moduledoc false
 
-  @valid_attributes [:integer, :float, :decimal, :boolean, :map, :string,
-                     :array, :references, :text, :date, :time,
-                     :naive_datetime, :utc_datetime, :uuid, :binary]
-
-  def valid_attributes, do: @valid_attributes
-
   @doc """
   Evals EEx files from source dir.
 
@@ -116,31 +110,6 @@ defmodule Mix.Phoenix do
   end
 
   @doc """
-  Parses the attrs as received by generators.
-  """
-  def attrs(attrs) do
-    Enum.map(attrs, fn attr ->
-      attr
-      |> drop_unique()
-      |> String.split(":", parts: 3)
-      |> list_to_attr()
-      |> validate_attr!()
-    end)
-  end
-
-  @doc """
-  Generates some sample params based on the parsed attributes.
-  """
-  def params(attrs, action \\ :create) when action in [:create, :update] do
-    attrs
-    |> Enum.reject(fn
-        {_, {:references, _}} -> true
-        {_, _} -> false
-       end)
-    |> Enum.into(%{}, fn {k, t} -> {k, type_to_default(k, t, action)} end)
-  end
-
-  @doc """
   Checks the availability of a given module name.
   """
   def check_module_name_availability!(name) do
@@ -185,63 +154,6 @@ defmodule Mix.Phoenix do
 
   defp beam_to_module(path) do
     path |> Path.basename(".beam") |> String.to_atom()
-  end
-
-  defp drop_unique(info) do
-    prefix = byte_size(info) - 7
-    case info do
-      <<attr::size(prefix)-binary, ":unique">> -> attr
-      _ -> info
-    end
-  end
-
-  defp list_to_attr([key]), do: {String.to_atom(key), :string}
-  defp list_to_attr([key, value]), do: {String.to_atom(key), String.to_atom(value)}
-  defp list_to_attr([key, comp, value]) do
-    {String.to_atom(key), {String.to_atom(comp), String.to_atom(value)}}
-  end
-
-  defp type_to_default(key, t, :create) do
-    case t do
-        {:array, _}     -> []
-        :integer        -> 42
-        :float          -> "120.5"
-        :decimal        -> "120.5"
-        :boolean        -> true
-        :map            -> %{}
-        :text           -> "some #{key}"
-        :date           -> %{year: 2010, month: 4, day: 17}
-        :time           -> %{hour: 14, minute: 0, second: 0}
-        :uuid           -> "7488a646-e31f-11e4-aace-600308960662"
-        :utc_datetime   -> %{year: 2010, month: 4, day: 17, hour: 14, minute: 0, second: 0}
-        :naive_datetime -> %{year: 2010, month: 4, day: 17, hour: 14, minute: 0, second: 0}
-        _               -> "some #{key}"
-    end
-  end
-  defp type_to_default(key, t, :update) do
-    case t do
-        {:array, _}     -> []
-        :integer        -> 43
-        :float          -> "456.7"
-        :decimal        -> "456.7"
-        :boolean        -> false
-        :map            -> %{}
-        :text           -> "some updated #{key}"
-        :date           -> %{year: 2011, month: 5, day: 18}
-        :time           -> %{hour: 15, minute: 1, second: 1}
-        :uuid           -> "7488a646-e31f-11e4-aace-600308960668"
-        :utc_datetime   -> %{year: 2011, month: 5, day: 18, hour: 15, minute: 1, second: 1}
-        :naive_datetime -> %{year: 2011, month: 5, day: 18, hour: 15, minute: 1, second: 1}
-        _               -> "some updated #{key}"
-    end
-  end
-
-  defp validate_attr!({name, :datetime}), do: validate_attr!({name, :naive_datetime})
-  defp validate_attr!({_name, type} = attr) when type in @valid_attributes, do: attr
-  defp validate_attr!({_name, {type, _}} = attr) when type in @valid_attributes, do: attr
-  defp validate_attr!({_, type}) do
-    Mix.raise "Unknown type `#{inspect type}` given to generator. " <>
-              "The supported types are: #{@valid_attributes |> Enum.sort() |> Enum.join(", ")}"
   end
 
   @doc """
