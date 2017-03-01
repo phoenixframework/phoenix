@@ -10,12 +10,12 @@ defmodule Phoenix.View do
 
   ## Examples
 
-  Phoenix defines the view template at `web/web.ex`:
+  Phoenix defines the view template at `lib/web/web.ex`:
 
       defmodule YourApp.Web do
         def view do
           quote do
-            use Phoenix.View, root: "web/templates"
+            use Phoenix.View, root: "lib/web/templates"
 
             # Import common functionality
             import YourApp.Router.Helpers
@@ -34,7 +34,7 @@ defmodule Phoenix.View do
         use YourApp.Web, :view
       end
 
-  Because we have defined the template root to be "web/templates", `Phoenix.View`
+  Because we have defined the template root to be "lib/web/templates", `Phoenix.View`
   will automatically load all templates at "web/templates/user" and include them
   in the `YourApp.UserView`. For example, imagine we have the template:
 
