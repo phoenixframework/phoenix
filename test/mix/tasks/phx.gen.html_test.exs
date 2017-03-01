@@ -87,7 +87,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
   test "generates html context and handles existing contexts", config do
     in_tmp_project config.test, fn ->
-      Gen.Html.run(["Blog", "Post", "posts", "title:string"])
+      Gen.Html.run(~w(Blog Post posts slug:unique title:string))
 
       assert_file "lib/phoenix/blog/post.ex"
       assert_file "lib/phoenix/blog.ex"
@@ -100,7 +100,23 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "defmodule Phoenix.Web.PostControllerTest"
       end
 
-      assert [_] = Path.wildcard("priv/repo/migrations/*_create_blog_post.exs")
+      assert [path] = Path.wildcard("priv/repo/migrations/*_create_blog_post.exs")
+      assert_file path, """
+        defmodule Phoenix.Repo.Migrations.CreatePhoenix.Blog.Post do
+          use Ecto.Migration
+
+          def change do
+            create table(:blog_posts) do
+              add :slug, :string
+              add :title, :string
+
+              timestamps()
+            end
+
+            create unique_index(:blog_posts, [:slug])
+          end
+        end
+        """
 
       assert_file "lib/phoenix/web/controllers/post_controller.ex", fn file ->
         assert file =~ "defmodule Phoenix.Web.PostController"

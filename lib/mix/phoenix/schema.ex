@@ -66,7 +66,7 @@ defmodule Mix.Phoenix.Schema do
       types: types(attrs),
       defaults: schema_defaults(attrs),
       uniques: uniques,
-      indexes: indexes(schema_plural, assocs, uniques),
+      indexes: indexes(table, assocs, uniques),
       human_singular: Phoenix.Naming.humanize(singular),
       human_plural: Phoenix.Naming.humanize(schema_plural),
       binary_id: opts[:binary_id],
@@ -153,14 +153,14 @@ defmodule Mix.Phoenix.Schema do
     end
   end
 
-  defp indexes(plural, assocs, uniques) do
+  defp indexes(table, assocs, uniques) do
     Enum.concat(
       Enum.map(uniques, fn key -> {key, true} end),
       Enum.map(assocs, fn {key, _} -> {key, false} end))
     |> Enum.uniq_by(fn {key, _} -> key end)
     |> Enum.map(fn
-      {key, false} -> "create index(:#{plural}, [:#{key}])"
-      {key, true}  -> "create unique_index(:#{plural}, [:#{key}])"
+      {key, false} -> "create index(:#{table}, [:#{key}])"
+      {key, true}  -> "create unique_index(:#{table}, [:#{key}])"
     end)
   end
 
