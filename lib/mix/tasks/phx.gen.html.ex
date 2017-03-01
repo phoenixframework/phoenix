@@ -50,7 +50,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     if Mix.Project.umbrella? do
       Mix.raise "mix phx.gen.html and phx.gen.json can only be run inside an application directory"
     end
-    switches = [binary_id: :boolean, model: :boolean, table: :string]
+    switches = [binary_id: :boolean, table: :string]
     {opts, parsed, _} = OptionParser.parse(args, switches: switches)
     [context_name, schema_name, plural | schema_args] = validate_args!(parsed)
 
