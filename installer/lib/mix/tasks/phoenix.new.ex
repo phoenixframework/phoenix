@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Phoenix.New do
   use Mix.Task
   import Mix.Generator
 
-  @phoenix Path.expand("../..", __DIR__)
+  @phoenix Path.expand("../../../..", __DIR__)
   @version Mix.Project.config[:version]
   @shortdoc "Creates a new Phoenix v#{@version} application"
 
