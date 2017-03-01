@@ -169,6 +169,7 @@
 const VSN = "1.0.0"
 const SOCKET_STATES = {connecting: 0, open: 1, closing: 2, closed: 3}
 const DEFAULT_TIMEOUT = 10000
+const WS_CLOSE_NORMAL = 1000
 const CHANNEL_STATES = {
   closed: "closed",
   errored: "errored",
@@ -499,6 +500,8 @@ export class Socket {
     this.longpollerTimeout    = opts.longpollerTimeout || 20000
     this.params               = opts.params || {}
     this.endPoint             = `${endPoint}/${TRANSPORTS.websocket}`
+    this.heartbeatTimer       = null
+    this.pendingHeartbeatRef  = null
     this.reconnectTimer       = new Timer(() => {
       this.disconnect(() => this.connect())
     }, this.reconnectAfterMs)
@@ -629,7 +632,14 @@ export class Socket {
   }
 
   sendHeartbeat(){ if(!this.isConnected()){ return }
-    this.push({topic: "phoenix", event: "heartbeat", payload: {}, ref: this.makeRef()})
+    if(this.pendingHeartbeatRef){
+      this.pendingHeartbeatRef = null
+      this.log("transport", "heartbeat timeout. Attempting to re-establish connection")
+      this.conn.close(WS_CLOSE_NORMAL, "hearbeat timeout")
+      return
+    }
+    this.pendingHeartbeatRef = this.makeRef()
+    this.push({topic: "phoenix", event: "heartbeat", payload: {}, ref: this.pendingHeartbeatRef})
   }
 
   flushSendBuffer(){
@@ -642,9 +652,11 @@ export class Socket {
   onConnMessage(rawMessage){
     this.decode(rawMessage.data, msg => {
       let {topic, event, payload, ref} = msg
+      if(ref && ref === this.pendingHeartbeatRef){ this.pendingHeartbeatRef = null }
+
       this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
       this.channels.filter( channel => channel.isMember(topic) )
-                  .forEach( channel => channel.trigger(event, payload, ref) )
+                   .forEach( channel => channel.trigger(event, payload, ref) )
       this.stateChangeCallbacks.message.forEach( callback => callback(msg) )
     })
   }

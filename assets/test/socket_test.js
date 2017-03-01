@@ -482,6 +482,17 @@ describe("sendHeartbeat", () => {
     socket.connect()
   })
 
+  it("closes socket when heartbeat is not ack'd within heartbeat window", () => {
+    let closed = false
+    socket.conn.readyState = 1 // open
+    socket.conn.onclose = () => closed = true
+    socket.sendHeartbeat()
+    assert.equal(closed, false)
+
+    socket.sendHeartbeat()
+    assert.equal(closed, true)
+  })
+
   it("pushes heartbeat data when connected", () => {
     socket.conn.readyState = 1 // open
 

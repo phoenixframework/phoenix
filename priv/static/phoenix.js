@@ -184,6 +184,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var VSN = "1.0.0";
 var SOCKET_STATES = { connecting: 0, open: 1, closing: 2, closed: 3 };
 var DEFAULT_TIMEOUT = 10000;
+var WS_CLOSE_NORMAL = 1000;
 var CHANNEL_STATES = {
   closed: "closed",
   errored: "errored",
@@ -658,6 +659,8 @@ var Socket = exports.Socket = function () {
     this.longpollerTimeout = opts.longpollerTimeout || 20000;
     this.params = opts.params || {};
     this.endPoint = endPoint + "/" + TRANSPORTS.websocket;
+    this.heartbeatTimer = null;
+    this.pendingHeartbeatRef = null;
     this.reconnectTimer = new Timer(function () {
       _this4.disconnect(function () {
         return _this4.connect();
@@ -887,7 +890,14 @@ var Socket = exports.Socket = function () {
       if (!this.isConnected()) {
         return;
       }
-      this.push({ topic: "phoenix", event: "heartbeat", payload: {}, ref: this.makeRef() });
+      if (this.pendingHeartbeatRef) {
+        this.pendingHeartbeatRef = null;
+        this.log("transport", "heartbeat timeout. Attempting to re-establish connection");
+        this.conn.close(WS_CLOSE_NORMAL, "hearbeat timeout");
+        return;
+      }
+      this.pendingHeartbeatRef = this.makeRef();
+      this.push({ topic: "phoenix", event: "heartbeat", payload: {}, ref: this.pendingHeartbeatRef });
     }
   }, {
     key: "flushSendBuffer",
@@ -909,6 +919,10 @@ var Socket = exports.Socket = function () {
             event = msg.event,
             payload = msg.payload,
             ref = msg.ref;
+
+        if (ref && ref === _this8.pendingHeartbeatRef) {
+          _this8.pendingHeartbeatRef = null;
+        }
 
         _this8.log("receive", (payload.status || "") + " " + topic + " " + event + " " + (ref && "(" + ref + ")" || ""), payload);
         _this8.channels.filter(function (channel) {
