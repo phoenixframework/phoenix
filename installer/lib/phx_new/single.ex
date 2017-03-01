@@ -16,7 +16,7 @@ defmodule Phx.New.Single do
     {:eex,  "phx_web/views/error_view.ex",              :project, "lib/:app/web/views/error_view.ex"},
     {:eex,  "phx_web/endpoint.ex",                      :project, "lib/:app/web/endpoint.ex"},
     {:eex,  "phx_web/router.ex",                        :project, "lib/:app/web/router.ex"},
-    {:eex,  "phx_single/lib/app_name/web.ex",           :project, "lib/:app/web.ex"},
+    {:eex,  "phx_single/lib/app_name/web/web.ex",       :project, "lib/:app/web/web.ex"},
     {:eex,  "phx_single/mix.exs",                       :project, "mix.exs"},
     {:eex,  "phx_single/README.md",                     :project, "README.md"},
     {:eex,  "phx_test/support/channel_case.ex",         :project, "test/support/channel_case.ex"},

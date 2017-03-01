@@ -46,7 +46,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
       Gen.Json.run(["Blog", "Post", "posts", "title:string"])
 
       assert_file "lib/phoenix/blog/post.ex"
-      assert_file "lib/phoenix/blog.ex"
+      assert_file "lib/phoenix/blog/blog.ex"
 
       assert_file "test/blog_test.exs", fn file ->
         assert file =~ "use Phoenix.DataCase"

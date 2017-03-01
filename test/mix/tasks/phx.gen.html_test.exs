@@ -25,7 +25,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         base_module: Phoenix,
         basename: "blog",
         dir: "lib/phoenix/blog",
-        file: "lib/phoenix/blog.ex",
+        file: "lib/phoenix/blog/blog.ex",
         module: Phoenix.Blog,
         web_module: Phoenix.Web,
         schema: %Mix.Phoenix.Schema{
@@ -43,7 +43,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
   test "new existing context", config do
     in_tmp_project config.test, fn ->
       File.mkdir_p!("lib/phoenix/blog")
-      File.write!("lib/phoenix/blog.ex", """
+      File.write!("lib/phoenix/blog/blog.ex", """
       defmodule Phoenix.Blog do
       end
       """)
@@ -92,7 +92,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       assert_file "lib/phoenix/blog/post.ex", fn file ->
         assert file =~ "field :published_at, :naive_datetime"
       end
-      assert_file "lib/phoenix/blog.ex"
+      assert_file "lib/phoenix/blog/blog.ex"
 
       assert_file "test/blog_test.exs", fn file ->
         assert file =~ "use Phoenix.DataCase"

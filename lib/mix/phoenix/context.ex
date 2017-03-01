@@ -25,7 +25,7 @@ defmodule Mix.Phoenix.Context do
     alias    = module |> Module.split() |> tl() |> Module.concat()
     basename = Phoenix.Naming.underscore(context_name)
     dir      = Path.join(["lib", otp_app, basename])
-    file     = Path.join(["lib", otp_app, basename <> ".ex"])
+    file     = Path.join([dir, basename <> ".ex"])
 
     %Context{
       name: context_name,

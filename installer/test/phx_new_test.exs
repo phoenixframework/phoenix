@@ -43,7 +43,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/lib/phx_blog/application.ex", ~r/defmodule PhxBlog.Application do/
       assert_file "phx_blog/mix.exs", ~r/mod: {PhxBlog.Application, \[\]}/
-      assert_file "phx_blog/lib/phx_blog/web.ex", fn file ->
+      assert_file "phx_blog/lib/phx_blog/web/web.ex", fn file ->
         assert file =~ "defmodule PhxBlog.Web do"
         assert file =~ "use Phoenix.View, root: \"lib/phx_blog/web/templates\""
       end
@@ -63,7 +63,7 @@ defmodule Mix.Tasks.Phx.NewTest do
                   ~r/defmodule PhxBlog.Web.PageView/
 
       assert_file "phx_blog/lib/phx_blog/web/router.ex", "defmodule PhxBlog.Web.Router"
-      assert_file "phx_blog/lib/phx_blog/web.ex", "defmodule PhxBlog.Web"
+      assert_file "phx_blog/lib/phx_blog/web/web.ex", "defmodule PhxBlog.Web"
       assert_file "phx_blog/lib/phx_blog/web/templates/layout/app.html.eex",
                   "<title>Hello PhxBlog!</title>"
 
@@ -108,7 +108,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/phx_blog/repo.ex", ~r"defmodule PhxBlog.Repo"
       assert_file "phx_blog/priv/repo/seeds.exs", ~r"PhxBlog.Repo.insert!"
       assert_file "phx_blog/test/support/data_case.ex", ~r"defmodule PhxBlog.DataCase"
-      assert_file "phx_blog/lib/phx_blog/web.ex", ~r"defmodule PhxBlog.Web"
+      assert_file "phx_blog/lib/phx_blog/web/web.ex", ~r"defmodule PhxBlog.Web"
 
       # Install dependencies?
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
@@ -163,7 +163,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/config/dev.exs", &refute(&1 =~ config)
       assert_file "phx_blog/config/test.exs", &refute(&1 =~ config)
       assert_file "phx_blog/config/prod.secret.exs", &refute(&1 =~ config)
-      assert_file "phx_blog/lib/phx_blog/web.ex", &refute(&1 =~ ~r"alias PhxBlog.Repo")
+      assert_file "phx_blog/lib/phx_blog/web/web.ex", &refute(&1 =~ ~r"alias PhxBlog.Repo")
 
       # No HTML
       assert File.exists?("phx_blog/test/web/controllers")
@@ -237,7 +237,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "custom_path/mix.exs", ~r/app: :phx_blog/
       assert_file "custom_path/lib/phx_blog/web/endpoint.ex", ~r/app: :phx_blog/
       assert_file "custom_path/config/config.exs", ~r/namespace: PhoteuxBlog/
-      assert_file "custom_path/lib/phx_blog/web.ex", ~r/use Phoenix.Controller, namespace: PhoteuxBlog.Web/
+      assert_file "custom_path/lib/phx_blog/web/web.ex", ~r/use Phoenix.Controller, namespace: PhoteuxBlog.Web/
     end
   end
 
