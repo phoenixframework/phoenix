@@ -30,7 +30,7 @@ $ cd installer
 $ mix phx.new dev_app --dev
 ```
 
-The `--dev` flag will configure your new project's `:phoenix` dep relative path dependency, pointing to local checkout:
+The `--dev` flag will configure your new project's `:phoenix` dep as a relative path dependency, pointing to your local Phoenix checkout:
 
 ```
 defp deps do
