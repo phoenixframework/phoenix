@@ -87,9 +87,11 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
   test "generates html context and handles existing contexts", config do
     in_tmp_project config.test, fn ->
-      Gen.Html.run(~w(Blog Post posts slug:unique title:string))
+      Gen.Html.run(~w(Blog Post posts slug:unique title:string published_at:datetime))
 
-      assert_file "lib/phoenix/blog/post.ex"
+      assert_file "lib/phoenix/blog/post.ex", fn file ->
+        assert file =~ "field :published_at, :naive_datetime"
+      end
       assert_file "lib/phoenix/blog.ex"
 
       assert_file "test/blog_test.exs", fn file ->
@@ -109,6 +111,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
             create table(:blog_posts) do
               add :slug, :string
               add :title, :string
+              add :published_at, :naive_datetime
 
               timestamps()
             end
@@ -130,14 +133,33 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       end
 
 
-      Gen.Html.run(["Blog", "Comment", "comments", "title:string"])
-      assert_file "lib/phoenix/blog/comment.ex"
+      Gen.Html.run(~w(Blog Comment comments title:string published_at:naive_datetime edited_at:utc_datetime))
+      assert_file "lib/phoenix/blog/comment.ex", fn file ->
+        assert file =~ "field :published_at, :naive_datetime"
+        assert file =~ "field :edited_at, :utc_datetime"
+      end
 
       assert_file "test/web/controllers/comment_controller_test.exs", fn file ->
         assert file =~ "defmodule Phoenix.Web.CommentControllerTest"
       end
 
-      assert [_] = Path.wildcard("priv/repo/migrations/*_create_blog_comment.exs")
+      assert [path] = Path.wildcard("priv/repo/migrations/*_create_blog_comment.exs")
+      assert_file path, """
+        defmodule Phoenix.Repo.Migrations.CreatePhoenix.Blog.Comment do
+          use Ecto.Migration
+
+          def change do
+            create table(:blog_comments) do
+              add :title, :string
+              add :published_at, :naive_datetime
+              add :edited_at, :utc_datetime
+
+              timestamps()
+            end
+
+          end
+        end
+        """
 
       assert_file "lib/phoenix/web/controllers/comment_controller.ex", fn file ->
         assert file =~ "defmodule Phoenix.Web.CommentController"

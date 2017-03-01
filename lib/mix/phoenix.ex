@@ -6,6 +6,8 @@ defmodule Mix.Phoenix do
                      :array, :references, :text, :date, :time,
                      :naive_datetime, :utc_datetime, :uuid, :binary]
 
+  def valid_attributes, do: @valid_attributes
+
   @doc """
   Evals EEx files from source dir.
 
@@ -234,10 +236,11 @@ defmodule Mix.Phoenix do
     end
   end
 
+  defp validate_attr!({name, :datetime}), do: validate_attr!({name, :naive_datetime})
   defp validate_attr!({_name, type} = attr) when type in @valid_attributes, do: attr
   defp validate_attr!({_name, {type, _}} = attr) when type in @valid_attributes, do: attr
   defp validate_attr!({_, type}) do
-    Mix.raise "Unknown type `#{type}` given to generator. " <>
+    Mix.raise "Unknown type `#{inspect type}` given to generator. " <>
               "The supported types are: #{@valid_attributes |> Enum.sort() |> Enum.join(", ")}"
   end
 

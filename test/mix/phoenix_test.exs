@@ -45,7 +45,7 @@ defmodule Mix.PhoenixTest do
   end
 
   test "attrs/1 raises with an unknown type" do
-    assert_raise(Mix.Error, ~r"Unknown type `other` given to generator", fn ->
+    assert_raise(Mix.Error, ~r"Unknown type `:other` given to generator", fn ->
       Mix.Phoenix.attrs(["other:other"])
     end)
   end

@@ -24,6 +24,11 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
 
       mix phx.gen.schema Blog.Post blog_posts title views:integer
 
+  The following types are supported:
+
+  #{for attr <- Mix.Phoenix.valid_attributes(), do: "  * `#{inspect attr}`\n"}
+    * `:datetime` - An alias for `:naive_datetime`
+
   The generator also supports `belongs_to` associations
   via references:
 
