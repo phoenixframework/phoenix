@@ -19,24 +19,25 @@ We appreciate any contribution to Phoenix. Check our [CODE_OF_CONDUCT.md](CODE_O
 
 ### Generating a Phoenix project from unreleased versions
 
-In order to create a new project using the latest Phoenix source installer (the `phx.new` Mix task) you will need to ensure two things.
+You can create a new project using the latest Phoenix source installer (the `phx.new` Mix task) with the following steps:
 
 1. Remove any previously installed `phx_new` archives so that Mix will pick up the local source code. This can be done with `mix archive.uninstall phx_new.ez` or by simply deleting the file, which is usually in `~/.mix/archives/`.
-2. Run the command from within the `installer` directory and provide a subdirectory within the installer to generate your dev project. The command below will create a new project using your current Phoenix checkout, thanks to the `--dev` flag.
+2. Copy this repo via `git clone https://github.com/phoenixframework/phoenix` or by downloading it
+3. Run the `phx.new` mix task from within the `installer` directory, for example:
 
 ```bash
 $ cd installer
 $ mix phx.new dev_app --dev
 ```
 
-This will produce a new project that has `:phoenix` configured as a relative dependency:
+The `--dev` flag will configure your new project's `:phoenix` dep relative path dependency, pointing to local checkout:
 
 ```
 defp deps do
   [{:phoenix, path: "../..", override: true},
 ```
 
-The command must be run from the `installer` directory. See the discussion in [PR 1224](https://github.com/phoenixframework/phoenix/pull/1224) for more information.
+To create projects outside of the `installer/` directory, add the latest archive to your machine by following the instructions in [installer/README.md](https://github.com/phoenixframework/phoenix/blob/master/installer/README.md)
 
 ### Building phoenix.js
 
