@@ -19,6 +19,7 @@
 
 * JavaScript client enhancements
   * Add ability to pass `encode` and `decode` functions to socket constructor for custom encoding and decoding of outgoing and incoming messages.
+  * Detect heartbeat timeouts on client to handle ungraceful connection loss for faster socket error detection
 
 ## 1.2.1 (2016-8-11)
 
