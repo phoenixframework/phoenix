@@ -2,6 +2,8 @@
 
 ## 1.3.0-rc.0 (2017-03-01)
 
+See these [`1.2.x` to `1.3.x` upgrade instructions](https://gist.github.com/b018b804d3c100c760af8c8c9b107da2) to bring your existing apps up to speed.
+
 * Enhancements
   * [Generator] Add new `phx.new`, `phx.new.web`, `phx.new.ecto` project generators with improved application structure and support for umbrella applications
   * [Generator] Add new `phx.gen.html` and `phx.gen.json` resource generators with improved isolation of API boundaries
