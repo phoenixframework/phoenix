@@ -21,14 +21,14 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   As well as a migration file for the repository and test files for
   generated context and controller features.
 
-  ## Schema table name
+  ## Schema options
 
   By deault, the schema table name will be the plural name, namespaced by the
   context name. You can customize this value by providing the `--table`
   option to the generator.
 
-  Read the documentation for `phx.gen.schema` for more information on attributes
-  and supported options.
+  Read the documentation for `phx.gen.schema` for more information on
+  attributes and supported options.
   """
   use Mix.Task
 
@@ -36,32 +36,17 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   alias Mix.Tasks.Phx.Gen
 
   def run(args) do
-    {context, schema} = build(args)
-    binding = [context: context, schema: schema]
+    if Mix.Project.umbrella? do
+      Mix.raise "mix phx.gen.html can only be run inside an application directory"
+    end
+
+    {context, schema} = Gen.Context.build(args)
+    binding = [context: context, schema: schema, inputs: inputs(schema)]
     paths = Mix.Phoenix.generator_paths()
 
     context
-    |> Context.inject_schema_access(binding, paths)
     |> copy_new_files(paths, binding)
     |> print_shell_instructions()
-  end
-
-  def build(args) do
-    if Mix.Project.umbrella? do
-      Mix.raise "mix phx.gen.html and phx.gen.json can only be run inside an application directory"
-    end
-    switches = [binary_id: :boolean, table: :string]
-    {opts, parsed, _} = OptionParser.parse(args, switches: switches)
-    [context_name, schema_name, plural | schema_args] = validate_args!(parsed)
-
-    table = Keyword.get(opts, :table, Phoenix.Naming.underscore(context_name) <> "_#{plural}")
-    schema_module = inspect(Module.concat(context_name, schema_name))
-
-    schema = Gen.Schema.build([schema_module, plural | schema_args] ++ ["--table", table], __MODULE__)
-    context = Context.new(context_name, schema, opts)
-    Mix.Phoenix.check_module_name_availability!(context.module)
-
-    {context, schema}
   end
 
   def copy_new_files(%Context{schema: schema} = context, paths, binding) do
@@ -77,55 +62,56 @@ defmodule Mix.Tasks.Phx.Gen.Html do
       {:eex, "show.html.eex",       Path.join(web_prefix, "templates/#{schema.singular}/show.html.eex")},
       {:eex, "view.ex",             Path.join(web_prefix, "views/#{schema.singular}_view.ex")},
       {:eex, "controller_test.exs", Path.join(test_prefix, "controllers/#{schema.singular}_controller_test.exs")},
-      {:new_eex, "context_test.exs", "test/#{context.basename}_test.exs"},
     ]
-    Gen.Schema.copy_new_files(schema, paths, binding)
 
+    Gen.Context.copy_new_files(context, paths, binding)
     context
   end
 
-  def print_shell_instructions(%Context{schema: schema}) do
+  def print_shell_instructions(%Context{schema: schema} = context) do
     Mix.shell.info """
 
     Add the resource to your browser scope in lib/#{Mix.Phoenix.otp_app()}/web/router.ex:
 
         resources "/#{schema.plural}", #{inspect schema.alias}Controller
     """
-    Gen.Schema.print_shell_instructions(schema)
+    Gen.Context.print_shell_instructions(context)
   end
 
-  defp validate_args!([context, schema, _plural | _] = args) do
-    cond do
-      not Context.valid?(context) ->
-        raise_with_help "Expected the context, #{inspect context}, to be a valid module name"
-      not Schema.valid?(schema) ->
-        raise_with_help "Expected the schema, #{inspect schema}, to be a valid module name"
-      context == schema ->
-        raise_with_help "The context and schema should have different names"
-      true ->
-        args
-    end
+  defp inputs(%Schema{} = schema) do
+    Enum.map(schema.attrs, fn
+      {_, {:array, _}} ->
+        {nil, nil, nil}
+      {_, {:references, _}} ->
+        {nil, nil, nil}
+      {key, :integer} ->
+        {label(key), ~s(<%= number_input f, #{inspect(key)}, class: "form-control" %>), error(key)}
+      {key, :float} ->
+        {label(key), ~s(<%= number_input f, #{inspect(key)}, step: "any", class: "form-control" %>), error(key)}
+      {key, :decimal} ->
+        {label(key), ~s(<%= number_input f, #{inspect(key)}, step: "any", class: "form-control" %>), error(key)}
+      {key, :boolean} ->
+        {label(key), ~s(<%= checkbox f, #{inspect(key)}, class: "checkbox" %>), error(key)}
+      {key, :text} ->
+        {label(key), ~s(<%= textarea f, #{inspect(key)}, class: "form-control" %>), error(key)}
+      {key, :date} ->
+        {label(key), ~s(<%= date_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
+      {key, :time} ->
+        {label(key), ~s(<%= time_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
+      {key, :utc_datetime} ->
+        {label(key), ~s(<%= datetime_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
+      {key, :naive_datetime} ->
+        {label(key), ~s(<%= datetime_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
+      {key, _}  ->
+        {label(key), ~s(<%= text_input f, #{inspect(key)}, class: "form-control" %>), error(key)}
+    end)
   end
 
-  defp validate_args!(_) do
-    raise_with_help "Invalid arguments"
+  defp label(key) do
+    ~s(<%= label f, #{inspect(key)}, class: "control-label" %>)
   end
 
-  @spec raise_with_help(String.t) :: no_return()
-  def raise_with_help(msg) do
-    Mix.raise """
-    #{msg}
-
-    mix phx.gen.html and mix phx.gen.json expect a context module name,
-    followed by singular and plural names of the generated resource, ending
-    with any number of attributes. For example:
-
-        mix phx.gen.html Accounts User users name:string
-        mix phx.gen.json Accounts User users name:string
-
-    The context serves as the API boundary for the given resource.
-    Multiple resources may belong to a context and a resource may be
-    split over distinct contexts (such as Accounts.User and Blog.User).
-    """
+  defp error(field) do
+    ~s(<%= error_tag f, #{inspect(field)} %>)
   end
 end

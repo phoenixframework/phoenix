@@ -1,4 +1,6 @@
 defmodule Mix.Phoenix.Schema do
+  @moduledoc false
+
   alias Mix.Phoenix.Schema
 
   defstruct module: nil,
@@ -104,7 +106,6 @@ defmodule Mix.Phoenix.Schema do
     |> Enum.filter(&String.ends_with?(&1, ":unique"))
     |> Enum.map(& &1 |> String.split(":", parts: 2) |> hd |> String.to_atom)
   end
-
 
   @doc """
   Parses the attrs as received by generators.
