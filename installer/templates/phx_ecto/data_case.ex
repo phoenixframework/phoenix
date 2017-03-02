@@ -38,7 +38,7 @@ defmodule <%= app_module %>.DataCase do
   @doc """
   A helper that transform changeset errors to a map of messages.
 
-      changeset = Blog.create_user(%{password: "short"})
+      changeset = Accounts.create_user(%{password: "short"})
       assert "password is too short" in errors_on(changeset).password
       assert %{password: ["password is too short"]} = errors_on(changeset)
 
