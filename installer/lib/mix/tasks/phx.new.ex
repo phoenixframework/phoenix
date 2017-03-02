@@ -131,7 +131,7 @@ defmodule Mix.Tasks.Phx.New do
         Task.await(compile, :infinity)
 
         print_mix_info(project.project_path, extra)
-        if Project.ecto?(project), do: print_ecto_info()
+        if Project.ecto?(project), do: print_ecto_info(project)
         if not brunch?, do: print_brunch_info(project, starting_dir)
       end)
     end)
@@ -181,9 +181,15 @@ defmodule Mix.Tasks.Phx.New do
     nil
   end
 
-  defp print_ecto_info do
+  defp print_ecto_info(%Project{app_path: nil}), do: nil
+  defp print_ecto_info(%Project{app_path: app_path} = project) do
+    config_path =
+      app_path
+      |> Path.join("config/dev.exs")
+      |> Path.relative_to(project.project_path)
+
     Mix.shell.info """
-    Before moving on, configure your database in config/dev.exs and run:
+    Before moving on, configure your database in #{config_path} and run:
 
         $ mix ecto.create
     """
