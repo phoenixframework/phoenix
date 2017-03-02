@@ -1,8 +1,5 @@
 Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 
-defmodule Phoenix.DupJsonContext do
-end
-
 defmodule Mix.Tasks.Phx.Gen.JsonTest do
   use ExUnit.Case
   import MixHelper
@@ -23,6 +20,10 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
         Gen.Json.run(~w(Post posts title:string))
       end
 
+      assert_raise Mix.Error, ~r/The context and schema should have different names/, fn ->
+        Gen.Json.run(~w(Blog Blog blogs))
+      end
+
       assert_raise Mix.Error, ~r/Invalid arguments/, fn ->
         Gen.Json.run(~w(Blog.Post posts))
       end
@@ -33,15 +34,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
     end
   end
 
-  test "name is already defined", config do
-    in_tmp_project config.test, fn ->
-      assert_raise Mix.Error, ~r/already taken/, fn ->
-        Gen.Json.run ~w(DupJsonContext Post dups)
-      end
-    end
-  end
-
-  test "generates json context", config do
+  test "generates json resource", config do
     in_tmp_project config.test, fn ->
       Gen.Json.run(["Blog", "Post", "posts", "title:string"])
 

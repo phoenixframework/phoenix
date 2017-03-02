@@ -67,10 +67,26 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
   test "generates schema", config do
     in_tmp_project config.test, fn ->
       Gen.Schema.run(~w(Blog.Post posts title:string))
-
       assert_file "lib/phoenix/blog/post.ex"
-
       assert [_] = Path.wildcard("priv/repo/migrations/*_create_blog_post.exs")
+    end
+  end
+
+  test "generates schema with proper datetime types" do
+    Gen.Schema.run(~w(Blog.Comment comments title:string drafted_at:datetime published_at:naive_datetime edited_at:utc_datetime))
+
+    assert_file "lib/phoenix/blog/comment.ex", fn file ->
+      assert file =~ "field :drafted_at, :naive_datetime"
+      assert file =~ "field :published_at, :naive_datetime"
+      assert file =~ "field :edited_at, :utc_datetime"
+    end
+
+    assert [path] = Path.wildcard("priv/repo/migrations/*_create_blog_comment.exs")
+    assert_file path, fn file ->
+      assert file =~ "create table(:comments)"
+      assert file =~ "add :drafted_at, :naive_datetime"
+      assert file =~ "add :published_at, :naive_datetime"
+      assert file =~ "add :edited_at, :utc_datetime"
     end
   end
 end

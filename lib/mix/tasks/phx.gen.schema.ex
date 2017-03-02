@@ -84,6 +84,10 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   @switches [migration: :boolean, binary_id: :boolean, table: :string]
 
   def run(args) do
+    if Mix.Project.umbrella? do
+      Mix.raise "mix phx.gen.schema can only be run inside an application directory"
+    end
+
     schema = build(args)
     paths = Mix.Phoenix.generator_paths()
 
@@ -93,9 +97,6 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   end
 
   def build(args, help \\ __MODULE__) do
-    if Mix.Project.umbrella? do
-      Mix.raise "mix phx.gen.schema can only be run inside an application directory"
-    end
     {opts, parsed, _} = OptionParser.parse(args, switches: @switches)
     [schema_name, plural | attrs] = validate_args!(parsed, help)
 
