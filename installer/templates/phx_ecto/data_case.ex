@@ -36,18 +36,18 @@ defmodule <%= app_module %>.DataCase do
   end
 
   @doc """
-  A helper that converts the changeset error messages
-  for a given field into a list of strings for assertion:
+  A helper that transform changeset errors to a map of messages.
 
-      changeset = Blog.create_user(%{password: "short"})
-      assert "password is too short" in errors_on(changeset, :password)
+      changeset = Accounts.create_user(%{password: "short"})
+      assert "password is too short" in errors_on(changeset).password
+      assert %{password: ["password is too short"]} = errors_on(changeset)
 
   """
-  def errors_on(changeset, field) do
-    for {message, opts} <- Keyword.get_values(changeset.errors, field) do
+  def errors_on(changeset) do
+    Ecto.Changeset.traverse_errors(changeset, fn {message, opts} ->
       Enum.reduce(opts, message, fn {key, value}, acc ->
         String.replace(acc, "%{#{key}}", to_string(value))
       end)
-    end
+    end)
   end
 end
