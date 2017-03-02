@@ -7,7 +7,7 @@
   3. Update `phoenix_dep` in `installer/lib/phoenix_new.ex` and `installer/lib/phx_new/generator.ex` to "~> version to be released"
   4. Run tests, commit, push code
   5. Publish packages and docs after pruning any extraneous uncommitted files
-  6. Run `mix archive.build` and `mix archive.build -o phoenix_new.ez` inside "installer" directory to build new installers
+  6. Run `MIX_ENV=prod mix archive.build` and `MIX_ENV=prod mix archive.build -o phx_new.ez` inside "installer" directory to build new installers
   7. Copy new installers to "phoenixframework/archives" project
   8. Test installer by generating a new app, running `mix deps.get`, and compiling
   9. Start -dev version in related files below

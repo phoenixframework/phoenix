@@ -1,10 +1,12 @@
 # Changelog
 
-## 1.3-dev
+## 1.3.0-rc.0 (2017-03-01)
+
+See these [`1.2.x` to `1.3.x` upgrade instructions](https://gist.github.com/chrismccord/71ab10d433c98b714b75c886eff17357) to bring your existing apps up to speed.
 
 * Enhancements
-  * Add new `phx.new`, `phx.new.web`, `phx.new.ecto` project generators with improved application structure and support for umbrella applications
-  * Add new `phx.gen.html` and `phx.gen.json` resource generators with improved isolation of API boundaries
+  * [Generator] Add new `phx.new`, `phx.new.web`, `phx.new.ecto` project generators with improved application structure and support for umbrella applications
+  * [Generator] Add new `phx.gen.html` and `phx.gen.json` resource generators with improved isolation of API boundaries
   * [Controller] Add `current_path` and `current_url` to generate a connection's path and url
   * [Controller] Introduce `action_fallback` to registers a plug to call as a fallback to the controller action
   * [Controller] Wrap exceptions at controller to maintain connection state
@@ -15,7 +17,7 @@
   * [ConnTest] Add `redirected_params/1` to return the named params matched in the router for the redirected URL
 
 * Deprecations
-  * All `phoenix.*` mix tasks have been deprecated in favor of new `phx.*` tasks
+  * [Generator] All `phoenix.*` mix tasks have been deprecated in favor of new `phx.*` tasks
 
 * JavaScript client enhancements
   * Add ability to pass `encode` and `decode` functions to socket constructor for custom encoding and decoding of outgoing and incoming messages.

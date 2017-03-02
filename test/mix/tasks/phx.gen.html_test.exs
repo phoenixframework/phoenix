@@ -103,23 +103,11 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       end
 
       assert [path] = Path.wildcard("priv/repo/migrations/*_create_blog_post.exs")
-      assert_file path, """
-        defmodule Phoenix.Repo.Migrations.CreatePhoenix.Blog.Post do
-          use Ecto.Migration
-
-          def change do
-            create table(:blog_posts) do
-              add :slug, :string
-              add :title, :string
-              add :published_at, :naive_datetime
-
-              timestamps()
-            end
-
-            create unique_index(:blog_posts, [:slug])
-          end
-        end
-        """
+      assert_file path, fn file ->
+        assert file =~ "create table(:blog_posts)"
+        assert file =~ "add :published_at, :naive_datetime"
+        assert file =~ "create unique_index(:blog_posts, [:slug])"
+      end
 
       assert_file "lib/phoenix/web/controllers/post_controller.ex", fn file ->
         assert file =~ "defmodule Phoenix.Web.PostController"
@@ -144,22 +132,11 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       end
 
       assert [path] = Path.wildcard("priv/repo/migrations/*_create_blog_comment.exs")
-      assert_file path, """
-        defmodule Phoenix.Repo.Migrations.CreatePhoenix.Blog.Comment do
-          use Ecto.Migration
-
-          def change do
-            create table(:blog_comments) do
-              add :title, :string
-              add :published_at, :naive_datetime
-              add :edited_at, :utc_datetime
-
-              timestamps()
-            end
-
-          end
-        end
-        """
+      assert_file path, fn file ->
+        assert file =~ "create table(:blog_comments)"
+        assert file =~ "add :published_at, :naive_datetime"
+        assert file =~ "add :edited_at, :utc_datetime"
+      end
 
       assert_file "lib/phoenix/web/controllers/comment_controller.ex", fn file ->
         assert file =~ "defmodule Phoenix.Web.CommentController"
