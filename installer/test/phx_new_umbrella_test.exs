@@ -163,7 +163,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert msg =~ "$ cd phx_umb"
       assert msg =~ "$ mix phx.server"
 
-      assert_received {:mix_shell, :info, ["Before moving on," <> _ = msg]}
+      assert_received {:mix_shell, :info, ["Before moving on, configure your database in apps/#{@app}/config/dev.exs" <> _ = msg]}
       assert msg =~ "$ mix ecto.create"
 
       # Channels
@@ -508,6 +508,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert_received {:mix_shell, :info, ["\nWe are all set!" <> _ = msg]}
         assert msg =~ "$ cd another"
         assert msg =~ "$ mix phx.server"
+
+        refute_received {:mix_shell, :info, ["Before moving on, configure your database" <> _]}
 
         # Channels
         assert File.exists?("another/lib/another/channels")
