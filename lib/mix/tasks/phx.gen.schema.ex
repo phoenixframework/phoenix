@@ -66,9 +66,9 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   ## Default options
 
   This generator uses default options provided in the `:generators`
-  configuration of the `:phoenix` application. These are the defaults:
+  configuration of your application. These are the defaults:
 
-      config :phoenix, :generators,
+      config :your_app, :generators,
         migration: true,
         binary_id: false,
         sample_binary_id: "11111111-1111-1111-1111-111111111111"
@@ -117,9 +117,15 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
       |> String.replace("/", "_")
 
     Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.html", "", binding, [
-      {:eex, "schema.ex",     schema.file},
-      {:eex, "migration.exs", "priv/repo/migrations/#{timestamp()}_create_#{migration}.exs"},
+      {:eex, "schema.ex", schema.file}
     ]
+
+    if schema.migration? do
+      Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.html", "", binding, [
+        {:eex, "migration.exs", "priv/repo/migrations/#{timestamp()}_create_#{migration}.exs"},
+      ]
+    end
+
     schema
   end
 

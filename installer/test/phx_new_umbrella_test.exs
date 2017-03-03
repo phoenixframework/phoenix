@@ -54,8 +54,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end
       assert_file app_path(@app, "config/config.exs"), fn file ->
         assert file =~ "ecto_repos: [PhxUmb.Repo]"
-        refute file =~ "namespacej"
-        refute file =~ "config :phoenix, :generators"
+        refute file =~ "namespace"
+        refute file =~ "config :phx_blog_web, :generators"
       end
       assert_file web_path(@app, "config/config.exs"), fn file ->
         assert file =~ "ecto_repos: [PhxUmb.Repo]"
@@ -200,11 +200,11 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file app_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_ecto")
 
       assert_file app_path(@app, "config/config.exs"), fn file ->
-        refute file =~ "config :phoenix, :generators"
+        refute file =~ "config :phx_blog_web, :generators"
         refute file =~ "ecto_repos:"
       end
       assert_file web_path(@app, "config/config.exs"), fn file ->
-        refute file =~ "config :phoenix, :generators"
+        refute file =~ "config :phx_blog_web, :generators"
       end
 
       assert_file web_path(@app, "config/dev.exs"), &refute(&1 =~ config)
@@ -252,6 +252,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
     in_tmp "new with binary_id", fn ->
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--binary-id"])
 
+      assert_file web_path(@app, "config/config.exs"), ~r/config :phx_umb_web, :generators/
       assert_file web_path(@app, "config/config.exs"), ~r/binary_id: true/
     end
   end

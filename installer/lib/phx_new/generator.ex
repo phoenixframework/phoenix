@@ -125,7 +125,7 @@ defmodule Phx.New.Generator do
       adapter_module: adapter_module,
       adapter_config: adapter_config,
       hex?: Code.ensure_loaded?(Hex),
-      generator_config: generator_config(adapter_config),
+      generator_config: generator_config(project.web_app, adapter_config),
       namespaced?: namespaced?(project)]
 
     %Project{project | binding: binding}
@@ -194,7 +194,7 @@ defmodule Phx.New.Generator do
     end)
   end
 
-  defp generator_config(adapter_config) do
+  defp generator_config(web_app, adapter_config) do
     adapter_config
     |> Keyword.take([:binary_id, :migration, :sample_binary_id])
     |> Enum.filter(fn {_, value} -> not is_nil(value) end)
@@ -203,8 +203,8 @@ defmodule Phx.New.Generator do
       conf ->
         """
 
-        # Configure phoenix generators
-        config :phoenix, :generators#{kw_to_config(conf)}
+        # Configure generators for this app
+        config #{inspect web_app}, :generators#{kw_to_config(conf)}
         """
     end
   end

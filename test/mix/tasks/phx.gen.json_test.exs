@@ -66,40 +66,4 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
       end
     end
   end
-
-  test "with binary_id properly generates controller test", config do
-    in_tmp_project config.test, fn ->
-      with_generator_env [binary_id: true, sample_binary_id: "abcd"], fn ->
-        Gen.Json.run(~w(Blog Post posts))
-
-        assert_file "test/web/controllers/post_controller_test.exs", fn file ->
-          assert file =~ ~S|post_path(conn, :show, "abcd")|
-        end
-      end
-
-      with_generator_env [binary_id: true], fn ->
-        Gen.Json.run(~w(Blog Post posts))
-
-        assert_file "test/web/controllers/post_controller_test.exs", fn file ->
-          assert file =~ ~S|post_path(conn, :show, "11111111-1111-1111-1111-111111111111")|
-        end
-      end
-    end
-  end
-
-  test "plural can't contain a colon" do
-    assert_raise Mix.Error, fn ->
-      Gen.Json.run(~w(Blog Post title:string))
-    end
-  end
-
-  test "plural can't have uppercased characters or camelized format" do
-    assert_raise Mix.Error, fn ->
-      Gen.Json.run(~w(Blog Post Posts title:string))
-    end
-
-    assert_raise Mix.Error, fn ->
-      Gen.Json.run(~w(Blog Post BlogPosts title:string))
-    end
-  end
 end

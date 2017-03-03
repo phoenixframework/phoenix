@@ -33,7 +33,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/config/config.exs", fn file ->
         assert file =~ "ecto_repos: [PhxBlog.Repo]"
         refute file =~ "namespace: PhxBlog"
-        refute file =~ "config :phoenix, :generators"
+        refute file =~ "config :phx_blog, :generators"
       end
 
       assert_file "phx_blog/config/prod.exs", fn file ->
@@ -156,7 +156,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_ecto")
 
       assert_file "phx_blog/config/config.exs", fn file ->
-        refute file =~ "config :phoenix, :generators"
+        refute file =~ "config :phx_blog, :generators"
         refute file =~ "ecto_repos:"
       end
 
