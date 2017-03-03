@@ -13,7 +13,8 @@ See these [`1.2.x` to `1.3.x` upgrade instructions](https://gist.github.com/chri
   * [Channel] Add ability to configure channel event logging with `:log_join` and `:log_handle_in` options
   * [Channel] Warn on unhandled `handle_info/2` messages
   * [Channel] Channels now distinguish from graceful exits and application restarts, allowing clients to enter error mode and reconnected after cold deploys.
-  * [Router] document `match` support for matching on any http method with the special `:*` argument
+  * [Router] Document `match` support for matching on any HTTP method with the special `:*` argument
+  * [Router] Populate `conn.path_params` with path parameters for the route
   * [ConnTest] Add `redirected_params/1` to return the named params matched in the router for the redirected URL
   * [Digester] Add `mix phx.digest.clean` to remove old versions of compiled assets
 
