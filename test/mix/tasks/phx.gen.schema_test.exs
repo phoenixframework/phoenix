@@ -146,6 +146,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
       assert_file migration, fn file ->
         assert file =~ "add :user_id, references(:users, on_delete: :nothing)"
+        assert file =~ "create index(:posts, [:user_id])"
       end
 
       assert_file "lib/phoenix/blog/post.ex", fn file ->
@@ -154,7 +155,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
     end
   end
 
-  test "generates references with indices", config do
+  test "generates references with unique indexes", config do
     in_tmp_project config.test, fn ->
       Gen.Schema.run(~w(Blog.Post posts title user_id:references:users unique_post_id:references:posts:unique))
 
@@ -165,6 +166,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
         assert file =~ "create table(:posts) do"
         assert file =~ "add :user_id, references(:users, on_delete: :nothing)"
         assert file =~ "add :unique_post_id, references(:posts, on_delete: :nothing)"
+        assert file =~ "create index(:posts, [:user_id])"
         assert file =~ "create unique_index(:posts, [:unique_post_id])"
       end
 

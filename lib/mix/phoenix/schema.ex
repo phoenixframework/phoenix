@@ -249,7 +249,7 @@ defmodule Mix.Phoenix.Schema do
 
   defp indexes(table, assocs, uniques) do
     uniques = Enum.map(uniques, fn key -> {key, true} end)
-    assocs = Enum.map(assocs, fn {key, _, _, _} -> {key, false} end)
+    assocs = Enum.map(assocs, fn {_, key, _, _} -> {key, false} end)
 
     (uniques ++ assocs)
     |> Enum.uniq_by(fn {key, _} -> key end)
