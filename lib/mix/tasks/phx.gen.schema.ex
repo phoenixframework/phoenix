@@ -6,8 +6,8 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
 
       mix phx.gen.schema Blog.Post blog_posts title:string views:integer
 
-  The first argument is the module name followed by its plural
-  name (used for the schema).
+  The first argument is the schema module followed by its plural
+  name (used as the table name).
 
   The generated schema above will contain:
 

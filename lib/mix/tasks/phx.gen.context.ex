@@ -6,16 +6,25 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
       mix phx.gen.context Accounts User users name:string age:integer
 
-  The first argument is the context name followed by the schema module
-  and its plural name (used for resources and schema).
+  The first argument is the context module followed by the schema module
+  and its plural name (used as the schema table name).
 
-  The above generated resource will add the following files to lib/your_app:
+  The context is an Elixir module that serves as an API boundary for
+  the given resource. A context often holds many related resources.
+  Therefore, if the context already exists, it will be augmented with
+  functions for the given resource. Note a resource may also be split
+  over distinct contexts (such as Accounts.User and Payments.User).
 
-    * a context module in accounts.ex, serving as the API boundary to the resource
+  The schema is responsible for mapping the database fields into an
+  Elixir struct.
+
+  Overall, this generator will add the following files to lib/your_app:
+
+    * a context module in accounts/accounts.ex, serving as the API boundary
     * a schema in accounts/user.ex, with an `accounts_users` table
 
-  As well as a migration file for the repository and test files for
-  generated context.
+  A migration file for the repository and test files for the context
+  will also be generated.
 
   ## Schema options
 
@@ -129,7 +138,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
     The context serves as the API boundary for the given resource.
     Multiple resources may belong to a context and a resource may be
-    split over distinct contexts (such as Accounts.User and Blog.User).
+    split over distinct contexts (such as Accounts.User and Payments.User).
     """
   end
 end
