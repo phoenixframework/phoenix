@@ -150,7 +150,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
       end
 
       assert_file "lib/phoenix/blog/post.ex", fn file ->
-        assert file =~ "belongs_to :user, Phoenix.Blog.User"
+        assert file =~ "field :user_id, :id"
       end
     end
   end
@@ -172,8 +172,8 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
       assert_file "lib/phoenix/blog/post.ex", fn file ->
         assert file =~ "defmodule Phoenix.Blog.Post do"
-        assert file =~ "belongs_to :user, Phoenix.Blog.User"
-        assert file =~ "belongs_to :unique_post, Phoenix.Blog.UniquePost"
+        assert file =~ "field :user_id, :id"
+        assert file =~ "field :unique_post_id, :id"
       end
     end
   end
@@ -202,8 +202,11 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
     in_tmp_project config.test, fn ->
       Gen.Schema.run(~w(Blog.Post posts title user_id:references:users --binary-id))
 
-      assert [migration] = Path.wildcard("priv/repo/migrations/*_create_blog_post.exs")
+      assert_file "lib/phoenix/blog/post.ex", fn file ->
+        assert file =~ "field :user_id, :binary_id"
+      end
 
+      assert [migration] = Path.wildcard("priv/repo/migrations/*_create_blog_post.exs")
       assert_file migration, fn file ->
         assert file =~ "create table(:posts, primary_key: false) do"
         assert file =~ "add :id, :binary_id, primary_key: true"

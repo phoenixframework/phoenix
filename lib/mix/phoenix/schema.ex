@@ -46,13 +46,14 @@ defmodule Mix.Phoenix.Schema do
     table    = opts[:table] || schema_plural
     uniques  = uniques(cli_attrs)
     {assocs, attrs} = partition_attrs_and_assocs(module, attrs(cli_attrs))
+    types = types(attrs)
 
     singular =
       module
       |> Module.split()
       |> List.last()
       |> Phoenix.Naming.underscore()
-    string_attr =  attrs |> types() |> string_attr()
+    string_attr = string_attr(types)
     create_params = params(attrs, :create)
     default_params_key =
       case Enum.at(create_params, 0) do
@@ -72,7 +73,7 @@ defmodule Mix.Phoenix.Schema do
       plural: schema_plural,
       singular: singular,
       assocs: assocs,
-      types: types(attrs),
+      types: types,
       defaults: schema_defaults(attrs),
       uniques: uniques,
       indexes: indexes(table, assocs, uniques),
@@ -233,13 +234,14 @@ defmodule Mix.Phoenix.Schema do
 
   defp types(attrs) do
     Enum.into(attrs, %{}, fn
-      {key, {column, val}} -> {key, {column, value_to_type(val)}}
-      {key, val}           -> {key, value_to_type(val)}
+      {key, {root, val}} -> {key, {root, schema_type(val)}}
+      {key, val} -> {key, schema_type(val)}
     end)
   end
-  defp value_to_type(:text), do: :string
-  defp value_to_type(:uuid), do: Ecto.UUID
-  defp value_to_type(val) do
+
+  defp schema_type(:text), do: :string
+  defp schema_type(:uuid), do: Ecto.UUID
+  defp schema_type(val) do
     if Code.ensure_loaded?(Ecto.Type) and not Ecto.Type.primitive?(val) do
       Mix.raise "Unknown type `#{val}` given to generator"
     else

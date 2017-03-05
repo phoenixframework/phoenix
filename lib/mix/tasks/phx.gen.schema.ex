@@ -29,14 +29,14 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   #{for attr <- Mix.Phoenix.Schema.valid_types(), do: "  * `#{inspect attr}`\n"}
     * `:datetime` - An alias for `:naive_datetime`
 
-  The generator also supports `belongs_to` associations
-  via references:
+  The generator also supports references, which we will properly
+  associate the given column to the primary key column of the
+  referenced table:
 
-      mix phx.gen.schema Blog.Post blog_posts title user_id:references:users
+      mix phx.gen.schema Blog.Post blog_posts title user_id:references:blog_users
 
   This will result in a migration with an `:integer` column
-  of `:user_id` and create an index. It will also generate
-  the appropriate `belongs_to` entry in the schema.
+  of `:user_id` and create an index.
 
   Furthermore an array type can also be given if it is
   supported by your database, although it requires the
@@ -116,12 +116,12 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
       |> Phoenix.Naming.underscore()
       |> String.replace("/", "_")
 
-    Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.html", "", binding, [
+    Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.schema", "", binding, [
       {:eex, "schema.ex", schema.file}
     ]
 
     if schema.migration? do
-      Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.html", "", binding, [
+      Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.schema", "", binding, [
         {:eex, "migration.exs", "priv/repo/migrations/#{timestamp()}_create_#{migration}.exs"},
       ]
     end
