@@ -204,7 +204,7 @@ defmodule Phx.New.Generator do
         """
 
         # Configure generators for this app
-        config #{inspect web_app}, :generators#{kw_to_config(conf)}
+        config :#{web_app}, :generators#{kw_to_config(conf)}
         """
     end
   end
