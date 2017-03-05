@@ -251,9 +251,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
   test "new with binary_id" do
     in_tmp "new with binary_id", fn ->
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--binary-id"])
-
-      assert_file web_path(@app, "config/config.exs"), ~r/config :phx_umb_web, :generators/
-      assert_file web_path(@app, "config/config.exs"), ~r/binary_id: true/
+      assert_file web_path(@app, "config/config.exs"), ~r/generators: \[binary_id: true\]/
     end
   end
 

@@ -207,8 +207,7 @@ defmodule Mix.Tasks.Phx.NewTest do
   test "new with binary_id" do
     in_tmp "new with binary_id", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--binary-id"])
-      assert_file "phx_blog/config/config.exs", ~r/config :phx_blog, :generators/
-      assert_file "phx_blog/config/config.exs", ~r/binary_id: true/
+      assert_file "phx_blog/config/config.exs", ~r/generators: \[binary_id: true\]/
     end
   end
 
