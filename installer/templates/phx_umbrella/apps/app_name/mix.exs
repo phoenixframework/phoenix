@@ -21,7 +21,7 @@ defmodule <%= app_module %>.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [mod: {<%= app_module %>.Application, []},
-     extra_applications: [:logger]]
+     extra_applications: [:logger, :runtime_tools]]
   end
 
   # Specifies which paths to compile per environment.
