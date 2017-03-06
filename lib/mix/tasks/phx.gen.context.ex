@@ -26,14 +26,35 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   A migration file for the repository and test files for the context
   will also be generated.
 
-  ## Schema options
+  ## table
 
-  By deault, the schema table name will be the plural name, namespaced by the
-  context name. You can customize this value by providing the `--table`
-  option to the generator.
+  By default, the table name for the migration and schema will be
+  the plural name provided for the resource, namespaced by the context name,
+  To customize this value, a `--table` option may be provided. For example:
+
+      mix phx.gen.context Accounts User users --table cms_users
+
+  ## binary_id
+
+  Generated migration can use `binary_id` for schema's primary key
+  and its references with option `--binary-id`.
+
+  ## Default options
+
+  This generator uses default options provided in the `:generators`
+  configuration of your application. These are the defaults:
+
+      config :your_app, :generators,
+        migration: true,
+        binary_id: false,
+        sample_binary_id: "11111111-1111-1111-1111-111111111111"
+
+  You can override those options per invocation by providing corresponding
+  switches, e.g. `--no-binary-id` to use normal ids despite the default
+  configuration or `--migration` to force generation of the migration.
 
   Read the documentation for `phx.gen.schema` for more information on
-  attributes and supported options.
+  attributes.
   """
 
   use Mix.Task
