@@ -54,7 +54,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
 
   By default, the table name for the migration and schema will be
   the plural name provided for the resource. To customize this value,
-  a `--table` option may be provided. For exampe:
+  a `--table` option may be provided. For example:
 
       mix phx.gen.schema Blog.Post posts --table cms_posts
 
