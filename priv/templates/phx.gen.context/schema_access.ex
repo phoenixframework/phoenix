@@ -35,10 +35,10 @@
 
   ## Examples
 
-      iex> create_<%= schema.singular %>(<%= schema.singular %>, %{field: value})
+      iex> create_<%= schema.singular %>(%{field: value})
       {:ok, %<%= inspect schema.alias %>{}}
 
-      iex> create_<%= schema.singular %>(<%= schema.singular %>, %{field: bad_value})
+      iex> create_<%= schema.singular %>(%{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
