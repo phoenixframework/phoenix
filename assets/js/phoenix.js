@@ -118,7 +118,7 @@
 // based on the local state of metadata. By default, all presence
 // metadata is returned, but a `listBy` function can be supplied to
 // allow the client to select which metadata to use for a given presence.
-// For example, you may have a user online from different devices with a
+// For example, you may have a user online from different devices with
 // a metadata status of "online", but they have set themselves to "away"
 // on another device. In this case, they app may choose to use the "away"
 // status for what appears on the UI. The example below defines a `listBy`
