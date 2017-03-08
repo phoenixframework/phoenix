@@ -36,6 +36,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file root_path(@app, "README.md")
       assert_file root_path(@app, ".gitignore")
       assert_file app_path(@app, "README.md")
+      assert_file app_path(@app, ".gitignore")
       assert_file web_path(@app, "README.md")
       assert_file root_path(@app, "mix.exs"), fn file ->
         assert file =~ "apps_path: \"apps\""
