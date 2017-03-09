@@ -33,9 +33,6 @@ defmodule Mix.Tasks.Phx.New do
 
     * `--no-html` - do not generate HTML views.
 
-    * `--binary-id` - use `binary_id` as primary key type
-      in Ecto schemas
-
   When passing the `--no-ecto` flag, Phoenix generators such as
   `phx.gen.html`, `phx.gen.json` and `phx.gen.context` may no
   longer work as expected as they generate context files that rely
@@ -81,8 +78,7 @@ defmodule Mix.Tasks.Phx.New do
 
   @switches [dev: :boolean, brunch: :boolean, ecto: :boolean,
              app: :string, module: :string, web_module: :string,
-             database: :string, binary_id: :boolean, html: :boolean,
-             umbrella: :boolean]
+             database: :string, html: :boolean, umbrella: :boolean]
 
   def run([version]) when version in ~w(-v --version) do
     Mix.shell.info "Phoenix v#{@version}"
