@@ -6,15 +6,16 @@ defmodule Phx.New.Ecto do
   @pre "phx_umbrella/apps/app_name"
 
   template :new, [
-    {:eex, "#{@pre}/config/config.exs",           :app, "config/config.exs"},
-    {:eex, "#{@pre}/config/dev.exs",              :app, "config/dev.exs"},
-    {:eex, "#{@pre}/config/prod.exs",             :app, "config/prod.exs"},
-    {:eex, "#{@pre}/config/prod.secret.exs",      :app, "config/prod.secret.exs"},
-    {:eex, "#{@pre}/config/test.exs",             :app, "config/test.exs"},
-    {:eex, "#{@pre}/lib/app_name/application.ex", :app, "lib/:app/application.ex"},
-    {:eex, "#{@pre}/test/test_helper.exs",        :app, "test/test_helper.exs"},
-    {:eex, "#{@pre}/README.md",                   :app, "README.md"},
-    {:eex, "#{@pre}/mix.exs",                     :app, "mix.exs"},
+    {:eex,  "#{@pre}/config/config.exs",           :app, "config/config.exs"},
+    {:eex,  "#{@pre}/config/dev.exs",              :app, "config/dev.exs"},
+    {:eex,  "#{@pre}/config/prod.exs",             :app, "config/prod.exs"},
+    {:eex,  "#{@pre}/config/prod.secret.exs",      :app, "config/prod.secret.exs"},
+    {:eex,  "#{@pre}/config/test.exs",             :app, "config/test.exs"},
+    {:eex,  "#{@pre}/lib/app_name/application.ex", :app, "lib/:app/application.ex"},
+    {:eex,  "#{@pre}/test/test_helper.exs",        :app, "test/test_helper.exs"},
+    {:eex,  "#{@pre}/README.md",                   :app, "README.md"},
+    {:eex,  "#{@pre}/mix.exs",                     :app, "mix.exs"},
+    {:text, "phx_assets/bare/gitignore",           :app, ".gitignore"},
   ]
 
   template :ecto, [
