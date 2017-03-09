@@ -100,10 +100,9 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     context
   end
 
-  defp inject_schema_access(%Context{dir: dir, file: file} = context, paths, binding) do
+  defp inject_schema_access(%Context{file: file} = context, paths, binding) do
     unless context.pre_existing? do
-      File.mkdir_p!(dir)
-      File.write!(file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context.ex", binding))
+      Mix.Generator.create_file(file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context.ex", binding))
     end
 
     schema_content = Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/schema_access.ex", binding)
