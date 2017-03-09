@@ -66,12 +66,11 @@ defmodule MixHelper do
   end
 
   def with_generator_env(new_env, fun) do
-    old = Application.get_env(:phoenix, :generators)
     Application.put_env(:phoenix, :generators, new_env)
     try do
       fun.()
     after
-      Application.put_env(:phoenix, :generators, old)
+      Application.delete_env(:phoenix, :generators)
     end
   end
 

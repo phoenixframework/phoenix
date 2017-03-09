@@ -112,7 +112,7 @@ defmodule Mix.Tasks.Phoenix.NewTest do
       assert msg =~ "$ cd photo_blog"
       assert msg =~ "$ mix phoenix.server"
 
-      assert_received {:mix_shell, :info, ["Before moving on," <> _ = msg]}
+      assert_received {:mix_shell, :info, ["Before moving on, configure your database in config/dev.exs" <> _ = msg]}
       assert msg =~ "$ mix ecto.create"
 
       # Channels

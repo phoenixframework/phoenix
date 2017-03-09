@@ -1,4 +1,6 @@
 defmodule Mix.Phoenix.Schema do
+  @moduledoc false
+
   alias Mix.Phoenix.Schema
 
   defstruct module: nil,
@@ -35,21 +37,23 @@ defmodule Mix.Phoenix.Schema do
   end
 
   def new(schema_name, schema_plural, cli_attrs, opts) do
-    otp_app  = to_string(Mix.Phoenix.otp_app())
+    otp_app  = Mix.Phoenix.otp_app()
+    opts     = Keyword.merge(Application.get_env(otp_app, :generators, []), opts)
     basename = Phoenix.Naming.underscore(schema_name)
     module   = Module.concat([Mix.Phoenix.base(), schema_name])
     repo     = opts[:repo] || Module.concat([Mix.Phoenix.base(), "Repo"])
-    file     = Path.join(["lib", otp_app, basename <> ".ex"])
-    {assocs, cli_attrs} = partition_attrs_and_assocs(cli_attrs)
-    attrs    = attrs(cli_attrs)
-    uniques  = uniques(cli_attrs)
+    file     = Path.join(["lib", Atom.to_string(otp_app), basename <> ".ex"])
     table    = opts[:table] || schema_plural
+    uniques  = uniques(cli_attrs)
+    {assocs, attrs} = partition_attrs_and_assocs(module, attrs(cli_attrs))
+    types = types(attrs)
+
     singular =
       module
       |> Module.split()
       |> List.last()
       |> Phoenix.Naming.underscore()
-    string_attr =  attrs |> types() |> string_attr()
+    string_attr = string_attr(types)
     create_params = params(attrs, :create)
     default_params_key =
       case Enum.at(create_params, 0) do
@@ -59,7 +63,7 @@ defmodule Mix.Phoenix.Schema do
 
     %Schema{
       opts: opts,
-      migration?: opts[:migration] != false,
+      migration?: Keyword.get(opts, :migration, true),
       module: module,
       repo: repo,
       table: table,
@@ -69,7 +73,7 @@ defmodule Mix.Phoenix.Schema do
       plural: schema_plural,
       singular: singular,
       assocs: assocs,
-      types: types(attrs),
+      types: types,
       defaults: schema_defaults(attrs),
       uniques: uniques,
       indexes: indexes(table, assocs, uniques),
@@ -104,7 +108,6 @@ defmodule Mix.Phoenix.Schema do
     |> Enum.filter(&String.ends_with?(&1, ":unique"))
     |> Enum.map(& &1 |> String.split(":", parts: 2) |> hd |> String.to_atom)
   end
-
 
   @doc """
   Parses the attrs as received by generators.
@@ -188,25 +191,28 @@ defmodule Mix.Phoenix.Schema do
               "The supported types are: #{@valid_types |> Enum.sort() |> Enum.join(", ")}"
   end
 
-  defp partition_attrs_and_assocs(attrs) do
-    {assocs, attrs} = Enum.partition(attrs, fn
-      {_, {:references, _}} ->
-        true
-      {key, :references} ->
-        Mix.raise """
-        Phoenix generators expect the table to be given to #{key}:references.
-        For example:
+  defp partition_attrs_and_assocs(schema_module, attrs) do
+    {assocs, attrs} =
+      Enum.partition(attrs, fn
+        {_, {:references, _}} ->
+          true
+        {key, :references} ->
+          Mix.raise """
+          Phoenix generators expect the table to be given to #{key}:references.
+          For example:
 
-            mix phx.gen.schema Comment comments body:text post_id:references:posts
-        """
-      _ -> false
-    end)
+              mix phx.gen.schema Comment comments body:text post_id:references:posts
+          """
+        _ -> false
+      end)
 
-    assocs = Enum.map(assocs, fn {key_id, {:references, source}} ->
-      key   = String.replace(Atom.to_string(key_id), "_id", "")
-      assoc = Mix.Phoenix.inflect key
-      {String.to_atom(key), key_id, assoc[:module], source}
-    end)
+    assocs =
+      Enum.map(assocs, fn {key_id, {:references, source}} ->
+        key = String.replace(Atom.to_string(key_id), "_id", "")
+        base = schema_module |> Module.split() |> Enum.drop(-1)
+        module = Module.concat(base ++ [Phoenix.Naming.camelize(key)])
+        {String.to_atom(key), key_id, inspect(module), source}
+      end)
 
     {assocs, attrs}
   end
@@ -228,13 +234,14 @@ defmodule Mix.Phoenix.Schema do
 
   defp types(attrs) do
     Enum.into(attrs, %{}, fn
-      {key, {column, val}} -> {key, {column, value_to_type(val)}}
-      {key, val}           -> {key, value_to_type(val)}
+      {key, {root, val}} -> {key, {root, schema_type(val)}}
+      {key, val} -> {key, schema_type(val)}
     end)
   end
-  defp value_to_type(:text), do: :string
-  defp value_to_type(:uuid), do: Ecto.UUID
-  defp value_to_type(val) do
+
+  defp schema_type(:text), do: :string
+  defp schema_type(:uuid), do: Ecto.UUID
+  defp schema_type(val) do
     if Code.ensure_loaded?(Ecto.Type) and not Ecto.Type.primitive?(val) do
       Mix.raise "Unknown type `#{val}` given to generator"
     else
@@ -243,9 +250,10 @@ defmodule Mix.Phoenix.Schema do
   end
 
   defp indexes(table, assocs, uniques) do
-    Enum.concat(
-      Enum.map(uniques, fn key -> {key, true} end),
-      Enum.map(assocs, fn {key, _} -> {key, false} end))
+    uniques = Enum.map(uniques, fn key -> {key, true} end)
+    assocs = Enum.map(assocs, fn {_, key, _, _} -> {key, false} end)
+
+    (uniques ++ assocs)
     |> Enum.uniq_by(fn {key, _} -> key end)
     |> Enum.map(fn
       {key, false} -> "create index(:#{table}, [:#{key}])"

@@ -24,8 +24,7 @@ defmodule <%= inspect context.module %>Test do
   end
 
   test "create_<%= schema.singular %>/1 with valid data creates a <%= schema.singular %>" do
-    assert {:ok, %<%= inspect schema.alias %>{} = <%= schema.singular %>} = <%= inspect context.alias %>.create_<%= schema.singular %>(@create_attrs)
-    <%= for {field, value} <- schema.params.create do %>
+    assert {:ok, %<%= inspect schema.alias %>{} = <%= schema.singular %>} = <%= inspect context.alias %>.create_<%= schema.singular %>(@create_attrs)<%= for {field, value} <- schema.params.create do %>
     assert <%= schema.singular %>.<%= field %> == <%= inspect value %><% end %>
   end
 
@@ -36,8 +35,7 @@ defmodule <%= inspect context.module %>Test do
   test "update_<%= schema.singular %>/2 with valid data updates the <%= schema.singular %>" do
     <%= schema.singular %> = fixture(:<%= schema.singular %>)
     assert {:ok, <%= schema.singular %>} = <%= inspect context.alias %>.update_<%= schema.singular %>(<%= schema.singular %>, @update_attrs)
-    assert %<%= inspect schema.alias %>{} = <%= schema.singular %>
-    <%= for {field, value} <- schema.params.update do %>
+    assert %<%= inspect schema.alias %>{} = <%= schema.singular %><%= for {field, value} <- schema.params.update do %>
     assert <%= schema.singular %>.<%= field %> == <%= inspect value %><% end %>
   end
 

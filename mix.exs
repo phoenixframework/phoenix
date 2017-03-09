@@ -40,7 +40,6 @@ defmodule Phoenix.Mixfile do
      env: [stacktrace_depth: nil,
            template_engines: [],
            format_encoders: [],
-           generators: [],
            filter_parameters: ["password"],
            serve_endpoints: false,
            gzippable_exts: ~w(.js .css .txt .text .html .json .svg)]]

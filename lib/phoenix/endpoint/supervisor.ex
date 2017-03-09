@@ -21,6 +21,10 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   @doc false
+  # TODO: Ideally every process would be named based on a `name` option
+  # instead of using the module. However, __phoenix_pubsub__ is highly
+  # dependent on the module name, so we should consider enabling this
+  # once we move to Firenest.
   def init({otp_app, mod}) do
     id = :crypto.strong_rand_bytes(16) |> Base.encode64
     conf = [endpoint_id: id] ++ config(otp_app, mod)
@@ -57,7 +61,6 @@ defmodule Phoenix.Endpoint.Supervisor do
     [worker(Phoenix.Config, args)]
   end
 
-  # TODO: Consider moving this out of the endpoint once we introduce firenest
   defp pubsub_children(mod, conf) do
     pub_conf = conf[:pubsub]
 
