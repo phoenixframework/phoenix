@@ -1101,7 +1101,7 @@ defmodule Phoenix.Controller do
         if format = (q === 1.0 && find_format(exts, accepted)) do
           put_format(conn, format)
         else
-          parse_header_accept(conn, t, [{-q, exts}|acc], accepted)
+          parse_header_accept(conn, t, [{-q, h, exts}|acc], accepted)
         end
       :error ->
         parse_header_accept(conn, t, acc, accepted)
@@ -1112,10 +1112,10 @@ defmodule Phoenix.Controller do
     acc
     |> Enum.sort()
     |> Enum.find_value(&parse_header_accept(conn, &1, accepted))
-    |> Kernel.||(refuse(conn, accepted))
+    |> Kernel.||(refuse(conn, acc, accepted))
   end
 
-  defp parse_header_accept(conn, {_, exts}, accepted) do
+  defp parse_header_accept(conn, {_, _, exts}, accepted) do
     if format = find_format(exts, accepted) do
       put_format(conn, format)
     end
@@ -1148,11 +1148,27 @@ defmodule Phoenix.Controller do
     end
   end
 
-  @spec refuse(term(), term()) :: no_return()
-  defp refuse(_conn, accepted) do
+  @spec refuse(term(), [tuple], [binary]) :: no_return()
+  defp refuse(_conn, given, accepted) do
     raise Phoenix.NotAcceptableError,
-      message: "no supported media type in accept header, expected one of #{inspect accepted}",
-      accepts: accepted
+      accepts: accepted,
+      message: """
+      no supported media type in accept header.
+
+      Expected one of #{inspect accepted} but got the following formats:
+
+        * #{Enum.map_join(given, "\n  ", fn {_, header, exts} ->
+              inspect(header) <> " with extensions: " <> inspect(exts)
+            end)}
+
+      To accept custom formats, register its extensions in the `:mime` library:
+
+          config :mime, :types, %{
+            "application/xml" => ["xml"]
+          }
+
+      And then run `mix deps.clean --build mime` to force it to be recompiled.
+      """
   end
 
   @doc """
