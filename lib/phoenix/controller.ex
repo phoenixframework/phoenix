@@ -1161,7 +1161,8 @@ defmodule Phoenix.Controller do
               inspect(header) <> " with extensions: " <> inspect(exts)
             end)}
 
-      To accept custom formats, register its extensions in the `:mime` library:
+      To accept custom formats, register them under the `:mime` library
+      in your config/config.exs file:
 
           config :mime, :types, %{
             "application/xml" => ["xml"]
