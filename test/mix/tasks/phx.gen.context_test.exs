@@ -36,7 +36,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
           module: Phoenix.Blog.Post,
           plural: "posts",
           singular: "post"
-        }} = context
+        }} == context
     end
   end
 
@@ -132,6 +132,14 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "def delete_comment"
         assert file =~ "def change_comment"
       end
+    end
+  end
+
+  test "generates context file in context app" do
+    with_generator_env [context_app: :my_context_app], fn ->
+      {context, _schema} = Gen.Context.build(~w(Blog Post posts))
+      assert context.file == "../my_context_app/lib/my_context_app/blog/blog.ex"
+      assert context.module == MyContextApp.Blog
     end
   end
 end

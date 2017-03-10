@@ -244,4 +244,13 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
       end
     end
   end
+
+  test "generates schema and migration in context app" do
+    with_generator_env [context_app: :my_context_app], fn ->
+      schema = Gen.Schema.build(~w(Blog.Post posts))
+      assert schema.file == "../my_context_app/lib/my_context_app/blog/post.ex"
+      assert schema.migration_dir == "../my_context_app/priv/repo/migrations"
+    end
+  end
+
 end

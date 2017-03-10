@@ -20,13 +20,13 @@ defmodule Mix.Phoenix.Context do
   end
 
   def new(context_name, %Schema{} = schema, opts) do
-    otp_app  = to_string(Mix.Phoenix.otp_app())
-    base     = Module.concat([Mix.Phoenix.base()])
+    otp_app  = Mix.Phoenix.otp_app()
+    base     = context_base(otp_app)
     module   = Module.concat(base, context_name)
     alias    = module |> Module.split() |> tl() |> Module.concat()
     basename = Phoenix.Naming.underscore(context_name)
-    dir      = Path.join(["lib", otp_app, basename])
-    file     = Path.join([dir, basename <> ".ex"])
+    dir      = context_dir(otp_app)
+    file     = Path.join([dir, basename, basename <> ".ex"])
 
     %Context{
       name: context_name,
@@ -40,6 +40,24 @@ defmodule Mix.Phoenix.Context do
       dir: dir,
       opts: opts,
       pre_existing?: File.exists?(file)}
+  end
+
+  defp context_dir(otp_app) do
+    case Application.get_env(otp_app, :generators)[:context_app] do
+      nil ->
+        Path.join(["lib", to_string(otp_app)])
+      context_app ->
+        Path.join(["..", to_string(context_app), "lib", to_string(context_app)])
+    end
+  end
+
+  defp context_base(otp_app) do
+    case Application.get_env(otp_app, :generators)[:context_app] do
+      nil -> Module.concat([Mix.Phoenix.base()])
+      context_app ->
+        [context_app |> to_string |> Phoenix.Naming.camelize()]
+        |> Module.concat()
+    end
   end
 
   defp web_module(base) do
