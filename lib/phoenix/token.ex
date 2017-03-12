@@ -101,7 +101,7 @@ defmodule Phoenix.Token do
       when generating the encryption and signing keys. Defaults to 32;
     * `:key_digest` - option passed to `Plug.Crypto.KeyGenerator`
       when generating the encryption and signing keys. Defaults to `:sha256`;
-    * `:signed_at` - set the timestamp of the token. Defaults to `System.system_time(:milliseconds)`;
+    * `:signed_at` - set the timestamp of the token in seconds. Defaults to `System.system_time(:seconds)`;
   """
   def sign(context, salt, data, opts \\ []) when is_binary(salt) do
     {signed_at_seconds, key_opts} = Keyword.pop(opts, :signed_at)
