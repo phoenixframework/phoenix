@@ -218,7 +218,7 @@ plug :assign_welcome_message, "Welcome Back"
 
 def index(conn, _params) do
   conn
-  |> assign(:name, "Dweezil")
+  |> assign(:message, "Welcome Forward")
   |> render("index.html")
 end
 
