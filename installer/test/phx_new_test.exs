@@ -336,7 +336,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
   test "new without args" do
     in_tmp "new without args", fn ->
-      assert capture_io(fn -> Mix.Tasks.Phx.New.run([]) end)
+      assert capture_io(fn -> Mix.Tasks.Phx.New.run([]) end) =~
              "Creates a new Phoenix project."
     end
   end

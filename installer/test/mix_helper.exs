@@ -32,6 +32,18 @@ defmodule MixHelper do
     function.()
   end
 
+  def in_tmp_umbrella_project(which, function) do
+    path = Path.join(tmp_path(), to_string(which))
+    apps_path = Path.join(path, "apps")
+    File.rm_rf! path
+    File.mkdir_p! path
+    File.mkdir_p! apps_path
+    File.cd! path
+    File.touch!("mix.exs")
+    File.cd! apps_path
+    function.()
+  end
+
   def in_project(app, path, fun) do
     %{name: name, file: file} = Mix.Project.pop()
 
