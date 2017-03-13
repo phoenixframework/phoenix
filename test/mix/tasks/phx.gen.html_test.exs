@@ -44,7 +44,16 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
       assert_file "lib/phoenix/blog/post.ex"
       assert_file "lib/phoenix/blog/blog.ex"
-      assert_file "test/blog_test.exs"
+      assert_file "test/blog_test.exs", fn file ->
+        assert file =~ "alarm: ~T[14:00:00]"
+        assert file =~ "announcement_date: ~D[2010-04-17]"
+        assert file =~ "deleted_at: ~N[2010-04-17 14:00:00.000000]"
+        assert file =~ "published_at: %DateTime{"
+
+        assert file =~ "assert post.announcement_date == ~D[2011-05-18]"
+        assert file =~ "assert post.deleted_at == ~N[2011-05-18 15:01:01.000000]"
+        assert file =~ "assert post.published_at == %DateTime{"
+      end
 
       assert_file "test/web/controllers/post_controller_test.exs", fn file ->
         assert file =~ "defmodule Phoenix.Web.PostControllerTest"

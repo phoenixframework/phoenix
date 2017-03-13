@@ -157,11 +157,11 @@ defmodule Mix.Phoenix.Schema do
         :boolean        -> true
         :map            -> %{}
         :text           -> "some #{key}"
-        :date           -> %{year: 2010, month: 4, day: 17}
-        :time           -> %{hour: 14, minute: 0, second: 0}
+        :date           -> %Date{year: 2010, month: 4, day: 17}
+        :time           -> %Time{hour: 14, minute: 0, second: 0}
         :uuid           -> "7488a646-e31f-11e4-aace-600308960662"
-        :utc_datetime   -> %{year: 2010, month: 4, day: 17, hour: 14, minute: 0, second: 0}
-        :naive_datetime -> %{year: 2010, month: 4, day: 17, hour: 14, minute: 0, second: 0}
+        :utc_datetime   -> DateTime.from_naive!(~N[2010-04-17 14:00:00.000000], "Etc/UTC")
+        :naive_datetime -> ~N[2010-04-17 14:00:00.000000]
         _               -> "some #{key}"
     end
   end
@@ -174,11 +174,11 @@ defmodule Mix.Phoenix.Schema do
         :boolean        -> false
         :map            -> %{}
         :text           -> "some updated #{key}"
-        :date           -> %{year: 2011, month: 5, day: 18}
-        :time           -> %{hour: 15, minute: 1, second: 1}
+        :date           -> %Date{year: 2011, month: 5, day: 18}
+        :time           -> %Time{hour: 15, minute: 1, second: 1}
         :uuid           -> "7488a646-e31f-11e4-aace-600308960668"
-        :utc_datetime   -> %{year: 2011, month: 5, day: 18, hour: 15, minute: 1, second: 1}
-        :naive_datetime -> %{year: 2011, month: 5, day: 18, hour: 15, minute: 1, second: 1}
+        :utc_datetime   -> DateTime.from_naive!(~N[2011-05-18 15:01:01.000000], "Etc/UTC")
+        :naive_datetime -> ~N[2011-05-18 15:01:01.000000]
         _               -> "some updated #{key}"
     end
   end
