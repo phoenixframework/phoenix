@@ -96,12 +96,12 @@ defmodule Phoenix.Token do
   ## Options
 
     * `:key_iterations` - option passed to `Plug.Crypto.KeyGenerator`
-      when generating the encryption and signing keys. Defaults to 1000;
+      when generating the encryption and signing keys. Defaults to 1000
     * `:key_length` - option passed to `Plug.Crypto.KeyGenerator`
-      when generating the encryption and signing keys. Defaults to 32;
+      when generating the encryption and signing keys. Defaults to 32
     * `:key_digest` - option passed to `Plug.Crypto.KeyGenerator`
-      when generating the encryption and signing keys. Defaults to `:sha256`;
-    * `:signed_at` - set the timestamp of the token in seconds. Defaults to `System.system_time(:seconds)`;
+      when generating the encryption and signing keys. Defaults to `:sha256`
+    * `:signed_at` - set the timestamp of the token in seconds. Defaults to `System.system_time(:seconds)`
   """
   def sign(context, salt, data, opts \\ []) when is_binary(salt) do
     {signed_at_seconds, key_opts} = Keyword.pop(opts, :signed_at)
@@ -157,13 +157,13 @@ defmodule Phoenix.Token do
 
     * `:max_age` - verifies the token only if it has been generated
       "max age" ago in seconds. A reasonable value is 2 weeks (`1209600`
-      seconds);
+      seconds)
     * `:key_iterations` - option passed to `Plug.Crypto.KeyGenerator`
-      when generating the encryption and signing keys. Defaults to 1000;
+      when generating the encryption and signing keys. Defaults to 1000
     * `:key_length` - option passed to `Plug.Crypto.KeyGenerator`
-      when generating the encryption and signing keys. Defaults to 32;
+      when generating the encryption and signing keys. Defaults to 32
     * `:key_digest` - option passed to `Plug.Crypto.KeyGenerator`
-      when generating the encryption and signing keys. Defaults to `:sha256`;
+      when generating the encryption and signing keys. Defaults to `:sha256`
 
   """
   def verify(context, salt, token, opts \\ [])
