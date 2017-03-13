@@ -190,7 +190,7 @@ Our first `show/2` test result is, as expected, not yet implemented.
 Let's build a test around what we think a successful `show/2` should look like.
 
 ```elixir
-test "Reponds with a newly created user if the user is found" do
+test "Responds with a newly created user if the user is found" do
   user = User.changeset(%User{}, %{name: "John", email: "john@example.com"})
   |> Repo.insert!
 
