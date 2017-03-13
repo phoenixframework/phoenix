@@ -477,6 +477,12 @@ We can now do as the task suggests and inspect the contents of `priv/static` dir
 * a file containing the original file name and its digest
 * a compressed file containing the file name and its digest
 
+We can optionally determine which files should be gzipped by using the `:gzippable_exts` option in the config file:
+
+```elixir
+config :phoenix, :gzippable_exts, ~w(.js .css)
+```
+
 > Note: We can specify a different output folder where `phoenix.digest` will put processed files. The first argument is the path where the static files are located.
 ```console
 $ mix phoenix.digest priv/static -o www/public
