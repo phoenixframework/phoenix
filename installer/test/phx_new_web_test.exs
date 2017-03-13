@@ -201,26 +201,6 @@ defmodule Mix.Tasks.Phx.New.WebTest do
     end
   end
 
-  test "new inside umbrella" do
-    in_tmp_umbrella_project "new inside umbrella", fn ->
-      File.write! "mix.exs", MixHelper.umbrella_mixfile_contents()
-      File.mkdir! "apps"
-      File.cd! "apps", fn ->
-        Mix.Tasks.Phx.New.Web.run([@app_name])
-
-        assert_file "phx_web/mix.exs", fn file ->
-          assert file =~ "deps_path: \"../../deps\""
-          assert file =~ "lockfile: \"../../mix.lock\""
-        end
-
-        assert_file "phx_web/assets/package.json", fn file ->
-          assert file =~ ~s["file:../../../deps/phoenix"]
-          assert file =~ ~s["file:../../../deps/phoenix_html"]
-        end
-      end
-    end
-  end
-
   test "new outside umbrella", config do
     in_tmp config.test, fn ->
       assert_raise Mix.Error, ~r"The web task can only be run within an umbrella's apps directory", fn ->
