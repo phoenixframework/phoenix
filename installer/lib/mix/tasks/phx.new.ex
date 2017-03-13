@@ -74,7 +74,7 @@ defmodule Mix.Tasks.Phx.New do
   official [Elixir guide](http://elixir-lang.org/getting-started/mix-otp/dependencies-and-umbrella-apps.html#umbrella-projects)
   """
   use Mix.Task
-  alias Phx.New.{Generator, Project, Single, Umbrella}
+  alias Phx.New.{Generator, Project, Single, Umbrella, Web}
 
   @version Mix.Project.config[:version]
   @shortdoc "Creates a new Phoenix v#{@version} application using the experimental generators"
@@ -111,7 +111,7 @@ defmodule Mix.Tasks.Phx.New do
     |> Generator.put_binding()
     |> validate_project()
     |> generator.generate()
-    |> prompt_to_install_deps()
+    |> prompt_to_install_deps(generator)
   end
 
   defp validate_project(%Project{opts: opts} = project) do
@@ -123,7 +123,23 @@ defmodule Mix.Tasks.Phx.New do
     project
   end
 
-  defp prompt_to_install_deps(%Project{} = project) do
+  defp prompt_to_install_deps(%Project{} = project, Phx.New.Ecto = generator) do
+    install? = Mix.shell.yes?("\nFetch and install dependencies?")
+
+    maybe_cd(project.project_path, fn ->
+      extra_instructions =
+        if install_mix(install?) do
+          cmd("mix deps.compile")
+          []
+        else
+          ["$ mix deps.get"]
+        end
+
+      print_mix_info(project.project_path, extra_instructions, generator)
+      print_ecto_info(project, generator)
+    end)
+  end
+  defp prompt_to_install_deps(%Project{} = project, generator) do
     install? = Mix.shell.yes?("\nFetch and install dependencies?")
     starting_dir = File.cwd!()
 
@@ -138,12 +154,14 @@ defmodule Mix.Tasks.Phx.New do
             {["$ mix deps.get"], Task.async(fn -> :ok end)}
           end
 
-        brunch? = install_brunch(install?)
+        installed_brunch? = Project.brunch?(project) && install_brunch(install?)
         Task.await(compile, :infinity)
 
-        print_mix_info(project.project_path, extra)
-        if Project.ecto?(project), do: print_ecto_info(project)
-        if not brunch?, do: print_brunch_info(project, starting_dir)
+        print_mix_info(project.project_path, extra, generator)
+        if Project.ecto?(project), do: print_ecto_info(project, generator)
+        if Project.brunch?(project) && not installed_brunch? do
+          print_brunch_info(project, starting_dir, generator)
+        end
       end)
     end)
   end
@@ -169,7 +187,8 @@ defmodule Mix.Tasks.Phx.New do
     maybe_cmd "mix deps.get", true, install? && Code.ensure_loaded?(Hex)
   end
 
-  defp print_brunch_info(%Project{} = project, starting_dir) do
+  defp print_brunch_info(%Project{}, _starting_dir, Phx.New.Ecto), do: nil
+  defp print_brunch_info(%Project{} = project, starting_dir, _gen) do
     rel_path =
       project.web_path
       |> Path.relative_to(starting_dir)
@@ -192,8 +211,9 @@ defmodule Mix.Tasks.Phx.New do
     nil
   end
 
-  defp print_ecto_info(%Project{app_path: nil}), do: nil
-  defp print_ecto_info(%Project{app_path: app_path} = project) do
+  defp print_ecto_info(%Project{}, Web), do: nil
+  defp print_ecto_info(%Project{app_path: nil}, _gen), do: nil
+  defp print_ecto_info(%Project{app_path: app_path} = project, _gen) do
     config_path =
       app_path
       |> Path.join("config/dev.exs")
@@ -206,7 +226,7 @@ defmodule Mix.Tasks.Phx.New do
     """
   end
 
-  defp print_mix_info(path, extra) do
+  defp print_mix_info(path, extra, gen) when gen in [Umbrella, Single, Web] do
     steps = ["$ cd #{relative_app_path(path)}"] ++ extra ++ ["$ mix phx.server"]
 
     Mix.shell.info """
@@ -218,6 +238,17 @@ defmodule Mix.Tasks.Phx.New do
     You can also run your app inside IEx (Interactive Elixir) as:
 
         $ iex -S mix phx.server
+    """
+  end
+  defp print_mix_info(path, extra, gen) when gen in [Phx.New.Ecto] do
+    steps = ["$ cd #{relative_app_path(path)}"] ++ extra ++ ["$ iex -S mix"]
+
+    Mix.shell.info """
+
+    We are all set! You can run your app inside IEx (Interactive Elixir) as:
+
+        #{Enum.join(steps, "\n    ")}
+
     """
   end
   defp relative_app_path(path) do
