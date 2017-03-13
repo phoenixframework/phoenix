@@ -1316,7 +1316,7 @@ defmodule Phoenix.Controller do
         cur_uri  = Phoenix.Controller.endpoint_module(conn).struct_url()
         cur_path = Phoenix.Controller.current_path(conn, params)
 
-        MyApp.Router.Helpers.url(%URI{cur_uri | scheme: "https}) <> cur_path
+        MyApp.Web.Router.Helpers.url(%URI{cur_uri | scheme: "https}) <> cur_path
       end
 
   Or maybe you have a subdomain based URL for different organizations:
