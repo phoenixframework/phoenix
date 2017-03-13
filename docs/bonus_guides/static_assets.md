@@ -22,7 +22,7 @@ The second important file is `brunch-config.js`. This is configuration for Brunc
 
 According to this configuration Brunch will look for asset source files in `web/static`.
 
-Files and directories in `web/static/assets` will be copied to the destination without changes.
+Files and directories in `web/static/assets` will be copied to the destination `priv/static/` without changes.  Only the assets included in the `:only` option to Plug.Static in endpoint.ex are mounted at the root path.  By default only js, css, images, and robots.txt are exposed.
 
 The `css` and `js` directories inside of `web/static` are a convention. Brunch will simply look for all files in `web/static` excluding `web/static/assets` and sort all found files by their type.
 
