@@ -466,9 +466,9 @@ end
 
 Now run `$ mix phoenix.routes` again and you can see that we get the same result as above when we qualified each controller name individually.
 
-As an extra bonus, we could nest all of the routes for our application inside a scope that simply has an alias for the name of our Phoenix app, and eliminate the duplication in our controller names.
+This doesn't just apply to nested routes, we can even nest all of the routes for our application inside a scope that simply has an alias for the name of our Phoenix app, and eliminate the duplication of our application name in our controller names.
 
-Phoenix already does this now for us in the generated router for a new application (see beginning of this section). Notice here the use of `HelloPhoenix.Router` in the `defmodule` declaration:
+Phoenix already does this for us in the generated router for a new application (see beginning of this section). Notice here the use of `HelloPhoenix.Router` in the `defmodule` declaration:
 
 ```elixir
 defmodule HelloPhoenix.Router do
