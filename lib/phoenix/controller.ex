@@ -306,18 +306,22 @@ defmodule Phoenix.Controller do
 
   defp url(opts) do
     cond do
-      to = opts[:to] ->
-        case to do
-          "//" <> _ -> raise_invalid_url(to)
-          "/" <> _  -> to
-          _         -> raise_invalid_url(to)
-        end
-      external = opts[:external] ->
-        external
-      true ->
-        raise ArgumentError, "expected :to or :external option in redirect/2"
+      to = opts[:to] -> validate_local_url(to)
+      external = opts[:external] -> external
+      true -> raise ArgumentError, "expected :to or :external option in redirect/2"
     end
   end
+  @invalid_local_url_chars ["\\"]
+  defp validate_local_url("//" <> _ = to), do: raise_invalid_url(to)
+  defp validate_local_url("/" <> _ = to) do
+    if String.contains?(to, @invalid_local_url_chars) do
+      raise ArgumentError, "unsafe characters detected for local redirect in URL #{inspect to}"
+    else
+      to
+    end
+  end
+  defp validate_local_url(to), do: raise_invalid_url(to)
+
   @spec raise_invalid_url(term()) :: no_return()
   defp raise_invalid_url(url) do
     raise ArgumentError, "the :to option in redirect expects a path but was #{inspect url}"

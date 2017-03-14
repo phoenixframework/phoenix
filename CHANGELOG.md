@@ -1,6 +1,11 @@
 # Changelog
 
 
+## 1.2.2 (2017-3-14)
+
+* Big Fixes
+  * [Controller] Harden local redirect against arbitrary URL redirection
+
 ## 1.2.1 (2016-8-11)
 
 * Enhancements
