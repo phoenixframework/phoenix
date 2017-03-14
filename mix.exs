@@ -1,7 +1,7 @@
 defmodule Phoenix.Mixfile do
   use Mix.Project
 
-  @version "1.0.5"
+  @version "1.0.6"
 
   def project do
     [app: :phoenix,
@@ -33,7 +33,7 @@ defmodule Phoenix.Mixfile do
 
   defp deps do
     [{:cowboy, "~> 1.0", optional: true},
-     {:plug, "~> 1.0"},
+     {:plug, "~> 1.0.5"},
      {:poison, "~> 1.3"},
 
      # Docs dependencies
