@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.8 (2017-3-14)
+
+* Enhancements
+  * [Plug] Use latest plug with crypto hardening for Phoenix.Token
+
 ## 1.1.7 (2017-3-14)
 
 * Big Fixes
