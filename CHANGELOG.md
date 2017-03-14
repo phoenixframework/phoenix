@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.3.0-rc.0 (2017-03-01)
+## 1.3.0-rc.1 (2017-03-14)
 
 See these [`1.2.x` to `1.3.x` upgrade instructions](https://gist.github.com/chrismccord/71ab10d433c98b714b75c886eff17357) to bring your existing apps up to speed.
 
@@ -18,6 +18,9 @@ See these [`1.2.x` to `1.3.x` upgrade instructions](https://gist.github.com/chri
   * [ConnTest] Add `redirected_params/1` to return the named params matched in the router for the redirected URL
   * [Digester] Add `mix phx.digest.clean` to remove old versions of compiled assets
 
+* Big Fixes
+  * [Controller] Harden local redirect against arbitrary URL redirection
+
 * Deprecations
   * [Generator] All `phoenix.*` mix tasks have been deprecated in favor of new `phx.*` tasks
 
@@ -25,6 +28,11 @@ See these [`1.2.x` to `1.3.x` upgrade instructions](https://gist.github.com/chri
   * Add ability to pass `encode` and `decode` functions to socket constructor for custom encoding and decoding of outgoing and incoming messages.
   * Detect heartbeat timeouts on client to handle ungraceful connection loss for faster socket error detection
   * Add support for AMD/RequireJS
+
+## 1.2.2 (2017-3-14)
+
+* Big Fixes
+  * [Controller] Harden local redirect against arbitrary URL redirection
 
 ## 1.2.1 (2016-8-11)
 

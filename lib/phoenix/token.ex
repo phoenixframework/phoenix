@@ -108,11 +108,9 @@ defmodule Phoenix.Token do
     signed_at_ms = if signed_at_seconds, do: trunc(signed_at_seconds * 1000), else: now_ms()
     secret = get_key_base(context) |> get_secret(salt, key_opts)
 
-    message = %{
-      data: data,
-      signed: signed_at_ms,
-    } |> :erlang.term_to_binary()
-    MessageVerifier.sign(message, secret)
+    %{data: data, signed: signed_at_ms}
+    |> :erlang.term_to_binary()
+    |> MessageVerifier.sign(secret)
   end
 
   @doc """
