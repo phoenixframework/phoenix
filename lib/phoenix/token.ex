@@ -123,7 +123,7 @@ defmodule Phoenix.Token do
 
     case MessageVerifier.verify(token, secret) do
       {:ok, message} ->
-        %{data: data, signed: signed} = :erlang.binary_to_term(message)
+        %{data: data, signed: signed} = Plug.Crypto.safe_binary_to_term(message)
 
         if max_age_ms && (signed + max_age_ms) < now_ms() do
           {:error, :expired}
