@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.5 (2017-3-14)
+
+* Big Fixes
+  * [Controller] Harden local redirect against arbitrary URL redirection
+
 ## 1.0.4 (2015-11-30)
 
 * Enhancements
@@ -7,7 +12,6 @@
 
 * Bug fixes
   * [LongPoll] force application/json content-type to fix blank JSON bodies on older IE clients using xdomain
-
 
 ## 1.0.3 (2015-9-28)
 
