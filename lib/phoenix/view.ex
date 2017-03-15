@@ -132,6 +132,7 @@ defmodule Phoenix.View do
 
       @doc "The resource name, as an atom, for this view"
       def __resource__, do: @view_resource
+      def __otp_app__, do: unquote(Mix.Phoenix.otp_app())
     end
   end
 
@@ -329,7 +330,7 @@ defmodule Phoenix.View do
   Renders the template and returns iodata.
   """
   def render_to_iodata(module, template, assign) do
-    render(module, template, assign) |> encode(template)
+    render(module, template, assign) |> encode(module, template)
   end
 
   @doc """
@@ -339,8 +340,8 @@ defmodule Phoenix.View do
     render_to_iodata(module, template, assign) |> IO.iodata_to_binary
   end
 
-  defp encode(content, template) do
-    if encoder = Template.format_encoder(template) do
+  defp encode(content, view, template) do
+    if encoder = Template.format_encoder(view.__otp_app__(), template) do
       encoder.encode_to_iodata!(content)
     else
       content

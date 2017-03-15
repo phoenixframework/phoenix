@@ -10,7 +10,7 @@ defmodule Phoenix.Template.EExEngine do
   end
 
   defp engine_for(name) do
-    case Phoenix.Template.format_encoder(name) do
+    case Phoenix.Template.format_encoder(Mix.Phoenix.otp_app(), name) do
       Phoenix.Template.HTML ->
         unless Code.ensure_loaded?(Phoenix.HTML.Engine) do
           raise "Could not load Phoenix.HTML.Engine to use with .html.eex templates. " <>

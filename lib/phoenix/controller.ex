@@ -261,11 +261,6 @@ defmodule Phoenix.Controller do
     conn.private[:phoenix_template]
   end
 
-  defp get_json_encoder do
-    Application.get_env(:phoenix, :format_encoders)
-    |> Keyword.get(:json, Poison)
-  end
-
   @doc """
   Sends JSON response.
 
@@ -279,9 +274,34 @@ defmodule Phoenix.Controller do
   """
   @spec json(Plug.Conn.t, term) :: Plug.Conn.t
   def json(conn, data) do
-    encoder = get_json_encoder()
+    encoder = get_json_encoder(conn)
 
     send_resp(conn, conn.status || 200, "application/json", encoder.encode_to_iodata!(data))
+  end
+  defp get_json_encoder(conn) do
+    conn
+    |> get_encoders()
+    |> Keyword.get(:json, Poison)
+  end
+  defp get_encoders(conn) do
+    configured_encoders(conn) || deprecated_encoders() || []
+  end
+  defp configured_encoders(conn) do
+    Application.get_env(endpoint_module(conn).__otp_app__(), :format_encoders)
+  end
+  defp deprecated_encoders() do
+    case Application.get_env(:phoenix, :format_encoders) do
+      nil -> nil
+      [] -> nil
+      [_|_] = encoders ->
+        IO.write :stderr, """
+        [warn] global format_encoders configuration is deprecated.
+        configure your format_encoders on your individual applications. For example:
+
+            config :my_app, format_encoders: [json: Poison]
+        """
+        encoders
+    end
   end
 
   @doc """

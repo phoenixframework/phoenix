@@ -280,6 +280,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   Invoked to warm up caches on start and config change.
   """
   def warmup(endpoint) do
+    _ = Phoenix.Template.format_encoder(endpoint.__otp_app__(), "index.html")
     endpoint.host
     endpoint.path("/")
     endpoint.script_name
@@ -287,8 +288,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     warmup_static(endpoint)
     :ok
   rescue
-    _ ->
-      :ok
+    _ -> :ok
   end
 
   defp warmup_url(endpoint) do

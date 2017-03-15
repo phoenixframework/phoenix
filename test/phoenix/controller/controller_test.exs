@@ -10,6 +10,13 @@ defmodule Phoenix.Controller.ControllerTest do
     :ok
   end
 
+  defp endpoint_conn(method, path) do
+    method
+    |> conn(path)
+    |> put_private(:phoenix_endpoint, __MODULE__)
+  end
+  def __otp_app__(), do: :phoenix
+
   defp get_resp_content_type(conn) do
     [header]  = get_resp_header(conn, "content-type")
     header |> String.split(";") |> Enum.fetch!(0)
@@ -112,21 +119,21 @@ defmodule Phoenix.Controller.ControllerTest do
 
   describe "json/2" do
     test "encodes content to json" do
-      conn = json(conn(:get, "/"), %{foo: :bar})
+      conn = json(endpoint_conn(:get, "/"), %{foo: :bar})
       assert conn.resp_body == "{\"foo\":\"bar\"}"
       assert get_resp_content_type(conn) == "application/json"
       refute conn.halted
     end
 
     test "allows status injection on connection" do
-      conn = conn(:get, "/") |> put_status(400)
+      conn = endpoint_conn(:get, "/") |> put_status(400)
       conn = json(conn, %{foo: :bar})
       assert conn.resp_body == "{\"foo\":\"bar\"}"
       assert conn.status == 400
     end
 
     test "allows content-type injection on connection" do
-      conn = conn(:get, "/") |> put_resp_content_type("application/vnd.api+json")
+      conn = endpoint_conn(:get, "/") |> put_resp_content_type("application/vnd.api+json")
       conn = json(conn, %{foo: :bar})
       assert conn.resp_body == "{\"foo\":\"bar\"}"
       assert Conn.get_resp_header(conn, "content-type") ==
@@ -134,7 +141,7 @@ defmodule Phoenix.Controller.ControllerTest do
     end
 
     test "with allow_jsonp/2 returns json when no callback param is present" do
-      conn = conn(:get, "/")
+      conn = endpoint_conn(:get, "/")
              |> fetch_query_params()
              |> allow_jsonp()
              |> json(%{foo: "bar"})
@@ -144,7 +151,7 @@ defmodule Phoenix.Controller.ControllerTest do
     end
 
     test "with allow_jsonp/2 returns json when callback name is left empty" do
-      conn = conn(:get, "/?callback=")
+      conn = endpoint_conn(:get, "/?callback=")
              |> fetch_query_params()
              |> allow_jsonp()
              |> json(%{foo: "bar"})
@@ -154,7 +161,7 @@ defmodule Phoenix.Controller.ControllerTest do
     end
 
     test "with allow_jsonp/2 returns javascript when callback param is present" do
-      conn = conn(:get, "/?callback=cb")
+      conn = endpoint_conn(:get, "/?callback=cb")
              |> fetch_query_params
              |> allow_jsonp
              |> json(%{foo: "bar"})
@@ -164,7 +171,7 @@ defmodule Phoenix.Controller.ControllerTest do
     end
 
     test "with allow_jsonp/2 allows to override the callback param" do
-      conn = conn(:get, "/?cb=cb")
+      conn = endpoint_conn(:get, "/?cb=cb")
              |> fetch_query_params
              |> allow_jsonp(callback: "cb")
              |> json(%{foo: "bar"})
@@ -181,7 +188,7 @@ defmodule Phoenix.Controller.ControllerTest do
     end
 
     test "with allow_jsonp/2 escapes invalid javascript characters" do
-      conn = conn(:get, "/?cb=cb")
+      conn = endpoint_conn(:get, "/?cb=cb")
              |> fetch_query_params
              |> allow_jsonp(callback: "cb")
              |> json(%{foo: <<0x2028::utf8, 0x2029::utf8>>})

@@ -406,6 +406,7 @@ defmodule Phoenix.Endpoint do
 
       # Avoid unused variable warnings
       _ = var!(code_reloading?)
+      def __otp_app__(), do: @otp_app
     end
   end
 
