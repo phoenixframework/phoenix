@@ -11,7 +11,7 @@ use Mix.Config
 
 config :hello_phoenix, HelloPhoenix.Endpoint,
   http: [port: 8080],
-  cache_static_manifest: "priv/static/manifest.json"
+  cache_static_manifest: "priv/static/cache_manifest.json"
 
 . . .
 ```
@@ -25,7 +25,7 @@ use Mix.Config
 
 config :hello_phoenix, HelloPhoenix.Endpoint,
   http: [port: {:system, "PORT"}],
-  cache_static_manifest: "priv/static/manifest.json"
+  cache_static_manifest: "priv/static/cache_manifest.json"
 
 . . .
 ```
@@ -40,7 +40,7 @@ use Mix.Config
 config :hello_phoenix, HelloPhoenix.Endpoint,
   http: [port: 8080],
   url: [host: "example.com", port: 80],
-  cache_static_manifest: "priv/static/manifest.json"
+  cache_static_manifest: "priv/static/cache_manifest.json"
 
 . . .
 ```

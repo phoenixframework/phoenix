@@ -13,7 +13,7 @@ use Mix.Config
 config :hello_phoenix, HelloPhoenix.Endpoint,
   http: [port: {:system, "PORT"}],
   url: [host: "example.com"],
-  cache_static_manifest: "priv/static/manifest.json",
+  cache_static_manifest: "priv/static/cache_manifest.json",
   https: [port: 443,
           otp_app: :hello_phoenix,
           keyfile: System.get_env("SOME_APP_SSL_KEY_PATH"),

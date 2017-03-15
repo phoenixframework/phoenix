@@ -75,7 +75,7 @@ config :hello_phoenix, HelloPhoenix.Endpoint,
 http: [port: 8888],
 url: [host: "example.com"],
 root: ".",
-cache_static_manifest: "priv/static/manifest.json",
+cache_static_manifest: "priv/static/cache_manifest.json",
 server: true,
 version: Mix.Project.config[:version]
 ```

@@ -71,14 +71,14 @@ $ MIX_ENV=prod mix phoenix.digest
 Check your digested files at "priv/static".
 ```
 
-And that is it! The first command builds the assets and the second generates digests as well as a manifest file so Phoenix can quickly serve assets in production.
+And that is it! The first command builds the assets and the second generates digests as well as a cache manifest file so Phoenix can quickly serve assets in production.
 
 Keep in mind that, if you by any chance forget to run the steps above, Phoenix will show an error message:
 
 ```console
 $ PORT=4001 MIX_ENV=prod mix phoenix.server
 10:50:18.732 [info] Running MyApp.Endpoint with Cowboy on http://example.com
-10:50:18.735 [error] Could not find static manifest at "my_app/_build/prod/lib/foo/priv/static/manifest.json". Run "mix phoenix.digest" after building your static files or remove the configuration from "config/prod.exs".
+10:50:18.735 [error] Could not find static manifest at "my_app/_build/prod/lib/foo/priv/static/cache_manifest.json". Run "mix phoenix.digest" after building your static files or remove the configuration from "config/prod.exs".
 ```
 
 The error message is quite clear: it says Phoenix could not find a static manifest. Just run the commands above to fix it or, if you are not serving or don't care about assets at all, you can just remove the `cache_static_manifest` configuration from `config/prod.exs`.
