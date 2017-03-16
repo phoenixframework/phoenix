@@ -23,6 +23,7 @@ defmodule Mix.Phoenix.Schema do
             binary_id: false,
             migration_defaults: nil,
             migration?: false,
+            migration_dir: nil,
             params: %{},
             sample_id: nil
 
@@ -40,9 +41,11 @@ defmodule Mix.Phoenix.Schema do
     otp_app  = Mix.Phoenix.otp_app()
     opts     = Keyword.merge(Application.get_env(otp_app, :generators, []), opts)
     basename = Phoenix.Naming.underscore(schema_name)
-    module   = Module.concat([Mix.Phoenix.base(), schema_name])
-    repo     = opts[:repo] || Module.concat([Mix.Phoenix.base(), "Repo"])
-    file     = Path.join(["lib", Atom.to_string(otp_app), basename <> ".ex"])
+    base     = context_base(otp_app)
+    module   = Module.concat(base, schema_name)
+    repo     = opts[:repo] || Module.concat([base, "Repo"])
+    dir      = context_dir(otp_app)
+    file     = Path.join([dir, basename <> ".ex"])
     table    = opts[:table] || schema_plural
     uniques  = uniques(cli_attrs)
     {assocs, attrs} = partition_attrs_and_assocs(module, attrs(cli_attrs))
@@ -81,6 +84,7 @@ defmodule Mix.Phoenix.Schema do
       human_plural: Phoenix.Naming.humanize(schema_plural),
       binary_id: opts[:binary_id],
       migration_defaults: migration_defaults(attrs),
+      migration_dir: migration_dir(otp_app),
       string_attr: string_attr,
       params: %{
         create: create_params,
@@ -88,6 +92,33 @@ defmodule Mix.Phoenix.Schema do
         default_key: string_attr || default_params_key
       },
       sample_id: sample_id(opts)}
+  end
+
+  defp context_dir(otp_app) do
+    case Application.get_env(otp_app, :generators)[:context_app] do
+      nil ->
+        Path.join(["lib", to_string(otp_app)])
+      context_app ->
+        Path.join(["..", to_string(context_app), "lib", to_string(context_app)])
+    end
+  end
+
+  defp context_base(otp_app) do
+    case Application.get_env(otp_app, :generators)[:context_app] do
+      nil -> Module.concat([Mix.Phoenix.base()])
+      context_app ->
+        [context_app |> to_string |> Phoenix.Naming.camelize()]
+        |> Module.concat()
+    end
+  end
+
+  defp migration_dir(otp_app) do
+    case Application.get_env(otp_app, :generators)[:context_app] do
+      nil ->
+        Path.join(["priv/repo/migrations"])
+      context_app ->
+        Path.join(["..", to_string(context_app), "priv/repo/migrations"])
+    end
   end
 
   @doc """

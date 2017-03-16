@@ -125,7 +125,7 @@ defmodule Phx.New.Generator do
       adapter_module: adapter_module,
       adapter_config: adapter_config,
       hex?: Code.ensure_loaded?(Hex),
-      generators: generators(adapter_config),
+      generators: generators(project, adapter_config),
       namespaced?: namespaced?(project)]
 
     %Project{project | binding: binding}
@@ -194,15 +194,21 @@ defmodule Phx.New.Generator do
     end)
   end
 
-  defp generators(adapter_config) do
+  defp generators(%Project{} = project, adapter_config) do
     adapter_config
     |> Keyword.take([:binary_id, :migration, :sample_binary_id])
+    |> Keyword.merge(maybe_umbrella_generators(project))
     |> Enum.filter(fn {_, value} -> not is_nil(value) end)
     |> case do
       [] -> nil
       conf -> conf
     end
   end
+
+  defp maybe_umbrella_generators(%Project{app: app, in_umbrella?: true}),
+    do: [context_app: String.to_atom(app)]
+  defp maybe_umbrella_generators(_),
+    do: []
 
   defp phoenix_path(%Project{} = project, true) do
     absolute = Path.expand(project.project_path)
