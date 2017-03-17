@@ -94,9 +94,8 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   def copy_new_files(%Context{schema: schema} = context, paths, binding) do
     Gen.Schema.copy_new_files(schema, paths, binding)
     inject_schema_access(context, paths, binding)
-    Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.context", "", binding, [
-      {:new_eex, "context_test.exs", "test/#{context.basename}_test.exs"},
-    ]
+    inject_tests(context, paths, binding)
+
     context
   end
 
@@ -105,20 +104,34 @@ defmodule Mix.Tasks.Phx.Gen.Context do
       Mix.Generator.create_file(file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context.ex", binding))
     end
 
-    schema_content = Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/schema_access.ex", binding)
+    paths
+    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/schema_access.ex", binding)
+    |> inject_eex_before_final_end(file, binding)
+  end
 
-    file
+  defp write_file(content, file) do
+    File.write!(file, content)
+  end
+
+  defp inject_tests(%Context{test_file: test_file} = context, paths, binding) do
+    unless context.tests_pre_existing? do
+      Mix.Generator.create_file(test_file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context_test.exs", binding))
+    end
+
+    paths
+    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/test_cases.exs", binding)
+    |> inject_eex_before_final_end(test_file, binding)
+  end
+
+  defp inject_eex_before_final_end(content_to_inject, file_path, binding) do
+    file_path
     |> File.read!()
     |> String.trim_trailing()
     |> String.trim_trailing("end")
     |> EEx.eval_string(binding)
-    |> Kernel.<>(schema_content)
+    |> Kernel.<>(content_to_inject)
     |> Kernel.<>("end\n")
-    |> write_context(file)
-  end
-
-  defp write_context(content, file) do
-    File.write!(file, content)
+    |> write_file(file_path)
   end
 
   def print_shell_instructions(%Context{schema: schema}) do

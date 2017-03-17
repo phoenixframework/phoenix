@@ -104,6 +104,8 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
 
       assert_file "test/blog_test.exs", fn file ->
         assert file =~ "use Phoenix.DataCase"
+        assert file =~ "describe \"posts\" do"
+        assert file =~ "def post_fixture(attrs \\\\ %{})"
       end
 
       assert [path] = Path.wildcard("priv/repo/migrations/*_create_blog_post.exs")
@@ -116,6 +118,12 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       Gen.Context.run(~w(Blog Comment comments title:string))
       assert_file "lib/phoenix/blog/comment.ex", fn file ->
         assert file =~ "field :title, :string"
+      end
+
+      assert_file "test/blog_test.exs", fn file ->
+        assert file =~ "use Phoenix.DataCase"
+        assert file =~ "describe \"comments\" do"
+        assert file =~ "def comment_fixture(attrs \\\\ %{})"
       end
 
       assert [path] = Path.wildcard("priv/repo/migrations/*_create_blog_comment.exs")
