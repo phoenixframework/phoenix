@@ -189,13 +189,23 @@ defmodule Phoenix.Token do
   end
 
   defp get_key_base(%Plug.Conn{} = conn),
-    do: Phoenix.Controller.endpoint_module(conn).config(:secret_key_base)
+    do: conn |> Phoenix.Controller.endpoint_module() |> get_endpoint_key_base()
   defp get_key_base(%Phoenix.Socket{} = socket),
     do: socket.endpoint.config(:secret_key_base)
   defp get_key_base(endpoint) when is_atom(endpoint),
-    do: endpoint.config(:secret_key_base)
+    do: get_endpoint_key_base(endpoint)
   defp get_key_base(string) when is_binary(string) and byte_size(string) >= 20,
     do: string
+
+  defp get_endpoint_key_base(endpoint) do
+    endpoint.config(:secret_key_base) || raise """
+    no :secret_key_base configuration found in #{inspect endpoint}.
+    Ensure your environment has the necessary mix configuration. For example:
+
+        config :my_app, MyApp.Endpoint,
+            secret_key_base: ...
+    """
+  end
 
   # Gathers configuration and generates the key secrets and signing secrets.
   defp get_secret(secret_key_base, salt, opts) do
