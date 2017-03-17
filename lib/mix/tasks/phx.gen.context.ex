@@ -71,9 +71,17 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     binding = [context: context, schema: schema]
     paths = Mix.Phoenix.generator_paths()
 
+    prompt_for_conflicts(context)
+
     context
     |> copy_new_files(paths, binding)
     |> print_shell_instructions()
+  end
+
+  defp prompt_for_conflicts(context) do
+    context
+    |> files_to_be_generated()
+    |> Mix.Phoenix.prompt_for_conflicts()
   end
 
   def build(args) do
@@ -91,6 +99,10 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     {context, schema}
   end
 
+  def files_to_be_generated(%Context{schema: schema}) do
+    Gen.Schema.files_to_be_generated(schema)
+  end
+
   def copy_new_files(%Context{schema: schema} = context, paths, binding) do
     Gen.Schema.copy_new_files(schema, paths, binding)
     inject_schema_access(context, paths, binding)
@@ -100,7 +112,9 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   defp inject_schema_access(%Context{file: file} = context, paths, binding) do
-    unless Context.pre_existing?(context) do
+    if Context.pre_existing?(context) do
+      Mix.shell.info([:green, "* injecting ", :reset, Path.relative_to_cwd(file)])
+    else
       Mix.Generator.create_file(file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context.ex", binding))
     end
 
@@ -114,7 +128,9 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   defp inject_tests(%Context{test_file: test_file} = context, paths, binding) do
-    unless Context.pre_existing_tests?(context) do
+    if Context.pre_existing_tests?(context) do
+      Mix.shell.info([:green, "* injecting ", :reset, Path.relative_to_cwd(test_file)])
+    else
       Mix.Generator.create_file(test_file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context_test.exs", binding))
     end
 
