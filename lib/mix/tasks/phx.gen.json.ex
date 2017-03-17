@@ -97,7 +97,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   def print_shell_instructions(%Context{schema: schema} = context) do
     Mix.shell.info """
 
-    Add the resource to your api scope in lib/#{Mix.Phoenix.otp_app()}/web/router.ex:
+    Add the resource to your api scope in #{Mix.Phoenix.web_prefix()}/router.ex:
 
         resources "/#{schema.plural}", #{inspect schema.alias}Controller, except: [:new, :edit]
     """
