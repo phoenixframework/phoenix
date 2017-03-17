@@ -63,7 +63,47 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
         assert file =~ "Blog.create_post"
         assert file =~ "Blog.update_post"
         assert file =~ "Blog.delete_post"
+        assert file =~ " post_path(conn"
       end
+
+      assert_receive {:mix_shell, :info, ["""
+
+      Add the resource to your :api scope in lib/phoenix/web/router.ex:
+
+          resources "/posts", PostController, except: [:new, :edit]
+      """]}
+    end
+  end
+
+  test "with json --web namespace generates namedspaced web modules and directories", config do
+    in_tmp_project config.test, fn ->
+      Gen.Json.run(~w(Blog Post posts title:string --web Blog))
+
+      assert_file "test/web/controllers/blog/post_controller_test.exs", fn file ->
+        assert file =~ "defmodule Phoenix.Web.Blog.PostControllerTest"
+        assert file =~ " blog_post_path(conn"
+      end
+
+      assert_file "lib/phoenix/web/controllers/blog/post_controller.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.Blog.PostController"
+        assert file =~ "use Phoenix.Web, :controller"
+        assert file =~ " blog_post_path(conn"
+      end
+
+      assert_file "lib/phoenix/web/views/blog/post_view.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.Blog.PostView"
+      end
+
+      assert_receive {:mix_shell, :info, ["""
+
+      Add the resource to your Blog :api scope in lib/phoenix/web/router.ex:
+
+          scope "/blog", Phoenix.Web.Blog do
+            pipe_through :api
+            ...
+            resources "/posts", PostController
+          end
+      """]}
     end
   end
 end

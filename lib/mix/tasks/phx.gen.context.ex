@@ -77,14 +77,14 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   def build(args) do
-    switches = [binary_id: :boolean, table: :string]
+    switches = [binary_id: :boolean, table: :string, web: :string]
     {opts, parsed, _} = OptionParser.parse(args, switches: switches)
     [context_name, schema_name, plural | schema_args] = validate_args!(parsed)
 
     table = Keyword.get(opts, :table, Phoenix.Naming.underscore(context_name) <> "_#{plural}")
     schema_module = inspect(Module.concat(context_name, schema_name))
 
-    schema = Gen.Schema.build([schema_module, plural | schema_args] ++ ["--table", table], __MODULE__)
+    schema = Gen.Schema.build([schema_module, plural | schema_args] ++ ["--table", table], opts, __MODULE__)
     context = Context.new(context_name, schema, opts)
     Mix.Phoenix.check_module_name_availability!(context.module)
 

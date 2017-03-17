@@ -81,14 +81,14 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
 
   alias Mix.Phoenix.Schema
 
-  @switches [migration: :boolean, binary_id: :boolean, table: :string]
+  @switches [migration: :boolean, binary_id: :boolean, table: :string, web: :string]
 
   def run(args) do
     if Mix.Project.umbrella? do
       Mix.raise "mix phx.gen.schema can only be run inside an application directory"
     end
 
-    schema = build(args)
+    schema = build(args, [])
     paths = Mix.Phoenix.generator_paths()
 
     schema
@@ -96,9 +96,10 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
     |> print_shell_instructions()
   end
 
-  def build(args, help \\ __MODULE__) do
-    {opts, parsed, _} = OptionParser.parse(args, switches: @switches)
+  def build(args, parent_opts, help \\ __MODULE__) do
+    {schema_opts, parsed, _} = OptionParser.parse(args, switches: @switches)
     [schema_name, plural | attrs] = validate_args!(parsed, help)
+    opts = Keyword.merge(parent_opts, schema_opts)
 
     schema = Schema.new(schema_name, plural, attrs, opts)
     Mix.Phoenix.check_module_name_availability!(schema.module)

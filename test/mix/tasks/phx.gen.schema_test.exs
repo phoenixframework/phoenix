@@ -16,7 +16,7 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
 
   test "build" do
     in_tmp_project "build", fn ->
-      schema = Gen.Schema.build(~w(Blog.Post posts title:string))
+      schema = Gen.Schema.build(~w(Blog.Post posts title:string), [])
 
       assert %Schema{
         alias: Post,

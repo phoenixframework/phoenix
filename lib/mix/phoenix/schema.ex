@@ -24,7 +24,10 @@ defmodule Mix.Phoenix.Schema do
             migration_defaults: nil,
             migration?: false,
             params: %{},
-            sample_id: nil
+            sample_id: nil,
+            web_path: nil,
+            web_namespace: nil,
+            route_helper: nil
 
   @valid_types [:integer, :float, :decimal, :boolean, :map, :string,
                      :array, :references, :text, :date, :time,
@@ -47,6 +50,8 @@ defmodule Mix.Phoenix.Schema do
     uniques  = uniques(cli_attrs)
     {assocs, attrs} = partition_attrs_and_assocs(module, attrs(cli_attrs))
     types = types(attrs)
+    web_namespace = opts[:web]
+    web_path = web_namespace && Phoenix.Naming.underscore(web_namespace)
 
     singular =
       module
@@ -60,6 +65,7 @@ defmodule Mix.Phoenix.Schema do
         {key, _} -> key
         nil -> :some_field
       end
+    route_helper = if web_path, do: "#{web_path}_#{singular}", else: singular
 
     %Schema{
       opts: opts,
@@ -87,6 +93,9 @@ defmodule Mix.Phoenix.Schema do
         update: Mix.Phoenix.Schema.params(attrs, :update),
         default_key: string_attr || default_params_key
       },
+      web_namespace: web_namespace,
+      web_path: web_path,
+      route_helper: route_helper,
       sample_id: sample_id(opts)}
   end
 

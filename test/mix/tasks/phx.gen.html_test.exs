@@ -57,6 +57,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
       assert_file "test/web/controllers/post_controller_test.exs", fn file ->
         assert file =~ "defmodule Phoenix.Web.PostControllerTest"
+        assert file =~ " post_path(conn"
       end
 
       assert [path] = Path.wildcard("priv/repo/migrations/*_create_blog_post.exs")
@@ -75,6 +76,11 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "Blog.update_post"
         assert file =~ "Blog.delete_post"
         assert file =~ "Blog.change_post"
+        assert file =~ "redirect(to: post_path(conn"
+      end
+
+      assert_file "lib/phoenix/web/views/post_view.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.PostView"
       end
 
       assert_file "lib/phoenix/web/templates/post/form.html.eex", fn file ->
@@ -127,7 +133,48 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "Blog.update_comment"
         assert file =~ "Blog.delete_comment"
         assert file =~ "Blog.change_comment"
+        assert file =~ "redirect(to: comment_path(conn"
       end
+
+      assert_receive {:mix_shell, :info, ["""
+
+      Add the resource to your browser scope in lib/phoenix/web/router.ex:
+
+          resources "/posts", PostController
+      """]}
+    end
+  end
+
+  test "with --web namespace generates namedspaced web modules and directories", config do
+    in_tmp_project config.test, fn ->
+      Gen.Html.run(~w(Blog Post posts title:string --web Blog))
+
+      assert_file "test/web/controllers/blog/post_controller_test.exs", fn file ->
+        assert file =~ "defmodule Phoenix.Web.Blog.PostControllerTest"
+        assert file =~ " blog_post_path(conn"
+      end
+
+      assert_file "lib/phoenix/web/controllers/blog/post_controller.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.Blog.PostController"
+        assert file =~ "use Phoenix.Web, :controller"
+        assert file =~ "redirect(to: blog_post_path(conn"
+      end
+
+      assert_file "lib/phoenix/web/templates/blog/post/form.html.eex"
+      assert_file "lib/phoenix/web/views/blog/post_view.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.Blog.PostView"
+      end
+
+      assert_receive {:mix_shell, :info, ["""
+
+      Add the resource to your Blog :browser scope in lib/phoenix/web/router.ex:
+
+          scope "/blog", Phoenix.Web.Blog do
+            pipe_through :browser
+            ...
+            resources "/posts", PostController
+          end
+      """]}
     end
   end
 end
