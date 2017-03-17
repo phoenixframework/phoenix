@@ -100,7 +100,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   defp inject_schema_access(%Context{file: file} = context, paths, binding) do
-    unless context.pre_existing? do
+    unless Context.pre_existing?(context) do
       Mix.Generator.create_file(file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context.ex", binding))
     end
 
@@ -114,7 +114,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   defp inject_tests(%Context{test_file: test_file} = context, paths, binding) do
-    unless context.tests_pre_existing? do
+    unless Context.pre_existing_tests?(context) do
       Mix.Generator.create_file(test_file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context_test.exs", binding))
     end
 

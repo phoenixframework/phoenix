@@ -20,12 +20,12 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       context = Context.new("Blog", schema, [])
 
       assert %Context{
-        pre_existing?: false,
         alias: Blog,
         base_module: Phoenix,
         basename: "blog",
         dir: "lib/phoenix/blog",
         file: "lib/phoenix/blog/blog.ex",
+        test_file: "test/blog_test.exs",
         module: Phoenix.Blog,
         web_module: Phoenix.Web,
         schema: %Mix.Phoenix.Schema{
@@ -49,7 +49,16 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       """)
 
       schema = Schema.new("Blog.Post", "posts", [], [])
-      assert %Context{pre_existing?: true} = Context.new("Blog", schema, [])
+      context = Context.new("Blog", schema, [])
+      assert Context.pre_existing?(context)
+      refute Context.pre_existing_tests?(context)
+
+      File.mkdir_p!("test")
+      File.write!(context.test_file, """
+      defmodule Phoenix.BlogTest do
+      end
+      """)
+      assert Context.pre_existing_tests?(context)
     end
   end
 

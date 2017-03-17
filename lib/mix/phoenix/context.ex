@@ -13,9 +13,7 @@ defmodule Mix.Phoenix.Context do
             file: nil,
             test_file: nil,
             dir: nil,
-            opts: [],
-            pre_existing?: false,
-            tests_pre_existing?: false
+            opts: []
 
   def valid?(context) do
     context =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/
@@ -42,10 +40,12 @@ defmodule Mix.Phoenix.Context do
       file: file,
       test_file: test_file,
       dir: dir,
-      opts: opts,
-      pre_existing?: File.exists?(file),
-      tests_pre_existing?: File.exists?(test_file)}
+      opts: opts}
   end
+
+  def pre_existing?(%Context{file: file}), do: File.exists?(file)
+
+  def pre_existing_tests?(%Context{test_file: file}), do: File.exists?(file)
 
   defp web_module(base) do
     case base |> Module.split() |> Enum.reverse() do
