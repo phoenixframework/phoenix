@@ -206,6 +206,28 @@ defmodule Mix.Phoenix do
     Path.join(web_prefix(), rel_path)
   end
 
+  @doc """
+  Prompts to continue if any files exist.
+  """
+  def prompt_for_conflicts(generator_files) do
+    file_paths = Enum.map(generator_files, fn {_, _, path} -> path end)
+
+    case Enum.filter(file_paths, &File.exists?(&1)) do
+      [] -> :ok
+      conflicts ->
+        Mix.shell.info"""
+        The following files conflict with new files to be generated:
+
+        #{conflicts |> Enum.map(&"  * #{&1}") |> Enum.join("\n")}
+
+        See the --web option to namespace similarly named resources
+        """
+        unless Mix.shell.yes?("Proceeed with interactive overwrite?") do
+          System.halt()
+        end
+    end
+  end
+
   defp web_module(base) do
     if base |> to_string() |> String.ends_with?(".Web") do
       Module.concat(base, nil)

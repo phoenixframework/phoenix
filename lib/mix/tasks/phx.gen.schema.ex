@@ -91,9 +91,17 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
     schema = build(args, [])
     paths = Mix.Phoenix.generator_paths()
 
+    prompt_for_conflicts(schema)
+
     schema
     |> copy_new_files(paths, schema: schema)
     |> print_shell_instructions()
+  end
+
+  defp prompt_for_conflicts(schema) do
+    schema
+    |> files_to_be_generated()
+    |> Mix.Phoenix.prompt_for_conflicts()
   end
 
   def build(args, parent_opts, help \\ __MODULE__) do
@@ -107,6 +115,10 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
     schema
   end
 
+  def files_to_be_generated(%Schema{} = schema) do
+    [{:eex, "schema.ex", schema.file}]
+  end
+
   def copy_new_files(%Schema{} = schema, paths, binding) do
     migration =
       schema.module
@@ -117,9 +129,8 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
       |> Phoenix.Naming.underscore()
       |> String.replace("/", "_")
 
-    Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.schema", "", binding, [
-      {:eex, "schema.ex", schema.file}
-    ]
+    files = files_to_be_generated(schema)
+    Mix.Phoenix.copy_from(paths,"priv/templates/phx.gen.schema", "", binding, files)
 
     if schema.migration? do
       Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.schema", "", binding, [

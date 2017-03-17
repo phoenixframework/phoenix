@@ -73,25 +73,39 @@ defmodule Mix.Tasks.Phx.Gen.Json do
     binding = [context: context, schema: schema]
     paths = Mix.Phoenix.generator_paths()
 
+    prompt_for_conflicts(context)
+
     context
     |> copy_new_files(paths, binding)
     |> print_shell_instructions()
   end
 
-  def copy_new_files(%Context{schema: schema} = context, paths, binding) do
+  defp prompt_for_conflicts(context) do
+    context
+    |> files_to_be_generated()
+    |> Kernel.++(Gen.Context.files_to_be_generated(context))
+    |> Mix.Phoenix.prompt_for_conflicts()
+  end
+
+  def files_to_be_generated(%Context{schema: schema}) do
     web_prefix = Mix.Phoenix.web_prefix()
     test_prefix = Mix.Phoenix.test_prefix()
     web_path = to_string(schema.web_path)
 
-    Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.json", "", binding, [
+    [
       {:eex,     "controller.ex",          Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_controller.ex"])},
       {:eex,     "view.ex",                Path.join([web_prefix, "views", web_path, "#{schema.singular}_view.ex"])},
       {:eex,     "controller_test.exs",    Path.join([test_prefix, "controllers", web_path, "#{schema.singular}_controller_test.exs"])},
       {:new_eex, "changeset_view.ex",      Path.join([web_prefix, "views/changeset_view.ex"])},
       {:new_eex, "fallback_controller.ex", Path.join([web_prefix, "controllers/fallback_controller.ex"])},
     ]
+  end
 
+  def copy_new_files(%Context{} = context, paths, binding) do
+    files = files_to_be_generated(context)
+    Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.json", "", binding, files
     Gen.Context.copy_new_files(context, paths, binding)
+
     context
   end
 
