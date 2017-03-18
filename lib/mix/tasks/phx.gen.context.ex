@@ -112,9 +112,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   defp inject_schema_access(%Context{file: file} = context, paths, binding) do
-    if Context.pre_existing?(context) do
-      Mix.shell.info([:green, "* injecting ", :reset, Path.relative_to_cwd(file)])
-    else
+    unless Context.pre_existing?(context) do
       Mix.Generator.create_file(file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context.ex", binding))
     end
 
@@ -128,9 +126,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   defp inject_tests(%Context{test_file: test_file} = context, paths, binding) do
-    if Context.pre_existing_tests?(context) do
-      Mix.shell.info([:green, "* injecting ", :reset, Path.relative_to_cwd(test_file)])
-    else
+    unless Context.pre_existing_tests?(context) do
       Mix.Generator.create_file(test_file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context_test.exs", binding))
     end
 
@@ -140,14 +136,21 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   defp inject_eex_before_final_end(content_to_inject, file_path, binding) do
-    file_path
-    |> File.read!()
-    |> String.trim_trailing()
-    |> String.trim_trailing("end")
-    |> EEx.eval_string(binding)
-    |> Kernel.<>(content_to_inject)
-    |> Kernel.<>("end\n")
-    |> write_file(file_path)
+    file = File.read!(file_path)
+
+    if String.contains?(file, content_to_inject) do
+      :ok
+    else
+      Mix.shell.info([:green, "* injecting ", :reset, Path.relative_to_cwd(file_path)])
+
+      file
+      |> String.trim_trailing()
+      |> String.trim_trailing("end")
+      |> EEx.eval_string(binding)
+      |> Kernel.<>(content_to_inject)
+      |> Kernel.<>("end\n")
+      |> write_file(file_path)
+    end
   end
 
   def print_shell_instructions(%Context{schema: schema}) do
