@@ -32,7 +32,7 @@ $ mix phx.new dev_app --dev
 
 The `--dev` flag will configure your new project's `:phoenix` dep as a relative path dependency, pointing to your local Phoenix checkout:
 
-```
+```elixir
 defp deps do
   [{:phoenix, path: "../..", override: true},
 ```
