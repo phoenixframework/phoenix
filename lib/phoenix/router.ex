@@ -271,12 +271,13 @@ defmodule Phoenix.Router do
   end
   def __call__({conn, pipeline, dispatch}) do
     case pipeline.(conn) do
-      %Plug.Conn{halted: true} = halted_conn -> halted_conn
+      %Plug.Conn{halted: true} = halted_conn ->
+        halted_conn
       %Plug.Conn{} = piped_conn ->
         try do
           dispatch.(piped_conn)
         catch
-          kind, reason -> Plug.Conn.WrapperError.reraise(piped_conn, kind, reason)
+          :error, reason -> Plug.Conn.WrapperError.reraise(piped_conn, :error, reason)
         end
     end
   end
@@ -438,8 +439,8 @@ defmodule Phoenix.Router do
           try do
             unquote(body)
           catch
-            kind, reason ->
-              Plug.Conn.WrapperError.reraise(unquote(conn), kind, reason)
+            :error, reason ->
+              Plug.Conn.WrapperError.reraise(unquote(conn), :error, reason)
           end
         end
         @phoenix_pipeline nil
