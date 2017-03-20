@@ -357,7 +357,7 @@ What it doesn't have is an alternative template for rendering text. Let's add on
 OMG, this is actually some text.
 ```
 
-There are just few more things we need to do to make this work. We need to tell our router that it should accept the `text` format. We do that by adding `text` to the list of accepted formats in the `:browser` pipeline. Let's open up `web/router.ex` and change the `plug :accepts` to include `text` as well as `html` like this.
+There are just a few more things we need to do to make this work. We need to tell our router that it should accept the `text` format. We do that by adding `text` to the list of accepted formats in the `:browser` pipeline. Let's open up `web/router.ex` and change the `plug :accepts` to include `text` as well as `html` like this.
 
 ```elixir
 defmodule HelloPhoenix.Router do
