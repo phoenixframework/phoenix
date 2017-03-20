@@ -20,7 +20,7 @@
       assert <%= inspect context.alias %>.list_<%= schema.plural %>() == [<%= schema.singular %>]
     end
 
-    test "get_<%= schema.singular %>! returns the <%= schema.singular %> with given id" do
+    test "get_<%= schema.singular %>!/1 returns the <%= schema.singular %> with given id" do
       <%= schema.singular %> = <%= schema.singular %>_fixture()
       assert <%= inspect context.alias %>.get_<%= schema.singular %>!(<%= schema.singular %>.id) == <%= schema.singular %>
     end
