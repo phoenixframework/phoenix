@@ -44,7 +44,7 @@
   """
   def create_<%= schema.singular %>(attrs \\ %{}) do
     %<%= inspect schema.alias %>{}
-    |> <%= schema.singular %>_changeset(attrs)
+    |> <%= inspect schema.alias %>.changeset(attrs)
     |> Repo.insert()
   end
 
@@ -62,7 +62,7 @@
   """
   def update_<%= schema.singular %>(%<%= inspect schema.alias %>{} = <%= schema.singular %>, attrs) do
     <%= schema.singular %>
-    |> <%= schema.singular %>_changeset(attrs)
+    |> <%= inspect schema.alias %>.changeset(attrs)
     |> Repo.update()
   end
 
@@ -92,12 +92,5 @@
 
   """
   def change_<%= schema.singular %>(%<%= inspect schema.alias %>{} = <%= schema.singular %>) do
-    <%= schema.singular %>_changeset(<%= schema.singular %>, %{})
+    <%= inspect schema.alias %>.changeset(<%= schema.singular %>, %{})
   end
-
-  defp <%= schema.singular %>_changeset(%<%= inspect schema.alias %>{} = <%= schema.singular %>, attrs) do
-    <%= schema.singular %>
-    |> cast(attrs, [<%= Enum.map_join(schema.attrs, ", ", &inspect(elem(&1, 0))) %>])
-    |> validate_required([<%= Enum.map_join(schema.attrs, ", ", &inspect(elem(&1, 0))) %>])
-<%= for k <- schema.uniques do %>    |> unique_constraint(<%= inspect k %>)
-<% end %>  end

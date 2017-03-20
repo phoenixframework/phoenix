@@ -6,6 +6,7 @@ defmodule Mix.Phoenix.Schema do
   defstruct module: nil,
             repo: nil,
             table: nil,
+            embedded?: false,
             opts: [],
             alias: nil,
             file: nil,
@@ -52,6 +53,7 @@ defmodule Mix.Phoenix.Schema do
     types = types(attrs)
     web_namespace = opts[:web]
     web_path = web_namespace && Phoenix.Naming.underscore(web_namespace)
+    embedded? = Keyword.get(opts, :embedded, false)
 
     singular =
       module
@@ -73,6 +75,7 @@ defmodule Mix.Phoenix.Schema do
       module: module,
       repo: repo,
       table: table,
+      embedded?: embedded?,
       alias: module |> Module.split() |> List.last() |> Module.concat(nil),
       file: file,
       attrs: attrs,
