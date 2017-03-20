@@ -510,7 +510,7 @@ def index(conn, _params) do
 end
 ```
 
-We can also make use of the path helpers we learned about in the [Routing Guide](routing.html). It's useful to `alias` the helpers in `web/router.ex` in order to shorten the expression.
+We can also make use of the path helpers we learned about in the [Routing Guide](routing.html).
 
 ```elixir
 defmodule HelloPhoenix.PageController do
