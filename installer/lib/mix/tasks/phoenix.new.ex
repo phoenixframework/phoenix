@@ -248,11 +248,11 @@ defmodule Mix.Tasks.Phoenix.New do
       brunch? = install_brunch(install?)
       extra   = if mix?, do: [], else: ["$ mix deps.get"]
 
-      print_mix_info(path, extra)
-
       if binding[:ecto] do
         print_ecto_info()
       end
+
+      print_mix_info(path, extra)
 
       if not brunch? do
         print_brunch_info()
