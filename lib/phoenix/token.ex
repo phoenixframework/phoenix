@@ -57,8 +57,8 @@ defmodule Phoenix.Token do
 
       def create(conn, params) do
         user = User.create(params)
-        render(conn, "user.json",)
-               %{token: Phoenix.Token.sign(conn, "user salt", user.id), user: user}
+        render(conn, "user.json",
+               %{token: Phoenix.Token.sign(conn, "user salt", user.id), user: user})
       end
 
   Once the token is sent, the client may now send it back to the server
