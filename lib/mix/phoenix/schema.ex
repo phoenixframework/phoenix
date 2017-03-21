@@ -7,6 +7,7 @@ defmodule Mix.Phoenix.Schema do
             repo: nil,
             table: nil,
             embedded?: false,
+            generate?: true,
             opts: [],
             alias: nil,
             file: nil,
@@ -54,6 +55,7 @@ defmodule Mix.Phoenix.Schema do
     web_namespace = opts[:web]
     web_path = web_namespace && Phoenix.Naming.underscore(web_namespace)
     embedded? = Keyword.get(opts, :embedded, false)
+    generate? = Keyword.get(opts, :schema, true)
 
     singular =
       module
@@ -99,7 +101,8 @@ defmodule Mix.Phoenix.Schema do
       web_namespace: web_namespace,
       web_path: web_path,
       route_helper: route_helper,
-      sample_id: sample_id(opts)}
+      sample_id: sample_id(opts),
+      generate?: generate?}
   end
 
   @doc """

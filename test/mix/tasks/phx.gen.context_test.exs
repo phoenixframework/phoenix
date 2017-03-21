@@ -151,4 +151,30 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       end
     end
   end
+
+  test "generates context with no schema", config do
+    in_tmp_project config.test, fn ->
+      Gen.Context.run(~w(Blog Post posts title:string --no-schema))
+
+      refute_file "lib/phoenix/blog/post.ex"
+
+      assert_file "lib/phoenix/blog/blog.ex", fn file ->
+        assert file =~ "def get_post!"
+        assert file =~ "def list_posts"
+        assert file =~ "def create_post"
+        assert file =~ "def update_post"
+        assert file =~ "def delete_post"
+        assert file =~ "def change_post"
+        assert file =~ "raise \"TODO\""
+      end
+
+      assert_file "test/blog_test.exs", fn file ->
+        assert file =~ "use Phoenix.DataCase"
+        assert file =~ "describe \"posts\" do"
+        assert file =~ "def post_fixture(attrs \\\\ %{})"
+      end
+
+      assert Path.wildcard("priv/repo/migrations/*_create_blog_post.exs") == []
+    end
+  end
 end

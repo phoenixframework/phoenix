@@ -26,6 +26,12 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   A migration file for the repository and test files for the context
   will also be generated.
 
+  ## Generating without a schema
+
+  In some cases, you may wish to boostrap the context module and
+  tests, but leave internal implementation the context and schema
+  to yourself. Use the `--no-schema` flags to accomplish this.
+
   ## table
 
   By default, the table name for the migration and schema will be
@@ -62,6 +68,11 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   alias Mix.Phoenix.{Context, Schema}
   alias Mix.Tasks.Phx.Gen
 
+  @switches [binary_id: :boolean, table: :string, web: :string,
+             schema: :boolean, context: :boolean]
+
+  @default_opts [schema: true, context: true]
+
   def run(args) do
     if Mix.Project.umbrella? do
       Mix.raise "mix phx.gen.context can only be run inside an application directory"
@@ -85,8 +96,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   def build(args) do
-    switches = [binary_id: :boolean, table: :string, web: :string]
-    {opts, parsed, _} = OptionParser.parse(args, switches: switches)
+    {opts, parsed, _} = parse_opts(args)
     [context_name, schema_name, plural | schema_args] = validate_args!(parsed)
 
     table = Keyword.get(opts, :table, Phoenix.Naming.underscore(context_name) <> "_#{plural}")
@@ -99,12 +109,21 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     {context, schema}
   end
 
+  defp parse_opts(args) do
+    {opts, parsed, invalid} = OptionParser.parse(args, switches: @switches)
+    {Keyword.merge(@default_opts, opts), parsed, invalid}
+  end
+
   def files_to_be_generated(%Context{schema: schema}) do
-    Gen.Schema.files_to_be_generated(schema)
+    if schema.generate? do
+      Gen.Schema.files_to_be_generated(schema)
+    else
+      []
+    end
   end
 
   def copy_new_files(%Context{schema: schema} = context, paths, binding) do
-    Gen.Schema.copy_new_files(schema, paths, binding)
+    if schema.generate?, do: Gen.Schema.copy_new_files(schema, paths, binding)
     inject_schema_access(context, paths, binding)
     inject_tests(context, paths, binding)
 
@@ -117,7 +136,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     end
 
     paths
-    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/schema_access.ex", binding)
+    |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/#{schema_access_template(context)}", binding)
     |> inject_eex_before_final_end(file, binding)
   end
 
@@ -154,7 +173,19 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   end
 
   def print_shell_instructions(%Context{schema: schema}) do
-    Gen.Schema.print_shell_instructions(schema)
+    if schema.generate? do
+      Gen.Schema.print_shell_instructions(schema)
+    else
+      :ok
+    end
+  end
+
+  defp schema_access_template(%Context{schema: schema}) do
+    if schema.generate? do
+      "schema_access.ex"
+    else
+      "access_no_schema.ex"
+    end
   end
 
   defp validate_args!([context, schema, _plural | _] = args) do

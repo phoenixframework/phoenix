@@ -177,4 +177,52 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       """]}
     end
   end
+
+  test "with --no-context skips context and schema file generation", config do
+    in_tmp_project config.test, fn ->
+      Gen.Html.run(~w(Blog Comment comments title:string --no-context))
+
+      refute_file "lib/phoenix/blog/blog.ex"
+      refute_file "lib/phoenix/blog/comment.ex"
+      assert Path.wildcard("priv/repo/migrations/*.exs") == []
+
+      assert_file "test/web/controllers/comment_controller_test.exs", fn file ->
+        assert file =~ "defmodule Phoenix.Web.CommentControllerTest"
+      end
+
+      assert_file "lib/phoenix/web/controllers/comment_controller.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.CommentController"
+        assert file =~ "use Phoenix.Web, :controller"
+      end
+
+      assert_file "lib/phoenix/web/templates/comment/form.html.eex"
+      assert_file "lib/phoenix/web/views/comment_view.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.CommentView"
+      end
+    end
+  end
+
+  test "with --no-schema skips schema file generation", config do
+    in_tmp_project config.test, fn ->
+      Gen.Html.run(~w(Blog Comment comments title:string --no-schema))
+
+      assert_file "lib/phoenix/blog/blog.ex"
+      refute_file "lib/phoenix/blog/comment.ex"
+      assert Path.wildcard("priv/repo/migrations/*.exs") == []
+
+      assert_file "test/web/controllers/comment_controller_test.exs", fn file ->
+        assert file =~ "defmodule Phoenix.Web.CommentControllerTest"
+      end
+
+      assert_file "lib/phoenix/web/controllers/comment_controller.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.CommentController"
+        assert file =~ "use Phoenix.Web, :controller"
+      end
+
+      assert_file "lib/phoenix/web/templates/comment/form.html.eex"
+      assert_file "lib/phoenix/web/views/comment_view.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.CommentView"
+      end
+    end
+  end
 end

@@ -28,6 +28,24 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   A migration file for the repository and test files for the context and
   controller features will also be generated.
 
+  ## Web namespace
+
+  By default, the controller and view will be namespaced by the schema name.
+  You can customize the web module namespace by passing the `--web` flag with a
+  module name, for example:
+
+      mix phx.gen.html Sales User users --web Sales
+
+  Which would geneate a `web/controllers/sales/user_controller.ex` and
+  `web/views/sales/user_view.ex`.
+
+  ## Generating without a schema or context file
+
+  In some cases, you may wish to boostrap JSON views, controllers, and
+  controller tests, but leave internal implementation the context or schema
+  to yourself. You can use the `--no-context` and `--no-schema` flags for
+  file generation control.
+
   ## table
 
   By default, the table name for the migration and schema will be
@@ -83,8 +101,14 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   defp prompt_for_conflicts(context) do
     context
     |> files_to_be_generated()
-    |> Kernel.++(Gen.Context.files_to_be_generated(context))
+    |> Kernel.++(context_files(context))
     |> Mix.Phoenix.prompt_for_conflicts()
+  end
+  defp context_files(%Context{generate?: true} = context) do
+    Gen.Context.files_to_be_generated(context)
+  end
+  defp context_files(%Context{generate?: false}) do
+    []
   end
 
   def files_to_be_generated(%Context{schema: schema}) do
@@ -104,7 +128,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   def copy_new_files(%Context{} = context, paths, binding) do
     files = files_to_be_generated(context)
     Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.json", "", binding, files
-    Gen.Context.copy_new_files(context, paths, binding)
+    if context.generate?, do: Gen.Context.copy_new_files(context, paths, binding)
 
     context
   end
@@ -129,6 +153,6 @@ defmodule Mix.Tasks.Phx.Gen.Json do
           resources "/#{schema.plural}", #{inspect schema.alias}Controller, except: [:new, :edit]
       """
     end
-    Gen.Context.print_shell_instructions(context)
+    if context.generate?, do: Gen.Context.print_shell_instructions(context)
   end
 end

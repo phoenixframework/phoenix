@@ -13,6 +13,7 @@ defmodule Mix.Phoenix.Context do
             file: nil,
             test_file: nil,
             dir: nil,
+            generate?: true,
             opts: []
 
   def valid?(context) do
@@ -28,6 +29,7 @@ defmodule Mix.Phoenix.Context do
     dir       = Path.join(["lib", otp_app, basename])
     file      = Path.join([dir, basename <> ".ex"])
     test_file = Path.join(["test", basename <> "_test.exs"])
+    generate? = Keyword.get(opts, :context, true)
 
     %Context{
       name: context_name,
@@ -40,6 +42,7 @@ defmodule Mix.Phoenix.Context do
       file: file,
       test_file: test_file,
       dir: dir,
+      generate?: generate?,
       opts: opts}
   end
 

@@ -40,6 +40,13 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   Which would geneate a `web/controllers/sales/user_controller.ex` and
   `web/views/sales/user_view.ex`.
 
+  ## Generating without a schema or context file
+
+  In some cases, you may wish to boostrap HTML templates, controllers, and
+  controller tests, but leave internal implementation the context or schema
+  to yourself. You can use the `--no-context` and `--no-schema` flags for
+  file generation control.
+
   ## table
 
   By default, the table name for the migration and schema will be
@@ -79,7 +86,6 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     if Mix.Project.umbrella? do
       Mix.raise "mix phx.gen.html can only be run inside an application directory"
     end
-
     {context, schema} = Gen.Context.build(args)
     binding = [context: context, schema: schema, inputs: inputs(schema)]
     paths = Mix.Phoenix.generator_paths()
@@ -94,8 +100,14 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   defp prompt_for_conflicts(context) do
     context
     |> files_to_be_generated()
-    |> Kernel.++(Gen.Context.files_to_be_generated(context))
+    |> Kernel.++(context_files(context))
     |> Mix.Phoenix.prompt_for_conflicts()
+  end
+  defp context_files(%Context{generate?: true} = context) do
+    Gen.Context.files_to_be_generated(context)
+  end
+  defp context_files(%Context{generate?: false}) do
+    []
   end
 
   def files_to_be_generated(%Context{schema: schema}) do
@@ -118,7 +130,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   def copy_new_files(%Context{} = context, paths, binding) do
     files = files_to_be_generated(context)
     Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.html", "", binding, files)
-    Gen.Context.copy_new_files(context, paths, binding)
+    if context.generate?, do: Gen.Context.copy_new_files(context, paths, binding)
     context
   end
 
@@ -142,7 +154,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
           resources "/#{schema.plural}", #{inspect schema.alias}Controller
       """
     end
-    Gen.Context.print_shell_instructions(context)
+    if context.generate?, do: Gen.Context.print_shell_instructions(context)
   end
 
   defp inputs(%Schema{} = schema) do
