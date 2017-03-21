@@ -91,7 +91,7 @@ defmodule Phoenix.Controller do
   a plug to only run in some particular action:
 
       plug :authenticate, usernames: ["jose", "eric", "sonny"] when action in [:show, :edit]
-      plug :authenticate, usernames: ["admin"] when action in [:show, :edit] when not action in [:index]
+      plug :authenticate, usernames: ["admin"] when not action in [:index]
 
   The first plug will run only when action is show or edit. The second plug will
   always run, except for the index action.
