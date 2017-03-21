@@ -54,7 +54,7 @@ defmodule Phoenix.Controller do
     * `Phoenix.Controller` - functions provided by Phoenix
       to support rendering, and other Phoenix specific behaviour
 
-  IF you want to have functions that manipulate the connection
+  If you want to have functions that manipulate the connection
   without fully implementing the controller, you can import both
   modules directly instead of `use Phoenix.Controller`.
 
