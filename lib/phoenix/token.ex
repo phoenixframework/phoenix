@@ -57,7 +57,7 @@ defmodule Phoenix.Token do
 
       def create(conn, params) do
         user = User.create(params)
-        render conn, "user.json",
+        render(conn, "user.json",)
                %{token: Phoenix.Token.sign(conn, "user salt", user.id), user: user}
       end
 

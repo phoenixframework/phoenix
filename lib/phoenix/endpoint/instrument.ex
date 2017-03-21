@@ -23,7 +23,7 @@ defmodule Phoenix.Endpoint.Instrument do
       ## Examples
 
           instrument :render_view, %{view: "index.html"}, fn ->
-            render conn, "index.html"
+            render(conn, "index.html")
           end
 
       """

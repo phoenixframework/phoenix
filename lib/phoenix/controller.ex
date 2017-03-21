@@ -22,7 +22,7 @@ defmodule Phoenix.Controller do
 
         def show(conn, %{"id" => id}) do
           user = Repo.get(User, id)
-          render conn, "show.html", user: user
+          render(conn, "show.html", user: user)
         end
       end
 
@@ -614,7 +614,7 @@ defmodule Phoenix.Controller do
         use Phoenix.Controller
 
         def show(conn, _params) do
-          render conn, "show.html", message: "Hello"
+          render(conn, "show.html", message: "Hello")
         end
       end
 
@@ -626,7 +626,7 @@ defmodule Phoenix.Controller do
   the extension):
 
       def show(conn, _params) do
-        render conn, :show, message: "Hello"
+        render(conn, :show, message: "Hello")
       end
 
   In order for the example above to work, we need to do content negotiation with
@@ -660,7 +660,7 @@ defmodule Phoenix.Controller do
         plug :put_view, MyApp.SpecialView
 
         def show(conn, _params) do
-          render conn, :show, message: "Hello"
+          render(conn, :show, message: "Hello")
         end
       end
 
@@ -673,7 +673,7 @@ defmodule Phoenix.Controller do
         use Phoenix.Controller
 
         def show(conn, _params) do
-          render conn, "show.html", message: "Hello"
+          render(conn, "show.html", message: "Hello")
         end
       end
 

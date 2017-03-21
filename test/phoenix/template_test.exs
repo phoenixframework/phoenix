@@ -113,7 +113,7 @@ defmodule Phoenix.TemplateTest do
       use Phoenix.Template, root: Path.join(__DIR__, "not-exists")
 
       def template_not_found(_template, assigns) do
-        render "this-does-not-exist.html", assigns
+        render("this-does-not-exist.html", assigns)
       end
     end
 

@@ -87,7 +87,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
         %{conn | state: :sent}
     after
       0 ->
-        render conn, kind, reason, stack, opts
+        render(conn, kind, reason, stack, opts)
     end
   end
 

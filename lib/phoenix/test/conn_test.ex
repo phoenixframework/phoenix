@@ -56,8 +56,8 @@ defmodule Phoenix.ConnTest do
   For such cases, a connection can be created using the
   `conn/3` helper:
 
-      MyApp.UserView.render "hello.html",
-                             conn: conn(:get, "/")
+      MyApp.UserView.render("hello.html",
+                             conn: conn(:get, "/"))
 
   ## Recycling
 
