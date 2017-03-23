@@ -436,7 +436,7 @@ defmodule Phoenix.Controller do
     put_private(conn, :phoenix_view, module)
   end
 
-  def put_view(_conn, _module), do: raise AlreadySentError
+  def put_view(%Plug.Conn{}, _module), do: raise AlreadySentError
 
   @doc """
   Stores the view for rendering if one was not stored yet.
@@ -449,9 +449,7 @@ defmodule Phoenix.Controller do
     update_in conn.private, &Map.put_new(&1, :phoenix_view, module)
   end
 
-  def put_new_view(_conn, _module) do
-    raise Plug.Conn.AlreadySentError
-  end
+  def put_new_view(%Plug.Conn{}, _module), do: raise AlreadySentError
 
   @doc """
   Retrieves the current view.
@@ -496,7 +494,7 @@ defmodule Phoenix.Controller do
     if state in @unsent do
       do_put_layout(conn, layout)
     else
-      raise Plug.Conn.AlreadySentError
+      raise AlreadySentError
     end
   end
 
@@ -552,9 +550,7 @@ defmodule Phoenix.Controller do
     put_private(conn, :phoenix_layout_formats, formats)
   end
 
-  def put_layout_formats(_conn, _formats) do
-    raise Plug.Conn.AlreadySentError
-  end
+  def put_layout_formats(%Plug.Conn{}, _formats), do: raise AlreadySentError
 
   @doc """
   Retrieves current layout formats.
