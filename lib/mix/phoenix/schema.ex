@@ -95,7 +95,7 @@ defmodule Mix.Phoenix.Schema do
       string_attr: string_attr,
       params: %{
         create: create_params,
-        update: Mix.Phoenix.Schema.params(attrs, :update),
+        update: params(attrs, :update),
         default_key: string_attr || default_params_key
       },
       web_namespace: web_namespace,
@@ -149,6 +149,17 @@ defmodule Mix.Phoenix.Schema do
     |> Enum.into(%{}, fn {k, t} -> {k, type_to_default(k, t, action)} end)
   end
 
+  @doc """
+  Returns the string value for use in EEx templates.
+  """
+  def value(schema, field, value) do
+    schema.types
+    |> Map.fetch!(field)
+    |> inspect_value(value)
+  end
+  defp inspect_value(:decimal, value), do: "Decimal.new(\"#{to_string(value)}\")"
+  defp inspect_value(_type, value), do: inspect(value)
+
   defp drop_unique(info) do
     prefix = byte_size(info) - 7
     case info do
@@ -173,7 +184,7 @@ defmodule Mix.Phoenix.Schema do
         :map            -> %{}
         :text           -> "some #{key}"
         :date           -> %Date{year: 2010, month: 4, day: 17}
-        :time           -> %Time{hour: 14, minute: 0, second: 0}
+        :time           -> %Time{hour: 14, minute: 0, second: 0, microsecond: {0, 6}}
         :uuid           -> "7488a646-e31f-11e4-aace-600308960662"
         :utc_datetime   -> %DateTime{day: 17, hour: 14, microsecond: {0, 6},
                             minute: 0, month: 4, second: 0, std_offset: 0, time_zone: "Etc/UTC",
@@ -192,7 +203,7 @@ defmodule Mix.Phoenix.Schema do
         :map            -> %{}
         :text           -> "some updated #{key}"
         :date           -> %Date{year: 2011, month: 5, day: 18}
-        :time           -> %Time{hour: 15, minute: 1, second: 1}
+        :time           -> %Time{hour: 15, minute: 1, second: 1, microsecond: {0, 6}}
         :uuid           -> "7488a646-e31f-11e4-aace-600308960668"
         :utc_datetime   -> %DateTime{day: 18, hour: 15, microsecond: {0, 6},
                             minute: 1, month: 5, second: 1, std_offset: 0, time_zone: "Etc/UTC",

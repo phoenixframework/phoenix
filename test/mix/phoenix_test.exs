@@ -74,7 +74,7 @@ defmodule Mix.PhoenixTest do
       meta: %{},
       name: "some name",
       date_of_birth: %Date{year: 2010, month: 4, day: 17},
-      happy_hour: %Time{hour: 14, minute: 0, second: 0},
+      happy_hour: %Time{hour: 14, minute: 0, second: 0, microsecond: {0, 6}},
       joined: %NaiveDateTime{year: 2010, month: 4, day: 17, hour: 14, minute: 0, second: 0, microsecond: {0, 6}},
       token: "7488a646-e31f-11e4-aace-600308960662",
       other: "some other"

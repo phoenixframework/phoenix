@@ -27,7 +27,7 @@
 
     test "create_<%= schema.singular %>/1 with valid data creates a <%= schema.singular %>" do
       assert {:ok, %<%= inspect schema.alias %>{} = <%= schema.singular %>} = <%= inspect context.alias %>.create_<%= schema.singular %>(@valid_attrs)<%= for {field, value} <- schema.params.create do %>
-      assert <%= schema.singular %>.<%= field %> == <%= inspect value %><% end %>
+      assert <%= schema.singular %>.<%= field %> == <%= Mix.Phoenix.Schema.value(schema, field, value) %><% end %>
     end
 
     test "create_<%= schema.singular %>/1 with invalid data returns error changeset" do
@@ -38,7 +38,7 @@
       <%= schema.singular %> = <%= schema.singular %>_fixture()
       assert {:ok, <%= schema.singular %>} = <%= inspect context.alias %>.update_<%= schema.singular %>(<%= schema.singular %>, @update_attrs)
       assert %<%= inspect schema.alias %>{} = <%= schema.singular %><%= for {field, value} <- schema.params.update do %>
-      assert <%= schema.singular %>.<%= field %> == <%= inspect value %><% end %>
+      assert <%= schema.singular %>.<%= field %> == <%= Mix.Phoenix.Schema.value(schema, field, value) %><% end %>
     end
 
     test "update_<%= schema.singular %>/2 with invalid data returns error changeset" do
