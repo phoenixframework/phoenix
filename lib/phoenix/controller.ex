@@ -233,32 +233,32 @@ defmodule Phoenix.Controller do
   Returns the action name as an atom, raises if unavailable.
   """
   @spec action_name(Plug.Conn.t) :: atom
-  def action_name(conn), do: conn.private.phoenix_action
+  def action_name(%Plug.Conn{} = conn), do: conn.private.phoenix_action
 
   @doc """
   Returns the controller module as an atom, raises if unavailable.
   """
   @spec controller_module(Plug.Conn.t) :: atom
-  def controller_module(conn), do: conn.private.phoenix_controller
+  def controller_module(%Plug.Conn{} = conn), do: conn.private.phoenix_controller
 
   @doc """
   Returns the router module as an atom, raises if unavailable.
   """
   @spec router_module(Plug.Conn.t) :: atom
-  def router_module(conn), do: conn.private.phoenix_router
+  def router_module(%Plug.Conn{} = conn), do: conn.private.phoenix_router
 
   @doc """
   Returns the endpoint module as an atom, raises if unavailable.
   """
   @spec endpoint_module(Plug.Conn.t) :: atom
-  def endpoint_module(conn), do: conn.private.phoenix_endpoint
+  def endpoint_module(%Plug.Conn{} = conn), do: conn.private.phoenix_endpoint
 
   @doc """
   Returns the template name rendered in the view as a string
   (or nil if no template was rendered).
   """
   @spec view_template(Plug.Conn.t) :: binary | nil
-  def view_template(conn) do
+  def view_template(%Plug.Conn{} = conn) do
     conn.private[:phoenix_template]
   end
 
@@ -279,7 +279,7 @@ defmodule Phoenix.Controller do
 
   """
   @spec json(Plug.Conn.t, term) :: Plug.Conn.t
-  def json(conn, data) do
+  def json(%Plug.Conn{} = conn, data) do
     encoder = get_json_encoder()
 
     send_resp(conn, conn.status || 200, "application/json", encoder.encode_to_iodata!(data))
@@ -309,7 +309,7 @@ defmodule Phoenix.Controller do
 
   """
   @spec allow_jsonp(Plug.Conn.t, Keyword.t) :: Plug.Conn.t
-  def allow_jsonp(conn, opts \\ []) do
+  def allow_jsonp(%Plug.Conn{} = conn, opts \\ []) when is_list(opts) do
     callback = Keyword.get(opts, :callback, "callback")
     case Map.fetch(conn.query_params, callback) do
       :error    -> conn
@@ -364,7 +364,7 @@ defmodule Phoenix.Controller do
 
   """
   @spec text(Plug.Conn.t, String.Chars.t) :: Plug.Conn.t
-  def text(conn, data) do
+  def text(%Plug.Conn{} = conn, data) do
     send_resp(conn, conn.status || 200, "text/plain", to_string(data))
   end
 
@@ -377,7 +377,7 @@ defmodule Phoenix.Controller do
 
   """
   @spec html(Plug.Conn.t, iodata) :: Plug.Conn.t
-  def html(conn, data) do
+  def html(%Plug.Conn{} = conn, data) do
     send_resp(conn, conn.status || 200, "text/html", data)
   end
 
@@ -395,7 +395,7 @@ defmodule Phoenix.Controller do
 
   """
   @spec redirect(Plug.Conn.t, Keyword.t) :: Plug.Conn.t
-  def redirect(conn, opts) when is_list(opts) do
+  def redirect(%Plug.Conn{} = conn, opts) when is_list(opts) do
     url  = url(opts)
     html = Plug.HTML.html_escape(url)
     body = "<html><body>You are being <a href=\"#{html}\">redirected</a>.</body></html>"
@@ -558,7 +558,7 @@ defmodule Phoenix.Controller do
   Retrieves current layout formats.
   """
   @spec layout_formats(Plug.Conn.t) :: [String.t]
-  def layout_formats(conn) do
+  def layout_formats(%Plug.Conn{} = conn) do
     Map.get(conn.private, :phoenix_layout_formats, ~w(html))
   end
 
@@ -566,7 +566,7 @@ defmodule Phoenix.Controller do
   Retrieves the current layout.
   """
   @spec layout(Plug.Conn.t) :: {atom, String.t} | false
-  def layout(conn), do: conn.private |> Map.get(:phoenix_layout, false)
+  def layout(%Plug.Conn{} = conn), do: conn.private |> Map.get(:phoenix_layout, false)
 
   @doc """
   Render the given template or the default template
@@ -577,11 +577,11 @@ defmodule Phoenix.Controller do
   @spec render(Plug.Conn.t, Keyword.t | map | binary | atom) :: Plug.Conn.t
   def render(conn, template_or_assigns \\ [])
 
-  def render(conn, template) when is_binary(template) or is_atom(template) do
+  def render(%Plug.Conn{} = conn, template) when is_binary(template) or is_atom(template) do
     render(conn, template, [])
   end
 
-  def render(conn, assigns) do
+  def render(%Plug.Conn{} = conn, assigns) when is_list(assigns) or is_map(assigns) do
     render(conn, action_name(conn), assigns)
   end
 
@@ -684,7 +684,7 @@ defmodule Phoenix.Controller do
   which formats support/require layout rendering (defaults to "html" only).
   """
   @spec render(Plug.Conn.t, binary | atom, Keyword.t | map) :: Plug.Conn.t
-  def render(conn, template, assigns)
+  def render(%Plug.Conn{} = conn, template, assigns)
       when is_atom(template) and (is_map(assigns) or is_list(assigns)) do
     format =
       get_format(conn) ||
@@ -693,7 +693,7 @@ defmodule Phoenix.Controller do
     do_render(conn, template_name(template, format), format, assigns)
   end
 
-  def render(conn, template, assigns)
+  def render(%Plug.Conn{} = conn, template, assigns)
       when is_binary(template) and (is_map(assigns) or is_list(assigns)) do
     case Path.extname(template) do
       "." <> format ->
@@ -704,7 +704,7 @@ defmodule Phoenix.Controller do
     end
   end
 
-  def render(conn, view, template)
+  def render(%Plug.Conn{} = conn, view, template)
       when is_atom(view) and (is_binary(template) or is_atom(template)) do
     render(conn, view, template, [])
   end
@@ -720,7 +720,7 @@ defmodule Phoenix.Controller do
 
   """
   @spec render(Plug.Conn.t, atom, atom | binary, Keyword.t | map) :: Plug.Conn.t
-  def render(conn, view, template, assigns)
+  def render(%Plug.Conn{} = conn, view, template, assigns)
       when is_atom(view) and (is_binary(template) or is_atom(template)) do
     conn
     |> put_view(view)
@@ -797,13 +797,13 @@ defmodule Phoenix.Controller do
   See `get_format/1` for retrieval.
   """
   @spec put_format(Plug.Conn.t, String.t) :: Plug.Conn.t
-  def put_format(conn, format), do: put_private(conn, :phoenix_format, format)
+  def put_format(%Plug.Conn{} = conn, format), do: put_private(conn, :phoenix_format, format)
 
   @doc """
   Returns the request format, such as "json", "html".
   """
   @spec get_format(Plug.Conn.t) :: String.t
-  def get_format(conn) do
+  def get_format(%Plug.Conn{} = conn) do
     conn.private[:phoenix_format] || conn.params["_format"]
   end
 
@@ -855,14 +855,14 @@ defmodule Phoenix.Controller do
   @spec send_download(Plug.Conn.t, {atom, binary | String.t}, Keyword.t) :: Plug.Conn.t
   def send_download(conn, kind, opts \\ [])
 
-  def send_download(conn, {:file, path}, opts) do
+  def send_download(%Plug.Conn{} = conn, {:file, path}, opts) do
     filename = opts[:filename] || Path.basename(path)
     conn
     |> prepare_send_download(filename, opts)
     |> send_file(conn.status || 200, path)
   end
 
-  def send_download(conn, {:binary, contents}, opts) do
+  def send_download(%Plug.Conn{} = conn, {:binary, contents}, opts) do
     filename = opts[:filename] || raise ":filename option is required when sending binary download"
     conn
     |> prepare_send_download(filename, opts)
@@ -913,7 +913,7 @@ defmodule Phoenix.Controller do
 
   """
   @spec scrub_params(Plug.Conn.t, String.t) :: Plug.Conn.t
-  def scrub_params(conn, required_key) when is_binary(required_key) do
+  def scrub_params(%Plug.Conn{} = conn, required_key) when is_binary(required_key) do
     param = Map.get(conn.params, required_key) |> scrub_param()
 
     unless param do
@@ -954,7 +954,7 @@ defmodule Phoenix.Controller do
   retrieving and deleting CSRF tokens.
   """
   @spec protect_from_forgery(Plug.Conn.t, Keyword.t) :: Plug.Conn.t
-  def protect_from_forgery(conn, opts \\ []) do
+  def protect_from_forgery(%Plug.Conn{} = conn, opts \\ []) when is_list(opts) do
     Plug.CSRFProtection.call(conn, Plug.CSRFProtection.init(opts))
   end
 
@@ -974,10 +974,10 @@ defmodule Phoenix.Controller do
   """
   @spec put_secure_browser_headers(Plug.Conn.t, list | map) :: Plug.Conn.t
   def put_secure_browser_headers(conn, headers \\ %{})
-  def put_secure_browser_headers(conn, []) do
+  def put_secure_browser_headers(%Plug.Conn{} = conn, []) do
     put_secure_defaults(conn)
   end
-  def put_secure_browser_headers(conn, headers) when is_map(headers) do
+  def put_secure_browser_headers(%Plug.Conn{} = conn, headers) when is_map(headers) do
     conn
     |> put_secure_defaults()
     |> merge_resp_headers(headers)
@@ -1065,7 +1065,7 @@ defmodule Phoenix.Controller do
       plug :accepts, ["html", "json-api"]
   """
   @spec accepts(Plug.Conn.t, [binary]) :: Plug.Conn.t | no_return()
-  def accepts(conn, [_|_] = accepted) do
+  def accepts(%Plug.Conn{} = conn, [_|_] = accepted) do
     case Map.fetch(conn.params, "_format") do
       {:ok, format} ->
         handle_params_accept(conn, format, accepted)
@@ -1185,7 +1185,7 @@ defmodule Phoenix.Controller do
   Fetches the flash storage.
   """
   @spec fetch_flash(Plug.Conn.t, Keyword.t) :: Plug.Conn.t
-  def fetch_flash(conn, _opts \\ []) do
+  def fetch_flash(%Plug.Conn{} = conn, _opts \\ []) do
     flash = get_session(conn, "phoenix_flash") || %{}
     conn  = persist_flash(conn, flash)
 
@@ -1216,7 +1216,7 @@ defmodule Phoenix.Controller do
 
   """
   @spec put_flash(Plug.Conn.t, atom | binary, any) :: Plug.Conn.t
-  def put_flash(conn, key, message) do
+  def put_flash(%Plug.Conn{} = conn, key, message) do
     persist_flash(conn, Map.put(get_flash(conn), flash_key(key), message))
   end
 
@@ -1234,7 +1234,7 @@ defmodule Phoenix.Controller do
 
   """
   @spec get_flash(Plug.Conn.t) :: String.t
-  def get_flash(conn) do
+  def get_flash(%Plug.Conn{} = conn) do
     Map.get(conn.private, :phoenix_flash) ||
       raise ArgumentError, message: "flash not fetched, call fetch_flash/2"
   end
@@ -1250,7 +1250,7 @@ defmodule Phoenix.Controller do
 
   """
   @spec get_flash(Plug.Conn.t, atom | binary) :: String.t
-  def get_flash(conn, key) do
+  def get_flash(%Plug.Conn{} = conn, key) do
     get_flash(conn)[flash_key(key)]
   end
 
@@ -1258,7 +1258,7 @@ defmodule Phoenix.Controller do
   Clears all flash messages.
   """
   @spec clear_flash(Plug.Conn.t) :: Plug.Conn.t
-  def clear_flash(conn) do
+  def clear_flash(%Plug.Conn{} = conn) do
     persist_flash(conn, %{})
   end
 
