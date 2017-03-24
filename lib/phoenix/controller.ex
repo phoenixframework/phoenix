@@ -224,6 +224,7 @@ defmodule Phoenix.Controller do
         end
       end
   """
+  @spec action_fallback(module) :: atom
   defmacro action_fallback(plug) do
     Phoenix.Controller.Pipeline.__action_fallback__(plug)
   end
@@ -393,6 +394,7 @@ defmodule Phoenix.Controller do
       iex> redirect conn, external: "http://elixir-lang.org"
 
   """
+  @spec redirect(Plug.Conn.t, Keyword.t) :: Plug.Conn.t
   def redirect(conn, opts) when is_list(opts) do
     url  = url(opts)
     html = Plug.HTML.html_escape(url)
@@ -794,11 +796,13 @@ defmodule Phoenix.Controller do
 
   See `get_format/1` for retrieval.
   """
+  @spec put_format(Plug.Conn.t, String.t) :: Plug.Conn.t
   def put_format(conn, format), do: put_private(conn, :phoenix_format, format)
 
   @doc """
   Returns the request format, such as "json", "html".
   """
+  @spec get_format(Plug.Conn.t) :: String.t
   def get_format(conn) do
     conn.private[:phoenix_format] || conn.params["_format"]
   end
@@ -848,6 +852,7 @@ defmodule Phoenix.Controller do
   would like to access the low-level functions used to send files
   and responses via Plug.
   """
+  @spec send_download(Plug.Conn.t, {atom, binary | String.t}, Keyword.t) :: Plug.Conn.t
   def send_download(conn, kind, opts \\ [])
 
   def send_download(conn, {:file, path}, opts) do
@@ -948,6 +953,7 @@ defmodule Phoenix.Controller do
   Check `get_csrf_token/0` and `delete_csrf_token/0` for
   retrieving and deleting CSRF tokens.
   """
+  @spec protect_from_forgery(Plug.Conn.t, Keyword.t) :: Plug.Conn.t
   def protect_from_forgery(conn, opts \\ []) do
     Plug.CSRFProtection.call(conn, Plug.CSRFProtection.init(opts))
   end
@@ -966,6 +972,7 @@ defmodule Phoenix.Controller do
 
   A custom headers map may also be given to be merged with defaults.
   """
+  @spec put_secure_browser_headers(Plug.Conn.t, list | map) :: Plug.Conn.t
   def put_secure_browser_headers(conn, headers \\ %{})
   def put_secure_browser_headers(conn, []) do
     put_secure_defaults(conn)
@@ -986,11 +993,13 @@ defmodule Phoenix.Controller do
   @doc """
   Gets the CSRF token.
   """
+  @spec get_csrf_token() :: String.t
   defdelegate get_csrf_token(), to: Plug.CSRFProtection
 
   @doc """
   Deletes any CSRF token set.
   """
+  @spec delete_csrf_token() :: String.t | nil
   defdelegate delete_csrf_token(), to: Plug.CSRFProtection
 
   @doc """
@@ -1175,6 +1184,7 @@ defmodule Phoenix.Controller do
   @doc """
   Fetches the flash storage.
   """
+  @spec fetch_flash(Plug.Conn.t, Keyword.t) :: Plug.Conn.t
   def fetch_flash(conn, _opts \\ []) do
     flash = get_session(conn, "phoenix_flash") || %{}
     conn  = persist_flash(conn, flash)
@@ -1205,6 +1215,7 @@ defmodule Phoenix.Controller do
       "Welcome Back!"
 
   """
+  @spec put_flash(Plug.Conn.t, atom | binary, any) :: Plug.Conn.t
   def put_flash(conn, key, message) do
     persist_flash(conn, Map.put(get_flash(conn), flash_key(key), message))
   end
@@ -1222,6 +1233,7 @@ defmodule Phoenix.Controller do
       %{"info" => "Welcome Back!"}
 
   """
+  @spec get_flash(Plug.Conn.t) :: String.t
   def get_flash(conn) do
     Map.get(conn.private, :phoenix_flash) ||
       raise ArgumentError, message: "flash not fetched, call fetch_flash/2"
@@ -1237,6 +1249,7 @@ defmodule Phoenix.Controller do
       "Welcome Back!"
 
   """
+  @spec get_flash(Plug.Conn.t, atom | binary) :: String.t
   def get_flash(conn, key) do
     get_flash(conn)[flash_key(key)]
   end
@@ -1244,6 +1257,7 @@ defmodule Phoenix.Controller do
   @doc """
   Clears all flash messages.
   """
+  @spec clear_flash(Plug.Conn.t) :: Plug.Conn.t
   def clear_flash(conn) do
     persist_flash(conn, %{})
   end
@@ -1274,9 +1288,12 @@ defmodule Phoenix.Controller do
       iex> current_path(conn, %{})
       "/users/123"
   """
+  @spec current_path(Plug.Conn.t) :: String.t
   def current_path(%Plug.Conn{query_params: params} = conn) do
     current_path(conn, params)
   end
+
+  @spec current_path(Plug.Conn.t, map) :: String.t
   def current_path(%Plug.Conn{} = conn, params) when params == %{} do
     conn.request_path
   end
@@ -1329,9 +1346,12 @@ defmodule Phoenix.Controller do
         MyApp.Router.Helpers.url(%URI{cur_uri | host: org_host}) <> cur_path
       end
   """
+  @spec current_url(Plug.Conn.t) :: String.t
   def current_url(%Plug.Conn{} = conn) do
     endpoint_module(conn).url() <> current_path(conn)
   end
+
+  @spec current_url(Plug.Conn.t, map) :: String.t
   def current_url(%Plug.Conn{} = conn, %{} = params) do
     endpoint_module(conn).url() <> current_path(conn, params)
   end
