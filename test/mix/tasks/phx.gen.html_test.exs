@@ -228,4 +228,53 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       end
     end
   end
+
+  describe "inside umbrella" do
+    test "without context_app generators config uses web dir", config do
+      in_tmp_umbrella_project config.test, fn ->
+        Gen.Html.run(~w(Accounts User users name:string))
+
+        assert_file "lib/phoenix/accounts/accounts.ex"
+        assert_file "lib/phoenix/accounts/user.ex"
+
+        assert_file "lib/phoenix/web/controllers/user_controller.ex", fn file ->
+          assert file =~ "defmodule Phoenix.Web.UserController"
+          assert file =~ "use Phoenix.Web, :controller"
+        end
+
+        assert_file "lib/phoenix/web/templates/user/form.html.eex"
+        assert_file "lib/phoenix/web/views/user_view.ex", fn file ->
+          assert file =~ "defmodule Phoenix.Web.UserView"
+        end
+
+        assert_file "test/web/controllers/user_controller_test.exs", fn file ->
+          assert file =~ "defmodule Phoenix.Web.UserControllerTest"
+        end
+      end
+    end
+
+    test "with context_app generators config does not use web dir", config do
+      in_tmp_umbrella_project config.test, fn ->
+        Application.put_env(:phoenix, :generators, context_app: Phoenix)
+        Gen.Html.run(~w(Accounts User users name:string))
+
+        assert_file "lib/phoenix/accounts/accounts.ex"
+        assert_file "lib/phoenix/accounts/user.ex"
+
+        assert_file "lib/phoenix/controllers/user_controller.ex", fn file ->
+          assert file =~ "defmodule Phoenix.Web.UserController"
+          assert file =~ "use Phoenix.Web, :controller"
+        end
+
+        assert_file "lib/phoenix/templates/user/form.html.eex"
+        assert_file "lib/phoenix/views/user_view.ex", fn file ->
+          assert file =~ "defmodule Phoenix.Web.UserView"
+        end
+
+        assert_file "test/controllers/user_controller_test.exs", fn file ->
+          assert file =~ "defmodule Phoenix.Web.UserControllerTest"
+        end
+      end
+    end
+  end
 end

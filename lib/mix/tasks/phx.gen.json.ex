@@ -28,6 +28,18 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   A migration file for the repository and test files for the context and
   controller features will also be generated.
 
+  The location of the web files (controllers, views, templates, etc) in an
+  umbrella application will vary based on the `:context_app` config located
+  in your applications `:generators` configuration. When set, the Phoenix
+  generators will generate web files directly in your lib and test folders
+  since the application is assumed to be isolated to web specific functionality.
+  If `:context_app` is not set, the generators will place web related lib
+  and test files in a `web/` directory since the application is assumed
+  to be handling both web and domain specific functionality.
+  Example configuration:
+
+      config :my_app_web, :generators, context_app: :my_app
+
   ## Web namespace
 
   By default, the controller and view will be namespaced by the schema name.

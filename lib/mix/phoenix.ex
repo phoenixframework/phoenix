@@ -180,11 +180,16 @@ defmodule Mix.Phoenix do
   Returns the web prefix to be used in generated file specs.
   """
   def web_prefix do
-    app = to_string(otp_app())
-    if in_umbrella?(File.cwd!()) do
-      Path.join("lib", app)
-    else
-      Path.join(["lib", app, "web"])
+    case fetch_context_app(otp_app()) do
+      {:ok, _context_app} -> Path.join(["lib", to_string(otp_app())])
+      :error -> Path.join(["lib", to_string(otp_app()), "web"])
+    end
+  end
+
+  defp fetch_context_app(app) do
+    case Application.get_env(app, :generators)[:context_app] do
+      nil -> :error
+      app -> {:ok, app}
     end
   end
 
@@ -192,10 +197,9 @@ defmodule Mix.Phoenix do
   Returns the test prefix to be used in generated file specs.
   """
   def test_prefix do
-    if in_umbrella?(File.cwd!()) do
-      "test"
-    else
-      "test/web"
+    case fetch_context_app(otp_app()) do
+      {:ok, _context_app} -> "test"
+      :error -> "test/web"
     end
   end
 
