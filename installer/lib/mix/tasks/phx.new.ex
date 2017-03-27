@@ -179,7 +179,7 @@ defmodule Mix.Tasks.Phx.New do
   defp switch_to_string({name, val}), do: name <> "=" <> val
 
   defp install_brunch(install?) do
-    maybe_cmd "cd assets && npm install && node node_modules/brunch/bin/brunch build",
+    maybe_cmd "cd assets && npm install && node node_modules/.bin/brunch build",
               File.exists?("assets/brunch-config.js"), install? && System.find_executable("npm")
   end
 
