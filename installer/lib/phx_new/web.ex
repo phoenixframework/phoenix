@@ -21,12 +21,12 @@ defmodule Phx.New.Web do
     {:eex,  "phx_web/views/error_view.ex",            :web, "lib/:web_app/views/error_view.ex"},
     {:eex,  "#{@pre}/mix.exs",                        :web, "mix.exs"},
     {:eex,  "#{@pre}/README.md",                      :web, "README.md"},
-    {:keep, "phx_test/channels",                      :web, "test/channels"},
-    {:keep, "phx_test/controllers",                   :web, "test/controllers"},
+    {:keep, "phx_test/channels",                      :web, "test/:web_app/channels"},
+    {:keep, "phx_test/controllers",                   :web, "test/:web_app/controllers"},
     {:eex,  "#{@pre}/test/test_helper.exs",           :web, "test/test_helper.exs"},
     {:eex,  "phx_test/support/channel_case.ex",       :web, "test/support/channel_case.ex"},
     {:eex,  "phx_test/support/conn_case.ex",          :web, "test/support/conn_case.ex"},
-    {:eex,  "phx_test/views/error_view_test.exs",     :web, "test/views/error_view_test.exs"},
+    {:eex,  "phx_test/views/error_view_test.exs",     :web, "test/:web_app/views/error_view_test.exs"},
   ]
 
   template :gettext, [
@@ -53,9 +53,9 @@ defmodule Phx.New.Web do
     {:eex,  "phx_web/templates/page/index.html.eex",          :web, "lib/:web_app/templates/page/index.html.eex"},
     {:eex,  "phx_web/views/layout_view.ex",                   :web, "lib/:web_app/views/layout_view.ex"},
     {:eex,  "phx_web/views/page_view.ex",                     :web, "lib/:web_app/views/page_view.ex"},
-    {:eex,  "phx_test/controllers/page_controller_test.exs",  :web, "test/controllers/page_controller_test.exs"},
-    {:eex,  "phx_test/views/layout_view_test.exs",            :web, "test/views/layout_view_test.exs"},
-    {:eex,  "phx_test/views/page_view_test.exs",              :web, "test/views/page_view_test.exs"},
+    {:eex,  "phx_test/controllers/page_controller_test.exs",  :web, "test/:web_app/controllers/page_controller_test.exs"},
+    {:eex,  "phx_test/views/layout_view_test.exs",            :web, "test/:web_app/views/layout_view_test.exs"},
+    {:eex,  "phx_test/views/page_view_test.exs",              :web, "test/:web_app/views/page_view_test.exs"},
   ]
 
   template :bare, [

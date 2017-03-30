@@ -22,9 +22,9 @@ defmodule Phx.New.Single do
     {:eex,  "phx_test/support/channel_case.ex",         :project, "test/support/channel_case.ex"},
     {:eex,  "phx_test/support/conn_case.ex",            :project, "test/support/conn_case.ex"},
     {:eex,  "phx_single/test/test_helper.exs",          :project, "test/test_helper.exs"},
-    {:keep, "phx_test/channels",                        :project, "test/web/channels"},
-    {:keep, "phx_test/controllers",                     :project, "test/web/controllers"},
-    {:eex,  "phx_test/views/error_view_test.exs",       :project, "test/web/views/error_view_test.exs"},
+    {:keep, "phx_test/channels",                        :project, "test/:app/web/channels"},
+    {:keep, "phx_test/controllers",                     :project, "test/:app/web/controllers"},
+    {:eex,  "phx_test/views/error_view_test.exs",       :project, "test/:app/web/views/error_view_test.exs"},
   ]
 
   template :gettext, [
@@ -58,9 +58,9 @@ defmodule Phx.New.Single do
     {:eex, "phx_web/templates/page/index.html.eex",          :project, "lib/:app/web/templates/page/index.html.eex"},
     {:eex, "phx_web/views/layout_view.ex",                   :project, "lib/:app/web/views/layout_view.ex"},
     {:eex, "phx_web/views/page_view.ex",                     :project, "lib/:app/web/views/page_view.ex"},
-    {:eex, "phx_test/controllers/page_controller_test.exs",  :project, "test/web/controllers/page_controller_test.exs"},
-    {:eex, "phx_test/views/layout_view_test.exs",            :project, "test/web/views/layout_view_test.exs"},
-    {:eex, "phx_test/views/page_view_test.exs",              :project, "test/web/views/page_view_test.exs"},
+    {:eex, "phx_test/controllers/page_controller_test.exs",  :project, "test/:app/web/controllers/page_controller_test.exs"},
+    {:eex, "phx_test/views/layout_view_test.exs",            :project, "test/:app/web/views/layout_view_test.exs"},
+    {:eex, "phx_test/views/page_view_test.exs",              :project, "test/:app/web/views/page_view_test.exs"},
   ]
 
   template :bare, [

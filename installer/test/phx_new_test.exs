@@ -49,10 +49,10 @@ defmodule Mix.Tasks.Phx.NewTest do
       end
       assert_file "phx_blog/lib/phx_blog/web/endpoint.ex", ~r/defmodule PhxBlog.Web.Endpoint do/
 
-      assert_file "phx_blog/test/web/controllers/page_controller_test.exs"
-      assert_file "phx_blog/test/web/views/page_view_test.exs"
-      assert_file "phx_blog/test/web/views/error_view_test.exs"
-      assert_file "phx_blog/test/web/views/layout_view_test.exs"
+      assert_file "phx_blog/test/phx_blog/web/controllers/page_controller_test.exs"
+      assert_file "phx_blog/test/phx_blog/web/views/page_view_test.exs"
+      assert_file "phx_blog/test/phx_blog/web/views/error_view_test.exs"
+      assert_file "phx_blog/test/phx_blog/web/views/layout_view_test.exs"
       assert_file "phx_blog/test/support/conn_case.ex"
       assert_file "phx_blog/test/test_helper.exs"
 
@@ -125,7 +125,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert File.exists?("phx_blog/lib/phx_blog/web/channels")
       assert_file "phx_blog/lib/phx_blog/web/channels/user_socket.ex", ~r"defmodule PhxBlog.Web.UserSocket"
       assert_file "phx_blog/lib/phx_blog/web/endpoint.ex", ~r"socket \"/socket\", PhxBlog.Web.UserSocket"
-      assert File.exists?("phx_blog/test/web/channels")
+      assert File.exists?("phx_blog/test/phx_blog/web/channels")
 
       # Gettext
       assert_file "phx_blog/lib/phx_blog/web/gettext.ex", ~r"defmodule PhxBlog.Web.Gettext"
@@ -166,7 +166,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/phx_blog/web/web.ex", &refute(&1 =~ ~r"alias PhxBlog.Repo")
 
       # No HTML
-      assert File.exists?("phx_blog/test/web/controllers")
+      assert File.exists?("phx_blog/test/phx_blog/web/controllers")
 
       assert File.exists?("phx_blog/lib/phx_blog/web/controllers")
       assert File.exists?("phx_blog/lib/phx_blog/web/views")

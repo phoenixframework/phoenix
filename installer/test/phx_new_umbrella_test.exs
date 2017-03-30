@@ -82,10 +82,10 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ "use Phoenix.View, root: \"lib/phx_umb_web/templates\""
       end
       assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"), ~r/defmodule PhxUmb.Web.Endpoint do/
-      assert_file web_path(@app, "test/controllers/page_controller_test.exs")
-      assert_file web_path(@app, "test/views/page_view_test.exs")
-      assert_file web_path(@app, "test/views/error_view_test.exs")
-      assert_file web_path(@app, "test/views/layout_view_test.exs")
+      assert_file web_path(@app, "test/#{@app}_web/controllers/page_controller_test.exs")
+      assert_file web_path(@app, "test/#{@app}_web/views/page_view_test.exs")
+      assert_file web_path(@app, "test/#{@app}_web/views/error_view_test.exs")
+      assert_file web_path(@app, "test/#{@app}_web/views/layout_view_test.exs")
       assert_file web_path(@app, "test/support/conn_case.ex")
       assert_file web_path(@app, "test/test_helper.exs")
 
@@ -99,7 +99,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "lib/#{@app}_web/templates/layout/app.html.eex"),
                   "<title>Hello PhxUmb!</title>"
 
-      assert_file web_path(@app, "test/views/page_view_test.exs"),
+      assert_file web_path(@app, "test/#{@app}_web/views/page_view_test.exs"),
                   "defmodule PhxUmb.Web.PageViewTest"
 
       # Brunch
@@ -215,7 +215,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "config/prod.secret.exs"), &refute(&1 =~ config)
 
       # No HTML
-      assert File.exists?(web_path(@app, "test/controllers"))
+      assert File.exists?(web_path(@app, "test/#{@app}_web/controllers"))
       assert File.exists?(web_path(@app, "lib/#{@app}_web/controllers"))
       assert File.exists?(web_path(@app, "lib/#{@app}_web/views"))
       refute File.exists?(web_path(@app, "test/controllers/pager_controller_test.exs"))
@@ -453,10 +453,10 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert_file "another/lib/another.ex", ~r/defmodule Another do/
         assert_file "another/lib/another/endpoint.ex", ~r/defmodule Another.Endpoint do/
 
-        assert_file "another/test/controllers/page_controller_test.exs"
-        assert_file "another/test/views/page_view_test.exs"
-        assert_file "another/test/views/error_view_test.exs"
-        assert_file "another/test/views/layout_view_test.exs"
+        assert_file "another/test/another/controllers/page_controller_test.exs"
+        assert_file "another/test/another/views/page_view_test.exs"
+        assert_file "another/test/another/views/error_view_test.exs"
+        assert_file "another/test/another/views/layout_view_test.exs"
         assert_file "another/test/support/conn_case.ex"
         assert_file "another/test/test_helper.exs"
 
