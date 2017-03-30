@@ -124,9 +124,10 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   end
 
   def files_to_be_generated(%Context{schema: schema}) do
-    web_prefix = Mix.Phoenix.web_prefix()
-    test_prefix = Mix.Phoenix.test_prefix()
+    web_prefix = Mix.Phoenix.web_path()
+    test_prefix = Mix.Phoenix.web_test_path()
     web_path = to_string(schema.web_path)
+
     [
       {:eex, "controller.ex",       Path.join([web_prefix, "controllers", web_path, "#{schema.singular}_controller.ex"])},
       {:eex, "edit.html.eex",       Path.join([web_prefix, "templates", web_path, schema.singular, "edit.html.eex"])},
@@ -151,7 +152,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     if schema.web_namespace do
       Mix.shell.info """
 
-      Add the resource to your #{schema.web_namespace} :browser scope in #{Mix.Phoenix.web_prefix()}/router.ex:
+      Add the resource to your #{schema.web_namespace} :browser scope in #{Mix.Phoenix.web_path()}/router.ex:
 
           scope "/#{schema.web_path}", #{inspect Module.concat(context.web_module, schema.web_namespace)} do
             pipe_through :browser

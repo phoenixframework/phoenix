@@ -178,7 +178,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
 
     test "with context_app generators config does not use web dir", config do
       in_tmp_umbrella_project config.test, fn ->
-        Application.put_env(:phoenix, :generators, context_app: Phoenix)
+        Application.put_env(:phoenix, :generators, context_app: :phoenix)
         Gen.Json.run(~w(Accounts User users name:string))
 
         assert_file "lib/phoenix/accounts/accounts.ex"

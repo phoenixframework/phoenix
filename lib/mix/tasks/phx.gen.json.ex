@@ -124,8 +124,8 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   end
 
   def files_to_be_generated(%Context{schema: schema}) do
-    web_prefix = Mix.Phoenix.web_prefix()
-    test_prefix = Mix.Phoenix.test_prefix()
+    web_prefix = Mix.Phoenix.web_path()
+    test_prefix = Mix.Phoenix.web_test_path()
     web_path = to_string(schema.web_path)
 
     [
@@ -149,7 +149,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
     if schema.web_namespace do
       Mix.shell.info """
 
-      Add the resource to your #{schema.web_namespace} :api scope in #{Mix.Phoenix.web_prefix()}/router.ex:
+      Add the resource to your #{schema.web_namespace} :api scope in #{Mix.Phoenix.web_path()}/router.ex:
 
           scope "/#{schema.web_path}", #{inspect Module.concat(context.web_module, schema.web_namespace)} do
             pipe_through :api

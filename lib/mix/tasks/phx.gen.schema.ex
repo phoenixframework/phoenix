@@ -135,7 +135,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
 
     if schema.migration? do
       Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.schema", "", binding, [
-        {:eex, "migration.exs", "priv/repo/migrations/#{timestamp()}_create_#{migration}.exs"},
+        {:eex, "migration.exs", Mix.Phoenix.context_app_path("priv/repo/migrations/#{timestamp()}_create_#{migration}.exs")},
       ]
     end
 

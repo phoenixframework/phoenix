@@ -26,8 +26,8 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
   def run(args) do
     [channel_name] = validate_args!(args)
 
-    web_prefix = Mix.Phoenix.web_prefix()
-    test_prefix = Mix.Phoenix.test_prefix()
+    web_prefix = Mix.Phoenix.web_path()
+    test_prefix = Mix.Phoenix.web_test_path()
     binding = Mix.Phoenix.inflect(channel_name)
     binding = Keyword.put(binding, :module, "#{binding[:web_module]}.#{binding[:scoped]}")
 

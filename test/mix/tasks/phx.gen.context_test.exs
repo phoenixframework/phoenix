@@ -23,20 +23,21 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         alias: Blog,
         base_module: Phoenix,
         basename: "blog",
-        dir: "lib/phoenix/blog",
-        file: "lib/phoenix/blog/blog.ex",
-        test_file: "test/blog_test.exs",
         module: Phoenix.Blog,
         web_module: Phoenix.Web,
         schema: %Mix.Phoenix.Schema{
           alias: Post,
-          file: "lib/phoenix/blog/post.ex",
           human_plural: "Posts",
           human_singular: "Post",
           module: Phoenix.Blog.Post,
           plural: "posts",
           singular: "post"
         }} = context
+
+      assert String.ends_with?(context.dir, "lib/phoenix/blog")
+      assert String.ends_with?(context.file, "lib/phoenix/blog/blog.ex")
+      assert String.ends_with?(context.test_file, "test/blog_test.exs")
+      assert String.ends_with?(context.schema.file, "lib/phoenix/blog/post.ex")
     end
   end
 

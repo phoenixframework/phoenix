@@ -19,7 +19,6 @@ defmodule Mix.Tasks.Phx.Gen.EmbeddedTest do
         alias: Post,
         module: Phoenix.Blog.Post,
         repo: Phoenix.Repo,
-        file: "lib/phoenix/blog/post.ex",
         migration?: true,
         migration_defaults: %{title: ""},
         plural: "posts",
@@ -31,6 +30,7 @@ defmodule Mix.Tasks.Phx.Gen.EmbeddedTest do
         embedded?: true,
         defaults: %{title: ""},
       } = schema
+      assert String.ends_with?(schema.file, "lib/phoenix/blog/post.ex")
     end
   end
 

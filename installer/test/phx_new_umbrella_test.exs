@@ -62,6 +62,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ "ecto_repos: [PhxUmb.Repo]"
         assert file =~ ":phx_umb_web, PhxUmb.Web.Endpoint"
         assert file =~ "namespace"
+        assert file =~ "config :phx_umb_web, :generators,"
+        assert file =~ "context_app: :phx_umb\n"
       end
 
       assert_file web_path(@app, "config/prod.exs"), fn file ->

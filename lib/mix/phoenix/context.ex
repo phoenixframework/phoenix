@@ -21,14 +21,14 @@ defmodule Mix.Phoenix.Context do
   end
 
   def new(context_name, %Schema{} = schema, opts) do
-    otp_app   = to_string(Mix.Phoenix.otp_app())
-    base      = Module.concat([Mix.Phoenix.base()])
+    base      = Module.concat([Mix.Phoenix.context_base()])
     module    = Module.concat(base, context_name)
     alias     = module |> Module.split() |> tl() |> Module.concat()
     basename  = Phoenix.Naming.underscore(context_name)
-    dir       = Path.join(["lib", otp_app, basename])
+    dir       = Mix.Phoenix.context_lib_path(basename)
+    test_dir  = Mix.Phoenix.context_app_path("test")
     file      = Path.join([dir, basename <> ".ex"])
-    test_file = Path.join(["test", basename <> "_test.exs"])
+    test_file = Path.join([test_dir, basename <> "_test.exs"])
     generate? = Keyword.get(opts, :context, true)
 
     %Context{

@@ -42,14 +42,15 @@ defmodule Mix.Phoenix.Schema do
   end
 
   def new(schema_name, schema_plural, cli_attrs, opts) do
-    otp_app  = Mix.Phoenix.otp_app()
-    opts     = Keyword.merge(Application.get_env(otp_app, :generators, []), opts)
-    basename = Phoenix.Naming.underscore(schema_name)
-    module   = Module.concat([Mix.Phoenix.base(), schema_name])
-    repo     = opts[:repo] || Module.concat([Mix.Phoenix.base(), "Repo"])
-    file     = Path.join(["lib", Atom.to_string(otp_app), basename <> ".ex"])
-    table    = opts[:table] || schema_plural
-    uniques  = uniques(cli_attrs)
+    otp_app   = Mix.Phoenix.otp_app()
+    opts      = Keyword.merge(Application.get_env(otp_app, :generators, []), opts)
+    base      = Mix.Phoenix.context_base()
+    basename  = Phoenix.Naming.underscore(schema_name)
+    module    = Module.concat([base, schema_name])
+    repo      = opts[:repo] || Module.concat([base, "Repo"])
+    file      = Mix.Phoenix.context_lib_path(basename <> ".ex")
+    table     = opts[:table] || schema_plural
+    uniques   = uniques(cli_attrs)
     {assocs, attrs} = partition_attrs_and_assocs(module, attrs(cli_attrs))
     types = types(attrs)
     web_namespace = opts[:web]
