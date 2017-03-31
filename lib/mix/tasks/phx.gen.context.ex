@@ -69,7 +69,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   alias Mix.Tasks.Phx.Gen
 
   @switches [binary_id: :boolean, table: :string, web: :string,
-             schema: :boolean, context: :boolean]
+             schema: :boolean, context: :boolean, context_app: :string]
 
   @default_opts [schema: true, context: true]
 
@@ -104,14 +104,22 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
     schema = Gen.Schema.build([schema_module, plural | schema_args] ++ ["--table", table], opts, __MODULE__)
     context = Context.new(context_name, schema, opts)
-    Mix.Phoenix.check_module_name_availability!(context.module)
 
     {context, schema}
   end
 
   defp parse_opts(args) do
     {opts, parsed, invalid} = OptionParser.parse(args, switches: @switches)
-    {Keyword.merge(@default_opts, opts), parsed, invalid}
+    merged_opts =
+      @default_opts
+      |> Keyword.merge(opts)
+      |> put_context_app(opts[:context_app])
+
+    {merged_opts, parsed, invalid}
+  end
+  defp put_context_app(opts, nil), do: opts
+  defp put_context_app(opts, string) do
+    Keyword.put(opts, :context_app, String.to_atom(string))
   end
 
   def files_to_be_generated(%Context{schema: schema}) do

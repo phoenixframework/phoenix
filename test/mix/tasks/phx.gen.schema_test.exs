@@ -36,14 +36,6 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
     end
   end
 
-  test "name is already defined", config do
-    in_tmp_project config.test, fn ->
-      assert_raise Mix.Error, ~r/already taken/, fn ->
-        Gen.Schema.run ~w(DupSchema schemas)
-      end
-    end
-  end
-
   test "table name missing from references", config do
     in_tmp_project config.test, fn ->
       assert_raise Mix.Error, ~r/expect the table to be given to user_id:references/, fn ->

@@ -87,14 +87,6 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
     end
   end
 
-  test "name is already defined", config do
-    in_tmp_project config.test, fn ->
-      assert_raise Mix.Error, ~r/already taken/, fn ->
-        Gen.Context.run ~w(DupContext Post dups)
-      end
-    end
-  end
-
   test "generates context and handles existing contexts", config do
     in_tmp_project config.test, fn ->
       Gen.Context.run(~w(Blog Post posts slug:unique title:string))

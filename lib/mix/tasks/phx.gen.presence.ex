@@ -23,7 +23,7 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
     run(["Presence"])
   end
   def run([alias_name]) do
-    web_prefix = Mix.Phoenix.web_path()
+    web_prefix = Mix.Phoenix.web_path(Mix.Phoenix.otp_app())
     inflections = Mix.Phoenix.inflect(alias_name)
     inflections = Keyword.put(inflections, :module, "#{inflections[:web_module]}.#{inflections[:scoped]}")
 

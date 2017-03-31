@@ -109,9 +109,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
     {schema_opts, parsed, _} = OptionParser.parse(args, switches: @switches)
     [schema_name, plural | attrs] = validate_args!(parsed, help)
     opts = Keyword.merge(parent_opts, schema_opts)
-
     schema = Schema.new(schema_name, plural, attrs, opts)
-    Mix.Phoenix.check_module_name_availability!(schema.module)
 
     schema
   end
@@ -120,7 +118,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
     [{:eex, "schema.ex", schema.file}]
   end
 
-  def copy_new_files(%Schema{} = schema, paths, binding) do
+  def copy_new_files(%Schema{context_app: ctx_app} = schema, paths, binding) do
     migration =
       schema.module
       |> Module.split()
@@ -134,8 +132,9 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
     Mix.Phoenix.copy_from(paths,"priv/templates/phx.gen.schema", "", binding, files)
 
     if schema.migration? do
+      migration_path = Mix.Phoenix.context_app_path(ctx_app, "priv/repo/migrations/#{timestamp()}_create_#{migration}.exs")
       Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.schema", "", binding, [
-        {:eex, "migration.exs", Mix.Phoenix.context_app_path("priv/repo/migrations/#{timestamp()}_create_#{migration}.exs")},
+        {:eex, "migration.exs", migration_path},
       ]
     end
 
