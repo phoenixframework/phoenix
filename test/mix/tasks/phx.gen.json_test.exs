@@ -176,6 +176,15 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
       end
     end
 
+    test "raises with false context_app", config do
+      in_tmp_umbrella_project config.test, fn ->
+        Application.put_env(:phoenix, :generators, context_app: false)
+        assert_raise Mix.Error, ~r/no context_app configured/, fn ->
+          Gen.Json.run(~w(Accounts User users name:string))
+        end
+      end
+    end
+
     test "with context_app generators config does not use web dir", config do
       in_tmp_umbrella_project config.test, fn ->
         Application.put_env(:phoenix, :generators, context_app: :phoenix)

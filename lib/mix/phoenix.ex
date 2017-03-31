@@ -250,7 +250,22 @@ defmodule Mix.Phoenix do
   defp fetch_context_app(this_otp_app) do
     case Application.get_env(this_otp_app, :generators)[:context_app] do
       nil -> :error
-      false -> :error
+      false ->
+        Mix.raise """
+        no context_app configured for current application #{this_otp_app}.
+
+        Add the context_app generators config in config.exs, or pass the
+        --context-app option explicitly to the generators. For example:
+
+        via config:
+
+            config :#{this_otp_app}, :generators,
+              context_app: :some_app
+
+        via cli option:
+
+            mix phx.gen.[task] --context-app some_app
+        """
       app -> {:ok, app, app_path!(app, this_otp_app)}
     end
   end
@@ -259,7 +274,7 @@ defmodule Mix.Phoenix do
   defp app_path!(app, _this_otp_app) do
     case Mix.Project.deps_paths() do
       %{^app => path} -> Path.relative_to(path, File.cwd!())
-      deps -> raise "no directory for context_app #{inspect app} found in #{inspect deps}"
+      deps -> Mix.raise "no directory for context_app #{inspect app} found in #{inspect deps}"
     end
   end
 
