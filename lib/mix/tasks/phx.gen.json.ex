@@ -40,6 +40,10 @@ defmodule Mix.Tasks.Phx.Gen.Json do
 
       config :my_app_web, :generators, context_app: :my_app
 
+  Alternatively, the `--context-app` option may be supplied to the generator:
+
+      mix phx.gen.html Sales User users --context-app warehouse
+
   ## Web namespace
 
   By default, the controller and view will be namespaced by the schema name.
@@ -123,9 +127,9 @@ defmodule Mix.Tasks.Phx.Gen.Json do
     []
   end
 
-  def files_to_be_generated(%Context{schema: schema}) do
-    web_prefix = Mix.Phoenix.web_path()
-    test_prefix = Mix.Phoenix.web_test_path()
+  def files_to_be_generated(%Context{schema: schema, context_app: context_app}) do
+    web_prefix = Mix.Phoenix.web_path(context_app)
+    test_prefix = Mix.Phoenix.web_test_path(context_app)
     web_path = to_string(schema.web_path)
 
     [
@@ -145,11 +149,11 @@ defmodule Mix.Tasks.Phx.Gen.Json do
     context
   end
 
-  def print_shell_instructions(%Context{schema: schema} = context) do
+  def print_shell_instructions(%Context{schema: schema, context_app: ctx_app} = context) do
     if schema.web_namespace do
       Mix.shell.info """
 
-      Add the resource to your #{schema.web_namespace} :api scope in #{Mix.Phoenix.web_path()}/router.ex:
+      Add the resource to your #{schema.web_namespace} :api scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 
           scope "/#{schema.web_path}", #{inspect Module.concat(context.web_module, schema.web_namespace)} do
             pipe_through :api

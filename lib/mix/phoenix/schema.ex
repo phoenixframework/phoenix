@@ -29,6 +29,7 @@ defmodule Mix.Phoenix.Schema do
             sample_id: nil,
             web_path: nil,
             web_namespace: nil,
+            context_app: nil,
             route_helper: nil
 
   @valid_types [:integer, :float, :decimal, :boolean, :map, :string,
@@ -42,13 +43,14 @@ defmodule Mix.Phoenix.Schema do
   end
 
   def new(schema_name, schema_plural, cli_attrs, opts) do
+    ctx_app   = opts[:context_app] || Mix.Phoenix.context_app()
     otp_app   = Mix.Phoenix.otp_app()
     opts      = Keyword.merge(Application.get_env(otp_app, :generators, []), opts)
-    base      = Mix.Phoenix.context_base()
+    base      = Mix.Phoenix.context_base(ctx_app)
     basename  = Phoenix.Naming.underscore(schema_name)
     module    = Module.concat([base, schema_name])
     repo      = opts[:repo] || Module.concat([base, "Repo"])
-    file      = Mix.Phoenix.context_lib_path(basename <> ".ex")
+    file      = Mix.Phoenix.context_lib_path(ctx_app, basename <> ".ex")
     table     = opts[:table] || schema_plural
     uniques   = uniques(cli_attrs)
     {assocs, attrs} = partition_attrs_and_assocs(module, attrs(cli_attrs))
@@ -103,6 +105,7 @@ defmodule Mix.Phoenix.Schema do
       web_path: web_path,
       route_helper: route_helper,
       sample_id: sample_id(opts),
+      context_app: ctx_app,
       generate?: generate?}
   end
 

@@ -265,12 +265,13 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
     test "with context_app generators config does not use web dir", config do
       in_tmp_umbrella_project config.test, fn ->
-        Application.put_env(:phoenix, :generators, context_app: :phoenix)
+        File.mkdir!("another_app")
+        Application.put_env(:phoenix, :generators, context_app: {:another_app, "another_app"})
 
         Gen.Html.run(~w(Accounts User users name:string))
 
-        assert_file "lib/phoenix/accounts/accounts.ex"
-        assert_file "lib/phoenix/accounts/user.ex"
+        assert_file "another_app/lib/another_app/accounts/accounts.ex"
+        assert_file "another_app/lib/another_app/accounts/user.ex"
 
         assert_file "lib/phoenix/controllers/user_controller.ex", fn file ->
           assert file =~ "defmodule Phoenix.Web.UserController"

@@ -25,9 +25,10 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
 
   def run(args) do
     [channel_name] = validate_args!(args)
+    otp_app = Mix.Phoenix.otp_app()
 
-    web_prefix = Mix.Phoenix.web_path()
-    test_prefix = Mix.Phoenix.web_test_path()
+    web_prefix = Mix.Phoenix.web_path(otp_app)
+    test_prefix = Mix.Phoenix.web_test_path(otp_app)
     binding = Mix.Phoenix.inflect(channel_name)
     binding = Keyword.put(binding, :module, "#{binding[:web_module]}.#{binding[:scoped]}")
 
@@ -40,7 +41,7 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
 
     Mix.shell.info """
 
-    Add the channel to your `#{Mix.Phoenix.web_path("channels/user_socket.ex")}` handler, for example:
+    Add the channel to your `#{Mix.Phoenix.web_path(otp_app, "channels/user_socket.ex")}` handler, for example:
 
         channel "#{binding[:singular]}:lobby", #{binding[:module]}Channel
     """
