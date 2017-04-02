@@ -38,7 +38,7 @@ defmodule Phoenix.Presence do
         alias MyApp.Presence
 
         def join("some:topic", _params, socket) do
-          send(self, :after_join)
+          send(self(), :after_join)
           {:ok, assign(socket, :user_id, ...)}
         end
 
