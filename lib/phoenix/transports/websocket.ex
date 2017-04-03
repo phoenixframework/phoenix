@@ -72,6 +72,7 @@ defmodule Phoenix.Transports.WebSocket do
 
         case Transport.connect(endpoint, handler, transport, __MODULE__, serializer, params) do
           {:ok, socket} ->
+		    socket = put_in socket.assigns["headers"], conn.req_headers
             {:ok, conn, {__MODULE__, {socket, opts}}}
           :error ->
             send_resp(conn, 403, "")
