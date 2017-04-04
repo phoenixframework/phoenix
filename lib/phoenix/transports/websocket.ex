@@ -22,7 +22,13 @@ defmodule Phoenix.Transports.WebSocket do
       origin header is present. It defaults to true and, in such cases,
       it will check against the host value in `YourApp.Endpoint.config(:url)[:host]`.
       It may be set to `false` (not recommended) or to a list of explicitly
-      allowed origins
+      allowed origins.
+
+      check_origin: ["https://example.com",
+                     "//another.com:888", "//other.com"]
+
+      Note: it is necessary to set `check_origin: false` to support native
+      mobile apps.
 
     * `:code_reloader` - optionally override the default `:code_reloader` value
       from the socket's endpoint
