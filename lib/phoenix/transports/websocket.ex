@@ -27,8 +27,8 @@ defmodule Phoenix.Transports.WebSocket do
       check_origin: ["https://example.com",
                      "//another.com:888", "//other.com"]
 
-      Note: it is necessary to set `check_origin: false` to support native
-      mobile apps.
+      Note: To connect from a native app be sure to either have the native app
+      set an origin or allow any origin via `check_origin: false`
 
     * `:code_reloader` - optionally override the default `:code_reloader` value
       from the socket's endpoint
