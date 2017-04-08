@@ -1298,7 +1298,7 @@ defmodule Phoenix.Controller do
       iex> current_url(conn, %{new: "param"})
       "https://www.example.com/users/123?new=param"
 
-      iex> current_path(conn, %{})
+      iex> current_url(conn, %{})
       "https://www.example.com/users/123"
 
   ## Custom URL Generation
