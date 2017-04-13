@@ -120,7 +120,7 @@
 // allow the client to select which metadata to use for a given presence.
 // For example, you may have a user online from different devices with
 // a metadata status of "online", but they have set themselves to "away"
-// on another device. In this case, they app may choose to use the "away"
+// on another device. In this case, the app may choose to use the "away"
 // status for what appears on the UI. The example below defines a `listBy`
 // function which prioritizes the first metadata which was registered for
 // each user. This could be the first tab they opened, or the first device
