@@ -99,7 +99,8 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     {opts, parsed, _} = parse_opts(args)
     [context_name, schema_name, plural | schema_args] = validate_args!(parsed)
 
-    table = Keyword.get(opts, :table, Phoenix.Naming.underscore(context_name) <> "_#{plural}")
+    table_name = context_name |> Phoenix.Naming.underscore |> String.replace("/", "_")
+    table = Keyword.get(opts, :table, "#{table_name}_#{plural}")
     schema_module = inspect(Module.concat(context_name, schema_name))
 
     schema = Gen.Schema.build([schema_module, plural | schema_args] ++ ["--table", table], opts, __MODULE__)

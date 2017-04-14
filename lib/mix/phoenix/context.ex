@@ -25,12 +25,12 @@ defmodule Mix.Phoenix.Context do
     ctx_app   = opts[:context_app] || Mix.Phoenix.context_app()
     base      = Module.concat([Mix.Phoenix.context_base(ctx_app)])
     module    = Module.concat(base, context_name)
-    alias     = module |> Module.split() |> tl() |> Module.concat()
-    basename  = Phoenix.Naming.underscore(context_name)
-    dir       = Mix.Phoenix.context_lib_path(ctx_app, basename)
+    alias     = module |> Module.split() |> List.last() |> Module.concat(nil)
+    basename  = context_name |> String.split(".") |> List.last |> Phoenix.Naming.underscore
+    dir       = Mix.Phoenix.context_lib_path(ctx_app, Phoenix.Naming.underscore(context_name))
     test_dir  = Mix.Phoenix.context_app_path(ctx_app, "test")
     file      = Path.join([dir, basename <> ".ex"])
-    test_file = Path.join([test_dir, basename <> "_test.exs"])
+    test_file = Path.join([test_dir, Phoenix.Naming.underscore(context_name) <> "_test.exs"])
     generate? = Keyword.get(opts, :context, true)
 
     %Context{

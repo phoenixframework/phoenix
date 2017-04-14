@@ -41,6 +41,33 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
     end
   end
 
+  test "new nested context", config do
+    in_tmp_project config.test, fn ->
+      schema = Schema.new("Site.Blog.Post", "posts", [], [])
+      context = Context.new("Site.Blog", schema, [])
+
+      assert %Context{
+        alias: Blog,
+        base_module: Phoenix,
+        basename: "blog",
+        module: Phoenix.Site.Blog,
+        web_module: Phoenix.Web,
+        schema: %Mix.Phoenix.Schema{
+          alias: Post,
+          human_plural: "Posts",
+          human_singular: "Post",
+          module: Phoenix.Site.Blog.Post,
+          plural: "posts",
+          singular: "post"
+        }} = context
+
+      assert String.ends_with?(context.dir, "lib/phoenix/site/blog")
+      assert String.ends_with?(context.file, "lib/phoenix/site/blog/blog.ex")
+      assert String.ends_with?(context.test_file, "test/site/blog_test.exs")
+      assert String.ends_with?(context.schema.file, "lib/phoenix/site/blog/post.ex")
+    end
+  end
+
   test "new existing context", config do
     in_tmp_project config.test, fn ->
       File.mkdir_p!("lib/phoenix/blog")
