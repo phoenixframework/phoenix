@@ -25,6 +25,14 @@ You can create a new project using the latest Phoenix source installer (the `phx
 2. Copy this repo via `git clone https://github.com/phoenixframework/phoenix` or by downloading it
 3. Run the `phx.new` mix task from within the `installer` directory, for example:
 
+If you have previously installed Phoenix using mix archive.install [as described here](http://www.phoenixframework.org/v0.13.1/docs/up-and-running) then you will have to remove the archive.
+
+```bash
+mix archive.uninstall phoenix_new-x.x.x.ez # where x.x.x is your version
+```
+
+After that you can run the installer from the current Phoenix checkout.
+
 ```bash
 $ cd installer
 $ mix phx.new dev_app --dev
