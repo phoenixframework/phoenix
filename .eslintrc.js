@@ -15,8 +15,8 @@ module.exports = {
       "never"
     ],
     "array-callback-return": "error",
-    "arrow-body-style": "off",
-    "arrow-parens": "off",
+    "arrow-body-style": ["error", "as-needed"],
+    "arrow-parens": ["error", "as-needed"],
     "arrow-spacing": [
       "error",
       {
@@ -24,17 +24,17 @@ module.exports = {
         "before": true
       }
     ],
-    "block-scoped-var": "off",
+    "block-scoped-var": "error",
     "block-spacing": [
       "error",
       "always"
     ],
-    "brace-style": "off",
+    "brace-style": ["error", "1tbs", { "allowSingleLine": true }],
     "callback-return": "off",
     "camelcase": "error",
     "capitalized-comments": "off",
     "class-methods-use-this": "off",
-    "comma-dangle": "off",
+    "comma-dangle": ["error", "never"],
     "comma-spacing": [
       "error",
       {
@@ -76,7 +76,9 @@ module.exports = {
     "id-blacklist": "error",
     "id-length": "off",
     "id-match": "error",
-    "indent": "off",
+    "indent": ["error", 2, {
+      "SwitchCase": 1
+    }],
     "init-declarations": "error",
     "jsx-quotes": "error",
     "key-spacing": "error",
@@ -108,6 +110,7 @@ module.exports = {
     "no-catch-shadow": "error",
     "no-compare-neg-zero": "error",
     "no-confusing-arrow": "error",
+    "no-console": "off",
     "no-continue": "off",
     "no-div-regex": "error",
     "no-duplicate-imports": "error",

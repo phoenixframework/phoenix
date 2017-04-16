@@ -28,6 +28,7 @@
     "assets/js/phoenix.js"
   ],
   "scripts": {
-    "test": "./node_modules/.bin/mocha ./assets/test/**/*.js --compilers js:babel-register -r jsdom-global/register"
+    "test": "./node_modules/.bin/mocha ./assets/test/**/*.js --compilers js:babel-register -r jsdom-global/register",
+    "lint": "./node_modules/.bin/eslint ./assets/js/"
   }
 }
