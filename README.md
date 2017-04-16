@@ -5,6 +5,10 @@
 [![Build Status](https://api.travis-ci.org/phoenixframework/phoenix.svg)](https://travis-ci.org/phoenixframework/phoenix)
 [![Inline docs](http://inch-ci.org/github/phoenixframework/phoenix.svg)](http://inch-ci.org/github/phoenixframework/phoenix)
 
+## Elixir
+
+Ensure [Elixir](http://elixir-lang.org/) is installed. Current working version: `0.14.0`
+
 ## Getting started
 
 See the official site at http://www.phoenixframework.org/
