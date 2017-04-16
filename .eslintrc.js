@@ -235,7 +235,7 @@ module.exports = {
       "error",
       "never"
     ],
-    "semi": "off",
+    "semi": ["error", "never"],
     "semi-spacing": "error",
     "sort-imports": "error",
     "sort-keys": "off",
