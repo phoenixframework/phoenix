@@ -198,15 +198,15 @@ defmodule Phoenix.Integration.LongPollTest do
       assert phx_reply ==
         %{"event" => "phx_reply",
           "payload" => %{"response" => %{}, "status" => "ok"},
-          "ref" => "123", "topic" => "room:lobby"}
+          "ref" => "123", "topic" => "room:lobby", "join_ref" => "123"}
       assert status_msg ==
         %{"event" => "joined",
           "payload" => %{"status" => "connected", "user_id" => nil},
-          "ref" => nil, "topic" => "room:lobby"}
+          "ref" => nil, "join_ref" => nil, "topic" => "room:lobby"}
       assert user_entered ==
         %{"event" => "user_entered",
           "payload" => %{"user" => nil},
-          "ref" => nil, "topic" => "room:lobby"}
+          "ref" => nil, "join_ref" => nil, "topic" => "room:lobby"}
 
       # poll without messages sends 204 no_content
       resp = poll(:get, "/ws", session)
@@ -234,6 +234,7 @@ defmodule Phoenix.Integration.LongPollTest do
         %{"event" => "new_msg",
           "payload" => %{"transport" => "Phoenix.Transports.LongPoll", "body" => "hi!"},
           "ref" => nil,
+          "join_ref" => nil,
           "topic" => "room:lobby"}
 
       # Publish unauthorized event
@@ -329,7 +330,8 @@ defmodule Phoenix.Integration.LongPollTest do
     [_phx_reply, _joined, _user_entered, _you_left_msg, chan_error] = resp.body["messages"]
 
     assert chan_error ==
-      %{"event" => "phx_error", "payload" => %{}, "topic" => "room:lobby", "ref" => "123"}
+      %{"event" => "phx_error", "payload" => %{}, "topic" => "room:lobby",
+        "ref" => "123", "join_ref" => "123"}
   end
 
   test "sends phx_close if a channel server normally exits" do
@@ -349,7 +351,10 @@ defmodule Phoenix.Integration.LongPollTest do
     [_phx_reply, _joined, _user_entered, _leave_reply, phx_close, _you_left_msg] = resp.body["messages"]
 
     assert phx_close ==
-      %{"event" => "phx_close", "payload" => %{}, "ref" => "123", "topic" => "room:lobby"}
+      %{"event" => "phx_close", "payload" => %{},
+        "ref" => "123",
+        "join_ref" => "123",
+        "topic" => "room:lobby"}
   end
 
   test "shuts down when receiving disconnect broadcasts on socket's id" do

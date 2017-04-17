@@ -40,7 +40,8 @@ defmodule Phoenix.Transports.LongPoll do
   def default_config() do
     [window_ms: 10_000,
      pubsub_timeout_ms: 2_000,
-     serializer: Phoenix.Transports.LongPollSerializer,
+     serializer: [{Phoenix.Transports.LongPollSerializer, "~> 1.0.0"},
+                  {Phoenix.Transports.V2.LongPollSerializer, "~> 2.0.0"}],
      transport_log: false,
      crypto: [max_age: 1209600]]
   end
@@ -52,8 +53,7 @@ defmodule Phoenix.Transports.LongPoll do
 
   import Plug.Conn
 
-  alias Phoenix.Socket.Message
-  alias Phoenix.Socket.Transport
+  alias Phoenix.Socket.{Message, Transport}
 
   @doc false
   def init(opts) do

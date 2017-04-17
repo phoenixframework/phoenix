@@ -29,7 +29,7 @@ defmodule Phoenix.Transports.TransportTest do
 
   test "on_exit_message/3" do
     assert Transport.on_exit_message("foo", "1", :oops) ==
-           %Message{ref: "1", event: "phx_error", payload: %{}, topic: "foo"}
+           %Message{ref: "1", event: "phx_error", payload: %{}, topic: "foo", join_ref: "1"}
   end
 
   ## Check origin
@@ -151,6 +151,6 @@ defmodule Phoenix.Transports.TransportTest do
   end
 
   test "provides the protocol version" do
-    assert Version.match?(Transport.protocol_version(), "~> 1.0")
+    assert Version.match?(Transport.protocol_version(), "~> 2.0")
   end
 end

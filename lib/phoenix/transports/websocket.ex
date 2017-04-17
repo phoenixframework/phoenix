@@ -8,7 +8,7 @@ defmodule Phoenix.Transports.WebSocket do
 
       transport :websocket, Phoenix.Transports.WebSocket,
         timeout: :infinity,
-        serializer: Phoenix.Transports.WebSocketSerializer,
+        serializer: [{Phoenix.Transports.WebSocketSerializer, "~> 2.0.0"}],
         transport_log: false
 
     * `:timeout` - the timeout for keeping websocket connections
@@ -56,7 +56,8 @@ defmodule Phoenix.Transports.WebSocket do
   @behaviour Phoenix.Socket.Transport
 
   def default_config() do
-    [serializer: Phoenix.Transports.WebSocketSerializer,
+    [serializer: [{Phoenix.Transports.WebSocketSerializer, "~> 1.0.0"},
+                  {Phoenix.Transports.V2.WebSocketSerializer, "~> 2.0.0"}],
      timeout: 60_000,
      transport_log: false]
   end
@@ -105,15 +106,14 @@ defmodule Phoenix.Transports.WebSocket do
   @doc false
   def ws_init({socket, config}) do
     Process.flag(:trap_exit, true)
-    serializer = Keyword.fetch!(config, :serializer)
-    timeout    = Keyword.fetch!(config, :timeout)
+    timeout = Keyword.fetch!(config, :timeout)
 
     if socket.id, do: socket.endpoint.subscribe(socket.id, link: true)
 
     {:ok, %{socket: socket,
             channels: %{},
             channels_inverse: %{},
-            serializer: serializer}, timeout}
+            serializer: socket.serializer}, timeout}
   end
 
   @doc false

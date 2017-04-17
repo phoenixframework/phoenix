@@ -1,4 +1,4 @@
-defmodule Phoenix.Transports.LongPollSerializer do
+defmodule Phoenix.Transports.V2.LongPollSerializer do
   @moduledoc false
 
   @behaviour Phoenix.Transports.Serializer
@@ -20,22 +20,26 @@ defmodule Phoenix.Transports.LongPollSerializer do
   Encoding is handled downstream in the LongPoll controller.
   """
   def encode!(%Reply{} = reply) do
-    %Message{
-      topic: reply.topic,
-      event: "phx_reply",
-      ref: reply.ref,
-      join_ref: reply.ref,
-      payload: %{status: reply.status, response: reply.payload}
-    }
+    [reply.join_ref, reply.ref, reply.topic, "phx_reply",
+     %{status: reply.status, response: reply.payload}]
   end
- def encode!(%Message{} = msg), do: msg
+
+  def encode!(%Message{} = msg) do
+    [msg.join_ref, nil, msg.topic, msg.event, msg.payload]
+  end
 
   @doc """
   Decodes JSON String into `Phoenix.Socket.Message` struct.
   """
-  def decode!(message, _opts) do
-    message
-    |> Poison.decode!()
-    |> Phoenix.Socket.Message.from_map!()
+  def decode!(raw_message, _opts) do
+    [join_ref, ref, topic, event, payload] = Poison.decode!(raw_message)
+
+    %Phoenix.Socket.Message{
+      topic: topic,
+      event: event,
+      payload: payload,
+      ref: ref,
+      join_ref: join_ref,
+    }
   end
 end
