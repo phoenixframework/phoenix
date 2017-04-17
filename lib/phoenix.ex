@@ -51,4 +51,12 @@ defmodule Phoenix do
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Phoenix.Supervisor)
   end
+
+  @doc """
+  Returns the version of Phoenix
+  """
+  def version do
+    {:ok, vsn} = :application.get_key(:phoenix, :vsn)
+    vsn
+  end
 end
