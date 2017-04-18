@@ -73,10 +73,7 @@ defmodule Phoenix.Endpoint.CowboyWebSocket do
     {:ok, :cowboy_req.compact(req), {handler, state}, timeout}
   end
 
-  def websocket_handle({opcode = :text, payload}, req, {handler, state}) do
-    handle_reply req, handler, handler.ws_handle(opcode, payload, state)
-  end
-  def websocket_handle({opcode = :binary, payload}, req, {handler, state}) do
+  def websocket_handle({opcode, payload}, req, {handler, state}) when opcode in [:text, :binary] do
     handle_reply req, handler, handler.ws_handle(opcode, payload, state)
   end
   def websocket_handle(_other, req, {handler, state}) do
