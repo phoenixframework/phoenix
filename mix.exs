@@ -95,7 +95,6 @@ defmodule Phoenix.Mixfile do
 
      "deployment/deployment.md": [group: "Deployment"],
      "deployment/heroku.md": [group: "Deployment"],
-     "deployment/exrm_releases.md": [group: "Deployment"],
 
      "bonus_guides/upgrading_phoenix.md": [group: "Bonus Guides"],
      "bonus_guides/custom_primary_key.md": [group: "Bonus Guides"],
