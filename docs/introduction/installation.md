@@ -93,4 +93,4 @@ Linux users need to install this dependency. Please consult the [inotify-tools w
 
 Sometimes you want an installation without anything except the bare minimum phoenix setup. The following command will give you that.
 
-`mix phoenix.new web --no-brunch --no-ecto`
+`mix phx.new web --no-brunch --no-ecto`

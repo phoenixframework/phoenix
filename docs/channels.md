@@ -10,14 +10,14 @@ The word "Channel" is really shorthand for a layered system with a number of com
 
 ### Socket Handlers
 
-Phoenix holds a single connection to the server and multiplexes your channel sockets over that one connection. Socket handlers, such as `web/channels/user_socket.ex`, are modules that authenticate and identify a socket connection and allow you to set default socket assigns for use in all channels.
+Phoenix holds a single connection to the server and multiplexes your channel sockets over that one connection. Socket handlers, such as `lib/hello_phoenix/web/channels/user_socket.ex`, are modules that authenticate and identify a socket connection and allow you to set default socket assigns for use in all channels.
 
 ### Channel Routes
 
-These are defined in Socket handlers, such as `web/channels/user_socket.ex`, which makes them distinct from other routes. They match on the topic string and dispatch matching requests to the given Channel module. The star character `*` acts as a wildcard matcher, so in the following example route, requests for `sample_topic:pizza` and `sample_topic:oranges` would both be dispatched to the `SampleTopicChannel`.
+These are defined in Socket handlers, such as `lib/hello_phoenix/web/channels/user_socket.ex`, which makes them distinct from other routes. They match on the topic string and dispatch matching requests to the given Channel module. The star character `*` acts as a wildcard matcher, so in the following example route, requests for `sample_topic:pizza` and `sample_topic:oranges` would both be dispatched to the `SampleTopicChannel`.
 
 ```elixir
-channel "sample_topic:*", HelloPhoenix.SampleTopicChannel
+channel "sample_topic:*", HelloPhoenix.Web.SampleTopicChannel
 ```
 
 ### Channels
@@ -83,25 +83,25 @@ defmodule HelloPhoenix.Endpoint do
 end
 ```
 
-In `web/channels/user_socket.ex`, the `HelloPhoenix.UserSocket` we pointed to in our endpoint has already been created when we generated our application. We need to make sure messages get routed to the correct channel. To do that, we'll uncomment the "room:*" channel definition:
+In `lib/hello_phoenix/web/channels/user_socket.ex`, the `HelloPhoenix.UserSocket` we pointed to in our endpoint has already been created when we generated our application. We need to make sure messages get routed to the correct channel. To do that, we'll uncomment the "room:*" channel definition:
 
 ```elixir
 defmodule HelloPhoenix.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  channel "room:*", HelloPhoenix.RoomChannel
+  channel "room:*", HelloPhoenix.Web.RoomChannel
   ...
 ```
 
-Now, whenever a client sends a message whose topic starts with `"room:"`, it will be routed to our RoomChannel. Next, we'll define a `HelloPhoenix.RoomChannel` module to manage our chat room messages.
+Now, whenever a client sends a message whose topic starts with `"room:"`, it will be routed to our RoomChannel. Next, we'll define a `HelloPhoenix.Web.RoomChannel` module to manage our chat room messages.
 
 ### Joining Channels
 
-The first priority of your channels is to authorize clients to join a given topic. For authorization, we must implement `join/3` in `web/channels/room_channel.ex`.
+The first priority of your channels is to authorize clients to join a given topic. For authorization, we must implement `join/3` in `lib/hello_phoenix/web/channels/room_channel.ex`.
 
 ```elixir
-defmodule HelloPhoenix.RoomChannel do
+defmodule HelloPhoenix.Web.RoomChannel do
   use Phoenix.Channel
 
   def join("room:lobby", _message, socket) do
@@ -117,14 +117,14 @@ For our chat app, we'll allow anyone to join the `"room:lobby"` topic, but any o
 
 With our channel in place, let's get the client and server talking.
 
-Phoenix projects come with [Brunch](http://www.phoenixframework.org/docs/static-assets) built in, unless disabled with the `--no-brunch` option when you run `mix phoenix.new`.
+Phoenix projects come with [Brunch](http://www.phoenixframework.org/docs/static-assets) built in, unless disabled with the `--no-brunch` option when you run `mix phx.new`.
 
-If you are using brunch, there's some code in `web/static/js/socket.js` that defines a simple client based on the socket implementation that ships with Phoenix.
+If you are using brunch, there's some code in `assets/js/socket.js` that defines a simple client based on the socket implementation that ships with Phoenix.
 
 We can use that library to connect to our socket and join our channel, we just need to set our room name to "room:lobby" in that file.
 
 ```javascript
-// web/static/js/socket.js
+// assets/js/socket.js
 ...
 socket.connect()
 
@@ -137,7 +137,7 @@ channel.join()
 export default socket
 ```
 
-After that, we need to make sure `web/static/js/socket.js` gets imported into our application javascript file. To do that, uncomment the last line in `web/static/js/app.js`.
+After that, we need to make sure `assets/js/socket.js` gets imported into our application javascript file. To do that, uncomment the last line in `assets/js/app.js`.
 
 ```javascript
 ...
@@ -146,14 +146,14 @@ import socket from "./socket"
 
 Save the file and your browser should auto refresh, thanks to the Phoenix live reloader. If everything worked, we should see "Joined successfully" in the browser's JavaScript console. Our client and server are now talking over a persistent connection. Now let's make it useful by enabling chat.
 
-In `web/templates/page/index.html.eex`, we'll replace the existing code with a container to hold our chat messages, and an input field to send them:
+In `lib/hello_phoenix/web/templates/page/index.html.eex`, we'll replace the existing code with a container to hold our chat messages, and an input field to send them:
 
 ```html
 <div id="messages"></div>
 <input id="chat-input" type="text"></input>
 ```
 
-Now let's add a couple of event listeners to `web/static/js/socket.js`:
+Now let's add a couple of event listeners to `assets/js/socket.js`:
 
 ```javascript
 ...
@@ -209,7 +209,7 @@ We listen for the `"new_msg"` event using `channel.on`, and then append the mess
 We handle incoming events with `handle_in/3`. We can pattern match on the event names, like `"new_msg"`, and then grab the payload that the client passed over the channel. For our chat application, we simply need to notify all other `room:lobby` subscribers of the new message with `broadcast!/3`.
 
 ```elixir
-defmodule HelloPhoenix.RoomChannel do
+defmodule HelloPhoenix.Web.RoomChannel do
   use Phoenix.Channel
 
   def join("room:lobby", _message, socket) do
