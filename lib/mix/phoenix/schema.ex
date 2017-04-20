@@ -236,7 +236,17 @@ defmodule Mix.Phoenix.Schema do
   defp value_to_type(:uuid), do: Ecto.UUID
   defp value_to_type(val) do
     if Code.ensure_loaded?(Ecto.Type) and not Ecto.Type.primitive?(val) do
-      Mix.raise "Unknown type `#{val}` given to generator"
+      case val do
+        :array ->
+          Mix.raise """
+            Phoenix generators expect the type of the array to be given.
+            For example:
+
+                mix phx.gen.schema Post posts settings:array:string
+            """
+        _ ->
+          Mix.raise "Unknown type `#{val}` given to generator"
+      end
     else
       val
     end
