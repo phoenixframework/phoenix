@@ -1271,6 +1271,9 @@ defmodule Phoenix.Controller do
       iex> current_path(conn, %{new: "param"})
       "/users/123?new=param"
 
+      iex> current_path(conn, %{filter: %{status: ["draft", "published"})
+      "/users/123?filter[status][]=draft&filter[status][]=published"
+
       iex> current_path(conn, %{})
       "/users/123"
   """
@@ -1281,7 +1284,7 @@ defmodule Phoenix.Controller do
     conn.request_path
   end
   def current_path(%Plug.Conn{} = conn, params) do
-    conn.request_path <> "?" <> URI.encode_query(params)
+    conn.request_path <> "?" <> Plug.Conn.Query.encode(params)
   end
 
   @doc ~S"""
