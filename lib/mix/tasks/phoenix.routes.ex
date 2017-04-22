@@ -23,7 +23,7 @@ defmodule Mix.Tasks.Phoenix.Routes do
   """
 
   def run(args, base \\ Mix.Phoenix.base()) do
-    IO.puts :stderr, "mix phoenix.router is deprecated. Use phx.router instead."
+    IO.puts :stderr, "mix phoenix.routes is deprecated. Use phx.routes instead."
     Mix.Tasks.Phx.Routes.run(args, base)
   end
 end
