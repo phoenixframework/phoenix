@@ -11,41 +11,36 @@
 
   """
   def list_<%= schema.plural %> do
-    Repo.all(<%= inspect schema.alias %>)
+    raise "TODO"
   end
 
   @doc """
   Gets a single <%= schema.singular %>.
 
-  Raises `Ecto.NoResultsError` if the <%= schema.human_singular %> does not exist.
+  Raises if the <%= schema.human_singular %> does not exist.
 
   ## Examples
 
       iex> get_<%= schema.singular %>!(123)
       %<%= inspect schema.alias %>{}
 
-      iex> get_<%= schema.singular %>!(456)
-      ** (Ecto.NoResultsError)
-
   """
-  def get_<%= schema.singular %>!(id), do: Repo.get!(<%= inspect schema.alias %>, id)
+  def get_<%= schema.singular %>!(id), do: raise "TODO"
 
   @doc """
   Creates a <%= schema.singular %>.
 
   ## Examples
 
-      iex> create_<%= schema.singular %>(<%= schema.singular %>, %{field: value})
+      iex> create_<%= schema.singular %>(%{field: value})
       {:ok, %<%= inspect schema.alias %>{}}
 
-      iex> create_<%= schema.singular %>(<%= schema.singular %>, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
+      iex> create_<%= schema.singular %>(%{field: bad_value})
+      {:error, ...}
 
   """
   def create_<%= schema.singular %>(attrs \\ %{}) do
-    %<%= inspect schema.alias %>{}
-    |> <%= schema.singular %>_changeset(attrs)
-    |> Repo.insert()
+    raise "TODO"
   end
 
   @doc """
@@ -57,13 +52,11 @@
       {:ok, %<%= inspect schema.alias %>{}}
 
       iex> update_<%= schema.singular %>(<%= schema.singular %>, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
+      {:error, ...}
 
   """
   def update_<%= schema.singular %>(%<%= inspect schema.alias %>{} = <%= schema.singular %>, attrs) do
-    <%= schema.singular %>
-    |> <%= schema.singular %>_changeset(attrs)
-    |> Repo.update()
+    raise "TODO"
   end
 
   @doc """
@@ -75,29 +68,22 @@
       {:ok, %<%= inspect schema.alias %>{}}
 
       iex> delete_<%= schema.singular %>(<%= schema.singular %>)
-      {:error, %Ecto.Changeset{}}
+      {:error, ...}
 
   """
   def delete_<%= schema.singular %>(%<%= inspect schema.alias %>{} = <%= schema.singular %>) do
-    Repo.delete(<%= schema.singular %>)
+    raise "TODO"
   end
 
   @doc """
-  Returns an `%Ecto.Changeset{}` for tracking <%= schema.singular %> changes.
+  Returns a datastructure for tracking <%= schema.singular %> changes.
 
   ## Examples
 
       iex> change_<%= schema.singular %>(<%= schema.singular %>)
-      %Ecto.Changeset{source: %<%= inspect schema.alias %>{}}
+      %Todo{...}
 
   """
   def change_<%= schema.singular %>(%<%= inspect schema.alias %>{} = <%= schema.singular %>) do
-    <%= schema.singular %>_changeset(<%= schema.singular %>, %{})
+    raise "TODO"
   end
-
-  defp <%= schema.singular %>_changeset(%<%= inspect schema.alias %>{} = <%= schema.singular %>, attrs) do
-    <%= schema.singular %>
-    |> cast(attrs, [<%= Enum.map_join(schema.attrs, ", ", &inspect(elem(&1, 0))) %>])
-    |> validate_required([<%= Enum.map_join(schema.attrs, ", ", &inspect(elem(&1, 0))) %>])
-<%= for k <- schema.uniques do %>    |> unique_constraint(<%= inspect k %>)
-<% end %>  end

@@ -6,8 +6,8 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
 
       mix phx.gen.schema Blog.Post blog_posts title:string views:integer
 
-  The first argument is the module name followed by its plural
-  name (used for the schema).
+  The first argument is the schema module followed by its plural
+  name (used as the table name).
 
   The generated schema above will contain:
 
@@ -29,14 +29,14 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   #{for attr <- Mix.Phoenix.Schema.valid_types(), do: "  * `#{inspect attr}`\n"}
     * `:datetime` - An alias for `:naive_datetime`
 
-  The generator also supports `belongs_to` associations
-  via references:
+  The generator also supports references, which we will properly
+  associate the given column to the primary key column of the
+  referenced table:
 
-      mix phx.gen.schema Blog.Post blog_posts title user_id:references:users
+      mix phx.gen.schema Blog.Post blog_posts title user_id:references:blog_users
 
   This will result in a migration with an `:integer` column
-  of `:user_id` and create an index. It will also generate
-  the appropriate `belongs_to` entry in the schema.
+  of `:user_id` and create an index.
 
   Furthermore an array type can also be given if it is
   supported by your database, although it requires the
@@ -54,7 +54,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
 
   By default, the table name for the migration and schema will be
   the plural name provided for the resource. To customize this value,
-  a `--table` option may be provided. For exampe:
+  a `--table` option may be provided. For example:
 
       mix phx.gen.schema Blog.Post posts --table cms_posts
 
@@ -66,9 +66,9 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   ## Default options
 
   This generator uses default options provided in the `:generators`
-  configuration of the `:phoenix` application. These are the defaults:
+  configuration of your application. These are the defaults:
 
-      config :phoenix, :generators,
+      config :your_app, :generators,
         migration: true,
         binary_id: false,
         sample_binary_id: "11111111-1111-1111-1111-111111111111"
@@ -81,31 +81,44 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
 
   alias Mix.Phoenix.Schema
 
-  @switches [migration: :boolean, binary_id: :boolean, table: :string]
+  @switches [migration: :boolean, binary_id: :boolean, table: :string,
+             web: :string]
 
   def run(args) do
-    schema = build(args)
+    if Mix.Project.umbrella?() do
+      Mix.raise "mix phx.gen.schema can only be run inside an application directory"
+    end
+
+    schema = build(args, [])
     paths = Mix.Phoenix.generator_paths()
+
+    prompt_for_conflicts(schema)
 
     schema
     |> copy_new_files(paths, schema: schema)
     |> print_shell_instructions()
   end
 
-  def build(args, help \\ __MODULE__) do
-    if Mix.Project.umbrella? do
-      Mix.raise "mix phx.gen.schema can only be run inside an application directory"
-    end
-    {opts, parsed, _} = OptionParser.parse(args, switches: @switches)
-    [schema_name, plural | attrs] = validate_args!(parsed, help)
+  defp prompt_for_conflicts(schema) do
+    schema
+    |> files_to_be_generated()
+    |> Mix.Phoenix.prompt_for_conflicts()
+  end
 
+  def build(args, parent_opts, help \\ __MODULE__) do
+    {schema_opts, parsed, _} = OptionParser.parse(args, switches: @switches)
+    [schema_name, plural | attrs] = validate_args!(parsed, help)
+    opts = Keyword.merge(parent_opts, schema_opts)
     schema = Schema.new(schema_name, plural, attrs, opts)
-    Mix.Phoenix.check_module_name_availability!(schema.module)
 
     schema
   end
 
-  def copy_new_files(%Schema{} = schema, paths, binding) do
+  def files_to_be_generated(%Schema{} = schema) do
+    [{:eex, "schema.ex", schema.file}]
+  end
+
+  def copy_new_files(%Schema{context_app: ctx_app} = schema, paths, binding) do
     migration =
       schema.module
       |> Module.split()
@@ -115,10 +128,16 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
       |> Phoenix.Naming.underscore()
       |> String.replace("/", "_")
 
-    Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.html", "", binding, [
-      {:eex, "schema.ex",     schema.file},
-      {:eex, "migration.exs", "priv/repo/migrations/#{timestamp()}_create_#{migration}.exs"},
-    ]
+    files = files_to_be_generated(schema)
+    Mix.Phoenix.copy_from(paths,"priv/templates/phx.gen.schema", "", binding, files)
+
+    if schema.migration? do
+      migration_path = Mix.Phoenix.context_app_path(ctx_app, "priv/repo/migrations/#{timestamp()}_create_#{migration}.exs")
+      Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.schema", "", binding, [
+        {:eex, "migration.exs", migration_path},
+      ]
+    end
+
     schema
   end
 
@@ -152,8 +171,9 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
     Mix.raise """
     #{msg}
 
-    mix phx.gen.schema expects both a module name and the plural
-    of the generated resource followed by any number of attributes:
+    mix phx.gen.schema and phx.gen.embedded expect both a module
+    name and the plural of the generated resource followed by
+    any number of attributes:
 
         mix phx.gen.schema Blog.Post blog_posts title:string
     """

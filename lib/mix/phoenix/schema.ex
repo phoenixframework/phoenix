@@ -1,9 +1,13 @@
 defmodule Mix.Phoenix.Schema do
+  @moduledoc false
+
   alias Mix.Phoenix.Schema
 
   defstruct module: nil,
             repo: nil,
             table: nil,
+            embedded?: false,
+            generate?: true,
             opts: [],
             alias: nil,
             file: nil,
@@ -22,7 +26,11 @@ defmodule Mix.Phoenix.Schema do
             migration_defaults: nil,
             migration?: false,
             params: %{},
-            sample_id: nil
+            sample_id: nil,
+            web_path: nil,
+            web_namespace: nil,
+            context_app: nil,
+            route_helper: nil
 
   @valid_types [:integer, :float, :decimal, :boolean, :map, :string,
                      :array, :references, :text, :date, :time,
@@ -35,41 +43,51 @@ defmodule Mix.Phoenix.Schema do
   end
 
   def new(schema_name, schema_plural, cli_attrs, opts) do
-    otp_app  = to_string(Mix.Phoenix.otp_app())
-    basename = Phoenix.Naming.underscore(schema_name)
-    module   = Module.concat([Mix.Phoenix.base(), schema_name])
-    repo     = opts[:repo] || Module.concat([Mix.Phoenix.base(), "Repo"])
-    file     = Path.join(["lib", otp_app, basename <> ".ex"])
-    {assocs, cli_attrs} = partition_attrs_and_assocs(cli_attrs)
-    attrs    = attrs(cli_attrs)
-    uniques  = uniques(cli_attrs)
-    table    = opts[:table] || schema_plural
+    ctx_app   = opts[:context_app] || Mix.Phoenix.context_app()
+    otp_app   = Mix.Phoenix.otp_app()
+    opts      = Keyword.merge(Application.get_env(otp_app, :generators, []), opts)
+    base      = Mix.Phoenix.context_base(ctx_app)
+    basename  = Phoenix.Naming.underscore(schema_name)
+    module    = Module.concat([base, schema_name])
+    repo      = opts[:repo] || Module.concat([base, "Repo"])
+    file      = Mix.Phoenix.context_lib_path(ctx_app, basename <> ".ex")
+    table     = opts[:table] || schema_plural
+    uniques   = uniques(cli_attrs)
+    {assocs, attrs} = partition_attrs_and_assocs(module, attrs(cli_attrs))
+    types = types(attrs)
+    web_namespace = opts[:web]
+    web_path = web_namespace && Phoenix.Naming.underscore(web_namespace)
+    embedded? = Keyword.get(opts, :embedded, false)
+    generate? = Keyword.get(opts, :schema, true)
+
     singular =
       module
       |> Module.split()
       |> List.last()
       |> Phoenix.Naming.underscore()
-    string_attr =  attrs |> types() |> string_attr()
+    string_attr = string_attr(types)
     create_params = params(attrs, :create)
     default_params_key =
       case Enum.at(create_params, 0) do
         {key, _} -> key
         nil -> :some_field
       end
+    route_helper = if web_path, do: "#{web_path}_#{singular}", else: singular
 
     %Schema{
       opts: opts,
-      migration?: opts[:migration] != false,
+      migration?: Keyword.get(opts, :migration, true),
       module: module,
       repo: repo,
       table: table,
+      embedded?: embedded?,
       alias: module |> Module.split() |> List.last() |> Module.concat(nil),
       file: file,
       attrs: attrs,
       plural: schema_plural,
       singular: singular,
       assocs: assocs,
-      types: types(attrs),
+      types: types,
       defaults: schema_defaults(attrs),
       uniques: uniques,
       indexes: indexes(table, assocs, uniques),
@@ -80,10 +98,15 @@ defmodule Mix.Phoenix.Schema do
       string_attr: string_attr,
       params: %{
         create: create_params,
-        update: Mix.Phoenix.Schema.params(attrs, :update),
+        update: params(attrs, :update),
         default_key: string_attr || default_params_key
       },
-      sample_id: sample_id(opts)}
+      web_namespace: web_namespace,
+      web_path: web_path,
+      route_helper: route_helper,
+      sample_id: sample_id(opts),
+      context_app: ctx_app,
+      generate?: generate?}
   end
 
   @doc """
@@ -104,7 +127,6 @@ defmodule Mix.Phoenix.Schema do
     |> Enum.filter(&String.ends_with?(&1, ":unique"))
     |> Enum.map(& &1 |> String.split(":", parts: 2) |> hd |> String.to_atom)
   end
-
 
   @doc """
   Parses the attrs as received by generators.
@@ -131,6 +153,17 @@ defmodule Mix.Phoenix.Schema do
     |> Enum.into(%{}, fn {k, t} -> {k, type_to_default(k, t, action)} end)
   end
 
+  @doc """
+  Returns the string value for use in EEx templates.
+  """
+  def value(schema, field, value) do
+    schema.types
+    |> Map.fetch!(field)
+    |> inspect_value(value)
+  end
+  defp inspect_value(:decimal, value), do: "Decimal.new(\"#{to_string(value)}\")"
+  defp inspect_value(_type, value), do: inspect(value)
+
   defp drop_unique(info) do
     prefix = byte_size(info) - 7
     case info do
@@ -154,11 +187,13 @@ defmodule Mix.Phoenix.Schema do
         :boolean        -> true
         :map            -> %{}
         :text           -> "some #{key}"
-        :date           -> %{year: 2010, month: 4, day: 17}
-        :time           -> %{hour: 14, minute: 0, second: 0}
+        :date           -> %Date{year: 2010, month: 4, day: 17}
+        :time           -> %Time{hour: 14, minute: 0, second: 0, microsecond: {0, 6}}
         :uuid           -> "7488a646-e31f-11e4-aace-600308960662"
-        :utc_datetime   -> %{year: 2010, month: 4, day: 17, hour: 14, minute: 0, second: 0}
-        :naive_datetime -> %{year: 2010, month: 4, day: 17, hour: 14, minute: 0, second: 0}
+        :utc_datetime   -> %DateTime{day: 17, hour: 14, microsecond: {0, 6},
+                            minute: 0, month: 4, second: 0, std_offset: 0, time_zone: "Etc/UTC",
+                            utc_offset: 0, year: 2010, zone_abbr: "UTC"}
+        :naive_datetime -> ~N[2010-04-17 14:00:00.000000]
         _               -> "some #{key}"
     end
   end
@@ -171,11 +206,13 @@ defmodule Mix.Phoenix.Schema do
         :boolean        -> false
         :map            -> %{}
         :text           -> "some updated #{key}"
-        :date           -> %{year: 2011, month: 5, day: 18}
-        :time           -> %{hour: 15, minute: 1, second: 1}
+        :date           -> %Date{year: 2011, month: 5, day: 18}
+        :time           -> %Time{hour: 15, minute: 1, second: 1, microsecond: {0, 6}}
         :uuid           -> "7488a646-e31f-11e4-aace-600308960668"
-        :utc_datetime   -> %{year: 2011, month: 5, day: 18, hour: 15, minute: 1, second: 1}
-        :naive_datetime -> %{year: 2011, month: 5, day: 18, hour: 15, minute: 1, second: 1}
+        :utc_datetime   -> %DateTime{day: 18, hour: 15, microsecond: {0, 6},
+                            minute: 1, month: 5, second: 1, std_offset: 0, time_zone: "Etc/UTC",
+                            utc_offset: 0, year: 2011, zone_abbr: "UTC"}
+        :naive_datetime -> ~N[2011-05-18 15:01:01.000000]
         _               -> "some updated #{key}"
     end
   end
@@ -188,25 +225,28 @@ defmodule Mix.Phoenix.Schema do
               "The supported types are: #{@valid_types |> Enum.sort() |> Enum.join(", ")}"
   end
 
-  defp partition_attrs_and_assocs(attrs) do
-    {assocs, attrs} = Enum.partition(attrs, fn
-      {_, {:references, _}} ->
-        true
-      {key, :references} ->
-        Mix.raise """
-        Phoenix generators expect the table to be given to #{key}:references.
-        For example:
+  defp partition_attrs_and_assocs(schema_module, attrs) do
+    {assocs, attrs} =
+      Enum.partition(attrs, fn
+        {_, {:references, _}} ->
+          true
+        {key, :references} ->
+          Mix.raise """
+          Phoenix generators expect the table to be given to #{key}:references.
+          For example:
 
-            mix phx.gen.schema Comment comments body:text post_id:references:posts
-        """
-      _ -> false
-    end)
+              mix phx.gen.schema Comment comments body:text post_id:references:posts
+          """
+        _ -> false
+      end)
 
-    assocs = Enum.map(assocs, fn {key_id, {:references, source}} ->
-      key   = String.replace(Atom.to_string(key_id), "_id", "")
-      assoc = Mix.Phoenix.inflect key
-      {String.to_atom(key), key_id, assoc[:module], source}
-    end)
+    assocs =
+      Enum.map(assocs, fn {key_id, {:references, source}} ->
+        key = String.replace(Atom.to_string(key_id), "_id", "")
+        base = schema_module |> Module.split() |> Enum.drop(-1)
+        module = Module.concat(base ++ [Phoenix.Naming.camelize(key)])
+        {String.to_atom(key), key_id, inspect(module), source}
+      end)
 
     {assocs, attrs}
   end
@@ -228,13 +268,14 @@ defmodule Mix.Phoenix.Schema do
 
   defp types(attrs) do
     Enum.into(attrs, %{}, fn
-      {key, {column, val}} -> {key, {column, value_to_type(val)}}
-      {key, val}           -> {key, value_to_type(val)}
+      {key, {root, val}} -> {key, {root, schema_type(val)}}
+      {key, val} -> {key, schema_type(val)}
     end)
   end
-  defp value_to_type(:text), do: :string
-  defp value_to_type(:uuid), do: Ecto.UUID
-  defp value_to_type(val) do
+
+  defp schema_type(:text), do: :string
+  defp schema_type(:uuid), do: Ecto.UUID
+  defp schema_type(val) do
     if Code.ensure_loaded?(Ecto.Type) and not Ecto.Type.primitive?(val) do
       case val do
         :array ->
@@ -253,9 +294,10 @@ defmodule Mix.Phoenix.Schema do
   end
 
   defp indexes(table, assocs, uniques) do
-    Enum.concat(
-      Enum.map(uniques, fn key -> {key, true} end),
-      Enum.map(assocs, fn {key, _} -> {key, false} end))
+    uniques = Enum.map(uniques, fn key -> {key, true} end)
+    assocs = Enum.map(assocs, fn {_, key, _, _} -> {key, false} end)
+
+    (uniques ++ assocs)
     |> Enum.uniq_by(fn {key, _} -> key end)
     |> Enum.map(fn
       {key, false} -> "create index(:#{table}, [:#{key}])"

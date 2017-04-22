@@ -196,11 +196,11 @@ defmodule Mix.Tasks.Phoenix.Gen.JsonTest do
   test "plural can't have uppercased characters or camelized format" do
     capture_io(:stderr, fn ->
       assert_raise Mix.Error, fn ->
-        Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "Users", "foo:string"]
+        Mix.Tasks.Phoenix.Gen.Json.run ["Admin.User", "Users", "foo:string"]
       end
 
       assert_raise Mix.Error, fn ->
-        Mix.Tasks.Phoenix.Gen.Html.run ["Admin.User", "AdminUsers", "foo:string"]
+        Mix.Tasks.Phoenix.Gen.Json.run ["Admin.User", "AdminUsers", "foo:string"]
       end
     end)
   end

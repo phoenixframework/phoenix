@@ -22,7 +22,7 @@ defmodule Phoenix.Router do
   that dispatch to specific controllers and actions. Those
   macros are named after HTTP verbs. For example:
 
-      defmodule MyApp.Router do
+      defmodule MyApp.Web.Router do
         use Phoenix.Router
 
         get "/pages/:page", PageController, :show
@@ -52,22 +52,22 @@ defmodule Phoenix.Router do
 
   will generate the following named helper:
 
-      MyApp.Router.Helpers.page_path(conn_or_endpoint, :show, "hello")
+      MyApp.Web.Router.Helpers.page_path(conn_or_endpoint, :show, "hello")
       "/pages/hello"
 
-      MyApp.Router.Helpers.page_path(conn_or_endpoint, :show, "hello", some: "query")
+      MyApp.Web.Router.Helpers.page_path(conn_or_endpoint, :show, "hello", some: "query")
       "/pages/hello?some=query"
 
-      MyApp.Router.Helpers.page_url(conn_or_endpoint, :show, "hello")
+      MyApp.Web.Router.Helpers.page_url(conn_or_endpoint, :show, "hello")
       "http://example.com/pages/hello"
 
-      MyApp.Router.Helpers.page_url(conn_or_endpoint, :show, "hello", some: "query")
+      MyApp.Web.Router.Helpers.page_url(conn_or_endpoint, :show, "hello", some: "query")
       "http://example.com/pages/hello?some=query"
 
   If the route contains glob-like patterns, parameters for those have to be given as
   list:
 
-      MyApp.Router.Helpers.dynamic_path(conn_or_endpoint, :show, ["dynamic", "something"])
+      MyApp.Web.Router.Helpers.dynamic_path(conn_or_endpoint, :show, ["dynamic", "something"])
       "/dynamic/something"
 
   The URL generated in the named URL helpers is based on the configuration for
@@ -76,7 +76,7 @@ defmodule Phoenix.Router do
   struct:
 
       uri = %URI{scheme: "https", host: "other.example.com"}
-      MyApp.Router.Helpers.page_url(uri, :show, "hello")
+      MyApp.Web.Router.Helpers.page_url(uri, :show, "hello")
       "https://other.example.com/pages/hello"
 
   The named helper can also be customized with the `:as` option. Given
@@ -86,7 +86,7 @@ defmodule Phoenix.Router do
 
   the named helper will be:
 
-      MyApp.Router.Helpers.special_page_path(conn, :show, "hello")
+      MyApp.Web.Router.Helpers.special_page_path(conn, :show, "hello")
       "/pages/hello"
 
   ## Scopes and Resources
@@ -124,7 +124,7 @@ defmodule Phoenix.Router do
   Phoenix also provides a `resources/4` macro that allows developers
   to generate "RESTful" routes to a given resource:
 
-      defmodule MyApp.Router do
+      defmodule MyApp.Web.Router do
         use Phoenix.Router
 
         resources "/pages", PageController, only: [:show]
@@ -147,7 +147,7 @@ defmodule Phoenix.Router do
 
   One can also pass a router explicitly as an argument to the task:
 
-      $ mix phoenix.routes MyApp.Router
+      $ mix phoenix.routes MyApp.Web.Router
 
   Check `scope/2` and `resources/4` for more information.
 
@@ -163,7 +163,7 @@ defmodule Phoenix.Router do
 
   For example:
 
-      defmodule MyApp.Router do
+      defmodule MyApp.Web.Router do
         use Phoenix.Router
 
         pipeline :browser do
@@ -271,12 +271,13 @@ defmodule Phoenix.Router do
   end
   def __call__({conn, pipeline, dispatch}) do
     case pipeline.(conn) do
-      %Plug.Conn{halted: true} = halted_conn -> halted_conn
+      %Plug.Conn{halted: true} = halted_conn ->
+        halted_conn
       %Plug.Conn{} = piped_conn ->
         try do
           dispatch.(piped_conn)
         catch
-          kind, reason -> Plug.Conn.WrapperError.reraise(piped_conn, kind, reason)
+          :error, reason -> Plug.Conn.WrapperError.reraise(piped_conn, :error, reason)
         end
     end
   end
@@ -438,8 +439,8 @@ defmodule Phoenix.Router do
           try do
             unquote(body)
           catch
-            kind, reason ->
-              Plug.Conn.WrapperError.reraise(unquote(conn), kind, reason)
+            :error, reason ->
+              Plug.Conn.WrapperError.reraise(unquote(conn), :error, reason)
           end
         end
         @phoenix_pipeline nil

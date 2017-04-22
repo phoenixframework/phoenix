@@ -96,20 +96,21 @@ defmodule Phoenix.Token do
   ## Options
 
     * `:key_iterations` - option passed to `Plug.Crypto.KeyGenerator`
-      when generating the encryption and signing keys. Defaults to 1000;
+      when generating the encryption and signing keys. Defaults to 1000
     * `:key_length` - option passed to `Plug.Crypto.KeyGenerator`
-      when generating the encryption and signing keys. Defaults to 32;
+      when generating the encryption and signing keys. Defaults to 32
     * `:key_digest` - option passed to `Plug.Crypto.KeyGenerator`
-      when generating the encryption and signing keys. Defaults to `:sha256`;
+      when generating the encryption and signing keys. Defaults to `:sha256`
+    * `:signed_at` - set the timestamp of the token in seconds. Defaults to `System.system_time(:seconds)`
   """
   def sign(context, salt, data, opts \\ []) when is_binary(salt) do
-    secret = get_key_base(context) |> get_secret(salt, opts)
+    {signed_at_seconds, key_opts} = Keyword.pop(opts, :signed_at)
+    signed_at_ms = if signed_at_seconds, do: trunc(signed_at_seconds * 1000), else: now_ms()
+    secret = get_key_base(context) |> get_secret(salt, key_opts)
 
-    message = %{
-      data: data,
-      signed: now_ms(),
-    } |> :erlang.term_to_binary()
-    MessageVerifier.sign(message, secret)
+    %{data: data, signed: signed_at_ms}
+    |> :erlang.term_to_binary()
+    |> MessageVerifier.sign(secret)
   end
 
   @doc """
@@ -154,13 +155,13 @@ defmodule Phoenix.Token do
 
     * `:max_age` - verifies the token only if it has been generated
       "max age" ago in seconds. A reasonable value is 2 weeks (`1209600`
-      seconds);
+      seconds)
     * `:key_iterations` - option passed to `Plug.Crypto.KeyGenerator`
-      when generating the encryption and signing keys. Defaults to 1000;
+      when generating the encryption and signing keys. Defaults to 1000
     * `:key_length` - option passed to `Plug.Crypto.KeyGenerator`
-      when generating the encryption and signing keys. Defaults to 32;
+      when generating the encryption and signing keys. Defaults to 32
     * `:key_digest` - option passed to `Plug.Crypto.KeyGenerator`
-      when generating the encryption and signing keys. Defaults to `:sha256`;
+      when generating the encryption and signing keys. Defaults to `:sha256`
 
   """
   def verify(context, salt, token, opts \\ [])
@@ -188,13 +189,23 @@ defmodule Phoenix.Token do
   end
 
   defp get_key_base(%Plug.Conn{} = conn),
-    do: Phoenix.Controller.endpoint_module(conn).config(:secret_key_base)
+    do: conn |> Phoenix.Controller.endpoint_module() |> get_endpoint_key_base()
   defp get_key_base(%Phoenix.Socket{} = socket),
     do: socket.endpoint.config(:secret_key_base)
   defp get_key_base(endpoint) when is_atom(endpoint),
-    do: endpoint.config(:secret_key_base)
+    do: get_endpoint_key_base(endpoint)
   defp get_key_base(string) when is_binary(string) and byte_size(string) >= 20,
     do: string
+
+  defp get_endpoint_key_base(endpoint) do
+    endpoint.config(:secret_key_base) || raise """
+    no :secret_key_base configuration found in #{inspect endpoint}.
+    Ensure your environment has the necessary mix configuration. For example:
+
+        config :my_app, MyApp.Endpoint,
+            secret_key_base: ...
+    """
+  end
 
   # Gathers configuration and generates the key secrets and signing secrets.
   defp get_secret(secret_key_base, salt, opts) do

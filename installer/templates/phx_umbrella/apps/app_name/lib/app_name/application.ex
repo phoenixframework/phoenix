@@ -13,7 +13,7 @@ defmodule <%= app_module %>.Application do
     import Supervisor.Spec, warn: false
 
     Supervisor.start_link([
-      <%= if ecto do %>worker(<%= app_module %>.Repo, []),<% end %>
+      <%= if ecto do %>supervisor(<%= app_module %>.Repo, []),<% end %>
     ], strategy: :one_for_one, name: <%= app_module %>.Supervisor)
   end
 end

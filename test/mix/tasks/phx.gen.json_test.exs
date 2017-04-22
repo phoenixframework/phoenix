@@ -1,8 +1,5 @@
 Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 
-defmodule Phoenix.DupJsonContext do
-end
-
 defmodule Mix.Tasks.Phx.Gen.JsonTest do
   use ExUnit.Case
   import MixHelper
@@ -23,6 +20,10 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
         Gen.Json.run(~w(Post posts title:string))
       end
 
+      assert_raise Mix.Error, ~r/The context and schema should have different names/, fn ->
+        Gen.Json.run(~w(Blog Blog blogs))
+      end
+
       assert_raise Mix.Error, ~r/Invalid arguments/, fn ->
         Gen.Json.run(~w(Blog.Post posts))
       end
@@ -33,15 +34,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
     end
   end
 
-  test "name is already defined", config do
-    in_tmp_project config.test, fn ->
-      assert_raise Mix.Error, ~r/already taken/, fn ->
-        Gen.Json.run ~w(DupJsonContext Post dups)
-      end
-    end
-  end
-
-  test "generates json context", config do
+  test "generates json resource", config do
     in_tmp_project config.test, fn ->
       Gen.Json.run(["Blog", "Post", "posts", "title:string"])
 
@@ -70,43 +63,151 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
         assert file =~ "Blog.create_post"
         assert file =~ "Blog.update_post"
         assert file =~ "Blog.delete_post"
+        assert file =~ " post_path(conn"
       end
+
+      assert_receive {:mix_shell, :info, ["""
+
+      Add the resource to your :api scope in lib/phoenix/web/router.ex:
+
+          resources "/posts", PostController, except: [:new, :edit]
+      """]}
     end
   end
 
-  test "with binary_id properly generates controller test", config do
+  test "with json --web namespace generates namedspaced web modules and directories", config do
     in_tmp_project config.test, fn ->
-      with_generator_env [binary_id: true, sample_binary_id: "abcd"], fn ->
-        Gen.Json.run(~w(Blog Post posts))
+      Gen.Json.run(~w(Blog Post posts title:string --web Blog))
 
-        assert_file "test/web/controllers/post_controller_test.exs", fn file ->
-          assert file =~ ~S|post_path(conn, :show, "abcd")|
-        end
+      assert_file "test/web/controllers/blog/post_controller_test.exs", fn file ->
+        assert file =~ "defmodule Phoenix.Web.Blog.PostControllerTest"
+        assert file =~ " blog_post_path(conn"
       end
 
-      with_generator_env [binary_id: true], fn ->
-        Gen.Json.run(~w(Blog Post posts))
+      assert_file "lib/phoenix/web/controllers/blog/post_controller.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.Blog.PostController"
+        assert file =~ "use Phoenix.Web, :controller"
+        assert file =~ " blog_post_path(conn"
+      end
 
-        assert_file "test/web/controllers/post_controller_test.exs", fn file ->
-          assert file =~ ~S|post_path(conn, :show, "11111111-1111-1111-1111-111111111111")|
-        end
+      assert_file "lib/phoenix/web/views/blog/post_view.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.Blog.PostView"
+      end
+
+      assert_receive {:mix_shell, :info, ["""
+
+      Add the resource to your Blog :api scope in lib/phoenix/web/router.ex:
+
+          scope "/blog", Phoenix.Web.Blog do
+            pipe_through :api
+            ...
+            resources "/posts", PostController
+          end
+      """]}
+    end
+  end
+
+  test "with --no-context skips context and schema file generation", config do
+    in_tmp_project config.test, fn ->
+      Gen.Json.run(~w(Blog Comment comments title:string --no-context))
+
+      refute_file "lib/phoenix/blog/blog.ex"
+      refute_file "lib/phoenix/blog/comment.ex"
+      assert Path.wildcard("priv/repo/migrations/*.exs") == []
+
+      assert_file "test/web/controllers/comment_controller_test.exs", fn file ->
+        assert file =~ "defmodule Phoenix.Web.CommentControllerTest"
+      end
+
+      assert_file "lib/phoenix/web/controllers/comment_controller.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.CommentController"
+        assert file =~ "use Phoenix.Web, :controller"
+      end
+
+      assert_file "lib/phoenix/web/views/comment_view.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.CommentView"
       end
     end
   end
 
-  test "plural can't contain a colon" do
-    assert_raise Mix.Error, fn ->
-      Gen.Json.run(~w(Blog Post title:string))
+  test "with --no-schema skips schema file generation", config do
+    in_tmp_project config.test, fn ->
+      Gen.Json.run(~w(Blog Comment comments title:string --no-schema))
+
+      assert_file "lib/phoenix/blog/blog.ex"
+      refute_file "lib/phoenix/blog/comment.ex"
+      assert Path.wildcard("priv/repo/migrations/*.exs") == []
+
+      assert_file "test/web/controllers/comment_controller_test.exs", fn file ->
+        assert file =~ "defmodule Phoenix.Web.CommentControllerTest"
+      end
+
+      assert_file "lib/phoenix/web/controllers/comment_controller.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.CommentController"
+        assert file =~ "use Phoenix.Web, :controller"
+      end
+
+      assert_file "lib/phoenix/web/views/comment_view.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.CommentView"
+      end
     end
   end
 
-  test "plural can't have uppercased characters or camelized format" do
-    assert_raise Mix.Error, fn ->
-      Gen.Json.run(~w(Blog Post Posts title:string))
+  describe "inside umbrella" do
+    test "without context_app generators config uses web dir", config do
+      in_tmp_umbrella_project config.test, fn ->
+        Gen.Json.run(~w(Accounts User users name:string))
+
+        assert_file "lib/phoenix/accounts/accounts.ex"
+        assert_file "lib/phoenix/accounts/user.ex"
+
+        assert_file "lib/phoenix/web/controllers/user_controller.ex", fn file ->
+          assert file =~ "defmodule Phoenix.Web.UserController"
+          assert file =~ "use Phoenix.Web, :controller"
+        end
+
+        assert_file "lib/phoenix/web/views/user_view.ex", fn file ->
+          assert file =~ "defmodule Phoenix.Web.UserView"
+        end
+
+        assert_file "test/web/controllers/user_controller_test.exs", fn file ->
+          assert file =~ "defmodule Phoenix.Web.UserControllerTest"
+        end
+      end
     end
 
-    assert_raise Mix.Error, fn ->
-      Gen.Json.run(~w(Blog Post BlogPosts title:string))
+    test "raises with false context_app", config do
+      in_tmp_umbrella_project config.test, fn ->
+        Application.put_env(:phoenix, :generators, context_app: false)
+        assert_raise Mix.Error, ~r/no context_app configured/, fn ->
+          Gen.Json.run(~w(Accounts User users name:string))
+        end
+      end
+    end
+
+    test "with context_app generators config does not use web dir", config do
+      in_tmp_umbrella_project config.test, fn ->
+        File.mkdir!("another_app")
+        Application.put_env(:phoenix, :generators, context_app: {:another_app, "another_app"})
+
+        Gen.Json.run(~w(Accounts User users name:string))
+
+        assert_file "another_app/lib/another_app/accounts/accounts.ex"
+        assert_file "another_app/lib/another_app/accounts/user.ex"
+
+        assert_file "lib/phoenix/controllers/user_controller.ex", fn file ->
+          assert file =~ "defmodule Phoenix.Web.UserController"
+          assert file =~ "use Phoenix.Web, :controller"
+        end
+
+        assert_file "lib/phoenix/views/user_view.ex", fn file ->
+          assert file =~ "defmodule Phoenix.Web.UserView"
+        end
+
+        assert_file "test/controllers/user_controller_test.exs", fn file ->
+          assert file =~ "defmodule Phoenix.Web.UserControllerTest"
+        end
+      end
     end
   end
 end

@@ -11,7 +11,6 @@ defmodule <%= web_namespace %>.Mixfile do
      elixir: "~> 1.4",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
-     build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      aliases: aliases(),
      deps: deps()]
@@ -22,7 +21,7 @@ defmodule <%= web_namespace %>.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [mod: {<%= web_namespace %>.Application, []},
-     extra_applications: [:logger]]
+     extra_applications: [:logger, :runtime_tools]]
   end
 
   # Specifies which paths to compile per environment.
@@ -38,8 +37,8 @@ defmodule <%= web_namespace %>.Mixfile do
      {:phoenix_ecto, "~> 3.2"},<% end %><%= if html do %>
      {:phoenix_html, "~> 2.6"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},<% end %>
-     {:gettext, "~> 0.11"},
-     {:<%= app_name %>, in_umbrella: true},
+     {:gettext, "~> 0.11"},<%= if app_name != web_app_name do %>
+     {:<%= app_name %>, in_umbrella: true},<% end %>
      {:cowboy, "~> 1.0"}]
   end
 

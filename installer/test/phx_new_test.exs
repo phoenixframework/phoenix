@@ -33,7 +33,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/config/config.exs", fn file ->
         assert file =~ "ecto_repos: [PhxBlog.Repo]"
         refute file =~ "namespace: PhxBlog"
-        refute file =~ "config :phoenix, :generators"
+        refute file =~ "config :phx_blog, :generators"
       end
 
       assert_file "phx_blog/config/prod.exs", fn file ->
@@ -156,7 +156,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_ecto")
 
       assert_file "phx_blog/config/config.exs", fn file ->
-        refute file =~ "config :phoenix, :generators"
+        refute file =~ "config :phx_blog, :generators"
         refute file =~ "ecto_repos:"
       end
 
@@ -207,7 +207,7 @@ defmodule Mix.Tasks.Phx.NewTest do
   test "new with binary_id" do
     in_tmp "new with binary_id", fn ->
       Mix.Tasks.Phx.New.run([@app_name, "--binary-id"])
-      assert_file "phx_blog/config/config.exs", ~r/binary_id: true/
+      assert_file "phx_blog/config/config.exs", ~r/generators: \[binary_id: true\]/
     end
   end
 
@@ -336,7 +336,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
   test "new without args" do
     in_tmp "new without args", fn ->
-      assert capture_io(fn -> Mix.Tasks.Phx.New.run([]) end)
+      assert capture_io(fn -> Mix.Tasks.Phx.New.run([]) end) =~
              "Creates a new Phoenix project."
     end
   end

@@ -1,4 +1,6 @@
 defmodule Mix.Phoenix.Context do
+  @moduledoc false
+
   alias Mix.Phoenix.{Context, Schema}
 
   defstruct name: nil,
@@ -9,23 +11,27 @@ defmodule Mix.Phoenix.Context do
             web_module: nil,
             basename: nil,
             file: nil,
+            test_file: nil,
             dir: nil,
-            opts: [],
-            pre_existing?: false,
-            inputs: []
+            generate?: true,
+            context_app: nil,
+            opts: []
 
   def valid?(context) do
     context =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/
   end
 
   def new(context_name, %Schema{} = schema, opts) do
-    otp_app  = to_string(Mix.Phoenix.otp_app())
-    base     = Module.concat([Mix.Phoenix.base()])
-    module   = Module.concat(base, context_name)
-    alias    = module |> Module.split() |> tl() |> Module.concat()
-    basename = Phoenix.Naming.underscore(context_name)
-    dir      = Path.join(["lib", otp_app, basename])
-    file     = Path.join([dir, basename <> ".ex"])
+    ctx_app   = opts[:context_app] || Mix.Phoenix.context_app()
+    base      = Module.concat([Mix.Phoenix.context_base(ctx_app)])
+    module    = Module.concat(base, context_name)
+    alias     = module |> Module.split() |> tl() |> Module.concat()
+    basename  = Phoenix.Naming.underscore(context_name)
+    dir       = Mix.Phoenix.context_lib_path(ctx_app, basename)
+    test_dir  = Mix.Phoenix.context_app_path(ctx_app, "test")
+    file      = Path.join([dir, basename <> ".ex"])
+    test_file = Path.join([test_dir, basename <> "_test.exs"])
+    generate? = Keyword.get(opts, :context, true)
 
     %Context{
       name: context_name,
@@ -33,79 +39,25 @@ defmodule Mix.Phoenix.Context do
       schema: schema,
       alias: alias,
       base_module: base,
-      web_module: web_module(base),
+      web_module: web_module(),
       basename: basename,
       file: file,
+      test_file: test_file,
       dir: dir,
-      opts: opts,
-      inputs: inputs(schema),
-      pre_existing?: File.exists?(file)}
+      generate?: generate?,
+      context_app: ctx_app,
+      opts: opts}
   end
 
-  defp web_module(base) do
+  def pre_existing?(%Context{file: file}), do: File.exists?(file)
+
+  def pre_existing_tests?(%Context{test_file: file}), do: File.exists?(file)
+
+  defp web_module do
+    base = Module.concat([Mix.Phoenix.base()])
     case base |> Module.split() |> Enum.reverse() do
       ["Web" | _] -> base
       _ -> Module.concat(base, "Web")
     end
-  end
-
-  def inject_schema_access(%Context{} = context, binding, paths) do
-    unless context.pre_existing? do
-      File.mkdir_p!(context.dir)
-      File.write!(context.file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.html/context.ex", binding))
-    end
-    schema_content = Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.html/schema_access.ex", binding)
-
-    context.file
-    |> File.read!()
-    |> String.trim_trailing()
-    |> String.trim_trailing("end")
-    |> EEx.eval_string(binding)
-    |> Kernel.<>(schema_content)
-    |> Kernel.<>("end\n")
-    |> write_context(context)
-
-    context
-  end
-
-  defp write_context(content, context) do
-    File.write!(context.file, content)
-  end
-
-  defp inputs(%Schema{} = schema) do
-    Enum.map(schema.attrs, fn
-      {_, {:array, _}} ->
-        {nil, nil, nil}
-      {_, {:references, _}} ->
-        {nil, nil, nil}
-      {key, :integer} ->
-        {label(key), ~s(<%= number_input f, #{inspect(key)}, class: "form-control" %>), error(key)}
-      {key, :float} ->
-        {label(key), ~s(<%= number_input f, #{inspect(key)}, step: "any", class: "form-control" %>), error(key)}
-      {key, :decimal} ->
-        {label(key), ~s(<%= number_input f, #{inspect(key)}, step: "any", class: "form-control" %>), error(key)}
-      {key, :boolean} ->
-        {label(key), ~s(<%= checkbox f, #{inspect(key)}, class: "checkbox" %>), error(key)}
-      {key, :text} ->
-        {label(key), ~s(<%= textarea f, #{inspect(key)}, class: "form-control" %>), error(key)}
-      {key, :date} ->
-        {label(key), ~s(<%= date_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
-      {key, :time} ->
-        {label(key), ~s(<%= time_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
-      {key, :utc_datetime} ->
-        {label(key), ~s(<%= datetime_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
-      {key, :naive_datetime} ->
-        {label(key), ~s(<%= datetime_select f, #{inspect(key)}, class: "form-control" %>), error(key)}
-      {key, _}  ->
-        {label(key), ~s(<%= text_input f, #{inspect(key)}, class: "form-control" %>), error(key)}
-    end)
-  end
-
-  defp label(key) do
-    ~s(<%= label f, #{inspect(key)}, class: "control-label" %>)
-  end
-
-  defp error(field) do
-    ~s(<%= error_tag f, #{inspect(field)} %>)
   end
 end

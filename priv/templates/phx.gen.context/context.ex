@@ -3,6 +3,6 @@ defmodule <%= inspect context.module %> do
   The boundary for the <%= context.name %> system.
   """
 
-  import Ecto.{Query, Changeset}, warn: false
+  import Ecto.Query, warn: false
   alias <%= inspect schema.repo %>
 end

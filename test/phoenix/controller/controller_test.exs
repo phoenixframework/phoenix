@@ -246,6 +246,10 @@ defmodule Phoenix.Controller.ControllerTest do
       assert_raise ArgumentError, ~r/the :to option in redirect expects a path/, fn ->
         redirect(conn(:get, "/"), to: "//example.com")
       end
+
+      assert_raise ArgumentError, ~r/unsafe/, fn ->
+        redirect(conn(:get, "/"), to: "/\\example.com")
+      end
     end
 
     test "with :external" do
@@ -556,6 +560,11 @@ defmodule Phoenix.Controller.ControllerTest do
 
       conn = build_conn_for_path("/foo?one=1&two=2")
       assert current_path(conn, %{three: 3}) == "/foo?three=3"
+    end
+
+    test "current_path/2 allows custom nested query params" do
+      conn = build_conn_for_path("/")
+      assert current_path(conn, %{foo: %{bar: [:baz], baz: :qux}}) == "/?foo[bar][]=baz&foo[baz]=qux"
     end
 
     test "current_url/1 with root path includes trailing slash" do

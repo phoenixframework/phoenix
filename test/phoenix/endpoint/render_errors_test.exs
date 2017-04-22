@@ -230,4 +230,13 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
       |> render([], fn -> throw :hello end)
     end) == ""
   end
+
+  test "exception page for NoRouteError with plug_status 404" do
+    conn = render(conn(:get, "/"), [], fn ->
+      raise Phoenix.Router.NoRouteError, conn: conn(:get, "/"), router: nil, plug_status: 404
+    end)
+
+    assert conn.status == 404
+    assert conn.resp_body == "Got 404 from error with GET"
+  end
 end

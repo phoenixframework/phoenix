@@ -1,6 +1,6 @@
-defmodule <%= inspect context.web_module %>.<%= inspect schema.alias %>View do
+defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>View do
   use <%= inspect context.web_module %>, :view
-  alias <%= inspect context.web_module %>.<%= inspect schema.alias %>View
+  alias <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>View
 
   def render("index.json", %{<%= schema.plural %>: <%= schema.plural %>}) do
     %{data: render_many(<%= schema.plural %>, <%= inspect schema.alias %>View, "<%= schema.singular %>.json")}

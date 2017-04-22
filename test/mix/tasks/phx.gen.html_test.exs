@@ -1,56 +1,13 @@
 Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 
-defmodule Phoenix.DupContext do
-end
-
 defmodule Mix.Tasks.Phx.Gen.HtmlTest do
   use ExUnit.Case
   import MixHelper
   alias Mix.Tasks.Phx.Gen
-  alias Mix.Phoenix.{Context, Schema}
 
   setup do
     Mix.Task.clear()
     :ok
-  end
-
-  test "new context", config do
-    in_tmp_project config.test, fn ->
-      schema = Schema.new("Blog.Post", "posts", [], [])
-      context = Context.new("Blog", schema, [])
-
-      assert %Context{
-        pre_existing?: false,
-        alias: Blog,
-        base_module: Phoenix,
-        basename: "blog",
-        dir: "lib/phoenix/blog",
-        file: "lib/phoenix/blog/blog.ex",
-        module: Phoenix.Blog,
-        web_module: Phoenix.Web,
-        schema: %Mix.Phoenix.Schema{
-          alias: Post,
-          file: "lib/phoenix/blog/post.ex",
-          human_plural: "Posts",
-          human_singular: "Post",
-          module: Phoenix.Blog.Post,
-          plural: "posts",
-          singular: "post"
-        }} = context
-    end
-  end
-
-  test "new existing context", config do
-    in_tmp_project config.test, fn ->
-      File.mkdir_p!("lib/phoenix/blog")
-      File.write!("lib/phoenix/blog/blog.ex", """
-      defmodule Phoenix.Blog do
-      end
-      """)
-
-      schema = Schema.new("Blog.Post", "posts", [], [])
-      assert %Context{pre_existing?: true} = Context.new("Blog", schema, [])
-    end
   end
 
   test "invalid mix arguments", config do
@@ -77,35 +34,39 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     end
   end
 
-  test "name is already defined", config do
+  test "generates html resource and handles existing contexts", config do
     in_tmp_project config.test, fn ->
-      assert_raise Mix.Error, ~r/already taken/, fn ->
-        Gen.Html.run ~w(DupContext Post dups)
-      end
-    end
-  end
+      Gen.Html.run(~w(Blog Post posts title slug:unique votes:integer cost:decimal
+                      tags:array:text popular:boolean drafted_at:datetime
+                      published_at:utc_datetime deleted_at:naive_datetime
+                      secret:uuid announcement_date:date alarm:time
+                      user_id:references:users))
 
-  test "generates html context and handles existing contexts", config do
-    in_tmp_project config.test, fn ->
-      Gen.Html.run(~w(Blog Post posts slug:unique title:string published_at:datetime))
-
-      assert_file "lib/phoenix/blog/post.ex", fn file ->
-        assert file =~ "field :published_at, :naive_datetime"
-      end
+      assert_file "lib/phoenix/blog/post.ex"
       assert_file "lib/phoenix/blog/blog.ex"
-
       assert_file "test/blog_test.exs", fn file ->
-        assert file =~ "use Phoenix.DataCase"
+        assert file =~ "alarm: ~T[15:01:01.000000]"
+        assert file =~ "announcement_date: ~D[2010-04-17]"
+        assert file =~ "deleted_at: ~N[2010-04-17 14:00:00.000000]"
+        assert file =~ "cost: \"120.5\""
+        assert file =~ "published_at: %DateTime{"
+
+        assert file =~ "assert post.announcement_date == ~D[2011-05-18]"
+        assert file =~ "assert post.deleted_at == ~N[2011-05-18 15:01:01.000000]"
+        assert file =~ "assert post.published_at == %DateTime{"
+        assert file =~ "assert post.alarm == ~T[15:01:01.000000]"
+        assert file =~ "assert post.cost == Decimal.new(\"120.5\")"
       end
 
       assert_file "test/web/controllers/post_controller_test.exs", fn file ->
         assert file =~ "defmodule Phoenix.Web.PostControllerTest"
+        assert file =~ " post_path(conn"
       end
 
       assert [path] = Path.wildcard("priv/repo/migrations/*_create_blog_post.exs")
       assert_file path, fn file ->
         assert file =~ "create table(:blog_posts)"
-        assert file =~ "add :published_at, :naive_datetime"
+        assert file =~ "add :title, :string"
         assert file =~ "create unique_index(:blog_posts, [:slug])"
       end
 
@@ -118,14 +79,43 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "Blog.update_post"
         assert file =~ "Blog.delete_post"
         assert file =~ "Blog.change_post"
+        assert file =~ "redirect(to: post_path(conn"
       end
 
-
-      Gen.Html.run(~w(Blog Comment comments title:string published_at:naive_datetime edited_at:utc_datetime))
-      assert_file "lib/phoenix/blog/comment.ex", fn file ->
-        assert file =~ "field :published_at, :naive_datetime"
-        assert file =~ "field :edited_at, :utc_datetime"
+      assert_file "lib/phoenix/web/views/post_view.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.PostView"
       end
+
+      assert_file "lib/phoenix/web/templates/post/form.html.eex", fn file ->
+        assert file =~ ~s(<%= text_input f, :title, class: "form-control" %>)
+        assert file =~ ~s(<%= number_input f, :votes, class: "form-control" %>)
+        assert file =~ ~s(<%= number_input f, :cost, step: "any", class: "form-control" %>)
+        assert file =~ ~s(<%= checkbox f, :popular, class: "checkbox" %>)
+        assert file =~ ~s(<%= datetime_select f, :drafted_at, class: "form-control" %>)
+        assert file =~ ~s(<%= datetime_select f, :published_at, class: "form-control" %>)
+        assert file =~ ~s(<%= datetime_select f, :deleted_at, class: "form-control" %>)
+        assert file =~ ~s(<%= date_select f, :announcement_date, class: "form-control" %>)
+        assert file =~ ~s(<%= time_select f, :alarm, class: "form-control" %>)
+        assert file =~ ~s(<%= text_input f, :secret, class: "form-control" %>)
+
+        assert file =~ ~s(<%= label f, :title, class: "control-label" %>)
+        assert file =~ ~s(<%= label f, :votes, class: "control-label" %>)
+        assert file =~ ~s(<%= label f, :cost, class: "control-label" %>)
+        assert file =~ ~s(<%= label f, :popular, class: "control-label" %>)
+        assert file =~ ~s(<%= label f, :drafted_at, class: "control-label" %>)
+        assert file =~ ~s(<%= label f, :published_at, class: "control-label" %>)
+        assert file =~ ~s(<%= label f, :deleted_at, class: "control-label" %>)
+        assert file =~ ~s(<%= label f, :announcement_date, class: "control-label" %>)
+        assert file =~ ~s(<%= label f, :alarm, class: "control-label" %>)
+        assert file =~ ~s(<%= label f, :secret, class: "control-label" %>)
+
+        refute file =~ ":tags"
+        refute file =~ ~s(<%= label f, :user_id)
+        refute file =~ ~s(<%= number_input f, :user_id)
+      end
+
+      Gen.Html.run(~w(Blog Comment comments title:string))
+      assert_file "lib/phoenix/blog/comment.ex"
 
       assert_file "test/web/controllers/comment_controller_test.exs", fn file ->
         assert file =~ "defmodule Phoenix.Web.CommentControllerTest"
@@ -134,8 +124,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       assert [path] = Path.wildcard("priv/repo/migrations/*_create_blog_comment.exs")
       assert_file path, fn file ->
         assert file =~ "create table(:blog_comments)"
-        assert file =~ "add :published_at, :naive_datetime"
-        assert file =~ "add :edited_at, :utc_datetime"
+        assert file =~ "add :title, :string"
       end
 
       assert_file "lib/phoenix/web/controllers/comment_controller.ex", fn file ->
@@ -147,43 +136,157 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "Blog.update_comment"
         assert file =~ "Blog.delete_comment"
         assert file =~ "Blog.change_comment"
+        assert file =~ "redirect(to: comment_path(conn"
       end
+
+      assert_receive {:mix_shell, :info, ["""
+
+      Add the resource to your browser scope in lib/phoenix/web/router.ex:
+
+          resources "/posts", PostController
+      """]}
     end
   end
 
-  test "with binary_id properly generates controller test", config do
+  test "with --web namespace generates namedspaced web modules and directories", config do
     in_tmp_project config.test, fn ->
-      with_generator_env [binary_id: true, sample_binary_id: "abcd"], fn ->
-        Gen.Html.run(~w(Blog Post posts))
+      Gen.Html.run(~w(Blog Post posts title:string --web Blog))
 
-        assert_file "test/web/controllers/post_controller_test.exs", fn file ->
-          assert file =~ ~S|post_path(conn, :show, "abcd")|
-        end
+      assert_file "test/web/controllers/blog/post_controller_test.exs", fn file ->
+        assert file =~ "defmodule Phoenix.Web.Blog.PostControllerTest"
+        assert file =~ " blog_post_path(conn"
       end
 
-      with_generator_env [binary_id: true], fn ->
-        Gen.Html.run(~w(Blog Post posts))
+      assert_file "lib/phoenix/web/controllers/blog/post_controller.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.Blog.PostController"
+        assert file =~ "use Phoenix.Web, :controller"
+        assert file =~ "redirect(to: blog_post_path(conn"
+      end
 
-        assert_file "test/web/controllers/post_controller_test.exs", fn file ->
-          assert file =~ ~S|post_path(conn, :show, "11111111-1111-1111-1111-111111111111")|
-        end
+      assert_file "lib/phoenix/web/templates/blog/post/form.html.eex"
+      assert_file "lib/phoenix/web/views/blog/post_view.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.Blog.PostView"
+      end
+
+      assert_receive {:mix_shell, :info, ["""
+
+      Add the resource to your Blog :browser scope in lib/phoenix/web/router.ex:
+
+          scope "/blog", Phoenix.Web.Blog do
+            pipe_through :browser
+            ...
+            resources "/posts", PostController
+          end
+      """]}
+    end
+  end
+
+  test "with --no-context skips context and schema file generation", config do
+    in_tmp_project config.test, fn ->
+      Gen.Html.run(~w(Blog Comment comments title:string --no-context))
+
+      refute_file "lib/phoenix/blog/blog.ex"
+      refute_file "lib/phoenix/blog/comment.ex"
+      assert Path.wildcard("priv/repo/migrations/*.exs") == []
+
+      assert_file "test/web/controllers/comment_controller_test.exs", fn file ->
+        assert file =~ "defmodule Phoenix.Web.CommentControllerTest"
+      end
+
+      assert_file "lib/phoenix/web/controllers/comment_controller.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.CommentController"
+        assert file =~ "use Phoenix.Web, :controller"
+      end
+
+      assert_file "lib/phoenix/web/templates/comment/form.html.eex"
+      assert_file "lib/phoenix/web/views/comment_view.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.CommentView"
       end
     end
   end
 
-  test "plural can't contain a colon" do
-    assert_raise Mix.Error, fn ->
-      Gen.Html.run(~w(Blog Post title:string))
+  test "with --no-schema skips schema file generation", config do
+    in_tmp_project config.test, fn ->
+      Gen.Html.run(~w(Blog Comment comments title:string --no-schema))
+
+      assert_file "lib/phoenix/blog/blog.ex"
+      refute_file "lib/phoenix/blog/comment.ex"
+      assert Path.wildcard("priv/repo/migrations/*.exs") == []
+
+      assert_file "test/web/controllers/comment_controller_test.exs", fn file ->
+        assert file =~ "defmodule Phoenix.Web.CommentControllerTest"
+      end
+
+      assert_file "lib/phoenix/web/controllers/comment_controller.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.CommentController"
+        assert file =~ "use Phoenix.Web, :controller"
+      end
+
+      assert_file "lib/phoenix/web/templates/comment/form.html.eex"
+      assert_file "lib/phoenix/web/views/comment_view.ex", fn file ->
+        assert file =~ "defmodule Phoenix.Web.CommentView"
+      end
     end
   end
 
-  test "plural can't have uppercased characters or camelized format" do
-    assert_raise Mix.Error, fn ->
-      Gen.Html.run(~w(Blog Post Posts title:string))
+  describe "inside umbrella" do
+    test "without context_app generators config uses web dir", config do
+      in_tmp_umbrella_project config.test, fn ->
+        Application.put_env(:phoenix, :generators, context_app: nil)
+        Gen.Html.run(~w(Accounts User users name:string))
+
+        assert_file "lib/phoenix/accounts/accounts.ex"
+        assert_file "lib/phoenix/accounts/user.ex"
+
+        assert_file "lib/phoenix/web/controllers/user_controller.ex", fn file ->
+          assert file =~ "defmodule Phoenix.Web.UserController"
+          assert file =~ "use Phoenix.Web, :controller"
+        end
+
+        assert_file "lib/phoenix/web/templates/user/form.html.eex"
+        assert_file "lib/phoenix/web/views/user_view.ex", fn file ->
+          assert file =~ "defmodule Phoenix.Web.UserView"
+        end
+
+        assert_file "test/web/controllers/user_controller_test.exs", fn file ->
+          assert file =~ "defmodule Phoenix.Web.UserControllerTest"
+        end
+      end
     end
 
-    assert_raise Mix.Error, fn ->
-      Gen.Html.run(~w(Blog Post BlogPosts title:string))
+    test "raises with false context_app", config do
+      in_tmp_umbrella_project config.test, fn ->
+        Application.put_env(:phoenix, :generators, context_app: false)
+        assert_raise Mix.Error, ~r/no context_app configured/, fn ->
+          Gen.Html.run(~w(Accounts User users name:string))
+        end
+      end
+    end
+
+    test "with context_app generators config does not use web dir", config do
+      in_tmp_umbrella_project config.test, fn ->
+        File.mkdir!("another_app")
+        Application.put_env(:phoenix, :generators, context_app: {:another_app, "another_app"})
+
+        Gen.Html.run(~w(Accounts User users name:string))
+
+        assert_file "another_app/lib/another_app/accounts/accounts.ex"
+        assert_file "another_app/lib/another_app/accounts/user.ex"
+
+        assert_file "lib/phoenix/controllers/user_controller.ex", fn file ->
+          assert file =~ "defmodule Phoenix.Web.UserController"
+          assert file =~ "use Phoenix.Web, :controller"
+        end
+
+        assert_file "lib/phoenix/templates/user/form.html.eex"
+        assert_file "lib/phoenix/views/user_view.ex", fn file ->
+          assert file =~ "defmodule Phoenix.Web.UserView"
+        end
+
+        assert_file "test/controllers/user_controller_test.exs", fn file ->
+          assert file =~ "defmodule Phoenix.Web.UserControllerTest"
+        end
+      end
     end
   end
 end

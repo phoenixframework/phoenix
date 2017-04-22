@@ -36,7 +36,7 @@ defmodule Mix.Phoenix do
           if File.exists?(source), do: source
         end) || raise "could not find #{source_file_path} in any of the sources"
 
-      target = Path.join(target_dir, target_file_path)
+      target = join_target_path(target_dir, target_file_path)
 
       case format do
         :text -> Mix.Generator.create_file(target, File.read!(source))
@@ -49,6 +49,13 @@ defmodule Mix.Phoenix do
           end
       end
     end
+  end
+
+  defp join_target_path(_target_dir, "/" <> _ = target_file_path) do
+    target_file_path
+  end
+  defp join_target_path(target_dir, target_file_path) do
+    Path.join(target_dir, target_file_path)
   end
 
   defp to_app_source(path, source_dir) when is_binary(path),
@@ -127,13 +134,27 @@ defmodule Mix.Phoenix do
 
   """
   def base do
-    app = otp_app()
+    app_base(otp_app())
+  end
 
+  @doc """
+  Returns the context module base name based on the configuration value.
+
+      config :my_app
+        namespace: My.App
+
+  """
+  def context_base(ctx_app) do
+    app_base(ctx_app)
+  end
+
+  defp app_base(app) do
     case Application.get_env(app, :namespace, app) do
       ^app -> app |> to_string |> Phoenix.Naming.camelize()
       mod  -> mod |> inspect()
     end
   end
+
 
   @doc """
   Returns the otp app from the Mix project configuration.
@@ -179,31 +200,128 @@ defmodule Mix.Phoenix do
   @doc """
   Returns the web prefix to be used in generated file specs.
   """
-  def web_prefix do
-    app = to_string(otp_app())
-    if in_umbrella?(File.cwd!()) do
-      Path.join("lib", app)
+  def web_path(ctx_app, rel_path \\ "") when is_atom(ctx_app) do
+    this_app = otp_app()
+
+    if ctx_app == this_app do
+      Path.join(["lib", to_string(this_app), "web", rel_path])
     else
-      Path.join(["lib", app, "web"])
+      Path.join(["lib", to_string(this_app), rel_path])
+    end
+  end
+
+  @doc """
+  Returns the contex app path prefix to be used in generated context files.
+  """
+  def context_app_path(ctx_app, rel_path \\ "") when is_atom(ctx_app) do
+    if ctx_app == otp_app() do
+      Path.join([File.cwd!(), rel_path])
+    else
+      Path.join([app_path!(ctx_app, otp_app()), rel_path])
+    end
+  end
+
+  def context_lib_path(ctx_app, rel_path \\ "") when is_atom(ctx_app) do
+    Path.join([app_path!(ctx_app, otp_app()), "lib", to_string(ctx_app), rel_path])
+  end
+
+  @doc """
+  Returns the otp context app.
+  """
+  def context_app do
+    this_app = otp_app()
+
+    case fetch_context_app(this_app) do
+      {:ok, app, _path} -> app
+      :error -> this_app
     end
   end
 
   @doc """
   Returns the test prefix to be used in generated file specs.
   """
-  def test_prefix do
-    if in_umbrella?(File.cwd!()) do
-      "test"
+  def web_test_path(ctx_app) when is_atom(ctx_app) do
+    if ctx_app == otp_app() do
+      Path.join(File.cwd!(), "test/web")
     else
-      "test/web"
+      Path.join(File.cwd!(), "test")
+    end
+  end
+
+  defp fetch_context_app(this_otp_app) do
+    case Application.get_env(this_otp_app, :generators)[:context_app] do
+      nil -> :error
+      false ->
+        Mix.raise """
+        no context_app configured for current application #{this_otp_app}.
+
+        Add the context_app generators config in config.exs, or pass the
+        --context-app option explicitly to the generators. For example:
+
+        via config:
+
+            config :#{this_otp_app}, :generators,
+              context_app: :some_app
+
+        via cli option:
+
+            mix phx.gen.[task] --context-app some_app
+        """
+      {app, _path} -> {:ok, app, app_path!(app, this_otp_app)}
+      app -> {:ok, app, app_path!(app, this_otp_app)}
+    end
+  end
+
+  defp app_path!(this_otp_app, this_otp_app), do: "."
+  defp app_path!(app, this_otp_app) do
+    case Application.get_env(this_otp_app, :generators)[:context_app] do
+      false -> mix_app_path(app, this_otp_app)
+      ^app -> mix_app_path(app, this_otp_app)
+      {^app, path} -> Path.relative_to(path, File.cwd!())
+    end
+  end
+  defp mix_app_path(app, this_otp_app) do
+    case Mix.Project.deps_paths() do
+      %{^app => path} -> Path.relative_to(path, File.cwd!())
+      deps -> Mix.raise """
+        no directory for context_app #{inspect app} found in #{this_otp_app}'s deps.
+
+        Ensure you have listed #{inspect app} as an in_umbrella depenency in mix.exs:
+
+
+            def deps do
+              [...
+                {:#{app}, in_umbrella: true},
+              ]
+            end
+
+        Existing deps:
+
+            #{inspect Map.keys(deps)}
+        """
     end
   end
 
   @doc """
-  Returns the web path of the file in the application.
+  Prompts to continue if any files exist.
   """
-  def web_path(rel_path) do
-    Path.join(web_prefix(), rel_path)
+  def prompt_for_conflicts(generator_files) do
+    file_paths = Enum.map(generator_files, fn {_, _, path} -> path end)
+
+    case Enum.filter(file_paths, &File.exists?(&1)) do
+      [] -> :ok
+      conflicts ->
+        Mix.shell.info"""
+        The following files conflict with new files to be generated:
+
+        #{conflicts |> Enum.map(&"  * #{&1}") |> Enum.join("\n")}
+
+        See the --web option to namespace similarly named resources
+        """
+        unless Mix.shell.yes?("Proceeed with interactive overwrite?") do
+          System.halt()
+        end
+    end
   end
 
   defp web_module(base) do

@@ -1,4 +1,4 @@
-defmodule <%= inspect context.web_module %>.<%= inspect schema.alias %>Controller do
+defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Controller do
   use <%= inspect context.web_module %>, :controller
 
   alias <%= inspect context.module %>
@@ -15,7 +15,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect schema.alias %>Controlle
     with {:ok, %<%= inspect schema.alias %>{} = <%= schema.singular %>} <- <%= inspect context.alias %>.create_<%= schema.singular %>(<%= schema.singular %>_params) do
       conn
       |> put_status(:created)
-      |> put_resp_header("location", <%= schema.singular %>_path(conn, :show, <%= schema.singular %>))
+      |> put_resp_header("location", <%= schema.route_helper %>_path(conn, :show, <%= schema.singular %>))
       |> render("show.json", <%= schema.singular %>: <%= schema.singular %>)
     end
   end

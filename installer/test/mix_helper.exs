@@ -24,12 +24,28 @@ defmodule MixHelper do
   end
 
   def in_tmp_project(which, function) do
+    conf_before = Application.get_env(:phoenix, :generators) || []
     path = Path.join(tmp_path(), to_string(which))
     File.rm_rf! path
     File.mkdir_p! path
     File.cd! path
     File.touch!("mix.exs")
     function.()
+    Application.put_env(:phoenix, :generators, conf_before)
+  end
+
+  def in_tmp_umbrella_project(which, function) do
+    conf_before = Application.get_env(:phoenix, :generators) || []
+    path = Path.join(tmp_path(), to_string(which))
+    apps_path = Path.join(path, "apps")
+    File.rm_rf! path
+    File.mkdir_p! path
+    File.mkdir_p! apps_path
+    File.cd! path
+    File.touch!("mix.exs")
+    File.cd! apps_path
+    function.()
+    Application.put_env(:phoenix, :generators, conf_before)
   end
 
   def in_project(app, path, fun) do
@@ -66,12 +82,11 @@ defmodule MixHelper do
   end
 
   def with_generator_env(new_env, fun) do
-    old = Application.get_env(:phoenix, :generators)
     Application.put_env(:phoenix, :generators, new_env)
     try do
       fun.()
     after
-      Application.put_env(:phoenix, :generators, old)
+      Application.delete_env(:phoenix, :generators)
     end
   end
 

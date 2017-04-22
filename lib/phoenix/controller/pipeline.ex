@@ -88,11 +88,10 @@ defmodule Phoenix.Controller.Pipeline do
           var!(conn_after) = super(var!(conn_before), opts)
           unquote(fallback_ast)
         catch
-          kind, reason ->
+          :error, reason ->
             Phoenix.Controller.Pipeline.__catch__(
-              var!(conn_before), kind, reason, __MODULE__,
-              var!(conn_before).private.phoenix_action,
-              System.stacktrace()
+              var!(conn_before), reason, __MODULE__,
+              var!(conn_before).private.phoenix_action, System.stacktrace()
             )
         end
       end
@@ -130,13 +129,13 @@ defmodule Phoenix.Controller.Pipeline do
   end
 
   @doc false
-  def __catch__(%Plug.Conn{}, :error, :function_clause, controller, action,
+  def __catch__(%Plug.Conn{}, :function_clause, controller, action,
                 [{controller, action, [%Plug.Conn{} = conn | _], _loc} | _] = stack) do
     args = [controller: controller, action: action, params: conn.params]
     reraise Phoenix.ActionClauseError, args, stack
   end
-  def __catch__(%Plug.Conn{} = conn, kind, reason, _controller, _action, _stack) do
-    Plug.Conn.WrapperError.reraise(conn, kind, reason)
+  def __catch__(%Plug.Conn{} = conn, reason, _controller, _action, _stack) do
+    Plug.Conn.WrapperError.reraise(conn, :error, reason)
   end
 
   @doc """

@@ -1,7 +1,7 @@
 defmodule Phoenix.Mixfile do
   use Mix.Project
 
-  @version "1.3.0-rc.0"
+  @version "1.3.0-rc.1"
 
   # TODO v1.4: Update to elixir 1.4 + new application inference
 
@@ -40,7 +40,6 @@ defmodule Phoenix.Mixfile do
      env: [stacktrace_depth: nil,
            template_engines: [],
            format_encoders: [],
-           generators: [],
            filter_parameters: ["password"],
            serve_endpoints: false,
            gzippable_exts: ~w(.js .css .txt .text .html .json .svg)]]
@@ -96,7 +95,6 @@ defmodule Phoenix.Mixfile do
 
      "deployment/deployment.md": [group: "Deployment"],
      "deployment/heroku.md": [group: "Deployment"],
-     "deployment/exrm_releases.md": [group: "Deployment"],
 
      "bonus_guides/upgrading_phoenix.md": [group: "Bonus Guides"],
      "bonus_guides/custom_primary_key.md": [group: "Bonus Guides"],

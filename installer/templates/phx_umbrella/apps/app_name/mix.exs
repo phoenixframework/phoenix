@@ -10,7 +10,6 @@ defmodule <%= app_module %>.Mixfile do
      lockfile: "../../mix.lock",
      elixir: "~> 1.4",
      elixirc_paths: elixirc_paths(Mix.env),
-     build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      aliases: aliases(),
      deps: deps()]
@@ -21,7 +20,7 @@ defmodule <%= app_module %>.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [mod: {<%= app_module %>.Application, []},
-     extra_applications: [:logger]]
+     extra_applications: [:logger, :runtime_tools]]
   end
 
   # Specifies which paths to compile per environment.
@@ -33,7 +32,7 @@ defmodule <%= app_module %>.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [<%= if ecto do %>{:<%= adapter_app %>, ">= 0.0.0"},
-     {:ecto, "~> 2.1-rc"}<% end %>]
+     {:ecto, "~> 2.1"}<% end %>]
   end
 
   # Aliases are shortcuts or tasks specific to the current project.<%= if ecto do %>

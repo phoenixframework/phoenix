@@ -54,7 +54,7 @@ defmodule Phoenix.Controller do
     * `Phoenix.Controller` - functions provided by Phoenix
       to support rendering, and other Phoenix specific behaviour
 
-  IF you want to have functions that manipulate the connection
+  If you want to have functions that manipulate the connection
   without fully implementing the controller, you can import both
   modules directly instead of `use Phoenix.Controller`.
 
@@ -90,8 +90,8 @@ defmodule Phoenix.Controller do
   `plug/2` in controllers supports guards, allowing a developer to configure
   a plug to only run in some particular action:
 
-      plug :authenticate, usernames: ["jose", "eric", "sonny"] when action in [:show, :edit]
-      plug :authenticate, usernames: ["admin"] when action in [:show, :edit] when not action in [:index]
+      plug :authenticate, [usernames: ["jose", "eric", "sonny"]] when action in [:show, :edit]
+      plug :authenticate, [usernames: ["admin"]] when not action in [:index]
 
   The first plug will run only when action is show or edit. The second plug will
   always run, except for the index action.
@@ -405,18 +405,22 @@ defmodule Phoenix.Controller do
 
   defp url(opts) do
     cond do
-      to = opts[:to] ->
-        case to do
-          "//" <> _ -> raise_invalid_url(to)
-          "/" <> _  -> to
-          _         -> raise_invalid_url(to)
-        end
-      external = opts[:external] ->
-        external
-      true ->
-        raise ArgumentError, "expected :to or :external option in redirect/2"
+      to = opts[:to] -> validate_local_url(to)
+      external = opts[:external] -> external
+      true -> raise ArgumentError, "expected :to or :external option in redirect/2"
     end
   end
+  @invalid_local_url_chars ["\\"]
+  defp validate_local_url("//" <> _ = to), do: raise_invalid_url(to)
+  defp validate_local_url("/" <> _ = to) do
+    if String.contains?(to, @invalid_local_url_chars) do
+      raise ArgumentError, "unsafe characters detected for local redirect in URL #{inspect to}"
+    else
+      to
+    end
+  end
+  defp validate_local_url(to), do: raise_invalid_url(to)
+
   @spec raise_invalid_url(term()) :: no_return()
   defp raise_invalid_url(url) do
     raise ArgumentError, "the :to option in redirect expects a path but was #{inspect url}"
@@ -432,7 +436,7 @@ defmodule Phoenix.Controller do
     put_private(conn, :phoenix_view, module)
   end
 
-  def put_view(_conn, _module), do: raise AlreadySentError
+  def put_view(%Plug.Conn{}, _module), do: raise AlreadySentError
 
   @doc """
   Stores the view for rendering if one was not stored yet.
@@ -445,9 +449,7 @@ defmodule Phoenix.Controller do
     update_in conn.private, &Map.put_new(&1, :phoenix_view, module)
   end
 
-  def put_new_view(_conn, _module) do
-    raise Plug.Conn.AlreadySentError
-  end
+  def put_new_view(%Plug.Conn{}, _module), do: raise AlreadySentError
 
   @doc """
   Retrieves the current view.
@@ -492,7 +494,7 @@ defmodule Phoenix.Controller do
     if state in @unsent do
       do_put_layout(conn, layout)
     else
-      raise Plug.Conn.AlreadySentError
+      raise AlreadySentError
     end
   end
 
@@ -548,9 +550,7 @@ defmodule Phoenix.Controller do
     put_private(conn, :phoenix_layout_formats, formats)
   end
 
-  def put_layout_formats(_conn, _formats) do
-    raise Plug.Conn.AlreadySentError
-  end
+  def put_layout_formats(%Plug.Conn{}, _formats), do: raise AlreadySentError
 
   @doc """
   Retrieves current layout formats.
@@ -1101,7 +1101,7 @@ defmodule Phoenix.Controller do
         if format = (q === 1.0 && find_format(exts, accepted)) do
           put_format(conn, format)
         else
-          parse_header_accept(conn, t, [{-q, exts}|acc], accepted)
+          parse_header_accept(conn, t, [{-q, h, exts}|acc], accepted)
         end
       :error ->
         parse_header_accept(conn, t, acc, accepted)
@@ -1112,10 +1112,10 @@ defmodule Phoenix.Controller do
     acc
     |> Enum.sort()
     |> Enum.find_value(&parse_header_accept(conn, &1, accepted))
-    |> Kernel.||(refuse(conn, accepted))
+    |> Kernel.||(refuse(conn, acc, accepted))
   end
 
-  defp parse_header_accept(conn, {_, exts}, accepted) do
+  defp parse_header_accept(conn, {_, _, exts}, accepted) do
     if format = find_format(exts, accepted) do
       put_format(conn, format)
     end
@@ -1148,11 +1148,28 @@ defmodule Phoenix.Controller do
     end
   end
 
-  @spec refuse(term(), term()) :: no_return()
-  defp refuse(_conn, accepted) do
+  @spec refuse(term(), [tuple], [binary]) :: no_return()
+  defp refuse(_conn, given, accepted) do
     raise Phoenix.NotAcceptableError,
-      message: "no supported media type in accept header, expected one of #{inspect accepted}",
-      accepts: accepted
+      accepts: accepted,
+      message: """
+      no supported media type in accept header.
+
+      Expected one of #{inspect accepted} but got the following formats:
+
+        * #{Enum.map_join(given, "\n  ", fn {_, header, exts} ->
+              inspect(header) <> " with extensions: " <> inspect(exts)
+            end)}
+
+      To accept custom formats, register them under the `:mime` library
+      in your config/config.exs file:
+
+          config :mime, :types, %{
+            "application/xml" => ["xml"]
+          }
+
+      And then run `mix deps.clean --build mime` to force it to be recompiled.
+      """
   end
 
   @doc """
@@ -1254,6 +1271,9 @@ defmodule Phoenix.Controller do
       iex> current_path(conn, %{new: "param"})
       "/users/123?new=param"
 
+      iex> current_path(conn, %{filter: %{status: ["draft", "published"})
+      "/users/123?filter[status][]=draft&filter[status][]=published"
+
       iex> current_path(conn, %{})
       "/users/123"
   """
@@ -1264,7 +1284,7 @@ defmodule Phoenix.Controller do
     conn.request_path
   end
   def current_path(%Plug.Conn{} = conn, params) do
-    conn.request_path <> "?" <> URI.encode_query(params)
+    conn.request_path <> "?" <> Plug.Conn.Query.encode(params)
   end
 
   @doc ~S"""
@@ -1281,7 +1301,7 @@ defmodule Phoenix.Controller do
       iex> current_url(conn, %{new: "param"})
       "https://www.example.com/users/123?new=param"
 
-      iex> current_path(conn, %{})
+      iex> current_url(conn, %{})
       "https://www.example.com/users/123"
 
   ## Custom URL Generation
@@ -1299,7 +1319,7 @@ defmodule Phoenix.Controller do
         cur_uri  = Phoenix.Controller.endpoint_module(conn).struct_url()
         cur_path = Phoenix.Controller.current_path(conn, params)
 
-        MyApp.Router.Helpers.url(%URI{cur_uri | scheme: "https}) <> cur_path
+        MyApp.Web.Router.Helpers.url(%URI{cur_uri | scheme: "https}) <> cur_path
       end
 
   Or maybe you have a subdomain based URL for different organizations:
