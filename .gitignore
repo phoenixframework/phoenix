@@ -8,3 +8,5 @@
 /installer/tmp
 
 erl_crash.dump
+
+npm-debug.log
