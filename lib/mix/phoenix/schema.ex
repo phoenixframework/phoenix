@@ -218,6 +218,14 @@ defmodule Mix.Phoenix.Schema do
   end
 
   defp validate_attr!({name, :datetime}), do: validate_attr!({name, :naive_datetime})
+  defp validate_attr!({name, :array}) do
+    Mix.raise """
+    Phoenix generators expect the type of the array to be given to #{name}:array.
+    For example:
+
+        mix phx.gen.schema Post posts settings:array:string
+    """
+  end
   defp validate_attr!({_name, type} = attr) when type in @valid_types, do: attr
   defp validate_attr!({_name, {type, _}} = attr) when type in @valid_types, do: attr
   defp validate_attr!({_, type}) do
@@ -277,17 +285,7 @@ defmodule Mix.Phoenix.Schema do
   defp schema_type(:uuid), do: Ecto.UUID
   defp schema_type(val) do
     if Code.ensure_loaded?(Ecto.Type) and not Ecto.Type.primitive?(val) do
-      case val do
-        :array ->
-          Mix.raise """
-            Phoenix generators expect the type of the array to be given.
-            For example:
-
-                mix phx.gen.schema Post posts settings:array:string
-            """
-        _ ->
-          Mix.raise "Unknown type `#{val}` given to generator"
-      end
+      Mix.raise "Unknown type `#{val}` given to generator"
     else
       val
     end
