@@ -6,7 +6,7 @@
 // channels are multiplexed over the connection.
 // Connect to the server using the `Socket` class:
 //
-//     let socket = new Socket("/ws", {params: {userToken: "123"}})
+//     let socket = new Socket("/socket", {params: {userToken: "123"}})
 //     socket.connect()
 //
 // The `Socket` constructor takes the mount point of the socket,
@@ -442,9 +442,9 @@ export class Socket {
 
   // Initializes the Socket
   //
-  // endPoint - The string WebSocket endpoint, ie, "ws://example.com/ws",
+  // endPoint - The string WebSocket endpoint, ie, "ws://example.com/socket",
   //                                               "wss://example.com"
-  //                                               "/ws" (inherited host & protocol)
+  //                                               "/socket" (inherited host & protocol)
   // opts - Optional configuration
   //   transport - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
   //               Defaults to WebSocket with automatic LongPoll fallback.

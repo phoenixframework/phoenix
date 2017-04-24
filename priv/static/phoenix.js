@@ -25,7 +25,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // channels are multiplexed over the connection.
 // Connect to the server using the `Socket` class:
 //
-//     let socket = new Socket("/ws", {params: {userToken: "123"}})
+//     let socket = new Socket("/socket", {params: {userToken: "123"}})
 //     socket.connect()
 //
 // The `Socket` constructor takes the mount point of the socket,
@@ -137,9 +137,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // based on the local state of metadata. By default, all presence
 // metadata is returned, but a `listBy` function can be supplied to
 // allow the client to select which metadata to use for a given presence.
-// For example, you may have a user online from different devices with a
+// For example, you may have a user online from different devices with
 // a metadata status of "online", but they have set themselves to "away"
-// on another device. In this case, they app may choose to use the "away"
+// on another device. In this case, the app may choose to use the "away"
 // status for what appears on the UI. The example below defines a `listBy`
 // function which prioritizes the first metadata which was registered for
 // each user. This could be the first tab they opened, or the first device
@@ -595,9 +595,9 @@ var Socket = exports.Socket = function () {
 
   // Initializes the Socket
   //
-  // endPoint - The string WebSocket endpoint, ie, "ws://example.com/ws",
+  // endPoint - The string WebSocket endpoint, ie, "ws://example.com/socket",
   //                                               "wss://example.com"
-  //                                               "/ws" (inherited host & protocol)
+  //                                               "/socket" (inherited host & protocol)
   // opts - Optional configuration
   //   transport - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
   //               Defaults to WebSocket with automatic LongPoll fallback.
