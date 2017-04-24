@@ -11,16 +11,18 @@ defmodule Phoenix.Tranports.LongPollSerializerTest do
     test "fastlane!/1 translates `Phoenix.Socket.Broadcast` into 'Phoenix.Socket.Message'" do
       broadcast = %Broadcast{topic: "t", event: "e", payload: "m"}
       assert LongPollSerializer.fastlane!(broadcast) ==
-        %Message{topic: broadcast.topic, event: broadcast.event, payload: broadcast.payload}
+        {:socket_push, :text,
+          %Message{topic: broadcast.topic, event: broadcast.event, payload: broadcast.payload}}
     end
 
     test "encode!/1 encodes `Phoenix.Socket.Message` as JSON" do
       reply = %Reply{topic: "t", payload: "m", ref: "foo", status: "bar"}
       assert LongPollSerializer.encode!(reply) ==
-        %Message{topic: reply.topic,
-                event: "phx_reply",
-                join_ref: "foo",
-                ref: reply.ref, payload: %{status: reply.status, response: reply.payload}}
+        {:socket_push, :text,
+          %Message{topic: reply.topic,
+                  event: "phx_reply",
+                  join_ref: "foo",
+                  ref: reply.ref, payload: %{status: reply.status, response: reply.payload}}}
     end
 
     test "decode!/2 decodes `Phoenix.Socket.Message` from JSON" do
@@ -33,13 +35,13 @@ defmodule Phoenix.Tranports.LongPollSerializerTest do
     test "fastlane!/1 translates `Phoenix.Socket.Broadcast` into 'Phoenix.Socket.Message'" do
       broadcast = %Broadcast{topic: "t", event: "e", payload: "m"}
       assert V2.LongPollSerializer.fastlane!(broadcast) ==
-        %Message{topic: broadcast.topic, event: broadcast.event, payload: broadcast.payload}
+        {:socket_push, :text, Poison.encode!([nil, nil, "t", "e", "m"])}
     end
 
     test "encode!/1 encodes `Phoenix.Socket.Message` as JSON" do
       reply = %Reply{join_ref: "join", topic: "t", payload: "m", ref: "foo", status: "bar"}
       assert V2.LongPollSerializer.encode!(reply) ==
-        ["join", "foo", "t", "phx_reply", %{response: "m", status: "bar"}]
+        {:socket_push, :text, Poison.encode!(["join", "foo", "t", "phx_reply", %{response: "m", status: "bar"}])}
     end
 
     test "decode!/2 decodes `Phoenix.Socket.Message` from JSON" do

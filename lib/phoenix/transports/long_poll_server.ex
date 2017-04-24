@@ -21,9 +21,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
   use GenServer
 
   alias Phoenix.PubSub
-  alias Phoenix.Socket.Transport
-  alias Phoenix.Socket.Broadcast
-  alias Phoenix.Socket.Message
+  alias Phoenix.Socket.{Transport, Broadcast}
 
   @doc """
   Starts the Server.
@@ -57,6 +55,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
                   pubsub_server: socket.endpoint.__pubsub_server__(),
                   priv_topic: priv_topic,
                   last_client_poll: now_ms(),
+                  serializer: socket.serializer,
                   client_ref: nil}
 
         if socket.id, do: PubSub.subscribe(state.pubsub_server, socket.id, link: true)
@@ -141,8 +140,9 @@ defmodule Phoenix.Transports.LongPoll.Server do
     end
   end
 
-  def handle_info(%Message{} = msg, state) do
-    publish_reply(msg, state)
+  def handle_info({:socket_push, :text, encoded}, state) do
+    notify_client_now_available(state)
+    {:noreply, %{state | buffer: [encoded | state.buffer]}}
   end
 
   def terminate(_reason, _state) do
@@ -155,16 +155,18 @@ defmodule Phoenix.Transports.LongPoll.Server do
     do: send(client_ref, msg)
 
   defp publish_reply(msg, state) do
-    msg = state.socket.serializer.encode!(msg)
+    notify_client_now_available(state)
+    {:socket_push, :text, encoded} = state.serializer.encode!(msg)
+    {:noreply, %{state | buffer: [encoded | state.buffer]}}
+  end
 
+  defp notify_client_now_available(state) do
     case state.client_ref do
       {client_ref, ref} ->
         broadcast_from!(state, client_ref, {:now_available, ref})
       nil ->
         :ok
     end
-
-    {:noreply, %{state | buffer: [msg | state.buffer]}}
   end
 
   defp now_ms, do: System.system_time(:milliseconds)

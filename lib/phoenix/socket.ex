@@ -319,12 +319,12 @@ defmodule Phoenix.Socket do
     update_in(conf, [:serializer], fn
       nil -> default
 
-      Phoenix.Transports.LongPollSerializer = serializer->
+      Phoenix.Transports.LongPollSerializer = serializer ->
         warn_serializer_deprecation(name, transport_mod, serializer)
         default
 
 
-      Phoenix.Transports.WebSocketSerializer = serializer->
+      Phoenix.Transports.WebSocketSerializer = serializer ->
         warn_serializer_deprecation(name, transport_mod, serializer)
         default
 
