@@ -36,6 +36,7 @@ defmodule Phoenix.Transports.LongPoll do
   ## Transport callbacks
 
   @behaviour Phoenix.Socket.Transport
+  alias Phoenix.Transports.{V2, LongPollSerializer}
 
   def default_config() do
     [window_ms: 10_000,
@@ -49,16 +50,12 @@ defmodule Phoenix.Transports.LongPoll do
   ## Plug callbacks
 
   @behaviour Plug
-  @plug_parsers Plug.Parsers.init(parsers: [:json], json_decoder: Poison)
 
   import Plug.Conn
-
-  alias Phoenix.Socket.{Message, Transport}
+  alias Phoenix.Socket.Transport
 
   @doc false
-  def init(opts) do
-    opts
-  end
+  def init(opts), do: opts
 
   @doc false
   def call(conn, {endpoint, handler, transport}) do
@@ -113,17 +110,27 @@ defmodule Phoenix.Transports.LongPoll do
 
   # All other requests should fail.
   defp dispatch(conn, _, _, _, _) do
-    conn |> send_resp(:bad_request, "")
+    send_resp(conn, :bad_request, "")
   end
+
+  ## Connection helpers
 
   # force application/json for xdomain clients
   defp parse_json(conn) do
     conn
-    |> put_req_header("content-type", "application/json")
-    |> Plug.Parsers.call(@plug_parsers)
+    |> read_body([])
+    |> decode(serializer(conn.params["vsn"]))
   end
+  defp decode({:ok, body, conn}, serializer) do
+    assign(conn, :message, serializer.decode!(body, []))
+  rescue
+    Phoenix.Socket.InvalidMessageError -> raise Plug.Parsers.ParseError
+  end
+  defp decode(_bad_request, _serializr), do: raise Plug.BadRequestError
 
-  ## Connection helpers
+  defp serializer("1." <> _ = _vsn), do: LongPollSerializer
+  defp serializer("2." <> _ = _vsn), do: V2.LongPollSerializer
+  defp serializer(nil), do: LongPollSerializer
 
   defp new_session(conn, endpoint, handler, transport, opts) do
     serializer = opts[:serializer]
@@ -176,7 +183,7 @@ defmodule Phoenix.Transports.LongPoll do
   end
 
   defp publish(conn, server_ref, endpoint, opts) do
-    msg = Message.from_map!(conn.body_params)
+    msg = conn.assigns.message
 
     case transport_dispatch(endpoint, server_ref, msg, opts) do
       :ok               -> conn |> put_status(:ok) |> status_json(%{})

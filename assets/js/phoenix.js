@@ -473,62 +473,77 @@ export class Channel {
   isLeaving(){ return this.state === CHANNEL_STATES.leaving }
 }
 
-  /** Initializes the Socket
-   *
-   *
-   * For IE8 support use an ES5-shim (https://github.com/es-shims/es5-shim)
-   *
-   * @param {string} endPoint - The string WebSocket endpoint, ie, `"ws://example.com/socket"`,
-   *                                               `"wss://example.com"`
-   *                                               `"/socket"` (inherited host & protocol)
-   * @param {Object} opts - Optional configuration
-   * @param {string} opts.transport - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
-   *
-   * Defaults to WebSocket with automatic LongPoll fallback.
-   * @param {Function} opts.encode - The function to encode outgoing messages.
-   *
-   * Defaults to JSON:
-   *
-   * ```javascript
-   * (payload, callback) => callback(JSON.stringify(payload))
-   * ```
-   *
-   * @param {Function} opts.decode - The function to decode incoming messages.
-   *
-   * Defaults to JSON:
-   *
-   * ```javascript
-   * (payload, callback) => callback(JSON.parse(payload))
-   * ```
-   *
-   * @param {number} opts.timeout - The default timeout in milliseconds to trigger push timeouts.
-   *
-   * Defaults `DEFAULT_TIMEOUT`
-   * @param {number} opts.heartbeatIntervalMs - The millisec interval to send a heartbeat message
-   * @param {number} opts.reconnectAfterMs - The optional function that returns the millsec reconnect interval.
-   *
-   * Defaults to stepped backoff of:
-   *
-   * ```javascript
-   *  function(tries){
-   *    return [1000, 5000, 10000][tries - 1] || 10000
-   *  }
-   * ```
-   * @param {Function} opts.logger - The optional function for specialized logging, ie:
-   * ```javascript
-   * logger: (kind, msg, data) => { console.log(`${kind}: ${msg}`, data) }
-   * ```
-   *
-   * @param {number}  opts.longpollerTimeout - The maximum timeout of a long poll AJAX request.
-   *
-   * Defaults to 20s (double the server long poll timer).
-   *
-   * @param {Object}  opts.params - The optional params to pass when connecting
-   *
-   *
-  */
-export class Socket {
+let Encoder = {
+  encode(msg, callback){
+    let payload = [
+      msg.join_ref, msg.ref, msg.topic, msg.event, msg.payload
+    ]
+    return callback(JSON.stringify(payload))
+  },
 
+  decode(rawPayload, callback){
+    let [join_ref, ref, topic, event, payload] = JSON.parse(rawPayload)
+
+    return callback({join_ref, ref, topic, event, payload})
+  }
+}
+
+
+/** Initializes the Socket
+ *
+ *
+ * For IE8 support use an ES5-shim (https://github.com/es-shims/es5-shim)
+ *
+ * @param {string} endPoint - The string WebSocket endpoint, ie, `"ws://example.com/socket"`,
+ *                                               `"wss://example.com"`
+ *                                               `"/socket"` (inherited host & protocol)
+ * @param {Object} opts - Optional configuration
+ * @param {string} opts.transport - The Websocket Transport, for example WebSocket or Phoenix.LongPoll.
+ *
+ * Defaults to WebSocket with automatic LongPoll fallback.
+ * @param {Function} opts.encode - The function to encode outgoing messages.
+ *
+ * Defaults to JSON:
+ *
+ * ```javascript
+ * (payload, callback) => callback(JSON.stringify(payload))
+ * ```
+ *
+ * @param {Function} opts.decode - The function to decode incoming messages.
+ *
+ * Defaults to JSON:
+ *
+ * ```javascript
+ * (payload, callback) => callback(JSON.parse(payload))
+ * ```
+ *
+ * @param {number} opts.timeout - The default timeout in milliseconds to trigger push timeouts.
+ *
+ * Defaults `DEFAULT_TIMEOUT`
+ * @param {number} opts.heartbeatIntervalMs - The millisec interval to send a heartbeat message
+ * @param {number} opts.reconnectAfterMs - The optional function that returns the millsec reconnect interval.
+ *
+ * Defaults to stepped backoff of:
+ *
+ * ```javascript
+ *  function(tries){
+ *    return [1000, 5000, 10000][tries - 1] || 10000
+ *  }
+ * ```
+ * @param {Function} opts.logger - The optional function for specialized logging, ie:
+ * ```javascript
+ * logger: (kind, msg, data) => { console.log(`${kind}: ${msg}`, data) }
+ * ```
+ *
+ * @param {number}  opts.longpollerTimeout - The maximum timeout of a long poll AJAX request.
+ *
+ * Defaults to 20s (double the server long poll timer).
+ *
+ * @param {Object}  opts.params - The optional params to pass when connecting
+ *
+ *
+*/
+export class Socket {
 
   constructor(endPoint, opts = {}){
     this.stateChangeCallbacks = {open: [], close: [], error: [], message: []}
@@ -537,8 +552,8 @@ export class Socket {
     this.ref                  = 0
     this.timeout              = opts.timeout || DEFAULT_TIMEOUT
     this.transport            = opts.transport || window.WebSocket || LongPoll
-    this.defaultEncoder       = (payload, callback) => callback(JSON.stringify(payload))
-    this.defaultDecoder       = (payload, callback) => callback(JSON.parse(payload))
+    this.defaultEncoder       = Encoder.encode
+    this.defaultDecoder       = Encoder.decode
     if(this.transport !== LongPoll){
       this.encode = opts.encode || this.defaultEncoder
       this.decode = opts.decode || this.defaultDecoder
@@ -777,7 +792,7 @@ export class LongPoll {
 
       switch(status){
         case 200:
-          messages.forEach( msg => this.onmessage({data: JSON.stringify(msg)}) )
+          messages.forEach(msg => this.onmessage({data: msg}))
           this.poll()
           break
         case 204:

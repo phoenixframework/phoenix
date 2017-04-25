@@ -134,7 +134,7 @@ defmodule Phoenix.Integration.LongPollTest do
   """
   def poll(method, path, vsn, params, json \\ nil, headers \\ %{}) do
     headers = Map.merge(%{"content-type" => "application/json"}, headers)
-    body = Poison.encode!(json)
+    body = encode(vsn, json)
     query_str = params |> Map.put("vsn", vsn) |> URI.encode_query()
     url = "http://127.0.0.1:#{@port}#{path}/longpoll?" <> query_str
 
@@ -143,10 +143,10 @@ defmodule Phoenix.Integration.LongPollTest do
     decode_body(vsn, resp)
   end
   defp decode_body(_vsn, %{body: ""} = resp), do: resp
-  defp decode_body("1" <> _vsn, %{} = resp) do
+  defp decode_body("1." <> _, %{} = resp) do
     put_in(resp, [:body], Poison.decode!(resp.body))
   end
-  defp decode_body("2" <> _vsn, %{} = resp) do
+  defp decode_body("2." <> _, %{} = resp) do
     resp
     |> put_in([:body], Poison.decode!(resp.body))
     |> update_in([:body, "messages"], fn
@@ -166,6 +166,13 @@ defmodule Phoenix.Integration.LongPollTest do
     |> Poison.decode!()
   end
 
+  defp encode(_vsn, nil), do: nil
+  defp encode("1." <> _ = _vsn, map), do: Poison.encode!(map)
+  defp encode("2." <> _ = _vsn, map) do
+    Poison.encode!(
+      [map["join_ref"], map["refj"], map["topic"], map["event"], map["payload"]])
+  end
+  defp encode(_, map), do: encode("1.0.0", map)
 
   @doc """
   Joins a long poll socket.
@@ -190,6 +197,7 @@ defmodule Phoenix.Integration.LongPollTest do
       "topic" => topic,
       "event" => "phx_join",
       "ref" => "123",
+      "join_ref" => "123",
       "payload" => payload
     }
     assert resp.body["status"] == 200
@@ -287,9 +295,10 @@ defmodule Phoenix.Integration.LongPollTest do
     end
   end
 
-  for {serializer, vsn} <- [{LongPollSerializer, "1.0.0"},
-                            {V2.LongPollSerializer, "2.0.0"}] do
+  for {serializer, vsn, join_ref} <- [{LongPollSerializer, "1.0.0", nil},
+                                      {V2.LongPollSerializer, "2.0.0", "1"}] do
     @vsn vsn
+    @join_ref join_ref
 
     describe "with #{vsn} serializer #{inspect serializer}" do
       test "refuses connects that error with 403 response" do

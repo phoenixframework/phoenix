@@ -157,6 +157,7 @@ defmodule Phoenix.Transports.LongPoll.Server do
   defp publish_reply(msg, state) do
     notify_client_now_available(state)
     {:socket_push, :text, encoded} = state.serializer.encode!(msg)
+
     {:noreply, %{state | buffer: [encoded | state.buffer]}}
   end
 
