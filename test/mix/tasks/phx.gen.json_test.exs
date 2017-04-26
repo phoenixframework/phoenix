@@ -41,11 +41,11 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
       assert_file "lib/phoenix/blog/post.ex"
       assert_file "lib/phoenix/blog/blog.ex"
 
-      assert_file "test/blog_test.exs", fn file ->
+      assert_file "test/phoenix/blog/blog_test.exs", fn file ->
         assert file =~ "use Phoenix.DataCase"
       end
 
-      assert_file "test/web/controllers/post_controller_test.exs", fn file ->
+      assert_file "test/phoenix/web/controllers/post_controller_test.exs", fn file ->
         assert file =~ "defmodule Phoenix.Web.PostControllerTest"
       end
 
@@ -79,7 +79,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
     in_tmp_project config.test, fn ->
       Gen.Json.run(~w(Blog Post posts title:string --web Blog))
 
-      assert_file "test/web/controllers/blog/post_controller_test.exs", fn file ->
+      assert_file "test/phoenix/web/controllers/blog/post_controller_test.exs", fn file ->
         assert file =~ "defmodule Phoenix.Web.Blog.PostControllerTest"
         assert file =~ " blog_post_path(conn"
       end
@@ -115,7 +115,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
       refute_file "lib/phoenix/blog/comment.ex"
       assert Path.wildcard("priv/repo/migrations/*.exs") == []
 
-      assert_file "test/web/controllers/comment_controller_test.exs", fn file ->
+      assert_file "test/phoenix/web/controllers/comment_controller_test.exs", fn file ->
         assert file =~ "defmodule Phoenix.Web.CommentControllerTest"
       end
 
@@ -138,7 +138,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
       refute_file "lib/phoenix/blog/comment.ex"
       assert Path.wildcard("priv/repo/migrations/*.exs") == []
 
-      assert_file "test/web/controllers/comment_controller_test.exs", fn file ->
+      assert_file "test/phoenix/web/controllers/comment_controller_test.exs", fn file ->
         assert file =~ "defmodule Phoenix.Web.CommentControllerTest"
       end
 
@@ -170,7 +170,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
           assert file =~ "defmodule Phoenix.Web.UserView"
         end
 
-        assert_file "test/web/controllers/user_controller_test.exs", fn file ->
+        assert_file "test/phoenix/web/controllers/user_controller_test.exs", fn file ->
           assert file =~ "defmodule Phoenix.Web.UserControllerTest"
         end
       end
@@ -204,7 +204,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
           assert file =~ "defmodule Phoenix.Web.UserView"
         end
 
-        assert_file "test/controllers/user_controller_test.exs", fn file ->
+        assert_file "test/phoenix/controllers/user_controller_test.exs", fn file ->
           assert file =~ "defmodule Phoenix.Web.UserControllerTest"
         end
       end

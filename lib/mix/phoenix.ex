@@ -225,6 +225,10 @@ defmodule Mix.Phoenix do
     Path.join([app_path!(ctx_app, otp_app()), "lib", to_string(ctx_app), rel_path])
   end
 
+  def context_test_path(ctx_app, rel_path \\ "") when is_atom(ctx_app) do
+    Path.join([app_path!(ctx_app, otp_app()), "test", to_string(ctx_app), rel_path])
+  end
+
   @doc """
   Returns the otp context app.
   """
@@ -240,11 +244,13 @@ defmodule Mix.Phoenix do
   @doc """
   Returns the test prefix to be used in generated file specs.
   """
-  def web_test_path(ctx_app) when is_atom(ctx_app) do
-    if ctx_app == otp_app() do
-      Path.join(File.cwd!(), "test/web")
+  def web_test_path(ctx_app, rel_path \\ "") when is_atom(ctx_app) do
+    this_app = otp_app()
+
+    if ctx_app == this_app do
+      Path.join(["test", to_string(this_app), "web", rel_path])
     else
-      Path.join(File.cwd!(), "test")
+      Path.join(["test", to_string(this_app), rel_path])
     end
   end
 
