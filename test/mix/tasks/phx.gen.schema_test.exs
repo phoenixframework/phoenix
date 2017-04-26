@@ -44,6 +44,14 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
     end
   end
 
+  test "type missing from array", config do
+    in_tmp_project config.test, fn ->
+      assert_raise Mix.Error, ~r/expect the type of the array to be given to settings:array/, fn ->
+        Gen.Schema.run(~w(Blog.Post posts settings:array))
+      end
+    end
+  end
+
   test "plural can't contain a colon" do
     assert_raise Mix.Error, fn ->
       Gen.Schema.run(~w(Blog Post title:string))
