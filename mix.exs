@@ -117,6 +117,7 @@ defmodule Phoenix.Mixfile do
       "bonus_guides/custom_primary_key.md": [group: "Bonus Guides"],
       "bonus_guides/using_mysql.md": [group: "Bonus Guides"],
       "bonus_guides/static_assets.md": [group: "Bonus Guides"],
+      "bonus_guides/mix_tasks.md": [group: "Bonus Guides"],
       "bonus_guides/file_uploads.md": [group: "Bonus Guides"],
       "bonus_guides/sending_email_with_mailgun.md": [group: "Bonus Guides"],
       "bonus_guides/sending_email_with_smtp.md": [group: "Bonus Guides"],
