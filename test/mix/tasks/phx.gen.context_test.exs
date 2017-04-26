@@ -36,7 +36,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
 
       assert String.ends_with?(context.dir, "lib/phoenix/blog")
       assert String.ends_with?(context.file, "lib/phoenix/blog/blog.ex")
-      assert String.ends_with?(context.test_file, "test/blog_test.exs")
+      assert String.ends_with?(context.test_file, "test/phoenix/blog/blog_test.exs")
       assert String.ends_with?(context.schema.file, "lib/phoenix/blog/post.ex")
     end
   end
@@ -54,7 +54,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       assert Context.pre_existing?(context)
       refute Context.pre_existing_tests?(context)
 
-      File.mkdir_p!("test")
+      File.mkdir_p!("test/phoenix/blog")
       File.write!(context.test_file, """
       defmodule Phoenix.BlogTest do
       end
@@ -104,7 +104,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "def change_post"
       end
 
-      assert_file "test/blog_test.exs", fn file ->
+      assert_file "test/phoenix/blog/blog_test.exs", fn file ->
         assert file =~ "use Phoenix.DataCase"
         assert file =~ "describe \"posts\" do"
         assert file =~ "def post_fixture(attrs \\\\ %{})"
@@ -122,7 +122,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "field :title, :string"
       end
 
-      assert_file "test/blog_test.exs", fn file ->
+      assert_file "test/phoenix/blog/blog_test.exs", fn file ->
         assert file =~ "use Phoenix.DataCase"
         assert file =~ "describe \"comments\" do"
         assert file =~ "def comment_fixture(attrs \\\\ %{})"
@@ -161,7 +161,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "raise \"TODO\""
       end
 
-      assert_file "test/blog_test.exs", fn file ->
+      assert_file "test/phoenix/blog/blog_test.exs", fn file ->
         assert file =~ "use Phoenix.DataCase"
         assert file =~ "describe \"posts\" do"
         assert file =~ "def post_fixture(attrs \\\\ %{})"

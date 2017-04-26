@@ -13,12 +13,12 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
   For a regular application:
 
     * a channel in lib/my_app/web/channels
-    * a channel_test in test/web/channels
+    * a channel_test in test/my_app/web/channels
 
   For an umbrella application:
 
     * a channel in lib/my_app/channels
-    * a channel_test in test/channels
+    * a channel_test in test/my_app/channels
 
   """
   use Mix.Task

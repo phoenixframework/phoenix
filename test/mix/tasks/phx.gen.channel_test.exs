@@ -29,7 +29,7 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
         assert file =~ ~S|{:noreply, socket}|
       end
 
-      assert_file "test/web/channels/room_channel_test.exs", fn file ->
+      assert_file "test/phoenix/web/channels/room_channel_test.exs", fn file ->
         assert file =~ ~S|defmodule Phoenix.Web.RoomChannelTest|
         assert file =~ ~S|use Phoenix.Web.ChannelCase|
         assert file =~ ~S|alias Phoenix.Web.RoomChannel|
@@ -60,7 +60,7 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
         assert file =~ ~S|use Phoenix.Web, :channel|
       end
 
-      assert_file "test/web/channels/admin/room_channel_test.exs", fn file ->
+      assert_file "test/phoenix/web/channels/admin/room_channel_test.exs", fn file ->
         assert file =~ ~S|defmodule Phoenix.Web.Admin.RoomChannelTest|
         assert file =~ ~S|use Phoenix.Web.ChannelCase|
         assert file =~ ~S|alias Phoenix.Web.Admin.RoomChannel|

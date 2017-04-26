@@ -44,7 +44,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
       assert_file "lib/phoenix/blog/post.ex"
       assert_file "lib/phoenix/blog/blog.ex"
-      assert_file "test/blog_test.exs", fn file ->
+      assert_file "test/phoenix/blog/blog_test.exs", fn file ->
         assert file =~ "alarm: ~T[15:01:01.000000]"
         assert file =~ "announcement_date: ~D[2010-04-17]"
         assert file =~ "deleted_at: ~N[2010-04-17 14:00:00.000000]"
@@ -58,7 +58,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "assert post.cost == Decimal.new(\"120.5\")"
       end
 
-      assert_file "test/web/controllers/post_controller_test.exs", fn file ->
+      assert_file "test/phoenix/web/controllers/post_controller_test.exs", fn file ->
         assert file =~ "defmodule Phoenix.Web.PostControllerTest"
         assert file =~ " post_path(conn"
       end
@@ -117,7 +117,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       Gen.Html.run(~w(Blog Comment comments title:string))
       assert_file "lib/phoenix/blog/comment.ex"
 
-      assert_file "test/web/controllers/comment_controller_test.exs", fn file ->
+      assert_file "test/phoenix/web/controllers/comment_controller_test.exs", fn file ->
         assert file =~ "defmodule Phoenix.Web.CommentControllerTest"
       end
 
@@ -152,7 +152,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     in_tmp_project config.test, fn ->
       Gen.Html.run(~w(Blog Post posts title:string --web Blog))
 
-      assert_file "test/web/controllers/blog/post_controller_test.exs", fn file ->
+      assert_file "test/phoenix/web/controllers/blog/post_controller_test.exs", fn file ->
         assert file =~ "defmodule Phoenix.Web.Blog.PostControllerTest"
         assert file =~ " blog_post_path(conn"
       end
@@ -189,7 +189,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       refute_file "lib/phoenix/blog/comment.ex"
       assert Path.wildcard("priv/repo/migrations/*.exs") == []
 
-      assert_file "test/web/controllers/comment_controller_test.exs", fn file ->
+      assert_file "test/phoenix/web/controllers/comment_controller_test.exs", fn file ->
         assert file =~ "defmodule Phoenix.Web.CommentControllerTest"
       end
 
@@ -213,7 +213,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       refute_file "lib/phoenix/blog/comment.ex"
       assert Path.wildcard("priv/repo/migrations/*.exs") == []
 
-      assert_file "test/web/controllers/comment_controller_test.exs", fn file ->
+      assert_file "test/phoenix/web/controllers/comment_controller_test.exs", fn file ->
         assert file =~ "defmodule Phoenix.Web.CommentControllerTest"
       end
 
@@ -248,7 +248,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
           assert file =~ "defmodule Phoenix.Web.UserView"
         end
 
-        assert_file "test/web/controllers/user_controller_test.exs", fn file ->
+        assert_file "test/phoenix/web/controllers/user_controller_test.exs", fn file ->
           assert file =~ "defmodule Phoenix.Web.UserControllerTest"
         end
       end
@@ -283,7 +283,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
           assert file =~ "defmodule Phoenix.Web.UserView"
         end
 
-        assert_file "test/controllers/user_controller_test.exs", fn file ->
+        assert_file "test/phoenix/controllers/user_controller_test.exs", fn file ->
           assert file =~ "defmodule Phoenix.Web.UserControllerTest"
         end
       end
