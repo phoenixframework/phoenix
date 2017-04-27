@@ -47,6 +47,9 @@ defmodule Mix.Tasks.Phx.New do
   `phx.gen.html` will no longer work, as important HTML components
   will be missing.
 
+  When no options passed. And there's a file `.phxrc` in the home directory
+  then Phoenix will load the options from there. Each option separated by a newline.
+
   ## Examples
 
       mix phx.new hello_world
