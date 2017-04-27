@@ -168,6 +168,12 @@ defmodule Mix.Tasks.Phx.New do
   defp maybe_cd(path, func), do: path && File.cd!(path, func)
 
   defp parse_opts(argv) do
+    if phxrc_exist?() and Enum.count(argv) < 2 do
+      {:ok, phxrc} = File.read(Path.expand("~/.phxrc"))
+      opts = phxrc |> String.trim |> String.split("\n")
+      argv = argv ++ opts
+      IO.puts("Using #{phxrc} from #{Path.expand("~/.phxrc")}")
+    end
     case OptionParser.parse(argv, strict: @switches) do
       {opts, argv, []} ->
         {opts, argv}
@@ -177,6 +183,7 @@ defmodule Mix.Tasks.Phx.New do
   end
   defp switch_to_string({name, nil}), do: name
   defp switch_to_string({name, val}), do: name <> "=" <> val
+  defp phxrc_exist?(), do: File.exists?(Path.expand("~/.phxrc"))
 
   defp install_brunch(install?) do
     maybe_cmd "cd assets && npm install && node node_modules/.bin/brunch build",
