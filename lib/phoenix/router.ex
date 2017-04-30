@@ -378,7 +378,7 @@ defmodule Phoenix.Router do
 
       match(:*, "/any", SomeController, :any)
   """
-  defmacro match(verb, path, plug, plug_opts, options \\ []) do
+  defmacro match(verb, path, plug, plug_opts \\ [], options \\ []) do
     add_route(:match, verb, path, plug, plug_opts, options)
   end
 
@@ -386,7 +386,7 @@ defmodule Phoenix.Router do
     @doc """
     Generates a route to handle a #{verb} request to the given path.
     """
-    defmacro unquote(verb)(path, plug, plug_opts, options \\ []) do
+    defmacro unquote(verb)(path, plug, plug_opts \\ [], options \\ []) do
       verb = unquote(verb)
       quote bind_quoted: binding() do
         match(verb, path, plug, plug_opts, options)
@@ -394,7 +394,7 @@ defmodule Phoenix.Router do
     end
   end
 
-  defp add_route(kind, verb, path, plug, plug_opts, options) do
+  defp add_route(kind, verb, path, plug, plug_opts \\ [], options) do
     quote do
       @phoenix_routes Scope.route(__MODULE__, unquote(kind), unquote(verb), unquote(path),
                                   unquote(plug), unquote(plug_opts), unquote(options))
