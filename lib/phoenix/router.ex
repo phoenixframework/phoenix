@@ -131,11 +131,11 @@ defmodule Phoenix.Router do
         resources "/users", UserController, except: [:delete]
       end
 
-  Finally, Phoenix ships with a `mix phoenix.routes` task that nicely
+  Finally, Phoenix ships with a `mix phx.routes` task that nicely
   formats all routes in a given router. We can use it to verify all
   routes included in the router above:
 
-      $ mix phoenix.routes
+      $ mix phx.routes
       page_path  GET    /pages/:id       PageController.show/2
       user_path  GET    /users           UserController.index/2
       user_path  GET    /users/:id/edit  UserController.edit/2
@@ -147,7 +147,7 @@ defmodule Phoenix.Router do
 
   One can also pass a router explicitly as an argument to the task:
 
-      $ mix phoenix.routes MyApp.Web.Router
+      $ mix phx.routes MyApp.Web.Router
 
   Check `scope/2` and `resources/4` for more information.
 

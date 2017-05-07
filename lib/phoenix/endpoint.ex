@@ -109,7 +109,7 @@ defmodule Phoenix.Endpoint do
     * `:cache_static_manifest` - a path to a json manifest file that contains
       static files and their digested version. This is typically set to
       "priv/static/cache_manifest.json" which is the file automatically generated
-      by `mix phoenix.digest`.
+      by `mix phx.digest`.
 
     * `:check_origin` - configure transports to check origins or not. May
       be false, true or a list of hosts that are allowed. Hosts also support
@@ -145,7 +145,7 @@ defmodule Phoenix.Endpoint do
       Defaults to `nil` as it must be set per application.
 
     * `:server` - when `true`, starts the web server when the endpoint
-      supervision tree starts. Defaults to `false`. The `mix phoenix.server`
+      supervision tree starts. Defaults to `false`. The `mix phx.server`
       task automatically sets this to `true`.
 
     * `:url` - configuration for generating URLs throughout the app.
