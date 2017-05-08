@@ -256,7 +256,7 @@ class Push {
     this.timeoutTimer = null
   }
 
-  startTimeout(){ if(this.timeoutTimer){ return }
+  startTimeout(){ if(this.timeoutTimer){ this.cancelTimeout() }
     this.ref      = this.channel.socket.makeRef()
     this.refEvent = this.channel.replyEventName(this.ref)
 
