@@ -24,7 +24,7 @@ config :<%= app_name %>, <%= app_module %>.Endpoint,
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
-  watchers: <%= if brunch do %>[node: ["node_modules/.bin/brunch", "watch", "--stdin",
+  watchers: <%= if brunch do %>[node: ["node_modules/brunch/bin/brunch", "watch", "--stdin",
                     cd: Path.expand("../", __DIR__)]]<% else %>[]<% end %>
 
 

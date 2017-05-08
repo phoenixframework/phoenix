@@ -323,7 +323,7 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   defp install_brunch(install?) do
-    maybe_cmd "npm install && node node_modules/.bin/brunch build",
+    maybe_cmd "npm install && node node_modules/brunch/bin/brunch build",
               File.exists?("brunch-config.js"), install? && System.find_executable("npm")
   end
 
