@@ -90,7 +90,7 @@ defmodule Phoenix.Presence do
         users = query |> Repo.all |> Enum.into(%{})
 
         for {key, %{metas: metas}} <- entries, into: %{} do
-          {key, %{metas: metas, user: users[key]}}
+          {key, %{metas: metas, user: users[String.to_integer(key)]}}
         end
       end
 
