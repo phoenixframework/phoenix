@@ -51,11 +51,12 @@ defmodule Phoenix.Presence do
         end
       end
 
-  In the example above, `Presence.track` is used to register this
-  channel's process as a presence for the socket's user ID, with
-  a map of metadata. Next, the current presence information for
+  In the example above, the current presence information for
   the socket's topic is pushed to the client as a `"presence_state"` event.
-
+  Next, `Presence.track` is used to register this
+  channel's process as a presence for the socket's user ID, with
+  a map of metadata. 
+  
   Finally, a diff of presence join and leave events will be sent to the
   client as they happen in real-time with the "presence_diff" event.
   The diff structure will be a map of `:joins` and `:leaves` of the form:
