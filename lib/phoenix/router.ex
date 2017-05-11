@@ -538,6 +538,28 @@ defmodule Phoenix.Router do
 
       resources "/account", AccountController, only: [:show], singleton: true
 
+  ## Nested Resources
+
+  The `controller` param can be passed as a block. This is helpful for nesting
+  children resources within their parents to generate nested routes.
+
+  The given definition:
+
+      resources "/users", UserController do
+        resources "/posts", PostController
+      end
+
+  will include the following routes:
+
+      user_post_path  GET     /users/:user_id/posts           PostController :index
+      user_post_path  GET     /users/:user_id/posts/:id/edit  PostController :edit
+      user_post_path  GET     /users/:user_id/posts/new       PostController :new
+      user_post_path  GET     /users/:user_id/posts/:id       PostController :show
+      user_post_path  POST    /users/:user_id/posts           PostController :create
+      user_post_path  PATCH   /users/:user_id/posts/:id       PostController :update
+                      PUT     /users/:user_id/posts/:id       PostController :update
+      user_post_path  DELETE  /users/:user_id/posts/:id       PostController :delete
+
   """
   defmacro resources(path, controller, opts, do: nested_context) do
     add_resources path, controller, opts, do: nested_context
