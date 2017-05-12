@@ -276,7 +276,9 @@ defmodule Phoenix.ConnTest do
   defdelegate get_flash(conn, key), to: Phoenix.Controller
 
   @doc """
-  Puts the given value under key in the flash storage.
+  Puts the given value under key in the flash storage. The value
+  can be any term so if you need more than one message under a
+  key a list may be used.
   """
   @spec put_flash(Conn.t, term, term) :: Conn.t
   defdelegate put_flash(conn, key, value), to: Phoenix.Controller
