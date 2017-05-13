@@ -231,22 +231,57 @@ defmodule Phoenix.Template do
   @doc """
   Returns the format encoder for the given template name.
   """
-  @spec format_encoder(name) :: module | nil
-  def format_encoder(template_name) when is_binary(template_name) do
-    Map.get(compiled_format_encoders(), Path.extname(template_name))
+  @spec format_encoder(otp_app :: atom, name) :: module | nil
+  def format_encoder(otp_app, template_name) when is_binary(template_name) do
+    Map.get(compiled_encoders(otp_app), Path.extname(template_name))
   end
 
-  defp compiled_format_encoders do
-    case Application.fetch_env(:phoenix, :compiled_format_encoders) do
-      {:ok, encoders} ->
+  @spec format_encoder(name) :: module | nil
+  def format_encoder(template_name) when is_binary(template_name) do
+    Map.get(deprecated_compiled_format_encoders(), Path.extname(template_name))
+  end
+
+  defp compiled_encoders(otp_app) do
+    case Application.fetch_env(otp_app, :phx_compiled_format_encoders) do
+      {:ok, encoders} -> encoders
+      :error ->
+        configured_encoders =
+          Application.get_env(otp_app, :format_encoders, []) ++ deprecated_encoders()
+
+        encoders =
+          @encoders
+          |> Keyword.merge(configured_encoders)
+          |> Enum.filter(fn {_, v} -> v end)
+          |> Enum.into(%{}, fn {k, v} -> {".#{k}", v} end)
+        Application.put_env(otp_app, :phx_compiled_format_encoders, encoders)
         encoders
+    end
+  end
+
+  defp deprecated_encoders() do
+    case raw_config(:format_encoders) do
+      [] -> []
+      existing ->
+        IO.write :stderr, """
+        [warn] global format_encoders configuration is deprecated.
+        configure your format_encoders on your individual applications. For example:
+
+            config :my_app, format_encoders: [json: Poison]
+        """
+        existing
+    end
+  end
+
+  defp deprecated_compiled_format_encoders do
+    case Application.fetch_env(:phoenix, :deprecated_compiled_format_encoders) do
+      {:ok, encoders} -> encoders
       :error ->
         encoders =
           @encoders
-          |> Keyword.merge(raw_config(:format_encoders))
+          |> Keyword.merge(deprecated_encoders())
           |> Enum.filter(fn {_, v} -> v end)
           |> Enum.into(%{}, fn {k, v} -> {".#{k}", v} end)
-        Application.put_env(:phoenix, :compiled_format_encoders, encoders)
+        Application.put_env(:phoenix, :deprecated_compiled_format_encoders, encoders)
         encoders
     end
   end

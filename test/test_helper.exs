@@ -11,6 +11,8 @@ end
 # Used whenever a router fails. We default to simply
 # rendering a short string.
 defmodule Phoenix.ErrorView do
+  def __otp_app__(), do: :phoenix
+
   def render("404.json", %{kind: kind, reason: _reason, stack: _stack, conn: conn}) do
     %{error: "Got 404 from #{kind} with #{conn.method}"}
   end

@@ -254,9 +254,10 @@ defmodule Phoenix.Transports.LongPoll do
   defp status_json(conn, data) do
     status = Plug.Conn.Status.code(conn.status || 200)
     data   = Map.put(data, :status, status)
+
     conn
-    |> put_status(200)
-    |> Phoenix.Controller.json(data)
+    |> put_resp_header("content-type", "application/json")
+    |> send_resp(200, Poison.encode_to_iodata!(data))
   end
 
   defp code_reload(conn, opts, endpoint) do

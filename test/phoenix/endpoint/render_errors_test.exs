@@ -5,6 +5,8 @@ defmodule Phoenix.Endpoint.RenderErrorsTest do
 
   view = __MODULE__
 
+  def __otp_app__(), do: :phoenix
+
   def render("app.html", %{view_template: view_template} = assigns) do
     "Layout: " <> render(view_template, assigns)
   end
