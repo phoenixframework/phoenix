@@ -179,7 +179,7 @@ iex> HelloPhoenix.Router.Helpers.page_path(HelloPhoenix.Endpoint, :index)
 "/"
 ```
 
-This is significant because we can use the `page_path` function in a template to link to the root of our application. Note: If that function invocation seems uncomfortably long, there is a solution, including `import HelloPhoenix.Router.Helpers` in our main application view.
+This is significant because we can use the `page_path` function in a template to link to the root of our application. We can then use this helper in our templates:
 
 ```html
 <a href="<%= page_path(@conn, :index) %>">To the Welcome Page!</a>
