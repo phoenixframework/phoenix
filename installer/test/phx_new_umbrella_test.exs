@@ -162,12 +162,12 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
 
       # Instructions
-      assert_received {:mix_shell, :info, ["\nWe are all set!" <> _ = msg]}
+      assert_received {:mix_shell, :info, ["\nWe are almost there" <> _ = msg]}
       assert msg =~ "$ cd phx_umb"
-      assert msg =~ "$ mix phx.server"
+      assert msg =~ "$ mix deps.get"
 
-      assert_received {:mix_shell, :info, ["Before moving on, configure your database in apps/#{@app}/config/dev.exs" <> _ = msg]}
-      assert msg =~ "$ mix ecto.create"
+      assert_received {:mix_shell, :info, ["Then configure your database in apps/phx_umb/config/dev.exs" <> _]}
+      assert_received {:mix_shell, :info, ["Start your Phoenix app" <> _]}
 
       # Channels
       assert File.exists?(web_path(@app, "/lib/#{@app}_web/channels"))
@@ -507,11 +507,12 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
 
         # Instructions
-        assert_received {:mix_shell, :info, ["\nWe are all set!" <> _ = msg]}
+        assert_received {:mix_shell, :info, ["\nWe are almost there" <> _ = msg]}
         assert msg =~ "$ cd another"
-        assert msg =~ "$ mix phx.server"
+        assert msg =~ "$ mix deps.get"
 
-        refute_received {:mix_shell, :info, ["Before moving on, configure your database" <> _]}
+        refute_received {:mix_shell, :info, ["Then configure your database" <> _]}
+        assert_received {:mix_shell, :info, ["Start your Phoenix app" <> _]}
 
         # Channels
         assert File.exists?("another/lib/another/channels")

@@ -35,13 +35,11 @@ defmodule Mix.Tasks.Phx.New.EctoTest do
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
 
       # Instructions
-      assert_received {:mix_shell, :info, ["\nWe are all set!" <> _ = msg]}
+      assert_received {:mix_shell, :info, ["\nWe are almost there" <> _ = msg]}
       assert msg =~ "$ cd phx_ecto"
-      assert msg =~ "$ iex -S mix"
-      refute msg =~ "$ phx.server"
+      assert msg =~ "$ mix deps.get"
 
-      assert_received {:mix_shell, :info, ["Before moving on" <> _]}
+      assert_received {:mix_shell, :info, ["Then configure your database in config/dev.exs" <> _]}
     end
   end
-
 end

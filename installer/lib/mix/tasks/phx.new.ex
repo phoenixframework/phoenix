@@ -74,7 +74,7 @@ defmodule Mix.Tasks.Phx.New do
   official [Elixir guide](http://elixir-lang.org/getting-started/mix-otp/dependencies-and-umbrella-apps.html#umbrella-projects)
   """
   use Mix.Task
-  alias Phx.New.{Generator, Project, Single, Umbrella, Web}
+  alias Phx.New.{Generator, Project, Single, Umbrella, Web, Ecto}
 
   @version Mix.Project.config[:version]
   @shortdoc "Creates a new Phoenix v#{@version} application using the experimental generators"
@@ -123,46 +123,39 @@ defmodule Mix.Tasks.Phx.New do
     project
   end
 
-  defp prompt_to_install_deps(%Project{} = project, Phx.New.Ecto = generator) do
-    install? = Mix.shell.yes?("\nFetch and install dependencies?")
-
-    maybe_cd(project.project_path, fn ->
-      extra_instructions =
-        if install_mix(install?) do
-          cmd("mix deps.compile")
-          []
-        else
-          ["$ mix deps.get"]
-        end
-
-      print_mix_info(project.project_path, extra_instructions, generator)
-      print_ecto_info(project, generator)
-    end)
-  end
   defp prompt_to_install_deps(%Project{} = project, generator) do
     install? = Mix.shell.yes?("\nFetch and install dependencies?")
-    starting_dir = File.cwd!()
 
     maybe_cd(project.project_path, fn ->
-      mix? = install_mix(install?)
+      mix_pending =
+        install_mix(install?)
 
-      maybe_cd(project.web_path, fn ->
-        {extra, compile} =
-          if mix? do
-            {[], Task.async(fn -> cmd("mix deps.compile") end)}
-          else
-            {["$ mix deps.get"], Task.async(fn -> :ok end)}
+      brunch_pending =
+        maybe_cd(project.web_path, fn ->
+          compile =
+            case mix_pending do
+              [] -> Task.async(fn -> cmd("mix deps.compile") end)
+              _  -> Task.async(fn -> :ok end)
+            end
+
+          brunch_pending = install_brunch(install?)
+          Task.await(compile, :infinity)
+
+          if Project.brunch?(project) and !System.find_executable("npm") do
+            print_brunch_info(project, generator)
           end
 
-        installed_brunch? = Project.brunch?(project) && install_brunch(install?)
-        Task.await(compile, :infinity)
+          brunch_pending
+        end)
 
-        print_mix_info(project.project_path, extra, generator)
-        if Project.ecto?(project), do: print_ecto_info(project, generator)
-        if Project.brunch?(project) && not installed_brunch? do
-          print_brunch_info(project, starting_dir, generator)
-        end
-      end)
+      pending = mix_pending ++ (brunch_pending || [])
+      print_missing_commands(pending, project.project_path)
+
+      if Project.ecto?(project) do
+        print_ecto_info(project, generator)
+      end
+
+      print_mix_info(generator)
     end)
   end
   defp maybe_cd(path, func), do: path && File.cd!(path, func)
@@ -187,32 +180,38 @@ defmodule Mix.Tasks.Phx.New do
     maybe_cmd "mix deps.get", true, install? && Code.ensure_loaded?(Hex)
   end
 
-  defp print_brunch_info(%Project{}, _starting_dir, Phx.New.Ecto), do: nil
-  defp print_brunch_info(%Project{} = project, starting_dir, _gen) do
-    rel_path =
-      project.web_path
-      |> Path.relative_to(starting_dir)
-      |> Path.relative_to(project.project_path)
-
+  defp print_brunch_info(_project, _gen) do
     Mix.shell.info """
-
     Phoenix uses an optional assets build tool called brunch.io
     that requires node.js and npm. Installation instructions for
     node.js, which includes npm, can be found at http://nodejs.org.
 
-    After npm is installed, install your brunch dependencies by
-    running the following command inside ./#{rel_path}:
-
-        $ cd assets && npm install
-
+    The command listed next expect that you have npm available.
     If you don't want brunch.io, you can re-run this generator
     with the --no-brunch option.
     """
-    nil
   end
 
-  defp print_ecto_info(%Project{}, Web), do: nil
-  defp print_ecto_info(%Project{app_path: nil}, _gen), do: nil
+  defp print_missing_commands([], path) do
+    Mix.shell.info """
+
+    We are all set! Go into your application by running:
+
+        $ cd #{relative_app_path(path)}
+    """
+  end
+  defp print_missing_commands(commands, path) do
+    steps = ["$ cd #{relative_app_path(path)}" | commands]
+    Mix.shell.info """
+
+    We are almost there! The following steps are missing:
+
+        #{Enum.join(steps, "\n    ")}
+    """
+  end
+
+  defp print_ecto_info(%Project{}, Web), do: :ok
+  defp print_ecto_info(%Project{app_path: nil}, _gen), do: :ok
   defp print_ecto_info(%Project{app_path: app_path} = project, _gen) do
     config_path =
       app_path
@@ -220,35 +219,28 @@ defmodule Mix.Tasks.Phx.New do
       |> Path.relative_to(project.project_path)
 
     Mix.shell.info """
-    Before moving on, configure your database in #{config_path} and run:
+    Then configure your database in #{config_path} and run:
 
         $ mix ecto.create
     """
   end
 
-  defp print_mix_info(path, extra, gen) when gen in [Umbrella, Single, Web] do
-    steps = ["$ cd #{relative_app_path(path)}"] ++ extra ++ ["$ mix phx.server"]
-
+  defp print_mix_info(gen) when gen in [Ecto] do
     Mix.shell.info """
+    You can run your app inside IEx (Interactive Elixir) as:
 
-    We are all set! Run your Phoenix application:
+        $ iex -S mix
+    """
+  end
+  defp print_mix_info(_gen) do
+    Mix.shell.info """
+    Start your Phoenix app with:
 
-        #{Enum.join(steps, "\n    ")}
+        $ mix phx.server
 
     You can also run your app inside IEx (Interactive Elixir) as:
 
         $ iex -S mix phx.server
-    """
-  end
-  defp print_mix_info(path, extra, gen) when gen in [Phx.New.Ecto] do
-    steps = ["$ cd #{relative_app_path(path)}"] ++ extra ++ ["$ iex -S mix"]
-
-    Mix.shell.info """
-
-    We are all set! You can run your app inside IEx (Interactive Elixir) as:
-
-        #{Enum.join(steps, "\n    ")}
-
     """
   end
   defp relative_app_path(path) do
@@ -264,11 +256,10 @@ defmodule Mix.Tasks.Phx.New do
     cond do
       should_run? && can_run? ->
         cmd(cmd)
-        true
       should_run? ->
-        false
+        ["$ #{cmd}"]
       true ->
-        true
+        []
     end
   end
 
@@ -276,11 +267,10 @@ defmodule Mix.Tasks.Phx.New do
     Mix.shell.info [:green, "* running ", :reset, cmd]
     case Mix.shell.cmd(cmd, quiet: true) do
       0 ->
-        true
+        []
       _ ->
-        Mix.shell.error [:red, "* error ", :reset, "command failed to execute, " <>
-          "please run the following command again after installation:\n\n    #{cmd}"]
-        false
+        Mix.shell.error [:red, "* error ", :reset, "command failed to execute"]
+        ["$ #{cmd}"]
     end
   end
 

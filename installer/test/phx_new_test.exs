@@ -114,12 +114,12 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
 
       # Instructions
-      assert_received {:mix_shell, :info, ["\nWe are all set!" <> _ = msg]}
+      assert_received {:mix_shell, :info, ["\nWe are almost there" <> _ = msg]}
       assert msg =~ "$ cd phx_blog"
-      assert msg =~ "$ mix phx.server"
+      assert msg =~ "$ mix deps.get"
 
-      assert_received {:mix_shell, :info, ["Before moving on," <> _ = msg]}
-      assert msg =~ "$ mix ecto.create"
+      assert_received {:mix_shell, :info, ["Then configure your database in config/dev.exs" <> _]}
+      assert_received {:mix_shell, :info, ["Start your Phoenix app" <> _]}
 
       # Channels
       assert File.exists?("phx_blog/lib/phx_blog/web/channels")

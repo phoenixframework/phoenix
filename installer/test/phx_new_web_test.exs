@@ -42,11 +42,11 @@ defmodule Mix.Tasks.Phx.New.WebTest do
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
 
       # Instructions
-      assert_received {:mix_shell, :info, ["\nWe are all set!" <> _ = msg]}
+      assert_received {:mix_shell, :info, ["\nWe are almost there" <> _ = msg]}
       assert msg =~ "$ cd phx_web"
-      assert msg =~ "$ mix phx.server"
+      assert msg =~ "$ mix deps.get"
 
-      refute_received {:mix_shell, :info, ["Before moving on" <> _]}
+      assert_received {:mix_shell, :info, ["Start your Phoenix app" <> _]}
     end
   end
 end
