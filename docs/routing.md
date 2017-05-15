@@ -224,7 +224,7 @@ iex> user_path(Endpoint, :show, 17, admin: true, active: false)
 "/users/17?admin=true&active=false"
 ```
 
-What if we need a full url instead of a path? Just replace `_path` by `_url`:
+What if we need a full url instead of a path? Just replace `_path` with `_url`:
 
 ```elixir
 iex(3)> user_url(Endpoint, :index)
