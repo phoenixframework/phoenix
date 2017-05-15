@@ -166,21 +166,21 @@ defmodule Phoenix.Endpoint.Supervisor do
   Builds the host for caching.
   """
   def host(endpoint) do
-    {:cache, host_to_binary(endpoint.config(:url)[:host])}
+    {:cache, host_to_binary(endpoint.config(:url)[:host] || "localhost")}
   end
 
   @doc """
   Builds the path for caching.
   """
   def path(endpoint) do
-    {:cache, empty_string_if_root(endpoint.config(:url)[:path])}
+    {:cache, empty_string_if_root(endpoint.config(:url)[:path] || "/")}
   end
 
   @doc """
   Builds the script_name for caching.
   """
   def script_name(endpoint) do
-    {:cache, Plug.Router.Utils.split(endpoint.config(:url)[:path])}
+    {:cache, Plug.Router.Utils.split(endpoint.config(:url)[:path] || "/")}
   end
 
   @doc """
@@ -204,7 +204,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     url    = endpoint.config(:url)
     struct = build_url(endpoint, url)
     {:cache,
-      case url[:path] do
+      case url[:path] || "/" do
         "/"  -> struct
         path -> %{struct | path: path}
       end}
@@ -226,7 +226,7 @@ defmodule Phoenix.Endpoint.Supervisor do
       end
 
     scheme = url[:scheme] || scheme
-    host   = host_to_binary(url[:host])
+    host   = host_to_binary(url[:host] || "localhost")
     port   = port_to_integer(url[:port] || port)
 
     %URI{scheme: scheme, port: port, host: host}
@@ -280,8 +280,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     warmup_static(endpoint)
     :ok
   rescue
-    _ ->
-      :ok
+    _ -> :ok
   end
 
   defp warmup_url(endpoint) do
