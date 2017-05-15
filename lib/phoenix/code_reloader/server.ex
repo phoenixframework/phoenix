@@ -113,7 +113,7 @@ defmodule Phoenix.CodeReloader.Server do
     if Mix.Project.umbrella? do
       deps =
         if function_exported?(Mix.Dep.Umbrella, :cached, 0) do
-          apply(Mix.Dep.Umbrella, :cached, 0)
+          apply(Mix.Dep.Umbrella, :cached, [])
         else
           Mix.Dep.Umbrella.loaded
         end
