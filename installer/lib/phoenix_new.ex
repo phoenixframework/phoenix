@@ -393,7 +393,7 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   defp check_application_name!(name, from_app_flag) do
-    unless name =~ ~r/^[a-z][\w_]*$/ do
+    unless name =~ recompile(~r/^[a-z][\w_]*$/) do
       extra =
         if !from_app_flag do
           ". The application name is inferred from the path, if you'd like to " <>
@@ -408,7 +408,7 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   defp check_module_name_validity!(name) do
-    unless name =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/ do
+    unless name =~ recompile(~r/^[A-Z]\w*(\.[A-Z]\w*)*$/) do
       Mix.raise "Module name must be a valid Elixir alias (for example: Foo.Bar), got: #{inspect name}"
     end
   end
@@ -491,7 +491,7 @@ defmodule Mix.Tasks.Phoenix.New do
     :crypto.strong_rand_bytes(length) |> Base.encode64 |> binary_part(0, length)
   end
 
-  defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> 1.2.3"}]
+  defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> 1.2.4"}]
   # defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
   defp phoenix_dep(path), do: ~s[{:phoenix, path: #{inspect path}, override: true}]
 
@@ -514,6 +514,15 @@ defmodule Mix.Tasks.Phoenix.New do
 
   defp phoenix_path(_path, false) do
     "deps/phoenix"
+  end
+
+  @doc false
+  def recompile(regex) do
+    if Code.ensure_loaded?(Regex) and function_exported?(Regex, :recompile!, 1) do
+      apply(Regex, :recompile!, [regex])
+    else
+      regex
+    end
   end
 
   ## Template helpers
