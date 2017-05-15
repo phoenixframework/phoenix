@@ -1,11 +1,6 @@
 # Changelog
 
-## 1.3.0-dev
-
-* Big Fixes
-  * [Controller] Fix issue causing flash session to remain when using `clear_flash/1`
-
-## 1.3.0-rc.1 (2017-03-14)
+## 1.3.0-rc.2 (2017-05-15)
 
 See these [`1.2.x` to `1.3.x` upgrade instructions](https://gist.github.com/chrismccord/71ab10d433c98b714b75c886eff17357) to bring your existing apps up to speed.
 
@@ -22,9 +17,11 @@ See these [`1.2.x` to `1.3.x` upgrade instructions](https://gist.github.com/chri
   * [Router] Populate `conn.path_params` with path parameters for the route
   * [ConnTest] Add `redirected_params/1` to return the named params matched in the router for the redirected URL
   * [Digester] Add `mix phx.digest.clean` to remove old versions of compiled assets
+  * [phx.new] Add Erlang 20 support in `phx.new` installer archive
 
 * Big Fixes
   * [Controller] Harden local redirect against arbitrary URL redirection
+  * [Controller] Fix issue causing flash session to remain when using `clear_flash/1`
 
 * Deprecations
   * [Generator] All `phoenix.*` mix tasks have been deprecated in favor of new `phx.*` tasks
