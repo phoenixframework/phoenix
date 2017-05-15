@@ -28,8 +28,8 @@ mix phx.new hello_phoenix
 * creating hello_phoenix/config/dev.exs
 * creating hello_phoenix/config/prod.exs
 ...
-* creating hello_phoenix/web/views/layout_view.ex
-* creating hello_phoenix/web/views/page_view.ex
+* creating hello_phoenix/lib/hello_phoenix/web/views/layout_view.ex
+* creating hello_phoenix/lib/hello_phoenix/web/views/page_view.ex
 
 Fetch and install dependencies? [Yn]
 ```
@@ -39,7 +39,8 @@ Phoenix generates the directory structure and all the files we will need for our
 ```console
 Fetch and install dependencies? [Yn] Y
 * running mix deps.get
-* running npm install && node node_modules/brunch/bin/brunch build
+* running mix deps.compile
+* running cd assets && npm install && node node_modules/brunch/bin/brunch build
 
 We are all set! Run your Phoenix application:
 
@@ -67,7 +68,7 @@ Now we'll create our database:
 
 ```
 $ mix ecto.create
-The database for HelloPhoenix.Repo has been created.
+The database for HelloPhoenix.Repo has been created
 ```
 
 > Note: if this is the first time you are running this command, Phoenix may also ask to install Rebar. Go ahead with the installation as Rebar is used to build Erlang packages.
@@ -76,8 +77,8 @@ And finally, we'll start the Phoenix server:
 
 ```console
 $ mix phx.server
-[info] Running HelloPhoenix.Endpoint with Cowboy using http on port 4000
-23 Nov 05:25:14 - info: compiled 5 files into 2 files, copied 3 in 1724ms
+[info] Running HelloPhoenix.Web.Endpoint with Cowboy using http://0.0.0.0:4000
+19:30:43 - info: compiled 6 files into 2 files, copied 3 in 2.1 sec
 ```
 
 If we choose not to have Phoenix install our dependencies when we generate a new application, the `phx.new` task will prompt us to take the necessary steps when we do want to install them.
@@ -85,32 +86,23 @@ If we choose not to have Phoenix install our dependencies when we generate a new
 ```console
 Fetch and install dependencies? [Yn] n
 
-We are all set! Run your Phoenix application:
+We are almost there! The following steps are missing:
 
     $ cd hello_phoenix
     $ mix deps.get
+    $ cd assets && npm install && node node_modules/brunch/bin/brunch build
+
+Then configure your database in config/dev.exs and run:
+
+    $ mix ecto.create
+
+Start your Phoenix app with:
+
     $ mix phx.server
 
 You can also run your app inside IEx (Interactive Elixir) as:
 
     $ iex -S mix phx.server
-
-Before moving on, configure your database in config/dev.exs and run:
-
-    $ mix ecto.create
-
-
-Phoenix uses an optional assets build tool called brunch.io
-that requires node.js and npm. Installation instructions for
-node.js, which includes npm, can be found at http://nodejs.org.
-
-After npm is installed, install your brunch dependencies by
-running inside your app:
-
-    $ npm install
-
-If you don't want brunch.io, you can re-run this generator
-with the --no-brunch option.
 ```
 
 By default Phoenix accepts requests on port 4000. If we point our favorite web browser at [http://localhost:4000](http://localhost:4000), we should see the Phoenix Framework welcome page.
