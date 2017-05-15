@@ -184,7 +184,8 @@ This is significant because we can use the `page_path` function in a template to
 ```html
 <a href="<%= page_path(@conn, :index) %>">To the Welcome Page!</a>
 ```
-Please see the [View Guide](views.html) for more information.
+
+The `page_path` function is imported into our template with `use HelloPhoenix.Web, :view`. Please see the [View Guide](views.html) for more information.
 
 This pays off tremendously if we should ever have to change the path of our route in the router. Since the path helpers are built dynamically from the routes, any calls to `page_path` in our templates will still work.
 
