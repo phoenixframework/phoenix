@@ -31,9 +31,34 @@ defmodule Phoenix.Controller.FlashTest do
     end
   end
 
-  test "flash does not write to session when it is empty" do
-    conn = conn(:get, "/") |> with_session |> fetch_flash() |> send_resp(200, "ok")
+  test "flash does not write to session when it is empty and no session exists" do
+    conn =
+      conn(:get, "/")
+      |> with_session()
+      |> fetch_flash()
+      |> clear_flash()
+      |> send_resp(302, "ok")
+
     assert get_resp_header(conn, "set-cookie") == []
+  end
+
+  test "flash writes to session when it is empty and a previous session exists" do
+    persisted_flash_conn =
+      conn(:get, "/")
+      |> with_session()
+      |> fetch_flash()
+      |> put_flash(:info, "existing")
+      |> send_resp(302, "ok")
+
+    conn =
+      conn(:get, "/")
+      |> Plug.Test.recycle_cookies(persisted_flash_conn)
+      |> with_session()
+      |> fetch_flash()
+      |> clear_flash()
+      |> send_resp(200, "ok")
+
+    assert ["_app=" <> _] = get_resp_header(conn, "set-cookie")
   end
 
   test "get_flash/1 raises ArgumentError when flash not previously fetched" do

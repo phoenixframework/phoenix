@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0-dev
+
+* Big Fixes
+  * [Controller] Fix issue causing flash session to remain when using `clear_flash/1`
+
 ## 1.3.0-rc.1 (2017-03-14)
 
 See these [`1.2.x` to `1.3.x` upgrade instructions](https://gist.github.com/chrismccord/71ab10d433c98b714b75c886eff17357) to bring your existing apps up to speed.

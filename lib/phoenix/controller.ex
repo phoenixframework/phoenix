@@ -1176,16 +1176,17 @@ defmodule Phoenix.Controller do
   Fetches the flash storage.
   """
   def fetch_flash(conn, _opts \\ []) do
-    flash = get_session(conn, "phoenix_flash") || %{}
-    conn  = persist_flash(conn, flash)
+    session_flash = get_session(conn, "phoenix_flash")
+    conn = persist_flash(conn, session_flash || %{})
 
     register_before_send conn, fn conn ->
       flash = conn.private.phoenix_flash
+      flash_size = map_size(flash)
 
       cond do
-        map_size(flash) == 0 ->
+        is_nil(session_flash) and flash_size == 0 ->
           conn
-        conn.status in 300..308 ->
+        flash_size > 0 and conn.status in 300..308 ->
           put_session(conn, "phoenix_flash", flash)
         true ->
           delete_session(conn, "phoenix_flash")
