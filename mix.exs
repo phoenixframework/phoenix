@@ -63,8 +63,9 @@ defmodule Phoenix.Mixfile do
   end
 
   defp package do
-    [maintainers: ["Chris McCord", "José Valim", "Lance Halvorsen",
-                   "Jason Stiebs", "Eric Meadows-Jönsson", "Sonny Scroggin"],
+    [maintainers: [
+      "Chris McCord", "José Valim", "Lance Halvorsen", "Gary Rennie",
+      "Jason Stiebs", "Eric Meadows-Jönsson", "Sonny Scroggin"],
      licenses: ["MIT"],
      links: %{github: "https://github.com/phoenixframework/phoenix"},
      files: ~w(assets lib priv) ++
