@@ -41,14 +41,17 @@ defmodule <%= endpoint_module %> do
   plug <%= web_namespace %>.Router
 
   @doc """
-  Dynamically loads configuration from the system environment
-  on startup.
+  Callback invoked for dynamically configuring the endpoint.
 
-  It receives the endpoint configuration from the config files
-  and must return the updated configuration.
+  It receives the endpoint configuration and checks if
+  configuration should be loaded from the system environment.
   """
-  def load_from_system_env(config) do
-    port = System.get_env("PORT") || raise "expected the PORT environment variable to be set"
-    {:ok, Keyword.put(config, :http, [:inet6, port: port])}
+  def init(_key, config) do
+    if config[:load_from_system_env] do
+      port = System.get_env("PORT") || raise "expected the PORT environment variable to be set"
+      {:ok, Keyword.put(config, :http, [:inet6, port: port])}
+    else
+      {:ok, config}
+    end
   end
 end

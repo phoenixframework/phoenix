@@ -85,19 +85,19 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert Endpoint.static_path("/foo.css") == "/foo-d978852bea6530fcd197b5445ed008fd.css?vsn=d"
   end
 
-  test "invokes on_init callback" do
-    Application.put_env(:phoenix, __MODULE__.OnInitEndpoint,
-                        on_init: {__MODULE__.OnInitEndpoint, :sample, [:sample]},
-                        parent: self())
-    defmodule OnInitEndpoint do
+  test "invokes init/2 callback" do
+    Application.put_env(:phoenix, __MODULE__.InitEndpoint, parent: self())
+
+    defmodule InitEndpoint do
       use Phoenix.Endpoint, otp_app: :phoenix
 
-      def sample(opts, :sample) do
+      def init(:supervisor, opts) do
         send opts[:parent], {self(), :sample}
         {:ok, opts}
       end
     end
-    {:ok, pid} = OnInitEndpoint.start_link
+
+    {:ok, pid} = InitEndpoint.start_link
     assert_receive {^pid, :sample}
   end
 

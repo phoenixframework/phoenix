@@ -63,24 +63,12 @@ defmodule Phoenix.Endpoint do
   ### Dynamic configuration
 
   For dynamically configuring the endpoint, such as loading data
-  from environment variables or configuration files, Phoenix provides
-  an `:on_init` option that allows developers to set a module, function
-  and list of arguments that is invoked when the endpoint starts. For
-  example, to dynamically configure the port, one may:
-
-      config :your_app, YourApp.Endpoint,
-        on_init: {YourApp.Endpoint, :load_from_system_env, []}
-
-  Where `load_from_system_env` will receive the configuration and must
-  return the updated configuration. For example:
-
-      def load_from_system_env(config) do
-        port = System.get_env("PORT") || raise "expected the PORT environment variable to be set"
-        {:ok, Keyword.put(config, :http, [:inet6, port: port])}
-      end
+  from environment variables or configuration files, Phoenix invokes
+  the `init/2` callback on the endpoint, passing a `:supervivsor`
+  atom as first argument and the endpoint configuration as second.
 
   All of Phoenix configuration, except the Compile-time configuration
-  below can be set dynamically from the `:on_init` callback.
+  below can be set dynamically from the `init/2` callback.
 
   ### Compile-time configuration
 
@@ -134,10 +122,6 @@ defmodule Phoenix.Endpoint do
       it redirects to the https version using the `:host` specified in the `:url`
       configuration. To dynamically redirect to the `host` of the current request,
       `:host` must be set `nil`.
-
-    * `:on_init` - a tuple with `module`, `function` and `args` that is invoked
-      when the endpoint starts. The endpoint configuration will be prepended to
-      the list of arguments and the callback must returned the updated configuration.
 
     * `:secret_key_base` - a secret key used as a base to generate secrets
       for encrypting and signing data. For example, cookies and tokens
@@ -406,6 +390,15 @@ defmodule Phoenix.Endpoint do
 
       # Avoid unused variable warnings
       _ = var!(code_reloading?)
+
+      @doc """
+      Callback invoked on endpoint initialization.
+      """
+      def init(_key, config) do
+        {:ok, config}
+      end
+
+      defoverridable init: 2
     end
   end
 
