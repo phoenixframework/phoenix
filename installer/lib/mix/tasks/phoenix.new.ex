@@ -399,7 +399,7 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   defp check_application_name!(name, from_app_flag) do
-    unless name =~ ~r/^[a-z][\w_]*$/ do
+    unless name =~ Mix.Tasks.Phx.New.recompile(~r/^[a-z][\w_]*$/) do
       extra =
         if !from_app_flag do
           ". The application name is inferred from the path, if you'd like to " <>
@@ -414,7 +414,7 @@ defmodule Mix.Tasks.Phoenix.New do
   end
 
   defp check_module_name_validity!(name) do
-    unless name =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/ do
+    unless name =~ Mix.Tasks.Phx.New.recompile(~r/^[A-Z]\w*(\.[A-Z]\w*)*$/) do
       Mix.raise "Module name must be a valid Elixir alias (for example: Foo.Bar), got: #{inspect name}"
     end
   end
