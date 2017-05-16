@@ -54,12 +54,8 @@ defmodule <%= module %> do
   to include any additional information. For example:
 
       def fetch(_topic, entries) do
-        query =
-          from u in User,
-            where: u.id in ^Map.keys(entries),
-            select: {u.id, u}
-
-        users = query |> Repo.all |> Enum.into(%{})
+        users = entries |> Map.keys() |> Accounts.get_users_map(entries)
+        # => %{"123" => %{name: "User 123"}, "456" => %{name: nil}}
 
         for {key, %{metas: metas}} <- entries, into: %{} do
           {key, %{metas: metas, user: users[key]}}
