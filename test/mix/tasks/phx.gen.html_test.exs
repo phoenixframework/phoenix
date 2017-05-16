@@ -166,6 +166,18 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       end
 
       assert_file "lib/phoenix/web/templates/blog/post/form.html.eex"
+      assert_file "lib/phoenix/web/templates/blog/post/edit.html.eex", fn file ->
+        assert file =~ " blog_post_path(@conn"
+      end
+      assert_file "lib/phoenix/web/templates/blog/post/index.html.eex", fn file ->
+        assert file =~ " blog_post_path(@conn"
+      end
+      assert_file "lib/phoenix/web/templates/blog/post/new.html.eex", fn file ->
+        assert file =~ " blog_post_path(@conn"
+      end
+      assert_file "lib/phoenix/web/templates/blog/post/show.html.eex", fn file ->
+        assert file =~ " blog_post_path(@conn"
+      end
       assert_file "lib/phoenix/web/views/blog/post_view.ex", fn file ->
         assert file =~ "defmodule Phoenix.Web.Blog.PostView"
       end
@@ -174,7 +186,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
       Add the resource to your Blog :browser scope in lib/phoenix/web/router.ex:
 
-          scope "/blog", Phoenix.Web.Blog do
+          scope "/blog", Phoenix.Web.Blog, as: :blog do
             pipe_through :browser
             ...
             resources "/posts", PostController
