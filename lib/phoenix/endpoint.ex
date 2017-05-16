@@ -55,7 +55,7 @@ defmodule Phoenix.Endpoint do
 
   Runtime configuration, instead, is accessed during or
   after your application is started and can be read through the
-  `config/2` function:
+  `c:config/2` function:
 
       YourApp.Endpoint.config(:port)
       YourApp.Endpoint.config(:some_config, :default_value)
@@ -68,7 +68,7 @@ defmodule Phoenix.Endpoint do
   atom as first argument and the endpoint configuration as second.
 
   All of Phoenix configuration, except the Compile-time configuration
-  below can be set dynamically from the `init/2` callback.
+  below can be set dynamically from the `c:init/2` callback.
 
   ### Compile-time configuration
 
@@ -193,60 +193,23 @@ defmodule Phoenix.Endpoint do
 
   ## Endpoint API
 
-  In the previous section, we have used the `config/2` function that is
-  automatically generated in your endpoint. Here is a summary of all the
-  functions that are automatically defined in your endpoint.
+  In the previous section, we have used the `c:config/2` function that is
+  automatically generated in your endpoint. Here's a list of all the functions
+  that are automatically defined in your endpoint:
 
-  #### Paths and URLs
-
-    * `struct_url()` - generates the endpoint base URL, but as a `URI` struct
-    * `url()` - generates the endpoint base URL without any path information
-    * `path(path)` - generates the path information when routing to this endpoint
-    * `static_url()` - generates the static URL without any path information
-    * `static_path(path)` - generates a route to a static file in `priv/static`
-
-  #### Channels
-
-    * `subscribe(topic, opts)` - subscribes the caller to the given topic.
-      See `Phoenix.PubSub.subscribe/3` for options.
-
-    * `unsubscribe(topic)` - unsubscribes the caller from the given topic.
-
-    * `broadcast(topic, event, msg)` - broadcasts a `msg` as `event`
-      in the given `topic`.
-
-    * `broadcast!(topic, event, msg)` - broadcasts a `msg` as `event`
-      in the given `topic`. Raises in case of failures.
-
-    * `broadcast_from(from, topic, event, msg)` - broadcasts a `msg` from
-      the given `from` as `event` in the given `topic`.
-
-    * `broadcast_from!(from, topic, event, msg)` - broadcasts a `msg` from
-      the given `from` as `event` in the given `topic`. Raises in case of failures.
-
-  #### Endpoint configuration
-
-    * `start_link()` - starts the Endpoint supervision tree, including its
-      configuration cache and possibly the servers for handling requests
-    * `config(key, default)` - access the endpoint configuration given by key
-    * `config_change(changed, removed)` - reload the endpoint configuration
-      on application upgrades
-
-  #### Plug API
-
-    * `init(opts)` - invoked when starting the endpoint server
-    * `call(conn, opts)` - invoked on every request (simply dispatches to
-      the defined plug pipeline)
-
-  #### Instrumentation API
-
-    * `instrument(event, runtime_metadata \\ nil, function)` - read more about
-      instrumentation in the "Instrumentation" section
+    * for handling paths and URLs: `c:struct_url/0`, `c:url/0`, `c:path/1`,
+      `c:static_url/0`, and `c:static_path/1`;
+    * for handling channel subscriptions: `c:subscribe/2` and `c:unsubscribe/1`;
+    * for broadcasting to channels: `c:broadcast/3`, `c:broadcast!/3`,
+      `c:broadcast_from/4`, and `c:broadcast_from!/4`
+    * for configuration: `c:start_link/0`, `c:config/2`, and `c:config_change/2`;
+    * for instrumentation: `c:instrument/3`;
+    * as required by the `Plug` behaviour: `c:Plug.init/1` and `c:Plug.call/2`.
 
   ## Instrumentation
 
   Phoenix supports instrumentation through an extensible API. Each endpoint
-  defines an `instrument/3` macro that both users and Phoenix internals can call
+  defines an `c:instrument/3` macro that both users and Phoenix internals can call
   to instrument generic events. This macro is responsible for measuring the time
   it takes for the event to be processed and for notifying a list of interested
   instrumenter modules of this measurement.
@@ -283,7 +246,7 @@ defmodule Phoenix.Endpoint do
   the time you will want to define (at least) two separate clauses for each
   event callback, one for the "before" and one for the "after" callbacks.
 
-  All event callbacks are run in the same process that calls the `instrument/3`
+  All event callbacks are run in the same process that calls the `c:instrument/3`
   macro; hence, instrumenters should be careful to avoid performing blocking actions.
   If an event callback fails in any way (exits, throws, or raises), it won't
   affect anything as the error is caught, but the failure will be logged. Note
@@ -337,9 +300,9 @@ defmodule Phoenix.Endpoint do
   called like this:
 
       require MyApp.Endpoint
-      MyApp.Endpoint.instrument :render_view, %{view: "index.html"}, fn ->
+      MyApp.Endpoint.instrument(:render_view, %{view: "index.html"}, fn ->
         # actual view rendering
-      end
+      end)
 
   All the instrumenter modules that export a `render_view/3` function will be
   notified of the event so that they can perform their respective actions.
@@ -365,16 +328,126 @@ defmodule Phoenix.Endpoint do
   ### Dynamic instrumentation
 
   If you want to instrument a piece of code, but the endpoint that should
-  instrument it (the one that contains the `instrument/3` macro you want to use)
+  instrument it (the one that contains the `c:instrument/3` macro you want to use)
   is not known at compile time, only at runtime, you can use the
   `Phoenix.Endpoint.instrument/4` macro. Refer to its documentation for more
   information.
 
   """
 
+  @type topic :: String.t
+  @type event :: String.t
+  @type msg :: map
+
+  # Configuration
+
+  @doc """
+  Starts the Endpoint supervision tree.
+
+  Starts endpoint's configuration cache and possibly the servers for
+  handling requests.
+  """
+  @callback start_link() :: Supervisor.on_start
+
+  @doc """
+  Access the endpoint configuration given by key.
+  """
+  @callback config(key :: atom, default :: term) :: term
+
+  @doc """
+  Reload the endpoint configuration on application upgrades.
+  """
+  @callback config_change(changed :: term, removed :: term) :: term
+
+  @doc """
+  Initialize the endpoint configuration.
+
+  Invoked when the endpoint supervisor starts, allows dynamically
+  configuring the endpoint from system environment or other runtime sources.
+  """
+  @callback init(:supervisor, config :: Keyword.t) :: {:ok, Keyword.t}
+
+  # Paths and URLs
+
+  @doc """
+  Generates the endpoint base URL, but as a `URI` struct.
+  """
+  @callback struct_url() :: URI.t
+
+  @doc """
+  Generates the endpoint base URL without any path information.
+  """
+  @callback url() :: String.t
+
+  @doc """
+  Generates the path information when routing to this endpoint.
+  """
+  @callback path(path :: String.t) :: String.t
+
+  @doc """
+  Geerates the static URL without any path information.
+  """
+  @callback static_url() :: String.t
+
+  @doc """
+  Generates a route to a static file in `priv/static`
+  """
+  @callback static_path(path :: String.t) :: String.t
+
+  # Channels
+
+  @doc """
+  Subscribes the caller to the given topic.
+
+  See `Phoenix.PubSub.subscribe/3` for options.
+  """
+  @callback subscribe(topic, opts :: Keyword.t) :: :ok | {:error, term}
+
+  @doc """
+  Unsubscribes the caller from the given topic.
+  """
+  @callback unsubscribe(topic) :: :ok | {:error, term}
+
+  @doc """
+  Broadcasts a `msg` as `event` in the given `topic`.
+  """
+  @callback broadcast(topic, event, msg) :: :ok | {:error, term}
+
+  @doc """
+  Broadcasts a `msg` as `event` in the given `topic`.
+
+  Raises in case of failures.
+  """
+  @callback broadcast!(topic, event, msg) :: :ok | no_return
+
+  @doc """
+  Broadcasts a `msg` from the given `from` as `event` in the given `topic`.
+  """
+  @callback broadcast_from(from :: pid, topic, event, msg) :: :ok | {:error, term}
+
+  @doc """
+  Broadcasts a `msg` from the given `from` as `event` in the given `topic`.
+
+  Raises in case of failures.
+  """
+  @callback broadcast_from!(from :: pid, topic, event, msg) :: :ok | no_return
+
+  # Instrumentation
+
+  @doc """
+  Allows instrumenting operation defined by `function`.
+
+  `runtime_metadata` may be omitted and defaults to `nil`.
+
+  Read more about instrumentation in the "Instrumentation" section.
+  """
+  @macrocallback instrument(instrument_event :: Macro.t, runtime_metadata :: Macro.t, funcion :: Macro.t) :: Macro.t
+
   @doc false
   defmacro __using__(opts) do
     quote do
+      @behaviour Phoenix.Endpoint
+
       unquote(config(opts))
       unquote(pubsub())
       unquote(plug())
@@ -676,7 +749,7 @@ defmodule Phoenix.Endpoint do
       `:endpoint` field of the socket; if it's not there, `fun` will be
       executed with no instrumentation
 
-  Usually, users should prefer to instrument events using the `instrument/3`
+  Usually, users should prefer to instrument events using the `c:instrument/3`
   macro defined in every Phoenix endpoint. This macro should only be used for
   cases when the endpoint is dynamic and not known at compile time.
 
