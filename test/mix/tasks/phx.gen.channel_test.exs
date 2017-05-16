@@ -51,6 +51,22 @@ defmodule Mix.Tasks.Phx.Gen.ChannelTest do
     end
   end
 
+  test "in an umbrella with a context_app, generates the files", config do
+    in_tmp_umbrella_project "generates presences", fn ->
+      Application.put_env(:phoenix, :generators, context_app: {:another_app, "another_app"})
+      Gen.Channel.run ["room"]
+      assert_file "lib/phoenix/channels/room_channel.ex", fn file ->
+        assert file =~ ~S|defmodule Phoenix.Web.RoomChannel do|
+        assert file =~ ~S|use Phoenix.Web, :channel|
+      end
+
+      assert_file "test/phoenix/channels/room_channel_test.exs", fn file ->
+        assert file =~ ~S|defmodule Phoenix.Web.RoomChannelTest|
+        assert file =~ ~S|alias Phoenix.Web.RoomChannel|
+      end
+    end
+  end
+
   test "generates nested channel" do
     in_tmp_project "generates nested channel", fn ->
       Gen.Channel.run ["Admin.Room"]
