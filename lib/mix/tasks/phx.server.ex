@@ -18,6 +18,8 @@ defmodule Mix.Tasks.Phx.Server do
 
   The `--no-halt` flag is automatically added.
   """
+
+  @doc false
   def run(args) do
     Application.put_env(:phoenix, :serve_endpoints, true, persistent: true)
     Mix.Tasks.Run.run run_args() ++ args

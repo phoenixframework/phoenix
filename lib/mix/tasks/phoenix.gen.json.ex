@@ -21,6 +21,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Json do
   """
   use Mix.Task
 
+  @doc false
   def run(args) do
     IO.puts :stderr, "mix phoenix.gen.json is deprecated. Use phx.gen.json instead."
     switches = [binary_id: :boolean, model: :boolean]

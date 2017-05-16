@@ -10,6 +10,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Secret do
   """
   use Mix.Task
 
+  @doc false
   def run(args) do
     IO.puts :stderr, "mix phoenix.gen.secret is deprecated. Use phx.gen.secret instead."
     Mix.Tasks.Phx.Gen.Secret.run(args)

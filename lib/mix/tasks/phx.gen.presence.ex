@@ -19,6 +19,7 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
   """
   use Mix.Task
 
+  @doc false
   def run([]) do
     run(["Presence"])
   end

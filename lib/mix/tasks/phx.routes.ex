@@ -25,6 +25,7 @@ defmodule Mix.Tasks.Phx.Routes do
   therefore always expect a router to be given.
   """
 
+  @doc false
   def run(args, base \\ Mix.Phoenix.base()) do
     Mix.Task.run "compile", args
 

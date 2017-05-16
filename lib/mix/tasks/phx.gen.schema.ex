@@ -84,6 +84,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   @switches [migration: :boolean, binary_id: :boolean, table: :string,
              web: :string]
 
+  @doc false
   def run(args) do
     if Mix.Project.umbrella?() do
       Mix.raise "mix phx.gen.schema can only be run inside an application directory"
@@ -105,6 +106,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
     |> Mix.Phoenix.prompt_for_conflicts()
   end
 
+  @doc false
   def build(args, parent_opts, help \\ __MODULE__) do
     {schema_opts, parsed, _} = OptionParser.parse(args, switches: @switches)
     [schema_name, plural | attrs] = validate_args!(parsed, help)
@@ -114,10 +116,12 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
     schema
   end
 
+  @doc false
   def files_to_be_generated(%Schema{} = schema) do
     [{:eex, "schema.ex", schema.file}]
   end
 
+  @doc false
   def copy_new_files(%Schema{context_app: ctx_app} = schema, paths, binding) do
     migration =
       schema.module
@@ -141,6 +145,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
     schema
   end
 
+  @doc false
   def print_shell_instructions(%Schema{} = schema) do
     if schema.migration? do
       Mix.shell.info """
@@ -152,6 +157,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
     end
   end
 
+  @doc false
   def validate_args!([schema, plural | _] = args, help) do
     cond do
       not Schema.valid?(schema) ->
@@ -166,6 +172,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
     help.raise_with_help "Invalid arguments"
   end
 
+  @doc false
   @spec raise_with_help(String.t) :: no_return()
   def raise_with_help(msg) do
     Mix.raise """

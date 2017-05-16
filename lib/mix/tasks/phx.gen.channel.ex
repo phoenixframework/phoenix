@@ -23,6 +23,7 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
   """
   use Mix.Task
 
+  @doc false
   def run(args) do
     [channel_name] = validate_args!(args)
     otp_app = Mix.Phoenix.otp_app()
