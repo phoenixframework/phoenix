@@ -584,7 +584,7 @@ defmodule Phoenix.Router do
 
   ## Examples
 
-      scope "/api/v1", as: :api_v1, alias: API.V1 do
+      scope path: "/api/v1", as: :api_v1, alias: API.V1 do
         get "/pages/:id", PageController, :show
       end
 
@@ -618,6 +618,12 @@ defmodule Phoenix.Router do
         ...
       end
 
+  ## Examples
+
+      scope "/api/v1", as: :api_v1, alias: API.V1 do
+        get "/pages/:id", PageController, :show
+      end
+
   """
   defmacro scope(path, options, do: context) do
     options = quote do
@@ -637,6 +643,12 @@ defmodule Phoenix.Router do
 
       scope path: path, alias: alias do
         ...
+      end
+
+  ## Examples
+
+      scope "/api/v1", API.V1, as: :api_v1 do
+        get "/pages/:id", PageController, :show
       end
 
   """
