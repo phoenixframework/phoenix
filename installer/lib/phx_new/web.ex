@@ -82,8 +82,8 @@ defmodule Phx.New.Web do
   end
 
   def generate(%Project{} = project) do
-    copy_from project, __MODULE__, template_files(:new)
-    copy_from project, __MODULE__, template_files(:gettext)
+    copy_from project, __MODULE__, :new
+    copy_from project, __MODULE__, :gettext
 
     if Project.html?(project), do: gen_html(project)
 
@@ -97,23 +97,23 @@ defmodule Phx.New.Web do
   end
 
   defp gen_html(%Project{} = project) do
-    copy_from project, __MODULE__, template_files(:html)
+    copy_from project, __MODULE__, :html
   end
 
   defp gen_static(%Project{web_path: web_path} = project) do
-    copy_from project, __MODULE__, template_files(:static)
+    copy_from project, __MODULE__, :static
     create_file Path.join(web_path, "priv/static/js/phoenix.js"), phoenix_js_text()
     create_file Path.join(web_path, "priv/static/images/phoenix.png"), phoenix_png_text()
     create_file Path.join(web_path, "priv/static/favicon.ico"), phoenix_favicon_text()
   end
 
   defp gen_brunch(%Project{web_path: web_path} = project) do
-    copy_from project, __MODULE__, template_files(:brunch)
+    copy_from project, __MODULE__, :brunch
     create_file Path.join(web_path, "assets/static/images/phoenix.png"), phoenix_png_text()
     create_file Path.join(web_path, "assets/static/favicon.ico"), phoenix_favicon_text()
   end
 
   defp gen_bare(%Project{} = project) do
-    copy_from project, __MODULE__, template_files(:bare)
+    copy_from project, __MODULE__, :bare
   end
 end

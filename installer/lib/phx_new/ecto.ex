@@ -35,15 +35,14 @@ defmodule Phx.New.Ecto do
   end
 
   def generate(%Project{} = project) do
-    copy_from project, __MODULE__, template_files(:new)
-
+    copy_from project, __MODULE__, :new
     if Project.ecto?(project), do: gen_ecto(project)
 
     project
   end
 
   defp gen_ecto(project) do
-    copy_from(project, __MODULE__, template_files(:ecto))
+    copy_from project, __MODULE__, :ecto
     gen_ecto_config(project)
   end
 end

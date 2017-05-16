@@ -31,7 +31,7 @@ defmodule Mix.Tasks.Phx.Gen.PresenceTest do
     end
   end
 
-  test "in an umbrella with a context_app, the file goes in lib/app/channels", config do
+  test "in an umbrella with a context_app, the file goes in lib/app/channels" do
     in_tmp_umbrella_project "generates presences", fn ->
       Application.put_env(:phoenix, :generators, context_app: {:another_app, "another_app"})
       Mix.Tasks.Phx.Gen.Presence.run([])

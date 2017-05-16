@@ -20,12 +20,12 @@ defmodule Phx.New.Generator do
 
   defmacro __before_compile__(env) do
     root = Path.expand("../../templates", __DIR__)
-    templates_ast = for {_name, mappings} <- Module.get_attribute(env.module, :templates) do
+    templates_ast = for {name, mappings} <- Module.get_attribute(env.module, :templates) do
       for {format, source, _, _} <- mappings, format != :keep do
         path = Path.join(root, source)
         quote do
           @external_resource unquote(path)
-          def render(unquote(source)), do: unquote(File.read!(path))
+          def render(unquote(name), unquote(source)), do: unquote(File.read!(path))
         end
       end
     end
@@ -46,7 +46,8 @@ defmodule Phx.New.Generator do
     end
   end
 
-  def copy_from(%Project{} = project, mod, mapping) when is_list(mapping) do
+  def copy_from(%Project{} = project, mod, name) when is_atom(name) do
+    mapping = mod.template_files(name)
     for {format, source, project_location, target_path} <- mapping do
       target = Project.join_path(project, project_location, target_path)
 
@@ -54,11 +55,11 @@ defmodule Phx.New.Generator do
         :keep ->
           File.mkdir_p!(target)
         :text ->
-          create_file(target, mod.render(source))
+          create_file(target, mod.render(name, source))
         :append ->
-          append_to(Path.dirname(target), Path.basename(target), mod.render(source))
+          append_to(Path.dirname(target), Path.basename(target), mod.render(name, source))
         :eex  ->
-          contents = EEx.eval_string(mod.render(source), project.binding, file: source)
+          contents = EEx.eval_string(mod.render(name, source), project.binding, file: source)
           create_file(target, contents)
       end
     end

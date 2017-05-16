@@ -8,84 +8,86 @@ defmodule Mix.Tasks.Phoenix.New do
 
   # File mappings
 
-  @new [
-    {:eex,  "new/config/config.exs",                         "config/config.exs"},
-    {:eex,  "new/config/dev.exs",                            "config/dev.exs"},
-    {:eex,  "new/config/prod.exs",                           "config/prod.exs"},
-    {:eex,  "new/config/prod.secret.exs",                    "config/prod.secret.exs"},
-    {:eex,  "new/config/test.exs",                           "config/test.exs"},
-    {:eex,  "new/lib/app_name.ex",                           "lib/app_name.ex"},
-    {:eex,  "new/lib/app_name/endpoint.ex",                  "lib/app_name/endpoint.ex"},
-    {:keep, "new/test/channels",                             "test/channels"},
-    {:keep, "new/test/controllers",                          "test/controllers"},
-    {:eex,  "new/test/views/error_view_test.exs",            "test/views/error_view_test.exs"},
-    {:eex,  "new/test/support/conn_case.ex",                 "test/support/conn_case.ex"},
-    {:eex,  "new/test/support/channel_case.ex",              "test/support/channel_case.ex"},
-    {:eex,  "new/test/test_helper.exs",                      "test/test_helper.exs"},
-    {:eex,  "new/web/channels/user_socket.ex",               "web/channels/user_socket.ex"},
-    {:keep, "new/web/controllers",                           "web/controllers"},
-    {:keep, "new/web/models",                                "web/models"},
-    {:eex,  "new/web/router.ex",                             "web/router.ex"},
-    {:keep, "new/web/static/vendor",                         "web/static/vendor"},
-    {:eex,  "new/web/views/error_view.ex",                   "web/views/error_view.ex"},
-    {:eex,  "new/web/web.ex",                                "web/web.ex"},
-    {:eex,  "new/mix.exs",                                   "mix.exs"},
-    {:eex,  "new/README.md",                                 "README.md"},
-    {:eex,  "new/web/gettext.ex",                            "web/gettext.ex"},
-    {:eex,  "new/priv/gettext/errors.pot",                   "priv/gettext/errors.pot"},
-    {:eex,  "new/priv/gettext/en/LC_MESSAGES/errors.po",     "priv/gettext/en/LC_MESSAGES/errors.po"},
-    {:eex,  "new/web/views/error_helpers.ex",                "web/views/error_helpers.ex"},
-  ]
+  @templates [
+    new: [
+      {:eex,  "new/config/config.exs",                         "config/config.exs"},
+      {:eex,  "new/config/dev.exs",                            "config/dev.exs"},
+      {:eex,  "new/config/prod.exs",                           "config/prod.exs"},
+      {:eex,  "new/config/prod.secret.exs",                    "config/prod.secret.exs"},
+      {:eex,  "new/config/test.exs",                           "config/test.exs"},
+      {:eex,  "new/lib/app_name.ex",                           "lib/app_name.ex"},
+      {:eex,  "new/lib/app_name/endpoint.ex",                  "lib/app_name/endpoint.ex"},
+      {:keep, "new/test/channels",                             "test/channels"},
+      {:keep, "new/test/controllers",                          "test/controllers"},
+      {:eex,  "new/test/views/error_view_test.exs",            "test/views/error_view_test.exs"},
+      {:eex,  "new/test/support/conn_case.ex",                 "test/support/conn_case.ex"},
+      {:eex,  "new/test/support/channel_case.ex",              "test/support/channel_case.ex"},
+      {:eex,  "new/test/test_helper.exs",                      "test/test_helper.exs"},
+      {:eex,  "new/web/channels/user_socket.ex",               "web/channels/user_socket.ex"},
+      {:keep, "new/web/controllers",                           "web/controllers"},
+      {:keep, "new/web/models",                                "web/models"},
+      {:eex,  "new/web/router.ex",                             "web/router.ex"},
+      {:keep, "new/web/static/vendor",                         "web/static/vendor"},
+      {:eex,  "new/web/views/error_view.ex",                   "web/views/error_view.ex"},
+      {:eex,  "new/web/web.ex",                                "web/web.ex"},
+      {:eex,  "new/mix.exs",                                   "mix.exs"},
+      {:eex,  "new/README.md",                                 "README.md"},
+      {:eex,  "new/web/gettext.ex",                            "web/gettext.ex"},
+      {:eex,  "new/priv/gettext/errors.pot",                   "priv/gettext/errors.pot"},
+      {:eex,  "new/priv/gettext/en/LC_MESSAGES/errors.po",     "priv/gettext/en/LC_MESSAGES/errors.po"},
+      {:eex,  "new/web/views/error_helpers.ex",                "web/views/error_helpers.ex"},
+    ],
 
-  @ecto [
-    {:eex,  "ecto/repo.ex",              "lib/app_name/repo.ex"},
-    {:keep, "ecto/test/models",          "test/models"},
-    {:eex,  "ecto/model_case.ex",        "test/support/model_case.ex"},
-    {:keep, "ecto/priv/repo/migrations", "priv/repo/migrations"},
-    {:eex,  "ecto/seeds.exs",            "priv/repo/seeds.exs"}
-  ]
+    ecto: [
+      {:eex,  "ecto/repo.ex",              "lib/app_name/repo.ex"},
+      {:keep, "ecto/test/models",          "test/models"},
+      {:eex,  "ecto/model_case.ex",        "test/support/model_case.ex"},
+      {:keep, "ecto/priv/repo/migrations", "priv/repo/migrations"},
+      {:eex,  "ecto/seeds.exs",            "priv/repo/seeds.exs"}
+    ],
 
-  @brunch [
-    {:text, "static/brunch/gitignore",       ".gitignore"},
-    {:eex,  "static/brunch/brunch-config.js", "brunch-config.js"},
-    {:eex,  "static/brunch/package.json",     "package.json"},
-    {:text, "static/app.css",                 "web/static/css/app.css"},
-    {:text, "static/phoenix.css",             "web/static/css/phoenix.css"},
-    {:eex,  "static/brunch/app.js",           "web/static/js/app.js"},
-    {:eex,  "static/brunch/socket.js",        "web/static/js/socket.js"},
-    {:text, "static/robots.txt",              "web/static/assets/robots.txt"},
-  ]
+    brunch: [
+      {:text, "static/brunch/gitignore",       ".gitignore"},
+      {:eex,  "static/brunch/brunch-config.js", "brunch-config.js"},
+      {:eex,  "static/brunch/package.json",     "package.json"},
+      {:text, "static/app.css",                 "web/static/css/app.css"},
+      {:text, "static/phoenix.css",             "web/static/css/phoenix.css"},
+      {:eex,  "static/brunch/app.js",           "web/static/js/app.js"},
+      {:eex,  "static/brunch/socket.js",        "web/static/js/socket.js"},
+      {:text, "static/robots.txt",              "web/static/assets/robots.txt"},
+    ],
 
-  @html [
-    {:eex,  "new/test/controllers/page_controller_test.exs", "test/controllers/page_controller_test.exs"},
-    {:eex,  "new/test/views/layout_view_test.exs",           "test/views/layout_view_test.exs"},
-    {:eex,  "new/test/views/page_view_test.exs",             "test/views/page_view_test.exs"},
-    {:eex,  "new/web/controllers/page_controller.ex",        "web/controllers/page_controller.ex"},
-    {:eex,  "new/web/templates/layout/app.html.eex",         "web/templates/layout/app.html.eex"},
-    {:eex,  "new/web/templates/page/index.html.eex",         "web/templates/page/index.html.eex"},
-    {:eex,  "new/web/views/layout_view.ex",                  "web/views/layout_view.ex"},
-    {:eex,  "new/web/views/page_view.ex",                    "web/views/page_view.ex"},
-  ]
+    html: [
+      {:eex,  "new/test/controllers/page_controller_test.exs", "test/controllers/page_controller_test.exs"},
+      {:eex,  "new/test/views/layout_view_test.exs",           "test/views/layout_view_test.exs"},
+      {:eex,  "new/test/views/page_view_test.exs",             "test/views/page_view_test.exs"},
+      {:eex,  "new/web/controllers/page_controller.ex",        "web/controllers/page_controller.ex"},
+      {:eex,  "new/web/templates/layout/app.html.eex",         "web/templates/layout/app.html.eex"},
+      {:eex,  "new/web/templates/page/index.html.eex",         "web/templates/page/index.html.eex"},
+      {:eex,  "new/web/views/layout_view.ex",                  "web/views/layout_view.ex"},
+      {:eex,  "new/web/views/page_view.ex",                    "web/views/page_view.ex"},
+    ],
 
-  @static [
-    {:text,   "static/bare/gitignore", ".gitignore"},
-    {:text,   "static/app.css",         "priv/static/css/app.css"},
-    {:append, "static/phoenix.css",     "priv/static/css/app.css"},
-    {:text,   "static/bare/app.js",     "priv/static/js/app.js"},
-    {:text,   "static/robots.txt",      "priv/static/robots.txt"},
-  ]
+    static: [
+      {:text,   "static/bare/gitignore", ".gitignore"},
+      {:text,   "static/app.css",         "priv/static/css/app.css"},
+      {:append, "static/phoenix.css",     "priv/static/css/app.css"},
+      {:text,   "static/bare/app.js",     "priv/static/js/app.js"},
+      {:text,   "static/robots.txt",      "priv/static/robots.txt"},
+    ],
 
-  @bare [
-    {:text,   "static/bare/gitignore", ".gitignore"},
+    bare: [
+      {:text,   "static/bare/gitignore", ".gitignore"},
+    ]
   ]
 
   # Embed all defined templates
   root = Path.expand("../../../templates", __DIR__)
 
-  for {format, source, _} <- @new ++ @ecto ++ @brunch ++ @html ++ @static ++ @bare do
-    unless format == :keep do
+  for {name, mapping} <- @templates do
+    for {format, source, _} <- mapping, format != :keep do
       @external_resource Path.join(root, source)
-      def render(unquote(source)), do: unquote(File.read!(Path.join(root, source)))
+      def render(unquote(name), unquote(source)), do: unquote(File.read!(Path.join(root, source)))
     end
   end
 
@@ -233,7 +235,7 @@ defmodule Mix.Tasks.Phoenix.New do
                generator_config: generator_config,
                namespaced?: Macro.camelize(app) != mod]
 
-    copy_from path, binding, @new
+    copy_from path, binding, :new
 
     # Optional contents
     copy_model  app, path, binding
@@ -265,7 +267,7 @@ defmodule Mix.Tasks.Phoenix.New do
 
   defp copy_model(_app, path, binding) do
     if binding[:ecto] do
-      copy_from path, binding, @ecto
+      copy_from path, binding, :ecto
 
       adapter_config = binding[:adapter_config]
 
@@ -303,22 +305,22 @@ defmodule Mix.Tasks.Phoenix.New do
   defp copy_static(_app, path, binding) do
     case {binding[:brunch], binding[:html]} do
     {true, _} ->
-      copy_from path, binding, @brunch
+      copy_from path, binding, :brunch
       create_file Path.join(path, "web/static/assets/images/phoenix.png"), phoenix_png_text()
       create_file Path.join(path, "web/static/assets/favicon.ico"), phoenix_favicon_text()
     {false, true} ->
-      copy_from path, binding, @static
+      copy_from path, binding, :static
       create_file Path.join(path, "priv/static/js/phoenix.js"), phoenix_js_text()
       create_file Path.join(path, "priv/static/images/phoenix.png"), phoenix_png_text()
       create_file Path.join(path, "priv/static/favicon.ico"), phoenix_favicon_text()
     {false, false} ->
-      copy_from path, binding, @bare
+      copy_from path, binding, :bare
     end
   end
 
   defp copy_html(_app, path, binding) do
     if binding[:html] do
-      copy_from path, binding, @html
+      copy_from path, binding, :html
     end
   end
 
@@ -509,8 +511,9 @@ defmodule Mix.Tasks.Phoenix.New do
 
   ## Template helpers
 
-  defp copy_from(target_dir, binding, mapping) when is_list(mapping) do
+  defp copy_from(target_dir, binding, name) when is_atom(name) do
     app = Keyword.fetch!(binding, :app_name)
+    mapping = Keyword.fetch!(@templates, name)
     for {format, source, target_path} <- mapping do
       target = Path.join(target_dir, String.replace(target_path, "app_name", app))
 
@@ -518,11 +521,11 @@ defmodule Mix.Tasks.Phoenix.New do
         :keep ->
           File.mkdir_p!(target)
         :text ->
-          create_file(target, render(source))
+          create_file(target, render(name, source))
         :append ->
-          append_to(Path.dirname(target), Path.basename(target), render(source))
+          append_to(Path.dirname(target), Path.basename(target), render(name, source))
         :eex  ->
-          contents = EEx.eval_string(render(source), binding, file: source)
+          contents = EEx.eval_string(render(name, source), binding, file: source)
           create_file(target, contents)
       end
     end

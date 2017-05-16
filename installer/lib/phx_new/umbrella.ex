@@ -48,7 +48,7 @@ defmodule Phx.New.Umbrella do
     if in_umbrella?(project.project_path) do
       Mix.raise "Unable to nest umbrella project within apps"
     end
-    copy_from project, __MODULE__, template_files(:new)
+    copy_from project, __MODULE__, :new
 
     project
     |> Web.generate()
