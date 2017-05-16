@@ -24,11 +24,13 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
   use Mix.Task
 
   def run(args) do
+    if Mix.Project.umbrella?() do
+      Mix.raise "mix phx.gen.channel can only be run inside an application directory"
+    end
     [channel_name] = validate_args!(args)
-    otp_app = Mix.Phoenix.otp_app()
-
-    web_prefix = Mix.Phoenix.web_path(otp_app)
-    test_prefix = Mix.Phoenix.web_test_path(otp_app)
+    context_app = Mix.Phoenix.context_app()
+    web_prefix = Mix.Phoenix.web_path(context_app)
+    test_prefix = Mix.Phoenix.web_test_path(context_app)
     binding = Mix.Phoenix.inflect(channel_name)
     binding = Keyword.put(binding, :module, "#{binding[:web_module]}.#{binding[:scoped]}")
 
@@ -41,7 +43,7 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
 
     Mix.shell.info """
 
-    Add the channel to your `#{Mix.Phoenix.web_path(otp_app, "channels/user_socket.ex")}` handler, for example:
+    Add the channel to your `#{Mix.Phoenix.web_path(context_app, "channels/user_socket.ex")}` handler, for example:
 
         channel "#{binding[:singular]}:lobby", #{binding[:module]}Channel
     """
