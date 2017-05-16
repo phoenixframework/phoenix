@@ -22,6 +22,7 @@ defmodule Mix.Tasks.Phoenix.Routes do
   therefore always expect a router to be given.
   """
 
+  @doc false
   def run(args, base \\ Mix.Phoenix.base()) do
     IO.puts :stderr, "mix phoenix.routes is deprecated. Use phx.routes instead."
     Mix.Tasks.Phx.Routes.run(args, base)

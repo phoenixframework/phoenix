@@ -31,6 +31,8 @@ defmodule Mix.Tasks.Phx.Digest.Clean do
       Defaults to 2 previous version.
 
   """
+
+  @doc false
   def run(args) do
     switches = [output: :string, age: :integer, keep: :integer]
     {opts, _, _} = OptionParser.parse(args, switches: switches, aliases: [o: :output])

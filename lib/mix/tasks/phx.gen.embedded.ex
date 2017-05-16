@@ -31,6 +31,7 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
   alias Mix.Tasks.Phx.Gen
   alias Mix.Phoenix.Schema
 
+  @doc false
   def run(args) do
     if Mix.Project.umbrella?() do
       Mix.raise "mix phx.gen.embedded can only be run inside an application directory"
@@ -45,6 +46,7 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
     copy_new_files(schema, paths, schema: schema)
   end
 
+  @doc false
   def build(args, _opts), do: Gen.Schema.build(args, [embedded: true], Gen.Schema)
 
   defp prompt_for_conflicts(schema) do
@@ -53,10 +55,12 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
     |> Mix.Phoenix.prompt_for_conflicts()
   end
 
+  @doc false
   def files_to_be_generated(%Schema{} = schema) do
     [{:eex, "embedded_schema.ex", schema.file}]
   end
 
+  @doc false
   def copy_new_files(%Schema{} = schema, paths, binding) do
     files = files_to_be_generated(schema)
     Mix.Phoenix.copy_from(paths,"priv/templates/phx.gen.embedded", "", binding, files)

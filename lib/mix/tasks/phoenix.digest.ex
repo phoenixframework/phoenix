@@ -32,6 +32,7 @@ defmodule Mix.Tasks.Phoenix.Digest do
     * cache_manifest.json
   """
 
+  @doc false
   def run(args) do
     IO.puts :stderr, "mix phoenix.digest is deprecated. Use phx.digest instead."
     Mix.Tasks.Phx.Digest.run(args)

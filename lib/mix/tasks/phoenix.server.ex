@@ -18,6 +18,8 @@ defmodule Mix.Tasks.Phoenix.Server do
 
   The `--no-halt` flag is automatically added.
   """
+
+  @doc false
   def run(args) do
     IO.puts :stderr, "mix phoenix.server is deprecated. Use phx.server instead."
     Mix.Tasks.Phx.Server.run(args)

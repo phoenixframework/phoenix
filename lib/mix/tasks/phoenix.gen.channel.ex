@@ -14,6 +14,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Channel do
   """
   use Mix.Task
 
+  @doc false
   def run(args) do
     IO.puts :stderr, "mix phoenix.gen.channel is deprecated. Use phx.gen.channel instead."
 
@@ -37,6 +38,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Channel do
     """
   end
 
+  @doc false
   @spec raise_with_help() :: no_return()
   defp raise_with_help do
     Mix.raise """

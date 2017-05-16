@@ -73,6 +73,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
   @default_opts [schema: true, context: true]
 
+  @doc false
   def run(args) do
     if Mix.Project.umbrella? do
       Mix.raise "mix phx.gen.context can only be run inside an application directory"
@@ -95,6 +96,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     |> Mix.Phoenix.prompt_for_conflicts()
   end
 
+  @doc false
   def build(args) do
     {opts, parsed, _} = parse_opts(args)
     [context_name, schema_name, plural | schema_args] = validate_args!(parsed)
@@ -122,6 +124,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     Keyword.put(opts, :context_app, String.to_atom(string))
   end
 
+  @doc false
   def files_to_be_generated(%Context{schema: schema}) do
     if schema.generate? do
       Gen.Schema.files_to_be_generated(schema)
@@ -130,6 +133,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     end
   end
 
+  @doc false
   def copy_new_files(%Context{schema: schema} = context, paths, binding) do
     if schema.generate?, do: Gen.Schema.copy_new_files(schema, paths, binding)
     inject_schema_access(context, paths, binding)
@@ -180,6 +184,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     end
   end
 
+  @doc false
   def print_shell_instructions(%Context{schema: schema}) do
     if schema.generate? do
       Gen.Schema.print_shell_instructions(schema)
@@ -213,6 +218,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     raise_with_help "Invalid arguments"
   end
 
+  @doc false
   @spec raise_with_help(String.t) :: no_return()
   def raise_with_help(msg) do
     Mix.raise """

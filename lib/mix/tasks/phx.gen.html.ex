@@ -99,6 +99,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   alias Mix.Phoenix.{Context, Schema}
   alias Mix.Tasks.Phx.Gen
 
+  @doc false
   def run(args) do
     if Mix.Project.umbrella? do
       Mix.raise "mix phx.gen.html can only be run inside an application directory"
@@ -127,6 +128,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     []
   end
 
+  @doc false
   def files_to_be_generated(%Context{schema: schema, context_app: context_app}) do
     web_prefix = Mix.Phoenix.web_path(context_app)
     test_prefix = Mix.Phoenix.web_test_path(context_app)
@@ -144,7 +146,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     ]
   end
 
-
+  @doc false
   def copy_new_files(%Context{} = context, paths, binding) do
     files = files_to_be_generated(context)
     Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.html", "", binding, files)
@@ -152,6 +154,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     context
   end
 
+  @doc false
   def print_shell_instructions(%Context{schema: schema, context_app: ctx_app} = context) do
     if schema.web_namespace do
       Mix.shell.info """

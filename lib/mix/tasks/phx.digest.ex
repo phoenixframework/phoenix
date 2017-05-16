@@ -34,6 +34,7 @@ defmodule Mix.Tasks.Phx.Digest do
     * cache_manifest.json
   """
 
+  @doc false
   def run(args) do
     {opts, args, _} = OptionParser.parse(args, aliases: [o: :output])
     input_path  = List.first(args) || @default_input_path

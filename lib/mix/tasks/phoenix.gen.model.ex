@@ -80,6 +80,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
   """
   use Mix.Task
 
+  @doc false
   def run(args) do
     IO.puts :stderr, "mix phoenix.gen.model is deprecated. Use phx.gen.schema instead."
     switches = [migration: :boolean, binary_id: :boolean, instructions: :string]
