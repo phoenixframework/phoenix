@@ -196,7 +196,7 @@ The order in which plugins run is defined by the order in which they appear in `
 Let's add support for CoffeeScript. Edit `package.json` by adding the following line **before** `javascript-brunch`:
 
 ```json
-  "coffee-script-brunch": ">= 1.8",
+  "coffee-script-brunch": "^2",
 ```
 
 and run
