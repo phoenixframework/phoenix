@@ -68,7 +68,7 @@ defmodule Mix.PhoenixTest do
     assert Mix.Phoenix.Schema.params(params) == %{
       logins: [],
       age: 42,
-      temp: "120.5",
+      temp: 120.5,
       temp_2: "120.5",
       admin: true,
       meta: %{},
