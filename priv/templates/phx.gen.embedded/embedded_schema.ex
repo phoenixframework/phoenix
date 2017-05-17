@@ -4,8 +4,8 @@ defmodule <%= inspect schema.module %> do
   alias <%= inspect schema.module %>
 
   embedded_schema do
-<%= for {k, v} <- schema.types do %>    field <%= inspect k %>, <%= inspect v %><%= schema.defaults[k] %><% end %>
-  end
+<%= for {k, v} <- schema.types do %>    field <%= inspect k %>, <%= inspect v %><%= schema.defaults[k] %>
+<% end %>  end
 
   @doc false
   def changeset(%<%= inspect schema.alias %>{} = <%= schema.singular %>, attrs) do
