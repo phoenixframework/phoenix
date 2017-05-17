@@ -40,7 +40,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
                       tags:array:text popular:boolean drafted_at:datetime
                       published_at:utc_datetime deleted_at:naive_datetime
                       secret:uuid announcement_date:date alarm:time
-                      user_id:references:users))
+                      weight:float user_id:references:users))
 
       assert_file "lib/phoenix/blog/post.ex"
       assert_file "lib/phoenix/blog/blog.ex"
@@ -50,12 +50,14 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "deleted_at: ~N[2010-04-17 14:00:00.000000]"
         assert file =~ "cost: \"120.5\""
         assert file =~ "published_at: %DateTime{"
+        assert file =~ "weight: 120.5"
 
         assert file =~ "assert post.announcement_date == ~D[2011-05-18]"
         assert file =~ "assert post.deleted_at == ~N[2011-05-18 15:01:01.000000]"
         assert file =~ "assert post.published_at == %DateTime{"
         assert file =~ "assert post.alarm == ~T[15:01:01.000000]"
         assert file =~ "assert post.cost == Decimal.new(\"120.5\")"
+        assert file =~ "assert post.weight == 120.5"
       end
 
       assert_file "test/phoenix/web/controllers/post_controller_test.exs", fn file ->
