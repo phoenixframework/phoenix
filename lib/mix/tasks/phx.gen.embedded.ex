@@ -4,10 +4,9 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
   @moduledoc """
   Generates an embedded Ecto schema for casting/validating data outside the DB.
 
-      mix phx.gen.embedded Blog.Post blog_posts title:string views:integer
+      mix phx.gen.embedded Blog.Post title:string views:integer
 
-  The first argument is the schema module followed by its plural
-  name (used as the table name).
+  The first argument is the schema module followed by the schema attributes
 
   The generated schema above will contain:
 
@@ -19,7 +18,7 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
   where type are the types supported by Ecto. Omitting
   the type makes it default to `:string`:
 
-      mix phx.gen.embedded Blog.Post blog_posts title views:integer
+      mix phx.gen.embedded Blog.Post title views:integer
 
   The following types are supported:
 
@@ -28,8 +27,9 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
   """
   use Mix.Task
 
-  alias Mix.Tasks.Phx.Gen
   alias Mix.Phoenix.Schema
+
+  @switches [binary_id: :boolean, web: :string]
 
   @doc false
   def run(args) do
@@ -37,7 +37,7 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
       Mix.raise "mix phx.gen.embedded can only be run inside an application directory"
     end
 
-    schema = build(args, [])
+    schema = build(args)
 
     paths = Mix.Phoenix.generator_paths()
 
@@ -47,7 +47,45 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
   end
 
   @doc false
-  def build(args, _opts), do: Gen.Schema.build(args, [embedded: true], Gen.Schema)
+  def build(args) do
+    {schema_opts, parsed, _} = OptionParser.parse(args, switches: @switches)
+    [schema_name | attrs] = validate_args!(parsed)
+    opts =
+      schema_opts
+      |> Keyword.put(:embedded, true)
+      |> Keyword.put(:migration, false)
+
+    schema = Schema.new(schema_name, nil, attrs, opts)
+
+    schema
+  end
+
+  @doc false
+  def validate_args!([schema | _] = args) do
+    cond do
+      not Schema.valid?(schema) ->
+        raise_with_help "Expected the schema argument, #{inspect schema}, to be a valid module name"
+      true ->
+        args
+    end
+  end
+  def validate_args!(_) do
+    raise_with_help "Invalid arguments"
+  end
+
+  @doc false
+  @spec raise_with_help(String.t) :: no_return()
+  def raise_with_help(msg) do
+    Mix.raise """
+    #{msg}
+
+    mix phx.gen.embedded expects a module name followed by
+    any number of attributes:
+
+        mix phx.gen.embedded Blog.Post title:string
+    """
+  end
+
 
   defp prompt_for_conflicts(schema) do
     schema
