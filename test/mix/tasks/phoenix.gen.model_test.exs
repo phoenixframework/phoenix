@@ -55,7 +55,7 @@ defmodule Mix.Tasks.Phoenix.Gen.ModelTest do
         assert file =~ "field :desc, :string"
         assert file =~ "field :blob, :binary"
         assert file =~ "timestamps()"
-        assert file =~ "def changeset"
+        assert file =~ "def changeset(struct, params \\\\ :empty)"
         assert file =~ "[:name, :age, :nicks, :famous, :born_at, :secret, :desc, :blob]"
       end
 
