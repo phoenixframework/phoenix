@@ -383,3 +383,21 @@ always_rebuild=true
 ```
 
 Commit this file to the repository and try to push again to Heroku.
+
+### Connection Timeout Error
+
+If you are constantly getting connection timeouts while running `heroku run` this could mean that your internet provider has blocked 
+port number 5000:
+
+```console
+heroku run "POOL_SIZE=2 mix myapp.task"
+Running POOL_SIZE=2 mix myapp.task on mysterious-meadow-6277... !
+ETIMEDOUT: connect ETIMEDOUT 50.19.103.36:5000
+```
+
+You can overcome this by adding `detached` option to run command:
+
+```console
+heroku run:detached "POOL_SIZE=2 mix ecto.migrate"
+Running POOL_SIZE=2 mix ecto.migrate on mysterious-meadow-6277... done, run.8089 (Free)
+```
