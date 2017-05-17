@@ -178,8 +178,8 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
     Mix.raise """
     #{msg}
 
-    mix phx.gen.schema and phx.gen.embedded expect both a module
-    name and the plural of the generated resource followed by
+    mix phx.gen.schema expects both a module name and
+    the plural of the generated resource followed by
     any number of attributes:
 
         mix phx.gen.schema Blog.Post blog_posts title:string
