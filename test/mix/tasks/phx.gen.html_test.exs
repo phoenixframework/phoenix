@@ -88,6 +88,22 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "defmodule Phoenix.Web.PostView"
       end
 
+      assert_file "lib/phoenix/web/templates/post/edit.html.eex", fn file ->
+        assert file =~ " post_path(@conn"
+      end
+
+      assert_file "lib/phoenix/web/templates/post/index.html.eex", fn file ->
+        assert file =~ " post_path(@conn"
+      end
+
+      assert_file "lib/phoenix/web/templates/post/new.html.eex", fn file ->
+        assert file =~ " post_path(@conn"
+      end
+
+      assert_file "lib/phoenix/web/templates/post/show.html.eex", fn file ->
+        assert file =~ " post_path(@conn"
+      end
+
       assert_file "lib/phoenix/web/templates/post/form.html.eex", fn file ->
         assert file =~ ~s(<%= text_input f, :title, class: "form-control" %>)
         assert file =~ ~s(<%= number_input f, :votes, class: "form-control" %>)
@@ -166,18 +182,23 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       end
 
       assert_file "lib/phoenix/web/templates/blog/post/form.html.eex"
+
       assert_file "lib/phoenix/web/templates/blog/post/edit.html.eex", fn file ->
         assert file =~ " blog_post_path(@conn"
       end
+
       assert_file "lib/phoenix/web/templates/blog/post/index.html.eex", fn file ->
         assert file =~ " blog_post_path(@conn"
       end
+
       assert_file "lib/phoenix/web/templates/blog/post/new.html.eex", fn file ->
         assert file =~ " blog_post_path(@conn"
       end
+
       assert_file "lib/phoenix/web/templates/blog/post/show.html.eex", fn file ->
         assert file =~ " blog_post_path(@conn"
       end
+
       assert_file "lib/phoenix/web/views/blog/post_view.ex", fn file ->
         assert file =~ "defmodule Phoenix.Web.Blog.PostView"
       end
