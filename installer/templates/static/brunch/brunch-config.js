@@ -18,6 +18,11 @@ exports.config = {
       //     "web/static/vendor/js/bootstrap.min.js"
       //   ]
       // }
+      //
+      // Or, you just bundle your application to a single file based on your imports/requires
+      // entryPoints: {
+      //   "web/static/js/app.js": "js/app.js"
+      // }
     },
     stylesheets: {
       joinTo: "css/app.css",
