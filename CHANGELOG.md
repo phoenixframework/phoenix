@@ -19,7 +19,7 @@ See these [`1.2.x` to `1.3.x` upgrade instructions](https://gist.github.com/chri
   * [Digester] Add `mix phx.digest.clean` to remove old versions of compiled assets
   * [phx.new] Add Erlang 20 support in `phx.new` installer archive
 
-* Big Fixes
+* Bug Fixes
   * [Controller] Harden local redirect against arbitrary URL redirection
   * [Controller] Fix issue causing flash session to remain when using `clear_flash/1`
 
