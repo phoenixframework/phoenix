@@ -12,7 +12,7 @@ defmodule <%= web_namespace %>.Application do
       # worker(<%= web_namespace %>.Worker, [arg1, arg2, arg3]),
     ]
 
-    # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
+    # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: <%= web_namespace %>.Supervisor]
     Supervisor.start_link(children, opts)

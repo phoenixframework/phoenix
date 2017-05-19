@@ -1,7 +1,7 @@
 defmodule <%= app_module %> do
   use Application
 
-  # See http://elixir-lang.org/docs/stable/elixir/Application.html
+  # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
   def start(_type, _args) do
     import Supervisor.Spec
@@ -16,7 +16,7 @@ defmodule <%= app_module %> do
       # worker(<%= app_module %>.Worker, [arg1, arg2, arg3]),
     ]
 
-    # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
+    # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: <%= app_module %>.Supervisor]
     Supervisor.start_link(children, opts)
