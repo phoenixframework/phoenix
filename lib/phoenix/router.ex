@@ -72,7 +72,7 @@ defmodule Phoenix.Router do
 
   The URL generated in the named URL helpers is based on the configuration for
   `:url`, `:http` and `:https`. However, if for some reason you need to manually
-  control the URL generation, the url helpers also allow you to pass in a [`URI`](https://hexdocs.pm/elixir/URI.html)
+  control the URL generation, the url helpers also allow you to pass in a `URI`
   struct:
 
       uri = %URI{scheme: "https", host: "other.example.com"}
