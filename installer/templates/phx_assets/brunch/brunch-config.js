@@ -7,8 +7,8 @@ exports.config = {
       // To use a separate vendor.js bundle, specify two files path
       // http://brunch.io/docs/config#-files-
       // joinTo: {
-      //  "js/app.js": /^(js)/,
-      //  "js/vendor.js": /^(vendor)|(deps)/
+      //   "js/app.js": /^js/,
+      //   "js/vendor.js": /^(?!js)/
       // }
       //
       // To change the order of concatenation of files, explicitly mention here
