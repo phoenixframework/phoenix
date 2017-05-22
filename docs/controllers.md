@@ -4,10 +4,10 @@ Phoenix controllers act as intermediary modules. Their functions - called action
 
 Phoenix controllers also build on the Plug package, and are themselves plugs. Controllers provide the functions to do almost anything we need to in an action. If we do find ourselves looking for something that Phoenix controllers don't provide; however, we might find what we're looking for in Plug itself. Please see the [Plug Guide](plug.html) or [Plug Documentation](http://hexdocs.pm/plug/) for more information.
 
-A newly generated Phoenix app will have a single controller, the `PageController`, which can be found at `web/controllers/page_controller.ex` and looks like this.
+A newly generated Phoenix app will have a single controller, the `PageController`, which can be found at `lib/hello_phoenix/web/controllers/page_controller.ex` and looks like this.
 
 ```elixir
-defmodule HelloPhoenix.PageController do
+defmodule HelloPhoenix.Web.PageController do
   use HelloPhoenix.Web, :controller
 
   def index(conn, _params) do
@@ -26,19 +26,19 @@ Controller actions are just functions. We can name them anything we like as long
 For example, in `web/router.ex` we could change the action name in the default route that Phoenix gives us in a new app from index:
 
 ```elixir
-get "/", HelloPhoenix.PageController, :index
+get "/", PageController, :index
 ```
 
 To test:
 
 ```elixir
-get "/", HelloPhoenix.PageController, :test
+get "/", PageController, :test
 ```
 
 As long as we change the action name in the `PageController` to `test` as well, the welcome page will load as before.
 
 ```elixir
-defmodule HelloPhoenix.PageController do
+defmodule HelloPhoenix.Web.PageController do
   . . .
 
   def test(conn, _params) do
@@ -64,7 +64,7 @@ The first parameter is always `conn`, a struct which holds information about the
 The second parameter is `params`. Not surprisingly, this is a map which holds any parameters passed along in the HTTP request. It is a good practice to pattern match against params in the function signature to provide data in a simple package we can pass on to rendering. We saw this in the [Adding Pages guide](adding_pages.html) when we added a messenger parameter to our `show` route in `web/controllers/hello_controller.ex`.
 
 ```elixir
-defmodule HelloPhoenix.HelloController do
+defmodule HelloPhoenix.Web.HelloController do
   . . .
 
   def show(conn, %{"messenger" => messenger}) do
@@ -87,12 +87,12 @@ The data world is your oyster, but we won't be covering these options in these g
 
 There are times when we need to communicate with users during the course of an action. Maybe there was an error updating a model. Maybe we just want to welcome them back to the application. For this, we have flash messages.
 
-The `Phoenix.Controller` module provides the `put_flash/3` and `get_flash/2` functions to help us set and retrieve flash messages as a key value pair. Let's set two flash messages in our `HelloPhoenix.PageController` to try this out.
+The `Phoenix.Controller` module provides the `put_flash/3` and `get_flash/2` functions to help us set and retrieve flash messages as a key value pair. Let's set two flash messages in our `HelloPhoenix.Web.PageController` to try this out.
 
 To do this we modify the `index` action as follows:
 
 ```elixir
-defmodule HelloPhoenix.PageController do
+defmodule HelloPhoenix.Web.PageController do
   . . .
   def index(conn, _params) do
     conn
@@ -103,11 +103,11 @@ defmodule HelloPhoenix.PageController do
 end
 ```
 
-The `Phoenix.Controller` module is not particular about the keys we use. As long as we are internally consistent, all will be well. `:info` and `:error`, however, are common.
+The `Phoenix.Web.Controller` module is not particular about the keys we use. As long as we are internally consistent, all will be well. `:info` and `:error`, however, are common.
 
 In order to see our flash messages, we need to be able to retrieve them and display them in a template/layout. One way to do the first part is with `get_flash/2` which takes `conn` and the key we care about. It then returns the value for that key.
 
-Fortunately, our application layout, `web/templates/layout/app.html.eex`, already has markup for displaying flash messages.
+Fortunately, our application layout, `lib/hello_phoenix/web/templates/layout/app.html.eex`, already has markup for displaying flash messages.
 
 ```html
 <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
@@ -170,10 +170,10 @@ For this, Phoenix provides the `render/3` function.
 
 Interestingly, `render/3` is defined in the `Phoenix.View` module instead of `Phoenix.Controller`, but it is aliased in `Phoenix.Controller` for convenience.
 
-We have already seen the render function in the [Adding Pages Guide](adding_pages.html). Our `show` action in `web/controllers/hello_controller.ex` looked like this.
+We have already seen the render function in the [Adding Pages Guide](adding_pages.html). Our `show` action in `lib/hello_phoenix/web/controllers/hello_controller.ex` looked like this.
 
 ```elixir
-defmodule HelloPhoenix.HelloController do
+defmodule HelloPhoenix.Web.HelloController do
   use HelloPhoenix.Web, :controller
 
   def show(conn, %{"messenger" => messenger}) do
@@ -182,7 +182,7 @@ defmodule HelloPhoenix.HelloController do
 end
 ```
 
-In order for the `render/3` function to work correctly, the controller must have the same root name as the individual view. The individual view must also have the same root name as the template directory where the `show.html.eex` template lives. In other words, the `HelloController` requires `HelloView`, and `HelloView` requires the existence of the `web/templates/hello` directory, which must contain the `show.html.eex` template.
+In order for the `render/3` function to work correctly, the controller must have the same root name as the individual view. The individual view must also have the same root name as the template directory where the `show.html.eex` template lives. In other words, the `HelloController` requires `HelloView`, and `HelloView` requires the existence of the `lib/hello_phoenix/web/templates/hello` directory, which must contain the `show.html.eex` template.
 
 `render/3` will also pass the value which the `show` action received for `messenger` from the params hash into the template for interpolation.
 
@@ -230,7 +230,7 @@ end
 What if we want to plug `assign_welcome_message`, but only for some of our actions? Phoenix offers a solution to this by letting us specify which actions a plug should be applied to. If we only wanted `plug :assign_welcome_message` to work on the `index` and `show` actions, we could do this.
 
 ```elixir
-defmodule HelloPhoenix.PageController do
+defmodule HelloPhoenix.Web.PageController do
   use HelloPhoenix.Web, :controller
 
   plug :assign_welcome_message, "Hi!" when action in [:index, :show]
@@ -268,26 +268,26 @@ Rendering does not end with the template, though. By default, the results of the
 
 ### Assigning Layouts
 
-Layouts are just a special subset of templates. They live in `/web/templates/layout`. Phoenix created one for us when we generated our app. It's called `app.html.eex`, and it is the layout into which all templates will be rendered by default.
+Layouts are just a special subset of templates. They live in `lib/hello_phoenix/web/templates/layout`. Phoenix created one for us when we generated our app. It's called `app.html.eex`, and it is the layout into which all templates will be rendered by default.
 
-Since layouts are really just templates, they need a view to render them. This is the `LayoutView` module defined in `/web/views/layout_view.ex`. Since Phoenix generated this view for us, we won't have to create a new one as long as we put the layouts we want to render inside the `/web/templates/layout` directory.
+Since layouts are really just templates, they need a view to render them. This is the `LayoutView` module defined in `lib/hello_phoenix/web/views/layout_view.ex`. Since Phoenix generated this view for us, we won't have to create a new one as long as we put the layouts we want to render inside the `lib/hello_phoenix/web/templates/layout` directory.
 
 Before we create a new layout, though, let's do the simplest possible thing and render a template with no layout at all.
 
 The `Phoenix.Controller` module provides the `put_layout/2` function for us to switch layouts. This takes `conn` as its first argument and a string for the basename of the layout we want to render. Another clause of the function will match on the boolean `false` for the second argument, and that's how we will render the Phoenix welcome page without a layout.
 
-In a freshly generated Phoenix app, edit the `index` action of the `PageController` module `web/controllers/page_controller.ex` to look like this.
+In a freshly generated Phoenix app, edit the `index` action of the `PageController` module `lib/hello_phoenix/web/controllers/page_controller.ex` to look like this.
 
 ```elixir
 def index(conn, params) do
   conn
   |> put_layout(false)
-  |> render "index.html"
+  |> render("index.html")
 end
 ```
 After reloading [http://localhost:4000/](http://localhost:4000/), we should see a very different page, one with no title, logo image, or css styling at all.
 
-Very Important! For function calls in the middle of a pipeline, like `put_layout/2` here, it is critical to use parenthesis around the arguments because the pipe operator binds very tightly. This leads to parsing problems and very strange results.
+Very Important! For function calls in a pipeline, it is critical to use parenthesis around the arguments because the pipe operator binds very tightly. This leads to parsing problems and very strange results.
 
 If you ever get a stack trace that looks like this,
 
@@ -307,7 +307,7 @@ This is fine.
 def index(conn, params) do
   conn
   |> put_layout(false)
-  |> render "index.html"
+  |> render("index.html")
 end
 ```
 
@@ -321,13 +321,13 @@ def index(conn, params) do
 end
 ```
 
-Now let's actually create another layout and render the index template into it. As an example, let's say we had a different layout for the admin section of our application which didn't have the logo image. To do this, let's copy the existing `app.html.eex` to a new file `admin.html.eex` in the same directory `web/templates/layout`. Then let's remove the line in `admin.html.eex` that displays the logo.
+Now let's actually create another layout and render the index template into it. As an example, let's say we had a different layout for the admin section of our application which didn't have the logo image. To do this, let's copy the existing `app.html.eex` to a new file `admin.html.eex` in the same directory `lib/hello_phoenix/web/templates/layout`. Then let's remove the line in `admin.html.eex` that displays the logo.
 
 ```html
 <span class="logo"></span> <!-- remove this line -->
 ```
 
-Then, pass the basename of the new layout into `put_layout/2` in our `index` action in `web/controllers/page_controller.ex`.
+Then, pass the basename of the new layout into `put_layout/2` in our `index` action in `lib/hello_phoenix/web/controllers/page_controller.ex`.
 
 ```elixir
 def index(conn, params) do
@@ -344,23 +344,23 @@ Rendering HTML through a template is fine, but what if we need to change the ren
 
 Phoenix allows us to change formats on the fly with the `_format` query string parameter. To make this happen, Phoenix requires an appropriately named view and an appropriately named template in the correct directory.
 
-As an example, let's take the `PageController` index action from a newly generated app. Out of the box, this has the right view, `PageView`, the right templates directory, `/web/templates/page`, and the right template for rendering HTML, `index.html.eex`.
+As an example, let's take the `PageController` index action from a newly generated app. Out of the box, this has the right view, `PageView`, the right templates directory, `lib/hello_phoenix/web/templates/page`, and the right template for rendering HTML, `index.html.eex`.
 
 ```elixir
 def index(conn, _params) do
   render conn, "index.html"
 end
 ```
-What it doesn't have is an alternative template for rendering text. Let's add one at `/web/templates/page/index.text.eex`. Here is our example `index.text.eex` template.
+What it doesn't have is an alternative template for rendering text. Let's add one at `lib/hello_phoenix/web/templates/page/index.text.eex`. Here is our example `index.text.eex` template.
 
 ```elixir
 OMG, this is actually some text.
 ```
 
-There are just a few more things we need to do to make this work. We need to tell our router that it should accept the `text` format. We do that by adding `text` to the list of accepted formats in the `:browser` pipeline. Let's open up `web/router.ex` and change the `plug :accepts` to include `text` as well as `html` like this.
+There are just a few more things we need to do to make this work. We need to tell our router that it should accept the `text` format. We do that by adding `text` to the list of accepted formats in the `:browser` pipeline. Let's open up `lib/hello_phoenix/web/router.ex` and change the `plug :accepts` to include `text` as well as `html` like this.
 
 ```elixir
-defmodule HelloPhoenix.Router do
+defmodule HelloPhoenix.Web.Router do
   use HelloPhoenix.Web, :router
 
   pipeline :browser do
@@ -402,13 +402,13 @@ Now if we go to `http://localhost:4000/?_format=text&message=CrazyTown`, we will
 
 Analogous to the `_format` query string param, we can render any sort of format we want by modifying the HTTP Content-Type Header and providing the appropriate template.
 
-If we wanted to render an xml version of our `index` action, we might implement the action like this in `web/page_controller.ex`.
+If we wanted to render an xml version of our `index` action, we might implement the action like this in `lib/hello_phoenix/web/page_controller.ex`.
 
 ```elixir
 def index(conn, _params) do
   conn
   |> put_resp_content_type("text/xml")
-  |> render "index.xml", content: some_xml_content
+  |> render("index.xml", content: some_xml_content)
 end
 ```
 
@@ -436,7 +436,7 @@ The status code we provide must be valid - [Cowboy](https://github.com/ninenines
 
 If the action sends a response - either renders or redirects - changing the code will not change the behavior of the response. If, for example, we set the status to 404 or 500 and then `render "index.html"`, we do not get an error page. Similarly, no 300 level code will actually redirect. (It wouldn't know where to redirect to, even if the code did affect behavior.)
 
-The following implementation of the `HelloPhoenix.PageController` `index` action, for example, will _not_ render the default `not_found` behavior as expected.
+The following implementation of the `HelloPhoenix.Web.PageController` `index` action, for example, will _not_ render the default `not_found` behavior as expected.
 
 ```elixir
 def index(conn, _params) do
@@ -446,13 +446,13 @@ def index(conn, _params) do
 end
 ```
 
-The correct way to render the 404 page from `HelloPhoenix.PageController` is:
+The correct way to render the 404 page from `HelloPhoenix.Web.PageController` is:
 
 ```elixir
 def index(conn, _params) do
   conn
   |> put_status(:not_found)
-  |> render(HelloPhoenix.ErrorView, "404.html")
+  |> render(HelloPhoenix.Web.ErrorView, "404.html")
 end
 ```
 
@@ -462,20 +462,20 @@ Often, we need to redirect to a new url in the middle of a request. A successful
 
 Whatever the circumstance, Phoenix controllers provide the handy `redirect/2` function to make redirection easy. Phoenix differentiates between redirecting to a path within the application and redirecting to a url - either within our application or external to it.
 
-In order to try out `redirect/2`, let's create a new route in `web/router.ex`.
+In order to try out `redirect/2`, let's create a new route in `lib/hello_phoenix/web/router.ex`.
 
 ```elixir
-defmodule HelloPhoenix.Router do
+defmodule HelloPhoenix.Web.Router do
   use HelloPhoenix.Web, :router
   . . .
 
-  scope "/", HelloPhoenix do
+  scope "/", HelloPhoenix.Web do
     . . .
     get "/", PageController, :index
   end
 
   # New route for redirects
-  scope "/", HelloPhoenix do
+  scope "/", HelloPhoenix.Web do
     get "/redirect_test", PageController, :redirect_test, as: :redirect_test
   end
   . . .
@@ -513,7 +513,7 @@ end
 We can also make use of the path helpers we learned about in the [Routing Guide](routing.html).
 
 ```elixir
-defmodule HelloPhoenix.PageController do
+defmodule HelloPhoenix.Web.PageController do
   use HelloPhoenix.Web, :controller
 
   def index(conn, _params) do
