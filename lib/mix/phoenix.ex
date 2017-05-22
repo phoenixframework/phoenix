@@ -211,7 +211,7 @@ defmodule Mix.Phoenix do
   end
 
   @doc """
-  Returns the contex app path prefix to be used in generated context files.
+  Returns the context app path prefix to be used in generated context files.
   """
   def context_app_path(ctx_app, rel_path \\ "") when is_atom(ctx_app) do
     if ctx_app == otp_app() do
@@ -324,7 +324,7 @@ defmodule Mix.Phoenix do
 
         See the --web option to namespace similarly named resources
         """
-        unless Mix.shell.yes?("Proceeed with interactive overwrite?") do
+        unless Mix.shell.yes?("Proceed with interactive overwrite?") do
           System.halt()
         end
     end
