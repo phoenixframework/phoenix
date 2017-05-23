@@ -145,8 +145,7 @@ warning: redefining module HelloPhoenix.Web.PageView (current version loaded fro
 
 {:reloaded, HelloPhoenix.Web.PageView, [HelloPhoenix.Web.PageView]}
 
-iex(3)> Phoenix.View.render(HelloPhoenix.Web.PageView, "test.html",
-message: "Assigns has an @.")
+iex(3)> Phoenix.View.render(HelloPhoenix.Web.PageView, "test.html", message: "Assigns has an @.")
 {:safe,
   [[[["" | "I came from assigns: "] | "Assigns has an @."] |
   "\nThis is the message: "] | "Hello from the view!"]}
