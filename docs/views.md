@@ -48,7 +48,7 @@ When we reload the Welcome to Phoenix page, we should see our new title.
 
 The `<%=` and `%>` are from the Elixir [EEx](http://elixir-lang.org/docs/stable/eex/) project. They enclose executable Elixir code within a template. The `=` tells EEx to print the result. If the `=` is not there, EEx will still execute the code, but there will be no output. In our example, we are calling the `title/0` function from our `LayoutView` and printing the output into the title tag.
 
-Note that we didn't need to fully qualify `title/0` with `HelloPhoenix.Web.LayoutView` because our `LayoutView` actually does the rendering. In fact, "templates" in Phoenix area really just function definitions on their view module. You can try this out by temporarily deleting your `lib/hello_phoenix/web/templates/page/index.html.eex` file and adding this function clause to your `PageView` module in lib/hello_phoenix/web/views/page_view.ex`.
+Note that we didn't need to fully qualify `title/0` with `HelloPhoenix.Web.LayoutView` because our `LayoutView` actually does the rendering. In fact, "templates" in Phoenix area really just function definitions on their view module. You can try this out by temporarily deleting your `lib/hello_phoenix/web/templates/page/index.html.eex` file and adding this function clause to your `PageView` module in `lib/hello_phoenix/web/views/page_view.ex`.
 
 ```elixir
 defmodule HelloPhoenix.Web.PageView do
@@ -65,7 +65,7 @@ Now if you fire up the server with `mix phx.server` and visit `http://locahost:4
 rendering with asigns [:conn, :view_module, :view_template]
 ```
 
-Pretty neat, right? At compile-time, phoenix precompiles all `*.html.eex` templates and turns them into `render/2` function clauses on their respective view modules. At runtime, all templates are already loaded in memory. There's no disk reads, or complex file caching or template caching involved. This is also why we were able to define functions like `title/0` in our `LayoutView` and they were immediately available inside the layout's `app.html.eex` – the call to `title/0` was just a local function call!
+Pretty neat, right? At compile-time, phoenix precompiles all `*.html.eex` templates and turns them into `render/2` function clauses on their respective view modules. At runtime, all templates are already loaded in memory. There's no disk reads, complex file caching, or template engine computation involved. This is also why we were able to define functions like `title/0` in our `LayoutView` and they were immediately available inside the layout's `app.html.eex` – the call to `title/0` was just a local function call!
 
 When we `use HelloPhoenix.Web, :view`, we get other conveniences as well. Since the `view/0` function imports `HelloPhoenix.Web.Router.Helpers`, we don't have to fully qualify path helpers in templates. Let's see how that works by changing the template for our Welcome to Phoenix page.
 
