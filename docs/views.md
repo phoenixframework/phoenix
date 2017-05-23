@@ -268,7 +268,7 @@ Great, so we have a `render/2` function that takes a template and an `assigns` m
 </html>
 ```
 
-Now we can use the `render/2` function we saw above when we were experimenting with rendering in the `iex` session. Since we know that Phoenix will precompile the `404.html.eex` template as a `render("index.html.eex, assigns)` function call, we can delete the clause from our ErrorView.
+Now we can use the `render/2` function we saw above when we were experimenting with rendering in the `iex` session. Since we know that Phoenix will precompile the `404.html.eex` template as a `render("index.html.eex, assigns)` function clause, we can delete the clause from our ErrorView.
 
 ```diff
 - def render("404.html", _assigns) do
