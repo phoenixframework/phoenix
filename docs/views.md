@@ -4,16 +4,16 @@ Phoenix views have two main jobs. First and foremost, they render templates (thi
 
 ## Rendering Templates
 
-Phoenix assumes a strong naming convention from controllers to views to the templates they render. The `PageController` requires a `PageView` to render templates in the `web/templates/page` directory.
+Phoenix assumes a strong naming convention from controllers to views to the templates they render. The `PageController` requires a `PageView` to render templates in the `lib/hello_phoenix/web/templates/page` directory.
 
-If we want to, we can change the directory Phoenix considers to be the template root. Phoenix provides a `view/0` function in the `HelloPhoenix.Web` module defined in `web/web.ex`. The first line of `view/0` allows us to change our root directory by changing the value assigned to the `:root` key.
+If we want to, we can change the directory Phoenix considers to be the template root. Phoenix provides a `view/0` function in the `HelloPhoenix.Web` module defined in `lib/hello_phoenix/web/web.ex`. The first line of `view/0` allows us to change our root directory by changing the value assigned to the `:root` key.
 
-A newly generated Phoenix application has three view modules - `ErrorView`, `LayoutView`, and `PageView` -  which are all in the, `web/views` directory.
+A newly generated Phoenix application has three view modules - `ErrorView`, `LayoutView`, and `PageView` -  which are all in the, `lib/hello_phoenix/web/views` directory.
 
 Let's take a quick look at the `LayoutView`.
 
 ```elixir
-defmodule HelloPhoenix.LayoutView do
+defmodule HelloPhoenix.Web.LayoutView do
   use HelloPhoenix.Web, :view
 end
 ```
@@ -22,7 +22,7 @@ That's simple enough. There's only one line, `use HelloPhoenix.Web, :view`. This
 
 At the top of this guide, we mentioned that views are a place to put functions for use in our templates. Let's experiment with that a little bit.
 
-Let's open up our application layout template, `templates/layout/app.html.eex`, and change this line,
+Let's open up our application layout template, `lib/hello_phoenix/web/templates/layout/app.html.eex`, and change this line,
 
 ```html
 <title>Hello Phoenix!</title>
@@ -37,7 +37,7 @@ to call a `title/0` function, like this.
 Now let's add a `title/0` function to our `LayoutView`.
 
 ```elixir
-defmodule HelloPhoenix.LayoutView do
+defmodule HelloPhoenix.Web.LayoutView do
   use HelloPhoenix.Web, :view
 
   def title do
@@ -50,15 +50,15 @@ When we reload the Welcome to Phoenix page, we should see our new title.
 
 The `<%=` and `%>` are from the Elixir [EEx](http://elixir-lang.org/docs/stable/eex/) project. They enclose executable Elixir code within a template. The `=` tells EEx to print the result. If the `=` is not there, EEx will still execute the code, but there will be no output. In our example, we are calling the `title/0` function from our `LayoutView` and printing the output into the title tag.
 
-Note that we didn't need to fully qualify `title/0` with `HelloPhoenix.LayoutView` because our `LayoutView` actually does the rendering.
+Note that we didn't need to fully qualify `title/0` with `HelloPhoenix.Web.LayoutView` because our `LayoutView` actually does the rendering.
 
-When we `use HelloPhoenix.Web, :view`, we get other conveniences as well. Since the `view/0` function imports `HelloPhoenix.Router.Helpers`, we don't have to fully qualify path helpers in templates. Let's see how that works by changing the template for our Welcome to Phoenix page.
+When we `use HelloPhoenix.Web, :view`, we get other conveniences as well. Since the `view/0` function imports `HelloPhoenix.Web.Router.Helpers`, we don't have to fully qualify path helpers in templates. Let's see how that works by changing the template for our Welcome to Phoenix page.
 
-Let's open up the `templates/page/index.html.eex` and locate this stanza.
+Let's open up the `lib/hello_phoenix/web/templates/page/index.html.eex` and locate this stanza.
 
 ```html
 <div class="jumbotron">
-  <h2>Welcome to Phoenix!</h2>
+  <h2><%= gettext "Welcome to %{name}!", name: "Phoenix" %></h2>
   <p class="lead">A productive web framework that<br>does not compromise speed and maintainability.</p>
 </div>
 ```
@@ -67,7 +67,7 @@ Then let's add a line with a link back to the same page. (The objective is to se
 
 ```html
 <div class="jumbotron">
-  <h2>Welcome to Phoenix!</h2>
+  <h2><%= gettext "Welcome to %{name}!", name: "Phoenix" %></h2>
   <p class="lead">A productive web framework that<br>does not compromise speed and maintainability.</p>
   <p><a href="<%= page_path @conn, :index %>">Link back to this page</a></p>
 </div>
@@ -79,7 +79,7 @@ Now we can reload the page and view source to see what we have.
 <a href="/">Link back to this page</a>
 ```
 
-Great, `page_path/2` evaluated to `/` as we would expect, and we didn't need to qualify it with `HelloPhoenix.View`.
+Great, `page_path/2` evaluated to `/` as we would expect, and we didn't need to qualify it with `Phoenix.View`.
 
 ### More About Views
 
@@ -87,10 +87,10 @@ You might be wondering how views are able to work so closely with templates.
 
 The `Phoenix.View` module gains access to template behavior via the `use Phoenix.Template` line in its `__using__/1` macro. `Phoenix.Template` provides many convenience methods for working with templates - finding them, extracting their names and paths, and much more.
 
-Let's experiment a little with one of the generated views Phoenix provides us, `web/views/page_view.ex`. We'll add a `message/0` function to it, like this.
+Let's experiment a little with one of the generated views Phoenix provides us, `lib/hello_phoenix/web/views/page_view.ex`. We'll add a `message/0` function to it, like this.
 
 ```elixir
-defmodule HelloPhoenix.PageView do
+defmodule HelloPhoenix.Web.PageView do
   use HelloPhoenix.Web, :view
 
   def message do
@@ -99,16 +99,16 @@ defmodule HelloPhoenix.PageView do
 end
 ```
 
-Now let's create a new template to play around with, `web/templates/page/test.html.eex`.
+Now let's create a new template to play around with, `lib/hello_phoenix/web/templates/page/test.html.eex`.
 
 ```html
-This is the message: <%= message %>
+This is the message: <%= message() %>
 ```
 
 This doesn't correspond to any action in our controller, but we'll exercise it in an `iex` session. At the root of our project, we can run `iex -S mix`, and then explicitly render our template.
 
 ```console
-iex(1)> Phoenix.View.render(HelloPhoenix.PageView, "test.html", %{})
+iex(1)> Phoenix.View.render(HelloPhoenix.Web.PageView, "test.html", %{})
   {:safe, [["" | "This is the message: "] | "Hello from the view!"]}
 ```
 As we can see, we're calling `render/3` with the individual view responsible for our test template, the name of our test template, and an empty map representing any data we might have wanted to pass in.
@@ -121,17 +121,19 @@ What happens if we assign some key value pairs to the third argument of `render/
 
 ```html
 I came from assigns: <%= @message %>
-This is the message: <%= message %>
+This is the message: <%= message() %>
 ```
 
 Note the `@` in the top line. Now if we change our function call, we see a different rendering after recompiling `PageView` module.
 
 ```console
-iex(2)> r HelloPhoenix.PageView
-web/views/page_view.ex:1: warning: redefining module HelloPhoenix.PageView
-{:reloaded, HelloPhoenix.PageView, [HelloPhoenix.PageView]}
+iex(2)> r HelloPhoenix.Web.PageView
+warning: redefining module HelloPhoenix.Web.PageView (current version loaded from _build/dev/lib/hello_phoenix/ebin/Elixir.HelloPhoenix.Web.PageView.beam)
+  lib/hello_phoenix/web/views/page_view.ex:1
 
-iex(3)> Phoenix.View.render(HelloPhoenix.PageView, "test.html", message: "Assigns has an @.")
+{:reloaded, HelloPhoenix.Web.PageView, [HelloPhoenix.Web.PageView]}
+
+iex(3)> Phoenix.View.render(HelloPhoenix.Web.PageView, "test.html", message: "Assigns has an @.")
 {:safe,
   [[[["" | "I came from assigns: "] | "Assigns has an @."] |
   "\nThis is the message: "] | "Hello from the view!"]}
@@ -139,7 +141,7 @@ iex(3)> Phoenix.View.render(HelloPhoenix.PageView, "test.html", message: "Assign
 Let's test out the HTML escaping, just for fun.
 
 ```console
-iex(4)> Phoenix.View.render(HelloPhoenix.PageView, "test.html", message: "<script>badThings();</script>")
+iex(4)> Phoenix.View.render(HelloPhoenix.Web.PageView, "test.html", message: "<script>badThings();</script>")
 {:safe,
   [[[["" | "I came from assigns: "] |
      "&lt;script&gt;badThings();&lt;/script&gt;"] |
@@ -149,16 +151,16 @@ iex(4)> Phoenix.View.render(HelloPhoenix.PageView, "test.html", message: "<scrip
 If we need only the rendered string, without the whole tuple, we can use the `render_to_iodata/3`.
 
  ```console
- iex(5)> Phoenix.View.render_to_iodata(HelloPhoenix.PageView, "test.html", message: "Assigns has an @.")
+ iex(5)> Phoenix.View.render_to_iodata(HelloPhoenix.Web.PageView, "test.html", message: "Assigns has an @.")
  [[[["" | "I came from assigns: "] | "Assigns has an @."] |
    "\nThis is the message: "] | "Hello from the view!"]
   ```
 
 ### A Word About Layouts
 
-Layouts are just templates. They have a view, just like other templates. In a newly generated app, this is `web/views/layout_view.ex`. You may be wondering how the string resulting from a rendered view ends up inside a layout. That's a great question!
+Layouts are just templates. They have a view, just like other templates. In a newly generated app, this is `lib/hello_phoenix/web/views/layout_view.ex`. You may be wondering how the string resulting from a rendered view ends up inside a layout. That's a great question!
 
-If we look at `web/templates/layout/app.html.eex`, just about in the middle of the `<body>`, we will see this.
+If we look at `lib/hello_phoenix/web/templates/layout/app.html.eex`, just about in the middle of the `<body>`, we will see this.
 
 ```html
 <%= render @view_module, @view_template, assigns %>
@@ -168,10 +170,10 @@ This is where the view module and its template from the controller are rendered 
 
 ## The ErrorView
 
-Phoenix has a view called the `ErrorView` which lives in `web/views/error_view.ex`. The purpose of the `ErrorView` is to handle two of the most common errors - `404 not found` and `500 internal error` - in a general way, from one centralized location. Let's see what it looks like.
+Phoenix has a view called the `ErrorView` which lives in `lib/hello_phoenix/web/views/error_view.ex`. The purpose of the `ErrorView` is to handle two of the most common errors - `404 not found` and `500 internal error` - in a general way, from one centralized location. Let's see what it looks like.
 
 ```elixir
-defmodule HelloPhoenix.ErrorView do
+defmodule HelloPhoenix.Web.ErrorView do
   use HelloPhoenix.Web, :view
 
   def render("404.html", _assigns) do
@@ -195,7 +197,7 @@ Before we dive into this, let's see what the rendered `404 not found` message lo
 ```elixir
 use Mix.Config
 
-config :hello_phoenix, HelloPhoenix.Endpoint,
+config :hello_phoenix, HelloPhoenix.Web.Endpoint,
   http: [port: 4000],
   debug_errors: false,
   code_reloader: true,
@@ -218,11 +220,11 @@ end
 
 Great, so we have a `render/2` function that takes a template and an `assigns` map, which we ignore. Where is this `render/2` function being called from?
 
-The answer is the `render/5` function defined in the `Phoenix.Endpoint.RenderErrors` module. The whole purpose of this module is to catch errors and render them with a view, in our case, the `HelloPhoenix.ErrorView`.
+The answer is the `render/5` function defined in the `Phoenix.Endpoint.RenderErrors` module. The whole purpose of this module is to catch errors and render them with a view, in our case, the `HelloPhoenix.Web.ErrorView`.
 
 Now that we understand how we got here, let's make a better error page.
 
-Phoenix generates an `ErrorView` for us, but it doesn't give us a `web/templates/error` directory. Let's create one now. Inside our new directory, let's add a template, `not_found.html.eex` and give it some markup - a mixture of our application layout and a new `div` with our message to the user.
+Phoenix generates an `ErrorView` for us, but it doesn't give us a `lib/hello_phoenix/web/templates/error` directory. Let's create one now. Inside our new directory, let's add a template, `not_found.html.eex` and give it some markup - a mixture of our application layout and a new `div` with our message to the user.
 
 
 ```html
@@ -291,7 +293,7 @@ It is possible to respond with JSON back directly from the controller and skip t
 Let's take our `PageController`, and see what it might look like when we respond with some static page maps as JSON, instead of HTML.
 
 ```elixir
-defmodule HelloPhoenix.PageController do
+defmodule HelloPhoenix.Web.PageController do
   use HelloPhoenix.Web, :controller
 
   def show(conn, _params) do
@@ -311,7 +313,7 @@ end
 Here, we have our `show/2` and `index/2` actions returning static page data. Instead of passing in `"show.html"` to `render/3` as the template name, we pass `"show.json"`.  This way, we can have views that are responsible for rendering HTML as well as JSON by pattern matching on different file types.
 
 ```elixir
-defmodule HelloPhoenix.PageView do
+defmodule HelloPhoenix.Web.PageView do
   use HelloPhoenix.Web, :view
 
   def render("index.json", %{pages: pages}) do
@@ -365,12 +367,12 @@ It's useful to build our views like this so they can be composable.  Imagine a s
 
 
 ```elixir
-defmodule HelloPhoenix.PageView do
+defmodule HelloPhoenix.Web.PageView do
   use HelloPhoenix.Web, :view
 
   def render("page_with_authors.json", %{page: page}) do
     %{title: page.title,
-      authors: render_many(page.authors, HelloPhoenix.AuthorView, "author.json")}
+      authors: render_many(page.authors, HelloPhoenix.Web.AuthorView, "author.json")}
   end
 
   def render("page.json", %{page: page}) do
