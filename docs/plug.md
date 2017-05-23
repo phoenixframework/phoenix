@@ -24,7 +24,7 @@ Pretty simple, right?
 This is how we use them to compose a series of transformations on our connection in Phoenix:
 
 ```elixir
-defmodule HelloPhoenix.MessageController do
+defmodule HelloPhoenix.Web.MessageController do
   use HelloPhoenix.Web, :controller
 
   plug :put_headers, %{content_encoding: "gzip", cache_control: "max-age=3600"}
@@ -37,7 +37,7 @@ end
 By abiding by the plug contract, `put_headers/2`, `put_layout/2`, and even `action/2` turn an application request into a series of explicit transformations. It doesn't stop there. To really see how effective Plug's design is, let's imagine a scenario where we need to check a series of conditions and then either redirect or halt if a condition fails. Without plug, we would end up with something like this:
 
 ```elixir
-defmodule HelloPhoenix.MessageController do
+defmodule HelloPhoenix.Web.MessageController do
   use HelloPhoenix.Web, :controller
 
   def show(conn, params) do
@@ -64,7 +64,7 @@ end
 Notice how just a few steps of authentication and authorization require complicated nesting and duplication? Let's improve this with a couple of plugs.
 
 ```elixir
-defmodule HelloPhoenix.MessageController do
+defmodule HelloPhoenix.Web.MessageController do
   use HelloPhoenix.Web, :controller
 
   plug :authenticate
@@ -120,7 +120,7 @@ Module plugs are another type of Plug that let us define a connection transforma
 To see this in action, lets write a module plug that puts the `:locale` key and value into the connection assign for downstream use in other plugs, controller actions, and our views.
 
 ```elixir
-defmodule HelloPhoenix.Plugs.Locale do
+defmodule HelloPhoenix.Web.Plugs.Locale do
   import Plug.Conn
 
   @locales ["en", "fr", "de"]
@@ -133,7 +133,7 @@ defmodule HelloPhoenix.Plugs.Locale do
   def call(conn, default), do: assign(conn, :locale, default)
 end
 
-defmodule HelloPhoenix.Router do
+defmodule HelloPhoenix.Web.Router do
   use HelloPhoenix.Web, :router
 
   pipeline :browser do
@@ -142,11 +142,11 @@ defmodule HelloPhoenix.Router do
     plug :fetch_flash
     plug :protect_from_forgery
     plug :put_secure_browser_headers
-    plug HelloPhoenix.Plugs.Locale, "en"
+    plug HelloPhoenix.Web.Plugs.Locale, "en"
   end
   ...
 ```
 
-We are able to add this module plug to our browser pipeline via `plug HelloPhoenix.Plugs.Locale, "en"`. In the `init/1` callback, we pass a default locale to use if none is present in the params. We also use pattern matching to define multiple `call/2` function heads to validate the locale in the params, and fall back to "en" if there is no match.
+We are able to add this module plug to our browser pipeline via `plug HelloPhoenix.Web.Plugs.Locale, "en"`. In the `init/1` callback, we pass a default locale to use if none is present in the params. We also use pattern matching to define multiple `call/2` function heads to validate the locale in the params, and fall back to "en" if there is no match.
 
 That's all there is to Plug. Phoenix embraces the plug design of composable transformations all the way up and down the stack. This is just the first taste. If we ask ourselves, "Could I put this in a plug?" The answer is usually, "Yes!"
