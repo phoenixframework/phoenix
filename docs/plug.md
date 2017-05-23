@@ -81,7 +81,7 @@ defmodule HelloPhoenix.Web.MessageController do
       {:ok, user} ->
         assign(conn, :user, user)
       :error ->
-        conn |> put_flash(:info, "You must be logged in") |> redirect(to: "/") |> halt
+        conn |> put_flash(:info, "You must be logged in") |> redirect(to: "/") |> halt()
     end
   end
 
@@ -89,7 +89,7 @@ defmodule HelloPhoenix.Web.MessageController do
   defp find_message(conn, _) do
     case find_message(conn.params["id"]) do
       nil ->
-        conn |> put_flash(:info, "That message wasn't found") |> redirect(to: "/") |> halt
+        conn |> put_flash(:info, "That message wasn't found") |> redirect(to: "/") |> halt()
       message ->
         assign(conn, :message, message)
     end
@@ -99,7 +99,7 @@ defmodule HelloPhoenix.Web.MessageController do
     if Authorizer.can_access?(conn.assigns[:user], conn.assigns[:message]) do
       conn
     else
-      conn |> put_flash(:info, "You can't access that page") |> redirect(to: "/") |> halt
+      conn |> put_flash(:info, "You can't access that page") |> redirect(to: "/") |> halt()
     end
   end
 end
