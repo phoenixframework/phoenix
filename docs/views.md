@@ -74,8 +74,7 @@ Let's open up the `lib/hello_phoenix/web/templates/page/index.html.eex` and loca
 ```html
 <div class="jumbotron">
   <h2><%= gettext "Welcome to %{name}!", name: "Phoenix" %></h2>
-  <p class="lead">A productive web framework that<br>does not
-compromise speed and maintainability.</p>
+  <p class="lead">A productive web framework that<br>does not compromise speed and maintainability.</p>
 </div>
 ```
 
@@ -84,10 +83,8 @@ Then let's add a line with a link back to the same page. (The objective is to se
 ```html
 <div class="jumbotron">
   <h2><%= gettext "Welcome to %{name}!", name: "Phoenix" %></h2>
-  <p class="lead">A productive web framework that<br>does not
-compromise speed and maintainability.</p>
-  <p><a href="<%= page_path @conn, :index %>">Link back to this
-page</a></p>
+  <p class="lead">A productive web framework that<br>does not compromise speed and maintainability.</p>
+  <p><a href="<%= page_path @conn, :index %>">Link back to this page</a></p>
 </div>
 ```
 
@@ -143,9 +140,7 @@ Note the `@` in the top line. Now if we change our function call, we see a diffe
 
 ```console
 iex(2)> r HelloPhoenix.Web.PageView
-warning: redefining module HelloPhoenix.Web.PageView (current version
-loaded from
-_build/dev/lib/hello_phoenix/ebin/Elixir.HelloPhoenix.Web.PageView.beam)
+warning: redefining module HelloPhoenix.Web.PageView (current version loaded from _build/dev/lib/hello_phoenix/ebin/Elixir.HelloPhoenix.Web.PageView.beam)
   lib/hello_phoenix/web/views/page_view.ex:1
 
 {:reloaded, HelloPhoenix.Web.PageView, [HelloPhoenix.Web.PageView]}
@@ -159,8 +154,7 @@ message: "Assigns has an @.")
 Let's test out the HTML escaping, just for fun.
 
 ```console
-iex(4)> Phoenix.View.render(HelloPhoenix.Web.PageView, "test.html",
-message: "<script>badThings();</script>")
+iex(4)> Phoenix.View.render(HelloPhoenix.Web.PageView, "test.html", message: "<script>badThings();</script>")
 {:safe,
   [[[["" | "I came from assigns: "] |
      "&lt;script&gt;badThings();&lt;/script&gt;"] |
@@ -170,8 +164,7 @@ message: "<script>badThings();</script>")
 If we need only the rendered string, without the whole tuple, we can use the `render_to_iodata/3`.
 
  ```console
- iex(5)> Phoenix.View.render_to_iodata(HelloPhoenix.Web.PageView,
-"test.html", message: "Assigns has an @.")
+ iex(5)> Phoenix.View.render_to_iodata(HelloPhoenix.Web.PageView, "test.html", message: "Assigns has an @.")
  [[[["" | "I came from assigns: "] | "Assigns has an @."] |
    "\nThis is the message: "] | "Hello from the view!"]
   ```
@@ -245,8 +238,7 @@ Great, so we have a `render/2` function that takes a template and an `assigns` m
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width,
-initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
 
@@ -258,8 +250,7 @@ initial-scale=1">
     <div class="container">
       <div class="header">
         <ul class="nav nav-pills pull-right">
-          <li><a href="http://www.phoenixframework.org/docs">Get
-Started</a></li>
+          <li><a href="http://www.phoenixframework.org/docs">Get Started</a></li>
         </ul>
         <span class="logo"></span>
       </div>
@@ -269,8 +260,7 @@ Started</a></li>
       </div>
 
       <div class="footer">
-        <p><a
-href="http://phoenixframework.org">phoenixframework.org</a></p>
+        <p><a href="http://phoenixframework.org">phoenixframework.org</a></p>
       </div>
 
     </div> <!-- /container -->
@@ -362,11 +352,11 @@ It's useful to build our views like this so they can be composable. Imagine a si
 ```elixir
 defmodule HelloPhoenix.Web.PageView do
   use HelloPhoenix.Web, :view
+  alias HelloPhoenix.Web.AuthorView
 
   def render("page_with_authors.json", %{page: page}) do
     %{title: page.title,
-      authors: render_many(page.authors, HelloPhoenix.Web.AuthorView,
-"author.json")}
+      authors: render_many(page.authors, AuthorView, "author.json")}
   end
 
   def render("page.json", %{page: page}) do
