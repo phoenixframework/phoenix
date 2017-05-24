@@ -1,6 +1,6 @@
 defmodule Mix.Tasks.Phx.New.Ecto do
   @moduledoc """
-  Creates a new Ecto project within an umbrella application.
+  Creates a new Ecto project within an umbrella project.
 
   This task is inteded to create a bare Ecto project without
   web integration, which serves as a core application of your
@@ -38,6 +38,8 @@ defmodule Mix.Tasks.Phx.New.Ecto do
 
       mix phx.new.ecto hello_ecto --module HelloEcto
   """
+
+  @shortdoc "Creates a new Ecto project within an umbrella project"
 
   use Mix.Task
   import Phx.New.Generator

@@ -1,6 +1,6 @@
 defmodule Mix.Tasks.Phx.New.Web do
   @moduledoc """
-  Creates a new Phoenix web project within an umbrella application.
+  Creates a new Phoenix web project within an umbrella project.
 
   It expects the name of the otp app as the first argument and
   for the command to be run inside your umbrella application's
@@ -24,6 +24,9 @@ defmodule Mix.Tasks.Phx.New.Web do
   Supports the same options as the `phx.new` task.
   See `Mix.Tasks.Phx.New` for details.
   """
+
+  @shortdoc "Creates a new Phoenix web project within an umbrella project"
+
   use Mix.Task
 
   def run([]) do
