@@ -24,6 +24,9 @@ defmodule Mix.Tasks.Phx.New.Web do
   Supports the same options as the `phx.new` task.
   See `Mix.Tasks.Phx.New` for details.
   """
+
+  @shortdoc "Creates a new Phoenix web project within an umbrella application"
+
   use Mix.Task
 
   def run([]) do

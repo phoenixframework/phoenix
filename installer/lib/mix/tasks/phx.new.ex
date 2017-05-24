@@ -77,7 +77,7 @@ defmodule Mix.Tasks.Phx.New do
   alias Phx.New.{Generator, Project, Single, Umbrella, Web, Ecto}
 
   @version Mix.Project.config[:version]
-  @shortdoc "Creates a new Phoenix v#{@version} application using the experimental generators"
+  @shortdoc "Creates a new Phoenix v#{@version} application"
 
   @switches [dev: :boolean, brunch: :boolean, ecto: :boolean,
              app: :string, module: :string, web_module: :string,
