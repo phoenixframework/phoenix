@@ -4,9 +4,7 @@ Phoenix views have two main jobs. First and foremost, they render templates (thi
 
 ## Rendering Templates
 
-Phoenix assumes a strong naming convention from controllers to views to the templates they render. The `PageController` requires a `PageView` to render templates in the `lib/hello_phoenix/web/templates/page` directory.
-
-If we want to, we can change the directory Phoenix considers to be the template root. Phoenix provides a `view/0` function in the `HelloPhoenix.Web` module defined in `lib/hello_phoenix/web/web.ex`. The first line of `view/0` allows us to change our root directory by changing the value assigned to the `:root` key.
+Phoenix assumes a strong naming convention from controllers to views to the templates they render. The `PageController` requires a `PageView` to render templates in the `lib/hello_phoenix/web/templates/page` directory. If we want to, we can change the directory Phoenix considers to be the template root. Phoenix provides a `view/0` function in the `HelloPhoenix.Web` module defined in `lib/hello_phoenix/web/web.ex`. The first line of `view/0` allows us to change our root directory by changing the value assigned to the `:root` key.
 
 A newly generated Phoenix application has three view modules - `ErrorView`, `LayoutView`, and `PageView` -  which are all in the, `lib/hello_phoenix/web/views` directory.
 
@@ -31,7 +29,7 @@ Let's open up our application layout template, `lib/hello_phoenix/web/templates/
 to call a `title/0` function, like this.
 
 ```elixir
-<title><%= title %></title>
+<title><%= title() %></title>
 ```
 
 Now let's add a `title/0` function to our `LayoutView`.
@@ -50,7 +48,24 @@ When we reload the Welcome to Phoenix page, we should see our new title.
 
 The `<%=` and `%>` are from the Elixir [EEx](http://elixir-lang.org/docs/stable/eex/) project. They enclose executable Elixir code within a template. The `=` tells EEx to print the result. If the `=` is not there, EEx will still execute the code, but there will be no output. In our example, we are calling the `title/0` function from our `LayoutView` and printing the output into the title tag.
 
-Note that we didn't need to fully qualify `title/0` with `HelloPhoenix.Web.LayoutView` because our `LayoutView` actually does the rendering.
+Note that we didn't need to fully qualify `title/0` with `HelloPhoenix.Web.LayoutView` because our `LayoutView` actually does the rendering. In fact, "templates" in Phoenix area really just function definitions on their view module. You can try this out by temporarily deleting your `lib/hello_phoenix/web/templates/page/index.html.eex` file and adding this function clause to your `PageView` module in `lib/hello_phoenix/web/views/page_view.ex`.
+
+```elixir
+defmodule HelloPhoenix.Web.PageView do
+  use HelloPhoenix.Web, :view
+
+  def render("index.html", assigns) do
+    "rendering with asigns #{inspect Map.keys(assigns)}"
+  end
+end
+```
+
+Now if you fire up the server with `mix phx.server` and visit `http://locahost:4000`, you should see the following text below your layout header instead of the main template page:
+```
+rendering with asigns [:conn, :view_module, :view_template]
+```
+
+Pretty neat, right? At compile-time, Phoenix precompiles all `*.html.eex` templates and turns them into `render/2` function clauses on their respective view modules. At runtime, all templates are already loaded in memory. There's no disk reads, complex file caching, or template engine computation involved. This is also why we were able to define functions like `title/0` in our `LayoutView` and they were immediately available inside the layout's `app.html.eex` – the call to `title/0` was just a local function call!
 
 When we `use HelloPhoenix.Web, :view`, we get other conveniences as well. Since the `view/0` function imports `HelloPhoenix.Web.Router.Helpers`, we don't have to fully qualify path helpers in templates. Let's see how that works by changing the template for our Welcome to Phoenix page.
 
@@ -108,14 +123,11 @@ This is the message: <%= message() %>
 This doesn't correspond to any action in our controller, but we'll exercise it in an `iex` session. At the root of our project, we can run `iex -S mix`, and then explicitly render our template.
 
 ```console
-iex(1)> Phoenix.View.render(HelloPhoenix.Web.PageView, "test.html", %{})
+iex(1)> Phoenix.View.render(HelloPhoenix.Web.PageView, "test.html",
+%{})
   {:safe, [["" | "This is the message: "] | "Hello from the view!"]}
 ```
-As we can see, we're calling `render/3` with the individual view responsible for our test template, the name of our test template, and an empty map representing any data we might have wanted to pass in.
-
-The return value is a tuple beginning with the atom `:safe` and the resultant string of the interpolated template.
-
-"Safe" here means that Phoenix has escaped the contents of our rendered template. Phoenix defines its own `Phoenix.HTML.Safe` protocol with implementations for atoms, bitstrings, lists, integers, floats, and tuples to handle this escaping for us as our templates are rendered into strings.
+As we can see, we're calling `render/3` with the individual view responsible for our test template, the name of our test template, and an empty map representing any data we might have wanted to pass in. The return value is a tuple beginning with the atom `:safe` and the resultant io list of the interpolated template. "Safe" here means that Phoenix has escaped the contents of our rendered template. Phoenix defines its own `Phoenix.HTML.Safe` protocol with implementations for atoms, bitstrings, lists, integers, floats, and tuples to handle this escaping for us as our templates are rendered into strings.
 
 What happens if we assign some key value pairs to the third argument of `render/3`? In order to find out, we need to change the template just a bit.
 
@@ -158,9 +170,7 @@ If we need only the rendered string, without the whole tuple, we can use the `re
 
 ### A Word About Layouts
 
-Layouts are just templates. They have a view, just like other templates. In a newly generated app, this is `lib/hello_phoenix/web/views/layout_view.ex`. You may be wondering how the string resulting from a rendered view ends up inside a layout. That's a great question!
-
-If we look at `lib/hello_phoenix/web/templates/layout/app.html.eex`, just about in the middle of the `<body>`, we will see this.
+Layouts are just templates. They have a view, just like other templates. In a newly generated app, this is `lib/hello_phoenix/web/views/layout_view.ex`. You may be wondering how the string resulting from a rendered view ends up inside a layout. That's a great question! If we look at `lib/hello_phoenix/web/templates/layout/app.html.eex`, just about in the middle of the `<body>`, we will see this.
 
 ```html
 <%= render @view_module, @view_template, assigns %>
@@ -218,13 +228,7 @@ def render("404.html", _assigns) do
 end
 ```
 
-Great, so we have a `render/2` function that takes a template and an `assigns` map, which we ignore. Where is this `render/2` function being called from?
-
-The answer is the `render/5` function defined in the `Phoenix.Endpoint.RenderErrors` module. The whole purpose of this module is to catch errors and render them with a view, in our case, the `HelloPhoenix.Web.ErrorView`.
-
-Now that we understand how we got here, let's make a better error page.
-
-Phoenix generates an `ErrorView` for us, but it doesn't give us a `lib/hello_phoenix/web/templates/error` directory. Let's create one now. Inside our new directory, let's add a template, `not_found.html.eex` and give it some markup - a mixture of our application layout and a new `div` with our message to the user.
+Great, so we have a `render/2` function that takes a template and an `assigns` map, which we ignore. Where is this `render/2` function being called from? The answer is the `render/5` function defined in the `Phoenix.Endpoint.RenderErrors` module. The whole purpose of this module is to catch errors and render them with a view, in our case, the `HelloPhoenix.Web.ErrorView`. Now that we understand how we got here, let's make a better error page. Phoenix generates an `ErrorView` for us, but it doesn't give us a `lib/hello_phoenix/web/templates/error` directory. Let's create one now. Inside our new directory, let's add a template, `404.html.eex` and give it some markup - a mixture of our application layout and a new `div` with our message to the user.
 
 
 ```html
@@ -264,33 +268,19 @@ Phoenix generates an `ErrorView` for us, but it doesn't give us a `lib/hello_pho
 </html>
 ```
 
-Now we can use the `render/2` function we saw above when we were experimenting with rendering in the `iex` session.
+Now we can use the `render/2` function we saw above when we were experimenting with rendering in the `iex` session. Since we know that Phoenix will precompile the `404.html.eex` template as a `render("index.html.eex, assigns)` function clause, we can delete the clause from our ErrorView.
 
-Our `render/2` function should look like this when we've modified it.
-
-```elixir
-def render("404.html", _assigns) do
-  render("not_found.html", %{})
-end
+```diff
+- def render("404.html", _assigns) do
+-  render("not_found.html", %{})
+- end
 ```
 
-When we go back to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path), we should see a much nicer error page.
-
-It is worth noting that we did not render our `not_found.html.eex` template through our application layout, even though we want our error page to have the look and feel of the rest of our site. The main reason is that it's easy to run into edge case issues while handling errors globally.
-
-If we want to minimize duplication between our application layout and our `not_found.html.eex` template, we can implement shared templates for our header and footer. Please see the [Template Guide](http://www.phoenixframework.org/docs/templates#section-shared-templates-across-views) for more information.
-
-Of course, we can do these same steps with the `def render("500.html", _assigns) do` clause in our `ErrorView` as well.
-
-We can also use the `assigns` map passed into any `render/2` clause in the `ErrorView`, instead of discarding it, in order to display more information in our templates.
+When we go back to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path), we should see a much nicer error page. It is worth noting that we did not render our `404.html.eex` template through our application layout, even though we want our error page to have the look and feel of the rest of our site. The main reason is that it's easy to run into edge case issues while handling errors globally. If we want to minimize duplication between our application layout and our `404.html.eex` template, we can implement shared templates for our header and footer. Please see the [Template Guide](templates.html) for more information. Of course, we can do these same steps with the `def render("500.html", _assigns) do` clause in our `ErrorView` as well. We can also use the `assigns` map passed into any `render/2` clause in the `ErrorView`, instead of discarding it, in order to display more information in our templates.
 
 ## Rendering JSON
 
-The view's other job besides rendering templates is to render JSON. Phoenix uses [Poison](https://github.com/devinus/poison) to encode Maps to JSON, so all we need to do in our views is format the data we'd like to respond with as a Map, and Phoenix will do the rest.
-
-It is possible to respond with JSON back directly from the controller and skip the View. However, if we think about a controller as having the responsibilities of receiving a request and fetching data to be sent back, data manipulation and formatting don't fall under those responsibilities. A view gives us a module responsible for formatting and manipulating the data.
-
-Let's take our `PageController`, and see what it might look like when we respond with some static page maps as JSON, instead of HTML.
+The view's job is not only to render HTML templates. Views are about data presentation. Given a bag of data, the view's purpose is to present that in a meaningful way given some format, be it HTML, JSON, CSV, or others. Many web apps today return JSON to remote clients, and Phoenix views are *great* for JSON rendering. Phoenix uses [Poison](https://github.com/devinus/poison) to encode Maps to JSON, so all we need to do in our views is format the data we'd like to respond with as a Map, and Phoenix will do the rest. It is possible to respond with JSON back directly from the controller and skip the View. However, if we think about a controller as having the responsibilities of receiving a request and fetching data to be sent back, data manipulation and formatting don't fall under those responsibilities. A view gives us a module responsible for formatting and manipulating the data. Let's take our `PageController`, and see what it might look like when we respond with some static page maps as JSON, instead of HTML.
 
 ```elixir
 defmodule HelloPhoenix.Web.PageController do
@@ -317,11 +307,11 @@ defmodule HelloPhoenix.Web.PageView do
   use HelloPhoenix.Web, :view
 
   def render("index.json", %{pages: pages}) do
-    %{data: render_many(pages, HelloPhoenix.PageView, "page.json")}
+    %{data: render_many(pages, HelloPhoenix.Web.PageView, "page.json")}
   end
 
   def render("show.json", %{page: page}) do
-    %{data: render_one(page, HelloPhoenix.PageView, "page.json")}
+    %{data: render_one(page, HelloPhoenix.Web.PageView, "page.json")}
   end
 
   def render("page.json", %{page: page}) do
@@ -330,15 +320,7 @@ defmodule HelloPhoenix.Web.PageView do
 end
 ```
 
-In the view we see our `render/2` function pattern matching on `"index.json"`, `"show.json"`, and `"page.json"`. In our controller `show/2` function, `render conn, "show.json", page: page` will pattern match on the matching name and extension in the view `render/3` functions.
-
-In other words, `render conn, "index.json", pages: pages` will call `render("index.json", %{pages: pages})`
-
-The `render_many/3` function takes the data we want to respond with (`pages`), a `View`, and a string to pattern match on the `render/3` function defined on `View`. It will map over each item in `pages`, and pass the item to the `render/3` function in `View` matching the file string.
-
-`render_one/3` follows, the same signature, ultimately using the `render/3` matching `page.json` to specifiy what each `page` looks like.
-
-The `render/3` matching `"index.json"` will respond with JSON as you would expect:
+In the view we see our `render/2` function pattern matching on `"index.json"`, `"show.json"`, and `"page.json"`. In our controller `show/2` function, `render conn, "show.json", page: page` will pattern match on the matching name and extension in the view `render/3` functions. In other words, `render conn, "index.json", pages: pages` will call `render("index.json", %{pages: pages})` The `render_many/3` function takes the data we want to respond with (`pages`), a `View`, and a string to pattern match on the `render/3` function defined on `View`. It will map over each item in `pages`, and pass the item to the `render/3` function in `View` matching the file string. `render_one/3` follows, the same signature, ultimately using the `render/3` matching `page.json` to specifiy what each `page` looks like. The `render/3` matching `"index.json"` will respond with JSON as you would expect:
 
 ```javascript
   {
@@ -363,20 +345,30 @@ And the `render/3` matching `"show.json"`:
   }
 ```
 
-It's useful to build our views like this so they can be composable.  Imagine a situation where our `Page` has a `has_many` relationship with `Author`, and depending on the request, we may want to send back `author` data with the `page`. We can easily accomplish this with a new `render/3`:
+It's useful to build our views like this so they can be composable. Imagine a situation where our `Page` has a `has_many` relationship with `Author`, and depending on the request, we may want to send back `author` data with the `page`. We can easily accomplish this with a new `render/3`:
 
 
 ```elixir
 defmodule HelloPhoenix.Web.PageView do
   use HelloPhoenix.Web, :view
+  alias HelloPhoenix.Web.AuthorView
 
   def render("page_with_authors.json", %{page: page}) do
     %{title: page.title,
-      authors: render_many(page.authors, HelloPhoenix.Web.AuthorView, "author.json")}
+      authors: render_many(page.authors, AuthorView, "author.json")}
   end
 
   def render("page.json", %{page: page}) do
     %{title: page.title}
   end
 end
+```
+
+The name used in assigns is determined from the view. For example the `PageView` will use `%{page: page}` and the `AuthorView` will use `%{author: author}`. This can be overridden with the `as` option. Let's assume that the author view uses `%{writer: writer]` instead of `%{author: author}`:
+
+```elixir
+  def render("page_with_authors.json", %{page: page}) do
+    %{title: page.title,
+      authors: render_many(page.authors, AuthorView, "author.json", as: :writer)}
+  end
 ```
