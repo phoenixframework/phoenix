@@ -65,7 +65,7 @@ Now if you fire up the server with `mix phx.server` and visit `http://locahost:4
 rendering with asigns [:conn, :view_module, :view_template]
 ```
 
-Pretty neat, right? At compile-time, phoenix precompiles all `*.html.eex` templates and turns them into `render/2` function clauses on their respective view modules. At runtime, all templates are already loaded in memory. There's no disk reads, complex file caching, or template engine computation involved. This is also why we were able to define functions like `title/0` in our `LayoutView` and they were immediately available inside the layout's `app.html.eex` – the call to `title/0` was just a local function call!
+Pretty neat, right? At compile-time, Phoenix precompiles all `*.html.eex` templates and turns them into `render/2` function clauses on their respective view modules. At runtime, all templates are already loaded in memory. There's no disk reads, complex file caching, or template engine computation involved. This is also why we were able to define functions like `title/0` in our `LayoutView` and they were immediately available inside the layout's `app.html.eex` – the call to `title/0` was just a local function call!
 
 When we `use HelloPhoenix.Web, :view`, we get other conveniences as well. Since the `view/0` function imports `HelloPhoenix.Web.Router.Helpers`, we don't have to fully qualify path helpers in templates. Let's see how that works by changing the template for our Welcome to Phoenix page.
 
@@ -127,7 +127,7 @@ iex(1)> Phoenix.View.render(HelloPhoenix.Web.PageView, "test.html",
 %{})
   {:safe, [["" | "This is the message: "] | "Hello from the view!"]}
 ```
-As we can see, we're calling `render/3` with the individual view responsible for our test template, the name of our test template, and an empty map representing any data we might have wanted to pass in. The return value is a tuple beginning with the atom `:safe` and the resultant string of the interpolated template. "Safe" here means that Phoenix has escaped the contents of our rendered template. Phoenix defines its own `Phoenix.HTML.Safe` protocol with implementations for atoms, bitstrings, lists, integers, floats, and tuples to handle this escaping for us as our templates are rendered into strings.
+As we can see, we're calling `render/3` with the individual view responsible for our test template, the name of our test template, and an empty map representing any data we might have wanted to pass in. The return value is a tuple beginning with the atom `:safe` and the resultant io list of the interpolated template. "Safe" here means that Phoenix has escaped the contents of our rendered template. Phoenix defines its own `Phoenix.HTML.Safe` protocol with implementations for atoms, bitstrings, lists, integers, floats, and tuples to handle this escaping for us as our templates are rendered into strings.
 
 What happens if we assign some key value pairs to the third argument of `render/3`? In order to find out, we need to change the template just a bit.
 
@@ -276,7 +276,7 @@ Now we can use the `render/2` function we saw above when we were experimenting w
 - end
 ```
 
-When we go back to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path), we should see a much nicer error page. It is worth noting that we did not render our `404.html.eex` template through our application layout, even though we want our error page to have the look and feel of the rest of our site. The main reason is that it's easy to run into edge case issues while handling errors globally. If we want to minimize duplication between our application layout and our `404.html.eex` template, we can implement shared templates for our header and footer. Please see the [Template Guide](http://www.phoenixframework.org/docs/templates#section-shared-templates-across-views) for more information. Of course, we can do these same steps with the `def render("500.html", _assigns) do` clause in our `ErrorView` as well. We can also use the `assigns` map passed into any `render/2` clause in the `ErrorView`, instead of discarding it, in order to display more information in our templates.
+When we go back to [http://localhost:4000/such/a/wrong/path](http://localhost:4000/such/a/wrong/path), we should see a much nicer error page. It is worth noting that we did not render our `404.html.eex` template through our application layout, even though we want our error page to have the look and feel of the rest of our site. The main reason is that it's easy to run into edge case issues while handling errors globally. If we want to minimize duplication between our application layout and our `404.html.eex` template, we can implement shared templates for our header and footer. Please see the [Template Guide](templates.html) for more information. Of course, we can do these same steps with the `def render("500.html", _assigns) do` clause in our `ErrorView` as well. We can also use the `assigns` map passed into any `render/2` clause in the `ErrorView`, instead of discarding it, in order to display more information in our templates.
 
 ## Rendering JSON
 
@@ -362,4 +362,13 @@ defmodule HelloPhoenix.Web.PageView do
     %{title: page.title}
   end
 end
+```
+
+The name used in assigns is determined from the view. For example the `PageView` will use `%{page: page}` and the `AuthorView` will use `%{author: author}`. This can be overridden with the `as` option. Let's assume that the author view uses `%{writer: writer]` instead of `%{author: author}`:
+
+```elixir
+  def render("page_with_authors.json", %{page: page}) do
+    %{title: page.title,
+      authors: render_many(page.authors, AuthorView, "author.json", as: :writer)}
+  end
 ```
