@@ -53,7 +53,7 @@ defmodule Phoenix.Mixfile do
      {:gettext, "~> 0.8", only: :test},
 
      # Docs dependencies
-     {:ex_doc, "~> 0.14", only: :docs},
+     {:ex_doc, "~> 0.16", only: :docs},
      {:inch_ex, "~> 0.2", only: :docs},
      {:phoenix_guides, git: "https://github.com/phoenixframework/phoenix_guides.git", compile: false, app: false, only: :docs},
 
