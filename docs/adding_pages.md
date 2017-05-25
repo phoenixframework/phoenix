@@ -1,6 +1,6 @@
 # Adding Pages
 
-Our task for this guide is to add two new pages to our Phoenix application. One will be a purely static page, and the other will take part of the path from the URL as input and pass it through to a template for display. Along the way, we will gain familiarity with the basic components of a Phoenix application: the router, controllers, views, and templates.
+Our task for this guide is to add two new pages to our Phoenix project. One will be a purely static page, and the other will take part of the path from the URL as input and pass it through to a template for display. Along the way, we will gain familiarity with the basic components of a Phoenix project: the router, controllers, views, and templates.
 
 When Phoenix generates a new application for us, it builds a top-level directory structure like this:
 
@@ -16,7 +16,7 @@ When Phoenix generates a new application for us, it builds a top-level directory
 ├── test
 ```
 
-Most of our work in this guide will be in the `lib/hello_phoenix/web` directory, which looks like this when expanded:
+Most of our work in this guide will be in the `lib/hello_phoenix/web` directory, which holds the web-related parts of our application. It looks like this when expanded:
 
 ```console
 ├── channels
@@ -38,29 +38,22 @@ Most of our work in this guide will be in the `lib/hello_phoenix/web` directory,
 ├── web.ex
 ```
 
-All of the files which are currently in the `controllers`, `templates`, and `views` directories are there to create the "Welcome to Phoenix!" page we saw in the last guide. We will see how we can re-use some of that code shortly. By convention, in the development environment, anything in the `web` directory will be automatically recompiled when there is a new web request.
+All of the files which are currently in the `controllers`, `templates`, and `views` directories are there to create the "Welcome to Phoenix!" page we saw in the last guide. We will see how we can re-use some of that code shortly. When running in development, code changes will be automatically recompiled on new web requests.
 
-All of our application's static assets live in `priv/static` in the directory appropriate for each type of file - css, images or js. We place assets that require a build phase into `assets/static`, and the source files are built into their respective `app.js` / `app.css` bundles within `priv/static`. We won't be making any changes here for now, but it is good to know where to look for future reference.
-
-```console
-priv
-└── static 
-    └── images
-        └── phoenix.png
-```
+All of our application's static assets like js, css, and image files live in `assets`, which are built into `priv/static` by brunch or other front-end build tools. We won't be making any changes here for now, but it is good to know where to look for future reference.
 
 ```console
-web
-└── static
-    ├── assets
-    │   ├── css
-    │   │   └── app.css
-    │   ├── js
-    │   │   └── app.js
-    │   └── vendor
+├── assets
+│   ├── css
+│   │   └── app.css
+│   ├── js
+│   │   └── app.js
+│   └── static
+│   └── node_modules
+│   └── vendor
 ```
 
-The `lib` directory also contains files we should know about. Our application's endpoint is at `lib/hello_phoenix/web/endpoint.ex`, and our application file (which starts our application and its supervision tree) is at `lib/hello_phoenix/application.ex`.
+There are also non web-related files we should know about. Our application file (which starts our Elixir application and its supervision tree) is at `lib/hello_phoenix/application.ex`. We also have our Ecto Repo in `lib/hello_phoenix/repo.ex` for interacting with the database. We'll touch on Ecto in an upcoming guide.
 
 ```console
 lib
@@ -71,7 +64,7 @@ lib
         └── endpoint.ex
 ```
 
-Unlike the `web` directory, Phoenix won't recompile files inside of `lib` when there is a new web request. This is intentional! The distinction between `web` and `lib` provides a convention for the different ways that we handle state inside of our application. The `web` directory contains anything whose state lasts for the duration of a web request. The `lib` directory contains both shared modules and anything that needs to manage state outside of the duration of a web request.
+Our `lib/hello_phoenix/web` directory contains web-related files – routers, controllers, templates, channels, etc. The rest of our greater Elixir application lives inside `lib/hello_phoenix/`, and you structure code here like any other Elixir application.
 
 Enough prep, let's get on with our first new Phoenix page!
 
@@ -181,7 +174,7 @@ end
 
 ### A New Template
 
-Phoenix templates are just that, templates into which data can be rendered. The standard templating engine Phoenix uses is EEx, which stands for [Embedded Elixir](http://elixir-lang.org/docs/stable/eex/). All of our template files will have the `.eex` file extension.
+Phoenix templates are just that, templates into which data can be rendered. The standard templating engine Phoenix uses is EEx, which stands for [Embedded Elixir](http://elixir-lang.org/docs/stable/eex/). Phoenix enhances EEx to include automatic escaping of values. This protects you from security vulnerabilities like Cross-Site-Scripting with no extra work on your part. All of our template files will have the `.eex` file extension.
 
 Templates are scoped to a view, which are scoped to controller. Phoenix creates a `lib/hello_phoenix/web/templates` directory where we can put all these. It is best to namespace these for organization, so for our hello page, that means we need to create a `hello` directory under `lib/hello_phoenix/web/templates` and then create an `index.html.eex` file within it.
 
@@ -264,7 +257,7 @@ And this is what the template should look like:
 </div>
 ```
 
-Our messenger appears as `@messenger`. In this case, this is not a module attribute. It is special bit of metaprogrammed syntax which stands in for `Map.get(assigns, :messenger)`. The result is much nicer on the eyes and much easier to work with in a template.
+Our messenger appears as `@messenger`. In this case, this is not a module attribute. It is special bit of metaprogrammed syntax which stands in for `assigns.messenger`. The result is much nicer on the eyes and much easier to work with in a template.
 
 We're done. If you point your browser here: [http://localhost:4000/hello/Frank](http://localhost:4000/hello/Frank), you should see a page that looks like this:
 
