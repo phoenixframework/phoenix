@@ -278,7 +278,6 @@ defmodule Mix.Tasks.Phx.New do
       0 ->
         []
       _ ->
-        Mix.shell.error [:red, "* error ", :reset, "command failed to execute"]
         ["$ #{cmd}"]
     end
   end
