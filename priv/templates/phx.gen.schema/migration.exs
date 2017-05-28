@@ -1,4 +1,4 @@
-defmodule <%= inspect schema.repo %>.Migrations.Create<%= inspect schema.module %> do
+defmodule <%= inspect schema.repo %>.Migrations.Create<%= Macro.camelize(schema.table) %> do
   use Ecto.Migration
 
   def change do

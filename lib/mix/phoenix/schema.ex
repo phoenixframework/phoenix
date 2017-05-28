@@ -33,8 +33,8 @@ defmodule Mix.Phoenix.Schema do
             route_helper: nil
 
   @valid_types [:integer, :float, :decimal, :boolean, :map, :string,
-                     :array, :references, :text, :date, :time,
-                     :naive_datetime, :utc_datetime, :uuid, :binary]
+                :array, :references, :text, :date, :time,
+                :naive_datetime, :utc_datetime, :uuid, :binary]
 
   def valid_types, do: @valid_types
 

@@ -65,11 +65,11 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ " post_path(conn"
       end
 
-      assert [path] = Path.wildcard("priv/repo/migrations/*_create_blog_post.exs")
+      assert [path] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
       assert_file path, fn file ->
-        assert file =~ "create table(:blog_posts)"
+        assert file =~ "create table(:posts)"
         assert file =~ "add :title, :string"
-        assert file =~ "create unique_index(:blog_posts, [:slug])"
+        assert file =~ "create unique_index(:posts, [:slug])"
       end
 
       assert_file "lib/phoenix/web/controllers/post_controller.ex", fn file ->
@@ -139,9 +139,9 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "defmodule Phoenix.Web.CommentControllerTest"
       end
 
-      assert [path] = Path.wildcard("priv/repo/migrations/*_create_blog_comment.exs")
+      assert [path] = Path.wildcard("priv/repo/migrations/*_create_comments.exs")
       assert_file path, fn file ->
-        assert file =~ "create table(:blog_comments)"
+        assert file =~ "create table(:comments)"
         assert file =~ "add :title, :string"
       end
 

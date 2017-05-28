@@ -33,7 +33,7 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
   associate the given column to the primary key column of the
   referenced table:
 
-      mix phx.gen.schema Blog.Post blog_posts title user_id:references:blog_users
+      mix phx.gen.schema Blog.Post blog_posts title user_id:references:users
 
   This will result in a migration with an `:integer` column
   of `:user_id` and create an index.
@@ -123,20 +123,11 @@ defmodule Mix.Tasks.Phx.Gen.Schema do
 
   @doc false
   def copy_new_files(%Schema{context_app: ctx_app} = schema, paths, binding) do
-    migration =
-      schema.module
-      |> Module.split()
-      |> tl()
-      |> Module.concat()
-      |> inspect()
-      |> Phoenix.Naming.underscore()
-      |> String.replace("/", "_")
-
     files = files_to_be_generated(schema)
     Mix.Phoenix.copy_from(paths,"priv/templates/phx.gen.schema", "", binding, files)
 
     if schema.migration? do
-      migration_path = Mix.Phoenix.context_app_path(ctx_app, "priv/repo/migrations/#{timestamp()}_create_#{migration}.exs")
+      migration_path = Mix.Phoenix.context_app_path(ctx_app, "priv/repo/migrations/#{timestamp()}_create_#{schema.table}.exs")
       Mix.Phoenix.copy_from paths, "priv/templates/phx.gen.schema", "", binding, [
         {:eex, "migration.exs", migration_path},
       ]

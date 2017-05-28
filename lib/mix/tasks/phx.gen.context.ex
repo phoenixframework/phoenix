@@ -35,8 +35,8 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   ## table
 
   By default, the table name for the migration and schema will be
-  the plural name provided for the resource, namespaced by the context name,
-  To customize this value, a `--table` option may be provided. For example:
+  the plural name provided for the resource. To customize this value,
+  a `--table` option may be provided. For example:
 
       mix phx.gen.context Accounts User users --table cms_users
 
@@ -100,13 +100,9 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   def build(args) do
     {opts, parsed, _} = parse_opts(args)
     [context_name, schema_name, plural | schema_args] = validate_args!(parsed)
-
-    table = Keyword.get(opts, :table, Phoenix.Naming.underscore(context_name) <> "_#{plural}")
     schema_module = inspect(Module.concat(context_name, schema_name))
-
-    schema = Gen.Schema.build([schema_module, plural | schema_args] ++ ["--table", table], opts, __MODULE__)
+    schema = Gen.Schema.build([schema_module, plural | schema_args], opts, __MODULE__)
     context = Context.new(context_name, schema, opts)
-
     {context, schema}
   end
 

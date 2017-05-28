@@ -49,7 +49,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
         assert file =~ "defmodule Phoenix.Web.PostControllerTest"
       end
 
-      assert [_] = Path.wildcard("priv/repo/migrations/*_create_blog_post.exs")
+      assert [_] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
 
       assert_file "lib/phoenix/web/controllers/fallback_controller.ex", fn file ->
         assert file =~ "defmodule Phoenix.Web.FallbackController"

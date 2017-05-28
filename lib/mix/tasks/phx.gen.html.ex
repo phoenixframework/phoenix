@@ -26,7 +26,6 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     * a controller in web/controllers/user_controller.ex
     * default CRUD templates in web/templates/user
 
-
   A migration file for the repository and test files for the context and
   controller features will also be generated.
 

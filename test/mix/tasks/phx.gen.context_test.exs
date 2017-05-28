@@ -110,11 +110,11 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "def post_fixture(attrs \\\\ %{})"
       end
 
-      assert [path] = Path.wildcard("priv/repo/migrations/*_create_blog_post.exs")
+      assert [path] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
       assert_file path, fn file ->
-        assert file =~ "create table(:blog_posts)"
+        assert file =~ "create table(:posts)"
         assert file =~ "add :title, :string"
-        assert file =~ "create unique_index(:blog_posts, [:slug])"
+        assert file =~ "create unique_index(:posts, [:slug])"
       end
 
       Gen.Context.run(~w(Blog Comment comments title:string))
@@ -128,9 +128,9 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "def comment_fixture(attrs \\\\ %{})"
       end
 
-      assert [path] = Path.wildcard("priv/repo/migrations/*_create_blog_comment.exs")
+      assert [path] = Path.wildcard("priv/repo/migrations/*_create_comments.exs")
       assert_file path, fn file ->
-        assert file =~ "create table(:blog_comments)"
+        assert file =~ "create table(:comments)"
         assert file =~ "add :title, :string"
       end
 
@@ -167,7 +167,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "def post_fixture(attrs \\\\ %{})"
       end
 
-      assert Path.wildcard("priv/repo/migrations/*_create_blog_post.exs") == []
+      assert Path.wildcard("priv/repo/migrations/*_create_posts.exs") == []
     end
   end
 end
