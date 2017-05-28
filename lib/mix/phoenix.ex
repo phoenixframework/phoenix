@@ -155,7 +155,6 @@ defmodule Mix.Phoenix do
     end
   end
 
-
   @doc """
   Returns the otp app from the Mix project configuration.
   """
@@ -213,20 +212,33 @@ defmodule Mix.Phoenix do
   @doc """
   Returns the context app path prefix to be used in generated context files.
   """
-  def context_app_path(ctx_app, rel_path \\ "") when is_atom(ctx_app) do
-    if ctx_app == otp_app() do
-      Path.join([File.cwd!(), rel_path])
+  def context_app_path(ctx_app, rel_path) when is_atom(ctx_app) do
+    this_app = otp_app()
+
+    if ctx_app == this_app do
+      rel_path
     else
-      Path.join([app_path!(ctx_app, otp_app()), rel_path])
+      app_path =
+        case Application.get_env(this_app, :generators)[:context_app] do
+          {^ctx_app, path} -> Path.relative_to_cwd(path)
+          _ -> mix_app_path(ctx_app, this_app)
+        end
+      Path.join(app_path, rel_path)
     end
   end
 
-  def context_lib_path(ctx_app, rel_path \\ "") when is_atom(ctx_app) do
-    Path.join([app_path!(ctx_app, otp_app()), "lib", to_string(ctx_app), rel_path])
+  @doc """
+  Returns the context lib path to be used in generated context files.
+  """
+  def context_lib_path(ctx_app, rel_path) when is_atom(ctx_app) do
+    context_app_path(ctx_app, Path.join(["lib", to_string(ctx_app), rel_path]))
   end
 
-  def context_test_path(ctx_app, rel_path \\ "") when is_atom(ctx_app) do
-    Path.join([app_path!(ctx_app, otp_app()), "test", to_string(ctx_app), rel_path])
+  @doc """
+  Returns the context test path to be used in generated context files.
+  """
+  def context_test_path(ctx_app, rel_path) when is_atom(ctx_app) do
+    context_app_path(ctx_app, Path.join(["test", to_string(ctx_app), rel_path]))
   end
 
   @doc """
@@ -236,7 +248,7 @@ defmodule Mix.Phoenix do
     this_app = otp_app()
 
     case fetch_context_app(this_app) do
-      {:ok, app, _path} -> app
+      {:ok, app} -> app
       :error -> this_app
     end
   end
@@ -256,7 +268,8 @@ defmodule Mix.Phoenix do
 
   defp fetch_context_app(this_otp_app) do
     case Application.get_env(this_otp_app, :generators)[:context_app] do
-      nil -> :error
+      nil ->
+        :error
       false ->
         Mix.raise """
         no context_app configured for current application #{this_otp_app}.
@@ -273,31 +286,27 @@ defmodule Mix.Phoenix do
 
             mix phx.gen.[task] --context-app some_app
         """
-      {app, _path} -> {:ok, app, app_path!(app, this_otp_app)}
-      app -> {:ok, app, app_path!(app, this_otp_app)}
+      {app, _path} ->
+        {:ok, app}
+      app ->
+        {:ok, app}
     end
   end
 
-  defp app_path!(this_otp_app, this_otp_app), do: "."
-  defp app_path!(app, this_otp_app) do
-    case Application.get_env(this_otp_app, :generators)[:context_app] do
-      false -> mix_app_path(app, this_otp_app)
-      ^app -> mix_app_path(app, this_otp_app)
-      {^app, path} -> Path.relative_to(path, File.cwd!())
-    end
-  end
   defp mix_app_path(app, this_otp_app) do
     case Mix.Project.deps_paths() do
-      %{^app => path} -> Path.relative_to(path, File.cwd!())
-      deps -> Mix.raise """
+      %{^app => path} ->
+        Path.relative_to_cwd(path)
+      deps ->
+        Mix.raise """
         no directory for context_app #{inspect app} found in #{this_otp_app}'s deps.
 
-        Ensure you have listed #{inspect app} as an in_umbrella depenency in mix.exs:
-
+        Ensure you have listed #{inspect app} as an in_umbrella dependency in mix.exs:
 
             def deps do
-              [...
+              [
                 {:#{app}, in_umbrella: true},
+                ...
               ]
             end
 
