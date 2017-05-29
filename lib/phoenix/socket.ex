@@ -108,7 +108,7 @@ defmodule Phoenix.Socket do
   Would allow you to broadcast a "disconnect" event and terminate
   all active sockets and channels for a given user:
 
-      MyApp.Endpoint.broadcast("users_socket:" <> user.id, "disconnect", %{})
+      MyApp.Endpoint.broadcast(id(socket), "disconnect", %{})
 
   Returning `nil` makes this socket anonymous.
   """
