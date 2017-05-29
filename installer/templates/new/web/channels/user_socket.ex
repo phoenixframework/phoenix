@@ -30,7 +30,7 @@ defmodule <%= app_module %>.UserSocket do
   # Would allow you to broadcast a "disconnect" event and terminate
   # all active sockets and channels for a given user:
   #
-  #     <%= app_module %>.Endpoint.broadcast("users_socket:#{user.id}", "disconnect", %{})
+  #     <%= app_module %>.Endpoint.broadcast(id(socket), "disconnect", %{})
   #
   # Returning `nil` makes this socket anonymous.
   def id(_socket), do: nil
