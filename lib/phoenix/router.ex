@@ -540,8 +540,9 @@ defmodule Phoenix.Router do
 
   ## Nested Resources
 
-  The `controller` param can be passed as a block. This is helpful for nesting
-  children resources within their parents to generate nested routes.
+  This macro also supports passing a nested block of route definitions.
+  This is helpful for nesting children resources within their parents to
+  generate nested routes.
 
   The given definition:
 
