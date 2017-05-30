@@ -12,6 +12,7 @@
   "devDependencies": {
     "babel-brunch": "~6.0.0",
     "brunch": "~2.6.5",
+    "documentation": "^4.0.0-rc.1",
     "jsdom": "9.8.3",
     "jsdom-global": "2.1.0",
     "mocha": "~2.4.4",
@@ -21,6 +22,7 @@
   },
   "files": ["README.md", "LICENSE.md", "package.json", "priv/static/phoenix.js", "assets/js/phoenix.js"],
   "scripts": {
-    "test": "./node_modules/.bin/mocha ./assets/test/**/*.js --compilers js:babel-register -r jsdom-global/register"
+    "test": "./node_modules/.bin/mocha ./assets/test/**/*.js --compilers js:babel-register -r jsdom-global/register",
+    "docs": "documentation build assets/js/phoenix.js -f html -o doc/phoenix.js"
   }
 }
