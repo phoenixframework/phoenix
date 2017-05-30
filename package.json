@@ -12,6 +12,7 @@
   "devDependencies": {
     "babel-brunch": "~6.0.0",
     "brunch": "~2.6.5",
+    "eslint": "^3.19.0",
     "jsdom": "9.8.3",
     "jsdom-global": "2.1.0",
     "mocha": "~2.4.4",
@@ -19,8 +20,15 @@
     "sinon": "^1.17.6",
     "uglify-js-brunch": "~2.0.1"
   },
-  "files": ["README.md", "LICENSE.md", "package.json", "priv/static/phoenix.js", "assets/js/phoenix.js"],
+  "files": [
+    "README.md",
+    "LICENSE.md",
+    "package.json",
+    "priv/static/phoenix.js",
+    "assets/js/phoenix.js"
+  ],
   "scripts": {
-    "test": "./node_modules/.bin/mocha ./assets/test/**/*.js --compilers js:babel-register -r jsdom-global/register"
+    "test": "./node_modules/.bin/mocha ./assets/test/**/*.js --compilers js:babel-register -r jsdom-global/register",
+    "lint": "./node_modules/.bin/eslint ./assets/js/"
   }
 }
