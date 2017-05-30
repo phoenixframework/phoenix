@@ -6,7 +6,7 @@ defmodule Mix.Tasks.Phx.Gen.Secret do
 
       mix phx.gen.secret [length]
 
-  By default, mix phoenix.gen.secret generates a key 64 characters long.
+  By default, mix phx.gen.secret generates a key 64 characters long.
 
   The minimum value for `length` is 32.
   """
