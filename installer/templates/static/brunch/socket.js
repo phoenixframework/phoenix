@@ -48,8 +48,9 @@ let socket = new Socket("/socket", {params: {token: window.userToken}})
 //       end
 //     end
 //
-// Finally, pass the token on connect as below. Or remove it
-// from connect if you don't care about authentication.
+// Finally, pass the token to the Socket constructor as above.
+// Or, remove it from the constructor if you don't care about
+// authentication.
 
 socket.connect()
 
