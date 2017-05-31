@@ -23,6 +23,6 @@
   "files": ["README.md", "LICENSE.md", "package.json", "priv/static/phoenix.js", "assets/js/phoenix.js"],
   "scripts": {
     "test": "./node_modules/.bin/mocha ./assets/test/**/*.js --compilers js:babel-register -r jsdom-global/register",
-    "docs": "documentation build assets/js/phoenix.js -f html -o doc/phoenix.js"
+    "docs": "documentation build assets/js/phoenix.js -f html -o doc/js"
   }
 }

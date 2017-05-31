@@ -308,6 +308,9 @@ class Push {
 
 /**
  *
+ * @param {string} topic
+ * @param {Object} params
+ * @param {Socket} socket
  */
 export class Channel {
   constructor(topic, params, socket) {
@@ -473,6 +476,8 @@ export class Channel {
   /** Initializes the Socket
    *
    *
+   * For IE8 support use an ES5-shim (https://github.com/es-shims/es5-shim)
+   *
    * @param {string} endPoint - The string WebSocket endpoint, ie, `"ws://example.com/socket"`,
    *                                               `"wss://example.com"`
    *                                               `"/socket"` (inherited host & protocol)
@@ -521,7 +526,6 @@ export class Channel {
    * @param {Object}  opts.params - The optional params to pass when connecting
    *
    *
-   * For IE8 support use an ES5-shim (https://github.com/es-shims/es5-shim)
   */
 export class Socket {
 
@@ -598,9 +602,9 @@ export class Socket {
 
   /**
    * Logs the message. Override `this.logger` for specialized logging. noops by default
-   * @param {*} kind
-   * @param {*} msg
-   * @param {*} data
+   * @param {string} kind
+   * @param {string} msg
+   * @param {Object} data
    */
   log(kind, msg, data){ this.logger(kind, msg, data) }
 
@@ -681,7 +685,9 @@ export class Socket {
     }
   }
 
-  // Return the next message ref, accounting for overflows
+  /**
+   * Return the next message ref, accounting for overflows
+   */
   makeRef(){
     let newRef = this.ref + 1
     if(newRef === this.ref){ this.ref = 0 } else { this.ref = newRef }
