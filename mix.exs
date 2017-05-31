@@ -117,8 +117,7 @@ defmodule Phoenix.Mixfile do
 
   defp aliases do
     [
-      generate_js_docs: &generate_js_docs/1,
-      "docs": ["docs", "generate_js_docs"]
+      "docs": ["docs", &generate_js_docs/1]
     ]
   end
 
