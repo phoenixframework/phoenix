@@ -117,7 +117,7 @@ Module plugs are another type of Plug that let us define a connection transforma
 - `call/2` which carries out the connection transformation. `call/2` is just a function plug that we saw earlier
 
 
-To see this in action, lets write a module plug that puts the `:locale` key and value into the connection assign for downstream use in other plugs, controller actions, and our views.
+To see this in action, let's write a module plug that puts the `:locale` key and value into the connection assign for downstream use in other plugs, controller actions, and our views.
 
 ```elixir
 defmodule HelloPhoenix.Web.Plugs.Locale do
