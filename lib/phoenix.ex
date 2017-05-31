@@ -10,7 +10,7 @@ defmodule Phoenix do
     * [Phoenix](https://hexdocs.pm/phoenix) - the Phoenix web framework
       (these docs)
 
-    * [Phoenix.js](/js) - Phoenix Channels JavaScript client
+    * [Phoenix.js](js) - Phoenix Channels JavaScript client
 
     * [Phoenix Pubsub](https://hexdocs.pm/phoenix_pubsub) - a distributed
       pubsub system with presence support
