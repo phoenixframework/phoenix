@@ -173,7 +173,7 @@ defmodule Phoenix.Presence do
         {:ok, state}
       end
 
-      defoverridable fetch: 2
+      defoverridable [fetch: 2, handle_diff: 2]
     end
   end
 
