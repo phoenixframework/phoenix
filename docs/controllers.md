@@ -287,7 +287,7 @@ end
 ```
 After reloading [http://localhost:4000/](http://localhost:4000/), we should see a very different page, one with no title, logo image, or css styling at all.
 
-Very Important! For function calls in a pipeline, it is critical to use parenthesis around the arguments because the pipe operator binds very tightly. This leads to parsing problems and very strange results.
+Very Important! For function calls in a pipeline, it is critical to use parentheses around the arguments because the pipe operator binds very tightly. This leads to parsing problems and very strange results.
 
 If you ever get a stack trace that looks like this,
 
@@ -336,7 +336,7 @@ def index(conn, params) do
   |> render "index.html"
 end
 ```
-When we load the page, and we should be rendering the admin layout without a logo.
+When we load the page, we should be rendering the admin layout without a logo.
 
 ### Overriding Rendering Formats
 
