@@ -163,6 +163,79 @@ comment_path  PATCH   /comments/:id       HelloPhoenix.Web.CommentController :up
 
 The `Phoenix.Router.resources/4` function describes additional options for customizing resource routes.
 
+### Forward
+
+The `Phoenix.Router.forward/4` macro can be used to send all requests start start with a particular path to a particular plug. Let's say we have a part of our system that is responsible (it could even be a separate application or library) for running jobs in the background, it could have its own web interface for checking the status of the jobs. We can forward to this admin interface using:
+
+```elixir
+defmodule HelloPhoenix.Web.Router do
+  use HelloPhoenix.Web, :router
+
+  #...
+
+  scope "/", HelloPhoenix.Web do
+    #...
+  end
+
+  forward "/jobs", BackgroundJob.Plug
+end
+```
+
+This means that all routes starting with `/jobs` will be sent to the `BackgroundJob.Plug` module.
+
+We can even use the `forward/4` macro in a pipeline. If we wanted to ensure that the user was authenticated and an administrator in order to see the jobs page, we could use the following in our router.
+
+```elixir
+defmodule HelloPhoenix.Web.Router do
+  use HelloPhoenix.Web, :router
+
+  #...
+
+  scope "/" do
+    pipe_through [:authenticate_user, :ensure_admin]
+    forward "/jobs", BackgroundJob.Plug
+  end
+end
+```
+
+This means that the plugs in the `authenticate_user` and `ensure_admin` pipelines will be called before the `BackgroundJob.Plug` allowing them to send an appropriate response and call `halt()` .
+
+The `opts` that are passed to the `init/1` callback of a Plug can be passed as a 3rd argument. For example, maybe the background job page lets you set the name of your application to be displayed on the page. This could be passed with:
+
+```elixir
+  forward "/jobs", BackgroundJob.Plug, name: "Hello Phoenix"
+```
+
+There is a fourth `router_opts` argument that can be passed. These options are outlined in the `Phoenix.Router.scope/2` documentation.
+
+Although it is possible to forward to any module plug, it is not advised to forward to another endpoint. This is because plugs defined by your app and the forwarded endpoint would be invoked twice, which may lead to errors.
+
+Writing an actual background job worker is beyond the scope of this guide. However for convenience and to allow you to test the code above, here is the implementation of `BackgroundJob.Plug` that you can copy into your application:
+
+
+```elixir
+defmodule BackgroundJob.Plug do
+  def init(opts), do: opts
+  def call(conn, opts) do
+    conn
+    |> Plug.Conn.assign(:name, Keyword.get(opts, :name, "Background Job"))
+    |> BackgroundJob.Router.call(opts)
+  end
+end
+
+defmodule BackgroundJob.Router do
+  use Plug.Router
+
+  plug :match
+  plug :dispatch
+
+  get "/", do: send_resp(conn, 200, "Welcome to #{conn.assigns.name}")
+  get "/active", do: send_resp(conn, 200, "5 Active Jobs")
+  get "/pending", do: send_resp(conn, 200, "3 Active Jobs")
+  match _, do: send_resp(conn, 404, "Not found")
+end
+```
+
 ### Path Helpers
 
 Path helpers are functions which are dynamically defined on the `Router.Helpers` module for an individual application. For us, that is `HelloPhoenix.Web.Router.Helpers`.  Their names are derived from the name of the controller used in the route definition. Our controller is `HelloPhoenix.Web.PageController`, and `page_path` is the function which will return the path to the root of our application.
