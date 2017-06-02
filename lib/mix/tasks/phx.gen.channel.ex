@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Phx.Gen.Channel do
     * a channel in lib/my_app/web/channels
     * a channel_test in test/my_app/web/channels
 
-  For an umbrella application:
+  For an umbrella project:
 
     * a channel in lib/my_app/channels
     * a channel_test in test/my_app/channels

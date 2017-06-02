@@ -3,7 +3,7 @@ defmodule Mix.Tasks.Phx.New.Web do
   Creates a new Phoenix web project within an umbrella project.
 
   It expects the name of the otp app as the first argument and
-  for the command to be run inside your umbrella application's
+  for the command to be run inside your umbrella project
   apps directory:
 
       $ cd my_umbrella/apps
@@ -11,7 +11,7 @@ defmodule Mix.Tasks.Phx.New.Web do
 
   This task is inteded to create a bare Phoenix project without
   database integration, which interfaces with your greater
-  umbrella application(s).
+  umbrella project(s).
 
   ## Examples
 

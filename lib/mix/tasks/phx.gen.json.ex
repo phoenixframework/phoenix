@@ -29,7 +29,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   controller features will also be generated.
 
   The location of the web files (controllers, views, templates, etc) in an
-  umbrella application will vary based on the `:context_app` config located
+  umbrella project will vary based on the `:context_app` config located
   in your applications `:generators` configuration. When set, the Phoenix
   generators will generate web files directly in your lib and test folders
   since the application is assumed to be isolated to web specific functionality.
