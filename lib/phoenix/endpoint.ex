@@ -564,6 +564,8 @@ defmodule Phoenix.Endpoint do
         }
       end
 
+      defoverridable child_spec: 1
+
       @doc """
       Starts the endpoint supervision tree.
       """
