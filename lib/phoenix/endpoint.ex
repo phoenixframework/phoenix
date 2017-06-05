@@ -555,10 +555,19 @@ defmodule Phoenix.Endpoint do
 
   defp server() do
     quote location: :keep, unquote: false do
+      @doc false
+      def child_spec(opts) do
+        %{
+          id: __MODULE__,
+          start: {__MODULE__, :start_link, [opts]},
+          type: :supervisor
+        }
+      end
+
       @doc """
       Starts the endpoint supervision tree.
       """
-      def start_link do
+      def start_link(_opts \\ []) do
         Phoenix.Endpoint.Supervisor.start_link(@otp_app, __MODULE__)
       end
 

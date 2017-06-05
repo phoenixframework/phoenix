@@ -27,6 +27,14 @@ defmodule Phoenix.Endpoint.EndpointTest do
     :ok
   end
 
+  test "defines child_spec/1" do
+    assert Endpoint.child_spec([]) == %{
+      id: Endpoint,
+      start: {Endpoint, :start_link, [[]]},
+      type: :supervisor
+    }
+  end
+
   test "has reloadable configuration" do
     assert Endpoint.config(:url) == [host: {:system, "ENDPOINT_TEST_HOST"}, path: "/api"]
     assert Endpoint.config(:static_url) == [host: "static.example.com"]
