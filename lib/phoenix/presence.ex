@@ -106,6 +106,7 @@ defmodule Phoenix.Presence do
   @type presences :: %{ String.t => %{metas: [map()]}}
   @type presence :: %{key: String.t, meta: map()}
   @type topic :: String.t
+  @type key :: String.t
 
   @callback start_link(Keyword.t) :: {:ok, pid()} | {:error, reason :: term()} :: :ignore
   @callback init(Keyword.t) :: {:ok, pid()} | {:error, reason :: term}
@@ -117,6 +118,7 @@ defmodule Phoenix.Presence do
   @callback update(pid, topic, key :: String.t, meta :: map() | (map() -> map())) :: {:ok, binary()} | {:error, reason :: term()}
   @callback fetch(topic, presences) :: presences
   @callback list(topic) :: presences
+  @callback get_by_key(topic, key) :: presences
   @callback handle_diff(%{topic => {joins :: presences, leaves :: presences}}, state :: term) :: {:ok, state :: term}
 
   defmacro __using__(opts) do
@@ -164,6 +166,12 @@ defmodule Phoenix.Presence do
       def list(%Phoenix.Socket{topic: topic}), do: list(topic)
       def list(topic) do
         Phoenix.Presence.list(__MODULE__, topic)
+      end
+
+      def get_by_key(topic, key, default \\ %{})
+      def get_by_key(%Phoenix.Socket{topic: topic}, key, default), do: get_by_key(topic, key, default)
+      def get_by_key(topic, key, default) do
+        Phoenix.Presence.get_by_key(__MODULE__, topic, key, default)
       end
 
       def handle_diff(diff, state) do
@@ -238,6 +246,10 @@ defmodule Phoenix.Presence do
       |> group()
 
     module.fetch(topic, grouped)
+  end
+
+  def get_by_key(module, topic, key, default \\ %{}) do
+    list(module, topic) |> Map.get(key, default)
   end
 
   defp group(presences) do

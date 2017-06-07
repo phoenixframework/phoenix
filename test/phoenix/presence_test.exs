@@ -49,6 +49,36 @@ defmodule Phoenix.PresenceTest do
            MyPresence.list(config.topic)
   end
 
+  test "get_by_key/2 gets by a string key", config do
+    assert MyPresence.list(config.topic) == %{}
+    assert MyPresence.list(%Phoenix.Socket{topic: config.topic}) == %{}
+    assert {:ok, _} = MyPresence.track(self(), config.topic, "u1", %{name: "u1"})
+    assert %{extra: "extra", metas: [%{name: "u1", phx_ref: _}]} =
+           MyPresence.get_by_key(config.topic, "u1")
+    assert %{extra: "extra", metas: [%{name: "u1", phx_ref: _}]} =
+           MyPresence.get_by_key(%Phoenix.Socket{topic: config.topic}, "u1")
+  end
+
+  test "get_by_key/2 returns an empty map if the key doesn't exist", config do
+    assert MyPresence.list(config.topic) == %{}
+    assert MyPresence.list(%Phoenix.Socket{topic: config.topic}) == %{}
+    assert {:ok, _} = MyPresence.track(self(), config.topic, "u1", %{name: "u1"})
+    assert %{} ==
+           MyPresence.get_by_key(config.topic, "u2")
+    assert %{} ==
+           MyPresence.get_by_key(%Phoenix.Socket{topic: config.topic}, "u2")
+  end
+
+  test "get_by_key/3 returns the provided default when the key doesn't exist", config do
+    assert MyPresence.list(config.topic) == %{}
+    assert MyPresence.list(%Phoenix.Socket{topic: config.topic}) == %{}
+    assert {:ok, _} = MyPresence.track(self(), config.topic, "u1", %{name: "u1"})
+    assert :default ==
+           MyPresence.get_by_key(config.topic, "u2", :default)
+    assert :default ==
+           MyPresence.get_by_key(%Phoenix.Socket{topic: config.topic}, "u2", :default)
+  end
+
   test "handle_diff broadcasts events with default fetched data",
     %{topic: topic} = config do
 
