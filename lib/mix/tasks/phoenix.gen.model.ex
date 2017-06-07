@@ -159,7 +159,9 @@ defmodule Mix.Tasks.Phoenix.Gen.Model do
         Mix.raise """
         Phoenix generators expect the table to be given to #{key}:references.
         For example:
-            mix phoenix.gen.model Comment comments body:text post_id:references:posts
+            mix phoenix.gen.model Comment comments body:text post_id:references:blog_posts
+
+        Note that table names are typically prefixed with the context, such as "blog_" in the example above.
         """
       _ ->
         false
