@@ -23,6 +23,12 @@ defmodule <%= module %>Controller do
         |> render(<%= base %>.ChangesetView, "error.json", changeset: changeset)
     end
   end
+  def create(conn, _) do
+    changeset = <%= alias %>.changeset(%<%= alias %>{}, %{})
+    conn
+    |> put_status(:unprocessable_entity)
+    |> render(<%= base %>.ChangesetView, "error.json", changeset: changeset)
+  end
 
   def show(conn, %{"id" => id}) do
     <%= singular %> = Repo.get!(<%= alias %>, id)
@@ -41,6 +47,12 @@ defmodule <%= module %>Controller do
         |> put_status(:unprocessable_entity)
         |> render(<%= base %>.ChangesetView, "error.json", changeset: changeset)
     end
+  end
+  def update(conn, _) do
+    changeset = <%= alias %>.changeset(<%= singular %>, %{})
+    conn
+    |> put_status(:unprocessable_entity)
+    |> render(<%= base %>.ChangesetView, "error.json", changeset: changeset)
   end
 
   def delete(conn, %{"id" => id}) do

@@ -25,6 +25,10 @@ defmodule <%= module %>Controller do
         render(conn, "new.html", changeset: changeset)
     end
   end
+  def create(conn, _) do
+    changeset = <%= alias %>.changeset(%<%= alias %>{}, %{})
+    render(conn, "new.html", changeset: changeset)
+  end
 
   def show(conn, %{"id" => id}) do
     <%= singular %> = Repo.get!(<%= alias %>, id)
@@ -49,6 +53,10 @@ defmodule <%= module %>Controller do
       {:error, changeset} ->
         render(conn, "edit.html", <%= singular %>: <%= singular %>, changeset: changeset)
     end
+  end
+  def update(conn, _) do
+    changeset = <%= alias %>.changeset(<%= singular %>, %{})
+    render(conn, "edit.html", <%= singular %>: <%= singular %>, changeset: changeset)
   end
 
   def delete(conn, %{"id" => id}) do

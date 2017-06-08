@@ -26,6 +26,11 @@ defmodule <%= module %>ControllerTest do
     assert html_response(conn, 200) =~ "New <%= template_singular %>"
   end
 
+  test "does not create resource and renders errors when namespace is missing", %{conn: conn} do
+    conn = post conn, <%= singular %>_path(conn, :create), %{}
+    assert html_response(conn, 200) =~ "New <%= template_singular %>"
+  end
+
   test "shows chosen resource", %{conn: conn} do
     <%= singular %> = Repo.insert! %<%= alias %>{}
     conn = get conn, <%= singular %>_path(conn, :show, <%= singular %>)
@@ -54,6 +59,12 @@ defmodule <%= module %>ControllerTest do
   test "does not update chosen resource and renders errors when data is invalid", %{conn: conn} do
     <%= singular %> = Repo.insert! %<%= alias %>{}
     conn = put conn, <%= singular %>_path(conn, :update, <%= singular %>), <%= singular %>: @invalid_attrs
+    assert html_response(conn, 200) =~ "Edit <%= template_singular %>"
+  end
+
+  test "does not update chosen resource and renders errors when namespace is missing", %{conn: conn} do
+    <%= singular %> = Repo.insert! %<%= alias %>{}
+    conn = put conn, <%= singular %>_path(conn, :update, <%= singular %>), %{}
     assert html_response(conn, 200) =~ "Edit <%= template_singular %>"
   end
 
