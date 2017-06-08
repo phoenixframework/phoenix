@@ -15,6 +15,22 @@ defmodule Phoenix.NotAcceptableError do
   defexception message: nil, accepts: [], plug_status: 406
 end
 
+defmodule Phoenix.IncorrectParamError do
+  @moduledoc """
+  Raised when a parameter in the request is incorrect.
+
+  If you are seeing this error, you should handle the error and surface it
+  to the end user. It means that user incorrectly uses an API.
+  """
+
+  defexception [:message, plug_status: 400]
+
+  def exception([key: value]) do
+    msg = "parameter #{inspect value} is incorrect"
+    %Phoenix.IncorrectParamError{message: msg}
+  end
+end
+
 defmodule Phoenix.MissingParamError do
   @moduledoc """
   Raised when a key is expected to be present in the request parameters,
