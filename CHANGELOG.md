@@ -5,7 +5,7 @@
 See these [`1.2.x` to `1.3.x` upgrade instructions](https://gist.github.com/chrismccord/71ab10d433c98b714b75c886eff17357) to bring your existing apps up to speed.
 
 * Enhancements
-  * [Generator] Add new `phx.new`, `phx.new.web`, `phx.new.ecto` project generators with improved application structure and support for umbrella applications
+  * [Generator] Add new `phx.new`, `phx.new.web`, `phx.new.ecto` project generators with improved application structure and support for umbrella projects
   * [Generator] Add new `phx.gen.html` and `phx.gen.json` resource generators with improved isolation of API boundaries
   * [Controller] Add `current_path` and `current_url` to generate a connection's path and url
   * [Controller] Introduce `action_fallback` to registers a plug to call as a fallback to the controller action

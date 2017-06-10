@@ -38,7 +38,7 @@ defmodule Mix.Tasks.Phx.Routes do
 
   defp router(nil, base) do
     if Mix.Project.umbrella?() do
-      Mix.raise "umbrella applications require an explicit router to be given to phx.routes"
+      Mix.raise "umbrella projects require an explicit router to be given to phx.routes"
     end
     web_router = app_mod(base, "Web.Router")
     old_router = app_mod(base, "Router")
