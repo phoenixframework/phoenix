@@ -13,6 +13,8 @@ See the official site at http://www.phoenixframework.org/
 
 API documentation is available at [https://hexdocs.pm/phoenix](https://hexdocs.pm/phoenix)
 
+Phoenix.js documentation is available at [https://hexdocs.pm/phoenix/js](https://hexdocs.pm/phoenix/js)
+
 ## Contributing
 
 We appreciate any contribution to Phoenix. Check our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) and [CONTRIBUTING.md](CONTRIBUTING.md) guides for more information. We usually keep a list of features and bugs [in the issue tracker][4].

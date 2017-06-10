@@ -26,6 +26,7 @@ defmodule Phoenix.Mixfile do
             extra_section: "GUIDES",
             assets: "deps/phoenix_guides/images",
             extras: extras()],
+     aliases: aliases(),
      source_url: "https://github.com/phoenixframework/phoenix",
      homepage_url: "http://www.phoenixframework.org",
      description: """
@@ -112,5 +113,16 @@ defmodule Phoenix.Mixfile do
      "bonus_guides/learning_elixir.md": [group: "Bonus Guides"],
      "bonus_guides/seeding_data.md": [group: "Bonus Guides"]]
     |> Enum.map(fn {file, opts} -> {:"deps/phoenix_guides/docs/#{file}", opts} end)
+  end
+
+  defp aliases do
+    [
+      "docs": ["docs", &generate_js_docs/1]
+    ]
+  end
+
+  def generate_js_docs(_) do
+    Mix.Task.run "app.start"
+    System.cmd("npm", ["run", "docs"])
   end
 end
