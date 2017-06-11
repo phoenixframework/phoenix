@@ -17,8 +17,8 @@ defmodule <%= module %>ControllerTest do
 
   test "creates resource and redirects when data is valid", %{conn: conn} do
     conn = post conn, <%= singular %>_path(conn, :create), <%= singular %>: @valid_attrs
-    assert redirected_to(conn) == <%= singular %>_path(conn, :index)
-    assert Repo.get_by(<%= alias %>, @valid_attrs)
+    <%= singular %> = Repo.get_by!(<%= alias %>, @valid_attrs)
+    assert redirected_to(conn) == <%= singular %>_path(conn, :show, post.id)
   end
 
   test "does not create resource and renders errors when data is invalid", %{conn: conn} do
