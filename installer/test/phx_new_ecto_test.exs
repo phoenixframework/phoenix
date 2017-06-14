@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Phx.New.EctoTest do
   test "new without args" do
     in_tmp_umbrella_project "new without args", fn ->
       assert capture_io(fn -> Mix.Tasks.Phx.New.Ecto.run([]) end) =~
-             "Creates a new Ecto project within an umbrella application."
+             "Creates a new Ecto project within an umbrella project."
     end
   end
 
