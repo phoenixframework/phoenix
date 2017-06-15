@@ -42,6 +42,14 @@ defmodule Phx.New.Project do
     Keyword.fetch!(binding, :brunch)
   end
 
+  def webpack?(%Project{binding: binding}) do
+    Keyword.fetch!(binding, :webpack)
+  end
+
+  def packer?(%Project{} = p) do
+    brunch?(p) or webpack?(p)
+  end
+
   def join_path(%Project{} = project, location, path)
       when location in [:project, :app, :web] do
 
