@@ -45,8 +45,7 @@ To create projects outside of the `installer/` directory, add the latest archive
 
 ```bash
 $ npm install
-$ npm install -g brunch
-$ brunch watch
+$ npm run watch
 ```
 
 ### Building docs from source
