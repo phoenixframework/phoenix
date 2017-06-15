@@ -2,9 +2,11 @@ defmodule <%= root_app_module %>.Mixfile do
   use Mix.Project
 
   def project do
-    [apps_path: "apps",
-     start_permanent: Mix.env == :prod,
-     deps: deps()]
+    [
+      apps_path: "apps",
+      start_permanent: Mix.env == :prod,
+      deps: deps()
+    ]
   end
 
   # Dependencies can be Hex packages:

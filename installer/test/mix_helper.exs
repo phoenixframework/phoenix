@@ -92,18 +92,20 @@ defmodule MixHelper do
 
   def umbrella_mixfile_contents do
     """
-defmodule Umbrella.Mixfile do
-  use Mix.Project
+    defmodule Umbrella.Mixfile do
+      use Mix.Project
 
-  def project do
-    [apps_path: "apps",
-     deps: deps()]
-  end
+      def project do
+        [
+          apps_path: "apps",
+          deps: deps()
+        ]
+      end
 
-  defp deps do
-    []
-  end
-end
+      defp deps do
+        []
+      end
+    end
     """
   end
 
