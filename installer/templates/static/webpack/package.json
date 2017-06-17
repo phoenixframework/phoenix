@@ -6,21 +6,24 @@
         "watch": "webpack --watch --colors --stdin"
     },
     "dependencies": {
-        "phoenix": "file:<%= phoenix_brunch_path %>"<%= if html do %>,
-        "phoenix_html": "file:<%= phoenix_html_brunch_path %>"<% end %>
+        "phoenix": "file:../../../",
+        "phoenix_html": "file:../deps/phoenix_html"
     },
     "devDependencies": {
-        "babel-core": "6.14.0",
-        "babel-loader": "6.2.5",
-        "babel-plugin-transform-runtime": "6.15.0",
-        "babel-plugin-transform-strict-mode": "6.11.3",
-        "babel-preset-es2015": "6.14.0",
-        "babel-preset-stage-2": "6.18.0",
-        "babel-register": "6.18.0",
+        "babel-core": "6.25.0",
+        "babel-loader": "7.0.0",
+        "babel-plugin-transform-runtime": "6.23.0",
+        "babel-plugin-transform-strict-mode": "6.24.1",
+        "babel-preset-es2015": "6.24.1",
+        "babel-preset-stage-2": "6.24.1",
+        "babel-register": "6.24.1",
+        "cpx": "1.5.0",
         "css-loader": "0.23.1",
+        "file-loader": "0.9.0",
         "raw-loader": "0.5.1",
         "resolve-url-loader": "1.6.0",
         "style-loader": "0.13.2",
-        "webpack": "2.2.1"
+        "url-loader": "0.5.9",
+        "webpack": "2.6.1"
     }
 }

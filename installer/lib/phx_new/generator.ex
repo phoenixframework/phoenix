@@ -122,6 +122,7 @@ defmodule Phx.New.Generator do
       in_umbrella: project.in_umbrella?,
       brunch: brunch,
       webpack: webpack,
+      packer: brunch or webpack,
       ecto: ecto,
       html: html,
       adapter_app: adapter_app,
