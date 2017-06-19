@@ -21,7 +21,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   Overall, this generator will add the following files to lib/your_app:
 
     * a context module in accounts/accounts.ex, serving as the API boundary
-    * a schema in accounts/user.ex, with an `accounts_users` table
+    * a schema in accounts/user.ex, with a `users` table
 
   A migration file for the repository and test files for the context
   will also be generated.
