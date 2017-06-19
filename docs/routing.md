@@ -70,7 +70,7 @@ get "/", RootController, :index
 
 Then run `$ mix compile` at the root of your project.
 
-### Examining Routes
+## Examining Routes
 
 Phoenix provides a great tool for investigating routes in an application, the mix task `phx.routes`.
 
@@ -84,7 +84,7 @@ The output tells us that any HTTP GET request for the root of the application wi
 
 `page_path` is an example of what Phoenix calls a path helper, and we'll talk about those very soon.
 
-### Resources
+## Resources
 
 The router supports other macros besides those for HTTP verbs like `get`, `post`, and `put`. The most important among them is `resources`, which expands out to eight clauses of the `match/3` function.
 
@@ -163,7 +163,80 @@ comment_path  PATCH   /comments/:id       HelloPhoenix.Web.CommentController :up
 
 The `Phoenix.Router.resources/4` function describes additional options for customizing resource routes.
 
-### Path Helpers
+## Forward
+
+The `Phoenix.Router.forward/4` macro can be used to send all requests start start with a particular path to a particular plug. Let's say we have a part of our system that is responsible (it could even be a separate application or library) for running jobs in the background, it could have its own web interface for checking the status of the jobs. We can forward to this admin interface using:
+
+```elixir
+defmodule HelloPhoenix.Web.Router do
+  use HelloPhoenix.Web, :router
+
+  #...
+
+  scope "/", HelloPhoenix.Web do
+    #...
+  end
+
+  forward "/jobs", BackgroundJob.Plug
+end
+```
+
+This means that all routes starting with `/jobs` will be sent to the `BackgroundJob.Plug` module.
+
+We can even use the `forward/4` macro in a pipeline. If we wanted to ensure that the user was authenticated and an administrator in order to see the jobs page, we could use the following in our router.
+
+```elixir
+defmodule HelloPhoenix.Web.Router do
+  use HelloPhoenix.Web, :router
+
+  #...
+
+  scope "/" do
+    pipe_through [:authenticate_user, :ensure_admin]
+    forward "/jobs", BackgroundJob.Plug
+  end
+end
+```
+
+This means that the plugs in the `authenticate_user` and `ensure_admin` pipelines will be called before the `BackgroundJob.Plug` allowing them to send an appropriate response and call `halt()` .
+
+The `opts` that are passed to the `init/1` callback of a Plug can be passed as a 3rd argument. For example, maybe the background job page lets you set the name of your application to be displayed on the page. This could be passed with:
+
+```elixir
+  forward "/jobs", BackgroundJob.Plug, name: "Hello Phoenix"
+```
+
+There is a fourth `router_opts` argument that can be passed. These options are outlined in the `Phoenix.Router.scope/2` documentation.
+
+Although it is possible to forward to any module plug, it is not advised to forward to another endpoint. This is because plugs defined by your app and the forwarded endpoint would be invoked twice, which may lead to errors.
+
+Writing an actual background job worker is beyond the scope of this guide. However for convenience and to allow you to test the code above, here is the implementation of `BackgroundJob.Plug` that you can copy into your application:
+
+
+```elixir
+defmodule BackgroundJob.Plug do
+  def init(opts), do: opts
+  def call(conn, opts) do
+    conn
+    |> Plug.Conn.assign(:name, Keyword.get(opts, :name, "Background Job"))
+    |> BackgroundJob.Router.call(opts)
+  end
+end
+
+defmodule BackgroundJob.Router do
+  use Plug.Router
+
+  plug :match
+  plug :dispatch
+
+  get "/", do: send_resp(conn, 200, "Welcome to #{conn.assigns.name}")
+  get "/active", do: send_resp(conn, 200, "5 Active Jobs")
+  get "/pending", do: send_resp(conn, 200, "3 Active Jobs")
+  match _, do: send_resp(conn, 404, "Not found")
+end
+```
+
+## Path Helpers
 
 Path helpers are functions which are dynamically defined on the `Router.Helpers` module for an individual application. For us, that is `HelloPhoenix.Web.Router.Helpers`.  Their names are derived from the name of the controller used in the route definition. Our controller is `HelloPhoenix.Web.PageController`, and `page_path` is the function which will return the path to the root of our application.
 
@@ -230,7 +303,7 @@ Application endpoints will have their own guide soon. For now, think of them as 
 
 The `_url` functions will get the host, port, proxy port, and SSL information needed to construct the full URL from the configuration parameters set for each environment. We'll talk about configuration in more detail in its own guide. For now, you can take a look at `config/dev.exs` file in your own project to see those values.
 
-### Nested Resources
+## Nested Resources
 
 It is also possible to nest resources in a Phoenix router. Let's say we also have a `posts` resource which has a one to many relationship with `users`. That is to say, a user can create many posts, and an individual post belongs to only one user. We can represent that by adding a nested route in `lib/hello_phoenix/web/router.ex` like this:
 
@@ -270,7 +343,7 @@ iex> HelloPhoenix.Web.Router.Helpers.user_post_path(Endpoint, :index, 42, active
 "/users/42/posts?active=true"
 ```
 
-### Scoped Routes
+## Scoped Routes
 
 Scopes are a way to group routes under a common path prefix and scoped set of plug middleware. We might want to do this for admin functionality, APIs, and especially for versioned APIs. Let's say we have user generated reviews on a site, and that those reviews first need to be approved by an admin. The semantics of these resources are quite different, and they might not share the same controller. Scopes enable us to segregate these routes.
 
@@ -590,7 +663,7 @@ post_path  PATCH   /posts/:id       AnotherApp.Web.PostController :update
 post_path  DELETE  /posts/:id       AnotherApp.Web.PostController :delete
 ```
 
-### Pipelines
+## Pipelines
 
 We have come quite a long way in this guide without talking about one of the first lines we saw in the router - `pipe_through :browser`. It's time to fix that.
 
@@ -600,7 +673,7 @@ Pipelines are simply plugs stacked up together in a specific order and given a n
 
 A newly generated Phoenix application defines two pipelines called `:browser` and `:api`. We'll get to those in a minute, but first we need to talk about the plug stack in the Endpoint plugs.
 
-##### The Endpoint Plugs
+#### The Endpoint Plugs
 
 Endpoints organize all the plugs common to every request, and apply them before dispatching into the router(s) with their underlying `:browser`, `:api`, and custom pipelines. The default Endpoint plugs do quite a lot of work. Here they are in order.
 
@@ -622,7 +695,7 @@ Endpoints organize all the plugs common to every request, and apply them before 
 
 - [Plug.Router](http://hexdocs.pm/plug/Plug.Router.html) - plugs a router into the request cycle
 
-##### The `:browser` and `:api` Pipelines
+#### The `:browser` and `:api` Pipelines
 
 Phoenix defines two other pipelines by default, `:browser` and `:api`. The router will invoke these after it matches a route, assuming we have called `pipe_through/1` with them in the enclosing scope.
 
@@ -753,7 +826,7 @@ end
 
 In general, the scoping rules for pipelines behave as you might expect. In this example, all routes will pipe through the `:browser` pipeline. However, only the `reviews` resources routes will  pipe through the `:review_checks` pipeline. Since we declared both pipes `pipe_through [:browser, :review_checks]` in a list of pipelines, Phoenix will `pipe_through` each of them as it invokes them in order.
 
-##### Creating New Pipelines
+#### Creating New Pipelines
 
 Phoenix allows us to create our own custom pipelines anywhere in the router. To do so, we call the `pipeline/2` macro with these arguments: an atom for the name of our new pipeline and a block with all the plugs we want in it.
 
@@ -782,7 +855,7 @@ defmodule HelloPhoenix.Web.Router do
 end
 ```
 
-### Channel Routes
+## Channel Routes
 
 Channels are a very exciting, real-time component of the Phoenix framework. Channels handle incoming and outgoing messages broadcast over a socket for a given topic. Channel routes, then, need to match requests by socket and topic in order to dispatch to the correct channel. (For a more detailed description of channels and their behavior, please see the [Channel Guide](channels.html).)
 
@@ -830,7 +903,7 @@ socket "/socket", HelloPhoenix.Web.UserSocket
 socket "/admin-socket", HelloPhoenix.Web.AdminSocket
 ```
 
-### Summary
+## Summary
 
 Routing is a big topic, and we have covered a lot of ground here. The important points to take away from this guide are:
 - Routes which begin with an HTTP verb name expand to a single clause of the match function.
