@@ -55,7 +55,7 @@ Thankfully, this is relatively straightforward to accomplish with nginx.
 Below is a standard `sites-enabled` style nginx configuration, for a given domain `my-app.domain`.
 
 ```
-// /etc/nginx/sites-enabled/my-app.domain
+# /etc/nginx/sites-enabled/my-app.domain
 upstream phoenix {
   server 127.0.0.1:4000 max_fails=5 fail_timeout=60s;
 }
