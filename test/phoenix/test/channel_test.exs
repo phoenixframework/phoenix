@@ -146,7 +146,7 @@ defmodule Phoenix.Test.ChannelTest do
   defmodule UserSocket do
     use Phoenix.Socket
 
-    channel "foo:*", Channel
+    channel "foo:*", Channel, assigns: %{user_socket_assigns: true}
 
     transport :websocket, Phoenix.Transports.WebSocket
 
@@ -450,5 +450,11 @@ defmodule Phoenix.Test.ChannelTest do
     {:ok, socket} = connect(UserSocket, %{})
     socket.endpoint.broadcast!(socket.id, "disconnect", %{})
     assert_broadcast "disconnect", %{}
+  end
+
+  test "supports static assigns in user socket channel definition" do
+    {:ok, socket} = connect(UserSocket, %{})
+    socket = subscribe_and_join!(socket, "foo:ok")
+    assert socket.assigns.user_socket_assigns
   end
 end

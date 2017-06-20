@@ -180,8 +180,8 @@ defmodule Phoenix.Socket do
     channel_defs =
       for {topic_pattern, module, opts} <- channels do
         topic_pattern
-        |> to_topic_match
-        |> defchannel(module, opts[:via])
+        |> to_topic_match()
+        |> defchannel(module, opts[:via], opts)
       end
 
     quote do
@@ -200,16 +200,16 @@ defmodule Phoenix.Socket do
     end
   end
 
-  defp defchannel(topic_match, channel_module, nil) do
+  defp defchannel(topic_match, channel_module, nil = _transports, opts) do
     quote do
-      def __channel__(unquote(topic_match), _transport), do: unquote(channel_module)
+      def __channel__(unquote(topic_match), _transport), do: unquote({channel_module, opts})
     end
   end
 
-  defp defchannel(topic_match, channel_module, transports) do
+  defp defchannel(topic_match, channel_module, transports, opts) do
     quote do
       def __channel__(unquote(topic_match), transport)
-          when transport in unquote(List.wrap(transports)), do: unquote(channel_module)
+          when transport in unquote(List.wrap(transports)), do: unquote({channel_module, opts})
     end
   end
 
@@ -240,6 +240,7 @@ defmodule Phoenix.Socket do
 
     * `:via` - the transport adapters to accept on this channel.
       Defaults `[:websocket, :longpoll]`
+    * `:assigns` - the map of socket assigns to merge into the socket on join.
 
   ## Examples
 
@@ -266,7 +267,7 @@ defmodule Phoenix.Socket do
     module = tear_alias(module)
 
     quote do
-      @phoenix_channels {unquote(topic_pattern), unquote(module), unquote(opts)}
+      @phoenix_channels {unquote(topic_pattern), unquote(module), unquote(Macro.escape(opts))}
     end
   end
 

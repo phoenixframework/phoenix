@@ -268,8 +268,12 @@ defmodule Phoenix.ChannelTest do
   @doc "See `subscribe_and_join!/4`."
   def subscribe_and_join!(%Socket{} = socket, topic, payload)
       when is_binary(topic) and is_map(payload) do
-    channel = match_topic_to_channel!(socket, topic)
-    subscribe_and_join!(socket, channel, topic, payload)
+
+    {channel, opts} = match_topic_to_channel!(socket, topic)
+
+    socket
+    |> with_opts(opts)
+    |> subscribe_and_join!(channel, topic, payload)
   end
   @doc """
   Same as `subscribe_and_join/4`, but returns either the socket
@@ -293,8 +297,12 @@ defmodule Phoenix.ChannelTest do
   @doc "See `subscribe_and_join/4`."
   def subscribe_and_join(%Socket{} = socket, topic, payload)
       when is_binary(topic) and is_map(payload) do
-    channel = match_topic_to_channel!(socket, topic)
-    subscribe_and_join(socket, channel, topic, payload)
+
+    {channel, opts} = match_topic_to_channel!(socket, topic)
+
+    socket
+    |> with_opts(opts)
+    |> subscribe_and_join(channel, topic, payload)
   end
   @doc """
   Subscribes to the given topic and joins the channel
@@ -325,9 +333,14 @@ defmodule Phoenix.ChannelTest do
   @doc "See `join/4`."
   def join(%Socket{} = socket, topic, payload)
       when is_binary(topic) and is_map(payload) do
-    channel = match_topic_to_channel!(socket, topic)
-    join(socket, channel, topic, payload)
+
+    {channel, opts} = match_topic_to_channel!(socket, topic)
+
+    socket
+    |> with_opts(opts)
+    |> join(channel, topic, payload)
   end
+
   @doc """
   Joins the channel under the given topic and payload.
 
@@ -340,7 +353,7 @@ defmodule Phoenix.ChannelTest do
       when is_atom(channel) and is_binary(topic) and is_map(payload) do
 
     ref = System.unique_integer([:positive])
-    socket = Transport.build_channel_socket(socket, channel, topic, ref)
+    socket = Transport.build_channel_socket(socket, channel, topic, ref, [])
 
     case Server.join(socket, payload) do
       {:ok, reply, pid} ->
@@ -567,7 +580,7 @@ defmodule Phoenix.ChannelTest do
     end
 
     case socket.handler.__channel__(topic, socket.transport_name) do
-      channel when is_atom(channel) -> channel
+      {channel, opts} when is_atom(channel) -> {channel, opts}
       _ -> raise "no channel found for topic #{inspect topic} in #{inspect socket.handler}"
     end
   end
@@ -582,4 +595,8 @@ defmodule Phoenix.ChannelTest do
 
   defp stringify_kv({k, v}),
     do: {to_string(k), __stringify__(v)}
+
+  defp with_opts(%Socket{} = socket, opts) do
+    %Socket{socket | assigns: Map.merge(socket.assigns, opts[:assigns] || %{})}
+  end
 end

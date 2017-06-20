@@ -229,29 +229,31 @@ defmodule Phoenix.Socket.Transport do
   end
 
   @doc false
-  def build_channel_socket(%Socket{} = socket, channel, topic, join_ref) do
+  def build_channel_socket(%Socket{} = socket, channel, topic, join_ref, opts) do
     %Socket{socket |
             topic: topic,
             channel: channel,
             join_ref: join_ref,
+            assigns: Map.merge(socket.assigns, opts[:assigns] || %{}),
             private: channel.__socket__(:private)}
   end
 
   defp do_dispatch(nil, %{event: "phx_join", topic: topic} = msg, base_socket) do
-    if channel = base_socket.handler.__channel__(topic, base_socket.transport_name) do
-      socket = build_channel_socket(base_socket, channel, topic, msg.ref)
+    case base_socket.handler.__channel__(topic, base_socket.transport_name) do
+      {channel, opts} ->
+        socket = build_channel_socket(base_socket, channel, topic, msg.ref, opts)
 
-      case Phoenix.Channel.Server.join(socket, msg.payload) do
-        {:ok, response, pid} ->
-          log_info topic, fn -> "Replied #{topic} :ok" end
-          {:joined, pid, %Reply{ref: msg.ref, topic: topic, status: :ok, payload: response}}
+        case Phoenix.Channel.Server.join(socket, msg.payload) do
+          {:ok, response, pid} ->
+            log_info topic, fn -> "Replied #{topic} :ok" end
+            {:joined, pid, %Reply{ref: msg.ref, topic: topic, status: :ok, payload: response}}
 
-        {:error, reason} ->
-          log_info topic, fn -> "Replied #{topic} :error" end
-          {:error, reason, %Reply{ref: msg.ref, topic: topic, status: :error, payload: reason}}
-      end
-    else
-      reply_ignore(msg, base_socket)
+          {:error, reason} ->
+            log_info topic, fn -> "Replied #{topic} :error" end
+            {:error, reason, %Reply{ref: msg.ref, topic: topic, status: :error, payload: reason}}
+        end
+
+      nil -> reply_ignore(msg, base_socket)
     end
   end
 
