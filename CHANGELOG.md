@@ -4,6 +4,7 @@
 
 * Enhancements
   * [ChannelTest] Subscribe `connect` to `UserSocket.id` to support testing forceful disconnects
+  * [Socket] Support static `:assigns` when defining channel routes
 
 ## 1.3.0-rc.2 (2017-05-15)
 
