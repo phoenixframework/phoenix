@@ -165,7 +165,7 @@ The `Phoenix.Router.resources/4` function describes additional options for custo
 
 ## Forward
 
-The `Phoenix.Router.forward/4` macro can be used to send all requests start start with a particular path to a particular plug. Let's say we have a part of our system that is responsible (it could even be a separate application or library) for running jobs in the background, it could have its own web interface for checking the status of the jobs. We can forward to this admin interface using:
+The `Phoenix.Router.forward/4` macro can be used to send all requests that start with a particular path to a particular plug. Let's say we have a part of our system that is responsible (it could even be a separate application or library) for running jobs in the background, it could have its own web interface for checking the status of the jobs. We can forward to this admin interface using:
 
 ```elixir
 defmodule HelloPhoenix.Web.Router do
