@@ -10,9 +10,9 @@
     "phoenix_html": "file:<%= phoenix_html_brunch_path %>"<% end %>
   },
   "devDependencies": {
-    "babel-brunch": "6.0.6",
-    "brunch": "2.10.7",
+    "babel-brunch": "6.1.1",
+    "brunch": "2.10.9",
     "clean-css-brunch": "2.10.0",
-    "uglify-js-brunch": "2.1.1"
+    "uglify-js-brunch": "2.10.0"
   }
 }
