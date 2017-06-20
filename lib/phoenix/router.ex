@@ -462,6 +462,11 @@ defmodule Phoenix.Router do
   See `pipeline/2` for more information.
   """
   defmacro plug(plug, opts \\ []) do
+    if not is_atom(plug) do
+      raise ArgumentError, "the plug must expects an atom (for example `:fetch_session`) " <>
+        "or a module (for example `Plug.Logger`). Got #{Macro.to_string(plug)}"
+    end
+
     quote do
       if pipeline = @phoenix_pipeline do
         @phoenix_pipeline [{unquote(plug), unquote(opts), true}|pipeline]

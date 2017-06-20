@@ -134,4 +134,18 @@ defmodule Phoenix.Router.PipelineTest do
     conn = call(Router, :get, "/browser/hello")
     assert conn.assigns[:params] == %{"id" => "hello"}
   end
+
+  test "pipeline with a non-atom plug raises" do
+    assert_raise(ArgumentError, fn ->
+      Code.eval_string("""
+        defmodule Phoenix.Router.PipelineTest.RouterWithException do
+          use Phoenix.Router
+          pipeline :browser do
+            plug SampleController.noop_plug
+          end
+        end
+      """)
+    end)
+  end
+
 end
