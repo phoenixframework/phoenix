@@ -77,7 +77,9 @@ defmodule Phoenix.Channel.Server do
       payload: payload
     }
   end
-  def broadcast(_, _, _, _), do: raise_invalid_message()
+  def broadcast(_, topic, event, payload) do
+    raise_invalid_message(topic, event, payload)
+  end
 
   @doc """
   Broadcasts on the given pubsub server with the given
@@ -93,7 +95,10 @@ defmodule Phoenix.Channel.Server do
       payload: payload
     }
   end
-  def broadcast!(_, _, _, _), do: raise_invalid_message()
+  def broadcast!(_, topic, event, payload) do
+    raise_invalid_message(topic, event, payload)
+  end
+
 
   @doc """
   Broadcasts on the given pubsub server with the given
@@ -109,7 +114,9 @@ defmodule Phoenix.Channel.Server do
       payload: payload
     }
   end
-  def broadcast_from(_, _, _, _, _), do: raise_invalid_message()
+  def broadcast_from(_, _from, topic, event, payload) do
+    raise_invalid_message(topic, event, payload)
+  end
 
   @doc """
   Broadcasts on the given pubsub server with the given
@@ -125,7 +132,9 @@ defmodule Phoenix.Channel.Server do
       payload: payload
     }
   end
-  def broadcast_from!(_, _, _, _, _), do: raise_invalid_message()
+  def broadcast_from!(_, _from, topic, event, payload) do
+    raise_invalid_message(topic, event, payload)
+  end
 
   @doc """
   Pushes a message with the given topic, event and payload
@@ -140,7 +149,9 @@ defmodule Phoenix.Channel.Server do
     send pid, encoded_msg
     :ok
   end
-  def push(_, _, _, _, _), do: raise_invalid_message()
+  def push(_, topic, event, payload, _) do
+    raise_invalid_message(topic, event, payload)
+  end
 
   @doc """
   Replies to a given ref to the transport process.
@@ -153,12 +164,20 @@ defmodule Phoenix.Channel.Server do
     )
     :ok
   end
-  def reply(_, _, _, _, _), do: raise_invalid_message()
+  def reply(_, _, topic, {_status, payload}, _) do
+    raise_invalid_message(topic, "phx_reply", payload)
+  end
 
 
-  @spec raise_invalid_message() :: no_return()
-  defp raise_invalid_message do
-    raise ArgumentError, "topic and event must be strings, message must be a map"
+  @spec raise_invalid_message(topic :: term, event :: term, payload :: term) :: no_return()
+  defp raise_invalid_message(topic, event, payload) do
+    raise ArgumentError, """
+    topic and event must be strings, message must be a map, got:
+
+      topic: #{inspect topic}
+      event: #{inspect event}
+      payload: #{inspect payload}
+    """
   end
 
   ## Callbacks

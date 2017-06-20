@@ -240,13 +240,26 @@ defmodule Phoenix.ChannelTest do
   defmacro connect(handler, params) do
     if endpoint = Module.get_attribute(__CALLER__.module, :endpoint) do
       quote do
-        Transport.connect(unquote(endpoint), unquote(handler), :channel_test,
-                          unquote(__MODULE__), NoopSerializer, Phoenix.ChannelTest.__stringify__(unquote(params)))
+        unquote(__MODULE__).__connect__(unquote(endpoint), unquote(handler), unquote(params))
       end
     else
       raise "module attribute @endpoint not set for socket/2"
     end
   end
+
+  @doc false
+  def __connect__(endpoint, handler, params) do
+    endpoint
+    |> Transport.connect(handler, :channel_test, __MODULE__, NoopSerializer, __stringify__(params))
+    |> subscribe_to_socket_id(endpoint, handler)
+  end
+  defp subscribe_to_socket_id({:ok, socket}, endpoint, handler) do
+    if topic = handler.id(socket) do
+      :ok = endpoint.subscribe(topic)
+    end
+    {:ok, socket}
+  end
+  defp subscribe_to_socket_id(error, _endpoint, _handler), do: error
 
   @doc "See `subscribe_and_join!/4`."
   def subscribe_and_join!(%Socket{} = socket, topic) when is_binary(topic) do

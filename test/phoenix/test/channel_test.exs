@@ -445,4 +445,10 @@ defmodule Phoenix.Test.ChannelTest do
       assert_reply ref, :ok
     end) =~ "received unexpected message in handle_info/2: :unhandled"
   end
+
+  test "subscribes to socket.id and receives disconnects" do
+    {:ok, socket} = connect(UserSocket, %{})
+    socket.endpoint.broadcast!(socket.id, "disconnect", %{})
+    assert_broadcast "disconnect", %{}
+  end
 end
