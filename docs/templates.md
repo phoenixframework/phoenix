@@ -4,7 +4,7 @@ Templates are what they sound like they should be: files into which we pass data
 
 EEx is the default template system in Phoenix, and it is quite similar to ERB in Ruby. It is actually part of Elixir itself, and Phoenix uses EEx templates to create files like the router and the main application view while generating a new application.
 
-As we learned in the [View Guide](views.html), by default, templates live in the `web/templates` directory, organized into directories named after a view. Each directory has its own view module to render the templates in it.
+As we learned in the [View Guide](views.html), by default, templates live in the `lib/hello_phoenix/web/templates` directory, organized into directories named after a view. Each directory has its own view module to render the templates in it.
 
 ### Examples
 
@@ -12,17 +12,17 @@ We've already seen several ways in which templates are used, notably in the [Add
 
 ##### web.ex
 
-Phoenix generates a `web/web.ex` file that serves as place to group common imports and aliases. All declarations here within the `view` block apply to all your templates.
+Phoenix generates a `lib/hello_phoenix/web/web.ex` file that serves as place to group common imports and aliases. All declarations here within the `view` block apply to all your templates.
 
 Let's make some additions to our application so we can experiment a little.
 
-First, let's define a new route in `web/router.ex`.
+First, let's define a new route in `lib/hello_phoenix/web/router.ex`.
 
 ```elixir
-defmodule HelloPhoenix.Router do
+defmodule HelloPhoenix.Web.Router do
   ...
 
-  scope "/", HelloPhoenix do
+  scope "/", HelloPhoenix.Web do
     pipe_through :browser # Use the default browser stack
 
     get "/", PageController, :index
@@ -36,10 +36,10 @@ defmodule HelloPhoenix.Router do
 end
 ```
 
-Now, let's define the controller action we specified in the route. We'll add a `test/2` action in the `web/controllers/page_controller.ex` file.
+Now, let's define the controller action we specified in the route. We'll add a `test/2` action in the `lib/hello_phoenix/web/controllers/page_controller.ex` file.
 
 ```elixir
-defmodule HelloPhoenix.PageController do
+defmodule HelloPhoenix.Web.PageController do
   ...
 
   def test(conn, _params) do
@@ -50,12 +50,13 @@ end
 
 We're going to create a function that tells us which controller and action are handling our request.
 
-To do that, we need to import the `action_name/1` and `controller_module/1` functions from `Phoenix.Controller` in `web/web.ex`.
+To do that, we need to import the `action_name/1` and `controller_module/1` functions from `Phoenix.Controller` in `lib/hello_phoenix/web/web.ex`.
 
 ```elixir
   def view do
     quote do
-      use Phoenix.View, root: "web/templates"
+      use Phoenix.View, root: "lib/hello_phoenix/web/templates",
+                        namespace: HelloPhoenix.Web
 
       # Import convenience functions from controllers
       import Phoenix.Controller, only: [get_csrf_token: 0, get_flash: 2, view_module: 1,
@@ -66,10 +67,10 @@ To do that, we need to import the `action_name/1` and `controller_module/1` func
   end
 ```
 
-Next, let's define a `handler_info/1` function at the bottom of the `web/views/page_view.ex` which makes use of the `controller_module/1` and `action_name/1` functions we just imported. We'll also define a `connection_keys/1` function that we'll use in a moment.
+Next, let's define a `handler_info/1` function at the bottom of the ` lib/hello_phoenix/web/views/page_view.ex` which makes use of the `controller_module/1` and `action_name/1` functions we just imported. We'll also define a `connection_keys/1` function that we'll use in a moment.
 
 ```elixir
-defmodule HelloPhoenix.PageView do
+defmodule HelloPhoenix.Web.PageView do
   use HelloPhoenix.Web, :view
 
   def handler_info(conn) do
@@ -84,7 +85,7 @@ defmodule HelloPhoenix.PageView do
 end
 ```
 
-We have a route. We created a new controller action. We have made modifications to the main application view. Now all we need is a new template to display the string we get from `handler_info/1`. Let's create a new one at `web/templates/page/test.html.eex`.
+We have a route. We created a new controller action. We have made modifications to the main application view. Now all we need is a new template to display the string we get from `handler_info/1`. Let's create a new one at `lib/hello_phoenix/web/templates/page/test.html.eex`.
 
 ```html
 <div class="jumbotron">
@@ -94,9 +95,9 @@ We have a route. We created a new controller action. We have made modifications 
 
 Notice that `@conn` is available to us in the template for free via the `assigns` map.
 
-If we visit [localhost:4000/test](http://localhost:4000/test), we will see that our page is brought to us by `Elixir.HelloPhoenix.PageController.test`.
+If we visit [localhost:4000/test](http://localhost:4000/test), we will see that our page is brought to us by `Elixir.HelloPhoenix.Web.PageController.test`.
 
-We can define functions in any individual view in `web/views`. Functions defined in an individual view will only be available to templates which that view renders. For example, functions like our `handler_info` above, will only be available to templates in `web/templates/page`.
+We can define functions in any individual view in `lib/hello_phoenix/web/views`. Functions defined in an individual view will only be available to templates which that view renders. For example, functions like our `handler_info` above, will only be available to templates in `lib/hello_phoenix/web/templates/page`.
 
 ##### Displaying Lists
 
@@ -104,7 +105,7 @@ So far, we've only displayed singular values in our templates - strings here, an
 
 The answer is that we can use Elixir's list comprehensions.
 
-Now that we have a function, visible to our template, that returns a list of keys in the `conn` struct, all we need to do is modify our `web/templates/page/test.html.eex` template a bit to display them.
+Now that we have a function, visible to our template, that returns a list of keys in the `conn` struct, all we need to do is modify our `lib/hello_phoenix/web/templates/page/test.html.eex` template a bit to display them.
 
 We can add a header and a list comprehension like this.
 
@@ -135,7 +136,7 @@ We are probably fine with leaving this in place. Quite often, however, this disp
 
 The simple solution is to use another template! Templates are just function calls, so like regular code, composing your greater template by small, purpose-built functions can lead to clearer design. This is simply a continuation of the rendering chain we have already seen. Layouts are templates into which regular templates are rendered. Regular templates may have other templates rendered into them.
 
-Let's turn this display snippet into its own template. Let's create a new template file at `web/templates/page/key.html.eex`, like this.
+Let's turn this display snippet into its own template. Let's create a new template file at `lib/hello_phoenix/web/templates/page/key.html.eex`, like this.
 
 ```html
 <p><%= @key %></p>
@@ -165,31 +166,31 @@ Often, we find that small pieces of data need to be rendered the same way in dif
 
 Let's move our template into a shared view.
 
-`key.html.eex` is currently rendered by the `HelloPhoenix.PageView` module, but we use a render call which assumes that the current view model is what we want to render with. We could make that explicit, and re-write it like this:
+`key.html.eex` is currently rendered by the `HelloPhoenix.Web.PageView` module, but we use a render call which assumes that the current view model is what we want to render with. We could make that explicit, and re-write it like this:
 
 ```html
 <div class="jumbotron">
   ...
 
   <%= for key <- connection_keys @conn do %>
-    <%= render HelloPhoenix.PageView, "key.html", key: key %>
+    <%= render HelloPhoenix.Web.PageView, "key.html", key: key %>
   <% end %>
 </div>
 ```
 
-Since we want this to live in a new `web/templates/shared` directory, we need a new individual view to render templates in that directory, `web/views/shared_view.ex`.
+Since we want this to live in a new `lib/hello_phoenix/web/templates/shared` directory, we need a new individual view to render templates in that directory, `lib/hello_phoenix/web/views/shared_view.ex`.
 
 ```elixir
-defmodule HelloPhoenix.SharedView do
+defmodule HelloPhoenix.Web.SharedView do
   use HelloPhoenix.Web, :view
 end
 ```
 
-Now we can move `key.html.eex` from the `web/templates/page` directory into the `web/templates/shared` directory. Once that happens, we can change the render call in `web/templates/page/test.html.eex` to use the new `HelloPhoenix.SharedView`.
+Now we can move `key.html.eex` from the `lib/hello_phoenix/web/templates/page` directory into the `lib/hello_phoenix/web/templates/shared` directory. Once that happens, we can change the render call in `lib/hello_phoenix/web/templates/page/test.html.eex` to use the new `HelloPhoenix.Web.SharedView`.
 
 ```html
 <%= for key <- connection_keys @conn do %>
-  <%= render HelloPhoenix.SharedView, "key.html", key: key %>
+  <%= render HelloPhoenix.Web.SharedView, "key.html", key: key %>
 <% end %>
 ```
 Going back to [localhost:4000/test](http://localhost:4000/test) again. The page should look exactly as it did before.
