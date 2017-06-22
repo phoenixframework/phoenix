@@ -22,8 +22,9 @@
         <span class="logo"></span>
       </header>
 
-      <p class="alert alert-info" role="alert"><%%= get_flash(@conn, :info) %></p>
-      <p class="alert alert-danger" role="alert"><%%= get_flash(@conn, :error) %></p>
+			<%= for {type, text} <- get_flash(@conn) do %>
+				<p class="alert alert-<%= "#{type}" %>" role="alert"><%= text %></p>
+			<% end %>
 
       <main role="main">
         <%%= render @view_module, @view_template, assigns %>
