@@ -24,6 +24,6 @@
         "resolve-url-loader": "1.6.0",
         "style-loader": "0.13.2",
         "url-loader": "0.5.9",
-        "webpack": "2.6.1"
+        "webpack": "3.0.0"
     }
 }
