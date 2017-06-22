@@ -82,7 +82,8 @@ defmodule Phx.New.Generator do
     db           = Keyword.get(opts, :database, "postgres")
     ecto         = Keyword.get(opts, :ecto, true)
     html         = Keyword.get(opts, :html, true)
-    brunch       = Keyword.get(opts, :brunch, true)
+    webpack      = Keyword.get(opts, :webpack, false)
+    brunch       = Keyword.get(opts, :brunch, !webpack)
     dev          = Keyword.get(opts, :dev, false)
     phoenix_path = phoenix_path(project, dev)
 
@@ -120,6 +121,8 @@ defmodule Phx.New.Generator do
       signing_salt: random_string(8),
       in_umbrella: project.in_umbrella?,
       brunch: brunch,
+      webpack: webpack,
+      packer: brunch or webpack,
       ecto: ecto,
       html: html,
       adapter_app: adapter_app,

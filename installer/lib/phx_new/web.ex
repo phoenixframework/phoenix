@@ -36,15 +36,26 @@ defmodule Phx.New.Web do
   ]
 
   template :brunch, [
-    {:text, "phx_assets/brunch/gitignore",        :web, ".gitignore"},
+    {:text, "phx_assets/js/gitignore",            :web, ".gitignore"},
     {:eex,  "phx_assets/brunch/brunch-config.js", :web, "assets/brunch-config.js"},
     {:text, "phx_assets/app.css",                 :web, "assets/css/app.css"},
     {:text, "phx_assets/phoenix.css",             :web, "assets/css/phoenix.css"},
-    {:eex,  "phx_assets/brunch/app.js",           :web, "assets/js/app.js"},
-    {:eex,  "phx_assets/brunch/socket.js",        :web, "assets/js/socket.js"},
+    {:eex,  "phx_assets/js/app.js",               :web, "assets/js/app.js"},
+    {:eex,  "phx_assets/js/socket.js",            :web, "assets/js/socket.js"},
     {:eex,  "phx_assets/brunch/package.json",     :web, "assets/package.json"},
     {:text, "phx_assets/robots.txt",              :web, "assets/static/robots.txt"},
     {:keep, "phx_assets/vendor",                  :web, "assets/vendor"},
+  ]
+
+  template :webpack, [
+      {:text, "static/js/gitignore",              ".gitignore"},
+      {:eex,  "static/webpack/webpack.config.js", "webpack.config.js"},
+      {:eex,  "static/webpack/package.json",      "package.json"},
+      {:text, "static/app.css",                   "web/static/css/app.css"},
+      {:text, "static/phoenix.css",               "web/static/css/phoenix.css"},
+      {:eex,  "static/js/app.js",                 "web/static/js/app.js"},
+      {:eex,  "static/js/socket.js",              "web/static/js/socket.js"},
+      {:text, "static/robots.txt",                "web/static/assets/robots.txt"},
   ]
 
   template :html, [
@@ -87,8 +98,12 @@ defmodule Phx.New.Web do
 
     if Project.html?(project), do: gen_html(project)
 
-    case {Project.brunch?(project), Project.html?(project)} do
-      {true, _}      -> gen_brunch(project)
+    case {Project.packer?(project), Project.html?(project)} do
+      {true, _} ->
+        cond do
+          Project.brunch?(project) -> gen_brunch(project)
+          Project.webpack?(project) -> gen_webpack(project)
+        end
       {false, true}  -> gen_static(project)
       {false, false} -> gen_bare(project)
     end
@@ -109,6 +124,12 @@ defmodule Phx.New.Web do
 
   defp gen_brunch(%Project{web_path: web_path} = project) do
     copy_from project, __MODULE__, :brunch
+    create_file Path.join(web_path, "assets/static/images/phoenix.png"), phoenix_png_text()
+    create_file Path.join(web_path, "assets/static/favicon.ico"), phoenix_favicon_text()
+  end
+
+  defp gen_webpack(%Project{web_path: web_path} = project) do
+    copy_from project, __MODULE__, :webpack
     create_file Path.join(web_path, "assets/static/images/phoenix.png"), phoenix_png_text()
     create_file Path.join(web_path, "assets/static/favicon.ico"), phoenix_favicon_text()
   end

@@ -47,14 +47,26 @@ defmodule Mix.Tasks.Phoenix.New do
     ],
 
     brunch: [
-      {:text, "static/brunch/gitignore",       ".gitignore"},
+      {:text, "static/js/gitignore",            ".gitignore"},
       {:eex,  "static/brunch/brunch-config.js", "brunch-config.js"},
       {:eex,  "static/brunch/package.json",     "package.json"},
       {:text, "static/app.css",                 "web/static/css/app.css"},
       {:text, "static/phoenix.css",             "web/static/css/phoenix.css"},
-      {:eex,  "static/brunch/app.js",           "web/static/js/app.js"},
-      {:eex,  "static/brunch/socket.js",        "web/static/js/socket.js"},
+      {:eex,  "static/js/app.js",               "web/static/js/app.js"},
+      {:eex,  "static/js/socket.js",            "web/static/js/socket.js"},
       {:text, "static/robots.txt",              "web/static/assets/robots.txt"},
+    ],
+
+    webpack: [
+      {:text, "static/js/gitignore",              ".gitignore"},
+      {:text, "static/webpack/babelrc",          ".babelrc"},
+      {:eex,  "static/webpack/webpack.config.js", "webpack.config.js"},
+      {:eex,  "static/webpack/package.json",      "package.json"},
+      {:text, "static/app.css",                   "web/static/css/app.css"},
+      {:text, "static/phoenix.css",               "web/static/css/phoenix.css"},
+      {:eex,  "static/js/app.js",                 "web/static/js/app.js"},
+      {:eex,  "static/js/socket.js",              "web/static/js/socket.js"},
+      {:text, "static/robots.txt",                "web/static/assets/robots.txt"},
     ],
 
     html: [
@@ -117,6 +129,8 @@ defmodule Mix.Tasks.Phoenix.New do
     * `--database` - specify the database adapter for ecto.
       Values can be `postgres` or `mysql`. Defaults to `postgres`.
 
+    * `--webpack` - use webpack instead of brunch
+
     * `--no-brunch` - do not generate brunch files
       for static asset building. When choosing this
       option, you will need to manually handle
@@ -142,10 +156,14 @@ defmodule Mix.Tasks.Phoenix.New do
 
       mix phoenix.new ~/Workspace/hello_world --no-brunch
 
+  Using webpack instead of brunch:
+
+      mix phoenix.new ~/Workspace/hello_world --webpack
+
   """
   @switches [dev: :boolean, brunch: :boolean, ecto: :boolean,
              app: :string, module: :string, database: :string,
-             binary_id: :boolean, html: :boolean]
+             binary_id: :boolean, html: :boolean, webpack: :boolean]
 
   def run([version]) when version in ~w(-v --version) do
     Mix.shell.info "Phoenix v#{@version}"
@@ -184,7 +202,9 @@ defmodule Mix.Tasks.Phoenix.New do
     db = Keyword.get(opts, :database, "postgres")
     ecto = Keyword.get(opts, :ecto, true)
     html = Keyword.get(opts, :html, true)
-    brunch = Keyword.get(opts, :brunch, true)
+    webpack = Keyword.get(opts, :webpack, false)
+    brunch = Keyword.get(opts, :brunch, !webpack)
+
     phoenix_path = phoenix_path(path, Keyword.get(opts, :dev, false))
 
     # We lowercase the database name because according to the
@@ -226,6 +246,7 @@ defmodule Mix.Tasks.Phoenix.New do
                in_umbrella: in_umbrella?,
                brunch_deps_prefix: brunch_deps_prefix,
                brunch: brunch,
+               webpack: webpack,
                ecto: ecto,
                html: html,
                adapter_app: adapter_app,
@@ -248,6 +269,7 @@ defmodule Mix.Tasks.Phoenix.New do
     File.cd!(path, fn ->
       mix?    = install_mix(install?)
       brunch? = install_brunch(install?)
+      webpack? = install_webpack(install?)
       extra   = if mix?, do: [], else: ["$ mix deps.get"]
 
       print_mix_info(path, extra)
@@ -258,6 +280,9 @@ defmodule Mix.Tasks.Phoenix.New do
 
       if not brunch? do
         print_brunch_info()
+      end
+      if not webpack? do
+        print_webpack_info()
       end
     end)
   end
@@ -329,6 +354,11 @@ defmodule Mix.Tasks.Phoenix.New do
               File.exists?("brunch-config.js"), install? && System.find_executable("npm")
   end
 
+  defp install_webpack(install?) do
+    maybe_cmd "npm install && node node_modules/webpack/bin/webpack.js",
+              File.exists?("webpack/config.js"), install? && System.find_executable("npm")
+  end
+
   defp install_mix(install?) do
     maybe_cmd "mix deps.get", true, install? && Code.ensure_loaded?(Hex)
   end
@@ -347,6 +377,22 @@ defmodule Mix.Tasks.Phoenix.New do
 
     If you don't want brunch.io, you can re-run this generator
     with the --no-brunch option.
+    """
+    nil
+  end
+
+  defp print_webpack_info do
+    Mix.shell.info """
+
+    Phoenix uses an optional assets build tool called webpack
+    that requires node.js and npm. Installation instructions for
+    node.js, which includes npm, can be found at http://nodejs.org.
+
+    After npm is installed, install your brunch dependencies by
+    running inside your app:
+
+        $ npm install
+
     """
     nil
   end

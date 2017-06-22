@@ -11,7 +11,7 @@ config :<%= app_name %>, <%= endpoint_module %>,
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
-  watchers: <%= if brunch do %>[node: ["node_modules/brunch/bin/brunch", "watch", "--stdin",
+  watchers: <%= if brunch or webpack do %>[node: [<%= if brunch do %>"node_modules/brunch/bin/brunch", "watch", "--stdin",<% end %><%= if webpack do %>"node_modules/webpack/bin/webpack.js", "--watch", "--stdin", "--color",<% end %>
                     cd: Path.expand("../assets", __DIR__)]]<% else %>[]<% end %>
 
 # ## SSL Support

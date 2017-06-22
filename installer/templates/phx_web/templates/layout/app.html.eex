@@ -7,8 +7,8 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Hello <%= app_module %>!</title>
-    <link rel="stylesheet" href="<%%= static_path(@conn, "/css/app.css") %>">
+    <title>Hello <%= app_module %>!</title><%= if brunch do %>
+    <link rel="stylesheet" href="<%%= static_path(@conn, "/css/app.css") %>"><% end %>
   </head>
 
   <body>

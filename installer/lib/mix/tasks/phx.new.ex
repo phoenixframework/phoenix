@@ -82,7 +82,7 @@ defmodule Mix.Tasks.Phx.New do
   @switches [dev: :boolean, brunch: :boolean, ecto: :boolean,
              app: :string, module: :string, web_module: :string,
              database: :string, binary_id: :boolean, html: :boolean,
-             umbrella: :boolean]
+             umbrella: :boolean, webpack: :boolean]
 
   def run([version]) when version in ~w(-v --version) do
     Mix.shell.info "Phoenix v#{@version}"
@@ -130,7 +130,7 @@ defmodule Mix.Tasks.Phx.New do
       mix_pending =
         install_mix(install?)
 
-      brunch_pending =
+      packer_pending =
         maybe_cd(project.web_path, fn ->
           compile =
             case mix_pending do
@@ -138,17 +138,17 @@ defmodule Mix.Tasks.Phx.New do
               _  -> Task.async(fn -> :ok end)
             end
 
-          brunch_pending = install_brunch(install?)
+          packer_pending = install_packer(install?, project)
           Task.await(compile, :infinity)
 
-          if Project.brunch?(project) and !System.find_executable("npm") do
-            print_brunch_info(project, generator)
+          if Project.packer?(project) and !System.find_executable("npm") do
+            print_packer_info(project, generator)
           end
 
-          brunch_pending
+          packer_pending
         end)
 
-      pending = mix_pending ++ (brunch_pending || [])
+      pending = mix_pending ++ (packer_pending || [])
       print_missing_commands(pending, project.project_path)
 
       if Project.ecto?(project) do
@@ -171,13 +171,32 @@ defmodule Mix.Tasks.Phx.New do
   defp switch_to_string({name, nil}), do: name
   defp switch_to_string({name, val}), do: name <> "=" <> val
 
+  defp install_packer(install?, project) do
+    cond do
+      Project.brunch?(project) -> install_brunch(install?)
+      Project.webpack?(project) -> install_webpack(install?)
+    end
+  end
+
   defp install_brunch(install?) do
     maybe_cmd "cd assets && npm install && node node_modules/brunch/bin/brunch build",
               File.exists?("assets/brunch-config.js"), install? && System.find_executable("npm")
   end
 
+  defp install_webpack(install?) do
+    maybe_cmd "cd assets && npm install && node node_modules/webpack/bin/webpack.js",
+              File.exists?("assets/webpack.config.js"), install? && System.find_executable("npm")
+  end
+
   defp install_mix(install?) do
     maybe_cmd "mix deps.get", true, install? && Code.ensure_loaded?(Hex)
+  end
+
+  defp print_packer_info(project, gen) do
+    cond do
+      Project.brunch?(project) -> print_brunch_info(project, gen)
+      Project.webpack?(project) -> print_webpack_info(project, gen)
+    end
   end
 
   defp print_brunch_info(_project, _gen) do
@@ -189,6 +208,18 @@ defmodule Mix.Tasks.Phx.New do
     The command listed next expect that you have npm available.
     If you don't want brunch.io, you can re-run this generator
     with the --no-brunch option.
+    """
+  end
+
+  defp print_webpack_info(_project, _gen) do
+    Mix.shell.info """
+    Phoenix uses an optional assets build tool called weback
+    that requires node.js and npm. Installation instructions for
+    node.js, which includes npm, can be found at http://nodejs.org.
+
+    The command listed next expect that you have npm available.
+    If you don't want webpack, you can re-run this generator
+    with the --no-webpack option.
     """
   end
 
