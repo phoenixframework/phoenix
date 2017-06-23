@@ -40,7 +40,7 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
     files = [
       {:eex, "presence.ex", Path.join(web_prefix, "channels/#{binding[:path]}.ex")},
     ]
-    Mix.Phoenix.copy_from paths(), "priv/templates/phx.gen.presence", "", binding, files
+    Mix.Phoenix.copy_from paths(), "priv/templates/phx.gen.presence", binding, files
 
     Mix.shell.info """
 

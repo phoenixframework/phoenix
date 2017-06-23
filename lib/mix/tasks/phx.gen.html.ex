@@ -148,7 +148,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   @doc false
   def copy_new_files(%Context{} = context, paths, binding) do
     files = files_to_be_generated(context)
-    Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.html", "", binding, files)
+    Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.html", binding, files)
     if context.generate?, do: Gen.Context.copy_new_files(context, paths, binding)
     context
   end

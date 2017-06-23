@@ -49,7 +49,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Html do
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Controller")
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "View")
 
-    Mix.Phoenix.copy_from paths(), "priv/templates/phoenix.gen.html", "", binding, [
+    Mix.Phoenix.copy_from paths(), "priv/templates/phoenix.gen.html", binding, [
       {:eex, "controller.ex",       "web/controllers/#{path}_controller.ex"},
       {:eex, "edit.html.eex",       "web/templates/#{path}/edit.html.eex"},
       {:eex, "form.html.eex",       "web/templates/#{path}/form.html.eex"},

@@ -25,7 +25,7 @@ defmodule Mix.Tasks.Phoenix.Gen.Channel do
 
     Mix.Phoenix.check_module_name_availability!(binding[:module] <> "Channel")
 
-    Mix.Phoenix.copy_from paths(), "priv/templates/phoenix.gen.channel", "", binding, [
+    Mix.Phoenix.copy_from paths(), "priv/templates/phoenix.gen.channel", binding, [
       {:eex, "channel.ex",       "web/channels/#{path}_channel.ex"},
       {:eex, "channel_test.exs", "test/channels/#{path}_channel_test.exs"},
     ]

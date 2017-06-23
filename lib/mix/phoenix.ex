@@ -26,17 +26,15 @@ defmodule Mix.Phoenix do
   Files are evaluated against EEx according to
   the given binding.
   """
-  def copy_from(apps, source_dir, target_dir, binding, mapping) when is_list(mapping) do
+  def copy_from(apps, source_dir, binding, mapping) when is_list(mapping) do
     roots = Enum.map(apps, &to_app_source(&1, source_dir))
 
-    for {format, source_file_path, target_file_path} <- mapping do
+    for {format, source_file_path, target} <- mapping do
       source =
         Enum.find_value(roots, fn root ->
           source = Path.join(root, source_file_path)
           if File.exists?(source), do: source
         end) || raise "could not find #{source_file_path} in any of the sources"
-
-      target = join_target_path(target_dir, target_file_path)
 
       case format do
         :text -> Mix.Generator.create_file(target, File.read!(source))
@@ -49,13 +47,6 @@ defmodule Mix.Phoenix do
           end
       end
     end
-  end
-
-  defp join_target_path(_target_dir, "/" <> _ = target_file_path) do
-    target_file_path
-  end
-  defp join_target_path(target_dir, target_file_path) do
-    Path.join(target_dir, target_file_path)
   end
 
   defp to_app_source(path, source_dir) when is_binary(path),
