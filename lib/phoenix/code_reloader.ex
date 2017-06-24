@@ -32,6 +32,8 @@ defmodule Phoenix.CodeReloader do
   @behaviour Plug
   import Plug.Conn
 
+  alias Phoenix.CodeReloader.Proxy
+
   @style %{
     primary: "#EB532D",
     accent: "#a0b0c0",
@@ -49,15 +51,199 @@ defmodule Phoenix.CodeReloader do
   API used by Plug to invoke the code reloader on every request.
   """
   def call(conn, opts) do
-    case opts[:reloader].(conn.private.phoenix_endpoint) do
+    task = Task.async(fn -> recv_loop(conn) end)
+
+    Proxy.forward_to(task.pid)
+
+    res = opts[:reloader].(conn.private.phoenix_endpoint)
+
+    {:ok, {conn, output}} = Task.shutdown(task)
+
+    case res do
       :ok ->
-        conn
-      {:error, output} ->
+        if feedback_started?(conn) do
+          Plug.Conn.chunk(conn, "Done!<br />\n")
+          Plug.Conn.chunk(conn, ~s(<meta http-equiv="refresh" content="0">\n))
+          halt(conn)
+        else
+          conn
+        end
+      :error ->
+        if !feedback_started?(conn) do
+          conn
+          |> put_resp_content_type("text/html")
+          |> send_resp(500, template(output))
+          |> halt()
+        else
+          halt(conn)
+        end
+    end
+  end
+
+  defp recv_loop(conn) do
+    receive do
+      {:done, output} ->
+        {conn, output}
+      {:chars, channel, chars} ->
+        conn = compile_callback(conn, channel, chars)
+        recv_loop(conn)
+    end
+  end
+
+  def compile_callback(conn, channel, chars) do
+    if send_feedback?(conn) do
+      conn = start_progress_output(conn)
+      html = ~s(<span class="#{channel}">) <> Phoenix.CodeReloader.Colors.to_html(chars) <> "</span>"
+      {:ok, conn} = Plug.Conn.chunk(conn, html)
+      conn
+    else
+      conn
+    end
+  end
+
+  defp send_feedback?(conn),
+    do: accepts_html?(conn) and not is_ajax?(conn)
+
+  defp feedback_started?(conn),
+    do: conn.state == :chunked
+
+  defp accepts_html?(conn) do
+    conn
+    |> get_req_header("accept")
+    |> Enum.any?(&String.contains?(&1, "html"))
+  end
+
+  defp is_ajax?(conn) do
+    "XMLHttpRequest" in get_req_header(conn, "x-requested-with")
+  end
+
+  defp start_progress_output(conn) do
+    if !feedback_started?(conn) do
+      {:ok, conn} =
         conn
         |> put_resp_content_type("text/html")
-        |> send_resp(500, template(output))
-        |> halt()
+        |> send_chunked(200)
+        |> Plug.Conn.chunk(compile_template())
+      conn
+    else
+      conn
     end
+  end
+
+  defp header_template(title) do
+    """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>#{title}</title>
+        <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-size: 10pt;
+            font-family: helvetica neue, lucida grande, sans-serif;
+            line-height: 1.5;
+            color: #333;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        html {
+            background: #f0f0f5;
+        }
+
+        header.exception {
+            padding: 18px 20px;
+
+            height: 59px;
+            min-height: 59px;
+
+            overflow: hidden;
+
+            background-color: #20202a;
+            color: #aaa;
+            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+            font-weight: 200;
+            box-shadow: inset 0 -5px 3px -3px rgba(0, 0, 0, 0.05), inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+
+            -webkit-text-smoothing: antialiased;
+        }
+
+        header.exception h2 {
+            font-weight: 200;
+            font-size: 11pt;
+            padding-bottom: 2pt;
+        }
+
+        header.exception h2,
+        header.exception p {
+            line-height: 1.4em;
+            height: 1.4em;
+            overflow: hidden;
+            white-space: pre;
+            text-overflow: ellipsis;
+        }
+
+        header.exception h2 strong {
+            font-weight: 700;
+            color: #7E5ABE;
+        }
+
+        header.exception p {
+            font-weight: 200;
+            font-size: 18pt;
+            color: white;
+        }
+
+        pre, code {
+            font-family: menlo, lucida console, monospace;
+            font-size: 9pt;
+        }
+
+        .trace_info {
+            margin: 10px;
+            background: #fff;
+            padding: 6px;
+            border-radius: 3px;
+            margin-bottom: 2px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.03), 1px 1px 0 rgba(0, 0, 0, 0.05), -1px 1px 0 rgba(0, 0, 0, 0.05), 0 0 0 4px rgba(0, 0, 0, 0.04);
+        }
+
+        .code {
+            background: #fff;
+            box-shadow: inset 3px 3px 3px rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+            margin-bottom: -1px;
+            padding: 10px;
+            overflow: auto;
+        }
+
+        .code::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        .code::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 5px;
+        }
+
+        .code:hover::-webkit-scrollbar-thumb {
+            background: #888;
+        }
+
+        .stderr {
+          color: red;
+          font-weight: bold;
+        }
+        .stdout {
+          color: blue;
+        }
+        </style>
+    </head>
+    <body>
+    """
   end
 
   defp template(output) do
@@ -254,6 +440,7 @@ defmodule Phoenix.CodeReloader do
     output
     |> String.trim
     |> Plug.HTML.html_escape
+    |> Phoenix.CodeReloader.Colors.to_html
   end
 
   defp get_error_details(output) do
@@ -261,5 +448,21 @@ defmodule Phoenix.CodeReloader do
       [_, error, headline] -> {error, format_output(headline)}
       _ -> {"CompileError", "Compilation error"}
     end
+  end
+
+  defp compile_template do
+    header_template("Compilation Output") <>
+    """
+        <div id="compile-output">
+            <div class="top">
+                <header class="exception">
+                    <h2>Compilation Output</h2>
+                    <p>Showing console output</p>
+                </header>
+            </div>
+
+            <header class="trace_info">
+                <div class="code"><pre>
+    """
   end
 end

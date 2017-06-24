@@ -44,10 +44,10 @@ defmodule Phoenix.CodeReloader.Server do
 
   def handle_call({:reload!, endpoint}, from, state) do
     compilers = endpoint.config(:reloadable_compilers)
-    backup = load_backup(endpoint)
-    froms  = all_waiting([from], endpoint)
+    backup    = load_backup(endpoint)
+    froms     = all_waiting([from], endpoint)
 
-    {res, out} =
+    {res, _out} =
       proxy_io(fn ->
         try do
           mix_compile(Code.ensure_loaded(Mix.Task), compilers)
@@ -66,7 +66,7 @@ defmodule Phoenix.CodeReloader.Server do
           :ok
         :error ->
           write_backup(backup)
-          {:error, out}
+          :error
       end
 
     Enum.each(froms, &GenServer.reply(&1, reply))
@@ -174,14 +174,14 @@ defmodule Phoenix.CodeReloader.Server do
 
   defp proxy_io(fun) do
     original_gl = Process.group_leader
-    {:ok, proxy_gl} = Proxy.start()
-    Process.group_leader(self(), proxy_gl)
+    Proxy.capture(original_gl)
 
     try do
-      {fun.(), Proxy.stop(proxy_gl)}
+      result = fun.()
+      {:ok, output} = Proxy.flush
+      {result, output}
     after
-      Process.group_leader(self(), original_gl)
-      Process.exit(proxy_gl, :kill)
+      Proxy.uncapture
     end
   end
 end
