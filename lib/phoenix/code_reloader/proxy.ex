@@ -66,8 +66,6 @@ defmodule Phoenix.CodeReloader.Proxy do
   end
 
   def handle_call(:flush, _from, state) do
-    broadcast state.pids, :flush
-
     {:reply, {:ok, state.output}, state}
   end
 
