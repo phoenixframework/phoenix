@@ -44,8 +44,8 @@ defmodule Phoenix.CodeReloader.Server do
 
   def handle_call({:reload!, endpoint}, from, state) do
     compilers = endpoint.config(:reloadable_compilers)
-    backup    = load_backup(endpoint)
-    froms     = all_waiting([from], endpoint)
+    backup = load_backup(endpoint)
+    froms = all_waiting([from], endpoint)
 
     {res, _out} =
       proxy_io(fn ->
