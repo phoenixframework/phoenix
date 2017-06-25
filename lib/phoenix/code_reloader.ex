@@ -57,7 +57,7 @@ defmodule Phoenix.CodeReloader do
 
     res = opts[:reloader].(conn.private.phoenix_endpoint)
 
-    {:ok, {conn, output}} = Task.shutdown(task)
+    {conn, output} = Task.await(task)
 
     case res do
       :ok ->
