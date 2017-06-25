@@ -72,7 +72,7 @@ defmodule Phoenix.CodeReloader do
         if !feedback_started?(conn) do
           conn
           |> put_resp_content_type("text/html")
-          |> send_resp(500, template(output))
+          |> send_resp(500, error_template(output))
           |> halt()
         else
           halt(conn)
@@ -135,126 +135,8 @@ defmodule Phoenix.CodeReloader do
     <!DOCTYPE html>
     <html>
     <head>
-        <title>#{title}</title>
-        <style>
-        * {
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-size: 10pt;
-            font-family: helvetica neue, lucida grande, sans-serif;
-            line-height: 1.5;
-            color: #333;
-            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
-        }
-
-        html {
-            background: #f0f0f5;
-        }
-
-        header.exception {
-            padding: 18px 20px;
-
-            height: 59px;
-            min-height: 59px;
-
-            overflow: hidden;
-
-            background-color: #20202a;
-            color: #aaa;
-            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
-            font-weight: 200;
-            box-shadow: inset 0 -5px 3px -3px rgba(0, 0, 0, 0.05), inset 0 -1px 0 rgba(0, 0, 0, 0.05);
-
-            -webkit-text-smoothing: antialiased;
-        }
-
-        header.exception h2 {
-            font-weight: 200;
-            font-size: 11pt;
-            padding-bottom: 2pt;
-        }
-
-        header.exception h2,
-        header.exception p {
-            line-height: 1.4em;
-            height: 1.4em;
-            overflow: hidden;
-            white-space: pre;
-            text-overflow: ellipsis;
-        }
-
-        header.exception h2 strong {
-            font-weight: 700;
-            color: #7E5ABE;
-        }
-
-        header.exception p {
-            font-weight: 200;
-            font-size: 18pt;
-            color: white;
-        }
-
-        pre, code {
-            font-family: menlo, lucida console, monospace;
-            font-size: 9pt;
-        }
-
-        .trace_info {
-            margin: 10px;
-            background: #fff;
-            padding: 6px;
-            border-radius: 3px;
-            margin-bottom: 2px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.03), 1px 1px 0 rgba(0, 0, 0, 0.05), -1px 1px 0 rgba(0, 0, 0, 0.05), 0 0 0 4px rgba(0, 0, 0, 0.04);
-        }
-
-        .code {
-            background: #fff;
-            box-shadow: inset 3px 3px 3px rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(0, 0, 0, 0.1);
-            margin-bottom: -1px;
-            padding: 10px;
-            overflow: auto;
-        }
-
-        .code::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
-        }
-
-        .code::-webkit-scrollbar-thumb {
-            background: #ccc;
-            border-radius: 5px;
-        }
-
-        .code:hover::-webkit-scrollbar-thumb {
-            background: #888;
-        }
-
-        .stderr {
-          color: red;
-          font-weight: bold;
-        }
-        .stdout {
-          color: blue;
-        }
-        </style>
-    </head>
-    <body>
-    """
-  end
-
-  defp template(output) do
-    {error, headline} = get_error_details(output)
-
-    """
-    <!DOCTYPE html>
-    <html>
-    <head>
         <meta charset="utf-8">
-        <title>CompileError</title>
+        <title>#{title}</title>
         <meta name="viewport" content="width=device-width">
         <style>/*! normalize.css v4.2.0 | MIT License | github.com/necolas/normalize.css */html{font-family:sans-serif;line-height:1.15;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}body{margin:0}article,aside,details,figcaption,figure,footer,header,main,menu,nav,section,summary{display:block}audio,canvas,progress,video{display:inline-block}audio:not([controls]){display:none;height:0}progress{vertical-align:baseline}template,[hidden]{display:none}a{background-color:transparent;-webkit-text-decoration-skip:objects}a:active,a:hover{outline-width:0}abbr[title]{border-bottom:none;text-decoration:underline;text-decoration:underline dotted}b,strong{font-weight:inherit}b,strong{font-weight:bolder}dfn{font-style:italic}h1{font-size:2em;margin:0.67em 0}mark{background-color:#ff0;color:#000}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-0.25em}sup{top:-0.5em}img{border-style:none}svg:not(:root){overflow:hidden}code,kbd,pre,samp{font-family:monospace, monospace;font-size:1em}figure{margin:1em 40px}hr{box-sizing:content-box;height:0;overflow:visible}button,input,optgroup,select,textarea{font:inherit;margin:0}optgroup{font-weight:bold}button,input{overflow:visible}button,select{text-transform:none}button,html [type="button"],[type="reset"],[type="submit"]{-webkit-appearance:button}button::-moz-focus-inner,[type="button"]::-moz-focus-inner,[type="reset"]::-moz-focus-inner,[type="submit"]::-moz-focus-inner{border-style:none;padding:0}button:-moz-focusring,[type="button"]:-moz-focusring,[type="reset"]:-moz-focusring,[type="submit"]:-moz-focusring{outline:1px dotted ButtonText}fieldset{border:1px solid #c0c0c0;margin:0 2px;padding:0.35em 0.625em 0.75em}legend{box-sizing:border-box;color:inherit;display:table;max-width:100%;padding:0;white-space:normal}textarea{overflow:auto}[type="checkbox"],[type="radio"]{box-sizing:border-box;padding:0}[type="number"]::-webkit-inner-spin-button,[type="number"]::-webkit-outer-spin-button{height:auto}[type="search"]{-webkit-appearance:textfield;outline-offset:-2px}[type="search"]::-webkit-search-cancel-button,[type="search"]::-webkit-search-decoration{-webkit-appearance:none}::-webkit-input-placeholder{color:inherit;opacity:0.54}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}</style>
         <style>
@@ -420,19 +302,6 @@ defmodule Phoenix.CodeReloader do
         </style>
     </head>
     <body>
-        <div class="heading-block">
-            <aside class="exception-logo"></aside>
-            <header class="exception-info">
-                <h5 class="error">#{error}</h5>
-                <h1 class="title">#{headline}</h1>
-                <h5 class="subtext">Console output is shown below.</h5>
-            </header>
-        </div>
-        <div class="output-block">
-            <pre class="code code-block">#{format_output(output)}</pre>
-        </div>
-    </body>
-    </html>
     """
   end
 
@@ -453,16 +322,35 @@ defmodule Phoenix.CodeReloader do
   defp compile_template do
     header_template("Compilation Output") <>
     """
-        <div id="compile-output">
-            <div class="top">
-                <header class="exception">
-                    <h2>Compilation Output</h2>
-                    <p>Showing console output</p>
-                </header>
-            </div>
+        <div class="heading-block">
+            <aside class="exception-logo"></aside>
+            <header class="exception-info">
+                <h1 class="title">Console Output</h1>
+            </header>
+        </div>
+        <div class="output-block">
+            <pre class="code code-block">
+    """
+  end
 
-            <header class="trace_info">
-                <div class="code"><pre>
+  defp error_template(output) do
+    {error, headline} = get_error_details(output)
+
+    header_template("CompileError") <>
+    """
+        <div class="heading-block">
+            <aside class="exception-logo"></aside>
+            <header class="exception-info">
+                <h5 class="error">#{error}</h5>
+                <h1 class="title">#{headline}</h1>
+                <h5 class="subtext">Console output is shown below.</h5>
+            </header>
+        </div>
+        <div class="output-block">
+            <pre class="code code-block">#{format_output(output)}</pre>
+        </div>
+    </body>
+    </html>
     """
   end
 end
