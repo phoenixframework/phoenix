@@ -93,7 +93,7 @@ defmodule Phoenix.CodeReloader do
   def compile_callback(conn, channel, chars) do
     if send_feedback?(conn) do
       conn = start_progress_output(conn)
-      html = ~s(<span class="#{channel}">) <> Phoenix.CodeReloader.Colors.to_html(chars) <> "</span>"
+      html = Phoenix.CodeReloader.Colors.to_html(chars)
       {:ok, conn} = Plug.Conn.chunk(conn, html)
       conn
     else
