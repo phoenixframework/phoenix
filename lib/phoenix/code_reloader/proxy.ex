@@ -32,7 +32,6 @@ defmodule Phoenix.CodeReloader.Proxy do
   def init(original_stderr) do
     state =
       %{
-        captured: nil, # {pid, originnal_gl}
         pids: [],
         output: "",
         original_stderr: original_stderr,
@@ -58,9 +57,7 @@ defmodule Phoenix.CodeReloader.Proxy do
 
     GenServer.stop(state.proxy)
 
-    state = Map.put(state, :output, "")
-    state = Map.put(state, :captured, nil)
-    state = Map.put(state, :pids, [])
+    state = %{state | output: "", pids: [], proxy: nil}
 
     {:reply, :ok, state}
   end
