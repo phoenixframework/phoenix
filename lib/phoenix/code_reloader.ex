@@ -59,24 +59,20 @@ defmodule Phoenix.CodeReloader do
 
     {conn, output} = Task.await(task)
 
-    case res do
-      :ok ->
-        if feedback_started?(conn) do
-          Plug.Conn.chunk(conn, "Done!<br />\n")
-          Plug.Conn.chunk(conn, ~s(<meta http-equiv="refresh" content="0">\n))
-          halt(conn)
-        else
-          conn
-        end
-      :error ->
-        if !feedback_started?(conn) do
-          conn
-          |> put_resp_content_type("text/html")
-          |> send_resp(500, error_template(output))
-          |> halt()
-        else
-          halt(conn)
-        end
+    case {res, feedback_started?(conn)} do
+      {:ok, true} ->
+        Plug.Conn.chunk(conn, "Done!<br />\n")
+        Plug.Conn.chunk(conn, ~s(<meta http-equiv="refresh" content="0">\n))
+        halt(conn)
+      {:ok, false} ->
+        conn
+      {:error, true} ->
+        halt(conn)
+      {:error, false} ->
+        conn
+        |> put_resp_content_type("text/html")
+        |> send_resp(500, error_template(output))
+        |> halt()
     end
   end
 
