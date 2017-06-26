@@ -51,7 +51,7 @@ defmodule Phoenix.CodeReloader do
   API used by Plug to invoke the code reloader on every request.
   """
   def call(conn, opts) do
-    task = Task.async(fn -> recv_loop(conn) end)
+    task = Task.async(fn -> forward_output(conn) end)
 
     Proxy.forward_to(task.pid)
 
@@ -76,17 +76,17 @@ defmodule Phoenix.CodeReloader do
     end
   end
 
-  defp recv_loop(conn) do
+  defp forward_output(conn) do
     receive do
       {:done, output} ->
         {conn, output}
       {:chars, channel, chars} ->
-        conn = compile_callback(conn, channel, chars)
-        recv_loop(conn)
+        conn = send_output(conn, channel, chars)
+        forward_output(conn)
     end
   end
 
-  defp compile_callback(conn, _channel, chars) do
+  defp send_output(conn, _channel, chars) do
     if send_feedback?(conn) do
       conn = start_progress_output(conn)
       html = Phoenix.CodeReloader.Colors.to_html(chars)
