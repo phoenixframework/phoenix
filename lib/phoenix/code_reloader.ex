@@ -100,9 +100,6 @@ defmodule Phoenix.CodeReloader do
   defp send_feedback?(conn),
     do: accepts_html?(conn) and not is_ajax?(conn)
 
-  defp feedback_started?(conn),
-    do: conn.state == :chunked
-
   defp accepts_html?(conn) do
     conn
     |> get_req_header("accept")
@@ -112,6 +109,9 @@ defmodule Phoenix.CodeReloader do
   defp is_ajax?(conn) do
     "XMLHttpRequest" in get_req_header(conn, "x-requested-with")
   end
+
+  defp feedback_started?(conn),
+    do: conn.state == :chunked
 
   defp start_progress_output(conn) do
     if !feedback_started?(conn) do
