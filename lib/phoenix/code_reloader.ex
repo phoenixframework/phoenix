@@ -86,7 +86,7 @@ defmodule Phoenix.CodeReloader do
     end
   end
 
-  def compile_callback(conn, channel, chars) do
+  defp compile_callback(conn, _channel, chars) do
     if send_feedback?(conn) do
       conn = start_progress_output(conn)
       html = Phoenix.CodeReloader.Colors.to_html(chars)
