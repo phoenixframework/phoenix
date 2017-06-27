@@ -47,7 +47,7 @@ defmodule Phoenix.CodeReloader.Server do
     backup = load_backup(endpoint)
     froms = all_waiting([from], endpoint)
 
-    {res, _out} =
+    {res, out} =
       proxy_io(fn ->
         try do
           mix_compile(Code.ensure_loaded(Mix.Task), compilers)
@@ -63,10 +63,10 @@ defmodule Phoenix.CodeReloader.Server do
     reply =
       case res do
         :ok ->
-          :ok
+          {:ok, out}
         :error ->
           write_backup(backup)
-          :error
+          {:error, out}
       end
 
     Enum.each(froms, &GenServer.reply(&1, reply))

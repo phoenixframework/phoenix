@@ -51,13 +51,7 @@ defmodule Phoenix.CodeReloader do
   API used by Plug to invoke the code reloader on every request.
   """
   def call(conn, opts) do
-    task = Task.async(fn -> forward_output(conn) end)
-
-    Proxy.forward_to(task.pid)
-
-    res = opts[:reloader].(conn.private.phoenix_endpoint)
-
-    {conn, output} = Task.await(task)
+    {conn, res, output} = call_reloader(conn, opts[:reloader])
 
     case {res, feedback_started?(conn)} do
       {:ok, true} ->
@@ -76,42 +70,30 @@ defmodule Phoenix.CodeReloader do
     end
   end
 
+  defp call_reloader(conn, reloader) do
+    if send_feedback?(conn) do
+      task = Task.async(fn -> forward_output(conn) end)
+      Proxy.forward_to(task.pid)
+      {res, output} = reloader.(conn.private.phoenix_endpoint)
+      conn = Task.await(task)
+      {conn, res, output}
+    else
+      {res, output} = reloader.(conn.private.phoenix_endpoint)
+      {conn, res, output}
+    end
+  end
+
   defp forward_output(conn) do
     receive do
-      {:done, output} ->
-        {conn, output}
-      {:chars, channel, chars} ->
-        conn = send_output(conn, channel, chars)
+      {:done, _output} ->
+        conn
+      {:chars, _channel, chars} ->
+        conn = start_progress_output(conn)
+        html = Phoenix.CodeReloader.Colors.to_html(chars)
+        {:ok, conn} = Plug.Conn.chunk(conn, html)
         forward_output(conn)
     end
   end
-
-  defp send_output(conn, _channel, chars) do
-    if send_feedback?(conn) do
-      conn = start_progress_output(conn)
-      html = Phoenix.CodeReloader.Colors.to_html(chars)
-      {:ok, conn} = Plug.Conn.chunk(conn, html)
-      conn
-    else
-      conn
-    end
-  end
-
-  defp send_feedback?(conn),
-    do: accepts_html?(conn) and not is_ajax?(conn)
-
-  defp accepts_html?(conn) do
-    conn
-    |> get_req_header("accept")
-    |> Enum.any?(&String.contains?(&1, "html"))
-  end
-
-  defp is_ajax?(conn) do
-    "XMLHttpRequest" in get_req_header(conn, "x-requested-with")
-  end
-
-  defp feedback_started?(conn),
-    do: conn.state == :chunked
 
   defp start_progress_output(conn) do
     if !feedback_started?(conn) do
@@ -124,6 +106,22 @@ defmodule Phoenix.CodeReloader do
     else
       conn
     end
+  end
+
+  defp feedback_started?(conn),
+    do: conn.state == :chunked
+
+  defp send_feedback?(conn),
+    do: accepts_html?(conn) and not is_ajax?(conn)
+
+  defp accepts_html?(conn) do
+    conn
+    |> get_req_header("accept")
+    |> Enum.any?(&String.contains?(&1, "html"))
+  end
+
+  defp is_ajax?(conn) do
+    "XMLHttpRequest" in get_req_header(conn, "x-requested-with")
   end
 
   defp header_template(title) do
