@@ -116,10 +116,11 @@ defmodule Phoenix.Integration.WebSocketTest do
 
   test "endpoint handles multiple mount segments" do
     {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/admin/websocket")
-    WebsocketClient.join(sock, "room:admin-lobby", %{})
+
+    WebsocketClient.join(sock, "room:admin-lobby1", %{})
     assert_receive %Message{event: "phx_reply",
                             payload: %{"response" => %{}, "status" => "ok"},
-                            ref: "1", topic: "room:admin-lobby"}
+                            ref: "1", topic: "room:admin-lobby1"}
   end
 
   test "join, leave, and event messages" do
@@ -158,14 +159,14 @@ defmodule Phoenix.Integration.WebSocketTest do
   end
 
   test "logs and filter params on join and handle_in" do
-    topic = "room:admin-lobby"
+    topic = "room:admin-lobby2"
 
     {:ok, sock} = WebsocketClient.start_link(self(), "ws://127.0.0.1:#{@port}/ws/logging/websocket")
     log = capture_log fn ->
       WebsocketClient.join(sock, topic, %{"join" => "yes", "password" => "no"})
       assert_receive %Message{event: "phx_reply",
                               payload: %{"response" => %{}, "status" => "ok"},
-                              ref: "1", topic: "room:admin-lobby"}
+                              ref: "1", topic: "room:admin-lobby2"}
     end
     assert log =~ "Parameters: %{\"join\" => \"yes\", \"password\" => \"[FILTERED]\"}"
 
