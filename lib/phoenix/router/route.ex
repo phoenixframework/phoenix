@@ -18,12 +18,13 @@ defmodule Phoenix.Router.Route do
     * :helper - the name of the helper as a string (may be nil)
     * :private - the private route info
     * :assigns - the route info
+    * :types - the type of params
     * :pipe_through - the pipeline names as a list of atoms
 
   """
 
   defstruct [:verb, :kind, :path, :host, :plug, :opts,
-             :helper, :private, :pipe_through, :assigns]
+             :helper, :private, :pipe_through, :assigns, :types]
 
   @type t :: %Route{}
 
@@ -31,16 +32,16 @@ defmodule Phoenix.Router.Route do
   Receives the verb, path, plug, options and helper
   and returns a `Phoenix.Router.Route` struct.
   """
-  @spec build(:match | :forward, String.t, String.t, String.t | nil, atom, atom, atom | nil, atom, %{}, %{}) :: t
-  def build(kind, verb, path, host, plug, opts, helper, pipe_through, private, assigns)
+  @spec build(:match | :forward, String.t, String.t, String.t | nil, atom, atom, atom | nil, atom, %{}, %{}, []) :: t
+  def build(kind, verb, path, host, plug, opts, helper, pipe_through, private, assigns, types)
       when is_atom(verb) and (is_binary(host) or is_nil(host)) and
            is_atom(plug) and (is_binary(helper) or is_nil(helper)) and
            is_list(pipe_through) and is_map(private) and is_map(assigns)
-           and kind in [:match, :forward] do
+           and is_list(types) and kind in [:match, :forward] do
 
     %Route{kind: kind, verb: verb, path: path, host: host, private: private,
            plug: plug, opts: opts, helper: helper,
-           pipe_through: pipe_through, assigns: assigns}
+           pipe_through: pipe_through, assigns: assigns, types: types}
   end
 
   @doc """
@@ -84,7 +85,8 @@ defmodule Phoenix.Router.Route do
     dispatch_block = build_dispatch(route)
     pipes_block = build_pipes(route)
     exprs =
-      [build_params(binding),
+      [maybe_checking(route.types),
+       build_params(binding),
        maybe_merge(:private, route.private),
        maybe_merge(:assigns, route.assigns)]
 
@@ -103,6 +105,7 @@ defmodule Phoenix.Router.Route do
       end
     end
   end
+
   defp build_dispatch(%Route{} = route) do
     quote do
       fn conn ->
@@ -177,6 +180,44 @@ defmodule Phoenix.Router.Route do
         path_segments
       _ ->
         raise ArgumentError, "Dynamic segment `\"#{path}\"` not allowed when forwarding. Use a static path instead."
+    end
+  end
+
+  defp maybe_checking([]), do: nil
+  defp maybe_checking(types) do
+    if Keyword.keyword?(types) do
+      ast = Enum.map(types, fn {var, type} -> checking_and_transform(type, var) end)
+      {:__block__, [], ast}
+    else
+      nil
+    end
+  end
+
+  def checking_and_transform(type, identifier) do
+    regex = checking_type_regex(type)
+    check_ast = quote do
+      unless unquote({identifier, [], nil}) =~ unquote(Macro.escape(regex)) do
+        raise Phoenix.Router.NoRouteError, conn: var!(conn), router: __MODULE__
+      end
+    end
+
+    transform_ast = transform_type(type, identifier)
+
+    {:__block__, [], [check_ast, transform_ast]}
+  end
+
+  defp transform_type(:integer, identifier) do
+    var_ast = {identifier, [], nil}
+    quote do
+      unquote(var_ast) = String.to_integer(unquote(var_ast))
+    end
+  end
+  defp transform_type(:unsigned_integer, var), do: transform_type(:integer, var)
+
+  def checking_type_regex(type) do
+    case type do
+      :unsigned_integer -> ~r/^\d+$/
+      :integer -> ~r/^[\+\d|\-\d]?\d+$/
     end
   end
 end

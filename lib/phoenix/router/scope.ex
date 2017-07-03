@@ -22,11 +22,12 @@ defmodule Phoenix.Router.Scope do
     path    = validate_path(path)
     private = Keyword.get(opts, :private, %{})
     assigns = Keyword.get(opts, :assigns, %{})
+    types   = Keyword.get(opts, :types, [])
     as      = Keyword.get(opts, :as, Phoenix.Naming.resource_name(plug, "Controller"))
 
     {path, host, alias, as, pipes, private, assigns} =
       join(module, path, plug, as, private, assigns)
-    Phoenix.Router.Route.build(kind, verb, path, host, alias, plug_opts, as, pipes, private, assigns)
+    Phoenix.Router.Route.build(kind, verb, path, host, alias, plug_opts, as, pipes, private, assigns, types)
   end
 
   @doc """
