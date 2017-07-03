@@ -1363,4 +1363,97 @@ defmodule Phoenix.Controller do
       end
     Module.concat(namespace, "LayoutView")
   end
+
+  @doc """
+  plug to validate required param
+
+  ## Examples
+
+      plug :validate_required, [:age] when action in [:index]
+  """
+  def validate_required(conn, opts) when is_list(opts) do
+    Enum.reduce(opts, 0, fn identifier, _acc ->
+      if is_nil(conn.params[Atom.to_string(identifier)]) do
+        raise ArgumentError,
+          ~s|:#{identifier} is required by #{conn.private.phoenix_action} in #{conn.private.phoenix_controller}|
+      end
+      0
+    end)
+    conn
+  end
+
+  @doc """
+  plug to validate param type/form, default support :integer and :unsigned_integer
+
+  ## Custom type/format
+
+  In some cases, you may want to custom special param type/format
+
+      plug :validate_param, [format: :special]
+
+  Then you need add function check_type(var, :special) and
+  transform_type(var, :special) in that controller. Eg:
+
+      def check_type(var, :special), do: var =~ ~r/^[1-9]\d{0,2}$/
+
+      def transform_type(var, :special), do: String.to_integer(var)
+  """
+  def validate_param(conn, opts) when is_list(opts) do
+    if Keyword.keyword?(opts) do
+      Enum.reduce(opts, conn, fn {var, type}, conn ->
+        controller = conn.private.phoenix_controller
+        var = Atom.to_string(var)
+
+        if check_type(controller, conn.params[var], type) do
+          %{conn | params: Map.put(conn.params, var,
+            transform_type(controller, conn.params[var], type))}
+        else
+          raise Phoenix.Router.NoRouteError, conn: var!(conn), router: __MODULE__
+          halt(conn)
+        end
+      end)
+    else
+      conn
+    end
+  end
+
+  defp check_type(controller, var, type) do
+    functions = controller.__info__(:functions)
+
+    if !is_nil(functions[:check_type]) && 2 == functions[:check_type] do
+      try do
+        controller.check_type(var, type)
+      rescue
+        FunctionClauseError -> check_type(var, type)
+      end
+    else
+      check_type(var, type)
+    end
+  end
+
+  defp check_type(var, :integer) do
+    var =~ Phoenix.Router.Route.checking_type_regex(:integer)
+  end
+  defp check_type(var, :unsigned_integer) do
+    var =~ Phoenix.Router.Route.checking_type_regex(:unsigned_integer)
+  end
+  defp check_type(_var, _type), do: true
+
+  defp transform_type(controller, var, type) do
+    functions = controller.__info__(:functions)
+
+    if !is_nil(functions[:transform_type]) && 2 == functions[:transform_type] do
+      try do
+        controller.transform_type(var, type)
+      rescue
+        FunctionClauseError -> transform_type(var, type)
+      end
+    else
+      transform_type(var, type)
+    end
+  end
+
+  defp transform_type(var, :unsigned_integer), do: String.to_integer(var)
+  defp transform_type(var, :integer), do: String.to_integer(var)
+  defp transform_type(var, _type), do: var
 end

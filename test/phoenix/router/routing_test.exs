@@ -4,6 +4,11 @@ defmodule Phoenix.Router.RoutingTest do
 
   defmodule UserController do
     use Phoenix.Controller
+
+    plug :validate_required, [:age] when action in [:type]
+    plug :validate_param, [id: :integer, format: :special, age: :alpha, extra: :whatever]
+      when action in [:type]
+
     def index(conn, _params), do: text(conn, "users index")
     def show(conn, _params), do: text(conn, "users show")
     def top(conn, _params), do: text(conn, "users top")
@@ -13,7 +18,12 @@ defmodule Phoenix.Router.RoutingTest do
     def not_found(conn, _params), do: text(put_status(conn, :not_found), "not found")
     def image(conn, _params), do: text(conn, conn.params["path"] || "show files")
     def move(conn, _params), do: text(conn, "users move")
+    def type(conn, _params), do: text(conn, "typed param")
     def any(conn, _params), do: text(conn, "users any")
+
+    def check_type(var, :special), do: var =~ ~r/^[A-Z]\d[a-z]\d$/
+    def check_type(var, :alpha), do: var =~ ~r/^[A-Za-z]+$/
+    def transform_type(_var, :special), do: "test"
   end
 
   defmodule Router do
@@ -28,6 +38,8 @@ defmodule Phoenix.Router.RoutingTest do
     get "/files/:user_name/*path", UserController, :image
     get "/backups/*path", UserController, :image
     get "/static/images/icons/*image", UserController, :image
+    get "/type/:id/param/:age", UserController, :image, types: [id: :unsigned_integer, age: :integer]
+    get "/type/:id/custome/:format", UserController, :type
 
     trace "/trace", UserController, :trace
     options "/options", UserController, :options
@@ -89,6 +101,44 @@ defmodule Phoenix.Router.RoutingTest do
 
     conn = call(Router, :get, "/backups/a%20b/c%20d")
     assert conn.params == %{"path" => ["a b", "c d"]}
+  end
+
+  test "typed parameters" do
+    conn = call(Router, :get, "/type/1/param/23")
+    assert conn.status == 200
+    assert conn.params["id"] == 1
+    assert conn.path_params["age"] == 23
+
+    conn = call(Router, :get, "/type/1/param/-23")
+    assert conn.status == 200
+    assert conn.params["id"] == 1
+    assert conn.path_params["age"] == -23
+
+    assert_raise Phoenix.Router.NoRouteError, fn ->
+      call(Router, :get, "/type/-1/param/23")
+    end
+
+    assert_raise Phoenix.Router.NoRouteError, fn ->
+      call(Router, :get, "/type/1/param/a")
+    end
+
+    assert_raise Phoenix.Router.NoRouteError, fn ->
+      call(Router, :get, "/type/a/param/23")
+    end
+
+    conn = call(Router, :get, "/type/1/custome/A0c1?age=ab")
+    assert conn.status == 200
+    assert conn.params["id"] == 1
+    assert conn.params["format"] == "test"
+    assert conn.params["age"] == "ab"
+
+    assert_raise Plug.Conn.WrapperError, fn ->
+      call(Router, :get, "/type/1/custome/A0c1")
+    end
+
+    assert_raise Plug.Conn.WrapperError, fn ->
+      call(Router, :get, "/type/1/custome/123?age=ab")
+    end
   end
 
   test "get to custom action" do
