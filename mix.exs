@@ -97,6 +97,7 @@ defmodule Phoenix.Mixfile do
       "adding_pages.md": [group: "Guides"],
       "routing.md": [group: "Guides"],
       "plug.md": [group: "Guides"],
+      "endpoint.md": [group: "Guides"],
       "controllers.md": [group: "Guides"],
       "views.md": [group: "Guides"],
       "templates.md": [group: "Guides"],
