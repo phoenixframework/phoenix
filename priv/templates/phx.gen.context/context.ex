@@ -1,6 +1,6 @@
 defmodule <%= inspect context.module %> do
   @moduledoc """
-  The boundary for the <%= context.name %> system.
+  The <%= context.name %> context.
   """
 
   import Ecto.Query, warn: false
