@@ -93,7 +93,7 @@ defmodule Phoenix.Template do
   New encoders can be added via the format encoder option:
 
       config :phoenix, :format_encoders,
-        html: Phoenix.HTML.Engine,
+        html: Phoenix.Template.HTML,
         json: Poison
 
   """
