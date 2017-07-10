@@ -107,7 +107,9 @@ defmodule Phoenix.Transports.LongPoll.Server do
         {:stop, {:shutdown, :pubsub_server_terminated}, state}
       {topic, join_ref} ->
         new_state = delete(state, topic, channel_pid)
-        publish_reply(Transport.on_exit_message(topic, join_ref, reason), new_state)
+        msg = Transport.on_exit_message(topic, join_ref, reason)
+
+        publish_reply(msg, new_state)
     end
   end
 

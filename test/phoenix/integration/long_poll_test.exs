@@ -53,11 +53,6 @@ defmodule Phoenix.Integration.LongPollTest do
       push socket, "new_msg", Map.put(payload, "transport", inspect(socket.transport))
       {:noreply, socket}
     end
-
-    def terminate(_reason, socket) do
-      push socket, "you_left", %{message: "bye!"}
-      :ok
-    end
   end
 
   defmodule UserSocket do
@@ -119,12 +114,17 @@ defmodule Phoenix.Integration.LongPollTest do
     :ok
   end
 
-  setup do
+  setup config do
     supervisor = Module.concat(Endpoint, "LongPoll.Supervisor")
     for {_, pid, _, _} <- Supervisor.which_children(supervisor) do
       Supervisor.terminate_child(supervisor, pid)
     end
-    :ok
+    {:ok, topic: "room:" <> to_string(config.test)}
+  end
+
+  def assert_down(topic) do
+    ref = Process.monitor(Process.whereis(:"#{topic}"))
+    assert_receive {:DOWN, ^ref, :process, _pid, _}
   end
 
   @doc """
@@ -159,6 +159,9 @@ defmodule Phoenix.Integration.LongPollTest do
         end
     end)
   end
+  defp decode_body(_invalid, %{} = resp) do
+    put_in(resp, [:body], Poison.decode!(resp.body))
+  end
   def stringify(struct) do
     struct
     |> Map.from_struct()
@@ -166,11 +169,11 @@ defmodule Phoenix.Integration.LongPollTest do
     |> Poison.decode!()
   end
 
-  defp encode(_vsn, nil), do: nil
+  defp encode(_vsn, nil), do: ""
   defp encode("1." <> _ = _vsn, map), do: Poison.encode!(map)
   defp encode("2." <> _ = _vsn, map) do
     Poison.encode!(
-      [map["join_ref"], map["refj"], map["topic"], map["event"], map["payload"]])
+      [map["join_ref"], map["ref"], map["topic"], map["event"], map["payload"]])
   end
   defp encode(_, map), do: encode("1.0.0", map)
 
@@ -295,10 +298,10 @@ defmodule Phoenix.Integration.LongPollTest do
     end
   end
 
-  for {serializer, vsn, join_ref} <- [{LongPollSerializer, "1.0.0", nil},
-                                      {V2.LongPollSerializer, "2.0.0", "1"}] do
+  for {serializer, vsn} <- [{LongPollSerializer, "1.0.0"},
+                            {V2.LongPollSerializer, "2.0.0"}] do
     @vsn vsn
-    @join_ref join_ref
+    @join_ref "123"
 
     describe "with #{vsn} serializer #{inspect serializer}" do
       test "refuses connects that error with 403 response" do
@@ -349,26 +352,28 @@ defmodule Phoenix.Integration.LongPollTest do
         assert log =~ "Parameters: %{\"foo\" => \"bar\", \"password\" => \"[FILTERED]\"}"
       end
 
-      test "sends phx_error if a channel server abnormally exits" do
-        session = join("/ws", "room:lobby", @vsn)
+      test "sends phx_error if a channel server abnormally exits", %{topic: topic} do
+        session = join("/ws", topic, @vsn)
 
         capture_log fn ->
           resp = poll :post, "/ws", @vsn, session, %{
-            "topic" => "room:lobby",
+            "topic" => topic,
             "event" => "boom",
-            "ref" => "123",
+            "ref" => @join_ref,
+            "join_ref" => @join_ref,
             "payload" => %{}
           }
           assert resp.body["status"] == 200
           assert resp.status == 200
         end
+        assert_down(topic)
 
         resp = poll(:get, "/ws", @vsn, session)
-        [_phx_reply, _joined, _user_entered, _you_left_msg, chan_error] = resp.body["messages"]
+        [_phx_reply, _user_entered, _joined, chan_error] = resp.body["messages"]
 
         assert chan_error ==
-          %{"event" => "phx_error", "payload" => %{}, "topic" => "room:lobby",
-            "ref" => "123", "join_ref" => "123"}
+          %{"event" => "phx_error", "payload" => %{}, "topic" => topic,
+            "ref" => "123", "join_ref" => @join_ref}
       end
 
       test "sends phx_close if a channel server normally exits" do
@@ -385,12 +390,12 @@ defmodule Phoenix.Integration.LongPollTest do
 
         resp = poll(:get, "/ws", @vsn, session)
 
-        [_phx_reply, _joined, _user_entered, _leave_reply, phx_close, _you_left_msg] = resp.body["messages"]
+        [_phx_reply, _joined, _user_entered, _leave_reply, phx_close] = resp.body["messages"]
 
         assert phx_close ==
           %{"event" => "phx_close", "payload" => %{},
             "ref" => "123",
-            "join_ref" => "123",
+            "join_ref" => @join_ref,
             "topic" => "room:lobby"}
       end
 

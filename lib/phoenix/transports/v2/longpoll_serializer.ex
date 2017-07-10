@@ -26,7 +26,6 @@ defmodule Phoenix.Transports.V2.LongPollSerializer do
     {:socket_push, :text, msg |> to_list() |> Poison.encode!()}
   end
   defp to_list(%Reply{} = reply) do
-    IO.inspect reply
     [reply.join_ref, reply.ref, reply.topic, "phx_reply",
      %{status: reply.status, response: reply.payload}]
   end
