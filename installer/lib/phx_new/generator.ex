@@ -125,7 +125,6 @@ defmodule Phx.New.Generator do
       adapter_app: adapter_app,
       adapter_module: adapter_module,
       adapter_config: adapter_config,
-      hex?: Code.ensure_loaded?(Hex),
       generators: generators(adapter_config),
       namespaced?: namespaced?(project)]
 

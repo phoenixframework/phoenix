@@ -134,7 +134,7 @@ defmodule Mix.Tasks.Phx.New do
         maybe_cd(project.web_path, fn ->
           compile =
             case mix_pending do
-              [] -> Task.async(fn -> cmd("mix deps.compile") end)
+              [] -> Task.async(fn -> rebar_available?() && cmd("mix deps.compile") end)
               _  -> Task.async(fn -> :ok end)
             end
 
@@ -177,7 +177,15 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp install_mix(install?) do
-    maybe_cmd "mix deps.get", true, install? && Code.ensure_loaded?(Hex)
+    maybe_cmd "mix deps.get", true, install? && hex_available?()
+  end
+
+  defp hex_available? do
+    Code.ensure_loaded?(Hex)
+  end
+
+  defp rebar_available? do
+    Mix.Rebar.rebar_cmd(:rebar) && Mix.Rebar.rebar_cmd(:rebar3)
   end
 
   defp print_brunch_info(_project, _gen) do
