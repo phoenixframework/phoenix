@@ -268,8 +268,11 @@ class Push {
   // private
 
   matchReceive({status, response, ref}){
-    this.recHooks.filter( h => h.status === status )
-                 .forEach( h => h.callback(response) )
+    this.recHooks.forEach(hook => {
+      if (hook.status === status) {
+        hook.callback(response)
+      }
+    })
   }
 
   cancelRefEvent(){ if(!this.refEvent){ return }
@@ -460,8 +463,11 @@ export class Channel {
     let handledPayload = this.onMessage(event, payload, ref)
     if(payload && !handledPayload){ throw("channel onMessage callbacks must return the payload, modified or unmodified") }
 
-    this.bindings.filter( bind => bind.event === event)
-                 .map( bind => bind.callback(handledPayload, ref))
+    this.bindings.forEach(bind => {
+      if (bind.event === event) {
+        bind.callback(handledPayload, ref))
+      }
+    })
   }
 
   replyEventName(ref){ return `chan_reply_${ref}` }
@@ -719,8 +725,13 @@ export class Socket {
       if(ref && ref === this.pendingHeartbeatRef){ this.pendingHeartbeatRef = null }
 
       this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
-      this.channels.filter( channel => channel.isMember(topic) )
-                   .forEach( channel => channel.trigger(event, payload, ref) )
+
+      this.channels.forEach(channel => {
+        if (channel.isMember(topic)) {
+          channel.trigger(event, payload, ref)
+        }
+      })
+
       this.stateChangeCallbacks.message.forEach( callback => callback(msg) )
     })
   }
