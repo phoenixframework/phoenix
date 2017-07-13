@@ -1,4 +1,12 @@
 defmodule <%= web_namespace %>.Application do
+  @moduledoc """
+  The <%= web_namespace %> Application Service.
+  
+  The <%= app_name %> system business domain lives in this application.
+  
+  Exposes API to clients such as the `<%= web_namespace %>.Web` application
+  for use in channels, controllers, and elsewhere.
+  """
   use Application
 
   def start(_type, _args) do
