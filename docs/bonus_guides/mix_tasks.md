@@ -5,19 +5,32 @@ There are currently a number of built-in Phoenix-specific and ecto-specific mix 
 ## Phoenix Specific Mix Tasks
 
 ```console
-$ mix help | grep -i phoenix
-mix local.phoenix        # Updates Phoenix locally
-mix phoenix.digest       # Digests and compress static files
-mix phoenix.gen.channel  # Generates a Phoenix channel
-mix phoenix.gen.html     # Generates controller, model and views for an HTML based resource
-mix phoenix.gen.json     # Generates a controller and model for a JSON based resource
-mix phoenix.gen.model    # Generates an Ecto model
-mix phoenix.gen.presence # Generates a Presence tracker
-mix phoenix.gen.secret   # Generates a secret
-mix phoenix.new          # Creates a new Phoenix v1.2.1 application
-mix phoenix.routes       # Prints all routes
-mix phoenix.server       # Starts applications and their servers
+
+➜ mix help | grep -i phx
+mix phx.digest         # Digests and compresses static files
+mix phx.digest.clean   # Removes old versions of static assets.
+mix phx.gen.channel    # Generates a Phoenix channel
+mix phx.gen.context    # Generates a context with functions around an Ecto schema
+mix phx.gen.embedded   # Generates an embedded Ecto schema file
+mix phx.gen.html       # Generates controller, views, and context for an HTML resource
+mix phx.gen.json       # Generates controller, views, and context for a JSON resource
+mix phx.gen.presence   # Generates a Presence tracker
+mix phx.gen.schema     # Generates an Ecto schema and migration file
+mix phx.gen.secret     # Generates a secret
+mix phx.routes         # Prints all routes
+mix phx.server         # Starts applications and their servers
 ```
+
+Note that there are still other tasks under the full phoenix name:
+
+```console
+➜  mix help | grep -i phoenix
+mix local.phoenix      # Updates Phoenix locally
+mix phoenix.gen.html   # Generates controller, model and views for an HTML based resource
+mix phoenix.new        # Creates a new Phoenix v1.2.1 application
+mix phoenix.server     # Starts applications and their servers
+```
+
 We have seen all of these at one point or another in the guides, but having all the information about them in one place seems like a good idea. And here we are.
 
 #### `mix phoenix.new`
@@ -269,14 +282,14 @@ $ mix phoenix.server
     (stdlib) erl_eval.erl:657: :erl_eval.do_apply/6
 ```
 
-#### `mix phoenix.gen.json`
+#### `mix phx.gen.json`
 
 Phoenix also offers the ability to generate all the code to stand up a complete JSON resource - ecto migration, ecto model, controller with all the necessary actions and view. This command will not create any template for the app.
 
-The `phoenix.gen.json` task takes a number of arguments, the module name of the model, the resource name, and a list of column_name:type attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
+The `phx.gen.json` task takes a number of arguments, the module name of the model, the resource name, and a list of column_name:type attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
 
 ```console
-$ mix phoenix.gen.json Post posts title:string content:string
+$ mix phx.gen.json Post posts title:string content:string
 * creating priv/repo/migrations/20150521140551_create_post.exs
 * creating web/models/post.ex
 * creating test/models/post_test.exs
@@ -286,7 +299,7 @@ $ mix phoenix.gen.json Post posts title:string content:string
 * creating web/views/changeset_view.ex
 ```
 
-When `phoenix.gen.json` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our ecto migrations.
+When `phx.gen.json` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our ecto migrations.
 
 ```console
 Add the resource to your api scope in web/router.ex:
@@ -301,7 +314,7 @@ and then update your repository by running migrations:
 Important: If we don't do this, our application won't compile, and we'll get an error.
 
 ```console
-$ mix phoenix.server
+$ mix phx.server
 Compiled web/models/post.ex
 
 == Compilation error on file web/controllers/post_controller.ex ==
@@ -313,7 +326,7 @@ Compiled web/models/post.ex
 If we don't want to create a model for our resource we can use the `--no-model` flag.
 
 ```console
-$ mix phoenix.gen.json Post posts title:string content:string --no-model
+$ mix phx.gen.json Post posts title:string content:string --no-model
 * creating web/controllers/post_controller.ex
 * creating web/views/post_view.ex
 * creating test/controllers/post_controller_test.exs
@@ -331,7 +344,7 @@ Add the resource to your api scope in web/router.ex:
 Important: If we don't do this, our application won't compile, and we'll get an error.
 
 ```console
-$ mix phoenix.server
+$ mix phx.server
 
 == Compilation error on file web/controllers/post_controller.ex ==
 ** (CompileError) web/controllers/post_controller.ex:15: HelloPhoenix.Post.__struct__/0 is undefined, cannot expand struct HelloPhoenix.Post
@@ -360,17 +373,17 @@ $ mix phoenix.gen.model Admin.User users name:string age:integer
 * creating test/models/admin/user_test.exs
 ```
 
-#### `mix phoenix.gen.channel`
+#### `mix phx.gen.channel`
 
 This task will generate a basic Phoenix channel as well a test case for it. It takes the module name for the channel as argument:
 
 ```console
-$ mix phoenix.gen.channel Room
+$ mix phx.gen.channel Room
 * creating web/channels/room_channel.ex
 * creating test/channels/room_channel_test.exs
 ```
 
-When `phoenix.gen.channel` is done, it helpfully tells us that we need to add a channel route to our router file.
+When `phx.gen.channel` is done, it helpfully tells us that we need to add a channel route to our router file.
 
 ```console
 Add the channel to your `web/channels/user_socket.ex` handler, for example:
@@ -378,57 +391,52 @@ Add the channel to your `web/channels/user_socket.ex` handler, for example:
     channel "rooms:lobby", HelloPhoenix.RoomChannel
 ```
 
-#### `mix phoenix.gen.presence`
+#### `mix phx.gen.presence`
 
 This task will generate a Presence tracker. The module name can be passed as an argument, 
 `Presence` is used if no module name is passed.
 
 ```console
-$ mix phoenix.gen.presence Presence
+$ mix phx.gen.presence Presence
 $ web/channels/presence.ex
 ```
 
-#### `mix phoenix.routes`
+#### `mix phx.routes`
 
 This task has a single purpose, to show us all the routes defined for a given router. We saw it used extensively in the [Routing Guide](routing.html).
 
 If we don't specify a router for this task, it will default to the router Phoenix generated for us.
 
 ```console
-$ mix phoenix.routes
+$ mix phx.routes
 page_path  GET  /  TaskTester.PageController.index/2
 ```
 We can also specify an individual router if we have more than one for our application.
 
 ```console
-$ mix phoenix.routes TaskTester.Router
+$ mix phx.routes TaskTester.Router
 page_path  GET  /  TaskTester.PageController.index/2
 ```
 
-#### `mix phoenix.server`
+#### `mix phx.server`
 
 This is the task we use to get our application running. It takes no arguments at all. If we pass any in, they will be silently ignored.
 
 ```console
-$ mix phoenix.server
+$ mix phx.server
 [info] Running TaskTester.Endpoint with Cowboy on port 4000 (http)
 ```
 It silently ignores our `DoesNotExist` argument.
 
 ```console
-$ mix phoenix.server DoesNotExist
+$ mix phx.server DoesNotExist
 [info] Running TaskTester.Endpoint with Cowboy on port 4000 (http)
 ```
-Prior to the 0.8.x versions of Phoenix, we used the `phoenix.start` task to get our applications running. That task no longer exists, and attempting to run it will cause an error.
+
+If we would like to start our application and also have an `iex` session open to it, we can run the mix task within `iex` like this, `iex -S mix phx.server`.
 
 ```console
-$ mix phoenix.start
-** (Mix) The task phoenix.start could not be found
-```
-If we would like to start our application and also have an `iex` session open to it, we can run the mix task within `iex` like this, `iex -S mix phoenix.server`.
-
-```console
-$ iex -S mix phoenix.server
+$ iex -S mix phx.server
 Erlang/OTP 17 [erts-6.4] [source] [64-bit] [smp:8:8] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
 
 [info] Running TaskTester.Endpoint with Cowboy on port 4000 (http)
@@ -436,7 +444,7 @@ Interactive Elixir (1.0.4) - press Ctrl+C to exit (type h() ENTER for help)
 iex(1)>
 ```
 
-#### `mix phoenix.digest`
+#### `mix phx.digest`
 
 This task does two things, it creates a digest for our static assets and then compresses them.
 
@@ -463,7 +471,7 @@ And then `web/static/` which should look similar to this:
 │   └── phoenix.js
 ```
 
-All of these files are our static assets. Now let's run the `mix phoenix.digest` task.
+All of these files are our static assets. Now let's run the `mix phx.digest` task.
 
 ```console
 $ mix phoenix.digest
