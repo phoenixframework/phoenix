@@ -179,7 +179,7 @@
  * @module phoenix
  */
 
-const VSN = "1.0.0"
+const VSN = "2.0.0"
 const SOCKET_STATES = {connecting: 0, open: 1, closing: 2, closed: 3}
 const DEFAULT_TIMEOUT = 10000
 const WS_CLOSE_NORMAL = 1000
@@ -197,6 +197,13 @@ const CHANNEL_EVENTS = {
   reply: "phx_reply",
   leave: "phx_leave"
 }
+const CHANNEL_LIFECYCLE_EVENTS = [
+  CHANNEL_EVENTS.close,
+  CHANNEL_EVENTS.error,
+  CHANNEL_EVENTS.join,
+  CHANNEL_EVENTS.reply,
+  CHANNEL_EVENTS.leave
+]
 const TRANSPORTS = {
   longpoll: "longpoll",
   websocket: "websocket"
@@ -228,11 +235,7 @@ class Push {
    */
   resend(timeout){
     this.timeout = timeout
-    this.cancelRefEvent()
-    this.ref          = null
-    this.refEvent     = null
-    this.receivedResp = null
-    this.sent         = false
+    this.reset()
     this.send()
   }
 
@@ -246,7 +249,8 @@ class Push {
       topic: this.channel.topic,
       event: this.event,
       payload: this.payload,
-      ref: this.ref
+      ref: this.ref,
+      join_ref: this.channel.joinRef()
     })
   }
 
@@ -267,6 +271,14 @@ class Push {
 
   // private
 
+  reset(){
+    this.cancelRefEvent()
+    this.ref          = null
+    this.refEvent     = null
+    this.receivedResp = null
+    this.sent         = false
+  }
+
   matchReceive({status, response, ref}){
     this.recHooks.filter( h => h.status === status )
                  .forEach( h => h.callback(response) )
@@ -281,7 +293,7 @@ class Push {
     this.timeoutTimer = null
   }
 
-  startTimeout(){ if(this.timeoutTimer){ return }
+  startTimeout(){ if(this.timeoutTimer){ this.cancelTimeout() }
     this.ref      = this.channel.socket.makeRef()
     this.refEvent = this.channel.replyEventName(this.ref)
 
@@ -345,8 +357,9 @@ export class Channel {
       this.rejoinTimer.scheduleTimeout()
     })
     this.joinPush.receive("timeout", () => { if(!this.isJoining()){ return }
-      this.socket.log("channel", `timeout ${this.topic}`, this.joinPush.timeout)
+      this.socket.log("channel", `timeout ${this.topic} (${this.joinRef()})`, this.joinPush.timeout)
       this.state = CHANNEL_STATES.errored
+      this.joinPush.reset()
       this.rejoinTimer.scheduleTimeout()
     })
     this.on(CHANNEL_EVENTS.reply, (payload, ref) => {
@@ -416,7 +429,7 @@ export class Channel {
     this.state = CHANNEL_STATES.leaving
     let onClose = () => {
       this.socket.log("channel", `leave ${this.topic}`)
-      this.trigger(CHANNEL_EVENTS.close, "leave", this.joinRef())
+      this.trigger(CHANNEL_EVENTS.close, "leave")
     }
     let leavePush = new Push(this, CHANNEL_EVENTS.leave, {}, timeout)
     leavePush.receive("ok", () => onClose() )
@@ -437,9 +450,20 @@ export class Channel {
    */
   onMessage(event, payload, ref){ return payload }
 
+
   // private
 
-  isMember(topic){ return this.topic === topic }
+  isMember(topic, event, payload, joinRef){
+    if(this.topic !== topic){ return false }
+    let isLifecycleEvent = CHANNEL_LIFECYCLE_EVENTS.indexOf(event) >= 0
+
+    if(joinRef && isLifecycleEvent && joinRef !== this.joinRef()){
+      this.socket.log("channel", "dropping outdated message", {topic, event, payload, joinRef})
+      return false
+    } else {
+      return true
+    }
+  }
 
   joinRef(){ return this.joinPush.ref }
 
@@ -452,16 +476,12 @@ export class Channel {
     this.sendJoin(timeout)
   }
 
-  trigger(event, payload, ref){
-    let {close, error, leave, join} = CHANNEL_EVENTS
-    if(ref && [close, error, leave, join].indexOf(event) >= 0 && ref !== this.joinRef()){
-      return
-    }
-    let handledPayload = this.onMessage(event, payload, ref)
+  trigger(event, payload, ref, joinRef){
+    let handledPayload = this.onMessage(event, payload, ref, joinRef)
     if(payload && !handledPayload){ throw("channel onMessage callbacks must return the payload, modified or unmodified") }
 
     this.bindings.filter( bind => bind.event === event)
-                 .map( bind => bind.callback(handledPayload, ref))
+                 .map( bind => bind.callback(handledPayload, ref, joinRef || this.joinRef()))
   }
 
   replyEventName(ref){ return `chan_reply_${ref}` }
@@ -685,13 +705,13 @@ export class Socket {
   }
 
   push(data){
-    let {topic, event, payload, ref} = data
+    let {topic, event, payload, ref, join_ref} = data
     let callback = () => {
       this.encode(data, result => {
         this.conn.send(result)
       })
     }
-    this.log("push", `${topic} ${event} (${ref})`, payload)
+    this.log("push", `${topic} ${event} (${join_ref}, ${ref})`, payload)
     if(this.isConnected()){
       callback()
     }
@@ -730,12 +750,12 @@ export class Socket {
 
   onConnMessage(rawMessage){
     this.decode(rawMessage.data, msg => {
-      let {topic, event, payload, ref} = msg
+      let {topic, event, payload, ref, join_ref} = msg
       if(ref && ref === this.pendingHeartbeatRef){ this.pendingHeartbeatRef = null }
 
       this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
-      this.channels.filter( channel => channel.isMember(topic) )
-                   .forEach( channel => channel.trigger(event, payload, ref) )
+      this.channels.filter( channel => channel.isMember(topic, event, payload, join_ref) )
+                   .forEach( channel => channel.trigger(event, payload, ref, join_ref) )
       this.stateChangeCallbacks.message.forEach( callback => callback(msg) )
     })
   }

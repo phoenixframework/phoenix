@@ -85,7 +85,8 @@ defmodule Phoenix.Logger do
   defp log_join(topic, socket, params) do
     channel_log(:log_join, socket, fn ->
       "JOIN #{inspect topic} to #{inspect(socket.channel)}\n" <>
-      "  Transport:  #{inspect socket.transport}\n" <>
+      "  Transport:  #{inspect socket.transport} (#{socket.vsn})\n" <>
+      "  Serializer:  #{inspect socket.serializer}\n" <>
       "  Parameters: #{inspect filter_values(params)}"
     end)
   end

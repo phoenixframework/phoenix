@@ -149,7 +149,7 @@ defmodule Phoenix.Socket.Transport do
 
     case serializer_for_vsn(vsn, serializer_config) do
       {:ok, serializer} ->
-        do_connect(endpoint, handler, transport_name, transport, serializer, params)
+        do_connect(vsn, endpoint, handler, transport_name, transport, serializer, params)
       {:error, reason} ->
         Logger.error(reason)
         :error
@@ -162,6 +162,10 @@ defmodule Phoenix.Socket.Transport do
       {:error, "The client's requested channel transport version \"#{vsn}\" " <>
                "does not match server's version requirements of \"~> 1.0.0\""}
     end
+  rescue
+    Version.InvalidVersionError ->
+      {:error, "The client's requested channel transport version \"#{inspect vsn}\" " <>
+               "is invalid"}
   end
   defp serializer_for_vsn(vsn, serializers) when is_list(serializers) do
     serializers
@@ -174,12 +178,13 @@ defmodule Phoenix.Socket.Transport do
     end
   end
 
-  defp do_connect(endpoint, handler, transport_name, transport, serializer, params) do
+  defp do_connect(vsn, endpoint, handler, transport_name, transport, serializer, params) do
     socket = %Socket{endpoint: endpoint,
                      transport: transport,
                      transport_pid: self(),
                      transport_name: transport_name,
                      handler: handler,
+                     vsn: vsn,
                      pubsub_server: endpoint.__pubsub_server__,
                      serializer: serializer}
 

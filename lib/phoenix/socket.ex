@@ -70,6 +70,7 @@ defmodule Phoenix.Socket do
     * `transport_name` - The socket's transport, for example: `:websocket`
     * `serializer` - The serializer for socket messages,
       for example: `Phoenix.Transports.WebSocketSerializer`
+    * `vsn` - The protocol version of the client, for example: "2.0.0"
 
   ## Custom transports
 
@@ -152,7 +153,8 @@ defmodule Phoenix.Socket do
             transport_pid: nil,
             transport_name: nil,
             serializer: nil,
-            private: %{}
+            private: %{},
+            vsn: nil
 
   defmacro __using__(_) do
     quote do
