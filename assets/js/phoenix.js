@@ -358,6 +358,8 @@ export class Channel {
     })
     this.joinPush.receive("timeout", () => { if(!this.isJoining()){ return }
       this.socket.log("channel", `timeout ${this.topic} (${this.joinRef()})`, this.joinPush.timeout)
+      let leavePush = new Push(this, CHANNEL_EVENTS.leave, {}, this.timeout)
+      leavePush.send()
       this.state = CHANNEL_STATES.errored
       this.joinPush.reset()
       this.rejoinTimer.scheduleTimeout()

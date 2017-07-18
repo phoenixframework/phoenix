@@ -426,6 +426,8 @@ var Channel = exports.Channel = function () {
         return;
       }
       _this2.socket.log("channel", "timeout " + _this2.topic + " (" + _this2.joinRef() + ")", _this2.joinPush.timeout);
+      var leavePush = new Push(_this2, CHANNEL_EVENTS.leave, {}, _this2.timeout);
+      leavePush.send();
       _this2.state = CHANNEL_STATES.errored;
       _this2.joinPush.reset();
       _this2.rejoinTimer.scheduleTimeout();
