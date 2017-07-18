@@ -5,6 +5,14 @@
 * Enhancements
   * [ChannelTest] Subscribe `connect` to `UserSocket.id` to support testing forceful disconnects
   * [Socket] Support static `:assigns` when defining channel routes
+  * [Channel] Add V2 of wire channel wire protocol with resolved race conditions and compacted payloads
+
+* JavaScript client enhancements
+  * Use V2 channel wire protocol support
+  *
+* JavaScript bug fixes
+  * Resolve race conditions when join timeouts occur on client, while server channel successfully joins
+
 
 ## 1.3.0-rc.2 (2017-05-15)
 
