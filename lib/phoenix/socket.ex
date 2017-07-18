@@ -70,6 +70,7 @@ defmodule Phoenix.Socket do
     * `transport_name` - The socket's transport, for example: `:websocket`
     * `serializer` - The serializer for socket messages,
       for example: `Phoenix.Transports.WebSocketSerializer`
+    * `vsn` - The protocol version of the client, for example: "2.0.0"
 
   ## Custom transports
 
@@ -152,7 +153,8 @@ defmodule Phoenix.Socket do
             transport_pid: nil,
             transport_name: nil,
             serializer: nil,
-            private: %{}
+            private: %{},
+            vsn: nil
 
   defmacro __using__(_) do
     quote do
@@ -301,12 +303,47 @@ defmodule Phoenix.Socket do
   end
 
   @doc false
-  def __transport__(transports, name, module, config) do
-    config = Keyword.merge(module.default_config() , config)
+  def __transport__(transports, name, module, user_conf) do
+    defaults = module.default_config()
+    conf =
+      user_conf
+      |> normalize_serializer_conf(name, module, defaults[:serializer])
+      |> merge_defaults(defaults)
 
-    Map.update(transports, name, {module, config}, fn {dup_module, _} ->
+    Map.update(transports, name, {module, conf}, fn {dup_module, _} ->
       raise ArgumentError,
         "duplicate transports (#{inspect dup_module} and #{inspect module}) defined for #{inspect name}."
     end)
+  end
+  defp merge_defaults(conf, defaults), do: Keyword.merge(defaults, conf)
+
+  defp normalize_serializer_conf(conf, name, transport_mod, default) do
+    update_in(conf, [:serializer], fn
+      nil -> default
+
+      Phoenix.Transports.LongPollSerializer = serializer ->
+        warn_serializer_deprecation(name, transport_mod, serializer)
+        default
+
+
+      Phoenix.Transports.WebSocketSerializer = serializer ->
+        warn_serializer_deprecation(name, transport_mod, serializer)
+        default
+
+      [_ | _] = serializer -> serializer
+
+      serializer when is_atom(serializer) ->
+        warn_serializer_deprecation(name, transport_mod, serializer)
+        [{serializer, "~> 1.0.0"}]
+    end)
+  end
+  defp warn_serializer_deprecation(name, transport_mod, serializer) do
+    IO.puts :stderr, """
+    [warning] passing a serializer module to the transport macro is deprecated.
+    Use a list with version requirements instead. For example:
+
+        transport :#{name}, #{inspect transport_mod},
+          serializer: [{#{inspect serializer}, "~> 1.0.0"}]
+    """
   end
 end

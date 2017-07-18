@@ -30,7 +30,12 @@ defmodule Phoenix.Transports.WebSocketSerializer do
     })}
   end
   def encode!(%Message{} = msg) do
-    {:socket_push, :text, Poison.encode_to_iodata!(msg)}
+    encoded_msg =
+      msg
+      |> Map.take([:topic, :event, :payload, :ref])
+      |> Poison.encode_to_iodata!()
+
+    {:socket_push, :text, encoded_msg}
   end
 
   @doc """

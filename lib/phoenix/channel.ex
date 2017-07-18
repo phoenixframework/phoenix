@@ -265,7 +265,7 @@ defmodule Phoenix.Channel do
 
   @type reply :: status :: atom | {status :: atom, response :: map}
   @type socket_ref :: {transport_pid :: Pid, serializer :: module,
-                       topic :: binary, ref :: binary}
+                       topic :: binary, ref :: binary, join_ref :: binary}
 
 
   @callback code_change(old_vsn, Socket.t, extra :: term) ::
@@ -473,8 +473,8 @@ defmodule Phoenix.Channel do
 
   """
   @spec reply(socket_ref, reply) :: :ok
-  def reply({transport_pid, serializer, topic, ref}, {status, payload}) do
-    Server.reply(transport_pid, ref, topic, {status, payload}, serializer)
+  def reply({transport_pid, serializer, topic, ref, join_ref}, {status, payload}) do
+    Server.reply(transport_pid, join_ref, ref, topic, {status, payload}, serializer)
   end
 
   @doc """
@@ -484,7 +484,7 @@ defmodule Phoenix.Channel do
   """
   @spec socket_ref(Socket.t) :: socket_ref
   def socket_ref(%Socket{joined: true, ref: ref} = socket) when not is_nil(ref) do
-    {socket.transport_pid, socket.serializer, socket.topic, ref}
+    {socket.transport_pid, socket.serializer, socket.topic, ref, socket.join_ref}
   end
   def socket_ref(_socket) do
     raise ArgumentError, """

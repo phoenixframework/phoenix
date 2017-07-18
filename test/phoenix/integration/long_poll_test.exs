@@ -7,6 +7,7 @@ defmodule Phoenix.Integration.LongPollTest do
 
   alias Phoenix.Integration.HTTPClient
   alias Phoenix.Socket.Broadcast
+  alias Phoenix.Transports.{V2, LongPollSerializer}
   alias Phoenix.PubSub.Local
   alias __MODULE__.Endpoint
 
@@ -51,11 +52,6 @@ defmodule Phoenix.Integration.LongPollTest do
     def handle_out("new_msg", payload, socket) do
       push socket, "new_msg", Map.put(payload, "transport", inspect(socket.transport))
       {:noreply, socket}
-    end
-
-    def terminate(_reason, socket) do
-      push socket, "you_left", %{message: "bye!"}
-      :ok
     end
   end
 
@@ -118,12 +114,17 @@ defmodule Phoenix.Integration.LongPollTest do
     :ok
   end
 
-  setup do
+  setup config do
     supervisor = Module.concat(Endpoint, "LongPoll.Supervisor")
     for {_, pid, _, _} <- Supervisor.which_children(supervisor) do
       Supervisor.terminate_child(supervisor, pid)
     end
-    :ok
+    {:ok, topic: "room:" <> to_string(config.test)}
+  end
+
+  def assert_down(topic) do
+    ref = Process.monitor(Process.whereis(:"#{topic}"))
+    assert_receive {:DOWN, ^ref, :process, _pid, _}
   end
 
   @doc """
@@ -131,19 +132,50 @@ defmodule Phoenix.Integration.LongPollTest do
 
   Returns a response with body decoded into JSON map.
   """
-  def poll(method, path, params, json \\ nil, headers \\ %{}) do
+  def poll(method, path, vsn, params, json \\ nil, headers \\ %{}) do
     headers = Map.merge(%{"content-type" => "application/json"}, headers)
-    body = Poison.encode!(json)
-    url = "http://127.0.0.1:#{@port}#{path}/longpoll?" <> URI.encode_query(params)
+    body = encode(vsn, json)
+    query_str = params |> Map.put("vsn", vsn) |> URI.encode_query()
+    url = "http://127.0.0.1:#{@port}#{path}/longpoll?" <> query_str
 
     {:ok, resp} = HTTPClient.request(method, url, headers, body)
 
-    if resp.body != "" do
-      put_in resp.body, Poison.decode!(resp.body)
-    else
-      resp
-    end
+    decode_body(vsn, resp)
   end
+  defp decode_body(_vsn, %{body: ""} = resp), do: resp
+  defp decode_body("1." <> _, %{} = resp) do
+    put_in(resp, [:body], Poison.decode!(resp.body))
+  end
+  defp decode_body("2." <> _, %{} = resp) do
+    resp
+    |> put_in([:body], Poison.decode!(resp.body))
+    |> update_in([:body, "messages"], fn
+      nil -> []
+      messages ->
+        for msg <- messages do
+          msg
+          |> V2.LongPollSerializer.decode!([])
+          |> stringify()
+        end
+    end)
+  end
+  defp decode_body(_invalid, %{} = resp) do
+    put_in(resp, [:body], Poison.decode!(resp.body))
+  end
+  def stringify(struct) do
+    struct
+    |> Map.from_struct()
+    |> Poison.encode!()
+    |> Poison.decode!()
+  end
+
+  defp encode(_vsn, nil), do: ""
+  defp encode("1." <> _ = _vsn, map), do: Poison.encode!(map)
+  defp encode("2." <> _ = _vsn, map) do
+    Poison.encode!(
+      [map["join_ref"], map["ref"], map["topic"], map["event"], map["payload"]])
+  end
+  defp encode(_, map), do: encode("1.0.0", map)
 
   @doc """
   Joins a long poll socket.
@@ -154,20 +186,21 @@ defmodule Phoenix.Integration.LongPollTest do
   process. If the mode is pubsub, the session will use the
   pubsub system.
   """
-  def join(path, topic, mode \\ :local, payload \\ %{})
+  def join(path, topic, vsn, mode \\ :local, payload \\ %{})
 
-  def join(path, topic, :local, payload) do
-    resp = poll :get, path, %{}, %{}
+  def join(path, topic, vsn, :local, payload) do
+    resp = poll :get, path, vsn, %{}, %{}
     assert resp.body["token"]
     assert resp.body["status"] == 410
     assert resp.status == 200
 
     session = Map.take(resp.body, ["token"])
 
-    resp = poll :post, path, session, %{
+    resp = poll :post, path, vsn, session, %{
       "topic" => topic,
       "event" => "phx_join",
       "ref" => "123",
+      "join_ref" => "123",
       "payload" => payload
     }
     assert resp.body["status"] == 200
@@ -175,8 +208,8 @@ defmodule Phoenix.Integration.LongPollTest do
     session
   end
 
-  def join(path, topic, :pubsub, payload) do
-    session = join(path, topic, :local, payload)
+  def join(path, topic, vsn, :pubsub, payload) do
+    session = join(path, topic, vsn, :local, payload)
     {:ok, {:v1, _id, pid, topic}} =
       Phoenix.Token.verify(Endpoint, Atom.to_string(__MODULE__), session["token"])
     %{"token" =>
@@ -185,12 +218,13 @@ defmodule Phoenix.Integration.LongPollTest do
 
   for mode <- [:local, :pubsub] do
     @mode mode
+    @vsn "1.0.0"
 
     test "#{@mode}: joins and poll messages" do
-      session = join("/ws", "room:lobby", @mode)
+      session = join("/ws", "room:lobby", @vsn, @mode)
 
       # pull messages
-      resp = poll(:get, "/ws", session)
+      resp = poll(:get, "/ws", @vsn, session)
       assert resp.body["status"] == 200
 
       [status_msg, phx_reply, user_entered] = Enum.sort(resp.body["messages"])
@@ -198,27 +232,27 @@ defmodule Phoenix.Integration.LongPollTest do
       assert phx_reply ==
         %{"event" => "phx_reply",
           "payload" => %{"response" => %{}, "status" => "ok"},
-          "ref" => "123", "topic" => "room:lobby"}
+          "ref" => "123", "topic" => "room:lobby", "join_ref" => "123"}
       assert status_msg ==
         %{"event" => "joined",
           "payload" => %{"status" => "connected", "user_id" => nil},
-          "ref" => nil, "topic" => "room:lobby"}
+          "ref" => nil, "join_ref" => nil, "topic" => "room:lobby"}
       assert user_entered ==
         %{"event" => "user_entered",
           "payload" => %{"user" => nil},
-          "ref" => nil, "topic" => "room:lobby"}
+          "ref" => nil, "join_ref" => nil, "topic" => "room:lobby"}
 
       # poll without messages sends 204 no_content
-      resp = poll(:get, "/ws", session)
+      resp = poll(:get, "/ws", @vsn, session)
       assert resp.body["status"] == 204
     end
 
     test "#{@mode}: publishing events" do
       Phoenix.PubSub.subscribe(__MODULE__, "room:lobby")
-      session = join("/ws", "room:lobby", @mode)
+      session = join("/ws", "room:lobby", @vsn, @mode)
 
       # Publish successfully
-      resp = poll :post, "/ws", session, %{
+      resp = poll :post, "/ws", @vsn, session, %{
         "topic" => "room:lobby",
         "event" => "new_msg",
         "ref" => "123",
@@ -228,18 +262,19 @@ defmodule Phoenix.Integration.LongPollTest do
       assert_receive %Broadcast{event: "new_msg", payload: %{"body" => "hi!"}}
 
       # Get published message
-      resp = poll(:get, "/ws", session)
+      resp = poll(:get, "/ws", @vsn, session)
       assert resp.body["status"] == 200
       assert List.last(resp.body["messages"]) ==
         %{"event" => "new_msg",
           "payload" => %{"transport" => "Phoenix.Transports.LongPoll", "body" => "hi!"},
           "ref" => nil,
+          "join_ref" => nil,
           "topic" => "room:lobby"}
 
       # Publish unauthorized event
       capture_log fn ->
         Phoenix.PubSub.subscribe(__MODULE__, "room:private-room")
-        resp = poll :post, "/ws", session, %{
+        resp = poll :post, "/ws", @vsn, session, %{
           "topic" => "room:private-room",
           "event" => "new_msg",
           "ref" => "12300",
@@ -251,154 +286,168 @@ defmodule Phoenix.Integration.LongPollTest do
     end
 
     test "#{@mode}: shuts down after timeout" do
-      session = join("/ws", "room:lobby", @mode)
+      session = join("/ws", "room:lobby", @vsn, @mode)
 
       channel = Process.whereis(:"room:lobby")
       assert channel
       Process.monitor(channel)
 
       assert_receive({:DOWN, _, :process, ^channel, {:shutdown, :inactive}}, 5000)
-      resp = poll(:post, "/ws", session)
+      resp = poll(:post, "/ws", @vsn, session)
       assert resp.body["status"] == 410
     end
   end
 
-  test "refuses connects that error with 403 response" do
-    resp = poll :get, "/ws", %{"reject" => "true"}, %{}
-    assert resp.body["status"] == 403
-  end
+  for {serializer, vsn} <- [{LongPollSerializer, "1.0.0"},
+                            {V2.LongPollSerializer, "2.0.0"}] do
+    @vsn vsn
+    @join_ref "123"
 
-  test "refuses unallowed origins" do
-    capture_log fn ->
-      resp = poll(:get, "/ws", %{}, nil, %{"origin" => "https://example.com"})
-      assert resp.body["status"] == 410
+    describe "with #{vsn} serializer #{inspect serializer}" do
+      test "refuses connects that error with 403 response" do
+        resp = poll :get, "/ws", @vsn, %{"reject" => "true"}, %{}
+        assert resp.body["status"] == 403
+      end
 
-      resp = poll(:get, "/ws", %{}, nil, %{"origin" => "http://notallowed.com"})
-      assert resp.body["status"] == 403
-    end
-  end
+      test "refuses unallowed origins" do
+        capture_log fn ->
+          resp = poll(:get, "/ws", @vsn, %{}, nil, %{"origin" => "https://example.com"})
+          assert resp.body["status"] == 410
 
-  test "shuts down on pubsub crash" do
-    session = join("/ws", "room:lobby")
+          resp = poll(:get, "/ws", @vsn, %{}, nil, %{"origin" => "http://notallowed.com"})
+          assert resp.body["status"] == 403
+        end
+      end
 
-    channel = Process.whereis(:"room:lobby")
-    assert channel
-    Process.monitor(channel)
+      test "shuts down on pubsub crash" do
+        session = join("/ws", "room:lobby", @vsn)
 
-    capture_log fn ->
-      for shard <- 0..(@pool_size - 1) do
-        local_pubsub_server = Process.whereis(Local.local_name(__MODULE__, shard))
-        Process.monitor(local_pubsub_server)
-        Process.exit(local_pubsub_server, :kill)
-        assert_receive {:DOWN, _, :process, ^local_pubsub_server, :killed}
+        channel = Process.whereis(:"room:lobby")
+        assert channel
+        Process.monitor(channel)
+
+        capture_log fn ->
+          for shard <- 0..(@pool_size - 1) do
+            local_pubsub_server = Process.whereis(Local.local_name(__MODULE__, shard))
+            Process.monitor(local_pubsub_server)
+            Process.exit(local_pubsub_server, :kill)
+            assert_receive {:DOWN, _, :process, ^local_pubsub_server, :killed}
+          end
+        end
+
+        resp = poll :post, "/ws", @vsn, session, %{
+          "topic" => "room:lobby",
+          "event" => "new_msg",
+          "ref" => "123",
+          "payload" => %{"body" => "hi!"}
+        }
+        assert resp.body["status"] == 410
+        assert_receive {:DOWN, _, :process, ^channel, _}
+      end
+
+      test "filter params on join" do
+        log = capture_log fn ->
+          join("/ws/logging", "room:lobby", @vsn, :local, %{"foo" => "bar", "password" => "shouldnotshow"})
+        end
+        assert log =~ "Parameters: %{\"foo\" => \"bar\", \"password\" => \"[FILTERED]\"}"
+      end
+
+      test "sends phx_error if a channel server abnormally exits", %{topic: topic} do
+        session = join("/ws", topic, @vsn)
+
+        capture_log fn ->
+          resp = poll :post, "/ws", @vsn, session, %{
+            "topic" => topic,
+            "event" => "boom",
+            "ref" => @join_ref,
+            "join_ref" => @join_ref,
+            "payload" => %{}
+          }
+          assert resp.body["status"] == 200
+          assert resp.status == 200
+        end
+        assert_down(topic)
+
+        resp = poll(:get, "/ws", @vsn, session)
+        [_phx_reply, _user_entered, _joined, chan_error] = resp.body["messages"]
+
+        assert chan_error ==
+          %{"event" => "phx_error", "payload" => %{}, "topic" => topic,
+            "ref" => "123", "join_ref" => @join_ref}
+      end
+
+      test "sends phx_close if a channel server normally exits" do
+        session = join("/ws", "room:lobby", @vsn)
+
+        resp = poll :post, "/ws", @vsn, session, %{
+          "topic" => "room:lobby",
+          "event" => "phx_leave",
+          "ref" => "2",
+          "payload" => %{}
+        }
+        assert resp.body["status"] == 200
+        assert resp.status == 200
+
+        resp = poll(:get, "/ws", @vsn, session)
+
+        [_phx_reply, _joined, _user_entered, _leave_reply, phx_close] = resp.body["messages"]
+
+        assert phx_close ==
+          %{"event" => "phx_close", "payload" => %{},
+            "ref" => "123",
+            "join_ref" => @join_ref,
+            "topic" => "room:lobby"}
+      end
+
+      test "shuts down when receiving disconnect broadcasts on socket's id" do
+        resp = poll :get, "/ws", @vsn, %{"user_id" => "456"}, %{}
+        session = Map.take(resp.body, ["token"])
+
+        for topic <- ["room:lpdisconnect1", "room:lpdisconnect2"] do
+          poll :post, "/ws", @vsn, session, %{
+            "topic" => topic,
+            "event" => "phx_join",
+            "ref" => "1",
+            "payload" => %{}
+          }
+        end
+
+        chan1 = Process.whereis(:"room:lpdisconnect1")
+        assert chan1
+        chan2 = Process.whereis(:"room:lpdisconnect2")
+        assert chan2
+        Process.monitor(chan1)
+        Process.monitor(chan2)
+
+        Endpoint.broadcast("user_sockets:456", "disconnect", %{})
+
+        assert_receive {:DOWN, _, :process, ^chan1, {:shutdown, :disconnected}}
+        assert_receive {:DOWN, _, :process, ^chan2, {:shutdown, :disconnected}}
+
+        poll(:get, "/ws", @vsn, session)
+        assert resp.body["status"] == 410
+      end
+
+      test "refuses non-matching versions" do
+        log = capture_log fn ->
+          resp = poll(:get, "/ws", "123.1.1", %{}, nil, %{"origin" => "https://example.com"})
+          assert resp.body["status"] == 403
+        end
+        assert log =~ "The client's requested channel transport version \"123.1.1\" does not match server's version"
+      end
+
+      test "forces application/json content-type" do
+        session = join("/ws", "room:lobby", @vsn)
+
+        resp = poll :post, "/ws", @vsn, session, %{
+          "topic" => "room:lobby",
+          "event" => "phx_leave",
+          "ref" => "2",
+          "payload" => %{}
+        }, %{"content-type" => ""}
+        assert resp.body["status"] == 200
+        assert resp.status == 200
       end
     end
-
-    resp = poll :post, "/ws", session, %{
-      "topic" => "room:lobby",
-      "event" => "new_msg",
-      "ref" => "123",
-      "payload" => %{"body" => "hi!"}
-    }
-    assert resp.body["status"] == 410
-    assert_receive {:DOWN, _, :process, ^channel, _}
-  end
-
-  test "filter params on join" do
-    log = capture_log fn ->
-      join("/ws/logging", "room:lobby", :local, %{"foo" => "bar", "password" => "shouldnotshow"})
-    end
-    assert log =~ "Parameters: %{\"foo\" => \"bar\", \"password\" => \"[FILTERED]\"}"
-  end
-
-  test "sends phx_error if a channel server abnormally exits" do
-    session = join("/ws", "room:lobby")
-
-    capture_log fn ->
-      resp = poll :post, "/ws", session, %{
-        "topic" => "room:lobby",
-        "event" => "boom",
-        "ref" => "123",
-        "payload" => %{}
-      }
-      assert resp.body["status"] == 200
-      assert resp.status == 200
-    end
-
-    resp = poll(:get, "/ws", session)
-    [_phx_reply, _joined, _user_entered, _you_left_msg, chan_error] = resp.body["messages"]
-
-    assert chan_error ==
-      %{"event" => "phx_error", "payload" => %{}, "topic" => "room:lobby", "ref" => "123"}
-  end
-
-  test "sends phx_close if a channel server normally exits" do
-    session = join("/ws", "room:lobby")
-
-    resp = poll :post, "/ws", session, %{
-      "topic" => "room:lobby",
-      "event" => "phx_leave",
-      "ref" => "2",
-      "payload" => %{}
-    }
-    assert resp.body["status"] == 200
-    assert resp.status == 200
-
-    resp = poll(:get, "/ws", session)
-
-    [_phx_reply, _joined, _user_entered, _leave_reply, phx_close, _you_left_msg] = resp.body["messages"]
-
-    assert phx_close ==
-      %{"event" => "phx_close", "payload" => %{}, "ref" => "123", "topic" => "room:lobby"}
-  end
-
-  test "shuts down when receiving disconnect broadcasts on socket's id" do
-    resp = poll :get, "/ws", %{"user_id" => "456"}, %{}
-    session = Map.take(resp.body, ["token"])
-
-    for topic <- ["room:lpdisconnect1", "room:lpdisconnect2"] do
-      poll :post, "/ws", session, %{
-        "topic" => topic,
-        "event" => "phx_join",
-        "ref" => "1",
-        "payload" => %{}
-      }
-    end
-
-    chan1 = Process.whereis(:"room:lpdisconnect1")
-    assert chan1
-    chan2 = Process.whereis(:"room:lpdisconnect2")
-    assert chan2
-    Process.monitor(chan1)
-    Process.monitor(chan2)
-
-    Endpoint.broadcast("user_sockets:456", "disconnect", %{})
-
-    assert_receive {:DOWN, _, :process, ^chan1, {:shutdown, :disconnected}}
-    assert_receive {:DOWN, _, :process, ^chan2, {:shutdown, :disconnected}}
-
-    poll(:get, "/ws", session)
-    assert resp.body["status"] == 410
-  end
-
-  test "refuses non-matching versions" do
-    log = capture_log fn ->
-      resp = poll(:get, "/ws", %{vsn: "123.1.1"}, nil, %{"origin" => "https://example.com"})
-      assert resp.body["status"] == 403
-    end
-    assert log =~ "The client's requested channel transport version \"123.1.1\" does not match server's version"
-  end
-
-  test "forces application/json content-type" do
-    session = join("/ws", "room:lobby")
-
-    resp = poll :post, "/ws", session, %{
-      "topic" => "room:lobby",
-      "event" => "phx_leave",
-      "ref" => "2",
-      "payload" => %{}
-    }, %{"content-type" => ""}
-    assert resp.body["status"] == 200
-    assert resp.status == 200
   end
 end
