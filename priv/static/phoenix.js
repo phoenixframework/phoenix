@@ -648,7 +648,7 @@ var Channel = exports.Channel = function () {
   return Channel;
 }();
 
-var Encoder = {
+var Serializer = {
   encode: function encode(msg, callback) {
     var payload = [msg.join_ref, msg.ref, msg.topic, msg.event, msg.payload];
     return callback(JSON.stringify(payload));
@@ -735,8 +735,8 @@ var Socket = exports.Socket = function () {
     this.ref = 0;
     this.timeout = opts.timeout || DEFAULT_TIMEOUT;
     this.transport = opts.transport || window.WebSocket || LongPoll;
-    this.defaultEncoder = Encoder.encode;
-    this.defaultDecoder = Encoder.decode;
+    this.defaultEncoder = Serializer.encode;
+    this.defaultDecoder = Serializer.decode;
     if (this.transport !== LongPoll) {
       this.encode = opts.encode || this.defaultEncoder;
       this.decode = opts.decode || this.defaultDecoder;

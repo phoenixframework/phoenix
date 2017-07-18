@@ -493,7 +493,7 @@ export class Channel {
   isLeaving(){ return this.state === CHANNEL_STATES.leaving }
 }
 
-let Encoder = {
+let Serializer = {
   encode(msg, callback){
     let payload = [
       msg.join_ref, msg.ref, msg.topic, msg.event, msg.payload
@@ -572,8 +572,8 @@ export class Socket {
     this.ref                  = 0
     this.timeout              = opts.timeout || DEFAULT_TIMEOUT
     this.transport            = opts.transport || window.WebSocket || LongPoll
-    this.defaultEncoder       = Encoder.encode
-    this.defaultDecoder       = Encoder.decode
+    this.defaultEncoder       = Serializer.encode
+    this.defaultDecoder       = Serializer.decode
     if(this.transport !== LongPoll){
       this.encode = opts.encode || this.defaultEncoder
       this.decode = opts.decode || this.defaultDecoder
