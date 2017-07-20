@@ -43,28 +43,28 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/lib/phx_blog/application.ex", ~r/defmodule PhxBlog.Application do/
       assert_file "phx_blog/mix.exs", ~r/mod: {PhxBlog.Application, \[\]}/
-      assert_file "phx_blog/lib/phx_blog/web/web.ex", fn file ->
-        assert file =~ "defmodule PhxBlog.Web do"
-        assert file =~ "use Phoenix.View, root: \"lib/phx_blog/web/templates\""
+      assert_file "phx_blog/lib/phx_blog_web/web.ex", fn file ->
+        assert file =~ "defmodule PhxBlogWeb do"
+        assert file =~ "use Phoenix.View, root: \"lib/phx_blog_web/templates\""
       end
-      assert_file "phx_blog/lib/phx_blog/web/endpoint.ex", ~r/defmodule PhxBlog.Web.Endpoint do/
+      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", ~r/defmodule PhxBlogWeb.Endpoint do/
 
-      assert_file "phx_blog/test/phx_blog/web/controllers/page_controller_test.exs"
-      assert_file "phx_blog/test/phx_blog/web/views/page_view_test.exs"
-      assert_file "phx_blog/test/phx_blog/web/views/error_view_test.exs"
-      assert_file "phx_blog/test/phx_blog/web/views/layout_view_test.exs"
+      assert_file "phx_blog/test/phx_blog_web/controllers/page_controller_test.exs"
+      assert_file "phx_blog/test/phx_blog_web/views/page_view_test.exs"
+      assert_file "phx_blog/test/phx_blog_web/views/error_view_test.exs"
+      assert_file "phx_blog/test/phx_blog_web/views/layout_view_test.exs"
       assert_file "phx_blog/test/support/conn_case.ex"
       assert_file "phx_blog/test/test_helper.exs"
 
-      assert_file "phx_blog/lib/phx_blog/web/controllers/page_controller.ex",
-                  ~r/defmodule PhxBlog.Web.PageController/
+      assert_file "phx_blog/lib/phx_blog_web/controllers/page_controller.ex",
+                  ~r/defmodule PhxBlogWeb.PageController/
 
-      assert_file "phx_blog/lib/phx_blog/web/views/page_view.ex",
-                  ~r/defmodule PhxBlog.Web.PageView/
+      assert_file "phx_blog/lib/phx_blog_web/views/page_view.ex",
+                  ~r/defmodule PhxBlogWeb.PageView/
 
-      assert_file "phx_blog/lib/phx_blog/web/router.ex", "defmodule PhxBlog.Web.Router"
-      assert_file "phx_blog/lib/phx_blog/web/web.ex", "defmodule PhxBlog.Web"
-      assert_file "phx_blog/lib/phx_blog/web/templates/layout/app.html.eex",
+      assert_file "phx_blog/lib/phx_blog_web/router.ex", "defmodule PhxBlogWeb.Router"
+      assert_file "phx_blog/lib/phx_blog_web/web.ex", "defmodule PhxBlogWeb"
+      assert_file "phx_blog/lib/phx_blog_web/templates/layout/app.html.eex",
                   "<title>Hello PhxBlog!</title>"
 
       # Brunch
@@ -72,8 +72,8 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/assets/brunch-config.js", ~s("js/app.js": ["js/app"])
       assert_file "phx_blog/config/dev.exs", fn file ->
         assert file =~ "watchers: [node:"
-        assert file =~ "lib/phx_blog/web/views/.*(ex)"
-        assert file =~ "lib/phx_blog/web/templates/.*(eex)"
+        assert file =~ "lib/phx_blog_web/views/.*(ex)"
+        assert file =~ "lib/phx_blog_web/templates/.*(eex)"
       end
       assert_file "phx_blog/assets/static/favicon.ico"
       assert_file "phx_blog/assets/static/images/phoenix.png"
@@ -108,7 +108,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/lib/phx_blog/repo.ex", ~r"defmodule PhxBlog.Repo"
       assert_file "phx_blog/priv/repo/seeds.exs", ~r"PhxBlog.Repo.insert!"
       assert_file "phx_blog/test/support/data_case.ex", ~r"defmodule PhxBlog.DataCase"
-      assert_file "phx_blog/lib/phx_blog/web/web.ex", ~r"defmodule PhxBlog.Web"
+      assert_file "phx_blog/lib/phx_blog_web/web.ex", ~r"defmodule PhxBlogWeb"
 
       # Install dependencies?
       assert_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
@@ -122,13 +122,13 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_received {:mix_shell, :info, ["Start your Phoenix app" <> _]}
 
       # Channels
-      assert File.exists?("phx_blog/lib/phx_blog/web/channels")
-      assert_file "phx_blog/lib/phx_blog/web/channels/user_socket.ex", ~r"defmodule PhxBlog.Web.UserSocket"
-      assert_file "phx_blog/lib/phx_blog/web/endpoint.ex", ~r"socket \"/socket\", PhxBlog.Web.UserSocket"
-      assert File.exists?("phx_blog/test/phx_blog/web/channels")
+      assert File.exists?("phx_blog/lib/phx_blog_web/channels")
+      assert_file "phx_blog/lib/phx_blog_web/channels/user_socket.ex", ~r"defmodule PhxBlogWeb.UserSocket"
+      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex", ~r"socket \"/socket\", PhxBlogWeb.UserSocket"
+      assert File.exists?("phx_blog/test/phx_blog_web/channels")
 
       # Gettext
-      assert_file "phx_blog/lib/phx_blog/web/gettext.ex", ~r"defmodule PhxBlog.Web.Gettext"
+      assert_file "phx_blog/lib/phx_blog_web/gettext.ex", ~r"defmodule PhxBlogWeb.Gettext"
       assert File.exists?("phx_blog/priv/gettext/errors.pot")
       assert File.exists?("phx_blog/priv/gettext/en/LC_MESSAGES/errors.po")
     end
@@ -163,31 +163,31 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/config/dev.exs", &refute(&1 =~ config)
       assert_file "phx_blog/config/test.exs", &refute(&1 =~ config)
       assert_file "phx_blog/config/prod.secret.exs", &refute(&1 =~ config)
-      assert_file "phx_blog/lib/phx_blog/web/web.ex", &refute(&1 =~ ~r"alias PhxBlog.Repo")
+      assert_file "phx_blog/lib/phx_blog_web/web.ex", &refute(&1 =~ ~r"alias PhxBlog.Repo")
 
       # No HTML
-      assert File.exists?("phx_blog/test/phx_blog/web/controllers")
+      assert File.exists?("phx_blog/test/phx_blog_web/controllers")
 
-      assert File.exists?("phx_blog/lib/phx_blog/web/controllers")
-      assert File.exists?("phx_blog/lib/phx_blog/web/views")
+      assert File.exists?("phx_blog/lib/phx_blog_web/controllers")
+      assert File.exists?("phx_blog/lib/phx_blog_web/views")
 
       refute File.exists? "phx_blog/test/web/controllers/pager_controller_test.exs"
       refute File.exists? "phx_blog/test/views/layout_view_test.exs"
       refute File.exists? "phx_blog/test/views/page_view_test.exs"
-      refute File.exists? "phx_blog/lib/phx_blog/web/controllers/page_controller.ex"
-      refute File.exists? "phx_blog/lib/phx_blog/web/templates/layout/app.html.eex"
-      refute File.exists? "phx_blog/lib/phx_blog/web/templates/page/index.html.eex"
-      refute File.exists? "phx_blog/lib/phx_blog/web/views/layout_view.ex"
-      refute File.exists? "phx_blog/lib/phx_blog/web/views/page_view.ex"
+      refute File.exists? "phx_blog/lib/phx_blog_web/controllers/page_controller.ex"
+      refute File.exists? "phx_blog/lib/phx_blog_web/templates/layout/app.html.eex"
+      refute File.exists? "phx_blog/lib/phx_blog_web/templates/page/index.html.eex"
+      refute File.exists? "phx_blog/lib/phx_blog_web/views/layout_view.ex"
+      refute File.exists? "phx_blog/lib/phx_blog_web/views/page_view.ex"
 
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_html")
       assert_file "phx_blog/mix.exs", &refute(&1 =~ ~r":phoenix_live_reload")
-      assert_file "phx_blog/lib/phx_blog/web/endpoint.ex",
+      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex",
                   &refute(&1 =~ ~r"Phoenix.LiveReloader")
-      assert_file "phx_blog/lib/phx_blog/web/endpoint.ex",
+      assert_file "phx_blog/lib/phx_blog_web/endpoint.ex",
                   &refute(&1 =~ ~r"Phoenix.LiveReloader.Socket")
-      assert_file "phx_blog/lib/phx_blog/web/views/error_view.ex", ~r".json"
-      assert_file "phx_blog/lib/phx_blog/web/router.ex", &refute(&1 =~ ~r"pipeline :browser")
+      assert_file "phx_blog/lib/phx_blog_web/views/error_view.ex", ~r".json"
+      assert_file "phx_blog/lib/phx_blog_web/router.ex", &refute(&1 =~ ~r"pipeline :browser")
     end
   end
 
@@ -235,9 +235,9 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "custom_path/.gitignore"
       assert_file "custom_path/mix.exs", ~r/app: :phx_blog/
-      assert_file "custom_path/lib/phx_blog/web/endpoint.ex", ~r/app: :phx_blog/
+      assert_file "custom_path/lib/phx_blog_web/endpoint.ex", ~r/app: :phx_blog/
       assert_file "custom_path/config/config.exs", ~r/namespace: PhoteuxBlog/
-      assert_file "custom_path/lib/phx_blog/web/web.ex", ~r/use Phoenix.Controller, namespace: PhoteuxBlog.Web/
+      assert_file "custom_path/lib/phx_blog_web/web.ex", ~r/use Phoenix.Controller, namespace: PhoteuxBlogWeb/
     end
   end
 

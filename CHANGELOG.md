@@ -10,7 +10,7 @@
 * JavaScript client enhancements
   * Use V2 channel wire protocol support
   *
-* JavaScript bug fixes
+* JavaScript client bug fixes
   * Resolve race conditions when join timeouts occur on client, while server channel successfully joins
 
 

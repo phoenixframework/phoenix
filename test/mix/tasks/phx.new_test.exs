@@ -28,7 +28,7 @@ defmodule Mix.Tasks.Phx.NewTest do
   test "bootstraps generated project" do
     Logger.disable(self())
 
-    Application.put_env(:phx_blog, PhxBlog.Web.Endpoint,
+    Application.put_env(:phx_blog, PhxBlogWeb.Endpoint,
       secret_key_base: String.duplicate("abcdefgh", 8),
       code_reloader: true)
 
@@ -49,20 +49,20 @@ defmodule Mix.Tasks.Phx.NewTest do
       Mix.shell.flush()
 
       # Adding a new template touches file (through mix)
-      File.touch! "lib/phx_blog/web/views/layout_view.ex", @epoch
-      File.write! "lib/phx_blog/web/templates/layout/another.html.eex", "oops"
+      File.touch! "lib/phx_blog_web/views/layout_view.ex", @epoch
+      File.write! "lib/phx_blog_web/templates/layout/another.html.eex", "oops"
 
       Mix.Task.clear()
       Mix.Task.run "compile", ["--no-deps-check"]
-      assert File.stat!("lib/phx_blog/web/views/layout_view.ex").mtime > @epoch
+      assert File.stat!("lib/phx_blog_web/views/layout_view.ex").mtime > @epoch
 
       # Adding a new template triggers recompilation (through request)
-      File.touch! "lib/phx_blog/web/views/page_view.ex", @epoch
-      File.write! "lib/phx_blog/web/templates/page/another.html.eex", "oops"
+      File.touch! "lib/phx_blog_web/views/page_view.ex", @epoch
+      File.write! "lib/phx_blog_web/templates/page/another.html.eex", "oops"
 
       {:ok, _} = Application.ensure_all_started(:phx_blog)
-      PhxBlog.Web.Endpoint.call(conn(:get, "/"), [])
-      assert File.stat!("lib/phx_blog/web/views/page_view.ex").mtime > @epoch
+      PhxBlogWeb.Endpoint.call(conn(:get, "/"), [])
+      assert File.stat!("lib/phx_blog_web/views/page_view.ex").mtime > @epoch
 
       # Ensure /priv static files are copied
       assert File.exists?("priv/static/js/phoenix.js")
