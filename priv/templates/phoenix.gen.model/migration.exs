@@ -8,9 +8,8 @@ defmodule <%= base %>.Repo.Migrations.Create<%= scoped %> do
 <% end %><%= for {_, i, _, s} <- assocs do %>      add <%= if(String.ends_with?(inspect(i), "_id"), do: inspect(i), else: inspect(i) <> "_id") %>, references(<%= inspect(s) %>, on_delete: :nothing<%= if binary_id do %>, type: :binary_id<% end %>)
 <% end %>
       timestamps()
-    end
-<%= for index <- indexes do %>
-    <%= index %><% end %>
+    end<%= if length(indexes) > 0 do %>
+
+    <%= Enum.join(indexes, "\n    ") %><% end %>
   end
 end
-
