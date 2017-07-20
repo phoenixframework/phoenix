@@ -268,11 +268,11 @@ defmodule Phoenix.Socket.Transport do
 
         case Phoenix.Channel.Server.join(socket, msg.payload) do
           {:ok, response, pid} ->
-            log_info topic, fn -> "Replied #{topic} :ok" end
+            log socket, topic, fn -> "Replied #{topic} :ok" end
             {:joined, pid, %Reply{join_ref: socket.join_ref, ref: msg.ref, topic: topic, status: :ok, payload: response}}
 
           {:error, reason} ->
-            log_info topic, fn -> "Replied #{topic} :error" end
+            log socket, topic, fn -> "Replied #{topic} :error" end
             {:error, reason, %Reply{join_ref: socket.join_ref, ref: msg.ref, topic: topic, status: :error, payload: reason}}
         end
 
@@ -296,8 +296,9 @@ defmodule Phoenix.Socket.Transport do
     :noreply
   end
 
-  defp log_info("phoenix" <> _, _func), do: :noop
-  defp log_info(_topic, func), do: Logger.info(func)
+  defp log(_, "phoenix" <> _, _func), do: :noop
+  defp log(%{ private: %{ log_join: false } }, _topic, _func), do: :noop
+  defp log(%{ private: %{ log_join: level } }, _topic, func), do: Logger.log(level, func)
 
   defp reply_ignore(msg, socket) do
     Logger.warn fn -> "Ignoring unmatched topic \"#{msg.topic}\" in #{inspect(socket.handler)}" end
