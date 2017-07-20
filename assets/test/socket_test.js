@@ -3,7 +3,7 @@ import assert from "assert"
 import jsdom from "jsdom"
 import sinon from "sinon"
 import {WebSocket, Server as WebSocketServer} from "mock-socket"
-
+import {encode, decode} from "./serializer"
 import {Socket, LongPoll} from "../js/phoenix"
 
 let socket
@@ -101,28 +101,28 @@ describe("endpointURL", () => {
     jsdom.changeURL(window, "https://example.com/");
     socket = new Socket("wss://example.org/chat")
 
-    assert.equal(socket.endPointURL(), "wss://example.org/chat/websocket?vsn=1.0.0")
+    assert.equal(socket.endPointURL(), "wss://example.org/chat/websocket?vsn=2.0.0")
   })
 
   it("returns endpoint for given protocol-relative url", () => {
     jsdom.changeURL(window, "https://example.com/");
     socket = new Socket("//example.org/chat")
 
-    assert.equal(socket.endPointURL(), "wss://example.org/chat/websocket?vsn=1.0.0")
+    assert.equal(socket.endPointURL(), "wss://example.org/chat/websocket?vsn=2.0.0")
   })
 
   it("returns endpoint for given path on https host", () => {
     jsdom.changeURL(window, "https://example.com/");
     socket = new Socket("/socket")
 
-    assert.equal(socket.endPointURL(), "wss://example.com/socket/websocket?vsn=1.0.0")
+    assert.equal(socket.endPointURL(), "wss://example.com/socket/websocket?vsn=2.0.0")
   })
 
   it("returns endpoint for given path on http host", () => {
     jsdom.changeURL(window, "http://example.com/");
     socket = new Socket("/socket")
 
-    assert.equal(socket.endPointURL(), "ws://example.com/socket/websocket?vsn=1.0.0")
+    assert.equal(socket.endPointURL(), "ws://example.com/socket/websocket?vsn=2.0.0")
   })
 })
 
@@ -174,7 +174,7 @@ describe("connect with WebSocket", () => {
     assert.equal(lastError, "error")
 
     const data = {"topic":"topic","event":"event","payload":"payload","status":"ok"}
-    socket.conn.onmessage[0]({data: JSON.stringify(data)})
+    socket.conn.onmessage[0]({data: encode(data)})
     assert.equal(lastMessage, "payload")
   })
 
@@ -207,7 +207,7 @@ describe("connect with long poll", () => {
 
     let conn = socket.conn
     assert.ok(conn instanceof LongPoll)
-    assert.equal(conn.pollEndpoint, "http://example.com/socket/longpoll?vsn=1.0.0")
+    assert.equal(conn.pollEndpoint, "http://example.com/socket/longpoll?vsn=2.0.0")
     assert.equal(conn.timeout, 20000)
   })
 
@@ -230,10 +230,15 @@ describe("connect with long poll", () => {
     assert.equal(closes, 1)
 
     socket.conn.onerror("error")
+
     assert.equal(lastError, "error")
 
-    socket.conn.onmessage({data: '{"topic":"topic","event":"event","payload":"message","status":"ok"}'})
-    assert.equal(lastMessage, "message")
+    socket.connect()
+
+    const data = {"topic":"topic","event":"event","payload":"payload","status":"ok"}
+
+    socket.conn.onmessage({data: encode(data)})
+    assert.equal(lastMessage, "payload")
   })
 
   it("is idempotent", () => {
@@ -403,7 +408,7 @@ describe("remove", () => {
 
 describe("push", () => {
   const data = {topic: "topic", event: "event", payload: "payload", ref: "ref"}
-  const json = '{"topic":"topic","event":"event","payload":"payload","ref":"ref"}'
+  const json = encode(data)
 
   before(() => {
     window.XMLHttpRequest = sinon.useFakeXMLHttpRequest()
@@ -497,7 +502,7 @@ describe("sendHeartbeat", () => {
     socket.conn.readyState = 1 // open
 
     const spy = sinon.spy(socket.conn, "send")
-    const data = '{"topic":"phoenix","event":"heartbeat","payload":{},"ref":"1"}'
+    const data = "[null,\"1\",\"phoenix\",\"heartbeat\",{}]"
 
     socket.sendHeartbeat()
     assert.ok(spy.calledWith(data))
@@ -507,7 +512,7 @@ describe("sendHeartbeat", () => {
     socket.conn.readyState = 0 // connecting
 
     const spy = sinon.spy(socket.conn, "send")
-    const data = '{"topic":"phoenix","event":"heartbeat","payload":{},"ref":"1"}'
+    const data = encode({topic: "phoenix", event: "heartbeat", payload: {},ref: "1"})
 
     socket.sendHeartbeat()
     assert.ok(spy.neverCalledWith(data))
@@ -715,7 +720,7 @@ describe("onConnMessage", () => {
   })
 
   it("parses raw message and triggers channel event", () => {
-    const message = '{"topic":"topic","event":"event","payload":"payload","ref":"ref"}'
+    const message = encode({topic: "topic", event: "event", payload: "payload", ref: "ref"})
     const data = {data: message}
 
     const targetChannel = socket.channel("topic")
@@ -732,31 +737,29 @@ describe("onConnMessage", () => {
   })
 
   it("triggers onMessage callback", () => {
-    const message = '{"topic":"topic","event":"event","payload":"payload","ref":"ref"}'
-    const data =  {data: message}
+    const message = {"topic":"topic","event":"event","payload":"payload","ref":"ref"}
     const spy = sinon.spy()
-
     socket.onMessage(spy)
-
-    socket.onConnMessage(data)
+    socket.onConnMessage({data: encode(message)})
 
     assert.ok(spy.calledWith({
       "topic": "topic",
       "event": "event",
       "payload": "payload",
       "ref": "ref",
+      "join_ref": null
     }))
   })
 })
 
 describe("custom encoder and decoder", () => {
 
-  it("encodes to JSON by default", () => {
+  it("encodes to JSON array by default", () => {
     socket = new Socket("/socket")
-    let payload = {foo: "bar"}
+    let payload = {topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}}
 
     socket.encode(payload, encoded => {
-      assert.deepStrictEqual(encoded, JSON.stringify(payload))
+      assert.deepStrictEqual(encoded, '["1","2","topic","join",{"foo":"bar"}]')
     })
   })
 
@@ -772,18 +775,19 @@ describe("custom encoder and decoder", () => {
   it("forces JSON encoding when using LongPoll transport", () => {
     let encoder = (payload, callback) => callback("encode works")
     socket = new Socket("/socket", {transport: LongPoll, encode: encoder})
+    let payload = {topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}}
 
-    socket.encode({foo: "bar"}, encoded => {
-      assert.deepStrictEqual(encoded, JSON.stringify({foo: "bar"}))
+    socket.encode(payload, encoded => {
+      assert.deepStrictEqual(encoded, '["1","2","topic","join",{"foo":"bar"}]')
     })
   })
 
   it("decodes JSON by default", () => {
     socket = new Socket("/socket")
-    let payload = JSON.stringify({foo: "bar"})
+    let encoded = '["1","2","topic","join",{"foo":"bar"}]'
 
-    socket.decode(payload, decoded => {
-      assert.deepStrictEqual(decoded, {foo: "bar"})
+    socket.decode(encoded, decoded => {
+      assert.deepStrictEqual(decoded, {topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}})
     })
   })
 
@@ -799,9 +803,10 @@ describe("custom encoder and decoder", () => {
   it("forces JSON decoding when using LongPoll transport", () => {
     let decoder = (payload, callback) => callback("decode works")
     socket = new Socket("/socket", {transport: LongPoll, decode: decoder})
+    let payload = {topic: "topic", ref: "2", join_ref: "1", event: "join", payload: {foo: "bar"}}
 
-    socket.decode(JSON.stringify({foo: "bar"}), decoded => {
-      assert.deepStrictEqual(decoded, {foo: "bar"})
+    socket.decode('["1","2","topic","join",{"foo":"bar"}]', decoded => {
+      assert.deepStrictEqual(decoded, payload)
     })
   })
 })

@@ -3,7 +3,7 @@ import assert from "assert"
 import jsdom from "jsdom"
 import sinon from "sinon"
 import {WebSocket, Server as WebSocketServer} from "mock-socket"
-
+import {encode, decode} from "./serializer"
 import {Channel, Socket} from "../js/phoenix"
 
 let channel, socket
@@ -79,6 +79,7 @@ describe("join", () => {
       event: "phx_join",
       payload: { one: "two" },
       ref: defaultRef,
+      join_ref: channel.joinRef()
     }))
   })
 
@@ -113,7 +114,7 @@ describe("join", () => {
     })
 
     it("succeeds before timeout", () => {
-      const spy = sinon.spy(socket, "push")
+      const spy = sinon.stub(socket, "push")
       const timeout = joinPush.timeout
 
       socket.connect()
@@ -130,6 +131,96 @@ describe("join", () => {
 
       clock.tick(timeout)
       assert.equal(spy.callCount, 1)
+    })
+
+    it("retries with backoff after timeout", () => {
+      const spy = sinon.stub(socket, "push")
+      const timeout = joinPush.timeout
+      let callCount = 1
+
+      socket.connect()
+      helpers.receiveSocketOpen()
+
+      channel.join()
+      assert.equal(spy.callCount, callCount)
+
+      clock.tick(timeout)
+      assert.equal(spy.callCount, ++callCount) // leave pushed to server
+
+      clock.tick(1000)
+      assert.equal(spy.callCount, ++callCount)
+
+      clock.tick(2000)
+      assert.equal(spy.callCount, ++callCount)
+
+      clock.tick(5000)
+      assert.equal(spy.callCount, ++callCount)
+
+      clock.tick(10000)
+      assert.equal(spy.callCount, ++callCount)
+
+      console.log("test: joinPush.trigger ok")
+      joinPush.trigger("ok", {})
+      assert.equal(channel.state, "joined")
+
+      clock.tick(10000)
+      assert.equal(spy.callCount, callCount)
+      assert.equal(channel.state, "joined")
+    })
+
+    it("with socket and join delay", () => {
+      const spy = sinon.stub(socket, "push")
+      const clock = sinon.useFakeTimers()
+      const joinPush = channel.joinPush
+
+      channel.join()
+      assert.equal(spy.callCount, 1)
+
+      // open socket after delay
+      clock.tick(9000)
+
+      assert.equal(spy.callCount, 1)
+
+      // join request returns between timeouts
+      clock.tick(1000)
+      socket.connect()
+      helpers.receiveSocketOpen()
+      joinPush.trigger("ok", {})
+
+      assert.equal(channel.state, "errored")
+
+      // join request succeeds after delay
+      clock.tick(1000)
+
+      assert.equal(channel.state, "joining")
+
+      joinPush.trigger("ok", {})
+
+      assert.equal(channel.state, "joined")
+      assert.equal(spy.callCount, 3) // leave pushed to server
+    })
+
+    it("with socket delay only", () => {
+      const spy = sinon.stub(socket, "push")
+      const clock = sinon.useFakeTimers()
+      const joinPush = channel.joinPush
+
+      channel.join()
+
+      // connect socket after delay
+      clock.tick(6000)
+      socket.connect()
+
+      // open socket after delay
+      clock.tick(5000)
+      helpers.receiveSocketOpen()
+      joinPush.trigger("ok", {})
+
+      clock.tick(2000)
+      assert.equal(channel.state, "joining")
+
+      joinPush.trigger("ok", {})
+      assert.equal(channel.state, "joined")
     })
   })
 })
@@ -292,16 +383,6 @@ describe("joinPush", () => {
       assert.ok(spyTimeout.calledOnce)
     })
 
-    it("triggers receive('timeout') callback if already timed out", () => {
-      const spyTimeout = sinon.spy()
-
-      helpers.receiveTimeout()
-
-      joinPush.receive("timeout", spyTimeout)
-
-      assert.ok(spyTimeout.calledOnce)
-    })
-
     it("does not trigger other receive callbacks after timeout response", () => {
       const spyOk = sinon.spy()
       const spyError = sinon.spy()
@@ -325,24 +406,6 @@ describe("joinPush", () => {
       helpers.receiveTimeout()
 
       assert.ok(spy.called) // TODO why called multiple times?
-    })
-
-    it("cannot send after timeout", () => {
-      const spy = sinon.spy(socket, "push")
-
-      helpers.receiveTimeout()
-
-      joinPush.send()
-
-      assert.ok(!spy.called)
-    })
-
-    it("sets receivedResp", () => {
-      assert.equal(joinPush.receivedResp, null)
-
-      helpers.receiveTimeout()
-
-      assert.deepEqual(joinPush.receivedResp, { status: "timeout", response: {} })
     })
   })
 
@@ -705,11 +768,14 @@ describe("push", () => {
   let clock, joinPush
   let socketSpy
 
-  const pushParams = {
-    topic: "topic",
-    event: "event",
-    payload: { foo: "bar" },
-    ref: defaultRef,
+  let pushParams = (channel) => {
+    return({
+      topic: "topic",
+      event: "event",
+      payload: { foo: "bar" },
+      join_ref: channel.joinRef(),
+      ref: defaultRef
+    })
   }
 
   beforeEach(() => {
@@ -731,31 +797,31 @@ describe("push", () => {
     channel.join().trigger("ok", {})
     channel.push("event", { foo: "bar" })
 
-    assert.ok(socketSpy.calledWith(pushParams))
+    assert.ok(socketSpy.calledWith(pushParams(channel)))
   })
 
   it("enqueues push event to be sent once join has succeeded", () => {
     joinPush = channel.join()
     channel.push("event", { foo: "bar" })
 
-    assert.ok(!socketSpy.calledWith(pushParams))
+    assert.ok(!socketSpy.calledWith(pushParams(channel)))
 
     clock.tick(channel.timeout / 2)
     joinPush.trigger("ok", {})
 
-    assert.ok(socketSpy.calledWith(pushParams))
+    assert.ok(socketSpy.calledWith(pushParams(channel)))
   })
 
   it("does not push if channel join times out", () => {
     joinPush = channel.join()
     channel.push("event", { foo: "bar" })
 
-    assert.ok(!socketSpy.calledWith(pushParams))
+    assert.ok(!socketSpy.calledWith(pushParams(channel)))
 
     clock.tick(channel.timeout * 2)
     joinPush.trigger("ok", {})
 
-    assert.ok(!socketSpy.calledWith(pushParams))
+    assert.ok(!socketSpy.calledWith(pushParams(channel)))
   })
 
   it("uses channel timeout by default", () => {
@@ -827,6 +893,7 @@ describe("leave", () => {
 
   it("unsubscribes from server events", () => {
     sinon.stub(socket, "makeRef", () => defaultRef)
+    const joinRef = channel.joinRef()
 
     channel.leave()
 
@@ -834,7 +901,8 @@ describe("leave", () => {
       topic: "topic",
       event: "phx_leave",
       payload: {},
-      ref: defaultRef
+      ref: defaultRef,
+      join_ref: joinRef
     }))
   })
 
