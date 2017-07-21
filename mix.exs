@@ -68,7 +68,7 @@ defmodule Phoenix.Mixfile do
       {:phoenix_guides, git: "https://github.com/phoenixframework/phoenix_guides.git", compile: false, app: false, only: :docs},
 
       # Test dependencies
-      {:phoenix_html, "~> 2.6", only: :test},
+      {:phoenix_html, "~> 2.10", only: :test},
       {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test}
     ]
   end
