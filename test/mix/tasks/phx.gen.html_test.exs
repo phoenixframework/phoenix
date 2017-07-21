@@ -60,8 +60,8 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "assert post.weight == 120.5"
       end
 
-      assert_file "test/phoenix/web/controllers/post_controller_test.exs", fn file ->
-        assert file =~ "defmodule Phoenix.Web.PostControllerTest"
+      assert_file "test/phoenix_web/controllers/post_controller_test.exs", fn file ->
+        assert file =~ "defmodule PhoenixWeb.PostControllerTest"
         assert file =~ " post_path(conn"
       end
 
@@ -72,9 +72,9 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "create unique_index(:posts, [:slug])"
       end
 
-      assert_file "lib/phoenix/web/controllers/post_controller.ex", fn file ->
-        assert file =~ "defmodule Phoenix.Web.PostController"
-        assert file =~ "use Phoenix.Web, :controller"
+      assert_file "lib/phoenix_web/controllers/post_controller.ex", fn file ->
+        assert file =~ "defmodule PhoenixWeb.PostController"
+        assert file =~ "use PhoenixWeb, :controller"
         assert file =~ "Blog.get_post!"
         assert file =~ "Blog.list_posts"
         assert file =~ "Blog.create_post"
@@ -84,27 +84,27 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "redirect(to: post_path(conn"
       end
 
-      assert_file "lib/phoenix/web/views/post_view.ex", fn file ->
-        assert file =~ "defmodule Phoenix.Web.PostView"
+      assert_file "lib/phoenix_web/views/post_view.ex", fn file ->
+        assert file =~ "defmodule PhoenixWeb.PostView"
       end
 
-      assert_file "lib/phoenix/web/templates/post/edit.html.eex", fn file ->
+      assert_file "lib/phoenix_web/templates/post/edit.html.eex", fn file ->
         assert file =~ " post_path(@conn"
       end
 
-      assert_file "lib/phoenix/web/templates/post/index.html.eex", fn file ->
+      assert_file "lib/phoenix_web/templates/post/index.html.eex", fn file ->
         assert file =~ " post_path(@conn"
       end
 
-      assert_file "lib/phoenix/web/templates/post/new.html.eex", fn file ->
+      assert_file "lib/phoenix_web/templates/post/new.html.eex", fn file ->
         assert file =~ " post_path(@conn"
       end
 
-      assert_file "lib/phoenix/web/templates/post/show.html.eex", fn file ->
+      assert_file "lib/phoenix_web/templates/post/show.html.eex", fn file ->
         assert file =~ " post_path(@conn"
       end
 
-      assert_file "lib/phoenix/web/templates/post/form.html.eex", fn file ->
+      assert_file "lib/phoenix_web/templates/post/form.html.eex", fn file ->
         assert file =~ ~s(<%= text_input f, :title, class: "form-control" %>)
         assert file =~ ~s(<%= number_input f, :votes, class: "form-control" %>)
         assert file =~ ~s(<%= number_input f, :cost, step: "any", class: "form-control" %>)
@@ -135,8 +135,8 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       Gen.Html.run(~w(Blog Comment comments title:string))
       assert_file "lib/phoenix/blog/comment.ex"
 
-      assert_file "test/phoenix/web/controllers/comment_controller_test.exs", fn file ->
-        assert file =~ "defmodule Phoenix.Web.CommentControllerTest"
+      assert_file "test/phoenix_web/controllers/comment_controller_test.exs", fn file ->
+        assert file =~ "defmodule PhoenixWeb.CommentControllerTest"
       end
 
       assert [path] = Path.wildcard("priv/repo/migrations/*_create_comments.exs")
@@ -145,9 +145,9 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "add :title, :string"
       end
 
-      assert_file "lib/phoenix/web/controllers/comment_controller.ex", fn file ->
-        assert file =~ "defmodule Phoenix.Web.CommentController"
-        assert file =~ "use Phoenix.Web, :controller"
+      assert_file "lib/phoenix_web/controllers/comment_controller.ex", fn file ->
+        assert file =~ "defmodule PhoenixWeb.CommentController"
+        assert file =~ "use PhoenixWeb, :controller"
         assert file =~ "Blog.get_comment!"
         assert file =~ "Blog.list_comments"
         assert file =~ "Blog.create_comment"
@@ -159,7 +159,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
       assert_receive {:mix_shell, :info, ["""
 
-      Add the resource to your browser scope in lib/phoenix/web/router.ex:
+      Add the resource to your browser scope in lib/phoenix_web/router.ex:
 
           resources "/posts", PostController
       """]}
@@ -170,44 +170,44 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     in_tmp_project config.test, fn ->
       Gen.Html.run(~w(Blog Post posts title:string --web Blog))
 
-      assert_file "test/phoenix/web/controllers/blog/post_controller_test.exs", fn file ->
-        assert file =~ "defmodule Phoenix.Web.Blog.PostControllerTest"
+      assert_file "test/phoenix_web/controllers/blog/post_controller_test.exs", fn file ->
+        assert file =~ "defmodule PhoenixWeb.Blog.PostControllerTest"
         assert file =~ " blog_post_path(conn"
       end
 
-      assert_file "lib/phoenix/web/controllers/blog/post_controller.ex", fn file ->
-        assert file =~ "defmodule Phoenix.Web.Blog.PostController"
-        assert file =~ "use Phoenix.Web, :controller"
+      assert_file "lib/phoenix_web/controllers/blog/post_controller.ex", fn file ->
+        assert file =~ "defmodule PhoenixWeb.Blog.PostController"
+        assert file =~ "use PhoenixWeb, :controller"
         assert file =~ "redirect(to: blog_post_path(conn"
       end
 
-      assert_file "lib/phoenix/web/templates/blog/post/form.html.eex"
+      assert_file "lib/phoenix_web/templates/blog/post/form.html.eex"
 
-      assert_file "lib/phoenix/web/templates/blog/post/edit.html.eex", fn file ->
+      assert_file "lib/phoenix_web/templates/blog/post/edit.html.eex", fn file ->
         assert file =~ " blog_post_path(@conn"
       end
 
-      assert_file "lib/phoenix/web/templates/blog/post/index.html.eex", fn file ->
+      assert_file "lib/phoenix_web/templates/blog/post/index.html.eex", fn file ->
         assert file =~ " blog_post_path(@conn"
       end
 
-      assert_file "lib/phoenix/web/templates/blog/post/new.html.eex", fn file ->
+      assert_file "lib/phoenix_web/templates/blog/post/new.html.eex", fn file ->
         assert file =~ " blog_post_path(@conn"
       end
 
-      assert_file "lib/phoenix/web/templates/blog/post/show.html.eex", fn file ->
+      assert_file "lib/phoenix_web/templates/blog/post/show.html.eex", fn file ->
         assert file =~ " blog_post_path(@conn"
       end
 
-      assert_file "lib/phoenix/web/views/blog/post_view.ex", fn file ->
-        assert file =~ "defmodule Phoenix.Web.Blog.PostView"
+      assert_file "lib/phoenix_web/views/blog/post_view.ex", fn file ->
+        assert file =~ "defmodule PhoenixWeb.Blog.PostView"
       end
 
       assert_receive {:mix_shell, :info, ["""
 
-      Add the resource to your Blog :browser scope in lib/phoenix/web/router.ex:
+      Add the resource to your Blog :browser scope in lib/phoenix_web/router.ex:
 
-          scope "/blog", Phoenix.Web.Blog, as: :blog do
+          scope "/blog", PhoenixWeb.Blog, as: :blog do
             pipe_through :browser
             ...
             resources "/posts", PostController
@@ -224,18 +224,18 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       refute_file "lib/phoenix/blog/comment.ex"
       assert Path.wildcard("priv/repo/migrations/*.exs") == []
 
-      assert_file "test/phoenix/web/controllers/comment_controller_test.exs", fn file ->
-        assert file =~ "defmodule Phoenix.Web.CommentControllerTest"
+      assert_file "test/phoenix_web/controllers/comment_controller_test.exs", fn file ->
+        assert file =~ "defmodule PhoenixWeb.CommentControllerTest"
       end
 
-      assert_file "lib/phoenix/web/controllers/comment_controller.ex", fn file ->
-        assert file =~ "defmodule Phoenix.Web.CommentController"
-        assert file =~ "use Phoenix.Web, :controller"
+      assert_file "lib/phoenix_web/controllers/comment_controller.ex", fn file ->
+        assert file =~ "defmodule PhoenixWeb.CommentController"
+        assert file =~ "use PhoenixWeb, :controller"
       end
 
-      assert_file "lib/phoenix/web/templates/comment/form.html.eex"
-      assert_file "lib/phoenix/web/views/comment_view.ex", fn file ->
-        assert file =~ "defmodule Phoenix.Web.CommentView"
+      assert_file "lib/phoenix_web/templates/comment/form.html.eex"
+      assert_file "lib/phoenix_web/views/comment_view.ex", fn file ->
+        assert file =~ "defmodule PhoenixWeb.CommentView"
       end
     end
   end
@@ -248,18 +248,18 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       refute_file "lib/phoenix/blog/comment.ex"
       assert Path.wildcard("priv/repo/migrations/*.exs") == []
 
-      assert_file "test/phoenix/web/controllers/comment_controller_test.exs", fn file ->
-        assert file =~ "defmodule Phoenix.Web.CommentControllerTest"
+      assert_file "test/phoenix_web/controllers/comment_controller_test.exs", fn file ->
+        assert file =~ "defmodule PhoenixWeb.CommentControllerTest"
       end
 
-      assert_file "lib/phoenix/web/controllers/comment_controller.ex", fn file ->
-        assert file =~ "defmodule Phoenix.Web.CommentController"
-        assert file =~ "use Phoenix.Web, :controller"
+      assert_file "lib/phoenix_web/controllers/comment_controller.ex", fn file ->
+        assert file =~ "defmodule PhoenixWeb.CommentController"
+        assert file =~ "use PhoenixWeb, :controller"
       end
 
-      assert_file "lib/phoenix/web/templates/comment/form.html.eex"
-      assert_file "lib/phoenix/web/views/comment_view.ex", fn file ->
-        assert file =~ "defmodule Phoenix.Web.CommentView"
+      assert_file "lib/phoenix_web/templates/comment/form.html.eex"
+      assert_file "lib/phoenix_web/views/comment_view.ex", fn file ->
+        assert file =~ "defmodule PhoenixWeb.CommentView"
       end
     end
   end
@@ -273,18 +273,18 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert_file "lib/phoenix/accounts/accounts.ex"
         assert_file "lib/phoenix/accounts/user.ex"
 
-        assert_file "lib/phoenix/web/controllers/user_controller.ex", fn file ->
-          assert file =~ "defmodule Phoenix.Web.UserController"
-          assert file =~ "use Phoenix.Web, :controller"
+        assert_file "lib/phoenix_web/controllers/user_controller.ex", fn file ->
+          assert file =~ "defmodule PhoenixWeb.UserController"
+          assert file =~ "use PhoenixWeb, :controller"
         end
 
-        assert_file "lib/phoenix/web/templates/user/form.html.eex"
-        assert_file "lib/phoenix/web/views/user_view.ex", fn file ->
-          assert file =~ "defmodule Phoenix.Web.UserView"
+        assert_file "lib/phoenix_web/templates/user/form.html.eex"
+        assert_file "lib/phoenix_web/views/user_view.ex", fn file ->
+          assert file =~ "defmodule PhoenixWeb.UserView"
         end
 
-        assert_file "test/phoenix/web/controllers/user_controller_test.exs", fn file ->
-          assert file =~ "defmodule Phoenix.Web.UserControllerTest"
+        assert_file "test/phoenix_web/controllers/user_controller_test.exs", fn file ->
+          assert file =~ "defmodule PhoenixWeb.UserControllerTest"
         end
       end
     end
@@ -309,17 +309,17 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert_file "another_app/lib/another_app/accounts/user.ex"
 
         assert_file "lib/phoenix/controllers/user_controller.ex", fn file ->
-          assert file =~ "defmodule Phoenix.Web.UserController"
-          assert file =~ "use Phoenix.Web, :controller"
+          assert file =~ "defmodule PhoenixWeb.UserController"
+          assert file =~ "use PhoenixWeb, :controller"
         end
 
         assert_file "lib/phoenix/templates/user/form.html.eex"
         assert_file "lib/phoenix/views/user_view.ex", fn file ->
-          assert file =~ "defmodule Phoenix.Web.UserView"
+          assert file =~ "defmodule PhoenixWeb.UserView"
         end
 
         assert_file "test/phoenix/controllers/user_controller_test.exs", fn file ->
-          assert file =~ "defmodule Phoenix.Web.UserControllerTest"
+          assert file =~ "defmodule PhoenixWeb.UserControllerTest"
         end
       end
     end

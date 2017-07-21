@@ -18,13 +18,13 @@ defmodule Mix.Tasks.Phx.Gen.Html do
   The schema is responsible for mapping the database fields into an
   Elixir struct.
 
-  Overall, this generator will add the following files to lib/your_app:
+  Overall, this generator will add the following files to `lib/`:
 
-    * a context module in accounts/accounts.ex, serving as the API boundary
-    * a schema in accounts/user.ex, with an `accounts_users` table
-    * a view in web/views/user_view.ex
-    * a controller in web/controllers/user_controller.ex
-    * default CRUD templates in web/templates/user
+    * a context module in lib/app/accounts/accounts.ex for the accounts API
+    * a schema in lib/app/accounts/user.ex, with an `accounts_users` table
+    * a view in lib/app_web/views/user_view.ex
+    * a controller in lib/app_web/controllers/user_controller.ex
+    * default CRUD templates in lib/app_web/templates/user
 
   A migration file for the repository and test files for the context and
   controller features will also be generated.
@@ -53,8 +53,8 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
       mix phx.gen.html Sales User users --web Sales
 
-  Which would geneate a `web/controllers/sales/user_controller.ex` and
-  `web/views/sales/user_view.ex`.
+  Which would geneate a `lib/app_web/controllers/sales/user_controller.ex` and
+  `lib/app_web/views/sales/user_view.ex`.
 
   ## Generating without a schema or context file
 
@@ -169,7 +169,7 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     else
       Mix.shell.info """
 
-      Add the resource to your browser scope in lib/#{Mix.Phoenix.otp_app()}/web/router.ex:
+      Add the resource to your browser scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 
           resources "/#{schema.plural}", #{inspect schema.alias}Controller
       """

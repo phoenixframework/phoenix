@@ -54,10 +54,11 @@ defmodule Mix.Phoenix.Context do
   def pre_existing_tests?(%Context{test_file: file}), do: File.exists?(file)
 
   defp web_module do
-    base = Module.concat([Mix.Phoenix.base()])
-    case base |> Module.split() |> Enum.reverse() do
-      ["Web" | _] -> base
-      _ -> Module.concat(base, "Web")
+    base = Mix.Phoenix.base()
+    if String.ends_with?(base, "Web") do
+      base
+    else
+      Module.concat(["#{base}Web"])
     end
   end
 end

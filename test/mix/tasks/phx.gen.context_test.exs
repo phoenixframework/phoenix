@@ -24,7 +24,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         base_module: Phoenix,
         basename: "blog",
         module: Phoenix.Blog,
-        web_module: Phoenix.Web,
+        web_module: PhoenixWeb,
         schema: %Mix.Phoenix.Schema{
           alias: Post,
           human_plural: "Posts",
