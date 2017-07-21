@@ -11,6 +11,8 @@ matrix:
       elixir: 1.4
     - otp_release: 19.3
       elixir: 1.4
+    - otp_release: 20.0
+      elixir: 1.4
 services:
   - redis-server
 sudo: false
