@@ -24,8 +24,8 @@ defmodule Mix.Tasks.Phx.New.Ecto do
       the generated skeleton
 
     * `--database` - specify the database adapter for ecto.
-      Values can be `postgres`, `mysql`, `mssql`, `sqlite` or
-      `mongodb`. Defaults to `postgres`
+      Values can be `postgres`, `mysql` or `mssql`.
+      Defaults to `postgres`
 
     * `--binary-id` - use `binary_id` as primary key type
       in Ecto schemas
