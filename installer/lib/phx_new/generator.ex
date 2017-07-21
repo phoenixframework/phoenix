@@ -106,6 +106,7 @@ defmodule Phx.New.Generator do
       app_module: inspect(project.app_mod),
       root_app_name: project.root_app,
       root_app_module: inspect(project.root_mod),
+      lib_web_name: project.lib_web_name,
       web_app_name: project.web_app,
       endpoint_module: inspect(Module.concat(project.web_namespace, Endpoint)),
       web_namespace: inspect(project.web_namespace),

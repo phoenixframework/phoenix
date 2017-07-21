@@ -24,7 +24,7 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         base_module: Phoenix,
         basename: "blog",
         module: Phoenix.Blog,
-        web_module: Phoenix.Web,
+        web_module: PhoenixWeb,
         schema: %Mix.Phoenix.Schema{
           alias: Post,
           human_plural: "Posts",
@@ -38,6 +38,33 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
       assert String.ends_with?(context.file, "lib/phoenix/blog/blog.ex")
       assert String.ends_with?(context.test_file, "test/phoenix/blog/blog_test.exs")
       assert String.ends_with?(context.schema.file, "lib/phoenix/blog/post.ex")
+    end
+  end
+
+  test "new nested context", config do
+    in_tmp_project config.test, fn ->
+      schema = Schema.new("Site.Blog.Post", "posts", [], [])
+      context = Context.new("Site.Blog", schema, [])
+
+      assert %Context{
+        alias: Site.Blog,
+        base_module: Phoenix,
+        basename: "blog",
+        module: Phoenix.Site.Blog,
+        web_module: PhoenixWeb,
+        schema: %Mix.Phoenix.Schema{
+          alias: Post,
+          human_plural: "Posts",
+          human_singular: "Post",
+          module: Phoenix.Site.Blog.Post,
+          plural: "posts",
+          singular: "post"
+        }} = context
+
+      assert String.ends_with?(context.dir, "lib/phoenix/site/blog")
+      assert String.ends_with?(context.file, "lib/phoenix/site/blog/blog.ex")
+      assert String.ends_with?(context.test_file, "test/phoenix/site/blog/blog_test.exs")
+      assert String.ends_with?(context.schema.file, "lib/phoenix/site/blog/post.ex")
     end
   end
 

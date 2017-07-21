@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
 
   A new file will be generated in:
 
-    * lib/my_app/web/channels/presence.ex
+    * lib/my_app_web/channels/presence.ex
 
   Where `presence.ex` is the snake cased version of the module name provided.
   """

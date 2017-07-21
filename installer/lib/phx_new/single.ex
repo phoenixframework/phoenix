@@ -10,25 +10,25 @@ defmodule Phx.New.Single do
     {:eex,  "phx_single/config/prod.secret.exs",        :project, "config/prod.secret.exs"},
     {:eex,  "phx_single/config/test.exs",               :project, "config/test.exs"},
     {:eex,  "phx_single/lib/app_name/application.ex",   :project, "lib/:app/application.ex"},
-    {:eex,  "phx_web/channels/user_socket.ex",          :project, "lib/:app/web/channels/user_socket.ex"},
-    {:keep, "phx_web/controllers",                      :project, "lib/:app/web/controllers"},
-    {:eex,  "phx_web/views/error_helpers.ex",           :project, "lib/:app/web/views/error_helpers.ex"},
-    {:eex,  "phx_web/views/error_view.ex",              :project, "lib/:app/web/views/error_view.ex"},
-    {:eex,  "phx_web/endpoint.ex",                      :project, "lib/:app/web/endpoint.ex"},
-    {:eex,  "phx_web/router.ex",                        :project, "lib/:app/web/router.ex"},
-    {:eex,  "phx_single/lib/app_name/web/web.ex",       :project, "lib/:app/web/web.ex"},
+    {:eex,  "phx_web/channels/user_socket.ex",          :project, "lib/:lib_web_name/channels/user_socket.ex"},
+    {:keep, "phx_web/controllers",                      :project, "lib/:lib_web_name/controllers"},
+    {:eex,  "phx_web/views/error_helpers.ex",           :project, "lib/:lib_web_name/views/error_helpers.ex"},
+    {:eex,  "phx_web/views/error_view.ex",              :project, "lib/:lib_web_name/views/error_view.ex"},
+    {:eex,  "phx_web/endpoint.ex",                      :project, "lib/:lib_web_name/endpoint.ex"},
+    {:eex,  "phx_web/router.ex",                        :project, "lib/:lib_web_name/router.ex"},
+    {:eex,  "phx_single/lib/app_name_web/web.ex",       :project, "lib/:lib_web_name/web.ex"},
     {:eex,  "phx_single/mix.exs",                       :project, "mix.exs"},
     {:eex,  "phx_single/README.md",                     :project, "README.md"},
     {:eex,  "phx_test/support/channel_case.ex",         :project, "test/support/channel_case.ex"},
     {:eex,  "phx_test/support/conn_case.ex",            :project, "test/support/conn_case.ex"},
     {:eex,  "phx_single/test/test_helper.exs",          :project, "test/test_helper.exs"},
-    {:keep, "phx_test/channels",                        :project, "test/:app/web/channels"},
-    {:keep, "phx_test/controllers",                     :project, "test/:app/web/controllers"},
-    {:eex,  "phx_test/views/error_view_test.exs",       :project, "test/:app/web/views/error_view_test.exs"},
+    {:keep, "phx_test/channels",                        :project, "test/:lib_web_name/channels"},
+    {:keep, "phx_test/controllers",                     :project, "test/:lib_web_name/controllers"},
+    {:eex,  "phx_test/views/error_view_test.exs",       :project, "test/:lib_web_name/views/error_view_test.exs"},
   ]
 
   template :gettext, [
-    {:eex,  "phx_gettext/gettext.ex",               :project, "lib/:app/web/gettext.ex"},
+    {:eex,  "phx_gettext/gettext.ex",               :project, "lib/:lib_web_name/gettext.ex"},
     {:eex,  "phx_gettext/en/LC_MESSAGES/errors.po", :project, "priv/gettext/en/LC_MESSAGES/errors.po"},
     {:eex,  "phx_gettext/errors.pot",               :project, "priv/gettext/errors.pot"}
   ]
@@ -53,14 +53,14 @@ defmodule Phx.New.Single do
   ]
 
   template :html, [
-    {:eex, "phx_web/controllers/page_controller.ex",         :project, "lib/:app/web/controllers/page_controller.ex"},
-    {:eex, "phx_web/templates/layout/app.html.eex",          :project, "lib/:app/web/templates/layout/app.html.eex"},
-    {:eex, "phx_web/templates/page/index.html.eex",          :project, "lib/:app/web/templates/page/index.html.eex"},
-    {:eex, "phx_web/views/layout_view.ex",                   :project, "lib/:app/web/views/layout_view.ex"},
-    {:eex, "phx_web/views/page_view.ex",                     :project, "lib/:app/web/views/page_view.ex"},
-    {:eex, "phx_test/controllers/page_controller_test.exs",  :project, "test/:app/web/controllers/page_controller_test.exs"},
-    {:eex, "phx_test/views/layout_view_test.exs",            :project, "test/:app/web/views/layout_view_test.exs"},
-    {:eex, "phx_test/views/page_view_test.exs",              :project, "test/:app/web/views/page_view_test.exs"},
+    {:eex, "phx_web/controllers/page_controller.ex",         :project, "lib/:lib_web_name/controllers/page_controller.ex"},
+    {:eex, "phx_web/templates/layout/app.html.eex",          :project, "lib/:lib_web_name/templates/layout/app.html.eex"},
+    {:eex, "phx_web/templates/page/index.html.eex",          :project, "lib/:lib_web_name/templates/page/index.html.eex"},
+    {:eex, "phx_web/views/layout_view.ex",                   :project, "lib/:lib_web_name/views/layout_view.ex"},
+    {:eex, "phx_web/views/page_view.ex",                     :project, "lib/:lib_web_name/views/page_view.ex"},
+    {:eex, "phx_test/controllers/page_controller_test.exs",  :project, "test/:lib_web_name/controllers/page_controller_test.exs"},
+    {:eex, "phx_test/views/layout_view_test.exs",            :project, "test/:lib_web_name/views/layout_view_test.exs"},
+    {:eex, "phx_test/views/page_view_test.exs",              :project, "test/:lib_web_name/views/page_view_test.exs"},
   ]
 
   template :bare, [
@@ -97,7 +97,8 @@ defmodule Phx.New.Single do
   defp put_web_app(%Project{app: app} = project) do
     %Project{project |
              web_app: app,
-             web_namespace: Module.concat(project.root_mod, Web),
+             lib_web_name: "#{app}_web",
+             web_namespace: Module.concat(["#{project.root_mod}Web"]),
              web_path: project.project_path}
   end
 

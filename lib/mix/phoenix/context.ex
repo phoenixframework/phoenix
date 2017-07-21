@@ -26,9 +26,10 @@ defmodule Mix.Phoenix.Context do
     base      = Module.concat([Mix.Phoenix.context_base(ctx_app)])
     module    = Module.concat(base, context_name)
     alias     = module |> Module.split() |> tl() |> Module.concat()
-    basename  = Phoenix.Naming.underscore(context_name)
-    dir       = Mix.Phoenix.context_lib_path(ctx_app, basename)
-    test_dir  = Mix.Phoenix.context_test_path(ctx_app, basename)
+    basedir   = Phoenix.Naming.underscore(context_name)
+    basename  = Path.basename(basedir)
+    dir       = Mix.Phoenix.context_lib_path(ctx_app, basedir)
+    test_dir  = Mix.Phoenix.context_test_path(ctx_app, basedir)
     file      = Path.join([dir, basename <> ".ex"])
     test_file = Path.join([test_dir, basename <> "_test.exs"])
     generate? = Keyword.get(opts, :context, true)
@@ -54,10 +55,11 @@ defmodule Mix.Phoenix.Context do
   def pre_existing_tests?(%Context{test_file: file}), do: File.exists?(file)
 
   defp web_module do
-    base = Module.concat([Mix.Phoenix.base()])
-    case base |> Module.split() |> Enum.reverse() do
-      ["Web" | _] -> base
-      _ -> Module.concat(base, "Web")
+    base = Mix.Phoenix.base()
+    if String.ends_with?(base, "Web") do
+      base
+    else
+      Module.concat(["#{base}Web"])
     end
   end
 end

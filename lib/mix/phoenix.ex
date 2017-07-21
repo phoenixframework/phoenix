@@ -61,7 +61,7 @@ defmodule Mix.Phoenix do
       [alias: "User",
        human: "User",
        base: "Phoenix",
-       web_module: "Phoenix.Web",
+       web_module: "PhoenixWeb",
        module: "Phoenix.User",
        scoped: "User",
        singular: "user",
@@ -71,7 +71,7 @@ defmodule Mix.Phoenix do
       [alias: "User",
        human: "User",
        base: "Phoenix",
-       web_module: "Phoenix.Web",
+       web_module: "PhoenixWeb",
        module: "Phoenix.Admin.User",
        scoped: "Admin.User",
        singular: "user",
@@ -81,7 +81,7 @@ defmodule Mix.Phoenix do
       [alias: "SuperUser",
        human: "Super user",
        base: "Phoenix",
-       web_module: "Phoenix.Web",
+       web_module: "PhoenixWeb",
        module: "Phoenix.Admin.SuperUser",
        scoped: "Admin.SuperUser",
        singular: "super_user",
@@ -194,7 +194,7 @@ defmodule Mix.Phoenix do
     this_app = otp_app()
 
     if ctx_app == this_app do
-      Path.join(["lib", to_string(this_app), "web", rel_path])
+      Path.join(["lib", "#{this_app}_web", rel_path])
     else
       Path.join(["lib", to_string(this_app), rel_path])
     end
@@ -251,7 +251,7 @@ defmodule Mix.Phoenix do
     this_app = otp_app()
 
     if ctx_app == this_app do
-      Path.join(["test", to_string(this_app), "web", rel_path])
+      Path.join(["test", "#{this_app}_web", rel_path])
     else
       Path.join(["test", to_string(this_app), rel_path])
     end
@@ -331,10 +331,10 @@ defmodule Mix.Phoenix do
   end
 
   defp web_module(base) do
-    if base |> to_string() |> String.ends_with?(".Web") do
-      Module.concat(base, nil)
+    if base |> to_string() |> String.ends_with?("Web") do
+      Module.concat([base])
     else
-      Module.concat(base, "Web")
+      Module.concat(["#{base}Web"])
     end
   end
 end
