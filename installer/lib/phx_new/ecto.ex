@@ -12,6 +12,7 @@ defmodule Phx.New.Ecto do
     {:eex,  "#{@pre}/config/prod.secret.exs",      :app, "config/prod.secret.exs"},
     {:eex,  "#{@pre}/config/test.exs",             :app, "config/test.exs"},
     {:eex,  "#{@pre}/lib/app_name/application.ex", :app, "lib/:app/application.ex"},
+    {:eex,  "#{@pre}/lib/app_name.ex",             :app, "lib/:app.ex"},
     {:eex,  "#{@pre}/test/test_helper.exs",        :app, "test/test_helper.exs"},
     {:eex,  "#{@pre}/README.md",                   :app, "README.md"},
     {:eex,  "#{@pre}/mix.exs",                     :app, "mix.exs"},
