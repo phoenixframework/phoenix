@@ -10,7 +10,7 @@ Ecto currently has adapters for the following databases:
 * SQLite3
 * MongoDB
 
-Newly generated Phoenix projects include Ecto with the PostgreSQL adapter by default.
+Newly generated Phoenix projects include Ecto with the PostgreSQL adapter by default. (you can pass the `--no-ecto` flag to exlude this)
 
 For a thorough, general guide for Ecto, check out the [Ecto getting started guide](https://hexdocs.pm/ecto/getting-started.html). For an overview of all Ecto specific mix tasks for Phoenix, see the [mix tasks guide](mix_tasks.html#ecto-specific-mix-tasks).
 
@@ -24,7 +24,7 @@ ALTER USER postgres PASSWORD 'postgres';
 ALTER USER postgres WITH SUPERUSER;
 ```
 
-Now that we all have Ecto and Postgres installed and configured, the easiest way to use Ecto is to generate an Ecto *schema* through the `phx.gen.schema` task. Ecto schemas are a way for us to specify how Elixir data types map to and from external sources, such as database tables. Let's generate a `User` schema with `name`, `email`, `bio`, and `number_of_pets` fields.
+Now that we have Ecto and Postgres installed and configured, the easiest way to use Ecto is to generate an Ecto *schema* through the `phx.gen.schema` task. Ecto schemas are a way for us to specify how Elixir data types map to and from external sources, such as database tables. Let's generate a `User` schema with `name`, `email`, `bio`, and `number_of_pets` fields.
 
 ```console
 $ mix phx.gen.schema User users name:string email:string \
@@ -40,7 +40,7 @@ Remember to update your repository by running migrations:
 
 A couple files were generated with this task. First, we have a `user.ex` file, containing our Ecto schema with our schema definition of the fields we passed to the task. Next, a migration file was generated inside `priv/repo/migrations` which will create our database table that our schema maps to.
 
-With our files in place, let's follow the instructions and run our migration. If you forgot to run the `mix ecto.create` task after creating your application, do that now with `mix ecto.create`. Next run:
+With our files in place, let's follow the instructions and run our migration. If the repo hasn't been created yet, run the mix ecto.create task. Next we can run:
 
 ```console
 $ mix ecto.migrate
@@ -228,7 +228,7 @@ iex> changeset = User.changeset(%User{}, %{})
  data: #HelloPhoenix.User<>, valid?: false>
 ```
 
-Once we have a changeset, we can ask it if it is valid.
+Once we have a changeset, we can check it if it is valid.
 
 ```console
 iex> changeset.valid?
@@ -366,7 +366,6 @@ iex> changeset.errors[:email]
 
 There are many more validations and transformations we can perform in a changeset. Please see the [Ecto Changeset documentation](http://hexdocs.pm/ecto/Ecto.Changeset.html) for more information.
 
-
 ### Data Persistence
 
 We've talked a lot about migrations and data-storage, but we haven't yet persisted any of our schemas or changesets. We briefly looked at our repo module in `lib/hello_phoenix/repo.ex` earlier, now it's time to put it to use. Ecto Repo's are the interface into a storage system, be it a Database like PostgreSQL, or an external service like a RESTful API. The Repo module's purpose is to take care of the finer details of persistence and data querying for us. As the caller, we only care about fetching and persisting data. The Repo takes care of the underlying Database adapter communication, connection pooling, and error translation for database constraint violations.
@@ -393,7 +392,7 @@ INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETUR
   updated_at: ~N[2017-05-23 19:06:08.452556]}}
 ```
 
-We started by aliasing our `User` and `Repo` modules for easy access. Next, we called `Repo.insert/1` and passed a user struct. Since we've in the `dev` environment, we can see the debug logs for the query our Repo performed when inserting the underlying `%User{}` data. We received a 2-tuple back with `{:ok, %User{}}`, which lets us know the insertion was successful. With a couple users inserted, let's fetched them back out of the repo.
+We started by aliasing our `User` and `Repo` modules for easy access. Next, we called `Repo.insert/1` and passed a user struct. Since we're in the `dev` environment, we can see the debug logs for the query our Repo performed when inserting the underlying `%User{}` data. We received a 2-tuple back with `{:ok, %User{}}`, which lets us know the insertion was successful. With a couple users inserted, let's fetched them back out of the repo.
 
 ```console
 iex> Repo.all(User)
@@ -443,5 +442,6 @@ That little query packed a big punch. It both fetched all user emails from the d
 
 In addition to inserts, we can also perform updates and deletes with `Repo.update/1` and `Repo.delete/1` to update or delete a single schema. Ecto also supports bulk persistence with the `Repo.insert_all`, `Repo.update_all`, and `Repo.delete_all` functions.
 
-
 There is quite a bit more that Ecto can do and we've only barely scratched the surface. With a solid Ecto foundation in place, we're now ready to continue building our app and integrate the web facing application with our backend persistence. Along the way, we'll expand our Ecto knowledge and learn how to properly isolate our web interface from the underlying details of our system. Please take a look at the [Ecto documentation](http://hexdocs.pm/ecto/) for the rest of the story.
+
+In our next [FIX ME context guide](FIX ME context guide), we'll find out how to wrap up our Ecto access and business logic behind modules that group related functionality. We'll see how Phoenix helps us design maintainable applications, and we'll find out about other neat Ecto features along the way. 
