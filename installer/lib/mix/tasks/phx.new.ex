@@ -21,9 +21,14 @@ defmodule Mix.Tasks.Phx.New do
     * `--module` - the name of the base module in
       the generated skeleton
 
-    * `--database` - specify the database adapter for ecto.
-      Values can be `postgres`, `mysql` or `mssql`.
-      Defaults to `postgres`
+    * `--database` - specify the database adapter for Ecto. One of:
+
+        * `postgres` (https://github.com/elixir-ecto/postgrex)
+        * `mysql` (https://github.com/xerions/mariaex)
+        * `mssql` (https://github.com/findmypast-oss/mssqlex)
+
+      Please check the driver docs, between parentheses, for more information
+      and requirements. Defaults to "postgres".
 
     * `--no-brunch` - do not generate brunch files
       for static asset building. When choosing this

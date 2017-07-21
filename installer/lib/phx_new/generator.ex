@@ -175,7 +175,7 @@ defmodule Phx.New.Generator do
     {:postgrex, Ecto.Adapters.Postgres, db_config(app, module, "postgres", "postgres")}
   end
   defp get_ecto_adapter("mssql", app, module) do
-    {:mssql_ecto, MssqlEcto, db_config(app, module, "#{app}", "")}
+    {:mssql_ecto, MssqlEcto, db_config(app, module, "sa", "")}
   end
   defp get_ecto_adapter(db, _app, _mod) do
     Mix.raise "Unknown database #{inspect db}"
