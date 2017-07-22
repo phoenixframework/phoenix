@@ -1,7 +1,7 @@
 defmodule <%= app_module %>.Web do
   @moduledoc """
-  A module defining __using__ hooks for controllers,
-  views and so on.
+  The entrypoint for defining your web interface, such
+  as controllers, views, channels and so on.
 
   This can be used in your application as:
 
@@ -13,7 +13,8 @@ defmodule <%= app_module %>.Web do
   on imports, uses and aliases.
 
   Do NOT define functions inside the quoted expressions
-  below.
+  below. Instead, define any helper function in modules
+  and import those modules here.
   """
 <%= if ecto do %>
   def model do

@@ -1,7 +1,7 @@
 defmodule <%= web_namespace %> do
   @moduledoc """
-  A module that keeps using definitions for controllers,
-  views and so on.
+  The entrypoint for defining your web interface, such
+  as controllers, views, channels and so on.
 
   This can be used in your application as:
 
@@ -13,7 +13,8 @@ defmodule <%= web_namespace %> do
   on imports, uses and aliases.
 
   Do NOT define functions inside the quoted expressions
-  below.
+  below. Instead, define any helper function in modules
+  and import those modules here.
   """
 
   def controller do
