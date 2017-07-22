@@ -1,6 +1,6 @@
 Code.require_file "../../../installer/test/mix_helper.exs", __DIR__
 
-defmodule PhoenixTest.Web.Router do
+defmodule PhoenixTestWeb.Router do
   use Phoenix.Router
   get "/", PageController, :index, as: :page
 end
@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Phx.RoutesTest do
   use ExUnit.Case, async: true
 
   test "format routes for specific router" do
-    Mix.Tasks.Phx.Routes.run(["PhoenixTest.Web.Router"])
+    Mix.Tasks.Phx.Routes.run(["PhoenixTestWeb.Router"])
     assert_received {:mix_shell, :info, [routes]}
     assert routes =~ "page_path  GET  /  PageController :index"
   end
@@ -27,7 +27,7 @@ defmodule Mix.Tasks.Phx.RoutesTest do
   end
 
   test "prints error when implicit router cannot be found" do
-    assert_raise Mix.Error, ~r/no router found at Foo.Web.Router or Foo.Router/, fn ->
+    assert_raise Mix.Error, ~r/no router found at FooWeb.Router or Foo.Router/, fn ->
       Mix.Tasks.Phx.Routes.run([], Foo)
     end
   end
