@@ -19,7 +19,7 @@ defmodule Mix.Tasks.Phx.New.Web do
 
   Is equivalent to:
 
-      mix phx.new.web hello_web --module Hello.Web
+      mix phx.new.web hello_web --module HelloWeb
 
   Supports the same options as the `phx.new` task.
   See `Mix.Tasks.Phx.New` for details.

@@ -18,7 +18,7 @@ defmodule Phoenix.Controller do
   will invoke the `show/2` action in the `MyApp.UserController`:
 
       defmodule MyApp.UserController do
-        use MyApp.Web, :controller
+        use MyAppWeb, :controller
 
         def show(conn, %{"id" => id}) do
           user = Repo.get(User, id)
@@ -64,7 +64,7 @@ defmodule Phoenix.Controller do
   However, different from routers, controllers have a single pipeline:
 
       defmodule MyApp.UserController do
-        use MyApp.Web, :controller
+        use MyAppWeb, :controller
 
         plug :authenticate, usernames: ["jose", "eric", "sonny"]
 
@@ -1320,7 +1320,7 @@ defmodule Phoenix.Controller do
         cur_uri  = Phoenix.Controller.endpoint_module(conn).struct_url()
         cur_path = Phoenix.Controller.current_path(conn, params)
 
-        MyApp.Web.Router.Helpers.url(%URI{cur_uri | scheme: "https}) <> cur_path
+        MyAppWeb.Router.Helpers.url(%URI{cur_uri | scheme: "https}) <> cur_path
       end
 
   Or maybe you have a subdomain based URL for different organizations:
@@ -1330,7 +1330,7 @@ defmodule Phoenix.Controller do
         cur_path = Phoenix.Controller.current_path(conn, params)
         org_host = "#{org.slug}.#{cur_uri.host}"
 
-        MyApp.Router.Helpers.url(%URI{cur_uri | host: org_host}) <> cur_path
+        MyAppWeb.Router.Helpers.url(%URI{cur_uri | host: org_host}) <> cur_path
       end
   """
   def current_url(%Plug.Conn{} = conn) do

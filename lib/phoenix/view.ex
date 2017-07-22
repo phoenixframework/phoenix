@@ -12,7 +12,7 @@ defmodule Phoenix.View do
 
   Phoenix defines the view template at `lib/web/web.ex`:
 
-      defmodule YourApp.Web do
+      defmodule YourAppWeb do
         def view do
           quote do
             use Phoenix.View, root: "lib/web/templates"
@@ -31,7 +31,7 @@ defmodule Phoenix.View do
   We can use the definition above to define any view in your application:
 
       defmodule YourApp.UserView do
-        use YourApp.Web, :view
+        use YourAppWeb, :view
       end
 
   Because we have defined the template root to be "lib/web/templates", `Phoenix.View`

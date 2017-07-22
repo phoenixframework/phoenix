@@ -10,7 +10,7 @@ defmodule <%= module %> do
   Presences can be tracked in your channel after joining:
 
       defmodule <%= base %>.MyChannel do
-        use <%= base %>.Web, :channel
+        use <%= base %>Web, :channel
         alias <%= base %>.Presence
 
         def join("some:topic", _params, socket) do

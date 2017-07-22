@@ -503,7 +503,7 @@ defmodule Phoenix.ConnTest do
 
       conn =
         conn
-        |> bypass_through(MyApp.Web.Router, [:browser])
+        |> bypass_through(MyAppWeb.Router, [:browser])
         |> get("/")
         |> MyApp.RequireAuthentication.call([])
       assert conn.halted
@@ -512,7 +512,7 @@ defmodule Phoenix.ConnTest do
 
       conn =
         conn
-        |> bypass_through(MyApp.Web.Router, [])
+        |> bypass_through(MyAppWeb.Router, [])
         |> get("/")
         |> MyApp.RequireAuthentication.call([])
       assert conn.halted

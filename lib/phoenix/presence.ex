@@ -34,7 +34,7 @@ defmodule Phoenix.Presence do
   Once added, presences can be tracked in your channel after joining:
 
       defmodule MyApp.MyChannel do
-        use MyApp.Web, :channel
+        use MyAppWeb, :channel
         alias MyApp.Presence
 
         def join("some:topic", _params, socket) do

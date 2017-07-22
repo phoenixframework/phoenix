@@ -4,7 +4,7 @@ defmodule <%= app_module %>.Application do
 
   The <%= app_name %> system business domain lives in this application.
 
-  Exposes API to clients such as the `<%= app_module%>.Web` application
+  Exposes API to clients such as the `<%= app_module%>Web` application
   for use in channels, controllers, and elsewhere.
   """
   use Application

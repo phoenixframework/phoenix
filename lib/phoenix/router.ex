@@ -22,7 +22,7 @@ defmodule Phoenix.Router do
   that dispatch to specific controllers and actions. Those
   macros are named after HTTP verbs. For example:
 
-      defmodule MyApp.Web.Router do
+      defmodule MyAppWeb.Router do
         use Phoenix.Router
 
         get "/pages/:page", PageController, :show
@@ -52,22 +52,22 @@ defmodule Phoenix.Router do
 
   will generate the following named helper:
 
-      MyApp.Web.Router.Helpers.page_path(conn_or_endpoint, :show, "hello")
+      MyAppWeb.Router.Helpers.page_path(conn_or_endpoint, :show, "hello")
       "/pages/hello"
 
-      MyApp.Web.Router.Helpers.page_path(conn_or_endpoint, :show, "hello", some: "query")
+      MyAppWeb.Router.Helpers.page_path(conn_or_endpoint, :show, "hello", some: "query")
       "/pages/hello?some=query"
 
-      MyApp.Web.Router.Helpers.page_url(conn_or_endpoint, :show, "hello")
+      MyAppWeb.Router.Helpers.page_url(conn_or_endpoint, :show, "hello")
       "http://example.com/pages/hello"
 
-      MyApp.Web.Router.Helpers.page_url(conn_or_endpoint, :show, "hello", some: "query")
+      MyAppWeb.Router.Helpers.page_url(conn_or_endpoint, :show, "hello", some: "query")
       "http://example.com/pages/hello?some=query"
 
   If the route contains glob-like patterns, parameters for those have to be given as
   list:
 
-      MyApp.Web.Router.Helpers.dynamic_path(conn_or_endpoint, :show, ["dynamic", "something"])
+      MyAppWeb.Router.Helpers.dynamic_path(conn_or_endpoint, :show, ["dynamic", "something"])
       "/dynamic/something"
 
   The URL generated in the named URL helpers is based on the configuration for
@@ -76,7 +76,7 @@ defmodule Phoenix.Router do
   struct:
 
       uri = %URI{scheme: "https", host: "other.example.com"}
-      MyApp.Web.Router.Helpers.page_url(uri, :show, "hello")
+      MyAppWeb.Router.Helpers.page_url(uri, :show, "hello")
       "https://other.example.com/pages/hello"
 
   The named helper can also be customized with the `:as` option. Given
@@ -86,7 +86,7 @@ defmodule Phoenix.Router do
 
   the named helper will be:
 
-      MyApp.Web.Router.Helpers.special_page_path(conn, :show, "hello")
+      MyAppWeb.Router.Helpers.special_page_path(conn, :show, "hello")
       "/pages/hello"
 
   ## Scopes and Resources
@@ -94,7 +94,7 @@ defmodule Phoenix.Router do
   It is very common in Phoenix applications to namespace all of your
   routes under the application scope:
 
-      scope "/", MyApp do
+      scope "/", MyAppWeb do
         get "/pages/:id", PageController, :show
       end
 
@@ -103,7 +103,7 @@ defmodule Phoenix.Router do
   the `MyApp.` prefix on all routes, but it also allows Phoenix to put
   less pressure in the Elixir compiler. If instead we had written:
 
-    get "/pages/:id", MyApp.PageController, :show
+      get "/pages/:id", MyAppWeb.PageController, :show
 
   The Elixir compiler would infer that the router depends directly on
   `MyApp.PageController`, which is not true. By using scopes, Phoenix
@@ -113,7 +113,7 @@ defmodule Phoenix.Router do
 
   Scopes allow us to scope on any path or even on the helper name:
 
-      scope "/api/v1", MyApp, as: :api_v1 do
+      scope "/api/v1", MyAppWeb, as: :api_v1 do
         get "/pages/:id", PageController, :show
       end
 
@@ -124,7 +124,7 @@ defmodule Phoenix.Router do
   Phoenix also provides a `resources/4` macro that allows developers
   to generate "RESTful" routes to a given resource:
 
-      defmodule MyApp.Web.Router do
+      defmodule MyAppWeb.Router do
         use Phoenix.Router
 
         resources "/pages", PageController, only: [:show]
@@ -147,7 +147,7 @@ defmodule Phoenix.Router do
 
   One can also pass a router explicitly as an argument to the task:
 
-      $ mix phx.routes MyApp.Web.Router
+      $ mix phx.routes MyAppWeb.Router
 
   Check `scope/2` and `resources/4` for more information.
 
@@ -163,7 +163,7 @@ defmodule Phoenix.Router do
 
   For example:
 
-      defmodule MyApp.Web.Router do
+      defmodule MyAppWeb.Router do
         use Phoenix.Router
 
         pipeline :browser do
