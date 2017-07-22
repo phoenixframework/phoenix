@@ -40,7 +40,7 @@ defmodule Mix.Tasks.Phx.Routes do
     if Mix.Project.umbrella?() do
       Mix.raise "umbrella applications require an explicit router to be given to phx.routes"
     end
-    web_router = app_mod(base, "Web.Router")
+    web_router = web_mod(base, "Router")
     old_router = app_mod(base, "Router")
 
     loaded(web_router) || loaded(old_router) || Mix.raise """
@@ -56,4 +56,6 @@ defmodule Mix.Tasks.Phx.Routes do
   defp loaded(module), do: Code.ensure_loaded?(module) && module
 
   defp app_mod(base, name), do: Module.concat([base, name])
+
+  defp web_mod(base, name), do: Module.concat(["#{base}Web", name])
 end
