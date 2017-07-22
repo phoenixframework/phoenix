@@ -16,12 +16,13 @@ defmodule Phoenix.Token do
 
       iex> user_id = 1
       iex> token = Phoenix.Token.sign(MyApp.Endpoint, "user salt", user_id)
-      iex> Phoenix.Token.verify(MyApp.Endpoint, "user salt", token)
+      iex> Phoenix.Token.verify(MyApp.Endpoint, "user salt", token, max_age: 86400)
       {:ok, 1}
 
   In that example we have a user's id, we generate a token and
   verify it using the secret key base configured in the given
-  `endpoint`.
+  `endpoint`. We guarantee the token will only be valid for one day
+  by setting a max age (recommended).
 
   The first argument to both `sign/4` and `verify/4` can be one of:
 
@@ -69,8 +70,7 @@ defmodule Phoenix.Token do
         use Phoenix.Socket
 
         def connect(%{"token" => token}, socket) do
-          # Max age of 2 weeks (1209600 seconds)
-          case Phoenix.Token.verify(socket, "user salt", token, max_age: 1209600) do
+          case Phoenix.Token.verify(socket, "user salt", token, max_age: 86400) do
             {:ok, user_id} ->
               socket = assign(socket, :user, Repo.get!(User, user_id))
               {:ok, socket}
@@ -87,6 +87,7 @@ defmodule Phoenix.Token do
   password resets, e-mail confirmation and more.
   """
 
+  require Logger
   alias Plug.Crypto.KeyGenerator
   alias Plug.Crypto.MessageVerifier
 
@@ -101,7 +102,8 @@ defmodule Phoenix.Token do
       when generating the encryption and signing keys. Defaults to 32
     * `:key_digest` - option passed to `Plug.Crypto.KeyGenerator`
       when generating the encryption and signing keys. Defaults to `:sha256`
-    * `:signed_at` - set the timestamp of the token in seconds. Defaults to `System.system_time(:seconds)`
+    * `:signed_at` - set the timestamp of the token in seconds.
+      Defaults to `System.system_time(:seconds)`
   """
   def sign(context, salt, data, opts \\ []) when is_binary(salt) do
     {signed_at_seconds, key_opts} = Keyword.pop(opts, :signed_at)
@@ -135,7 +137,7 @@ defmodule Phoenix.Token do
   When the server receives a request, it can use `verify/4` to determine if it
   should provide the requested resources to the client:
 
-      iex> Phoenix.Token.verify(secret, user_salt, token)
+      iex> Phoenix.Token.verify(secret, user_salt, token, max_age: 86400)
       {:ok, 99}
 
   In this example, we know the client sent a valid token because `verify/4`
@@ -145,16 +147,16 @@ defmodule Phoenix.Token do
   However, if the client had sent an expired or otherwise invalid token
   `verify/4` would have returned an error instead:
 
-      iex> Phoenix.Token.verify(secret, user_salt, expired, max_age: 1209600)
+      iex> Phoenix.Token.verify(secret, user_salt, expired, max_age: 86400)
       {:error, :expired}
 
-      iex> Phoenix.Token.verify(secret, user_salt, invalid)
+      iex> Phoenix.Token.verify(secret, user_salt, invalid, max_age: 86400)
       {:error, :invalid}
 
   ## Options
 
     * `:max_age` - verifies the token only if it has been generated
-      "max age" ago in seconds. A reasonable value is 2 weeks (`1209600`
+      "max age" ago in seconds. A reasonable value is 1 day (`86400`
       seconds)
     * `:key_iterations` - option passed to `Plug.Crypto.KeyGenerator`
       when generating the encryption and signing keys. Defaults to 1000
@@ -167,8 +169,17 @@ defmodule Phoenix.Token do
   def verify(context, salt, token, opts \\ [])
 
   def verify(context, salt, token, opts) when is_binary(salt) and is_binary(token) do
-    secret = get_key_base(context) |> get_secret(salt, opts)
-    max_age_ms = if max_age_secs = opts[:max_age], do: trunc(max_age_secs * 1000)
+    secret = context |> get_key_base() |> get_secret(salt, opts)
+
+    max_age_ms =
+      if max_age_secs = opts[:max_age] do
+        trunc(max_age_secs * 1000)
+      else
+        Logger.warn ":max_age was not set on Phoenix.Token.verify/4. " <>
+                    "A max_age is recommended otherwise tokens are forever valid. " <>
+                    "Please set it to the amount of seconds the token is valid, such as 86400 (1 day)"
+        nil
+      end
 
     case MessageVerifier.verify(token, secret) do
       {:ok, message} ->

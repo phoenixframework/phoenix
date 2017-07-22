@@ -2,6 +2,8 @@ defmodule Phoenix.TokenTest do
   use ExUnit.Case, async: true
   alias Phoenix.Token
 
+  @moduletag :capture_log
+
   defmodule TokenEndpoint do
     def config(:secret_key_base), do: "abc123"
   end
