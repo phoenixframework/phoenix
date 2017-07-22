@@ -161,7 +161,8 @@ defmodule Mix.Phoenix.Schema do
     |> Map.fetch!(field)
     |> inspect_value(value)
   end
-  defp inspect_value(:decimal, value), do: "Decimal.new(\"#{to_string(value)}\")"
+  defp inspect_value(:decimal, value), do: "Decimal.new(\"#{value}\")"
+  defp inspect_value(:utc_datetime, value), do: "DateTime.from_naive!(~N[#{value}], \"Etc/UTC\")"
   defp inspect_value(_type, value), do: inspect(value)
 
   defp drop_unique(info) do
@@ -190,9 +191,7 @@ defmodule Mix.Phoenix.Schema do
         :date           -> %Date{year: 2010, month: 4, day: 17}
         :time           -> %Time{hour: 14, minute: 0, second: 0, microsecond: {0, 6}}
         :uuid           -> "7488a646-e31f-11e4-aace-600308960662"
-        :utc_datetime   -> %DateTime{day: 17, hour: 14, microsecond: {0, 6},
-                            minute: 0, month: 4, second: 0, std_offset: 0, time_zone: "Etc/UTC",
-                            utc_offset: 0, year: 2010, zone_abbr: "UTC"}
+        :utc_datetime   -> "2010-04-17 14:00:00.000000Z"
         :naive_datetime -> ~N[2010-04-17 14:00:00.000000]
         _               -> "some #{key}"
     end
@@ -209,9 +208,7 @@ defmodule Mix.Phoenix.Schema do
         :date           -> %Date{year: 2011, month: 5, day: 18}
         :time           -> %Time{hour: 15, minute: 1, second: 1, microsecond: {0, 6}}
         :uuid           -> "7488a646-e31f-11e4-aace-600308960668"
-        :utc_datetime   -> %DateTime{day: 18, hour: 15, microsecond: {0, 6},
-                            minute: 1, month: 5, second: 1, std_offset: 0, time_zone: "Etc/UTC",
-                            utc_offset: 0, year: 2011, zone_abbr: "UTC"}
+        :utc_datetime   -> "2011-05-18 15:01:01.000000Z"
         :naive_datetime -> ~N[2011-05-18 15:01:01.000000]
         _               -> "some updated #{key}"
     end
