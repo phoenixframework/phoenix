@@ -23,26 +23,26 @@ corresponding tests. Let's go ahead and generate our Channel:
 
 ```console
 $ mix phoenix.gen.channel Room
-* creating web/channels/room_channel.ex
-* creating test/channels/room_channel_test.exs
+* creating lib/hello_web/channels/room_channel.ex
+* creating test/hello_web/channels/room_channel_test.exs
 
-Add the channel to your `web/channels/user_socket.ex` handler, for example:
+Add the channel to your `lib/hello_web/channels/user_socket.ex` handler, for example:
 
-    channel "room:lobby", HelloPhoenix.RoomChannel
+    channel "room:lobby", HelloWeb.RoomChannel
 ```
 
 This creates a channel, its test and instructs us to add a channel route in
-`web/channels/user_socket.ex`. It is important to add the channel route or our
+`lib/hello_web/channels/user_socket.ex`. It is important to add the channel route or our
 channel won't function at all!
 
 #### The Channel Test Helpers Module
 
-Upon inspecting the file `test/channels/room_channel_test.exs`, we see a line that looks like
-`use MyApp.ChannelCase`. Note - we assume that our app is named `MyApp` throughout this guide.
+Upon inspecting the file `test/hello_web/channels/room_channel_test.exs`, we see a line that looks like
+`use MyAppWeb.ChannelCase`. Note - we assume that our app is named `MyApp` throughout this guide.
 Where does this come from?
 
 When we generate a new Phoenix application, a `test/support/channel_case.ex` file is
-also generated for us. This file houses the `MyApp.ChannelCase` module which we will
+also generated for us. This file houses the `MyAppWeb.ChannelCase` module which we will
 use for all our integration tests for our channels. It automatically imports conveniences
 for testing channels and the Ecto model and query functions(if we use Ecto).
 
@@ -50,17 +50,17 @@ Some of the helper functions provided there are for triggering callback function
 channel. The others are there to provide us with special assertions that apply only to channels.
 
 If we need to add our own helper function that we would only use in channel tests, we
-would add it to `MyApp.ChannelCase` by defining it there and ensuring `MyApp.ChannelCase`
+would add it to `MyAppWeb.ChannelCase` by defining it there and ensuring `MyAppWeb.ChannelCase`
 is imported every time it is `use`d. For example:
 
 ```elixir
-defmodule MyApp.ChannelCase do
+defmodule MyAppWeb.ChannelCase do
   ...
 
   using do
     quote do
       ...
-      import MyApp.ChannelCase
+      import MyAppWeb.ChannelCase
     end
   end
 
@@ -74,7 +74,7 @@ end
 #### The Setup Block
 
 Now that we know that Phoenix provides with a custom Test Case just for channels and what it
-provides, we can move on to understanding the rest of `test/channel/room_channel_test.exs`.
+provides, we can move on to understanding the rest of `test/hello_web/channelsj/room_channel_test.exs`.
 
 First off, is the setup block:
 
@@ -110,7 +110,7 @@ test "ping replies with status ok", %{socket: socket} do
 end
 ```
 
-This tests the following code in our `MyApp.RoomChannel`:
+This tests the following code in our `MyAppWeb.RoomChannel`:
 
 ```elixir
 # Channels can be used in a request/response fashion
@@ -142,7 +142,7 @@ server sends a synchronous reply `:ok, %{"hello" => "there"}`. This is how we ch
 
 It is common to receive messages from the client and broadcast to everyone subscribed to a
 current topic. This common pattern is simple to express in Phoenix and is one of the generated
-`handle_in/3` callbacks in our `MyApp.RoomChannel`.
+`handle_in/3` callbacks in our `MyAppWeb.RoomChannel`.
 
 ```elixir
 def handle_in("shout", payload, socket) do
@@ -171,7 +171,7 @@ all subscribers in the `"room:lobby"` should receive the message. To check that,
 
 #### Testing an Asynchronous Push from the Server
 
-The last test in our `MyApp.RoomChannelTest` verifies that broadcasts from the server are pushed
+The last test in our `MyAppWeb.RoomChannelTest` verifies that broadcasts from the server are pushed
 to the client. Unlike the previous tests discussed, we are indirectly testing that our channel's
 `handle_out/3` callback is triggered. This `handle_out/3` is defined in our `MyApp.RoomChannel` as:
 
@@ -194,10 +194,10 @@ callback above which pushes the same event and payload back to the client. To te
 
 #### Wrap-up
 
-In this guide we tackled all the special assertions that comes with `MyApp.ConnCase` and some of
+In this guide we tackled all the special assertions that comes with `MyAppWeb.ConnCase` and some of
 the functions provided that help you test channels by triggering its callbacks. We found
 the API for testing channels is largely consistent with the API for Phoenix Channels which makes
 it easy to work with.
 
-If interested in learning more about the helpers provided by `MyApp.ChannelCase`, check out the
+If interested in learning more about the helpers provided by `MyAppWeb.ChannelCase`, check out the
 documentation for [`Phoenix.ChannelTest`](http://hexdocs.pm/phoenix/Phoenix.ChannelTest.html) which is the module that defines those functions.

@@ -10,12 +10,12 @@ Here's an example configuration from `config/prod.exs`.
 use Mix.Config
 
 . . .
-config :hello_phoenix, HelloPhoenix.Endpoint,
+config :hello, HelloWeb.Endpoint,
   http: [port: {:system, "PORT"}],
   url: [host: "example.com"],
   cache_static_manifest: "priv/static/cache_manifest.json",
   https: [port: 443,
-          otp_app: :hello_phoenix,
+          otp_app: :hello,
           keyfile: System.get_env("SOME_APP_SSL_KEY_PATH"),
           certfile: System.get_env("SOME_APP_SSL_CERT_PATH"),
           cacertfile: System.get_env("INTERMEDIATE_CERTFILE_PATH") # OPTIONAL Key for intermediate certificates
@@ -35,7 +35,7 @@ In many cases, you'll want to force all incoming requests to use SSL by redirect
 
 
 ```elixir
-  config :my_app, MyApp.Endpoint, 
+  config :my_app, MyApp.Endpoint,
     force_ssl: [rewrite_on: [:x_forwarded_proto]]
 ```
 
@@ -46,7 +46,7 @@ In order to build and run a release with exrm, make sure you also include the ss
 
 ```elixir
 def application do
-	[mod: {HelloPhoenix, []},
+	[mod: {Hello, []},
 	applications: [:phoenix, :phoenix_html, :cowboy, :logger, :gettext,
                  :phoenix_ecto, :postgrex, :ssl]]
 end

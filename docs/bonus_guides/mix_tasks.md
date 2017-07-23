@@ -88,68 +88,57 @@ With the `--no-ecto` flag, Phoenix will not make either ecto or postgrex a depen
 By default, Phoenix will name our OTP application after the name we pass into `phoenix.new`. If we want, we can specify a different OTP application name with the `--app` flag.
 
 ```console
-$  mix phoenix.new task_tester --app hello_phoenix
+$  mix phx.new task_tester --app hello
 * creating task_tester/config/config.exs
 * creating task_tester/config/dev.exs
 * creating task_tester/config/prod.exs
 * creating task_tester/config/prod.secret.exs
 * creating task_tester/config/test.exs
-* creating task_tester/lib/hello_phoenix.ex
-* creating task_tester/lib/hello_phoenix/endpoint.ex
-* creating task_tester/priv/static/robots.txt
-* creating task_tester/test/controllers/page_controller_test.exs
-* creating task_tester/test/views/error_view_test.exs
-* creating task_tester/test/views/page_view_test.exs
-* creating task_tester/test/support/conn_case.ex
-* creating task_tester/test/support/channel_case.ex
-* creating task_tester/test/test_helper.exs
-* creating task_tester/web/controllers/page_controller.ex
-* creating task_tester/web/templates/layout/app.html.eex
-* creating task_tester/web/templates/page/index.html.eex
-* creating task_tester/web/views/error_view.ex
-* creating task_tester/web/views/layout_view.ex
-* creating task_tester/web/views/page_view.ex
-* creating task_tester/web/router.ex
-* creating task_tester/web/web.ex
+* creating task_tester/lib/hello/application.ex
+* creating task_tester/lib/hello.ex
+* creating task_tester/lib/hello_web/channels/user_socket.ex
+* creating task_tester/lib/hello_web/views/error_helpers.ex
+* creating task_tester/lib/hello_web/views/error_view.ex
+* creating task_tester/lib/hello_web/endpoint.ex
+* creating task_tester/lib/hello_web/router.ex
+* creating task_tester/lib/hello_web.ex
 * creating task_tester/mix.exs
-* creating task_tester/README.md
-* creating task_tester/lib/hello_phoenix/repo.ex
 . . .
 ```
 
-If we look in the resulting `mix.exs` file, we will see that our project app name is `hello_phoenix`.
+If we look in the resulting `mix.exs` file, we will see that our project app name is `hello`.
 
 ```elixir
-defmodule HelloPhoenix.Mixfile do
+defmodule Hello.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :hello_phoenix,
-    version: "0.0.1",
+    [app: :hello,
+     version: "0.0.1",
 . . .
 ```
 
-A quick check will show that all of our module names are qualified with `HelloPhoenix`.
+A quick check will show that all of our module names are qualified with `Hello`.
 
 ```elixir
-defmodule HelloPhoenix.PageController do
-  use HelloPhoenix.Web, :controller
+defmodule HelloWeb.PageController do
+  use HelloWeb, :controller
 . . .
 ```
 
-We can also see that files related to the application as a whole - eg. files in `lib/` and the test seed file - have `hello_phoenix` in their names.
+We can also see that files related to the application as a whole - eg. files in `lib/` and the test seed file - have `hello` in their names.
 
 ```console
-* creating task_tester/lib/hello_phoenix.ex
-* creating task_tester/lib/hello_phoenix/endpoint.ex
-* creating task_tester/lib/hello_phoenix/repo.ex
-* creating task_tester/test/hello_phoenix_test.exs
+* creating task_tester/lib/hello.ex
+* creating task_tester/lib/hello/endpoint.ex
+* creating task_tester/lib/hello/repo.ex
+* creating task_tester/test/hello_test.exs
 ```
 
 If we only want to change the qualifying prefix for module names, we can do that with the `--module` flag. It's important to note that the value of the `--module` must look like a valid module name with proper capitalization. The task will throw an error if it doesn't.
 
 ```console
-$  mix phoenix.new task_tester --module HelloPhoenix
+$  mix phoenix.new task_tester --module Hello
 * creating task_tester/config/config.exs
 * creating task_tester/config/dev.exs
 * creating task_tester/config/prod.exs
@@ -178,12 +167,12 @@ $  mix phoenix.new task_tester --module HelloPhoenix
 . . .
 ```
 
-Notice that none of the files have `hello_phoenix` in their names. All filenames related to the application name are `task_tester`.
+Notice that none of the files have `hello` in their names. All filenames related to the application name are `task_tester`.
 
-If we look at the project app name in `mix.exs`, we see that it is `task_tester`, but all the module qualifying names begin with `HelloPhoenix`.
+If we look at the project app name in `mix.exs`, we see that it is `task_tester`, but all the module qualifying names begin with `Hello`.
 
 ```elixir
-defmodule HelloPhoenix.Mixfile do
+defmodule Hello.Mixfile do
   use Mix.Project
 
   def project do
@@ -333,8 +322,8 @@ Important: If we don't do this, our application won't compile, and we'll get an 
 ```console
 $ mix phoenix.server
 
-== Compilation error on file web/controllers/post_controller.ex ==
-** (CompileError) web/controllers/post_controller.ex:15: HelloPhoenix.Post.__struct__/0 is undefined, cannot expand struct HelloPhoenix.Post
+== Compilation error on file lib/hello_web/controllers/post_controller.ex ==
+** (CompileError) lib/hello_web/controllers/post_controller.ex:15: Hello.Post.__struct__/0 is undefined, cannot expand struct Hello.Post
     (elixir) src/elixir_map.erl:55: :elixir_map.translate_struct/4
     (stdlib) lists.erl:1352: :lists.mapfoldl/3
 ```
@@ -365,30 +354,30 @@ $ mix phoenix.gen.model Admin.User users name:string age:integer
 This task will generate a basic Phoenix channel as well a test case for it. It takes the module name for the channel as argument:
 
 ```console
-$ mix phoenix.gen.channel Room
-* creating web/channels/room_channel.ex
-* creating test/channels/room_channel_test.exs
+$ mix phx.gen.channel Room
+* creating lib/hello_web/channels/room_channel.ex
+* creating test/hello_web/channels/room_channel_test.exs
 ```
 
-When `phoenix.gen.channel` is done, it helpfully tells us that we need to add a channel route to our router file.
+When `phx.gen.channel` is done, it helpfully tells us that we need to add a channel route to our router file.
 
 ```console
-Add the channel to your `web/channels/user_socket.ex` handler, for example:
+Add the channel to your `lib/hello_web/channels/user_socket.ex` handler, for example:
 
-    channel "rooms:lobby", HelloPhoenix.RoomChannel
+    channel "rooms:lobby", HelloWeb.RoomChannel
 ```
 
-#### `mix phoenix.gen.presence`
+#### `mix phx.gen.presence`
 
-This task will generate a Presence tracker. The module name can be passed as an argument, 
+This task will generate a Presence tracker. The module name can be passed as an argument,
 `Presence` is used if no module name is passed.
 
 ```console
-$ mix phoenix.gen.presence Presence
-$ web/channels/presence.ex
+$ mix phx.gen.presence Presence
+$ lib/hello_web/channels/presence.ex
 ```
 
-#### `mix phoenix.routes`
+#### `mix phx.routes`
 
 This task has a single purpose, to show us all the routes defined for a given router. We saw it used extensively in the [Routing Guide](routing.html).
 
@@ -401,48 +390,42 @@ page_path  GET  /  TaskTester.PageController.index/2
 We can also specify an individual router if we have more than one for our application.
 
 ```console
-$ mix phoenix.routes TaskTester.Router
-page_path  GET  /  TaskTester.PageController.index/2
+$ mix phx.routes TaskTesterWeb.Router
+page_path  GET  /  TaskTesterWeb.PageController.index/2
 ```
 
-#### `mix phoenix.server`
+#### `mix phx.server`
 
 This is the task we use to get our application running. It takes no arguments at all. If we pass any in, they will be silently ignored.
 
 ```console
-$ mix phoenix.server
-[info] Running TaskTester.Endpoint with Cowboy on port 4000 (http)
+$ mix phx.server
+[info] Running TaskTesterWeb.Endpoint with Cowboy on port 4000 (http)
 ```
 It silently ignores our `DoesNotExist` argument.
 
 ```console
-$ mix phoenix.server DoesNotExist
-[info] Running TaskTester.Endpoint with Cowboy on port 4000 (http)
+$ mix phx.server DoesNotExist
+[info] Running TaskTesterWeb.Endpoint with Cowboy on port 4000 (http)
 ```
-Prior to the 0.8.x versions of Phoenix, we used the `phoenix.start` task to get our applications running. That task no longer exists, and attempting to run it will cause an error.
+If we would like to start our application and also have an `iex` session open to it, we can run the mix task within `iex` like this, `iex -S mix phx.server`.
 
 ```console
-$ mix phoenix.start
-** (Mix) The task phoenix.start could not be found
-```
-If we would like to start our application and also have an `iex` session open to it, we can run the mix task within `iex` like this, `iex -S mix phoenix.server`.
-
-```console
-$ iex -S mix phoenix.server
+$ iex -S mix phx.server
 Erlang/OTP 17 [erts-6.4] [source] [64-bit] [smp:8:8] [async-threads:10] [hipe] [kernel-poll:false] [dtrace]
 
-[info] Running TaskTester.Endpoint with Cowboy on port 4000 (http)
+[info] Running TaskTesterWeb.Endpoint with Cowboy on port 4000 (http)
 Interactive Elixir (1.0.4) - press Ctrl+C to exit (type h() ENTER for help)
 iex(1)>
 ```
 
-#### `mix phoenix.digest`
+#### `mix phx.digest`
 
 This task does two things, it creates a digest for our static assets and then compresses them.
 
 "Digest" here refers to an MD5 digest of the contents of an asset which gets added to the filename of that asset. This creates a sort of "fingerprint" for it. If the digest doesn't change, browsers and CDNs will use a cached version. If it does change, they will re-fetch the new version.
 
-Before we run this task let's inspect the contents of two directories in our hello_phoenix application.
+Before we run this task let's inspect the contents of two directories in our hello application.
 
 First `priv/static` which should look similar to this:
 
@@ -452,7 +435,7 @@ First `priv/static` which should look similar to this:
 ├── robots.txt
 ```
 
-And then `web/static/` which should look similar to this:
+And then `assets/` which should look similar to this:
 
 ```console
 ├── css
@@ -463,14 +446,14 @@ And then `web/static/` which should look similar to this:
 │   └── phoenix.js
 ```
 
-All of these files are our static assets. Now let's run the `mix phoenix.digest` task.
+All of these files are our static assets. Now let's run the `mix phx.digest` task.
 
 ```console
-$ mix phoenix.digest
+$ mix phx.digest
 Check your digested files at 'priv/static'.
 ```
 
-We can now do as the task suggests and inspect the contents of `priv/static` directory. We'll see that all files from `web/static/` have been copied over to `priv/static` and also each file now has a couple of versions. Those versions are:
+We can now do as the task suggests and inspect the contents of `priv/static` directory. We'll see that all files from `assets/` have been copied over to `priv/static` and also each file now has a couple of versions. Those versions are:
 
 * the original file
 * a compressed file with gzip
@@ -483,15 +466,15 @@ We can optionally determine which files should be gzipped by using the `:gzippab
 config :phoenix, :gzippable_exts, ~w(.js .css)
 ```
 
-> Note: We can specify a different output folder where `phoenix.digest` will put processed files. The first argument is the path where the static files are located.
+> Note: We can specify a different output folder where `phx.digest` will put processed files. The first argument is the path where the static files are located.
 ```console
-$ mix phoenix.digest priv/static -o www/public
+$ mix phx.digest priv/static -o www/public
 Check your digested files at 'www/public'.
 ```
 
 ## Ecto Specific Mix Tasks
 
-Newly generated Phoenix applications now include ecto and postgrex as dependencies by default (which is to say, unless we use the `--no-ecto` flag with `phoenix.new`). With those dependencies come mix tasks to take care of common ecto operations. Let's see which tasks we get out of the box.
+Newly generated Phoenix applications now include ecto and postgrex as dependencies by default (which is to say, unless we use the `--no-ecto` flag with `phx.new`). With those dependencies come mix tasks to take care of common ecto operations. Let's see which tasks we get out of the box.
 
 ```console
 $ mix help | grep -i ecto
@@ -512,7 +495,7 @@ Here's what it looks like in action.
 
 ```console
 $ mix ecto.create
-The database for HelloPhoenix.Repo has been created.
+The database for Hello.Repo has been created.
 ```
 
 If we happen to have another repo called `OurCustom.Repo` that we want to create the database for, we can run this.
@@ -526,10 +509,10 @@ There are a few things that can go wrong with `ecto.create`. If our Postgres dat
 
 ```console
 $ mix ecto.create
-** (Mix) The database for HelloPhoenix.Repo couldn't be created, reason given: psql: FATAL:  role "postgres" does not exist
+** (Mix) The database for Hello.Repo couldn't be created, reason given: psql: FATAL:  role "postgres" does not exist
 ```
 
-We can fix this by creating the "postgres" role in the `psql` console  with the permissions needed to log in and create a database.
+We can fix this by creating the "postgres" role in the `psql` console with the permissions needed to log in and create a database.
 
 ```console
 =# CREATE ROLE postgres LOGIN CREATEDB;
@@ -540,7 +523,7 @@ If the "postgres" role does not have permission to log in to the application, we
 
 ```console
 $ mix ecto.create
-** (Mix) The database for HelloPhoenix.Repo couldn't be created, reason given: psql: FATAL:  role "postgres" is not permitted to log in
+** (Mix) The database for Hello.Repo couldn't be created, reason given: psql: FATAL:  role "postgres" is not permitted to log in
 ```
 
 To fix this, we need to change the permissions on our "postgres" user to allow login.
@@ -554,7 +537,7 @@ If the "postgres" role does not have permission to create a database, we'll get 
 
 ```console
 $ mix ecto.create
-** (Mix) The database for HelloPhoenix.Repo couldn't be created, reason given: ERROR:  permission denied to create database
+** (Mix) The database for Hello.Repo couldn't be created, reason given: ERROR:  permission denied to create database
 ```
 
 To fix this, we need to change the permissions on our "postgres" user in the `psql` console  to allow database creation.
@@ -568,7 +551,7 @@ If the "postgres" role is using a password different from the default "postgres"
 
 ```console
 $ mix ecto.create
-** (Mix) The database for HelloPhoenix.Repo couldn't be created, reason given: psql: FATAL:  password authentication failed for user "postgres"
+** (Mix) The database for Hello.Repo couldn't be created, reason given: psql: FATAL:  password authentication failed for user "postgres"
 ```
 
 To fix this, we can change the password in the environment specific configuration file. For the development environment the password used can be found at the bottom of the `config/dev.exs` file.
@@ -579,7 +562,7 @@ This task will drop the database specified in our repo. By default it will look 
 
 ```console
 $ mix ecto.drop
-The database for HelloPhoenix.Repo has been dropped.
+The database for Hello.Repo has been dropped.
 ```
 
 If we happen to have another repo that we want to drop the database for, we can specify it with the `-r` flag.
@@ -601,7 +584,7 @@ $ mix ecto.gen.repo -r OurCustom.Repo
 * creating lib/our_custom/repo.ex
 * updating config/config.exs
 Don't forget to add your new repo to your supervision tree
-(typically in lib/hello_phoenix.ex):
+(typically in lib/hello.ex):
 
 worker(OurCustom.Repo, [])
 ```
@@ -610,9 +593,9 @@ Notice that this task has updated `config/config.exs`. If we take a look, we'll 
 
 ```elixir
 . . .
-config :hello_phoenix, OurCustom.Repo,
+config :hello, OurCustom.Repo,
 adapter: Ecto.Adapters.Postgres,
-database: "hello_phoenix_repo",
+database: "hello_repo",
 username: "user",
 password: "pass",
 hostname: "localhost"
@@ -621,17 +604,17 @@ hostname: "localhost"
 
 Of course, we'll need to change the login credentials to match what our database expects. We'll also need to change the config for other environments.
 
-We certainly should follow the instructions and add our new repo to our supervision tree. In our `HelloPhoenix` application, we would open up `lib/hello_phoenix.ex`, and add our repo as a worker to the `children` list.
+We certainly should follow the instructions and add our new repo to our supervision tree. In our `Hello` application, we would open up `lib/hello.ex`, and add our repo as a worker to the `children` list.
 
 ```elixir
 . . .
 children = [
   # Start the endpoint when the application starts
-  supervisor(HelloPhoenix.Endpoint, []),
+  supervisor(HelloWeb.Endpoint, []),
   # Start the Ecto repository
-  worker(HelloPhoenix.Repo, []),
+  worker(Hello.Repo, []),
   # Here you could define other workers and supervisors as children
-  # worker(HelloPhoenix.Worker, [arg1, arg2, arg3]),
+  # worker(Hello.Worker, [arg1, arg2, arg3]),
   worker(OurCustom.Repo, []),
 ]
 . . .
@@ -654,7 +637,7 @@ Notice that the migration's filename begins with a string representation of the 
 Let's take a look at the file `ecto.gen.migration` has generated for us at `priv/repo/migrations/20150318001628_add_comments_table.exs`.
 
 ```elixir
-defmodule HelloPhoenix.Repo.Migrations.AddCommentsTable do
+defmodule Hello.Repo.Migrations.AddCommentsTable do
   use Ecto.Migration
 
   def change do
@@ -696,7 +679,7 @@ Once we have our migration module ready, we can simply run `mix ecto.migrate` to
 
 ```console
 $ mix ecto.migrate
-[info] == Running HelloPhoenix.Repo.Migrations.AddCommentsTable.change/0 forward
+[info] == Running Hello.Repo.Migrations.AddCommentsTable.change/0 forward
 [info] create table comments
 [info] == Migrated in 0.1s
 ```
@@ -706,7 +689,7 @@ When we first run `ecto.migrate`, it will create a table for us called `schema_m
 Here's what the `schema_migrations` table looks like.
 
 ```console
-hello_phoenix_dev=# select * from schema_migrations;
+hello_dev=# select * from schema_migrations;
 version     |     inserted_at
 ----------------+---------------------
 20150317170448 | 2015-03-17 21:07:26
@@ -722,10 +705,10 @@ We can specify the number of pending migrations we would like to run with the `-
 
 ```console
 $ mix ecto.migrate -n 2
-[info] == Running HelloPhoenix.Repo.Migrations.CreatePost.change/0 forward
+[info] == Running Hello.Repo.Migrations.CreatePost.change/0 forward
 [info] create table posts
 [info] == Migrated in 0.0s
-[info] == Running HelloPhoenix.Repo.Migrations.AddCommentsTable.change/0 forward
+[info] == Running Hello.Repo.Migrations.AddCommentsTable.change/0 forward
 [info] create table comments
 [info] == Migrated in 0.0s
 ```
@@ -754,7 +737,7 @@ The `ecto.rollback` task will reverse the last migration we have run, undoing th
 
 ```console
 $ mix ecto.rollback
-[info] == Running HelloPhoenix.Repo.Migrations.AddCommentsTable.change/0 backward
+[info] == Running Hello.Repo.Migrations.AddCommentsTable.change/0 backward
 [info] drop table comments
 [info] == Migrated in 0.0s
 ```
@@ -771,10 +754,10 @@ The first thing we need to do is create a `mix/tasks` directory inside of `lib`.
 $ mkdir -p lib/mix/tasks
 ```
 
-Inside that directory, let's create a new file, `hello_phoenix.greeting.ex`, that looks like this.
+Inside that directory, let's create a new file, `hello.greeting.ex`, that looks like this.
 
 ```elixir
-defmodule Mix.Tasks.HelloPhoenix.Greeting do
+defmodule Mix.Tasks.Hello.Greeting do
   use Mix.Task
 
   @shortdoc "Sends a greeting to us from Hello Phoenix"
@@ -793,8 +776,8 @@ end
 
 Let's take a quick look at the moving parts involved in a working mix task.
 
-The first thing we need to do is name our module. In order to properly namespace it, we begin with `Mix.Tasks`. We'd like to invoke this as `mix hello_phoenix.greeting`, so we complete the module name with
-`HelloPhoenix.Greeting`.
+The first thing we need to do is name our module. In order to properly namespace it, we begin with `Mix.Tasks`. We'd like to invoke this as `mix hello.greeting`, so we complete the module name with
+`Hello.Greeting`.
 
 The `use Mix.Task` line clearly brings in functionality from mix that makes this module behave as a mix task.
 
@@ -810,15 +793,15 @@ Now that we have our task module defined, our next step is to compile the applic
 
 ```console
 $ mix compile
-Compiled lib/tasks/hello_phoenix.greeting.ex
-Generated hello_phoenix.app
+Compiled lib/tasks/hello.greeting.ex
+Generated hello.app
 ```
 
 Now our new task should be visible to `mix help`.
 
 ```console
 $ mix help | grep hello
-mix hello_phoenix.greeting # Sends a greeting to us from Hello Phoenix
+mix hello.greeting # Sends a greeting to us from Hello Phoenix
 ```
 
 Notice that `mix help` displays the text we put into the `@shortdoc` along with the name of our task.
@@ -826,7 +809,7 @@ Notice that `mix help` displays the text we put into the `@shortdoc` along with 
 So far, so good, but does it work?
 
 ```console
-$ mix hello_phoenix.greeting
+$ mix hello.greeting
 Greetings from the Hello Phoenix Application!
 ```
 

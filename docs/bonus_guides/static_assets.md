@@ -20,11 +20,11 @@ This will install Brunch and its plugins into the `node_modules` directory.
 
 The second important file is `brunch-config.js`. This is configuration for Brunch itself. Let's see how it configures asset management for Phoenix.
 
-According to this configuration Brunch will look for asset source files in `web/static`.
+According to this configuration Brunch will look for asset source files in `assets`.
 
-Files and directories in `web/static/assets` will be copied to the destination `priv/static/` without changes.  Only the assets included in the `:only` option to Plug.Static in endpoint.ex are mounted at the root path.  By default only js, css, images, and robots.txt are exposed.
+Files and directories in `assets/static` will be copied to the destination `priv/static/` without changes.  Only the assets included in the `:only` option to Plug.Static in endpoint.ex are mounted at the root path.  By default only js, css, images, and robots.txt are exposed.
 
-The `css` and `js` directories inside of `web/static` are a convention. Brunch will simply look for all files in `web/static` excluding `web/static/assets` and sort all found files by their type.
+The `css` and `js` directories inside of `assets` are a convention. Brunch will simply look for all files in `assets` excluding `assets/static` and sort all found files by their type.
 
 Processed and concatenated javascript will be put into `priv/static/js/app.js`, styles will be in `priv/static/css/app.css`.
 
@@ -46,11 +46,11 @@ and then building assets is as simple as
 brunch build
 ```
 
-In addition to Javascript files found in `web/static` the following source files will always be included into `priv/static/js/app.js`:
+In addition to Javascript files found in `assets` the following source files will always be included into `priv/static/js/app.js`:
 
 - Brunch's  "bootstrapper" code which provides module management and `require()` logic
-- Phoenix Channels JavaScript client (`deps/phoenix/web/static/js/phoenix.js`)
-- Some code from Phoenix.HTML (`deps/phoenix_html/web/static/js/phoenix_html.js`)
+- Phoenix Channels JavaScript client (`deps/phoenix/assets/js/phoenix.js`)
+- Some code from Phoenix.HTML (`deps/phoenix_html/assets/js/phoenix_html.js`)
 
 
 #### Modules
@@ -59,7 +59,7 @@ By default each Javascript file will be wrapped in a module, and for this code t
 
 Brunch in Phoenix is configured to use ES6, so we can use ES6 module syntax.
 
-Open `web/static/js/app.js` and add the following code:
+Open `assets/js/app.js` and add the following code:
 
 ```javascript
 export var App = {
@@ -84,7 +84,7 @@ module.exports = {
 };
 ```
 
-Open default application layout `web/templates/layout/app.html.eex`, find line
+Open default application layout `lib/hello_web/templates/layout/app.html.eex`, find line
 
 ```html
 <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
@@ -93,15 +93,15 @@ Open default application layout `web/templates/layout/app.html.eex`, find line
 and add the following code below:
 
 ```html
-<script>require("web/static/js/app").App.run()</script>
+<script>require("assets/static/js/app").App.run()</script>
 ```
 
 When we load this page we should see `Hello!` in the browser Javascript console.
 
-Take notice of `"web/static/js/app"`. This is not really a file name, this is the name of a module into which Brunch wrapped the code in `"web/static/js/app.js"`
+Take notice of `"assets/js/app"`. This is not really a file name, this is the name of a module into which Brunch wrapped the code in `"assets/js/app.js"`
 
 
-Let's add one more file `web/static/js/greeter.js`:
+Let's add one more file `assets/js/greeter.js`:
 
 ```javascript
 export var Greet = {
@@ -117,10 +117,10 @@ export var Bye = {
 }
 ```
 
-and modify `web/static/js/app.js` to require the new module:
+and modify `assets/js/app.js` to require the new module:
 
 ```javascript
-import { Greet } from "web/static/js/greeter";
+import { Greet } from "./greeter"
 
 export var App = {
   run: function(){
@@ -131,16 +131,16 @@ export var App = {
 
 Please reload the page. We should see `Hello!` in the browser Javascript console.
 
-Object `Bye` was not imported into package `"web/static/js/app"`, even though `Bye` is declared as exportable.
+Object `Bye` was not imported into package `"assets/js/app"`, even though `Bye` is declared as exportable.
 
-Please pay attention to how differently we required module `web/static/js/app.js` from the HTML page, and how we imported module `web/static/js/greeter` from `web/static/js/app`. This is because there is no preprocessing happening for HTML pages and we cannot use ES6 syntax.
+Please pay attention to how differently we required module `assets/js/app.js` from the HTML page, and how we imported module `assets/js/greeter` from `assets/js/app`. This is because there is no preprocessing happening for HTML pages and we cannot use ES6 syntax.
 
 
 #### Legacy Non-modularized Code
 
-If we have some legacy Javascript code which doesn't play well with module systems and/or we need global variables it defines, all we need to do is place our Javascript into directory `web/static/vendor`. Brunch will not wrap these files in modules.
+If we have some legacy Javascript code which doesn't play well with module systems and/or we need global variables it defines, all we need to do is place our Javascript into directory `assets/vendor`. Brunch will not wrap these files in modules.
 
-Let's test it. Create `web/static/vendor` if it does not exist yet and create file `web/static/vendor/meaning_of_life.js` with just one line in it:
+Let's test it. Create `assets/vendor` if it does not exist yet and create file `assets/vendor/meaning_of_life.js` with just one line in it:
 
 ```
 meaning_of_life = 42;
@@ -148,11 +148,11 @@ meaning_of_life = 42;
 
 Reload the page. Open the JS console and type `meaning_of_life`. This will return `42`. The variable is global.
 
-Important detail: according to the default configuration there is no ES6 support for files in `web/static/vendor`. Should we need to enable it, look for `plugins: { babel: { ignore:` in `brunch-config.js`.
+Important detail: according to the default configuration there is no ES6 support for files in `assets/vendor`. Should we need to enable it, look for `plugins: { babel: { ignore:` in `brunch-config.js`.
 
 #### JavaScript Libraries
 
-We may need to use a JavaScript library like jQuery or underscore in our application. As we mentioned above, we could copy the libraries into `web/static/vendor`. It may be a little bit easier to use `npm` to install it: We can simply add `"jquery": ">= 2.1"` to the dependencies in the `package.json` file in our projects root and run `npm install --save`. If the `npm` section in our `brunch-config.js` has a `whitelist` property, we will also need to add "jquery" to that. Now we can `import $ from "jquery"` in our module inside`app.js`.
+We may need to use a JavaScript library like jQuery or underscore in our application. As we mentioned above, we could copy the libraries into `assets/vendor`. It may be a little bit easier to use `npm` to install it: We can simply add `"jquery": ">= 2.1"` to the dependencies in the `package.json` file in our projects root and run `npm install --save`. If the `npm` section in our `brunch-config.js` has a `whitelist` property, we will also need to add "jquery" to that. Now we can `import $ from "jquery"` in our module inside`app.js`.
 
  If we already have code that assumes jQuery is available as a global variable, we’ll either need to migrate our code (which is a must-do in the long run), or leave jQuery as a non-wrapped codebase (which is acceptable as a transition hack).
 
@@ -229,7 +229,7 @@ There are many more nice tricks we can do with Brunch which are not covered in t
 
 - It is possible to have [multiple build targets](https://github.com/brunch/brunch-guide/blob/master/content/en/chapter04-starting-from-scratch.md#split-targets), for example, `app.js` for our code and `vendor.js` for third-party libraries
 - It is possible to control the order of concatenation of files. This might be necessary when working with JS files in `vendor` if they depend on each other.
-- Instead of manually copying third-party libraries into `web/static/vendor` we can [use Bower to download and install them](https://github.com/brunch/brunch-guide/blob/master/content/en/chapter05-using-third-party-registries.md).
+- Instead of manually copying third-party libraries into `assets/vendor` we can [use Bower to download and install them](https://github.com/brunch/brunch-guide/blob/master/content/en/chapter05-using-third-party-registries.md).
 
 
 Should we want one of these, please read [the Brunch documentation](http://brunch.io/docs/getting-started).
@@ -295,7 +295,7 @@ Create webpack configuration file `webpack.config.js`:
 
 ```javascript
 module.exports = {
-  entry: "./web/static/js/app.js",
+  entry: "./assets/js/app.js",
   output: {
     path: "./priv/static/js",
     filename: "app.js"

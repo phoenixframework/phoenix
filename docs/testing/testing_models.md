@@ -124,7 +124,7 @@ Finished in 0.4 seconds (0.2s on load, 0.1s on tests)
 Randomized with seed 780208
 ```
 
-It fails - which is exactly what it should do! We haven't written the code to make it pass yet. To do that, we need to remove the `:number_of_pets` attribute from our `validate_required/3` function in `web/models/user.ex`.
+It fails - which is exactly what it should do! We haven't written the code to make it pass yet. To do that, we need to remove the `:number_of_pets` attribute from our `validate_required/3` function in `lib/hello_web/models/user.ex`.
 
 ```elixir
 defmodule HelloPhoenix.User do
@@ -453,13 +453,13 @@ Remember to update your repository by running migrations:
     $ mix ecto.migrate
 ```
 
-Then we need to follow the instructions the task gives us and insert the `resources "/users", UserController` line in the router `web/router.ex`.
+Then we need to follow the instructions the task gives us and insert the `resources "/users", UserController` line in the router `lib/hello_web/router.ex`.
 
 ```elixir
-defmodule HelloPhoenix.Router do
+defmodule HelloWeb.Router do
   ...
 
-  scope "/", HelloPhoenix do
+  scope "/", HelloWeb do
     pipe_through :browser # Use the default browser stack
 
     get "/", PageController, :index
@@ -467,7 +467,7 @@ defmodule HelloPhoenix.Router do
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", HelloPhoenix do
+  # scope "/api", HelloWeb do
   #   pipe_through :api
   # end
 end

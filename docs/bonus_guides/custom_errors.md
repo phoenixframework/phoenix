@@ -1,6 +1,6 @@
 # Custom Errors
 
-Phoenix provides an `ErrorView`, `web/views/error_view.ex`, to render errors in our applications. The full module name will include the name of our application, as in `HelloPhoenix.ErrorView`.
+Phoenix provides an `ErrorView`, `lib/hello_web/views/error_view.ex`, to render errors in our applications. The full module name will include the name of our application, as in `Hello.ErrorView`.
 
 Phoenix will detect any 400 or 500 status level errors in our application and use the `render/2` function in our `ErrorView` to render an appropriate error template. We get default implementations for 404 and 500 HTML errors, but we can add any clauses to `render/2` that we might need. Any errors which don't match an existing clause of `render/2` will be caught by `template_not_found/2`.
 
@@ -9,8 +9,8 @@ We can also customize the implementation of any of these functions however we li
 Here's what the `ErrorView` looks like.
 
 ```elixir
-defmodule HelloPhoenix.ErrorView do
-  use HelloPhoenix.Web, :view
+defmodule Hello.ErrorView do
+  use Hello.Web, :view
 
   def render("404.html", _assigns) do
     "Page not found"
@@ -31,7 +31,7 @@ end
 > NOTE: In the development environment, this behavior will be overridden. Instead, we will get a really great debugging page. In order to see the `ErrorView` in action, we'll need to set `debug_errors:` to `false` in `config/dev.exs`. The server must be restarted for the changes to become effective.
 
 ```elixir
-config :hello_phoenix, HelloPhoenix.Endpoint,
+config :hello, HelloWeb.Endpoint,
   http: [port: 4000],
   debug_errors: false,
   code_reloader: true,

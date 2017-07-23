@@ -9,7 +9,7 @@ use Mix.Config
 
 . . .
 
-config :hello_phoenix, HelloPhoenix.Endpoint,
+config :hello, HelloWeb.Endpoint,
   http: [port: 8080],
   cache_static_manifest: "priv/static/cache_manifest.json"
 
@@ -23,21 +23,21 @@ use Mix.Config
 
 . . .
 
-config :hello_phoenix, HelloPhoenix.Endpoint,
+config :hello, HelloWeb.Endpoint,
   http: [port: {:system, "PORT"}],
   cache_static_manifest: "priv/static/cache_manifest.json"
 
 . . .
 ```
 
-Urls generated using a `_url` function from the `HelloPhoenix.Router.Helpers` module will include a url such as http://localhost:8080/users for `user_url(conn, :index)`. To fix this we can use the `url` option:
+Urls generated using a `_url` function from the `HelloWeb.Router.Helpers` module will include a url such as http://localhost:8080/users for `user_url(conn, :index)`. To fix this we can use the `url` option:
 
 ```elixir
 use Mix.Config
 
 . . .
 
-config :hello_phoenix, HelloPhoenix.Endpoint,
+config :hello, HelloWeb.Endpoint,
   http: [port: 8080],
   url: [host: "example.com", port: 80],
   cache_static_manifest: "priv/static/cache_manifest.json"

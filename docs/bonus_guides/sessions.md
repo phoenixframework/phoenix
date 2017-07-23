@@ -9,26 +9,26 @@ Phoenix uses Plug's cookie session storage by default. The two things that make 
 Here's the `config/config.exs` file from a newly generated Phoenix application, showing the `secret_key_base` set for us.
 
 ```elixir
-config :hello_phoenix, HelloPhoenix.Endpoint,
+config :hello, HelloWeb.Endpoint,
   url: [host: "localhost"],
   root: Path.dirname(__DIR__),
   secret_key_base: "some_crazy_long_string_phoenix_generated",
   debug_errors: false,
-  pubsub: [name: HelloPhoenix.PubSub,
+  pubsub: [name: Hello.PubSub,
            adapter: Phoenix.PubSub.PG2]
 ```
 
 Plug uses our `secret_key_base` value to sign each cookie to make sure it can't be tampered with.
 
-And here is the default `Plug.Session` configuration from `lib/hello_phoenix/endpoint.ex`.
+And here is the default `Plug.Session` configuration from `lib/hello_lib/hello_web/endpoint.ex`.
 
 ```elixir
-defmodule HelloPhoenix.Endpoint do
-  use Phoenix.Endpoint, otp_app: :hello_phoenix
+defmodule HelloWeb.Endpoint do
+  use Phoenix.Endpoint, otp_app: :hello
 . . .
   plug Plug.Session,
     store: :cookie,
-    key: "_hello_phoenix_key",
+    key: "_hello_key",
     signing_salt: "Jk7pxAMf"
 . . .
 end
@@ -37,7 +37,7 @@ end
 ## ETS
 Phoenix also supports server-side sessions via ETS. To configure ETS sessions, we need to create an ETS table when we start our application. We'll call ours `session`. We also need to re-configure `Plug.Session` in our endpoint.
 
-Here's how we would create an ETS table on application startup in `lib/hello_phoenix.ex`.
+Here's how we would create an ETS table on application startup in `lib/hello.ex`.
 
 ```elixir
 def start(_type, _args) do
@@ -48,11 +48,11 @@ def start(_type, _args) do
 
 In order to re-configure `Plug.Session`, we need to change the store, specify the name of the key for the ETS table, and specify the name of the table in which we are storing the sessions. The `secret_key_base` is not necessary if we are using ETS session storage.
 
-Here is how it looks in `lib/hello_phoenix/endpoint.ex`.
+Here is how it looks in `lib/hello/endpoint.ex`.
 
 ```elixir
-defmodule HelloPhoenix.Endpoint do
-  use Phoenix.Endpoint, otp_app: :hello_phoenix
+defmodule HelloWeb.Endpoint do
+  use Phoenix.Endpoint, otp_app: :hello
   . . .
   plug Plug.Session,
     store: :ets,
@@ -72,11 +72,11 @@ While we can use ETS for session storage, it might not be the best idea. This is
 
 With the proper configuration in place, we can access session data in our application's controllers.
 
-Here's a really quick example of putting a value into the session and getting it out again. We can change the `index` action of our generated `HelloPhoenix.PageController` at `web/controllers/page_controller.ex` to use `put_session/3`, `get_session/2`, and then render only the text that made the session round-trip.
+Here's a really quick example of putting a value into the session and getting it out again. We can change the `index` action of our generated `HelloWeb.PageController` at `lib/hello_web/controllers/page_controller.ex` to use `put_session/3`, `get_session/2`, and then render only the text that made the session round-trip.
 
 ```elixir
-defmodule HelloPhoenix.PageController do
-  use HelloPhoenix.Web, :controller
+defmodule HelloWeb.PageController do
+  use HelloWeb, :controller
 
   def index(conn, _params) do
     conn = put_session(conn, :message, "new stuff we just set in the session")

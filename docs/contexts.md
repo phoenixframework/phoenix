@@ -28,7 +28,7 @@ In order to run the context generators, we need to come up with a module name th
 Before we use the generators, we need to undo the changes we made in the Ecto guide, so we can give our user schema a proper home. Run these commands to undo our previous work:
 
 ```console
-$ rm lib/hello_phoenix/ ... TODO
+$ rm lib/hello/ ... TODO
 $ rm priv/repo/migrations/*_create_user.exs
 ```
 
@@ -36,9 +36,9 @@ Next, let's reset our database so we also discard the table we have just removed
 
 ```console
 $ mix ecto.reset
-Generated hello_phoenix app
-The database for HelloPhoenix.Repo has been dropped
-The database for HelloPhoenix.Repo has been created
+Generated hello app
+The database for Hello.Repo has been dropped
+The database for Hello.Repo has been created
 
 14:38:37.418 [info]  Already up
 ```
@@ -49,22 +49,22 @@ Now we're ready to create our accounts context. We'll use the `phx.gen.html` tas
 $ mix phx.gen.html Accounts User users name:string \
 username:string:unique
 
-* creating lib/hello_phoenix_web/controllers/user_controller.ex
-* creating lib/hello_phoenix_web/templates/user/edit.html.eex
-* creating lib/hello_phoenix_web/templates/user/form.html.eex
-* creating lib/hello_phoenix_web/templates/user/index.html.eex
-* creating lib/hello_phoenix_web/templates/user/new.html.eex
-* creating lib/hello_phoenix_web/templates/user/show.html.eex
-* creating lib/hello_phoenix_web/views/user_view.ex
-* creating test/hello_phoenix_web/controllers/user_controller_test.exs
-* creating lib/hello_phoenix/accounts/user.ex
+* creating lib/hello_web/controllers/user_controller.ex
+* creating lib/hello_web/templates/user/edit.html.eex
+* creating lib/hello_web/templates/user/form.html.eex
+* creating lib/hello_web/templates/user/index.html.eex
+* creating lib/hello_web/templates/user/new.html.eex
+* creating lib/hello_web/templates/user/show.html.eex
+* creating lib/hello_web/views/user_view.ex
+* creating test/hello_web/controllers/user_controller_test.exs
+* creating lib/hello/accounts/user.ex
 * creating priv/repo/migrations/20170629175236_create_users.exs
-* creating lib/hello_phoenix/accounts/accounts.ex
-* injecting lib/hello_phoenix/accounts/accounts.ex
-* creating test/hello_phoenix/accounts/accounts_test.exs
-* injecting test/hello_phoenix/accounts/accounts_test.exs
+* creating lib/hello/accounts/accounts.ex
+* injecting lib/hello/accounts/accounts.ex
+* creating test/hello/accounts/accounts_test.exs
+* injecting test/hello/accounts/accounts_test.exs
 
-Add the resource to your browser scope in lib/hello_phoenix_web/router.ex:
+Add the resource to your browser scope in lib/hello_web/router.ex:
 
     resources "/users", UserController
 
@@ -75,10 +75,10 @@ Remember to update your repository by running migrations:
 
 ```
 
-Phoenix generated the web files as expected in `lib/hello_phoenix_web/`. We can also see our context files were generated inside a `lib/hello_phoenix/accounts/` directory. We have an `Accounts` module to serve as the public API for account functionality, as well as an `Accounts.User` struct, which is an Ecto schema for casting and validating user account data. Phoenix also provided web and context tests for us, which we'll look at later. For now, let's follow the instructions and add the route according to the console instructions, in `lib/hello_phoenix_web/router.ex`:
+Phoenix generated the web files as expected in `lib/hello_web/`. We can also see our context files were generated inside a `lib/hello/accounts/` directory. We have an `Accounts` module to serve as the public API for account functionality, as well as an `Accounts.User` struct, which is an Ecto schema for casting and validating user account data. Phoenix also provided web and context tests for us, which we'll look at later. For now, let's follow the instructions and add the route according to the console instructions, in `lib/hello_web/router.ex`:
 
 ```elixir
-  scope "/", HelloPhoenixWeb do
+  scope "/", HelloWeb do
     pipe_through :browser # Use the default browser stack
 
     get "/", PageController, :index
@@ -91,7 +91,7 @@ With the new route in place, Phoenix reminds us to update our repo by running `m
 ```console
 $ mix ecto.migrate
 
-[info]  == Running HelloPhoenix.Repo.Migrations.CreateUsers.change/0 forward
+[info]  == Running Hello.Repo.Migrations.CreateUsers.change/0 forward
 
 [info]  create table users
 
@@ -122,14 +122,14 @@ If we follow the "Back" link, we get a list of all users, which should contain t
 
 That little `phx.gen.html` command packed a surprising punch. We got a lot of functionality out-of-the-box for creating, updating, and deleting users. This is far from a full-featured app, but remember, generators are first and foremost learning tools and a starting point for you to begin building real features. Code generation can't solve all your problems, but it will teach you the ins and outs of Phoenix and nudge you towards the proper mind-set when designing your application.
 
-Let's first checkout the `UserController` that was generated in `lib/hello_phoenix_web/controllers/user_controller.ex`:
+Let's first checkout the `UserController` that was generated in `lib/hello_web/controllers/user_controller.ex`:
 
 
 ```elixir
-defmodule HelloPhoenixWeb.UserController do
-  use HelloPhoenixWeb, :controller
+defmodule HelloWeb.UserController do
+  use HelloWeb, :controller
 
-  alias HelloPhoenix.Accounts
+  alias Hello.Accounts
 
   def index(conn, _params) do
     users = Accounts.list_users()
@@ -137,7 +137,7 @@ defmodule HelloPhoenixWeb.UserController do
   end
 
   def new(conn, _params) do
-    changeset = Accounts.change_user(%HelloPhoenix.Accounts.User{})
+    changeset = Accounts.change_user(%Hello.Accounts.User{})
     render(conn, "new.html", changeset: changeset)
   end
 
@@ -159,18 +159,18 @@ We've seen how controllers work in our [FIX ME controller guide](FIX_ME), so the
 
 In the case of our `create` action, when we successfully create a user, we use `Phoenix.Controller.push_flash/2` to show a success message, and then we redirect to the `user_path`'s show page. Conversely, if `Accounts.create_user/1` fails, we render our `"new.html"` template and pass along the Ecto changeset for the template to lift error messages from.
 
-Next, let's dig deeper and checkout our `Accounts` context in `lib/hello_phoenix/accounts/accounts.ex`:
+Next, let's dig deeper and checkout our `Accounts` context in `lib/hello/accounts/accounts.ex`:
 
 ```elixir
-defmodule HelloPhoenix.Accounts do
+defmodule Hello.Accounts do
   @moduledoc """
   The Accounts context.
   """
 
   import Ecto.Query, warn: false
-  alias HelloPhoenix.Repo
+  alias Hello.Repo
 
-  alias HelloPhoenix.Accounts.User
+  alias Hello.Accounts.User
 
   @doc """
   Returns the list of users.
@@ -214,13 +214,13 @@ Now we know how data is fetched, but how are users persisted? Let's take a look 
 
 There's more documentation than code here, but a couple things are important to highlight. First, we can see again that our Ecto Repo is used under-the-hood for database access. You probably also noticed the call to `User.changeset/2`. We talked about changesets before, and now we see them in action in our context.
 
-If we open up the `User` schema in `lib/hello_phoenix/accounts/user.ex`, it will look immediately familiar:
+If we open up the `User` schema in `lib/hello/accounts/user.ex`, it will look immediately familiar:
 
 ```elixir
-defmodule HelloPhoenix.Accounts.User do
+defmodule Hello.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
-  alias HelloPhoenix.Accounts.User
+  alias Hello.Accounts.User
 
 
   schema "users" do
@@ -252,10 +252,10 @@ For now, user credentials will contain only email information. Our first order o
 $ mix phx.gen.context Accounts Credential credentials \
 email:string:unique user_id:references:users
 
-* creating lib/hello_phoenix/accounts/credential.ex
+* creating lib/hello/accounts/credential.ex
 * creating priv/repo/migrations/20170629180555_create_credentials.exs
-* injecting lib/hello_phoenix/accounts/accounts.ex
-* injecting test/hello_phoenix/accounts/accounts_test.exs
+* injecting lib/hello/accounts/accounts.ex
+* injecting test/hello/accounts/accounts_test.exs
 
 Remember to update your repository by running migrations:
 
@@ -292,9 +292,9 @@ Next, let's migrate up our database as Phoenix instructed:
 $ mix ecto.migrate
 mix ecto.migrate
 Compiling 2 files (.ex)
-Generated hello_phoenix app
+Generated hello app
 
-[info]  == Running HelloPhoenix.Repo.Migrations.CreateCredentials.change/0 forward
+[info]  == Running Hello.Repo.Migrations.CreateCredentials.change/0 forward
 
 [info]  create table credentials
 
@@ -309,8 +309,8 @@ Before we integrate credentials in the web layer, we need to let our context kno
 
 
 ```elixir
-- alias HelloPhoenix.Accounts.User
-+ alias HelloPhoenix.Accounts.{User, Credential}
+- alias Hello.Accounts.User
++ alias Hello.Accounts.{User, Credential}
 
   schema "users" do
     field :name, :string
@@ -326,8 +326,8 @@ Before we integrate credentials in the web layer, we need to let our context kno
 We used `Ecto.Schema`'s `has_one` macro to let Ecto know how to associate our parent User to a child Credential. Next, let's add the relationships in the other direction in `accounts/credential.ex`:
 
 ```elixir
-- alias HelloPhoenix.Accounts.Credential
-+ alias HelloPhoenix.Accounts.{Credential, User}
+- alias Hello.Accounts.Credential
++ alias Hello.Accounts.{Credential, User}
 
 
   schema "credentials" do
@@ -358,7 +358,7 @@ We used the `belongs_to` macro to map our child relationship to the parent `User
 
 We rewrote the `list_users/0` and `get_user!/1` to preload the credential association whenever we fetch users. The Repo preload functionality fetches a schema's association data from the database, then places it inside the schema. When operating on a collection, such as our query in `list_users`, Ecto can efficiently preload the associations in a single query. This allows us to represent our `%Accounts.User{}` structs as always containing credentials without the caller having to worry about fetching the extra data.
 
-Next, let's expose our new feature to the web by adding the credentials input to our user form. Open up `lib/hello_phoenix_web/templates/user/form.html.eex` and key in the new credential form group above the submit button:
+Next, let's expose our new feature to the web by adding the credentials input to our user form. Open up `lib/hello_web/templates/user/form.html.eex` and key in the new credential form group above the submit button:
 
 
 ```eex
@@ -378,7 +378,7 @@ Next, let's expose our new feature to the web by adding the credentials input to
 
 We used `Phoenix.HTML`'s `inputs_for` function to add an associations nested fields within the parent form. Within the nested inputs, we rendered our credential's email field and included the `label` and `error_tag` helpers just like our other inputs.
 
-Next, let's show the user's email address in the user show template. Add the following code to `lib/hello_phoenix_web/templates/user/show.html.eex`:
+Next, let's show the user's email address in the user show template. Add the following code to `lib/hello_web/templates/user/show.html.eex`:
 
 ```eex
   ...
@@ -430,7 +430,7 @@ To start, let's think of a function name that describes what we want to accompli
 
     > user = Accounts.authenticate_by_email_password(email, password)
 
-That looks nice. A descriptive name that exposes the intent of our code is best. This function makes it crystal clear what purpose it serves, while allowing our caller to remain blissfully unaware of the internal details. Make the following additions to your `lib/hello_phoenix/accounts/accounts.ex` file:
+That looks nice. A descriptive name that exposes the intent of our code is best. This function makes it crystal clear what purpose it serves, while allowing our caller to remain blissfully unaware of the internal details. Make the following additions to your `lib/hello/accounts/accounts.ex` file:
 
 ```elixir
 def authenticate_by_email_password(email, _password) do
@@ -448,13 +448,13 @@ end
 
 We defined an `authenticate_by_email_password/2` function, which discards the password field for now, but you could integrate tools like [FIX ME guardian]() or [FIX ME comeonin]() as you continue building your application. All we need to do in our function is find the user with matching credentials and return the `%Accounts.User{}` struct in a `:ok` tuple, or an `{:error, :unauthorized}` value to let the caller know their authentication attempt has failed.
 
-Now that we can authenticate a user from our context, let's add a login page to our web layer. First create a new controller in `lib/hello_phoenix_web/controllers/session_controller.ex`:
+Now that we can authenticate a user from our context, let's add a login page to our web layer. First create a new controller in `lib/hello_web/controllers/session_controller.ex`:
 
 ```elixir
-defmodule HelloPhoenixWeb.SessionController do
-  use HelloPhoenixWeb, :controller
+defmodule HelloWeb.SessionController do
+  use HelloWeb, :controller
 
-  alias HelloPhoenix.Accounts
+  alias Hello.Accounts
 
   def new(conn, _) do
     render(conn, "new.html")
@@ -485,11 +485,11 @@ end
 
 We defined a `SessionController` to handle users signing in and out of the application. Our `new` action is responsible for simply rendering a "new session" form, which posts out to the create action of our controller. In `create`, we pattern match the form fields and call into our `Accounts.authenticate_by_email_password/2` that we just defined. If successful, we use `Plug.Conn.put_session/3` to place the authenticated user's ID in the session, and redirect to the home page with a successful welcome message. We also called `configure_session(conn, renew: true)` before redirecting to avoid session fixation attacks. If authentication fails, we add a flash error message, and redirect to the sigin-in page for the user to try again. To finish the controller, we support a `delete` action which simply calls `Plug.Conn.configure_session/2` to drop the session and redirect to the home page.
 
-Next, let's wire up our session routes in `lib/hello_phoenix_web/router.ex`:
+Next, let's wire up our session routes in `lib/hello_web/router.ex`:
 
 
 ```elixir
-  scope "/", HelloPhoenixWeb do
+  scope "/", HelloWeb do
     pipe_through :browser # Use the default browser stack
 
     get "/", PageController, :index
@@ -499,7 +499,7 @@ Next, let's wire up our session routes in `lib/hello_phoenix_web/router.ex`:
   end
 ```
 
-We used `resources` to generate a set of routes under the `"/session"` path. This is what we've done for other routes, except this time we also passed the `:only` option to limit which routes are generated, since we only need to support `:new`, `:create`, and `:delete` actions. We also used the `singleton: true` option, which defines all the RESTful routes, but does not require a resource ID to be passed along in the URL. We don't need an ID in the URL because our actions are always scoped to the "current" user in the system. The ID is always in the session. Before we finish our router, let's add an authentication plug to the router that will allow us to lock down certain routes after a user has used our new session controller to sign-in. Add the following function to `lib/hello_phoenix_web/router.ex`:
+We used `resources` to generate a set of routes under the `"/session"` path. This is what we've done for other routes, except this time we also passed the `:only` option to limit which routes are generated, since we only need to support `:new`, `:create`, and `:delete` actions. We also used the `singleton: true` option, which defines all the RESTful routes, but does not require a resource ID to be passed along in the URL. We don't need an ID in the URL because our actions are always scoped to the "current" user in the system. The ID is always in the session. Before we finish our router, let's add an authentication plug to the router that will allow us to lock down certain routes after a user has used our new session controller to sign-in. Add the following function to `lib/hello_web/router.ex`:
 
 
 ```elixir
@@ -511,22 +511,22 @@ We used `resources` to generate a set of routes under the `"/session"` path. Thi
         |> Phoenix.Controller.redirect(to: "/")
         |> halt()
       user_id ->
-        assign(conn, :current_user, HelloPhoenix.Accounts.get_user!(user_id))
+        assign(conn, :current_user, Hello.Accounts.get_user!(user_id))
     end
   end
 ```
 
-We defined an `authetnicate_user/2` plug in the router which simply uses `Plug.Conn.get_session/2` to check for a `:user_id` in the session. If we find one, it means a user has previously authenticated, and we call into `HelloPhoenix.Accounts.get_user!/` to place our `:current_user` into the connection assigns. If we don't have a session, we add a flash error message, redirect to the homepage, and criticially, we use `Plug.Conn.halt/1` to halt further plugs downstream from being invoked. We won't use this new plug quite yet, but it will be ready and waiting as we add authenticated routes in just a moment.
+We defined an `authetnicate_user/2` plug in the router which simply uses `Plug.Conn.get_session/2` to check for a `:user_id` in the session. If we find one, it means a user has previously authenticated, and we call into `Hello.Accounts.get_user!/` to place our `:current_user` into the connection assigns. If we don't have a session, we add a flash error message, redirect to the homepage, and criticially, we use `Plug.Conn.halt/1` to halt further plugs downstream from being invoked. We won't use this new plug quite yet, but it will be ready and waiting as we add authenticated routes in just a moment.
 
-Lastly, we need `SessionView` to render a template for our login form. Create a new file in `lib/hello_phoenix_web/views/session_view.ex:`
+Lastly, we need `SessionView` to render a template for our login form. Create a new file in `lib/hello_web/views/session_view.ex:`
 
 ```elixir
-defmodule HelloPhoenixWeb.SessionView do
-  use HelloPhoenixWeb, :view
+defmodule HelloWeb.SessionView do
+  use HelloWeb, :view
 end
 ```
 
-Next, add a new template in `lib/hello_phoenix_web/templates/session/new.html.eex:`
+Next, add a new template in `lib/hello_web/templates/session/new.html.eex:`
 
 ```eex
 <h1>Sign in</h1>
@@ -579,24 +579,24 @@ With our plan set, let's get to work. Run the following command to generate our 
 $ mix phx.gen.html CMS Page pages title:string body:text \
 views:integer --web CMS
 
-* creating lib/hello_phoenix_web/controllers/cms/page_controller.ex
-* creating lib/hello_phoenix_web/templates/cms/page/edit.html.eex
-* creating lib/hello_phoenix_web/templates/cms/page/form.html.eex
-* creating lib/hello_phoenix_web/templates/cms/page/index.html.eex
-* creating lib/hello_phoenix_web/templates/cms/page/new.html.eex
-* creating lib/hello_phoenix_web/templates/cms/page/show.html.eex
-* creating lib/hello_phoenix_web/views/cms/page_view.ex
-* creating test/hello_phoenix_web/controllers/cms/page_controller_test.exs
-* creating lib/hello_phoenix/cms/page.ex
+* creating lib/hello_web/controllers/cms/page_controller.ex
+* creating lib/hello_web/templates/cms/page/edit.html.eex
+* creating lib/hello_web/templates/cms/page/form.html.eex
+* creating lib/hello_web/templates/cms/page/index.html.eex
+* creating lib/hello_web/templates/cms/page/new.html.eex
+* creating lib/hello_web/templates/cms/page/show.html.eex
+* creating lib/hello_web/views/cms/page_view.ex
+* creating test/hello_web/controllers/cms/page_controller_test.exs
+* creating lib/hello/cms/page.ex
 * creating priv/repo/migrations/20170629195946_create_pages.exs
-* creating lib/hello_phoenix/cms/cms.ex
-* injecting lib/hello_phoenix/cms/cms.ex
-* creating test/hello_phoenix/cms/cms_test.exs
-* injecting test/hello_phoenix/cms/cms_test.exs
+* creating lib/hello/cms/cms.ex
+* injecting lib/hello/cms/cms.ex
+* creating test/hello/cms/cms_test.exs
+* injecting test/hello/cms/cms_test.exs
 
-Add the resource to your CMS :browser scope in lib/hello_phoenix_web/router.ex:
+Add the resource to your CMS :browser scope in lib/hello_web/router.ex:
 
-    scope "/cms", HelloPhoenixWeb.CMS, as: :cms do
+    scope "/cms", HelloWeb.CMS, as: :cms do
       pipe_through :browser
       ...
       resources "/pages", PageController
@@ -609,11 +609,11 @@ Remember to update your repository by running migrations:
 
 ```
 
-This time we passed the `--web` option to the generator. This tells phoenix what namespace to use for the web modules, such as controllers and views. This is useful when you have conflicting resources in the system, such as our existing `PageController`, as well as a way to naturally namespace paths and functionality of different features, like a CMS system. Phoenix instructed us to add a new `scope` to the router for a `"/cms"` path prefix. Let's copy paste the following into our `lib/hello_phoenix_web/router.ex`, but we'll make one modification to the `pipe_through` macro:
+This time we passed the `--web` option to the generator. This tells phoenix what namespace to use for the web modules, such as controllers and views. This is useful when you have conflicting resources in the system, such as our existing `PageController`, as well as a way to naturally namespace paths and functionality of different features, like a CMS system. Phoenix instructed us to add a new `scope` to the router for a `"/cms"` path prefix. Let's copy paste the following into our `lib/hello_web/router.ex`, but we'll make one modification to the `pipe_through` macro:
 
 
 ```
-  scope "/cms", HelloPhoenixWeb.CMS, as: :cms do
+  scope "/cms", HelloWeb.CMS, as: :cms do
     pipe_through [:browser, :authenticate_user]
 
     resources "/pages", PageController
@@ -627,9 +627,9 @@ We added the `:authenticate_user` plug to require a signed in user for all route
 $ mix ecto.migrate
 
 Compiling 12 files (.ex)
-Generated hello_phoenix app
+Generated hello app
 
-[info]  == Running HelloPhoenix.Repo.Migrations.CreatePages.change/0 forward
+[info]  == Running Hello.Repo.Migrations.CreatePages.change/0 forward
 
 [info]  create table pages
 
@@ -644,10 +644,10 @@ Before we create any pages, we need page authors. Let's run the `phx.gen.context
 $ mix phx.gen.context CMS Author authors bio:text role:string \
 genre:string user_id:references:users:unique
 
-* creating lib/hello_phoenix/cms/author.ex
+* creating lib/hello/cms/author.ex
 * creating priv/repo/migrations/20170629200937_create_authors.exs
-* injecting lib/hello_phoenix/cms/cms.ex
-* injecting test/hello_phoenix/cms/cms_test.exs
+* injecting lib/hello/cms/cms.ex
+* injecting test/hello/cms/cms_test.exs
 
 Remember to update your repository by running migrations:
 
@@ -708,7 +708,7 @@ Now let's migrate up:
 ```
 $ mix ecto.migrate
 
-[info]  == Running HelloPhoenix.Repo.Migrations.CreateAuthors.change/0 forward
+[info]  == Running Hello.Repo.Migrations.CreateAuthors.change/0 forward
 
 [info]  create table authors
 
@@ -716,7 +716,7 @@ $ mix ecto.migrate
 
 [info]  == Migrated in 0.0s
 
-[info]  == Running HelloPhoenix.Repo.Migrations.AddAuthorIdToPages.change/0 forward
+[info]  == Running Hello.Repo.Migrations.AddAuthorIdToPages.change/0 forward
 
 [info]  == Migrated in 0.0s
 ```
@@ -729,12 +729,12 @@ Dependencies in your software are often unavoidable, but we can do our best to l
 
 Our `Author` resource serves to keep the responsibilities of representing an author inside the CMS, but ultimately for an author to exist at all, an end-user represented by an `Accounts.User` must be present. Given this, our `CMS` context will have a data dependency on the `Accounts` context. With that in mind, we have two options. One is to expose APIs on the `Accounts` contexts that allows us to efficiently fetch user data for use in the CMS system, or we can use database joins to fetch the dependent data. Both are valid options given your tradeoffs and application size, but joining data from the database when you have a hard data dependency is just fine for a large class of applications. If you decide to break out coupled contexts into entirely separate applications and databases at a later time, you still gain the benefits of isolation. This is because your public context APIs will likely remain unchanged.
 
-Now that we know where our data dependencies exist, lets add our schema associations so we can tie pages to authors and authors to users. Make the following changes to `lib/hello_phoenix/cms/page.ex`:
+Now that we know where our data dependencies exist, lets add our schema associations so we can tie pages to authors and authors to users. Make the following changes to `lib/hello/cms/page.ex`:
 
 
 ```elixir
-- alias HelloPhoenix.CMS.Page
-+ alias HelloPhoenix.CMS.{Page, Author}
+- alias Hello.CMS.Page
++ alias Hello.CMS.{Page, Author}
 
 
   schema "pages" do
@@ -748,13 +748,13 @@ Now that we know where our data dependencies exist, lets add our schema associat
 ```
 
 We added a `belongs_to` relationships between pages and their authors.
-Next, let's add the association in the other direction in `lib/hello_phoenix/cms/author.ex`:
+Next, let's add the association in the other direction in `lib/hello/cms/author.ex`:
 
 
 ```elixir
 
-- alias HelloPhoenix.CMS.Author
-+ alias HelloPhoenix.CMS.{Author, Page}
+- alias Hello.CMS.Author
++ alias Hello.CMS.{Author, Page}
 
 
   schema "authors" do
@@ -764,7 +764,7 @@ Next, let's add the association in the other direction in `lib/hello_phoenix/cms
 
 -   field :user_id, :id
 +   has_many :pages, Page
-+   belongs_to :user, HelloPhoenix.Accounts.User
++   belongs_to :user, Hello.Accounts.User
 
     timestamps()
   end
@@ -772,11 +772,11 @@ Next, let's add the association in the other direction in `lib/hello_phoenix/cms
 
 We added the `has_many` association for author pages, and then introduced our data dependency on the `Accounts` context by wiring up the `belongs_to` association to our `Accounts.User` schema.
 
-With our associations in place, let's update our `CMS` context to require an author when creating or updating a page. We'll start off with data fetching changes. Open up your `CMS` context in `lib/hello_phoenix/cms/cms.ex` and replace the `list_pages/0`, and `get_page!/1` functions with the following definitions:
+With our associations in place, let's update our `CMS` context to require an author when creating or updating a page. We'll start off with data fetching changes. Open up your `CMS` context in `lib/hello/cms/cms.ex` and replace the `list_pages/0`, and `get_page!/1` functions with the following definitions:
 
 ```elixir
-  alias HelloPhoenix.CMS.{Page, Author}
-  alias HelloPhoenix.Accounts
+  alias Hello.CMS.{Page, Author}
+  alias Hello.Accounts
 
   def list_pages do
     Page
@@ -799,7 +799,7 @@ With our associations in place, let's update our `CMS` context to require an aut
 
 We started by rewriting the `list_pages/0` function to preload the associated author, user, and credential data from the database. Next, we rewrote `get_page!/1` and `get_author!/1` to also preload the necessary data.
 
-With our data access functions in place, let's turn our focus towards persistence. We can fetch authors alongside pages, but we haven't yet allowed authors to be persisted when we create or edit pages. Let's fix that. Open up `lib/hello_phoenix/cms/cms.ex` and make the following changes:
+With our data access functions in place, let's turn our focus towards persistence. We can fetch authors alongside pages, but we haven't yet allowed authors to be persisted when we create or edit pages. Let's fix that. Open up `lib/hello/cms/cms.ex` and make the following changes:
 
 
 ```elixir
@@ -829,7 +829,7 @@ Our CMS system requires an author to exist for any end-user before they publish 
 
 That wraps up our `CMS` changes. Now, let's update our web-layer to support our additions. Before we update our individual CMS controller actions, we need to make a couple additions to the `CMS.PageController` plug pipeline. First, we must ensure an author exists for end-users accessing the CMS, and we need to authorize access to page owners.
 
-Open up your generated `lib/hello_phoenix_web/controllers/cms/page_controller.ex` and make the following additions:
+Open up your generated `lib/hello_web/controllers/cms/page_controller.ex` and make the following additions:
 
 ```elixir
 
@@ -897,13 +897,13 @@ With our new plugs in place, we can now modify our `create`, `update`, and `dele
 
 We modified the `create` action to grab our `current_author` from the connection assigns, which was placed there by our `authenticate_user` plug in the router. We then passed our current author into `CMS.create_page` where it will be used to associate the author to the new page. Next, we changed the `update` action to pass the `conn.assigns.page` into `CMS.update_page/2`, rather than fetching it directly in the action. Since our `authorize_page` plug already fetched the page and placed it into the assigns, we can simply reference it here in the action. Similarly, we updated the `delete` action to pass the `conn.assigns.page` into the CMS rather than fetching the page in the action.
 
-To complete the web changes, let's display the author when showing a page. First, open up `lib/hello_phoenix_web/views/cms/page_view.ex` and add a helper function to handle formatting the author's name:
+To complete the web changes, let's display the author when showing a page. First, open up `lib/hello_web/views/cms/page_view.ex` and add a helper function to handle formatting the author's name:
 
 ```elixir
-defmodule HelloPhoenixWeb.CMS.PageView do
-  use HelloPhoenixWeb, :view
+defmodule HelloWeb.CMS.PageView do
+  use HelloWeb, :view
 
-  alias HelloPhoenix.CMS
+  alias Hello.CMS
 
   def author_name(%CMS.Page{author: author}) do
     author.user.name
@@ -911,7 +911,7 @@ defmodule HelloPhoenixWeb.CMS.PageView do
 end
 ```
 
-Next, let's open up `lib/hello_phoenix_web/templates/cms/page/show.html.eex` and make use of our new function:
+Next, let's open up `lib/hello_web/templates/cms/page/show.html.eex` and make use of our new function:
 
 ```eex
 + <li>
@@ -976,7 +976,7 @@ end
 
 We built a query for fetching the current page given its ID which we pass to `Repo.update_all`. Ecto's `Repo.update_all` allows us to perform batch updates against the database, and is perfect for atomically updating values, such as incrementing our views count. The result of the repo operation returns the number of updated records, along with the selected schema values specified by the `returning` option. When we receive the new page views, we use `put_in(page.views, views)` to place the new view count within the page.
 
-With our context function in place, let's make use of it in our CMS page controller. Update your `show` action in `lib/hello_phoenix_web/controllers/cms/page_controller.ex` to call our new function:
+With our context function in place, let's make use of it in our CMS page controller. Update your `show` action in `lib/hello_web/controllers/cms/page_controller.ex` to call our new function:
 
 
 ```elixir
@@ -1035,9 +1035,9 @@ This may accomplish what we want, but now we need to wire up the schema relation
 If you find yourself in similar situations where you feel your usecase is requiring you to create circular dependencies across contexts, it's a sign you need a new context in the system to handle these application requirements. In our case, what we really want is an interface that handles all requirements when a user is created or registers in our application. To handle this, we could create a `UserRegistration` context, which calls into both the `Accounts` and `CMS` APIs to create a user, then associate a CMS author. Not only would this allow our Accounts to remain as isolated as possible, it gives us a clear, obvious API to handle `UserRegistration` needs in the system. If you take this approach, you can also use tools like `Ecto.Multi` to handle transactions across different context operations without deeply coupling the internal database calls. Part of our `UserRegistration` API could look something like this:
 
 ```elixir
-defmodule HelloPhoenix.UserRegistration do
+defmodule Hello.UserRegistration do
   alias Ecto.Multi
-  alias HelloPhoenix.{Accounts, CMS}
+  alias Hello.{Accounts, CMS}
 
   def register_user(params) do
     Multi.new()
