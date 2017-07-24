@@ -857,7 +857,7 @@ Open up your generated `lib/hello_web/controllers/cms/page_controller.ex` and ma
   end
 ```
 
-    We added two new plugs to our `CMS.PageController`. The first plug, `:require_existing_author`, runs for every action in this controller. The `require_existing_author/2` plug calls into our `CMS.ensure_author_exists/1` and passes in the `current_user` from the connection assigns. After finding or creating the author, we use `Plug.Conn.assign/3` to place a `:current_author` key into the assigns for use downstream.
+We added two new plugs to our `CMS.PageController`. The first plug, `:require_existing_author`, runs for every action in this controller. The `require_existing_author/2` plug calls into our `CMS.ensure_author_exists/1` and passes in the `current_user` from the connection assigns. After finding or creating the author, we use `Plug.Conn.assign/3` to place a `:current_author` key into the assigns for use downstream.
 
 Next, we added an `:authorized_page` plug that makes use of plug's guard clause feature where we can limit the plug to only certain actions. The definition for our `authorize_page/2` plug first fetches the page from the connection params, then does an authorization check against the `current_author`. If our current author's ID matches the fetched page ID, we have verified the page's owner is accessing the page and we simply assign the `page` into the connection assigns to be used in the controller action. If our authorization fails, we add a flash error message, redirect to the page index screen, and then call `Plug.Conn.halt/1` to prevent the plug pipeline from continuing and invoking the controller action.
 
@@ -936,21 +936,21 @@ And it works! We now have two isolated contexts responsible for user accounts an
 
 ## Adding new CMS context functions
 
-Just like we extended our `Accounts` context with new application-specific functions like `Accounts.authenticate_by_email_password/2`, let's extend our generated CMS context with new functionality. For any CMS system, the ability to track how many times a page has been viewed is essential for popularity ranks. While we could try to use the existing `CMS.update_page` function, along the lines of `CMS.update_page(user, page, %{views: page.views + 1`}`, this would not only be prone to race conditions, but it would also require the caller to know too much about our CMS system. To see why the race condition exists, let's walk through the possible execution of events:
+Just like we extended our `Accounts` context with new application-specific functions like `Accounts.authenticate_by_email_password/2`, let's extend our generated CMS context with new functionality. For any CMS system, the ability to track how many times a page has been viewed is essential for popularity ranks. While we could try to use the existing `CMS.update_page` function, along the lines of `CMS.update_page(user, page, %{views: page.views + 1})`, this would not only be prone to race conditions, but it would also require the caller to know too much about our CMS system. To see why the race condition exists, let's walk through the possible execution of events:
 
 Intuitively, you would assume the following events:
 
-1. User 1 loads the page with count of 13
-2. User 1 saves the page with count of 14
-3. User 2 loads the page with count of 14
-4. User 2 loads the page with count of 15
+  1. User 1 loads the page with count of 13
+  2. User 1 saves the page with count of 14
+  3. User 2 loads the page with count of 14
+  4. User 2 loads the page with count of 15
 
 While in practice this would happen:
 
-1. User 1 loads the page with count of 13
-2. User 2 loads the page with count of 13
-3. User 1 saves the page with count of 14
-4. User 2 saves the page with count of 14
+  1. User 1 loads the page with count of 13
+  2. User 2 loads the page with count of 13
+  3. User 1 saves the page with count of 14
+  4. User 2 saves the page with count of 14
 
 The race conditions would make this an unreliable way to update the existing table since multiple callers may be updating out of date view values. There's a better way.
 
