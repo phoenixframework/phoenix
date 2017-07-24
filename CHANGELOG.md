@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.3.0-rc.2 (2017-07-24)
+## 1.3.0-rc.3 (2017-07-24)
 
 * Enhancements
   * [ChannelTest] Subscribe `connect` to `UserSocket.id` to support testing forceful disconnects
