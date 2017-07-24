@@ -1,15 +1,17 @@
 # Changelog
 
-## 1.3.0-dev
+## 1.3.0-rc.2 (2017-07-24)
 
 * Enhancements
   * [ChannelTest] Subscribe `connect` to `UserSocket.id` to support testing forceful disconnects
   * [Socket] Support static `:assigns` when defining channel routes
   * [Channel] Add V2 of wire channel wire protocol with resolved race conditions and compacted payloads
+  * [phx.new] Use new `lib/my_app` and `lib/my_app_web` directory structure
+  * [phx.new] Use new `MyAppWeb` alias convention for web modules
 
 * JavaScript client enhancements
   * Use V2 channel wire protocol support
-  *
+
 * JavaScript client bug fixes
   * Resolve race conditions when join timeouts occur on client, while server channel successfully joins
 

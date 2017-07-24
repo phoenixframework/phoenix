@@ -1,7 +1,7 @@
 defmodule Phoenix.Mixfile do
   use Mix.Project
 
-  @version "1.3.0-rc.2"
+  @version "1.3.0-rc.3"
 
   # TODO v1.4: Update to elixir 1.4 + new application inference
 
@@ -102,7 +102,8 @@ defmodule Phoenix.Mixfile do
       "views.md": [group: "Guides"],
       "templates.md": [group: "Guides"],
       "channels.md": [group: "Guides"],
-      "ecto_models.md": [group: "Guides"],
+      "ecto.md": [group: "Guides"],
+      "contexts.md": [group: "Guides"],
 
       "testing/testing.md": [group: "Testing"],
       "testing/testing_models.md": [group: "Testing"],
