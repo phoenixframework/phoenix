@@ -8,6 +8,7 @@
   * [Channel] Add V2 of wire channel wire protocol with resolved race conditions and compacted payloads
   * [phx.new] Use new `lib/my_app` and `lib/my_app_web` directory structure
   * [phx.new] Use new `MyAppWeb` alias convention for web modules
+  * [phx.gen.context] No longer prefix Ecto table name by context name
 
 * JavaScript client enhancements
   * Use V2 channel wire protocol support

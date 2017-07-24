@@ -5,7 +5,7 @@
   "gettext": {:hex, :gettext, "0.13.1", "5e0daf4e7636d771c4c71ad5f3f53ba09a9ae5c250e1ab9c42ba9edccc476263", [:mix], [], "hexpm"},
   "inch_ex": {:hex, :inch_ex, "0.5.6", "418357418a553baa6d04eccd1b44171936817db61f4c0840112b420b8e378e67", [:mix], [{:poison, "~> 1.5 or ~> 2.0 or ~> 3.0", [hex: :poison, repo: "hexpm", optional: false]}], "hexpm"},
   "mime": {:hex, :mime, "1.1.0", "01c1d6f4083d8aa5c7b8c246ade95139620ef8effb009edde934e0ec3b28090a", [:mix], [], "hexpm"},
-  "phoenix_guides": {:git, "https://github.com/phoenixframework/phoenix_guides.git", "dd52d251033cafddbb7fa0214da5385ec2698fa7", []},
+  "phoenix_guides": {:git, "https://github.com/phoenixframework/phoenix_guides.git", "f7b23b2e4095fd90710c25b6a99851ffee43f3cc", []},
   "phoenix_html": {:hex, :phoenix_html, "2.10.0", "69981c46f8c41fbc4d897c538ec2938534c127d6ff7f8f51a507e64138000d4a", [:mix], [{:plug, "~> 1.0", [hex: :plug, repo: "hexpm", optional: false]}], "hexpm"},
   "phoenix_pubsub": {:hex, :phoenix_pubsub, "1.0.1", "c10ddf6237007c804bf2b8f3c4d5b99009b42eca3a0dfac04ea2d8001186056a", [:mix], [], "hexpm"},
   "plug": {:hex, :plug, "1.4.0", "e81227c15eb166d2065efe42c902a16c15258002a709246d5fb2453bfb6c0a7d", [:mix], [{:cowboy, "~> 1.0.1 or ~> 1.1", [hex: :cowboy, repo: "hexpm", optional: true]}, {:mime, "~> 1.0", [hex: :mime, repo: "hexpm", optional: false]}], "hexpm"},
