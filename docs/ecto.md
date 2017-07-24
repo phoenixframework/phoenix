@@ -116,7 +116,7 @@ Indexes:
 
 Notice that we do get an `id` column as our primary key by default, even though it isn't listed as a field in our migration.
 
-#### The Repo
+## The Repo
 
 Our `Hello.Repo` module is the foundation we need to work with databases in a Phoenix application. Phoenix generated it for us in `lib/hello/repo.ex`, and this is what it looks like.
 
@@ -155,7 +155,7 @@ It begins by configuring our `otp_app` name and repo module. Then it sets the ad
 
 We also have similar configuration in `config/test.exs` and `config/prod.secret.exs` which can also be changed to match your actual credentials.
 
-#### The Schema
+## The Schema
 
 Ecto schemas are responsible for mapping Elixir values to external data sources, as well as mapping external data back into Elixir data-structures. We can also define relationships to other schemas in our applications. For example, our `User` schema might have many `Post`'s, and each `Post` would belong to a `User`. Ecto also handles data validation and type casting with changesets, which will discuss in a moment.
 
@@ -188,7 +188,7 @@ end
 
 Ecto schemas at their core are simply Elixir structs. Our `schema` block is what tells Ecto how to cast our `%User{}` struct fields to and from the external `"users`" table. Often, the ability to simply cast data to and from the database isn't enough and extra data validation is required. This is where Ecto Changesets come in. Let's dive in!
 
-#### Changesets and Validations
+## Changesets and Validations
 
 Changesets define a pipeline of transformations our data needs to undergo before it will be ready for our application to use. These transformations might include type-casting, user input validation, and filtering out any extraneous parameters. Often times, we'll use changesets to validate user input before writing it to the database. Ecto Repos are also changeset-aware, which allows them not only to refuse invalid data, but also perform the minimal database updates possible by inspecting the changeset to know which fields have changed.
 
@@ -366,7 +366,7 @@ iex> changeset.errors[:email]
 
 There are many more validations and transformations we can perform in a changeset. Please see the [Ecto Changeset documentation](http://hexdocs.pm/ecto/Ecto.Changeset.html) for more information.
 
-### Data Persistence
+## Data Persistence
 
 We've talked a lot about migrations and data-storage, but we haven't yet persisted any of our schemas or changesets. We briefly looked at our repo module in `lib/hello/repo.ex` earlier, now it's time to put it to use. Ecto Repo's are the interface into a storage system, be it a Database like PostgreSQL, or an external service like a RESTful API. The Repo module's purpose is to take care of the finer details of persistence and data querying for us. As the caller, we only care about fetching and persisting data. The Repo takes care of the underlying Database adapter communication, connection pooling, and error translation for database constraint violations.
 
