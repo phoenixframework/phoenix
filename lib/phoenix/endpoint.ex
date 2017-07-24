@@ -222,13 +222,6 @@ defmodule Phoenix.Endpoint do
   instrumenter module interested in that event will have to export
   `render_view/3`.
 
-  **Note**: since the configuration for the list of instrumenters is specified
-  at compile time, but it's used inside Phoenix itself, if you change this
-  configuration you'll have to recompile Phoenix manually:
-
-      $ mix deps.clean phoenix
-      $ mix compile
-
   ### Callbacks cycle
 
   The event callback sequence is:
