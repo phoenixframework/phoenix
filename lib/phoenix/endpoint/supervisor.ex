@@ -34,6 +34,28 @@ defmodule Phoenix.Endpoint.Supervisor do
         other -> raise ArgumentError, "expected init/2 callback to return {:ok, config}, got: #{inspect other}"
       end
 
+    # TODO: Remove as soon as v1.3 is out
+    if conf[:on_init] do
+      Logger.warn """
+      The :on_init configuration in #{inspect mod} introduced in Phoenix v1.3.0-rc
+      is no longer supported and won't be invoked. Instead, use the init/2 callback,
+      which is always called. In your config/prod.exs, instead of :on_init, set:
+
+          load_from_system_env: true
+
+      and then in #{inspect mod}:
+
+          def init(_key, config) do
+            if config[:load_from_system_env] do
+              port = System.get_env("PORT") || raise "expected the PORT environment variable to be set"
+              {:ok, Keyword.put(config, :http, [:inet6, port: port])}
+            else
+              {:ok, config}
+            end
+          end
+      """
+    end
+
     server? = server?(conf)
 
     if server? and conf[:code_reloader] do
