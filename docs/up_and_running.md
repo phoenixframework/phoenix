@@ -16,8 +16,6 @@ $ mix phx.new hello
 
 > A note about [Brunch.io](http://brunch.io/) before we begin: Phoenix will use Brunch.io for asset management by default. Brunch.io's dependencies are installed via the node package manager, not mix. Phoenix will prompt us to install them at the end of the `mix phx.new` task. If we say "no" at that point, and if we don't install those dependencies later with `npm install`, our application will raise errors when we try to start it, and our assets may not load properly. If we don't want to use Brunch.io at all, we can simply pass `--no-brunch` to `mix phx.new`.
 
-Now that we're ready, let's run `mix phx.new` with a relative path.
-
 ```console
 mix phx.new hello
 * creating hello/config/config.exs
