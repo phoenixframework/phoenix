@@ -57,7 +57,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
 
   ## Generating without a schema or context file
 
-  In some cases, you may wish to boostrap JSON views, controllers, and
+  In some cases, you may wish to bootstrap JSON views, controllers, and
   controller tests, but leave internal implementation of the context or schema
   to yourself. You can use the `--no-context` and `--no-schema` flags for
   file generation control.
