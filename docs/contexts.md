@@ -516,7 +516,7 @@ We used `resources` to generate a set of routes under the `"/session"` path. Thi
   end
 ```
 
-We defined an `authetnicate_user/2` plug in the router which simply uses `Plug.Conn.get_session/2` to check for a `:user_id` in the session. If we find one, it means a user has previously authenticated, and we call into `Hello.Accounts.get_user!/` to place our `:current_user` into the connection assigns. If we don't have a session, we add a flash error message, redirect to the homepage, and criticially, we use `Plug.Conn.halt/1` to halt further plugs downstream from being invoked. We won't use this new plug quite yet, but it will be ready and waiting as we add authenticated routes in just a moment.
+We defined an `authenticate_user/2` plug in the router which simply uses `Plug.Conn.get_session/2` to check for a `:user_id` in the session. If we find one, it means a user has previously authenticated, and we call into `Hello.Accounts.get_user!/` to place our `:current_user` into the connection assigns. If we don't have a session, we add a flash error message, redirect to the homepage, and criticially, we use `Plug.Conn.halt/1` to halt further plugs downstream from being invoked. We won't use this new plug quite yet, but it will be ready and waiting as we add authenticated routes in just a moment.
 
 Lastly, we need `SessionView` to render a template for our login form. Create a new file in `lib/hello_web/views/session_view.ex:`
 
