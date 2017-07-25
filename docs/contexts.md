@@ -284,7 +284,7 @@ Before we run our migrations, we need to make one change to the generated migrat
   end
 ```
 
-We changed the `:on_delete` option from `:nothing` to `:delete_all`, which will generate a foreign key constraint that will delete all credentials for a given user when the user is removed from the database. Likewise, we also passed `null: false` to disallow creating credentials without an existing user. By using a database constraint, we enforce data integrity and the database level, rather than relying on ad-hoc and error prone application logic.
+We changed the `:on_delete` option from `:nothing` to `:delete_all`, which will generate a foreign key constraint that will delete all credentials for a given user when the user is removed from the database. Likewise, we also passed `null: false` to disallow creating credentials without an existing user. By using a database constraint, we enforce data integrity at the database level, rather than relying on ad-hoc and error prone application logic.
 
 Next, let's migrate up our database as Phoenix instructed:
 
@@ -426,7 +426,7 @@ It's not much to look at yet, but it works! We added relationships within our co
 
 As we've seen, your context modules are dedicated modules that expose and group related functionality. Phoenix generates generic functions, such as `list_users` and `update_user`, but they only serve as a basis for you to grow your business logic and application from. To begin extending our Accounts context with real features, let's address an obvious issue of our application – we can create users with credentials in our system, but they have no way of signing in with those credentials. Building a complete user authentication system is beyond the scope of this guide, but let's get started with a basic email-only sign-in page that allows us to track a current user's session. This will let us focus on extending our `Accounts` context while giving you a good start to grow a complete authentication solution from.
 
-To start, let's think of a function name that describes what we want to accomplish. To authenticate a user by email address, we'll need a way to lookup that user and verify their entered credentials are valid. We can do this be exposing a single function on our `Accounts` context.
+To start, let's think of a function name that describes what we want to accomplish. To authenticate a user by email address, we'll need a way to lookup that user and verify their entered credentials are valid. We can do this by exposing a single function on our `Accounts` context.
 
     > user = Accounts.authenticate_by_email_password(email, password)
 
