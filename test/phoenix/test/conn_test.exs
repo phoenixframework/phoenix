@@ -160,6 +160,11 @@ defmodule Phoenix.Test.ConnTest do
     assert conn.cookies == %{"req_cookie"  => "req_cookie",
                              "over_cookie" => "pos_cookie",
                              "resp_cookie" => "resp_cookie"}
+
+    conn =
+      build_conn(:get, "http://localhost/", nil)
+      |> recycle()
+    assert conn.host == "localhost"
   end
 
   test "ensure_recycled/1" do
