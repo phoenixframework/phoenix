@@ -17,11 +17,6 @@ body, form, ul, table {
 /* Phoenix flash messages */
 .alert:empty { display: none; }
 
-/* Phoenix inline forms in links and buttons */
-form.link, form.button {
-  display: inline;
-}
-
 /* Custom page header */
 .header {
   border-bottom: 1px solid #e5e5e5;
