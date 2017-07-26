@@ -5,7 +5,7 @@ defmodule Mix.Tasks.Phx.DigestTest do
   import MixHelper
 
   test "fails when the given paths are invalid" do
-    Mix.Tasks.Phx.Digest.run(["invalid_path"])
+    Mix.Tasks.Phx.Digest.run(["invalid_path", "--no-deps-check"])
     assert_received {:mix_shell, :error, ["The input path \"invalid_path\" does not exist"]}
   end
 
@@ -13,8 +13,7 @@ defmodule Mix.Tasks.Phx.DigestTest do
   test "digests and compress files" do
     in_tmp @output_path, fn ->
       File.mkdir_p!("priv/static")
-
-      Mix.Tasks.Phx.Digest.run(["priv/static", "-o", @output_path])
+      Mix.Tasks.Phx.Digest.run(["priv/static", "-o", @output_path, "--no-deps-check"])
       assert_received {:mix_shell, :info, ["Check your digested files at \"mix_phoenix_digest\""]}
     end
   end
@@ -23,7 +22,7 @@ defmodule Mix.Tasks.Phx.DigestTest do
   test "digests and compress files without the input path" do
     in_tmp @output_path, fn ->
       File.mkdir_p!("priv/static")
-      Mix.Tasks.Phx.Digest.run(["-o", @output_path])
+      Mix.Tasks.Phx.Digest.run(["-o", @output_path, "--no-deps-check"])
       assert_received {:mix_shell, :info, ["Check your digested files at \"mix_phoenix_digest_no_input\""]}
     end
   end
@@ -32,8 +31,7 @@ defmodule Mix.Tasks.Phx.DigestTest do
   test "uses the input path as output path when no outputh path is given" do
     in_tmp @input_path, fn ->
       File.mkdir_p!(@input_path)
-
-      Mix.Tasks.Phx.Digest.run([@input_path])
+      Mix.Tasks.Phx.Digest.run([@input_path, "--no-deps-check"])
       assert_received {:mix_shell, :info, ["Check your digested files at \"input_path\""]}
     end
   end
