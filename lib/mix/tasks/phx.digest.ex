@@ -40,6 +40,7 @@ defmodule Mix.Tasks.Phx.Digest do
     input_path  = List.first(args) || @default_input_path
     output_path = opts[:output] || input_path
 
+    Mix.Task.run "deps.loadpaths", args
     {:ok, _} = Application.ensure_all_started(:phoenix)
 
     case Phoenix.Digester.compile(input_path, output_path) do
