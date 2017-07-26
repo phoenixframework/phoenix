@@ -35,12 +35,12 @@ defmodule Mix.Tasks.Phx.Digest do
   """
 
   @doc false
-  def run(args) do
-    {opts, args, _} = OptionParser.parse(args, aliases: [o: :output])
-    input_path  = List.first(args) || @default_input_path
+  def run(all_args) do
+    {opts, args, _} = OptionParser.parse(all_args, aliases: [o: :output])
+    input_path = List.first(args) || @default_input_path
     output_path = opts[:output] || input_path
 
-    Mix.Task.run "deps.loadpaths", args
+    Mix.Task.run "deps.loadpaths", all_args
     {:ok, _} = Application.ensure_all_started(:phoenix)
 
     case Phoenix.Digester.compile(input_path, output_path) do
