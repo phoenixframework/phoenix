@@ -14,6 +14,8 @@ matrix:
     - otp_release: 20.0
       elixir: 1.4
 sudo: false
+env:
+  - ELIXIR_ASSERT_TIMEOUT=2000
 before_script:
   - mix deps.get
   - nvm install 6.2 && nvm use 6.2
