@@ -13,11 +13,9 @@ matrix:
       elixir: 1.4
     - otp_release: 20.0
       elixir: 1.4
-services:
-  - redis-server
 sudo: false
 before_script:
-  - mix deps.get --only test
+  - mix deps.get
   - nvm install 6.2 && nvm use 6.2
 script:
   - mix test
@@ -25,5 +23,4 @@ script:
   - cd ../ && npm install && npm test
 after_script:
   - cd $TRAVIS_BUILD_DIR
-  - mix deps.get --only docs
   - MIX_ENV=docs mix inch.report
