@@ -57,7 +57,7 @@ defmodule Mix.Phoenix.Context do
   defp web_module do
     base = Mix.Phoenix.base()
     if String.ends_with?(base, "Web") do
-      base
+      Module.concat([base])
     else
       Module.concat(["#{base}Web"])
     end
