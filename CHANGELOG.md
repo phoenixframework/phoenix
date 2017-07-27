@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.5 (2017-7-27)
+
+* Enhancements
+  * Broaden `:plug` dependency versions to resolve warnings
+
 ## 1.2.4 (2017-5-15)
 
 * Enhancements
