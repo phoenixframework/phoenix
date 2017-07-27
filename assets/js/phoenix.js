@@ -700,6 +700,13 @@ export class Socket {
     this.channels = this.channels.filter(c => c.joinRef() !== channel.joinRef())
   }
 
+  /**
+   * Initiates a new channel for the given topic
+   *
+   * @param {string} topic
+   * @param {Object} chanParams - Paramaters for the channel
+   * @returns {Channel}
+   */
   channel(topic, chanParams = {}){
     let chan = new Channel(topic, chanParams, this)
     this.channels.push(chan)
