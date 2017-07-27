@@ -108,7 +108,6 @@ defmodule Phoenix.Mixfile do
       "testing/testing.md": [group: "Testing"],
       "testing/testing_models.md": [group: "Testing"],
       "testing/testing_controllers.md": [group: "Testing"],
-      "testing/testing_views.md": [group: "Testing"],
       "testing/testing_channels.md": [group: "Testing"],
 
       "deployment/deployment.md": [group: "Deployment"],
