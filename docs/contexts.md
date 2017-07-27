@@ -1,4 +1,4 @@
-# Writing Web-facing features with Contexts
+# Contexts
 
 So far, we've built pages, wired up controller actions through our routers, and learned how Ecto allows data to be validated and persisted. Now it's time to tie it all together by writing web-facing features that interact with our greater Elixir application.
 
@@ -7,7 +7,7 @@ When building a Phoenix project, we are first and formost building an Elixir app
 > How to read this guide:
 Using the context generators is a great way for beginners and intermediate Elixir programmers alike to get up and running quickly while thoughtfully designing their applications. This guide focuses on those readers. On the other hand, experienced developers may get more mileage from nuanced discussions around application design. For those readers, we include a frequently asked questions (FAQ) section at the end of the guide which brings different perspectives to some design decisions made throughout the guide. Beginners can safely skip the FAQ sections and return later when they're ready to dig deeper.
 
-## Thinking about design with Contexts
+## Thinking about design
 
 Contexts are dedicated modules that expose and group related functionality. For example, anytime you call Elixir's standard library, be it `Logger.info/1` or `Stream.map/2`, you are accessing different contexts. Internally, Elixir's logger is made of multiple modules, such as `Logger.Config` and `Logger.Backends`, but we never interact with those modules directly. We call the `Logger` module the context, exactly because it exposes and groups all of the logging functionality.
 
@@ -118,7 +118,7 @@ Username: chrismccord
 
 If we follow the "Back" link, we get a list of all users, which should contain the one we just created. Likewise, we can update this record or delete it. Now that we've seen how it works in the browser, it's time to take a look at the generated code.
 
-## Generators – A starting point
+## Starting With Generators
 
 That little `phx.gen.html` command packed a surprising punch. We got a lot of functionality out-of-the-box for creating, updating, and deleting users. This is far from a full-featured app, but remember, generators are first and foremost learning tools and a starting point for you to begin building real features. Code generation can't solve all your problems, but it will teach you the ins and outs of Phoenix and nudge you towards the proper mind-set when designing your application.
 
@@ -422,7 +422,7 @@ Email: chris@example.com
 
 It's not much to look at yet, but it works! We added relationships within our context complete with data integrity enforced by the database. Not bad. Let's keep building!
 
-## Adding new Account context functions
+## Adding Account functions
 
 As we've seen, your context modules are dedicated modules that expose and group related functionality. Phoenix generates generic functions, such as `list_users` and `update_user`, but they only serve as a basis for you to grow your business logic and application from. To begin extending our Accounts context with real features, let's address an obvious issue of our application – we can create users with credentials in our system, but they have no way of signing in with those credentials. Building a complete user authentication system is beyond the scope of this guide, but let's get started with a basic email-only sign-in page that allows us to track a current user's session. This will let us focus on extending our `Accounts` context while giving you a good start to grow a complete authentication solution from.
 
@@ -559,7 +559,7 @@ For logging out, we simply defined a form that sends the `DELETE` HTTP method to
 With authentication in place, we're in good shape to begin building out our next features.
 
 
-## Adding a CMS context with cross-context dependencies
+## Cross-context dependencies
 
 Now that we have the beginnings of user account and credential features, let begin work on the other main features of our application – managing page content. We want to support a content management system (CMS) where authors can create and edit pages of the site. While we could extend our Accounts context with CMS features, if we step back and think about the isolation of our application, we can see it doesn't fit. An accounts system shouldn't care at all about a CMS system. The responsibilities of our `Accounts` context is to manage users and their credentials, not handle page content changes. There's a clear need here for a separate context to  handle these responsibilities. Let's call it `CMS`.
 
@@ -723,7 +723,7 @@ $ mix ecto.migrate
 
 With our database ready, let's integrate authors and posts in the CMS system.
 
-## Cross-context data dependencies
+## Cross-context data
 
 Dependencies in your software are often unavoidable, but we can do our best to limit them where possible and lessen the maintenance burden when a dependency is necessary. So far, we've done a great job isolating the two main contexts of our application from each other, but now we have a necessary dependency to handle.
 
@@ -934,7 +934,7 @@ Author: Chris
 
 And it works! We now have two isolated contexts responsible for user accounts and content management. We coupled the content management system to accounts where necessary, while keeping each system isolated wherever possible. This gives us a great base to grow our application from.
 
-## Adding new CMS context functions
+## Adding CMS functions
 
 Just like we extended our `Accounts` context with new application-specific functions like `Accounts.authenticate_by_email_password/2`, let's extend our generated CMS context with new functionality. For any CMS system, the ability to track how many times a page has been viewed is essential for popularity ranks. While we could try to use the existing `CMS.update_page` function, along the lines of `CMS.update_page(user, page, %{views: page.views + 1})`, this would not only be prone to race conditions, but it would also require the caller to know too much about our CMS system. To see why the race condition exists, let's walk through the possible execution of events:
 
@@ -1004,8 +1004,9 @@ Good work!
 
 As we've seen, designing with contexts gives you a solid foundation to grow your application from. Using discrete, well-defined APIs that expose the intent of your system allows you to write more maintainable applications with reusable code.
 
+## FAQ
 
-## FAQ – Returning Ecto structures from context APIs
+### Returning Ecto structures from context APIs
 
 As we explored the context API, you might have wondered:
 
@@ -1014,7 +1015,7 @@ As we explored the context API, you might have wondered:
 The answer is we've decided to expose `%Ecto.Changeset{}` as a public *data-structure* in our application. We saw before how changesets allow us to track field changes, perform validations, and generate error messages. Its use here is de-coupled from the private Repo access and Ecto changeset API internals. We're exposing a data-structure that the caller understands which contains the rich information like field errors. Conveniently for us, the `phoenix_ecto` project implements the necessary `Phoenix.Param` and `Phoenix.FormData` protocols which know how to handle `%Ecto.Changeset{}`'s for things like form generation and error messages. You can also think about it as if you defined your own `%Accounts.Changes{}` struct for the same purpose and implemented the Phoenix protocols for the web-layer integration.
 
 
-## FAQ – Strategies for cross-context work-flows
+### Strategies for cross-context work-flows
 
 Our CMS context supports lazily creating authors in the system when a user decides to publish page content. This makes sense for our use-case because not all users of our system will be CMS authors. But what if our use-case was all users of our app are indeed authors?
 

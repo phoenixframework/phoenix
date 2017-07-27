@@ -1,4 +1,4 @@
-# Data Validation and Persistence with Ecto
+# Ecto
 
 Most web applications today need some form of data validation and persistence. In the Elixir ecosystem, we have Ecto to enable this. Before we jump into building database-backed web features, we're going to focus on the finer details of Ecto to give a solid base to build our web features on top of. Let's get started!
 
