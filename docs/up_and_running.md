@@ -8,28 +8,22 @@ At this point, we should have Elixir, Erlang, Hex, and the Phoenix archive insta
 
 Ok, we're ready to go!
 
-We can run `mix phx.new` from any directory in order to bootstrap our Phoenix application. Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello_phoenix`, either of these will work.
+We can run `mix phx.new` from any directory in order to bootstrap our Phoenix application. Phoenix will accept either an absolute or relative path for the directory of our new project. Assuming that the name of our application is `hello`, let's run the following command:
 
 ```console
-$ mix phx.new /Users/me/work/elixir-stuff/hello_phoenix
-```
-
-```console
-$ mix phx.new hello_phoenix
+$ mix phx.new hello
 ```
 
 > A note about [Brunch.io](http://brunch.io/) before we begin: Phoenix will use Brunch.io for asset management by default. Brunch.io's dependencies are installed via the node package manager, not mix. Phoenix will prompt us to install them at the end of the `mix phx.new` task. If we say "no" at that point, and if we don't install those dependencies later with `npm install`, our application will raise errors when we try to start it, and our assets may not load properly. If we don't want to use Brunch.io at all, we can simply pass `--no-brunch` to `mix phx.new`.
 
-Now that we're ready, let's run `mix phx.new` with a relative path.
-
 ```console
-mix phx.new hello_phoenix
-* creating hello_phoenix/config/config.exs
-* creating hello_phoenix/config/dev.exs
-* creating hello_phoenix/config/prod.exs
+mix phx.new hello
+* creating hello/config/config.exs
+* creating hello/config/dev.exs
+* creating hello/config/prod.exs
 ...
-* creating hello_phoenix/lib/hello_phoenix/web/views/layout_view.ex
-* creating hello_phoenix/lib/hello_phoenix/web/views/page_view.ex
+* creating hello/lib/hello_web/views/layout_view.ex
+* creating hello/lib/hello_web/views/page_view.ex
 
 Fetch and install dependencies? [Yn]
 ```
@@ -44,7 +38,7 @@ Fetch and install dependencies? [Yn] Y
 
 We are all set! Run your Phoenix application:
 
-    $ cd hello_phoenix
+    $ cd hello
     $ mix phx.server
 
 You can also run your app inside IEx (Interactive Elixir) as:
@@ -60,15 +54,15 @@ Once our dependencies are installed, the task will prompt us to change into our 
 
 Phoenix assumes that our PostgreSQL database will have a `postgres` user account with the correct permissions and a password of "postgres". If that isn't the case, please see the instructions for the [ecto.create](mix_tasks.html#ecto-specific-mix-tasks) mix task.
 
-Ok, let's give it a try. First, we'll `cd` into the `hello_phoenix/` directory we've just created:
+Ok, let's give it a try. First, we'll `cd` into the `hello/` directory we've just created:
 
-    $ cd hello_phoenix
+    $ cd hello
 
 Now we'll create our database:
 
 ```
 $ mix ecto.create
-The database for HelloPhoenix.Repo has been created
+The database for Hello.Repo has been created
 ```
 
 > Note: if this is the first time you are running this command, Phoenix may also ask to install Rebar. Go ahead with the installation as Rebar is used to build Erlang packages.
@@ -77,7 +71,7 @@ And finally, we'll start the Phoenix server:
 
 ```console
 $ mix phx.server
-[info] Running HelloPhoenix.Web.Endpoint with Cowboy using http://0.0.0.0:4000
+[info] Running HelloWeb.Endpoint with Cowboy using http://0.0.0.0:4000
 19:30:43 - info: compiled 6 files into 2 files, copied 3 in 2.1 sec
 ```
 
@@ -88,7 +82,7 @@ Fetch and install dependencies? [Yn] n
 
 We are almost there! The following steps are missing:
 
-    $ cd hello_phoenix
+    $ cd hello
     $ mix deps.get
     $ cd assets && npm install && node node_modules/brunch/bin/brunch build
 

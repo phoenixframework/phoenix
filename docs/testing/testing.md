@@ -52,8 +52,8 @@ We're going to look at test cases in detail throughout the testing guides, but l
 The first test case we'll look at is `test/controllers/page_controller_test.exs`.
 
 ```elixir
-defmodule HelloPhoenix.PageControllerTest do
-  use HelloPhoenix.ConnCase
+defmodule HelloWeb.PageControllerTest do
+  use HelloWeb.ConnCase
 
   test "GET /", %{conn: conn} do
     conn = get conn, "/"
@@ -71,38 +71,38 @@ The assertion actually tests three things - that we got an HTML response (by che
 The error view test case, `test/views/error_view_test.exs`, illustrates a few interesting things of its own.
 
 ```elixir
-defmodule HelloPhoenix.ErrorViewTest do
-  use HelloPhoenix.ConnCase, async: true
+defmodule HelloWeb.ErrorViewTest do
+  use HelloWeb.ConnCase, async: true
 
   # Bring render/3 and render_to_string/3 for testing custom views
   import Phoenix.View
 
   test "renders 404.html" do
-    assert render_to_string(HelloPhoenix.ErrorView, "404.html", []) ==
+    assert render_to_string(HelloWeb.ErrorView, "404.html", []) ==
            "Page not found"
   end
 
   test "render 500.html" do
-    assert render_to_string(HelloPhoenix.ErrorView, "500.html", []) ==
+    assert render_to_string(HelloWeb.ErrorView, "500.html", []) ==
            "Internal server error"
   end
 
   test "render any other" do
-    assert render_to_string(HelloPhoenix.ErrorView, "505.html", []) ==
+    assert render_to_string(HelloWeb.ErrorView, "505.html", []) ==
            "Internal server error"
   end
 end
 ```
 
-`HelloPhoenix.ErrorViewTest` sets `async: true` which means that each individual test will run in parallel, greatly speeding up the test run. This works because none of the tests access any resources which share state, such as a database. If we set `async: true` for a test case which does access a database, different test processes might modify the same data, corrupting the test results.
+`HelloWeb.ErrorViewTest` sets `async: true` which means that each individual test will run in parallel, greatly speeding up the test run. This works because none of the tests access any resources which share state, such as a database. If we set `async: true` for a test case which does access a database, different test processes might modify the same data, corrupting the test results.
 
 It also imports `Phoenix.View` in order to use the `render_to_string/3` function. With that, all the assertions can be simple string equality tests.
 
-The page view case, `test/views/page_view_test.exs`, does not contain any tests by default, but it is here for us when we need to add functions to our `HelloPhoenix.PageView` module.
+The page view case, `test/views/page_view_test.exs`, does not contain any tests by default, but it is here for us when we need to add functions to our `HelloWeb.PageView` module.
 
 ```elixir
-defmodule HelloPhoenix.PageViewTest do
-  use HelloPhoenix.ConnCase, async: true
+defmodule HelloWeb.PageViewTest do
+  use HelloWeb.ConnCase, async: true
 end
 ```
 
@@ -115,7 +115,7 @@ The test helper can also hold any testing-specific configuration our application
 ```elixir
 ExUnit.start
 
-Ecto.Adapters.SQL.Sandbox.mode(HelloPhoenix.Repo, :manual)
+Ecto.Adapters.SQL.Sandbox.mode(Hello.Repo, :manual)
 ```
 
 The files in `test/support` are there to help us get our modules into a testable state. They provide convenience functions for tasks like setting up a connection struct and finding errors on an Ecto changeset. We'll take a closer look at them in action throughout the rest of the testing guides.
@@ -162,7 +162,7 @@ Randomized with seed 220535
 
 And we can run a single test in a file by appending a colon and a line number to the filename.
 
-Let's say we only wanted to run the test for the way `HelloPhoenix.ErrorView` renders `500.html`. The test begins on line 12 of the file, so this is how we would do it.
+Let's say we only wanted to run the test for the way `HelloWeb.ErrorView` renders `500.html`. The test begins on line 12 of the file, so this is how we would do it.
 
 ```console
 $ mix test test/views/error_view_test.exs:12
@@ -188,8 +188,8 @@ Let's experiment with how this works.
 First, we'll add a `@moduletag` to `test/views/error_view_test.exs`.
 
 ```elixir
-defmodule HelloPhoenix.ErrorViewTest do
-  use HelloPhoenix.ConnCase, async: true
+defmodule HelloWeb.ErrorViewTest do
+  use HelloWeb.ConnCase, async: true
 
   @moduletag :error_view_case
   ...
@@ -199,8 +199,8 @@ end
 If we use only an atom for our module tag, ExUnit assumes that it has a value of `true`. We could also specify a different value if we wanted.
 
 ```elixir
-defmodule HelloPhoenix.ErrorViewTest do
-  use HelloPhoenix.ConnCase, async: true
+defmodule HelloWeb.ErrorViewTest do
+  use HelloWeb.ConnCase, async: true
 
   @moduletag error_view_case: "some_interesting_value"
   ...
@@ -288,8 +288,8 @@ Specifying values for a tag works the same way for `--exclude` as it does for `-
 We can tag individual tests as well as full test cases. Let's tag a few tests in the error view case to see how this works.
 
 ```elixir
-defmodule HelloPhoenix.ErrorViewTest do
-  use HelloPhoenix.ConnCase, async: true
+defmodule HelloWeb.ErrorViewTest do
+  use HelloWeb.ConnCase, async: true
 
   @moduletag :error_view_case
 
@@ -298,13 +298,13 @@ defmodule HelloPhoenix.ErrorViewTest do
 
   @tag individual_test: "yup"
   test "renders 404.html" do
-    assert render_to_string(HelloPhoenix.ErrorView, "404.html", []) ==
+    assert render_to_string(HelloWeb.ErrorView, "404.html", []) ==
            "Page not found"
   end
 
   @tag individual_test: "nope"
   test "render 500.html" do
-    assert render_to_string(HelloPhoenix.ErrorView, "500.html", []) ==
+    assert render_to_string(HelloWeb.ErrorView, "500.html", []) ==
            "Server internal error"
   end
   ...
@@ -392,7 +392,7 @@ Finally, we can configure ExUnit to exclude tags by default. Let's configure it 
 ```elixir
 ExUnit.start
 
-Ecto.Adapters.SQL.Sandbox.mode(HelloPhoenix.Repo, :manual)
+Ecto.Adapters.SQL.Sandbox.mode(Hello.Repo, :manual)
 
 ExUnit.configure(exclude: [error_view_case: true])
 ```
@@ -455,7 +455,7 @@ $ mix phoenix.gen.html User users name:string email:string bio:string number_of_
 
 ...
 
-Generated hello_phoenix app
+Generated hello app
 * creating priv/repo/migrations/20150519043351_create_user.exs
 * creating web/models/user.ex
 * creating test/models/user_test.exs
@@ -477,15 +477,15 @@ Remember to update your repository by running migrations:
     $ mix ecto.migrate
 ```
 
-Now let's follow the directions and add the new resources route to our `web/router.ex` file.
+Now let's follow the directions and add the new resources route to our `lib/hello_web/router.ex` file.
 
 ```elixir
-defmodule HelloPhoenix.Router do
-  use HelloPhoenix.Web, :router
+defmodule HelloWeb.Router do
+  use HelloWeb, :router
 
   ...
 
-  scope "/", HelloPhoenix do
+  scope "/", Hello do
     pipe_through :browser # Use the default browser stack
 
     get "/", PageController, :index
@@ -493,7 +493,7 @@ defmodule HelloPhoenix.Router do
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", HelloPhoenix do
+  # scope "/api", Hello do
   #   pipe_through :api
   # end
 end
@@ -503,17 +503,17 @@ When we run `mix test` again, we see that we already have sixteen tests!
 
 ```console
 $ mix test
-Compiled lib/hello_phoenix.ex
-Compiled web/models/user.ex
-Compiled web/views/page_view.ex
-Compiled web/views/layout_view.ex
-Compiled web/views/error_view.ex
-Compiled web/router.ex
-Compiled web/controllers/page_controller.ex
-Compiled web/controllers/user_controller.ex
-Compiled lib/hello_phoenix/endpoint.ex
-Compiled web/views/user_view.ex
-Generated hello_phoenix app
+Compiled lib/hello.ex
+Compiled lib/hello_web/models/user.ex
+Compiled lib/hello_web/views/page_view.ex
+Compiled lib/hello_web/views/layout_view.ex
+Compiled lib/hello_web/views/error_view.ex
+Compiled lib/hello_web/router.ex
+Compiled lib/hello_web/controllers/page_controller.ex
+Compiled lib/hello_web/controllers/user_controller.ex
+Compiled lib/hello_web/endpoint.ex
+Compiled lib/hellO_web/views/user_view.ex
+Generated hello app
 ................
 
 Finished in 0.5 seconds

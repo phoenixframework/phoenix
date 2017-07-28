@@ -10,14 +10,14 @@ The word "Channel" is really shorthand for a layered system with a number of com
 
 ### Socket Handlers
 
-Phoenix holds a single connection to the server and multiplexes your channel sockets over that one connection. Socket handlers, such as `lib/hello_phoenix/web/channels/user_socket.ex`, are modules that authenticate and identify a socket connection and allow you to set default socket assigns for use in all channels.
+Phoenix holds a single connection to the server and multiplexes your channel sockets over that one connection. Socket handlers, such as `lib/hello_web/channels/user_socket.ex`, are modules that authenticate and identify a socket connection and allow you to set default socket assigns for use in all channels.
 
 ### Channel Routes
 
-These are defined in Socket handlers, such as `lib/hello_phoenix/web/channels/user_socket.ex`, which makes them distinct from other routes. They match on the topic string and dispatch matching requests to the given Channel module. The star character `*` acts as a wildcard matcher, so in the following example route, requests for `sample_topic:pizza` and `sample_topic:oranges` would both be dispatched to the `SampleTopicChannel`.
+These are defined in Socket handlers, such as `lib/hello_web/channels/user_socket.ex`, which makes them distinct from other routes. They match on the topic string and dispatch matching requests to the given Channel module. The star character `*` acts as a wildcard matcher, so in the following example route, requests for `sample_topic:pizza` and `sample_topic:oranges` would both be dispatched to the `SampleTopicChannel`.
 
 ```elixir
-channel "sample_topic:*", HelloPhoenix.Web.SampleTopicChannel
+channel "sample_topic:*", HelloWeb.SampleTopicChannel
 ```
 
 ### Channels
@@ -52,7 +52,7 @@ The transport layer is where the rubber meets the road. The `Phoenix.Channel.Tra
 
 ### Transport Adapters
 
-The default transport mechanism is via WebSockets which will fall back to LongPolling if WebSockets are not available. Other transport adapters are possible, and we can write our own if we follow the adapter contract. Please see `Phoenix.Transports.WebSocket` for an example.
+The default transport mechanism is via WebSockets which will fall back to LongPolling if WebSockets are not available. Other transport adapters are possible, and we can write our own if we follow the adapter contract. Please see `Phoenix.TransportsWebSocket` for an example.
 
 ### Client Libraries
 
@@ -60,7 +60,7 @@ The default transport mechanism is via WebSockets which will fall back to LongPo
 
 + JavaScript
   - [phoenix.js](https://github.com/phoenixframework/phoenix/blob/v1.2/web/static/js/phoenix.js)
-  
+
 #### 3rd Party
 
 + Swift (iOS)
@@ -72,36 +72,36 @@ The default transport mechanism is via WebSockets which will fall back to LongPo
   - [dn-phoenix](https://github.com/jfis/dn-phoenix)
 
 ## Tying it all together
-Let's tie all these ideas together by building a simple chat application. After [generating a new Phoenix application](http://www.phoenixframework.org/docs/up-and-running) we'll see that the endpoint is already set up for us in `lib/hello_phoenix/endpoint.ex`:
+Let's tie all these ideas together by building a simple chat application. After [generating a new Phoenix application](http://www.phoenixframework.org/docs/up-and-running) we'll see that the endpoint is already set up for us in `lib/hello/endpoint.ex`:
 
 ```elixir
-defmodule HelloPhoenix.Endpoint do
-  use Phoenix.Endpoint, otp_app: :hello_phoenix
+defmodule Hello.Endpoint do
+  use Phoenix.Endpoint, otp_app: :hello
 
-  socket "/socket", HelloPhoenix.UserSocket
+  socket "/socket", Hello.UserSocket
   ...
 end
 ```
 
-In `lib/hello_phoenix/web/channels/user_socket.ex`, the `HelloPhoenix.UserSocket` we pointed to in our endpoint has already been created when we generated our application. We need to make sure messages get routed to the correct channel. To do that, we'll uncomment the "room:*" channel definition:
+In `lib/hello_web/channels/user_socket.ex`, the `Hello.UserSocket` we pointed to in our endpoint has already been created when we generated our application. We need to make sure messages get routed to the correct channel. To do that, we'll uncomment the "room:*" channel definition:
 
 ```elixir
-defmodule HelloPhoenix.UserSocket do
+defmodule Hello.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  channel "room:*", HelloPhoenix.Web.RoomChannel
+  channel "room:*", HelloWeb.RoomChannel
   ...
 ```
 
-Now, whenever a client sends a message whose topic starts with `"room:"`, it will be routed to our RoomChannel. Next, we'll define a `HelloPhoenix.Web.RoomChannel` module to manage our chat room messages.
+Now, whenever a client sends a message whose topic starts with `"room:"`, it will be routed to our RoomChannel. Next, we'll define a `HelloWeb.RoomChannel` module to manage our chat room messages.
 
 ### Joining Channels
 
-The first priority of your channels is to authorize clients to join a given topic. For authorization, we must implement `join/3` in `lib/hello_phoenix/web/channels/room_channel.ex`.
+The first priority of your channels is to authorize clients to join a given topic. For authorization, we must implement `join/3` in `lib/hello_web/channels/room_channel.ex`.
 
 ```elixir
-defmodule HelloPhoenix.Web.RoomChannel do
+defmodule HelloWeb.RoomChannel do
   use Phoenix.Channel
 
   def join("room:lobby", _message, socket) do
@@ -146,7 +146,7 @@ import socket from "./socket"
 
 Save the file and your browser should auto refresh, thanks to the Phoenix live reloader. If everything worked, we should see "Joined successfully" in the browser's JavaScript console. Our client and server are now talking over a persistent connection. Now let's make it useful by enabling chat.
 
-In `lib/hello_phoenix/web/templates/page/index.html.eex`, we'll replace the existing code with a container to hold our chat messages, and an input field to send them:
+In `lib/hello_web/templates/page/index.html.eex`, we'll replace the existing code with a container to hold our chat messages, and an input field to send them:
 
 ```html
 <div id="messages"></div>
@@ -209,7 +209,7 @@ We listen for the `"new_msg"` event using `channel.on`, and then append the mess
 We handle incoming events with `handle_in/3`. We can pattern match on the event names, like `"new_msg"`, and then grab the payload that the client passed over the channel. For our chat application, we simply need to notify all other `room:lobby` subscribers of the new message with `broadcast!/3`.
 
 ```elixir
-defmodule HelloPhoenix.Web.RoomChannel do
+defmodule HelloWeb.RoomChannel do
   use Phoenix.Channel
 
   def join("room:lobby", _message, socket) do

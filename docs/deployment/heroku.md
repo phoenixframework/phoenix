@@ -95,7 +95,7 @@ This works great except Heroku uses [environment variables](https://devcenter.he
 First, let's make sure our secret key is loaded from Heroku's environment variables instead of `config/prod.secret.exs` by adding a `secret_key_base` line  in `config/prod.exs`:
 
 ```elixir
-config :hello_phoenix, HelloPhoenix.Endpoint,
+config :hello, HelloWeb.Endpoint,
   http: [port: {:system, "PORT"}],
   url: [host: "example.com", port: 80],
   cache_static_manifest: "priv/static/cache_manifest.json",
@@ -106,7 +106,7 @@ Then, we'll add the production database configuration to `config/prod.exs`:
 
 ```elixir
 # Configure your database
-config :hello_phoenix, HelloPhoenix.Repo,
+config :hello, Hello.Repo,
   adapter: Ecto.Adapters.Postgres,
   url: System.get_env("DATABASE_URL"),
   pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
@@ -139,7 +139,7 @@ use Mix.Config
 
 ...
 
-config :hello_phoenix, HelloPhoenix.Endpoint,
+config :hello, HelloWeb.Endpoint,
   http: [port: {:system, "PORT"}],
   url: [scheme: "https", host: "mysterious-meadow-6277.herokuapp.com", port: 443],
   force_ssl: [rewrite_on: [:x_forwarded_proto]],
@@ -150,17 +150,17 @@ config :hello_phoenix, HelloPhoenix.Endpoint,
 config :logger, level: :info
 
 # Configure your database
-config :hello_phoenix, HelloPhoenix.Repo,
+config :hello, Hello.Repo,
   adapter: Ecto.Adapters.Postgres,
   url: System.get_env("DATABASE_URL"),
   pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
   ssl: true
 ```
 
-Finally, we need to decrease the timeout for the websocket transport in `web/channels/user_socket.ex`:
+Finally, we need to decrease the timeout for the websocket transport in `lib/hello_web/channels/user_socket.ex`:
 
 ```elixir
-defmodule HelloPhoenix.UserSocket do
+defmodule HelloWeb.UserSocket do
   use Phoenix.Socket
 
   ...
@@ -199,7 +199,7 @@ This value should be just under the number of available connections, leaving a c
 When running a mix task you will also want to limit its pool size like so:
 
 ```console
-$ heroku run "POOL_SIZE=2 mix hello_phoenix.task"
+$ heroku run "POOL_SIZE=2 mix hello.task"
 ```
 
 So that Ecto does not attempt to open more than the available connections.
@@ -386,7 +386,7 @@ Commit this file to the repository and try to push again to Heroku.
 
 ### Connection Timeout Error
 
-If you are constantly getting connection timeouts while running `heroku run` this could mean that your internet provider has blocked 
+If you are constantly getting connection timeouts while running `heroku run` this could mean that your internet provider has blocked
 port number 5000:
 
 ```console

@@ -5,7 +5,7 @@ Phoenix applications are configured to use PostgreSQL by default, but what if we
 If we are about to create a new application, configuring our application to use MySQL is easy. We can simply pass the `--database mysql` flag to `phoenix.new` and everything will be configured correctly.
 
 ```console
-$ mix phoenix.new hello_phoenix --database mysql
+$ mix phoenix.new hello --database mysql
 ```
 
 This will set up all the correct dependencies and configuration for us automatically. Once we install those dependencies with `mix deps.get`, we'll be ready to begin working with Ecto in our application.
@@ -17,7 +17,7 @@ To switch adapters, we need to remove the Postgrex dependency and add a new one 
 Let's open up our `mix.exs` file and do that now.
 
 ```elixir
-defmodule HelloPhoenix.Mixfile do
+defmodule Hello.Mixfile do
   use Mix.Project
 
   . . .
@@ -38,7 +38,7 @@ end
 We also need to remove the `:postgrex` app from our list of applications and substitute the `:mariaex` app instead. Let's do that in `mix.exs` as well.
 
 ```elixir
-defmodule HelloPhoenix.Mixfile do
+defmodule Hello.Mixfile do
   use Mix.Project
 
 . . .
@@ -53,14 +53,14 @@ end
 Next, we need to configure our new adapter. Let's open up our `config/dev.exs` file and do that.
 
 ```elixir
-config :hello_phoenix, HelloPhoenix.Repo,
+config :hello, Hello.Repo,
 adapter: Ecto.Adapters.MySQL,
 username: "root",
 password: "",
-database: "hello_phoenix_dev"
+database: "hello_dev"
 ```
 
-If we have an existing configuration block for our `HelloPhoenix.Repo`, we can simply change the values to match our new ones. The most important thing is to make sure we are using the MySQL adapter `adapter: Ecto.Adapters.MySQL,`.
+If we have an existing configuration block for our `Hello.Repo`, we can simply change the values to match our new ones. The most important thing is to make sure we are using the MySQL adapter `adapter: Ecto.Adapters.MySQL,`.
 
 We also need to configure the correct values in the `config/test.exs` and `config/prod.secret.exs` files as well.
 
@@ -74,14 +74,14 @@ With our new adapter installed and configured, we're ready to create our databas
 
 ```console
 $ mix ecto.create
-The database for HelloPhoenix.repo has been created.
+The database for Hello.repo has been created.
 ```
 
 We're also ready to run any migrations, or do anything else with Ecto that we might choose.
 
 ```console
 $ mix ecto.migrate
-[info] == Running HelloPhoenix.Repo.Migrations.CreateUser.change/0 forward
+[info] == Running Hello.Repo.Migrations.CreateUser.change/0 forward
 [info] create table users
 [info] == Migrated in 0.2s
 ```

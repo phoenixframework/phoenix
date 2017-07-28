@@ -35,7 +35,7 @@ The first thing we need to do is add the resources route to the `api` scope in t
 
 ```elixir
 . . .
-scope "/api", HelloPhoenix do
+scope "/api", Hello do
   pipe_through :api
 
   resources "/players", PlayerController
@@ -48,7 +48,7 @@ Now we'll need to make a few quick changes to the generated files.
 Let's take a look at the migration first, `priv/repo/migrations/20150908003815_create_player.exs`. We'll need to do two things. The first is to pass in a second argument - `primary_key: false` to the `table/2` function so that it won't create a primary_key. Then we'll need to pass `primary_key: true` to the `add/3` function for the name field to signal that it will be the primary_key instead.
 
 ```elixir
-defmodule HelloPhoenix.Repo.Migrations.CreatePlayer do
+defmodule Hello.Repo.Migrations.CreatePlayer do
   use Ecto.Migration
 
   def change do
@@ -63,11 +63,11 @@ defmodule HelloPhoenix.Repo.Migrations.CreatePlayer do
 end
 ```
 
-Let's move on to `web/models/player.ex` next. We'll need to add a module attribute `@primary_key {:name, :string, []}` describing our primary key as a string. Then we'll need to tell Phoenix how to convert our data structure to an ID that is used in the routes: `@derive {Phoenix.Param, key: :name}`. We'll also need to remove the `field :name, :string` line because this is our new primary key. If this seems unusual, recall that the schema doesn't list the `id` field in models where `id` is the primary key.
+Let's move on to `lib/hello_web/models/player.ex` next. We'll need to add a module attribute `@primary_key {:name, :string, []}` describing our primary key as a string. Then we'll need to tell Phoenix how to convert our data structure to an ID that is used in the routes: `@derive {Phoenix.Param, key: :name}`. We'll also need to remove the `field :name, :string` line because this is our new primary key. If this seems unusual, recall that the schema doesn't list the `id` field in models where `id` is the primary key.
 
 ```elixir
-defmodule HelloPhoenix.Player do
-  use HelloPhoenix.Web, :model
+defmodule Hello.Player do
+  use Hello.Web, :model
 
   @primary_key {:name, :string, []}
   @derive {Phoenix.Param, key: :name}
@@ -83,8 +83,8 @@ defmodule HelloPhoenix.Player do
 There's just one more thing we'll need to do, and that's remove the reference to `id: player.id,` in the `def render("player.json", %{player: player})` function body.
 
 ```elixir
-defmodule HelloPhoenix.PlayerView do
-  use HelloPhoenix.Web, :view
+defmodule Hello.PlayerView do
+  use Hello.Web, :view
 
   . . .
 
@@ -105,7 +105,7 @@ $mix ecto.migrate
 The resulting `players` table will look like this:
 
 ```sql
-hello_phoenix_dev=# \d players
+hello_dev=# \d players
                 Table "public.players"
    Column    |            Type             | Modifiers
 -------------+-----------------------------+-----------
@@ -127,7 +127,7 @@ In some cases, you will want two or more fields to make up the primary key. In
 this case, the syntax becomes:
 
 ```elixir
-defmodule HelloPhoenix.Repo.Migrations.CreatePlayer do
+defmodule Hello.Repo.Migrations.CreatePlayer do
   use Ecto.Migration
 
   def change do
@@ -142,8 +142,8 @@ defmodule HelloPhoenix.Repo.Migrations.CreatePlayer do
 and
 
 ```elixir
-defmodule HelloPhoenix.Player do
-  use HelloPhoenix.Web, :model
+defmodule Hello.Player do
+  use Hello.Web, :model
 
   @primary_key false
   schema "players" do
@@ -164,4 +164,3 @@ def index(conn, %{"first_name" => first_name, "last_name" => last_name}) do
   player = Repo.get_by!(Player, first_name: first_name, last_name: last_name)
   . . .
 ```
-

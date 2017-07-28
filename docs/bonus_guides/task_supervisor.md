@@ -8,20 +8,20 @@ continue running if the new process crashes. To do this, we use
 
 ### Starting Our Supervisor
 
-In `lib/hello_phoenix.ex`, where our app is started, we can see that we have
-`HelloPhoenix.Endpoint` as a supervisor, which is handling our web requests. If
-we want to hand off async tasks to from our `HelloPhoenix.Endpoint` supervisor
+In `lib/hello.ex`, where our app is started, we can see that we have
+`HelloWeb.Endpoint` as a supervisor, which is handling our web requests. If
+we want to hand off async tasks to from our `HelloWeb.Endpoint` supervisor
 to a `Task.Supervisor`, we need to start one here. Inside of the `children`
 list, add:
 
 ```elixir
-supervisor(Task.Supervisor, [[name: HelloPhoenix.TaskSupervisor]])
+supervisor(Task.Supervisor, [[name: Hello.TaskSupervisor]])
 ```
 
 Which gives us:
 
 ```elixir
-defmodule HelloPhoenix do
+defmodule Hello do
   use Application
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
@@ -31,31 +31,31 @@ defmodule HelloPhoenix do
 
     children = [
       # Start the endpoint when the application starts
-      supervisor(HelloPhoenix.Endpoint, []),
-      supervisor(Task.Supervisor, [[name: HelloPhoenix.TaskSupervisor]]),
+      supervisor(HelloWeb.Endpoint, []),
+      supervisor(Task.Supervisor, [[name: Hello.TaskSupervisor]]),
       # Start the Ecto repository
-      worker(HelloPhoenix.Repo, []),
+      worker(Hello.Repo, []),
       # Here you could define other workers and supervisors as children
-      # worker(HelloPhoenix.Worker, [arg1, arg2, arg3]),
+      # worker(Hello.Worker, [arg1, arg2, arg3]),
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
     # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: HelloPhoenix.Supervisor]
+    opts = [strategy: :one_for_one, name: Hello.Supervisor]
     Supervisor.start_link(children, opts)
   end
 
   # Tell Phoenix to update the endpoint configuration
   # whenever the application is updated.
   def config_change(changed, _new, removed) do
-    HelloPhoenix.Endpoint.config_change(changed, removed)
+    HelloWeb.Endpoint.config_change(changed, removed)
     :ok
   end
 end
 ```
 
 Now we have a `Task.Supervisor` that we can refer to as
-`HelloPhoenix.TaskSupervisor`, waiting to receive any tasks that we'd like to
+`Hello.TaskSupervisor`, waiting to receive any tasks that we'd like to
 offload from another process. Let's see what this does for us.
 
 ### Fire and Forget
@@ -73,7 +73,7 @@ Since the result of the new async process and the calling process are
 independent of each other, we need to make sure if something goes wrong in
 our async task, it doesn't crash the calling process. To do this, we need a
 separate supervisor that can supervise our async process. We can use the
-`HelloPhoenix.TaskSupervisor` that we created earlier for this, as we will see
+`Hello.TaskSupervisor` that we created earlier for this, as we will see
 below.
 
 Let's prove that we can send a task to our supervisor that is completely
@@ -86,12 +86,12 @@ request still finishes despite the error. We will also sleep for 2 seconds, so
 we can see that our calling process is not blocked by the async task runs.
 
 ```elixir
-defmodule HelloPhoenix.PageController do
-  use HelloPhoenix.Web, :controller
+defmodule Hello.PageController do
+  use Hello.Web, :controller
 
   def index(conn, _params) do
 
-    Task.Supervisor.async_nolink(HelloPhoenix.TaskSupervisor, fn ->
+    Task.Supervisor.async_nolink(Hello.TaskSupervisor, fn ->
       :timer.sleep(2000)
       1 / 0
     end)
@@ -102,7 +102,7 @@ end
 ```
 
 `async_nolink/2` accepts the name of a supervisor as the first argument, we
-passed in the name of the supervisor we specified in `lib/hello_phoenix.ex`.
+passed in the name of the supervisor we specified in `lib/hello.ex`.
 The next argument is an anonymous function that will become a task supervised
 by the passed in supervisor.  As the name suggested, this task will not be
 linked to the calling process, allowing our request to finish when our task

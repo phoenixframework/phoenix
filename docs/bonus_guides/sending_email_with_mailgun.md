@@ -45,7 +45,7 @@ For security reasons, it's important to not commit these values to a public sour
 One way is quick, but it requires us to set environment variables for our `:mailgun_domain` and `:mailgun_key` in all of our environments - development, production, and whichever other environments we might define. With the environment variables set, we can reference them in our `config/config.exs` file.
 
 ```elixir
-config :hello_phoenix,
+config :hello,
        mailgun_domain: System.get_env("MAILGUN_DOMAIN"),
        mailgun_key: System.get_env("MAILGUN_API_KEY")
 ```
@@ -71,7 +71,7 @@ The next step is to create the `config/config.secret.exs` file with our `mailgun
 ```elixir
 use Mix.Config
 
-config :hello_phoenix,
+config :hello,
        mailgun_domain: "https://api.mailgun.net/v3/sandbox-our-domain.mailgun.org",
        mailgun_key: "key-another-long-string"
 ```
@@ -90,13 +90,13 @@ Since our `config/config.secret.exs` file won't be in our repository, we'll need
 
 ### The Client Module
 
-In order for our application to interact with Mailgun, we'll need a client module. Let's define one here `lib/hello_phoenix/mailer.ex`. When we `use` the `Mailgun.Client` module in the second line, we pass our configuration to the `mailgun` package, and we import `mailgun`'s `send_email/1` function into our mailer.
+In order for our application to interact with Mailgun, we'll need a client module. Let's define one here `lib/hello/mailer.ex`. When we `use` the `Mailgun.Client` module in the second line, we pass our configuration to the `mailgun` package, and we import `mailgun`'s `send_email/1` function into our mailer.
 
 ```elixir
-defmodule HelloPhoenix.Mailer do
+defmodule Hello.Mailer do
   use Mailgun.Client,
-      domain: Application.get_env(:hello_phoenix, :mailgun_domain),
-      key: Application.get_env(:hello_phoenix, :mailgun_key)
+      domain: Application.get_env(:hello, :mailgun_domain),
+      key: Application.get_env(:hello, :mailgun_key)
 end
 ```
 
@@ -111,22 +111,22 @@ def send_welcome_text_email(email_address) do
   send_email to: email_address,
              from: "us@example.com",
              subject: "Welcome!",
-             text: "Welcome to HelloPhoenix!"
+             text: "Welcome to Hello!"
 end
 ```
 
 Sending this email is as easy as invoking the function with an email address, from wherever we want to in our application.
 
 ```elixir
-HelloPhoenix.Mailer.send_welcome_text_email("us@example.com")
+Hello.Mailer.send_welcome_text_email("us@example.com")
 ```
 
 Since we're just getting started, it would be great to test this out locally without hitting Mailgun. The `mailgun` package gives us a very easy way to do this. In the client module, we set the mode to `:test` and provide a path to a file for `mailgun` to write out the JSON representation of our emails.
 
-Let's add those to our client module at `lib/hello_phoenix/mailer.ex`.
+Let's add those to our client module at `lib/hello/mailer.ex`.
 
 ```elixir
-defmodule HelloPhoenix.Mailer do
+defmodule Hello.Mailer do
   use Mailgun.Client, domain: Application.get_env(:my_app, :mailgun_domain),
                       key: Application.get_env(:my_app, :mailgun_key),
                       mode: :test, # Alternatively use Mix.env while in the test environment.
@@ -140,7 +140,7 @@ Let's try this out from `iex`. We'll use `iex -S mix phoenix.server` in order to
 ```console
 $ iex -S mix phoenix.server
 . . .
-iex> HelloPhoenix.Mailer.send_welcome_text_email("us@example.com")
+iex> Hello.Mailer.send_welcome_text_email("us@example.com")
 {:ok, "OK"}
 ```
 
@@ -150,7 +150,7 @@ Now, we can see the results in the output file.
 
 ```console
 $ more /tmp/mailgun.json
-{"to":"us@example.com","text":"Welcome to HelloPhoenix!","subject":"Welcome!","from":"Mailgun Sandbox <postmaster@sandbox-our-domain.mailgun.org>"}
+{"to":"us@example.com","text":"Welcome to Hello!","subject":"Welcome!","from":"Mailgun Sandbox <postmaster@sandbox-our-domain.mailgun.org>"}
 ```
 
 We can send HTML emails as well. To do this, we can define a new function which uses an `:html` key instead of `:text`. The HTML value we use will need to be a string.
@@ -160,14 +160,14 @@ def send_welcome_html_email(email_address) do
   send_email to: email_address,
              from: "us@example.com",
              subject: "Welcome!",
-             html: "<strong>Welcome to HelloPhoenix</strong>"
+             html: "<strong>Welcome to Hello</strong>"
 end
 ```
 
 Notice that we have some duplication here in the value of the "from" lines in both functions. We can fix that with a module attribute.
 
 ```elixir
-defmodule HelloPhoenix.Mailer do
+defmodule Hello.Mailer do
   . . .
   @from "us@example.com"
   . . .
@@ -180,14 +180,14 @@ def send_welcome_text_email(email_address) do
   send_email to: email_address,
              from: @from,
              subject: "Welcome!",
-             text: "Welcome to HelloPhoenix!"
+             text: "Welcome to Hello!"
 end
 
 def send_welcome_html_email(email_address) do
   send_email to: email_address,
              from: @from,
              subject: "Welcome!",
-             html: "<strong>Welcome to HelloPhoenix</strong>"
+             html: "<strong>Welcome to Hello</strong>"
 end
 ```
 
@@ -196,7 +196,7 @@ When we call the `send_welcome_html_email/1` function, we get almost the same ou
 ```console
 $ iex -S mix phoenix.server
 
-iex> HelloPhoenix.Mailer.send_welcome_html_email("us@example.com")
+iex> Hello.Mailer.send_welcome_html_email("us@example.com")
 {:ok, "OK"}
 ```
 
@@ -204,7 +204,7 @@ Here's the output in `/tmp/mailgun.json`.
 
 ```console
 $ more /tmp/mailgun.json
-{"to":"them@example.com","subject":"Welcome!","html":"<strong>Welcome to HelloPhoenix Test</strong>","from":"Mailgun Sandbox <postmaster@sandbox-our-domain.mailgun.org>"}
+{"to":"them@example.com","subject":"Welcome!","html":"<strong>Welcome to Hello Test</strong>","from":"Mailgun Sandbox <postmaster@sandbox-our-domain.mailgun.org>"}
 ```
 
 For many email uses, it's good to have clients try to render an HTML version first, then fall back to plain text if they are unable to do so. Let's write a new `send_welcome_email/1` function which will supersede the other two welcome email functions. In it, we'll simply use both `:text` and `:html` options. This will produce a multi-part email with the text section separated from the HTML section. Each will appear in the order it is defined in the function.
@@ -214,8 +214,8 @@ def send_welcome_email(email_address) do
   send_email to: email_address,
              from: @from,
              subject: "Welcome!",
-             text: "Welcome to HelloPhoenix!",
-             html: "<strong>Welcome to HelloPhoenix</strong>"
+             text: "Welcome to Hello!",
+             html: "<strong>Welcome to Hello</strong>"
 end
 ```
 
@@ -224,23 +224,23 @@ When we call our new function, this is what we get.
 ```console
 $ more /tmp/mailgun.json
 
-{"to":"us@example.com","text":"Welcome to HelloPhoenix!","subject":"Welcome!","html":"<strong>Welcome to HelloPhoenix Test</strong>","from":"Mailgun Sandbox <postmaster@sandbox-our-domain.mailgun.org>"}
+{"to":"us@example.com","text":"Welcome to Hello!","subject":"Welcome!","html":"<strong>Welcome to Hello Test</strong>","from":"Mailgun Sandbox <postmaster@sandbox-our-domain.mailgun.org>"}
 ```
 
 Let's take our client out of test mode by removing the `:mode` and `:test_file_path` options.
 
 ```elixir
-defmodule HelloPhoenix.Mailer do
+defmodule Hello.Mailer do
   use Mailgun.Client,
-      domain: Application.get_env(:hello_phoenix, :mailgun_domain),
-      key: Application.get_env(:hello_phoenix, :mailgun_key)
+      domain: Application.get_env(:hello, :mailgun_domain),
+      key: Application.get_env(:hello, :mailgun_key)
   . . .
 ```
 
 When we restart the application and call our `send_welcome_email/1` function, we actually get a response back from Mailgun telling us our email has been queued.
 
 ```console
-iex> HelloPhoenix.Mailer.send_welcome_email("us@example.com")
+iex> Hello.Mailer.send_welcome_email("us@example.com")
 {:ok,
  "{\n  \"id\": \"<20150820050046.numbers.more_numbers@sandbox-our-domain.mailgun.org>\",\n  \"message\": \"Queued. Thank you.\"\n}"}
 ```
@@ -262,13 +262,13 @@ Content-Type: text/plain; charset="ascii"
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 
-Welcome to HelloPhoenix!
+Welcome to Hello!
 --ab2eaf529cf8442b93154d6e3d98896e
 Content-Type: text/html; charset="ascii"
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 
-<strong>Welcome to HelloPhoenix Test</strong>
+<strong>Welcome to Hello Test</strong>
 --ab2eaf529cf8442b93154d6e3d98896e--
 ```
 
@@ -276,7 +276,7 @@ Content-Transfer-Encoding: 7bit
 
 What we've written so far is fine, but for a real-world welcome email, we're going to need more than a few words of text or a single HTML tag. With more text or HTML, though, our `send_welcome_email/1` will become messy quite quickly. The solution is private functions which cordon off the complexity behind a descriptive name.
 
-In our `HelloPhoenix.Mailer` module, we can define a private `welcome_text/0` function which uses a heredoc to define a string literal for the text that makes up the body of our email.
+In our `Hello.Mailer` module, we can define a private `welcome_text/0` function which uses a heredoc to define a string literal for the text that makes up the body of our email.
 
 ```elixir
 . . .
@@ -296,7 +296,7 @@ def send_welcome_email(email_address) do
              from: @from,
              subject: "Welcome!",
              text: welcome_text,
-             html: "<strong>Welcome to HelloPhoenix</strong>"
+             html: "<strong>Welcome to Hello</strong>"
 end
 ```
 
@@ -308,31 +308,31 @@ def send_welcome_email(email_address) do
              from: @from,
              subject: "Welcome!",
              text: welcome_text,
-             html: Phoenix.View.render_to_string(HelloPhoenix.EmailView, "welcome.html", %{})
+             html: Phoenix.View.render_to_string(Hello.EmailView, "welcome.html", %{})
 end
 ```
 
 To make this example work, we'll need the same components that we would use to render any template in Phoenix.
 
-First, we'll need a basic `HelloPhoenix.EmailView` defined at `web/views/email_view.ex`.
+First, we'll need a basic `Hello.EmailView` defined at `lib/hello_web/views/email_view.ex`.
 
 ```elixir
-defmodule HelloPhoenix.EmailView do
-  use HelloPhoenix.Web, :view
+defmodule Hello.EmailView do
+  use Hello.Web, :view
 end
 ```
 
-We'll also need a new `email` directory in `web/templates` with a `welcome.html.eex` template in it.
+We'll also need a new `email` directory in `lib/hello_web/templates` with a `welcome.html.eex` template in it.
 
 ```html
 <div class="jumbotron">
-  <h2>Welcome to HelloPhoenix!</h2>
+  <h2>Welcome to Hello!</h2>
 </div>
 ```
 
 > Note: If we need to use any path or url helpers in our template, we will need to pass the endpoint instead of a connection struct for the first argument. This is because we won't be in the context of a request, so `@conn` won't be available. For example, we will need to write this
 ```elixir
-alias HelloPhoenix
+alias Hello
 Router.Helpers.page_url(Endpoint, :index)
 ```
 instead of this.
@@ -347,7 +347,7 @@ We can put the render call behind a private function as well, just as we did wit
 ```elixir
 . . .
 defp welcome_html do
-  Phoenix.View.render_to_string(HelloPhoenix.EmailView, "welcome.html", %{})
+  Phoenix.View.render_to_string(Hello.EmailView, "welcome.html", %{})
 end
 . . .
 ```
@@ -385,7 +385,7 @@ If we put our mailer client back in test mode, restart our application, and call
 
 ```console
 more mailgun.json
-{"to":"us@example.com","text":"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n","subject":"Welcome!","html":"<div class=\"jumbotron\">\n  <h2>Welcome to HelloPhoenix!</h2>\n</div>","from":"Mailgun Sandbox <postmaster@sandbox-our-domain.mailgun.org>","attachments":[{"path":"priv/static/images/phoenix.png","filename":"phoenix.png"}]}
+{"to":"us@example.com","text":"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n","subject":"Welcome!","html":"<div class=\"jumbotron\">\n  <h2>Welcome to Hello!</h2>\n</div>","from":"Mailgun Sandbox <postmaster@sandbox-our-domain.mailgun.org>","attachments":[{"path":"priv/static/images/phoenix.png","filename":"phoenix.png"}]}
 ```
 
 Then we can take the mailer out of test mode and actually send it.
