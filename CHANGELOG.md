@@ -1,23 +1,6 @@
 # Changelog
 
-## 1.3.0-rc.3 (2017-07-24)
-
-* Enhancements
-  * [ChannelTest] Subscribe `connect` to `UserSocket.id` to support testing forceful disconnects
-  * [Socket] Support static `:assigns` when defining channel routes
-  * [Channel] Add V2 of wire channel wire protocol with resolved race conditions and compacted payloads
-  * [phx.new] Use new `lib/my_app` and `lib/my_app_web` directory structure
-  * [phx.new] Use new `MyAppWeb` alias convention for web modules
-  * [phx.gen.context] No longer prefix Ecto table name by context name
-
-* JavaScript client enhancements
-  * Use V2 channel wire protocol support
-
-* JavaScript client bug fixes
-  * Resolve race conditions when join timeouts occur on client, while server channel successfully joins
-
-
-## 1.3.0-rc.2 (2017-05-15)
+## 1.3.0 (2017-07-28)
 
 See these [`1.2.x` to `1.3.x` upgrade instructions](https://gist.github.com/chrismccord/71ab10d433c98b714b75c886eff17357) to bring your existing apps up to speed.
 
@@ -30,11 +13,16 @@ See these [`1.2.x` to `1.3.x` upgrade instructions](https://gist.github.com/chri
   * [Channel] Add ability to configure channel event logging with `:log_join` and `:log_handle_in` options
   * [Channel] Warn on unhandled `handle_info/2` messages
   * [Channel] Channels now distinguish from graceful exits and application restarts, allowing clients to enter error mode and reconnected after cold deploys.
+  * [Channel] Add V2 of wire channel wire protocol with resolved race conditions and compacted payloads
+  * [ChannelTest] Subscribe `connect` to `UserSocket.id` to support testing forceful disconnects
+  * [Socket] Support static `:assigns` when defining channel routes
   * [Router] Document `match` support for matching on any HTTP method with the special `:*` argument
   * [Router] Populate `conn.path_params` with path parameters for the route
   * [ConnTest] Add `redirected_params/1` to return the named params matched in the router for the redirected URL
   * [Digester] Add `mix phx.digest.clean` to remove old versions of compiled assets
   * [phx.new] Add Erlang 20 support in `phx.new` installer archive
+  * [phx.new] Use new `lib/my_app` and `lib/my_app_web` directory structure
+  * [phx.new] Use new `MyAppWeb` alias convention for web modules
 
 * Bug Fixes
   * [Controller] Harden local redirect against arbitrary URL redirection
@@ -44,9 +32,13 @@ See these [`1.2.x` to `1.3.x` upgrade instructions](https://gist.github.com/chri
   * [Generator] All `phoenix.*` mix tasks have been deprecated in favor of new `phx.*` tasks
 
 * JavaScript client enhancements
+  * Use V2 channel wire protocol support
   * Add ability to pass `encode` and `decode` functions to socket constructor for custom encoding and decoding of outgoing and incoming messages.
   * Detect heartbeat timeouts on client to handle ungraceful connection loss for faster socket error detection
   * Add support for AMD/RequireJS
+
+* JavaScript client bug fixes
+  * Resolve race conditions when join timeouts occur on client, while server channel successfully joins
 
 ## 1.2.2 (2017-3-14)
 

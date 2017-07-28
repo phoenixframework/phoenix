@@ -61,6 +61,7 @@ $ MIX_ENV=docs mix docs
 * [Issue tracker][4]
 * [phoenix-talk Mailing list (questions)][5]
 * [phoenix-core Mailing list (development)][6]
+* Visit Phoenix's sponsor, DockYard, for expert [phoenix consulting](https://dockyard.com/phoenix-consulting)
 * Privately disclose security vulnerabilities to phoenix-security@googlegroups.com
 
   [1]: https://webchat.freenode.net/?channels=#elixir-lang
