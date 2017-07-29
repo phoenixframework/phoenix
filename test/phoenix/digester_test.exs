@@ -15,27 +15,6 @@ defmodule Phoenix.DigesterTest do
       assert {:error, :invalid_path} = Phoenix.Digester.compile("nonexistent path", "/ ?? /path")
     end
 
-    test "upgrade old cache manifest" do
-      source_path = "test/fixtures/digest/priv/static/"
-      input_path = "tmp/digest/static"
-      File.rm_rf!(input_path)
-      :ok = File.mkdir_p!(@output_path)
-      :ok = File.mkdir_p!(input_path)
-      :ok = File.cp(Path.join(source_path, "foo.css"), Path.join(@output_path, "foo-d978852bea6530fcd197b5445ed008fd.css"))
-      File.write!(Path.join(input_path, "foo.css"), ".foo { background-color: blue }")
-
-      assert :ok = Phoenix.Digester.compile(input_path, @output_path)
-
-      json =
-        Path.join(@output_path, "cache_manifest.json")
-        |> File.read!()
-        |> Poison.decode!()
-
-      assert_in_delta json["digests"]["foo-d978852bea6530fcd197b5445ed008fd.css"]["mtime"], now(), 2
-      assert_in_delta json["digests"]["foo-1198fd3c7ecf0e8f4a33a6e4fc5ae168.css"]["mtime"], now(), 2
-      assert json["latest"]["foo.css"] == "foo-1198fd3c7ecf0e8f4a33a6e4fc5ae168.css"
-    end
-
     test "digests and compress files" do
       input_path = "test/fixtures/digest/priv/static/"
       assert :ok = Phoenix.Digester.compile(input_path, @output_path)
