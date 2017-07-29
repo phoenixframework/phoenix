@@ -232,7 +232,7 @@ defmodule Mix.Phoenix.Schema do
 
   defp partition_attrs_and_assocs(schema_module, attrs) do
     {assocs, attrs} =
-      Enum.partition(attrs, fn
+      Enum.split_with(attrs, fn
         {_, {:references, _}} ->
           true
         {key, :references} ->

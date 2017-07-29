@@ -22,7 +22,6 @@ defmodule Phoenix.DigesterTest do
       :ok = File.mkdir_p!(@output_path)
       :ok = File.mkdir_p!(input_path)
       :ok = File.cp(Path.join(source_path, "foo.css"), Path.join(@output_path, "foo-d978852bea6530fcd197b5445ed008fd.css"))
-      :ok = File.cp("test/fixtures/old_cache_manifest.json", Path.join(@output_path, "cache_manifest.json"))
       File.write!(Path.join(input_path, "foo.css"), ".foo { background-color: blue }")
 
       assert :ok = Phoenix.Digester.compile(input_path, @output_path)
