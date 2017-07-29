@@ -1224,8 +1224,7 @@ defmodule Phoenix.Controller do
 
   """
   def get_flash(conn) do
-    Map.get(conn.private, :phoenix_flash) ||
-      raise ArgumentError, message: "flash not fetched, call fetch_flash/2"
+    Map.get(conn.private, :phoenix_flash, %{})
   end
 
   @doc """
