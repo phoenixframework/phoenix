@@ -1,6 +1,0 @@
-<h2>Edit <%= template_singular %></h2>
-
-<%%= render "form.html", changeset: @changeset,
-                        action: <%= singular %>_path(@conn, :update, @<%= singular %>) %>
-
-<span><%%= link "Back", to: <%= singular %>_path(@conn, :index) %></span>

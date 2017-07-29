@@ -111,13 +111,7 @@ defmodule Phoenix.CodeReloader.Server do
   # warning.
   defp mix_compile({:module, Mix.Task}, compilers) do
     if Mix.Project.umbrella? do
-      deps =
-        if function_exported?(Mix.Dep.Umbrella, :cached, 0) do
-          apply(Mix.Dep.Umbrella, :cached, [])
-        else
-          Mix.Dep.Umbrella.loaded
-        end
-      Enum.each deps, fn dep ->
+      Enum.each Mix.Dep.Umbrella.cached, fn dep ->
         Mix.Dep.in_dependency(dep, fn _ ->
           mix_compile_unless_stale_config(compilers)
         end)

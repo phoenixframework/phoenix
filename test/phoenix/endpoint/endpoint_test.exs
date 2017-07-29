@@ -87,12 +87,6 @@ defmodule Phoenix.Endpoint.EndpointTest do
     assert Endpoint.static_path("/foo.css") == "/foo-ghijkl.css?vsn=d"
   end
 
-  test "warms up cache from previous manifest format" do
-    config = put_in(@config, [:cache_static_manifest], "../../../../test/fixtures/old_cache_manifest.json")
-    assert Endpoint.config_change([{Endpoint, config}], []) == :ok
-    assert Endpoint.static_path("/foo.css") == "/foo-d978852bea6530fcd197b5445ed008fd.css?vsn=d"
-  end
-
   test "invokes init/2 callback" do
     Application.put_env(:phoenix, __MODULE__.InitEndpoint, parent: self())
 
