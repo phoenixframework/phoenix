@@ -268,9 +268,9 @@ class Push {
     return this
   }
 
-
-  // private
-
+  /**
+   * @private
+   */
   reset(){
     this.cancelRefEvent()
     this.ref          = null
@@ -279,20 +279,32 @@ class Push {
     this.sent         = false
   }
 
+  /**
+   * @private
+   */
   matchReceive({status, response, ref}){
     this.recHooks.filter( h => h.status === status )
                  .forEach( h => h.callback(response) )
   }
 
+  /**
+   * @private
+   */
   cancelRefEvent(){ if(!this.refEvent){ return }
     this.channel.off(this.refEvent)
   }
 
+  /**
+   * @private
+   */
   cancelTimeout(){
     clearTimeout(this.timeoutTimer)
     this.timeoutTimer = null
   }
 
+  /**
+   * @private
+   */
   startTimeout(){ if(this.timeoutTimer){ this.cancelTimeout() }
     this.ref      = this.channel.socket.makeRef()
     this.refEvent = this.channel.replyEventName(this.ref)
@@ -309,10 +321,16 @@ class Push {
     }, this.timeout)
   }
 
+  /**
+   * @private
+   */
   hasReceived(status){
     return this.receivedResp && this.receivedResp.status === status
   }
 
+  /**
+   * @private
+   */
   trigger(status, response){
     this.channel.trigger(this.refEvent, {status, response})
   }
@@ -370,6 +388,9 @@ export class Channel {
     })
   }
 
+  /**
+   * @private
+   */
   rejoinUntilConnected(){
     this.rejoinTimer.scheduleTimeout()
     if(this.socket.isConnected()){
@@ -377,6 +398,11 @@ export class Channel {
     }
   }
 
+  /**
+   * Join the channel
+   * @param {integer} timeout
+   * @returns {Push}
+   */
   join(timeout = this.timeout){
     if(this.joinedOnce){
       throw(`tried to join multiple times. 'join' can only be called a single time per channel instance`)
@@ -387,41 +413,65 @@ export class Channel {
     }
   }
 
+  /**
+   * Hook into channel close
+   * @param {function} callback
+   */
   onClose(callback){
-    return this.on(CHANNEL_EVENTS.close, callback)
+    this.on(CHANNEL_EVENTS.close, callback)
   }
 
+  /**
+   * Hook into channel close
+   * @param {function} callback
+   */
   onError(callback){
     return this.on(CHANNEL_EVENTS.error, reason => callback(reason))
   }
 
- /** Subscribes on channel events
-  *
-  * Subscription returnrs a ref counter, which can be used later to 
-  * unsubsribe exact event listener:
-  *
-  * ```javascript
-  *     ref1 = channel.on("event", do_stuff)
-  *     ref2 = channel.on("event", do_other_stuff)
-  *     channel.off("event", ref1)
-  *     // Since unsubscription, do_stuff won't fire,
-  *     // while do_other_stuff will keep firing on the "event" 
-  * ```
-  */
+  /**
+   * Subscribes on channel events
+   *
+   * Subscription returnrs a ref counter, which can be used later to 
+   * unsubsribe exact event listener:
+   *
+   * ```javascript
+   *     ref1 = channel.on("event", do_stuff)
+   *     ref2 = channel.on("event", do_other_stuff)
+   *     channel.off("event", ref1)
+   *     // Since unsubscription, do_stuff won't fire,
+   *     // while do_other_stuff will keep firing on the "event" 
+   * ```
+   *
+   * @param {string} event
+   * @param {function} callback
+   */
   on(event, callback){
     let ref = this.bindingRef++
     this.bindings.push({event, ref, callback})
     return ref
   }
 
+  /**
+   * @param {string} event
+   * @param {function} callback
+   */
   off(event, ref){
     this.bindings = this.bindings.filter((bind) => {
       return !(bind.event === event && (typeof ref === "undefined" || ref === bind.ref))
     })
   }
 
+  /**
+   * @private
+   */
   canPush(){ return this.socket.isConnected() && this.isJoined() }
 
+  /**
+   * @param {string} event
+   * @param {Object} payload
+   * @returns {Push}
+   */
   push(event, payload, timeout = this.timeout){
     if(!this.joinedOnce){
       throw(`tried to push '${event}' to '${this.topic}' before joining. Use channel.join() before pushing events`)
@@ -450,6 +500,8 @@ export class Channel {
    * ```javascript
    *     channel.leave().receive("ok", () => alert("left!") )
    * ```
+   * @param {integer} timeout
+   * @returns {Push}
    */
   leave(timeout = this.timeout){
     this.state = CHANNEL_STATES.leaving
@@ -473,12 +525,15 @@ export class Channel {
    * before dispatching to the channel callbacks.
    *
    * Must return the payload, modified or unmodified
+   * @param {string} event
+   * @param {Object} payload
+   * @param {integer} ref
    */
   onMessage(event, payload, ref){ return payload }
 
-
-  // private
-
+  /**
+   * @private
+   */
   isMember(topic, event, payload, joinRef){
     if(this.topic !== topic){ return false }
     let isLifecycleEvent = CHANNEL_LIFECYCLE_EVENTS.indexOf(event) >= 0
@@ -491,17 +546,29 @@ export class Channel {
     }
   }
 
+  /**
+   * @private
+   */
   joinRef(){ return this.joinPush.ref }
 
+  /**
+   * @private
+   */
   sendJoin(timeout){
     this.state = CHANNEL_STATES.joining
     this.joinPush.resend(timeout)
   }
 
+  /**
+   * @private
+   */
   rejoin(timeout = this.timeout){ if(this.isLeaving()){ return }
     this.sendJoin(timeout)
   }
 
+  /**
+   * @private
+   */
   trigger(event, payload, ref, joinRef){
     let handledPayload = this.onMessage(event, payload, ref, joinRef)
     if(payload && !handledPayload){ throw("channel onMessage callbacks must return the payload, modified or unmodified") }
@@ -510,16 +577,38 @@ export class Channel {
                  .map( bind => bind.callback(handledPayload, ref, joinRef || this.joinRef()))
   }
 
+  /**
+   * @private
+   */
   replyEventName(ref){ return `chan_reply_${ref}` }
 
+  /**
+   * @private
+   */
   isClosed() { return this.state === CHANNEL_STATES.closed }
+
+  /**
+   * @private
+   */
   isErrored(){ return this.state === CHANNEL_STATES.errored }
+
+  /**
+   * @private
+   */
   isJoined() { return this.state === CHANNEL_STATES.joined }
+
+  /**
+   * @private
+   */
   isJoining(){ return this.state === CHANNEL_STATES.joining }
+
+  /**
+   * @private
+   */
   isLeaving(){ return this.state === CHANNEL_STATES.leaving }
 }
 
-let Serializer = {
+const Serializer = {
   encode(msg, callback){
     let payload = [
       msg.join_ref, msg.ref, msg.topic, msg.event, msg.payload
