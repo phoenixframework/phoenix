@@ -1,6 +1,6 @@
 # Endpoint
 
-Phoenix applications starts the HelloWeb.Endpoint as a supervised process. By default, the Endpoint is added to the supervision tree in `lib/hello/application.ex` as a supervised proces. Each request begins and ends its lifecycle inside your application in an endpoint. The endpoints handles starting the web server and transforming requests through several defined plugs before calling the [Router](routing.html).
+Phoenix applications start the HelloWeb.Endpoint as a supervised process. By default, the Endpoint is added to the supervision tree in `lib/hello/application.ex` as a supervised process. Each request begins and ends its lifecycle inside your application in an endpoint. The endpoint handles starting the web server and transforming requests through several defined plugs before calling the [Router](routing.html).
 
 
 ```elixir
@@ -42,7 +42,7 @@ Next the endpoint declares a socket on the "/socket" URI. "/socket" requests wil
   socket "/socket", HelloWeb.UserSocket
 ```
 
-Next a series of plugs which are relevant to all requests in our application. we can customize some of the features, for example, enabling `gzip: true` when deploying to production to gzip the static files.
+Next a series of plugs which are relevant to all requests in our application. We can customize some of the features, for example, enabling `gzip: true` when deploying to production to gzip the static files.
 
 Static files are served from `priv/static` before any part of our request makes it to a router.
 
@@ -61,7 +61,7 @@ If code reloading is enabled, a socket will be used to communicate to the browse
   end
 ```
 
-[Plug.ReqestId](https://hexdocs.pm/plug/Plug.RequestId.html) generated a unique id for each request and [Plug.Logger](https://hexdocs.pm/plug/Plug.Logger.html) logs the request path, status code and request time by default.
+[Plug.RequestId](https://hexdocs.pm/plug/Plug.RequestId.html) generates a unique id for each request and [Plug.Logger](https://hexdocs.pm/plug/Plug.Logger.html) logs the request path, status code and request time by default.
 
 ```elixir
   plug Plug.RequestId
@@ -100,4 +100,4 @@ end
 
 Faults in the different parts of the supervision tree, such as the Ecto Repo will not immediately impact the main application allowing the supervisor to restart those processes separately after unexpected faults. It is also possible for an application to have multiple endpoints, each with its own supervision tree.
 
-There are many functions defined in the endpoint module for path helpers, channel subscriptions and broadcasts, instrumentation, and  endpoint configuration. These are all covered in the [Endpoint API of the `Phoenix.Endpoint` docs](Phoenix.Endpoint.html#module-endpoints-api).
+There are many functions defined in the endpoint module for path helpers, channel subscriptions and broadcasts, instrumentation, and endpoint configuration. These are all covered in the [Endpoint API of the `Phoenix.Endpoint` docs](Phoenix.Endpoint.html#module-endpoints-api).
