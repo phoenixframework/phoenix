@@ -52,7 +52,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
 
       mix phx.gen.html Sales User users --web Sales
 
-  Which would geneate a `lib/app_web/controllers/sales/user_controller.ex` and
+  Which would generate a `lib/app_web/controllers/sales/user_controller.ex` and
   `lib/app_web/views/sales/user_view.ex`.
 
   ## Generating without a schema or context file
