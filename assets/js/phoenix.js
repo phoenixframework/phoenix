@@ -66,7 +66,7 @@
  * can be done with `channel.push(eventName, payload)` and we can optionally
  * receive responses from the push. Additionally, we can use
  * `receive("timeout", callback)` to abort waiting for our other `receive` hooks
- *  and take action after some period of waiting. The default timeout is 5000ms.
+ *  and take action after some period of waiting. The default timeout is 10000ms.
  *
  *
  * ## Socket Hooks
