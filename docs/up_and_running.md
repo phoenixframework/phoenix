@@ -101,7 +101,7 @@ You can also run your app inside IEx (Interactive Elixir) as:
 
 By default Phoenix accepts requests on port 4000. If we point our favorite web browser at [http://localhost:4000](http://localhost:4000), we should see the Phoenix Framework welcome page.
 
-![Phoenix Welcome Page](/images/welcome-to-phoenix.png)
+![Phoenix Welcome Page](assets/images/welcome-to-phoenix.png)
 
 If your screen looks like the image above, congratulations! You now have a working Phoenix application. In case you can't see the page above, try accessing it via [http://127.0.0.1:4000](http://127.0.0.1:4000) and later make sure your OS has defined "localhost" as "127.0.0.1".
 

@@ -189,7 +189,7 @@ Let's do that now. Create `lib/hello_web/templates/hello/index.html.eex` and mak
 
 Now that we've got the route, controller, view, and template, we should be able to point our browsers at [http://localhost:4000/hello](http://localhost:4000/hello) and see our greeting from Phoenix! (In case you stopped the server along the way, the task to restart it is `mix phx.server`.)
 
-![Phoenix Greets Us](/images/hello-from-phoenix.png)
+![Phoenix Greets Us](assets/images/hello-from-phoenix.png)
 
 There are a couple of interesting things to notice about what we just did. We didn't need to stop and re-start the server while we made these changes. Yes, Phoenix has hot code reloading! Also, even though our `index.html.eex` file consisted of only a single `div` tag, the page we get is a full HTML document. Our index template is rendered into the application layout - `lib/hello_web/templates/layout/app.html.eex`. If you open it, you'll see a line that looks like this:
 
@@ -262,6 +262,6 @@ Our messenger appears as `@messenger`. In this case, this is not a module attrib
 
 We're done. If you point your browser here: [http://localhost:4000/hello/Frank](http://localhost:4000/hello/Frank), you should see a page that looks like this:
 
-![Frank Greets Us from Phoenix](/images/hello-world-from-frank.png)
+![Frank Greets Us from Phoenix](assets/images/hello-world-from-frank.png)
 
 Play around a bit. Whatever you put after `/hello/` will appear on the page as your messenger.

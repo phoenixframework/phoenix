@@ -13,7 +13,7 @@ defmodule PhoenixGuides.Mixfile do
      docs: [source_ref: "v#{@version}",
             main: "overview",
             logo: "logo.png",
-            assets: "images",
+            assets: "docs/assets",
             extra_section: "GUIDES",
             extras: extras(),
             homepage_url: "http://www.phoenixframework.org",
