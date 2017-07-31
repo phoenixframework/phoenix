@@ -24,7 +24,7 @@ defmodule Phoenix.Mixfile do
         main: "overview",
         logo: "logo.png",
         extra_section: "GUIDES",
-        assets: "deps/phoenix_guides/images",
+        assets: "deps/phoenix_guides/docs/assets",
         extras: extras()
       ],
       aliases: aliases(),
