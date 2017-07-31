@@ -422,7 +422,7 @@ export class Channel {
   }
 
   /**
-   * Hook into channel close
+   * Hook into channel errors
    * @param {function} callback
    */
   onError(callback){
