@@ -42,7 +42,7 @@ Next the endpoint declares a socket on the "/socket" URI. "/socket" requests wil
   socket "/socket", HelloWeb.UserSocket
 ```
 
-Next a series of plugs which are relevant to all requests in our application. We can customize some of the features, for example, enabling `gzip: true` when deploying to production to gzip the static files.
+Next comes a series of plugs that are relevant to all requests in our application. We can customize some of the features, for example, enabling `gzip: true` when deploying to production to gzip the static files.
 
 Static files are served from `priv/static` before any part of our request makes it to a router.
 
@@ -98,6 +98,6 @@ def init(_key, config) do
 end
 ```
 
-Faults in the different parts of the supervision tree, such as the Ecto Repo will not immediately impact the main application allowing the supervisor to restart those processes separately after unexpected faults. It is also possible for an application to have multiple endpoints, each with its own supervision tree.
+Faults in the different parts of the supervision tree, such as the Ecto Repo, will not immediately impact the main application. The supervisor is therefore able to restart those processes separately after unexpected faults. It is also possible for an application to have multiple endpoints, each with its own supervision tree.
 
 There are many functions defined in the endpoint module for path helpers, channel subscriptions and broadcasts, instrumentation, and endpoint configuration. These are all covered in the [Endpoint API of the `Phoenix.Endpoint` docs](Phoenix.Endpoint.html#module-endpoints-api).
