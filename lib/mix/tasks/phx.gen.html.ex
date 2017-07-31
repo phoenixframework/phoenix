@@ -53,12 +53,12 @@ defmodule Mix.Tasks.Phx.Gen.Html do
 
       mix phx.gen.html Sales User users --web Sales
 
-  Which would geneate a `lib/app_web/controllers/sales/user_controller.ex` and
+  Which would generate a `lib/app_web/controllers/sales/user_controller.ex` and
   `lib/app_web/views/sales/user_view.ex`.
 
   ## Generating without a schema or context file
 
-  In some cases, you may wish to boostrap HTML templates, controllers, and
+  In some cases, you may wish to bootstrap HTML templates, controllers, and
   controller tests, but leave internal implementation of the context or schema
   to yourself. You can use the `--no-context` and `--no-schema` flags for
   file generation control.
