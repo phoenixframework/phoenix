@@ -75,7 +75,7 @@ Remember to update your repository by running migrations:
 
 ```
 
-Phoenix generated the web files as expected in `lib/hello_web/`. We can also see our context files were generated inside a `lib/hello/accounts/` directory. We have an `Accounts` module to serve as the public API for account functionality, as well as an `Accounts.User` struct, which is an Ecto schema for casting and validating user account data. Phoenix also provided web and context tests for us, which we'll look at later. For now, let's follow the instructions and add the route according to the console instructions, in `lib/hello_web/router.ex`:
+Phoenix generated the web files as expected in `lib/hello_web/`. We can also see our context files were generated inside a `lib/hello/accounts/` directory. Note the difference between `lib/hello` and `lib/hello_web`. We have an `Accounts` module to serve as the public API for account functionality, as well as an `Accounts.User` struct, which is an Ecto schema for casting and validating user account data. Phoenix also provided web and context tests for us, which we'll look at later. For now, let's follow the instructions and add the route according to the console instructions, in `lib/hello_web/router.ex`:
 
 ```elixir
   scope "/", HelloWeb do
