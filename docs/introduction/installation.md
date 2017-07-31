@@ -4,7 +4,7 @@ In the [Overview Guide](overview.html) we got a look at the Phoenix ecosystem an
 
 Please take a look at this list and make sure to install anything necessary for your system. Having dependencies installed in advance can prevent frustrating problems later on.
 
-### Elixir 1.4
+### Elixir 1.4 or later
 
 Phoenix is written in Elixir, and our application code will also be written in Elixir. We won't get far in a Phoenix app without it! The Elixir site maintains a great [Installation Page](http://elixir-lang.org/install.html) to help.
 
