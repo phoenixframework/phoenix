@@ -378,7 +378,7 @@ defmodule Phoenix.Endpoint do
   @callback path(path :: String.t) :: String.t
 
   @doc """
-  Geerates the static URL without any path information.
+  Generates the static URL without any path information.
   """
   @callback static_url() :: String.t
 
