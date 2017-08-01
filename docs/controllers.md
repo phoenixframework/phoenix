@@ -103,7 +103,7 @@ defmodule HelloWeb.PageController do
 end
 ```
 
-The `PhoenixWeb.Controller` module is not particular about the keys we use. As long as we are internally consistent, all will be well. `:info` and `:error`, however, are common.
+The `Phoenix.Controller` module is not particular about the keys we use. As long as we are internally consistent, all will be well. `:info` and `:error`, however, are common.
 
 In order to see our flash messages, we need to be able to retrieve them and display them in a template/layout. One way to do the first part is with `get_flash/2` which takes `conn` and the key we care about. It then returns the value for that key.
 
