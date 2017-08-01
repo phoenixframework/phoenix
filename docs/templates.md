@@ -10,9 +10,9 @@ As we learned in the [View Guide](views.html), by default, templates live in the
 
 We've already seen several ways in which templates are used, notably in the [Adding Pages Guide](adding_pages.html) and the [Views Guide](views.html). We may cover some of the same territory here, but we will certainly add some new information.
 
-##### web.ex
+##### hello_web.ex
 
-Phoenix generates a `lib/hello_web/web.ex` file that serves as place to group common imports and aliases. All declarations here within the `view` block apply to all your templates.
+Phoenix generates a `lib/hello_web.ex` file that serves as place to group common imports and aliases. All declarations here within the `view` block apply to all your templates.
 
 Let's make some additions to our application so we can experiment a little.
 
@@ -50,7 +50,7 @@ end
 
 We're going to create a function that tells us which controller and action are handling our request.
 
-To do that, we need to import the `action_name/1` and `controller_module/1` functions from `Phoenix.Controller` in `lib/hello_web/web.ex`.
+To do that, we need to import the `action_name/1` and `controller_module/1` functions from `Phoenix.Controller` in `lib/hello_web.ex`.
 
 ```elixir
   def view do
@@ -59,7 +59,7 @@ To do that, we need to import the `action_name/1` and `controller_module/1` func
                         namespace: HelloWeb
 
       # Import convenience functions from controllers
-      import Phoenix.Controller, only: [get_csrf_token: 0, get_flash: 2, view_module: 1,
+      import Phoenix.Controller, only: [get_flash: 2, view_module: 1,
                                         action_name: 1, controller_module: 1]
 
       ...
