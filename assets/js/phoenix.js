@@ -331,6 +331,7 @@ export class Channel {
     this.params      = params || {}
     this.socket      = socket
     this.bindings    = []
+    this.bindingRef  = 0
     this.timeout     = this.socket.timeout
     this.joinedOnce  = false
     this.joinPush    = new Push(this, CHANNEL_EVENTS.join, this.params, this.timeout)
@@ -392,9 +393,30 @@ export class Channel {
     this.on(CHANNEL_EVENTS.error, reason => callback(reason) )
   }
 
-  on(event, callback){ this.bindings.push({event, callback}) }
+ /** Subscribes on channel events
+  *
+  * Subscription returnrs a ref counter, which can be used later to 
+  * unsubsribe exact event listener:
+  *
+  * ```javascript
+  *     ref1 = channel.on("event", do_stuff)
+  *     ref2 = channel.on("event", do_other_stuff)
+  *     channel.off("event", ref1)
+  *     // Since unsubscription, do_stuff won't fire,
+  *     // while do_other_stuff will keep firing on the "event" 
+  * ```
+  */
+  on(event, callback){
+    let ref = this.bindingRef++
+    this.bindings.push({event, ref, callback})
+    return ref
+  }
 
-  off(event){ this.bindings = this.bindings.filter( bind => bind.event !== event ) }
+  off(event, ref){
+    this.bindings = this.bindings.filter((bind) => {
+      return !(bind.event === event && (typeof ref === "undefined" || ref === bind.ref))
+    })
+  }
 
   canPush(){ return this.socket.isConnected() && this.isJoined() }
 
