@@ -387,10 +387,12 @@ export class Channel {
     }
   }
 
-  onClose(callback){ this.on(CHANNEL_EVENTS.close, callback) }
+  onClose(callback){
+    return this.on(CHANNEL_EVENTS.close, callback)
+  }
 
   onError(callback){
-    this.on(CHANNEL_EVENTS.error, reason => callback(reason) )
+    return this.on(CHANNEL_EVENTS.error, reason => callback(reason))
   }
 
  /** Subscribes on channel events
