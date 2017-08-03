@@ -734,6 +734,12 @@ describe("on", () => {
 
     assert.ok(!ignoredSpy.called)
   })
+  
+  it("generates unique refs for callbacks", () => {
+    const ref1 = channel.on("event1", () => 0)
+    const ref2 = channel.on("event2", () => 0)
+    assert.equal(ref1 + 1, ref2)
+  })
 })
 
 describe("off", () => {
@@ -761,6 +767,20 @@ describe("off", () => {
     assert.ok(!spy1.called)
     assert.ok(!spy2.called)
     assert.ok(spy3.called)
+  })
+  
+  it("removes callback by its ref", () => {
+    const spy1 = sinon.spy()
+    const spy2 = sinon.spy()
+    
+    const ref1 = channel.on("event", spy1)
+    const ref2 = channel.on("event", spy2)
+
+    channel.off("event", ref1)
+    channel.trigger("event", {}, defaultRef)
+
+    assert.ok(!spy1.called)
+    assert.ok(spy2.called)    
   })
 })
 
