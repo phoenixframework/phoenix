@@ -116,4 +116,4 @@ the error.
 
 It's worth noting that if these tasks fail, they won't be retried. Consider
 building a solution using
-[GenStage](https://hexdocs.pm/gen_stage/Experimental.GenStage.html)
+[GenStage](https://hexdocs.pm/gen_stage/GenStage.html)
