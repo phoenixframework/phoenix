@@ -8,8 +8,8 @@
  * Connect to the server using the `Socket` class:
  *
  * ```javascript
- *     let socket = new Socket("/socket", {params: {userToken: "123"}})
- *     socket.connect()
+ * let socket = new Socket("/socket", {params: {userToken: "123"}})
+ * socket.connect()
  * ```
  *
  * The `Socket` constructor takes the mount point of the socket,
@@ -27,18 +27,19 @@
  * the channel is joined with ok/error/timeout matches:
  *
  * ```javascript
- *     let channel = socket.channel("room:123", {token: roomToken})
- *     channel.on("new_msg", msg => console.log("Got message", msg) )
- *     $input.onEnter( e => {
- *       channel.push("new_msg", {body: e.target.val}, 10000)
- *        .receive("ok", (msg) => console.log("created message", msg) )
- *        .receive("error", (reasons) => console.log("create failed", reasons) )
- *        .receive("timeout", () => console.log("Networking issue...") )
- *     })
- *     channel.join()
- *       .receive("ok", ({messages}) => console.log("catching up", messages) )
- *       .receive("error", ({reason}) => console.log("failed join", reason) )
- *       .receive("timeout", () => console.log("Networking issue. Still waiting...") )
+ * let channel = socket.channel("room:123", {token: roomToken})
+ * channel.on("new_msg", msg => console.log("Got message", msg) )
+ * $input.onEnter( e => {
+ *   channel.push("new_msg", {body: e.target.val}, 10000)
+ *     .receive("ok", (msg) => console.log("created message", msg) )
+ *     .receive("error", (reasons) => console.log("create failed", reasons) )
+ *     .receive("timeout", () => console.log("Networking issue...") )
+ * })
+ *
+ * channel.join()
+ *   .receive("ok", ({messages}) => console.log("catching up", messages) )
+ *   .receive("error", ({reason}) => console.log("failed join", reason) )
+ *   .receive("timeout", () => console.log("Networking issue. Still waiting..."))
  *```
  *
  * ## Joining
@@ -75,8 +76,8 @@
  * `socket.onError()` and `socket.onClose()` events, ie:
  *
  * ```javascript
- *     socket.onError( () => console.log("there was an error with the connection!") )
- *     socket.onClose( () => console.log("the connection dropped") )
+ * socket.onError( () => console.log("there was an error with the connection!") )
+ * socket.onClose( () => console.log("the connection dropped") )
  * ```
  *
  *
@@ -86,8 +87,8 @@
  * to monitor the channel lifecycle, ie:
  *
  * ```javascript
- *     channel.onError( () => console.log("there was an error!") )
- *     channel.onClose( () => console.log("the channel has gone away gracefully") )
+ * channel.onError( () => console.log("there was an error!") )
+ * channel.onClose( () => console.log("the channel has gone away gracefully") )
  * ```
  *
  * ### onError hooks
@@ -135,46 +136,46 @@
  * they came online from:
  *
  * ```javascript
- *     let state = {}
- *     state = Presence.syncState(state, stateFromServer)
- *     let listBy = (id, {metas: [first, ...rest]}) => {
- *       first.count = rest.length + 1 // count of this user's presences
- *       first.id = id
- *       return first
- *     }
- *     let onlineUsers = Presence.list(state, listBy)
+ * let state = {}
+ * state = Presence.syncState(state, stateFromServer)
+ * let listBy = (id, {metas: [first, ...rest]}) => {
+ *   first.count = rest.length + 1 // count of this user's presences
+ *   first.id = id
+ *   return first
+ * }
+ * let onlineUsers = Presence.list(state, listBy)
  * ```
  *
  *
  * ### Example Usage
- *```javascript
- *     // detect if user has joined for the 1st time or from another tab/device
- *     let onJoin = (id, current, newPres) => {
- *       if(!current){
- *         console.log("user has entered for the first time", newPres)
- *       } else {
- *         console.log("user additional presence", newPres)
- *       }
- *     }
- *     // detect if user has left from all tabs/devices, or is still present
- *     let onLeave = (id, current, leftPres) => {
- *       if(current.metas.length === 0){
- *         console.log("user has left from all devices", leftPres)
- *       } else {
- *         console.log("user left from a device", leftPres)
- *       }
- *     }
- *     let presences = {} // client's initial empty presence state
- *     // receive initial presence data from server, sent after join
- *     myChannel.on("presence_state", state => {
- *       presences = Presence.syncState(presences, state, onJoin, onLeave)
- *       displayUsers(Presence.list(presences))
- *     })
- *     // receive "presence_diff" from server, containing join/leave events
- *     myChannel.on("presence_diff", diff => {
- *       presences = Presence.syncDiff(presences, diff, onJoin, onLeave)
- *       this.setState({users: Presence.list(room.presences, listBy)})
- *     })
+ * ```javascript
+ * // detect if user has joined for the 1st time or from another tab/device
+ * let onJoin = (id, current, newPres) => {
+ *   if(!current){
+ *     console.log("user has entered for the first time", newPres)
+ *   } else {
+ *     console.log("user additional presence", newPres)
+ *   }
+ * }
+ * // detect if user has left from all tabs/devices, or is still present
+ * let onLeave = (id, current, leftPres) => {
+ *   if(current.metas.length === 0){
+ *     console.log("user has left from all devices", leftPres)
+ *   } else {
+ *     console.log("user left from a device", leftPres)
+ *   }
+ * }
+ * let presences = {} // client's initial empty presence state
+ * // receive initial presence data from server, sent after join
+ * myChannel.on("presence_state", state => {
+ *   presences = Presence.syncState(presences, state, onJoin, onLeave)
+ *   displayUsers(Presence.list(presences))
+ * })
+ * // receive "presence_diff" from server, containing join/leave events
+ * myChannel.on("presence_diff", diff => {
+ *   presences = Presence.syncDiff(presences, diff, onJoin, onLeave)
+ *   this.setState({users: Presence.list(room.presences, listBy)})
+ * })
  * ```
  * @module phoenix
  */
@@ -436,11 +437,11 @@ export class Channel {
    * unsubsribe exact event listener:
    *
    * ```javascript
-   *     ref1 = channel.on("event", do_stuff)
-   *     ref2 = channel.on("event", do_other_stuff)
-   *     channel.off("event", ref1)
-   *     // Since unsubscription, do_stuff won't fire,
-   *     // while do_other_stuff will keep firing on the "event" 
+   * ref1 = channel.on("event", do_stuff)
+   * ref2 = channel.on("event", do_other_stuff)
+   * channel.off("event", ref1)
+   * // Since unsubscription, do_stuff won't fire,
+   * // while do_other_stuff will keep firing on the "event" 
    * ```
    *
    * @param {string} event
@@ -498,7 +499,7 @@ export class Channel {
    * hook to bind to the server ack, ie:
    *
    * ```javascript
-   *     channel.leave().receive("ok", () => alert("left!") )
+   * channel.leave().receive("ok", () => alert("left!") )
    * ```
    * @param {integer} timeout
    * @returns {Push}
@@ -661,9 +662,9 @@ const Serializer = {
  * Defaults to stepped backoff of:
  *
  * ```javascript
- *  function(tries){
- *    return [1000, 5000, 10000][tries - 1] || 10000
- *  }
+ * function(tries){
+ *   return [1000, 5000, 10000][tries - 1] || 10000
+ * }
  * ```
  * @param {Function} opts.logger - The optional function for specialized logging, ie:
  * ```javascript
@@ -1199,13 +1200,13 @@ export var Presence = {
  * ## Examples
  *
  * ```javascript
- *    let reconnectTimer = new Timer(() => this.connect(), function(tries){
- *      return [1000, 5000, 10000][tries - 1] || 10000
- *    })
- *    reconnectTimer.scheduleTimeout() // fires after 1000
- *    reconnectTimer.scheduleTimeout() // fires after 5000
- *    reconnectTimer.reset()
- *    reconnectTimer.scheduleTimeout() // fires after 1000
+ * let reconnectTimer = new Timer(() => this.connect(), function(tries){
+ *   return [1000, 5000, 10000][tries - 1] || 10000
+ * })
+ * reconnectTimer.scheduleTimeout() // fires after 1000
+ * reconnectTimer.scheduleTimeout() // fires after 5000
+ * reconnectTimer.reset()
+ * reconnectTimer.scheduleTimeout() // fires after 1000
  * ```
  * @param {Function} callback
  * @param {Function} timerCalc
