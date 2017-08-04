@@ -415,7 +415,7 @@ export class Channel {
 
   /**
    * Hook into channel close
-   * @param {function} callback
+   * @param {Function} callback
    */
   onClose(callback){
     this.on(CHANNEL_EVENTS.close, callback)
@@ -423,7 +423,7 @@ export class Channel {
 
   /**
    * Hook into channel errors
-   * @param {function} callback
+   * @param {Function} callback
    */
   onError(callback){
     return this.on(CHANNEL_EVENTS.error, reason => callback(reason))
@@ -444,7 +444,7 @@ export class Channel {
    * ```
    *
    * @param {string} event
-   * @param {function} callback
+   * @param {Function} callback
    */
   on(event, callback){
     let ref = this.bindingRef++
@@ -454,7 +454,7 @@ export class Channel {
 
   /**
    * @param {string} event
-   * @param {function} callback
+   * @param {Function} callback
    */
   off(event, ref){
     this.bindings = this.bindings.filter((bind) => {
@@ -711,8 +711,18 @@ export class Socket {
     }, this.reconnectAfterMs)
   }
 
+  /**
+   * Returns the socket protocol
+   *
+   * @returns {string}
+   */
   protocol(){ return location.protocol.match(/^https/) ? "wss" : "ws" }
 
+  /**
+   * The fully qualifed socket url
+   *
+   * @returns {string}
+   */
   endPointURL(){
     let uri = Ajax.appendParams(
       Ajax.appendParams(this.endPoint, this.params), {vsn: VSN})
@@ -722,6 +732,11 @@ export class Socket {
     return `${this.protocol()}://${location.host}${uri}`
   }
 
+  /**
+   * @param {Function} callback
+   * @param {integer} code
+   * @param {string} reason
+   */
   disconnect(callback, code, reason){
     if(this.conn){
       this.conn.onclose = function(){} // noop
@@ -758,17 +773,39 @@ export class Socket {
    */
   log(kind, msg, data){ this.logger(kind, msg, data) }
 
-  // Registers callbacks for connection state change events
-  //
-  // Examples
-  //
-  //    socket.onError(function(error){ alert("An error occurred") })
-  //
-  onOpen     (callback){ this.stateChangeCallbacks.open.push(callback) }
-  onClose    (callback){ this.stateChangeCallbacks.close.push(callback) }
-  onError    (callback){ this.stateChangeCallbacks.error.push(callback) }
-  onMessage  (callback){ this.stateChangeCallbacks.message.push(callback) }
+  /**
+   * Registers callbacks for connection open events
+   *
+   * @example socket.onOpen(function(){ console.info("the socket was opened") })
+   *
+   * @param {Function} callback
+   */
+  onOpen(callback){ this.stateChangeCallbacks.open.push(callback) }
 
+  /**
+   * Registers callbacks for connection close events
+   * @param {Function} callback
+   */
+  onClose(callback){ this.stateChangeCallbacks.close.push(callback) }
+
+  /**
+   * Registers callbacks for connection error events
+   *
+   * @example socket.onError(function(error){ alert("An error occurred") })
+   *
+   * @param {Function} callback
+   */
+  onError(callback){ this.stateChangeCallbacks.error.push(callback) }
+
+  /**
+   * Registers callbacks for connection message events
+   * @param {Function} callback
+   */
+  onMessage(callback){ this.stateChangeCallbacks.message.push(callback) }
+
+  /**
+   * @private
+   */
   onConnOpen(){
     this.log("transport", `connected to ${this.endPointURL()}`)
     this.flushSendBuffer()
@@ -780,6 +817,9 @@ export class Socket {
     this.stateChangeCallbacks.open.forEach( callback => callback() )
   }
 
+  /**
+   * @private
+   */
   onConnClose(event){
     this.log("transport", "close", event)
     this.triggerChanError()
@@ -788,16 +828,25 @@ export class Socket {
     this.stateChangeCallbacks.close.forEach( callback => callback(event) )
   }
 
+  /**
+   * @private
+   */
   onConnError(error){
     this.log("transport", error)
     this.triggerChanError()
     this.stateChangeCallbacks.error.forEach( callback => callback(error) )
   }
 
+  /**
+   * @private
+   */
   triggerChanError(){
     this.channels.forEach( channel => channel.trigger(CHANNEL_EVENTS.error) )
   }
 
+  /**
+   * @returns {string}
+   */
   connectionState(){
     switch(this.conn && this.conn.readyState){
       case SOCKET_STATES.connecting: return "connecting"
@@ -807,8 +856,14 @@ export class Socket {
     }
   }
 
+  /**
+   * @returns {boolean}
+   */
   isConnected(){ return this.connectionState() === "open" }
 
+  /**
+   * @param {Channel}
+   */
   remove(channel){
     this.channels = this.channels.filter(c => c.joinRef() !== channel.joinRef())
   }
@@ -826,6 +881,9 @@ export class Socket {
     return chan
   }
 
+  /**
+   * @param {Object} data
+   */
   push(data){
     let {topic, event, payload, ref, join_ref} = data
     let callback = () => {
@@ -844,6 +902,7 @@ export class Socket {
 
   /**
    * Return the next message ref, accounting for overflows
+   * @returns {string}
    */
   makeRef(){
     let newRef = this.ref + 1
