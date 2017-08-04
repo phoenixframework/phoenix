@@ -32,7 +32,7 @@ defmodule Phoenix.Mixfile do
       homepage_url: "http://www.phoenixframework.org",
       description: """
       Productive. Reliable. Fast. A productive web framework that
-      does not compromise speed and maintainability.
+      does not compromise speed nor maintainability.
       """
     ]
   end
