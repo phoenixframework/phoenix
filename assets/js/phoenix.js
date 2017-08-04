@@ -436,13 +436,12 @@ export class Channel {
    * Subscription returns a ref counter, which can be used later to
    * unsubscribe the exact event listener
    *
-   * ```javascript
-   * ref1 = channel.on("event", do_stuff)
-   * ref2 = channel.on("event", do_other_stuff)
+   * @example
+   * const ref1 = channel.on("event", do_stuff)
+   * const ref2 = channel.on("event", do_other_stuff)
    * channel.off("event", ref1)
    * // Since unsubscription, do_stuff won't fire,
    * // while do_other_stuff will keep firing on the "event"
-   * ```
    *
    * @param {string} event
    * @param {Function} callback
@@ -498,9 +497,9 @@ export class Channel {
    * To receive leave acknowledgements, use the a `receive`
    * hook to bind to the server ack, ie:
    *
-   * ```javascript
+   * @example
    * channel.leave().receive("ok", () => alert("left!") )
-   * ```
+   *
    * @param {integer} timeout
    * @returns {Push}
    */
@@ -1197,9 +1196,7 @@ export var Presence = {
  * Creates a timer that accepts a `timerCalc` function to perform
  * calculated timeout retries, such as exponential backoff.
  *
- * ## Examples
- *
- * ```javascript
+ * @example
  * let reconnectTimer = new Timer(() => this.connect(), function(tries){
  *   return [1000, 5000, 10000][tries - 1] || 10000
  * })
@@ -1207,7 +1204,7 @@ export var Presence = {
  * reconnectTimer.scheduleTimeout() // fires after 5000
  * reconnectTimer.reset()
  * reconnectTimer.scheduleTimeout() // fires after 1000
- * ```
+ *
  * @param {Function} callback
  * @param {Function} timerCalc
  */
