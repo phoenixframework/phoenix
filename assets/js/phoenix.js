@@ -433,15 +433,15 @@ export class Channel {
   /**
    * Subscribes on channel events
    *
-   * Subscription returnrs a ref counter, which can be used later to 
-   * unsubsribe exact event listener:
+   * Subscription returns a ref counter, which can be used later to
+   * unsubscribe the exact event listener
    *
    * ```javascript
    * ref1 = channel.on("event", do_stuff)
    * ref2 = channel.on("event", do_other_stuff)
    * channel.off("event", ref1)
    * // Since unsubscription, do_stuff won't fire,
-   * // while do_other_stuff will keep firing on the "event" 
+   * // while do_other_stuff will keep firing on the "event"
    * ```
    *
    * @param {string} event
