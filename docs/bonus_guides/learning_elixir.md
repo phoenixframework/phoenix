@@ -7,7 +7,7 @@ Here is a selected list of resources to help with learning Elixir and Erlang.
 - [Official Documentation](http://elixir-lang.org/docs/stable/elixir)
 
 ##### Books
-- [Programming Elixir](https://pragprog.com/book/elixir/programming-elixir), Dave Thomas
+- [Programming Elixir](https://pragprog.com/book/elixir13/programming-elixir-1-3), Dave Thomas
 - [Elixir in Action](https://www.manning.com/juric/), Saša Jurić
 - [Introducing Elixir](http://shop.oreilly.com/product/0636920030584.do), Simon St. Laurent, J. David Eisenberg
 - [Metaprogramming Elixir](https://pragprog.com/book/cmelixir/metaprogramming-elixir), Chris McCord
