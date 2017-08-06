@@ -126,14 +126,14 @@ defmodule Phx.New.Generator do
       adapter_app: adapter_app,
       adapter_module: adapter_module,
       adapter_config: adapter_config,
-      generators: generators(adapter_config),
+      generators: nil_if_empty(project.generators ++ adapter_generators(adapter_config)),
       namespaced?: namespaced?(project)]
 
     %Project{project | binding: binding}
   end
 
   defp namespaced?(project) do
-    project.in_umbrella? || Macro.camelize(project.app) != inspect(project.app_mod)
+    Macro.camelize(project.app) != inspect(project.app_mod)
   end
 
   def gen_ecto_config(%Project{app_path: app_path, binding: binding}) do
@@ -198,15 +198,14 @@ defmodule Phx.New.Generator do
     end)
   end
 
-  defp generators(adapter_config) do
+  defp adapter_generators(adapter_config) do
     adapter_config
     |> Keyword.take([:binary_id, :migration, :sample_binary_id])
     |> Enum.filter(fn {_, value} -> not is_nil(value) end)
-    |> case do
-      [] -> nil
-      conf -> conf
-    end
   end
+
+  defp nil_if_empty([]), do: nil
+  defp nil_if_empty(other), do: other
 
   defp phoenix_path(%Project{} = project, true) do
     absolute = Path.expand(project.project_path)

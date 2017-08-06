@@ -61,9 +61,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "config/config.exs"), fn file ->
         assert file =~ "ecto_repos: [PhxUmb.Repo]"
         assert file =~ ":phx_umb_web, PhxUmbWeb.Endpoint"
-        assert file =~ "namespace"
-        assert file =~ "config :phx_umb_web, :generators,"
-        assert file =~ "context_app: :phx_umb\n"
+        assert file =~ "generators: [context_app: :phx_umb]\n"
       end
 
       assert_file web_path(@app, "config/prod.exs"), fn file ->
@@ -255,7 +253,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
   test "new with binary_id" do
     in_tmp "new with binary_id", fn ->
       Mix.Tasks.Phx.New.run([@app, "--umbrella", "--binary-id"])
-      assert_file web_path(@app, "config/config.exs"), ~r/generators: \[binary_id: true\]/
+      assert_file web_path(@app, "config/config.exs"), ~r/generators: \[context_app: :phx_umb, binary_id: true\]/
     end
   end
 

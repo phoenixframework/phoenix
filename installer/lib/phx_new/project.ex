@@ -15,8 +15,8 @@ defmodule Phx.New.Project do
             web_path: nil,
             opts: :unset,
             in_umbrella?: false,
-            web_applications: [],
-            binding: []
+            binding: [],
+            generators: []
 
   def new(project_path, opts) do
     project_path = Path.expand(project_path)

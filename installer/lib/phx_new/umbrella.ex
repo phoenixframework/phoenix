@@ -28,14 +28,15 @@ defmodule Phx.New.Umbrella do
              app_path: app_path,
              project_path: project_path}
   end
-  def put_web(%Project{opts: opts} = project) do
-    web_app = :"#{project.app}_web"
+  def put_web(%Project{app: app, opts: opts} = project) do
+    web_app = :"#{app}_web"
     web_namespace = Module.concat([opts[:web_module] || "#{project.app_mod}Web"])
 
     %Project{project |
              web_app: web_app,
              lib_web_name: web_app,
              web_namespace: web_namespace,
+             generators: [context_app: :"#{app}"],
              web_path: Path.join(project.project_path, "apps/#{web_app}/")}
   end
 

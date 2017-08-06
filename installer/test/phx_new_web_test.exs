@@ -34,8 +34,7 @@ defmodule Mix.Tasks.Phx.New.WebTest do
       Mix.Tasks.Phx.New.Web.run([@app_name])
 
       assert_file "#{@app_name}/config/config.exs", fn file ->
-        assert file =~ "config :#{@app_name}, :generators,"
-        assert file =~ "context_app: false"
+        assert file =~ "generators: [context_app: false]"
       end
 
       # Install dependencies?
