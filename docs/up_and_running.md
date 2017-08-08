@@ -36,18 +36,21 @@ Fetch and install dependencies? [Yn] Y
 * running mix deps.compile
 * running cd assets && npm install && node node_modules/brunch/bin/brunch build
 
-We are all set! Run your Phoenix application:
+We are all set! Go into your application by running:
 
     $ cd hello
+
+Then configure your database in config/dev.exs and run:
+
+    $ mix ecto.create
+
+Start your Phoenix app with:
+
     $ mix phx.server
 
 You can also run your app inside IEx (Interactive Elixir) as:
 
     $ iex -S mix phx.server
-
-Before moving on, configure your database in config/dev.exs and run:
-
-    $ mix ecto.create
 ```
 
 Once our dependencies are installed, the task will prompt us to change into our project directory and start our application.
