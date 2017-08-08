@@ -4,7 +4,7 @@ Phoenix views have two main jobs. First and foremost, they render templates (thi
 
 ## Rendering Templates
 
-Phoenix assumes a strong naming convention from controllers to views to the templates they render. The `PageController` requires a `PageView` to render templates in the `lib/hello_web/templates/page` directory. If we want to, we can change the directory Phoenix considers to be the template root. Phoenix provides a `view/0` function in the `HelloWeb` module defined in `lib/hello_web/web.ex`. The first line of `view/0` allows us to change our root directory by changing the value assigned to the `:root` key.
+Phoenix assumes a strong naming convention from controllers to views to the templates they render. The `PageController` requires a `PageView` to render templates in the `lib/hello_web/templates/page` directory. If we want to, we can change the directory Phoenix considers to be the template root. Phoenix provides a `view/0` function in the `HelloWeb` module defined in `lib/hello_web.ex`. The first line of `view/0` allows us to change our root directory by changing the value assigned to the `:root` key.
 
 A newly generated Phoenix application has three view modules - `ErrorView`, `LayoutView`, and `PageView` -  which are all in the, `lib/hello_web/views` directory.
 
