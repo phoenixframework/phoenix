@@ -12,8 +12,8 @@ When Phoenix generates a new application for us, it builds a top-level directory
 ├── lib
 │   └── hello
 │   └── hello_web
-├── hello.ex
-├── hello_web.ex
+│   └── hello.ex
+│   └── hello_web.ex
 ├── priv
 ├── test
 ```
@@ -35,8 +35,9 @@ Most of our work in this guide will be in the `lib/hello_web` directory, which h
 │   ├── error_view.ex
 │   ├── layout_view.ex
 │   └── page_view.ex
-├── router.ex
+├── endpoint.ex
 ├── gettext.ex
+├── router.ex
 ```
 
 All of the files which are currently in the `controllers`, `templates`, and `views` directories are there to create the "Welcome to Phoenix!" page we saw in the last guide. We will see how we can re-use some of that code shortly. When running in development, code changes will be automatically recompiled on new web requests.
