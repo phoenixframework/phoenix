@@ -196,7 +196,7 @@ This ensures that any idle connections are closed by Phoenix before they reach H
 Lastly, we'll need to create a [Procfile](https://devcenter.heroku.com/articles/procfile) with the following:
 
 ```
-web: MIX_ENV=prod mix phoenix.server
+web: MIX_ENV=prod mix phx.server
 
 ```
 
@@ -224,10 +224,10 @@ $ heroku run "POOL_SIZE=2 mix hello.task"
 
 So that Ecto does not attempt to open more than the available connections.
 
-We still have to create the `SECRET_KEY_BASE` config based on a random string. First, use `mix phoenix.gen.secret` to get a new secret:
+We still have to create the `SECRET_KEY_BASE` config based on a random string. First, use `mix phx.gen.secret` to get a new secret:
 
 ```console
-$ mix phoenix.gen.secret
+$ mix phx.gen.secret
 xvafzY4y01jYuzLm3ecJqo008dVnU3CN4f+MamNd1Zue4pXvfvUjbiXT8akaIF53
 ```
 
