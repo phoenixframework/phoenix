@@ -25,7 +25,7 @@ Phoenix is made up of a number of distinct parts, each with its own purpose and 
     - Pipelines - allow easy application of groups of plugs to a set of routes
  - [Controllers](controllers.html)
     - provide functions, called *actions*, to handle requests
-    - Actions
+    - actions:
         - prepare data and pass it into views
         - invoke rendering via views
         - perform redirects
