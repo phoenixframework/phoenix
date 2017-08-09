@@ -728,7 +728,7 @@ export class Socket {
    * Initiates a new channel for the given topic
    *
    * @param {string} topic
-   * @param {Object} chanParams - Paramaters for the channel
+   * @param {Object} chanParams - Parameters for the channel
    * @returns {Channel}
    */
   channel(topic, chanParams = {}){
