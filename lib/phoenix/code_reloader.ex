@@ -305,7 +305,6 @@ defmodule Phoenix.CodeReloader do
   defp format_output(output) do
     output
     |> String.trim
-    |> Plug.HTML.html_escape
     |> Phoenix.CodeReloader.Colors.to_html
   end
 
