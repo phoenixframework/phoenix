@@ -111,8 +111,8 @@ defmodule Phoenix.CodeReloader do
   defp feedback_started?(conn),
     do: conn.state == :chunked
 
-  defp send_feedback?(conn),
-    do: accepts_html?(conn) and not is_ajax?(conn)
+  defp is_unix?,
+    do: match?({:unix, _}, :os.type())
 
   defp accepts_html?(conn) do
     conn
@@ -123,6 +123,9 @@ defmodule Phoenix.CodeReloader do
   defp is_ajax?(conn) do
     "XMLHttpRequest" in get_req_header(conn, "x-requested-with")
   end
+
+  defp send_feedback?(conn),
+    do: accepts_html?(conn) and not is_ajax?(conn) and is_unix?()
 
   defp header_template(title) do
     """
