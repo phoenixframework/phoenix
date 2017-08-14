@@ -30,6 +30,30 @@ defmodule Mix.Tasks.Phx.Gen.SchemaTest do
         human_singular: "Post",
         attrs: [title: :string],
         types: %{title: :string},
+        route_helper: "post",
+        defaults: %{title: ""},
+      } = schema
+      assert String.ends_with?(schema.file, "lib/phoenix/blog/post.ex")
+    end
+  end
+
+  test "build with nested web namespace", config do
+    in_tmp_project config.test, fn ->
+      schema = Gen.Schema.build(~w(Blog.Post posts title:string --web API.V1), [])
+
+      assert %Schema{
+        alias: Post,
+        module: Phoenix.Blog.Post,
+        repo: Phoenix.Repo,
+        migration?: true,
+        migration_defaults: %{title: ""},
+        plural: "posts",
+        singular: "post",
+        human_plural: "Posts",
+        human_singular: "Post",
+        attrs: [title: :string],
+        types: %{title: :string},
+        route_helper: "api_v1_post",
         defaults: %{title: ""},
       } = schema
       assert String.ends_with?(schema.file, "lib/phoenix/blog/post.ex")
