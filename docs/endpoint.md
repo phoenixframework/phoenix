@@ -51,7 +51,7 @@ Static files are served from `priv/static` before any part of our request makes 
     at: "/", from: :hello, gzip: false,
     only: ~w(css fonts images js favicon.ico robots.txt)
 ```
-If code reloading is enabled, a socket will be used to communicate to the browser that the page needs to be reloaded when code is changed on the server. This feature is enabled by default in the development environment. This is configured using `config :hello, HelloWeb.Endpoint, core_reloader: true`.
+If code reloading is enabled, a socket will be used to communicate to the browser that the page needs to be reloaded when code is changed on the server. This feature is enabled by default in the development environment. This is configured using `config :hello, HelloWeb.Endpoint, code_reloader: true`.
 
 ```elixir
   if code_reloading? do
