@@ -10,7 +10,7 @@ Let's see this in action.
 
 > Note: Before we proceed, we'll need to have PostgreSQL installed and running on our system. We'll also need to configure our repo with the correct login credentials. [The section on ecto.create in the Mix Tasks guide](mix_tasks.html#ecto-specific-mix-tasks) has more information on this, and the [Ecto Models Guide](ecto_models.html) dives into the details on how it all works.
 
-In a freshly generated application, let's run `mix test` at the root of the project. (Please see the [Up and Running Guide](up_and_running.html) for instructions on generating a new application.)
+In a freshly generated application (we use a project named "hello" in the examples), let's run `mix test` at the root of the project. (Please see the [Up and Running Guide](up_and_running.html) for instructions on generating a new application.)
 
 ```console
 $ mix test
@@ -45,11 +45,11 @@ test
     └── page_view_test.exs
 ```
 
-The test cases we get for free include `test/controllers/page_controller_test.exs`, `test/views/error_view_test.exs`, and `test/views/page_view_test.exs`. Nice.
+The test cases we get for free include `test/hello_web/controllers/page_controller_test.exs`, `test/hello_web/views/error_view_test.exs`, and `test/hello_web/views/page_view_test.exs`. Nice.
 
 We're going to look at test cases in detail throughout the testing guides, but let's take a quick look at these three, just to get our feet wet.
 
-The first test case we'll look at is `test/controllers/page_controller_test.exs`.
+The first test case we'll look at is `test/hello_web/controllers/page_controller_test.exs`.
 
 ```elixir
 defmodule HelloWeb.PageControllerTest do
@@ -68,7 +68,7 @@ The `get/2` function gives us a connection struct set up as if it had been used 
 
 The assertion actually tests three things - that we got an HTML response (by checking for a content-type of "text/html"), that our response code was 200, and that the body of our response contains the string "Welcome to Phoenix!"
 
-The error view test case, `test/views/error_view_test.exs`, illustrates a few interesting things of its own.
+The error view test case, `test/hello_web/views/error_view_test.exs`, illustrates a few interesting things of its own.
 
 ```elixir
 defmodule HelloWeb.ErrorViewTest do
@@ -98,7 +98,7 @@ end
 
 It also imports `Phoenix.View` in order to use the `render_to_string/3` function. With that, all the assertions can be simple string equality tests.
 
-The page view case, `test/views/page_view_test.exs`, does not contain any tests by default, but it is here for us when we need to add functions to our `HelloWeb.PageView` module.
+The page view case, `test/hello_web/views/page_view_test.exs`, does not contain any tests by default, but it is here for us when we need to add functions to our `HelloWeb.PageView` module.
 
 ```elixir
 defmodule HelloWeb.PageViewTest do
@@ -136,10 +136,10 @@ Finished in 0.2 seconds
 Randomized with seed 540755
 ```
 
-If we would like to run all the tests in a given directory, `test/controllers` for instance, we can pass the path to that directory to `mix test`.
+If we would like to run all the tests in a given directory, `test/hello_web/controllers` for instance, we can pass the path to that directory to `mix test`.
 
 ```console
-$ mix test test/controllers/
+$ mix test test/hello_web/controllers/
 .
 
 Finished in 0.2 seconds
@@ -151,7 +151,7 @@ Randomized with seed 652376
 In order to run all the tests in a specific file, we can pass the path to that file into `mix test`.
 
 ```console
-$ mix test test/views/error_view_test.exs
+$ mix test test/hello_web/views/error_view_test.exs
 ...
 
 Finished in 0.2 seconds
@@ -165,7 +165,7 @@ And we can run a single test in a file by appending a colon and a line number to
 Let's say we only wanted to run the test for the way `HelloWeb.ErrorView` renders `500.html`. The test begins on line 12 of the file, so this is how we would do it.
 
 ```console
-$ mix test test/views/error_view_test.exs:12
+$ mix test test/hello_web/views/error_view_test.exs:12
 Including tags: [line: "12"]
 Excluding tags: [:test]
 
@@ -185,7 +185,7 @@ ExUnit allows us to tag our tests at the case level or on the individual test le
 
 Let's experiment with how this works.
 
-First, we'll add a `@moduletag` to `test/views/error_view_test.exs`.
+First, we'll add a `@moduletag` to `test/hello_web/views/error_view_test.exs`.
 
 ```elixir
 defmodule HelloWeb.ErrorViewTest do
@@ -227,7 +227,7 @@ Randomized with seed 125659
 > Note: ExUnit tells us exactly which tags it is including and excluding for each test run. If we look back to the previous section on running tests, we'll see that line numbers specified for individual tests are actually treated as tags.
 
 ```console
-$ mix test test/views/error_view_test.exs:12
+$ mix test test/hello_web/views/error_view_test.exs:12
 Including tags: [line: "12"]
 Excluding tags: [:test]
 
@@ -370,7 +370,7 @@ Finished in 0.2 seconds
 Randomized with seed 41241
 ```
 
-This runs the two tests tagged with `individual_test` as well as the one from `test/controllers/page_controller_test.exs`.
+This runs the two tests tagged with `individual_test` as well as the one from `test/hello_web/controllers/page_controller_test.exs`.
 
 We can be more specific and exclude all the tests from the error view case except the one tagged with `individual_test` that has the value "yup".
 
@@ -430,7 +430,7 @@ Randomized with seed 748424
 
 Running tests in random order is a good way to ensure that our tests are truly isolated. If we notice that we get sporadic failures for a given test, it may be because a previous test changes the state of the system in ways that aren't cleaned up afterward, thereby affecting the tests which follow. Those failures might only present themselves if the tests are run in a specific order.
 
-ExUnit, will randomize the order tests run in by default, using an integer to seed the randomization. If we notice that a specific random seed triggers our intermittent failure, we can re-run the tests with that same seed to reliably recreate that test sequence in order to help us figure out what the problem is.
+ExUnit will randomize the order tests run in by default, using an integer to seed the randomization. If we notice that a specific random seed triggers our intermittent failure, we can re-run the tests with that same seed to reliably recreate that test sequence in order to help us figure out what the problem is.
 
 ```console
 $ mix test --seed 401472

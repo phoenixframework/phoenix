@@ -37,7 +37,7 @@ Let's separate this process into a few steps so we can keep track of where we ar
 - Install the Heroku Toolbelt
 - Create the Heroku application
 - Add the Phoenix static buildpack
-- Make our project Heroku-ready
+- Make our project ready for Heroku
 - Deploy time!
 - Useful Heroku commands
 
@@ -106,17 +106,17 @@ Buildpack added. Next release on mysterious-meadow-6277 will use:
 Run `git push heroku master` to create a new release using these buildpacks.
 ```
 
-## Making our Project Heroku-ready
+## Making our Project ready for Heroku
 
 Every new Phoenix project ships with a config file `config/prod.secret.exs` which stores configuration that should not be committed along with our source code. By default Phoenix adds it to our `.gitignore` file.
 
 This works great except Heroku uses [environment variables](https://devcenter.heroku.com/articles/config-vars) to pass sensitive informations to our application. It means we need to make some changes to our config before we can deploy.
 
-First, let's make sure our secret key is loaded from Heroku's environment variables instead of `config/prod.secret.exs` by adding a `secret_key_base` line  in `config/prod.exs`:
+First, let's make sure our secret key is loaded from Heroku's environment variables instead of `config/prod.secret.exs` by adding a `secret_key_base` line  in `config/prod.exs` (remember to add a comma to the end of the preceding line):
 
 ```elixir
 config :hello, HelloWeb.Endpoint,
-  http: [port: {:system, "PORT"}],
+  load_from_system_env: true,
   url: [host: "example.com", port: 80],
   cache_static_manifest: "priv/static/cache_manifest.json",
   secret_key_base: Map.fetch!(System.get_env(), "SECRET_KEY_BASE")
@@ -160,7 +160,7 @@ use Mix.Config
 ...
 
 config :hello, HelloWeb.Endpoint,
-  http: [port: {:system, "PORT"}],
+  load_from_system_env: true,
   url: [scheme: "https", host: "mysterious-meadow-6277.herokuapp.com", port: 443],
   force_ssl: [rewrite_on: [:x_forwarded_proto]],
   cache_static_manifest: "priv/static/cache_manifest.json",
@@ -188,12 +188,13 @@ defmodule HelloWeb.UserSocket do
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket,
     timeout: 45_000
+    ...
 end
 ```
 
-This ensures that any idle connections are closed by Phoenix before they reach Heroku's 55 second timeout window.
+This ensures that any idle connections are closed by Phoenix before they reach Heroku's 55-second timeout window.
 
-Lastly, we'll need to create a [Procfile](https://devcenter.heroku.com/articles/procfile) with the following:
+Lastly, we'll need to create a [Procfile](https://devcenter.heroku.com/articles/procfile) (a text file called "Procfile" in the root of our project’s folder) with the following line:
 
 ```
 web: MIX_ENV=prod mix phx.server
@@ -216,8 +217,7 @@ $ heroku config:set POOL_SIZE=18
 
 This value should be just under the number of available connections, leaving a couple open for migrations and mix tasks. The hobby-dev database allows 20 connections, so we set this number to 18. If additional dynos will share the database, reduce the `POOL_SIZE` to give each dyno an equal share.
 
-When running a mix task you will also want to limit its pool size like so:
-
+When running a mix task later (after we have pushed the project to Heroku) you will also want to limit its pool size like so:
 ```console
 $ heroku run "POOL_SIZE=2 mix hello.task"
 ```
@@ -252,7 +252,7 @@ Let's commit all our changes:
 ```
 $ git add config/prod.exs
 $ git add Procfile
-$ git add web/channels/user_socket.ex
+$ git add lib/hello_web/channels/user_socket.ex
 $ git commit -m "Use production config from Heroku ENV variables and decrease socket timeout"
 ```
 
@@ -344,7 +344,7 @@ To https://git.heroku.com/mysterious-meadow-6277.git
  * [new branch]      master -> master
 ```
 
-Typing `heroku open` in the terminal should launch a browser with the Phoenix welcome page opened. In case you are using Ecto to access a database, you will also need to run migrations after the first deploy:
+Typing `heroku open` in the terminal should launch a browser with the Phoenix welcome page opened. In the event that you are using Ecto to access a database, you will also need to run migrations after the first deploy:
 
 ```console
 $ heroku run "POOL_SIZE=2 mix ecto.migrate"

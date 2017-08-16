@@ -38,7 +38,7 @@ Remember to update your repository by running migrations:
    $ mix ecto.migrate
 ```
 
-A couple files were generated with this task. First, we have a `user.ex` file, containing our Ecto schema with our schema definition of the fields we passed to the task. Next, a migration file was generated inside `priv/repo/migrations` which will create our database table that our schema maps to.
+A couple of files were generated with this task. First, we have a `user.ex` file, containing our Ecto schema with our schema definition of the fields we passed to the task. Next, a migration file was generated inside `priv/repo/migrations` which will create our database table that our schema maps to.
 
 With our files in place, let's follow the instructions and run our migration. If the repo hasn't been created yet, run the mix ecto.create task. Next we can run:
 
@@ -190,7 +190,7 @@ Ecto schemas at their core are simply Elixir structs. Our `schema` block is what
 
 ## Changesets and Validations
 
-Changesets define a pipeline of transformations our data needs to undergo before it will be ready for our application to use. These transformations might include type-casting, user input validation, and filtering out any extraneous parameters. Often times, we'll use changesets to validate user input before writing it to the database. Ecto Repos are also changeset-aware, which allows them not only to refuse invalid data, but also perform the minimal database updates possible by inspecting the changeset to know which fields have changed.
+Changesets define a pipeline of transformations our data needs to undergo before it will be ready for our application to use. These transformations might include type-casting, user input validation, and filtering out any extraneous parameters. Often we'll use changesets to validate user input before writing it to the database. Ecto Repos are also changeset-aware, which allows them not only to refuse invalid data, but also perform the minimal database updates possible by inspecting the changeset to know which fields have changed.
 
 Let's take a closer look at our default changeset function.
 
@@ -370,7 +370,7 @@ There are many more validations and transformations we can perform in a changese
 
 We've talked a lot about migrations and data-storage, but we haven't yet persisted any of our schemas or changesets. We briefly looked at our repo module in `lib/hello/repo.ex` earlier, now it's time to put it to use. Ecto Repo's are the interface into a storage system, be it a Database like PostgreSQL, or an external service like a RESTful API. The Repo module's purpose is to take care of the finer details of persistence and data querying for us. As the caller, we only care about fetching and persisting data. The Repo takes care of the underlying Database adapter communication, connection pooling, and error translation for database constraint violations.
 
-Let's head back over to IEx with `iex -S mix`, and insert a couple users to the database.
+Let's head back over to IEx with `iex -S mix`, and insert a couple of users to the database.
 
 ```console
 iex> Repo.insert(%User{email: "user1@example.com"})
@@ -392,7 +392,7 @@ INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETUR
   updated_at: ~N[2017-05-23 19:06:08.452556]}}
 ```
 
-We started by aliasing our `User` and `Repo` modules for easy access. Next, we called `Repo.insert/1` and passed a user struct. Since we're in the `dev` environment, we can see the debug logs for the query our Repo performed when inserting the underlying `%User{}` data. We received a 2-tuple back with `{:ok, %User{}}`, which lets us know the insertion was successful. With a couple users inserted, let's fetched them back out of the repo.
+We started by aliasing our `User` and `Repo` modules for easy access. Next, we called `Repo.insert/1` and passed a user struct. Since we're in the `dev` environment, we can see the debug logs for the query our Repo performed when inserting the underlying `%User{}` data. We received a 2-tuple back with `{:ok, %User{}}`, which lets us know the insertion was successful. With a couple of users inserted, let's fetch them back out of the repo.
 
 ```console
 iex> Repo.all(User)
