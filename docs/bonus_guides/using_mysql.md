@@ -44,8 +44,7 @@ defmodule Hello.Mixfile do
 . . .
 def application do
   [mod: {MysqlTester, []},
-  applications: [:phoenix, :cowboy, :logger,
-  :phoenix_ecto, :mariaex]]
+  extra_applications: [:logger, :runtime_tools]]
 end
 . . .
 ```
