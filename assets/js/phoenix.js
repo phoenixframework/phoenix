@@ -8,8 +8,8 @@
  * Connect to the server using the `Socket` class:
  *
  * ```javascript
- *     let socket = new Socket("/socket", {params: {userToken: "123"}})
- *     socket.connect()
+ * let socket = new Socket("/socket", {params: {userToken: "123"}})
+ * socket.connect()
  * ```
  *
  * The `Socket` constructor takes the mount point of the socket,
@@ -27,18 +27,19 @@
  * the channel is joined with ok/error/timeout matches:
  *
  * ```javascript
- *     let channel = socket.channel("room:123", {token: roomToken})
- *     channel.on("new_msg", msg => console.log("Got message", msg) )
- *     $input.onEnter( e => {
- *       channel.push("new_msg", {body: e.target.val}, 10000)
- *        .receive("ok", (msg) => console.log("created message", msg) )
- *        .receive("error", (reasons) => console.log("create failed", reasons) )
- *        .receive("timeout", () => console.log("Networking issue...") )
- *     })
- *     channel.join()
- *       .receive("ok", ({messages}) => console.log("catching up", messages) )
- *       .receive("error", ({reason}) => console.log("failed join", reason) )
- *       .receive("timeout", () => console.log("Networking issue. Still waiting...") )
+ * let channel = socket.channel("room:123", {token: roomToken})
+ * channel.on("new_msg", msg => console.log("Got message", msg) )
+ * $input.onEnter( e => {
+ *   channel.push("new_msg", {body: e.target.val}, 10000)
+ *     .receive("ok", (msg) => console.log("created message", msg) )
+ *     .receive("error", (reasons) => console.log("create failed", reasons) )
+ *     .receive("timeout", () => console.log("Networking issue...") )
+ * })
+ *
+ * channel.join()
+ *   .receive("ok", ({messages}) => console.log("catching up", messages) )
+ *   .receive("error", ({reason}) => console.log("failed join", reason) )
+ *   .receive("timeout", () => console.log("Networking issue. Still waiting..."))
  *```
  *
  * ## Joining
@@ -75,8 +76,8 @@
  * `socket.onError()` and `socket.onClose()` events, ie:
  *
  * ```javascript
- *     socket.onError( () => console.log("there was an error with the connection!") )
- *     socket.onClose( () => console.log("the connection dropped") )
+ * socket.onError( () => console.log("there was an error with the connection!") )
+ * socket.onClose( () => console.log("the connection dropped") )
  * ```
  *
  *
@@ -86,8 +87,8 @@
  * to monitor the channel lifecycle, ie:
  *
  * ```javascript
- *     channel.onError( () => console.log("there was an error!") )
- *     channel.onClose( () => console.log("the channel has gone away gracefully") )
+ * channel.onError( () => console.log("there was an error!") )
+ * channel.onClose( () => console.log("the channel has gone away gracefully") )
  * ```
  *
  * ### onError hooks
@@ -135,46 +136,46 @@
  * they came online from:
  *
  * ```javascript
- *     let state = {}
- *     state = Presence.syncState(state, stateFromServer)
- *     let listBy = (id, {metas: [first, ...rest]}) => {
- *       first.count = rest.length + 1 // count of this user's presences
- *       first.id = id
- *       return first
- *     }
- *     let onlineUsers = Presence.list(state, listBy)
+ * let state = {}
+ * state = Presence.syncState(state, stateFromServer)
+ * let listBy = (id, {metas: [first, ...rest]}) => {
+ *   first.count = rest.length + 1 // count of this user's presences
+ *   first.id = id
+ *   return first
+ * }
+ * let onlineUsers = Presence.list(state, listBy)
  * ```
  *
  *
  * ### Example Usage
- *```javascript
- *     // detect if user has joined for the 1st time or from another tab/device
- *     let onJoin = (id, current, newPres) => {
- *       if(!current){
- *         console.log("user has entered for the first time", newPres)
- *       } else {
- *         console.log("user additional presence", newPres)
- *       }
- *     }
- *     // detect if user has left from all tabs/devices, or is still present
- *     let onLeave = (id, current, leftPres) => {
- *       if(current.metas.length === 0){
- *         console.log("user has left from all devices", leftPres)
- *       } else {
- *         console.log("user left from a device", leftPres)
- *       }
- *     }
- *     let presences = {} // client's initial empty presence state
- *     // receive initial presence data from server, sent after join
- *     myChannel.on("presence_state", state => {
- *       presences = Presence.syncState(presences, state, onJoin, onLeave)
- *       displayUsers(Presence.list(presences))
- *     })
- *     // receive "presence_diff" from server, containing join/leave events
- *     myChannel.on("presence_diff", diff => {
- *       presences = Presence.syncDiff(presences, diff, onJoin, onLeave)
- *       this.setState({users: Presence.list(room.presences, listBy)})
- *     })
+ * ```javascript
+ * // detect if user has joined for the 1st time or from another tab/device
+ * let onJoin = (id, current, newPres) => {
+ *   if(!current){
+ *     console.log("user has entered for the first time", newPres)
+ *   } else {
+ *     console.log("user additional presence", newPres)
+ *   }
+ * }
+ * // detect if user has left from all tabs/devices, or is still present
+ * let onLeave = (id, current, leftPres) => {
+ *   if(current.metas.length === 0){
+ *     console.log("user has left from all devices", leftPres)
+ *   } else {
+ *     console.log("user left from a device", leftPres)
+ *   }
+ * }
+ * let presences = {} // client's initial empty presence state
+ * // receive initial presence data from server, sent after join
+ * myChannel.on("presence_state", state => {
+ *   presences = Presence.syncState(presences, state, onJoin, onLeave)
+ *   displayUsers(Presence.list(presences))
+ * })
+ * // receive "presence_diff" from server, containing join/leave events
+ * myChannel.on("presence_diff", diff => {
+ *   presences = Presence.syncDiff(presences, diff, onJoin, onLeave)
+ *   this.setState({users: Presence.list(room.presences, listBy)})
+ * })
  * ```
  * @module phoenix
  */
@@ -268,9 +269,9 @@ class Push {
     return this
   }
 
-
-  // private
-
+  /**
+   * @private
+   */
   reset(){
     this.cancelRefEvent()
     this.ref          = null
@@ -279,20 +280,32 @@ class Push {
     this.sent         = false
   }
 
+  /**
+   * @private
+   */
   matchReceive({status, response, ref}){
     this.recHooks.filter( h => h.status === status )
                  .forEach( h => h.callback(response) )
   }
 
+  /**
+   * @private
+   */
   cancelRefEvent(){ if(!this.refEvent){ return }
     this.channel.off(this.refEvent)
   }
 
+  /**
+   * @private
+   */
   cancelTimeout(){
     clearTimeout(this.timeoutTimer)
     this.timeoutTimer = null
   }
 
+  /**
+   * @private
+   */
   startTimeout(){ if(this.timeoutTimer){ this.cancelTimeout() }
     this.ref      = this.channel.socket.makeRef()
     this.refEvent = this.channel.replyEventName(this.ref)
@@ -309,10 +322,16 @@ class Push {
     }, this.timeout)
   }
 
+  /**
+   * @private
+   */
   hasReceived(status){
     return this.receivedResp && this.receivedResp.status === status
   }
 
+  /**
+   * @private
+   */
   trigger(status, response){
     this.channel.trigger(this.refEvent, {status, response})
   }
@@ -370,6 +389,9 @@ export class Channel {
     })
   }
 
+  /**
+   * @private
+   */
   rejoinUntilConnected(){
     this.rejoinTimer.scheduleTimeout()
     if(this.socket.isConnected()){
@@ -377,6 +399,11 @@ export class Channel {
     }
   }
 
+  /**
+   * Join the channel
+   * @param {integer} timeout
+   * @returns {Push}
+   */
   join(timeout = this.timeout){
     if(this.joinedOnce){
       throw(`tried to join multiple times. 'join' can only be called a single time per channel instance`)
@@ -387,41 +414,64 @@ export class Channel {
     }
   }
 
+  /**
+   * Hook into channel close
+   * @param {Function} callback
+   */
   onClose(callback){
-    return this.on(CHANNEL_EVENTS.close, callback)
+    this.on(CHANNEL_EVENTS.close, callback)
   }
 
+  /**
+   * Hook into channel errors
+   * @param {Function} callback
+   */
   onError(callback){
     return this.on(CHANNEL_EVENTS.error, reason => callback(reason))
   }
 
- /** Subscribes on channel events
-  *
-  * Subscription returnrs a ref counter, which can be used later to 
-  * unsubsribe exact event listener:
-  *
-  * ```javascript
-  *     ref1 = channel.on("event", do_stuff)
-  *     ref2 = channel.on("event", do_other_stuff)
-  *     channel.off("event", ref1)
-  *     // Since unsubscription, do_stuff won't fire,
-  *     // while do_other_stuff will keep firing on the "event" 
-  * ```
-  */
+  /**
+   * Subscribes on channel events
+   *
+   * Subscription returns a ref counter, which can be used later to
+   * unsubscribe the exact event listener
+   *
+   * @example
+   * const ref1 = channel.on("event", do_stuff)
+   * const ref2 = channel.on("event", do_other_stuff)
+   * channel.off("event", ref1)
+   * // Since unsubscription, do_stuff won't fire,
+   * // while do_other_stuff will keep firing on the "event"
+   *
+   * @param {string} event
+   * @param {Function} callback
+   */
   on(event, callback){
     let ref = this.bindingRef++
     this.bindings.push({event, ref, callback})
     return ref
   }
 
+  /**
+   * @param {string} event
+   * @param {Function} callback
+   */
   off(event, ref){
     this.bindings = this.bindings.filter((bind) => {
       return !(bind.event === event && (typeof ref === "undefined" || ref === bind.ref))
     })
   }
 
+  /**
+   * @private
+   */
   canPush(){ return this.socket.isConnected() && this.isJoined() }
 
+  /**
+   * @param {string} event
+   * @param {Object} payload
+   * @returns {Push}
+   */
   push(event, payload, timeout = this.timeout){
     if(!this.joinedOnce){
       throw(`tried to push '${event}' to '${this.topic}' before joining. Use channel.join() before pushing events`)
@@ -447,9 +497,11 @@ export class Channel {
    * To receive leave acknowledgements, use the a `receive`
    * hook to bind to the server ack, ie:
    *
-   * ```javascript
-   *     channel.leave().receive("ok", () => alert("left!") )
-   * ```
+   * @example
+   * channel.leave().receive("ok", () => alert("left!") )
+   *
+   * @param {integer} timeout
+   * @returns {Push}
    */
   leave(timeout = this.timeout){
     this.state = CHANNEL_STATES.leaving
@@ -473,12 +525,15 @@ export class Channel {
    * before dispatching to the channel callbacks.
    *
    * Must return the payload, modified or unmodified
+   * @param {string} event
+   * @param {Object} payload
+   * @param {integer} ref
    */
   onMessage(event, payload, ref){ return payload }
 
-
-  // private
-
+  /**
+   * @private
+   */
   isMember(topic, event, payload, joinRef){
     if(this.topic !== topic){ return false }
     let isLifecycleEvent = CHANNEL_LIFECYCLE_EVENTS.indexOf(event) >= 0
@@ -491,17 +546,29 @@ export class Channel {
     }
   }
 
+  /**
+   * @private
+   */
   joinRef(){ return this.joinPush.ref }
 
+  /**
+   * @private
+   */
   sendJoin(timeout){
     this.state = CHANNEL_STATES.joining
     this.joinPush.resend(timeout)
   }
 
+  /**
+   * @private
+   */
   rejoin(timeout = this.timeout){ if(this.isLeaving()){ return }
     this.sendJoin(timeout)
   }
 
+  /**
+   * @private
+   */
   trigger(event, payload, ref, joinRef){
     let handledPayload = this.onMessage(event, payload, ref, joinRef)
     if(payload && !handledPayload){ throw("channel onMessage callbacks must return the payload, modified or unmodified") }
@@ -510,16 +577,38 @@ export class Channel {
                  .map( bind => bind.callback(handledPayload, ref, joinRef || this.joinRef()))
   }
 
+  /**
+   * @private
+   */
   replyEventName(ref){ return `chan_reply_${ref}` }
 
+  /**
+   * @private
+   */
   isClosed() { return this.state === CHANNEL_STATES.closed }
+
+  /**
+   * @private
+   */
   isErrored(){ return this.state === CHANNEL_STATES.errored }
+
+  /**
+   * @private
+   */
   isJoined() { return this.state === CHANNEL_STATES.joined }
+
+  /**
+   * @private
+   */
   isJoining(){ return this.state === CHANNEL_STATES.joining }
+
+  /**
+   * @private
+   */
   isLeaving(){ return this.state === CHANNEL_STATES.leaving }
 }
 
-let Serializer = {
+const Serializer = {
   encode(msg, callback){
     let payload = [
       msg.join_ref, msg.ref, msg.topic, msg.event, msg.payload
@@ -572,9 +661,9 @@ let Serializer = {
  * Defaults to stepped backoff of:
  *
  * ```javascript
- *  function(tries){
- *    return [1000, 5000, 10000][tries - 1] || 10000
- *  }
+ * function(tries){
+ *   return [1000, 5000, 10000][tries - 1] || 10000
+ * }
  * ```
  * @param {Function} opts.logger - The optional function for specialized logging, ie:
  * ```javascript
@@ -622,8 +711,18 @@ export class Socket {
     }, this.reconnectAfterMs)
   }
 
+  /**
+   * Returns the socket protocol
+   *
+   * @returns {string}
+   */
   protocol(){ return location.protocol.match(/^https/) ? "wss" : "ws" }
 
+  /**
+   * The fully qualifed socket url
+   *
+   * @returns {string}
+   */
   endPointURL(){
     let uri = Ajax.appendParams(
       Ajax.appendParams(this.endPoint, this.params), {vsn: VSN})
@@ -633,6 +732,11 @@ export class Socket {
     return `${this.protocol()}://${location.host}${uri}`
   }
 
+  /**
+   * @param {Function} callback
+   * @param {integer} code
+   * @param {string} reason
+   */
   disconnect(callback, code, reason){
     if(this.conn){
       this.conn.onclose = function(){} // noop
@@ -669,17 +773,39 @@ export class Socket {
    */
   log(kind, msg, data){ this.logger(kind, msg, data) }
 
-  // Registers callbacks for connection state change events
-  //
-  // Examples
-  //
-  //    socket.onError(function(error){ alert("An error occurred") })
-  //
-  onOpen     (callback){ this.stateChangeCallbacks.open.push(callback) }
-  onClose    (callback){ this.stateChangeCallbacks.close.push(callback) }
-  onError    (callback){ this.stateChangeCallbacks.error.push(callback) }
-  onMessage  (callback){ this.stateChangeCallbacks.message.push(callback) }
+  /**
+   * Registers callbacks for connection open events
+   *
+   * @example socket.onOpen(function(){ console.info("the socket was opened") })
+   *
+   * @param {Function} callback
+   */
+  onOpen(callback){ this.stateChangeCallbacks.open.push(callback) }
 
+  /**
+   * Registers callbacks for connection close events
+   * @param {Function} callback
+   */
+  onClose(callback){ this.stateChangeCallbacks.close.push(callback) }
+
+  /**
+   * Registers callbacks for connection error events
+   *
+   * @example socket.onError(function(error){ alert("An error occurred") })
+   *
+   * @param {Function} callback
+   */
+  onError(callback){ this.stateChangeCallbacks.error.push(callback) }
+
+  /**
+   * Registers callbacks for connection message events
+   * @param {Function} callback
+   */
+  onMessage(callback){ this.stateChangeCallbacks.message.push(callback) }
+
+  /**
+   * @private
+   */
   onConnOpen(){
     this.log("transport", `connected to ${this.endPointURL()}`)
     this.flushSendBuffer()
@@ -691,6 +817,9 @@ export class Socket {
     this.stateChangeCallbacks.open.forEach( callback => callback() )
   }
 
+  /**
+   * @private
+   */
   onConnClose(event){
     this.log("transport", "close", event)
     this.triggerChanError()
@@ -699,16 +828,25 @@ export class Socket {
     this.stateChangeCallbacks.close.forEach( callback => callback(event) )
   }
 
+  /**
+   * @private
+   */
   onConnError(error){
     this.log("transport", error)
     this.triggerChanError()
     this.stateChangeCallbacks.error.forEach( callback => callback(error) )
   }
 
+  /**
+   * @private
+   */
   triggerChanError(){
     this.channels.forEach( channel => channel.trigger(CHANNEL_EVENTS.error) )
   }
 
+  /**
+   * @returns {string}
+   */
   connectionState(){
     switch(this.conn && this.conn.readyState){
       case SOCKET_STATES.connecting: return "connecting"
@@ -718,8 +856,14 @@ export class Socket {
     }
   }
 
+  /**
+   * @returns {boolean}
+   */
   isConnected(){ return this.connectionState() === "open" }
 
+  /**
+   * @param {Channel}
+   */
   remove(channel){
     this.channels = this.channels.filter(c => c.joinRef() !== channel.joinRef())
   }
@@ -737,6 +881,9 @@ export class Socket {
     return chan
   }
 
+  /**
+   * @param {Object} data
+   */
   push(data){
     let {topic, event, payload, ref, join_ref} = data
     let callback = () => {
@@ -755,6 +902,7 @@ export class Socket {
 
   /**
    * Return the next message ref, accounting for overflows
+   * @returns {string}
    */
   makeRef(){
     let newRef = this.ref + 1
@@ -1048,17 +1196,15 @@ export var Presence = {
  * Creates a timer that accepts a `timerCalc` function to perform
  * calculated timeout retries, such as exponential backoff.
  *
- * ## Examples
+ * @example
+ * let reconnectTimer = new Timer(() => this.connect(), function(tries){
+ *   return [1000, 5000, 10000][tries - 1] || 10000
+ * })
+ * reconnectTimer.scheduleTimeout() // fires after 1000
+ * reconnectTimer.scheduleTimeout() // fires after 5000
+ * reconnectTimer.reset()
+ * reconnectTimer.scheduleTimeout() // fires after 1000
  *
- * ```javascript
- *    let reconnectTimer = new Timer(() => this.connect(), function(tries){
- *      return [1000, 5000, 10000][tries - 1] || 10000
- *    })
- *    reconnectTimer.scheduleTimeout() // fires after 1000
- *    reconnectTimer.scheduleTimeout() // fires after 5000
- *    reconnectTimer.reset()
- *    reconnectTimer.scheduleTimeout() // fires after 1000
- * ```
  * @param {Function} callback
  * @param {Function} timerCalc
  */
