@@ -48,7 +48,7 @@ When we reload the Welcome to Phoenix page, we should see our new title.
 
 The `<%=` and `%>` are from the Elixir [EEx](http://elixir-lang.org/docs/stable/eex/) project. They enclose executable Elixir code within a template. The `=` tells EEx to print the result. If the `=` is not there, EEx will still execute the code, but there will be no output. In our example, we are calling the `title/0` function from our `LayoutView` and printing the output into the title tag.
 
-Note that we didn't need to fully qualify `title/0` with `HelloWeb.LayoutView` because our `LayoutView` actually does the rendering. In fact, "templates" in Phoenix area really just function definitions on their view module. You can try this out by temporarily deleting your `lib/hello_web/templates/page/index.html.eex` file and adding this function clause to your `PageView` module in `lib/hello_web/views/page_view.ex`.
+Note that we didn't need to fully qualify `title/0` with `HelloWeb.LayoutView` because our `LayoutView` actually does the rendering. In fact, "templates" in Phoenix are really just function definitions on their view module. You can try this out by temporarily deleting your `lib/hello_web/templates/page/index.html.eex` file and adding this function clause to your `PageView` module in `lib/hello_web/views/page_view.ex`.
 
 ```elixir
 defmodule HelloWeb.PageView do
