@@ -424,7 +424,7 @@ It's not much to look at yet, but it works! We added relationships within our co
 
 ## Adding Account functions
 
-As we've seen, your context modules are dedicated modules that expose and group related functionality. Phoenix generates generic functions, such as `list_users` and `update_user`, but they only serve as a basis for you to grow your business logic and application from. To begin extending our Accounts context with real features, let's address an obvious issue of our application – we can create users with credentials in our system, but they have no way of signing in with those credentials. Building a complete user authentication system is beyond the scope of this guide, but let's get started with a basic email-only sign-in page that allows us to track a current user's session. This will let us focus on extending our `Accounts` context while giving you a good start to grow a complete authentication solution from.
+As we've seen, your context modules are dedicated modules that expose and group related functionality. Phoenix generates generic functions, such as `list_users` and `update_user`, but they only serve as a basis for you to grow your business logic and application from. To begin extending our `Accounts` context with real features, let's address an obvious issue of our application – we can create users with credentials in our system, but they have no way of signing in with those credentials. Building a complete user authentication system is beyond the scope of this guide, but let's get started with a basic email-only sign-in page that allows us to track a current user's session. This will let us focus on extending our `Accounts` context while giving you a good start to grow a complete authentication solution from.
 
 To start, let's think of a function name that describes what we want to accomplish. To authenticate a user by email address, we'll need a way to lookup that user and verify their entered credentials are valid. We can do this by exposing a single function on our `Accounts` context.
 
@@ -516,7 +516,7 @@ We used `resources` to generate a set of routes under the `"/session"` path. Thi
   end
 ```
 
-We defined an `authenticate_user/2` plug in the router which simply uses `Plug.Conn.get_session/2` to check for a `:user_id` in the session. If we find one, it means a user has previously authenticated, and we call into `Hello.Accounts.get_user!/` to place our `:current_user` into the connection assigns. If we don't have a session, we add a flash error message, redirect to the homepage, and criticially, we use `Plug.Conn.halt/1` to halt further plugs downstream from being invoked. We won't use this new plug quite yet, but it will be ready and waiting as we add authenticated routes in just a moment.
+We defined an `authenticate_user/2` plug in the router which simply uses `Plug.Conn.get_session/2` to check for a `:user_id` in the session. If we find one, it means a user has previously authenticated, and we call into `Hello.Accounts.get_user!/1` to place our `:current_user` into the connection assigns. If we don't have a session, we add a flash error message, redirect to the homepage, and we use `Plug.Conn.halt/1` to halt further plugs downstream from being invoked. We won't use this new plug quite yet, but it will be ready and waiting as we add authenticated routes in just a moment.
 
 Lastly, we need `SessionView` to render a template for our login form. Create a new file in `lib/hello_web/views/session_view.ex:`
 
@@ -554,14 +554,14 @@ Next, add a new template in `lib/hello_web/templates/session/new.html.eex:`
 
 To keep things simple, we added both our sign-in and sign-out forms in this template. For our sign-in form, we pass the `@conn` directly to `form_for`, pointing our form action at `session_path(@conn, :create)`. We also pass the `as: :user` option which tells Phoenix to wrap the form parameters inside a `"user"` key. Next, we used the `text_input` and `password_input` functions to send up an `"email"` and `"password"` parameter.
 
-For logging out, we simply defined a form that sends the `DELETE` HTTP method to server's session delete path. Now if you visit the sign-in page at `http://localhost:4000/sessions/new` and enter a bad email address, you should be greeted with your flash message. Entering a valid email address will redirect to the home page with a success flash notice.
+For logging out, we simply defined a form that sends the `DELETE` HTTP method to server's session delete path. Now if you visit the sign-in page at http://localhost:4000/sessions/new and enter a bad email address, you should be greeted with your flash message. Entering a valid email address will redirect to the home page with a success flash notice.
 
 With authentication in place, we're in good shape to begin building out our next features.
 
 
 ## Cross-context dependencies
 
-Now that we have the beginnings of user account and credential features, let begin work on the other main features of our application – managing page content. We want to support a content management system (CMS) where authors can create and edit pages of the site. While we could extend our Accounts context with CMS features, if we step back and think about the isolation of our application, we can see it doesn't fit. An accounts system shouldn't care at all about a CMS system. The responsibilities of our `Accounts` context is to manage users and their credentials, not handle page content changes. There's a clear need here for a separate context to  handle these responsibilities. Let's call it `CMS`.
+Now that we have the beginnings of user account and credential features, let begin work on the other main features of our application – managing page content. We want to support a content management system (CMS) where authors can create and edit pages of the site. While we could extend our `Accounts` context with CMS features, if we step back and think about the isolation of our application, we can see it doesn't fit. An accounts system shouldn't care at all about a CMS system. The responsibilities of our `Accounts` context is to manage users and their credentials, not handle page content changes. There's a clear need here for a separate context to  handle these responsibilities. Let's call it `CMS`.
 
 Let's create a `CMS` context to handle basic CMS duties. Before we write code, let's imagine we have the following CMS feature requirements:
 
@@ -655,7 +655,7 @@ Remember to update your repository by running migrations:
 
 ```
 
-We used the context generator to inject code, just like when we generated our credentials code. We added fields for the author bio, their role in the content management system, the genre the author writes in, and lastly a foreign key to a user in our accounts system. Since our accounts context is still the authority on end-users in our application, we will depend on it for our CMS authors. That said, any information specific to authors will stay in the authors schema. We could also decorate our Author with user account information by using virtual fields and never expose the User structure. This would ensure consumers of the CMS API are protected from changes in the User context.
+We used the context generator to inject code, just like when we generated our credentials code. We added fields for the author bio, their role in the content management system, the genre the author writes in, and lastly a foreign key to a user in our accounts system. Since our accounts context is still the authority on end-users in our application, we will depend on it for our CMS authors. That said, any information specific to authors will stay in the authors schema. We could also decorate our `Author` with user account information by using virtual fields and never expose the `User` structure. This would ensure consumers of the CMS API are protected from changes in the `User` context.
 
 Before we migrate our database, we need to handle data integrity once again in the newly generated `*_create_authors.exs` migration. Open up the new file in `priv/repo/migrations` and make the following change to the foreign key constraint:
 
@@ -895,7 +895,7 @@ With our new plugs in place, we can now modify our `create`, `update`, and `dele
   end
 ```
 
-We modified the `create` action to grab our `current_author` from the connection assigns, which was placed there by our `authenticate_user` plug in the router. We then passed our current author into `CMS.create_page` where it will be used to associate the author to the new page. Next, we changed the `update` action to pass the `conn.assigns.page` into `CMS.update_page/2`, rather than fetching it directly in the action. Since our `authorize_page` plug already fetched the page and placed it into the assigns, we can simply reference it here in the action. Similarly, we updated the `delete` action to pass the `conn.assigns.page` into the CMS rather than fetching the page in the action.
+We modified the `create` action to grab our `current_author` from the connection assigns, which was placed there by our `authenticate_user` plug in the router. We then passed our current author into `CMS.create_page` where it will be used to associate the author to the new page. Next, we changed the `update` action to pass the `conn.assigns.page` into `CMS.update_page/2`, rather than fetching it directly in the action. Since our `authorize_page` plug already fetched the page and placed it into the assigns, we can simply reference it here in the action. Similarly, we updated the `delete` action to pass the `conn.assigns.page` into the `CMS` rather than fetching the page in the action.
 
 To complete the web changes, let's display the author when showing a page. First, open up `lib/hello_web/views/cms/page_view.ex` and add a helper function to handle formatting the author's name:
 
@@ -913,7 +913,7 @@ end
 
 Next, let's open up `lib/hello_web/templates/cms/page/show.html.eex` and make use of our new function:
 
-```eex
+```diff
 + <li>
 +   <strong>Author:</strong>
 +   <%= author_name(@page) %>
@@ -936,7 +936,7 @@ And it works! We now have two isolated contexts responsible for user accounts an
 
 ## Adding CMS functions
 
-Just like we extended our `Accounts` context with new application-specific functions like `Accounts.authenticate_by_email_password/2`, let's extend our generated CMS context with new functionality. For any CMS system, the ability to track how many times a page has been viewed is essential for popularity ranks. While we could try to use the existing `CMS.update_page` function, along the lines of `CMS.update_page(user, page, %{views: page.views + 1})`, this would not only be prone to race conditions, but it would also require the caller to know too much about our CMS system. To see why the race condition exists, let's walk through the possible execution of events:
+Just like we extended our `Accounts` context with new application-specific functions like `Accounts.authenticate_by_email_password/2`, let's extend our generated `CMS` context with new functionality. For any CMS system, the ability to track how many times a page has been viewed is essential for popularity ranks. While we could try to use the existing `CMS.update_page` function, along the lines of `CMS.update_page(user, page, %{views: page.views + 1})`, this would not only be prone to race conditions, but it would also require the caller to know too much about our CMS system. To see why the race condition exists, let's walk through the possible execution of events:
 
 Intuitively, you would assume the following events:
 
@@ -1031,7 +1031,7 @@ def create_user(attrs) do
 end
 ```
 
-This may accomplish what we want, but now we need to wire up the schema relationships in the Accounts context to the CMS author. Worse, we have now taken our isolated Accounts context and required it to know about a content management system. This isn't what we want for isolated responsibilities in our application. There's a better way to handle these requirements.
+This may accomplish what we want, but now we need to wire up the schema relationships in the `Accounts` context to the `CMS` author. Worse, we have now taken our isolated `Accounts` context and required it to know about a content management system. This isn't what we want for isolated responsibilities in our application. There's a better way to handle these requirements.
 
 If you find yourself in similar situations where you feel your use case is requiring you to create circular dependencies across contexts, it's a sign you need a new context in the system to handle these application requirements. In our case, what we really want is an interface that handles all requirements when a user is created or registers in our application. To handle this, we could create a `UserRegistration` context, which calls into both the `Accounts` and `CMS` APIs to create a user, then associate a CMS author. Not only would this allow our Accounts to remain as isolated as possible, it gives us a clear, obvious API to handle `UserRegistration` needs in the system. If you take this approach, you can also use tools like `Ecto.Multi` to handle transactions across different context operations without deeply coupling the internal database calls. Part of our `UserRegistration` API could look something like this:
 
@@ -1050,6 +1050,6 @@ defmodule Hello.UserRegistration do
   end
 end
 ```
-We can take advantage of `Ecto.Multi` to create a pipeline of operations that can be run inside a transaction of our Repo. If any given operation fails, the transaction will be rolled back and an error will be returned containing which operation failed, as well as the changes up to that point. In our `register_user/1` example, we specified two operations, one that calls into `Accounts.create_user/1` and another that passes the newly created user to `CMS.ensure_author_exits/1`. The final step of our function is to invoke the operations with `Repo.transaction/1`.
+We can take advantage of `Ecto.Multi` to create a pipeline of operations that can be run inside a transaction of our `Repo`. If any given operation fails, the transaction will be rolled back and an error will be returned containing which operation failed, as well as the changes up to that point. In our `register_user/1` example, we specified two operations, one that calls into `Accounts.create_user/1` and another that passes the newly created user to `CMS.ensure_author_exits/1`. The final step of our function is to invoke the operations with `Repo.transaction/1`.
 
 The `UserRegistration` setup is likely simpler to implement than the dynamic author system we built – we decided to take the harder path exactly because those are decisions developers take on their applications every day.

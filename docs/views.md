@@ -55,14 +55,14 @@ defmodule HelloWeb.PageView do
   use HelloWeb, :view
 
   def render("index.html", assigns) do
-    "rendering with asigns #{inspect Map.keys(assigns)}"
+    "rendering with assigns #{inspect Map.keys(assigns)}"
   end
 end
 ```
 
 Now if you fire up the server with `mix phx.server` and visit `http://locahost:4000`, you should see the following text below your layout header instead of the main template page:
 ```
-rendering with asigns [:conn, :view_module, :view_template]
+rendering with assigns [:conn, :view_module, :view_template]
 ```
 
 Pretty neat, right? At compile-time, Phoenix precompiles all `*.html.eex` templates and turns them into `render/2` function clauses on their respective view modules. At runtime, all templates are already loaded in memory. There's no disk reads, complex file caching, or template engine computation involved. This is also why we were able to define functions like `title/0` in our `LayoutView` and they were immediately available inside the layout's `app.html.eex` – the call to `title/0` was just a local function call!
@@ -268,7 +268,7 @@ Great, so we have a `render/2` function that takes a template and an `assigns` m
 </html>
 ```
 
-Now we can use the `render/2` function we saw above when we were experimenting with rendering in the `iex` session. Since we know that Phoenix will precompile the `404.html.eex` template as a `render("index.html.eex, assigns)` function clause, we can delete the clause from our ErrorView.
+Now we can use the `render/2` function we saw above when we were experimenting with rendering in the `iex` session. Since we know that Phoenix will precompile the `404.html.eex` template as a `render("index.html.eex", assigns)` function clause, we can delete the clause from our ErrorView.
 
 ```diff
 - def render("404.html", _assigns) do

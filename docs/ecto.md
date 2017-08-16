@@ -101,8 +101,8 @@ And here's what that translates to in the actual `users` table.
 ```console
 hello_dev=# \d users
 Table "public.users"
-Column     |            Type             | Modifiers
-----------------+-----------------------------+----------------------------------------------------
+Column         |            Type             | Modifiers
+---------------+-----------------------------+----------------------------------------------------
 id             | integer                     | not null default nextval('users_id_seq'::regclass)
 name           | character varying(255)      |
 email          | character varying(255)      |

@@ -4,9 +4,7 @@ Plug lives at the heart of Phoenix's HTTP layer, and Phoenix puts Plug front and
 
 [Plug](https://github.com/elixir-lang/plug) is a specification for composable modules in between web applications. It is also an abstraction layer for connection adapters of different web servers. The basic idea of Plug is to unify the concept of a "connection" that we operate on. This differs from other HTTP middleware layers such as Rack, where the request and response are separated in the middleware stack.
 
-## The Plug Specification
-
-At the simplest level, the Plug specification comes in two flavors, *function plugs* and *module plugs*
+At the simplest level, the Plug specification comes in two flavors: *function plugs* and *module plugs*.
 
 ## Function Plugs
 In order to act as a plug, a function simply needs to accept a connection struct (`%Plug.Conn{}`) and options. It also needs to return the connection struct. Any function that meets those criteria will do. Here's an example.
@@ -75,7 +73,6 @@ defmodule HelloWeb.MessageController do
     render conn, :show, page: find_message(params["id"])
   end
 
-  defp authenticate(conn), do: ...
   defp authenticate(conn, _) do
     case Authenticator.find_user(conn) do
       {:ok, user} ->
