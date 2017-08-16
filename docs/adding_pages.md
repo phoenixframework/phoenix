@@ -59,14 +59,20 @@ There are also non web-related files we should know about. Our application file 
 
 ```console
 lib
-└── hello
-    ├── application.ex
-    ├── repo.ex
-    └── web
-        └── endpoint.ex
+├── hello
+|   ├── application.ex
+|   └── repo.ex
+├── hello_web
+|   ├── channels
+|   ├── controllers
+|   ├── templates
+|   ├── views
+|   ├── endpoint.ex
+|   ├── gettext.ex
+|   └── router.ex
 ```
 
-Our `lib/hello_web` directory contains web-related files – routers, controllers, templates, channels, etc. The rest of our greater Elixir application lives inside `lib/hello/`, and you structure code here like any other Elixir application.
+Our `lib/hello_web` directory contains web-related files – routers, controllers, templates, channels, etc. The rest of our greater Elixir application lives inside `lib/hello`, and you structure code here like any other Elixir application.
 
 Enough prep, let's get on with our first new Phoenix page!
 
