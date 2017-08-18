@@ -359,7 +359,7 @@ Let's say we want to perform at least some rudimentary format validation on the 
 If we try to cast a user with an email of "example.com", we should see an error message like the following.
 
 ```console
-iex> changeset = User.changeset(%User{}, %{email: "emaxmple.com"})
+iex> changeset = User.changeset(%User{}, %{email: "example.com"})
 iex> changeset.errors[:email]
 {"has invalid format", [validation: :format]}
 ```
@@ -373,6 +373,8 @@ We've talked a lot about migrations and data-storage, but we haven't yet persist
 Let's head back over to IEx with `iex -S mix`, and insert a couple of users to the database.
 
 ```console
+iex> alias Hello.{Repo, User}
+[Hello.Repo, Hello.User]
 iex> Repo.insert(%User{email: "user1@example.com"})
 [debug] QUERY OK db=4.6ms
 INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["user1@example.com", {{2017, 5, 23}, {19, 6, 4, 822044}}, {{2017, 5, 23}, {19, 6, 4, 822055}}]
