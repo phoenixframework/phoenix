@@ -55,7 +55,7 @@ defmodule Phoenix.CodeReloader.Proxy do
   def handle_call(:uncapture, _from, state) do
     broadcast state.pids, {:done, state.output}
 
-    GenServer.stop(state.proxy)
+    send state.proxy, :stop
 
     state = %{state | output: "", pids: [], proxy: nil}
 
@@ -66,43 +66,16 @@ defmodule Phoenix.CodeReloader.Proxy do
     {:reply, {:ok, state.output}, state}
   end
 
-  def handle_cast({:stdout, chars}, state) do
-    broadcast state.pids, {:chars, :stdout, chars}
+  def handle_cast({:chars, channel, chars}, state) do
+    broadcast state.pids, {:chars, channel, chars}
 
-    state = %{state | output: state.output <> IO.chardata_to_string(chars)}
+    state = %{state | output: state.output <> chars}
 
     {:noreply, state}
   end
 
   def handle_info(msg, state = %{original_stderr: stderr}) do
-    case msg do
-      {:io_request, from, reply, {:put_chars, chars}} ->
-        put_chars(stderr, from, reply, chars, state)
-
-      {:io_request, from, reply, {:put_chars, m, f, as}} ->
-        put_chars(stderr, from, reply, apply(m, f, as), state)
-
-      {:io_request, from, reply, {:put_chars, _encoding, chars}} ->
-        put_chars(stderr, from, reply, chars, state)
-
-      {:io_request, from, reply, {:put_chars, _encoding, m, f, as}} ->
-        put_chars(stderr, from, reply, apply(m, f, as), state)
-
-      {:io_request, _from, _reply, _request} = msg ->
-        send(stderr, msg)
-        {:noreply, state}
-
-      _ ->
-        {:noreply, state}
-    end
-  end
-
-  defp put_chars(stderr, from, reply, chars, state) do
-    broadcast state.pids, {:chars, :stderr, chars}
-
-    send(stderr, {:io_request, from, reply, {:put_chars, :unicode, chars}})
-
-    state = %{state | output: state.output <> IO.chardata_to_string(chars)}
+    handle_io(msg, :stderr, self(), stderr)
     {:noreply, state}
   end
 
@@ -112,8 +85,53 @@ defmodule Phoenix.CodeReloader.Proxy do
     end
   end
 
-  defp start_capture(pid, original_gl, state) do
-    {:ok, proxy} = Phoenix.CodeReloader.GroupLeaderProxy.start_link(self(), pid, original_gl)
+  defp io_loop(proxy_pid, forward_to) do
+    receive do
+      :stop ->
+        :ok
+      msg ->
+        handle_io(msg, :stdout, proxy_pid, forward_to)
+        io_loop(proxy_pid, forward_to)
+    end
+  end
+
+  defp handle_io(msg, device, proxy_pid, forward_to) do
+    case msg do
+      {:io_request, from, reply, {:put_chars, chars}} ->
+        put_chars(from, reply, chars, device, proxy_pid, forward_to)
+
+      {:io_request, from, reply, {:put_chars, m, f, as}} ->
+        put_chars(from, reply, apply(m, f, as), device, proxy_pid, forward_to)
+
+      {:io_request, from, reply, {:put_chars, _encoding, chars}} ->
+        put_chars(from, reply, chars, device, proxy_pid, forward_to)
+
+      {:io_request, from, reply, {:put_chars, _encoding, m, f, as}} ->
+        put_chars(from, reply, apply(m, f, as), device, proxy_pid, forward_to)
+
+      {:io_request, _from, _reply, _request} = msg ->
+        send(forward_to, msg)
+
+      _ ->
+        nil
+    end
+  end
+
+  defp put_chars(from, reply, chars, device, proxy_pid, forward_to) do
+    GenServer.cast(proxy_pid, {:chars, device, chars})
+    send(forward_to, {:io_request, from, reply, {:put_chars, :unicode, chars}})
+  end
+
+  defp start_capture(capture_pid, original_gl, state) do
+    proxy_pid = self()
+
+    {:ok, proxy} = Task.start_link(fn ->
+      Process.group_leader(capture_pid, self())
+
+      io_loop(proxy_pid, Process.group_leader)
+
+      Process.group_leader(capture_pid, original_gl)
+    end)
 
     %{state | proxy: proxy}
   end
