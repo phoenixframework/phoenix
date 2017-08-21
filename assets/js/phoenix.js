@@ -1154,7 +1154,9 @@ export var Presence = {
       let currentPresence = state[key]
       state[key] = newPresence
       if(currentPresence){
-        state[key].metas.unshift(...currentPresence.metas)
+        let joinedRefs = state[key].metas.map(m => m.phx_ref)
+        let curMetas = currentPresence.metas.filter(m => joinedRefs.indexOf(m.phx_ref) < 0)
+        state[key].metas.unshift(...curMetas);
       }
       onJoin(key, currentPresence, newPresence)
     })
