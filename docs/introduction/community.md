@@ -9,6 +9,6 @@ There are a number of places to connect with community members at all experience
 * For general Phoenix questions, email the [phoenix-talk mailing list](http://groups.google.com/group/phoenix-talk).
 * To discuss new features in the framework, email the [phoenix-core mailing list](http://groups.google.com/group/phoenix-core).
 * Read about [bug reports](https://github.com/phoenixframework/phoenix/blob/master/CONTRIBUTING.md#bug-reports) or open an issue in the Phoenix [issue tracker](https://github.com/phoenixframework/phoenix/issues).
-* Ask or answer questions about Phoenix on [Stack Overflow](http://stackoverflow.com/questions/tagged/phoenix-framework).
+* Ask or answer questions about Phoenix on [Elixir Forum](https://elixirforum.com/c/phoenix-forum) or [Stack Overflow](http://stackoverflow.com/questions/tagged/phoenix-framework).
 * Follow the Phoenix Framework on [Twitter](https://twitter.com/elixirphoenix).
 * The source for these guides is [on GitHub](https://github.com/phoenixframework/phoenix_guides). To help improve the guides, please report an [issue](https://github.com/phoenixframework/phoenix_guides/issues) or open a [pull request](https://github.com/phoenixframework/phoenix_guides/pulls).
