@@ -83,7 +83,7 @@ defmodule Phoenix.Controller do
 
   The `:authenticate` plug will be invoked before the action. If the
   plug calls `Plug.Conn.halt/1` (which is by default imported into
-  controllers), it will halt the pipeline and won't inoke the action.
+  controllers), it will halt the pipeline and won't invoke the action.
 
   ### Guards
 
