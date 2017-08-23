@@ -472,10 +472,10 @@ admin_review_path  DELETE  /admin/reviews/:id HelloWeb.Admin.ReviewController :d
 The path helpers now return what we want them to as well. Run `$ iex -S mix` and give it a try yourself.
 
 ```elixir
-iex(1)> HelloWeb.Router.Helpers.review_path(Endpoint, :index)
+iex(1)> HelloWeb.Router.Helpers.review_path(HelloWeb.Endpoint, :index)
 "/reviews"
 
-iex(2)> HelloWeb.Router.Helpers.admin_review_path(Endpoint, :show, 1234)
+iex(2)> HelloWeb.Router.Helpers.admin_review_path(HelloWeb.Endpoint, :show, 1234)
 "/admin/reviews/1234"
 ```
 
