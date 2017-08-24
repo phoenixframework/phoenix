@@ -70,6 +70,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # Brunch
       assert_file "phx_blog/.gitignore", "/node_modules"
+      assert_file "phx_blog/.gitignore", ~r/\n$/
       assert_file "phx_blog/assets/brunch-config.js", ~s("js/app.js": ["js/app"])
       assert_file "phx_blog/config/dev.exs", fn file ->
         assert file =~ "watchers: [node:"
@@ -141,6 +142,7 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # No Brunch
       refute File.read!("phx_blog/.gitignore") |> String.contains?("/node_modules")
+      assert_file "phx_blog/.gitignore", ~r/\n$/
       assert_file "phx_blog/config/dev.exs", ~r/watchers: \[\]/
 
       # No Brunch & No Html
@@ -197,6 +199,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       Mix.Tasks.Phx.New.run([@app_name, "--no-brunch"])
 
       assert_file "phx_blog/.gitignore"
+      assert_file "phx_blog/.gitignore", ~r/\n$/
       assert_file "phx_blog/priv/static/css/app.css"
       assert_file "phx_blog/priv/static/favicon.ico"
       assert_file "phx_blog/priv/static/images/phoenix.png"
@@ -235,6 +238,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       Mix.Tasks.Phx.New.run([project_path, "--app", @app_name, "--module", "PhoteuxBlog"])
 
       assert_file "custom_path/.gitignore"
+      assert_file "custom_path/.gitignore", ~r/\n$/
       assert_file "custom_path/mix.exs", ~r/app: :phx_blog/
       assert_file "custom_path/lib/phx_blog_web/endpoint.ex", ~r/app: :phx_blog/
       assert_file "custom_path/config/config.exs", ~r/namespace: PhoteuxBlog/
