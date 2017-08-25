@@ -468,6 +468,24 @@ defmodule Phoenix.Endpoint do
     end
   end
 
+  @doc false
+  def __pubsub_server__!(module) do
+    if server = module.__pubsub_server__() do
+      server
+    else
+      raise ArgumentError, """
+      No pubsub server configured, please setup pubsub in your config.
+
+      By default this looks like:
+
+          config :my_app, MyApp.PubSub,
+            ...,
+            pubsub: [name: MyApp.PubSub,
+            adapter: Phoenix.PubSub.PG2]
+      """
+    end
+  end
+
   defp pubsub() do
     quote do
       @pubsub_server var!(config)[:pubsub][:name] ||
@@ -478,69 +496,46 @@ defmodule Phoenix.Endpoint do
 
       def __pubsub_server__, do: @pubsub_server
 
-      defp __pubsub_server__! do
-        if @pubsub_server do
-          @pubsub_server
-        else
-          app_module =
-            __MODULE__
-            |> Module.split
-            |> List.first
-
-          raise ArgumentError, """
-          No pubsub server configured, please setup pubsub in your config.
-
-          By default this looks like
-          ```
-          config #{inspect @otp_app}, #{__MODULE__},
-            # other config ...
-            pubsub: [name: #{app_module}.PubSub,
-               adapter: Phoenix.PubSub.PG2]
-          ```\
-          """
-        end
-      end
-
       # TODO v2: Remove pid version
       @doc false
       def subscribe(pid, topic) when is_pid(pid) and is_binary(topic) do
         IO.warn "#{__MODULE__}.subscribe/2 is deprecated, please use subscribe/1"
-        Phoenix.PubSub.subscribe(__pubsub_server__!(), pid, topic, [])
+        Phoenix.PubSub.subscribe(Phoenix.Endpoint.__pubsub_server__!(__MODULE__), pid, topic, [])
       end
       def subscribe(pid, topic, opts) when is_pid(pid) and is_binary(topic) and is_list(opts) do
-        Phoenix.PubSub.subscribe(__pubsub_server__!(), pid, topic, opts)
+        Phoenix.PubSub.subscribe(Phoenix.Endpoint.__pubsub_server__!(__MODULE__), pid, topic, opts)
       end
       def subscribe(topic) when is_binary(topic) do
-        Phoenix.PubSub.subscribe(__pubsub_server__!(), topic, [])
+        Phoenix.PubSub.subscribe(Phoenix.Endpoint.__pubsub_server__!(__MODULE__), topic, [])
       end
       def subscribe(topic, opts) when is_binary(topic) and is_list(opts) do
-        Phoenix.PubSub.subscribe(__pubsub_server__!(), topic, opts)
+        Phoenix.PubSub.subscribe(Phoenix.Endpoint.__pubsub_server__!(__MODULE__), topic, opts)
       end
 
       # TODO v2: Remove pid version
       @doc false
       def unsubscribe(pid, topic) do
         IO.warn "#{__MODULE__}.unsubscribe/2 is deprecated, please use unsubscribe/1"
-        Phoenix.PubSub.unsubscribe(__pubsub_server__!(), topic)
+        Phoenix.PubSub.unsubscribe(Phoenix.Endpoint.__pubsub_server__!(__MODULE__), topic)
       end
       def unsubscribe(topic) do
-        Phoenix.PubSub.unsubscribe(__pubsub_server__!(), topic)
+        Phoenix.PubSub.unsubscribe(Phoenix.Endpoint.__pubsub_server__!(__MODULE__), topic)
       end
 
       def broadcast_from(from, topic, event, msg) do
-        Phoenix.Channel.Server.broadcast_from(__pubsub_server__!(), from, topic, event, msg)
+        Phoenix.Channel.Server.broadcast_from(Phoenix.Endpoint.__pubsub_server__!(__MODULE__), from, topic, event, msg)
       end
 
       def broadcast_from!(from, topic, event, msg) do
-        Phoenix.Channel.Server.broadcast_from!(__pubsub_server__!(), from, topic, event, msg)
+        Phoenix.Channel.Server.broadcast_from!(Phoenix.Endpoint.__pubsub_server__!(__MODULE__), from, topic, event, msg)
       end
 
       def broadcast(topic, event, msg) do
-        Phoenix.Channel.Server.broadcast(__pubsub_server__!(), topic, event, msg)
+        Phoenix.Channel.Server.broadcast(Phoenix.Endpoint.__pubsub_server__!(__MODULE__), topic, event, msg)
       end
 
       def broadcast!(topic, event, msg) do
-        Phoenix.Channel.Server.broadcast!(__pubsub_server__!(), topic, event, msg)
+        Phoenix.Channel.Server.broadcast!(Phoenix.Endpoint.__pubsub_server__!(__MODULE__), topic, event, msg)
       end
     end
   end
