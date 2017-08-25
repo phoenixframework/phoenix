@@ -115,11 +115,11 @@ defmodule Phoenix.Endpoint do
       [`Plug.Adapters.Cowboy`](https://hexdocs.pm/plug/Plug.Adapters.Cowboy.html).
       Defaults to `false`.
 
-    * `:force_ssl` - ensures no data is ever sent via http, always redirecting
-      to https. It expects a list of options which are forwarded to `Plug.SSL`.
-      By defalts it sets the "strict-transport-security" header in https requests,
-      forcing browsers to always use https. If an unsafe request (http) is sent,
-      it redirects to the https version using the `:host` specified in the `:url`
+    * `:force_ssl` - ensures no data is ever sent via HTTP, always redirecting
+      to HTTPS. It expects a list of options which are forwarded to `Plug.SSL`.
+      By default it sets the "strict-transport-security" header in HTTPS requests,
+      forcing browsers to always use HTTPS. If an unsafe request (HTTP) is sent,
+      it redirects to the HTTPS version using the `:host` specified in the `:url`
       configuration. To dynamically redirect to the `host` of the current request,
       `:host` must be set `nil`.
 
