@@ -1,13 +1,5 @@
 defmodule Phoenix.Controller.FlashTest do
-  use ExUnit.Case, async: true
-  use RouterHelper
-
-  import Phoenix.Controller
-
-  setup do
-    Logger.disable(self())
-    :ok
-  end
+  use Phoenix.Controller.ConnCase
 
   test "flash is persisted when status is a redirect" do
     for status <- 300..308 do

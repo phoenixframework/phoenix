@@ -1,8 +1,5 @@
 defmodule Phoenix.Controller.PipelineTest do
-  use ExUnit.Case, async: true
-  use RouterHelper
-
-  import Phoenix.Controller
+  use Phoenix.Controller.ConnCase
 
   defmodule MyController do
     use Phoenix.Controller
@@ -94,11 +91,6 @@ defmodule Phoenix.Controller.PipelineTest do
   def init(opts), do: opts
   def call(conn, :not_a_conn), do: Plug.Conn.send_resp(conn, 200, "fallback")
   def call(_conn, :bad_fallback), do: :bad_fallback
-
-  setup do
-    Logger.disable(self())
-    :ok
-  end
 
   test "invokes the plug stack" do
     conn = stack_conn()

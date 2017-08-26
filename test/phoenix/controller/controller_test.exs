@@ -1,14 +1,6 @@
 defmodule Phoenix.Controller.ControllerTest do
-  use ExUnit.Case, async: true
-  use RouterHelper
-
-  import Phoenix.Controller
+  use Phoenix.Controller.ConnCase
   alias Plug.Conn
-
-  setup do
-    Logger.disable(self())
-    :ok
-  end
 
   defp get_resp_content_type(conn) do
     [header]  = get_resp_header(conn, "content-type")

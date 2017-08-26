@@ -1,10 +1,7 @@
 Code.require_file "../../fixtures/views.exs", __DIR__
 
 defmodule Phoenix.Controller.RenderTest do
-  use ExUnit.Case, async: true
-
-  use RouterHelper
-  import Phoenix.Controller
+  use Phoenix.Controller.ConnCase
 
   defp conn() do
     conn(:get, "/") |> put_view(MyApp.UserView) |> fetch_query_params
