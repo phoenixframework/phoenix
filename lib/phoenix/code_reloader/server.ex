@@ -47,6 +47,8 @@ defmodule Phoenix.CodeReloader.Server do
     backup = load_backup(endpoint)
     froms = all_waiting([from], endpoint)
 
+    state = start_proxy(state)
+
     {res, out} =
       proxy_io(fn ->
         try do
@@ -171,6 +173,13 @@ defmodule Phoenix.CodeReloader.Server do
   defp consolidate_protocols? do
     Mix.Project.config[:consolidate_protocols]
   end
+
+  defp start_proxy(false) do
+    {:ok, pid} = Phoenix.CodeReloader.Proxy.start_link()
+    pid
+  end
+  defp start_proxy(proxy_pid),
+    do: proxy_pid
 
   defp proxy_io(fun) do
     original_gl = Process.group_leader

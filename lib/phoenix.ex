@@ -48,7 +48,6 @@ defmodule Phoenix do
 
     children = [
       # Code reloading must be serial across all Phoenix apps
-      worker(Phoenix.CodeReloader.Proxy, []),
       worker(Phoenix.CodeReloader.Server, []),
     ]
 
