@@ -6,7 +6,7 @@ defmodule Phoenix.CodeReloader.Server do
   alias Phoenix.CodeReloader.Proxy
 
   def start_link() do
-    GenServer.start_link(__MODULE__, false, name: __MODULE__)
+    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
   def check_symlinks do
@@ -17,10 +17,14 @@ defmodule Phoenix.CodeReloader.Server do
     GenServer.call(__MODULE__, {:reload!, endpoint}, :infinity)
   end
 
+  def forward_output_to(pid) do
+    GenServer.call(__MODULE__, {:forward_output_to, pid}, :infinity)
+  end
+
   ## Callbacks
 
-  def init(false) do
-    {:ok, false}
+  def init(nil) do
+    {:ok, nil}
   end
 
   def handle_call(:check_symlinks, _from, checked?) do
@@ -42,15 +46,15 @@ defmodule Phoenix.CodeReloader.Server do
     {:reply, :ok, true}
   end
 
-  def handle_call({:reload!, endpoint}, from, state) do
+  def handle_call({:reload!, endpoint}, from, proxy_pid) do
     compilers = endpoint.config(:reloadable_compilers)
     backup = load_backup(endpoint)
     froms = all_waiting([from], endpoint)
 
-    state = start_proxy(state)
+    proxy_pid = start_proxy(proxy_pid)
 
     {res, out} =
-      proxy_io(fn ->
+      proxy_io(proxy_pid, fn ->
         try do
           mix_compile(Code.ensure_loaded(Mix.Task), compilers)
         catch
@@ -72,11 +76,17 @@ defmodule Phoenix.CodeReloader.Server do
       end
 
     Enum.each(froms, &GenServer.reply(&1, reply))
-    {:noreply, state}
+    {:noreply, proxy_pid}
   end
 
-  def handle_info(_, state) do
-    {:noreply, state}
+  def handle_call({:forward_output_to, pid}, _from, proxy_pid) do
+    proxy_pid = start_proxy(proxy_pid)
+    Proxy.forward_to(proxy_pid, pid)
+    {:reply, :ok, proxy_pid}
+  end
+
+  def handle_info(_, proxy_pid) do
+    {:noreply, proxy_pid}
   end
 
   defp os_symlink({:win32, _}),
@@ -174,23 +184,23 @@ defmodule Phoenix.CodeReloader.Server do
     Mix.Project.config[:consolidate_protocols]
   end
 
-  defp start_proxy(false) do
+  defp start_proxy(nil) do
     {:ok, pid} = Phoenix.CodeReloader.Proxy.start_link()
     pid
   end
   defp start_proxy(proxy_pid),
     do: proxy_pid
 
-  defp proxy_io(fun) do
+  defp proxy_io(proxy_pid, fun) do
     original_gl = Process.group_leader
-    Proxy.capture(original_gl)
+    Proxy.capture(proxy_pid, original_gl)
 
     try do
       result = fun.()
-      {:ok, output} = Proxy.flush
+      {:ok, output} = Proxy.flush(proxy_pid)
       {result, output}
     after
-      Proxy.uncapture
+      Proxy.uncapture(proxy_pid)
     end
   end
 end

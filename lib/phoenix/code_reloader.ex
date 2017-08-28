@@ -32,8 +32,6 @@ defmodule Phoenix.CodeReloader do
   @behaviour Plug
   import Plug.Conn
 
-  alias Phoenix.CodeReloader.Proxy
-
   @style %{
     primary: "#EB532D",
     accent: "#a0b0c0",
@@ -73,7 +71,7 @@ defmodule Phoenix.CodeReloader do
   defp call_reloader(conn, reloader) do
     if send_feedback?(conn) do
       task = Task.async(fn -> forward_output(conn) end)
-      Proxy.forward_to(task.pid)
+      Phoenix.CodeReloader.Server.forward_output_to(task.pid)
       {res, output} = reloader.(conn.private.phoenix_endpoint)
       conn = Task.await(task)
       {conn, res, output}

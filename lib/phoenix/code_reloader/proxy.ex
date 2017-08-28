@@ -11,20 +11,20 @@ defmodule Phoenix.CodeReloader.Proxy do
     GenServer.start_link(__MODULE__, stderr, name: :standard_error)
   end
 
-  def flush do
-    GenServer.call(:standard_error, :flush)
+  def flush(proxy_pid) do
+    GenServer.call(proxy_pid, :flush)
   end
 
-  def capture(original_gl) do
-    GenServer.call(:standard_error, {:capture, original_gl}, :infinity)
+  def capture(proxy_pid, original_gl) do
+    GenServer.call(proxy_pid, {:capture, original_gl}, :infinity)
   end
 
-  def forward_to(pid) do
-    GenServer.call(:standard_error, {:forward_to, pid}, :infinity)
+  def forward_to(proxy_pid, pid) do
+    GenServer.call(proxy_pid, {:forward_to, pid}, :infinity)
   end
 
-  def uncapture() do
-    GenServer.call(:standard_error, :uncapture, :infinity)
+  def uncapture(proxy_pid) do
+    GenServer.call(proxy_pid, :uncapture, :infinity)
   end
 
   ## Callbacks
