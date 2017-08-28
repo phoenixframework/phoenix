@@ -8,10 +8,7 @@
     <h4>Resources</h4>
     <ul>
       <li>
-        <a href="http://phoenixframework.org/docs/overview">Guides</a>
-      </li>
-      <li>
-        <a href="https://hexdocs.pm/phoenix">Docs</a>
+        <a href="https://hexdocs.pm/phoenix/overview.html">Guides and Docs</a>
       </li>
       <li>
         <a href="https://github.com/phoenixframework/phoenix">Source</a>
@@ -23,7 +20,7 @@
     <h4>Help</h4>
     <ul>
       <li>
-        <a href="http://groups.google.com/group/phoenix-talk">Mailing list</a>
+        <a href="https://elixirforum.com/c/phoenix-forum">Forum</a>
       </li>
       <li>
         <a href="http://webchat.freenode.net/?channels=elixir-lang">#elixir-lang on freenode IRC</a>
