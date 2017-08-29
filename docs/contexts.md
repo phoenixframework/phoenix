@@ -886,7 +886,9 @@ With our new plugs in place, we can now modify our `create`, `update`, and `dele
     end
   end
 
-  def delete(conn, _) do
+- def delete(conn, %{"id" => id}) do
++ def delete(conn, _) do
+-   page = CMS.get_page!(id)
 +   {:ok, _page} = CMS.delete_page(conn.assigns.page)
 
     conn
