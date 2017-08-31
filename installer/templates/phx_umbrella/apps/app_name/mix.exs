@@ -37,7 +37,7 @@ defmodule <%= app_module %>.Mixfile do
   defp deps do
     [<%= if ecto do %>
       {:<%= adapter_app %>, ">= 0.0.0"},
-      {:ecto, "~> 2.1"}
+      {:ecto, "~> 2.2"}
     <% end %>]
   end
 
