@@ -5,7 +5,7 @@ Phoenix applications are configured to use PostgreSQL by default, but what if we
 If we are about to create a new application, configuring our application to use MySQL is easy. We can simply pass the `--database mysql` flag to `phoenix.new` and everything will be configured correctly.
 
 ```console
-$ mix phoenix.new hello --database mysql
+$ mix phx.new hello --database mysql
 ```
 
 This will set up all the correct dependencies and configuration for us automatically. Once we install those dependencies with `mix deps.get`, we'll be ready to begin working with Ecto in our application.
