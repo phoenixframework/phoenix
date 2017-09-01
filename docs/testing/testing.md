@@ -448,25 +448,29 @@ We've seen what Phoenix gives us with a newly generated app. Now let's see what 
 
 Let's borrow the `users` resource we created in the [Ecto Models Guide](ecto_models.html).
 
-At the root of our new application, let's run the `mix phoenix.gen.html` task with the following options.
+At the root of our new application, let's run the `mix phx.gen.html` task with the following options.
 
 ```console
-$ mix phoenix.gen.html User users name:string email:string bio:string number_of_pets:integer
+$ mix phx.gen.html Users User users name:string email:string bio:string number_of_pets:integer
 
 ...
 
 Generated hello app
-* creating priv/repo/migrations/20150519043351_create_user.exs
-* creating web/models/user.ex
-* creating test/models/user_test.exs
-* creating web/controllers/user_controller.ex
-* creating web/templates/user/edit.html.eex
-* creating web/templates/user/form.html.eex
-* creating web/templates/user/index.html.eex
-* creating web/templates/user/new.html.eex
-* creating web/templates/user/show.html.eex
-* creating web/views/user_view.ex
-* creating test/controllers/user_controller_test.exs
+
+* creating lib/hello_web/controllers/user_controller.ex
+* creating lib/hello_web/templates/user/edit.html.eex
+* creating lib/hello_web/templates/user/form.html.eex
+* creating lib/hello_web/templates/user/index.html.eex
+* creating lib/hello_web/templates/user/new.html.eex
+* creating lib/hello_web/templates/user/show.html.eex
+* creating lib/hello_web/views/user_view.ex
+* creating test/hello_web/controllers/user_controller_test.exs
+* creating lib/hello/users/user.ex
+* creating priv/repo/migrations/20170830041905_create_users.exs
+* creating lib/hello/users/users.ex
+* injecting lib/hello/users/users.ex
+* creating test/hello/users/users_test.exs
+* injecting test/hello/users/users_test.exs
 
 Add the resource to your browser scope in web/router.ex:
 
@@ -499,25 +503,14 @@ defmodule HelloWeb.Router do
 end
 ```
 
-When we run `mix test` again, we see that we already have sixteen tests!
+When we run `mix test` again, we see that we already have twenty tests!
 
 ```console
 $ mix test
-Compiled lib/hello.ex
-Compiled lib/hello_web/models/user.ex
-Compiled lib/hello_web/views/page_view.ex
-Compiled lib/hello_web/views/layout_view.ex
-Compiled lib/hello_web/views/error_view.ex
-Compiled lib/hello_web/router.ex
-Compiled lib/hello_web/controllers/page_controller.ex
-Compiled lib/hello_web/controllers/user_controller.ex
-Compiled lib/hello_web/endpoint.ex
-Compiled lib/hellO_web/views/user_view.ex
-Generated hello app
 ................
 
-Finished in 0.5 seconds
-16 tests, 0 failures
+Finished in 0.1 seconds
+20 tests, 0 failures
 
 Randomized with seed 537537
 ```
