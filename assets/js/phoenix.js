@@ -1032,15 +1032,21 @@ export class LongPoll {
 export class Ajax {
 
   static request(method, endPoint, accept, body, timeout, ontimeout, callback){
-    if(window.XDomainRequest){
-      let req = new XDomainRequest() // IE8, IE9
-      this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback)
+    if (typeof window != 'undefined') {
+      if(window.XDomainRequest){
+        let req = new XDomainRequest() // IE8, IE9
+        this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback)
+      } else {
+        let req = window.XMLHttpRequest ?
+                    new window.XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
+                    new ActiveXObject("Microsoft.XMLHTTP") // IE6, IE5
+        this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback)
+      }
     } else {
-      let req = window.XMLHttpRequest ?
-                  new window.XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
-                  new ActiveXObject("Microsoft.XMLHTTP") // IE6, IE5
+      var req = new XMLHttpRequest(); // tvOS support
       this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback)
     }
+
   }
 
   static xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback){
