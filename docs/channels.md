@@ -59,7 +59,7 @@ The default transport mechanism is via WebSockets which will fall back to LongPo
 #### Official
 
 + JavaScript
-  - [phoenix.js](https://github.com/phoenixframework/phoenix/blob/v1.2/web/static/js/phoenix.js)
+  - [phoenix.js](https://github.com/phoenixframework/phoenix/blob/v1.3/assets/js/phoenix.js)
 
 #### 3rd Party
 
