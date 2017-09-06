@@ -28,7 +28,7 @@ In order to run the context generators, we need to come up with a module name th
 Before we use the generators, we need to undo the changes we made in the Ecto guide, so we can give our user schema a proper home. Run these commands to undo our previous work:
 
 ```console
-$ rm lib/hello/ ... TODO
+$ rm lib/hello/user.ex
 $ rm priv/repo/migrations/*_create_user.exs
 ```
 
@@ -130,6 +130,7 @@ defmodule HelloWeb.UserController do
   use HelloWeb, :controller
 
   alias Hello.Accounts
+  alias Hello.Accounts.User
 
   def index(conn, _params) do
     users = Accounts.list_users()
@@ -137,7 +138,7 @@ defmodule HelloWeb.UserController do
   end
 
   def new(conn, _params) do
-    changeset = Accounts.change_user(%Hello.Accounts.User{})
+    changeset = Accounts.change_user(%User{})
     render(conn, "new.html", changeset: changeset)
   end
 
@@ -264,7 +265,7 @@ Remember to update your repository by running migrations:
 
 This time around, we used the `phx.gen.context` task, which is just like `phx.gen.html`, except it doesn't generate the web files for us. Since we already have controllers and templates for managing users, we can integrate the new credential features into our existing web form.
 
-We can see from the output that Phoenix generated an `accounts/credential.ex` file for our `Accounts.Credential` schema, as well as a migration. Notably, phoenix said it was `*injecting` code into the existing `accounts/accounts.ex` context file and test file. Since our `Accounts` module already exists, Phoenix knows to inject our code here.
+We can see from the output that Phoenix generated an `accounts/credential.ex` file for our `Accounts.Credential` schema, as well as a migration. Notably, phoenix said it was `* injecting` code into the existing `accounts/accounts.ex` context file and test file. Since our `Accounts` module already exists, Phoenix knows to inject our code here.
 
 Before we run our migrations, we need to make one change to the generated migration to enforce data integrity of user account credentials. In our case, we want a user's credentials to be deleted when the parent user is removed. Make the following change to your `*_create_credentials.exs` migration file in `priv/repo/migrations/`:
 
@@ -312,6 +313,7 @@ Before we integrate credentials in the web layer, we need to let our context kno
 - alias Hello.Accounts.User
 + alias Hello.Accounts.{User, Credential}
 
+
   schema "users" do
     field :name, :string
     field :username, :string
@@ -323,7 +325,7 @@ Before we integrate credentials in the web layer, we need to let our context kno
 
 ```
 
-We used `Ecto.Schema`'s `has_one` macro to let Ecto know how to associate our parent User to a child Credential. Next, let's add the relationships in the other direction in `accounts/credential.ex`:
+We used `Ecto.Schema`'s `has_one` macro to let Ecto know how to associate our parent User to a child Credential. Next, let's add the relationships in the opposite direction in `accounts/credential.ex`:
 
 ```elixir
 - alias Hello.Accounts.Credential
@@ -390,28 +392,33 @@ Next, let's show the user's email address in the user show template. Add the fol
 
 ```
 
-Now if we visit `http://localhost:4000/users/new`, we'll see the new email input, but if you try to save a user, you'll find that the email field is ignored. No validations are run telling you it was blank and the data was not saved. What gives?
+Now if we visit `http://localhost:4000/users/new`, we'll see the new email input, but if you try to save a user, you'll find that the email field is ignored. No validations are run telling you it was blank and the data was not saved, and at the end you'll get an exception `(UndefinedFunctionError) function nil.email/0 is undefined or private`. What gives?
 
 We used Ecto's `belongs_to` and `has_one` associations to wire-up how our data is related at the context level, but remember this is decoupled from our web-facing user input. To associate user input to our schema associations, we need to handle it the way we've handled other user input so far – in changesets. Modify your `create_user/1` and `update_user/2` functions in your `Accounts` context to build a changeset which knows how to cast user input with nested credential information:
 
 ```elixir
+- alias Hello.Accounts.User
++ alias Hello.Accounts.{User, Credential}
+  ...
   def update_user(%User{} = user, attrs) do
     user
     |> User.changeset(attrs)
-    |> Ecto.Changeset.cast_assoc(:credential, with: &Credential.changeset/2)
++   |> Ecto.Changeset.cast_assoc(:credential, with: &Credential.changeset/2)
     |> Repo.update()
   end
 
   def create_user(attrs \\ %{}) do
     %User{}
     |> User.changeset(attrs)
-    |> Ecto.Changeset.cast_assoc(:credential, with: &Credential.changeset/2)
++   |> Ecto.Changeset.cast_assoc(:credential, with: &Credential.changeset/2)
     |> Repo.insert()
   end
+  ...
+- alias ContextTest.Accounts.Credential
 ```
 We updated the functions to pipe our user changeset into `Ecto.Changeset.cast_assoc/2`. Ecto's `cast_assoc/2` allows us to tell the changeset how to cast user input to a schema relation. We also used the `:with` option to tell Ecto to use our `Credential.changeset/2` function to cast the data. This way, any validations we perform in `Credential.changeset/2` will be applied when saving the `User` changeset.
 
-Finally, if you visit `http://locahost:4000/users/new` and attempt to save an empty email address, you'll see the proper validation error message. If you enter valid information, the data will be casted and persisted properly.
+Finally, if you visit `http://localhost:4000/users/new` and attempt to save an empty email address, you'll see the proper validation error message. If you enter valid information, the data will be casted and persisted properly.
 
 ```
 Show User
@@ -545,7 +552,7 @@ Next, add a new template in `lib/hello_web/templates/session/new.html.eex:`
   </div>
 <% end %>
 
-<%= form_for @conn, session_path(@conn, :delete), [method: :delete, as: :user], fn f -> %>
+<%= form_for @conn, session_path(@conn, :delete), [method: :delete, as: :user], fn _ -> %>
   <div class="form-group">
     <%= submit "logout" %>
   </div>
@@ -636,7 +643,7 @@ Generated hello app
 [info]  == Migrated in 0.0s
 ```
 
-Now, let's fire up the server with `mix phx.server` and visit `http://localhost:4000/cms/pages`. If we haven't logged in yet, we'll be redirected to the home page with a flash error message telling us to sign in. Let's sign in at `http://locahost:4000/sessions/new`, then re-visit `http://localhost:4000/cms/pages`. Now that we're authenticated, we should see a familiar resource listing for pages, with a `New Page` link.
+Now, let's fire up the server with `mix phx.server` and visit `http://localhost:4000/cms/pages`. If we haven't logged in yet, we'll be redirected to the home page with a flash error message telling us to sign in. Let's sign in at `http://localhost:4000/sessions/new`, then re-visit `http://localhost:4000/cms/pages`. Now that we're authenticated, we should see a familiar resource listing for pages, with a `New Page` link.
 
 Before we create any pages, we need page authors. Let's run the `phx.gen.context` generator to generate an `Author` schema along with injected context functions:
 
@@ -886,7 +893,9 @@ With our new plugs in place, we can now modify our `create`, `update`, and `dele
     end
   end
 
-  def delete(conn, _) do
+- def delete(conn, %{"id" => id}) do
++ def delete(conn, _) do
+-   page = CMS.get_page!(id)
 +   {:ok, _page} = CMS.delete_page(conn.assigns.page)
 
     conn
@@ -960,7 +969,7 @@ Again, let's think of a function name that describes what we want to accomplish.
 
 That looks great. Our callers will have no confusion over what this function does and we can wrap up the increment in an atomic operation to prevent race conditions.
 
-Open up your CMS context, and add this new function:
+Open up your CMS context (`lib/hello/cms/cms.ex`), and add this new function:
 
 
 ```elixir
