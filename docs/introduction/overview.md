@@ -10,8 +10,6 @@ The aim of this introductory guide is to present a brief, high-level overview of
 
 ### Phoenix
 
-Phoenix is actually the top layer of a multi-layer system designed to be modular and flexible. The other layers include Plug, and Ecto, which we will cover right after Phoenix in this overview. The Erlang HTTP server, Cowboy, acts as the foundation for Plug and Phoenix, but we won't be covering Cowboy directly in these guides.
-
 Phoenix is made up of a number of distinct parts, each with its own purpose and role to play in building a web application. We will cover them all in depth throughout these guides, but here's a quick breakdown.
 
  - [Endpoint](endpoint.html)
@@ -42,6 +40,14 @@ Phoenix is made up of a number of distinct parts, each with its own purpose and 
  - PubSub
     - underlies the channel layer and allows clients to subscribe to *topics*
     - abstracts the underlying pubsub adapter for third-party pubsub integration
+
+## Phoenix Layers
+
+We just covered the internal parts that make up Phoenix, but its important to remember Phoenix itself is actually the top layer of a multi-layer system designed to be modular and flexible. The other layers include Cowboy, Plug, and Ecto.
+
+### Cowboy
+
+By default, the web server used by Phoenix (and Plug) is Cowboy. It is uncommon to interface with Cowboy directly when using Phoenix. If you do require using Cowboy directly, please refer to the [Cowboy documentation](https://ninenines.eu/docs/en/cowboy/1.0/guide/).
 
 ### Plug
 
