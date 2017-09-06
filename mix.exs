@@ -15,6 +15,7 @@ defmodule PhoenixGuides.Mixfile do
             logo: "logo.png",
             assets: "docs/assets",
             extra_section: "GUIDES",
+            formatters: ["epub", "html"],
             extras: extras(),
             homepage_url: "http://www.phoenixframework.org",
             description: """
