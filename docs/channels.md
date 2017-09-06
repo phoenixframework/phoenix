@@ -36,7 +36,7 @@ The Phoenix PubSub layer consists of the `Phoenix.PubSub` module and a variety o
 
 It is worth noting that these modules are intended for Phoenix's internal use. Channels use them under the hood to do much of their work. As end users, we shouldn't have any need to use them directly in our applications.
 
-If your deployment environment does not support distributed Elixir or direct communication between servers, Phoenix also ships with a [Redis Adapter](https://hexdocs.pm/phoenix_pubsub_redis/Phoenix.PubSub.Redis.html) that uses Redis to exchange PubSub data.  Please see the [Phoenix.PubSub docs](http://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.html) for more information.
+If your deployment environment does not support distributed Elixir or direct communication between servers, Phoenix also ships with a [Redis Adapter](https://hexdocs.pm/phoenix_pubsub_redis/Phoenix.PubSub.Redis.html) that uses Redis to exchange PubSub data. Please see the [Phoenix.PubSub docs](http://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.html) for more information.
 
 ### Messages
 
@@ -264,6 +264,87 @@ socket = assign(socket, :user, msg["user"])
 ```
 
 Sockets store assigned values as a map in `socket.assigns`.
+
+#### Using Token Authentication
+
+When we connect, we'll often need to authenticate the client. Fortunately, this is a 4-step process with [Phoenix.Token](https://hexdocs.pm/phoenix/Phoenix.Token.html).
+
+**Step 1 - Assign a Token in the Connection**
+
+Let's say we have an authentication plug in our app called `OurAuth`. When `OurAuth` authenticates a user, it sets a value for the `:current_user` key in `conn.assigns`. Since the `current_user` exists, we can simply assign the user's token in the connection for use in the layout. We can wrap that behavior up in a private function plug, `put_user_token/2`. This could also be put in its own module as well. To make this all work, we just add `OurAuth` and `put_user_token/2` to the browser pipeline.
+
+```elixir
+pipeline :browser do
+  # ...
+  plug OurAuth
+  plug :put_user_token
+end
+
+defp put_user_token(conn, _) do
+  if current_user = conn.assigns[:current_user] do
+    token = Phoenix.Token.sign(conn, "user socket", current_user.id)
+    assign(conn, :user_token, token)
+  else
+    conn
+  end
+end
+```
+
+Now our `conn.assigns` contains the `current_user` and `user_token`.
+
+**Step 2 - Pass the Token to the JavaScript**
+
+Next we need to pass this token to JavaScript. We can do so inside a script tag in `web/templates/layout/app.html.eex`, as follows:
+
+```html
+<script>window.userToken = "<%= assigns[:user_token] %>";</script>
+```
+
+**Step 3 - Pass the Token to the Socket Constructor and Verify**
+
+We also need to pass the `:params` to the socket constructor and verify the user token in the `connect/2` function. To do so, edit `web/channels/user_socket.ex`, as follows:
+
+```elixir
+def connect(%{"token" => token}, socket) do
+  # max_age: 1209600 is equivalent to two weeks in seconds
+  case Phoenix.Token.verify(socket, "user socket", token, max_age: 1209600) do
+    {:ok, user_id} ->
+      {:ok, assign(socket, :current_user, user_id)}
+    {:error, reason} ->
+      :error
+  end
+end
+```
+
+In our JavaScript, we can use the token set previously when to pass the token when constructing the Socket:
+
+```javascript
+let socket = new Socket("/socket", {params: {token: window.userToken}})
+```
+
+We used `Phoenix.Token.verify/4` to verify the user token provided by the client. `Phoenix.Token.verify/4` returns either `{:ok, user_id}` or `{:error, reason}`. We can pattern match on that return in a `case` statement. With a verified token, we set the user's id as the value to `:current_user` in the socket. Otherwise, we return `:error`.
+
+**Step 4 - Connect to the socket in JavaScript**
+
+With authentication set up, we can connect to sockets and channels from JavaScript.
+
+```javascript
+let socket = new Socket("/socket", {params: {token: window.userToken}})
+socket.connect()
+```
+
+Now that we are connected, we can join channels with a topic:
+
+```elixir
+let channel = socket.channel("topic:subtopic", {})
+channel.join()
+  .receive("ok", resp => { console.log("Joined successfully", resp) })
+  .receive("error", resp => { console.log("Unable to join", resp) })
+
+export default socket
+```
+
+Note that token authentication is preferable since it's transport agnostic and well-suited for long running-connections like channels, as opposed to using sessions or authentication approaches.
 
 #### Fault Tolerance and Reliability Guarantees
 
