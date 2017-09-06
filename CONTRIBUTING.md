@@ -28,8 +28,8 @@ complete, the better.
 - We use the "console" code fence for iex and shell commands.
 - We use the "html" code fence for html templates, even if there is elixir code
   in the template.
-- We use backtics for filenames and directory paths.
-- We use backtics for module names, function names, and variable names.
+- We use backticks for filenames and directory paths.
+- We use backticks for module names, function names, and variable names.
 
 #### Pull requests
 
@@ -106,5 +106,25 @@ git pull upstream master
 git checkout <your-topic-branch>
 git rebase master
 ```
+
+
+#### Running the Guides Locally
+
+Generating guides requires two separate running processes.  One watches the files for changes, and will regenerate the files as they change.  The other serves the files so they can be viewed in a web browser.
+
+In the first terminal, run:
+
+```console
+mix deps.get
+mix docs.watch
+```
+
+In the second terminal, run:
+
+```console
+python -m SimpleHTTPServer
+```
+
+Then open [http://localhost:8000/doc/overview.html](http://localhost:8000/doc/overview.html) to view the generated docs.
 
 Thank you for your contributions!

@@ -35,6 +35,7 @@ defmodule Mix.Tasks.Docs.Watch do
   @shortdoc "Automatically build docs on file changes"
 
   def run(_args) do
+    Mix.Tasks.Docs.run([])
     PhoenixGuides.Watcher.start_link()
     unless Code.ensure_loaded?(IEx) && IEx.started? do
       :timer.sleep(:infinity)
