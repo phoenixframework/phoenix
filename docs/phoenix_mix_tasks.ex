@@ -246,7 +246,7 @@ Compiling 17 files (.ex)
     (elixir) lib/kernel/parallel_compiler.ex:121: anonymous fn/4 in Kernel.ParallelCompiler.spawn_compilers/1
 ```
 
-If we don't want to create a context or schema for our resource we can use the `--no-context` flag.  Note that this still requires a context module name as a parameter.
+If we don't want to create a context or schema for our resource we can use the `--no-context` flag. Note that this still requires a context module name as a parameter.
 
 ```console
 $ mix phx.gen.html Blog Post posts body:string word_count:integer --no-context

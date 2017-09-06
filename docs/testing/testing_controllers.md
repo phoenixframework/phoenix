@@ -11,7 +11,7 @@ mix phoenix.gen.json Thing things some_attr:string another_attr:string
 
 Thing is the Model, things is the table name, and some_attr and another_attr are database columns on table things of type string. Don't run this command, we're going to explore test driving out a similar result to what a generator would give us.
 
-Let's create a `User` model. Since model creation is not in scope of this guide, we will use the generator.  If you aren't familiar, read [this section of the Mix guide](mix_tasks.html#phoenix-specific-mix-tasks).
+Let's create a `User` model. Since model creation is not in scope of this guide, we will use the generator. If you aren't familiar, read [this section of the Mix guide](mix_tasks.html#phoenix-specific-mix-tasks).
 
 ```bash
 $ mix phoenix.gen.model User users name:string email:string
@@ -106,7 +106,7 @@ defmodule HelloPhoenix.UserControllerTest do
     assert response == expected
   end
 ```
-Let's take a look at what's going on here. We build our users, and use the `get` function to make a `GET` request to our `UserController` index action, which is piped into `json_response/2` along with the expected HTTP status code.  This will return the JSON from the response body, when everything is wired up properly. We represent the JSON we want the controller action to return with the variable `expected`, and assert that the `response` and `expected` are the same.
+Let's take a look at what's going on here. We build our users, and use the `get` function to make a `GET` request to our `UserController` index action, which is piped into `json_response/2` along with the expected HTTP status code. This will return the JSON from the response body, when everything is wired up properly. We represent the JSON we want the controller action to return with the variable `expected`, and assert that the `response` and `expected` are the same.
 
 Our expected data is a JSON response with a top level key of `"data"` containing an array of users that have `"name"` and `"email"` properties.
 
@@ -254,7 +254,7 @@ When we run the test again, it passes.
 
 The last item we'll cover is the case where we don't find a user in `show/2`.
 
-Try this one on your own and see what you come up with.  One possible solution will be given below.
+Try this one on your own and see what you come up with. One possible solution will be given below.
 
 Walking through our TDD steps, we add a test that supplies a non existent user id to `user_path` which returns a 404 status and an error message:
 

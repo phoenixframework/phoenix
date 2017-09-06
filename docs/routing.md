@@ -238,7 +238,7 @@ end
 
 ## Path Helpers
 
-Path helpers are functions which are dynamically defined on the `Router.Helpers` module for an individual application. For us, that is `HelloWeb.Router.Helpers`.  Their names are derived from the name of the controller used in the route definition. Our controller is `HelloWeb.PageController`, and `page_path` is the function which will return the path to the root of our application.
+Path helpers are functions which are dynamically defined on the `Router.Helpers` module for an individual application. For us, that is `HelloWeb.Router.Helpers`. Their names are derived from the name of the controller used in the route definition. Our controller is `HelloWeb.PageController`, and `page_path` is the function which will return the path to the root of our application.
 
 That's a mouthful. Let's see it in action. Run `$ iex -S mix` at the root of the project. When we call the `page_path` function on our router helpers with the `Endpoint` or connection and action as arguments, it returns the path to us.
 
