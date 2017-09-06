@@ -44,17 +44,17 @@ Inside the scope block, however, we have our first actual route:
   get "/", PageController, :index
 ```
 
-`get` is a Phoenix macro which expands out to define one clause of the `match/3` function. It corresponds to the HTTP verb GET. Similar macros exist for other HTTP verbs including POST, PUT, PATCH, DELETE, OPTIONS, CONNECT, TRACE and HEAD.
+`get` is a Phoenix macro which expands out to define one clause of the `match/5` function. It corresponds to the HTTP verb GET. Similar macros exist for other HTTP verbs including POST, PUT, PATCH, DELETE, OPTIONS, CONNECT, TRACE and HEAD.
 
 The first argument to these macros is the path. Here, it is the root of the application, `/`. The next two arguments are the controller and action we want to have handle this request. These macros may also take other options, which we will see throughout the rest of this guide.
 
-If this were the only route in our router module, the clause of the `match/3` function would look like this after the macro is expanded:
+If this were the only route in our router module, the clause of the `match/5` function would look like this after the macro is expanded:
 
 ```elixir
-  def match(conn, "GET", ["/"])
+  def match(:get, "/", PageController, :index, [])
 ```
 
-The body of the `match/3` function sets up the connection and invokes the matched controller action.
+The body of the `match/5` function sets up the connection and invokes the matched controller action.
 
 As we add more routes, more clauses of the match function will be added to our router module. These will behave like any other multi-clause function in Elixir. They will be tried in order from the top, and the first clause to match the parameters given (verb and path) will be executed. After a match is found, the search will stop and no other clauses will be tried.
 
@@ -86,7 +86,7 @@ The output tells us that any HTTP GET request for the root of the application wi
 
 ## Resources
 
-The router supports other macros besides those for HTTP verbs like `get`, `post`, and `put`. The most important among them is `resources`, which expands out to eight clauses of the `match/3` function.
+The router supports other macros besides those for HTTP verbs like `get`, `post`, and `put`. The most important among them is `resources`, which expands out to eight clauses of the `match/5` function.
 
 Let's add a resource to our `lib/hello_web/router.ex` file like this:
 
