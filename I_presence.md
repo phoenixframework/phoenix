@@ -2,13 +2,30 @@ Phoenix Presence is a feature which allows you to register process information o
 
 Phoenix Presence is special for a number of reasons. It has no single point of failure, no single source of truth, relies entirely on the standard library with no operational dependencies and self heals. This is all handled with a conflict-free replicated data type (CRDT) protocol.
 
-To get started with Presence you'll need to create a channel that it can communicate on. For this example we will create a `RoomChannel` and register it in our `UserSocket`.
+To get started with Presence you'll first need to register it with your application and set it up to be supervised.
+
+```elixir
+defmodule Hello.Presence do
+  use Phoenix.Presence, otp_app: :hello, pubsub_server: Hello.PubSub
+end
+```
+
+Now supervise it in `application.ex`.
+
+```elixir
+children = [
+  # ...
+  supervisor(Hello.Presence, [])
+]
+```
+
+Next we will create a channel that Presence can communicate on. For this example we will create a `RoomChannel` and register it in our `UserSocket`.
 
 ```elixir
 defmodule HelloPhoenix.UserSocket do
   use Phoenix.Socket
 
-  channel "room:lobby", HelloPhoenix.RoomChannel
+  channel "room:lobby", HelloWeb.RoomChannel
 
   #
 end
@@ -21,12 +38,12 @@ Note that we provide the `user_id` from the connection in order to uniquely iden
 To learn more about channels, read the Channel documentation in the guide.
 
 ```elixir
-defmodule HelloPhoenix.RoomChannel do
-  use HelloPhoenix.Web, :channel
-  alias HelloPhoenix.Presence
+defmodule HelloWeb.RoomChannel do
+  use Phoenix.Channel
+  alias Hello.Presence
 
   def join("room:lobby", _params, socket) do
-    send(self, :after_join)
+    send(self(), :after_join)
     {:ok, socket}
   end
 
@@ -67,7 +84,7 @@ channel.on("presence_state", state => {
 })
 
 channel.on("presence_diff", diff => {
-  presences = Presence.syncDiff(presences)
+  presences = Presence.syncDiff(presences, diff)
 
   Presence.list(presences)
     .map(user => console.log(user))
