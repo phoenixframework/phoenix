@@ -69,7 +69,9 @@ Compilation of static assets happens in two steps:
 
 ```console
 $ brunch build --production
-$ MIX_ENV=prod mix phx.digest
+
+$ mix phx.digest
+
 Check your digested files at "priv/static".
 ```
 
@@ -124,7 +126,8 @@ $ MIX_ENV=prod mix compile
 
 # Compile assets
 $ brunch build --production
-$ MIX_ENV=prod mix phx.digest
+
+$ mix phx.digest
 
 # Custom tasks (like DB migrations)
 $ MIX_ENV=prod mix ecto.migrate
