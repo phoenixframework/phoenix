@@ -40,7 +40,7 @@ The webserver Phoenix is based on.
 - [User Guides](http://ninenines.eu/docs/en/cowboy/1.0/guide/)
 - [Manual/Function Reference](http://ninenines.eu/docs/en/cowboy/1.0/manual/)
 
-## EEX
+## EEx
 The default templating system for Phoenix.
 - [Source Code and Readme](https://github.com/elixir-lang/elixir)
 - [Documentation](http://elixir-lang.org/docs/stable/eex)
