@@ -244,7 +244,7 @@ We won't implement this for our application, but imagine our chat app allowed us
 intercept ["user_joined"]
 
 def handle_out("user_joined", msg, socket) do
-  if Accounts.igoring_user?(socket.assigns[:user], msg.user_id) do
+  if Accounts.ignoring_user?(socket.assigns[:user], msg.user_id) do
     {:noreply, socket}
   else
     push socket, "user_joined", msg
