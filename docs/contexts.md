@@ -28,7 +28,7 @@ In order to run the context generators, we need to come up with a module name th
 Before we use the generators, we need to undo the changes we made in the Ecto guide, so we can give our user schema a proper home. Run these commands to undo our previous work:
 
 ```console
-$ rm lib/hello/ ... TODO
+$ rm lib/hello/user.ex
 $ rm priv/repo/migrations/*_create_user.exs
 ```
 
