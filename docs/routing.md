@@ -299,9 +299,10 @@ What if we need a full url instead of a path? Just replace `_path` with `_url`:
 iex(3)> user_url(Endpoint, :index)
 "http://localhost:4000/users"
 ```
-Application endpoints will have their own guide soon. For now, think of them as the entity that handles requests just up to the point where the router takes over. That includes starting the app/server, applying configuration, and applying the plugs common to all requests.
 
 The `_url` functions will get the host, port, proxy port, and SSL information needed to construct the full URL from the configuration parameters set for each environment. We'll talk about configuration in more detail in its own guide. For now, you can take a look at `config/dev.exs` file in your own project to see those values.
+
+Whenever possible prefer to pass a `conn` in place of an `Endpoint`.
 
 ## Nested Resources
 
