@@ -490,7 +490,7 @@ defmodule HelloWeb.SessionController do
 end
 ```
 
-We defined a `SessionController` to handle users signing in and out of the application. Our `new` action is responsible for simply rendering a "new session" form, which posts out to the create action of our controller. In `create`, we pattern match the form fields and call into our `Accounts.authenticate_by_email_password/2` that we just defined. If successful, we use `Plug.Conn.put_session/3` to place the authenticated user's ID in the session, and redirect to the home page with a successful welcome message. We also called `configure_session(conn, renew: true)` before redirecting to avoid session fixation attacks. If authentication fails, we add a flash error message, and redirect to the sigin-in page for the user to try again. To finish the controller, we support a `delete` action which simply calls `Plug.Conn.configure_session/2` to drop the session and redirect to the home page.
+We defined a `SessionController` to handle users signing in and out of the application. Our `new` action is responsible for simply rendering a "new session" form, which posts out to the create action of our controller. In `create`, we pattern match the form fields and call into our `Accounts.authenticate_by_email_password/2` that we just defined. If successful, we use `Plug.Conn.put_session/3` to place the authenticated user's ID in the session, and redirect to the home page with a successful welcome message. We also called `configure_session(conn, renew: true)` before redirecting to avoid session fixation attacks. If authentication fails, we add a flash error message, and redirect to the sign-in page for the user to try again. To finish the controller, we support a `delete` action which simply calls `Plug.Conn.configure_session/2` to drop the session and redirect to the home page.
 
 Next, let's wire up our session routes in `lib/hello_web/router.ex`:
 
@@ -568,7 +568,7 @@ With authentication in place, we're in good shape to begin building out our next
 
 ## Cross-context dependencies
 
-Now that we have the beginnings of user account and credential features, let begin work on the other main features of our application – managing page content. We want to support a content management system (CMS) where authors can create and edit pages of the site. While we could extend our `Accounts` context with CMS features, if we step back and think about the isolation of our application, we can see it doesn't fit. An accounts system shouldn't care at all about a CMS system. The responsibilities of our `Accounts` context is to manage users and their credentials, not handle page content changes. There's a clear need here for a separate context to  handle these responsibilities. Let's call it `CMS`.
+Now that we have the beginnings of user account and credential features, let's begin to work on the other main features of our application – managing page content. We want to support a content management system (CMS) where authors can create and edit pages of the site. While we could extend our `Accounts` context with CMS features, if we step back and think about the isolation of our application, we can see it doesn't fit. An accounts system shouldn't care at all about a CMS system. The responsibilities of our `Accounts` context is to manage users and their credentials, not handle page content changes. There's a clear need here for a separate context to  handle these responsibilities. Let's call it `CMS`.
 
 Let's create a `CMS` context to handle basic CMS duties. Before we write code, let's imagine we have the following CMS feature requirements:
 
@@ -643,7 +643,7 @@ Generated hello app
 [info]  == Migrated in 0.0s
 ```
 
-Now, lets fire up the server with `mix phx.server` and visit `http://localhost:4000/cms/pages`. If we haven't logged in yet, we'll be redirected to the home page with a flash error message telling us to sign in. Let's sign in at `http://localhost:4000/sessions/new`, then re-visit `http://localhost:4000/cms/pages`. Now that we're authenticated, we should see a familiar resource listing for pages, with a `New Page` link.
+Now, let's fire up the server with `mix phx.server` and visit `http://localhost:4000/cms/pages`. If we haven't logged in yet, we'll be redirected to the home page with a flash error message telling us to sign in. Let's sign in at `http://localhost:4000/sessions/new`, then re-visit `http://localhost:4000/cms/pages`. Now that we're authenticated, we should see a familiar resource listing for pages, with a `New Page` link.
 
 Before we create any pages, we need page authors. Let's run the `phx.gen.context` generator to generate an `Author` schema along with injected context functions:
 
@@ -736,7 +736,7 @@ Dependencies in your software are often unavoidable, but we can do our best to l
 
 Our `Author` resource serves to keep the responsibilities of representing an author inside the CMS, but ultimately for an author to exist at all, an end-user represented by an `Accounts.User` must be present. Given this, our `CMS` context will have a data dependency on the `Accounts` context. With that in mind, we have two options. One is to expose APIs on the `Accounts` contexts that allows us to efficiently fetch user data for use in the CMS system, or we can use database joins to fetch the dependent data. Both are valid options given your tradeoffs and application size, but joining data from the database when you have a hard data dependency is just fine for a large class of applications. If you decide to break out coupled contexts into entirely separate applications and databases at a later time, you still gain the benefits of isolation. This is because your public context APIs will likely remain unchanged.
 
-Now that we know where our data dependencies exist, lets add our schema associations so we can tie pages to authors and authors to users. Make the following changes to `lib/hello/cms/page.ex`:
+Now that we know where our data dependencies exist, let's add our schema associations so we can tie pages to authors and authors to users. Make the following changes to `lib/hello/cms/page.ex`:
 
 
 ```elixir
