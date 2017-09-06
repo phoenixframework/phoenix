@@ -667,7 +667,9 @@ const Serializer = {
  * ```
  * @param {Function} opts.logger - The optional function for specialized logging, ie:
  * ```javascript
- * logger: (kind, msg, data) => { console.log(`${kind}: ${msg}`, data) }
+ * function(kind, msg, data) { 
+ *   console.log(`${kind}: ${msg}`, data) 
+ * }
  * ```
  *
  * @param {number}  opts.longpollerTimeout - The maximum timeout of a long poll AJAX request.
