@@ -618,6 +618,41 @@ Remember to update your repository by running migrations:
 
 ```
 
+The `views` attribute on the pages will not be updated directly by the user, so let's remove it from the generated form. Open `lib/hello_web/templates/cms/page/form.html.eex` and remove this part:
+
+```eex
+-  <div class="form-group">
+-    <%= label f, :views, class: "control-label" %>
+-    <%= number_input f, :views, class: "form-control" %>
+-    <%= error_tag f, :views %>
+-  </div>
+```
+
+Also, change `lib/hello/cms/page.ex` to remove `:views` from the permitted params:
+
+```elixir
+  def changeset(%Page{} = page, attrs) do
+    page
+-    |> cast(attrs, [:title, :body, :views])
+-    |> validate_required([:title, :body, :views])
++    |> cast(attrs, [:title, :body])
++    |> validate_required([:title, :body])
+  end
+```
+
+Finally, open up the new file in `priv/repo/migrations` to ensure the `views` attribute will have a default value:
+
+```elixir
+    create table(:pages) do
+      add :title, :string
+      add :body, :text
+-     add :views, :integer
++     add :views, :integer, default: 0
+
+      timestamps()
+    end
+```
+
 This time we passed the `--web` option to the generator. This tells Phoenix what namespace to use for the web modules, such as controllers and views. This is useful when you have conflicting resources in the system, such as our existing `PageController`, as well as a way to naturally namespace paths and functionality of different features, like a CMS system. Phoenix instructed us to add a new `scope` to the router for a `"/cms"` path prefix. Let's copy paste the following into our `lib/hello_web/router.ex`, but we'll make one modification to the `pipe_through` macro:
 
 
@@ -870,9 +905,17 @@ We added two new plugs to our `CMS.PageController`. The first plug, `:require_ex
 
 Next, we added an `:authorized_page` plug that makes use of plug's guard clause feature where we can limit the plug to only certain actions. The definition for our `authorize_page/2` plug first fetches the page from the connection params, then does an authorization check against the `current_author`. If our current author's ID matches the fetched page ID, we have verified the page's owner is accessing the page and we simply assign the `page` into the connection assigns to be used in the controller action. If our authorization fails, we add a flash error message, redirect to the page index screen, and then call `Plug.Conn.halt/1` to prevent the plug pipeline from continuing and invoking the controller action.
 
-With our new plugs in place, we can now modify our `create`, `update`, and `delete` actions to make use of the new values in the connection assigns:
+With our new plugs in place, we can now modify our `create`, `edit`, `update`, and `delete` actions to make use of the new values in the connection assigns:
 
 ```elixir
+   def edit(conn, %{"id" => id}) do
+-    page = CMS.get_page!(id)
+-    changeset = CMS.change_page(page)
+-    render(conn, "edit.html", page: page, changeset: changeset)
++    changeset = CMS.change_page(conn.assigns.page)
++    render(conn, "edit.html", changeset: changeset)
+   end
+
   def create(conn, %{"page" => page_params}) do
 +   case CMS.create_page(conn.assigns.current_author, page_params) do
       {:ok, page} ->
