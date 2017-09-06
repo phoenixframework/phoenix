@@ -13,6 +13,7 @@ The aim of this introductory guide is to present a brief, high-level overview of
 Phoenix is made up of a number of distinct parts, each with its own purpose and role to play in building a web application. We will cover them all in depth throughout these guides, but here's a quick breakdown.
 
  - [Endpoint](endpoint.html)
+    - the start and end of the request lifecycle
     - handles all aspects of requests up until the point where the router takes over
     - provides a core set of plugs to apply to all requests
     - dispatches requests into a designated router
