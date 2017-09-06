@@ -396,12 +396,13 @@ Next, let's show the user's email address in the user show template. Add the fol
 
 Now if we visit `http://localhost:4000/users/new`, we'll see the new email input, but if you try to save a user, you'll find that the email field is ignored. No validations are run telling you it was blank and the data was not saved, and at the end you'll get an exception `(UndefinedFunctionError) function nil.email/0 is undefined or private`. What gives?
 
-We used Ecto's `belongs_to` and `has_one` associations to wire-up how our data is related at the context level, but remember this is decoupled from our web-facing user input. To associate user input to our schema associations, we need to handle it the way we've handled other user input so far – in changesets. Modify your `create_user/1` and `update_user/2` functions in your `Accounts` context to build a changeset which knows how to cast user input with nested credential information:
+We used Ecto's `belongs_to` and `has_one` associations to wire-up how our data is related at the context level, but remember this is decoupled from our web-facing user input. To associate user input to our schema associations, we need to handle it the way we've handled other user input so far – in changesets. Remove the alias for Credential added by the generator and modify your `alias Hello.Accounts.User`, `create_user/1` and `update_user/2` functions in your `Accounts` context to build a changeset which knows how to cast user input with nested credential information:
 
 ```elixir
 - alias Hello.Accounts.User
 + alias Hello.Accounts.{User, Credential}
   ...
+
   def update_user(%User{} = user, attrs) do
     user
     |> User.changeset(attrs)
@@ -416,7 +417,8 @@ We used Ecto's `belongs_to` and `has_one` associations to wire-up how our data i
     |> Repo.insert()
   end
   ...
-- alias ContextTest.Accounts.Credential
+
+- alias Hello.Accounts.Credential
 ```
 We updated the functions to pipe our user changeset into `Ecto.Changeset.cast_assoc/2`. Ecto's `cast_assoc/2` allows us to tell the changeset how to cast user input to a schema relation. We also used the `:with` option to tell Ecto to use our `Credential.changeset/2` function to cast the data. This way, any validations we perform in `Credential.changeset/2` will be applied when saving the `User` changeset.
 
