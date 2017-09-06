@@ -4,12 +4,12 @@ When creating an app, it's important that we're able to seed our datastore with 
 
 Fortunately, Phoenix already provides us with a convention for seeding data. By default Phoenix generates a script file for each app at `priv/repo/seeds.exs`, which we can use to populate our datastore.
 
-Also note that in order to seed data as in the example below you should have already generated and run the related migration (i.e., Link migration, controller, model, etc.) and updated your `router.ex`, as described in the [Ecto Models Guide](ecto_models.html) (if you haven't completed that Guide yet, you should do so before proceeding further).
+Also note that in order to seed data as in the example below you should have already generated and run the related migration (i.e., Link migration, controller, context with schema, etc.) and updated your `router.ex`, as described in the [Ecto Guide](ecto.html) (if you haven't completed that Guide yet, you should do so before proceeding further).
 
 So in order to seed data, we simply need to add a script to `seeds.exs` that uses our datastore to directly add the data we want. As you can see from the comments that Phoenix generated for us in `seeds.exs` file, we should follow this pattern:
 
 ```elixir
-  <%= application_module %>.Repo.insert!(%<%= application_module %>.SomeModel{})
+  <%= application_module %>.Repo.insert!(%<%= application_module %>.SomeSchema{})
 ```
 
 For example, if we were creating an app called Linker and wanted to seed a Link table in our datastore with with a series of links, we could simply add the following script to our `seeds.exs` file:
@@ -82,14 +82,14 @@ iex(2)> <%= application_name %>.Link |> <%= application_name %>.Repo.all
 
 This is nice for experimenting in IEx during development in many cases.
 
-#### Models are Initialized
+#### Schemas are Initialized
 
-Conveniently, when following this convention, Phoenix makes sure that our models are appropriately initialized; and as long as we use the bang functions (e.g.,  `insert!`, `update!`, etc.), they will also fail if something goes wrong.
+Conveniently, when following this convention, Phoenix makes sure that our schemas are appropriately initialized; and as long as we use the bang functions (e.g.,  `insert!`, `update!`, etc.), they will also fail if something goes wrong.
 
 This is helpful, since it means that if we make a programming error (e.g., attempting to add a duplicate entry to a table where the field is required to be unique), the data in our database won’t lose its integrity. The database will refuse to execute the query and Ecto will throw an exception, such as:
 
 ```elixir
-  ** (Ecto.ConstraintError) constraint error when attempting to insert model:
+  ** (Ecto.ConstraintError) constraint error when attempting to insert struct:
 ```
 
 Which will be followed by a description of any constraint errors.

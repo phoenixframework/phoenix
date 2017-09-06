@@ -44,7 +44,7 @@ Where does this come from?
 When we generate a new Phoenix application, a `test/support/channel_case.ex` file is
 also generated for us. This file houses the `MyAppWeb.ChannelCase` module which we will
 use for all our integration tests for our channels. It automatically imports conveniences
-for testing channels and the Ecto model and query functions(if we use Ecto).
+for testing channels and the Ecto context and query functions(if we use Ecto).
 
 Some of the helper functions provided there are for triggering callback functions in our
 channel. The others are there to provide us with special assertions that apply only to channels.

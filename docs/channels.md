@@ -48,7 +48,7 @@ The `Phoenix.Socket.Message` module defines a struct with the following keys whi
 
 ### Topics
 
-Topics are string identifiers - names that the various layers use in order to make sure messages end up in the right place. As we saw above, topics can use wildcards. This allows for a useful "topic:subtopic" convention. Often, you'll compose topics using record IDs from your model layer, such as `"users:123"`.
+Topics are string identifiers - names that the various layers use in order to make sure messages end up in the right place. As we saw above, topics can use wildcards. This allows for a useful "topic:subtopic" convention. Often, you'll compose topics using record IDs from your application layer, such as `"users:123"`.
 
 ### Transports
 
@@ -238,13 +238,13 @@ end
 `broadcast!/3` will notify all joined clients on this `socket`'s topic and invoke their `handle_out/3` callbacks. `handle_out/3` isn't a required callback, but it allows us to customize and filter broadcasts before they reach each client. By default, `handle_out/3` is implemented for us and simply pushes the message on to the client, just like our definition. We included it here because hooking into outgoing events allows for powerful message customization and filtering. Let's see how.
 
 #### Intercepting Outgoing Events
-We won't implement this for our application, but imagine our chat app allowed users to ignore messages about new users joining a room. We could implement that behavior like this where we explicitly tell Phoenix which outgoing event we want to intercept and then define a `handle_out/3` callback for those events. (Of course, this assumes that we have a `User` model with an `ignoring?/2` function, and that we pass a user in via the `assigns` map.)
+We won't implement this for our application, but imagine our chat app allowed users to ignore messages about new users joining a room. We could implement that behavior like this where we explicitly tell Phoenix which outgoing event we want to intercept and then define a `handle_out/3` callback for those events. (Of course, this assumes that we have a `Accounts` context with an `igoring_user?/2` function, and that we pass a user in via the `assigns` map.)
 
 ```elixir
 intercept ["user_joined"]
 
 def handle_out("user_joined", msg, socket) do
-  if User.ignoring?(socket.assigns[:user], msg.user_id) do
+  if Accounts.igoring_user?(socket.assigns[:user], msg.user_id) do
     {:noreply, socket}
   else
     push socket, "user_joined", msg

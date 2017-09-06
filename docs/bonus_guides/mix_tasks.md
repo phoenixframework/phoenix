@@ -7,6 +7,7 @@ There are currently a number of built-in Phoenix-specific and ecto-specific mix 
 ```console
 
 ➜ mix help | grep -i phx
+mix local.phx          # Updates the Phoenix project generator locally
 mix phx.digest         # Digests and compresses static files
 mix phx.digest.clean   # Removes old versions of static assets.
 mix phx.gen.channel    # Generates a Phoenix channel
@@ -17,6 +18,9 @@ mix phx.gen.json       # Generates controller, views, and context for a JSON res
 mix phx.gen.presence   # Generates a Presence tracker
 mix phx.gen.schema     # Generates an Ecto schema and migration file
 mix phx.gen.secret     # Generates a secret
+mix phx.new            # Creates a new Phoenix v1.3.0 application
+mix phx.new.ecto       # Creates a new Ecto project within an umbrella project
+mix phx.new.web        # Creates a new Phoenix web project within an umbrella project
 mix phx.routes         # Prints all routes
 mix phx.server         # Starts applications and their servers
 ```
@@ -88,7 +92,7 @@ You can also run it inside IEx (Interactive Elixir) as:
 $ iex -S mix phoenix.server
 ```
 
-By default `phoenix.new` will assume we want to use ecto for our models. If we don't want to use ecto in our application, we can use the `--no-ecto` flag.
+By default `phoenix.new` will assume we want to use ecto for our contexts. If we don't want to use ecto in our application, we can use the `--no-ecto` flag.
 
 ```console
 $ mix phoenix.new task_tester --no-ecto
@@ -193,109 +197,38 @@ defmodule Hello.Mixfile do
 . . .
 ```
 
-#### `mix phoenix.gen.html`
+#### `mix phx.gen.html`
 
-Phoenix now offers the ability to generate all the code to stand up a complete HTML resource - ecto migration, ecto model, controller with all the necessary actions, view, and templates. This can be a tremendous timesaver. Let's take a look at how to make this happen.
+Phoenix now offers the ability to generate all the code to stand up a complete HTML resource - ecto migration, ecto context, controller with all the necessary actions, view, and templates. This can be a tremendous timesaver. Let's take a look at how to make this happen.
 
-The `phoenix.gen.html` task takes a number of arguments, the module name of the model, the resource name, and a list of column_name:type attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
+The `phx.gen.html` task takes a number of arguments, the module name of the context, the module name of the schema, the resource name, and a list of column_name:type attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
 
 ```console
-$ mix phoenix.gen.html Post posts body:string word_count:integer
-* creating priv/repo/migrations/20150523120903_create_post.exs
-* creating web/models/post.ex
-* creating test/models/post_test.exs
-* creating web/controllers/post_controller.ex
-* creating web/templates/post/edit.html.eex
-* creating web/templates/post/form.html.eex
-* creating web/templates/post/index.html.eex
-* creating web/templates/post/new.html.eex
-* creating web/templates/post/show.html.eex
-* creating web/views/post_view.ex
-* creating test/controllers/post_controller_test.exs
+$ mix phx.gen.html Blog Post posts body:string word_count:integer
+* creating lib/hello_web/controllers/post_controller.ex
+* creating lib/hello_web/templates/post/edit.html.eex
+* creating lib/hello_web/templates/post/form.html.eex
+* creating lib/hello_web/templates/post/index.html.eex
+* creating lib/hello_web/templates/post/new.html.eex
+* creating lib/hello_web/templates/post/show.html.eex
+* creating lib/hello_web/views/post_view.ex
+* creating test/hello_web/controllers/post_controller_test.exs
+* creating lib/hello/blog/post.ex
+* creating priv/repo/migrations/20170906150129_create_posts.exs
+* creating lib/hello/blog/blog.ex
+* injecting lib/hello/blog/blog.ex
+* creating test/hello/blog/blog_test.exs
+* injecting test/hello/blog/blog_test.exs
 ```
 
-When `phoenix.gen.html` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our ecto migrations.
+When `phx.gen.html` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our ecto migrations.
 
 ```console
-Add the resource to your browser scope in web/router.ex:
+Add the resource to your browser scope in lib/hello_web/router.ex:
 
     resources "/posts", PostController
 
-and then update your repository by running migrations:
-
-$ mix ecto.migrate
-```
-
-Important: If we don't do this, our application won't compile, and we'll get an error.
-
-```console
-$ mix phoenix.server
-Compiled web/models/post.ex
-
-== Compilation error on file web/controllers/post_controller.ex ==
-** (CompileError) web/controllers/post_controller.ex:27: function post_path/2 undefined
-(stdlib) lists.erl:1336: :lists.foreach/2
-(stdlib) erl_eval.erl:657: :erl_eval.do_apply/6
-```
-
-If we don't want to create a model for our resource we can use the `--no-model` flag.
-
-```console
-$ mix phoenix.gen.html Post posts body:string word_count:integer --no-model
-* creating web/controllers/post_controller.ex
-* creating web/templates/post/edit.html.eex
-* creating web/templates/post/form.html.eex
-* creating web/templates/post/index.html.eex
-* creating web/templates/post/new.html.eex
-* creating web/templates/post/show.html.eex
-* creating web/views/post_view.ex
-* creating test/controllers/post_controller_test.exs
-```
-
-It will tell us we need to add a line to our router file, but since we skipped the model, it won't mention anything about `ecto.migrate`.
-
-```console
-Add the resource to your browser scope in web/router.ex:
-
-    resources "/posts", PostController
-```
-
-Important: If we don't do this, our application won't compile, and we'll get an error.
-
-```console
-$ mix phoenix.server
-
-== Compilation error on file web/views/post_view.ex ==
-** (CompileError) web/templates/post/edit.html.eex:4: function post_path/3 undefined
-    (stdlib) lists.erl:1336: :lists.foreach/2
-    (stdlib) erl_eval.erl:657: :erl_eval.do_apply/6
-```
-
-#### `mix phx.gen.json`
-
-Phoenix also offers the ability to generate all the code to stand up a complete JSON resource - ecto migration, ecto model, controller with all the necessary actions and view. This command will not create any template for the app.
-
-The `phx.gen.json` task takes a number of arguments, the module name of the model, the resource name, and a list of column_name:type attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
-
-```console
-$ mix phx.gen.json Post posts title:string content:string
-* creating priv/repo/migrations/20150521140551_create_post.exs
-* creating web/models/post.ex
-* creating test/models/post_test.exs
-* creating web/controllers/post_controller.ex
-* creating web/views/post_view.ex
-* creating test/controllers/post_controller_test.exs
-* creating web/views/changeset_view.ex
-```
-
-When `phx.gen.json` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our ecto migrations.
-
-```console
-Add the resource to your api scope in web/router.ex:
-
-    resources "/posts", PostController, except: [:new, :edit]
-
-and then update your repository by running migrations:
+Remember to update your repository by running migrations:
 
     $ mix ecto.migrate
 ```
@@ -304,28 +237,151 @@ Important: If we don't do this, our application won't compile, and we'll get an 
 
 ```console
 $ mix phx.server
-Compiled web/models/post.ex
+Compiling 17 files (.ex)
 
-== Compilation error on file web/controllers/post_controller.ex ==
-** (CompileError) web/controllers/post_controller.ex:27: function post_path/2 undefined
-(stdlib) lists.erl:1336: :lists.foreach/2
-(stdlib) erl_eval.erl:657: :erl_eval.do_apply/6
+== Compilation error in file lib/hello_web/controllers/post_controller.ex ==
+** (CompileError) lib/hello_web/controllers/post_controller.ex:22: undefined function post_path/3
+    (stdlib) lists.erl:1338: :lists.foreach/2
+    (stdlib) erl_eval.erl:670: :erl_eval.do_apply/6
+    (elixir) lib/kernel/parallel_compiler.ex:121: anonymous fn/4 in Kernel.ParallelCompiler.spawn_compilers/1
 ```
 
-If we don't want to create a model for our resource we can use the `--no-model` flag.
+If we don't want to create a context or schema for our resource we can use the `--no-context` flag.  Note that this still requires a context module name as a parameter.
 
 ```console
-$ mix phx.gen.json Post posts title:string content:string --no-model
-* creating web/controllers/post_controller.ex
-* creating web/views/post_view.ex
-* creating test/controllers/post_controller_test.exs
-* creating web/views/changeset_view.ex
+$ mix phx.gen.html Blog Post posts body:string word_count:integer --no-context
+* creating lib/hello_web/controllers/post_controller.ex
+* creating lib/hello_web/templates/post/edit.html.eex
+* creating lib/hello_web/templates/post/form.html.eex
+* creating lib/hello_web/templates/post/index.html.eex
+* creating lib/hello_web/templates/post/new.html.eex
+* creating lib/hello_web/templates/post/show.html.eex
+* creating lib/hello_web/views/post_view.ex
+* creating test/hello_web/controllers/post_controller_test.exs
 ```
 
-It will tell us we need to add a line to our router file, but since we skipped the model, it won't mention anything about `ecto.migrate`.
+It will tell us we need to add a line to our router file, but since we skipped the context, it won't mention anything about `ecto.migrate`.
 
 ```console
-Add the resource to your api scope in web/router.ex:
+Add the resource to your browser scope in lib/hello_web/router.ex:
+
+    resources "/posts", PostController
+```
+
+Important: If we don't do this, our application won't compile, and we'll get an error.
+
+```console
+$ mix phx.server
+Compiling 15 files (.ex)
+
+== Compilation error in file lib/hello_web/views/post_view.ex ==
+** (CompileError) lib/hello_web/templates/post/edit.html.eex:3: undefined function post_path/3
+    (stdlib) lists.erl:1338: :lists.foreach/2
+    (stdlib) erl_eval.erl:670: :erl_eval.do_apply/6
+    (elixir) lib/kernel/parallel_compiler.ex:121: anonymous fn/4 in Kernel.ParallelCompiler.spawn_compilers/1
+```
+
+Similarly - if we want a context created without a schema for our resource we can use the `--no-schema` flag.
+
+```console
+$ mix phx.gen.html Blog Post posts body:string word_count:integer --no-schema
+* creating lib/hello_web/controllers/post_controller.ex
+* creating lib/hello_web/templates/post/edit.html.eex
+* creating lib/hello_web/templates/post/form.html.eex
+* creating lib/hello_web/templates/post/index.html.eex
+* creating lib/hello_web/templates/post/new.html.eex
+* creating lib/hello_web/templates/post/show.html.eex
+* creating lib/hello_web/views/post_view.ex
+* creating test/hello_web/controllers/post_controller_test.exs
+* creating lib/hello/blog/blog.ex
+* injecting lib/hello/blog/blog.ex
+* creating test/hello/blog/blog_test.exs
+* injecting test/hello/blog/blog_test.exs
+```
+
+It will tell us we need to add a line to our router file, but since we skipped the schema, it won't mention anything about `ecto.migrate`.
+
+```console
+Add the resource to your browser scope in lib/hello_web/router.ex:
+
+    resources "/posts", PostController
+```
+
+Important: If we don't do this, our application won't compile, and we'll get an error.
+
+```console
+$ mix phx.server
+Compiling 15 files (.ex)
+
+== Compilation error in file lib/hello_web/views/post_view.ex ==
+** (CompileError) lib/hello_web/templates/post/edit.html.eex:3: undefined function post_path/3
+    (stdlib) lists.erl:1338: :lists.foreach/2
+    (stdlib) erl_eval.erl:670: :erl_eval.do_apply/6
+    (elixir) lib/kernel/parallel_compiler.ex:121: anonymous fn/4 in Kernel.ParallelCompiler.spawn_compilers/1
+```
+
+#### `mix phx.gen.json`
+
+Phoenix also offers the ability to generate all the code to stand up a complete JSON resource - ecto migration, ecto schema, controller with all the necessary actions and view. This command will not create any template for the app.
+
+The `phx.gen.json` task takes a number of arguments, the module name of the context, the module name of the schema, the resource name, and a list of column_name:type attributes. The module name we pass in must conform to the Elixir rules of module naming, following proper capitalization.
+
+```console
+$ mix phx.gen.json Blog Post posts title:string content:string
+* creating lib/hello_web/controllers/post_controller.ex
+* creating lib/hello_web/views/post_view.ex
+* creating test/hello_web/controllers/post_controller_test.exs
+* creating lib/hello_web/views/changeset_view.ex
+* creating lib/hello_web/controllers/fallback_controller.ex
+* creating lib/hello/blog/post.ex
+* creating priv/repo/migrations/20170906153323_create_posts.exs
+* creating lib/hello/blog/blog.ex
+* injecting lib/hello/blog/blog.ex
+* creating test/hello/blog/blog_test.exs
+* injecting test/hello/blog/blog_test.exs
+```
+
+When `phx.gen.json` is done creating files, it helpfully tells us that we need to add a line to our router file as well as run our ecto migrations.
+
+```console
+Add the resource to your :api scope in lib/hello_web/router.ex:
+
+    resources "/posts", PostController, except: [:new, :edit]
+
+
+Remember to update your repository by running migrations:
+
+    $ mix ecto.migrate
+```
+
+Important: If we don't do this, our application won't compile, and we'll get an error.
+
+```console
+$ mix phx.server
+Compiling 19 files (.ex)
+
+== Compilation error in file lib/hello_web/controllers/post_controller.ex ==
+** (CompileError) lib/hello_web/controllers/post_controller.ex:18: undefined function post_path/3
+    (stdlib) lists.erl:1338: :lists.foreach/2
+    (stdlib) erl_eval.erl:670: :erl_eval.do_apply/6
+    (elixir) lib/kernel/parallel_compiler.ex:121: anonymous fn/4 in Kernel.ParallelCompiler.spawn_compilers/1
+```
+
+If we don't want to create a context or schema for our resource we can use the `--no-context` flag. Note that this still requires a context module name as a parameter.
+
+```console
+$ mix phx.gen.json Blog Post posts title:string content:string --no-context
+* creating lib/hello_web/controllers/post_controller.ex
+* creating lib/hello_web/views/post_view.ex
+* creating test/hello_web/controllers/post_controller_test.exs
+* creating lib/hello_web/views/changeset_view.ex
+* creating lib/hello_web/controllers/fallback_controller.ex
+```
+
+It will tell us we need to add a line to our router file, but since we skipped the context, it won't mention anything about `ecto.migrate`.
+
+```console
+Add the resource to your :api scope in lib/hello_web/router.ex:
 
     resources "/posts", PostController, except: [:new, :edit]
 ```
@@ -334,32 +390,90 @@ Important: If we don't do this, our application won't compile, and we'll get an 
 
 ```console
 $ mix phx.server
+Compiling 17 files (.ex)
 
-== Compilation error on file lib/hello_web/controllers/post_controller.ex ==
-** (CompileError) lib/hello_web/controllers/post_controller.ex:15: Hello.Post.__struct__/0 is undefined, cannot expand struct Hello.Post
-    (elixir) src/elixir_map.erl:55: :elixir_map.translate_struct/4
-    (stdlib) lists.erl:1352: :lists.mapfoldl/3
+== Compilation error in file lib/hello_web/controllers/post_controller.ex ==
+** (CompileError) lib/hello_web/controllers/post_controller.ex:15: Hello.Blog.Post.__struct__/0 is undefined, cannot expand struct Hello.Blog.Post
+    (stdlib) lists.erl:1354: :lists.mapfoldl/3
+    (stdlib) lists.erl:1355: :lists.mapfoldl/3
+    (stdlib) lists.erl:1354: :lists.mapfoldl/3
+    lib/hello_web/controllers/post_controller.ex:14: (module)
+    (stdlib) erl_eval.erl:670: :erl_eval.do_apply/6
 ```
 
-#### `mix phoenix.gen.model`
-
-If we don't need a complete HTML/JSON resource and instead are only interested in a model, we can use the `phoenix.gen.model` task. It will generate a model, a migration and a test case.
-
-The `phoenix.gen.model` task takes a number of arguments, the module name of the model, the plural model name used for the schema, and a list of column_name:type attributes.
+Similarly - if we want a context created without a schema for our resource we can use the `--no-schema` flag.
 
 ```console
-$ mix phoenix.gen.model User users name:string age:integer
-* creating priv/repo/migrations/20150527185323_create_user.exs
-* creating web/models/user.ex
-* creating test/models/user_test.exs
+$ mix phx.gen.json Blog Post posts title:string content:string --no-schema
+* creating lib/hello_web/controllers/post_controller.ex
+* creating lib/hello_web/views/post_view.ex
+* creating test/hello_web/controllers/post_controller_test.exs
+* creating lib/hello_web/views/changeset_view.ex
+* creating lib/hello_web/controllers/fallback_controller.ex
+* creating lib/hello/blog/blog.ex
+* injecting lib/hello/blog/blog.ex
+* creating test/hello/blog/blog_test.exs
+* injecting test/hello/blog/blog_test.exs
+```
+
+It will tell us we need to add a line to our router file, but since we skipped the context, it won't mention anything about `ecto.migrate`.
+
+```console
+Add the resource to your browser scope in lib/hello_web/router.ex:
+
+    resources "/posts", PostController
+```
+
+Important: If we don't do this, our application won't compile, and we'll get an error.
+
+```console
+$ mix phx.server
+Compiling 18 files (.ex)
+
+== Compilation error in file lib/hello/blog/blog.ex ==
+** (CompileError) lib/hello/blog/blog.ex:65: Hello.Blog.Post.__struct__/0 is undefined, cannot expand struct Hello.Blog.Post
+    lib/hello/blog/blog.ex:65: (module)
+    (stdlib) erl_eval.erl:670: :erl_eval.do_apply/6
+    (elixir) lib/kernel/parallel_compiler.ex:121: anonymous fn/4 in Kernel.ParallelCompiler.spawn_compilers/1
+```
+
+#### `mix phx.gen.context`
+
+If we don't need a complete HTML/JSON resource and instead are only interested in a context, we can use the `phx.gen.context` task. It will generate a context, a schema, a migration and a test case.
+
+The `phx.gen.context` task takes a number of arguments, the module name of the context, the module name of the schema, the resource name, and a list of column_name:type attributes.
+
+```console
+$ mix phx.gen.context Accounts User users name:string age:integer
+* creating lib/hello/accounts/user.ex
+* creating priv/repo/migrations/20170906161158_create_users.exs
+* creating lib/hello/accounts/accounts.ex
+* injecting lib/hello/accounts/accounts.ex
+* creating test/hello/accounts/accounts_test.exs
+* injecting test/hello/accounts/accounts_test.exs
 ```
 
 > Note: If we need to namespace our resource we can simply namespace the first argument of the generator.
+
 ```console
-$ mix phoenix.gen.model Admin.User users name:string age:integer
-* creating priv/repo/migrations/20150527185940_create_admin_user.exs
-* creating web/models/admin/user.ex
-* creating test/models/admin/user_test.exs
+* creating lib/hello/admin/accounts/user.ex
+* creating priv/repo/migrations/20170906161246_create_users.exs
+* creating lib/hello/admin/accounts/accounts.ex
+* injecting lib/hello/admin/accounts/accounts.ex
+* creating test/hello/admin/accounts/accounts_test.exs
+* injecting test/hello/admin/accounts/accounts_test.exs
+```
+
+#### `mix phx.gen.schema`
+
+If we don't need a complete HTML/JSON resource and are not interested in generating or altering a context we can use the `phx.gen.schema` task. It will generate a schema, and a migration.
+
+The `phx.gen.schema` task takes a number of arguments, the module name of the schema (which may be namespaced), the resource name, and a list of column_name:type attributes.
+
+```console
+$ mix phx.gen.schema Accounts.Credential credentials email:string:unique user_id:references:users
+* creating lib/hello/accounts/credential.ex
+* creating priv/repo/migrations/20170906162013_create_credentials.exs
 ```
 
 #### `mix phx.gen.channel`

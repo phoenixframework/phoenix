@@ -87,7 +87,7 @@ $ ln -s /usr/bin/nodejs /usr/bin/node
 
 PostgreSQL is a relational database server. Phoenix configures applications to use it by default, but we can switch to MySQL by passing the `--database mysql` flag when creating a new application.
 
-When we work with Ecto models in these guides, we will use PostgreSQL and the Postgrex adapter for it. In order to follow along with the examples, we should install PostgreSQL. The PostgreSQL wiki has [installation guides](https://wiki.postgresql.org/wiki/Detailed_installation_guides) for a number of different systems.
+When we work with Ecto schemas in these guides, we will use PostgreSQL and the Postgrex adapter for it. In order to follow along with the examples, we should install PostgreSQL. The PostgreSQL wiki has [installation guides](https://wiki.postgresql.org/wiki/Detailed_installation_guides) for a number of different systems.
 
 Postgrex is a direct Phoenix dependency, and it will be automatically installed along with the rest of our dependencies as we start our app.
 

@@ -6,7 +6,7 @@ Plug provides a `Plug.Upload` struct to hold the data from the `file` input. A `
 
 Let's take this one piece at a time.
 
-In the [`Ecto Models Guide`](ecto_models.html), we generated an HTML resource for users. We can reuse the form we generated there in order to demonstrate how file uploads work in Phoenix. Please see that guide for instructions on generating the users resource we'll be using here.
+In the [Ecto Guide](ecto.html), we generated an HTML resource for users. We can reuse the form we generated there in order to demonstrate how file uploads work in Phoenix. Please see that guide for instructions on generating the users resource we'll be using here.
 
 The first thing we need to do is change our form into a multipart form. The `form_for/4` function accepts a keyword list of options where we can specify this.
 
@@ -45,7 +45,7 @@ Note the `name` attribute of our `file` input. This will create the `"photo"` ke
 
 That's it from the form side. Now when users submit the form, a `POST` request will route to our `Hello.UserController` `create/2` action.
 
-> Note: This photo input does not need to be part of our model for it to come across in the `user_params`. If we want to persist any properties of the photo in a database, however, we would need to add it to our `Hello.User` model's schema.
+> Note: This photo input does not need to be part of our schema for it to come across in the `user_params`. If we want to persist any properties of the photo in a database, however, we would need to add it to our `Hello.User` schema.
 
 Before we begin, let's add `IO.inspect user_params` to the top of our `Hello.create/2` action in `lib/hello_web/controllers/user_controller.ex`. This will show the `user_params` in our development log so we can better see what's happening.
 

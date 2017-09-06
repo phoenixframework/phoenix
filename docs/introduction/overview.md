@@ -70,11 +70,11 @@ Ecto is built around four main abstractions:
 
 * Repo - A repository represents a connection to an individual database. Every database operation is done via the repository.
 
-* Model - Models are our data definitions. They define table names and fields as well as each field's type. Models also define associations - the relationships between models.
+* Schema - Schemas are our data definitions. They define table names and fields as well as each field's type. Schemas also define associations - the relationships between our resources.
 
-* Query - Queries tie both models and repositories together, allowing us to elegantly retrieve data from the repository and cast it into the models themselves.
+* Query - Queries tie both schemas and repositories together, allowing us to elegantly retrieve data from the repository and cast it into the schemas themselves.
 
-* Changeset - Changesets declare transformations we need to perform on our model data before our application can use it. These include type casting, validations, and more.
+* Changeset - Changesets declare transformations we need to perform on our data before our application can use it. These include type casting, validations, and more.
 
 A new Phoenix application will use Ecto with PostgreSQL storage by default.
 

@@ -166,7 +166,7 @@ Often, we find that small pieces of data need to be rendered the same way in dif
 
 Let's move our template into a shared view.
 
-`key.html.eex` is currently rendered by the `HelloWeb.PageView` module, but we use a render call which assumes that the current view model is what we want to render with. We could make that explicit, and re-write it like this:
+`key.html.eex` is currently rendered by the `HelloWeb.PageView` module, but we use a render call which assumes that the current schema is what we want to render with. We could make that explicit, and re-write it like this:
 
 ```html
 <div class="jumbotron">
