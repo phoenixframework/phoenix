@@ -6,6 +6,10 @@ Since Elixir is based on message passing, you may wonder why we need this extra 
 
 The word "Channel" is really shorthand for a layered system with a number of components. Let's take a quick look at them now so we can see the big picture a little better.
 
+## JS Documentation
+
+Phoenix ships with a JavaScript client that is available when generating a new Phoenix project. The documentation for the JavaScript module is available at [https://hexdocs.pm/phoenix/js/](https://hexdocs.pm/phoenix/js/)
+
 ## The Moving Parts
 
 ### Socket Handlers
