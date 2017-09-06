@@ -203,7 +203,7 @@ defmodule Phoenix.Controller do
   the render block and instead return the unmatched value. In this case,
   imagine `Blog.fetch_post/2` returned `{:error, :not_found}` or
   `Authorizer.authorize/3` returned `{:error, :unauthorized}`. For cases
-  where these datastructures serve as return values across multiple
+  where these data structures serve as return values across multiple
   boundaries in our domain, a single fallback module can be used to
   translate the value into a valid response. For example, you could
   write the following fallback controller to handle the above values:

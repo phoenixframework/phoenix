@@ -55,8 +55,8 @@ defmodule Phoenix.Presence do
   the socket's topic is pushed to the client as a `"presence_state"` event.
   Next, `Presence.track` is used to register this
   channel's process as a presence for the socket's user ID, with
-  a map of metadata. 
-  
+  a map of metadata.
+
   Finally, a diff of presence join and leave events will be sent to the
   client as they happen in real-time with the "presence_diff" event.
   The diff structure will be a map of `:joins` and `:leaves` of the form:
@@ -65,7 +65,7 @@ defmodule Phoenix.Presence do
         leaves: %{"456" => %{metas: [%{status: "online", phx_ref: ...}]},
 
   See `Phoenix.Presence.list/2` for more information on the presence
-  datastructure.
+  data structure.
 
   ## Fetching Presence Information
 
@@ -78,7 +78,7 @@ defmodule Phoenix.Presence do
   before broadcasting the information to all channel subscribers.
   This prevents N query problems and gives you a single place to group
   isolated data fetching to extend presence metadata. The function must
-  return a map of data matching the outlined Presence datastructure,
+  return a map of data matching the outlined Presence data structure,
   including the `:metas` key, but can extend the map of information
   to include any additional information. For example:
 
@@ -208,7 +208,7 @@ defmodule Phoenix.Presence do
   @doc """
   Returns presences for a topic.
 
-  ## Presence datastructure
+  ## Presence data structure
 
   The presence information is returned as a map with presences grouped
   by key, cast as a string, and accumulated metadata, with the following form:

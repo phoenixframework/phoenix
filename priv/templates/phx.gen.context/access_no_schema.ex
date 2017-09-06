@@ -76,7 +76,7 @@
   end
 
   @doc """
-  Returns a datastructure for tracking <%= schema.singular %> changes.
+  Returns a data structure for tracking <%= schema.singular %> changes.
 
   ## Examples
 
