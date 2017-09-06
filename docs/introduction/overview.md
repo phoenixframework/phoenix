@@ -4,7 +4,7 @@ Phoenix is a web development framework written in Elixir which implements the se
 
 Phoenix provides the best of both worlds - high developer productivity _and_ high application performance. It also has some interesting new twists like channels for implementing realtime features and pre-compiled templates for blazing speed.
 
-If you are already familiar with Elixir, great! If not, there are a number of places to learn. The [Elixir guides](http://elixir-lang.org/getting-started/introduction.html) are a great place to start. We also have a list of helpful resources in the [Learning Elixir and Erlang Guide](http://www.phoenixframework.org/docs/learning-elixir-and-erlang).
+If you are already familiar with Elixir, great! If not, there are a number of places to learn. The [Elixir guides](https://elixir-lang.org/getting-started/introduction.html) are a great place to start. We also have a list of helpful resources in the [Learning Elixir and Erlang Guide](http://www.phoenixframework.org/docs/learning-elixir-and-erlang).
 
 The aim of this introductory guide is to present a brief, high-level overview of Phoenix, the parts that make it up, and the layers underneath that support it.
 
@@ -52,7 +52,7 @@ By default, the web server used by Phoenix (and Plug) is Cowboy. It is uncommon 
 
 ### Plug
 
-[Plug](http://hexdocs.pm/plug/) is a specification for constructing composable modules to build web applications. Plugs are reusable modules or functions built to that specification. They provide discrete behaviors - like request header parsing or logging. Because the Plug API is small and consistent, plugs can be defined and executed in a set order, like a pipeline. They can also be re-used within a project or across projects.
+[Plug](https://hexdocs.pm/plug/) is a specification for constructing composable modules to build web applications. Plugs are reusable modules or functions built to that specification. They provide discrete behaviors - like request header parsing or logging. Because the Plug API is small and consistent, plugs can be defined and executed in a set order, like a pipeline. They can also be re-used within a project or across projects.
 
 Plugs can be written to handle almost anything, from authentication to parameter pre-processing, and even rendering.
 
@@ -64,7 +64,7 @@ Have a look at the [Plug Guide](plug.html) for more details.
 
 ### Ecto
 
-[Ecto](http://hexdocs.pm/ecto) is a language integrated query composition tool and database wrapper for Elixir. With Ecto, we can read and write to different databases, model our domain data, write complex queries in a type-safe way, protect against attack vectors - including SQL injection, and much more.
+[Ecto](https://hexdocs.pm/ecto) is a language integrated query composition tool and database wrapper for Elixir. With Ecto, we can read and write to different databases, model our domain data, write complex queries in a type-safe way, protect against attack vectors - including SQL injection, and much more.
 
 Ecto is built around four main abstractions:
 

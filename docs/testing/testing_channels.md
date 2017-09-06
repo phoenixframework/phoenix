@@ -200,4 +200,4 @@ the API for testing channels is largely consistent with the API for Phoenix Chan
 it easy to work with.
 
 If interested in learning more about the helpers provided by `MyAppWeb.ChannelCase`, check out the
-documentation for [`Phoenix.ChannelTest`](http://hexdocs.pm/phoenix/Phoenix.ChannelTest.html) which is the module that defines those functions.
+documentation for [`Phoenix.ChannelTest`](https://hexdocs.pm/phoenix/Phoenix.ChannelTest.html) which is the module that defines those functions.

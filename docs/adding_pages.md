@@ -249,7 +249,7 @@ def show(conn, %{"messenger" => messenger} = params) do
 end
 ```
 
-It's good to remember that the keys to the `params` map will always be strings, and that the equals sign does not represent assignment, but is instead a [pattern match](http://elixir-lang.org/getting-started/pattern-matching.html) assertion.
+It's good to remember that the keys to the `params` map will always be strings, and that the equals sign does not represent assignment, but is instead a [pattern match](https://elixir-lang.org/getting-started/pattern-matching.html) assertion.
 
 ### A New Template
 

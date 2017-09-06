@@ -9,7 +9,7 @@ Here's a list of other resources for learning about Phoenix and some of the proj
 
 #### Online Resources
 - [The Phoenix Project](https://github.com/phoenixframework/phoenix)
-- [Official Documentation](http://hexdocs.pm/phoenix/) (current stable release)
+- [Official Documentation](https://hexdocs.pm/phoenix/) (current stable release)
 
 #### Videos
 Phoenix author Chris McCord's videos covering the roadmap to Phoenix 1.0 and an overview of the current state of Phoenix.
@@ -19,12 +19,12 @@ Phoenix author Chris McCord's videos covering the roadmap to Phoenix 1.0 and an 
 ## Plug
 The Elixir middleware layer that Phoenix makes extensive use of.
 - [Source Code and Readme](https://github.com/elixir-lang/plug)
-- [Documentation](http://hexdocs.pm/plug)
+- [Documentation](https://hexdocs.pm/plug)
 
 ## Ecto
 The default data layer for Phoenix.
 - [Source Code and Readme](https://github.com/elixir-lang/ecto)
-- [Documentation](http://hexdocs.pm/ecto/)
+- [Documentation](https://hexdocs.pm/ecto/)
 
 ## Phoenix HTML
 The project which contains many HTML helper functions used in Phoenix.

@@ -2,7 +2,7 @@
 
 Phoenix controllers act as intermediary modules. Their functions - called actions - are invoked from the router in response to HTTP requests. The actions, in turn, gather all the necessary data and perform all the necessary steps before invoking the view layer to render a template or returning a JSON response.
 
-Phoenix controllers also build on the Plug package, and are themselves plugs. Controllers provide the functions to do almost anything we need to in an action. If we do find ourselves looking for something that Phoenix controllers don't provide; however, we might find what we're looking for in Plug itself. Please see the [Plug Guide](plug.html) or [Plug Documentation](http://hexdocs.pm/plug/) for more information.
+Phoenix controllers also build on the Plug package, and are themselves plugs. Controllers provide the functions to do almost anything we need to in an action. If we do find ourselves looking for something that Phoenix controllers don't provide; however, we might find what we're looking for in Plug itself. Please see the [Plug Guide](plug.html) or [Plug Documentation](https://hexdocs.pm/plug/) for more information.
 
 A newly generated Phoenix app will have a single controller, the `PageController`, which can be found at `lib/hello_web/controllers/page_controller.ex` and looks like this.
 
@@ -59,7 +59,7 @@ While we can name our actions whatever we like, there are conventions for action
 
 Each of these actions takes two parameters, which will be provided by Phoenix behind the scenes.
 
-The first parameter is always `conn`, a struct which holds information about the request such as the host, path elements, port, query string, and much more. `conn`, comes to Phoenix via Elixir's Plug middleware framework. More detailed info about `conn` can be found in [plug's documentation](http://hexdocs.pm/plug/Plug.Conn.html).
+The first parameter is always `conn`, a struct which holds information about the request such as the host, path elements, port, query string, and much more. `conn`, comes to Phoenix via Elixir's Plug middleware framework. More detailed info about `conn` can be found in [plug's documentation](https://hexdocs.pm/plug/Plug.Conn.html).
 
 The second parameter is `params`. Not surprisingly, this is a map which holds any parameters passed along in the HTTP request. It is a good practice to pattern match against params in the function signature to provide data in a simple package we can pass on to rendering. We saw this in the [Adding Pages guide](adding_pages.html) when we added a messenger parameter to our `show` route in `lib/hello_web/controllers/hello_controller.ex`.
 
@@ -77,7 +77,7 @@ In some cases - often in `index` actions, for instance - we don't care about par
 
 ### Gathering Data
 
-While Phoenix does not ship with its own data access layer, the Elixir project [Ecto](http://hexdocs.pm/ecto) provides a very nice solution for those using the [Postgres](http://www.postgresql.org/) relational database. We cover how to use Ecto in a Phoenix project in the [Ecto Guide](ecto.html). Databases supported by Ecto are covered in the [Usage section of the Ecto README](https://github.com/elixir-lang/ecto#usage).
+While Phoenix does not ship with its own data access layer, the Elixir project [Ecto](https://hexdocs.pm/ecto) provides a very nice solution for those using the [Postgres](http://www.postgresql.org/) relational database. We cover how to use Ecto in a Phoenix project in the [Ecto Guide](ecto.html). Databases supported by Ecto are covered in the [Usage section of the Ecto README](https://github.com/elixir-lang/ecto#usage).
 
 Of course, there are many other data access options. [Ets](http://www.erlang.org/doc/man/ets.html) and [Dets](http://www.erlang.org/doc/man/dets.html) are key value data stores built into [OTP](http://www.erlang.org/doc/). OTP also provides a relational database called [mnesia](http://www.erlang.org/doc/man/mnesia.html) with its own query language called QLC. Both Elixir and Erlang also have a number of libraries for working with a wide range of popular data stores.
 
@@ -506,7 +506,7 @@ Notice that the redirect function takes `conn` as well as a string representing 
 
 ```elixir
 def index(conn, _params) do
-  redirect conn, external: "http://elixir-lang.org/"
+  redirect conn, external: "https://elixir-lang.org/"
 end
 ```
 

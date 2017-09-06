@@ -678,25 +678,25 @@ A newly generated Phoenix application defines two pipelines called `:browser` an
 
 Endpoints organize all the plugs common to every request, and apply them before dispatching into the router(s) with their underlying `:browser`, `:api`, and custom pipelines. The default Endpoint plugs do quite a lot of work. Here they are in order.
 
-- [Plug.Static](http://hexdocs.pm/plug/Plug.Static.html) - serves static assets. Since this plug comes before the logger, serving of static assets is not logged
+- [Plug.Static](https://hexdocs.pm/plug/Plug.Static.html) - serves static assets. Since this plug comes before the logger, serving of static assets is not logged
 
-- [Plug.RequestId](http://hexdocs.pm/plug/Plug.RequestId.html) - generates a unique request id for each request. 
+- [Plug.RequestId](https://hexdocs.pm/plug/Plug.RequestId.html) - generates a unique request id for each request.
 
-- [Plug.Logger](http://hexdocs.pm/plug/Plug.Logger.html) - logs incoming requests
+- [Plug.Logger](https://hexdocs.pm/plug/Plug.Logger.html) - logs incoming requests
 
-- [Phoenix.CodeReloader](http://hexdocs.pm/phoenix/Phoenix.CodeReloader.html) - a plug that enables code reloading for all entries in the web directory. It is configured directly in the Phoenix application
+- [Phoenix.CodeReloader](https://hexdocs.pm/phoenix/Phoenix.CodeReloader.html) - a plug that enables code reloading for all entries in the web directory. It is configured directly in the Phoenix application
 
-- [Plug.Parsers](http://hexdocs.pm/plug/Plug.Parsers.html) - parses the request body when a known parser is available. By default parsers parse urlencoded, multipart and json (with poison). The request body is left untouched when the request content-type cannot be parsed
+- [Plug.Parsers](https://hexdocs.pm/plug/Plug.Parsers.html) - parses the request body when a known parser is available. By default parsers parse urlencoded, multipart and json (with poison). The request body is left untouched when the request content-type cannot be parsed
 
-- [Plug.MethodOverride](http://hexdocs.pm/plug/Plug.MethodOverride.html) - converts the request method to
+- [Plug.MethodOverride](https://hexdocs.pm/plug/Plug.MethodOverride.html) - converts the request method to
   PUT, PATCH or DELETE for POST requests with a valid `_method` parameter
 
-- [Plug.Head](http://hexdocs.pm/plug/Plug.Head.html) - converts HEAD requests to GET requests and strips the response body
+- [Plug.Head](https://hexdocs.pm/plug/Plug.Head.html) - converts HEAD requests to GET requests and strips the response body
 
-- [Plug.Session](http://hexdocs.pm/plug/Plug.Session.html) - a plug that sets up session management.
+- [Plug.Session](https://hexdocs.pm/plug/Plug.Session.html) - a plug that sets up session management.
   Note that `fetch_session/2` must still be explicitly called before using the session as this plug just sets up how the session is fetched
 
-- [Plug.Router](http://hexdocs.pm/plug/Plug.Router.html) - plugs a router into the request cycle
+- [Plug.Router](https://hexdocs.pm/plug/Plug.Router.html) - plugs a router into the request cycle
 
 #### The `:browser` and `:api` Pipelines
 

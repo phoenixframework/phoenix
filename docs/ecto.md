@@ -364,7 +364,7 @@ iex> changeset.errors[:email]
 {"has invalid format", [validation: :format]}
 ```
 
-There are many more validations and transformations we can perform in a changeset. Please see the [Ecto Changeset documentation](http://hexdocs.pm/ecto/Ecto.Changeset.html) for more information.
+There are many more validations and transformations we can perform in a changeset. Please see the [Ecto Changeset documentation](https://hexdocs.pm/ecto/Ecto.Changeset.html) for more information.
 
 ## Data Persistence
 
@@ -444,6 +444,6 @@ That little query packed a big punch. It both fetched all user emails from the d
 
 In addition to inserts, we can also perform updates and deletes with `Repo.update/1` and `Repo.delete/1` to update or delete a single schema. Ecto also supports bulk persistence with the `Repo.insert_all`, `Repo.update_all`, and `Repo.delete_all` functions.
 
-There is quite a bit more that Ecto can do and we've only barely scratched the surface. With a solid Ecto foundation in place, we're now ready to continue building our app and integrate the web facing application with our backend persistence. Along the way, we'll expand our Ecto knowledge and learn how to properly isolate our web interface from the underlying details of our system. Please take a look at the [Ecto documentation](http://hexdocs.pm/ecto/) for the rest of the story.
+There is quite a bit more that Ecto can do and we've only barely scratched the surface. With a solid Ecto foundation in place, we're now ready to continue building our app and integrate the web facing application with our backend persistence. Along the way, we'll expand our Ecto knowledge and learn how to properly isolate our web interface from the underlying details of our system. Please take a look at the [Ecto documentation](https://hexdocs.pm/ecto/) for the rest of the story.
 
 In our [context guide](contexts.html), we'll find out how to wrap up our Ecto access and business logic behind modules that group related functionality. We'll see how Phoenix helps us design maintainable applications, and we'll find out about other neat Ecto features along the way.
