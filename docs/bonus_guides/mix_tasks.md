@@ -681,8 +681,10 @@ $ mix ecto.gen.migration -r OurCustom.Repo add_users
 * creating priv/repo/migrations
 * creating priv/repo/migrations/20150318172927_add_users.exs
 ```
-
-For more infomation on ecto's migration dsl, please see the [ecto migration docs](http://hexdocs.pm/ecto/Ecto.Migration.html).
+For more information on how to modify your database schema please refer to the
+ecto's migration dsl [ecto migration docs](http://hexdocs.pm/ecto/Ecto.Migration.html).
+For example, to alter an existing schema see the documentation on ecto’s
+[`alter/2`](https://hexdocs.pm/ecto/Ecto.Migration.html#alter/2) function.
 
 That's it! We're ready to run our migration.
 
