@@ -182,7 +182,7 @@ end
 
 ### A New Template
 
-Phoenix templates are just that, templates into which data can be rendered. The standard templating engine Phoenix uses is EEx, which stands for [Embedded Elixir](http://elixir-lang.org/docs/stable/eex/). Phoenix enhances EEx to include automatic escaping of values. This protects you from security vulnerabilities like Cross-Site-Scripting with no extra work on your part. All of our template files will have the `.eex` file extension.
+Phoenix templates are just that, templates into which data can be rendered. The standard templating engine Phoenix uses is EEx, which stands for [Embedded Elixir](https://hexdocs.pm/eex/1.5.1/EEx.html). Phoenix enhances EEx to include automatic escaping of values. This protects you from security vulnerabilities like Cross-Site-Scripting with no extra work on your part. All of our template files will have the `.eex` file extension.
 
 Templates are scoped to a view, which are scoped to controller. Phoenix creates a `lib/hello_web/templates` directory where we can put all these. It is best to namespace these for organization, so for our hello page, that means we need to create a `hello` directory under `lib/hello_web/templates` and then create an `index.html.eex` file within it.
 
@@ -223,7 +223,7 @@ scope "/", HelloWeb do
   get "/hello/:messenger", HelloController, :show
 end
 ```
-Notice that we put the atom `:messenger` in the path. Phoenix will take whatever value that appears in that position in the URL and pass a [Map](http://elixir-lang.org/docs/stable/elixir/Map.html) with the key `messenger` pointing to that value to the controller.
+Notice that we put the atom `:messenger` in the path. Phoenix will take whatever value that appears in that position in the URL and pass a [Map](https://hexdocs.pm/elixir/1.5.1/Map.html) with the key `messenger` pointing to that value to the controller.
 
 For example, if we point the browser at: [http://localhost:4000/hello/Frank](http://localhost:4000/hello/Frank), the value of ":messenger" will be "Frank".
 

@@ -2,7 +2,7 @@
 
 Testing has become integral to the software development process, and the ability to easily write meaningful tests is an indispensable feature for any modern web framework. Phoenix takes this seriously, providing support files to make all the major components of the framework easy to test. It also generates test modules with real-world examples alongside any generated modules to help get us going.
 
-Elixir ships with a built-in testing framework called [ExUnit](http://elixir-lang.org/docs/stable/ex_unit/). ExUnit strives to be clear and explicit, keeping magic to a minimum. Phoenix uses ExUnit for all of its testing, and we will use it here as well.
+Elixir ships with a built-in testing framework called [ExUnit](https://hexdocs.pm/ex_unit/1.5.1/ExUnit.html). ExUnit strives to be clear and explicit, keeping magic to a minimum. Phoenix uses ExUnit for all of its testing, and we will use it here as well.
 
 ExUnit refers to a test module as a "test case", and we will do the same.
 

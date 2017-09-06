@@ -4,7 +4,7 @@ There are many instances where we will have multiple things to do that aren't
 dependent on each other. When we run into these cases, we would like to start
 separate processes that are not linked to the caller. This allows the caller to
 continue running if the new process crashes. To do this, we use
-[`Task.Supervisor.`](http://elixir-lang.org/docs/stable/elixir/Task.Supervisor)
+[`Task.Supervisor.`](https://hexdocs.pm/elixir/1.5.1/Task.Supervisor.html)
 
 ### Starting Our Supervisor
 
@@ -24,7 +24,7 @@ Which gives us:
 defmodule Hello do
   use Application
 
-  # See http://elixir-lang.org/docs/stable/elixir/Application.html
+  # See https://hexdocs.pm/elixir/1.5.1/Application.html
   # for more information on OTP Applications
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
@@ -39,7 +39,7 @@ defmodule Hello do
       # worker(Hello.Worker, [arg1, arg2, arg3]),
     ]
 
-    # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
+    # See https://hexdocs.pm/elixir/1.5.1/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Hello.Supervisor]
     Supervisor.start_link(children, opts)

@@ -32,7 +32,7 @@ The project which contains many HTML helper functions used in Phoenix.
 - [Documentation](https://hexdocs.pm/phoenix_html/)
 
 ## ExUnit
-- [Documentation](http://elixir-lang.org/docs/stable/ex_unit/)
+- [Documentation](https://hexdocs.pm/ex_unit/1.5.1/ExUnit.html)
 
 ## Cowboy
 The webserver Phoenix is based on.
@@ -40,7 +40,7 @@ The webserver Phoenix is based on.
 - [User Guides](http://ninenines.eu/docs/en/cowboy/1.0/guide/)
 - [Manual/Function Reference](http://ninenines.eu/docs/en/cowboy/1.0/manual/)
 
-## EEX
+## EEx
 The default templating system for Phoenix.
 - [Source Code and Readme](https://github.com/elixir-lang/elixir)
-- [Documentation](http://elixir-lang.org/docs/stable/eex)
+- [Documentation](https://hexdocs.pm/eex/1.5.1/EEx.html)

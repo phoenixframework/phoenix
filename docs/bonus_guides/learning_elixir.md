@@ -4,7 +4,7 @@ Here is a selected list of resources to help with learning Elixir and Erlang.
 
 ## Elixir
 - [Elixir Guides](http://elixir-lang.org/getting-started/introduction.html)
-- [Official Documentation](http://elixir-lang.org/docs/stable/elixir)
+- [Official Documentation](https://hexdocs.pm/elixir/1.5.1)
 
 ##### Books
 - [Programming Elixir](https://pragprog.com/book/elixir13/programming-elixir-1-3), Dave Thomas
