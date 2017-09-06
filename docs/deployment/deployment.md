@@ -69,7 +69,9 @@ Compilation of static assets happens in two steps:
 
 ```console
 $ brunch build --production
-$ mix phoenix.digest
+
+$ mix phx.digest
+
 Check your digested files at "priv/static".
 ```
 
@@ -78,7 +80,7 @@ And that is it! The first command builds the assets and the second generates dig
 Keep in mind that, if you by any chance forget to run the steps above, Phoenix will show an error message:
 
 ```console
-$ PORT=4001 MIX_ENV=prod mix phoenix.server
+$ PORT=4001 MIX_ENV=prod mix phx.server
 10:50:18.732 [info] Running MyApp.Endpoint with Cowboy on http://example.com
 10:50:18.735 [error] Could not find static manifest at "my_app/_build/prod/lib/foo/priv/static/cache_manifest.json". Run "mix phoenix.digest" after building your static files or remove the configuration from "config/prod.exs".
 ```
@@ -90,7 +92,7 @@ The error message is quite clear: it says Phoenix could not find a static manife
 To run Phoenix in production, we need to set the `PORT` and `MIX_ENV` environment variables when invoking `mix phoenix.server`:
 
 ```console
-$ PORT=4001 MIX_ENV=prod mix phoenix.server
+$ PORT=4001 MIX_ENV=prod mix phx.server
 10:59:19.136 [info] Running MyApp.Endpoint with Cowboy on http://example.com
 ```
 
@@ -99,14 +101,14 @@ In case you get an error message, please read it carefully, and open up a bug re
 You can also run your application inside an interactive shell:
 
 ```console
-$ PORT=4001 MIX_ENV=prod iex -S mix phoenix.server
+$ PORT=4001 MIX_ENV=prod iex -S mix phx.server
 10:59:19.136 [info] Running MyApp.Endpoint with Cowboy on http://example.com
 ```
 
 Or run it detached from the iex console. This effectively daemonizes the process so it can run independently in the background:
 
 ```elixir
-MIX_ENV=prod PORT=4001 elixir --detached -S mix do compile, phoenix.server
+MIX_ENV=prod PORT=4001 elixir --detached -S mix do compile, phx.server
 ```
 
 Running the application in detached mode allows us to keep the application running even after we terminate the shell connection with the server.
@@ -124,11 +126,12 @@ $ MIX_ENV=prod mix compile
 
 # Compile assets
 $ brunch build --production
-$ mix phoenix.digest
+
+$ mix phx.digest
 
 # Custom tasks (like DB migrations)
 $ MIX_ENV=prod mix ecto.migrate
 
 # Finally run the server
-$ PORT=4001 MIX_ENV=prod mix phoenix.server
+$ PORT=4001 MIX_ENV=prod mix phx.server
 ```

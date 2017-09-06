@@ -472,10 +472,10 @@ admin_review_path  DELETE  /admin/reviews/:id HelloWeb.Admin.ReviewController :d
 The path helpers now return what we want them to as well. Run `$ iex -S mix` and give it a try yourself.
 
 ```elixir
-iex(1)> HelloWeb.Router.Helpers.review_path(Endpoint, :index)
+iex(1)> HelloWeb.Router.Helpers.review_path(HelloWeb.Endpoint, :index)
 "/reviews"
 
-iex(2)> HelloWeb.Router.Helpers.admin_review_path(Endpoint, :show, 1234)
+iex(2)> HelloWeb.Router.Helpers.admin_review_path(HelloWeb.Endpoint, :show, 1234)
 "/admin/reviews/1234"
 ```
 
@@ -678,6 +678,8 @@ A newly generated Phoenix application defines two pipelines called `:browser` an
 Endpoints organize all the plugs common to every request, and apply them before dispatching into the router(s) with their underlying `:browser`, `:api`, and custom pipelines. The default Endpoint plugs do quite a lot of work. Here they are in order.
 
 - [Plug.Static](http://hexdocs.pm/plug/Plug.Static.html) - serves static assets. Since this plug comes before the logger, serving of static assets is not logged
+
+- [Plug.RequestId](http://hexdocs.pm/plug/Plug.RequestId.html) - generates a unique request id for each request. 
 
 - [Plug.Logger](http://hexdocs.pm/plug/Plug.Logger.html) - logs incoming requests
 

@@ -364,7 +364,7 @@ defmodule HelloWeb.PageView do
 end
 ```
 
-The name used in assigns is determined from the view. For example the `PageView` will use `%{page: page}` and the `AuthorView` will use `%{author: author}`. This can be overridden with the `as` option. Let's assume that the author view uses `%{writer: writer]` instead of `%{author: author}`:
+The name used in assigns is determined from the view. For example the `PageView` will use `%{page: page}` and the `AuthorView` will use `%{author: author}`. This can be overridden with the `as` option. Let's assume that the author view uses `%{writer: writer}` instead of `%{author: author}`:
 
 ```elixir
   def render("page_with_authors.json", %{page: page}) do

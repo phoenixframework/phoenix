@@ -19,7 +19,7 @@ Let's use these ideas to build out our web application. Our goal is to build a u
 
 User accounts are often wide-reaching across a platform so it's important to think upfront about writing a well-defined interface. With that in mind, our goal is to build an accounts API that handles creating, updating, and deleting user accounts, as well as authenticating user credentials. We'll start off with basic features, but as we add authentication later, we'll see how starting with a solid foundation allows us to grow our application naturally as we add functionality.
 
-Phoenix includes the `phx.gen.html`, `phx.gen.json`, and `phoenix.gen.context` generators that apply the ideas of isolating functionality in our applications into contexts. These generators are a great way to hit the ground running while Phoenix nudges you in the right direction to grow your application. Let's put these tools to use for our new user accounts context.
+Phoenix includes the `phx.gen.html`, `phx.gen.json`, and `phx.gen.context` generators that apply the ideas of isolating functionality in our applications into contexts. These generators are a great way to hit the ground running while Phoenix nudges you in the right direction to grow your application. Let's put these tools to use for our new user accounts context.
 
 In order to run the context generators, we need to come up with a module name that groups the related functionality that we're building. In the [Ecto guide](ecto.html), we saw how we can use Changesets and Repos to validate and persist user schemas, but we didn't integrate this with our application at large. In fact, we didn't think about where a "user" in our application should live at all. Let's take a step back and think about the different parts of our system. We know that we'll have users of our product. Along with users comes things like account login credentials and user registration. An `Accounts` context in our system is a natural place for our user functionality to live.
 
@@ -28,7 +28,7 @@ In order to run the context generators, we need to come up with a module name th
 Before we use the generators, we need to undo the changes we made in the Ecto guide, so we can give our user schema a proper home. Run these commands to undo our previous work:
 
 ```console
-$ rm lib/hello/ ... TODO
+$ rm lib/hello/user.ex
 $ rm priv/repo/migrations/*_create_user.exs
 ```
 
@@ -130,6 +130,7 @@ defmodule HelloWeb.UserController do
   use HelloWeb, :controller
 
   alias Hello.Accounts
+  alias Hello.Accounts.User
 
   def index(conn, _params) do
     users = Accounts.list_users()
@@ -137,7 +138,7 @@ defmodule HelloWeb.UserController do
   end
 
   def new(conn, _params) do
-    changeset = Accounts.change_user(%Hello.Accounts.User{})
+    changeset = Accounts.change_user(%User{})
     render(conn, "new.html", changeset: changeset)
   end
 
@@ -264,7 +265,7 @@ Remember to update your repository by running migrations:
 
 This time around, we used the `phx.gen.context` task, which is just like `phx.gen.html`, except it doesn't generate the web files for us. Since we already have controllers and templates for managing users, we can integrate the new credential features into our existing web form.
 
-We can see from the output that Phoenix generated an `accounts/credential.ex` file for our `Accounts.Credential` schema, as well as a migration. Notably, phoenix said it was `*injecting` code into the existing `accounts/accounts.ex` context file and test file. Since our `Accounts` module already exists, Phoenix knows to inject our code here.
+We can see from the output that Phoenix generated an `accounts/credential.ex` file for our `Accounts.Credential` schema, as well as a migration. Notably, phoenix said it was `* injecting` code into the existing `accounts/accounts.ex` context file and test file. Since our `Accounts` module already exists, Phoenix knows to inject our code here.
 
 Before we run our migrations, we need to make one change to the generated migration to enforce data integrity of user account credentials. In our case, we want a user's credentials to be deleted when the parent user is removed. Make the following change to your `*_create_credentials.exs` migration file in `priv/repo/migrations/`:
 
@@ -312,6 +313,7 @@ Before we integrate credentials in the web layer, we need to let our context kno
 - alias Hello.Accounts.User
 + alias Hello.Accounts.{User, Credential}
 
+
   schema "users" do
     field :name, :string
     field :username, :string
@@ -323,7 +325,7 @@ Before we integrate credentials in the web layer, we need to let our context kno
 
 ```
 
-We used `Ecto.Schema`'s `has_one` macro to let Ecto know how to associate our parent User to a child Credential. Next, let's add the relationships in the other direction in `accounts/credential.ex`:
+We used `Ecto.Schema`'s `has_one` macro to let Ecto know how to associate our parent User to a child Credential. Next, let's add the relationships in the opposite direction in `accounts/credential.ex`:
 
 ```elixir
 - alias Hello.Accounts.Credential
@@ -390,28 +392,33 @@ Next, let's show the user's email address in the user show template. Add the fol
 
 ```
 
-Now if we visit `http://localhost:4000/users/new`, we'll see the new email input, but if you try to save a user, you'll find that the email field is ignored. No validations are run telling you it was blank and the data was not saved. What gives?
+Now if we visit `http://localhost:4000/users/new`, we'll see the new email input, but if you try to save a user, you'll find that the email field is ignored. No validations are run telling you it was blank and the data was not saved, and at the end you'll get an exception `(UndefinedFunctionError) function nil.email/0 is undefined or private`. What gives?
 
 We used Ecto's `belongs_to` and `has_one` associations to wire-up how our data is related at the context level, but remember this is decoupled from our web-facing user input. To associate user input to our schema associations, we need to handle it the way we've handled other user input so far – in changesets. Modify your `create_user/1` and `update_user/2` functions in your `Accounts` context to build a changeset which knows how to cast user input with nested credential information:
 
 ```elixir
+- alias Hello.Accounts.User
++ alias Hello.Accounts.{User, Credential}
+  ...
   def update_user(%User{} = user, attrs) do
     user
     |> User.changeset(attrs)
-    |> Ecto.Changeset.cast_assoc(:credential, with: &Credential.changeset/2)
++   |> Ecto.Changeset.cast_assoc(:credential, with: &Credential.changeset/2)
     |> Repo.update()
   end
 
   def create_user(attrs \\ %{}) do
     %User{}
     |> User.changeset(attrs)
-    |> Ecto.Changeset.cast_assoc(:credential, with: &Credential.changeset/2)
++   |> Ecto.Changeset.cast_assoc(:credential, with: &Credential.changeset/2)
     |> Repo.insert()
   end
+  ...
+- alias ContextTest.Accounts.Credential
 ```
 We updated the functions to pipe our user changeset into `Ecto.Changeset.cast_assoc/2`. Ecto's `cast_assoc/2` allows us to tell the changeset how to cast user input to a schema relation. We also used the `:with` option to tell Ecto to use our `Credential.changeset/2` function to cast the data. This way, any validations we perform in `Credential.changeset/2` will be applied when saving the `User` changeset.
 
-Finally, if you visit `http://locahost:4000/users/new` and attempt to save an empty email address, you'll see the proper validation error message. If you enter valid information, the data will be casted and persisted properly.
+Finally, if you visit `http://localhost:4000/users/new` and attempt to save an empty email address, you'll see the proper validation error message. If you enter valid information, the data will be casted and persisted properly.
 
 ```
 Show User
@@ -483,7 +490,7 @@ defmodule HelloWeb.SessionController do
 end
 ```
 
-We defined a `SessionController` to handle users signing in and out of the application. Our `new` action is responsible for simply rendering a "new session" form, which posts out to the create action of our controller. In `create`, we pattern match the form fields and call into our `Accounts.authenticate_by_email_password/2` that we just defined. If successful, we use `Plug.Conn.put_session/3` to place the authenticated user's ID in the session, and redirect to the home page with a successful welcome message. We also called `configure_session(conn, renew: true)` before redirecting to avoid session fixation attacks. If authentication fails, we add a flash error message, and redirect to the sigin-in page for the user to try again. To finish the controller, we support a `delete` action which simply calls `Plug.Conn.configure_session/2` to drop the session and redirect to the home page.
+We defined a `SessionController` to handle users signing in and out of the application. Our `new` action is responsible for simply rendering a "new session" form, which posts out to the create action of our controller. In `create`, we pattern match the form fields and call into our `Accounts.authenticate_by_email_password/2` that we just defined. If successful, we use `Plug.Conn.put_session/3` to place the authenticated user's ID in the session, and redirect to the home page with a successful welcome message. We also called `configure_session(conn, renew: true)` before redirecting to avoid session fixation attacks. If authentication fails, we add a flash error message, and redirect to the sign-in page for the user to try again. To finish the controller, we support a `delete` action which simply calls `Plug.Conn.configure_session/2` to drop the session and redirect to the home page.
 
 Next, let's wire up our session routes in `lib/hello_web/router.ex`:
 
@@ -545,7 +552,7 @@ Next, add a new template in `lib/hello_web/templates/session/new.html.eex:`
   </div>
 <% end %>
 
-<%= form_for @conn, session_path(@conn, :delete), [method: :delete, as: :user], fn f -> %>
+<%= form_for @conn, session_path(@conn, :delete), [method: :delete, as: :user], fn _ -> %>
   <div class="form-group">
     <%= submit "logout" %>
   </div>
@@ -561,7 +568,7 @@ With authentication in place, we're in good shape to begin building out our next
 
 ## Cross-context dependencies
 
-Now that we have the beginnings of user account and credential features, let begin work on the other main features of our application – managing page content. We want to support a content management system (CMS) where authors can create and edit pages of the site. While we could extend our `Accounts` context with CMS features, if we step back and think about the isolation of our application, we can see it doesn't fit. An accounts system shouldn't care at all about a CMS system. The responsibilities of our `Accounts` context is to manage users and their credentials, not handle page content changes. There's a clear need here for a separate context to  handle these responsibilities. Let's call it `CMS`.
+Now that we have the beginnings of user account and credential features, let's begin to work on the other main features of our application – managing page content. We want to support a content management system (CMS) where authors can create and edit pages of the site. While we could extend our `Accounts` context with CMS features, if we step back and think about the isolation of our application, we can see it doesn't fit. An accounts system shouldn't care at all about a CMS system. The responsibilities of our `Accounts` context is to manage users and their credentials, not handle page content changes. There's a clear need here for a separate context to  handle these responsibilities. Let's call it `CMS`.
 
 Let's create a `CMS` context to handle basic CMS duties. Before we write code, let's imagine we have the following CMS feature requirements:
 
@@ -636,7 +643,7 @@ Generated hello app
 [info]  == Migrated in 0.0s
 ```
 
-Now, lets fire up the server with `mix phx.server` and visit `http://localhost:4000/cms/pages`. If we haven't logged in yet, we'll be redirected to the home page with a flash error message telling us to sign in. Let's sign in at `http://locahost:4000/sessions/new`, then re-visit `http://localhost:4000/cms/pages`. Now that we're authenticated, we should see a familiar resource listing for pages, with a `New Page` link.
+Now, let's fire up the server with `mix phx.server` and visit `http://localhost:4000/cms/pages`. If we haven't logged in yet, we'll be redirected to the home page with a flash error message telling us to sign in. Let's sign in at `http://localhost:4000/sessions/new`, then re-visit `http://localhost:4000/cms/pages`. Now that we're authenticated, we should see a familiar resource listing for pages, with a `New Page` link.
 
 Before we create any pages, we need page authors. Let's run the `phx.gen.context` generator to generate an `Author` schema along with injected context functions:
 
@@ -729,7 +736,7 @@ Dependencies in your software are often unavoidable, but we can do our best to l
 
 Our `Author` resource serves to keep the responsibilities of representing an author inside the CMS, but ultimately for an author to exist at all, an end-user represented by an `Accounts.User` must be present. Given this, our `CMS` context will have a data dependency on the `Accounts` context. With that in mind, we have two options. One is to expose APIs on the `Accounts` contexts that allows us to efficiently fetch user data for use in the CMS system, or we can use database joins to fetch the dependent data. Both are valid options given your tradeoffs and application size, but joining data from the database when you have a hard data dependency is just fine for a large class of applications. If you decide to break out coupled contexts into entirely separate applications and databases at a later time, you still gain the benefits of isolation. This is because your public context APIs will likely remain unchanged.
 
-Now that we know where our data dependencies exist, lets add our schema associations so we can tie pages to authors and authors to users. Make the following changes to `lib/hello/cms/page.ex`:
+Now that we know where our data dependencies exist, let's add our schema associations so we can tie pages to authors and authors to users. Make the following changes to `lib/hello/cms/page.ex`:
 
 
 ```elixir
@@ -886,7 +893,9 @@ With our new plugs in place, we can now modify our `create`, `update`, and `dele
     end
   end
 
-  def delete(conn, _) do
+- def delete(conn, %{"id" => id}) do
++ def delete(conn, _) do
+-   page = CMS.get_page!(id)
 +   {:ok, _page} = CMS.delete_page(conn.assigns.page)
 
     conn
@@ -960,7 +969,7 @@ Again, let's think of a function name that describes what we want to accomplish.
 
 That looks great. Our callers will have no confusion over what this function does and we can wrap up the increment in an atomic operation to prevent race conditions.
 
-Open up your CMS context, and add this new function:
+Open up your CMS context (`lib/hello/cms/cms.ex`), and add this new function:
 
 
 ```elixir
