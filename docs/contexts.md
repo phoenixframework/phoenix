@@ -249,6 +249,8 @@ Our basic user account features are nice, but let's take it up a notch by suppor
 
 For now, user credentials will contain only email information. Our first order of business is to decide where credentials live in the application. We have our `Accounts` context, which manages user accounts. User credentials is a natural fit here. Phoenix is also smart enough to generate code inside an existing context, which makes adding new resources to a context a breeze. Run the following command at your project root:
 
+> Sometimes it may be tricky to determine if two resources belong to the same context or not. In those cases, prefer distinct contexts per resource and refactor later if necessary. Otherwise you can easily end-up with large contexts of loosely related entities. In other words: if you are unsure, you should prefer explicit modules (contexts) between resources.
+
 ```console
 $ mix phx.gen.context Accounts Credential credentials \
 email:string:unique user_id:references:users
