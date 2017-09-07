@@ -25,6 +25,7 @@ defmodule Phoenix.Mixfile do
         logo: "logo.png",
         extra_section: "GUIDES",
         assets: "guides/docs/assets",
+        formatters: ["html", "epub"],
         extras: extras()
       ],
       aliases: aliases(),
