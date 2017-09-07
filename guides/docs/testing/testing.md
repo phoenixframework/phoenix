@@ -8,7 +8,7 @@ ExUnit refers to a test module as a "test case", and we will do the same.
 
 Let's see this in action.
 
-> Note: Before we proceed, we'll need to have PostgreSQL installed and running on our system. We'll also need to configure our repo with the correct login credentials. [The section on ecto.create in the Mix Tasks guide](mix_tasks.html#ecto-specific-mix-tasks) has more information on this, and the [Ecto Models Guide](ecto_models.html) dives into the details on how it all works.
+> Note: Before we proceed, we'll need to have PostgreSQL installed and running on our system. We'll also need to configure our repo with the correct login credentials. [The section on ecto.create in the Mix Tasks guide](mix_tasks.html#ecto-specific-mix-tasks) has more information on this, and the [Ecto Guide](ecto.html) dives into the details on how it all works.
 
 In a freshly generated application (we use a project named "hello" in the examples), let's run `mix test` at the root of the project. (Please see the [Up and Running Guide](up_and_running.html) for instructions on generating a new application.)
 
@@ -16,7 +16,7 @@ In a freshly generated application (we use a project named "hello" in the exampl
 $ mix test
 ....
 
-Finished in 0.2 seconds (0.2s on load, 0.00s on tests)
+Finished in 0.2 seconds
 4 tests, 0 failures
 
 Randomized with seed 652656
@@ -30,19 +30,19 @@ In fact, we already have a directory structure completely set up for testing, in
 
 ```console
 test
-├── channels
-├── controllers
-│   └── page_controller_test.exs
-├── models
+├── hello_web
+│   ├── channels
+│   ├── controllers
+│   │   └── page_controller_test.exs
+│   └── views
+│       ├── error_view_test.exs
+│       ├── layout_view_test.exs
+│       └── page_view_test.exs
 ├── support
-│   ├── channel_case.ex
-│   ├── conn_case.ex
-│   └── model_case.ex
-├── test_helper.exs
-└── views
-    ├── error_view_test.exs
-    ├── layout_view_test.exs
-    └── page_view_test.exs
+│   ├── channel_case.ex
+│   ├── conn_case.ex
+│   └── data_case.ex
+└── test_helper.exs
 ```
 
 The test cases we get for free include `test/hello_web/controllers/page_controller_test.exs`, `test/hello_web/views/error_view_test.exs`, and `test/hello_web/views/page_view_test.exs`. Nice.
@@ -446,7 +446,7 @@ Randomized with seed 401472
 
 We've seen what Phoenix gives us with a newly generated app. Now let's see what happens when we generate a new HTML resource.
 
-Let's borrow the `users` resource we created in the [Ecto Models Guide](ecto_models.html).
+Let's borrow the `users` resource we created in the [Ecto Guide](ecto.html).
 
 At the root of our new application, let's run the `mix phx.gen.html` task with the following options.
 
