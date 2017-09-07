@@ -1,8 +1,8 @@
 # Testing Models
 
-In the [Ecto Models Guide](ecto_models.html) we generated an HTML resource for users. This gave us a number of modules for free, including a user model and a user model test case. In this guide, we'll use the model and test case to work through the changes we made in the Ecto Models Guide in a test-driven way.
+In the [Ecto Guide](ecto.html) we generated an HTML resource for users. This gave us a number of modules for free, including a user model and a user model test case. In this guide, we'll use the model and test case to work through the changes we made in the Ecto Guide in a test-driven way.
 
-For those of us who haven't worked through the Ecto Models Guide, it's easy to catch up. Please see the "Generating an HTML Resource" section below.
+For those of us who haven't worked through the Ecto Guide, it's easy to catch up. Please see the "Generating an HTML Resource" section below.
 
 Before we do anything else, let's run `mix test` to make sure our test suite runs cleanly.
 
@@ -152,7 +152,7 @@ Randomized with seed 963040
 
 #### The Bio Attribute
 
-In the Ecto Models Guide, we learned that the user's `:bio` attribute has two business requirements. The first is that it must be at least two characters long. Let's write a test for that using the same pattern we've just used.
+In the Ecto Guide, we learned that the user's `:bio` attribute has two business requirements. The first is that it must be at least two characters long. Let's write a test for that using the same pattern we've just used.
 
 First, we change the `:bio` attribute to have a value of a single character. Then we create a changeset with the new attributes and test its validity.
 
@@ -426,7 +426,7 @@ Randomized with seed 330955
 
 For this section, we're going to assume that we all have a PostgreSQL database installed on our system, and that we generated a default application - one in which Ecto and Postgrex are installed and configured automatically.
 
-If this is not the case, please see the section on adding Ecto and Postgrex of the [Ecto Models Guide](ecto_models.html) and join us when that's done.
+If this is not the case, please see the section on adding Ecto and Postgrex of the [Ecto Guide](ecto.html) and join us when that's done.
 
 Ok, once we're all configured properly, we need to run the `phoenix.gen.html` task with the list of attributes we have here.
 
