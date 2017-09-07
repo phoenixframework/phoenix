@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html class="ng-scope" xmlns="http://www.w3.org/1999/xhtml" xmlns:fb="https://www.facebook.com/2008/fbml" itemscope="itemscope" itemtype="http://schema.org/Product" ng-app="hub" lang="en"><head prefix="og: http://ogp.me/ns# nodejsexpressdemo: http://ogp.me/ns/apps/nodejsexpressdemo#"><style type="text/css">@charset "UTF-8";[ng\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide{display:none !important;}ng\:form{display:block;}</style><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><title>Phoenix</title><meta http-equiv="Content-type" content="text/html; charset=UTF-8"><meta name="keywords" content="readme,developer hub,documentation"><meta name="description" content="A highly connected web framework"><link href="http://www.phoenixframework.org/favicon.ico" rel="shortcut icon" type="image/x-icon"><meta property="og:title" content="Phoenix - readme.io"><meta property="og:description" content="A highly connected web framework"><meta property="og:url" content="http://www.phoenixframework.org/"><meta property="og:image" content="https://www.filepicker.io/api/file/9prSmznZTiaRRmI3t89E"><meta property="og:site_name" content="Phoenix"><!-- Application styles--><link rel="stylesheet" href="Phoenix_files/bundle-hub.css"><!--if lt IE 9script(src="http://html5shim.googlecode.com/svn/trunk/html5.js")--><script src="Phoenix_files/ga.js"></script><script src="Phoenix_files/analytics.js" async=""></script><script>var is_hub = true;
+var is_hub_edit = false;
+</script><script src="Phoenix_files/bundle-hub.js"></script><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-52479696-1', 'auto');
+ga('send', 'pageview');
+</script>
+<link href="Phoenix_files/custom.css" rel="stylesheet" type="text/css">
+<link href="Phoenix_files/css.css" rel="stylesheet" type="text/css"><style>.theme-line header {  border-bottom-color: #f0f0f0;}.theme-line header a.btn {  background-color: #f0f0f0;}.theme-line header a.btn:hover {  background-color: #bdbdbd;}.theme-line header .navbar-nav a:hover ,.theme-line header .navbar-nav .open > a {  color: #f0f0f0;}.theme-line header .navbar-nav .tt-cursor {  background-color: #f0f0f0;}.theme-line .navbar-nav .active a {  font-weight: bold;  color: #7f8c8d;}.theme-line .navbar-nav .active a:hover {  color: #4e5758;}.theme-line .main-links .links a:hover {  color: #7f8c8d;}.theme-line .main-content a {  color: #7f8c8d;}.theme-line .main-content a:hover {  color: #4e5758;}.theme-line .sidebar-nav ul li a.active:before {  background-color: #7f8c8d;}.theme-line .sidebar-nav ul li a.active {  color: #7f8c8d;}.theme-line .sidebar-nav ul li a:hover,.theme-line .sidebar-nav ul li a.active:hover {  color: #4e5758;}.theme-line .btn-primary {  background-color: #7f8c8d;}.theme-line .btn-primary:hover {  background-color: #4e5758;}.theme-line .main-content .nav-horizontal a.active {  border-color: #7f8c8d;  color: #7f8c8d;}.theme-line .main-content .nav-horizontal a:hover {  color: #4e5758;}.theme-line .main-content .nav-horizontal a.active:hover {  border-color: #4e5758;}.theme-line header .navbar-nav a.active ,.theme-line #versions-list li a:hover strong,.theme-line #versions-list li a.active .current,.theme-line #versions-list li a:active .current {  color: #7f8c8d;}.theme-line.body-threes .section-right .threes-nav .btn-default:hover,.theme-line.page-docs.body-threes .section-right .threes-nav .pull-right a:hover {  color: #7f8c8d;  border-color: #7f8c8d;}.theme-solid header {  background-color: #f0f0f0;}.theme-solid.header-custom header a.btn {  background-color: #bdbdbd;}.theme-solid.header-custom header a.btn:hover {  background-color: #8a8a8a;}.theme-solid header .navbar-nav .dropdown-menu a:hover {  color: #7f8c8d;}.theme-line.lumosity-light header .navbar-nav a:hover,.theme-line.lumosity-light header .navbar-nav .open > a {  color: #7f8c8d;}.theme-line.lumosity-light header a.btn {  background-color: #7f8c8d;}.theme-line.lumosity-light header a.btn:hover {  background-color: #4e5758;}.theme-solid .main-links .links a:hover {  color: #7f8c8d;}.theme-solid .main-content a {  color: #7f8c8d;}.theme-solid .main-content a:hover {  color: #4e5758;}.theme-solid .sidebar-nav ul li a.active:before {  background-color: #7f8c8d;}.theme-solid .sidebar-nav ul li a.active {  color: #7f8c8d;}.theme-solid .sidebar-nav ul li a:hover,.theme-solid .sidebar-nav ul li a.active:hover {  color: #4e5758;}.theme-solid .btn-primary {  background-color: #7f8c8d;}.theme-solid .btn-primary:hover {  background-color: #4e5758;}.theme-solid .main-content .nav-horizontal a.active {  border-color: #7f8c8d;  color: #7f8c8d;}.theme-solid .main-content .nav-horizontal a:hover {  color: #4e5758;}.theme-solid .main-content .nav-horizontal a.active:hover {  border-color: #4e5758;}.theme-solid header .navbar-nav a.active ,.theme-solid #versions-list li a:hover strong,.theme-solid #versions-list li a.active .current,.theme-solid #versions-list li a:active .current {  color: #7f8c8d;}.theme-solid.body-threes .section-right .threes-nav .btn-default:hover,.theme-solid.page-docs.body-threes .section-right .threes-nav .pull-right a:hover {  color: #7f8c8d;  border-color: #7f8c8d;}.theme-solid.header-gradient header {  background: -moz-linear-gradient(top, #f0f0f0, #cacaca);  background: -webkit-gradient(linear, left top, #f0f0f0, #cacaca);  background: -webkit-linear-gradient(top, #f0f0f0, #cacaca);  background: linear-gradient(to bottom, #f0f0f0, #cacaca);}.theme-solid.header-custom .header {  background-image: url(undefined);  background-position: center center;}body {  font-weight: 400;font-family: Open Sans, sans-serif;;}h1, h2, h3, h4, h5, h6 {  font-weight: 400;font-family: Open Sans, sans-serif;;}.submit-vote.submit-vote-parent.voted a.submit-vote-button,.submit-vote.submit-vote-parent a.submit-vote-button:hover {  background-color: #7f8c8d;}div.submit-vote.submit-vote-parent.voted a.submit-vote-button:hover {  background-color: #4e5758;}a,.link .title {  color: #7f8c8d;}a:hover,.link:hover .title {  color: #4e5758;}.header h1.navbar-brand a {  background-image: url(https://www.filepicker.io/api/file/9prSmznZTiaRRmI3t89E)}.header h1.navbar-brand {  width: 260px;}
+</style><style>.theme-solid.lumosity-light header .btn.btn-primary {
+	background-color: rgb(255, 49, 0);
+}
+
+.section a {
+  text-decoration: underline;
+}
+</style></head><body ng-controller="Root" class="layout page-home body-none theme-solid header-solid header-bg-size-auto header-bg-pos-tl header-overlay-triangles lumosity-light undefined ng-scope os-osx"><div class="wrapper"><header id="header" class="header"><div class="container"><h1 class="navbar-brand"><a href="http://www.phoenixframework.org/v0.10.0">Phoenix</a></h1><div class="navbar-collapse collapse"><div id="project-info">{"id":"54348ec95b10711400c6c445","name":"Phoenix","subdomain":"phoenixframework","versions":[{"_id":"547f8f293031bc0800e5fe7e","releaseDate":"2014-12-03T22:31:05.923Z","is_hidden":false,"is_beta":true,"is_stable":false,"version_clean":"0.6.1","version":"0.6.1"},{"_id":"5484f8220d7c73140052fdd7","releaseDate":"2014-12-08T01:00:18.327Z","is_hidden":false,"is_beta":true,"is_stable":false,"version_clean":"0.6.2","version":"0.6.2"},{"_id":"549a1afd4c523e0b006d7928","releaseDate":"2014-12-24T01:46:37.298Z","is_hidden":false,"is_beta":true,"is_stable":false,"version_clean":"0.7.2","version":"0.7.2"},{"_id":"54b2a23715a58f31003a0e2f","releaseDate":"2015-01-11T16:17:59.014Z","is_hidden":false,"is_beta":true,"is_stable":false,"version_clean":"0.8.0","version":"0.8.0"},{"_id":"54e51b71d71c112d0054410f","releaseDate":"2015-02-18T23:08:33.140Z","is_hidden":false,"is_beta":true,"is_stable":false,"version_clean":"0.9.0","version":"0.9.0"},{"_id":"54fdb1829f864e2300f6fc1e","releaseDate":"2015-03-09T14:43:14.144Z","is_hidden":false,"is_beta":true,"is_stable":true,"version_clean":"0.10.0","version":"0.10.0"}],"current_version":{"version_clean":"0.10.0","version":"0.10.0"},"oauth":{"enabled":false},"temp_api_url":"","temp_api_auth":"","temp_api_authextra":[],"plan_details":{"name":"Developer
+
+Hub","cost":59,"versions":10000,"custom_domain":true,"custom_pages":true,"whitelabel":false,"errors":true,"password":true,"landing_page":true,"themebuilder":true,"stylesheet":true,"javascript":false,"html":true,"extra_html":false,"admins":true,"apps":true},"apps":{"enabled":false}}</div><ul class="nav navbar-nav"><li><a href="http://hexdocs.pm/phoenix/">API Docs</a></li><li><a href="http://www.phoenixframework.org/docs/community">Community</a></li><li><a href="https://github.com/phoenixframework/phoenix">Github</a></li><li><a href="http://elixir-lang.org/">Elixir</a></li><li><a href="http://www.phoenixframework.org/v0.10.0/blog" title="Announcements">Blog</a></li></ul><ul class="nav navbar-nav pull-right"><li><div class="searchbox"><div class="fa fa-search"></div><span style="position: relative; display: inline-block; direction: ltr;" class="twitter-typeahead"><input spellcheck="false" autocomplete="off" disabled="disabled" style="position: absolute; top: 0px; left: 0px; border-color: transparent; box-shadow: none; background: none repeat scroll 0% 0% rgba(0, 0, 0, 0.1);" class="typeahead tt-hint" type="text"><input dir="auto" style="position: relative; vertical-align: top; background-color: transparent;" spellcheck="false" autocomplete="off" placeholder="Search" class="typeahead tt-input" type="text"><pre style="position: absolute; visibility: hidden; white-space: pre; font-family: Open Sans,sans-serif; font-size: 14px; font-style: normal; font-variant: normal; font-weight: 400; word-spacing: 0px; letter-spacing: 0px; text-indent: 0px; text-rendering: optimizelegibility; text-transform: none;" aria-hidden="true"></pre><span style="position: absolute; top: 100%; left: 0px; z-index: 100; display: none; right: auto;" class="tt-dropdown-menu"><div class="tt-dataset-docs"></div><div class="tt-dataset-support"></div><div class="tt-dataset-blog"></div></span></span></div></li><li><a id="versions" href="" data-toggle="dropdown">v0.10.0 <div class="fa fa-caret-down"></div></a><ul role="menu" aria-labelledby="versions" class="dropdown-menu"><!-- ngRepeat: v in project.versions | semverReverseSort:'version_clean' | limitTo: 10 | filter:(!u.user.is_admin ? {is_hidden: false} : {}) --><li class="ng-scope" role="presentation" ng-repeat="v in project.versions | semverReverseSort:'version_clean' | limitTo: 10 | filter:(!u.user.is_admin ? {is_hidden: false} : {})"><a class="ng-binding active" role="menuitem" tabindex="-1" href="http://www.phoenixframework.org/v0.10.0" ng-class="{active: v.version_clean == project.current_version.version_clean}">v0.10.0<span ng-show="v.is_stable" class="stable">latest</span><span ng-show="v.is_beta" class="beta">beta</span><span ng-show="v.is_hidden" class="private ng-hide">private</span></a></li><!-- end ngRepeat: v in project.versions | semverReverseSort:'version_clean' | limitTo: 10 | filter:(!u.user.is_admin ? {is_hidden: false} : {}) --><li class="ng-scope" role="presentation" ng-repeat="v in project.versions | semverReverseSort:'version_clean' | limitTo: 10 | filter:(!u.user.is_admin ? {is_hidden: false} : {})"><a class="ng-binding" role="menuitem" tabindex="-1" href="http://www.phoenixframework.org/v0.9.0" ng-class="{active: v.version_clean == project.current_version.version_clean}">v0.9.0<span ng-show="v.is_stable" class="stable ng-hide">latest</span><span ng-show="v.is_beta" class="beta">beta</span><span ng-show="v.is_hidden" class="private ng-hide">private</span></a></li><!-- end ngRepeat: v in project.versions | semverReverseSort:'version_clean' | limitTo: 10 | filter:(!u.user.is_admin ? {is_hidden: false} : {}) --><li class="ng-scope" role="presentation" ng-repeat="v in project.versions | semverReverseSort:'version_clean' | limitTo: 10 | filter:(!u.user.is_admin ? {is_hidden: false} : {})"><a class="ng-binding" role="menuitem" tabindex="-1" href="http://www.phoenixframework.org/v0.8.0" ng-class="{active: v.version_clean == project.current_version.version_clean}">v0.8.0<span ng-show="v.is_stable" class="stable ng-hide">latest</span><span ng-show="v.is_beta" class="beta">beta</span><span ng-show="v.is_hidden" class="private ng-hide">private</span></a></li><!-- end ngRepeat: v in project.versions | semverReverseSort:'version_clean' | limitTo: 10 | filter:(!u.user.is_admin ? {is_hidden: false} : {}) --><li class="ng-scope" role="presentation" ng-repeat="v in project.versions | semverReverseSort:'version_clean' | limitTo: 10 | filter:(!u.user.is_admin ? {is_hidden: false} : {})"><a class="ng-binding" role="menuitem" tabindex="-1" href="http://www.phoenixframework.org/v0.7.2" ng-class="{active: v.version_clean == project.current_version.version_clean}">v0.7.2<span ng-show="v.is_stable" class="stable ng-hide">latest</span><span ng-show="v.is_beta" class="beta">beta</span><span ng-show="v.is_hidden" class="private ng-hide">private</span></a></li><!-- end ngRepeat: v in project.versions | semverReverseSort:'version_clean' | limitTo: 10 | filter:(!u.user.is_admin ? {is_hidden: false} : {}) --><li class="ng-scope" role="presentation" ng-repeat="v in project.versions | semverReverseSort:'version_clean' | limitTo: 10 | filter:(!u.user.is_admin ? {is_hidden: false} : {})"><a class="ng-binding" role="menuitem" tabindex="-1" href="http://www.phoenixframework.org/v0.6.2" ng-class="{active: v.version_clean == project.current_version.version_clean}">v0.6.2<span ng-show="v.is_stable" class="stable ng-hide">latest</span><span ng-show="v.is_beta" class="beta">beta</span><span ng-show="v.is_hidden" class="private ng-hide">private</span></a></li><!-- end ngRepeat: v in project.versions | semverReverseSort:'version_clean' | limitTo: 10 | filter:(!u.user.is_admin ? {is_hidden: false} : {}) --><li class="ng-scope" role="presentation" ng-repeat="v in project.versions | semverReverseSort:'version_clean' | limitTo: 10 | filter:(!u.user.is_admin ? {is_hidden: false} : {})"><a class="ng-binding" role="menuitem" tabindex="-1" href="http://www.phoenixframework.org/v0.6.1" ng-class="{active: v.version_clean == project.current_version.version_clean}">v0.6.1<span ng-show="v.is_stable" class="stable ng-hide">latest</span><span ng-show="v.is_beta" class="beta">beta</span><span ng-show="v.is_hidden" class="private ng-hide">private</span></a></li><!-- end ngRepeat: v in project.versions | semverReverseSort:'version_clean' | limitTo: 10 | filter:(!u.user.is_admin ? {is_hidden: false} : {}) --><li role="presentation" class="divider"></li><li role="presentation"><a href="http://www.phoenixframework.org/v0.10.0/versions">View all versions</a></li></ul></li></ul></div><div id="jumbotron" class="promos"><div class="row"><div class="col-sm-offset-2 col-sm-8">
+<h2>Productive. Reliable. Fast.</h2>
+<p>
+	Most web frameworks make you choose<br/>between speed and a productive environment.<br/>
+	<strong>Phoenix gives you both.</strong>
+</p>
+<a href="http://www.phoenixframework.org/v0.10.0/docs" class="btn btn-lg btn-primary">
+	<span class="button-title">Build APIs, HTML5 apps &amp; more</span>
+	<br><span class="button-teaser">See the guides</span>
+</a>
+<!--if project.plan_details('apps') && project.apps.enabledspan &nbsp;
+span &nbsp;
+span &nbsp;
+a.btn.btn-lg.btn-link(href="", ng-click="add_app()", require-login) Create App
+
+--></div></div></div></div></header>
+
+
+<div class="container body-container"><div><div id="subheader-columns"><div class="row">
+<div class="col-xs-4 subheader"><h4>How is Phoenix different?</h4>
+<p>Phoenix is a framework for building HTML5 apps, API backends and distributed systems. Written in Elixir, you get beautiful syntax, productive tooling and a fast runtime.
+<a class="subheader-link" href="http://www.phoenixframework.org/v0.10.0/docs">Get started with Phoenix</a></p></div>
+<div class="col-xs-4 subheader"><h4>Building the new web</h4>
+<p>Channels provide real-time streaming within Phoenix for building rich, interactive experiences across browsers, native mobile apps, and embedded devices.
+<a class="subheader-link" href="http://www.phoenixframework.org/v0.10.0/docs/channels">Learn about channels</a></p></p></div>
+<div class="col-xs-4 subheader"><h4>Battle-proven technology</h4>
+<p>Phoenix leverages the Erlang VM ability to handle millions of connections concurrently while also enjoying the VM guarantees for building fault-tolerant systems.
+<a class="subheader-link" href="http://elixir-lang.org/">More about Elixir &amp; the Erlang VM</a></p></p></div>
+</div></div></div></div>
+
+
+<div class="container body-container"><div><div class="main-head"></div><div id="category-columns"><div class="row"><div class="col-xs-4"><h4>Documentation</h4><ul><li class="" ng-show="(0 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/getting-started"><span>Getting Started with Phoenix</span></a></li><li class="" ng-show="(1 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/mix-tasks"><span>Mix Tasks</span></a></li><li class="" ng-show="(2 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/community"><span>Community</span></a></li><li class="" ng-show="(3 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/resources"><span>Resources</span></a></li><li><a ng-show="4 &gt; 5 &amp;&amp; !all" href="" ng-click="all=true" class="view-all text-muted ng-hide">View All 4</a></li></ul></div><div class="col-xs-4"><h4>Guides</h4><ul><li class="" ng-show="(0 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/overview"><span>Overview</span></a></li><li class="" ng-show="(1 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/up-and-running"><span>Up And Running</span></a></li><li class="" ng-show="(2 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/adding-pages"><span>Adding Pages</span></a></li><li class="" ng-show="(3 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/routing"><span>Routing</span></a></li><li class="" ng-show="(4 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/controllers"><span>Controllers</span></a></li><li class="ng-hide" ng-show="(5 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/views"><span>Views</span></a></li><li class="ng-hide" ng-show="(6 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/templates"><span>Templates</span></a></li><li class="ng-hide" ng-show="(7 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/channels"><span>Channels</span></a></li><li class="ng-hide" ng-show="(8 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/ecto-models"><span>Ecto Models</span></a></li><li class="ng-hide" ng-show="(9 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/deployment"><span>Deployment</span></a></li><li class="ng-hide" ng-show="(10 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/advanced-deployment"><span>Advanced Deployment</span></a></li><li><a ng-show="11 &gt; 5 &amp;&amp; !all" href="" ng-click="all=true" class="view-all text-muted">View All 11</a></li></ul></div><div class="col-xs-4"><h4>How-To</h4><ul><li class="" ng-show="(0 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/upgrading-from-v090"><span>Upgrading from v0.9.0</span></a></li><li class="" ng-show="(1 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/update-from-v080"><span>Upgrading from v0.8.0</span></a></li><li class="" ng-show="(2 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/running-in-production-or-performance-testing"><span>Running in Production or Performance Testing</span></a></li><li class="" ng-show="(3 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/configuration-for-ssl"><span>SSL</span></a></li><li class="" ng-show="(4 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/serving-your-application-behind-a-proxy"><span>Serving Your Application Behind a Proxy</span></a></li><li class="ng-hide" ng-show="(5 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/static-assets"><span>Static Assets</span></a></li><li class="ng-hide" ng-show="(6 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/sessions"><span>Sessions</span></a></li><li class="ng-hide" ng-show="(7 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/custom-errors"><span>Custom Errors</span></a></li><li class="ng-hide" ng-show="(8 &lt; 5) || all"><a href="http://www.phoenixframework.org/v0.10.0/docs/configuration"><span>Configuration</span></a></li><li><a ng-show="9 &gt; 5 &amp;&amp; !all" href="" ng-click="all=true" class="view-all text-muted">View All 9</a></li></ul></div></div></div></div></div></div><!-- Include partials--><div><script type="text/ng-template" id="content"><div class="block-content"><div class="blocks-parent"><div ng-repeat="(k, section) in sections" data-pos="{{ k }}" ng-if="is_sidebar === undefined || is_sidebar == !!section.sidebar" class="block section"><div ng-switch="section.type"><div ng-switch-when="textarea"><div marked="section.text"></div></div><!-- TODO: Make this generic using 'default' --><div ng-switch-when="api-header"><div type="section.type" ng-model="section.data" class="block-api-header"></div></div><div ng-switch-when="code"><div type="section.type" ng-model="section.data" class="block-code"></div></div><div ng-switch-when="image"><div type="section.type" ng-model="section.data" class="block-image"></div></div><div ng-switch-when="embed"><div type="section.type" ng-model="section.data" class="block-embed"></div></div><div ng-switch-when="callout"><div type="section.type" ng-model="section.data" class="block-callout"></div></div><div ng-switch-when="parameters"><div type="section.type" ng-model="section.data" class="block-parameters"></div></div><div ng-switch-when="html"><div type="section.type" ng-model="section.data" class="block-html"></div></div></div></div></div></div></script></div><div><script type="text/ng-template" id="blocks/api-header/show"><div class="block-display-api-header">
+  <!--
+  <div class="picker-offset">
+    <input type-picker ng-cloak ng-model="doc.type">
+  </div>
+  -->
+  <h2 id="{{ slugify(data.title) }}">
+    <span ng-show="data.type != 'basic'" class="pg-type-big pg-type type-{{data.type}}">{{data.type}}</span>
+    {{ data.title }}
+    <a class="fa fa-anchor fa-left" href="#{{ slugify(data.title) }}"></a>
+  </h2>
+  <hr>
+</div>
+</script><script type="text/ng-template" id="blocks/callout/show"><div class="block-show-callout {{ !data.title? 'no-title' : ''}} type-{{data.type}}">
+  <h3>
+    <i class="fa fa-info-circle {{data.type == 'info' ? 'on' : ''}}" title="Info"></i>
+    <i class="fa fa-exclamation-circle {{data.type == 'warning' ? 'on' : ''}}" title="Warning"></i>
+    <i class="fa fa-exclamation-triangle {{data.type == 'danger' ? 'on' : ''}}" title="Danger"></i>
+    <i class="fa fa-check-square {{data.type == 'success' ? 'on' : ''}}" title="Success"></i>
+
+    <span>{{ data.title }}</span>
+  </h3>
+
+  <div marked="data.body"></div>
+</div>
+</script><script type="text/ng-template" id="blocks/code/show"><div class="block-show-code">
+  <div class="code-tabs" ng-show="data.codes.length > 1 || (data.codes.length == 1 && data.codes[0].status)">
+    <div ng-class="{tab: true, on:$index==current, off:$index!=current}" ng-repeat="tab in data.codes track by $id($index)">
+      <a href="" ng-click="choose($index)">
+        <span ng-if="tab.status">
+          <span ng-if="tab.status" class="status-icon status-icon-{{ getStatusCode(tab.status)[2] }}"></span>
+          <em ng-if="!getStatusCode(tab.status)[3]">{{getStatusCode(tab.status)[0]}}</em>
+          {{ tab.name ? tab.name : getStatusCode(tab.status)[1] }}
+        </span>
+        <span ng-if="!tab.status">
+          {{ tab.name ? tab.name : code_types_obj[tab.language] }}
+        </span>
+      </a><span ng-hide="$last">&middot;</span>
+    </div>
+  </div>
+
+  <div ng-repeat="tab in data.codes track by $id($index)" ng-show="$index==current">
+  <pre class="{{theme}}" data-mode="{{ data.codes[$index].language }}">{{ data.codes[$index].code }}</pre>
+</div>
+</div>
+</script><script type="text/ng-template" id="blocks/image/show"><div class="block-display-image" ng-show="data.images.length > 0">
+  <figure ng-show="data.images[0].image.length">
+    <img ng-src="{{ data.images[0].image[0] }}">
+    <figcaption>{{ data.images[0].caption }}</figcaption>
+  </figure>
+</div>
+</script><script type="text/ng-template" id="blocks/parameters/show"><div class="block-display-parameters">
+  <table>
+    <tr ng-if="data.data['h-0'] || data.data['h-1']"> <!-- Rough check -->
+      <th ng-repeat="(c, col) in getNumber(data.cols) track by $index">
+        {{ data.data['h-' + c] }}
+      </th>
+    </tr>
+    <tr ng-repeat="(r, row) in getNumber(data.rows) track by $index">
+      <td ng-repeat="(c, col) in getNumber(data.cols) track by $index">
+        <div marked="data.data[r + '-' + c]"></div>
+      </th>
+    </tr>
+  </table>
+</div>
+
+</script><script type="text/ng-template" id="blocks/html/show"><div class="block-display-html"></div>
+
+</script><script type="text/ng-template" id="blocks/embed/show"><div class="block-display-embed">
+  <div class="html-replace" ng-if="data.html"></div>
+  <div ng-if="!data.html">
+    <div ng-if="data.iframe" class="iframe-replace"></div>
+    <div ng-if="!data.iframe">
+      <strong>
+        <img ng-src="data.favicon" class="favicon" ng-if="data.favicon">
+        <a href="{{ data.url }}" target="_new">{{ data.title || data.url }}</a>
+      </strong>
+    </div>
+  </div>
+</div>
+
+</script></div><div class="container container-footer"><footer><div class="pull-right"><a href="https://readme.io/" class="poweredby">readme.io</a></div></footer></div><script>var _gaq=[['_setAccount','UA-57337100-1'],['_trackPageview']];
+(function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+s.parentNode.insertBefore(g,s)}(document,'script'));
+</script></body></html>
