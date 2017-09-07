@@ -110,7 +110,7 @@ git rebase master
 
 #### Running the Guides Locally
 
-Generating guides requires two separate running processes.  One watches the files for changes, and will regenerate the files as they change.  The other serves the files so they can be viewed in a web browser.
+Generating guides requires two separate running processes. One watches the files for changes, and will regenerate the files as they change. The other serves the files so they can be viewed in a web browser.
 
 In the first terminal, run:
 

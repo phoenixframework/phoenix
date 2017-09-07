@@ -6,7 +6,7 @@ Please take a look at this list and make sure to install anything necessary for 
 
 ### Elixir 1.4 or later
 
-Phoenix is written in Elixir, and our application code will also be written in Elixir. We won't get far in a Phoenix app without it! The Elixir site maintains a great [Installation Page](http://elixir-lang.org/install.html) to help.
+Phoenix is written in Elixir, and our application code will also be written in Elixir. We won't get far in a Phoenix app without it! The Elixir site maintains a great [Installation Page](https://elixir-lang.org/install.html) to help.
 
 If we have just installed Elixir for the first time, we will need to install the Hex package manager as well. Hex is necessary to get a Phoenix app running (by installing dependencies) and to install any extra dependencies we might need along the way.
 
@@ -20,7 +20,7 @@ $ mix local.hex
 
 Elixir code compiles to Erlang byte code to run on the Erlang virtual machine. Without Erlang, Elixir code has no virtual machine to run on, so we need to install Erlang as well.
 
-When we install Elixir using instructions from the Elixir [Installation Page](http://elixir-lang.org/install.html),  we will usually get Erlang too. If Erlang was not installed along with Elixir, please see the [Erlang Instructions](http://elixir-lang.org/install.html#installing-erlang) section of the Elixir Installation Page for instructions.
+When we install Elixir using instructions from the Elixir [Installation Page](https://elixir-lang.org/install.html),  we will usually get Erlang too. If Erlang was not installed along with Elixir, please see the [Erlang Instructions](https://elixir-lang.org/install.html#installing-erlang) section of the Elixir Installation Page for instructions.
 
 People using Debian-based systems may need to explicitly install Erlang to get all the needed packages.
 
@@ -61,7 +61,7 @@ If we don't have any static assets, or we want to use another build tool, we can
 
 We can get node.js from the [download page](https://nodejs.org/en/download/). When selecting a package to download, it's important to note that Phoenix requires version 5.0.0 or greater.
 
-Mac OS X users can also install node.js via [homebrew](http://brew.sh/).
+Mac OS X users can also install node.js via [homebrew](https://brew.sh/).
 
 Note: io.js, which is an npm compatible platform originally based on Node.js, is not known to work with Phoenix.
 

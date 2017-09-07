@@ -246,7 +246,7 @@ Compiling 17 files (.ex)
     (elixir) lib/kernel/parallel_compiler.ex:121: anonymous fn/4 in Kernel.ParallelCompiler.spawn_compilers/1
 ```
 
-If we don't want to create a context or schema for our resource we can use the `--no-context` flag.  Note that this still requires a context module name as a parameter.
+If we don't want to create a context or schema for our resource we can use the `--no-context` flag. Note that this still requires a context module name as a parameter.
 
 ```console
 $ mix phx.gen.html Blog Post posts body:string word_count:integer --no-context
@@ -796,7 +796,7 @@ $ mix ecto.gen.migration -r OurCustom.Repo add_users
 * creating priv/repo/migrations/20150318172927_add_users.exs
 ```
 For more information on how to modify your database schema please refer to the
-ecto's migration dsl [ecto migration docs](http://hexdocs.pm/ecto/Ecto.Migration.html).
+ecto's migration dsl [ecto migration docs](https://hexdocs.pm/ecto/Ecto.Migration.html).
 For example, to alter an existing schema see the documentation on ecto’s
 [`alter/2`](https://hexdocs.pm/ecto/Ecto.Migration.html#alter/2) function.
 
