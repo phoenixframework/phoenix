@@ -4,34 +4,41 @@ We're going to take a look at how we might test drive a controller which has end
 
 Phoenix has a generator for creating a JSON resource which looks like this:
 
-### Set up
-```bash
-mix phoenix.gen.json Thing things some_attr:string another_attr:string
+```console
+mix phoenix.gen.json Stuff Thing things some_attr:string another_attr:string
 ```
 
-Thing is the Model, things is the table name, and some_attr and another_attr are database columns on table things of type string. Don't run this command, we're going to explore test driving out a similar result to what a generator would give us.
+Stuff is the context module name, Thing is the schema module name, things is the table name, and some_attr and another_attr are database columns on table things of type string. Don't run this command, we're going to explore test driving out a similar result to what a generator would give us.
 
-Let's create a `User` model. Since model creation is not in scope of this guide, we will use the generator. If you aren't familiar, read [this section of the Mix guide](mix_tasks.html#phoenix-specific-mix-tasks).
+### Set up
+Let's create a `User` schema. Since schema creation is not in scope of this guide, we will use the generator.  If you aren't familiar, read [this section of the Mix guide](mix_tasks.html#phoenix-specific-mix-tasks).
 
-```bash
-$ mix phoenix.gen.model User users name:string email:string
+```console
+$ mix phx.gen.schema Accounts.User users name:string email:string
+* creating lib/hello/accounts/user.ex
+* creating priv/repo/migrations/20170908031352_create_users.exs
+
+Remember to update your repository by running migrations:
+
+    $ mix ecto.migrate
 ```
 
 Now run migrations:
 
-```bash
+```console
 $ mix ecto.migrate
+[info] == Running Hello.Repo.Migrations.CreateUsers.change/0 forward
+[info] create table users
+[info] == Migrated in 0.0s
 ```
 
 ### Test driving
 
-What we are going for is a controller with the standard CRUD actions. We'll start with our test since we're TDDing this. Create a `user_controller_test.exs` file in `test/controllers`
+What we are going for is a controller with the standard CRUD actions. We'll start with our test since we're TDDing this. Create a `user_controller_test.exs` file in `test/hello_web/controllers`
 
 ```elixir
-# test/controllers/user_controller_test.exs
-
-defmodule HelloPhoenix.UserControllerTest do
-  use HelloPhoenix.ConnCase, async: true
+defmodule HelloWeb.UserControllerTest do
+  use HelloWeb.ConnCase, async: true
 
 end
 ```
@@ -39,10 +46,8 @@ end
 There are many ways to approach TDD. Here, we will think about each action we want to perform, and handle the "happy path" where things go as planned, and the error case where something goes wrong, if applicable.
 
 ```elixir
-# test/controllers/user_controller_test.exs
-
-defmodule HelloPhoenix.UserControllerTest do
-  use HelloPhoenix.ConnCase, async: true
+defmodule HelloWeb.UserControllerTest do
+  use HelloWeb.ConnCase, async: true
 
   test "index/2 responds with all Users"
 
@@ -72,19 +77,19 @@ Create, show and update have more typical ways to fail because they need a way t
 
 Let's run the test:
 
-```bash
+```console
 $ mix test test/controllers/user_controller_test.exs
 ```
 
-We get 8 failures that say "Not yet implemented" which is good. Our tests don't have blocks yet.
+We get 8 failures that say "Not implemented" which is good. Our tests don't have blocks yet.
 
 Let's add our first test. We'll start with `index/2`.
 
 ```elixir
-defmodule HelloPhoenix.UserControllerTest do
-  use HelloPhoenix.ConnCase, async: true
+defmodule HelloWeb.UserControllerTest do
+  use HelloWeb.ConnCase, async: true
 
-  alias HelloPhoenix.{Repo, User}
+  alias Hello.{Repo, Accounts.User}
 
   test "index/2 responds with all Users" do
     users = [ User.changeset(%User{}, %{name: "John", email: "john@example.com"}),
@@ -92,8 +97,8 @@ defmodule HelloPhoenix.UserControllerTest do
 
     Enum.each(users, &Repo.insert!(&1))
 
-    response = build_conn
-    |> get(user_path(build_conn, :index))
+    response = build_conn()
+    |> get(user_path(build_conn(), :index))
     |> json_response(200)
 
     expected = %{
@@ -115,8 +120,8 @@ When we run the test we get an error that we have no `user_path` function.
 In our router, we'll add a resource for `User` in our API pipe:
 
 ```elixir
-defmodule HelloPhoenix.Router do
-  use HelloPhoenix.Web, :router
+defmodule HelloWeb.Router do
+  use HelloWeb, :router
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -128,19 +133,19 @@ defmodule HelloPhoenix.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
-    resources "/users", HelloPhoenix.UserController
+    resources "/users", HelloWeb.UserController
   end
 
-  #...
+  ...
 ```
 
 We should get a new error now. Running the test informs us we don't have a `UserController`. Let's add it, along with the `index/2` action we're testing. Our test description has us returning all users:
 
 ```elixir
-defmodule HelloPhoenix.UserController do
-  use HelloPhoenix.Web, :controller
+defmodule HelloWeb.UserController do
+  use HelloWeb, :controller
 
-  alias HelloPhoenix.{User, Repo}
+  alias Hello.{Accounts.User, Repo}
 
   def index(conn, _params) do
     users = Repo.all(User)
@@ -153,11 +158,11 @@ end
 When we run the test again, our failing test tells us we have no view. Let's add it. Our test specifies a JSON format with a top key of `"data"`, containing an array of users with attributes `"name"` and `"email"`.
 
 ```elixir
-defmodule HelloPhoenix.UserView do
-  use HelloPhoenix.Web, :view
+defmodule HelloWeb.UserView do
+  use HelloWeb, :view
 
   def render("index.json", %{users: users}) do
-    %{data: render_many(users, HelloPhoenix.UserView, "user.json")}
+    %{data: render_many(users, HelloWeb.UserView, "user.json")}
   end
 
   def render("user.json", %{user: user}) do
@@ -182,11 +187,11 @@ Our show tests currently look like this:
 
 Run this test only by running the following command: (if your show tests don't start on line 32, change the line number accordingly)
 
-```bash
-$ mix test test/controllers/user_controller_test.exs:32
+```console
+$ mix test test/hello_web/controllers/user_controller_test.exs:32
 ```
 
-Our first `show/2` test result is, as expected, not yet implemented.
+Our first `show/2` test result is, as expected, not implemented.
 Let's build a test around what we think a successful `show/2` should look like.
 
 ```elixir
@@ -194,8 +199,8 @@ test "Responds with a newly created user if the user is found" do
   user = User.changeset(%User{}, %{name: "John", email: "john@example.com"})
   |> Repo.insert!
 
-  response = build_conn
-  |> get(user_path(build_conn, :show, user.id))
+  response = build_conn()
+  |> get(user_path(build_conn(), :show, user.id))
   |> json_response(200)
 
   expected = %{ "data" => %{ "name" => "John", "email" => "john@example.com" } }
@@ -209,10 +214,10 @@ This is very similar to our `index/2` test, except `show/2` requires a user id, 
 When we run our test tells us we need a `show/2` action.
 
 ```elixir
-defmodule HelloPhoenix.UserController do
-  use HelloPhoenix.Web, :controller
+defmodule HelloWeb.UserController do
+  use HelloWeb, :controller
 
-  alias HelloPhoenix.{User, Repo}
+  alias Hello.{Accounts.User, Repo}
 
   def index(conn, _params) do
     users = Repo.all(User)
@@ -232,15 +237,15 @@ You'll notice we only handle the case where we successfully find a user. When we
 Running the test tells us we need a `render/2` function that can pattern match on `"show.json"`:
 
 ```elixir
-defmodule HelloPhoenix.UserView do
-  use HelloPhoenix.Web, :view
+defmodule HelloWeb.UserView do
+  use HelloWeb, :view
 
   def render("index.json", %{users: users}) do
-    %{data: render_many(users, HelloPhoenix.UserView, "user.json")}
+    %{data: render_many(users, HelloWeb.UserView, "user.json")}
   end
 
   def render("show.json", %{user: user}) do
-    %{data: render_one(user, HelloPhoenix.UserView, "user.json")}
+    %{data: render_one(user, HelloWeb.UserView, "user.json")}
   end
 
   def render("user.json", %{user: user}) do
@@ -260,8 +265,8 @@ Walking through our TDD steps, we add a test that supplies a non existent user i
 
 ```elixir
 test "Responds with a message indicating user not found" do
-  response = build_conn
-  |> get(user_path(build_conn, :show, 300))
+  response = build_conn()
+  |> get(user_path(build_conn(), :show, 300))
   |> json_response(404)
 
   expected = %{ "error" => "User not found." }
