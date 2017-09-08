@@ -537,3 +537,119 @@ def index(conn, _params) do
   redirect conn, external: redirect_test_url(conn, :redirect_test)
 end
 ```
+
+### Halting the Plug Pipeline
+
+As we mentioned - Controllers are plugs.  Controller actions sit somewhere in the middle of a plug pipeline - receiving and then returning a `Plug.Conn.t` for use by other plugs downstream. In cases where our controller action redirects a request or returns an error page we often want to prevent these downstream plugs from being invoked. `halt/1` can be used to ensure that these downstream plugs are skipped.
+
+```elixir
+defmodule HelloWeb.UserController do
+  use HelloWeb, :controller
+
+. . .
+
+  def delete(conn, %{"id" => id}) do
+    user = Accounts.get_user!(id)
+    {:ok, _user} = Accounts.delete_user(user)
+
+    conn
+    |> put_flash(:info, "User deleted successfully.")
+    |> redirect(to: user_path(conn, :index))
+    |> halt()
+  end
+end
+```
+
+It's important to note that `halt/1` simply sets the `:halted` key on `Plug.Conn.t` to `true`.  This is enough to prevent downstream plugs from being invoked but it will not stop the execution of code locally. As such
+
+```elixir
+    conn
+    |> halt()
+    |> put_flash(:info, "User deleted successfully.")
+    |> redirect(to: user_path(conn, :index))
+```
+
+... is functionally equivalent to...
+
+```elixir
+    conn
+    |> put_flash(:info, "User deleted successfully.")
+    |> redirect(to: user_path(conn, :index))
+    |> halt()
+```
+
+This also means that function plugs will still execute unless they check for the `:halt` value.
+
+### Action Fallback
+
+Action Fallback allows us to centralize error handling code in plugs which are called when a controller action fails to return a `Plug.Conn.t`. These plugs receive both the conn which was originally passed to the controller action along with the return value of the action.
+
+Let's say we have a `show` action which uses `with` to fetch a blog post and then authorize the current user to view that blog post. In this example we might expect `Blog.fetch_post/1` to return `{:error, :not_found}` if the post is not not found and `Authorizer.authorize/3` might return `{:error, :unauthorized}` if the user is unauthorized. We could render the error views for these non-happy-paths directly.
+
+```elixir
+defmodule HelloWeb.MyController do
+  use Phoenix.Controller
+  alias Hello.{Authorizer, Blog}
+
+  def show(conn, %{"id" => id}, current_user) do
+    with {:ok, post} <- Blog.fetch_post(id),
+         :ok <- Authorizer.authorize(current_user, :view, post) do
+
+      render(conn, "show.json", post: post)
+    else
+      {:error, :not_found} ->
+        conn
+        |> put_status(:not_found)
+        |> render(ErrorView, :"404")
+        |> halt()
+      {:error, :unauthorized} ->
+        conn
+        |> put_status(403)
+        |> render(ErrorView, :"403")
+        |> halt()
+    end
+  end
+end
+```
+
+Many times - especially when implementing controllers for an API - error handling in the controllers like this results in a lot of repetition. Instead we can define a plug which knows how to handle these error cases.
+
+```elixir
+defmodule HelloWeb.MyFallbackController do
+  use Phoenix.Controller
+  alias HelloWeb.ErrorView
+
+  def call(conn, {:error, :not_found}) do
+    conn
+    |> put_status(:not_found)
+    |> render(ErrorView, :"404")
+    |> halt()
+  end
+
+  def call(conn, {:error, :unauthorized}) do
+    conn
+    |> put_status(403)
+    |> render(ErrorView, :"403")
+    |> halt()
+  end
+end
+```
+
+Then we can reference that plug using action_fallback and simply remove the `else` block from our `with`.  Our plug will receive the original conn as well as the result of the action and respond appropriately.
+
+```elixir
+defmodule HelloWeb.MyController do
+  use Phoenix.Controller
+  alias Hello.{Authorizer, Blog}
+
+  action_fallback HelloWeb.MyFallbackController
+
+  def show(conn, %{"id" => id}, current_user) do
+    with {:ok, post} <- Blog.fetch_post(id),
+         :ok <- Authorizer.authorize(current_user, :view, post) do
+
+      render(conn, "show.json", post: post)
+    end
+  end
+end
+```
