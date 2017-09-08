@@ -42,7 +42,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
 
   Alternatively, the `--context-app` option may be supplied to the generator:
 
-      mix phx.gen.html Sales User users --context-app warehouse
+      mix phx.gen.json Sales User users --context-app warehouse
 
   ## Web namespace
 
@@ -50,7 +50,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   You can customize the web module namespace by passing the `--web` flag with a
   module name, for example:
 
-      mix phx.gen.html Sales User users --web Sales
+      mix phx.gen.json Sales User users --web Sales
 
   Which would generate a `lib/app_web/controllers/sales/user_controller.ex` and
   `lib/app_web/views/sales/user_view.ex`.
