@@ -39,6 +39,7 @@ defmodule <%= web_namespace %> do
 
       import <%= web_namespace %>.Router.Helpers
       import <%= web_namespace %>.ErrorHelpers
+      import <%= web_namespace %>.CommonHelpers
       import <%= web_namespace %>.Gettext
     end
   end
