@@ -13,6 +13,7 @@ defmodule Phx.New.Single do
     {:eex,  "phx_single/lib/app_name.ex",               :project, "lib/:app.ex"},
     {:eex,  "phx_web/channels/user_socket.ex",          :project, "lib/:lib_web_name/channels/user_socket.ex"},
     {:keep, "phx_web/controllers",                      :project, "lib/:lib_web_name/controllers"},
+    {:eex,  "phx_web/views/common_helpers.ex",          :project, "lib/:lib_web_name/views/common_helpers.ex"},
     {:eex,  "phx_web/views/error_helpers.ex",           :project, "lib/:lib_web_name/views/error_helpers.ex"},
     {:eex,  "phx_web/views/error_view.ex",              :project, "lib/:lib_web_name/views/error_view.ex"},
     {:eex,  "phx_web/endpoint.ex",                      :project, "lib/:lib_web_name/endpoint.ex"},

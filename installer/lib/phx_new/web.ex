@@ -17,6 +17,7 @@ defmodule Phx.New.Web do
     {:keep, "phx_web/controllers",                    :web, "lib/:web_app/controllers"},
     {:eex,  "phx_web/endpoint.ex",                    :web, "lib/:web_app/endpoint.ex"},
     {:eex,  "phx_web/router.ex",                      :web, "lib/:web_app/router.ex"},
+    {:eex,  "phx_web/views/common_helpers.ex",        :web, "lib/:lib_web_name/views/common_helpers.ex"},
     {:eex,  "phx_web/views/error_helpers.ex",         :web, "lib/:web_app/views/error_helpers.ex"},
     {:eex,  "phx_web/views/error_view.ex",            :web, "lib/:web_app/views/error_view.ex"},
     {:eex,  "#{@pre}/mix.exs",                        :web, "mix.exs"},

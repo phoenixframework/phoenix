@@ -31,6 +31,7 @@ Most of our work in this guide will be in the `lib/hello_web` directory, which h
 │   └── page
 │       └── index.html.eex
 └── views
+│   ├── common_helpers.ex
 │   ├── error_helpers.ex
 │   ├── error_view.ex
 │   ├── layout_view.ex
