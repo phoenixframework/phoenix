@@ -12,8 +12,12 @@ defmodule <%= app_module %>.Application do
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
+    <%= if ecto do %>
     Supervisor.start_link([
-      <%= if ecto do %>supervisor(<%= app_module %>.Repo, []),<% end %>
+      supervisor(<%= app_module %>.Repo, []),
     ], strategy: :one_for_one, name: <%= app_module %>.Supervisor)
+    <% else %>
+    Supervisor.start_link([], strategy: :one_for_one, name: <%= app_module %>.Supervisor)
+    <% end %>
   end
 end

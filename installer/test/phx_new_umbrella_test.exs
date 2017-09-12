@@ -73,6 +73,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end
 
       assert_file app_path(@app, "lib/#{@app}/application.ex"), ~r/defmodule PhxUmb.Application do/
+      assert_file app_path(@app, "lib/#{@app}/application.ex"), ~r/supervisor\(PhxUmb.Repo, \[\]\)/
       assert_file app_path(@app, "lib/#{@app}.ex"), ~r/defmodule PhxUmb do/
       assert_file app_path(@app, "mix.exs"), ~r/mod: {PhxUmb.Application, \[\]}/
       assert_file app_path(@app, "test/test_helper.exs")
@@ -217,6 +218,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "config/dev.exs"), &refute(&1 =~ config)
       assert_file web_path(@app, "config/test.exs"), &refute(&1 =~ config)
       assert_file web_path(@app, "config/prod.secret.exs"), &refute(&1 =~ config)
+
+      assert_file app_path(@app, "lib/#{@app}/application.ex"), ~r/Supervisor.start_link\(\[\]/
 
       # No HTML
       assert File.exists?(web_path(@app, "test/#{@app}_web/controllers"))
