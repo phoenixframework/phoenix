@@ -37,18 +37,18 @@ mix phoenix.server     # Starts applications and their servers
 
 We have seen all of these at one point or another in the guides, but having all the information about them in one place seems like a good idea. And here we are.
 
-#### `mix phoenix.new`
+#### `mix phx.new`
 
 This is how we tell Phoenix the framework to generate a new Phoenix application for us. We saw it early on in the [Up and Running Guide](up_and_running.html).
 
 Before we begin, we should note that Phoenix uses [Ecto](https://github.com/elixir-lang/ecto) for database access and [Brunch.io](http://brunch.io/) for asset management by default. We can pass `--no-ecto` to opt out of Ecto and  `--no-brunch` to opt out of Brunch.io.
 
-> Note: If we do use Brunch.io, we need to install its dependencies before we start our application. `phoenix.new` will ask to do this for us. Otherwise, we can install them with `npm install`. If we don't install them, the app will throw errors and may not serve our assets properly.
+> Note: If we do use Brunch.io, we need to install its dependencies before we start our application. `phx.new` will ask to do this for us. Otherwise, we can install them with `npm install`. If we don't install them, the app will throw errors and may not serve our assets properly.
 
-We need to pass `phoenix.new` a name for our application. Conventionally, we use all lower-case letters with underscores.
+We need to pass `phx.new` a name for our application. Conventionally, we use all lower-case letters with underscores.
 
 ```console
-$ mix phoenix.new task_tester
+$ mix phx.new task_tester
 * creating task_tester/.gitignore
 . . .
 ```
@@ -58,7 +58,7 @@ We can also use either a relative or absolute path.
 This relative path works.
 
 ```console
-$ mix phoenix.new ../task_tester
+$ mix phx.new ../task_tester
 * creating ../task_tester/.gitignore
 . . .
 ```
@@ -66,12 +66,12 @@ $ mix phoenix.new ../task_tester
 This absolute path works as well.
 
 ```console
-$ mix phoenix.new /Users/me/work/task_tester
+$ mix phx.new /Users/me/work/task_tester
 * creating /Users/me/work/task_tester/.gitignore
 . . .
 ```
 
-The `phoenix.new` task will also ask us if we want to install our dependencies. (Please see the note above about Brunch.io dependencies.)
+The `phx.new` task will also ask us if we want to install our dependencies. (Please see the note above about Brunch.io dependencies.)
 
 ```console
 Fetch and install dependencies? [Yn] y
@@ -79,30 +79,30 @@ Fetch and install dependencies? [Yn] y
 * running mix deps.get
 ```
 
-Once all of our dependencies are installed, `phoenix.new` will tell us what our next steps are.
+Once all of our dependencies are installed, `phx.new` will tell us what our next steps are.
 
 ```console
 We are all set! Run your Phoenix application:
 
 $ cd task_tester
-$ mix phoenix.server
+$ mix phx.server
 
 You can also run it inside IEx (Interactive Elixir) as:
 
-$ iex -S mix phoenix.server
+$ iex -S mix phx.server
 ```
 
-By default `phoenix.new` will assume we want to use ecto for our contexts. If we don't want to use ecto in our application, we can use the `--no-ecto` flag.
+By default `phx.new` will assume we want to use ecto for our contexts. If we don't want to use ecto in our application, we can use the `--no-ecto` flag.
 
 ```console
-$ mix phoenix.new task_tester --no-ecto
+$ mix phx.new task_tester --no-ecto
 * creating task_tester/.gitignore
 . . .
 ```
 
 With the `--no-ecto` flag, Phoenix will not make either ecto or postgrex a dependency of our application, and it will not create a `repo.ex` file.
 
-By default, Phoenix will name our OTP application after the name we pass into `phoenix.new`. If we want, we can specify a different OTP application name with the `--app` flag.
+By default, Phoenix will name our OTP application after the name we pass into `phx.new`. If we want, we can specify a different OTP application name with the `--app` flag.
 
 ```console
 $  mix phx.new task_tester --app hello
@@ -155,7 +155,7 @@ We can also see that files related to the application as a whole - eg. files in 
 If we only want to change the qualifying prefix for module names, we can do that with the `--module` flag. It's important to note that the value of the `--module` must look like a valid module name with proper capitalization. The task will throw an error if it doesn't.
 
 ```console
-$  mix phoenix.new task_tester --module Hello
+$  mix phx.new task_tester --module Hello
 * creating task_tester/config/config.exs
 * creating task_tester/config/dev.exs
 * creating task_tester/config/prod.exs
