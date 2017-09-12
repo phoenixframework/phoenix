@@ -43,9 +43,9 @@ This is how we tell Phoenix the framework to generate a new Phoenix application 
 
 Before we begin, we should note that Phoenix uses [Ecto](https://github.com/elixir-lang/ecto) for database access and [Brunch.io](http://brunch.io/) for asset management by default. We can pass `--no-ecto` to opt out of Ecto and  `--no-brunch` to opt out of Brunch.io.
 
-> Note: If we do use Brunch.io, we need to install its dependencies before we start our application. `phoenix.new` will ask to do this for us. Otherwise, we can install them with `npm install`. If we don't install them, the app will throw errors and may not serve our assets properly.
+> Note: If we do use Brunch.io, we need to install its dependencies before we start our application. `phx.new` will ask to do this for us. Otherwise, we can install them with `npm install`. If we don't install them, the app will throw errors and may not serve our assets properly.
 
-We need to pass `phoenix.new` a name for our application. Conventionally, we use all lower-case letters with underscores.
+We need to pass `phx.new` a name for our application. Conventionally, we use all lower-case letters with underscores.
 
 ```console
 $ mix phx.new task_tester
@@ -71,7 +71,7 @@ $ mix phx.new /Users/me/work/task_tester
 . . .
 ```
 
-The `phoenix.new` task will also ask us if we want to install our dependencies. (Please see the note above about Brunch.io dependencies.)
+The `phx.new` task will also ask us if we want to install our dependencies. (Please see the note above about Brunch.io dependencies.)
 
 ```console
 Fetch and install dependencies? [Yn] y
@@ -79,7 +79,7 @@ Fetch and install dependencies? [Yn] y
 * running mix deps.get
 ```
 
-Once all of our dependencies are installed, `phoenix.new` will tell us what our next steps are.
+Once all of our dependencies are installed, `phx.new` will tell us what our next steps are.
 
 ```console
 We are all set! Run your Phoenix application:
@@ -92,7 +92,7 @@ You can also run it inside IEx (Interactive Elixir) as:
 $ iex -S mix phx.server
 ```
 
-By default `phoenix.new` will assume we want to use ecto for our contexts. If we don't want to use ecto in our application, we can use the `--no-ecto` flag.
+By default `phx.new` will assume we want to use ecto for our contexts. If we don't want to use ecto in our application, we can use the `--no-ecto` flag.
 
 ```console
 $ mix phx.new task_tester --no-ecto
@@ -102,7 +102,7 @@ $ mix phx.new task_tester --no-ecto
 
 With the `--no-ecto` flag, Phoenix will not make either ecto or postgrex a dependency of our application, and it will not create a `repo.ex` file.
 
-By default, Phoenix will name our OTP application after the name we pass into `phoenix.new`. If we want, we can specify a different OTP application name with the `--app` flag.
+By default, Phoenix will name our OTP application after the name we pass into `phx.new`. If we want, we can specify a different OTP application name with the `--app` flag.
 
 ```console
 $  mix phx.new task_tester --app hello
