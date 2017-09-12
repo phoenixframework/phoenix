@@ -62,7 +62,7 @@ defmodule Phoenix.Mixfile do
       {:gettext, "~> 0.8", only: :test},
 
       # Docs dependencies
-      {:ex_doc, "~> 0.16", only: :docs},
+      {:ex_doc, "~> 0.16.4", only: :docs},
       {:inch_ex, "~> 0.2", only: :docs},
 
       # Test dependencies

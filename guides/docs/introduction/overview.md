@@ -8,7 +8,7 @@ If you are already familiar with Elixir, great! If not, there are a number of pl
 
 The aim of this introductory guide is to present a brief, high-level overview of Phoenix, the parts that make it up, and the layers underneath that support it.
 
-If you would prefer to read these guides as an EPUB [click here!](Phoenix-v1.3.0.epub)
+If you would prefer to read these guides as an EPUB [click here!](Phoenix.epub)
 
 ### Phoenix
 
