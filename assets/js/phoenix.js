@@ -667,8 +667,8 @@ const Serializer = {
  * ```
  * @param {Function} opts.logger - The optional function for specialized logging, ie:
  * ```javascript
- * function(kind, msg, data) { 
- *   console.log(`${kind}: ${msg}`, data) 
+ * function(kind, msg, data) {
+ *   console.log(`${kind}: ${msg}`, data)
  * }
  * ```
  *
@@ -1045,7 +1045,7 @@ export class Ajax {
         this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback)
       }
     } else {
-      var req = new XMLHttpRequest(); // tvOS support
+      let req = new XMLHttpRequest(); // tvOS support
       this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback)
     }
   }

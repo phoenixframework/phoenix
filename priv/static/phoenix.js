@@ -29,8 +29,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * Connect to the server using the `Socket` class:
  *
  * ```javascript
- *     let socket = new Socket("/socket", {params: {userToken: "123"}})
- *     socket.connect()
+ * let socket = new Socket("/socket", {params: {userToken: "123"}})
+ * socket.connect()
  * ```
  *
  * The `Socket` constructor takes the mount point of the socket,
@@ -48,18 +48,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * the channel is joined with ok/error/timeout matches:
  *
  * ```javascript
- *     let channel = socket.channel("room:123", {token: roomToken})
- *     channel.on("new_msg", msg => console.log("Got message", msg) )
- *     $input.onEnter( e => {
- *       channel.push("new_msg", {body: e.target.val}, 10000)
- *        .receive("ok", (msg) => console.log("created message", msg) )
- *        .receive("error", (reasons) => console.log("create failed", reasons) )
- *        .receive("timeout", () => console.log("Networking issue...") )
- *     })
- *     channel.join()
- *       .receive("ok", ({messages}) => console.log("catching up", messages) )
- *       .receive("error", ({reason}) => console.log("failed join", reason) )
- *       .receive("timeout", () => console.log("Networking issue. Still waiting...") )
+ * let channel = socket.channel("room:123", {token: roomToken})
+ * channel.on("new_msg", msg => console.log("Got message", msg) )
+ * $input.onEnter( e => {
+ *   channel.push("new_msg", {body: e.target.val}, 10000)
+ *     .receive("ok", (msg) => console.log("created message", msg) )
+ *     .receive("error", (reasons) => console.log("create failed", reasons) )
+ *     .receive("timeout", () => console.log("Networking issue...") )
+ * })
+ *
+ * channel.join()
+ *   .receive("ok", ({messages}) => console.log("catching up", messages) )
+ *   .receive("error", ({reason}) => console.log("failed join", reason) )
+ *   .receive("timeout", () => console.log("Networking issue. Still waiting..."))
  *```
  *
  * ## Joining
@@ -87,7 +88,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * can be done with `channel.push(eventName, payload)` and we can optionally
  * receive responses from the push. Additionally, we can use
  * `receive("timeout", callback)` to abort waiting for our other `receive` hooks
- *  and take action after some period of waiting. The default timeout is 5000ms.
+ *  and take action after some period of waiting. The default timeout is 10000ms.
  *
  *
  * ## Socket Hooks
@@ -96,8 +97,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * `socket.onError()` and `socket.onClose()` events, ie:
  *
  * ```javascript
- *     socket.onError( () => console.log("there was an error with the connection!") )
- *     socket.onClose( () => console.log("the connection dropped") )
+ * socket.onError( () => console.log("there was an error with the connection!") )
+ * socket.onClose( () => console.log("the connection dropped") )
  * ```
  *
  *
@@ -107,8 +108,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * to monitor the channel lifecycle, ie:
  *
  * ```javascript
- *     channel.onError( () => console.log("there was an error!") )
- *     channel.onClose( () => console.log("the channel has gone away gracefully") )
+ * channel.onError( () => console.log("there was an error!") )
+ * channel.onClose( () => console.log("the channel has gone away gracefully") )
  * ```
  *
  * ### onError hooks
@@ -156,46 +157,46 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * they came online from:
  *
  * ```javascript
- *     let state = {}
- *     state = Presence.syncState(state, stateFromServer)
- *     let listBy = (id, {metas: [first, ...rest]}) => {
- *       first.count = rest.length + 1 // count of this user's presences
- *       first.id = id
- *       return first
- *     }
- *     let onlineUsers = Presence.list(state, listBy)
+ * let state = {}
+ * state = Presence.syncState(state, stateFromServer)
+ * let listBy = (id, {metas: [first, ...rest]}) => {
+ *   first.count = rest.length + 1 // count of this user's presences
+ *   first.id = id
+ *   return first
+ * }
+ * let onlineUsers = Presence.list(state, listBy)
  * ```
  *
  *
  * ### Example Usage
- *```javascript
- *     // detect if user has joined for the 1st time or from another tab/device
- *     let onJoin = (id, current, newPres) => {
- *       if(!current){
- *         console.log("user has entered for the first time", newPres)
- *       } else {
- *         console.log("user additional presence", newPres)
- *       }
- *     }
- *     // detect if user has left from all tabs/devices, or is still present
- *     let onLeave = (id, current, leftPres) => {
- *       if(current.metas.length === 0){
- *         console.log("user has left from all devices", leftPres)
- *       } else {
- *         console.log("user left from a device", leftPres)
- *       }
- *     }
- *     let presences = {} // client's initial empty presence state
- *     // receive initial presence data from server, sent after join
- *     myChannel.on("presence_state", state => {
- *       presences = Presence.syncState(presences, state, onJoin, onLeave)
- *       displayUsers(Presence.list(presences))
- *     })
- *     // receive "presence_diff" from server, containing join/leave events
- *     myChannel.on("presence_diff", diff => {
- *       presences = Presence.syncDiff(presences, diff, onJoin, onLeave)
- *       this.setState({users: Presence.list(room.presences, listBy)})
- *     })
+ * ```javascript
+ * // detect if user has joined for the 1st time or from another tab/device
+ * let onJoin = (id, current, newPres) => {
+ *   if(!current){
+ *     console.log("user has entered for the first time", newPres)
+ *   } else {
+ *     console.log("user additional presence", newPres)
+ *   }
+ * }
+ * // detect if user has left from all tabs/devices, or is still present
+ * let onLeave = (id, current, leftPres) => {
+ *   if(current.metas.length === 0){
+ *     console.log("user has left from all devices", leftPres)
+ *   } else {
+ *     console.log("user left from a device", leftPres)
+ *   }
+ * }
+ * let presences = {} // client's initial empty presence state
+ * // receive initial presence data from server, sent after join
+ * myChannel.on("presence_state", state => {
+ *   presences = Presence.syncState(presences, state, onJoin, onLeave)
+ *   displayUsers(Presence.list(presences))
+ * })
+ * // receive "presence_diff" from server, containing join/leave events
+ * myChannel.on("presence_diff", diff => {
+ *   presences = Presence.syncDiff(presences, diff, onJoin, onLeave)
+ *   this.setState({users: Presence.list(room.presences, listBy)})
+ * })
  * ```
  * @module phoenix
  */
@@ -298,7 +299,9 @@ var Push = function () {
       return this;
     }
 
-    // private
+    /**
+     * @private
+     */
 
   }, {
     key: "reset",
@@ -309,6 +312,11 @@ var Push = function () {
       this.receivedResp = null;
       this.sent = false;
     }
+
+    /**
+     * @private
+     */
+
   }, {
     key: "matchReceive",
     value: function matchReceive(_ref) {
@@ -322,6 +330,11 @@ var Push = function () {
         return h.callback(response);
       });
     }
+
+    /**
+     * @private
+     */
+
   }, {
     key: "cancelRefEvent",
     value: function cancelRefEvent() {
@@ -330,12 +343,22 @@ var Push = function () {
       }
       this.channel.off(this.refEvent);
     }
+
+    /**
+     * @private
+     */
+
   }, {
     key: "cancelTimeout",
     value: function cancelTimeout() {
       clearTimeout(this.timeoutTimer);
       this.timeoutTimer = null;
     }
+
+    /**
+     * @private
+     */
+
   }, {
     key: "startTimeout",
     value: function startTimeout() {
@@ -358,11 +381,21 @@ var Push = function () {
         _this.trigger("timeout", {});
       }, this.timeout);
     }
+
+    /**
+     * @private
+     */
+
   }, {
     key: "hasReceived",
     value: function hasReceived(status) {
       return this.receivedResp && this.receivedResp.status === status;
     }
+
+    /**
+     * @private
+     */
+
   }, {
     key: "trigger",
     value: function trigger(status, response) {
@@ -392,6 +425,7 @@ var Channel = exports.Channel = function () {
     this.params = params || {};
     this.socket = socket;
     this.bindings = [];
+    this.bindingRef = 0;
     this.timeout = this.socket.timeout;
     this.joinedOnce = false;
     this.joinPush = new Push(this, CHANNEL_EVENTS.join, this.params, this.timeout);
@@ -437,6 +471,11 @@ var Channel = exports.Channel = function () {
     });
   }
 
+  /**
+   * @private
+   */
+
+
   _createClass(Channel, [{
     key: "rejoinUntilConnected",
     value: function rejoinUntilConnected() {
@@ -445,6 +484,13 @@ var Channel = exports.Channel = function () {
         this.rejoin();
       }
     }
+
+    /**
+     * Join the channel
+     * @param {integer} timeout
+     * @returns {Push}
+     */
+
   }, {
     key: "join",
     value: function join() {
@@ -458,35 +504,85 @@ var Channel = exports.Channel = function () {
         return this.joinPush;
       }
     }
+
+    /**
+     * Hook into channel close
+     * @param {Function} callback
+     */
+
   }, {
     key: "onClose",
     value: function onClose(callback) {
       this.on(CHANNEL_EVENTS.close, callback);
     }
+
+    /**
+     * Hook into channel errors
+     * @param {Function} callback
+     */
+
   }, {
     key: "onError",
     value: function onError(callback) {
-      this.on(CHANNEL_EVENTS.error, function (reason) {
+      return this.on(CHANNEL_EVENTS.error, function (reason) {
         return callback(reason);
       });
     }
+
+    /**
+     * Subscribes on channel events
+     *
+     * Subscription returns a ref counter, which can be used later to
+     * unsubscribe the exact event listener
+     *
+     * @example
+     * const ref1 = channel.on("event", do_stuff)
+     * const ref2 = channel.on("event", do_other_stuff)
+     * channel.off("event", ref1)
+     * // Since unsubscription, do_stuff won't fire,
+     * // while do_other_stuff will keep firing on the "event"
+     *
+     * @param {string} event
+     * @param {Function} callback
+     */
+
   }, {
     key: "on",
     value: function on(event, callback) {
-      this.bindings.push({ event: event, callback: callback });
+      var ref = this.bindingRef++;
+      this.bindings.push({ event: event, ref: ref, callback: callback });
+      return ref;
     }
+
+    /**
+     * @param {string} event
+     * @param {Function} callback
+     */
+
   }, {
     key: "off",
-    value: function off(event) {
+    value: function off(event, ref) {
       this.bindings = this.bindings.filter(function (bind) {
-        return bind.event !== event;
+        return !(bind.event === event && (typeof ref === "undefined" || ref === bind.ref));
       });
     }
+
+    /**
+     * @private
+     */
+
   }, {
     key: "canPush",
     value: function canPush() {
       return this.socket.isConnected() && this.isJoined();
     }
+
+    /**
+     * @param {string} event
+     * @param {Object} payload
+     * @returns {Push}
+     */
+
   }, {
     key: "push",
     value: function push(event, payload) {
@@ -516,9 +612,11 @@ var Channel = exports.Channel = function () {
      * To receive leave acknowledgements, use the a `receive`
      * hook to bind to the server ack, ie:
      *
-     * ```javascript
-     *     channel.leave().receive("ok", () => alert("left!") )
-     * ```
+     * @example
+     * channel.leave().receive("ok", () => alert("left!") )
+     *
+     * @param {integer} timeout
+     * @returns {Push}
      */
 
   }, {
@@ -554,6 +652,9 @@ var Channel = exports.Channel = function () {
      * before dispatching to the channel callbacks.
      *
      * Must return the payload, modified or unmodified
+     * @param {string} event
+     * @param {Object} payload
+     * @param {integer} ref
      */
 
   }, {
@@ -562,7 +663,9 @@ var Channel = exports.Channel = function () {
       return payload;
     }
 
-    // private
+    /**
+     * @private
+     */
 
   }, {
     key: "isMember",
@@ -579,17 +682,32 @@ var Channel = exports.Channel = function () {
         return true;
       }
     }
+
+    /**
+     * @private
+     */
+
   }, {
     key: "joinRef",
     value: function joinRef() {
       return this.joinPush.ref;
     }
+
+    /**
+     * @private
+     */
+
   }, {
     key: "sendJoin",
     value: function sendJoin(timeout) {
       this.state = CHANNEL_STATES.joining;
       this.joinPush.resend(timeout);
     }
+
+    /**
+     * @private
+     */
+
   }, {
     key: "rejoin",
     value: function rejoin() {
@@ -599,6 +717,11 @@ var Channel = exports.Channel = function () {
       }
       this.sendJoin(timeout);
     }
+
+    /**
+     * @private
+     */
+
   }, {
     key: "trigger",
     value: function trigger(event, payload, ref, joinRef) {
@@ -615,31 +738,61 @@ var Channel = exports.Channel = function () {
         return bind.callback(handledPayload, ref, joinRef || _this4.joinRef());
       });
     }
+
+    /**
+     * @private
+     */
+
   }, {
     key: "replyEventName",
     value: function replyEventName(ref) {
       return "chan_reply_" + ref;
     }
+
+    /**
+     * @private
+     */
+
   }, {
     key: "isClosed",
     value: function isClosed() {
       return this.state === CHANNEL_STATES.closed;
     }
+
+    /**
+     * @private
+     */
+
   }, {
     key: "isErrored",
     value: function isErrored() {
       return this.state === CHANNEL_STATES.errored;
     }
+
+    /**
+     * @private
+     */
+
   }, {
     key: "isJoined",
     value: function isJoined() {
       return this.state === CHANNEL_STATES.joined;
     }
+
+    /**
+     * @private
+     */
+
   }, {
     key: "isJoining",
     value: function isJoining() {
       return this.state === CHANNEL_STATES.joining;
     }
+
+    /**
+     * @private
+     */
+
   }, {
     key: "isLeaving",
     value: function isLeaving() {
@@ -705,13 +858,15 @@ var Serializer = {
  * Defaults to stepped backoff of:
  *
  * ```javascript
- *  function(tries){
- *    return [1000, 5000, 10000][tries - 1] || 10000
- *  }
+ * function(tries){
+ *   return [1000, 5000, 10000][tries - 1] || 10000
+ * }
  * ```
  * @param {Function} opts.logger - The optional function for specialized logging, ie:
  * ```javascript
- * logger: (kind, msg, data) => { console.log(`${kind}: ${msg}`, data) }
+ * function(kind, msg, data) {
+ *   console.log(`${kind}: ${msg}`, data)
+ * }
  * ```
  *
  * @param {number}  opts.longpollerTimeout - The maximum timeout of a long poll AJAX request.
@@ -763,11 +918,25 @@ var Socket = exports.Socket = function () {
     }, this.reconnectAfterMs);
   }
 
+  /**
+   * Returns the socket protocol
+   *
+   * @returns {string}
+   */
+
+
   _createClass(Socket, [{
     key: "protocol",
     value: function protocol() {
       return location.protocol.match(/^https/) ? "wss" : "ws";
     }
+
+    /**
+     * The fully qualifed socket url
+     *
+     * @returns {string}
+     */
+
   }, {
     key: "endPointURL",
     value: function endPointURL() {
@@ -781,6 +950,13 @@ var Socket = exports.Socket = function () {
 
       return this.protocol() + "://" + location.host + uri;
     }
+
+    /**
+     * @param {Function} callback
+     * @param {integer} code
+     * @param {string} reason
+     */
+
   }, {
     key: "disconnect",
     value: function disconnect(callback, code, reason) {
@@ -843,33 +1019,60 @@ var Socket = exports.Socket = function () {
       this.logger(kind, msg, data);
     }
 
-    // Registers callbacks for connection state change events
-    //
-    // Examples
-    //
-    //    socket.onError(function(error){ alert("An error occurred") })
-    //
+    /**
+     * Registers callbacks for connection open events
+     *
+     * @example socket.onOpen(function(){ console.info("the socket was opened") })
+     *
+     * @param {Function} callback
+     */
 
   }, {
     key: "onOpen",
     value: function onOpen(callback) {
       this.stateChangeCallbacks.open.push(callback);
     }
+
+    /**
+     * Registers callbacks for connection close events
+     * @param {Function} callback
+     */
+
   }, {
     key: "onClose",
     value: function onClose(callback) {
       this.stateChangeCallbacks.close.push(callback);
     }
+
+    /**
+     * Registers callbacks for connection error events
+     *
+     * @example socket.onError(function(error){ alert("An error occurred") })
+     *
+     * @param {Function} callback
+     */
+
   }, {
     key: "onError",
     value: function onError(callback) {
       this.stateChangeCallbacks.error.push(callback);
     }
+
+    /**
+     * Registers callbacks for connection message events
+     * @param {Function} callback
+     */
+
   }, {
     key: "onMessage",
     value: function onMessage(callback) {
       this.stateChangeCallbacks.message.push(callback);
     }
+
+    /**
+     * @private
+     */
+
   }, {
     key: "onConnOpen",
     value: function onConnOpen() {
@@ -888,6 +1091,11 @@ var Socket = exports.Socket = function () {
         return callback();
       });
     }
+
+    /**
+     * @private
+     */
+
   }, {
     key: "onConnClose",
     value: function onConnClose(event) {
@@ -899,6 +1107,11 @@ var Socket = exports.Socket = function () {
         return callback(event);
       });
     }
+
+    /**
+     * @private
+     */
+
   }, {
     key: "onConnError",
     value: function onConnError(error) {
@@ -908,6 +1121,11 @@ var Socket = exports.Socket = function () {
         return callback(error);
       });
     }
+
+    /**
+     * @private
+     */
+
   }, {
     key: "triggerChanError",
     value: function triggerChanError() {
@@ -915,6 +1133,11 @@ var Socket = exports.Socket = function () {
         return channel.trigger(CHANNEL_EVENTS.error);
       });
     }
+
+    /**
+     * @returns {string}
+     */
+
   }, {
     key: "connectionState",
     value: function connectionState() {
@@ -929,11 +1152,21 @@ var Socket = exports.Socket = function () {
           return "closed";
       }
     }
+
+    /**
+     * @returns {boolean}
+     */
+
   }, {
     key: "isConnected",
     value: function isConnected() {
       return this.connectionState() === "open";
     }
+
+    /**
+     * @param {Channel}
+     */
+
   }, {
     key: "remove",
     value: function remove(channel) {
@@ -941,6 +1174,15 @@ var Socket = exports.Socket = function () {
         return c.joinRef() !== channel.joinRef();
       });
     }
+
+    /**
+     * Initiates a new channel for the given topic
+     *
+     * @param {string} topic
+     * @param {Object} chanParams - Parameters for the channel
+     * @returns {Channel}
+     */
+
   }, {
     key: "channel",
     value: function channel(topic) {
@@ -950,6 +1192,11 @@ var Socket = exports.Socket = function () {
       this.channels.push(chan);
       return chan;
     }
+
+    /**
+     * @param {Object} data
+     */
+
   }, {
     key: "push",
     value: function push(data) {
@@ -976,6 +1223,7 @@ var Socket = exports.Socket = function () {
 
     /**
      * Return the next message ref, accounting for overflows
+     * @returns {string}
      */
 
   }, {
@@ -1162,13 +1410,18 @@ var Ajax = exports.Ajax = function () {
   _createClass(Ajax, null, [{
     key: "request",
     value: function request(method, endPoint, accept, body, timeout, ontimeout, callback) {
-      if (window.XDomainRequest) {
-        var req = new XDomainRequest(); // IE8, IE9
-        this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback);
+      if (typeof window !== 'undefined') {
+        if (window.XDomainRequest) {
+          var req = new XDomainRequest(); // IE8, IE9
+          this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback);
+        } else {
+          var _req = window.XMLHttpRequest ? new window.XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
+          new ActiveXObject("Microsoft.XMLHTTP"); // IE6, IE5
+          this.xhrRequest(_req, method, endPoint, accept, body, timeout, ontimeout, callback);
+        }
       } else {
-        var _req = window.XMLHttpRequest ? new window.XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
-        new ActiveXObject("Microsoft.XMLHTTP"); // IE6, IE5
-        this.xhrRequest(_req, method, endPoint, accept, body, timeout, ontimeout, callback);
+        var _req2 = new XMLHttpRequest(); // tvOS support
+        this.xhrRequest(_req2, method, endPoint, accept, body, timeout, ontimeout, callback);
       }
     }
   }, {
@@ -1323,7 +1576,13 @@ var Presence = exports.Presence = {
       if (currentPresence) {
         var _state$key$metas;
 
-        (_state$key$metas = state[key].metas).unshift.apply(_state$key$metas, _toConsumableArray(currentPresence.metas));
+        var joinedRefs = state[key].metas.map(function (m) {
+          return m.phx_ref;
+        });
+        var curMetas = currentPresence.metas.filter(function (m) {
+          return joinedRefs.indexOf(m.phx_ref) < 0;
+        });
+        (_state$key$metas = state[key].metas).unshift.apply(_state$key$metas, _toConsumableArray(curMetas));
       }
       onJoin(key, currentPresence, newPresence);
     });
@@ -1375,17 +1634,15 @@ var Presence = exports.Presence = {
  * Creates a timer that accepts a `timerCalc` function to perform
  * calculated timeout retries, such as exponential backoff.
  *
- * ## Examples
+ * @example
+ * let reconnectTimer = new Timer(() => this.connect(), function(tries){
+ *   return [1000, 5000, 10000][tries - 1] || 10000
+ * })
+ * reconnectTimer.scheduleTimeout() // fires after 1000
+ * reconnectTimer.scheduleTimeout() // fires after 5000
+ * reconnectTimer.reset()
+ * reconnectTimer.scheduleTimeout() // fires after 1000
  *
- * ```javascript
- *    let reconnectTimer = new Timer(() => this.connect(), function(tries){
- *      return [1000, 5000, 10000][tries - 1] || 10000
- *    })
- *    reconnectTimer.scheduleTimeout() // fires after 1000
- *    reconnectTimer.scheduleTimeout() // fires after 5000
- *    reconnectTimer.reset()
- *    reconnectTimer.scheduleTimeout() // fires after 1000
- * ```
  * @param {Function} callback
  * @param {Function} timerCalc
  */
