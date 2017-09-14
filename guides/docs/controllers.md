@@ -601,12 +601,10 @@ defmodule HelloWeb.MyController do
         conn
         |> put_status(:not_found)
         |> render(ErrorView, :"404")
-        |> halt()
       {:error, :unauthorized} ->
         conn
         |> put_status(403)
         |> render(ErrorView, :"403")
-        |> halt()
     end
   end
 end
@@ -623,14 +621,12 @@ defmodule HelloWeb.MyFallbackController do
     conn
     |> put_status(:not_found)
     |> render(ErrorView, :"404")
-    |> halt()
   end
 
   def call(conn, {:error, :unauthorized}) do
     conn
     |> put_status(403)
     |> render(ErrorView, :"403")
-    |> halt()
   end
 end
 ```
