@@ -76,7 +76,7 @@ The default transport mechanism is via WebSockets which will fall back to LongPo
   - [dn-phoenix](https://github.com/jfis/dn-phoenix)
 
 ## Tying it all together
-Let's tie all these ideas together by building a simple chat application. After [generating a new Phoenix application](http://www.phoenixframework.org/docs/up-and-running) we'll see that the endpoint is already set up for us in `lib/hello/endpoint.ex`:
+Let's tie all these ideas together by building a simple chat application. After [generating a new Phoenix application](http://www.phoenixframework.org/docs/up-and-running) we'll see that the endpoint is already set up for us in `lib/hello_web/endpoint.ex`:
 
 ```elixir
 defmodule Hello.Endpoint do
