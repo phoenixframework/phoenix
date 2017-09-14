@@ -538,48 +538,6 @@ def index(conn, _params) do
 end
 ```
 
-### Halting the Plug Pipeline
-
-As we mentioned - Controllers are plugs.  Controller actions sit somewhere in the middle of a plug pipeline - receiving and then returning a `Plug.Conn.t` for use by other plugs downstream. In cases where our controller action redirects a request or returns an error page we often want to prevent these downstream plugs from being invoked. `halt/1` can be used to ensure that these downstream plugs are skipped.
-
-```elixir
-defmodule HelloWeb.UserController do
-  use HelloWeb, :controller
-
-. . .
-
-  def delete(conn, %{"id" => id}) do
-    user = Accounts.get_user!(id)
-    {:ok, _user} = Accounts.delete_user(user)
-
-    conn
-    |> put_flash(:info, "User deleted successfully.")
-    |> redirect(to: user_path(conn, :index))
-    |> halt()
-  end
-end
-```
-
-It's important to note that `halt/1` simply sets the `:halted` key on `Plug.Conn.t` to `true`.  This is enough to prevent downstream plugs from being invoked but it will not stop the execution of code locally. As such
-
-```elixir
-    conn
-    |> halt()
-    |> put_flash(:info, "User deleted successfully.")
-    |> redirect(to: user_path(conn, :index))
-```
-
-... is functionally equivalent to...
-
-```elixir
-    conn
-    |> put_flash(:info, "User deleted successfully.")
-    |> redirect(to: user_path(conn, :index))
-    |> halt()
-```
-
-This also means that function plugs will still execute unless they check for the `:halt` value.
-
 ### Action Fallback
 
 Action Fallback allows us to centralize error handling code in plugs which are called when a controller action fails to return a `Plug.Conn.t`. These plugs receive both the conn which was originally passed to the controller action along with the return value of the action.
@@ -649,3 +607,69 @@ defmodule HelloWeb.MyController do
   end
 end
 ```
+
+### Halting the Plug Pipeline
+
+As we mentioned - Controllers are plugs.... specifically plugs which are called toward the end of the plug pipeline.  At any step of the pipeline we might have cause to stop processing - typically because we've redirected or rendered a response. `Plug.Conn.t` has a `:halted` key - setting it to true will cause downstream plugs to be skipped. We can do that easily using `Plug.Conn.halt/1`.
+
+Consider a `HelloWeb.PostFinder` plug. On call if we find a post related to a given id then we add it to assigns; and if we don't find the post we respond with a 404 page.
+
+```elixir
+defmodule HelloWeb.PostFinder do
+  use Plug
+  import Plog.Conn
+
+  alias Hello.Blog
+
+  def init(opts), do: opts
+
+  def call(conn, _) do
+    case Blog.get_post(conn.params["id"]) do
+      {:ok, post} ->
+        assign(conn, :post, post)
+      {:error, :notfound} ->
+        conn
+        |> send_resp(404, "Not found")
+    end
+  end
+end
+```
+
+If we call this plug as part of the plug pipeline any downstream plugs will still be processed. If we want to prevent downstream plugs from being processed in the event of the 404 response we can simply call `Plug.Conn.halt/1`.
+
+```elixir
+    case Blog.get_post(conn.params["id"]) do
+      {:ok, post} ->
+        assign(conn, :post, post)
+      {:error, :notfound} ->
+        conn
+        |> send_resp(404, "Not found")
+        |> halt()
+    end
+```
+
+It's important to note that `halt/1` simply sets the `:halted` key on `Plug.Conn.t` to `true`.  This is enough to prevent downstream plugs from being invoked but it will not stop the execution of code locally. As such
+
+```elixir
+  conn
+  |> send_resp(404, "Not found")
+  |> halt()
+```
+
+... is functionally equivalent to...
+
+```elixir
+  conn
+  |> halt()
+  |> send_resp(404, "Not found")
+```
+
+It's also important to note that halting will only stop the plug pipeline from continuing. Function plugs will still execute unless their implementation checks for the `:halt` value.
+
+```
+  def post_authorization_plug(%{halted: true} = conn, _), do: conn
+  def post_authorization_plug(conn, _) do
+  . . .
+  end
+```
+
