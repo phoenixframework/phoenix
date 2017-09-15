@@ -242,26 +242,14 @@ Randomized with seed 305958
 
 The other business requirement for the `:bio` field is that it be a maximum of one hundred and forty characters. Let's write a test for that using the `errors_on/1` function again.
 
-Before we actually write the test, how are we going to handle a string that long without making a mess? A new function in `Hello.DataCase` is perfect for this. We'll create a `long_string/1` function which will send us back a string of "a"'s as long as we tell it to be.
-
-```elixir
-defmodule Hello.DataCase do
-  ...
-
-  def long_string(length) do
-    Enum.reduce (1..length), "", fn _, acc ->  acc <> "a" end
-  end
-end
-```
-
-We can now use `long_string/1` when changing the value of the `:bio` key in our `attrs`.
+We'll use String.duplicate/2 to produce n-long "a" string here.
 
 ```elixir
 defmodule Hello.Accounts.UserTest do
   ...
 
   test "bio must be at most 140 characters long" do
-    attrs = %{@valid_attrs | bio: long_string(141)}
+    attrs = %{@valid_attrs | bio: String.duplicate("a", 141)}
     changeset = User.changeset(%User{}, attrs)
     assert %{bio: ["should be at most 140 character(s)"]} = errors_on(changeset)
   end
