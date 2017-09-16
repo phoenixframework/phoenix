@@ -48,6 +48,15 @@ defmodule <%= endpoint_module %> do
   """
   def init(_key, config) do
     if config[:load_from_system_env] do
+      config = case Keyword.has_key?(config, :server) do
+        true -> config
+        false ->
+          case System.get_env("PHOENIX_SERVER") do
+            "true" -> Keyword.put(config, :server, true)
+            _ -> config
+          end
+      end
+
       port = System.get_env("PORT") || raise "expected the PORT environment variable to be set"
       {:ok, Keyword.put(config, :http, [:inet6, port: port])}
     else
