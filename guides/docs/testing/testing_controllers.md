@@ -225,7 +225,7 @@ defmodule HelloWeb.UserController do
 end
 ```
 
-When we run the test again, our failing test tells us module `HelloWeb.UserView` is not available. Let's add it. Our test specifies a JSON format with a top key of `"data"`, containing an array of users with attributes `"name"` and `"email"`.
+When we run the test again, our failing test tells us module `HelloWeb.UserView` is not available. Let's add it by creating the file `lib/hello_web/views/user_view.ex`. Our test specifies a JSON format with a top key of `"data"`, containing an array of users with attributes `"name"` and `"email"`.
 
 ```elixir
 defmodule HelloWeb.UserView do
