@@ -267,24 +267,84 @@ $ mix test test/hello_web/controllers/user_controller_test.exs:40
 Our first `show/2` test result is, as expected, not implemented. Let's build a test around what we think a successful `show/2` should look like.
 
 ```elixir
-test "Responds with user info if the user is found", %{conn: conn, user1: user} do
+test "Responds with user info if the user is found", %{conn: conn} do
+  {:ok, user} = Accounts.create_user(%{name: "John", email: "john@example.com", password: "john pass"})
+
   response = conn
   |> get(user_path(conn, :show, user.id))
   |> json_response(200)
 
   expected = %{
-    "data" =>
-    %{ "email" => user.email, "name" => user.name }
-
+    "data" => %{"email" => user.email, "name" => user.name}
   }
 
   assert response == expected
 end
 ```
 
-This is very similar to our `index/2` test, except `show/2` requires a user id, and our data is a single JSON object instead of an array. Notice that because we only need one user for this test, we're only grabbing `user1:` from the context, and mapping it to `user`.
+This is fine, but it can be refactored slightly. Notice that both this test and the index test both need users in the database. Instead of creating these users over and over again, we can instead call another `setup/1` function to populate the database with users on an as-needed basis. To do this, first create a private function at the bottom of the test module as follows:
 
-When we run our test tells us we need a `HelloWeb.UserController.show/2` action.
+```elixir
+defp create_user(_) do
+  {:ok, user} = Accounts.create_user(@create_attrs)
+  {:ok, user: user}
+end
+```
+Next define `@create_attrs` as a custom attribute for the module at the top, as follows.
+
+```elixir
+alias Hello.Accounts
+
+@create_attrs %{name: "John", email: "john@example.com", password: "john pass"}
+```
+
+
+Finally, invoke the function using a second `setup/1` call inside of the `describe` block:
+
+```elixir
+describe "show/2" do
+  setup [:create_user]
+  test "Responds with user info if the user is found", %{conn: conn, user: user} do
+
+    response = conn
+    |> get(user_path(conn, :show, user.id))
+    |> json_response(200)
+
+    expected = %{
+      "data" => %{"email" => user.email, "name" => user.name}
+    }
+
+    assert response == expected
+  end
+  test "Responds with a message indicating user not found"
+end
+```
+
+The functions called by setup take an ExUnit context (not to be confused with the contexts we are describing throughout this guide) and allow us to add additional fields when we return. In this case, `create_user` doesn't care about the existing context (hence the underscore parameter), and adds a new user to the ExUnit context under the key `user:`  by returning `{:ok, user: user}`. The test can then access both the database connection and this new user from the ExUnit context.
+
+Finally, let's change our `index/2` test to also use the new `create_user` function. The index test doesn't *really* need two users, after all. The revised `index/2` test should look like this:
+
+```elixir
+  describe "index/2" do
+    setup [:create_user]
+    test "index/2 responds with all Users", %{conn: conn, user: user} do
+
+      response = conn
+      |> get(user_path(conn, :index))
+      |> json_response(200)
+
+      expected = %{
+        "data" => [%{ "name" => user.name, "email" => user.email }]
+      }
+
+      assert response == expected
+    end
+  end
+```
+
+The biggest change here is that we now wrapped the old test inside of another `describe` block so that we have somewhere to put the `setup/2` call for the index test. We are now accessing the user from the ExUnit context, and expecting just a single user from the `index/2` test results.
+
+The `index/2` test should still pass, but the `show/2` test will error with a message that we need a `HelloWeb.UserController.show/2` action. Let's add that to the UserController module next.
 
 ```elixir
 defmodule HelloWeb.UserController do
