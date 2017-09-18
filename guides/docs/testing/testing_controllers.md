@@ -473,7 +473,7 @@ defmodule HelloWeb.ErrorView do
 end
 ```
 
-In the "400.json" render function, we only expect the `"User not found"` so far, so we only set that message. As other errors crop up in our TDD development, we can add additional error messages. As a side note, if we had chosen to catch the Ecto error, we could use this same "400.json" render function to report that error, matching on `%Ecto.NoResultsError`.
+In the "400.json" render function, we only expect the `"User not found"` so far, so we only set that message. As other errors crop up in our TDD development, we can add additional error messages.
 
 With those implemented, our tests pass.
 
