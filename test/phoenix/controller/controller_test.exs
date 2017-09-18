@@ -408,6 +408,20 @@ defmodule Phoenix.Controller.ControllerTest do
              "world"
     end
 
+    test "sends file for download with custom :offset" do
+      conn = send_download(conn(:get, "/"), {:file, @hello_txt}, offset: 2)
+      assert conn.status == 200
+      assert conn.resp_body ==
+             "rld"
+    end
+
+    test "sends file for download with custom :length" do
+      conn = send_download(conn(:get, "/"), {:file, @hello_txt}, length: 2)
+      assert conn.status == 200
+      assert conn.resp_body ==
+             "wo"
+    end
+
     test "sends binary for download with :filename" do
       conn = send_download(conn(:get, "/"), {:binary, "world"}, filename: "hello world.json")
       assert conn.status == 200
