@@ -163,7 +163,7 @@ Our expected data is a JSON response with a top level key of `"data"` containing
 
 When we run the test we get an error that we have no `user_path` function.
 
-In our router, we'll uncomment the `api` scope at the bottom of the auto-generated file, and then add a resource for `User` in the API. Because we aren't going to be generating forms to create and update users, we add the `except: [:new, :edit]` to skip those endpoints.
+In our router, we'll uncomment the `api` scope at the bottom of the auto-generated file, and then use the resources macro to generate the routes for the "/users" path. Because we aren't going to be generating forms to create and update users, we add the `except: [:new, :edit]` to skip those endpoints.
 
 ```elixir
 defmodule HelloWeb.Router do
