@@ -126,24 +126,23 @@ defmodule HelloWeb.UserControllerTest do
 
   alias Hello.Accounts
 
-  @user1_attrs %{email: "grobblefruit@example.org", name: "John", password: "surf and skate"}
-  @user2_attrs %{email: "varibiggles@example.org",  name: "Jane",  password: "coffee and beer"}
-
-  # setup creates users for all tests, and generates the conn
+  # setup generates the database connection
   setup do
-    {:ok, user1} = Accounts.create_user(@user1_attrs)
-    {:ok, user2} = Accounts.create_user(@user2_attrs)
     conn = build_conn()
-    # results are loaded into the context passed to each test
-    {:ok, conn: conn, user1: user1, user2: user2}
+    {:ok, conn: conn}
   end
 
-  test "index/2 responds with all Users", %{conn: conn, user1: user1, user2: user2} do
+  test "index/2 responds with all Users", %{conn: conn} do
+
+    users = [%{name: "John", email: "john@example.com", password: "john pass"},
+             %{name: "Jane", email: "jane@example.com", password: "jane pass"}]
+
+    # create users local to this database connection and test
+    [{:ok, user1},{:ok, user2}] = Enum.map(users, &Accounts.create_user(&1))
 
     response = conn
     |> get(user_path(conn, :index))
     |> json_response(200)
-
 
     expected = %{
       "data" => [
