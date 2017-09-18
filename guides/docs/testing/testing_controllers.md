@@ -230,18 +230,12 @@ When we run the test again, our failing test tells us module `HelloWeb.UserView`
 defmodule HelloWeb.UserView do
   use HelloWeb, :view
 
-  def render("index.json", %{data: users}) do
-    %{data:
-      render_many( users, HelloWeb.UserView, "user.json", as: :data)
-      }
+  def render("index.json", %{users: users}) do
+    %{data: render_many(users, HelloWeb.UserView, "user.json")}
   end
 
-  def render("user.json", %{data: user}) do
-    %{
-      name: user.name,
-      email: user.email
-      # skipping password, inserted_at, and updated_at
-    }
+  def render("user.json", %{user: user}) do
+    %{name: user.name, email: user.email}
   end
 end
 ```
