@@ -210,7 +210,7 @@ user_path  PATCH   /api/users/:id  HelloWeb.UserController :update
 user_path  DELETE  /api/users/:id  HelloWeb.UserController :delete
 ```
 
-We should get a new error now. Running the test informs us we don't have a `HelloWeb.UserController`. Let's add it, along with the `index/2` action we're testing. Our test description has us returning all users:
+We should get a new error now. Running the test informs us we don't have a `HelloWeb.UserController`. Let's create that controller by opening the file `lib/hello_web/controllers/user_controller.ex` and adding the `index/2` action we're testing. Our test description has us returning all users:
 
 ```elixir
 defmodule HelloWeb.UserController do
