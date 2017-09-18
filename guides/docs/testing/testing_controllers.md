@@ -45,7 +45,7 @@ Remember to update your repository by running migrations:
     $ mix ecto.migrate
 ```
 
-Ordinarily we would spend time tweaking the generated migration file (`priv/repo/migrations/<datetime>_create_users.exs`) to add things like non-null constraints and so on, but we don't care about that for this example. Just run the migration:
+Ordinarily we would spend time tweaking the generated migration file (`priv/repo/migrations/<datetime>_create_users.exs`) to add things like non-null constraints and so on, but we don't need to make any changes for this example, so we can just run the migration:
 
 ```console
 $ mix ecto.migrate
