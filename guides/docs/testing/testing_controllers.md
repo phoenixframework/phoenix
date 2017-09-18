@@ -280,7 +280,7 @@ test "Responds with user info if the user is found", %{conn: conn} do
 end
 ```
 
-This is fine, but it can be refactored slightly. Notice that both this test and the index test both need users in the database. Instead of creating these users over and over again, we can instead call another `setup/1` function to populate the database with users on an as-needed basis. To do this, first create a private function at the bottom of the test module as follows:
+This is fine, but it can be refactored slightly. Notice that both this test and the index test need users in the database. Instead of creating these users over and over again, we can instead call another `setup/1` function to populate the database with users on an as-needed basis. To do this, first create a private function at the bottom of the test module as follows:
 
 ```elixir
 defp create_user(_) do
