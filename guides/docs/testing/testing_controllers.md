@@ -241,7 +241,7 @@ defmodule HelloWeb.UserView do
 end
 ```
 
-The view module for the index uses the `render_many/4` function. According to the [documentation](https://hexdocs.pm/phoenix/Phoenix.View.html#render_many/4), using `render_many/4` is "roughly equivalent" to using `Enum.map/2`, and in fact `Enum.map` is called under the hood. The main difference betwee `render_many/4` and directly calling `Enum.map/2` is that the former benefits from library-quality error checking, properly handling missing values, and so on. `render_many/4` also has an `:as` option that can used so that the key in the assigns map can be renamed. By default, this is inferred from the module name (`:user` in this case), but it can be changed if necessary to fit the render function being used.
+The view module for the index uses the `render_many/4` function. According to the [documentation](https://hexdocs.pm/phoenix/Phoenix.View.html#render_many/4), using `render_many/4` is "roughly equivalent" to using `Enum.map/2`, and in fact `Enum.map` is called under the hood. The main difference between `render_many/4` and directly calling `Enum.map/2` is that the former benefits from library-quality error checking, properly handling missing values, and so on. `render_many/4` also has an `:as` option that can used so that the key in the assigns map can be renamed. By default, this is inferred from the module name (`:user` in this case), but it can be changed if necessary to fit the render function being used.
 
 And with that, our test passes when we run it.
 
