@@ -274,9 +274,7 @@ test "Responds with user info if the user is found", %{conn: conn} do
   |> get(user_path(conn, :show, user.id))
   |> json_response(200)
 
-  expected = %{
-    "data" => %{"email" => user.email, "name" => user.name}
-  }
+  expected = %{ "data" => %{"email" => user.email, "name" => user.name} }
 
   assert response == expected
 end
@@ -310,9 +308,7 @@ describe "show/2" do
     |> get(user_path(conn, :show, user.id))
     |> json_response(200)
 
-    expected = %{
-      "data" => %{"email" => user.email, "name" => user.name}
-    }
+    expected = %{ "data" => %{"email" => user.email, "name" => user.name} }
 
     assert response == expected
   end
@@ -333,16 +329,14 @@ Finally, let's change our `index/2` test to also use the new `create_user` funct
       |> get(user_path(conn, :index))
       |> json_response(200)
 
-      expected = %{
-        "data" => [%{ "name" => user.name, "email" => user.email }]
-      }
+      expected = %{ "data" => [%{ "name" => user.name, "email" => user.email }] }
 
       assert response == expected
     end
   end
 ```
 
-The biggest change here is that we now wrapped the old test inside of another `describe` block so that we have somewhere to put the `setup/2` call for the index test. We are now accessing the user from the ExUnit context, and expecting just a single user from the `index/2` test results.
+The biggest change here is that we now wrapped the old test inside of another `describe` block so that we have somewhere to put the `setup/2` call for the index test. We are now accessing the user from the ExUnit context, and expecting just a single user from the `index/2` test results, not two.
 
 The `index/2` test should still pass, but the `show/2` test will error with a message that we need a `HelloWeb.UserController.show/2` action. Let's add that to the UserController module next.
 
