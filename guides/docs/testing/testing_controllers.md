@@ -399,7 +399,7 @@ test "Responds with a message indicating user not found", %{conn:  conn} do
   |> get(user_path(conn, :show, -1 ))
   |> json_response(404)
 
-  expected = %{ "errors" => "User not found" }
+  expected = %{ "errors" => "User not found." }
 
   assert response == expected
 end
@@ -459,7 +459,7 @@ defmodule HelloWeb.ErrorView do
 
   def render("400.json", %{reason: reason}) do
     message = case reason do
-                "User not found" -> "User not found"
+                "User not found" -> "User not found."
                 _ -> "I'm afraid I can't do that, Dave"
               end
     %{errors: message}
@@ -473,7 +473,7 @@ defmodule HelloWeb.ErrorView do
 end
 ```
 
-In the "400.json" render function, we only expect the `"User not found"` so far, so we only set that message. As other errors crop up in our TDD development, we can add additional error messages.
+In the "400.json" render function, we only expect the `"User not found"` so far, so we only check for that message in the case statement. As other errors crop up in our TDD development, we can add additional error messages.
 
 With those implemented, our tests pass.
 
