@@ -251,7 +251,7 @@ The view module for the index uses the `render_many/4` function. According to th
 
 And with that, our test passes when we run it.
 
-### Time for the show
+### Testing the show action
 
 We'll also cover the `show/2` action here so we can see how to handle an error case.
 
@@ -344,7 +344,7 @@ Notice the "show.json" rendering path uses `render_one/4` instead of `render_man
 
 When we run the test again, it passes.
 
-### No show
+### Show when the user is not found
 
 The last item we'll cover is the case where we don't find a user in `show/2`.
 
