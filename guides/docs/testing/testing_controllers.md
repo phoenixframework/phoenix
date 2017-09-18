@@ -57,7 +57,7 @@ Generated hello app
 [info] == Migrated in 0.0s
 ```
 
-As a final check before we start developing, we run `mix test` and make sure that all is well.
+As a final check before we start developing, we can run `mix test` and make sure that all is well.
 
 ```console
 $ mix test
