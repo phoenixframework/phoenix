@@ -258,10 +258,10 @@ Our show tests currently look like this:
   end
 ```
 
-Run this test only by running the following command: (if your show tests don't start on line 41, change the line number accordingly)
+Run this test only by running the following command: (if your show tests don't start on line 40, change the line number accordingly)
 
 ```console
-$ mix test test/hello_web/controllers/user_controller_test.exs:41
+$ mix test test/hello_web/controllers/user_controller_test.exs:40
 ```
 
 Our first `show/2` test result is, as expected, not implemented. Let's build a test around what we think a successful `show/2` should look like.
