@@ -399,35 +399,51 @@ test "Responds with a message indicating user not found", %{conn:  conn} do
   |> get(user_path(conn, :show, -1 ))
   |> json_response(404)
 
-  expected = %{
-    "errors" => "Resource not found"
-  }
+  expected = %{ "errors" => "User not found" }
 
   assert response == expected
 end
 ```
 
-We want a HTTP code of 404 to notify the requester that this resource was not found, as well as an accompanying error message.
+We want a HTTP code of 404 to notify the requester that this resource was not found, as well as an accompanying error message. You can run this test now to see what happens. You should see that an `Ecto.NoResultsError` is thrown, because there is no such user in the database.
 
-Our controller action now needs to handle the error thrown by Ecto:
+Our controller action needs to handle the error thrown by Ecto. We have two choices here. We can either wrap the standard `get_user!/1` function in a try/catch block, or we can create a new `get_user/1` function that does not throw an Ecto error. For this example, we'll take the second path and implement a new `get_user/1` function in the file `lib/hello/accounts/accounts.ex`, just before the `get_user!/1` function:
 
 ```elixir
-  def show(conn, %{"id" => id}) do
-    try do
-      user = Accounts.get_user!(id)
-      render conn, "show.json", data: user
-    catch
-      :error, message ->
-        conn
-        |> put_status(:not_found)
-        |> render( HelloWeb.ErrorView, "400.json", reason: message )
-    end
-  end
+@doc """
+Gets a single `%User{}` from the data store  where the primary key matches the
+given id.
+
+Returns `nil` if no result was found.
+
+## Examples
+
+    iex> get_user(123)
+    %User{}
+
+    iex> get_user(456)
+    nil
+
+"""
+def get_user(id), do: Repo.get(User, id)
 ```
 
-In the `catch` block, there are two important things going on. First we use the [`put_status/2`](https://hexdocs.pm/plug/Plug.Conn.html#put_status/2) function from `Plug.Conn` to set the desired error status. The complete list of allowed codes can be found in the [Plug.Conn.Status documentation](https://hexdocs.pm/plug/Plug.Conn.Status.html), where we can see that `:not_found` corresponds to our desired "404" status.
+This function is just a thin wrapper around `Ecto.Repo.get/3`, and like that function will return either a `%User{}` if the user is found, or `nil` if not. Next change the `show/2` function to use the non-throwing version, and handle the two possible result cases.
 
-Second, we've redirected the view to the `ErrorView` module. If you open that file up, you'll see a few rendering helpers for HTML, output, but none for JSON. We need to add a render function for "400.json" as follows:
+```elixir
+def show(conn, %{"id" => id}) do
+  case Accounts.get_user(id) do
+    nil -> conn
+    |> put_status(:not_found)
+    |> render( HelloWeb.ErrorView, "400.json", reason: "User not found" )
+    user -> render(conn, "show.json", user: user)
+  end
+end
+```
+
+The second branch of the case statement handles the "happy path" we've already covered.
+
+The first branch of the case statement handles the `nil` result case. First, we use the [`put_status/2`](https://hexdocs.pm/plug/Plug.Conn.html#put_status/2) function from `Plug.Conn` to set the desired error status. The complete list of allowed codes can be found in the [Plug.Conn.Status documentation](https://hexdocs.pm/plug/Plug.Conn.Status.html), where we can see that `:not_found` corresponds to our desired "404" status. Second, we redirect the view to the `ErrorView` module. If you open that file up, you'll see a few rendering helpers for HTML, output, but none for JSON. We need to add a render function for "400.json" as follows:
 
 ```elixir
 defmodule HelloWeb.ErrorView do
@@ -443,7 +459,7 @@ defmodule HelloWeb.ErrorView do
 
   def render("400.json", %{reason: reason}) do
     message = case reason do
-                %Ecto.NoResultsError{} -> "Resource not found"
+                "User not found" -> "User not found"
                 _ -> "I'm afraid I can't do that, Dave"
               end
     %{errors: message}
@@ -457,7 +473,7 @@ defmodule HelloWeb.ErrorView do
 end
 ```
 
-In the "400.json" render function, we only expect the `%Ecto.NoResultsError{}` so far, so we only set that message. As other errors crop up in our TDD development, we can add additional error messages.
+In the "400.json" render function, we only expect the `"User not found"` so far, so we only set that message. As other errors crop up in our TDD development, we can add additional error messages. As a side note, if we had chosen to catch the Ecto error, we could use this same "400.json" render function to report that error, matching on `%Ecto.NoResultsError`.
 
 With those implemented, our tests pass.
 
