@@ -366,24 +366,16 @@ Running the test tells us we need a `render/2` function that can pattern match o
 defmodule HelloWeb.UserView do
   use HelloWeb, :view
 
-  def render("index.json", %{data: users}) do
-    %{data:
-      render_many( users, HelloWeb.UserView, "user.json", as: :data)
-      }
+  def render("index.json", %{users: users}) do
+    %{data: render_many(users, HelloWeb.UserView, "user.json")}
   end
 
-  def render("show.json", %{data: user}) do
-    %{data:
-      render_one( user, HelloWeb.UserView, "user.json", as: :data)
-      }
+  def render("show.json", %{user: user}) do
+    %{data: render_one(user, HelloWeb.UserView, "user.json")}
   end
 
-  def render("user.json", %{data: user}) do
-    %{
-      name: user.name,
-      email: user.email
-      # skipping password, inserted_at, and updated_at
-    }
+  def render("user.json", %{user: user}) do
+    %{name: user.name, email: user.email}
   end
 end
 ```
