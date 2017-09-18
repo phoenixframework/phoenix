@@ -63,7 +63,7 @@ As a final check before we start developing, we can run `mix test` and make sure
 $ mix test
 ```
 
-All of the tests should pass, but sometimes the database isn't specified properly in `config/test.exs`, or some other issue crops up. It is best to correct these issues now, *before* we complicate things with deliberately breaking tests!
+All of the tests should pass, but sometimes the database isn't configured properly in `config/test.exs`, or some other issue crops up. It is best to correct these issues now, *before* we complicate things with deliberately breaking tests!
 
 ### Test driving
 
