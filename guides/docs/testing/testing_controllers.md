@@ -8,7 +8,7 @@ Phoenix has a generator for creating a JSON resource which looks like this:
 $ mix phx.gen.json  AllTheThings Thing things some_attr:string another_attr:string
 ```
 
-In this command, AllTheThings is the Context; Thing is the Schema; things is the plural name of the schema (which is used as the table name). Then `some_attr` and `another_attr` are the database columns on table `things` of type string.
+In this command, AllTheThings is the `context`; Thing is the `schema`; things is the plural name of the schema (which is used as the table name). Then `some_attr` and `another_attr` are the database columns on table `things` of type string.
 
 However, *don't* actually run this command. Instead, we're going to explore test driving out a similar result to what a generator would give us.
 
