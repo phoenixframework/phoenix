@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.1-dev
+
+* Enhancements
+  * [Controller] Support partial file downloads with `:offset` and `:length` options to `send_download/3`
+
 ## 1.3.0 (2017-07-28)
 
 See these [`1.2.x` to `1.3.x` upgrade instructions](https://gist.github.com/chrismccord/71ab10d433c98b714b75c886eff17357) to bring your existing apps up to speed.
