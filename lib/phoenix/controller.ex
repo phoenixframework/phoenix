@@ -852,9 +852,11 @@ defmodule Phoenix.Controller do
 
   def send_download(conn, {:file, path}, opts) do
     filename = opts[:filename] || Path.basename(path)
+    offset = opts[:offset] || 0
+    length = opts[:length] || :all
     conn
     |> prepare_send_download(filename, opts)
-    |> send_file(conn.status || 200, path)
+    |> send_file(conn.status || 200, path, offset, length)
   end
 
   def send_download(conn, {:binary, contents}, opts) do
