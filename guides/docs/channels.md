@@ -79,18 +79,18 @@ The default transport mechanism is via WebSockets which will fall back to LongPo
 Let's tie all these ideas together by building a simple chat application. After [generating a new Phoenix application](http://www.phoenixframework.org/docs/up-and-running) we'll see that the endpoint is already set up for us in `lib/hello_web/endpoint.ex`:
 
 ```elixir
-defmodule Hello.Endpoint do
+defmodule HelloWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :hello
 
-  socket "/socket", Hello.UserSocket
+  socket "/socket", HelloWeb.UserSocket
   ...
 end
 ```
 
-In `lib/hello_web/channels/user_socket.ex`, the `Hello.UserSocket` we pointed to in our endpoint has already been created when we generated our application. We need to make sure messages get routed to the correct channel. To do that, we'll uncomment the "room:*" channel definition:
+In `lib/hello_web/channels/user_socket.ex`, the `HelloWeb.UserSocket` we pointed to in our endpoint has already been created when we generated our application. We need to make sure messages get routed to the correct channel. To do that, we'll uncomment the "room:*" channel definition:
 
 ```elixir
-defmodule Hello.UserSocket do
+defmodule HelloWeb.UserSocket do
   use Phoenix.Socket
 
   ## Channels
