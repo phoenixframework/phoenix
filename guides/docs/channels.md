@@ -82,7 +82,7 @@ Let's tie all these ideas together by building a simple chat application. After 
 defmodule HelloWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :hello
 
-  socket "/socket", Hello.UserSocket
+  socket "/socket", HelloWeb.UserSocket
   ...
 end
 ```
