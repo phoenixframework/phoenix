@@ -27,11 +27,11 @@ ALTER USER postgres WITH SUPERUSER;
 Now that we have Ecto and Postgres installed and configured, the easiest way to use Ecto is to generate an Ecto *schema* through the `phx.gen.schema` task. Ecto schemas are a way for us to specify how Elixir data types map to and from external sources, such as database tables. Let's generate a `User` schema with `name`, `email`, `bio`, and `number_of_pets` fields.
 
 ```console
-$ mix phx.gen.schema Accounts.User users name:string email:string \
+$ mix phx.gen.schema User users name:string email:string \
 bio:string number_of_pets:integer
 
-* creating ./lib/hello/accounts/user.ex
-* creating priv/repo/migrations/20170523151118_create_users.exs
+* creating ./lib/hello/user.ex
+* creating priv/repo/migrations/20170523151118_create_user.exs
 
 Remember to update your repository by running migrations:
 
@@ -162,10 +162,10 @@ Ecto schemas are responsible for mapping Elixir values to external data sources,
 Here's the `User` schema that Phoenix generated for us.
 
 ```elixir
-defmodule Hello.Accounts.User do
+defmodule Hello.User do
   use Ecto.Schema
   import Ecto.Changeset
-  alias Hello.Accounts.User
+  alias Hello.User
 
 
   schema "users" do
@@ -206,13 +206,13 @@ Right now, we have two transformations in our pipeline. In the first call, we in
 `cast/3` first takes a struct, then the parameters (the proposed updates), and then the final field is the list of columns to be updated. `cast/3` also will only take fields that exist in the schema.
 Next, `validate_required/3` checks that this list of fields is present in the changeset that `cast/3` returns. By default with the generator, all fields are required.
 
-We can verify this functionality in iex. Let's fire up our application inside `iex` by running `iex -S mix`. In order to minimize typing and make this easier to read, let's alias our `Hello.Accounts.User` struct.
+We can verify this functionality in iex. Let's fire up our application inside `iex` by running `iex -S mix`. In order to minimize typing and make this easier to read, let's alias our `Hello.User` struct.
 
 ```console
 $ iex -S mix
 
-iex> alias Hello.Accounts.User
-Hello.Accounts.User
+iex> alias Hello.User
+Hello.User
 ```
 
 Next, let's build a changeset from our schema with an empty `User` struct, and an empty map of parameters.
@@ -225,7 +225,7 @@ iex> changeset = User.changeset(%User{}, %{})
   email: {"can't be blank", [validation: :required]},
   bio: {"can't be blank", [validation: :required]},
   number_of_pets: {"can't be blank", [validation: :required]}],
- data: #Hello.Accounts.User<>, valid?: false>
+ data: #Hello.User<>, valid?: false>
 ```
 
 Once we have a changeset, we can check it if it is valid.
@@ -288,7 +288,7 @@ iex> changeset = User.changeset(%User{}, params)
 #Ecto.Changeset<action: nil,
  changes: %{bio: "An example to all", email: "joe@example.com",
    name: "Joe Example", number_of_pets: 5}, errors: [],
- data: #Hello.Accounts.User<>, valid?: true>
+ data: #Hello.User<>, valid?: true>
 ```
 
 Our new changeset is valid.
@@ -373,13 +373,13 @@ We've talked a lot about migrations and data-storage, but we haven't yet persist
 Let's head back over to IEx with `iex -S mix`, and insert a couple of users to the database.
 
 ```console
-iex> alias Hello.{Repo, Accounts.User}
-[Hello.Repo, Hello.Accounts.User]
+iex> alias Hello.{Repo, User}
+[Hello.Repo, Hello.User]
 iex> Repo.insert(%User{email: "user1@example.com"})
 [debug] QUERY OK db=4.6ms
 INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["user1@example.com", {{2017, 5, 23}, {19, 6, 4, 822044}}, {{2017, 5, 23}, {19, 6, 4, 822055}}]
 {:ok,
- %Hello.Accounts.User{__meta__: #Ecto.Schema.Metadata<:loaded, "users">,
+ %Hello.User{__meta__: #Ecto.Schema.Metadata<:loaded, "users">,
   bio: nil, email: "user1@example.com", id: 3,
   inserted_at: ~N[2017-05-23 19:06:04.822044], name: nil, number_of_pets: nil,
   updated_at: ~N[2017-05-23 19:06:04.822055]}}
@@ -388,7 +388,7 @@ iex> Repo.insert(%User{email: "user2@example.com"})
 [debug] QUERY OK db=5.1ms
 INSERT INTO "users" ("email","inserted_at","updated_at") VALUES ($1,$2,$3) RETURNING "id" ["user2@example.com", {{2017, 5, 23}, {19, 6, 8, 452545}}, {{2017, 5, 23}, {19, 6, 8, 452556}}]
 {:ok,
- %Hello.Accounts.User{__meta__: #Ecto.Schema.Metadata<:loaded, "users">,
+ %Hello.User{__meta__: #Ecto.Schema.Metadata<:loaded, "users">,
   bio: nil, email: "user2@example.com", id: 4,
   inserted_at: ~N[2017-05-23 19:06:08.452545], name: nil, number_of_pets: nil,
   updated_at: ~N[2017-05-23 19:06:08.452556]}}
@@ -400,11 +400,11 @@ We started by aliasing our `User` and `Repo` modules for easy access. Next, we c
 iex> Repo.all(User)
 [debug] QUERY OK source="users" db=2.7ms
 SELECT u0."id", u0."bio", u0."email", u0."name", u0."number_of_pets", u0."inserted_at", u0."updated_at" FROM "users" AS u0 []
-[%Hello.Accounts.User{__meta__: #Ecto.Schema.Metadata<:loaded, "users">,
+[%Hello.User{__meta__: #Ecto.Schema.Metadata<:loaded, "users">,
   bio: nil, email: "user1@example.com", id: 3,
   inserted_at: ~N[2017-05-23 19:06:04.822044], name: nil, number_of_pets: nil,
   updated_at: ~N[2017-05-23 19:06:04.822055]},
- %Hello.Accounts.User{__meta__: #Ecto.Schema.Metadata<:loaded, "users">,
+ %Hello.User{__meta__: #Ecto.Schema.Metadata<:loaded, "users">,
   bio: nil, email: "user2@example.com", id: 4,
   inserted_at: ~N[2017-05-23 19:06:08.452545], name: nil, number_of_pets: nil,
   updated_at: ~N[2017-05-23 19:06:08.452556]}]
