@@ -201,6 +201,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * @module phoenix
  */
 
+var global = typeof self !== "undefined" ? self : window;
 var VSN = "2.0.0";
 var SOCKET_STATES = { connecting: 0, open: 1, closing: 2, closed: 3 };
 var DEFAULT_TIMEOUT = 10000;
@@ -891,7 +892,7 @@ var Socket = exports.Socket = function () {
     this.sendBuffer = [];
     this.ref = 0;
     this.timeout = opts.timeout || DEFAULT_TIMEOUT;
-    this.transport = opts.transport || window.WebSocket || LongPoll;
+    this.transport = opts.transport || global.WebSocket || LongPoll;
     this.defaultEncoder = Serializer.encode;
     this.defaultDecoder = Serializer.decode;
     if (this.transport !== LongPoll) {
@@ -1410,18 +1411,13 @@ var Ajax = exports.Ajax = function () {
   _createClass(Ajax, null, [{
     key: "request",
     value: function request(method, endPoint, accept, body, timeout, ontimeout, callback) {
-      if (typeof window !== 'undefined') {
-        if (window.XDomainRequest) {
-          var req = new XDomainRequest(); // IE8, IE9
-          this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback);
-        } else {
-          var _req = window.XMLHttpRequest ? new window.XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
-          new ActiveXObject("Microsoft.XMLHTTP"); // IE6, IE5
-          this.xhrRequest(_req, method, endPoint, accept, body, timeout, ontimeout, callback);
-        }
+      if (global.XDomainRequest) {
+        var req = new XDomainRequest(); // IE8, IE9
+        this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback);
       } else {
-        var _req2 = new XMLHttpRequest(); // tvOS support
-        this.xhrRequest(_req2, method, endPoint, accept, body, timeout, ontimeout, callback);
+        var _req = global.XMLHttpRequest ? new global.XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
+        new ActiveXObject("Microsoft.XMLHTTP"); // IE6, IE5
+        this.xhrRequest(_req, method, endPoint, accept, body, timeout, ontimeout, callback);
       }
     }
   }, {
