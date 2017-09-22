@@ -100,7 +100,7 @@ $ mix ecto.migrate
 [info]  == Migrated in 0.0s
 ```
 
-Before jump into the generated code, let's start the server with `mix phx.server` and visit [http://localhost:4000/users](http://localhost:4000/users). Let's follow the "New User" link and click the "Submit" button without providing any input. We should be greeted with the following output:
+Before we jump into the generated code, let's start the server with `mix phx.server` and visit [http://localhost:4000/users](http://localhost:4000/users). Let's follow the "New User" link and click the "Submit" button without providing any input. We should be greeted with the following output:
 
 ```
 Oops, something went wrong! Please check the errors below.

@@ -81,4 +81,4 @@ Ecto is built around four main abstractions:
 A new Phoenix application will use Ecto with PostgreSQL storage by default.
 
 ## A Note about these guides
-If you find an issue with the guides or would like to help improve these guides please checkout the [Phoenix Guides](https://github.com/phoenixframework/phoenix_guides/) github. Issues and Pull Requests are happily accepted!
+If you find an issue with the guides or would like to help improve these guides please checkout the [Phoenix Guides](https://github.com/phoenixframework/phoenix/tree/master/guides/) on github. Issues and Pull Requests are happily accepted!
