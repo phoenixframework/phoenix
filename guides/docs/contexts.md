@@ -941,7 +941,8 @@ With our new plugs in place, we can now modify our `create`, `edit`, `update`, a
         |> put_flash(:info, "Page updated successfully.")
         |> redirect(to: cms_page_path(conn, :show, page))
       {:error, %Ecto.Changeset{} = changeset} ->
-        render(conn, "edit.html", changeset: changeset)
+-       render(conn, "edit.html", page: page, changeset: changeset)
++       render(conn, "edit.html", changeset: changeset)
     end
   end
 
