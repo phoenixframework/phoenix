@@ -15,6 +15,15 @@ defmodule Phoenix.Logger do
   case sensitive.
 
   Phoenix's default is `["password"]`.
+
+  Phoenix can filter all parameters by default and selectively keep
+  parameters. This can be configured like so:
+
+      config :phoenix, :filter_parameters, {:keep, ["id", "order"]}
+
+  With the configuration above, Phoenix will filter all parameters,
+  except those that match exactly `id` or `order`. If a kept parameter
+  matches, all parameters nested under that one will also be kept.
   """
   require Logger
   import Phoenix.Controller
@@ -48,22 +57,41 @@ defmodule Phoenix.Logger do
 
   @doc false
   def filter_values(values, params \\ Application.get_env(:phoenix, :filter_parameters))
-  def filter_values(%{__struct__: mod} = struct, _filter_params) when is_atom(mod) do
+  def filter_values(values, {:discard, params}), do: discard_values(values, params)
+  def filter_values(values, {:keep, params}), do: keep_values(values, params)
+  def filter_values(values, params), do: discard_values(values, params)
+
+  defp discard_values(%{__struct__: mod} = struct, _params) when is_atom(mod) do
     struct
   end
-  def filter_values(%{} = map, filter_params) do
+  defp discard_values(%{} = map, params) do
     Enum.into map, %{}, fn {k, v} ->
-      if is_binary(k) and String.contains?(k, filter_params) do
+      if is_binary(k) and String.contains?(k, params) do
         {k, "[FILTERED]"}
       else
-        {k, filter_values(v, filter_params)}
+        {k, discard_values(v, params)}
       end
     end
   end
-  def filter_values([_|_] = list, filter_params) do
-    Enum.map(list, &filter_values(&1, filter_params))
+  defp discard_values([_|_] = list, params) do
+    Enum.map(list, &discard_values(&1, params))
   end
-  def filter_values(other, _filter_params), do: other
+  defp discard_values(other, _params), do: other
+
+  defp keep_values(%{__struct__: mod}, _params) when is_atom(mod), do: "[FILTERED]"
+  defp keep_values(%{} = map, params) do
+    Enum.into map, %{}, fn {k, v} ->
+      if is_binary(k) and k in params do
+        {k, discard_values(v, [])}
+      else
+        {k, keep_values(v, params)}
+      end
+    end
+  end
+  defp keep_values([_|_] = list, params) do
+    Enum.map(list, &keep_values(&1, params))
+  end
+  defp keep_values(_other, _params), do: "[FILTERED]"
 
   defp params(%Plug.Conn.Unfetched{}), do: "[UNFETCHED]"
   defp params(params) do
