@@ -54,6 +54,26 @@ defmodule Mix.Phoenix.Context do
 
   def pre_existing_tests?(%Context{test_file: file}), do: File.exists?(file)
 
+  def function_count(%Context{file: file}) do
+    {_ast, count} =
+      file
+      |> File.read!()
+      |> Code.string_to_quoted!()
+      |> Macro.postwalk(0, fn
+        {:def, _, _} = node, count -> {node, count + 1}
+        node, count -> {node, count}
+      end)
+
+    count
+  end
+
+  def file_count(%Context{dir: dir}) do
+    dir
+    |> Path.join("**/*.ex")
+    |> Path.wildcard()
+    |> Enum.count()
+  end
+
   defp web_module do
     base = Mix.Phoenix.base()
     if String.ends_with?(base, "Web") do

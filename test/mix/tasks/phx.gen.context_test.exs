@@ -144,7 +144,14 @@ defmodule Mix.Tasks.Phx.Gen.ContextTest do
         assert file =~ "create unique_index(:posts, [:slug])"
       end
 
+
+      send self(), {:mix_shell_input, :yes?, true}
       Gen.Context.run(~w(Blog Comment comments title:string))
+
+      assert_received {:mix_shell, :info, ["You are generating into an existing context" <> notice]}
+      assert notice =~ "Phoenix.Blog context currently has 6 functions and\n2 files in its directory"
+      assert_received {:mix_shell, :yes?, ["Would you like proceed? [Y/n]"]}
+
       assert_file "lib/phoenix/blog/comment.ex", fn file ->
         assert file =~ "field :title, :string"
       end
