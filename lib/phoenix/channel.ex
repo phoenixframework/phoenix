@@ -164,8 +164,8 @@ defmodule Phoenix.Channel do
   If any of the callbacks return a `:stop` tuple, it will also
   trigger terminate with the reason given in the tuple.
 
-  `terminate/2`, however, won't be invoked in case of errors nor in
-  case of exits. This is the same behaviour as you find in Elixir
+  `terminate/2`, however, won't be invoked in the case of a linked process
+  non-normal exit. This is the same behaviour as you find in Elixir
   abstractions like `GenServer` and others. Typically speaking, if you
   want to clean something up, it is better to monitor your channel
   process and do the clean up from another process.  Similar to GenServer,
