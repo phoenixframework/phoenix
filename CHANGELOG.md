@@ -4,6 +4,7 @@
 
 * Enhancements
   * [Controller] Support partial file downloads with `:offset` and `:length` options to `send_download/3`
+  * [Logger] Add whitelist support to `filter_parameters` logger configuration, via new `:keep` tuple format
 
 ## 1.3.0 (2017-07-28)
 
