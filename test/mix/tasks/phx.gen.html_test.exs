@@ -132,7 +132,10 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         refute file =~ ~s(<%= number_input f, :user_id)
       end
 
+      send self(), {:mix_shell_input, :yes?, true}
       Gen.Html.run(~w(Blog Comment comments title:string))
+      assert_received {:mix_shell, :info, ["You are generating into an existing context" <> _]}
+
       assert_file "lib/phoenix/blog/comment.ex"
 
       assert_file "test/phoenix_web/controllers/comment_controller_test.exs", fn file ->

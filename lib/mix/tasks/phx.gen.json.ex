@@ -105,6 +105,8 @@ defmodule Mix.Tasks.Phx.Gen.Json do
     end
 
     {context, schema} = Gen.Context.build(args)
+    Gen.Context.prompt_for_code_injection(context)
+
     binding = [context: context, schema: schema]
     paths = Mix.Phoenix.generator_paths()
 

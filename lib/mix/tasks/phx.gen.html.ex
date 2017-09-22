@@ -103,7 +103,10 @@ defmodule Mix.Tasks.Phx.Gen.Html do
     if Mix.Project.umbrella? do
       Mix.raise "mix phx.gen.html can only be run inside an application directory"
     end
+
     {context, schema} = Gen.Context.build(args)
+    Gen.Context.prompt_for_code_injection(context)
+
     binding = [context: context, schema: schema, inputs: inputs(schema)]
     paths = Mix.Phoenix.generator_paths()
 

@@ -236,7 +236,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     """
   end
 
-  defp prompt_for_code_injection(%Context{} = context) do
+  def prompt_for_code_injection(%Context{} = context) do
     if Context.pre_existing?(context) do
       function_count = Context.function_count(context)
       file_count = Context.file_count(context)
