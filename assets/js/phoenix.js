@@ -688,7 +688,7 @@ export class Socket {
     this.sendBuffer           = []
     this.ref                  = 0
     this.timeout              = opts.timeout || DEFAULT_TIMEOUT
-    this.transport            = opts.transport || window.WebSocket || LongPoll
+    this.transport            = opts.transport || self.WebSocket || LongPoll
     this.defaultEncoder       = Serializer.encode
     this.defaultDecoder       = Serializer.decode
     if(this.transport !== LongPoll){
@@ -1034,13 +1034,13 @@ export class LongPoll {
 export class Ajax {
 
   static request(method, endPoint, accept, body, timeout, ontimeout, callback){
-    if(typeof window !== 'undefined'){
-      if(window.XDomainRequest){
+    if(typeof self !== 'undefined'){
+      if(self.XDomainRequest){
         let req = new XDomainRequest() // IE8, IE9
         this.xdomainRequest(req, method, endPoint, body, timeout, ontimeout, callback)
       } else {
-        let req = window.XMLHttpRequest ?
-                    new window.XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
+        let req = self.XMLHttpRequest ?
+                    new self.XMLHttpRequest() : // IE7+, Firefox, Chrome, Opera, Safari
                     new ActiveXObject("Microsoft.XMLHTTP") // IE6, IE5
         this.xhrRequest(req, method, endPoint, accept, body, timeout, ontimeout, callback)
       }
