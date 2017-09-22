@@ -951,7 +951,7 @@ With our new plugs in place, we can now modify our `create`, `edit`, `update`, a
   end
 ```
 
-We modified the `create` action to grab our `current_author` from the connection assigns, which was placed there by our `authenticate_user` plug in the router. We then passed our current author into `CMS.create_page` where it will be used to associate the author to the new page. Next, we changed the `update` action to pass the `conn.assigns.page` into `CMS.update_page/2`, rather than fetching it directly in the action. Since our `authorize_page` plug already fetched the page and placed it into the assigns, we can simply reference it here in the action. Similarly, we updated the `delete` action to pass the `conn.assigns.page` into the `CMS` rather than fetching the page in the action.
+We modified the `create` action to grab our `current_author` from the connection assigns, which was placed there by our `require_existing_author` plug. We then passed our current author into `CMS.create_page` where it will be used to associate the author to the new page. Next, we changed the `update` action to pass the `conn.assigns.page` into `CMS.update_page/2`, rather than fetching it directly in the action. Since our `authorize_page` plug already fetched the page and placed it into the assigns, we can simply reference it here in the action. Similarly, we updated the `delete` action to pass the `conn.assigns.page` into the `CMS` rather than fetching the page in the action.
 
 To complete the web changes, let's display the author when showing a page. First, open up `lib/hello_web/views/cms/page_view.ex` and add a helper function to handle formatting the author's name:
 
