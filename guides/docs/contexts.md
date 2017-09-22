@@ -910,15 +910,17 @@ Next, we added an `:authorized_page` plug that makes use of plug's guard clause 
 With our new plugs in place, we can now modify our `create`, `edit`, `update`, and `delete` actions to make use of the new values in the connection assigns:
 
 ```elixir
-   def edit(conn, %{"id" => id}) do
--    page = CMS.get_page!(id)
--    changeset = CMS.change_page(page)
--    render(conn, "edit.html", page: page, changeset: changeset)
-+    changeset = CMS.change_page(conn.assigns.page)
-+    render(conn, "edit.html", changeset: changeset)
-   end
+  def edit(conn, _) do
+-   page = CMS.get_page!(id)
+-   changeset = CMS.change_page(page)
++   changeset = CMS.change_page(conn.assigns.page)
+-   render(conn, "edit.html", page: page, changeset: changeset)
++   render(conn, "edit.html", changeset: changeset)
+  end
 
-  def create(conn, %{"page" => page_params}) do
+- def create(conn, %{"id" => id, "page" => page_params}) do
++ def create(conn, %{"page" => page_params}) do
+-   case CMS.create_page(page_params) do
 +   case CMS.create_page(conn.assigns.current_author, page_params) do
       {:ok, page} ->
         conn
@@ -929,7 +931,10 @@ With our new plugs in place, we can now modify our `create`, `edit`, `update`, a
     end
   end
 
-  def update(conn, %{"page" => page_params}) do
+- def update(conn, %{"id" => id, "page" => page_params}) do
++ def update(conn, %{"page" => page_params}) do
+-   page = CMS.get_page!(id)
+-   case CMS.update_page(page, page_params) do
 +   case CMS.update_page(conn.assigns.page, page_params) do
       {:ok, page} ->
         conn
@@ -943,6 +948,7 @@ With our new plugs in place, we can now modify our `create`, `edit`, `update`, a
 - def delete(conn, %{"id" => id}) do
 + def delete(conn, _) do
 -   page = CMS.get_page!(id)
+-   {:ok, _page} = CMS.delete_page(page)
 +   {:ok, _page} = CMS.delete_page(conn.assigns.page)
 
     conn
