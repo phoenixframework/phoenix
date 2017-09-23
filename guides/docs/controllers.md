@@ -537,3 +537,139 @@ def index(conn, _params) do
   redirect conn, external: redirect_test_url(conn, :redirect_test)
 end
 ```
+
+### Action Fallback
+
+Action Fallback allows us to centralize error handling code in plugs which are called when a controller action fails to return a `Plug.Conn.t`. These plugs receive both the conn which was originally passed to the controller action along with the return value of the action.
+
+Let's say we have a `show` action which uses `with` to fetch a blog post and then authorize the current user to view that blog post. In this example we might expect `Blog.fetch_post/1` to return `{:error, :not_found}` if the post is not not found and `Authorizer.authorize/3` might return `{:error, :unauthorized}` if the user is unauthorized. We could render the error views for these non-happy-paths directly.
+
+```elixir
+defmodule HelloWeb.MyController do
+  use Phoenix.Controller
+  alias Hello.{Authorizer, Blog}
+
+  def show(conn, %{"id" => id}, current_user) do
+    with {:ok, post} <- Blog.fetch_post(id),
+         :ok <- Authorizer.authorize(current_user, :view, post) do
+
+      render(conn, "show.json", post: post)
+    else
+      {:error, :not_found} ->
+        conn
+        |> put_status(:not_found)
+        |> render(ErrorView, :"404")
+      {:error, :unauthorized} ->
+        conn
+        |> put_status(403)
+        |> render(ErrorView, :"403")
+    end
+  end
+end
+```
+
+Many times - especially when implementing controllers for an API - error handling in the controllers like this results in a lot of repetition. Instead we can define a plug which knows how to handle these error cases.
+
+```elixir
+defmodule HelloWeb.MyFallbackController do
+  use Phoenix.Controller
+  alias HelloWeb.ErrorView
+
+  def call(conn, {:error, :not_found}) do
+    conn
+    |> put_status(:not_found)
+    |> render(ErrorView, :"404")
+  end
+
+  def call(conn, {:error, :unauthorized}) do
+    conn
+    |> put_status(403)
+    |> render(ErrorView, :"403")
+  end
+end
+```
+
+Then we can reference that plug using action_fallback and simply remove the `else` block from our `with`.  Our plug will receive the original conn as well as the result of the action and respond appropriately.
+
+```elixir
+defmodule HelloWeb.MyController do
+  use Phoenix.Controller
+  alias Hello.{Authorizer, Blog}
+
+  action_fallback HelloWeb.MyFallbackController
+
+  def show(conn, %{"id" => id}, current_user) do
+    with {:ok, post} <- Blog.fetch_post(id),
+         :ok <- Authorizer.authorize(current_user, :view, post) do
+
+      render(conn, "show.json", post: post)
+    end
+  end
+end
+```
+
+### Halting the Plug Pipeline
+
+As we mentioned - Controllers are plugs.... specifically plugs which are called toward the end of the plug pipeline.  At any step of the pipeline we might have cause to stop processing - typically because we've redirected or rendered a response. `Plug.Conn.t` has a `:halted` key - setting it to true will cause downstream plugs to be skipped. We can do that easily using `Plug.Conn.halt/1`.
+
+Consider a `HelloWeb.PostFinder` plug. On call if we find a post related to a given id then we add it to assigns; and if we don't find the post we respond with a 404 page.
+
+```elixir
+defmodule HelloWeb.PostFinder do
+  use Plug
+  import Plog.Conn
+
+  alias Hello.Blog
+
+  def init(opts), do: opts
+
+  def call(conn, _) do
+    case Blog.get_post(conn.params["id"]) do
+      {:ok, post} ->
+        assign(conn, :post, post)
+      {:error, :notfound} ->
+        conn
+        |> send_resp(404, "Not found")
+    end
+  end
+end
+```
+
+If we call this plug as part of the plug pipeline any downstream plugs will still be processed. If we want to prevent downstream plugs from being processed in the event of the 404 response we can simply call `Plug.Conn.halt/1`.
+
+```elixir
+    case Blog.get_post(conn.params["id"]) do
+      {:ok, post} ->
+        assign(conn, :post, post)
+      {:error, :notfound} ->
+        conn
+        |> send_resp(404, "Not found")
+        |> halt()
+    end
+```
+
+It's important to note that `halt/1` simply sets the `:halted` key on `Plug.Conn.t` to `true`.  This is enough to prevent downstream plugs from being invoked but it will not stop the execution of code locally. As such
+
+```elixir
+  conn
+  |> send_resp(404, "Not found")
+  |> halt()
+```
+
+... is functionally equivalent to...
+
+```elixir
+  conn
+  |> halt()
+  |> send_resp(404, "Not found")
+```
+
+It's also important to note that halting will only stop the plug pipeline from continuing. Function plugs will still execute unless their implementation checks for the `:halt` value.
+
+```
+  def post_authorization_plug(%{halted: true} = conn, _), do: conn
+  def post_authorization_plug(conn, _) do
+  . . .
+  end
+```
+
