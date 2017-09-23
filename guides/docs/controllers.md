@@ -542,7 +542,7 @@ end
 
 Action Fallback allows us to centralize error handling code in plugs which are called when a controller action fails to return a `Plug.Conn.t`. These plugs receive both the conn which was originally passed to the controller action along with the return value of the action.
 
-Let's say we have a `show` action which uses `with` to fetch a blog post and then authorize the current user to view that blog post. In this example we might expect `Blog.fetch_post/1` to return `{:error, :not_found}` if the post is not not found and `Authorizer.authorize/3` might return `{:error, :unauthorized}` if the user is unauthorized. We could render the error views for these non-happy-paths directly.
+Let's say we have a `show` action which uses `with` to fetch a blog post and then authorize the current user to view that blog post. In this example we might expect `Blog.fetch_post/1` to return `{:error, :not_found}` if the post is not found and `Authorizer.authorize/3` might return `{:error, :unauthorized}` if the user is unauthorized. We could render the error views for these non-happy-paths directly.
 
 ```elixir
 defmodule HelloWeb.MyController do
@@ -612,7 +612,7 @@ end
 
 As we mentioned - Controllers are plugs.... specifically plugs which are called toward the end of the plug pipeline.  At any step of the pipeline we might have cause to stop processing - typically because we've redirected or rendered a response. `Plug.Conn.t` has a `:halted` key - setting it to true will cause downstream plugs to be skipped. We can do that easily using `Plug.Conn.halt/1`.
 
-Consider a `HelloWeb.PostFinder` plug. On call if we find a post related to a given id then we add it to assigns; and if we don't find the post we respond with a 404 page.
+Consider a `HelloWeb.PostFinder` plug. On call, if we find a post related to a given id then we add it to `assigns`; and if we don't find the post we respond with a 404 page.
 
 ```elixir
 defmodule HelloWeb.PostFinder do
