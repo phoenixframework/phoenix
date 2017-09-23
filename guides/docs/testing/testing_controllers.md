@@ -5,32 +5,65 @@ We're going to take a look at how we might test drive a controller which has end
 Phoenix has a generator for creating a JSON resource which looks like this:
 
 ```console
-mix phoenix.gen.json Stuff Thing things some_attr:string another_attr:string
+$ mix phx.gen.json  AllTheThings Thing things some_attr:string another_attr:string
 ```
 
-Stuff is the context module name, Thing is the schema module name, things is the table name, and some_attr and another_attr are database columns on table things of type string. Don't run this command, we're going to explore test driving out a similar result to what a generator would give us.
+In this command, AllTheThings is the `context`; Thing is the `schema`; things is the plural name of the schema (which is used as the table name). Then `some_attr` and `another_attr` are the database columns on table `things` of type string.
+
+However, *don't* actually run this command. Instead, we're going to explore test driving out a similar result to what a generator would give us.
 
 ### Set up
-Let's create a `User` schema. Since schema creation is not in scope of this guide, we will use the generator.  If you aren't familiar, read [this section of the Mix guide](mix_tasks.html#phoenix-specific-mix-tasks).
+
+If you haven't already done so, first create a blank project by running
 
 ```console
-$ mix phx.gen.schema Accounts.User users name:string email:string
+$ mix phx.new hello -y
+```
+
+Change into the newly-created `hello` directory, configure your database in `config/dev.exs` and then run
+
+```console
+$ mix ecto.create
+```
+
+If you have any questions about this process, now is a good time to jump over to the [Up and Running Guide](up_and_running.html).
+
+Let's create an `Accounts` context for this example. Since context creation is not in scope of this guide, we will use the generator. If you aren't familiar, read [this section of the Mix guide](phoenix_mix_tasks.html#phoenix-specific-mix-tasks) and [the Contexts Guide](contexts.html#content).
+
+```console
+$ mix phx.gen.context Accounts User users name:string email:string:unique password:string
+
 * creating lib/hello/accounts/user.ex
-* creating priv/repo/migrations/20170908031352_create_users.exs
+* creating priv/repo/migrations/20170913155721_create_users.exs
+* creating lib/hello/accounts/accounts.ex
+* injecting lib/hello/accounts/accounts.ex
+* creating test/hello/accounts/accounts_test.exs
+* injecting test/hello/accounts/accounts_test.exs
 
 Remember to update your repository by running migrations:
 
     $ mix ecto.migrate
 ```
 
-Now run migrations:
+Ordinarily we would spend time tweaking the generated migration file (`priv/repo/migrations/<datetime>_create_users.exs`) to add things like non-null constraints and so on, but we don't need to make any changes for this example, so we can just run the migration:
 
 ```console
 $ mix ecto.migrate
+Compiling 2 files (.ex)
+Generated hello app
 [info] == Running Hello.Repo.Migrations.CreateUsers.change/0 forward
 [info] create table users
+[info] create index users_email_index
 [info] == Migrated in 0.0s
 ```
+
+As a final check before we start developing, we can run `mix test` and make sure that all is well.
+
+```console
+$ mix test
+```
+
+All of the tests should pass, but sometimes the database isn't configured properly in `config/test.exs`, or some other issue crops up. It is best to correct these issues now, *before* we complicate things with deliberately breaking tests!
 
 ### Test driving
 
@@ -38,7 +71,7 @@ What we are going for is a controller with the standard CRUD actions. We'll star
 
 ```elixir
 defmodule HelloWeb.UserControllerTest do
-  use HelloWeb.ConnCase, async: true
+  use HelloWeb.ConnCase
 
 end
 ```
@@ -47,7 +80,7 @@ There are many ways to approach TDD. Here, we will think about each action we wa
 
 ```elixir
 defmodule HelloWeb.UserControllerTest do
-  use HelloWeb.ConnCase, async: true
+  use HelloWeb.ConnCase
 
   test "index/2 responds with all Users"
 
@@ -57,7 +90,7 @@ defmodule HelloWeb.UserControllerTest do
   end
 
   describe "show/2" do
-    test "Responds with a newly created user if the user is found"
+    test "Responds with user info if the user is found"
     test "Responds with a message indicating user not found"
   end
 
@@ -71,53 +104,66 @@ defmodule HelloWeb.UserControllerTest do
 end
 ```
 
-Here we have tests around the 5 controller CRUD actions we need to implement for a typical JSON API. In 2 cases, index and delete, we are only testing the happy path, because in our case they generally won't fail because of domain rules (or lack thereof). In practical application, our delete could fail easily once we have associated resources that cannot leave orphaned resources behind, or number of other situations. On index, we could have filtering and searching to test. Also, both could require authorization.
+Here we have tests around the 5 controller CRUD actions we need to implement for a typical JSON API. At the top of the module we are using the module `HelloWeb.ConnCase`, which provides connections to our test repository. Then we define the 8 tests. In 2 cases, index and delete, we are only testing the happy path, because in our case they generally won't fail because of domain rules (or lack thereof). In practical application, our delete could fail easily once we have associated resources that cannot leave orphaned resources behind, or number of other situations. On index, we could have filtering and searching to test. Also, both could require authorization.
 
 Create, show and update have more typical ways to fail because they need a way to find the resource, which could be non existent, or invalid data was supplied in the params. Since we have multiple tests for each of these endpoints, putting them in a `describe` block is good way to organize our tests.
 
 Let's run the test:
 
 ```console
-$ mix test test/controllers/user_controller_test.exs
+$ mix test test/hello_web/controllers/user_controller_test.exs
 ```
 
 We get 8 failures that say "Not implemented" which is good. Our tests don't have blocks yet.
+
+### The first test
 
 Let's add our first test. We'll start with `index/2`.
 
 ```elixir
 defmodule HelloWeb.UserControllerTest do
-  use HelloWeb.ConnCase, async: true
+  use HelloWeb.ConnCase
 
-  alias Hello.{Repo, Accounts.User}
+  alias Hello.Accounts
 
-  test "index/2 responds with all Users" do
-    users = [ User.changeset(%User{}, %{name: "John", email: "john@example.com"}),
-              User.changeset(%User{}, %{name: "Jane", email: "jane@example.com"}) ]
+  # setup generates the database connection
+  setup do
+    conn = build_conn()
+    {:ok, conn: conn}
+  end
 
-    Enum.each(users, &Repo.insert!(&1))
+  test "index/2 responds with all Users", %{conn: conn} do
 
-    response = build_conn()
-    |> get(user_path(build_conn(), :index))
+    users = [%{name: "John", email: "john@example.com", password: "john pass"},
+             %{name: "Jane", email: "jane@example.com", password: "jane pass"}]
+
+    # create users local to this database connection and test
+    [{:ok, user1},{:ok, user2}] = Enum.map(users, &Accounts.create_user(&1))
+
+    response = conn
+    |> get(user_path(conn, :index))
     |> json_response(200)
 
     expected = %{
       "data" => [
-        %{ "name" => "John", "email" => "john@example.com" },
-        %{ "name" => "Jane", "email" => "jane@example.com" }
+        %{ "name" => user1.name, "email" => user1.email },
+        %{ "name" => user2.name, "email" => user2.email }
       ]
     }
 
     assert response == expected
   end
 ```
-Let's take a look at what's going on here. We build our users, and use the `get` function to make a `GET` request to our `UserController` index action, which is piped into `json_response/2` along with the expected HTTP status code. This will return the JSON from the response body, when everything is wired up properly. We represent the JSON we want the controller action to return with the variable `expected`, and assert that the `response` and `expected` are the same.
 
-Our expected data is a JSON response with a top level key of `"data"` containing an array of users that have `"name"` and `"email"` properties.
+Let's take a look at what's going on here. First we alias `Hello.Accounts`, the context module that provides us with our repository manipulation functions. Then we create a  [`setup/1` block](https://hexdocs.pm/ex_unit/1.5.1/ExUnit.Callbacks.html#content) to create a database connection called `conn` for each test. The details are somewhat complex, by creating a database connection inside of a test, the `HelloWeb.ConnCase` module sets things up such that each connection is wrapped in a transaction, *and* all of the database interactions inside of the test use the same database connection and transaction. For details, take a look at the file `test/support/conn_case.ex`, as well as the [Ecto documentation for SQL.Sandbox](https://hexdocs.pm/ecto/Ecto.Adapters.SQL.Sandbox.html). We could put a `build_conn/0` call inside of each test, but it is cleaner to use a setup block to do it.
+
+The index test then hooks into the context to extract the contents of the `conn:` key. We then create two users using the `Hello.Accounts.create_user/1` function. Again, note that this function access the test repo, but even though we don't pass the `conn` variable to the call, it still uses the same connection and puts these new users inside the same database transaction. Next the `conn` is piped to a `get` function to make a `GET` request to our `UserController` index action, which is in turn piped into `json_response/2` along with the expected HTTP status code. This will return the JSON from the response body, when everything is wired up properly. We represent the JSON we want the controller action to return with the variable `expected`, and assert that the `response` and `expected` are the same.
+
+Our expected data is a JSON response with a top level key of `"data"` containing an array of users that have `"name"` and `"email"` properties that should match those of the `userN` objects created by the `setup/1` function. Also, we do not want the users' "password" properties to show up in our JSON response.
 
 When we run the test we get an error that we have no `user_path` function.
 
-In our router, we'll add a resource for `User` in our API pipe:
+In our router, we'll uncomment the `api` scope at the bottom of the auto-generated file, and then use the resources macro to generate the routes for the "/users" path. Because we aren't going to be generating forms to create and update users, we add the `except: [:new, :edit]` to skip those endpoints.
 
 ```elixir
 defmodule HelloWeb.Router do
@@ -133,29 +179,52 @@ defmodule HelloWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
-    resources "/users", HelloWeb.UserController
   end
 
-  ...
+  scope "/", HelloWeb do
+    pipe_through :browser # Use the default browser stack
+
+    get "/", PageController, :index
+  end
+
+  # Other scopes may use custom stacks.
+  scope "/api", HelloWeb do
+    pipe_through :api
+    resources "/users", UserController, except: [:new, :edit]
+  end
+end
 ```
 
-We should get a new error now. Running the test informs us we don't have a `UserController`. Let's add it, along with the `index/2` action we're testing. Our test description has us returning all users:
+Before running the test again, check out our new paths by running `mix phx.routes`. You should see six new "/api" routes in addition to the default page controller route:
+
+```console
+$ mix phx.routes
+Compiling 6 files (.ex)
+page_path  GET     /               HelloWeb.PageController :index
+user_path  GET     /api/users      HelloWeb.UserController :index
+user_path  GET     /api/users/:id  HelloWeb.UserController :show
+user_path  POST    /api/users      HelloWeb.UserController :create
+user_path  PATCH   /api/users/:id  HelloWeb.UserController :update
+           PUT     /api/users/:id  HelloWeb.UserController :update
+user_path  DELETE  /api/users/:id  HelloWeb.UserController :delete
+```
+
+We should get a new error now. Running the test informs us we don't have a `HelloWeb.UserController`. Let's create that controller by opening the file `lib/hello_web/controllers/user_controller.ex` and adding the `index/2` action we're testing. Our test description has us returning all users:
 
 ```elixir
 defmodule HelloWeb.UserController do
   use HelloWeb, :controller
-
-  alias Hello.{Accounts.User, Repo}
+  alias Hello.Accounts
 
   def index(conn, _params) do
-    users = Repo.all(User)
-    render conn, "index.json", users: users
+    users = Accounts.list_users()
+    render(conn, "index.json", users: users)
   end
 
 end
 ```
 
-When we run the test again, our failing test tells us we have no view. Let's add it. Our test specifies a JSON format with a top key of `"data"`, containing an array of users with attributes `"name"` and `"email"`.
+When we run the test again, our failing test tells us module `HelloWeb.UserView` is not available. Let's add it by creating the file `lib/hello_web/views/user_view.ex`. Our test specifies a JSON format with a top key of `"data"`, containing an array of users with attributes `"name"` and `"email"`.
 
 ```elixir
 defmodule HelloWeb.UserView do
@@ -172,7 +241,11 @@ defmodule HelloWeb.UserView do
 end
 ```
 
+The view module for the index uses the `render_many/4` function. According to the [documentation](https://hexdocs.pm/phoenix/Phoenix.View.html#render_many/4), using `render_many/4` is "roughly equivalent" to using `Enum.map/2`, and in fact `Enum.map` is called under the hood. The main difference between `render_many/4` and directly calling `Enum.map/2` is that the former benefits from library-quality error checking, properly handling missing values, and so on. `render_many/4` also has an `:as` option that can used so that the key in the assigns map can be renamed. By default, this is inferred from the module name (`:user` in this case), but it can be changed if necessary to fit the render function being used.
+
 And with that, our test passes when we run it.
+
+### Testing the show action
 
 We'll also cover the `show/2` action here so we can see how to handle an error case.
 
@@ -180,59 +253,112 @@ Our show tests currently look like this:
 
 ```elixir
   describe "show/2" do
-    test "Responds with a newly created user if the user is found"
+    test "Responds with user info if the user is found"
     test "Responds with a message indicating user not found"
   end
 ```
 
-Run this test only by running the following command: (if your show tests don't start on line 32, change the line number accordingly)
+Run this test only by running the following command: (if your show tests don't start on line 40, change the line number accordingly)
 
 ```console
-$ mix test test/hello_web/controllers/user_controller_test.exs:32
+$ mix test test/hello_web/controllers/user_controller_test.exs:40
 ```
 
-Our first `show/2` test result is, as expected, not implemented.
-Let's build a test around what we think a successful `show/2` should look like.
+Our first `show/2` test result is, as expected, not implemented. Let's build a test around what we think a successful `show/2` should look like.
 
 ```elixir
-test "Responds with a newly created user if the user is found" do
-  user = User.changeset(%User{}, %{name: "John", email: "john@example.com"})
-  |> Repo.insert!
+test "Responds with user info if the user is found", %{conn: conn} do
+  {:ok, user} = Accounts.create_user(%{name: "John", email: "john@example.com", password: "john pass"})
 
-  response = build_conn()
-  |> get(user_path(build_conn(), :show, user.id))
+  response = conn
+  |> get(user_path(conn, :show, user.id))
   |> json_response(200)
 
-  expected = %{ "data" => %{ "name" => "John", "email" => "john@example.com" } }
+  expected = %{ "data" => %{"email" => user.email, "name" => user.name} }
 
   assert response == expected
 end
 ```
 
-This is very similar to our `index/2` test, except `show/2` requires a user id, and our data is a single JSON object instead of an array.
+This is fine, but it can be refactored slightly. Notice that both this test and the index test need users in the database. Instead of creating these users over and over again, we can instead call another `setup/1` function to populate the database with users on an as-needed basis. To do this, first create a private function at the bottom of the test module as follows:
 
-When we run our test tells us we need a `show/2` action.
+```elixir
+defp create_user(_) do
+  {:ok, user} = Accounts.create_user(@create_attrs)
+  {:ok, user: user}
+end
+```
+Next define `@create_attrs` as a custom attribute for the module at the top, as follows.
+
+```elixir
+alias Hello.Accounts
+
+@create_attrs %{name: "John", email: "john@example.com", password: "john pass"}
+```
+
+
+Finally, invoke the function using a second `setup/1` call inside of the `describe` block:
+
+```elixir
+describe "show/2" do
+  setup [:create_user]
+  test "Responds with user info if the user is found", %{conn: conn, user: user} do
+
+    response = conn
+    |> get(user_path(conn, :show, user.id))
+    |> json_response(200)
+
+    expected = %{ "data" => %{"email" => user.email, "name" => user.name} }
+
+    assert response == expected
+  end
+  test "Responds with a message indicating user not found"
+end
+```
+
+The functions called by setup take an ExUnit context (not to be confused with the contexts we are describing throughout this guide) and allow us to add additional fields when we return. In this case, `create_user` doesn't care about the existing context (hence the underscore parameter), and adds a new user to the ExUnit context under the key `user:`  by returning `{:ok, user: user}`. The test can then access both the database connection and this new user from the ExUnit context.
+
+Finally, let's change our `index/2` test to also use the new `create_user` function. The index test doesn't *really* need two users, after all. The revised `index/2` test should look like this:
+
+```elixir
+  describe "index/2" do
+    setup [:create_user]
+    test "index/2 responds with all Users", %{conn: conn, user: user} do
+
+      response = conn
+      |> get(user_path(conn, :index))
+      |> json_response(200)
+
+      expected = %{ "data" => [%{ "name" => user.name, "email" => user.email }] }
+
+      assert response == expected
+    end
+  end
+```
+
+The biggest change here is that we now wrapped the old test inside of another `describe` block so that we have somewhere to put the `setup/2` call for the index test. We are now accessing the user from the ExUnit context, and expecting just a single user from the `index/2` test results, not two.
+
+The `index/2` test should still pass, but the `show/2` test will error with a message that we need a `HelloWeb.UserController.show/2` action. Let's add that to the UserController module next.
 
 ```elixir
 defmodule HelloWeb.UserController do
   use HelloWeb, :controller
-
-  alias Hello.{Accounts.User, Repo}
+  alias Hello.Accounts
 
   def index(conn, _params) do
-    users = Repo.all(User)
-    render conn, "index.json", users: users
+    users = Accounts.list_users()
+    render(conn, "index.json", users: users)
   end
 
   def show(conn, %{"id" => id}) do
-    case Repo.get(User, id) do
-      user -> render conn, "show.json", user: user
-    end
+    user = Accounts.get_user!(id)
+    render(conn, "show.json", user: user)
   end
+
 end
 ```
 
-You'll notice we only handle the case where we successfully find a user. When we TDD we only want to write enough code to make the test pass. We'll add more code when we get to the error handling test for `show/2`.
+You might notice the exclamation point in the `get_user!/1` function. This convention means that this function will throw an error if the requested user is not found. You'll also notice that we aren't properly handling the possibility of a thrown error here. When we TDD we only want to write enough code to make the test pass. We'll add more code when we get to the error handling test for `show/2`.
 
 Running the test tells us we need a `render/2` function that can pattern match on `"show.json"`:
 
@@ -255,47 +381,102 @@ defmodule HelloWeb.UserView do
 end
 ```
 
+Notice the "show.json" rendering path uses `render_one/4` instead of `render_many/4` because it is only rendering a single user, not a list.
+
 When we run the test again, it passes.
+
+### Show when the user is not found
 
 The last item we'll cover is the case where we don't find a user in `show/2`.
 
 Try this one on your own and see what you come up with. One possible solution will be given below.
 
-Walking through our TDD steps, we add a test that supplies a non existent user id to `user_path` which returns a 404 status and an error message:
+Walking through our TDD steps, we add a test that supplies a non-existent user id to `user_path` which returns a 404 status and an error message. One interesting problem here is how we might define a "non-existent" id. We could just pick a large integer, but who's to say some future test won't generate thousands of test users and break our test? Instead of going bigger, we can also go the other way. Database ids tend to start at 1 and increase forever. Negative numbers are perfectly valid integers, and yet never used for database ids. So we'll pick -1 as our "unobtainable" user id, which *should* always fail.
 
 ```elixir
-test "Responds with a message indicating user not found" do
-  response = build_conn()
-  |> get(user_path(build_conn(), :show, 300))
+test "Responds with a message indicating user not found", %{conn:  conn} do
+  response = conn
+  |> get(user_path(conn, :show, -1 ))
   |> json_response(404)
 
-  expected = %{ "error" => "User not found." }
+  expected = %{ "errors" => "User not found." }
 
   assert response == expected
 end
 ```
 
-We want a HTTP code of 404 to notify the requester that this resource was not found, as well as an accompanying error message.
+We want a HTTP code of 404 to notify the requester that this resource was not found, as well as an accompanying error message. You can run this test now to see what happens. You should see that an `Ecto.NoResultsError` is thrown, because there is no such user in the database.
 
-Our controller action:
+Our controller action needs to handle the error thrown by Ecto. We have two choices here. We can either wrap the standard `get_user!/1` function in a try/catch block, or we can create a new `get_user/1` function that does not throw an Ecto error. For this example, we'll take the second path and implement a new `get_user/1` function in the file `lib/hello/accounts/accounts.ex`, just before the `get_user!/1` function:
+
+```elixir
+@doc """
+Gets a single `%User{}` from the data store  where the primary key matches the
+given id.
+
+Returns `nil` if no result was found.
+
+## Examples
+
+    iex> get_user(123)
+    %User{}
+
+    iex> get_user(456)
+    nil
+
+"""
+def get_user(id), do: Repo.get(User, id)
+```
+
+This function is just a thin wrapper around `Ecto.Repo.get/3`, and like that function will return either a `%User{}` if the user is found, or `nil` if not. Next change the `show/2` function to use the non-throwing version, and handle the two possible result cases.
 
 ```elixir
 def show(conn, %{"id" => id}) do
-  case Repo.get(User, id) do
-    nil -> conn |> put_status(404) |> render("error.json")
-    user -> render conn, "show.json", user: user
+  case Accounts.get_user(id) do
+    nil -> conn
+    |> put_status(:not_found)
+    |> render( HelloWeb.ErrorView, "400.json", reason: "User not found" )
+    user -> render(conn, "show.json", user: user)
   end
 end
 ```
 
-And our view:
+The second branch of the case statement handles the "happy path" we've already covered.
+
+The first branch of the case statement handles the `nil` result case. First, we use the [`put_status/2`](https://hexdocs.pm/plug/Plug.Conn.html#put_status/2) function from `Plug.Conn` to set the desired error status. The complete list of allowed codes can be found in the [Plug.Conn.Status documentation](https://hexdocs.pm/plug/Plug.Conn.Status.html), where we can see that `:not_found` corresponds to our desired "404" status. Second, we redirect the view to the `ErrorView` module. If you open that file up, you'll see a few rendering helpers for HTML, output, but none for JSON. We need to add a render function for "400.json" as follows:
 
 ```elixir
-def render("error.json", _assigns) do
-  %{error: "User not found."}
+defmodule HelloWeb.ErrorView do
+  use HelloWeb, :view
+
+  def render("404.html", _assigns) do
+    "Page not found"
+  end
+
+  def render("500.html", _assigns) do
+    "Internal server error"
+  end
+
+  def render("400.json", %{reason: reason}) do
+    message = case reason do
+                "User not found" -> "User not found."
+                _ -> "I'm afraid I can't do that, Dave"
+              end
+    %{errors: message}
+  end
+
+  # In case no render clause matches or no
+  # template is found, let's render it as 500
+  def template_not_found(_template, assigns) do
+    render "500.html", assigns
+  end
 end
 ```
 
+In the "400.json" render function, we only expect the `"User not found"` so far, so we only check for that message in the case statement. As other errors crop up in our TDD development, we can add additional error messages.
+
 With those implemented, our tests pass.
 
-The rest of the controller is left to you to implement as practice. Happy testing!
+The rest of the controller is left for you to implement as practice. If you are not sure where to begin, it is worth using the Phoenix JSON generator and seeing what tests are automatically generated for you.
+
+Happy testing!
