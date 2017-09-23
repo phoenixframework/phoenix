@@ -134,27 +134,36 @@ Without the `otp_app:` key, we need to provide absolute paths to the files where
 Path.expand("../../../some/path/to/ssl/key.pem", __DIR__)
 ```
 
-Forcing requests to use SSL:
+### Force SSL
 
-In many cases, you'll want to force all incoming requests to use SSL by redirecting http to https. This can be accomplished by setting the `:force_ssl` option in your endpoint. It expects a list of options which are forwarded to `Plug.SSL`. By default it sets the "strict-transport-security" header in https requests, forcing browsers to always use https. If an unsafe request (http) is sent, it redirects to the https version using the `:host` specified in the `:url` configuration. To dynamically redirect to the `host` of the current request,`:host` must be set `nil`. For example:
-
+In many cases, you'll want to force all incoming requests to use SSL by redirecting HTTP to HTTPS. This can be accomplished by setting the `:force_ssl` option in your endpoint configuration. It expects a list of options which are forwarded to `Plug.SSL`. By default it sets the "strict-transport-security" header in HTTPS requests, forcing browsers to always use HTTPS. If an unsafe (HTTP) request is sent, it redirects to the HTTPS version using the `:host` specified in the `:url` configuration. For example:
 
 ```elixir
-  config :my_app, MyApp.Endpoint,
-    force_ssl: [rewrite_on: [:x_forwarded_proto]]
+config :my_app, MyApp.Endpoint,
+  force_ssl: [rewrite_on: [:x_forwarded_proto]]
 ```
 
+To dynamically redirect to the `host` of the current request, set `:host` in the `:force_ssl` configuration to `nil`.
 
-Releasing with Exrm:
+```elixir
+config :my_app, MyApp.Endpoint,
+  force_ssl: [rewrite_on: [:x_forwarded_proto], host: nil]
+```
 
-In order to build and run a release with exrm, make sure you also include the ssl app in `mix.exs`:
+### Releasing with Exrm
+
+In order to build and run a release with Exrm, make sure you also include the `:ssl` app in `mix.exs`:
 
 ```elixir
 def application do
-	[mod: {Hello, []},
-	applications: [:phoenix, :phoenix_html, :cowboy, :logger, :gettext,
-                 :phoenix_ecto, :postgrex, :ssl]]
+  [mod: {MyApp, []},
+   applications: [:phoenix, :phoenix_html, :cowboy, :logger, :gettext,
+                  :phoenix_ecto, :postgrex, :ssl]]
 end
 ```
 
-Else you might run into errors: `** (MatchError) no match of right hand side value: {:error, {:ssl, {'no such file or directory', 'ssl.app'}}}`
+Or else you might run into errors:
+
+```
+** (MatchError) no match of right hand side value: {:error, {:ssl, {'no such file or directory', 'ssl.app'}}}
+```
