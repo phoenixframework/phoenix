@@ -376,8 +376,6 @@ scope "/admin" do
 end
 ```
 
-Note that Phoenix will assume that the path we set ought to begin with a slash, so `scope "/admin" do` and `scope "admin" do` will both produce the same results.
-
 Note also, that the way this scope is currently defined, we need to fully qualify our controller name, `HelloWeb.Admin.ReviewController`. We'll fix that in a minute.
 
 Running `$ mix phx.routes` again, in addition to the previous set of routes we get the following:
