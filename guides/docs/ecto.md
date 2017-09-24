@@ -12,7 +12,7 @@ Ecto currently has adapters for the following databases:
 
 Newly generated Phoenix projects include Ecto with the PostgreSQL adapter by default. (you can pass the `--no-ecto` flag to exclude this)
 
-For a thorough, general guide for Ecto, check out the [Ecto getting started guide](https://hexdocs.pm/ecto/getting-started.html). For an overview of all Ecto specific mix tasks for Phoenix, see the [mix tasks guide](mix_tasks.html#ecto-specific-mix-tasks).
+For a thorough, general guide for Ecto, check out the [Ecto getting started guide](https://hexdocs.pm/ecto/getting-started.html). For an overview of all Ecto specific mix tasks for Phoenix, see the [mix tasks guide](phoenix_mix_tasks.html#ecto-specific-mix-tasks).
 
 This guide assumes that we have generated our new application with Ecto integration and that we will be using PostgreSQL. For instructions on switching to MySQL, please see the [Using MySQL Guide](using_mysql.html).
 
