@@ -121,7 +121,7 @@ defmodule Phoenix.Endpoint do
       forcing browsers to always use HTTPS. If an unsafe request (HTTP) is sent,
       it redirects to the HTTPS version using the `:host` specified in the `:url`
       configuration. To dynamically redirect to the `host` of the current request,
-      `:host` must be set `nil`.
+      set `:host` in the `:force_ssl` configuration to `nil`.
 
     * `:secret_key_base` - a secret key used as a base to generate secrets
       for encrypting and signing data. For example, cookies and tokens
