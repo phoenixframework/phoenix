@@ -97,8 +97,3 @@ This is a Linux-only filesystem watcher that Phoenix uses for live code reloadin
 
 Linux users need to install this dependency. Please consult the [inotify-tools wiki](https://github.com/rvoicilas/inotify-tools/wiki) for distribution-specific installation instructions.
 
-### Skeleton Installation
-
-Sometimes you want an installation without anything except the bare minimum phoenix setup. The following command will give you that.
-
-`mix phx.new web --no-brunch --no-ecto`
