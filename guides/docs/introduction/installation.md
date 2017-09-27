@@ -97,3 +97,7 @@ This is a Linux-only filesystem watcher that Phoenix uses for live code reloadin
 
 Linux users need to install this dependency. Please consult the [inotify-tools wiki](https://github.com/rvoicilas/inotify-tools/wiki) for distribution-specific installation instructions.
 
+### Our First Phoenix Application
+
+Now that we have everything installed, let's create our first Phoenix application and get [up and running](up_and_running.html)
+
