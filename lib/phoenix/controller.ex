@@ -780,12 +780,12 @@ defmodule Phoenix.Controller do
     |> send_resp(conn.status || default_status, body)
   end
 
-  defp ensure_resp_content_type(%{resp_headers: resp_headers} = conn, content_type) do
+  defp ensure_resp_content_type(%Plug.Conn{resp_headers: resp_headers} = conn, content_type) do
     if List.keyfind(resp_headers, "content-type", 0) do
       conn
     else
       content_type = content_type <> "; charset=utf-8"
-      %{conn | resp_headers: [{"content-type", content_type}|resp_headers]}
+      %Plug.Conn{conn | resp_headers: [{"content-type", content_type}|resp_headers]}
     end
   end
 
@@ -920,7 +920,7 @@ defmodule Phoenix.Controller do
     end
 
     params = Map.put(conn.params, required_key, param)
-    %{conn | params: params}
+    %Plug.Conn{conn | params: params}
   end
 
   defp scrub_param(%{__struct__: mod} = struct) when is_atom(mod) do

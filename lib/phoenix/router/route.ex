@@ -158,8 +158,9 @@ defmodule Phoenix.Router.Route do
   def forward(%Plug.Conn{path_info: path, script_name: script} = conn, fwd_segments, target, opts) do
     new_path = path -- fwd_segments
     {base, ^new_path} = Enum.split(path, length(path) - length(new_path))
-    conn = %{conn | path_info: new_path, script_name: script ++ base} |> target.call(opts)
-    %{conn | path_info: path, script_name: script}
+
+    conn = %Plug.Conn{conn | path_info: new_path, script_name: script ++ base} |> target.call(opts)
+    %Plug.Conn{conn | path_info: path, script_name: script}
   end
 
   @doc """

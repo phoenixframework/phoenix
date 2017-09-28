@@ -84,7 +84,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
     receive do
       @already_sent ->
         send self(), @already_sent
-        %{conn | state: :sent}
+        %Plug.Conn{conn | state: :sent}
     after
       0 ->
         render conn, kind, reason, stack, opts
@@ -96,8 +96,8 @@ defmodule Phoenix.Endpoint.RenderErrors do
   rescue
     Plug.Conn.InvalidQueryError ->
       case conn.params do
-        %Plug.Conn.Unfetched{} -> %{conn | query_params: %{}, params: %{}}
-        params -> %{conn | query_params: %{}, params: params}
+        %Plug.Conn.Unfetched{} -> %Plug.Conn{conn | query_params: %{}, params: %{}}
+        params -> %Plug.Conn{conn | query_params: %{}, params: params}
       end
   end
 
