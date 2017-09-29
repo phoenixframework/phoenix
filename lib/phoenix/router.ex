@@ -98,15 +98,15 @@ defmodule Phoenix.Router do
         get "/pages/:id", PageController, :show
       end
 
-  The route above will dispatch to `MyApp.PageController`. This syntax
+  The route above will dispatch to `MyAppWeb.PageController`. This syntax
   is not only convenient for developers, since we don't have to repeat
-  the `MyApp.` prefix on all routes, but it also allows Phoenix to put
+  the `MyAppWeb.` prefix on all routes, but it also allows Phoenix to put
   less pressure in the Elixir compiler. If instead we had written:
 
       get "/pages/:id", MyAppWeb.PageController, :show
 
   The Elixir compiler would infer that the router depends directly on
-  `MyApp.PageController`, which is not true. By using scopes, Phoenix
+  `MyAppWeb.PageController`, which is not true. By using scopes, Phoenix
   can properly hint to the Elixir compiler the controller is not an
   actual dependency of the router. This provides more efficient
   compilation times.
