@@ -750,6 +750,17 @@ export class Socket {
   }
 
   /**
+   * Cancels pending reconnect attempts and then disconnects
+   * @param {Function} callback
+   * @param {integer} code
+   * @param {string} reason
+   */
+  forceDisconnect(callback, code, reason){
+    this.reconnectTimer.reset()
+    this.disconnect(callback, code, reason)
+  }
+
+  /**
    *
    * @param {Object} params - The params to send when connecting, for example `{user_id: userToken}`
    */
