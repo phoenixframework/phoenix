@@ -7,7 +7,7 @@ Plug lives at the heart of Phoenix's HTTP layer, and Phoenix puts Plug front and
 At the simplest level, the Plug specification comes in two flavors: *function plugs* and *module plugs*.
 
 ## Function Plugs
-In order to act as a plug, a function simply needs to accept a connection struct (`%Plug.Conn{}`) and options. It also needs to return the connection struct. Any function that meets those criteria will do. Here's an example.
+In order to act as a plug, a function simply needs to accept a connection struct (`%Plug.Conn{}`) and options. It also needs to return a connection struct. Any function that meets those criteria will do. Here's an example.
 
 ```elixir
 def put_headers(conn, key_values) do
