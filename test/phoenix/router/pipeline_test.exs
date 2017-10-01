@@ -134,4 +134,31 @@ defmodule Phoenix.Router.PipelineTest do
     conn = call(Router, :get, "/browser/hello")
     assert conn.assigns[:params] == %{"id" => "hello"}
   end
+
+  test "duplicate pipe_through's raises" do
+    assert_raise ArgumentError, ~r{duplicate pipe_through for :browser}, fn ->
+      defmodule DupPipeThroughRouter do
+        use Phoenix.Router, otp_app: :phoenix
+        pipeline :browser do
+        end
+        scope "/" do
+          pipe_through [:browser, :auth, :browser]
+        end
+      end
+    end
+
+    assert_raise ArgumentError, ~r{duplicate pipe_through for :browser}, fn ->
+      defmodule DupScopedPipeThroughRouter do
+        use Phoenix.Router, otp_app: :phoenix
+        pipeline :browser do
+        end
+        scope "/" do
+          pipe_through [:browser]
+          scope "/nested" do
+            pipe_through [:browser]
+          end
+        end
+      end
+    end
+  end
 end
