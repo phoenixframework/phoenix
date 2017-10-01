@@ -24,7 +24,7 @@ Heroku is a great platform and Elixir performs well on it. However, you may run 
 - [Remote shells](https://hexdocs.pm/iex/IEx.html#module-remote-shells) and remote observer are not possible.
     - Heroku does not allow SSH access to your dynos so you can not inspect, debug, or trace your production nodes using things like [the built-in Observer](https://elixir-lang.org/getting-started/mix-otp/supervisor-and-application.html#observer).
 
-If you are just getting started or you don't expect to use the features above, Heroku should be enough for your needs. For instance, if you are migrating an existing application running on Heroku to Phoenix, keeping a similar set of features, Elixir will perform just as well or even better then your current stack.
+If you are just getting started or you don't expect to use the features above, Heroku should be enough for your needs. For instance, if you are migrating an existing application running on Heroku to Phoenix, keeping a similar set of features, Elixir will perform just as well or even better than your current stack.
 
 If you want a platform-as-a-service without these limitations, try [Gigalixir](http://gigalixir.readthedocs.io/). If you would rather deploy to a cloud platform, such as EC2, Google Cloud, etc, consider [Distillery](https://github.com/bitwalker/distillery).
 
