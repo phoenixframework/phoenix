@@ -72,8 +72,8 @@ defmodule Phoenix.Router.Scope do
   defp collect_pipes([pipe | new_pipes], stack_pipes, acc) do
     if pipe in new_pipes or pipe in stack_pipes do
       raise ArgumentError, """
-        duplicate pipe_through for #{inspect pipe}
-        A plug may only be used once inside a scoped pipe_through
+      duplicate pipe_through for #{inspect pipe}.
+      A plug may only be used once inside a scoped pipe_through
       """
     end
     collect_pipes(new_pipes, stack_pipes, acc ++ [pipe])
