@@ -26,6 +26,7 @@ defmodule Phoenix.Mixfile do
         extra_section: "GUIDES",
         assets: "guides/docs/assets",
         formatters: ["html", "epub"],
+        groups_for_modules: groups_for_modules(),
         extras: extras(),
         groups_for_extras: groups_for_extras()
       ],
@@ -122,6 +123,54 @@ defmodule Phoenix.Mixfile do
       "Guides": ~r/guides\/docs\/[^\/]+\.md/,
       "Testing": ~r/guides\/docs\/testing\/.?/,
       "Deployment": ~r/guides\/docs\/deployment\/.?/
+    ]
+  end
+
+  defp groups_for_modules do
+    # Ungrouped Modules:
+    #
+    # Phoenix
+    # Phoenix.Channel
+    # Phoenix.Controller
+    # Phoenix.Naming
+    # Phoenix.Param
+    # Phoenix.Presence
+    # Phoenix.Router
+    # Phoenix.Token
+    # Phoenix.View
+
+    [
+      "Endpoint And Plugs": [
+        Phoenix.CodeReloader,
+        Phoenix.Endpoint,
+        Phoenix.Endpoint.CowboyHandler,
+        Phoenix.Endpoint.Handler,
+        Phoenix.Logger,
+      ],
+
+      "Socket And Transport": [
+        Phoenix.Socket,
+        Phoenix.Socket.Broadcast,
+        Phoenix.Socket.Message,
+        Phoenix.Socket.Reply,
+        Phoenix.Socket.Transport,
+        Phoenix.Transports.LongPoll,
+        Phoenix.Transports.Serializer,
+        Phoenix.Transports.WebSocket,
+      ],
+
+      "Templating": [
+        Phoenix.Template,
+        Phoenix.Template.EExEngine,
+        Phoenix.Template.Engine,
+        Phoenix.Template.ExsEngine,
+        Phoenix.Template.HTML,
+      ],
+
+      "Testing": [
+        Phoenix.ChannelTest,
+        Phoenix.ConnTest,
+      ],
     ]
   end
 

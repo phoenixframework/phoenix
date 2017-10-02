@@ -11,18 +11,7 @@ defmodule Phoenix.Digester do
     :calendar.datetime_to_gregorian_seconds(:calendar.universal_time)
   end
 
-  @moduledoc """
-  Digests and compresses static files.
-
-  For each file under the given input path, Phoenix will generate a digest
-  and also compress in `.gz` format. The filename and its digest will be
-  used to generate the cache manifest file. It also avoids duplication, checking
-  for already digested files.
-
-  For stylesheet files found under the given path, Phoenix will replace
-  asset references with the digested paths, as long as the asset exists
-  in the generated cache manifest.
-  """
+  @moduledoc false
 
   @doc """
   Digests and compresses the static files and saves them in the given output path.
