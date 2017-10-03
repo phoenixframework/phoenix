@@ -28,7 +28,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
   ## Generating without a schema
 
-  In some cases, you may wish to boostrap the context module and
+  In some cases, you may wish to bootstrap the context module and
   tests, but leave internal implementation of the context and schema
   to yourself. Use the `--no-schema` flags to accomplish this.
 
