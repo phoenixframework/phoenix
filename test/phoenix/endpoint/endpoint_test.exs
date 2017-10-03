@@ -170,4 +170,17 @@ defmodule Phoenix.Endpoint.EndpointTest do
     Application.put_env(:phoenix, endpoint, [])
     refute Phoenix.Endpoint.server?(:phoenix, endpoint)
   end
+
+  test "static_path/1 validates paths are local/safe" do
+    safe_path = "/some_safe_path"
+    assert Endpoint.static_path(safe_path) == safe_path
+
+    assert_raise ArgumentError, ~r/unsafe characters/, fn ->
+      Endpoint.static_path("/\\unsafe_path")
+    end
+
+    assert_raise ArgumentError, ~r/expected a local path/, fn ->
+      Endpoint.static_path("//invalid_path")
+    end
+  end
 end
