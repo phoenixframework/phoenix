@@ -156,6 +156,7 @@ defmodule Phoenix.ChannelTest do
   alias Phoenix.Socket.Broadcast
   alias Phoenix.Socket.Reply
   alias Phoenix.Socket.Transport
+  alias Phoenix.Socket.TransportDispatcher
   alias Phoenix.Channel.Server
 
   defmodule NoopSerializer do
@@ -353,7 +354,7 @@ defmodule Phoenix.ChannelTest do
       when is_atom(channel) and is_binary(topic) and is_map(payload) do
 
     ref = System.unique_integer([:positive])
-    socket = Transport.build_channel_socket(socket, channel, topic, ref, [])
+    socket = TransportDispatcher.build_channel_socket(socket, channel, topic, ref, [])
 
     case Server.join(socket, payload) do
       {:ok, reply, pid} ->
