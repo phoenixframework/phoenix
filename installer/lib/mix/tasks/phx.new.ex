@@ -136,23 +136,18 @@ defmodule Mix.Tasks.Phx.New do
       mix_pending =
         install_mix(install?)
 
-      brunch_pending =
-        maybe_cd(project.web_path, fn ->
-          compile =
-            case mix_pending do
-              [] -> Task.async(fn -> rebar_available?() && cmd("mix deps.compile") end)
-              _  -> Task.async(fn -> :ok end)
-            end
+      compile =
+        case mix_pending do
+          [] -> Task.async(fn -> rebar_available?() && cmd("mix deps.compile") end)
+          _  -> Task.async(fn -> :ok end)
+        end
 
-          brunch_pending = install_brunch(install?)
-          Task.await(compile, :infinity)
+      brunch_pending = install_brunch(install?, project)
+      Task.await(compile, :infinity)
 
-          if Project.brunch?(project) and !System.find_executable("npm") do
-            print_brunch_info(project, generator)
-          end
-
-          brunch_pending
-        end)
+      if Project.brunch?(project) and !System.find_executable("npm") do
+        print_brunch_info(project, generator)
+      end
 
       pending = mix_pending ++ (brunch_pending || [])
       print_missing_commands(pending, project.project_path)
@@ -177,9 +172,12 @@ defmodule Mix.Tasks.Phx.New do
   defp switch_to_string({name, nil}), do: name
   defp switch_to_string({name, val}), do: name <> "=" <> val
 
-  defp install_brunch(install?) do
-    maybe_cmd "cd assets && npm install && node node_modules/brunch/bin/brunch build",
-              File.exists?("assets/brunch-config.js"), install? && System.find_executable("npm")
+  defp install_brunch(install?, project) do
+    assets_path = Path.join(project.web_path || project.project_path, "assets")
+    brunch_config = Path.join(assets_path, "brunch-config.js")
+
+    maybe_cmd "cd #{relative_app_path(assets_path)} && npm install && node node_modules/brunch/bin/brunch build",
+              File.exists?(brunch_config), install? && System.find_executable("npm")
   end
 
   defp install_mix(install?) do
