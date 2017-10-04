@@ -635,12 +635,8 @@ defmodule Phoenix.Controller do
 
   By default, Controllers render templates in a view with a similar name to the
   controller. For example, `MyApp.UserController` will render templates inside
-  the `MyApp.UserView`. This information can be changed any time by using
-  `render/3`, `render/4` or the `put_view/2` function:
-
-      def show(conn, _params) do
-        render(conn, MyApp.SpecialView, :show, message: "Hello")
-      end
+  the `MyApp.UserView`. This information can be changed any time by using the
+  `put_view/2` function:
 
       def show(conn, _params) do
         conn
@@ -704,10 +700,13 @@ defmodule Phoenix.Controller do
 
   def render(conn, view, template)
       when is_atom(view) and (is_binary(template) or is_atom(template)) do
+    IO.warn "#{__MODULE__}.render/3 with a view is deprecated, see the documentation for render/3 for an alternative"
     render(conn, view, template, [])
   end
 
   @doc """
+  WARNING: This function is deprecated in favor of `render/3` + `put_view/2`.
+
   A shortcut that renders the given template in the given view.
 
   Equivalent to:
@@ -720,6 +719,7 @@ defmodule Phoenix.Controller do
   @spec render(Plug.Conn.t, atom, atom | binary, Keyword.t | map) :: Plug.Conn.t
   def render(conn, view, template, assigns)
       when is_atom(view) and (is_binary(template) or is_atom(template)) do
+    IO.warn "#{__MODULE__}.render/4 with a view is deprecated, see the documentation for render/3 for an alternative"
     conn
     |> put_view(view)
     |> render(template, assigns)
