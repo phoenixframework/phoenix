@@ -452,7 +452,8 @@ The correct way to render the 404 page from `HelloWeb.PageController` is:
 def index(conn, _params) do
   conn
   |> put_status(:not_found)
-  |> render(HelloWeb.ErrorView, "404.html")
+  |> put_view(HelloWeb.ErrorView)
+  |> render("404.html")
 end
 ```
 
@@ -558,11 +559,13 @@ defmodule HelloWeb.MyController do
       {:error, :not_found} ->
         conn
         |> put_status(:not_found)
-        |> render(ErrorView, :"404")
+        |> put_view(ErrorView)
+        |> render(:"404")
       {:error, :unauthorized} ->
         conn
         |> put_status(403)
-        |> render(ErrorView, :"403")
+        |> put_view(ErrorView)
+        |> render(:"403")
     end
   end
 end
@@ -578,13 +581,15 @@ defmodule HelloWeb.MyFallbackController do
   def call(conn, {:error, :not_found}) do
     conn
     |> put_status(:not_found)
-    |> render(ErrorView, :"404")
+    |> put_view(ErrorView)
+    |> render(:"404")
   end
 
   def call(conn, {:error, :unauthorized}) do
     conn
     |> put_status(403)
-    |> render(ErrorView, :"403")
+    |> put_view(ErrorView)
+    |> render(:"403")
   end
 end
 ```

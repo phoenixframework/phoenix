@@ -7,6 +7,9 @@
   * [Logger] Add whitelist support to `filter_parameters` logger configuration, via new `:keep` tuple format
   * [Router] Raise on duplicate plugs in pipe_through scopes
 
+* Deprecations
+  * [Controller] Passing a view in `render/3` and `render/4` is deprecated in favor of `put_view/2`
+
 ## 1.3.0 (2017-07-28)
 
 See these [`1.2.x` to `1.3.x` upgrade instructions](https://gist.github.com/chrismccord/71ab10d433c98b714b75c886eff17357) to bring your existing apps up to speed.
