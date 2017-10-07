@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Phx.Gen.Presence do
 
     * lib/my_app_web/channels/presence.ex
 
-  Where `presence.ex` is the snake cased version of the module name provided.
+  Where `my_app_web` is the snake cased version of the module name provided.
   """
   use Mix.Task
 
