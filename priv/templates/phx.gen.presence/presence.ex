@@ -11,10 +11,10 @@ defmodule <%= module %> do
 
       defmodule <%= base %>.MyChannel do
         use <%= base %>Web, :channel
-        alias <%= base %>.Presence
+        alias <%= base %>Web.Presence
 
         def join("some:topic", _params, socket) do
-          send(self, :after_join)
+          send(self(), :after_join)
           {:ok, assign(socket, :user_id, ...)}
         end
 
