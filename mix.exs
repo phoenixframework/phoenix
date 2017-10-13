@@ -28,7 +28,8 @@ defmodule Phoenix.Mixfile do
         formatters: ["html", "epub"],
         groups_for_modules: groups_for_modules(),
         extras: extras(),
-        groups_for_extras: groups_for_extras()
+        groups_for_extras: groups_for_extras(),
+        markdown_processor: ExDocMakeup
       ],
       aliases: aliases(),
       source_url: "https://github.com/phoenixframework/phoenix",
@@ -64,7 +65,8 @@ defmodule Phoenix.Mixfile do
       {:gettext, "~> 0.8", only: :test},
 
       # Docs dependencies
-      {:ex_doc, "~> 0.17.1", only: :docs},
+      {:ex_doc, ">= 0.18.1", only: :docs},
+      {:ex_doc_makeup, "~> 0.1", only: :docs},
       {:inch_ex, "~> 0.2", only: :docs},
 
       # Test dependencies
