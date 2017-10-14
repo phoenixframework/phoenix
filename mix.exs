@@ -113,7 +113,8 @@ defmodule Phoenix.Mixfile do
       "guides/docs/testing/testing_channels.md",
 
       "guides/docs/deployment/deployment.md",
-      "guides/docs/deployment/heroku.md"
+      "guides/docs/deployment/heroku.md",
+      "guides/docs/deployment/digital_ocean.md"
       ]
   end
 
