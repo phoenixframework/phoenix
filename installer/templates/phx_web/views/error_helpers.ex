@@ -10,7 +10,7 @@ defmodule <%= web_namespace %>.ErrorHelpers do
   """
   def error_tag(form, field, html_opts \\ []) do
     html_tag = Keyword.get(html_opts, :tag, :span)
-    class = Keyword.get(html_opts, :class, "help-block")
+    class    = Keyword.get(html_opts, :class, "help-block")
     Enum.map(Keyword.get_values(form.errors, field), fn (error) ->
       content_tag html_tag, translate_error(error), class: class
     end)
