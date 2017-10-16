@@ -105,7 +105,7 @@ defmodule Phoenix.Endpoint.RenderErrors do
     accepts(conn, Keyword.fetch!(opts, :accepts))
   rescue
     e in Phoenix.NotAcceptableError ->
-      fallback_format = Keyword.fetch!(opts, :accepts) |> List.first()
+      fallback_format = opts |> Keyword.fetch!(:accepts) |> List.first()
       Logger.warn("Could not render errors due to #{Exception.message(e)}. " <>
                   "Errors will be rendered using the first accepted format #{inspect fallback_format} as fallback. " <>
                   "Please customize the :accepts option under the :render_errors configuration " <>

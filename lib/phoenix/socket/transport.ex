@@ -386,7 +386,7 @@ defmodule Phoenix.Socket.Transport do
 
   def check_origin(conn, handler, endpoint, opts, sender) do
     import Plug.Conn
-    origin       = get_req_header(conn, "origin") |> List.first
+    origin       = conn |> get_req_header("origin") |> List.first
     check_origin = check_origin_config(handler, endpoint, opts)
 
     cond do
@@ -415,7 +415,8 @@ defmodule Phoenix.Socket.Transport do
                 check_origin: ["https://example.com",
                                "//another.com:888", "//other.com"]
         """
-        resp(conn, :forbidden, "")
+        conn
+        |> resp(:forbidden, "")
         |> sender.()
         |> halt()
     end

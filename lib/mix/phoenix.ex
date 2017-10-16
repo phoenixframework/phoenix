@@ -92,9 +92,9 @@ defmodule Mix.Phoenix do
     web_module = base |> web_module() |> inspect()
     scoped     = Phoenix.Naming.camelize(singular)
     path       = Phoenix.Naming.underscore(scoped)
-    singular   = String.split(path, "/") |> List.last
-    module     = Module.concat(base, scoped) |> inspect
-    alias      = String.split(module, ".") |> List.last
+    singular   = path |> String.split("/") |> List.last
+    module     = base |> Module.concat(scoped) |> inspect
+    alias      = module |> String.split(".") |> List.last
     human      = Phoenix.Naming.humanize(singular)
 
     [alias: alias,

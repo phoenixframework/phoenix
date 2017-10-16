@@ -329,14 +329,14 @@ defmodule Phoenix.View do
   Renders the template and returns iodata.
   """
   def render_to_iodata(module, template, assign) do
-    render(module, template, assign) |> encode(template)
+    module |> render(template, assign) |> encode(template)
   end
 
   @doc """
   Renders the template and returns a string.
   """
   def render_to_string(module, template, assign) do
-    render_to_iodata(module, template, assign) |> IO.iodata_to_binary
+    module |> render_to_iodata(template, assign) |> IO.iodata_to_binary
   end
 
   defp encode(content, template) do

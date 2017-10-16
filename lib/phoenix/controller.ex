@@ -264,7 +264,8 @@ defmodule Phoenix.Controller do
   end
 
   defp get_json_encoder do
-    Application.get_env(:phoenix, :format_encoders)
+    :phoenix
+    |> Application.get_env(:format_encoders)
     |> Keyword.get(:json, Poison)
   end
 
@@ -915,7 +916,7 @@ defmodule Phoenix.Controller do
   """
   @spec scrub_params(Plug.Conn.t, String.t) :: Plug.Conn.t
   def scrub_params(conn, required_key) when is_binary(required_key) do
-    param = Map.get(conn.params, required_key) |> scrub_param()
+    param = conn.params |> Map.get(required_key) |> scrub_param()
 
     unless param do
       raise Phoenix.MissingParamError, key: required_key

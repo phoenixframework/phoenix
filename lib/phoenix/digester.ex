@@ -140,7 +140,7 @@ defmodule Phoenix.Digester do
   defp map_file(file_path, input_path) do
     {:ok, stats} = File.stat(file_path)
     %{absolute_path: file_path,
-      relative_path: Path.relative_to(file_path, input_path) |> Path.dirname(),
+      relative_path: file_path |> Path.relative_to(input_path) |> Path.dirname(),
       filename: Path.basename(file_path),
       size: stats.size,
       content: File.read!(file_path)}
@@ -153,7 +153,7 @@ defmodule Phoenix.Digester do
     digest = String.trim_leading(digest, "-")
 
     %{absolute_path: file_path,
-      relative_path: Path.relative_to(file_path, output_path) |> Path.dirname(),
+      relative_path: file_path |> Path.relative_to(output_path) |> Path.dirname(),
       digested_filename: digested_filename,
       filename: String.replace(digested_filename, @digested_file_regex, ""),
       digest: digest,
