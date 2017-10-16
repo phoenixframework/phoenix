@@ -297,8 +297,8 @@ defmodule Phoenix.Socket.Transport do
   end
 
   defp log(_, "phoenix" <> _, _func), do: :noop
-  defp log(%{ private: %{ log_join: false } }, _topic, _func), do: :noop
-  defp log(%{ private: %{ log_join: level } }, _topic, func), do: Logger.log(level, func)
+  defp log(%{private: %{log_join: false}}, _topic, _func), do: :noop
+  defp log(%{private: %{log_join: level}}, _topic, func), do: Logger.log(level, func)
 
   defp reply_ignore(msg, socket) do
     Logger.warn fn -> "Ignoring unmatched topic \"#{msg.topic}\" in #{inspect(socket.handler)}" end

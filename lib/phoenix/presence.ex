@@ -103,7 +103,7 @@ defmodule Phoenix.Presence do
   """
   alias Phoenix.Socket.Broadcast
 
-  @type presences :: %{ String.t => %{metas: [map()]}}
+  @type presences :: %{String.t => %{metas: [map()]}}
   @type presence :: %{key: String.t, meta: map()}
   @type topic :: String.t
 
