@@ -19,7 +19,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   describe "index" do
     test "lists all <%= schema.plural %>", %{conn: conn} do
-      conn = get conn, <%= schema.route_helper %>_path(conn, :index)
+      conn = get conn, Routes.<%= schema.route_helper %>_path(conn, :index)
       assert json_response(conn, 200)["data"] == []
     end
   end

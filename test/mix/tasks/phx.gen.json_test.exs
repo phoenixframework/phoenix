@@ -63,7 +63,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
         assert file =~ "Blog.create_post"
         assert file =~ "Blog.update_post"
         assert file =~ "Blog.delete_post"
-        assert file =~ " post_path(conn"
+        assert file =~ " Routes.post_path(conn"
       end
 
       assert_receive {:mix_shell, :info, ["""
@@ -81,13 +81,13 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
 
       assert_file "test/phoenix_web/controllers/blog/post_controller_test.exs", fn file ->
         assert file =~ "defmodule PhoenixWeb.Blog.PostControllerTest"
-        assert file =~ " blog_post_path(conn"
+        assert file =~ " Routes.blog_post_path(conn"
       end
 
       assert_file "lib/phoenix_web/controllers/blog/post_controller.ex", fn file ->
         assert file =~ "defmodule PhoenixWeb.Blog.PostController"
         assert file =~ "use PhoenixWeb, :controller"
-        assert file =~ " blog_post_path(conn"
+        assert file =~ " Routes.blog_post_path(conn"
       end
 
       assert_file "lib/phoenix_web/views/blog/post_view.ex", fn file ->

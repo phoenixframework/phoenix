@@ -19,7 +19,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, <%= schema.singular %>} ->
         conn
         |> put_flash(:info, "<%= schema.human_singular %> created successfully.")
-        |> redirect(to: <%= schema.route_helper %>_path(conn, :show, <%= schema.singular %>))
+        |> redirect(to: Routes.<%= schema.route_helper %>_path(conn, :show, <%= schema.singular %>))
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, "new.html", changeset: changeset)
     end
@@ -43,7 +43,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       {:ok, <%= schema.singular %>} ->
         conn
         |> put_flash(:info, "<%= schema.human_singular %> updated successfully.")
-        |> redirect(to: <%= schema.route_helper %>_path(conn, :show, <%= schema.singular %>))
+        |> redirect(to: Routes.<%= schema.route_helper %>_path(conn, :show, <%= schema.singular %>))
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, "edit.html", <%= schema.singular %>: <%= schema.singular %>, changeset: changeset)
     end
@@ -55,6 +55,6 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
     conn
     |> put_flash(:info, "<%= schema.human_singular %> deleted successfully.")
-    |> redirect(to: <%= schema.route_helper %>_path(conn, :index))
+    |> redirect(to: Routes.<%= schema.route_helper %>_path(conn, :index))
   end
 end

@@ -19,7 +19,7 @@ defmodule <%= web_namespace %>.ConnCase do
     quote do
       # Import conveniences for testing with connections
       use Phoenix.ConnTest
-      import <%= web_namespace %>.Router.Helpers
+      alias <%= web_namespace %>.Router.Helpers, as: Routes
 
       # The default endpoint for testing
       @endpoint <%= endpoint_module %>

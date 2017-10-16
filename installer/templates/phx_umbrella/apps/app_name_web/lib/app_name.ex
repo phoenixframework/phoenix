@@ -21,8 +21,8 @@ defmodule <%= web_namespace %> do
     quote do
       use Phoenix.Controller, namespace: <%= web_namespace %>
       import Plug.Conn
-      import <%= web_namespace %>.Router.Helpers
       import <%= web_namespace %>.Gettext
+      alias <%= web_namespace %>.Router.Helpers, as: Routes
     end
   end
 
@@ -37,9 +37,9 @@ defmodule <%= web_namespace %> do
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML<% end %>
 
-      import <%= web_namespace %>.Router.Helpers
       import <%= web_namespace %>.ErrorHelpers
       import <%= web_namespace %>.Gettext
+      alias <%= web_namespace %>.Router.Helpers, as: Routes
     end
   end
 

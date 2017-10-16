@@ -1,5 +1,5 @@
 <h2>Edit <%= schema.human_singular %></h2>
 
-<%%= render "form.html", Map.put(assigns, :action, <%= schema.route_helper %>_path(@conn, :update, @<%= schema.singular %>)) %>
+<%%= render "form.html", Map.put(assigns, :action, Routes.<%= schema.route_helper %>_path(@conn, :update, @<%= schema.singular %>)) %>
 
-<span><%%= link "Back", to: <%= schema.route_helper %>_path(@conn, :index) %></span>
+<span><%%= link "Back", to: Routes.<%= schema.route_helper %>_path(@conn, :index) %></span>

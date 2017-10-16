@@ -62,7 +62,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
       assert_file "test/phoenix_web/controllers/post_controller_test.exs", fn file ->
         assert file =~ "defmodule PhoenixWeb.PostControllerTest"
-        assert file =~ " post_path(conn"
+        assert file =~ " Routes.post_path(conn"
       end
 
       assert [path] = Path.wildcard("priv/repo/migrations/*_create_posts.exs")
@@ -81,7 +81,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "Blog.update_post"
         assert file =~ "Blog.delete_post"
         assert file =~ "Blog.change_post"
-        assert file =~ "redirect(to: post_path(conn"
+        assert file =~ "redirect(to: Routes.post_path(conn"
       end
 
       assert_file "lib/phoenix_web/views/post_view.ex", fn file ->
@@ -89,19 +89,19 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       end
 
       assert_file "lib/phoenix_web/templates/post/edit.html.eex", fn file ->
-        assert file =~ " post_path(@conn"
+        assert file =~ " Routes.post_path(@conn"
       end
 
       assert_file "lib/phoenix_web/templates/post/index.html.eex", fn file ->
-        assert file =~ " post_path(@conn"
+        assert file =~ " Routes.post_path(@conn"
       end
 
       assert_file "lib/phoenix_web/templates/post/new.html.eex", fn file ->
-        assert file =~ " post_path(@conn"
+        assert file =~ " Routes.post_path(@conn"
       end
 
       assert_file "lib/phoenix_web/templates/post/show.html.eex", fn file ->
-        assert file =~ " post_path(@conn"
+        assert file =~ " Routes.post_path(@conn"
       end
 
       assert_file "lib/phoenix_web/templates/post/form.html.eex", fn file ->
@@ -157,7 +157,7 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
         assert file =~ "Blog.update_comment"
         assert file =~ "Blog.delete_comment"
         assert file =~ "Blog.change_comment"
-        assert file =~ "redirect(to: comment_path(conn"
+        assert file =~ "redirect(to: Routes.comment_path(conn"
       end
 
       assert_receive {:mix_shell, :info, ["""
@@ -175,31 +175,31 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
 
       assert_file "test/phoenix_web/controllers/blog/post_controller_test.exs", fn file ->
         assert file =~ "defmodule PhoenixWeb.Blog.PostControllerTest"
-        assert file =~ " blog_post_path(conn"
+        assert file =~ " Routes.blog_post_path(conn"
       end
 
       assert_file "lib/phoenix_web/controllers/blog/post_controller.ex", fn file ->
         assert file =~ "defmodule PhoenixWeb.Blog.PostController"
         assert file =~ "use PhoenixWeb, :controller"
-        assert file =~ "redirect(to: blog_post_path(conn"
+        assert file =~ "redirect(to: Routes.blog_post_path(conn"
       end
 
       assert_file "lib/phoenix_web/templates/blog/post/form.html.eex"
 
       assert_file "lib/phoenix_web/templates/blog/post/edit.html.eex", fn file ->
-        assert file =~ " blog_post_path(@conn"
+        assert file =~ " Routes.blog_post_path(@conn"
       end
 
       assert_file "lib/phoenix_web/templates/blog/post/index.html.eex", fn file ->
-        assert file =~ " blog_post_path(@conn"
+        assert file =~ " Routes.blog_post_path(@conn"
       end
 
       assert_file "lib/phoenix_web/templates/blog/post/new.html.eex", fn file ->
-        assert file =~ " blog_post_path(@conn"
+        assert file =~ " Routes.blog_post_path(@conn"
       end
 
       assert_file "lib/phoenix_web/templates/blog/post/show.html.eex", fn file ->
-        assert file =~ " blog_post_path(@conn"
+        assert file =~ " Routes.blog_post_path(@conn"
       end
 
       assert_file "lib/phoenix_web/views/blog/post_view.ex", fn file ->
