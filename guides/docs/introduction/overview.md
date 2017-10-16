@@ -4,7 +4,7 @@ Phoenix is a web development framework written in Elixir which implements the se
 
 Phoenix provides the best of both worlds - high developer productivity _and_ high application performance. It also has some interesting new twists like channels for implementing realtime features and pre-compiled templates for blazing speed.
 
-If you are already familiar with Elixir, great! If not, there are a number of places to learn. The [Elixir guides](https://elixir-lang.org/getting-started/introduction.html) are a great place to start. We also have a list of helpful resources in the [Learning Elixir and Erlang Guide](http://www.phoenixframework.org/docs/learning-elixir-and-erlang).
+If you are already familiar with Elixir, great! If not, there are a number of places to learn. The [Elixir guides](https://elixir-lang.org/getting-started/introduction.html) are a great place to start. We also have a list of helpful resources in the [Learning Elixir and Erlang Guide](learning.html).
 
 The aim of this introductory guide is to present a brief, high-level overview of Phoenix, the parts that make it up, and the layers underneath that support it.
 
