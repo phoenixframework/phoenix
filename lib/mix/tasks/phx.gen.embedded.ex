@@ -101,7 +101,7 @@ defmodule Mix.Tasks.Phx.Gen.Embedded do
   @doc false
   def copy_new_files(%Schema{} = schema, paths, binding) do
     files = files_to_be_generated(schema)
-    Mix.Phoenix.copy_from(paths,"priv/templates/phx.gen.embedded", binding, files)
+    Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.embedded", binding, files)
 
     schema
   end

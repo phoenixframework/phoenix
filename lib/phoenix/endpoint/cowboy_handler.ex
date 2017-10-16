@@ -110,7 +110,7 @@ defmodule Phoenix.Endpoint.CowboyHandler do
   end
 
   defp info(scheme, endpoint, ref) do
-    {addr,port} = :ranch.get_addr(ref)
+    {addr, port} = :ranch.get_addr(ref)
     addr_str = :inet.ntoa(addr)
     "Running #{inspect endpoint} with Cowboy using #{scheme}://#{addr_str}:#{port}"
   end
